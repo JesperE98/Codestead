@@ -10,6 +10,20 @@ när du gjort rätt (*learn by doing*).
 
 ![Kapitlet om pakethantering i Fedora, med uppgifter och terminal](docs/screenshot.png)
 
+## Ladda ner
+
+Installera LinuxLearningTool som ett vanligt program. Välj ditt operativsystem:
+
+| | Ladda ner |
+|---|---|
+| **Windows** 10/11 | [LinuxLearningTool-Setup-Windows.exe](https://github.com/jesper-e98/LinuxLearningTool/releases/latest/download/LinuxLearningTool-Setup-Windows.exe) |
+| **macOS** (Intel och Apple Silicon) | [LinuxLearningTool-macOS.dmg](https://github.com/jesper-e98/LinuxLearningTool/releases/latest/download/LinuxLearningTool-macOS.dmg) |
+| **Linux** (x86_64) | [LinuxLearningTool-Linux-x86_64.AppImage](https://github.com/jesper-e98/LinuxLearningTool/releases/latest/download/LinuxLearningTool-Linux-x86_64.AppImage) |
+
+Alla versioner finns under [Releases](https://github.com/jesper-e98/LinuxLearningTool/releases).
+Appen är inte signerad än, så Windows och macOS varnar första gången – se
+[instruktionerna](.github/release-notes.md#första-starten).
+
 ## Funktioner
 
 - **Simulerad Linux-terminal** direkt i webbläsaren – fungerar på alla
@@ -57,19 +71,30 @@ npm run dev
 | `npm run app` | Bygger och startar skrivbordsappen (Electron) |
 | `npm run app:dist` | Bygger installationsfiler för ditt operativsystem till `release/` |
 
-### Skrivbordsappen
+### Bygga installationsfilerna själv
 
-Skrivbordsappen är samma webbapp inpackad med [Electron](https://www.electronjs.org).
-`electron-builder` skapar:
+Skrivbordsappen är samma webbapp inpackad med [Electron](https://www.electronjs.org),
+och [electron-builder](https://www.electron.build) skapar installationsfilerna:
 
-- **Windows**: installationsprogram (`.exe`, NSIS)
-- **macOS**: `.dmg`
-- **Linux**: `.AppImage`
+| Operativsystem | Fil | Kommando |
+|---|---|---|
+| Windows | Installationsguide (`.exe`) där man väljer mapp och genvägar | `npm run app:dist:win` |
+| macOS | `.dmg` för både Intel och Apple Silicon | `npm run app:dist:mac` |
+| Linux | `.AppImage` som körs direkt | `npm run app:dist:linux` |
 
-Varje plattform byggs bäst på sitt eget operativsystem. GitHub Actions-flödet
-`release.yml` bygger alla tre automatiskt när du pushar en tagg som `v0.1.0`.
-macOS-appen är inte signerad, så första gången behöver man högerklicka och
-välja *Öppna*.
+Filerna hamnar i `release/`. Varje operativsystem måste byggas på sig självt,
+så det enklaste är att låta GitHub göra det:
+
+```bash
+git tag v0.1.0
+```
+
+```bash
+git push origin v0.1.0
+```
+
+Då bygger flödet `.github/workflows/release.yml` alla tre och lägger upp dem
+som en ny release. Ikonen ligger i `build/icon.svg` (och `build/icon.png`).
 
 ## Projektstruktur
 

@@ -2,7 +2,7 @@
   "name": "linuxlearningtool",
   "productName": "LinuxLearningTool",
   "version": "0.1.0",
-  "description": "Lär dig Linux-shell, kapitel för kapitel – med en simulerad terminal och uppgifter för Debian/Ubuntu, Arch och Fedora.",
+  "description": "Lär dig Linux-shell kapitel för kapitel – med en simulerad terminal och uppgifter för Debian/Ubuntu, Arch och Fedora.",
   "license": "Unlicense",
   "private": true,
   "type": "module",
@@ -36,23 +36,70 @@
   "build": {
     "appId": "io.github.jesper-e98.linuxlearningtool",
     "productName": "LinuxLearningTool",
+    "copyright": "Public domain (The Unlicense)",
     "files": [
       "dist/**",
       "electron/**"
     ],
     "directories": {
-      "output": "release"
+      "output": "release",
+      "buildResources": "build"
     },
     "win": {
-      "target": "nsis"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "LinuxLearningTool-Setup-Windows.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "LinuxLearningTool",
+      "uninstallDisplayName": "LinuxLearningTool",
+      "license": "LICENSE",
+      "installerLanguages": [
+        "sv_SE",
+        "en_US"
+      ],
+      "language": "1053"
     },
     "mac": {
-      "target": "dmg",
-      "category": "public.app-category.education"
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "category": "public.app-category.education",
+      "artifactName": "LinuxLearningTool-macOS.${ext}"
+    },
+    "dmg": {
+      "title": "LinuxLearningTool ${version}"
     },
     "linux": {
-      "target": "AppImage",
-      "category": "Education"
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Education",
+      "synopsis": "Lär dig Linux-shell kapitel för kapitel",
+      "artifactName": "LinuxLearningTool-Linux-x86_64.${ext}"
     }
-  }
+  },
+  "homepage": "https://github.com/jesper-e98/LinuxLearningTool",
+  "author": "jesper-e98"
 }
