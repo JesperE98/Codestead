@@ -1,0 +1,30 @@
+import type { Shell } from './shell';
+
+export interface Sink {
+  out(s: string): void;
+  err(s: string): void;
+}
+
+export interface IO extends Sink {
+  /** Indata från en pipe eller fil. null betyder "tangentbordet" (inget att läsa). */
+  stdin: string | null;
+  /** Sant när utdata går direkt till terminalen (inte till pipe eller fil). */
+  isTTY: boolean;
+}
+
+export interface CmdCtx extends IO {
+  sh: Shell;
+  name: string;
+  args: string[];
+}
+
+export interface CommandDef {
+  name: string;
+  /** En rad på svenska som visas av `help`. */
+  summary: string;
+  /** Förenklad manualsida på svenska som visas av `man`. */
+  man?: string;
+  /** Inbyggt i skalet (cd, export ...) i stället för en fil i /usr/bin. */
+  builtin?: boolean;
+  run(ctx: CmdCtx): number;
+}

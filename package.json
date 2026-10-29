@@ -1,0 +1,58 @@
+{
+  "name": "linuxlearningtool",
+  "productName": "LinuxLearningTool",
+  "version": "0.1.0",
+  "description": "Lär dig Linux-shell, kapitel för kapitel – med en simulerad terminal och uppgifter för Debian/Ubuntu, Arch och Fedora.",
+  "license": "Unlicense",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "app": "npm run build && electron .",
+    "app:dist": "npm run build && electron-builder",
+    "app:dist:win": "npm run build && electron-builder --win",
+    "app:dist:mac": "npm run build && electron-builder --mac",
+    "app:dist:linux": "npm run build && electron-builder --linux"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.4.0",
+    "electron": "^37.0.0",
+    "electron-builder": "^26.0.0",
+    "marked": "^15.0.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "typescript": "^5.8.0",
+    "vite": "^6.3.0",
+    "vitest": "^3.1.0"
+  },
+  "build": {
+    "appId": "io.github.jesper-e98.linuxlearningtool",
+    "productName": "LinuxLearningTool",
+    "files": [
+      "dist/**",
+      "electron/**"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.education"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Education"
+    }
+  }
+}
