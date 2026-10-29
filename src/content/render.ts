@@ -18,7 +18,9 @@ export function placeholders(d: Distro): Record<string, string> {
 /** Behåller bara :::familj-block för vald familj och fyller i {{platshållare}}. */
 export function preprocess(md: string, d: Distro): string {
   const values = placeholders(d);
+  // Windows-radslut (\r\n) skulle annars hindra att :::familj-blocken hittas.
   return md
+    .replace(/\r\n?/g, '\n')
     .replace(/^:::(debian|arch|redhat)[ \t]*\n([\s\S]*?)\n:::[ \t]*$/gm, (_m, family: string, body: string) =>
       family === d.family ? `<div class="distro-block" data-family="${family}">\n\n${body}\n\n</div>` : '',
     )

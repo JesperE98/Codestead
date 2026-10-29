@@ -36,6 +36,14 @@ describe('kapitelinnehåll', () => {
     }
   });
 
+  test('distro-block fungerar även med Windows-radslut', () => {
+    const md = '# Titel\r\n\r\n:::arch\r\nBara Arch\r\n:::\r\n\r\n:::debian\r\nBara Debian\r\n:::\r\n';
+    const html = renderMarkdown(md, DISTROS.find((d) => d.id === 'arch')!);
+    expect(html).toContain('Bara Arch');
+    expect(html).not.toContain('Bara Debian');
+    expect(html).not.toContain(':::');
+  });
+
   test('inga uppgifter klaras av utan att eleven gjort något', () => {
     for (const d of DISTROS) {
       const sh = Shell.create(d.id);

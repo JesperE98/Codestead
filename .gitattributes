@@ -1,0 +1,3 @@
+# Samma radslut (LF) på alla operativsystem, även när repot klonas på Windows.
+* text=auto eol=lf
+*.png binary
