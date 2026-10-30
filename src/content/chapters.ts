@@ -530,6 +530,86 @@ export const CHAPTERS: Chapter[] = [
     ],
   },
   {
+    id: 'systemd',
+    part: 'admin',
+    title: 'Tjänster och loggar med systemd',
+    tasks: [
+      {
+        id: 'status-ssh',
+        perFamily: true,
+        text: 'Visa status för SSH-servern med `systemctl status`. Tänk på vad tjänsten heter i din distributionsfamilj!',
+        hint: byFamily({
+          debian: 'I Debian-familjen heter tjänsten `ssh`: `systemctl status ssh`.',
+          arch: 'I Arch heter tjänsten `sshd`: `systemctl status sshd`.',
+          redhat: 'I Fedora heter tjänsten `sshd`: `systemctl status sshd`.',
+        }),
+        solution: byFamily({
+          debian: ['systemctl status ssh'],
+          arch: ['systemctl status sshd'],
+          redhat: ['systemctl status sshd'],
+        }),
+        check: (c) =>
+          /\bsystemctl\b.*\bstatus\b/.test(c.line) && c.output.includes(c.distro.family === 'debian' ? 'ssh.service - ' : 'sshd.service - '),
+      },
+      {
+        id: 'failed',
+        text: 'En tjänst verkar inte ha startat. Lista alla tjänster som har misslyckats (*failed*).',
+        hint: '`systemctl --failed` (eller `systemctl list-units --state=failed`).',
+        solution: ['systemctl --failed'],
+        check: (c) => ran(c, /\bsystemctl\b.*(--failed|--state[= ]\S*failed)/) && c.output.includes('loaded units listed'),
+      },
+      {
+        id: 'journal-err',
+        text: 'Visa bara felmeddelandena (prioritet *err* och allvarligare) från den här uppstarten i journalen.',
+        hint: '`-p err` väljer prioritet och `-b` den senaste uppstarten: `journalctl -p err -b`.',
+        solution: ['journalctl -p err -b'],
+        check: (c) =>
+          ran(c, /\bjournalctl\b/) &&
+          /(^|\s)(-\w*p\s*|--priority[= ])(err|error|3|0\.\.3|emerg\.\.err)(\s|$)/.test(c.line) &&
+          /(^|\s)(-\w*b\w*|--boot)\b/.test(c.line),
+      },
+      {
+        id: 'journal-u',
+        text: 'Läs loggen för den trasiga tjänsten `rapportd` med `journalctl`. Varför startar den inte?',
+        hint: '`-u` visar bara raderna från en tjänst: `journalctl -u rapportd`. Med `-xe` hoppar du till slutet och får förklaringar.',
+        solution: ['journalctl -u rapportd'],
+        check: (c) => ran(c, /\bjournalctl\b.*\brapportd\b/) && c.output.includes('rapportd.conf'),
+      },
+      {
+        id: 'fix',
+        text: 'Rätta felet som loggen berättar om och starta sedan om `rapportd` med `systemctl`, så att den kör.',
+        hint: 'Konfigurationsfilen saknas, men det finns ett exempel: `sudo cp /etc/rapportd.conf.example /etc/rapportd.conf`. Starta sedan om med `sudo systemctl restart rapportd`.',
+        solution: ['sudo cp /etc/rapportd.conf.example /etc/rapportd.conf', 'sudo systemctl restart rapportd'],
+        check: (c) => /\bsystemctl\b.*\brapportd\b/.test(c.line) && c.sh.services.units['rapportd.service']?.active === 'active',
+      },
+      {
+        id: 'start-minserver',
+        text: 'Starta tjänsten `minserver` (om den inte redan kör) och visa sedan dess status. Vilket PID fick den?',
+        hint: '`sudo systemctl start minserver` och sedan `systemctl status minserver`.',
+        solution: ['sudo systemctl start minserver', 'systemctl status minserver'],
+        check: (c) => ran(c, /\bsystemctl\b.*\bstatus\b.*\bminserver\b/) && c.output.includes('active (running)'),
+      },
+      {
+        id: 'stop',
+        text: 'Stoppa `minserver` med `systemctl`. Kontrollera gärna med `pgrep minserver` att processen är borta.',
+        hint: '`sudo systemctl stop minserver`',
+        solution: ['sudo systemctl stop minserver', 'pgrep minserver'],
+        check: (c) =>
+          ran(c, /\bsystemctl\b.*\bstop\b.*\bminserver\b/) && !c.sh.proc.procs.some((p) => p.cmd.includes('/minserver')),
+      },
+      {
+        id: 'enable',
+        text: 'Se till att `minserver` startar automatiskt varje gång datorn startar – och starta den nu också, med ett enda kommando.',
+        hint: '`enable` gäller vid uppstart och `--now` startar den direkt: `sudo systemctl enable --now minserver`.',
+        solution: ['sudo systemctl enable --now minserver'],
+        check: (c) =>
+          /\bsystemctl\b.*\benable\b/.test(c.line) &&
+          isFile(c, '/etc/systemd/system/multi-user.target.wants/minserver.service') &&
+          c.sh.services.units['minserver.service']?.active === 'active',
+      },
+    ],
+  },
+  {
     id: 'distributioner',
     part: 'distro',
     title: 'Distributioner och familjer',
@@ -767,7 +847,6 @@ CHAPTERS.sort((a, b) => PARTS.findIndex((p) => p.id === a.part) - PARTS.findInde
 /** Kapitel som planeras – visas i menyn som "kommer snart". */
 export const UPCOMING: string[] = [
   'Nätverk (ip, ping, curl, ssh)',
-  'Tjänster och loggar med systemd',
   'Diskar och filsystem (df, du, mount)',
   'Användarhantering (useradd, passwd)',
   'Andra skal: zsh och fish',
