@@ -40,6 +40,16 @@ type  owner   group   others
 
 After that come the owner (`elev`) and the group (`elev`).
 
+```quiz
+A directory has the permissions `drwxr-x---`. What may members of its group do?
+- [ ] Nothing at all
+- [x] List the contents and enter it with `cd`, but not create or delete files in it
+- [ ] Everything the owner may do
+---
+The group's set is `r-x`: `r` lets you list the contents and `x` lets you
+enter the directory. Without `w` you can't create or delete files in it.
+```
+
 ## Changing permissions – `chmod`
 
 Permissions can be given as **numbers**. Each set gets a digit that is the
@@ -63,6 +73,14 @@ chmod u+x skript.sh
 chmod go-w fil.txt
 ```
 
+```predict
+$ touch plan.txt
+$ chmod 600 plan.txt
+$ chmod g+r plan.txt
+$ ls -l plan.txt | awk '{print $1}'
+-rw-r-----
+```
+
 ## Scripts
 
 A **script** is a text file containing commands. The first line,
@@ -84,6 +102,17 @@ chmod +x datum.sh
 
 The `./` is needed because the directory you're in isn't part of `PATH`.
 
+```quiz
+You've written the script `test.sh` and run `./test.sh`, but get
+`Permission denied`. What's missing?
+- [ ] A `sudo` in front
+- [x] The execute permission – run `chmod +x test.sh` first
+- [ ] The `./` – it should be `test.sh`
+---
+To run a file as a program, it needs the `x` permission. The `./` is right:
+without it, the shell only looks in the directories in `PATH`.
+```
+
 ## root and sudo
 
 Some files, like `/etc/shadow` where the passwords are stored, can only be read
@@ -94,28 +123,26 @@ sudo whoami
 ```
 
 The first time, `sudo` asks for **your own** password. Only users in the
-administrators' group may use sudo. On {{distro}} that group is called
-**{{adminGroup}}**:
-
-:::debian
-In the Debian family the group is called `sudo`.
-:::
-
-:::arch
-In the Arch family the group is called `wheel` – an old Unix name for "the
-ones in charge" (a *big wheel*).
-:::
-
-:::redhat
-In the Red Hat family the group is called `wheel` – an old Unix name for "the
-ones in charge" (a *big wheel*).
-:::
+administrators' group may use sudo. On Ubuntu that group is called **sudo** –
+you can see it among your groups when you run `id`. Some other distributions
+call the group `wheel` instead; you'll read more about the differences
+between distributions in the part about distributions.
 
 If you need to run lots of commands as root, you can start a root shell with
 `sudo -i`. The prompt then changes to `#`. Go back with `exit`.
 
 > **Keep in mind!** With sudo there is no safety net. Only run commands you
 > understand.
+
+```quiz
+`sudo` asks for a password. Whose password should you type?
+- [ ] root's password
+- [x] Your own password
+- [ ] No password – just press Enter
+---
+`sudo` asks for **your own** password, and only lets you through if you're
+in the administrators' group.
+```
 
 ### A common trap
 
@@ -128,4 +155,15 @@ instead, which runs with sudo:
 
 ```sh
 echo "127.0.0.1 test.local" | sudo tee -a /etc/hosts
+```
+
+```quiz
+Why doesn't `sudo echo "text" > /etc/file` work?
+- [ ] `echo` can't be run with sudo
+- [x] Your own shell opens the file for `>`, and it doesn't run as root
+- [ ] Files in `/etc` can never be changed
+---
+sudo only applies to the command (`echo`). The redirection is handled by your
+shell, which runs as you. `tee` is the program that writes the file, so it's
+`tee` that needs sudo.
 ```

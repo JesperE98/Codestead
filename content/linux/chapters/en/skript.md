@@ -52,6 +52,17 @@ errors when a file name contains a space. If you want to write text directly
 after the variable name, use curly braces: `"${stad}_2026"` – without them,
 bash would look for a variable called `stad_2026`.
 
+```quiz
+`stad` contains `Göteborg`, and there's no variable called `stad_2026`. What
+does `echo "$stad_2026"` print?
+- [ ] `Göteborg_2026`
+- [ ] `Göteborg`
+- [x] An empty line
+---
+Bash reads the whole name `stad_2026`, and that variable doesn't exist.
+Write `"${stad}_2026"` to get `Göteborg_2026`.
+```
+
 ## Command substitution – `$(...)`
 
 `$(command)` is replaced by whatever the command prints. That's how you save
@@ -76,6 +87,13 @@ echo $(( 17 / 5 )) remainder $(( 17 % 5 ))
 
 To change a variable, write `(( a++ ))` or `(( a += 10 ))`.
 
+```predict
+$ echo $(( 7 / 2 )) $(( 7 % 2 ))
+3 1
+---
+Bash only counts with integers: 7 / 2 is 3, and the remainder (`%`) is 1.
+```
+
 ## Arguments
 
 When you run `./skript.sh one two`, the script can read the arguments:
@@ -87,6 +105,16 @@ When you run `./skript.sh one two`, the script can read the arguments:
 | `$#` | The number of arguments |
 | `"$@"` | All the arguments, each one separately |
 | `$?` | The exit code of the previous command |
+
+```quiz
+A script is run with `./skript.sh red green blue`. What do `$1` and `$#`
+contain?
+- [ ] `$1` is `./skript.sh` and `$#` is `4`
+- [x] `$1` is `red` and `$#` is `3`
+- [ ] `$1` is `red` and `$#` is `blue`
+---
+The script's own name is in `$0`, so it isn't counted in `$#`.
+```
 
 ## Conditions – `if`
 
@@ -133,6 +161,12 @@ For short conditions, `&&` and `||` are often enough:
 [ -d ~/bilder ] && echo "The pictures directory exists"
 ```
 
+```predict
+$ x=""
+$ if [ -z "$x" ]; then echo empty; else echo "not empty"; fi
+empty
+```
+
 ## Loops
 
 A **for loop** does the same thing for every item in a list:
@@ -162,6 +196,13 @@ while read rad; do echo "> $rad"; done < ~/dokument/frukter.txt
 ```
 
 `break` leaves a loop, and `continue` jumps straight to the next round.
+
+```predict
+$ for x in 2 4 6; do echo $(( x * 10 )); done
+20
+40
+60
+```
 
 > **Watch out for infinite loops!** A loop whose condition never becomes false
 > goes on forever. In a real terminal you stop it with **Ctrl+C**. The
