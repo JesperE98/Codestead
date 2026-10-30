@@ -94,7 +94,7 @@ public static class Js
         if (double.IsNaN(n)) return "NaN";
         if (double.IsPositiveInfinity(n)) return "Infinity";
         if (double.IsNegativeInfinity(n)) return "-Infinity";
-        if (n == Math.Floor(n) && Math.Abs(n) < 1e21) return ((decimal)n).ToString(CultureInfo.InvariantCulture);
+        if (n == Math.Floor(n) && Math.Abs(n) < 1e21) return new System.Numerics.BigInteger(n).ToString(CultureInfo.InvariantCulture);
         return n.ToString("R", CultureInfo.InvariantCulture);
     }
 

@@ -121,6 +121,7 @@ public class CoreTests
         Assert.Equal(493, Js.Oct(755));
         Assert.Equal("1.5", Js.Num(1.5));
         Assert.Equal("3", Js.Num(3.0));
+        Assert.Equal("9007199254740992", Js.Num(9007199254740992.0));
         Assert.Equal("ab b", ShellLib.FlattenLines("ab b"));
         Assert.Equal("for i in 1 2; do echo $i; done", ShellLib.FlattenLines("for i in 1 2\ndo echo $i\ndone"));
     }
