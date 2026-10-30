@@ -1,0 +1,33 @@
+{
+  "title": "用 sed、tr 和 awk 处理文本",
+  "tasks": {
+    "sed-s": {
+      "text": "使用 `sed` 显示 `~/dokument/server.log`，并把每一行中的单词 `ERROR` 替换为 `FEL`。",
+      "hint": "命令 `s/old/new/` 用于替换文本（old 为旧文本，new 为新文本）：`sed 's/ERROR/FEL/' file`"
+    },
+    "sed-d": {
+      "text": "使用 `sed` 显示 server.log，但**不**包括所有含有 `INFO` 的行。",
+      "hint": "地址 `/INFO/` 选中这些行，命令 `d` 把它们删除：`sed '/INFO/d' file`"
+    },
+    "tr-upper": {
+      "text": "以**大写**形式打印 `/etc/passwd` 中的所有用户名：用 `cut` 挑出第 1 个字段，再传给 `tr`。",
+      "hint": "`cut -d: -f1 /etc/passwd` 会给出用户名。再加上 `| tr a-z A-Z`。"
+    },
+    "tr-path": {
+      "text": "使用 `tr` 把 `:` 替换成换行符，让 `$PATH` 中的目录**各占一行**显示。",
+      "hint": "换行符写作 `\\n`：`echo $PATH | tr ':' '\\n'`"
+    },
+    "awk-print": {
+      "text": "用 `awk` 打印 `/etc/passwd` 中的用户名和 shell（第 1 和第 7 个字段）。",
+      "hint": "字段之间用冒号分隔，所以要使用 `-F:`。程序是 `'{print $1, $7}'`。"
+    },
+    "awk-sum": {
+      "text": "用 `awk` 计算 `~/dokument/betyg.csv` 中分数（第 3 列）的**总和**。",
+      "hint": "用 `NR > 1` 跳过表头，用 `summa += $3` 累加，并在 `END { }` 中打印结果。分隔符是逗号：`-F,`。"
+    },
+    "sed-i": {
+      "text": "**直接在文件** `~/anteckningar.txt` 中把 `Linux` 替换为 `GNU/Linux`。",
+      "hint": "使用 `sed -i`。由于替换文本中包含 `/`，最简单的办法是换一个分隔符：`s|Linux|GNU/Linux|`。"
+    }
+  }
+}
