@@ -218,6 +218,9 @@ export class Shell {
     // Mallen för nya hemkataloger (useradd -m) och inställningarna för useradd.
     walk('/etc/skel');
     walk('/etc/login.defs');
+    // Nätverkskapitlet: DNS-inställningen och övningsservern.
+    walk('/etc/resolv.conf');
+    walk('/usr/local/bin/minserver');
   }
 
   snapshot(): ShellSnapshot {

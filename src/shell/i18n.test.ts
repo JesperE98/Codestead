@@ -36,7 +36,7 @@ describe('engelska manualsidor', () => {
       expect(man, def.name).toMatch(/^NAME\n/);
       expect(man, def.name).not.toMatch(SWEDISH_HEADINGS);
       // Exempel får använda övningsfilernas svenska namn, men inte svensk text.
-      expect(man.replace(/frukter|dokument|betyg|anteckningar/g, ''), def.name).not.toMatch(SWEDISH);
+      expect(man.replace(/frukter|dokument|betyg|anteckningar|välkommen/g, ''), def.name).not.toMatch(SWEDISH);
     }
   });
 

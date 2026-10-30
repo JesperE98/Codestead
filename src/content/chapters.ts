@@ -611,6 +611,103 @@ export const CHAPTERS: Chapter[] = [
     ],
   },
   {
+    id: 'natverk',
+    part: 'natverk',
+    title: 'Nätverk',
+    tasks: [
+      {
+        id: 'ip-addr',
+        text: 'Visa datorns IP-adresser med `ip`.',
+        hint: '`ip addr` – eller kortare `ip a`.',
+        solution: ['ip a'],
+        check: (c) =>
+          (ran(c, /^ip\s+(-\S+\s+)*a(d(d(r(e(s(s)?)?)?)?)?)?(\s|$)/) || ran(c, /^hostname\s+-I\b/)) && c.output.includes('192.168.1.42'),
+      },
+      {
+        id: 'ping-gw',
+        text: 'Pinga gatewayen `192.168.1.1` exakt 3 gånger.',
+        hint: '`ping -c 3 192.168.1.1` – `-c` står för *count*.',
+        solution: ['ping -c 3 192.168.1.1'],
+        check: (c) => ran(c, /^ping\b/) && c.output.includes('(192.168.1.1)') && /\b3 packets transmitted, 3 received/.test(c.output),
+      },
+      {
+        id: 'dig',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Installera paketet `dnsutils` och slå upp IP-adressen för `example.com` med `dig`.',
+          arch: 'Installera paketet `bind` och slå upp IP-adressen för `example.com` med `dig`.',
+          redhat: 'Installera paketet `bind-utils` och slå upp IP-adressen för `example.com` med `dig`.',
+        }),
+        hint: byFamily({
+          debian: '`sudo apt update`, `sudo apt install dnsutils` och sedan `dig +short example.com`.',
+          arch: '`sudo pacman -S bind` och sedan `dig +short example.com`.',
+          redhat: '`sudo dnf install bind-utils` och sedan `dig +short example.com`.',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install dnsutils', 'dig +short example.com'],
+          arch: ['sudo pacman -S bind', 'y', 'dig +short example.com'],
+          redhat: ['sudo dnf install bind-utils', 'y', 'dig +short example.com'],
+        }),
+        check: (c) => ran(c, /^(dig|host|nslookup)\b.*\bexample\.com\b/) && c.output.includes('203.0.113.10'),
+      },
+      {
+        id: 'ss',
+        text: 'Ta reda på vilka portar som lyssnar på datorn med `ss`.',
+        hint: '`ss -tulpn` – **t**cp, **u**dp, **l**yssnande, **p**rocess, **n**umeriskt.',
+        solution: ['ss -tulpn'],
+        check: (c) => c.exitCode === 0 && /^ss\s+(-\w+\s+)*-\w*l/.test(unsudo(c.line)) && /:(22|ssh)\b/.test(c.output),
+      },
+      {
+        id: 'curl-localhost',
+        text: 'Hämta startsidan från övningsservern på din egen dator, `http://localhost:8080`, med `curl`.',
+        hint: byFamily({
+          debian: 'I Debian/Ubuntu måste curl installeras: `sudo apt install curl`. Får du *Couldn\'t connect to server* är minserver stoppad – starta den med `minserver`.',
+          arch: '`curl http://localhost:8080`. Får du *Couldn\'t connect to server* är minserver stoppad – starta den med `minserver`.',
+          redhat: '`curl http://localhost:8080`. Får du *Couldn\'t connect to server* är minserver stoppad – starta den med `minserver`.',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install curl', 'minserver', 'curl http://localhost:8080'],
+          arch: ['minserver', 'curl http://localhost:8080'],
+          redhat: ['minserver', 'curl http://localhost:8080'],
+        }),
+        check: (c) => ran(c, /^curl\b.*\b(localhost|127\.0\.0\.1|192\.168\.1\.42):8080\b/) && c.output.includes('Hello from minserver'),
+      },
+      {
+        id: 'spara',
+        text: 'Spara webbsidan `https://example.com` som filen `~/exempel.html`.',
+        hint: 'Stå i hemkatalogen och använd `curl -o exempel.html https://example.com` eller `wget -O exempel.html https://example.com`.',
+        solution: byFamily({
+          debian: ['cd ~', 'wget -O exempel.html https://example.com'],
+          arch: ['cd ~', 'curl -o exempel.html https://example.com'],
+          redhat: ['cd ~', 'curl -o exempel.html https://example.com'],
+        }),
+        check: (c) => content(c, '~/exempel.html').includes('Example Domain'),
+      },
+      {
+        id: 'hosts',
+        text: 'Servern `192.168.1.10` ska heta `server.lan`, men namnet finns inte i DNS. Lägg till det i `/etc/hosts` och pinga sedan `server.lan`.',
+        hint: "Filen ägs av root: `echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts` och sedan `ping -c 3 server.lan`.",
+        solution: ["echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts", 'ping -c 3 server.lan'],
+        check: (c) => ran(c, /^ping\b.*\bserver\.lan\b/) && c.output.includes('from server.lan (192.168.1.10)'),
+      },
+      {
+        id: 'ssh',
+        text: 'Kör kommandot `hostname` på servern `server.lan` med `ssh` som användaren `elev`.',
+        hint: byFamily({
+          debian: '`ssh elev@server.lan hostname` – och svara `yes` på frågan om värdnyckeln.',
+          arch: 'Installera först ssh-klienten: `sudo pacman -S openssh`. Sedan `ssh elev@server.lan hostname` – och svara `yes` på frågan om värdnyckeln.',
+          redhat: '`ssh elev@server.lan hostname` – och svara `yes` på frågan om värdnyckeln.',
+        }),
+        solution: byFamily({
+          debian: ['ssh elev@server.lan hostname', 'yes'],
+          arch: ['sudo pacman -S openssh', 'y', 'ssh elev@server.lan hostname', 'yes'],
+          redhat: ['ssh elev@server.lan hostname', 'yes'],
+        }),
+        check: (c) => ran(c, /^ssh\b.*(server\.lan|192\.168\.1\.10)/) && outLines(c).some((l) => l.trim() === 'server'),
+      },
+    ],
+  },
+  {
     id: 'distributioner',
     part: 'distro',
     title: 'Distributioner och familjer',
@@ -1008,7 +1105,6 @@ CHAPTERS.sort((a, b) => PARTS.findIndex((p) => p.id === a.part) - PARTS.findInde
 
 /** Kapitel som planeras – visas i menyn som "kommer snart". */
 export const UPCOMING: string[] = [
-  'Nätverk (ip, ping, curl, ssh)',
   'Diskar och filsystem (df, du, mount)',
   'AUR, PPA och COPR',
   'Flatpak, Snap och AppImage',

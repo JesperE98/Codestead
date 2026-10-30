@@ -3,6 +3,7 @@
 
 import type { Distro } from './distros';
 import { makeDir as d, makeFile as f, type FsNode } from './vfs';
+import { minserverBinary, resolvConf } from './network';
 
 export const STUDENT = 'elev';
 
@@ -262,6 +263,8 @@ export function buildFs(distro: Distro): FsNode {
     hosts: f(`127.0.0.1\tlocalhost\n127.0.1.1\t${distro.hostname}\n::1\t\tlocalhost ip6-localhost ip6-loopback\n`),
     fstab: f(`# <file system>  <mount point>  <type>  <options>  <dump>  <pass>\nUUID=1234-abcd   /              ext4    defaults   0       1\n`),
     shells: f('/bin/sh\n/bin/bash\n/usr/bin/bash\n'),
+    'resolv.conf': f(resolvConf(distro)),
+    'nsswitch.conf': f('passwd:         files\ngroup:          files\nshadow:         files\n\nhosts:          files dns\nnetworks:       files\n'),
     ...familyEtc(distro),
   });
 
@@ -285,7 +288,7 @@ export function buildFs(distro: Distro): FsNode {
     usr: d('root', 0o755, {
       bin: d(),
       lib: d(),
-      local: d('root', 0o755, { bin: d() }),
+      local: d('root', 0o755, { bin: d('root', 0o755, { minserver: minserverBinary() }) }),
       sbin: d(),
       share: d('root', 0o755, { doc: d(), man: d() }),
     }),

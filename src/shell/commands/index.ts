@@ -6,10 +6,12 @@ import type { CommandDef } from '../types';
 import { ARCHIVE_COMMANDS } from './archive';
 import { EXTRA_COMMANDS } from './extras';
 import { FS_COMMANDS } from './fs';
+import { NET_COMMANDS } from './net';
 import { PKG_COMMANDS } from './pkg';
 import { PROC_COMMANDS } from './procs';
 import { SCRIPT_COMMANDS } from './script';
 import { SHELL_COMMANDS } from './shells';
+import { SSH_COMMANDS } from './ssh';
 import { SYSTEM_COMMANDS } from './system';
 import { SYSTEMD_COMMANDS } from './systemd';
 import { TEXT_COMMANDS } from './text';
@@ -31,3 +33,18 @@ for (const def of SYSTEMD_COMMANDS) COMMANDS[def.name] = def;
 for (const def of SHELL_COMMANDS) COMMANDS[def.name] = def;
 // Användare och grupper (useradd, passwd, adduser ...) samt who, w, last och getent.
 for (const def of USER_COMMANDS) COMMANDS[def.name] = def;
+// Nätverk (ip, ping, ss, dig, curl, wget, ssh ...).
+for (const def of [...NET_COMMANDS, ...SSH_COMMANDS]) COMMANDS[def.name] = def;
+
+// getent finns i både användar- och nätverkskapitlet: värdnamn slås upp av
+// nätverksversionen (som även känner till DNS), allt annat av användarversionen.
+{
+  const users = USER_COMMANDS.find((d) => d.name === 'getent')!;
+  const net = NET_COMMANDS.find((d) => d.name === 'getent')!;
+  COMMANDS.getent = {
+    ...users,
+    man: users.man?.replace('getent group sudo', 'getent group sudo\n       getent hosts example.com'),
+    manEn: users.manEn?.replace('getent group sudo', 'getent group sudo\n       getent hosts example.com'),
+    run: (ctx) => (ctx.args[0] === 'hosts' || ctx.args[0] === 'ahosts' ? net.run(ctx) : users.run(ctx)),
+  };
+}
