@@ -1,0 +1,37 @@
+{
+  "title": "Arquivamento e compressão",
+  "tasks": {
+    "tar-czf": {
+      "text": "Empacote o diretório `~/dokument` no arquivo tar comprimido `~/dokument.tar.gz`.",
+      "hint": "Vá para o seu diretório pessoal e use *create zipped verbose file*: `tar -czvf dokument.tar.gz dokument`."
+    },
+    "tar-t": {
+      "text": "Liste o conteúdo de `~/dokument.tar.gz` – sem descompactá-lo.",
+      "hint": "`t` significa listar: `tar -tzvf ~/dokument.tar.gz`."
+    },
+    "tar-x": {
+      "text": "Crie o diretório `~/uppackat` e descompacte `~/dokument.tar.gz` dentro dele.",
+      "hint": "Com `-C` você escolhe onde o tar descompacta: `tar -xzvf ~/dokument.tar.gz -C ~/uppackat`."
+    },
+    "gzip": {
+      "text": "Copie `~/dokument/server.log` para o seu diretório pessoal e comprima a cópia com `gzip`, para obter `~/server.log.gz`.",
+      "hint": "Primeiro `cp ~/dokument/server.log ~`, depois `gzip ~/server.log`."
+    },
+    "zcat": {
+      "text": "Mostre as linhas que contêm `ERROR` em `~/server.log.gz` – sem descompactar o arquivo.",
+      "hint": "O `zcat` imprime o conteúdo de um arquivo .gz. Passe-o por um pipe para o `grep`."
+    },
+    "zip": {
+      "text": "Instale os pacotes `zip` e `unzip` e depois empacote `~/dokument` em `~/dokument.zip`.",
+      "hint": {
+        "debian": "Execute `sudo apt update` e `sudo apt install zip unzip`. Não esqueça o `-r` no zip: `zip -r dokument.zip dokument`.",
+        "arch": "Instale com `sudo pacman -S zip unzip`. Não esqueça o `-r` no zip: `zip -r dokument.zip dokument`.",
+        "redhat": "Instale com `sudo dnf install zip unzip` e responda `y`. Não esqueça o `-r` no zip: `zip -r dokument.zip dokument`."
+      }
+    },
+    "unzip": {
+      "text": "Descompacte `~/dokument.zip` no novo diretório `~/fran-zip` com `unzip`.",
+      "hint": "O `-d` escolhe o diretório e o cria se ele não existir: `unzip ~/dokument.zip -d ~/fran-zip`."
+    }
+  }
+}
