@@ -1,0 +1,19 @@
+<Project>
+  <!--
+    The only place where the product name, ids and version live.
+    Rename the product here (and nowhere else).
+  -->
+  <PropertyGroup>
+    <CodesteadBrand>Codestead</CodesteadBrand>
+    <CodesteadLinuxName>$(CodesteadBrand) Linux</CodesteadLinuxName>
+    <CodesteadLinuxId>codestead-linux</CodesteadLinuxId>
+    <CodesteadHubName>$(CodesteadBrand)</CodesteadHubName>
+    <CodesteadHubId>codestead-hub</CodesteadHubId>
+    <CodesteadPublisher>jesper-e98</CodesteadPublisher>
+    <CodesteadReleasesRepo>jesper-e98/codestead-releases</CodesteadReleasesRepo>
+    <Version>0.4.0</Version>
+    <Company>$(CodesteadPublisher)</Company>
+    <Product>$(CodesteadBrand)</Product>
+    <Copyright>Copyright © 2026 jesper-e98. All rights reserved.</Copyright>
+  </PropertyGroup>
+</Project>

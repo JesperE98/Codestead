@@ -5,3 +5,9 @@ release/
 .DS_Store
 coverage/
 .claude/worktrees/
+
+# .NET
+bin/
+obj/
+*.user
+TestResults/
