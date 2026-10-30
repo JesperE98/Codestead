@@ -1,0 +1,53 @@
+{
+  "title": "Flatpak وSnap وAppImage",
+  "tasks": {
+    "flatpak": {
+      "text": {
+        "debian": "ثبّت Flatpak (الحزمة `flatpak`).",
+        "arch": "ثبّت Flatpak (الحزمة `flatpak`).",
+        "redhat": "Flatpak موجود أصلًا على Fedora Workstation. تحقّق من الإصدار الذي لديك."
+      },
+      "hint": {
+        "debian": "`sudo apt update` ثم `sudo apt install flatpak`.",
+        "arch": "`sudo pacman -S flatpak`",
+        "redhat": "`flatpak --version`"
+      }
+    },
+    "flathub": {
+      "text": "أضف Flathub بوصفه مصدرًا (*remote*) لـ Flatpak.",
+      "hint": "`flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo`"
+    },
+    "gimp": {
+      "text": "ثبّت محرر الصور GIMP (`org.gimp.GIMP`) من Flathub.",
+      "hint": "`flatpak install flathub org.gimp.GIMP` – وأجب بنعم."
+    },
+    "flatpak-run": {
+      "text": "شغّل GIMP باستخدام `flatpak run`.",
+      "hint": "تُشغَّل البرامج بمعرّفها الكامل: `flatpak run org.gimp.GIMP`"
+    },
+    "snap": {
+      "text": {
+        "debian": "ثبّت الـ snap `hello-world` وشغّله. Snap موجود أصلًا في Ubuntu؛ أما على Debian فتثبّت الحزمة `snapd` أولًا.",
+        "arch": "Snap ليس في مستودعات Arch، بل في الـ AUR فقط. ابنِ `snapd` من الـ AUR وثبّته، ثم ثبّت الـ snap `hello-world` وشغّله.",
+        "redhat": "ثبّت Snap (الحزمة `snapd`)، ثم ثبّت الـ snap `hello-world` وشغّله."
+      },
+      "hint": {
+        "debian": "`sudo apt install snapd` (على Debian فقط)، ثم `sudo snap install hello-world` ثم `hello-world`.",
+        "arch": "`git clone https://aur.archlinux.org/snapd.git`، و`cd snapd`، و`makepkg -si`. ثم `sudo snap install hello-world` و`hello-world`.",
+        "redhat": "`sudo dnf install snapd`، ثم `sudo snap install hello-world` ثم `hello-world`."
+      }
+    },
+    "appimage-chmod": {
+      "text": "يوجد ملف AppImage منزَّل في `~/Nedladdningar` (وتعني بالسويدية «التنزيلات»). اجعل الملف `Kalkylator.AppImage` قابلًا للتنفيذ.",
+      "hint": "`chmod +x ~/Nedladdningar/Kalkylator.AppImage`"
+    },
+    "appimage-run": {
+      "text": "شغّل Kalkylator (وتعني «الآلة الحاسبة»). هل يشتكي من FUSE؟ ثبّت المكتبة الناقصة وحاول مرة أخرى.",
+      "hint": {
+        "debian": "المكتبة موجودة في الحزمة `libfuse2t64`. ثم شغّله باستخدام `~/Nedladdningar/Kalkylator.AppImage`.",
+        "arch": "المكتبة موجودة في الحزمة `fuse2`. ثم شغّله باستخدام `~/Nedladdningar/Kalkylator.AppImage`.",
+        "redhat": "المكتبة موجودة في الحزمة `fuse-libs`. ثم شغّله باستخدام `~/Nedladdningar/Kalkylator.AppImage`."
+      }
+    }
+  }
+}
