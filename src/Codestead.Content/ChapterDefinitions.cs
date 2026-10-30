@@ -1385,16 +1385,9 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "installera",
-                    PerFamily = true,
                     Text = "Installera paketet `git`.",
-                    Hint = ByFamily(
-                        debian: "Kör `sudo apt update` och sedan `sudo apt install git`.",
-                        arch: "`sudo pacman -S git` – och svara ja på frågan.",
-                        redhat: "`sudo dnf install git` – och svara `y`, eftersom Nej är standard."),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo apt update", "sudo apt install git"),
-                        arch: Cmds("sudo pacman -S git", "y"),
-                        redhat: Cmds("sudo dnf install git", "y")),
+                    Hint = "Kör `sudo apt update` och sedan `sudo apt install git`.",
+                    Solution = Cmds("sudo apt update", "sudo apt install git"),
                     Check = c => Installed(c, "git"),
                 },
                 new()
@@ -1495,16 +1488,9 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "installera-zsh",
-                    PerFamily = true,
                     Text = "Installera skalet `zsh`.",
-                    Hint = ByFamily(
-                        debian: "`sudo apt update` och sedan `sudo apt install zsh`.",
-                        arch: "`sudo pacman -S zsh` och svara ja.",
-                        redhat: "`sudo dnf install zsh` – och svara `y`."),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo apt update", "sudo apt install zsh"),
-                        arch: Cmds("sudo pacman -S zsh", "y"),
-                        redhat: Cmds("sudo dnf install zsh", "y")),
+                    Hint = "`sudo apt update` och sedan `sudo apt install zsh`.",
+                    Solution = Cmds("sudo apt update", "sudo apt install zsh"),
                     Check = c => Installed(c, "zsh"),
                 },
                 new()
@@ -1534,16 +1520,9 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "installera-fish",
-                    PerFamily = true,
                     Text = "Installera skalet `fish`.",
-                    Hint = ByFamily(
-                        debian: "`sudo apt update` och sedan `sudo apt install fish`.",
-                        arch: "`sudo pacman -S fish` och svara ja.",
-                        redhat: "`sudo dnf install fish` – och svara `y`."),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo apt update", "sudo apt install fish"),
-                        arch: Cmds("sudo pacman -S fish", "y"),
-                        redhat: Cmds("sudo dnf install fish", "y")),
+                    Hint = "`sudo apt update` och sedan `sudo apt install fish`.",
+                    Solution = Cmds("sudo apt update", "sudo apt install fish"),
                     Check = c => Installed(c, "fish"),
                 },
                 new()
