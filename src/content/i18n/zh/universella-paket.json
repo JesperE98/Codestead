@@ -1,0 +1,53 @@
+{
+  "title": "Flatpak、Snap 和 AppImage",
+  "tasks": {
+    "flatpak": {
+      "text": {
+        "debian": "安装 Flatpak（`flatpak` 软件包）。",
+        "arch": "安装 Flatpak（`flatpak` 软件包）。",
+        "redhat": "Fedora Workstation 上已经有 Flatpak 了。查看一下你的版本。"
+      },
+      "hint": {
+        "debian": "先 `sudo apt update`，再 `sudo apt install flatpak`。",
+        "arch": "`sudo pacman -S flatpak`",
+        "redhat": "`flatpak --version`"
+      }
+    },
+    "flathub": {
+      "text": "把 Flathub 添加为 Flatpak 的来源（*remote*）。",
+      "hint": "`flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo`"
+    },
+    "gimp": {
+      "text": "从 Flathub 安装图像编辑器 GIMP（`org.gimp.GIMP`）。",
+      "hint": "`flatpak install flathub org.gimp.GIMP`——并回答 yes。"
+    },
+    "flatpak-run": {
+      "text": "用 `flatpak run` 启动 GIMP。",
+      "hint": "程序要用完整的 ID 来启动：`flatpak run org.gimp.GIMP`"
+    },
+    "snap": {
+      "text": {
+        "debian": "安装 snap `hello-world` 并运行它。Ubuntu 已经自带 Snap；在 Debian 上，你需要先安装 `snapd` 软件包。",
+        "arch": "Snap 不在 Arch 的软件源中，只在 AUR 里有。从 AUR 构建并安装 `snapd`，然后安装 snap `hello-world` 并运行它。",
+        "redhat": "安装 Snap（`snapd` 软件包），然后安装 snap `hello-world` 并运行它。"
+      },
+      "hint": {
+        "debian": "`sudo apt install snapd`（只有 Debian 上才需要）、`sudo snap install hello-world`，然后运行 `hello-world`。",
+        "arch": "`git clone https://aur.archlinux.org/snapd.git`、`cd snapd`、`makepkg -si`。然后运行 `sudo snap install hello-world` 和 `hello-world`。",
+        "redhat": "`sudo dnf install snapd`、`sudo snap install hello-world`，然后运行 `hello-world`。"
+      }
+    },
+    "appimage-chmod": {
+      "text": "`~/Nedladdningar` 中有一个下载好的 AppImage。让文件 `Kalkylator.AppImage` 变成可执行文件。",
+      "hint": "`chmod +x ~/Nedladdningar/Kalkylator.AppImage`"
+    },
+    "appimage-run": {
+      "text": "启动 Kalkylator（瑞典语的“计算器”）。它是不是在抱怨 FUSE？安装缺失的库，然后再试一次。",
+      "hint": {
+        "debian": "这个库在 `libfuse2t64` 软件包中。然后用 `~/Nedladdningar/Kalkylator.AppImage` 启动它。",
+        "arch": "这个库在 `fuse2` 软件包中。然后用 `~/Nedladdningar/Kalkylator.AppImage` 启动它。",
+        "redhat": "这个库在 `fuse-libs` 软件包中。然后用 `~/Nedladdningar/Kalkylator.AppImage` 启动它。"
+      }
+    }
+  }
+}
