@@ -29,6 +29,16 @@ package manager की जगह नहीं लेते, बल्कि उ�
 इजाज़त दी गई है, जैसे network या आपका downloads folder, न कि आपकी पूरी home
 directory तक।
 
+```quiz
+कौन-सा फ़ॉर्मैट बैकग्राउंड में अपने-आप अपडेट होता है?
+- [ ] Flatpak
+- [x] Snap
+- [ ] AppImage
+---
+Flatpak प्रोग्राम `flatpak update` से अपडेट होते हैं, और AppImage को नई फ़ाइल
+डाउनलोड करके बदला जाता है।
+```
+
 ## Flatpak
 
 Flatpak वह format है जिस पर ज़्यादातर distributions desktop programs के लिए सहमत
@@ -113,6 +123,16 @@ flatpak install --user flathub org.videolan.VLC
 flatpak list --user
 ```
 
+```quiz
+जब आप `--user` के साथ कोई Flatpak इंस्टॉल करते हैं, तो क्या होता है?
+- [ ] वह पूरे सिस्टम के लिए `/var/lib/flatpak` में इंस्टॉल होता है
+- [x] वह आपकी होम डायरेक्टरी में पहुँचता है, और कोई दूसरा यूज़र उसे नहीं देखता
+- [ ] वह बिना सैंडबॉक्स के चलता है
+---
+याद रखिए कि यूज़र इंस्टॉलेशन के अपने रिमोट होते हैं – Flathub को भी `--user` के
+साथ जोड़ना पड़ता है।
+```
+
 ### Update करना और हटाना
 
 ```sh
@@ -144,8 +164,8 @@ sudo apt install snapd
 :::arch
 ### Arch पर Snap
 
-Snap Arch की repositories में नहीं है – सिर्फ़ AUR में है। इसे पिछले chapter की
-तरह build कीजिए:
+Snap Arch की repositories में नहीं है – सिर्फ़ AUR में है। इसे Arch परिवार वाले
+अध्याय की तरह बिल्ड कीजिए:
 
 ```sh
 sudo pacman -S --needed git base-devel
@@ -194,6 +214,14 @@ sudo snap install code
 sudo snap install code --classic
 ```
 
+```quiz
+कोई snap classic confinement के साथ प्रकाशित किया गया है। उसे इंस्टॉल करने के
+लिए आपको क्या जोड़ना होगा?
+- [ ] `--user`
+- [x] `--classic`
+- [ ] `--channel=edge`
+```
+
 ### Channels और updates
 
 हर snap के **channels** होते हैं: `stable`, `candidate`, `beta` और `edge` (सबसे
@@ -223,12 +251,27 @@ cd ~/Nedladdningar
 ls -l
 ```
 
+अगर आप इसे तुरंत चला दें, तो क्या होगा?
+
+```predict
+$ ~/Nedladdningar/Kalkylator.AppImage
+bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+---
+फ़ाइल के पास `x` अनुमति नहीं है।
+```
+
 Download की गई files शुरू में कभी executable नहीं होतीं। इसे executable बनाइए और
 start कीजिए:
 
 ```sh
 chmod +x Kalkylator.AppImage
 ./Kalkylator.AppImage
+```
+
+```try
+chmod +x ~/Nedladdningar/Kalkylator.AppImage
+---
+अब फ़ाइल चलाने योग्य (executable) है। `ls -l ~/Nedladdningar` से जाँचिए।
 ```
 
 ### FUSE
