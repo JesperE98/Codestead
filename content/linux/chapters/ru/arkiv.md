@@ -21,6 +21,16 @@
 сокращённо `.tgz`. Это философия Unix в двух словах: маленькие программы,
 каждая из которых делает одно дело, и их можно комбинировать.
 
+```quiz
+Почему `tar` и `gzip` обычно используют вместе?
+- [ ] `gzip` не умеет читать файлы, которые не создал `tar`
+- [x] `tar` собирает много файлов в один, а `gzip` делает этот один файл меньше
+- [ ] `tar` уменьшает файлы, а `gzip` даёт им правильные права доступа
+---
+gzip обрабатывает только один файл за раз и ничего не знает о каталогах, а
+tar-архив сам по себе не меньше файлов, которые в нём лежат.
+```
+
 | Расширение файла | Что это? | Чем распаковать |
 |---|---|---|
 | `.tar` | Архив без сжатия | `tar -xf` |
@@ -42,6 +52,7 @@ tar -cvf dokument.tar dokument
 
 ```text
 dokument/
+dokument/betyg.csv
 dokument/frukter.txt
 dokument/server.log
 ```
@@ -77,6 +88,16 @@ tar, *что* делать. Остальные – модификаторы. П�
 должно идти сразу после неё. По историческим причинам дефис можно опустить:
 `tar czvf` означает то же самое, что `tar -czvf`.
 
+```quiz
+Что делает `tar -xzvf backup.tar.gz`?
+- [ ] Создаёт сжатый архив `backup.tar.gz`
+- [ ] Показывает содержимое `backup.tar.gz` без распаковки
+- [x] Распаковывает `backup.tar.gz` с помощью gzip и показывает каждый файл
+---
+`x` – это операция (extract), `z` означает gzip, `v` показывает файлы, а после
+`f` идёт имя архива.
+```
+
 ## Сжатие с помощью `-z`
 
 Добавьте `z`, и архив по пути пройдёт через gzip:
@@ -88,11 +109,11 @@ ls -l dokument.tar dokument.tar.gz
 
 ```text
 -rw-r--r-- 1 elev elev 10240 Oct 30 12:00 dokument.tar
--rw-r--r-- 1 elev elev   674 Oct 30 12:00 dokument.tar.gz
+-rw-r--r-- 1 elev elev   837 Oct 30 12:00 dokument.tar.gz
 ```
 
 Несжатый архив занимает целых 10 240 байт, хотя в сумме файлы весят чуть
-меньше 900 байт. Дело в том, что tar ставит перед каждым файлом заголовок в
+больше 1000 байт. Дело в том, что tar ставит перед каждым файлом заголовок в
 512 байт и дополняет архив до целых блоков. Всё это пустое место gzip
 сжимает почти до нуля.
 
@@ -108,7 +129,7 @@ du -sh dokument
 ```text
 12K	dokument.tar
 4.0K	dokument.tar.gz
-12K	dokument
+16K	dokument
 ```
 
 Диск разбит на блоки по 4 КиБ, поэтому `du` никогда не показывает меньше
@@ -123,6 +144,7 @@ tar -tzvf dokument.tar.gz
 
 ```text
 drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
+-rw-r--r-- elev/elev       146 2026-10-30 12:00 dokument/betyg.csv
 -rw-r--r-- elev/elev        64 2026-10-30 12:00 dokument/frukter.txt
 -rw-r--r-- elev/elev       848 2026-10-30 12:00 dokument/server.log
 ```
@@ -169,6 +191,16 @@ tar -czf backup.tar.gz -C ~ dokument
 tar -tzf backup.tar.gz
 ```
 
+```quiz
+Вы выполняете `tar -czf backup.tar.gz -C ~ dokument`. Что содержит архив?
+- [x] `dokument/` и файлы в нём
+- [ ] `home/elev/dokument/` и файлы в нём
+- [ ] `/home/elev/dokument/` и файлы в нём
+---
+`-C ~` заставляет tar сначала перейти в ваш домашний каталог, поэтому имена в
+архиве начинаются с `dokument/`.
+```
+
 ## Сжатие отдельных файлов с помощью `gzip`
 
 `gzip` сжимает файл и **заменяет** его файлом `.gz`. Права доступа и отметка
@@ -203,6 +235,17 @@ gzip -kv frukter.txt
 frukter.txt:	-20.3% -- created frukter.txt.gz
 ```
 
+```predict
+$ cp dokument/frukter.txt .
+$ cp dokument/server.log .
+$ gzip frukter.txt
+$ gzip -k server.log
+$ ls frukter* server*
+frukter.txt.gz  server.log  server.log.gz
+---
+Простой `gzip` заменяет файл файлом `.gz`; `-k` сохраняет оригинал.
+```
+
 ### Чтение сжатых файлов напрямую
 
 Старые журналы в `/var/log` часто хранятся в виде `.gz`, чтобы сэкономить
@@ -225,11 +268,10 @@ zcat server.log.gz | grep ERROR
 чаще встречается `.tar.gz`, потому что он лучше сохраняет владельцев и права
 доступа.
 
-Программы `zip` и `unzip` установлены не всегда. В таком случае их ставят
-пакетным менеджером – подробнее об этом в главе об управлении пакетами. В
-{{distro}} это делается так:
+Программы `zip` и `unzip` установлены не всегда, и в этом терминале их
+сначала нужно установить. Это делается пакетным менеджером – всё о нём вы
+узнаете в части о дистрибутивах и пакетах. В Ubuntu это делается так:
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install zip unzip
@@ -237,25 +279,6 @@ sudo apt install zip unzip
 
 `apt update` загружает список доступных пакетов. Без этого apt вообще не
 может найти никаких пакетов.
-:::
-
-:::arch
-```sh
-sudo pacman -S zip unzip
-```
-
-Ответьте «да» (`Y` или просто Enter), когда pacman спросит, хотите ли вы
-продолжить.
-:::
-
-:::redhat
-```sh
-sudo dnf install zip unzip
-```
-
-Ответьте `y`, когда dnf спросит `Is this ok [y/N]`, – заглавная `N` означает,
-что если просто нажать Enter, ответом по умолчанию будет «нет».
-:::
 
 Затем упакуйте каталог. Не забудьте `-r` (*recursive*) – без неё zip добавит
 только пустой каталог, а не файлы внутри него:
@@ -266,6 +289,7 @@ zip -r dokument.zip dokument
 
 ```text
   adding: dokument/ (stored 0%)
+  adding: dokument/betyg.csv (deflated 17%)
   adding: dokument/frukter.txt (deflated 27%)
   adding: dokument/server.log (deflated 42%)
 ```
@@ -281,6 +305,15 @@ unzip dokument.zip -d fran-zip
 
 Если файлы уже существуют, unzip их пропускает. С `unzip -o` они
 перезаписываются.
+
+```quiz
+Вы выполняете `zip dokument.zip dokument` без `-r`. Что окажется в zip-файле?
+- [ ] Все файлы из `dokument`
+- [x] Только пустой каталог `dokument/`
+- [ ] Ничего – zip откажется работать
+---
+Без `-r` (*recursive*) zip не заходит внутрь каталога.
+```
 
 ## Итоги
 

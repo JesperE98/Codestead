@@ -1,0 +1,59 @@
+{
+  "title": "Семейство Debian: apt и PPA",
+  "tasks": {
+    "sync": {
+      "text": "Загрузите свежие списки пакетов командой `apt update`.",
+      "hint": "Команда меняет систему и требует прав root: `sudo apt update`."
+    },
+    "search": {
+      "text": "Найдите пакет `htop`.",
+      "hint": "`apt search htop`"
+    },
+    "install": {
+      "text": "Установите пакет `tree`.",
+      "hint": "`sudo apt install tree`"
+    },
+    "run-tree": {
+      "text": "Запустите `tree` в домашнем каталоге."
+    },
+    "remove": {
+      "text": "Снова удалите пакет `tree`.",
+      "hint": "`sudo apt remove tree`"
+    },
+    "upgrade": {
+      "text": "Обновите все установленные пакеты.",
+      "hint": "После `sudo apt update` выполните `sudo apt upgrade`."
+    },
+    "forbered": {
+      "text": "Убедитесь, что у вас есть команда `add-apt-repository`. Она находится в пакете `software-properties-common` – в Ubuntu он установлен заранее, а в Debian нет.",
+      "hint": "`sudo apt update`, а затем `sudo apt install software-properties-common`."
+    },
+    "lagg-till": {
+      "text": "Добавьте PPA `ppa:lunatool/moonphase`.",
+      "hint": "`sudo add-apt-repository ppa:lunatool/moonphase` – и нажмите Enter, когда появится вопрос."
+    },
+    "granska": {
+      "text": "Загляните в файл, который `add-apt-repository` создал в `/etc/apt/sources.list.d/`.",
+      "hint": "`ls /etc/apt/sources.list.d`, а затем `cat` для файла, имя которого начинается с `lunatool`."
+    },
+    "installera": {
+      "text": "Установите пакет `moonphase` из PPA.",
+      "hint": "`add-apt-repository` уже выполнил за вас `apt update`, так что достаточно `sudo apt install moonphase`."
+    },
+    "kor": {
+      "text": "Запустите программу `moonphase`."
+    },
+    "ursprung": {
+      "text": "Выясните, откуда взялся `moonphase`.",
+      "hint": "`apt policy moonphase`"
+    },
+    "efterat": {
+      "text": "Снова удалите PPA. Программа останется, но больше не будет получать обновлений.",
+      "hint": "`sudo add-apt-repository --remove ppa:lunatool/moonphase`"
+    },
+    "vim": {
+      "text": "Бонус: установите текстовый редактор Vim.",
+      "hint": "Поищите с помощью `apt search vim`. Пакет называется `vim`."
+    }
+  }
+}
