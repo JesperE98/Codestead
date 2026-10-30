@@ -8,7 +8,7 @@ import { chapterMarkdown, isTranslated, languagesWithMarkdown } from './i18n';
 import { LANGUAGES, type Lang } from '../i18n/languages';
 
 /** Språk som måste vara helt översatta. */
-const REQUIRED_LANGS: Lang[] = ['sv', 'en'];
+const REQUIRED_LANGS: Lang[] = LANGUAGES.map((l) => l.code);
 import { resolve } from './types';
 
 // Kör alla lösningar i ordning – precis som en elev skulle göra – och
