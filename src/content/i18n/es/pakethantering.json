@@ -1,0 +1,60 @@
+{
+  "title": "Gestión de paquetes",
+  "tasks": {
+    "sync": {
+      "text": {
+        "debian": "Descarga las listas de paquetes más recientes con `apt update`.",
+        "arch": "Sincroniza la base de datos de paquetes y actualiza el sistema con `pacman -Syu`.",
+        "redhat": "Obtén la información nueva de los paquetes y comprueba si hay actualizaciones con `dnf check-update`."
+      },
+      "hint": {
+        "debian": "El comando modifica el sistema y requiere root: `sudo apt update`.",
+        "arch": "El comando modifica el sistema y requiere root: `sudo pacman -Syu`.",
+        "redhat": "`dnf check-update` no necesita root."
+      }
+    },
+    "search": {
+      "text": "Busca el paquete `htop`.",
+      "hint": {
+        "debian": "`apt search htop`",
+        "arch": "`pacman -Ss htop`",
+        "redhat": "`dnf search htop`"
+      }
+    },
+    "install": {
+      "text": "Instala el paquete `tree`.",
+      "hint": {
+        "debian": "`sudo apt install tree`",
+        "arch": "`sudo pacman -S tree` y responde que sí a la pregunta.",
+        "redhat": "`sudo dnf install tree`, y responde `y`, ¡porque No es la respuesta por defecto!"
+      }
+    },
+    "run-tree": {
+      "text": "Ejecuta `tree` en tu directorio personal."
+    },
+    "remove": {
+      "text": "Desinstala de nuevo el paquete `tree`.",
+      "hint": {
+        "debian": "`sudo apt remove tree`",
+        "arch": "`sudo pacman -R tree`",
+        "redhat": "`sudo dnf remove tree`"
+      }
+    },
+    "upgrade": {
+      "text": "Actualiza todos los paquetes instalados.",
+      "hint": {
+        "debian": "Después de `sudo apt update`, ejecuta `sudo apt upgrade`.",
+        "arch": "`sudo pacman -Syu` lo hace todo de una vez.",
+        "redhat": "`sudo dnf upgrade`"
+      }
+    },
+    "vim": {
+      "text": "Extra: instala el editor de texto Vim. Pista: ¡el paquete no se llama igual en todas las familias!",
+      "hint": {
+        "debian": "Busca con `apt search vim`. El paquete se llama `vim`.",
+        "arch": "Busca con `pacman -Ss vim`. El paquete se llama `vim`.",
+        "redhat": "Busca con `dnf search vim`. El paquete se llama `vim-enhanced`."
+      }
+    }
+  }
+}

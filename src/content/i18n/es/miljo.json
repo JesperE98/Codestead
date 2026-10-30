@@ -1,0 +1,22 @@
+{
+  "title": "Variables, PATH y alias",
+  "tasks": {
+    "path": {
+      "text": "Muestra el contenido de la variable `PATH`."
+    },
+    "export": {
+      "text": "Crea la variable de entorno `FAVORIT` con el valor `linux`.",
+      "hint": "Sin espacios alrededor del signo igual: `export NOMBRE=valor`."
+    },
+    "which": {
+      "text": "Averigua en qué directorio está el programa `ls`."
+    },
+    "alias": {
+      "text": "Crea el alias `ll` que ejecute `ls -la`."
+    },
+    "exitcode": {
+      "text": "Ejecuta un comando que falle y luego muestra su código de salida con `echo $?`.",
+      "hint": "Prueba `ls /finnsinte` seguido de `echo $?`. El código de salida no debería ser 0."
+    }
+  }
+}

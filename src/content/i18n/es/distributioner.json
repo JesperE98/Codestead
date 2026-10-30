@@ -1,0 +1,18 @@
+{
+  "title": "Distribuciones y familias",
+  "tasks": {
+    "os-release": {
+      "text": "Averigua el nombre y la versión de la distribución que estás usando."
+    },
+    "kernel": {
+      "text": "Muestra qué versión del kernel Linux se está ejecutando."
+    },
+    "pm-config": {
+      "text": {
+        "debian": "Mira qué repositorios usa apt en `/etc/apt/sources.list.d/`.",
+        "arch": "Mira la configuración de pacman en `/etc/pacman.conf`.",
+        "redhat": "Mira qué repositorios usa dnf en `/etc/yum.repos.d/`."
+      }
+    }
+  }
+}
