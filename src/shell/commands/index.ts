@@ -8,9 +8,10 @@ import { FS_COMMANDS } from './fs';
 import { PKG_COMMANDS } from './pkg';
 import { SYSTEM_COMMANDS } from './system';
 import { TEXT_COMMANDS } from './text';
+import { TEXTPROC_COMMANDS } from './textproc';
 
 export const COMMANDS: Record<string, CommandDef> = {};
 
-for (const def of [...FS_COMMANDS, ...TEXT_COMMANDS, ...SYSTEM_COMMANDS, ...PKG_COMMANDS, ...EXTRA_COMMANDS]) {
+for (const def of [...FS_COMMANDS, ...TEXT_COMMANDS, ...SYSTEM_COMMANDS, ...PKG_COMMANDS, ...EXTRA_COMMANDS, ...TEXTPROC_COMMANDS]) {
   COMMANDS[def.name] = def;
 }
