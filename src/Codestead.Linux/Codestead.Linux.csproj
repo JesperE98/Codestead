@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="../Codestead.Shell/Codestead.Shell.csproj" />
     <ProjectReference Include="../Codestead.UI/Codestead.UI.csproj" />
+    <ProjectReference Include="../Codestead.Content/Codestead.Content.csproj" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets/**" />

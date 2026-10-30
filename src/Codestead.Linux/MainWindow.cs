@@ -38,7 +38,7 @@ public sealed class MainWindow : Window
 
     private ShellType shell;
     private List<string> justCompleted = new();
-    private DispatcherTimer? freshTimer;
+    private IDisposable? freshTimer;
 
     private readonly OverlayHost overlay;
     private readonly StackPanel sidebarList = new() { Margin = new Thickness(10, 12, 10, 12) };
@@ -86,6 +86,7 @@ public sealed class MainWindow : Window
         overlay = new OverlayHost(BuildLayout());
         Content = overlay;
 
+        terminal.Shell = shell;
         terminal.CommandExecuted += OnResult;
         markdown.CommandClicked += text => terminal.Inject(text);
         markdown.LinkClicked += OpenLink;
@@ -570,7 +571,7 @@ public sealed class MainWindow : Window
         RenderProgress();
         RenderSidebar();
         RenderTasks();
-        freshTimer?.Stop();
+        freshTimer?.Dispose();
         freshTimer = DispatcherTimer.RunOnce(() =>
         {
             justCompleted = new();

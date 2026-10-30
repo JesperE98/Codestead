@@ -127,7 +127,11 @@ public sealed class MarkdownView : UserControl
             case HeadingBlock h:
             {
                 var tb = NewText();
-                tb.Classes.Add(h.Level <= 1 ? "h1" : h.Level == 2 ? "h2" : "h3");
+                // Headings get their size from the theme (h1/h2/h3 classes), scaled to the base size.
+                tb.FontSize = BaseFontSize * (h.Level <= 1 ? 1.9 : h.Level == 2 ? 1.32 : 1.08);
+                tb.LineHeight = tb.FontSize * 1.25;
+                tb.FontWeight = h.Level <= 2 ? FontWeight.Bold : FontWeight.SemiBold;
+                tb.Margin = h.Level <= 1 ? new Thickness(0, 4, 0, 18) : h.Level == 2 ? new Thickness(0, 30, 0, 8) : new Thickness(0, 20, 0, 6);
                 AddInlines(tb.Inlines!, h.Inline);
                 return tb;
             }
