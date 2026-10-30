@@ -12,7 +12,7 @@ export class AwkSyntaxError extends Error {
     message: string,
     public pos: number,
     /** Satt när konstruktionen finns i riktig awk men inte i simulatorn. */
-    public unsupported?: string,
+    public unsupported?: { sv: string; en: string },
   ) {
     super(message);
   }
@@ -226,7 +226,7 @@ class Parser {
     if (tok.t === 'eof' || tok.t === 'nl') throw new AwkSyntaxError('unexpected newline or end of string', tok.pos);
     throw new AwkSyntaxError('syntax error', tok.pos);
   }
-  private unsupported(what: string, tok: Tok = this.tok): never {
+  private unsupported(what: { sv: string; en: string }, tok: Tok = this.tok): never {
     throw new AwkSyntaxError('syntax error', tok.pos, what);
   }
   private expect(v: string): Tok {
@@ -256,11 +256,11 @@ class Parser {
       if (!this.is('{')) this.fail();
       return { pattern, action: this.block() };
     }
-    if (this.is('function', 'kw') || this.is('func', 'kw')) this.unsupported('egna funktioner (function)');
+    if (this.is('function', 'kw') || this.is('func', 'kw')) this.unsupported({ sv: 'egna funktioner (function)', en: 'user-defined functions (function)' });
     let pattern: Expr | null = null;
     if (!this.is('{')) {
       pattern = this.expr();
-      if (this.is(',')) this.unsupported('intervallmönster (/start/,/slut/)');
+      if (this.is(',')) this.unsupported({ sv: 'intervallmönster (/start/,/slut/)', en: 'range patterns (/start/,/end/)' });
     }
     if (this.is('{')) return { pattern, action: this.block() };
     if (this.tok.t !== 'nl' && !this.is(';') && this.tok.t !== 'eof') this.fail();
@@ -381,13 +381,13 @@ class Parser {
           return { k: 'delete', arr, subs };
         }
         case 'getline':
-          this.unsupported('getline');
+          this.unsupported({ sv: 'getline', en: 'getline' });
           break;
         case 'return':
-          this.unsupported('egna funktioner (return)');
+          this.unsupported({ sv: 'egna funktioner (return)', en: 'user-defined functions (return)' });
           break;
         case 'nextfile':
-          this.unsupported('nextfile');
+          this.unsupported({ sv: 'nextfile', en: 'nextfile' });
           break;
       }
     }
@@ -414,7 +414,7 @@ class Parser {
         this.noGt = saved;
       }
       if (args.length === 1 && args[0].k === 'group') args = args[0].list;
-      if (this.is('>') || this.is('>>') || this.is('|')) this.unsupported(`omdirigering av utdata (${k} ${this.tok.v} ...)`);
+      if (this.is('>') || this.is('>>') || this.is('|')) this.unsupported({ sv: `omdirigering av utdata (${k} ${this.tok.v} ...)`, en: `output redirection (${k} ${this.tok.v} ...)` });
       if (k === 'printf' && args.length === 0) this.fail();
       return { k, args };
     }
@@ -593,12 +593,12 @@ class Parser {
       case 'name': {
         this.next();
         if (this.is('[')) return { k: 'idx', name: t.v, subs: this.subscripts() };
-        if (this.is('(') && this.tok.tight) this.unsupported(`egna funktioner (${t.v}(...))`, t);
+        if (this.is('(') && this.tok.tight) this.unsupported({ sv: `egna funktioner (${t.v}(...))`, en: `user-defined functions (${t.v}(...))` }, t);
         return { k: 'var', name: t.v };
       }
       case 'builtin': {
         this.next();
-        if (UNSUPPORTED_BUILTINS.has(t.v)) this.unsupported(`funktionen ${t.v}()`, t);
+        if (UNSUPPORTED_BUILTINS.has(t.v)) this.unsupported({ sv: `funktionen ${t.v}()`, en: `the function ${t.v}()` }, t);
         if (!this.is('(')) {
           if (t.v === 'length') return { k: 'call', name: 'length', args: [] };
           this.fail();
@@ -621,7 +621,7 @@ class Parser {
         return { k: 'call', name: t.v, args };
       }
       case 'kw':
-        if (t.v === 'getline') this.unsupported('getline');
+        if (t.v === 'getline') this.unsupported({ sv: 'getline', en: 'getline' });
         this.fail();
         break;
       case 'op':

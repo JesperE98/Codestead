@@ -1,0 +1,23 @@
+{
+  "title": "Files और directories",
+  "tasks": {
+    "mkdir": {
+      "text": "**एक ही** command से directory `~/projekt/src` बनाइए।",
+      "hint": "`projekt` और `src` दोनों को एक बार में बनाने के लिए `mkdir` को `-p` option चाहिए।"
+    },
+    "touch": {
+      "text": "`~/projekt/README.md` नाम की एक ख़ाली file बनाइए।"
+    },
+    "cp": {
+      "text": "`~/anteckningar.txt` को directory `~/projekt/` में copy कीजिए।"
+    },
+    "mv": {
+      "text": "`~/projekt/anteckningar.txt` का नाम बदलकर `~/projekt/att-gora.txt` कीजिए।",
+      "hint": "नाम बदलना और move करना एक ही बात है – `mv` इस्तेमाल कीजिए।"
+    },
+    "rm": {
+      "text": "Directory `~/gammalt` को उसके अंदर की हर चीज़ के साथ delete कीजिए।",
+      "hint": "Directory ख़ाली नहीं है, इसलिए `rmdir` काम नहीं करेगा। `rm -r` इस्तेमाल कीजिए।"
+    }
+  }
+}

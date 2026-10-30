@@ -1,0 +1,33 @@
+{
+  "title": "Processus et jobs",
+  "tasks": {
+    "ps": {
+      "text": "Affichez les processus de votre propre terminal avec `ps`."
+    },
+    "ps-aux": {
+      "text": "Listez **tous** les processus de l'ordinateur.",
+      "hint": "`ps aux` (ou `ps -ef`)."
+    },
+    "hitta": {
+      "text": "Un processus accapare presque tout le processeur. Affichez les processus triés par utilisation du CPU pour voir comment il s'appelle.",
+      "hint": "`top`, `htop` ou `ps aux --sort=-%cpu`."
+    },
+    "kill": {
+      "text": "Arrêtez le processus emballé (PID 3141) avec `kill`."
+    },
+    "bakgrund": {
+      "text": "Lancez `sleep 300` en arrière-plan.",
+      "hint": "Ajoutez `&` à la fin de la ligne."
+    },
+    "jobs": {
+      "text": "Affichez vos jobs en arrière-plan."
+    },
+    "kill-jobb": {
+      "text": "Terminez le job en arrière-plan avec `kill` et le numéro du job (`%1`) ou son PID."
+    },
+    "server": {
+      "text": "Le serveur `minserver` tourne en tant que root. Arrêtez-le – avec `pkill` ou `kill` et les bons privilèges.",
+      "hint": "En tant qu'utilisateur ordinaire, vous obtiendrez « Operation not permitted ». Mettez `sudo` devant."
+    }
+  }
+}

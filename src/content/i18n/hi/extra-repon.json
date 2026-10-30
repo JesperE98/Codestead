@@ -1,0 +1,80 @@
+{
+  "title": "AUR, PPA और COPR",
+  "tasks": {
+    "forbered": {
+      "text": {
+        "debian": "पक्का कीजिए कि आपके पास command `add-apt-repository` है। यह package `software-properties-common` में है – Ubuntu पर पहले से install, लेकिन Debian पर नहीं।",
+        "arch": "AUR से packages build करने के लिए ज़रूरी चीज़ें install कीजिए: `git` और `base-devel`।",
+        "redhat": "दिखाइए कि dnf अभी कौन-सी repositories इस्तेमाल कर रहा है।"
+      },
+      "hint": {
+        "debian": "`sudo apt update` और फिर `sudo apt install software-properties-common`।",
+        "arch": "`sudo pacman -S --needed git base-devel`",
+        "redhat": "`dnf repolist`"
+      }
+    },
+    "lagg-till": {
+      "text": {
+        "debian": "PPA `ppa:lunatool/moonphase` जोड़िए।",
+        "arch": "AUR package `moonphase` की build recipe को `git clone` से अपनी home directory में download कीजिए। Address है `https://aur.archlinux.org/moonphase.git`।",
+        "redhat": "COPR repository `lunatool/moonphase` enable कीजिए।"
+      },
+      "hint": {
+        "debian": "`sudo add-apt-repository ppa:lunatool/moonphase` – और जब यह पूछे तो Enter दबाइए।",
+        "arch": "`cd ~` और फिर `git clone https://aur.archlinux.org/moonphase.git`",
+        "redhat": "`sudo dnf copr enable lunatool/moonphase` – और `y` जवाब दीजिए, No default है।"
+      }
+    },
+    "granska": {
+      "text": {
+        "debian": "उस file के अंदर देखिए जो `add-apt-repository` ने `/etc/apt/sources.list.d/` में बनाई है।",
+        "arch": "कुछ भी build करने से पहले build recipe `PKGBUILD` पढ़िए!",
+        "redhat": "List कीजिए कि कौन-सी COPR repositories जोड़ी गई हैं।"
+      },
+      "hint": {
+        "debian": "`ls /etc/apt/sources.list.d` और फिर उस file को `cat` कीजिए जिसका नाम `lunatool` से शुरू होता है।",
+        "arch": "`cd ~/moonphase` और फिर `less PKGBUILD` (या `cat PKGBUILD`)।",
+        "redhat": "`dnf copr list`"
+      }
+    },
+    "installera": {
+      "text": {
+        "debian": "PPA से package `moonphase` install कीजिए।",
+        "arch": "`makepkg` से `moonphase` build और install कीजिए।",
+        "redhat": "COPR repository से package `moonphase` install कीजिए।"
+      },
+      "hint": {
+        "debian": "`add-apt-repository` आपके लिए पहले ही `apt update` चला चुका है, इसलिए `sudo apt install moonphase` काफ़ी है।",
+        "arch": "Directory `~/moonphase` में रहिए और `makepkg -si` चलाइए – sudo के बिना!",
+        "redhat": "`sudo dnf install moonphase`"
+      }
+    },
+    "kor": {
+      "text": "Program `moonphase` चलाइए।"
+    },
+    "ursprung": {
+      "text": {
+        "debian": "पता लगाइए कि `moonphase` कहाँ से आता है।",
+        "arch": "वे सारे installed packages list कीजिए जो Arch की अपनी repositories से नहीं आते।",
+        "redhat": "पता लगाइए कि `moonphase` किस repository से install हुआ था।"
+      },
+      "hint": {
+        "debian": "`apt policy moonphase`",
+        "arch": "ऐसे packages को *foreign* कहते हैं: `pacman -Qm`",
+        "redhat": "`dnf info moonphase` – `From repository` वाली line देखिए।"
+      }
+    },
+    "efterat": {
+      "text": {
+        "debian": "PPA को फिर से हटा दीजिए। Program बना रहता है, लेकिन उसे आगे updates नहीं मिलते।",
+        "arch": "Bonus: AUR helper `yay` (AUR package `yay-bin`) install कीजिए और उससे AUR package `snowfall` install कीजिए।",
+        "redhat": "COPR repository को फिर से disable कीजिए। Program बना रहता है, लेकिन उसे आगे updates नहीं मिलते।"
+      },
+      "hint": {
+        "debian": "`sudo add-apt-repository --remove ppa:lunatool/moonphase`",
+        "arch": "पहले की तरह: `cd ~`, `git clone https://aur.archlinux.org/yay-bin.git`, `cd yay-bin` और `makepkg -si`। फिर `yay -S snowfall` – sudo के बिना।",
+        "redhat": "`sudo dnf copr disable lunatool/moonphase`"
+      }
+    }
+  }
+}

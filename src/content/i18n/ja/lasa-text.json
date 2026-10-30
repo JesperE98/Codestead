@@ -1,0 +1,24 @@
+{
+  "title": "テキストを読む・検索する",
+  "tasks": {
+    "head": {
+      "text": "`~/dokument/server.log` の **最初の 3** 行を表示してください。"
+    },
+    "tail": {
+      "text": "`~/dokument/server.log` の **最後の 2** 行を表示してください。"
+    },
+    "grep": {
+      "text": "`~/dokument/server.log` から `ERROR` を含むすべての行を表示してください。"
+    },
+    "grep-i": {
+      "text": "大文字と小文字を区別 **せずに**、server.log から `warn` を検索してください。",
+      "hint": "`-i` オプションを付けると、大文字と小文字を区別せずに検索します。3 件見つかるはずです。"
+    },
+    "wc": {
+      "text": "`~/dokument/frukter.txt` が何行あるかを数えてください。"
+    },
+    "sort": {
+      "text": "`~/dokument/frukter.txt` の果物をアルファベット順に表示してください。"
+    }
+  }
+}

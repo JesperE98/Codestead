@@ -1,0 +1,40 @@
+{
+  "title": "ディスクとファイルシステム",
+  "tasks": {
+    "df": {
+      "text": "マウントされているファイルシステムの使用量と空き容量を、人間が読みやすいサイズ（G、M）で表示してください。",
+      "hint": "`df` はファイルシステムを表示し、`-h` オプションでサイズが読みやすくなります: `df -h`。"
+    },
+    "lsblk-f": {
+      "text": "すべてのディスクとパーティションを、ファイルシステムの種類、ラベル、UUID と一緒に表示してください。",
+      "hint": "`lsblk` はディスクをツリーとして表示します。`-f` を付けるとファイルシステムも表示されます: `lsblk -f`。"
+    },
+    "fstab": {
+      "text": "コンピューターの起動時に何をマウントするかが書かれたファイル `/etc/fstab` を表示してください。"
+    },
+    "uuid": {
+      "text": "`/` にマウントされているファイルシステムの UUID を調べてください。表示するのはその 1 つだけです。",
+      "hint": {
+        "debian": "`lsblk -f` を見ると、`/` は `/dev/sda2` にあります。次に `blkid /dev/sda2` で問い合わせます。または `findmnt -n -o UUID /` で一度に済ませることもできます。",
+        "arch": "`lsblk -f` を見ると、`/` は `/dev/sda3` にあります。次に `blkid /dev/sda3` で問い合わせます。または `findmnt -n -o UUID /` で一度に済ませることもできます。",
+        "redhat": "`lsblk -f` を見ると、`/` は `/dev/sda3` にあります。次に `blkid /dev/sda3` で問い合わせます。または `findmnt -n -o UUID /` で一度に済ませることもできます。"
+      }
+    },
+    "montera": {
+      "text": "マウントポイント `/mnt/usb` を作成し、そこに USB メモリ（`/dev/sdb1`）をマウントしてください。",
+      "hint": "`/mnt` にディレクトリを作るのにも、マウントするのにも root 権限が必要です: `sudo mkdir -p /mnt/usb`、そのあと `sudo mount /dev/sdb1 /mnt/usb`。"
+    },
+    "fran-usb": {
+      "text": "USB メモリから `rapport.pdf` をホームディレクトリにコピーしてください。",
+      "hint": "USB メモリのファイルはいま `/mnt/usb` にあります: `cp /mnt/usb/rapport.pdf ~`。"
+    },
+    "till-usb": {
+      "text": "`~/dokument/frukter.txt` のコピーを USB メモリに保存してください。",
+      "hint": "USB メモリ上のファイルの所有者は root です（FAT には Linux の権限がありません）。そのため `sudo` が必要です: `sudo cp ~/dokument/frukter.txt /mnt/usb/`。"
+    },
+    "avmontera": {
+      "text": "USB メモリを安全に抜けるように、アンマウントしてください。",
+      "hint": "`sudo umount /mnt/usb` です。n はありません！ *target is busy* と表示されたら、シェルがそのディレクトリにいます。先に `cd ~` で離れてください。"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "title": "Variables, PATH and aliases",
+  "tasks": {
+    "path": {
+      "text": "Show the contents of the `PATH` variable."
+    },
+    "export": {
+      "text": "Create the environment variable `FAVORIT` with the value `linux`.",
+      "hint": "No spaces around the equals sign: `export NAME=value`."
+    },
+    "which": {
+      "text": "Find out which directory the program `ls` lives in."
+    },
+    "alias": {
+      "text": "Create the alias `ll` that runs `ls -la`."
+    },
+    "exitcode": {
+      "text": "Run a command that fails, and then show its exit code with `echo $?`.",
+      "hint": "Try `ls /finnsinte` followed by `echo $?`. The exit code should not be 0."
+    }
+  }
+}

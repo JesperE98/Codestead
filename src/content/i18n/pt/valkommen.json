@@ -1,0 +1,17 @@
+{
+  "title": "Bem-vindo ao shell do Linux",
+  "tasks": {
+    "echo": {
+      "text": "Imprima o texto `Hej världen` (“Olá, mundo” em sueco) com `echo`."
+    },
+    "whoami": {
+      "text": "Descubra com qual usuário você está logado, usando `whoami`."
+    },
+    "os-release": {
+      "text": "Mostre qual distribuição você está usando com `cat /etc/os-release`."
+    },
+    "help": {
+      "text": "Liste todos os comandos disponíveis no simulador com `help`."
+    }
+  }
+}

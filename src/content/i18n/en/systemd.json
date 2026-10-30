@@ -1,0 +1,41 @@
+{
+  "title": "Services and logs with systemd",
+  "tasks": {
+    "status-ssh": {
+      "text": "Show the status of the SSH server with `systemctl status`. Think about what the service is called in your distribution family!",
+      "hint": {
+        "debian": "In the Debian family the service is called `ssh`: `systemctl status ssh`.",
+        "arch": "In Arch the service is called `sshd`: `systemctl status sshd`.",
+        "redhat": "In Fedora the service is called `sshd`: `systemctl status sshd`."
+      }
+    },
+    "failed": {
+      "text": "A service doesn't seem to have started. List all services that have *failed*.",
+      "hint": "`systemctl --failed` (or `systemctl list-units --state=failed`)."
+    },
+    "journal-err": {
+      "text": "Show only the error messages (priority *err* and more severe) from the current boot in the journal.",
+      "hint": "`-p err` picks the priority and `-b` the latest boot: `journalctl -p err -b`."
+    },
+    "journal-u": {
+      "text": "Read the log of the broken service `rapportd` with `journalctl`. Why doesn't it start?",
+      "hint": "`-u` shows only the lines from one service: `journalctl -u rapportd`. With `-xe` you jump to the end and get explanations."
+    },
+    "fix": {
+      "text": "Fix the problem the log tells you about, then restart `rapportd` with `systemctl` so that it runs.",
+      "hint": "The configuration file is missing, but there's an example: `sudo cp /etc/rapportd.conf.example /etc/rapportd.conf`. Then restart with `sudo systemctl restart rapportd`."
+    },
+    "start-minserver": {
+      "text": "Start the service `minserver` (unless it's already running) and then show its status. Which PID did it get?",
+      "hint": "`sudo systemctl start minserver` and then `systemctl status minserver`."
+    },
+    "stop": {
+      "text": "Stop `minserver` with `systemctl`. Feel free to check with `pgrep minserver` that the process is gone.",
+      "hint": "`sudo systemctl stop minserver`"
+    },
+    "enable": {
+      "text": "Make sure `minserver` starts automatically every time the computer boots – and start it now as well, with a single command.",
+      "hint": "`enable` applies at boot and `--now` starts it right away: `sudo systemctl enable --now minserver`."
+    }
+  }
+}

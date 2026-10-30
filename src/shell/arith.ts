@@ -97,7 +97,7 @@ function applyBinary(op: string, a: number, b: number): number {
     case '||': return +(a !== 0 || b !== 0);
     case ',': return b;
   }
-  throw new ArithError(`okänd operator ${op}`);
+  throw new ArithError(`unknown operator ${op}`);
 }
 
 export function evalArith(src: string, vars: ArithVars): number {

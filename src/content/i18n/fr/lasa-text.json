@@ -1,0 +1,24 @@
+{
+  "title": "Lire et rechercher du texte",
+  "tasks": {
+    "head": {
+      "text": "Affichez les **3 premières** lignes de `~/dokument/server.log`."
+    },
+    "tail": {
+      "text": "Affichez les **2 dernières** lignes de `~/dokument/server.log`."
+    },
+    "grep": {
+      "text": "Affichez toutes les lignes contenant `ERROR` dans `~/dokument/server.log`."
+    },
+    "grep-i": {
+      "text": "Cherchez `warn` dans server.log **sans** tenir compte des majuscules et minuscules.",
+      "hint": "L'option `-i` rend la recherche insensible à la casse. Vous devriez obtenir 3 résultats."
+    },
+    "wc": {
+      "text": "Comptez le nombre de lignes de `~/dokument/frukter.txt`."
+    },
+    "sort": {
+      "text": "Affichez les fruits de `~/dokument/frukter.txt` par ordre alphabétique."
+    }
+  }
+}

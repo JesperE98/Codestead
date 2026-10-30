@@ -1,0 +1,18 @@
+{
+  "title": "ディストリビューションとファミリー",
+  "tasks": {
+    "os-release": {
+      "text": "使っているディストリビューションの名前とバージョンを調べてください。"
+    },
+    "kernel": {
+      "text": "実行中の Linux カーネルのバージョンを表示してください。"
+    },
+    "pm-config": {
+      "text": {
+        "debian": "`/etc/apt/sources.list.d/` で、apt がどのリポジトリを使っているかを確認してください。",
+        "arch": "`/etc/pacman.conf` で、pacman の設定を確認してください。",
+        "redhat": "`/etc/yum.repos.d/` で、dnf がどのリポジトリを使っているかを確認してください。"
+      }
+    }
+  }
+}

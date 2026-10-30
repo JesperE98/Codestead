@@ -1,0 +1,60 @@
+{
+  "title": "Package management",
+  "tasks": {
+    "sync": {
+      "text": {
+        "debian": "`apt update` से सबसे नई package lists download कीजिए।",
+        "arch": "`pacman -Syu` से package database synchronize कीजिए और system upgrade कीजिए।",
+        "redhat": "`dnf check-update` से नई package जानकारी लाइए और updates check कीजिए।"
+      },
+      "hint": {
+        "debian": "यह command system बदलता है और इसे root चाहिए: `sudo apt update`।",
+        "arch": "यह command system बदलता है और इसे root चाहिए: `sudo pacman -Syu`।",
+        "redhat": "`dnf check-update` को root की ज़रूरत नहीं है।"
+      }
+    },
+    "search": {
+      "text": "`htop` package search कीजिए।",
+      "hint": {
+        "debian": "`apt search htop`",
+        "arch": "`pacman -Ss htop`",
+        "redhat": "`dnf search htop`"
+      }
+    },
+    "install": {
+      "text": "`tree` package install कीजिए।",
+      "hint": {
+        "debian": "`sudo apt install tree`",
+        "arch": "`sudo pacman -S tree` और सवाल का जवाब हाँ में दीजिए।",
+        "redhat": "`sudo dnf install tree` – और `y` जवाब दीजिए, क्योंकि No default है!"
+      }
+    },
+    "run-tree": {
+      "text": "अपनी home directory में `tree` चलाइए।"
+    },
+    "remove": {
+      "text": "`tree` package को फिर से हटा दीजिए।",
+      "hint": {
+        "debian": "`sudo apt remove tree`",
+        "arch": "`sudo pacman -R tree`",
+        "redhat": "`sudo dnf remove tree`"
+      }
+    },
+    "upgrade": {
+      "text": "सारे installed packages upgrade कीजिए।",
+      "hint": {
+        "debian": "`sudo apt update` के बाद `sudo apt upgrade` चलाइए।",
+        "arch": "`sudo pacman -Syu` यह सब एक बार में कर देता है।",
+        "redhat": "`sudo dnf upgrade`"
+      }
+    },
+    "vim": {
+      "text": "Bonus: Vim text editor install कीजिए। Hint: हर family में package का नाम एक जैसा नहीं है!",
+      "hint": {
+        "debian": "`apt search vim` से search कीजिए। Package का नाम `vim` है।",
+        "arch": "`pacman -Ss vim` से search कीजिए। Package का नाम `vim` है।",
+        "redhat": "`dnf search vim` से search कीजिए। Package का नाम `vim-enhanced` है।"
+      }
+    }
+  }
+}

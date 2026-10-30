@@ -1,8 +1,11 @@
 // Bygger startfilsystemet för en distribution: systemkataloger,
 // konfigurationsfiler och några övningsfiler i hemkatalogen.
 
+import { fstabFor } from './disks';
+import { APPIMAGE_DIR, APPIMAGE_NAME, appImageNode } from './commands/universal';
 import type { Distro } from './distros';
 import { makeDir as d, makeFile as f, type FsNode } from './vfs';
+import { minserverBinary, resolvConf } from './network';
 
 export const STUDENT = 'elev';
 
@@ -68,6 +71,37 @@ if [ -d "$HOME/bin" ] ; then
 fi
 `;
 
+// Övningsprojektet i kapitlet om git.
+const WEB_INDEX = `<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <title>Min webbplats</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Välkommen!</h1>
+  <p>Det här är min första webbplats.</p>
+</body>
+</html>
+`;
+
+const WEB_STYLE = `body {
+  font-family: sans-serif;
+  background: white;
+  color: black;
+}
+
+h1 {
+  color: navy;
+}
+`;
+
+const WEB_README = `# Min webbplats
+
+En liten webbplats som jag versionshanterar med git.
+`;
+
 function familyEtc(distro: Distro): Record<string, FsNode> {
   switch (distro.family) {
     case 'debian': {
@@ -131,6 +165,86 @@ function familyLogs(distro: Distro): Record<string, FsNode> {
   }
 }
 
+/** Systemanvändare (UID under 1000) – program och tjänster, inte människor. */
+function systemUsers(distro: Distro): string[] {
+  switch (distro.family) {
+    case 'debian':
+      return [
+        'root:x:0:0:root:/root:/bin/bash',
+        'daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin',
+        'bin:x:2:2:bin:/bin:/usr/sbin/nologin',
+        'sys:x:3:3:sys:/dev:/usr/sbin/nologin',
+        'sync:x:4:65534:sync:/bin:/bin/sync',
+        'mail:x:8:8:mail:/var/mail:/usr/sbin/nologin',
+        'www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin',
+        'nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin',
+        'systemd-network:x:998:998:systemd Network Management:/:/usr/sbin/nologin',
+        'messagebus:x:100:101::/nonexistent:/usr/sbin/nologin',
+        'syslog:x:102:102::/nonexistent:/usr/sbin/nologin',
+      ];
+    case 'arch':
+      return [
+        'root:x:0:0::/root:/usr/bin/bash',
+        'bin:x:1:1::/:/usr/bin/nologin',
+        'daemon:x:2:2::/:/usr/bin/nologin',
+        'mail:x:8:12::/var/spool/mail:/usr/bin/nologin',
+        'ftp:x:14:11::/srv/ftp:/usr/bin/nologin',
+        'http:x:33:33::/srv/http:/usr/bin/nologin',
+        'nobody:x:65534:65534:Kernel Overflow User:/:/usr/bin/nologin',
+        'dbus:x:81:81:System Message Bus:/:/usr/bin/nologin',
+        'systemd-network:x:982:982:systemd Network Management:/:/usr/bin/nologin',
+      ];
+    case 'redhat':
+      return [
+        'root:x:0:0:Super User:/root:/bin/bash',
+        'bin:x:1:1:bin:/bin:/usr/sbin/nologin',
+        'daemon:x:2:2:daemon:/sbin:/usr/sbin/nologin',
+        'adm:x:3:4:adm:/var/adm:/usr/sbin/nologin',
+        'mail:x:8:12:mail:/var/spool/mail:/usr/sbin/nologin',
+        'nobody:x:65534:65534:Kernel Overflow User:/:/usr/sbin/nologin',
+        'dbus:x:81:81:System Message Bus:/:/usr/sbin/nologin',
+        'systemd-network:x:192:192:systemd Network Management:/:/usr/sbin/nologin',
+      ];
+  }
+}
+
+/** Systemgrupper. Administratörsgruppen (sudo/wheel) får elev som medlem i buildFs. */
+function systemGroups(distro: Distro): string[] {
+  const admin = `${distro.adminGroup}:x:${distro.adminGid}:`;
+  switch (distro.family) {
+    case 'debian':
+      return [
+        'root:x:0:', 'daemon:x:1:', 'bin:x:2:', 'sys:x:3:', 'adm:x:4:syslog', 'tty:x:5:', 'mail:x:8:', 'www-data:x:33:',
+        admin, 'shadow:x:42:', 'users:x:100:', 'nogroup:x:65534:', 'systemd-network:x:998:', 'messagebus:x:101:', 'syslog:x:102:',
+      ];
+    case 'arch':
+      return [
+        'root:x:0:root', 'sys:x:3:bin', 'mem:x:8:', 'ftp:x:11:', 'mail:x:12:', 'log:x:19:', 'http:x:33:', 'tty:x:5:',
+        'bin:x:1:daemon', 'daemon:x:2:bin', 'dbus:x:81:', 'nobody:x:65534:', admin, 'adm:x:999:daemon', 'users:x:984:',
+        'systemd-network:x:982:',
+      ];
+    case 'redhat':
+      return [
+        'root:x:0:', 'bin:x:1:', 'daemon:x:2:', 'sys:x:3:', 'adm:x:4:', 'tty:x:5:', 'mail:x:12:', admin, 'users:x:100:',
+        'nobody:x:65534:', 'dbus:x:81:', 'systemd-network:x:192:',
+      ];
+  }
+}
+
+const LOGIN_DEFS = `# /etc/login.defs – inställningar för useradd, passwd m.fl. (utdrag)
+PASS_MAX_DAYS	99999
+PASS_MIN_DAYS	0
+PASS_WARN_AGE	7
+UID_MIN			 1000
+UID_MAX			60000
+SYS_UID_MIN		  100
+SYS_UID_MAX		  999
+GID_MIN			 1000
+GID_MAX			60000
+USERGROUPS_ENAB yes
+ENCRYPT_METHOD YESCRYPT
+`;
+
 export function buildFs(distro: Distro): FsNode {
   const u = STUDENT;
   const ug = STUDENT;
@@ -150,18 +264,20 @@ export function buildFs(distro: Distro): FsNode {
       arkiv: d(u, 0o755, { 'logg-2019.txt': f('gammal logg\n', u, 0o644, ug) }, ug),
     }, ug),
     bilder: d(u, 0o755, {}, ug),
+    'projekt-webb': d(u, 0o755, {
+      'index.html': f(WEB_INDEX, u, 0o644, ug),
+      'style.css': f(WEB_STYLE, u, 0o644, ug),
+      'README.md': f(WEB_README, u, 0o644, ug),
+    }, ug),
+    // En nedladdad AppImage (kapitlet "Flatpak, Snap och AppImage").
+    [APPIMAGE_DIR]: d(u, 0o755, { [APPIMAGE_NAME]: appImageNode(u, ug) }, ug),
   }, ug);
 
-  const passwd = [
-    'root:x:0:0:root:/root:/bin/bash',
-    'daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin',
-    'nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin',
-    `${u}:x:1000:1000:Elev,,,:/home/${u}:/bin/bash`,
-  ].join('\n') + '\n';
+  // Användare och grupper (se users.ts). Systemanvändarna skiljer sig lite mellan familjerna.
+  const passwd = [...systemUsers(distro), `${u}:x:1000:1000:Elev,,,:/home/${u}:/bin/bash`].join('\n') + '\n';
 
   const group = [
-    'root:x:0:',
-    `${distro.adminGroup}:x:${distro.adminGid}:${u}`,
+    ...systemGroups(distro).map((g) => (g.startsWith(`${distro.adminGroup}:`) ? g + u : g)),
     `${u}:x:1000:`,
   ].join('\n') + '\n';
 
@@ -170,15 +286,25 @@ export function buildFs(distro: Distro): FsNode {
     'os-release': f(distro.osRelease),
     passwd: f(passwd),
     group: f(group),
-    shadow: f(`root:*:20000:0:99999:7:::\n${u}:$y$j9T$Qm1x...simulerad...hash:20000:0:99999:7:::\n`, 'root', 0o640, 'shadow'),
+    shadow: f(
+      systemUsers(distro).map((l) => `${l.split(':')[0]}:*:20000:0:99999:7:::\n`).join('') +
+        `${u}:$y$j9T$Qm1x...simulerad...hash:20000:0:99999:7:::\n`,
+      'root',
+      { debian: 0o640, arch: 0o600, redhat: 0o000 }[distro.family],
+      distro.family === 'debian' ? 'shadow' : 'root',
+    ),
+    'login.defs': f(LOGIN_DEFS + (distro.family === 'redhat' ? 'CREATE_HOME\tyes\n' : '')),
+    skel: d('root', 0o755, { '.bashrc': f(BASHRC), '.profile': f(PROFILE) }),
     sudoers: f(
       `# Se sudoers(5). Redigera alltid med visudo!\nDefaults\tenv_reset\nroot\tALL=(ALL:ALL) ALL\n%${distro.adminGroup}\tALL=(ALL:ALL) ALL\n`,
       'root',
       0o440,
     ),
     hosts: f(`127.0.0.1\tlocalhost\n127.0.1.1\t${distro.hostname}\n::1\t\tlocalhost ip6-localhost ip6-loopback\n`),
-    fstab: f(`# <file system>  <mount point>  <type>  <options>  <dump>  <pass>\nUUID=1234-abcd   /              ext4    defaults   0       1\n`),
+    fstab: f(fstabFor(distro)),
     shells: f('/bin/sh\n/bin/bash\n/usr/bin/bash\n'),
+    'resolv.conf': f(resolvConf(distro)),
+    'nsswitch.conf': f('passwd:         files\ngroup:          files\nshadow:         files\n\nhosts:          files dns\nnetworks:       files\n'),
     ...familyEtc(distro),
   });
 
@@ -202,7 +328,7 @@ export function buildFs(distro: Distro): FsNode {
     usr: d('root', 0o755, {
       bin: d(),
       lib: d(),
-      local: d('root', 0o755, { bin: d() }),
+      local: d('root', 0o755, { bin: d('root', 0o755, { minserver: minserverBinary() }) }),
       sbin: d(),
       share: d('root', 0o755, { doc: d(), man: d() }),
     }),

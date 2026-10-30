@@ -152,7 +152,7 @@ FLAGGOR
        -b -n 1   skriv ut en gång (bra i skript)`,
   run(ctx) {
     topScreen(ctx, 'top');
-    if (ctx.isTTY) ctx.out(`${COLOR.dim}(Ögonblicksbild. I en riktig terminal uppdateras top hela tiden – avsluta med q.)${COLOR.reset}\n`);
+    if (ctx.isTTY) ctx.out(`${COLOR.dim}(${ctx.sh.msg({ sv: 'Ögonblicksbild. I en riktig terminal uppdateras top hela tiden – avsluta med q.', en: 'Snapshot. In a real terminal top updates continuously – quit with q.' })})${COLOR.reset}\n`);
     return 0;
   },
 };
@@ -167,7 +167,7 @@ function signalProc(ctx: CmdCtx, proc: Proc, signal: number, report: (msg: strin
   }
   if (proc.pid === 1 || proc.pid === 2) return true; // init ignorerar vanliga signaler
   if (proc.pid === SHELL_PID) {
-    ctx.err(`${COLOR.dim}(Simulatorn låter dig inte avsluta ditt eget skal.)${COLOR.reset}\n`);
+    ctx.err(`${COLOR.dim}(${ctx.sh.msg({ sv: 'Simulatorn låter dig inte avsluta ditt eget skal.', en: "The simulator won't let you kill your own shell." })})${COLOR.reset}\n`);
     return true;
   }
   if (signal === 0 || signal === 18 || signal === 19) return true;
@@ -400,7 +400,7 @@ BESKRIVNING
     if (!job) return 1;
     ctx.out(job.cmd + '\n');
     if (job.state === 'Running') {
-      ctx.out(`${COLOR.dim}(Simulatorn väntar inte – jobbet räknas som klart.)${COLOR.reset}\n`);
+      ctx.out(`${COLOR.dim}(${ctx.sh.msg({ sv: 'Simulatorn väntar inte – jobbet räknas som klart.', en: "The simulator doesn't wait – the job counts as done." })})${COLOR.reset}\n`);
       ctx.sh.finishJob(job, 'Done');
     }
     ctx.sh.proc.jobs = ctx.sh.proc.jobs.filter((j) => j !== job);

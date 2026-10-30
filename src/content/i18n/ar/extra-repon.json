@@ -1,0 +1,80 @@
+{
+  "title": "AUR وPPA وCOPR",
+  "tasks": {
+    "forbered": {
+      "text": {
+        "debian": "تأكّد من أن الأمر `add-apt-repository` متاح لديك. وهو في الحزمة `software-properties-common` – المثبّتة مسبقًا على Ubuntu، لكن ليس على Debian.",
+        "arch": "ثبّت ما تحتاج إليه لبناء الحزم من الـ AUR: `git` و`base-devel`.",
+        "redhat": "اعرض المستودعات التي يستخدمها dnf الآن."
+      },
+      "hint": {
+        "debian": "`sudo apt update` ثم `sudo apt install software-properties-common`.",
+        "arch": "`sudo pacman -S --needed git base-devel`",
+        "redhat": "`dnf repolist`"
+      }
+    },
+    "lagg-till": {
+      "text": {
+        "debian": "أضف الـ PPA `ppa:lunatool/moonphase`.",
+        "arch": "نزّل وصفة البناء لحزمة الـ AUR `moonphase` إلى مجلد المنزل الخاص بك باستخدام `git clone`. العنوان هو `https://aur.archlinux.org/moonphase.git`.",
+        "redhat": "فعّل مستودع COPR `lunatool/moonphase`."
+      },
+      "hint": {
+        "debian": "`sudo add-apt-repository ppa:lunatool/moonphase` – واضغط Enter عندما يسألك.",
+        "arch": "`cd ~` ثم `git clone https://aur.archlinux.org/moonphase.git`",
+        "redhat": "`sudo dnf copr enable lunatool/moonphase` – وأجب بـ `y`، لأن «لا» هي الإجابة الافتراضية."
+      }
+    },
+    "granska": {
+      "text": {
+        "debian": "ألقِ نظرة داخل الملف الذي أنشأه `add-apt-repository` في `/etc/apt/sources.list.d/`.",
+        "arch": "اقرأ وصفة البناء `PKGBUILD` قبل أن تبني أي شيء!",
+        "redhat": "اعرض مستودعات COPR التي أُضيفت."
+      },
+      "hint": {
+        "debian": "`ls /etc/apt/sources.list.d` ثم استخدم `cat` مع الملف الذي يبدأ اسمه بـ `lunatool`.",
+        "arch": "`cd ~/moonphase` ثم `less PKGBUILD` (أو `cat PKGBUILD`).",
+        "redhat": "`dnf copr list`"
+      }
+    },
+    "installera": {
+      "text": {
+        "debian": "ثبّت الحزمة `moonphase` من الـ PPA.",
+        "arch": "ابنِ `moonphase` وثبّته باستخدام `makepkg`.",
+        "redhat": "ثبّت الحزمة `moonphase` من مستودع COPR."
+      },
+      "hint": {
+        "debian": "لقد شغّل `add-apt-repository` الأمر `apt update` نيابةً عنك، لذا يكفي `sudo apt install moonphase`.",
+        "arch": "قف في المجلد `~/moonphase` وشغّل `makepkg -si` – دون sudo!",
+        "redhat": "`sudo dnf install moonphase`"
+      }
+    },
+    "kor": {
+      "text": "شغّل البرنامج `moonphase`."
+    },
+    "ursprung": {
+      "text": {
+        "debian": "اكتشف من أين يأتي `moonphase`.",
+        "arch": "اعرض كل الحزم المثبّتة التي لا تأتي من مستودعات Arch نفسها.",
+        "redhat": "اكتشف المستودع الذي ثُبّت منه `moonphase`."
+      },
+      "hint": {
+        "debian": "`apt policy moonphase`",
+        "arch": "تسمى هذه الحزم *foreign* (أجنبية): `pacman -Qm`",
+        "redhat": "`dnf info moonphase` – انظر إلى السطر `From repository`."
+      }
+    },
+    "efterat": {
+      "text": {
+        "debian": "أزل الـ PPA مرة أخرى. يبقى البرنامج، لكنه لا يحصل على تحديثات بعد ذلك.",
+        "arch": "مهمة إضافية: ثبّت أداة الـ AUR المساعدة `yay` (حزمة الـ AUR `yay-bin`) واستخدمها لتثبيت حزمة الـ AUR `snowfall`.",
+        "redhat": "عطّل مستودع COPR مرة أخرى. يبقى البرنامج، لكنه لا يحصل على تحديثات بعد ذلك."
+      },
+      "hint": {
+        "debian": "`sudo add-apt-repository --remove ppa:lunatool/moonphase`",
+        "arch": "كما فعلت من قبل: `cd ~`، و`git clone https://aur.archlinux.org/yay-bin.git`، و`cd yay-bin`، و`makepkg -si`. ثم `yay -S snowfall` – دون sudo.",
+        "redhat": "`sudo dnf copr disable lunatool/moonphase`"
+      }
+    }
+  }
+}

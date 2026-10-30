@@ -1,0 +1,23 @@
+{
+  "title": "Navigating the file system",
+  "tasks": {
+    "etc": {
+      "text": "Go to the `/etc` directory and list what's in it.",
+      "hint": "Two commands: first `cd`, then `ls`. You can also write them on the same line: `cd /etc && ls`."
+    },
+    "hidden": {
+      "text": "Show the hidden files in your home directory.",
+      "hint": "The `-a` option shows files that start with a dot. Your home directory is `~`."
+    },
+    "relative": {
+      "text": "Go to the root (`/`), and then go to `/var/log` using a **relative** path.",
+      "hint": "A relative path doesn't start with `/`. If you're in `/`, `cd var/log` is all you need."
+    },
+    "up": {
+      "text": "Go up one level with `cd ..`."
+    },
+    "home": {
+      "text": "Go back to your home directory with just `cd`, without any arguments."
+    }
+  }
+}
