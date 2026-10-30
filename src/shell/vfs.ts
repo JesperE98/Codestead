@@ -85,9 +85,20 @@ export function basename(path: string): string {
   return trimmed.slice(trimmed.lastIndexOf('/') + 1);
 }
 
+/**
+ * Simulerade arkiv (tar, gzip, zip – se commands/archive.ts) börjar med en
+ * markör följt av sin låtsasstorlek: MARKÖR NUL storlek NUL innehåll.
+ * Då får arkivet rätt storlek även när det kopieras eller skickas genom en pipe.
+ */
+const SIZED_BLOB = /^(?:\u0000SIMTAR1|\u001f\u008b\u0008SIMGZ1|PK\u0003\u0004SIMZIP1)\u0000(\d+)\u0000/;
+
 export function nodeSize(node: FsNode): number {
   if (node.type === 'dir') return 4096;
-  return node.size ?? new TextEncoder().encode(node.content ?? '').length;
+  if (node.size !== undefined) return node.size;
+  const content = node.content ?? '';
+  const sized = SIZED_BLOB.exec(content);
+  if (sized) return Number(sized[1]);
+  return new TextEncoder().encode(content).length;
 }
 
 export function hasPerm(node: FsNode, user: User, perm: 'r' | 'w' | 'x'): boolean {
