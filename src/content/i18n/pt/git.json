@@ -1,0 +1,45 @@
+{
+  "title": "Git no terminal",
+  "tasks": {
+    "installera": {
+      "text": "Instale o pacote `git`.",
+      "hint": {
+        "debian": "Execute `sudo apt update` e depois `sudo apt install git`.",
+        "arch": "`sudo pacman -S git` – e responda sim à pergunta.",
+        "redhat": "`sudo dnf install git` – e responda `y`, já que “não” é o padrão."
+      }
+    },
+    "identitet": {
+      "text": "Diga ao git quem você é: defina o seu nome (`user.name`) e o seu endereço de e-mail (`user.email`) com `git config --global`.",
+      "hint": "Dois comandos: `git config --global user.name \"Seu Nome\"` e `git config --global user.email \"voce@example.com\"`."
+    },
+    "init": {
+      "text": "Vá até o diretório `~/projekt-webb` e transforme-o em um repositório git com `git init`.",
+      "hint": "`cd ~/projekt-webb` e depois `git init`. Dê uma olhada no novo diretório oculto com `ls -a`."
+    },
+    "forsta-commit": {
+      "text": "Adicione os três arquivos ao índice com `git add` e faça o seu primeiro commit com uma mensagem descritiva.",
+      "hint": "`git add .` adiciona tudo no diretório. Depois, `git commit -m \"Primeira versão do site\"`. Verifique a situação com `git status` antes e depois!"
+    },
+    "diff": {
+      "text": "Acrescente uma linha no final do `README.md` e veja a alteração com `git diff`.",
+      "hint": "`echo 'Feito com HTML e CSS.' >> README.md` e depois `git diff`. As linhas que começam com `+` são novas."
+    },
+    "commit-a": {
+      "text": "Faça o commit da alteração no `README.md`. Experimente a opção `-a`, que inclui todos os arquivos alterados que o git já acompanha.",
+      "hint": "`git commit -a -m \"Descreve como o site é feito\"` – ou, mais curto, `git commit -am \"…\"`."
+    },
+    "gren": {
+      "text": "Crie o branch `ny-design` e mude para ele. Altere alguma coisa no `style.css` e faça o commit da alteração no branch novo.",
+      "hint": "`git switch -c ny-design` cria o branch e muda para ele. Depois altere o arquivo, por exemplo com `echo 'h1 { color: purple; }' >> style.css`, e execute `git commit -am \"Títulos roxos\"`."
+    },
+    "merge": {
+      "text": "Volte para `main` e faça o merge do branch `ny-design` com `git merge`.",
+      "hint": "`git switch main` e depois `git merge ny-design`. Como `main` não mudou desde que você criou o branch, vai ser um *fast-forward*."
+    },
+    "logg": {
+      "text": "Mostre o histórico com uma linha por commit usando `git log --oneline`.",
+      "hint": "Experimente também `git log --oneline --graph --all` para ver os branches."
+    }
+  }
+}
