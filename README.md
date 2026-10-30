@@ -35,7 +35,7 @@ Appen är inte signerad än, så Windows varnar första gången – se
   pakethanterarens utskrifter följer respektive distribution.
 - **Distro-medvetet innehåll**: kapitlen visar olika avsnitt beroende på vald
   familj, och distro-uppgifterna räknas separat per familj.
-- **9 kapitel** och **47 uppgifter** i första versionen, med tips och lösningar.
+- **10 kapitel** och **54 uppgifter**, med tips och lösningar.
 - Framsteg och terminalens tillstånd sparas lokalt (localStorage).
 - Ljust och mörkt tema, fungerar på mobil.
 
@@ -44,9 +44,9 @@ Appen är inte signerad än, så Windows varnar första gången – se
 | Del | Kapitel |
 |---|---|
 | Kom igång | 1. Välkommen till Linux-shell |
-| Grunderna | 2. Navigera i filsystemet · 3. Filer och kataloger · 4. Läsa och söka i text · 5. Omdirigering och pipes |
-| Systemet | 6. Variabler, PATH och alias · 7. Användare, rättigheter och sudo |
-| Distributioner | 8. Distributioner och familjer · 9. Pakethantering (apt / pacman / dnf) |
+| Grunderna | 2. Navigera i filsystemet · 3. Filer och kataloger · 4. Läsa och söka i text · 5. Omdirigering och pipes · 6. Textbearbetning med sed, tr och awk |
+| Systemet | 7. Variabler, PATH och alias · 8. Användare, rättigheter och sudo |
+| Distributioner | 9. Distributioner och familjer · 10. Pakethantering (apt / pacman / dnf) |
 
 ## Kom igång
 
@@ -145,7 +145,7 @@ installeras med pakethanteraren lägger du också till ett paket i
 
 - [ ] Processer och jobb (`ps`, `top`, `kill`, `&`, `jobs`)
 - [ ] Shell-skript: variabler, `if`, loopar och funktioner
-- [ ] Textbearbetning med `sed`, `awk` och `tr`
+- [x] Textbearbetning med `sed`, `awk` och `tr`
 - [ ] Arkiv och komprimering (`tar`, `gzip`, `zip`)
 - [ ] Nätverk (`ip`, `ping`, `curl`, `ssh`)
 - [ ] Tjänster och loggar med systemd (`systemctl`, `journalctl`)

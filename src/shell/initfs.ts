@@ -35,6 +35,17 @@ kiwi
 mango
 `;
 
+const GRADES = `namn,ämne,poäng
+Alva,matte,87
+Bilal,matte,64
+Cleo,svenska,92
+David,engelska,45
+Elin,svenska,78
+Farid,matte,95
+Greta,engelska,58
+Hugo,svenska,71
+`;
+
 const NOTES = `Saker att lära mig om Linux:
 - navigera i filsystemet
 - hantera filer och kataloger
@@ -129,6 +140,7 @@ export function buildFs(distro: Distro): FsNode {
     '.profile': f(PROFILE, u, 0o644, ug),
     'anteckningar.txt': f(NOTES, u, 0o644, ug),
     dokument: d(u, 0o755, {
+      'betyg.csv': f(GRADES, u, 0o644, ug),
       'frukter.txt': f(FRUITS, u, 0o644, ug),
       'server.log': f(SERVER_LOG, u, 0o644, ug),
     }, ug),

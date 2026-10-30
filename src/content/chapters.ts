@@ -15,6 +15,7 @@ import ch08 from './chapters/08-distributioner.md?raw';
 import ch09 from './chapters/09-pakethantering.md?raw';
 import chSkript from './chapters/skript.md?raw';
 import chProcesser from './chapters/processer.md?raw';
+import textbearbetning from './chapters/textbearbetning.md?raw';
 import { RUNAWAY_PID, SERVER_PID } from '../shell/procs';
 
 const HOME = '/home/elev';
@@ -247,6 +248,66 @@ export const CHAPTERS: Chapter[] = [
         text: 'Kör `ls /finnsinte`, men skicka felmeddelandet till `/dev/null` så att inget syns.',
         solution: ['ls /finnsinte 2> /dev/null'],
         check: (c) => /^ls\s+\/finnsinte\b.*2>\s*\/dev\/null/.test(c.line) && c.output.trim() === '',
+      },
+    ],
+  },
+  {
+    id: 'textbearbetning',
+    part: 'grunder',
+    title: 'Textbearbetning med sed, tr och awk',
+    content: textbearbetning,
+    tasks: [
+      {
+        id: 'sed-s',
+        text: 'Visa `~/dokument/server.log` med ordet `ERROR` utbytt mot `FEL` på alla rader, med `sed`.',
+        hint: "Kommandot `s/gammalt/nytt/` byter ut text: `sed 's/ERROR/FEL/' fil`",
+        solution: ["sed 's/ERROR/FEL/' ~/dokument/server.log"],
+        check: (c) =>
+          ran(c, /^sed\b/) && outLines(c).length === 15 && /FEL Kunde inte ansluta/.test(c.output) && !c.output.includes('ERROR'),
+      },
+      {
+        id: 'sed-d',
+        text: 'Visa server.log **utan** alla rader som innehåller `INFO`, med `sed`.',
+        hint: "Adressen `/INFO/` väljer raderna och kommandot `d` tar bort dem: `sed '/INFO/d' fil`",
+        solution: ["sed '/INFO/d' ~/dokument/server.log"],
+        check: (c) => ran(c, /^sed\b/) && outLines(c).length === 6 && !c.output.includes('INFO'),
+      },
+      {
+        id: 'tr-upper',
+        text: 'Skriv ut alla användarnamn i `/etc/passwd` med **versaler**: plocka ut fält 1 med `cut` och skicka vidare till `tr`.',
+        hint: '`cut -d: -f1 /etc/passwd` ger användarnamnen. Lägg till `| tr a-z A-Z`.',
+        solution: ['cut -d: -f1 /etc/passwd | tr a-z A-Z'],
+        check: (c) => ran(c, /\|\s*tr\b/) && outLines(c).includes('ROOT') && outLines(c).includes('ELEV'),
+      },
+      {
+        id: 'tr-path',
+        text: 'Visa katalogerna i `$PATH` på **varsin rad** genom att byta `:` mot radbrytning med `tr`.',
+        hint: "Radbrytning skrivs `\\n`: `echo $PATH | tr ':' '\\n'`",
+        solution: ["echo $PATH | tr ':' '\\n'"],
+        check: (c) => ran(c, /\btr\b/) && outLines(c).length >= 2 && outLines(c).includes('/usr/bin'),
+      },
+      {
+        id: 'awk-print',
+        text: 'Skriv ut användarnamn och skal (fält 1 och 7) ur `/etc/passwd` med `awk`.',
+        hint: "Fälten skiljs åt av kolon, så använd `-F:`. Programmet blir `'{print $1, $7}'`.",
+        solution: ["awk -F: '{print $1, $7}' /etc/passwd"],
+        check: (c) =>
+          ran(c, /^awk\b/) && outLines(c).some((l) => /^elev\b.*\/bin\/bash$/.test(l) && !l.includes('1000')),
+      },
+      {
+        id: 'awk-sum',
+        text: 'Räkna ut **summan** av poängen (kolumn 3) i `~/dokument/betyg.csv` med `awk`.',
+        hint: "Hoppa över rubrikraden med `NR > 1`, lägg ihop med `summa += $3` och skriv ut i `END { }`. Avgränsaren är komma: `-F,`.",
+        solution: ["awk -F, 'NR > 1 {summa += $3} END {print summa}' ~/dokument/betyg.csv"],
+        check: (c) => ran(c, /\bawk\b/) && /(^|\D)590(\D|$)/.test(c.output),
+      },
+      {
+        id: 'sed-i',
+        text: 'Byt ut `Linux` mot `GNU/Linux` **direkt i filen** `~/anteckningar.txt`.',
+        hint: "Använd `sed -i`. Eftersom ersättningen innehåller `/` är det enklast att byta avgränsare: `s|Linux|GNU/Linux|`.",
+        solution: ["sed -i 's|Linux|GNU/Linux|' ~/anteckningar.txt"],
+        check: (c) =>
+          c.exitCode === 0 && /^sed\b.*\s-\w*i/.test(unsudo(c.line)) && content(c, '~/anteckningar.txt').includes('GNU/Linux'),
       },
     ],
   },
@@ -633,7 +694,6 @@ export const CHAPTERS: Chapter[] = [
 
 /** Kapitel som planeras – visas i menyn som "kommer snart". */
 export const UPCOMING: string[] = [
-  'Textbearbetning med sed, awk och tr',
   'Arkiv och komprimering (tar, gzip, zip)',
   'Nätverk (ip, ping, curl, ssh)',
   'Tjänster och loggar med systemd',

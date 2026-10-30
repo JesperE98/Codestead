@@ -75,7 +75,7 @@ describe('expansion', () => {
 
   test('jokertecken', () => {
     const { run } = shell();
-    expect(run('echo dokument/*').out).toBe('dokument/frukter.txt dokument/server.log\n');
+    expect(run('echo dokument/*').out).toBe('dokument/betyg.csv dokument/frukter.txt dokument/server.log\n');
     expect(run('echo "dokument/*"').out).toBe('dokument/*\n');
     expect(run('echo *.saknas').out).toBe('*.saknas\n');
   });
@@ -218,7 +218,7 @@ describe('tab-komplettering', () => {
     expect(sh.complete('whoa').line).toBe('whoami ');
     expect(sh.complete('cd dok').line).toBe('cd dokument/');
     expect(sh.complete('cat dokument/s').line).toBe('cat dokument/server.log ');
-    expect(sh.complete('ls dokument/').options).toEqual(['frukter.txt', 'server.log']);
+    expect(sh.complete('ls dokument/').options).toEqual(['betyg.csv', 'frukter.txt', 'server.log']);
   });
 });
 

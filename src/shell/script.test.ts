@@ -63,7 +63,7 @@ describe('loopar', () => {
   test('for, while, until och c-stil', () => {
     const { run } = shell();
     expect(run('for i in 1 2 3; do echo "varv $i"; done').out).toBe('varv 1\nvarv 2\nvarv 3\n');
-    expect(run('for f in dokument/*; do echo $f; done').out).toBe('dokument/frukter.txt\ndokument/server.log\n');
+    expect(run('for f in dokument/*; do echo $f; done').out).toBe('dokument/betyg.csv\ndokument/frukter.txt\ndokument/server.log\n');
     expect(run('i=0; while [ $i -lt 3 ]; do echo $i; i=$((i+1)); done').out).toBe('0\n1\n2\n');
     expect(run('n=3; until [ $n -eq 0 ]; do echo $n; ((n--)); done').out).toBe('3\n2\n1\n');
     expect(run('for ((i=1; i<=3; i++)); do echo $i; done').out).toBe('1\n2\n3\n');
@@ -134,7 +134,7 @@ describe('skriptfiler', () => {
     run('chmod +x raknare.sh');
     expect(run('./raknare.sh').out).toBe('Användning: ./raknare.sh KATALOG\n');
     expect(run('./raknare.sh; echo $?').out).toContain('\n1\n');
-    expect(run('./raknare.sh dokument gammalt').out).toBe('dokument: 2 filer\ngammalt: 3 filer\n');
+    expect(run('./raknare.sh dokument gammalt').out).toBe('dokument: 3 filer\ngammalt: 3 filer\n');
   });
 
   test('skript körs i ett underskal men source påverkar skalet', () => {
