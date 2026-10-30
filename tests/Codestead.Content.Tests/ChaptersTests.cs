@@ -27,12 +27,15 @@ public class ChaptersTests
     /// <summary>Chapter id → null when every task got done, otherwise the failure message.</summary>
     private static Dictionary<string, string?> RunSolutions(string distroId)
     {
-        var distro = DistrosLib.GetDistro(distroId);
-        var sh = Shell.Shell.Create(distro.Id);
+        // Like the app: one shell per distribution, and each chapter runs on ChaptersLib.DistroFor
+        // (Ubuntu outside the distro main chapter, the student's choice – within the family – inside it).
+        var shells = new Dictionary<string, Shell.Shell>();
         var completed = new OrderedDictionary<string, bool>(StringComparer.Ordinal);
         var results = new Dictionary<string, string?>();
         foreach (var chapter in ChaptersLib.Chapters)
         {
+            var distro = DistrosLib.GetDistro(ChaptersLib.DistroFor(chapter, distroId));
+            if (!shells.TryGetValue(distro.Id, out var sh)) shells[distro.Id] = sh = Shell.Shell.Create(distro.Id);
             string? failure = null;
             try
             {

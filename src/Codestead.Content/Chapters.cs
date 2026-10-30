@@ -136,9 +136,23 @@ public static partial class ChaptersLib
 
     public static Part PartOf(Chapter chapter) => Parts.First(p => p.Id == chapter.Part);
 
-    /// <summary>The distribution to use in a chapter: the student's choice in the distro main chapter, otherwise the default.</summary>
-    public static string DistroFor(Chapter chapter, string chosenDistroId) =>
-        PartOf(chapter).DistroChoice ? chosenDistroId : DefaultDistro;
+    /// <summary>
+    /// The distribution a chapter runs on: outside the distro main chapter always <see cref="DefaultDistro"/>;
+    /// inside it the student's choice – limited to the chapter's family for a family chapter
+    /// (the family's first distribution if the choice belongs to another family).
+    /// </summary>
+    public static string DistroFor(Chapter chapter, string chosenDistroId)
+    {
+        if (!PartOf(chapter).DistroChoice) return DefaultDistro;
+        var choices = DistrosFor(chapter);
+        return choices.FirstOrDefault(d => d.Id == chosenDistroId)?.Id ?? choices[0].Id;
+    }
+
+    /// <summary>The distributions the student can choose between in a chapter (one = no choice).</summary>
+    public static List<Distro> DistrosFor(Chapter chapter) =>
+        !PartOf(chapter).DistroChoice ? new() { DistrosLib.GetDistro(DefaultDistro) }
+        : chapter.Family is null ? DistrosLib.Distros.ToList()
+        : DistrosLib.Distros.Where(d => d.Family == chapter.Family).ToList();
 
     /// <summary>The lesson chapters of a main chapter (not the summary and exam).</summary>
     public static List<Chapter> LessonsIn(string partId) =>

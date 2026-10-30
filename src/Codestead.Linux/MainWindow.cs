@@ -352,14 +352,17 @@ public sealed class MainWindow : Window
     {
         updatingPickers = true;
         distroPicker.Items.Clear();
-        foreach (var family in FamilyOrder)
+        // Only the distributions this chapter can run on (a family chapter: that family's).
+        var choices = ChaptersLib.DistrosFor(Chapter);
+        var current = DistroOf(Chapter).Id;
+        foreach (var family in FamilyOrder.Where(f => choices.Any(d => d.Family == f)))
         {
             distroPicker.Items.Add(new ComboBoxItem { Content = T($"family.{family}"), IsEnabled = false, FontWeight = FontWeight.SemiBold, FontSize = 12 });
-            foreach (var d in DistrosLib.Distros.Where(d => d.Family == family))
+            foreach (var d in choices.Where(d => d.Family == family))
             {
                 var item = new ComboBoxItem { Content = "   " + d.Name, Tag = d.Id };
                 distroPicker.Items.Add(item);
-                if (d.Id == state.Distro) distroPicker.SelectedItem = item;
+                if (d.Id == current) distroPicker.SelectedItem = item;
             }
         }
         ToolTip.SetTip(distroPicker, T("distro.label"));
@@ -383,7 +386,7 @@ public sealed class MainWindow : Window
         RenderTasks();
         RenderWorkbench();
         // The distro choice only matters in the main chapter about distributions.
-        distroPicker.IsVisible = ChaptersLib.PartOf(Chapter).DistroChoice;
+        distroPicker.IsVisible = ChaptersLib.DistrosFor(Chapter).Count > 1;
         terminalTitle.Text = $"{shell.CurrentUser().Name}@{Distro.Hostname} — {Distro.Name}";
     }
 
@@ -872,6 +875,7 @@ public sealed class MainWindow : Window
         justCompleted = new();
         SaveState();
         UseShellFor(Chapter);
+        FillPickers();
         RenderAll();
     }
 
@@ -934,11 +938,7 @@ public sealed class MainWindow : Window
         SaveShell();
         state.Distro = id;
         SaveState();
-        if (ChaptersLib.PartOf(Chapter).DistroChoice)
-        {
-            shell = LoadShell(id);
-            terminal.Shell = shell;
-        }
+        UseShellFor(Chapter);
         FillPickers();
         RenderAll();
     }

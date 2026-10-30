@@ -83,6 +83,11 @@ public partial class Chapter
     /// or "exam" (the test at the end of a main chapter).
     /// </summary>
     public string Kind { get; set; } = ChapterKinds.Lesson;
+    /// <summary>
+    /// A chapter about one distribution family ("debian", "arch", "redhat") runs on a distribution of
+    /// that family; null means any (the student's choice in the distro main chapter, Ubuntu elsewhere).
+    /// </summary>
+    public string? Family { get; set; }
 }
 
 public static class ChapterKinds
