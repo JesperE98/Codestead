@@ -444,17 +444,22 @@ public class ReposTests
     [Fact(DisplayName = "alla klickbara kommandon i kapiteltexterna fungerar")]
     public void ChapterCommandsWork()
     {
-        // Intentional failures: "snap install code" without --classic and an AppImage before FUSE exists.
-        var expectedFailures = new[] { new Regex(@"^sudo snap install code\z"), new Regex(@"^\./Kalkylator\.AppImage\z") };
+        // Intentional failures: "snap install code" without --classic, an AppImage before FUSE exists and
+        // "dnf check-update", which exits with 100 when there are updates.
+        var expectedFailures = new[] { new Regex(@"^sudo snap install code\z"), new Regex(@"^\./Kalkylator\.AppImage\z"), new Regex(@"^dnf check-update\z") };
         var root = RepoRoot();
         foreach (var lang in new[] { "sv", "en" })
         {
             foreach (var d in DistrosLib.Distros)
             {
                 var t = new TestShell(d.Id);
-                foreach (var id in new[] { "extra-repon", "universella-paket" })
+                // The family chapter of the distro (apt/pacman/dnf and PPA/AUR/COPR), then the universal formats.
+                foreach (var id in new[] { $"familj-{d.Family}", "universella-paket" })
                 {
-                    var md = Preprocess(File.ReadAllText(Path.Combine(root, "content", "linux", "chapters", lang, $"{id}.md")), d);
+                    var path = Path.Combine(root, "content", "linux", "chapters", lang, $"{id}.md");
+                    // A translation that hasn't been written yet is reported by the content tests, not here.
+                    if (lang != "en" && !File.Exists(path)) continue;
+                    var md = Preprocess(File.ReadAllText(path), d);
                     var lines = ShBlock.Matches(md).SelectMany(m => m.Groups[1].Value.Split('\n').Where(l => l != "")).ToList();
                     foreach (var line in lines)
                     {

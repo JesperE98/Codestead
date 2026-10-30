@@ -832,73 +832,39 @@ public static partial class ChaptersLib
         },
         new()
         {
-            Id = "pakethantering",
+            Id = "familj-debian",
             Part = "distro",
-            Title = "Pakethantering",
+            Family = "debian",
+            Title = "Debian-familjen: apt och PPA",
             Tasks = new()
             {
                 new()
                 {
                     Id = "sync",
-                    PerFamily = true,
-                    Text = ByFamily(
-                        debian: "Hämta de senaste paketlistorna med `apt update`.",
-                        arch: "Synkronisera paketdatabasen och uppgradera systemet med `pacman -Syu`.",
-                        redhat: "Hämta ny paketinformation och se om det finns uppdateringar med `dnf check-update`."),
-                    Hint = ByFamily(
-                        debian: "Kommandot ändrar systemet och kräver root: `sudo apt update`.",
-                        arch: "Kommandot ändrar systemet och kräver root: `sudo pacman -Syu`.",
-                        redhat: "`dnf check-update` behöver inte root."),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo apt update"),
-                        arch: Cmds("sudo pacman -Syu", "y"),
-                        redhat: Cmds("dnf check-update")),
+                    Text = "Hämta de senaste paketlistorna med `apt update`.",
+                    Hint = "Kommandot ändrar systemet och kräver root: `sudo apt update`.",
+                    Solution = Cmds("sudo apt update"),
                     Check = c => Flag(c, "repoSynced"),
                 },
                 new()
                 {
                     Id = "search",
-                    PerFamily = true,
                     Text = "Sök efter paketet `htop`.",
-                    Hint = ByFamily(
-                        debian: "`apt search htop`",
-                        arch: "`pacman -Ss htop`",
-                        redhat: "`dnf search htop`"),
-                    Solution = ByFamily(
-                        debian: Cmds("apt search htop"),
-                        arch: Cmds("pacman -Ss htop"),
-                        redhat: Cmds("dnf search htop")),
-                    Check = c =>
-                    {
-                        var re = c.Distro.Family switch
-                        {
-                            "debian" => Re(@"^apt(-cache)?\s+search\s+.*htop"),
-                            "arch" => Re(@"^pacman\s+-Ss\w*\s+.*htop"),
-                            "redhat" => Re(@"^dnf5?\s+search\s+.*htop"),
-                            _ => null,
-                        };
-                        return c.ExitCode == 0 && re!.IsMatch(Unsudo(c.Line));
-                    },
+                    Hint = "`apt search htop`",
+                    Solution = Cmds("apt search htop"),
+                    Check = c => c.ExitCode == 0 && Re(@"^apt(-cache)?\s+search\s+.*htop").IsMatch(Unsudo(c.Line)),
                 },
                 new()
                 {
                     Id = "install",
-                    PerFamily = true,
                     Text = "Installera paketet `tree`.",
-                    Hint = ByFamily(
-                        debian: "`sudo apt install tree`",
-                        arch: "`sudo pacman -S tree` och svara ja på frågan.",
-                        redhat: "`sudo dnf install tree` – och svara `y`, eftersom Nej är standard!"),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo apt install tree"),
-                        arch: Cmds("sudo pacman -S tree", "y"),
-                        redhat: Cmds("sudo dnf install tree", "y")),
+                    Hint = "`sudo apt install tree`",
+                    Solution = Cmds("sudo apt install tree"),
                     Check = c => Installed(c, "tree"),
                 },
                 new()
                 {
                     Id = "run-tree",
-                    PerFamily = true,
                     Text = "Kör `tree` i din hemkatalog.",
                     Solution = Cmds("cd ~", "tree"),
                     Check = c => Ran(c, Re(@"^tree\b")) && Installed(c, "tree"),
@@ -906,168 +872,58 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "remove",
-                    PerFamily = true,
                     Text = "Ta bort paketet `tree` igen.",
-                    Hint = ByFamily(
-                        debian: "`sudo apt remove tree`",
-                        arch: "`sudo pacman -R tree`",
-                        redhat: "`sudo dnf remove tree`"),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo apt remove tree", "y"),
-                        arch: Cmds("sudo pacman -R tree", "y"),
-                        redhat: Cmds("sudo dnf remove tree", "y")),
-                    Check = c =>
-                    {
-                        var re = c.Distro.Family switch
-                        {
-                            "debian" => Re(@"^apt(-get)?\s+(remove|purge)\b.*\btree\b"),
-                            "arch" => Re(@"^pacman\s+-R\w*\s+.*\btree\b"),
-                            "redhat" => Re(@"^dnf5?\s+(remove|rm|erase)\b.*\btree\b"),
-                            _ => null,
-                        };
-                        return re!.IsMatch(Unsudo(c.Line)) && !Installed(c, "tree");
-                    },
+                    Hint = "`sudo apt remove tree`",
+                    Solution = Cmds("sudo apt remove tree", "y"),
+                    Check = c => Re(@"^apt(-get)?\s+(remove|purge)\b.*\btree\b").IsMatch(Unsudo(c.Line)) && !Installed(c, "tree"),
                 },
                 new()
                 {
                     Id = "upgrade",
-                    PerFamily = true,
                     Text = "Uppgradera alla installerade paket.",
-                    Hint = ByFamily(
-                        debian: "Efter `sudo apt update` kör du `sudo apt upgrade`.",
-                        arch: "`sudo pacman -Syu` gör allt på en gång.",
-                        redhat: "`sudo dnf upgrade`"),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo apt update", "sudo apt upgrade", "y"),
-                        arch: Cmds("sudo pacman -Syu", "y"),
-                        redhat: Cmds("sudo dnf upgrade", "y")),
+                    Hint = "Efter `sudo apt update` kör du `sudo apt upgrade`.",
+                    Solution = Cmds("sudo apt update", "sudo apt upgrade", "y"),
                     Check = c => Flag(c, "upgraded"),
                 },
                 new()
                 {
-                    Id = "vim",
-                    PerFamily = true,
-                    Text = "Bonus: installera texteditorn Vim. Tips: paketet heter inte likadant i alla familjer!",
-                    Hint = ByFamily(
-                        debian: "Sök med `apt search vim`. Paketet heter `vim`.",
-                        arch: "Sök med `pacman -Ss vim`. Paketet heter `vim`.",
-                        redhat: "Sök med `dnf search vim`. Paketet heter `vim-enhanced`."),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo apt update", "sudo apt install vim"),
-                        arch: Cmds("sudo pacman -S vim", "y"),
-                        redhat: Cmds("sudo dnf install vim-enhanced", "y")),
-                    Check = c => Installed(c, "vim"),
-                },
-            },
-        },
-        new()
-        {
-            Id = "extra-repon",
-            Part = "distro",
-            Title = "AUR, PPA och COPR",
-            Tasks = new()
-            {
-                new()
-                {
                     Id = "forbered",
-                    PerFamily = true,
-                    Text = ByFamily(
-                        debian: "Se till att du har kommandot `add-apt-repository`. Det finns i paketet `software-properties-common` – förinstallerat i Ubuntu, men inte i Debian.",
-                        arch: "Installera det som behövs för att bygga paket från AUR: `git` och `base-devel`.",
-                        redhat: "Visa vilka förråd dnf använder just nu."),
-                    Hint = ByFamily(
-                        debian: "`sudo apt update` och sedan `sudo apt install software-properties-common`.",
-                        arch: "`sudo pacman -S --needed git base-devel`",
-                        redhat: "`dnf repolist`"),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo apt update", "sudo apt install software-properties-common"),
-                        arch: Cmds("sudo pacman -S --needed git base-devel", "y"),
-                        redhat: Cmds("dnf repolist")),
-                    Check = c => c.Distro.Family switch
-                    {
-                        "debian" =>
-                            Installed(c, "software-properties-common") &&
-                            Ran(c, Re(@"\badd-apt-repository\b|\bapt(-get)?\s+install\b.*\bsoftware-properties-common\b")),
-                        "arch" => Installed(c, "git") && Installed(c, "base-devel"),
-                        "redhat" => Ran(c, Re(@"^dnf5?\s+repolist\b")),
-                        _ => false,
-                    },
+                    Text = "Se till att du har kommandot `add-apt-repository`. Det finns i paketet `software-properties-common` – förinstallerat i Ubuntu, men inte i Debian.",
+                    Hint = "`sudo apt update` och sedan `sudo apt install software-properties-common`.",
+                    Solution = Cmds("sudo apt update", "sudo apt install software-properties-common"),
+                    Check = c =>
+                        Installed(c, "software-properties-common") &&
+                        Ran(c, Re(@"\badd-apt-repository\b|\bapt(-get)?\s+install\b.*\bsoftware-properties-common\b")),
                 },
                 new()
                 {
                     Id = "lagg-till",
-                    PerFamily = true,
-                    Text = ByFamily(
-                        debian: "Lägg till PPA:t `ppa:lunatool/moonphase`.",
-                        arch: "Hämta byggreceptet för AUR-paketet `moonphase` till din hemkatalog med `git clone`. Adressen är `https://aur.archlinux.org/moonphase.git`.",
-                        redhat: "Aktivera COPR-förrådet `lunatool/moonphase`."),
-                    Hint = ByFamily(
-                        debian: "`sudo add-apt-repository ppa:lunatool/moonphase` – och tryck Enter när den frågar.",
-                        arch: "`cd ~` och sedan `git clone https://aur.archlinux.org/moonphase.git`",
-                        redhat: "`sudo dnf copr enable lunatool/moonphase` – och svara `y`, Nej är standard."),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo add-apt-repository -y ppa:lunatool/moonphase"),
-                        arch: Cmds("cd ~", "git clone https://aur.archlinux.org/moonphase.git"),
-                        redhat: Cmds("sudo dnf copr enable lunatool/moonphase", "y")),
-                    Check = c => c.Distro.Family switch
-                    {
-                        "debian" =>
-                            Re(@"\badd-apt-repository\b").IsMatch(c.Line) && IsFile(c, PpaFile) && ExtrarepoLib.ExtraRepoEnabled(c.Sh, "ppa:lunatool/moonphase"),
-                        "arch" => Ran(c, Re(@"\bgit\s+clone\s+.*aur\.archlinux\.org\/moonphase(\.git)?\b")),
-                        "redhat" => Re(@"\bcopr\s+enable\b").IsMatch(c.Line) && ExtrarepoLib.ExtraRepoEnabled(c.Sh, "copr:lunatool/moonphase"),
-                        _ => false,
-                    },
+                    Text = "Lägg till PPA:t `ppa:lunatool/moonphase`.",
+                    Hint = "`sudo add-apt-repository ppa:lunatool/moonphase` – och tryck Enter när den frågar.",
+                    Solution = Cmds("sudo add-apt-repository -y ppa:lunatool/moonphase"),
+                    Check = c =>
+                        Re(@"\badd-apt-repository\b").IsMatch(c.Line) && IsFile(c, PpaFile) && ExtrarepoLib.ExtraRepoEnabled(c.Sh, "ppa:lunatool/moonphase"),
                 },
                 new()
                 {
                     Id = "granska",
-                    PerFamily = true,
-                    Text = ByFamily(
-                        debian: "Titta i filen som `add-apt-repository` skapade i `/etc/apt/sources.list.d/`.",
-                        arch: "Läs byggreceptet `PKGBUILD` innan du bygger något!",
-                        redhat: "Lista vilka COPR-förråd som är tillagda."),
-                    Hint = ByFamily(
-                        debian: "`ls /etc/apt/sources.list.d` och sedan `cat` på filen vars namn börjar med `lunatool`.",
-                        arch: "`cd ~/moonphase` och sedan `less PKGBUILD` (eller `cat PKGBUILD`).",
-                        redhat: "`dnf copr list`"),
+                    Text = "Titta i filen som `add-apt-repository` skapade i `/etc/apt/sources.list.d/`.",
+                    Hint = "`ls /etc/apt/sources.list.d` och sedan `cat` på filen vars namn börjar med `lunatool`.",
                     // The PPA file name is computed when the solution is shown (TS: `cat ${PPA_FILE}`).
-                    Solution = new PerDistro<List<string>>(d => d.Family switch
-                    {
-                        "debian" => Cmds("ls /etc/apt/sources.list.d", $"cat {PpaFile}"),
-                        "arch" => Cmds("cd ~/moonphase", "less PKGBUILD"),
-                        "redhat" => Cmds("dnf copr list"),
-                        _ => null!,
-                    }),
-                    Check = c => c.Distro.Family switch
-                    {
-                        "debian" => Ran(c, Re(@"^(cat|less|more|head|tail|grep)\b")) && c.Output.Contains("ppa.launchpadcontent.net/lunatool/moonphase"),
-                        "arch" => Ran(c, Re(@"^(cat|less|more|head|tail)\b.*PKGBUILD")) && c.Output.Contains("pkgname=moonphase"),
-                        "redhat" => Ran(c, Re(@"^dnf5?\s+copr\s+list\b")) && c.Output.Contains("lunatool/moonphase"),
-                        _ => false,
-                    },
+                    Solution = new PerDistro<List<string>>(_ => Cmds("ls /etc/apt/sources.list.d", $"cat {PpaFile}")),
+                    Check = c => Ran(c, Re(@"^(cat|less|more|head|tail|grep)\b")) && c.Output.Contains("ppa.launchpadcontent.net/lunatool/moonphase"),
                 },
                 new()
                 {
                     Id = "installera",
-                    PerFamily = true,
-                    Text = ByFamily(
-                        debian: "Installera paketet `moonphase` från PPA:t.",
-                        arch: "Bygg och installera `moonphase` med `makepkg`.",
-                        redhat: "Installera paketet `moonphase` från COPR-förrådet."),
-                    Hint = ByFamily(
-                        debian: "`add-apt-repository` körde redan `apt update` åt dig, så `sudo apt install moonphase` räcker.",
-                        arch: "Stå i katalogen `~/moonphase` och kör `makepkg -si` – utan sudo!",
-                        redhat: "`sudo dnf install moonphase`"),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo apt install moonphase"),
-                        arch: Cmds("cd ~/moonphase", "makepkg -si", "y"),
-                        redhat: Cmds("sudo dnf install moonphase", "y")),
+                    Text = "Installera paketet `moonphase` från PPA:t.",
+                    Hint = "`add-apt-repository` körde redan `apt update` åt dig, så `sudo apt install moonphase` räcker.",
+                    Solution = Cmds("sudo apt install moonphase"),
                     Check = c => Installed(c, "moonphase"),
                 },
                 new()
                 {
                     Id = "kor",
-                    PerFamily = true,
                     Text = "Kör programmet `moonphase`.",
                     Solution = Cmds("moonphase"),
                     Check = c => Ran(c, Re(@"^moonphase\b")) && Installed(c, "moonphase"),
@@ -1075,50 +931,266 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "ursprung",
-                    PerFamily = true,
-                    Text = ByFamily(
-                        debian: "Ta reda på varifrån `moonphase` kommer.",
-                        arch: "Lista alla installerade paket som inte kommer från Archs egna förråd.",
-                        redhat: "Ta reda på från vilket förråd `moonphase` installerades."),
-                    Hint = ByFamily(
-                        debian: "`apt policy moonphase`",
-                        arch: "Sådana paket kallas *foreign*: `pacman -Qm`",
-                        redhat: "`dnf info moonphase` – titta på raden `From repository`."),
-                    Solution = ByFamily(
-                        debian: Cmds("apt policy moonphase"),
-                        arch: Cmds("pacman -Qm"),
-                        redhat: Cmds("dnf info moonphase")),
-                    Check = c => c.Distro.Family switch
-                    {
-                        "debian" => Ran(c, Re(@"^apt\s+policy\b.*\bmoonphase\b")) && c.Output.Contains("ppa.launchpadcontent.net"),
-                        "arch" => Ran(c, Re(@"^(pacman|yay)\s+-Q\w*m")) && c.Output.Contains("moonphase"),
-                        "redhat" => Ran(c, Re(@"^dnf5?\s+info\b.*\bmoonphase\b")) && c.Output.Contains("copr:"),
-                        _ => false,
-                    },
+                    Text = "Ta reda på varifrån `moonphase` kommer.",
+                    Hint = "`apt policy moonphase`",
+                    Solution = Cmds("apt policy moonphase"),
+                    Check = c => Ran(c, Re(@"^apt\s+policy\b.*\bmoonphase\b")) && c.Output.Contains("ppa.launchpadcontent.net"),
                 },
                 new()
                 {
                     Id = "efterat",
-                    PerFamily = true,
-                    Text = ByFamily(
-                        debian: "Ta bort PPA:t igen. Programmet blir kvar, men får inga fler uppdateringar.",
-                        arch: "Bonus: installera AUR-hjälparen `yay` (AUR-paketet `yay-bin`) och använd den för att installera AUR-paketet `snowfall`.",
-                        redhat: "Stäng av COPR-förrådet igen. Programmet blir kvar, men får inga fler uppdateringar."),
-                    Hint = ByFamily(
-                        debian: "`sudo add-apt-repository --remove ppa:lunatool/moonphase`",
-                        arch: "Som förut: `cd ~`, `git clone https://aur.archlinux.org/yay-bin.git`, `cd yay-bin` och `makepkg -si`. Sedan `yay -S snowfall` – utan sudo.",
-                        redhat: "`sudo dnf copr disable lunatool/moonphase`"),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo add-apt-repository -y --remove ppa:lunatool/moonphase"),
-                        arch: Cmds("cd ~", "git clone https://aur.archlinux.org/yay-bin.git", "cd yay-bin", "makepkg -si", "y", "yay -S snowfall", "y"),
-                        redhat: Cmds("sudo dnf copr disable lunatool/moonphase")),
-                    Check = c => c.Distro.Family switch
-                    {
-                        "debian" => Re(@"\badd-apt-repository\b.*\s(-\w*r|--remove)\b|^rm\b").IsMatch(Unsudo(c.Line)) && !IsFile(c, PpaFile),
-                        "arch" => Installed(c, "snowfall"),
-                        "redhat" => Re(@"\bcopr\s+(disable|remove)\b").IsMatch(c.Line) && !ExtrarepoLib.ExtraRepoEnabled(c.Sh, "copr:lunatool/moonphase"),
-                        _ => false,
-                    },
+                    Text = "Ta bort PPA:t igen. Programmet blir kvar, men får inga fler uppdateringar.",
+                    Hint = "`sudo add-apt-repository --remove ppa:lunatool/moonphase`",
+                    Solution = Cmds("sudo add-apt-repository -y --remove ppa:lunatool/moonphase"),
+                    Check = c => Re(@"\badd-apt-repository\b.*\s(-\w*r|--remove)\b|^rm\b").IsMatch(Unsudo(c.Line)) && !IsFile(c, PpaFile),
+                },
+                new()
+                {
+                    Id = "vim",
+                    Text = "Bonus: installera texteditorn Vim.",
+                    Hint = "Sök med `apt search vim`. Paketet heter `vim`.",
+                    Solution = Cmds("sudo apt update", "sudo apt install vim"),
+                    Check = c => Installed(c, "vim"),
+                },
+            },
+        },
+        new()
+        {
+            Id = "familj-arch",
+            Part = "distro",
+            Family = "arch",
+            Title = "Arch-familjen: pacman och AUR",
+            Tasks = new()
+            {
+                new()
+                {
+                    Id = "sync",
+                    Text = "Synkronisera paketdatabasen och uppgradera systemet med `pacman -Syu`.",
+                    Hint = "Kommandot ändrar systemet och kräver root: `sudo pacman -Syu`.",
+                    Solution = Cmds("sudo pacman -Syu", "y"),
+                    Check = c => Flag(c, "repoSynced"),
+                },
+                new()
+                {
+                    Id = "search",
+                    Text = "Sök efter paketet `htop`.",
+                    Hint = "`pacman -Ss htop`",
+                    Solution = Cmds("pacman -Ss htop"),
+                    Check = c => c.ExitCode == 0 && Re(@"^pacman\s+-Ss\w*\s+.*htop").IsMatch(Unsudo(c.Line)),
+                },
+                new()
+                {
+                    Id = "install",
+                    Text = "Installera paketet `tree`.",
+                    Hint = "`sudo pacman -S tree` och svara ja på frågan.",
+                    Solution = Cmds("sudo pacman -S tree", "y"),
+                    Check = c => Installed(c, "tree"),
+                },
+                new()
+                {
+                    Id = "run-tree",
+                    Text = "Kör `tree` i din hemkatalog.",
+                    Solution = Cmds("cd ~", "tree"),
+                    Check = c => Ran(c, Re(@"^tree\b")) && Installed(c, "tree"),
+                },
+                new()
+                {
+                    Id = "remove",
+                    Text = "Ta bort paketet `tree` igen.",
+                    Hint = "`sudo pacman -R tree`",
+                    Solution = Cmds("sudo pacman -R tree", "y"),
+                    Check = c => Re(@"^pacman\s+-R\w*\s+.*\btree\b").IsMatch(Unsudo(c.Line)) && !Installed(c, "tree"),
+                },
+                new()
+                {
+                    Id = "upgrade",
+                    Text = "Uppgradera alla installerade paket.",
+                    Hint = "`sudo pacman -Syu` gör allt på en gång.",
+                    Solution = Cmds("sudo pacman -Syu", "y"),
+                    Check = c => Flag(c, "upgraded"),
+                },
+                new()
+                {
+                    Id = "forbered",
+                    Text = "Installera det som behövs för att bygga paket från AUR: `git` och `base-devel`.",
+                    Hint = "`sudo pacman -S --needed git base-devel`",
+                    Solution = Cmds("sudo pacman -S --needed git base-devel", "y"),
+                    Check = c => Installed(c, "git") && Installed(c, "base-devel"),
+                },
+                new()
+                {
+                    Id = "lagg-till",
+                    Text = "Hämta byggreceptet för AUR-paketet `moonphase` till din hemkatalog med `git clone`. Adressen är `https://aur.archlinux.org/moonphase.git`.",
+                    Hint = "`cd ~` och sedan `git clone https://aur.archlinux.org/moonphase.git`",
+                    Solution = Cmds("cd ~", "git clone https://aur.archlinux.org/moonphase.git"),
+                    Check = c => Ran(c, Re(@"\bgit\s+clone\s+.*aur\.archlinux\.org\/moonphase(\.git)?\b")),
+                },
+                new()
+                {
+                    Id = "granska",
+                    Text = "Läs byggreceptet `PKGBUILD` innan du bygger något!",
+                    Hint = "`cd ~/moonphase` och sedan `less PKGBUILD` (eller `cat PKGBUILD`).",
+                    Solution = Cmds("cd ~/moonphase", "less PKGBUILD"),
+                    Check = c => Ran(c, Re(@"^(cat|less|more|head|tail)\b.*PKGBUILD")) && c.Output.Contains("pkgname=moonphase"),
+                },
+                new()
+                {
+                    Id = "installera",
+                    Text = "Bygg och installera `moonphase` med `makepkg`.",
+                    Hint = "Stå i katalogen `~/moonphase` och kör `makepkg -si` – utan sudo!",
+                    Solution = Cmds("cd ~/moonphase", "makepkg -si", "y"),
+                    Check = c => Installed(c, "moonphase"),
+                },
+                new()
+                {
+                    Id = "kor",
+                    Text = "Kör programmet `moonphase`.",
+                    Solution = Cmds("moonphase"),
+                    Check = c => Ran(c, Re(@"^moonphase\b")) && Installed(c, "moonphase"),
+                },
+                new()
+                {
+                    Id = "ursprung",
+                    Text = "Lista alla installerade paket som inte kommer från Archs egna förråd.",
+                    Hint = "Sådana paket kallas *foreign*: `pacman -Qm`",
+                    Solution = Cmds("pacman -Qm"),
+                    Check = c => Ran(c, Re(@"^(pacman|yay)\s+-Q\w*m")) && c.Output.Contains("moonphase"),
+                },
+                new()
+                {
+                    Id = "efterat",
+                    Text = "Bonus: installera AUR-hjälparen `yay` (AUR-paketet `yay-bin`) och använd den för att installera AUR-paketet `snowfall`.",
+                    Hint = "Som förut: `cd ~`, `git clone https://aur.archlinux.org/yay-bin.git`, `cd yay-bin` och `makepkg -si`. Sedan `yay -S snowfall` – utan sudo.",
+                    Solution = Cmds("cd ~", "git clone https://aur.archlinux.org/yay-bin.git", "cd yay-bin", "makepkg -si", "y", "yay -S snowfall", "y"),
+                    Check = c => Installed(c, "snowfall"),
+                },
+                new()
+                {
+                    Id = "vim",
+                    Text = "Bonus: installera texteditorn Vim.",
+                    Hint = "Sök med `pacman -Ss vim`. Paketet heter `vim`.",
+                    Solution = Cmds("sudo pacman -S vim", "y"),
+                    Check = c => Installed(c, "vim"),
+                },
+            },
+        },
+        new()
+        {
+            Id = "familj-redhat",
+            Part = "distro",
+            Family = "redhat",
+            Title = "Red Hat-familjen: dnf och COPR",
+            Tasks = new()
+            {
+                new()
+                {
+                    Id = "sync",
+                    Text = "Hämta ny paketinformation och se om det finns uppdateringar med `dnf check-update`.",
+                    Hint = "`dnf check-update` behöver inte root.",
+                    Solution = Cmds("dnf check-update"),
+                    Check = c => Flag(c, "repoSynced"),
+                },
+                new()
+                {
+                    Id = "search",
+                    Text = "Sök efter paketet `htop`.",
+                    Hint = "`dnf search htop`",
+                    Solution = Cmds("dnf search htop"),
+                    Check = c => c.ExitCode == 0 && Re(@"^dnf5?\s+search\s+.*htop").IsMatch(Unsudo(c.Line)),
+                },
+                new()
+                {
+                    Id = "install",
+                    Text = "Installera paketet `tree`.",
+                    Hint = "`sudo dnf install tree` – och svara `y`, eftersom Nej är standard!",
+                    Solution = Cmds("sudo dnf install tree", "y"),
+                    Check = c => Installed(c, "tree"),
+                },
+                new()
+                {
+                    Id = "run-tree",
+                    Text = "Kör `tree` i din hemkatalog.",
+                    Solution = Cmds("cd ~", "tree"),
+                    Check = c => Ran(c, Re(@"^tree\b")) && Installed(c, "tree"),
+                },
+                new()
+                {
+                    Id = "remove",
+                    Text = "Ta bort paketet `tree` igen.",
+                    Hint = "`sudo dnf remove tree`",
+                    Solution = Cmds("sudo dnf remove tree", "y"),
+                    Check = c => Re(@"^dnf5?\s+(remove|rm|erase)\b.*\btree\b").IsMatch(Unsudo(c.Line)) && !Installed(c, "tree"),
+                },
+                new()
+                {
+                    Id = "upgrade",
+                    Text = "Uppgradera alla installerade paket.",
+                    Hint = "`sudo dnf upgrade`",
+                    Solution = Cmds("sudo dnf upgrade", "y"),
+                    Check = c => Flag(c, "upgraded"),
+                },
+                new()
+                {
+                    Id = "forbered",
+                    Text = "Visa vilka förråd dnf använder just nu.",
+                    Hint = "`dnf repolist`",
+                    Solution = Cmds("dnf repolist"),
+                    Check = c => Ran(c, Re(@"^dnf5?\s+repolist\b")),
+                },
+                new()
+                {
+                    Id = "lagg-till",
+                    Text = "Aktivera COPR-förrådet `lunatool/moonphase`.",
+                    Hint = "`sudo dnf copr enable lunatool/moonphase` – och svara `y`, Nej är standard.",
+                    Solution = Cmds("sudo dnf copr enable lunatool/moonphase", "y"),
+                    Check = c => Re(@"\bcopr\s+enable\b").IsMatch(c.Line) && ExtrarepoLib.ExtraRepoEnabled(c.Sh, "copr:lunatool/moonphase"),
+                },
+                new()
+                {
+                    Id = "granska",
+                    Text = "Lista vilka COPR-förråd som är tillagda.",
+                    Hint = "`dnf copr list`",
+                    Solution = Cmds("dnf copr list"),
+                    Check = c => Ran(c, Re(@"^dnf5?\s+copr\s+list\b")) && c.Output.Contains("lunatool/moonphase"),
+                },
+                new()
+                {
+                    Id = "installera",
+                    Text = "Installera paketet `moonphase` från COPR-förrådet.",
+                    Hint = "`sudo dnf install moonphase`",
+                    Solution = Cmds("sudo dnf install moonphase", "y"),
+                    Check = c => Installed(c, "moonphase"),
+                },
+                new()
+                {
+                    Id = "kor",
+                    Text = "Kör programmet `moonphase`.",
+                    Solution = Cmds("moonphase"),
+                    Check = c => Ran(c, Re(@"^moonphase\b")) && Installed(c, "moonphase"),
+                },
+                new()
+                {
+                    Id = "ursprung",
+                    Text = "Ta reda på från vilket förråd `moonphase` installerades.",
+                    Hint = "`dnf info moonphase` – titta på raden `From repository`.",
+                    Solution = Cmds("dnf info moonphase"),
+                    Check = c => Ran(c, Re(@"^dnf5?\s+info\b.*\bmoonphase\b")) && c.Output.Contains("copr:"),
+                },
+                new()
+                {
+                    Id = "efterat",
+                    Text = "Stäng av COPR-förrådet igen. Programmet blir kvar, men får inga fler uppdateringar.",
+                    Hint = "`sudo dnf copr disable lunatool/moonphase`",
+                    Solution = Cmds("sudo dnf copr disable lunatool/moonphase"),
+                    Check = c => Re(@"\bcopr\s+(disable|remove)\b").IsMatch(c.Line) && !ExtrarepoLib.ExtraRepoEnabled(c.Sh, "copr:lunatool/moonphase"),
+                },
+                new()
+                {
+                    Id = "vim",
+                    Text = "Bonus: installera texteditorn Vim. Tips: paketet heter inte `vim` i Red Hat-familjen!",
+                    Hint = "Sök med `dnf search vim`. Paketet heter `vim-enhanced`.",
+                    Solution = Cmds("sudo dnf install vim-enhanced", "y"),
+                    Check = c => Installed(c, "vim"),
                 },
             },
         },
