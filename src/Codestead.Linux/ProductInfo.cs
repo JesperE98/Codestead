@@ -10,7 +10,7 @@ public static class ProductInfo
 
     public static string Name => Meta("ProductName", "Codestead Linux");
     public static string ToolId => Meta("ToolId", "codestead-linux");
-    public static string ReleasesRepo => Meta("ReleasesRepo", "jesper-e98/codestead-releases");
+    public static string ReleasesRepo => Meta("ReleasesRepo", "JesperE98/codestead-releases");
     public static string Version =>
         typeof(ProductInfo).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "0.0.0";
 }

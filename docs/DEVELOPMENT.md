@@ -137,7 +137,7 @@ Allt byggs av GitHub Actions (`.github/workflows/release.yml`), för varje produ
 Flödet bygger alla produkter och installerar och startar dem på rena system (Windows Server 2022/2025,
 Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS). Hubben får dessutom installera och starta Codestead
 Linux från en signerad katalog. Därefter publiceras de ändrade produkterna i det offentliga repot
-`jesper-e98/codestead-releases` – men bara när båda secrets nedan finns (annars en varning, inget fel):
+`JesperE98/codestead-releases` – men bara när båda secrets nedan finns (annars en varning, inget fel):
 
 | Release | Innehåll |
 |---|---|

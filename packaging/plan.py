@@ -15,7 +15,7 @@ import os
 import re
 import subprocess
 
-REPO = os.environ.get("RELEASES_REPO", "jesper-e98/codestead-releases")
+REPO = os.environ.get("RELEASES_REPO", "JesperE98/codestead-releases")
 
 
 def run(*cmd):

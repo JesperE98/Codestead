@@ -7,9 +7,9 @@ version: ${VERSION}
 release: 1
 section: education
 priority: optional
-maintainer: jesper-e98 <noreply@github.com>
-vendor: jesper-e98
-homepage: https://github.com/jesper-e98/codestead-releases
+maintainer: JesperE98 <noreply@github.com>
+vendor: JesperE98
+homepage: https://github.com/JesperE98/codestead-releases
 license: Proprietary
 description: |
   ${PKG_DESCRIPTION}

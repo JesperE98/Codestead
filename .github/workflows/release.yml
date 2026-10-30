@@ -10,7 +10,7 @@ name: Release
 #   => Windows and Linux artifacts are built for every product, installed and smoke-tested on clean
 #      systems (Windows Server 2022/2025, Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS), the hub
 #      installs and starts the tool end to end, and only then the changed products are published in
-#      the public repository jesper-e98/codestead-releases:
+#      the public repository JesperE98/codestead-releases:
 #        <id>-v<version>   the release with all files (e.g. codestead-linux-v0.5.0)
 #        <id>-latest       the same files without version in the name + the Velopack update feed
 #        catalog           catalog.json + catalog.json.sig, read by the hub
@@ -44,7 +44,7 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: '1'
   DOTNET_NOLOGO: '1'
   AVALONIA_TELEMETRY_OPTOUT: '1'
-  RELEASES_REPO: jesper-e98/codestead-releases
+  RELEASES_REPO: JesperE98/codestead-releases
   NFPM_VERSION: 2.43.0
   VPK_VERSION: 1.2.161
 
