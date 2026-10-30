@@ -83,7 +83,7 @@ classes with public get/set properties so `System.Text.Json` can save and load i
 
 Use `Js.cs`:
 
-- `s.slice(a, b)` → `s.Slice(a, b)` (negative indices!). `arr.slice` → `list.Slice(a, b)`. `arr.at(-1)` → `list.At(-1)` or `list[^1]`.
+- `s.slice(a, b)` → `s.Slice(a, b)` (negative indices!). `arr.slice(a, b)` → **`Js.Slice(list, a, b)`** – never `list.Slice(a, b)` on a `List<T>`: that calls .NET's own `List<T>.Slice(start, count)` (second argument is a count!). `arr.at(-1)` → `list.At(-1)` or `list[^1]`.
 - `s[i]` when `i` may be out of range → `s.CharAt(i)` (returns `""`).
 - `'x'.repeat(n)` → `"x".Repeat(n)`; `padStart/padEnd` → `PadLeft/PadRight`.
 - `String(n)` for a JS number → `Js.Num(n)`; `n.toFixed(d)` → `Js.ToFixed(n, d)`. Never rely on the current culture: use `CultureInfo.InvariantCulture` for every number format/parse.
