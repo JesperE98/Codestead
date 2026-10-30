@@ -4,6 +4,7 @@
 
 import type { CommandDef } from '../types';
 import { ARCHIVE_COMMANDS } from './archive';
+import { DISK_COMMANDS } from './disks';
 import { EXTRA_COMMANDS } from './extras';
 import { FS_COMMANDS } from './fs';
 import { NET_COMMANDS } from './net';
@@ -48,3 +49,5 @@ for (const def of [...NET_COMMANDS, ...SSH_COMMANDS]) COMMANDS[def.name] = def;
     run: (ctx) => (ctx.args[0] === 'hosts' || ctx.args[0] === 'ahosts' ? net.run(ctx) : users.run(ctx)),
   };
 }
+// Diskar och filsystem: df, lsblk, blkid, mount, umount, findmnt, fdisk, mkfs ...
+for (const def of DISK_COMMANDS) COMMANDS[def.name] = def;

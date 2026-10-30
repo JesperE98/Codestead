@@ -43,7 +43,7 @@ export const PACKAGES: PackageDef[] = [
       'true', 'false', 'sleep', 'seq', 'basename', 'dirname', 'pwd', 'echo',
       'tr',
       'du',
-      'who', 'chgrp',
+      'who', 'chgrp', 'df', 'sync',
     ],
     base: ALL,
     essential: true,
@@ -156,7 +156,7 @@ export const PACKAGES: PackageDef[] = [
     version: { debian: '2.39.3-9ubuntu6', arch: '2.41.2-1', redhat: '2.41.2-1.fc43' },
     description: 'Miscellaneous system utilities (su, more, hostname ...)',
     sizeKb: 9_800,
-    provides: ['su', 'more', 'hostname', 'chsh', 'last'],
+    provides: ['su', 'more', 'hostname', 'chsh', 'last', 'mount', 'umount', 'lsblk', 'blkid', 'findmnt', 'fdisk', 'swapon', 'mkfs'],
     base: ALL,
     essential: true,
     archRepo: 'core',
@@ -181,6 +181,27 @@ export const PACKAGES: PackageDef[] = [
     provides: ['which'],
     base: ALL,
     essential: true,
+    archRepo: 'core',
+  },
+  {
+    id: 'e2fsprogs',
+    names: same('e2fsprogs'),
+    version: { debian: '1.47.0-2.4~exp1ubuntu4', arch: '1.47.3-1', redhat: '1.47.3-2.fc43' },
+    description: 'Utilities for the ext2/ext3/ext4 file systems (mkfs.ext4, mke2fs ...)',
+    sizeKb: 1_900,
+    provides: ['mkfs.ext4', 'mke2fs'],
+    base: ALL,
+    archRepo: 'core',
+  },
+  {
+    // Följer inte med Arch från början – där installeras det vid behov.
+    id: 'dosfstools',
+    names: same('dosfstools'),
+    version: { debian: '4.2-1.1build1', arch: '4.2-5', redhat: '4.2-14.fc43' },
+    description: 'Utilities for making and checking MS-DOS FAT file systems (mkfs.vfat)',
+    sizeKb: 320,
+    provides: ['mkfs.vfat', 'mkfs.fat'],
+    base: ['debian', 'redhat'],
     archRepo: 'core',
   },
   {
@@ -499,13 +520,16 @@ export function searchPackages(family: Family, query: string): PackageDef[] {
 /** Installerar (eller uppgraderar) paketet: lägger kommandona i /usr/bin. */
 export function installPackage(sh: Shell, pkg: PackageDef): void {
   sh.installed[pkg.id] = availableVersion(sh, pkg);
-  const bin = sh.vfs.lookup('/usr/bin', sh.rootUser());
-  for (const cmd of pkg.provides) {
-    const node = makeFile(`${ELF}\u0002\u0001\u0001 (simulerad binärfil: ${cmd})`, 'root', cmd === 'sudo' ? 0o4755 : 0o755);
-    node.size = 30_000 + ((cmd.length * 7919) % 150_000);
-    bin.children![cmd] = node;
-  }
+  for (const cmd of pkg.provides) installCommand(sh, cmd);
   if (pkg.shells) updateEtcShells(sh, pkg.shells, true);
+}
+
+/** Lägger en simulerad binärfil för kommandot i /usr/bin. */
+export function installCommand(sh: Shell, cmd: string): void {
+  const bin = sh.vfs.lookup('/usr/bin', sh.rootUser());
+  const node = makeFile(`${ELF}\u0002\u0001\u0001 (simulerad binärfil: ${cmd})`, 'root', cmd === 'sudo' ? 0o4755 : 0o755);
+  node.size = 30_000 + ((cmd.length * 7919) % 150_000);
+  bin.children![cmd] = node;
 }
 
 /** Lägger till eller tar bort skal i /etc/shells (som paketens installationsskript gör). */

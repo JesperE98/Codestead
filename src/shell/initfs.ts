@@ -1,6 +1,7 @@
 // Bygger startfilsystemet för en distribution: systemkataloger,
 // konfigurationsfiler och några övningsfiler i hemkatalogen.
 
+import { fstabFor } from './disks';
 import type { Distro } from './distros';
 import { makeDir as d, makeFile as f, type FsNode } from './vfs';
 import { minserverBinary, resolvConf } from './network';
@@ -261,7 +262,7 @@ export function buildFs(distro: Distro): FsNode {
       0o440,
     ),
     hosts: f(`127.0.0.1\tlocalhost\n127.0.1.1\t${distro.hostname}\n::1\t\tlocalhost ip6-localhost ip6-loopback\n`),
-    fstab: f(`# <file system>  <mount point>  <type>  <options>  <dump>  <pass>\nUUID=1234-abcd   /              ext4    defaults   0       1\n`),
+    fstab: f(fstabFor(distro)),
     shells: f('/bin/sh\n/bin/bash\n/usr/bin/bash\n'),
     'resolv.conf': f(resolvConf(distro)),
     'nsswitch.conf': f('passwd:         files\ngroup:          files\nshadow:         files\n\nhosts:          files dns\nnetworks:       files\n'),

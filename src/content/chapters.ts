@@ -7,6 +7,7 @@ import type { Chapter, CheckCtx, Part } from './types';
 
 import { RUNAWAY_PID, SERVER_PID } from '../shell/procs';
 import { findGroup, findUser, shadowHash } from '../shell/users';
+import { partitionRoot, rootUuid, USB_PART } from '../shell/disks';
 
 const HOME = '/home/elev';
 
@@ -708,6 +709,76 @@ export const CHAPTERS: Chapter[] = [
     ],
   },
   {
+    id: 'diskar',
+    part: 'admin',
+    title: 'Diskar och filsystem',
+    tasks: [
+      {
+        id: 'df',
+        text: 'Visa hur mycket plats som är använd och ledig på de monterade filsystemen – med läsbara storlekar (G, M).',
+        hint: '`df` visar filsystemen, flaggan `-h` gör storlekarna läsbara: `df -h`.',
+        solution: ['df -h'],
+        check: (c) => ran(c, /^df\b/) && /\s-\w*h|--human/.test(c.line) && c.output.includes('Mounted on'),
+      },
+      {
+        id: 'lsblk-f',
+        text: 'Visa alla diskar och partitioner tillsammans med filsystemens typ, etikett och UUID.',
+        hint: '`lsblk` visar diskarna som ett träd. Med `-f` kommer filsystemen med: `lsblk -f`.',
+        solution: ['lsblk -f'],
+        check: (c) => ran(c, /^lsblk\b/) && c.output.includes('FSTYPE') && c.output.includes('USBMINNE'),
+      },
+      {
+        id: 'fstab',
+        text: 'Visa filen `/etc/fstab`, som talar om vad som ska monteras när datorn startar.',
+        solution: ['cat /etc/fstab'],
+        check: (c) => ran(c, /\/etc\/fstab/) && c.output.includes('UUID='),
+      },
+      {
+        id: 'uuid',
+        text: 'Ta reda på UUID för filsystemet som är monterat på `/` – och bara det.',
+        hint: byFamily({
+          debian: '`lsblk -f` visar att `/` ligger på `/dev/sda2`. Fråga sedan `blkid /dev/sda2` – eller låt `findmnt -n -o UUID /` göra allt på en gång.',
+          arch: '`lsblk -f` visar att `/` ligger på `/dev/sda3`. Fråga sedan `blkid /dev/sda3` – eller låt `findmnt -n -o UUID /` göra allt på en gång.',
+          redhat: '`lsblk -f` visar att `/` ligger på `/dev/sda3`. Fråga sedan `blkid /dev/sda3` – eller låt `findmnt -n -o UUID /` göra allt på en gång.',
+        }),
+        solution: byFamily({
+          debian: ['blkid /dev/sda2'],
+          arch: ['blkid /dev/sda3'],
+          redhat: ['blkid /dev/sda3'],
+        }),
+        check: (c) => c.exitCode === 0 && outLines(c).length <= 2 && c.output.includes(rootUuid(c.distro)),
+      },
+      {
+        id: 'montera',
+        text: 'Skapa monteringspunkten `/mnt/usb` och montera USB-stickan (`/dev/sdb1`) där.',
+        hint: 'Både att skapa kataloger i `/mnt` och att montera kräver root: `sudo mkdir -p /mnt/usb` och sedan `sudo mount /dev/sdb1 /mnt/usb`.',
+        solution: ['sudo mkdir -p /mnt/usb', 'sudo mount /dev/sdb1 /mnt/usb'],
+        check: (c) => c.sh.disks.mounts.some((m) => m.dev === USB_PART && m.target === '/mnt/usb'),
+      },
+      {
+        id: 'fran-usb',
+        text: 'Kopiera `rapport.pdf` från USB-stickan till din hemkatalog.',
+        hint: 'Stickans filer finns nu i `/mnt/usb`: `cp /mnt/usb/rapport.pdf ~`.',
+        solution: ['cp /mnt/usb/rapport.pdf ~'],
+        check: (c) => content(c, '~/rapport.pdf').startsWith('%PDF'),
+      },
+      {
+        id: 'till-usb',
+        text: 'Spara en kopia av `~/dokument/frukter.txt` på USB-stickan.',
+        hint: 'Filerna på stickan ägs av root – FAT har inga Linux-rättigheter – så du behöver `sudo`: `sudo cp ~/dokument/frukter.txt /mnt/usb/`.',
+        solution: ['sudo cp ~/dokument/frukter.txt /mnt/usb/'],
+        check: (c) => !!partitionRoot(c.sh.vfs, c.sh.disks, USB_PART, c.sh.rootUser())?.children?.['frukter.txt'],
+      },
+      {
+        id: 'avmontera',
+        text: 'Avmontera USB-stickan, så att den är säker att dra ut.',
+        hint: '`sudo umount /mnt/usb` – utan n! Får du *target is busy* står ditt skal i katalogen: gå därifrån med `cd ~` först.',
+        solution: ['cd ~', 'sudo umount /mnt/usb'],
+        check: (c) => ran(c, /\bumount\b/) && !c.sh.disks.mounts.some((m) => m.dev === USB_PART),
+      },
+    ],
+  },
+  {
     id: 'distributioner',
     part: 'distro',
     title: 'Distributioner och familjer',
@@ -1105,7 +1176,6 @@ CHAPTERS.sort((a, b) => PARTS.findIndex((p) => p.id === a.part) - PARTS.findInde
 
 /** Kapitel som planeras – visas i menyn som "kommer snart". */
 export const UPCOMING: string[] = [
-  'Diskar och filsystem (df, du, mount)',
   'AUR, PPA och COPR',
   'Flatpak, Snap och AppImage',
   'Git i terminalen',
