@@ -22,6 +22,16 @@
 と呼ばれます。これはまさに Unix 哲学そのものです。それぞれが 1 つのことをこなし、
 組み合わせて使える小さなプログラムです。
 
+```quiz
+`tar` と `gzip` がふつう組み合わせて使われるのはなぜですか？
+- [ ] `gzip` は `tar` が作っていないファイルを読めないから
+- [x] `tar` がたくさんのファイルを 1 つにまとめ、`gzip` がその 1 つのファイルを小さくするから
+- [ ] `tar` がファイルを小さくし、`gzip` が正しいパーミッションを付けるから
+---
+gzip は一度に 1 つのファイルしか扱えず、ディレクトリのことは何も知りません。
+また、tar アーカイブそのものは中のファイルより小さくなりません。
+```
+
 | 拡張子 | 何のファイル？ | 展開方法 |
 |---|---|---|
 | `.tar` | 圧縮されていないアーカイブ | `tar -xf` |
@@ -43,6 +53,7 @@ tar -cvf dokument.tar dokument
 
 ```text
 dokument/
+dokument/betyg.csv
 dokument/frukter.txt
 dokument/server.log
 ```
@@ -79,6 +90,16 @@ dokument/server.log
 `f` の直後に来なければならないからです。歴史的な理由から、ダッシュを省略する
 こともできます。`tar czvf` は `tar -czvf` と同じ意味です。
 
+```quiz
+`tar -xzvf backup.tar.gz` は何をしますか？
+- [ ] 圧縮されたアーカイブ `backup.tar.gz` を作成する
+- [ ] `backup.tar.gz` を展開せずに内容を一覧表示する
+- [x] gzip を使って `backup.tar.gz` を展開し、ファイルを 1 つずつ表示する
+---
+`x` が操作（展開）、`z` は gzip、`v` はファイルの表示を意味し、`f` の後には
+アーカイブの名前が続きます。
+```
+
 ## `-z` で圧縮する
 
 `z` を加えると、アーカイブは作成途中で gzip を通ります。
@@ -90,10 +111,10 @@ ls -l dokument.tar dokument.tar.gz
 
 ```text
 -rw-r--r-- 1 elev elev 10240 Oct 30 12:00 dokument.tar
--rw-r--r-- 1 elev elev   674 Oct 30 12:00 dokument.tar.gz
+-rw-r--r-- 1 elev elev   837 Oct 30 12:00 dokument.tar.gz
 ```
 
-ファイルの合計は 900 バイト弱なのに、圧縮していないアーカイブは 10,240 バイトも
+ファイルの合計は 1,000 バイトを少し超える程度なのに、圧縮していないアーカイブは 10,240 バイトも
 あります。これは、tar が各ファイルの前に 512 バイトのヘッダーを置き、
 アーカイブをブロック単位まで埋めるからです。その空きスペースはすべて gzip が
 圧縮して取り除いてくれます。
@@ -110,7 +131,7 @@ du -sh dokument
 ```text
 12K	dokument.tar
 4.0K	dokument.tar.gz
-12K	dokument
+16K	dokument
 ```
 
 ディスクは 4 KiB 単位のブロックに分かれているので、空でないファイルについて
@@ -125,6 +146,7 @@ tar -tzvf dokument.tar.gz
 
 ```text
 drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
+-rw-r--r-- elev/elev       146 2026-10-30 12:00 dokument/betyg.csv
 -rw-r--r-- elev/elev        64 2026-10-30 12:00 dokument/frukter.txt
 -rw-r--r-- elev/elev       848 2026-10-30 12:00 dokument/server.log
 ```
@@ -171,6 +193,16 @@ tar -czf backup.tar.gz -C ~ dokument
 tar -tzf backup.tar.gz
 ```
 
+```quiz
+`tar -czf backup.tar.gz -C ~ dokument` を実行しました。アーカイブには何が入っていますか？
+- [x] `dokument/` とその中のファイル
+- [ ] `home/elev/dokument/` とその中のファイル
+- [ ] `/home/elev/dokument/` とその中のファイル
+---
+`-C ~` によって tar はまずホームディレクトリに移動するので、アーカイブ内の
+名前は `dokument/` から始まります。
+```
+
 ## `gzip` で 1 つのファイルを圧縮する
 
 `gzip` はファイルを圧縮し、元のファイルを `.gz` ファイルに **置き換えます**。
@@ -205,6 +237,17 @@ gzip -kv frukter.txt
 frukter.txt:	-20.3% -- created frukter.txt.gz
 ```
 
+```predict
+$ cp dokument/frukter.txt .
+$ cp dokument/server.log .
+$ gzip frukter.txt
+$ gzip -k server.log
+$ ls frukter* server*
+frukter.txt.gz  server.log  server.log.gz
+---
+ただの `gzip` はファイルを `.gz` ファイルに置き換えます。`-k` を付けると元のファイルが残ります。
+```
+
 ### 圧縮されたファイルを直接読む
 
 `/var/log` にある古いログファイルは、容量を節約するために `.gz` で保存されて
@@ -226,11 +269,11 @@ Windows と macOS は追加のソフトウェアなしで zip ファイルを開
 使っていない人にファイルを送るときにはこれが定番です。Linux の世界では、
 所有者やパーミッションをよりよく保持できる `.tar.gz` のほうが一般的です。
 
-`zip` と `unzip` のプログラムは、最初からインストールされているとは限りません。
-その場合はパッケージマネージャーでインストールします（詳しくはパッケージ管理の
-章で扱います）。{{distro}} では次のようにします。
+`zip` と `unzip` のプログラムは、最初からインストールされているとは限らず、
+このターミナルでは先にインストールする必要があります。それにはパッケージ
+マネージャーを使います。詳しくはディストリビューションとパッケージのパートで
+学びます。Ubuntu では次のようにします。
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install zip unzip
@@ -238,24 +281,6 @@ sudo apt install zip unzip
 
 `apt update` は、利用できるパッケージの一覧をダウンロードします。これをしないと、
 apt はパッケージを 1 つも見つけられません。
-:::
-
-:::arch
-```sh
-sudo pacman -S zip unzip
-```
-
-続行するかどうか pacman に聞かれたら、yes（`Y` または Enter だけ）と答えます。
-:::
-
-:::redhat
-```sh
-sudo dnf install zip unzip
-```
-
-dnf に `Is this ok [y/N]` と聞かれたら `y` と答えます。大文字の `N` は、Enter
-だけを押した場合の既定値が No であることを意味します。
-:::
 
 次にディレクトリをまとめます。`-r`（*recursive*）を忘れないでください。
 これがないと、zip は空のディレクトリだけを追加し、中のファイルは追加しません。
@@ -266,6 +291,7 @@ zip -r dokument.zip dokument
 
 ```text
   adding: dokument/ (stored 0%)
+  adding: dokument/betyg.csv (deflated 17%)
   adding: dokument/frukter.txt (deflated 27%)
   adding: dokument/server.log (deflated 42%)
 ```
@@ -280,6 +306,15 @@ unzip dokument.zip -d fran-zip
 
 ファイルがすでに存在する場合、unzip はそれをスキップします。`unzip -o` を使うと
 上書きします。
+
+```quiz
+`-r` を付けずに `zip dokument.zip dokument` を実行しました。zip ファイルには何が入りますか？
+- [ ] `dokument` の中のすべてのファイル
+- [x] 空のディレクトリ `dokument/` だけ
+- [ ] 何も入らない。zip は実行を拒否する
+---
+`-r`（*recursive*）がないと、zip はディレクトリの中に入っていきません。
+```
 
 ## まとめ
 

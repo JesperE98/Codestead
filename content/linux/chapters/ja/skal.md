@@ -18,6 +18,17 @@
 取り巻く言語** です。変数の設定方法、ループや条件の書き方、プロンプトの見た目、
 そしてどんな便利機能があるか、といったことです。
 
+```quiz
+bash から別のシェルに切り替えました。次のうち、まったく変わらないものはどれですか？
+- [ ] 変数の設定方法
+- [ ] ループの書き方
+- [x] `grep` がオプションに応じてすること
+- [ ] プロンプトの見た目
+---
+`grep` は `/usr/bin` にある独立したプログラムです。シェルはそれを起動するだけで、
+シェルによって違うのはそれを取り巻く言語のほうです。
+```
+
 ## 系統図: sh、bash、zsh、fish
 
 | シェル | 登場 | 特徴 |
@@ -54,26 +65,16 @@ echo $SHELL
 
 ### zsh をインストールする
 
-zsh のパッケージ名は、どのファミリーでも同じです。
+Ubuntu のターミナルでは、zsh は apt でインストールします。
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install zsh
 ```
-:::
 
-:::arch
-```sh
-sudo pacman -S zsh
-```
-:::
-
-:::redhat
-```sh
-sudo dnf install zsh
-```
-:::
+ほかのディストリビューションでは、ディストリビューションとパッケージのパートで
+学んだように、それぞれのパッケージマネージャーを使います。パッケージ名は
+そこでも `zsh` です。
 
 もう一度 `/etc/shells` を見てみましょう。パッケージが `/usr/bin/zsh`（と
 `/bin/zsh`）を追加しています。
@@ -100,7 +101,7 @@ zsh
 | `1` | すべての設定があるメインメニュー（シミュレーターでは使えない） |
 | `2` | おすすめの設定で `~/.zshrc` を作成する |
 
-`2` と答えてください。プロンプトが `elev@{{hostname}} ~ %` に変わります。
+`2` と答えてください。プロンプトが `elev@ubuntu ~ %` に変わります。
 zsh では、`%` が一般ユーザーを表すふつうの記号です（root は bash と同じく
 `#` になります）。
 
@@ -176,6 +177,22 @@ bash は `[a.txt]` と `[b.txt]` を出力しますが、zsh は `[a.txt b.txt]`
 スクリプトが zsh で同じ動きをするとは限らない、ということでもあります。
 （`setopt shwordsplit` を使うと、zsh は bash と同じように振る舞います。）
 
+1 つのコマンドを試すためだけに、わざわざシェルを起動する必要はありません。
+`-c` を付けると、シェルはそのコマンドを実行してすぐに終了します。
+`zsh -c 'echo $0'` は `zsh` と表示し、そのあとも bash にいたままです。
+
+次の問題は新しいターミナルで始まるので、まず zsh をインストールします。
+`> /dev/null 2>&1` はその行の出力を捨てます。最後のコマンドは何を表示しますか？
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
+$ zsh -c 'filer="x.txt y.txt z.txt"; for f in $filer; do echo "<$f>"; done'
+<x.txt y.txt z.txt>
+---
+zsh は変数をスペースで分割しないので、ループは値全体で 1 回だけ実行されます。
+bash なら同じループが `<x.txt>`、`<y.txt>`、`<z.txt>` の 3 行を表示します。
+```
+
 ### ~/.zshrc とプロンプト
 
 bash は起動時に `~/.bashrc` を読みますが、zsh は `~/.zshrc` を読みます。
@@ -233,30 +250,19 @@ fish は、設定なしですぐに使いやすいことを目指しています
 
 ### fish をインストールして起動する
 
-:::debian
+fish も同じように apt でインストールします。ほかのディストリビューションでは、
+それぞれのパッケージマネージャーを使います。
+
 ```sh
 sudo apt update
 sudo apt install fish
 ```
-:::
-
-:::arch
-```sh
-sudo pacman -S fish
-```
-:::
-
-:::redhat
-```sh
-sudo dnf install fish
-```
-:::
 
 ```sh
 fish
 ```
 
-fish があいさつしてくれて、プロンプトが `elev@{{hostname}} ~>` になります。
+fish があいさつしてくれて、プロンプトが `elev@ubuntu ~>` になります。
 いくつか下のディレクトリへ移動して、fish がプロンプトのパスをどう短縮するか
 見てみましょう。
 
@@ -319,6 +325,16 @@ fish では、どの変数も **リスト** です。要素には 1 から番号
 set frukter äpple päron banan
 echo $frukter[2]
 count $frukter
+```
+
+`-c` は fish でも使えます。最後のコマンドは何を表示しますか？
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y fish > /dev/null 2>&1
+$ fish -c 'set frukter äpple päron banan; echo $frukter[3]'
+banan
+---
+fish のリストの要素には 1 から番号が付くので、`[3]` は 3 番目、つまり最後の要素です。
 ```
 
 ### コマンド置換と $status
@@ -438,6 +454,16 @@ exit
 どこでも動かなければならないスクリプトは、`#!/bin/sh` と POSIX の構文だけで
 書きます。
 
+```quiz
+fish を使っているときに、`#!/bin/bash` で始まり `count=3` という行を含む
+スクリプトを実行しました。どうなりますか？
+- [ ] fish では `count=3` が許されないので、fish が拒否する
+- [x] 動く。あなたがどのシェルを使っていても、スクリプトを実行するのは bash だから
+- [ ] 先に `chsh` でログインシェルを bash に変えたときだけ動く
+---
+どのシェルでスクリプトを実行するかは `#!` 行で決まります。fish はそれを起動するだけです。
+```
+
 ## chsh で既定のシェルを変更する
 
 ターミナルを開くたびに `zsh` と入力するのは面倒になってきます。`chsh`
@@ -455,14 +481,6 @@ grep elev /etc/passwd
   古いシェルのままで、`$SHELL` もログインし直すまで変わりません。
 - root はほかのユーザーのシェルも変更できます: `sudo chsh -s /usr/bin/fish kim`。
 
-:::arch
-Arch では、`chsh -l` で有効なシェルをすべて一覧表示できます。
-:::
-
-:::redhat
-Fedora では、`chsh -l` で有効なシェルをすべて一覧表示できます。
-:::
-
 bash に戻すには、同じようにします。
 
 ```sh
@@ -472,6 +490,19 @@ chsh -s /bin/bash
 fish についてよくあるアドバイスは、ログインシェルは bash のままにして、
 代わりにターミナルのプログラムに fish を起動させる、というものです。そうすれば、
 ログイン時に POSIX シェルを前提とするものもすべて動き続けます。
+
+この問題は新しいターミナルで始まり、zsh をインストールしてログインシェルにします。
+最後のコマンドは何を表示しますか？
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
+$ chsh -s /usr/bin/zsh > /dev/null 2>&1
+$ echo $SHELL
+/bin/bash
+---
+`chsh` は `/etc/passwd` にあるあなたの行を変更しましたが、変更が有効になるのは
+次にログインしたときです。開いているターミナルは bash のままで、`$SHELL` も同じです。
+```
 
 ## どのシェルを選ぶべき？
 

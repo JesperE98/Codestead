@@ -31,12 +31,34 @@ echo "2行目" >> test.txt
 cat test.txt
 ```
 
+```predict
+$ echo one > t.txt
+$ echo two > t.txt
+$ cat t.txt
+two
+---
+2 回目の `>` がファイルを上書きしました。`>>` なら両方の行が入ります。
+```
+
 ## ファイルから – `<`
 
 `<` を使うと、プログラムは stdin をファイルから読み込みます。
 
 ```sh
 wc -l < dokument/frukter.txt
+```
+
+この場合 `wc` はファイル名を目にしません。stdin でテキストを受け取るだけなので、
+数だけを表示します。
+
+```predict
+$ wc -l dokument/frukter.txt
+$ wc -l < dokument/frukter.txt
+10 dokument/frukter.txt
+10
+---
+ファイル名を引数として渡すと、`wc` は名前も表示します。`<` を使うと、
+テキストだけを受け取ります。
 ```
 
 ## エラーメッセージ – `2>`
@@ -49,6 +71,16 @@ ls /finnsinte 2> fel.txt
 ```
 
 （*finns inte* はスウェーデン語で「存在しない」、*fel* は「エラー」という意味です。）
+
+```quiz
+`ls /finnsinte > fel.txt` を実行しました。エラーメッセージはどこに行きますか？
+- [ ] `fel.txt` の中
+- [x] 画面に表示され、`fel.txt` は空のまま
+- [ ] どこにも行かず、消える
+---
+`>` がリダイレクトするのは stdout（ストリーム 1）だけです。エラーメッセージは
+stderr（ストリーム 2）に出力され、それは引き続き画面に送られます。`2>` が必要です。
+```
 
 `/dev/null` というファイルは「ブラックホール」です。書き込んだものはすべて
 消えてしまいます。エラーを黙らせたいときに便利です。`2>&1` を使うと、
@@ -73,6 +105,12 @@ sort dokument/frukter.txt | uniq -c | sort -rn
 1 段ずつ読んでみましょう。果物を並べ替え、それぞれがいくつあるかを数え
 （`uniq -c`）、最後に数の大きい順に数値で並べ替えます（`sort -rn`）。
 
+`/etc` にはファイルとディレクトリがいくつありますか？パイプを使って数えてみましょう。
+
+```try
+ls /etc | wc -l
+```
+
 ## 画面とファイルの両方へ – `tee`
 
 `tee` は入力をそのまま次へ渡し、*さらに* ファイルにコピーを保存します。
@@ -93,4 +131,12 @@ ls /etc | tee etc-lista.txt | wc -l
 
 ```sh
 mkdir -p ny && cd ny
+```
+
+```predict
+$ mkdir dokument 2> /dev/null && echo created || echo failed
+failed
+---
+`dokument` はすでに存在するので、`mkdir` は失敗します（そのエラーメッセージは
+`/dev/null` に消えます）。`echo created` は飛ばされ、`echo failed` が実行されます。
 ```
