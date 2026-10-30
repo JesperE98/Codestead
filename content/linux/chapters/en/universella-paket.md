@@ -29,6 +29,16 @@ A **sandbox** means that the program can only reach what it has been allowed
 to, for example the network or your downloads folder, instead of your whole
 home directory.
 
+```quiz
+Which format is updated automatically in the background?
+- [ ] Flatpak
+- [x] Snap
+- [ ] AppImage
+---
+Flatpak programs are updated with `flatpak update`, and an AppImage is
+replaced by downloading a new file.
+```
+
 ## Flatpak
 
 Flatpak is the format most distributions have agreed on for desktop programs.
@@ -114,6 +124,16 @@ flatpak install --user flathub org.videolan.VLC
 flatpak list --user
 ```
 
+```quiz
+What happens when you install a Flatpak with `--user`?
+- [ ] It is installed for the whole system, in `/var/lib/flatpak`
+- [x] It ends up in your home directory, and no other user sees it
+- [ ] It runs without a sandbox
+---
+Remember that the user installation has its own remotes – Flathub has to be
+added with `--user` too.
+```
+
 ### Update and remove
 
 ```sh
@@ -146,7 +166,7 @@ sudo apt install snapd
 ### Snap on Arch
 
 Snap is not in the Arch repositories – only in the AUR. Build it as in the
-previous chapter:
+chapter about the Arch family:
 
 ```sh
 sudo pacman -S --needed git base-devel
@@ -195,6 +215,14 @@ sudo snap install code
 sudo snap install code --classic
 ```
 
+```quiz
+A snap is published with classic confinement. What do you need to add to
+install it?
+- [ ] `--user`
+- [x] `--classic`
+- [ ] `--channel=edge`
+```
+
 ### Channels and updates
 
 Every snap has **channels**: `stable`, `candidate`, `beta` and `edge` (the
@@ -225,12 +253,27 @@ cd ~/Nedladdningar
 ls -l
 ```
 
+What happens if you start it right away?
+
+```predict
+$ ~/Nedladdningar/Kalkylator.AppImage
+bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+---
+The file has no `x` permission.
+```
+
 Downloaded files are never executable to begin with. Make it executable and
 start it:
 
 ```sh
 chmod +x Kalkylator.AppImage
 ./Kalkylator.AppImage
+```
+
+```try
+chmod +x ~/Nedladdningar/Kalkylator.AppImage
+---
+Now the file is executable. Check with `ls -l ~/Nedladdningar`.
 ```
 
 ### FUSE
