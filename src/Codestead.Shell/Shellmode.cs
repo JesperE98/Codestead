@@ -222,7 +222,8 @@ public static partial class ShellmodeLib
     {
         var user = sh.CurrentUser();
         var path = $"{user.Home}/{rel}";
-        var parts = rel.Split('/').ToList().Slice(0, -1);
+        // Js.Slice explicitly: List<T>.Slice(start, count) would win over the extension method.
+        var parts = Js.Slice(rel.Split('/').ToList(), 0, -1);
         var dir = user.Home;
         foreach (var p in parts)
         {
