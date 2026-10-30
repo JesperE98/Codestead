@@ -1,0 +1,60 @@
+{
+  "title": "إدارة الحزم",
+  "tasks": {
+    "sync": {
+      "text": {
+        "debian": "نزّل أحدث قوائم الحزم باستخدام `apt update`.",
+        "arch": "زامِن قاعدة بيانات الحزم ورقِّ النظام باستخدام `pacman -Syu`.",
+        "redhat": "اجلب معلومات الحزم الجديدة وتحقق من التحديثات باستخدام `dnf check-update`."
+      },
+      "hint": {
+        "debian": "الأمر يغيّر النظام ويتطلب صلاحيات root: `sudo apt update`.",
+        "arch": "الأمر يغيّر النظام ويتطلب صلاحيات root: `sudo pacman -Syu`.",
+        "redhat": "لا يحتاج `dnf check-update` إلى صلاحيات root."
+      }
+    },
+    "search": {
+      "text": "ابحث عن الحزمة `htop`.",
+      "hint": {
+        "debian": "`apt search htop`",
+        "arch": "`pacman -Ss htop`",
+        "redhat": "`dnf search htop`"
+      }
+    },
+    "install": {
+      "text": "ثبّت الحزمة `tree`.",
+      "hint": {
+        "debian": "`sudo apt install tree`",
+        "arch": "`sudo pacman -S tree` وأجب بنعم على السؤال.",
+        "redhat": "`sudo dnf install tree` – وأجب بـ `y`، لأن «لا» هي الإجابة الافتراضية!"
+      }
+    },
+    "run-tree": {
+      "text": "شغّل `tree` في مجلد المنزل الخاص بك."
+    },
+    "remove": {
+      "text": "أزل الحزمة `tree` مرة أخرى.",
+      "hint": {
+        "debian": "`sudo apt remove tree`",
+        "arch": "`sudo pacman -R tree`",
+        "redhat": "`sudo dnf remove tree`"
+      }
+    },
+    "upgrade": {
+      "text": "رقِّ كل الحزم المثبّتة.",
+      "hint": {
+        "debian": "بعد `sudo apt update`، شغّل `sudo apt upgrade`.",
+        "arch": "`sudo pacman -Syu` يفعل كل شيء دفعة واحدة.",
+        "redhat": "`sudo dnf upgrade`"
+      }
+    },
+    "vim": {
+      "text": "مهمة إضافية: ثبّت محرر النصوص Vim. تلميح: الحزمة ليس لها الاسم نفسه في كل العائلات!",
+      "hint": {
+        "debian": "ابحث باستخدام `apt search vim`. اسم الحزمة `vim`.",
+        "arch": "ابحث باستخدام `pacman -Ss vim`. اسم الحزمة `vim`.",
+        "redhat": "ابحث باستخدام `dnf search vim`. اسم الحزمة `vim-enhanced`."
+      }
+    }
+  }
+}
