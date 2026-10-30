@@ -230,6 +230,7 @@ export class Shell {
       if (node.type === 'dir') for (const name of Object.keys(node.children!)) walk(`${path}/${name}`);
     };
     walk(`${home}/dokument`);
+    walk(`${home}/projekt-webb`);
     // Mallen för nya hemkataloger (useradd -m) och inställningarna för useradd.
     walk('/etc/skel');
     walk('/etc/login.defs');

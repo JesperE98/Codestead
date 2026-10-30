@@ -9,10 +9,13 @@ import { RUNAWAY_PID, SERVER_PID } from '../shell/procs';
 import { findGroup, findUser, shadowHash } from '../shell/users';
 import { partitionRoot, rootUuid, USB_PART } from '../shell/disks';
 import { extraRepoEnabled, parsePpa, ppaSourcesPath } from '../shell/extrarepo';
+import { gitGlobalConfig, gitIsAncestor, gitRepoState } from '../shell/commands/git';
 
 const HOME = '/home/elev';
 /** Filen som `add-apt-repository ppa:lunatool/moonphase` skapar. */
 const PPA_FILE = ppaSourcesPath(parsePpa('ppa:lunatool/moonphase')!);
+/** Övningsprojektet i kapitlet om git. */
+const WEB = `${HOME}/projekt-webb`;
 
 // ---------- Hjälpfunktioner för kontrollerna ----------
 
@@ -1301,6 +1304,103 @@ export const CHAPTERS: Chapter[] = [
     ],
   },
   {
+    id: 'git',
+    part: 'verktyg',
+    title: 'Git i terminalen',
+    tasks: [
+      {
+        id: 'installera',
+        perFamily: true,
+        text: 'Installera paketet `git`.',
+        hint: byFamily({
+          debian: 'Kör `sudo apt update` och sedan `sudo apt install git`.',
+          arch: '`sudo pacman -S git` – och svara ja på frågan.',
+          redhat: '`sudo dnf install git` – och svara `y`, eftersom Nej är standard.',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install git'],
+          arch: ['sudo pacman -S git', 'y'],
+          redhat: ['sudo dnf install git', 'y'],
+        }),
+        check: (c) => 'git' in c.sh.installed,
+      },
+      {
+        id: 'identitet',
+        text: 'Berätta för git vem du är: ställ in ditt namn (`user.name`) och din e-postadress (`user.email`) med `git config --global`.',
+        hint: 'Två kommandon: `git config --global user.name "Ditt Namn"` och `git config --global user.email "du@example.com"`.',
+        solution: ['git config --global user.name "Elev Elevsson"', 'git config --global user.email "elev@example.com"'],
+        check: (c) => !!gitGlobalConfig(c.sh, HOME, 'user.name') && !!gitGlobalConfig(c.sh, HOME, 'user.email'),
+      },
+      {
+        id: 'init',
+        text: 'Gå till katalogen `~/projekt-webb` och gör den till ett git-repo med `git init`.',
+        hint: '`cd ~/projekt-webb` och sedan `git init`. Titta gärna på den nya dolda katalogen med `ls -a`.',
+        solution: ['cd ~/projekt-webb', 'git init'],
+        check: (c) => ran(c, /(^|[;&]\s*)git\s+init\b/) && gitRepoState(c.sh, WEB) !== null,
+      },
+      {
+        id: 'forsta-commit',
+        text: 'Lägg till alla tre filerna i indexet med `git add` och gör din första commit med ett beskrivande meddelande.',
+        hint: '`git add .` lägger till allt i katalogen. Sedan `git commit -m "Första versionen av webbplatsen"`. Kolla läget med `git status` före och efter!',
+        solution: ['cd ~/projekt-webb', 'git add .', 'git commit -m "Första versionen av webbplatsen"'],
+        check: (c) => {
+          const s = gitRepoState(c.sh, WEB);
+          return !!s?.head && ['index.html', 'style.css', 'README.md'].every((f) => s.files.includes(f));
+        },
+      },
+      {
+        id: 'diff',
+        text: 'Lägg till en rad i slutet av `README.md` och titta på ändringen med `git diff`.',
+        hint: '`echo \'Sidan är byggd med HTML och CSS.\' >> README.md` och sedan `git diff`. Rader som börjar med `+` är nya.',
+        solution: ['cd ~/projekt-webb', "echo 'Sidan är byggd med HTML och CSS.' >> README.md", 'git diff'],
+        check: (c) => ran(c, /(^|[;&|]\s*)git\s+diff\b/) && outLines(c).some((l) => /^\+(?!\+\+ )/.test(l)),
+      },
+      {
+        id: 'commit-a',
+        text: 'Committa ändringen i `README.md`. Prova flaggan `-a`, som tar med alla ändrade filer som git redan följer.',
+        hint: '`git commit -a -m "Beskriv hur sidan är byggd"` – eller kortare `git commit -am "…"`.',
+        solution: ['cd ~/projekt-webb', 'git commit -am "Beskriv hur sidan är byggd"'],
+        check: (c) => ran(c, /(^|[;&]\s*)git\s+commit\b/) && (gitRepoState(c.sh, WEB)?.commits ?? 0) >= 2,
+      },
+      {
+        id: 'gren',
+        text: 'Skapa grenen `ny-design` och byt till den. Ändra något i `style.css` och committa ändringen på den nya grenen.',
+        hint: '`git switch -c ny-design` skapar grenen och byter till den. Ändra sedan t.ex. med `echo \'h1 { color: purple; }\' >> style.css` och kör `git commit -am "Lila rubriker"`.',
+        solution: ['cd ~/projekt-webb', 'git switch -c ny-design', "echo 'h1 { color: purple; }' >> style.css", 'git commit -am "Lila rubriker"'],
+        check: (c) => {
+          const s = gitRepoState(c.sh, WEB);
+          const design = s?.branches['ny-design'];
+          const main = s && (s.branches.main ?? s.branches.master);
+          return !!design && !!main && !gitIsAncestor(c.sh, WEB, design, main);
+        },
+      },
+      {
+        id: 'merge',
+        text: 'Byt tillbaka till `main` och slå ihop grenen `ny-design` med `git merge`.',
+        hint: '`git switch main` och sedan `git merge ny-design`. Eftersom `main` inte ändrats sedan du skapade grenen blir det en *fast-forward*.',
+        solution: ['cd ~/projekt-webb', 'git switch main', 'git merge ny-design'],
+        check: (c) => {
+          const s = gitRepoState(c.sh, WEB);
+          const design = s?.branches['ny-design'];
+          return (
+            ran(c, /(^|[;&]\s*)git\s+(merge|pull)\b/) &&
+            !!s?.head &&
+            (s.branch === 'main' || s.branch === 'master') &&
+            !!design &&
+            gitIsAncestor(c.sh, WEB, design, s.head)
+          );
+        },
+      },
+      {
+        id: 'logg',
+        text: 'Visa historiken med en rad per commit med `git log --oneline`.',
+        hint: 'Prova också `git log --oneline --graph --all` för att se grenarna.',
+        solution: ['cd ~/projekt-webb', 'git log --oneline'],
+        check: (c) => ran(c, /(^|[;&]\s*)git\s+log\b.*--oneline/) && outLines(c).length >= 3,
+      },
+    ],
+  },
+  {
     id: 'skal',
     part: 'verktyg',
     title: 'Andra skal: zsh och fish',
@@ -1468,7 +1568,6 @@ CHAPTERS.sort((a, b) => PARTS.findIndex((p) => p.id === a.part) - PARTS.findInde
 
 /** Kapitel som planeras – visas i menyn som "kommer snart". */
 export const UPCOMING: string[] = [
-  'Git i terminalen',
 ];
 
 export function taskKey(chapterId: string, taskId: string, perFamily: boolean | undefined, family: Family): string {

@@ -1,5 +1,5 @@
 // Program som inte är förinstallerade, utan installeras med pakethanteraren:
-// tree, htop, fastfetch, cowsay, git, python3, vim, nano.
+// tree, htop, fastfetch, cowsay, python3, vim, nano.
 // (curl, wget och ssh finns i net.ts och ssh.ts.)
 
 import type { CmdCtx, CommandDef } from '../types';
@@ -7,7 +7,6 @@ import { hasPerm, type FsNode } from '../vfs';
 import { badOption, colorName, COLOR, fsMessage, parseOpts } from './util';
 import { isInstalled, PACKAGES } from '../packages';
 import { currentProcs } from './procs';
-import { aurClone } from './repos';
 
 const note = (ctx: CmdCtx, text: string) => ctx.out(`${COLOR.dim}${text}${COLOR.reset}\n`);
 
@@ -212,40 +211,6 @@ EXEMPEL
   },
 };
 
-const git: CommandDef = {
-  name: 'git',
-  summary: 'Versionshantering',
-  man: `NAMN
-       git - distribuerad versionshantering
-
-BESKRIVNING
-       git kommer att få ett eget kapitel. I simulatorn stöds än så länge
-       bara "git --version".`,
-  run(ctx) {
-    if (ctx.args[0] === '--version' || ctx.args[0] === 'version') {
-      ctx.out('git version 2.51.1\n');
-      return 0;
-    }
-    if (!ctx.args.length) {
-      ctx.out('usage: git [-v | --version] [-h | --help] <command> [<args>]\n');
-      return 1;
-    }
-    // git clone https://aur.archlinux.org/PAKET.git – se repos.ts.
-    if (ctx.args[0] === 'clone') {
-      const code = aurClone(ctx, ctx.args.slice(1));
-      if (code !== null) return code;
-    }
-    note(
-      ctx,
-      ctx.sh.msg({
-        sv: `git ${ctx.args[0]} stöds inte ännu i simulatorn – det kommer i ett eget kapitel om git.`,
-        en: `git ${ctx.args[0]} is not supported in the simulator yet – it will get its own chapter about git.`,
-      }),
-    );
-    return 1;
-  },
-};
-
 const python3: CommandDef = {
   name: 'python3',
   summary: 'Programspråket Python',
@@ -299,7 +264,6 @@ export const EXTRA_COMMANDS: CommandDef[] = [
   htop,
   fastfetch,
   cowsay,
-  git,
   python3,
   editor('vim', 'Kraftfull texteditor', `NAMN
        vim - Vi IMproved, en kraftfull texteditor

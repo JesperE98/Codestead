@@ -7,6 +7,7 @@ import { ARCHIVE_COMMANDS } from './archive';
 import { DISK_COMMANDS } from './disks';
 import { EXTRA_COMMANDS } from './extras';
 import { FS_COMMANDS } from './fs';
+import { GIT_COMMANDS } from './git';
 import { NET_COMMANDS } from './net';
 import { PKG_COMMANDS } from './pkg';
 import { PROC_COMMANDS } from './procs';
@@ -29,6 +30,8 @@ for (const def of [...FS_COMMANDS, ...TEXT_COMMANDS, ...SYSTEM_COMMANDS, ...PKG_
 
 // Arkiv och komprimering (tar, gzip, zip ...) samt du.
 for (const def of ARCHIVE_COMMANDS) COMMANDS[def.name] = def;
+// Versionshantering med git.
+for (const def of GIT_COMMANDS) COMMANDS[def.name] = def;
 
 // Tjänster och loggar (systemctl, journalctl, hostnamectl, systemd-analyze, reboot).
 for (const def of SYSTEMD_COMMANDS) COMMANDS[def.name] = def;
