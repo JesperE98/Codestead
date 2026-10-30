@@ -1,22 +1,22 @@
-## Ladda ner
+## Download
 
-| System | Fil | Så installerar du |
+| System | File | How to install |
 |---|---|---|
-| **Windows** 10/11 (x64) | `codestead-linux-<version>-win-x64-Setup.exe` | Kör filen. Appen installeras för din användare och läggs i Start-menyn. Den uppdaterar sig själv. |
-| **Windows** (utan installation) | `codestead-linux-<version>-win-x64.zip` | Packa upp och starta `Codestead.Linux.exe`. |
+| **Windows** 10/11 (x64) | `codestead-linux-<version>-win-x64-Setup.exe` | Run the file. The app is installed for your user and added to the Start menu. It updates itself. |
+| **Windows** (no installation) | `codestead-linux-<version>-win-x64.zip` | Unzip it and start `Codestead.Linux.exe`. |
 | **Ubuntu / Debian** | `codestead-linux_<version>_amd64.deb` | `sudo apt install ./codestead-linux_<version>_amd64.deb` |
 | **Fedora** | `codestead-linux-<version>-1.x86_64.rpm` | `sudo dnf install ./codestead-linux-<version>-1.x86_64.rpm` |
 | **Arch Linux / CachyOS** | `codestead-linux-<version>-1-x86_64.pkg.tar.zst` | `sudo pacman -U codestead-linux-<version>-1-x86_64.pkg.tar.zst` |
-| **Alla Linux** | `codestead-linux-<version>-linux-x86_64.AppImage` | `chmod +x` på filen och starta den. Den uppdaterar sig själv. |
+| **Any Linux** | `codestead-linux-<version>-linux-x86_64.AppImage` | Run `chmod +x` on the file and start it. It updates itself. |
 
-`SHA256SUMS.txt` innehåller kontrollsummor för alla filer.
+`SHA256SUMS.txt` contains checksums for all files.
 
-På Arch Linux och CachyOS behövs typsnitt för att kinesiska, japanska, arabiska och hindi ska visas:
-`sudo pacman -S noto-fonts noto-fonts-cjk`. Paketen för Ubuntu och Fedora föreslår dem automatiskt.
+On Arch Linux and CachyOS, fonts are needed to display Chinese, Japanese, Arabic and Hindi:
+`sudo pacman -S noto-fonts noto-fonts-cjk`. The Ubuntu and Fedora packages suggest them automatically.
 
-### Första starten
+### First start
 
-Appen är ännu inte signerad med något utvecklarcertifikat:
+The app is not yet signed with a developer certificate:
 
-- **Windows**: SmartScreen kan visa "Windows skyddade datorn". Klicka på **Mer information** → **Kör ändå**.
-- **AppImage**: vissa distributioner behöver FUSE 2 (Ubuntu: `sudo apt install libfuse2t64`).
+- **Windows**: SmartScreen may show "Windows protected your PC". Click **More info** → **Run anyway**.
+- **AppImage**: some distributions need FUSE 2 (Ubuntu: `sudo apt install libfuse2t64`).
