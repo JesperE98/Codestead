@@ -1,0 +1,60 @@
+{
+  "title": "Управление пакетами",
+  "tasks": {
+    "sync": {
+      "text": {
+        "debian": "Загрузите свежие списки пакетов командой `apt update`.",
+        "arch": "Синхронизируйте базу данных пакетов и обновите систему командой `pacman -Syu`.",
+        "redhat": "Загрузите новую информацию о пакетах и проверьте наличие обновлений командой `dnf check-update`."
+      },
+      "hint": {
+        "debian": "Команда меняет систему и требует прав root: `sudo apt update`.",
+        "arch": "Команда меняет систему и требует прав root: `sudo pacman -Syu`.",
+        "redhat": "Для `dnf check-update` права root не нужны."
+      }
+    },
+    "search": {
+      "text": "Найдите пакет `htop`.",
+      "hint": {
+        "debian": "`apt search htop`",
+        "arch": "`pacman -Ss htop`",
+        "redhat": "`dnf search htop`"
+      }
+    },
+    "install": {
+      "text": "Установите пакет `tree`.",
+      "hint": {
+        "debian": "`sudo apt install tree`",
+        "arch": "`sudo pacman -S tree` и ответьте «да» на вопрос.",
+        "redhat": "`sudo dnf install tree` – и ответьте `y`, ведь по умолчанию стоит «нет»!"
+      }
+    },
+    "run-tree": {
+      "text": "Запустите `tree` в домашнем каталоге."
+    },
+    "remove": {
+      "text": "Снова удалите пакет `tree`.",
+      "hint": {
+        "debian": "`sudo apt remove tree`",
+        "arch": "`sudo pacman -R tree`",
+        "redhat": "`sudo dnf remove tree`"
+      }
+    },
+    "upgrade": {
+      "text": "Обновите все установленные пакеты.",
+      "hint": {
+        "debian": "После `sudo apt update` выполните `sudo apt upgrade`.",
+        "arch": "`sudo pacman -Syu` делает всё за один раз.",
+        "redhat": "`sudo dnf upgrade`"
+      }
+    },
+    "vim": {
+      "text": "Бонус: установите текстовый редактор Vim. Подсказка: пакет называется не во всех семействах одинаково!",
+      "hint": {
+        "debian": "Поищите с помощью `apt search vim`. Пакет называется `vim`.",
+        "arch": "Поищите с помощью `pacman -Ss vim`. Пакет называется `vim`.",
+        "redhat": "Поищите с помощью `dnf search vim`. Пакет называется `vim-enhanced`."
+      }
+    }
+  }
+}
