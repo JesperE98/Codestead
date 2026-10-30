@@ -12,7 +12,4 @@
   <ItemGroup>
     <ProjectReference Include="../Codestead.Shell/Codestead.Shell.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <AvaloniaResource Include="Themes/**/*.axaml" />
-  </ItemGroup>
 </Project>

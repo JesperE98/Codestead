@@ -1,4 +1,5 @@
 using Avalonia;
+using Velopack;
 
 namespace Codestead.Linux;
 
@@ -13,6 +14,8 @@ internal static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        // Velopack (installer and auto-update) runs its install/update hooks here and exits if it was one of them.
+        VelopackApp.Build().Run();
         SmokeTest = args.Contains("--smoke-test");
         if (args.Contains("--version"))
         {

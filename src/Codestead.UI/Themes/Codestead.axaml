@@ -1,4 +1,5 @@
 <Styles xmlns="https://github.com/avaloniaui"
+        x:Class="Codestead.UI.Themes.CodesteadTheme"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <!--
     The Codestead look, shared by every tool. Colours are the same tokens as the old web version
