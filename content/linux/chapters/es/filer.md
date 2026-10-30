@@ -24,6 +24,13 @@ fecha de modificación):
 touch inkopslista.txt
 ```
 
+```quiz
+¿Qué hace `touch anteckningar.txt` si el archivo ya existe?
+- [ ] Vacía el archivo
+- [ ] Se queja de que el archivo ya existe
+- [x] Solo actualiza la fecha del archivo: el contenido no cambia
+```
+
 ## Copiar – `cp`
 
 ```sh
@@ -38,6 +45,15 @@ recursivo):
 cp -r dokument dokument-backup
 ```
 
+```predict
+$ mkdir kopior
+$ cp anteckningar.txt kopior
+$ ls kopior
+anteckningar.txt
+---
+`kopior` es un directorio, así que la copia acaba dentro de él con el mismo nombre.
+```
+
 ## Mover y renombrar – `mv`
 
 En Linux, *mover* y *renombrar* son lo mismo. `mv` hace las dos cosas:
@@ -45,6 +61,15 @@ En Linux, *mover* y *renombrar* son lo mismo. `mv` hace las dos cosas:
 ```sh
 mv inkopslista.txt dokument/
 mv dokument/inkopslista.txt dokument/handla.txt
+```
+
+```quiz
+No existe ningún archivo llamado `b.txt`. ¿Qué hace `mv a.txt b.txt`?
+- [ ] Copia `a.txt` a `b.txt`
+- [x] Renombra `a.txt` a `b.txt`
+- [ ] Falla, porque `b.txt` no existe
+---
+Mover y renombrar son lo mismo. Después solo queda `b.txt`.
 ```
 
 ## Eliminar – `rm` y `rmdir`
@@ -65,6 +90,16 @@ rm -r dokument-backup
 > no hace preguntas y nunca se queja: comprueba siempre la ruta dos veces
 > antes de pulsar Enter.
 
+```quiz
+¿Qué comando elimina el directorio `gammalt` *solo* si está vacío?
+- [ ] `rm gammalt`
+- [x] `rmdir gammalt`
+- [ ] `rm -r gammalt`
+---
+`rmdir` se niega a eliminar un directorio que todavía contiene algo.
+`rm -r` elimina el directorio y todo lo que hay dentro.
+```
+
 ## Comodines
 
 La shell puede expandir patrones en varios nombres de archivo antes de que se
@@ -76,12 +111,24 @@ ejecute el comando:
 | `?` | Exactamente un carácter |
 | `[abc]` | Uno de los caracteres a, b o c |
 
+El directorio `dokument` de tu directorio personal contiene tres archivos:
+`betyg.csv`, `frukter.txt` y `server.log`. Esto muestra solo los que terminan
+en `.txt`:
+
 ```sh
 ls dokument/*.txt
 ```
 
 Aquí `ls` nunca llega a ver el asterisco: la shell ya ha sustituido
 `dokument/*.txt` por todos los nombres de archivo que coinciden.
+
+```predict
+$ ls dokument/?????.*
+dokument/betyg.csv
+---
+Cada `?` es exactamente un carácter, así que el nombre antes del punto debe
+tener cinco caracteres. Solo `betyg` los tiene: `frukter` y `server` son más largos.
+```
 
 ## Espacios en los nombres de archivo
 

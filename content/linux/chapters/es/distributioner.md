@@ -15,8 +15,12 @@ Ahora mismo estás usando **{{distro}}**, de la **familia Arch**.
 Ahora mismo estás usando **{{distro}}**, de la **familia Red Hat**.
 :::
 
-Puedes cambiar de distribución en el menú de la parte superior y volver a
-hacer las tareas: verás las diferencias enseguida.
+Este capítulo es una visión general. Puedes cambiar de distribución en el menú
+de la parte superior y volver a hacer las tareas: verás las diferencias
+enseguida. Después de este capítulo viene un capítulo para cada familia: la
+**familia Debian** (apt), la **familia Arch** (pacman) y la **familia Red
+Hat** (dnf). Cada uno se ejecuta siempre en una distribución de esa familia,
+así que puedes hacer los tres.
 
 ## ¿Qué es igual en todas partes?
 
@@ -25,6 +29,14 @@ hacer las tareas: verás las diferencias enseguida.
 - **La estructura de directorios**: `/etc`, `/home`, `/usr/bin`, etc.
 - **systemd**, que arranca el sistema y gestiona los servicios, en casi todas
   las distribuciones importantes.
+
+```predict
+$ echo $SHELL
+/bin/bash
+---
+La shell es bash en todas las distribuciones del simulador, elijas la que
+elijas.
+```
 
 ## ¿Qué cambia?
 
@@ -35,6 +47,15 @@ hacer las tareas: verás las diferencias enseguida.
 | Herramienta de bajo nivel | `dpkg` | (pacman) | `rpm` |
 | Grupo de sudo | `sudo` | `wheel` | `wheel` |
 | Publicaciones | Versiones estables | Continuas (*rolling*) | Una versión nueva cada 6 meses (Fedora) |
+
+```quiz
+¿En qué familias se llama `wheel` el grupo que puede usar sudo?
+- [ ] La familia Debian
+- [x] La familia Arch
+- [x] La familia Red Hat
+---
+La familia Debian llama al grupo `sudo`; Arch y Red Hat lo llaman `wheel`.
+```
 
 ### Modelos de publicación
 
@@ -48,6 +69,15 @@ hacer las tareas: verás las diferencias enseguida.
   seis meses y sirve como una especie de banco de pruebas para Red Hat
   Enterprise Linux (RHEL), que a su vez tiene diez años de soporte y lo usan
   las empresas.
+
+```quiz
+¿Qué distribución no tiene versiones, sino que se actualiza de forma continua
+(*rolling*)?
+- [ ] Debian
+- [ ] Ubuntu LTS
+- [x] Arch
+- [ ] Fedora
+```
 
 ## ¿Qué distribución estoy usando?
 
@@ -63,6 +93,51 @@ La versión del kernel se muestra con `uname -r`:
 ```sh
 uname -r
 ```
+
+```try
+cat /etc/os-release
+---
+Las líneas `NAME` y `PRETTY_NAME` te dicen qué distribución es.
+```
+
+## Paquetes, repositorios y dependencias
+
+En Windows y macOS es habitual descargar los programas de una página web. En
+Linux, en cambio, casi todo se instala con un **gestor de paquetes**. Esta es
+la mayor diferencia entre las familias de distribuciones.
+
+- Un **paquete** es un programa (o una biblioteca) empaquetado en un archivo,
+  junto con información sobre su versión y lo que necesita.
+- Un **repositorio** es un servidor en el que la distribución publica todos
+  sus paquetes. Están probados y firmados, así que sabes que nadie los ha
+  manipulado.
+- Una **dependencia** es otro paquete que hace falta. El gestor de paquetes
+  instala las dependencias automáticamente.
+
+El gestor de paquetes también lleva la cuenta de lo que está instalado y puede
+actualizar *todo* el ordenador con un solo comando. Los comandos que modifican
+el sistema requieren root, así que se ejecutan con `sudo`.
+
+```quiz
+Un paquete necesita otro paquete que no tienes. ¿Qué pasa cuando lo instalas
+con el gestor de paquetes?
+- [ ] La instalación se detiene y tienes que buscar tú el otro paquete
+- [x] El gestor de paquetes instala la dependencia automáticamente
+- [ ] El paquete se instala, pero no funciona hasta que descargues el otro
+```
+
+### El mismo programa, nombres distintos
+
+Los paquetes suelen llamarse igual en todas partes, pero no siempre. Algunos
+ejemplos:
+
+| Programa | Debian/Ubuntu | Arch | Fedora |
+|---|---|---|---|
+| Vim | `vim` | `vim` | `vim-enhanced` |
+| Python 3 | `python3` | `python` | `python3` |
+| Cliente SSH | `openssh-client` | `openssh` | `openssh-clients` |
+
+Si no estás seguro del nombre, búscalo siempre con el gestor de paquetes.
 
 ## La configuración del gestor de paquetes
 

@@ -22,6 +22,16 @@ la **raíz**, que se escribe `/`.
 Esta estructura se llama *Filesystem Hierarchy Standard* (FHS), y es casi
 idéntica en todas las distribuciones.
 
+```quiz
+Un programa escribe un archivo de registro. ¿En qué directorio esperarías encontrarlo?
+- [ ] `/etc`
+- [ ] `/usr/bin`
+- [x] `/var/log`
+- [ ] `/home`
+---
+Los archivos de registro van en `/var/log`. La configuración está en `/etc` y los programas en `/usr/bin`.
+```
+
 ## ¿Dónde estoy? – `pwd`
 
 `pwd` (*print working directory*) muestra el directorio en el que te
@@ -56,6 +66,21 @@ ls -a
 
 Las opciones se pueden combinar: `ls -la` es lo mismo que `ls -l -a`.
 
+```quiz
+¿Por qué un simple `ls` en tu directorio personal no muestra el archivo `.bashrc`?
+- [ ] Es un archivo del sistema que solo root puede ver
+- [x] Su nombre empieza por un punto, así que está oculto
+- [ ] `ls` solo muestra directorios
+---
+Los archivos cuyo nombre empieza por un punto están ocultos. `ls -a` también los muestra.
+```
+
+Prueba el formato largo junto con los archivos ocultos:
+
+```try
+ls -la
+```
+
 ## Cambiar de directorio – `cd`
 
 `cd` (*change directory*) te lleva a otro directorio:
@@ -71,6 +96,18 @@ Hay dos tipos de rutas:
 - Una ruta **relativa** parte del directorio en el que estás. Si estás en `/`,
   puedes llegar a `/var/log` simplemente con `cd var/log`.
 
+```quiz
+Estás en `/home`. ¿Qué comandos te llevan a `/home/elev/dokument`? (Elige todos los que funcionen).
+- [x] `cd elev/dokument`
+- [x] `cd /home/elev/dokument`
+- [ ] `cd /elev/dokument`
+- [ ] `cd dokument`
+---
+`elev/dokument` es relativa a `/home`, y `/home/elev/dokument` es absoluta,
+así que funciona desde cualquier sitio. `/elev/dokument` parte de la raíz, donde
+no hay ningún `elev`.
+```
+
 Conviene conocer algunos nombres especiales:
 
 | Nombre | Significa |
@@ -84,6 +121,15 @@ Conviene conocer algunos nombres especiales:
 
 ```sh
 cd ..
+```
+
+```predict
+$ cd /usr/bin
+$ cd ..
+$ pwd
+/usr
+---
+`..` es el directorio de arriba, así que desde `/usr/bin` acabas en `/usr`.
 ```
 
 ## Autocompletado con Tab

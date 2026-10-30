@@ -18,33 +18,17 @@ botones de git, pero por debajo ejecutan los mismos comandos que aprendes aquí.
 
 ## Instalar git
 
-Git no siempre viene preinstalado. En {{distro}} se instala así:
+Git no siempre viene preinstalado. En la terminal de Ubuntu se instala con
+apt:
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install git
 ```
-:::
 
-:::arch
-```sh
-sudo pacman -S git
-```
-
-Responde que sí cuando pacman pregunte si quieres continuar.
-:::
-
-:::redhat
-```sh
-sudo dnf install git
-```
-
-Responde `y`: la `N` mayúscula de `[y/N]` significa que No es la respuesta por
-defecto.
-:::
-
-El paquete se llama `git` en todas las familias. Comprueba que funciona:
+Otras distribuciones lo instalan con su propio gestor de paquetes, como
+aprendiste en la parte sobre distribuciones y paquetes; allí el paquete
+también se llama `git`. Comprueba que funciona:
 
 ```sh
 git --version
@@ -119,6 +103,16 @@ No borres nunca `.git` a menos que quieras perder el historial, y no edites a
 mano los archivos que contiene. Si quieres dejar de usar git en un proyecto,
 basta con eliminar `.git`; tus archivos normales se quedan.
 
+```quiz
+Quieres dejar de usar git en un proyecto, pero conservar todos tus archivos. ¿Qué haces?
+- [ ] Ejecutar `git init` otra vez
+- [x] Eliminar el directorio oculto `.git`
+- [ ] Eliminar todos los archivos excepto `.git`
+---
+Todo el historial está en `.git`, y git no toca tus archivos normales.
+Sin `.git` los archivos se quedan: solo desaparece el historial.
+```
+
 ## Tres lugares: árbol de trabajo, índice e historial
 
 Lo más importante que hay que entender de git es que un cambio pasa por tres
@@ -139,6 +133,17 @@ lugares:
 ¿Por qué el paso intermedio? Para que puedas elegir. Si has cambiado cinco
 archivos pero solo dos tienen que ver entre sí, puedes poner esos dos en el
 índice, hacer un commit con ellos y dejar el resto para un commit aparte.
+
+```quiz
+Has cambiado cinco archivos, pero solo dos de los cambios tienen que ver entre
+sí. ¿Cómo guardas solo esos dos en un commit?
+- [ ] Ejecutas primero `git commit` y después `git add` sobre los dos archivos
+- [x] Ejecutas `git add` sobre los dos archivos y luego `git commit`
+- [ ] Haces commit de los cinco: un commit siempre incluye todos los archivos cambiados
+---
+Un commit guarda lo que hay en el índice. Los otros tres cambios se quedan en el
+árbol de trabajo hasta que los añadas.
+```
 
 ## `git status` es tu brújula
 
@@ -260,6 +265,27 @@ git commit -a -m "Beskriv hur sidan är byggd"
 
 Ten en cuenta que `-a` *no* incluye archivos nuevos que git todavía no sigue.
 Esos siempre tienes que añadirlos antes con `git add`.
+
+Las preguntas con comandos de este capítulo empiezan en una terminal nueva,
+así que primero instalan git y hacen el primer commit. `> /dev/null 2>&1`
+descarta la salida de esas líneas, como aprendiste en el capítulo sobre
+redirecciones y pipes. ¿Qué imprime el último comando?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ echo 'En rad till.' >> README.md
+$ git commit -m "En rad till" > /dev/null
+$ git log --oneline | wc -l
+1
+---
+El segundo commit nunca llegó a hacerse: el cambio en `README.md` no estaba en
+el índice, así que no había nada de lo que hacer commit. Un `git add README.md`
+antes –o `git commit -a`– habría dado dos commits.
+```
 
 ## Buenos mensajes de commit
 
@@ -397,6 +423,26 @@ con la otra rama. En ese caso git se niega y te pide que hagas un commit
 primero (o que apartes los cambios temporalmente con `git stash` y los
 recuperes con `git stash pop`).
 
+¿Cuántas líneas con `purple` tiene `style.css` al final?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ git switch -c ny-design > /dev/null 2>&1
+$ echo 'h1 { color: purple; }' >> style.css
+$ git commit -am "Lila rubriker" > /dev/null
+$ git switch main > /dev/null 2>&1
+$ grep purple style.css | wc -l
+0
+---
+La línea morada se guardó en un commit en `ny-design`. Cuando cambias a `main`,
+git hace que el árbol de trabajo se parezca al último commit de `main`, donde
+la línea todavía no existe.
+```
+
 ## Fusionar ramas: `git merge`
 
 Colócate en la rama que debe *recibir* los cambios –aquí, `main`– y fusiona:
@@ -501,6 +547,23 @@ donde estabas antes de la fusión.
 Los conflictos son completamente normales cuando varias personas trabajan en
 el mismo proyecto. Una buena manera de tener menos es hacer commits pequeños y
 fusionar a menudo.
+
+```quiz
+Estás en `main` y ejecutas `git merge rubrik`. El archivo tiene un conflicto:
+
+    <<<<<<< HEAD
+      <h1>Hello!</h1>
+    =======
+      <h1>Welcome!</h1>
+    >>>>>>> rubrik
+
+¿Qué línea viene de `main`?
+- [x] `<h1>Hello!</h1>`
+- [ ] `<h1>Welcome!</h1>`
+---
+`HEAD` es la rama en la que estás, aquí `main`. Su versión está entre
+`<<<<<<< HEAD` y `=======`; la versión de la otra rama va después de `=======`.
+```
 
 ## Archivos que git debe ignorar: `.gitignore`
 
