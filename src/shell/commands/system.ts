@@ -137,11 +137,21 @@ BESKRIVNING
        Variabler som sätts med export gäller bara i den aktuella sessionen.
        Lägg raden i ~/.bashrc om den ska gälla varje gång du öppnar en terminal.`, true);
 
-const unset = simple('unset', 'Tar bort en variabel', (ctx) => {
-  for (const k of ctx.args) delete ctx.sh.env[k];
+const unset = simple('unset', 'Tar bort en variabel eller funktion', (ctx) => {
+  let functions = false;
+  for (const k of ctx.args) {
+    if (k === '-f') functions = true;
+    else if (k === '-v') functions = false;
+    else if (functions) delete ctx.sh.functions[k];
+    else delete ctx.sh.env[k];
+  }
   return 0;
 }, `NAMN
-       unset - ta bort en variabel`, true);
+       unset - ta bort en variabel eller funktion
+
+SYNOPSIS
+       unset NAMN...
+       unset -f FUNKTION...`, true);
 
 const alias = simple('alias', 'Skapar ett kortkommando för ett kommando', (ctx) => {
   const aliases = ctx.sh.aliases;
@@ -212,6 +222,7 @@ const type = simple('type', 'Visar vad ett kommandonamn är (alias, inbyggt, fil
   let code = 0;
   for (const n of ctx.args) {
     if (n in sh.aliases) ctx.out(`${n} is aliased to \`${sh.aliases[n]}'\n`);
+    else if (n in sh.functions) ctx.out(`${n} is a function\n`);
     else if (COMMANDS[n]?.builtin) ctx.out(`${n} is a shell builtin\n`);
     else {
       const r = sh.resolveCommand(n);

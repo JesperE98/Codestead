@@ -10,7 +10,7 @@ export type Completed = Record<string, true>;
 
 /** Returnerar nycklarna för uppgifter i kapitlet som just blev klara. */
 export function evaluateTasks(chapter: Chapter, sh: Shell, result: ExecResult, completed: Completed): string[] {
-  if (result.pending) return [];
+  if (result.pending || result.incomplete) return [];
   const distro: Distro = sh.distro;
   const ctx: CheckCtx = {
     sh,

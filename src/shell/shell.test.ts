@@ -14,23 +14,53 @@ function shell(distro = 'ubuntu') {
 
 describe('parser', () => {
   test('pipes, kedjor och omdirigering', () => {
-    const items = parse('ls -l | grep x > ut.txt && echo klar; echo "a b" \'c d\'');
-    expect(items.map((i) => i.op)).toEqual([null, '&&', ';']);
-    expect(items[0].pipeline).toHaveLength(2);
-    expect(items[0].pipeline[1].redirects[0].op).toBe('>');
-    expect(items[2].pipeline[0].words.map((w) => w.raw)).toEqual(['echo', '"a b"', "'c d'"]);
+    const ast = parse('ls -l | grep x > ut.txt && echo klar; echo "a b" \'c d\'') as any;
+    expect(ast.type).toBe('list');
+    expect(ast.items).toHaveLength(2);
+    const andor = ast.items[0].node;
+    expect(andor.type).toBe('andor');
+    expect(andor.first.type).toBe('pipeline');
+    expect(andor.first.commands[1].redirects[0].op).toBe('>');
+    expect(andor.rest[0].op).toBe('&&');
+    expect(ast.items[1].node.words.map((w: any) => w.raw)).toEqual(['echo', '"a b"', "'c d'"]);
   });
 
-  test('syntaxfel', () => {
+  test('syntaxfel och ofullständig kod', () => {
     expect(() => parse('ls |')).toThrow(ParseError);
     expect(() => parse('echo "oavslutad')).toThrow(ParseError);
     expect(() => parse('ls &&')).toThrow(ParseError);
+    const incomplete = (code: string) => {
+      try {
+        parse(code);
+        return false;
+      } catch (e) {
+        return (e as ParseError).incomplete;
+      }
+    };
+    expect(incomplete('for i in 1 2 3; do')).toBe(true);
+    expect(incomplete('if true; then echo a')).toBe(true);
+    expect(incomplete('echo "a')).toBe(true);
+    expect(incomplete('fi')).toBe(false);
+    expect(incomplete('done')).toBe(false);
   });
 
   test('2> räknas bara som operator i början av ett ord', () => {
-    const [item] = parse('echo fil2>x');
-    expect(item.pipeline[0].words.map((w) => w.raw)).toEqual(['echo', 'fil2']);
-    expect(item.pipeline[0].redirects[0].op).toBe('>');
+    const ast = parse('echo fil2>x') as any;
+    const cmd = ast.items[0].node;
+    expect(cmd.words.map((w: any) => w.raw)).toEqual(['echo', 'fil2']);
+    expect(cmd.redirects[0].op).toBe('>');
+  });
+
+  test('sammansatta kommandon', () => {
+    const types = (code: string) => (parse(code) as any).items.map((i: any) => i.node.type);
+    expect(types('if true; then echo a; elif false; then echo b; else echo c; fi')).toEqual(['if']);
+    expect(types('for f in *.txt; do echo $f; done')).toEqual(['for']);
+    expect(types('for ((i=0; i<3; i++)); do echo $i; done')).toEqual(['cfor']);
+    expect(types('while read x; do echo $x; done < fil')).toEqual(['while']);
+    expect(types('case $x in a|b) echo ab;; *) echo annat;; esac')).toEqual(['case']);
+    expect(types('hej() { echo hej; }; function da { echo da; }')).toEqual(['funcdef', 'funcdef']);
+    expect(types('(cd /tmp; ls); { echo a; echo b; }')).toEqual(['group', 'group']);
+    expect(types('((x = 1 + 2))')).toEqual(['arith']);
   });
 });
 

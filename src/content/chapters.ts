@@ -13,6 +13,7 @@ import ch06 from './chapters/06-miljo.md?raw';
 import ch07 from './chapters/07-rattigheter.md?raw';
 import ch08 from './chapters/08-distributioner.md?raw';
 import ch09 from './chapters/09-pakethantering.md?raw';
+import chSkript from './chapters/skript.md?raw';
 
 const HOME = '/home/elev';
 
@@ -36,6 +37,7 @@ export const PARTS: Part[] = [
   { id: 'grunder', title: 'Grunderna' },
   { id: 'system', title: 'Systemet' },
   { id: 'distro', title: 'Distributioner' },
+  { id: 'skript', title: 'Skript och automatisering' },
 ];
 
 export const CHAPTERS: Chapter[] = [
@@ -501,12 +503,75 @@ export const CHAPTERS: Chapter[] = [
       },
     ],
   },
+  {
+    id: 'skript',
+    part: 'skript',
+    title: 'Shell-skript',
+    content: chSkript,
+    tasks: [
+      {
+        id: 'variabel',
+        text: 'Skapa variabeln `namn` med ditt namn, och skriv sedan ut `Hej` följt av namnet med `echo`.',
+        hint: 'Inga mellanslag runt `=`: `namn=Kim`. Använd sedan `echo "Hej $namn"`.',
+        solution: ['namn=Kim', 'echo "Hej $namn"'],
+        check: (c) => ran(c, /^echo\b.*\$\{?namn\b/) && !!c.sh.env.namn && c.output.trim() === `Hej ${c.sh.env.namn}`,
+      },
+      {
+        id: 'rakna',
+        text: 'Räkna ut 17 × 23 med `$(( ))`.',
+        solution: ['echo $(( 17 * 23 ))'],
+        check: (c) => ran(c, /\$\(\(/) && c.output.trim() === '391',
+      },
+      {
+        id: 'substitution',
+        text: 'Spara antalet rader i `~/dokument/server.log` i variabeln `rader`, med `$(...)` och `wc -l`.',
+        hint: '`wc -l < fil` skriver bara ut antalet, utan filnamnet: `rader=$(wc -l < ~/dokument/server.log)`',
+        solution: ['rader=$(wc -l < ~/dokument/server.log)'],
+        check: (c) => (c.sh.env.rader ?? '').trim() === '15',
+      },
+      {
+        id: 'if',
+        text: 'Skriv ett `if`-villkor som skriver ut `finns` om filen `~/.bashrc` finns.',
+        hint: '`if [ -f ~/.bashrc ]; then echo finns; fi` – glöm inte mellanslagen innanför hakparenteserna.',
+        solution: ['if [ -f ~/.bashrc ]; then echo finns; fi'],
+        check: (c) => ran(c, /^if\b/) && /\[|\btest\b/.test(c.line) && c.output.trim() === 'finns',
+      },
+      {
+        id: 'for',
+        text: 'Skriv ut talen 1 till 5, ett per rad, med en `for`-loop.',
+        hint: 'Antingen `for i in 1 2 3 4 5; do ...; done` eller `for i in $(seq 1 5); do ...; done`.',
+        solution: ['for i in 1 2 3 4 5; do echo $i; done'],
+        check: (c) => ran(c, /^for\b/) && outLines(c).join(',') === '1,2,3,4,5',
+      },
+      {
+        id: 'while-read',
+        text: 'Läs `~/dokument/frukter.txt` rad för rad med `while read` och skriv ut `Frukt: ` framför varje rad.',
+        hint: '`while read rad; do echo "Frukt: $rad"; done < ~/dokument/frukter.txt`',
+        solution: ['while read rad; do echo "Frukt: $rad"; done < ~/dokument/frukter.txt'],
+        check: (c) => ran(c, /\bwhile\s+read\b/) && outLines(c).length === 10 && outLines(c)[0] === 'Frukt: äpple',
+      },
+      {
+        id: 'funktion',
+        text: 'Skapa funktionen `dubbla` som skriver ut sitt första argument gånger två. Testa med `dubbla 21`.',
+        hint: '`dubbla() { echo $(( $1 * 2 )); }` – och sedan `dubbla 21`.',
+        solution: ['dubbla() { echo $(( $1 * 2 )); }', 'dubbla 21'],
+        check: (c) => ran(c, /^dubbla\s+21\s*$/) && !!c.sh.functions.dubbla && c.output.trim() === '42',
+      },
+      {
+        id: 'backup',
+        text: 'Skriv skriptet `~/backup.sh` som kopierar filen i första argumentet till samma namn med `.bak` på slutet. Gör det körbart och kör `./backup.sh anteckningar.txt` i hemkatalogen.',
+        hint: 'Skapa filen med `cat > ~/backup.sh << \'SLUT\'`, skriv `#!/bin/bash` och `cp "$1" "$1.bak"` på varsin rad och avsluta med `SLUT`.',
+        solution: ["cat > ~/backup.sh << 'SLUT'", '#!/bin/bash', 'cp "$1" "$1.bak"', 'SLUT', 'chmod +x ~/backup.sh', 'cd ~', './backup.sh anteckningar.txt'],
+        check: (c) =>
+          ran(c, /backup\.sh\s+anteckningar\.txt\s*$/) && content(c, '~/backup.sh').includes('$1') && isFile(c, '~/anteckningar.txt.bak'),
+      },
+    ],
+  },
 ];
 
 /** Kapitel som planeras – visas i menyn som "kommer snart". */
 export const UPCOMING: string[] = [
   'Processer och jobb (ps, top, kill)',
-  'Shell-skript: variabler, villkor och loopar',
   'Textbearbetning med sed, awk och tr',
   'Arkiv och komprimering (tar, gzip, zip)',
   'Nätverk (ip, ping, curl, ssh)',
