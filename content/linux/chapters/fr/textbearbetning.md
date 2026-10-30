@@ -16,7 +16,7 @@ Tous les trois sont des *filtres* : ils lisent du texte, le transforment et
 pipes. Et le fichier d'origine n'est **pas** modifié (à une exception près,
 `sed -i`, que nous verrons plus loin).
 
-Dans `dokument` se trouve un nouveau fichier d'exercice, un fichier CSV avec
+Dans `dokument` se trouve un troisième fichier d'exercice, un fichier CSV avec
 les notes des élèves (*namn* = nom, *ämne* = matière, *poäng* = points) :
 
 ```sh
@@ -43,7 +43,7 @@ HELLO FROM CAFé
 
 Vous avez remarqué le é ? `tr` travaille sur des *octets* individuels, et les
 lettres comme é – ou les å, ä et ö suédois – ne font pas partie de `a-z`. C'est
-bon à savoir – `awk` (plus bas) s'en sort mieux.
+bon à savoir – GNU `awk` (plus bas) s'en sort mieux.
 
 `tr` lit **uniquement** depuis stdin, jamais depuis des fichiers. Pour
 utiliser un fichier, faites-le entrer avec `<` ou un pipe :
@@ -66,6 +66,13 @@ vous réduisez plusieurs caractères identiques consécutifs à un seul :
 ```sh
 echo "070-123 45 67" | tr -d ' -'
 echo "beaucoup     trop      espacé" | tr -s ' '
+```
+
+```predict
+$ echo "hello world" | tr -d o
+hell wrld
+---
+`-d` supprime chaque `o`, où qu'il se trouve.
 ```
 
 Au lieu de plages, vous pouvez écrire des *classes*, p. ex. `[:upper:]`
@@ -101,6 +108,13 @@ Avec `g` (*global*), elles le sont toutes :
 ```sh
 echo "cat cat cat" | sed 's/cat/dog/'
 echo "cat cat cat" | sed 's/cat/dog/g'
+```
+
+```predict
+$ echo banana | sed 's/a/o/'
+bonana
+---
+Sans `g`, seul le premier `a` de la ligne est remplacé.
 ```
 
 Le drapeau `i` rend la recherche insensible à la casse, comme `grep -i` :
@@ -204,9 +218,33 @@ Il n'y a pas d'annulation possible avec `sed -i`. Une bonne méthode consiste
 ajouter `-i` quand tout semble correct. Si vous écrivez `-i.bak`, l'original
 est aussi sauvegardé sous `fichier.bak`.
 
+```quiz
+Vous lancez `sed 's/kiwi/KIWI/' ~/dokument/frukter.txt`. Qu'arrive-t-il au fichier ?
+- [ ] Chaque `kiwi` du fichier devient `KIWI`
+- [ ] Seul le premier `kiwi` du fichier devient `KIWI`
+- [x] Rien – le résultat est seulement affiché, le fichier reste inchangé
+---
+Sans `-i`, `sed` écrit uniquement sur stdout. Le fichier reste tel quel.
+```
+
 Les fichiers de configuration de `/etc` appartiennent à root, il faut donc y
 utiliser `sudo sed -i ...`. C'est une façon courante de modifier un réglage
 depuis un script sans ouvrir d'éditeur de texte.
+
+## Découper des champs – `cut`
+
+Quand un fichier est constitué de champs séparés par un séparateur, `cut`
+peut en extraire un. `-d` choisit le séparateur (*delimiter*) et `-f` le champ
+à garder. Voici les matières – le champ 2 – du fichier CSV :
+
+```sh
+cut -d, -f2 ~/dokument/betyg.csv
+```
+
+Dans `/etc/passwd`, les champs sont séparés par des deux-points et le champ 1
+est le nom d'utilisateur, donc `cut -d: -f1 /etc/passwd` liste tous les
+utilisateurs. Comme les autres filtres, `cut` trouve sa place dans un pipe –
+par exemple devant `tr`.
 
 ## Les colonnes – `awk`
 
@@ -258,9 +296,17 @@ texte :
 awk -F: '{print $1 " utilise " $7}' /etc/passwd
 ```
 
-Vous vous souvenez peut-être de `cut -d: -f1`. La différence, c'est que awk
-peut réordonner les champs, y mêler du texte et gérer plusieurs espaces
-consécutifs.
+Comparez avec `cut -d: -f1` de la section précédente. La différence, c'est
+que awk peut réordonner les champs, y mêler du texte et gérer plusieurs
+espaces consécutifs.
+
+```predict
+$ echo "Alva,matte,87" | awk -F, '{print $3, $1}'
+87 Alva
+---
+`-F,` découpe la ligne aux virgules. awk affiche d'abord le champ 3, puis le
+champ 1, avec une espace entre les deux grâce à la virgule dans `print`.
+```
 
 ### Les motifs – choisir les lignes
 
@@ -296,6 +342,13 @@ l'en-tête avec `NR > 1` :
 awk -F, 'NR > 1 && $3 >= 90' ~/dokument/betyg.csv
 ```
 
+Essayez un motif de votre cru – les noms de tous ceux qui étudient le
+*svenska* (le suédois) :
+
+```try
+awk -F, '$2 == "svenska" {print $1}' ~/dokument/betyg.csv
+```
+
 ### Compter – les variables et `END`
 
 awk possède des variables qu'il n'est pas nécessaire de déclarer – elles
@@ -324,27 +377,19 @@ et `%5d` un entier sur 5 caractères.
 awk -F, 'BEGIN {print "Élève    Notes"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/dokument/betyg.csv
 ```
 
-awk dispose aussi de fonctions, comme `length()`, `toupper()` et `tolower()`.
-Contrairement à `tr`, GNU awk gère les lettres comme å, ä et ö :
+awk dispose aussi de fonctions, comme `length()`, `toupper()` et `tolower()` :
 
 ```sh
 awk '{print toupper($0)}' ~/dokument/frukter.txt
 ```
 
-:::debian
-Sur {{distro}}, `awk` est par défaut **mawk**, une variante petite et rapide.
-Si vous voulez GNU awk, installez le paquet `gawk`. Pour des programmes
-simples comme ceux-ci, vous ne verrez aucune différence – mais mawk ne
-convertit pas å, ä et ö avec `toupper()`.
-:::
-
-:::arch
-Sur Arch Linux, `awk` est **GNU awk** (le paquet `gawk`).
-:::
-
-:::redhat
-Sur {{distro}}, `awk` est **GNU awk** (le paquet `gawk`).
-:::
+Regardez bien `äpple` et `päron`. Sur Ubuntu, qui fait tourner le terminal
+ici, `awk` est par défaut **mawk**, une variante petite et rapide. Pour des
+programmes simples comme ceux-ci, vous ne verrez aucune différence – mais mawk
+ne convertit pas å, ä et ö avec `toupper()`. **GNU awk** (le paquet `gawk`),
+lui, le fait, contrairement à `tr`. Les distributions diffèrent quant à l'awk
+qu'elles utilisent et à la façon d'installer des logiciels – nous y viendrons
+dans le chapitre sur les distributions.
 
 Le simulateur ne connaît qu'une partie du langage awk – ce qui est présenté
 ici et un peu plus (`if`, boucles et tableaux). Voir `man awk`.

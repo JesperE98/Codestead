@@ -10,16 +10,8 @@
       "hint": "`ping -c 3 192.168.1.1` – `-c` signifie *count*."
     },
     "dig": {
-      "text": {
-        "debian": "Installez le paquet `dnsutils` et trouvez l'adresse IP de `example.com` avec `dig`.",
-        "arch": "Installez le paquet `bind` et trouvez l'adresse IP de `example.com` avec `dig`.",
-        "redhat": "Installez le paquet `bind-utils` et trouvez l'adresse IP de `example.com` avec `dig`."
-      },
-      "hint": {
-        "debian": "`sudo apt update`, `sudo apt install dnsutils`, puis `dig +short example.com`.",
-        "arch": "`sudo pacman -S bind`, puis `dig +short example.com`.",
-        "redhat": "`sudo dnf install bind-utils`, puis `dig +short example.com`."
-      }
+      "text": "Installez le paquet `dnsutils` et trouvez l'adresse IP de `example.com` avec `dig`.",
+      "hint": "`sudo apt update`, `sudo apt install dnsutils`, puis `dig +short example.com`."
     },
     "ss": {
       "text": "Découvrez quels ports sont en écoute sur l'ordinateur avec `ss`.",
@@ -27,11 +19,7 @@
     },
     "curl-localhost": {
       "text": "Récupérez la page d'accueil du serveur d'exercice sur votre propre ordinateur, `http://localhost:8080`, avec `curl`.",
-      "hint": {
-        "debian": "Sur Debian/Ubuntu, il faut installer curl : `sudo apt install curl`. Si vous obtenez *Couldn't connect to server*, minserver est arrêté – relancez-le avec `minserver`.",
-        "arch": "`curl http://localhost:8080`. Si vous obtenez *Couldn't connect to server*, minserver est arrêté – relancez-le avec `minserver`.",
-        "redhat": "`curl http://localhost:8080`. Si vous obtenez *Couldn't connect to server*, minserver est arrêté – relancez-le avec `minserver`."
-      }
+      "hint": "Sur Ubuntu, il faut installer curl : `sudo apt install curl`. Si vous obtenez *Couldn't connect to server*, minserver est arrêté – relancez-le avec `minserver`."
     },
     "spara": {
       "text": "Enregistrez la page web `https://example.com` dans le fichier `~/exempel.html`.",
@@ -43,11 +31,7 @@
     },
     "ssh": {
       "text": "Exécutez la commande `hostname` sur le serveur `server.lan` avec `ssh`, en tant qu'utilisateur `elev`.",
-      "hint": {
-        "debian": "`ssh elev@server.lan hostname` – et répondez `yes` à la question sur la clé d'hôte.",
-        "arch": "Installez d'abord le client ssh : `sudo pacman -S openssh`. Puis `ssh elev@server.lan hostname` – et répondez `yes` à la question sur la clé d'hôte.",
-        "redhat": "`ssh elev@server.lan hostname` – et répondez `yes` à la question sur la clé d'hôte."
-      }
+      "hint": "`ssh elev@server.lan hostname` – et répondez `yes` à la question sur la clé d'hôte."
     }
   }
 }

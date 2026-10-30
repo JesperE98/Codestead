@@ -42,6 +42,16 @@ type  propriétaire   groupe  autres
 
 Après cela viennent le propriétaire (`elev`) et le groupe (`elev`).
 
+```quiz
+Un répertoire a les permissions `drwxr-x---`. Que peuvent faire les membres de son groupe ?
+- [ ] Rien du tout
+- [x] Lister le contenu et y entrer avec `cd`, mais pas y créer ni y supprimer de fichiers
+- [ ] Tout ce que peut faire le propriétaire
+---
+Le groupe a `r-x` : `r` permet de lister le contenu et `x` d'entrer dans le
+répertoire. Sans `w`, vous ne pouvez pas y créer ni y supprimer de fichiers.
+```
+
 ## Modifier les permissions – `chmod`
 
 Les permissions peuvent s'exprimer en **chiffres**. Chaque groupe reçoit un
@@ -66,6 +76,14 @@ chmod u+x skript.sh
 chmod go-w fil.txt
 ```
 
+```predict
+$ touch plan.txt
+$ chmod 600 plan.txt
+$ chmod g+r plan.txt
+$ ls -l plan.txt | awk '{print $1}'
+-rw-r-----
+```
+
 ## Les scripts
 
 Un **script** est un fichier texte qui contient des commandes. La première
@@ -88,6 +106,18 @@ chmod +x datum.sh
 Le `./` est nécessaire parce que le répertoire où vous êtes ne fait pas
 partie de `PATH`.
 
+```quiz
+Vous avez écrit le script `test.sh` et lancé `./test.sh`, mais vous obtenez
+`Permission denied`. Que manque-t-il ?
+- [ ] Un `sudo` devant
+- [x] La permission d'exécution – lancez d'abord `chmod +x test.sh`
+- [ ] Le `./` est en trop – il faudrait écrire `test.sh`
+---
+Pour exécuter un fichier comme un programme, il lui faut la permission `x`.
+Le `./` est correct : sans lui, le shell ne cherche que dans les répertoires
+de `PATH`.
+```
+
 ## root et sudo
 
 Certains fichiers, comme `/etc/shadow` où sont stockés les mots de passe, ne
@@ -100,21 +130,10 @@ sudo whoami
 
 La première fois, `sudo` demande **votre propre** mot de passe. Seuls les
 utilisateurs du groupe des administrateurs peuvent utiliser sudo. Sur
-{{distro}}, ce groupe s'appelle **{{adminGroup}}** :
-
-:::debian
-Dans la famille Debian, le groupe s'appelle `sudo`.
-:::
-
-:::arch
-Dans la famille Arch, le groupe s'appelle `wheel` – un vieux nom Unix pour
-« ceux qui commandent » (en anglais, un *big wheel* est un gros bonnet).
-:::
-
-:::redhat
-Dans la famille Red Hat, le groupe s'appelle `wheel` – un vieux nom Unix pour
-« ceux qui commandent » (en anglais, un *big wheel* est un gros bonnet).
-:::
+Ubuntu, ce groupe s'appelle **sudo** – vous le voyez parmi vos groupes quand
+vous lancez `id`. D'autres distributions appellent plutôt ce groupe `wheel` ;
+vous en lirez plus sur les différences entre distributions dans la partie
+consacrée aux distributions.
 
 Si vous devez lancer beaucoup de commandes en tant que root, vous pouvez
 ouvrir un shell root avec `sudo -i`. L'invite se transforme alors en `#`.
@@ -122,6 +141,16 @@ Revenez avec `exit`.
 
 > **À retenir !** Avec sudo, il n'y a pas de filet de sécurité. Ne lancez que
 > des commandes que vous comprenez.
+
+```quiz
+`sudo` demande un mot de passe. Lequel devez-vous taper ?
+- [ ] Le mot de passe de root
+- [x] Votre propre mot de passe
+- [ ] Aucun mot de passe – appuyez simplement sur Entrée
+---
+`sudo` demande **votre propre** mot de passe, et ne vous laisse passer que si
+vous êtes dans le groupe des administrateurs.
+```
 
 ### Un piège classique
 
@@ -134,4 +163,15 @@ plutôt `tee`, qui s'exécute avec sudo :
 
 ```sh
 echo "127.0.0.1 test.local" | sudo tee -a /etc/hosts
+```
+
+```quiz
+Pourquoi `sudo echo "text" > /etc/file` ne fonctionne-t-il pas ?
+- [ ] `echo` ne peut pas être lancé avec sudo
+- [x] C'est votre propre shell qui ouvre le fichier pour `>`, et il ne tourne pas en tant que root
+- [ ] Les fichiers de `/etc` ne peuvent jamais être modifiés
+---
+sudo ne s'applique qu'à la commande (`echo`). La redirection est gérée par
+votre shell, qui tourne sous votre nom. C'est `tee` qui écrit le fichier,
+donc c'est `tee` qui a besoin de sudo.
 ```

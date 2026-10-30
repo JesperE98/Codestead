@@ -22,6 +22,17 @@ répertoires qui commence à la **racine**, notée `/`.
 Cette organisation s'appelle le *Filesystem Hierarchy Standard* (FHS), et elle
 est quasiment identique d'une distribution à l'autre.
 
+```quiz
+Un programme écrit un fichier journal. Dans quel répertoire vous attendez-vous à le trouver ?
+- [ ] `/etc`
+- [ ] `/usr/bin`
+- [x] `/var/log`
+- [ ] `/home`
+---
+Les fichiers journaux vont dans `/var/log`. Les réglages se trouvent dans
+`/etc` et les programmes dans `/usr/bin`.
+```
+
 ## Où suis-je ? – `pwd`
 
 `pwd` (*print working directory*) affiche le répertoire dans lequel vous vous
@@ -56,6 +67,22 @@ ls -a
 
 Les options peuvent se combiner : `ls -la` équivaut à `ls -l -a`.
 
+```quiz
+Pourquoi un simple `ls` dans votre répertoire personnel n'affiche-t-il pas le fichier `.bashrc` ?
+- [ ] C'est un fichier système que seul root peut voir
+- [x] Son nom commence par un point, il est donc caché
+- [ ] `ls` n'affiche que les répertoires
+---
+Les fichiers dont le nom commence par un point sont cachés. `ls -a` les
+affiche aussi.
+```
+
+Essayez le format long avec les fichiers cachés :
+
+```try
+ls -la
+```
+
 ## Changer de répertoire – `cd`
 
 `cd` (*change directory*) vous déplace dans un autre répertoire :
@@ -71,6 +98,18 @@ Il existe deux sortes de chemins :
 - Un chemin **relatif** part du répertoire où vous êtes. Si vous êtes dans
   `/`, vous pouvez atteindre `/var/log` avec simplement `cd var/log`.
 
+```quiz
+Vous êtes dans `/home`. Quelles commandes vous amènent dans `/home/elev/dokument` ? (Cochez toutes celles qui fonctionnent.)
+- [x] `cd elev/dokument`
+- [x] `cd /home/elev/dokument`
+- [ ] `cd /elev/dokument`
+- [ ] `cd dokument`
+---
+`elev/dokument` est relatif à `/home`, et `/home/elev/dokument` est absolu,
+donc il fonctionne de partout. `/elev/dokument` part de la racine, où il n'y a
+pas de `elev`.
+```
+
 Quelques noms spéciaux à connaître :
 
 | Nom | Signifie |
@@ -84,6 +123,16 @@ Quelques noms spéciaux à connaître :
 
 ```sh
 cd ..
+```
+
+```predict
+$ cd /usr/bin
+$ cd ..
+$ pwd
+/usr
+---
+`..` est le répertoire au-dessus, donc depuis `/usr/bin` vous arrivez dans
+`/usr`.
 ```
 
 ## La complétion avec Tab
