@@ -22,6 +22,8 @@ export interface PackageDef {
   essential?: boolean;
   /** Arch-förråd (core/extra). */
   archRepo?: 'core' | 'extra';
+  /** Skal som paketet lägger till i /etc/shells. */
+  shells?: string[];
 }
 
 const ALL: Family[] = ['debian', 'arch', 'redhat'];
@@ -120,7 +122,7 @@ export const PACKAGES: PackageDef[] = [
     version: { debian: '2.39.3-9ubuntu6', arch: '2.41.2-1', redhat: '2.41.2-1.fc43' },
     description: 'Miscellaneous system utilities (su, more, hostname ...)',
     sizeKb: 9_800,
-    provides: ['su', 'more', 'hostname'],
+    provides: ['su', 'more', 'hostname', 'chsh'],
     base: ALL,
     essential: true,
     archRepo: 'core',
@@ -349,6 +351,26 @@ export const PACKAGES: PackageDef[] = [
     sizeKb: 3_400,
     provides: ['ssh'],
   },
+  {
+    id: 'zsh',
+    names: same('zsh'),
+    version: { debian: '5.9-6ubuntu2', arch: '5.9-5', redhat: '5.9-18.fc43' },
+    description: 'Z shell – a shell with many extras, largely compatible with bash',
+    sizeKb: 8_900,
+    provides: ['zsh'],
+    archRepo: 'extra',
+    shells: ['/bin/zsh', '/usr/bin/zsh'],
+  },
+  {
+    id: 'fish',
+    names: same('fish'),
+    version: { debian: '3.7.0-1', arch: '4.1.2-1', redhat: '4.0.2-2.fc43' },
+    description: 'fish – the friendly interactive shell',
+    sizeKb: 14_200,
+    provides: ['fish'],
+    archRepo: 'extra',
+    shells: ['/usr/bin/fish', '/bin/fish'],
+  },
 ];
 
 export function packageName(pkg: PackageDef, family: Family): string | undefined {
@@ -395,12 +417,24 @@ export function installPackage(sh: Shell, pkg: PackageDef): void {
     node.size = 30_000 + ((cmd.length * 7919) % 150_000);
     bin.children![cmd] = node;
   }
+  if (pkg.shells) updateEtcShells(sh, pkg.shells, true);
+}
+
+/** Lägger till eller tar bort skal i /etc/shells (som paketens installationsskript gör). */
+function updateEtcShells(sh: Shell, shells: string[], add: boolean): void {
+  const root = sh.rootUser();
+  const node = sh.vfs.tryLookup('/etc/shells', root);
+  if (node?.type !== 'file') return;
+  const lines = (node.content ?? '').split('\n').filter((l) => l !== '' && !shells.includes(l));
+  if (add) lines.push(...shells);
+  node.content = lines.join('\n') + '\n';
 }
 
 export function removePackage(sh: Shell, pkg: PackageDef): void {
   delete sh.installed[pkg.id];
   const bin = sh.vfs.lookup('/usr/bin', sh.rootUser());
   for (const cmd of pkg.provides) delete bin.children![cmd];
+  if (pkg.shells) updateEtcShells(sh, pkg.shells, false);
 }
 
 export function formatKb(kb: number): string {

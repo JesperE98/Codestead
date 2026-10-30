@@ -759,6 +759,87 @@ export const CHAPTERS: Chapter[] = [
       },
     ],
   },
+  {
+    id: 'skal',
+    part: 'verktyg',
+    title: 'Andra skal: zsh och fish',
+    tasks: [
+      {
+        id: 'installera-zsh',
+        perFamily: true,
+        text: 'Installera skalet `zsh`.',
+        hint: byFamily({
+          debian: '`sudo apt update` och sedan `sudo apt install zsh`.',
+          arch: '`sudo pacman -S zsh` och svara ja.',
+          redhat: '`sudo dnf install zsh` – och svara `y`.',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install zsh'],
+          arch: ['sudo pacman -S zsh', 'y'],
+          redhat: ['sudo dnf install zsh', 'y'],
+        }),
+        check: (c) => 'zsh' in c.sh.installed,
+      },
+      {
+        id: 'starta-zsh',
+        text: 'Starta `zsh`. Första gången frågar *zsh-newuser-install* vad du vill göra – svara `2`. Visa sedan vilket skal du kör med `echo $0`.',
+        hint: 'Skriv `zsh`, svara `2` och skriv sedan `echo $0`. Det ska stå `zsh`.',
+        solution: ['zsh', '2', 'echo $0'],
+        check: (c) => c.sh.shellMode === 'zsh' && ran(c, /^echo\s+["']?\$\{?0\}?["']?\s*$/) && c.output.trim() === 'zsh',
+      },
+      {
+        id: 'globstar',
+        text: 'Använd zsh:s `**` för att lista alla `.txt`-filer i hemkatalogen **och alla underkataloger** med ett enda `ls`.',
+        hint: '`ls ~/**/*.txt` – `**` betyder "alla kataloger, på alla nivåer".',
+        solution: ['ls ~/**/*.txt'],
+        check: (c) => c.sh.shellMode === 'zsh' && ran(c, /\*\*\//) && c.output.includes('dokument/frukter.txt'),
+      },
+      {
+        id: 'tillbaka',
+        text: 'Lämna zsh och gå tillbaka till bash.',
+        hint: 'Skriv `exit`. Kontrollera gärna med `echo $0` eller `ps`.',
+        solution: ['exit'],
+        check: (c) => !!c.sh.flags['left:zsh'] && c.sh.shellMode === 'bash',
+      },
+      {
+        id: 'installera-fish',
+        perFamily: true,
+        text: 'Installera skalet `fish`.',
+        hint: byFamily({
+          debian: '`sudo apt update` och sedan `sudo apt install fish`.',
+          arch: '`sudo pacman -S fish` och svara ja.',
+          redhat: '`sudo dnf install fish` – och svara `y`.',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install fish'],
+          arch: ['sudo pacman -S fish', 'y'],
+          redhat: ['sudo dnf install fish', 'y'],
+        }),
+        check: (c) => 'fish' in c.sh.installed,
+      },
+      {
+        id: 'fish-set',
+        text: 'Starta `fish`. Skapa variabeln `frukt` med värdet `äpple` på fish-sättet och skriv ut den med `echo`.',
+        hint: '`frukt=äpple` fungerar inte i fish. Skriv `set frukt äpple` och sedan `echo $frukt`.',
+        solution: ['fish', 'set frukt äpple', 'echo $frukt'],
+        check: (c) => c.sh.shellMode === 'fish' && ran(c, /^echo\b.*\$frukt\b/) && c.sh.env.frukt === 'äpple' && c.output.trim() === 'äpple',
+      },
+      {
+        id: 'fish-for',
+        text: 'Skriv en `for`-loop med fish-syntax som skriver ut talen 1, 2 och 3, ett per rad. Gå sedan tillbaka till bash med `exit`.',
+        hint: 'I fish finns inget `do` och `done` – blocket avslutas med `end`: `for i in 1 2 3; echo $i; end`',
+        solution: ['for i in 1 2 3; echo $i; end', 'exit'],
+        check: (c) => c.sh.shellMode === 'fish' && ran(c, /^for\b.*\bend\s*$/) && outLines(c).join(',') === '1,2,3',
+      },
+      {
+        id: 'chsh',
+        text: 'Se efter i `/etc/shells` vilka skal som är installerade. Gör sedan zsh till ditt inloggningsskal med `chsh`.',
+        hint: '`cat /etc/shells` och sedan `chsh -s /usr/bin/zsh`. Kontrollera resultatet med `grep elev /etc/passwd`.',
+        solution: ['cat /etc/shells', 'chsh -s /usr/bin/zsh'],
+        check: (c) => /^elev:.*:\/(usr\/)?bin\/zsh$/m.test(content(c, '/etc/passwd')),
+      },
+    ],
+  },
 ];
 
 // Kapitlen visas i samma ordning som delarna i PARTS (stabil sortering behåller ordningen inom en del).
@@ -770,7 +851,6 @@ export const UPCOMING: string[] = [
   'Tjänster och loggar med systemd',
   'Diskar och filsystem (df, du, mount)',
   'Användarhantering (useradd, passwd)',
-  'Andra skal: zsh och fish',
   'AUR, PPA och COPR',
   'Flatpak, Snap och AppImage',
   'Git i terminalen',

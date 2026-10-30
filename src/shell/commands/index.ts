@@ -9,6 +9,7 @@ import { FS_COMMANDS } from './fs';
 import { PKG_COMMANDS } from './pkg';
 import { PROC_COMMANDS } from './procs';
 import { SCRIPT_COMMANDS } from './script';
+import { SHELL_COMMANDS } from './shells';
 import { SYSTEM_COMMANDS } from './system';
 import { TEXT_COMMANDS } from './text';
 import { TEXTPROC_COMMANDS } from './textproc';
@@ -21,3 +22,6 @@ for (const def of [...FS_COMMANDS, ...TEXT_COMMANDS, ...SYSTEM_COMMANDS, ...PKG_
 
 // Arkiv och komprimering (tar, gzip, zip ...) samt du.
 for (const def of ARCHIVE_COMMANDS) COMMANDS[def.name] = def;
+
+// Andra skal: zsh, fish, chsh och fish/zsh-inbyggda kommandon.
+for (const def of SHELL_COMMANDS) COMMANDS[def.name] = def;

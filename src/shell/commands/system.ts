@@ -5,6 +5,7 @@ import { basename, dirname } from '../vfs';
 import { badOption, COLOR, formatMan, fsMessage, longDate } from './util';
 import { COMMANDS } from './index';
 import { manFor, summaryFor } from './man-en';
+import { startBash } from './shells';
 
 function simple(name: string, summary: string, run: (ctx: CmdCtx) => number, man?: string, builtin = false): CommandDef {
   return { name, summary, run, man, builtin };
@@ -403,14 +404,16 @@ const bash = simple('bash', 'Kör ett skript i ett nytt bash-skal', (ctx) => {
     ctx.out('GNU bash, version 5.2.21(1)-release (x86_64-pc-linux-gnu)\n');
     return 0;
   }
-  if (first === '-c') return sh.runScript(rest[0] ?? '', 'bash', rest.slice(1), ctx);
+  if (first === '-c') return sh.runScript(rest[0] ?? '', 'bash', rest.slice(1), ctx, false, 'bash');
   if (!first) {
+    const started = startBash(ctx);
+    if (started !== null) return started;
     ctx.out(`${COLOR.dim}Du kör redan bash! Simulatorn kan inte starta ett nytt interaktivt skal.${COLOR.reset}\n`);
     return 0;
   }
   try {
     const content = sh.vfs.readFile(sh.resolve(first), sh.currentUser());
-    return sh.runScript(content, first, rest, ctx);
+    return sh.runScript(content, first, rest, ctx, false, 'bash');
   } catch (e) {
     ctx.err(`bash: ${first}: ${fsMessage(e)}\n`);
     return 127;
