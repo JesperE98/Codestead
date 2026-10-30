@@ -1,6 +1,5 @@
 using Avalonia.Controls;
 using Avalonia.Headless;
-using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
 using Codestead.UI.Controls;
@@ -18,8 +17,9 @@ public class ControlTests
         w.CaptureRenderedFrame()?.Save(Path.Combine(dir, name + ".png"));
     }
 
-    [AvaloniaFact(DisplayName = "ANSI-färger delas upp i segment")]
+    [Fact(DisplayName = "ANSI-färger delas upp i segment")]
     public void AnsiSegments()
+        => Ui.Run(() =>
     {
         var segs = Ansi.Parse("a\x1b[1;32mgrön\x1b[0m b");
         Assert.Equal(3, segs.Count);
@@ -27,10 +27,11 @@ public class ControlTests
         Assert.Equal(32, segs[1].Fg);
         Assert.True(segs[1].Bold);
         Assert.Equal(0, segs[2].Fg);
-    }
+    });
 
-    [AvaloniaFact(DisplayName = "markdown blir rubriker, stycken, listor, tabeller och klickbara kommandon")]
+    [Fact(DisplayName = "markdown blir rubriker, stycken, listor, tabeller och klickbara kommandon")]
     public void MarkdownRenders()
+        => Ui.Run(() =>
     {
         var view = new MarkdownView();
         string? clicked = null;
@@ -68,10 +69,11 @@ public class ControlTests
         Assert.Equal("ls -l", clicked);
         Snap(w, "markdown");
         w.Close();
-    }
+    });
 
-    [AvaloniaFact(DisplayName = "terminalen kör kommandon och visar prompten")]
+    [Fact(DisplayName = "terminalen kör kommandon och visar prompten")]
     public void TerminalRuns()
+        => Ui.Run(() =>
     {
         var sh = Codestead.Shell.Shell.Create("ubuntu");
         var term = new TerminalView { Shell = sh };
@@ -79,13 +81,16 @@ public class ControlTests
         term.CommandExecuted += r => last = r;
         var w = new Window { Width = 700, Height = 400, Content = term };
         w.Show();
-        term.Inject("export X=hej");
+        // Assignments are handled by the shell core itself (no command module needed).
+        term.Inject("X=hej");
         var input = term.GetLogicalDescendants().OfType<TextBox>().First();
-        input.Focus();
-        w.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+        Assert.Equal("X=hej", input.Text);
+        input.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
         Assert.NotNull(last);
         Assert.Equal("hej", sh.Env["X"]);
+        Assert.Equal("", input.Text);
         Snap(w, "terminal");
         w.Close();
-    }
+    });
 }
+

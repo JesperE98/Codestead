@@ -396,6 +396,6 @@ public sealed class MarkdownView : UserControl
         tb.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("CsLink"));
         ToolTip.SetTip(tb, url);
         tb.PointerReleased += (_, _) => LinkClicked?.Invoke(url);
-        return new InlineUIContainer(tb) { BaselineAlignment = BaselineAlignment.TextBottom };
+        return new InlineUIContainer(tb) { BaselineAlignment = BaselineAlignment.Baseline };
     }
 }

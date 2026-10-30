@@ -5,13 +5,27 @@ on:
   pull_request:
 
 jobs:
-  test:
+  dotnet:
+    name: .NET (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
-        # macos-latest saknas tills kontot får macOS-maskiner i GitHub Actions.
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet build -c Release
+      - run: dotnet test -c Release --no-build
+
+  # The TypeScript version stays until the C# port has replaced it (then this job is removed).
+  typescript:
+    runs-on: ubuntu-latest
     env:
       ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
     steps:
