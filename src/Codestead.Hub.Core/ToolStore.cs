@@ -158,8 +158,23 @@ public sealed class ToolStore
         if (!System.IO.Directory.Exists(dir)) return;
         // Removing current.json first means a half-finished uninstall leaves the tool "not installed".
         File.Delete(Path.Combine(dir, CurrentFile));
-        System.IO.Directory.Delete(dir, recursive: true);
+        // Right after the tool has exited, Windows (or a virus scanner) may still hold its files for a moment.
+        for (int attempt = 1; ; attempt++)
+        {
+            try
+            {
+                System.IO.Directory.Delete(dir, recursive: true);
+                return;
+            }
+            catch (Exception e) when ((e is IOException or UnauthorizedAccessException) && attempt < UninstallAttempts)
+            {
+                Thread.Sleep(UninstallRetryDelay);
+            }
+        }
     }
+
+    private const int UninstallAttempts = 10;
+    private static readonly TimeSpan UninstallRetryDelay = TimeSpan.FromMilliseconds(300);
 
     /// <summary>Starts the installed tool (with <paramref name="captureOutput"/>: standard output can be read, for tests).</summary>
     public Process Launch(string id, string[] args, bool captureOutput = false)

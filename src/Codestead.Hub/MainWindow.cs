@@ -497,6 +497,7 @@ public sealed class MainWindow : Window
                     {
                         var output = await p.StandardOutput.ReadToEndAsync();
                         await p.WaitForExitAsync(new CancellationTokenSource(TimeSpan.FromMinutes(3)).Token);
+                        p.WaitForExit(); // also waits until the output is fully read and the process is gone
                         Console.WriteLine(output.Trim());
                         if (p.ExitCode != 0 || !output.Contains("SMOKE OK")) throw new InvalidOperationException($"{id} --smoke-test failed (exit {p.ExitCode}).");
                     }

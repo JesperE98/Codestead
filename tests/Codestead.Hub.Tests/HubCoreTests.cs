@@ -323,3 +323,27 @@ public class CatalogClientTests
         Assert.Single(r.Catalog.Tools);
     }
 }
+
+public class UninstallTests
+{
+    [Fact(DisplayName = "avinstallation väntar en stund på filer som fortfarande är öppna (Windows)")]
+    public async Task WaitsForLockedFiles()
+    {
+        // Only Windows refuses to delete a file that is open (that is what happens right after a tool exits).
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "Open files only block deletion on Windows.");
+        using var f = new Fixture();
+        var store = new ToolStore(f.StoreRoot);
+        var (_, a) = f.Package("0.1.0", true);
+        var t = await store.InstallAsync(Fixture.Tool("0.1.0", a, "win-x64"), a, new HttpClient());
+        var stream = File.Open(Path.Combine(t.Directory, "lib", "data.txt"), FileMode.Open, FileAccess.Read, FileShare.None);
+        var release = Task.Run(async () =>
+        {
+            await Task.Delay(700);
+            stream.Dispose();
+        });
+        store.Uninstall("codestead-test");
+        await release;
+        Assert.Null(store.Installed("codestead-test"));
+        Assert.False(Directory.Exists(t.Directory));
+    }
+}

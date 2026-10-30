@@ -16,6 +16,7 @@
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
     <PackageReference Include="Velopack" Version="1.2.161" />
   </ItemGroup>
+  <Import Project="../../build/Codestead.App.props" />
   <ItemGroup>
     <ProjectReference Include="../Codestead.Hub.Core/Codestead.Hub.Core.csproj" />
     <ProjectReference Include="../Codestead.UI/Codestead.UI.csproj" />
