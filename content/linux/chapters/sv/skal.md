@@ -18,6 +18,17 @@ likadant vilket skal du än använder. Det som skiljer skalen åt är **språket
 runt omkring**: hur variabler sätts, hur loopar och villkor skrivs, hur
 prompten ser ut och vilka bekvämligheter som finns.
 
+```quiz
+Du byter från bash till ett annat skal. Vilket av de här förblir exakt likadant?
+- [ ] Hur du sätter en variabel
+- [ ] Hur du skriver en loop
+- [x] Vad `grep` gör med sina flaggor
+- [ ] Hur prompten ser ut
+---
+`grep` är ett eget program i `/usr/bin`. Skalet startar det bara – det är
+språket runt omkring som skiljer sig mellan skalen.
+```
+
 ## Släktträdet: sh, bash, zsh och fish
 
 | Skal | Kom | Kännetecken |
@@ -53,26 +64,15 @@ echo $SHELL
 
 ### Installera zsh
 
-zsh heter likadant i alla familjer:
+I Ubuntu-terminalen installerar du zsh med apt:
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install zsh
 ```
-:::
 
-:::arch
-```sh
-sudo pacman -S zsh
-```
-:::
-
-:::redhat
-```sh
-sudo dnf install zsh
-```
-:::
+Andra distributioner använder sin egen pakethanterare, som du lärde dig i
+delen om distributioner och paket. Paketet heter `zsh` där också.
 
 Titta i `/etc/shells` igen – paketet har lagt till `/usr/bin/zsh` (och
 `/bin/zsh`):
@@ -100,7 +100,7 @@ konfigurationsfil för zsh ännu. Det är en meny som hjälper dig komma igång:
 | `1` | Huvudmenyn med alla inställningar (finns inte i simulatorn) |
 | `2` | Skapa `~/.zshrc` med rekommenderade inställningar |
 
-Svara `2`. Prompten ändras till `elev@{{hostname}} ~ %` – i zsh är `%`
+Svara `2`. Prompten ändras till `elev@ubuntu ~ %` – i zsh är `%`
 det vanliga tecknet för en vanlig användare (root får `#`, precis som i bash).
 
 Vilket skal kör du nu? Variabeln `$0` innehåller namnet på skalet:
@@ -170,6 +170,24 @@ bash skriver ut `[a.txt]` och `[b.txt]` – zsh skriver ut `[a.txt b.txt]`.
 zsh:s sätt är oftast det man vill, men det betyder att ett bash-skript inte
 alltid gör samma sak i zsh. (Med `setopt shwordsplit` beter sig zsh som bash.)
 
+Du behöver inte starta ett skal för att prova ett enda kommando i det. Med
+`-c` kör skalet kommandot och avslutas direkt – `zsh -c 'echo $0'` skriver ut
+`zsh`, och du är fortfarande i bash efteråt.
+
+Frågan nedan börjar i en ny terminal, så den installerar först zsh.
+`> /dev/null 2>&1` slänger utskriften från den raden. Vad skriver det sista
+kommandot ut?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
+$ zsh -c 'filer="x.txt y.txt z.txt"; for f in $filer; do echo "<$f>"; done'
+<x.txt y.txt z.txt>
+---
+zsh delar inte upp variabeln vid mellanslag, så loopen körs en gång med hela
+värdet. I bash skulle samma loop skriva ut tre rader: `<x.txt>`, `<y.txt>`
+och `<z.txt>`.
+```
+
 ### ~/.zshrc och prompten
 
 bash läser `~/.bashrc` när det startar – zsh läser `~/.zshrc`. Titta i filen
@@ -227,30 +245,19 @@ simulatorn syns inga förslag, men syntaxen fungerar.)
 
 ### Installera och starta fish
 
-:::debian
+fish installeras med apt på samma sätt – i andra distributioner med deras
+egen pakethanterare:
+
 ```sh
 sudo apt update
 sudo apt install fish
 ```
-:::
-
-:::arch
-```sh
-sudo pacman -S fish
-```
-:::
-
-:::redhat
-```sh
-sudo dnf install fish
-```
-:::
 
 ```sh
 fish
 ```
 
-fish hälsar dig välkommen och prompten blir `elev@{{hostname}} ~>`. Gå ner i
+fish hälsar dig välkommen och prompten blir `elev@ubuntu ~>`. Gå ner i
 några kataloger och se hur fish förkortar sökvägen i prompten:
 
 ```sh
@@ -311,6 +318,17 @@ I fish är alla variabler **listor**. Elementen numreras från 1:
 set frukter äpple päron banan
 echo $frukter[2]
 count $frukter
+```
+
+`-c` fungerar i fish också. Vad skriver det sista kommandot ut?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y fish > /dev/null 2>&1
+$ fish -c 'set frukter äpple päron banan; echo $frukter[3]'
+banan
+---
+Elementen i en fish-lista numreras från 1, så `[3]` är det tredje och sista
+elementet.
 ```
 
 ### Kommandosubstitution och $status
@@ -429,6 +447,16 @@ bash som kör det. Därför är `#!/bin/bash` (eller `#!/usr/bin/env bash`) så
 viktig. Ett skript som ska fungera överallt, även där bash saknas, skriver man
 med `#!/bin/sh` och bara POSIX-syntax.
 
+```quiz
+Du sitter i fish och kör ett skript som börjar med `#!/bin/bash` och
+innehåller raden `count=3`. Vad händer?
+- [ ] fish vägrar, eftersom `count=3` inte är tillåtet i fish
+- [x] Det fungerar – bash kör skriptet, vilket skal du än sitter i
+- [ ] Det fungerar bara om du först byter inloggningsskal till bash med `chsh`
+---
+Raden `#!` bestämmer vilket skal som kör skriptet. fish startar det bara.
+```
+
 ## Byta standardskal med chsh
 
 Att skriva `zsh` varje gång du öppnar en terminal blir tjatigt. Med `chsh`
@@ -446,14 +474,6 @@ grep elev /etc/passwd
   med sitt gamla skal, och `$SHELL` ändras först när du loggat in igen.
 - root kan byta skal åt andra: `sudo chsh -s /usr/bin/fish kim`.
 
-:::arch
-På Arch listar `chsh -l` alla giltiga skal.
-:::
-
-:::redhat
-På Fedora listar `chsh -l` alla giltiga skal.
-:::
-
 Vill du tillbaka till bash gör du likadant:
 
 ```sh
@@ -463,6 +483,19 @@ chsh -s /bin/bash
 Ett vanligt råd för fish är att behålla bash som inloggningsskal och i stället
 låta terminalprogrammet starta fish – då fungerar allt som förväntar sig ett
 POSIX-skal vid inloggningen som vanligt.
+
+Frågan börjar i en ny terminal, installerar zsh och gör det till
+inloggningsskal. Vad skriver det sista kommandot ut?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
+$ chsh -s /usr/bin/zsh > /dev/null 2>&1
+$ echo $SHELL
+/bin/bash
+---
+`chsh` ändrade din rad i `/etc/passwd`, men ändringen gäller från nästa
+inloggning. Terminalen du har öppen behåller bash, och det gör `$SHELL` också.
+```
 
 ## Vilket skal ska man välja?
 

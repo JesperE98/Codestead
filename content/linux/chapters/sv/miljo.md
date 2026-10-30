@@ -26,6 +26,16 @@ Du skapar en variabel med `NAMN=värde` (inga mellanslag runt `=`!). Med
 export EDITOR=nano
 ```
 
+```quiz
+Vilken rad skapar variabeln `FARG` med värdet `blue`?
+- [ ] `FARG = blue`
+- [x] `FARG=blue`
+- [ ] `$FARG=blue`
+---
+Det får inte finnas mellanslag runt `=`. Med mellanslag tror skalet att `FARG`
+är ett kommando. `$` används bara när du *läser* en variabel.
+```
+
 ## Enkla och dubbla citattecken
 
 Det finns en viktig skillnad:
@@ -37,6 +47,14 @@ echo 'Hemma: $HOME'
 
 Inom **dubbla** citattecken byts variabler ut mot sitt värde. Inom **enkla**
 citattecken skrivs allt ut precis som det står.
+
+```predict
+$ x=linux
+$ echo "I like $x"
+$ echo 'I like $x'
+I like linux
+I like $x
+```
 
 ## PATH – var hittas kommandon?
 
@@ -57,6 +75,17 @@ type cd
 
 Om du vill köra ett program som inte ligger i `PATH` måste du ange sökvägen,
 till exempel `./mittprogram` för en fil i katalogen du står i.
+
+```quiz
+Du har ett program som heter `hej` i katalogen du står i, och den katalogen
+finns inte i `PATH`. Hur kör du det?
+- [ ] `hej`
+- [x] `./hej`
+- [ ] `type hej`
+---
+Utan sökväg letar skalet bara i katalogerna i `PATH`. `./hej` säger exakt var
+filen finns: i katalogen du står i.
+```
 
 ## Slutkoder – `$?`
 
@@ -81,6 +110,12 @@ ll
 
 `alias` utan argument listar alla alias och `unalias ll` tar bort ett.
 
+```predict
+$ alias hej='echo Hello'
+$ hej
+Hello
+```
+
 ## Spara inställningar – `~/.bashrc`
 
 Variabler och alias som du skapar försvinner när du stänger terminalen. För
@@ -90,4 +125,14 @@ direkt med:
 
 ```sh
 source ~/.bashrc
+```
+
+```quiz
+Du skapar ett alias, stänger terminalen och öppnar en ny. Aliaset är borta.
+Vad borde du ha gjort?
+- [ ] Kört `alias` utan argument
+- [x] Lagt aliaset i `~/.bashrc`
+- [ ] Skapat det med `export`
+---
+Allt du lägger i `~/.bashrc` läses in igen varje gång en ny terminal öppnas.
 ```
