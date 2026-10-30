@@ -1,0 +1,25 @@
+{
+  "title": "ユーザー、パーミッション、sudo",
+  "tasks": {
+    "groups": {
+      "text": "自分がどのグループに属しているかを調べてください。"
+    },
+    "shadow": {
+      "text": "`cat` で `/etc/shadow` を読んでみてください。そのあと `sudo` を付けて読んでください。"
+    },
+    "script": {
+      "text": "`echo Hej från mitt skript`（スウェーデン語で「私のスクリプトからこんにちは」）という行を含むスクリプト `~/hej.sh` を作成してください。",
+      "hint": "シングルクォートを使いましょう: `echo 'echo Hej från mitt skript' > ~/hej.sh`"
+    },
+    "chmod-x": {
+      "text": "`~/hej.sh` を実行可能にしてください。"
+    },
+    "run-script": {
+      "text": "（ホームディレクトリから）`./hej.sh` でスクリプトを実行してください。"
+    },
+    "chmod-600": {
+      "text": "`~/anteckningar.txt` を、あなた **だけ** が読み書きできるようにしてください（`rw-------`）。",
+      "hint": "r = 4、w = 2、x = 1 です。所有者は 4 + 2、それ以外は全員 0 にします。"
+    }
+  }
+}
