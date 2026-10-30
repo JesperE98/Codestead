@@ -265,9 +265,7 @@ public static partial class ShellmodeLib
                 {
                     if (key == "1")
                     {
-                        @out.Out($"{Dim}{sh.Msg(
-                            "Huvudmenyn finns inte i simulatorn – du får de rekommenderade inställningarna (som med 2).",
-                            "The main menu is not available in the simulator – you get the recommended settings (as with 2).")}{Reset}\n");
+                        @out.Out($"{Dim}{sh.Msg("shellmode.zshMainMenu")}{Reset}\n");
                     }
                     WriteHomeFile(sh, ".zshrc", ZshrcRecommended);
                     SourceFile(sh, ".zshrc", "zsh", @out);

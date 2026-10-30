@@ -47,6 +47,7 @@ src/
 │   ├── Packages.cs          Paketdatabasen (olika paketnamn per familj)
 │   ├── Services.cs, Disks.cs, Users.cs, Network.cs, Procs.cs, Fish.cs, Shellmode.cs
 │   ├── Js.cs                Hjälpfunktioner med JavaScript-semantik (från porteringen)
+│   ├── ShellI18n.cs, i18n/  Simulatorns egna tips och help-sammanfattningar på alla språk
 │   └── Commands/            Alla kommandon: ls, grep, chmod, apt, pacman, dnf, git, ssh ...
 ├── Codestead.Content/       Kapitel, uppgifter och kontroller (ChapterDefinitions.cs), språk, UI-texter (i18n/ui/*.json)
 ├── Codestead.UI/            Delade Avalonia-delar för alla verktyg: tema, terminal, markdown-vy, dialoger, lagring
@@ -100,6 +101,20 @@ packaging/                   Byggskript och installationstester för Windows och
 
 Behövs ett nytt kommando lägger du det i `src/Codestead.Shell/Commands/`. Ska det installeras med
 pakethanteraren lägger du också till ett paket i `Packages.cs`.
+
+## Simulatorns egna texter
+
+Tips, anmärkningar och välkomsttexten som simulatorn skriver i terminalen finns i
+`src/Codestead.Shell/i18n/<språk>.json` (`messages`), och anropas med en nyckel:
+`sh.Msg("pkg.aptListsEmpty")` eller `Dim(sh, "users.noPasswordSet", ("user", name))`. Engelska
+(`en.json`) är källan; lägg till nyckeln i alla elva filer med samma `{platshållare}`. Utskrifter som
+härmar riktiga program (`ls: cannot access ...`) och manualsidor översätts inte.
+
+Sammanfattningarna som `help` visar (`summaries`) skrivs i koden (`Summary` på svenska,
+`SummaryEn` på engelska) och förs över till `sv.json` och `en.json` med
+`CODESTEAD_UPDATE_SHELL_I18N=1 dotnet test --project tests/Codestead.Shell.Tests`. Översätt sedan
+ändringen i de andra språken. Testerna i `ShellI18nTests.cs` kontrollerar nycklar, platshållare och
+att inget har glömts.
 
 ## Bygga installationsfilerna
 

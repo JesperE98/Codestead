@@ -85,7 +85,7 @@ public static partial class GitCmd
         /// <summary>Colours the text if output goes to the terminal.</summary>
         public string C(string color, string s) => Tty && s != "" ? $"{color}{s}{Col.Reset}" : s;
 
-        public void Note(string sv, string en) => Ctx.Err($"{UtilCmd.Color.Dim}{Sh.Msg(sv, en)}{UtilCmd.Color.Reset}\n");
+        public void Note(string key, params (string Name, object? Value)[] args) => Ctx.Err($"{UtilCmd.Color.Dim}{Sh.Msg(key, args)}{UtilCmd.Color.Reset}\n");
 
         public void Hint(string text) =>
             Ctx.Err(string.Join("\n", text.Split('\n').Select(l => Tty ? $"{Col.Yellow}hint:{(l != "" ? " " + l : "")}{Col.Reset}" : $"hint:{(l != "" ? " " + l : "")}")) + "\n");

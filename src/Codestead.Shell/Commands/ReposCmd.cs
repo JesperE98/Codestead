@@ -14,7 +14,7 @@ using static PackagesLib;
 public static partial class ReposCmd
 {
     private static bool IsRoot(Shell sh) => sh.CurrentUser().Uid == 0;
-    private static string Dim(Shell sh, string sv, string en) => $"{UtilCmd.Color.Dim}{sh.Msg(sv, en)}{UtilCmd.Color.Reset}\n";
+    private static string Dim(Shell sh, string key, params (string Name, object? Value)[] args) => $"{UtilCmd.Color.Dim}{sh.Msg(key, args)}{UtilCmd.Color.Reset}\n";
     private static PackageDef PkgById(string id) => Packages.FirstOrDefault(p => p.Id == id)!;
     /// <summary>sh.installed[id] used as a truth value.</summary>
     private static bool Has(Shell sh, string id) => !string.IsNullOrEmpty(sh.Installed.Get(id));
@@ -321,14 +321,14 @@ EXAMPLES
                 return 0;
             }
             ctx.Out($"Adding component(s) '{spec}' to all repositories.\n");
-            ctx.Out(Dim(sh, $"(Komponenten {spec} finns bara i Ubuntu – Debian har main, contrib och non-free.)", $"(The {spec} component only exists in Ubuntu - Debian has main, contrib and non-free.)"));
+            ctx.Out(Dim(sh, "repos.ubuntuOnlyComponent", ("component", spec)));
             return 0;
         }
         var ppa = ParsePpa(spec);
         if (ppa is null)
         {
             ctx.Err($"Error: '{spec}' invalid\n");
-            ctx.Err(Dim(sh, "Tips från simulatorn: ett PPA skrivs ppa:användare/namn, t.ex. ppa:lunatool/moonphase.", "Simulator tip: a PPA is written ppa:user/name, e.g. ppa:lunatool/moonphase."));
+            ctx.Err(Dim(sh, "repos.ppaFormat"));
             return 1;
         }
         var info = Ppas.GetValueOrDefault(PpaKey(ppa));
@@ -349,9 +349,7 @@ EXAMPLES
         ctx.Out(removing ? "Removing repository.\n" : "Adding repository.\n");
         if (!removing && sh.Distro.Id != "ubuntu")
         {
-            ctx.Out(Dim(sh,
-                $"Varning från simulatorn: PPA:er byggs för Ubuntu (här {PpaSuite}), inte för {sh.Distro.Name}. Paketen kan kräva andra versioner av bibliotek än de Debian har och göra systemet trasigt.",
-                $"Simulator warning: PPAs are built for Ubuntu (here {PpaSuite}), not for {sh.Distro.Name}. The packages may need other library versions than Debian has and can break the system."));
+            ctx.Out(Dim(sh, "repos.ppaWarning", ("suite", PpaSuite), ("distro", sh.Distro.Name)));
         }
         int Apply(Sink io)
         {
@@ -729,7 +727,7 @@ EXAMPLES
         {
             // Just like for real: the AUR lets you clone anything – if the package doesn't exist the directory is empty.
             ctx.Err("warning: You appear to have cloned an empty repository.\n");
-            ctx.Err(Dim(sh, $"(Det finns inget AUR-paket som heter \"{name}\". Kontrollera namnet på aur.archlinux.org eller med \"yay -Ss\".)", $"(There is no AUR package called \"{name}\". Check the name on aur.archlinux.org or with \"yay -Ss\".)"));
+            ctx.Err(Dim(sh, "repos.noSuchAurPackage", ("name", name)));
             return 0;
         }
         dir.Children["PKGBUILD"] = VfsLib.MakeFile(Pkgbuild(name, entry), user.Name, Js.Oct(644), g);
@@ -902,7 +900,7 @@ EXAMPLES
         if (IsRoot(sh))
         {
             ctx.Err("==> ERROR: Running makepkg as root is not allowed as it can cause permanent,\ncatastrophic damage to your system.\n");
-            ctx.Err(Dim(sh, "Tips från simulatorn: kör makepkg utan sudo. Den använder sudo själv när paketet ska installeras.", "Simulator tip: run makepkg without sudo. It uses sudo by itself when the package is installed."));
+            ctx.Err(Dim(sh, "repos.makepkgNoSudo"));
             return 10;
         }
         var dir = sh.Cwd;
@@ -917,7 +915,7 @@ EXAMPLES
             ctx.Err("==> ERROR: PKGBUILD does not exist.\n");
             if (sh.Vfs.TryLookup($"{dir}/.git", user) is not null)
             {
-                ctx.Err(Dim(sh, "(Katalogen är tom – kanske fanns inget AUR-paket med det namnet?)", "(The directory is empty - maybe there was no AUR package with that name?)"));
+                ctx.Err(Dim(sh, "repos.emptyDirectory"));
             }
             return 1;
         }
@@ -927,7 +925,7 @@ EXAMPLES
         if (!Has(sh, "base-devel"))
         {
             ctx.Err("==> ERROR: Cannot find the fakeroot binary.\n");
-            ctx.Err(Dim(sh, "Tips från simulatorn: installera byggverktygen först: sudo pacman -S --needed base-devel", "Simulator tip: install the build tools first: sudo pacman -S --needed base-devel"));
+            ctx.Err(Dim(sh, "repos.installBaseDevel"));
             return 1;
         }
         if (entry is null)
@@ -936,7 +934,7 @@ EXAMPLES
             var src = sm.Success ? sm.Groups[1].Value : name;
             ctx.Out($"==> Making package: {name} ({UtilCmd.LongDate()})\n==> Retrieving sources...\n");
             ctx.Err($"==> ERROR: Failure while downloading {src}\n    Aborting...\n");
-            ctx.Err(Dim(sh, "(Simulatorn kan bara bygga paketen som finns i dess låtsas-AUR.)", "(The simulator can only build the packages in its pretend AUR.)"));
+            ctx.Err(Dim(sh, "repos.onlyPretendAur"));
             return 1;
         }
         var pkg = PkgById(entry.PkgId);
@@ -1027,7 +1025,7 @@ EXAMPLES
         if (!o.Flags.Contains("s"))
         {
             ctx.Err($"==> Missing dependencies:\n{missingList}==> ERROR: Could not resolve all dependencies.\n");
-            ctx.Err(Dim(sh, "Tips från simulatorn: med -s installerar makepkg beroendena åt dig (makepkg -si).", "Simulator tip: with -s makepkg installs the dependencies for you (makepkg -si)."));
+            ctx.Err(Dim(sh, "repos.makepkgSyncDeps"));
             return 8;
         }
         ctx.Out("==> Installing missing dependencies...\n");
@@ -1207,7 +1205,7 @@ OPTIONS
             if (!Has(sh, "base-devel"))
             {
                 ctx.Err(" -> Missing dependency: base-devel\n");
-                ctx.Err(Dim(sh, "Tips från simulatorn: sudo pacman -S --needed base-devel", "Simulator tip: sudo pacman -S --needed base-devel"));
+                ctx.Err(Dim(sh, "repos.baseDevelTip"));
                 return 1;
             }
             var user = sh.CurrentUser();
@@ -1236,7 +1234,7 @@ OPTIONS
                 built.Size = Round(PkgById(e.PkgId).SizeKb * 400);
                 sh.Vfs.Insert($"{cache}/{PkgFileName(t, e)}", built, user);
             }
-            ctx.Out(Dim(sh, "(yay visar PKGBUILD-filerna här om du vill läsa dem – de ligger i ~/.cache/yay/.)", "(yay shows the PKGBUILD files here if you want to read them - they are in ~/.cache/yay/.)"));
+            ctx.Out(Dim(sh, "repos.yayPkgbuildHint"));
             foreach (var t in aurTargets)
             {
                 var e = Aur[t];
@@ -1371,7 +1369,7 @@ DESCRIPTION
             ctx.Out(
                 "   *        .     *       .    *\n .     *       .      *         .\n     .    *        .      *  .\n" +
                 "  *      .     *      .     *    \n    .  *     .     *     .    *\n__/\\___/\\__/\\____/\\___/\\___/\\___\n");
-            ctx.Out(Dim(ctx.Sh, "(I en riktig terminal faller snön tills du trycker q.)", "(In a real terminal the snow keeps falling until you press q.)"));
+            ctx.Out(Dim(ctx.Sh, "repos.snowQuit"));
             return 0;
         },
     };
@@ -1407,7 +1405,7 @@ DESCRIPTION
                 ctx.Out("Go is a tool for managing Go source code.\n\nUsage:\n\n\tgo <command> [arguments]\n");
                 return 2;
             }
-            ctx.Out(Dim(ctx.Sh, $"go {ctx.Args[0]} stöds inte i simulatorn.", $"go {ctx.Args[0]} is not supported in the simulator."));
+            ctx.Out(Dim(ctx.Sh, "repos.goSubcommandUnsupported", ("subcommand", ctx.Args[0])));
             return 1;
         },
     };

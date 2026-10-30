@@ -233,9 +233,7 @@ public static partial class ShellsCmd
         sh.Vfs.WriteFile("/etc/passwd", string.Join("\n", lines), root);
         if (utilLinux) @out.Out("Shell changed.\n");
         @out.Out(
-            $"{UtilCmd.Color.Dim}{sh.Msg(
-                $"Inloggningsskalet för {user} är nu {shell} (se /etc/passwd). Det gäller från nästa inloggning – terminalen du har öppen kör fortfarande sitt gamla skal.",
-                $"The login shell for {user} is now {shell} (see /etc/passwd). It takes effect at the next login – the terminal you have open still runs its old shell.")}{UtilCmd.Color.Reset}\n");
+            $"{UtilCmd.Color.Dim}{sh.Msg("shells.loginShellChanged", ("user", user), ("shell", shell))}{UtilCmd.Color.Reset}\n");
         return 0;
     }
 
@@ -344,7 +342,7 @@ public static partial class ShellsCmd
                 return 1;
             }
             if (utilLinux) ctx.Out($"Changing shell for {user}.\n");
-            if (me.Uid != 0) ctx.Err($"Password: {UtilCmd.Color.Dim}{sh.Msg("(simulatorn hoppar över lösenordet)", "(the simulator skips the password)")}{UtilCmd.Color.Reset}\n");
+            if (me.Uid != 0) ctx.Err($"Password: {UtilCmd.Color.Dim}{sh.Msg("common.skipsPassword")}{UtilCmd.Color.Reset}\n");
             if (shell is not null) return ChangeShell(ctx, user, shell, ctx);
             var fields = line.Split(':');
             var current = fields.Length > 6 ? fields[6] : "/bin/bash";
@@ -375,7 +373,7 @@ public static partial class ShellsCmd
     {
         var mode = ctx.Sh.ShellMode;
         ctx.Err(mode == "fish" ? $"fish: Unknown command: {ctx.Name}\n" : $"{mode}: {ctx.Name}: command not found\n");
-        ctx.Err($"{UtilCmd.Color.Dim}{ctx.Sh.Msg($"{ctx.Name} finns bara i zsh.", $"{ctx.Name} only exists in zsh.")}{UtilCmd.Color.Reset}\n");
+        ctx.Err($"{UtilCmd.Color.Dim}{ctx.Sh.Msg("shells.zshOnly", ("command", ctx.Name))}{UtilCmd.Color.Reset}\n");
         return 127;
     }
 

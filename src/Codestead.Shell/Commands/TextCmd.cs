@@ -210,7 +210,7 @@ BESKRIVNING
                 }
                 if (o.Flags.Contains("f"))
                 {
-                    ctx.Out($"{UtilCmd.Color.Dim}({ctx.Sh.Msg("simulatorn: -f följer inte filen – i en riktig terminal avslutar du med Ctrl+C", "simulator: -f doesn't follow the file – in a real terminal you stop it with Ctrl+C")}){UtilCmd.Color.Reset}\n");
+                    ctx.Out($"{UtilCmd.Color.Dim}({ctx.Sh.Msg("text.tailFollow")}){UtilCmd.Color.Reset}\n");
                 }
                 return failed ? 1 : 0;
             },

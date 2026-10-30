@@ -300,9 +300,7 @@ I SIMULATORN
                 return 0;
             }
             ctx.Err(
-                $"bash: read: {ctx.Sh.Msg("ingen indata", "no input")}\n{UtilCmd.Color.Dim}{ctx.Sh.Msg(
-                    "I simulatorn kan read inne i skript bara läsa från en pipe eller en fil, t.ex. \"echo text | ./skript.sh\".",
-                    "In the simulator, read inside a script can only read from a pipe or a file, e.g. \"echo text | ./script.sh\".")}{UtilCmd.Color.Reset}\n");
+                $"bash: read: {ctx.Sh.Msg("script.readNoInput")}\n{UtilCmd.Color.Dim}{ctx.Sh.Msg("script.readInScripts")}{UtilCmd.Color.Reset}\n");
             return 1;
         },
     };

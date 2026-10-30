@@ -102,7 +102,7 @@ public static partial class PkgCmd
                 ctx.Err($"E: Unable to locate package {n}\n");
                 if (!Flag(sh, "repoSynced"))
                 {
-                    ctx.Err($"{UtilCmd.Color.Dim}{ctx.Sh.Msg("Tips från simulatorn: paketlistorna är tomma. Kör 'sudo apt update' först.", "Tip from the simulator: the package lists are empty. Run 'sudo apt update' first.")}{UtilCmd.Color.Reset}\n");
+                    ctx.Err($"{UtilCmd.Color.Dim}{ctx.Sh.Msg("pkg.aptListsEmpty")}{UtilCmd.Color.Reset}\n");
                 }
                 return 100;
             }
@@ -172,7 +172,7 @@ public static partial class PkgCmd
             if (p.Essential == true)
             {
                 ctx.Err("E: Removing essential system-critical packages is not permitted. This might break the system.\n");
-                ctx.Err($"{UtilCmd.Color.Dim}({ctx.Sh.Msg($"{n} är ett systemkritiskt paket – utan det slutar systemet fungera.", $"{n} is an essential package – without it the system stops working.")}){UtilCmd.Color.Reset}\n");
+                ctx.Err($"{UtilCmd.Color.Dim}({ctx.Sh.Msg("pkg.essentialPackage", ("pkg", n))}){UtilCmd.Color.Reset}\n");
                 return 100;
             }
             toRemove.Add(p);
@@ -221,7 +221,7 @@ public static partial class PkgCmd
         {
             ctx.Out("0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.\n");
             if (Flag(sh, "repoSynced")) sh.Flags["upgraded"] = true;
-            else ctx.Out($"{UtilCmd.Color.Dim}{ctx.Sh.Msg("Tips från simulatorn: apt vet inte om några nya versioner förrän du kört 'sudo apt update'.", "Tip from the simulator: apt doesn't know about any new versions until you have run 'sudo apt update'.")}{UtilCmd.Color.Reset}\n");
+            else ctx.Out($"{UtilCmd.Color.Dim}{ctx.Sh.Msg("pkg.aptUpgradeNeedsUpdate")}{UtilCmd.Color.Reset}\n");
             return 0;
         }
         var size = ups.Sum(p => p.SizeKb);
@@ -586,7 +586,7 @@ BESKRIVNING
                     ctx.Err($"error: target not found: {t}\n");
                     if (Packages.Any(x => x.Names.Get("arch") == t && IsForeign(fam, x)))
                     {
-                        ctx.Err($"{UtilCmd.Color.Dim}{sh.Msg($"Tips från simulatorn: {t} finns inte i Archs förråd, bara i AUR (se kapitlet \"AUR, PPA och COPR\").", $"Simulator tip: {t} is not in the Arch repositories, only in the AUR (see the chapter \"AUR, PPA and COPR\").")}{UtilCmd.Color.Reset}\n");
+                        ctx.Err($"{UtilCmd.Color.Dim}{sh.Msg("pkg.onlyInAur", ("pkg", t))}{UtilCmd.Color.Reset}\n");
                     }
                     return 1;
                 }

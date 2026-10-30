@@ -55,10 +55,9 @@ public static partial class FishLib
         ["*"] = "$* is not supported. In fish, please use $argv.",
     };
 
-    private static string DefaultMsg(string sv, string en) => en;
-
-    public static string TranslateFish(string text, Func<string, string, string>? msg = null) =>
-        new FishTranslator(msg ?? DefaultMsg).Translate(text);
+    /// <summary>Translates fish code to bash. <paramref name="lang"/> is the language of the simulator's own hints.</summary>
+    public static string TranslateFish(string text, string lang = ShellI18n.Source) =>
+        new FishTranslator(lang).Translate(text);
 
     private static ParseError FishError(string message, bool incomplete = false) => new(message, incomplete);
 
@@ -214,9 +213,9 @@ public static partial class FishLib
         private string? pending;
         private bool needSep;
         private readonly List<Block> blocks = new();
-        private readonly Func<string, string, string> msg;
+        private readonly string lang;
 
-        public FishTranslator(Func<string, string, string> msg) => this.msg = msg;
+        public FishTranslator(string lang) => this.lang = lang;
 
         public string Translate(string text)
         {
@@ -452,9 +451,7 @@ public static partial class FishLib
                     if (BashOnly.Contains(t.Raw))
                     {
                         throw FishError(
-                            $"Unknown command: {t.Raw}\n{Dim}{msg(
-                                "Det där är bash-syntax. I fish avslutas if, for, while och function med \"end\" – utan then, do, done och fi.",
-                                "That is bash syntax. In fish, if, for, while and function blocks are closed with \"end\" – no then, do, done or fi.")}{Reset}");
+                            $"Unknown command: {t.Raw}\n{Dim}{ShellI18n.Msg(lang, "fish.bashSyntax")}{Reset}");
                     }
                     cmdName = t.Raw;
                     if (FishBuiltins.TryGetValue(t.Raw, out var builtin))
@@ -595,6 +592,6 @@ public static partial class FishLib
         }
 
         /// <summary>Code inside (…): translated on its own.</summary>
-        private string Sub(string code) => new FishTranslator(msg).Translate(code);
+        private string Sub(string code) => new FishTranslator(lang).Translate(code);
     }
 }

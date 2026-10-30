@@ -203,7 +203,7 @@ public static partial class ProcsCmd
         Run = ctx =>
         {
             TopScreen(ctx, "top");
-            if (ctx.IsTTY) ctx.Out($"{UtilCmd.Color.Dim}({ctx.Sh.Msg("Ögonblicksbild. I en riktig terminal uppdateras top hela tiden – avsluta med q.", "Snapshot. In a real terminal top updates continuously – quit with q.")}){UtilCmd.Color.Reset}\n");
+            if (ctx.IsTTY) ctx.Out($"{UtilCmd.Color.Dim}({ctx.Sh.Msg("procs.topSnapshot")}){UtilCmd.Color.Reset}\n");
             return 0;
         },
     };
@@ -221,7 +221,7 @@ public static partial class ProcsCmd
         if (proc.Pid == 1 || proc.Pid == 2) return true; // init ignores ordinary signals
         if (proc.Pid == ProcsLib.ShellPid)
         {
-            ctx.Err($"{UtilCmd.Color.Dim}({ctx.Sh.Msg("Simulatorn låter dig inte avsluta ditt eget skal.", "The simulator won't let you kill your own shell.")}){UtilCmd.Color.Reset}\n");
+            ctx.Err($"{UtilCmd.Color.Dim}({ctx.Sh.Msg("procs.killOwnShell")}){UtilCmd.Color.Reset}\n");
             return true;
         }
         if (signal == 0 || signal == 18 || signal == 19) return true;
@@ -510,7 +510,7 @@ public static partial class ProcsCmd
             ctx.Out(job.Cmd + "\n");
             if (job.State == "Running")
             {
-                ctx.Out($"{UtilCmd.Color.Dim}({ctx.Sh.Msg("Simulatorn väntar inte – jobbet räknas som klart.", "The simulator doesn't wait – the job counts as done.")}){UtilCmd.Color.Reset}\n");
+                ctx.Out($"{UtilCmd.Color.Dim}({ctx.Sh.Msg("procs.fgJobDone")}){UtilCmd.Color.Reset}\n");
                 ctx.Sh.FinishJob(job, "Done");
             }
             ctx.Sh.Proc.Jobs = ctx.Sh.Proc.Jobs.Where(j => !ReferenceEquals(j, job)).ToList();

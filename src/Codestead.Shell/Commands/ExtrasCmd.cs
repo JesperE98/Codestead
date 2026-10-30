@@ -122,9 +122,7 @@ BESKRIVNING
                     $"{Js.Num(p.Pid).PadLeft(7)} {p.User.Slice(0, 9).PadRight(10)} 20   0 {Mb(p.Vsz).PadLeft(5)} {Mb(p.Rss).PadLeft(5)} {p.Stat.CharAt(0)} {Js.ToFixed(p.Cpu, 1).PadLeft(4)} {Js.ToFixed(p.Mem, 1).PadLeft(4)} {(p.Time + ".00").PadLeft(8)} {p.Cmd}\n");
             }
             ctx.Out("\nF1Help  F2Setup  F3Search  F4Filter  F5Tree  F6SortBy  F7Nice-  F8Nice+  F9Kill  F10Quit\n");
-            Note(ctx, ctx.Sh.Msg(
-                "(Simulerad ögonblicksbild. I en riktig terminal är htop interaktivt – avsluta med q.)",
-                "(Simulated snapshot. In a real terminal htop is interactive – quit with q.)"));
+            Note(ctx, ctx.Sh.Msg("extras.htopSnapshot"));
             return 0;
         },
     };
@@ -273,9 +271,7 @@ BESKRIVNING
                 ctx.Out($"Python {v}\n");
                 return 0;
             }
-            Note(ctx, ctx.Sh.Msg(
-                $"Python {v} – det interaktiva läget stöds inte i simulatorn ännu.",
-                $"Python {v} – interactive mode is not supported in the simulator yet."));
+            Note(ctx, ctx.Sh.Msg("extras.pythonInteractive", ("version", v)));
             return 0;
         },
     };
@@ -287,11 +283,7 @@ BESKRIVNING
         Man = man,
         Run = ctx =>
         {
-            Note(ctx, ctx.Sh.Msg(
-                $"{name} är en interaktiv texteditor och stöds inte i simulatorn ännu.\n" +
-                "Skapa filer med t.ex.  echo 'text' > fil.txt  eller  echo 'mer text' >> fil.txt",
-                $"{name} is an interactive text editor and is not supported in the simulator yet.\n" +
-                "Create files with e.g.  echo 'text' > file.txt  or  echo 'more text' >> file.txt"));
+            Note(ctx, ctx.Sh.Msg("extras.editorUnsupported", ("editor", name)));
             return 0;
         },
     };

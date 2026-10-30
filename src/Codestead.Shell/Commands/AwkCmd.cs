@@ -15,13 +15,26 @@ public partial class AwkSyntaxError : Exception
 {
     public int Pos { get; }
     /// <summary>Set when the construct exists in real awk but not in the simulator.</summary>
-    public (string Sv, string En)? Unsupported { get; }
+    public AwkUnsupported? Unsupported { get; }
 
-    public AwkSyntaxError(string message, int pos, (string Sv, string En)? unsupported = null) : base(message)
+    public AwkSyntaxError(string message, int pos, AwkUnsupported? unsupported = null) : base(message)
     {
         Pos = pos;
         Unsupported = unsupported;
     }
+}
+
+/// <summary>
+/// An awk construct the simulator lacks: a message key (e.g. awk.featureFunction) with its arguments,
+/// or – for a bare keyword such as getline – just that keyword.
+/// </summary>
+public sealed partial class AwkUnsupported(string? key, string? keyword, (string Name, object? Value)[] args)
+{
+    public static AwkUnsupported Feature(string key, params (string Name, object? Value)[] args) => new(key, null, args);
+    public static AwkUnsupported Keyword(string keyword) => new(null, keyword, []);
+
+    /// <summary>The construct described in the shell's language.</summary>
+    public string Describe(Shell sh) => key is not null ? sh.Msg(key, args) : keyword!;
 }
 
 public partial class AwkFatal : Exception
@@ -301,8 +314,11 @@ public static partial class AwkCmd
             return new AwkSyntaxError("syntax error", tok.Pos);
         }
 
-        private AwkSyntaxError Unsupported(string sv, string en, Tok? tok = null) =>
-            new("syntax error", (tok ?? Tok).Pos, (sv, en));
+        private AwkSyntaxError Unsupported(AwkUnsupported what, Tok? tok = null) =>
+            new("syntax error", (tok ?? Tok).Pos, what);
+
+        private AwkSyntaxError Unsupported(string key, params (string Name, object? Value)[] args) =>
+            Unsupported(AwkUnsupported.Feature(key, args));
 
         private Tok Expect(string v)
         {
@@ -340,12 +356,12 @@ public static partial class AwkCmd
                 if (!Is("{")) throw Fail();
                 return new Rule { Pattern = pat, Action = ParseBlock() };
             }
-            if (Is("function", "kw") || Is("func", "kw")) throw Unsupported("egna funktioner (function)", "user-defined functions (function)");
+            if (Is("function", "kw") || Is("func", "kw")) throw Unsupported("awk.featureFunction");
             Expr? pattern = null;
             if (!Is("{"))
             {
                 pattern = ParseExpr();
-                if (Is(",")) throw Unsupported("intervallmönster (/start/,/slut/)", "range patterns (/start/,/end/)");
+                if (Is(",")) throw Unsupported("awk.featureRangePattern");
             }
             if (Is("{")) return new Rule { Pattern = pattern, Action = ParseBlock() };
             if (Tok.T != "nl" && !Is(";") && Tok.T != "eof") throw Fail();
@@ -483,11 +499,11 @@ public static partial class AwkCmd
                         return new Stmt.Delete(arr, subs);
                     }
                     case "getline":
-                        throw Unsupported("getline", "getline");
+                        throw Unsupported(AwkUnsupported.Keyword("getline"));
                     case "return":
-                        throw Unsupported("egna funktioner (return)", "user-defined functions (return)");
+                        throw Unsupported("awk.featureReturn");
                     case "nextfile":
-                        throw Unsupported("nextfile", "nextfile");
+                        throw Unsupported(AwkUnsupported.Keyword("nextfile"));
                 }
             }
             var s = Simple();
@@ -518,7 +534,7 @@ public static partial class AwkCmd
                 }
                 if (args.Count == 1 && args[0] is Expr.Group g) args = g.List;
                 if (Is(">") || Is(">>") || Is("|"))
-                    throw Unsupported($"omdirigering av utdata ({k} {Tok.V} ...)", $"output redirection ({k} {Tok.V} ...)");
+                    throw Unsupported("awk.featureOutputRedirect", ("statement", k), ("op", Tok.V));
                 if (k == "printf" && args.Count == 0) throw Fail();
                 return new Stmt.Print(k, args);
             }
@@ -732,13 +748,13 @@ public static partial class AwkCmd
                 {
                     Next();
                     if (Is("[")) return new Expr.Idx(t.V, Subscripts());
-                    if (Is("(") && Tok.Tight) throw Unsupported($"egna funktioner ({t.V}(...))", $"user-defined functions ({t.V}(...))", t);
+                    if (Is("(") && Tok.Tight) throw Unsupported(AwkUnsupported.Feature("awk.featureFunctionCall", ("name", t.V)), t);
                     return new Expr.Var(t.V);
                 }
                 case "builtin":
                 {
                     Next();
-                    if (UnsupportedBuiltins.Contains(t.V)) throw Unsupported($"funktionen {t.V}()", $"the function {t.V}()", t);
+                    if (UnsupportedBuiltins.Contains(t.V)) throw Unsupported(AwkUnsupported.Feature("awk.featureBuiltin", ("name", t.V)), t);
                     if (!Is("("))
                     {
                         if (t.V == "length") return new Expr.Call("length", new List<Expr>());
@@ -764,7 +780,7 @@ public static partial class AwkCmd
                     return new Expr.Call(t.V, args);
                 }
                 case "kw":
-                    if (t.V == "getline") throw Unsupported("getline", "getline");
+                    if (t.V == "getline") throw Unsupported(AwkUnsupported.Keyword("getline"));
                     throw Fail();
                 case "op":
                     if (t.V == "$")

@@ -80,9 +80,7 @@ public static partial class GitCmd
         string? scope = o.Has("global") ? "global" : o.Has("system") ? "system" : o.Has("local") ? "local" : null;
         if (o.Has("edit"))
         {
-            g.Note(
-                "(Simulatorn har ingen editor för git config -e. Använd git config <nyckel> <värde>, eller ändra filen med t.ex. echo.)",
-                "(The simulator has no editor for git config -e. Use git config <key> <value>, or change the file with e.g. echo.)");
+            g.Note("git.configEditUnsupported");
             return 1;
         }
         if (o.Has("list")) action = "list";
@@ -304,15 +302,11 @@ public static partial class GitCmd
         else if (!string.IsNullOrEmpty(mergeHead))
         {
             message = ReadText(g, Gpath(r, "MERGE_MSG")) ?? $"Merge commit '{mergeHead}'\n";
-            g.Note(
-                "(Simulatorn har ingen editor, så det föreslagna meddelandet från .git/MERGE_MSG används.)",
-                "(The simulator has no editor, so the suggested message from .git/MERGE_MSG is used.)");
+            g.Note("git.mergeMsgUsed");
         }
         else
         {
-            g.Note(
-                "(Riktiga git öppnar nu en texteditor för commit-meddelandet. Simulatorn har ingen – skriv meddelandet direkt: git commit -m \"Vad ändringen gör\")",
-                "(Real git now opens a text editor for the commit message. The simulator has none – give the message directly: git commit -m \"What the change does\")");
+            g.Note("git.commitNoEditor");
             g.Err("Aborting commit due to empty commit message.\n");
             return 1;
         }
@@ -1444,7 +1438,7 @@ public static partial class GitCmd
         if (!string.IsNullOrEmpty(mergeHead)) throw Fatal("You have not concluded your merge (MERGE_HEAD exists).\nPlease, commit your changes before you merge.");
         if (o.Has("squash"))
         {
-            g.Note("(git merge --squash stöds inte i simulatorn.)", "(git merge --squash is not supported in the simulator.)");
+            g.Note("git.mergeSquashUnsupported");
             return 1;
         }
         var name = o.Operands.Count > 0 ? o.Operands[0] : null;
@@ -1457,7 +1451,7 @@ public static partial class GitCmd
         }
         if (o.Operands.Count > 1)
         {
-            g.Note("(Att slå ihop flera grenar på en gång (octopus) stöds inte i simulatorn.)", "(Merging several branches at once (octopus) is not supported in the simulator.)");
+            g.Note("git.octopusUnsupported");
             return 1;
         }
         if (name == "-") name = PreviousBranch(r) ?? throw Fatal("No previous branch.");
@@ -1645,7 +1639,7 @@ public static partial class GitCmd
             var msg = msgs is not null ? string.Join("\n\n", msgs) : null;
             if (string.IsNullOrEmpty(msg))
             {
-                g.Note("(Simulatorn har ingen editor. Ange meddelandet med -m \"…\".)", "(The simulator has no editor. Give the message with -m \"…\".)");
+                g.Note("git.tagNoEditor");
                 return 1;
             }
             var id = Identity(g, r)!;

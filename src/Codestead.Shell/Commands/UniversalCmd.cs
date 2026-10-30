@@ -11,14 +11,12 @@ namespace Codestead.Shell.Commands;
 public static partial class UniversalCmd
 {
     private static bool IsRoot(Shell sh) => sh.CurrentUser().Uid == 0;
-    private static string Dim(Shell sh, string sv, string en) => $"{UtilCmd.Color.Dim}{sh.Msg(sv, en)}{UtilCmd.Color.Reset}\n";
+    private static string Dim(Shell sh, string key, params (string Name, object? Value)[] args) => $"{UtilCmd.Color.Dim}{sh.Msg(key, args)}{UtilCmd.Color.Reset}\n";
     private static bool Flag(Shell sh, string key) => sh.Flags.TryGetValue(key, out var v) && v;
 
     /// <summary>The line shown instead of a window.</summary>
     private static string WindowNote(Shell sh, string app) =>
-        Dim(sh,
-            $"({app} är ett grafiskt program och skulle nu öppnas i ett eget fönster. Simulatorn har bara en terminal, så här tar det stopp.)",
-            $"({app} is a graphical program and would now open in a window of its own. The simulator only has a terminal, so this is where it stops.)");
+        Dim(sh, "universal.graphicalApp", ("app", app));
 
     private static FsNode SimBinary(string impl, string owner = "root", int mode = -1, string? group = null, string extra = "")
     {
@@ -330,7 +328,7 @@ EXAMPLES
             if (inst == "system" && !IsRoot(sh) && !Flag(sh, "flatpak:polkitNote"))
             {
                 sh.Flags["flatpak:polkitNote"] = true;
-                ctx.Out(Dim(sh, "(Utan sudo frågar Flatpak efter ditt lösenord i ett fönster (polkit). Simulatorn hoppar över det.)", "(Without sudo, Flatpak asks for your password in a window (polkit). The simulator skips that.)"));
+                ctx.Out(Dim(sh, "universal.flatpakPolkit"));
             }
         }
 
@@ -354,7 +352,7 @@ EXAMPLES
                 if (!FlathubRepoFile.IsMatch(url) && !FlathubRepoDir.IsMatch(url))
                 {
                     ctx.Err($"error: Can't load uri {url}: Could not resolve hostname\n");
-                    ctx.Err(Dim(sh, $"(Simulatorn känner bara till Flathub: {FlathubUrl})", $"(The simulator only knows about Flathub: {FlathubUrl})"));
+                    ctx.Err(Dim(sh, "universal.flathubOnly", ("url", FlathubUrl)));
                     return 1;
                 }
                 NeedRoot();
@@ -405,7 +403,7 @@ EXAMPLES
                 if (hits.Count == 0)
                 {
                     ctx.Out("No matches found\n");
-                    if (rs.Count == 0) ctx.Out(Dim(sh, "Tips från simulatorn: du har inga källor ännu. Lägg till Flathub med flatpak remote-add.", "Simulator tip: you have no remotes yet. Add Flathub with flatpak remote-add."));
+                    if (rs.Count == 0) ctx.Out(Dim(sh, "universal.noRemotes"));
                     return 0;
                 }
                 if (ctx.IsTTY) ctx.Out("Name                              Description                                          Application ID                 Version    Branch  Remotes\n");
@@ -436,11 +434,11 @@ EXAMPLES
                     ctx.Err($"error: No remote refs found for ‘{remote}’\n");
                     if (inst == "user" && Remotes(sh, "system").Contains(remote))
                     {
-                        ctx.Err(Dim(sh, $"({remote} finns bara i systemets installation. Användarinstallationen har egna källor – lägg till den med --user.)", $"({remote} only exists in the system installation. The user installation has its own remotes - add it with --user.)"));
+                        ctx.Err(Dim(sh, "universal.remoteSystemOnly", ("remote", remote)));
                     }
                     else
                     {
-                        ctx.Err(Dim(sh, $"Tips från simulatorn: lägg till källan först: flatpak remote-add --if-not-exists flathub {FlathubUrl}", $"Simulator tip: add the remote first: flatpak remote-add --if-not-exists flathub {FlathubUrl}"));
+                        ctx.Err(Dim(sh, "universal.addRemoteFirst", ("url", FlathubUrl)));
                     }
                     return 1;
                 }
@@ -635,7 +633,7 @@ EXAMPLES
                         io.Out("Uninstall complete.\n");
                         if (!o.Flags.Contains("u") && targets.Any(t => t.Kind == "app"))
                         {
-                            io.Out(Dim(sh, "Tips: runtimes ligger kvar. Ta bort dem som inget program använder med: flatpak uninstall --unused", "Tip: the runtimes are still there. Remove those no app uses with: flatpak uninstall --unused"));
+                            io.Out(Dim(sh, "universal.unusedRuntimes"));
                         }
                         return 0;
                     },
@@ -976,7 +974,7 @@ EXAMPLES
                 if (!(sh.Env.Get("PATH") ?? "").Split(':').Contains("/snap/bin"))
                 {
                     sh.Env["PATH"] = $"{sh.Env.Get("PATH") ?? "/usr/bin:/bin"}:/snap/bin";
-                    ctx.Out(Dim(sh, "(/snap/bin lades till i PATH. I ett riktigt system händer det nästa gång du loggar in.)", "(/snap/bin was added to PATH. On a real system that happens the next time you log in.)"));
+                    ctx.Out(Dim(sh, "universal.snapPathAdded"));
                 }
                 return code;
             }
@@ -1142,9 +1140,7 @@ OPTIONS
         {
             ctx.Err(FuseError);
             var fusePkg = FusePkg.GetValueOrDefault(sh.Distro.Family);
-            ctx.Err(Dim(sh,
-                $"Tips från simulatorn: installera FUSE 2-biblioteket – i {sh.Distro.Name} heter paketet {fusePkg}. Eller kör med --appimage-extract-and-run.",
-                $"Simulator tip: install the FUSE 2 library - on {sh.Distro.Name} the package is called {fusePkg}. Or run it with --appimage-extract-and-run."));
+            ctx.Err(Dim(sh, "universal.appImageFuse", ("distro", sh.Distro.Name), ("pkg", fusePkg)));
             return 127;
         }
         ctx.Out(WindowNote(sh, appName));

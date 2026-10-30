@@ -9,7 +9,7 @@ public static partial class UsersCmd
 {
     // ---------- Helpers ----------
 
-    private static string Dim(Shell sh, string sv, string en) => $"{UtilCmd.Color.Dim}{sh.Msg(sv, en)}{UtilCmd.Color.Reset}\n";
+    private static string Dim(Shell sh, string key, params (string Name, object? Value)[] args) => $"{UtilCmd.Color.Dim}{sh.Msg(key, args)}{UtilCmd.Color.Reset}\n";
 
     private static bool IsRoot(Shell sh) => sh.CurrentUser().Uid == 0;
 
@@ -17,7 +17,7 @@ public static partial class UsersCmd
     private static int Denied(CmdCtx ctx, string file = "/etc/passwd")
     {
         ctx.Err($"{ctx.Name}: Permission denied.\n{ctx.Name}: cannot lock {file}; try again later.\n");
-        if (ctx.IsTTY) ctx.Err(Dim(ctx.Sh, "Tips: det här kräver root – prova med sudo framför.", "Tip: this needs root – try putting sudo in front."));
+        if (ctx.IsTTY) ctx.Err(Dim(ctx.Sh, "users.needsRoot"));
         return 1;
     }
 
@@ -344,7 +344,7 @@ public static partial class UsersCmd
             if (!UsersLib.ValidName(name))
             {
                 ctx.Err($"useradd: invalid user name '{name}': use --badname to ignore\n");
-                if (UpperRe.IsMatch(name)) ctx.Err(Dim(sh, "Tips: användarnamn skrivs med små bokstäver a–z, utan å, ä och ö.", "Tip: user names use lowercase letters a–z."));
+                if (UpperRe.IsMatch(name)) ctx.Err(Dim(sh, "users.lowercaseNames"));
                 return 3;
             }
             if (UsersLib.FindUser(sh, name) is not null)
@@ -1066,12 +1066,12 @@ public static partial class UsersCmd
             else if (me.Uid != 0) ctx.Out($"Changing password for {name}.\n");
             if (me.Uid != 0)
             {
-                ctx.Out(Dim(sh, "(Current password: – simulatorn hoppar över ditt nuvarande lösenord)", "(Current password: – the simulator skips your current password)"));
+                ctx.Out(Dim(sh, "users.skipsCurrentPassword"));
             }
             if (ctx.IsTTY && !sh.Flags.GetValue("passwdNoticeShown").GetValueOrDefault())
             {
                 sh.Flags["passwdNoticeShown"] = true;
-                ctx.Out(Dim(sh, "Det du skriver syns inte – precis som i en riktig terminal. Skriv lösenordet och tryck Enter.", "What you type isn't shown – just like in a real terminal. Type the password and press Enter."));
+                ctx.Out(Dim(sh, "users.passwordHidden"));
             }
             AskNewPassword(sh, name, (ok, _) => ok ? 0 : 10);
             return 0;
@@ -1283,7 +1283,7 @@ public static partial class UsersCmd
         io.Out($"Changing the user information for {name}\nEnter the new value, or press ENTER for the default\n");
         sh.AskText("\tFull Name []: ", (fullName, io2) =>
         {
-            io2.Out(Dim(sh, "(Rumsnummer, telefonnummer och \"Other\" hoppar simulatorn över.)", "(The simulator skips room number, phone numbers and \"Other\".)"));
+            io2.Out(Dim(sh, "users.chfnSkips"));
             sh.Ask("Is the information correct? [Y/n] ", true, (yes, io3) =>
             {
                 if (!yes)
@@ -1489,7 +1489,7 @@ public static partial class UsersCmd
             if (o2.Flags.Contains("P") || !sh.CanAskInteractively()) return AfterPassword(ctx);
             AskNewPassword(sh, name, (ok, io) =>
             {
-                if (!ok) io.Err(Dim(sh, $"Inget lösenord sattes. Sätt det senare med: sudo passwd {name}", $"No password was set. Set it later with: sudo passwd {name}"));
+                if (!ok) io.Err(Dim(sh, "users.noPasswordSet", ("user", name)));
                 return AfterPassword(io);
             });
             return 0;

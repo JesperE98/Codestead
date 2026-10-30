@@ -5,4 +5,10 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Codestead.Shell.Tests" />
   </ItemGroup>
+  <!-- The simulator's own messages and help summaries in every language (see ShellI18n.cs). -->
+  <ItemGroup>
+    <EmbeddedResource Include="i18n/*.json">
+      <LogicalName>shell-i18n/%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

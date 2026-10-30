@@ -7,8 +7,8 @@ namespace Codestead.Shell.Commands;
 
 public static partial class NetCmd
 {
-    private static void Note(CmdCtx ctx, string sv, string en) =>
-        ctx.Err($"{UtilCmd.Color.Dim}{ctx.Sh.Msg(sv, en)}{UtilCmd.Color.Reset}\n");
+    private static void Note(CmdCtx ctx, string key, params (string Name, object? Value)[] args) =>
+        ctx.Err($"{UtilCmd.Color.Dim}{ctx.Sh.Msg(key, args)}{UtilCmd.Color.Reset}\n");
 
     private static bool IsRoot(CmdCtx ctx) => ctx.Sh.CurrentUser().Uid == 0;
 
@@ -148,7 +148,7 @@ public static partial class NetCmd
                 ctx.Err("RTNETLINK answers: Operation not permitted\n");
                 return 2;
             }
-            Note(ctx, "(Att ändra rutter stöds inte i simulatorn.)", "(Changing routes is not supported in the simulator.)");
+            Note(ctx, "net.routeChangeUnsupported");
             return 1;
         }
         ctx.Err($"Command \"{cmd}\" is unknown, try \"ip route help\".\n");
@@ -267,7 +267,7 @@ public static partial class NetCmd
                             ctx.Err("RTNETLINK answers: Operation not permitted\n");
                             return 2;
                         }
-                        Note(ctx, "(Att ändra adresser stöds inte i simulatorn.)", "(Changing addresses is not supported in the simulator.)");
+                        Note(ctx, "net.addressChangeUnsupported");
                         return 1;
                     }
                     ctx.Err($"Command \"{cmd}\" is unknown, try \"ip address help\".\n");
@@ -420,9 +420,7 @@ public static partial class NetCmd
             }
             if (!limited && ctx.IsTTY)
             {
-                Note(ctx,
-                    "(I en riktig terminal fortsätter ping tills du trycker Ctrl+C. Med -c 4 skickas bara fyra paket.)",
-                    "(In a real terminal ping keeps going until you press Ctrl+C. With -c 4 only four packets are sent.)");
+                Note(ctx, "net.pingCtrlC");
             }
             return times.Count > 0 ? 0 : 1;
         },
@@ -517,15 +515,11 @@ public static partial class NetCmd
             foreach (var line in lines) ctx.Out(line + "\n");
             if (hidden && ctx.IsTTY)
             {
-                Note(ctx,
-                    "(Processkolumnen är tom för processer som andra användare äger. Kör \"sudo ss -tulpn\" för att se alla.)",
-                    "(The process column is empty for processes owned by other users. Run \"sudo ss -tulpn\" to see all of them.)");
+                Note(ctx, "net.ssProcessColumn");
             }
             if (!listening && ctx.IsTTY)
             {
-                Note(ctx,
-                    "(Inga öppna anslutningar just nu. Lägg till -l för att se portar som lyssnar, t.ex. \"ss -tulpn\".)",
-                    "(No open connections right now. Add -l to see listening ports, e.g. \"ss -tulpn\".)");
+                Note(ctx, "net.ssNoConnections");
             }
             return 0;
         },
@@ -834,7 +828,7 @@ public static partial class NetCmd
             var server = words.At(1);
             if (string.IsNullOrEmpty(name))
             {
-                ctx.Err($"{UtilCmd.Color.Dim}{ctx.Sh.Msg("(Det interaktiva läget stöds inte i simulatorn. Skriv t.ex.  nslookup example.com)", "(Interactive mode is not supported in the simulator. Type e.g.  nslookup example.com)")}{UtilCmd.Color.Reset}\n");
+                ctx.Err($"{UtilCmd.Color.Dim}{ctx.Sh.Msg("net.nslookupInteractive")}{UtilCmd.Color.Reset}\n");
                 return 1;
             }
             var srv = PickServer(ctx, server);
@@ -1344,9 +1338,7 @@ public static partial class NetCmd
             if (!f.Contains("L") && !f.Contains("s") && resp.Status >= 300 && resp.Status < 400 && ctx.IsTTY)
             {
                 var loc = Header(resp, "location") ?? "undefined";
-                Note(ctx,
-                    $"(Servern svarade {resp.Status} {resp.Reason} – sidan har flyttat till {loc}. Lägg till -L så följer curl efter.)",
-                    $"(The server answered {resp.Status} {resp.Reason} – the page has moved to {loc}. Add -L to make curl follow it.)");
+                Note(ctx, "net.curlRedirect", ("status", resp.Status), ("reason", resp.Reason), ("location", loc));
             }
             return 0;
         },
@@ -1632,9 +1624,7 @@ public static partial class NetCmd
             ctx.Out($"minserver 1.0: listening on http://0.0.0.0:{port}/ (pid {pid})\n");
             if (ctx.IsTTY)
             {
-                Note(ctx,
-                    $"(minserver körs nu i bakgrunden. Prova  curl http://localhost:{port}  – och stoppa den med  pkill minserver)",
-                    $"(minserver now runs in the background. Try  curl http://localhost:{port}  – and stop it with  pkill minserver)");
+                Note(ctx, "net.minserverBackground", ("port", port));
             }
             return 0;
         },
