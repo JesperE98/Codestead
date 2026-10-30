@@ -40,11 +40,11 @@ och [electron-builder](https://www.electron.build) skapar installationsfilerna:
 Filerna hamnar i `release/`. Varje operativsystem måste byggas på sig självt,
 så det enklaste är att låta GitHub göra det:
 
-1. Höj `version` i `package.json` (t.ex. 0.2.0 → 0.3.0).
+1. Höj `version` i `package.json` (t.ex. 0.3.0 → 0.4.0).
 2. Slå ihop ändringen till `main`.
 
 Då bygger flödet `.github/workflows/release.yml` installationsfilerna för
-Windows och Linux och lägger upp dem som release `v0.3.0`. (macOS är
+Windows och Linux och lägger upp dem som release `v0.4.0`. (macOS är
 avstängt i flödet, eftersom GitHub inte ger privata repon macOS-maskiner på
 det här kontot.) Ikonen ligger i `build/icon.svg` (och `build/icon.png`).
 
