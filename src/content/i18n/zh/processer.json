@@ -1,0 +1,33 @@
+{
+  "title": "进程和作业",
+  "tasks": {
+    "ps": {
+      "text": "用 `ps` 显示你自己终端中的进程。"
+    },
+    "ps-aux": {
+      "text": "列出计算机上的**所有**进程。",
+      "hint": "`ps aux`（或 `ps -ef`）。"
+    },
+    "hitta": {
+      "text": "有个进程几乎吃掉了全部 CPU。按 CPU 占用率排序显示进程，看看它叫什么。",
+      "hint": "`top`、`htop` 或 `ps aux --sort=-%cpu`。"
+    },
+    "kill": {
+      "text": "用 `kill` 停止这个失控的进程（PID 3141）。"
+    },
+    "bakgrund": {
+      "text": "在后台启动 `sleep 300`。",
+      "hint": "在这一行的末尾加上 `&`。"
+    },
+    "jobs": {
+      "text": "显示你的后台作业。"
+    },
+    "kill-jobb": {
+      "text": "用 `kill` 加上作业编号（`%1`）或 PID 结束这个后台作业。"
+    },
+    "server": {
+      "text": "服务器 `minserver` 正以 root 身份运行。停止它——使用 `pkill` 或 `kill`，并具备相应的权限。",
+      "hint": "以普通用户身份运行会得到 \"Operation not permitted\"。在前面加上 `sudo`。"
+    }
+  }
+}
