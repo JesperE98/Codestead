@@ -924,6 +924,15 @@ a {
     display: none;
   }
 
+  .lang-picker,
+  .progress {
+    display: none;
+  }
+
+  .picker {
+    margin-inline-start: auto;
+  }
+
   .picker {
     min-width: 0;
   }
