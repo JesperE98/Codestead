@@ -197,7 +197,7 @@ export class Shell {
   private addMissingDefaults(): void {
     const family = this.distro.family;
     for (const pkg of PACKAGES) {
-      if (!pkg.names[family] || !pkg.base?.includes(family)) continue;
+      if (!pkg.names[family] || !(pkg.base?.includes(family) || pkg.baseDistros?.includes(this.distro.id))) continue;
       const key = `default:pkg:${pkg.id}`;
       if (this.flags[key]) continue;
       if (!(pkg.id in this.installed)) installPackage(this, pkg);
@@ -236,6 +236,7 @@ export class Shell {
     // Nätverkskapitlet: DNS-inställningen och övningsservern.
     walk('/etc/resolv.conf');
     walk('/usr/local/bin/minserver');
+    walk(`${home}/Nedladdningar`);
   }
 
   snapshot(): ShellSnapshot {
@@ -935,7 +936,10 @@ export class Shell {
       if (node.type === 'dir') return { kind: 'error' as const, message: 'Is a directory' };
       if (!hasPerm(node, user, 'x')) return { kind: 'error' as const, message: 'Permission denied' };
       const content = node.content ?? '';
-      if (content.startsWith(ELF)) return { kind: 'binary' as const, impl: basename(path), path };
+      // Binärfilen säger själv vilket program den är, så den fungerar även om den byter namn
+      // (t.ex. ./Kalkylator.AppImage eller /snap/bin/hello-world som pekar på snap).
+      const impl = /^\u007fELF[^(]*\(simulerad binärfil: ([^)\s]+)\)/.exec(content)?.[1] ?? basename(path);
+      if (content.startsWith(ELF)) return { kind: 'binary' as const, impl, path };
       if (!hasPerm(node, user, 'r')) return { kind: 'error' as const, message: 'Permission denied' };
       return { kind: 'script' as const, content, path };
     };

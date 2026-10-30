@@ -7,7 +7,9 @@ import {
   formatKb,
   formatMiB,
   installPackage,
+  isForeign,
   isInstalled,
+  isKnown,
   PACKAGES,
   removePackage,
   searchPackages,
@@ -15,11 +17,12 @@ import {
   type PackageDef,
 } from '../packages';
 import type { CmdCtx, CommandDef, Sink } from '../types';
+import { aptPolicy, aptPpaMirror, aptUpdatePpas, dnfCopr, dnfCoprRepolist, dnfRepoId } from './repos';
 import { COLOR } from './util';
 
 const isRoot = (ctx: CmdCtx) => ctx.sh.currentUser().uid === 0;
 const pkgName = (ctx: CmdCtx, p: PackageDef) => p.names[ctx.sh.distro.family]!;
-const familyPackages = (ctx: CmdCtx) => PACKAGES.filter((p) => p.names[ctx.sh.distro.family]);
+const familyPackages = (ctx: CmdCtx) => PACKAGES.filter((p) => p.names[ctx.sh.distro.family] && isKnown(ctx.sh, p));
 
 /**
  * Frågar "fortsätt? [Y/n]" om inte -y/--noconfirm angetts.
@@ -66,6 +69,8 @@ function aptUpdate(ctx: CmdCtx): number {
     if (already || i === 0) ctx.out(`Hit:${i + 1} ${m}\n`);
     else ctx.out(`Get:${i + 1} ${m} [${(118.6 + i * 7.3).toFixed(1)} kB]\n`);
   });
+  // Tillagda PPA:er (se repos.ts).
+  aptUpdatePpas(ctx, sh.distro.mirrors.length + 1);
   if (!already) ctx.out(`Fetched 1,284 kB in 1s (1,107 kB/s)\n`);
   sh.flags.repoSynced = true;
   ctx.out(APT_READING);
@@ -88,7 +93,7 @@ function aptInstall(ctx: CmdCtx, names: string[]): number {
   ctx.out(APT_READING);
   const toInstall: PackageDef[] = [];
   for (const n of names) {
-    const p = findPackage(sh.distro.family, n);
+    const p = findPackage(sh.distro.family, n, sh);
     // Utan "apt update" är paketlistorna tomma och apt hittar ingenting.
     if (!p || (!sh.flags.repoSynced && !isInstalled(sh, p))) {
       ctx.err(`E: Unable to locate package ${n}\n`);
@@ -116,7 +121,7 @@ function aptInstall(ctx: CmdCtx, names: string[]): number {
       `After this operation, ${formatKb(size)} of additional disk space will be used.\n`,
   );
   toInstall.forEach((p, i) => {
-    ctx.out(`Get:${i + 1} ${aptMirror(ctx)} ${pkgName(ctx, p)} amd64 ${availableVersion(sh, p)} [${formatKb(Math.round(p.sizeKb * 0.4))}]\n`);
+    ctx.out(`Get:${i + 1} ${aptPpaMirror(p) ?? aptMirror(ctx)} ${pkgName(ctx, p)} amd64 ${availableVersion(sh, p)} [${formatKb(Math.round(p.sizeKb * 0.4))}]\n`);
   });
   ctx.out(`Fetched ${formatKb(Math.round(size * 0.4))} in 0s (2,511 kB/s)\n`);
   for (const p of toInstall) {
@@ -141,7 +146,7 @@ function aptRemove(ctx: CmdCtx, names: string[], assumeYes: boolean): number {
   ctx.out(APT_READING);
   const toRemove: PackageDef[] = [];
   for (const n of names) {
-    const p = findPackage(sh.distro.family, n);
+    const p = findPackage(sh.distro.family, n, sh);
     if (!p) {
       ctx.err(`E: Unable to locate package ${n}\n`);
       return 100;
@@ -306,7 +311,7 @@ BESKRIVNING
             return 100;
           }
           ctx.out('Sorting... Done\nFull Text Search... Done\n');
-          const results = searchPackages(sh.distro.family, pkgs.join(' '));
+          const results = searchPackages(sh.distro.family, pkgs.join(' '), sh);
           for (const p of results) {
             const n = ctx.isTTY ? `${COLOR.green}${pkgName(ctx, p)}${COLOR.reset}` : pkgName(ctx, p);
             ctx.out(`${n}/${sh.distro.codename} ${availableVersion(sh, p)} amd64${isInstalled(sh, p) ? ' [installed]' : ''}\n  ${p.description}\n\n`);
@@ -317,7 +322,7 @@ BESKRIVNING
           if (name === 'apt-get') break;
           let code = 0;
           for (const n of pkgs) {
-            const p = findPackage(sh.distro.family, n);
+            const p = findPackage(sh.distro.family, n, sh);
             if (!p) {
               ctx.err(`N: Unable to locate package ${n}\nE: No packages found\n`);
               code = 100;
@@ -331,6 +336,9 @@ BESKRIVNING
           }
           return code;
         }
+        case 'policy':
+          if (name === 'apt-get') break;
+          return aptPolicy(ctx, pkgs);
         case 'list': {
           if (name === 'apt-get') break;
           ctx.out('Listing... Done\n');
@@ -435,14 +443,14 @@ BESKRIVNING
         let list = familyPackages(ctx).filter((p) => isInstalled(sh, p));
         if (mods.includes('s')) {
           const q = targets.join(' ');
-          list = searchPackages(fam, q).filter((p) => isInstalled(sh, p));
+          list = searchPackages(fam, q, sh).filter((p) => isInstalled(sh, p));
           for (const p of list) ctx.out(`local/${pkgName(ctx, p)} ${sh.installed[p.id]}\n    ${p.description}\n`);
           return list.length ? 0 : 1;
         }
         if (targets.length) {
           const picked: PackageDef[] = [];
           for (const t of targets) {
-            const p = findPackage(fam, t);
+            const p = findPackage(fam, t, sh);
             if (!p || !isInstalled(sh, p)) {
               ctx.err(`error: package '${t}' was not found\n`);
               return 1;
@@ -451,6 +459,10 @@ BESKRIVNING
           }
           list = picked;
         }
+        // -Qm: paket som inte finns i förråden ("foreign", t.ex. från AUR). -Qn: bara de som finns där.
+        if (mods.includes('m')) list = list.filter((p) => isForeign(fam, p));
+        if (mods.includes('n')) list = list.filter((p) => !isForeign(fam, p));
+        if ((mods.includes('m') || mods.includes('n')) && !list.length) return 1;
         list.sort((a, b) => pkgName(ctx, a).localeCompare(pkgName(ctx, b)));
         for (const p of list) {
           if (mods.includes('i')) {
@@ -467,7 +479,7 @@ BESKRIVNING
 
       if (op === 'S') {
         if (mods.includes('s')) {
-          const results = searchPackages(fam, targets.join(' '));
+          const results = searchPackages(fam, targets.join(' '), sh).filter((p) => !isForeign(fam, p));
           for (const p of results) {
             ctx.out(`${repo(p)}/${pkgName(ctx, p)} ${availableVersion(sh, p)}${isInstalled(sh, p) ? ' [installed]' : ''}\n    ${p.description}\n`);
           }
@@ -475,8 +487,8 @@ BESKRIVNING
         }
         if (mods.includes('i')) {
           for (const t of targets) {
-            const p = findPackage(fam, t);
-            if (!p) {
+            const p = findPackage(fam, t, sh);
+            if (!p || isForeign(fam, p)) {
               ctx.err(`error: package '${t}' was not found\n`);
               return 1;
             }
@@ -501,9 +513,12 @@ BESKRIVNING
           list.push(...upgradable(sh));
         }
         for (const t of targets) {
-          const p = findPackage(fam, t);
-          if (!p) {
+          const p = findPackage(fam, t, sh);
+          if (!p || isForeign(fam, p)) {
             ctx.err(`error: target not found: ${t}\n`);
+            if (PACKAGES.some((x) => x.names.arch === t && isForeign(fam, x))) {
+              ctx.err(`${COLOR.dim}${sh.msg({ sv: `Tips från simulatorn: ${t} finns inte i Archs förråd, bara i AUR (se kapitlet "AUR, PPA och COPR").`, en: `Simulator tip: ${t} is not in the Arch repositories, only in the AUR (see the chapter "AUR, PPA and COPR").` })}${COLOR.reset}\n`);
+            }
             return 1;
           }
           if (isInstalled(sh, p) && sh.installed[p.id] === availableVersion(sh, p)) {
@@ -567,7 +582,7 @@ BESKRIVNING
         if (!isRoot(ctx)) return rootError();
         const list: PackageDef[] = [];
         for (const t of targets) {
-          const p = findPackage(fam, t);
+          const p = findPackage(fam, t, sh);
           if (!p || !isInstalled(sh, p)) {
             ctx.err(`error: target not found: ${t}\n`);
             return 1;
@@ -673,7 +688,7 @@ BESKRIVNING
           loadRepos();
           const list: PackageDef[] = [];
           for (const t of targets) {
-            const p = findPackage(fam, t);
+            const p = findPackage(fam, t, sh);
             if (!p) {
               ctx.err(`Failed to resolve the transaction:\nNo match for argument: ${t}\nYou can try to add to command line:\n  --skip-unavailable to skip unavailable packages\n`);
               return 1;
@@ -686,7 +701,7 @@ BESKRIVNING
             return 0;
           }
           const size = list.reduce((s, p) => s + p.sizeKb, 0);
-          ctx.out(header + 'Installing:\n' + list.map((p) => row(p, ver(p), 'fedora')).join(''));
+          ctx.out(header + 'Installing:\n' + list.map((p) => row(p, ver(p), dnfRepoId(p))).join(''));
           ctx.out(
             `\nTransaction Summary:\n Installing:        ${list.length} package${list.length > 1 ? 's' : ''}\n\n` +
               `Total size of inbound packages is ${formatMiB(size * 0.4)}. Need to download ${formatMiB(size * 0.4)}.\n` +
@@ -719,7 +734,7 @@ BESKRIVNING
           if (!isRoot(ctx)) return rootError();
           const list: PackageDef[] = [];
           for (const t of targets) {
-            const p = findPackage(fam, t);
+            const p = findPackage(fam, t, sh);
             if (!p || !isInstalled(sh, p)) {
               ctx.out(`No packages to remove for argument: ${t}\n`);
               continue;
@@ -802,11 +817,13 @@ BESKRIVNING
           ctx.out('Metadata cache created.\n');
           return 0;
         case 'repolist':
-          ctx.out(`repo id                          repo name\nfedora                           Fedora ${sh.distro.version} - x86_64\nupdates                          Fedora ${sh.distro.version} - x86_64 - Updates\n`);
+          ctx.out(`repo id                          repo name\n${dnfCoprRepolist(sh)}fedora                           Fedora ${sh.distro.version} - x86_64\nupdates                          Fedora ${sh.distro.version} - x86_64 - Updates\n`);
           return 0;
+        case 'copr':
+          return dnfCopr(ctx, rest);
         case 'search': {
           loadRepos();
-          const results = searchPackages(fam, targets.join(' '));
+          const results = searchPackages(fam, targets.join(' '), sh);
           if (!results.length) {
             ctx.out('No matches found.\n');
             return 1;
@@ -819,7 +836,7 @@ BESKRIVNING
           loadRepos();
           let code = 0;
           for (const t of targets) {
-            const p = findPackage(fam, t);
+            const p = findPackage(fam, t, sh);
             if (!p) {
               ctx.err(`No matching packages to list\n`);
               code = 1;
@@ -830,7 +847,9 @@ BESKRIVNING
             ctx.out(
               `${installedNow ? 'Installed' : 'Available'} packages\nName            : ${t}\nVersion         : ${version}\n` +
                 `Release         : ${release ?? '1'}\nArchitecture    : x86_64\nInstalled size  : ${formatMiB(p.sizeKb)}\n` +
-                `Repository      : ${installedNow ? '@System' : 'fedora'}\nSummary         : ${p.description}\n\n`,
+                `Repository      : ${installedNow ? '@System' : dnfRepoId(p)}\n` +
+                (installedNow ? `From repository : ${p.base ? 'anaconda' : dnfRepoId(p)}\n` : '') +
+                `Summary         : ${p.description}\n\n`,
             );
           }
           return code;

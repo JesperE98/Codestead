@@ -8,8 +8,11 @@ import type { Chapter, CheckCtx, Part } from './types';
 import { RUNAWAY_PID, SERVER_PID } from '../shell/procs';
 import { findGroup, findUser, shadowHash } from '../shell/users';
 import { partitionRoot, rootUuid, USB_PART } from '../shell/disks';
+import { extraRepoEnabled, parsePpa, ppaSourcesPath } from '../shell/extrarepo';
 
 const HOME = '/home/elev';
+/** Filen som `add-apt-repository ppa:lunatool/moonphase` skapar. */
+const PPA_FILE = ppaSourcesPath(parsePpa('ppa:lunatool/moonphase')!);
 
 // ---------- Hjälpfunktioner för kontrollerna ----------
 
@@ -946,6 +949,295 @@ export const CHAPTERS: Chapter[] = [
     ],
   },
   {
+    id: 'extra-repon',
+    part: 'distro',
+    title: 'AUR, PPA och COPR',
+    tasks: [
+      {
+        id: 'forbered',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Se till att du har kommandot `add-apt-repository`. Det finns i paketet `software-properties-common` – förinstallerat i Ubuntu, men inte i Debian.',
+          arch: 'Installera det som behövs för att bygga paket från AUR: `git` och `base-devel`.',
+          redhat: 'Visa vilka förråd dnf använder just nu.',
+        }),
+        hint: byFamily({
+          debian: '`sudo apt update` och sedan `sudo apt install software-properties-common`.',
+          arch: '`sudo pacman -S --needed git base-devel`',
+          redhat: '`dnf repolist`',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install software-properties-common'],
+          arch: ['sudo pacman -S --needed git base-devel', 'y'],
+          redhat: ['dnf repolist'],
+        }),
+        check: (c) => {
+          switch (c.distro.family) {
+            case 'debian':
+              return (
+                'software-properties-common' in c.sh.installed &&
+                ran(c, /\badd-apt-repository\b|\bapt(-get)?\s+install\b.*\bsoftware-properties-common\b/)
+              );
+            case 'arch':
+              return 'git' in c.sh.installed && 'base-devel' in c.sh.installed;
+            case 'redhat':
+              return ran(c, /^dnf5?\s+repolist\b/);
+          }
+        },
+      },
+      {
+        id: 'lagg-till',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Lägg till PPA:t `ppa:lunatool/moonphase`.',
+          arch: 'Hämta byggreceptet för AUR-paketet `moonphase` till din hemkatalog med `git clone`. Adressen är `https://aur.archlinux.org/moonphase.git`.',
+          redhat: 'Aktivera COPR-förrådet `lunatool/moonphase`.',
+        }),
+        hint: byFamily({
+          debian: '`sudo add-apt-repository ppa:lunatool/moonphase` – och tryck Enter när den frågar.',
+          arch: '`cd ~` och sedan `git clone https://aur.archlinux.org/moonphase.git`',
+          redhat: '`sudo dnf copr enable lunatool/moonphase` – och svara `y`, Nej är standard.',
+        }),
+        solution: byFamily({
+          debian: ['sudo add-apt-repository -y ppa:lunatool/moonphase'],
+          arch: ['cd ~', 'git clone https://aur.archlinux.org/moonphase.git'],
+          redhat: ['sudo dnf copr enable lunatool/moonphase', 'y'],
+        }),
+        check: (c) => {
+          switch (c.distro.family) {
+            case 'debian':
+              return /\badd-apt-repository\b/.test(c.line) && isFile(c, PPA_FILE) && extraRepoEnabled(c.sh, 'ppa:lunatool/moonphase');
+            case 'arch':
+              return ran(c, /\bgit\s+clone\s+.*aur\.archlinux\.org\/moonphase(\.git)?\b/);
+            case 'redhat':
+              return /\bcopr\s+enable\b/.test(c.line) && extraRepoEnabled(c.sh, 'copr:lunatool/moonphase');
+          }
+        },
+      },
+      {
+        id: 'granska',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Titta i filen som `add-apt-repository` skapade i `/etc/apt/sources.list.d/`.',
+          arch: 'Läs byggreceptet `PKGBUILD` innan du bygger något!',
+          redhat: 'Lista vilka COPR-förråd som är tillagda.',
+        }),
+        hint: byFamily({
+          debian: '`ls /etc/apt/sources.list.d` och sedan `cat` på filen vars namn börjar med `lunatool`.',
+          arch: '`cd ~/moonphase` och sedan `less PKGBUILD` (eller `cat PKGBUILD`).',
+          redhat: '`dnf copr list`',
+        }),
+        solution: byFamily({
+          debian: ['ls /etc/apt/sources.list.d', `cat ${PPA_FILE}`],
+          arch: ['cd ~/moonphase', 'less PKGBUILD'],
+          redhat: ['dnf copr list'],
+        }),
+        check: (c) => {
+          switch (c.distro.family) {
+            case 'debian':
+              return ran(c, /^(cat|less|more|head|tail|grep)\b/) && c.output.includes('ppa.launchpadcontent.net/lunatool/moonphase');
+            case 'arch':
+              return ran(c, /^(cat|less|more|head|tail)\b.*PKGBUILD/) && c.output.includes('pkgname=moonphase');
+            case 'redhat':
+              return ran(c, /^dnf5?\s+copr\s+list\b/) && c.output.includes('lunatool/moonphase');
+          }
+        },
+      },
+      {
+        id: 'installera',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Installera paketet `moonphase` från PPA:t.',
+          arch: 'Bygg och installera `moonphase` med `makepkg`.',
+          redhat: 'Installera paketet `moonphase` från COPR-förrådet.',
+        }),
+        hint: byFamily({
+          debian: '`add-apt-repository` körde redan `apt update` åt dig, så `sudo apt install moonphase` räcker.',
+          arch: 'Stå i katalogen `~/moonphase` och kör `makepkg -si` – utan sudo!',
+          redhat: '`sudo dnf install moonphase`',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt install moonphase'],
+          arch: ['cd ~/moonphase', 'makepkg -si', 'y'],
+          redhat: ['sudo dnf install moonphase', 'y'],
+        }),
+        check: (c) => 'moonphase' in c.sh.installed,
+      },
+      {
+        id: 'kor',
+        perFamily: true,
+        text: 'Kör programmet `moonphase`.',
+        solution: ['moonphase'],
+        check: (c) => ran(c, /^moonphase\b/) && 'moonphase' in c.sh.installed,
+      },
+      {
+        id: 'ursprung',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Ta reda på varifrån `moonphase` kommer.',
+          arch: 'Lista alla installerade paket som inte kommer från Archs egna förråd.',
+          redhat: 'Ta reda på från vilket förråd `moonphase` installerades.',
+        }),
+        hint: byFamily({
+          debian: '`apt policy moonphase`',
+          arch: 'Sådana paket kallas *foreign*: `pacman -Qm`',
+          redhat: '`dnf info moonphase` – titta på raden `From repository`.',
+        }),
+        solution: byFamily({
+          debian: ['apt policy moonphase'],
+          arch: ['pacman -Qm'],
+          redhat: ['dnf info moonphase'],
+        }),
+        check: (c) => {
+          switch (c.distro.family) {
+            case 'debian':
+              return ran(c, /^apt\s+policy\b.*\bmoonphase\b/) && c.output.includes('ppa.launchpadcontent.net');
+            case 'arch':
+              return ran(c, /^(pacman|yay)\s+-Q\w*m/) && c.output.includes('moonphase');
+            case 'redhat':
+              return ran(c, /^dnf5?\s+info\b.*\bmoonphase\b/) && c.output.includes('copr:');
+          }
+        },
+      },
+      {
+        id: 'efterat',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Ta bort PPA:t igen. Programmet blir kvar, men får inga fler uppdateringar.',
+          arch: 'Bonus: installera AUR-hjälparen `yay` (AUR-paketet `yay-bin`) och använd den för att installera AUR-paketet `snowfall`.',
+          redhat: 'Stäng av COPR-förrådet igen. Programmet blir kvar, men får inga fler uppdateringar.',
+        }),
+        hint: byFamily({
+          debian: '`sudo add-apt-repository --remove ppa:lunatool/moonphase`',
+          arch: 'Som förut: `cd ~`, `git clone https://aur.archlinux.org/yay-bin.git`, `cd yay-bin` och `makepkg -si`. Sedan `yay -S snowfall` – utan sudo.',
+          redhat: '`sudo dnf copr disable lunatool/moonphase`',
+        }),
+        solution: byFamily({
+          debian: ['sudo add-apt-repository -y --remove ppa:lunatool/moonphase'],
+          arch: ['cd ~', 'git clone https://aur.archlinux.org/yay-bin.git', 'cd yay-bin', 'makepkg -si', 'y', 'yay -S snowfall', 'y'],
+          redhat: ['sudo dnf copr disable lunatool/moonphase'],
+        }),
+        check: (c) => {
+          switch (c.distro.family) {
+            case 'debian':
+              return /\badd-apt-repository\b.*\s(-\w*r|--remove)\b|^rm\b/.test(unsudo(c.line)) && !isFile(c, PPA_FILE);
+            case 'arch':
+              return 'snowfall' in c.sh.installed;
+            case 'redhat':
+              return /\bcopr\s+(disable|remove)\b/.test(c.line) && !extraRepoEnabled(c.sh, 'copr:lunatool/moonphase');
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'universella-paket',
+    part: 'distro',
+    title: 'Flatpak, Snap och AppImage',
+    tasks: [
+      {
+        id: 'flatpak',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Installera Flatpak (paketet `flatpak`).',
+          arch: 'Installera Flatpak (paketet `flatpak`).',
+          redhat: 'Flatpak finns redan i Fedora Workstation. Kontrollera vilken version du har.',
+        }),
+        hint: byFamily({
+          debian: '`sudo apt update` och sedan `sudo apt install flatpak`.',
+          arch: '`sudo pacman -S flatpak`',
+          redhat: '`flatpak --version`',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install flatpak'],
+          arch: ['sudo pacman -S flatpak', 'y'],
+          redhat: ['flatpak --version'],
+        }),
+        check: (c) => ran(c, /\bflatpak\b/) && 'flatpak' in c.sh.installed,
+      },
+      {
+        id: 'flathub',
+        perFamily: true,
+        text: 'Lägg till Flathub som källa (*remote*) för Flatpak.',
+        hint: '`flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo`',
+        solution: ['flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo'],
+        check: (c) =>
+          ran(c, /^flatpak\s+remote-add\b/) &&
+          [content(c, '/var/lib/flatpak/repo/config'), content(c, '~/.local/share/flatpak/repo/config')].some((t) => t.includes('[remote "flathub"]')),
+      },
+      {
+        id: 'gimp',
+        perFamily: true,
+        text: 'Installera bildredigeringsprogrammet GIMP (`org.gimp.GIMP`) från Flathub.',
+        hint: '`flatpak install flathub org.gimp.GIMP` – och svara ja.',
+        solution: ['flatpak install flathub org.gimp.GIMP', 'y'],
+        check: (c) => isDir(c, '/var/lib/flatpak/app/org.gimp.GIMP') || isDir(c, '~/.local/share/flatpak/app/org.gimp.GIMP'),
+      },
+      {
+        id: 'flatpak-run',
+        perFamily: true,
+        text: 'Starta GIMP med `flatpak run`.',
+        hint: 'Program startas med sitt fullständiga id: `flatpak run org.gimp.GIMP`',
+        solution: ['flatpak run org.gimp.GIMP'],
+        check: (c) => ran(c, /^flatpak\s+run\s+(\S+\s+)*org\.gimp\.GIMP\b/),
+      },
+      {
+        id: 'snap',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Installera snap-paketet `hello-world` och kör det. I Ubuntu finns Snap redan; i Debian installerar du paketet `snapd` först.',
+          arch: 'Snap finns inte i Archs förråd, bara i AUR. Bygg och installera `snapd` från AUR, installera sedan snap-paketet `hello-world` och kör det.',
+          redhat: 'Installera Snap (paketet `snapd`), installera sedan snap-paketet `hello-world` och kör det.',
+        }),
+        hint: byFamily({
+          debian: '`sudo apt install snapd` (behövs bara i Debian), `sudo snap install hello-world` och sedan `hello-world`.',
+          arch: '`git clone https://aur.archlinux.org/snapd.git`, `cd snapd`, `makepkg -si`. Sedan `sudo snap install hello-world` och `hello-world`.',
+          redhat: '`sudo dnf install snapd`, `sudo snap install hello-world` och sedan `hello-world`.',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install snapd', 'sudo snap install hello-world', 'hello-world'],
+          arch: [
+            'sudo pacman -S --needed git base-devel',
+            'y',
+            'cd ~',
+            'git clone https://aur.archlinux.org/snapd.git',
+            'cd snapd',
+            'makepkg -si',
+            'y',
+            'y',
+            'sudo snap install hello-world',
+            'hello-world',
+          ],
+          redhat: ['sudo dnf install snapd', 'y', 'sudo snap install hello-world', 'hello-world'],
+        }),
+        check: (c) => ran(c, /\bhello-world\b/) && c.output.includes('Hello World!'),
+      },
+      {
+        id: 'appimage-chmod',
+        text: 'I `~/Nedladdningar` ligger en nedladdad AppImage. Gör filen `Kalkylator.AppImage` körbar.',
+        hint: '`chmod +x ~/Nedladdningar/Kalkylator.AppImage`',
+        solution: ['chmod +x ~/Nedladdningar/Kalkylator.AppImage'],
+        check: (c) => ran(c, /^chmod\b/) && ((node(c, '~/Nedladdningar/Kalkylator.AppImage')?.mode ?? 0) & 0o100) !== 0,
+      },
+      {
+        id: 'appimage-run',
+        perFamily: true,
+        text: 'Starta Kalkylator. Klagar den på FUSE? Installera biblioteket som saknas och försök igen.',
+        hint: byFamily({
+          debian: 'Biblioteket finns i paketet `libfuse2t64`. Starta sedan med `~/Nedladdningar/Kalkylator.AppImage`.',
+          arch: 'Biblioteket finns i paketet `fuse2`. Starta sedan med `~/Nedladdningar/Kalkylator.AppImage`.',
+          redhat: 'Biblioteket finns i paketet `fuse-libs`. Starta sedan med `~/Nedladdningar/Kalkylator.AppImage`.',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install libfuse2t64', '~/Nedladdningar/Kalkylator.AppImage'],
+          arch: ['sudo pacman -S fuse2', 'y', '~/Nedladdningar/Kalkylator.AppImage'],
+          redhat: ['sudo dnf install fuse-libs', 'y', '~/Nedladdningar/Kalkylator.AppImage'],
+        }),
+        check: (c) => ran(c, /Kalkylator\.AppImage|\bAppRun\b/) && !/--appimage-extract(\s|$)/.test(c.line),
+      },
+    ],
+  },
+  {
     id: 'skript',
     part: 'skript',
     title: 'Shell-skript',
@@ -1176,8 +1468,6 @@ CHAPTERS.sort((a, b) => PARTS.findIndex((p) => p.id === a.part) - PARTS.findInde
 
 /** Kapitel som planeras – visas i menyn som "kommer snart". */
 export const UPCOMING: string[] = [
-  'AUR, PPA och COPR',
-  'Flatpak, Snap och AppImage',
   'Git i terminalen',
 ];
 

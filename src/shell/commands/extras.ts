@@ -7,6 +7,7 @@ import { hasPerm, type FsNode } from '../vfs';
 import { badOption, colorName, COLOR, fsMessage, parseOpts } from './util';
 import { isInstalled, PACKAGES } from '../packages';
 import { currentProcs } from './procs';
+import { aurClone } from './repos';
 
 const note = (ctx: CmdCtx, text: string) => ctx.out(`${COLOR.dim}${text}${COLOR.reset}\n`);
 
@@ -228,6 +229,11 @@ BESKRIVNING
     if (!ctx.args.length) {
       ctx.out('usage: git [-v | --version] [-h | --help] <command> [<args>]\n');
       return 1;
+    }
+    // git clone https://aur.archlinux.org/PAKET.git – se repos.ts.
+    if (ctx.args[0] === 'clone') {
+      const code = aurClone(ctx, ctx.args.slice(1));
+      if (code !== null) return code;
     }
     note(
       ctx,

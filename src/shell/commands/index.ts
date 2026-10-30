@@ -10,6 +10,7 @@ import { FS_COMMANDS } from './fs';
 import { NET_COMMANDS } from './net';
 import { PKG_COMMANDS } from './pkg';
 import { PROC_COMMANDS } from './procs';
+import { REPO_COMMANDS } from './repos';
 import { SCRIPT_COMMANDS } from './script';
 import { SHELL_COMMANDS } from './shells';
 import { SSH_COMMANDS } from './ssh';
@@ -18,6 +19,7 @@ import { SYSTEMD_COMMANDS } from './systemd';
 import { TEXT_COMMANDS } from './text';
 import { TEXTPROC_COMMANDS } from './textproc';
 import { USER_COMMANDS } from './users';
+import { UNIVERSAL_COMMANDS } from './universal';
 
 export const COMMANDS: Record<string, CommandDef> = {};
 
@@ -51,3 +53,6 @@ for (const def of [...NET_COMMANDS, ...SSH_COMMANDS]) COMMANDS[def.name] = def;
 }
 // Diskar och filsystem: df, lsblk, blkid, mount, umount, findmnt, fdisk, mkfs ...
 for (const def of DISK_COMMANDS) COMMANDS[def.name] = def;
+// Extra förråd (PPA, AUR, COPR) och universella paketformat (Flatpak, Snap, AppImage).
+for (const def of REPO_COMMANDS) COMMANDS[def.name] = def;
+for (const def of UNIVERSAL_COMMANDS) COMMANDS[def.name] = def;

@@ -2,6 +2,7 @@
 // konfigurationsfiler och några övningsfiler i hemkatalogen.
 
 import { fstabFor } from './disks';
+import { APPIMAGE_DIR, APPIMAGE_NAME, appImageNode } from './commands/universal';
 import type { Distro } from './distros';
 import { makeDir as d, makeFile as f, type FsNode } from './vfs';
 import { minserverBinary, resolvConf } from './network';
@@ -232,6 +233,8 @@ export function buildFs(distro: Distro): FsNode {
       arkiv: d(u, 0o755, { 'logg-2019.txt': f('gammal logg\n', u, 0o644, ug) }, ug),
     }, ug),
     bilder: d(u, 0o755, {}, ug),
+    // En nedladdad AppImage (kapitlet "Flatpak, Snap och AppImage").
+    [APPIMAGE_DIR]: d(u, 0o755, { [APPIMAGE_NAME]: appImageNode(u, ug) }, ug),
   }, ug);
 
   // Användare och grupper (se users.ts). Systemanvändarna skiljer sig lite mellan familjerna.
