@@ -68,6 +68,37 @@ if [ -d "$HOME/bin" ] ; then
 fi
 `;
 
+// Övningsprojektet i kapitlet om git.
+const WEB_INDEX = `<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <title>Min webbplats</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Välkommen!</h1>
+  <p>Det här är min första webbplats.</p>
+</body>
+</html>
+`;
+
+const WEB_STYLE = `body {
+  font-family: sans-serif;
+  background: white;
+  color: black;
+}
+
+h1 {
+  color: navy;
+}
+`;
+
+const WEB_README = `# Min webbplats
+
+En liten webbplats som jag versionshanterar med git.
+`;
+
 function familyEtc(distro: Distro): Record<string, FsNode> {
   switch (distro.family) {
     case 'debian': {
@@ -150,6 +181,11 @@ export function buildFs(distro: Distro): FsNode {
       arkiv: d(u, 0o755, { 'logg-2019.txt': f('gammal logg\n', u, 0o644, ug) }, ug),
     }, ug),
     bilder: d(u, 0o755, {}, ug),
+    'projekt-webb': d(u, 0o755, {
+      'index.html': f(WEB_INDEX, u, 0o644, ug),
+      'style.css': f(WEB_STYLE, u, 0o644, ug),
+      'README.md': f(WEB_README, u, 0o644, ug),
+    }, ug),
   }, ug);
 
   const passwd = [

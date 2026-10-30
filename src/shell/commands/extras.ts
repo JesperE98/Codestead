@@ -1,5 +1,5 @@
 // Program som inte är förinstallerade, utan installeras med pakethanteraren:
-// tree, htop, fastfetch, cowsay, git, curl, wget, python3, vim, nano, ssh.
+// tree, htop, fastfetch, cowsay, curl, wget, python3, vim, nano, ssh.
 
 import type { CmdCtx, CommandDef } from '../types';
 import { hasPerm, type FsNode } from '../vfs';
@@ -204,29 +204,6 @@ EXEMPEL
   },
 };
 
-const git: CommandDef = {
-  name: 'git',
-  summary: 'Versionshantering',
-  man: `NAMN
-       git - distribuerad versionshantering
-
-BESKRIVNING
-       git kommer att få ett eget kapitel. I simulatorn stöds än så länge
-       bara "git --version".`,
-  run(ctx) {
-    if (ctx.args[0] === '--version' || ctx.args[0] === 'version') {
-      ctx.out('git version 2.51.1\n');
-      return 0;
-    }
-    if (!ctx.args.length) {
-      ctx.out('usage: git [-v | --version] [-h | --help] <command> [<args>]\n');
-      return 1;
-    }
-    note(ctx, `git ${ctx.args[0]} stöds inte ännu i simulatorn – det kommer i ett eget kapitel om git.`);
-    return 1;
-  },
-};
-
 function noNetwork(name: string, summary: string): CommandDef {
   return {
     name,
@@ -315,7 +292,6 @@ export const EXTRA_COMMANDS: CommandDef[] = [
   htop,
   fastfetch,
   cowsay,
-  git,
   noNetwork('curl', 'Överför data från eller till en server'),
   noNetwork('wget', 'Laddar ner filer från webben'),
   python3,

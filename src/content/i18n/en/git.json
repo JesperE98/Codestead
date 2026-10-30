@@ -1,0 +1,45 @@
+{
+  "title": "Git in the terminal",
+  "tasks": {
+    "installera": {
+      "text": "Install the `git` package.",
+      "hint": {
+        "debian": "Run `sudo apt update` and then `sudo apt install git`.",
+        "arch": "`sudo pacman -S git` – and answer yes to the question.",
+        "redhat": "`sudo dnf install git` – and answer `y`, since No is the default."
+      }
+    },
+    "identitet": {
+      "text": "Tell git who you are: set your name (`user.name`) and your email address (`user.email`) with `git config --global`.",
+      "hint": "Two commands: `git config --global user.name \"Your Name\"` and `git config --global user.email \"you@example.com\"`."
+    },
+    "init": {
+      "text": "Go to the directory `~/projekt-webb` and turn it into a git repository with `git init`.",
+      "hint": "`cd ~/projekt-webb` and then `git init`. Have a look at the new hidden directory with `ls -a`."
+    },
+    "forsta-commit": {
+      "text": "Add all three files to the index with `git add` and make your first commit with a descriptive message.",
+      "hint": "`git add .` adds everything in the directory. Then `git commit -m \"First version of the website\"`. Check the state with `git status` before and after!"
+    },
+    "diff": {
+      "text": "Add a line at the end of `README.md` and look at the change with `git diff`.",
+      "hint": "`echo 'Built with HTML and CSS.' >> README.md` and then `git diff`. Lines starting with `+` are new."
+    },
+    "commit-a": {
+      "text": "Commit the change to `README.md`. Try the `-a` option, which includes every changed file git already follows.",
+      "hint": "`git commit -a -m \"Describe how the site is built\"` – or shorter, `git commit -am \"…\"`."
+    },
+    "gren": {
+      "text": "Create the branch `ny-design` and switch to it. Change something in `style.css` and commit the change on the new branch.",
+      "hint": "`git switch -c ny-design` creates the branch and switches to it. Then change the file, e.g. with `echo 'h1 { color: purple; }' >> style.css`, and run `git commit -am \"Purple headings\"`."
+    },
+    "merge": {
+      "text": "Switch back to `main` and merge the branch `ny-design` with `git merge`.",
+      "hint": "`git switch main` and then `git merge ny-design`. Since `main` hasn't changed since you created the branch, this will be a *fast-forward*."
+    },
+    "logg": {
+      "text": "Show the history with one line per commit using `git log --oneline`.",
+      "hint": "Also try `git log --oneline --graph --all` to see the branches."
+    }
+  }
+}

@@ -198,6 +198,7 @@ export class Shell {
       if (node.type === 'dir') for (const name of Object.keys(node.children!)) walk(`${path}/${name}`);
     };
     walk(`${home}/dokument`);
+    walk(`${home}/projekt-webb`);
   }
 
   snapshot(): ShellSnapshot {
