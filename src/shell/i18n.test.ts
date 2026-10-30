@@ -21,6 +21,7 @@ describe('engelska manualsidor', () => {
     const sv = Shell.create('ubuntu');
     const { sh } = shell();
     for (const def of Object.values(COMMANDS)) {
+      if (def.name.startsWith('__')) continue; // dolda interna hjälpkommandon
       const en = summaryFor(def, sh);
       expect(en, def.name).not.toBe(summaryFor(def, sv));
       expect(en, def.name).not.toMatch(SWEDISH);
@@ -30,6 +31,7 @@ describe('engelska manualsidor', () => {
   test('varje kommando har en engelsk manualsida', () => {
     const { sh } = shell();
     for (const def of Object.values(COMMANDS)) {
+      if (def.name.startsWith('__')) continue;
       const man = manFor(def, sh);
       expect(man, def.name).toMatch(/^NAME\n/);
       expect(man, def.name).not.toMatch(SWEDISH_HEADINGS);

@@ -9,6 +9,7 @@ import { FS_COMMANDS } from './fs';
 import { PKG_COMMANDS } from './pkg';
 import { PROC_COMMANDS } from './procs';
 import { SCRIPT_COMMANDS } from './script';
+import { SHELL_COMMANDS } from './shells';
 import { SYSTEM_COMMANDS } from './system';
 import { SYSTEMD_COMMANDS } from './systemd';
 import { TEXT_COMMANDS } from './text';
@@ -25,3 +26,5 @@ for (const def of ARCHIVE_COMMANDS) COMMANDS[def.name] = def;
 
 // Tjänster och loggar (systemctl, journalctl, hostnamectl, systemd-analyze, reboot).
 for (const def of SYSTEMD_COMMANDS) COMMANDS[def.name] = def;
+// Andra skal: zsh, fish, chsh och fish/zsh-inbyggda kommandon.
+for (const def of SHELL_COMMANDS) COMMANDS[def.name] = def;
