@@ -24,6 +24,18 @@ Disk को एक ख़ाली godown समझिए, partitions को व
 हैं, और file system को हर कमरे की shelves और labels। Shelves के बिना आपको कुछ भी
 नहीं मिलेगा।
 
+```quiz
+आपने अभी-अभी एक डिस्क पर नया पार्टिशन बनाया है। आप उस पर अभी फ़ाइलें सेव क्यों
+नहीं कर सकते?
+- [ ] पहले उसे पार्टिशन टेबल में जोड़ना होगा
+- [x] उस पर अभी कोई फ़ाइल सिस्टम नहीं है – पहले उसे फ़ॉर्मैट करना होगा
+- [ ] पार्टिशन में फ़ाइलें नहीं रह सकतीं, सिर्फ़ डिस्क में रह सकती हैं
+- [ ] पहले उसे एक ड्राइव लेटर मिलना चाहिए
+---
+नया पार्टिशन तब तक ख़ाली और बेकार रहता है जब तक आप उस पर फ़ाइल सिस्टम नहीं
+बनाते। फ़ॉर्मैट करने का यही मतलब है।
+```
+
 ## Disks `/dev` में files हैं
 
 Linux में लगभग हर चीज़ एक file है – disks भी। हर disk और partition की `/dev` में
@@ -64,25 +76,10 @@ lsblk
 | `TYPE` | `disk` या `part` (partition) |
 | `MOUNTPOINTS` | File system directory tree में कहाँ दिखता है, swap के लिए `[SWAP]` |
 
-:::debian
-{{distro}} में आपको वह layout दिखता है जो Debian installer आम तौर पर चुनता है:
-`sda1` **EFI partition** है (जिससे computer का firmware boot करता है)
-`/boot/efi` पर, `sda2` **root file system** `/` है और `sda3` **swap** है।
-:::
-
-:::arch
-Arch में disk कैसे बाँटी जाए, यह आप ख़ुद तय करते हैं। यह computer Arch wiki के
-उदाहरण पर चलता है: `sda1` **EFI partition** है, जो सीधे `/boot` पर mount है ताकि
-kernel वहाँ रहे जहाँ firmware उसे पढ़ सके, `sda2` **swap** है और `sda3` **root
-file system** `/` है।
-:::
-
-:::redhat
-Fedora चीज़ें थोड़ा अलग करता है: `sda1` `/boot/efi` पर **EFI partition** है,
-`sda2` kernels वाला `/boot` है और `sda3` एक बड़ा **btrfs** file system है जो `/`
-और `/home` दोनों पर दिखता है। Swap disk पर है ही नहीं, बल्कि RAM में है: `zram0`
-compressed memory है।
-:::
+इस कंप्यूटर पर `sda1` **EFI partition** है (जिससे कंप्यूटर का firmware boot करता
+है) `/boot/efi` पर, `sda2` **root file system** `/` है और `sda3` **swap** है। दूसरे
+डिस्ट्रीब्यूशन – और दूसरे इंस्टॉलेशन – डिस्क को अलग तरह से बाँट सकते हैं, इसलिए
+मान लेने के बजाय हमेशा देख लीजिए।
 
 `-f` के साथ `lsblk` file systems भी दिखाता है – type, label, UUID और कितनी जगह
 ख़ाली है:
@@ -167,6 +164,12 @@ df -h ~
 ध्यान दिया कि `Used` और `Avail` जोड़ने पर ठीक `Size` नहीं बनता? ext4 root के लिए
 5 % जगह reserve रखता है, ताकि सामान्य user के disk भर देने पर भी system चलता रहे।
 
+```try
+df -hT
+---
+`Type` कॉलम दिखाता है कि `/` `ext4` है और `/boot/efi` `vfat` है।
+```
+
 ## `df` या `du`?
 
 लगभग एक जैसे नाम वाले दो commands, लेकिन ये अलग-अलग सवालों के जवाब देते हैं:
@@ -223,6 +226,17 @@ Device name की जगह label से भी mount किया जा स�
 `sudo mount LABEL=USBMINNE /mnt/usb`। Desktop वाले computer पर stick लगाते ही
 file manager यह सब अपने-आप कर देता है।
 
+```quiz
+`sudo mount /dev/sdb1 /mnt/usb` के बाद FAT स्टिक की हर फ़ाइल का मालिक root है।
+क्यों?
+- [ ] फ़ाइलें किसी दूसरे कंप्यूटर पर root ने बनाई थीं
+- [x] FAT में Linux अनुमतियाँ नहीं होतीं, इसलिए सभी फ़ाइलों को माउंट करने वाले का स्वामित्व मिलता है – root
+- [ ] `/mnt` में सब कुछ हमेशा root का होता है
+- [ ] USB स्टिक सिर्फ़ root इस्तेमाल कर सकता है
+---
+`-o uid=1000,gid=1000` से आप माउंट करते समय मालिक ख़ुद चुन सकते हैं।
+```
+
 ## Unmount – stick निकालने से पहले!
 
 Linux हमेशा तुरंत disk पर नहीं लिखता। बदलाव RAM (*cache*) में इकट्ठा होते हैं और
@@ -250,6 +264,18 @@ umount: /mnt/usb: target is busy.
 कोशिश कीजिए। Unmount के बाद `/mnt/usb` फिर से एक ख़ाली directory है – लेकिन files,
 और आपके किए बदलाव, अगली बार mount करने पर भी stick पर मौजूद रहते हैं।
 
+```quiz
+USB स्टिक निकालने से पहले उसे अनमाउंट क्यों करना चाहिए?
+- [ ] वरना स्टिक की फ़ाइलें मिट जाती हैं
+- [x] बदलाव अभी भी RAM में इंतज़ार कर रहे हो सकते हैं – `umount` फ़ाइल सिस्टम को अलग करने से पहले उन्हें लिख देता है
+- [ ] वरना अगली बार स्टिक को नया डिवाइस नाम मिलता है
+- [ ] स्टिक तब तक दोबारा माउंट नहीं हो सकती जब तक उसे उसी कंप्यूटर पर अनमाउंट न किया जाए
+---
+Linux बदलावों को RAM (*cache*) में इकट्ठा करता है और उन्हें थोड़ी देर बाद लिखता है।
+अगर स्टिक माउंट रहते हुए निकाल ली जाए, तो वे फ़ाइलें खो सकती हैं जिन्हें आपने
+"सेव" किया था।
+```
+
 ## `/etc/fstab` – boot पर क्या mount होता है
 
 Root file system, `/boot` और swap हर बार computer start होने पर अपने-आप mount हो
@@ -271,22 +297,9 @@ cat /etc/fstab
 | dump | `0` | पुराना backup flag, लगभग हमेशा 0 |
 | pass | `1` | Boot पर `fsck` इन्हें किस क्रम में जाँचता है (1 = root, 2 = बाक़ी, 0 = कभी नहीं) |
 
-:::debian
 Option `errors=remount-ro` का मतलब है कि कोई error मिलने पर root file system को
 read-only कर दिया जाता है – और ज़्यादा नुकसान होने से यह बेहतर है।
 `# / was on /dev/sda2 during installation` जैसे comments installer ने लिखे थे।
-:::
-
-:::arch
-Arch में यह file installation के दौरान `genfstab` ने लिखी थी। यह हर line के ऊपर
-comment के रूप में device का पुराना नाम लिख देता है।
-:::
-
-:::redhat
-ध्यान दीजिए कि `/` और `/home` का UUID **एक ही** है: यह एक ही btrfs file system है,
-लेकिन अलग-अलग subvolumes (`subvol=root` और `subvol=home`)। `compress=zstd:1` से
-files अपने-आप compressed हो जाती हैं।
-:::
 
 सिर्फ़ `/dev/sda2` की जगह `UUID=…` क्यों? Device names बदल सकते हैं – नई disk
 लगाइए और पुरानी disk को नया अक्षर मिल सकता है। UUID file system के साथ ही बनता है
@@ -295,6 +308,16 @@ files अपने-आप compressed हो जाती हैं।
 ```sh
 sudo blkid
 findmnt -n -o UUID /
+```
+
+`findmnt` में `-o` चुनता है कि कौन-से कॉलम दिखें और `-n` शीर्षक छोड़ देता है – तब
+काम का जब आपको सिर्फ़ मान चाहिए।
+
+```predict
+$ findmnt -n -o FSTYPE /boot/efi
+vfat
+---
+`/boot/efi` EFI पार्टिशन है, और EFI पार्टिशन का FAT होना ज़रूरी है।
 ```
 
 अगर आप चाहते हैं कि stick हमेशा `/mnt/usb` पर mount की जा सके, तो आप इस तरह की
@@ -325,20 +348,8 @@ swapon --show
 free -h
 ```
 
-:::debian
 यहाँ swap एक अलग partition है, `sda3`। बहुत-सी installations (जैसे नए Ubuntu)
 इसकी जगह root file system पर एक *swap file* इस्तेमाल करती हैं।
-:::
-
-:::arch
-यहाँ swap एक अलग partition है, `sda2`। *Swap file* भी उतनी ही अच्छी तरह काम
-करती है, या Fedora की तरह zram।
-:::
-
-:::redhat
-Fedora **zram** इस्तेमाल करता है: RAM में swap, लेकिन compressed। सुनने में अजीब
-लगता है, लेकिन अच्छा काम करता है – compressed memory भी disk से बहुत तेज़ है।
-:::
 
 ## Partitioning और formatting – पूरी सावधानी के साथ
 
@@ -366,11 +377,6 @@ sudo mkfs.ext4 -L BACKUP /dev/sdb1      # ext4 – Linux permissions, लेक�
 Simulator में आप USB stick पर `mkfs.ext4` और `mkfs.vfat` आज़मा सकते हैं – लेकिन
 पहले tasks पूरे कर लीजिए, क्योंकि stick की files मिट जाती हैं। System के अपने
 partitions सुरक्षित हैं क्योंकि वे mounted हैं, बिल्कुल असली system की तरह।
-
-:::arch
-Arch में `mkfs.vfat` शुरू से installed नहीं होता। यह package `dosfstools` में है:
-`sudo pacman -S dosfstools`।
-:::
 
 ## सारांश
 

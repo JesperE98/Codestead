@@ -67,31 +67,13 @@ getent passwd elev
 `/etc/passwd` की ज़्यादातर lines इंसान नहीं हैं। Web server और logging system जैसी
 services अपने-अपने users के रूप में, जितने कम हो सकें उतने अधिकारों के साथ चलती
 हैं – अगर वे hack हो जाएँ, तो attacker आपकी files तक नहीं पहुँच सकता। उनका shell
-`nologin` होता है, ताकि कोई उनके रूप में login न कर सके:
-
-:::debian
-Debian और Ubuntu पर web server के user का नाम `www-data` है:
+`nologin` होता है, ताकि कोई उनके रूप में login न कर सके। Ubuntu पर वेब सर्वर के
+यूज़र का नाम `www-data` है (सिस्टम यूज़र्स के नाम अलग-अलग डिस्ट्रीब्यूशन में अलग
+होते हैं):
 
 ```sh
 grep www-data /etc/passwd
 ```
-:::
-
-:::arch
-Arch पर web server के user का नाम `http` है:
-
-```sh
-grep http /etc/passwd
-```
-:::
-
-:::redhat
-Fedora पर उदाहरण के लिए `dbus` है, जो system message bus चलाता है:
-
-```sh
-grep dbus /etc/passwd
-```
-:::
 
 Text processing वाले chapter के `awk` से आप UID 1000 या उससे ज़्यादा वाले सबकी
 list बना सकते हैं – यानी सामान्य users:
@@ -103,6 +85,14 @@ awk -F: '$3 >= 1000 {print $1}' /etc/passwd
 `nobody` (UID 65534) भी दिखता है। यह एक ख़ास user है जो "कुछ भी नहीं" का owner है
 और तब इस्तेमाल होता है जब किसी program के पास जितने कम हो सकें उतने अधिकार होने
 चाहिए।
+
+```predict
+$ awk -F: '$3 == 0 {print $1}' /etc/passwd
+root
+---
+फ़ील्ड 3 UID है, और सिर्फ़ root का UID 0 है। root को उसकी शक्तियाँ नाम से नहीं,
+बल्कि इसी संख्या से मिलती हैं।
+```
 
 ## Groups और GIDs
 
@@ -129,6 +119,19 @@ Fields हैं: group का नाम, `x`, group का number (**GID**) औ
 ```sh
 groups
 id
+```
+
+```quiz
+आप (`elev`) समूह `elev` और `sudo` में हैं, और आपका प्राथमिक समूह `elev` है।
+आपकी बनाई नई फ़ाइल को कौन-सा समूह मिलता है?
+- [x] `elev`
+- [ ] `sudo`
+- [ ] दोनों
+- [ ] `root`
+---
+नई फ़ाइलों को आपका **प्राथमिक** समूह मिलता है – `/etc/passwd` का GID फ़ील्ड।
+`sudo` जैसे अतिरिक्त (supplementary) समूह आपको अतिरिक्त अधिकार देते हैं, लेकिन
+आपकी फ़ाइलों पर नहीं आते।
 ```
 
 ## Passwords – `/etc/shadow`
@@ -159,6 +162,12 @@ account **locked** है। बाक़ी fields बताते हैं �
 chage -l elev
 ```
 
+```try
+chage -l elev
+---
+`Password expires: never` – elev का पासवर्ड कभी बदलना नहीं पड़ता।
+```
+
 ## User बनाना – `useradd`
 
 Users बनाने के लिए root चाहिए। सबसे आम command हर distribution में मौजूद है:
@@ -183,13 +192,12 @@ Limits `/etc/login.defs` में हैं। साथ में एक group
 ls -a /etc/skel
 ```
 
-यहीं पर distributions में फ़र्क़ है:
+Ubuntu पर `useradd` कंजूस है: `-m` के बिना **कोई** होम डायरेक्टरी नहीं बनती, और
+`-s` के बिना शेल `/bin/sh` बन जाता है। दूसरे डिस्ट्रीब्यूशनों के डिफ़ॉल्ट अलग हैं,
+इसलिए `-m` और `-s` लिखने की आदत डालिए – तब एक ही कमांड हर जगह काम करता है।
 
-:::debian
-Debian और Ubuntu पर `useradd` कंजूस है: `-m` के बिना **कोई** home directory नहीं
-बनती, और `-s` के बिना shell `/bin/sh` बन जाता है। इसीलिए एक ज़्यादा friendly
-script `adduser` है, जो Debian family का हिस्सा है। यह home directory बनाता है,
-bash चुनता है और password व नाम पूछता है:
+इसीलिए Ubuntu पर एक ज़्यादा सुविधाजनक स्क्रिप्ट `adduser` भी है, जो Debian परिवार
+का हिस्सा है। यह होम डायरेक्टरी बनाता है, bash चुनता है और पासवर्ड व नाम पूछता है:
 
 ```sh
 sudo adduser lisa
@@ -197,29 +205,9 @@ sudo adduser lisa
 
 सवालों के जवाब दीजिए – ज़्यादातर के लिए आप Enter दबा सकते हैं। `adduser` किसी
 मौजूदा user को group में भी जोड़ सकता है: `sudo adduser lisa sudo`।
-:::
 
-:::arch
-Arch पर `-m` के बिना कोई home directory नहीं बनती, और `adduser` command तो है ही
-नहीं – आज़माकर देखिए:
-
-```sh
-adduser lisa
-```
-
-Arch wiki सब कुछ एक साथ करने की सलाह देती है:
-`useradd -m -G wheel -s /bin/bash name`।
-:::
-
-:::redhat
-Fedora पर `-m` के बिना भी home directory बन जाती है (`/etc/login.defs` में
-setting `CREATE_HOME`), और shell bash होता है। फिर भी `-m` से कोई नुकसान नहीं,
-इसलिए इसे लिखने की आदत डालिए – तब एक ही command हर जगह काम करता है।
-:::
-
-`useradd`, `passwd` और इस chapter के बाक़ी commands हमेशा installed होते हैं।
-Package का नाम Debian पर `passwd`, Arch पर `shadow` और Fedora पर `shadow-utils` है –
-एक ही चीज़ के अलग-अलग नामों का एक और उदाहरण।
+`useradd`, `passwd` और इस अध्याय के बाक़ी कमांड हमेशा इंस्टॉल रहते हैं। Ubuntu पर
+ये पैकेज `passwd` में आते हैं; दूसरे परिवार इस पैकेज को कुछ और नाम देते हैं।
 
 ## Password set करना – `passwd`
 
@@ -256,6 +244,19 @@ supplementary groups की list ठीक वही set हो जाती ह
 बाक़ी हर group से हट जाता है, जैसे sudo group से। ख़ुद को lock out करने का यह एक आम
 तरीक़ा है।
 
+```quiz
+`kim` अतिरिक्त समूहों `sudo` और `utvecklare` में है। एक प्रशासक
+`sudo usermod -G backup kim` चलाता है। इसके बाद kim किन अतिरिक्त समूहों में
+है?
+- [ ] `sudo`, `utvecklare` और `backup`
+- [x] सिर्फ़ `backup`
+- [ ] `sudo` और `utvecklare` – `-a` के बिना कमांड विफल हो जाता है
+- [ ] किसी में नहीं
+---
+`-a` के बिना सूची ठीक वही सेट हो जाती है जो आप टाइप करते हैं।
+`sudo usermod -aG backup kim` से kim के बाक़ी समूह बने रहते।
+```
+
 `gpasswd` भी यही करता है और members को हटा भी सकता है:
 
 ```sh
@@ -276,7 +277,7 @@ sudo chmod 775 /srv/projekt
 ls -ld /srv/projekt
 ```
 
-## Sudo अधिकार देना – `sudo` या `wheel`
+## Sudo अधिकार देना – `sudo` समूह
 
 `sudo` कौन इस्तेमाल कर सकता है, यह `/etc/sudoers` में तय होता है:
 
@@ -284,36 +285,16 @@ ls -ld /srv/projekt
 sudo cat /etc/sudoers
 ```
 
-Line `%{{adminGroup}} ALL=(ALL:ALL) ALL` का मतलब है कि group **{{adminGroup}}**
-का हर member हर command root के रूप में चला सकता है। इसलिए किसी को sudo अधिकार
-देना बस उसे सही group में जोड़ने की बात है – और अलग-अलग families में इस group के
-नाम अलग हैं:
-
-:::debian
-Debian और Ubuntu पर group का नाम `sudo` है:
+पंक्ति `%sudo ALL=(ALL:ALL) ALL` का मतलब है कि समूह **sudo** का हर सदस्य हर कमांड
+root के रूप में चला सकता है। इसलिए किसी को sudo अधिकार देना बस उसे सही समूह में
+जोड़ने की बात है – Ubuntu पर समूह `sudo` में:
 
 ```sh
 sudo usermod -aG sudo kim
 ```
-:::
 
-:::arch
-Arch पर group का नाम `wheel` है – "जो कमान संभालते हैं" के लिए एक पुराना Unix नाम
-(*big wheel*):
-
-```sh
-sudo usermod -aG wheel kim
-```
-:::
-
-:::redhat
-Fedora पर group का नाम `wheel` है – "जो कमान संभालते हैं" के लिए एक पुराना Unix
-नाम (*big wheel*):
-
-```sh
-sudo usermod -aG wheel kim
-```
-:::
+अलग-अलग परिवारों में इस समूह के नाम अलग हैं: Arch और Fedora पर इसका नाम `wheel` है –
+"जो कमान संभालते हैं" के लिए एक पुराना Unix नाम (*big wheel*)।
 
 `/etc/sudoers` को कभी किसी साधारण editor से सीधे edit मत कीजिए – एक typo का मतलब हो
 सकता है कि अब कोई भी sudo इस्तेमाल न कर पाए। `visudo` इस्तेमाल कीजिए, जो save करने
@@ -343,6 +324,18 @@ su - kim
 
 बिना नाम के `su` का मतलब root है। Ubuntu पर root का कोई password नहीं होता, इसलिए
 वहाँ `su -` काम नहीं करता – `sudo -i` इस्तेमाल कीजिए।
+
+```quiz
+आप `kim` के रूप में एक अकेला कमांड चलाना चाहते हैं, लेकिन आपको kim का पासवर्ड
+नहीं पता। आपके पास sudo अधिकार हैं। क्या काम करेगा?
+- [ ] `su - kim`
+- [x] `sudo -u kim command`
+- [ ] `su kim command`
+- [ ] कुछ नहीं – आपको kim का पासवर्ड चाहिए
+---
+`su` उस यूज़र का पासवर्ड माँगता है जो आप बनते हैं। `sudo` **आपका अपना** पासवर्ड
+माँगता है और `/etc/sudoers` में जाँचता है कि आपको इसकी अनुमति है।
+```
 
 ## Accounts को lock और delete करना
 
@@ -376,11 +369,9 @@ sudo useradd -m vikarie
 sudo userdel -r vikarie
 ```
 
-:::debian
-Debian family में `deluser` भी है, जो `adduser` का उलटा है:
-`sudo deluser --remove-home vikarie`। `sudo deluser kim sudo` kim को group sudo
+Ubuntu पर `deluser` भी है, जो `adduser` का उलटा है:
+`sudo deluser --remove-home vikarie`। `sudo deluser kim sudo` kim को समूह sudo
 से हटा देता है।
-:::
 
 `userdel` logged in user को delete करने से मना कर देता है – `sudo userdel elev`
 आज़माइए।

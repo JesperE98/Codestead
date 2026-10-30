@@ -3,11 +3,7 @@
   "tasks": {
     "installera": {
       "text": "`git` package install कीजिए।",
-      "hint": {
-        "debian": "`sudo apt update` और फिर `sudo apt install git` चलाइए।",
-        "arch": "`sudo pacman -S git` – और सवाल का जवाब हाँ में दीजिए।",
-        "redhat": "`sudo dnf install git` – और `y` जवाब दीजिए, क्योंकि No default है।"
-      }
+      "hint": "`sudo apt update` और फिर `sudo apt install git` चलाइए।"
     },
     "identitet": {
       "text": "git को बताइए कि आप कौन हैं: `git config --global` से अपना नाम (`user.name`) और अपना email address (`user.email`) set कीजिए।",

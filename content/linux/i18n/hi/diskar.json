@@ -14,11 +14,7 @@
     },
     "uuid": {
       "text": "`/` पर mounted file system का UUID पता कीजिए – और सिर्फ़ उसी का।",
-      "hint": {
-        "debian": "`lsblk -f` दिखाता है कि `/` `/dev/sda2` पर है। फिर `blkid /dev/sda2` से पूछिए – या `findmnt -n -o UUID /` से सब एक बार में कर लीजिए।",
-        "arch": "`lsblk -f` दिखाता है कि `/` `/dev/sda3` पर है। फिर `blkid /dev/sda3` से पूछिए – या `findmnt -n -o UUID /` से सब एक बार में कर लीजिए।",
-        "redhat": "`lsblk -f` दिखाता है कि `/` `/dev/sda3` पर है। फिर `blkid /dev/sda3` से पूछिए – या `findmnt -n -o UUID /` से सब एक बार में कर लीजिए।"
-      }
+      "hint": "`lsblk -f` दिखाता है कि `/` `/dev/sda2` पर है। फिर `blkid /dev/sda2` से पूछिए – या `findmnt -n -o UUID /` से सब एक बार में कर लीजिए।"
     },
     "montera": {
       "text": "Mount point `/mnt/usb` बनाइए और USB stick (`/dev/sdb1`) को वहाँ mount कीजिए।",

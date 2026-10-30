@@ -52,6 +52,17 @@ space होने पर अजीब errors आते हैं। अगर �
 हैं, तो curly braces इस्तेमाल कीजिए: `"${stad}_2026"` – इनके बिना bash `stad_2026` नाम
 का variable ढूँढेगा।
 
+```quiz
+`stad` में `Göteborg` है, और `stad_2026` नाम का कोई वेरिएबल नहीं है।
+`echo "$stad_2026"` क्या छापता है?
+- [ ] `Göteborg_2026`
+- [ ] `Göteborg`
+- [x] एक ख़ाली पंक्ति
+---
+Bash पूरा नाम `stad_2026` पढ़ता है, और वह वेरिएबल मौजूद नहीं है।
+`Göteborg_2026` पाने के लिए `"${stad}_2026"` लिखिए।
+```
+
 ## Command substitution – `$(...)`
 
 `$(command)` की जगह वह आ जाता है जो command print करता है। इसी तरह आप किसी command का
@@ -76,6 +87,13 @@ echo $(( 17 / 5 )) remainder $(( 17 % 5 ))
 
 किसी variable को बदलने के लिए `(( a++ ))` या `(( a += 10 ))` लिखिए।
 
+```predict
+$ echo $(( 7 / 2 )) $(( 7 % 2 ))
+3 1
+---
+Bash सिर्फ़ पूर्णांकों (integers) से गिनता है: 7 / 2 बराबर 3 है, और शेषफल (`%`) 1 है।
+```
+
 ## Arguments
 
 जब आप `./skript.sh one two` चलाते हैं, तो script arguments पढ़ सकती है:
@@ -87,6 +105,16 @@ echo $(( 17 / 5 )) remainder $(( 17 % 5 ))
 | `$#` | Arguments की संख्या |
 | `"$@"` | सारे arguments, हर एक अलग-अलग |
 | `$?` | पिछले command का exit code |
+
+```quiz
+एक स्क्रिप्ट `./skript.sh red green blue` से चलाई जाती है। `$1` और `$#` में
+क्या है?
+- [ ] `$1` है `./skript.sh` और `$#` है `4`
+- [x] `$1` है `red` और `$#` है `3`
+- [ ] `$1` है `red` और `$#` है `blue`
+---
+स्क्रिप्ट का अपना नाम `$0` में होता है, इसलिए उसे `$#` में नहीं गिना जाता।
+```
 
 ## Conditions – `if`
 
@@ -131,6 +159,12 @@ fi
 [ -d ~/bilder ] && echo "Pictures वाली directory मौजूद है"
 ```
 
+```predict
+$ x=""
+$ if [ -z "$x" ]; then echo empty; else echo "not empty"; fi
+empty
+```
+
 ## Loops
 
 **For loop** किसी list की हर चीज़ के लिए एक ही काम करता है:
@@ -160,6 +194,13 @@ while read rad; do echo "> $rad"; done < ~/dokument/frukter.txt
 ```
 
 `break` loop से बाहर निकलता है, और `continue` सीधे अगले round पर कूद जाता है।
+
+```predict
+$ for x in 2 4 6; do echo $(( x * 10 )); done
+20
+40
+60
+```
 
 > **Infinite loops से सावधान!** जिस loop की condition कभी false नहीं होती, वह हमेशा
 > चलता रहता है। असली terminal में आप उसे **Ctrl+C** से रोकते हैं। Simulator उसे 20,000

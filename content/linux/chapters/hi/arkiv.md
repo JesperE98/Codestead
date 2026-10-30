@@ -20,6 +20,16 @@ program का source code download करेंगे। तब बहुत �
 philosophy का निचोड़ है – छोटे programs जो हर एक, एक काम करते हैं और जिन्हें आपस में
 जोड़ा जा सकता है।
 
+```quiz
+`tar` और `gzip` आम तौर पर साथ में क्यों इस्तेमाल किए जाते हैं?
+- [ ] `gzip` उन फ़ाइलों को नहीं पढ़ सकता जिन्हें `tar` ने नहीं बनाया
+- [x] `tar` बहुत-सी फ़ाइलों को एक में इकट्ठा करता है, और `gzip` उस एक फ़ाइल को छोटा करता है
+- [ ] `tar` फ़ाइलों को छोटा करता है, और `gzip` उन्हें सही अनुमतियाँ देता है
+---
+gzip एक बार में सिर्फ़ एक फ़ाइल संभालता है और डायरेक्टरी के बारे में कुछ नहीं
+जानता, और अकेला tar आर्काइव अपनी फ़ाइलों से छोटा नहीं होता।
+```
+
 | File extension | यह क्या है? | किससे unpack करें |
 |---|---|---|
 | `.tar` | Archive, बिना compression | `tar -xf` |
@@ -41,6 +51,7 @@ tar -cvf dokument.tar dokument
 
 ```text
 dokument/
+dokument/betyg.csv
 dokument/frukter.txt
 dokument/server.log
 ```
@@ -75,6 +86,16 @@ Options को साथ में लिखते समय `f` को हम�
 उसके बाद आना चाहिए। ऐतिहासिक कारणों से आप dash छोड़ भी सकते हैं: `tar czvf` का मतलब
 वही है जो `tar -czvf` का।
 
+```quiz
+`tar -xzvf backup.tar.gz` क्या करता है?
+- [ ] संपीड़ित (compressed) आर्काइव `backup.tar.gz` बनाता है
+- [ ] `backup.tar.gz` को अनपैक किए बिना उसकी सामग्री की सूची दिखाता है
+- [x] `backup.tar.gz` को gzip से अनपैक करता है और हर फ़ाइल दिखाता है
+---
+`x` ऑपरेशन है (extract), `z` का मतलब gzip, `v` फ़ाइलें दिखाता है और `f` के बाद
+आर्काइव का नाम आता है।
+```
+
 ## `-z` से compress करना
 
 `z` जोड़िए और archive रास्ते में gzip से होकर गुज़रता है:
@@ -86,11 +107,11 @@ ls -l dokument.tar dokument.tar.gz
 
 ```text
 -rw-r--r-- 1 elev elev 10240 Oct 30 12:00 dokument.tar
--rw-r--r-- 1 elev elev   674 Oct 30 12:00 dokument.tar.gz
+-rw-r--r-- 1 elev elev   837 Oct 30 12:00 dokument.tar.gz
 ```
 
-बिना compression वाला archive पूरे 10,240 bytes का है, जबकि files मिलाकर 900 bytes से
-थोड़ी कम हैं। ऐसा इसलिए है क्योंकि tar हर file से पहले 512 bytes का एक header लगाता
+बिना compression वाला archive पूरे 10,240 bytes का है, जबकि फ़ाइलें मिलाकर 1,000
+bytes से थोड़ी ज़्यादा हैं। ऐसा इसलिए है क्योंकि tar हर file से पहले 512 bytes का एक header लगाता
 है और archive को पूरे blocks तक भर देता है। वह सारी ख़ाली जगह gzip compress करके
 हटा देता है।
 
@@ -105,7 +126,7 @@ du -sh dokument
 ```text
 12K	dokument.tar
 4.0K	dokument.tar.gz
-12K	dokument
+16K	dokument
 ```
 
 Disk 4 KiB के blocks में बँटी होती है, इसलिए किसी ख़ाली न होने वाली file के लिए `du`
@@ -120,6 +141,7 @@ tar -tzvf dokument.tar.gz
 
 ```text
 drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
+-rw-r--r-- elev/elev       146 2026-10-30 12:00 dokument/betyg.csv
 -rw-r--r-- elev/elev        64 2026-10-30 12:00 dokument/frukter.txt
 -rw-r--r-- elev/elev       848 2026-10-30 12:00 dokument/server.log
 ```
@@ -164,6 +186,16 @@ tar -czf backup.tar.gz -C ~ dokument
 tar -tzf backup.tar.gz
 ```
 
+```quiz
+आप `tar -czf backup.tar.gz -C ~ dokument` चलाते हैं। आर्काइव में क्या है?
+- [x] `dokument/` और उसके अंदर की फ़ाइलें
+- [ ] `home/elev/dokument/` और उसके अंदर की फ़ाइलें
+- [ ] `/home/elev/dokument/` और उसके अंदर की फ़ाइलें
+---
+`-C ~` से tar पहले आपकी होम डायरेक्टरी में जाता है, इसलिए आर्काइव में नाम
+`dokument/` से शुरू होते हैं।
+```
+
 ## `gzip` से अकेली files compress करना
 
 `gzip` एक file को compress करता है और उसे एक `.gz` file से **बदल** देता है।
@@ -198,6 +230,17 @@ gzip -kv frukter.txt
 frukter.txt:	-20.3% -- created frukter.txt.gz
 ```
 
+```predict
+$ cp dokument/frukter.txt .
+$ cp dokument/server.log .
+$ gzip frukter.txt
+$ gzip -k server.log
+$ ls frukter* server*
+frukter.txt.gz  server.log  server.log.gz
+---
+सादा `gzip` फ़ाइल को `.gz` फ़ाइल से बदल देता है; `-k` मूल फ़ाइल को बनाए रखता है।
+```
+
 ### Compressed files को सीधे पढ़ना
 
 `/var/log` की पुरानी log files जगह बचाने के लिए अक्सर `.gz` के रूप में रखी जाती हैं।
@@ -220,11 +263,10 @@ compress भी करता है। Windows और macOS बिना कि�
 स्वाभाविक विकल्प है। Linux की दुनिया में `.tar.gz` ज़्यादा आम है, क्योंकि यह owners और
 permissions को बेहतर तरीक़े से बचाकर रखता है।
 
-Programs `zip` और `unzip` हमेशा पहले से installed नहीं होते। ऐसे में आप उन्हें package
-manager से install करते हैं – इसके बारे में package management वाले chapter में और
-जानेंगे। {{distro}} पर यह ऐसे होता है:
+प्रोग्राम `zip` और `unzip` हमेशा पहले से इंस्टॉल नहीं होते, और इस टर्मिनल में आपको
+उन्हें पहले इंस्टॉल करना होगा। यह पैकेज मैनेजर से होता है – इसके बारे में आप
+डिस्ट्रीब्यूशन और पैकेज वाले भाग में सब कुछ सीखेंगे। Ubuntu पर यह ऐसे होता है:
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install zip unzip
@@ -232,24 +274,6 @@ sudo apt install zip unzip
 
 `apt update` उपलब्ध packages की list download करता है। इसके बिना apt को कोई package
 मिलता ही नहीं।
-:::
-
-:::arch
-```sh
-sudo pacman -S zip unzip
-```
-
-जब pacman पूछे कि क्या आप आगे बढ़ना चाहते हैं, तो हाँ कहिए (`Y` या बस Enter)।
-:::
-
-:::redhat
-```sh
-sudo dnf install zip unzip
-```
-
-जब dnf पूछे `Is this ok [y/N]`, तो `y` जवाब दीजिए – बड़े `N` का मतलब है कि अगर आप
-बस Enter दबाते हैं तो No default है।
-:::
 
 फिर directory को pack कीजिए। `-r` (*recursive*) मत भूलिए – इसके बिना zip सिर्फ़ ख़ाली
 directory जोड़ता है, उसके अंदर की files नहीं:
@@ -260,6 +284,7 @@ zip -r dokument.zip dokument
 
 ```text
   adding: dokument/ (stored 0%)
+  adding: dokument/betyg.csv (deflated 17%)
   adding: dokument/frukter.txt (deflated 27%)
   adding: dokument/server.log (deflated 42%)
 ```
@@ -275,6 +300,15 @@ unzip dokument.zip -d fran-zip
 
 अगर files पहले से मौजूद हैं, तो unzip उन्हें छोड़ देता है। `unzip -o` के साथ वे
 overwrite हो जाती हैं।
+
+```quiz
+आप `-r` के बिना `zip dokument.zip dokument` चलाते हैं। zip फ़ाइल में क्या पहुँचता है?
+- [ ] `dokument` की सभी फ़ाइलें
+- [x] सिर्फ़ ख़ाली डायरेक्टरी `dokument/`
+- [ ] कुछ नहीं – zip चलने से मना कर देता है
+---
+`-r` (*recursive*) के बिना zip डायरेक्टरी के अंदर नहीं जाता।
+```
 
 ## सारांश
 
