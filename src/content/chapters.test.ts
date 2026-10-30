@@ -9,8 +9,6 @@ import { LANGUAGES, type Lang } from '../i18n/languages';
 
 /** Språk som måste vara helt översatta. */
 const REQUIRED_LANGS: Lang[] = LANGUAGES.map((l) => l.code);
-/** Nya kapitel som ännu bara finns på svenska och engelska. Ska vara tom inför en release. */
-const AWAITING_TRANSLATION = ['extra-repon', 'universella-paket', 'git'];
 import { resolve } from './types';
 
 // Kör alla lösningar i ordning – precis som en elev skulle göra – och
@@ -51,7 +49,6 @@ describe('kapitelinnehåll', () => {
     'alla kapitel och uppgifter finns på %s',
     (lang) => {
       for (const chapter of CHAPTERS) {
-        if (lang !== 'sv' && lang !== 'en' && AWAITING_TRANSLATION.includes(chapter.id)) continue;
         expect(isTranslated(chapter, lang), `${lang}/${chapter.id}`).toBe(true);
       }
     },
