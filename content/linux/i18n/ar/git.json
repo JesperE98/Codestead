@@ -3,11 +3,7 @@
   "tasks": {
     "installera": {
       "text": "ثبّت الحزمة `git`.",
-      "hint": {
-        "debian": "شغّل `sudo apt update` ثم `sudo apt install git`.",
-        "arch": "`sudo pacman -S git` – وأجب بنعم على السؤال.",
-        "redhat": "`sudo dnf install git` – وأجب بـ `y`، لأن «لا» هي الإجابة الافتراضية."
-      }
+      "hint": "شغّل `sudo apt update` ثم `sudo apt install git`."
     },
     "identitet": {
       "text": "عرّف git بنفسك: اضبط اسمك (`user.name`) وعنوان بريدك الإلكتروني (`user.email`) باستخدام `git config --global`.",

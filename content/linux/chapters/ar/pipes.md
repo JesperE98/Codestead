@@ -32,12 +32,34 @@ echo "second line" >> test.txt
 cat test.txt
 ```
 
+```predict
+$ echo one > t.txt
+$ echo two > t.txt
+$ cat t.txt
+two
+---
+الـ `>` الثانية استبدلت محتوى الملف. ومع `>>` كان سيحتوي على السطرين كليهما.
+```
+
 ## من ملف – `<`
 
 يتيح `<` للبرنامج أن يقرأ مدخلاته stdin من ملف:
 
 ```sh
 wc -l < dokument/frukter.txt
+```
+
+الآن لا يرى `wc` اسم الملف أبدًا – بل يحصل على النص فقط عبر stdin – لذا يطبع
+العدد وحده.
+
+```predict
+$ wc -l dokument/frukter.txt
+$ wc -l < dokument/frukter.txt
+10 dokument/frukter.txt
+10
+---
+عندما يُعطى اسم الملف وسيطًا، يطبع `wc` الاسم أيضًا. ومع `<` لا يحصل إلا على
+النص.
 ```
 
 ## رسائل الخطأ – `2>`
@@ -50,6 +72,16 @@ ls /finnsinte 2> fel.txt
 ```
 
 (*Finns inte* تعني بالسويدية "غير موجود"، و*fel* تعني "خطأ".)
+
+```quiz
+تشغّل `ls /finnsinte > fel.txt`. أين تنتهي رسالة الخطأ؟
+- [ ] في `fel.txt`
+- [x] على الشاشة – ويبقى `fel.txt` فارغًا
+- [ ] لا مكان، فهي تختفي
+---
+لا يعيد `>` توجيه سوى stdout (التدفق 1). أما رسالة الخطأ فتذهب إلى stderr
+(التدفق 2)، الذي ما زال يذهب إلى الشاشة. كنت ستحتاج إلى `2>`.
+```
 
 الملف `/dev/null` هو "ثقب أسود" – أي شيء يُكتب فيه يختفي. وهذا مفيد لإسكات
 الأخطاء. ومع `2>&1` يُرسَل stderr إلى حيث يذهب stdout.
@@ -73,6 +105,12 @@ sort dokument/frukter.txt | uniq -c | sort -rn
 اقرأه خطوة بخطوة: رتّب الفواكه، ثم احسب عدد مرات ظهور كل منها (`uniq -c`)، ثم
 رتّب رقميًا بحيث يأتي الأكبر أولًا (`sort -rn`).
 
+كم ملفًا ومجلدًا يوجد في `/etc`؟ احسبها باستخدام أنبوب:
+
+```try
+ls /etc | wc -l
+```
+
 ## الشاشة والملف معًا – `tee`
 
 يمرّر `tee` مدخلاته إلى الأمام *ويحفظ* نسخة منها في ملف:
@@ -93,4 +131,12 @@ ls /etc | tee etc-lista.txt | wc -l
 
 ```sh
 mkdir -p ny && cd ny
+```
+
+```predict
+$ mkdir dokument 2> /dev/null && echo created || echo failed
+failed
+---
+`dokument` موجود بالفعل، لذا يفشل `mkdir` (وتختفي رسالة خطئه في
+`/dev/null`). فيُتخطّى `echo created` ويُنفَّذ `echo failed`.
 ```

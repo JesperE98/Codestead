@@ -14,11 +14,7 @@
     },
     "uuid": {
       "text": "اعرف الـ UUID الخاص بنظام الملفات المركّب على `/` – وهذا وحده فقط.",
-      "hint": {
-        "debian": "يُظهر `lsblk -f` أن `/` موجود على `/dev/sda2`. ثم اسأل `blkid /dev/sda2` – أو دع `findmnt -n -o UUID /` يفعل كل ذلك دفعة واحدة.",
-        "arch": "يُظهر `lsblk -f` أن `/` موجود على `/dev/sda3`. ثم اسأل `blkid /dev/sda3` – أو دع `findmnt -n -o UUID /` يفعل كل ذلك دفعة واحدة.",
-        "redhat": "يُظهر `lsblk -f` أن `/` موجود على `/dev/sda3`. ثم اسأل `blkid /dev/sda3` – أو دع `findmnt -n -o UUID /` يفعل كل ذلك دفعة واحدة."
-      }
+      "hint": "يُظهر `lsblk -f` أن `/` موجود على `/dev/sda2`. ثم اسأل `blkid /dev/sda2` – أو دع `findmnt -n -o UUID /` يفعل كل ذلك دفعة واحدة."
     },
     "montera": {
       "text": "أنشئ نقطة التركيب `/mnt/usb` وركّب ذاكرة USB (`/dev/sdb1`) عليها.",

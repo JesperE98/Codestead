@@ -10,16 +10,8 @@
       "hint": "`ping -c 3 192.168.1.1` – الخيار `-c` اختصار لـ *count*."
     },
     "dig": {
-      "text": {
-        "debian": "ثبّت الحزمة `dnsutils` وابحث عن عنوان IP الخاص بـ `example.com` باستخدام `dig`.",
-        "arch": "ثبّت الحزمة `bind` وابحث عن عنوان IP الخاص بـ `example.com` باستخدام `dig`.",
-        "redhat": "ثبّت الحزمة `bind-utils` وابحث عن عنوان IP الخاص بـ `example.com` باستخدام `dig`."
-      },
-      "hint": {
-        "debian": "`sudo apt update` و`sudo apt install dnsutils` ثم `dig +short example.com`.",
-        "arch": "`sudo pacman -S bind` ثم `dig +short example.com`.",
-        "redhat": "`sudo dnf install bind-utils` ثم `dig +short example.com`."
-      }
+      "text": "ثبّت الحزمة `dnsutils` وابحث عن عنوان IP الخاص بـ `example.com` باستخدام `dig`.",
+      "hint": "`sudo apt update` و`sudo apt install dnsutils` ثم `dig +short example.com`."
     },
     "ss": {
       "text": "اعرف المنافذ التي تستمع على الحاسوب باستخدام `ss`.",
@@ -27,11 +19,7 @@
     },
     "curl-localhost": {
       "text": "اجلب الصفحة الرئيسية لخادم التدريب على حاسوبك، `http://localhost:8080`، باستخدام `curl`.",
-      "hint": {
-        "debian": "على Debian/Ubuntu يجب تثبيت curl: `sudo apt install curl`. إذا حصلت على *Couldn't connect to server* فإن minserver متوقف – شغّله باستخدام `minserver`.",
-        "arch": "`curl http://localhost:8080`. إذا حصلت على *Couldn't connect to server* فإن minserver متوقف – شغّله باستخدام `minserver`.",
-        "redhat": "`curl http://localhost:8080`. إذا حصلت على *Couldn't connect to server* فإن minserver متوقف – شغّله باستخدام `minserver`."
-      }
+      "hint": "على Ubuntu يجب تثبيت curl: `sudo apt install curl`. إذا حصلت على *Couldn't connect to server* فإن minserver متوقف – شغّله باستخدام `minserver`."
     },
     "spara": {
       "text": "احفظ صفحة الويب `https://example.com` في الملف `~/exempel.html`.",
@@ -43,11 +31,7 @@
     },
     "ssh": {
       "text": "شغّل الأمر `hostname` على الخادم `server.lan` باستخدام `ssh` بوصفك المستخدم `elev`.",
-      "hint": {
-        "debian": "`ssh elev@server.lan hostname` – وأجب بـ `yes` عن السؤال المتعلق بمفتاح المضيف.",
-        "arch": "ثبّت أولًا عميل ssh: `sudo pacman -S openssh`. ثم `ssh elev@server.lan hostname` – وأجب بـ `yes` عن السؤال المتعلق بمفتاح المضيف.",
-        "redhat": "`ssh elev@server.lan hostname` – وأجب بـ `yes` عن السؤال المتعلق بمفتاح المضيف."
-      }
+      "hint": "`ssh elev@server.lan hostname` – وأجب بـ `yes` عن السؤال المتعلق بمفتاح المضيف."
     }
   }
 }

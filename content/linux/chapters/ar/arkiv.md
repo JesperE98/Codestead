@@ -17,6 +17,16 @@
 النتيجة `.tar.gz`، أو `.tgz` اختصارًا. هذه هي فلسفة يونكس باختصار – برامج صغيرة
 يفعل كل منها شيئًا واحدًا ويمكن الجمع بينها.
 
+```quiz
+لماذا يُستخدم `tar` و`gzip` معًا عادةً؟
+- [ ] لأن `gzip` لا يستطيع قراءة ملفات لم ينشئها `tar`
+- [x] لأن `tar` يجمع ملفات كثيرة في ملف واحد، و`gzip` يصغّر هذا الملف الواحد
+- [ ] لأن `tar` يصغّر الملفات، و`gzip` يعطيها الصلاحيات الصحيحة
+---
+لا يتعامل gzip إلا مع ملف واحد في كل مرة ولا يعرف شيئًا عن المجلدات، والأرشيف
+tar وحده ليس أصغر من الملفات التي فيه.
+```
+
 | امتداد الملف | ما هو؟ | يُفك بـ |
 |---|---|---|
 | `.tar` | أرشيف غير مضغوط | `tar -xf` |
@@ -38,6 +48,7 @@ tar -cvf dokument.tar dokument
 
 ```text
 dokument/
+dokument/betyg.csv
 dokument/frukter.txt
 dokument/server.log
 ```
@@ -72,6 +83,16 @@ dokument/server.log
 بعده مباشرة. ولأسباب تاريخية يمكنك أيضًا حذف الشرطة: `tar czvf` يعني الشيء نفسه
 مثل `tar -czvf`.
 
+```quiz
+ماذا يفعل `tar -xzvf backup.tar.gz`؟
+- [ ] ينشئ الأرشيف المضغوط `backup.tar.gz`
+- [ ] يعرض محتوى `backup.tar.gz` من دون فكّه
+- [x] يفك `backup.tar.gz` باستخدام gzip ويعرض كل ملف
+---
+`x` هي العملية (الفك)، و`z` تعني gzip، و`v` تعرض الملفات، و`f` يتبعها اسم
+الأرشيف.
+```
+
 ## الضغط بـ `-z`
 
 أضف `z` وسيُمرَّر الأرشيف عبر gzip في الطريق:
@@ -83,11 +104,11 @@ ls -l dokument.tar dokument.tar.gz
 
 ```text
 -rw-r--r-- 1 elev elev 10240 Oct 30 12:00 dokument.tar
--rw-r--r-- 1 elev elev   674 Oct 30 12:00 dokument.tar.gz
+-rw-r--r-- 1 elev elev   837 Oct 30 12:00 dokument.tar.gz
 ```
 
-يبلغ حجم الأرشيف غير المضغوط 10,240 بايت كاملة، مع أن مجموع الملفات أقل بقليل من
-900 بايت. والسبب أن tar يضع ترويسة بحجم 512 بايت قبل كل ملف ويحشو الأرشيف حتى
+يبلغ حجم الأرشيف غير المضغوط 10,240 بايت كاملة، مع أن مجموع الملفات يزيد قليلًا على
+1,000 بايت. والسبب أن tar يضع ترويسة بحجم 512 بايت قبل كل ملف ويحشو الأرشيف حتى
 يكتمل عدد صحيح من الكتل. وكل هذه المساحة الفارغة يزيلها gzip بالضغط.
 
 يعرض الأمر `du` (*disk usage*) مقدار المساحة التي يشغلها شيء ما على القرص. ومع
@@ -101,7 +122,7 @@ du -sh dokument
 ```text
 12K	dokument.tar
 4.0K	dokument.tar.gz
-12K	dokument
+16K	dokument
 ```
 
 القرص مقسّم إلى كتل حجمها 4 KiB، لذا لا يعرض `du` أبدًا أقل من `4.0K` لملف غير
@@ -115,6 +136,7 @@ tar -tzvf dokument.tar.gz
 
 ```text
 drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
+-rw-r--r-- elev/elev       146 2026-10-30 12:00 dokument/betyg.csv
 -rw-r--r-- elev/elev        64 2026-10-30 12:00 dokument/frukter.txt
 -rw-r--r-- elev/elev       848 2026-10-30 12:00 dokument/server.log
 ```
@@ -158,6 +180,16 @@ tar -czf backup.tar.gz -C ~ dokument
 tar -tzf backup.tar.gz
 ```
 
+```quiz
+تشغّل `tar -czf backup.tar.gz -C ~ dokument`. ماذا يحتوي الأرشيف؟
+- [x] `dokument/` والملفات التي فيه
+- [ ] `home/elev/dokument/` والملفات التي فيه
+- [ ] `/home/elev/dokument/` والملفات التي فيه
+---
+يجعل `-C ~` الأمر tar ينتقل إلى مجلد المنزل أولًا، لذا تبدأ الأسماء في الأرشيف
+بـ `dokument/`.
+```
+
 ## ضغط ملفات مفردة بـ `gzip`
 
 يضغط `gzip` ملفًا **ويستبدله** بملف `.gz`. وتُحفظ الصلاحيات والطابع الزمني:
@@ -191,6 +223,17 @@ gzip -kv frukter.txt
 frukter.txt:	-20.3% -- created frukter.txt.gz
 ```
 
+```predict
+$ cp dokument/frukter.txt .
+$ cp dokument/server.log .
+$ gzip frukter.txt
+$ gzip -k server.log
+$ ls frukter* server*
+frukter.txt.gz  server.log  server.log.gz
+---
+يستبدل `gzip` العادي الملف بملف `.gz`، أما `-k` فيحتفظ بالأصل.
+```
+
 ### قراءة الملفات المضغوطة مباشرة
 
 غالبًا ما تُخزَّن ملفات السجلات القديمة في `/var/log` بصيغة `.gz` لتوفير المساحة.
@@ -211,11 +254,10 @@ zcat server.log.gz | grep ERROR
 لا يستخدم لينكس. أما داخل عالم لينكس فـ `.tar.gz` أكثر شيوعًا، لأنها تحفظ المالكين
 والصلاحيات بشكل أفضل.
 
-البرنامجان `zip` و`unzip` ليسا مثبّتين مسبقًا دائمًا. وفي هذه الحالة تثبّتهما
-بمدير الحزم – وستعرف المزيد عن ذلك في فصل إدارة الحزم. على {{distro}} تفعل ذلك
-هكذا:
+البرنامجان `zip` و`unzip` ليسا مثبّتين مسبقًا دائمًا، وفي هذه الطرفية عليك
+تثبيتهما أولًا. ويتم ذلك بمدير الحزم – وستتعلّم كل شيء عنه في الجزء الخاص
+بالتوزيعات والحزم. على Ubuntu تفعل ذلك هكذا:
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install zip unzip
@@ -223,24 +265,6 @@ sudo apt install zip unzip
 
 ينزّل `apt update` قائمة الحزم المتاحة. ومن دونه لا يستطيع apt العثور على أي حزمة
 على الإطلاق.
-:::
-
-:::arch
-```sh
-sudo pacman -S zip unzip
-```
-
-أجب بنعم (`Y` أو Enter فقط) عندما يسألك pacman إن كنت تريد المتابعة.
-:::
-
-:::redhat
-```sh
-sudo dnf install zip unzip
-```
-
-أجب بـ `y` عندما يسأل dnf `Is this ok [y/N]` – فالحرف الكبير `N` يعني أن «لا» هي
-الإجابة الافتراضية إذا ضغطت Enter فقط.
-:::
 
 ثم احزم المجلد. لا تنسَ `-r` (*recursive*) – فمن دونه لا يضيف zip إلا المجلد
 الفارغ، لا الملفات التي بداخله:
@@ -251,6 +275,7 @@ zip -r dokument.zip dokument
 
 ```text
   adding: dokument/ (stored 0%)
+  adding: dokument/betyg.csv (deflated 17%)
   adding: dokument/frukter.txt (deflated 27%)
   adding: dokument/server.log (deflated 42%)
 ```
@@ -264,6 +289,15 @@ unzip dokument.zip -d fran-zip
 ```
 
 إذا كانت الملفات موجودة أصلًا، يتخطاها unzip. ومع `unzip -o` يُكتب فوقها.
+
+```quiz
+تشغّل `zip dokument.zip dokument` من دون `-r`. ماذا ينتهي في ملف zip؟
+- [ ] كل الملفات الموجودة في `dokument`
+- [x] المجلد الفارغ `dokument/` فقط
+- [ ] لا شيء – يرفض zip العمل
+---
+من دون `-r` (*recursive*) لا يدخل zip إلى المجلد.
+```
 
 ## الخلاصة
 
