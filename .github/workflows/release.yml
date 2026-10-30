@@ -25,10 +25,12 @@ jobs:
         include:
           - os: windows-latest
             platform: --win
-          - os: macos-latest
-            platform: --mac
           - os: ubuntu-latest
             platform: --linux
+          # macOS är tillfälligt borttaget: kontot får inga macOS-maskiner i
+          # GitHub Actions. Lägg tillbaka raderna nedan när det fungerar:
+          # - os: macos-latest
+          #   platform: --mac
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4

@@ -9,7 +9,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # macos-latest saknas tills kontot får macOS-maskiner i GitHub Actions.
+        os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     env:
       ELECTRON_SKIP_BINARY_DOWNLOAD: '1'

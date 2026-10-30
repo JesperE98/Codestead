@@ -17,11 +17,11 @@ Installera LinuxLearningTool som ett vanligt program. Välj ditt operativsystem:
 | | Ladda ner |
 |---|---|
 | **Windows** 10/11 | [LinuxLearningTool-Setup-Windows.exe](https://github.com/jesper-e98/LinuxLearningTool/releases/latest/download/LinuxLearningTool-Setup-Windows.exe) |
-| **macOS** (Intel och Apple Silicon) | [LinuxLearningTool-macOS.dmg](https://github.com/jesper-e98/LinuxLearningTool/releases/latest/download/LinuxLearningTool-macOS.dmg) |
+| **macOS** | Kommer snart – tills vidare kan du bygga själv med `npm run app:dist:mac` på en Mac |
 | **Linux** (x86_64) | [LinuxLearningTool-Linux-x86_64.AppImage](https://github.com/jesper-e98/LinuxLearningTool/releases/latest/download/LinuxLearningTool-Linux-x86_64.AppImage) |
 
 Alla versioner finns under [Releases](https://github.com/jesper-e98/LinuxLearningTool/releases).
-Appen är inte signerad än, så Windows och macOS varnar första gången – se
+Appen är inte signerad än, så Windows varnar första gången – se
 [instruktionerna](.github/release-notes.md#första-starten).
 
 ## Funktioner
