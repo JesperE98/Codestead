@@ -29,6 +29,16 @@ Uma **sandbox** (caixa de areia) significa que o programa só alcança aquilo
 que recebeu permissão para acessar, por exemplo a rede ou a sua pasta de
 downloads, em vez do seu diretório pessoal inteiro.
 
+```quiz
+Qual formato é atualizado automaticamente em segundo plano?
+- [ ] Flatpak
+- [x] Snap
+- [ ] AppImage
+---
+Os programas Flatpak são atualizados com `flatpak update`, e um AppImage é
+substituído baixando um arquivo novo.
+```
+
 ## Flatpak
 
 O Flatpak é o formato com que a maioria das distribuições concordou para
@@ -115,6 +125,16 @@ flatpak install --user flathub org.videolan.VLC
 flatpak list --user
 ```
 
+```quiz
+O que acontece quando você instala um Flatpak com `--user`?
+- [ ] Ele é instalado para o sistema inteiro, em `/var/lib/flatpak`
+- [x] Ele vai parar no seu diretório pessoal, e nenhum outro usuário o vê
+- [ ] Ele roda sem sandbox
+---
+Lembre-se de que a instalação de usuário tem os próprios remotes – o Flathub
+também precisa ser adicionado com `--user`.
+```
+
 ### Atualizando e removendo
 
 ```sh
@@ -147,7 +167,7 @@ sudo apt install snapd
 ### Snap no Arch
 
 O Snap não está nos repositórios do Arch – só no AUR. Compile-o como no
-capítulo anterior:
+capítulo sobre a família Arch:
 
 ```sh
 sudo pacman -S --needed git base-devel
@@ -197,6 +217,14 @@ sudo snap install code
 sudo snap install code --classic
 ```
 
+```quiz
+Um snap é publicado com classic confinement. O que você precisa acrescentar
+para instalá-lo?
+- [ ] `--user`
+- [x] `--classic`
+- [ ] `--channel=edge`
+```
+
 ### Canais e atualizações
 
 Todo snap tem **canais** (*channels*): `stable`, `candidate`, `beta` e `edge`
@@ -227,12 +255,27 @@ cd ~/Nedladdningar
 ls -l
 ```
 
+O que acontece se você o iniciar na hora?
+
+```predict
+$ ~/Nedladdningar/Kalkylator.AppImage
+bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+---
+O arquivo não tem a permissão `x`.
+```
+
 Arquivos baixados nunca são executáveis de início. Torne-o executável e
 inicie-o:
 
 ```sh
 chmod +x Kalkylator.AppImage
 ./Kalkylator.AppImage
+```
+
+```try
+chmod +x ~/Nedladdningar/Kalkylator.AppImage
+---
+Agora o arquivo é executável. Confira com `ls -l ~/Nedladdningar`.
 ```
 
 ### FUSE

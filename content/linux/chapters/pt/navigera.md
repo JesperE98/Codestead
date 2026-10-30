@@ -22,6 +22,16 @@ até o hardware – fica em **uma única árvore** de diretórios que começa na
 Essa organização se chama *Filesystem Hierarchy Standard* e é quase idêntica
 em todas as distribuições.
 
+```quiz
+Um programa grava um arquivo de log. Em qual diretório você esperaria encontrá-lo?
+- [ ] `/etc`
+- [ ] `/usr/bin`
+- [x] `/var/log`
+- [ ] `/home`
+---
+Os arquivos de log ficam em `/var/log`. As configurações ficam em `/etc` e os programas em `/usr/bin`.
+```
+
 ## Onde estou? – `pwd`
 
 O `pwd` (*print working directory*) mostra o diretório em que você está:
@@ -55,6 +65,21 @@ ls -a
 
 As opções podem ser combinadas: `ls -la` é o mesmo que `ls -l -a`.
 
+```quiz
+Por que um simples `ls` no seu diretório pessoal não mostra o arquivo `.bashrc`?
+- [ ] É um arquivo de sistema que só o root pode ver
+- [x] O nome dele começa com um ponto, então ele é oculto
+- [ ] O `ls` só mostra diretórios
+---
+Arquivos cujo nome começa com um ponto são ocultos. O `ls -a` mostra esses também.
+```
+
+Experimente o formato longo junto com os arquivos ocultos:
+
+```try
+ls -la
+```
+
 ## Mudando de diretório – `cd`
 
 O `cd` (*change directory*) leva você para outro diretório:
@@ -70,6 +95,18 @@ Existem dois tipos de caminho:
 - Um caminho **relativo** parte do diretório em que você está. Se você estiver
   em `/`, pode chegar a `/var/log` com apenas `cd var/log`.
 
+```quiz
+Você está em `/home`. Quais comandos levam você para `/home/elev/dokument`? (Escolha todos os que funcionam.)
+- [x] `cd elev/dokument`
+- [x] `cd /home/elev/dokument`
+- [ ] `cd /elev/dokument`
+- [ ] `cd dokument`
+---
+`elev/dokument` é relativo a `/home`, e `/home/elev/dokument` é absoluto,
+então funciona de qualquer lugar. `/elev/dokument` começa na raiz, onde não
+existe nenhum `elev`.
+```
+
 Vale a pena conhecer alguns nomes especiais:
 
 | Nome | Significa |
@@ -83,6 +120,15 @@ O `cd` sem argumentos sempre leva você de volta para casa.
 
 ```sh
 cd ..
+```
+
+```predict
+$ cd /usr/bin
+$ cd ..
+$ pwd
+/usr
+---
+`..` é o diretório acima, então a partir de `/usr/bin` você vai parar em `/usr`.
 ```
 
 ## Completar com Tab
