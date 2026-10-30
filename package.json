@@ -3,7 +3,7 @@
   "productName": "LinuxLearningTool",
   "version": "0.2.0",
   "description": "Lär dig Linux-shell kapitel för kapitel – med en simulerad terminal och uppgifter för Debian/Ubuntu, Arch och Fedora.",
-  "license": "Unlicense",
+  "license": "UNLICENSED",
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
@@ -36,7 +36,7 @@
   "build": {
     "appId": "io.github.jesper-e98.linuxlearningtool",
     "productName": "LinuxLearningTool",
-    "copyright": "Public domain (The Unlicense)",
+    "copyright": "Copyright © 2026 jesper-e98. All rights reserved.",
     "files": [
       "dist/**",
       "electron/**"

@@ -13,9 +13,11 @@ interface Props {
   onResult(result: ExecResult): void;
   /** Text som ska läggas in på kommandoraden (t.ex. när man klickar på ett kodexempel). */
   inject: { text: string; nonce: number } | null;
+  /** Etikett för kommandoraden (för skärmläsare), på valt språk. */
+  inputLabel: string;
 }
 
-export function Terminal({ shell, onResult, inject }: Props) {
+export function Terminal({ shell, onResult, inject, inputLabel }: Props) {
   const [entries, setEntries] = useState<Entry[]>(() => [{ output: shell.welcome() }]);
   const [input, setInput] = useState('');
   const [, force] = useState(0);
@@ -104,7 +106,7 @@ export function Terminal({ shell, onResult, inject }: Props) {
   };
 
   return (
-    <div className="terminal" onClick={focus}>
+    <div className="terminal" onClick={focus} dir="ltr">
       <div className="terminal-scroll" ref={scrollRef} role="log" aria-live="polite">
         {entries.map((entry, i) => (
           <div key={i} className="terminal-entry">
@@ -131,7 +133,7 @@ export function Terminal({ shell, onResult, inject }: Props) {
             autoComplete="off"
             autoCapitalize="off"
             autoCorrect="off"
-            aria-label="Kommandorad"
+            aria-label={inputLabel}
           />
         </div>
       </div>
