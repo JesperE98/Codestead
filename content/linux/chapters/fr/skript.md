@@ -58,6 +58,17 @@ contient un espace. Si vous voulez écrire du texte juste après le nom de la
 variable, utilisez des accolades : `"${stad}_2026"` – sans elles, bash
 chercherait une variable nommée `stad_2026`.
 
+```quiz
+`stad` contient `Göteborg`, et il n'existe aucune variable nommée `stad_2026`.
+Qu'affiche `echo "$stad_2026"` ?
+- [ ] `Göteborg_2026`
+- [ ] `Göteborg`
+- [x] Une ligne vide
+---
+Bash lit le nom entier `stad_2026`, et cette variable n'existe pas. Écrivez
+`"${stad}_2026"` pour obtenir `Göteborg_2026`.
+```
+
 ## La substitution de commande – `$(...)`
 
 `$(commande)` est remplacé par ce qu'affiche la commande. C'est ainsi qu'on
@@ -82,6 +93,13 @@ echo $(( 17 / 5 )) reste $(( 17 % 5 ))
 
 Pour modifier une variable, écrivez `(( a++ ))` ou `(( a += 10 ))`.
 
+```predict
+$ echo $(( 7 / 2 )) $(( 7 % 2 ))
+3 1
+---
+Bash ne calcule qu'avec des entiers : 7 / 2 donne 3, et le reste (`%`) est 1.
+```
+
 ## Les arguments
 
 Quand vous lancez `./skript.sh un deux`, le script peut lire les arguments :
@@ -93,6 +111,16 @@ Quand vous lancez `./skript.sh un deux`, le script peut lire les arguments :
 | `$#` | Le nombre d'arguments |
 | `"$@"` | Tous les arguments, chacun séparément |
 | `$?` | Le code de retour de la commande précédente |
+
+```quiz
+Un script est lancé avec `./skript.sh red green blue`. Que contiennent `$1` et
+`$#` ?
+- [ ] `$1` vaut `./skript.sh` et `$#` vaut `4`
+- [x] `$1` vaut `red` et `$#` vaut `3`
+- [ ] `$1` vaut `red` et `$#` vaut `blue`
+---
+Le nom du script lui-même est dans `$0`, il n'est donc pas compté dans `$#`.
+```
 
 ## Les conditions – `if`
 
@@ -140,6 +168,12 @@ Pour les conditions courtes, `&&` et `||` suffisent souvent :
 [ -d ~/bilder ] && echo "Le répertoire des images existe"
 ```
 
+```predict
+$ x=""
+$ if [ -z "$x" ]; then echo empty; else echo "not empty"; fi
+empty
+```
+
 ## Les boucles
 
 Une **boucle for** fait la même chose pour chaque élément d'une liste :
@@ -169,6 +203,13 @@ while read rad; do echo "> $rad"; done < ~/dokument/frukter.txt
 ```
 
 `break` sort d'une boucle, et `continue` passe directement au tour suivant.
+
+```predict
+$ for x in 2 4 6; do echo $(( x * 10 )); done
+20
+40
+60
+```
 
 > **Attention aux boucles infinies !** Une boucle dont la condition ne devient
 > jamais fausse tourne indéfiniment. Dans un vrai terminal, on l'arrête avec

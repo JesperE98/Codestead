@@ -15,6 +15,16 @@ l'identifie – et un parent, le **PPID**, qui l'a lancé. Tout commence avec le
 processus numéro 1, `init` (sur presque toutes les distributions, c'est
 `systemd`), qui lance tous les autres.
 
+```quiz
+Qu'est-ce que le PPID d'un processus ?
+- [ ] Le numéro du processeur sur lequel il tourne
+- [x] Le PID du processus qui l'a lancé – son parent
+- [ ] Sa priorité
+---
+Chaque processus a un parent. Remontez les parents assez loin et vous arrivez
+au processus numéro 1.
+```
+
 ## Mes processus – `ps`
 
 `ps` (*process status*) sans option affiche les processus de votre propre
@@ -60,6 +70,12 @@ connaissez le nom, il y a `pgrep` :
 pgrep -l sshd
 ```
 
+```try
+pgrep -l sshd
+---
+`-l` affiche le nom à côté du PID.
+```
+
 ## Une vue en direct – `top` et `htop`
 
 `top` affiche les processus triés selon le temps processeur qu'ils utilisent
@@ -100,6 +116,17 @@ Vous ne pouvez envoyer des signaux qu'à vos **propres** processus. Pour les
 processus qui appartiennent à root ou à d'autres utilisateurs, il vous faut
 `sudo`.
 
+```quiz
+Un programme ne répond plus. Quelle commande devriez-vous essayer **en premier** ?
+- [x] `kill 1234` – elle envoie `SIGTERM` et laisse le programme s'arrêter proprement
+- [ ] `kill -9 1234` – c'est toujours ce qui marche le mieux
+- [ ] `sudo kill -9 1`
+---
+Commencez par le signal par défaut, `SIGTERM`. `SIGKILL` (`-9`) est le dernier
+recours, car le programme n'a alors aucune chance d'enregistrer ou de faire le
+ménage.
+```
+
 > **Trouvez-le et arrêtez-le !** Un processus sur cet ordinateur utilise
 > presque 100 % du processeur. Utilisez `top` ou `ps aux --sort=-%cpu` pour
 > découvrir comment il s'appelle et quel est son PID – puis arrêtez-le.
@@ -136,6 +163,17 @@ La variable `$!` contient le PID du dernier job lancé en arrière-plan. Quand
 un job se termine, le shell vous le signale avec une ligne comme
 `[1]+  Done   sleep 300`.
 
+```quiz
+Vous avez appuyé sur `Ctrl+Z` sur un programme au premier plan. Comment le
+laisser continuer à tourner tout en gardant votre invite ?
+- [ ] `fg %1`
+- [x] `bg %1`
+- [ ] `Ctrl+C`
+---
+`Ctrl+Z` met le programme en pause. `bg` laisse un job stoppé continuer en
+arrière-plan, alors que `fg` le ramènerait au premier plan.
+```
+
 ## Comment va l'ordinateur ?
 
 Deux petites commandes donnent un aperçu rapide :
@@ -151,10 +189,19 @@ utilisée. Regardez la colonne *available* : Linux utilise la mémoire libre
 comme cache pour les fichiers, donc *free* paraît souvent faible alors qu'il
 reste largement assez de mémoire.
 
+```quiz
+`free -h` montre peu de mémoire *free* mais beaucoup de mémoire *available*.
+Qu'est-ce que cela signifie ?
+- [ ] L'ordinateur est sur le point de manquer de mémoire
+- [x] Linux utilise la mémoire libre comme cache pour les fichiers – regardez *available*
+- [ ] Une partie de la mémoire est défectueuse
+```
+
 ## Pareil partout
 
-Les processus fonctionnent de la même façon sur toutes les distributions. Les
-outils viennent du paquet **procps** (appelé `procps-ng` sur Arch et Fedora),
-et `killall` de **psmisc**. Ce qui diffère, ce sont les services lancés au
-démarrage – essayez de comparer `ps aux` sur {{distro}} avec une autre
-distribution !
+Les processus fonctionnent de la même façon sur toutes les distributions.
+Sur Ubuntu, les outils viennent du paquet **procps**, et `killall` de
+**psmisc**. Certaines distributions donnent aux paquets des noms un peu
+différents, et les services lancés au démarrage diffèrent aussi – vous
+pourrez comparer les distributions dans la partie consacrée aux
+distributions.

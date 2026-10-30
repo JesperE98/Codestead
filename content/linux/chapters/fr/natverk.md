@@ -12,7 +12,7 @@ L'ordinateur simulé se trouve dans un petit réseau domestique :
 
 | Ordinateur | Adresse | Quoi |
 |---|---|---|
-| Votre ordinateur ({{hostname}}) | `192.168.1.42` | Là où vous êtes en ce moment |
+| Votre ordinateur (`ubuntu`) | `192.168.1.42` | Là où vous êtes en ce moment |
 | Le routeur (passerelle) | `192.168.1.1` | La connexion vers Internet |
 | Le serveur | `192.168.1.10` | Un autre ordinateur Linux sur lequel vous pouvez vous connecter |
 
@@ -52,6 +52,12 @@ ip -br a
 hostname -I
 ```
 
+```try
+ip -br a
+---
+Une ligne par interface : le nom, l'état (`UP`) et les adresses.
+```
+
 Vous croiserez encore l'ancienne commande `ifconfig` (du paquet *net-tools*)
 dans de nombreux tutoriels, mais elle n'est plus installée par défaut sur les
 distributions modernes. `ip` fait tout ce qu'elle faisait, et plus encore.
@@ -87,6 +93,26 @@ pas listé ailleurs part vers 192.168.1.1 ». La deuxième ligne dit que tout le
 réseau `192.168.1.0/24` est joignable directement via `enp0s3`. `proto dhcp`
 signifie que l'ordinateur a reçu sa configuration automatiquement du routeur
 par **DHCP**.
+
+```quiz
+Votre ordinateur a l'adresse `192.168.1.42/24`. Quelles adresses peut-il
+joindre directement, sans passer par la passerelle ?
+- [x] `192.168.1.10`
+- [x] `192.168.1.1`
+- [ ] `192.168.2.10`
+- [ ] `1.1.1.1`
+---
+Avec `/24`, les trois premiers nombres sont l'adresse du réseau. Tout ce qui
+commence par `192.168.1.` est sur le même réseau local – tout le reste passe
+par la route par défaut vers la passerelle.
+```
+
+```predict
+$ ip route | grep default | awk '{print $3}'
+192.168.1.1
+---
+Le troisième mot de la ligne `default` est l'adresse de la passerelle.
+```
 
 ## ping – est-ce joignable ?
 
@@ -133,36 +159,19 @@ indiqué dans `/etc/resolv.conf` :
 cat /etc/resolv.conf
 ```
 
-Sur Ubuntu et Fedora, on y lit `127.0.0.53` – c'est **systemd-resolved**, un
+Sur Ubuntu, on y lit `127.0.0.53` – c'est **systemd-resolved**, un
 intermédiaire local sur votre propre ordinateur qui interroge à son tour le
-routeur. Sur Debian et Arch, c'est directement le routeur, `192.168.1.1`, qui
-est indiqué.
+routeur. Certaines autres distributions indiquent directement le routeur,
+`192.168.1.1`.
 
 Pour interroger le DNS vous-même, on utilise `dig`, `host` ou `nslookup`. Ils
-ne sont pas installés d'office, mais se trouvent dans un paquet qui porte un
-nom différent selon la distribution :
+ne sont pas installés d'office. Sur Ubuntu, ils se trouvent dans le paquet
+`dnsutils` (les autres familles donnent un autre nom au paquet) :
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install dnsutils
 ```
-:::
-
-:::arch
-```sh
-sudo pacman -S bind
-```
-
-Le paquet s'appelle `bind` d'après le serveur DNS BIND, dont proviennent les
-outils.
-:::
-
-:::redhat
-```sh
-sudo dnf install bind-utils
-```
-:::
 
 `dig` affiche toute la réponse du serveur DNS. La partie importante se trouve
 sous `ANSWER SECTION`. Avec `+short`, vous n'obtenez que l'adresse :
@@ -236,6 +245,18 @@ getent hosts server.lan
 L'ordre (d'abord le fichier, puis le DNS) est défini par la ligne `hosts:` de
 `/etc/nsswitch.conf`.
 
+```quiz
+Pourquoi `sudo echo '192.168.1.10 server.lan' >> /etc/hosts` donne-t-il
+*Permission denied* ?
+- [ ] `echo` ne peut pas être lancé avec sudo
+- [x] C'est votre propre shell, et non root, qui ouvre le fichier pour `>>` – sudo ne s'applique qu'à `echo`
+- [ ] `/etc/hosts` ne peut pas être modifié, pas même par root
+- [ ] `>>` ne fonctionne que sur les fichiers de votre répertoire personnel
+---
+C'est pourquoi on utilise `echo ... | sudo tee -a /etc/hosts` : c'est alors
+`tee`, qui tourne en tant que root, qui ouvre le fichier.
+```
+
 ## Ports et services
 
 Une adresse IP désigne un ordinateur. Un **port** (un nombre entre 1 et
@@ -277,13 +298,11 @@ vous le voyez ici sur le port 8080. L'ancienne commande `netstat -tulpn` (de
 `curl` récupère ce qui se trouve à une adresse (une **URL**) et l'affiche dans
 le terminal. Essayez-le avec minserver sur votre propre ordinateur :
 
-:::debian
-Sur Debian et Ubuntu, `curl` n'est pas préinstallé (mais `wget` l'est) :
+Sur Ubuntu, `curl` n'est pas préinstallé (mais `wget` l'est) :
 
 ```sh
 sudo apt install curl
 ```
-:::
 
 ```sh
 curl http://localhost:8080
@@ -339,22 +358,6 @@ curl -o exempel.html https://example.com
 `wget` est fait pour télécharger des fichiers. Il enregistre toujours dans un
 fichier, affiche la progression et suit les redirections tout seul :
 
-:::arch
-Sur Arch, `wget` n'est pas préinstallé (mais `curl` l'est) :
-
-```sh
-sudo pacman -S wget
-```
-:::
-
-:::redhat
-Sur Fedora, `wget` n'est pas préinstallé (mais `curl` l'est) :
-
-```sh
-sudo dnf install wget
-```
-:::
-
 ```sh
 wget https://example.com/cheatsheet.txt
 cat cheatsheet.txt
@@ -370,21 +373,13 @@ Linux à distance, et tout ce qui transite est chiffré. Le serveur fait tourner
 le service `sshd` sur le port 22, et vous vous connectez avec le client
 `ssh` :
 
-:::arch
-Sur Arch, le client ssh n'est pas préinstallé :
-
-```sh
-sudo pacman -S openssh
-```
-:::
-
 ```sh
 ssh elev@server.lan hostname
 ```
 
 `elev@server.lan` signifie « l'utilisateur elev sur l'ordinateur
 server.lan ». La commande après l'hôte (`hostname`) s'exécute sur le serveur
-et la réponse s'affiche ici – elle dit `server`, et non {{hostname}}.
+et la réponse s'affiche ici – elle dit `server`, et non `ubuntu`.
 
 La première fois que vous vous connectez à un ordinateur, ssh vous demande si
 vous lui faites confiance :
@@ -450,6 +445,19 @@ L'étape 4 pingue directement une adresse, sans aucun nom. Si l'étape 4
 fonctionne mais pas l'étape 5, c'est presque toujours le DNS qui est en panne
 – l'un des problèmes les plus courants.
 
+```quiz
+`ping -c 3 1.1.1.1` fonctionne, mais `ping -c 3 example.com` répond
+*Name or service not known*. Où se trouve probablement le problème ?
+- [ ] La carte réseau est désactivée
+- [ ] Il n'y a pas de route par défaut
+- [x] Le DNS – la résolution de noms ne fonctionne pas
+- [ ] example.com ne répond pas au ping
+---
+Si vous pouvez joindre une adresse sur Internet, la carte, la route et le
+routeur fonctionnent. Il reste la traduction du nom – vérifiez
+`/etc/resolv.conf`.
+```
+
 Essayez par vous-même ! Désactivez la carte réseau, suivez les étapes, puis
 réactivez-la :
 
@@ -464,16 +472,20 @@ sudo ip link set enp0s3 up
 
 ## Les paquets
 
-Les outils réseau se trouvent dans différents paquets – et, comme d'habitude,
-ils portent des noms différents selon les familles :
+Les outils réseau se trouvent dans différents paquets. Sur Ubuntu, ils
+s'appellent :
 
-| Outil | Debian/Ubuntu | Arch | Fedora |
-|---|---|---|---|
-| `ip`, `ss` | `iproute2` | `iproute2` | `iproute` |
-| `ping` | `iputils-ping` | `iputils` | `iputils` |
-| `dig`, `host`, `nslookup` | `dnsutils` | `bind` | `bind-utils` |
-| `traceroute` | `traceroute` | `traceroute` | `traceroute` |
-| `ssh`, `ssh-keygen` | `openssh-client` | `openssh` | `openssh-clients` |
+| Outil | Paquet sur Ubuntu |
+|---|---|
+| `ip`, `ss` | `iproute2` |
+| `ping` | `iputils-ping` |
+| `dig`, `host`, `nslookup` | `dnsutils` |
+| `traceroute` | `traceroute` |
+| `ssh`, `ssh-keygen` | `openssh-client` |
+
+Comme d'habitude, les autres familles donnent un autre nom à certains de ces
+paquets – la partie consacrée aux distributions et aux paquets traite de ce
+genre de différences.
 
 `traceroute` affiche chaque routeur par lequel passent les paquets en chemin.
 Installez-le et essayez `traceroute example.com` !

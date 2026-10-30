@@ -27,6 +27,16 @@ On crée une variable avec `NOM=valeur` (sans espace autour du `=` !). Avec
 export EDITOR=nano
 ```
 
+```quiz
+Quelle ligne crée la variable `FARG` avec la valeur `blue` ?
+- [ ] `FARG = blue`
+- [x] `FARG=blue`
+- [ ] `$FARG=blue`
+---
+Il ne doit pas y avoir d'espace autour du `=`. Avec des espaces, le shell croit
+que `FARG` est une commande. Le `$` ne sert que quand on *lit* une variable.
+```
+
 ## Guillemets simples et doubles
 
 Il y a une différence importante :
@@ -39,6 +49,14 @@ echo 'Dossier perso : $HOME'
 Entre guillemets **doubles**, les variables sont remplacées par leur valeur.
 Entre guillemets **simples** (apostrophes), tout est affiché exactement tel
 quel.
+
+```predict
+$ x=linux
+$ echo "I like $x"
+$ echo 'I like $x'
+I like linux
+I like $x
+```
 
 ## PATH – où trouve-t-on les commandes ?
 
@@ -61,6 +79,17 @@ type cd
 Si vous voulez lancer un programme qui n'est pas dans `PATH`, vous devez
 indiquer son chemin, par exemple `./monprogramme` pour un fichier situé dans
 le répertoire où vous êtes.
+
+```quiz
+Vous avez un programme nommé `hej` dans le répertoire où vous êtes, et ce
+répertoire n'est pas dans `PATH`. Comment le lancez-vous ?
+- [ ] `hej`
+- [x] `./hej`
+- [ ] `type hej`
+---
+Sans chemin, le shell ne cherche que dans les répertoires de `PATH`. `./hej`
+indique exactement où se trouve le fichier : dans le répertoire courant.
+```
 
 ## Les codes de retour – `$?`
 
@@ -86,6 +115,12 @@ ll
 
 `alias` sans argument liste tous les alias, et `unalias ll` en supprime un.
 
+```predict
+$ alias hej='echo Hello'
+$ hej
+Hello
+```
+
 ## Conserver ses réglages – `~/.bashrc`
 
 Les variables et alias que vous créez disparaissent quand vous fermez le
@@ -95,4 +130,15 @@ vous pouvez le charger tout de suite avec :
 
 ```sh
 source ~/.bashrc
+```
+
+```quiz
+Vous créez un alias, fermez le terminal et en ouvrez un nouveau. L'alias a
+disparu. Qu'auriez-vous dû faire ?
+- [ ] Lancer `alias` sans argument
+- [x] Mettre l'alias dans `~/.bashrc`
+- [ ] Le créer avec `export`
+---
+Tout ce que vous mettez dans `~/.bashrc` est relu à chaque ouverture d'un
+nouveau terminal.
 ```

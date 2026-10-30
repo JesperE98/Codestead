@@ -30,6 +30,16 @@ Un **bac à sable** (*sandbox*) signifie que le programme ne peut accéder qu'à
 ce qui lui a été autorisé, par exemple le réseau ou votre dossier de
 téléchargements, au lieu de tout votre répertoire personnel.
 
+```quiz
+Quel format est mis à jour automatiquement en arrière-plan ?
+- [ ] Flatpak
+- [x] Snap
+- [ ] AppImage
+---
+Les programmes Flatpak se mettent à jour avec `flatpak update`, et une
+AppImage se remplace en téléchargeant un nouveau fichier.
+```
+
 ## Flatpak
 
 Flatpak est le format sur lequel la plupart des distributions se sont
@@ -117,6 +127,16 @@ flatpak install --user flathub org.videolan.VLC
 flatpak list --user
 ```
 
+```quiz
+Que se passe-t-il quand vous installez un Flatpak avec `--user` ?
+- [ ] Il est installé pour tout le système, dans `/var/lib/flatpak`
+- [x] Il atterrit dans votre répertoire personnel, et aucun autre utilisateur ne le voit
+- [ ] Il tourne sans bac à sable
+---
+N'oubliez pas que l'installation utilisateur a ses propres remotes – Flathub
+doit aussi être ajouté avec `--user`.
+```
+
 ### Mettre à jour et supprimer
 
 ```sh
@@ -149,7 +169,7 @@ sudo apt install snapd
 ### Snap sur Arch
 
 Snap n'est pas dans les dépôts d'Arch – seulement dans l'AUR. Construisez-le
-comme dans le chapitre précédent :
+comme dans le chapitre sur la famille Arch :
 
 ```sh
 sudo pacman -S --needed git base-devel
@@ -199,6 +219,14 @@ sudo snap install code
 sudo snap install code --classic
 ```
 
+```quiz
+Un snap est publié avec le confinement classique. Que devez-vous ajouter pour
+l'installer ?
+- [ ] `--user`
+- [x] `--classic`
+- [ ] `--channel=edge`
+```
+
 ### Canaux et mises à jour
 
 Chaque snap a des **canaux** (*channels*) : `stable`, `candidate`, `beta` et
@@ -230,12 +258,27 @@ cd ~/Nedladdningar
 ls -l
 ```
 
+Que se passe-t-il si vous la lancez tout de suite ?
+
+```predict
+$ ~/Nedladdningar/Kalkylator.AppImage
+bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+---
+Le fichier n'a pas la permission `x`.
+```
+
 Les fichiers téléchargés ne sont jamais exécutables au départ. Rendez-la
 exécutable et lancez-la :
 
 ```sh
 chmod +x Kalkylator.AppImage
 ./Kalkylator.AppImage
+```
+
+```try
+chmod +x ~/Nedladdningar/Kalkylator.AppImage
+---
+Le fichier est maintenant exécutable. Vérifiez avec `ls -l ~/Nedladdningar`.
 ```
 
 ### FUSE
