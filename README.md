@@ -37,6 +37,21 @@ Appen är inte signerad än, så Windows varnar första gången – se
   portugisiska, franska, tyska, ryska och japanska.
 - Dina framsteg sparas automatiskt. Ljust och mörkt tema.
 
+## Kapitel
+
+21 kapitel med sammanlagt 140 uppgifter:
+
+| Del | Kapitel |
+|---|---|
+| Kom igång | Välkommen till Linux-shell |
+| Grunderna | Navigera i filsystemet · Filer och kataloger · Läsa och söka i text · Omdirigering och pipes · Textbearbetning med sed, tr och awk |
+| Systemet | Variabler, PATH och alias · Användare, rättigheter och sudo · Processer och jobb · Arkiv och komprimering |
+| Systemadministration | Tjänster och loggar med systemd · Diskar och filsystem · Användare och grupper |
+| Nätverk | Nätverk (ip, ping, dig, curl, ssh) |
+| Distributioner och paket | Distributioner och familjer · Pakethantering · AUR, PPA och COPR · Flatpak, Snap och AppImage |
+| Skript och automatisering | Shell-skript |
+| Fler verktyg | Git i terminalen · Andra skal: zsh och fish |
+
 ## Licens
 
 Copyright © 2026 jesper-e98. Alla rättigheter förbehållna – se [LICENSE](LICENSE).

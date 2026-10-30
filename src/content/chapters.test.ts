@@ -10,7 +10,7 @@ import { LANGUAGES, type Lang } from '../i18n/languages';
 /** Språk som måste vara helt översatta. */
 const REQUIRED_LANGS: Lang[] = LANGUAGES.map((l) => l.code);
 /** Nya kapitel som ännu bara finns på svenska och engelska. Ska vara tom inför en release. */
-const AWAITING_TRANSLATION = ['natverk', 'diskar', 'systemd', 'anvandare', 'skal', 'extra-repon', 'universella-paket', 'git'];
+const AWAITING_TRANSLATION = ['extra-repon', 'universella-paket', 'git'];
 import { resolve } from './types';
 
 // Kör alla lösningar i ordning – precis som en elev skulle göra – och
