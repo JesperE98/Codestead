@@ -87,25 +87,62 @@ public static partial class ChaptersLib
 
     // ---------- Parts and chapters ----------
 
+    /// <summary>The distribution the terminal runs outside the "distro" main chapter.</summary>
+    public const string DefaultDistro = "ubuntu";
+
+    /// <summary>
+    /// The main chapters in order. The fundamentals come first and are the same on every distribution;
+    /// distributions and package managers get their own main chapter (the only one with a distro choice).
+    /// </summary>
     public static List<Part> Parts { get; } = new()
     {
         new() { Id = "start", Title = "Kom igång" },
         new() { Id = "grunder", Title = "Grunderna" },
         new() { Id = "system", Title = "Systemet" },
+        new() { Id = "distro", Title = "Distributioner och paket", DistroChoice = true },
         new() { Id = "admin", Title = "Systemadministration" },
         new() { Id = "natverk", Title = "Nätverk" },
-        new() { Id = "distro", Title = "Distributioner och paket" },
         new() { Id = "skript", Title = "Skript och automatisering" },
         new() { Id = "verktyg", Title = "Fler verktyg" },
     };
 
     /// <summary>
     /// All chapters, shown in the same order as the parts in <see cref="Parts"/>
-    /// (stable sort keeps the order within a part).
+    /// (stable sort keeps the order within a part). Each main chapter ends with a summary and an exam
+    /// when their texts exist (content/linux/chapters/&lt;lang&gt;/&lt;part&gt;-summary.md and -exam.md).
     /// </summary>
-    public static List<Chapter> Chapters { get; } = DefineChapters()
+    public static List<Chapter> Chapters { get; } = WithSummariesAndExams(DefineChapters())
         .OrderBy(ch => Parts.FindIndex(p => p.Id == ch.Part))
         .ToList();
+
+    private static IEnumerable<Chapter> WithSummariesAndExams(IEnumerable<Chapter> lessons)
+    {
+        var list = lessons.ToList();
+        foreach (var part in Parts)
+        {
+            int last = list.FindLastIndex(c => c.Part == part.Id);
+            if (last < 0) continue;
+            var extra = new List<Chapter>();
+            foreach (var kind in new[] { ChapterKinds.Summary, ChapterKinds.Exam })
+            {
+                var id = $"{part.Id}-{kind}";
+                if (Resources.Read($"chapters/en/{id}.md") is null) continue;
+                extra.Add(new Chapter { Id = id, Part = part.Id, Kind = kind });
+            }
+            list.InsertRange(last + 1, extra);
+        }
+        return list;
+    }
+
+    public static Part PartOf(Chapter chapter) => Parts.First(p => p.Id == chapter.Part);
+
+    /// <summary>The distribution to use in a chapter: the student's choice in the distro main chapter, otherwise the default.</summary>
+    public static string DistroFor(Chapter chapter, string chosenDistroId) =>
+        PartOf(chapter).DistroChoice ? chosenDistroId : DefaultDistro;
+
+    /// <summary>The lesson chapters of a main chapter (not the summary and exam).</summary>
+    public static List<Chapter> LessonsIn(string partId) =>
+        Chapters.Where(c => c.Part == partId && c.Kind == ChapterKinds.Lesson).ToList();
 
     /// <summary>Planned chapters – shown in the menu as "coming soon".</summary>
     public static List<string> Upcoming { get; } = new();

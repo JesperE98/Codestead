@@ -64,6 +64,14 @@ public static partial class I18nLib
         return $"# {chapter.Title}\n";
     }
 
+    private static readonly ConcurrentDictionary<string, List<Reference>> referencesCache = new(StringComparer.Ordinal);
+
+    /// <summary>Official sources for a chapter (content/linux/references/&lt;id&gt;.json). Empty if there are none.</summary>
+    public static List<Reference> References(Chapter chapter) =>
+        referencesCache.GetOrAdd(chapter.Id, id => Resources.Read($"references/{id}.json") is { } json
+            ? JsonSerializer.Deserialize<List<Reference>>(json, Js.JsonOptions) ?? new()
+            : new());
+
     /// <summary>Is the chapter translated into the language (both text and tasks)?</summary>
     public static bool IsTranslated(Chapter chapter, Lang lang)
     {
@@ -77,7 +85,7 @@ public static partial class I18nLib
     {
         foreach (var l in LanguagesLib.FallbackChain(lang))
         {
-            if (l == "sv") return chapter.Title;
+            if (l == "sv" && chapter.Title != "") return chapter.Title;
             var title = Strings(l, chapter.Id)?.Title;
             if (!string.IsNullOrEmpty(title)) return title;
         }

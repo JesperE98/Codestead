@@ -24,7 +24,9 @@ Compress-Archive -Path (Join-Path $publish "*") -DestinationPath (Join-Path $Out
 vpk pack --packId $PackageName --packVersion $Version --packDir $publish --mainExe "$exe.exe" `
   --packTitle $DisplayName --icon build/icon.ico --outputDir $vp --runtime win-x64
 if ($LASTEXITCODE -ne 0) { throw "vpk pack failed" }
-Copy-Item (Join-Path $vp "$PackageName-win-Setup.exe") (Join-Path $Out "$PackageName-$Version-win-x64-Setup.exe")
+$setup = Get-ChildItem $vp -Filter "*Setup.exe" | Select-Object -First 1
+if (-not $setup) { throw "vpk did not create a Setup.exe" }
+Copy-Item $setup.FullName (Join-Path $Out "$PackageName-$Version-win-x64-Setup.exe")
 New-Item -ItemType Directory -Force -Path (Join-Path $Out "velopack-win") | Out-Null
 Copy-Item (Join-Path $vp "*") (Join-Path $Out "velopack-win")
 Get-ChildItem $Out

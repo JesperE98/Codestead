@@ -19,6 +19,9 @@
     <EmbeddedResource Include="../../content/linux/i18n/**/*.json">
       <LogicalName>i18n/$([System.String]::Copy('%(RecursiveDir)').Replace('\', '/'))%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="../../content/linux/references/*.json">
+      <LogicalName>references/%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
     <EmbeddedResource Include="i18n/ui/*.json">
       <LogicalName>ui/%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>

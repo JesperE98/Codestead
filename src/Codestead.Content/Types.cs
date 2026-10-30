@@ -78,12 +78,38 @@ public partial class Chapter
     /// <summary>Title in Swedish. Other languages are in i18n/&lt;lang&gt;/&lt;id&gt;.json.</summary>
     public string Title { get; set; } = "";
     public List<ChapterTask> Tasks { get; set; } = new();
+    /// <summary>
+    /// "lesson" (text, checkpoints, tasks and terminal), "summary" (recap of a main chapter, text only)
+    /// or "exam" (the test at the end of a main chapter).
+    /// </summary>
+    public string Kind { get; set; } = ChapterKinds.Lesson;
 }
 
+public static class ChapterKinds
+{
+    public const string Lesson = "lesson";
+    public const string Summary = "summary";
+    public const string Exam = "exam";
+}
+
+/// <summary>A main chapter ("part"), e.g. "The basics". Its sub-chapters are the <see cref="Chapter"/>s with this part id.</summary>
 public partial class Part
 {
     public string Id { get; set; } = "";
     public string Title { get; set; } = "";
+    /// <summary>
+    /// The only main chapter where the student picks a distribution. Everywhere else the terminal runs
+    /// <see cref="ChaptersLib.DefaultDistro"/>, so the basics are learnt without distribution differences.
+    /// </summary>
+    public bool DistroChoice { get; set; }
+}
+
+/// <summary>A link to an official source, shown at the end of a sub-chapter.</summary>
+public partial class Reference
+{
+    public string Title { get; set; } = "";
+    public string Url { get; set; } = "";
+    public string Publisher { get; set; } = "";
 }
 
 /// <summary>Translation of a chapter: src/content/i18n/&lt;lang&gt;/&lt;chapter-id&gt;.json</summary>

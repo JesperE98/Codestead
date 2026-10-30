@@ -69,7 +69,7 @@ jobs:
       - name: Install packaging tools (nfpm, vpk)
         run: |
           curl -sSfL -o /tmp/nfpm.deb "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_${NFPM_VERSION}_amd64.deb"
-          sudo apt-get install -y /tmp/nfpm.deb
+          sudo apt-get install -y /tmp/nfpm.deb squashfs-tools
           dotnet tool install -g vpk --version "$VPK_VERSION"
       - run: dotnet test -c Release
       - name: Build Linux artifacts

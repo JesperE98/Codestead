@@ -735,6 +735,10 @@ public static partial class ServicesLib
     {
         var st = sh.Services;
         if (rt.Active == "active") return new StartResult { Ok = true };
+        // A new start must come after the unit's earlier journal lines, even within the same millisecond
+        // (fast machines) – otherwise `systemctl status` would show lines from the previous, failed start.
+        var lastOwn = st.Journal.Where(e => e.Unit == rt.Name).Select(e => e.T).DefaultIfEmpty(long.MinValue).Max();
+        if (lastOwn >= t) t = lastOwn + 1;
         var info = UnitInfo(rt);
         var def = DefFor(sh, rt.Name);
         var desc = info.Description != "" ? $"{rt.Name} - {info.Description}" : rt.Name;
