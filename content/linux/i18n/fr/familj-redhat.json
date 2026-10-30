@@ -1,0 +1,59 @@
+{
+  "title": "La famille Red Hat : dnf et COPR",
+  "tasks": {
+    "sync": {
+      "text": "Récupérez les nouvelles informations sur les paquets et cherchez des mises à jour avec `dnf check-update`.",
+      "hint": "`dnf check-update` n'a pas besoin des droits root."
+    },
+    "search": {
+      "text": "Recherchez le paquet `htop`.",
+      "hint": "`dnf search htop`"
+    },
+    "install": {
+      "text": "Installez le paquet `tree`.",
+      "hint": "`sudo dnf install tree` – et répondez `y`, car Non est la réponse par défaut !"
+    },
+    "run-tree": {
+      "text": "Lancez `tree` dans votre répertoire personnel."
+    },
+    "remove": {
+      "text": "Supprimez à nouveau le paquet `tree`.",
+      "hint": "`sudo dnf remove tree`"
+    },
+    "upgrade": {
+      "text": "Mettez à jour tous les paquets installés.",
+      "hint": "`sudo dnf upgrade`"
+    },
+    "forbered": {
+      "text": "Affichez les dépôts que dnf utilise en ce moment.",
+      "hint": "`dnf repolist`"
+    },
+    "lagg-till": {
+      "text": "Activez le dépôt COPR `lunatool/moonphase`.",
+      "hint": "`sudo dnf copr enable lunatool/moonphase` – et répondez `y`, car Non est la réponse par défaut."
+    },
+    "granska": {
+      "text": "Listez les dépôts COPR qui ont été ajoutés.",
+      "hint": "`dnf copr list`"
+    },
+    "installera": {
+      "text": "Installez le paquet `moonphase` depuis le dépôt COPR.",
+      "hint": "`sudo dnf install moonphase`"
+    },
+    "kor": {
+      "text": "Lancez le programme `moonphase`."
+    },
+    "ursprung": {
+      "text": "Découvrez depuis quel dépôt `moonphase` a été installé.",
+      "hint": "`dnf info moonphase` – regardez la ligne `From repository`."
+    },
+    "efterat": {
+      "text": "Désactivez à nouveau le dépôt COPR. Le programme reste, mais ne reçoit plus de mises à jour.",
+      "hint": "`sudo dnf copr disable lunatool/moonphase`"
+    },
+    "vim": {
+      "text": "Bonus : installez l'éditeur de texte Vim. Indice : dans la famille Red Hat, le paquet ne s'appelle pas `vim` !",
+      "hint": "Cherchez avec `dnf search vim`. Le paquet s'appelle `vim-enhanced`."
+    }
+  }
+}

@@ -23,11 +23,7 @@
     },
     "zip": {
       "text": "Установите пакеты `zip` и `unzip`, а затем упакуйте `~/dokument` в `~/dokument.zip`.",
-      "hint": {
-        "debian": "Выполните `sudo apt update` и `sudo apt install zip unzip`. Не забудьте `-r` для zip: `zip -r dokument.zip dokument`.",
-        "arch": "Установите командой `sudo pacman -S zip unzip`. Не забудьте `-r` для zip: `zip -r dokument.zip dokument`.",
-        "redhat": "Установите командой `sudo dnf install zip unzip` и ответьте `y`. Не забудьте `-r` для zip: `zip -r dokument.zip dokument`."
-      }
+      "hint": "Выполните `sudo apt update` и `sudo apt install zip unzip`. Не забудьте `-r` для zip: `zip -r dokument.zip dokument`."
     },
     "unzip": {
       "text": "Распакуйте `~/dokument.zip` с помощью `unzip` в новый каталог `~/fran-zip`.",

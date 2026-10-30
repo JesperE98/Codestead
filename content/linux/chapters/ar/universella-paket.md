@@ -26,6 +26,16 @@
 **العزل** (sandbox) يعني أن البرنامج لا يصل إلا إلى ما سُمح له به، مثل الشبكة أو
 مجلد التنزيلات، بدلًا من مجلد المنزل كله.
 
+```quiz
+أيّ صيغة تُحدَّث تلقائيًا في الخلفية؟
+- [ ] Flatpak
+- [x] Snap
+- [ ] AppImage
+---
+تُحدَّث برامج Flatpak باستخدام `flatpak update`، أما AppImage فيُستبدل بتنزيل ملف
+جديد.
+```
+
 ## Flatpak
 
 Flatpak هي الصيغة التي اتفقت عليها معظم التوزيعات لبرامج سطح المكتب. تُنزَّل البرامج
@@ -109,6 +119,16 @@ flatpak install --user flathub org.videolan.VLC
 flatpak list --user
 ```
 
+```quiz
+ماذا يحدث عندما تثبّت Flatpak باستخدام `--user`؟
+- [ ] يُثبَّت للنظام كله، في `/var/lib/flatpak`
+- [x] ينتهي في مجلد المنزل الخاص بك، ولا يراه أي مستخدم آخر
+- [ ] يعمل من دون عزل
+---
+تذكّر أن لتثبيت المستخدم مصادره البعيدة الخاصة – لذا يجب أن يُضاف Flathub
+باستخدام `--user` أيضًا.
+```
+
 ### التحديث والإزالة
 
 ```sh
@@ -139,7 +159,8 @@ sudo apt install snapd
 :::arch
 ### Snap على Arch
 
-Snap ليس في مستودعات Arch – بل في الـ AUR فقط. ابنِه كما في الفصل السابق:
+Snap ليس في مستودعات Arch – بل في الـ AUR فقط. ابنِه كما في الفصل الخاص بعائلة
+Arch:
 
 ```sh
 sudo pacman -S --needed git base-devel
@@ -188,6 +209,13 @@ sudo snap install code
 sudo snap install code --classic
 ```
 
+```quiz
+نُشرت حزمة snap بـ classic confinement. ما الذي يجب أن تضيفه لتثبيتها؟
+- [ ] `--user`
+- [x] `--classic`
+- [ ] `--channel=edge`
+```
+
 ### القنوات والتحديثات
 
 لكل snap **قنوات** (channels): `stable` و`candidate` و`beta` و`edge` (أحدث إصدار،
@@ -215,12 +243,27 @@ cd ~/Nedladdningar
 ls -l
 ```
 
+ماذا يحدث إذا شغّلته فورًا؟
+
+```predict
+$ ~/Nedladdningar/Kalkylator.AppImage
+bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+---
+ليست للملف الصلاحية `x`.
+```
+
 الملفات المنزَّلة لا تكون قابلة للتنفيذ في البداية أبدًا. اجعله قابلًا للتنفيذ
 وشغّله:
 
 ```sh
 chmod +x Kalkylator.AppImage
 ./Kalkylator.AppImage
+```
+
+```try
+chmod +x ~/Nedladdningar/Kalkylator.AppImage
+---
+الآن صار الملف قابلًا للتنفيذ. تحقّق من ذلك باستخدام `ls -l ~/Nedladdningar`.
 ```
 
 ### FUSE

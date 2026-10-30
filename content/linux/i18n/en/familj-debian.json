@@ -1,0 +1,59 @@
+{
+  "title": "The Debian family: apt and PPAs",
+  "tasks": {
+    "sync": {
+      "text": "Download the latest package lists with `apt update`.",
+      "hint": "The command changes the system and requires root: `sudo apt update`."
+    },
+    "search": {
+      "text": "Search for the `htop` package.",
+      "hint": "`apt search htop`"
+    },
+    "install": {
+      "text": "Install the `tree` package.",
+      "hint": "`sudo apt install tree`"
+    },
+    "run-tree": {
+      "text": "Run `tree` in your home directory."
+    },
+    "remove": {
+      "text": "Remove the `tree` package again.",
+      "hint": "`sudo apt remove tree`"
+    },
+    "upgrade": {
+      "text": "Upgrade all installed packages.",
+      "hint": "After `sudo apt update`, run `sudo apt upgrade`."
+    },
+    "forbered": {
+      "text": "Make sure you have the command `add-apt-repository`. It is in the package `software-properties-common` – preinstalled on Ubuntu, but not on Debian.",
+      "hint": "`sudo apt update` and then `sudo apt install software-properties-common`."
+    },
+    "lagg-till": {
+      "text": "Add the PPA `ppa:lunatool/moonphase`.",
+      "hint": "`sudo add-apt-repository ppa:lunatool/moonphase` – and press Enter when it asks."
+    },
+    "granska": {
+      "text": "Look inside the file that `add-apt-repository` created in `/etc/apt/sources.list.d/`.",
+      "hint": "`ls /etc/apt/sources.list.d` and then `cat` the file whose name starts with `lunatool`."
+    },
+    "installera": {
+      "text": "Install the package `moonphase` from the PPA.",
+      "hint": "`add-apt-repository` already ran `apt update` for you, so `sudo apt install moonphase` is enough."
+    },
+    "kor": {
+      "text": "Run the program `moonphase`."
+    },
+    "ursprung": {
+      "text": "Find out where `moonphase` comes from.",
+      "hint": "`apt policy moonphase`"
+    },
+    "efterat": {
+      "text": "Remove the PPA again. The program stays, but gets no more updates.",
+      "hint": "`sudo add-apt-repository --remove ppa:lunatool/moonphase`"
+    },
+    "vim": {
+      "text": "Bonus: install the Vim text editor.",
+      "hint": "Search with `apt search vim`. The package is called `vim`."
+    }
+  }
+}

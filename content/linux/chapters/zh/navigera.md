@@ -19,6 +19,16 @@ Linux 没有像 `C:` 这样的盘符。所有东西——硬盘、U 盘，甚至
 
 这种布局叫做*文件系统层次结构标准*（*Filesystem Hierarchy Standard*），在各个发行版之间几乎完全相同。
 
+```quiz
+某个程序会写日志文件。你认为应该在哪个目录里找到它？
+- [ ] `/etc`
+- [ ] `/usr/bin`
+- [x] `/var/log`
+- [ ] `/home`
+---
+日志文件放在 `/var/log`。设置位于 `/etc`，程序位于 `/usr/bin`。
+```
+
 ## 我在哪里？——`pwd`
 
 `pwd`（*print working directory*，打印工作目录）显示你当前所在的目录：
@@ -49,6 +59,21 @@ ls -a
 
 选项可以组合使用：`ls -la` 与 `ls -l -a` 效果相同。
 
+```quiz
+为什么在主目录里直接运行 `ls` 看不到文件 `.bashrc`？
+- [ ] 它是只有 root 才能看到的系统文件
+- [x] 它的名字以点开头，所以是隐藏文件
+- [ ] `ls` 只显示目录
+---
+名字以点开头的文件是隐藏文件。`ls -a` 也会把它们显示出来。
+```
+
+试试把长格式和隐藏文件一起显示：
+
+```try
+ls -la
+```
+
 ## 切换目录——`cd`
 
 `cd`（*change directory*，切换目录）把你带到另一个目录：
@@ -61,6 +86,16 @@ cd /var/log
 
 - **绝对路径**以 `/` 开头，从根目录出发，例如 `/var/log`。无论你身在何处，它都有效。
 - **相对路径**从你当前所在的目录出发。如果你在 `/`，只需 `cd var/log` 就能到达 `/var/log`。
+
+```quiz
+你在 `/home`。哪些命令能把你带到 `/home/elev/dokument`？（选出所有可行的。）
+- [x] `cd elev/dokument`
+- [x] `cd /home/elev/dokument`
+- [ ] `cd /elev/dokument`
+- [ ] `cd dokument`
+---
+`elev/dokument` 是相对于 `/home` 的路径，而 `/home/elev/dokument` 是绝对路径，所以在任何地方都有效。`/elev/dokument` 从根目录出发，而根目录下并没有 `elev`。
+```
 
 有几个特殊名称值得记住：
 
@@ -75,6 +110,15 @@ cd /var/log
 
 ```sh
 cd ..
+```
+
+```predict
+$ cd /usr/bin
+$ cd ..
+$ pwd
+/usr
+---
+`..` 是上一级目录，所以从 `/usr/bin` 出发你会到达 `/usr`。
 ```
 
 ## Tab 补全

@@ -1,0 +1,117 @@
+# テスト: システム
+
+変数、パーミッション、プロセス、アーカイブについての問題に答えてください。合格には 80 % が必要です。
+
+```predict
+$ echo "$HOME" '$USER'
+/home/elev $USER
+---
+ダブルクォートでは変数がその値に置き換えられ、シングルクォートでは書いたとおりに
+表示されます。
+```
+
+```quiz
+`export` は変数に対して何をしますか？
+- [ ] `~/.bashrc` に保存する
+- [x] 環境変数にして、あなたが起動するプログラムからも読めるようにする
+- [ ] 削除する
+```
+
+```predict
+$ ls ~ > /dev/null
+$ echo $?
+0
+---
+`ls` はうまくいったので、終了コードは `0` です。出力そのものは `/dev/null` に
+消えました。
+```
+
+```quiz
+パーミッション `rwxr-x---` になる数字はどれですか？
+- [ ] `755`
+- [x] `750`
+- [ ] `640`
+---
+所有者: 4 + 2 + 1 = 7。グループ: 4 + 1 = 5。その他: 0。
+```
+
+```predict
+$ touch verktyg.sh
+$ chmod 755 verktyg.sh
+$ chmod go-x verktyg.sh
+$ ls -l verktyg.sh | awk '{print $1}'
+-rwxr--r--
+```
+
+```quiz
+Ubuntu では、どのグループのメンバーが `sudo` を使えますか？
+- [x] `sudo`
+- [ ] `root`
+- [ ] `elev`
+```
+
+```quiz
+`sudo -i` は何をしますか？
+- [ ] sudo についての情報を表示する
+- [x] `exit` と入力するまで、プロンプトが `#` に変わる root シェルを起動する
+- [ ] 直前のコマンドを root としてもう一度実行する
+```
+
+```quiz
+`ps aux` で、あるプロセスの `STAT` 列に `R` と表示されています。どういう意味ですか？
+- [x] 実行中である
+- [ ] スリープしている
+- [ ] root のものである
+```
+
+```quiz
+直前のバックグラウンドジョブの PID が入っている変数はどれですか？
+- [ ] `$?`
+- [x] `$!`
+- [ ] `$#`
+```
+
+```quiz
+root のプロセスに `kill 812` を試したところ、`Operation not permitted` と
+表示されました。どうしますか？
+- [ ] 代わりに `kill -9 812` を使う
+- [x] `sudo` を付けて実行する: `sudo kill 812`
+- [ ] 何もしない。root のプロセスは決して止められない
+```
+
+```quiz
+`pkill` と `killall` の違いは何ですか？
+- [x] `pkill` はパターンに一致させ、`killall` は正確な名前を必要とする
+- [ ] `pkill` は `SIGKILL` を送り、`killall` は `SIGTERM` を送る
+- [ ] 違いはない。同じプログラムである
+```
+
+```quiz
+`tar -cvf dokument dokument.tar` のどこが間違っていますか？
+- [ ] `-v` は `-c` と組み合わせられない
+- [x] 順番。アーカイブの名前は `f` の直後、ファイルより前に来なければならない
+- [ ] tar アーカイブの名前は `.tgz` で終わらなければならない
+```
+
+```predict
+$ cp dokument/frukter.txt .
+$ gzip frukter.txt
+$ gunzip frukter.txt.gz
+$ ls frukter*
+frukter.txt
+```
+
+```quiz
+`zcat server.log.gz` は何をしますか？
+- [x] 展開した中身を表示し、`server.log.gz` はそのまま残る
+- [ ] ファイルを `server.log` に展開する
+- [ ] ファイルをもう一度圧縮する
+---
+`zcat` は `gzip -dc` と同じで、標準出力に展開します。
+```
+
+```try
+du -sh dokument
+---
+`-s` はディレクトリ全体の合計を 1 つだけ表示し、`-h` はサイズを読みやすくします。
+```

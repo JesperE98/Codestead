@@ -15,7 +15,7 @@ Ergebnis nach stdout. Deshalb passen sie perfekt in Pipes. Und die
 Originaldatei wird **nicht** verändert (mit einer Ausnahme, `sed -i`, zu der
 wir noch kommen).
 
-In `dokument` gibt es eine neue Übungsdatei, eine CSV-Datei mit den Punkten der
+In `dokument` gibt es eine dritte Übungsdatei, eine CSV-Datei mit den Punkten der
 Schüler (*namn* = Name, *ämne* = Fach, *poäng* = Punkte):
 
 ```sh
@@ -41,7 +41,7 @@ HALLO AUS DEM CAFé
 
 Ist dir das é aufgefallen? `tr` arbeitet mit einzelnen *Bytes*, und Buchstaben
 wie é – oder die Umlaute ä, ö und ü – gehören nicht zu `a-z`. Das solltest du
-wissen – `awk` (weiter unten) kommt damit besser zurecht.
+wissen – GNU `awk` (weiter unten) kommt damit besser zurecht.
 
 `tr` liest **nur** von stdin, nie aus Dateien. Willst du eine Datei verwenden,
 füttere sie mit `<` oder einer Pipe hinein:
@@ -63,6 +63,13 @@ mehrere gleiche Zeichen hintereinander zu einem zusammen:
 ```sh
 echo "070-123 45 67" | tr -d ' -'
 echo "zu     viele      Leerzeichen" | tr -s ' '
+```
+
+```predict
+$ echo "hello world" | tr -d o
+hell wrld
+---
+`-d` löscht jedes `o`, egal wo es steht.
 ```
 
 Statt Bereichen kannst du *Klassen* schreiben, z. B. `[:upper:]`
@@ -98,6 +105,13 @@ Ohne Flags wird nur der **erste** Treffer in jeder Zeile ersetzt. Mit `g`
 ```sh
 echo "Katze Katze Katze" | sed 's/Katze/Hund/'
 echo "Katze Katze Katze" | sed 's/Katze/Hund/g'
+```
+
+```predict
+$ echo banana | sed 's/a/o/'
+bonana
+---
+Ohne `g` wird nur das erste `a` in der Zeile ersetzt.
 ```
 
 Das Flag `i` macht die Suche unabhängig von Groß- und Kleinschreibung, genau wie
@@ -199,9 +213,32 @@ zuerst **ohne** `-i` auszuführen und dir das Ergebnis anzusehen und `-i` erst
 hinzuzufügen, wenn es richtig aussieht. Schreibst du `-i.bak`, wird das
 Original außerdem als `file.bak` gespeichert.
 
+```quiz
+Du führst `sed 's/kiwi/KIWI/' ~/dokument/frukter.txt` aus. Was passiert mit der Datei?
+- [ ] Jedes `kiwi` in der Datei wird zu `KIWI`
+- [ ] Nur das erste `kiwi` in der Datei wird zu `KIWI`
+- [x] Nichts – das Ergebnis wird nur ausgegeben, die Datei bleibt unverändert
+---
+Ohne `-i` schreibt `sed` nur nach stdout. Die Datei bleibt, wie sie war.
+```
+
 Konfigurationsdateien in `/etc` gehören root, dort brauchst du also
 `sudo sed -i ...`. Das ist ein gängiger Weg, eine Einstellung aus einem Skript
 heraus zu ändern, ohne einen Texteditor zu öffnen.
+
+## Felder herausschneiden – `cut`
+
+Besteht eine Datei aus Feldern mit einem Trennzeichen dazwischen, kann `cut`
+ein Feld herauspicken. `-d` wählt das Trennzeichen (*delimiter*) und `-f`, welches
+Feld übrig bleiben soll. Hier sind die Fächer – Feld 2 – aus der CSV-Datei:
+
+```sh
+cut -d, -f2 ~/dokument/betyg.csv
+```
+
+In `/etc/passwd` sind die Felder durch Doppelpunkte getrennt, und Feld 1 ist
+der Benutzername, also listet `cut -d: -f1 /etc/passwd` alle Benutzer auf. Wie
+die anderen Filter passt `cut` in eine Pipe – zum Beispiel vor `tr`.
 
 ## Spalten – `awk`
 
@@ -251,9 +288,17 @@ einfügen:
 awk -F: '{print $1 " nutzt " $7}' /etc/passwd
 ```
 
-Vielleicht erinnerst du dich an `cut -d: -f1`. Der Unterschied ist, dass awk
-die Felder umsortieren, Text einfügen und mit mehreren Leerzeichen
+Vergleiche mit `cut -d: -f1` aus dem vorigen Abschnitt. Der Unterschied ist,
+dass awk die Felder umsortieren, Text einfügen und mit mehreren Leerzeichen
 hintereinander umgehen kann.
+
+```predict
+$ echo "Alva,matte,87" | awk -F, '{print $3, $1}'
+87 Alva
+---
+`-F,` teilt die Zeile an den Kommas. awk gibt zuerst Feld 3 aus, dann Feld 1,
+mit einem Leerzeichen dazwischen wegen des Kommas in `print`.
+```
 
 ### Muster – Zeilen auswählen
 
@@ -288,6 +333,13 @@ kommt alphabetisch nach `"90"`. Die Kopfzeile überspringst du mit `NR > 1`:
 awk -F, 'NR > 1 && $3 >= 90' ~/dokument/betyg.csv
 ```
 
+Probier ein eigenes Muster aus – die Namen aller, die *svenska* (Schwedisch)
+lernen:
+
+```try
+awk -F, '$2 == "svenska" {print $1}' ~/dokument/betyg.csv
+```
+
 ### Zählen – Variablen und `END`
 
 awk hat Variablen, die du nicht deklarieren musst – sie beginnen bei 0. Der
@@ -315,27 +367,19 @@ Zeichen.
 awk -F, 'BEGIN {print "Schüler Punkte"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/dokument/betyg.csv
 ```
 
-awk hat auch Funktionen wie `length()`, `toupper()` und `tolower()`. Anders als
-`tr` kommt GNU awk mit Buchstaben wie å, ä und ö zurecht:
+awk hat auch Funktionen wie `length()`, `toupper()` und `tolower()`:
 
 ```sh
 awk '{print toupper($0)}' ~/dokument/frukter.txt
 ```
 
-:::debian
-Unter {{distro}} ist `awk` standardmäßig **mawk**, eine kleine und schnelle
-Variante. Wenn du GNU awk willst, installiere das Paket `gawk`. Bei einfachen
-Programmen wie diesen merkst du keinen Unterschied – aber mawk wandelt å, ä
-und ö mit `toupper()` nicht um.
-:::
-
-:::arch
-Unter Arch Linux ist `awk` **GNU awk** (das Paket `gawk`).
-:::
-
-:::redhat
-Unter {{distro}} ist `awk` **GNU awk** (das Paket `gawk`).
-:::
+Schau dir `äpple` und `päron` genau an. Unter Ubuntu, auf dem das Terminal hier
+läuft, ist `awk` standardmäßig **mawk**, eine kleine und schnelle Variante. Bei
+einfachen Programmen wie diesen merkst du keinen Unterschied – aber mawk
+wandelt å, ä und ö mit `toupper()` nicht um. **GNU awk** (das Paket `gawk`)
+kann das, anders als `tr`. Distributionen unterscheiden sich darin, welches awk
+sie verwenden und wie man Software installiert – das kommt im Kapitel über
+Distributionen.
 
 Der Simulator kennt nur einen Teil der Sprache awk – das, was hier behandelt
 wird, und ein bisschen mehr (`if`, Schleifen und Arrays). Siehe `man awk`.

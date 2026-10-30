@@ -1,0 +1,59 @@
+{
+  "title": "Debian 家族：apt 和 PPA",
+  "tasks": {
+    "sync": {
+      "text": "用 `apt update` 下载最新的软件包列表。",
+      "hint": "这条命令会修改系统，需要 root 权限：`sudo apt update`。"
+    },
+    "search": {
+      "text": "搜索 `htop` 软件包。",
+      "hint": "`apt search htop`"
+    },
+    "install": {
+      "text": "安装 `tree` 软件包。",
+      "hint": "`sudo apt install tree`"
+    },
+    "run-tree": {
+      "text": "在你的主目录中运行 `tree`。"
+    },
+    "remove": {
+      "text": "再把 `tree` 软件包删除。",
+      "hint": "`sudo apt remove tree`"
+    },
+    "upgrade": {
+      "text": "升级所有已安装的软件包。",
+      "hint": "运行 `sudo apt update` 之后，再运行 `sudo apt upgrade`。"
+    },
+    "forbered": {
+      "text": "确认你有 `add-apt-repository` 命令。它位于 `software-properties-common` 软件包中——Ubuntu 上预装了，但 Debian 上没有。",
+      "hint": "先 `sudo apt update`，再 `sudo apt install software-properties-common`。"
+    },
+    "lagg-till": {
+      "text": "添加 PPA `ppa:lunatool/moonphase`。",
+      "hint": "`sudo add-apt-repository ppa:lunatool/moonphase`——在它询问时按 Enter。"
+    },
+    "granska": {
+      "text": "查看 `add-apt-repository` 在 `/etc/apt/sources.list.d/` 中创建的文件的内容。",
+      "hint": "先 `ls /etc/apt/sources.list.d`，然后用 `cat` 查看名字以 `lunatool` 开头的那个文件。"
+    },
+    "installera": {
+      "text": "从 PPA 安装 `moonphase` 软件包。",
+      "hint": "`add-apt-repository` 已经替你运行过 `apt update` 了，所以只需 `sudo apt install moonphase`。"
+    },
+    "kor": {
+      "text": "运行程序 `moonphase`。"
+    },
+    "ursprung": {
+      "text": "查明 `moonphase` 来自哪里。",
+      "hint": "`apt policy moonphase`"
+    },
+    "efterat": {
+      "text": "再把这个 PPA 删除。程序会保留下来，但不会再得到更新。",
+      "hint": "`sudo add-apt-repository --remove ppa:lunatool/moonphase`"
+    },
+    "vim": {
+      "text": "附加题：安装文本编辑器 Vim。",
+      "hint": "用 `apt search vim` 搜索。这个软件包叫做 `vim`。"
+    }
+  }
+}

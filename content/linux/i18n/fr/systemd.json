@@ -2,12 +2,8 @@
   "title": "Services et journaux avec systemd",
   "tasks": {
     "status-ssh": {
-      "text": "Affichez l'état du serveur SSH avec `systemctl status`. Pensez au nom que porte le service dans votre famille de distributions !",
-      "hint": {
-        "debian": "Dans la famille Debian, le service s'appelle `ssh` : `systemctl status ssh`.",
-        "arch": "Sous Arch, le service s'appelle `sshd` : `systemctl status sshd`.",
-        "redhat": "Sur Fedora, le service s'appelle `sshd` : `systemctl status sshd`."
-      }
+      "text": "Affichez l'état du serveur SSH avec `systemctl status`. Pensez au nom que porte le service sur Ubuntu !",
+      "hint": "Sur Ubuntu, le service s'appelle `ssh` : `systemctl status ssh`."
     },
     "failed": {
       "text": "Un service ne semble pas avoir démarré. Listez tous les services qui ont *échoué* (*failed*).",

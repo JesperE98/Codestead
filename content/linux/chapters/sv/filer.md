@@ -25,6 +25,13 @@ tidsstämpeln):
 touch inkopslista.txt
 ```
 
+```quiz
+Vad gör `touch anteckningar.txt` om filen redan finns?
+- [ ] Den tömmer filen
+- [ ] Den klagar på att filen finns
+- [x] Den uppdaterar bara filens tidsstämpel – innehållet är oförändrat
+```
+
 ## Kopiera – `cp`
 
 ```sh
@@ -38,6 +45,15 @@ hel katalog behövs `-r` (*recursive*):
 cp -r dokument dokument-backup
 ```
 
+```predict
+$ mkdir kopior
+$ cp anteckningar.txt kopior
+$ ls kopior
+anteckningar.txt
+---
+`kopior` är en katalog, så kopian hamnar i den med samma namn.
+```
+
 ## Flytta och byta namn – `mv`
 
 I Linux är *flytta* och *byta namn* samma sak. `mv` gör båda:
@@ -45,6 +61,15 @@ I Linux är *flytta* och *byta namn* samma sak. `mv` gör båda:
 ```sh
 mv inkopslista.txt dokument/
 mv dokument/inkopslista.txt dokument/handla.txt
+```
+
+```quiz
+Det finns ingen fil som heter `b.txt`. Vad gör `mv a.txt b.txt`?
+- [ ] Kopierar `a.txt` till `b.txt`
+- [x] Byter namn på `a.txt` till `b.txt`
+- [ ] Misslyckas, eftersom `b.txt` inte finns
+---
+Flytta och byta namn är samma sak. Efteråt finns bara `b.txt`.
 ```
 
 ## Ta bort – `rm` och `rmdir`
@@ -65,6 +90,16 @@ rm -r dokument-backup
 > ingenting och klagar inte – dubbelkolla alltid sökvägen innan du trycker
 > Enter.
 
+```quiz
+Vilket kommando tar bort katalogen `gammalt` *bara* om den är tom?
+- [ ] `rm gammalt`
+- [x] `rmdir gammalt`
+- [ ] `rm -r gammalt`
+---
+`rmdir` vägrar ta bort en katalog som fortfarande har något i sig.
+`rm -r` tar bort katalogen och allt som finns i den.
+```
+
 ## Jokertecken
 
 Skalet kan expandera mönster till flera filnamn innan kommandot körs:
@@ -75,12 +110,23 @@ Skalet kan expandera mönster till flera filnamn innan kommandot körs:
 | `?` | Exakt ett tecken |
 | `[abc]` | Ett av tecknen a, b eller c |
 
+Katalogen `dokument` i din hemkatalog innehåller tre filer: `betyg.csv`,
+`frukter.txt` och `server.log`. Det här listar bara dem som slutar på `.txt`:
+
 ```sh
 ls dokument/*.txt
 ```
 
 Här ser `ls` aldrig stjärnan – skalet har redan bytt ut `dokument/*.txt` mot
 alla matchande filnamn.
+
+```predict
+$ ls dokument/?????.*
+dokument/betyg.csv
+---
+Varje `?` är exakt ett tecken, så namnet före punkten måste vara fem tecken
+långt. Det är bara `betyg` – `frukter` och `server` är längre.
+```
 
 ## Mellanslag i filnamn
 

@@ -1,0 +1,59 @@
+{
+  "title": "Arch 家族：pacman 和 AUR",
+  "tasks": {
+    "sync": {
+      "text": "用 `pacman -Syu` 同步软件包数据库并升级系统。",
+      "hint": "这条命令会修改系统，需要 root 权限：`sudo pacman -Syu`。"
+    },
+    "search": {
+      "text": "搜索 `htop` 软件包。",
+      "hint": "`pacman -Ss htop`"
+    },
+    "install": {
+      "text": "安装 `tree` 软件包。",
+      "hint": "`sudo pacman -S tree`，并对提问回答 yes。"
+    },
+    "run-tree": {
+      "text": "在你的主目录中运行 `tree`。"
+    },
+    "remove": {
+      "text": "再把 `tree` 软件包删除。",
+      "hint": "`sudo pacman -R tree`"
+    },
+    "upgrade": {
+      "text": "升级所有已安装的软件包。",
+      "hint": "`sudo pacman -Syu` 一步就能全部完成。"
+    },
+    "forbered": {
+      "text": "安装从 AUR 构建软件包所需的东西：`git` 和 `base-devel`。",
+      "hint": "`sudo pacman -S --needed git base-devel`"
+    },
+    "lagg-till": {
+      "text": "用 `git clone` 把 AUR 软件包 `moonphase` 的构建脚本下载到你的主目录。地址是 `https://aur.archlinux.org/moonphase.git`。",
+      "hint": "先 `cd ~`，再 `git clone https://aur.archlinux.org/moonphase.git`"
+    },
+    "granska": {
+      "text": "在构建任何东西之前，先阅读构建脚本 `PKGBUILD`！",
+      "hint": "先 `cd ~/moonphase`，再 `less PKGBUILD`（或 `cat PKGBUILD`）。"
+    },
+    "installera": {
+      "text": "用 `makepkg` 构建并安装 `moonphase`。",
+      "hint": "进入目录 `~/moonphase`，运行 `makepkg -si`——不要加 sudo！"
+    },
+    "kor": {
+      "text": "运行程序 `moonphase`。"
+    },
+    "ursprung": {
+      "text": "列出所有不是来自 Arch 官方软件源的已安装软件包。",
+      "hint": "这样的软件包叫做 *foreign*（外来）软件包：`pacman -Qm`"
+    },
+    "efterat": {
+      "text": "附加题：安装 AUR 助手 `yay`（AUR 软件包 `yay-bin`），然后用它安装 AUR 软件包 `snowfall`。",
+      "hint": "和之前一样：`cd ~`、`git clone https://aur.archlinux.org/yay-bin.git`、`cd yay-bin` 和 `makepkg -si`。然后运行 `yay -S snowfall`——不要加 sudo。"
+    },
+    "vim": {
+      "text": "附加题：安装文本编辑器 Vim。",
+      "hint": "用 `pacman -Ss vim` 搜索。这个软件包叫做 `vim`。"
+    }
+  }
+}

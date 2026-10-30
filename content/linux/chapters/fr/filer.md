@@ -25,6 +25,13 @@ jour son horodatage) :
 touch inkopslista.txt
 ```
 
+```quiz
+Que fait `touch anteckningar.txt` si le fichier existe déjà ?
+- [ ] Il vide le fichier
+- [ ] Il se plaint que le fichier existe
+- [x] Il met seulement à jour l'horodatage du fichier – le contenu reste le même
+```
+
 ## Copier – `cp`
 
 ```sh
@@ -38,6 +45,16 @@ nom. Pour copier un répertoire entier, il faut `-r` (*recursive*) :
 cp -r dokument dokument-backup
 ```
 
+```predict
+$ mkdir kopior
+$ cp anteckningar.txt kopior
+$ ls kopior
+anteckningar.txt
+---
+`kopior` est un répertoire, donc la copie atterrit à l'intérieur, sous le même
+nom.
+```
+
 ## Déplacer et renommer – `mv`
 
 Sous Linux, *déplacer* et *renommer*, c'est la même chose. `mv` fait les
@@ -46,6 +63,15 @@ deux :
 ```sh
 mv inkopslista.txt dokument/
 mv dokument/inkopslista.txt dokument/handla.txt
+```
+
+```quiz
+Il n'existe aucun fichier nommé `b.txt`. Que fait `mv a.txt b.txt` ?
+- [ ] Il copie `a.txt` vers `b.txt`
+- [x] Il renomme `a.txt` en `b.txt`
+- [ ] Il échoue, parce que `b.txt` n'existe pas
+---
+Déplacer et renommer, c'est la même chose. Ensuite, il n'y a plus que `b.txt`.
 ```
 
 ## Supprimer – `rm` et `rmdir`
@@ -66,6 +92,16 @@ rm -r dokument-backup
 > force*) ne pose aucune question et ne se plaint jamais – vérifiez toujours le
 > chemin avant d'appuyer sur Entrée.
 
+```quiz
+Quelle commande supprime le répertoire `gammalt` *uniquement* s'il est vide ?
+- [ ] `rm gammalt`
+- [x] `rmdir gammalt`
+- [ ] `rm -r gammalt`
+---
+`rmdir` refuse de supprimer un répertoire qui contient encore quelque chose.
+`rm -r` supprime le répertoire et tout ce qu'il contient.
+```
+
 ## Les caractères génériques (wildcards)
 
 Le shell peut développer des motifs en plusieurs noms de fichiers avant que la
@@ -77,12 +113,25 @@ commande ne s'exécute :
 | `?` | Exactement un caractère |
 | `[abc]` | L'un des caractères a, b ou c |
 
+Le répertoire `dokument` de votre dossier personnel contient trois fichiers :
+`betyg.csv`, `frukter.txt` et `server.log`. Ceci liste uniquement ceux qui se
+terminent par `.txt` :
+
 ```sh
 ls dokument/*.txt
 ```
 
 Ici, `ls` ne voit jamais l'astérisque – le shell a déjà remplacé
 `dokument/*.txt` par tous les noms de fichiers correspondants.
+
+```predict
+$ ls dokument/?????.*
+dokument/betyg.csv
+---
+Chaque `?` correspond à exactement un caractère, donc le nom avant le point
+doit faire cinq caractères. Seul `betyg` les fait – `frukter` et `server` sont
+plus longs.
+```
 
 ## Les espaces dans les noms de fichiers
 

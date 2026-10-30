@@ -17,6 +17,17 @@ shell इस्तेमाल करें, वे एक जैसे का�
 **उनके आसपास की भाषा**: variables कैसे set होते हैं, loops और conditions कैसे लिखे
 जाते हैं, prompt कैसा दिखता है और कौन-सी सुविधाएँ मिलती हैं।
 
+```quiz
+आप bash से किसी दूसरे शेल पर जाते हैं। इनमें से क्या बिल्कुल वैसा ही रहता है?
+- [ ] आप वेरिएबल कैसे सेट करते हैं
+- [ ] आप लूप कैसे लिखते हैं
+- [x] `grep` अपने ऑप्शनों के साथ क्या करता है
+- [ ] प्रॉम्प्ट कैसा दिखता है
+---
+`grep` `/usr/bin` में एक अलग प्रोग्राम है। शेल उसे सिर्फ़ शुरू करता है – शेलों के
+बीच उसके आसपास की भाषा अलग होती है।
+```
+
 ## वंश-वृक्ष: sh, bash, zsh और fish
 
 | Shell | कब से | ख़ासियतें |
@@ -53,26 +64,15 @@ echo $SHELL
 
 ### zsh install कीजिए
 
-हर family में zsh के package का नाम एक ही है:
+Ubuntu टर्मिनल में आप zsh को apt से इंस्टॉल करते हैं:
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install zsh
 ```
-:::
 
-:::arch
-```sh
-sudo pacman -S zsh
-```
-:::
-
-:::redhat
-```sh
-sudo dnf install zsh
-```
-:::
+दूसरे डिस्ट्रीब्यूशन अपना पैकेज मैनेजर इस्तेमाल करते हैं, जैसा आपने डिस्ट्रीब्यूशन और
+पैकेज वाले भाग में सीखा। वहाँ भी पैकेज का नाम `zsh` है।
 
 `/etc/shells` फिर से देखिए – package ने `/usr/bin/zsh` (और `/bin/zsh`) जोड़ दिया
 है:
@@ -100,7 +100,7 @@ zsh
 | `1` | सारी settings वाला main menu (simulator में उपलब्ध नहीं) |
 | `2` | सुझाई गई settings के साथ `~/.zshrc` बनाओ |
 
-`2` जवाब दीजिए। Prompt बदलकर `elev@{{hostname}} ~ %` हो जाता है – zsh में `%`
+`2` जवाब दीजिए। Prompt बदलकर `elev@ubuntu ~ %` हो जाता है – zsh में `%`
 सामान्य user का आम निशान है (root को `#` मिलता है, बिल्कुल bash की तरह)।
 
 अभी आप कौन-सा shell चला रहे हैं? Variable `$0` में shell का नाम होता है:
@@ -171,6 +171,22 @@ bash `[a.txt]` और `[b.txt]` print करता है – zsh `[a.txt b.txt]
 zsh में हमेशा वही काम नहीं करता। (`setopt shwordsplit` के साथ zsh bash जैसा व्यवहार
 करता है।)
 
+किसी शेल में एक अकेला कमांड आज़माने के लिए उसे शुरू करना ज़रूरी नहीं है। `-c` के साथ
+शेल कमांड चलाता है और तुरंत बंद हो जाता है – `zsh -c 'echo $0'` `zsh` छापता है, और
+उसके बाद भी आप bash में ही रहते हैं।
+
+नीचे का सवाल एक नए टर्मिनल में शुरू होता है, इसलिए पहले वह zsh इंस्टॉल करता है।
+`> /dev/null 2>&1` उस पंक्ति का आउटपुट फेंक देता है। आख़िरी कमांड क्या छापता है?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
+$ zsh -c 'filer="x.txt y.txt z.txt"; for f in $filer; do echo "<$f>"; done'
+<x.txt y.txt z.txt>
+---
+zsh वेरिएबल को स्पेस पर नहीं बाँटता, इसलिए लूप पूरे मान के साथ एक बार चलता है।
+bash में यही लूप तीन पंक्तियाँ छापता: `<x.txt>`, `<y.txt>` और `<z.txt>`।
+```
+
 ### ~/.zshrc और prompt
 
 bash start होते समय `~/.bashrc` पढ़ता है – zsh `~/.zshrc` पढ़ता है।
@@ -227,30 +243,19 @@ tab completion और **autosuggestions** – fish आपकी history के �
 
 ### fish install और start कीजिए
 
-:::debian
+fish भी इसी तरह apt से इंस्टॉल होता है – दूसरे डिस्ट्रीब्यूशनों पर उनके अपने पैकेज
+मैनेजर से:
+
 ```sh
 sudo apt update
 sudo apt install fish
 ```
-:::
-
-:::arch
-```sh
-sudo pacman -S fish
-```
-:::
-
-:::redhat
-```sh
-sudo dnf install fish
-```
-:::
 
 ```sh
 fish
 ```
 
-fish आपका स्वागत करता है और prompt `elev@{{hostname}} ~>` बन जाता है। कुछ
+fish आपका स्वागत करता है और prompt `elev@ubuntu ~>` बन जाता है। कुछ
 directories नीचे जाइए और देखिए कि fish prompt में path को कैसे छोटा करता है:
 
 ```sh
@@ -312,6 +317,17 @@ fish में हर variable एक **list** है। Elements की numberi
 set frukter äpple päron banan
 echo $frukter[2]
 count $frukter
+```
+
+`-c` fish में भी काम करता है। आख़िरी कमांड क्या छापता है?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y fish > /dev/null 2>&1
+$ fish -c 'set frukter äpple päron banan; echo $frukter[3]'
+banan
+---
+fish की सूची के तत्वों की गिनती 1 से शुरू होती है, इसलिए `[3]` तीसरा और आख़िरी
+तत्व है।
 ```
 
 ### Command substitution और $status
@@ -428,6 +444,16 @@ Script fish में चलता है, भले ही वहाँ `name=K
 हर जगह चलना है, वहाँ भी जहाँ bash नहीं है, उसे `#!/bin/sh` और सिर्फ़ POSIX syntax
 के साथ लिखा जाता है।
 
+```quiz
+आप fish में हैं और एक स्क्रिप्ट चलाते हैं जो `#!/bin/bash` से शुरू होती है और जिसमें
+पंक्ति `count=3` है। क्या होता है?
+- [ ] fish मना कर देता है, क्योंकि fish में `count=3` की अनुमति नहीं है
+- [x] यह काम करता है – स्क्रिप्ट bash चलाता है, चाहे आप किसी भी शेल में हों
+- [ ] यह तभी काम करता है जब आप पहले `chsh` से अपना लॉगिन शेल bash कर दें
+---
+`#!` पंक्ति तय करती है कि स्क्रिप्ट कौन-सा शेल चलाएगा। fish उसे सिर्फ़ शुरू करता है।
+```
+
 ## chsh से अपना default shell बदलना
 
 हर बार terminal खोलने पर `zsh` टाइप करना जल्दी ही उबाऊ हो जाता है। `chsh`
@@ -446,14 +472,6 @@ grep elev /etc/passwd
   shell ही रहता है, और `$SHELL` तभी बदलता है जब आप दोबारा login कर लेते हैं।
 - root दूसरों का shell बदल सकता है: `sudo chsh -s /usr/bin/fish kim`।
 
-:::arch
-Arch पर `chsh -l` सारे valid shells की list दिखाता है।
-:::
-
-:::redhat
-Fedora पर `chsh -l` सारे valid shells की list दिखाता है।
-:::
-
 वापस bash पर जाने के लिए यही कीजिए:
 
 ```sh
@@ -463,6 +481,19 @@ chsh -s /bin/bash
 fish के लिए एक आम सलाह यह है कि bash को अपना login shell रहने दें और उसकी जगह
 terminal program से fish start कराएँ – तब login पर POSIX shell की उम्मीद रखने वाली
 हर चीज़ काम करती रहती है।
+
+यह सवाल एक नए टर्मिनल में शुरू होता है, zsh इंस्टॉल करता है और उसे लॉगिन शेल बनाता
+है। आख़िरी कमांड क्या छापता है?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
+$ chsh -s /usr/bin/zsh > /dev/null 2>&1
+$ echo $SHELL
+/bin/bash
+---
+`chsh` ने `/etc/passwd` में आपकी पंक्ति बदल दी, लेकिन बदलाव अगले लॉगिन पर लागू होता
+है। जो टर्मिनल आपने खोल रखा है उसमें bash ही रहता है, और `$SHELL` भी।
+```
 
 ## आपको कौन-सा shell चुनना चाहिए?
 

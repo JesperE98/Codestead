@@ -29,6 +29,18 @@ Imaginez le disque comme un entrepôt vide, les partitions comme les murs qui
 le divisent en pièces et le système de fichiers comme les étagères et les
 étiquettes de chaque pièce. Sans étagères, on ne retrouve rien.
 
+```quiz
+Vous venez de créer une nouvelle partition sur un disque. Pourquoi ne
+pouvez-vous pas encore y enregistrer de fichiers ?
+- [ ] Elle doit d'abord être ajoutée à la table des partitions
+- [x] Elle n'a pas encore de système de fichiers – il faut d'abord la formater
+- [ ] Les partitions ne peuvent pas contenir de fichiers, seuls les disques le peuvent
+- [ ] Elle doit d'abord recevoir une lettre de lecteur
+---
+Une nouvelle partition est vide et inutilisable tant que vous n'y avez pas
+créé de système de fichiers. C'est ce que signifie formater.
+```
+
 ## Les disques sont des fichiers dans `/dev`
 
 Sous Linux, presque tout est un fichier – les disques aussi. Chaque disque et
@@ -70,28 +82,11 @@ lsblk
 | `TYPE` | `disk` ou `part` (partition) |
 | `MOUNTPOINTS` | L'endroit où le système de fichiers apparaît dans l'arborescence, `[SWAP]` pour le swap |
 
-:::debian
-Sur {{distro}}, vous voyez le découpage que l'installateur Debian choisit
-habituellement : `sda1` est la **partition EFI** (depuis laquelle le firmware
-de l'ordinateur démarre) sur `/boot/efi`, `sda2` est le **système de fichiers
-racine** `/` et `sda3` est le **swap**.
-:::
-
-:::arch
-Sous Arch, c'est vous qui décidez comment découper le disque. Cet ordinateur
-suit l'exemple du wiki Arch : `sda1` est la **partition EFI**, montée
-directement sur `/boot` pour que le noyau se trouve là où le firmware peut le
-lire, `sda2` est le **swap** et `sda3` est le **système de fichiers racine**
-`/`.
-:::
-
-:::redhat
-Fedora fait les choses un peu différemment : `sda1` est la **partition EFI**
-sur `/boot/efi`, `sda2` est `/boot` avec les noyaux et `sda3` est un seul
-grand système de fichiers **btrfs** qui apparaît à la fois sur `/` et sur
-`/home`. Le swap n'est pas du tout sur le disque, mais en RAM : `zram0` est de
-la mémoire compressée.
-:::
+Sur cet ordinateur, `sda1` est la **partition EFI** (depuis laquelle le
+firmware de l'ordinateur démarre) sur `/boot/efi`, `sda2` est le **système de
+fichiers racine** `/` et `sda3` est le **swap**. D'autres distributions – et
+d'autres installations – peuvent découper le disque autrement, alors regardez
+toujours au lieu de supposer.
 
 Avec `-f`, `lsblk` affiche aussi les systèmes de fichiers – type, étiquette,
 UUID et espace libre :
@@ -179,6 +174,12 @@ Vous remarquez que `Used` et `Avail` ne font pas tout à fait `Size` ? ext4
 réserve 5 % à root, pour que le système continue de fonctionner même quand un
 utilisateur ordinaire a rempli le disque.
 
+```try
+df -hT
+---
+La colonne `Type` montre que `/` est en `ext4` et `/boot/efi` en `vfat`.
+```
+
 ## `df` ou `du` ?
 
 Deux commandes au nom presque identique, mais qui répondent à des questions
@@ -241,6 +242,18 @@ Vous pouvez aussi monter par étiquette plutôt que par nom de périphérique :
 de bureau, le gestionnaire de fichiers fait tout cela automatiquement quand
 vous branchez la clé.
 
+```quiz
+Après `sudo mount /dev/sdb1 /mnt/usb`, tous les fichiers de la clé FAT
+appartiennent à root. Pourquoi ?
+- [ ] Les fichiers ont été créés par root sur un autre ordinateur
+- [x] FAT n'a pas de permissions Linux, donc tous les fichiers reçoivent comme propriétaire celui qui l'a montée – root
+- [ ] Tout ce qui se trouve dans `/mnt` appartient toujours à root
+- [ ] Les clés USB ne peuvent être utilisées que par root
+---
+Avec `-o uid=1000,gid=1000`, vous pouvez choisir vous-même le propriétaire au
+moment du montage.
+```
+
 ## Démonter – avant de retirer la clé !
 
 Linux n'écrit pas toujours immédiatement sur le disque. Les modifications sont
@@ -270,6 +283,18 @@ Ici, c'est votre propre shell qui se trouve dans le répertoire. Sortez-en avec
 vide – mais les fichiers, et les modifications que vous avez faites, sont
 toujours sur la clé la prochaine fois que vous la monterez.
 
+```quiz
+Pourquoi faut-il démonter une clé USB avant de la retirer ?
+- [ ] Sinon, les fichiers de la clé sont supprimés
+- [x] Des modifications peuvent encore attendre en RAM – `umount` les écrit avant de détacher le système de fichiers
+- [ ] Sinon, la clé reçoit un nouveau nom de périphérique la fois suivante
+- [ ] La clé ne peut pas être remontée tant qu'elle n'a pas été démontée sur le même ordinateur
+---
+Linux rassemble les modifications en RAM (*cache*) et les écrit un peu plus
+tard. Une clé retirée alors qu'elle est encore montée peut perdre des
+fichiers que vous aviez « enregistrés ».
+```
+
 ## `/etc/fstab` – ce qui est monté au démarrage
 
 Le système de fichiers racine, `/boot` et le swap sont montés automatiquement
@@ -291,24 +316,10 @@ Chaque ligne comporte six colonnes :
 | dump | `0` | Ancien indicateur de sauvegarde, presque toujours 0 |
 | pass | `1` | L'ordre dans lequel `fsck` les vérifie au démarrage (1 = racine, 2 = les autres, 0 = jamais) |
 
-:::debian
 L'option `errors=remount-ro` signifie que le système de fichiers racine passe
 en lecture seule si une erreur est détectée – mieux vaut cela que d'abîmer
 davantage. Les commentaires comme `# / was on /dev/sda2 during installation`
 ont été écrits par l'installateur.
-:::
-
-:::arch
-Sous Arch, le fichier a été écrit par `genfstab` pendant l'installation. Il
-inscrit l'ancien nom du périphérique en commentaire au-dessus de chaque ligne.
-:::
-
-:::redhat
-Remarquez que `/` et `/home` ont le **même** UUID : c'est le même système de
-fichiers btrfs, mais des sous-volumes différents (`subvol=root` et
-`subvol=home`). `compress=zstd:1` fait que les fichiers sont compressés
-automatiquement.
-:::
 
 Pourquoi `UUID=…` et pas simplement `/dev/sda2` ? Les noms de périphériques
 peuvent changer – branchez un nouveau disque et l'ancien peut recevoir une
@@ -318,6 +329,16 @@ ne change jamais. Vous le trouvez avec `lsblk -f`, `blkid` ou `findmnt` :
 ```sh
 sudo blkid
 findmnt -n -o UUID /
+```
+
+Avec `findmnt`, `-o` choisit les colonnes à afficher et `-n` supprime
+l'en-tête – pratique quand vous ne voulez que la valeur elle-même.
+
+```predict
+$ findmnt -n -o FSTYPE /boot/efi
+vfat
+---
+`/boot/efi` est la partition EFI, et la partition EFI doit être en FAT.
 ```
 
 Si vous voulez que la clé puisse toujours être montée sur `/mnt/usb`, vous
@@ -350,22 +371,9 @@ swapon --show
 free -h
 ```
 
-:::debian
 Ici, le swap est une partition à part entière, `sda3`. Beaucoup
 d'installations (par exemple les Ubuntu récents) utilisent plutôt un *fichier
 d'échange* (*swap file*) sur le système de fichiers racine.
-:::
-
-:::arch
-Ici, le swap est une partition à part entière, `sda2`. Un *fichier
-d'échange* (*swap file*) fonctionne tout aussi bien, ou zram comme sur Fedora.
-:::
-
-:::redhat
-Fedora utilise **zram** : du swap en RAM, mais compressé. Cela paraît étrange,
-mais fonctionne bien – la mémoire compressée reste bien plus rapide qu'un
-disque.
-:::
 
 ## Partitionner et formater – avec la plus grande prudence
 
@@ -397,11 +405,6 @@ Dans le simulateur, vous pouvez essayer `mkfs.ext4` et `mkfs.vfat` sur la clé
 USB – mais faites d'abord les exercices, car les fichiers de la clé
 disparaissent. Les partitions du système sont protégées parce qu'elles sont
 montées, exactement comme sur un vrai système.
-
-:::arch
-Sous Arch, `mkfs.vfat` n'est pas installé d'office. Il se trouve dans le
-paquet `dosfstools` : `sudo pacman -S dosfstools`.
-:::
 
 ## Résumé
 

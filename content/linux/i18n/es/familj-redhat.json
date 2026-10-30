@@ -1,0 +1,59 @@
+{
+  "title": "La familia Red Hat: dnf y COPR",
+  "tasks": {
+    "sync": {
+      "text": "Obtén la información nueva de los paquetes y comprueba si hay actualizaciones con `dnf check-update`.",
+      "hint": "`dnf check-update` no necesita root."
+    },
+    "search": {
+      "text": "Busca el paquete `htop`.",
+      "hint": "`dnf search htop`"
+    },
+    "install": {
+      "text": "Instala el paquete `tree`.",
+      "hint": "`sudo dnf install tree`, y responde `y`, ¡porque No es la respuesta por defecto!"
+    },
+    "run-tree": {
+      "text": "Ejecuta `tree` en tu directorio personal."
+    },
+    "remove": {
+      "text": "Desinstala de nuevo el paquete `tree`.",
+      "hint": "`sudo dnf remove tree`"
+    },
+    "upgrade": {
+      "text": "Actualiza todos los paquetes instalados.",
+      "hint": "`sudo dnf upgrade`"
+    },
+    "forbered": {
+      "text": "Muestra qué repositorios está usando dnf ahora mismo.",
+      "hint": "`dnf repolist`"
+    },
+    "lagg-till": {
+      "text": "Activa el repositorio COPR `lunatool/moonphase`.",
+      "hint": "`sudo dnf copr enable lunatool/moonphase`, y responde `y`, porque No es la respuesta por defecto."
+    },
+    "granska": {
+      "text": "Lista qué repositorios COPR se han añadido.",
+      "hint": "`dnf copr list`"
+    },
+    "installera": {
+      "text": "Instala el paquete `moonphase` desde el repositorio COPR.",
+      "hint": "`sudo dnf install moonphase`"
+    },
+    "kor": {
+      "text": "Ejecuta el programa `moonphase`."
+    },
+    "ursprung": {
+      "text": "Averigua desde qué repositorio se instaló `moonphase`.",
+      "hint": "`dnf info moonphase`, y mira la línea `From repository`."
+    },
+    "efterat": {
+      "text": "Desactiva de nuevo el repositorio COPR. El programa se queda, pero ya no recibe actualizaciones.",
+      "hint": "`sudo dnf copr disable lunatool/moonphase`"
+    },
+    "vim": {
+      "text": "Extra: instala el editor de texto Vim. Pista: ¡en la familia Red Hat el paquete no se llama `vim`!",
+      "hint": "Busca con `dnf search vim`. El paquete se llama `vim-enhanced`."
+    }
+  }
+}

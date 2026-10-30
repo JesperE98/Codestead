@@ -3,11 +3,7 @@
   "tasks": {
     "installera": {
       "text": "Installez le paquet `git`.",
-      "hint": {
-        "debian": "Lancez `sudo apt update`, puis `sudo apt install git`.",
-        "arch": "`sudo pacman -S git` – et répondez oui à la question.",
-        "redhat": "`sudo dnf install git` – et répondez `y`, car Non est la réponse par défaut."
-      }
+      "hint": "Lancez `sudo apt update`, puis `sudo apt install git`."
     },
     "identitet": {
       "text": "Dites à git qui vous êtes : réglez votre nom (`user.name`) et votre adresse e-mail (`user.email`) avec `git config --global`.",

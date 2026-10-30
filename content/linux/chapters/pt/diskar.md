@@ -28,6 +28,18 @@ Pense no disco como um galpão vazio, nas partições como as paredes que o
 dividem em salas e no sistema de arquivos como as prateleiras e etiquetas de
 cada sala. Sem prateleiras você não encontra nada.
 
+```quiz
+Você acabou de criar uma partição nova em um disco. Por que ainda não dá para
+salvar arquivos nela?
+- [ ] Ela precisa primeiro ser adicionada à tabela de partições
+- [x] Ela ainda não tem sistema de arquivos – precisa ser formatada primeiro
+- [ ] Partições não guardam arquivos, só discos guardam
+- [ ] Ela precisa primeiro ganhar uma letra de unidade
+---
+Uma partição nova fica vazia e inutilizável até você criar um sistema de
+arquivos nela. É isso que formatar significa.
+```
+
 ## Discos são arquivos em `/dev`
 
 No Linux quase tudo é um arquivo – inclusive os discos. Todo disco e toda
@@ -69,26 +81,10 @@ lsblk
 | `TYPE` | `disk` ou `part` (partição) |
 | `MOUNTPOINTS` | Onde o sistema de arquivos aparece na árvore de diretórios, `[SWAP]` para swap |
 
-:::debian
-No {{distro}} você vê o layout que o instalador do Debian costuma escolher:
-`sda1` é a **partição EFI** (de onde o firmware do computador dá boot) em
-`/boot/efi`, `sda2` é o **sistema de arquivos raiz** `/` e `sda3` é a
-**swap**.
-:::
-
-:::arch
-No Arch você mesmo decide como o disco é dividido. Este computador segue o
-exemplo da wiki do Arch: `sda1` é a **partição EFI**, montada direto em
-`/boot` para que o kernel fique onde o firmware consegue lê-lo, `sda2` é a
-**swap** e `sda3` é o **sistema de arquivos raiz** `/`.
-:::
-
-:::redhat
-O Fedora faz as coisas um pouco diferente: `sda1` é a **partição EFI** em
-`/boot/efi`, `sda2` é o `/boot` com os kernels e `sda3` é um grande sistema
-de arquivos **btrfs** que aparece tanto em `/` quanto em `/home`. A swap nem
-está no disco, mas na RAM: `zram0` é memória comprimida.
-:::
+Neste computador, `sda1` é a **partição EFI** (de onde o firmware do
+computador dá boot) em `/boot/efi`, `sda2` é o **sistema de arquivos raiz**
+`/` e `sda3` é a **swap**. Outras distribuições – e outras instalações –
+podem dividir o disco de outro jeito, então sempre olhe em vez de supor.
 
 Com `-f`, o `lsblk` também mostra os sistemas de arquivos – tipo, rótulo
 (*label*), UUID e quanto está livre:
@@ -176,6 +172,12 @@ Reparou que `Used` e `Avail` não somam exatamente `Size`? O ext4 reserva 5 %
 para o root, para que o sistema continue funcionando mesmo quando um usuário
 comum encheu o disco.
 
+```try
+df -hT
+---
+A coluna `Type` mostra que `/` é `ext4` e `/boot/efi` é `vfat`.
+```
+
 ## `df` ou `du`?
 
 Dois comandos com nomes quase iguais, mas que respondem a perguntas
@@ -236,6 +238,18 @@ Você também pode montar pelo rótulo em vez do nome do dispositivo:
 o gerenciador de arquivos faz tudo isso automaticamente quando você conecta o
 pendrive.
 
+```quiz
+Depois de `sudo mount /dev/sdb1 /mnt/usb`, todos os arquivos do pendrive FAT
+pertencem ao root. Por quê?
+- [ ] Os arquivos foram criados pelo root em outro computador
+- [x] O FAT não tem permissões do Linux, então todos os arquivos recebem como dono quem montou – o root
+- [ ] Tudo em `/mnt` sempre pertence ao root
+- [ ] Pendrives só podem ser usados pelo root
+---
+Com `-o uid=1000,gid=1000` você mesmo pode escolher o dono quando
+monta.
+```
+
 ## Desmontar – antes de tirar o pendrive!
 
 O Linux nem sempre escreve no disco na hora. As alterações são juntadas na
@@ -265,6 +279,18 @@ tente de novo. Depois de desmontar, `/mnt/usb` volta a ser um diretório vazio
 – mas os arquivos, e as alterações que você fez, continuam no pendrive na
 próxima vez que você montá-lo.
 
+```quiz
+Por que você deve desmontar um pendrive antes de tirá-lo?
+- [ ] Senão os arquivos do pendrive são apagados
+- [x] Alterações ainda podem estar esperando na RAM – o `umount` as escreve antes de desligar o sistema de arquivos
+- [ ] Senão o pendrive ganha outro nome de dispositivo na próxima vez
+- [ ] O pendrive não pode ser montado de novo até ter sido desmontado no mesmo computador
+---
+O Linux junta as alterações na RAM (*cache*) e as escreve um pouco depois. Um
+pendrive tirado enquanto ainda está montado pode perder arquivos que você
+"salvou".
+```
+
 ## `/etc/fstab` – o que é montado no boot
 
 O sistema de arquivos raiz, o `/boot` e a swap são montados automaticamente
@@ -286,23 +312,10 @@ Cada linha tem seis colunas:
 | dump | `0` | Antiga flag de backup, quase sempre 0 |
 | pass | `1` | A ordem em que o `fsck` os verifica no boot (1 = raiz, 2 = outros, 0 = nunca) |
 
-:::debian
 A opção `errors=remount-ro` significa que o sistema de arquivos raiz passa a
 ser somente leitura se for detectado um erro – melhor isso do que estragar
 mais coisas. Comentários como `# / was on /dev/sda2 during installation`
 foram escritos pelo instalador.
-:::
-
-:::arch
-No Arch o arquivo foi escrito pelo `genfstab` durante a instalação. Ele
-escreve o nome antigo do dispositivo como comentário acima de cada linha.
-:::
-
-:::redhat
-Repare que `/` e `/home` têm o **mesmo** UUID: é o mesmo sistema de arquivos
-btrfs, mas subvolumes diferentes (`subvol=root` e `subvol=home`).
-`compress=zstd:1` faz com que os arquivos sejam comprimidos automaticamente.
-:::
 
 Por que `UUID=…` e não simplesmente `/dev/sda2`? Nomes de dispositivo podem
 mudar – conecte um disco novo e o antigo pode ganhar outra letra. Um UUID é
@@ -312,6 +325,16 @@ criado junto com o sistema de arquivos e nunca muda. Você o encontra com
 ```sh
 sudo blkid
 findmnt -n -o UUID /
+```
+
+No `findmnt`, o `-o` escolhe as colunas a mostrar e o `-n` omite o cabeçalho –
+prático quando você só quer o valor em si.
+
+```predict
+$ findmnt -n -o FSTYPE /boot/efi
+vfat
+---
+O `/boot/efi` é a partição EFI, e a partição EFI precisa ser FAT.
 ```
 
 Se você quiser que o pendrive sempre possa ser montado em `/mnt/usb`, pode
@@ -343,21 +366,9 @@ swapon --show
 free -h
 ```
 
-:::debian
 Aqui a swap é uma partição própria, a `sda3`. Muitas instalações (por
 exemplo, o Ubuntu mais recente) usam um *arquivo de swap* no sistema de
 arquivos raiz em vez disso.
-:::
-
-:::arch
-Aqui a swap é uma partição própria, a `sda2`. Um *arquivo de swap* funciona
-igualmente bem, ou zram como no Fedora.
-:::
-
-:::redhat
-O Fedora usa **zram**: swap na RAM, mas comprimida. Parece estranho, mas
-funciona bem – memória comprimida ainda é muito mais rápida que um disco.
-:::
 
 ## Particionar e formatar – com o máximo cuidado
 
@@ -389,11 +400,6 @@ No simulador você pode experimentar `mkfs.ext4` e `mkfs.vfat` no pendrive –
 mas faça as tarefas primeiro, porque os arquivos do pendrive desaparecem. As
 partições do próprio sistema estão protegidas porque estão montadas,
 exatamente como em um sistema de verdade.
-
-:::arch
-No Arch o `mkfs.vfat` não vem instalado de início. Ele está no pacote
-`dosfstools`: `sudo pacman -S dosfstools`.
-:::
 
 ## Resumo
 

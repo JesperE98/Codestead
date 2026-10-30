@@ -14,6 +14,16 @@ tiene un **PID** (*process ID*), un número que lo identifica, y un padre, el
 **PPID**, que lo inició. Todo empieza con el proceso número 1, `init` (en casi
 todas las distribuciones es `systemd`), que arranca todos los demás.
 
+```quiz
+¿Qué es el PPID de un proceso?
+- [ ] El número del procesador en el que se ejecuta
+- [x] El PID del proceso que lo inició: su padre
+- [ ] Su prioridad
+---
+Todo proceso tiene un padre. Si sigues a los padres lo suficiente, acabas en
+el proceso número 1.
+```
+
 ## Mis procesos – `ps`
 
 `ps` (*process status*) sin opciones muestra los procesos de tu propia
@@ -58,6 +68,12 @@ tienes `pgrep`:
 pgrep -l sshd
 ```
 
+```try
+pgrep -l sshd
+---
+`-l` muestra el nombre junto al PID.
+```
+
 ## Una vista en directo – `top` y `htop`
 
 `top` muestra los procesos ordenados según el tiempo de procesador que usan y
@@ -97,6 +113,16 @@ killall firefox
 Solo puedes enviar señales a tus **propios** procesos. Para los procesos que
 pertenecen a root o a otros usuarios, necesitas `sudo`.
 
+```quiz
+Un programa ha dejado de responder. ¿Qué comando deberías probar **primero**?
+- [x] `kill 1234`: envía `SIGTERM` y deja que el programa se cierre de forma ordenada
+- [ ] `kill -9 1234`: siempre funciona mejor
+- [ ] `sudo kill -9 1`
+---
+Empieza con la señal por defecto, `SIGTERM`. `SIGKILL` (`-9`) es el último
+recurso, ya que el programa no tiene ocasión de guardar ni de limpiar.
+```
+
 > **¡Encuéntralo y detenlo!** Hay un proceso en este ordenador que está usando
 > casi el 100 % del procesador. Usa `top` o `ps aux --sort=-%cpu` para
 > averiguar cómo se llama y cuál es su PID, y después detenlo.
@@ -132,6 +158,17 @@ La variable `$!` contiene el PID del último trabajo en segundo plano. Cuando
 un trabajo termina, la shell te avisa con una línea como
 `[1]+  Done   sleep 300`.
 
+```quiz
+Has pulsado `Ctrl+Z` en un programa en primer plano. ¿Cómo dejas que siga
+ejecutándose mientras conservas el prompt?
+- [ ] `fg %1`
+- [x] `bg %1`
+- [ ] `Ctrl+C`
+---
+`Ctrl+Z` pausa el programa. `bg` deja que un trabajo detenido continúe en
+segundo plano, mientras que `fg` lo traería de vuelta al primer plano.
+```
+
 ## ¿Cómo está el ordenador?
 
 Dos pequeños comandos te dan una visión general rápida:
@@ -147,9 +184,18 @@ Fíjate en la columna *available* (disponible): Linux usa la memoria sobrante
 como caché de archivos, así que *free* (libre) suele parecer baja aunque haya
 memoria de sobra.
 
+```quiz
+`free -h` muestra poca memoria *free* pero mucha memoria *available*. ¿Qué
+significa eso?
+- [ ] El ordenador está a punto de quedarse sin memoria
+- [x] Linux usa la memoria sobrante como caché de archivos: fíjate en *available*
+- [ ] Parte de la memoria está estropeada
+```
+
 ## Igual en todas partes
 
-Los procesos funcionan igual en todas las distribuciones. Las herramientas
-vienen del paquete **procps** (llamado `procps-ng` en Arch y Fedora), y
-`killall` de **psmisc**. Lo que cambia es qué servicios se ejecutan desde el
-arranque: ¡prueba a comparar `ps aux` en {{distro}} con otra distribución!
+Los procesos funcionan igual en todas las distribuciones. En Ubuntu, las
+herramientas vienen del paquete **procps**, y `killall` de **psmisc**. Algunas
+distribuciones dan a los paquetes nombres un poco distintos, y también cambia
+qué servicios se ejecutan desde el arranque: podrás comparar distribuciones en
+la parte sobre distribuciones.

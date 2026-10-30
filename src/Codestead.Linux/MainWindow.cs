@@ -185,6 +185,8 @@ public sealed class MainWindow : Window
     private int ChapterIndex => Math.Max(0, ChaptersLib.Chapters.FindIndex(c => c.Id == state.Chapter));
     private Chapter Chapter => ChaptersLib.Chapters[ChapterIndex];
 
+    private static readonly List<Chapter> Lessons = ChaptersLib.Chapters.Where(c => c.Kind == ChapterKinds.Lesson).ToList();
+
     private ShellType LoadShell(string distroId)
     {
         var sh = ShellType.RestoreJson(storage.LoadText($"shell.{distroId}")) ?? ShellType.Create(distroId);
@@ -563,7 +565,8 @@ public sealed class MainWindow : Window
         {
             ChapterKinds.Summary => T($"part.{chapter.Part}") + " · " + T("summary.label"),
             ChapterKinds.Exam => T($"part.{chapter.Part}") + " · " + T("exam.label"),
-            _ => T("lesson.chapter", ("n", ChapterIndex + 1), ("total", ChaptersLib.Chapters.Count)),
+            // Numbered like the sidebar: lessons only (summaries and exams are not counted).
+            _ => T("lesson.chapter", ("n", Lessons.IndexOf(chapter) + 1), ("total", Lessons.Count)),
         };
         var eyebrow = Text(eyebrowText.ToUpperInvariant(), 12.5, null, "eyebrow");
         lessonPanel.Children.Add(eyebrow);

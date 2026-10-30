@@ -11,7 +11,7 @@ Simulated computer एक छोटे-से home network में है:
 
 | Computer | Address | क्या |
 |---|---|---|
-| आपका computer ({{hostname}}) | `192.168.1.42` | जहाँ आप अभी हैं |
+| आपका कंप्यूटर (`ubuntu`) | `192.168.1.42` | जहाँ आप अभी हैं |
 | Router (gateway) | `192.168.1.1` | Internet तक बाहर जाने का रास्ता |
 | Server | `192.168.1.10` | एक और Linux computer जिस पर आप login कर सकते हैं |
 
@@ -48,6 +48,12 @@ ip -br a
 hostname -I
 ```
 
+```try
+ip -br a
+---
+हर इंटरफ़ेस के लिए एक पंक्ति: नाम, स्थिति (`UP`) और पते।
+```
+
 बहुत-सी guides में आपको अब भी पुराना command `ifconfig` (*net-tools* package से)
 दिखेगा, लेकिन modern distributions में यह default रूप से installed नहीं होता।
 `ip` वह सब करता है जो `ifconfig` करता था, और उससे ज़्यादा भी।
@@ -80,6 +86,25 @@ default via 192.168.1.1 dev enp0s3 proto dhcp src 192.168.1.42 metric 100
 192.168.1.1 को जाता है"। दूसरी line कहती है कि पूरे `192.168.1.0/24` network तक
 सीधे `enp0s3` से पहुँचा जाता है। `proto dhcp` का मतलब है कि computer को उसकी
 settings router से **DHCP** के ज़रिए अपने-आप मिली हैं।
+
+```quiz
+आपके कंप्यूटर का पता `192.168.1.42/24` है। वह किन पतों तक गेटवे से होकर जाए
+बिना सीधे पहुँच सकता है?
+- [x] `192.168.1.10`
+- [x] `192.168.1.1`
+- [ ] `192.168.2.10`
+- [ ] `1.1.1.1`
+---
+`/24` के साथ पहली तीन संख्याएँ नेटवर्क का पता हैं। `192.168.1.` से शुरू होने वाली
+हर चीज़ उसी लोकल नेटवर्क पर है – बाक़ी सब डिफ़ॉल्ट रूट से गेटवे को जाता है।
+```
+
+```predict
+$ ip route | grep default | awk '{print $3}'
+192.168.1.1
+---
+`default` वाली पंक्ति का तीसरा शब्द गेटवे का पता है।
+```
 
 ## ping – क्या वहाँ तक पहुँचा जा सकता है?
 
@@ -125,34 +150,18 @@ ping -c 3 example.com
 cat /etc/resolv.conf
 ```
 
-Ubuntu और Fedora पर वहाँ `127.0.0.53` लिखा होता है – यह **systemd-resolved** है,
-आपके अपने computer पर एक local बिचौलिया जो आगे router से पूछता है। Debian और Arch
-पर router, `192.168.1.1`, सीधे लिखा होता है।
+Ubuntu पर वहाँ `127.0.0.53` लिखा होता है – यह **systemd-resolved** है, आपके अपने
+कंप्यूटर पर एक लोकल बिचौलिया जो आगे राउटर से पूछता है। कुछ दूसरे डिस्ट्रीब्यूशन
+राउटर, `192.168.1.1`, को सीधे लिखते हैं।
 
 ख़ुद DNS से पूछने के लिए `dig`, `host` या `nslookup` इस्तेमाल होते हैं। ये शुरू से
-installed नहीं होते, बल्कि एक package में आते हैं जिसका नाम अलग-अलग distributions
-में अलग है:
+इंस्टॉल नहीं होते। Ubuntu पर ये पैकेज `dnsutils` में आते हैं (दूसरे परिवार इस
+पैकेज को कुछ और नाम देते हैं):
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install dnsutils
 ```
-:::
-
-:::arch
-```sh
-sudo pacman -S bind
-```
-
-Package का नाम DNS server BIND के नाम पर `bind` है, जिससे ये tools आते हैं।
-:::
-
-:::redhat
-```sh
-sudo dnf install bind-utils
-```
-:::
 
 `dig` DNS server का पूरा जवाब दिखाता है। ज़रूरी हिस्सा `ANSWER SECTION` के नीचे
 होता है। `+short` से आपको सिर्फ़ address मिलता है:
@@ -223,6 +232,18 @@ getent hosts server.lan
 
 क्रम (पहले file, फिर DNS) `/etc/nsswitch.conf` की `hosts:` line से तय होता है।
 
+```quiz
+`sudo echo '192.168.1.10 server.lan' >> /etc/hosts` से *Permission denied* क्यों
+मिलता है?
+- [ ] `echo` को sudo के साथ नहीं चलाया जा सकता
+- [x] `>>` के लिए फ़ाइल root नहीं, आपका अपना शेल खोलता है – sudo सिर्फ़ `echo` पर लागू होता है
+- [ ] `/etc/hosts` को बदला नहीं जा सकता, root भी नहीं बदल सकता
+- [ ] `>>` सिर्फ़ आपकी होम डायरेक्टरी की फ़ाइलों पर काम करता है
+---
+इसीलिए आप `echo ... | sudo tee -a /etc/hosts` इस्तेमाल करते हैं: तब फ़ाइल
+`tee` खोलता है, जो root के रूप में चलता है।
+```
+
 ## Ports और services
 
 IP address किसी computer की ओर इशारा करता है। **Port** (1 से 65535 के बीच का एक
@@ -264,13 +285,11 @@ sudo ss -tulpn
 `curl` किसी address (एक **URL**) पर जो कुछ है उसे लाकर terminal में print करता
 है। इसे अपने ही computer पर minserver के साथ आज़माइए:
 
-:::debian
-Debian और Ubuntu पर `curl` पहले से installed नहीं होता (लेकिन `wget` होता है):
+Ubuntu पर `curl` पहले से इंस्टॉल नहीं होता (लेकिन `wget` होता है):
 
 ```sh
 sudo apt install curl
 ```
-:::
 
 ```sh
 curl http://localhost:8080
@@ -325,22 +344,6 @@ curl -o exempel.html https://example.com
 `wget` files download करने के लिए बना है। यह हमेशा file में save करता है, progress
 दिखाता है और redirects के पीछे अपने-आप जाता है:
 
-:::arch
-Arch पर `wget` पहले से installed नहीं होता (लेकिन `curl` होता है):
-
-```sh
-sudo pacman -S wget
-```
-:::
-
-:::redhat
-Fedora पर `wget` पहले से installed नहीं होता (लेकिन `curl` होता है):
-
-```sh
-sudo dnf install wget
-```
-:::
-
 ```sh
 wget https://example.com/cheatsheet.txt
 cat cheatsheet.txt
@@ -354,21 +357,13 @@ File का नाम ख़ुद चुनने के लिए capital `-O`
 है, और जो कुछ भी भेजा जाता है वह encrypted होता है। Server पर port 22 पर service
 `sshd` चलती है, और आप client `ssh` से connect करते हैं:
 
-:::arch
-Arch पर ssh client पहले से installed नहीं होता:
-
-```sh
-sudo pacman -S openssh
-```
-:::
-
 ```sh
 ssh elev@server.lan hostname
 ```
 
 `elev@server.lan` का मतलब है "computer server.lan पर user elev"। Host के बाद वाला
 command (`hostname`) server पर चलता है और उसका जवाब यहाँ दिखता है – उसमें
-`server` लिखा आता है, {{hostname}} नहीं।
+`server` लिखा आता है, `ubuntu` नहीं।
 
 जब आप पहली बार किसी computer से connect करते हैं, तो ssh पूछता है कि क्या आप उस
 पर भरोसा करते हैं:
@@ -430,6 +425,18 @@ Step 4 किसी name के बिना सीधे एक address को 
 लेकिन step 5 नहीं, तो लगभग हमेशा DNS ख़राब होता है – यह सबसे आम problems में से
 एक है।
 
+```quiz
+`ping -c 3 1.1.1.1` काम करता है, लेकिन `ping -c 3 example.com` जवाब देता है
+*Name or service not known*। समस्या सबसे ज़्यादा संभावना से कहाँ है?
+- [ ] नेटवर्क कार्ड बंद है
+- [ ] कोई डिफ़ॉल्ट रूट नहीं है
+- [x] DNS – नाम खोजना (name lookup) काम नहीं कर रहा
+- [ ] example.com ping का जवाब नहीं देता
+---
+अगर आप इंटरनेट पर किसी पते तक पहुँच सकते हैं, तो कार्ड, रूट और राउटर काम कर रहे
+हैं। बचता है नाम का अनुवाद – `/etc/resolv.conf` जाँचिए।
+```
+
 ख़ुद आज़माइए! Network card बंद कीजिए, steps एक-एक करके देखिए और फिर उसे वापस चालू
 कीजिए:
 
@@ -444,16 +451,18 @@ sudo ip link set enp0s3 up
 
 ## Packages
 
-Network tools अलग-अलग packages में होते हैं – और हमेशा की तरह, अलग-अलग families
-में उनके नाम अलग हैं:
+नेटवर्क टूल अलग-अलग पैकेजों में होते हैं। Ubuntu पर उनके नाम ये हैं:
 
-| Tool | Debian/Ubuntu | Arch | Fedora |
-|---|---|---|---|
-| `ip`, `ss` | `iproute2` | `iproute2` | `iproute` |
-| `ping` | `iputils-ping` | `iputils` | `iputils` |
-| `dig`, `host`, `nslookup` | `dnsutils` | `bind` | `bind-utils` |
-| `traceroute` | `traceroute` | `traceroute` | `traceroute` |
-| `ssh`, `ssh-keygen` | `openssh-client` | `openssh` | `openssh-clients` |
+| टूल | Ubuntu पर पैकेज |
+|---|---|
+| `ip`, `ss` | `iproute2` |
+| `ping` | `iputils-ping` |
+| `dig`, `host`, `nslookup` | `dnsutils` |
+| `traceroute` | `traceroute` |
+| `ssh`, `ssh-keygen` | `openssh-client` |
+
+हमेशा की तरह, दूसरे परिवार कुछ पैकेजों को दूसरे नाम देते हैं – डिस्ट्रीब्यूशन और
+पैकेज वाला भाग ऐसे ही अंतरों के बारे में है।
 
 `traceroute` रास्ते में packets जिस-जिस router से गुज़रते हैं, वे सब दिखाता है।
 इसे install करके `traceroute example.com` आज़माइए!

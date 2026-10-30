@@ -22,6 +22,16 @@ Por eso se usan juntos: primero `tar` para obtener un único archivo, y luego
 para abreviar. Es la filosofía Unix en pocas palabras: programas pequeños que
 hacen una sola cosa cada uno y se pueden combinar.
 
+```quiz
+¿Por qué `tar` y `gzip` suelen usarse juntos?
+- [ ] `gzip` no puede leer archivos que no haya creado `tar`
+- [x] `tar` reúne muchos archivos en uno, y `gzip` hace que ese archivo sea más pequeño
+- [ ] `tar` hace los archivos más pequeños, y `gzip` les da los permisos correctos
+---
+gzip solo maneja un archivo cada vez y no sabe nada de directorios, y
+un archivador tar por sí solo no es más pequeño que los archivos que contiene.
+```
+
 | Extensión | ¿Qué es? | Se descomprime con |
 |---|---|---|
 | `.tar` | Archivador sin comprimir | `tar -xf` |
@@ -43,6 +53,7 @@ tar -cvf dokument.tar dokument
 
 ```text
 dokument/
+dokument/betyg.csv
 dokument/frukter.txt
 dokument/server.log
 ```
@@ -79,6 +90,16 @@ Pon siempre la `f` **al final** cuando escribas las opciones juntas, ya que el
 nombre del archivo tiene que ir justo después. Por razones históricas también
 puedes omitir el guion: `tar czvf` significa lo mismo que `tar -czvf`.
 
+```quiz
+¿Qué hace `tar -xzvf backup.tar.gz`?
+- [ ] Crea el archivador comprimido `backup.tar.gz`
+- [ ] Lista el contenido de `backup.tar.gz` sin extraerlo
+- [x] Extrae `backup.tar.gz` con gzip y muestra cada archivo
+---
+`x` es la operación (extraer), `z` significa gzip, `v` muestra los archivos y
+después de `f` va el nombre del archivador.
+```
+
 ## Comprimir con `-z`
 
 Añade `z` y el archivador pasa por gzip por el camino:
@@ -90,11 +111,11 @@ ls -l dokument.tar dokument.tar.gz
 
 ```text
 -rw-r--r-- 1 elev elev 10240 Oct 30 12:00 dokument.tar
--rw-r--r-- 1 elev elev   674 Oct 30 12:00 dokument.tar.gz
+-rw-r--r-- 1 elev elev   837 Oct 30 12:00 dokument.tar.gz
 ```
 
 El archivador sin comprimir ocupa nada menos que 10 240 bytes, aunque los
-archivos suman algo menos de 900 bytes. Esto se debe a que tar pone una
+archivos suman algo más de 1000 bytes. Esto se debe a que tar pone una
 cabecera de 512 bytes delante de cada archivo y rellena el archivador hasta
 completar bloques enteros. Todo ese espacio vacío desaparece al comprimir con
 gzip.
@@ -111,7 +132,7 @@ du -sh dokument
 ```text
 12K	dokument.tar
 4.0K	dokument.tar.gz
-12K	dokument
+16K	dokument
 ```
 
 El disco se divide en bloques de 4 KiB, así que `du` nunca muestra menos de
@@ -126,6 +147,7 @@ tar -tzvf dokument.tar.gz
 
 ```text
 drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
+-rw-r--r-- elev/elev       146 2026-10-30 12:00 dokument/betyg.csv
 -rw-r--r-- elev/elev        64 2026-10-30 12:00 dokument/frukter.txt
 -rw-r--r-- elev/elev       848 2026-10-30 12:00 dokument/server.log
 ```
@@ -173,6 +195,16 @@ tar -czf backup.tar.gz -C ~ dokument
 tar -tzf backup.tar.gz
 ```
 
+```quiz
+Ejecutas `tar -czf backup.tar.gz -C ~ dokument`. ¿Qué contiene el archivador?
+- [x] `dokument/` y los archivos que contiene
+- [ ] `home/elev/dokument/` y los archivos que contiene
+- [ ] `/home/elev/dokument/` y los archivos que contiene
+---
+`-C ~` hace que tar cambie primero a tu directorio personal, así que los nombres
+del archivador empiezan en `dokument/`.
+```
+
 ## Comprimir archivos sueltos con `gzip`
 
 `gzip` comprime un archivo y lo **sustituye** por un archivo `.gz`. Los
@@ -208,6 +240,17 @@ gzip -kv frukter.txt
 frukter.txt:	-20.3% -- created frukter.txt.gz
 ```
 
+```predict
+$ cp dokument/frukter.txt .
+$ cp dokument/server.log .
+$ gzip frukter.txt
+$ gzip -k server.log
+$ ls frukter* server*
+frukter.txt.gz  server.log  server.log.gz
+---
+`gzip` a secas sustituye el archivo por un archivo `.gz`; `-k` conserva el original.
+```
+
 ### Leer archivos comprimidos directamente
 
 Los archivos de registro antiguos de `/var/log` suelen guardarse como `.gz`
@@ -230,11 +273,11 @@ adicional, así que es la opción obvia cuando envías archivos a alguien que no
 usa Linux. Dentro del mundo Linux es más común `.tar.gz`, porque conserva
 mejor los propietarios y los permisos.
 
-Los programas `zip` y `unzip` no siempre vienen preinstalados. En ese caso se
-instalan con el gestor de paquetes (verás más sobre esto en el capítulo de
-gestión de paquetes). En {{distro}} se hace así:
+Los programas `zip` y `unzip` no siempre vienen preinstalados, y en esta
+terminal tienes que instalarlos primero. Eso se hace con el gestor de paquetes:
+lo aprenderás todo sobre él en la parte sobre distribuciones y paquetes. En
+Ubuntu se hace así:
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install zip unzip
@@ -242,25 +285,6 @@ sudo apt install zip unzip
 
 `apt update` descarga la lista de paquetes disponibles. Sin este paso, apt no
 encuentra ningún paquete.
-:::
-
-:::arch
-```sh
-sudo pacman -S zip unzip
-```
-
-Responde que sí (`Y` o simplemente Enter) cuando pacman pregunte si quieres
-continuar.
-:::
-
-:::redhat
-```sh
-sudo dnf install zip unzip
-```
-
-Responde `y` cuando dnf pregunte `Is this ok [y/N]`: la `N` mayúscula
-significa que No es la respuesta por defecto si solo pulsas Enter.
-:::
 
 Después empaqueta el directorio. No olvides `-r` (*recursive*): sin esta opción, zip
 solo añade el directorio vacío, no los archivos que contiene:
@@ -271,6 +295,7 @@ zip -r dokument.zip dokument
 
 ```text
   adding: dokument/ (stored 0%)
+  adding: dokument/betyg.csv (deflated 17%)
   adding: dokument/frukter.txt (deflated 27%)
   adding: dokument/server.log (deflated 42%)
 ```
@@ -286,6 +311,15 @@ unzip dokument.zip -d fran-zip
 
 Si los archivos ya existen, unzip se los salta. Con `unzip -o` se
 sobrescriben.
+
+```quiz
+Ejecutas `zip dokument.zip dokument` sin `-r`. ¿Qué acaba en el archivo zip?
+- [ ] Todos los archivos de `dokument`
+- [x] Solo el directorio vacío `dokument/`
+- [ ] Nada: zip se niega a ejecutarse
+---
+Sin `-r` (*recursive*), zip no entra en el directorio.
+```
 
 ## Resumen
 

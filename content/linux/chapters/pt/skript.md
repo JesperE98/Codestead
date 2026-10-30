@@ -54,6 +54,17 @@ causa erros estranhos quando um nome de arquivo tem espaço. Se quiser escrever
 texto logo depois do nome da variável, use chaves: `"${stad}_2026"` – sem
 elas, o bash procuraria uma variável chamada `stad_2026`.
 
+```quiz
+`stad` contém `Göteborg`, e não existe nenhuma variável chamada `stad_2026`. O
+que `echo "$stad_2026"` imprime?
+- [ ] `Göteborg_2026`
+- [ ] `Göteborg`
+- [x] Uma linha vazia
+---
+O bash lê o nome inteiro `stad_2026`, e essa variável não existe.
+Escreva `"${stad}_2026"` para obter `Göteborg_2026`.
+```
+
 ## Substituição de comandos – `$(...)`
 
 `$(comando)` é substituído pelo que o comando imprime. É assim que você
@@ -79,6 +90,13 @@ echo $(( 17 / 5 )) remainder $(( 17 % 5 ))
 (*Remainder* é "resto" em inglês.) Para alterar uma variável, escreva
 `(( a++ ))` ou `(( a += 10 ))`.
 
+```predict
+$ echo $(( 7 / 2 )) $(( 7 % 2 ))
+3 1
+---
+O bash só calcula com números inteiros: 7 / 2 dá 3, e o resto (`%`) é 1.
+```
+
 ## Argumentos
 
 Quando você executa `./skript.sh um dois`, o script consegue ler os
@@ -91,6 +109,16 @@ argumentos:
 | `$#` | O número de argumentos |
 | `"$@"` | Todos os argumentos, cada um separadamente |
 | `$?` | O código de saída do comando anterior |
+
+```quiz
+Um script é executado com `./skript.sh red green blue`. O que `$1` e `$#`
+contêm?
+- [ ] `$1` é `./skript.sh` e `$#` é `4`
+- [x] `$1` é `red` e `$#` é `3`
+- [ ] `$1` é `red` e `$#` é `blue`
+---
+O nome do próprio script fica em `$0`, então ele não é contado em `$#`.
+```
 
 ## Condições – `if`
 
@@ -138,6 +166,12 @@ Para condições curtas, muitas vezes o `&&` e o `||` bastam:
 [ -d ~/bilder ] && echo "O diretório de imagens existe"
 ```
 
+```predict
+$ x=""
+$ if [ -z "$x" ]; then echo empty; else echo "not empty"; fi
+empty
+```
+
 ## Laços
 
 Um **laço for** faz a mesma coisa para cada item de uma lista:
@@ -167,6 +201,13 @@ while read rad; do echo "> $rad"; done < ~/dokument/frukter.txt
 ```
 
 O `break` sai de um laço, e o `continue` pula direto para a próxima rodada.
+
+```predict
+$ for x in 2 4 6; do echo $(( x * 10 )); done
+20
+40
+60
+```
 
 > **Cuidado com laços infinitos!** Um laço cuja condição nunca fica falsa
 > continua para sempre. Em um terminal de verdade, você o interrompe com

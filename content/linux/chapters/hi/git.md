@@ -18,32 +18,17 @@ Git terminal के लिए बना है। Graphical programs और edit
 
 ## git install करना
 
-Git हमेशा पहले से install नहीं होता। {{distro}} में आप इसे ऐसे install करते हैं:
+Git हमेशा पहले से इंस्टॉल नहीं होता। Ubuntu टर्मिनल में आप इसे apt से इंस्टॉल करते
+हैं:
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install git
 ```
-:::
 
-:::arch
-```sh
-sudo pacman -S git
-```
-
-जब pacman पूछे कि आगे बढ़ना है या नहीं, तो हाँ में जवाब दीजिए।
-:::
-
-:::redhat
-```sh
-sudo dnf install git
-```
-
-`y` जवाब दीजिए – `[y/N]` में बड़े `N` का मतलब है कि No default है।
-:::
-
-हर family में package का नाम `git` ही है। Check कीजिए कि यह काम करता है:
+दूसरे डिस्ट्रीब्यूशन इसे अपने पैकेज मैनेजर से इंस्टॉल करते हैं, जैसा आपने डिस्ट्रीब्यूशन
+और पैकेज वाले भाग में सीखा – वहाँ भी पैकेज का नाम `git` ही है। जाँचिए कि यह काम
+करता है:
 
 ```sh
 git --version
@@ -116,6 +101,16 @@ ls .git
 files को हाथ से edit मत कीजिए। अगर आप किसी project में git इस्तेमाल करना बंद करना
 चाहते हैं, तो `.git` हटाना काफ़ी है; आपकी साधारण files बनी रहती हैं।
 
+```quiz
+आप किसी प्रोजेक्ट में git इस्तेमाल करना बंद करना चाहते हैं, लेकिन अपनी सारी फ़ाइलें रखना चाहते हैं। आप क्या करेंगे?
+- [ ] `git init` फिर से चलाएँगे
+- [x] छिपी हुई डायरेक्टरी `.git` हटाएँगे
+- [ ] `.git` को छोड़कर हर फ़ाइल हटाएँगे
+---
+पूरी हिस्ट्री `.git` में रहती है, और git आपकी साधारण फ़ाइलों को नहीं छूता।
+`.git` के बिना फ़ाइलें बनी रहती हैं – सिर्फ़ हिस्ट्री चली जाती है।
+```
+
 ## तीन जगहें: working tree, index और history
 
 Git के बारे में समझने वाली सबसे ज़रूरी बात यह है कि एक बदलाव तीन जगहों से होकर
@@ -136,6 +131,17 @@ Git के बारे में समझने वाली सबसे ज�
 बीच वाला step क्यों? ताकि आप चुन सकें। अगर आपने पाँच files बदली हैं लेकिन उनमें
 से सिर्फ़ दो एक साथ जाती हैं, तो आप उन दो को index में रखकर commit कर सकते हैं और
 बाक़ी को उनके अपने commit के लिए बचा सकते हैं।
+
+```quiz
+आपने पाँच फ़ाइलें बदली हैं, लेकिन उनमें से सिर्फ़ दो बदलाव एक साथ जाते हैं। आप
+सिर्फ़ उन दो को एक commit में कैसे सेव करेंगे?
+- [ ] पहले `git commit` चलाइए और उसके बाद दोनों फ़ाइलों पर `git add`
+- [x] दोनों फ़ाइलों पर `git add` चलाइए, फिर `git commit`
+- [ ] पाँचों को commit कीजिए – commit हमेशा हर बदली हुई फ़ाइल लेता है
+---
+commit वही सेव करता है जो index में है। बाक़ी तीन बदलाव तब तक working tree में
+रहते हैं जब तक आप उन्हें add नहीं करते।
+```
 
 ## `git status` आपका compass है
 
@@ -257,6 +263,27 @@ git commit -a -m "Beskriv hur sidan är byggd"
 
 ध्यान दीजिए कि `-a` उन नई files को शामिल *नहीं* करता जिन्हें git अभी follow नहीं
 करता। उन्हें आपको हमेशा पहले `git add` से जोड़ना होता है।
+
+इस अध्याय के कमांड वाले सवाल एक नए टर्मिनल में शुरू होते हैं, इसलिए वे पहले git
+इंस्टॉल करते हैं और पहला commit बनाते हैं। `> /dev/null 2>&1` उन पंक्तियों का
+आउटपुट फेंक देता है, जैसा आपने रीडायरेक्शन और पाइप वाले अध्याय में सीखा। आख़िरी
+कमांड क्या छापता है?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ echo 'En rad till.' >> README.md
+$ git commit -m "En rad till" > /dev/null
+$ git log --oneline | wc -l
+1
+---
+दूसरा commit कभी हुआ ही नहीं: `README.md` का बदलाव index में नहीं था, इसलिए
+commit करने को कुछ नहीं था। पहले `git add README.md` – या `git commit -a` – से
+दो commit बनते।
+```
 
 ## अच्छे commit messages
 
@@ -384,6 +411,26 @@ Branch बदलने पर uncommitted बदलाव साथ आ जा�
 टकराएँ नहीं। तब git मना कर देता है और आपसे पहले commit करने को कहता है (या बदलावों
 को `git stash` से कुछ देर के लिए अलग रखने और `git stash pop` से वापस लाने को)।
 
+आख़िर में `style.css` में `purple` वाली कितनी पंक्तियाँ हैं?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ git switch -c ny-design > /dev/null 2>&1
+$ echo 'h1 { color: purple; }' >> style.css
+$ git commit -am "Lila rubriker" > /dev/null
+$ git switch main > /dev/null 2>&1
+$ grep purple style.css | wc -l
+0
+---
+purple वाली पंक्ति `ny-design` पर commit हुई थी। जब आप `main` पर जाते हैं, तो git
+working tree को `main` के सबसे नए commit जैसा बना देता है – जहाँ वह पंक्ति अभी
+है ही नहीं।
+```
+
 ## Branches merge करना: `git merge`
 
 उस branch पर रहिए जिसे बदलाव *मिलने* चाहिए – यहाँ `main` – और merge कीजिए:
@@ -486,6 +533,23 @@ git commit -m "Slå ihop grenen rubrik"
 
 जब कई लोग एक ही project पर काम करते हैं, तो conflicts बिलकुल आम बात हैं। इन्हें कम
 करने का एक अच्छा तरीक़ा है छोटे commits करना और अक्सर merge करना।
+
+```quiz
+आप `main` पर हैं और `git merge rubrik` चलाते हैं। फ़ाइल में conflict आता है:
+
+    <<<<<<< HEAD
+      <h1>Hello!</h1>
+    =======
+      <h1>Welcome!</h1>
+    >>>>>>> rubrik
+
+कौन-सी पंक्ति `main` से आती है?
+- [x] `<h1>Hello!</h1>`
+- [ ] `<h1>Welcome!</h1>`
+---
+`HEAD` वह branch है जिस पर आप हैं – यहाँ `main`। उसका संस्करण `<<<<<<< HEAD` और
+`=======` के बीच है; दूसरी branch का संस्करण `=======` के बाद आता है।
+```
 
 ## वे files जिन्हें git को ignore करना चाहिए: `.gitignore`
 

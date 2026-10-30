@@ -14,11 +14,7 @@
     },
     "uuid": {
       "text": "Find out the UUID of the file system mounted on `/` – and only that one.",
-      "hint": {
-        "debian": "`lsblk -f` shows that `/` is on `/dev/sda2`. Then ask `blkid /dev/sda2` – or let `findmnt -n -o UUID /` do it all at once.",
-        "arch": "`lsblk -f` shows that `/` is on `/dev/sda3`. Then ask `blkid /dev/sda3` – or let `findmnt -n -o UUID /` do it all at once.",
-        "redhat": "`lsblk -f` shows that `/` is on `/dev/sda3`. Then ask `blkid /dev/sda3` – or let `findmnt -n -o UUID /` do it all at once."
-      }
+      "hint": "`lsblk -f` shows that `/` is on `/dev/sda2`. Then ask `blkid /dev/sda2` – or let `findmnt -n -o UUID /` do it all at once."
     },
     "montera": {
       "text": "Create the mount point `/mnt/usb` and mount the USB stick (`/dev/sdb1`) there.",

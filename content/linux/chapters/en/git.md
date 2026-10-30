@@ -18,32 +18,17 @@ buttons, but under the hood they run the same commands you learn here.
 
 ## Install git
 
-Git is not always preinstalled. In {{distro}} you install it like this:
+Git is not always preinstalled. In the Ubuntu terminal you install it with
+apt:
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install git
 ```
-:::
 
-:::arch
-```sh
-sudo pacman -S git
-```
-
-Answer yes when pacman asks whether to proceed.
-:::
-
-:::redhat
-```sh
-sudo dnf install git
-```
-
-Answer `y` – the capital `N` in `[y/N]` means No is the default.
-:::
-
-The package is called `git` in every family. Check that it works:
+Other distributions install it with their own package manager, as you
+learned in the part about distributions and packages – the package is
+called `git` there too. Check that it works:
 
 ```sh
 git --version
@@ -117,6 +102,16 @@ Never delete `.git` unless you want to lose the history – and don't edit the
 files in it by hand. If you want to stop using git in a project, removing
 `.git` is enough; your ordinary files stay.
 
+```quiz
+You want to stop using git in a project, but keep all your files. What do you do?
+- [ ] Run `git init` again
+- [x] Remove the hidden directory `.git`
+- [ ] Remove every file except `.git`
+---
+The whole history lives in `.git`, and git does not touch your ordinary files.
+Without `.git` the files stay – only the history is gone.
+```
+
 ## Three places: working tree, index and history
 
 The most important thing to understand about git is that a change passes
@@ -136,6 +131,17 @@ through three places:
 Why the middle step? So that you can choose. If you have changed five files
 but only two belong together, you can put those two in the index, commit
 them and save the rest for a commit of its own.
+
+```quiz
+You have changed five files, but only two of the changes belong together.
+How do you save just those two in a commit?
+- [ ] Run `git commit` first and `git add` on the two files afterwards
+- [x] Run `git add` on the two files, then `git commit`
+- [ ] Commit all five – a commit always takes every changed file
+---
+A commit saves what is in the index. The other three changes stay in the
+working tree until you add them.
+```
 
 ## `git status` is your compass
 
@@ -256,6 +262,27 @@ git commit -a -m "Beskriv hur sidan är byggd"
 
 Note that `-a` does *not* include new files that git doesn't follow yet. You
 always have to add those with `git add` first.
+
+The questions with commands in this chapter start in a fresh terminal, so
+they first install git and make the first commit. `> /dev/null 2>&1` throws
+away the output of those lines, as you learned in the chapter on redirection
+and pipes. What does the last command print?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ echo 'En rad till.' >> README.md
+$ git commit -m "En rad till" > /dev/null
+$ git log --oneline | wc -l
+1
+---
+The second commit never happened: the change to `README.md` was not in the
+index, so there was nothing to commit. `git add README.md` first – or
+`git commit -a` – would have given two commits.
+```
 
 ## Good commit messages
 
@@ -384,6 +411,26 @@ with the other branch. Then git refuses and asks you to commit first (or to
 put the changes aside temporarily with `git stash` and bring them back with
 `git stash pop`).
 
+How many lines containing `purple` does `style.css` have at the end?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ git switch -c ny-design > /dev/null 2>&1
+$ echo 'h1 { color: purple; }' >> style.css
+$ git commit -am "Lila rubriker" > /dev/null
+$ git switch main > /dev/null 2>&1
+$ grep purple style.css | wc -l
+0
+---
+The purple line was committed on `ny-design`. When you switch to `main`, git
+makes the working tree look like the latest commit of `main` – where the line
+does not exist yet.
+```
+
 ## Merge branches: `git merge`
 
 Stand on the branch that should *receive* the changes – here `main` – and
@@ -489,6 +536,23 @@ takes you back to where you were before the merge.
 Conflicts are completely normal when several people work on the same
 project. A good way to get fewer of them is to make small commits and merge
 often.
+
+```quiz
+You are on `main` and run `git merge rubrik`. The file gets a conflict:
+
+    <<<<<<< HEAD
+      <h1>Hello!</h1>
+    =======
+      <h1>Welcome!</h1>
+    >>>>>>> rubrik
+
+Which line comes from `main`?
+- [x] `<h1>Hello!</h1>`
+- [ ] `<h1>Welcome!</h1>`
+---
+`HEAD` is the branch you are on – here `main`. Its version is between
+`<<<<<<< HEAD` and `=======`; the other branch's version comes after `=======`.
+```
 
 ## Files git should ignore: `.gitignore`
 

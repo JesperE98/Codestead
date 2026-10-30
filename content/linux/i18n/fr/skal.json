@@ -3,11 +3,7 @@
   "tasks": {
     "installera-zsh": {
       "text": "Installez le shell `zsh`.",
-      "hint": {
-        "debian": "`sudo apt update`, puis `sudo apt install zsh`.",
-        "arch": "`sudo pacman -S zsh` et répondez oui.",
-        "redhat": "`sudo dnf install zsh` – et répondez `y`."
-      }
+      "hint": "`sudo apt update`, puis `sudo apt install zsh`."
     },
     "starta-zsh": {
       "text": "Lancez `zsh`. La première fois, *zsh-newuser-install* vous demande ce que vous voulez faire – répondez `2`. Affichez ensuite quel shell vous utilisez avec `echo $0`.",
@@ -23,11 +19,7 @@
     },
     "installera-fish": {
       "text": "Installez le shell `fish`.",
-      "hint": {
-        "debian": "`sudo apt update`, puis `sudo apt install fish`.",
-        "arch": "`sudo pacman -S fish` et répondez oui.",
-        "redhat": "`sudo dnf install fish` – et répondez `y`."
-      }
+      "hint": "`sudo apt update`, puis `sudo apt install fish`."
     },
     "fish-set": {
       "text": "Lancez `fish`. Créez la variable `frukt` avec la valeur `äpple` à la manière de fish et affichez-la avec `echo`.",

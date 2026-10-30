@@ -13,6 +13,16 @@ ID*) – a number that identifies it – and a parent, the **PPID**, that starte
 it. Everything begins with process number 1, `init` (on almost every
 distribution that's `systemd`), which starts all the rest.
 
+```quiz
+What is the PPID of a process?
+- [ ] The number of the processor it runs on
+- [x] The PID of the process that started it – its parent
+- [ ] Its priority
+---
+Every process has a parent. Follow the parents far enough and you end up at
+process number 1.
+```
+
 ## My processes – `ps`
 
 `ps` (*process status*) without options shows the processes in your own
@@ -56,6 +66,12 @@ there's `pgrep`:
 pgrep -l sshd
 ```
 
+```try
+pgrep -l sshd
+---
+`-l` shows the name next to the PID.
+```
+
 ## A live view – `top` and `htop`
 
 `top` shows the processes sorted by how much processor time they use and
@@ -94,6 +110,16 @@ killall firefox
 You may only send signals to your **own** processes. For processes that
 belong to root or other users, you need `sudo`.
 
+```quiz
+A program has stopped responding. Which command should you try **first**?
+- [x] `kill 1234` – it sends `SIGTERM` and lets the program shut down nicely
+- [ ] `kill -9 1234` – it always works best
+- [ ] `sudo kill -9 1`
+---
+Start with the default signal, `SIGTERM`. `SIGKILL` (`-9`) is the last
+resort, since the program gets no chance to save or clean up.
+```
+
 > **Find it and stop it!** Some process on this computer is using almost 100 %
 > of the processor. Use `top` or `ps aux --sort=-%cpu` to find out what it's
 > called and what its PID is – and then stop it.
@@ -128,6 +154,17 @@ jobs
 The variable `$!` holds the PID of the most recent background job. When a
 job finishes, the shell tells you with a line like `[1]+  Done   sleep 300`.
 
+```quiz
+You've pressed `Ctrl+Z` on a program in the foreground. How do you let it
+carry on running while you keep your prompt?
+- [ ] `fg %1`
+- [x] `bg %1`
+- [ ] `Ctrl+C`
+---
+`Ctrl+Z` pauses the program. `bg` lets a stopped job continue in the
+background, while `fg` would bring it back to the foreground.
+```
+
 ## How is the computer doing?
 
 Two small commands give you a quick overview:
@@ -142,9 +179,18 @@ last 1, 5 and 15 minutes. `free -h` shows how much memory is in use. Note the
 *available* column: Linux uses spare memory as a cache for files, so *free*
 often looks low even though there's plenty of memory.
 
+```quiz
+`free -h` shows little *free* memory but a lot of *available* memory. What
+does that mean?
+- [ ] The computer is about to run out of memory
+- [x] Linux uses spare memory as a cache for files – look at *available*
+- [ ] Some memory is broken
+```
+
 ## The same everywhere
 
-Processes work the same on every distribution. The tools come from the
-**procps** package (called `procps-ng` on Arch and Fedora), and `killall`
-from **psmisc**. What differs is which services are running from the start –
-try comparing `ps aux` on {{distro}} with another distribution!
+Processes work the same on every distribution. On Ubuntu the tools come from
+the **procps** package, and `killall` from **psmisc**. Some distributions give
+the packages slightly different names, and which services are running from
+the start differs too – you'll get to compare distributions in the part about
+distributions.

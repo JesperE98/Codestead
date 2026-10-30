@@ -23,11 +23,7 @@
     },
     "zip": {
       "text": "`zip` और `unzip` packages install कीजिए, और फिर `~/dokument` को `~/dokument.zip` में pack कीजिए।",
-      "hint": {
-        "debian": "`sudo apt update` और `sudo apt install zip unzip` चलाइए। zip के लिए `-r` मत भूलिए: `zip -r dokument.zip dokument`।",
-        "arch": "`sudo pacman -S zip unzip` से install कीजिए। zip के लिए `-r` मत भूलिए: `zip -r dokument.zip dokument`।",
-        "redhat": "`sudo dnf install zip unzip` से install कीजिए और `y` जवाब दीजिए। zip के लिए `-r` मत भूलिए: `zip -r dokument.zip dokument`।"
-      }
+      "hint": "`sudo apt update` और `sudo apt install zip unzip` चलाइए। zip के लिए `-r` मत भूलिए: `zip -r dokument.zip dokument`।"
     },
     "unzip": {
       "text": "`unzip` से `~/dokument.zip` को नई directory `~/fran-zip` में unpack कीजिए।",

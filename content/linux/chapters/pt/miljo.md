@@ -27,6 +27,16 @@ Você cria uma variável com `NOME=valor` (sem espaços em volta do `=`!). Com o
 export EDITOR=nano
 ```
 
+```quiz
+Qual linha cria a variável `FARG` com o valor `blue`?
+- [ ] `FARG = blue`
+- [x] `FARG=blue`
+- [ ] `$FARG=blue`
+---
+Não pode haver espaços em volta do `=`. Com espaços, o shell acha que `FARG`
+é um comando. O `$` só é usado quando você *lê* uma variável.
+```
+
 ## Aspas simples e duplas
 
 Existe uma diferença importante:
@@ -38,6 +48,14 @@ echo 'Pasta pessoal: $HOME'
 
 Dentro de aspas **duplas**, as variáveis são substituídas pelos seus valores.
 Dentro de aspas **simples**, tudo é impresso exatamente como foi escrito.
+
+```predict
+$ x=linux
+$ echo "I like $x"
+$ echo 'I like $x'
+I like linux
+I like $x
+```
 
 ## PATH – onde ficam os comandos?
 
@@ -60,6 +78,17 @@ type cd
 Se quiser executar um programa que não está no `PATH`, você precisa informar
 o caminho dele, por exemplo `./meuprograma` para um arquivo no diretório em
 que você está.
+
+```quiz
+Você tem um programa chamado `hej` no diretório em que está, e esse
+diretório não está no `PATH`. Como você o executa?
+- [ ] `hej`
+- [x] `./hej`
+- [ ] `type hej`
+---
+Sem um caminho, o shell só procura nos diretórios do `PATH`. `./hej`
+diz exatamente onde o arquivo está: no diretório atual.
+```
 
 ## Códigos de saída – `$?`
 
@@ -85,6 +114,12 @@ ll
 
 O `alias` sem argumentos lista todos os aliases, e `unalias ll` remove um.
 
+```predict
+$ alias hej='echo Hello'
+$ hej
+Hello
+```
+
 ## Salvando configurações – `~/.bashrc`
 
 As variáveis e os aliases que você cria desaparecem quando você fecha o
@@ -94,4 +129,15 @@ carregá-lo na hora com:
 
 ```sh
 source ~/.bashrc
+```
+
+```quiz
+Você cria um alias, fecha o terminal e abre um novo. O alias
+sumiu. O que você deveria ter feito?
+- [ ] Executado `alias` sem argumentos
+- [x] Colocado o alias no `~/.bashrc`
+- [ ] Criado o alias com `export`
+---
+Tudo o que você coloca no `~/.bashrc` é lido de novo toda vez que um novo
+terminal é aberto.
 ```

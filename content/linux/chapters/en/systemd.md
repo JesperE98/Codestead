@@ -52,10 +52,8 @@ ls /usr/lib/systemd/system
 ls /etc/systemd/system
 ```
 
-:::debian
 Older Debian and Ubuntu versions often say `/lib/systemd/system` instead.
 It's the same directory – `/lib` is a link to `/usr/lib`.
-:::
 
 The name of a service is the file name, for example `minserver.service`.
 When you type commands you may leave out `.service`: `systemctl status
@@ -65,40 +63,28 @@ minserver` works just as well.
 
 The command you'll use most is `systemctl status`:
 
-:::debian
 ```sh
 systemctl status ssh
 ```
-:::
 
-:::arch
-```sh
-systemctl status sshd
-```
-:::
-
-:::redhat
-```sh
-systemctl status sshd
-```
-:::
-
-The output looks roughly like this:
+On Ubuntu the SSH server is called `ssh`. The output looks roughly like
+this:
 
 ```text
-● sshd.service - OpenSSH server daemon
-     Loaded: loaded (/usr/lib/systemd/system/sshd.service; enabled; preset: disabled)
-     Active: active (running) since Fri 2026-10-30 07:54:07 CET; 2h 13min ago
+● ssh.service - OpenBSD Secure Shell server
+     Loaded: loaded (/usr/lib/systemd/system/ssh.service; enabled; preset: enabled)
+     Active: active (running) since Fri 2026-10-30 07:54:07 UTC; 2h 13min ago
        Docs: man:sshd(8)
+             man:sshd_config(5)
    Main PID: 733 (sshd)
       Tasks: 1 (limit: 9387)
      Memory: 10.1M
-     CGroup: /system.slice/sshd.service
+     CGroup: /system.slice/ssh.service
              └─733 /usr/sbin/sshd -D
 
-Oct 30 07:54:07 fedora systemd[1]: Starting sshd.service - OpenSSH server daemon...
-Oct 30 07:54:07 fedora sshd[733]: Server listening on 0.0.0.0 port 22.
-Oct 30 07:54:07 fedora systemd[1]: Started sshd.service - OpenSSH server daemon.
+Oct 30 07:54:07 ubuntu systemd[1]: Starting ssh.service - OpenBSD Secure Shell server...
+Oct 30 07:54:07 ubuntu sshd[733]: Server listening on 0.0.0.0 port 22.
+Oct 30 07:54:07 ubuntu systemd[1]: Started ssh.service - OpenBSD Secure Shell server.
 ```
 
 Line by line:
@@ -181,6 +167,20 @@ silent:
 if systemctl is-active -q minserver; then echo "the server is running"; fi
 ```
 
+On a freshly started computer in the simulator, `minserver` is running, but
+nobody has enabled it. What do these two commands print?
+
+```predict
+$ systemctl is-active minserver
+$ systemctl is-enabled minserver
+active
+disabled
+---
+minserver is running **now**, but nobody has run `enable` – after a reboot
+it would not be started. `start` and `enable` really are two different
+things.
+```
+
 ## Listing services
 
 ```sh
@@ -248,9 +248,21 @@ Don't worry if `journalctl -p err` shows a couple of kernel errors such as
 harmless – bugs in the computer's firmware that the kernel works around.
 
 Normally you have to be root, or a member of a group allowed to read the
-journal (`adm` or `systemd-journal` in Debian and Ubuntu, `wheel` in Arch
-and Fedora), to see everything. Your user in the simulator may read the
-whole journal.
+journal (`adm` or `systemd-journal` on Ubuntu – other families use other
+groups), to see everything. Your user in the simulator may read the whole
+journal.
+
+```quiz
+Which priorities does `journalctl -p warning` show?
+- [x] `err`
+- [x] `warning`
+- [x] `crit`
+- [ ] `notice`
+- [ ] `info`
+---
+`-p` shows the priority you choose *and everything more severe* – that is,
+everything with the same or a lower number (`warning` is 4).
+```
 
 ## Troubleshooting a service that won't start
 
@@ -294,6 +306,18 @@ The line `Main process exited, code=exited, status=1/FAILURE` means the
 program exited by itself with an error. If it says `status=203/EXEC`,
 systemd couldn't find the program at all – check the path in `ExecStart=`.
 
+```quiz
+A service won't start, and the journal says `status=203/EXEC`. Where do you
+look first?
+- [ ] In `/etc/fstab`
+- [x] At the path in `ExecStart=` in the unit file
+- [ ] At the priority with `journalctl -p err`
+- [ ] Nowhere – it means the program exited by itself with an error
+---
+203/EXEC means systemd couldn't find the program at all. A program that
+starts and then exits with an error gives `status=1/FAILURE` instead.
+```
+
 ## The unit file – `systemctl cat`
 
 To see exactly how a service is started, read its unit file:
@@ -333,45 +357,50 @@ Never edit the files in `/usr/lib/systemd/system` – they're overwritten
 the next time the package is updated. Put your own version in
 `/etc/systemd/system` instead.
 
-## Different names in different families
+```quiz
+You want to change how a service that came with a package is started. What
+is the right way?
+- [ ] Edit its file in `/usr/lib/systemd/system` and restart the service
+- [x] Put your own version in `/etc/systemd/system`, run `sudo systemctl daemon-reload` and restart the service
+- [ ] Put your own version in `/etc/systemd/system` – systemd notices the change by itself
+- [ ] Edit the file in `/usr/lib/systemd/system` and run `sudo systemctl enable` on it
+---
+Files in `/etc/systemd/system` take precedence, and they aren't overwritten
+when the package is updated. `daemon-reload` makes systemd load the changed
+unit file again.
+```
+
+## What are the services called?
 
 systemd works the same everywhere, but **the services aren't always called
-the same thing**. It depends on what the packages are called and which
-programs the distribution has chosen:
+the same thing** – it depends on what the packages are called and which
+programs the distribution has chosen. On Ubuntu:
 
-| Service | Debian/Ubuntu | Arch | Fedora |
-|---|---|---|---|
-| SSH server | `ssh` (alias `sshd`) | `sshd` | `sshd` |
-| Scheduled jobs (cron) | `cron` | `cronie` (not installed by default) | `crond` |
-| Network | `NetworkManager` (Ubuntu), `networking` (Debian) | `systemd-networkd` | `NetworkManager` |
-| Firewall | `ufw` (if installed) | – | `firewalld` |
-| Clock | `systemd-timesyncd` | `systemd-timesyncd` | `chronyd` |
+| Service | Name on Ubuntu |
+|---|---|
+| SSH server | `ssh` (alias `sshd`) |
+| Scheduled jobs (cron) | `cron` |
+| Network | `NetworkManager` |
+| Firewall | `ufw` (if installed) |
+| Clock | `systemd-timesyncd` |
 
-:::debian
-In {{distro}} the SSH service is called `ssh.service`. It has the alias
+The SSH service is really called `ssh.service`. It has the alias
 `sshd.service`, so `systemctl status sshd` works too – but the output shows
-the real name.
-:::
-
-:::arch
-Arch installs almost no services by default – you choose for yourself. No
-cron service is running, for example; Arch uses systemd **timers** instead.
-If you want cron, install the package `cronie` and run `sudo systemctl
-enable --now cronie`. Also keep in mind that Arch has `preset: disabled`:
-new services are never enabled automatically when you install them.
-:::
-
-:::redhat
-Fedora has `firewalld` running from the start, and time sync is handled by
-`chronyd`. Fedora also uses `preset: disabled` for most services: when you
-install a new service (a web server, for example) you have to run `sudo
-systemctl enable --now …` yourself.
-:::
+the real name. Other families can name the same services differently (on
+Arch and Fedora the SSH service is called `sshd`) – the part on
+distributions and packages is about such differences.
 
 Not sure what something is called? Search the list:
 
 ```sh
 systemctl list-unit-files | grep ssh
+```
+
+```try
+systemctl list-unit-files | grep ssh
+---
+`ssh.service` is the real unit file, and `sshd.service` is listed as an
+`alias` for it.
 ```
 
 ## Rebooting the computer

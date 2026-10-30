@@ -22,6 +22,16 @@ Verzeichnissen, der bei der **Wurzel** (*root*) beginnt, geschrieben `/`.
 Diese Aufteilung heißt *Filesystem Hierarchy Standard* und ist auf allen
 Distributionen fast identisch.
 
+```quiz
+Ein Programm schreibt eine Logdatei. In welchem Verzeichnis würdest du sie erwarten?
+- [ ] `/etc`
+- [ ] `/usr/bin`
+- [x] `/var/log`
+- [ ] `/home`
+---
+Logdateien landen in `/var/log`. Einstellungen liegen in `/etc` und Programme in `/usr/bin`.
+```
+
 ## Wo bin ich? – `pwd`
 
 `pwd` (*print working directory*) zeigt das Verzeichnis an, in dem du dich
@@ -56,6 +66,21 @@ ls -a
 
 Optionen lassen sich kombinieren: `ls -la` ist dasselbe wie `ls -l -a`.
 
+```quiz
+Warum zeigt ein einfaches `ls` in deinem Home-Verzeichnis die Datei `.bashrc` nicht an?
+- [ ] Es ist eine Systemdatei, die nur root sehen kann
+- [x] Ihr Name beginnt mit einem Punkt, also ist sie versteckt
+- [ ] `ls` zeigt nur Verzeichnisse an
+---
+Dateien, deren Name mit einem Punkt beginnt, sind versteckt. `ls -a` zeigt sie auch an.
+```
+
+Probier das lange Format zusammen mit den versteckten Dateien aus:
+
+```try
+ls -la
+```
+
 ## Verzeichnis wechseln – `cd`
 
 `cd` (*change directory*) bringt dich in ein anderes Verzeichnis:
@@ -71,6 +96,18 @@ Es gibt zwei Arten von Pfaden:
 - Ein **relativer** Pfad geht von dem Verzeichnis aus, in dem du bist. Wenn du
   in `/` bist, erreichst du `/var/log` einfach mit `cd var/log`.
 
+```quiz
+Du bist in `/home`. Welche Befehle bringen dich nach `/home/elev/dokument`? (Wähle alle, die funktionieren.)
+- [x] `cd elev/dokument`
+- [x] `cd /home/elev/dokument`
+- [ ] `cd /elev/dokument`
+- [ ] `cd dokument`
+---
+`elev/dokument` ist relativ zu `/home`, und `/home/elev/dokument` ist absolut,
+funktioniert also von überall. `/elev/dokument` beginnt bei der Wurzel, und dort
+gibt es kein `elev`.
+```
+
 Ein paar besondere Namen solltest du kennen:
 
 | Name | Bedeutet |
@@ -84,6 +121,15 @@ Ein paar besondere Namen solltest du kennen:
 
 ```sh
 cd ..
+```
+
+```predict
+$ cd /usr/bin
+$ cd ..
+$ pwd
+/usr
+---
+`..` ist das Verzeichnis darüber, also landest du von `/usr/bin` aus in `/usr`.
 ```
 
 ## Tab-Vervollständigung

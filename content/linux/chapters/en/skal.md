@@ -18,6 +18,17 @@ work the same whichever shell you use. What differs between shells is **the
 language around them**: how variables are set, how loops and conditions are
 written, what the prompt looks like and which conveniences are available.
 
+```quiz
+You switch from bash to another shell. Which of these stays exactly the same?
+- [ ] How you set a variable
+- [ ] How you write a loop
+- [x] What `grep` does with its options
+- [ ] What the prompt looks like
+---
+`grep` is a separate program in `/usr/bin`. The shell only starts it – the
+language around it is what differs between shells.
+```
+
 ## The family tree: sh, bash, zsh and fish
 
 | Shell | Since | Characteristics |
@@ -53,26 +64,16 @@ echo $SHELL
 
 ### Install zsh
 
-zsh has the same package name in every family:
+In the Ubuntu terminal you install zsh with apt:
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install zsh
 ```
-:::
 
-:::arch
-```sh
-sudo pacman -S zsh
-```
-:::
-
-:::redhat
-```sh
-sudo dnf install zsh
-```
-:::
+Other distributions use their own package manager, as you learned in the
+part about distributions and packages. The package is called `zsh` there
+too.
 
 Look at `/etc/shells` again – the package has added `/usr/bin/zsh` (and
 `/bin/zsh`):
@@ -100,7 +101,7 @@ started:
 | `1` | The main menu with all settings (not available in the simulator) |
 | `2` | Create `~/.zshrc` with the recommended settings |
 
-Answer `2`. The prompt changes to `elev@{{hostname}} ~ %` – in zsh, `%` is
+Answer `2`. The prompt changes to `elev@ubuntu ~ %` – in zsh, `%` is
 the usual sign for a regular user (root gets `#`, just like in bash).
 
 Which shell are you running now? The variable `$0` holds the name of the
@@ -171,6 +172,24 @@ bash prints `[a.txt]` and `[b.txt]` – zsh prints `[a.txt b.txt]`. The zsh way
 is usually what you want, but it means that a bash script does not always do
 the same thing in zsh. (With `setopt shwordsplit`, zsh behaves like bash.)
 
+You don't have to start a shell to try a single command in it. With `-c`, the
+shell runs the command and exits right away – `zsh -c 'echo $0'` prints `zsh`,
+and you are still in bash afterwards.
+
+The question below starts in a fresh terminal, so it first installs zsh.
+`> /dev/null 2>&1` throws away the output of that line. What does the last
+command print?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
+$ zsh -c 'filer="x.txt y.txt z.txt"; for f in $filer; do echo "<$f>"; done'
+<x.txt y.txt z.txt>
+---
+zsh does not split the variable on spaces, so the loop runs once with the
+whole value. In bash the same loop would print three lines: `<x.txt>`,
+`<y.txt>` and `<z.txt>`.
+```
+
 ### ~/.zshrc and the prompt
 
 bash reads `~/.bashrc` when it starts – zsh reads `~/.zshrc`. Look at the file
@@ -227,30 +246,19 @@ right arrow key. (The simulator shows no suggestions, but the syntax works.)
 
 ### Install and start fish
 
-:::debian
+fish is installed with apt in the same way – on other distributions with
+their own package manager:
+
 ```sh
 sudo apt update
 sudo apt install fish
 ```
-:::
-
-:::arch
-```sh
-sudo pacman -S fish
-```
-:::
-
-:::redhat
-```sh
-sudo dnf install fish
-```
-:::
 
 ```sh
 fish
 ```
 
-fish welcomes you and the prompt becomes `elev@{{hostname}} ~>`. Go down a
+fish welcomes you and the prompt becomes `elev@ubuntu ~>`. Go down a
 few directories and see how fish shortens the path in the prompt:
 
 ```sh
@@ -312,6 +320,17 @@ In fish, every variable is a **list**. The elements are numbered from 1:
 set frukter äpple päron banan
 echo $frukter[2]
 count $frukter
+```
+
+`-c` works in fish too. What does the last command print?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y fish > /dev/null 2>&1
+$ fish -c 'set frukter äpple päron banan; echo $frukter[3]'
+banan
+---
+The elements of a fish list are numbered from 1, so `[3]` is the third and
+last element.
 ```
 
 ### Command substitution and $status
@@ -430,6 +449,16 @@ bash runs it. That is why `#!/bin/bash` (or `#!/usr/bin/env bash`) matters so
 much. A script that must work everywhere, even where bash is missing, is
 written with `#!/bin/sh` and POSIX syntax only.
 
+```quiz
+You are sitting in fish and run a script that starts with `#!/bin/bash` and
+contains the line `count=3`. What happens?
+- [ ] fish refuses, because `count=3` is not allowed in fish
+- [x] It works – bash runs the script, whatever shell you are sitting in
+- [ ] It only works if you first change your login shell to bash with `chsh`
+---
+The `#!` line decides which shell runs the script. fish only starts it.
+```
+
 ## Changing your default shell with chsh
 
 Typing `zsh` every time you open a terminal gets old. With `chsh` (*change
@@ -447,14 +476,6 @@ grep elev /etc/passwd
   again.
 - root can change the shell for others: `sudo chsh -s /usr/bin/fish kim`.
 
-:::arch
-On Arch, `chsh -l` lists all valid shells.
-:::
-
-:::redhat
-On Fedora, `chsh -l` lists all valid shells.
-:::
-
 To go back to bash, do the same:
 
 ```sh
@@ -464,6 +485,19 @@ chsh -s /bin/bash
 A common piece of advice for fish is to keep bash as your login shell and let
 the terminal program start fish instead – then everything that expects a
 POSIX shell at login keeps working.
+
+The question starts in a fresh terminal, installs zsh and makes it the login
+shell. What does the last command print?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
+$ chsh -s /usr/bin/zsh > /dev/null 2>&1
+$ echo $SHELL
+/bin/bash
+---
+`chsh` changed your line in `/etc/passwd`, but the change takes effect at the
+next login. The terminal you have open keeps bash, and so does `$SHELL`.
+```
 
 ## Which shell should you choose?
 

@@ -18,16 +18,8 @@
       "hint": "まず `sudo groupadd utvecklare`、次に `sudo usermod -aG utvecklare kim` です。"
     },
     "sudo-ratt": {
-      "text": {
-        "debian": "`kim` をグループ `sudo` に追加して、`sudo` を使えるようにしてください。",
-        "arch": "`kim` をグループ `wheel` に追加して、`sudo` を使えるようにしてください。",
-        "redhat": "`kim` をグループ `wheel` に追加して、`sudo` を使えるようにしてください。"
-      },
-      "hint": {
-        "debian": "`sudo usermod -aG sudo kim` です。`-a` を忘れずに！",
-        "arch": "`sudo usermod -aG wheel kim` です。`-a` を忘れずに！",
-        "redhat": "`sudo usermod -aG wheel kim` です。`-a` を忘れずに！"
-      }
+      "text": "`kim` をグループ `sudo` に追加して、`sudo` を使えるようにしてください。",
+      "hint": "`sudo usermod -aG sudo kim` です。`-a` を忘れずに！"
     },
     "sudo-u": {
       "text": "`sudo -u` で、`kim` として `whoami` を実行してください。",

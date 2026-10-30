@@ -8,32 +8,14 @@ Git 是为终端而生的。图形化程序和编辑器里虽然也有 git 按�
 
 ## 安装 git
 
-git 并不总是预装的。在 {{distro}} 上，你可以这样安装它：
+git 并不总是预装的。在 Ubuntu 终端中，你用 apt 安装它：
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install git
 ```
-:::
 
-:::arch
-```sh
-sudo pacman -S git
-```
-
-当 pacman 询问是否继续时，回答 yes。
-:::
-
-:::redhat
-```sh
-sudo dnf install git
-```
-
-回答 `y`——`[y/N]` 中大写的 `N` 表示默认选项是 No。
-:::
-
-在每个家族中，这个软件包都叫 `git`。检查一下它能否正常工作：
+其他发行版用各自的包管理器来安装它，这一点你在关于发行版和软件包的部分中已经学过——在那些发行版上，这个软件包同样叫 `git`。检查一下它能否正常工作：
 
 ```sh
 git --version
@@ -94,6 +76,15 @@ ls .git
 
 除非你想丢掉历史记录，否则千万不要删除 `.git`——也不要手动编辑其中的文件。如果你想在某个项目中停止使用 git，只要删除 `.git` 就够了；你的普通文件都会保留下来。
 
+```quiz
+你想在某个项目中停止使用 git，但要保留所有文件。你该怎么做？
+- [ ] 再运行一次 `git init`
+- [x] 删除隐藏目录 `.git`
+- [ ] 删除除 `.git` 以外的所有文件
+---
+全部历史都保存在 `.git` 中，而 git 不会动你的普通文件。没有了 `.git`，文件依然保留——只是历史没有了。
+```
+
 ## 三个地方：工作区、暂存区和历史
 
 关于 git，最重要的一点是要理解：一项修改会经过三个地方：
@@ -108,6 +99,15 @@ ls .git
 - **历史**由一个个**提交**（commit）组成。一个提交就是所有文件的一份保存快照，附带一条提交信息、作者和时间。
 
 为什么要有中间这一步？为了让你可以挑选。如果你改了五个文件，但只有其中两个属于同一件事，你就可以只把这两个放进暂存区并提交，剩下的留给另一个单独的提交。
+
+```quiz
+你改了五个文件，但其中只有两个文件的修改属于同一件事。怎样只把这两个保存到一个提交中？
+- [ ] 先运行 `git commit`，之后再对这两个文件运行 `git add`
+- [x] 对这两个文件运行 `git add`，然后运行 `git commit`
+- [ ] 把五个都提交——提交总是包含每个修改过的文件
+---
+提交保存的是暂存区中的内容。另外三个修改会留在工作区中，直到你添加它们。
+```
 
 ## `git status` 是你的指南针
 
@@ -213,6 +213,22 @@ git commit -a -m "Beskriv hur sidan är byggd"
 
 注意，`-a` *不会*包含 git 还没有跟踪的新文件。这些文件你总是需要先用 `git add` 添加。
 
+本章中带命令的问题都从一个全新的终端开始，所以它们会先安装 git 并完成第一次提交。`> /dev/null 2>&1` 会丢弃那几行的输出，这一点你在关于重定向和管道的那一章中已经学过。最后一条命令会打印什么？
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ echo 'En rad till.' >> README.md
+$ git commit -m "En rad till" > /dev/null
+$ git log --oneline | wc -l
+1
+---
+第二次提交根本没有发生：对 `README.md` 的修改不在暂存区中，所以没有任何东西可以提交。先运行 `git add README.md`——或者使用 `git commit -a`——就会得到两次提交。
+```
+
 ## 好的提交信息
 
 半年之后，讲述整个故事的就是这些提交信息——讲给你自己，也讲给别人。几条经验法则：
@@ -315,6 +331,24 @@ git log --oneline --all
 
 切换分支时，未提交的修改会被一起带过去——除非它们和另一个分支冲突。这时 git 会拒绝切换，并要求你先提交（或者用 `git stash` 把修改暂时放到一边，之后再用 `git stash pop` 取回来）。
 
+最后，`style.css` 中有多少行包含 `purple`？
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ git switch -c ny-design > /dev/null 2>&1
+$ echo 'h1 { color: purple; }' >> style.css
+$ git commit -am "Lila rubriker" > /dev/null
+$ git switch main > /dev/null 2>&1
+$ grep purple style.css | wc -l
+0
+---
+紫色的那一行是在 `ny-design` 上提交的。当你切换到 `main` 时，git 会让工作区变成 `main` 最新一次提交的样子——而那里还没有这一行。
+```
+
 ## 合并分支：`git merge`
 
 先站在要*接收*修改的分支上——这里是 `main`——然后合并：
@@ -402,6 +436,22 @@ git commit -m "Slå ihop grenen rubrik"
 如果你在解决冲突的过程中改变了主意，`git merge --abort` 会让你回到合并之前的状态。
 
 当多人在同一个项目上工作时，冲突是再正常不过的事。想减少冲突，一个好办法是多做小提交、经常合并。
+
+```quiz
+你在 `main` 上运行 `git merge rubrik`。文件出现了冲突：
+
+    <<<<<<< HEAD
+      <h1>Hello!</h1>
+    =======
+      <h1>Welcome!</h1>
+    >>>>>>> rubrik
+
+哪一行来自 `main`？
+- [x] `<h1>Hello!</h1>`
+- [ ] `<h1>Welcome!</h1>`
+---
+`HEAD` 是你当前所在的分支——这里是 `main`。它的版本位于 `<<<<<<< HEAD` 和 `=======` 之间；另一个分支的版本则在 `=======` 之后。
+```
 
 ## git 应该忽略的文件：`.gitignore`
 

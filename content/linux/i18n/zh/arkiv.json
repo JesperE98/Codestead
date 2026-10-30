@@ -23,11 +23,7 @@
     },
     "zip": {
       "text": "安装 `zip` 和 `unzip` 软件包，然后把 `~/dokument` 打包成 `~/dokument.zip`。",
-      "hint": {
-        "debian": "运行 `sudo apt update` 和 `sudo apt install zip unzip`。别忘了给 zip 加上 `-r`：`zip -r dokument.zip dokument`。",
-        "arch": "用 `sudo pacman -S zip unzip` 安装。别忘了给 zip 加上 `-r`：`zip -r dokument.zip dokument`。",
-        "redhat": "用 `sudo dnf install zip unzip` 安装，并回答 `y`。别忘了给 zip 加上 `-r`：`zip -r dokument.zip dokument`。"
-      }
+      "hint": "运行 `sudo apt update` 和 `sudo apt install zip unzip`。别忘了给 zip 加上 `-r`：`zip -r dokument.zip dokument`。"
     },
     "unzip": {
       "text": "用 `unzip` 把 `~/dokument.zip` 解包到新目录 `~/fran-zip` 中。",

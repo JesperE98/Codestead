@@ -1,0 +1,59 @@
+{
+  "title": "Red Hat 家族：dnf 和 COPR",
+  "tasks": {
+    "sync": {
+      "text": "用 `dnf check-update` 获取新的软件包信息并检查更新。",
+      "hint": "`dnf check-update` 不需要 root 权限。"
+    },
+    "search": {
+      "text": "搜索 `htop` 软件包。",
+      "hint": "`dnf search htop`"
+    },
+    "install": {
+      "text": "安装 `tree` 软件包。",
+      "hint": "`sudo dnf install tree`——并回答 `y`，因为默认选项是 No！"
+    },
+    "run-tree": {
+      "text": "在你的主目录中运行 `tree`。"
+    },
+    "remove": {
+      "text": "再把 `tree` 软件包删除。",
+      "hint": "`sudo dnf remove tree`"
+    },
+    "upgrade": {
+      "text": "升级所有已安装的软件包。",
+      "hint": "`sudo dnf upgrade`"
+    },
+    "forbered": {
+      "text": "显示 dnf 当前正在使用哪些软件源。",
+      "hint": "`dnf repolist`"
+    },
+    "lagg-till": {
+      "text": "启用 COPR 软件源 `lunatool/moonphase`。",
+      "hint": "`sudo dnf copr enable lunatool/moonphase`——并回答 `y`，默认选项是 No。"
+    },
+    "granska": {
+      "text": "列出已经添加了哪些 COPR 软件源。",
+      "hint": "`dnf copr list`"
+    },
+    "installera": {
+      "text": "从 COPR 软件源安装 `moonphase` 软件包。",
+      "hint": "`sudo dnf install moonphase`"
+    },
+    "kor": {
+      "text": "运行程序 `moonphase`。"
+    },
+    "ursprung": {
+      "text": "查明 `moonphase` 是从哪个软件源安装的。",
+      "hint": "`dnf info moonphase`——看看 `From repository` 那一行。"
+    },
+    "efterat": {
+      "text": "再把这个 COPR 软件源禁用。程序会保留下来，但不会再得到更新。",
+      "hint": "`sudo dnf copr disable lunatool/moonphase`"
+    },
+    "vim": {
+      "text": "附加题：安装文本编辑器 Vim。提示：在 Red Hat 家族中，这个软件包不叫 `vim`！",
+      "hint": "用 `dnf search vim` 搜索。这个软件包叫做 `vim-enhanced`。"
+    }
+  }
+}

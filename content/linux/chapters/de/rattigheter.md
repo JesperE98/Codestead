@@ -40,6 +40,17 @@ Typ   Besitzer Gruppe  Andere
 
 Danach folgen der Besitzer (`elev`) und die Gruppe (`elev`).
 
+```quiz
+Ein Verzeichnis hat die Rechte `drwxr-x---`. Was dürfen Mitglieder seiner Gruppe?
+- [ ] Gar nichts
+- [x] Den Inhalt auflisten und mit `cd` hineinwechseln, aber darin keine Dateien anlegen oder löschen
+- [ ] Alles, was der Besitzer darf
+---
+Der Block der Gruppe ist `r-x`: Mit `r` kannst du den Inhalt auflisten und mit
+`x` in das Verzeichnis wechseln. Ohne `w` kannst du darin keine Dateien anlegen
+oder löschen.
+```
+
 ## Rechte ändern – `chmod`
 
 Rechte lassen sich als **Zahlen** angeben. Jeder Block bekommt eine Ziffer,
@@ -63,6 +74,14 @@ chmod u+x skript.sh
 chmod go-w fil.txt
 ```
 
+```predict
+$ touch plan.txt
+$ chmod 600 plan.txt
+$ chmod g+r plan.txt
+$ ls -l plan.txt | awk '{print $1}'
+-rw-r-----
+```
+
 ## Skripte
 
 Ein **Skript** ist eine Textdatei mit Befehlen. Die erste Zeile,
@@ -84,6 +103,17 @@ chmod +x datum.sh
 
 Das `./` ist nötig, weil das aktuelle Verzeichnis nicht im `PATH` steht.
 
+```quiz
+Du hast das Skript `test.sh` geschrieben und führst `./test.sh` aus, bekommst
+aber `Permission denied`. Was fehlt?
+- [ ] Ein `sudo` davor
+- [x] Das Ausführungsrecht – führe zuerst `chmod +x test.sh` aus
+- [ ] Das `./` – es sollte `test.sh` heißen
+---
+Damit eine Datei als Programm laufen kann, braucht sie das Recht `x`. Das `./`
+ist richtig: Ohne es sucht die Shell nur in den Verzeichnissen aus `PATH`.
+```
+
 ## root und sudo
 
 Manche Dateien, wie `/etc/shadow`, in der die Passwörter gespeichert sind,
@@ -95,22 +125,10 @@ sudo whoami
 ```
 
 Beim ersten Mal fragt `sudo` nach **deinem eigenen** Passwort. Nur Benutzer in
-der Administratorengruppe dürfen sudo benutzen. Unter {{distro}} heißt diese
-Gruppe **{{adminGroup}}**:
-
-:::debian
-In der Debian-Familie heißt die Gruppe `sudo`.
-:::
-
-:::arch
-In der Arch-Familie heißt die Gruppe `wheel` – ein alter Unix-Name für „die,
-die das Sagen haben“ (ein *big wheel* ist im Englischen ein hohes Tier).
-:::
-
-:::redhat
-In der Red-Hat-Familie heißt die Gruppe `wheel` – ein alter Unix-Name für „die,
-die das Sagen haben“ (ein *big wheel* ist im Englischen ein hohes Tier).
-:::
+der Administratorengruppe dürfen sudo benutzen. Unter Ubuntu heißt diese
+Gruppe **sudo** – du siehst sie unter deinen Gruppen, wenn du `id` ausführst.
+Manche andere Distributionen nennen die Gruppe stattdessen `wheel`; mehr über
+die Unterschiede zwischen Distributionen liest du im Teil über Distributionen.
 
 Musst du viele Befehle als root ausführen, kannst du mit `sudo -i` eine
 root-Shell starten. Der Prompt wechselt dann zu `#`. Mit `exit` kommst du
@@ -118,6 +136,16 @@ zurück.
 
 > **Denk daran!** Mit sudo gibt es kein Sicherheitsnetz. Führe nur Befehle
 > aus, die du verstehst.
+
+```quiz
+`sudo` fragt nach einem Passwort. Wessen Passwort solltest du eingeben?
+- [ ] Das Passwort von root
+- [x] Dein eigenes Passwort
+- [ ] Kein Passwort – einfach Enter drücken
+---
+`sudo` fragt nach **deinem eigenen** Passwort und lässt dich nur durch, wenn du
+in der Administratorengruppe bist.
+```
 
 ### Eine häufige Falle
 
@@ -130,4 +158,15 @@ stattdessen `tee`, das mit sudo läuft:
 
 ```sh
 echo "127.0.0.1 test.local" | sudo tee -a /etc/hosts
+```
+
+```quiz
+Warum funktioniert `sudo echo "text" > /etc/file` nicht?
+- [ ] `echo` kann nicht mit sudo ausgeführt werden
+- [x] Deine eigene Shell öffnet die Datei für `>`, und die läuft nicht als root
+- [ ] Dateien in `/etc` können nie geändert werden
+---
+sudo gilt nur für den Befehl (`echo`). Die Umleitung erledigt deine Shell, und
+die läuft als du. `tee` ist das Programm, das die Datei schreibt, also braucht
+`tee` das sudo.
 ```

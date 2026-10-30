@@ -71,30 +71,12 @@ getent passwd elev
 などのサービスは、できるだけ少ない権限を持つ専用のユーザーとして動きます。
 もし乗っ取られても、攻撃者はあなたのファイルに手が届きません。システム
 ユーザーのシェルは `nologin` なので、誰もそのユーザーとしてログインできません。
-
-:::debian
-Debian と Ubuntu では、Web サーバーのユーザーは `www-data` という名前です。
+Ubuntu では、Web サーバーのユーザーは `www-data` という名前です（システム
+ユーザーの名前はディストリビューションによって異なります）。
 
 ```sh
 grep www-data /etc/passwd
 ```
-:::
-
-:::arch
-Arch では、Web サーバーのユーザーは `http` という名前です。
-
-```sh
-grep http /etc/passwd
-```
-:::
-
-:::redhat
-Fedora には、たとえばシステムのメッセージバスを動かす `dbus` があります。
-
-```sh
-grep dbus /etc/passwd
-```
-:::
 
 テキスト処理の章で学んだ `awk` を使えば、UID が 1000 以上のユーザー、
 つまり一般ユーザーを全員一覧表示できます。
@@ -105,6 +87,14 @@ awk -F: '$3 >= 1000 {print $1}' /etc/passwd
 
 `nobody`（UID 65534）も表示されます。これは「何も」所有していない特別な
 ユーザーで、プログラムの権限をできるだけ少なくしたいときに使われます。
+
+```predict
+$ awk -F: '$3 == 0 {print $1}' /etc/passwd
+root
+---
+フィールド 3 は UID で、UID 0 を持つのは root だけです。root に力を与えているのは
+名前ではなく、この番号です。
+```
 
 ## グループと GID
 
@@ -133,6 +123,19 @@ sudo:x:27:elev
 ```sh
 groups
 id
+```
+
+```quiz
+あなた（`elev`）はグループ `elev` と `sudo` に属していて、プライマリグループは
+`elev` です。あなたが作った新しいファイルにはどのグループが付きますか？
+- [x] `elev`
+- [ ] `sudo`
+- [ ] 両方
+- [ ] `root`
+---
+新しいファイルには、あなたの **プライマリ** グループ（`/etc/passwd` の GID
+フィールド）が付きます。`sudo` のような補助グループは追加の権限を与えますが、
+ファイルに付くことはありません。
 ```
 
 ## パスワード – `/etc/shadow`
@@ -165,6 +168,12 @@ kim:$y$j9T$Tm9...$Kx2...:20756:0:99999:7:::
 chage -l elev
 ```
 
+```try
+chage -l elev
+---
+`Password expires: never` – elev のパスワードは変更する必要がありません。
+```
+
 ## ユーザーを作成する – `useradd`
 
 ユーザーを作成するには root 権限が必要です。最もよく使われるコマンドは、
@@ -190,13 +199,14 @@ sudo useradd -m -s /bin/bash kim
 ls -a /etc/skel
 ```
 
-ここでディストリビューションの違いが出てきます。
+Ubuntu の `useradd` はけちです。`-m` がないとホームディレクトリは **作られず**、
+`-s` がないとシェルは `/bin/sh` になります。ほかのディストリビューションでは
+既定値が違うので、`-m` と `-s` を付ける習慣をつけましょう。そうすれば、同じ
+コマンドがどこでも使えます。
 
-:::debian
-Debian と Ubuntu の `useradd` はけちです。`-m` がないとホームディレクトリは
-**作られず**、`-s` がないとシェルは `/bin/sh` になります。そのため、Debian
-ファミリーには、もっと親切なスクリプト `adduser` があります。ホームディレクトリを
-作り、bash を選び、パスワードと名前を尋ねてくれます。
+そのため Ubuntu には、Debian ファミリーに属する、もっと親切なスクリプト
+`adduser` もあります。ホームディレクトリを作り、bash を選び、パスワードと
+名前を尋ねてくれます。
 
 ```sh
 sudo adduser lisa
@@ -204,29 +214,10 @@ sudo adduser lisa
 
 質問に答えてください。ほとんどは Enter を押すだけでかまいません。`adduser` は
 既存のユーザーをグループに追加することもできます: `sudo adduser lisa sudo`。
-:::
-
-:::arch
-Arch では、`-m` がないとホームディレクトリは作られません。また、`adduser`
-コマンドはそもそも存在しません。試してみましょう。
-
-```sh
-adduser lisa
-```
-
-Arch Wiki では、すべてを一度に行うことを勧めています:
-`useradd -m -G wheel -s /bin/bash name`。
-:::
-
-:::redhat
-Fedora では、`-m` がなくてもホームディレクトリが作られ（`/etc/login.defs` の
-`CREATE_HOME` 設定）、シェルは bash になります。とはいえ `-m` を付けても害は
-ないので、付ける習慣をつけましょう。そうすれば、同じコマンドがどこでも使えます。
-:::
 
 `useradd`、`passwd`、そしてこの章のほかのコマンドは、いつもインストール
-されています。パッケージ名は Debian では `passwd`、Arch では `shadow`、
-Fedora では `shadow-utils` です。同じものの名前が違う、また 1 つの例ですね。
+されています。Ubuntu では `passwd` パッケージに含まれています。ほかの
+ファミリーでは、パッケージの名前が違います。
 
 ## パスワードを設定する – `passwd`
 
@@ -263,6 +254,19 @@ groups kim
 置き換えられ、ユーザーはほかのすべてのグループ、たとえば sudo のグループからも
 外されてしまいます。自分を締め出してしまう、よくあるパターンです。
 
+```quiz
+`kim` は補助グループ `sudo` と `utvecklare` に属しています。管理者が
+`sudo usermod -G backup kim` を実行しました。そのあと kim はどの補助グループに
+属していますか？
+- [ ] `sudo`、`utvecklare`、`backup`
+- [x] `backup` だけ
+- [ ] `sudo` と `utvecklare`。`-a` がないのでコマンドは失敗する
+- [ ] どれにも属していない
+---
+`-a` がないと、一覧は入力したものそのものになります。
+`sudo usermod -aG backup kim` なら、kim はほかのグループにも残っていました。
+```
+
 `gpasswd` も同じことができ、メンバーを外すこともできます。
 
 ```sh
@@ -284,7 +288,7 @@ sudo chmod 775 /srv/projekt
 ls -ld /srv/projekt
 ```
 
-## sudo 権限を与える – `sudo` または `wheel`
+## sudo 権限を与える – `sudo` グループ
 
 誰が `sudo` を使えるかは、`/etc/sudoers` で決められています。
 
@@ -292,36 +296,17 @@ ls -ld /srv/projekt
 sudo cat /etc/sudoers
 ```
 
-`%{{adminGroup}} ALL=(ALL:ALL) ALL` という行は、グループ **{{adminGroup}}** の
-全員が、どんなコマンドでも root として実行できることを意味します。つまり、
-誰かに sudo 権限を与えるには、正しいグループに追加するだけでよいのです。
-そして、そのグループの名前はファミリーごとに違います。
-
-:::debian
-Debian と Ubuntu では、グループの名前は `sudo` です。
+`%sudo ALL=(ALL:ALL) ALL` という行は、グループ **sudo** の全員が、どんな
+コマンドでも root として実行できることを意味します。つまり、誰かに sudo 権限を
+与えるには、正しいグループに追加するだけでよいのです。Ubuntu ではグループ
+`sudo` です。
 
 ```sh
 sudo usermod -aG sudo kim
 ```
-:::
 
-:::arch
-Arch では、グループの名前は `wheel` です。「偉い人たち」（*big wheel*）を
-意味する、Unix の古い呼び名です。
-
-```sh
-sudo usermod -aG wheel kim
-```
-:::
-
-:::redhat
-Fedora では、グループの名前は `wheel` です。「偉い人たち」（*big wheel*）を
-意味する、Unix の古い呼び名です。
-
-```sh
-sudo usermod -aG wheel kim
-```
-:::
+このグループの名前はファミリーごとに違います。Arch と Fedora では `wheel` と
+いう名前です。「偉い人たち」（*big wheel*）を意味する、Unix の古い呼び名です。
 
 `/etc/sudoers` を、ふつうのエディターで直接編集してはいけません。タイプミス
 1 つで、誰も sudo を使えなくなることがあります。保存する前にファイルを
@@ -352,6 +337,18 @@ su - kim
 
 名前を付けない `su` は root を意味します。Ubuntu では root にパスワードが
 ないので、`su -` は使えません。代わりに `sudo -i` を使ってください。
+
+```quiz
+1 つのコマンドを `kim` として実行したいのですが、kim のパスワードは知りません。
+sudo 権限は持っています。うまくいくのはどれですか？
+- [ ] `su - kim`
+- [x] `sudo -u kim command`
+- [ ] `su kim command`
+- [ ] 何もない。kim のパスワードが必要
+---
+`su` は切り替え先のユーザーのパスワードを尋ねます。`sudo` は **あなた自身の**
+パスワードを尋ね、それをしてよいかどうかを `/etc/sudoers` で確認します。
+```
 
 ## アカウントのロックと削除
 
@@ -385,11 +382,9 @@ sudo useradd -m vikarie
 sudo userdel -r vikarie
 ```
 
-:::debian
-Debian ファミリーには、`adduser` の対になる `deluser` もあります:
+Ubuntu には、`adduser` の対になる `deluser` もあります:
 `sudo deluser --remove-home vikarie`。`sudo deluser kim sudo` は、kim を
 グループ sudo から外します。
-:::
 
 `userdel` は、ログイン中のユーザーを削除するのを拒否します。
 `sudo userdel elev` を試してみましょう。

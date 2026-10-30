@@ -20,6 +20,16 @@ för att göra den mindre. Resultatet heter `.tar.gz`, eller kortare `.tgz`.
 Det är Unix-filosofin i ett nötskal – små program som gör en sak var och som
 går att kombinera.
 
+```quiz
+Varför används `tar` och `gzip` oftast tillsammans?
+- [ ] `gzip` kan inte läsa filer som `tar` inte har skapat
+- [x] `tar` samlar många filer i en, och `gzip` gör den filen mindre
+- [ ] `tar` gör filerna mindre, och `gzip` ger dem rätt rättigheter
+---
+gzip hanterar bara en fil i taget och vet ingenting om kataloger, och ett
+tar-arkiv är i sig inte mindre än filerna i det.
+```
+
 | Filändelse | Vad är det? | Packa upp med |
 |---|---|---|
 | `.tar` | Arkiv, okomprimerat | `tar -xf` |
@@ -41,6 +51,7 @@ tar -cvf dokument.tar dokument
 
 ```text
 dokument/
+dokument/betyg.csv
 dokument/frukter.txt
 dokument/server.log
 ```
@@ -75,6 +86,16 @@ Lägg alltid `f` **sist** när du skriver ihop flaggorna, eftersom filnamnet ska
 stå direkt efter den. Av historiska skäl går det också att skippa
 bindestrecket: `tar czvf` betyder samma sak som `tar -czvf`.
 
+```quiz
+Vad gör `tar -xzvf backup.tar.gz`?
+- [ ] Skapar det komprimerade arkivet `backup.tar.gz`
+- [ ] Listar innehållet i `backup.tar.gz` utan att packa upp
+- [x] Packar upp `backup.tar.gz` med gzip och visar varje fil
+---
+`x` är operationen (packa upp), `z` betyder gzip, `v` visar filerna och efter
+`f` kommer arkivets namn.
+```
+
 ## Komprimera med `-z`
 
 Lägg till `z` så skickas arkivet genom gzip på vägen:
@@ -86,11 +107,11 @@ ls -l dokument.tar dokument.tar.gz
 
 ```text
 -rw-r--r-- 1 elev elev 10240 Oct 30 12:00 dokument.tar
--rw-r--r-- 1 elev elev   674 Oct 30 12:00 dokument.tar.gz
+-rw-r--r-- 1 elev elev   837 Oct 30 12:00 dokument.tar.gz
 ```
 
-Arkivet utan komprimering är hela 10 240 byte, fast filerna bara är på knappt
-900 byte tillsammans. Det beror på att tar lägger ett huvud på 512 byte före
+Arkivet utan komprimering är hela 10 240 byte, fast filerna bara är på drygt
+1 000 byte tillsammans. Det beror på att tar lägger ett huvud på 512 byte före
 varje fil och fyller ut arkivet till jämna block. Allt det tomma utrymmet
 komprimeras bort av gzip.
 
@@ -105,7 +126,7 @@ du -sh dokument
 ```text
 12K	dokument.tar
 4.0K	dokument.tar.gz
-12K	dokument
+16K	dokument
 ```
 
 Disken delas in i block om 4 KiB, så `du` visar aldrig mindre än `4.0K` för en
@@ -119,6 +140,7 @@ tar -tzvf dokument.tar.gz
 
 ```text
 drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
+-rw-r--r-- elev/elev       146 2026-10-30 12:00 dokument/betyg.csv
 -rw-r--r-- elev/elev        64 2026-10-30 12:00 dokument/frukter.txt
 -rw-r--r-- elev/elev       848 2026-10-30 12:00 dokument/server.log
 ```
@@ -162,6 +184,16 @@ tar -czf backup.tar.gz -C ~ dokument
 tar -tzf backup.tar.gz
 ```
 
+```quiz
+Du kör `tar -czf backup.tar.gz -C ~ dokument`. Vad innehåller arkivet?
+- [x] `dokument/` och filerna i den
+- [ ] `home/elev/dokument/` och filerna i den
+- [ ] `/home/elev/dokument/` och filerna i den
+---
+`-C ~` gör att tar först byter till din hemkatalog, så namnen i arkivet börjar
+med `dokument/`.
+```
+
 ## Komprimera enskilda filer med `gzip`
 
 `gzip` komprimerar en fil och **ersätter** den med en `.gz`-fil. Rättigheterna
@@ -196,6 +228,17 @@ gzip -kv frukter.txt
 frukter.txt:	-20.3% -- created frukter.txt.gz
 ```
 
+```predict
+$ cp dokument/frukter.txt .
+$ cp dokument/server.log .
+$ gzip frukter.txt
+$ gzip -k server.log
+$ ls frukter* server*
+frukter.txt.gz  server.log  server.log.gz
+---
+Vanligt `gzip` ersätter filen med en `.gz`-fil; `-k` behåller originalet.
+```
+
 ### Läsa komprimerade filer direkt
 
 Gamla loggfiler i `/var/log` sparas ofta som `.gz` för att spara plats.
@@ -218,11 +261,11 @@ det är det självklara valet när du ska skicka filer till någon som inte kör
 Linux. Inom Linuxvärlden är `.tar.gz` vanligare, eftersom det bevarar ägare
 och rättigheter bättre.
 
-Programmen `zip` och `unzip` är inte alltid förinstallerade. Då installerar du
-dem med pakethanteraren – mer om den i kapitlet om pakethantering. I
-{{distro}} gör du så här:
+Programmen `zip` och `unzip` är inte alltid förinstallerade, och i den här
+terminalen måste du installera dem först. Det gör du med pakethanteraren – du
+lär dig allt om den i delen om distributioner och paket. I Ubuntu gör du så
+här:
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install zip unzip
@@ -230,24 +273,6 @@ sudo apt install zip unzip
 
 `apt update` hämtar listan över vilka paket som finns. Utan den hittar apt
 inga paket alls.
-:::
-
-:::arch
-```sh
-sudo pacman -S zip unzip
-```
-
-Svara ja (`Y` eller bara Enter) när pacman frågar om du vill fortsätta.
-:::
-
-:::redhat
-```sh
-sudo dnf install zip unzip
-```
-
-Svara `y` när dnf frågar `Is this ok [y/N]` – stort `N` betyder att Nej är
-standard om du bara trycker Enter.
-:::
 
 Packa sedan ihop katalogen. Glöm inte `-r` (*recursive*) – utan den lägger zip
 bara till den tomma katalogen, inte filerna i den:
@@ -258,6 +283,7 @@ zip -r dokument.zip dokument
 
 ```text
   adding: dokument/ (stored 0%)
+  adding: dokument/betyg.csv (deflated 17%)
   adding: dokument/frukter.txt (deflated 27%)
   adding: dokument/server.log (deflated 42%)
 ```
@@ -272,6 +298,15 @@ unzip dokument.zip -d fran-zip
 ```
 
 Finns filerna redan hoppar unzip över dem. Med `unzip -o` skrivs de över.
+
+```quiz
+Du kör `zip dokument.zip dokument` utan `-r`. Vad hamnar i zip-filen?
+- [ ] Alla filer i `dokument`
+- [x] Bara den tomma katalogen `dokument/`
+- [ ] Ingenting – zip vägrar köra
+---
+Utan `-r` (*recursive*) går zip inte in i katalogen.
+```
 
 ## Sammanfattning
 

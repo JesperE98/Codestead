@@ -40,6 +40,16 @@ typ ägaren  gruppen övriga
 
 Därefter visas ägaren (`elev`) och gruppen (`elev`).
 
+```quiz
+En katalog har rättigheterna `drwxr-x---`. Vad får medlemmarna i dess grupp göra?
+- [ ] Ingenting alls
+- [x] Lista innehållet och gå in i den med `cd`, men inte skapa eller ta bort filer i den
+- [ ] Allt som ägaren får göra
+---
+Gruppens rättigheter är `r-x`: `r` låter dig lista innehållet och `x` låter
+dig gå in i katalogen. Utan `w` kan du inte skapa eller ta bort filer i den.
+```
+
 ## Ändra rättigheter – `chmod`
 
 Rättigheter kan anges med **siffror**. Varje grupp får en siffra som är summan
@@ -63,6 +73,14 @@ chmod u+x skript.sh
 chmod go-w fil.txt
 ```
 
+```predict
+$ touch plan.txt
+$ chmod 600 plan.txt
+$ chmod g+r plan.txt
+$ ls -l plan.txt | awk '{print $1}'
+-rw-r-----
+```
+
 ## Skript
 
 Ett **skript** är en textfil med kommandon. Första raden, `#!/bin/bash`, kallas
@@ -83,6 +101,17 @@ chmod +x datum.sh
 
 `./` behövs eftersom katalogen du står i inte finns i `PATH`.
 
+```quiz
+Du har skrivit skriptet `test.sh` och kör `./test.sh`, men får
+`Permission denied`. Vad saknas?
+- [ ] Ett `sudo` framför
+- [x] Rätten att köra – kör `chmod +x test.sh` först
+- [ ] `./` – det ska vara `test.sh`
+---
+För att köra en fil som program behöver den rättigheten `x`. `./` är rätt:
+utan det letar skalet bara i katalogerna i `PATH`.
+```
+
 ## root och sudo
 
 Vissa filer, som `/etc/shadow` där lösenorden finns, får bara root läsa.
@@ -93,27 +122,25 @@ sudo whoami
 ```
 
 Första gången frågar `sudo` efter **ditt eget** lösenord. Bara användare i
-administratörsgruppen får använda sudo. I {{distro}} heter den gruppen
-**{{adminGroup}}**:
-
-:::debian
-I Debian-familjen heter gruppen `sudo`.
-:::
-
-:::arch
-I Arch-familjen heter gruppen `wheel` – ett gammalt Unix-namn för
-"de som styr" (*big wheel*).
-:::
-
-:::redhat
-I Red Hat-familjen heter gruppen `wheel` – ett gammalt Unix-namn för
-"de som styr" (*big wheel*).
-:::
+administratörsgruppen får använda sudo. I Ubuntu heter den gruppen **sudo** –
+du ser den bland dina grupper när du kör `id`. Vissa andra distributioner
+kallar gruppen `wheel` i stället; du läser mer om skillnaderna mellan
+distributionerna i delen om distributioner.
 
 Behöver du köra många kommandon som root kan du starta ett root-skal med
 `sudo -i`. Prompten ändras då till `#`. Gå tillbaka med `exit`.
 
 > **Tänk på!** Med sudo finns inga skyddsnät. Kör bara kommandon som du förstår.
+
+```quiz
+`sudo` frågar efter ett lösenord. Vems lösenord ska du skriva?
+- [ ] roots lösenord
+- [x] Ditt eget lösenord
+- [ ] Inget lösenord – tryck bara Enter
+---
+`sudo` frågar efter **ditt eget** lösenord och släpper bara igenom dig om du
+är med i administratörsgruppen.
+```
 
 ### En vanlig fälla
 
@@ -126,4 +153,15 @@ Det är *ditt* skal – inte sudo – som öppnar filen för `>`. Använd i stä
 
 ```sh
 echo "127.0.0.1 test.local" | sudo tee -a /etc/hosts
+```
+
+```quiz
+Varför fungerar inte `sudo echo "text" > /etc/fil`?
+- [ ] `echo` kan inte köras med sudo
+- [x] Ditt eget skal öppnar filen för `>`, och det körs inte som root
+- [ ] Filer i `/etc` kan aldrig ändras
+---
+sudo gäller bara kommandot (`echo`). Omdirigeringen sköts av ditt skal, som
+körs som du. `tee` är programmet som skriver filen, så det är `tee` som
+behöver sudo.
 ```

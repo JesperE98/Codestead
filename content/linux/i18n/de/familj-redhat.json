@@ -1,0 +1,59 @@
+{
+  "title": "Die Red-Hat-Familie: dnf und COPR",
+  "tasks": {
+    "sync": {
+      "text": "Hol mit `dnf check-update` neue Paketinformationen und prüfe, ob es Updates gibt.",
+      "hint": "`dnf check-update` braucht keine root-Rechte."
+    },
+    "search": {
+      "text": "Suche nach dem Paket `htop`.",
+      "hint": "`dnf search htop`"
+    },
+    "install": {
+      "text": "Installiere das Paket `tree`.",
+      "hint": "`sudo dnf install tree` – und antworte mit `y`, denn Nein ist die Vorgabe!"
+    },
+    "run-tree": {
+      "text": "Führe `tree` in deinem Home-Verzeichnis aus."
+    },
+    "remove": {
+      "text": "Entferne das Paket `tree` wieder.",
+      "hint": "`sudo dnf remove tree`"
+    },
+    "upgrade": {
+      "text": "Aktualisiere alle installierten Pakete.",
+      "hint": "`sudo dnf upgrade`"
+    },
+    "forbered": {
+      "text": "Zeige an, welche Repositorys dnf gerade verwendet.",
+      "hint": "`dnf repolist`"
+    },
+    "lagg-till": {
+      "text": "Aktiviere das COPR-Repository `lunatool/moonphase`.",
+      "hint": "`sudo dnf copr enable lunatool/moonphase` – und antworte mit `y`, Nein ist die Vorgabe."
+    },
+    "granska": {
+      "text": "Liste auf, welche COPR-Repositorys hinzugefügt wurden.",
+      "hint": "`dnf copr list`"
+    },
+    "installera": {
+      "text": "Installiere das Paket `moonphase` aus dem COPR-Repository.",
+      "hint": "`sudo dnf install moonphase`"
+    },
+    "kor": {
+      "text": "Führe das Programm `moonphase` aus."
+    },
+    "ursprung": {
+      "text": "Finde heraus, aus welchem Repository `moonphase` installiert wurde.",
+      "hint": "`dnf info moonphase` – sieh dir die Zeile `From repository` an."
+    },
+    "efterat": {
+      "text": "Deaktiviere das COPR-Repository wieder. Das Programm bleibt, bekommt aber keine Updates mehr.",
+      "hint": "`sudo dnf copr disable lunatool/moonphase`"
+    },
+    "vim": {
+      "text": "Bonus: Installiere den Texteditor Vim. Tipp: Das Paket heißt in der Red-Hat-Familie nicht `vim`!",
+      "hint": "Suche mit `dnf search vim`. Das Paket heißt `vim-enhanced`."
+    }
+  }
+}

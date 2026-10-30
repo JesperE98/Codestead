@@ -32,12 +32,34 @@ echo "zweite Zeile" >> test.txt
 cat test.txt
 ```
 
+```predict
+$ echo one > t.txt
+$ echo two > t.txt
+$ cat t.txt
+two
+---
+Das zweite `>` hat die Datei überschrieben. Mit `>>` stünden beide Zeilen darin.
+```
+
 ## Aus einer Datei – `<`
 
 Mit `<` liest ein Programm sein stdin aus einer Datei:
 
 ```sh
 wc -l < dokument/frukter.txt
+```
+
+Jetzt bekommt `wc` den Dateinamen nie zu sehen – es bekommt nur den Text über
+stdin – und gibt deshalb nur die Zahl aus.
+
+```predict
+$ wc -l dokument/frukter.txt
+$ wc -l < dokument/frukter.txt
+10 dokument/frukter.txt
+10
+---
+Mit einem Dateinamen als Argument gibt `wc` auch den Namen aus. Mit `<` bekommt
+es nur den Text.
 ```
 
 ## Fehlermeldungen – `2>`
@@ -51,6 +73,16 @@ ls /finnsinte 2> fel.txt
 
 (*Finns inte* ist Schwedisch für „existiert nicht“, und *fel* bedeutet
 „Fehler“.)
+
+```quiz
+Du führst `ls /finnsinte > fel.txt` aus. Wo landet die Fehlermeldung?
+- [ ] In `fel.txt`
+- [x] Auf dem Bildschirm – `fel.txt` bleibt leer
+- [ ] Nirgends, sie verschwindet
+---
+`>` leitet nur stdout (Strom 1) um. Die Fehlermeldung geht nach stderr
+(Strom 2), und das landet weiterhin auf dem Bildschirm. Du bräuchtest `2>`.
+```
 
 Die Datei `/dev/null` ist ein „schwarzes Loch“ – alles, was hineingeschrieben
 wird, verschwindet. Das ist praktisch, um Fehler stummzuschalten. Mit `2>&1`
@@ -77,6 +109,12 @@ Lies es Schritt für Schritt: Sortiere die Früchte, zähle, wie viele es von
 jeder gibt (`uniq -c`), und sortiere dann numerisch mit der größten Zahl zuerst
 (`sort -rn`).
 
+Wie viele Dateien und Verzeichnisse gibt es in `/etc`? Zähl sie mit einer Pipe:
+
+```try
+ls /etc | wc -l
+```
+
 ## Bildschirm und Datei zugleich – `tee`
 
 `tee` reicht seine Eingabe weiter *und* speichert eine Kopie in einer Datei:
@@ -97,4 +135,13 @@ Mehrere Befehle können in derselben Zeile stehen:
 
 ```sh
 mkdir -p ny && cd ny
+```
+
+```predict
+$ mkdir dokument 2> /dev/null && echo created || echo failed
+failed
+---
+`dokument` existiert schon, also schlägt `mkdir` fehl (seine Fehlermeldung
+verschwindet in `/dev/null`). `echo created` wird übersprungen, und
+`echo failed` läuft.
 ```

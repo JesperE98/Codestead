@@ -13,6 +13,16 @@ En process är ett program som körs, tillsammans med allt det behöver: minne,
 **PPID**, som startade den. Allt börjar med process nummer 1, `init` (i
 nästan alla distributioner är det `systemd`), som startar resten.
 
+```quiz
+Vad är en process PPID?
+- [ ] Numret på processorn den körs på
+- [x] PID för processen som startade den – dess förälder
+- [ ] Dess prioritet
+---
+Varje process har en förälder. Följer du föräldrarna tillräckligt långt
+hamnar du hos process nummer 1.
+```
+
 ## Mina processer – `ps`
 
 `ps` (*process status*) utan flaggor visar processerna i din egen terminal:
@@ -54,6 +64,12 @@ kolumn. Vill du bara ha PID för en process vars namn du vet finns `pgrep`:
 pgrep -l sshd
 ```
 
+```try
+pgrep -l sshd
+---
+`-l` visar namnet bredvid PID.
+```
+
 ## Live-vy – `top` och `htop`
 
 `top` visar processerna sorterade efter hur mycket processor de använder och
@@ -90,6 +106,16 @@ killall firefox
 Du får bara skicka signaler till dina **egna** processer. För processer som
 tillhör root eller andra användare behövs `sudo`.
 
+```quiz
+Ett program har slutat svara. Vilket kommando ska du prova **först**?
+- [x] `kill 1234` – det skickar `SIGTERM` och låter programmet avsluta snyggt
+- [ ] `kill -9 1234` – det fungerar alltid bäst
+- [ ] `sudo kill -9 1`
+---
+Börja med standardsignalen, `SIGTERM`. `SIGKILL` (`-9`) är sista utvägen,
+eftersom programmet då inte hinner spara eller städa upp.
+```
+
 > **Hitta och stoppa!** Någon process på den här datorn använder nästan 100 %
 > av processorn. Använd `top` eller `ps aux --sort=-%cpu` för att ta reda på
 > vad den heter och vilket PID den har – och stoppa den sedan.
@@ -123,6 +149,17 @@ jobs
 Variabeln `$!` innehåller PID för det senaste bakgrundsjobbet. När ett jobb
 blir klart berättar skalet det, med en rad som `[1]+  Done   sleep 300`.
 
+```quiz
+Du har tryckt `Ctrl+Z` på ett program i förgrunden. Hur låter du det fortsätta
+köras medan du behåller prompten?
+- [ ] `fg %1`
+- [x] `bg %1`
+- [ ] `Ctrl+C`
+---
+`Ctrl+Z` pausar programmet. `bg` låter ett stoppat jobb fortsätta i
+bakgrunden, medan `fg` skulle ta tillbaka det till förgrunden.
+```
+
 ## Hur mår datorn?
 
 Två små kommandon ger en snabb överblick:
@@ -137,9 +174,16 @@ och 15 minuterna. `free -h` visar hur mycket minne som används. Lägg märke
 till kolumnen *available*: Linux använder ledigt minne som cache för filer,
 så *free* ser ofta lågt ut fast det finns gott om minne.
 
+```quiz
+`free -h` visar lite *free* minne men mycket *available*. Vad betyder det?
+- [ ] Datorn håller på att få slut på minne
+- [x] Linux använder ledigt minne som cache för filer – titta på *available*
+- [ ] En del av minnet är trasigt
+```
+
 ## Samma överallt
 
-Processer fungerar likadant i alla distributioner. Verktygen kommer från
-paketet **procps** (som heter `procps-ng` i Arch och Fedora) och `killall`
-från **psmisc**. Det som skiljer är vilka tjänster som körs från början –
-jämför gärna `ps aux` i {{distro}} med en annan distribution!
+Processer fungerar likadant i alla distributioner. I Ubuntu kommer verktygen
+från paketet **procps** och `killall` från **psmisc**. En del distributioner
+ger paketen lite andra namn, och vilka tjänster som körs från början skiljer
+sig också – du får jämföra distributioner i delen om distributioner.

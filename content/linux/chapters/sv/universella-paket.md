@@ -28,6 +28,16 @@ En **sandlåda** betyder att programmet bara kommer åt det det fått lov till,
 till exempel nätverket eller din nedladdningsmapp, i stället för hela din
 hemkatalog.
 
+```quiz
+Vilket format uppdateras automatiskt i bakgrunden?
+- [ ] Flatpak
+- [x] Snap
+- [ ] AppImage
+---
+Flatpak-program uppdateras med `flatpak update`, och en AppImage byts ut genom
+att du laddar ner en ny fil.
+```
+
 ## Flatpak
 
 Flatpak är det format som de flesta distributioner har enats om för
@@ -114,6 +124,16 @@ flatpak install --user flathub org.videolan.VLC
 flatpak list --user
 ```
 
+```quiz
+Vad händer när du installerar en Flatpak med `--user`?
+- [ ] Den installeras för hela systemet, i `/var/lib/flatpak`
+- [x] Den hamnar i din hemkatalog, och ingen annan användare ser den
+- [ ] Den körs utan sandlåda
+---
+Kom ihåg att användarinstallationen har egna remotes – Flathub måste läggas
+till med `--user` också.
+```
+
 ### Uppdatera och ta bort
 
 ```sh
@@ -144,7 +164,8 @@ sudo apt install snapd
 :::arch
 ### Snap i Arch
 
-Snap finns inte i Archs förråd – bara i AUR. Bygg det som i förra kapitlet:
+Snap finns inte i Archs förråd – bara i AUR. Bygg det som i kapitlet om
+Arch-familjen:
 
 ```sh
 sudo pacman -S --needed git base-devel
@@ -193,6 +214,14 @@ sudo snap install code
 sudo snap install code --classic
 ```
 
+```quiz
+En snap är publicerad med classic confinement. Vad måste du lägga till för att
+installera den?
+- [ ] `--user`
+- [x] `--classic`
+- [ ] `--channel=edge`
+```
+
 ### Kanaler och uppdateringar
 
 Varje snap har **kanaler**: `stable`, `candidate`, `beta` och `edge` (den
@@ -222,11 +251,26 @@ cd ~/Nedladdningar
 ls -l
 ```
 
+Vad händer om du startar den direkt?
+
+```predict
+$ ~/Nedladdningar/Kalkylator.AppImage
+bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+---
+Filen har inte rättigheten `x`.
+```
+
 Nedladdade filer är aldrig körbara från början. Gör den körbar och starta den:
 
 ```sh
 chmod +x Kalkylator.AppImage
 ./Kalkylator.AppImage
+```
+
+```try
+chmod +x ~/Nedladdningar/Kalkylator.AppImage
+---
+Nu är filen körbar. Kontrollera med `ls -l ~/Nedladdningar`.
 ```
 
 ### FUSE

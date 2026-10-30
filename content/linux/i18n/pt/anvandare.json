@@ -18,16 +18,8 @@
       "hint": "Primeiro `sudo groupadd utvecklare`, depois `sudo usermod -aG utvecklare kim`."
     },
     "sudo-ratt": {
-      "text": {
-        "debian": "Permita que a `kim` use o `sudo` adicionando a conta ao grupo `sudo`.",
-        "arch": "Permita que a `kim` use o `sudo` adicionando a conta ao grupo `wheel`.",
-        "redhat": "Permita que a `kim` use o `sudo` adicionando a conta ao grupo `wheel`."
-      },
-      "hint": {
-        "debian": "`sudo usermod -aG sudo kim` – não esqueça o `-a`!",
-        "arch": "`sudo usermod -aG wheel kim` – não esqueça o `-a`!",
-        "redhat": "`sudo usermod -aG wheel kim` – não esqueça o `-a`!"
-      }
+      "text": "Permita que a `kim` use o `sudo` adicionando a conta ao grupo `sudo`.",
+      "hint": "`sudo usermod -aG sudo kim` – não esqueça o `-a`!"
     },
     "sudo-u": {
       "text": "Rode `whoami` como `kim` com `sudo -u`.",

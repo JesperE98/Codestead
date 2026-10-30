@@ -1,0 +1,59 @@
+{
+  "title": "Die Arch-Familie: pacman und das AUR",
+  "tasks": {
+    "sync": {
+      "text": "Synchronisiere die Paketdatenbank und aktualisiere das System mit `pacman -Syu`.",
+      "hint": "Der Befehl verändert das System und braucht root-Rechte: `sudo pacman -Syu`."
+    },
+    "search": {
+      "text": "Suche nach dem Paket `htop`.",
+      "hint": "`pacman -Ss htop`"
+    },
+    "install": {
+      "text": "Installiere das Paket `tree`.",
+      "hint": "`sudo pacman -S tree` und beantworte die Frage mit Ja."
+    },
+    "run-tree": {
+      "text": "Führe `tree` in deinem Home-Verzeichnis aus."
+    },
+    "remove": {
+      "text": "Entferne das Paket `tree` wieder.",
+      "hint": "`sudo pacman -R tree`"
+    },
+    "upgrade": {
+      "text": "Aktualisiere alle installierten Pakete.",
+      "hint": "`sudo pacman -Syu` erledigt alles in einem Rutsch."
+    },
+    "forbered": {
+      "text": "Installiere, was du brauchst, um Pakete aus dem AUR zu bauen: `git` und `base-devel`.",
+      "hint": "`sudo pacman -S --needed git base-devel`"
+    },
+    "lagg-till": {
+      "text": "Lade das Baurezept für das AUR-Paket `moonphase` mit `git clone` in dein Home-Verzeichnis herunter. Die Adresse ist `https://aur.archlinux.org/moonphase.git`.",
+      "hint": "`cd ~` und danach `git clone https://aur.archlinux.org/moonphase.git`"
+    },
+    "granska": {
+      "text": "Lies das Baurezept `PKGBUILD`, bevor du irgendetwas baust!",
+      "hint": "`cd ~/moonphase` und danach `less PKGBUILD` (oder `cat PKGBUILD`)."
+    },
+    "installera": {
+      "text": "Baue und installiere `moonphase` mit `makepkg`.",
+      "hint": "Stell dich in das Verzeichnis `~/moonphase` und führe `makepkg -si` aus – ohne sudo!"
+    },
+    "kor": {
+      "text": "Führe das Programm `moonphase` aus."
+    },
+    "ursprung": {
+      "text": "Liste alle installierten Pakete auf, die nicht aus den eigenen Repositorys von Arch stammen.",
+      "hint": "Solche Pakete heißen *foreign* (fremd): `pacman -Qm`"
+    },
+    "efterat": {
+      "text": "Bonus: Installiere den AUR-Helper `yay` (das AUR-Paket `yay-bin`) und installiere damit das AUR-Paket `snowfall`.",
+      "hint": "Wie vorhin: `cd ~`, `git clone https://aur.archlinux.org/yay-bin.git`, `cd yay-bin` und `makepkg -si`. Danach `yay -S snowfall` – ohne sudo."
+    },
+    "vim": {
+      "text": "Bonus: Installiere den Texteditor Vim.",
+      "hint": "Suche mit `pacman -Ss vim`. Das Paket heißt `vim`."
+    }
+  }
+}

@@ -18,32 +18,17 @@ men under huven kör de samma kommandon som du lär dig här.
 
 ## Installera git
 
-Git är inte alltid förinstallerat. I {{distro}} installerar du det så här:
+Git är inte alltid förinstallerat. I Ubuntu-terminalen installerar du det med
+apt:
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install git
 ```
-:::
 
-:::arch
-```sh
-sudo pacman -S git
-```
-
-Svara ja när pacman frågar om du vill fortsätta.
-:::
-
-:::redhat
-```sh
-sudo dnf install git
-```
-
-Svara `y` – stort `N` i `[y/N]` betyder att Nej är standard.
-:::
-
-Paketet heter `git` i alla familjer. Kontrollera att det fungerar:
+Andra distributioner installerar det med sin egen pakethanterare, som du lärde
+dig i delen om distributioner och paket – paketet heter `git` där också.
+Kontrollera att det fungerar:
 
 ```sh
 git --version
@@ -118,6 +103,16 @@ Ta aldrig bort `.git` om du inte vill bli av med historiken – och redigera
 inte filerna där för hand. Vill du sluta använda git i ett projekt räcker det
 att ta bort `.git`; dina vanliga filer finns kvar.
 
+```quiz
+Du vill sluta använda git i ett projekt, men behålla alla dina filer. Vad gör du?
+- [ ] Kör `git init` igen
+- [x] Tar bort den dolda katalogen `.git`
+- [ ] Tar bort alla filer utom `.git`
+---
+Hela historiken finns i `.git`, och git rör inte dina vanliga filer. Utan
+`.git` finns filerna kvar – bara historiken är borta.
+```
+
 ## Tre platser: arbetskatalog, index och historik
 
 Det viktigaste att förstå i git är att en ändring passerar tre platser:
@@ -136,6 +131,17 @@ Det viktigaste att förstå i git är att en ändring passerar tre platser:
 Varför ett mellansteg? För att du ska kunna välja. Har du ändrat i fem filer
 men bara två hör ihop kan du lägga de två i indexet, göra en commit av dem och
 spara resten till en egen commit.
+
+```quiz
+Du har ändrat i fem filer, men bara två av ändringarna hör ihop. Hur sparar du
+bara de två i en commit?
+- [ ] Kör `git commit` först och `git add` på de två filerna efteråt
+- [x] Kör `git add` på de två filerna, sedan `git commit`
+- [ ] Committa alla fem – en commit tar alltid med alla ändrade filer
+---
+En commit sparar det som finns i indexet. De andra tre ändringarna stannar i
+arbetskatalogen tills du lägger till dem.
+```
 
 ## `git status` är din kompass
 
@@ -254,6 +260,27 @@ git commit -a -m "Beskriv hur sidan är byggd"
 
 Observera att `-a` *inte* tar med nya filer som git inte följer än. Dem måste
 du alltid lägga till med `git add` först.
+
+Frågorna med kommandon i det här kapitlet börjar i en ny terminal, så de
+installerar först git och gör den första commiten. `> /dev/null 2>&1` slänger
+utskriften från de raderna, som du lärde dig i kapitlet om omdirigering och
+pipes. Vad skriver det sista kommandot ut?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ echo 'En rad till.' >> README.md
+$ git commit -m "En rad till" > /dev/null
+$ git log --oneline | wc -l
+1
+---
+Den andra commiten blev aldrig av: ändringen i `README.md` fanns inte i
+indexet, så det fanns inget att committa. `git add README.md` först – eller
+`git commit -a` – hade gett två commits.
+```
 
 ## Bra commit-meddelanden
 
@@ -379,6 +406,25 @@ om de inte krockar med den andra grenen. Då vägrar git och ber dig committa
 först (eller lägga undan ändringarna tillfälligt med `git stash`, och ta
 fram dem igen med `git stash pop`).
 
+Hur många rader med `purple` har `style.css` till slut?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ git switch -c ny-design > /dev/null 2>&1
+$ echo 'h1 { color: purple; }' >> style.css
+$ git commit -am "Lila rubriker" > /dev/null
+$ git switch main > /dev/null 2>&1
+$ grep purple style.css | wc -l
+0
+---
+Den lila raden committades på `ny-design`. När du byter till `main` gör git
+arbetskatalogen som den senaste commiten på `main` – där raden inte finns än.
+```
+
 ## Slå ihop grenar: `git merge`
 
 Stå på grenen som ska *ta emot* ändringarna – här `main` – och slå ihop:
@@ -481,6 +527,23 @@ läget före sammanfogningen.
 
 Konflikter är helt normala när flera jobbar i samma projekt. Ett bra sätt att
 få färre är att göra små commits och slå ihop ofta.
+
+```quiz
+Du står på `main` och kör `git merge rubrik`. Filen får en konflikt:
+
+    <<<<<<< HEAD
+      <h1>Hej!</h1>
+    =======
+      <h1>Välkommen!</h1>
+    >>>>>>> rubrik
+
+Vilken rad kommer från `main`?
+- [x] `<h1>Hej!</h1>`
+- [ ] `<h1>Välkommen!</h1>`
+---
+`HEAD` är grenen du står på – här `main`. Dess version står mellan
+`<<<<<<< HEAD` och `=======`; den andra grenens version kommer efter `=======`.
+```
 
 ## Filer som git ska strunta i: `.gitignore`
 

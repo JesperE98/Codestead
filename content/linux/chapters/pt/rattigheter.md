@@ -42,6 +42,16 @@ tipo  dono    grupo   outros
 
 Em seguida vêm o dono (`elev`) e o grupo (`elev`).
 
+```quiz
+Um diretório tem as permissões `drwxr-x---`. O que os membros do grupo dele podem fazer?
+- [ ] Absolutamente nada
+- [x] Listar o conteúdo e entrar nele com `cd`, mas não criar nem apagar arquivos nele
+- [ ] Tudo o que o dono pode fazer
+---
+O conjunto do grupo é `r-x`: o `r` permite listar o conteúdo e o `x` permite
+entrar no diretório. Sem o `w`, você não pode criar nem apagar arquivos nele.
+```
+
 ## Alterando permissões – `chmod`
 
 As permissões podem ser dadas como **números**. Cada conjunto recebe um dígito
@@ -63,6 +73,14 @@ Ou com **símbolos**: `u` (o dono), `g` (o grupo), `o` (os outros), `a`
 ```sh
 chmod u+x skript.sh
 chmod go-w fil.txt
+```
+
+```predict
+$ touch plan.txt
+$ chmod 600 plan.txt
+$ chmod g+r plan.txt
+$ ls -l plan.txt | awk '{print $1}'
+-rw-r-----
 ```
 
 ## Scripts
@@ -87,6 +105,17 @@ chmod +x datum.sh
 O `./` é necessário porque o diretório em que você está não faz parte do
 `PATH`.
 
+```quiz
+Você escreveu o script `test.sh` e executou `./test.sh`, mas recebeu
+`Permission denied`. O que está faltando?
+- [ ] Um `sudo` na frente
+- [x] A permissão de execução – execute `chmod +x test.sh` primeiro
+- [ ] O `./` – deveria ser `test.sh`
+---
+Para executar um arquivo como programa, ele precisa da permissão `x`. O `./` está
+certo: sem ele, o shell só procura nos diretórios do `PATH`.
+```
+
 ## root e sudo
 
 Alguns arquivos, como o `/etc/shadow`, onde ficam guardadas as senhas, só
@@ -98,28 +127,26 @@ sudo whoami
 ```
 
 Na primeira vez, o `sudo` pede a **sua própria** senha. Só os usuários do
-grupo de administradores podem usar o sudo. No {{distro}}, esse grupo se chama
-**{{adminGroup}}**:
-
-:::debian
-Na família Debian, o grupo se chama `sudo`.
-:::
-
-:::arch
-Na família Arch, o grupo se chama `wheel` – um nome antigo do Unix para "quem
-manda" (em inglês, um *big wheel* é um figurão).
-:::
-
-:::redhat
-Na família Red Hat, o grupo se chama `wheel` – um nome antigo do Unix para
-"quem manda" (em inglês, um *big wheel* é um figurão).
-:::
+grupo de administradores podem usar o sudo. No Ubuntu, esse grupo se chama
+**sudo** – você pode vê-lo entre os seus grupos quando executa `id`. Algumas
+outras distribuições chamam o grupo de `wheel`; você vai ler mais sobre as
+diferenças entre as distribuições na parte sobre distribuições.
 
 Se você precisar executar muitos comandos como root, pode abrir um shell de
 root com `sudo -i`. O prompt então muda para `#`. Volte com `exit`.
 
 > **Lembre-se!** Com o sudo não existe rede de proteção. Só execute comandos
 > que você entende.
+
+```quiz
+O `sudo` pede uma senha. A senha de quem você deve digitar?
+- [ ] A senha do root
+- [x] A sua própria senha
+- [ ] Nenhuma senha – é só pressionar Enter
+---
+O `sudo` pede a **sua própria** senha e só deixa você passar se você estiver
+no grupo de administradores.
+```
 
 ### Uma armadilha comum
 
@@ -132,4 +159,15 @@ em vez disso, que roda com sudo:
 
 ```sh
 echo "127.0.0.1 test.local" | sudo tee -a /etc/hosts
+```
+
+```quiz
+Por que `sudo echo "text" > /etc/file` não funciona?
+- [ ] O `echo` não pode ser executado com sudo
+- [x] O seu próprio shell abre o arquivo para o `>`, e ele não roda como root
+- [ ] Os arquivos em `/etc` nunca podem ser alterados
+---
+O sudo só vale para o comando (`echo`). O redirecionamento é feito pelo seu
+shell, que roda como você. O `tee` é o programa que grava o arquivo, então é o
+`tee` que precisa do sudo.
 ```

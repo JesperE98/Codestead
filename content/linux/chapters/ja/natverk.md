@@ -11,7 +11,7 @@ Linux コンピューターがすることのほとんどは、ほかのコン�
 
 | コンピューター | アドレス | 説明 |
 |---|---|---|
-| あなたのコンピューター（{{hostname}}） | `192.168.1.42` | いまいる場所 |
+| あなたのコンピューター（`ubuntu`） | `192.168.1.42` | いまいる場所 |
 | ルーター（ゲートウェイ） | `192.168.1.1` | インターネットへの出口 |
 | サーバー | `192.168.1.10` | ログインできる別の Linux コンピューター |
 
@@ -49,6 +49,12 @@ ip -br a
 hostname -I
 ```
 
+```try
+ip -br a
+---
+インターフェースごとに 1 行です。名前、状態（`UP`）、アドレスが表示されます。
+```
+
 多くの解説ではいまでも古いコマンド `ifconfig`（*net-tools* パッケージ）を
 見かけますが、最近のディストリビューションでは既定ではインストールされて
 いません。`ip` は `ifconfig` ができたことをすべて、さらにそれ以上のことができます。
@@ -84,6 +90,26 @@ default via 192.168.1.1 dev enp0s3 proto dhcp src 192.168.1.42 metric 100
 ネットワーク全体には `enp0s3` から直接届くことを示しています。`proto dhcp` は、
 コンピューターが **DHCP** によってルーターから自動的に設定を受け取ったことを
 意味します。
+
+```quiz
+あなたのコンピューターのアドレスは `192.168.1.42/24` です。ゲートウェイを通さずに
+直接届くアドレスはどれですか？
+- [x] `192.168.1.10`
+- [x] `192.168.1.1`
+- [ ] `192.168.2.10`
+- [ ] `1.1.1.1`
+---
+`/24` では、最初の 3 つの数字がネットワークのアドレスです。`192.168.1.` で始まる
+ものはすべて同じローカルネットワーク上にあり、それ以外はすべてデフォルトルートを
+通ってゲートウェイへ送られます。
+```
+
+```predict
+$ ip route | grep default | awk '{print $3}'
+192.168.1.1
+---
+`default` の行の 3 番目の単語がゲートウェイのアドレスです。
+```
 
 ## ping – 届くかどうか
 
@@ -130,36 +156,19 @@ System*）はインターネットの電話帳で、`example.com` を IP アド�
 cat /etc/resolv.conf
 ```
 
-Ubuntu と Fedora では `127.0.0.53` と書かれています。これは
-**systemd-resolved** で、自分のコンピューター上にあるローカルな仲介役です。
-そこからさらにルーターに問い合わせます。Debian と Arch では、ルーターの
-`192.168.1.1` が直接書かれています。
+Ubuntu では `127.0.0.53` と書かれています。これは **systemd-resolved** で、
+自分のコンピューター上にあるローカルな仲介役です。そこからさらにルーターに
+問い合わせます。ほかのディストリビューションには、ルーターの `192.168.1.1` が
+直接書かれているものもあります。
 
 自分で DNS に問い合わせるには `dig`、`host`、`nslookup` を使います。これらは
-最初からはインストールされておらず、ディストリビューションごとに名前の違う
-パッケージに入っています。
+最初からはインストールされていません。Ubuntu では `dnsutils` パッケージに
+入っています（ほかのファミリーでは、パッケージの名前が違います）。
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install dnsutils
 ```
-:::
-
-:::arch
-```sh
-sudo pacman -S bind
-```
-
-パッケージ名の `bind` は、これらのツールの出どころである DNS サーバー BIND に
-由来しています。
-:::
-
-:::redhat
-```sh
-sudo dnf install bind-utils
-```
-:::
 
 `dig` は DNS サーバーからの応答をすべて表示します。重要なのは
 `ANSWER SECTION` の部分です。`+short` を付けるとアドレスだけが表示されます。
@@ -235,6 +244,18 @@ getent hosts server.lan
 この順序（まずファイル、次に DNS）は、`/etc/nsswitch.conf` の `hosts:` の行で
 決められています。
 
+```quiz
+`sudo echo '192.168.1.10 server.lan' >> /etc/hosts` が *Permission denied* に
+なるのはなぜですか？
+- [ ] `echo` は sudo で実行できないから
+- [x] `>>` のためにファイルを開くのは root ではなくあなた自身のシェルで、sudo が適用されるのは `echo` だけだから
+- [ ] `/etc/hosts` は root でも変更できないから
+- [ ] `>>` はホームディレクトリのファイルにしか使えないから
+---
+だから `echo ... | sudo tee -a /etc/hosts` を使うのです。そうすれば、ファイルを
+開くのは root として動く `tee` になります。
+```
+
 ## ポートとサービス
 
 IP アドレスはコンピューターを指し示します。**ポート**（1 から 65535 までの
@@ -276,14 +297,11 @@ sudo ss -tulpn
 `curl` は、あるアドレス（**URL**）にあるものを取ってきて、ターミナルに表示します。
 自分のコンピューター上の minserver で試してみましょう。
 
-:::debian
-Debian と Ubuntu では `curl` はプリインストールされていません（`wget` は
-入っています）。
+Ubuntu では `curl` はプリインストールされていません（`wget` は入っています）。
 
 ```sh
 sudo apt install curl
 ```
-:::
 
 ```sh
 curl http://localhost:8080
@@ -339,22 +357,6 @@ curl -o exempel.html https://example.com
 `wget` はファイルのダウンロードのために作られています。常にファイルに保存し、
 進捗を表示し、リダイレクトも自動的にたどります。
 
-:::arch
-Arch では `wget` はプリインストールされていません（`curl` は入っています）。
-
-```sh
-sudo pacman -S wget
-```
-:::
-
-:::redhat
-Fedora では `wget` はプリインストールされていません（`curl` は入っています）。
-
-```sh
-sudo dnf install wget
-```
-:::
-
 ```sh
 wget https://example.com/cheatsheet.txt
 cat cheatsheet.txt
@@ -368,21 +370,13 @@ cat cheatsheet.txt
 定番の方法で、送られるものはすべて暗号化されます。サーバーではポート 22 で
 `sshd` というサービスが動いていて、クライアントの `ssh` で接続します。
 
-:::arch
-Arch では ssh クライアントはプリインストールされていません。
-
-```sh
-sudo pacman -S openssh
-```
-:::
-
 ```sh
 ssh elev@server.lan hostname
 ```
 
 `elev@server.lan` は「コンピューター server.lan 上のユーザー elev」という意味です。
 ホストの後ろのコマンド（`hostname`）はサーバー上で実行され、その結果が
-ここに表示されます。表示されるのは {{hostname}} ではなく `server` です。
+ここに表示されます。表示されるのは `ubuntu` ではなく `server` です。
 
 あるコンピューターに初めて接続するとき、ssh はそのコンピューターを信頼するか
 どうかを尋ねます。
@@ -446,6 +440,18 @@ ssh-copy-id elev@server.lan
 いくのに手順 5 が失敗するなら、壊れているのはほぼ間違いなく DNS です。
 これは最もよくある問題の 1 つです。
 
+```quiz
+`ping -c 3 1.1.1.1` はうまくいくのに、`ping -c 3 example.com` は
+*Name or service not known* と答えます。問題がある可能性が最も高いのはどこですか？
+- [ ] ネットワークカードが停止している
+- [ ] デフォルトルートがない
+- [x] DNS。名前の解決がうまくいっていない
+- [ ] example.com が ping に応答しない
+---
+インターネット上のアドレスに届くなら、カード、ルート、ルーターは動いています。
+残るのは名前の変換です。`/etc/resolv.conf` を確認しましょう。
+```
+
 自分で試してみましょう！ ネットワークカードを停止し、手順を順に確認してから、
 もう一度有効にします。
 
@@ -460,16 +466,19 @@ sudo ip link set enp0s3 up
 
 ## パッケージ
 
-ネットワークツールはいくつかのパッケージに分かれています。そして例によって、
-ファミリーごとに名前が違います。
+ネットワークツールはいくつかのパッケージに分かれています。Ubuntu での名前は
+次のとおりです。
 
-| ツール | Debian/Ubuntu | Arch | Fedora |
-|---|---|---|---|
-| `ip`, `ss` | `iproute2` | `iproute2` | `iproute` |
-| `ping` | `iputils-ping` | `iputils` | `iputils` |
-| `dig`, `host`, `nslookup` | `dnsutils` | `bind` | `bind-utils` |
-| `traceroute` | `traceroute` | `traceroute` | `traceroute` |
-| `ssh`, `ssh-keygen` | `openssh-client` | `openssh` | `openssh-clients` |
+| ツール | Ubuntu でのパッケージ |
+|---|---|
+| `ip`, `ss` | `iproute2` |
+| `ping` | `iputils-ping` |
+| `dig`, `host`, `nslookup` | `dnsutils` |
+| `traceroute` | `traceroute` |
+| `ssh`, `ssh-keygen` | `openssh-client` |
+
+例によって、ほかのファミリーでは一部のパッケージの名前が違います。そのような
+違いは、ディストリビューションとパッケージのパートで扱います。
 
 `traceroute` は、パケットが途中で通過するルーターをすべて表示します。
 インストールして `traceroute example.com` を試してみましょう！

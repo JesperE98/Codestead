@@ -6,7 +6,7 @@ Linux 计算机所做的几乎每件事都需要和其他计算机通信：获�
 
 | 计算机 | 地址 | 说明 |
 |---|---|---|
-| 你的计算机（{{hostname}}） | `192.168.1.42` | 你现在所在的位置 |
+| 你的计算机（`ubuntu`） | `192.168.1.42` | 你现在所在的位置 |
 | 路由器（网关） | `192.168.1.1` | 通往互联网的出口 |
 | 服务器 | `192.168.1.10` | 另一台你可以登录的 Linux 计算机 |
 
@@ -34,6 +34,12 @@ ip -br a
 hostname -I
 ```
 
+```try
+ip -br a
+---
+每个网络接口一行：名字、状态（`UP`）以及地址。
+```
+
 在很多教程里你仍然会看到旧命令 `ifconfig`（来自 *net-tools* 软件包），但现代发行版默认不再安装它。`ip` 能做它能做的一切，而且更多。
 
 ## localhost——计算机自己
@@ -54,6 +60,23 @@ default via 192.168.1.1 dev enp0s3 proto dhcp src 192.168.1.42 metric 100
 ```
 
 第一行 **default** 是默认路由：“所有没有在别处列出的目标都发往 192.168.1.1”。第二行说明整个 `192.168.1.0/24` 网络可以通过 `enp0s3` 直接访问。`proto dhcp` 表示计算机是通过 **DHCP** 从路由器自动获取这些设置的。
+
+```quiz
+你的计算机的地址是 `192.168.1.42/24`。它可以不经过网关、直接访问哪些地址？
+- [x] `192.168.1.10`
+- [x] `192.168.1.1`
+- [ ] `192.168.2.10`
+- [ ] `1.1.1.1`
+---
+使用 `/24` 时，前三个数字是网络地址。所有以 `192.168.1.` 开头的地址都在同一个局域网中——其他所有地址都要通过默认路由发往网关。
+```
+
+```predict
+$ ip route | grep default | awk '{print $3}'
+192.168.1.1
+---
+`default` 那一行中的第三个单词就是网关的地址。
+```
 
 ## ping——能连通吗？
 
@@ -90,30 +113,14 @@ ping -c 3 example.com
 cat /etc/resolv.conf
 ```
 
-在 Ubuntu 和 Fedora 上，这里写的是 `127.0.0.53`——那是 **systemd-resolved**，一个运行在你自己计算机上的本地“中间人”，它再去询问路由器。在 Debian 和 Arch 上，这里直接列出的是路由器 `192.168.1.1`。
+在 Ubuntu 上，这里写的是 `127.0.0.53`——那是 **systemd-resolved**，一个运行在你自己计算机上的本地“中间人”，它再去询问路由器。另外一些发行版直接列出路由器 `192.168.1.1`。
 
-要自己查询 DNS，可以使用 `dig`、`host` 或 `nslookup`。它们并不是一开始就安装好的，而是包含在一个软件包里，这个包在不同发行版中名字不同：
+要自己查询 DNS，可以使用 `dig`、`host` 或 `nslookup`。它们并不是一开始就安装好的。在 Ubuntu 上，它们包含在 `dnsutils` 软件包中（其他家族给这个软件包起了别的名字）：
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install dnsutils
 ```
-:::
-
-:::arch
-```sh
-sudo pacman -S bind
-```
-
-这个软件包叫 `bind`，得名于 DNS 服务器 BIND，这些工具就出自那里。
-:::
-
-:::redhat
-```sh
-sudo dnf install bind-utils
-```
-:::
 
 `dig` 会显示 DNS 服务器返回的完整应答。重要的部分在 `ANSWER SECTION` 下面。加上 `+short` 就只显示地址：
 
@@ -173,6 +180,16 @@ getent hosts server.lan
 
 查找顺序（先查文件，再查 DNS）由 `/etc/nsswitch.conf` 中的 `hosts:` 这一行决定。
 
+```quiz
+为什么 `sudo echo '192.168.1.10 server.lan' >> /etc/hosts` 会报 *Permission denied*？
+- [ ] `echo` 不能用 sudo 运行
+- [x] 为 `>>` 打开文件的是你自己的 shell，而不是 root——sudo 只作用于 `echo`
+- [ ] `/etc/hosts` 无法修改，连 root 也不行
+- [ ] `>>` 只能用于你主目录中的文件
+---
+所以要用 `echo ... | sudo tee -a /etc/hosts`：这样打开文件的就是以 root 身份运行的 `tee`。
+```
+
 ## 端口和服务
 
 IP 地址指向一台计算机。**端口**（port，1 到 65535 之间的一个数字）则指向这台计算机上的某个程序——就像街道地址和门牌号。一个等待连接的程序，我们说它在某个端口上**监听**（listen）。一些常见的端口：
@@ -203,13 +220,11 @@ sudo ss -tulpn
 
 `curl` 会获取某个地址（**URL**）上的内容，并把它打印到终端上。用你自己计算机上的 minserver 试一试：
 
-:::debian
-在 Debian 和 Ubuntu 上，`curl` 没有预装（但 `wget` 有）：
+在 Ubuntu 上，`curl` 没有预装（但 `wget` 有）：
 
 ```sh
 sudo apt install curl
 ```
-:::
 
 ```sh
 curl http://localhost:8080
@@ -257,22 +272,6 @@ curl -o exempel.html https://example.com
 
 `wget` 是专门用来下载文件的。它总是保存到文件，会显示进度，并且会自动跟随重定向：
 
-:::arch
-在 Arch 上，`wget` 没有预装（但 `curl` 有）：
-
-```sh
-sudo pacman -S wget
-```
-:::
-
-:::redhat
-在 Fedora 上，`wget` 没有预装（但 `curl` 有）：
-
-```sh
-sudo dnf install wget
-```
-:::
-
 ```sh
 wget https://example.com/cheatsheet.txt
 cat cheatsheet.txt
@@ -284,19 +283,11 @@ cat cheatsheet.txt
 
 **SSH**（*Secure Shell*，安全外壳）是远程控制 Linux 计算机的常用方式，所有传输的内容都是加密的。服务器在 22 端口上运行 `sshd` 服务，你用客户端 `ssh` 连接它：
 
-:::arch
-在 Arch 上，ssh 客户端没有预装：
-
-```sh
-sudo pacman -S openssh
-```
-:::
-
 ```sh
 ssh elev@server.lan hostname
 ```
 
-`elev@server.lan` 的意思是“计算机 server.lan 上的用户 elev”。主机后面的命令（`hostname`）在服务器上运行，结果显示在这里——它显示的是 `server`，而不是 {{hostname}}。
+`elev@server.lan` 的意思是“计算机 server.lan 上的用户 elev”。主机后面的命令（`hostname`）在服务器上运行，结果显示在这里——它显示的是 `server`，而不是 `ubuntu`。
 
 第一次连接某台计算机时，ssh 会问你是否信任它：
 
@@ -344,6 +335,16 @@ ssh-copy-id elev@server.lan
 
 第 4 步直接 ping 一个地址，不涉及任何名字。如果第 4 步成功而第 5 步失败，那几乎总是 DNS 出了问题——这是最常见的问题之一。
 
+```quiz
+`ping -c 3 1.1.1.1` 能成功，但 `ping -c 3 example.com` 回答 *Name or service not known*。问题最有可能出在哪里？
+- [ ] 网卡关闭了
+- [ ] 没有默认路由
+- [x] DNS——域名查询不起作用
+- [ ] example.com 不响应 ping
+---
+如果你能访问互联网上的某个地址，就说明网卡、路由和路由器都正常。剩下的就是名字的翻译——检查 `/etc/resolv.conf`。
+```
+
 自己试试吧！关掉网卡，逐步检查，然后再把它打开：
 
 ```sh
@@ -357,15 +358,17 @@ sudo ip link set enp0s3 up
 
 ## 软件包
 
-网络工具分布在不同的软件包中——而且和往常一样，它们在不同的发行版家族中名字不同：
+网络工具分布在不同的软件包中。在 Ubuntu 上，它们叫做：
 
-| 工具 | Debian/Ubuntu | Arch | Fedora |
-|---|---|---|---|
-| `ip`, `ss` | `iproute2` | `iproute2` | `iproute` |
-| `ping` | `iputils-ping` | `iputils` | `iputils` |
-| `dig`, `host`, `nslookup` | `dnsutils` | `bind` | `bind-utils` |
-| `traceroute` | `traceroute` | `traceroute` | `traceroute` |
-| `ssh`, `ssh-keygen` | `openssh-client` | `openssh` | `openssh-clients` |
+| 工具 | Ubuntu 上的软件包 |
+|---|---|
+| `ip`, `ss` | `iproute2` |
+| `ping` | `iputils-ping` |
+| `dig`, `host`, `nslookup` | `dnsutils` |
+| `traceroute` | `traceroute` |
+| `ssh`, `ssh-keygen` | `openssh-client` |
+
+和往常一样，其他家族给其中一些软件包起了别的名字——关于发行版和软件包的部分讲的就是这类差异。
 
 `traceroute` 会显示数据包一路上经过的每一台路由器。安装它，然后试试 `traceroute example.com`！
 

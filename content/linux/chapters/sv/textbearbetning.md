@@ -14,7 +14,7 @@ Alla tre är *filter*: de läser text, gör något med den och skriver resultate
 till stdout. Därför passar de perfekt i pipes. Och originalfilen ändras **inte**
 (med ett undantag, `sed -i`, som vi kommer till).
 
-I `dokument` finns en ny övningsfil, en CSV-fil med elevernas poäng:
+I `dokument` finns en tredje övningsfil, en CSV-fil med elevernas poäng:
 
 ```sh
 cat ~/dokument/betyg.csv
@@ -37,7 +37,7 @@ HEJ FRåN TERMINALEN
 ```
 
 Ser du å:et? `tr` arbetar med enskilda *byte*, och å, ä och ö ingår inte i
-`a-z`. Det är bra att känna till – `awk` (längre ner) klarar det bättre.
+`a-z`. Det är bra att känna till – GNU `awk` (längre ner) klarar det bättre.
 
 `tr` läser **bara** från stdin, aldrig från filer. Vill du använda en fil
 skickar du in den med `<` eller en pipe:
@@ -59,6 +59,13 @@ ihop flera likadana tecken i rad till ett:
 ```sh
 echo "070-123 45 67" | tr -d ' -'
 echo "för     många      mellanslag" | tr -s ' '
+```
+
+```predict
+$ echo "hello world" | tr -d o
+hell wrld
+---
+`-d` tar bort varje `o`, var det än står.
 ```
 
 I stället för intervall kan du skriva *klasser*, t.ex. `[:upper:]` (versaler),
@@ -91,6 +98,13 @@ byts alla:
 ```sh
 echo "katt katt katt" | sed 's/katt/hund/'
 echo "katt katt katt" | sed 's/katt/hund/g'
+```
+
+```predict
+$ echo banana | sed 's/a/o/'
+bonana
+---
+Utan `g` byts bara det första `a`:et på raden.
 ```
 
 Flaggan `i` gör sökningen skiftlägesokänslig, precis som `grep -i`:
@@ -189,9 +203,32 @@ cat ~/frukter-kopia.txt
 **utan** `-i` och titta på resultatet, och lägga till `-i` när det ser rätt
 ut. Skriver du `-i.bak` sparas dessutom originalet som `fil.bak`.
 
+```quiz
+Du kör `sed 's/kiwi/KIWI/' ~/dokument/frukter.txt`. Vad händer med filen?
+- [ ] Varje `kiwi` i filen blir `KIWI`
+- [ ] Bara det första `kiwi` i filen blir `KIWI`
+- [x] Ingenting – resultatet skrivs bara ut, filen är oförändrad
+---
+Utan `-i` skriver `sed` bara till stdout. Filen är som den var.
+```
+
 Konfigurationsfiler i `/etc` ägs av root, så där behövs `sudo sed -i ...`.
 Det är ett vanligt sätt att ändra en inställning i ett skript, utan att öppna
 en texteditor.
+
+## Klippa ut fält – `cut`
+
+När en fil består av fält med en avgränsare emellan kan `cut` plocka ut ett
+fält. `-d` väljer avgränsaren (*delimiter*) och `-f` vilket fält som ska
+behållas. Här är ämnena – fält 2 – i CSV-filen:
+
+```sh
+cut -d, -f2 ~/dokument/betyg.csv
+```
+
+I `/etc/passwd` skiljs fälten åt av kolon och fält 1 är användarnamnet, så
+`cut -d: -f1 /etc/passwd` listar alla användare. Precis som de andra filtren
+passar `cut` i en pipe – till exempel framför `tr`.
 
 ## Kolumner – `awk`
 
@@ -239,8 +276,16 @@ fälten ihop, och då kan du blanda in egen text:
 awk -F: '{print $1 " använder " $7}' /etc/passwd
 ```
 
-Du kanske minns `cut -d: -f1`. Skillnaden är att awk kan byta ordning på
-fälten, blanda in text och klarar flera mellanslag i rad.
+Jämför med `cut -d: -f1` från förra avsnittet. Skillnaden är att awk kan byta
+ordning på fälten, blanda in text och klarar flera mellanslag i rad.
+
+```predict
+$ echo "Alva,matte,87" | awk -F, '{print $3, $1}'
+87 Alva
+---
+`-F,` delar raden vid kommatecknen. awk skriver ut fält 3 först och sedan
+fält 1, med ett mellanslag emellan på grund av kommatecknet i `print`.
+```
 
 ### Mönster – välj rader
 
@@ -273,6 +318,12 @@ värde inte är ett tal jämför awk som *text* – och `"poäng"` kommer efter
 awk -F, 'NR > 1 && $3 >= 90' ~/dokument/betyg.csv
 ```
 
+Prova ett eget mönster – namnen på alla som läser svenska:
+
+```try
+awk -F, '$2 == "svenska" {print $1}' ~/dokument/betyg.csv
+```
+
 ### Räkna – variabler och `END`
 
 awk har variabler som du inte behöver deklarera – de börjar på 0. Blocket
@@ -299,25 +350,18 @@ awk -F, 'BEGIN {print "Elev     Poäng"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~
 ```
 
 awk har också funktioner, till exempel `length()`, `toupper()` och
-`tolower()`. Till skillnad från `tr` klarar GNU awk å, ä och ö:
+`tolower()`:
 
 ```sh
 awk '{print toupper($0)}' ~/dokument/frukter.txt
 ```
 
-:::debian
-På {{distro}} är `awk` som standard **mawk**, en liten och snabb variant. Vill
-du ha GNU awk installerar du paketet `gawk`. För enkla program som de här
-märks ingen skillnad – men mawk gör inte om å, ä och ö med `toupper()`.
-:::
-
-:::arch
-På Arch Linux är `awk` **GNU awk** (paketet `gawk`).
-:::
-
-:::redhat
-På {{distro}} är `awk` **GNU awk** (paketet `gawk`).
-:::
+Titta noga på `äpple` och `päron`. På Ubuntu, som terminalen här kör, är
+`awk` som standard **mawk**, en liten och snabb variant. För enkla program som
+de här märks ingen skillnad – men mawk gör inte om å, ä och ö med
+`toupper()`. Det gör **GNU awk** (paketet `gawk`), till skillnad från `tr`.
+Distributionerna skiljer sig i vilken awk de använder och i hur man
+installerar program – det kommer i kapitlet om distributioner.
 
 Simulatorn kan bara en del av awk-språket – det som tas upp här och lite
 till (`if`, loopar och arrayer). Se `man awk`.

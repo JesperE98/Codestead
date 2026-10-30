@@ -14,11 +14,7 @@
     },
     "uuid": {
       "text": "Trouvez l'UUID du système de fichiers monté sur `/` – et uniquement celui-là.",
-      "hint": {
-        "debian": "`lsblk -f` montre que `/` se trouve sur `/dev/sda2`. Interrogez ensuite `blkid /dev/sda2` – ou laissez `findmnt -n -o UUID /` tout faire d'un coup.",
-        "arch": "`lsblk -f` montre que `/` se trouve sur `/dev/sda3`. Interrogez ensuite `blkid /dev/sda3` – ou laissez `findmnt -n -o UUID /` tout faire d'un coup.",
-        "redhat": "`lsblk -f` montre que `/` se trouve sur `/dev/sda3`. Interrogez ensuite `blkid /dev/sda3` – ou laissez `findmnt -n -o UUID /` tout faire d'un coup."
-      }
+      "hint": "`lsblk -f` montre que `/` se trouve sur `/dev/sda2`. Interrogez ensuite `blkid /dev/sda2` – ou laissez `findmnt -n -o UUID /` tout faire d'un coup."
     },
     "montera": {
       "text": "Créez le point de montage `/mnt/usb` et montez-y la clé USB (`/dev/sdb1`).",

@@ -23,11 +23,7 @@
     },
     "zip": {
       "text": "`zip` と `unzip` パッケージをインストールし、そのあと `~/dokument` を `~/dokument.zip` にまとめてください。",
-      "hint": {
-        "debian": "`sudo apt update` と `sudo apt install zip unzip` を実行します。zip には `-r` を忘れずに: `zip -r dokument.zip dokument`。",
-        "arch": "`sudo pacman -S zip unzip` でインストールします。zip には `-r` を忘れずに: `zip -r dokument.zip dokument`。",
-        "redhat": "`sudo dnf install zip unzip` でインストールし、`y` と答えます。zip には `-r` を忘れずに: `zip -r dokument.zip dokument`。"
-      }
+      "hint": "`sudo apt update` と `sudo apt install zip unzip` を実行します。zip には `-r` を忘れずに: `zip -r dokument.zip dokument`。"
     },
     "unzip": {
       "text": "`unzip` を使って、`~/dokument.zip` を新しいディレクトリ `~/fran-zip` に展開してください。",
