@@ -190,6 +190,9 @@ public static partial class GitCmd
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
+    /// <summary>arr.slice(start, end) – List&lt;T&gt;.Slice is (start, count) in .NET, so call the JS version explicitly.</summary>
+    private static List<T> JsSlice<T>(List<T> list, int start, int? end = null) => Js.Slice<T>(list, start, end);
+
     private static List<string> SortedOrdinal(IEnumerable<string> xs)
     {
         var l = xs.ToList();

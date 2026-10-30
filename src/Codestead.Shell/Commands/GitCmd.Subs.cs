@@ -122,7 +122,7 @@ public static partial class GitCmd
             var nk = NormKey(parts);
             var entries = (scope is not null ? ParseConfig(ReadText(g, PathFor(scope)) ?? "") : ConfigAll(g, r)).Where(e => e.Key == nk).ToList();
             if (entries.Count == 0) return 1;
-            foreach (var e in o.Has("get-all") || o.Has("all") ? entries : entries.Slice(-1)) g.Out(e.Value + "\n");
+            foreach (var e in o.Has("get-all") || o.Has("all") ? entries : JsSlice(entries, -1)) g.Out(e.Value + "\n");
             return 0;
         }
         var cfgPath = PathFor(scope ?? "local");
@@ -656,7 +656,7 @@ public static partial class GitCmd
             bool Touches(Commit c) => TreeChanges(CommitTree(r, c.Parents.Count > 0 ? c.Parents[0] : null), ReadTree(r, c.Tree), p => specs.Any(s => SpecMatch(s, p))).Count > 0;
             commits = commits.Where(Touches).ToList();
         }
-        commits = commits.Slice(0, SliceEnd(limit));
+        commits = JsSlice(commits, 0, SliceEnd(limit));
         if (o.Has("reverse")) commits.Reverse();
         var pretty = o.Get("pretty") ?? o.Get("format");
         bool oneline = o.Has("oneline") || pretty == "oneline";

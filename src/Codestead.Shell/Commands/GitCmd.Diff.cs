@@ -26,8 +26,8 @@ public static partial class GitCmd
         while (pre < a.Count && pre < b.Count && a[pre] == b[pre]) pre++;
         int suf = 0;
         while (suf < a.Count - pre && suf < b.Count - pre && a[a.Count - 1 - suf] == b[b.Count - 1 - suf]) suf++;
-        var A = a.Slice(pre, a.Count - suf);
-        var B = b.Slice(pre, b.Count - suf);
+        var A = JsSlice(a, pre, a.Count - suf);
+        var B = JsSlice(b, pre, b.Count - suf);
         var mid = new List<Op>();
         int n = A.Count;
         int m = B.Count;
@@ -107,7 +107,7 @@ public static partial class GitCmd
         foreach (var range in ranges)
         {
             int s = range[0], e = range[1];
-            var slice = ops.Slice(s, e + 1);
+            var slice = JsSlice(ops, s, e + 1);
             int aCount = slice.Count(o => o.T != '+');
             int bCount = slice.Count(o => o.T != '-');
             res.Add(g.C(Col.Cyan, $"@@ -{Fmt(aPos[s], aCount)} +{Fmt(bPos[s], bCount)} @@"));
@@ -295,9 +295,9 @@ public static partial class GitCmd
             while (t < B.Count && !(mo[t] >= j && mt[t] >= k)) t++;
             int oj = t < B.Count ? mo[t] : O.Count;
             int tk = t < B.Count ? mt[t] : T.Count;
-            var b = B.Slice(i, t);
-            var o = O.Slice(j, oj);
-            var th = T.Slice(k, tk);
+            var b = JsSlice(B, i, t);
+            var o = JsSlice(O, j, oj);
+            var th = JsSlice(T, k, tk);
             if (Eq(o, b)) res.AddRange(th);
             else if (Eq(th, b) || Eq(o, th)) res.AddRange(o);
             else
