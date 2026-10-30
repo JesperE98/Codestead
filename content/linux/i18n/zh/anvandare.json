@@ -18,16 +18,8 @@
       "hint": "先 `sudo groupadd utvecklare`，然后 `sudo usermod -aG utvecklare kim`。"
     },
     "sudo-ratt": {
-      "text": {
-        "debian": "把 `kim` 加入 `sudo` 组，让这个账户可以使用 `sudo`。",
-        "arch": "把 `kim` 加入 `wheel` 组，让这个账户可以使用 `sudo`。",
-        "redhat": "把 `kim` 加入 `wheel` 组，让这个账户可以使用 `sudo`。"
-      },
-      "hint": {
-        "debian": "`sudo usermod -aG sudo kim`——别忘了 `-a`！",
-        "arch": "`sudo usermod -aG wheel kim`——别忘了 `-a`！",
-        "redhat": "`sudo usermod -aG wheel kim`——别忘了 `-a`！"
-      }
+      "text": "把 `kim` 加入 `sudo` 组，让这个账户可以使用 `sudo`。",
+      "hint": "`sudo usermod -aG sudo kim`——别忘了 `-a`！"
     },
     "sudo-u": {
       "text": "用 `sudo -u` 以 `kim` 的身份运行 `whoami`。",
