@@ -1,0 +1,45 @@
+{
+  "title": "Otros shells: zsh y fish",
+  "tasks": {
+    "installera-zsh": {
+      "text": "Instala el shell `zsh`.",
+      "hint": {
+        "debian": "`sudo apt update` y luego `sudo apt install zsh`.",
+        "arch": "`sudo pacman -S zsh` y responde que sí.",
+        "redhat": "`sudo dnf install zsh`, y responde `y`."
+      }
+    },
+    "starta-zsh": {
+      "text": "Inicia `zsh`. La primera vez, *zsh-newuser-install* te pregunta qué quieres hacer: responde `2`. Luego muestra qué shell estás ejecutando con `echo $0`.",
+      "hint": "Escribe `zsh`, responde `2` y luego escribe `echo $0`. Debería poner `zsh`."
+    },
+    "globstar": {
+      "text": "Usa el `**` de zsh para listar con un solo `ls` todos los archivos `.txt` de tu directorio personal **y de todos los subdirectorios**.",
+      "hint": "`ls ~/**/*.txt`: `**` significa «todos los directorios, a cualquier nivel»."
+    },
+    "tillbaka": {
+      "text": "Sal de zsh y vuelve a bash.",
+      "hint": "Escribe `exit`. Si quieres, compruébalo con `echo $0` o `ps`."
+    },
+    "installera-fish": {
+      "text": "Instala el shell `fish`.",
+      "hint": {
+        "debian": "`sudo apt update` y luego `sudo apt install fish`.",
+        "arch": "`sudo pacman -S fish` y responde que sí.",
+        "redhat": "`sudo dnf install fish`, y responde `y`."
+      }
+    },
+    "fish-set": {
+      "text": "Inicia `fish`. Crea la variable `frukt` con el valor `äpple` a la manera de fish y muéstrala con `echo`.",
+      "hint": "`frukt=äpple` no funciona en fish. Escribe `set frukt äpple` y luego `echo $frukt`."
+    },
+    "fish-for": {
+      "text": "Escribe un bucle `for` con la sintaxis de fish que muestre los números 1, 2 y 3, uno por línea. Luego vuelve a bash con `exit`.",
+      "hint": "fish no tiene `do` ni `done`: el bloque termina con `end`: `for i in 1 2 3; echo $i; end`"
+    },
+    "chsh": {
+      "text": "Mira en `/etc/shells` qué shells hay instalados. Luego haz que zsh sea tu shell de inicio de sesión con `chsh`.",
+      "hint": "`cat /etc/shells` y luego `chsh -s /usr/bin/zsh`. Comprueba el resultado con `grep elev /etc/passwd`."
+    }
+  }
+}
