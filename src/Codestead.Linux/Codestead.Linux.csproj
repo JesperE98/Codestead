@@ -17,6 +17,14 @@
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
     <PackageReference Include="Velopack" Version="1.2.161" />
   </ItemGroup>
+  <!--
+    Published builds carry their own ICU (Unicode/collation library), so the app does not depend on the
+    distribution's libicu version (libicu70/74/76 ... differ between Ubuntu, Debian, Fedora and Arch).
+  -->
+  <ItemGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <PackageReference Include="Microsoft.ICU.ICU4C.Runtime" Version="72.1.0.3" />
+    <RuntimeHostConfigurationOption Include="System.Globalization.AppLocalIcu" Value="72.1.0.3" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Codestead.Shell/Codestead.Shell.csproj" />
     <ProjectReference Include="../Codestead.UI/Codestead.UI.csproj" />
