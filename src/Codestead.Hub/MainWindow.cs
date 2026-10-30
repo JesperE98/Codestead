@@ -89,7 +89,8 @@ public sealed class MainWindow : Window
         {
             if (options.SmokeTest)
             {
-                await RunSmokeTest();
+                // After the window has finished opening: closing it while it opens crashes the lifetime.
+                Dispatcher.UIThread.Post(() => _ = RunSmokeTest(), DispatcherPriority.Background);
                 return;
             }
             await Refresh();

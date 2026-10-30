@@ -19,14 +19,15 @@ case "$hub_archive" in
   *) tar -xzf "$hub_archive" -C "$work/hub" ;;
 esac
 
-openssl ecparam -name prime256v1 -genkey -noout -out "$work/key.pem"
-openssl ec -in "$work/key.pem" -pubout -out "$work/pub.pem" 2>/dev/null
+# openssl on Windows is a native program: give it Windows paths.
+openssl ecparam -name prime256v1 -genkey -noout -out "$(native "$work/key.pem")"
+openssl ec -in "$(native "$work/key.pem")" -pubout -out "$(native "$work/pub.pem")" 2>/dev/null
 tool_file="$(native "$(abs "$tool_archive")")"
 url=$("$py" -c 'import pathlib,sys; print(pathlib.Path(sys.argv[1]).resolve().as_uri())' "$tool_file")
 "$py" "$(native "$root/packaging/catalog.py")" --catalog "$(native "$work/catalog.json")" --id "$tool_id" --name "$tool_name" \
   --version "$tool_version" --description-file "$(native "$root/packaging/descriptions/$tool_id.json")" \
   --asset "$rid=$tool_file=$url=$tool_exe"
-openssl dgst -sha256 -sign "$work/key.pem" "$work/catalog.json" | base64 | tr -d '\n' > "$work/catalog.json.sig"
+openssl dgst -sha256 -sign "$(native "$work/key.pem")" "$(native "$work/catalog.json")" | base64 | tr -d '\n' > "$work/catalog.json.sig"
 
 export CODESTEAD_HUB_DIR="$(native "$work/hub-data")" CODESTEAD_DATA_DIR="$(native "$work/settings")"
 args=(--smoke-test --catalog "$(native "$work/catalog.json")" --public-key "$(native "$work/pub.pem")" --install "$tool_id")
