@@ -10,16 +10,8 @@
       "hint": "`ping -c 3 192.168.1.1`——`-c` 代表 *count*（次数）。"
     },
     "dig": {
-      "text": {
-        "debian": "安装软件包 `dnsutils`，然后用 `dig` 查询 `example.com` 的 IP 地址。",
-        "arch": "安装软件包 `bind`，然后用 `dig` 查询 `example.com` 的 IP 地址。",
-        "redhat": "安装软件包 `bind-utils`，然后用 `dig` 查询 `example.com` 的 IP 地址。"
-      },
-      "hint": {
-        "debian": "`sudo apt update`、`sudo apt install dnsutils`，然后 `dig +short example.com`。",
-        "arch": "`sudo pacman -S bind`，然后 `dig +short example.com`。",
-        "redhat": "`sudo dnf install bind-utils`，然后 `dig +short example.com`。"
-      }
+      "text": "安装软件包 `dnsutils`，然后用 `dig` 查询 `example.com` 的 IP 地址。",
+      "hint": "`sudo apt update`、`sudo apt install dnsutils`，然后 `dig +short example.com`。"
     },
     "ss": {
       "text": "用 `ss` 找出计算机上有哪些端口正在监听。",
@@ -27,11 +19,7 @@
     },
     "curl-localhost": {
       "text": "用 `curl` 获取你自己计算机上练习服务器的首页 `http://localhost:8080`。",
-      "hint": {
-        "debian": "在 Debian/Ubuntu 上需要先安装 curl：`sudo apt install curl`。如果你得到 *Couldn't connect to server*，说明 minserver 已停止——用 `minserver` 启动它。",
-        "arch": "`curl http://localhost:8080`。如果你得到 *Couldn't connect to server*，说明 minserver 已停止——用 `minserver` 启动它。",
-        "redhat": "`curl http://localhost:8080`。如果你得到 *Couldn't connect to server*，说明 minserver 已停止——用 `minserver` 启动它。"
-      }
+      "hint": "在 Ubuntu 上需要先安装 curl：`sudo apt install curl`。如果你得到 *Couldn't connect to server*，说明 minserver 已停止——用 `minserver` 启动它。"
     },
     "spara": {
       "text": "把网页 `https://example.com` 保存为文件 `~/exempel.html`。",
@@ -43,11 +31,7 @@
     },
     "ssh": {
       "text": "以用户 `elev` 的身份，用 `ssh` 在服务器 `server.lan` 上运行命令 `hostname`。",
-      "hint": {
-        "debian": "`ssh elev@server.lan hostname`——并对主机密钥的提问回答 `yes`。",
-        "arch": "先安装 ssh 客户端：`sudo pacman -S openssh`。然后 `ssh elev@server.lan hostname`——并对主机密钥的提问回答 `yes`。",
-        "redhat": "`ssh elev@server.lan hostname`——并对主机密钥的提问回答 `yes`。"
-      }
+      "hint": "`ssh elev@server.lan hostname`——并对主机密钥的提问回答 `yes`。"
     }
   }
 }

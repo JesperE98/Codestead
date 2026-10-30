@@ -3,11 +3,7 @@
   "tasks": {
     "installera": {
       "text": "安装 `git` 软件包。",
-      "hint": {
-        "debian": "先运行 `sudo apt update`，再运行 `sudo apt install git`。",
-        "arch": "`sudo pacman -S git`——并对提问回答 yes。",
-        "redhat": "`sudo dnf install git`——并回答 `y`，因为默认选项是 No。"
-      }
+      "hint": "先运行 `sudo apt update`，再运行 `sudo apt install git`。"
     },
     "identitet": {
       "text": "告诉 git 你是谁：用 `git config --global` 设置你的名字（`user.name`）和电子邮件地址（`user.email`）。",

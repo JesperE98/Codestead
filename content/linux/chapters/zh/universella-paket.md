@@ -19,6 +19,15 @@
 
 **沙盒**（sandbox）的意思是，程序只能访问它被允许访问的东西，比如网络或你的下载文件夹，而不是你的整个主目录。
 
+```quiz
+哪种格式会在后台自动更新？
+- [ ] Flatpak
+- [x] Snap
+- [ ] AppImage
+---
+Flatpak 程序用 `flatpak update` 更新，而 AppImage 要通过下载一个新文件来替换。
+```
+
 ## Flatpak
 
 Flatpak 是大多数发行版在桌面程序方面达成共识的格式。程序从一个 **remote**（远程源）下载——几乎总是 **Flathub**——并共享通用的**运行时**（runtime，例如 `org.gnome.Platform`），这样就不必每个程序都把所有东西自带一份。
@@ -91,6 +100,15 @@ flatpak install --user flathub org.videolan.VLC
 flatpak list --user
 ```
 
+```quiz
+用 `--user` 安装 Flatpak 时会发生什么？
+- [ ] 它会为整个系统安装，安装在 `/var/lib/flatpak` 中
+- [x] 它会安装到你的主目录中，其他用户看不到它
+- [ ] 它会在没有沙盒的情况下运行
+---
+记住，用户级安装有它自己的 remote——Flathub 也要用 `--user` 再添加一次。
+```
+
 ### 更新和卸载
 
 ```sh
@@ -119,7 +137,7 @@ sudo apt install snapd
 :::arch
 ### Arch 上的 Snap
 
-Snap 不在 Arch 的软件源中——只在 AUR 里有。像上一章那样构建它：
+Snap 不在 Arch 的软件源中——只在 AUR 里有。像关于 Arch 家族的那一章中那样构建它：
 
 ```sh
 sudo pacman -S --needed git base-devel
@@ -163,6 +181,13 @@ sudo snap install code
 sudo snap install code --classic
 ```
 
+```quiz
+某个 snap 是以经典约束方式发布的。安装它时你需要加上什么？
+- [ ] `--user`
+- [x] `--classic`
+- [ ] `--channel=edge`
+```
+
 ### 通道和更新
 
 每个 snap 都有若干**通道**（channel）：`stable`、`candidate`、`beta` 和 `edge`（最新的、未经测试的版本）。`snap info` 会显示这些通道，`--channel=beta` 可以选择另一个通道。更新是自动进行的，但你也可以强制更新，或者删除 snap：
@@ -185,11 +210,26 @@ cd ~/Nedladdningar
 ls -l
 ```
 
+如果你马上启动它，会发生什么？
+
+```predict
+$ ~/Nedladdningar/Kalkylator.AppImage
+bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+---
+这个文件没有 `x` 权限。
+```
+
 下载下来的文件一开始总是不可执行的。让它变成可执行文件，然后启动它：
 
 ```sh
 chmod +x Kalkylator.AppImage
 ./Kalkylator.AppImage
+```
+
+```try
+chmod +x ~/Nedladdningar/Kalkylator.AppImage
+---
+现在这个文件可执行了。用 `ls -l ~/Nedladdningar` 检查一下。
 ```
 
 ### FUSE

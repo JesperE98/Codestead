@@ -56,31 +56,11 @@ getent passwd elev
 
 ### 系统用户
 
-`/etc/passwd` 中的大部分行都不是人。像 Web 服务器和日志系统这样的服务，会以各自专用的用户身份运行，并且权限尽可能少——这样即使它们被攻破，攻击者也接触不到你的文件。它们的 shell 是 `nologin`，所以没有人能以它们的身份登录：
-
-:::debian
-在 Debian 和 Ubuntu 上，Web 服务器的用户叫 `www-data`：
+`/etc/passwd` 中的大部分行都不是人。像 Web 服务器和日志系统这样的服务，会以各自专用的用户身份运行，并且权限尽可能少——这样即使它们被攻破，攻击者也接触不到你的文件。它们的 shell 是 `nologin`，所以没有人能以它们的身份登录。在 Ubuntu 上，Web 服务器的用户叫 `www-data`（系统用户的名字因发行版而异）：
 
 ```sh
 grep www-data /etc/passwd
 ```
-:::
-
-:::arch
-在 Arch 上，Web 服务器的用户叫 `http`：
-
-```sh
-grep http /etc/passwd
-```
-:::
-
-:::redhat
-在 Fedora 上，例如有 `dbus`，它负责运行系统消息总线：
-
-```sh
-grep dbus /etc/passwd
-```
-:::
 
 用文本处理那一章中学过的 `awk`，可以列出 UID 为 1000 及以上的所有用户——也就是普通用户：
 
@@ -89,6 +69,13 @@ awk -F: '$3 >= 1000 {print $1}' /etc/passwd
 ```
 
 `nobody`（UID 65534）也会出现在结果中。它是一个特殊用户，“什么也不拥有”，用于需要让程序拥有尽可能少权限的场合。
+
+```predict
+$ awk -F: '$3 == 0 {print $1}' /etc/passwd
+root
+---
+第 3 个字段是 UID，只有 root 的 UID 是 0。赋予 root 强大权力的是这个数字，而不是名字。
+```
 
 ## 组和 GID
 
@@ -112,6 +99,16 @@ groups
 id
 ```
 
+```quiz
+你（`elev`）属于 `elev` 和 `sudo` 两个组，你的主组是 `elev`。你新建的文件会归属于哪个组？
+- [x] `elev`
+- [ ] `sudo`
+- [ ] 两个都是
+- [ ] `root`
+---
+新文件会归属于你的**主**组——也就是 `/etc/passwd` 中的 GID 字段。像 `sudo` 这样的附加组会给你额外的权限，但不会出现在你的文件上。
+```
+
 ## 密码——`/etc/shadow`
 
 注意 `/etc/passwd` 第 2 个字段中的 `x`。在过去，（加密后的）密码就直接放在那里。问题是 `/etc/passwd` **必须**对所有人可读——`ls -l` 就是从那里获取所有者名字的。所以任何人都可以复制这些加密后的密码，然后慢慢地尝试破解。因此，它们被移到了只有 root 能读取的 `/etc/shadow` 中：
@@ -129,6 +126,12 @@ kim:$y$j9T$Tm9...$Kx2...:20756:0:99999:7:::
 
 ```sh
 chage -l elev
+```
+
+```try
+chage -l elev
+---
+`Password expires: never`——elev 的密码永远不需要修改。
 ```
 
 ## 创建用户——`useradd`
@@ -152,33 +155,17 @@ sudo useradd -m -s /bin/bash kim
 ls -a /etc/skel
 ```
 
-在这一点上，各发行版有所不同：
+在 Ubuntu 上，`useradd` 相当“吝啬”：不加 `-m` 就**不会**创建主目录，不加 `-s` 的话 shell 会是 `/bin/sh`。其他发行版有其他的默认设置，所以养成输入 `-m` 和 `-s` 的习惯吧——这样同一条命令在哪里都能用。
 
-:::debian
-在 Debian 和 Ubuntu 上，`useradd` 相当“吝啬”：不加 `-m` 就**不会**创建主目录，不加 `-s` 的话 shell 会是 `/bin/sh`。所以 Debian 家族还提供了一个更友好的脚本 `adduser`。它会创建主目录、选择 bash，并询问密码和姓名：
+所以 Ubuntu 还提供了一个更友好的脚本 `adduser`，它属于 Debian 家族。它会创建主目录、选择 bash，并询问密码和姓名：
 
 ```sh
 sudo adduser lisa
 ```
 
 回答这些问题——大多数问题直接按 Enter 就行。`adduser` 还能把已有用户加入某个组：`sudo adduser lisa sudo`。
-:::
 
-:::arch
-在 Arch 上，不加 `-m` 就不会创建主目录，而且根本没有 `adduser` 命令——试试看：
-
-```sh
-adduser lisa
-```
-
-Arch Wiki 推荐一步到位：`useradd -m -G wheel -s /bin/bash name`。
-:::
-
-:::redhat
-在 Fedora 上，即使不加 `-m` 也会创建主目录（由 `/etc/login.defs` 中的 `CREATE_HOME` 设置决定），而且 shell 是 bash。不过加上 `-m` 也没有坏处，所以养成输入它的习惯吧——这样同一条命令在哪里都能用。
-:::
-
-`useradd`、`passwd` 以及本章中的其他命令总是预装好的。这个软件包在 Debian 上叫 `passwd`，在 Arch 上叫 `shadow`，在 Fedora 上叫 `shadow-utils`——这又是同一个东西在不同地方名字不同的例子。
+`useradd`、`passwd` 以及本章中的其他命令总是预装好的。在 Ubuntu 上，它们来自 `passwd` 软件包；其他家族给这个软件包起了别的名字。
 
 ## 设置密码——`passwd`
 
@@ -208,6 +195,16 @@ groups kim
 
 `-aG` 的意思是 *append to Groups*（追加到组）。**别忘了 `-a`！** 如果只用 `-G`，附加组列表会被设置成你输入的内容，一个不多一个不少——用户会被移出其他所有组，比如 sudo 组。这是把自己锁在门外的常见方式。
 
+```quiz
+`kim` 属于附加组 `sudo` 和 `utvecklare`。管理员运行了 `sudo usermod -G backup kim`。之后 kim 属于哪些附加组？
+- [ ] `sudo`、`utvecklare` 和 `backup`
+- [x] 只有 `backup`
+- [ ] `sudo` 和 `utvecklare`——不加 `-a` 命令会失败
+- [ ] 一个都没有
+---
+不加 `-a` 时，列表会被设置成你输入的内容，一个不多一个不少。如果用 `sudo usermod -aG backup kim`，kim 就会保留其他组。
+```
+
 `gpasswd` 也能做同样的事，而且还能移除成员：
 
 ```sh
@@ -226,7 +223,7 @@ sudo chmod 775 /srv/projekt
 ls -ld /srv/projekt
 ```
 
-## 授予 sudo 权限——`sudo` 或 `wheel`
+## 授予 sudo 权限——`sudo` 组
 
 谁可以使用 `sudo`，由 `/etc/sudoers` 决定：
 
@@ -234,31 +231,13 @@ ls -ld /srv/projekt
 sudo cat /etc/sudoers
 ```
 
-`%{{adminGroup}} ALL=(ALL:ALL) ALL` 这一行表示 **{{adminGroup}}** 组中的每个人都可以以 root 身份运行任何命令。所以，给某人 sudo 权限，只需要把他加入正确的组——而这个组在不同的家族中名字不同：
-
-:::debian
-在 Debian 和 Ubuntu 上，这个组叫 `sudo`：
+`%sudo ALL=(ALL:ALL) ALL` 这一行表示 **sudo** 组中的每个人都可以以 root 身份运行任何命令。所以，给某人 sudo 权限，只需要把他加入正确的组——在 Ubuntu 上就是 `sudo` 组：
 
 ```sh
 sudo usermod -aG sudo kim
 ```
-:::
 
-:::arch
-在 Arch 上，这个组叫 `wheel`——这是一个古老的 Unix 名字，指“说了算的人”（*big wheel*，大人物）：
-
-```sh
-sudo usermod -aG wheel kim
-```
-:::
-
-:::redhat
-在 Fedora 上，这个组叫 `wheel`——这是一个古老的 Unix 名字，指“说了算的人”（*big wheel*，大人物）：
-
-```sh
-sudo usermod -aG wheel kim
-```
-:::
+这个组在不同的家族中名字不同：在 Arch 和 Fedora 上，它叫 `wheel`——这是一个古老的 Unix 名字，指“说了算的人”（*big wheel*，大人物）。
 
 永远不要用普通编辑器直接编辑 `/etc/sudoers`——一个拼写错误就可能导致再也没有人能使用 sudo。请使用 `visudo`，它会在保存前检查文件。通常，你只需要用组就够了。
 
@@ -283,6 +262,16 @@ su - kim
 ```
 
 不带用户名的 `su` 表示切换到 root。在 Ubuntu 上 root 没有密码，所以 `su -` 在那里行不通——请改用 `sudo -i`。
+
+```quiz
+你想以 `kim` 的身份运行一条命令，但你不知道 kim 的密码。你有 sudo 权限。哪种方法可行？
+- [ ] `su - kim`
+- [x] `sudo -u kim command`
+- [ ] `su kim command`
+- [ ] 都不行——你需要 kim 的密码
+---
+`su` 要求输入你要变成的那个用户的密码。`sudo` 要求输入**你自己的**密码，并在 `/etc/sudoers` 中检查你是否有权这样做。
+```
 
 ## 锁定和删除账户
 
@@ -310,9 +299,7 @@ sudo useradd -m vikarie
 sudo userdel -r vikarie
 ```
 
-:::debian
-Debian 家族还有 `deluser`，它是 `adduser` 的对应命令：`sudo deluser --remove-home vikarie`。`sudo deluser kim sudo` 会把 kim 从 sudo 组中移除。
-:::
+Ubuntu 还有 `deluser`，它是 `adduser` 的对应命令：`sudo deluser --remove-home vikarie`。`sudo deluser kim sudo` 会把 kim 从 sudo 组中移除。
 
 `userdel` 拒绝删除已登录的用户——试试 `sudo userdel elev`。
 

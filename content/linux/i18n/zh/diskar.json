@@ -14,11 +14,7 @@
     },
     "uuid": {
       "text": "找出挂载在 `/` 上的文件系统的 UUID——只要这一个。",
-      "hint": {
-        "debian": "`lsblk -f` 显示 `/` 位于 `/dev/sda2`。然后查询 `blkid /dev/sda2`——或者用 `findmnt -n -o UUID /` 一步到位。",
-        "arch": "`lsblk -f` 显示 `/` 位于 `/dev/sda3`。然后查询 `blkid /dev/sda3`——或者用 `findmnt -n -o UUID /` 一步到位。",
-        "redhat": "`lsblk -f` 显示 `/` 位于 `/dev/sda3`。然后查询 `blkid /dev/sda3`——或者用 `findmnt -n -o UUID /` 一步到位。"
-      }
+      "hint": "`lsblk -f` 显示 `/` 位于 `/dev/sda2`。然后查询 `blkid /dev/sda2`——或者用 `findmnt -n -o UUID /` 一步到位。"
     },
     "montera": {
       "text": "创建挂载点 `/mnt/usb`，并把 U 盘（`/dev/sdb1`）挂载到那里。",
