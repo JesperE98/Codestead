@@ -2,12 +2,8 @@
   "title": "systemd によるサービスとログ",
   "tasks": {
     "status-ssh": {
-      "text": "`systemctl status` で SSH サーバーの状態を表示してください。あなたのディストリビューションのファミリーでは、サービスが何という名前か考えてみましょう！",
-      "hint": {
-        "debian": "Debian ファミリーでは、サービスの名前は `ssh` です: `systemctl status ssh`。",
-        "arch": "Arch では、サービスの名前は `sshd` です: `systemctl status sshd`。",
-        "redhat": "Fedora では、サービスの名前は `sshd` です: `systemctl status sshd`。"
-      }
+      "text": "`systemctl status` で SSH サーバーの状態を表示してください。Ubuntu では、サービスが何という名前か考えてみましょう！",
+      "hint": "Ubuntu では、サービスの名前は `ssh` です: `systemctl status ssh`。"
     },
     "failed": {
       "text": "どうやら起動しなかったサービスがあるようです。*失敗した* サービスをすべて一覧表示してください。",

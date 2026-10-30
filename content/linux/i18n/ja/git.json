@@ -3,11 +3,7 @@
   "tasks": {
     "installera": {
       "text": "`git` パッケージをインストールしてください。",
-      "hint": {
-        "debian": "`sudo apt update` を実行してから、`sudo apt install git` を実行します。",
-        "arch": "`sudo pacman -S git` を実行し、質問には yes と答えます。",
-        "redhat": "`sudo dnf install git` を実行し、`y` と答えます。既定値は No です！"
-      }
+      "hint": "`sudo apt update` を実行してから、`sudo apt install git` を実行します。"
     },
     "identitet": {
       "text": "自分が誰なのかを git に伝えてください。`git config --global` で名前（`user.name`）とメールアドレス（`user.email`）を設定します。",

@@ -30,6 +30,16 @@
 ネットワークやダウンロードフォルダーなど、許可されたものにしかアクセスできない
 ことを意味します。
 
+```quiz
+バックグラウンドで自動的に更新されるのはどの形式ですか？
+- [ ] Flatpak
+- [x] Snap
+- [ ] AppImage
+---
+Flatpak のプログラムは `flatpak update` で更新し、AppImage は新しいファイルを
+ダウンロードして置き換えます。
+```
+
 ## Flatpak
 
 Flatpak は、ほとんどのディストリビューションがデスクトッププログラム用として
@@ -115,6 +125,16 @@ flatpak install --user flathub org.videolan.VLC
 flatpak list --user
 ```
 
+```quiz
+`--user` を付けて Flatpak をインストールすると、どうなりますか？
+- [ ] システム全体に、`/var/lib/flatpak` にインストールされる
+- [x] あなたのホームディレクトリに入り、ほかのユーザーからは見えない
+- [ ] サンドボックスなしで動く
+---
+ユーザー用のインストールには独自のリモートがあることを忘れないでください。
+Flathub も `--user` を付けて追加する必要があります。
+```
+
 ### 更新と削除
 
 ```sh
@@ -146,8 +166,8 @@ sudo apt install snapd
 :::arch
 ### Arch の Snap
 
-Snap は Arch のリポジトリにはなく、AUR にしかありません。前の章と同じように
-ビルドします。
+Snap は Arch のリポジトリにはなく、AUR にしかありません。Arch ファミリーの章と
+同じようにビルドします。
 
 ```sh
 sudo pacman -S --needed git base-devel
@@ -197,6 +217,13 @@ sudo snap install code
 sudo snap install code --classic
 ```
 
+```quiz
+ある snap が classic confinement で公開されています。インストールするには何を付ける必要がありますか？
+- [ ] `--user`
+- [x] `--classic`
+- [ ] `--channel=edge`
+```
+
 ### チャンネルと更新
 
 snap にはそれぞれ **チャンネル** があります。`stable`、`candidate`、`beta`、
@@ -227,12 +254,27 @@ cd ~/Nedladdningar
 ls -l
 ```
 
+すぐに起動すると、どうなるでしょうか？
+
+```predict
+$ ~/Nedladdningar/Kalkylator.AppImage
+bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+---
+このファイルには `x` パーミッションがありません。
+```
+
 ダウンロードしたファイルは、最初は決して実行可能になっていません。実行可能にして
 起動しましょう。
 
 ```sh
 chmod +x Kalkylator.AppImage
 ./Kalkylator.AppImage
+```
+
+```try
+chmod +x ~/Nedladdningar/Kalkylator.AppImage
+---
+これでファイルが実行可能になりました。`ls -l ~/Nedladdningar` で確認しましょう。
 ```
 
 ### FUSE

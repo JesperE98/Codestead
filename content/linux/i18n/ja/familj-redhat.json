@@ -1,0 +1,59 @@
+{
+  "title": "Red Hat ファミリー: dnf と COPR",
+  "tasks": {
+    "sync": {
+      "text": "`dnf check-update` で新しいパッケージ情報を取得し、更新があるか確認してください。",
+      "hint": "`dnf check-update` には root 権限は必要ありません。"
+    },
+    "search": {
+      "text": "`htop` パッケージを検索してください。",
+      "hint": "`dnf search htop`"
+    },
+    "install": {
+      "text": "`tree` パッケージをインストールしてください。",
+      "hint": "`sudo dnf install tree` を実行し、`y` と答えます。既定値は No です！"
+    },
+    "run-tree": {
+      "text": "ホームディレクトリで `tree` を実行してください。"
+    },
+    "remove": {
+      "text": "`tree` パッケージを再び削除してください。",
+      "hint": "`sudo dnf remove tree`"
+    },
+    "upgrade": {
+      "text": "インストール済みのすべてのパッケージをアップグレードしてください。",
+      "hint": "`sudo dnf upgrade`"
+    },
+    "forbered": {
+      "text": "dnf がいま使っているリポジトリを表示してください。",
+      "hint": "`dnf repolist`"
+    },
+    "lagg-till": {
+      "text": "COPR リポジトリ `lunatool/moonphase` を有効にしてください。",
+      "hint": "`sudo dnf copr enable lunatool/moonphase` を実行し、`y` と答えます。既定値は No です。"
+    },
+    "granska": {
+      "text": "追加されている COPR リポジトリを一覧表示してください。",
+      "hint": "`dnf copr list`"
+    },
+    "installera": {
+      "text": "COPR リポジトリから `moonphase` パッケージをインストールしてください。",
+      "hint": "`sudo dnf install moonphase`"
+    },
+    "kor": {
+      "text": "プログラム `moonphase` を実行してください。"
+    },
+    "ursprung": {
+      "text": "`moonphase` がどのリポジトリからインストールされたのかを調べてください。",
+      "hint": "`dnf info moonphase` を実行し、`From repository` の行を見ます。"
+    },
+    "efterat": {
+      "text": "COPR リポジトリを再び無効にしてください。プログラムは残りますが、もう更新は届きません。",
+      "hint": "`sudo dnf copr disable lunatool/moonphase`"
+    },
+    "vim": {
+      "text": "ボーナス: テキストエディター Vim をインストールしてください。ヒント: Red Hat ファミリーでは、パッケージ名は `vim` ではありません！",
+      "hint": "`dnf search vim` で検索しましょう。パッケージ名は `vim-enhanced` です。"
+    }
+  }
+}

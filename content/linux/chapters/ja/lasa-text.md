@@ -3,8 +3,8 @@
 Linux では、設定、ログ、リストなど、ほとんどすべてがテキストです。そのため、
 テキストファイルを読んだり検索したりするための小さなツールがたくさんあります。
 ホームディレクトリには `dokument` というディレクトリがあり、練習用のファイルが
-2 つ入っています。`frukter.txt`（果物のリスト）と `server.log`（架空の Web
-サーバーのログ）です。中身はスウェーデン語ですが、これから検索する単語
+入っています。その中には `frukter.txt`（果物のリスト）と `server.log`（架空の Web
+サーバーのログ）があります。中身はスウェーデン語ですが、これから検索する単語
 （`INFO`、`WARN`、`ERROR`）は本物のログと同じです。
 
 ## ファイルを表示する – `cat` と `less`
@@ -18,6 +18,12 @@ cat dokument/frukter.txt
 長いファイルには `less` のほうが向いています。矢印キーとスペースキーで
 スクロールし、`/word`（word は探したい単語）で検索し、`q` で終了します。
 
+果物のリストを見てみましょう。次の問題で必要になります。
+
+```try
+cat dokument/frukter.txt
+```
+
 ## 先頭と末尾 – `head` と `tail`
 
 `head` は最初の数行を、`tail` は最後の数行を表示します。標準では 10 行ですが、
@@ -30,6 +36,13 @@ tail -n 3 dokument/server.log
 
 `tail -f` はファイルを *追いかけ*、新しい行が書き込まれるたびに表示します。
 ログを見るのにぴったりです。**Ctrl+C** で止めます。
+
+```predict
+$ tail -n 1 dokument/frukter.txt
+mango
+---
+`tail -n 1` はいちばん最後の行だけを表示します。
+```
 
 ## 数える – `wc`
 
@@ -68,6 +81,24 @@ grep -n WARN dokument/server.log
 パターンは *正規表現* です。例を 2 つ挙げると、`^` は行頭、`$` は行末を
 意味します。つまり `grep "^2026"` は 2026 で始まる行を見つけます。
 
+```quiz
+`server.log` には `WARN` を含む行が 2 行、小文字の `warn` を含む行が 1 行あります。
+`grep -c WARN dokument/server.log` は何を表示しますか？
+- [ ] 1
+- [x] 2
+- [ ] 3
+---
+`-c` は一致する行を数えます。`-i` を付けなければ大文字と小文字は区別されます。
+`grep -ic WARN` なら 3 行すべてを数えます。
+```
+
+```quiz
+`server.log` の中で `INFO` を含ま **ない** 行をすべて表示するコマンドはどれですか？
+- [ ] `grep -i INFO dokument/server.log`
+- [ ] `grep -c INFO dokument/server.log`
+- [x] `grep -v INFO dokument/server.log`
+```
+
 ## 並べ替える – `sort` と `uniq`
 
 `sort` は行をアルファベット順に並べ替えます（数値順なら `-n`、逆順なら `-r`）。
@@ -76,6 +107,13 @@ grep -n WARN dokument/server.log
 
 ```sh
 sort dokument/frukter.txt
+```
+
+```quiz
+`uniq` がほとんどいつも `sort` のあとに使われるのはなぜですか？
+- [ ] `uniq` は並べ替えたファイルでしか動かず、それ以外ではエラーになるから
+- [x] `uniq` はすぐ上の行と同じ行しか取り除かないので、同じ行が隣り合っている必要があるから
+- [ ] `sort` が重複を取り除き、`uniq` がそれを元に戻すから
 ```
 
 ## マニュアル – `man`

@@ -18,34 +18,17 @@ git のボタンがありますが、内部ではここで学ぶのと同じコ�
 
 ## git をインストールする
 
-Git は最初からインストールされているとは限りません。{{distro}} では次のように
-インストールします。
+Git は最初からインストールされているとは限りません。Ubuntu のターミナルでは、
+apt でインストールします。
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install git
 ```
-:::
 
-:::arch
-```sh
-sudo pacman -S git
-```
-
-続行するかどうか pacman に聞かれたら、yes と答えます。
-:::
-
-:::redhat
-```sh
-sudo dnf install git
-```
-
-`y` と答えてください。`[y/N]` の大文字の `N` は、既定値が No であることを
-意味します。
-:::
-
-パッケージ名はどのファミリーでも `git` です。動作することを確認しましょう。
+ほかのディストリビューションでは、ディストリビューションとパッケージのパートで
+学んだように、それぞれのパッケージマネージャーでインストールします。パッケージ名は
+そこでも `git` です。動作することを確認しましょう。
 
 ```sh
 git --version
@@ -123,6 +106,16 @@ ls .git
 やめたいときは、`.git` を削除するだけで十分です。普通のファイルはそのまま
 残ります。
 
+```quiz
+あるプロジェクトで git を使うのはやめたいけれど、ファイルはすべて残したいとします。どうしますか？
+- [ ] もう一度 `git init` を実行する
+- [x] 隠しディレクトリ `.git` を削除する
+- [ ] `.git` 以外のファイルをすべて削除する
+---
+履歴はすべて `.git` の中にあり、git は普通のファイルには手を触れません。
+`.git` がなくなってもファイルは残り、なくなるのは履歴だけです。
+```
+
 ## 3 つの場所: 作業ツリー、インデックス、履歴
 
 git について理解すべき最も大切なことは、変更が 3 つの場所を通っていくという
@@ -143,6 +136,17 @@ git について理解すべき最も大切なことは、変更が 3 つの場�
 なぜ中間のステップがあるのでしょう？　選べるようにするためです。5 つのファイルを
 変更したけれど、まとまりがあるのはそのうち 2 つだけ、という場合、その 2 つだけを
 インデックスに入れてコミットし、残りは別のコミットに回せます。
+
+```quiz
+5 つのファイルを変更しましたが、まとまりがあるのはそのうち 2 つの変更だけです。
+その 2 つだけをコミットに保存するにはどうしますか？
+- [ ] 先に `git commit` を実行し、そのあと 2 つのファイルに `git add` を実行する
+- [x] 2 つのファイルに `git add` を実行してから、`git commit` を実行する
+- [ ] 5 つすべてをコミットする。コミットは変更されたファイルを必ずすべて含む
+---
+コミットはインデックスにあるものを保存します。残りの 3 つの変更は、追加するまで
+作業ツリーに残ります。
+```
 
 ## `git status` は羅針盤
 
@@ -266,6 +270,26 @@ git commit -a -m "Beskriv hur sidan är byggd"
 
 `-a` は、git がまだ追跡していない新しいファイルを含め *ない* ことに注意して
 ください。新しいファイルは、必ず先に `git add` で追加する必要があります。
+
+この章のコマンド付きの問題は新しいターミナルで始まるので、まず git をインストール
+して最初のコミットを作ります。`> /dev/null 2>&1` は、リダイレクトとパイプの章で
+学んだように、それらの行の出力を捨てます。最後のコマンドは何を表示しますか？
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ echo 'En rad till.' >> README.md
+$ git commit -m "En rad till" > /dev/null
+$ git log --oneline | wc -l
+1
+---
+2 つ目のコミットは作られませんでした。`README.md` の変更はインデックスに
+入っていなかったので、コミットするものが何もなかったのです。先に
+`git add README.md` を実行するか、`git commit -a` を使えば、コミットは 2 つになっていました。
+```
 
 ## よいコミットメッセージ
 
@@ -401,6 +425,26 @@ git log --oneline --all
 先にコミットするよう求めます（または、`git stash` で変更を一時的に退避し、
 `git stash pop` で戻すこともできます）。
 
+最後に、`style.css` には `purple` を含む行がいくつありますか？
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ git switch -c ny-design > /dev/null 2>&1
+$ echo 'h1 { color: purple; }' >> style.css
+$ git commit -am "Lila rubriker" > /dev/null
+$ git switch main > /dev/null 2>&1
+$ grep purple style.css | wc -l
+0
+---
+purple の行は `ny-design` でコミットされました。`main` に切り替えると、git は
+作業ツリーを `main` の最新のコミットと同じ状態にします。そこにはまだその行が
+ありません。
+```
+
 ## ブランチをマージする: `git merge`
 
 変更を *受け取る* ほうのブランチ（ここでは `main`）にいる状態で、マージします。
@@ -506,6 +550,24 @@ git commit -m "Slå ihop grenen rubrik"
 複数の人が同じプロジェクトで作業していれば、コンフリクトはまったく普通のこと
 です。コンフリクトを減らすよい方法は、小さなコミットを作って、こまめにマージする
 ことです。
+
+```quiz
+`main` にいるときに `git merge rubrik` を実行しました。ファイルにコンフリクトが起きています。
+
+    <<<<<<< HEAD
+      <h1>Hello!</h1>
+    =======
+      <h1>Welcome!</h1>
+    >>>>>>> rubrik
+
+`main` から来ている行はどれですか？
+- [x] `<h1>Hello!</h1>`
+- [ ] `<h1>Welcome!</h1>`
+---
+`HEAD` はいまいるブランチ、ここでは `main` です。そのバージョンは
+`<<<<<<< HEAD` と `=======` のあいだにあり、もう一方のブランチのバージョンは
+`=======` の後ろに来ます。
+```
 
 ## git に無視させるファイル: `.gitignore`
 

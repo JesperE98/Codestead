@@ -3,11 +3,7 @@
   "tasks": {
     "installera-zsh": {
       "text": "`zsh` シェルをインストールしてください。",
-      "hint": {
-        "debian": "`sudo apt update`、そのあと `sudo apt install zsh` です。",
-        "arch": "`sudo pacman -S zsh` を実行し、yes と答えます。",
-        "redhat": "`sudo dnf install zsh` を実行し、`y` と答えます。"
-      }
+      "hint": "`sudo apt update`、そのあと `sudo apt install zsh` です。"
     },
     "starta-zsh": {
       "text": "`zsh` を起動してください。最初は *zsh-newuser-install* が何をしたいか尋ねてくるので、`2` と答えます。そのあと `echo $0` で、動いているシェルを表示してください。",
@@ -23,11 +19,7 @@
     },
     "installera-fish": {
       "text": "`fish` シェルをインストールしてください。",
-      "hint": {
-        "debian": "`sudo apt update`、そのあと `sudo apt install fish` です。",
-        "arch": "`sudo pacman -S fish` を実行し、yes と答えます。",
-        "redhat": "`sudo dnf install fish` を実行し、`y` と答えます。"
-      }
+      "hint": "`sudo apt update`、そのあと `sudo apt install fish` です。"
     },
     "fish-set": {
       "text": "`fish` を起動してください。fish のやり方で、値が `äpple` の変数 `frukt` を作り、`echo` で表示してください。",

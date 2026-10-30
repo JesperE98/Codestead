@@ -54,10 +54,8 @@ ls /usr/lib/systemd/system
 ls /etc/systemd/system
 ```
 
-:::debian
 古い Debian や Ubuntu では、代わりに `/lib/systemd/system` と書かれていることが
 よくあります。同じディレクトリです。`/lib` は `/usr/lib` へのリンクです。
-:::
 
 サービスの名前はファイル名で、たとえば `minserver.service` です。コマンドを
 入力するときは `.service` を省略してもかまいません。`systemctl status
@@ -67,40 +65,28 @@ minserver` でも同じように動きます。
 
 いちばんよく使うコマンドは `systemctl status` です。
 
-:::debian
 ```sh
 systemctl status ssh
 ```
-:::
 
-:::arch
-```sh
-systemctl status sshd
-```
-:::
-
-:::redhat
-```sh
-systemctl status sshd
-```
-:::
-
-出力はだいたい次のようになります。
+Ubuntu では、SSH サーバーは `ssh` という名前です。出力はだいたい次のように
+なります。
 
 ```text
-● sshd.service - OpenSSH server daemon
-     Loaded: loaded (/usr/lib/systemd/system/sshd.service; enabled; preset: disabled)
-     Active: active (running) since Fri 2026-10-30 07:54:07 CET; 2h 13min ago
+● ssh.service - OpenBSD Secure Shell server
+     Loaded: loaded (/usr/lib/systemd/system/ssh.service; enabled; preset: enabled)
+     Active: active (running) since Fri 2026-10-30 07:54:07 UTC; 2h 13min ago
        Docs: man:sshd(8)
+             man:sshd_config(5)
    Main PID: 733 (sshd)
       Tasks: 1 (limit: 9387)
      Memory: 10.1M
-     CGroup: /system.slice/sshd.service
+     CGroup: /system.slice/ssh.service
              └─733 /usr/sbin/sshd -D
 
-Oct 30 07:54:07 fedora systemd[1]: Starting sshd.service - OpenSSH server daemon...
-Oct 30 07:54:07 fedora sshd[733]: Server listening on 0.0.0.0 port 22.
-Oct 30 07:54:07 fedora systemd[1]: Started sshd.service - OpenSSH server daemon.
+Oct 30 07:54:07 ubuntu systemd[1]: Starting ssh.service - OpenBSD Secure Shell server...
+Oct 30 07:54:07 ubuntu sshd[733]: Server listening on 0.0.0.0 port 22.
+Oct 30 07:54:07 ubuntu systemd[1]: Started ssh.service - OpenBSD Secure Shell server.
 ```
 
 1 行ずつ見ていきましょう。
@@ -183,6 +169,19 @@ systemctl is-enabled minserver
 if systemctl is-active -q minserver; then echo "the server is running"; fi
 ```
 
+シミュレーターで起動したばかりのコンピューターでは、`minserver` は動いていますが、
+誰も有効化していません。次の 2 つのコマンドは何を表示しますか？
+
+```predict
+$ systemctl is-active minserver
+$ systemctl is-enabled minserver
+active
+disabled
+---
+minserver は **いま** 動いていますが、誰も `enable` を実行していないので、
+再起動すると起動されません。`start` と `enable` は本当に別のものなのです。
+```
+
 ## サービスの一覧を表示する
 
 ```sh
@@ -252,9 +251,21 @@ journalctl --since today -u minserver
 うまく回避しているのです。
 
 ふつう、すべてを見るには root であるか、ジャーナルを読むことが許可された
-グループ（Debian と Ubuntu では `adm` または `systemd-journal`、Arch と
-Fedora では `wheel`）のメンバーである必要があります。シミュレーターの
+グループ（Ubuntu では `adm` または `systemd-journal`。ほかのファミリーでは
+別のグループを使います）のメンバーである必要があります。シミュレーターの
 あなたのユーザーは、ジャーナル全体を読めます。
+
+```quiz
+`journalctl -p warning` が表示する優先度はどれですか？
+- [x] `err`
+- [x] `warning`
+- [x] `crit`
+- [ ] `notice`
+- [ ] `info`
+---
+`-p` は、選んだ優先度と *それより深刻なものすべて*、つまり番号が同じか
+それより小さいものすべてを表示します（`warning` は 4 です）。
+```
 
 ## 起動しないサービスのトラブルシューティング
 
@@ -299,6 +310,18 @@ Fedora では `wheel`）のメンバーである必要があります。シミ�
 systemd はプログラムをまったく見つけられなかったということです。`ExecStart=`
 のパスを確認してください。
 
+```quiz
+サービスが起動せず、ジャーナルに `status=203/EXEC` と出ています。まずどこを
+見ますか？
+- [ ] `/etc/fstab` の中
+- [x] ユニットファイルの `ExecStart=` にあるパス
+- [ ] `journalctl -p err` で優先度を見る
+- [ ] どこも見ない。プログラムが自分でエラー終了したという意味だから
+---
+203/EXEC は、systemd がプログラムをまったく見つけられなかったという意味です。
+起動してからエラーで終了したプログラムなら、代わりに `status=1/FAILURE` になります。
+```
+
 ## ユニットファイル – `systemctl cat`
 
 サービスがどのように起動されるのかを正確に知るには、そのユニットファイルを
@@ -339,47 +362,49 @@ sudo systemctl daemon-reload
 次にパッケージが更新されたときに上書きされてしまいます。代わりに、自分の
 バージョンを `/etc/systemd/system` に置きましょう。
 
-## ファミリーごとに違う名前
+```quiz
+パッケージと一緒に入ったサービスの起動方法を変えたいとします。正しいやり方はどれですか？
+- [ ] `/usr/lib/systemd/system` にあるそのファイルを編集して、サービスを再起動する
+- [x] 自分のバージョンを `/etc/systemd/system` に置き、`sudo systemctl daemon-reload` を実行してから、サービスを再起動する
+- [ ] 自分のバージョンを `/etc/systemd/system` に置く。systemd は変更に自分で気づく
+- [ ] `/usr/lib/systemd/system` にあるファイルを編集し、それに対して `sudo systemctl enable` を実行する
+---
+`/etc/systemd/system` にあるファイルが優先され、パッケージが更新されても
+上書きされません。`daemon-reload` で、systemd は変更されたユニットファイルを
+もう一度読み込みます。
+```
+
+## サービスの名前は？
 
 systemd はどこでも同じように動きますが、**サービスの名前がいつも同じとは
 限りません**。パッケージの名前や、ディストリビューションがどのプログラムを
-選んだかによって変わります。
+選んだかによって変わります。Ubuntu では次のとおりです。
 
-| サービス | Debian/Ubuntu | Arch | Fedora |
-|---|---|---|---|
-| SSH サーバー | `ssh`（エイリアス `sshd`） | `sshd` | `sshd` |
-| 定期的なジョブ（cron） | `cron` | `cronie`（既定ではインストールされていない） | `crond` |
-| ネットワーク | `NetworkManager`（Ubuntu）、`networking`（Debian） | `systemd-networkd` | `NetworkManager` |
-| ファイアウォール | `ufw`（インストールされていれば） | – | `firewalld` |
-| 時計 | `systemd-timesyncd` | `systemd-timesyncd` | `chronyd` |
+| サービス | Ubuntu での名前 |
+|---|---|
+| SSH サーバー | `ssh`（エイリアス `sshd`） |
+| 定期的なジョブ（cron） | `cron` |
+| ネットワーク | `NetworkManager` |
+| ファイアウォール | `ufw`（インストールされていれば） |
+| 時計 | `systemd-timesyncd` |
 
-:::debian
-{{distro}} では、SSH サービスは `ssh.service` という名前です。
-`sshd.service` というエイリアスがあるので `systemctl status sshd` でも
-動きますが、出力には本当の名前が表示されます。
-:::
-
-:::arch
-Arch は既定ではほとんどサービスをインストールしません。自分で選ぶのです。
-たとえば cron サービスは動いていません。Arch では代わりに systemd の
-**タイマー** を使います。cron を使いたければ、`cronie` パッケージを
-インストールして `sudo systemctl
-enable --now cronie` を実行してください。また、Arch は `preset: disabled`
-であることも覚えておきましょう。新しいサービスは、インストールしても
-自動的に有効化されることはありません。
-:::
-
-:::redhat
-Fedora では最初から `firewalld` が動いていて、時刻の同期は `chronyd` が
-担当しています。Fedora もほとんどのサービスで `preset: disabled` を使います。
-新しいサービス（たとえば Web サーバー）をインストールしたら、`sudo
-systemctl enable --now …` を自分で実行する必要があります。
-:::
+SSH サービスの本当の名前は `ssh.service` です。`sshd.service` という
+エイリアスがあるので `systemctl status sshd` でも動きますが、出力には本当の
+名前が表示されます。ほかのファミリーでは、同じサービスに別の名前を付けている
+ことがあります（Arch と Fedora では SSH サービスは `sshd` という名前です）。
+そのような違いは、ディストリビューションとパッケージのパートで扱います。
 
 名前がわからない？ 一覧を検索しましょう。
 
 ```sh
 systemctl list-unit-files | grep ssh
+```
+
+```try
+systemctl list-unit-files | grep ssh
+---
+`ssh.service` が本当のユニットファイルで、`sshd.service` はそのエイリアス
+（`alias`）として表示されます。
 ```
 
 ## コンピューターを再起動する
