@@ -1,0 +1,23 @@
+{
+  "title": "Moverse por el sistema de archivos",
+  "tasks": {
+    "etc": {
+      "text": "Ve al directorio `/etc` y muestra su contenido.",
+      "hint": "Dos comandos: primero `cd` y luego `ls`. También puedes escribirlos en la misma línea: `cd /etc && ls`."
+    },
+    "hidden": {
+      "text": "Muestra los archivos ocultos de tu directorio personal.",
+      "hint": "La opción `-a` muestra los archivos que empiezan por un punto. Tu directorio personal es `~`."
+    },
+    "relative": {
+      "text": "Ve a la raíz (`/`) y luego ve a `/var/log` usando una ruta **relativa**.",
+      "hint": "Una ruta relativa no empieza por `/`. Si estás en `/`, basta con `cd var/log`."
+    },
+    "up": {
+      "text": "Sube un nivel con `cd ..`."
+    },
+    "home": {
+      "text": "Vuelve a tu directorio personal solo con `cd`, sin ningún argumento."
+    }
+  }
+}

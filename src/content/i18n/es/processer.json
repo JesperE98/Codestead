@@ -1,0 +1,33 @@
+{
+  "title": "Procesos y trabajos",
+  "tasks": {
+    "ps": {
+      "text": "Muestra los procesos de tu propia terminal con `ps`."
+    },
+    "ps-aux": {
+      "text": "Muestra **todos** los procesos del ordenador.",
+      "hint": "`ps aux` (o `ps -ef`)."
+    },
+    "hitta": {
+      "text": "Un proceso está acaparando casi toda la CPU. Muestra los procesos ordenados por uso de CPU para ver cómo se llama.",
+      "hint": "`top`, `htop` o `ps aux --sort=-%cpu`."
+    },
+    "kill": {
+      "text": "Detén el proceso desbocado (PID 3141) con `kill`."
+    },
+    "bakgrund": {
+      "text": "Inicia `sleep 300` en segundo plano.",
+      "hint": "Pon `&` al final de la línea."
+    },
+    "jobs": {
+      "text": "Muestra tus trabajos en segundo plano."
+    },
+    "kill-jobb": {
+      "text": "Termina el trabajo en segundo plano con `kill` y el número de trabajo (`%1`) o su PID."
+    },
+    "server": {
+      "text": "El servidor `minserver` se está ejecutando como root. Detenlo con `pkill` o `kill` y los privilegios adecuados.",
+      "hint": "Como usuario normal obtendrás \"Operation not permitted\". Pon `sudo` delante."
+    }
+  }
+}

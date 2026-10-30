@@ -1,0 +1,33 @@
+{
+  "title": "Procesar texto con sed, tr y awk",
+  "tasks": {
+    "sed-s": {
+      "text": "Muestra `~/dokument/server.log` con la palabra `ERROR` sustituida por `FEL` en cada línea, usando `sed`.",
+      "hint": "El comando `s/viejo/nuevo/` sustituye texto: `sed 's/ERROR/FEL/' archivo`"
+    },
+    "sed-d": {
+      "text": "Muestra server.log **sin** las líneas que contienen `INFO`, usando `sed`.",
+      "hint": "La dirección `/INFO/` selecciona las líneas y el comando `d` las elimina: `sed '/INFO/d' archivo`"
+    },
+    "tr-upper": {
+      "text": "Imprime todos los nombres de usuario de `/etc/passwd` en **mayúsculas**: extrae el campo 1 con `cut` y pásalo a `tr`.",
+      "hint": "`cut -d: -f1 /etc/passwd` te da los nombres de usuario. Añade `| tr a-z A-Z`."
+    },
+    "tr-path": {
+      "text": "Muestra los directorios de `$PATH` en **líneas separadas** sustituyendo `:` por un salto de línea con `tr`.",
+      "hint": "Un salto de línea se escribe `\\n`: `echo $PATH | tr ':' '\\n'`"
+    },
+    "awk-print": {
+      "text": "Imprime el nombre de usuario y la shell (campos 1 y 7) de `/etc/passwd` con `awk`.",
+      "hint": "Los campos están separados por dos puntos, así que usa `-F:`. El programa es `'{print $1, $7}'`."
+    },
+    "awk-sum": {
+      "text": "Calcula la **suma** de los puntos (columna 3) de `~/dokument/betyg.csv` con `awk`.",
+      "hint": "Sáltate la línea de cabecera con `NR > 1`, suma con `summa += $3` e imprime el resultado en `END { }`. El separador es una coma: `-F,`."
+    },
+    "sed-i": {
+      "text": "Sustituye `Linux` por `GNU/Linux` **directamente en el archivo** `~/anteckningar.txt`.",
+      "hint": "Usa `sed -i`. Como el reemplazo contiene una `/`, lo más fácil es cambiar de delimitador: `s|Linux|GNU/Linux|`."
+    }
+  }
+}
