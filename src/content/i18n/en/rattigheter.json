@@ -1,0 +1,25 @@
+{
+  "title": "Users, permissions and sudo",
+  "tasks": {
+    "groups": {
+      "text": "Find out which groups you belong to."
+    },
+    "shadow": {
+      "text": "Try to read `/etc/shadow` with `cat` – and then do it with `sudo`."
+    },
+    "script": {
+      "text": "Create the script `~/hej.sh` containing the line `echo Hej från mitt skript` (Swedish for “Hello from my script”).",
+      "hint": "Use single quotes: `echo 'echo Hej från mitt skript' > ~/hej.sh`"
+    },
+    "chmod-x": {
+      "text": "Make `~/hej.sh` executable."
+    },
+    "run-script": {
+      "text": "Run the script with `./hej.sh` (from your home directory)."
+    },
+    "chmod-600": {
+      "text": "Make `~/anteckningar.txt` readable and writable **only** by you (`rw-------`).",
+      "hint": "r = 4, w = 2, x = 1. The owner should have 4 + 2 and everyone else 0."
+    }
+  }
+}

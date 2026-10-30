@@ -1,0 +1,33 @@
+{
+  "title": "Processes and jobs",
+  "tasks": {
+    "ps": {
+      "text": "Show the processes in your own terminal with `ps`."
+    },
+    "ps-aux": {
+      "text": "List **all** the processes on the computer.",
+      "hint": "`ps aux` (or `ps -ef`)."
+    },
+    "hitta": {
+      "text": "A process is eating up almost all of the CPU. Show the processes sorted by CPU usage so you can see what it's called.",
+      "hint": "`top`, `htop` or `ps aux --sort=-%cpu`."
+    },
+    "kill": {
+      "text": "Stop the runaway process (PID 3141) with `kill`."
+    },
+    "bakgrund": {
+      "text": "Start `sleep 300` in the background.",
+      "hint": "Put `&` at the end of the line."
+    },
+    "jobs": {
+      "text": "Show your background jobs."
+    },
+    "kill-jobb": {
+      "text": "End the background job with `kill` and the job number (`%1`) or its PID."
+    },
+    "server": {
+      "text": "The server `minserver` is running as root. Stop it – with `pkill` or `kill` and the right privileges.",
+      "hint": "As a regular user you'll get \"Operation not permitted\". Put `sudo` in front."
+    }
+  }
+}
