@@ -5,6 +5,7 @@ import { basename, dirname } from '../vfs';
 import { badOption, COLOR, formatMan, fsMessage, longDate } from './util';
 import { COMMANDS } from './index';
 import { manFor, summaryFor } from './man-en';
+import { myIp } from '../network';
 
 function simple(name: string, summary: string, run: (ctx: CmdCtx) => number, man?: string, builtin = false): CommandDef {
   return { name, summary, run, man, builtin };
@@ -47,14 +48,36 @@ BESKRIVNING
        Medlemmar i gruppen sudo (Debian/Ubuntu) eller wheel (Arch/Fedora)
        får använda sudo.`);
 
-const hostname = simple('hostname', 'Visar datorns namn', (ctx) => {
-  ctx.out(ctx.sh.distro.hostname + '\n');
-  return 0;
-}, `NAMN
+const hostname: CommandDef = {
+  ...simple('hostname', 'Visar datorns namn', (ctx) => {
+    if (ctx.args.includes('-I') || ctx.args.includes('--all-ip-addresses')) {
+      ctx.out(myIp(ctx.sh) + ' \n');
+      return 0;
+    }
+    if (ctx.args.includes('-i') || ctx.args.includes('--ip-address')) {
+      ctx.out('127.0.1.1\n');
+      return 0;
+    }
+    ctx.out(ctx.sh.distro.hostname + '\n');
+    return 0;
+  }, `NAMN
        hostname - visa systemets värdnamn
 
 BESKRIVNING
-       Namnet finns också i filen /etc/hostname.`);
+       Namnet finns också i filen /etc/hostname.
+
+FLAGGOR
+       -I       visa datorns IP-adresser (utom 127.0.0.1)`),
+  summaryEn: "Show the system's host name",
+  manEn: `NAME
+       hostname - show the system's host name
+
+DESCRIPTION
+       The name is also stored in the file /etc/hostname.
+
+OPTIONS
+       -I       show the computer's IP addresses (except 127.0.0.1)`,
+};
 
 const uname = simple('uname', 'Visar information om systemet och kärnan', (ctx) => {
   const d = ctx.sh.distro;

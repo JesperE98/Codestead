@@ -1,5 +1,6 @@
 // Program som inte är förinstallerade, utan installeras med pakethanteraren:
-// tree, htop, fastfetch, cowsay, git, curl, wget, python3, vim, nano, ssh.
+// tree, htop, fastfetch, cowsay, git, python3, vim, nano.
+// (curl, wget och ssh finns i net.ts och ssh.ts.)
 
 import type { CmdCtx, CommandDef } from '../types';
 import { hasPerm, type FsNode } from '../vfs';
@@ -227,30 +228,6 @@ BESKRIVNING
   },
 };
 
-function noNetwork(name: string, summary: string): CommandDef {
-  return {
-    name,
-    summary,
-    man: `NAMN
-       ${name} - ${summary.toLowerCase()}
-
-BESKRIVNING
-       Simulatorn har inget nätverk, så ${name} kan inte hämta något.`,
-    run(ctx) {
-      const url = ctx.args.find((a) => !a.startsWith('-'));
-      if (!url) {
-        ctx.err(name === 'curl' ? "curl: try 'curl --help' or 'curl --manual' for more information\n" : 'wget: missing URL\n');
-        return 2;
-      }
-      const host = url.replace(/^\w+:\/\//, '').split('/')[0];
-      if (name === 'curl') ctx.err(`curl: (6) Could not resolve host: ${host}\n`);
-      else ctx.err(`--2026-10-29 12:00:00--  ${url}\nResolving ${host} (${host})... failed: Name or service not known.\nwget: unable to resolve host address '${host}'\n`);
-      note(ctx, '(Simulatorn har inget nätverk.)');
-      return name === 'curl' ? 6 : 4;
-    },
-  };
-}
-
 const python3: CommandDef = {
   name: 'python3',
   summary: 'Programspråket Python',
@@ -287,37 +264,12 @@ function editor(name: string, summary: string, man: string): CommandDef {
   };
 }
 
-const ssh: CommandDef = {
-  name: 'ssh',
-  summary: 'Loggar in på en annan dator säkert',
-  man: `NAMN
-       ssh - logga in på en annan dator via SSH (Secure Shell)
-
-SYNOPSIS
-       ssh ANVÄNDARE@VÄRD
-
-BESKRIVNING
-       Simulatorn har inget nätverk, så ssh kan inte ansluta någonstans.`,
-  run(ctx) {
-    const target = ctx.args.find((a) => !a.startsWith('-'));
-    if (!target) {
-      ctx.err('usage: ssh [-46AaCfGgKkMNnqsTtVvXxYy] [-p port] destination [command [argument ...]]\n');
-      return 255;
-    }
-    ctx.err(`ssh: Could not resolve hostname ${target.split('@').pop()}: Name or service not known\n`);
-    note(ctx, '(Simulatorn har inget nätverk.)');
-    return 255;
-  },
-};
-
 export const EXTRA_COMMANDS: CommandDef[] = [
   tree,
   htop,
   fastfetch,
   cowsay,
   git,
-  noNetwork('curl', 'Överför data från eller till en server'),
-  noNetwork('wget', 'Laddar ner filer från webben'),
   python3,
   editor('vim', 'Kraftfull texteditor', `NAMN
        vim - Vi IMproved, en kraftfull texteditor
@@ -331,5 +283,4 @@ BESKRIVNING
 BESKRIVNING
        Kommandona visas längst ner: ^O betyder Ctrl+O (spara) och ^X
        betyder Ctrl+X (avsluta).`),
-  ssh,
 ];

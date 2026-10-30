@@ -198,6 +198,9 @@ export class Shell {
       if (node.type === 'dir') for (const name of Object.keys(node.children!)) walk(`${path}/${name}`);
     };
     walk(`${home}/dokument`);
+    // Nätverkskapitlet: DNS-inställningen och övningsservern.
+    walk('/etc/resolv.conf');
+    walk('/usr/local/bin/minserver');
   }
 
   snapshot(): ShellSnapshot {
