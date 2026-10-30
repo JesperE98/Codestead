@@ -1,0 +1,23 @@
+{
+  "title": "Naviguer dans le système de fichiers",
+  "tasks": {
+    "etc": {
+      "text": "Allez dans le répertoire `/etc` et listez son contenu.",
+      "hint": "Deux commandes : d'abord `cd`, puis `ls`. Vous pouvez aussi les écrire sur la même ligne : `cd /etc && ls`."
+    },
+    "hidden": {
+      "text": "Affichez les fichiers cachés de votre répertoire personnel.",
+      "hint": "L'option `-a` affiche les fichiers qui commencent par un point. Votre répertoire personnel est `~`."
+    },
+    "relative": {
+      "text": "Allez à la racine (`/`), puis allez dans `/var/log` avec un chemin **relatif**.",
+      "hint": "Un chemin relatif ne commence pas par `/`. Si vous êtes dans `/`, `cd var/log` suffit."
+    },
+    "up": {
+      "text": "Remontez d'un niveau avec `cd ..`."
+    },
+    "home": {
+      "text": "Revenez dans votre répertoire personnel avec `cd` tout seul, sans argument."
+    }
+  }
+}

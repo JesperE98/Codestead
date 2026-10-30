@@ -1,0 +1,60 @@
+{
+  "title": "La gestion des paquets",
+  "tasks": {
+    "sync": {
+      "text": {
+        "debian": "Téléchargez les dernières listes de paquets avec `apt update`.",
+        "arch": "Synchronisez la base de données des paquets et mettez à jour le système avec `pacman -Syu`.",
+        "redhat": "Récupérez les nouvelles informations sur les paquets et cherchez des mises à jour avec `dnf check-update`."
+      },
+      "hint": {
+        "debian": "La commande modifie le système et nécessite les droits root : `sudo apt update`.",
+        "arch": "La commande modifie le système et nécessite les droits root : `sudo pacman -Syu`.",
+        "redhat": "`dnf check-update` n'a pas besoin des droits root."
+      }
+    },
+    "search": {
+      "text": "Recherchez le paquet `htop`.",
+      "hint": {
+        "debian": "`apt search htop`",
+        "arch": "`pacman -Ss htop`",
+        "redhat": "`dnf search htop`"
+      }
+    },
+    "install": {
+      "text": "Installez le paquet `tree`.",
+      "hint": {
+        "debian": "`sudo apt install tree`",
+        "arch": "`sudo pacman -S tree` et répondez oui à la question.",
+        "redhat": "`sudo dnf install tree` – et répondez `y`, car Non est la réponse par défaut !"
+      }
+    },
+    "run-tree": {
+      "text": "Lancez `tree` dans votre répertoire personnel."
+    },
+    "remove": {
+      "text": "Supprimez à nouveau le paquet `tree`.",
+      "hint": {
+        "debian": "`sudo apt remove tree`",
+        "arch": "`sudo pacman -R tree`",
+        "redhat": "`sudo dnf remove tree`"
+      }
+    },
+    "upgrade": {
+      "text": "Mettez à jour tous les paquets installés.",
+      "hint": {
+        "debian": "Après `sudo apt update`, lancez `sudo apt upgrade`.",
+        "arch": "`sudo pacman -Syu` fait tout d'un coup.",
+        "redhat": "`sudo dnf upgrade`"
+      }
+    },
+    "vim": {
+      "text": "Bonus : installez l'éditeur de texte Vim. Indice : le paquet n'a pas le même nom dans toutes les familles !",
+      "hint": {
+        "debian": "Cherchez avec `apt search vim`. Le paquet s'appelle `vim`.",
+        "arch": "Cherchez avec `pacman -Ss vim`. Le paquet s'appelle `vim`.",
+        "redhat": "Cherchez avec `dnf search vim`. Le paquet s'appelle `vim-enhanced`."
+      }
+    }
+  }
+}
