@@ -116,6 +116,32 @@ public class LearningContentTests
         }
     }
 
+    [Fact(DisplayName = "varje huvudkapitel utom Kom igång har sammanfattning och prov")]
+    public void EveryPartHasSummaryAndExam()
+    {
+        foreach (var part in ChaptersLib.Parts.Where(p => p.Id != "start"))
+        {
+            Assert.True(ChaptersLib.Chapters.Any(c => c.Part == part.Id && c.Kind == ChapterKinds.Summary), $"{part.Id}: no summary");
+            Assert.True(ChaptersLib.Chapters.Any(c => c.Part == part.Id && c.Kind == ChapterKinds.Exam), $"{part.Id}: no exam");
+        }
+    }
+
+    /// <summary>The repository root (the folder with Codestead.sln), found from the test's output folder.</summary>
+    private static string RepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "Codestead.sln"))) dir = dir.Parent;
+        return dir?.FullName ?? throw new InvalidOperationException("Codestead.sln not found");
+    }
+
+    [Theory(DisplayName = "varje kapitel har en granskningslogg")]
+    [MemberData(nameof(ChapterIds))]
+    public void EveryChapterHasVerificationLog(string chapterId)
+    {
+        var log = Path.Combine(RepoRoot(), "docs", "verification", chapterId + ".md");
+        Assert.True(File.Exists(log), $"docs/verification/{chapterId}.md is missing (see docs/verification/README.md)");
+    }
+
     [Theory(DisplayName = "varje sub-kapitel har minst en källa", Skip = "Källorna läggs till när innehållet faktagranskas (fas 4).")]
     [MemberData(nameof(ChapterIds))]
     public void EveryLessonHasReferences(string chapterId)
@@ -124,7 +150,7 @@ public class LearningContentTests
         if (chapter.Kind == ChapterKinds.Lesson) Assert.NotEmpty(I18nLib.References(chapter));
     }
 
-    [Theory(DisplayName = "varje sub-kapitel har kontrollfrågor", Skip = "Kontrollfrågorna skrivs när innehållet struktureras om (fas 3).")]
+    [Theory(DisplayName = "varje sub-kapitel har kontrollfrågor")]
     [MemberData(nameof(ChapterIds))]
     public void EveryLessonHasCheckpoints(string chapterId)
     {
