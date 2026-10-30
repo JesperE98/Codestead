@@ -14,11 +14,7 @@
     },
     "uuid": {
       "text": "`/` にマウントされているファイルシステムの UUID を調べてください。表示するのはその 1 つだけです。",
-      "hint": {
-        "debian": "`lsblk -f` を見ると、`/` は `/dev/sda2` にあります。次に `blkid /dev/sda2` で問い合わせます。または `findmnt -n -o UUID /` で一度に済ませることもできます。",
-        "arch": "`lsblk -f` を見ると、`/` は `/dev/sda3` にあります。次に `blkid /dev/sda3` で問い合わせます。または `findmnt -n -o UUID /` で一度に済ませることもできます。",
-        "redhat": "`lsblk -f` を見ると、`/` は `/dev/sda3` にあります。次に `blkid /dev/sda3` で問い合わせます。または `findmnt -n -o UUID /` で一度に済ませることもできます。"
-      }
+      "hint": "`lsblk -f` を見ると、`/` は `/dev/sda2` にあります。次に `blkid /dev/sda2` で問い合わせます。または `findmnt -n -o UUID /` で一度に済ませることもできます。"
     },
     "montera": {
       "text": "マウントポイント `/mnt/usb` を作成し、そこに USB メモリ（`/dev/sdb1`）をマウントしてください。",

@@ -10,16 +10,8 @@
       "hint": "`ping -c 3 192.168.1.1` です。`-c` は *count* の略です。"
     },
     "dig": {
-      "text": {
-        "debian": "`dnsutils` パッケージをインストールし、`dig` で `example.com` の IP アドレスを調べてください。",
-        "arch": "`bind` パッケージをインストールし、`dig` で `example.com` の IP アドレスを調べてください。",
-        "redhat": "`bind-utils` パッケージをインストールし、`dig` で `example.com` の IP アドレスを調べてください。"
-      },
-      "hint": {
-        "debian": "`sudo apt update`、`sudo apt install dnsutils`、そのあと `dig +short example.com` です。",
-        "arch": "`sudo pacman -S bind`、そのあと `dig +short example.com` です。",
-        "redhat": "`sudo dnf install bind-utils`、そのあと `dig +short example.com` です。"
-      }
+      "text": "`dnsutils` パッケージをインストールし、`dig` で `example.com` の IP アドレスを調べてください。",
+      "hint": "`sudo apt update`、`sudo apt install dnsutils`、そのあと `dig +short example.com` です。"
     },
     "ss": {
       "text": "`ss` で、コンピューター上のどのポートが待ち受けているかを調べてください。",
@@ -27,11 +19,7 @@
     },
     "curl-localhost": {
       "text": "`curl` で、自分のコンピューター上の練習用サーバーのトップページ `http://localhost:8080` を取ってきてください。",
-      "hint": {
-        "debian": "Debian/Ubuntu では curl をインストールする必要があります: `sudo apt install curl`。*Couldn't connect to server* と表示されたら minserver が止まっているので、`minserver` で起動してください。",
-        "arch": "`curl http://localhost:8080` です。*Couldn't connect to server* と表示されたら minserver が止まっているので、`minserver` で起動してください。",
-        "redhat": "`curl http://localhost:8080` です。*Couldn't connect to server* と表示されたら minserver が止まっているので、`minserver` で起動してください。"
-      }
+      "hint": "Ubuntu では curl をインストールする必要があります: `sudo apt install curl`。*Couldn't connect to server* と表示されたら minserver が止まっているので、`minserver` で起動してください。"
     },
     "spara": {
       "text": "Web ページ `https://example.com` を `~/exempel.html` というファイルに保存してください。",
@@ -43,11 +31,7 @@
     },
     "ssh": {
       "text": "`ssh` を使い、ユーザー `elev` としてサーバー `server.lan` 上でコマンド `hostname` を実行してください。",
-      "hint": {
-        "debian": "`ssh elev@server.lan hostname` です。ホスト鍵についての質問には `yes` と答えてください。",
-        "arch": "まず ssh クライアントをインストールします: `sudo pacman -S openssh`。そのあと `ssh elev@server.lan hostname` を実行し、ホスト鍵についての質問には `yes` と答えてください。",
-        "redhat": "`ssh elev@server.lan hostname` です。ホスト鍵についての質問には `yes` と答えてください。"
-      }
+      "hint": "`ssh elev@server.lan hostname` です。ホスト鍵についての質問には `yes` と答えてください。"
     }
   }
 }

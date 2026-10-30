@@ -1,0 +1,59 @@
+{
+  "title": "Arch ファミリー: pacman と AUR",
+  "tasks": {
+    "sync": {
+      "text": "`pacman -Syu` でパッケージデータベースを同期し、システムをアップグレードしてください。",
+      "hint": "このコマンドはシステムを変更するので root 権限が必要です: `sudo pacman -Syu`。"
+    },
+    "search": {
+      "text": "`htop` パッケージを検索してください。",
+      "hint": "`pacman -Ss htop`"
+    },
+    "install": {
+      "text": "`tree` パッケージをインストールしてください。",
+      "hint": "`sudo pacman -S tree` を実行し、質問には yes と答えます。"
+    },
+    "run-tree": {
+      "text": "ホームディレクトリで `tree` を実行してください。"
+    },
+    "remove": {
+      "text": "`tree` パッケージを再び削除してください。",
+      "hint": "`sudo pacman -R tree`"
+    },
+    "upgrade": {
+      "text": "インストール済みのすべてのパッケージをアップグレードしてください。",
+      "hint": "`sudo pacman -Syu` で一度にすべて行えます。"
+    },
+    "forbered": {
+      "text": "AUR からパッケージをビルドするのに必要なもの、`git` と `base-devel` をインストールしてください。",
+      "hint": "`sudo pacman -S --needed git base-devel`"
+    },
+    "lagg-till": {
+      "text": "AUR パッケージ `moonphase` のビルドレシピを、`git clone` でホームディレクトリにダウンロードしてください。アドレスは `https://aur.archlinux.org/moonphase.git` です。",
+      "hint": "`cd ~` のあとに `git clone https://aur.archlinux.org/moonphase.git` を実行します。"
+    },
+    "granska": {
+      "text": "何かをビルドする前に、ビルドレシピ `PKGBUILD` を読んでください！",
+      "hint": "`cd ~/moonphase` のあとに `less PKGBUILD`（または `cat PKGBUILD`）を実行します。"
+    },
+    "installera": {
+      "text": "`makepkg` で `moonphase` をビルドしてインストールしてください。",
+      "hint": "ディレクトリ `~/moonphase` で `makepkg -si` を実行します。sudo は付けません！"
+    },
+    "kor": {
+      "text": "プログラム `moonphase` を実行してください。"
+    },
+    "ursprung": {
+      "text": "Arch 自身のリポジトリから来たのではない、インストール済みのパッケージをすべて一覧表示してください。",
+      "hint": "そのようなパッケージは *foreign*（外部）パッケージと呼ばれます: `pacman -Qm`"
+    },
+    "efterat": {
+      "text": "ボーナス: AUR ヘルパー `yay`（AUR パッケージ `yay-bin`）をインストールし、それを使って AUR パッケージ `snowfall` をインストールしてください。",
+      "hint": "前と同じように `cd ~`、`git clone https://aur.archlinux.org/yay-bin.git`、`cd yay-bin`、`makepkg -si` を実行します。そのあと `yay -S snowfall` を実行します。sudo は付けません。"
+    },
+    "vim": {
+      "text": "ボーナス: テキストエディター Vim をインストールしてください。",
+      "hint": "`pacman -Ss vim` で検索しましょう。パッケージ名は `vim` です。"
+    }
+  }
+}
