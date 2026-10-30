@@ -19,6 +19,17 @@ es **el lenguaje que los rodea**: cómo se asignan las variables, cómo se
 escriben los bucles y las condiciones, qué aspecto tiene el prompt y qué
 comodidades hay disponibles.
 
+```quiz
+Cambias de bash a otro shell. ¿Cuál de estas cosas sigue exactamente igual?
+- [ ] Cómo se asigna una variable
+- [ ] Cómo se escribe un bucle
+- [x] Lo que hace `grep` con sus opciones
+- [ ] Qué aspecto tiene el prompt
+---
+`grep` es un programa independiente que está en `/usr/bin`. El shell solo lo
+inicia: lo que cambia entre shells es el lenguaje que lo rodea.
+```
+
 ## El árbol genealógico: sh, bash, zsh y fish
 
 | Shell | Desde | Características |
@@ -55,26 +66,15 @@ echo $SHELL
 
 ### Instalar zsh
 
-zsh tiene el mismo nombre de paquete en todas las familias:
+En la terminal de Ubuntu, zsh se instala con apt:
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install zsh
 ```
-:::
 
-:::arch
-```sh
-sudo pacman -S zsh
-```
-:::
-
-:::redhat
-```sh
-sudo dnf install zsh
-```
-:::
+Otras distribuciones usan su propio gestor de paquetes, como aprendiste en la
+parte sobre distribuciones y paquetes. Allí el paquete también se llama `zsh`.
 
 Vuelve a mirar `/etc/shells`: el paquete ha añadido `/usr/bin/zsh` (y
 `/bin/zsh`):
@@ -102,7 +102,7 @@ ningún archivo de configuración para zsh. Es un menú que te ayuda a empezar:
 | `1` | El menú principal con todos los ajustes (no disponible en el simulador) |
 | `2` | Crear `~/.zshrc` con los ajustes recomendados |
 
-Responde `2`. El prompt cambia a `elev@{{hostname}} ~ %`: en zsh, `%` es el
+Responde `2`. El prompt cambia a `elev@ubuntu ~ %`: en zsh, `%` es el
 signo habitual de un usuario normal (root recibe `#`, igual que en bash).
 
 ¿Qué shell estás ejecutando ahora? La variable `$0` contiene el nombre del
@@ -175,6 +175,24 @@ bash escribe `[a.txt]` y `[b.txt]`; zsh escribe `[a.txt b.txt]`. La forma de
 zsh suele ser lo que quieres, pero significa que un script de bash no siempre
 hace lo mismo en zsh. (Con `setopt shwordsplit`, zsh se comporta como bash).
 
+No hace falta iniciar un shell para probar un solo comando en él. Con `-c`, el
+shell ejecuta el comando y termina enseguida: `zsh -c 'echo $0'` imprime `zsh`,
+y después sigues en bash.
+
+La pregunta de abajo empieza en una terminal nueva, así que primero instala
+zsh. `> /dev/null 2>&1` descarta la salida de esa línea. ¿Qué imprime el
+último comando?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
+$ zsh -c 'filer="x.txt y.txt z.txt"; for f in $filer; do echo "<$f>"; done'
+<x.txt y.txt z.txt>
+---
+zsh no divide la variable por los espacios, así que el bucle se ejecuta una vez
+con el valor completo. En bash, el mismo bucle imprimiría tres líneas: `<x.txt>`,
+`<y.txt>` y `<z.txt>`.
+```
+
 ### ~/.zshrc y el prompt
 
 bash lee `~/.bashrc` al iniciarse; zsh lee `~/.zshrc`. Mira el archivo que ha
@@ -234,30 +252,19 @@ sugerencias, pero la sintaxis funciona).
 
 ### Instalar e iniciar fish
 
-:::debian
+fish se instala con apt de la misma manera; en otras distribuciones, con su
+propio gestor de paquetes:
+
 ```sh
 sudo apt update
 sudo apt install fish
 ```
-:::
-
-:::arch
-```sh
-sudo pacman -S fish
-```
-:::
-
-:::redhat
-```sh
-sudo dnf install fish
-```
-:::
 
 ```sh
 fish
 ```
 
-fish te da la bienvenida y el prompt pasa a ser `elev@{{hostname}} ~>`. Baja
+fish te da la bienvenida y el prompt pasa a ser `elev@ubuntu ~>`. Baja
 unos cuantos directorios y mira cómo fish acorta la ruta en el prompt:
 
 ```sh
@@ -320,6 +327,17 @@ En fish, todas las variables son **listas**. Los elementos se numeran desde
 set frukter äpple päron banan
 echo $frukter[2]
 count $frukter
+```
+
+`-c` también funciona en fish. ¿Qué imprime el último comando?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y fish > /dev/null 2>&1
+$ fish -c 'set frukter äpple päron banan; echo $frukter[3]'
+banan
+---
+Los elementos de una lista de fish se numeran desde 1, así que `[3]` es el
+tercer y último elemento.
 ```
 
 ### Sustitución de comandos y $status
@@ -439,6 +457,16 @@ ejecuta bash. Por eso `#!/bin/bash` (o `#!/usr/bin/env bash`) es tan
 importante. Un script que tiene que funcionar en todas partes, incluso donde
 no hay bash, se escribe con `#!/bin/sh` y solo con sintaxis POSIX.
 
+```quiz
+Estás en fish y ejecutas un script que empieza con `#!/bin/bash` y contiene la
+línea `count=3`. ¿Qué ocurre?
+- [ ] fish se niega, porque `count=3` no está permitido en fish
+- [x] Funciona: lo ejecuta bash, estés en el shell que estés
+- [ ] Solo funciona si antes cambias tu shell de inicio de sesión a bash con `chsh`
+---
+La línea `#!` decide qué shell ejecuta el script. fish solo lo inicia.
+```
+
 ## Cambiar tu shell por defecto con chsh
 
 Escribir `zsh` cada vez que abres una terminal acaba cansando. Con `chsh`
@@ -457,14 +485,6 @@ grep elev /etc/passwd
   vuelves a iniciar sesión.
 - root puede cambiar el shell de otros: `sudo chsh -s /usr/bin/fish kim`.
 
-:::arch
-En Arch, `chsh -l` lista todos los shells válidos.
-:::
-
-:::redhat
-En Fedora, `chsh -l` lista todos los shells válidos.
-:::
-
 Para volver a bash, haz lo mismo:
 
 ```sh
@@ -474,6 +494,20 @@ chsh -s /bin/bash
 Un consejo habitual con fish es mantener bash como shell de inicio de sesión y
 dejar que el programa de terminal inicie fish: así sigue funcionando todo lo
 que espera un shell POSIX al iniciar sesión.
+
+La pregunta empieza en una terminal nueva, instala zsh y lo convierte en el
+shell de inicio de sesión. ¿Qué imprime el último comando?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
+$ chsh -s /usr/bin/zsh > /dev/null 2>&1
+$ echo $SHELL
+/bin/bash
+---
+`chsh` cambió tu línea en `/etc/passwd`, pero el cambio tiene efecto en el
+próximo inicio de sesión. La terminal que tienes abierta conserva bash, y
+`$SHELL` también.
+```
 
 ## ¿Qué shell deberías elegir?
 

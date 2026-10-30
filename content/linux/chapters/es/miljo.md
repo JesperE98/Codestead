@@ -27,6 +27,16 @@ Con `export` se convierte en una variable de entorno:
 export EDITOR=nano
 ```
 
+```quiz
+¿Qué línea crea la variable `FARG` con el valor `blue`?
+- [ ] `FARG = blue`
+- [x] `FARG=blue`
+- [ ] `$FARG=blue`
+---
+No puede haber espacios alrededor del `=`. Con espacios, la shell cree que `FARG`
+es un comando. El `$` solo se usa cuando *lees* una variable.
+```
+
 ## Comillas simples y dobles
 
 Hay una diferencia importante:
@@ -38,6 +48,14 @@ echo 'Inicio: $HOME'
 
 Dentro de comillas **dobles**, las variables se sustituyen por su valor.
 Dentro de comillas **simples**, todo se imprime exactamente como está escrito.
+
+```predict
+$ x=linux
+$ echo "I like $x"
+$ echo 'I like $x'
+I like linux
+I like $x
+```
 
 ## PATH: ¿dónde se encuentran los comandos?
 
@@ -60,6 +78,17 @@ type cd
 Si quieres ejecutar un programa que no está en `PATH`, tienes que indicar su
 ruta, por ejemplo `./miprograma` para un archivo del directorio en el que
 estás.
+
+```quiz
+Tienes un programa llamado `hej` en el directorio en el que estás, y ese
+directorio no está en `PATH`. ¿Cómo lo ejecutas?
+- [ ] `hej`
+- [x] `./hej`
+- [ ] `type hej`
+---
+Sin una ruta, la shell solo busca en los directorios de `PATH`. `./hej`
+dice exactamente dónde está el archivo: en el directorio actual.
+```
 
 ## Códigos de salida – `$?`
 
@@ -85,6 +114,12 @@ ll
 
 `alias` sin argumentos muestra todos los alias, y `unalias ll` elimina uno.
 
+```predict
+$ alias hej='echo Hello'
+$ hej
+Hello
+```
+
 ## Guardar la configuración – `~/.bashrc`
 
 Las variables y los alias que creas desaparecen al cerrar la terminal. Para
@@ -94,4 +129,15 @@ enseguida con:
 
 ```sh
 source ~/.bashrc
+```
+
+```quiz
+Creas un alias, cierras la terminal y abres una nueva. El alias ha
+desaparecido. ¿Qué deberías haber hecho?
+- [ ] Ejecutar `alias` sin argumentos
+- [x] Poner el alias en `~/.bashrc`
+- [ ] Crearlo con `export`
+---
+Todo lo que pones en `~/.bashrc` se vuelve a leer cada vez que se abre una
+terminal nueva.
 ```

@@ -2,8 +2,8 @@
 
 Casi todo en Linux es texto: configuraciones, registros, listas. Por eso hay
 un montón de pequeñas herramientas para leer y buscar en archivos de texto. En
-tu directorio personal hay un directorio llamado `dokument` con dos archivos
-para practicar: `frukter.txt` (una lista de frutas) y `server.log` (el
+tu directorio personal hay un directorio llamado `dokument` con archivos
+para practicar, entre ellos `frukter.txt` (una lista de frutas) y `server.log` (el
 registro de un servidor web inventado). Su contenido está en sueco, pero las
 palabras que vas a buscar –`INFO`, `WARN` y `ERROR`– son las mismas que en los
 registros reales.
@@ -19,6 +19,12 @@ cat dokument/frukter.txt
 Para archivos largos, `less` es mejor. Allí te desplazas con las flechas y la
 barra espaciadora, buscas con `/palabra` y sales con `q`.
 
+Mira la lista de frutas: la necesitarás para la siguiente pregunta:
+
+```try
+cat dokument/frukter.txt
+```
+
 ## El principio y el final – `head` y `tail`
 
 `head` muestra las primeras líneas y `tail` las últimas. Por defecto son 10
@@ -31,6 +37,13 @@ tail -n 3 dokument/server.log
 
 `tail -f` *sigue* un archivo y muestra las líneas nuevas a medida que se
 escriben: perfecto para los registros. Se detiene con **Ctrl+C**.
+
+```predict
+$ tail -n 1 dokument/frukter.txt
+mango
+---
+`tail -n 1` muestra solo la última línea.
+```
 
 ## Contar – `wc`
 
@@ -70,6 +83,24 @@ El patrón es una *expresión regular*. Un par de ejemplos: `^` significa el
 principio de la línea y `$` el final, así que `grep "^2026"` encuentra las
 líneas que empiezan por 2026.
 
+```quiz
+`server.log` tiene dos líneas con `WARN` y una línea con `warn` en minúsculas.
+¿Qué imprime `grep -c WARN dokument/server.log`?
+- [ ] 1
+- [x] 2
+- [ ] 3
+---
+`-c` cuenta las líneas que coinciden, y sin `-i` las mayúsculas y las minúsculas
+son distintas. `grep -ic WARN` contaría las tres.
+```
+
+```quiz
+¿Qué comando muestra todas las líneas de `server.log` que **no** contienen `INFO`?
+- [ ] `grep -i INFO dokument/server.log`
+- [ ] `grep -c INFO dokument/server.log`
+- [x] `grep -v INFO dokument/server.log`
+```
+
 ## Ordenar – `sort` y `uniq`
 
 `sort` ordena las líneas alfabéticamente (`-n` para números, `-r` para orden
@@ -78,6 +109,13 @@ anterior*; por eso casi siempre se usa después de `sort`:
 
 ```sh
 sort dokument/frukter.txt
+```
+
+```quiz
+¿Por qué `uniq` casi siempre se usa después de `sort`?
+- [ ] `uniq` solo funciona con archivos ordenados y, si no, falla
+- [x] `uniq` solo elimina las líneas idénticas a la línea inmediatamente anterior, así que las líneas iguales tienen que estar juntas
+- [ ] `sort` elimina los duplicados y `uniq` los vuelve a poner
 ```
 
 ## El manual – `man`

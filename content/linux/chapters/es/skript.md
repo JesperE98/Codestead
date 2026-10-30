@@ -57,6 +57,17 @@ espacio. Si quieres escribir texto justo después del nombre de la variable,
 usa llaves: `"${stad}_2026"`; sin ellas, bash buscaría una variable llamada
 `stad_2026`.
 
+```quiz
+`stad` contiene `Göteborg`, y no existe ninguna variable llamada `stad_2026`.
+¿Qué imprime `echo "$stad_2026"`?
+- [ ] `Göteborg_2026`
+- [ ] `Göteborg`
+- [x] Una línea vacía
+---
+Bash lee el nombre completo `stad_2026`, y esa variable no existe.
+Escribe `"${stad}_2026"` para obtener `Göteborg_2026`.
+```
+
 ## Sustitución de comandos – `$(...)`
 
 `$(comando)` se sustituye por lo que imprima el comando. Así se guarda el
@@ -81,6 +92,13 @@ echo $(( 17 / 5 )) resto $(( 17 % 5 ))
 
 Para modificar una variable, escribe `(( a++ ))` o `(( a += 10 ))`.
 
+```predict
+$ echo $(( 7 / 2 )) $(( 7 % 2 ))
+3 1
+---
+Bash solo calcula con enteros: 7 / 2 es 3, y el resto (`%`) es 1.
+```
+
 ## Argumentos
 
 Cuando ejecutas `./skript.sh uno dos`, el script puede leer los argumentos:
@@ -92,6 +110,15 @@ Cuando ejecutas `./skript.sh uno dos`, el script puede leer los argumentos:
 | `$#` | El número de argumentos |
 | `"$@"` | Todos los argumentos, cada uno por separado |
 | `$?` | El código de salida del comando anterior |
+
+```quiz
+Un script se ejecuta con `./skript.sh red green blue`. ¿Qué contienen `$1` y `$#`?
+- [ ] `$1` es `./skript.sh` y `$#` es `4`
+- [x] `$1` es `red` y `$#` es `3`
+- [ ] `$1` es `red` y `$#` es `blue`
+---
+El propio nombre del script está en `$0`, así que no se cuenta en `$#`.
+```
 
 ## Condiciones – `if`
 
@@ -139,6 +166,12 @@ Para condiciones cortas, a menudo basta con `&&` y `||`:
 [ -d ~/bilder ] && echo "El directorio de imágenes existe"
 ```
 
+```predict
+$ x=""
+$ if [ -z "$x" ]; then echo empty; else echo "not empty"; fi
+empty
+```
+
 ## Bucles
 
 Un **bucle for** hace lo mismo con cada elemento de una lista:
@@ -169,6 +202,13 @@ while read rad; do echo "> $rad"; done < ~/dokument/frukter.txt
 
 `break` sale de un bucle, y `continue` salta directamente a la siguiente
 vuelta.
+
+```predict
+$ for x in 2 4 6; do echo $(( x * 10 )); done
+20
+40
+60
+```
 
 > **¡Cuidado con los bucles infinitos!** Un bucle cuya condición nunca se
 > vuelve falsa sigue para siempre. En una terminal real lo detienes con

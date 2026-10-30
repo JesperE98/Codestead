@@ -2,10 +2,11 @@
 
 Esta guía te enseña a usar Linux desde la línea de comandos: desde tus
 primeros comandos hasta la gestión de paquetes en distintas distribuciones.
-Cada capítulo explica un tema y termina con una serie de **tareas** que
-resuelves en la terminal de la derecha. Una tarea se marca automáticamente
-como completada en cuanto la resuelves bien. La mejor forma de aprender es
-*haciendo*: lee, prueba, equivócate y vuelve a intentarlo.
+Cada capítulo explica un tema. Por el camino hay breves **preguntas** en el
+texto; respóndelas y se desbloquearán la terminal de la derecha y las
+**tareas** del capítulo. Una tarea se marca automáticamente como completada en
+cuanto la resuelves bien. La mejor forma de aprender es *haciendo*: lee,
+prueba, equivócate y vuelve a intentarlo.
 
 ## ¿Qué es Linux?
 
@@ -17,20 +18,12 @@ es software libre.
 Para tener un sistema utilizable hace falta mucho más: una shell, herramientas
 para gestionar archivos, un gestor de paquetes y quizá un entorno de
 escritorio. Una **distribución** (*distro*) lo reúne todo en un conjunto listo
-para usar. Ahora mismo estás usando **{{distro}}**.
+para usar. Debian, Ubuntu, Arch Linux y Fedora son algunos ejemplos conocidos.
 
-Las distribuciones se agrupan en *familias* que se basan unas en otras y
-comparten gestor de paquetes:
-
-| Familia | Gestor de paquetes | Ejemplos |
-|---|---|---|
-| Debian | `apt` | Debian, Ubuntu, Linux Mint, Pop!_OS |
-| Arch | `pacman` | Arch Linux, Manjaro, EndeavourOS |
-| Red Hat | `dnf` | Fedora, RHEL, Rocky Linux, AlmaLinux |
-
-Casi todo lo que aprendas en esta guía funciona igual en todas partes. Lo que
-cambia –sobre todo la gestión de paquetes– tiene sus propios capítulos. Puedes
-cambiar de distribución cuando quieras desde el menú de la parte superior.
+Casi todo lo que aprendas en esta guía funciona igual en todas las
+distribuciones, así que el curso empieza por ahí. La terminal de esta página
+ejecuta **Ubuntu 24.04 LTS**. Las distribuciones se diferencian sobre todo en
+cómo se instala el software: eso lo verás en el capítulo sobre distribuciones.
 
 ## ¿Qué es una shell?
 
@@ -43,33 +36,36 @@ Fíjate en la diferencia entre una *terminal* y una *shell*: la terminal es la
 ventana que muestra el texto, y la shell es el programa que se ejecuta dentro
 de ella.
 
+```quiz
+Escribes `ls` y pulsas Enter. ¿Qué programa lee el comando y lo ejecuta?
+- [ ] La terminal
+- [x] La shell
+- [ ] El kernel
+---
+La terminal solo muestra el texto. La shell (aquí bash) lee lo que escribes
+y lo ejecuta.
+```
+
 ## El prompt
 
 Cuando la shell está esperando un comando, muestra un **prompt** (indicador).
-En {{distro}} tiene más o menos este aspecto:
+En la terminal de esta página tiene este aspecto:
 
-:::debian
 ```text
-elev@{{hostname}}:~$
+elev@ubuntu:~$
 ```
-:::
 
-:::arch
-```text
-[elev@{{hostname}} ~]$
-```
-:::
-
-:::redhat
-```text
-[elev@{{hostname}} ~]$
-```
-:::
-
-Te indica quién eres (`elev`), en qué ordenador estás (`{{hostname}}`) y en qué
+Te indica quién eres (`elev`), en qué ordenador estás (`ubuntu`) y en qué
 lugar del sistema de archivos te encuentras (`~` significa tu directorio
 personal). El signo `$` indica que eres un usuario normal. Si eres el
 administrador (*root*), verás un `#` en su lugar.
+
+```quiz
+El prompt termina en `#` en lugar de `$`. ¿Qué te dice eso?
+- [ ] Que estás en tu directorio personal
+- [ ] Que el comando anterior falló
+- [x] Que eres el administrador, root
+```
 
 ## Tu primer comando
 
@@ -91,12 +87,42 @@ El *comando* es el programa que se ejecuta, las *opciones* (o *flags*)
 modifican su comportamiento y los *argumentos* son aquello sobre lo que debe
 trabajar el comando.
 
+```quiz
+En el comando `ls -l /etc`, ¿qué parte es la **opción**?
+- [ ] `ls`
+- [x] `-l`
+- [ ] `/etc`
+---
+`ls` es el comando, `-l` modifica su comportamiento y `/etc` es el argumento:
+aquello sobre lo que debe trabajar `ls`.
+```
+
+Prueba `echo` con un texto tuyo:
+
+```try
+echo Linux is fun
+---
+`echo` imprimió exactamente las palabras que le diste.
+```
+
+## ¿Quién soy y dónde estoy?
+
+Dos pequeños comandos te informan sobre el sistema en el que estás. `whoami`
+imprime el nombre del usuario con el que has iniciado sesión. El archivo
+`/etc/os-release` describe la distribución, y `cat` imprime un archivo
+(verás más sobre `cat` en un capítulo posterior):
+
+```sh
+whoami
+cat /etc/os-release
+```
+
 ## Cómo funciona el simulador
 
-La terminal de esta página es un **simulador** que se ejecuta por completo en
-tu navegador. Se comporta como un ordenador Linux real, pero nada de lo que
-hagas puede dañar tu propio equipo, y si haces alguna tontería siempre puedes
-empezar de nuevo con el botón *Restablecer*.
+La terminal de esta página es un **simulador** que se ejecuta por completo
+dentro de esta aplicación. Se comporta como un ordenador Linux real, pero nada
+de lo que hagas puede dañar tu propio equipo, y si haces alguna tontería
+siempre puedes empezar de nuevo con *Restablecer terminal* en los ajustes.
 
 - **Haz clic en un ejemplo de código** para poner el comando en la terminal.
 - **Tab** completa comandos y nombres de archivo.
@@ -105,6 +131,16 @@ empezar de nuevo con el botón *Restablecer*.
   escribiendo.
 - `help` muestra todos los comandos, y `man comando` muestra una página del
   manual.
+
+```quiz
+Has escrito `ech` y pulsas **Tab**. ¿Qué ocurre?
+- [ ] Se cancela la línea
+- [x] La shell intenta completar el resto del nombre
+- [ ] Se limpia la pantalla
+---
+Tab completa comandos y nombres de archivo. **Ctrl+C** cancela la línea y
+**Ctrl+L** limpia la pantalla.
+```
 
 ### Algunas palabras en sueco
 
