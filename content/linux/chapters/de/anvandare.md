@@ -71,32 +71,12 @@ Die meisten Zeilen in `/etc/passwd` sind keine Menschen. Dienste wie der
 Webserver und das Logging-System laufen als eigene Benutzer mit so wenigen
 Rechten wie möglich – werden sie gehackt, kommt der Angreifer nicht an deine
 Dateien heran. Sie haben die Shell `nologin`, sodass sich niemand als sie
-anmelden kann:
-
-:::debian
-Unter Debian und Ubuntu heißt der Benutzer des Webservers `www-data`:
+anmelden kann. Unter Ubuntu heißt der Benutzer des Webservers `www-data` (die
+Namen der Systembenutzer unterscheiden sich zwischen Distributionen):
 
 ```sh
 grep www-data /etc/passwd
 ```
-:::
-
-:::arch
-Unter Arch heißt der Benutzer des Webservers `http`:
-
-```sh
-grep http /etc/passwd
-```
-:::
-
-:::redhat
-Unter Fedora gibt es zum Beispiel `dbus`, der den System-Nachrichtenbus
-betreibt:
-
-```sh
-grep dbus /etc/passwd
-```
-:::
 
 Mit `awk` aus dem Kapitel über Textbearbeitung kannst du alle mit UID 1000
 oder höher auflisten – die normalen Benutzer:
@@ -108,6 +88,14 @@ awk -F: '$3 >= 1000 {print $1}' /etc/passwd
 Auch `nobody` (UID 65534) taucht auf. Das ist ein besonderer Benutzer, dem
 „nichts“ gehört und der benutzt wird, wenn ein Programm so wenige Rechte wie
 möglich haben soll.
+
+```predict
+$ awk -F: '$3 == 0 {print $1}' /etc/passwd
+root
+---
+Feld 3 ist die UID, und nur root hat die UID 0. Es ist die Nummer, nicht der
+Name, die root seine Macht gibt.
+```
 
 ## Gruppen und GIDs
 
@@ -136,6 +124,19 @@ demselben Namen – `elev` ist in der Gruppe `elev`.
 ```sh
 groups
 id
+```
+
+```quiz
+Du (`elev`) bist in den Gruppen `elev` und `sudo`, und deine primäre Gruppe ist
+`elev`. Welche Gruppe bekommt eine neue Datei, die du anlegst?
+- [x] `elev`
+- [ ] `sudo`
+- [ ] Beide
+- [ ] `root`
+---
+Neue Dateien bekommen deine **primäre** Gruppe – das GID-Feld in `/etc/passwd`.
+Zusätzliche Gruppen wie `sudo` geben dir zusätzliche Rechte, landen aber nicht
+auf deinen Dateien.
 ```
 
 ## Die Passwörter – `/etc/shadow`
@@ -168,6 +169,12 @@ geändert wurde und wann es abläuft. `chage` zeigt sie im Klartext:
 chage -l elev
 ```
 
+```try
+chage -l elev
+---
+`Password expires: never` – das Passwort von elev muss nie geändert werden.
+```
+
 ## Einen Benutzer anlegen – `useradd`
 
 Benutzer anzulegen erfordert root. Der gängigste Befehl existiert in jeder
@@ -194,13 +201,14 @@ bekommt es:
 ls -a /etc/skel
 ```
 
-Hier unterscheiden sich die Distributionen:
+Unter Ubuntu ist `useradd` knauserig: Ohne `-m` wird **kein**
+Home-Verzeichnis angelegt, und ohne `-s` wird die Shell `/bin/sh`. Andere
+Distributionen haben andere Vorgaben, also gewöhn dir an, `-m` und `-s` zu
+tippen – dann funktioniert derselbe Befehl überall.
 
-:::debian
-Unter Debian und Ubuntu ist `useradd` knauserig: Ohne `-m` wird **kein**
-Home-Verzeichnis angelegt, und ohne `-s` wird die Shell `/bin/sh`. Deshalb
-gibt es das freundlichere Skript `adduser`, das zur Debian-Familie gehört. Es
-legt das Home-Verzeichnis an, wählt bash und fragt nach Passwort und Namen:
+Deshalb hat Ubuntu außerdem das freundlichere Skript `adduser`, das zur
+Debian-Familie gehört. Es legt das Home-Verzeichnis an, wählt bash und fragt
+nach Passwort und Namen:
 
 ```sh
 sudo adduser lisa
@@ -209,31 +217,10 @@ sudo adduser lisa
 Beantworte die Fragen – bei den meisten kannst du einfach Enter drücken.
 `adduser` kann auch einen bestehenden Benutzer zu einer Gruppe hinzufügen:
 `sudo adduser lisa sudo`.
-:::
-
-:::arch
-Unter Arch wird ohne `-m` kein Home-Verzeichnis angelegt, und den Befehl
-`adduser` gibt es überhaupt nicht – probiere es aus:
-
-```sh
-adduser lisa
-```
-
-Das Arch-Wiki empfiehlt, alles auf einmal zu erledigen:
-`useradd -m -G wheel -s /bin/bash name`.
-:::
-
-:::redhat
-Unter Fedora wird das Home-Verzeichnis auch ohne `-m` angelegt (die
-Einstellung `CREATE_HOME` in `/etc/login.defs`), und die Shell ist bash. `-m`
-schadet aber nicht, also gewöhn dir an, es zu tippen – dann funktioniert
-derselbe Befehl überall.
-:::
 
 `useradd`, `passwd` und die anderen Befehle in diesem Kapitel sind immer
-installiert. Das Paket heißt `passwd` unter Debian, `shadow` unter Arch und
-`shadow-utils` unter Fedora – noch ein Beispiel dafür, dass dieselbe Sache
-unterschiedliche Namen hat.
+installiert. Unter Ubuntu stecken sie im Paket `passwd`; andere Familien nennen
+das Paket anders.
 
 ## Ein Passwort setzen – `passwd`
 
@@ -271,6 +258,19 @@ das gesetzt, was du tippst – und der Benutzer wird aus allen anderen Gruppen
 entfernt, etwa aus der sudo-Gruppe. Ein beliebter Weg, sich selbst
 auszusperren.
 
+```quiz
+`kim` ist in den zusätzlichen Gruppen `sudo` und `utvecklare`. Ein
+Administrator führt `sudo usermod -G backup kim` aus. In welchen zusätzlichen
+Gruppen ist kim danach?
+- [ ] `sudo`, `utvecklare` und `backup`
+- [x] Nur `backup`
+- [ ] `sudo` und `utvecklare` – der Befehl schlägt ohne `-a` fehl
+- [ ] In keiner
+---
+Ohne `-a` wird die Liste auf genau das gesetzt, was du tippst. Mit
+`sudo usermod -aG backup kim` hätte kim die anderen Gruppen behalten.
+```
+
 `gpasswd` macht dasselbe und kann außerdem Mitglieder entfernen:
 
 ```sh
@@ -292,7 +292,7 @@ sudo chmod 775 /srv/projekt
 ls -ld /srv/projekt
 ```
 
-## sudo-Rechte vergeben – `sudo` oder `wheel`
+## sudo-Rechte vergeben – die Gruppe `sudo`
 
 Wer `sudo` benutzen darf, wird in `/etc/sudoers` festgelegt:
 
@@ -300,36 +300,18 @@ Wer `sudo` benutzen darf, wird in `/etc/sudoers` festgelegt:
 sudo cat /etc/sudoers
 ```
 
-Die Zeile `%{{adminGroup}} ALL=(ALL:ALL) ALL` bedeutet, dass jeder in der
-Gruppe **{{adminGroup}}** jeden Befehl als root ausführen darf. Jemandem
-sudo-Rechte zu geben, heißt also nur, ihn in die richtige Gruppe aufzunehmen –
-und die Gruppe heißt in den verschiedenen Familien unterschiedlich:
-
-:::debian
-Unter Debian und Ubuntu heißt die Gruppe `sudo`:
+Die Zeile `%sudo ALL=(ALL:ALL) ALL` bedeutet, dass jeder in der Gruppe
+**sudo** jeden Befehl als root ausführen darf. Jemandem sudo-Rechte zu geben,
+heißt also nur, ihn in die richtige Gruppe aufzunehmen – unter Ubuntu in die
+Gruppe `sudo`:
 
 ```sh
 sudo usermod -aG sudo kim
 ```
-:::
 
-:::arch
-Unter Arch heißt die Gruppe `wheel` – ein alter Unix-Name für „die, die das
-Sagen haben“ (*big wheel*, auf Deutsch etwa „hohes Tier“):
-
-```sh
-sudo usermod -aG wheel kim
-```
-:::
-
-:::redhat
-Unter Fedora heißt die Gruppe `wheel` – ein alter Unix-Name für „die, die das
-Sagen haben“ (*big wheel*, auf Deutsch etwa „hohes Tier“):
-
-```sh
-sudo usermod -aG wheel kim
-```
-:::
+Die Gruppe heißt in den verschiedenen Familien unterschiedlich: Unter Arch und
+Fedora heißt sie `wheel` – ein alter Unix-Name für „die, die das Sagen haben“
+(*big wheel*, auf Deutsch etwa „hohes Tier“).
 
 Bearbeite `/etc/sudoers` niemals direkt mit einem gewöhnlichen Editor – ein
 Tippfehler kann dazu führen, dass niemand mehr sudo benutzen kann. Nimm
@@ -360,6 +342,18 @@ su - kim
 
 `su` ohne Namen bedeutet root. Unter Ubuntu hat root kein Passwort, deshalb
 funktioniert `su -` dort nicht – nimm `sudo -i`.
+
+```quiz
+Du willst einen einzelnen Befehl als `kim` ausführen, kennst aber kims
+Passwort nicht. Sudo-Rechte hast du. Was funktioniert?
+- [ ] `su - kim`
+- [x] `sudo -u kim command`
+- [ ] `su kim command`
+- [ ] Nichts – du brauchst kims Passwort
+---
+`su` fragt nach dem Passwort des Benutzers, der du wirst. `sudo` fragt nach
+**deinem eigenen** Passwort und prüft in `/etc/sudoers`, ob du das darfst.
+```
 
 ## Konten sperren und löschen
 
@@ -393,11 +387,9 @@ sudo useradd -m vikarie
 sudo userdel -r vikarie
 ```
 
-:::debian
-Die Debian-Familie hat außerdem `deluser`, das Gegenstück zu `adduser`:
+Ubuntu hat außerdem `deluser`, das Gegenstück zu `adduser`:
 `sudo deluser --remove-home vikarie`. `sudo deluser kim sudo` entfernt kim aus
 der Gruppe sudo.
-:::
 
 `userdel` weigert sich, einen Benutzer zu löschen, der angemeldet ist – probiere
 `sudo userdel elev`.

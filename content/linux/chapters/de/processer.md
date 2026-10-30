@@ -15,6 +15,16 @@ Elternprozess, die **PPID**, der ihn gestartet hat. Alles beginnt mit Prozess
 Nummer 1, `init` (auf fast jeder Distribution ist das `systemd`), der alle
 anderen startet.
 
+```quiz
+Was ist die PPID eines Prozesses?
+- [ ] Die Nummer des Prozessors, auf dem er läuft
+- [x] Die PID des Prozesses, der ihn gestartet hat – sein Elternprozess
+- [ ] Seine Priorität
+---
+Jeder Prozess hat einen Elternprozess. Folgst du den Eltern weit genug, landest
+du bei Prozess Nummer 1.
+```
+
 ## Meine Prozesse – `ps`
 
 `ps` (*process status*) ohne Optionen zeigt die Prozesse in deinem eigenen
@@ -59,6 +69,12 @@ dessen Namen du kennst, gibt es `pgrep`:
 pgrep -l sshd
 ```
 
+```try
+pgrep -l sshd
+---
+`-l` zeigt den Namen neben der PID an.
+```
+
 ## Eine Live-Ansicht – `top` und `htop`
 
 `top` zeigt die Prozesse sortiert danach, wie viel Prozessorzeit sie
@@ -98,6 +114,16 @@ killall firefox
 Signale darfst du nur an deine **eigenen** Prozesse schicken. Für Prozesse,
 die root oder anderen Benutzern gehören, brauchst du `sudo`.
 
+```quiz
+Ein Programm reagiert nicht mehr. Welchen Befehl solltest du **zuerst** probieren?
+- [x] `kill 1234` – er schickt `SIGTERM` und lässt das Programm sich ordentlich beenden
+- [ ] `kill -9 1234` – das funktioniert immer am besten
+- [ ] `sudo kill -9 1`
+---
+Fang mit dem Standardsignal an, `SIGTERM`. `SIGKILL` (`-9`) ist das letzte
+Mittel, denn dann hat das Programm keine Chance, zu speichern oder aufzuräumen.
+```
+
 > **Finde ihn und stopp ihn!** Irgendein Prozess auf diesem Rechner
 > verbraucht fast 100 % des Prozessors. Finde mit `top` oder
 > `ps aux --sort=-%cpu` heraus, wie er heißt und welche PID er hat – und
@@ -134,6 +160,17 @@ Die Variable `$!` enthält die PID des zuletzt gestarteten Hintergrundjobs.
 Wenn ein Job fertig ist, sagt dir die Shell das mit einer Zeile wie
 `[1]+  Done   sleep 300`.
 
+```quiz
+Du hast bei einem Programm im Vordergrund `Ctrl+Z` gedrückt. Wie lässt du es
+weiterlaufen und behältst trotzdem deinen Prompt?
+- [ ] `fg %1`
+- [x] `bg %1`
+- [ ] `Ctrl+C`
+---
+`Ctrl+Z` hält das Programm an. `bg` lässt einen angehaltenen Job im Hintergrund
+weiterlaufen, während `fg` ihn wieder in den Vordergrund holen würde.
+```
+
 ## Wie geht es dem Rechner?
 
 Zwei kleine Befehle geben dir einen schnellen Überblick:
@@ -148,9 +185,18 @@ free -h
 die Spalte *available*: Linux nutzt freien Speicher als Cache für Dateien,
 deshalb sieht *free* oft niedrig aus, obwohl reichlich Speicher da ist.
 
+```quiz
+`free -h` zeigt wenig *freien* Speicher, aber viel *verfügbaren* (*available*)
+Speicher. Was bedeutet das?
+- [ ] Dem Rechner geht gleich der Speicher aus
+- [x] Linux nutzt freien Speicher als Cache für Dateien – schau auf *available*
+- [ ] Ein Teil des Speichers ist kaputt
+```
+
 ## Überall gleich
 
-Prozesse funktionieren auf jeder Distribution gleich. Die Werkzeuge stammen aus
-dem Paket **procps** (unter Arch und Fedora heißt es `procps-ng`) und `killall`
-aus **psmisc**. Unterschiedlich ist, welche Dienste von Anfang an laufen –
-vergleiche doch mal `ps aux` unter {{distro}} mit einer anderen Distribution!
+Prozesse funktionieren auf jeder Distribution gleich. Unter Ubuntu stammen die
+Werkzeuge aus dem Paket **procps** und `killall` aus **psmisc**. Manche
+Distributionen geben den Paketen etwas andere Namen, und auch welche Dienste
+von Anfang an laufen, ist unterschiedlich – Distributionen vergleichst du im
+Teil über Distributionen.

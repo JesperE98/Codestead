@@ -2,8 +2,9 @@
 
 Diese Anleitung bringt dir bei, Linux über die Kommandozeile zu benutzen – von
 deinen allerersten Befehlen bis hin zur Paketverwaltung auf verschiedenen
-Distributionen. Jedes Kapitel erklärt ein Thema und endet mit einigen
-**Aufgaben**, die du im Terminal rechts löst. Eine Aufgabe wird automatisch
+Distributionen. Jedes Kapitel erklärt ein Thema. Unterwegs gibt es im Text
+kurze **Fragen**; beantworte sie, dann werden das Terminal rechts und die
+**Aufgaben** des Kapitels freigeschaltet. Eine Aufgabe wird automatisch
 abgehakt, sobald du sie richtig gelöst hast. Am besten lernst du durch *Tun*:
 lesen, ausprobieren, Fehler machen und es noch einmal versuchen.
 
@@ -17,20 +18,12 @@ Torvalds geschaffen und ist freie Software.
 Für ein benutzbares System brauchst du noch viel mehr: eine Shell, Werkzeuge
 zum Verwalten von Dateien, einen Paketmanager, vielleicht einen Desktop. Eine
 **Distribution** (*Distro*) packt all das zu einem fertigen Ganzen zusammen.
-Gerade benutzt du **{{distro}}**.
+Debian, Ubuntu, Arch Linux und Fedora sind ein paar bekannte Beispiele.
 
-Distributionen werden in *Familien* eingeteilt, die aufeinander aufbauen und
-denselben Paketmanager verwenden:
-
-| Familie | Paketmanager | Beispiele |
-|---|---|---|
-| Debian | `apt` | Debian, Ubuntu, Linux Mint, Pop!_OS |
-| Arch | `pacman` | Arch Linux, Manjaro, EndeavourOS |
-| Red Hat | `dnf` | Fedora, RHEL, Rocky Linux, AlmaLinux |
-
-Das meiste, was du in dieser Anleitung lernst, funktioniert überall gleich.
-Was sich unterscheidet – vor allem die Paketverwaltung –, bekommt eigene
-Kapitel. Über das Menü oben kannst du jederzeit die Distribution wechseln.
+Das meiste, was du in dieser Anleitung lernst, funktioniert auf jeder
+Distribution gleich, deshalb beginnt der Kurs damit. Das Terminal hier läuft
+mit **Ubuntu 24.04 LTS**. Distributionen unterscheiden sich vor allem darin,
+wie Software installiert wird – das kommt im Kapitel über Distributionen.
 
 ## Was ist eine Shell?
 
@@ -42,33 +35,36 @@ und **fish**. Die Grundlagen sind in allen gleich.
 Beachte den Unterschied zwischen *Terminal* und *Shell*: Das Terminal ist das
 Fenster, das Text anzeigt, und die Shell ist das Programm, das darin läuft.
 
+```quiz
+Du tippst `ls` und drückst Enter. Welches Programm liest den Befehl und führt ihn aus?
+- [ ] Das Terminal
+- [x] Die Shell
+- [ ] Der Kernel
+---
+Das Terminal zeigt nur den Text an. Die Shell (hier bash) liest, was du
+tippst, und führt es aus.
+```
+
 ## Der Prompt
 
 Wenn die Shell auf einen Befehl wartet, zeigt sie einen **Prompt** (eine
-Eingabeaufforderung) an. Unter {{distro}} sieht er ungefähr so aus:
+Eingabeaufforderung) an. Im Terminal hier sieht er so aus:
 
-:::debian
 ```text
-elev@{{hostname}}:~$
+elev@ubuntu:~$
 ```
-:::
-
-:::arch
-```text
-[elev@{{hostname}} ~]$
-```
-:::
-
-:::redhat
-```text
-[elev@{{hostname}} ~]$
-```
-:::
 
 Er verrät dir, wer du bist (`elev`), an welchem Rechner du sitzt
-(`{{hostname}}`) und wo im Dateisystem du dich befindest (`~` bedeutet dein
+(`ubuntu`) und wo im Dateisystem du dich befindest (`~` bedeutet dein
 Home-Verzeichnis). Das `$`-Zeichen zeigt, dass du ein normaler Benutzer bist.
 Bist du der Administrator (*root*), siehst du stattdessen ein `#`.
+
+```quiz
+Der Prompt endet mit `#` statt mit `$`. Was sagt dir das?
+- [ ] Du bist in deinem Home-Verzeichnis
+- [ ] Der vorige Befehl ist fehlgeschlagen
+- [x] Du bist der Administrator, root
+```
 
 ## Dein erster Befehl
 
@@ -90,12 +86,43 @@ Der *Befehl* ist das Programm, das ausgeführt wird, die *Optionen* (oder
 *Flags*) ändern sein Verhalten, und die *Argumente* sind das, womit der Befehl
 arbeiten soll.
 
+```quiz
+Welcher Teil ist im Befehl `ls -l /etc` die **Option**?
+- [ ] `ls`
+- [x] `-l`
+- [ ] `/etc`
+---
+`ls` ist der Befehl, `-l` ändert sein Verhalten, und `/etc` ist das Argument –
+das, womit `ls` arbeiten soll.
+```
+
+Probier `echo` mit einem eigenen Text aus:
+
+```try
+echo Linux is fun
+---
+`echo` hat genau die Wörter ausgegeben, die du ihm übergeben hast.
+```
+
+## Wer und wo bin ich?
+
+Zwei kleine Befehle verraten dir etwas über das System, an dem du sitzt.
+`whoami` gibt den Namen des Benutzers aus, als der du angemeldet bist. Die
+Datei `/etc/os-release` beschreibt die Distribution, und `cat` gibt eine Datei
+aus (mehr über `cat` in einem späteren Kapitel):
+
+```sh
+whoami
+cat /etc/os-release
+```
+
 ## So funktioniert der Simulator
 
-Das Terminal hier ist ein **Simulator**, der vollständig in deinem Browser
-läuft. Er verhält sich wie ein echter Linux-Rechner, aber nichts, was du tust,
-kann deinem eigenen Computer schaden – und wenn du etwas Dummes anstellst,
-kannst du jederzeit mit dem Knopf *Zurücksetzen* von vorn beginnen.
+Das Terminal hier ist ein **Simulator**, der vollständig in dieser App läuft.
+Er verhält sich wie ein echter Linux-Rechner, aber nichts, was du tust, kann
+deinem eigenen Computer schaden – und wenn du etwas Dummes anstellst, kannst
+du jederzeit mit *Terminal zurücksetzen* in den Einstellungen von vorn
+beginnen.
 
 - **Klicke auf ein Codebeispiel**, um den Befehl ins Terminal zu übernehmen.
 - **Tab** vervollständigt Befehle und Dateinamen.
@@ -103,6 +130,16 @@ kannst du jederzeit mit dem Knopf *Zurücksetzen* von vorn beginnen.
 - **Strg+L** leert den Bildschirm und **Strg+C** bricht die Zeile ab, die du
   gerade tippst.
 - `help` listet alle Befehle auf, und `man command` zeigt eine Handbuchseite.
+
+```quiz
+Du hast `ech` getippt und drückst **Tab**. Was passiert?
+- [ ] Die Zeile wird abgebrochen
+- [x] Die Shell versucht, den Rest des Namens zu ergänzen
+- [ ] Der Bildschirm wird geleert
+---
+Tab vervollständigt Befehle und Dateinamen. **Strg+C** bricht die Zeile ab,
+und **Strg+L** leert den Bildschirm.
+```
 
 ### Ein paar schwedische Wörter
 
