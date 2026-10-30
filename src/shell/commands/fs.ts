@@ -4,6 +4,7 @@ import { globToRegex } from '../parser';
 import type { CmdCtx, CommandDef } from '../types';
 import { basename, cloneNode, FsError, hasPerm, nodeSize, type FsNode, type User } from '../vfs';
 import { badOption, colorName, fsMessage, humanSize, lsDate, modeString, parseOpts } from './util';
+import { groupExists, userExists } from '../users';
 
 function joinPath(dir: string, name: string): string {
   return dir === '/' ? `/${name}` : `${dir}/${name}`;
@@ -752,20 +753,22 @@ FLAGGOR
     }
     if (spec === undefined) return badOption(ctx, 'missing operand');
     if (!files.length) return badOption(ctx, `missing operand after '${spec}'`);
-    const [owner, group] = spec.split(':');
-    const users = ['root', 'elev'];
-    const groups = ['root', 'elev', sh.distro.adminGroup, 'shadow'];
-    if (owner && !users.includes(owner)) {
+    const [owner, groupSpec] = spec.split(':');
+    // Användare och grupper finns i /etc/passwd och /etc/group. "kim:" betyder kims inloggningsgrupp.
+    if (owner && !userExists(sh, owner)) {
       ctx.err(`chown: invalid user: '${spec}'\n`);
       return 1;
     }
-    if (group && !groups.includes(group)) {
+    const group = groupSpec === '' && owner ? sh.getUser(owner).groups[0] : groupSpec;
+    if (group && !groupExists(sh, group)) {
       ctx.err(`chown: invalid group: '${spec}'\n`);
       return 1;
     }
     let code = 0;
     const apply = (label: string, node: FsNode) => {
-      if (user.uid !== 0) {
+      // Vanliga användare får bara byta grupp på sina egna filer, till en grupp de själva är med i.
+      const ownGroupChange = (!owner || owner === user.name) && node.owner === user.name && !!group && user.groups.includes(group);
+      if (user.uid !== 0 && !ownGroupChange) {
         ctx.err(`chown: changing ownership of '${label}': Operation not permitted\n`);
         code = 1;
         return;

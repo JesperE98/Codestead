@@ -12,6 +12,7 @@ import { SCRIPT_COMMANDS } from './script';
 import { SYSTEM_COMMANDS } from './system';
 import { TEXT_COMMANDS } from './text';
 import { TEXTPROC_COMMANDS } from './textproc';
+import { USER_COMMANDS } from './users';
 
 export const COMMANDS: Record<string, CommandDef> = {};
 
@@ -21,3 +22,5 @@ for (const def of [...FS_COMMANDS, ...TEXT_COMMANDS, ...SYSTEM_COMMANDS, ...PKG_
 
 // Arkiv och komprimering (tar, gzip, zip ...) samt du.
 for (const def of ARCHIVE_COMMANDS) COMMANDS[def.name] = def;
+// Användare och grupper (useradd, passwd, adduser ...) samt who, w, last och getent.
+for (const def of USER_COMMANDS) COMMANDS[def.name] = def;
