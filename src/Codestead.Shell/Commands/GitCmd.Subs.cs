@@ -393,8 +393,12 @@ public static partial class GitCmd
         return $" {g.C(Col.Yellow, "(")}{string.Join(g.C(Col.Yellow, ", "), parts)}{g.C(Col.Yellow, ")")}";
     }
 
-    /// <summary>Commits reachable from `starts` (but not from `exclude`), newest first and children before parents.</summary>
-    private static List<Commit> WalkCommits(Repo r, List<string> starts, List<string>? exclude = null, bool firstParent = false)
+    /// <summary>
+    /// Commits reachable from `starts` (but not from `exclude`), newest first and children before parents.
+    /// With `topo` (as `git log --graph`), the order no longer depends on the commit times: after a merge
+    /// the merged branch is shown before the first parent's line, like git's --topo-order.
+    /// </summary>
+    private static List<Commit> WalkCommits(Repo r, List<string> starts, List<string>? exclude = null, bool firstParent = false, bool topo = false)
     {
         exclude ??= new List<string>();
         var hidden = new HashSet<string>(StringComparer.Ordinal);
@@ -419,16 +423,32 @@ public static partial class GitCmd
             foreach (var p in ParentsOf(c))
                 if (all.ContainsKey(p)) pending[p] = (pending.TryGetValue(p, out var n) ? n : 0) + 1;
         var ready = all.Keys.Where(h => !pending.TryGetValue(h, out var n) || n == 0).ToList();
+        int ByDate(string a, string b)
+        {
+            var d = all[b].Committer.Time.CompareTo(all[a].Committer.Time);
+            return d != 0 ? d : order[a] - order[b];
+        }
         var res = new List<Commit>();
+        if (topo)
+        {
+            // A stack: the newest tip on top, and a commit's last parent is taken first.
+            ready.StableSort(ByDate);
+            ready.Reverse();
+        }
         while (ready.Count > 0)
         {
-            ready.StableSort((a, b) =>
+            string h;
+            if (topo)
             {
-                var d = all[b].Committer.Time.CompareTo(all[a].Committer.Time);
-                return d != 0 ? d : order[a] - order[b];
-            });
-            var h = ready[0];
-            ready.RemoveAt(0);
+                h = ready[^1];
+                ready.RemoveAt(ready.Count - 1);
+            }
+            else
+            {
+                ready.StableSort(ByDate);
+                h = ready[0];
+                ready.RemoveAt(0);
+            }
             var c = all[h];
             res.Add(c);
             foreach (var p in ParentsOf(c))
@@ -643,7 +663,7 @@ public static partial class GitCmd
             if (string.IsNullOrEmpty(head.Hash)) throw Fatal(!string.IsNullOrEmpty(head.Branch) ? $"your current branch '{head.Branch}' does not have any commits yet" : "bad default revision 'HEAD'");
             starts.Add(head.Hash);
         }
-        var commits = WalkCommits(r, Union(starts), exclude, o.Has("first-parent"));
+        var commits = WalkCommits(r, Union(starts), exclude, o.Has("first-parent"), o.Has("graph"));
         if (paths.Count > 0)
         {
             var specs = paths.Select(p => ToSpec(r, p)).ToList();

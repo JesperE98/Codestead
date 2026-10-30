@@ -362,6 +362,29 @@ public class GitTests
         Assert.Equal("*   H (HEAD -> main) Merge branch 'css'\n|\\\n| * H (css) Marginaler\n* | H Mer text\n|/\n* H Första versionen\n", graph);
     }
 
+    [Fact(DisplayName = "git log --graph visar den sammanslagna grenen först, oavsett commit-tider")]
+    public void GraphOrderDoesNotDependOnCommitTimes()
+    {
+        long now = 1_790_000_000_000;
+        Js.ClockOverride = () => now += 1000;
+        try
+        {
+            var s = Repo();
+            s.Run("git switch -c css && echo \"p { margin: 0; }\" >> style.css && git commit -qam \"Marginaler\"");
+            s.Run("git switch main && echo \"Mer text.\" >> README.md && git commit -qam \"Mer text\"");
+            s.Run("git merge css");
+            var graph = Regex.Replace(s.Run("git log --oneline --graph --all").Out, "[0-9a-f]{7}", "H");
+            Assert.Equal("*   H (HEAD -> main) Merge branch 'css'\n|\\\n| * H (css) Marginaler\n* | H Mer text\n|/\n* H Första versionen\n", graph);
+            // Without --graph, git log is newest first.
+            var log = Regex.Replace(s.Run("git log --oneline").Out, "[0-9a-f]{7}", "H");
+            Assert.Equal("H (HEAD -> main) Merge branch 'css'\nH Mer text\nH (css) Marginaler\nH Första versionen\n", log);
+        }
+        finally
+        {
+            Js.ClockOverride = null;
+        }
+    }
+
     [Fact(DisplayName = "konflikt: markeringar i filen, git add och git commit avslutar")]
     public void ConflictMarkersAddCommit()
     {

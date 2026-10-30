@@ -10,8 +10,17 @@ namespace Codestead.Shell;
 /// </summary>
 public static class Js
 {
-    /// <summary>Optional clock override for tests (milliseconds since the Unix epoch).</summary>
-    public static Func<long>? ClockOverride { get; set; }
+    private static readonly AsyncLocal<Func<long>?> clockOverride = new();
+
+    /// <summary>
+    /// Optional clock override for tests (milliseconds since the Unix epoch). It only applies to the
+    /// code that set it (and what it calls), so tests running in parallel do not affect each other.
+    /// </summary>
+    public static Func<long>? ClockOverride
+    {
+        get => clockOverride.Value;
+        set => clockOverride.Value = value;
+    }
 
     /// <summary>Date.now()</summary>
     public static long Now() => ClockOverride?.Invoke() ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
