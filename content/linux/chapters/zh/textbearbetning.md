@@ -10,7 +10,7 @@
 
 这三个工具都是*过滤器*（filter）：它们读取文本，对其进行处理，然后把结果写到 stdout。这让它们非常适合与管道搭配使用。而且原始文件**不会**被修改（只有一个例外：`sed -i`，我们稍后会讲到）。
 
-`dokument` 中有一个新的练习文件，这是一个记录学生分数的 CSV 文件（*namn* = 姓名，*ämne* = 科目，*poäng* = 分数）：
+`dokument` 中有第三个练习文件，这是一个记录学生分数的 CSV 文件（*namn* = 姓名，*ämne* = 科目，*poäng* = 分数）：
 
 ```sh
 cat ~/dokument/betyg.csv
@@ -30,7 +30,7 @@ echo "hello from café" | tr a-z A-Z
 HELLO FROM CAFé
 ```
 
-注意到那个 é 了吗？`tr` 处理的是单个*字节*，而像 é 这样的字母——或者瑞典语中的 å、ä 和 ö——并不在 `a-z` 的范围内。这一点值得记住——`awk`（后面会讲到）处理得更好。
+注意到那个 é 了吗？`tr` 处理的是单个*字节*，而像 é 这样的字母——或者瑞典语中的 å、ä 和 ö——并不在 `a-z` 的范围内。这一点值得记住——GNU `awk`（后面会讲到）处理得更好。
 
 `tr` **只**从 stdin 读取，从不读取文件。如果你想处理一个文件，可以用 `<` 或管道把它送进去：
 
@@ -49,6 +49,13 @@ echo $PATH | tr ':' '\n'
 ```sh
 echo "070-123 45 67" | tr -d ' -'
 echo "too     many      spaces" | tr -s ' '
+```
+
+```predict
+$ echo "hello world" | tr -d o
+hell wrld
+---
+`-d` 会删除每一个 `o`，无论它在哪里。
 ```
 
 除了范围，你还可以使用*字符类*，例如 `[:upper:]`（大写字母）、`[:lower:]`（小写字母）、`[:digit:]`（数字）和 `[:space:]`（空白字符）：
@@ -78,6 +85,13 @@ s/PATTERN/REPLACEMENT/FLAGS
 ```sh
 echo "cat cat cat" | sed 's/cat/dog/'
 echo "cat cat cat" | sed 's/cat/dog/g'
+```
+
+```predict
+$ echo banana | sed 's/a/o/'
+bonana
+---
+不加 `g` 时，只有该行中的第一个 `a` 会被替换。
 ```
 
 `i` 标志让搜索不区分大小写，就像 `grep -i` 一样：
@@ -160,7 +174,26 @@ cat ~/frukter-kopia.txt
 
 `sed -i` 没有撤销功能。一个好的做法是先**不加** `-i` 运行命令，看看结果，确认无误后再加上 `-i`。如果你写成 `-i.bak`，原文件还会另存为 `file.bak`。
 
+```quiz
+你运行 `sed 's/kiwi/KIWI/' ~/dokument/frukter.txt`。文件会发生什么变化？
+- [ ] 文件中的每个 `kiwi` 都变成 `KIWI`
+- [ ] 只有文件中的第一个 `kiwi` 变成 `KIWI`
+- [x] 什么都不会发生——结果只是被打印出来，文件保持不变
+---
+不加 `-i` 时，`sed` 只会写到 stdout。文件保持原样。
+```
+
 `/etc` 中的配置文件属于 root，所以在那里你需要使用 `sudo sed -i ...`。这是在脚本中修改设置、而无需打开文本编辑器的常用方法。
+
+## 截取字段——`cut`
+
+当一个文件由字段组成、字段之间有分隔符时，`cut` 可以挑出其中一个字段。`-d` 选择分隔符（*delimiter*），`-f` 选择要保留哪个字段。下面是 CSV 文件中的科目——第 2 个字段：
+
+```sh
+cut -d, -f2 ~/dokument/betyg.csv
+```
+
+在 `/etc/passwd` 中，字段之间用冒号分隔，第 1 个字段是用户名，所以 `cut -d: -f1 /etc/passwd` 会列出所有用户。和其他过滤器一样，`cut` 也适合放在管道中——例如放在 `tr` 前面。
 
 ## 列——`awk`
 
@@ -202,7 +235,14 @@ awk -F: '{print $1, $7}' /etc/passwd
 awk -F: '{print $1 " uses " $7}' /etc/passwd
 ```
 
-你可能还记得 `cut -d: -f1`。区别在于 awk 可以调换字段的顺序、插入文字，还能处理连续的多个空格。
+和上一节中的 `cut -d: -f1` 比较一下。区别在于 awk 可以调换字段的顺序、插入文字，还能处理连续的多个空格。
+
+```predict
+$ echo "Alva,matte,87" | awk -F, '{print $3, $1}'
+87 Alva
+---
+`-F,` 在逗号处拆分这一行。awk 先打印第 3 个字段，再打印第 1 个字段，由于 `print` 中有逗号，它们之间会有一个空格。
+```
 
 ### 模式——选择行
 
@@ -230,6 +270,12 @@ awk -F, '$3 >= 90' ~/dokument/betyg.csv
 awk -F, 'NR > 1 && $3 >= 90' ~/dokument/betyg.csv
 ```
 
+试试你自己的模式——列出所有学习 *svenska*（瑞典语）的学生的名字：
+
+```try
+awk -F, '$2 == "svenska" {print $1}' ~/dokument/betyg.csv
+```
+
 ### 计算——变量和 `END`
 
 awk 中的变量不需要声明——它们的初始值是 0。`END { }` 块在最后一行**之后**运行一次。把两者结合起来，就能轻松地对一列求和：
@@ -250,23 +296,13 @@ awk -F, 'NR > 1 {summa += $3; antal++} END {print "Average:", summa / antal}' ~/
 awk -F, 'BEGIN {print "Student  Score"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/dokument/betyg.csv
 ```
 
-awk 还有一些函数，例如 `length()`、`toupper()` 和 `tolower()`。与 `tr` 不同，GNU awk 能正确处理 å、ä 和 ö 这样的字母：
+awk 还有一些函数，例如 `length()`、`toupper()` 和 `tolower()`：
 
 ```sh
 awk '{print toupper($0)}' ~/dokument/frukter.txt
 ```
 
-:::debian
-在 {{distro}} 上，`awk` 默认是 **mawk**，一个小巧快速的变体。如果你想要 GNU awk，请安装 `gawk` 软件包。对于像这里这样的简单程序，你不会察觉到任何区别——不过 mawk 的 `toupper()` 不会转换 å、ä 和 ö。
-:::
-
-:::arch
-在 Arch Linux 上，`awk` 就是 **GNU awk**（`gawk` 软件包）。
-:::
-
-:::redhat
-在 {{distro}} 上，`awk` 就是 **GNU awk**（`gawk` 软件包）。
-:::
+仔细看看 `äpple` 和 `päron`。在这里的终端所运行的 Ubuntu 上，`awk` 默认是 **mawk**，一个小巧快速的变体。对于像这里这样的简单程序，你不会察觉到任何区别——不过 mawk 的 `toupper()` 不会转换 å、ä 和 ö。而 **GNU awk**（`gawk` 软件包）会转换，这一点与 `tr` 不同。各个发行版使用的 awk 不同，安装软件的方式也不同——这些内容会在关于发行版的那一章中讲到。
 
 模拟器只支持 awk 语言的一部分——也就是这里讲到的内容，再加上一点点别的（`if`、循环和数组）。请参阅 `man awk`。
 

@@ -29,12 +29,32 @@ echo "second line" >> test.txt
 cat test.txt
 ```
 
+```predict
+$ echo one > t.txt
+$ echo two > t.txt
+$ cat t.txt
+two
+---
+第二个 `>` 覆盖了文件。如果用 `>>`，文件里就会同时有这两行。
+```
+
 ## 从文件读取——`<`
 
 `<` 让程序从文件中读取它的 stdin：
 
 ```sh
 wc -l < dokument/frukter.txt
+```
+
+这样 `wc` 根本看不到文件名——它只从 stdin 拿到文本——所以只会打印出数字。
+
+```predict
+$ wc -l dokument/frukter.txt
+$ wc -l < dokument/frukter.txt
+10 dokument/frukter.txt
+10
+---
+把文件名作为参数时，`wc` 也会打印出文件名。使用 `<` 时，它只拿到文本。
 ```
 
 ## 错误信息——`2>`
@@ -46,6 +66,15 @@ ls /finnsinte 2> fel.txt
 ```
 
 （*Finns inte* 是瑞典语的“不存在”，*fel* 的意思是“错误”。）
+
+```quiz
+你运行 `ls /finnsinte > fel.txt`。错误信息会出现在哪里？
+- [ ] 在 `fel.txt` 中
+- [x] 在屏幕上——`fel.txt` 仍然是空的
+- [ ] 哪儿都没有，它消失了
+---
+`>` 只重定向 stdout（流 1）。错误信息发送到 stderr（流 2），它仍然输出到屏幕。你需要使用 `2>`。
+```
 
 文件 `/dev/null` 是一个“黑洞”——写进去的任何东西都会消失。用它来屏蔽错误信息非常方便。使用 `2>&1`，stderr 就会被发送到和 stdout 相同的地方。
 
@@ -64,6 +93,12 @@ sort dokument/frukter.txt | uniq -c | sort -rn
 ```
 
 一步一步地读：先对水果排序，再统计每种水果有多少个（`uniq -c`），最后按数字排序，最大的排在最前面（`sort -rn`）。
+
+`/etc` 中有多少个文件和目录？用管道数一数：
+
+```try
+ls /etc | wc -l
+```
 
 ## 同时输出到屏幕和文件——`tee`
 
@@ -85,4 +120,11 @@ ls /etc | tee etc-lista.txt | wc -l
 
 ```sh
 mkdir -p ny && cd ny
+```
+
+```predict
+$ mkdir dokument 2> /dev/null && echo created || echo failed
+failed
+---
+`dokument` 已经存在，所以 `mkdir` 失败了（它的错误信息消失在 `/dev/null` 中）。`echo created` 被跳过，而 `echo failed` 被执行。
 ```

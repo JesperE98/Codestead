@@ -8,6 +8,16 @@
 
 像 `ls`、`grep` 和 `cat` 这样的程序是 `/usr/bin` 中独立的程序——无论你使用哪个 shell，它们的用法都一样。不同 shell 之间的区别在于**围绕这些程序的语言**：如何设置变量、如何编写循环和条件判断、提示符是什么样子，以及提供了哪些便利功能。
 
+```quiz
+你从 bash 换到了另一个 shell。下面哪一项会保持完全不变？
+- [ ] 如何设置变量
+- [ ] 如何编写循环
+- [x] `grep` 如何处理它的选项
+- [ ] 提示符是什么样子
+---
+`grep` 是 `/usr/bin` 中一个独立的程序。shell 只是启动它——不同 shell 之间不同的是围绕它的语言。
+```
+
 ## 家族谱系：sh、bash、zsh 和 fish
 
 | Shell | 诞生年份 | 特点 |
@@ -38,26 +48,14 @@ echo $SHELL
 
 ### 安装 zsh
 
-zsh 在所有发行版家族中的软件包名都一样：
+在 Ubuntu 终端中，你用 apt 安装 zsh：
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install zsh
 ```
-:::
 
-:::arch
-```sh
-sudo pacman -S zsh
-```
-:::
-
-:::redhat
-```sh
-sudo dnf install zsh
-```
-:::
+其他发行版使用各自的包管理器，这一点你在关于发行版和软件包的部分中已经学过。在那些发行版上，这个软件包同样叫做 `zsh`。
 
 再看看 `/etc/shells`——这个软件包添加了 `/usr/bin/zsh`（以及 `/bin/zsh`）：
 
@@ -82,7 +80,7 @@ zsh
 | `1` | 包含所有设置的主菜单（模拟器中不可用） |
 | `2` | 创建带有推荐设置的 `~/.zshrc` |
 
-回答 `2`。提示符变成了 `elev@{{hostname}} ~ %`——在 zsh 中，`%` 是普通用户的常用标志（root 则是 `#`，和 bash 一样）。
+回答 `2`。提示符变成了 `elev@ubuntu ~ %`——在 zsh 中，`%` 是普通用户的常用标志（root 则是 `#`，和 bash 一样）。
 
 你现在运行的是哪个 shell？变量 `$0` 保存着 shell 的名字：
 
@@ -143,6 +141,18 @@ for f in $filer; do echo "[$f]"; done
 
 bash 会输出 `[a.txt]` 和 `[b.txt]`——zsh 则输出 `[a.txt b.txt]`。zsh 的做法通常正是你想要的，但这意味着 bash 脚本在 zsh 中不一定会做同样的事。（使用 `setopt shwordsplit` 后，zsh 的行为就会和 bash 一样。）
 
+要在某个 shell 中试一条命令，并不需要先启动它。使用 `-c` 时，shell 会运行这条命令，然后立即退出——`zsh -c 'echo $0'` 会打印 `zsh`，之后你仍然在 bash 中。
+
+下面的问题从一个全新的终端开始，所以它会先安装 zsh。`> /dev/null 2>&1` 会丢弃那一行的输出。最后一条命令会打印什么？
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
+$ zsh -c 'filer="x.txt y.txt z.txt"; for f in $filer; do echo "<$f>"; done'
+<x.txt y.txt z.txt>
+---
+zsh 不会按空格拆分变量，所以循环只用整个值运行一次。在 bash 中，同样的循环会打印三行：`<x.txt>`、`<y.txt>` 和 `<z.txt>`。
+```
+
 ### ~/.zshrc 和提示符
 
 bash 启动时读取 `~/.bashrc`——zsh 读取的是 `~/.zshrc`。看看 zsh-newuser-install 创建的文件：
@@ -189,30 +199,18 @@ fish 希望无需配置就能立即上手：彩色显示、Tab 补全以及**自
 
 ### 安装并启动 fish
 
-:::debian
+fish 也用同样的方式通过 apt 安装——在其他发行版上则用各自的包管理器：
+
 ```sh
 sudo apt update
 sudo apt install fish
 ```
-:::
-
-:::arch
-```sh
-sudo pacman -S fish
-```
-:::
-
-:::redhat
-```sh
-sudo dnf install fish
-```
-:::
 
 ```sh
 fish
 ```
 
-fish 会向你打招呼，提示符变成 `elev@{{hostname}} ~>`。往下进入几层目录，看看 fish 是如何缩短提示符中的路径的：
+fish 会向你打招呼，提示符变成 `elev@ubuntu ~>`。往下进入几层目录，看看 fish 是如何缩短提示符中的路径的：
 
 ```sh
 mkdir -p ~/dokument/projekt
@@ -270,6 +268,16 @@ set -e frukt
 set frukter äpple päron banan
 echo $frukter[2]
 count $frukter
+```
+
+`-c` 在 fish 中也能用。最后一条命令会打印什么？
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y fish > /dev/null 2>&1
+$ fish -c 'set frukter äpple päron banan; echo $frukter[3]'
+banan
+---
+fish 列表中的元素从 1 开始编号，所以 `[3]` 是第三个，也是最后一个元素。
 ```
 
 ### 命令替换和 $status
@@ -372,6 +380,15 @@ exit
 
 这个脚本在 fish 中可以正常运行，尽管 `name=Kim` 在 fish 中是不允许的——因为运行它的是 bash。这就是 `#!/bin/bash`（或 `#!/usr/bin/env bash`）如此重要的原因。一个必须在任何地方都能运行的脚本——即使在没有 bash 的地方——要用 `#!/bin/sh` 并且只使用 POSIX 语法来编写。
 
+```quiz
+你正在 fish 中运行一个以 `#!/bin/bash` 开头、并且包含 `count=3` 这一行的脚本。会发生什么？
+- [ ] fish 拒绝运行，因为 fish 中不允许 `count=3`
+- [x] 它能正常运行——无论你在哪个 shell 中，运行这个脚本的都是 bash
+- [ ] 只有先用 `chsh` 把登录 shell 改成 bash 才能运行
+---
+`#!` 行决定了由哪个 shell 来运行脚本。fish 只是启动它。
+```
+
 ## 用 chsh 更改默认 shell
 
 每次打开终端都要输入 `zsh`，很快就会让人厌烦。用 `chsh`（*change shell*，更改 shell）可以更改你的**登录 shell**——也就是 `/etc/passwd` 中的那一个：
@@ -386,14 +403,6 @@ grep elev /etc/passwd
 - 更改在**下次登录**时生效。你已经打开的终端会保留原来的 shell，而 `$SHELL` 要等你重新登录后才会改变。
 - root 可以为其他用户更改 shell：`sudo chsh -s /usr/bin/fish kim`。
 
-:::arch
-在 Arch 上，`chsh -l` 会列出所有有效的 shell。
-:::
-
-:::redhat
-在 Fedora 上，`chsh -l` 会列出所有有效的 shell。
-:::
-
 要切换回 bash，做法相同：
 
 ```sh
@@ -401,6 +410,17 @@ chsh -s /bin/bash
 ```
 
 对于 fish，一个常见的建议是保留 bash 作为登录 shell，而让终端程序去启动 fish——这样所有在登录时需要 POSIX shell 的东西都能继续正常工作。
+
+下面的问题从一个全新的终端开始，安装 zsh 并把它设为登录 shell。最后一条命令会打印什么？
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
+$ chsh -s /usr/bin/zsh > /dev/null 2>&1
+$ echo $SHELL
+/bin/bash
+---
+`chsh` 修改了 `/etc/passwd` 中你的那一行，但更改要到下次登录时才生效。你已经打开的终端仍然使用 bash，`$SHELL` 也一样。
+```
 
 ## 该选择哪个 shell？
 

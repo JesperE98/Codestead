@@ -37,9 +37,7 @@ ls /usr/lib/systemd/system
 ls /etc/systemd/system
 ```
 
-:::debian
 较旧的 Debian 和 Ubuntu 版本经常写的是 `/lib/systemd/system`。这是同一个目录——`/lib` 是指向 `/usr/lib` 的链接。
-:::
 
 服务的名字就是文件名，例如 `minserver.service`。输入命令时可以省略 `.service`：`systemctl status minserver` 也一样能用。
 
@@ -47,40 +45,27 @@ ls /etc/systemd/system
 
 你最常用的命令是 `systemctl status`：
 
-:::debian
 ```sh
 systemctl status ssh
 ```
-:::
 
-:::arch
-```sh
-systemctl status sshd
-```
-:::
-
-:::redhat
-```sh
-systemctl status sshd
-```
-:::
-
-输出大致如下：
+在 Ubuntu 上，SSH 服务器叫 `ssh`。输出大致如下：
 
 ```text
-● sshd.service - OpenSSH server daemon
-     Loaded: loaded (/usr/lib/systemd/system/sshd.service; enabled; preset: disabled)
-     Active: active (running) since Fri 2026-10-30 07:54:07 CET; 2h 13min ago
+● ssh.service - OpenBSD Secure Shell server
+     Loaded: loaded (/usr/lib/systemd/system/ssh.service; enabled; preset: enabled)
+     Active: active (running) since Fri 2026-10-30 07:54:07 UTC; 2h 13min ago
        Docs: man:sshd(8)
+             man:sshd_config(5)
    Main PID: 733 (sshd)
       Tasks: 1 (limit: 9387)
      Memory: 10.1M
-     CGroup: /system.slice/sshd.service
+     CGroup: /system.slice/ssh.service
              └─733 /usr/sbin/sshd -D
 
-Oct 30 07:54:07 fedora systemd[1]: Starting sshd.service - OpenSSH server daemon...
-Oct 30 07:54:07 fedora sshd[733]: Server listening on 0.0.0.0 port 22.
-Oct 30 07:54:07 fedora systemd[1]: Started sshd.service - OpenSSH server daemon.
+Oct 30 07:54:07 ubuntu systemd[1]: Starting ssh.service - OpenBSD Secure Shell server...
+Oct 30 07:54:07 ubuntu sshd[733]: Server listening on 0.0.0.0 port 22.
+Oct 30 07:54:07 ubuntu systemd[1]: Started ssh.service - OpenBSD Secure Shell server.
 ```
 
 逐行解释：
@@ -149,6 +134,17 @@ systemctl is-enabled minserver
 if systemctl is-active -q minserver; then echo "the server is running"; fi
 ```
 
+在模拟器中一台刚刚启动的计算机上，`minserver` 正在运行，但没有人启用过它。下面这两条命令会打印什么？
+
+```predict
+$ systemctl is-active minserver
+$ systemctl is-enabled minserver
+active
+disabled
+---
+minserver **现在**正在运行，但没有人运行过 `enable`——重启之后它就不会被启动。`start` 和 `enable` 确实是两回事。
+```
+
 ## 列出服务
 
 ```sh
@@ -208,7 +204,18 @@ journal 中的每一行都有一个**优先级**（priority）。`-p` 会显示�
 
 如果 `journalctl -p err` 显示了几条像 `ACPI BIOS Error` 这样的内核错误，不用担心。几乎每台计算机上都有这类错误，它们通常是无害的——是计算机固件中的 bug，内核会绕过它们。
 
-通常，你必须是 root，或者是允许读取 journal 的用户组的成员（在 Debian 和 Ubuntu 中是 `adm` 或 `systemd-journal`，在 Arch 和 Fedora 中是 `wheel`），才能看到全部内容。模拟器中的用户可以读取整个 journal。
+通常，你必须是 root，或者是允许读取 journal 的用户组的成员（在 Ubuntu 上是 `adm` 或 `systemd-journal`——其他家族使用别的组），才能看到全部内容。模拟器中的用户可以读取整个 journal。
+
+```quiz
+`journalctl -p warning` 会显示哪些优先级？
+- [x] `err`
+- [x] `warning`
+- [x] `crit`
+- [ ] `notice`
+- [ ] `info`
+---
+`-p` 会显示你选择的优先级*以及所有更严重的级别*——也就是数字相同或更小的所有级别（`warning` 是 4）。
+```
 
 ## 排查无法启动的服务
 
@@ -244,6 +251,16 @@ journal 中的每一行都有一个**优先级**（priority）。`-p` 会显示�
    ```
 
 `Main process exited, code=exited, status=1/FAILURE` 这一行表示程序自己因错误而退出了。如果显示的是 `status=203/EXEC`，说明 systemd 根本找不到这个程序——检查 `ExecStart=` 中的路径。
+
+```quiz
+某个服务无法启动，journal 中显示 `status=203/EXEC`。你首先应该检查哪里？
+- [ ] `/etc/fstab`
+- [x] 单元文件中 `ExecStart=` 的路径
+- [ ] 用 `journalctl -p err` 查看优先级
+- [ ] 哪儿都不用看——这表示程序自己因错误而退出了
+---
+203/EXEC 表示 systemd 根本找不到这个程序。如果程序启动后因错误而退出，显示的则是 `status=1/FAILURE`。
+```
 
 ## 单元文件——`systemctl cat`
 
@@ -281,34 +298,40 @@ sudo systemctl daemon-reload
 
 永远不要编辑 `/usr/lib/systemd/system` 中的文件——下次软件包更新时它们会被覆盖。应该把你自己的版本放到 `/etc/systemd/system` 中。
 
-## 不同家族中的不同名字
+```quiz
+你想修改一个随软件包附带的服务的启动方式。正确的做法是什么？
+- [ ] 编辑它在 `/usr/lib/systemd/system` 中的文件，然后重启服务
+- [x] 把你自己的版本放到 `/etc/systemd/system` 中，运行 `sudo systemctl daemon-reload`，然后重启服务
+- [ ] 把你自己的版本放到 `/etc/systemd/system` 中——systemd 会自己发现这个修改
+- [ ] 编辑 `/usr/lib/systemd/system` 中的文件，然后对它运行 `sudo systemctl enable`
+---
+`/etc/systemd/system` 中的文件优先，而且软件包更新时它们不会被覆盖。`daemon-reload` 让 systemd 重新加载修改过的单元文件。
+```
 
-systemd 在所有地方的用法都一样，但**服务的名字并不总是相同的**。这取决于软件包叫什么名字，以及发行版选择了哪些程序：
+## 服务都叫什么名字？
 
-| 服务 | Debian/Ubuntu | Arch | Fedora |
-|---|---|---|---|
-| SSH 服务器 | `ssh`（别名 `sshd`） | `sshd` | `sshd` |
-| 定时任务（cron） | `cron` | `cronie`（默认未安装） | `crond` |
-| 网络 | `NetworkManager`（Ubuntu）、`networking`（Debian） | `systemd-networkd` | `NetworkManager` |
-| 防火墙 | `ufw`（如果已安装） | – | `firewalld` |
-| 时钟 | `systemd-timesyncd` | `systemd-timesyncd` | `chronyd` |
+systemd 在所有地方的用法都一样，但**服务的名字并不总是相同的**——这取决于软件包叫什么名字，以及发行版选择了哪些程序。在 Ubuntu 上：
 
-:::debian
-在 {{distro}} 中，SSH 服务叫 `ssh.service`。它有一个别名 `sshd.service`，所以 `systemctl status sshd` 也能用——但输出中显示的是真正的名字。
-:::
+| 服务 | 在 Ubuntu 上的名字 |
+|---|---|
+| SSH 服务器 | `ssh`（别名 `sshd`） |
+| 定时任务（cron） | `cron` |
+| 网络 | `NetworkManager` |
+| 防火墙 | `ufw`（如果已安装） |
+| 时钟 | `systemd-timesyncd` |
 
-:::arch
-Arch 默认几乎不安装任何服务——由你自己选择。例如，这里没有运行任何 cron 服务；Arch 改用 systemd **timer**（定时器）。如果你想用 cron，就安装 `cronie` 软件包，然后运行 `sudo systemctl enable --now cronie`。还要记住，Arch 的设置是 `preset: disabled`：安装新服务时，它们永远不会被自动启用。
-:::
-
-:::redhat
-Fedora 一开始就运行着 `firewalld`，时间同步由 `chronyd` 负责。Fedora 对大多数服务也使用 `preset: disabled`：当你安装一个新服务（例如 Web 服务器）时，必须自己运行 `sudo systemctl enable --now …`。
-:::
+SSH 服务真正的名字是 `ssh.service`。它有一个别名 `sshd.service`，所以 `systemctl status sshd` 也能用——但输出中显示的是真正的名字。其他家族可能会给同样的服务起不同的名字（在 Arch 和 Fedora 上，SSH 服务叫 `sshd`）——关于发行版和软件包的部分讲的就是这类差异。
 
 不确定某个服务叫什么？在列表中搜索：
 
 ```sh
 systemctl list-unit-files | grep ssh
+```
+
+```try
+systemctl list-unit-files | grep ssh
+---
+`ssh.service` 是真正的单元文件，而 `sshd.service` 被列为它的 `alias`（别名）。
 ```
 
 ## 重启计算机
