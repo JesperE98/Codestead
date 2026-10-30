@@ -4,7 +4,8 @@
     <RootNamespace>Codestead.Linux</RootNamespace>
     <AssemblyName>Codestead.Linux</AssemblyName>
     <AssemblyTitle>$(CodesteadLinuxName)</AssemblyTitle>
-    <Version>$(CodesteadLinuxVersion)</Version>
+    <!-- The release workflow passes the full version (-p:Version=x.y.z); local builds are x.y.0. -->
+    <Version>$(CodesteadLinuxVersion).0</Version>
     <ApplicationIcon>../../build/icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>

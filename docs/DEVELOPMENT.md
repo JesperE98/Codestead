@@ -28,8 +28,12 @@ installation i release-flödet.
 
 ## Namn och version
 
-Produktnamn, id:n och versioner finns **bara** i `build/Codestead.props`
-(`CodesteadLinuxVersion`, `CodesteadHubVersion`). Byt namn där.
+Produktnamn, id:n och versioner finns **bara** i `build/Codestead.props`. Byt namn där.
+
+Versionerna anges bara som `major.minor` (`CodesteadLinuxVersion` = `0.5`, `CodesteadHubVersion` = `0.1`).
+Patchnumret sätts av release-flödet: varje ändring av en produkt som når `main` blir nästa version
+(0.5.0, 0.5.1, 0.5.2 …). Vilka filer som hör till en produkt står i `packaging/products.json`
+(`paths`). För nästa större version ändrar du `0.5` till `0.6`. Lokala byggen får versionen `x.y.0`.
 
 ## Projektstruktur
 
@@ -127,13 +131,13 @@ att inget har glömts.
 Allt byggs av GitHub Actions (`.github/workflows/release.yml`), för varje produkt i
 `packaging/products.json` (Codestead Linux och hubben):
 
-1. Höj versionen i `build/Codestead.props`, t.ex. `CodesteadLinuxVersion` 0.4.0 → 0.5.0.
-2. Slå ihop ändringen till `main`.
+1. Slå ihop ändringarna till `main`. Flödet (`packaging/plan.py`) räknar ut nästa patchversion för
+   varje produkt som ändrats sedan dess senaste release.
 
 Flödet bygger alla produkter och installerar och startar dem på rena system (Windows Server 2022/2025,
 Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS). Hubben får dessutom installera och starta Codestead
-Linux från en signerad katalog. Därefter publiceras varje produkt vars version saknar release i det
-offentliga repot `jesper-e98/codestead-releases`:
+Linux från en signerad katalog. Därefter publiceras de ändrade produkterna i det offentliga repot
+`jesper-e98/codestead-releases` – men bara när båda secrets nedan finns (annars en varning, inget fel):
 
 | Release | Innehåll |
 |---|---|

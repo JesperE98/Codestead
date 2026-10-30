@@ -11,9 +11,13 @@
     <CodesteadHubId>codestead-hub</CodesteadHubId>
     <CodesteadPublisher>jesper-e98</CodesteadPublisher>
     <CodesteadReleasesRepo>jesper-e98/codestead-releases</CodesteadReleasesRepo>
-    <!-- Versions: raise one to release that product (see .github/workflows/release.yml). -->
-    <CodesteadLinuxVersion>0.4.0</CodesteadLinuxVersion>
-    <CodesteadHubVersion>0.1.0</CodesteadHubVersion>
+    <!--
+      Versions: major.minor only. The release workflow adds the patch number itself (0.5.0, 0.5.1 ...):
+      every change to a product that reaches main becomes the next patch release. For 0.6 change 0.5 to 0.6.
+      Local builds are x.y.0.
+    -->
+    <CodesteadLinuxVersion>0.5</CodesteadLinuxVersion>
+    <CodesteadHubVersion>0.1</CodesteadHubVersion>
     <Company>$(CodesteadPublisher)</Company>
     <Product>$(CodesteadBrand)</Product>
     <Copyright>Copyright © 2026 jesper-e98. All rights reserved.</Copyright>

@@ -3,16 +3,19 @@ name: Release
 # Builds, tests and publishes every Codestead product listed in packaging/products.json
 # (today: Codestead Linux and the hub "Codestead").
 #
-# How a new version is released:
-#   1. Raise the product's version in build/Codestead.props (CodesteadLinuxVersion / CodesteadHubVersion).
-#   2. Merge the change to main.
+# How versions work (packaging/products.json, build/Codestead.props):
+#   build/Codestead.props holds only major.minor per product (CodesteadLinuxVersion = 0.5).
+#   Every push to main that changes a product's files (its "paths" in products.json) since its last
+#   release becomes the next patch release: 0.5.0, 0.5.1, 0.5.2 ... For 0.6, change 0.5 to 0.6.
 #   => Windows and Linux artifacts are built for every product, installed and smoke-tested on clean
 #      systems (Windows Server 2022/2025, Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS), the hub
-#      installs and starts the tool end to end, and only then each product whose version has no
-#      release yet is published in the public repository jesper-e98/codestead-releases:
+#      installs and starts the tool end to end, and only then the changed products are published in
+#      the public repository jesper-e98/codestead-releases:
 #        <id>-v<version>   the release with all files (e.g. codestead-linux-v0.5.0)
 #        <id>-latest       the same files without version in the name + the Velopack update feed
 #        catalog           catalog.json + catalog.json.sig, read by the hub
+#   Each release records the source commit it was built from (a hidden comment in its notes); that is
+#   how the next run knows what changed. Nothing is published until both secrets below exist.
 #
 # Run it by hand under Actions -> "Release" -> "Run workflow" to build and test without
 # publishing (or tick "publish" to publish from the selected branch).
@@ -53,6 +56,8 @@ jobs:
       publish: ${{ steps.plan.outputs.publish }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the whole history, to see what changed since the last release
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
@@ -60,26 +65,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.RELEASES_TOKEN || github.token }}
           WANT_PUBLISH: ${{ github.event_name == 'push' || inputs.publish == true }}
-        run: |
-          python3 - <<'EOF'
-          import json, os, subprocess
-          products, publish = [], []
-          for p in json.load(open("packaging/products.json")):
-              out = subprocess.check_output(["dotnet", "msbuild", p["project"], "-getProperty:Version", "-getProperty:AssemblyName",
-                                             f"-getProperty:{p['idProperty']}", f"-getProperty:{p['nameProperty']}"], text=True)
-              props = json.loads(out)["Properties"]
-              product = {"key": p["key"], "id": props[p["idProperty"]], "name": props[p["nameProperty"]], "version": props["Version"],
-                         "exe": props["AssemblyName"], "project": p["project"], "summary": p["summary"]}
-              products.append(product)
-              tag = f"{product['id']}-v{product['version']}"
-              exists = subprocess.run(["gh", "release", "view", tag, "--repo", os.environ["RELEASES_REPO"]], capture_output=True).returncode == 0
-              if os.environ["WANT_PUBLISH"] == "true" and not exists:
-                  publish.append(product)
-              print(f"{product['name']} {product['version']}: " + ("already released" if exists else "new version") + (", will be published" if product in publish else ""))
-          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write(f"products={json.dumps(products)}\n")
-              f.write(f"publish={json.dumps(publish)}\n")
-          EOF
+          SECRETS_OK: ${{ secrets.RELEASES_TOKEN != '' && secrets.CATALOG_SIGNING_KEY != '' }}
+        run: python3 packaging/plan.py
 
   # The tests run once; the packaging jobs below only build.
   test:
@@ -276,7 +263,9 @@ jobs:
       - name: Publish release ${{ matrix.product.id }}-v${{ matrix.product.version }}
         run: |
           notes=".github/release-notes/$ID.md"
-          gh release create "$ID-v$VERSION" release/* --repo "$RELEASES_REPO" --title "$NAME $VERSION" --notes-file "$notes" --latest=false
+          # The hidden source comment tells the next run what changed since this release (packaging/plan.py).
+          { cat "$notes"; echo; echo "<!-- codestead-source: $GITHUB_SHA -->"; } > "$RUNNER_TEMP/notes.md"
+          gh release create "$ID-v$VERSION" release/* --repo "$RELEASES_REPO" --title "$NAME $VERSION" --notes-file "$RUNNER_TEMP/notes.md" --latest=false
       - name: Update ${{ matrix.product.id }}-latest
         run: |
           tag="$ID-latest"
