@@ -10,16 +10,8 @@
       "hint": "`ping -c 3 192.168.1.1` – `-c` stands for *count*."
     },
     "dig": {
-      "text": {
-        "debian": "Install the package `dnsutils` and look up the IP address of `example.com` with `dig`.",
-        "arch": "Install the package `bind` and look up the IP address of `example.com` with `dig`.",
-        "redhat": "Install the package `bind-utils` and look up the IP address of `example.com` with `dig`."
-      },
-      "hint": {
-        "debian": "`sudo apt update`, `sudo apt install dnsutils` and then `dig +short example.com`.",
-        "arch": "`sudo pacman -S bind` and then `dig +short example.com`.",
-        "redhat": "`sudo dnf install bind-utils` and then `dig +short example.com`."
-      }
+      "text": "Install the package `dnsutils` and look up the IP address of `example.com` with `dig`.",
+      "hint": "`sudo apt update`, `sudo apt install dnsutils` and then `dig +short example.com`."
     },
     "ss": {
       "text": "Find out which ports are listening on the computer with `ss`.",
@@ -27,11 +19,7 @@
     },
     "curl-localhost": {
       "text": "Fetch the start page of the practice server on your own computer, `http://localhost:8080`, with `curl`.",
-      "hint": {
-        "debian": "On Debian/Ubuntu curl must be installed: `sudo apt install curl`. If you get *Couldn't connect to server*, minserver is stopped – start it with `minserver`.",
-        "arch": "`curl http://localhost:8080`. If you get *Couldn't connect to server*, minserver is stopped – start it with `minserver`.",
-        "redhat": "`curl http://localhost:8080`. If you get *Couldn't connect to server*, minserver is stopped – start it with `minserver`."
-      }
+      "hint": "On Ubuntu curl must be installed: `sudo apt install curl`. If you get *Couldn't connect to server*, minserver is stopped – start it with `minserver`."
     },
     "spara": {
       "text": "Save the web page `https://example.com` as the file `~/exempel.html`.",
@@ -43,11 +31,7 @@
     },
     "ssh": {
       "text": "Run the command `hostname` on the server `server.lan` with `ssh` as the user `elev`.",
-      "hint": {
-        "debian": "`ssh elev@server.lan hostname` – and answer `yes` to the question about the host key.",
-        "arch": "First install the ssh client: `sudo pacman -S openssh`. Then `ssh elev@server.lan hostname` – and answer `yes` to the question about the host key.",
-        "redhat": "`ssh elev@server.lan hostname` – and answer `yes` to the question about the host key."
-      }
+      "hint": "`ssh elev@server.lan hostname` – and answer `yes` to the question about the host key."
     }
   }
 }
