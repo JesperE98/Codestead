@@ -30,6 +30,16 @@
 того, что ей разрешено, например до сети или до папки загрузок, а не до всего
 вашего домашнего каталога.
 
+```quiz
+Какой формат обновляется автоматически в фоне?
+- [ ] Flatpak
+- [x] Snap
+- [ ] AppImage
+---
+Программы Flatpak обновляются командой `flatpak update`, а AppImage заменяют,
+скачав новый файл.
+```
+
 ## Flatpak
 
 Flatpak – это формат, на котором для настольных программ сошлось большинство
@@ -117,6 +127,16 @@ flatpak install --user flathub org.videolan.VLC
 flatpak list --user
 ```
 
+```quiz
+Что происходит, когда вы устанавливаете Flatpak с `--user`?
+- [ ] Он устанавливается для всей системы, в `/var/lib/flatpak`
+- [x] Он попадает в ваш домашний каталог, и другие пользователи его не видят
+- [ ] Он работает без песочницы
+---
+Помните, что у пользовательской установки свои remote – Flathub тоже нужно
+добавить с `--user`.
+```
+
 ### Обновление и удаление
 
 ```sh
@@ -149,8 +169,8 @@ sudo apt install snapd
 :::arch
 ### Snap в Arch
 
-Snap нет в репозиториях Arch – только в AUR. Соберите его, как в предыдущей
-главе:
+Snap нет в репозиториях Arch – только в AUR. Соберите его, как в главе о
+семействе Arch:
 
 ```sh
 sudo pacman -S --needed git base-devel
@@ -200,6 +220,14 @@ sudo snap install code
 sudo snap install code --classic
 ```
 
+```quiz
+Snap опубликован с ограничением classic. Что нужно добавить, чтобы его
+установить?
+- [ ] `--user`
+- [x] `--classic`
+- [ ] `--channel=edge`
+```
+
 ### Каналы и обновления
 
 У каждого snap есть **каналы**: `stable`, `candidate`, `beta` и `edge`
@@ -230,12 +258,27 @@ cd ~/Nedladdningar
 ls -l
 ```
 
+Что произойдёт, если сразу его запустить?
+
+```predict
+$ ~/Nedladdningar/Kalkylator.AppImage
+bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+---
+У файла нет права `x`.
+```
+
 Скачанные файлы изначально никогда не бывают исполняемыми. Сделайте файл
 исполняемым и запустите его (*Kalkylator* по-шведски – «калькулятор»):
 
 ```sh
 chmod +x Kalkylator.AppImage
 ./Kalkylator.AppImage
+```
+
+```try
+chmod +x ~/Nedladdningar/Kalkylator.AppImage
+---
+Теперь файл исполняемый. Проверьте с помощью `ls -l ~/Nedladdningar`.
 ```
 
 ### FUSE
