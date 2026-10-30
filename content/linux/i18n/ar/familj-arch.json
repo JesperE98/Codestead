@@ -1,0 +1,59 @@
+{
+  "title": "عائلة Arch: pacman والـ AUR",
+  "tasks": {
+    "sync": {
+      "text": "زامِن قاعدة بيانات الحزم ورقِّ النظام باستخدام `pacman -Syu`.",
+      "hint": "الأمر يغيّر النظام ويتطلب صلاحيات root: `sudo pacman -Syu`."
+    },
+    "search": {
+      "text": "ابحث عن الحزمة `htop`.",
+      "hint": "`pacman -Ss htop`"
+    },
+    "install": {
+      "text": "ثبّت الحزمة `tree`.",
+      "hint": "`sudo pacman -S tree` وأجب بنعم على السؤال."
+    },
+    "run-tree": {
+      "text": "شغّل `tree` في مجلد المنزل الخاص بك."
+    },
+    "remove": {
+      "text": "أزل الحزمة `tree` مرة أخرى.",
+      "hint": "`sudo pacman -R tree`"
+    },
+    "upgrade": {
+      "text": "رقِّ كل الحزم المثبّتة.",
+      "hint": "`sudo pacman -Syu` يفعل كل شيء دفعة واحدة."
+    },
+    "forbered": {
+      "text": "ثبّت ما تحتاج إليه لبناء الحزم من الـ AUR: `git` و`base-devel`.",
+      "hint": "`sudo pacman -S --needed git base-devel`"
+    },
+    "lagg-till": {
+      "text": "نزّل وصفة البناء لحزمة الـ AUR `moonphase` إلى مجلد المنزل الخاص بك باستخدام `git clone`. العنوان هو `https://aur.archlinux.org/moonphase.git`.",
+      "hint": "`cd ~` ثم `git clone https://aur.archlinux.org/moonphase.git`"
+    },
+    "granska": {
+      "text": "اقرأ وصفة البناء `PKGBUILD` قبل أن تبني أي شيء!",
+      "hint": "`cd ~/moonphase` ثم `less PKGBUILD` (أو `cat PKGBUILD`)."
+    },
+    "installera": {
+      "text": "ابنِ `moonphase` وثبّته باستخدام `makepkg`.",
+      "hint": "قف في المجلد `~/moonphase` وشغّل `makepkg -si` – دون sudo!"
+    },
+    "kor": {
+      "text": "شغّل البرنامج `moonphase`."
+    },
+    "ursprung": {
+      "text": "اعرض كل الحزم المثبّتة التي لا تأتي من مستودعات Arch نفسها.",
+      "hint": "تسمى هذه الحزم *foreign* (أجنبية): `pacman -Qm`"
+    },
+    "efterat": {
+      "text": "مهمة إضافية: ثبّت أداة الـ AUR المساعدة `yay` (حزمة الـ AUR `yay-bin`) واستخدمها لتثبيت حزمة الـ AUR `snowfall`.",
+      "hint": "كما فعلت من قبل: `cd ~`، و`git clone https://aur.archlinux.org/yay-bin.git`، و`cd yay-bin`، و`makepkg -si`. ثم `yay -S snowfall` – دون sudo."
+    },
+    "vim": {
+      "text": "مهمة إضافية: ثبّت محرر النصوص Vim.",
+      "hint": "ابحث باستخدام `pacman -Ss vim`. اسم الحزمة `vim`."
+    }
+  }
+}

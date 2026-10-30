@@ -2,12 +2,8 @@
   "title": "الخدمات والسجلات مع systemd",
   "tasks": {
     "status-ssh": {
-      "text": "اعرض حالة خادم SSH باستخدام `systemctl status`. فكّر في اسم الخدمة في عائلة توزيعتك!",
-      "hint": {
-        "debian": "في عائلة Debian تُسمّى الخدمة `ssh`: `systemctl status ssh`.",
-        "arch": "في Arch تُسمّى الخدمة `sshd`: `systemctl status sshd`.",
-        "redhat": "في Fedora تُسمّى الخدمة `sshd`: `systemctl status sshd`."
-      }
+      "text": "اعرض حالة خادم SSH باستخدام `systemctl status`. فكّر في اسم الخدمة على Ubuntu!",
+      "hint": "على Ubuntu تُسمّى الخدمة `ssh`: `systemctl status ssh`."
     },
     "failed": {
       "text": "يبدو أن إحدى الخدمات لم تبدأ. اسرد كل الخدمات التي *فشلت*.",

@@ -1,0 +1,59 @@
+{
+  "title": "عائلة Debian: apt ومستودعات PPA",
+  "tasks": {
+    "sync": {
+      "text": "نزّل أحدث قوائم الحزم باستخدام `apt update`.",
+      "hint": "الأمر يغيّر النظام ويتطلب صلاحيات root: `sudo apt update`."
+    },
+    "search": {
+      "text": "ابحث عن الحزمة `htop`.",
+      "hint": "`apt search htop`"
+    },
+    "install": {
+      "text": "ثبّت الحزمة `tree`.",
+      "hint": "`sudo apt install tree`"
+    },
+    "run-tree": {
+      "text": "شغّل `tree` في مجلد المنزل الخاص بك."
+    },
+    "remove": {
+      "text": "أزل الحزمة `tree` مرة أخرى.",
+      "hint": "`sudo apt remove tree`"
+    },
+    "upgrade": {
+      "text": "رقِّ كل الحزم المثبّتة.",
+      "hint": "بعد `sudo apt update`، شغّل `sudo apt upgrade`."
+    },
+    "forbered": {
+      "text": "تأكّد من أن الأمر `add-apt-repository` متاح لديك. وهو في الحزمة `software-properties-common` – المثبّتة مسبقًا على Ubuntu، لكن ليس على Debian.",
+      "hint": "`sudo apt update` ثم `sudo apt install software-properties-common`."
+    },
+    "lagg-till": {
+      "text": "أضف الـ PPA `ppa:lunatool/moonphase`.",
+      "hint": "`sudo add-apt-repository ppa:lunatool/moonphase` – واضغط Enter عندما يسألك."
+    },
+    "granska": {
+      "text": "ألقِ نظرة داخل الملف الذي أنشأه `add-apt-repository` في `/etc/apt/sources.list.d/`.",
+      "hint": "`ls /etc/apt/sources.list.d` ثم استخدم `cat` مع الملف الذي يبدأ اسمه بـ `lunatool`."
+    },
+    "installera": {
+      "text": "ثبّت الحزمة `moonphase` من الـ PPA.",
+      "hint": "لقد شغّل `add-apt-repository` الأمر `apt update` نيابةً عنك، لذا يكفي `sudo apt install moonphase`."
+    },
+    "kor": {
+      "text": "شغّل البرنامج `moonphase`."
+    },
+    "ursprung": {
+      "text": "اكتشف من أين يأتي `moonphase`.",
+      "hint": "`apt policy moonphase`"
+    },
+    "efterat": {
+      "text": "أزل الـ PPA مرة أخرى. يبقى البرنامج، لكنه لا يحصل على تحديثات بعد ذلك.",
+      "hint": "`sudo add-apt-repository --remove ppa:lunatool/moonphase`"
+    },
+    "vim": {
+      "text": "مهمة إضافية: ثبّت محرر النصوص Vim.",
+      "hint": "ابحث باستخدام `apt search vim`. اسم الحزمة `vim`."
+    }
+  }
+}
