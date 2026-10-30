@@ -63,7 +63,7 @@ function evalTest(args: string[], ctx: CmdCtx, extended: boolean): boolean {
         try {
           return new RegExp(b).test(a);
         } catch {
-          throw new TestError(`${b}: ogiltigt reguljärt uttryck`);
+          throw new TestError(`${b}: invalid regular expression`);
         }
       case '-eq':
         return toInt(a) === toInt(b);
@@ -266,7 +266,10 @@ I SIMULATORN
       return 0;
     }
     ctx.err(
-      `bash: read: ingen indata\n${COLOR.dim}I simulatorn kan read inne i skript bara läsa från en pipe eller en fil, t.ex. "echo text | ./skript.sh".${COLOR.reset}\n`,
+      `bash: read: ${ctx.sh.msg({ sv: 'ingen indata', en: 'no input' })}\n${COLOR.dim}${ctx.sh.msg({
+        sv: 'I simulatorn kan read inne i skript bara läsa från en pipe eller en fil, t.ex. "echo text | ./skript.sh".',
+        en: 'In the simulator, read inside a script can only read from a pipe or a file, e.g. "echo text | ./script.sh".',
+      })}${COLOR.reset}\n`,
     );
     return 1;
   },

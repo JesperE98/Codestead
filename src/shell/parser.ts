@@ -407,7 +407,7 @@ class Parser {
       this.i++;
       if (t.v === '<<' || t.v === '<<-') {
         const body = this.peek();
-        if (!body || body.t !== 'hdbody') throw new ParseError('here-document saknar innehåll', true);
+        if (!body || body.t !== 'hdbody') throw new ParseError('here-document has no body', true);
         this.i++;
         redirects.push({ op: t.v, target: target.w, body: body.body, expand: !body.quoted });
         continue;

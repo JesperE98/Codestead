@@ -6,7 +6,8 @@ import { AwkFatal, AwkInterpreter, AwkSyntaxError, parseAwk } from './awk';
 import { groupCount, toJsRegex } from './regex';
 import { COLOR, fsMessage, splitLines } from './util';
 
-const dimNote = (ctx: CmdCtx, text: string) => ctx.err(`${COLOR.dim}(simulatorn: ${text})${COLOR.reset}\n`);
+const dimNote = (ctx: CmdCtx, text: { sv: string; en: string }) =>
+  ctx.err(`${COLOR.dim}(${ctx.sh.msg({ sv: 'simulatorn', en: 'simulator' })}: ${ctx.sh.msg(text)})${COLOR.reset}\n`);
 
 // =====================================================================
 // tr
@@ -724,7 +725,10 @@ SIMULATORN
       }
       if (e instanceof SedUnsupported) {
         ctx.err(`sed: unsupported command: \`${e.message}'\n`);
-        dimNote(ctx, `sed-kommandot ${e.message} stöds inte här – bara s, d, p, q, Q, y, =, a, i och c. Se \`man sed\`.`);
+        dimNote(ctx, {
+          sv: `sed-kommandot ${e.message} stöds inte här – bara s, d, p, q, Q, y, =, a, i och c. Se \`man sed\`.`,
+          en: `the sed command ${e.message} is not supported here – only s, d, p, q, Q, y, =, a, i and c. See \`man sed\`.`,
+        });
         return 1;
       }
       throw e;
@@ -802,7 +806,10 @@ SIMULATORN
 // awk
 // =====================================================================
 
-const AWK_NOTE = 'här finns bara en del av awk: mönster, BEGIN/END, fält, variabler, arrayer, if/while/for, print, printf och de vanligaste funktionerna. Se `man awk`.';
+const AWK_NOTE = {
+  sv: 'här finns bara en del av awk: mönster, BEGIN/END, fält, variabler, arrayer, if/while/for, print, printf och de vanligaste funktionerna. Se `man awk`.',
+  en: 'only part of awk is available here: patterns, BEGIN/END, fields, variables, arrays, if/while/for, print, printf and the most common functions. See `man awk`.',
+};
 
 const awk: CommandDef = {
   name: 'awk',
@@ -930,7 +937,12 @@ SIMULATORN
       const srcLine = program.slice(lineStart, lineEnd < 0 ? undefined : lineEnd);
       const prefix = `awk: ${label}:${lineNo}: `;
       ctx.err(`${prefix}${srcLine}\n${prefix}${' '.repeat(e.pos - lineStart)}^ ${e.message}\n`);
-      dimNote(ctx, e.unsupported ? `${e.unsupported} stöds inte – ${AWK_NOTE}` : AWK_NOTE);
+      dimNote(
+        ctx,
+        e.unsupported
+          ? { sv: `${e.unsupported.sv} stöds inte – ${AWK_NOTE.sv}`, en: `not supported: ${e.unsupported.en} – ${AWK_NOTE.en}` }
+          : AWK_NOTE,
+      );
       return 1;
     }
 
@@ -962,7 +974,10 @@ SIMULATORN
       if (e.message === '__reported__') return 2;
       if (e.message === '__steps__') {
         ctx.err(`awk: ${label}: fatal: program stopped\n`);
-        dimNote(ctx, 'programmet avbröts efter för många steg – kanske en oändlig loop?');
+        dimNote(ctx, {
+          sv: 'programmet avbröts efter för många steg – kanske en oändlig loop?',
+          en: 'the program was stopped after too many steps – an infinite loop, perhaps?',
+        });
       } else ctx.err(`awk: ${label}:1: fatal: ${e.message}\n`);
       return 2;
     }

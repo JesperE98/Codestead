@@ -194,7 +194,8 @@ export function stripAnsi(s: string): string {
 /** Formaterar en förenklad manualsida. */
 export function formatMan(name: string, body: string): string {
   const title = `${name.toUpperCase()}(1)`;
-  const mid = 'Simulerad manual';
+  // Svenska manualsidor börjar med NAMN, engelska med NAME.
+  const mid = /^\s*NAMN\b/.test(body) ? 'Simulerad manual' : 'Simulated manual';
   const pad = Math.max(1, Math.floor((72 - title.length * 2 - mid.length) / 2));
   return `${title}${' '.repeat(pad)}${mid}${' '.repeat(pad)}${title}\n\n${body.trim()}\n\n`;
 }
