@@ -10,6 +10,7 @@ import { getDistro, type Distro } from './distros';
 import { buildFs, STUDENT } from './initfs';
 import { installPackage, PACKAGES, packageProviding } from './packages';
 import { initialProcs, SHELL_PID, type Job, type ProcState } from './procs';
+import { initialServices, type ServiceState } from './services';
 import {
   escapeGlob,
   findClosingParen,
@@ -40,6 +41,7 @@ export interface ShellSnapshot {
   userStack: string[];
   functions?: Record<string, Node>;
   proc?: ProcState;
+  services?: ServiceState;
 }
 
 export interface ExecResult {
@@ -93,6 +95,8 @@ export class Shell {
   functions: Record<string, Node>;
   /** Processer och bakgrundsjobb. */
   proc: ProcState;
+  /** Tjänster (systemd) och journalen. */
+  services!: ServiceState;
   /** PID för det senast startade bakgrundsjobbet ($!). */
   lastBgPid: number | null = null;
   /** Inloggade användare; sista är aktiv. `sudo -i` lägger till root, `exit` tar bort. */
@@ -129,6 +133,7 @@ export class Shell {
     this.functions = s.functions ?? {};
     this.proc = s.proc ?? initialProcs(this.distro);
     this.userStack = s.userStack.length ? s.userStack : [STUDENT];
+    this.services = s.services ?? initialServices(this);
   }
 
   static create(distroId: string): Shell {
@@ -214,6 +219,7 @@ export class Shell {
       userStack: this.userStack,
       functions: this.functions,
       proc: this.proc,
+      services: this.services,
     };
   }
 

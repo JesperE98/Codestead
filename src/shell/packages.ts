@@ -209,6 +209,17 @@ export const PACKAGES: PackageDef[] = [
     archRepo: 'core',
   },
   {
+    id: 'systemd',
+    names: same('systemd'),
+    version: { debian: '255.4-1ubuntu8.11', arch: '258.1-1', redhat: '258-1.fc43' },
+    description: 'System and service manager (systemctl, journalctl ...)',
+    sizeKb: 31_000,
+    provides: ['systemctl', 'journalctl', 'hostnamectl', 'systemd-analyze', 'reboot'],
+    base: ALL,
+    essential: true,
+    archRepo: 'core',
+  },
+  {
     id: 'apt',
     names: { debian: 'apt' },
     version: { debian: '2.8.3', arch: '', redhat: '' },

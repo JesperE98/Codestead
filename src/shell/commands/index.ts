@@ -10,6 +10,7 @@ import { PKG_COMMANDS } from './pkg';
 import { PROC_COMMANDS } from './procs';
 import { SCRIPT_COMMANDS } from './script';
 import { SYSTEM_COMMANDS } from './system';
+import { SYSTEMD_COMMANDS } from './systemd';
 import { TEXT_COMMANDS } from './text';
 import { TEXTPROC_COMMANDS } from './textproc';
 
@@ -21,3 +22,6 @@ for (const def of [...FS_COMMANDS, ...TEXT_COMMANDS, ...SYSTEM_COMMANDS, ...PKG_
 
 // Arkiv och komprimering (tar, gzip, zip ...) samt du.
 for (const def of ARCHIVE_COMMANDS) COMMANDS[def.name] = def;
+
+// Tjänster och loggar (systemctl, journalctl, hostnamectl, systemd-analyze, reboot).
+for (const def of SYSTEMD_COMMANDS) COMMANDS[def.name] = def;
