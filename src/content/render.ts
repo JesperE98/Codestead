@@ -24,7 +24,7 @@ export function preprocess(md: string, d: Distro, lang: Lang = 'sv'): string {
   return md
     .replace(/\r\n?/g, '\n')
     .replace(/^:::(debian|arch|redhat)[ \t]*\n([\s\S]*?)\n:::[ \t]*$/gm, (_m, family: string, body: string) =>
-      family === d.family ? `<div class="distro-block" data-family="${family}">\n\n${body}\n\n</div>` : '',
+      family === d.family ? `<div class="distro-block" data-family="${family}" data-label="${values.family}">\n\n${body}\n\n</div>` : '',
     )
     .replace(/\{\{(\w+)\}\}/g, (m, key: string) => values[key] ?? m);
 }

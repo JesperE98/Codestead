@@ -505,20 +505,18 @@ a {
   font-weight: 700;
   letter-spacing: 0.03em;
   color: #fff;
+  content: attr(data-label);
 }
 
 .distro-block[data-family='debian']::before {
-  content: 'Debian-familjen';
   background: #c7254e;
 }
 
 .distro-block[data-family='arch']::before {
-  content: 'Arch-familjen';
   background: #1793d1;
 }
 
 .distro-block[data-family='redhat']::before {
-  content: 'Red Hat-familjen';
   background: #3c6eb4;
 }
 
