@@ -1,13 +1,12 @@
-node_modules/
-dist/
-release/
-*.log
-.DS_Store
-coverage/
-.claude/worktrees/
-
-# .NET
+# .NET build output
 bin/
 obj/
 *.user
 TestResults/
+
+# Release artifacts built locally (packaging/build-*.sh)
+artifacts/
+
+.DS_Store
+*.log
+.claude/worktrees/

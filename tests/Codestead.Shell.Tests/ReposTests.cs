@@ -437,8 +437,8 @@ public class ReposTests
     private static string RepoRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null && !Directory.Exists(Path.Combine(dir.FullName, "src", "content", "chapters"))) dir = dir.Parent;
-        return dir?.FullName ?? throw new DirectoryNotFoundException("src/content/chapters");
+        while (dir is not null && !Directory.Exists(Path.Combine(dir.FullName, "content", "linux", "chapters"))) dir = dir.Parent;
+        return dir?.FullName ?? throw new DirectoryNotFoundException("content/linux/chapters");
     }
 
     [Fact(DisplayName = "alla klickbara kommandon i kapiteltexterna fungerar")]
@@ -454,7 +454,7 @@ public class ReposTests
                 var t = new TestShell(d.Id);
                 foreach (var id in new[] { "extra-repon", "universella-paket" })
                 {
-                    var md = Preprocess(File.ReadAllText(Path.Combine(root, "src", "content", "chapters", lang, $"{id}.md")), d);
+                    var md = Preprocess(File.ReadAllText(Path.Combine(root, "content", "linux", "chapters", lang, $"{id}.md")), d);
                     var lines = ShBlock.Matches(md).SelectMany(m => m.Groups[1].Value.Split('\n').Where(l => l != "")).ToList();
                     foreach (var line in lines)
                     {

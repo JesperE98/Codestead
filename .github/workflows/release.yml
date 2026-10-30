@@ -28,6 +28,7 @@ on:
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: '1'
   DOTNET_NOLOGO: '1'
+  AVALONIA_TELEMETRY_OPTOUT: '1'
   RELEASES_REPO: jesper-e98/codestead-releases
   PKG_NAME: codestead-linux
   PKG_DISPLAY: Codestead Linux
@@ -160,6 +161,12 @@ jobs:
           # Velopack update feeds (auto-update of the Windows install and the AppImage).
           cp dist/windows/velopack-win/releases.win.json dist/windows/velopack-win/*.nupkg release/ 2>/dev/null || true
           cp dist/linux/velopack-linux/releases.linux.json dist/linux/velopack-linux/*.nupkg release/ 2>/dev/null || true
+          # Copies without the version in the name, so links to /releases/latest/download/<name> always work.
+          cp release/"$PKG_NAME"-*-win-x64-Setup.exe "release/$PKG_NAME-win-x64-Setup.exe"
+          cp release/"$PKG_NAME"-*-linux-x86_64.AppImage "release/$PKG_NAME-linux-x86_64.AppImage"
+          cp release/"${PKG_NAME}"_*_amd64.deb "release/${PKG_NAME}_amd64.deb"
+          cp release/"$PKG_NAME"-*-1.x86_64.rpm "release/$PKG_NAME.x86_64.rpm"
+          cp release/"$PKG_NAME"-*-1-x86_64.pkg.tar.zst "release/$PKG_NAME-x86_64.pkg.tar.zst"
           (cd release && sha256sum * > SHA256SUMS.txt)
           ls -la release
       - name: Publish to ${{ env.RELEASES_REPO }}

@@ -30,6 +30,10 @@ overrides:
       - libxrandr2
       - libxi6
       - libxcursor1
+    # Fonts for Chinese, Japanese, Arabic and Hindi (installed by default on desktop systems).
+    recommends:
+      - fonts-noto-core
+      - fonts-noto-cjk
   rpm:
     depends:
       - glibc
@@ -43,6 +47,11 @@ overrides:
       - libXrandr
       - libXi
       - libXcursor
+    recommends:
+      - google-noto-sans-fonts
+      - google-noto-sans-cjk-fonts
+      - google-noto-sans-arabic-fonts
+      - google-noto-sans-devanagari-fonts
   archlinux:
     depends:
       - glibc
