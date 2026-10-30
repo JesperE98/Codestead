@@ -6,9 +6,14 @@ import type { Distro, Family } from '../shell/distros';
 import type { Chapter, CheckCtx, Part } from './types';
 
 import { RUNAWAY_PID, SERVER_PID } from '../shell/procs';
+import { findGroup, findUser, shadowHash } from '../shell/users';
+import { partitionRoot, rootUuid, USB_PART } from '../shell/disks';
+import { extraRepoEnabled, parsePpa, ppaSourcesPath } from '../shell/extrarepo';
 import { gitGlobalConfig, gitIsAncestor, gitRepoState } from '../shell/commands/git';
 
 const HOME = '/home/elev';
+/** Filen som `add-apt-repository ppa:lunatool/moonphase` skapar. */
+const PPA_FILE = ppaSourcesPath(parsePpa('ppa:lunatool/moonphase')!);
 /** Övningsprojektet i kapitlet om git. */
 const WEB = `${HOME}/projekt-webb`;
 
@@ -533,6 +538,253 @@ export const CHAPTERS: Chapter[] = [
     ],
   },
   {
+    id: 'systemd',
+    part: 'admin',
+    title: 'Tjänster och loggar med systemd',
+    tasks: [
+      {
+        id: 'status-ssh',
+        perFamily: true,
+        text: 'Visa status för SSH-servern med `systemctl status`. Tänk på vad tjänsten heter i din distributionsfamilj!',
+        hint: byFamily({
+          debian: 'I Debian-familjen heter tjänsten `ssh`: `systemctl status ssh`.',
+          arch: 'I Arch heter tjänsten `sshd`: `systemctl status sshd`.',
+          redhat: 'I Fedora heter tjänsten `sshd`: `systemctl status sshd`.',
+        }),
+        solution: byFamily({
+          debian: ['systemctl status ssh'],
+          arch: ['systemctl status sshd'],
+          redhat: ['systemctl status sshd'],
+        }),
+        check: (c) =>
+          /\bsystemctl\b.*\bstatus\b/.test(c.line) && c.output.includes(c.distro.family === 'debian' ? 'ssh.service - ' : 'sshd.service - '),
+      },
+      {
+        id: 'failed',
+        text: 'En tjänst verkar inte ha startat. Lista alla tjänster som har misslyckats (*failed*).',
+        hint: '`systemctl --failed` (eller `systemctl list-units --state=failed`).',
+        solution: ['systemctl --failed'],
+        check: (c) => ran(c, /\bsystemctl\b.*(--failed|--state[= ]\S*failed)/) && c.output.includes('loaded units listed'),
+      },
+      {
+        id: 'journal-err',
+        text: 'Visa bara felmeddelandena (prioritet *err* och allvarligare) från den här uppstarten i journalen.',
+        hint: '`-p err` väljer prioritet och `-b` den senaste uppstarten: `journalctl -p err -b`.',
+        solution: ['journalctl -p err -b'],
+        check: (c) =>
+          ran(c, /\bjournalctl\b/) &&
+          /(^|\s)(-\w*p\s*|--priority[= ])(err|error|3|0\.\.3|emerg\.\.err)(\s|$)/.test(c.line) &&
+          /(^|\s)(-\w*b\w*|--boot)\b/.test(c.line),
+      },
+      {
+        id: 'journal-u',
+        text: 'Läs loggen för den trasiga tjänsten `rapportd` med `journalctl`. Varför startar den inte?',
+        hint: '`-u` visar bara raderna från en tjänst: `journalctl -u rapportd`. Med `-xe` hoppar du till slutet och får förklaringar.',
+        solution: ['journalctl -u rapportd'],
+        check: (c) => ran(c, /\bjournalctl\b.*\brapportd\b/) && c.output.includes('rapportd.conf'),
+      },
+      {
+        id: 'fix',
+        text: 'Rätta felet som loggen berättar om och starta sedan om `rapportd` med `systemctl`, så att den kör.',
+        hint: 'Konfigurationsfilen saknas, men det finns ett exempel: `sudo cp /etc/rapportd.conf.example /etc/rapportd.conf`. Starta sedan om med `sudo systemctl restart rapportd`.',
+        solution: ['sudo cp /etc/rapportd.conf.example /etc/rapportd.conf', 'sudo systemctl restart rapportd'],
+        check: (c) => /\bsystemctl\b.*\brapportd\b/.test(c.line) && c.sh.services.units['rapportd.service']?.active === 'active',
+      },
+      {
+        id: 'start-minserver',
+        text: 'Starta tjänsten `minserver` (om den inte redan kör) och visa sedan dess status. Vilket PID fick den?',
+        hint: '`sudo systemctl start minserver` och sedan `systemctl status minserver`.',
+        solution: ['sudo systemctl start minserver', 'systemctl status minserver'],
+        check: (c) => ran(c, /\bsystemctl\b.*\bstatus\b.*\bminserver\b/) && c.output.includes('active (running)'),
+      },
+      {
+        id: 'stop',
+        text: 'Stoppa `minserver` med `systemctl`. Kontrollera gärna med `pgrep minserver` att processen är borta.',
+        hint: '`sudo systemctl stop minserver`',
+        solution: ['sudo systemctl stop minserver', 'pgrep minserver'],
+        check: (c) =>
+          ran(c, /\bsystemctl\b.*\bstop\b.*\bminserver\b/) && !c.sh.proc.procs.some((p) => p.cmd.includes('/minserver')),
+      },
+      {
+        id: 'enable',
+        text: 'Se till att `minserver` startar automatiskt varje gång datorn startar – och starta den nu också, med ett enda kommando.',
+        hint: '`enable` gäller vid uppstart och `--now` startar den direkt: `sudo systemctl enable --now minserver`.',
+        solution: ['sudo systemctl enable --now minserver'],
+        check: (c) =>
+          /\bsystemctl\b.*\benable\b/.test(c.line) &&
+          isFile(c, '/etc/systemd/system/multi-user.target.wants/minserver.service') &&
+          c.sh.services.units['minserver.service']?.active === 'active',
+      },
+    ],
+  },
+  {
+    id: 'natverk',
+    part: 'natverk',
+    title: 'Nätverk',
+    tasks: [
+      {
+        id: 'ip-addr',
+        text: 'Visa datorns IP-adresser med `ip`.',
+        hint: '`ip addr` – eller kortare `ip a`.',
+        solution: ['ip a'],
+        check: (c) =>
+          (ran(c, /^ip\s+(-\S+\s+)*a(d(d(r(e(s(s)?)?)?)?)?)?(\s|$)/) || ran(c, /^hostname\s+-I\b/)) && c.output.includes('192.168.1.42'),
+      },
+      {
+        id: 'ping-gw',
+        text: 'Pinga gatewayen `192.168.1.1` exakt 3 gånger.',
+        hint: '`ping -c 3 192.168.1.1` – `-c` står för *count*.',
+        solution: ['ping -c 3 192.168.1.1'],
+        check: (c) => ran(c, /^ping\b/) && c.output.includes('(192.168.1.1)') && /\b3 packets transmitted, 3 received/.test(c.output),
+      },
+      {
+        id: 'dig',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Installera paketet `dnsutils` och slå upp IP-adressen för `example.com` med `dig`.',
+          arch: 'Installera paketet `bind` och slå upp IP-adressen för `example.com` med `dig`.',
+          redhat: 'Installera paketet `bind-utils` och slå upp IP-adressen för `example.com` med `dig`.',
+        }),
+        hint: byFamily({
+          debian: '`sudo apt update`, `sudo apt install dnsutils` och sedan `dig +short example.com`.',
+          arch: '`sudo pacman -S bind` och sedan `dig +short example.com`.',
+          redhat: '`sudo dnf install bind-utils` och sedan `dig +short example.com`.',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install dnsutils', 'dig +short example.com'],
+          arch: ['sudo pacman -S bind', 'y', 'dig +short example.com'],
+          redhat: ['sudo dnf install bind-utils', 'y', 'dig +short example.com'],
+        }),
+        check: (c) => ran(c, /^(dig|host|nslookup)\b.*\bexample\.com\b/) && c.output.includes('203.0.113.10'),
+      },
+      {
+        id: 'ss',
+        text: 'Ta reda på vilka portar som lyssnar på datorn med `ss`.',
+        hint: '`ss -tulpn` – **t**cp, **u**dp, **l**yssnande, **p**rocess, **n**umeriskt.',
+        solution: ['ss -tulpn'],
+        check: (c) => c.exitCode === 0 && /^ss\s+(-\w+\s+)*-\w*l/.test(unsudo(c.line)) && /:(22|ssh)\b/.test(c.output),
+      },
+      {
+        id: 'curl-localhost',
+        text: 'Hämta startsidan från övningsservern på din egen dator, `http://localhost:8080`, med `curl`.',
+        hint: byFamily({
+          debian: 'I Debian/Ubuntu måste curl installeras: `sudo apt install curl`. Får du *Couldn\'t connect to server* är minserver stoppad – starta den med `minserver`.',
+          arch: '`curl http://localhost:8080`. Får du *Couldn\'t connect to server* är minserver stoppad – starta den med `minserver`.',
+          redhat: '`curl http://localhost:8080`. Får du *Couldn\'t connect to server* är minserver stoppad – starta den med `minserver`.',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install curl', 'minserver', 'curl http://localhost:8080'],
+          arch: ['minserver', 'curl http://localhost:8080'],
+          redhat: ['minserver', 'curl http://localhost:8080'],
+        }),
+        check: (c) => ran(c, /^curl\b.*\b(localhost|127\.0\.0\.1|192\.168\.1\.42):8080\b/) && c.output.includes('Hello from minserver'),
+      },
+      {
+        id: 'spara',
+        text: 'Spara webbsidan `https://example.com` som filen `~/exempel.html`.',
+        hint: 'Stå i hemkatalogen och använd `curl -o exempel.html https://example.com` eller `wget -O exempel.html https://example.com`.',
+        solution: byFamily({
+          debian: ['cd ~', 'wget -O exempel.html https://example.com'],
+          arch: ['cd ~', 'curl -o exempel.html https://example.com'],
+          redhat: ['cd ~', 'curl -o exempel.html https://example.com'],
+        }),
+        check: (c) => content(c, '~/exempel.html').includes('Example Domain'),
+      },
+      {
+        id: 'hosts',
+        text: 'Servern `192.168.1.10` ska heta `server.lan`, men namnet finns inte i DNS. Lägg till det i `/etc/hosts` och pinga sedan `server.lan`.',
+        hint: "Filen ägs av root: `echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts` och sedan `ping -c 3 server.lan`.",
+        solution: ["echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts", 'ping -c 3 server.lan'],
+        check: (c) => ran(c, /^ping\b.*\bserver\.lan\b/) && c.output.includes('from server.lan (192.168.1.10)'),
+      },
+      {
+        id: 'ssh',
+        text: 'Kör kommandot `hostname` på servern `server.lan` med `ssh` som användaren `elev`.',
+        hint: byFamily({
+          debian: '`ssh elev@server.lan hostname` – och svara `yes` på frågan om värdnyckeln.',
+          arch: 'Installera först ssh-klienten: `sudo pacman -S openssh`. Sedan `ssh elev@server.lan hostname` – och svara `yes` på frågan om värdnyckeln.',
+          redhat: '`ssh elev@server.lan hostname` – och svara `yes` på frågan om värdnyckeln.',
+        }),
+        solution: byFamily({
+          debian: ['ssh elev@server.lan hostname', 'yes'],
+          arch: ['sudo pacman -S openssh', 'y', 'ssh elev@server.lan hostname', 'yes'],
+          redhat: ['ssh elev@server.lan hostname', 'yes'],
+        }),
+        check: (c) => ran(c, /^ssh\b.*(server\.lan|192\.168\.1\.10)/) && outLines(c).some((l) => l.trim() === 'server'),
+      },
+    ],
+  },
+  {
+    id: 'diskar',
+    part: 'admin',
+    title: 'Diskar och filsystem',
+    tasks: [
+      {
+        id: 'df',
+        text: 'Visa hur mycket plats som är använd och ledig på de monterade filsystemen – med läsbara storlekar (G, M).',
+        hint: '`df` visar filsystemen, flaggan `-h` gör storlekarna läsbara: `df -h`.',
+        solution: ['df -h'],
+        check: (c) => ran(c, /^df\b/) && /\s-\w*h|--human/.test(c.line) && c.output.includes('Mounted on'),
+      },
+      {
+        id: 'lsblk-f',
+        text: 'Visa alla diskar och partitioner tillsammans med filsystemens typ, etikett och UUID.',
+        hint: '`lsblk` visar diskarna som ett träd. Med `-f` kommer filsystemen med: `lsblk -f`.',
+        solution: ['lsblk -f'],
+        check: (c) => ran(c, /^lsblk\b/) && c.output.includes('FSTYPE') && c.output.includes('USBMINNE'),
+      },
+      {
+        id: 'fstab',
+        text: 'Visa filen `/etc/fstab`, som talar om vad som ska monteras när datorn startar.',
+        solution: ['cat /etc/fstab'],
+        check: (c) => ran(c, /\/etc\/fstab/) && c.output.includes('UUID='),
+      },
+      {
+        id: 'uuid',
+        text: 'Ta reda på UUID för filsystemet som är monterat på `/` – och bara det.',
+        hint: byFamily({
+          debian: '`lsblk -f` visar att `/` ligger på `/dev/sda2`. Fråga sedan `blkid /dev/sda2` – eller låt `findmnt -n -o UUID /` göra allt på en gång.',
+          arch: '`lsblk -f` visar att `/` ligger på `/dev/sda3`. Fråga sedan `blkid /dev/sda3` – eller låt `findmnt -n -o UUID /` göra allt på en gång.',
+          redhat: '`lsblk -f` visar att `/` ligger på `/dev/sda3`. Fråga sedan `blkid /dev/sda3` – eller låt `findmnt -n -o UUID /` göra allt på en gång.',
+        }),
+        solution: byFamily({
+          debian: ['blkid /dev/sda2'],
+          arch: ['blkid /dev/sda3'],
+          redhat: ['blkid /dev/sda3'],
+        }),
+        check: (c) => c.exitCode === 0 && outLines(c).length <= 2 && c.output.includes(rootUuid(c.distro)),
+      },
+      {
+        id: 'montera',
+        text: 'Skapa monteringspunkten `/mnt/usb` och montera USB-stickan (`/dev/sdb1`) där.',
+        hint: 'Både att skapa kataloger i `/mnt` och att montera kräver root: `sudo mkdir -p /mnt/usb` och sedan `sudo mount /dev/sdb1 /mnt/usb`.',
+        solution: ['sudo mkdir -p /mnt/usb', 'sudo mount /dev/sdb1 /mnt/usb'],
+        check: (c) => c.sh.disks.mounts.some((m) => m.dev === USB_PART && m.target === '/mnt/usb'),
+      },
+      {
+        id: 'fran-usb',
+        text: 'Kopiera `rapport.pdf` från USB-stickan till din hemkatalog.',
+        hint: 'Stickans filer finns nu i `/mnt/usb`: `cp /mnt/usb/rapport.pdf ~`.',
+        solution: ['cp /mnt/usb/rapport.pdf ~'],
+        check: (c) => content(c, '~/rapport.pdf').startsWith('%PDF'),
+      },
+      {
+        id: 'till-usb',
+        text: 'Spara en kopia av `~/dokument/frukter.txt` på USB-stickan.',
+        hint: 'Filerna på stickan ägs av root – FAT har inga Linux-rättigheter – så du behöver `sudo`: `sudo cp ~/dokument/frukter.txt /mnt/usb/`.',
+        solution: ['sudo cp ~/dokument/frukter.txt /mnt/usb/'],
+        check: (c) => !!partitionRoot(c.sh.vfs, c.sh.disks, USB_PART, c.sh.rootUser())?.children?.['frukter.txt'],
+      },
+      {
+        id: 'avmontera',
+        text: 'Avmontera USB-stickan, så att den är säker att dra ut.',
+        hint: '`sudo umount /mnt/usb` – utan n! Får du *target is busy* står ditt skal i katalogen: gå därifrån med `cd ~` först.',
+        solution: ['cd ~', 'sudo umount /mnt/usb'],
+        check: (c) => ran(c, /\bumount\b/) && !c.sh.disks.mounts.some((m) => m.dev === USB_PART),
+      },
+    ],
+  },
+  {
     id: 'distributioner',
     part: 'distro',
     title: 'Distributioner och familjer',
@@ -700,6 +952,295 @@ export const CHAPTERS: Chapter[] = [
     ],
   },
   {
+    id: 'extra-repon',
+    part: 'distro',
+    title: 'AUR, PPA och COPR',
+    tasks: [
+      {
+        id: 'forbered',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Se till att du har kommandot `add-apt-repository`. Det finns i paketet `software-properties-common` – förinstallerat i Ubuntu, men inte i Debian.',
+          arch: 'Installera det som behövs för att bygga paket från AUR: `git` och `base-devel`.',
+          redhat: 'Visa vilka förråd dnf använder just nu.',
+        }),
+        hint: byFamily({
+          debian: '`sudo apt update` och sedan `sudo apt install software-properties-common`.',
+          arch: '`sudo pacman -S --needed git base-devel`',
+          redhat: '`dnf repolist`',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install software-properties-common'],
+          arch: ['sudo pacman -S --needed git base-devel', 'y'],
+          redhat: ['dnf repolist'],
+        }),
+        check: (c) => {
+          switch (c.distro.family) {
+            case 'debian':
+              return (
+                'software-properties-common' in c.sh.installed &&
+                ran(c, /\badd-apt-repository\b|\bapt(-get)?\s+install\b.*\bsoftware-properties-common\b/)
+              );
+            case 'arch':
+              return 'git' in c.sh.installed && 'base-devel' in c.sh.installed;
+            case 'redhat':
+              return ran(c, /^dnf5?\s+repolist\b/);
+          }
+        },
+      },
+      {
+        id: 'lagg-till',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Lägg till PPA:t `ppa:lunatool/moonphase`.',
+          arch: 'Hämta byggreceptet för AUR-paketet `moonphase` till din hemkatalog med `git clone`. Adressen är `https://aur.archlinux.org/moonphase.git`.',
+          redhat: 'Aktivera COPR-förrådet `lunatool/moonphase`.',
+        }),
+        hint: byFamily({
+          debian: '`sudo add-apt-repository ppa:lunatool/moonphase` – och tryck Enter när den frågar.',
+          arch: '`cd ~` och sedan `git clone https://aur.archlinux.org/moonphase.git`',
+          redhat: '`sudo dnf copr enable lunatool/moonphase` – och svara `y`, Nej är standard.',
+        }),
+        solution: byFamily({
+          debian: ['sudo add-apt-repository -y ppa:lunatool/moonphase'],
+          arch: ['cd ~', 'git clone https://aur.archlinux.org/moonphase.git'],
+          redhat: ['sudo dnf copr enable lunatool/moonphase', 'y'],
+        }),
+        check: (c) => {
+          switch (c.distro.family) {
+            case 'debian':
+              return /\badd-apt-repository\b/.test(c.line) && isFile(c, PPA_FILE) && extraRepoEnabled(c.sh, 'ppa:lunatool/moonphase');
+            case 'arch':
+              return ran(c, /\bgit\s+clone\s+.*aur\.archlinux\.org\/moonphase(\.git)?\b/);
+            case 'redhat':
+              return /\bcopr\s+enable\b/.test(c.line) && extraRepoEnabled(c.sh, 'copr:lunatool/moonphase');
+          }
+        },
+      },
+      {
+        id: 'granska',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Titta i filen som `add-apt-repository` skapade i `/etc/apt/sources.list.d/`.',
+          arch: 'Läs byggreceptet `PKGBUILD` innan du bygger något!',
+          redhat: 'Lista vilka COPR-förråd som är tillagda.',
+        }),
+        hint: byFamily({
+          debian: '`ls /etc/apt/sources.list.d` och sedan `cat` på filen vars namn börjar med `lunatool`.',
+          arch: '`cd ~/moonphase` och sedan `less PKGBUILD` (eller `cat PKGBUILD`).',
+          redhat: '`dnf copr list`',
+        }),
+        solution: byFamily({
+          debian: ['ls /etc/apt/sources.list.d', `cat ${PPA_FILE}`],
+          arch: ['cd ~/moonphase', 'less PKGBUILD'],
+          redhat: ['dnf copr list'],
+        }),
+        check: (c) => {
+          switch (c.distro.family) {
+            case 'debian':
+              return ran(c, /^(cat|less|more|head|tail|grep)\b/) && c.output.includes('ppa.launchpadcontent.net/lunatool/moonphase');
+            case 'arch':
+              return ran(c, /^(cat|less|more|head|tail)\b.*PKGBUILD/) && c.output.includes('pkgname=moonphase');
+            case 'redhat':
+              return ran(c, /^dnf5?\s+copr\s+list\b/) && c.output.includes('lunatool/moonphase');
+          }
+        },
+      },
+      {
+        id: 'installera',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Installera paketet `moonphase` från PPA:t.',
+          arch: 'Bygg och installera `moonphase` med `makepkg`.',
+          redhat: 'Installera paketet `moonphase` från COPR-förrådet.',
+        }),
+        hint: byFamily({
+          debian: '`add-apt-repository` körde redan `apt update` åt dig, så `sudo apt install moonphase` räcker.',
+          arch: 'Stå i katalogen `~/moonphase` och kör `makepkg -si` – utan sudo!',
+          redhat: '`sudo dnf install moonphase`',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt install moonphase'],
+          arch: ['cd ~/moonphase', 'makepkg -si', 'y'],
+          redhat: ['sudo dnf install moonphase', 'y'],
+        }),
+        check: (c) => 'moonphase' in c.sh.installed,
+      },
+      {
+        id: 'kor',
+        perFamily: true,
+        text: 'Kör programmet `moonphase`.',
+        solution: ['moonphase'],
+        check: (c) => ran(c, /^moonphase\b/) && 'moonphase' in c.sh.installed,
+      },
+      {
+        id: 'ursprung',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Ta reda på varifrån `moonphase` kommer.',
+          arch: 'Lista alla installerade paket som inte kommer från Archs egna förråd.',
+          redhat: 'Ta reda på från vilket förråd `moonphase` installerades.',
+        }),
+        hint: byFamily({
+          debian: '`apt policy moonphase`',
+          arch: 'Sådana paket kallas *foreign*: `pacman -Qm`',
+          redhat: '`dnf info moonphase` – titta på raden `From repository`.',
+        }),
+        solution: byFamily({
+          debian: ['apt policy moonphase'],
+          arch: ['pacman -Qm'],
+          redhat: ['dnf info moonphase'],
+        }),
+        check: (c) => {
+          switch (c.distro.family) {
+            case 'debian':
+              return ran(c, /^apt\s+policy\b.*\bmoonphase\b/) && c.output.includes('ppa.launchpadcontent.net');
+            case 'arch':
+              return ran(c, /^(pacman|yay)\s+-Q\w*m/) && c.output.includes('moonphase');
+            case 'redhat':
+              return ran(c, /^dnf5?\s+info\b.*\bmoonphase\b/) && c.output.includes('copr:');
+          }
+        },
+      },
+      {
+        id: 'efterat',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Ta bort PPA:t igen. Programmet blir kvar, men får inga fler uppdateringar.',
+          arch: 'Bonus: installera AUR-hjälparen `yay` (AUR-paketet `yay-bin`) och använd den för att installera AUR-paketet `snowfall`.',
+          redhat: 'Stäng av COPR-förrådet igen. Programmet blir kvar, men får inga fler uppdateringar.',
+        }),
+        hint: byFamily({
+          debian: '`sudo add-apt-repository --remove ppa:lunatool/moonphase`',
+          arch: 'Som förut: `cd ~`, `git clone https://aur.archlinux.org/yay-bin.git`, `cd yay-bin` och `makepkg -si`. Sedan `yay -S snowfall` – utan sudo.',
+          redhat: '`sudo dnf copr disable lunatool/moonphase`',
+        }),
+        solution: byFamily({
+          debian: ['sudo add-apt-repository -y --remove ppa:lunatool/moonphase'],
+          arch: ['cd ~', 'git clone https://aur.archlinux.org/yay-bin.git', 'cd yay-bin', 'makepkg -si', 'y', 'yay -S snowfall', 'y'],
+          redhat: ['sudo dnf copr disable lunatool/moonphase'],
+        }),
+        check: (c) => {
+          switch (c.distro.family) {
+            case 'debian':
+              return /\badd-apt-repository\b.*\s(-\w*r|--remove)\b|^rm\b/.test(unsudo(c.line)) && !isFile(c, PPA_FILE);
+            case 'arch':
+              return 'snowfall' in c.sh.installed;
+            case 'redhat':
+              return /\bcopr\s+(disable|remove)\b/.test(c.line) && !extraRepoEnabled(c.sh, 'copr:lunatool/moonphase');
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'universella-paket',
+    part: 'distro',
+    title: 'Flatpak, Snap och AppImage',
+    tasks: [
+      {
+        id: 'flatpak',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Installera Flatpak (paketet `flatpak`).',
+          arch: 'Installera Flatpak (paketet `flatpak`).',
+          redhat: 'Flatpak finns redan i Fedora Workstation. Kontrollera vilken version du har.',
+        }),
+        hint: byFamily({
+          debian: '`sudo apt update` och sedan `sudo apt install flatpak`.',
+          arch: '`sudo pacman -S flatpak`',
+          redhat: '`flatpak --version`',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install flatpak'],
+          arch: ['sudo pacman -S flatpak', 'y'],
+          redhat: ['flatpak --version'],
+        }),
+        check: (c) => ran(c, /\bflatpak\b/) && 'flatpak' in c.sh.installed,
+      },
+      {
+        id: 'flathub',
+        perFamily: true,
+        text: 'Lägg till Flathub som källa (*remote*) för Flatpak.',
+        hint: '`flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo`',
+        solution: ['flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo'],
+        check: (c) =>
+          ran(c, /^flatpak\s+remote-add\b/) &&
+          [content(c, '/var/lib/flatpak/repo/config'), content(c, '~/.local/share/flatpak/repo/config')].some((t) => t.includes('[remote "flathub"]')),
+      },
+      {
+        id: 'gimp',
+        perFamily: true,
+        text: 'Installera bildredigeringsprogrammet GIMP (`org.gimp.GIMP`) från Flathub.',
+        hint: '`flatpak install flathub org.gimp.GIMP` – och svara ja.',
+        solution: ['flatpak install flathub org.gimp.GIMP', 'y'],
+        check: (c) => isDir(c, '/var/lib/flatpak/app/org.gimp.GIMP') || isDir(c, '~/.local/share/flatpak/app/org.gimp.GIMP'),
+      },
+      {
+        id: 'flatpak-run',
+        perFamily: true,
+        text: 'Starta GIMP med `flatpak run`.',
+        hint: 'Program startas med sitt fullständiga id: `flatpak run org.gimp.GIMP`',
+        solution: ['flatpak run org.gimp.GIMP'],
+        check: (c) => ran(c, /^flatpak\s+run\s+(\S+\s+)*org\.gimp\.GIMP\b/),
+      },
+      {
+        id: 'snap',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Installera snap-paketet `hello-world` och kör det. I Ubuntu finns Snap redan; i Debian installerar du paketet `snapd` först.',
+          arch: 'Snap finns inte i Archs förråd, bara i AUR. Bygg och installera `snapd` från AUR, installera sedan snap-paketet `hello-world` och kör det.',
+          redhat: 'Installera Snap (paketet `snapd`), installera sedan snap-paketet `hello-world` och kör det.',
+        }),
+        hint: byFamily({
+          debian: '`sudo apt install snapd` (behövs bara i Debian), `sudo snap install hello-world` och sedan `hello-world`.',
+          arch: '`git clone https://aur.archlinux.org/snapd.git`, `cd snapd`, `makepkg -si`. Sedan `sudo snap install hello-world` och `hello-world`.',
+          redhat: '`sudo dnf install snapd`, `sudo snap install hello-world` och sedan `hello-world`.',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install snapd', 'sudo snap install hello-world', 'hello-world'],
+          arch: [
+            'sudo pacman -S --needed git base-devel',
+            'y',
+            'cd ~',
+            'git clone https://aur.archlinux.org/snapd.git',
+            'cd snapd',
+            'makepkg -si',
+            'y',
+            'y',
+            'sudo snap install hello-world',
+            'hello-world',
+          ],
+          redhat: ['sudo dnf install snapd', 'y', 'sudo snap install hello-world', 'hello-world'],
+        }),
+        check: (c) => ran(c, /\bhello-world\b/) && c.output.includes('Hello World!'),
+      },
+      {
+        id: 'appimage-chmod',
+        text: 'I `~/Nedladdningar` ligger en nedladdad AppImage. Gör filen `Kalkylator.AppImage` körbar.',
+        hint: '`chmod +x ~/Nedladdningar/Kalkylator.AppImage`',
+        solution: ['chmod +x ~/Nedladdningar/Kalkylator.AppImage'],
+        check: (c) => ran(c, /^chmod\b/) && ((node(c, '~/Nedladdningar/Kalkylator.AppImage')?.mode ?? 0) & 0o100) !== 0,
+      },
+      {
+        id: 'appimage-run',
+        perFamily: true,
+        text: 'Starta Kalkylator. Klagar den på FUSE? Installera biblioteket som saknas och försök igen.',
+        hint: byFamily({
+          debian: 'Biblioteket finns i paketet `libfuse2t64`. Starta sedan med `~/Nedladdningar/Kalkylator.AppImage`.',
+          arch: 'Biblioteket finns i paketet `fuse2`. Starta sedan med `~/Nedladdningar/Kalkylator.AppImage`.',
+          redhat: 'Biblioteket finns i paketet `fuse-libs`. Starta sedan med `~/Nedladdningar/Kalkylator.AppImage`.',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install libfuse2t64', '~/Nedladdningar/Kalkylator.AppImage'],
+          arch: ['sudo pacman -S fuse2', 'y', '~/Nedladdningar/Kalkylator.AppImage'],
+          redhat: ['sudo dnf install fuse-libs', 'y', '~/Nedladdningar/Kalkylator.AppImage'],
+        }),
+        check: (c) => ran(c, /Kalkylator\.AppImage|\bAppRun\b/) && !/--appimage-extract(\s|$)/.test(c.line),
+      },
+    ],
+  },
+  {
     id: 'skript',
     part: 'skript',
     title: 'Shell-skript',
@@ -859,6 +1400,167 @@ export const CHAPTERS: Chapter[] = [
       },
     ],
   },
+  {
+    id: 'skal',
+    part: 'verktyg',
+    title: 'Andra skal: zsh och fish',
+    tasks: [
+      {
+        id: 'installera-zsh',
+        perFamily: true,
+        text: 'Installera skalet `zsh`.',
+        hint: byFamily({
+          debian: '`sudo apt update` och sedan `sudo apt install zsh`.',
+          arch: '`sudo pacman -S zsh` och svara ja.',
+          redhat: '`sudo dnf install zsh` – och svara `y`.',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install zsh'],
+          arch: ['sudo pacman -S zsh', 'y'],
+          redhat: ['sudo dnf install zsh', 'y'],
+        }),
+        check: (c) => 'zsh' in c.sh.installed,
+      },
+      {
+        id: 'starta-zsh',
+        text: 'Starta `zsh`. Första gången frågar *zsh-newuser-install* vad du vill göra – svara `2`. Visa sedan vilket skal du kör med `echo $0`.',
+        hint: 'Skriv `zsh`, svara `2` och skriv sedan `echo $0`. Det ska stå `zsh`.',
+        solution: ['zsh', '2', 'echo $0'],
+        check: (c) => c.sh.shellMode === 'zsh' && ran(c, /^echo\s+["']?\$\{?0\}?["']?\s*$/) && c.output.trim() === 'zsh',
+      },
+      {
+        id: 'globstar',
+        text: 'Använd zsh:s `**` för att lista alla `.txt`-filer i hemkatalogen **och alla underkataloger** med ett enda `ls`.',
+        hint: '`ls ~/**/*.txt` – `**` betyder "alla kataloger, på alla nivåer".',
+        solution: ['ls ~/**/*.txt'],
+        check: (c) => c.sh.shellMode === 'zsh' && ran(c, /\*\*\//) && c.output.includes('dokument/frukter.txt'),
+      },
+      {
+        id: 'tillbaka',
+        text: 'Lämna zsh och gå tillbaka till bash.',
+        hint: 'Skriv `exit`. Kontrollera gärna med `echo $0` eller `ps`.',
+        solution: ['exit'],
+        check: (c) => !!c.sh.flags['left:zsh'] && c.sh.shellMode === 'bash',
+      },
+      {
+        id: 'installera-fish',
+        perFamily: true,
+        text: 'Installera skalet `fish`.',
+        hint: byFamily({
+          debian: '`sudo apt update` och sedan `sudo apt install fish`.',
+          arch: '`sudo pacman -S fish` och svara ja.',
+          redhat: '`sudo dnf install fish` – och svara `y`.',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install fish'],
+          arch: ['sudo pacman -S fish', 'y'],
+          redhat: ['sudo dnf install fish', 'y'],
+        }),
+        check: (c) => 'fish' in c.sh.installed,
+      },
+      {
+        id: 'fish-set',
+        text: 'Starta `fish`. Skapa variabeln `frukt` med värdet `äpple` på fish-sättet och skriv ut den med `echo`.',
+        hint: '`frukt=äpple` fungerar inte i fish. Skriv `set frukt äpple` och sedan `echo $frukt`.',
+        solution: ['fish', 'set frukt äpple', 'echo $frukt'],
+        check: (c) => c.sh.shellMode === 'fish' && ran(c, /^echo\b.*\$frukt\b/) && c.sh.env.frukt === 'äpple' && c.output.trim() === 'äpple',
+      },
+      {
+        id: 'fish-for',
+        text: 'Skriv en `for`-loop med fish-syntax som skriver ut talen 1, 2 och 3, ett per rad. Gå sedan tillbaka till bash med `exit`.',
+        hint: 'I fish finns inget `do` och `done` – blocket avslutas med `end`: `for i in 1 2 3; echo $i; end`',
+        solution: ['for i in 1 2 3; echo $i; end', 'exit'],
+        check: (c) => c.sh.shellMode === 'fish' && ran(c, /^for\b.*\bend\s*$/) && outLines(c).join(',') === '1,2,3',
+      },
+      {
+        id: 'chsh',
+        text: 'Se efter i `/etc/shells` vilka skal som är installerade. Gör sedan zsh till ditt inloggningsskal med `chsh`.',
+        hint: '`cat /etc/shells` och sedan `chsh -s /usr/bin/zsh`. Kontrollera resultatet med `grep elev /etc/passwd`.',
+        solution: ['cat /etc/shells', 'chsh -s /usr/bin/zsh'],
+        check: (c) => /^elev:.*:\/(usr\/)?bin\/zsh$/m.test(content(c, '/etc/passwd')),
+      },
+    ],
+  },
+  {
+    id: 'anvandare',
+    part: 'admin',
+    title: 'Användare och grupper',
+    tasks: [
+      {
+        id: 'useradd',
+        text: 'Skapa användaren `kim` med en hemkatalog och `/bin/bash` som skal.',
+        hint: '`sudo useradd -m -s /bin/bash kim` – `-m` skapar hemkatalogen och `-s` väljer skalet.',
+        solution: ['sudo useradd -m -s /bin/bash kim'],
+        check: (c) => {
+          const kim = findUser(c.sh, 'kim');
+          return !!kim && /\/bash$/.test(kim.shell) && isDir(c, kim.home);
+        },
+      },
+      {
+        id: 'passwd-rad',
+        text: 'Visa kims rad i `/etc/passwd`.',
+        hint: '`grep kim /etc/passwd` – eller `getent passwd kim`.',
+        solution: ['grep kim /etc/passwd'],
+        check: (c) => c.exitCode === 0 && /passwd/.test(c.line) && outLines(c).some((l) => l.startsWith('kim:x:')),
+      },
+      {
+        id: 'losenord',
+        text: 'Ge `kim` ett lösenord med `passwd`.',
+        hint: 'Bara root får sätta lösenord åt andra: `sudo passwd kim`. Skriv samma lösenord två gånger – det syns inte när du skriver.',
+        solution: ['sudo passwd kim', 'hemligt123', 'hemligt123'],
+        check: (c) => (shadowHash(c.sh, 'kim') ?? '').startsWith('$'),
+      },
+      {
+        id: 'grupp',
+        text: 'Skapa gruppen `utvecklare` och lägg till `kim` i den.',
+        hint: 'Först `sudo groupadd utvecklare`, sedan `sudo usermod -aG utvecklare kim`.',
+        solution: ['sudo groupadd utvecklare', 'sudo usermod -aG utvecklare kim'],
+        check: (c) => !!findGroup(c.sh, 'utvecklare')?.members.includes('kim'),
+      },
+      {
+        id: 'sudo-ratt',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Ge `kim` rätt att använda `sudo` genom att lägga till kontot i gruppen `sudo`.',
+          arch: 'Ge `kim` rätt att använda `sudo` genom att lägga till kontot i gruppen `wheel`.',
+          redhat: 'Ge `kim` rätt att använda `sudo` genom att lägga till kontot i gruppen `wheel`.',
+        }),
+        hint: byFamily({
+          debian: '`sudo usermod -aG sudo kim` – glöm inte `-a`!',
+          arch: '`sudo usermod -aG wheel kim` – glöm inte `-a`!',
+          redhat: '`sudo usermod -aG wheel kim` – glöm inte `-a`!',
+        }),
+        solution: byFamily({
+          debian: ['sudo usermod -aG sudo kim'],
+          arch: ['sudo usermod -aG wheel kim'],
+          redhat: ['sudo usermod -aG wheel kim'],
+        }),
+        check: (c) => !!findGroup(c.sh, c.distro.adminGroup)?.members.includes('kim'),
+      },
+      {
+        id: 'sudo-u',
+        text: 'Kör `whoami` som `kim` med `sudo -u`.',
+        hint: '`sudo -u kim whoami`',
+        solution: ['sudo -u kim whoami'],
+        check: (c) => ran(c, /^sudo\s+(-\S+\s+)*-u\s*kim\s+whoami\s*$/) && outLines(c).at(-1) === 'kim',
+      },
+      {
+        id: 'su',
+        text: 'Logga in som `kim` med `su -` och kör `id`. Gå sedan tillbaka till `elev` med `exit`.',
+        hint: 'Skriv `su - kim` och sedan kims lösenord – det du valde med `passwd`. Prompten visar att du är kim.',
+        solution: ['su - kim', 'hemligt123', 'id', 'exit'],
+        check: (c) => ran(c, /^id\s*$/) && c.sh.currentUser().name === 'kim',
+      },
+      {
+        id: 'userdel',
+        text: 'Skapa en tillfällig användare `vikarie` med hemkatalog – och ta sedan bort den igen, **inklusive** hemkatalogen.',
+        hint: '`sudo useradd -m vikarie` och sedan `sudo userdel -r vikarie`.',
+        solution: ['sudo useradd -m vikarie', 'sudo userdel -r vikarie'],
+        check: (c) =>
+          c.exitCode === 0 && /^(userdel|deluser)\b.*\bvikarie\b/.test(unsudo(c.line)) && !findUser(c.sh, 'vikarie') && !exists(c, '/home/vikarie'),
+      },
+    ],
+  },
 ];
 
 // Kapitlen visas i samma ordning som delarna i PARTS (stabil sortering behåller ordningen inom en del).
@@ -866,13 +1568,6 @@ CHAPTERS.sort((a, b) => PARTS.findIndex((p) => p.id === a.part) - PARTS.findInde
 
 /** Kapitel som planeras – visas i menyn som "kommer snart". */
 export const UPCOMING: string[] = [
-  'Nätverk (ip, ping, curl, ssh)',
-  'Tjänster och loggar med systemd',
-  'Diskar och filsystem (df, du, mount)',
-  'Användarhantering (useradd, passwd)',
-  'Andra skal: zsh och fish',
-  'AUR, PPA och COPR',
-  'Flatpak, Snap och AppImage',
 ];
 
 export function taskKey(chapterId: string, taskId: string, perFamily: boolean | undefined, family: Family): string {

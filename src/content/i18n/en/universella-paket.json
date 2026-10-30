@@ -1,0 +1,53 @@
+{
+  "title": "Flatpak, Snap and AppImage",
+  "tasks": {
+    "flatpak": {
+      "text": {
+        "debian": "Install Flatpak (the package `flatpak`).",
+        "arch": "Install Flatpak (the package `flatpak`).",
+        "redhat": "Flatpak is already there on Fedora Workstation. Check which version you have."
+      },
+      "hint": {
+        "debian": "`sudo apt update` and then `sudo apt install flatpak`.",
+        "arch": "`sudo pacman -S flatpak`",
+        "redhat": "`flatpak --version`"
+      }
+    },
+    "flathub": {
+      "text": "Add Flathub as a source (*remote*) for Flatpak.",
+      "hint": "`flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo`"
+    },
+    "gimp": {
+      "text": "Install the image editor GIMP (`org.gimp.GIMP`) from Flathub.",
+      "hint": "`flatpak install flathub org.gimp.GIMP` – and answer yes."
+    },
+    "flatpak-run": {
+      "text": "Start GIMP with `flatpak run`.",
+      "hint": "Programs are started with their full ID: `flatpak run org.gimp.GIMP`"
+    },
+    "snap": {
+      "text": {
+        "debian": "Install the snap `hello-world` and run it. Ubuntu already has Snap; on Debian you install the package `snapd` first.",
+        "arch": "Snap is not in the Arch repositories, only in the AUR. Build and install `snapd` from the AUR, then install the snap `hello-world` and run it.",
+        "redhat": "Install Snap (the package `snapd`), then install the snap `hello-world` and run it."
+      },
+      "hint": {
+        "debian": "`sudo apt install snapd` (only needed on Debian), `sudo snap install hello-world` and then `hello-world`.",
+        "arch": "`git clone https://aur.archlinux.org/snapd.git`, `cd snapd`, `makepkg -si`. Then `sudo snap install hello-world` and `hello-world`.",
+        "redhat": "`sudo dnf install snapd`, `sudo snap install hello-world` and then `hello-world`."
+      }
+    },
+    "appimage-chmod": {
+      "text": "There is a downloaded AppImage in `~/Nedladdningar`. Make the file `Kalkylator.AppImage` executable.",
+      "hint": "`chmod +x ~/Nedladdningar/Kalkylator.AppImage`"
+    },
+    "appimage-run": {
+      "text": "Start Kalkylator. Does it complain about FUSE? Install the missing library and try again.",
+      "hint": {
+        "debian": "The library is in the package `libfuse2t64`. Then start it with `~/Nedladdningar/Kalkylator.AppImage`.",
+        "arch": "The library is in the package `fuse2`. Then start it with `~/Nedladdningar/Kalkylator.AppImage`.",
+        "redhat": "The library is in the package `fuse-libs`. Then start it with `~/Nedladdningar/Kalkylator.AppImage`."
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "title": "发行版和家族",
+  "tasks": {
+    "os-release": {
+      "text": "查看你正在运行的发行版的名称和版本。"
+    },
+    "kernel": {
+      "text": "显示正在运行的 Linux 内核版本。"
+    },
+    "pm-config": {
+      "text": {
+        "debian": "在 `/etc/apt/sources.list.d/` 中查看 apt 使用了哪些软件源。",
+        "arch": "在 `/etc/pacman.conf` 中查看 pacman 的设置。",
+        "redhat": "在 `/etc/yum.repos.d/` 中查看 dnf 使用了哪些软件源。"
+      }
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "title": "Package management",
+  "tasks": {
+    "sync": {
+      "text": {
+        "debian": "Download the latest package lists with `apt update`.",
+        "arch": "Synchronize the package database and upgrade the system with `pacman -Syu`.",
+        "redhat": "Fetch new package information and check for updates with `dnf check-update`."
+      },
+      "hint": {
+        "debian": "The command changes the system and requires root: `sudo apt update`.",
+        "arch": "The command changes the system and requires root: `sudo pacman -Syu`.",
+        "redhat": "`dnf check-update` doesn't need root."
+      }
+    },
+    "search": {
+      "text": "Search for the `htop` package.",
+      "hint": {
+        "debian": "`apt search htop`",
+        "arch": "`pacman -Ss htop`",
+        "redhat": "`dnf search htop`"
+      }
+    },
+    "install": {
+      "text": "Install the `tree` package.",
+      "hint": {
+        "debian": "`sudo apt install tree`",
+        "arch": "`sudo pacman -S tree` and answer yes to the question.",
+        "redhat": "`sudo dnf install tree` – and answer `y`, since No is the default!"
+      }
+    },
+    "run-tree": {
+      "text": "Run `tree` in your home directory."
+    },
+    "remove": {
+      "text": "Remove the `tree` package again.",
+      "hint": {
+        "debian": "`sudo apt remove tree`",
+        "arch": "`sudo pacman -R tree`",
+        "redhat": "`sudo dnf remove tree`"
+      }
+    },
+    "upgrade": {
+      "text": "Upgrade all installed packages.",
+      "hint": {
+        "debian": "After `sudo apt update`, run `sudo apt upgrade`.",
+        "arch": "`sudo pacman -Syu` does it all in one go.",
+        "redhat": "`sudo dnf upgrade`"
+      }
+    },
+    "vim": {
+      "text": "Bonus: install the Vim text editor. Hint: the package doesn't have the same name in every family!",
+      "hint": {
+        "debian": "Search with `apt search vim`. The package is called `vim`.",
+        "arch": "Search with `pacman -Ss vim`. The package is called `vim`.",
+        "redhat": "Search with `dnf search vim`. The package is called `vim-enhanced`."
+      }
+    }
+  }
+}

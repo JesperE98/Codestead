@@ -142,7 +142,7 @@ EXEMPEL
           name === 'head' ? lines.slice(0, n) : fromStart ? lines.slice(Math.max(0, n - 1)) : n === 0 ? [] : lines.slice(-n);
         ctx.out(joinLines(picked));
       });
-      if (o.flags.has('f')) ctx.out(`${COLOR.dim}(simulatorn: -f följer inte filen – i en riktig terminal avslutar du med Ctrl+C)${COLOR.reset}\n`);
+      if (o.flags.has('f')) ctx.out(`${COLOR.dim}(${ctx.sh.msg({ sv: 'simulatorn: -f följer inte filen – i en riktig terminal avslutar du med Ctrl+C', en: "simulator: -f doesn't follow the file – in a real terminal you stop it with Ctrl+C" })})${COLOR.reset}\n`);
       return failed ? 1 : 0;
     },
   };

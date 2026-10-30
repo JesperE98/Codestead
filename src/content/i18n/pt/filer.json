@@ -1,0 +1,23 @@
+{
+  "title": "Arquivos e diretórios",
+  "tasks": {
+    "mkdir": {
+      "text": "Crie o diretório `~/projekt/src` com **um único** comando.",
+      "hint": "O `mkdir` precisa da opção `-p` para criar `projekt` e `src` de uma vez."
+    },
+    "touch": {
+      "text": "Crie um arquivo vazio chamado `~/projekt/README.md`."
+    },
+    "cp": {
+      "text": "Copie `~/anteckningar.txt` para dentro do diretório `~/projekt/`."
+    },
+    "mv": {
+      "text": "Renomeie `~/projekt/anteckningar.txt` para `~/projekt/att-gora.txt`.",
+      "hint": "Renomear é o mesmo que mover – use `mv`."
+    },
+    "rm": {
+      "text": "Apague o diretório `~/gammalt` e tudo o que há dentro dele.",
+      "hint": "O diretório não está vazio, então o `rmdir` não serve. Use `rm -r`."
+    }
+  }
+}

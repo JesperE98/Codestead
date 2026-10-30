@@ -1,0 +1,24 @@
+{
+  "title": "Redirections et pipes",
+  "tasks": {
+    "redirect": {
+      "text": "Écrivez le texte `Hej från shell` (« Bonjour depuis le shell » en suédois) dans le fichier `~/hej.txt` avec `echo` et `>`."
+    },
+    "append": {
+      "text": "Ajoutez une ligne de plus à `~/hej.txt` – sans écraser la première.",
+      "hint": "Utilisez `>>` au lieu de `>`."
+    },
+    "count-errors": {
+      "text": "Comptez le nombre de lignes contenant `ERROR` dans server.log en envoyant `grep` dans `wc -l` avec un pipe."
+    },
+    "uniq": {
+      "text": "Affichez combien de fois chaque fruit apparaît dans `frukter.txt`, avec `sort` et `uniq -c`."
+    },
+    "save-ls": {
+      "text": "Enregistrez la liste des fichiers de `/etc` dans le fichier `~/etc-filer.txt`."
+    },
+    "devnull": {
+      "text": "Exécutez `ls /finnsinte`, mais envoyez le message d'erreur vers `/dev/null` pour que rien ne s'affiche."
+    }
+  }
+}

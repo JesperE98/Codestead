@@ -6,10 +6,12 @@ import { ArithError, evalArith } from './arith';
 import { COMMANDS } from './commands';
 import { formatMan } from './commands/util';
 import { manFor } from './commands/man-en';
+import { setupDisks, type DiskState } from './disks';
 import { getDistro, type Distro } from './distros';
 import { buildFs, STUDENT } from './initfs';
-import { installPackage, PACKAGES, packageProviding } from './packages';
+import { installCommand, installPackage, PACKAGES, packageProviding } from './packages';
 import { initialProcs, SHELL_PID, type Job, type ProcState } from './procs';
+import { initialServices, type ServiceState } from './services';
 import {
   escapeGlob,
   findClosingParen,
@@ -23,8 +25,11 @@ import {
   type Redirect,
   type Word,
 } from './parser';
+import { translateFish } from './fish';
+import { fishVersion, shebang, shellProc, shellPrompt, shellStartup, ZSH_VERSION, type ShellFrame, type ShellMode } from './shellmode';
 import { ExitSignal, isControlSignal, LimitError, LoopSignal, ReturnSignal } from './signals';
 import type { CmdCtx, IO, Reader, Sink } from './types';
+import { lookupUser } from './users';
 import { basename, dirname, ELF, FsError, hasPerm, resolvePath, VFS, type FsNode, type User } from './vfs';
 
 export interface ShellSnapshot {
@@ -40,6 +45,10 @@ export interface ShellSnapshot {
   userStack: string[];
   functions?: Record<string, Node>;
   proc?: ProcState;
+  services?: ServiceState;
+  /** Startade zsh/fish-skal ovanpå det första bash-skalet. */
+  shells?: ShellFrame[];
+  disks?: DiskState;
 }
 
 export interface ExecResult {
@@ -62,6 +71,8 @@ interface Pending {
   onAnswer(yes: boolean, io: Sink, text: string): number;
   /** Resten av kommandoraden, som körs när frågan besvarats. */
   resume?: (io: XIO) => number;
+  /** Svaret är hemligt (lösenord): terminalen visar inte det som skrivs. */
+  secret?: boolean;
 }
 
 /** Internt IO-objekt när kod körs: stdin är en delad läsare. */
@@ -93,10 +104,16 @@ export class Shell {
   functions: Record<string, Node>;
   /** Processer och bakgrundsjobb. */
   proc: ProcState;
+  /** Tjänster (systemd) och journalen. */
+  services!: ServiceState;
+  /** Diskar, partitioner och monterade filsystem. */
+  disks: DiskState;
   /** PID för det senast startade bakgrundsjobbet ($!). */
   lastBgPid: number | null = null;
   /** Inloggade användare; sista är aktiv. `sudo -i` lägger till root, `exit` tar bort. */
   userStack: string[];
+  /** Skal som startats med `zsh`, `fish` eller `bash` (avslutas med exit). */
+  shellStack: ShellFrame[];
   lastExit = 0;
   pending: Pending | null = null;
   /** Gränssnittets språk. Styr simulatorns egna tipsrader och manualsidor (svenska eller engelska). */
@@ -116,6 +133,8 @@ export class Shell {
   private steps = 0;
   private listDepth = 0;
   private substDepth = 0;
+  /** Skalet som ett skript körs med (enligt #! eller t.ex. `zsh skript.sh`). */
+  private modeOverride: ShellMode[] = [];
 
   private constructor(s: ShellSnapshot) {
     this.distro = getDistro(s.distroId);
@@ -128,7 +147,10 @@ export class Shell {
     this.flags = s.flags;
     this.functions = s.functions ?? {};
     this.proc = s.proc ?? initialProcs(this.distro);
+    this.disks = s.disks ?? setupDisks(this.distro, this.vfs);
     this.userStack = s.userStack.length ? s.userStack : [STUDENT];
+    this.services = s.services ?? initialServices(this);
+    this.shellStack = s.shells ?? [];
   }
 
   static create(distroId: string): Shell {
@@ -175,11 +197,21 @@ export class Shell {
   private addMissingDefaults(): void {
     const family = this.distro.family;
     for (const pkg of PACKAGES) {
-      if (!pkg.names[family] || !pkg.base?.includes(family)) continue;
+      if (!pkg.names[family] || !(pkg.base?.includes(family) || pkg.baseDistros?.includes(this.distro.id))) continue;
       const key = `default:pkg:${pkg.id}`;
       if (this.flags[key]) continue;
       if (!(pkg.id in this.installed)) installPackage(this, pkg);
       this.flags[key] = true;
+    }
+    // Nya kommandon i paket som redan är installerade (t.ex. mount i util-linux).
+    for (const pkg of PACKAGES) {
+      if (!(pkg.id in this.installed)) continue;
+      for (const cmd of pkg.provides) {
+        const key = `default:cmd:${cmd}`;
+        if (this.flags[key]) continue;
+        if (!this.vfs.tryLookup(`/usr/bin/${cmd}`, this.rootUser())) installCommand(this, cmd);
+        this.flags[key] = true;
+      }
     }
     const fresh = new VFS(buildFs(this.distro));
     const root = this.rootUser();
@@ -199,6 +231,13 @@ export class Shell {
     };
     walk(`${home}/dokument`);
     walk(`${home}/projekt-webb`);
+    // Mallen för nya hemkataloger (useradd -m) och inställningarna för useradd.
+    walk('/etc/skel');
+    walk('/etc/login.defs');
+    // Nätverkskapitlet: DNS-inställningen och övningsservern.
+    walk('/etc/resolv.conf');
+    walk('/usr/local/bin/minserver');
+    walk(`${home}/Nedladdningar`);
   }
 
   snapshot(): ShellSnapshot {
@@ -215,14 +254,17 @@ export class Shell {
       userStack: this.userStack,
       functions: this.functions,
       proc: this.proc,
+      services: this.services,
+      shells: this.shellStack,
+      disks: this.disks,
     };
   }
 
   // ---------- Användare ----------
 
+  /** Användaren enligt /etc/passwd och /etc/group (se users.ts). */
   getUser(name: string): User {
-    if (name === 'root') return { name: 'root', uid: 0, groups: ['root'], home: '/root' };
-    return { name, uid: 1000, groups: [name, this.distro.adminGroup], home: `/home/${name}` };
+    return lookupUser(this, name);
   }
 
   rootUser(): User {
@@ -265,14 +307,15 @@ export class Shell {
     this.pending = { question, defaultYes, onAnswer, user: this.currentUser().name, line: this.currentLine };
   }
 
-  /** Ber användaren skriva en rad text (används av `read`). */
-  askText(prompt: string, onText: (text: string, io: Sink) => number): void {
+  /** Ber användaren skriva en rad text (används av `read`). Med secret visas inte svaret (lösenord). */
+  askText(prompt: string, onText: (text: string, io: Sink) => number, secret = false): void {
     this.pending = {
       question: prompt,
       defaultYes: false,
       onAnswer: (_yes, io, text) => onText(text, io),
       user: this.currentUser().name,
       line: this.currentLine,
+      secret,
     };
   }
 
@@ -287,9 +330,50 @@ export class Shell {
     this.partial = null;
   }
 
+  // ---------- Andra skal (zsh, fish) ----------
+
+  /** Skalet som tolkar kommandona just nu. */
+  get shellMode(): ShellMode {
+    if (this.modeOverride.length) return this.modeOverride.at(-1)!;
+    const top = this.shellStack.at(-1);
+    return top && top.userDepth === this.userStack.length ? top.mode : 'bash';
+  }
+
+  /** Sant när kommandon skrivs direkt i terminalen (inte i ett skript eller $(...)). */
+  get interactive(): boolean {
+    return this.modeOverride.length === 0 && this.substDepth === 0;
+  }
+
+  /** Startar ett nytt interaktivt skal (zsh, fish eller bash) ovanpå det nuvarande. */
+  startShell(mode: ShellMode, io: Sink): number {
+    const pid = this.proc.nextPid++;
+    const ppid = this.shellStack.at(-1)?.pid ?? SHELL_PID;
+    const user = this.currentUser();
+    this.proc.procs.push(shellProc(pid, ppid, user.name, mode));
+    const saved = { cwd: this.cwd, env: { ...this.env }, aliases: this.aliases, functions: this.functions };
+    // `sudo zsh` ger ett skal som root.
+    const pushedUser = user.name !== this.userStack.at(-1);
+    if (pushedUser) {
+      this.userStack.push(user.name);
+      Object.assign(this.env, { USER: user.name, HOME: user.home });
+    }
+    this.shellStack.push({ mode, pid, userDepth: this.userStack.length, options: {}, saved, pushedUser });
+    // Alias och funktioner ärvs inte av ett nytt skal – miljövariablerna gör det.
+    this.aliases = {};
+    this.functions = {};
+    shellStartup(this, mode, io);
+    return 0;
+  }
+
+  /** Tolkar kod med det aktuella skalets syntax (fish översätts till bash först). */
+  private parseCode(text: string, mode = this.shellMode): Node {
+    return parse(mode === 'fish' ? translateFish(text, (t) => this.msg(t)) : text);
+  }
+
   prompt(): string {
     if (this.pending) return this.pending.question;
     if (this.partial !== null) return '> ';
+    if (this.shellMode !== 'bash') return shellPrompt(this, this.shellMode);
     const u = this.currentUser();
     let p = this.cwd;
     if (p === u.home) p = '~';
@@ -312,8 +396,12 @@ export class Shell {
     const motd = this.distro.motd ? this.distro.motd + '\n' : '';
     return (
       motd +
-      `${DIM}Simulerad terminal (${this.distro.name}). Inget du gör här påverkar din dator.\n` +
-      `Skriv 'help' för att se vilka kommandon som finns.${RESET}\n`
+      DIM +
+      this.msg({
+        sv: `Simulerad terminal (${this.distro.name}). Inget du gör här påverkar din dator.\nSkriv 'help' för att se vilka kommandon som finns.`,
+        en: `Simulated terminal (${this.distro.name}). Nothing you do here affects your computer.\nType 'help' to see which commands are available.`,
+      }) +
+      `${RESET}\n`
     );
   }
 
@@ -341,7 +429,9 @@ export class Shell {
       this.currentLine = p.line;
       this.guard(term, () => {
         this.lastExit = this.runAs(p.user, () => p.onAnswer(yes, term, line));
-        if (p.resume && !this.pending) this.lastExit = p.resume(term);
+        // Ställer svaret en ny fråga (t.ex. "Retype new password:") körs resten av raden efter den.
+        if (p.resume && this.pending) this.pending.resume ??= p.resume;
+        else if (p.resume) this.lastExit = p.resume(term);
       });
       return result(p.line);
     }
@@ -349,7 +439,7 @@ export class Shell {
     const text = this.partial !== null ? `${this.partial}\n${line}` : line;
     let ast: Node;
     try {
-      ast = parse(text);
+      ast = this.parseCode(text);
     } catch (e) {
       if (!(e instanceof ParseError)) throw e;
       if (e.incomplete && text.split('\n').length < 500) {
@@ -358,7 +448,7 @@ export class Shell {
       }
       this.partial = null;
       this.addHistory(text);
-      term.err(`bash: ${e.message}\n`);
+      term.err(`${this.shellMode}: ${e.message}\n`);
       this.lastExit = 2;
       return result(flattenLines(text));
     }
@@ -399,8 +489,14 @@ export class Shell {
   private tick(): void {
     if (++this.steps > STEP_LIMIT) {
       throw new LimitError(
-        `Simulatorn avbröt körningen efter ${STEP_LIMIT.toLocaleString('sv-SE')} steg – kanske en oändlig loop? ` +
-          '(I en riktig terminal stoppar du ett program som aldrig blir klart med Ctrl+C.)',
+        this.msg({
+          sv:
+            `Simulatorn avbröt körningen efter ${STEP_LIMIT.toLocaleString('sv-SE')} steg – kanske en oändlig loop? ` +
+            '(I en riktig terminal stoppar du ett program som aldrig blir klart med Ctrl+C.)',
+          en:
+            `The simulator stopped the run after ${STEP_LIMIT.toLocaleString('en-US')} steps – an infinite loop, perhaps? ` +
+            '(In a real terminal you stop a program that never finishes with Ctrl+C.)',
+        }),
       );
     }
   }
@@ -408,10 +504,10 @@ export class Shell {
   /** Kör en rad (eller ett helt skript) i det aktuella skalet. */
   runLine(line: string, sink: Sink): number {
     try {
-      return (this.lastExit = this.exec(parse(line), { ...sink, stdin: null, tty: false }));
+      return (this.lastExit = this.exec(this.parseCode(line), { ...sink, stdin: null, tty: false }));
     } catch (e) {
       if (e instanceof ParseError) {
-        sink.err(`bash: ${e.message}\n`);
+        sink.err(`${this.shellMode}: ${e.message}\n`);
         return (this.lastExit = 2);
       }
       throw e;
@@ -740,6 +836,10 @@ export class Shell {
     try {
       if (!opts.viaSudo && this.functions[name]) return this.callFunction(name, args, io);
       if (builtin?.builtin && !opts.viaSudo) return builtin.run(ctx);
+      // zsh med `setopt autocd`: ett katalognamn som kommando byter katalog.
+      if (!args.length && this.shellMode === 'zsh' && this.shellStack.at(-1)?.options.autocd && !opts.viaSudo) {
+        if (this.vfs.tryLookup(this.resolve(name), this.currentUser())?.type === 'dir') return this.invoke(['cd', name], io);
+      }
 
       const found = this.resolveCommand(name);
       switch (found.kind) {
@@ -767,7 +867,7 @@ export class Shell {
       }
     } catch (e) {
       if (isControlSignal(e)) throw e;
-      io.err(`${name}: internt fel i simulatorn: ${(e as Error).message}\n`);
+      io.err(`${name}: ${this.msg({ sv: 'internt fel i simulatorn', en: 'internal simulator error' })}: ${(e as Error).message}\n`);
       return 1;
     }
   }
@@ -837,7 +937,10 @@ export class Shell {
       if (node.type === 'dir') return { kind: 'error' as const, message: 'Is a directory' };
       if (!hasPerm(node, user, 'x')) return { kind: 'error' as const, message: 'Permission denied' };
       const content = node.content ?? '';
-      if (content.startsWith(ELF)) return { kind: 'binary' as const, impl: basename(path), path };
+      // Binärfilen säger själv vilket program den är, så den fungerar även om den byter namn
+      // (t.ex. ./Kalkylator.AppImage eller /snap/bin/hello-world som pekar på snap).
+      const impl = /^\u007fELF[^(]*\(simulerad binärfil: ([^)\s]+)\)/.exec(content)?.[1] ?? basename(path);
+      if (content.startsWith(ELF)) return { kind: 'binary' as const, impl, path };
       if (!hasPerm(node, user, 'r')) return { kind: 'error' as const, message: 'Permission denied' };
       return { kind: 'script' as const, content, path };
     };
@@ -862,13 +965,14 @@ export class Shell {
   private commandNotFound(name: string, io: IO): void {
     const pkg = packageProviding(this.distro.family, name);
     const pkgName = pkg?.names[this.distro.family];
-    if (pkg && pkgName && this.distro.id === 'ubuntu') {
+    if (pkg && pkgName && this.distro.id === 'ubuntu' && this.shellMode === 'bash') {
       io.err(`Command '${name}' not found, but can be installed with:\nsudo apt install ${pkgName}\n`);
       return;
     }
-    io.err(`bash: ${name}: command not found\n`);
+    const mode = this.shellMode;
+    io.err(mode === 'zsh' ? `zsh: command not found: ${name}\n` : mode === 'fish' ? `fish: Unknown command: ${name}\n` : `bash: ${name}: command not found\n`);
     if (pkgName) {
-      io.err(`${DIM}Tips från simulatorn: kommandot finns i paketet '${pkgName}'. Se kapitlet om pakethantering.${RESET}\n`);
+      io.err(`${DIM}${this.msg({ sv: `Tips från simulatorn: kommandot finns i paketet '${pkgName}'. Se kapitlet om pakethantering.`, en: `Tip from the simulator: the command is in the package '${pkgName}'. See the chapter on package management.` })}${RESET}\n`);
     }
   }
 
@@ -876,14 +980,24 @@ export class Shell {
    * Kör ett skript. Som standard i ett "underskal": cd, variabler och funktioner
    * påverkar inte anroparen. Med inCurrentShell (source) stannar ändringarna kvar.
    */
-  runScript(content: string, name: string, args: string[], io: IO, inCurrentShell = false): number {
+  runScript(content: string, name: string, args: string[], io: IO, inCurrentShell = false, mode?: ShellMode): number {
     if (this.scriptDepth > 20) {
-      io.err(`bash: ${name}: för djup rekursion\n`);
+      io.err(`bash: ${name}: ${this.msg({ sv: 'för djup rekursion', en: 'maximum nesting level exceeded' })}\n`);
       return 1;
     }
+    if (!mode && !inCurrentShell) {
+      // Raden #! bestämmer vilket skal som kör skriptet, oavsett vilket skal du själv använder.
+      const sb = shebang(content);
+      if (sb && sb.mode !== 'bash' && this.resolveCommand(sb.mode).kind !== 'binary') {
+        io.err(`${this.shellMode}: ${name}: ${sb.interpreter}: bad interpreter: No such file or directory\n`);
+        return 126;
+      }
+      mode = sb?.mode ?? 'bash';
+    }
+    mode ??= this.shellMode;
     let ast: Node;
     try {
-      ast = parse(content);
+      ast = this.parseCode(content, mode);
     } catch (e) {
       if (!(e instanceof ParseError)) throw e;
       io.err(`${name}: ${e.message}\n`);
@@ -891,6 +1005,7 @@ export class Shell {
     }
     const saved = { cwd: this.cwd, env: { ...this.env }, functions: { ...this.functions } };
     this.scriptDepth++;
+    if (!inCurrentShell) this.modeOverride.push(mode);
     this.positional.push([name, ...args]);
     const savedLoopDepth = this.loopDepth;
     this.loopDepth = 0;
@@ -903,6 +1018,7 @@ export class Shell {
       else throw e;
     } finally {
       this.scriptDepth--;
+      if (!inCurrentShell) this.modeOverride.pop();
       this.positional.pop();
       this.loopDepth = savedLoopDepth;
       if (!inCurrentShell) Object.assign(this, saved);
@@ -914,16 +1030,27 @@ export class Shell {
   /** Anropas av `exit`. */
   exit(code: number, io: IO): number {
     if (this.scriptDepth > 0 || this.substDepth > 0) throw new ExitSignal(code);
+    const top = this.shellStack.at(-1);
+    if (top && top.userDepth === this.userStack.length) {
+      // Tillbaka till skalet som startade zsh/fish – med dess variabler, alias och katalog.
+      this.shellStack.pop();
+      if (top.pushedUser) this.userStack.pop();
+      Object.assign(this, top.saved);
+      this.flags[`left:${top.mode}`] = true;
+      this.proc.procs = this.proc.procs.filter((p) => p.pid !== top.pid);
+      return code;
+    }
     if (this.userStack.length > 1) {
       this.userStack.pop();
       const u = this.currentUser();
       this.cwd = u.home;
       this.env.HOME = u.home;
       this.env.USER = u.name;
+      this.env.LOGNAME = u.name;
       io.out('logout\n');
       return code;
     }
-    io.out(`${DIM}Det här är en simulerad terminal, så det finns ingen session att avsluta. Använd 'clear' för att rensa skärmen.${RESET}\n`);
+    io.out(`${DIM}${this.msg({ sv: "Det här är en simulerad terminal, så det finns ingen session att avsluta. Använd 'clear' för att rensa skärmen.", en: "This is a simulated terminal, so there is no session to end. Use 'clear' to clear the screen." })}${RESET}\n`);
     return 0;
   }
 
@@ -997,6 +1124,8 @@ export class Shell {
     if (name === 'RANDOM') return String(Math.floor(Math.random() * 32768));
     if (name === 'PWD') return this.cwd;
     if (name === 'UID') return String(this.currentUser().uid);
+    if (name === 'ZSH_VERSION' && this.shellMode === 'zsh') return ZSH_VERSION;
+    if (name === 'FISH_VERSION' && this.shellMode === 'fish') return fishVersion(this);
     return this.env[name];
   }
 
@@ -1077,7 +1206,7 @@ export class Shell {
 
   /** Värdet av en vanlig eller speciell parameter ($1, $#, $? ...). */
   private special(name: string): string | undefined {
-    const pos = this.positional.at(-1) ?? ['bash'];
+    const pos = this.positional.at(-1) ?? [this.shellMode];
     if (/^\d+$/.test(name)) return pos[Number(name)];
     switch (name) {
       case '?':
@@ -1123,7 +1252,13 @@ export class Shell {
       if (!quoted && hasUnescapedGlob(text)) cur.hasGlob = true;
       cur.touched = true;
     };
-    const expansion = (text: string, quoted: boolean) => {
+    // zsh delar inte upp ociterade $variabler vid mellanslag (om inte setopt shwordsplit).
+    const zshParams = this.shellMode === 'zsh' && !this.shellStack.at(-1)?.options.shwordsplit;
+    const expansion = (text: string, quoted: boolean, param = false) => {
+      if (param && zshParams && !quoted) {
+        if (text) literal(text, true);
+        return;
+      }
       if (quoted || !split) {
         literal(text, quoted);
         return;
@@ -1149,7 +1284,7 @@ export class Shell {
         if (quoted && text !== '$@') cur.touched = true;
         this.scan(text, io, {
           literal: (t) => literal(t, quoted),
-          expansion: (t) => expansion(t, quoted),
+          expansion: (t, param) => expansion(t, quoted, param),
           fields: (list) => {
             // "$@" blir ett fält per argument.
             if (!quoted) return expansion(list.join(' '), false);
@@ -1211,7 +1346,7 @@ export class Shell {
   private scan(
     text: string,
     io: Sink,
-    emit: { literal(t: string): void; expansion(t: string): void; fields(list: string[]): void },
+    emit: { literal(t: string): void; expansion(t: string, param?: boolean): void; fields(list: string[]): void },
   ): void {
     let lit = '';
     const flush = () => {
@@ -1257,14 +1392,14 @@ export class Shell {
           continue;
         }
         flush();
-        emit.expansion(this.paramExpand(text.slice(i + 2, j), io));
+        emit.expansion(this.paramExpand(text.slice(i + 2, j), io), true);
         i = j;
         continue;
       }
       const name = /^[A-Za-z_]\w*/.exec(text.slice(i + 1))?.[0];
       if (name) {
         flush();
-        emit.expansion(this.getVar(name) ?? '');
+        emit.expansion(this.getVar(name) ?? '', true);
         i += name.length;
         continue;
       }
@@ -1276,7 +1411,7 @@ export class Shell {
       }
       if (/[0-9?#$!-]/.test(next)) {
         flush();
-        emit.expansion(this.special(next) ?? '');
+        emit.expansion(this.special(next) ?? '', true);
         i++;
         continue;
       }
@@ -1294,6 +1429,19 @@ export class Shell {
     for (const seg of segs) {
       const next: string[] = [];
       for (const base of results) {
+        if (seg === '**' && this.shellMode !== 'bash') {
+          // zsh och fish: ** matchar alla underkataloger, på alla nivåer (även ingen alls).
+          const walk = (dir: string) => {
+            next.push(dir);
+            const node = this.vfs.tryLookup(this.resolve(dir || '.'), user);
+            if (!node || node.type !== 'dir' || !hasPerm(node, user, 'r')) return;
+            for (const name of Object.keys(node.children!).sort()) {
+              if (!name.startsWith('.') && node.children![name].type === 'dir') walk(join(dir, name));
+            }
+          };
+          walk(base);
+          continue;
+        }
         if (!hasUnescapedGlob(seg)) {
           next.push(join(base, unescapeGlob(seg)));
           continue;
@@ -1308,7 +1456,8 @@ export class Shell {
       }
       results = next;
     }
-    return results.filter((r) => r && this.vfs.tryLookup(this.resolve(r), user));
+    const found = results.filter((r) => r && this.vfs.tryLookup(this.resolve(r), user));
+    return segs.includes('**') && this.shellMode !== 'bash' ? found.sort() : found;
   }
 
   // ---------- Tab-komplettering ----------

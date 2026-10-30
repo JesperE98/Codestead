@@ -1,0 +1,60 @@
+{
+  "title": "パッケージ管理",
+  "tasks": {
+    "sync": {
+      "text": {
+        "debian": "`apt update` で最新のパッケージ一覧をダウンロードしてください。",
+        "arch": "`pacman -Syu` でパッケージデータベースを同期し、システムをアップグレードしてください。",
+        "redhat": "`dnf check-update` で新しいパッケージ情報を取得し、更新があるか確認してください。"
+      },
+      "hint": {
+        "debian": "このコマンドはシステムを変更するので root 権限が必要です: `sudo apt update`。",
+        "arch": "このコマンドはシステムを変更するので root 権限が必要です: `sudo pacman -Syu`。",
+        "redhat": "`dnf check-update` には root 権限は必要ありません。"
+      }
+    },
+    "search": {
+      "text": "`htop` パッケージを検索してください。",
+      "hint": {
+        "debian": "`apt search htop`",
+        "arch": "`pacman -Ss htop`",
+        "redhat": "`dnf search htop`"
+      }
+    },
+    "install": {
+      "text": "`tree` パッケージをインストールしてください。",
+      "hint": {
+        "debian": "`sudo apt install tree`",
+        "arch": "`sudo pacman -S tree` を実行し、質問には yes と答えます。",
+        "redhat": "`sudo dnf install tree` を実行し、`y` と答えます。既定値は No です！"
+      }
+    },
+    "run-tree": {
+      "text": "ホームディレクトリで `tree` を実行してください。"
+    },
+    "remove": {
+      "text": "`tree` パッケージを再び削除してください。",
+      "hint": {
+        "debian": "`sudo apt remove tree`",
+        "arch": "`sudo pacman -R tree`",
+        "redhat": "`sudo dnf remove tree`"
+      }
+    },
+    "upgrade": {
+      "text": "インストール済みのすべてのパッケージをアップグレードしてください。",
+      "hint": {
+        "debian": "`sudo apt update` のあとに、`sudo apt upgrade` を実行します。",
+        "arch": "`sudo pacman -Syu` で一度にすべて行えます。",
+        "redhat": "`sudo dnf upgrade`"
+      }
+    },
+    "vim": {
+      "text": "ボーナス: テキストエディター Vim をインストールしてください。ヒント: パッケージ名はどのファミリーでも同じとは限りません！",
+      "hint": {
+        "debian": "`apt search vim` で検索しましょう。パッケージ名は `vim` です。",
+        "arch": "`pacman -Ss vim` で検索しましょう。パッケージ名は `vim` です。",
+        "redhat": "`dnf search vim` で検索しましょう。パッケージ名は `vim-enhanced` です。"
+      }
+    }
+  }
+}

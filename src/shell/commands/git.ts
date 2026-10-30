@@ -9,6 +9,7 @@
 import type { Shell } from '../shell';
 import type { CmdCtx, CommandDef } from '../types';
 import { dirname, FsError, hasPerm, normalizePath, resolvePath, type FsNode, type User } from '../vfs';
+import { aurClone } from './repos';
 import { COLOR } from './util';
 
 // ---------- SHA-1 ----------
@@ -2936,6 +2937,9 @@ function fetchRemote(r: Repo, name: string, quiet = false): number {
 }
 
 const cmdClone: Sub = (g, args) => {
+  // Paket från AUR (git clone https://aur.archlinux.org/PAKET.git) – se repos.ts.
+  const aur = aurClone(g.ctx, args);
+  if (aur !== null) return aur;
   const o = parseArgs(args, ['q|quiet', 'bare', 'b|branch=', 'o|origin=', 'depth='], 'clone');
   const [url, dirArg] = o.operands;
   if (!url) fail('fatal: You must specify a repository to clone.\n\nusage: git clone [<options>] [--] <repo> [<dir>]', 129);

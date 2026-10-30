@@ -1,0 +1,17 @@
+{
+  "title": "Willkommen in der Linux-Shell",
+  "tasks": {
+    "echo": {
+      "text": "Gib den Text `Hej världen` (Schwedisch für „Hallo Welt“) mit `echo` aus."
+    },
+    "whoami": {
+      "text": "Finde mit `whoami` heraus, als welcher Benutzer du angemeldet bist."
+    },
+    "os-release": {
+      "text": "Zeige mit `cat /etc/os-release` an, welche Distribution du benutzt."
+    },
+    "help": {
+      "text": "Liste mit `help` alle Befehle auf, die es im Simulator gibt."
+    }
+  }
+}

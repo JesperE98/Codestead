@@ -1,0 +1,60 @@
+{
+  "title": "软件包管理",
+  "tasks": {
+    "sync": {
+      "text": {
+        "debian": "用 `apt update` 下载最新的软件包列表。",
+        "arch": "用 `pacman -Syu` 同步软件包数据库并升级系统。",
+        "redhat": "用 `dnf check-update` 获取新的软件包信息并检查更新。"
+      },
+      "hint": {
+        "debian": "这条命令会修改系统，需要 root 权限：`sudo apt update`。",
+        "arch": "这条命令会修改系统，需要 root 权限：`sudo pacman -Syu`。",
+        "redhat": "`dnf check-update` 不需要 root 权限。"
+      }
+    },
+    "search": {
+      "text": "搜索 `htop` 软件包。",
+      "hint": {
+        "debian": "`apt search htop`",
+        "arch": "`pacman -Ss htop`",
+        "redhat": "`dnf search htop`"
+      }
+    },
+    "install": {
+      "text": "安装 `tree` 软件包。",
+      "hint": {
+        "debian": "`sudo apt install tree`",
+        "arch": "`sudo pacman -S tree`，并对提问回答 yes。",
+        "redhat": "`sudo dnf install tree`——并回答 `y`，因为默认选项是 No！"
+      }
+    },
+    "run-tree": {
+      "text": "在你的主目录中运行 `tree`。"
+    },
+    "remove": {
+      "text": "再把 `tree` 软件包删除。",
+      "hint": {
+        "debian": "`sudo apt remove tree`",
+        "arch": "`sudo pacman -R tree`",
+        "redhat": "`sudo dnf remove tree`"
+      }
+    },
+    "upgrade": {
+      "text": "升级所有已安装的软件包。",
+      "hint": {
+        "debian": "运行 `sudo apt update` 之后，再运行 `sudo apt upgrade`。",
+        "arch": "`sudo pacman -Syu` 一步就能全部完成。",
+        "redhat": "`sudo dnf upgrade`"
+      }
+    },
+    "vim": {
+      "text": "附加题：安装文本编辑器 Vim。提示：这个软件包在各个家族中的名字并不相同！",
+      "hint": {
+        "debian": "用 `apt search vim` 搜索。这个软件包叫做 `vim`。",
+        "arch": "用 `pacman -Ss vim` 搜索。这个软件包叫做 `vim`。",
+        "redhat": "用 `dnf search vim` 搜索。这个软件包叫做 `vim-enhanced`。"
+      }
+    }
+  }
+}

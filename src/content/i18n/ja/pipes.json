@@ -1,0 +1,24 @@
+{
+  "title": "リダイレクトとパイプ",
+  "tasks": {
+    "redirect": {
+      "text": "`echo` と `>` を使って、`Hej från shell`（スウェーデン語で「シェルからこんにちは」）というテキストを `~/hej.txt` ファイルに書き込んでください。"
+    },
+    "append": {
+      "text": "`~/hej.txt` に、1 行目を上書きせずにもう 1 行追加してください。",
+      "hint": "`>` の代わりに `>>` を使いましょう。"
+    },
+    "count-errors": {
+      "text": "`grep` の出力を `wc -l` にパイプでつないで、server.log の中で `ERROR` を含む行数を数えてください。"
+    },
+    "uniq": {
+      "text": "`sort` と `uniq -c` を使って、`frukter.txt` にそれぞれの果物が何回出てくるかを表示してください。"
+    },
+    "save-ls": {
+      "text": "`/etc` にあるファイルの一覧を `~/etc-filer.txt` ファイルに保存してください。"
+    },
+    "devnull": {
+      "text": "`ls /finnsinte` を実行し、エラーメッセージを `/dev/null` に送って何も表示されないようにしてください。"
+    }
+  }
+}

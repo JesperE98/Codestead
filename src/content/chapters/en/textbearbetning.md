@@ -1,0 +1,348 @@
+# Text processing with sed, tr and awk
+
+With `grep` you can *find* lines. But often you want to do more than that:
+replace a word, delete certain lines, pick out a column or add up some
+numbers. That's when you reach for three classic tools:
+
+| Tool | Works on | Typical job |
+|---|---|---|
+| `tr` | single **characters** | convert to uppercase, turn `:` into newlines |
+| `sed` | **lines** | replace a word, delete lines |
+| `awk` | **columns** (fields) | pick out columns, add up, count |
+
+All three are *filters*: they read text, do something with it and write the
+result to stdout. That makes them a perfect fit for pipes. And the original
+file is **not** changed (with one exception, `sed -i`, which we'll get to).
+
+In `dokument` there's a new practice file, a CSV file with the students'
+scores (*namn* = name, *ämne* = subject, *poäng* = points):
+
+```sh
+cat ~/dokument/betyg.csv
+```
+
+CSV stands for *comma-separated values* – the columns are separated by
+commas, and the first line is a header.
+
+## Translating characters – `tr`
+
+`tr` (*translate*) replaces every character in the first set with the
+character in the same position in the second. `a-z` means all the letters
+from a to z:
+
+```sh
+echo "hello from café" | tr a-z A-Z
+```
+
+```text
+HELLO FROM CAFé
+```
+
+Did you spot the é? `tr` works on individual *bytes*, and letters such as é –
+or the Swedish å, ä and ö – aren't part of `a-z`. That's worth knowing – `awk`
+(further down) handles it better.
+
+`tr` **only** reads from stdin, never from files. If you want to use a file,
+feed it in with `<` or a pipe:
+
+```sh
+tr a-z A-Z < ~/dokument/frukter.txt
+```
+
+A classic trick is to turn colons into newlines (`\n`), so that each
+directory in `PATH` ends up on a line of its own:
+
+```sh
+echo $PATH | tr ':' '\n'
+```
+
+With `-d` (*delete*) you remove characters, and with `-s` (*squeeze*) you
+squeeze several identical characters in a row into one:
+
+```sh
+echo "070-123 45 67" | tr -d ' -'
+echo "too     many      spaces" | tr -s ' '
+```
+
+Instead of ranges you can write *classes*, e.g. `[:upper:]` (uppercase),
+`[:lower:]` (lowercase), `[:digit:]` (digits) and `[:space:]` (whitespace):
+
+```sh
+echo "Room 101, floor 3" | tr -d '[:digit:]'
+```
+
+## The stream editor – `sed`
+
+`sed` (*stream editor*) reads text line by line and runs a small *script* on
+each line. The most common command is `s` – *substitute*.
+
+### Replacing text – `s`
+
+```sh
+sed 's/ERROR/FEL/' ~/dokument/server.log
+```
+
+The script `s/ERROR/FEL/` means: replace `ERROR` with `FEL` (Swedish for
+"error"). It has the form
+
+```text
+s/PATTERN/REPLACEMENT/FLAGS
+```
+
+Without flags, only the **first** match on each line is replaced. With `g`
+(*global*), all of them are:
+
+```sh
+echo "cat cat cat" | sed 's/cat/dog/'
+echo "cat cat cat" | sed 's/cat/dog/g'
+```
+
+The `i` flag makes the search case-insensitive, just like `grep -i`:
+
+```sh
+sed 's/warn/WARNING/i' ~/dokument/server.log
+```
+
+The pattern is a *regular expression*, just as in `grep`. Here we remove the
+date at the start of each line (`^` = start of line, `[0-9-]*` = digits and
+hyphens):
+
+```sh
+sed 's/^[0-9-]* //' ~/dokument/server.log
+```
+
+In the replacement, `&` means "whatever matched":
+
+```sh
+echo "Linux is fun" | sed 's/Linux/**&**/'
+```
+
+**A different delimiter.** If the text itself contains slashes, things get
+messy: `s/\/usr\/local/\/opt/`. But the character right after `s` decides
+the delimiter, so you might as well use `|` or `#`:
+
+```sh
+echo /usr/local/bin | sed 's|/usr/local|/opt|'
+```
+
+**Groups.** With `-E` (extended regular expressions) you can capture parts of
+the match with parentheses and use them in the replacement as `\1`, `\2` …
+Here we turn the date around:
+
+```sh
+sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/dokument/server.log
+```
+
+### Choosing lines – addresses
+
+In front of a command you can write an *address* that chooses which lines it
+applies to. The `d` command (*delete*) deletes lines and `p` (*print*) prints
+them:
+
+```sh
+sed '/INFO/d' ~/dokument/server.log
+sed '1d' ~/dokument/betyg.csv
+```
+
+The first one deletes every line containing `INFO`, the second deletes line 1
+– the header.
+
+`sed` normally prints *every* line. With `-n` it stops doing that, and then
+only what `p` asks for is printed. Here's how to show lines 5 to 8:
+
+```sh
+sed -n '5,8p' ~/dokument/server.log
+```
+
+| Address | Means |
+|---|---|
+| `5` | line 5 |
+| `$` | the last line |
+| `/ERROR/` | lines matching the pattern |
+| `2,4` | lines 2 to 4 |
+| `/WARN/,/ERROR/` | from a line with WARN to the next line with ERROR |
+| `/INFO/!` | every line **except** those that match |
+
+Addresses work with every command, `s` included. Here only the error lines
+get marked:
+
+```sh
+sed '/ERROR/s/^/>>> /' ~/dokument/server.log
+```
+
+The `q` command (*quit*) stops after a given line – so `sed 3q` does the same
+as `head -n 3`. You separate several commands with `;` or with several `-e`:
+
+```sh
+sed -e '/INFO/d' -e 's/ERROR/FEL/' ~/dokument/server.log
+```
+
+### Editing the file in place – `sed -i`
+
+Everything so far has only been *printed*. The file itself is unchanged –
+feel free to check with `cat`. With `-i` (*in-place*), `sed` writes the
+result back to the file instead. Try it on a copy:
+
+```sh
+cp ~/dokument/frukter.txt ~/frukter-kopia.txt
+sed -i 's/kiwi/kiwifruit/' ~/frukter-kopia.txt
+cat ~/frukter-kopia.txt
+```
+
+There's no undo for `sed -i`. A good way to work is to run the command
+**without** `-i` first and look at the result, then add `-i` once it looks
+right. If you write `-i.bak`, the original is also saved as `file.bak`.
+
+Configuration files in `/etc` are owned by root, so there you need
+`sudo sed -i ...`. It's a common way to change a setting from a script
+without opening a text editor.
+
+## Columns – `awk`
+
+`awk` is really a whole little programming language, but most of the time
+it's used for one thing: working with **columns**. awk splits each line into
+*fields*:
+
+| Field | Means |
+|---|---|
+| `$1`, `$2` … | the first, second … field |
+| `$0` | the whole line |
+| `NF` | the number of fields on the line (*number of fields*) |
+| `$NF` | the last field |
+| `NR` | the line number (*number of record*) |
+
+By default, fields are separated by spaces (any number of them). In
+`server.log`, field 3 is the log level:
+
+```sh
+awk '{print $3}' ~/dokument/server.log
+```
+
+The program goes inside `{ }` and runs for every line. Always put the awk
+program in **single** quotes – otherwise the shell thinks `$3` is a shell
+variable and replaces it before awk even starts.
+
+awk fits perfectly in a pipe. How many lines are there of each level?
+
+```sh
+awk '{print $3}' ~/dokument/server.log | sort | uniq -c
+```
+
+### Other separators – `-F`
+
+With `-F` you choose the field separator. In `/etc/passwd` it's a colon;
+field 1 is the user name and field 7 the shell:
+
+```sh
+awk -F: '{print $1, $7}' /etc/passwd
+```
+
+The comma in `print` becomes a space in the output. Without a comma the
+fields are glued together, and then you can mix in text of your own:
+
+```sh
+awk -F: '{print $1 " uses " $7}' /etc/passwd
+```
+
+You may remember `cut -d: -f1`. The difference is that awk can reorder the
+fields, mix in text and cope with several spaces in a row.
+
+### Patterns – choosing lines
+
+Before the `{ }` you can write a *pattern*. The program then only runs for
+the lines that match. The pattern can be a regular expression, as in `grep`:
+
+```sh
+awk '/ERROR/ {print $2}' ~/dokument/server.log
+```
+
+… or a condition. Text goes inside double quotes:
+
+```sh
+awk -F, '$2 == "matte" {print $1, $3}' ~/dokument/betyg.csv
+```
+
+(*Matte* is Swedish for "math".) Comparisons are written `==`, `!=`, `<`,
+`<=`, `>` and `>=`, and conditions are combined with `&&` (and), `||` (or)
+and `!` (not). Here are all the students with at least 90 points (without
+`{ }` the whole line is printed):
+
+```sh
+awk -F, '$3 >= 90' ~/dokument/betyg.csv
+```
+
+Did you get the header line as well? In it, field 3 is the word `poäng`, and
+when a value isn't a number, awk compares it as *text* – and `"poäng"` comes
+after `"90"` in alphabetical order. You skip the header with `NR > 1`:
+
+```sh
+awk -F, 'NR > 1 && $3 >= 90' ~/dokument/betyg.csv
+```
+
+### Counting – variables and `END`
+
+awk has variables that you don't need to declare – they start at 0. The
+`END { }` block runs once, **after** the last line. Together they make an
+easy way to add up a column:
+
+```sh
+awk -F, 'NR > 1 {summa += $3} END {print summa}' ~/dokument/betyg.csv
+```
+
+`summa += $3` means "add field 3 to summa" (*summa* is Swedish for "sum").
+If you count the lines at the same time (`antal++` increases *antal*, the
+count, by 1), you can work out the average:
+
+```sh
+awk -F, 'NR > 1 {summa += $3; antal++} END {print "Average:", summa / antal}' ~/dokument/betyg.csv
+```
+
+There's also `BEGIN { }`, which runs **before** the first line – handy for
+headings. And with `printf` you decide exactly what the output looks like:
+`%-8s` is text left-aligned in 8 characters and `%5d` an integer in 5
+characters.
+
+```sh
+awk -F, 'BEGIN {print "Student  Score"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/dokument/betyg.csv
+```
+
+awk also has functions, such as `length()`, `toupper()` and `tolower()`.
+Unlike `tr`, GNU awk handles letters like å, ä and ö:
+
+```sh
+awk '{print toupper($0)}' ~/dokument/frukter.txt
+```
+
+:::debian
+On {{distro}}, `awk` is **mawk** by default, a small and fast variant. If you
+want GNU awk, install the `gawk` package. For simple programs like these you
+won't notice any difference – but mawk doesn't convert å, ä and ö with
+`toupper()`.
+:::
+
+:::arch
+On Arch Linux, `awk` is **GNU awk** (the `gawk` package).
+:::
+
+:::redhat
+On {{distro}}, `awk` is **GNU awk** (the `gawk` package).
+:::
+
+The simulator only knows part of the awk language – what's covered here and
+a little more (`if`, loops and arrays). See `man awk`.
+
+## Which tool should I choose?
+
+| You want to … | Use |
+|---|---|
+| find lines that contain something | `grep` |
+| replace or delete individual characters | `tr` |
+| replace words or patterns, delete lines | `sed` |
+| pick out columns, compare numbers, add up | `awk` |
+
+The real power comes from combining them. Which levels are there among the
+lines that *aren't* INFO – if we ignore upper and lower case?
+
+```sh
+grep -v INFO ~/dokument/server.log | awk '{print $3}' | tr A-Z a-z | sort | uniq -c
+```

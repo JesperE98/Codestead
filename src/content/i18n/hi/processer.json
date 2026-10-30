@@ -1,0 +1,33 @@
+{
+  "title": "Processes और jobs",
+  "tasks": {
+    "ps": {
+      "text": "`ps` से अपने terminal के processes दिखाइए।"
+    },
+    "ps-aux": {
+      "text": "Computer के **सारे** processes की list दिखाइए।",
+      "hint": "`ps aux` (या `ps -ef`)।"
+    },
+    "hitta": {
+      "text": "कोई process लगभग पूरा CPU खा रहा है। Processes को CPU usage के हिसाब से sort करके दिखाइए ताकि उसका नाम दिख जाए।",
+      "hint": "`top`, `htop` या `ps aux --sort=-%cpu`।"
+    },
+    "kill": {
+      "text": "बेक़ाबू process (PID 3141) को `kill` से रोकिए।"
+    },
+    "bakgrund": {
+      "text": "`sleep 300` को background में start कीजिए।",
+      "hint": "Line के आख़िर में `&` लगाइए।"
+    },
+    "jobs": {
+      "text": "अपने background jobs दिखाइए।"
+    },
+    "kill-jobb": {
+      "text": "Background job को `kill` और job number (`%1`) या उसके PID से ख़त्म कीजिए।"
+    },
+    "server": {
+      "text": "Server `minserver` root के रूप में चल रहा है। उसे रोकिए – `pkill` या `kill` और सही privileges के साथ।",
+      "hint": "सामान्य user के रूप में आपको \"Operation not permitted\" मिलेगा। आगे `sudo` लगाइए।"
+    }
+  }
+}

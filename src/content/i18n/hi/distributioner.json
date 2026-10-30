@@ -1,0 +1,18 @@
+{
+  "title": "Distributions और families",
+  "tasks": {
+    "os-release": {
+      "text": "पता कीजिए कि आप जो distribution चला रहे हैं, उसका नाम और version क्या है।"
+    },
+    "kernel": {
+      "text": "दिखाइए कि Linux kernel का कौन-सा version चल रहा है।"
+    },
+    "pm-config": {
+      "text": {
+        "debian": "`/etc/apt/sources.list.d/` में देखिए कि apt कौन-सी repositories इस्तेमाल करता है।",
+        "arch": "`/etc/pacman.conf` में pacman की settings देखिए।",
+        "redhat": "`/etc/yum.repos.d/` में देखिए कि dnf कौन-सी repositories इस्तेमाल करता है।"
+      }
+    }
+  }
+}

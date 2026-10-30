@@ -2,6 +2,7 @@
 // Samma program kan heta olika saker i olika familjer – det är en viktig poäng!
 
 import type { Family } from './distros';
+import { extraRepoEnabled } from './extrarepo';
 import type { Shell } from './shell';
 import { ELF, makeFile } from './vfs';
 
@@ -22,6 +23,15 @@ export interface PackageDef {
   essential?: boolean;
   /** Arch-förråd (core/extra). */
   archRepo?: 'core' | 'extra';
+  /** Skal som paketet lägger till i /etc/shells. */
+  shells?: string[];
+  /** Förinstallerat bara i dessa distributioner (t.ex. snapd i Ubuntu men inte i Debian). */
+  baseDistros?: string[];
+  /**
+   * Finns bara i ett extra förråd: 'ppa:användare/namn' (Debian/Ubuntu), 'aur' (Arch)
+   * eller 'copr:användare/projekt' (Fedora). Se extrarepo.ts och commands/repos.ts.
+   */
+  extraRepo?: Partial<Record<Family, string>>;
 }
 
 const ALL: Family[] = ['debian', 'arch', 'redhat'];
@@ -41,6 +51,7 @@ export const PACKAGES: PackageDef[] = [
       'true', 'false', 'sleep', 'seq', 'basename', 'dirname', 'pwd', 'echo',
       'tr',
       'du',
+      'who', 'chgrp', 'df', 'sync',
     ],
     base: ALL,
     essential: true,
@@ -115,12 +126,45 @@ export const PACKAGES: PackageDef[] = [
     archRepo: 'core',
   },
   {
+    // Användarhantering. Paketet heter olika saker i familjerna!
+    id: 'shadow',
+    names: { debian: 'passwd', arch: 'shadow', redhat: 'shadow-utils' },
+    version: { debian: '1:4.13+dfsg1-4ubuntu3.2', arch: '4.18.0-1', redhat: '2:4.18.0-3.fc43' },
+    description: 'Change and administer password and group data (useradd, passwd ...)',
+    sizeKb: 3_900,
+    provides: ['useradd', 'usermod', 'userdel', 'groupadd', 'groupdel', 'gpasswd', 'passwd', 'chpasswd', 'chage'],
+    base: ALL,
+    essential: true,
+    archRepo: 'core',
+  },
+  {
+    // Debians vänligare skript runt useradd. Finns inte i Arch och Fedora.
+    id: 'adduser',
+    names: { debian: 'adduser' },
+    version: { debian: '3.137ubuntu1', arch: '', redhat: '' },
+    description: 'Add and remove users and groups (friendly front end to useradd)',
+    sizeKb: 640,
+    provides: ['adduser', 'deluser', 'addgroup', 'delgroup'],
+    base: ['debian'],
+  },
+  {
+    id: 'libc',
+    names: { debian: 'libc-bin', arch: 'glibc', redhat: 'glibc-common' },
+    version: { debian: '2.39-0ubuntu8.6', arch: '2.42+r17-1', redhat: '2.42-4.fc43' },
+    description: 'GNU C Library: support programs (getent, ldd ...)',
+    sizeKb: 2_700,
+    provides: ['getent'],
+    base: ALL,
+    essential: true,
+    archRepo: 'core',
+  },
+  {
     id: 'util-linux',
     names: same('util-linux'),
     version: { debian: '2.39.3-9ubuntu6', arch: '2.41.2-1', redhat: '2.41.2-1.fc43' },
     description: 'Miscellaneous system utilities (su, more, hostname ...)',
     sizeKb: 9_800,
-    provides: ['su', 'more', 'hostname'],
+    provides: ['su', 'more', 'hostname', 'chsh', 'last', 'mount', 'umount', 'lsblk', 'blkid', 'findmnt', 'fdisk', 'swapon', 'mkfs'],
     base: ALL,
     essential: true,
     archRepo: 'core',
@@ -148,12 +192,33 @@ export const PACKAGES: PackageDef[] = [
     archRepo: 'core',
   },
   {
+    id: 'e2fsprogs',
+    names: same('e2fsprogs'),
+    version: { debian: '1.47.0-2.4~exp1ubuntu4', arch: '1.47.3-1', redhat: '1.47.3-2.fc43' },
+    description: 'Utilities for the ext2/ext3/ext4 file systems (mkfs.ext4, mke2fs ...)',
+    sizeKb: 1_900,
+    provides: ['mkfs.ext4', 'mke2fs'],
+    base: ALL,
+    archRepo: 'core',
+  },
+  {
+    // Följer inte med Arch från början – där installeras det vid behov.
+    id: 'dosfstools',
+    names: same('dosfstools'),
+    version: { debian: '4.2-1.1build1', arch: '4.2-5', redhat: '4.2-14.fc43' },
+    description: 'Utilities for making and checking MS-DOS FAT file systems (mkfs.vfat)',
+    sizeKb: 320,
+    provides: ['mkfs.vfat', 'mkfs.fat'],
+    base: ['debian', 'redhat'],
+    archRepo: 'core',
+  },
+  {
     id: 'procps',
     names: { debian: 'procps', arch: 'procps-ng', redhat: 'procps-ng' },
     version: { debian: '2:4.0.4-4ubuntu3', arch: '4.0.5-3', redhat: '4.0.4-7.fc43' },
     description: 'Utilities for monitoring processes (ps, top, kill, pkill, free ...)',
     sizeKb: 2_100,
-    provides: ['ps', 'top', 'pkill', 'pgrep', 'uptime', 'free'],
+    provides: ['ps', 'top', 'pkill', 'pgrep', 'uptime', 'free', 'w'],
     base: ALL,
     essential: true,
     archRepo: 'core',
@@ -209,6 +274,17 @@ export const PACKAGES: PackageDef[] = [
     archRepo: 'core',
   },
   {
+    id: 'systemd',
+    names: same('systemd'),
+    version: { debian: '255.4-1ubuntu8.11', arch: '258.1-1', redhat: '258-1.fc43' },
+    description: 'System and service manager (systemctl, journalctl ...)',
+    sizeKb: 31_000,
+    provides: ['systemctl', 'journalctl', 'hostnamectl', 'systemd-analyze', 'reboot'],
+    base: ALL,
+    essential: true,
+    archRepo: 'core',
+  },
+  {
     id: 'apt',
     names: { debian: 'apt' },
     version: { debian: '2.8.3', arch: '', redhat: '' },
@@ -224,7 +300,7 @@ export const PACKAGES: PackageDef[] = [
     version: { debian: '', arch: '7.0.0.r6.gc685ae6-6', redhat: '' },
     description: 'A library-based package manager with dependency support',
     sizeKb: 4_900,
-    provides: ['pacman'],
+    provides: ['pacman', 'makepkg'],
     base: ['arch'],
     essential: true,
     archRepo: 'core',
@@ -314,6 +390,8 @@ export const PACKAGES: PackageDef[] = [
     description: 'Retrieves files from the web',
     sizeKb: 1_000,
     provides: ['wget'],
+    // Förinstallerat i Debian/Ubuntu, medan Arch och Fedora har curl i stället.
+    base: ['debian'],
   },
   {
     id: 'python',
@@ -347,7 +425,160 @@ export const PACKAGES: PackageDef[] = [
     version: { debian: '1:9.6p1-3ubuntu13.14', arch: '10.2p1-1', redhat: '10.0p1-5.fc43' },
     description: 'Secure shell (SSH) client for secure access to remote machines',
     sizeKb: 3_400,
-    provides: ['ssh'],
+    provides: ['ssh', 'ssh-keygen', 'ssh-copy-id'],
+    // Arch installerar inte ssh-klienten från början.
+    base: ['debian', 'redhat'],
+  },
+  // ---------- Nätverk ----------
+  {
+    id: 'iproute2',
+    names: { debian: 'iproute2', arch: 'iproute2', redhat: 'iproute' },
+    version: { debian: '6.1.0-1ubuntu6.2', arch: '6.17.0-1', redhat: '6.14.0-2.fc43' },
+    description: 'Networking and traffic control tools (ip, ss)',
+    sizeKb: 3_200,
+    provides: ['ip', 'ss'],
+    base: ALL,
+    archRepo: 'core',
+  },
+  {
+    id: 'iputils',
+    names: { debian: 'iputils-ping', arch: 'iputils', redhat: 'iputils' },
+    version: { debian: '3:20240117-1ubuntu0.1', arch: '20250605-1', redhat: '20250605-1.fc43' },
+    description: 'Tools to test the reachability of network hosts (ping)',
+    sizeKb: 200,
+    provides: ['ping'],
+    base: ALL,
+    archRepo: 'core',
+  },
+  {
+    id: 'dnsutils',
+    names: { debian: 'dnsutils', arch: 'bind', redhat: 'bind-utils' },
+    version: { debian: '1:9.18.39-0ubuntu0.24.04.1', arch: '9.20.13-1', redhat: '32:9.18.39-1.fc43' },
+    description: 'DNS lookup utilities (dig, host, nslookup)',
+    sizeKb: 1_100,
+    provides: ['dig', 'host', 'nslookup'],
+    archRepo: 'extra',
+  },
+  {
+    id: 'traceroute',
+    names: same('traceroute'),
+    version: { debian: '1:2.1.5-1', arch: '2.1.6-1', redhat: '3:2.1.6-3.fc43' },
+    description: 'Traces the route taken by packets over an IPv4/IPv6 network',
+    sizeKb: 160,
+    provides: ['traceroute'],
+    archRepo: 'extra',
+  },
+  {
+    id: 'zsh',
+    names: same('zsh'),
+    version: { debian: '5.9-6ubuntu2', arch: '5.9-5', redhat: '5.9-18.fc43' },
+    description: 'Z shell – a shell with many extras, largely compatible with bash',
+    sizeKb: 8_900,
+    provides: ['zsh'],
+    archRepo: 'extra',
+    shells: ['/bin/zsh', '/usr/bin/zsh'],
+  },
+  {
+    id: 'fish',
+    names: same('fish'),
+    version: { debian: '3.7.0-1', arch: '4.1.2-1', redhat: '4.0.2-2.fc43' },
+    description: 'fish – the friendly interactive shell',
+    sizeKb: 14_200,
+    provides: ['fish'],
+    archRepo: 'extra',
+    shells: ['/usr/bin/fish', '/bin/fish'],
+  },
+  // ----- Extra förråd (kapitlet "AUR, PPA och COPR") -----
+  {
+    id: 'software-properties-common',
+    names: { debian: 'software-properties-common' },
+    version: { debian: '0.99.49.3', arch: '', redhat: '' },
+    description: 'Manage the repositories that you install software from (add-apt-repository)',
+    sizeKb: 210,
+    provides: ['add-apt-repository'],
+    baseDistros: ['ubuntu'],
+  },
+  {
+    id: 'moonphase',
+    names: same('moonphase'),
+    version: { debian: '1.4.2-1~ppa1~noble1', arch: '1.4.2-1', redhat: '1.4.2-1.fc43' },
+    description: 'Shows the current phase of the moon in the terminal',
+    sizeKb: 64,
+    provides: ['moonphase'],
+    extraRepo: { debian: 'ppa:lunatool/moonphase', arch: 'aur', redhat: 'copr:lunatool/moonphase' },
+  },
+  {
+    id: 'base-devel',
+    names: { arch: 'base-devel' },
+    version: { debian: '', arch: '1-2', redhat: '' },
+    description: 'Basic tools to build Arch Linux packages (gcc, make, fakeroot ...)',
+    sizeKb: 245_000,
+    provides: [],
+    archRepo: 'core',
+  },
+  {
+    id: 'go',
+    names: { debian: 'golang-go', arch: 'go', redhat: 'golang' },
+    version: { debian: '2:1.22~2build1', arch: '2:1.25.3-1', redhat: '1.25.3-1.fc43' },
+    description: 'The Go programming language compiler',
+    sizeKb: 228_000,
+    provides: ['go'],
+  },
+  {
+    id: 'yay',
+    names: { arch: 'yay' },
+    version: { debian: '', arch: '12.5.2-1', redhat: '' },
+    description: 'Yet another yogurt. Pacman wrapper and AUR helper written in go.',
+    sizeKb: 9_800,
+    provides: ['yay'],
+    extraRepo: { arch: 'aur' },
+  },
+  {
+    id: 'yay-bin',
+    names: { arch: 'yay-bin' },
+    version: { debian: '', arch: '12.5.2-1', redhat: '' },
+    description: 'Yet another yogurt. Pacman wrapper and AUR helper written in go. Pre-compiled.',
+    sizeKb: 9_800,
+    provides: ['yay'],
+    extraRepo: { arch: 'aur' },
+  },
+  {
+    id: 'snowfall',
+    names: { arch: 'snowfall' },
+    version: { debian: '', arch: '2.0.1-1', redhat: '' },
+    description: 'Let it snow in your terminal',
+    sizeKb: 48,
+    provides: ['snowfall'],
+    extraRepo: { arch: 'aur' },
+  },
+  // ----- Universella format (kapitlet "Flatpak, Snap och AppImage") -----
+  {
+    id: 'flatpak',
+    names: same('flatpak'),
+    version: { debian: '1.14.6-1ubuntu0.1', arch: '1:1.16.1-1', redhat: '1.16.1-1.fc43' },
+    description: 'Application deployment framework for desktop apps (Flatpak)',
+    sizeKb: 6_400,
+    provides: ['flatpak'],
+    base: ['redhat'],
+  },
+  {
+    id: 'snapd',
+    names: same('snapd'),
+    version: { debian: '2.71+24.04', arch: '2.71-1', redhat: '2.71-1.fc43' },
+    description: 'Daemon and tooling that enable snap packages',
+    sizeKb: 98_000,
+    provides: ['snap'],
+    baseDistros: ['ubuntu'],
+    // Snap finns inte i Archs officiella förråd – bara i AUR.
+    extraRepo: { arch: 'aur' },
+  },
+  {
+    id: 'fuse2',
+    names: { debian: 'libfuse2t64', arch: 'fuse2', redhat: 'fuse-libs' },
+    version: { debian: '2.9.9-8.1build1', arch: '2.9.9-5', redhat: '2.9.9-24.fc43' },
+    description: 'Filesystem in Userspace (FUSE) v2 library – needed to run AppImages',
+    sizeKb: 330,
+    provides: [],
   },
 ];
 
@@ -355,13 +586,32 @@ export function packageName(pkg: PackageDef, family: Family): string | undefined
   return pkg.names[family];
 }
 
-export function findPackage(family: Family, name: string): PackageDef | undefined {
-  return PACKAGES.find((p) => p.names[family] === name);
+/**
+ * Finns paketet i förråden som är aktiverade i skalet? Paket från ett extra förråd
+ * (PPA, COPR) syns först när förrådet lagts till; AUR-paket aldrig (de byggs med makepkg).
+ * Utan skal räknas bara de vanliga förråden.
+ */
+export function inRepos(sh: Shell | undefined, pkg: PackageDef): boolean {
+  const family = sh?.distro.family;
+  if (!family || !pkg.extraRepo) return !pkg.extraRepo;
+  return !pkg.extraRepo[family] || extraRepoEnabled(sh, pkg.extraRepo[family]!);
+}
+
+/** Paketet finns i förråden eller är redan installerat. */
+export const isKnown = (sh: Shell | undefined, pkg: PackageDef) => inRepos(sh, pkg) || (!!sh && isInstalled(sh, pkg));
+
+export function findPackage(family: Family, name: string, sh?: Shell): PackageDef | undefined {
+  return PACKAGES.find((p) => p.names[family] === name && isKnown(sh, p));
+}
+
+/** Paket som inte kommer från distributionens egna förråd (t.ex. AUR – `pacman -Qm`). */
+export function isForeign(family: Family, pkg: PackageDef): boolean {
+  return !!pkg.extraRepo?.[family];
 }
 
 /** Paket som tillhandahåller ett visst kommando (för "command not found"-tips). */
 export function packageProviding(family: Family, command: string): PackageDef | undefined {
-  return PACKAGES.find((p) => p.names[family] && p.provides.includes(command));
+  return PACKAGES.find((p) => p.names[family] && p.provides.includes(command) && !p.extraRepo?.[family]);
 }
 
 export function availableVersion(sh: Shell, pkg: PackageDef): string {
@@ -379,28 +629,51 @@ export function upgradable(sh: Shell): PackageDef[] {
   return PACKAGES.filter((p) => isInstalled(sh, p) && sh.installed[p.id] !== availableVersion(sh, p));
 }
 
-export function searchPackages(family: Family, query: string): PackageDef[] {
+export function searchPackages(family: Family, query: string, sh?: Shell): PackageDef[] {
   const q = query.toLowerCase();
   return PACKAGES.filter(
-    (p) => p.names[family] && (p.names[family]!.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)),
+    (p) =>
+      p.names[family] &&
+      isKnown(sh, p) &&
+      (p.names[family]!.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)),
   ).sort((a, b) => a.names[family]!.localeCompare(b.names[family]!));
 }
 
 /** Installerar (eller uppgraderar) paketet: lägger kommandona i /usr/bin. */
 export function installPackage(sh: Shell, pkg: PackageDef): void {
   sh.installed[pkg.id] = availableVersion(sh, pkg);
+  for (const cmd of pkg.provides) installCommand(sh, cmd);
+  if (pkg.shells) updateEtcShells(sh, pkg.shells, true);
+}
+
+/** Lägger paketets kommandon i /usr/bin. */
+export function placeBinaries(sh: Shell, pkg: PackageDef): void {
+  for (const cmd of pkg.provides) installCommand(sh, cmd);
+}
+
+/** Lägger en simulerad binärfil för kommandot i /usr/bin. */
+export function installCommand(sh: Shell, cmd: string): void {
   const bin = sh.vfs.lookup('/usr/bin', sh.rootUser());
-  for (const cmd of pkg.provides) {
-    const node = makeFile(`${ELF}\u0002\u0001\u0001 (simulerad binärfil: ${cmd})`, 'root', cmd === 'sudo' ? 0o4755 : 0o755);
-    node.size = 30_000 + ((cmd.length * 7919) % 150_000);
-    bin.children![cmd] = node;
-  }
+  const node = makeFile(`${ELF}\u0002\u0001\u0001 (simulerad binärfil: ${cmd})`, 'root', cmd === 'sudo' ? 0o4755 : 0o755);
+  node.size = 30_000 + ((cmd.length * 7919) % 150_000);
+  bin.children![cmd] = node;
+}
+
+/** Lägger till eller tar bort skal i /etc/shells (som paketens installationsskript gör). */
+function updateEtcShells(sh: Shell, shells: string[], add: boolean): void {
+  const root = sh.rootUser();
+  const node = sh.vfs.tryLookup('/etc/shells', root);
+  if (node?.type !== 'file') return;
+  const lines = (node.content ?? '').split('\n').filter((l) => l !== '' && !shells.includes(l));
+  if (add) lines.push(...shells);
+  node.content = lines.join('\n') + '\n';
 }
 
 export function removePackage(sh: Shell, pkg: PackageDef): void {
   delete sh.installed[pkg.id];
   const bin = sh.vfs.lookup('/usr/bin', sh.rootUser());
   for (const cmd of pkg.provides) delete bin.children![cmd];
+  if (pkg.shells) updateEtcShells(sh, pkg.shells, false);
 }
 
 export function formatKb(kb: number): string {

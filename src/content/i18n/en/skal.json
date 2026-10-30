@@ -1,0 +1,45 @@
+{
+  "title": "Other shells: zsh and fish",
+  "tasks": {
+    "installera-zsh": {
+      "text": "Install the `zsh` shell.",
+      "hint": {
+        "debian": "`sudo apt update` and then `sudo apt install zsh`.",
+        "arch": "`sudo pacman -S zsh` and answer yes.",
+        "redhat": "`sudo dnf install zsh` – and answer `y`."
+      }
+    },
+    "starta-zsh": {
+      "text": "Start `zsh`. The first time, *zsh-newuser-install* asks what you want to do – answer `2`. Then show which shell you are running with `echo $0`.",
+      "hint": "Type `zsh`, answer `2` and then type `echo $0`. It should say `zsh`."
+    },
+    "globstar": {
+      "text": "Use zsh's `**` to list all `.txt` files in your home directory **and all subdirectories** with a single `ls`.",
+      "hint": "`ls ~/**/*.txt` – `**` means \"all directories, at every level\"."
+    },
+    "tillbaka": {
+      "text": "Leave zsh and go back to bash.",
+      "hint": "Type `exit`. Check with `echo $0` or `ps` if you like."
+    },
+    "installera-fish": {
+      "text": "Install the `fish` shell.",
+      "hint": {
+        "debian": "`sudo apt update` and then `sudo apt install fish`.",
+        "arch": "`sudo pacman -S fish` and answer yes.",
+        "redhat": "`sudo dnf install fish` – and answer `y`."
+      }
+    },
+    "fish-set": {
+      "text": "Start `fish`. Create the variable `frukt` with the value `äpple` the fish way and print it with `echo`.",
+      "hint": "`frukt=äpple` does not work in fish. Type `set frukt äpple` and then `echo $frukt`."
+    },
+    "fish-for": {
+      "text": "Write a `for` loop in fish syntax that prints the numbers 1, 2 and 3, one per line. Then go back to bash with `exit`.",
+      "hint": "fish has no `do` and `done` – the block ends with `end`: `for i in 1 2 3; echo $i; end`"
+    },
+    "chsh": {
+      "text": "Look in `/etc/shells` to see which shells are installed. Then make zsh your login shell with `chsh`.",
+      "hint": "`cat /etc/shells` and then `chsh -s /usr/bin/zsh`. Check the result with `grep elev /etc/passwd`."
+    }
+  }
+}

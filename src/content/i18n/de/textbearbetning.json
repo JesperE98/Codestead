@@ -1,0 +1,33 @@
+{
+  "title": "Textverarbeitung mit sed, tr und awk",
+  "tasks": {
+    "sed-s": {
+      "text": "Zeige `~/dokument/server.log` mit `sed` so an, dass in jeder Zeile das Wort `ERROR` durch `FEL` ersetzt ist.",
+      "hint": "Der Befehl `s/old/new/` ersetzt Text: `sed 's/ERROR/FEL/' file`"
+    },
+    "sed-d": {
+      "text": "Zeige server.log mit `sed` an, aber **ohne** alle Zeilen, die `INFO` enthalten.",
+      "hint": "Die Adresse `/INFO/` wählt die Zeilen aus und der Befehl `d` löscht sie: `sed '/INFO/d' file`"
+    },
+    "tr-upper": {
+      "text": "Gib alle Benutzernamen aus `/etc/passwd` in **Großbuchstaben** aus: Zieh Feld 1 mit `cut` heraus und reich es an `tr` weiter.",
+      "hint": "`cut -d: -f1 /etc/passwd` liefert dir die Benutzernamen. Häng `| tr a-z A-Z` an."
+    },
+    "tr-path": {
+      "text": "Zeige die Verzeichnisse in `$PATH` in **eigenen Zeilen** an, indem du mit `tr` jeden `:` durch einen Zeilenumbruch ersetzt.",
+      "hint": "Ein Zeilenumbruch wird `\\n` geschrieben: `echo $PATH | tr ':' '\\n'`"
+    },
+    "awk-print": {
+      "text": "Gib mit `awk` Benutzername und Shell (Felder 1 und 7) aus `/etc/passwd` aus.",
+      "hint": "Die Felder sind durch Doppelpunkte getrennt, also nimm `-F:`. Das Programm lautet `'{print $1, $7}'`."
+    },
+    "awk-sum": {
+      "text": "Berechne mit `awk` die **Summe** der Punkte (Spalte 3) in `~/dokument/betyg.csv`.",
+      "hint": "Überspringe die Kopfzeile mit `NR > 1`, summiere mit `summa += $3` und gib das Ergebnis in `END { }` aus. Das Trennzeichen ist ein Komma: `-F,`."
+    },
+    "sed-i": {
+      "text": "Ersetze `Linux` durch `GNU/Linux` **direkt in der Datei** `~/anteckningar.txt`.",
+      "hint": "Nimm `sed -i`. Da die Ersetzung ein `/` enthält, wechselst du am einfachsten das Trennzeichen: `s|Linux|GNU/Linux|`."
+    }
+  }
+}

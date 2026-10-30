@@ -1,0 +1,17 @@
+{
+  "title": "欢迎来到 Linux shell",
+  "tasks": {
+    "echo": {
+      "text": "用 `echo` 打印文本 `Hej världen`（瑞典语的“你好，世界”）。"
+    },
+    "whoami": {
+      "text": "用 `whoami` 查看你当前以哪个用户身份登录。"
+    },
+    "os-release": {
+      "text": "用 `cat /etc/os-release` 显示你正在运行的发行版。"
+    },
+    "help": {
+      "text": "用 `help` 列出模拟器中所有可用的命令。"
+    }
+  }
+}
