@@ -6,9 +6,10 @@ import { ArithError, evalArith } from './arith';
 import { COMMANDS } from './commands';
 import { formatMan } from './commands/util';
 import { manFor } from './commands/man-en';
+import { setupDisks, type DiskState } from './disks';
 import { getDistro, type Distro } from './distros';
 import { buildFs, STUDENT } from './initfs';
-import { installPackage, PACKAGES, packageProviding } from './packages';
+import { installCommand, installPackage, PACKAGES, packageProviding } from './packages';
 import { initialProcs, SHELL_PID, type Job, type ProcState } from './procs';
 import {
   escapeGlob,
@@ -40,6 +41,7 @@ export interface ShellSnapshot {
   userStack: string[];
   functions?: Record<string, Node>;
   proc?: ProcState;
+  disks?: DiskState;
 }
 
 export interface ExecResult {
@@ -93,6 +95,8 @@ export class Shell {
   functions: Record<string, Node>;
   /** Processer och bakgrundsjobb. */
   proc: ProcState;
+  /** Diskar, partitioner och monterade filsystem. */
+  disks: DiskState;
   /** PID för det senast startade bakgrundsjobbet ($!). */
   lastBgPid: number | null = null;
   /** Inloggade användare; sista är aktiv. `sudo -i` lägger till root, `exit` tar bort. */
@@ -128,6 +132,7 @@ export class Shell {
     this.flags = s.flags;
     this.functions = s.functions ?? {};
     this.proc = s.proc ?? initialProcs(this.distro);
+    this.disks = s.disks ?? setupDisks(this.distro, this.vfs);
     this.userStack = s.userStack.length ? s.userStack : [STUDENT];
   }
 
@@ -181,6 +186,16 @@ export class Shell {
       if (!(pkg.id in this.installed)) installPackage(this, pkg);
       this.flags[key] = true;
     }
+    // Nya kommandon i paket som redan är installerade (t.ex. mount i util-linux).
+    for (const pkg of PACKAGES) {
+      if (!(pkg.id in this.installed)) continue;
+      for (const cmd of pkg.provides) {
+        const key = `default:cmd:${cmd}`;
+        if (this.flags[key]) continue;
+        if (!this.vfs.tryLookup(`/usr/bin/${cmd}`, this.rootUser())) installCommand(this, cmd);
+        this.flags[key] = true;
+      }
+    }
     const fresh = new VFS(buildFs(this.distro));
     const root = this.rootUser();
     const home = `/home/${STUDENT}`;
@@ -214,6 +229,7 @@ export class Shell {
       userStack: this.userStack,
       functions: this.functions,
       proc: this.proc,
+      disks: this.disks,
     };
   }
 
