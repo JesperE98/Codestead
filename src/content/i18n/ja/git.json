@@ -1,0 +1,45 @@
+{
+  "title": "ターミナルで Git",
+  "tasks": {
+    "installera": {
+      "text": "`git` パッケージをインストールしてください。",
+      "hint": {
+        "debian": "`sudo apt update` を実行してから、`sudo apt install git` を実行します。",
+        "arch": "`sudo pacman -S git` を実行し、質問には yes と答えます。",
+        "redhat": "`sudo dnf install git` を実行し、`y` と答えます。既定値は No です！"
+      }
+    },
+    "identitet": {
+      "text": "自分が誰なのかを git に伝えてください。`git config --global` で名前（`user.name`）とメールアドレス（`user.email`）を設定します。",
+      "hint": "コマンドは 2 つです: `git config --global user.name \"あなたの名前\"` と `git config --global user.email \"you@example.com\"`。"
+    },
+    "init": {
+      "text": "ディレクトリ `~/projekt-webb` に移動し、`git init` でそこを git リポジトリにしてください。",
+      "hint": "`cd ~/projekt-webb` のあとに `git init` を実行します。新しくできた隠しディレクトリを `ls -a` で見てみましょう。"
+    },
+    "forsta-commit": {
+      "text": "3 つのファイルすべてを `git add` でインデックスに追加し、内容がわかるメッセージを付けて最初のコミットをしてください。",
+      "hint": "`git add .` はディレクトリ内のすべてを追加します。そのあと `git commit -m \"Web サイトの最初のバージョン\"` を実行します。前後で `git status` を実行して状態を確認しましょう！"
+    },
+    "diff": {
+      "text": "`README.md` の末尾に 1 行追加し、`git diff` で変更を確認してください。",
+      "hint": "`echo 'HTML と CSS で作りました。' >> README.md` のあとに `git diff` を実行します。`+` で始まる行が新しい行です。"
+    },
+    "commit-a": {
+      "text": "`README.md` の変更をコミットしてください。git がすでに追跡している変更済みファイルをすべて含める `-a` オプションを試しましょう。",
+      "hint": "`git commit -a -m \"サイトの作り方を説明\"`。短く `git commit -am \"…\"` とも書けます。"
+    },
+    "gren": {
+      "text": "ブランチ `ny-design` を作成して、そこへ切り替えてください。`style.css` の中身を何か変更し、その変更を新しいブランチでコミットします。",
+      "hint": "`git switch -c ny-design` でブランチを作成して切り替えます。次に、たとえば `echo 'h1 { color: purple; }' >> style.css` でファイルを変更し、`git commit -am \"見出しを紫に\"` を実行します。"
+    },
+    "merge": {
+      "text": "`main` に戻り、`git merge` でブランチ `ny-design` をマージしてください。",
+      "hint": "`git switch main` のあとに `git merge ny-design` を実行します。ブランチを作ってから `main` は変わっていないので、*fast-forward* になります。"
+    },
+    "logg": {
+      "text": "`git log --oneline` で、コミットごとに 1 行ずつ履歴を表示してください。",
+      "hint": "`git log --oneline --graph --all` も試して、ブランチを見てみましょう。"
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "title": "Flatpak、Snap、AppImage",
+  "tasks": {
+    "flatpak": {
+      "text": {
+        "debian": "Flatpak（`flatpak` パッケージ）をインストールしてください。",
+        "arch": "Flatpak（`flatpak` パッケージ）をインストールしてください。",
+        "redhat": "Fedora Workstation には Flatpak がすでに入っています。どのバージョンがあるかを確認してください。"
+      },
+      "hint": {
+        "debian": "`sudo apt update` のあとに `sudo apt install flatpak` を実行します。",
+        "arch": "`sudo pacman -S flatpak`",
+        "redhat": "`flatpak --version`"
+      }
+    },
+    "flathub": {
+      "text": "Flatpak のソース（*リモート*）として Flathub を追加してください。",
+      "hint": "`flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo`"
+    },
+    "gimp": {
+      "text": "画像エディター GIMP（`org.gimp.GIMP`）を Flathub からインストールしてください。",
+      "hint": "`flatpak install flathub org.gimp.GIMP` を実行し、yes と答えます。"
+    },
+    "flatpak-run": {
+      "text": "`flatpak run` で GIMP を起動してください。",
+      "hint": "プログラムは完全な ID で起動します: `flatpak run org.gimp.GIMP`"
+    },
+    "snap": {
+      "text": {
+        "debian": "snap `hello-world` をインストールして実行してください。Ubuntu にはすでに Snap があります。Debian では、まず `snapd` パッケージをインストールします。",
+        "arch": "Snap は Arch のリポジトリにはなく、AUR にしかありません。AUR から `snapd` をビルドしてインストールし、そのあと snap `hello-world` をインストールして実行してください。",
+        "redhat": "Snap（`snapd` パッケージ）をインストールし、そのあと snap `hello-world` をインストールして実行してください。"
+      },
+      "hint": {
+        "debian": "`sudo apt install snapd`（Debian でのみ必要）、`sudo snap install hello-world`、そして `hello-world` を実行します。",
+        "arch": "`git clone https://aur.archlinux.org/snapd.git`、`cd snapd`、`makepkg -si`。そのあと `sudo snap install hello-world` と `hello-world` を実行します。",
+        "redhat": "`sudo dnf install snapd`、`sudo snap install hello-world`、そして `hello-world` を実行します。"
+      }
+    },
+    "appimage-chmod": {
+      "text": "`~/Nedladdningar` にダウンロード済みの AppImage があります。ファイル `Kalkylator.AppImage` を実行可能にしてください。",
+      "hint": "`chmod +x ~/Nedladdningar/Kalkylator.AppImage`"
+    },
+    "appimage-run": {
+      "text": "Kalkylator を起動してください。FUSE について文句を言われましたか？　足りないライブラリをインストールして、もう一度試しましょう。",
+      "hint": {
+        "debian": "ライブラリは `libfuse2t64` パッケージにあります。そのあと `~/Nedladdningar/Kalkylator.AppImage` で起動します。",
+        "arch": "ライブラリは `fuse2` パッケージにあります。そのあと `~/Nedladdningar/Kalkylator.AppImage` で起動します。",
+        "redhat": "ライブラリは `fuse-libs` パッケージにあります。そのあと `~/Nedladdningar/Kalkylator.AppImage` で起動します。"
+      }
+    }
+  }
+}
