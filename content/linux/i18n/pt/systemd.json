@@ -2,12 +2,8 @@
   "title": "Serviços e logs com systemd",
   "tasks": {
     "status-ssh": {
-      "text": "Mostre o status do servidor SSH com `systemctl status`. Pense em como o serviço se chama na sua família de distribuições!",
-      "hint": {
-        "debian": "Na família Debian o serviço se chama `ssh`: `systemctl status ssh`.",
-        "arch": "No Arch o serviço se chama `sshd`: `systemctl status sshd`.",
-        "redhat": "No Fedora o serviço se chama `sshd`: `systemctl status sshd`."
-      }
+      "text": "Mostre o status do servidor SSH com `systemctl status`. Pense em como o serviço se chama no Ubuntu!",
+      "hint": "No Ubuntu o serviço se chama `ssh`: `systemctl status ssh`."
     },
     "failed": {
       "text": "Parece que um serviço não iniciou. Liste todos os serviços que *falharam*.",

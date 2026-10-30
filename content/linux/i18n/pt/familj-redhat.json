@@ -1,0 +1,59 @@
+{
+  "title": "A família Red Hat: dnf e COPR",
+  "tasks": {
+    "sync": {
+      "text": "Busque as informações novas dos pacotes e verifique se há atualizações com `dnf check-update`.",
+      "hint": "O `dnf check-update` não precisa de root."
+    },
+    "search": {
+      "text": "Pesquise o pacote `htop`.",
+      "hint": "`dnf search htop`"
+    },
+    "install": {
+      "text": "Instale o pacote `tree`.",
+      "hint": "`sudo dnf install tree` – e responda `y`, já que “não” é o padrão!"
+    },
+    "run-tree": {
+      "text": "Execute `tree` no seu diretório pessoal."
+    },
+    "remove": {
+      "text": "Remova o pacote `tree` de novo.",
+      "hint": "`sudo dnf remove tree`"
+    },
+    "upgrade": {
+      "text": "Atualize todos os pacotes instalados.",
+      "hint": "`sudo dnf upgrade`"
+    },
+    "forbered": {
+      "text": "Mostre quais repositórios o dnf está usando agora.",
+      "hint": "`dnf repolist`"
+    },
+    "lagg-till": {
+      "text": "Ative o repositório COPR `lunatool/moonphase`.",
+      "hint": "`sudo dnf copr enable lunatool/moonphase` – e responda `y`, já que “não” é o padrão."
+    },
+    "granska": {
+      "text": "Liste quais repositórios COPR foram adicionados.",
+      "hint": "`dnf copr list`"
+    },
+    "installera": {
+      "text": "Instale o pacote `moonphase` a partir do repositório COPR.",
+      "hint": "`sudo dnf install moonphase`"
+    },
+    "kor": {
+      "text": "Execute o programa `moonphase`."
+    },
+    "ursprung": {
+      "text": "Descubra de qual repositório o `moonphase` foi instalado.",
+      "hint": "`dnf info moonphase` – olhe a linha `From repository`."
+    },
+    "efterat": {
+      "text": "Desative o repositório COPR de novo. O programa continua instalado, mas não recebe mais atualizações.",
+      "hint": "`sudo dnf copr disable lunatool/moonphase`"
+    },
+    "vim": {
+      "text": "Bônus: instale o editor de texto Vim. Dica: o pacote não se chama `vim` na família Red Hat!",
+      "hint": "Pesquise com `dnf search vim`. O pacote se chama `vim-enhanced`."
+    }
+  }
+}
