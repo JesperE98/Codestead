@@ -537,16 +537,9 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "zip",
-                    PerFamily = true,
                     Text = "Installera paketen `zip` och `unzip`, och packa sedan ihop `~/dokument` till `~/dokument.zip`.",
-                    Hint = ByFamily(
-                        debian: "Kör `sudo apt update` och `sudo apt install zip unzip`. Glöm inte `-r` till zip: `zip -r dokument.zip dokument`.",
-                        arch: "Installera med `sudo pacman -S zip unzip`. Glöm inte `-r` till zip: `zip -r dokument.zip dokument`.",
-                        redhat: "Installera med `sudo dnf install zip unzip` och svara `y`. Glöm inte `-r` till zip: `zip -r dokument.zip dokument`."),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo apt update", "sudo apt install zip unzip", "cd ~", "zip -r dokument.zip dokument"),
-                        arch: Cmds("sudo pacman -S zip unzip", "y", "cd ~", "zip -r dokument.zip dokument"),
-                        redhat: Cmds("sudo dnf install zip unzip", "y", "cd ~", "zip -r dokument.zip dokument")),
+                    Hint = "Kör `sudo apt update` och `sudo apt install zip unzip`. Glöm inte `-r` till zip: `zip -r dokument.zip dokument`.",
+                    Solution = Cmds("sudo apt update", "sudo apt install zip unzip", "cd ~", "zip -r dokument.zip dokument"),
                     Check = c => ArchiveHas(c, "~/dokument.zip", "zip", "dokument/frukter.txt"),
                 },
                 new()

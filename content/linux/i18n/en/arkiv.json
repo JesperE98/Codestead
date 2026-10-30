@@ -23,11 +23,7 @@
     },
     "zip": {
       "text": "Install the `zip` and `unzip` packages, and then pack `~/dokument` into `~/dokument.zip`.",
-      "hint": {
-        "debian": "Run `sudo apt update` and `sudo apt install zip unzip`. Don't forget `-r` for zip: `zip -r dokument.zip dokument`.",
-        "arch": "Install with `sudo pacman -S zip unzip`. Don't forget `-r` for zip: `zip -r dokument.zip dokument`.",
-        "redhat": "Install with `sudo dnf install zip unzip` and answer `y`. Don't forget `-r` for zip: `zip -r dokument.zip dokument`."
-      }
+      "hint": "Run `sudo apt update` and `sudo apt install zip unzip`. Don't forget `-r` for zip: `zip -r dokument.zip dokument`."
     },
     "unzip": {
       "text": "Unpack `~/dokument.zip` into the new directory `~/fran-zip` with `unzip`.",
