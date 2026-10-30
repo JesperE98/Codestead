@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Media;
 using Velopack;
 
 namespace Codestead.Linux;
@@ -28,5 +29,8 @@ internal static class Program
     public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>()
         .UsePlatformDetect()
         .WithInterFont()
+        // The bundled Inter font is the default, so the app also starts on systems without any fonts
+        // installed (minimal Arch/CachyOS installations, containers). Other scripts fall back to system fonts.
+        .With(new FontManagerOptions { DefaultFamilyName = "fonts:Inter#Inter" })
         .LogToTrace();
 }

@@ -67,6 +67,7 @@
   "gate.checkpoints": "Beantworte die Fragen im Text ({done} von {total}), um das Terminal und die Aufgaben freizuschalten.",
   "gate.read": "Wenn du das Kapitel gelesen hast, erscheinen hier das Terminal und die Aufgaben.",
   "gate.readButton": "Ich habe das Kapitel gelesen – Aufgaben anzeigen",
+  "gate.unlocked": "Gut gemacht! Terminal und Aufgaben sind freigeschaltet.",
   "checkpoint.question": "Teste dich selbst",
   "checkpoint.check": "Prüfen",
   "checkpoint.correct": "Richtig!",

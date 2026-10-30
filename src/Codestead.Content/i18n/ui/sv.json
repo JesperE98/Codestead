@@ -68,6 +68,7 @@
   "gate.checkpoints": "Svara på frågorna i texten ({done} av {total}) för att låsa upp terminalen och uppgifterna.",
   "gate.read": "När du har läst kapitlet visas terminalen och uppgifterna här.",
   "gate.readButton": "Jag har läst kapitlet – visa uppgifterna",
+  "gate.unlocked": "Bra jobbat! Terminalen och uppgifterna är upplåsta.",
   "checkpoint.question": "Testa dig själv",
   "checkpoint.check": "Kontrollera",
   "checkpoint.correct": "Rätt!",

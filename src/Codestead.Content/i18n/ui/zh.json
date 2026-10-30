@@ -67,6 +67,7 @@
   "gate.checkpoints": "回答正文中的问题（{done}/{total}）即可解锁终端和练习任务。",
   "gate.read": "读完本章后，终端和任务会显示在这里。",
   "gate.readButton": "我已读完本章——显示任务",
+  "gate.unlocked": "做得好！终端和任务已解锁。",
   "checkpoint.question": "自我检测",
   "checkpoint.check": "检查",
   "checkpoint.correct": "正确！",

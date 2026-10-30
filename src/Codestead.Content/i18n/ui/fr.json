@@ -67,6 +67,7 @@
   "gate.checkpoints": "Répondez aux questions du texte ({done} sur {total}) pour débloquer le terminal et les exercices.",
   "gate.read": "Une fois le chapitre lu, le terminal et les exercices apparaîtront ici.",
   "gate.readButton": "J’ai lu le chapitre – afficher les exercices",
+  "gate.unlocked": "Bravo ! Le terminal et les exercices sont déverrouillés.",
   "checkpoint.question": "Testez-vous",
   "checkpoint.check": "Vérifier",
   "checkpoint.correct": "Correct !",

@@ -36,7 +36,8 @@ Produktnamn, verktygs-id och version finns **bara** i `build/Codestead.props`. B
 build/Codestead.props        Namn, id:n och version
 content/linux/
 ├── chapters/<språk>/*.md    Kapiteltexterna (markdown), ett språk per katalog
-└── i18n/<språk>/*.json      Översatta titlar och uppgiftstexter
+├── i18n/<språk>/*.json      Översatta titlar och uppgiftstexter
+└── references/*.json        Officiella källor per kapitel
 src/
 ├── Codestead.Shell/         Den simulerade terminalen (bash, zsh, fish, apt, pacman, dnf, git ...)
 │   ├── Shell.cs             Kör kommandorader: pipes, omdirigering, sudo, skript, jobb
@@ -61,10 +62,41 @@ packaging/                   Byggskript och installationstester för Windows och
    - Kodblock märkta ` ```sh ` blir klickbara – ett klick lägger in kommandot i terminalen.
    - Text som bara gäller en familj läggs i `:::debian` / `:::arch` / `:::redhat` … `:::`.
    - Platshållare: `{{distro}}`, `{{hostname}}`, `{{family}}`, `{{pm}}`, `{{adminGroup}}`.
+   - **Kontrollfrågor** i texten låser upp terminalen och uppgifterna. Tre sorter:
+
+     ````markdown
+     ```quiz
+     Which command shows the directory you are in?
+     - [ ] ls
+     - [x] pwd
+     ---
+     Explanation shown after the right answer (optional).
+     ```
+
+     ```predict
+     $ echo $((2 + 3))
+     5
+     ```
+
+     ```try
+     pwd
+     ```
+     ````
+
+     `quiz` med flera `[x]` kräver alla rätta svar. `predict` visar kommandot efter `$ ` och väntar sig
+     resten som svar (testerna kör kommandot i simulatorn och kontrollerar svaret). `try` ger en
+     miniterminal; första raden är det kommando som visas, och alla rader godtas.
+     Ett kapitel utan kontrollfrågor låses upp med knappen "Jag har läst kapitlet".
+   - **Källor**: `content/linux/references/mitt-kapitel.json` med
+     `[{ "title": ..., "url": "https://...", "publisher": ... }]`. Bara officiella webbplatser
+     (listan finns i [verification/README.md](verification/README.md)); testerna säger nej till andra.
+   - **Sammanfattning och prov** för ett huvudkapitel: `<huvudkapitel>-summary.md` och
+     `<huvudkapitel>-exam.md` (t.ex. `grunder-exam.md`). De läggs till sist i huvudkapitlet av sig själva.
+     Provet består av kontrollfrågor (minst 10), öppnas när alla sub-kapitel är klara och kräver 80 %.
 2. Lägg till kapitlet med uppgifter i `src/Codestead.Content/ChapterDefinitions.cs`. Varje uppgift har
    en `Check` som körs efter varje kommando och en `Solution` (lista med kommandon).
 3. Kör `dotnet test`. Testerna kör alla lösningar i alla distributioner och kontrollerar att
-   varje kapitel finns på alla språk.
+   varje kapitel finns på alla språk, och att kontrollfrågorna är likadana på alla språk.
 
 Behövs ett nytt kommando lägger du det i `src/Codestead.Shell/Commands/`. Ska det installeras med
 pakethanteraren lägger du också till ett paket i `Packages.cs`.

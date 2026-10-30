@@ -67,6 +67,7 @@
   "gate.checkpoints": "Answer the questions in the text ({done} of {total}) to unlock the terminal and the tasks.",
   "gate.read": "When you have read the chapter, the terminal and the tasks appear here.",
   "gate.readButton": "I have read the chapter – show the tasks",
+  "gate.unlocked": "Well done! The terminal and the tasks are unlocked.",
   "checkpoint.question": "Check yourself",
   "checkpoint.check": "Check",
   "checkpoint.correct": "Correct!",

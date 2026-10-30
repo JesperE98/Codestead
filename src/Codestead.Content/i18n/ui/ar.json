@@ -67,6 +67,7 @@
   "gate.checkpoints": "أجب عن الأسئلة الموجودة في النص ({done} من {total}) لفتح الطرفية والمهام.",
   "gate.read": "بعد أن تنتهي من قراءة الفصل، ستظهر الطرفية والمهام هنا.",
   "gate.readButton": "قرأت الفصل – اعرض المهام",
+  "gate.unlocked": "أحسنت! تم فتح الطرفية والمهام.",
   "checkpoint.question": "اختبر نفسك",
   "checkpoint.check": "تحقّق",
   "checkpoint.correct": "إجابة صحيحة!",

@@ -11,6 +11,9 @@
 
 `SHA256SUMS.txt` innehåller kontrollsummor för alla filer.
 
+På Arch Linux och CachyOS behövs typsnitt för att kinesiska, japanska, arabiska och hindi ska visas:
+`sudo pacman -S noto-fonts noto-fonts-cjk`. Paketen för Ubuntu och Fedora föreslår dem automatiskt.
+
 ### Första starten
 
 Appen är ännu inte signerad med något utvecklarcertifikat:

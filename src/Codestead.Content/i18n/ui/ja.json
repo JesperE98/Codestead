@@ -67,6 +67,7 @@
   "gate.checkpoints": "本文中の問題に答えると（{done}/{total}）、ターミナルと課題のロックが解除されます。",
   "gate.read": "章を読み終えると、ここにターミナルと課題が表示されます。",
   "gate.readButton": "章を読み終えました – 課題を表示",
+  "gate.unlocked": "よくできました！ターミナルと課題のロックが解除されました。",
   "checkpoint.question": "確認問題",
   "checkpoint.check": "答え合わせ",
   "checkpoint.correct": "正解！",

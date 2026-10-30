@@ -24,6 +24,16 @@ public sealed class AppState
     public string Distro { get; set; } = "ubuntu";
     public string? Chapter { get; set; }
     public OrderedDictionary<string, bool> Progress { get; set; } = Js.Obj<bool>();
+    /// <summary>Solved checkpoints in the lesson texts ("chapter#index").</summary>
+    public OrderedDictionary<string, bool> Checkpoints { get; set; } = Js.Obj<bool>();
+    /// <summary>Chapters without checkpoints that the student has marked as read.</summary>
+    public List<string> Read { get; set; } = new();
+    /// <summary>Commands run while a task was unfinished, per task key (unlocks the solution).</summary>
+    public OrderedDictionary<string, int> Attempts { get; set; } = Js.Obj<int>();
+    /// <summary>Task keys whose hint has been opened (also unlocks the solution).</summary>
+    public List<string> HintSeen { get; set; } = new();
+    /// <summary>Best exam result in percent, per main chapter.</summary>
+    public OrderedDictionary<string, int> Exams { get; set; } = Js.Obj<int>();
 }
 
 /// <summary>
@@ -57,6 +67,19 @@ public sealed class MainWindow : Window
     private readonly Button settingsButton = new() { Content = "⚙", FontSize = 17, Padding = new Thickness(10, 4) };
     private bool updatingPickers;
 
+    private readonly Grid body = new() { ColumnDefinitions = new ColumnDefinitions("270,*,4,560") };
+    private readonly GridSplitter splitter = new() { ResizeDirection = GridResizeDirection.Columns, Background = Brushes.Transparent };
+    private readonly Border tasksCard = new();
+    private Border terminalFrame = new();
+    private readonly Border gateCard = new() { Padding = new Thickness(24), VerticalAlignment = VerticalAlignment.Top };
+    private readonly StackPanel gatePanel = new() { Spacing = 12 };
+    private GridLength workbenchWidth = new(560);
+
+    /// <summary>How many own attempts a task needs before its solution can be shown (unless the hint was opened).</summary>
+    public const int AttemptsBeforeSolution = 3;
+    /// <summary>Percentage needed to pass an exam.</summary>
+    public const int ExamPassPercent = 80;
+
     private static readonly string[] FamilyOrder = { "debian", "arch", "redhat" };
 
     public MainWindow() : this(false) { }
@@ -68,7 +91,7 @@ public sealed class MainWindow : Window
         if (!LanguagesLib.IsLang(state.Lang)) state.Lang = LanguagesLib.DetectLang();
         state.Distro = DistrosLib.GetDistro(state.Distro).Id;
         if (state.Chapter is null || ChaptersLib.Chapters.All(c => c.Id != state.Chapter)) state.Chapter = ChaptersLib.Chapters[0].Id;
-        shell = LoadShell(state.Distro);
+        shell = LoadShell(ChaptersLib.DistroFor(Chapter, state.Distro));
 
         Width = 1440;
         Height = 900;
@@ -90,6 +113,7 @@ public sealed class MainWindow : Window
         terminal.CommandExecuted += OnResult;
         markdown.CommandClicked += text => terminal.Inject(text);
         markdown.LinkClicked += OpenLink;
+        markdown.CustomBlockRenderer = RenderCheckpoint;
 
         ApplyTheme();
         ApplyLanguage();
@@ -109,6 +133,50 @@ public sealed class MainWindow : Window
         UiStrings.Translate(Lang, key, args.Length == 0 ? null : args.ToDictionary(a => a.Name, a => a.Value));
 
     private Distro Distro => shell.Distro;
+
+    /// <summary>The distribution a chapter runs on: the student's choice in the distro main chapter, Ubuntu elsewhere.</summary>
+    private Distro DistroOf(Chapter chapter) => DistrosLib.GetDistro(ChaptersLib.DistroFor(chapter, state.Distro));
+
+    private string TaskKeyOf(Chapter chapter, ChapterTask task) =>
+        ChaptersLib.TaskKey(chapter.Id, task.Id, task.PerFamily, DistroOf(chapter).Family);
+
+    private static string CheckpointKey(Chapter chapter, int index) => $"{chapter.Id}#{index}";
+
+    private readonly Dictionary<string, int> checkpointCounts = new();
+
+    /// <summary>Number of checkpoints in a chapter text (the same in every language; the English text is the source).</summary>
+    private int CheckpointCount(Chapter chapter)
+    {
+        if (!checkpointCounts.TryGetValue(chapter.Id, out var n))
+            checkpointCounts[chapter.Id] = n = Codestead.UI.Learning.Checkpoint.ParseAll(I18nLib.ChapterMarkdown(chapter, "en")).Count;
+        return n;
+    }
+
+    private int SolvedCheckpoints(Chapter chapter) =>
+        Enumerable.Range(0, CheckpointCount(chapter)).Count(i => state.Checkpoints.ContainsKey(CheckpointKey(chapter, i)));
+
+    /// <summary>
+    /// Are the terminal and the tasks unlocked? Only after the student has worked through the text:
+    /// all checkpoints answered, or (in a text without checkpoints) marked as read.
+    /// Chapters where a task is already done stay unlocked.
+    /// </summary>
+    private bool IsUnlocked(Chapter chapter)
+    {
+        if (chapter.Tasks.Any(t => state.Progress.ContainsKey(TaskKeyOf(chapter, t)))) return true;
+        int total = CheckpointCount(chapter);
+        return total > 0 ? SolvedCheckpoints(chapter) == total : state.Read.Contains(chapter.Id);
+    }
+
+    /// <summary>A lesson is complete when it is unlocked and all of its tasks are done.</summary>
+    private bool IsLessonComplete(Chapter chapter)
+    {
+        var (done, total) = ProgressLib.ChapterProgress(chapter, state.Progress, DistroOf(chapter));
+        return done == total && IsUnlocked(chapter);
+    }
+
+    private CheckpointTexts CheckpointTexts() => new(
+        T("checkpoint.check"), T("checkpoint.correct"), T("checkpoint.wrong"), T("checkpoint.predict"),
+        T("checkpoint.try"), T("checkpoint.done"), T("checkpoint.answer"), T("checkpoint.question"));
 
     private int ChapterIndex => Math.Max(0, ChaptersLib.Chapters.FindIndex(c => c.Id == state.Chapter));
     private Chapter Chapter => ChaptersLib.Chapters[ChapterIndex];
@@ -213,8 +281,10 @@ public sealed class MainWindow : Window
         lessonScroll.Content = lessonPanel;
 
         // Workbench: tasks above, terminal below
-        var tasksCard = new Border { Child = new ScrollViewer { Content = taskPanel } };
+        tasksCard.Child = new ScrollViewer { Content = taskPanel };
         tasksCard.Classes.Add("card");
+        gateCard.Classes.Add("card");
+        gateCard.Child = gatePanel;
         terminalReset.Classes.Add("flat");
         terminalReset.Foreground = new SolidColorBrush(Color.Parse("#c9d1d9"));
         terminalReset.FontSize = 12.5;
@@ -234,17 +304,17 @@ public sealed class MainWindow : Window
         DockPanel.SetDock(bar, Dock.Top);
         terminalDock.Children.Add(bar);
         terminalDock.Children.Add(terminal);
-        var terminalFrame = new Border { CornerRadius = new CornerRadius(10), ClipToBounds = true, Child = terminalDock, FlowDirection = FlowDirection.LeftToRight };
+        terminalFrame = new Border { CornerRadius = new CornerRadius(10), ClipToBounds = true, Child = terminalDock, FlowDirection = FlowDirection.LeftToRight };
         var workbench = new Grid { RowDefinitions = new RowDefinitions("2*,12,3*"), Margin = new Thickness(0, 14, 14, 14) };
         workbench.Children.Add(tasksCard);
         Grid.SetRow(terminalFrame, 2);
         workbench.Children.Add(terminalFrame);
+        Grid.SetRowSpan(gateCard, 3);
+        workbench.Children.Add(gateCard);
 
-        var body = new Grid { ColumnDefinitions = new ColumnDefinitions("270,*,4,560") };
         body.Children.Add(sidebar);
         Grid.SetColumn(lessonScroll, 1);
         body.Children.Add(lessonScroll);
-        var splitter = new GridSplitter { ResizeDirection = GridResizeDirection.Columns, Background = Brushes.Transparent };
         Grid.SetColumn(splitter, 2);
         body.Children.Add(splitter);
         Grid.SetColumn(workbench, 3);
@@ -285,7 +355,7 @@ public sealed class MainWindow : Window
             {
                 var item = new ComboBoxItem { Content = "   " + d.Name, Tag = d.Id };
                 distroPicker.Items.Add(item);
-                if (d.Id == shell.Distro.Id) distroPicker.SelectedItem = item;
+                if (d.Id == state.Distro) distroPicker.SelectedItem = item;
             }
         }
         ToolTip.SetTip(distroPicker, T("distro.label"));
@@ -307,12 +377,108 @@ public sealed class MainWindow : Window
         RenderSidebar();
         RenderLesson();
         RenderTasks();
+        RenderWorkbench();
+        // The distro choice only matters in the main chapter about distributions.
+        distroPicker.IsVisible = ChaptersLib.PartOf(Chapter).DistroChoice;
         terminalTitle.Text = $"{shell.CurrentUser().Name}@{Distro.Hostname} — {Distro.Name}";
+    }
+
+    /// <summary>
+    /// Shows the tasks and the terminal for an unlocked lesson, a "read first" card for a locked one,
+    /// and nothing for summaries and exams (they use the whole width).
+    /// </summary>
+    private void RenderWorkbench()
+    {
+        var chapter = Chapter;
+        bool lesson = chapter.Kind == ChapterKinds.Lesson;
+        if (body.ColumnDefinitions[3].Width.Value > 0) workbenchWidth = body.ColumnDefinitions[3].Width;
+        body.ColumnDefinitions[3].Width = lesson ? workbenchWidth : new GridLength(0);
+        splitter.IsVisible = lesson;
+        bool unlocked = lesson && IsUnlocked(chapter);
+        tasksCard.IsVisible = terminalFrame.IsVisible = unlocked;
+        gateCard.IsVisible = lesson && !unlocked;
+        if (!gateCard.IsVisible) return;
+
+        gatePanel.Children.Clear();
+        gatePanel.Children.Add(Text("🔒  " + T("gate.title"), 18, FontWeight.Bold));
+        int total = CheckpointCount(chapter);
+        if (total > 0)
+        {
+            int done = SolvedCheckpoints(chapter);
+            gatePanel.Children.Add(Text(T("gate.checkpoints", ("done", done), ("total", total)), 14.5));
+            var bar = new ProgressBar { Minimum = 0, Maximum = total, Value = done, Height = 6, MinHeight = 6 };
+            bar.Bind(ProgressBar.ForegroundProperty, this.GetResourceObservable("CsAccent"));
+            gatePanel.Children.Add(bar);
+        }
+        else
+        {
+            gatePanel.Children.Add(Text(T("gate.read"), 14.5));
+        }
+    }
+
+    private void Unlocked()
+    {
+        RenderWorkbench();
+        RenderSidebar();
+        if (!smokeTest) terminal.FocusInput();
+    }
+
+    /// <summary>Turns ```quiz / ```predict / ```try blocks in a lesson or exam into interactive checkpoints.</summary>
+    private int nextCheckpoint;
+    private readonly List<CheckpointView> examViews = new();
+    private bool renderingExam;
+
+    private Control? RenderCheckpoint(Markdig.Syntax.FencedCodeBlock fenced)
+    {
+        var kind = (fenced.Info ?? "").Trim();
+        if (!Codestead.UI.Learning.Checkpoint.Kinds.Contains(kind)) return null;
+        var chapter = Chapter;
+        int index = nextCheckpoint++;
+        var cp = Codestead.UI.Learning.Checkpoint.Parse(kind, fenced.Lines.ToString().TrimEnd('\n', '\r'), index);
+        var key = CheckpointKey(chapter, index);
+        var distroId = DistroOf(chapter).Id;
+        ShellType Sandbox()
+        {
+            var sh = ShellType.Create(distroId);
+            sh.Lang = Lang == "sv" ? "sv" : "en";
+            return sh;
+        }
+        var view = new CheckpointView(cp, CheckpointTexts(), state.Checkpoints.ContainsKey(key), Sandbox, renderingExam, cmd => terminal.Inject(cmd));
+        if (renderingExam)
+        {
+            examViews.Add(view);
+        }
+        else
+        {
+            view.Solved += _ =>
+            {
+                bool wasUnlocked = IsUnlocked(chapter);
+                state.Checkpoints[key] = true;
+                SaveState();
+                if (chapter.Id != Chapter.Id) return;
+                if (!wasUnlocked && IsUnlocked(chapter))
+                {
+                    overlay.Toast(T("gate.unlocked"));
+                    Unlocked();
+                }
+                else
+                {
+                    RenderWorkbench();
+                }
+            };
+        }
+        return view;
     }
 
     private void RenderProgress()
     {
-        var (done, total) = ProgressLib.TotalProgress(state.Progress, Distro);
+        int done = 0, total = 0;
+        foreach (var ch in ChaptersLib.Chapters)
+        {
+            var p = ProgressLib.ChapterProgress(ch, state.Progress, DistroOf(ch));
+            done += p.Done;
+            total += p.Total;
+        }
         totalBar.Maximum = Math.Max(1, total);
         totalBar.Value = done;
         totalText.Text = T("progress.short", ("done", done), ("total", total));
@@ -333,14 +499,36 @@ public sealed class MainWindow : Window
             sidebarList.Children.Add(header);
             foreach (var ch in chapters)
             {
-                number++;
-                var (done, total) = ProgressLib.ChapterProgress(ch, state.Progress, Distro);
+                var (done, total) = ProgressLib.ChapterProgress(ch, state.Progress, DistroOf(ch));
                 var row = new Grid { ColumnDefinitions = new ColumnDefinitions("26,*,Auto") };
-                var no = Text(number.ToString(), 13, null, "muted");
+                var no = Text(ch.Kind switch
+                {
+                    ChapterKinds.Summary => "∑",
+                    ChapterKinds.Exam => "★",
+                    _ => (++number).ToString(),
+                }, 13, null, "muted");
                 var title = Text(I18nLib.ChapterTitle(ch, Lang), 14);
                 Grid.SetColumn(title, 1);
-                var count = Text(done == total ? "✓" : $"{done}/{total}", 12.5, done == total ? FontWeight.Bold : null, done == total ? null : "muted");
-                if (done == total) count.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("CsAccent"));
+                bool complete;
+                string mark;
+                if (ch.Kind == ChapterKinds.Exam)
+                {
+                    complete = state.Exams.TryGetValue(ch.Part, out var best) && best >= ExamPassPercent;
+                    mark = state.Exams.TryGetValue(ch.Part, out best) ? $"{best} %" : "";
+                }
+                else if (ch.Kind == ChapterKinds.Summary)
+                {
+                    complete = false;
+                    mark = "";
+                }
+                else
+                {
+                    complete = IsLessonComplete(ch);
+                    mark = complete ? "✓" : $"{done}/{total}";
+                }
+                if (complete && ch.Kind == ChapterKinds.Lesson) mark = "✓";
+                var count = Text(mark, 12.5, complete ? FontWeight.Bold : null, complete ? null : "muted");
+                if (complete) count.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("CsAccent"));
                 count.Margin = new Thickness(8, 0, 0, 0);
                 Grid.SetColumn(count, 2);
                 row.Children.Add(no);
@@ -364,7 +552,13 @@ public sealed class MainWindow : Window
         var shownDir = LanguagesLib.Languages.FirstOrDefault(l => l.Code == shownLang)?.Dir ?? "ltr";
 
         lessonPanel.Children.Clear();
-        var eyebrow = Text(T("lesson.chapter", ("n", ChapterIndex + 1), ("total", ChaptersLib.Chapters.Count)).ToUpperInvariant(), 12.5, null, "eyebrow");
+        var eyebrowText = chapter.Kind switch
+        {
+            ChapterKinds.Summary => T($"part.{chapter.Part}") + " · " + T("summary.label"),
+            ChapterKinds.Exam => T($"part.{chapter.Part}") + " · " + T("exam.label"),
+            _ => T("lesson.chapter", ("n", ChapterIndex + 1), ("total", ChaptersLib.Chapters.Count)),
+        };
+        var eyebrow = Text(eyebrowText.ToUpperInvariant(), 12.5, null, "eyebrow");
         lessonPanel.Children.Add(eyebrow);
         if (!available.Contains(Lang))
         {
@@ -373,8 +567,55 @@ public sealed class MainWindow : Window
             lessonPanel.Children.Add(note);
         }
         markdown.FlowDirection = shownDir == "rtl" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
-        markdown.SetMarkdown(RenderLib.Preprocess(I18nLib.ChapterMarkdown(chapter, Lang), Distro, Lang));
-        lessonPanel.Children.Add(markdown);
+        var text = RenderLib.Preprocess(I18nLib.ChapterMarkdown(chapter, Lang), Distro, Lang);
+        nextCheckpoint = 0;
+        examViews.Clear();
+        if (chapter.Kind == ChapterKinds.Exam) RenderExam(chapter, text);
+        else
+        {
+            renderingExam = false;
+            markdown.SetMarkdown(text);
+            lessonPanel.Children.Add(markdown);
+        }
+
+        // A lesson without checkpoints: the student confirms having read it.
+        if (chapter.Kind == ChapterKinds.Lesson && !IsUnlocked(chapter) && CheckpointCount(chapter) == 0)
+        {
+            var read = new Button { Content = "✓  " + T("gate.readButton"), Margin = new Thickness(0, 18, 0, 0) };
+            read.Classes.Add("primary");
+            read.Click += (_, _) =>
+            {
+                if (!state.Read.Contains(chapter.Id)) state.Read.Add(chapter.Id);
+                SaveState();
+                read.IsVisible = false;
+                overlay.Toast(T("gate.unlocked"));
+                Unlocked();
+            };
+            lessonPanel.Children.Add(read);
+        }
+
+        // Official sources for the chapter.
+        var references = I18nLib.References(chapter);
+        if (references.Count > 0)
+        {
+            var refs = new StackPanel { Spacing = 2, Margin = new Thickness(0, 30, 0, 0) };
+            refs.Children.Add(Text(T("references.title"), 17, FontWeight.Bold));
+            foreach (var r in references)
+            {
+                var content = new StackPanel { Spacing = 0 };
+                var title = Text("↗  " + r.Title, 14.5, FontWeight.SemiBold);
+                title.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("CsAccent"));
+                content.Children.Add(title);
+                content.Children.Add(Text($"{r.Publisher} · {r.Url}", 12, null, "muted"));
+                var link = new Button { Content = content, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(8, 6) };
+                link.Classes.Add("flat");
+                ToolTip.SetTip(link, r.Url);
+                var url = r.Url;
+                link.Click += (_, _) => OpenLink(url);
+                refs.Children.Add(link);
+            }
+            lessonPanel.Children.Add(refs);
+        }
 
         // Previous / next
         var nav = new Grid { ColumnDefinitions = new ColumnDefinitions("*,16,*"), Margin = new Thickness(0, 36, 0, 0) };
@@ -388,6 +629,65 @@ public sealed class MainWindow : Window
         }
         lessonPanel.Children.Add(nav);
         lessonScroll.Offset = new Vector(0, 0);
+    }
+
+    /// <summary>
+    /// The exam of a main chapter: locked until every sub-chapter is complete, then all questions at once.
+    /// Answers are graded on "Submit"; 80 % passes and the exam can be retaken.
+    /// </summary>
+    private void RenderExam(Chapter chapter, string text)
+    {
+        var remaining = ChaptersLib.LessonsIn(chapter.Part).Where(l => !IsLessonComplete(l)).ToList();
+        if (remaining.Count > 0)
+        {
+            var box = new StackPanel { Spacing = 8 };
+            box.Children.Add(Text(I18nLib.ChapterTitle(chapter, Lang), 30, FontWeight.Bold));
+            box.Children.Add(Text("🔒  " + T("exam.locked"), 15));
+            box.Children.Add(Text(T("exam.remaining"), 14, FontWeight.SemiBold));
+            foreach (var l in remaining)
+            {
+                var b = new Button { Content = "→  " + I18nLib.ChapterTitle(l, Lang), HorizontalAlignment = HorizontalAlignment.Left };
+                b.Classes.Add("flat");
+                var id = l.Id;
+                b.Click += (_, _) => Navigate(id);
+                box.Children.Add(b);
+            }
+            lessonPanel.Children.Add(new Border { Margin = new Thickness(0, 10, 0, 0), Child = box });
+            return;
+        }
+
+        renderingExam = true;
+        markdown.SetMarkdown(text);
+        renderingExam = false;
+        lessonPanel.Children.Add(markdown);
+        var views = examViews.ToList();
+
+        var result = new StackPanel { Spacing = 8, Margin = new Thickness(0, 18, 0, 0) };
+        if (state.Exams.TryGetValue(chapter.Part, out var best)) result.Children.Add(Text(T("exam.best", ("percent", best)), 13.5, null, "muted"));
+        var submit = new Button { Content = T("exam.submit"), Margin = new Thickness(0, 12, 0, 0) };
+        submit.Classes.Add("primary");
+        submit.Click += (_, _) =>
+        {
+            int score = views.Count(v => v.Grade());
+            int percent = views.Count == 0 ? 100 : (int)Math.Floor(100.0 * score / views.Count);
+            if (!state.Exams.TryGetValue(chapter.Part, out var old) || percent > old) state.Exams[chapter.Part] = percent;
+            SaveState();
+            submit.IsVisible = false;
+            result.Children.Clear();
+            bool passed = percent >= ExamPassPercent;
+            var headline = Text(T("exam.result", ("score", score), ("total", views.Count), ("percent", percent)), 17, FontWeight.Bold);
+            result.Children.Add(headline);
+            var verdict = Text(passed ? "✓ " + T("exam.passed") : T("exam.failed", ("need", ExamPassPercent)), 15, FontWeight.SemiBold);
+            verdict.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable(passed ? "CsAccent" : "CsDanger"));
+            result.Children.Add(verdict);
+            var retake = new Button { Content = "↺  " + T("exam.retake") };
+            retake.Classes.Add("secondary");
+            retake.Click += (_, _) => RenderLesson();
+            result.Children.Add(retake);
+            RenderSidebar();
+        };
+        lessonPanel.Children.Add(submit);
+        lessonPanel.Children.Add(result);
     }
 
     private Button NavButton(Chapter target, string direction, HorizontalAlignment align)
@@ -485,6 +785,8 @@ public sealed class MainWindow : Window
 
         var hint = I18nLib.TaskHint(chapter, task, Lang, Distro);
         var solution = task.Solution.Resolve(Distro);
+        int attempts = state.Attempts.TryGetValue(key, out var a) ? a : 0;
+        bool SolutionUnlocked() => done || attempts >= AttemptsBeforeSolution || state.HintSeen.Contains(key);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         var details = new StackPanel { Spacing = 6 };
         Button? hintButton = null;
@@ -497,7 +799,16 @@ public sealed class MainWindow : Window
                 hintButton.Content = "💡 " + (which == "hint" ? T("tasks.hideHint") : T("tasks.hint"));
                 hintButton.Classes.Set("active", which == "hint");
             }
-            solutionButton.Content = "👁 " + (which == "solution" ? T("tasks.hideSolution") : T("tasks.solution"));
+            if (which == "hint" && !state.HintSeen.Contains(key))
+            {
+                state.HintSeen.Add(key);
+                SaveState();
+            }
+            bool unlocked = SolutionUnlocked();
+            solutionButton.IsEnabled = unlocked;
+            solutionButton.Content = unlocked
+                ? "👁 " + (which == "solution" ? T("tasks.hideSolution") : T("tasks.solution"))
+                : "🔒 " + T("tasks.solutionLocked", ("n", AttemptsBeforeSolution - attempts));
             solutionButton.Classes.Set("active", which == "solution");
             if (which == "hint" && hint is not null)
             {
@@ -556,7 +867,19 @@ public sealed class MainWindow : Window
         state.Chapter = id;
         justCompleted = new();
         SaveState();
+        UseShellFor(Chapter);
         RenderAll();
+    }
+
+    /// <summary>Switches the terminal to the chapter's distribution (Ubuntu outside the distro main chapter).</summary>
+    private void UseShellFor(Chapter chapter)
+    {
+        var id = ChaptersLib.DistroFor(chapter, state.Distro);
+        if (id == shell.Distro.Id) return;
+        SaveShell();
+        shell = LoadShell(id);
+        terminal.Shell = shell;
+        FillPickers();
     }
 
     private void OnResult(ExecResult result)
@@ -564,7 +887,29 @@ public sealed class MainWindow : Window
         SaveShell();
         terminalTitle.Text = $"{shell.CurrentUser().Name}@{Distro.Hostname} — {Distro.Name}";
         var newly = ProgressLib.EvaluateTasks(Chapter, shell, result, state.Progress);
-        if (newly.Count == 0) return;
+        // Every finished command line counts as an attempt for the tasks that are not done yet.
+        bool solutionUnlocked = false;
+        if (!result.Pending && !result.Incomplete && result.Line.Trim() != "")
+        {
+            foreach (var task in Chapter.Tasks)
+            {
+                var key = TaskKeyOf(Chapter, task);
+                if (state.Progress.ContainsKey(key) || newly.Contains(key)) continue;
+                int n = (state.Attempts.TryGetValue(key, out var a) ? a : 0) + 1;
+                if (n > AttemptsBeforeSolution) continue;
+                state.Attempts[key] = n;
+                if (n == AttemptsBeforeSolution) solutionUnlocked = true;
+            }
+        }
+        if (newly.Count == 0)
+        {
+            if (solutionUnlocked)
+            {
+                SaveState();
+                RenderTasks();
+            }
+            return;
+        }
         foreach (var k in newly) state.Progress[k] = true;
         SaveState();
         justCompleted = newly;
@@ -581,12 +926,15 @@ public sealed class MainWindow : Window
 
     private void ChangeDistro(string id)
     {
-        if (id == shell.Distro.Id) return;
+        if (id == state.Distro) return;
         SaveShell();
         state.Distro = id;
         SaveState();
-        shell = LoadShell(id);
-        terminal.Shell = shell;
+        if (ChaptersLib.PartOf(Chapter).DistroChoice)
+        {
+            shell = LoadShell(id);
+            terminal.Shell = shell;
+        }
         FillPickers();
         RenderAll();
     }
@@ -628,6 +976,11 @@ public sealed class MainWindow : Window
         overlay.Confirm(T("reset.progress.title"), T("reset.progress.confirm"), T("reset.progress.button"), T("dialog.cancel"), true, () =>
         {
             state.Progress = Js.Obj<bool>();
+            state.Checkpoints = Js.Obj<bool>();
+            state.Read = new();
+            state.Attempts = Js.Obj<int>();
+            state.HintSeen = new();
+            state.Exams = Js.Obj<int>();
             SaveState();
             RenderAll();
             overlay.Toast(T("toast.progressReset"));
@@ -685,7 +1038,7 @@ public sealed class MainWindow : Window
         {
             var b = new Button { Content = d.Name, Margin = new Thickness(0, 0, 8, 8) };
             b.Classes.Add("chip");
-            if (d.Id == Distro.Id) b.Classes.Add("active");
+            if (d.Id == state.Distro) b.Classes.Add("active");
             var id = d.Id;
             b.Click += (_, _) =>
             {
@@ -743,12 +1096,14 @@ public sealed class MainWindow : Window
                 foreach (var ch in ChaptersLib.Chapters)
                 {
                     state.Chapter = ch.Id;
+                    UseShellFor(ch);
                     RenderAll();
                 }
             }
             // Solve the first task of the first chapter in the real terminal.
             state.Lang = "en";
             state.Chapter = ChaptersLib.Chapters[0].Id;
+            UseShellFor(Chapter);
             ApplyLanguage();
             var task = Chapter.Tasks[0];
             var before = state.Progress.ContainsKey(ChaptersLib.TaskKey(Chapter.Id, task.Id, task.PerFamily, Distro.Family));

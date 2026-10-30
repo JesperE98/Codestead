@@ -37,6 +37,7 @@ public sealed class CheckpointView : UserControl
     private readonly MarkdownView explanation = new() { BaseFontSize = 14, IsVisible = false };
     private readonly List<ToggleButton> optionButtons = new();
     private TextBox? answerBox;
+    private Button? checkButton;
     private bool trySolved;
     private bool solved;
 
@@ -86,10 +87,10 @@ public sealed class CheckpointView : UserControl
 
         if (!examMode && cp.Kind != Checkpoint.Try)
         {
-            var check = new Button { Content = texts.Check, HorizontalAlignment = HorizontalAlignment.Left };
-            check.Classes.Add("secondary");
-            check.Click += (_, _) => CheckNow();
-            body.Children.Add(check);
+            checkButton = new Button { Content = texts.Check, HorizontalAlignment = HorizontalAlignment.Left };
+            checkButton.Classes.Add("secondary");
+            checkButton.Click += (_, _) => CheckNow();
+            body.Children.Add(checkButton);
         }
         body.Children.Add(feedback);
         if (cp.Explanation is not null)
@@ -200,6 +201,7 @@ public sealed class CheckpointView : UserControl
     {
         if (solved) return;
         solved = true;
+        if (checkButton is not null) checkButton.IsVisible = false;
         feedback.Text = "✓ " + (silent ? texts.Done : texts.Correct);
         feedback.IsVisible = true;
         feedback.Bind(TextBlock.ForegroundProperty, feedback.GetResourceObservable("CsAccent"));
