@@ -14,6 +14,8 @@ import ch07 from './chapters/07-rattigheter.md?raw';
 import ch08 from './chapters/08-distributioner.md?raw';
 import ch09 from './chapters/09-pakethantering.md?raw';
 import chSkript from './chapters/skript.md?raw';
+import chProcesser from './chapters/processer.md?raw';
+import { RUNAWAY_PID, SERVER_PID } from '../shell/procs';
 
 const HOME = '/home/elev';
 
@@ -335,6 +337,66 @@ export const CHAPTERS: Chapter[] = [
     ],
   },
   {
+    id: 'processer',
+    part: 'system',
+    title: 'Processer och jobb',
+    content: chProcesser,
+    tasks: [
+      {
+        id: 'ps',
+        text: 'Visa processerna i din egen terminal med `ps`.',
+        solution: ['ps'],
+        check: (c) => ran(c, /^ps\s*$/),
+      },
+      {
+        id: 'ps-aux',
+        text: 'Lista **alla** processer på datorn.',
+        hint: '`ps aux` (eller `ps -ef`).',
+        solution: ['ps aux'],
+        check: (c) => ran(c, /^ps\s+(-?aux|-ef|-e|-A)\b/) && c.output.includes('/sbin/init'),
+      },
+      {
+        id: 'hitta',
+        text: 'En process slukar nästan all CPU. Visa processerna sorterade efter CPU-användning så att du ser vad den heter.',
+        hint: '`top`, `htop` eller `ps aux --sort=-%cpu`.',
+        solution: ['ps aux --sort=-%cpu'],
+        check: (c) => ran(c, /^(top|htop)\b|^ps\b.*--sort[= ]-?%?(cpu|pcpu)/) && c.output.includes(String(RUNAWAY_PID)),
+      },
+      {
+        id: 'kill',
+        text: `Stoppa den skenande processen (PID ${RUNAWAY_PID}) med \`kill\`.`,
+        solution: [`kill ${RUNAWAY_PID}`],
+        check: (c) => !c.sh.proc.procs.some((p) => p.pid === RUNAWAY_PID),
+      },
+      {
+        id: 'bakgrund',
+        text: 'Starta `sleep 300` i bakgrunden.',
+        hint: 'Sätt `&` sist på raden.',
+        solution: ['sleep 300 &'],
+        check: (c) => c.sh.proc.jobs.some((j) => j.state === 'Running' && /^sleep\s+300\b/.test(j.cmd)),
+      },
+      {
+        id: 'jobs',
+        text: 'Visa dina bakgrundsjobb.',
+        solution: ['jobs'],
+        check: (c) => ran(c, /^jobs\b/) && c.output.includes('sleep'),
+      },
+      {
+        id: 'kill-jobb',
+        text: 'Avsluta bakgrundsjobbet med `kill` och jobbnumret (`%1`) eller dess PID.',
+        solution: ['kill %1'],
+        check: (c) => ran(c, /^kill\b/) && /Terminated|Killed/.test(c.output),
+      },
+      {
+        id: 'server',
+        text: 'Servern `minserver` körs som root. Stoppa den – med `pkill` eller `kill` och rätt behörighet.',
+        hint: 'Som vanlig användare får du "Operation not permitted". Sätt `sudo` framför.',
+        solution: ['sudo pkill minserver'],
+        check: (c) => !c.sh.proc.procs.some((p) => p.pid === SERVER_PID),
+      },
+    ],
+  },
+  {
     id: 'distributioner',
     part: 'distro',
     title: 'Distributioner och familjer',
@@ -571,7 +633,6 @@ export const CHAPTERS: Chapter[] = [
 
 /** Kapitel som planeras – visas i menyn som "kommer snart". */
 export const UPCOMING: string[] = [
-  'Processer och jobb (ps, top, kill)',
   'Textbearbetning med sed, awk och tr',
   'Arkiv och komprimering (tar, gzip, zip)',
   'Nätverk (ip, ping, curl, ssh)',

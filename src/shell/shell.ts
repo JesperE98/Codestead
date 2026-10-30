@@ -8,6 +8,7 @@ import { formatMan } from './commands/util';
 import { getDistro, type Distro } from './distros';
 import { buildFs, STUDENT } from './initfs';
 import { installPackage, PACKAGES, packageProviding } from './packages';
+import { initialProcs, SHELL_PID, type Job, type ProcState } from './procs';
 import {
   escapeGlob,
   findClosingParen,
@@ -37,6 +38,7 @@ export interface ShellSnapshot {
   flags: Record<string, boolean>;
   userStack: string[];
   functions?: Record<string, Node>;
+  proc?: ProcState;
 }
 
 export interface ExecResult {
@@ -88,6 +90,10 @@ export class Shell {
   installed: Record<string, string>;
   flags: Record<string, boolean>;
   functions: Record<string, Node>;
+  /** Processer och bakgrundsjobb. */
+  proc: ProcState;
+  /** PID för det senast startade bakgrundsjobbet ($!). */
+  lastBgPid: number | null = null;
   /** Inloggade användare; sista är aktiv. `sudo -i` lägger till root, `exit` tar bort. */
   userStack: string[];
   lastExit = 0;
@@ -118,6 +124,7 @@ export class Shell {
     this.installed = s.installed;
     this.flags = s.flags;
     this.functions = s.functions ?? {};
+    this.proc = s.proc ?? initialProcs(this.distro);
     this.userStack = s.userStack.length ? s.userStack : [STUDENT];
   }
 
@@ -170,6 +177,7 @@ export class Shell {
       flags: this.flags,
       userStack: this.userStack,
       functions: this.functions,
+      proc: this.proc,
     };
   }
 
@@ -276,7 +284,7 @@ export class Shell {
     const term: XIO = { out: (s) => (output += s), err: (s) => (output += s), stdin: null, tty: true };
     const result = (l: string, incomplete = false): ExecResult => ({
       line: l,
-      output,
+      output: incomplete || this.pending ? output : output + this.jobNotifications(),
       exitCode: this.lastExit,
       clear: this.clearRequested,
       pending: !!this.pending,
@@ -377,7 +385,7 @@ export class Shell {
         code = this.lastExit;
         try {
           for (let k = 0; k < node.items.length; k++) {
-            code = this.exec(node.items[k].node, io);
+            code = node.items[k].background ? this.startJob(node.items[k].node, io) : this.exec(node.items[k].node, io);
             if (this.pending) {
               // En fråga (t.ex. från read eller apt) – kör resten när den besvarats.
               const rest = node.items.slice(k + 1);
@@ -877,6 +885,70 @@ export class Shell {
     return 0;
   }
 
+  // ---------- Bakgrundsjobb ----------
+
+  /** Uppdaterar jobb vars tid har gått ut (t.ex. `sleep 5 &`). */
+  refreshJobs(): void {
+    const now = Date.now();
+    for (const job of this.proc.jobs) {
+      if (job.state === 'Running' && job.endsAt !== undefined && job.endsAt <= now) this.finishJob(job, 'Done');
+    }
+  }
+
+  finishJob(job: Job, state: Job['state']): void {
+    job.state = state;
+    this.proc.procs = this.proc.procs.filter((p) => p.pid !== job.pid);
+  }
+
+  /** `kommando &`: startar ett bakgrundsjobb och skriver ut "[1] 4200". */
+  private startJob(node: Node, io: XIO): number {
+    this.refreshJobs();
+    const cmd = nodeToString(node);
+    const id = Math.max(0, ...this.proc.jobs.map((j) => j.id)) + 1;
+    const pid = this.proc.nextPid++;
+    this.lastBgPid = pid;
+    io.err(`[${id}] ${pid}\n`);
+    const seconds = sleepSeconds(node);
+    if (seconds !== null) {
+      // sleep körs "på riktigt" i bakgrunden: jobbet blir klart när tiden gått.
+      this.proc.jobs.push({ id, pid, cmd, state: 'Running', endsAt: Date.now() + seconds * 1000 });
+      this.proc.procs.push({
+        pid,
+        ppid: SHELL_PID,
+        user: this.currentUser().name,
+        cmd,
+        cpu: 0,
+        mem: 0,
+        vsz: 8_300,
+        rss: 1_900,
+        tty: 'pts/0',
+        stat: 'S',
+        start: new Date().toTimeString().slice(0, 5),
+        time: '0:00',
+      });
+    } else {
+      // Andra kommandon körs direkt – i simulatorn blir de klara på en gång.
+      const exit = this.exec(node, io);
+      this.proc.jobs.push({ id, pid, cmd, state: 'Done', exit });
+    }
+    return 0;
+  }
+
+  /** "[1]+  Done   sleep 3" för jobb som blivit klara sedan förra gången. */
+  private jobNotifications(): string {
+    this.refreshJobs();
+    const finished = this.proc.jobs.filter((j) => j.state !== 'Running');
+    if (!finished.length) return '';
+    const last = this.proc.jobs.at(-1);
+    this.proc.jobs = this.proc.jobs.filter((j) => j.state === 'Running');
+    return finished
+      .map((j) => {
+        const state = j.state === 'Done' && j.exit ? `Exit ${j.exit}` : j.state;
+        return `[${j.id}]${j === last ? '+' : '-'}  ${state.padEnd(24)}${j.cmd}\n`;
+      })
+      .join('');
+  }
+
   // ---------- Variabler och expansion ----------
 
   getVar(name: string): string | undefined {
@@ -976,7 +1048,7 @@ export class Shell {
       case '$':
         return '4242';
       case '!':
-        return '';
+        return this.lastBgPid !== null ? String(this.lastBgPid) : '';
       case '-':
         return 'himBH';
     }
@@ -1266,4 +1338,28 @@ export function flattenLines(text: string): string {
     const joiner = /(\bdo|\bthen|\belse|\{|\||&&|\|\||\bin|;)$/.test(acc) || /^(;|\))/.test(l) ? ' ' : '; ';
     return acc + joiner + l;
   });
+}
+
+/** Ungefärlig källkod för ett kommando (visas av jobs och ps). */
+export function nodeToString(node: Node): string {
+  switch (node.type) {
+    case 'simple':
+      return [...node.words.map((w) => w.raw), ...node.redirects.map((r) => r.op + (r.target ? ' ' + r.target.raw : ''))].join(' ');
+    case 'pipeline':
+      return (node.negate ? '! ' : '') + node.commands.map(nodeToString).join(' | ');
+    case 'andor':
+      return [nodeToString(node.first), ...node.rest.map((r) => `${r.op} ${nodeToString(r.node)}`)].join(' ');
+    case 'list':
+      return node.items.map((i) => nodeToString(i.node) + (i.background ? ' &' : '')).join('; ');
+    default:
+      return node.type === 'funcdef' ? `${node.name}()` : node.type;
+  }
+}
+
+/** Om noden är `sleep N`: antalet sekunder, annars null. */
+function sleepSeconds(node: Node): number | null {
+  if (node.type !== 'simple' || node.words[0]?.raw !== 'sleep' || node.words.length !== 2) return null;
+  const m = /^(\d+(?:\.\d+)?)([smh]?)$/.exec(node.words[1].raw);
+  if (!m) return null;
+  return Number(m[1]) * (m[2] === 'm' ? 60 : m[2] === 'h' ? 3600 : 1);
 }
