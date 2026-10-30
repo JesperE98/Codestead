@@ -1,0 +1,71 @@
+# nfpm config for the native Linux packages of one Codestead tool (.deb, .rpm, Arch .pkg.tar.zst).
+# Values come from environment variables set by packaging/build-linux.sh.
+name: ${PKG_NAME}
+arch: amd64
+platform: linux
+version: ${VERSION}
+release: 1
+section: education
+priority: optional
+maintainer: jesper-e98 <noreply@github.com>
+vendor: jesper-e98
+homepage: https://github.com/jesper-e98/codestead-releases
+license: Proprietary
+description: |
+  ${PKG_DESCRIPTION}
+
+# Shared libraries a self-contained .NET + Avalonia app needs on a desktop system.
+overrides:
+  deb:
+    depends:
+      - libc6
+      - libstdc++6
+      - libgcc-s1
+      - zlib1g
+      - libssl3 | libssl3t64
+      - libfontconfig1
+      - libx11-6
+      - libice6
+      - libsm6
+      - libxrandr2
+      - libxi6
+      - libxcursor1
+  rpm:
+    depends:
+      - glibc
+      - libstdc++
+      - zlib
+      - openssl-libs
+      - fontconfig
+      - libX11
+      - libICE
+      - libSM
+      - libXrandr
+      - libXi
+      - libXcursor
+  archlinux:
+    depends:
+      - glibc
+      - gcc-libs
+      - zlib
+      - openssl
+      - fontconfig
+      - libx11
+      - libice
+      - libsm
+      - libxrandr
+      - libxi
+      - libxcursor
+
+contents:
+  - src: ${PUBLISH_DIR}/
+    dst: /opt/${PKG_NAME}/
+    type: tree
+  - src: ${GEN_DIR}/launcher.sh
+    dst: /usr/bin/${PKG_NAME}
+    file_info:
+      mode: 0755
+  - src: ${GEN_DIR}/app.desktop
+    dst: /usr/share/applications/${PKG_NAME}.desktop
+  - src: build/icon.png
+    dst: /usr/share/icons/hicolor/1024x1024/apps/${PKG_NAME}.png
