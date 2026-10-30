@@ -1,0 +1,25 @@
+{
+  "title": "Benutzer, Rechte und sudo",
+  "tasks": {
+    "groups": {
+      "text": "Finde heraus, zu welchen Gruppen du gehörst."
+    },
+    "shadow": {
+      "text": "Versuche, `/etc/shadow` mit `cat` zu lesen – und mach es danach mit `sudo`."
+    },
+    "script": {
+      "text": "Lege das Skript `~/hej.sh` an, das die Zeile `echo Hej från mitt skript` (Schwedisch für „Hallo aus meinem Skript“) enthält.",
+      "hint": "Nimm einfache Anführungszeichen: `echo 'echo Hej från mitt skript' > ~/hej.sh`"
+    },
+    "chmod-x": {
+      "text": "Mach `~/hej.sh` ausführbar."
+    },
+    "run-script": {
+      "text": "Führe das Skript mit `./hej.sh` aus (aus deinem Home-Verzeichnis)."
+    },
+    "chmod-600": {
+      "text": "Sorge dafür, dass `~/anteckningar.txt` **nur** für dich lesbar und schreibbar ist (`rw-------`).",
+      "hint": "r = 4, w = 2, x = 1. Der Besitzer soll 4 + 2 haben und alle anderen 0."
+    }
+  }
+}
