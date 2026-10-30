@@ -16,8 +16,6 @@ public static partial class PkgCmd
     private static bool Flag(Shell sh, string key) => sh.Flags.TryGetValue(key, out var v) && v;
     /// <summary>Math.round for non-negative numbers.</summary>
     private static long Round(double v) => (long)Math.Floor(v + 0.5);
-    /// <summary>formatMiB for fractional sizes (the same formula as PackagesLib.FormatMiB).</summary>
-    private static string MiB(double kb) => $"{Js.ToFixed(kb / 1024, 2)} MiB";
     private static string ReplaceFirst(string s, string find)
     {
         int i = s.IndexOf(find, StringComparison.Ordinal);
@@ -561,7 +559,7 @@ BESKRIVNING
                     }
                     ctx.Out(
                         $"Repository      : {Repo(p)}\nName            : {PkgName(ctx, p)}\nVersion         : {AvailableVersion(sh, p)}\n" +
-                        $"Description     : {p.Description}\nArchitecture    : x86_64\nDownload Size   : {MiB(p.SizeKb * 0.4)}\n" +
+                        $"Description     : {p.Description}\nArchitecture    : x86_64\nDownload Size   : {FormatMiB(p.SizeKb * 0.4)}\n" +
                         $"Installed Size  : {FormatMiB(p.SizeKb)}\n\n");
                 }
                 return 0;
@@ -623,7 +621,7 @@ BESKRIVNING
             var size = list.Sum(p => p.SizeKb);
             ctx.Out(
                 $"resolving dependencies...\nlooking for conflicting packages...\n\nPackages ({list.Count}) {string.Join("  ", list.Select(Full))}\n\n" +
-                $"Total Download Size:   {MiB(size * 0.4)}\nTotal Installed Size:  {FormatMiB(size)}\n\n");
+                $"Total Download Size:   {FormatMiB(size * 0.4)}\nTotal Installed Size:  {FormatMiB(size)}\n\n");
             return Confirm(
                 ctx,
                 ":: Proceed with installation? [Y/n] ",
@@ -806,7 +804,7 @@ BESKRIVNING
                 ctx.Out(DnfHeader + "Installing:\n" + string.Concat(list.Select(p => Row(p, Ver(p), ReposCmd.DnfRepoId(p)))));
                 ctx.Out(
                     $"\nTransaction Summary:\n Installing:        {list.Count} package{(list.Count > 1 ? "s" : "")}\n\n" +
-                    $"Total size of inbound packages is {MiB(size * 0.4)}. Need to download {MiB(size * 0.4)}.\n" +
+                    $"Total size of inbound packages is {FormatMiB(size * 0.4)}. Need to download {FormatMiB(size * 0.4)}.\n" +
                     $"After this operation, {FormatMiB(size)} extra will be used (install {FormatMiB(size)}, remove 0 B).\n");
                 return Confirm(
                     ctx,
@@ -818,7 +816,7 @@ BESKRIVNING
                         for (int i = 0; i < list.Count; i++)
                         {
                             var p = list[i];
-                            io.Out($"[{i + 1}/{list.Count}] {PkgName(ctx, p)}-0:{Ver(p)}.x86_64          100% |   1.8 MiB/s | {MiB(p.SizeKb * 0.4)} |  00m00s\n");
+                            io.Out($"[{i + 1}/{list.Count}] {PkgName(ctx, p)}-0:{Ver(p)}.x86_64          100% |   1.8 MiB/s | {FormatMiB(p.SizeKb * 0.4)} |  00m00s\n");
                         }
                         io.Out($"Running transaction\n[1/{list.Count + 2}] Verify package files            100%\n[2/{list.Count + 2}] Prepare transaction             100%\n");
                         for (int i = 0; i < list.Count; i++)
