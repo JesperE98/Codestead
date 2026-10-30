@@ -11,7 +11,9 @@
     <CodesteadHubId>codestead-hub</CodesteadHubId>
     <CodesteadPublisher>jesper-e98</CodesteadPublisher>
     <CodesteadReleasesRepo>jesper-e98/codestead-releases</CodesteadReleasesRepo>
-    <Version>0.4.0</Version>
+    <!-- Versions: raise one to release that product (see .github/workflows/release.yml). -->
+    <CodesteadLinuxVersion>0.4.0</CodesteadLinuxVersion>
+    <CodesteadHubVersion>0.1.0</CodesteadHubVersion>
     <Company>$(CodesteadPublisher)</Company>
     <Product>$(CodesteadBrand)</Product>
     <Copyright>Copyright © 2026 jesper-e98. All rights reserved.</Copyright>

@@ -4,6 +4,7 @@
     <RootNamespace>Codestead.Linux</RootNamespace>
     <AssemblyName>Codestead.Linux</AssemblyName>
     <AssemblyTitle>$(CodesteadLinuxName)</AssemblyTitle>
+    <Version>$(CodesteadLinuxVersion)</Version>
     <ApplicationIcon>../../build/icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>

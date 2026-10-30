@@ -10,19 +10,23 @@ simulerad terminal. De bockas av automatiskt när du gjort rätt (*learn by doin
 ## Ladda ner
 
 Installationsfilerna finns i det offentliga repot
-[jesper-e98/codestead-releases](https://github.com/jesper-e98/codestead-releases/releases/latest).
+[jesper-e98/codestead-releases](https://github.com/jesper-e98/codestead-releases/releases).
 
-| System | Fil |
-|---|---|
-| **Windows** 10/11 (x64) | [codestead-linux-win-x64-Setup.exe](https://github.com/jesper-e98/codestead-releases/releases/latest/download/codestead-linux-win-x64-Setup.exe) |
-| **Ubuntu / Debian** | [codestead-linux_amd64.deb](https://github.com/jesper-e98/codestead-releases/releases/latest/download/codestead-linux_amd64.deb) |
-| **Fedora** | [codestead-linux.x86_64.rpm](https://github.com/jesper-e98/codestead-releases/releases/latest/download/codestead-linux.x86_64.rpm) |
-| **Arch Linux / CachyOS** | [codestead-linux-x86_64.pkg.tar.zst](https://github.com/jesper-e98/codestead-releases/releases/latest/download/codestead-linux-x86_64.pkg.tar.zst) |
-| **Alla Linux** (AppImage) | [codestead-linux-linux-x86_64.AppImage](https://github.com/jesper-e98/codestead-releases/releases/latest/download/codestead-linux-linux-x86_64.AppImage) |
+**Enklast: hubben "Codestead".** Den installerar, startar och uppdaterar Codestead Linux (och senare
+fler verktyg) åt dig.
+
+| System | Hubben Codestead | Bara Codestead Linux |
+|---|---|---|
+| **Windows** 10/11 (x64) | [codestead-hub-win-x64-Setup.exe](https://github.com/jesper-e98/codestead-releases/releases/download/codestead-hub-latest/codestead-hub-win-x64-Setup.exe) | [codestead-linux-win-x64-Setup.exe](https://github.com/jesper-e98/codestead-releases/releases/download/codestead-linux-latest/codestead-linux-win-x64-Setup.exe) |
+| **Ubuntu / Debian** | [codestead-hub_amd64.deb](https://github.com/jesper-e98/codestead-releases/releases/download/codestead-hub-latest/codestead-hub_amd64.deb) | [codestead-linux_amd64.deb](https://github.com/jesper-e98/codestead-releases/releases/download/codestead-linux-latest/codestead-linux_amd64.deb) |
+| **Fedora** | [codestead-hub.x86_64.rpm](https://github.com/jesper-e98/codestead-releases/releases/download/codestead-hub-latest/codestead-hub.x86_64.rpm) | [codestead-linux.x86_64.rpm](https://github.com/jesper-e98/codestead-releases/releases/download/codestead-linux-latest/codestead-linux.x86_64.rpm) |
+| **Arch Linux / CachyOS** | [codestead-hub-x86_64.pkg.tar.zst](https://github.com/jesper-e98/codestead-releases/releases/download/codestead-hub-latest/codestead-hub-x86_64.pkg.tar.zst) | [codestead-linux-x86_64.pkg.tar.zst](https://github.com/jesper-e98/codestead-releases/releases/download/codestead-linux-latest/codestead-linux-x86_64.pkg.tar.zst) |
+| **Alla Linux** (AppImage) | [codestead-hub-linux-x86_64.AppImage](https://github.com/jesper-e98/codestead-releases/releases/download/codestead-hub-latest/codestead-hub-linux-x86_64.AppImage) | [codestead-linux-linux-x86_64.AppImage](https://github.com/jesper-e98/codestead-releases/releases/download/codestead-linux-latest/codestead-linux-linux-x86_64.AppImage) |
 
 Varje release installeras och startas automatiskt på rena system innan den publiceras: Windows
-Server 2022/2025, Ubuntu 22.04 och 24.04, Fedora, Arch Linux och CachyOS. Se
-[.github/release-notes.md](.github/release-notes.md) för hur du installerar.
+Server 2022/2025, Ubuntu 22.04 och 24.04, Fedora, Arch Linux och CachyOS. Hubben testas dessutom genom
+att den installerar och startar Codestead Linux. Se
+[.github/release-notes/](.github/release-notes/) för hur du installerar.
 
 ## Det här får du
 

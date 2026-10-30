@@ -21,3 +21,13 @@ CachyOS. Det här görs för hand på riktiga datorer före en större release.
 - [ ] Språk med andra skrivsystem (arabiska, hindi, japanska) visas rätt.
 - [ ] AppImage: starta, kontrollera att den hittar uppdateringar.
 - [ ] Avinstallera med pakethanteraren.
+
+## Hubben Codestead (Windows 10/11 och ett Linux-skrivbord)
+
+- [ ] Installera hubben (`codestead-hub-…-Setup.exe` / paket / AppImage) och starta den.
+- [ ] Listan visar Codestead Linux med beskrivning på valt språk.
+- [ ] **Installera** → förloppet visas → **Öppna** startar Codestead Linux.
+- [ ] Höj `CodesteadLinuxVersion` och släpp en testversion: hubben visar **Uppdatera till …**, uppdaterar,
+      och **Gå tillbaka till …** återställer den förra versionen.
+- [ ] Koppla från nätet och starta hubben: den sparade listan visas och installerade verktyg kan startas.
+- [ ] **Avinstallera**: verktyget försvinner, framstegen finns kvar efter en ny installation.

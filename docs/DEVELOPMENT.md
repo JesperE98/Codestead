@@ -28,7 +28,8 @@ installation i release-flödet.
 
 ## Namn och version
 
-Produktnamn, verktygs-id och version finns **bara** i `build/Codestead.props`. Byt namn där.
+Produktnamn, id:n och versioner finns **bara** i `build/Codestead.props`
+(`CodesteadLinuxVersion`, `CodesteadHubVersion`). Byt namn där.
 
 ## Projektstruktur
 
@@ -49,10 +50,15 @@ src/
 │   ├── Js.cs                Hjälpfunktioner med JavaScript-semantik (från porteringen)
 │   └── Commands/            Alla kommandon: ls, grep, chmod, apt, pacman, dnf, git, ssh ...
 ├── Codestead.Content/       Kapitel, uppgifter och kontroller (ChapterDefinitions.cs), språk, UI-texter (i18n/ui/*.json)
-├── Codestead.UI/            Delade Avalonia-delar för alla verktyg: tema, terminal, markdown-vy, dialoger, lagring
-└── Codestead.Linux/         Själva appen (Avalonia)
-tests/                       xUnit: Shell (simulatorn), Content (alla uppgifter i alla distros och språk), UI (headless)
-packaging/                   Byggskript och installationstester för Windows och Linux
+├── Codestead.UI/            Delade Avalonia-delar för alla verktyg: tema, terminal, markdown-vy, dialoger,
+│                            lagring, självuppdatering (Velopack)
+├── Codestead.Linux/         Själva appen (Avalonia)
+├── Codestead.Hub.Core/      Hubbens logik utan UI: signerad katalog, nedladdning, installation, uppdatering
+└── Codestead.Hub/           Hubben "Codestead" (Avalonia), texter i i18n/<språk>.json
+tests/                       xUnit: Shell (simulatorn), Content (alla uppgifter i alla distros och språk),
+                             UI (headless), Hub (katalog, signatur, installation)
+packaging/                   Byggskript, installationstester, products.json (vilka produkter som byggs),
+                             catalog.py (hubbens katalog) och hub-e2e.sh (hubben installerar Codestead Linux)
 ```
 
 ## Skriva ett nytt kapitel
@@ -103,22 +109,56 @@ pakethanteraren lägger du också till ett paket i `Packages.cs`.
 
 ## Bygga installationsfilerna
 
-Allt byggs av GitHub Actions (`.github/workflows/release.yml`):
+Allt byggs av GitHub Actions (`.github/workflows/release.yml`), för varje produkt i
+`packaging/products.json` (Codestead Linux och hubben):
 
-1. Höj `<Version>` i `build/Codestead.props` (t.ex. 0.4.0 → 0.5.0).
+1. Höj versionen i `build/Codestead.props`, t.ex. `CodesteadLinuxVersion` 0.4.0 → 0.5.0.
 2. Slå ihop ändringen till `main`.
 
-Flödet bygger, installerar och startar appen på rena system (Windows Server 2022/2025, Ubuntu
-22.04/24.04, Fedora, Arch Linux, CachyOS) och publicerar sedan releasen i det offentliga repot
-`jesper-e98/codestead-releases`. Det kräver secret `RELEASES_TOKEN` (en fine-grained token med
-*Contents: read and write* på `codestead-releases`).
+Flödet bygger alla produkter och installerar och startar dem på rena system (Windows Server 2022/2025,
+Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS). Hubben får dessutom installera och starta Codestead
+Linux från en signerad katalog. Därefter publiceras varje produkt vars version saknar release i det
+offentliga repot `jesper-e98/codestead-releases`:
+
+| Release | Innehåll |
+|---|---|
+| `<id>-v<version>` (t.ex. `codestead-linux-v0.5.0`) | Alla filer för versionen och `SHA256SUMS.txt` |
+| `<id>-latest` | Samma filer utan version i namnet (länkarna i README) och Velopacks uppdateringsflöde |
+| `catalog` | `catalog.json` och `catalog.json.sig`: listan som hubben läser |
 
 Flödet kan också startas för hand under Actions → **Release** → **Run workflow** (utan att publicera).
 
 GitHub har inga rena Windows 10/11-skrivbordsmaskiner, bara Windows Server. Gå därför igenom
 [RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md) på en riktig Windows 10/11-dator före en större release.
 
-Lokalt (Linux, kräver [nfpm](https://nfpm.goreleaser.com) och `dotnet tool install -g vpk`):
+### Secrets i det här repot
+
+- `RELEASES_TOKEN`: en fine-grained token med *Contents: read and write* på `codestead-releases`.
+- `CATALOG_SIGNING_KEY`: den privata nyckeln som hubbens katalog signeras med.
+
+### Signeringsnyckel för katalogen
+
+Hubben litar bara på en katalog som är signerad med rätt nyckel (ECDSA P-256). Skapa nyckelparet en
+gång, på din egen dator (Git Bash på Windows har `openssl`):
+
+```bash
+openssl ecparam -name prime256v1 -genkey -noout -out catalog-signing.pem
+```
+
+```bash
+openssl ec -in catalog-signing.pem -pubout -out build/catalog-signing.pub.pem
+```
+
+1. Committa `build/catalog-signing.pub.pem` (den publika nyckeln byggs in i hubben).
+2. Lägg hela innehållet i `catalog-signing.pem` som secret `CATALOG_SIGNING_KEY`
+   (Settings → Secrets and variables → Actions).
+3. Spara `catalog-signing.pem` säkert utanför repot, t.ex. i en lösenordshanterare. Committa den aldrig.
+
+Release-flödet kontrollerar att nyckeln och den publika nyckeln hör ihop innan något publiceras.
+
+### Lokalt
+
+Linux (kräver [nfpm](https://nfpm.goreleaser.com) och `dotnet tool install -g vpk`):
 
 ```bash
 packaging/build-linux.sh src/Codestead.Linux/Codestead.Linux.csproj codestead-linux "Codestead Linux" 0.4.0

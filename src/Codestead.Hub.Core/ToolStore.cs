@@ -161,11 +161,11 @@ public sealed class ToolStore
         System.IO.Directory.Delete(dir, recursive: true);
     }
 
-    /// <summary>Starts the installed tool.</summary>
-    public Process Launch(string id, params string[] args)
+    /// <summary>Starts the installed tool (with <paramref name="captureOutput"/>: standard output can be read, for tests).</summary>
+    public Process Launch(string id, string[] args, bool captureOutput = false)
     {
         var t = Installed(id) ?? throw new InvalidOperationException($"{id} is not installed.");
-        var psi = new ProcessStartInfo(t.ExecutablePath) { WorkingDirectory = t.Directory, UseShellExecute = false };
+        var psi = new ProcessStartInfo(t.ExecutablePath) { WorkingDirectory = t.Directory, UseShellExecute = false, RedirectStandardOutput = captureOutput };
         foreach (var a in args) psi.ArgumentList.Add(a);
         return Process.Start(psi) ?? throw new InvalidOperationException($"Could not start {t.ExecutablePath}.");
     }

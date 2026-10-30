@@ -1,0 +1,16 @@
+[
+  {
+    "key": "linux",
+    "project": "src/Codestead.Linux/Codestead.Linux.csproj",
+    "idProperty": "CodesteadLinuxId",
+    "nameProperty": "CodesteadLinuxName",
+    "summary": "Learn the Linux shell by doing"
+  },
+  {
+    "key": "hub",
+    "project": "src/Codestead.Hub/Codestead.Hub.csproj",
+    "idProperty": "CodesteadHubId",
+    "nameProperty": "CodesteadHubName",
+    "summary": "Install and update the Codestead learning tools"
+  }
+]

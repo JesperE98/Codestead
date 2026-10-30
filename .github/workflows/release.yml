@@ -1,14 +1,24 @@
 name: Release
 
+# Builds, tests and publishes every Codestead product listed in packaging/products.json
+# (today: Codestead Linux and the hub "Codestead").
+#
 # How a new version is released:
-#   1. Raise <Version> in build/Codestead.props (e.g. 0.4.0 -> 0.5.0).
+#   1. Raise the product's version in build/Codestead.props (CodesteadLinuxVersion / CodesteadHubVersion).
 #   2. Merge the change to main.
-#   => Windows and Linux artifacts are built, installed and smoke-tested on clean systems
-#      (Windows Server 2022/2025, Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS), and only then
-#      published as release "v0.5.0" in the public repository jesper-e98/codestead-releases.
+#   => Windows and Linux artifacts are built for every product, installed and smoke-tested on clean
+#      systems (Windows Server 2022/2025, Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS), the hub
+#      installs and starts the tool end to end, and only then each product whose version has no
+#      release yet is published in the public repository jesper-e98/codestead-releases:
+#        <id>-v<version>   the release with all files (e.g. codestead-linux-v0.5.0)
+#        <id>-latest       the same files without version in the name + the Velopack update feed
+#        catalog           catalog.json + catalog.json.sig, read by the hub
 #
 # Run it by hand under Actions -> "Release" -> "Run workflow" to build and test without
 # publishing (or tick "publish" to publish from the selected branch).
+#
+# Secrets: RELEASES_TOKEN (contents read/write on codestead-releases) and CATALOG_SIGNING_KEY
+# (the ECDSA P-256 private key whose public half is build/catalog-signing.pub.pem).
 on:
   push:
     branches: [main]
@@ -17,11 +27,13 @@ on:
       - build/**
       - packaging/**
       - src/Codestead.Linux/**
+      - src/Codestead.Hub/**
+      - src/Codestead.Hub.Core/**
       - .github/workflows/release.yml
   workflow_dispatch:
     inputs:
       publish:
-        description: Publish the release to codestead-releases
+        description: Publish new versions to codestead-releases
         type: boolean
         default: false
 
@@ -30,10 +42,6 @@ env:
   DOTNET_NOLOGO: '1'
   AVALONIA_TELEMETRY_OPTOUT: '1'
   RELEASES_REPO: jesper-e98/codestead-releases
-  PKG_NAME: codestead-linux
-  PKG_DISPLAY: Codestead Linux
-  PROJECT: src/Codestead.Linux/Codestead.Linux.csproj
-  EXECUTABLE: Codestead.Linux
   NFPM_VERSION: 2.43.0
   VPK_VERSION: 1.2.161
 
@@ -41,26 +49,55 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.plan.outputs.version }}
+      products: ${{ steps.plan.outputs.products }}
       publish: ${{ steps.plan.outputs.publish }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
       - id: plan
         env:
           GH_TOKEN: ${{ secrets.RELEASES_TOKEN || github.token }}
+          WANT_PUBLISH: ${{ github.event_name == 'push' || inputs.publish == true }}
         run: |
-          version=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' build/Codestead.props)
-          publish=false
-          if [[ "$GITHUB_EVENT_NAME" == "push" || "${{ inputs.publish }}" == "true" ]]; then
-            if ! gh release view "v$version" --repo "$RELEASES_REPO" >/dev/null 2>&1; then publish=true; fi
-          fi
-          echo "Version $version, publish: $publish"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          python3 - <<'EOF'
+          import json, os, subprocess
+          products, publish = [], []
+          for p in json.load(open("packaging/products.json")):
+              out = subprocess.check_output(["dotnet", "msbuild", p["project"], "-getProperty:Version", "-getProperty:AssemblyName",
+                                             f"-getProperty:{p['idProperty']}", f"-getProperty:{p['nameProperty']}"], text=True)
+              props = json.loads(out)["Properties"]
+              product = {"key": p["key"], "id": props[p["idProperty"]], "name": props[p["nameProperty"]], "version": props["Version"],
+                         "exe": props["AssemblyName"], "project": p["project"], "summary": p["summary"]}
+              products.append(product)
+              tag = f"{product['id']}-v{product['version']}"
+              exists = subprocess.run(["gh", "release", "view", tag, "--repo", os.environ["RELEASES_REPO"]], capture_output=True).returncode == 0
+              if os.environ["WANT_PUBLISH"] == "true" and not exists:
+                  publish.append(product)
+              print(f"{product['name']} {product['version']}: " + ("already released" if exists else "new version") + (", will be published" if product in publish else ""))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"products={json.dumps(products)}\n")
+              f.write(f"publish={json.dumps(publish)}\n")
+          EOF
+
+  # The tests run once; the packaging jobs below only build.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet test -c Release
 
   build-linux:
     needs: plan
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        product: ${{ fromJSON(needs.plan.outputs.products) }}
+    name: Build Linux – ${{ matrix.product.name }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -71,42 +108,48 @@ jobs:
           curl -sSfL -o /tmp/nfpm.deb "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_${NFPM_VERSION}_amd64.deb"
           sudo apt-get install -y /tmp/nfpm.deb squashfs-tools
           dotnet tool install -g vpk --version "$VPK_VERSION"
-      - run: dotnet test -c Release
       - name: Build Linux artifacts
-        run: packaging/build-linux.sh "$PROJECT" "$PKG_NAME" "$PKG_DISPLAY" "${{ needs.plan.outputs.version }}" artifacts
+        env:
+          PKG_SUMMARY: ${{ matrix.product.summary }}
+          PKG_DESCRIPTION: ${{ matrix.product.name }} - ${{ matrix.product.summary }}.
+        run: packaging/build-linux.sh "${{ matrix.product.project }}" "${{ matrix.product.id }}" "${{ matrix.product.name }}" "${{ matrix.product.version }}" artifacts
       - uses: actions/upload-artifact@v4
         with:
-          name: linux
+          name: linux-${{ matrix.product.id }}
           path: artifacts/
           if-no-files-found: error
 
   build-windows:
     needs: plan
     runs-on: windows-latest
+    strategy:
+      matrix:
+        product: ${{ fromJSON(needs.plan.outputs.products) }}
+    name: Build Windows – ${{ matrix.product.name }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
       - run: dotnet tool install -g vpk --version $env:VPK_VERSION
-      - run: dotnet test -c Release
       - name: Build Windows artifacts
-        run: packaging/build-windows.ps1 -Project $env:PROJECT -PackageName $env:PKG_NAME -DisplayName "$env:PKG_DISPLAY" -Version "${{ needs.plan.outputs.version }}" -Out artifacts
+        run: packaging/build-windows.ps1 -Project "${{ matrix.product.project }}" -PackageName "${{ matrix.product.id }}" -DisplayName "${{ matrix.product.name }}" -Version "${{ matrix.product.version }}" -Out artifacts
       - uses: actions/upload-artifact@v4
         with:
-          name: windows
+          name: windows-${{ matrix.product.id }}
           path: artifacts/
           if-no-files-found: error
 
   # Installation tests on clean systems: a fresh container per distribution, installing the package
   # exactly like a user would, starting the app (--smoke-test) on a virtual display and removing it again.
   test-linux:
-    needs: build-linux
+    needs: [plan, build-linux]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        include:
+        product: ${{ fromJSON(needs.plan.outputs.products) }}
+        target:
           - { name: Ubuntu 24.04 LTS (.deb), image: 'ubuntu:24.04', kind: deb }
           - { name: Ubuntu 22.04 LTS (.deb), image: 'ubuntu:22.04', kind: deb }
           - { name: Fedora (.rpm), image: 'fedora:latest', kind: rpm }
@@ -115,70 +158,152 @@ jobs:
           - { name: Ubuntu 24.04 LTS (AppImage), image: 'ubuntu:24.04', kind: appimage }
           - { name: Fedora (AppImage), image: 'fedora:latest', kind: appimage }
           - { name: Arch Linux (AppImage), image: 'archlinux:latest', kind: appimage }
-    name: Install test – ${{ matrix.name }}
+    name: Install test – ${{ matrix.product.name }} – ${{ matrix.target.name }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: linux
+          name: linux-${{ matrix.product.id }}
           path: artifacts
-      - name: Install and start in a clean ${{ matrix.image }} container
+      - name: Install and start in a clean ${{ matrix.target.image }} container
         run: |
-          docker run --rm -v "$PWD/artifacts:/artifacts" -v "$PWD/packaging:/packaging:ro" "${{ matrix.image }}" \
-            bash /packaging/install-test.sh "$PKG_NAME" "$EXECUTABLE" "${{ matrix.kind }}"
+          docker run --rm -v "$PWD/artifacts:/artifacts" -v "$PWD/packaging:/packaging:ro" "${{ matrix.target.image }}" \
+            bash /packaging/install-test.sh "${{ matrix.product.id }}" "${{ matrix.product.exe }}" "${{ matrix.target.kind }}"
 
   test-windows:
-    needs: build-windows
+    needs: [plan, build-windows]
     strategy:
       fail-fast: false
       matrix:
+        product: ${{ fromJSON(needs.plan.outputs.products) }}
         os: [windows-2022, windows-2025]
     runs-on: ${{ matrix.os }}
-    name: Install test – ${{ matrix.os }}
+    name: Install test – ${{ matrix.product.name }} – ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: windows
+          name: windows-${{ matrix.product.id }}
           path: artifacts
       - name: Install with the setup program, start, uninstall
         shell: pwsh
-        run: packaging/install-test-windows.ps1 -PackageName $env:PKG_NAME -Executable $env:EXECUTABLE -Artifacts artifacts
+        run: packaging/install-test-windows.ps1 -PackageName "${{ matrix.product.id }}" -Executable "${{ matrix.product.exe }}" -Artifacts artifacts
 
-  publish:
-    needs: [plan, test-linux, test-windows]
-    if: needs.plan.outputs.publish == 'true'
-    runs-on: ubuntu-latest
+  # The hub installs, starts and removes Codestead Linux from a signed catalog (throw-away key).
+  test-hub:
+    needs: [plan, build-linux, build-windows]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, platform: linux, rid: linux-x64, ext: tar.gz }
+          - { os: windows-latest, platform: windows, rid: win-x64, ext: zip }
+    runs-on: ${{ matrix.os }}
+    name: Hub end-to-end – ${{ matrix.platform }}
+    env:
+      PRODUCTS: ${{ needs.plan.outputs.products }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          pattern: ${{ matrix.platform }}-*
           path: dist
+      - if: matrix.platform == 'linux'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb xauth
+      - name: Hub installs and starts Codestead Linux
+        shell: bash
+        run: |
+          py=$(command -v python || command -v python3)
+          get() { "$py" -c 'import json,os,sys; p=[x for x in json.loads(os.environ["PRODUCTS"]) if x["key"]==sys.argv[1]][0]; print(p[sys.argv[2]])' "$1" "$2"; }
+          hub_id=$(get hub id); tool_id=$(get linux id)
+          hub=$(ls dist/${{ matrix.platform }}-$hub_id/$hub_id-*-${{ matrix.rid }}.${{ matrix.ext }})
+          tool=$(ls dist/${{ matrix.platform }}-$tool_id/$tool_id-*-${{ matrix.rid }}.${{ matrix.ext }})
+          packaging/hub-e2e.sh "$hub" "$(get hub exe)" "$tool" "$tool_id" "$(get linux name)" "$(get linux version)" \
+            "$(get linux exe)${{ matrix.platform == 'windows' && '.exe' || '' }}" "${{ matrix.rid }}"
+
+  publish:
+    needs: [plan, test, test-linux, test-windows, test-hub]
+    if: needs.plan.outputs.publish != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      # One product at a time: each one updates the shared catalog.
+      max-parallel: 1
+      matrix:
+        product: ${{ fromJSON(needs.plan.outputs.publish) }}
+    name: Publish – ${{ matrix.product.name }} ${{ matrix.product.version }}
+    env:
+      GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+      CATALOG_SIGNING_KEY: ${{ secrets.CATALOG_SIGNING_KEY }}
+      ID: ${{ matrix.product.id }}
+      NAME: ${{ matrix.product.name }}
+      VERSION: ${{ matrix.product.version }}
+      EXE: ${{ matrix.product.exe }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the secrets
+        run: |
+          [[ -n "$GH_TOKEN" ]] || { echo "::error::The secret RELEASES_TOKEN is missing (a token with write access to $RELEASES_REPO)."; exit 1; }
+          [[ -n "$CATALOG_SIGNING_KEY" ]] || { echo "::error::The secret CATALOG_SIGNING_KEY is missing (see docs/DEVELOPMENT.md)."; exit 1; }
+          printf '%s\n' "$CATALOG_SIGNING_KEY" > "$RUNNER_TEMP/key.pem"
+          # The key must match the public key built into the hub.
+          diff <(openssl ec -in "$RUNNER_TEMP/key.pem" -pubout 2>/dev/null) build/catalog-signing.pub.pem \
+            || { echo "::error::CATALOG_SIGNING_KEY does not match build/catalog-signing.pub.pem."; exit 1; }
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-${{ matrix.product.id }}
+          path: dist/linux
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-${{ matrix.product.id }}
+          path: dist/windows
       - name: Collect files and checksums
         run: |
-          mkdir -p release
-          find dist -maxdepth 2 -type f \( -name '*.deb' -o -name '*.rpm' -o -name '*.pkg.tar.zst' -o -name '*.AppImage' -o -name '*.tar.gz' -o -name '*.zip' -o -name '*-Setup.exe' \) -exec cp {} release/ \;
-          # Velopack update feeds (auto-update of the Windows install and the AppImage).
-          cp dist/windows/velopack-win/releases.win.json dist/windows/velopack-win/*.nupkg release/ 2>/dev/null || true
-          cp dist/linux/velopack-linux/releases.linux.json dist/linux/velopack-linux/*.nupkg release/ 2>/dev/null || true
-          # Copies without the version in the name, so links to /releases/latest/download/<name> always work.
-          cp release/"$PKG_NAME"-*-win-x64-Setup.exe "release/$PKG_NAME-win-x64-Setup.exe"
-          cp release/"$PKG_NAME"-*-linux-x86_64.AppImage "release/$PKG_NAME-linux-x86_64.AppImage"
-          cp release/"${PKG_NAME}"_*_amd64.deb "release/${PKG_NAME}_amd64.deb"
-          cp release/"$PKG_NAME"-*-1.x86_64.rpm "release/$PKG_NAME.x86_64.rpm"
-          cp release/"$PKG_NAME"-*-1-x86_64.pkg.tar.zst "release/$PKG_NAME-x86_64.pkg.tar.zst"
+          mkdir -p release latest
+          find dist -mindepth 2 -maxdepth 2 -type f \( -name '*.deb' -o -name '*.rpm' -o -name '*.pkg.tar.zst' -o -name '*.AppImage' -o -name '*.tar.gz' -o -name '*.zip' -o -name '*-Setup.exe' \) -exec cp {} release/ \;
           (cd release && sha256sum * > SHA256SUMS.txt)
-          ls -la release
-      - name: Publish to ${{ env.RELEASES_REPO }}
-        env:
-          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
-          VERSION: ${{ needs.plan.outputs.version }}
+          # Copies without the version in the name (for links that always give the latest version) ...
+          cp release/"$ID-$VERSION-win-x64-Setup.exe" "latest/$ID-win-x64-Setup.exe"
+          cp release/"$ID-$VERSION-win-x64.zip" "latest/$ID-win-x64.zip"
+          cp release/"$ID-$VERSION-linux-x86_64.AppImage" "latest/$ID-linux-x86_64.AppImage"
+          cp release/"$ID-$VERSION-linux-x64.tar.gz" "latest/$ID-linux-x64.tar.gz"
+          cp release/"${ID}_${VERSION}_amd64.deb" "latest/${ID}_amd64.deb"
+          cp release/"$ID-$VERSION-1.x86_64.rpm" "latest/$ID.x86_64.rpm"
+          cp release/"$ID-$VERSION-1-x86_64.pkg.tar.zst" "latest/$ID-x86_64.pkg.tar.zst"
+          # ... and the Velopack update feeds (self-update of the Windows installation and the AppImage).
+          cp dist/windows/velopack-win/releases.win.json dist/windows/velopack-win/assets.win.json dist/windows/velopack-win/*.nupkg latest/
+          cp dist/linux/velopack-linux/releases.linux.json dist/linux/velopack-linux/assets.linux.json dist/linux/velopack-linux/*.nupkg latest/
+          ls -la release latest
+      - name: Publish release ${{ matrix.product.id }}-v${{ matrix.product.version }}
         run: |
-          if [[ -z "$GH_TOKEN" ]]; then
-            echo "::error::The secret RELEASES_TOKEN is missing (a token with write access to $RELEASES_REPO)."
-            exit 1
+          notes=".github/release-notes/$ID.md"
+          gh release create "$ID-v$VERSION" release/* --repo "$RELEASES_REPO" --title "$NAME $VERSION" --notes-file "$notes" --latest=false
+      - name: Update ${{ matrix.product.id }}-latest
+        run: |
+          tag="$ID-latest"
+          if ! gh release view "$tag" --repo "$RELEASES_REPO" >/dev/null 2>&1; then
+            gh release create "$tag" --repo "$RELEASES_REPO" --title "$NAME – latest version" --latest=false \
+              --notes "The latest version of $NAME, always at the same address. Every version: see the releases named $ID-v…"
           fi
-          gh release create "v$VERSION" release/* \
-            --repo "$RELEASES_REPO" \
-            --title "$PKG_DISPLAY $VERSION" \
-            --notes-file .github/release-notes.md
+          gh release upload "$tag" latest/* --repo "$RELEASES_REPO" --clobber
+          # Remove files of older versions (old update packages).
+          for asset in $(gh release view "$tag" --repo "$RELEASES_REPO" --json assets --jq '.assets[].name'); do
+            [[ -e "latest/$asset" ]] || gh release delete-asset "$tag" "$asset" --repo "$RELEASES_REPO" --yes
+          done
+      - name: Update the signed catalog
+        run: |
+          base="https://github.com/$RELEASES_REPO/releases/download/$ID-v$VERSION"
+          if ! gh release view catalog --repo "$RELEASES_REPO" >/dev/null 2>&1; then
+            gh release create catalog --repo "$RELEASES_REPO" --title "Catalog" --latest=false \
+              --notes "The list of tools for the Codestead hub (catalog.json, signed: catalog.json.sig)."
+          fi
+          gh release download catalog --repo "$RELEASES_REPO" --pattern catalog.json --dir . 2>/dev/null || true
+          python3 packaging/catalog.py --catalog catalog.json --id "$ID" --name "$NAME" --version "$VERSION" \
+            --notes-url "https://github.com/$RELEASES_REPO/releases/tag/$ID-v$VERSION" \
+            --description-file "packaging/descriptions/$ID.json" \
+            --asset "linux-x64=release/$ID-$VERSION-linux-x64.tar.gz=$base/$ID-$VERSION-linux-x64.tar.gz=$EXE" \
+            --asset "win-x64=release/$ID-$VERSION-win-x64.zip=$base/$ID-$VERSION-win-x64.zip=$EXE.exe"
+          openssl dgst -sha256 -sign "$RUNNER_TEMP/key.pem" catalog.json | base64 -w0 > catalog.json.sig
+          # Check the signature the same way the hub does before publishing it.
+          openssl dgst -sha256 -verify build/catalog-signing.pub.pem -signature <(base64 -d catalog.json.sig) catalog.json
+          gh release upload catalog catalog.json catalog.json.sig --repo "$RELEASES_REPO" --clobber
+          rm -f "$RUNNER_TEMP/key.pem"

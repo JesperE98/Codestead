@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Codestead.Hub</RootNamespace>
+    <AssemblyName>Codestead.Hub</AssemblyName>
+    <AssemblyTitle>$(CodesteadHubName)</AssemblyTitle>
+    <Version>$(CodesteadHubVersion)</Version>
+    <ApplicationIcon>../../build/icon.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
+    <PackageReference Include="Velopack" Version="1.2.161" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Codestead.Hub.Core/Codestead.Hub.Core.csproj" />
+    <ProjectReference Include="../Codestead.UI/Codestead.UI.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/**" />
+    <EmbeddedResource Include="i18n/*.json" LogicalName="hub-i18n/%(Filename)%(Extension)" />
+    <!--
+      The public key that catalog.json must be signed with. Without it the hub trusts no catalog.
+      Create the key pair as described in docs/DEVELOPMENT.md ("Signeringsnyckel för katalogen").
+    -->
+    <EmbeddedResource Include="../../build/catalog-signing.pub.pem" LogicalName="catalog-signing.pub.pem" Condition="Exists('../../build/catalog-signing.pub.pem')" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ProductName</_Parameter1>
+      <_Parameter2>$(CodesteadHubName)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ToolId</_Parameter1>
+      <_Parameter2>$(CodesteadHubId)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ReleasesRepo</_Parameter1>
+      <_Parameter2>$(CodesteadReleasesRepo)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>

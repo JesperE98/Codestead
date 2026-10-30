@@ -11,6 +11,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/Codestead.Hub.Core/Codestead.Hub.Core.csproj" />
+    <ProjectReference Include="../../src/Codestead.Hub/Codestead.Hub.csproj" />
+    <!-- Only to check that the hub offers the same languages as Codestead Linux. -->
+    <ProjectReference Include="../../src/Codestead.Content/Codestead.Content.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
