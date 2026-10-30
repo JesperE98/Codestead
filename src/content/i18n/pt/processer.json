@@ -1,0 +1,33 @@
+{
+  "title": "Processos e jobs",
+  "tasks": {
+    "ps": {
+      "text": "Mostre os processos do seu próprio terminal com `ps`."
+    },
+    "ps-aux": {
+      "text": "Liste **todos** os processos do computador.",
+      "hint": "`ps aux` (ou `ps -ef`)."
+    },
+    "hitta": {
+      "text": "Um processo está consumindo quase toda a CPU. Mostre os processos ordenados por uso de CPU para ver como ele se chama.",
+      "hint": "`top`, `htop` ou `ps aux --sort=-%cpu`."
+    },
+    "kill": {
+      "text": "Pare o processo descontrolado (PID 3141) com `kill`."
+    },
+    "bakgrund": {
+      "text": "Inicie `sleep 300` em segundo plano.",
+      "hint": "Coloque `&` no final da linha."
+    },
+    "jobs": {
+      "text": "Mostre os seus jobs em segundo plano."
+    },
+    "kill-jobb": {
+      "text": "Encerre o job em segundo plano com `kill` e o número do job (`%1`) ou o PID dele."
+    },
+    "server": {
+      "text": "O servidor `minserver` está rodando como root. Pare-o – com `pkill` ou `kill` e as permissões certas.",
+      "hint": "Como usuário comum, você vai receber \"Operation not permitted\". Coloque `sudo` na frente."
+    }
+  }
+}
