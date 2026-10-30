@@ -27,6 +27,18 @@ Think of the disk as an empty warehouse, the partitions as the walls that
 divide it into rooms and the file system as the shelves and labels in each
 room. Without shelves you can't find anything.
 
+```quiz
+You have just created a new partition on a disk. Why can't you save files
+on it yet?
+- [ ] It must first be added to the partition table
+- [x] It has no file system yet – it must be formatted first
+- [ ] Partitions can't hold files, only disks can
+- [ ] It must first get a drive letter
+---
+A new partition is empty and unusable until you create a file system on
+it. That is what formatting means.
+```
+
 ## Disks are files in `/dev`
 
 In Linux almost everything is a file – disks included. Every disk and
@@ -67,25 +79,10 @@ lsblk
 | `TYPE` | `disk` or `part` (partition) |
 | `MOUNTPOINTS` | Where the file system appears in the directory tree, `[SWAP]` for swap |
 
-:::debian
-In {{distro}} you see the layout the Debian installer usually picks: `sda1`
-is the **EFI partition** (which the computer's firmware boots from) on
-`/boot/efi`, `sda2` is the **root file system** `/` and `sda3` is **swap**.
-:::
-
-:::arch
-In Arch you decide yourself how the disk is divided. This computer follows
-the Arch wiki's example: `sda1` is the **EFI partition**, mounted straight on
-`/boot` so that the kernel is where the firmware can read it, `sda2` is
-**swap** and `sda3` is the **root file system** `/`.
-:::
-
-:::redhat
-Fedora does things a little differently: `sda1` is the **EFI partition** on
-`/boot/efi`, `sda2` is `/boot` with the kernels and `sda3` is one big
-**btrfs** file system that appears on both `/` and `/home`. Swap is not on
-the disk at all, but in RAM: `zram0` is compressed memory.
-:::
+On this computer `sda1` is the **EFI partition** (which the computer's
+firmware boots from) on `/boot/efi`, `sda2` is the **root file system** `/`
+and `sda3` is **swap**. Other distributions – and other installations – can
+divide the disk differently, so always look instead of assuming.
 
 With `-f`, `lsblk` also shows the file systems – type, label, UUID and how
 much is free:
@@ -172,6 +169,12 @@ Notice that `Used` and `Avail` don't quite add up to `Size`? ext4 reserves
 5 % for root, so the system keeps working even when a normal user has filled
 the disk.
 
+```try
+df -hT
+---
+The `Type` column shows that `/` is `ext4` and `/boot/efi` is `vfat`.
+```
+
 ## `df` or `du`?
 
 Two commands with almost the same name, but they answer different questions:
@@ -228,6 +231,18 @@ You can also mount by label instead of device name:
 `sudo mount LABEL=USBMINNE /mnt/usb`. On a computer with a desktop, the file
 manager does all of this automatically when you plug in the stick.
 
+```quiz
+After `sudo mount /dev/sdb1 /mnt/usb` every file on the FAT stick is owned
+by root. Why?
+- [ ] The files were created by root on another computer
+- [x] FAT has no Linux permissions, so all files get the owner of whoever mounted it – root
+- [ ] Everything in `/mnt` is always owned by root
+- [ ] USB sticks can only be used by root
+---
+With `-o uid=1000,gid=1000` you can choose the owner yourself when you
+mount.
+```
+
 ## Unmount – before you pull out the stick!
 
 Linux doesn't always write to the disk right away. Changes are collected in
@@ -256,6 +271,17 @@ try again. After unmounting, `/mnt/usb` is an empty directory again – but
 the files, and the changes you made, are still on the stick the next time
 you mount it.
 
+```quiz
+Why should you unmount a USB stick before pulling it out?
+- [ ] Otherwise the files on the stick are deleted
+- [x] Changes may still be waiting in RAM – `umount` writes them before it detaches the file system
+- [ ] Otherwise the stick gets a new device name next time
+- [ ] The stick can't be mounted again until it has been unmounted on the same computer
+---
+Linux collects changes in RAM (*cache*) and writes them a bit later. A stick
+that is pulled out while still mounted may lose files you "saved".
+```
+
 ## `/etc/fstab` – what is mounted at boot
 
 The root file system, `/boot` and swap are mounted automatically every time
@@ -277,22 +303,9 @@ Each line has six columns:
 | dump | `0` | Old backup flag, almost always 0 |
 | pass | `1` | The order `fsck` checks them at boot (1 = root, 2 = others, 0 = never) |
 
-:::debian
 The option `errors=remount-ro` means the root file system is made read-only
 if an error is detected – better that than destroying more. Comments like
 `# / was on /dev/sda2 during installation` were written by the installer.
-:::
-
-:::arch
-In Arch the file was written by `genfstab` during installation. It writes
-the device's old name as a comment above each line.
-:::
-
-:::redhat
-Notice that `/` and `/home` have the **same** UUID: it is the same btrfs file
-system, but different subvolumes (`subvol=root` and `subvol=home`).
-`compress=zstd:1` makes the files compressed automatically.
-:::
 
 Why `UUID=…` and not just `/dev/sda2`? Device names can change – plug in a
 new disk and the old one may get a new letter. A UUID is created together
@@ -302,6 +315,16 @@ or `findmnt`:
 ```sh
 sudo blkid
 findmnt -n -o UUID /
+```
+
+With `findmnt`, `-o` picks the columns to show and `-n` leaves out the
+heading – handy when you only want the value itself.
+
+```predict
+$ findmnt -n -o FSTYPE /boot/efi
+vfat
+---
+`/boot/efi` is the EFI partition, and the EFI partition must be FAT.
 ```
 
 If you want the stick to always be mountable on `/mnt/usb`, you can add a
@@ -332,20 +355,8 @@ swapon --show
 free -h
 ```
 
-:::debian
 Here swap is a partition of its own, `sda3`. Many installations (for example
 newer Ubuntu) use a *swap file* on the root file system instead.
-:::
-
-:::arch
-Here swap is a partition of its own, `sda2`. A *swap file* works just as
-well, or zram like in Fedora.
-:::
-
-:::redhat
-Fedora uses **zram**: swap in RAM, but compressed. It sounds strange but
-works well – compressed memory is still much faster than a disk.
-:::
 
 ## Partitioning and formatting – with the utmost care
 
@@ -376,11 +387,6 @@ In the simulator you can try `mkfs.ext4` and `mkfs.vfat` on the USB stick –
 but do the tasks first, because the files on the stick disappear. The
 system's own partitions are protected because they are mounted, just like
 on a real system.
-
-:::arch
-In Arch, `mkfs.vfat` is not installed from the start. It is in the package
-`dosfstools`: `sudo pacman -S dosfstools`.
-:::
 
 ## Summary
 

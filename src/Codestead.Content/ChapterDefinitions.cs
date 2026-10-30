@@ -571,18 +571,11 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "status-ssh",
-                    PerFamily = true,
-                    Text = "Visa status för SSH-servern med `systemctl status`. Tänk på vad tjänsten heter i din distributionsfamilj!",
-                    Hint = ByFamily(
-                        debian: "I Debian-familjen heter tjänsten `ssh`: `systemctl status ssh`.",
-                        arch: "I Arch heter tjänsten `sshd`: `systemctl status sshd`.",
-                        redhat: "I Fedora heter tjänsten `sshd`: `systemctl status sshd`."),
-                    Solution = ByFamily(
-                        debian: Cmds("systemctl status ssh"),
-                        arch: Cmds("systemctl status sshd"),
-                        redhat: Cmds("systemctl status sshd")),
+                    Text = "Visa status för SSH-servern med `systemctl status`. Tänk på vad tjänsten heter i Ubuntu!",
+                    Hint = "I Ubuntu heter tjänsten `ssh`: `systemctl status ssh`.",
+                    Solution = Cmds("systemctl status ssh"),
                     Check = c =>
-                        Re(@"\bsystemctl\b.*\bstatus\b").IsMatch(c.Line) && c.Output.Contains(c.Distro.Family == "debian" ? "ssh.service - " : "sshd.service - "),
+                        Re(@"\bsystemctl\b.*\bstatus\b").IsMatch(c.Line) && c.Output.Contains("ssh.service - "),
                 },
                 new()
                 {
@@ -676,19 +669,9 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "dig",
-                    PerFamily = true,
-                    Text = ByFamily(
-                        debian: "Installera paketet `dnsutils` och slå upp IP-adressen för `example.com` med `dig`.",
-                        arch: "Installera paketet `bind` och slå upp IP-adressen för `example.com` med `dig`.",
-                        redhat: "Installera paketet `bind-utils` och slå upp IP-adressen för `example.com` med `dig`."),
-                    Hint = ByFamily(
-                        debian: "`sudo apt update`, `sudo apt install dnsutils` och sedan `dig +short example.com`.",
-                        arch: "`sudo pacman -S bind` och sedan `dig +short example.com`.",
-                        redhat: "`sudo dnf install bind-utils` och sedan `dig +short example.com`."),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo apt update", "sudo apt install dnsutils", "dig +short example.com"),
-                        arch: Cmds("sudo pacman -S bind", "y", "dig +short example.com"),
-                        redhat: Cmds("sudo dnf install bind-utils", "y", "dig +short example.com")),
+                    Text = "Installera paketet `dnsutils` och slå upp IP-adressen för `example.com` med `dig`.",
+                    Hint = "`sudo apt update`, `sudo apt install dnsutils` och sedan `dig +short example.com`.",
+                    Solution = Cmds("sudo apt update", "sudo apt install dnsutils", "dig +short example.com"),
                     Check = c => Ran(c, Re(@"^(dig|host|nslookup)\b.*\bexample\.com\b")) && c.Output.Contains("203.0.113.10"),
                 },
                 new()
@@ -703,14 +686,8 @@ public static partial class ChaptersLib
                 {
                     Id = "curl-localhost",
                     Text = "Hämta startsidan från övningsservern på din egen dator, `http://localhost:8080`, med `curl`.",
-                    Hint = ByFamily(
-                        debian: "I Debian/Ubuntu måste curl installeras: `sudo apt install curl`. Får du *Couldn't connect to server* är minserver stoppad – starta den med `minserver`.",
-                        arch: "`curl http://localhost:8080`. Får du *Couldn't connect to server* är minserver stoppad – starta den med `minserver`.",
-                        redhat: "`curl http://localhost:8080`. Får du *Couldn't connect to server* är minserver stoppad – starta den med `minserver`."),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo apt update", "sudo apt install curl", "minserver", "curl http://localhost:8080"),
-                        arch: Cmds("minserver", "curl http://localhost:8080"),
-                        redhat: Cmds("minserver", "curl http://localhost:8080")),
+                    Hint = "I Ubuntu måste curl installeras: `sudo apt install curl`. Får du *Couldn't connect to server* är minserver stoppad – starta den med `minserver`.",
+                    Solution = Cmds("sudo apt update", "sudo apt install curl", "minserver", "curl http://localhost:8080"),
                     Check = c => Ran(c, Re(@"^curl\b.*\b(localhost|127\.0\.0\.1|192\.168\.1\.42):8080\b")) && c.Output.Contains("Hello from minserver"),
                 },
                 new()
@@ -718,10 +695,7 @@ public static partial class ChaptersLib
                     Id = "spara",
                     Text = "Spara webbsidan `https://example.com` som filen `~/exempel.html`.",
                     Hint = "Stå i hemkatalogen och använd `curl -o exempel.html https://example.com` eller `wget -O exempel.html https://example.com`.",
-                    Solution = ByFamily(
-                        debian: Cmds("cd ~", "wget -O exempel.html https://example.com"),
-                        arch: Cmds("cd ~", "curl -o exempel.html https://example.com"),
-                        redhat: Cmds("cd ~", "curl -o exempel.html https://example.com")),
+                    Solution = Cmds("cd ~", "wget -O exempel.html https://example.com"),
                     Check = c => Content(c, "~/exempel.html").Contains("Example Domain"),
                 },
                 new()
@@ -736,14 +710,8 @@ public static partial class ChaptersLib
                 {
                     Id = "ssh",
                     Text = "Kör kommandot `hostname` på servern `server.lan` med `ssh` som användaren `elev`.",
-                    Hint = ByFamily(
-                        debian: "`ssh elev@server.lan hostname` – och svara `yes` på frågan om värdnyckeln.",
-                        arch: "Installera först ssh-klienten: `sudo pacman -S openssh`. Sedan `ssh elev@server.lan hostname` – och svara `yes` på frågan om värdnyckeln.",
-                        redhat: "`ssh elev@server.lan hostname` – och svara `yes` på frågan om värdnyckeln."),
-                    Solution = ByFamily(
-                        debian: Cmds("ssh elev@server.lan hostname", "yes"),
-                        arch: Cmds("sudo pacman -S openssh", "y", "ssh elev@server.lan hostname", "yes"),
-                        redhat: Cmds("ssh elev@server.lan hostname", "yes")),
+                    Hint = "`ssh elev@server.lan hostname` – och svara `yes` på frågan om värdnyckeln.",
+                    Solution = Cmds("ssh elev@server.lan hostname", "yes"),
                     Check = c => Ran(c, Re(@"^ssh\b.*(server\.lan|192\.168\.1\.10)")) && OutLines(c).Any(l => l.Trim() == "server"),
                 },
             },
@@ -782,14 +750,8 @@ public static partial class ChaptersLib
                 {
                     Id = "uuid",
                     Text = "Ta reda på UUID för filsystemet som är monterat på `/` – och bara det.",
-                    Hint = ByFamily(
-                        debian: "`lsblk -f` visar att `/` ligger på `/dev/sda2`. Fråga sedan `blkid /dev/sda2` – eller låt `findmnt -n -o UUID /` göra allt på en gång.",
-                        arch: "`lsblk -f` visar att `/` ligger på `/dev/sda3`. Fråga sedan `blkid /dev/sda3` – eller låt `findmnt -n -o UUID /` göra allt på en gång.",
-                        redhat: "`lsblk -f` visar att `/` ligger på `/dev/sda3`. Fråga sedan `blkid /dev/sda3` – eller låt `findmnt -n -o UUID /` göra allt på en gång."),
-                    Solution = ByFamily(
-                        debian: Cmds("blkid /dev/sda2"),
-                        arch: Cmds("blkid /dev/sda3"),
-                        redhat: Cmds("blkid /dev/sda3")),
+                    Hint = "`lsblk -f` visar att `/` ligger på `/dev/sda2`. Fråga sedan `blkid /dev/sda2` – eller låt `findmnt -n -o UUID /` göra allt på en gång.",
+                    Solution = Cmds("blkid /dev/sda2"),
                     Check = c => c.ExitCode == 0 && OutLines(c).Count <= 2 && c.Output.Contains(DisksLib.RootUuid(c.Distro)),
                 },
                 new()
@@ -1591,20 +1553,10 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "sudo-ratt",
-                    PerFamily = true,
-                    Text = ByFamily(
-                        debian: "Ge `kim` rätt att använda `sudo` genom att lägga till kontot i gruppen `sudo`.",
-                        arch: "Ge `kim` rätt att använda `sudo` genom att lägga till kontot i gruppen `wheel`.",
-                        redhat: "Ge `kim` rätt att använda `sudo` genom att lägga till kontot i gruppen `wheel`."),
-                    Hint = ByFamily(
-                        debian: "`sudo usermod -aG sudo kim` – glöm inte `-a`!",
-                        arch: "`sudo usermod -aG wheel kim` – glöm inte `-a`!",
-                        redhat: "`sudo usermod -aG wheel kim` – glöm inte `-a`!"),
-                    Solution = ByFamily(
-                        debian: Cmds("sudo usermod -aG sudo kim"),
-                        arch: Cmds("sudo usermod -aG wheel kim"),
-                        redhat: Cmds("sudo usermod -aG wheel kim")),
-                    Check = c => UsersLib.FindGroup(c.Sh, c.Distro.AdminGroup)?.Members.Contains("kim") == true,
+                    Text = "Ge `kim` rätt att använda `sudo` genom att lägga till kontot i gruppen `sudo`.",
+                    Hint = "`sudo usermod -aG sudo kim` – glöm inte `-a`!",
+                    Solution = Cmds("sudo usermod -aG sudo kim"),
+                    Check = c => UsersLib.FindGroup(c.Sh, "sudo")?.Members.Contains("kim") == true,
                 },
                 new()
                 {
