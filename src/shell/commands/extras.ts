@@ -5,6 +5,7 @@ import type { CmdCtx, CommandDef } from '../types';
 import { hasPerm, type FsNode } from '../vfs';
 import { badOption, colorName, COLOR, fsMessage, parseOpts } from './util';
 import { isInstalled, PACKAGES } from '../packages';
+import { currentProcs } from './procs';
 
 const note = (ctx: CmdCtx, text: string) => ctx.out(`${COLOR.dim}${text}${COLOR.reset}\n`);
 
@@ -77,20 +78,23 @@ BESKRIVNING
        sorterar du med F6, söker med F3, avslutar processer med F9 och
        stänger htop med q eller F10. I simulatorn visas en ögonblicksbild.`,
   run(ctx) {
-    const u = ctx.sh.currentUser().name;
+    const procs = currentProcs(ctx, 'htop').sort((a, b) => b.cpu - a.cpu || a.pid - b.pid);
+    const load = procs.reduce((sum, p) => sum + p.cpu, 0);
+    const bar = (pct: number) => `[${COLOR.green}${'|'.repeat(Math.round(Math.min(pct, 100) / 4)).padEnd(25)}${COLOR.reset}${pct.toFixed(1).padStart(5)}%]`;
+    const mb = (kb: number) => (kb >= 1024 ? `${(kb / 1024).toFixed(1)}M` : `${kb}K`);
     ctx.out(
-      `    0[${COLOR.green}||||||                       ${COLOR.reset}12.4%]   Tasks: 87, 214 thr; 1 running\n` +
-        `    1[${COLOR.green}|||                          ${COLOR.reset} 6.1%]   Load average: 0.32 0.41 0.38\n` +
-        `  Mem[${COLOR.green}||||||||||||               ${COLOR.reset}1.84G/7.70G]   Uptime: 02:14:07\n` +
+      `    0${bar(Math.min(100, load))}   Tasks: ${procs.length}, 1 running\n` +
+        `    1${bar(3.2)}   Load average: ${(load / 100).toFixed(2)} ${((load / 100) * 0.9).toFixed(2)} ${((load / 100) * 0.8).toFixed(2)}\n` +
+        `  Mem[${COLOR.green}||||||||||||             ${COLOR.reset}1.84G/7.70G]   Uptime: 02:14:07\n` +
         `  Swp[                             0K/2.00G]\n\n` +
-        `\x1b[30;42m    PID USER       PRI  NI  VIRT   RES   SHR S CPU% MEM%   TIME+  Command              ${COLOR.reset}\n` +
-        `      1 root        20   0 22.1M 13.2M  9.4M S  0.0  0.2  0:01.84 /sbin/init\n` +
-        `    412 root        20   0 48.3M 16.0M 14.9M S  0.0  0.2  0:00.52 /usr/lib/systemd/systemd-journald\n` +
-        `    733 root        20   0 15.4M  7.1M  6.2M S  0.0  0.1  0:00.11 /usr/sbin/sshd -D\n` +
-        `   1290 ${u.padEnd(10)} 20   0  9.2M  5.3M  3.6M S  0.0  0.1  0:00.07 -bash\n` +
-        `   1402 ${u.padEnd(10)} 20   0  8.1M  4.4M  3.2M R  0.7  0.1  0:00.03 htop\n\n` +
-        `F1Help  F2Setup  F3Search  F4Filter  F5Tree  F6SortBy  F7Nice-  F8Nice+  F9Kill  F10Quit\n`,
+        `\x1b[30;42m    PID USER       PRI  NI  VIRT   RES S CPU% MEM%   TIME+  Command              ${COLOR.reset}\n`,
     );
+    for (const p of procs) {
+      ctx.out(
+        `${String(p.pid).padStart(7)} ${p.user.slice(0, 9).padEnd(10)} 20   0 ${mb(p.vsz).padStart(5)} ${mb(p.rss).padStart(5)} ${p.stat[0]} ${p.cpu.toFixed(1).padStart(4)} ${p.mem.toFixed(1).padStart(4)} ${(p.time + '.00').padStart(8)} ${p.cmd}\n`,
+      );
+    }
+    ctx.out(`\nF1Help  F2Setup  F3Search  F4Filter  F5Tree  F6SortBy  F7Nice-  F8Nice+  F9Kill  F10Quit\n`);
     note(ctx, '(Simulerad ögonblicksbild. I en riktig terminal är htop interaktivt – avsluta med q.)');
     return 0;
   },

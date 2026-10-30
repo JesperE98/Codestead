@@ -87,8 +87,8 @@ export function Terminal({ shell, onResult, inject }: Props) {
       // Låt Ctrl+C kopiera om text är markerad.
       if (window.getSelection()?.toString()) return;
       e.preventDefault();
-      const wasPending = !!shell.pending;
-      shell.pending = null;
+      const wasPending = !!shell.pending || shell.prompt() === '> ';
+      shell.cancel();
       setEntries((en) => [...en, { prompt, input: input + '^C', output: '' }]);
       setInput('');
       historyIndex.current = null;
