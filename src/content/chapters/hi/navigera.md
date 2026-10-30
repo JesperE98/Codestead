@@ -1,0 +1,92 @@
+# File system में घूमना
+
+Linux में `C:` जैसे drive letters नहीं होते। सब कुछ – hard drives, USB sticks,
+यहाँ तक कि hardware भी – directories के **एक ही tree** में रहता है, जो **root**
+से शुरू होता है, जिसे `/` लिखा जाता है।
+
+## सबसे ज़रूरी directories
+
+| Directory | क्या रहता है |
+|---|---|
+| `/` | Root – tree का सबसे ऊपरी हिस्सा |
+| `/home` | Users की home directories, जैसे `/home/elev` |
+| `/root` | Administrator, यानी root, की home directory |
+| `/etc` | System settings (configuration files) |
+| `/usr/bin` | Programs (commands) जैसे `ls` और `cat` |
+| `/var/log` | Log files |
+| `/tmp` | Temporary files, जिनमें कोई भी लिख सकता है |
+| `/dev` | Devices, जैसे disks |
+| `/proc` | Processes और kernel के बारे में जानकारी |
+| `/boot` | Computer को start करने के लिए ज़रूरी files |
+
+इस बनावट को *Filesystem Hierarchy Standard* कहते हैं, और यह लगभग सभी
+distributions में एक जैसी है।
+
+## मैं कहाँ हूँ? – `pwd`
+
+`pwd` (*print working directory*) वह directory दिखाता है जिसमें आप अभी हैं:
+
+```sh
+pwd
+```
+
+## यहाँ क्या है? – `ls`
+
+`ls` किसी directory का content दिखाता है। Arguments के बिना यह वही directory
+दिखाता है जिसमें आप हैं, लेकिन आप किसी और directory का नाम भी दे सकते हैं:
+
+```sh
+ls /etc
+```
+
+`-l` option ज़्यादा जानकारी के साथ एक long format देता है:
+
+```sh
+ls -l
+```
+
+जिन files के नाम dot से शुरू होते हैं, वे **hidden** होती हैं और default रूप से
+नहीं दिखतीं। अक्सर ये settings files होती हैं, जैसे `.bashrc`। `-a` (*all*)
+option इन्हें भी दिखाता है:
+
+```sh
+ls -a
+```
+
+Options को मिलाया जा सकता है: `ls -la` वही है जो `ls -l -a` है।
+
+## Directory बदलना – `cd`
+
+`cd` (*change directory*) आपको किसी दूसरी directory में ले जाता है:
+
+```sh
+cd /var/log
+```
+
+Paths दो तरह के होते हैं:
+
+- **Absolute** path `/` से शुरू होता है और root से चलता है, जैसे `/var/log`।
+  आप कहीं भी हों, यह काम करता है।
+- **Relative** path उस directory से शुरू होता है जिसमें आप हैं। अगर आप `/`
+  में हैं, तो `/var/log` तक सिर्फ़ `cd var/log` से पहुँच सकते हैं।
+
+कुछ ख़ास नाम जानने लायक़ हैं:
+
+| नाम | मतलब |
+|---|---|
+| `.` | वह directory जिसमें आप हैं |
+| `..` | ऊपर वाली directory (parent) |
+| `~` | आपकी home directory |
+| `-` | (सिर्फ़ `cd` के साथ) वह directory जिसमें आप पिछली बार थे |
+
+Arguments के बिना `cd` आपको हमेशा home ले जाता है।
+
+```sh
+cd ..
+```
+
+## Tab completion
+
+पूरे नाम टाइप करने की ज़रूरत कम ही पड़ती है। शुरुआत टाइप कीजिए, जैसे `cd /va`,
+और **Tab** दबाइए – shell बाक़ी हिस्सा भर देता है। अगर कई विकल्प हों, तो Tab
+दबाने पर वे दिख जाते हैं। अनुभवी Linux users हर समय Tab दबाते रहते हैं!
