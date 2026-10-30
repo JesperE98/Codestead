@@ -27,6 +27,16 @@ Eine Variable legst du mit `NAME=value` an (keine Leerzeichen um das `=`!). Mit
 export EDITOR=nano
 ```
 
+```quiz
+Welche Zeile legt die Variable `FARG` mit dem Wert `blue` an?
+- [ ] `FARG = blue`
+- [x] `FARG=blue`
+- [ ] `$FARG=blue`
+---
+Um das `=` dürfen keine Leerzeichen stehen. Mit Leerzeichen hält die Shell
+`FARG` für einen Befehl. Das `$` brauchst du nur, wenn du eine Variable *liest*.
+```
+
 ## Einfache und doppelte Anführungszeichen
 
 Hier gibt es einen wichtigen Unterschied:
@@ -39,6 +49,14 @@ echo 'Zuhause: $HOME'
 In **doppelten** Anführungszeichen werden Variablen durch ihre Werte ersetzt.
 In **einfachen** Anführungszeichen wird alles genau so ausgegeben, wie es
 dasteht.
+
+```predict
+$ x=linux
+$ echo "I like $x"
+$ echo 'I like $x'
+I like linux
+I like $x
+```
 
 ## PATH – wo werden Befehle gefunden?
 
@@ -61,6 +79,17 @@ type cd
 Willst du ein Programm ausführen, das nicht im `PATH` liegt, musst du seinen
 Pfad angeben, zum Beispiel `./myprogram` für eine Datei im aktuellen
 Verzeichnis.
+
+```quiz
+Du hast ein Programm namens `hej` in dem Verzeichnis, in dem du bist, und
+dieses Verzeichnis liegt nicht im `PATH`. Wie führst du es aus?
+- [ ] `hej`
+- [x] `./hej`
+- [ ] `type hej`
+---
+Ohne Pfad sucht die Shell nur in den Verzeichnissen aus `PATH`. `./hej` sagt
+genau, wo die Datei liegt: im aktuellen Verzeichnis.
+```
 
 ## Exit-Codes – `$?`
 
@@ -86,6 +115,12 @@ ll
 
 `alias` ohne Argumente listet alle Aliase auf, und `unalias ll` entfernt einen.
 
+```predict
+$ alias hej='echo Hello'
+$ hej
+Hello
+```
+
 ## Einstellungen speichern – `~/.bashrc`
 
 Die Variablen und Aliase, die du anlegst, verschwinden, wenn du das Terminal
@@ -95,4 +130,15 @@ Datei geändert hast, kannst du sie sofort neu laden mit:
 
 ```sh
 source ~/.bashrc
+```
+
+```quiz
+Du legst einen Alias an, schließt das Terminal und öffnest ein neues. Der Alias
+ist weg. Was hättest du tun sollen?
+- [ ] `alias` ohne Argumente ausführen
+- [x] Den Alias in `~/.bashrc` schreiben
+- [ ] Ihn mit `export` anlegen
+---
+Alles, was in `~/.bashrc` steht, wird jedes Mal neu gelesen, wenn ein neues
+Terminal geöffnet wird.
 ```

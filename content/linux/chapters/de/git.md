@@ -19,33 +19,17 @@ lernst.
 
 ## git installieren
 
-Git ist nicht immer vorinstalliert. Unter {{distro}} installierst du es so:
+Git ist nicht immer vorinstalliert. Im Ubuntu-Terminal installierst du es mit
+apt:
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install git
 ```
-:::
 
-:::arch
-```sh
-sudo pacman -S git
-```
-
-Antworte mit Ja, wenn pacman fragt, ob es weitermachen soll.
-:::
-
-:::redhat
-```sh
-sudo dnf install git
-```
-
-Antworte mit `y` – das große `N` in `[y/N]` bedeutet, dass Nein die Vorgabe
-ist.
-:::
-
-Das Paket heißt in jeder Familie `git`. Prüfe, ob es funktioniert:
+Andere Distributionen installieren es mit ihrem eigenen Paketmanager, wie du im
+Teil über Distributionen und Pakete gelernt hast – auch dort heißt das Paket
+`git`. Prüfe, ob es funktioniert:
 
 ```sh
 git --version
@@ -123,6 +107,16 @@ bearbeite die Dateien darin nicht von Hand. Wenn du git in einem Projekt nicht
 mehr verwenden willst, reicht es, `.git` zu entfernen; deine normalen Dateien
 bleiben erhalten.
 
+```quiz
+Du willst git in einem Projekt nicht mehr verwenden, aber alle deine Dateien behalten. Was tust du?
+- [ ] `git init` noch einmal ausführen
+- [x] Das versteckte Verzeichnis `.git` entfernen
+- [ ] Alle Dateien außer `.git` entfernen
+---
+Die ganze Geschichte liegt in `.git`, und git rührt deine normalen Dateien
+nicht an. Ohne `.git` bleiben die Dateien – nur die Geschichte ist weg.
+```
+
 ## Drei Orte: Arbeitsverzeichnis, Index und Geschichte
 
 Das Wichtigste, was man über git verstehen muss: Eine Änderung durchläuft drei
@@ -144,6 +138,17 @@ Orte:
 Wozu der Zwischenschritt? Damit du auswählen kannst. Wenn du fünf Dateien
 geändert hast, aber nur zwei zusammengehören, kannst du diese beiden in den
 Index legen, sie committen und den Rest für einen eigenen Commit aufheben.
+
+```quiz
+Du hast fünf Dateien geändert, aber nur zwei der Änderungen gehören zusammen.
+Wie speicherst du nur diese beiden in einem Commit?
+- [ ] Zuerst `git commit` ausführen und danach `git add` auf die beiden Dateien
+- [x] `git add` auf die beiden Dateien ausführen, dann `git commit`
+- [ ] Alle fünf committen – ein Commit nimmt immer jede geänderte Datei mit
+---
+Ein Commit speichert, was im Index liegt. Die anderen drei Änderungen bleiben
+im Arbeitsverzeichnis, bis du sie hinzufügst.
+```
 
 ## `git status` ist dein Kompass
 
@@ -268,6 +273,27 @@ git commit -a -m "Beskriv hur sidan är byggd"
 
 Beachte, dass `-a` *keine* neuen Dateien einschließt, die git noch nicht
 verfolgt. Die musst du immer zuerst mit `git add` hinzufügen.
+
+Die Fragen mit Befehlen in diesem Kapitel beginnen in einem frischen Terminal,
+deshalb installieren sie zuerst git und machen den ersten Commit.
+`> /dev/null 2>&1` wirft die Ausgabe dieser Zeilen weg, wie du im Kapitel über
+Umleitungen und Pipes gelernt hast. Was gibt der letzte Befehl aus?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ echo 'En rad till.' >> README.md
+$ git commit -m "En rad till" > /dev/null
+$ git log --oneline | wc -l
+1
+---
+Der zweite Commit ist nie passiert: Die Änderung an `README.md` lag nicht im
+Index, also gab es nichts zu committen. Zuerst `git add README.md` – oder
+`git commit -a` – hätte zwei Commits ergeben.
+```
 
 ## Gute Commit-Nachrichten
 
@@ -404,6 +430,26 @@ kollidieren mit dem anderen Branch. Dann weigert sich git und bittet dich,
 zuerst zu committen (oder die Änderungen mit `git stash` vorübergehend
 beiseitezulegen und sie mit `git stash pop` zurückzuholen).
 
+Wie viele Zeilen mit `purple` hat `style.css` am Ende?
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ git switch -c ny-design > /dev/null 2>&1
+$ echo 'h1 { color: purple; }' >> style.css
+$ git commit -am "Lila rubriker" > /dev/null
+$ git switch main > /dev/null 2>&1
+$ grep purple style.css | wc -l
+0
+---
+Die lila Zeile wurde auf `ny-design` committet. Wenn du zu `main` wechselst,
+lässt git das Arbeitsverzeichnis so aussehen wie den letzten Commit von
+`main` – und dort gibt es die Zeile noch nicht.
+```
+
 ## Branches zusammenführen: `git merge`
 
 Stell dich auf den Branch, der die Änderungen *bekommen* soll – hier `main` –,
@@ -511,6 +557,24 @@ Wenn du es dir mitten in einem Konflikt anders überlegst, bringt dich
 Konflikte sind völlig normal, wenn mehrere Leute am selben Projekt arbeiten.
 Ein guter Weg, weniger davon zu bekommen: kleine Commits machen und oft
 zusammenführen.
+
+```quiz
+Du bist auf `main` und führst `git merge rubrik` aus. Die Datei bekommt einen Konflikt:
+
+    <<<<<<< HEAD
+      <h1>Hello!</h1>
+    =======
+      <h1>Welcome!</h1>
+    >>>>>>> rubrik
+
+Welche Zeile stammt von `main`?
+- [x] `<h1>Hello!</h1>`
+- [ ] `<h1>Welcome!</h1>`
+---
+`HEAD` ist der Branch, auf dem du bist – hier `main`. Seine Version steht
+zwischen `<<<<<<< HEAD` und `=======`; die Version des anderen Branches kommt
+nach `=======`.
+```
 
 ## Dateien, die git ignorieren soll: `.gitignore`
 

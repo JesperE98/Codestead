@@ -55,6 +55,17 @@ Dateiname ein Leerzeichen enthält. Willst du direkt nach dem Variablennamen
 Text schreiben, nimm geschweifte Klammern: `"${stad}_2026"` – ohne sie würde
 bash nach einer Variable namens `stad_2026` suchen.
 
+```quiz
+`stad` enthält `Göteborg`, und es gibt keine Variable namens `stad_2026`. Was
+gibt `echo "$stad_2026"` aus?
+- [ ] `Göteborg_2026`
+- [ ] `Göteborg`
+- [x] Eine leere Zeile
+---
+Bash liest den ganzen Namen `stad_2026`, und diese Variable gibt es nicht.
+Schreib `"${stad}_2026"`, um `Göteborg_2026` zu bekommen.
+```
+
 ## Befehlssubstitution – `$(...)`
 
 `$(command)` wird durch das ersetzt, was der Befehl ausgibt. So speicherst du
@@ -79,6 +90,13 @@ echo $(( 17 / 5 )) Rest $(( 17 % 5 ))
 
 Um eine Variable zu ändern, schreibst du `(( a++ ))` oder `(( a += 10 ))`.
 
+```predict
+$ echo $(( 7 / 2 )) $(( 7 % 2 ))
+3 1
+---
+Bash rechnet nur mit ganzen Zahlen: 7 / 2 ist 3, und der Rest (`%`) ist 1.
+```
+
 ## Argumente
 
 Wenn du `./skript.sh one two` ausführst, kann das Skript die Argumente lesen:
@@ -90,6 +108,17 @@ Wenn du `./skript.sh one two` ausführst, kann das Skript die Argumente lesen:
 | `$#` | Die Anzahl der Argumente |
 | `"$@"` | Alle Argumente, jedes einzeln |
 | `$?` | Den Exit-Code des vorherigen Befehls |
+
+```quiz
+Ein Skript wird mit `./skript.sh red green blue` ausgeführt. Was enthalten `$1`
+und `$#`?
+- [ ] `$1` ist `./skript.sh` und `$#` ist `4`
+- [x] `$1` ist `red` und `$#` ist `3`
+- [ ] `$1` ist `red` und `$#` ist `blue`
+---
+Der Name des Skripts selbst steht in `$0` und wird deshalb in `$#` nicht
+mitgezählt.
+```
 
 ## Bedingungen – `if`
 
@@ -137,6 +166,12 @@ Für kurze Bedingungen reichen oft `&&` und `||`:
 [ -d ~/bilder ] && echo "Das Verzeichnis bilder existiert"
 ```
 
+```predict
+$ x=""
+$ if [ -z "$x" ]; then echo empty; else echo "not empty"; fi
+empty
+```
+
 ## Schleifen
 
 Eine **for-Schleife** macht dasselbe für jedes Element einer Liste:
@@ -167,6 +202,13 @@ while read rad; do echo "> $rad"; done < ~/dokument/frukter.txt
 
 `break` verlässt eine Schleife, und `continue` springt direkt zur nächsten
 Runde.
+
+```predict
+$ for x in 2 4 6; do echo $(( x * 10 )); done
+20
+40
+60
+```
 
 > **Vorsicht vor Endlosschleifen!** Eine Schleife, deren Bedingung nie falsch
 > wird, läuft ewig. In einem echten Terminal stoppst du sie mit **Strg+C**.

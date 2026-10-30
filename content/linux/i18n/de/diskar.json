@@ -14,11 +14,7 @@
     },
     "uuid": {
       "text": "Finde die UUID des Dateisystems heraus, das auf `/` eingehängt ist – und nur diese.",
-      "hint": {
-        "debian": "`lsblk -f` zeigt, dass `/` auf `/dev/sda2` liegt. Frag dann `blkid /dev/sda2` – oder lass `findmnt -n -o UUID /` alles auf einmal erledigen.",
-        "arch": "`lsblk -f` zeigt, dass `/` auf `/dev/sda3` liegt. Frag dann `blkid /dev/sda3` – oder lass `findmnt -n -o UUID /` alles auf einmal erledigen.",
-        "redhat": "`lsblk -f` zeigt, dass `/` auf `/dev/sda3` liegt. Frag dann `blkid /dev/sda3` – oder lass `findmnt -n -o UUID /` alles auf einmal erledigen."
-      }
+      "hint": "`lsblk -f` zeigt, dass `/` auf `/dev/sda2` liegt. Frag dann `blkid /dev/sda2` – oder lass `findmnt -n -o UUID /` alles auf einmal erledigen."
     },
     "montera": {
       "text": "Lege den Mountpunkt `/mnt/usb` an und hänge den USB-Stick (`/dev/sdb1`) dort ein.",

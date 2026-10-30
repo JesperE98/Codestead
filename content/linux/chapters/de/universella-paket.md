@@ -30,6 +30,16 @@ Eine **Sandbox** bedeutet, dass das Programm nur an das herankommt, was ihm
 erlaubt wurde, zum Beispiel das Netzwerk oder deinen Download-Ordner, statt an
 dein ganzes Home-Verzeichnis.
 
+```quiz
+Welches Format wird automatisch im Hintergrund aktualisiert?
+- [ ] Flatpak
+- [x] Snap
+- [ ] AppImage
+---
+Flatpak-Programme werden mit `flatpak update` aktualisiert, und ein AppImage
+ersetzt du, indem du eine neue Datei herunterlädst.
+```
+
 ## Flatpak
 
 Flatpak ist das Format, auf das sich die meisten Distributionen für
@@ -117,6 +127,16 @@ flatpak install --user flathub org.videolan.VLC
 flatpak list --user
 ```
 
+```quiz
+Was passiert, wenn du ein Flatpak mit `--user` installierst?
+- [ ] Es wird für das ganze System installiert, in `/var/lib/flatpak`
+- [x] Es landet in deinem Home-Verzeichnis, und kein anderer Benutzer sieht es
+- [ ] Es läuft ohne Sandbox
+---
+Denk daran, dass die Benutzerinstallation eigene Remotes hat – Flathub muss
+auch mit `--user` hinzugefügt werden.
+```
+
 ### Aktualisieren und entfernen
 
 ```sh
@@ -148,8 +168,8 @@ sudo apt install snapd
 :::arch
 ### Snap unter Arch
 
-Snap liegt nicht in den Arch-Repositorys – nur im AUR. Bau es wie im vorigen
-Kapitel:
+Snap liegt nicht in den Arch-Repositorys – nur im AUR. Bau es wie im Kapitel
+über die Arch-Familie:
 
 ```sh
 sudo pacman -S --needed git base-devel
@@ -199,6 +219,14 @@ sudo snap install code
 sudo snap install code --classic
 ```
 
+```quiz
+Ein Snap ist mit Classic Confinement veröffentlicht. Was musst du hinzufügen,
+um ihn zu installieren?
+- [ ] `--user`
+- [x] `--classic`
+- [ ] `--channel=edge`
+```
+
 ### Kanäle und Updates
 
 Jeder Snap hat **Kanäle** (*channels*): `stable`, `candidate`, `beta` und
@@ -230,12 +258,27 @@ cd ~/Nedladdningar
 ls -l
 ```
 
+Was passiert, wenn du es gleich startest?
+
+```predict
+$ ~/Nedladdningar/Kalkylator.AppImage
+bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+---
+Die Datei hat kein `x`-Recht.
+```
+
 Heruntergeladene Dateien sind anfangs nie ausführbar. Mach sie ausführbar und
 starte sie:
 
 ```sh
 chmod +x Kalkylator.AppImage
 ./Kalkylator.AppImage
+```
+
+```try
+chmod +x ~/Nedladdningar/Kalkylator.AppImage
+---
+Jetzt ist die Datei ausführbar. Prüf es mit `ls -l ~/Nedladdningar`.
 ```
 
 ### FUSE

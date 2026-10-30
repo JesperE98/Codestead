@@ -28,6 +28,18 @@ Stell dir den Datenträger als leere Lagerhalle vor, die Partitionen als die
 Wände, die sie in Räume aufteilen, und das Dateisystem als die Regale und
 Etiketten in jedem Raum. Ohne Regale findest du nichts.
 
+```quiz
+Du hast gerade eine neue Partition auf einem Datenträger angelegt. Warum
+kannst du noch keine Dateien darauf speichern?
+- [ ] Sie muss zuerst in die Partitionstabelle eingetragen werden
+- [x] Sie hat noch kein Dateisystem – sie muss zuerst formatiert werden
+- [ ] Partitionen können keine Dateien enthalten, nur Datenträger
+- [ ] Sie braucht zuerst einen Laufwerksbuchstaben
+---
+Eine neue Partition ist leer und unbrauchbar, bis du ein Dateisystem darauf
+anlegst. Genau das bedeutet Formatieren.
+```
+
 ## Datenträger sind Dateien in `/dev`
 
 Unter Linux ist fast alles eine Datei – Datenträger eingeschlossen. Jeder
@@ -69,28 +81,10 @@ lsblk
 | `TYPE` | `disk` oder `part` (Partition) |
 | `MOUNTPOINTS` | Wo das Dateisystem im Verzeichnisbaum auftaucht, `[SWAP]` für Swap |
 
-:::debian
-In {{distro}} siehst du die Aufteilung, die der Debian-Installer meistens
-wählt: `sda1` ist die **EFI-Partition** (von der die Firmware des Rechners
-bootet) auf `/boot/efi`, `sda2` ist das **Root-Dateisystem** `/` und `sda3`
-ist **Swap**.
-:::
-
-:::arch
-Unter Arch entscheidest du selbst, wie der Datenträger aufgeteilt wird. Dieser
-Rechner folgt dem Beispiel aus dem Arch-Wiki: `sda1` ist die
-**EFI-Partition**, direkt auf `/boot` eingehängt, damit der Kernel dort liegt,
-wo die Firmware ihn lesen kann, `sda2` ist **Swap** und `sda3` ist das
-**Root-Dateisystem** `/`.
-:::
-
-:::redhat
-Fedora macht es ein wenig anders: `sda1` ist die **EFI-Partition** auf
-`/boot/efi`, `sda2` ist `/boot` mit den Kerneln und `sda3` ist ein einziges
-großes **btrfs**-Dateisystem, das sowohl auf `/` als auch auf `/home`
-auftaucht. Swap liegt gar nicht auf dem Datenträger, sondern im RAM: `zram0`
-ist komprimierter Arbeitsspeicher.
-:::
+Auf diesem Rechner ist `sda1` die **EFI-Partition** (von der die Firmware des
+Rechners bootet) auf `/boot/efi`, `sda2` ist das **Root-Dateisystem** `/` und
+`sda3` ist **Swap**. Andere Distributionen – und andere Installationen – können
+den Datenträger anders aufteilen, also immer nachsehen statt annehmen.
 
 Mit `-f` zeigt `lsblk` auch die Dateisysteme – Typ, Label, UUID und wie viel
 frei ist:
@@ -177,6 +171,12 @@ Ist dir aufgefallen, dass `Used` und `Avail` zusammen nicht ganz `Size`
 ergeben? ext4 reserviert 5 % für root, damit das System weiterläuft, auch wenn
 ein normaler Benutzer den Datenträger vollgeschrieben hat.
 
+```try
+df -hT
+---
+Die Spalte `Type` zeigt, dass `/` `ext4` ist und `/boot/efi` `vfat`.
+```
+
 ## `df` oder `du`?
 
 Zwei Befehle mit fast demselben Namen, aber sie beantworten verschiedene
@@ -238,6 +238,17 @@ Du kannst auch über das Label statt über den Gerätenamen einhängen:
 `sudo mount LABEL=USBMINNE /mnt/usb`. Auf einem Rechner mit Desktop erledigt
 der Dateimanager das alles automatisch, wenn du den Stick einsteckst.
 
+```quiz
+Nach `sudo mount /dev/sdb1 /mnt/usb` gehört jede Datei auf dem FAT-Stick root.
+Warum?
+- [ ] Die Dateien wurden auf einem anderen Rechner von root angelegt
+- [x] FAT hat keine Linux-Rechte, also bekommen alle Dateien den Besitzer dessen, der eingehängt hat – root
+- [ ] Alles in `/mnt` gehört immer root
+- [ ] USB-Sticks können nur von root benutzt werden
+---
+Mit `-o uid=1000,gid=1000` kannst du den Besitzer beim Einhängen selbst wählen.
+```
+
 ## Aushängen – bevor du den Stick herausziehst!
 
 Linux schreibt nicht immer sofort auf den Datenträger. Änderungen werden im
@@ -267,6 +278,18 @@ Hier ist es deine eigene Shell, die im Verzeichnis steht. Verlasse es mit
 ein leeres Verzeichnis – aber die Dateien und die Änderungen, die du gemacht
 hast, sind beim nächsten Einhängen immer noch auf dem Stick.
 
+```quiz
+Warum solltest du einen USB-Stick aushängen, bevor du ihn herausziehst?
+- [ ] Sonst werden die Dateien auf dem Stick gelöscht
+- [x] Änderungen warten vielleicht noch im RAM – `umount` schreibt sie, bevor es das Dateisystem abkoppelt
+- [ ] Sonst bekommt der Stick beim nächsten Mal einen neuen Gerätenamen
+- [ ] Der Stick lässt sich erst wieder einhängen, wenn er auf demselben Rechner ausgehängt wurde
+---
+Linux sammelt Änderungen im RAM (*Cache*) und schreibt sie etwas später. Ein
+Stick, der noch eingehängt herausgezogen wird, kann Dateien verlieren, die du
+„gespeichert“ hast.
+```
+
 ## `/etc/fstab` – was beim Booten eingehängt wird
 
 Das Root-Dateisystem, `/boot` und Swap werden bei jedem Start des Rechners
@@ -288,24 +311,10 @@ Jede Zeile hat sechs Spalten:
 | dump | `0` | Altes Backup-Flag, fast immer 0 |
 | pass | `1` | Die Reihenfolge, in der `fsck` sie beim Booten prüft (1 = Root, 2 = andere, 0 = nie) |
 
-:::debian
 Die Option `errors=remount-ro` bedeutet, dass das Root-Dateisystem nur noch
 lesbar gemacht wird, wenn ein Fehler entdeckt wird – besser das, als noch mehr
 zu zerstören. Kommentare wie `# / was on /dev/sda2 during installation` hat
 der Installer geschrieben.
-:::
-
-:::arch
-Unter Arch wurde die Datei bei der Installation von `genfstab` geschrieben. Es
-schreibt den alten Namen des Geräts als Kommentar über jede Zeile.
-:::
-
-:::redhat
-Achte darauf, dass `/` und `/home` **dieselbe** UUID haben: Es ist dasselbe
-btrfs-Dateisystem, aber verschiedene Subvolumes (`subvol=root` und
-`subvol=home`). `compress=zstd:1` sorgt dafür, dass die Dateien automatisch
-komprimiert werden.
-:::
 
 Warum `UUID=…` und nicht einfach `/dev/sda2`? Gerätenamen können sich ändern –
 steck einen neuen Datenträger ein, und der alte bekommt vielleicht einen neuen
@@ -315,6 +324,16 @@ sich nie. Du findest sie mit `lsblk -f`, `blkid` oder `findmnt`:
 ```sh
 sudo blkid
 findmnt -n -o UUID /
+```
+
+Bei `findmnt` wählt `-o` die Spalten, die angezeigt werden, und `-n` lässt die
+Überschrift weg – praktisch, wenn du nur den Wert selbst willst.
+
+```predict
+$ findmnt -n -o FSTYPE /boot/efi
+vfat
+---
+`/boot/efi` ist die EFI-Partition, und die EFI-Partition muss FAT sein.
 ```
 
 Wenn sich der Stick immer auf `/mnt/usb` einhängen lassen soll, kannst du eine
@@ -347,22 +366,9 @@ swapon --show
 free -h
 ```
 
-:::debian
 Hier ist Swap eine eigene Partition, `sda3`. Viele Installationen (zum
 Beispiel neuere Ubuntu-Versionen) benutzen stattdessen eine *Swap-Datei* auf
 dem Root-Dateisystem.
-:::
-
-:::arch
-Hier ist Swap eine eigene Partition, `sda2`. Eine *Swap-Datei* funktioniert
-genauso gut, oder zram wie bei Fedora.
-:::
-
-:::redhat
-Fedora benutzt **zram**: Swap im RAM, aber komprimiert. Das klingt seltsam,
-funktioniert aber gut – komprimierter Arbeitsspeicher ist immer noch viel
-schneller als ein Datenträger.
-:::
 
 ## Partitionieren und Formatieren – mit größter Vorsicht
 
@@ -394,11 +400,6 @@ Im Simulator kannst du `mkfs.ext4` und `mkfs.vfat` auf dem USB-Stick
 ausprobieren – aber erledige zuerst die Aufgaben, denn die Dateien auf dem
 Stick verschwinden dabei. Die eigenen Partitionen des Systems sind geschützt,
 weil sie eingehängt sind, genau wie auf einem echten System.
-
-:::arch
-Unter Arch ist `mkfs.vfat` nicht von Anfang an installiert. Es steckt im
-Paket `dosfstools`: `sudo pacman -S dosfstools`.
-:::
 
 ## Zusammenfassung
 
