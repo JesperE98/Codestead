@@ -1,114 +1,177 @@
-name: Bygg skrivbordsappar
+name: Release
 
-# Så skapas en ny version:
-#   1. Höj "version" i package.json (t.ex. 0.1.0 -> 0.2.0).
-#   2. Slå ihop ändringen till main.
-#   => Installationsfiler för Windows och Linux byggs och läggs upp som
-#      GitHub Release "v0.2.0". Finns releasen redan händer ingenting.
+# How a new version is released:
+#   1. Raise <Version> in build/Codestead.props (e.g. 0.4.0 -> 0.5.0).
+#   2. Merge the change to main.
+#   => Windows and Linux artifacts are built, installed and smoke-tested on clean systems
+#      (Windows Server 2022/2025, Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS), and only then
+#      published as release "v0.5.0" in the public repository jesper-e98/codestead-releases.
 #
-# Det går också att starta flödet för hand under Actions -> "Bygg skrivbordsappar"
-# -> "Run workflow", eller att pusha en tagg som v0.2.0.
-# I pull requests som ändrar paketeringen byggs filerna bara som test.
+# Run it by hand under Actions -> "Release" -> "Run workflow" to build and test without
+# publishing (or tick "publish" to publish from the selected branch).
 on:
   push:
     branches: [main]
-    tags: ['v*']
   pull_request:
     paths:
-      - package.json
-      - package-lock.json
-      - electron/**
       - build/**
-      - .gitattributes
+      - packaging/**
+      - src/Codestead.Linux/**
       - .github/workflows/release.yml
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the release to codestead-releases
+        type: boolean
+        default: false
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: '1'
+  RELEASES_REPO: jesper-e98/codestead-releases
+  PKG_NAME: codestead-linux
+  PKG_DISPLAY: Codestead Linux
+  PROJECT: src/Codestead.Linux/Codestead.Linux.csproj
+  EXECUTABLE: Codestead.Linux
+  NFPM_VERSION: 2.43.0
+  VPK_VERSION: 1.2.161
 
 jobs:
   plan:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     outputs:
       version: ${{ steps.plan.outputs.version }}
-      release: ${{ steps.plan.outputs.release }}
+      publish: ${{ steps.plan.outputs.publish }}
     steps:
       - uses: actions/checkout@v4
       - id: plan
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN || github.token }}
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            version="${GITHUB_REF_NAME#v}"
-          else
-            version=$(node -p "require('./package.json').version")
+          version=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' build/Codestead.props)
+          publish=false
+          if [[ "$GITHUB_EVENT_NAME" == "push" || "${{ inputs.publish }}" == "true" ]]; then
+            if ! gh release view "v$version" --repo "$RELEASES_REPO" >/dev/null 2>&1; then publish=true; fi
           fi
-          release=false
-          if [[ "$GITHUB_EVENT_NAME" != "pull_request" ]] && ! gh release view "v$version" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            release=true
-          fi
-          echo "Version: $version, ny release: $release"
+          echo "Version $version, publish: $publish"
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "release=$release" >> "$GITHUB_OUTPUT"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
 
-  build:
+  build-linux:
     needs: plan
-    if: needs.plan.outputs.release == 'true' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Install packaging tools (nfpm, vpk)
+        run: |
+          curl -sSfL -o /tmp/nfpm.deb "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_${NFPM_VERSION}_amd64.deb"
+          sudo apt-get install -y /tmp/nfpm.deb
+          dotnet tool install -g vpk --version "$VPK_VERSION"
+      - run: dotnet test -c Release
+      - name: Build Linux artifacts
+        run: packaging/build-linux.sh "$PROJECT" "$PKG_NAME" "$PKG_DISPLAY" "${{ needs.plan.outputs.version }}" artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: artifacts/
+          if-no-files-found: error
+
+  build-windows:
+    needs: plan
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet tool install -g vpk --version $env:VPK_VERSION
+      - run: dotnet test -c Release
+      - name: Build Windows artifacts
+        run: packaging/build-windows.ps1 -Project $env:PROJECT -PackageName $env:PKG_NAME -DisplayName "$env:PKG_DISPLAY" -Version "${{ needs.plan.outputs.version }}" -Out artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: artifacts/
+          if-no-files-found: error
+
+  # Installation tests on clean systems: a fresh container per distribution, installing the package
+  # exactly like a user would, starting the app (--smoke-test) on a virtual display and removing it again.
+  test-linux:
+    needs: build-linux
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
-            platform: --win
-          - os: ubuntu-latest
-            platform: --linux
-          # macOS är tillfälligt borttaget: kontot får inga macOS-maskiner i
-          # GitHub Actions. Lägg tillbaka raderna nedan när det fungerar:
-          # - os: macos-latest
-          #   platform: --mac
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Sätt versionsnumret
-        shell: bash
-        run: npm version "${{ needs.plan.outputs.version }}" --no-git-tag-version --allow-same-version
-      - run: npm test
-      - run: npm run build
-      - run: npx electron-builder ${{ matrix.platform }} --publish never
-        env:
-          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-      - uses: actions/upload-artifact@v4
-        with:
-          name: LinuxLearningTool-${{ runner.os }}
-          path: |
-            release/*.exe
-            release/*.dmg
-            release/*.AppImage
-          if-no-files-found: error
-
-  release:
-    needs: [plan, build]
-    if: needs.plan.outputs.release == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+          - { name: Ubuntu 24.04 LTS (.deb), image: 'ubuntu:24.04', kind: deb }
+          - { name: Ubuntu 22.04 LTS (.deb), image: 'ubuntu:22.04', kind: deb }
+          - { name: Fedora (.rpm), image: 'fedora:latest', kind: rpm }
+          - { name: Arch Linux (.pkg.tar.zst), image: 'archlinux:latest', kind: arch }
+          - { name: CachyOS (.pkg.tar.zst), image: 'cachyos/cachyos:latest', kind: arch }
+          - { name: Ubuntu 24.04 LTS (AppImage), image: 'ubuntu:24.04', kind: appimage }
+          - { name: Fedora (AppImage), image: 'fedora:latest', kind: appimage }
+          - { name: Arch Linux (AppImage), image: 'archlinux:latest', kind: appimage }
+    name: Install test – ${{ matrix.name }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          name: linux
           path: artifacts
-          merge-multiple: true
-      - name: Skapa GitHub Release
+      - name: Install and start in a clean ${{ matrix.image }} container
+        run: |
+          docker run --rm -v "$PWD/artifacts:/artifacts" -v "$PWD/packaging:/packaging:ro" "${{ matrix.image }}" \
+            bash /packaging/install-test.sh "$PKG_NAME" "$EXECUTABLE" "${{ matrix.kind }}"
+
+  test-windows:
+    needs: build-windows
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-2025]
+    runs-on: ${{ matrix.os }}
+    name: Install test – ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: artifacts
+      - name: Install with the setup program, start, uninstall
+        shell: pwsh
+        run: packaging/install-test-windows.ps1 -PackageName $env:PKG_NAME -Executable $env:EXECUTABLE -Artifacts artifacts
+
+  publish:
+    needs: [plan, test-linux, test-windows]
+    if: needs.plan.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Collect files and checksums
+        run: |
+          mkdir -p release
+          find dist -maxdepth 2 -type f \( -name '*.deb' -o -name '*.rpm' -o -name '*.pkg.tar.zst' -o -name '*.AppImage' -o -name '*.tar.gz' -o -name '*.zip' -o -name '*-Setup.exe' \) -exec cp {} release/ \;
+          # Velopack update feeds (auto-update of the Windows install and the AppImage).
+          cp dist/windows/velopack-win/releases.win.json dist/windows/velopack-win/*.nupkg release/ 2>/dev/null || true
+          cp dist/linux/velopack-linux/releases.linux.json dist/linux/velopack-linux/*.nupkg release/ 2>/dev/null || true
+          (cd release && sha256sum * > SHA256SUMS.txt)
+          ls -la release
+      - name: Publish to ${{ env.RELEASES_REPO }}
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
           VERSION: ${{ needs.plan.outputs.version }}
         run: |
-          gh release create "v$VERSION" artifacts/* \
-            --repo "$GITHUB_REPOSITORY" \
-            --target "$GITHUB_SHA" \
-            --title "LinuxLearningTool v$VERSION" \
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo "::error::The secret RELEASES_TOKEN is missing (a token with write access to $RELEASES_REPO)."
+            exit 1
+          fi
+          gh release create "v$VERSION" release/* \
+            --repo "$RELEASES_REPO" \
+            --title "$PKG_DISPLAY $VERSION" \
             --notes-file .github/release-notes.md
