@@ -2,12 +2,8 @@
   "title": "Службы и журналы с systemd",
   "tasks": {
     "status-ssh": {
-      "text": "Покажите состояние SSH-сервера с помощью `systemctl status`. Подумайте, как называется эта служба в вашем семействе дистрибутивов!",
-      "hint": {
-        "debian": "В семействе Debian служба называется `ssh`: `systemctl status ssh`.",
-        "arch": "В Arch служба называется `sshd`: `systemctl status sshd`.",
-        "redhat": "В Fedora служба называется `sshd`: `systemctl status sshd`."
-      }
+      "text": "Покажите состояние SSH-сервера с помощью `systemctl status`. Подумайте, как эта служба называется в Ubuntu!",
+      "hint": "В Ubuntu служба называется `ssh`: `systemctl status ssh`."
     },
     "failed": {
       "text": "Похоже, какая-то служба не запустилась. Выведите список всех служб, которые завершились сбоем (*failed*).",
