@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Codestead.Content</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Codestead.Shell/Codestead.Shell.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Codestead.Content.Tests" />
+  </ItemGroup>
+  <!--
+    Chapter texts and their translations stay in src/content/ (shared with the TypeScript app) and are
+    embedded here. Logical names always use forward slashes: chapters/<lang>/<id>.md,
+    i18n/<lang>/<id>.json and ui/<lang>.json.
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="../content/chapters/**/*.md">
+      <LogicalName>chapters/$([System.String]::Copy('%(RecursiveDir)').Replace('\', '/'))%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="../content/i18n/**/*.json">
+      <LogicalName>i18n/$([System.String]::Copy('%(RecursiveDir)').Replace('\', '/'))%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="i18n/ui/*.json">
+      <LogicalName>ui/%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>
