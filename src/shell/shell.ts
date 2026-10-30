@@ -8,7 +8,7 @@ import { formatMan } from './commands/util';
 import { manFor } from './commands/man-en';
 import { getDistro, type Distro } from './distros';
 import { buildFs, STUDENT } from './initfs';
-import { installPackage, PACKAGES, packageProviding } from './packages';
+import { installPackage, placeBinaries, PACKAGES, packageProviding } from './packages';
 import { initialProcs, SHELL_PID, type Job, type ProcState } from './procs';
 import {
   escapeGlob,
@@ -175,11 +175,19 @@ export class Shell {
   private addMissingDefaults(): void {
     const family = this.distro.family;
     for (const pkg of PACKAGES) {
-      if (!pkg.names[family] || !pkg.base?.includes(family)) continue;
+      if (!pkg.names[family] || !(pkg.base?.includes(family) || pkg.baseDistros?.includes(this.distro.id))) continue;
       const key = `default:pkg:${pkg.id}`;
-      if (this.flags[key]) continue;
-      if (!(pkg.id in this.installed)) installPackage(this, pkg);
-      this.flags[key] = true;
+      // Kommandon som tillkommit i ett förinstallerat paket (t.ex. makepkg i pacman) läggs till i gamla terminaler.
+      const filesKey = `default:files:${pkg.id}:${pkg.provides.length}`;
+      if (!this.flags[key]) {
+        if (!(pkg.id in this.installed)) {
+          installPackage(this, pkg);
+          this.flags[filesKey] = true;
+        }
+        this.flags[key] = true;
+      }
+      if (!this.flags[filesKey] && pkg.id in this.installed) placeBinaries(this, pkg);
+      this.flags[filesKey] = true;
     }
     const fresh = new VFS(buildFs(this.distro));
     const root = this.rootUser();
@@ -198,6 +206,7 @@ export class Shell {
       if (node.type === 'dir') for (const name of Object.keys(node.children!)) walk(`${path}/${name}`);
     };
     walk(`${home}/dokument`);
+    walk(`${home}/Nedladdningar`);
   }
 
   snapshot(): ShellSnapshot {
@@ -836,7 +845,10 @@ export class Shell {
       if (node.type === 'dir') return { kind: 'error' as const, message: 'Is a directory' };
       if (!hasPerm(node, user, 'x')) return { kind: 'error' as const, message: 'Permission denied' };
       const content = node.content ?? '';
-      if (content.startsWith(ELF)) return { kind: 'binary' as const, impl: basename(path), path };
+      // Binärfilen säger själv vilket program den är, så den fungerar även om den byter namn
+      // (t.ex. ./Kalkylator.AppImage eller /snap/bin/hello-world som pekar på snap).
+      const impl = /^\u007fELF[^(]*\(simulerad binärfil: ([^)\s]+)\)/.exec(content)?.[1] ?? basename(path);
+      if (content.startsWith(ELF)) return { kind: 'binary' as const, impl, path };
       if (!hasPerm(node, user, 'r')) return { kind: 'error' as const, message: 'Permission denied' };
       return { kind: 'script' as const, content, path };
     };

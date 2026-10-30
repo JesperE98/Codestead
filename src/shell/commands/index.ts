@@ -8,10 +8,12 @@ import { EXTRA_COMMANDS } from './extras';
 import { FS_COMMANDS } from './fs';
 import { PKG_COMMANDS } from './pkg';
 import { PROC_COMMANDS } from './procs';
+import { REPO_COMMANDS } from './repos';
 import { SCRIPT_COMMANDS } from './script';
 import { SYSTEM_COMMANDS } from './system';
 import { TEXT_COMMANDS } from './text';
 import { TEXTPROC_COMMANDS } from './textproc';
+import { UNIVERSAL_COMMANDS } from './universal';
 
 export const COMMANDS: Record<string, CommandDef> = {};
 
@@ -21,3 +23,6 @@ for (const def of [...FS_COMMANDS, ...TEXT_COMMANDS, ...SYSTEM_COMMANDS, ...PKG_
 
 // Arkiv och komprimering (tar, gzip, zip ...) samt du.
 for (const def of ARCHIVE_COMMANDS) COMMANDS[def.name] = def;
+// Extra förråd (PPA, AUR, COPR) och universella paketformat (Flatpak, Snap, AppImage).
+for (const def of REPO_COMMANDS) COMMANDS[def.name] = def;
+for (const def of UNIVERSAL_COMMANDS) COMMANDS[def.name] = def;
