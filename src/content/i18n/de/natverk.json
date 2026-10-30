@@ -1,0 +1,53 @@
+{
+  "title": "Netzwerk",
+  "tasks": {
+    "ip-addr": {
+      "text": "Zeige die IP-Adressen des Rechners mit `ip` an.",
+      "hint": "`ip addr` – oder kürzer `ip a`."
+    },
+    "ping-gw": {
+      "text": "Pinge das Gateway `192.168.1.1` genau 3-mal an.",
+      "hint": "`ping -c 3 192.168.1.1` – `-c` steht für *count*."
+    },
+    "dig": {
+      "text": {
+        "debian": "Installiere das Paket `dnsutils` und schlage mit `dig` die IP-Adresse von `example.com` nach.",
+        "arch": "Installiere das Paket `bind` und schlage mit `dig` die IP-Adresse von `example.com` nach.",
+        "redhat": "Installiere das Paket `bind-utils` und schlage mit `dig` die IP-Adresse von `example.com` nach."
+      },
+      "hint": {
+        "debian": "`sudo apt update`, `sudo apt install dnsutils` und dann `dig +short example.com`.",
+        "arch": "`sudo pacman -S bind` und dann `dig +short example.com`.",
+        "redhat": "`sudo dnf install bind-utils` und dann `dig +short example.com`."
+      }
+    },
+    "ss": {
+      "text": "Finde mit `ss` heraus, welche Ports auf dem Rechner lauschen.",
+      "hint": "`ss -tulpn` – **t**cp, **u**dp, **l**istening, **p**rocess, **n**umeric."
+    },
+    "curl-localhost": {
+      "text": "Hole mit `curl` die Startseite des Übungsservers auf deinem eigenen Rechner, `http://localhost:8080`.",
+      "hint": {
+        "debian": "Unter Debian/Ubuntu muss curl erst installiert werden: `sudo apt install curl`. Bekommst du *Couldn't connect to server*, ist minserver beendet – starte ihn mit `minserver`.",
+        "arch": "`curl http://localhost:8080`. Bekommst du *Couldn't connect to server*, ist minserver beendet – starte ihn mit `minserver`.",
+        "redhat": "`curl http://localhost:8080`. Bekommst du *Couldn't connect to server*, ist minserver beendet – starte ihn mit `minserver`."
+      }
+    },
+    "spara": {
+      "text": "Speichere die Webseite `https://example.com` als Datei `~/exempel.html`.",
+      "hint": "Geh in dein Home-Verzeichnis und nimm `curl -o exempel.html https://example.com` oder `wget -O exempel.html https://example.com`."
+    },
+    "hosts": {
+      "text": "Der Server `192.168.1.10` soll `server.lan` heißen, aber der Name steht nicht im DNS. Trage ihn in `/etc/hosts` ein und pinge danach `server.lan` an.",
+      "hint": "Die Datei gehört root: `echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts` und dann `ping -c 3 server.lan`."
+    },
+    "ssh": {
+      "text": "Führe mit `ssh` als Benutzer `elev` den Befehl `hostname` auf dem Server `server.lan` aus.",
+      "hint": {
+        "debian": "`ssh elev@server.lan hostname` – und antworte `yes` auf die Frage nach dem Host-Key.",
+        "arch": "Installiere zuerst den ssh-Client: `sudo pacman -S openssh`. Dann `ssh elev@server.lan hostname` – und antworte `yes` auf die Frage nach dem Host-Key.",
+        "redhat": "`ssh elev@server.lan hostname` – und antworte `yes` auf die Frage nach dem Host-Key."
+      }
+    }
+  }
+}

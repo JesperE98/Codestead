@@ -1,0 +1,40 @@
+{
+  "title": "Datenträger und Dateisysteme",
+  "tasks": {
+    "df": {
+      "text": "Zeige, wie viel Platz auf den eingehängten Dateisystemen belegt und frei ist – mit menschenlesbaren Größen (G, M).",
+      "hint": "`df` zeigt die Dateisysteme, die Option `-h` macht die Größen lesbar: `df -h`."
+    },
+    "lsblk-f": {
+      "text": "Zeige alle Datenträger und Partitionen zusammen mit Typ, Label und UUID der Dateisysteme.",
+      "hint": "`lsblk` zeigt die Datenträger als Baum. Mit `-f` kommen die Dateisysteme dazu: `lsblk -f`."
+    },
+    "fstab": {
+      "text": "Zeige die Datei `/etc/fstab`, in der steht, was beim Start des Rechners eingehängt werden soll."
+    },
+    "uuid": {
+      "text": "Finde die UUID des Dateisystems heraus, das auf `/` eingehängt ist – und nur diese.",
+      "hint": {
+        "debian": "`lsblk -f` zeigt, dass `/` auf `/dev/sda2` liegt. Frag dann `blkid /dev/sda2` – oder lass `findmnt -n -o UUID /` alles auf einmal erledigen.",
+        "arch": "`lsblk -f` zeigt, dass `/` auf `/dev/sda3` liegt. Frag dann `blkid /dev/sda3` – oder lass `findmnt -n -o UUID /` alles auf einmal erledigen.",
+        "redhat": "`lsblk -f` zeigt, dass `/` auf `/dev/sda3` liegt. Frag dann `blkid /dev/sda3` – oder lass `findmnt -n -o UUID /` alles auf einmal erledigen."
+      }
+    },
+    "montera": {
+      "text": "Lege den Mountpunkt `/mnt/usb` an und hänge den USB-Stick (`/dev/sdb1`) dort ein.",
+      "hint": "Sowohl das Anlegen von Verzeichnissen in `/mnt` als auch das Einhängen erfordern root: `sudo mkdir -p /mnt/usb` und dann `sudo mount /dev/sdb1 /mnt/usb`."
+    },
+    "fran-usb": {
+      "text": "Kopiere `rapport.pdf` vom USB-Stick in dein Home-Verzeichnis.",
+      "hint": "Die Dateien des Sticks liegen jetzt in `/mnt/usb`: `cp /mnt/usb/rapport.pdf ~`."
+    },
+    "till-usb": {
+      "text": "Speichere eine Kopie von `~/dokument/frukter.txt` auf dem USB-Stick.",
+      "hint": "Die Dateien auf dem Stick gehören root – FAT hat keine Linux-Rechte –, also brauchst du `sudo`: `sudo cp ~/dokument/frukter.txt /mnt/usb/`."
+    },
+    "avmontera": {
+      "text": "Hänge den USB-Stick aus, damit du ihn gefahrlos herausziehen kannst.",
+      "hint": "`sudo umount /mnt/usb` – ohne n! Bekommst du *target is busy*, steht deine Shell im Verzeichnis: Verlasse es zuerst mit `cd ~`."
+    }
+  }
+}
