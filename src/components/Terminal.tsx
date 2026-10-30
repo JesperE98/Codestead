@@ -38,15 +38,18 @@ export function Terminal({ shell, onResult, inject, inputLabel }: Props) {
   }, [entries, input]);
 
   const prompt = shell.prompt();
+  // Lösenord (t.ex. för passwd och su) syns inte när man skriver – precis som i en riktig terminal.
+  const secret = !!shell.pending?.secret;
 
   const run = () => {
     const line = input;
     const shownPrompt = prompt;
+    const shownInput = secret ? '' : line;
     const result = shell.execute(line);
     historyIndex.current = null;
     setInput('');
     if (result.clear) setEntries([]);
-    else setEntries((e) => [...e, { prompt: shownPrompt, input: line, output: result.output }]);
+    else setEntries((e) => [...e, { prompt: shownPrompt, input: shownInput, output: result.output }]);
     onResult(result);
   };
 
@@ -91,7 +94,7 @@ export function Terminal({ shell, onResult, inject, inputLabel }: Props) {
       e.preventDefault();
       const wasPending = !!shell.pending || shell.prompt() === '> ';
       shell.cancel();
-      setEntries((en) => [...en, { prompt, input: input + '^C', output: '' }]);
+      setEntries((en) => [...en, { prompt, input: (secret ? '' : input) + '^C', output: '' }]);
       setInput('');
       historyIndex.current = null;
       if (wasPending) force((n) => n + 1);
@@ -126,6 +129,7 @@ export function Terminal({ shell, onResult, inject, inputLabel }: Props) {
           <input
             ref={inputRef}
             className="terminal-input"
+            style={secret ? { color: 'transparent', caretColor: 'var(--term-text)' } : undefined}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}

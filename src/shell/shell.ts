@@ -28,6 +28,7 @@ import { translateFish } from './fish';
 import { fishVersion, shebang, shellProc, shellPrompt, shellStartup, ZSH_VERSION, type ShellFrame, type ShellMode } from './shellmode';
 import { ExitSignal, isControlSignal, LimitError, LoopSignal, ReturnSignal } from './signals';
 import type { CmdCtx, IO, Reader, Sink } from './types';
+import { lookupUser } from './users';
 import { basename, dirname, ELF, FsError, hasPerm, resolvePath, VFS, type FsNode, type User } from './vfs';
 
 export interface ShellSnapshot {
@@ -68,6 +69,8 @@ interface Pending {
   onAnswer(yes: boolean, io: Sink, text: string): number;
   /** Resten av kommandoraden, som körs när frågan besvarats. */
   resume?: (io: XIO) => number;
+  /** Svaret är hemligt (lösenord): terminalen visar inte det som skrivs. */
+  secret?: boolean;
 }
 
 /** Internt IO-objekt när kod körs: stdin är en delad läsare. */
@@ -212,6 +215,9 @@ export class Shell {
       if (node.type === 'dir') for (const name of Object.keys(node.children!)) walk(`${path}/${name}`);
     };
     walk(`${home}/dokument`);
+    // Mallen för nya hemkataloger (useradd -m) och inställningarna för useradd.
+    walk('/etc/skel');
+    walk('/etc/login.defs');
   }
 
   snapshot(): ShellSnapshot {
@@ -235,9 +241,9 @@ export class Shell {
 
   // ---------- Användare ----------
 
+  /** Användaren enligt /etc/passwd och /etc/group (se users.ts). */
   getUser(name: string): User {
-    if (name === 'root') return { name: 'root', uid: 0, groups: ['root'], home: '/root' };
-    return { name, uid: 1000, groups: [name, this.distro.adminGroup], home: `/home/${name}` };
+    return lookupUser(this, name);
   }
 
   rootUser(): User {
@@ -280,14 +286,15 @@ export class Shell {
     this.pending = { question, defaultYes, onAnswer, user: this.currentUser().name, line: this.currentLine };
   }
 
-  /** Ber användaren skriva en rad text (används av `read`). */
-  askText(prompt: string, onText: (text: string, io: Sink) => number): void {
+  /** Ber användaren skriva en rad text (används av `read`). Med secret visas inte svaret (lösenord). */
+  askText(prompt: string, onText: (text: string, io: Sink) => number, secret = false): void {
     this.pending = {
       question: prompt,
       defaultYes: false,
       onAnswer: (_yes, io, text) => onText(text, io),
       user: this.currentUser().name,
       line: this.currentLine,
+      secret,
     };
   }
 
@@ -401,7 +408,9 @@ export class Shell {
       this.currentLine = p.line;
       this.guard(term, () => {
         this.lastExit = this.runAs(p.user, () => p.onAnswer(yes, term, line));
-        if (p.resume && !this.pending) this.lastExit = p.resume(term);
+        // Ställer svaret en ny fråga (t.ex. "Retype new password:") körs resten av raden efter den.
+        if (p.resume && this.pending) this.pending.resume ??= p.resume;
+        else if (p.resume) this.lastExit = p.resume(term);
       });
       return result(p.line);
     }
@@ -1013,6 +1022,7 @@ export class Shell {
       this.cwd = u.home;
       this.env.HOME = u.home;
       this.env.USER = u.name;
+      this.env.LOGNAME = u.name;
       io.out('logout\n');
       return code;
     }

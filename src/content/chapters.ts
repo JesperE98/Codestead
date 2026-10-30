@@ -6,6 +6,7 @@ import type { Distro, Family } from '../shell/distros';
 import type { Chapter, CheckCtx, Part } from './types';
 
 import { RUNAWAY_PID, SERVER_PID } from '../shell/procs';
+import { findGroup, findUser, shadowHash } from '../shell/users';
 
 const HOME = '/home/elev';
 
@@ -920,6 +921,86 @@ export const CHAPTERS: Chapter[] = [
       },
     ],
   },
+  {
+    id: 'anvandare',
+    part: 'admin',
+    title: 'Användare och grupper',
+    tasks: [
+      {
+        id: 'useradd',
+        text: 'Skapa användaren `kim` med en hemkatalog och `/bin/bash` som skal.',
+        hint: '`sudo useradd -m -s /bin/bash kim` – `-m` skapar hemkatalogen och `-s` väljer skalet.',
+        solution: ['sudo useradd -m -s /bin/bash kim'],
+        check: (c) => {
+          const kim = findUser(c.sh, 'kim');
+          return !!kim && /\/bash$/.test(kim.shell) && isDir(c, kim.home);
+        },
+      },
+      {
+        id: 'passwd-rad',
+        text: 'Visa kims rad i `/etc/passwd`.',
+        hint: '`grep kim /etc/passwd` – eller `getent passwd kim`.',
+        solution: ['grep kim /etc/passwd'],
+        check: (c) => c.exitCode === 0 && /passwd/.test(c.line) && outLines(c).some((l) => l.startsWith('kim:x:')),
+      },
+      {
+        id: 'losenord',
+        text: 'Ge `kim` ett lösenord med `passwd`.',
+        hint: 'Bara root får sätta lösenord åt andra: `sudo passwd kim`. Skriv samma lösenord två gånger – det syns inte när du skriver.',
+        solution: ['sudo passwd kim', 'hemligt123', 'hemligt123'],
+        check: (c) => (shadowHash(c.sh, 'kim') ?? '').startsWith('$'),
+      },
+      {
+        id: 'grupp',
+        text: 'Skapa gruppen `utvecklare` och lägg till `kim` i den.',
+        hint: 'Först `sudo groupadd utvecklare`, sedan `sudo usermod -aG utvecklare kim`.',
+        solution: ['sudo groupadd utvecklare', 'sudo usermod -aG utvecklare kim'],
+        check: (c) => !!findGroup(c.sh, 'utvecklare')?.members.includes('kim'),
+      },
+      {
+        id: 'sudo-ratt',
+        perFamily: true,
+        text: byFamily({
+          debian: 'Ge `kim` rätt att använda `sudo` genom att lägga till kontot i gruppen `sudo`.',
+          arch: 'Ge `kim` rätt att använda `sudo` genom att lägga till kontot i gruppen `wheel`.',
+          redhat: 'Ge `kim` rätt att använda `sudo` genom att lägga till kontot i gruppen `wheel`.',
+        }),
+        hint: byFamily({
+          debian: '`sudo usermod -aG sudo kim` – glöm inte `-a`!',
+          arch: '`sudo usermod -aG wheel kim` – glöm inte `-a`!',
+          redhat: '`sudo usermod -aG wheel kim` – glöm inte `-a`!',
+        }),
+        solution: byFamily({
+          debian: ['sudo usermod -aG sudo kim'],
+          arch: ['sudo usermod -aG wheel kim'],
+          redhat: ['sudo usermod -aG wheel kim'],
+        }),
+        check: (c) => !!findGroup(c.sh, c.distro.adminGroup)?.members.includes('kim'),
+      },
+      {
+        id: 'sudo-u',
+        text: 'Kör `whoami` som `kim` med `sudo -u`.',
+        hint: '`sudo -u kim whoami`',
+        solution: ['sudo -u kim whoami'],
+        check: (c) => ran(c, /^sudo\s+(-\S+\s+)*-u\s*kim\s+whoami\s*$/) && outLines(c).at(-1) === 'kim',
+      },
+      {
+        id: 'su',
+        text: 'Logga in som `kim` med `su -` och kör `id`. Gå sedan tillbaka till `elev` med `exit`.',
+        hint: 'Skriv `su - kim` och sedan kims lösenord – det du valde med `passwd`. Prompten visar att du är kim.',
+        solution: ['su - kim', 'hemligt123', 'id', 'exit'],
+        check: (c) => ran(c, /^id\s*$/) && c.sh.currentUser().name === 'kim',
+      },
+      {
+        id: 'userdel',
+        text: 'Skapa en tillfällig användare `vikarie` med hemkatalog – och ta sedan bort den igen, **inklusive** hemkatalogen.',
+        hint: '`sudo useradd -m vikarie` och sedan `sudo userdel -r vikarie`.',
+        solution: ['sudo useradd -m vikarie', 'sudo userdel -r vikarie'],
+        check: (c) =>
+          c.exitCode === 0 && /^(userdel|deluser)\b.*\bvikarie\b/.test(unsudo(c.line)) && !findUser(c.sh, 'vikarie') && !exists(c, '/home/vikarie'),
+      },
+    ],
+  },
 ];
 
 // Kapitlen visas i samma ordning som delarna i PARTS (stabil sortering behåller ordningen inom en del).
@@ -929,7 +1010,6 @@ CHAPTERS.sort((a, b) => PARTS.findIndex((p) => p.id === a.part) - PARTS.findInde
 export const UPCOMING: string[] = [
   'Nätverk (ip, ping, curl, ssh)',
   'Diskar och filsystem (df, du, mount)',
-  'Användarhantering (useradd, passwd)',
   'AUR, PPA och COPR',
   'Flatpak, Snap och AppImage',
   'Git i terminalen',

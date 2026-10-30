@@ -14,6 +14,7 @@ import { SYSTEM_COMMANDS } from './system';
 import { SYSTEMD_COMMANDS } from './systemd';
 import { TEXT_COMMANDS } from './text';
 import { TEXTPROC_COMMANDS } from './textproc';
+import { USER_COMMANDS } from './users';
 
 export const COMMANDS: Record<string, CommandDef> = {};
 
@@ -28,3 +29,5 @@ for (const def of ARCHIVE_COMMANDS) COMMANDS[def.name] = def;
 for (const def of SYSTEMD_COMMANDS) COMMANDS[def.name] = def;
 // Andra skal: zsh, fish, chsh och fish/zsh-inbyggda kommandon.
 for (const def of SHELL_COMMANDS) COMMANDS[def.name] = def;
+// Användare och grupper (useradd, passwd, adduser ...) samt who, w, last och getent.
+for (const def of USER_COMMANDS) COMMANDS[def.name] = def;

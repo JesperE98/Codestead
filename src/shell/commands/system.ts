@@ -2,7 +2,8 @@
 
 import type { CmdCtx, CommandDef } from '../types';
 import { basename, dirname } from '../vfs';
-import { badOption, COLOR, formatMan, fsMessage, longDate } from './util';
+import { badOption, COLOR, formatMan, fsMessage, longDate, parseOpts } from './util';
+import { findUser, gidOf, isNologin, shadowHash, switchUser, userExists, verifyPassword } from '../users';
 import { COMMANDS } from './index';
 import { manFor, summaryFor } from './man-en';
 import { startBash } from './shells';
@@ -22,31 +23,61 @@ BESKRIVNING
 
 const id = simple('id', 'Visar användar- och grupp-id', (ctx) => {
   const sh = ctx.sh;
-  const name = ctx.args[0] ?? sh.currentUser().name;
-  if (name !== 'root' && name !== 'elev') {
+  const o = parseOpts(ctx.args, { flags: 'ugGnr', long: { user: 'u', group: 'g', groups: 'G', name: 'n', real: 'r' } });
+  if (o.error) return badOption(ctx, o.error);
+  const name = o.operands[0] ?? sh.currentUser().name;
+  if (o.operands.length && !userExists(sh, name)) {
     ctx.err(`id: '${name}': no such user\n`);
     return 1;
   }
   const u = sh.getUser(name);
-  const gid = (g: string) => (g === 'root' ? 0 : g === sh.distro.adminGroup ? sh.distro.adminGid : 1000);
-  ctx.out(`uid=${u.uid}(${u.name}) gid=${gid(u.groups[0])}(${u.groups[0]}) groups=${u.groups.map((g) => `${gid(g)}(${g})`).join(',')}\n`);
+  const gid = (g: string) => gidOf(sh, g) ?? g;
+  const show = (n: string | number, label: string) => (o.flags.has('n') ? label : String(n));
+  if (o.flags.has('u')) ctx.out(show(u.uid, u.name) + '\n');
+  else if (o.flags.has('g')) ctx.out(show(gid(u.groups[0]), u.groups[0]) + '\n');
+  else if (o.flags.has('G')) ctx.out(u.groups.map((g) => show(gid(g), g)).join(' ') + '\n');
+  else ctx.out(`uid=${u.uid}(${u.name}) gid=${gid(u.groups[0])}(${u.groups[0]}) groups=${u.groups.map((g) => `${gid(g)}(${g})`).join(',')}\n`);
   return 0;
 }, `NAMN
        id - visa användar-id (uid), grupp-id (gid) och grupper
 
 SYNOPSIS
-       id [ANVÄNDARE]`);
+       id [FLAGGOR] [ANVÄNDARE]
+
+BESKRIVNING
+       Uppgifterna kommer från /etc/passwd och /etc/group.
+
+FLAGGOR
+       -u    bara användar-id
+       -g    bara primär grupp-id
+       -G    alla grupp-id
+       -n    namn i stället för nummer (med -u, -g eller -G)`);
 
 const groups = simple('groups', 'Visar vilka grupper du tillhör', (ctx) => {
-  const u = ctx.sh.getUser(ctx.args[0] ?? ctx.sh.currentUser().name);
-  ctx.out((ctx.args[0] ? `${u.name} : ` : '') + u.groups.join(' ') + '\n');
-  return 0;
+  const sh = ctx.sh;
+  if (!ctx.args.length) {
+    ctx.out(sh.currentUser().groups.join(' ') + '\n');
+    return 0;
+  }
+  let code = 0;
+  for (const name of ctx.args) {
+    if (!userExists(sh, name)) {
+      ctx.err(`groups: '${name}': no such user\n`);
+      code = 1;
+      continue;
+    }
+    ctx.out(`${name} : ${sh.getUser(name).groups.join(' ')}\n`);
+  }
+  return code;
 }, `NAMN
        groups - visa vilka grupper en användare tillhör
 
+SYNOPSIS
+       groups [ANVÄNDARE]...
+
 BESKRIVNING
        Medlemmar i gruppen sudo (Debian/Ubuntu) eller wheel (Arch/Fedora)
-       får använda sudo.`);
+       får använda sudo. Grupperna står i /etc/group.`);
 
 const hostname = simple('hostname', 'Visar datorns namn', (ctx) => {
   ctx.out(ctx.sh.distro.hostname + '\n');
@@ -322,46 +353,80 @@ const logout = { ...exit, name: 'logout', summary: 'Loggar ut från ett inloggni
 
 function sudoNotice(ctx: CmdCtx): void {
   const sh = ctx.sh;
-  if (sh.flags.sudoNoticeShown) return;
-  sh.flags.sudoNoticeShown = true;
-  ctx.err(`[sudo] password for ${sh.currentUser().name}: ${COLOR.dim}(${sh.msg({ sv: 'simulatorn hoppar över lösenordet', en: 'the simulator skips the password' })})${COLOR.reset}\n`);
+  const name = sh.currentUser().name;
+  const flag = name === 'elev' ? 'sudoNoticeShown' : `sudoNoticeShown:${name}`;
+  if (sh.flags[flag]) return;
+  sh.flags[flag] = true;
+  ctx.err(`[sudo] password for ${name}: ${COLOR.dim}${sh.msg({ sv: '(simulatorn hoppar över lösenordet)', en: '(the simulator skips the password)' })}${COLOR.reset}\n`);
 }
 
-function becomeRoot(ctx: CmdCtx, login: boolean): number {
-  const sh = ctx.sh;
-  sh.userStack.push('root');
-  sh.env.USER = 'root';
-  sh.env.HOME = '/root';
-  if (login) sh.cwd = '/root';
-  return 0;
-}
+const SUDO_USAGE = 'usage: sudo -h | -K | -k | -V\nusage: sudo [-AbEHknPS] [-u user] [-i | -s] [command [arg ...]]\n';
 
 const sudo = simple('sudo', 'Kör ett kommando som root (administratör)', (ctx) => {
   const sh = ctx.sh;
   const user = sh.currentUser();
   const args = [...ctx.args];
   if (!args.length || args[0] === '-h') {
-    ctx.err('usage: sudo -h | -K | -k | -V\nusage: sudo [-AbEHknPS] [-u user] [-i | -s] [command [arg ...]]\n');
+    ctx.err(SUDO_USAGE);
     return 1;
   }
   if (args[0] === '-V' || args[0] === '--version') {
     ctx.out('Sudo version 1.9.17p2\n');
     return 0;
   }
+  let target = 'root';
+  let login = false;
+  let shell = false;
+  while (args.length && args[0].startsWith('-')) {
+    const a = args.shift()!;
+    if (a === '--') break;
+    if (a === '--user' || a.startsWith('--user=')) {
+      target = a.includes('=') ? a.slice(7) : (args.shift() ?? '');
+      continue;
+    }
+    if (a === '--login') login = true;
+    else if (a === '--shell') shell = true;
+    else if (a.startsWith('--')) {
+      ctx.err(`sudo: unrecognized option '${a}'\n${SUDO_USAGE}`);
+      return 1;
+    } else {
+      for (let i = 1; i < a.length; i++) {
+        const c = a[i];
+        if (c === 'i') login = true;
+        else if (c === 's') shell = true;
+        else if (c === 'u') {
+          target = a.slice(i + 1) || (args.shift() ?? '');
+          break;
+        } else {
+          ctx.err(`sudo: invalid option -- '${c}'\n${SUDO_USAGE}`);
+          return 1;
+        }
+      }
+    }
+  }
   if (user.uid !== 0 && !user.groups.includes(sh.distro.adminGroup)) {
     ctx.err(`${user.name} is not in the sudoers file.\n`);
+    if (ctx.isTTY) {
+      ctx.err(`${COLOR.dim}${sh.msg({
+        sv: `Tips: bara medlemmar i gruppen ${sh.distro.adminGroup} får använda sudo.`,
+        en: `Tip: only members of the ${sh.distro.adminGroup} group may use sudo.`,
+      })}${COLOR.reset}\n`);
+    }
+    return 1;
+  }
+  if (target !== 'root' && !userExists(sh, target)) {
+    ctx.err(`sudo: unknown user ${target}\n`);
     return 1;
   }
   if (user.uid !== 0) sudoNotice(ctx);
-  if (args[0] === '-i' || args[0] === '-s') return becomeRoot(ctx, args[0] === '-i');
-  if (args[0] === 'su' && (args.length === 1 || args[1] === '-')) return becomeRoot(ctx, args[1] === '-');
-  let target = 'root';
-  if (args[0] === '-u') {
-    target = args[1] ?? 'root';
-    args.splice(0, 2);
+  if ((login || shell) && !args.length) {
+    switchUser(sh, target, login, (m) => ctx.err(`sudo: ${m.replace('cannot change', 'unable to change')}\n`));
+    return 0;
   }
-  if (args[0] === '--') args.shift();
-  if (!args.length) return 1;
+  if (!args.length) {
+    ctx.err(SUDO_USAGE);
+    return 1;
+  }
   return sh.runAs(target, () => sh.invoke(args, ctx, { viaSudo: true }));
 }, `NAMN
        sudo - kör ett kommando som en annan användare (oftast root)
@@ -376,26 +441,95 @@ BESKRIVNING
        kan köra enstaka kommandon som root genom att sätta sudo framför.
        Du får då ange ditt eget lösenord.
 
-       sudo -i    starta ett root-skal (avsluta med exit)
+       sudo -i         starta ett root-skal (avsluta med exit)
+       sudo -u ANV     kör kommandot som en annan användare än root
+       sudo -iu ANV    starta ett inloggningsskal som ANV
 
 EXEMPEL
        sudo apt update
        sudo cat /etc/shadow
+       sudo -u kim whoami
 
 VARNING
        Med sudo finns inga skyddsnät. Kör bara kommandon du förstår.`);
 
 const su = simple('su', 'Byter användare', (ctx) => {
-  if (ctx.sh.currentUser().uid === 0) return becomeRoot(ctx, ctx.args[0] === '-' || ctx.args[0] === '-l');
-  ctx.err(`Password: \nsu: Authentication failure\n`);
-  ctx.err(`${COLOR.dim}${ctx.sh.msg({ sv: "Tips: root-kontot har ofta inget lösenord. Använd 'sudo -i' i stället.", en: "Tip: the root account often has no password. Use 'sudo -i' instead." })}${COLOR.reset}\n`);
-  return 1;
+  const sh = ctx.sh;
+  let login = false;
+  let command: string | undefined;
+  const operands: string[] = [];
+  for (let i = 0; i < ctx.args.length; i++) {
+    const a = ctx.args[i];
+    if (a === '-' || a === '-l' || a === '--login') login = true;
+    else if (a === '-c' || a === '--command') command = ctx.args[++i] ?? '';
+    else if (a.startsWith('--command=')) command = a.slice(10);
+    else if (a.startsWith('-') && a.length > 1) return badOption(ctx, `invalid option -- '${a.replace(/^-+/, '')}'`);
+    else operands.push(a);
+  }
+  const target = operands[0] ?? 'root';
+  const entry = findUser(sh, target);
+  if (!entry && target !== 'root') {
+    ctx.err(`su: user ${target} does not exist or the user entry does not contain all the required fields\n`);
+    return 1;
+  }
+  const become = (io: { out(s: string): void; err(s: string): void }): number => {
+    if (entry && isNologin(entry.shell)) {
+      io.out('This account is currently not available.\n');
+      return 1;
+    }
+    if (command !== undefined) return sh.runAs(target, () => sh.runScript(command!, 'bash', [], { ...io, stdin: null, isTTY: ctx.isTTY }));
+    switchUser(sh, target, login, (m) => io.err(`su: warning: ${m}\n`));
+    return 0;
+  };
+  if (sh.currentUser().uid === 0) return become(ctx);
+  if (!sh.canAskInteractively()) {
+    ctx.err('su: must be run from a terminal\n');
+    return 1;
+  }
+  sh.askText(
+    'Password: ',
+    (password, io) => {
+      const hash = shadowHash(sh, target) ?? '!';
+      if (!hash.startsWith('!') && !hash.startsWith('*') && verifyPassword(sh, target, password)) return become(io);
+      io.err('su: Authentication failure\n');
+      if (target === 'root' && (hash.startsWith('*') || hash.startsWith('!'))) {
+        io.err(`${COLOR.dim}${sh.msg({
+          sv: "Tips: root-kontot har inget lösenord här, så su fungerar inte. Använd 'sudo -i' i stället.",
+          en: "Tip: the root account has no password here, so su won't work. Use 'sudo -i' instead.",
+        })}${COLOR.reset}\n`);
+      } else if (hash.startsWith('!') || hash.startsWith('*')) {
+        io.err(`${COLOR.dim}${sh.msg({
+          sv: `Tips: ${target} har inget lösenord eller är låst. Sätt ett med 'sudo passwd ${target}' – eller använd 'sudo -iu ${target}'.`,
+          en: `Tip: ${target} has no password or is locked. Set one with 'sudo passwd ${target}' – or use 'sudo -iu ${target}'.`,
+        })}${COLOR.reset}\n`);
+      }
+      return 1;
+    },
+    true,
+  );
+  return 0;
 }, `NAMN
        su - byt användare (substitute user)
 
+SYNOPSIS
+       su [-] [ANVÄNDARE]
+       su -c KOMMANDO [ANVÄNDARE]
+
 BESKRIVNING
-       "su -" loggar in som root, men kräver root-lösenordet. På Ubuntu är
-       root-kontot låst, så där används "sudo -i" i stället.`);
+       Startar ett skal som en annan användare (root om ingen anges).
+       Du måste skriva den andra användarens lösenord – inte ditt eget.
+       Är du redan root behövs inget lösenord. Gå tillbaka med exit.
+
+       På Ubuntu är root-kontot låst, så där används "sudo -i" i stället
+       för "su -".
+
+FLAGGOR
+       -, -l     inloggningsskal: gå till användarens hemkatalog
+       -c CMD    kör bara ett kommando som användaren
+
+EXEMPEL
+       su - kim
+       su -c whoami kim`);
 
 const bash = simple('bash', 'Kör ett skript i ett nytt bash-skal', (ctx) => {
   const sh = ctx.sh;
