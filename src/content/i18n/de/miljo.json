@@ -1,0 +1,22 @@
+{
+  "title": "Variablen, PATH und Aliase",
+  "tasks": {
+    "path": {
+      "text": "Zeige den Inhalt der Variable `PATH` an."
+    },
+    "export": {
+      "text": "Lege die Umgebungsvariable `FAVORIT` mit dem Wert `linux` an.",
+      "hint": "Keine Leerzeichen um das Gleichheitszeichen: `export NAME=value`."
+    },
+    "which": {
+      "text": "Finde heraus, in welchem Verzeichnis das Programm `ls` liegt."
+    },
+    "alias": {
+      "text": "Lege den Alias `ll` an, der `ls -la` ausführt."
+    },
+    "exitcode": {
+      "text": "Führe einen Befehl aus, der fehlschlägt, und zeige danach mit `echo $?` seinen Exit-Code an.",
+      "hint": "Probier `ls /finnsinte` und danach `echo $?`. Der Exit-Code sollte nicht 0 sein."
+    }
+  }
+}

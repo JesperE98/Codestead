@@ -1,0 +1,23 @@
+{
+  "title": "Im Dateisystem navigieren",
+  "tasks": {
+    "etc": {
+      "text": "Wechsle in das Verzeichnis `/etc` und liste seinen Inhalt auf.",
+      "hint": "Zwei Befehle: zuerst `cd`, dann `ls`. Du kannst sie auch in eine Zeile schreiben: `cd /etc && ls`."
+    },
+    "hidden": {
+      "text": "Zeige die versteckten Dateien in deinem Home-Verzeichnis an.",
+      "hint": "Die Option `-a` zeigt Dateien, die mit einem Punkt beginnen. Dein Home-Verzeichnis ist `~`."
+    },
+    "relative": {
+      "text": "Wechsle ins Wurzelverzeichnis (`/`) und dann mit einem **relativen** Pfad nach `/var/log`.",
+      "hint": "Ein relativer Pfad beginnt nicht mit `/`. Wenn du in `/` bist, reicht `cd var/log`."
+    },
+    "up": {
+      "text": "Gehe mit `cd ..` eine Ebene nach oben."
+    },
+    "home": {
+      "text": "Kehre mit einem bloßen `cd` ohne Argumente in dein Home-Verzeichnis zurück."
+    }
+  }
+}

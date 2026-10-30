@@ -1,0 +1,33 @@
+{
+  "title": "Prozesse und Jobs",
+  "tasks": {
+    "ps": {
+      "text": "Zeige mit `ps` die Prozesse in deinem eigenen Terminal an."
+    },
+    "ps-aux": {
+      "text": "Liste **alle** Prozesse auf dem Rechner auf.",
+      "hint": "`ps aux` (oder `ps -ef`)."
+    },
+    "hitta": {
+      "text": "Ein Prozess frisst fast die gesamte CPU. Zeige die Prozesse nach CPU-Auslastung sortiert an, damit du siehst, wie er heißt.",
+      "hint": "`top`, `htop` oder `ps aux --sort=-%cpu`."
+    },
+    "kill": {
+      "text": "Stoppe den außer Kontrolle geratenen Prozess (PID 3141) mit `kill`."
+    },
+    "bakgrund": {
+      "text": "Starte `sleep 300` im Hintergrund.",
+      "hint": "Setze `&` ans Ende der Zeile."
+    },
+    "jobs": {
+      "text": "Zeige deine Hintergrundjobs an."
+    },
+    "kill-jobb": {
+      "text": "Beende den Hintergrundjob mit `kill` und der Jobnummer (`%1`) oder seiner PID."
+    },
+    "server": {
+      "text": "Der Server `minserver` läuft als root. Stoppe ihn – mit `pkill` oder `kill` und den richtigen Rechten.",
+      "hint": "Als normaler Benutzer bekommst du \"Operation not permitted\". Setze `sudo` davor."
+    }
+  }
+}

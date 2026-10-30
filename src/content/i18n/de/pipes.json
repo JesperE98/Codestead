@@ -1,0 +1,24 @@
+{
+  "title": "Umleitungen und Pipes",
+  "tasks": {
+    "redirect": {
+      "text": "Schreibe mit `echo` und `>` den Text `Hej från shell` (Schwedisch für „Hallo aus der Shell“) in die Datei `~/hej.txt`."
+    },
+    "append": {
+      "text": "Füge `~/hej.txt` eine weitere Zeile hinzu – ohne die erste zu überschreiben.",
+      "hint": "Nimm `>>` statt `>`."
+    },
+    "count-errors": {
+      "text": "Zähle die Zeilen mit `ERROR` in server.log, indem du `grep` per Pipe an `wc -l` weiterleitest."
+    },
+    "uniq": {
+      "text": "Zeige mit `sort` und `uniq -c`, wie oft jede Frucht in `frukter.txt` vorkommt."
+    },
+    "save-ls": {
+      "text": "Speichere eine Liste der Dateien in `/etc` in der Datei `~/etc-filer.txt`."
+    },
+    "devnull": {
+      "text": "Führe `ls /finnsinte` aus, aber schicke die Fehlermeldung nach `/dev/null`, sodass nichts angezeigt wird."
+    }
+  }
+}
