@@ -427,7 +427,7 @@ EXEMPEL
         ctx.Out(UtilCmd.FormatMan(name, ManEnCmd.ManFor(def, ctx.Sh)));
         if (ctx.IsTTY)
         {
-            ctx.Out($"{UtilCmd.Color.Dim}({ctx.Sh.Msg("I en riktig terminal bläddrar du i manualen med piltangenterna och avslutar med q.", "In a real terminal you scroll through the manual with the arrow keys and quit with q.")}){UtilCmd.Color.Reset}\n");
+            ctx.Out($"{UtilCmd.Color.Dim}({ctx.Sh.Msg("system.manScrollHint")}){UtilCmd.Color.Reset}\n");
         }
         return 0;
     }, """
@@ -449,10 +449,10 @@ BESKRIVNING
     {
         var sh = ctx.Sh;
         var names = sh.AvailableCommands().Where(n => LowercaseStartRe.IsMatch(n) && IndexCmd.Commands.GetValueOrDefault(n)?.Name == n).ToList();
-        ctx.Out(sh.Msg($"Kommandon i den här simulerade terminalen ({sh.Distro.Name}):\n", $"Commands in this simulated terminal ({sh.Distro.Name}):\n"));
-        ctx.Out(sh.Msg("Skriv 'man <kommando>' för mer information om ett kommando.\n\n", "Type 'man <command>' for more information about a command.\n\n"));
+        ctx.Out(sh.Msg("system.helpHeader", ("distro", sh.Distro.Name)));
+        ctx.Out(sh.Msg("system.helpManHint"));
         foreach (var n in names) ctx.Out($"  {n.PadRight(11)} {ManEnCmd.SummaryFor(IndexCmd.Commands[n], sh)}\n");
-        ctx.Out($"\n{UtilCmd.Color.Dim}{sh.Msg($"Saknas ett program? Det kanske går att installera med pakethanteraren ({sh.Distro.PackageManager}).", $"Missing a program? Maybe you can install it with the package manager ({sh.Distro.PackageManager}).")}{UtilCmd.Color.Reset}\n");
+        ctx.Out($"\n{UtilCmd.Color.Dim}{sh.Msg("system.helpMissingProgram", ("pm", sh.Distro.PackageManager))}{UtilCmd.Color.Reset}\n");
         return 0;
     }, """
 NAMN
@@ -495,7 +495,7 @@ BESKRIVNING
         var flag = name == "elev" ? "sudoNoticeShown" : $"sudoNoticeShown:{name}";
         if (sh.Flags.TryGetValue(flag, out var shown) && shown) return;
         sh.Flags[flag] = true;
-        ctx.Err($"[sudo] password for {name}: {UtilCmd.Color.Dim}{sh.Msg("(simulatorn hoppar över lösenordet)", "(the simulator skips the password)")}{UtilCmd.Color.Reset}\n");
+        ctx.Err($"[sudo] password for {name}: {UtilCmd.Color.Dim}{sh.Msg("common.skipsPassword")}{UtilCmd.Color.Reset}\n");
     }
 
     private const string SudoUsage = "usage: sudo -h | -K | -k | -V\nusage: sudo [-AbEHknPS] [-u user] [-i | -s] [command [arg ...]]\n";
@@ -567,7 +567,7 @@ BESKRIVNING
             ctx.Err($"{user.Name} is not in the sudoers file.\n");
             if (ctx.IsTTY)
             {
-                ctx.Err($"{UtilCmd.Color.Dim}{sh.Msg($"Tips: bara medlemmar i gruppen {sh.Distro.AdminGroup} får använda sudo.", $"Tip: only members of the {sh.Distro.AdminGroup} group may use sudo.")}{UtilCmd.Color.Reset}\n");
+                ctx.Err($"{UtilCmd.Color.Dim}{sh.Msg("system.sudoAdminGroup", ("group", sh.Distro.AdminGroup))}{UtilCmd.Color.Reset}\n");
             }
             return 1;
         }
@@ -671,11 +671,11 @@ VARNING
                 io.Err("su: Authentication failure\n");
                 if (target == "root" && (hash.StartsWith('*') || hash.StartsWith('!')))
                 {
-                    io.Err($"{UtilCmd.Color.Dim}{sh.Msg("Tips: root-kontot har inget lösenord här, så su fungerar inte. Använd 'sudo -i' i stället.", "Tip: the root account has no password here, so su won't work. Use 'sudo -i' instead.")}{UtilCmd.Color.Reset}\n");
+                    io.Err($"{UtilCmd.Color.Dim}{sh.Msg("system.suRootNoPassword")}{UtilCmd.Color.Reset}\n");
                 }
                 else if (hash.StartsWith('!') || hash.StartsWith('*'))
                 {
-                    io.Err($"{UtilCmd.Color.Dim}{sh.Msg($"Tips: {target} har inget lösenord eller är låst. Sätt ett med 'sudo passwd {target}' – eller använd 'sudo -iu {target}'.", $"Tip: {target} has no password or is locked. Set one with 'sudo passwd {target}' – or use 'sudo -iu {target}'.")}{UtilCmd.Color.Reset}\n");
+                    io.Err($"{UtilCmd.Color.Dim}{sh.Msg("system.suUserNoPassword", ("user", target))}{UtilCmd.Color.Reset}\n");
                 }
                 return 1;
             },
@@ -723,7 +723,7 @@ EXEMPEL
         {
             var started = ShellsCmd.StartBash(ctx);
             if (started is not null) return started.Value;
-            ctx.Out($"{UtilCmd.Color.Dim}{sh.Msg("Du kör redan bash! Simulatorn kan inte starta ett nytt interaktivt skal.", "You're already running bash! The simulator can't start a new interactive shell.")}{UtilCmd.Color.Reset}\n");
+            ctx.Out($"{UtilCmd.Color.Dim}{sh.Msg("system.alreadyBash")}{UtilCmd.Color.Reset}\n");
             return 0;
         }
         string content;

@@ -106,7 +106,10 @@ public partial class Shell
     public List<ShellFrame> ShellStack { get; set; }
     public int LastExit { get; set; }
     public Pending? PendingQuestion { get; set; }
-    /// <summary>The UI language. Controls the simulator's own hint lines and man pages (Swedish or English).</summary>
+    /// <summary>
+    /// The UI language code (en, sv, de ...). Controls the simulator's own hint lines and help summaries
+    /// (see <see cref="ShellI18n"/>); man pages are Swedish for "sv" and English otherwise.
+    /// </summary>
     public string Lang { get; set; } = "sv";
 
     public int ScriptDepth { get; set; }
@@ -299,8 +302,11 @@ public partial class Shell
 
     public string Resolve(string path) => VfsLib.ResolvePath(Cwd, path);
 
-    /// <summary>Picks the simulator's own messages in Swedish or English (English for every other language).</summary>
-    public string Msg(string sv, string en) => Lang == "sv" ? sv : en;
+    /// <summary>The simulator's own message <paramref name="key"/> in the shell's language (see <see cref="ShellI18n"/>).</summary>
+    public string Msg(string key, params (string Name, object? Value)[] args) => ShellI18n.Msg(Lang, key, args);
+
+    /// <summary>A whole number formatted for the shell's language (10 000, 10,000, 10.000 ...).</summary>
+    public string FormatNumber(long n) => n.ToString("N0", ShellI18n.Culture(Lang));
 
     public void RequestClear() => clearRequested = true;
 
@@ -385,7 +391,7 @@ public partial class Shell
     private Node ParseCode(string text, ShellMode? mode = null)
     {
         mode ??= ShellMode;
-        return ParserLib.Parse(mode == "fish" ? FishLib.TranslateFish(text, Msg) : text);
+        return ParserLib.Parse(mode == "fish" ? FishLib.TranslateFish(text, Lang) : text);
     }
 
     public string Prompt()
@@ -413,9 +419,7 @@ public partial class Shell
     {
         var motd = Distro.Motd != "" ? Distro.Motd + "\n" : "";
         return motd + Dim +
-            Msg(
-                $"Simulerad terminal ({Distro.Name}). Inget du gör här påverkar din dator.\nSkriv 'help' för att se vilka kommandon som finns.",
-                $"Simulated terminal ({Distro.Name}). Nothing you do here affects your computer.\nType 'help' to see which commands are available.") +
+            Msg("shell.welcome", ("distro", Distro.Name)) +
             $"{Reset}\n";
     }
 
@@ -524,11 +528,7 @@ public partial class Shell
     {
         if (++steps > StepLimit)
         {
-            throw new LimitError(Msg(
-                $"Simulatorn avbröt körningen efter {StepLimit.ToString("N0", CultureInfo.GetCultureInfo("sv-SE"))} steg – kanske en oändlig loop? " +
-                "(I en riktig terminal stoppar du ett program som aldrig blir klart med Ctrl+C.)",
-                $"The simulator stopped the run after {StepLimit.ToString("N0", CultureInfo.GetCultureInfo("en-US"))} steps – an infinite loop, perhaps? " +
-                "(In a real terminal you stop a program that never finishes with Ctrl+C.)"));
+            throw new LimitError(Msg("shell.stepLimit", ("steps", FormatNumber(StepLimit))));
         }
     }
 
@@ -982,7 +982,7 @@ public partial class Shell
         }
         catch (Exception e) when (e is not ControlSignal)
         {
-            io.Err($"{name}: {Msg("internt fel i simulatorn", "internal simulator error")}: {e.Message}\n");
+            io.Err($"{name}: {Msg("shell.internalError")}: {e.Message}\n");
             return 1;
         }
     }
@@ -1106,7 +1106,7 @@ public partial class Shell
         io.Err(mode == "zsh" ? $"zsh: command not found: {name}\n" : mode == "fish" ? $"fish: Unknown command: {name}\n" : $"bash: {name}: command not found\n");
         if (pkgName is not null)
         {
-            io.Err($"{Dim}{Msg($"Tips från simulatorn: kommandot finns i paketet '{pkgName}'. Se kapitlet om pakethantering.", $"Tip from the simulator: the command is in the package '{pkgName}'. See the chapter on package management.")}{Reset}\n");
+            io.Err($"{Dim}{Msg("shell.commandInPackage", ("pkg", pkgName))}{Reset}\n");
         }
     }
 
@@ -1118,7 +1118,7 @@ public partial class Shell
     {
         if (ScriptDepth > 20)
         {
-            io.Err($"bash: {name}: {Msg("för djup rekursion", "maximum nesting level exceeded")}\n");
+            io.Err($"bash: {name}: {Msg("shell.nestingTooDeep")}\n");
             return 1;
         }
         if (mode is null && !inCurrentShell)
@@ -1214,7 +1214,7 @@ public partial class Shell
             io.Out("logout\n");
             return code;
         }
-        io.Out($"{Dim}{Msg("Det här är en simulerad terminal, så det finns ingen session att avsluta. Använd 'clear' för att rensa skärmen.", "This is a simulated terminal, so there is no session to end. Use 'clear' to clear the screen.")}{Reset}\n");
+        io.Out($"{Dim}{Msg("shell.exitNoSession")}{Reset}\n");
         return 0;
     }
 

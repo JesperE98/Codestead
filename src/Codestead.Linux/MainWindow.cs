@@ -188,7 +188,7 @@ public sealed class MainWindow : Window
     private ShellType LoadShell(string distroId)
     {
         var sh = ShellType.RestoreJson(storage.LoadText($"shell.{distroId}")) ?? ShellType.Create(distroId);
-        sh.Lang = Lang == "sv" ? "sv" : "en";
+        sh.Lang = Lang;
         return sh;
     }
 
@@ -337,7 +337,7 @@ public sealed class MainWindow : Window
     {
         var info = LanguagesLib.Languages.FirstOrDefault(l => l.Code == Lang);
         FlowDirection = info?.Dir == "rtl" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
-        shell.Lang = Lang == "sv" ? "sv" : "en";
+        shell.Lang = Lang;
         markdown.CommandHint = T("lesson.cmdTitle");
         terminal.InputLabel = T("terminal.input");
         sidebarSettings.Content = "⚙  " + T("settings.open");
@@ -444,7 +444,7 @@ public sealed class MainWindow : Window
         ShellType Sandbox()
         {
             var sh = ShellType.Create(distroId);
-            sh.Lang = Lang == "sv" ? "sv" : "en";
+            sh.Lang = Lang;
             return sh;
         }
         var view = new CheckpointView(cp, CheckpointTexts(), state.Checkpoints.ContainsKey(key), Sandbox, renderingExam, cmd => terminal.Inject(cmd));
@@ -1001,7 +1001,7 @@ public sealed class MainWindow : Window
         {
             storage.Remove($"shell.{Distro.Id}");
             shell = ShellType.Create(Distro.Id);
-            shell.Lang = Lang == "sv" ? "sv" : "en";
+            shell.Lang = Lang;
             terminal.Shell = shell;
             RenderAll();
             overlay.Toast(T("toast.terminalReset"));

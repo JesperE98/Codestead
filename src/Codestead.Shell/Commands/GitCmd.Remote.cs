@@ -28,9 +28,7 @@ public static partial class GitCmd
             g.Err($"ssh: Could not resolve hostname {host}: Name or service not known\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n");
         }
         else g.Err($"fatal: unable to access '{(url.EndsWith('/') ? url : url + "/")}': Could not resolve host: {host}\n");
-        g.Note(
-            $"(Simulatorn har inget nätverk, så git {action} kan inte nå {host}. Det fungerar däremot mot repon på den här datorn, t.ex. git clone ~/projekt-webb ~/kopia.)",
-            $"(The simulator has no network, so git {action} cannot reach {host}. It does work with repositories on this computer, e.g. git clone ~/projekt-webb ~/kopia.)");
+        g.Note("git.noNetwork", ("action", action), ("host", host));
         return 128;
     }
 
@@ -261,7 +259,7 @@ public static partial class GitCmd
         var head = ReadHead(r);
         if (o.Has("rebase"))
         {
-            g.Note("(git pull --rebase stöds inte i simulatorn – kör git pull utan --rebase.)", "(git pull --rebase is not supported in the simulator – run git pull without --rebase.)");
+            g.Note("git.pullRebaseUnsupported");
             return 1;
         }
         var up = !string.IsNullOrEmpty(head.Branch) ? UpstreamOf(r, head.Branch) : null;
@@ -411,7 +409,7 @@ public static partial class GitCmd
         var sub = args.Count > 0 ? args[0] : null;
         if (!string.IsNullOrEmpty(sub) && sub != "show")
         {
-            g.Note("(Bara git reflog [show] stöds i simulatorn.)", "(Only git reflog [show] is supported in the simulator.)");
+            g.Note("git.reflogShowOnly");
             return 1;
         }
         var log = ReadReflog(r);
@@ -885,7 +883,7 @@ See 'git help git' for an overview of the system.
         {
             if (rest.Count > 0 && rest[0] != "" && Subs.ContainsKey(rest[0]))
             {
-                g.Note("(Skriv man git för simulatorns manualsida om git.)", "(Type man git for the simulator's manual page about git.)");
+                g.Note("git.manGitHint");
                 return 0;
             }
             g.Out(Common);
@@ -894,7 +892,7 @@ See 'git help git' for an overview of the system.
         if (rest.Contains("-h") && Subs.ContainsKey(cmd))
         {
             g.Out($"usage: git {cmd} [<options>]\n");
-            g.Note("(Se man git för de flaggor som simulatorn stöder.)", "(See man git for the options the simulator supports.)");
+            g.Note("git.manGitOptions");
             return 129;
         }
         if (Subs.TryGetValue(cmd, out var sub)) return sub(g, rest);
@@ -904,7 +902,7 @@ See 'git help git' for an overview of the system.
         {
             if (alias.StartsWith('!'))
             {
-                g.Note("(Alias som kör skalkommandon (!) stöds inte i simulatorn.)", "(Aliases that run shell commands (!) are not supported in the simulator.)");
+                g.Note("git.shellAliasUnsupported");
                 return 1;
             }
             return RunGit(g, WhitespaceRunRe.Split(alias).Where(x => x != "").Concat(rest).ToList(), depth + 1);

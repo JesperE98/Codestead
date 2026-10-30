@@ -74,11 +74,11 @@ public partial class CmdCtx : IO
 public partial class CommandDef
 {
     public required string Name { get; init; }
-    /// <summary>One line in Swedish shown by `help`.</summary>
+    /// <summary>One line in Swedish shown by `help`. The source of the summaries in shell i18n/sv.json.</summary>
     public required string Summary { get; init; }
     /// <summary>Simplified man page in Swedish shown by `man`.</summary>
     public string? Man { get; init; }
-    /// <summary>Summary in English (shown for every language except Swedish).</summary>
+    /// <summary>Summary in English. The source of the summaries in shell i18n/en.json (other languages are translated there).</summary>
     public string? SummaryEn { get; init; }
     /// <summary>Man page in English (shown for every language except Swedish).</summary>
     public string? ManEn { get; init; }

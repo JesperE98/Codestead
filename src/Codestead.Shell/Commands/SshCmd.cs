@@ -8,7 +8,7 @@ namespace Codestead.Shell.Commands;
 
 public static partial class SshCmd
 {
-    private static string Dim(Shell sh, string sv, string en) => $"{UtilCmd.Color.Dim}{sh.Msg(sv, en)}{UtilCmd.Color.Reset}\n";
+    private static string Dim(Shell sh, string key, params (string Name, object? Value)[] args) => $"{UtilCmd.Color.Dim}{sh.Msg(key, args)}{UtilCmd.Color.Reset}\n";
 
     private const string HostFp = "SHA256:q7Jx3MmP0yZk8VbW1sTn4dLr9HcE2uFgA6oYiKjN5Rw";
     private const string HostKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHk3c2VydmVyLmxhbi1zaW11bGVyYWQtdsOkcmRueWNrZWw";
@@ -183,13 +183,7 @@ public static partial class SshCmd
         if (r.Ip != NetworkLib.ServerIp)
         {
             var local = NetworkLib.IsLocal(sh, r.Ip);
-            ctx.Err(Dim(sh,
-                local
-                    ? "(Det här är din egen dator – sshd lyssnar, men i simulatorn kan du bara logga in på server.lan, 192.168.1.10.)"
-                    : "(I simulatorn kan du bara logga in på server.lan, 192.168.1.10.)",
-                local
-                    ? "(This is your own computer – sshd is listening, but in the simulator you can only log in to server.lan, 192.168.1.10.)"
-                    : "(In the simulator you can only log in to server.lan, 192.168.1.10.)"));
+            ctx.Err(local ? Dim(sh, "ssh.ownComputerOnlyServer") : Dim(sh, "ssh.onlyServer"));
             return 255;
         }
         if (IsKnown(sh, d)) return then(ctx);
@@ -235,7 +229,7 @@ public static partial class SshCmd
         var keyLogin = HasKeyFlag(sh) && HasPrivateKey(sh);
         if (!keyLogin)
         {
-            io.Err($"{d.User}@{d.Host}'s password: {Dim(sh, "(simulatorn hoppar över lösenordet)", "(the simulator skips the password)")}");
+            io.Err($"{d.User}@{d.Host}'s password: {Dim(sh, "common.skipsPassword")}");
         }
         if (d.User != "elev")
         {
@@ -376,9 +370,7 @@ public static partial class SshCmd
                         "individual files in /usr/share/doc/*/copyright.\n\n" +
                         "Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent\npermitted by applicable law.\n" +
                         $"Last login: Thu Oct 29 18:03:12 2026 from {NetworkLib.MyIpAddress}\n");
-                    io.Err(Dim(sh,
-                        $"(I simulatorn kan du inte få ett interaktivt skal på servern. Skriv kommandot direkt efter värden, t.ex.  ssh {dest} 'ls -l')",
-                        $"(The simulator can't give you an interactive shell on the server. Put the command right after the host, e.g.  ssh {dest} 'ls -l')"));
+                    io.Err(Dim(sh, "ssh.noInteractiveShell", ("dest", dest)));
                     io.Err($"Connection to {d.Host} closed.\n");
                     return 0;
                 }

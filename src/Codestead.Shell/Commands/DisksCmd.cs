@@ -8,8 +8,8 @@ public static partial class DisksCmd
 {
     private static bool IsRoot(CmdCtx ctx) => ctx.Sh.CurrentUser().Uid == 0;
 
-    private static void Tip(CmdCtx ctx, string sv, string en) =>
-        ctx.Err($"{UtilCmd.Color.Dim}{ctx.Sh.Msg(sv, en)}{UtilCmd.Color.Reset}\n");
+    private static void Tip(CmdCtx ctx, string key, params (string Name, object? Value)[] args) =>
+        ctx.Err($"{UtilCmd.Color.Dim}{ctx.Sh.Msg(key, args)}{UtilCmd.Color.Reset}\n");
 
     /// <summary>
     /// Writes a table with columns. Cells may have several lines (\n), e.g. when a partition is
@@ -606,9 +606,7 @@ public static partial class DisksCmd
             if (block.Part is null && block.Disk.Partitions.Count > 0)
             {
                 var suffix = block.Disk.Partitions[0].Name.Slice(block.Disk.Name.Length);
-                Tip(ctx,
-                    $"Tips från simulatorn: {block.Path} är hela disken. Filsystemet ligger på en partition – prova {block.Path}{suffix}.",
-                    $"Simulator tip: {block.Path} is the whole disk. The file system is on a partition – try {block.Path}{suffix}.");
+                Tip(ctx, "disks.wholeDiskTip", ("disk", block.Path), ("suffix", suffix));
             }
             return code;
         }
@@ -793,9 +791,7 @@ public static partial class DisksCmd
                     ctx.Err($"umount: {t}: target is busy.\n");
                     if (Inside(sh.Cwd) && !m.System)
                     {
-                        Tip(ctx,
-                            "Tips från simulatorn: ditt skal står i katalogen. Gå därifrån först, t.ex. med cd ~.",
-                            "Simulator tip: your shell is inside the directory. Leave it first, e.g. with cd ~.");
+                        Tip(ctx, "disks.shellInsideDir");
                     }
                     code = 32;
                     continue;
@@ -1000,9 +996,7 @@ public static partial class DisksCmd
                     return 1;
                 }
                 ctx.Out("\nWelcome to fdisk (util-linux 2.39.3).\nChanges will remain in memory only, until you decide to write them.\nBe careful before using the write command.\n\n");
-                Tip(ctx,
-                    "Simulatorn låtsas inte ändra partitionstabeller – det är här man på riktigt kan förstöra en disk. Använd fdisk -l för att titta.",
-                    "The simulator does not pretend to change partition tables – this is where you can really destroy a disk. Use fdisk -l to look.");
+                Tip(ctx, "disks.noPartitionChanges");
                 return 1;
             }
             var disks = state.Disks;
@@ -1130,9 +1124,7 @@ public static partial class DisksCmd
         if (b.Part is null && b.Disk.Partitions.Count > 0)
         {
             ctx.Out($"Found a {b.Disk.Pttype} partition table in {b.Path}\n");
-            Tip(ctx,
-                "Simulatorn formaterar bara partitioner (t.ex. /dev/sdb1), inte hela diskar.",
-                "The simulator only formats partitions (e.g. /dev/sdb1), not whole disks.");
+            Tip(ctx, "disks.formatPartitionsOnly");
             return 1;
         }
         var sh = ctx.Sh;

@@ -62,8 +62,8 @@ public static partial class SystemdCmd
 
     private static string Paint(CmdCtx ctx, string code, string s) => ctx.IsTTY ? $"{code}{s}{UtilCmd.Color.Reset}" : s;
 
-    private static void Tip(CmdCtx ctx, string sv, string en) =>
-        ctx.Err($"{UtilCmd.Color.Dim}{ctx.Sh.Msg(sv, en)}{UtilCmd.Color.Reset}\n");
+    private static void Tip(CmdCtx ctx, string key, params (string Name, object? Value)[] args) =>
+        ctx.Err($"{UtilCmd.Color.Dim}{ctx.Sh.Msg(key, args)}{UtilCmd.Color.Reset}\n");
 
     private static string SupportUrl(CmdCtx ctx) => ctx.Sh.Distro.Id switch
     {
@@ -94,9 +94,7 @@ public static partial class SystemdCmd
 
     private const string Auth = "Interactive authentication required.";
 
-    private static void SudoTip(CmdCtx ctx) => Tip(ctx,
-        "(Att ändra tjänster kräver root – sätt sudo framför kommandot.)",
-        "(Changing services requires root – put sudo in front of the command.)");
+    private static void SudoTip(CmdCtx ctx) => Tip(ctx, "systemd.needsRoot");
 
     private static bool IsRoot(CmdCtx ctx) => ctx.Sh.CurrentUser().Uid == 0;
 
@@ -472,7 +470,7 @@ public static partial class SystemdCmd
             else if (a == "--user")
             {
                 ctx.Err("Failed to connect to user scope bus via local transport: No medium found\n");
-                Tip(ctx, "(Simulatorn har bara systemtjänster – skippa --user.)", "(The simulator only has system services – skip --user.)");
+                Tip(ctx, "systemd.noUserServices");
                 return 1;
             }
             else if (a == "-h" || a == "--help")
@@ -738,7 +736,7 @@ public static partial class SystemdCmd
             case "poweroff":
             case "halt":
                 ctx.Err($"Call to PowerOff failed: {Auth}\n");
-                Tip(ctx, "(Simulatorn kan inte stängas av – prova sudo systemctl reboot i stället.)", "(The simulator can't be powered off – try sudo systemctl reboot instead.)");
+                Tip(ctx, "systemd.cannotPowerOff");
                 return 1;
             default:
                 ctx.Err($"Unknown command verb '{verb}'.\n");
@@ -759,9 +757,7 @@ public static partial class SystemdCmd
         sh.Env["HOME"] = home;
         sh.Env["PWD"] = home;
         sh.Cwd = home;
-        ctx.Out($"{UtilCmd.Color.Dim}{sh.Msg(
-            "(Datorn startar om … klart! Du är inloggad som elev igen. Se vad som hände med journalctl -b -1 (förra uppstarten) och journalctl -b.)",
-            "(The computer reboots … done! You're logged in as elev again. See what happened with journalctl -b -1 (previous boot) and journalctl -b.)")}{UtilCmd.Color.Reset}\n");
+        ctx.Out($"{UtilCmd.Color.Dim}{sh.Msg("systemd.rebooted")}{UtilCmd.Color.Reset}\n");
         return 0;
     }
 
@@ -1313,9 +1309,7 @@ public static partial class SystemdCmd
         }
         if (follow)
         {
-            Tip(ctx,
-                "(journalctl -f fortsätter att visa nya rader tills du trycker Ctrl+C. Simulatorn visar bara de senaste raderna.)",
-                "(journalctl -f keeps showing new lines until you press Ctrl+C. The simulator only shows the latest lines.)");
+            Tip(ctx, "systemd.journalFollow");
         }
         return 0;
     }
@@ -1388,9 +1382,7 @@ public static partial class SystemdCmd
                     return 1;
                 }
                 sh.Vfs.WriteFile("/etc/hostname", name + "\n", root);
-                Tip(ctx,
-                    "(Namnet är sparat i /etc/hostname. I simulatorn visar prompten fortfarande det gamla namnet.)",
-                    "(The name is saved in /etc/hostname. In the simulator the prompt still shows the old name.)");
+                Tip(ctx, "systemd.hostnameSaved");
                 return 0;
             }
             if (verb != "status")

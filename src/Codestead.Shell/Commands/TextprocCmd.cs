@@ -4,8 +4,8 @@ namespace Codestead.Shell.Commands;
 
 public static partial class TextprocCmd
 {
-    private static void DimNote(CmdCtx ctx, string sv, string en) =>
-        ctx.Err($"{UtilCmd.Color.Dim}({ctx.Sh.Msg("simulatorn", "simulator")}: {ctx.Sh.Msg(sv, en)}){UtilCmd.Color.Reset}\n");
+    private static void DimNote(CmdCtx ctx, string key, params (string Name, object? Value)[] args) =>
+        ctx.Err($"{UtilCmd.Color.Dim}({ctx.Sh.Msg("textproc.simulator")}: {ctx.Sh.Msg(key, args)}){UtilCmd.Color.Reset}\n");
 
     /// <summary>[...s] – the code points of a string, each as a string.</summary>
     private static List<string> CodePoints(string s)
@@ -928,9 +928,7 @@ SIMULATORN
             catch (SedUnsupported e)
             {
                 ctx.Err($"sed: unsupported command: `{e.Message}'\n");
-                DimNote(ctx,
-                    $"sed-kommandot {e.Message} stöds inte här – bara s, d, p, q, Q, y, =, a, i och c. Se `man sed`.",
-                    $"the sed command {e.Message} is not supported here – only s, d, p, q, Q, y, =, a, i and c. See `man sed`.");
+                DimNote(ctx, "textproc.sedUnsupported", ("command", e.Message));
                 return 1;
             }
 
@@ -1022,8 +1020,6 @@ SIMULATORN
     // awk
     // =====================================================================
 
-    private const string AwkNoteSv = "här finns bara en del av awk: mönster, BEGIN/END, fält, variabler, arrayer, if/while/for, print, printf och de vanligaste funktionerna. Se `man awk`.";
-    private const string AwkNoteEn = "only part of awk is available here: patterns, BEGIN/END, fields, variables, arrays, if/while/for, print, printf and the most common functions. See `man awk`.";
 
     private static readonly CommandDef Awk = new()
     {
@@ -1172,9 +1168,9 @@ SIMULATORN
                 var prefix = $"awk: {label}:{lineNo}: ";
                 ctx.Err($"{prefix}{srcLine}\n{prefix}{" ".Repeat(e.Pos - lineStart)}^ {e.Message}\n");
                 if (e.Unsupported is { } u)
-                    DimNote(ctx, $"{u.Sv} stöds inte – {AwkNoteSv}", $"not supported: {u.En} – {AwkNoteEn}");
+                    DimNote(ctx, "textproc.awkUnsupported", ("feature", u.Describe(ctx.Sh)), ("note", ctx.Sh.Msg("textproc.awkNote")));
                 else
-                    DimNote(ctx, AwkNoteSv, AwkNoteEn);
+                    DimNote(ctx, "textproc.awkNote");
                 return 1;
             }
 
@@ -1215,9 +1211,7 @@ SIMULATORN
                 if (e.Message == "__steps__")
                 {
                     ctx.Err($"awk: {label}: fatal: program stopped\n");
-                    DimNote(ctx,
-                        "programmet avbröts efter för många steg – kanske en oändlig loop?",
-                        "the program was stopped after too many steps – an infinite loop, perhaps?");
+                    DimNote(ctx, "textproc.awkTooManySteps");
                 }
                 else ctx.Err($"awk: {label}:1: fatal: {e.Message}\n");
                 return 2;
