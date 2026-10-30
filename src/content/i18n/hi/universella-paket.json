@@ -1,0 +1,53 @@
+{
+  "title": "Flatpak, Snap और AppImage",
+  "tasks": {
+    "flatpak": {
+      "text": {
+        "debian": "Flatpak (package `flatpak`) install कीजिए।",
+        "arch": "Flatpak (package `flatpak`) install कीजिए।",
+        "redhat": "Fedora Workstation पर Flatpak पहले से है। Check कीजिए कि आपके पास कौन-सा version है।"
+      },
+      "hint": {
+        "debian": "`sudo apt update` और फिर `sudo apt install flatpak`।",
+        "arch": "`sudo pacman -S flatpak`",
+        "redhat": "`flatpak --version`"
+      }
+    },
+    "flathub": {
+      "text": "Flathub को Flatpak के source (*remote*) के रूप में जोड़िए।",
+      "hint": "`flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo`"
+    },
+    "gimp": {
+      "text": "Flathub से image editor GIMP (`org.gimp.GIMP`) install कीजिए।",
+      "hint": "`flatpak install flathub org.gimp.GIMP` – और हाँ में जवाब दीजिए।"
+    },
+    "flatpak-run": {
+      "text": "`flatpak run` से GIMP start कीजिए।",
+      "hint": "Programs अपनी पूरी ID से start होते हैं: `flatpak run org.gimp.GIMP`"
+    },
+    "snap": {
+      "text": {
+        "debian": "Snap `hello-world` install कीजिए और उसे चलाइए। Ubuntu में Snap पहले से है; Debian पर आप पहले package `snapd` install करते हैं।",
+        "arch": "Snap Arch की repositories में नहीं है, सिर्फ़ AUR में है। AUR से `snapd` build और install कीजिए, फिर snap `hello-world` install करके उसे चलाइए।",
+        "redhat": "Snap (package `snapd`) install कीजिए, फिर snap `hello-world` install करके उसे चलाइए।"
+      },
+      "hint": {
+        "debian": "`sudo apt install snapd` (सिर्फ़ Debian पर ज़रूरी), `sudo snap install hello-world` और फिर `hello-world`।",
+        "arch": "`git clone https://aur.archlinux.org/snapd.git`, `cd snapd`, `makepkg -si`। फिर `sudo snap install hello-world` और `hello-world`।",
+        "redhat": "`sudo dnf install snapd`, `sudo snap install hello-world` और फिर `hello-world`।"
+      }
+    },
+    "appimage-chmod": {
+      "text": "`~/Nedladdningar` में एक download किया हुआ AppImage है। File `Kalkylator.AppImage` को executable बनाइए।",
+      "hint": "`chmod +x ~/Nedladdningar/Kalkylator.AppImage`"
+    },
+    "appimage-run": {
+      "text": "Kalkylator start कीजिए। क्या यह FUSE के बारे में शिकायत करता है? छूटी हुई library install कीजिए और फिर से कोशिश कीजिए।",
+      "hint": {
+        "debian": "Library package `libfuse2t64` में है। फिर इसे `~/Nedladdningar/Kalkylator.AppImage` से start कीजिए।",
+        "arch": "Library package `fuse2` में है। फिर इसे `~/Nedladdningar/Kalkylator.AppImage` से start कीजिए।",
+        "redhat": "Library package `fuse-libs` में है। फिर इसे `~/Nedladdningar/Kalkylator.AppImage` से start कीजिए।"
+      }
+    }
+  }
+}
