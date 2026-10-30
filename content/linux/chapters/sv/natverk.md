@@ -11,7 +11,7 @@ Den simulerade datorn sitter i ett litet hemnätverk:
 
 | Dator | Adress | Vad |
 |---|---|---|
-| Din dator ({{hostname}}) | `192.168.1.42` | Där du sitter nu |
+| Din dator (`ubuntu`) | `192.168.1.42` | Där du sitter nu |
 | Routern (gatewayen) | `192.168.1.1` | Förbindelsen ut mot internet |
 | Servern | `192.168.1.10` | En annan Linuxdator som du kan logga in på |
 
@@ -48,6 +48,12 @@ ip -br a
 hostname -I
 ```
 
+```try
+ip -br a
+---
+En rad per gränssnitt: namnet, tillståndet (`UP`) och adresserna.
+```
+
 Det äldre kommandot `ifconfig` (från paketet *net-tools*) ser du fortfarande
 i många guider, men det är inte installerat från början i moderna
 distributioner. `ip` gör allt det gjorde och mer.
@@ -80,6 +86,26 @@ Första raden, **default**, är standardvägen: "allt som inte står någon
 annanstans skickas till 192.168.1.1". Andra raden säger att hela
 `192.168.1.0/24` nås direkt via `enp0s3`. `proto dhcp` betyder att datorn
 fick sina inställningar automatiskt från routern via **DHCP**.
+
+```quiz
+Din dator har adressen `192.168.1.42/24`. Vilka adresser kan den nå direkt,
+utan att gå via gatewayen?
+- [x] `192.168.1.10`
+- [x] `192.168.1.1`
+- [ ] `192.168.2.10`
+- [ ] `1.1.1.1`
+---
+Med `/24` är de tre första talen nätverkets adress. Allt som börjar med
+`192.168.1.` finns i samma lokala nät – allt annat går via standardvägen till
+gatewayen.
+```
+
+```predict
+$ ip route | grep default | awk '{print $3}'
+192.168.1.1
+---
+Det tredje ordet på `default`-raden är gatewayens adress.
+```
 
 ## ping – går det att nå?
 
@@ -124,34 +150,18 @@ IP-adress. Vilken DNS-server datorn frågar står i `/etc/resolv.conf`:
 cat /etc/resolv.conf
 ```
 
-I Ubuntu och Fedora står det `127.0.0.53` – det är **systemd-resolved**, en
-lokal mellanhand på din egen dator som i sin tur frågar routern. I Debian och
-Arch står routern, `192.168.1.1`, där direkt.
+I Ubuntu står det `127.0.0.53` – det är **systemd-resolved**, en lokal
+mellanhand på din egen dator som i sin tur frågar routern. En del andra
+distributioner har routern, `192.168.1.1`, där direkt.
 
 För att fråga DNS själv används `dig`, `host` eller `nslookup`. De finns
-inte från början, utan ingår i ett paket som heter olika saker i olika
-distributioner:
+inte från början. I Ubuntu ingår de i paketet `dnsutils` (andra familjer
+kallar paketet något annat):
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install dnsutils
 ```
-:::
-
-:::arch
-```sh
-sudo pacman -S bind
-```
-
-Paketet heter `bind` efter DNS-servern BIND, som verktygen kommer ifrån.
-:::
-
-:::redhat
-```sh
-sudo dnf install bind-utils
-```
-:::
 
 `dig` visar hela svaret från DNS-servern. Det viktiga står under
 `ANSWER SECTION`. Med `+short` får du bara adressen:
@@ -223,6 +233,18 @@ getent hosts server.lan
 Ordningen (först filen, sedan DNS) bestäms av raden `hosts:` i
 `/etc/nsswitch.conf`.
 
+```quiz
+Varför ger `sudo echo '192.168.1.10 server.lan' >> /etc/hosts`
+*Permission denied*?
+- [ ] `echo` kan inte köras med sudo
+- [x] Ditt eget skal, inte root, öppnar filen för `>>` – sudo gäller bara `echo`
+- [ ] `/etc/hosts` går inte att ändra, inte ens för root
+- [ ] `>>` fungerar bara på filer i din hemkatalog
+---
+Därför använder man `echo ... | sudo tee -a /etc/hosts`: då är det `tee`, som
+körs som root, som öppnar filen.
+```
+
 ## Portar och tjänster
 
 En IP-adress pekar ut en dator. En **port** (ett nummer mellan 1 och 65535)
@@ -264,13 +286,11 @@ sak.
 `curl` hämtar det som finns på en adress (en **URL**) och skriver ut det i
 terminalen. Prova med minserver på din egen dator:
 
-:::debian
-I Debian och Ubuntu är `curl` inte förinstallerat (men `wget` är det):
+I Ubuntu är `curl` inte förinstallerat (men `wget` är det):
 
 ```sh
 sudo apt install curl
 ```
-:::
 
 ```sh
 curl http://localhost:8080
@@ -324,22 +344,6 @@ curl -o exempel.html https://example.com
 `wget` är gjort för att ladda ner filer. Det sparar alltid till en fil,
 visar ett förlopp och följer omdirigeringar av sig själv:
 
-:::arch
-I Arch är `wget` inte förinstallerat (men `curl` är det):
-
-```sh
-sudo pacman -S wget
-```
-:::
-
-:::redhat
-I Fedora är `wget` inte förinstallerat (men `curl` är det):
-
-```sh
-sudo dnf install wget
-```
-:::
-
 ```sh
 wget https://example.com/cheatsheet.txt
 cat cheatsheet.txt
@@ -353,21 +357,13 @@ Vill du välja filnamnet själv används stort `-O`: `wget -O fil.html URL`.
 distans, och allt som skickas är krypterat. Servern kör tjänsten `sshd` på
 port 22, och du ansluter med klienten `ssh`:
 
-:::arch
-I Arch är ssh-klienten inte förinstallerad:
-
-```sh
-sudo pacman -S openssh
-```
-:::
-
 ```sh
 ssh elev@server.lan hostname
 ```
 
 `elev@server.lan` betyder "användaren elev på datorn server.lan". Kommandot
 efter värden (`hostname`) körs på servern och svaret visas hos dig – det står
-`server` och inte {{hostname}}.
+`server` och inte `ubuntu`.
 
 Första gången du ansluter till en dator frågar ssh om du litar på den:
 
@@ -429,6 +425,18 @@ Steg 4 pingar en adress direkt, utan något namn. Om steg 4 fungerar men
 inte steg 5 är det nästan alltid DNS som krånglar – det är ett av de
 vanligaste felen.
 
+```quiz
+`ping -c 3 1.1.1.1` fungerar, men `ping -c 3 example.com` svarar
+*Name or service not known*. Var sitter felet troligast?
+- [ ] Nätverkskortet är nere
+- [ ] Det finns ingen standardväg
+- [x] DNS – namnuppslagen fungerar inte
+- [ ] example.com svarar inte på ping
+---
+Når du en adress på internet fungerar kortet, vägen och routern. Det som
+återstår är att översätta namnet – kolla `/etc/resolv.conf`.
+```
+
 Prova själv! Stäng av nätverkskortet, gå igenom stegen och sätt sedan på det
 igen:
 
@@ -443,16 +451,18 @@ sudo ip link set enp0s3 up
 
 ## Paketen
 
-Nätverksverktygen ligger i olika paket – och heter, som vanligt, olika
-saker i olika familjer:
+Nätverksverktygen ligger i olika paket. I Ubuntu heter de:
 
-| Verktyg | Debian/Ubuntu | Arch | Fedora |
-|---|---|---|---|
-| `ip`, `ss` | `iproute2` | `iproute2` | `iproute` |
-| `ping` | `iputils-ping` | `iputils` | `iputils` |
-| `dig`, `host`, `nslookup` | `dnsutils` | `bind` | `bind-utils` |
-| `traceroute` | `traceroute` | `traceroute` | `traceroute` |
-| `ssh`, `ssh-keygen` | `openssh-client` | `openssh` | `openssh-clients` |
+| Verktyg | Paket i Ubuntu |
+|---|---|
+| `ip`, `ss` | `iproute2` |
+| `ping` | `iputils-ping` |
+| `dig`, `host`, `nslookup` | `dnsutils` |
+| `traceroute` | `traceroute` |
+| `ssh`, `ssh-keygen` | `openssh-client` |
+
+Som vanligt kallar andra familjer en del av paketen något annat – delen om
+distributioner och paket handlar om sådana skillnader.
 
 `traceroute` visar varje router som paketen passerar på vägen. Installera det
 och prova `traceroute example.com`!

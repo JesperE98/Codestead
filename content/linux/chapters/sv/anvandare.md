@@ -68,31 +68,13 @@ getent passwd elev
 De flesta raderna i `/etc/passwd` är inte människor. Tjänster som webbservern
 och loggsystemet körs som egna användare med så få rättigheter som möjligt –
 blir de hackade kommer angriparen inte åt dina filer. De har skalet
-`nologin`, så det går inte att logga in som dem:
-
-:::debian
-I Debian och Ubuntu heter webbserverns användare `www-data`:
+`nologin`, så det går inte att logga in som dem. I Ubuntu heter webbserverns
+användare `www-data` (systemanvändarnas namn skiljer sig mellan
+distributionerna):
 
 ```sh
 grep www-data /etc/passwd
 ```
-:::
-
-:::arch
-I Arch heter webbserverns användare `http`:
-
-```sh
-grep http /etc/passwd
-```
-:::
-
-:::redhat
-I Fedora finns till exempel `dbus`, som kör systemets meddelandebuss:
-
-```sh
-grep dbus /etc/passwd
-```
-:::
 
 Med `awk` från kapitlet om textbearbetning kan du lista alla med UID 1000
 eller mer – de vanliga användarna:
@@ -103,6 +85,14 @@ awk -F: '$3 >= 1000 {print $1}' /etc/passwd
 
 `nobody` (UID 65534) kommer också med. Det är en specialanvändare som äger
 "ingenting" och används när ett program ska ha så lite rättigheter som möjligt.
+
+```predict
+$ awk -F: '$3 == 0 {print $1}' /etc/passwd
+root
+---
+Fält 3 är UID, och bara root har UID 0. Det är numret, inte namnet, som ger
+root dess makt.
+```
 
 ## Grupper och GID
 
@@ -129,6 +119,18 @@ en egen primär grupp med samma namn – `elev` är med i gruppen `elev`.
 ```sh
 groups
 id
+```
+
+```quiz
+Du (`elev`) är med i grupperna `elev` och `sudo`, och din primära grupp är
+`elev`. Vilken grupp får en ny fil som du skapar?
+- [x] `elev`
+- [ ] `sudo`
+- [ ] Båda
+- [ ] `root`
+---
+Nya filer får din **primära** grupp – GID-fältet i `/etc/passwd`. Extra
+grupper som `sudo` ger dig fler rättigheter, men hamnar inte på dina filer.
 ```
 
 ## Lösenorden – `/etc/shadow`
@@ -159,6 +161,12 @@ när det går ut. Dem visar `chage` i klartext:
 chage -l elev
 ```
 
+```try
+chage -l elev
+---
+`Password expires: never` – elevs lösenord behöver aldrig bytas.
+```
+
 ## Skapa en användare – `useradd`
 
 Att skapa användare kräver root. Det vanligaste kommandot finns i alla
@@ -184,13 +192,13 @@ något där, så får alla nya användare det:
 ls -a /etc/skel
 ```
 
-Här skiljer sig distributionerna åt:
+I Ubuntu är `useradd` snålt: utan `-m` skapas **ingen** hemkatalog, och utan
+`-s` blir skalet `/bin/sh`. Andra distributioner har andra standardvärden, så
+vänj dig vid att skriva `-m` och `-s` – då fungerar samma kommando överallt.
 
-:::debian
-I Debian och Ubuntu är `useradd` snålt: utan `-m` skapas **ingen**
-hemkatalog, och utan `-s` blir skalet `/bin/sh`. Därför finns det vänligare
-skriptet `adduser`, som hör till Debian-familjen. Det skapar hemkatalog,
-väljer bash och frågar efter lösenord och namn:
+Därför har Ubuntu också det vänligare skriptet `adduser`, som hör till
+Debian-familjen. Det skapar hemkatalog, väljer bash och frågar efter lösenord
+och namn:
 
 ```sh
 sudo adduser lisa
@@ -198,29 +206,10 @@ sudo adduser lisa
 
 Svara på frågorna – du kan trycka Enter på de flesta. `adduser` kan också
 lägga till en befintlig användare i en grupp: `sudo adduser lisa sudo`.
-:::
-
-:::arch
-I Arch skapas ingen hemkatalog utan `-m`, och kommandot `adduser` finns inte
-alls – prova:
-
-```sh
-adduser lisa
-```
-
-Arch-wikin rekommenderar att du gör allt på en gång:
-`useradd -m -G wheel -s /bin/bash namn`.
-:::
-
-:::redhat
-I Fedora skapas hemkatalogen även utan `-m` (inställningen `CREATE_HOME` i
-`/etc/login.defs`), och skalet blir bash. `-m` skadar ändå inte, så vänj dig
-vid att skriva det – då fungerar samma kommando överallt.
-:::
 
 `useradd`, `passwd` och de andra kommandona i kapitlet är alltid installerade.
-Paketet heter `passwd` i Debian, `shadow` i Arch och `shadow-utils` i Fedora –
-ännu ett exempel på att samma sak kan heta olika.
+I Ubuntu kommer de i paketet `passwd`; andra familjer kallar paketet något
+annat.
 
 ## Sätta lösenord – `passwd`
 
@@ -257,6 +246,18 @@ listan över extra grupper till exakt det du skriver – och användaren åker u
 ur alla andra grupper, till exempel sudo-gruppen. Ett vanligt sätt att låsa
 ute sig själv.
 
+```quiz
+`kim` är med i de extra grupperna `sudo` och `utvecklare`. En administratör
+kör `sudo usermod -G backup kim`. Vilka extra grupper är kim med i efteråt?
+- [ ] `sudo`, `utvecklare` och `backup`
+- [x] Bara `backup`
+- [ ] `sudo` och `utvecklare` – kommandot misslyckas utan `-a`
+- [ ] Inga
+---
+Utan `-a` sätts listan till exakt det du skriver. Med
+`sudo usermod -aG backup kim` hade kim fått behålla de andra grupperna.
+```
+
 `gpasswd` gör samma sak och kan också ta bort medlemmar:
 
 ```sh
@@ -277,7 +278,7 @@ sudo chmod 775 /srv/projekt
 ls -ld /srv/projekt
 ```
 
-## Ge sudo-rätt – `sudo` eller `wheel`
+## Ge sudo-rätt – gruppen `sudo`
 
 Vem som får använda `sudo` bestäms i `/etc/sudoers`:
 
@@ -285,36 +286,16 @@ Vem som får använda `sudo` bestäms i `/etc/sudoers`:
 sudo cat /etc/sudoers
 ```
 
-Raden `%{{adminGroup}} ALL=(ALL:ALL) ALL` betyder att alla i gruppen
-**{{adminGroup}}** får köra alla kommandon som root. Att ge någon sudo-rätt
-är alltså bara att lägga till personen i rätt grupp – och gruppen heter
-olika i olika familjer:
-
-:::debian
-I Debian och Ubuntu heter gruppen `sudo`:
+Raden `%sudo ALL=(ALL:ALL) ALL` betyder att alla i gruppen **sudo** får köra
+alla kommandon som root. Att ge någon sudo-rätt är alltså bara att lägga till
+personen i rätt grupp – i Ubuntu gruppen `sudo`:
 
 ```sh
 sudo usermod -aG sudo kim
 ```
-:::
 
-:::arch
-I Arch heter gruppen `wheel` – ett gammalt Unix-namn för "de som styr" (*big
-wheel*):
-
-```sh
-sudo usermod -aG wheel kim
-```
-:::
-
-:::redhat
-I Fedora heter gruppen `wheel` – ett gammalt Unix-namn för "de som styr"
-(*big wheel*):
-
-```sh
-sudo usermod -aG wheel kim
-```
-:::
+Gruppen heter olika i olika familjer: i Arch och Fedora heter den `wheel` –
+ett gammalt Unix-namn för "de som styr" (*big wheel*).
 
 Redigera aldrig `/etc/sudoers` direkt med en vanlig editor – ett skrivfel
 kan göra att ingen längre kan använda sudo. Använd `visudo`, som kontrollerar
@@ -344,6 +325,18 @@ su - kim
 
 `su` utan namn betyder root. På Ubuntu har root inget lösenord, så `su -`
 fungerar inte där – använd `sudo -i`.
+
+```quiz
+Du vill köra ett enda kommando som `kim`, men du kan inte kims lösenord. Du
+har sudo-rätt. Vad fungerar?
+- [ ] `su - kim`
+- [x] `sudo -u kim kommando`
+- [ ] `su kim kommando`
+- [ ] Ingenting – du behöver kims lösenord
+---
+`su` frågar efter lösenordet till användaren du blir. `sudo` frågar efter
+**ditt eget** lösenord och kontrollerar i `/etc/sudoers` att du får göra det.
+```
 
 ## Låsa och ta bort konton
 
@@ -377,11 +370,9 @@ sudo useradd -m vikarie
 sudo userdel -r vikarie
 ```
 
-:::debian
-I Debian-familjen finns också `deluser`, motsvarigheten till `adduser`:
+Ubuntu har också `deluser`, motsvarigheten till `adduser`:
 `sudo deluser --remove-home vikarie`. `sudo deluser kim sudo` tar bort kim
 ur gruppen sudo.
-:::
 
 `userdel` vägrar ta bort en användare som är inloggad – prova `sudo userdel
 elev`.

@@ -50,6 +50,17 @@ citattecken delas värdet upp vid mellanslag, vilket ger konstiga fel när ett
 filnamn innehåller mellanslag. Vill du skriva text direkt efter
 variabelnamnet använder du klammerparenteser: `"${stad}s hamn"`.
 
+```quiz
+`stad` innehåller `Göteborg`, och det finns ingen variabel som heter
+`stad_2026`. Vad skriver `echo "$stad_2026"` ut?
+- [ ] `Göteborg_2026`
+- [ ] `Göteborg`
+- [x] En tom rad
+---
+Bash läser hela namnet `stad_2026`, och den variabeln finns inte. Skriv
+`"${stad}_2026"` för att få `Göteborg_2026`.
+```
+
 ## Kommandosubstitution – `$(...)`
 
 `$(kommando)` byts ut mot det kommandot skriver ut. Så sparar du resultatet
@@ -74,6 +85,13 @@ echo $(( 17 / 5 )) och resten $(( 17 % 5 ))
 
 Vill du ändra en variabel skriver du `(( a++ ))` eller `(( a += 10 ))`.
 
+```predict
+$ echo $(( 7 / 2 )) $(( 7 % 2 ))
+3 1
+---
+Bash räknar bara med heltal: 7 / 2 blir 3, och resten (`%`) är 1.
+```
+
 ## Argument
 
 När du kör `./skript.sh ett två` kan skriptet läsa argumenten:
@@ -85,6 +103,16 @@ När du kör `./skript.sh ett två` kan skriptet läsa argumenten:
 | `$#` | Antal argument |
 | `"$@"` | Alla argument, vart och ett för sig |
 | `$?` | Slutkoden från förra kommandot |
+
+```quiz
+Ett skript körs med `./skript.sh red green blue`. Vad innehåller `$1` och
+`$#`?
+- [ ] `$1` är `./skript.sh` och `$#` är `4`
+- [x] `$1` är `red` och `$#` är `3`
+- [ ] `$1` är `red` och `$#` är `blue`
+---
+Skriptets eget namn finns i `$0`, så det räknas inte i `$#`.
+```
 
 ## Villkor – `if`
 
@@ -130,6 +158,12 @@ För korta villkor räcker ofta `&&` och `||`:
 [ -d ~/bilder ] && echo "Bildkatalogen finns"
 ```
 
+```predict
+$ x=""
+$ if [ -z "$x" ]; then echo empty; else echo "not empty"; fi
+empty
+```
+
 ## Loopar
 
 En **for-loop** gör samma sak för varje sak i en lista:
@@ -159,6 +193,13 @@ while read rad; do echo "> $rad"; done < ~/dokument/frukter.txt
 ```
 
 `break` avbryter en loop och `continue` hoppar direkt till nästa varv.
+
+```predict
+$ for x in 2 4 6; do echo $(( x * 10 )); done
+20
+40
+60
+```
 
 > **Se upp för oändliga loopar!** En loop vars villkor aldrig blir falskt
 > fortsätter för evigt. I en riktig terminal stoppar du den med **Ctrl+C**.

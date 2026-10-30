@@ -31,12 +31,34 @@ echo "andra raden" >> test.txt
 cat test.txt
 ```
 
+```predict
+$ echo one > t.txt
+$ echo two > t.txt
+$ cat t.txt
+two
+---
+Det andra `>` skrev över filen. Med `>>` hade den innehållit båda raderna.
+```
+
 ## Från en fil – `<`
 
 `<` låter ett program läsa stdin från en fil:
 
 ```sh
 wc -l < dokument/frukter.txt
+```
+
+Nu ser `wc` aldrig filnamnet – det får bara texten på stdin – så det skriver
+bara ut antalet.
+
+```predict
+$ wc -l dokument/frukter.txt
+$ wc -l < dokument/frukter.txt
+10 dokument/frukter.txt
+10
+---
+Med ett filnamn som argument skriver `wc` ut namnet också. Med `<` får det
+bara texten.
 ```
 
 ## Felmeddelanden – `2>`
@@ -46,6 +68,16 @@ dem skriver du strömmens nummer framför:
 
 ```sh
 ls /finnsinte 2> fel.txt
+```
+
+```quiz
+Du kör `ls /finnsinte > fel.txt`. Var hamnar felmeddelandet?
+- [ ] I `fel.txt`
+- [x] På skärmen – `fel.txt` förblir tom
+- [ ] Ingenstans, det försvinner
+---
+`>` omdirigerar bara stdout (ström 1). Felmeddelandet går till stderr
+(ström 2), som fortfarande går till skärmen. Du hade behövt `2>`.
 ```
 
 Filen `/dev/null` är ett "svart hål" – allt som skrivs dit försvinner. Det är
@@ -71,6 +103,12 @@ sort dokument/frukter.txt | uniq -c | sort -rn
 Läs det steg för steg: sortera frukterna, räkna hur många av varje (`uniq -c`)
 och sortera sedan numeriskt med flest först (`sort -rn`).
 
+Hur många filer och kataloger finns det i `/etc`? Räkna dem med en pipe:
+
+```try
+ls /etc | wc -l
+```
+
 ## Både skärm och fil – `tee`
 
 `tee` skickar indata vidare *och* sparar en kopia i en fil:
@@ -91,4 +129,12 @@ Flera kommandon kan stå på samma rad:
 
 ```sh
 mkdir -p ny && cd ny
+```
+
+```predict
+$ mkdir dokument 2> /dev/null && echo created || echo failed
+failed
+---
+`dokument` finns redan, så `mkdir` misslyckas (felmeddelandet försvinner i
+`/dev/null`). `echo created` hoppas över och `echo failed` körs.
 ```

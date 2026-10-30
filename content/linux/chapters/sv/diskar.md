@@ -26,6 +26,18 @@ Tänk på disken som ett tomt lagerhus, partitionerna som väggarna som delar
 upp det i rum och filsystemet som hyllorna och etiketterna i varje rum. Utan
 hyllor går det inte att hitta något.
 
+```quiz
+Du har just skapat en ny partition på en disk. Varför kan du inte spara filer
+på den än?
+- [ ] Den måste först läggas till i partitionstabellen
+- [x] Den har inget filsystem än – den måste formateras först
+- [ ] Partitioner kan inte innehålla filer, det kan bara diskar
+- [ ] Den måste först få en enhetsbokstav
+---
+En ny partition är tom och oanvändbar tills du skapar ett filsystem på den.
+Det är det som kallas att formatera.
+```
+
 ## Diskarna är filer i `/dev`
 
 I Linux är nästan allt en fil – även diskarna. Varje disk och partition har
@@ -66,25 +78,10 @@ lsblk
 | `TYPE` | `disk` eller `part` (partition) |
 | `MOUNTPOINTS` | Var filsystemet syns i katalogträdet, `[SWAP]` för swap |
 
-:::debian
-I {{distro}} ser du upplägget som Debians installationsprogram brukar välja:
-`sda1` är **EFI-partitionen** (som datorns firmware startar från) på
-`/boot/efi`, `sda2` är **rotfilsystemet** `/` och `sda3` är **swap**.
-:::
-
-:::arch
-I Arch bestämmer du själv hur disken delas in. Den här datorn följer
-Arch-wikins exempel: `sda1` är **EFI-partitionen**, monterad direkt på `/boot`
-så att kärnan ligger där firmware kan läsa den, `sda2` är **swap** och `sda3`
-är **rotfilsystemet** `/`.
-:::
-
-:::redhat
-Fedora gör lite annorlunda: `sda1` är **EFI-partitionen** på `/boot/efi`,
-`sda2` är `/boot` med kärnorna och `sda3` är ett enda stort **btrfs**-filsystem
-som syns på både `/` och `/home`. Swap ligger inte på disken alls, utan i
-RAM-minnet: `zram0` är komprimerat minne.
-:::
+På den här datorn är `sda1` **EFI-partitionen** (som datorns firmware
+startar från) på `/boot/efi`, `sda2` är **rotfilsystemet** `/` och `sda3` är
+**swap**. Andra distributioner – och andra installationer – kan dela in
+disken på andra sätt, så titta alltid i stället för att gissa.
 
 Med `-f` visar `lsblk` även filsystemen – typ, etikett (*label*), UUID och
 hur mycket som är ledigt:
@@ -169,6 +166,12 @@ Ser du att `Used` och `Avail` inte riktigt blir `Size` tillsammans? På ext4
 reserveras 5 % åt root, så att systemet kan fortsätta fungera även när en
 vanlig användare fyllt disken.
 
+```try
+df -hT
+---
+Kolumnen `Type` visar att `/` är `ext4` och `/boot/efi` är `vfat`.
+```
+
 ## `df` eller `du`?
 
 Två kommandon med nästan samma namn, men som svarar på olika frågor:
@@ -225,6 +228,17 @@ Du kan också montera med etiketten i stället för enhetsnamnet:
 `sudo mount LABEL=USBMINNE /mnt/usb`. På en dator med skrivbordsmiljö gör
 filhanteraren allt detta automatiskt när du sätter i stickan.
 
+```quiz
+Efter `sudo mount /dev/sdb1 /mnt/usb` ägs alla filer på FAT-stickan av root.
+Varför?
+- [ ] Filerna skapades av root på en annan dator
+- [x] FAT har inga Linux-rättigheter, så alla filer får samma ägare som den som monterade – root
+- [ ] Allt i `/mnt` ägs alltid av root
+- [ ] USB-stickor kan bara användas av root
+---
+Med `-o uid=1000,gid=1000` kan du själv välja ägaren när du monterar.
+```
+
 ## Avmontera – innan du drar ut stickan!
 
 Linux skriver inte alltid till disken direkt. Ändringar samlas i RAM-minnet
@@ -253,6 +267,18 @@ försök igen. Efter avmonteringen är `/mnt/usb` en tom katalog igen – men
 filerna, och ändringarna du gjort, finns kvar på stickan nästa gång du
 monterar den.
 
+```quiz
+Varför ska du avmontera en USB-sticka innan du drar ut den?
+- [ ] Annars raderas filerna på stickan
+- [x] Ändringar kan fortfarande vänta i RAM-minnet – `umount` skriver dem innan filsystemet kopplas bort
+- [ ] Annars får stickan ett nytt enhetsnamn nästa gång
+- [ ] Stickan kan inte monteras igen förrän den har avmonterats på samma dator
+---
+Linux samlar ändringar i RAM-minnet (*cache*) och skriver dem lite senare. En
+sticka som dras ut medan den fortfarande är monterad kan förlora filer du
+"sparat".
+```
+
 ## `/etc/fstab` – det som monteras vid start
 
 Rotfilsystemet, `/boot` och swap monteras automatiskt varje gång datorn
@@ -273,22 +299,9 @@ Varje rad har sex kolumner:
 | dump | `0` | Gammal backupflagga, nästan alltid 0 |
 | pass | `1` | I vilken ordning `fsck` kontrollerar vid start (1 = rot, 2 = övriga, 0 = aldrig) |
 
-:::debian
 Raden `errors=remount-ro` betyder att rotfilsystemet görs skrivskyddat om
 ett fel upptäcks – hellre det än att förstöra mer. Kommentarerna som
 `# / was on /dev/sda2 during installation` skrev installationsprogrammet.
-:::
-
-:::arch
-I Arch skrevs filen av `genfstab` under installationen. Den skriver
-enhetens gamla namn som kommentar ovanför varje rad.
-:::
-
-:::redhat
-Lägg märke till att `/` och `/home` har **samma** UUID: det är samma
-btrfs-filsystem, men olika subvolymer (`subvol=root` och `subvol=home`).
-`compress=zstd:1` gör att filerna komprimeras automatiskt.
-:::
 
 Varför `UUID=…` och inte bara `/dev/sda2`? Enhetsnamnen kan ändras – sätter
 du i en ny disk kan den gamla byta bokstav. Ett UUID skapas tillsammans med
@@ -298,6 +311,16 @@ filsystemet och ändras aldrig. Du hittar det med `lsblk -f`, `blkid` eller
 ```sh
 sudo blkid
 findmnt -n -o UUID /
+```
+
+Med `findmnt` väljer `-o` vilka kolumner som ska visas och `-n` hoppar över
+rubriken – praktiskt när du bara vill ha själva värdet.
+
+```predict
+$ findmnt -n -o FSTYPE /boot/efi
+vfat
+---
+`/boot/efi` är EFI-partitionen, och EFI-partitionen måste vara FAT.
 ```
 
 Vill du att stickan alltid ska kunna monteras på `/mnt/usb` kan du lägga
@@ -328,21 +351,8 @@ swapon --show
 free -h
 ```
 
-:::debian
 Här är swap en egen partition, `sda3`. Många installationer (till exempel
 nyare Ubuntu) använder i stället en *swapfil* på rotfilsystemet.
-:::
-
-:::arch
-Här är swap en egen partition, `sda2`. Det går lika bra att använda en
-*swapfil*, eller zram som i Fedora.
-:::
-
-:::redhat
-Fedora använder **zram**: swap i RAM-minnet, men komprimerat. Det låter
-konstigt men fungerar bra – komprimerat minne är fortfarande mycket snabbare
-än en disk.
-:::
 
 ## Partitionera och formatera – med största försiktighet
 
@@ -371,11 +381,6 @@ sudo mkfs.ext4 -L BACKUP /dev/sdb1      # ext4 – Linux-rättigheter, men bara 
 I simulatorn går det att prova `mkfs.ext4` och `mkfs.vfat` på USB-stickan –
 men gör uppgifterna först, för filerna på stickan försvinner. Systemets egna
 partitioner är skyddade eftersom de är monterade, precis som på riktigt.
-
-:::arch
-I Arch följer inte `mkfs.vfat` med från början. Det finns i paketet
-`dosfstools`: `sudo pacman -S dosfstools`.
-:::
 
 ## Sammanfattning
 
