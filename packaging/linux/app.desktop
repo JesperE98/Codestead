@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=${PKG_DISPLAY_NAME}
+Comment=${PKG_SUMMARY}
+Exec=${PKG_NAME} %U
+Icon=${PKG_NAME}
+Terminal=false
+Categories=Education;Development;
+StartupWMClass=${PKG_EXECUTABLE}
