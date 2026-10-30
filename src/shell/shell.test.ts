@@ -222,6 +222,26 @@ describe('tab-komplettering', () => {
   });
 });
 
+describe('uppdatering av sparat tillstånd', () => {
+  test('nya förinstallerade program och övningsfiler läggs till, borttagna läggs inte tillbaka', () => {
+    const { sh, run } = shell('debian');
+    run('sudo apt remove -y nano');
+    run('rm ~/dokument/frukter.txt');
+    const old = JSON.parse(JSON.stringify(sh.snapshot()));
+    // Simulera ett tillstånd från en äldre version: utan sed och betyg.csv och utan minnesanteckningar.
+    delete old.installed.sed;
+    delete old.fs.children.usr.children.bin.children.sed;
+    delete old.fs.children.home.children.elev.children.dokument.children['betyg.csv'];
+    for (const k of Object.keys(old.flags)) if (k.startsWith('default:') && (k.includes('sed') || k.includes('betyg'))) delete old.flags[k];
+    const restored = Shell.restore(old)!;
+    expect(restored.installed.sed).toBeDefined();
+    expect(restored.execute("echo hej | sed 's/hej/hallå/'").output).toBe('hallå\n');
+    expect(restored.vfs.tryLookup('/home/elev/dokument/betyg.csv', restored.rootUser())).not.toBeNull();
+    expect(restored.installed.nano).toBeUndefined();
+    expect(restored.vfs.tryLookup('/home/elev/dokument/frukter.txt', restored.rootUser())).toBeNull();
+  });
+});
+
 describe('spara och återställa', () => {
   test('snapshot överlever JSON', () => {
     const { run, sh } = shell('arch');

@@ -24,7 +24,7 @@ import {
 } from './parser';
 import { ExitSignal, isControlSignal, LimitError, LoopSignal, ReturnSignal } from './signals';
 import type { CmdCtx, IO, Reader, Sink } from './types';
-import { basename, ELF, FsError, hasPerm, resolvePath, VFS, type FsNode, type User } from './vfs';
+import { basename, dirname, ELF, FsError, hasPerm, resolvePath, VFS, type FsNode, type User } from './vfs';
 
 export interface ShellSnapshot {
   version: 1;
@@ -152,16 +152,49 @@ export class Shell {
       flags: {},
       userStack: [STUDENT],
     });
-    for (const pkg of PACKAGES) {
-      if (pkg.names[distro.family] && pkg.base?.includes(distro.family)) installPackage(sh, pkg);
-    }
+    sh.addMissingDefaults();
     return sh;
   }
 
   static restore(snapshot: unknown): Shell | null {
     const s = snapshot as ShellSnapshot | null;
     if (!s || s.version !== 1 || !s.fs || !s.distroId) return null;
-    return new Shell(s);
+    const sh = new Shell(s);
+    sh.addMissingDefaults();
+    return sh;
+  }
+
+  /**
+   * Installerar förinstallerade paket och övningsfiler som saknas – t.ex. när appen
+   * uppdaterats med nya kapitel efter att terminalen sparades. Det som skalet lagt in
+   * en gång (och eleven sedan tagit bort med flit) läggs inte tillbaka.
+   */
+  private addMissingDefaults(): void {
+    const family = this.distro.family;
+    for (const pkg of PACKAGES) {
+      if (!pkg.names[family] || !pkg.base?.includes(family)) continue;
+      const key = `default:pkg:${pkg.id}`;
+      if (this.flags[key]) continue;
+      if (!(pkg.id in this.installed)) installPackage(this, pkg);
+      this.flags[key] = true;
+    }
+    const fresh = new VFS(buildFs(this.distro));
+    const root = this.rootUser();
+    const home = `/home/${STUDENT}`;
+    const walk = (path: string) => {
+      const node = fresh.tryLookup(path, root);
+      if (!node) return;
+      const key = `default:file:${path}`;
+      if (!this.flags[key]) {
+        this.flags[key] = true;
+        if (!this.vfs.tryLookup(path, root) && this.vfs.tryLookup(dirname(path), root)?.type === 'dir') {
+          this.vfs.insert(path, node, root);
+          return;
+        }
+      }
+      if (node.type === 'dir') for (const name of Object.keys(node.children!)) walk(`${path}/${name}`);
+    };
+    walk(`${home}/dokument`);
   }
 
   snapshot(): ShellSnapshot {

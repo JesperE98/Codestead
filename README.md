@@ -29,13 +29,15 @@ Appen är inte signerad än, så Windows varnar första gången – se
 - **Simulerad Linux-terminal** direkt i webbläsaren – fungerar på alla
   operativsystem, även Windows, utan att något installeras och utan att något
   kan gå sönder. Stöd för pipes, omdirigering, jokertecken, variabler, alias,
-  skript, rättigheter och `sudo`.
+  rättigheter, `sudo`, processer och bakgrundsjobb.
+- **Riktiga bash-skript**: `if`, `for`, `while`, `case`, funktioner, `$(...)`,
+  `$((...))`, here-dokument och flerradig inmatning med `> `-prompten.
 - **Fyra distributioner i tre familjer**: Ubuntu och Debian (`apt`), Arch Linux
   (`pacman`) och Fedora (`dnf`). Prompten, filerna i `/etc`, paketnamnen och
   pakethanterarens utskrifter följer respektive distribution.
 - **Distro-medvetet innehåll**: kapitlen visar olika avsnitt beroende på vald
   familj, och distro-uppgifterna räknas separat per familj.
-- **10 kapitel** och **54 uppgifter**, med tips och lösningar.
+- **13 kapitel** och **77 uppgifter**, med tips och lösningar.
 - Framsteg och terminalens tillstånd sparas lokalt (localStorage).
 - Ljust och mörkt tema, fungerar på mobil.
 
@@ -45,10 +47,15 @@ Appen är inte signerad än, så Windows varnar första gången – se
 |---|---|
 | Kom igång | 1. Välkommen till Linux-shell |
 | Grunderna | 2. Navigera i filsystemet · 3. Filer och kataloger · 4. Läsa och söka i text · 5. Omdirigering och pipes · 6. Textbearbetning med sed, tr och awk |
-| Systemet | 7. Variabler, PATH och alias · 8. Användare, rättigheter och sudo |
-| Distributioner | 9. Distributioner och familjer · 10. Pakethantering (apt / pacman / dnf) |
+| Systemet | 7. Variabler, PATH och alias · 8. Användare, rättigheter och sudo · 9. Processer och jobb · 10. Arkiv och komprimering |
+| Distributioner | 11. Distributioner och familjer · 12. Pakethantering (apt / pacman / dnf) |
+| Skript och automatisering | 13. Shell-skript |
 
-## Kom igång
+## Utveckla själv
+
+Det här behövs bara om du vill ändra i koden – **för att använda appen räcker
+det att ladda ner den** (se ovan). Installationsfilerna innehåller allt som
+behövs.
 
 Kräver [Node.js](https://nodejs.org) 20 eller senare.
 
@@ -83,17 +90,18 @@ och [electron-builder](https://www.electron.build) skapar installationsfilerna:
 | Linux | `.AppImage` som körs direkt | `npm run app:dist:linux` |
 
 Filerna hamnar i `release/`. Varje operativsystem måste byggas på sig självt,
-så det enklaste är att låta GitHub göra det.
+så det enklaste är att låta GitHub göra det:
 
-### Släppa en ny version
+```bash
+git tag v0.1.0
+```
 
-1. Höj `version` i `package.json`, till exempel från `0.1.0` till `0.2.0`.
-2. Slå ihop ändringen till `main`.
+```bash
+git push origin v0.1.0
+```
 
-Flödet `.github/workflows/release.yml` bygger då installationsfilerna och
-lägger upp dem som release `v0.2.0`. Finns releasen redan händer ingenting.
-Flödet kan också startas för hand under **Actions → Bygg skrivbordsappar →
-Run workflow**. Ikonen ligger i `build/icon.svg` (och `build/icon.png`).
+Då bygger flödet `.github/workflows/release.yml` alla tre och lägger upp dem
+som en ny release. Ikonen ligger i `build/icon.svg` (och `build/icon.png`).
 
 ## Projektstruktur
 
@@ -143,10 +151,10 @@ installeras med pakethanteraren lägger du också till ett paket i
 
 ## Färdplan
 
-- [ ] Processer och jobb (`ps`, `top`, `kill`, `&`, `jobs`)
-- [ ] Shell-skript: variabler, `if`, loopar och funktioner
+- [x] Processer och jobb (`ps`, `top`, `kill`, `&`, `jobs`)
+- [x] Shell-skript: variabler, `if`, loopar och funktioner
 - [x] Textbearbetning med `sed`, `awk` och `tr`
-- [ ] Arkiv och komprimering (`tar`, `gzip`, `zip`)
+- [x] Arkiv och komprimering (`tar`, `gzip`, `zip`)
 - [ ] Nätverk (`ip`, `ping`, `curl`, `ssh`)
 - [ ] Tjänster och loggar med systemd (`systemctl`, `journalctl`)
 - [ ] Diskar och filsystem (`df`, `du`, `mount`, `lsblk`)

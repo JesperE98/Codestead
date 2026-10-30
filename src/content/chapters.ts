@@ -1,6 +1,7 @@
 // Alla kapitel och deras uppgifter.
 // Texten finns i chapters/*.md, uppgifterna och deras kontroller här.
 
+import { gunzipString, readArchive } from '../shell/commands/archive';
 import type { Distro, Family } from '../shell/distros';
 import type { Chapter, CheckCtx, Part } from './types';
 
@@ -16,6 +17,7 @@ import ch09 from './chapters/09-pakethantering.md?raw';
 import chSkript from './chapters/skript.md?raw';
 import chProcesser from './chapters/processer.md?raw';
 import textbearbetning from './chapters/textbearbetning.md?raw';
+import chArkiv from './chapters/arkiv.md?raw';
 import { RUNAWAY_PID, SERVER_PID } from '../shell/procs';
 
 const HOME = '/home/elev';
@@ -34,6 +36,25 @@ const outLines = (c: CheckCtx) => c.output.split('\n').filter((l) => l.trim() !=
 const unsudo = (line: string) => line.replace(/^sudo\s+(-\S+\s+)*/, '');
 
 const byFamily = <T,>(map: Record<Family, T>) => (d: Distro) => map[d.family];
+
+/** Sant om filen är ett arkiv (tar, tar.gz eller zip) av rätt sort som innehåller en fil vars sökväg slutar på `suffix`. */
+const archiveHas = (c: CheckCtx, p: string, format: 'tar' | 'tar.gz' | 'zip', suffix: string) => {
+  const a = readArchive(content(c, p));
+  return a?.format === format && a.entries.some((e) => e.path === suffix || e.path.endsWith('/' + suffix));
+};
+/** Vilka tar-operationer (c, x, t) kommandoraden innehåller, t.ex. "x" för `cd ~ && tar -xzf a.tgz`. */
+const tarOps = (line: string) =>
+  line
+    .split(/&&|\|\||[;|]/)
+    .map((part) => unsudo(part.trim()).split(/\s+/))
+    .filter((words) => words[0] === 'tar')
+    .flatMap((words) =>
+      words.slice(1).map((w, i) => {
+        if (w.startsWith('--')) return { '--create': 'c', '--extract': 'x', '--get': 'x', '--list': 't' }[w] ?? '';
+        return w.startsWith('-') || i === 0 ? w.replace(/[^cxt]/g, '') : '';
+      }),
+    )
+    .join('');
 
 export const PARTS: Part[] = [
   { id: 'start', title: 'Kom igång' },
@@ -458,6 +479,77 @@ export const CHAPTERS: Chapter[] = [
     ],
   },
   {
+    id: 'arkiv',
+    part: 'system',
+    title: 'Arkiv och komprimering',
+    content: chArkiv,
+    tasks: [
+      {
+        id: 'tar-czf',
+        text: 'Packa ihop katalogen `~/dokument` till det komprimerade arkivet `~/dokument.tar.gz`.',
+        hint: 'Stå i hemkatalogen och använd *create zipped verbose file*: `tar -czvf dokument.tar.gz dokument`.',
+        solution: ['cd ~', 'tar -czvf dokument.tar.gz dokument'],
+        check: (c) => archiveHas(c, '~/dokument.tar.gz', 'tar.gz', 'dokument/frukter.txt'),
+      },
+      {
+        id: 'tar-t',
+        text: 'Lista innehållet i `~/dokument.tar.gz` – utan att packa upp det.',
+        hint: '`t` betyder lista: `tar -tzvf ~/dokument.tar.gz`.',
+        solution: ['tar -tzvf ~/dokument.tar.gz'],
+        check: (c) => ran(c, /\btar\b/) && tarOps(c.line) === 't' && c.output.includes('dokument/server.log'),
+      },
+      {
+        id: 'tar-x',
+        text: 'Skapa katalogen `~/uppackat` och packa upp `~/dokument.tar.gz` i den.',
+        hint: 'Med `-C` väljer du var tar packar upp: `tar -xzvf ~/dokument.tar.gz -C ~/uppackat`.',
+        solution: ['mkdir ~/uppackat', 'tar -xzvf ~/dokument.tar.gz -C ~/uppackat'],
+        check: (c) => tarOps(c.line).includes('x') && isFile(c, '~/uppackat/dokument/frukter.txt'),
+      },
+      {
+        id: 'gzip',
+        text: 'Kopiera `~/dokument/server.log` till din hemkatalog och komprimera kopian med `gzip`, så att du får `~/server.log.gz`.',
+        hint: 'Först `cp ~/dokument/server.log ~`, sedan `gzip ~/server.log`.',
+        solution: ['cp ~/dokument/server.log ~', 'gzip -v ~/server.log'],
+        check: (c) => gunzipString(content(c, '~/server.log.gz'))?.d.includes('Servern startar') ?? false,
+      },
+      {
+        id: 'zcat',
+        text: 'Visa raderna med `ERROR` i `~/server.log.gz` – utan att packa upp filen.',
+        hint: '`zcat` skriver ut innehållet i en .gz-fil. Skicka det vidare till `grep` med en pipe.',
+        solution: ['zcat ~/server.log.gz | grep ERROR'],
+        check: (c) =>
+          ran(c, /\bzcat\b|\bgunzip\s+-\w*c|\bgzip\s+-\w*(d\w*c|c\w*d)/) &&
+          isFile(c, '~/server.log.gz') &&
+          ((outLines(c).length === 3 && outLines(c).every((l) => l.includes('ERROR'))) || c.output.trim() === '3'),
+      },
+      {
+        id: 'zip',
+        perFamily: true,
+        text: 'Installera paketen `zip` och `unzip`, och packa sedan ihop `~/dokument` till `~/dokument.zip`.',
+        hint: byFamily({
+          debian: 'Kör `sudo apt update` och `sudo apt install zip unzip`. Glöm inte `-r` till zip: `zip -r dokument.zip dokument`.',
+          arch: 'Installera med `sudo pacman -S zip unzip`. Glöm inte `-r` till zip: `zip -r dokument.zip dokument`.',
+          redhat: 'Installera med `sudo dnf install zip unzip` och svara `y`. Glöm inte `-r` till zip: `zip -r dokument.zip dokument`.',
+        }),
+        solution: byFamily({
+          debian: ['sudo apt update', 'sudo apt install zip unzip', 'cd ~', 'zip -r dokument.zip dokument'],
+          arch: ['sudo pacman -S zip unzip', 'y', 'cd ~', 'zip -r dokument.zip dokument'],
+          redhat: ['sudo dnf install zip unzip', 'y', 'cd ~', 'zip -r dokument.zip dokument'],
+        }),
+        check: (c) => archiveHas(c, '~/dokument.zip', 'zip', 'dokument/frukter.txt'),
+      },
+      {
+        id: 'unzip',
+        text: 'Packa upp `~/dokument.zip` i den nya katalogen `~/fran-zip` med `unzip`.',
+        hint: '`-d` väljer katalog och skapar den om den saknas: `unzip ~/dokument.zip -d ~/fran-zip`.',
+        solution: ['unzip ~/dokument.zip -d ~/fran-zip'],
+        check: (c) =>
+          /\bunzip\b/.test(c.line) &&
+          (isFile(c, '~/fran-zip/dokument/frukter.txt') || isFile(c, '~/fran-zip/home/elev/dokument/frukter.txt')),
+      },
+    ],
+  },
+  {
     id: 'distributioner',
     part: 'distro',
     title: 'Distributioner och familjer',
@@ -694,7 +786,6 @@ export const CHAPTERS: Chapter[] = [
 
 /** Kapitel som planeras – visas i menyn som "kommer snart". */
 export const UPCOMING: string[] = [
-  'Arkiv och komprimering (tar, gzip, zip)',
   'Nätverk (ip, ping, curl, ssh)',
   'Tjänster och loggar med systemd',
   'Diskar och filsystem (df, du, mount)',
