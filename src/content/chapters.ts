@@ -5,19 +5,6 @@ import { gunzipString, readArchive } from '../shell/commands/archive';
 import type { Distro, Family } from '../shell/distros';
 import type { Chapter, CheckCtx, Part } from './types';
 
-import ch01 from './chapters/01-valkommen.md?raw';
-import ch02 from './chapters/02-navigera.md?raw';
-import ch03 from './chapters/03-filer.md?raw';
-import ch04 from './chapters/04-lasa-text.md?raw';
-import ch05 from './chapters/05-pipes.md?raw';
-import ch06 from './chapters/06-miljo.md?raw';
-import ch07 from './chapters/07-rattigheter.md?raw';
-import ch08 from './chapters/08-distributioner.md?raw';
-import ch09 from './chapters/09-pakethantering.md?raw';
-import chSkript from './chapters/skript.md?raw';
-import chProcesser from './chapters/processer.md?raw';
-import textbearbetning from './chapters/textbearbetning.md?raw';
-import chArkiv from './chapters/arkiv.md?raw';
 import { RUNAWAY_PID, SERVER_PID } from '../shell/procs';
 
 const HOME = '/home/elev';
@@ -60,8 +47,11 @@ export const PARTS: Part[] = [
   { id: 'start', title: 'Kom igång' },
   { id: 'grunder', title: 'Grunderna' },
   { id: 'system', title: 'Systemet' },
-  { id: 'distro', title: 'Distributioner' },
+  { id: 'admin', title: 'Systemadministration' },
+  { id: 'natverk', title: 'Nätverk' },
+  { id: 'distro', title: 'Distributioner och paket' },
   { id: 'skript', title: 'Skript och automatisering' },
+  { id: 'verktyg', title: 'Fler verktyg' },
 ];
 
 export const CHAPTERS: Chapter[] = [
@@ -69,7 +59,6 @@ export const CHAPTERS: Chapter[] = [
     id: 'valkommen',
     part: 'start',
     title: 'Välkommen till Linux-shell',
-    content: ch01,
     tasks: [
       {
         id: 'echo',
@@ -101,7 +90,6 @@ export const CHAPTERS: Chapter[] = [
     id: 'navigera',
     part: 'grunder',
     title: 'Navigera i filsystemet',
-    content: ch02,
     tasks: [
       {
         id: 'etc',
@@ -142,7 +130,6 @@ export const CHAPTERS: Chapter[] = [
     id: 'filer',
     part: 'grunder',
     title: 'Filer och kataloger',
-    content: ch03,
     tasks: [
       {
         id: 'mkdir',
@@ -183,7 +170,6 @@ export const CHAPTERS: Chapter[] = [
     id: 'lasa-text',
     part: 'grunder',
     title: 'Läsa och söka i text',
-    content: ch04,
     tasks: [
       {
         id: 'head',
@@ -228,7 +214,6 @@ export const CHAPTERS: Chapter[] = [
     id: 'pipes',
     part: 'grunder',
     title: 'Omdirigering och pipes',
-    content: ch05,
     tasks: [
       {
         id: 'redirect',
@@ -276,7 +261,6 @@ export const CHAPTERS: Chapter[] = [
     id: 'textbearbetning',
     part: 'grunder',
     title: 'Textbearbetning med sed, tr och awk',
-    content: textbearbetning,
     tasks: [
       {
         id: 'sed-s',
@@ -336,7 +320,6 @@ export const CHAPTERS: Chapter[] = [
     id: 'miljo',
     part: 'system',
     title: 'Variabler, PATH och alias',
-    content: ch06,
     tasks: [
       {
         id: 'path',
@@ -376,7 +359,6 @@ export const CHAPTERS: Chapter[] = [
     id: 'rattigheter',
     part: 'system',
     title: 'Användare, rättigheter och sudo',
-    content: ch07,
     tasks: [
       {
         id: 'groups',
@@ -422,7 +404,6 @@ export const CHAPTERS: Chapter[] = [
     id: 'processer',
     part: 'system',
     title: 'Processer och jobb',
-    content: chProcesser,
     tasks: [
       {
         id: 'ps',
@@ -482,7 +463,6 @@ export const CHAPTERS: Chapter[] = [
     id: 'arkiv',
     part: 'system',
     title: 'Arkiv och komprimering',
-    content: chArkiv,
     tasks: [
       {
         id: 'tar-czf',
@@ -553,7 +533,6 @@ export const CHAPTERS: Chapter[] = [
     id: 'distributioner',
     part: 'distro',
     title: 'Distributioner och familjer',
-    content: ch08,
     tasks: [
       {
         id: 'os-release',
@@ -593,7 +572,6 @@ export const CHAPTERS: Chapter[] = [
     id: 'pakethantering',
     part: 'distro',
     title: 'Pakethantering',
-    content: ch09,
     tasks: [
       {
         id: 'sync',
@@ -722,7 +700,6 @@ export const CHAPTERS: Chapter[] = [
     id: 'skript',
     part: 'skript',
     title: 'Shell-skript',
-    content: chSkript,
     tasks: [
       {
         id: 'variabel',
@@ -783,6 +760,9 @@ export const CHAPTERS: Chapter[] = [
     ],
   },
 ];
+
+// Kapitlen visas i samma ordning som delarna i PARTS (stabil sortering behåller ordningen inom en del).
+CHAPTERS.sort((a, b) => PARTS.findIndex((p) => p.id === a.part) - PARTS.findIndex((p) => p.id === b.part));
 
 /** Kapitel som planeras – visas i menyn som "kommer snart". */
 export const UPCOMING: string[] = [

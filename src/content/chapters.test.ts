@@ -4,6 +4,11 @@ import { Shell } from '../shell/shell';
 import { CHAPTERS, taskKey } from './chapters';
 import { evaluateTasks, type Completed } from './progress';
 import { renderMarkdown } from './render';
+import { chapterMarkdown, isTranslated, languagesWithMarkdown } from './i18n';
+import { LANGUAGES, type Lang } from '../i18n/languages';
+
+/** Språk som måste vara helt översatta. */
+const REQUIRED_LANGS: Lang[] = ['sv'];
 import { resolve } from './types';
 
 // Kör alla lösningar i ordning – precis som en elev skulle göra – och
@@ -27,14 +32,25 @@ describe.each(DISTROS.map((d) => [d.id, d] as const))('alla uppgifter går att l
 });
 
 describe('kapitelinnehåll', () => {
-  test.each(CHAPTERS.map((c) => [c.id, c] as const))('%s renderas för alla familjer', (_id, chapter) => {
-    for (const d of DISTROS) {
-      const html = renderMarkdown(chapter.content, d);
-      expect(html).toContain('<h1');
-      expect(html).not.toMatch(/\{\{\w+\}\}/);
-      expect(html).not.toMatch(/^:::/m);
+  test.each(CHAPTERS.map((c) => [c.id, c] as const))('%s renderas på alla språk och för alla familjer', (_id, chapter) => {
+    const langs = languagesWithMarkdown(chapter);
+    expect(langs).toContain('sv');
+    for (const lang of langs) {
+      for (const d of DISTROS) {
+        const html = renderMarkdown(chapterMarkdown(chapter, lang as Lang), d);
+        expect(html, `${lang}/${chapter.id}`).toContain('<h1');
+        expect(html, `${lang}/${chapter.id}`).not.toMatch(/\{\{\w+\}\}/);
+        expect(html, `${lang}/${chapter.id}`).not.toMatch(/^:::/m);
+      }
     }
   });
+
+  test.each(LANGUAGES.filter((l) => REQUIRED_LANGS.includes(l.code)).map((l) => [l.code] as const))(
+    'alla kapitel och uppgifter finns på %s',
+    (lang) => {
+      for (const chapter of CHAPTERS) expect(isTranslated(chapter, lang), `${lang}/${chapter.id}`).toBe(true);
+    },
+  );
 
   test('distro-block fungerar även med Windows-radslut', () => {
     const md = '# Titel\r\n\r\n:::arch\r\nBara Arch\r\n:::\r\n\r\n:::debian\r\nBara Debian\r\n:::\r\n';

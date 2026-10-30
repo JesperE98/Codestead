@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, type MouseEvent } from 'react';
+import { chapterMarkdown } from '../content/i18n';
 import { renderMarkdown } from '../content/render';
 import type { Chapter } from '../content/types';
 import type { Distro } from '../shell/distros';
@@ -14,7 +15,7 @@ interface Props {
 }
 
 export function Lesson({ chapter, number, distro, prev, next, onNavigate, onCommand }: Props) {
-  const html = useMemo(() => renderMarkdown(chapter.content, distro), [chapter, distro]);
+  const html = useMemo(() => renderMarkdown(chapterMarkdown(chapter, 'sv'), distro), [chapter, distro]);
   const ref = useRef<HTMLElement>(null);
 
   // Gör varje rad i ```sh-block klickbar: klick lägger in kommandot i terminalen.

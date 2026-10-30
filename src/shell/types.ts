@@ -32,6 +32,10 @@ export interface CommandDef {
   summary: string;
   /** Förenklad manualsida på svenska som visas av `man`. */
   man?: string;
+  /** Sammanfattning på engelska (visas för alla språk utom svenska). */
+  summaryEn?: string;
+  /** Manualsida på engelska (visas för alla språk utom svenska). */
+  manEn?: string;
   /** Inbyggt i skalet (cd, export ...) i stället för en fil i /usr/bin. */
   builtin?: boolean;
   run(ctx: CmdCtx): number;

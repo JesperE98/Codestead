@@ -98,6 +98,8 @@ export class Shell {
   userStack: string[];
   lastExit = 0;
   pending: Pending | null = null;
+  /** Gränssnittets språk. Styr simulatorns egna tipsrader och manualsidor (svenska eller engelska). */
+  lang = 'sv';
 
   scriptDepth = 0;
   funcDepth = 0;
@@ -245,6 +247,11 @@ export class Shell {
 
   resolve(path: string): string {
     return resolvePath(this.cwd, path);
+  }
+
+  /** Väljer simulatorns egna meddelanden på svenska eller engelska (engelska för alla andra språk). */
+  msg(text: { sv: string; en: string }): string {
+    return this.lang === 'sv' ? text.sv : text.en;
   }
 
   requestClear(): void {
