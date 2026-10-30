@@ -10,16 +10,8 @@
       "hint": "`ping -c 3 192.168.1.1` – `-c` का मतलब *count* है।"
     },
     "dig": {
-      "text": {
-        "debian": "Package `dnsutils` install कीजिए और `dig` से `example.com` का IP address look up कीजिए।",
-        "arch": "Package `bind` install कीजिए और `dig` से `example.com` का IP address look up कीजिए।",
-        "redhat": "Package `bind-utils` install कीजिए और `dig` से `example.com` का IP address look up कीजिए।"
-      },
-      "hint": {
-        "debian": "`sudo apt update`, `sudo apt install dnsutils` और फिर `dig +short example.com`।",
-        "arch": "`sudo pacman -S bind` और फिर `dig +short example.com`।",
-        "redhat": "`sudo dnf install bind-utils` और फिर `dig +short example.com`।"
-      }
+      "text": "पैकेज `dnsutils` इंस्टॉल कीजिए और `dig` से `example.com` का IP पता खोजिए।",
+      "hint": "`sudo apt update`, `sudo apt install dnsutils` और फिर `dig +short example.com`।"
     },
     "ss": {
       "text": "`ss` से पता कीजिए कि computer पर कौन-से ports listen कर रहे हैं।",
@@ -27,11 +19,7 @@
     },
     "curl-localhost": {
       "text": "अपने ही computer पर चल रहे practice server का start page, `http://localhost:8080`, `curl` से लाइए।",
-      "hint": {
-        "debian": "Debian/Ubuntu पर curl install करना पड़ता है: `sudo apt install curl`। अगर आपको *Couldn't connect to server* मिले, तो minserver रुका हुआ है – उसे `minserver` से start कीजिए।",
-        "arch": "`curl http://localhost:8080`। अगर आपको *Couldn't connect to server* मिले, तो minserver रुका हुआ है – उसे `minserver` से start कीजिए।",
-        "redhat": "`curl http://localhost:8080`। अगर आपको *Couldn't connect to server* मिले, तो minserver रुका हुआ है – उसे `minserver` से start कीजिए।"
-      }
+      "hint": "Ubuntu पर curl इंस्टॉल करना पड़ता है: `sudo apt install curl`। अगर आपको *Couldn't connect to server* मिले, तो minserver रुका हुआ है – उसे `minserver` से शुरू कीजिए।"
     },
     "spara": {
       "text": "Web page `https://example.com` को file `~/exempel.html` के रूप में save कीजिए।",
@@ -43,11 +31,7 @@
     },
     "ssh": {
       "text": "`ssh` से server `server.lan` पर user `elev` के रूप में command `hostname` चलाइए।",
-      "hint": {
-        "debian": "`ssh elev@server.lan hostname` – और host key वाले सवाल का जवाब `yes` दीजिए।",
-        "arch": "पहले ssh client install कीजिए: `sudo pacman -S openssh`। फिर `ssh elev@server.lan hostname` – और host key वाले सवाल का जवाब `yes` दीजिए।",
-        "redhat": "`ssh elev@server.lan hostname` – और host key वाले सवाल का जवाब `yes` दीजिए।"
-      }
+      "hint": "`ssh elev@server.lan hostname` – और होस्ट कुंजी (host key) वाले सवाल का जवाब `yes` दीजिए।"
     }
   }
 }

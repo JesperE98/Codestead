@@ -18,16 +18,8 @@
       "hint": "पहले `sudo groupadd utvecklare`, फिर `sudo usermod -aG utvecklare kim`।"
     },
     "sudo-ratt": {
-      "text": {
-        "debian": "`kim` के account को `sudo` group में जोड़कर उसे `sudo` इस्तेमाल करने दीजिए।",
-        "arch": "`kim` के account को `wheel` group में जोड़कर उसे `sudo` इस्तेमाल करने दीजिए।",
-        "redhat": "`kim` के account को `wheel` group में जोड़कर उसे `sudo` इस्तेमाल करने दीजिए।"
-      },
-      "hint": {
-        "debian": "`sudo usermod -aG sudo kim` – `-a` मत भूलिए!",
-        "arch": "`sudo usermod -aG wheel kim` – `-a` मत भूलिए!",
-        "redhat": "`sudo usermod -aG wheel kim` – `-a` मत भूलिए!"
-      }
+      "text": "`kim` के खाते को `sudo` समूह में जोड़कर उसे `sudo` इस्तेमाल करने की अनुमति दीजिए।",
+      "hint": "`sudo usermod -aG sudo kim` – `-a` मत भूलिए!"
     },
     "sudo-u": {
       "text": "`sudo -u` से `whoami` को `kim` के रूप में चलाइए।",

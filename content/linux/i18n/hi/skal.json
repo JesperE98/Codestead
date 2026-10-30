@@ -3,11 +3,7 @@
   "tasks": {
     "installera-zsh": {
       "text": "Shell `zsh` install कीजिए।",
-      "hint": {
-        "debian": "`sudo apt update` और फिर `sudo apt install zsh`।",
-        "arch": "`sudo pacman -S zsh` और हाँ में जवाब दीजिए।",
-        "redhat": "`sudo dnf install zsh` – और `y` जवाब दीजिए।"
-      }
+      "hint": "`sudo apt update` और फिर `sudo apt install zsh`।"
     },
     "starta-zsh": {
       "text": "`zsh` start कीजिए। पहली बार *zsh-newuser-install* पूछता है कि आप क्या करना चाहते हैं – `2` जवाब दीजिए। फिर `echo $0` से दिखाइए कि आप कौन-सा shell चला रहे हैं।",
@@ -23,11 +19,7 @@
     },
     "installera-fish": {
       "text": "Shell `fish` install कीजिए।",
-      "hint": {
-        "debian": "`sudo apt update` और फिर `sudo apt install fish`।",
-        "arch": "`sudo pacman -S fish` और हाँ में जवाब दीजिए।",
-        "redhat": "`sudo dnf install fish` – और `y` जवाब दीजिए।"
-      }
+      "hint": "`sudo apt update` और फिर `sudo apt install fish`।"
     },
     "fish-set": {
       "text": "`fish` start कीजिए। fish के तरीक़े से `äpple` value वाला variable `frukt` बनाइए और उसे `echo` से print कीजिए।",

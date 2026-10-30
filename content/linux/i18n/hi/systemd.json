@@ -2,12 +2,8 @@
   "title": "systemd के साथ services और logs",
   "tasks": {
     "status-ssh": {
-      "text": "`systemctl status` से SSH server का status दिखाइए। सोचिए कि आपकी distribution family में service का नाम क्या है!",
-      "hint": {
-        "debian": "Debian family में service का नाम `ssh` है: `systemctl status ssh`।",
-        "arch": "Arch में service का नाम `sshd` है: `systemctl status sshd`।",
-        "redhat": "Fedora में service का नाम `sshd` है: `systemctl status sshd`।"
-      }
+      "text": "`systemctl status` से SSH सर्वर की स्थिति दिखाइए। सोचिए कि Ubuntu पर इस सर्विस का नाम क्या है!",
+      "hint": "Ubuntu पर सर्विस का नाम `ssh` है: `systemctl status ssh`।"
     },
     "failed": {
       "text": "लगता है कोई service start नहीं हुई। उन सारी services की list दिखाइए जो *fail* हो गई हैं।",

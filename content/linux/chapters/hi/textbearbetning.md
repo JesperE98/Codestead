@@ -14,7 +14,7 @@
 लिखते हैं। इसीलिए ये pipes के लिए बिल्कुल सही हैं। और original file **नहीं** बदलती
 (एक अपवाद के साथ, `sed -i`, जिस पर हम आगे आएँगे)।
 
-`dokument` में practice के लिए एक नई file है, students के अंकों वाली एक CSV file
+`dokument` में अभ्यास के लिए एक तीसरी फ़ाइल है, छात्रों के अंकों वाली एक CSV फ़ाइल
 (*namn* = नाम, *ämne* = विषय, *poäng* = अंक):
 
 ```sh
@@ -38,8 +38,8 @@ HELLO FROM CAFé
 ```
 
 é पर ध्यान गया? `tr` अलग-अलग *bytes* पर काम करता है, और é जैसे letters – या Swedish
-के å, ä और ö – `a-z` का हिस्सा नहीं हैं। यह जानना अच्छा है – `awk` (आगे) इसे बेहतर
-संभालता है।
+के å, ä और ö – `a-z` का हिस्सा नहीं हैं। यह जानना अच्छा है – GNU `awk` (आगे) इसे
+बेहतर संभालता है।
 
 `tr` **सिर्फ़** stdin से पढ़ता है, files से कभी नहीं। अगर आप कोई file इस्तेमाल करना
 चाहते हैं, तो उसे `<` या pipe से अंदर भेजिए:
@@ -61,6 +61,13 @@ echo $PATH | tr ':' '\n'
 ```sh
 echo "070-123 45 67" | tr -d ' -'
 echo "too     many      spaces" | tr -s ' '
+```
+
+```predict
+$ echo "hello world" | tr -d o
+hell wrld
+---
+`-d` हर `o` को हटा देता है, चाहे वह कहीं भी हो।
 ```
 
 Ranges की जगह आप *classes* भी लिख सकते हैं, जैसे `[:upper:]` (uppercase),
@@ -94,6 +101,13 @@ Flags के बिना हर line पर सिर्फ़ **पहला**
 ```sh
 echo "cat cat cat" | sed 's/cat/dog/'
 echo "cat cat cat" | sed 's/cat/dog/g'
+```
+
+```predict
+$ echo banana | sed 's/a/o/'
+bonana
+---
+`g` के बिना पंक्ति का सिर्फ़ पहला `a` बदला जाता है।
 ```
 
 `i` flag खोज को case-insensitive बना देता है, बिल्कुल `grep -i` की तरह:
@@ -190,8 +204,31 @@ cat ~/frukter-kopia.txt
 के **बिना** चलाकर नतीजा देखिए, और जब सही लगे तब `-i` जोड़िए। अगर आप `-i.bak` लिखते
 हैं, तो original भी `file.bak` के रूप में save हो जाती है।
 
+```quiz
+आप `sed 's/kiwi/KIWI/' ~/dokument/frukter.txt` चलाते हैं। फ़ाइल का क्या होता है?
+- [ ] फ़ाइल का हर `kiwi` `KIWI` बन जाता है
+- [ ] फ़ाइल का सिर्फ़ पहला `kiwi` `KIWI` बनता है
+- [x] कुछ नहीं – नतीजा सिर्फ़ छापा जाता है, फ़ाइल नहीं बदलती
+---
+`-i` के बिना `sed` सिर्फ़ stdout पर लिखता है। फ़ाइल जैसी थी वैसी ही रहती है।
+```
+
 `/etc` की configuration files root की होती हैं, इसलिए वहाँ आपको `sudo sed -i ...`
 चाहिए। Text editor खोले बिना किसी script से setting बदलने का यह एक आम तरीक़ा है।
+
+## फ़ील्ड काटकर निकालना – `cut`
+
+जब कोई फ़ाइल फ़ील्डों से बनी हो जिनके बीच एक विभाजक (separator) हो, तो `cut`
+एक फ़ील्ड चुनकर निकाल सकता है। `-d` विभाजक (*delimiter*) चुनता है और `-f` बताता
+है कि कौन-सा फ़ील्ड रखना है। ये रहे CSV फ़ाइल के विषय – फ़ील्ड 2:
+
+```sh
+cut -d, -f2 ~/dokument/betyg.csv
+```
+
+`/etc/passwd` में फ़ील्ड कोलन से अलग होते हैं और फ़ील्ड 1 यूज़रनेम है, इसलिए
+`cut -d: -f1 /etc/passwd` सभी यूज़र्स की सूची दिखाता है। दूसरे फ़िल्टरों की तरह
+`cut` भी पाइप में फ़िट बैठता है – जैसे `tr` से पहले।
 
 ## Columns – `awk`
 
@@ -240,8 +277,16 @@ awk -F: '{print $1, $7}' /etc/passwd
 awk -F: '{print $1 " uses " $7}' /etc/passwd
 ```
 
-शायद आपको `cut -d: -f1` याद हो। फ़र्क़ यह है कि awk fields का order बदल सकता है, text
-मिला सकता है और लगातार कई spaces को भी संभाल लेता है।
+पिछले भाग के `cut -d: -f1` से तुलना कीजिए। फ़र्क़ यह है कि awk fields का order बदल
+सकता है, text मिला सकता है और लगातार कई spaces को भी संभाल लेता है।
+
+```predict
+$ echo "Alva,matte,87" | awk -F, '{print $3, $1}'
+87 Alva
+---
+`-F,` पंक्ति को कॉमा पर बाँटता है। awk पहले फ़ील्ड 3 छापता है, फिर फ़ील्ड 1,
+और `print` में कॉमा की वजह से दोनों के बीच एक स्पेस आता है।
+```
 
 ### Patterns – lines चुनना
 
@@ -275,6 +320,12 @@ awk -F, '$3 >= 90' ~/dokument/betyg.csv
 awk -F, 'NR > 1 && $3 >= 90' ~/dokument/betyg.csv
 ```
 
+अपना ख़ुद का पैटर्न आज़माइए – उन सभी के नाम जो *svenska* (स्वीडिश) पढ़ते हैं:
+
+```try
+awk -F, '$2 == "svenska" {print $1}' ~/dokument/betyg.csv
+```
+
 ### गिनती – variables और `END`
 
 awk में variables होते हैं जिन्हें declare करने की ज़रूरत नहीं – वे 0 से शुरू होते हैं।
@@ -301,26 +352,18 @@ awk -F, 'NR > 1 {summa += $3; antal++} END {print "Average:", summa / antal}' ~/
 awk -F, 'BEGIN {print "Student  Score"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/dokument/betyg.csv
 ```
 
-awk में functions भी हैं, जैसे `length()`, `toupper()` और `tolower()`। `tr` के उलट,
-GNU awk å, ä और ö जैसे letters को संभाल लेता है:
+awk में functions भी हैं, जैसे `length()`, `toupper()` और `tolower()`:
 
 ```sh
 awk '{print toupper($0)}' ~/dokument/frukter.txt
 ```
 
-:::debian
-{{distro}} पर `awk` default रूप से **mawk** है, एक छोटा और तेज़ variant। अगर आपको GNU
-awk चाहिए, तो `gawk` package install कीजिए। इन जैसे सरल programs में आपको कोई फ़र्क़
-नहीं दिखेगा – लेकिन mawk `toupper()` से å, ä और ö को नहीं बदलता।
-:::
-
-:::arch
-Arch Linux पर `awk` **GNU awk** है (`gawk` package)।
-:::
-
-:::redhat
-{{distro}} पर `awk` **GNU awk** है (`gawk` package)।
-:::
+`äpple` और `päron` को ध्यान से देखिए। Ubuntu पर, जिस पर यहाँ का टर्मिनल चलता है,
+`awk` डिफ़ॉल्ट रूप से **mawk** है, एक छोटा और तेज़ रूप। इन जैसे सरल प्रोग्रामों में
+आपको कोई फ़र्क़ नहीं दिखेगा – लेकिन mawk `toupper()` से å, ä और ö को नहीं बदलता।
+**GNU awk** (`gawk` पैकेज) `tr` के उलट उन्हें बदल देता है। डिस्ट्रीब्यूशन इसमें
+अलग होते हैं कि वे कौन-सा awk इस्तेमाल करते हैं और सॉफ़्टवेयर कैसे इंस्टॉल किया
+जाता है – यह डिस्ट्रीब्यूशन वाले अध्याय में आएगा।
 
 Simulator awk language का सिर्फ़ एक हिस्सा जानता है – जो यहाँ बताया गया है और थोड़ा
 और (`if`, loops और arrays)। `man awk` देखिए।
