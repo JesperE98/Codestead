@@ -54,8 +54,13 @@ public class LearningContentTests
         }
     }
 
-    private static Codestead.Shell.Shell Sandbox(Chapter chapter) =>
-        Codestead.Shell.Shell.Create(ChaptersLib.DistroFor(chapter, ChaptersLib.DefaultDistro));
+    /// <summary>A fresh shell like the app's checkpoint sandbox (English, the source language).</summary>
+    private static Codestead.Shell.Shell Sandbox(Chapter chapter)
+    {
+        var sh = Codestead.Shell.Shell.Create(ChaptersLib.DistroFor(chapter, ChaptersLib.DefaultDistro));
+        sh.Lang = "en";
+        return sh;
+    }
 
     [Theory(DisplayName = "predict-svaren stämmer med simulatorn")]
     [MemberData(nameof(ChapterIds))]
