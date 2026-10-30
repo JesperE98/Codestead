@@ -1,0 +1,23 @@
+{
+  "title": "File system में घूमना",
+  "tasks": {
+    "etc": {
+      "text": "`/etc` directory में जाइए और उसका content list कीजिए।",
+      "hint": "दो commands: पहले `cd`, फिर `ls`। आप इन्हें एक ही line में भी लिख सकते हैं: `cd /etc && ls`।"
+    },
+    "hidden": {
+      "text": "अपनी home directory की hidden files दिखाइए।",
+      "hint": "`-a` option dot से शुरू होने वाली files दिखाता है। आपकी home directory `~` है।"
+    },
+    "relative": {
+      "text": "Root (`/`) पर जाइए, और फिर **relative** path से `/var/log` में जाइए।",
+      "hint": "Relative path `/` से शुरू नहीं होता। अगर आप `/` में हैं, तो बस `cd var/log` काफ़ी है।"
+    },
+    "up": {
+      "text": "`cd ..` से एक level ऊपर जाइए।"
+    },
+    "home": {
+      "text": "बिना किसी argument के सिर्फ़ `cd` से अपनी home directory में वापस जाइए।"
+    }
+  }
+}
