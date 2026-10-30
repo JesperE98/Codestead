@@ -83,18 +83,17 @@ och [electron-builder](https://www.electron.build) skapar installationsfilerna:
 | Linux | `.AppImage` som körs direkt | `npm run app:dist:linux` |
 
 Filerna hamnar i `release/`. Varje operativsystem måste byggas på sig självt,
-så det enklaste är att låta GitHub göra det:
+så det enklaste är att låta GitHub göra det.
 
-```bash
-git tag v0.1.0
-```
+### Släppa en ny version
 
-```bash
-git push origin v0.1.0
-```
+1. Höj `version` i `package.json`, till exempel från `0.1.0` till `0.2.0`.
+2. Slå ihop ändringen till `main`.
 
-Då bygger flödet `.github/workflows/release.yml` alla tre och lägger upp dem
-som en ny release. Ikonen ligger i `build/icon.svg` (och `build/icon.png`).
+Flödet `.github/workflows/release.yml` bygger då installationsfilerna och
+lägger upp dem som release `v0.2.0`. Finns releasen redan händer ingenting.
+Flödet kan också startas för hand under **Actions → Bygg skrivbordsappar →
+Run workflow**. Ikonen ligger i `build/icon.svg` (och `build/icon.png`).
 
 ## Projektstruktur
 
