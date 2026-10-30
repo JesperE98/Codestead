@@ -277,7 +277,7 @@ const man = simple('man', 'Visar manualen för ett kommando', (ctx) => {
     return 16;
   }
   ctx.out(formatMan(name, manFor(def, ctx.sh)));
-  if (ctx.isTTY) ctx.out(`${COLOR.dim}(I en riktig terminal bläddrar du i manualen med piltangenterna och avslutar med q.)${COLOR.reset}\n`);
+  if (ctx.isTTY) ctx.out(`${COLOR.dim}(${ctx.sh.msg({ sv: 'I en riktig terminal bläddrar du i manualen med piltangenterna och avslutar med q.', en: 'In a real terminal you scroll through the manual with the arrow keys and quit with q.' })})${COLOR.reset}\n`);
   return 0;
 }, `NAMN
        man - visa manualsidor
@@ -293,10 +293,10 @@ BESKRIVNING
 const help = simple('help', 'Listar alla kommandon som finns', (ctx) => {
   const sh = ctx.sh;
   const names = sh.availableCommands().filter((n) => /^[a-z]/.test(n) && COMMANDS[n]?.name === n);
-  ctx.out(`Kommandon i den här simulerade terminalen (${sh.distro.name}):\n`);
-  ctx.out(`Skriv 'man <kommando>' för mer information om ett kommando.\n\n`);
+  ctx.out(sh.msg({ sv: `Kommandon i den här simulerade terminalen (${sh.distro.name}):\n`, en: `Commands in this simulated terminal (${sh.distro.name}):\n` }));
+  ctx.out(sh.msg({ sv: `Skriv 'man <kommando>' för mer information om ett kommando.\n\n`, en: `Type 'man <command>' for more information about a command.\n\n` }));
   for (const n of names) ctx.out(`  ${n.padEnd(11)} ${summaryFor(COMMANDS[n], sh)}\n`);
-  ctx.out(`\n${COLOR.dim}Saknas ett program? Det kanske går att installera med pakethanteraren (${sh.distro.packageManager}).${COLOR.reset}\n`);
+  ctx.out(`\n${COLOR.dim}${sh.msg({ sv: `Saknas ett program? Det kanske går att installera med pakethanteraren (${sh.distro.packageManager}).`, en: `Missing a program? Maybe you can install it with the package manager (${sh.distro.packageManager}).` })}${COLOR.reset}\n`);
   return 0;
 }, `NAMN
        help - lista kommandon i simulatorn`, true);
@@ -323,7 +323,7 @@ function sudoNotice(ctx: CmdCtx): void {
   const sh = ctx.sh;
   if (sh.flags.sudoNoticeShown) return;
   sh.flags.sudoNoticeShown = true;
-  ctx.err(`[sudo] password for ${sh.currentUser().name}: ${COLOR.dim}(simulatorn hoppar över lösenordet)${COLOR.reset}\n`);
+  ctx.err(`[sudo] password for ${sh.currentUser().name}: ${COLOR.dim}(${sh.msg({ sv: 'simulatorn hoppar över lösenordet', en: 'the simulator skips the password' })})${COLOR.reset}\n`);
 }
 
 function becomeRoot(ctx: CmdCtx, login: boolean): number {
@@ -387,7 +387,7 @@ VARNING
 const su = simple('su', 'Byter användare', (ctx) => {
   if (ctx.sh.currentUser().uid === 0) return becomeRoot(ctx, ctx.args[0] === '-' || ctx.args[0] === '-l');
   ctx.err(`Password: \nsu: Authentication failure\n`);
-  ctx.err(`${COLOR.dim}Tips: root-kontot har ofta inget lösenord. Använd 'sudo -i' i stället.${COLOR.reset}\n`);
+  ctx.err(`${COLOR.dim}${ctx.sh.msg({ sv: "Tips: root-kontot har ofta inget lösenord. Använd 'sudo -i' i stället.", en: "Tip: the root account often has no password. Use 'sudo -i' instead." })}${COLOR.reset}\n`);
   return 1;
 }, `NAMN
        su - byt användare (substitute user)
@@ -405,7 +405,7 @@ const bash = simple('bash', 'Kör ett skript i ett nytt bash-skal', (ctx) => {
   }
   if (first === '-c') return sh.runScript(rest[0] ?? '', 'bash', rest.slice(1), ctx);
   if (!first) {
-    ctx.out(`${COLOR.dim}Du kör redan bash! Simulatorn kan inte starta ett nytt interaktivt skal.${COLOR.reset}\n`);
+    ctx.out(`${COLOR.dim}${sh.msg({ sv: 'Du kör redan bash! Simulatorn kan inte starta ett nytt interaktivt skal.', en: "You're already running bash! The simulator can't start a new interactive shell." })}${COLOR.reset}\n`);
     return 0;
   }
   try {

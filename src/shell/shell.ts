@@ -311,8 +311,12 @@ export class Shell {
     const motd = this.distro.motd ? this.distro.motd + '\n' : '';
     return (
       motd +
-      `${DIM}Simulerad terminal (${this.distro.name}). Inget du gör här påverkar din dator.\n` +
-      `Skriv 'help' för att se vilka kommandon som finns.${RESET}\n`
+      DIM +
+      this.msg({
+        sv: `Simulerad terminal (${this.distro.name}). Inget du gör här påverkar din dator.\nSkriv 'help' för att se vilka kommandon som finns.`,
+        en: `Simulated terminal (${this.distro.name}). Nothing you do here affects your computer.\nType 'help' to see which commands are available.`,
+      }) +
+      `${RESET}\n`
     );
   }
 
@@ -398,8 +402,14 @@ export class Shell {
   private tick(): void {
     if (++this.steps > STEP_LIMIT) {
       throw new LimitError(
-        `Simulatorn avbröt körningen efter ${STEP_LIMIT.toLocaleString('sv-SE')} steg – kanske en oändlig loop? ` +
-          '(I en riktig terminal stoppar du ett program som aldrig blir klart med Ctrl+C.)',
+        this.msg({
+          sv:
+            `Simulatorn avbröt körningen efter ${STEP_LIMIT.toLocaleString('sv-SE')} steg – kanske en oändlig loop? ` +
+            '(I en riktig terminal stoppar du ett program som aldrig blir klart med Ctrl+C.)',
+          en:
+            `The simulator stopped the run after ${STEP_LIMIT.toLocaleString('en-US')} steps – an infinite loop, perhaps? ` +
+            '(In a real terminal you stop a program that never finishes with Ctrl+C.)',
+        }),
       );
     }
   }
@@ -766,7 +776,7 @@ export class Shell {
       }
     } catch (e) {
       if (isControlSignal(e)) throw e;
-      io.err(`${name}: internt fel i simulatorn: ${(e as Error).message}\n`);
+      io.err(`${name}: ${this.msg({ sv: 'internt fel i simulatorn', en: 'internal simulator error' })}: ${(e as Error).message}\n`);
       return 1;
     }
   }
@@ -867,7 +877,7 @@ export class Shell {
     }
     io.err(`bash: ${name}: command not found\n`);
     if (pkgName) {
-      io.err(`${DIM}Tips från simulatorn: kommandot finns i paketet '${pkgName}'. Se kapitlet om pakethantering.${RESET}\n`);
+      io.err(`${DIM}${this.msg({ sv: `Tips från simulatorn: kommandot finns i paketet '${pkgName}'. Se kapitlet om pakethantering.`, en: `Tip from the simulator: the command is in the package '${pkgName}'. See the chapter on package management.` })}${RESET}\n`);
     }
   }
 
@@ -877,7 +887,7 @@ export class Shell {
    */
   runScript(content: string, name: string, args: string[], io: IO, inCurrentShell = false): number {
     if (this.scriptDepth > 20) {
-      io.err(`bash: ${name}: för djup rekursion\n`);
+      io.err(`bash: ${name}: ${this.msg({ sv: 'för djup rekursion', en: 'maximum nesting level exceeded' })}\n`);
       return 1;
     }
     let ast: Node;
@@ -922,7 +932,7 @@ export class Shell {
       io.out('logout\n');
       return code;
     }
-    io.out(`${DIM}Det här är en simulerad terminal, så det finns ingen session att avsluta. Använd 'clear' för att rensa skärmen.${RESET}\n`);
+    io.out(`${DIM}${this.msg({ sv: "Det här är en simulerad terminal, så det finns ingen session att avsluta. Använd 'clear' för att rensa skärmen.", en: "This is a simulated terminal, so there is no session to end. Use 'clear' to clear the screen." })}${RESET}\n`);
     return 0;
   }
 

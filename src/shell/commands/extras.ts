@@ -95,7 +95,13 @@ BESKRIVNING
       );
     }
     ctx.out(`\nF1Help  F2Setup  F3Search  F4Filter  F5Tree  F6SortBy  F7Nice-  F8Nice+  F9Kill  F10Quit\n`);
-    note(ctx, '(Simulerad ögonblicksbild. I en riktig terminal är htop interaktivt – avsluta med q.)');
+    note(
+      ctx,
+      ctx.sh.msg({
+        sv: '(Simulerad ögonblicksbild. I en riktig terminal är htop interaktivt – avsluta med q.)',
+        en: '(Simulated snapshot. In a real terminal htop is interactive – quit with q.)',
+      }),
+    );
     return 0;
   },
 };
@@ -222,7 +228,13 @@ BESKRIVNING
       ctx.out('usage: git [-v | --version] [-h | --help] <command> [<args>]\n');
       return 1;
     }
-    note(ctx, `git ${ctx.args[0]} stöds inte ännu i simulatorn – det kommer i ett eget kapitel om git.`);
+    note(
+      ctx,
+      ctx.sh.msg({
+        sv: `git ${ctx.args[0]} stöds inte ännu i simulatorn – det kommer i ett eget kapitel om git.`,
+        en: `git ${ctx.args[0]} is not supported in the simulator yet – it will get its own chapter about git.`,
+      }),
+    );
     return 1;
   },
 };
@@ -245,7 +257,7 @@ BESKRIVNING
       const host = url.replace(/^\w+:\/\//, '').split('/')[0];
       if (name === 'curl') ctx.err(`curl: (6) Could not resolve host: ${host}\n`);
       else ctx.err(`--2026-10-29 12:00:00--  ${url}\nResolving ${host} (${host})... failed: Name or service not known.\nwget: unable to resolve host address '${host}'\n`);
-      note(ctx, '(Simulatorn har inget nätverk.)');
+      note(ctx, ctx.sh.msg({ sv: '(Simulatorn har inget nätverk.)', en: '(The simulator has no network.)' }));
       return name === 'curl' ? 6 : 4;
     },
   };
@@ -266,7 +278,13 @@ BESKRIVNING
       ctx.out(`Python ${v}\n`);
       return 0;
     }
-    note(ctx, `Python ${v} – det interaktiva läget stöds inte i simulatorn ännu.`);
+    note(
+      ctx,
+      ctx.sh.msg({
+        sv: `Python ${v} – det interaktiva läget stöds inte i simulatorn ännu.`,
+        en: `Python ${v} – interactive mode is not supported in the simulator yet.`,
+      }),
+    );
     return 0;
   },
 };
@@ -279,8 +297,14 @@ function editor(name: string, summary: string, man: string): CommandDef {
     run(ctx) {
       note(
         ctx,
-        `${name} är en interaktiv texteditor och stöds inte i simulatorn ännu.\n` +
-          `Skapa filer med t.ex.  echo 'text' > fil.txt  eller  echo 'mer text' >> fil.txt`,
+        ctx.sh.msg({
+          sv:
+            `${name} är en interaktiv texteditor och stöds inte i simulatorn ännu.\n` +
+            `Skapa filer med t.ex.  echo 'text' > fil.txt  eller  echo 'mer text' >> fil.txt`,
+          en:
+            `${name} is an interactive text editor and is not supported in the simulator yet.\n` +
+            `Create files with e.g.  echo 'text' > file.txt  or  echo 'more text' >> file.txt`,
+        }),
       );
       return 0;
     },
@@ -305,7 +329,7 @@ BESKRIVNING
       return 255;
     }
     ctx.err(`ssh: Could not resolve hostname ${target.split('@').pop()}: Name or service not known\n`);
-    note(ctx, '(Simulatorn har inget nätverk.)');
+    note(ctx, ctx.sh.msg({ sv: '(Simulatorn har inget nätverk.)', en: '(The simulator has no network.)' }));
     return 255;
   },
 };

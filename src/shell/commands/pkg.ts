@@ -93,7 +93,7 @@ function aptInstall(ctx: CmdCtx, names: string[]): number {
     if (!p || (!sh.flags.repoSynced && !isInstalled(sh, p))) {
       ctx.err(`E: Unable to locate package ${n}\n`);
       if (!sh.flags.repoSynced) {
-        ctx.err(`${COLOR.dim}Tips från simulatorn: paketlistorna är tomma. Kör 'sudo apt update' först.${COLOR.reset}\n`);
+        ctx.err(`${COLOR.dim}${ctx.sh.msg({ sv: "Tips från simulatorn: paketlistorna är tomma. Kör 'sudo apt update' först.", en: "Tip from the simulator: the package lists are empty. Run 'sudo apt update' first." })}${COLOR.reset}\n`);
       }
       return 100;
     }
@@ -152,7 +152,7 @@ function aptRemove(ctx: CmdCtx, names: string[], assumeYes: boolean): number {
     }
     if (p.essential) {
       ctx.err(`E: Removing essential system-critical packages is not permitted. This might break the system.\n`);
-      ctx.err(`${COLOR.dim}(${n} är ett systemkritiskt paket – utan det slutar systemet fungera.)${COLOR.reset}\n`);
+      ctx.err(`${COLOR.dim}(${ctx.sh.msg({ sv: `${n} är ett systemkritiskt paket – utan det slutar systemet fungera.`, en: `${n} is an essential package – without it the system stops working.` })})${COLOR.reset}\n`);
       return 100;
     }
     toRemove.push(p);
@@ -197,7 +197,7 @@ function aptUpgrade(ctx: CmdCtx, assumeYes: boolean): number {
   if (!ups.length) {
     ctx.out('0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.\n');
     if (sh.flags.repoSynced) sh.flags.upgraded = true;
-    else ctx.out(`${COLOR.dim}Tips från simulatorn: apt vet inte om några nya versioner förrän du kört 'sudo apt update'.${COLOR.reset}\n`);
+    else ctx.out(`${COLOR.dim}${ctx.sh.msg({ sv: "Tips från simulatorn: apt vet inte om några nya versioner förrän du kört 'sudo apt update'.", en: "Tip from the simulator: apt doesn't know about any new versions until you have run 'sudo apt update'." })}${COLOR.reset}\n`);
     return 0;
   }
   const size = ups.reduce((s, p) => s + p.sizeKb, 0);
