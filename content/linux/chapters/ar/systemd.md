@@ -49,10 +49,8 @@ ls /usr/lib/systemd/system
 ls /etc/systemd/system
 ```
 
-:::debian
 في إصدارات Debian وUbuntu الأقدم غالبًا ما ترى `/lib/systemd/system` بدلًا من
 ذلك. وهو المجلد نفسه – فـ `/lib` رابط إلى `/usr/lib`.
-:::
 
 اسم الخدمة هو اسم الملف، مثل `minserver.service`. وعندما تكتب الأوامر يمكنك
 حذف `.service`: فالأمر `systemctl status minserver` يعمل بالقدر نفسه.
@@ -61,40 +59,27 @@ ls /etc/systemd/system
 
 الأمر الذي ستستخدمه أكثر من غيره هو `systemctl status`:
 
-:::debian
 ```sh
 systemctl status ssh
 ```
-:::
 
-:::arch
-```sh
-systemctl status sshd
-```
-:::
-
-:::redhat
-```sh
-systemctl status sshd
-```
-:::
-
-تبدو المخرجات تقريبًا هكذا:
+على Ubuntu يُسمّى خادم SSH باسم `ssh`. تبدو المخرجات تقريبًا هكذا:
 
 ```text
-● sshd.service - OpenSSH server daemon
-     Loaded: loaded (/usr/lib/systemd/system/sshd.service; enabled; preset: disabled)
-     Active: active (running) since Fri 2026-10-30 07:54:07 CET; 2h 13min ago
+● ssh.service - OpenBSD Secure Shell server
+     Loaded: loaded (/usr/lib/systemd/system/ssh.service; enabled; preset: enabled)
+     Active: active (running) since Fri 2026-10-30 07:54:07 UTC; 2h 13min ago
        Docs: man:sshd(8)
+             man:sshd_config(5)
    Main PID: 733 (sshd)
       Tasks: 1 (limit: 9387)
      Memory: 10.1M
-     CGroup: /system.slice/sshd.service
+     CGroup: /system.slice/ssh.service
              └─733 /usr/sbin/sshd -D
 
-Oct 30 07:54:07 fedora systemd[1]: Starting sshd.service - OpenSSH server daemon...
-Oct 30 07:54:07 fedora sshd[733]: Server listening on 0.0.0.0 port 22.
-Oct 30 07:54:07 fedora systemd[1]: Started sshd.service - OpenSSH server daemon.
+Oct 30 07:54:07 ubuntu systemd[1]: Starting ssh.service - OpenBSD Secure Shell server...
+Oct 30 07:54:07 ubuntu sshd[733]: Server listening on 0.0.0.0 port 22.
+Oct 30 07:54:07 ubuntu systemd[1]: Started ssh.service - OpenBSD Secure Shell server.
 ```
 
 سطرًا سطرًا:
@@ -173,6 +158,19 @@ systemctl is-enabled minserver
 if systemctl is-active -q minserver; then echo "the server is running"; fi
 ```
 
+على حاسوب بدأ للتو في المحاكي، تعمل `minserver`، لكن لم يفعّلها أحد. ماذا يطبع
+هذان الأمران؟
+
+```predict
+$ systemctl is-active minserver
+$ systemctl is-enabled minserver
+active
+disabled
+---
+تعمل minserver **الآن**، لكن أحدًا لم يشغّل `enable` – فبعد إعادة التشغيل لن
+تبدأ. فـ `start` و`enable` شيئان مختلفان فعلًا.
+```
+
 ## سرد الخدمات
 
 ```sh
@@ -240,8 +238,20 @@ journalctl --since today -u minserver
 (firmware) للحاسوب تلتفّ عليها النواة.
 
 عادةً يجب أن تكون root، أو عضوًا في مجموعة يحق لها قراءة الـ journal (`adm` أو
-`systemd-journal` في Debian وUbuntu، و`wheel` في Arch وFedora)، لترى كل شيء.
+`systemd-journal` على Ubuntu – وتستخدم العائلات الأخرى مجموعات أخرى)، لترى كل شيء.
 أما مستخدمك في المحاكي فيحق له قراءة الـ journal كاملًا.
+
+```quiz
+أيّ الأولويات يعرضها `journalctl -p warning`؟
+- [x] `err`
+- [x] `warning`
+- [x] `crit`
+- [ ] `notice`
+- [ ] `info`
+---
+يعرض `-p` الأولوية التي تختارها *وكل ما هو أخطر منها* – أي كل ما له الرقم نفسه
+أو رقم أصغر (`warning` رقمها 4).
+```
 
 ## استكشاف أخطاء خدمة لا تبدأ
 
@@ -284,6 +294,17 @@ journalctl --since today -u minserver
 انتهى من تلقاء نفسه بخطأ. وإذا كُتب `status=203/EXEC`، فإن systemd لم يجد
 البرنامج أصلًا – تحقّق من المسار في `ExecStart=`.
 
+```quiz
+خدمة لا تبدأ، والـ journal يقول `status=203/EXEC`. أين تنظر أولًا؟
+- [ ] في `/etc/fstab`
+- [x] في المسار الموجود في `ExecStart=` في ملف الوحدة
+- [ ] في الأولوية باستخدام `journalctl -p err`
+- [ ] لا مكان – فهذا يعني أن البرنامج انتهى من تلقاء نفسه بخطأ
+---
+تعني 203/EXEC أن systemd لم يجد البرنامج إطلاقًا. أما البرنامج الذي يبدأ ثم
+ينتهي بخطأ فيعطي `status=1/FAILURE` بدلًا من ذلك.
+```
+
 ## ملف الوحدة – `systemctl cat`
 
 لترى بالضبط كيف تبدأ خدمة ما، اقرأ ملف الوحدة الخاص بها:
@@ -323,43 +344,47 @@ sudo systemctl daemon-reload
 المرة القادمة التي تُحدَّث فيها الحزمة. ضع نسختك الخاصة في
 `/etc/systemd/system` بدلًا من ذلك.
 
-## أسماء مختلفة في عائلات مختلفة
+```quiz
+تريد تغيير طريقة بدء خدمة جاءت مع حزمة. ما الطريقة الصحيحة؟
+- [ ] تعديل ملفها في `/usr/lib/systemd/system` ثم إعادة تشغيل الخدمة
+- [x] وضع نسختك الخاصة في `/etc/systemd/system`، وتشغيل `sudo systemctl daemon-reload` ثم إعادة تشغيل الخدمة
+- [ ] وضع نسختك الخاصة في `/etc/systemd/system` – وسيلاحظ systemd التغيير بنفسه
+- [ ] تعديل الملف في `/usr/lib/systemd/system` وتشغيل `sudo systemctl enable` عليه
+---
+للملفات في `/etc/systemd/system` الأولوية، ولا يُكتب فوقها عندما تُحدَّث الحزمة.
+ويجعل `daemon-reload` الأمر systemd يحمّل ملف الوحدة المعدَّل من جديد.
+```
+
+## ما أسماء الخدمات؟
 
 يعمل systemd بالطريقة نفسها في كل مكان، لكن **الخدمات لا تحمل الأسماء نفسها
-دائمًا**. فذلك يعتمد على أسماء الحزم وعلى البرامج التي اختارتها التوزيعة:
+دائمًا** – فذلك يعتمد على أسماء الحزم وعلى البرامج التي اختارتها التوزيعة. على
+Ubuntu:
 
-| الخدمة | Debian/Ubuntu | Arch | Fedora |
-|---|---|---|---|
-| خادم SSH | `ssh` (والاسم البديل `sshd`) | `sshd` | `sshd` |
-| المهام المجدولة (cron) | `cron` | `cronie` (غير مثبّتة افتراضيًا) | `crond` |
-| الشبكة | `NetworkManager` (Ubuntu)، `networking` (Debian) | `systemd-networkd` | `NetworkManager` |
-| الجدار الناري | `ufw` (إن كان مثبّتًا) | – | `firewalld` |
-| الساعة | `systemd-timesyncd` | `systemd-timesyncd` | `chronyd` |
+| الخدمة | الاسم على Ubuntu |
+|---|---|
+| خادم SSH | `ssh` (والاسم البديل `sshd`) |
+| المهام المجدولة (cron) | `cron` |
+| الشبكة | `NetworkManager` |
+| الجدار الناري | `ufw` (إن كان مثبّتًا) |
+| الساعة | `systemd-timesyncd` |
 
-:::debian
-في {{distro}} تُسمّى خدمة SSH باسم `ssh.service`. ولها الاسم البديل
-`sshd.service`، لذا يعمل `systemctl status sshd` أيضًا – لكن المخرجات تعرض
-الاسم الحقيقي.
-:::
-
-:::arch
-لا يثبّت Arch أي خدمات تقريبًا افتراضيًا – فأنت من يختار. فلا توجد مثلًا خدمة
-cron تعمل؛ إذ يستخدم Arch بدلًا من ذلك **مؤقّتات** systemd (timers). وإذا أردت
-cron، فثبّت الحزمة `cronie` وشغّل `sudo systemctl enable --now cronie`. وتذكّر
-أيضًا أن Arch يستخدم `preset: disabled`: فالخدمات الجديدة لا تُفعَّل تلقائيًا
-أبدًا عندما تثبّتها.
-:::
-
-:::redhat
-في Fedora يعمل `firewalld` من البداية، ويتولّى `chronyd` مزامنة الوقت. ويستخدم
-Fedora أيضًا `preset: disabled` لمعظم الخدمات: فعندما تثبّت خدمة جديدة (خادم ويب
-مثلًا) عليك أن تشغّل `sudo systemctl enable --now …` بنفسك.
-:::
+تُسمّى خدمة SSH في الحقيقة `ssh.service`. ولها الاسم البديل `sshd.service`، لذا
+يعمل `systemctl status sshd` أيضًا – لكن المخرجات تعرض الاسم الحقيقي. وقد تسمّي
+العائلات الأخرى الخدمات نفسها بأسماء مختلفة (ففي Arch وFedora تُسمّى خدمة SSH
+`sshd`) – والجزء الخاص بالتوزيعات والحزم يتناول مثل هذه الاختلافات.
 
 لست متأكدًا من اسم شيء ما؟ ابحث في القائمة:
 
 ```sh
 systemctl list-unit-files | grep ssh
+```
+
+```try
+systemctl list-unit-files | grep ssh
+---
+`ssh.service` هو ملف الوحدة الحقيقي، و`sshd.service` مسرود بوصفه `alias` (اسمًا
+بديلًا) له.
 ```
 
 ## إعادة تشغيل الحاسوب

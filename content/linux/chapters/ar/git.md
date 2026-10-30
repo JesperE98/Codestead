@@ -16,32 +16,15 @@
 
 ## ثبّت git
 
-لا يكون git مثبّتًا مسبقًا دائمًا. على {{distro}} تثبّته هكذا:
+لا يكون git مثبّتًا مسبقًا دائمًا. في طرفية Ubuntu تثبّته باستخدام apt:
 
-:::debian
 ```sh
 sudo apt update
 sudo apt install git
 ```
-:::
 
-:::arch
-```sh
-sudo pacman -S git
-```
-
-أجب بنعم عندما يسألك pacman هل تريد المتابعة.
-:::
-
-:::redhat
-```sh
-sudo dnf install git
-```
-
-أجب بـ `y` – فالحرف الكبير `N` في `[y/N]` يعني أن «لا» هي الإجابة الافتراضية.
-:::
-
-اسم الحزمة `git` في كل العائلات. تحقّق من أنه يعمل:
+أما التوزيعات الأخرى فتثبّته بمدير الحزم الخاص بها، كما تعلّمت في الجزء الخاص
+بالتوزيعات والحزم – واسم الحزمة هناك أيضًا `git`. تحقّق من أنه يعمل:
 
 ```sh
 git --version
@@ -114,6 +97,16 @@ ls .git
 يدويًا. وإذا أردت التوقف عن استخدام git في مشروع ما، فيكفي حذف `.git`؛ وتبقى
 ملفاتك العادية كما هي.
 
+```quiz
+تريد التوقف عن استخدام git في مشروع، لكن مع الاحتفاظ بكل ملفاتك. ماذا تفعل؟
+- [ ] تشغّل `git init` مرة أخرى
+- [x] تحذف المجلد المخفي `.git`
+- [ ] تحذف كل الملفات ما عدا `.git`
+---
+التاريخ كله موجود في `.git`، ولا يمسّ git ملفاتك العادية. ومن دون `.git` تبقى
+الملفات – ويختفي التاريخ فقط.
+```
+
 ## ثلاثة أماكن: شجرة العمل والفهرس والتاريخ
 
 أهم شيء يجب أن تفهمه في git هو أن كل تغيير يمرّ عبر ثلاثة أماكن:
@@ -132,6 +125,17 @@ ls .git
 لماذا الخطوة الوسطى؟ لكي تستطيع الاختيار. فإذا عدّلت خمسة ملفات لكن اثنين منها
 فقط مرتبطان معًا، تستطيع وضع هذين الاثنين في الفهرس، وعمل commit لهما، وترك البقية
 لـ commit مستقل.
+
+```quiz
+غيّرت خمسة ملفات، لكن تغييرين فقط منها مترابطان. كيف تحفظ هذين الاثنين فقط في
+commit؟
+- [ ] تشغّل `git commit` أولًا ثم `git add` على الملفين بعد ذلك
+- [x] تشغّل `git add` على الملفين، ثم `git commit`
+- [ ] تحفظ الخمسة كلها في commit – فالـ commit يأخذ دائمًا كل ملف تغيّر
+---
+يحفظ الـ commit ما هو موجود في الفهرس. وتبقى التغييرات الثلاثة الأخرى في شجرة
+العمل حتى تضيفها.
+```
 
 ## `git status` هو بوصلتك
 
@@ -249,6 +253,26 @@ git commit -a -m "Beskriv hur sidan är byggd"
 
 لاحظ أن `-a` *لا* يشمل الملفات الجديدة التي لا يتتبّعها git بعد. فهذه يجب أن تضيفها
 دائمًا باستخدام `git add` أولًا.
+
+الأسئلة التي فيها أوامر في هذا الفصل تبدأ في طرفية جديدة، لذا تثبّت git أولًا
+وتنشئ أول commit. ويرمي `> /dev/null 2>&1` مخرجات تلك الأسطر، كما تعلّمت في فصل
+إعادة التوجيه والأنابيب. ماذا يطبع الأمر الأخير؟
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ echo 'En rad till.' >> README.md
+$ git commit -m "En rad till" > /dev/null
+$ git log --oneline | wc -l
+1
+---
+الـ commit الثاني لم يحدث قط: فالتغيير على `README.md` لم يكن في الفهرس، لذا لم
+يكن هناك ما يُحفظ. ولو شغّلت `git add README.md` أولًا – أو `git commit -a` –
+لحصلت على commit اثنين.
+```
 
 ## رسائل commit جيدة
 
@@ -371,6 +395,25 @@ git log --oneline --all
 الفرع الآخر. عندها يرفض git ويطلب منك عمل commit أولًا (أو وضع التغييرات جانبًا
 مؤقتًا باستخدام `git stash` واستعادتها باستخدام `git stash pop`).
 
+كم سطرًا يحتوي على `purple` في `style.css` في النهاية؟
+
+```predict
+$ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
+$ git config --global user.name "Elev Elevsson"
+$ git config --global user.email "elev@example.com"
+$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git add . && git commit -m "Första versionen" > /dev/null
+$ git switch -c ny-design > /dev/null 2>&1
+$ echo 'h1 { color: purple; }' >> style.css
+$ git commit -am "Lila rubriker" > /dev/null
+$ git switch main > /dev/null 2>&1
+$ grep purple style.css | wc -l
+0
+---
+حُفظ السطر البنفسجي في commit على `ny-design`. وعندما تنتقل إلى `main`، يجعل git
+شجرة العمل تبدو مثل آخر commit في `main` – حيث لا يوجد السطر بعد.
+```
+
 ## دمج الفروع: `git merge`
 
 قف على الفرع الذي يجب أن *يستقبل* التغييرات – وهو هنا `main` – وادمج:
@@ -470,6 +513,23 @@ git commit -m "Slå ihop grenen rubrik"
 
 التعارضات أمر طبيعي تمامًا عندما يعمل عدة أشخاص على المشروع نفسه. ومن الطرق الجيدة
 لتقليلها أن تعمل commits صغيرة وأن تدمج كثيرًا.
+
+```quiz
+أنت على `main` وتشغّل `git merge rubrik`. فيحصل الملف على تعارض:
+
+    <<<<<<< HEAD
+      <h1>Hello!</h1>
+    =======
+      <h1>Welcome!</h1>
+    >>>>>>> rubrik
+
+أيّ سطر يأتي من `main`؟
+- [x] `<h1>Hello!</h1>`
+- [ ] `<h1>Welcome!</h1>`
+---
+`HEAD` هو الفرع الذي أنت عليه – هنا `main`. ونسخته موجودة بين
+`<<<<<<< HEAD` و`=======`؛ أما نسخة الفرع الآخر فتأتي بعد `=======`.
+```
 
 ## ملفات يجب أن يتجاهلها git: `.gitignore`
 

@@ -23,6 +23,13 @@ mkdir -p resa/2026/juni
 touch inkopslista.txt
 ```
 
+```quiz
+ماذا يفعل `touch anteckningar.txt` إذا كان الملف موجودًا بالفعل؟
+- [ ] يُفرغ الملف
+- [ ] يشتكي من أن الملف موجود
+- [x] يحدّث الطابع الزمني للملف فقط – ويبقى المحتوى كما هو
+```
+
 ## النسخ – `cp`
 
 ```sh
@@ -36,6 +43,15 @@ cp anteckningar.txt anteckningar-kopia.txt
 cp -r dokument dokument-backup
 ```
 
+```predict
+$ mkdir kopior
+$ cp anteckningar.txt kopior
+$ ls kopior
+anteckningar.txt
+---
+`kopior` مجلد، لذا تنتهي النسخة داخله بالاسم نفسه.
+```
+
 ## النقل وإعادة التسمية – `mv`
 
 في لينكس، *النقل* و*إعادة التسمية* شيء واحد. والأمر `mv` يقوم بالاثنين:
@@ -43,6 +59,15 @@ cp -r dokument dokument-backup
 ```sh
 mv inkopslista.txt dokument/
 mv dokument/inkopslista.txt dokument/handla.txt
+```
+
+```quiz
+لا يوجد ملف اسمه `b.txt`. ماذا يفعل `mv a.txt b.txt`؟
+- [ ] ينسخ `a.txt` إلى `b.txt`
+- [x] يعيد تسمية `a.txt` إلى `b.txt`
+- [ ] يفشل، لأن `b.txt` غير موجود
+---
+النقل وإعادة التسمية شيء واحد. بعد ذلك لا يبقى إلا `b.txt`.
 ```
 
 ## الحذف – `rm` و`rmdir`
@@ -61,6 +86,16 @@ rm -r dokument-backup
 > والأمر `rm -rf` (*recursive, force*) لا يسأل أي سؤال ولا يشتكي أبدًا – تحقّق
 > دائمًا من المسار مرتين قبل أن تضغط Enter.
 
+```quiz
+أيّ أمر يحذف المجلد `gammalt` *فقط* إذا كان فارغًا؟
+- [ ] `rm gammalt`
+- [x] `rmdir gammalt`
+- [ ] `rm -r gammalt`
+---
+يرفض `rmdir` حذف مجلد ما زال فيه شيء.
+أما `rm -r` فيحذف المجلد وكل ما بداخله.
+```
+
 ## أحرف البدل (wildcards)
 
 يستطيع الـ shell توسيع الأنماط إلى عدة أسماء ملفات قبل تشغيل الأمر:
@@ -71,12 +106,24 @@ rm -r dokument-backup
 | `?` | محرفًا واحدًا بالضبط |
 | `[abc]` | أحد المحارف a أو b أو c |
 
+يحتوي المجلد `dokument` في مجلد المنزل على ثلاثة ملفات:
+`betyg.csv` و`frukter.txt` و`server.log`. هذا الأمر يعرض فقط تلك التي تنتهي
+بـ `.txt`:
+
 ```sh
 ls dokument/*.txt
 ```
 
 هنا لا يرى `ls` النجمة أبدًا – فقد استبدل الـ shell بالفعل `dokument/*.txt` بكل
 أسماء الملفات المطابقة.
+
+```predict
+$ ls dokument/?????.*
+dokument/betyg.csv
+---
+كل `?` محرف واحد بالضبط، لذا يجب أن يكون الاسم قبل النقطة مكوّنًا من خمسة
+محارف. و`betyg` وحده كذلك – أما `frukter` و`server` فأطول.
+```
 
 ## المسافات في أسماء الملفات
 
