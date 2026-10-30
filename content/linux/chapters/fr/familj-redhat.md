@@ -63,7 +63,7 @@ La lettre majuscule est la réponse par défaut. Dans la famille Debian, apt
 demande `[Y/n]`, donc Entrée y signifie oui.
 ```
 
-`dnf remove paquet` supprime à nouveau un paquet.
+`dnf remove package` supprime à nouveau un paquet.
 
 ## Mettre à jour le système
 
