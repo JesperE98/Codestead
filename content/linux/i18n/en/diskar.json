@@ -1,0 +1,36 @@
+{
+  "title": "Disks and file systems",
+  "tasks": {
+    "df": {
+      "text": "Show how much space is used and free on the mounted file systems – with human-readable sizes (G, M).",
+      "hint": "`df` shows the file systems, the `-h` option makes the sizes readable: `df -h`."
+    },
+    "lsblk-f": {
+      "text": "Show all disks and partitions together with the file systems' type, label and UUID.",
+      "hint": "`lsblk` shows the disks as a tree. With `-f` the file systems are included: `lsblk -f`."
+    },
+    "fstab": {
+      "text": "Show the file `/etc/fstab`, which says what should be mounted when the computer starts."
+    },
+    "uuid": {
+      "text": "Find out the UUID of the file system mounted on `/` – and only that one.",
+      "hint": "`lsblk -f` shows that `/` is on `/dev/sda2`. Then ask `blkid /dev/sda2` – or let `findmnt -n -o UUID /` do it all at once."
+    },
+    "montera": {
+      "text": "Create the mount point `/mnt/usb` and mount the USB stick (`/dev/sdb1`) there.",
+      "hint": "Both creating directories in `/mnt` and mounting require root: `sudo mkdir -p /mnt/usb` and then `sudo mount /dev/sdb1 /mnt/usb`."
+    },
+    "fran-usb": {
+      "text": "Copy `rapport.pdf` from the USB stick to your home directory.",
+      "hint": "The stick's files are now in `/mnt/usb`: `cp /mnt/usb/rapport.pdf ~`."
+    },
+    "till-usb": {
+      "text": "Save a copy of `~/dokument/frukter.txt` on the USB stick.",
+      "hint": "The files on the stick are owned by root – FAT has no Linux permissions – so you need `sudo`: `sudo cp ~/dokument/frukter.txt /mnt/usb/`."
+    },
+    "avmontera": {
+      "text": "Unmount the USB stick, so that it is safe to pull out.",
+      "hint": "`sudo umount /mnt/usb` – without an n! If you get *target is busy*, your shell is in the directory: leave it with `cd ~` first."
+    }
+  }
+}

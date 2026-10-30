@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Codestead.Linux</RootNamespace>
+    <AssemblyName>Codestead.Linux</AssemblyName>
+    <AssemblyTitle>$(CodesteadLinuxName)</AssemblyTitle>
+    <!-- The release workflow passes the full version (-p:Version=x.y.z); local builds are x.y.0. -->
+    <Version>$(CodesteadLinuxVersion).0</Version>
+    <ApplicationIcon>../../build/icon.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- Release builds: no debugger attach info for users, smaller output. -->
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
+    <PackageReference Include="Velopack" Version="1.2.161" />
+  </ItemGroup>
+  <Import Project="../../build/Codestead.App.props" />
+  <ItemGroup>
+    <ProjectReference Include="../Codestead.Shell/Codestead.Shell.csproj" />
+    <ProjectReference Include="../Codestead.UI/Codestead.UI.csproj" />
+    <ProjectReference Include="../Codestead.Content/Codestead.Content.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/**" />
+  </ItemGroup>
+  <!-- Expose the product name from build/Codestead.props to the code. -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ProductName</_Parameter1>
+      <_Parameter2>$(CodesteadLinuxName)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ToolId</_Parameter1>
+      <_Parameter2>$(CodesteadLinuxId)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ReleasesRepo</_Parameter1>
+      <_Parameter2>$(CodesteadReleasesRepo)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>

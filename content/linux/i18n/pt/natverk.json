@@ -1,0 +1,37 @@
+{
+  "title": "Redes",
+  "tasks": {
+    "ip-addr": {
+      "text": "Mostre os endereços IP do computador com `ip`.",
+      "hint": "`ip addr` – ou, mais curto, `ip a`."
+    },
+    "ping-gw": {
+      "text": "Pingue o gateway `192.168.1.1` exatamente 3 vezes.",
+      "hint": "`ping -c 3 192.168.1.1` – `-c` vem de *count*."
+    },
+    "dig": {
+      "text": "Instale o pacote `dnsutils` e consulte o endereço IP de `example.com` com `dig`.",
+      "hint": "`sudo apt update`, `sudo apt install dnsutils` e depois `dig +short example.com`."
+    },
+    "ss": {
+      "text": "Descubra quais portas estão escutando no computador com `ss`.",
+      "hint": "`ss -tulpn` – **t**cp, **u**dp, **l**istening, **p**rocess, **n**umeric."
+    },
+    "curl-localhost": {
+      "text": "Busque a página inicial do servidor de treino no seu próprio computador, `http://localhost:8080`, com `curl`.",
+      "hint": "No Ubuntu é preciso instalar o curl: `sudo apt install curl`. Se você receber *Couldn't connect to server*, o minserver está parado – inicie-o com `minserver`."
+    },
+    "spara": {
+      "text": "Salve a página web `https://example.com` como o arquivo `~/exempel.html`.",
+      "hint": "Fique no seu diretório pessoal e use `curl -o exempel.html https://example.com` ou `wget -O exempel.html https://example.com`."
+    },
+    "hosts": {
+      "text": "O servidor `192.168.1.10` deveria se chamar `server.lan`, mas o nome não está no DNS. Adicione-o ao `/etc/hosts` e depois pingue `server.lan`.",
+      "hint": "O arquivo pertence ao root: `echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts` e depois `ping -c 3 server.lan`."
+    },
+    "ssh": {
+      "text": "Rode o comando `hostname` no servidor `server.lan` com `ssh` como o usuário `elev`.",
+      "hint": "`ssh elev@server.lan hostname` – e responda `yes` à pergunta sobre a chave do host."
+    }
+  }
+}

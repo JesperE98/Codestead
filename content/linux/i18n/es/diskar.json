@@ -1,0 +1,36 @@
+{
+  "title": "Discos y sistemas de archivos",
+  "tasks": {
+    "df": {
+      "text": "Muestra cuánto espacio está usado y libre en los sistemas de archivos montados, con tamaños legibles para humanos (G, M).",
+      "hint": "`df` muestra los sistemas de archivos, y la opción `-h` hace que los tamaños sean legibles: `df -h`."
+    },
+    "lsblk-f": {
+      "text": "Muestra todos los discos y particiones junto con el tipo, la etiqueta y el UUID de los sistemas de archivos.",
+      "hint": "`lsblk` muestra los discos como un árbol. Con `-f` se incluyen los sistemas de archivos: `lsblk -f`."
+    },
+    "fstab": {
+      "text": "Muestra el archivo `/etc/fstab`, que indica lo que se debe montar cuando arranca el ordenador."
+    },
+    "uuid": {
+      "text": "Averigua el UUID del sistema de archivos montado en `/`, y solo ese.",
+      "hint": "`lsblk -f` muestra que `/` está en `/dev/sda2`. Luego pregunta con `blkid /dev/sda2`, o deja que `findmnt -n -o UUID /` lo haga todo de una vez."
+    },
+    "montera": {
+      "text": "Crea el punto de montaje `/mnt/usb` y monta allí la memoria USB (`/dev/sdb1`).",
+      "hint": "Tanto crear directorios en `/mnt` como montar requieren root: `sudo mkdir -p /mnt/usb` y luego `sudo mount /dev/sdb1 /mnt/usb`."
+    },
+    "fran-usb": {
+      "text": "Copia `rapport.pdf` de la memoria USB a tu directorio personal.",
+      "hint": "Los archivos de la memoria están ahora en `/mnt/usb`: `cp /mnt/usb/rapport.pdf ~`."
+    },
+    "till-usb": {
+      "text": "Guarda una copia de `~/dokument/frukter.txt` en la memoria USB.",
+      "hint": "Los archivos de la memoria pertenecen a root (FAT no tiene permisos de Linux), así que necesitas `sudo`: `sudo cp ~/dokument/frukter.txt /mnt/usb/`."
+    },
+    "avmontera": {
+      "text": "Desmonta la memoria USB para poder sacarla sin peligro.",
+      "hint": "`sudo umount /mnt/usb`, ¡sin n! Si te sale *target is busy*, tu shell está dentro del directorio: sal primero con `cd ~`."
+    }
+  }
+}

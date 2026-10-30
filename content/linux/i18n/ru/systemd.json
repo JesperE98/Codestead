@@ -1,0 +1,37 @@
+{
+  "title": "Службы и журналы с systemd",
+  "tasks": {
+    "status-ssh": {
+      "text": "Покажите состояние SSH-сервера с помощью `systemctl status`. Подумайте, как эта служба называется в Ubuntu!",
+      "hint": "В Ubuntu служба называется `ssh`: `systemctl status ssh`."
+    },
+    "failed": {
+      "text": "Похоже, какая-то служба не запустилась. Выведите список всех служб, которые завершились сбоем (*failed*).",
+      "hint": "`systemctl --failed` (или `systemctl list-units --state=failed`)."
+    },
+    "journal-err": {
+      "text": "Покажите в journal только сообщения об ошибках (приоритет *err* и серьёзнее) за текущую загрузку.",
+      "hint": "`-p err` выбирает приоритет, а `-b` – последнюю загрузку: `journalctl -p err -b`."
+    },
+    "journal-u": {
+      "text": "Прочитайте журнал сломанной службы `rapportd` с помощью `journalctl`. Почему она не запускается?",
+      "hint": "`-u` показывает только строки одной службы: `journalctl -u rapportd`. С `-xe` вы перейдёте в конец и получите пояснения."
+    },
+    "fix": {
+      "text": "Устраните проблему, о которой говорит журнал, а затем перезапустите `rapportd` с помощью `systemctl`, чтобы служба заработала.",
+      "hint": "Конфигурационного файла нет, но есть пример: `sudo cp /etc/rapportd.conf.example /etc/rapportd.conf`. Затем перезапустите службу: `sudo systemctl restart rapportd`."
+    },
+    "start-minserver": {
+      "text": "Запустите службу `minserver` (если она ещё не работает), а затем покажите её состояние. Какой PID она получила?",
+      "hint": "`sudo systemctl start minserver`, а затем `systemctl status minserver`."
+    },
+    "stop": {
+      "text": "Остановите `minserver` с помощью `systemctl`. Можете проверить командой `pgrep minserver`, что процесса больше нет.",
+      "hint": "`sudo systemctl stop minserver`"
+    },
+    "enable": {
+      "text": "Сделайте так, чтобы `minserver` автоматически запускался при каждой загрузке компьютера, – и заодно запустите его прямо сейчас, одной командой.",
+      "hint": "`enable` действует при загрузке, а `--now` запускает сразу: `sudo systemctl enable --now minserver`."
+    }
+  }
+}

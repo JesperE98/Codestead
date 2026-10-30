@@ -1,0 +1,37 @@
+{
+  "title": "其他 shell：zsh 和 fish",
+  "tasks": {
+    "installera-zsh": {
+      "text": "安装 `zsh` shell。",
+      "hint": "`sudo apt update`，然后 `sudo apt install zsh`。"
+    },
+    "starta-zsh": {
+      "text": "启动 `zsh`。第一次启动时，*zsh-newuser-install* 会问你想做什么——回答 `2`。然后用 `echo $0` 显示你正在运行的是哪个 shell。",
+      "hint": "输入 `zsh`，回答 `2`，然后输入 `echo $0`。它应该显示 `zsh`。"
+    },
+    "globstar": {
+      "text": "使用 zsh 的 `**`，只用一条 `ls` 列出你主目录**及其所有子目录**中的所有 `.txt` 文件。",
+      "hint": "`ls ~/**/*.txt`——`**` 表示“所有目录，任意层级”。"
+    },
+    "tillbaka": {
+      "text": "离开 zsh，回到 bash。",
+      "hint": "输入 `exit`。如果你愿意，可以用 `echo $0` 或 `ps` 检查一下。"
+    },
+    "installera-fish": {
+      "text": "安装 `fish` shell。",
+      "hint": "`sudo apt update`，然后 `sudo apt install fish`。"
+    },
+    "fish-set": {
+      "text": "启动 `fish`。用 fish 的方式创建值为 `äpple` 的变量 `frukt`，并用 `echo` 输出它。",
+      "hint": "`frukt=äpple` 在 fish 中行不通。输入 `set frukt äpple`，然后 `echo $frukt`。"
+    },
+    "fish-for": {
+      "text": "用 fish 语法写一个 `for` 循环，输出数字 1、2 和 3，每行一个。然后用 `exit` 回到 bash。",
+      "hint": "fish 没有 `do` 和 `done`——代码块以 `end` 结束：`for i in 1 2 3; echo $i; end`"
+    },
+    "chsh": {
+      "text": "查看 `/etc/shells`，看看安装了哪些 shell。然后用 `chsh` 把 zsh 设为你的登录 shell。",
+      "hint": "`cat /etc/shells`，然后 `chsh -s /usr/bin/zsh`。用 `grep elev /etc/passwd` 检查结果。"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "title": "أصداف shell أخرى: zsh وfish",
+  "tasks": {
+    "installera-zsh": {
+      "text": "ثبّت الـ shell المسمّى `zsh`.",
+      "hint": "`sudo apt update` ثم `sudo apt install zsh`."
+    },
+    "starta-zsh": {
+      "text": "ابدأ `zsh`. في المرة الأولى يسألك *zsh-newuser-install* عمّا تريد فعله – أجب بـ `2`. ثم اعرض الـ shell الذي تشغّله باستخدام `echo $0`.",
+      "hint": "اكتب `zsh`، وأجب بـ `2` ثم اكتب `echo $0`. يجب أن يظهر `zsh`."
+    },
+    "globstar": {
+      "text": "استخدم `**` في zsh لتسرد كل ملفات `.txt` في مجلد المنزل **وكل المجلدات الفرعية** بأمر `ls` واحد.",
+      "hint": "`ls ~/**/*.txt` – تعني `**` \"كل المجلدات، على كل المستويات\"."
+    },
+    "tillbaka": {
+      "text": "اخرج من zsh وعُد إلى bash.",
+      "hint": "اكتب `exit`. وتحقّق باستخدام `echo $0` أو `ps` إن شئت."
+    },
+    "installera-fish": {
+      "text": "ثبّت الـ shell المسمّى `fish`.",
+      "hint": "`sudo apt update` ثم `sudo apt install fish`."
+    },
+    "fish-set": {
+      "text": "ابدأ `fish`. أنشئ المتغيّر `frukt` بالقيمة `äpple` بطريقة fish واطبعه باستخدام `echo`.",
+      "hint": "لا يعمل `frukt=äpple` في fish. اكتب `set frukt äpple` ثم `echo $frukt`."
+    },
+    "fish-for": {
+      "text": "اكتب حلقة `for` بصياغة fish تطبع الأرقام 1 و2 و3، رقمًا في كل سطر. ثم عُد إلى bash باستخدام `exit`.",
+      "hint": "ليس في fish `do` ولا `done` – فالكتلة تنتهي بـ `end`: `for i in 1 2 3; echo $i; end`"
+    },
+    "chsh": {
+      "text": "انظر في `/etc/shells` لترى الأصداف المثبّتة. ثم اجعل zsh هو الـ login shell الخاص بك باستخدام `chsh`.",
+      "hint": "`cat /etc/shells` ثم `chsh -s /usr/bin/zsh`. وتحقّق من النتيجة باستخدام `grep elev /etc/passwd`."
+    }
+  }
+}

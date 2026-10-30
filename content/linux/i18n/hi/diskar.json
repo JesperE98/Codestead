@@ -1,0 +1,36 @@
+{
+  "title": "Disks और file systems",
+  "tasks": {
+    "df": {
+      "text": "Mounted file systems पर कितनी जगह इस्तेमाल हुई है और कितनी ख़ाली है, यह दिखाइए – इंसानों के पढ़ने लायक sizes (G, M) के साथ।",
+      "hint": "`df` file systems दिखाता है, और `-h` option sizes को पढ़ने लायक बनाता है: `df -h`।"
+    },
+    "lsblk-f": {
+      "text": "सारी disks और partitions को file systems के type, label और UUID के साथ दिखाइए।",
+      "hint": "`lsblk` disks को tree की तरह दिखाता है। `-f` के साथ file systems भी आ जाते हैं: `lsblk -f`।"
+    },
+    "fstab": {
+      "text": "File `/etc/fstab` दिखाइए, जो बताती है कि computer start होने पर क्या mount होना चाहिए।"
+    },
+    "uuid": {
+      "text": "`/` पर mounted file system का UUID पता कीजिए – और सिर्फ़ उसी का।",
+      "hint": "`lsblk -f` दिखाता है कि `/` `/dev/sda2` पर है। फिर `blkid /dev/sda2` से पूछिए – या `findmnt -n -o UUID /` से सब एक बार में कर लीजिए।"
+    },
+    "montera": {
+      "text": "Mount point `/mnt/usb` बनाइए और USB stick (`/dev/sdb1`) को वहाँ mount कीजिए।",
+      "hint": "`/mnt` में directories बनाने और mount करने, दोनों के लिए root चाहिए: `sudo mkdir -p /mnt/usb` और फिर `sudo mount /dev/sdb1 /mnt/usb`।"
+    },
+    "fran-usb": {
+      "text": "USB stick से `rapport.pdf` को अपनी home directory में copy कीजिए।",
+      "hint": "Stick की files अब `/mnt/usb` में हैं: `cp /mnt/usb/rapport.pdf ~`।"
+    },
+    "till-usb": {
+      "text": "`~/dokument/frukter.txt` की एक copy USB stick पर save कीजिए।",
+      "hint": "Stick पर files का owner root है – FAT में Linux permissions नहीं होतीं – इसलिए आपको `sudo` चाहिए: `sudo cp ~/dokument/frukter.txt /mnt/usb/`।"
+    },
+    "avmontera": {
+      "text": "USB stick को unmount कीजिए, ताकि उसे निकालना सुरक्षित हो।",
+      "hint": "`sudo umount /mnt/usb` – बिना n के! अगर आपको *target is busy* मिले, तो आपका shell उसी directory में है: पहले `cd ~` से बाहर निकलिए।"
+    }
+  }
+}

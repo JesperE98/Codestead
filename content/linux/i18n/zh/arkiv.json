@@ -1,0 +1,33 @@
+{
+  "title": "归档和压缩",
+  "tasks": {
+    "tar-czf": {
+      "text": "把目录 `~/dokument` 打包成压缩归档文件 `~/dokument.tar.gz`。",
+      "hint": "进入你的主目录，使用 *create zipped verbose file*（创建、压缩、详细、文件）：`tar -czvf dokument.tar.gz dokument`。"
+    },
+    "tar-t": {
+      "text": "列出 `~/dokument.tar.gz` 的内容——不要解包。",
+      "hint": "`t` 表示列出：`tar -tzvf ~/dokument.tar.gz`。"
+    },
+    "tar-x": {
+      "text": "创建目录 `~/uppackat`，并把 `~/dokument.tar.gz` 解包到其中。",
+      "hint": "用 `-C` 选择 tar 解包到哪里：`tar -xzvf ~/dokument.tar.gz -C ~/uppackat`。"
+    },
+    "gzip": {
+      "text": "把 `~/dokument/server.log` 复制到你的主目录，并用 `gzip` 压缩这个副本，得到 `~/server.log.gz`。",
+      "hint": "先 `cp ~/dokument/server.log ~`，再 `gzip ~/server.log`。"
+    },
+    "zcat": {
+      "text": "显示 `~/server.log.gz` 中包含 `ERROR` 的行——不要解压这个文件。",
+      "hint": "`zcat` 会打印 .gz 文件的内容。用管道把它传给 `grep`。"
+    },
+    "zip": {
+      "text": "安装 `zip` 和 `unzip` 软件包，然后把 `~/dokument` 打包成 `~/dokument.zip`。",
+      "hint": "运行 `sudo apt update` 和 `sudo apt install zip unzip`。别忘了给 zip 加上 `-r`：`zip -r dokument.zip dokument`。"
+    },
+    "unzip": {
+      "text": "用 `unzip` 把 `~/dokument.zip` 解包到新目录 `~/fran-zip` 中。",
+      "hint": "`-d` 用来选择目录，如果目录不存在还会自动创建：`unzip ~/dokument.zip -d ~/fran-zip`。"
+    }
+  }
+}

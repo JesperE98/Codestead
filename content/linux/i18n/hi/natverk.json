@@ -1,0 +1,37 @@
+{
+  "title": "Networking",
+  "tasks": {
+    "ip-addr": {
+      "text": "`ip` से computer के IP addresses दिखाइए।",
+      "hint": "`ip addr` – या छोटा रूप, `ip a`।"
+    },
+    "ping-gw": {
+      "text": "Gateway `192.168.1.1` को ठीक 3 बार ping कीजिए।",
+      "hint": "`ping -c 3 192.168.1.1` – `-c` का मतलब *count* है।"
+    },
+    "dig": {
+      "text": "पैकेज `dnsutils` इंस्टॉल कीजिए और `dig` से `example.com` का IP पता खोजिए।",
+      "hint": "`sudo apt update`, `sudo apt install dnsutils` और फिर `dig +short example.com`।"
+    },
+    "ss": {
+      "text": "`ss` से पता कीजिए कि computer पर कौन-से ports listen कर रहे हैं।",
+      "hint": "`ss -tulpn` – **t**cp, **u**dp, **l**istening, **p**rocess, **n**umeric।"
+    },
+    "curl-localhost": {
+      "text": "अपने ही computer पर चल रहे practice server का start page, `http://localhost:8080`, `curl` से लाइए।",
+      "hint": "Ubuntu पर curl इंस्टॉल करना पड़ता है: `sudo apt install curl`। अगर आपको *Couldn't connect to server* मिले, तो minserver रुका हुआ है – उसे `minserver` से शुरू कीजिए।"
+    },
+    "spara": {
+      "text": "Web page `https://example.com` को file `~/exempel.html` के रूप में save कीजिए।",
+      "hint": "अपनी home directory में जाइए और `curl -o exempel.html https://example.com` या `wget -O exempel.html https://example.com` इस्तेमाल कीजिए।"
+    },
+    "hosts": {
+      "text": "Server `192.168.1.10` का नाम `server.lan` होना चाहिए, लेकिन यह name DNS में नहीं है। इसे `/etc/hosts` में जोड़िए और फिर `server.lan` को ping कीजिए।",
+      "hint": "File का owner root है: `echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts` और फिर `ping -c 3 server.lan`।"
+    },
+    "ssh": {
+      "text": "`ssh` से server `server.lan` पर user `elev` के रूप में command `hostname` चलाइए।",
+      "hint": "`ssh elev@server.lan hostname` – और होस्ट कुंजी (host key) वाले सवाल का जवाब `yes` दीजिए।"
+    }
+  }
+}

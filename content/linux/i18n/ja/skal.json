@@ -1,0 +1,37 @@
+{
+  "title": "ほかのシェル: zsh と fish",
+  "tasks": {
+    "installera-zsh": {
+      "text": "`zsh` シェルをインストールしてください。",
+      "hint": "`sudo apt update`、そのあと `sudo apt install zsh` です。"
+    },
+    "starta-zsh": {
+      "text": "`zsh` を起動してください。最初は *zsh-newuser-install* が何をしたいか尋ねてくるので、`2` と答えます。そのあと `echo $0` で、動いているシェルを表示してください。",
+      "hint": "`zsh` と入力し、`2` と答えてから `echo $0` と入力します。`zsh` と表示されるはずです。"
+    },
+    "globstar": {
+      "text": "zsh の `**` を使い、ホームディレクトリ **とそのすべてのサブディレクトリ** にある `.txt` ファイルを、1 回の `ls` で一覧表示してください。",
+      "hint": "`ls ~/**/*.txt` です。`**` は「すべての階層のすべてのディレクトリ」を意味します。"
+    },
+    "tillbaka": {
+      "text": "zsh を抜けて bash に戻ってください。",
+      "hint": "`exit` と入力します。よければ `echo $0` や `ps` で確認してみましょう。"
+    },
+    "installera-fish": {
+      "text": "`fish` シェルをインストールしてください。",
+      "hint": "`sudo apt update`、そのあと `sudo apt install fish` です。"
+    },
+    "fish-set": {
+      "text": "`fish` を起動してください。fish のやり方で、値が `äpple` の変数 `frukt` を作り、`echo` で表示してください。",
+      "hint": "fish では `frukt=äpple` は使えません。`set frukt äpple` と入力し、そのあと `echo $frukt` です。"
+    },
+    "fish-for": {
+      "text": "fish の構文で、数字の 1、2、3 を 1 行に 1 つずつ表示する `for` ループを書いてください。そのあと `exit` で bash に戻ってください。",
+      "hint": "fish には `do` と `done` がなく、ブロックは `end` で終わります: `for i in 1 2 3; echo $i; end`"
+    },
+    "chsh": {
+      "text": "`/etc/shells` を見て、どのシェルがインストールされているか確認してください。そのあと `chsh` で zsh をログインシェルにしてください。",
+      "hint": "`cat /etc/shells`、そのあと `chsh -s /usr/bin/zsh` です。結果は `grep elev /etc/passwd` で確認できます。"
+    }
+  }
+}

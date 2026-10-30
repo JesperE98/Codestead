@@ -1,0 +1,41 @@
+{
+  "title": "Terminal में git",
+  "tasks": {
+    "installera": {
+      "text": "`git` package install कीजिए।",
+      "hint": "`sudo apt update` और फिर `sudo apt install git` चलाइए।"
+    },
+    "identitet": {
+      "text": "git को बताइए कि आप कौन हैं: `git config --global` से अपना नाम (`user.name`) और अपना email address (`user.email`) set कीजिए।",
+      "hint": "दो commands: `git config --global user.name \"Your Name\"` और `git config --global user.email \"you@example.com\"`।"
+    },
+    "init": {
+      "text": "Directory `~/projekt-webb` में जाइए और `git init` से उसे git repository बनाइए।",
+      "hint": "`cd ~/projekt-webb` और फिर `git init`। नई hidden directory को `ls -a` से देखिए।"
+    },
+    "forsta-commit": {
+      "text": "तीनों files को `git add` से index में जोड़िए और एक साफ़ बताने वाले message के साथ अपना पहला commit कीजिए।",
+      "hint": "`git add .` directory की हर चीज़ जोड़ देता है। फिर `git commit -m \"First version of the website\"`। पहले और बाद में `git status` से स्थिति check कीजिए!"
+    },
+    "diff": {
+      "text": "`README.md` के आख़िर में एक line जोड़िए और `git diff` से बदलाव देखिए।",
+      "hint": "`echo 'Built with HTML and CSS.' >> README.md` और फिर `git diff`। `+` से शुरू होने वाली lines नई हैं।"
+    },
+    "commit-a": {
+      "text": "`README.md` का बदलाव commit कीजिए। `-a` option आज़माइए, जो हर उस बदली हुई file को शामिल करता है जिसे git पहले से follow करता है।",
+      "hint": "`git commit -a -m \"Describe how the site is built\"` – या छोटे में, `git commit -am \"…\"`।"
+    },
+    "gren": {
+      "text": "Branch `ny-design` बनाइए और उस पर switch कीजिए। `style.css` में कुछ बदलिए और बदलाव को नई branch पर commit कीजिए।",
+      "hint": "`git switch -c ny-design` branch बनाता है और उस पर switch करता है। फिर file बदलिए, जैसे `echo 'h1 { color: purple; }' >> style.css` से, और `git commit -am \"Purple headings\"` चलाइए।"
+    },
+    "merge": {
+      "text": "वापस `main` पर switch कीजिए और branch `ny-design` को `git merge` से merge कीजिए।",
+      "hint": "`git switch main` और फिर `git merge ny-design`। Branch बनाने के बाद से `main` नहीं बदली है, इसलिए यह एक *fast-forward* होगा।"
+    },
+    "logg": {
+      "text": "`git log --oneline` से history को हर commit के लिए एक line में दिखाइए।",
+      "hint": "Branches देखने के लिए `git log --oneline --graph --all` भी आज़माइए।"
+    }
+  }
+}

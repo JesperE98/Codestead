@@ -1,0 +1,37 @@
+{
+  "title": "Networking",
+  "tasks": {
+    "ip-addr": {
+      "text": "Show the computer's IP addresses with `ip`.",
+      "hint": "`ip addr` – or shorter, `ip a`."
+    },
+    "ping-gw": {
+      "text": "Ping the gateway `192.168.1.1` exactly 3 times.",
+      "hint": "`ping -c 3 192.168.1.1` – `-c` stands for *count*."
+    },
+    "dig": {
+      "text": "Install the package `dnsutils` and look up the IP address of `example.com` with `dig`.",
+      "hint": "`sudo apt update`, `sudo apt install dnsutils` and then `dig +short example.com`."
+    },
+    "ss": {
+      "text": "Find out which ports are listening on the computer with `ss`.",
+      "hint": "`ss -tulpn` – **t**cp, **u**dp, **l**istening, **p**rocess, **n**umeric."
+    },
+    "curl-localhost": {
+      "text": "Fetch the start page of the practice server on your own computer, `http://localhost:8080`, with `curl`.",
+      "hint": "On Ubuntu curl must be installed: `sudo apt install curl`. If you get *Couldn't connect to server*, minserver is stopped – start it with `minserver`."
+    },
+    "spara": {
+      "text": "Save the web page `https://example.com` as the file `~/exempel.html`.",
+      "hint": "Stand in your home directory and use `curl -o exempel.html https://example.com` or `wget -O exempel.html https://example.com`."
+    },
+    "hosts": {
+      "text": "The server `192.168.1.10` should be called `server.lan`, but the name is not in DNS. Add it to `/etc/hosts` and then ping `server.lan`.",
+      "hint": "The file is owned by root: `echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts` and then `ping -c 3 server.lan`."
+    },
+    "ssh": {
+      "text": "Run the command `hostname` on the server `server.lan` with `ssh` as the user `elev`.",
+      "hint": "`ssh elev@server.lan hostname` – and answer `yes` to the question about the host key."
+    }
+  }
+}

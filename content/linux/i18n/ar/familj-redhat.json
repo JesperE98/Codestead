@@ -1,0 +1,59 @@
+{
+  "title": "عائلة Red Hat: dnf وCOPR",
+  "tasks": {
+    "sync": {
+      "text": "اجلب معلومات الحزم الجديدة وتحقق من التحديثات باستخدام `dnf check-update`.",
+      "hint": "لا يحتاج `dnf check-update` إلى صلاحيات root."
+    },
+    "search": {
+      "text": "ابحث عن الحزمة `htop`.",
+      "hint": "`dnf search htop`"
+    },
+    "install": {
+      "text": "ثبّت الحزمة `tree`.",
+      "hint": "`sudo dnf install tree` – وأجب بـ `y`، لأن «لا» هي الإجابة الافتراضية!"
+    },
+    "run-tree": {
+      "text": "شغّل `tree` في مجلد المنزل الخاص بك."
+    },
+    "remove": {
+      "text": "أزل الحزمة `tree` مرة أخرى.",
+      "hint": "`sudo dnf remove tree`"
+    },
+    "upgrade": {
+      "text": "رقِّ كل الحزم المثبّتة.",
+      "hint": "`sudo dnf upgrade`"
+    },
+    "forbered": {
+      "text": "اعرض المستودعات التي يستخدمها dnf الآن.",
+      "hint": "`dnf repolist`"
+    },
+    "lagg-till": {
+      "text": "فعّل مستودع COPR `lunatool/moonphase`.",
+      "hint": "`sudo dnf copr enable lunatool/moonphase` – وأجب بـ `y`، لأن «لا» هي الإجابة الافتراضية."
+    },
+    "granska": {
+      "text": "اعرض مستودعات COPR التي أُضيفت.",
+      "hint": "`dnf copr list`"
+    },
+    "installera": {
+      "text": "ثبّت الحزمة `moonphase` من مستودع COPR.",
+      "hint": "`sudo dnf install moonphase`"
+    },
+    "kor": {
+      "text": "شغّل البرنامج `moonphase`."
+    },
+    "ursprung": {
+      "text": "اكتشف المستودع الذي ثُبّت منه `moonphase`.",
+      "hint": "`dnf info moonphase` – انظر إلى السطر `From repository`."
+    },
+    "efterat": {
+      "text": "عطّل مستودع COPR مرة أخرى. يبقى البرنامج، لكنه لا يحصل على تحديثات بعد ذلك.",
+      "hint": "`sudo dnf copr disable lunatool/moonphase`"
+    },
+    "vim": {
+      "text": "مهمة إضافية: ثبّت محرر النصوص Vim. تلميح: الحزمة لا تُسمّى `vim` في عائلة Red Hat!",
+      "hint": "ابحث باستخدام `dnf search vim`. اسم الحزمة `vim-enhanced`."
+    }
+  }
+}

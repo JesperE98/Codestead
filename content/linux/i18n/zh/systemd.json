@@ -1,0 +1,37 @@
+{
+  "title": "用 systemd 管理服务和日志",
+  "tasks": {
+    "status-ssh": {
+      "text": "用 `systemctl status` 显示 SSH 服务器的状态。想一想，在 Ubuntu 上这个服务叫什么！",
+      "hint": "在 Ubuntu 上，这个服务叫 `ssh`：`systemctl status ssh`。"
+    },
+    "failed": {
+      "text": "似乎有个服务没有启动。列出所有*失败*的服务。",
+      "hint": "`systemctl --failed`（或 `systemctl list-units --state=failed`）。"
+    },
+    "journal-err": {
+      "text": "只显示 journal 中本次开机以来的错误消息（优先级为 *err* 及更严重的）。",
+      "hint": "`-p err` 选择优先级，`-b` 选择最近一次开机：`journalctl -p err -b`。"
+    },
+    "journal-u": {
+      "text": "用 `journalctl` 阅读出故障的服务 `rapportd` 的日志。它为什么启动不了？",
+      "hint": "`-u` 只显示某一个服务的日志行：`journalctl -u rapportd`。加上 `-xe` 会跳到末尾并给出解释。"
+    },
+    "fix": {
+      "text": "解决日志中提到的问题，然后用 `systemctl` 重启 `rapportd`，让它运行起来。",
+      "hint": "配置文件缺失了，但有一个示例文件：`sudo cp /etc/rapportd.conf.example /etc/rapportd.conf`。然后用 `sudo systemctl restart rapportd` 重启。"
+    },
+    "start-minserver": {
+      "text": "启动服务 `minserver`（如果它还没有运行的话），然后显示它的状态。它得到的 PID 是多少？",
+      "hint": "`sudo systemctl start minserver`，然后 `systemctl status minserver`。"
+    },
+    "stop": {
+      "text": "用 `systemctl` 停止 `minserver`。可以用 `pgrep minserver` 检查一下进程是否已经消失。",
+      "hint": "`sudo systemctl stop minserver`"
+    },
+    "enable": {
+      "text": "用一条命令让 `minserver` 在每次开机时自动启动——并且现在就启动它。",
+      "hint": "`enable` 在开机时生效，`--now` 会立即启动它：`sudo systemctl enable --now minserver`。"
+    }
+  }
+}

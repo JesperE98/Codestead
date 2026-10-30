@@ -1,0 +1,59 @@
+{
+  "title": "La familia Debian: apt y PPA",
+  "tasks": {
+    "sync": {
+      "text": "Descarga las listas de paquetes más recientes con `apt update`.",
+      "hint": "El comando modifica el sistema y requiere root: `sudo apt update`."
+    },
+    "search": {
+      "text": "Busca el paquete `htop`.",
+      "hint": "`apt search htop`"
+    },
+    "install": {
+      "text": "Instala el paquete `tree`.",
+      "hint": "`sudo apt install tree`"
+    },
+    "run-tree": {
+      "text": "Ejecuta `tree` en tu directorio personal."
+    },
+    "remove": {
+      "text": "Desinstala de nuevo el paquete `tree`.",
+      "hint": "`sudo apt remove tree`"
+    },
+    "upgrade": {
+      "text": "Actualiza todos los paquetes instalados.",
+      "hint": "Después de `sudo apt update`, ejecuta `sudo apt upgrade`."
+    },
+    "forbered": {
+      "text": "Asegúrate de que tienes el comando `add-apt-repository`. Está en el paquete `software-properties-common`: viene preinstalado en Ubuntu, pero no en Debian.",
+      "hint": "`sudo apt update` y después `sudo apt install software-properties-common`."
+    },
+    "lagg-till": {
+      "text": "Añade el PPA `ppa:lunatool/moonphase`.",
+      "hint": "`sudo add-apt-repository ppa:lunatool/moonphase`, y pulsa Intro cuando pregunte."
+    },
+    "granska": {
+      "text": "Mira el contenido del archivo que `add-apt-repository` creó en `/etc/apt/sources.list.d/`.",
+      "hint": "`ls /etc/apt/sources.list.d` y después `cat` del archivo cuyo nombre empieza por `lunatool`."
+    },
+    "installera": {
+      "text": "Instala el paquete `moonphase` desde el PPA.",
+      "hint": "`add-apt-repository` ya ejecutó `apt update` por ti, así que basta con `sudo apt install moonphase`."
+    },
+    "kor": {
+      "text": "Ejecuta el programa `moonphase`."
+    },
+    "ursprung": {
+      "text": "Averigua de dónde viene `moonphase`.",
+      "hint": "`apt policy moonphase`"
+    },
+    "efterat": {
+      "text": "Elimina de nuevo el PPA. El programa se queda, pero ya no recibe actualizaciones.",
+      "hint": "`sudo add-apt-repository --remove ppa:lunatool/moonphase`"
+    },
+    "vim": {
+      "text": "Extra: instala el editor de texto Vim.",
+      "hint": "Busca con `apt search vim`. El paquete se llama `vim`."
+    }
+  }
+}

@@ -1,0 +1,25 @@
+<Project>
+  <!--
+    The only place where the product name, ids and version live.
+    Rename the product here (and nowhere else).
+  -->
+  <PropertyGroup>
+    <CodesteadBrand>Codestead</CodesteadBrand>
+    <CodesteadLinuxName>$(CodesteadBrand) Linux</CodesteadLinuxName>
+    <CodesteadLinuxId>codestead-linux</CodesteadLinuxId>
+    <CodesteadHubName>$(CodesteadBrand)</CodesteadHubName>
+    <CodesteadHubId>codestead-hub</CodesteadHubId>
+    <CodesteadPublisher>JesperE98</CodesteadPublisher>
+    <CodesteadReleasesRepo>JesperE98/codestead-releases</CodesteadReleasesRepo>
+    <!--
+      Versions: major.minor only. The release workflow adds the patch number itself (0.5.0, 0.5.1 ...):
+      every change to a product that reaches main becomes the next patch release. For 0.6 change 0.5 to 0.6.
+      Local builds are x.y.0.
+    -->
+    <CodesteadLinuxVersion>0.5</CodesteadLinuxVersion>
+    <CodesteadHubVersion>0.1</CodesteadHubVersion>
+    <Company>$(CodesteadPublisher)</Company>
+    <Product>$(CodesteadBrand)</Product>
+    <Copyright>Copyright © 2026 JesperE98. All rights reserved.</Copyright>
+  </PropertyGroup>
+</Project>

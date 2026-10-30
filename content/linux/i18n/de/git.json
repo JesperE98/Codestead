@@ -1,0 +1,41 @@
+{
+  "title": "Git im Terminal",
+  "tasks": {
+    "installera": {
+      "text": "Installiere das Paket `git`.",
+      "hint": "Führe `sudo apt update` und danach `sudo apt install git` aus."
+    },
+    "identitet": {
+      "text": "Sag git, wer du bist: Setze mit `git config --global` deinen Namen (`user.name`) und deine E-Mail-Adresse (`user.email`).",
+      "hint": "Zwei Befehle: `git config --global user.name \"Dein Name\"` und `git config --global user.email \"du@example.com\"`."
+    },
+    "init": {
+      "text": "Wechsle in das Verzeichnis `~/projekt-webb` und mach es mit `git init` zu einem git-Repository.",
+      "hint": "`cd ~/projekt-webb` und danach `git init`. Sieh dir das neue versteckte Verzeichnis mit `ls -a` an."
+    },
+    "forsta-commit": {
+      "text": "Füge alle drei Dateien mit `git add` zum Index hinzu und mach deinen ersten Commit mit einer aussagekräftigen Nachricht.",
+      "hint": "`git add .` fügt alles im Verzeichnis hinzu. Danach `git commit -m \"Erste Version der Website\"`. Prüfe den Zustand vorher und nachher mit `git status`!"
+    },
+    "diff": {
+      "text": "Füge am Ende von `README.md` eine Zeile hinzu und sieh dir die Änderung mit `git diff` an.",
+      "hint": "`echo 'Gebaut mit HTML und CSS.' >> README.md` und danach `git diff`. Zeilen, die mit `+` beginnen, sind neu."
+    },
+    "commit-a": {
+      "text": "Committe die Änderung an `README.md`. Probiere die Option `-a` aus, die jede geänderte Datei einschließt, die git bereits verfolgt.",
+      "hint": "`git commit -a -m \"Beschreiben, wie die Seite gebaut ist\"` – oder kürzer `git commit -am \"…\"`."
+    },
+    "gren": {
+      "text": "Lege den Branch `ny-design` an und wechsle dorthin. Ändere etwas in `style.css` und committe die Änderung auf dem neuen Branch.",
+      "hint": "`git switch -c ny-design` legt den Branch an und wechselt dorthin. Ändere dann die Datei, z. B. mit `echo 'h1 { color: purple; }' >> style.css`, und führe `git commit -am \"Lila Überschriften\"` aus."
+    },
+    "merge": {
+      "text": "Wechsle zurück zu `main` und führe den Branch `ny-design` mit `git merge` zusammen.",
+      "hint": "`git switch main` und danach `git merge ny-design`. Da sich `main` seit dem Anlegen des Branches nicht verändert hat, wird das ein *Fast-forward*."
+    },
+    "logg": {
+      "text": "Zeige die Geschichte mit einer Zeile pro Commit an: `git log --oneline`.",
+      "hint": "Probiere auch `git log --oneline --graph --all` aus, um die Branches zu sehen."
+    }
+  }
+}

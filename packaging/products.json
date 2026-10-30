@@ -1,0 +1,38 @@
+[
+  {
+    "key": "linux",
+    "project": "src/Codestead.Linux/Codestead.Linux.csproj",
+    "idProperty": "CodesteadLinuxId",
+    "nameProperty": "CodesteadLinuxName",
+    "summary": "Learn the Linux shell by doing",
+    "versionProperty": "CodesteadLinuxVersion",
+    "paths": [
+      "src/Codestead.Linux",
+      "src/Codestead.Shell",
+      "src/Codestead.Content",
+      "content/linux",
+      "src/Codestead.UI",
+      "build",
+      "packaging",
+      "global.json",
+      "Directory.Build.props"
+    ]
+  },
+  {
+    "key": "hub",
+    "project": "src/Codestead.Hub/Codestead.Hub.csproj",
+    "idProperty": "CodesteadHubId",
+    "nameProperty": "CodesteadHubName",
+    "summary": "Install and update the Codestead learning tools",
+    "versionProperty": "CodesteadHubVersion",
+    "paths": [
+      "src/Codestead.Hub",
+      "src/Codestead.Hub.Core",
+      "src/Codestead.UI",
+      "build",
+      "packaging",
+      "global.json",
+      "Directory.Build.props"
+    ]
+  }
+]

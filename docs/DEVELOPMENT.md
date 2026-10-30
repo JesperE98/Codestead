@@ -1,116 +1,189 @@
 # Utveckling (internt)
 
-Den här filen är för dig som äger projektet. Den följer inte med i appen och
-visas inte för användarna.
+Den här filen är för dig som äger projektet. Den följer inte med i appen.
 
 ## Kom igång
 
-Kräver [Node.js](https://nodejs.org) 20 eller senare.
+Kräver [.NET 10 SDK](https://dotnet.microsoft.com/download). Inget annat.
 
 ```bash
-npm install
+dotnet build
 ```
 
 ```bash
-npm run dev
+dotnet test
 ```
 
-Öppna sedan adressen som visas (normalt http://localhost:5173).
+```bash
+dotnet run --project src/Codestead.Linux
+```
 
-### Andra kommandon
+Inställningar och terminaler sparas i `%APPDATA%\Codestead\codestead-linux` (Windows) respektive
+`~/.config/Codestead/codestead-linux` (Linux). Med miljövariabeln `CODESTEAD_DATA_DIR` kan du välja
+en annan mapp, t.ex. för att börja om från noll.
 
-| Kommando | Gör |
-|---|---|
-| `npm test` | Kör alla tester (skalet, pakethanterarna och alla kapiteluppgifter) |
-| `npm run build` | Bygger webbversionen till `dist/` – kan läggas på vilken statisk webbserver som helst |
-| `npm run app` | Bygger och startar skrivbordsappen (Electron) |
-| `npm run app:dist` | Bygger installationsfiler för ditt operativsystem till `release/` |
+`dotnet run --project src/Codestead.Linux -- --smoke-test` startar fönstret, går igenom alla kapitel
+på alla språk, löser en uppgift och avslutar med `SMOKE OK`. Det är samma test som körs efter varje
+installation i release-flödet.
 
-### Bygga installationsfilerna själv
+## Namn och version
 
-Skrivbordsappen är samma webbapp inpackad med [Electron](https://www.electronjs.org),
-och [electron-builder](https://www.electron.build) skapar installationsfilerna:
+Produktnamn, id:n och versioner finns **bara** i `build/Codestead.props`. Byt namn där.
 
-| Operativsystem | Fil | Kommando |
-|---|---|---|
-| Windows | Installationsguide (`.exe`) där man väljer mapp och genvägar | `npm run app:dist:win` |
-| macOS | `.dmg` för både Intel och Apple Silicon | `npm run app:dist:mac` |
-| Linux | `.AppImage` som körs direkt | `npm run app:dist:linux` |
-
-Filerna hamnar i `release/`. Varje operativsystem måste byggas på sig självt,
-så det enklaste är att låta GitHub göra det:
-
-1. Höj `version` i `package.json` (t.ex. 0.3.0 → 0.4.0).
-2. Slå ihop ändringen till `main`.
-
-Då bygger flödet `.github/workflows/release.yml` installationsfilerna för
-Windows och Linux och lägger upp dem som release `v0.4.0`. (macOS är
-avstängt i flödet, eftersom GitHub inte ger privata repon macOS-maskiner på
-det här kontot.) Ikonen ligger i `build/icon.svg` (och `build/icon.png`).
+Versionerna anges bara som `major.minor` (`CodesteadLinuxVersion` = `0.5`, `CodesteadHubVersion` = `0.1`).
+Patchnumret sätts av release-flödet: varje ändring av en produkt som når `main` blir nästa version
+(0.5.0, 0.5.1, 0.5.2 …). Vilka filer som hör till en produkt står i `packaging/products.json`
+(`paths`). För nästa större version ändrar du `0.5` till `0.6`. Lokala byggen får versionen `x.y.0`.
 
 ## Projektstruktur
 
 ```text
+build/Codestead.props        Namn, id:n och version
+content/linux/
+├── chapters/<språk>/*.md    Kapiteltexterna (markdown), ett språk per katalog
+├── i18n/<språk>/*.json      Översatta titlar och uppgiftstexter
+└── references/*.json        Officiella källor per kapitel
 src/
-├── shell/                 Den simulerade terminalen
-│   ├── shell.ts           Kör kommandorader: pipes, omdirigering, sudo, skript
-│   ├── parser.ts          Tolkar kommandorader (citattecken, operatorer)
-│   ├── vfs.ts             Virtuellt filsystem med ägare och rwx-rättigheter
-│   ├── initfs.ts          Startfilerna för varje distribution
-│   ├── distros.ts         Ubuntu, Debian, Arch och Fedora
-│   ├── packages.ts        Paketdatabasen (med olika paketnamn per familj)
-│   ├── procs.ts           Processer och jobb
-│   ├── services.ts        systemd-tjänster och journalen
-│   ├── disks.ts           Diskar, partitioner och monteringar
-│   ├── users.ts           Användare, grupper och lösenord
-│   ├── network.ts         Simulerat nätverk (värdar, DNS, webbsidor)
-│   ├── fish.ts            fish-skalets syntax (zsh/fish-läget i shellmode.ts)
-│   └── commands/          Alla kommandon: ls, grep, apt, pacman, dnf, git, ssh ...
-├── content/
-│   ├── chapters/<språk>/  Kapiteltexterna (markdown), ett språk per katalog
-│   ├── i18n/<språk>/      Översatta titlar och uppgiftstexter (JSON)
-│   ├── chapters.ts        Kapitlen och deras uppgifter
-│   ├── progress.ts        Kontrollerar uppgifter efter varje kommando
-│   └── render.ts          Markdown → HTML, med distro-block
-├── i18n/                  Gränssnittets språk (11 st.)
-├── components/            React-komponenter (meny, lektion, uppgifter, terminal)
-└── App.tsx
-electron/main.cjs          Skrivbordsappens startfil
+├── Codestead.Shell/         Den simulerade terminalen (bash, zsh, fish, apt, pacman, dnf, git ...)
+│   ├── Shell.cs             Kör kommandorader: pipes, omdirigering, sudo, skript, jobb
+│   ├── Parser.cs            Bash-parser (syntaxträd)
+│   ├── Vfs.cs               Virtuellt filsystem med ägare och rwx-rättigheter
+│   ├── Initfs.cs            Startfilerna för varje distribution
+│   ├── Packages.cs          Paketdatabasen (olika paketnamn per familj)
+│   ├── Services.cs, Disks.cs, Users.cs, Network.cs, Procs.cs, Fish.cs, Shellmode.cs
+│   ├── Js.cs                Hjälpfunktioner med JavaScript-semantik (från porteringen)
+│   ├── ShellI18n.cs, i18n/  Simulatorns egna tips och help-sammanfattningar på alla språk
+│   └── Commands/            Alla kommandon: ls, grep, chmod, apt, pacman, dnf, git, ssh ...
+├── Codestead.Content/       Kapitel, uppgifter och kontroller (ChapterDefinitions.cs), språk, UI-texter (i18n/ui/*.json)
+├── Codestead.UI/            Delade Avalonia-delar för alla verktyg: tema, terminal, markdown-vy, dialoger,
+│                            lagring, självuppdatering (Velopack)
+├── Codestead.Linux/         Själva appen (Avalonia)
+├── Codestead.Hub.Core/      Hubbens logik utan UI: signerad katalog, nedladdning, installation, uppdatering
+└── Codestead.Hub/           Hubben "Codestead" (Avalonia), texter i i18n/<språk>.json
+tests/                       xUnit: Shell (simulatorn), Content (alla uppgifter i alla distros och språk),
+                             UI (headless), Hub (katalog, signatur, installation)
+packaging/                   Byggskript, installationstester, products.json (vilka produkter som byggs),
+                             catalog.py (hubbens katalog) och hub-e2e.sh (hubben installerar Codestead Linux)
 ```
 
 ## Skriva ett nytt kapitel
 
-1. Skapa `src/content/chapters/sv/mitt-kapitel.md` (filnamnet är kapitlets id)
-   och en engelsk version i `chapters/en/` plus `i18n/en/mitt-kapitel.json`.
+1. Skriv `content/linux/chapters/en/mitt-kapitel.md` (engelska är källspråket) och
+   `content/linux/i18n/en/mitt-kapitel.json`, och motsvarande filer för de andra tio språken.
    - Kodblock märkta ` ```sh ` blir klickbara – ett klick lägger in kommandot i terminalen.
-   - Text som bara gäller en familj läggs i ett block:
+   - Text som bara gäller en familj läggs i `:::debian` / `:::arch` / `:::redhat` … `:::`.
+   - Platshållare: `{{distro}}`, `{{hostname}}`, `{{family}}`, `{{pm}}`, `{{adminGroup}}`.
+   - **Kontrollfrågor** i texten låser upp terminalen och uppgifterna. Tre sorter:
 
-     ```text
-     :::debian
-     Det här visas bara för Debian och Ubuntu.
-     :::
+     ````markdown
+     ```quiz
+     Which command shows the directory you are in?
+     - [ ] ls
+     - [x] pwd
+     ---
+     Explanation shown after the right answer (optional).
      ```
 
-     (även `:::arch` och `:::redhat`).
-   - Platshållare: `{{distro}}`, `{{hostname}}`, `{{family}}`, `{{pm}}`, `{{adminGroup}}`.
-2. Lägg till kapitlet i `CHAPTERS` i `src/content/chapters.ts` med uppgifter.
-   Varje uppgift har en `check`-funktion som körs efter varje kommando, och en
-   `solution` (lista med kommandon).
-3. Övriga språk: lägg till `chapters/<språk>/mitt-kapitel.md` och
-   `i18n/<språk>/mitt-kapitel.json`. Testerna kräver att alla 11 språk finns.
-4. Kör `npm test`. Testet kör alla lösningar i alla distributioner och
-   kontrollerar att varje uppgift faktiskt går att klara.
+     ```predict
+     $ echo $((2 + 3))
+     5
+     ```
 
-Behövs ett nytt kommando lägger du det i `src/shell/commands/`. Ska det
-installeras med pakethanteraren lägger du också till ett paket i
-`src/shell/packages.ts`.
+     ```try
+     pwd
+     ```
+     ````
 
-## Språk och översättningar
+     `quiz` med flera `[x]` kräver alla rätta svar. `predict` visar kommandot efter `$ ` och väntar sig
+     resten som svar (testerna kör kommandot i simulatorn och kontrollerar svaret). `try` ger en
+     miniterminal; första raden är det kommando som visas, och alla rader godtas.
+     Ett kapitel utan kontrollfrågor låses upp med knappen "Jag har läst kapitlet".
+   - **Källor**: `content/linux/references/mitt-kapitel.json` med
+     `[{ "title": ..., "url": "https://...", "publisher": ... }]`. Bara officiella webbplatser
+     (listan finns i [verification/README.md](verification/README.md)); testerna säger nej till andra.
+   - **Sammanfattning och prov** för ett huvudkapitel: `<huvudkapitel>-summary.md` och
+     `<huvudkapitel>-exam.md` (t.ex. `grunder-exam.md`). De läggs till sist i huvudkapitlet av sig själva.
+     Provet består av kontrollfrågor (minst 10), öppnas när alla sub-kapitel är klara och kräver 80 %.
+2. Lägg till kapitlet med uppgifter i `src/Codestead.Content/ChapterDefinitions.cs`. Varje uppgift har
+   en `Check` som körs efter varje kommando och en `Solution` (lista med kommandon).
+3. Kör `dotnet test`. Testerna kör alla lösningar i alla distributioner och kontrollerar att
+   varje kapitel finns på alla språk, och att kontrollfrågorna är likadana på alla språk.
 
-- Gränssnittets texter: `src/i18n/ui.ts` (alla språk i en fil).
-- Kapiteltexter: `src/content/chapters/<språk>/<kapitel-id>.md`.
-- Översatta titlar och uppgiftstexter: `src/content/i18n/<språk>/<kapitel-id>.json`.
-- Svenska är originalspråket (uppgiftstexterna står i `src/content/chapters.ts`).
-  Saknas en översättning visas engelska och i sista hand svenska.
-- Terminalens egna tipsrader och manualsidor finns på svenska och engelska
-  (`sh.msg({ sv, en })`, `summaryEn`/`manEn` och `src/shell/commands/man-en.ts`).
+Behövs ett nytt kommando lägger du det i `src/Codestead.Shell/Commands/`. Ska det installeras med
+pakethanteraren lägger du också till ett paket i `Packages.cs`.
+
+## Simulatorns egna texter
+
+Tips, anmärkningar och välkomsttexten som simulatorn skriver i terminalen finns i
+`src/Codestead.Shell/i18n/<språk>.json` (`messages`), och anropas med en nyckel:
+`sh.Msg("pkg.aptListsEmpty")` eller `Dim(sh, "users.noPasswordSet", ("user", name))`. Engelska
+(`en.json`) är källan; lägg till nyckeln i alla elva filer med samma `{platshållare}`. Utskrifter som
+härmar riktiga program (`ls: cannot access ...`) och manualsidor översätts inte.
+
+Sammanfattningarna som `help` visar (`summaries`) skrivs i koden (`Summary` på svenska,
+`SummaryEn` på engelska) och förs över till `sv.json` och `en.json` med
+`CODESTEAD_UPDATE_SHELL_I18N=1 dotnet test --project tests/Codestead.Shell.Tests`. Översätt sedan
+ändringen i de andra språken. Testerna i `ShellI18nTests.cs` kontrollerar nycklar, platshållare och
+att inget har glömts.
+
+## Bygga installationsfilerna
+
+Allt byggs av GitHub Actions (`.github/workflows/release.yml`), för varje produkt i
+`packaging/products.json` (Codestead Linux och hubben):
+
+1. Slå ihop ändringarna till `main`. Flödet (`packaging/plan.py`) räknar ut nästa patchversion för
+   varje produkt som ändrats sedan dess senaste release.
+
+Flödet bygger alla produkter och installerar och startar dem på rena system (Windows Server 2022/2025,
+Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS). Hubben får dessutom installera och starta Codestead
+Linux från en signerad katalog. Därefter publiceras de ändrade produkterna i det offentliga repot
+`JesperE98/codestead-releases` – men bara när båda secrets nedan finns (annars en varning, inget fel):
+
+| Release | Innehåll |
+|---|---|
+| `<id>-v<version>` (t.ex. `codestead-linux-v0.5.0`) | Alla filer för versionen och `SHA256SUMS.txt` |
+| `<id>-latest` | Samma filer utan version i namnet (länkarna i README) och Velopacks uppdateringsflöde |
+| `catalog` | `catalog.json` och `catalog.json.sig`: listan som hubben läser |
+
+Flödet kan också startas för hand under Actions → **Release** → **Run workflow** (utan att publicera).
+
+GitHub har inga rena Windows 10/11-skrivbordsmaskiner, bara Windows Server. Gå därför igenom
+[RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md) på en riktig Windows 10/11-dator före en större release.
+
+### Secrets i det här repot
+
+- `RELEASES_TOKEN`: en fine-grained token med *Contents: read and write* på `codestead-releases`.
+- `CATALOG_SIGNING_KEY`: den privata nyckeln som hubbens katalog signeras med.
+
+### Signeringsnyckel för katalogen
+
+Hubben litar bara på en katalog som är signerad med rätt nyckel (ECDSA P-256). Skapa nyckelparet en
+gång, på din egen dator (Git Bash på Windows har `openssl`):
+
+```bash
+openssl ecparam -name prime256v1 -genkey -noout -out catalog-signing.pem
+```
+
+```bash
+openssl ec -in catalog-signing.pem -pubout -out build/catalog-signing.pub.pem
+```
+
+1. Committa `build/catalog-signing.pub.pem` (den publika nyckeln byggs in i hubben).
+2. Lägg hela innehållet i `catalog-signing.pem` som secret `CATALOG_SIGNING_KEY`
+   (Settings → Secrets and variables → Actions).
+3. Spara `catalog-signing.pem` säkert utanför repot, t.ex. i en lösenordshanterare. Committa den aldrig.
+
+Release-flödet kontrollerar att nyckeln och den publika nyckeln hör ihop innan något publiceras.
+
+### Lokalt
+
+Linux (kräver [nfpm](https://nfpm.goreleaser.com) och `dotnet tool install -g vpk`):
+
+```bash
+packaging/build-linux.sh src/Codestead.Linux/Codestead.Linux.csproj codestead-linux "Codestead Linux" 0.4.0
+```
+
+## Historik
+
+Fram till version 0.3.0 var appen skriven i TypeScript/React/Electron. Den portades rad för rad
+till C# (se [PORTING.md](PORTING.md)); TypeScript-koden finns kvar i git-historiken (commit `a0bbdda`).

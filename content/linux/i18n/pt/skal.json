@@ -1,0 +1,37 @@
+{
+  "title": "Outros shells: zsh e fish",
+  "tasks": {
+    "installera-zsh": {
+      "text": "Instale o shell `zsh`.",
+      "hint": "`sudo apt update` e depois `sudo apt install zsh`."
+    },
+    "starta-zsh": {
+      "text": "Inicie o `zsh`. Na primeira vez, o *zsh-newuser-install* pergunta o que você quer fazer – responda `2`. Depois mostre qual shell você está rodando com `echo $0`.",
+      "hint": "Digite `zsh`, responda `2` e depois digite `echo $0`. Deve aparecer `zsh`."
+    },
+    "globstar": {
+      "text": "Use o `**` do zsh para listar todos os arquivos `.txt` no seu diretório pessoal **e em todos os subdiretórios** com um único `ls`.",
+      "hint": "`ls ~/**/*.txt` – `**` significa \"todos os diretórios, em todos os níveis\"."
+    },
+    "tillbaka": {
+      "text": "Saia do zsh e volte ao bash.",
+      "hint": "Digite `exit`. Se quiser, confira com `echo $0` ou `ps`."
+    },
+    "installera-fish": {
+      "text": "Instale o shell `fish`.",
+      "hint": "`sudo apt update` e depois `sudo apt install fish`."
+    },
+    "fish-set": {
+      "text": "Inicie o `fish`. Crie a variável `frukt` com o valor `äpple` do jeito do fish e imprima-a com `echo`.",
+      "hint": "`frukt=äpple` não funciona no fish. Digite `set frukt äpple` e depois `echo $frukt`."
+    },
+    "fish-for": {
+      "text": "Escreva um loop `for` na sintaxe do fish que imprima os números 1, 2 e 3, um por linha. Depois volte ao bash com `exit`.",
+      "hint": "O fish não tem `do` nem `done` – o bloco termina com `end`: `for i in 1 2 3; echo $i; end`"
+    },
+    "chsh": {
+      "text": "Olhe em `/etc/shells` para ver quais shells estão instalados. Depois faça do zsh o seu shell de login com `chsh`.",
+      "hint": "`cat /etc/shells` e depois `chsh -s /usr/bin/zsh`. Confira o resultado com `grep elev /etc/passwd`."
+    }
+  }
+}

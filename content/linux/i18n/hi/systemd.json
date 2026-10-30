@@ -1,0 +1,37 @@
+{
+  "title": "systemd के साथ services और logs",
+  "tasks": {
+    "status-ssh": {
+      "text": "`systemctl status` से SSH सर्वर की स्थिति दिखाइए। सोचिए कि Ubuntu पर इस सर्विस का नाम क्या है!",
+      "hint": "Ubuntu पर सर्विस का नाम `ssh` है: `systemctl status ssh`।"
+    },
+    "failed": {
+      "text": "लगता है कोई service start नहीं हुई। उन सारी services की list दिखाइए जो *fail* हो गई हैं।",
+      "hint": "`systemctl --failed` (या `systemctl list-units --state=failed`)।"
+    },
+    "journal-err": {
+      "text": "Journal में मौजूदा boot के सिर्फ़ error messages (priority *err* और उससे गंभीर) दिखाइए।",
+      "hint": "`-p err` priority चुनता है और `-b` सबसे नया boot: `journalctl -p err -b`।"
+    },
+    "journal-u": {
+      "text": "ख़राब service `rapportd` का log `journalctl` से पढ़िए। यह start क्यों नहीं होती?",
+      "hint": "`-u` सिर्फ़ एक service की lines दिखाता है: `journalctl -u rapportd`। `-xe` के साथ आप आख़िर पर पहुँच जाते हैं और explanations भी मिलती हैं।"
+    },
+    "fix": {
+      "text": "Log जो problem बताता है उसे ठीक कीजिए, फिर `rapportd` को `systemctl` से restart कीजिए ताकि वह चलने लगे।",
+      "hint": "Configuration file ग़ायब है, लेकिन एक उदाहरण मौजूद है: `sudo cp /etc/rapportd.conf.example /etc/rapportd.conf`। फिर `sudo systemctl restart rapportd` से restart कीजिए।"
+    },
+    "start-minserver": {
+      "text": "Service `minserver` को start कीजिए (अगर वह पहले से नहीं चल रही) और फिर उसका status दिखाइए। उसे कौन-सा PID मिला?",
+      "hint": "`sudo systemctl start minserver` और फिर `systemctl status minserver`।"
+    },
+    "stop": {
+      "text": "`minserver` को `systemctl` से रोकिए। चाहें तो `pgrep minserver` से जाँच लीजिए कि process चला गया है।",
+      "hint": "`sudo systemctl stop minserver`"
+    },
+    "enable": {
+      "text": "पक्का कीजिए कि `minserver` हर बार computer boot होने पर अपने-आप start हो – और इसे अभी भी start कीजिए, एक ही command से।",
+      "hint": "`enable` boot पर लागू होता है और `--now` इसे तुरंत start कर देता है: `sudo systemctl enable --now minserver`।"
+    }
+  }
+}

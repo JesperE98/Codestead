@@ -1,0 +1,41 @@
+{
+  "title": "Git в терминале",
+  "tasks": {
+    "installera": {
+      "text": "Установите пакет `git`.",
+      "hint": "Выполните `sudo apt update`, а затем `sudo apt install git`."
+    },
+    "identitet": {
+      "text": "Представьтесь git: задайте своё имя (`user.name`) и адрес электронной почты (`user.email`) с помощью `git config --global`.",
+      "hint": "Две команды: `git config --global user.name \"Ваше Имя\"` и `git config --global user.email \"you@example.com\"`."
+    },
+    "init": {
+      "text": "Перейдите в каталог `~/projekt-webb` и превратите его в git-репозиторий командой `git init`.",
+      "hint": "`cd ~/projekt-webb`, а затем `git init`. Посмотрите на новый скрытый каталог с помощью `ls -a`."
+    },
+    "forsta-commit": {
+      "text": "Добавьте все три файла в индекс командой `git add` и сделайте первый коммит с понятным сообщением.",
+      "hint": "`git add .` добавляет всё в каталоге. Затем `git commit -m \"Первая версия сайта\"`. Проверьте состояние командой `git status` до и после!"
+    },
+    "diff": {
+      "text": "Добавьте строку в конец `README.md` и посмотрите на изменение с помощью `git diff`.",
+      "hint": "`echo 'Built with HTML and CSS.' >> README.md`, а затем `git diff`. Строки, начинающиеся с `+`, – новые."
+    },
+    "commit-a": {
+      "text": "Закоммитьте изменение в `README.md`. Попробуйте опцию `-a`, которая включает все изменённые файлы, уже отслеживаемые git.",
+      "hint": "`git commit -a -m \"Описать, как устроен сайт\"` – или короче: `git commit -am \"…\"`."
+    },
+    "gren": {
+      "text": "Создайте ветку `ny-design` и переключитесь на неё. Измените что-нибудь в `style.css` и закоммитьте изменение в новой ветке.",
+      "hint": "`git switch -c ny-design` создаёт ветку и переключается на неё. Затем измените файл, например командой `echo 'h1 { color: purple; }' >> style.css`, и выполните `git commit -am \"Фиолетовые заголовки\"`."
+    },
+    "merge": {
+      "text": "Вернитесь на `main` и слейте с ней ветку `ny-design` командой `git merge`.",
+      "hint": "`git switch main`, а затем `git merge ny-design`. Поскольку `main` не менялась с момента создания ветки, это будет *fast-forward*."
+    },
+    "logg": {
+      "text": "Выведите историю по одной строке на коммит с помощью `git log --oneline`.",
+      "hint": "Попробуйте также `git log --oneline --graph --all`, чтобы увидеть ветки."
+    }
+  }
+}

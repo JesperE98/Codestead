@@ -1,0 +1,59 @@
+{
+  "title": "Red Hat परिवार: dnf और COPR",
+  "tasks": {
+    "sync": {
+      "text": "`dnf check-update` से नई पैकेज जानकारी लाइए और अपडेट जाँचिए।",
+      "hint": "`dnf check-update` को root की ज़रूरत नहीं है।"
+    },
+    "search": {
+      "text": "`htop` पैकेज खोजिए।",
+      "hint": "`dnf search htop`"
+    },
+    "install": {
+      "text": "`tree` पैकेज इंस्टॉल कीजिए।",
+      "hint": "`sudo dnf install tree` – और `y` जवाब दीजिए, क्योंकि डिफ़ॉल्ट No है!"
+    },
+    "run-tree": {
+      "text": "अपनी होम डायरेक्टरी में `tree` चलाइए।"
+    },
+    "remove": {
+      "text": "`tree` पैकेज को फिर से हटा दीजिए।",
+      "hint": "`sudo dnf remove tree`"
+    },
+    "upgrade": {
+      "text": "सभी इंस्टॉल किए गए पैकेज अपग्रेड कीजिए।",
+      "hint": "`sudo dnf upgrade`"
+    },
+    "forbered": {
+      "text": "दिखाइए कि dnf अभी कौन-सी रिपॉज़िटरी इस्तेमाल कर रहा है।",
+      "hint": "`dnf repolist`"
+    },
+    "lagg-till": {
+      "text": "COPR रिपॉज़िटरी `lunatool/moonphase` चालू (enable) कीजिए।",
+      "hint": "`sudo dnf copr enable lunatool/moonphase` – और `y` जवाब दीजिए, डिफ़ॉल्ट No है।"
+    },
+    "granska": {
+      "text": "सूची बनाइए कि कौन-सी COPR रिपॉज़िटरी जोड़ी गई हैं।",
+      "hint": "`dnf copr list`"
+    },
+    "installera": {
+      "text": "COPR रिपॉज़िटरी से पैकेज `moonphase` इंस्टॉल कीजिए।",
+      "hint": "`sudo dnf install moonphase`"
+    },
+    "kor": {
+      "text": "प्रोग्राम `moonphase` चलाइए।"
+    },
+    "ursprung": {
+      "text": "पता लगाइए कि `moonphase` किस रिपॉज़िटरी से इंस्टॉल हुआ था।",
+      "hint": "`dnf info moonphase` – `From repository` वाली पंक्ति देखिए।"
+    },
+    "efterat": {
+      "text": "COPR रिपॉज़िटरी को फिर से बंद (disable) कीजिए। प्रोग्राम बना रहता है, लेकिन उसे आगे अपडेट नहीं मिलते।",
+      "hint": "`sudo dnf copr disable lunatool/moonphase`"
+    },
+    "vim": {
+      "text": "बोनस: Vim टेक्स्ट एडिटर इंस्टॉल कीजिए। संकेत: Red Hat परिवार में पैकेज का नाम `vim` नहीं है!",
+      "hint": "`dnf search vim` से खोजिए। पैकेज का नाम `vim-enhanced` है।"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "title": "Архивы и сжатие",
+  "tasks": {
+    "tar-czf": {
+      "text": "Упакуйте каталог `~/dokument` в сжатый архив `~/dokument.tar.gz`.",
+      "hint": "Перейдите в домашний каталог и используйте *create zipped verbose file*: `tar -czvf dokument.tar.gz dokument`."
+    },
+    "tar-t": {
+      "text": "Покажите содержимое `~/dokument.tar.gz` – не распаковывая его.",
+      "hint": "`t` означает «показать содержимое»: `tar -tzvf ~/dokument.tar.gz`."
+    },
+    "tar-x": {
+      "text": "Создайте каталог `~/uppackat` и распакуйте в него `~/dokument.tar.gz`.",
+      "hint": "С помощью `-C` вы выбираете, куда tar распаковывает файлы: `tar -xzvf ~/dokument.tar.gz -C ~/uppackat`."
+    },
+    "gzip": {
+      "text": "Скопируйте `~/dokument/server.log` в домашний каталог и сожмите копию с помощью `gzip`, чтобы получился `~/server.log.gz`.",
+      "hint": "Сначала `cp ~/dokument/server.log ~`, затем `gzip ~/server.log`."
+    },
+    "zcat": {
+      "text": "Покажите строки с `ERROR` из `~/server.log.gz` – не распаковывая файл.",
+      "hint": "`zcat` выводит содержимое файла .gz. Передайте его по конвейеру в `grep`."
+    },
+    "zip": {
+      "text": "Установите пакеты `zip` и `unzip`, а затем упакуйте `~/dokument` в `~/dokument.zip`.",
+      "hint": "Выполните `sudo apt update` и `sudo apt install zip unzip`. Не забудьте `-r` для zip: `zip -r dokument.zip dokument`."
+    },
+    "unzip": {
+      "text": "Распакуйте `~/dokument.zip` с помощью `unzip` в новый каталог `~/fran-zip`.",
+      "hint": "`-d` задаёт каталог и создаёт его, если его нет: `unzip ~/dokument.zip -d ~/fran-zip`."
+    }
+  }
+}

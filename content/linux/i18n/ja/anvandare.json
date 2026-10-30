@@ -1,0 +1,37 @@
+{
+  "title": "ユーザーとグループ",
+  "tasks": {
+    "useradd": {
+      "text": "ホームディレクトリ付きで、シェルが `/bin/bash` のユーザー `kim` を作成してください。",
+      "hint": "`sudo useradd -m -s /bin/bash kim` です。`-m` はホームディレクトリを作成し、`-s` はシェルを選びます。"
+    },
+    "passwd-rad": {
+      "text": "`/etc/passwd` にある kim の行を表示してください。",
+      "hint": "`grep kim /etc/passwd`、または `getent passwd kim` です。"
+    },
+    "losenord": {
+      "text": "`passwd` で `kim` にパスワードを設定してください。",
+      "hint": "ほかのユーザーのパスワードを設定できるのは root だけです: `sudo passwd kim`。同じパスワードを 2 回入力します。入力中は表示されません。"
+    },
+    "grupp": {
+      "text": "グループ `utvecklare`（スウェーデン語で「開発者」）を作成し、`kim` をそのグループに追加してください。",
+      "hint": "まず `sudo groupadd utvecklare`、次に `sudo usermod -aG utvecklare kim` です。"
+    },
+    "sudo-ratt": {
+      "text": "`kim` をグループ `sudo` に追加して、`sudo` を使えるようにしてください。",
+      "hint": "`sudo usermod -aG sudo kim` です。`-a` を忘れずに！"
+    },
+    "sudo-u": {
+      "text": "`sudo -u` で、`kim` として `whoami` を実行してください。",
+      "hint": "`sudo -u kim whoami`"
+    },
+    "su": {
+      "text": "`su -` で `kim` としてログインし、`id` を実行してください。そのあと `exit` で `elev` に戻ってください。",
+      "hint": "`su - kim` と入力し、続けて kim のパスワード（`passwd` で決めたもの）を入力します。プロンプトに、あなたが kim であることが表示されます。"
+    },
+    "userdel": {
+      "text": "ホームディレクトリ付きの一時的なユーザー `vikarie`（スウェーデン語で「代理の人」）を作成し、それをホームディレクトリ **ごと** 削除してください。",
+      "hint": "`sudo useradd -m vikarie`、そのあと `sudo userdel -r vikarie` です。"
+    }
+  }
+}

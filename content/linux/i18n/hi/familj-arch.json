@@ -1,0 +1,59 @@
+{
+  "title": "Arch परिवार: pacman और AUR",
+  "tasks": {
+    "sync": {
+      "text": "`pacman -Syu` से पैकेज डेटाबेस सिंक्रनाइज़ कीजिए और सिस्टम अपग्रेड कीजिए।",
+      "hint": "यह कमांड सिस्टम बदलता है और इसे root चाहिए: `sudo pacman -Syu`।"
+    },
+    "search": {
+      "text": "`htop` पैकेज खोजिए।",
+      "hint": "`pacman -Ss htop`"
+    },
+    "install": {
+      "text": "`tree` पैकेज इंस्टॉल कीजिए।",
+      "hint": "`sudo pacman -S tree` और सवाल का जवाब हाँ में दीजिए।"
+    },
+    "run-tree": {
+      "text": "अपनी होम डायरेक्टरी में `tree` चलाइए।"
+    },
+    "remove": {
+      "text": "`tree` पैकेज को फिर से हटा दीजिए।",
+      "hint": "`sudo pacman -R tree`"
+    },
+    "upgrade": {
+      "text": "सभी इंस्टॉल किए गए पैकेज अपग्रेड कीजिए।",
+      "hint": "`sudo pacman -Syu` यह सब एक बार में कर देता है।"
+    },
+    "forbered": {
+      "text": "AUR से पैकेज बनाने (build करने) के लिए ज़रूरी चीज़ें इंस्टॉल कीजिए: `git` और `base-devel`।",
+      "hint": "`sudo pacman -S --needed git base-devel`"
+    },
+    "lagg-till": {
+      "text": "AUR पैकेज `moonphase` की बिल्ड रेसिपी को `git clone` से अपनी होम डायरेक्टरी में डाउनलोड कीजिए। पता है `https://aur.archlinux.org/moonphase.git`।",
+      "hint": "`cd ~` और फिर `git clone https://aur.archlinux.org/moonphase.git`"
+    },
+    "granska": {
+      "text": "कुछ भी बिल्ड करने से पहले बिल्ड रेसिपी `PKGBUILD` पढ़िए!",
+      "hint": "`cd ~/moonphase` और फिर `less PKGBUILD` (या `cat PKGBUILD`)।"
+    },
+    "installera": {
+      "text": "`makepkg` से `moonphase` बिल्ड और इंस्टॉल कीजिए।",
+      "hint": "डायरेक्टरी `~/moonphase` में रहिए और `makepkg -si` चलाइए – sudo के बिना!"
+    },
+    "kor": {
+      "text": "प्रोग्राम `moonphase` चलाइए।"
+    },
+    "ursprung": {
+      "text": "वे सभी इंस्टॉल किए गए पैकेज सूचीबद्ध कीजिए जो Arch की अपनी रिपॉज़िटरी से नहीं आते।",
+      "hint": "ऐसे पैकेज *foreign* (बाहरी) कहलाते हैं: `pacman -Qm`"
+    },
+    "efterat": {
+      "text": "बोनस: AUR हेल्पर `yay` (AUR पैकेज `yay-bin`) इंस्टॉल कीजिए और उससे AUR पैकेज `snowfall` इंस्टॉल कीजिए।",
+      "hint": "पहले की तरह: `cd ~`, `git clone https://aur.archlinux.org/yay-bin.git`, `cd yay-bin` और `makepkg -si`। फिर `yay -S snowfall` – sudo के बिना।"
+    },
+    "vim": {
+      "text": "बोनस: Vim टेक्स्ट एडिटर इंस्टॉल कीजिए।",
+      "hint": "`pacman -Ss vim` से खोजिए। पैकेज का नाम `vim` है।"
+    }
+  }
+}

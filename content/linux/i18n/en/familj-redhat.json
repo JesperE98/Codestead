@@ -1,0 +1,59 @@
+{
+  "title": "The Red Hat family: dnf and COPR",
+  "tasks": {
+    "sync": {
+      "text": "Fetch new package information and check for updates with `dnf check-update`.",
+      "hint": "`dnf check-update` doesn't need root."
+    },
+    "search": {
+      "text": "Search for the `htop` package.",
+      "hint": "`dnf search htop`"
+    },
+    "install": {
+      "text": "Install the `tree` package.",
+      "hint": "`sudo dnf install tree` – and answer `y`, since No is the default!"
+    },
+    "run-tree": {
+      "text": "Run `tree` in your home directory."
+    },
+    "remove": {
+      "text": "Remove the `tree` package again.",
+      "hint": "`sudo dnf remove tree`"
+    },
+    "upgrade": {
+      "text": "Upgrade all installed packages.",
+      "hint": "`sudo dnf upgrade`"
+    },
+    "forbered": {
+      "text": "Show which repositories dnf is using right now.",
+      "hint": "`dnf repolist`"
+    },
+    "lagg-till": {
+      "text": "Enable the COPR repository `lunatool/moonphase`.",
+      "hint": "`sudo dnf copr enable lunatool/moonphase` – and answer `y`, No is the default."
+    },
+    "granska": {
+      "text": "List which COPR repositories have been added.",
+      "hint": "`dnf copr list`"
+    },
+    "installera": {
+      "text": "Install the package `moonphase` from the COPR repository.",
+      "hint": "`sudo dnf install moonphase`"
+    },
+    "kor": {
+      "text": "Run the program `moonphase`."
+    },
+    "ursprung": {
+      "text": "Find out which repository `moonphase` was installed from.",
+      "hint": "`dnf info moonphase` – look at the line `From repository`."
+    },
+    "efterat": {
+      "text": "Disable the COPR repository again. The program stays, but gets no more updates.",
+      "hint": "`sudo dnf copr disable lunatool/moonphase`"
+    },
+    "vim": {
+      "text": "Bonus: install the Vim text editor. Hint: the package isn't called `vim` in the Red Hat family!",
+      "hint": "Search with `dnf search vim`. The package is called `vim-enhanced`."
+    }
+  }
+}

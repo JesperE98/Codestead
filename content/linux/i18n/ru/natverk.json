@@ -1,0 +1,37 @@
+{
+  "title": "Сеть",
+  "tasks": {
+    "ip-addr": {
+      "text": "Покажите IP-адреса компьютера с помощью `ip`.",
+      "hint": "`ip addr` – или короче, `ip a`."
+    },
+    "ping-gw": {
+      "text": "Пропингуйте шлюз `192.168.1.1` ровно 3 раза.",
+      "hint": "`ping -c 3 192.168.1.1` – `-c` означает *count*."
+    },
+    "dig": {
+      "text": "Установите пакет `dnsutils` и узнайте IP-адрес `example.com` с помощью `dig`.",
+      "hint": "`sudo apt update`, `sudo apt install dnsutils`, а затем `dig +short example.com`."
+    },
+    "ss": {
+      "text": "Выясните с помощью `ss`, какие порты слушаются на компьютере.",
+      "hint": "`ss -tulpn` – **t**cp, **u**dp, **l**istening, **p**rocess, **n**umeric."
+    },
+    "curl-localhost": {
+      "text": "Загрузите с помощью `curl` стартовую страницу учебного сервера на своём компьютере, `http://localhost:8080`.",
+      "hint": "В Ubuntu curl нужно установить: `sudo apt install curl`. Если вы получили *Couldn't connect to server*, minserver остановлен – запустите его командой `minserver`."
+    },
+    "spara": {
+      "text": "Сохраните веб-страницу `https://example.com` в файл `~/exempel.html`.",
+      "hint": "Перейдите в домашний каталог и используйте `curl -o exempel.html https://example.com` или `wget -O exempel.html https://example.com`."
+    },
+    "hosts": {
+      "text": "Сервер `192.168.1.10` должен называться `server.lan`, но этого имени нет в DNS. Добавьте его в `/etc/hosts`, а затем пропингуйте `server.lan`.",
+      "hint": "Файл принадлежит root: `echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts`, а затем `ping -c 3 server.lan`."
+    },
+    "ssh": {
+      "text": "Выполните команду `hostname` на сервере `server.lan` с помощью `ssh` от имени пользователя `elev`.",
+      "hint": "`ssh elev@server.lan hostname` – и ответьте `yes` на вопрос о ключе хоста."
+    }
+  }
+}

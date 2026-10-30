@@ -1,0 +1,191 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        x:Class="Codestead.UI.Themes.CodesteadTheme"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!--
+    The Codestead look, shared by every tool. Colours are the same tokens as the old web version
+    (styles.css): Bg, Surface, Surface2, Border, Text, TextMuted, Accent, AccentSoft, Link, CodeBg,
+    WarnBg, WarnBorder, TermBg, TermBar, TermText.
+  -->
+  <Styles.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="CsBg" Color="#f6f7f9" />
+          <SolidColorBrush x:Key="CsSurface" Color="#ffffff" />
+          <SolidColorBrush x:Key="CsSurface2" Color="#eef0f3" />
+          <SolidColorBrush x:Key="CsBorder" Color="#dcdfe4" />
+          <SolidColorBrush x:Key="CsText" Color="#1c2026" />
+          <SolidColorBrush x:Key="CsTextMuted" Color="#5b6370" />
+          <SolidColorBrush x:Key="CsAccent" Color="#1f7a4d" />
+          <SolidColorBrush x:Key="CsAccentSoft" Color="#e3f3ea" />
+          <SolidColorBrush x:Key="CsLink" Color="#1a64c7" />
+          <SolidColorBrush x:Key="CsCodeBg" Color="#eef0f3" />
+          <SolidColorBrush x:Key="CsCodeText" Color="#1c2026" />
+          <SolidColorBrush x:Key="CsWarnBg" Color="#fff6e0" />
+          <SolidColorBrush x:Key="CsWarnBorder" Color="#e7c25d" />
+          <SolidColorBrush x:Key="CsDanger" Color="#c62828" />
+          <SolidColorBrush x:Key="CsDangerSoft" Color="#fdecea" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="CsBg" Color="#13161b" />
+          <SolidColorBrush x:Key="CsSurface" Color="#1a1e24" />
+          <SolidColorBrush x:Key="CsSurface2" Color="#232830" />
+          <SolidColorBrush x:Key="CsBorder" Color="#2f3541" />
+          <SolidColorBrush x:Key="CsText" Color="#e3e7ed" />
+          <SolidColorBrush x:Key="CsTextMuted" Color="#9aa3b0" />
+          <SolidColorBrush x:Key="CsAccent" Color="#4fc283" />
+          <SolidColorBrush x:Key="CsAccentSoft" Color="#1c3528" />
+          <SolidColorBrush x:Key="CsLink" Color="#6cb0ff" />
+          <SolidColorBrush x:Key="CsCodeBg" Color="#232830" />
+          <SolidColorBrush x:Key="CsCodeText" Color="#e3e7ed" />
+          <SolidColorBrush x:Key="CsWarnBg" Color="#2d2615" />
+          <SolidColorBrush x:Key="CsWarnBorder" Color="#8a6d1f" />
+          <SolidColorBrush x:Key="CsDanger" Color="#ef5350" />
+          <SolidColorBrush x:Key="CsDangerSoft" Color="#3a1d1d" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+      <SolidColorBrush x:Key="CsTermBg" Color="#0f1318" />
+      <SolidColorBrush x:Key="CsTermBar" Color="#1b2129" />
+      <SolidColorBrush x:Key="CsTermText" Color="#e6edf3" />
+      <SolidColorBrush x:Key="CsTermMuted" Color="#7d8590" />
+      <SolidColorBrush x:Key="CsTermGreen" Color="#7ee787" />
+      <FontFamily x:Key="CsMonoFont">Cascadia Mono, JetBrains Mono, DejaVu Sans Mono, Liberation Mono, Noto Sans Mono, Menlo, Consolas, monospace</FontFamily>
+    </ResourceDictionary>
+  </Styles.Resources>
+
+  <!-- Window background and text -->
+  <Style Selector="Window">
+    <Setter Property="Background" Value="{DynamicResource CsBg}" />
+    <Setter Property="Foreground" Value="{DynamicResource CsText}" />
+  </Style>
+
+  <!-- Text styles -->
+  <Style Selector="TextBlock.muted, SelectableTextBlock.muted">
+    <Setter Property="Foreground" Value="{DynamicResource CsTextMuted}" />
+  </Style>
+  <Style Selector="TextBlock.h1, SelectableTextBlock.h1">
+    <Setter Property="FontSize" Value="30" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Margin" Value="0,4,0,18" />
+    <Setter Property="LineHeight" Value="36" />
+  </Style>
+  <Style Selector="TextBlock.h2, SelectableTextBlock.h2">
+    <Setter Property="FontSize" Value="21" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Margin" Value="0,30,0,8" />
+  </Style>
+  <Style Selector="TextBlock.h3, SelectableTextBlock.h3">
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Margin" Value="0,20,0,6" />
+  </Style>
+  <Style Selector="TextBlock.eyebrow">
+    <Setter Property="FontSize" Value="12.5" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="{DynamicResource CsAccent}" />
+    <Setter Property="LetterSpacing" Value="0.8" />
+  </Style>
+
+  <!-- Buttons -->
+  <Style Selector="Button">
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+  <Style Selector="Button.primary">
+    <Setter Property="Background" Value="{DynamicResource CsAccent}" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Padding" Value="14,7" />
+  </Style>
+  <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource CsAccent}" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="Opacity" Value="0.9" />
+  </Style>
+  <Style Selector="Button.secondary">
+    <Setter Property="Background" Value="{DynamicResource CsSurface}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CsBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="12,6" />
+  </Style>
+  <Style Selector="Button.danger">
+    <Setter Property="Background" Value="{DynamicResource CsDanger}" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Padding" Value="14,7" />
+  </Style>
+  <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource CsDanger}" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="Opacity" Value="0.9" />
+  </Style>
+  <Style Selector="Button.danger-outline">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource CsDanger}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CsDanger}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="12,6" />
+  </Style>
+  <Style Selector="Button.chip">
+    <Setter Property="Background" Value="{DynamicResource CsSurface}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CsBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="14" />
+    <Setter Property="Padding" Value="10,3" />
+    <Setter Property="FontSize" Value="12.5" />
+  </Style>
+  <Style Selector="Button.chip.active">
+    <Setter Property="Background" Value="{DynamicResource CsAccentSoft}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CsAccent}" />
+    <Setter Property="Foreground" Value="{DynamicResource CsAccent}" />
+  </Style>
+  <Style Selector="Button.flat">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="Button.nav-item">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="Padding" Value="10,6" />
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+  <Style Selector="Button.nav-item.current">
+    <Setter Property="Background" Value="{DynamicResource CsAccentSoft}" />
+    <Setter Property="Foreground" Value="{DynamicResource CsAccent}" />
+  </Style>
+  <Style Selector="Button.cmd">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="6,1" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Left" />
+    <Setter Property="FontFamily" Value="{StaticResource CsMonoFont}" />
+    <Setter Property="Foreground" Value="{StaticResource CsTermText}" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+  <Style Selector="Button.cmd:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#1F7EE787" />
+    <Setter Property="Foreground" Value="{StaticResource CsTermText}" />
+  </Style>
+  <Style Selector="Button.solution">
+    <Setter Property="Background" Value="{StaticResource CsTermBg}" />
+    <Setter Property="Foreground" Value="{StaticResource CsTermText}" />
+    <Setter Property="FontFamily" Value="{StaticResource CsMonoFont}" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Padding" Value="8,4" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+  <Style Selector="Button.solution:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource CsTermBar}" />
+    <Setter Property="Foreground" Value="{StaticResource CsTermGreen}" />
+  </Style>
+
+  <!-- Cards -->
+  <Style Selector="Border.card">
+    <Setter Property="Background" Value="{DynamicResource CsSurface}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CsBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="10" />
+  </Style>
+</Styles>

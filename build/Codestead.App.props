@@ -1,0 +1,11 @@
+<Project>
+  <!--
+    Shared by every Codestead desktop app (Codestead Linux, the hub).
+    Published builds carry their own ICU (Unicode/collation library), so the apps do not depend on the
+    distribution's libicu version (libicu70/74/76 ... differ between Ubuntu, Debian, Fedora and Arch).
+  -->
+  <ItemGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <PackageReference Include="Microsoft.ICU.ICU4C.Runtime" Version="72.1.0.3" />
+    <RuntimeHostConfigurationOption Include="System.Globalization.AppLocalIcu" Value="72.1.0.3" />
+  </ItemGroup>
+</Project>
