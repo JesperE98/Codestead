@@ -87,5 +87,10 @@
   "exam.passed": "通过！做得好。",
   "exam.failed": "需要达到 {need}% 才能通过。请重读子章节后再次参加测验。",
   "exam.retake": "重新测验",
-  "exam.best": "最佳成绩：{percent}%"
+  "exam.best": "最佳成绩：{percent}%",
+  "update.title": "有新版本",
+  "update.text": "应用的 {version} 版本已发布。现在更新吗？应用会重新启动，你的学习进度会保留。",
+  "update.button": "更新并重新启动",
+  "update.later": "以后再说",
+  "update.downloading": "正在下载更新…"
 }

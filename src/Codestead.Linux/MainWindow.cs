@@ -120,7 +120,11 @@ public sealed class MainWindow : Window
         Opened += (_, _) =>
         {
             if (this.smokeTest) Dispatcher.UIThread.Post(RunSmokeTest, DispatcherPriority.Background);
-            else terminal.FocusInput();
+            else
+            {
+                terminal.FocusInput();
+                _ = OfferUpdate();
+            }
         };
         Closing += (_, _) => SaveAll();
     }
@@ -956,6 +960,39 @@ public sealed class MainWindow : Window
             "dark" => ThemeVariant.Dark,
             _ => ThemeVariant.Default,
         };
+    }
+
+    /// <summary>
+    /// Installed with Setup.exe or as an AppImage, the app updates itself (Velopack). Installed by the hub or
+    /// as a native package, the hub or the package manager does it instead.
+    /// </summary>
+    private async Task OfferUpdate()
+    {
+        var updater = new SelfUpdate(ProductInfo.ReleasesRepo, ProductInfo.ToolId);
+        if (!updater.CanUpdateItself) return;
+        string? version;
+        try
+        {
+            version = await updater.CheckAsync();
+        }
+        catch (Exception)
+        {
+            return; // Offline or the release server is unavailable – try again next start.
+        }
+        if (version is null) return;
+        overlay.Confirm(T("update.title"), T("update.text", ("version", version)), T("update.button"), T("update.later"), false, async () =>
+        {
+            overlay.Toast(T("update.downloading"), 30);
+            try
+            {
+                SaveAll();
+                await updater.DownloadAndRestartAsync(_ => { });
+            }
+            catch (Exception e)
+            {
+                overlay.Toast(e.Message);
+            }
+        });
     }
 
     private void ConfirmResetTerminal()

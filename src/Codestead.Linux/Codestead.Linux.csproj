@@ -44,5 +44,9 @@
       <_Parameter1>ToolId</_Parameter1>
       <_Parameter2>$(CodesteadLinuxId)</_Parameter2>
     </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ReleasesRepo</_Parameter1>
+      <_Parameter2>$(CodesteadReleasesRepo)</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
 </Project>

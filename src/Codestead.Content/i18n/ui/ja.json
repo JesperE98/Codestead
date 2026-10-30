@@ -87,5 +87,10 @@
   "exam.passed": "合格！よくできました。",
   "exam.failed": "合格には {need}% が必要です。サブ章を読み直して、もう一度テストを受けてください。",
   "exam.retake": "テストをもう一度受ける",
-  "exam.best": "最高記録：{percent}%"
+  "exam.best": "最高記録：{percent}%",
+  "update.title": "新しいバージョン",
+  "update.text": "アプリのバージョン {version} が利用できます。今すぐ更新しますか？アプリは再起動し、学習の進み具合は保存されます。",
+  "update.button": "更新して再起動",
+  "update.later": "後で",
+  "update.downloading": "更新をダウンロード中…"
 }

@@ -88,5 +88,10 @@
   "exam.passed": "Godkänt! Bra jobbat.",
   "exam.failed": "Det krävs {need} % för godkänt. Läs delkapitlen igen och gör om provet.",
   "exam.retake": "Gör om provet",
-  "exam.best": "Bästa resultat: {percent} %"
+  "exam.best": "Bästa resultat: {percent} %",
+  "update.title": "En ny version",
+  "update.text": "Version {version} av appen finns. Vill du uppdatera nu? Appen startar om och dina framsteg sparas.",
+  "update.button": "Uppdatera och starta om",
+  "update.later": "Senare",
+  "update.downloading": "Laddar ner uppdateringen …"
 }

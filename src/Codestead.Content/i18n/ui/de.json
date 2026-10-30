@@ -87,5 +87,10 @@
   "exam.passed": "Bestanden! Gut gemacht.",
   "exam.failed": "Zum Bestehen brauchst du {need} %. Lies die Unterkapitel noch einmal und wiederhole die Prüfung.",
   "exam.retake": "Prüfung wiederholen",
-  "exam.best": "Bestes Ergebnis: {percent} %"
+  "exam.best": "Bestes Ergebnis: {percent} %",
+  "update.title": "Eine neue Version",
+  "update.text": "Version {version} der App ist verfügbar. Jetzt aktualisieren? Die App startet neu, dein Fortschritt bleibt erhalten.",
+  "update.button": "Aktualisieren und neu starten",
+  "update.later": "Später",
+  "update.downloading": "Update wird heruntergeladen …"
 }

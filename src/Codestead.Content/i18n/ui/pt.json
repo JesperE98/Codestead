@@ -87,5 +87,10 @@
   "exam.passed": "Aprovado! Muito bem.",
   "exam.failed": "São necessários {need} % para aprovação. Leia os subcapítulos de novo e refaça a prova.",
   "exam.retake": "Refazer a prova",
-  "exam.best": "Melhor resultado: {percent} %"
+  "exam.best": "Melhor resultado: {percent} %",
+  "update.title": "Uma nova versão",
+  "update.text": "A versão {version} do aplicativo está disponível. Atualizar agora? O aplicativo será reiniciado e seu progresso fica salvo.",
+  "update.button": "Atualizar e reiniciar",
+  "update.later": "Mais tarde",
+  "update.downloading": "Baixando a atualização …"
 }
