@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The hub's logic without any UI: catalog, signature check, download, install, update, uninstall. -->
+  <PropertyGroup>
+    <RootNamespace>Codestead.Hub.Core</RootNamespace>
+  </PropertyGroup>
+</Project>
