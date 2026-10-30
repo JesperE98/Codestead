@@ -31,12 +31,34 @@ echo "second line" >> test.txt
 cat test.txt
 ```
 
+```predict
+$ echo one > t.txt
+$ echo two > t.txt
+$ cat t.txt
+two
+---
+The second `>` overwrote the file. With `>>` it would contain both lines.
+```
+
 ## From a file – `<`
 
 `<` lets a program read its stdin from a file:
 
 ```sh
 wc -l < dokument/frukter.txt
+```
+
+Now `wc` never sees the file name – it only gets the text on stdin – so it
+prints just the number.
+
+```predict
+$ wc -l dokument/frukter.txt
+$ wc -l < dokument/frukter.txt
+10 dokument/frukter.txt
+10
+---
+With a file name as an argument, `wc` prints the name too. With `<`, it only
+gets the text.
 ```
 
 ## Error messages – `2>`
@@ -49,6 +71,16 @@ ls /finnsinte 2> fel.txt
 ```
 
 (*Finns inte* is Swedish for "doesn't exist", and *fel* means "error".)
+
+```quiz
+You run `ls /finnsinte > fel.txt`. Where does the error message end up?
+- [ ] In `fel.txt`
+- [x] On the screen – `fel.txt` stays empty
+- [ ] Nowhere, it disappears
+---
+`>` only redirects stdout (stream 1). The error message goes to stderr
+(stream 2), which still goes to the screen. You would need `2>`.
+```
 
 The file `/dev/null` is a "black hole" – anything written to it disappears.
 That's handy for silencing errors. With `2>&1`, stderr is sent the same way as
@@ -74,6 +106,12 @@ sort dokument/frukter.txt | uniq -c | sort -rn
 Read it step by step: sort the fruits, count how many there are of each
 (`uniq -c`), and then sort numerically with the largest first (`sort -rn`).
 
+How many files and directories are there in `/etc`? Count them with a pipe:
+
+```try
+ls /etc | wc -l
+```
+
 ## Both screen and file – `tee`
 
 `tee` passes its input along *and* saves a copy in a file:
@@ -94,4 +132,12 @@ Several commands can go on the same line:
 
 ```sh
 mkdir -p ny && cd ny
+```
+
+```predict
+$ mkdir dokument 2> /dev/null && echo created || echo failed
+failed
+---
+`dokument` already exists, so `mkdir` fails (its error message disappears in
+`/dev/null`). `echo created` is skipped and `echo failed` runs.
 ```
