@@ -4,6 +4,7 @@ import type { CmdCtx, CommandDef } from '../types';
 import { basename, dirname } from '../vfs';
 import { badOption, COLOR, formatMan, fsMessage, longDate } from './util';
 import { COMMANDS } from './index';
+import { manFor, summaryFor } from './man-en';
 
 function simple(name: string, summary: string, run: (ctx: CmdCtx) => number, man?: string, builtin = false): CommandDef {
   return { name, summary, run, man, builtin };
@@ -275,7 +276,7 @@ const man = simple('man', 'Visar manualen för ett kommando', (ctx) => {
     ctx.err(`No manual entry for ${name}\n`);
     return 16;
   }
-  ctx.out(formatMan(name, def.man ?? `NAMN\n       ${name} - ${def.summary}`));
+  ctx.out(formatMan(name, manFor(def, ctx.sh)));
   if (ctx.isTTY) ctx.out(`${COLOR.dim}(I en riktig terminal bläddrar du i manualen med piltangenterna och avslutar med q.)${COLOR.reset}\n`);
   return 0;
 }, `NAMN
@@ -294,7 +295,7 @@ const help = simple('help', 'Listar alla kommandon som finns', (ctx) => {
   const names = sh.availableCommands().filter((n) => /^[a-z]/.test(n) && COMMANDS[n]?.name === n);
   ctx.out(`Kommandon i den här simulerade terminalen (${sh.distro.name}):\n`);
   ctx.out(`Skriv 'man <kommando>' för mer information om ett kommando.\n\n`);
-  for (const n of names) ctx.out(`  ${n.padEnd(11)} ${COMMANDS[n].summary}\n`);
+  for (const n of names) ctx.out(`  ${n.padEnd(11)} ${summaryFor(COMMANDS[n], sh)}\n`);
   ctx.out(`\n${COLOR.dim}Saknas ett program? Det kanske går att installera med pakethanteraren (${sh.distro.packageManager}).${COLOR.reset}\n`);
   return 0;
 }, `NAMN

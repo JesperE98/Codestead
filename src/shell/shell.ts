@@ -5,6 +5,7 @@
 import { ArithError, evalArith } from './arith';
 import { COMMANDS } from './commands';
 import { formatMan } from './commands/util';
+import { manFor } from './commands/man-en';
 import { getDistro, type Distro } from './distros';
 import { buildFs, STUDENT } from './initfs';
 import { installPackage, PACKAGES, packageProviding } from './packages';
@@ -757,7 +758,7 @@ export class Shell {
             return 126;
           }
           if (args[0] === '--help' && def.man && !['apt', 'apt-get', 'pacman', 'dnf', 'dnf5'].includes(def.name)) {
-            io.out(formatMan(def.name, def.man));
+            io.out(formatMan(def.name, manFor(def, this)));
             return 0;
           }
           return def.run(ctx);
