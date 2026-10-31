@@ -4,7 +4,7 @@
 
 ```predict
 $ echo "$HOME" '$USER'
-/home/elev $USER
+/home/{{user}} $USER
 ---
 दोहरे उद्धरण चिह्न वेरिएबल को उसके मान से बदल देते हैं; एकल उद्धरण चिह्न उसे ठीक
 वैसा ही छापते हैं जैसा लिखा है।
@@ -35,10 +35,10 @@ $ echo $?
 ```
 
 ```predict
-$ touch verktyg.sh
-$ chmod 755 verktyg.sh
-$ chmod go-x verktyg.sh
-$ ls -l verktyg.sh | awk '{print $1}'
+$ touch tool.sh
+$ chmod 755 tool.sh
+$ chmod go-x tool.sh
+$ ls -l tool.sh | awk '{print $1}'
 -rwxr--r--
 ```
 
@@ -46,7 +46,7 @@ $ ls -l verktyg.sh | awk '{print $1}'
 Ubuntu पर किस समूह के सदस्य `sudo` इस्तेमाल कर सकते हैं?
 - [x] `sudo`
 - [ ] `root`
-- [ ] `elev`
+- [ ] `{{user}}`
 ```
 
 ```quiz
@@ -86,18 +86,18 @@ Ubuntu पर किस समूह के सदस्य `sudo` इस्त�
 ```
 
 ```quiz
-`tar -cvf dokument dokument.tar` में क्या ग़लत है?
+`tar -cvf {{documents}} {{documents}}.tar` में क्या ग़लत है?
 - [ ] `-v` को `-c` के साथ नहीं मिलाया जा सकता
 - [x] क्रम: आर्काइव का नाम `f` के ठीक बाद, फ़ाइलों से पहले आना चाहिए
 - [ ] tar आर्काइव का नाम `.tgz` पर ख़त्म होना ज़रूरी है
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ gzip frukter.txt
-$ gunzip frukter.txt.gz
-$ ls frukter*
-frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ gzip {{fruits}}
+$ gunzip {{fruits}}.gz
+$ ls {{fruits}}*
+{{fruits}}
 ```
 
 ```quiz
@@ -110,7 +110,7 @@ frukter.txt
 ```
 
 ```try
-du -sh dokument
+du -sh {{documents}}
 ---
 `-s` पूरी डायरेक्टरी का एक कुल योग देता है और `-h` आकार को पढ़ने में आसान बनाता है।
 ```

@@ -7,7 +7,7 @@
 - [ ] `var/log`
 - [ ] `../etc`
 - [x] `/usr/bin`
-- [ ] `dokument`
+- [ ] `{{documents}}`
 ---
 निरपेक्ष पाथ `/` से, यानी रूट से, शुरू होता है। बाक़ी उस डायरेक्टरी से शुरू होते हैं
 जिसमें आप हैं।
@@ -30,10 +30,10 @@ $ pwd
 ```
 
 ```quiz
-आप पूरी डायरेक्टरी `bilder` को, उसके अंदर की हर चीज़ के साथ, `bilder-kopia` में कॉपी करना चाहते हैं। कौन-सा कमांड काम करता है?
-- [ ] `cp bilder bilder-kopia`
-- [x] `cp -r bilder bilder-kopia`
-- [ ] `mv bilder bilder-kopia`
+आप पूरी डायरेक्टरी `{{pictures}}` को, उसके अंदर की हर चीज़ के साथ, `{{pictures}}-copy` में कॉपी करना चाहते हैं। कौन-सा कमांड काम करता है?
+- [ ] `cp {{pictures}} {{pictures}}-copy`
+- [x] `cp -r {{pictures}} {{pictures}}-copy`
+- [ ] `mv {{pictures}} {{pictures}}-copy`
 ---
 डायरेक्टरी `-r` (*recursive*) से कॉपी होती है। `mv` उसे कॉपी करने के बजाय
 स्थानांतरित कर देता।
@@ -48,17 +48,17 @@ c
 ```
 
 ```quiz
-आप `touch min fil.txt` टाइप करते हैं – बिना उद्धरण चिह्नों के। क्या होता है?
-- [ ] `min fil.txt` नाम की एक फ़ाइल बनती है
-- [x] दो फ़ाइलें बनती हैं: `min` और `fil.txt`
+आप `touch my file.txt` टाइप करते हैं – बिना उद्धरण चिह्नों के। क्या होता है?
+- [ ] `my file.txt` नाम की एक फ़ाइल बनती है
+- [x] दो फ़ाइलें बनती हैं: `my` और `file.txt`
 - [ ] कुछ नहीं, क्योंकि नाम में स्पेस है
 ---
 शेल पंक्ति को स्पेस पर बाँट देता है, इसलिए `touch` को दो आर्ग्युमेंट मिलते हैं। एक
-फ़ाइल पाने के लिए `touch "min fil.txt"` लिखिए।
+फ़ाइल पाने के लिए `touch "my file.txt"` लिखिए।
 ```
 
 ```quiz
-`grep -i error dokument/server.log` कौन-सी पंक्तियाँ दिखाता है?
+`grep -i error {{documents}}/server.log` कौन-सी पंक्तियाँ दिखाता है?
 - [ ] सिर्फ़ छोटे अक्षरों में `error` वाली पंक्तियाँ
 - [ ] सिर्फ़ बड़े अक्षरों में `ERROR` वाली पंक्तियाँ
 - [x] छोटे-बड़े अक्षरों के किसी भी मेल में `error` वाली पंक्तियाँ
@@ -66,9 +66,9 @@ c
 
 ```quiz
 आप एक लॉग फ़ाइल पर नज़र रखना चाहते हैं और नई पंक्तियाँ लिखे जाते ही देखना चाहते हैं। कौन-सा कमांड सही है?
-- [ ] `head -n 10 dokument/server.log`
-- [x] `tail -f dokument/server.log`
-- [ ] `wc -l dokument/server.log`
+- [ ] `head -n 10 {{documents}}/server.log`
+- [x] `tail -f {{documents}}/server.log`
+- [ ] `wc -l {{documents}}/server.log`
 ---
 `tail -f` फ़ाइल का *पीछा* करता है। इसे **Ctrl+C** से रोकिए।
 ```
@@ -98,9 +98,9 @@ c
 ```
 
 ```try
-grep ERROR ~/dokument/server.log | tee fel.txt | wc -l
+grep ERROR ~/{{documents}}/server.log | tee errors.txt | wc -l
 ---
-`tee` ने त्रुटि वाली पंक्तियाँ `fel.txt` में सहेजीं और उन्हें `wc -l` को आगे भेजा,
+`tee` ने त्रुटि वाली पंक्तियाँ `errors.txt` में सहेजीं और उन्हें `wc -l` को आगे भेजा,
 जिसने उन्हें गिना।
 ```
 

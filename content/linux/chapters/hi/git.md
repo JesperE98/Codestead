@@ -44,8 +44,8 @@ Git में save किए गए हर version में उस व्यक
 हैं। यह आप हर computer पर एक बार set करते हैं:
 
 ```sh
-git config --global user.name "Elev Elevsson"
-git config --global user.email "elev@example.com"
+git config --global user.name "{{gitName}}"
+git config --global user.email "{{user}}@example.com"
 ```
 
 बेझिझक अपना नाम इस्तेमाल कीजिए। `--global` का मतलब है कि यह setting आपके सारे
@@ -57,8 +57,8 @@ cat ~/.gitconfig
 
 ```text
 [user]
-	name = Elev Elevsson
-	email = elev@example.com
+	name = {{gitName}}
+	email = {{user}}@example.com
 ```
 
 अगर आप यह step भूल जाते हैं, तो save करने की कोशिश पर git शिकायत करता है:
@@ -70,11 +70,11 @@ cat ~/.gitconfig
 
 ## एक नई repository
 
-आपकी home directory में एक छोटा web project है, `~/projekt-webb` (Swedish में
-*web project*), जिसमें तीन files हैं। वहाँ जाइए और देखिए:
+आपकी home directory में एक छोटा web project है, `~/{{webProject}}`, जिसमें तीन
+files हैं। वहाँ जाइए और देखिए:
 
 ```sh
-cd ~/projekt-webb
+cd ~/{{webProject}}
 ls
 ```
 
@@ -86,7 +86,7 @@ git init
 ```
 
 ```text
-Initialized empty Git repository in /home/elev/projekt-webb/.git/
+Initialized empty Git repository in /home/{{user}}/{{webProject}}/.git/
 ```
 
 हुआ बस इतना है कि एक hidden directory, `.git`, बन गई है। वहीं git पूरी history
@@ -194,19 +194,18 @@ Changes to be committed:
 Snapshot को `git commit` से save कीजिए। `-m` option message देता है:
 
 ```sh
-git commit -m "Första versionen av webbplatsen"
+git commit -m "{{commitFirst}}"
 ```
 
 ```text
-[main (root-commit) 3f2a9c1] Första versionen av webbplatsen
+[main (root-commit) 3f2a9c1] {{commitFirst}}
  3 files changed, 24 insertions(+)
  create mode 100644 README.md
  create mode 100644 index.html
  create mode 100644 style.css
 ```
 
-(Message Swedish में है और इसका मतलब है *website का पहला version* – आप अपना message
-किसी भी भाषा में लिख सकते हैं।) `3f2a9c1` commit की **id** की शुरुआत है – 40
+आप अपना message किसी भी भाषा में लिख सकते हैं। `3f2a9c1` commit की **id** की शुरुआत है – 40
 characters का एक *hash* जो content से calculate किया जाता है। आपकी id अलग होगी,
 क्योंकि समय और आपका नाम उसका हिस्सा हैं। किसी commit को पहचानने के लिए आम तौर पर
 पहले सात characters काफ़ी होते हैं।
@@ -229,21 +228,21 @@ nothing to commit, working tree clean
 `README.md` में एक line जोड़िए और git से पूछिए कि क्या हुआ:
 
 ```sh
-echo 'Sidan är byggd med HTML och CSS.' >> README.md
+echo '{{builtWith}}' >> README.md
 git status
 git diff
 ```
 
 ```text
 diff --git a/README.md b/README.md
-index 1100cf4..e5bd3a0 100644
+index c5ea3c9..e243b6c 100644
 --- a/README.md
 +++ b/README.md
 @@ -1,3 +1,4 @@
- # Min webbplats
+ # {{siteTitle}}
  
- En liten webbplats som jag versionshanterar med git.
-+Sidan är byggd med HTML och CSS.
+ एक छोटी वेबसाइट, जिसका संस्करण-नियंत्रण git से होता है।
++{{builtWith}}
 ```
 
 `+` से शुरू होने वाली line नई है (हरी), `-` से शुरू होने वाली lines हटाई गई थीं
@@ -258,7 +257,7 @@ index 1100cf4..e5bd3a0 100644
 जिन्हें git पहले से follow करता है, इसलिए एक ही step काफ़ी है:
 
 ```sh
-git commit -a -m "Beskriv hur sidan är byggd"
+git commit -a -m "{{commitDescribe}}"
 ```
 
 ध्यान दीजिए कि `-a` उन नई files को शामिल *नहीं* करता जिन्हें git अभी follow नहीं
@@ -271,12 +270,12 @@ git commit -a -m "Beskriv hur sidan är byggd"
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ echo 'En rad till.' >> README.md
-$ git commit -m "En rad till" > /dev/null
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "{{commitFirst}}" > /dev/null
+$ echo 'एक और पंक्ति।' >> README.md
+$ git commit -m "एक और पंक्ति" > /dev/null
 $ git log --oneline | wc -l
 1
 ---
@@ -314,10 +313,10 @@ git log
 
 ```text
 commit 8d41b7e0c2a3f1d5e9b6a7c8d9e0f1a2b3c4d5e6 (HEAD -> main)
-Author: Elev Elevsson <elev@example.com>
+Author: {{gitName}} <{{user}}@example.com>
 Date:   Fri Oct 30 14:12:09 2026 +0100
 
-    Beskriv hur sidan är byggd
+    {{commitDescribe}}
 
 commit 3f2a9c1...
 ```
@@ -374,17 +373,17 @@ commits बनाने पर साथ-साथ आगे बढ़ता ह
 
 ```sh
 git branch
-git switch -c ny-design
+git switch -c {{newDesign}}
 git branch
 ```
 
-`git switch -c ny-design` (*नया design*) branch बनाता है और उस पर switch करता है।
+`git switch -c {{newDesign}}` branch बनाता है और उस पर switch करता है।
 `git branch` में star दिखाता है कि आप कहाँ हैं। कोई बदलाव कीजिए और उसे branch पर
 commit कीजिए:
 
 ```sh
 echo 'h1 { color: purple; }' >> style.css
-git commit -am "Lila rubriker"
+git commit -am "{{commitPurple}}"
 ```
 
 वापस `main` पर switch कीजिए और `style.css` देखिए:
@@ -395,14 +394,14 @@ tail -3 style.css
 ```
 
 बैंगनी रंग ग़ायब है! जब आप branch बदलते हैं, तो git working tree को इस तरह दोबारा
-लिखता है कि वह branch के सबसे नए commit जैसा दिखे। बदलाव `ny-design` में सुरक्षित
+लिखता है कि वह branch के सबसे नए commit जैसा दिखे। बदलाव `{{newDesign}}` में सुरक्षित
 है। `git log --oneline --all` सारी branches दिखाता है:
 
 ```sh
 git log --oneline --all
 ```
 
-> **Tip:** पुरानी guides अक्सर `git checkout ny-design` और
+> **Tip:** पुरानी guides अक्सर `git checkout {{newDesign}}` और
 > `git checkout -b new-branch` इस्तेमाल करती हैं। `checkout` वही करता है जो `switch`
 > करता है, लेकिन files भी restore कर सकता है। नए commands `switch` और `restore` इन
 > कामों को बाँट देते हैं और याद रखने में आसान हैं।
@@ -415,18 +414,18 @@ Branch बदलने पर uncommitted बदलाव साथ आ जा�
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "{{commitFirst}}" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
 $ grep purple style.css | wc -l
 0
 ---
-purple वाली पंक्ति `ny-design` पर commit हुई थी। जब आप `main` पर जाते हैं, तो git
+purple वाली पंक्ति `{{newDesign}}` पर commit हुई थी। जब आप `main` पर जाते हैं, तो git
 working tree को `main` के सबसे नए commit जैसा बना देता है – जहाँ वह पंक्ति अभी
 है ही नहीं।
 ```
@@ -436,7 +435,7 @@ working tree को `main` के सबसे नए commit जैसा बन
 उस branch पर रहिए जिसे बदलाव *मिलने* चाहिए – यहाँ `main` – और merge कीजिए:
 
 ```sh
-git merge ny-design
+git merge {{newDesign}}
 ```
 
 ```text
@@ -447,7 +446,7 @@ Fast-forward
 ```
 
 *Fast-forward* का मतलब है कि branch बनने के बाद से `main` नहीं बदली है। तब git को
-बस `main` को आगे बढ़ाकर उसी commit पर ले जाना होता है जिस पर `ny-design` है।
+बस `main` को आगे बढ़ाकर उसी commit पर ले जाना होता है जिस पर `{{newDesign}}` है।
 
 अगर दोनों branches में नए commits हैं, तो git एक **three-way merge** करता है: वह
 दोनों branches की तुलना उनके साझा पूर्वज (common ancestor) से करता है और दो parents
@@ -455,12 +454,12 @@ Fast-forward
 history कैसे बँटती है और फिर से जुड़ती है:
 
 ```text
-*   e4b1d0a (HEAD -> main) Merge branch 'rubrik'
+*   e4b1d0a (HEAD -> main) Merge branch 'heading'
 |\
-| * 7c3f9e2 (rubrik) Vänligare rubrik
-* | 52d8a71 Kortare text
+| * 7c3f9e2 (heading) ज़्यादा दोस्ताना शीर्षक
+* | 52d8a71 छोटा टेक्स्ट
 |/
-* c19e2f4 Lila rubriker
+* c19e2f4 {{commitPurple}}
 ```
 
 Merge हो चुकी branch की अब ज़रूरत नहीं है और उसे delete किया जा सकता है। अगर branch
@@ -468,23 +467,23 @@ Merge हो चुकी branch की अब ज़रूरत नहीं �
 है:
 
 ```sh
-git branch -d ny-design
+git branch -d {{newDesign}}
 ```
 
 ## Conflicts
 
 अगर दोनों branches ने *वही lines* बदली हैं, तो git नहीं जान सकता कि कौन-सा version
 सही है। इसे **conflict** कहते हैं, और तब फ़ैसला आप करते हैं। चलिए जान-बूझकर एक
-conflict बनाते हैं (*rubrik* Swedish में *heading* है):
+conflict बनाते हैं:
 
 ```sh
-git switch -c rubrik
-sed -i 's/Välkommen!/Hej och välkommen!/' index.html
-git commit -am "Vänligare rubrik"
+git switch -c heading
+sed -i 's/स्वागत है!/नमस्ते और स्वागत है!/' index.html
+git commit -am "ज़्यादा दोस्ताना शीर्षक"
 git switch main
-sed -i 's/Välkommen!/Välkommen till min sida!/' index.html
-git commit -am "Längre rubrik"
-git merge rubrik
+sed -i 's/स्वागत है!/मेरी साइट पर स्वागत है!/' index.html
+git commit -am "लंबा शीर्षक"
+git merge heading
 ```
 
 ```text
@@ -503,14 +502,14 @@ cat index.html
 
 ```text
 <<<<<<< HEAD
-  <h1>Välkommen till min sida!</h1>
+  <h1>मेरी साइट पर स्वागत है!</h1>
 =======
-  <h1>Hej och välkommen!</h1>
->>>>>>> rubrik
+  <h1>नमस्ते और स्वागत है!</h1>
+>>>>>>> heading
 ```
 
 `<<<<<<< HEAD` और `=======` के बीच आपका version है (वह branch जिस पर आप हैं);
-`=======` और `>>>>>>> rubrik` के बीच दूसरी branch का। Conflict ऐसे सुलझाते हैं:
+`=======` और `>>>>>>> heading` के बीच दूसरी branch का। Conflict ऐसे सुलझाते हैं:
 
 1. File को किसी editor में खोलिए और उसे वैसा बनाइए जैसा आप चाहते हैं – किसी एक
    line को चुनिए, या दोनों को मिलाइए – और marker वाली lines delete कर दीजिए।
@@ -525,7 +524,7 @@ Simulator में कोई असली editor नहीं है, लेक
 git checkout --theirs index.html
 git add index.html
 git status
-git commit -m "Slå ihop grenen rubrik"
+git commit -m "heading branch को merge करें"
 ```
 
 अगर conflict के बीच में आपका मन बदल जाए, तो `git merge --abort` आपको वहीं वापस ले
@@ -535,13 +534,13 @@ git commit -m "Slå ihop grenen rubrik"
 करने का एक अच्छा तरीक़ा है छोटे commits करना और अक्सर merge करना।
 
 ```quiz
-आप `main` पर हैं और `git merge rubrik` चलाते हैं। फ़ाइल में conflict आता है:
+आप `main` पर हैं और `git merge heading` चलाते हैं। फ़ाइल में conflict आता है:
 
     <<<<<<< HEAD
       <h1>Hello!</h1>
     =======
       <h1>Welcome!</h1>
-    >>>>>>> rubrik
+    >>>>>>> heading
 
 कौन-सी पंक्ति `main` से आती है?
 - [x] `<h1>Hello!</h1>`
@@ -558,9 +557,9 @@ temporary files और वे चीज़ें जो अपने-आप buil
 repository की root में file `.gitignore` में लिखिए:
 
 ```sh
-echo 'password=secret' > hemligt.txt
-echo 'error' > fel.log
-printf 'hemligt.txt\n*.log\nbuild/\n' > .gitignore
+echo 'password=secret' > secret.txt
+echo 'error' > error.log
+printf 'secret.txt\n*.log\nbuild/\n' > .gitignore
 git status
 ```
 
@@ -570,14 +569,14 @@ Untracked files:
 	.gitignore
 ```
 
-`hemligt.txt` (*secret.txt*) और `fel.log` (*error.log*) अब नहीं दिखतीं – `git add .`
+`secret.txt` और `error.log` अब नहीं दिखतीं – `git add .`
 भी उन्हें नहीं उठाता। `*` किसी भी चीज़ से match करता है, और आख़िर में slash
 (`build/`) का मतलब है पूरी directory। दूसरी तरफ़, `.gitignore` को ख़ुद commit किया
 जाना चाहिए, ताकि project पर काम करने वाला हर व्यक्ति वही चीज़ें ignore करे:
 
 ```sh
 git add .gitignore
-git commit -m "Ignorera hemligheter och loggar"
+git commit -m "secrets और logs को ignore करें"
 ```
 
 ध्यान दीजिए कि `.gitignore` सिर्फ़ उन files पर लागू होती है जिन्हें git पहले से
@@ -610,8 +609,8 @@ Remote का नाम आम तौर पर `origin` होता है, �
 
 ```sh
 cd ~
-git clone ~/projekt-webb ~/kopia
-cd ~/kopia
+git clone ~/{{webProject}} ~/copy
+cd ~/copy
 git log --oneline
 git remote -v
 ```
@@ -622,7 +621,7 @@ repository `git init --bare` से बनाई जाती है। मा�
 
 ```sh
 git init --bare ~/server.git
-cd ~/projekt-webb
+cd ~/{{webProject}}
 git remote add origin ~/server.git
 git push -u origin main
 git status

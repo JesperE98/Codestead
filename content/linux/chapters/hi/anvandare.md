@@ -36,12 +36,12 @@ cat /etc/passwd
 हर line में colons से अलग किए गए सात fields होते हैं। अपनी line देखिए:
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 ```text
-elev:x:1000:1000:Elev,,,:/home/elev:/bin/bash
- 1   2  3    4      5        6          7
+{{user}}:x:1000:1000:{{userFull}},,,:/home/{{user}}:/bin/bash
+   1    2  3    4     5          6           7
 ```
 
 | Field | मतलब |
@@ -59,7 +59,7 @@ elev:x:1000:1000:Elev,,,:/home/elev:/bin/bash
 central server पर रहते हैं:
 
 ```sh
-getent passwd elev
+getent passwd {{user}}
 ```
 
 ### System users
@@ -104,7 +104,7 @@ cat /etc/group
 ```
 
 ```text
-sudo:x:27:elev
+sudo:x:27:{{user}}
  1   2  3   4
 ```
 
@@ -114,7 +114,7 @@ Fields हैं: group का नाम, `x`, group का number (**GID**) औ
 हर user का **एक primary group** होता है (`/etc/passwd` में GID field) और वह कितने
 भी **supplementary groups** का member भी हो सकता है। आप जो नई files बनाते हैं,
 उन्हें आपका primary group मिलता है। ज़्यादातर distributions में हर user को उसी
-नाम का एक private primary group मिलता है – `elev` group `elev` में है।
+नाम का एक private primary group मिलता है – `{{user}}` group `{{user}}` में है।
 
 ```sh
 groups
@@ -122,9 +122,9 @@ id
 ```
 
 ```quiz
-आप (`elev`) समूह `elev` और `sudo` में हैं, और आपका प्राथमिक समूह `elev` है।
+आप (`{{user}}`) समूह `{{user}}` और `sudo` में हैं, और आपका प्राथमिक समूह `{{user}}` है।
 आपकी बनाई नई फ़ाइल को कौन-सा समूह मिलता है?
-- [x] `elev`
+- [x] `{{user}}`
 - [ ] `sudo`
 - [ ] दोनों
 - [ ] `root`
@@ -159,13 +159,13 @@ account **locked** है। बाक़ी fields बताते हैं �
 और कब expire होगा। `chage` इन्हें सीधी भाषा में दिखाता है:
 
 ```sh
-chage -l elev
+chage -l {{user}}
 ```
 
 ```try
-chage -l elev
+chage -l {{user}}
 ---
-`Password expires: never` – elev का पासवर्ड कभी बदलना नहीं पड़ता।
+`Password expires: never` – {{user}} का पासवर्ड कभी बदलना नहीं पड़ता।
 ```
 
 ## User बनाना – `useradd`
@@ -180,7 +180,7 @@ sudo useradd -m -s /bin/bash kim
 |---|---|
 | `-m` | Home directory `/home/kim` बनाओ |
 | `-s /bin/bash` | User का shell |
-| `-c "Kim Svensson"` | Comment (पूरा नाम) |
+| `-c "Kim Sharma"` | Comment (पूरा नाम) |
 | `-G group1,group2` | तुरंत ही supplementary groups |
 
 `useradd` 1000 से ऊपर की ओर अगला ख़ाली UID ढूँढ़ता है – `kim` को 1001 मिलता है।
@@ -234,8 +234,8 @@ passwd root
 एक group बनाइए और उसमें एक member जोड़िए:
 
 ```sh
-sudo groupadd utvecklare
-sudo usermod -aG utvecklare kim
+sudo groupadd {{devGroup}}
+sudo usermod -aG {{devGroup}} kim
 groups kim
 ```
 
@@ -245,12 +245,12 @@ supplementary groups की list ठीक वही set हो जाती ह
 तरीक़ा है।
 
 ```quiz
-`kim` अतिरिक्त समूहों `sudo` और `utvecklare` में है। एक प्रशासक
+`kim` अतिरिक्त समूहों `sudo` और `{{devGroup}}` में है। एक प्रशासक
 `sudo usermod -G backup kim` चलाता है। इसके बाद kim किन अतिरिक्त समूहों में
 है?
-- [ ] `sudo`, `utvecklare` और `backup`
+- [ ] `sudo`, `{{devGroup}}` और `backup`
 - [x] सिर्फ़ `backup`
-- [ ] `sudo` और `utvecklare` – `-a` के बिना कमांड विफल हो जाता है
+- [ ] `sudo` और `{{devGroup}}` – `-a` के बिना कमांड विफल हो जाता है
 - [ ] किसी में नहीं
 ---
 `-a` के बिना सूची ठीक वही सेट हो जाती है जो आप टाइप करते हैं।
@@ -260,8 +260,8 @@ supplementary groups की list ठीक वही set हो जाती ह
 `gpasswd` भी यही करता है और members को हटा भी सकता है:
 
 ```sh
-sudo gpasswd -a kim utvecklare
-sudo gpasswd -d kim utvecklare
+sudo gpasswd -a kim {{devGroup}}
+sudo gpasswd -d kim {{devGroup}}
 ```
 
 असली computer पर नई group membership तभी लागू होती है जब user अगली बार login करता
@@ -271,10 +271,10 @@ Groups shared directories के लिए इस्तेमाल होते
 owner बनाइए और उसे write permission दीजिए:
 
 ```sh
-sudo mkdir /srv/projekt
-sudo chgrp utvecklare /srv/projekt
-sudo chmod 775 /srv/projekt
-ls -ld /srv/projekt
+sudo mkdir /srv/{{project}}
+sudo chgrp {{devGroup}} /srv/{{project}}
+sudo chmod 775 /srv/{{project}}
+ls -ld /srv/{{project}}
 ```
 
 ## Sudo अधिकार देना – `sudo` समूह
@@ -365,15 +365,15 @@ last
 `-r` के बिना files पीछे छूट जाती हैं:
 
 ```sh
-sudo useradd -m vikarie
-sudo userdel -r vikarie
+sudo useradd -m {{tempUser}}
+sudo userdel -r {{tempUser}}
 ```
 
 Ubuntu पर `deluser` भी है, जो `adduser` का उलटा है:
-`sudo deluser --remove-home vikarie`। `sudo deluser kim sudo` kim को समूह sudo
+`sudo deluser --remove-home {{tempUser}}`। `sudo deluser kim sudo` kim को समूह sudo
 से हटा देता है।
 
-`userdel` logged in user को delete करने से मना कर देता है – `sudo userdel elev`
+`userdel` logged in user को delete करने से मना कर देता है – `sudo userdel {{user}}`
 आज़माइए।
 
 ## सारांश

@@ -14,11 +14,10 @@
 लिखते हैं। इसीलिए ये pipes के लिए बिल्कुल सही हैं। और original file **नहीं** बदलती
 (एक अपवाद के साथ, `sed -i`, जिस पर हम आगे आएँगे)।
 
-`dokument` में अभ्यास के लिए एक तीसरी फ़ाइल है, छात्रों के अंकों वाली एक CSV फ़ाइल
-(*namn* = नाम, *ämne* = विषय, *poäng* = अंक):
+`{{documents}}` में अभ्यास के लिए एक तीसरी फ़ाइल है, छात्रों के अंकों वाली एक CSV फ़ाइल:
 
 ```sh
-cat ~/dokument/betyg.csv
+cat ~/{{documents}}/{{grades}}
 ```
 
 CSV का मतलब है *comma-separated values* – columns commas से अलग होते हैं, और पहली
@@ -37,15 +36,15 @@ echo "hello from café" | tr a-z A-Z
 HELLO FROM CAFé
 ```
 
-é पर ध्यान गया? `tr` अलग-अलग *bytes* पर काम करता है, और é जैसे letters – या Swedish
-के å, ä और ö – `a-z` का हिस्सा नहीं हैं। यह जानना अच्छा है – GNU `awk` (आगे) इसे
+é पर ध्यान गया? `tr` अलग-अलग *bytes* पर काम करता है, और é जैसे letters `a-z` का
+हिस्सा नहीं हैं। यह जानना अच्छा है – GNU `awk` (आगे) इसे
 बेहतर संभालता है।
 
 `tr` **सिर्फ़** stdin से पढ़ता है, files से कभी नहीं। अगर आप कोई file इस्तेमाल करना
 चाहते हैं, तो उसे `<` या pipe से अंदर भेजिए:
 
 ```sh
-tr a-z A-Z < ~/dokument/frukter.txt
+tr a-z A-Z < ~/{{documents}}/{{fruits}}
 ```
 
 एक classic trick है colons को newlines (`\n`) में बदलना, ताकि `PATH` की हर directory
@@ -85,10 +84,10 @@ echo "Room 101, floor 3" | tr -d '[:digit:]'
 ### Text बदलना – `s`
 
 ```sh
-sed 's/ERROR/FEL/' ~/dokument/server.log
+sed 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log
 ```
 
-Script `s/ERROR/FEL/` का मतलब है: `ERROR` को `FEL` (Swedish में "error") से बदलो।
+Script `s/ERROR/{{errorWord}}/` का मतलब है: `ERROR` को `{{errorWord}}` से बदलो।
 इसका रूप होता है
 
 ```text
@@ -113,14 +112,14 @@ bonana
 `i` flag खोज को case-insensitive बना देता है, बिल्कुल `grep -i` की तरह:
 
 ```sh
-sed 's/warn/WARNING/i' ~/dokument/server.log
+sed 's/warn/WARNING/i' ~/{{documents}}/server.log
 ```
 
 Pattern एक *regular expression* है, बिल्कुल `grep` की तरह। यहाँ हम हर line की
 शुरुआत से date हटा रहे हैं (`^` = line की शुरुआत, `[0-9-]*` = अंक और hyphens):
 
 ```sh
-sed 's/^[0-9-]* //' ~/dokument/server.log
+sed 's/^[0-9-]* //' ~/{{documents}}/server.log
 ```
 
 Replacement में `&` का मतलब है "जो भी match हुआ":
@@ -142,7 +141,7 @@ parentheses से पकड़ सकते हैं और replacement मे
 सकते हैं। यहाँ हम date को उल्टा कर रहे हैं:
 
 ```sh
-sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/dokument/server.log
+sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/{{documents}}/server.log
 ```
 
 ### Lines चुनना – addresses
@@ -152,8 +151,8 @@ sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/dokument/server.log
 करता है:
 
 ```sh
-sed '/INFO/d' ~/dokument/server.log
-sed '1d' ~/dokument/betyg.csv
+sed '/INFO/d' ~/{{documents}}/server.log
+sed '1d' ~/{{documents}}/{{grades}}
 ```
 
 पहला `INFO` वाली हर line delete करता है, दूसरा line 1 – यानी header – delete करता है।
@@ -162,7 +161,7 @@ sed '1d' ~/dokument/betyg.csv
 तब सिर्फ़ वही print होता है जो `p` कहता है। Lines 5 से 8 ऐसे दिखाइए:
 
 ```sh
-sed -n '5,8p' ~/dokument/server.log
+sed -n '5,8p' ~/{{documents}}/server.log
 ```
 
 | Address | मतलब |
@@ -178,14 +177,14 @@ Addresses हर command के साथ काम करते हैं, `s` 
 पर निशान लगता है:
 
 ```sh
-sed '/ERROR/s/^/>>> /' ~/dokument/server.log
+sed '/ERROR/s/^/>>> /' ~/{{documents}}/server.log
 ```
 
 `q` command (*quit*) किसी दी गई line के बाद रुक जाता है – इसलिए `sed 3q` वही करता है
 जो `head -n 3`। कई commands को आप `;` से या कई `-e` से अलग करते हैं:
 
 ```sh
-sed -e '/INFO/d' -e 's/ERROR/FEL/' ~/dokument/server.log
+sed -e '/INFO/d' -e 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log
 ```
 
 ### File को सीधे बदलना – `sed -i`
@@ -195,9 +194,9 @@ sed -e '/INFO/d' -e 's/ERROR/FEL/' ~/dokument/server.log
 copy पर आज़माइए:
 
 ```sh
-cp ~/dokument/frukter.txt ~/frukter-kopia.txt
-sed -i 's/kiwi/kiwifruit/' ~/frukter-kopia.txt
-cat ~/frukter-kopia.txt
+cp ~/{{documents}}/{{fruits}} ~/fruits-copy.txt
+sed -i 's/कीवी/कीवी-फल/' ~/fruits-copy.txt
+cat ~/fruits-copy.txt
 ```
 
 `sed -i` का कोई undo नहीं है। काम करने का एक अच्छा तरीक़ा है कि पहले command को `-i`
@@ -205,9 +204,9 @@ cat ~/frukter-kopia.txt
 हैं, तो original भी `file.bak` के रूप में save हो जाती है।
 
 ```quiz
-आप `sed 's/kiwi/KIWI/' ~/dokument/frukter.txt` चलाते हैं। फ़ाइल का क्या होता है?
-- [ ] फ़ाइल का हर `kiwi` `KIWI` बन जाता है
-- [ ] फ़ाइल का सिर्फ़ पहला `kiwi` `KIWI` बनता है
+आप `sed 's/कीवी/अनार/' ~/{{documents}}/{{fruits}}` चलाते हैं। फ़ाइल का क्या होता है?
+- [ ] फ़ाइल का हर `कीवी` `अनार` बन जाता है
+- [ ] फ़ाइल का सिर्फ़ पहला `कीवी` `अनार` बनता है
 - [x] कुछ नहीं – नतीजा सिर्फ़ छापा जाता है, फ़ाइल नहीं बदलती
 ---
 `-i` के बिना `sed` सिर्फ़ stdout पर लिखता है। फ़ाइल जैसी थी वैसी ही रहती है।
@@ -223,7 +222,7 @@ cat ~/frukter-kopia.txt
 है कि कौन-सा फ़ील्ड रखना है। ये रहे CSV फ़ाइल के विषय – फ़ील्ड 2:
 
 ```sh
-cut -d, -f2 ~/dokument/betyg.csv
+cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
 
 `/etc/passwd` में फ़ील्ड कोलन से अलग होते हैं और फ़ील्ड 1 यूज़रनेम है, इसलिए
@@ -248,7 +247,7 @@ Default रूप से fields spaces से अलग होते हैं (
 log level है:
 
 ```sh
-awk '{print $3}' ~/dokument/server.log
+awk '{print $3}' ~/{{documents}}/server.log
 ```
 
 Program `{ }` के अंदर जाता है और हर line के लिए चलता है। awk program को हमेशा
@@ -258,7 +257,7 @@ Program `{ }` के अंदर जाता है और हर line के 
 awk pipe में बिल्कुल फ़िट बैठता है। हर level की कितनी lines हैं?
 
 ```sh
-awk '{print $3}' ~/dokument/server.log | sort | uniq -c
+awk '{print $3}' ~/{{documents}}/server.log | sort | uniq -c
 ```
 
 ### दूसरे separators – `-F`
@@ -281,7 +280,7 @@ awk -F: '{print $1 " uses " $7}' /etc/passwd
 सकता है, text मिला सकता है और लगातार कई spaces को भी संभाल लेता है।
 
 ```predict
-$ echo "Alva,matte,87" | awk -F, '{print $3, $1}'
+$ echo "Alva,गणित,87" | awk -F, '{print $3, $1}'
 87 Alva
 ---
 `-F,` पंक्ति को कॉमा पर बाँटता है। awk पहले फ़ील्ड 3 छापता है, फिर फ़ील्ड 1,
@@ -294,36 +293,36 @@ $ echo "Alva,matte,87" | awk -F, '{print $3, $1}'
 लिए चलता है। Pattern एक regular expression हो सकता है, जैसे `grep` में:
 
 ```sh
-awk '/ERROR/ {print $2}' ~/dokument/server.log
+awk '/ERROR/ {print $2}' ~/{{documents}}/server.log
 ```
 
 … या कोई condition। Text double quotes में जाता है:
 
 ```sh
-awk -F, '$2 == "matte" {print $1, $3}' ~/dokument/betyg.csv
+awk -F, '$2 == "गणित" {print $1, $3}' ~/{{documents}}/{{grades}}
 ```
 
-(*Matte* Swedish में "गणित" होता है।) तुलना के लिए `==`, `!=`, `<`, `<=`, `>` और `>=`
+तुलना के लिए `==`, `!=`, `<`, `<=`, `>` और `>=`
 लिखे जाते हैं, और conditions को `&&` (और), `||` (या) और `!` (नहीं) से जोड़ा जाता है।
 ये रहे वे सारे students जिनके कम से कम 90 अंक हैं (`{ }` के बिना पूरी line print होती
 है):
 
 ```sh
-awk -F, '$3 >= 90' ~/dokument/betyg.csv
+awk -F, '$3 >= 90' ~/{{documents}}/{{grades}}
 ```
 
-क्या header line भी आ गई? उसमें field 3 शब्द `poäng` है, और जब कोई value number नहीं
-होती, तो awk उसकी तुलना *text* की तरह करता है – और alphabetical order में `"poäng"`,
+क्या header line भी आ गई? उसमें field 3 शब्द `अंक` है, और जब कोई value number नहीं
+होती, तो awk उसकी तुलना *text* की तरह करता है – और alphabetical order में `"अंक"`,
 `"90"` के बाद आता है। Header को आप `NR > 1` से छोड़ सकते हैं:
 
 ```sh
-awk -F, 'NR > 1 && $3 >= 90' ~/dokument/betyg.csv
+awk -F, 'NR > 1 && $3 >= 90' ~/{{documents}}/{{grades}}
 ```
 
-अपना ख़ुद का पैटर्न आज़माइए – उन सभी के नाम जो *svenska* (स्वीडिश) पढ़ते हैं:
+अपना ख़ुद का पैटर्न आज़माइए – उन सभी के नाम जो हिंदी पढ़ते हैं:
 
 ```try
-awk -F, '$2 == "svenska" {print $1}' ~/dokument/betyg.csv
+awk -F, '$2 == "हिंदी" {print $1}' ~/{{documents}}/{{grades}}
 ```
 
 ### गिनती – variables और `END`
@@ -333,15 +332,14 @@ awk में variables होते हैं जिन्हें declare क
 जोड़ने का आसान तरीक़ा देते हैं:
 
 ```sh
-awk -F, 'NR > 1 {summa += $3} END {print summa}' ~/dokument/betyg.csv
+awk -F, 'NR > 1 {{{sumVar}} += $3} END {print {{sumVar}}}' ~/{{documents}}/{{grades}}
 ```
 
-`summa += $3` का मतलब है "field 3 को summa में जोड़ो" (*summa* Swedish में "जोड़/sum"
-है)। अगर आप साथ-साथ lines भी गिनें (`antal++` *antal*, यानी गिनती, को 1 बढ़ाता है),
-तो आप औसत निकाल सकते हैं:
+`{{sumVar}} += $3` का मतलब है "field 3 को {{sumVar}} में जोड़ो"। अगर आप साथ-साथ lines
+भी गिनें (`count++` गिनती को 1 बढ़ाता है), तो आप औसत निकाल सकते हैं:
 
 ```sh
-awk -F, 'NR > 1 {summa += $3; antal++} END {print "Average:", summa / antal}' ~/dokument/betyg.csv
+awk -F, 'NR > 1 {{{sumVar}} += $3; count++} END {print "Average:", {{sumVar}} / count}' ~/{{documents}}/{{grades}}
 ```
 
 `BEGIN { }` भी है, जो पहली line से **पहले** चलता है – headings के लिए काम का। और
@@ -349,18 +347,18 @@ awk -F, 'NR > 1 {summa += $3; antal++} END {print "Average:", summa / antal}' ~/
 में left-aligned text और `%5d` का मतलब 5 characters में एक integer।
 
 ```sh
-awk -F, 'BEGIN {print "Student  Score"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/dokument/betyg.csv
+awk -F, 'BEGIN {print "Student  Score"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/{{documents}}/{{grades}}
 ```
 
 awk में functions भी हैं, जैसे `length()`, `toupper()` और `tolower()`:
 
 ```sh
-awk '{print toupper($0)}' ~/dokument/frukter.txt
+echo "hello from café" | awk '{print toupper($0)}'
 ```
 
-`äpple` और `päron` को ध्यान से देखिए। Ubuntu पर, जिस पर यहाँ का टर्मिनल चलता है,
+`é` को ध्यान से देखिए। Ubuntu पर, जिस पर यहाँ का टर्मिनल चलता है,
 `awk` डिफ़ॉल्ट रूप से **mawk** है, एक छोटा और तेज़ रूप। इन जैसे सरल प्रोग्रामों में
-आपको कोई फ़र्क़ नहीं दिखेगा – लेकिन mawk `toupper()` से å, ä और ö को नहीं बदलता।
+आपको कोई फ़र्क़ नहीं दिखेगा – लेकिन mawk `toupper()` से é जैसे अक्षरों को नहीं बदलता।
 **GNU awk** (`gawk` पैकेज) `tr` के उलट उन्हें बदल देता है। डिस्ट्रीब्यूशन इसमें
 अलग होते हैं कि वे कौन-सा awk इस्तेमाल करते हैं और सॉफ़्टवेयर कैसे इंस्टॉल किया
 जाता है – यह डिस्ट्रीब्यूशन वाले अध्याय में आएगा।
@@ -381,5 +379,5 @@ Simulator awk language का सिर्फ़ एक हिस्सा ज�
 हैं – अगर हम upper और lower case को नज़रअंदाज़ करें?
 
 ```sh
-grep -v INFO ~/dokument/server.log | awk '{print $3}' | tr A-Z a-z | sort | uniq -c
+grep -v INFO ~/{{documents}}/server.log | awk '{print $3}' | tr A-Z a-z | sort | uniq -c
 ```

@@ -243,19 +243,19 @@ Snap के आलोचक भी हैं: Snap Store सिर्फ़ Cano
 download करते हैं, executable बनाते हैं और start कर देते हैं – न कोई installation,
 न root। Program से छुटकारा पाने के लिए आप बस file delete कर देते हैं।
 
-आपकी home directory में `~/Nedladdningar` (Swedish में "Downloads") के अंदर पहले से
+आपकी home directory में `~/{{downloads}}` के अंदर पहले से
 एक download किया हुआ AppImage है:
 
 ```sh
-cd ~/Nedladdningar
+cd ~/{{downloads}}
 ls -l
 ```
 
 अगर आप इसे तुरंत चला दें, तो क्या होगा?
 
 ```predict
-$ ~/Nedladdningar/Kalkylator.AppImage
-bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+$ ~/{{downloads}}/{{calculator}}
+bash: /home/{{user}}/{{downloads}}/{{calculator}}: Permission denied
 ---
 फ़ाइल के पास `x` अनुमति नहीं है।
 ```
@@ -264,14 +264,14 @@ Download की गई files शुरू में कभी executable नह�
 start कीजिए:
 
 ```sh
-chmod +x Kalkylator.AppImage
-./Kalkylator.AppImage
+chmod +x {{calculator}}
+./{{calculator}}
 ```
 
 ```try
-chmod +x ~/Nedladdningar/Kalkylator.AppImage
+chmod +x ~/{{downloads}}/{{calculator}}
 ---
-अब फ़ाइल चलाने योग्य (executable) है। `ls -l ~/Nedladdningar` से जाँचिए।
+अब फ़ाइल चलाने योग्य (executable) है। `ls -l ~/{{downloads}}` से जाँचिए।
 ```
 
 ### FUSE
@@ -287,7 +287,7 @@ Ubuntu 24.04 और Debian 13 पर package का नाम `libfuse2t64` ह�
 ```sh
 sudo apt update
 sudo apt install libfuse2t64
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 
 > Ubuntu पर package `fuse` install **मत** कीजिए – यह `fuse3` की जगह ले लेता है,
@@ -299,7 +299,7 @@ Arch पर package का नाम `fuse2` है:
 
 ```sh
 sudo pacman -S fuse2
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -308,7 +308,7 @@ Fedora पर package का नाम `fuse-libs` है:
 
 ```sh
 sudo dnf install fuse-libs
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -317,7 +317,7 @@ sudo dnf install fuse-libs
 AppImage को unpack भी किया जा सकता है। यह FUSE के बिना भी काम करता है:
 
 ```sh
-./Kalkylator.AppImage --appimage-extract
+./{{calculator}} --appimage-extract
 ls squashfs-root
 ./squashfs-root/AppRun
 ```

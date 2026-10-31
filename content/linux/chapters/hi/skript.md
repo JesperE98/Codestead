@@ -10,27 +10,26 @@ functions हैं।
 
 Script एक साधारण text file है। असली computers पर आप इसे `nano` या `vim` जैसे किसी text
 editor में लिखेंगे। एक और तरीक़ा, जो यहाँ भी और servers पर भी काम करता है, है **here
-document**: `<< 'SLUT'` और line `SLUT` के बीच की हर चीज़ command को दे दी जाती है।
-(*Slut* Swedish में बस "end" होता है – आप कोई भी शब्द चुन सकते हैं, `EOF` एक आम पसंद
-है।)
+document**: `<< '{{heredocEnd}}'` और line `{{heredocEnd}}` के बीच की हर चीज़ command को दे दी
+जाती है। (आप कोई भी शब्द चुन सकते हैं – `EOF` भी एक आम पसंद है।)
 
 पहली line टाइप कीजिए और Enter दबाइए। Prompt बदलकर `> ` हो जाता है – shell बाक़ी हिस्से
-का इंतज़ार कर रहा है। Lines एक-एक करके टाइप कीजिए और `SLUT` से ख़त्म कीजिए:
+का इंतज़ार कर रहा है। Lines एक-एक करके टाइप कीजिए और `{{heredocEnd}}` से ख़त्म कीजिए:
 
 ```sh
-cat > hej.sh << 'SLUT'
+cat > {{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
 echo "Script की ओर से नमस्ते!"
 echo "आज की तारीख़: $(date)"
-SLUT
+{{heredocEnd}}
 ```
 
 पहली line, `#!/bin/bash`, को *shebang* कहते हैं और यह system को बताती है कि file किस
 program से चलाई जाए। Script को executable बनाइए और चलाइए:
 
 ```sh
-chmod +x hej.sh
-./hej.sh
+chmod +x {{helloScript}}
+./{{helloScript}}
 ```
 
 जो lines `#` से शुरू होती हैं (shebang line को छोड़कर), वे **comments** हैं, जिन्हें
@@ -42,25 +41,25 @@ Variable `name=value` से बनाया जाता है। Equals sign 
 चाहिए – वरना shell `name` को एक command समझ लेता है।
 
 ```sh
-stad=Göteborg
-echo "मैं $stad में रहता हूँ"
+city=मुंबई
+echo "मैं $city में रहता हूँ"
 ```
 
-(*Stad* का मतलब है "शहर"।) Variables इस्तेमाल करते समय उन्हें हमेशा **double quotes**
+Variables इस्तेमाल करते समय उन्हें हमेशा **double quotes**
 के अंदर रखिए। Quotes के बिना value spaces पर टूट जाती है, जिससे किसी file name में
 space होने पर अजीब errors आते हैं। अगर आप variable के नाम के ठीक बाद text लिखना चाहते
-हैं, तो curly braces इस्तेमाल कीजिए: `"${stad}_2026"` – इनके बिना bash `stad_2026` नाम
+हैं, तो curly braces इस्तेमाल कीजिए: `"${city}_2026"` – इनके बिना bash `city_2026` नाम
 का variable ढूँढेगा।
 
 ```quiz
-`stad` में `Göteborg` है, और `stad_2026` नाम का कोई वेरिएबल नहीं है।
-`echo "$stad_2026"` क्या छापता है?
-- [ ] `Göteborg_2026`
-- [ ] `Göteborg`
+`city` में `मुंबई` है, और `city_2026` नाम का कोई वेरिएबल नहीं है।
+`echo "$city_2026"` क्या छापता है?
+- [ ] `मुंबई_2026`
+- [ ] `मुंबई`
 - [x] एक ख़ाली पंक्ति
 ---
-Bash पूरा नाम `stad_2026` पढ़ता है, और वह वेरिएबल मौजूद नहीं है।
-`Göteborg_2026` पाने के लिए `"${stad}_2026"` लिखिए।
+Bash पूरा नाम `city_2026` पढ़ता है, और वह वेरिएबल मौजूद नहीं है।
+`मुंबई_2026` पाने के लिए `"${city}_2026"` लिखिए।
 ```
 
 ## Command substitution – `$(...)`
@@ -69,9 +68,9 @@ Bash पूरा नाम `stad_2026` पढ़ता है, और वह �
 नतीजा एक variable में save करते हैं:
 
 ```sh
-idag=$(date)
-filer=$(ls ~ | wc -l)
-echo "आपकी home directory में $filer चीज़ें हैं"
+today=$(date)
+count=$(ls ~ | wc -l)
+echo "आपकी home directory में $count चीज़ें हैं"
 ```
 
 ## Arithmetic – `$(( ))`
@@ -96,7 +95,7 @@ Bash सिर्फ़ पूर्णांकों (integers) से गि�
 
 ## Arguments
 
-जब आप `./skript.sh one two` चलाते हैं, तो script arguments पढ़ सकती है:
+जब आप `./script.sh one two` चलाते हैं, तो script arguments पढ़ सकती है:
 
 | Variable | क्या होता है |
 |---|---|
@@ -107,9 +106,9 @@ Bash सिर्फ़ पूर्णांकों (integers) से गि�
 | `$?` | पिछले command का exit code |
 
 ```quiz
-एक स्क्रिप्ट `./skript.sh red green blue` से चलाई जाती है। `$1` और `$#` में
+एक स्क्रिप्ट `./script.sh red green blue` से चलाई जाती है। `$1` और `$#` में
 क्या है?
-- [ ] `$1` है `./skript.sh` और `$#` है `4`
+- [ ] `$1` है `./script.sh` और `$#` है `4`
 - [x] `$1` है `red` और `$#` है `3`
 - [ ] `$1` है `red` और `$#` है `blue`
 ---
@@ -156,7 +155,7 @@ fi
 छोटी conditions के लिए अक्सर `&&` और `||` काफ़ी होते हैं:
 
 ```sh
-[ -d ~/bilder ] && echo "Pictures वाली directory मौजूद है"
+[ -d ~/{{pictures}} ] && echo "Pictures वाली directory मौजूद है"
 ```
 
 ```predict
@@ -170,13 +169,13 @@ empty
 **For loop** किसी list की हर चीज़ के लिए एक ही काम करता है:
 
 ```sh
-for frukt in äpple banan kiwi; do echo "मुझे $frukt पसंद है"; done
+for fruit in सेब केला कीवी; do echo "मुझे $fruit पसंद है"; done
 ```
 
 List wildcards या किसी command से भी आ सकती है:
 
 ```sh
-for fil in ~/dokument/*; do echo "File: $fil"; done
+for file in ~/{{documents}}/*; do echo "File: $file"; done
 for i in $(seq 1 3); do echo "Round $i"; done
 ```
 
@@ -190,7 +189,7 @@ i=1; while [ $i -le 3 ]; do echo $i; (( i++ )); done
 `done` के बाद `<` से अंदर भेजा जाता है:
 
 ```sh
-while read rad; do echo "> $rad"; done < ~/dokument/frukter.txt
+while read {{lineVar}}; do echo "> ${{lineVar}}"; done < ~/{{documents}}/{{fruits}}
 ```
 
 `break` loop से बाहर निकलता है, और `continue` सीधे अगले round पर कूद जाता है।
@@ -212,8 +211,8 @@ $ for x in 2 4 6; do echo $(( x * 10 )); done
 chain से ज़्यादा साफ़ होता है:
 
 ```sh
-fil=semester.jpg
-case $fil in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
+file={{vacationPic}}
+case $file in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
 ```
 
 हर विकल्प `;;` से ख़त्म होता है, और `*)` बाक़ी सब कुछ पकड़ लेता है।
@@ -224,8 +223,8 @@ case $fil in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo 
 सकते हैं। इसे arguments उसी तरह मिलते हैं जैसे किसी script को – `$1`, `$2` और `$#`:
 
 ```sh
-halsa() { echo "नमस्ते $1, स्वागत है!"; }
-halsa Kim
+greet() { echo "नमस्ते $1, स्वागत है!"; }
+greet Kim
 ```
 
 जो variables सिर्फ़ function के अंदर रहने चाहिए, वे `local` से बनाए जाते हैं, और
@@ -236,7 +235,7 @@ halsa Kim
 `read` keyboard से एक line पढ़कर उसे एक variable में रखता है:
 
 ```sh
-read -p "आपका नाम क्या है? " namn; echo "नमस्ते $namn!"
+read -p "आपका नाम क्या है? " {{nameVar}}; echo "नमस्ते ${{nameVar}}!"
 ```
 
 ## एक पूरा उदाहरण

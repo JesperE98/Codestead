@@ -22,8 +22,8 @@
       "hint": "`sudo apt update` और फिर `sudo apt install fish`।"
     },
     "fish-set": {
-      "text": "`fish` start कीजिए। fish के तरीक़े से `äpple` value वाला variable `frukt` बनाइए और उसे `echo` से print कीजिए।",
-      "hint": "fish में `frukt=äpple` काम नहीं करता। `set frukt äpple` और फिर `echo $frukt` टाइप कीजिए।"
+      "text": "`fish` start कीजिए। fish के तरीक़े से `{{fruitWord}}` value वाला variable `{{fruitVar}}` बनाइए और उसे `echo` से print कीजिए।",
+      "hint": "fish में `{{fruitVar}}={{fruitWord}}` काम नहीं करता। `set {{fruitVar}} {{fruitWord}}` और फिर `echo ${{fruitVar}}` टाइप कीजिए।"
     },
     "fish-for": {
       "text": "fish syntax में एक `for` loop लिखिए जो numbers 1, 2 और 3 print करे, हर line पर एक। फिर `exit` से वापस bash में जाइए।",
@@ -31,7 +31,7 @@
     },
     "chsh": {
       "text": "`/etc/shells` में देखिए कि कौन-से shells installed हैं। फिर `chsh` से zsh को अपना login shell बनाइए।",
-      "hint": "`cat /etc/shells` और फिर `chsh -s /usr/bin/zsh`। नतीजा `grep elev /etc/passwd` से जाँचिए।"
+      "hint": "`cat /etc/shells` और फिर `chsh -s /usr/bin/zsh`। नतीजा `grep {{user}} /etc/passwd` से जाँचिए।"
     }
   }
 }

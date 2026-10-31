@@ -2,35 +2,35 @@
   "title": "Shell scripts",
   "tasks": {
     "variabel": {
-      "text": "Variable `namn` (Swedish में “नाम”) बनाइए जिसमें आपका नाम हो, और फिर `echo` से `Hej` (“नमस्ते”) और उसके बाद नाम print कीजिए।",
-      "hint": "`=` के आसपास कोई space नहीं: `namn=Kim`। फिर `echo \"Hej $namn\"` इस्तेमाल कीजिए।"
+      "text": "Variable `{{nameVar}}` बनाइए जिसमें आपका नाम हो, और फिर `echo` से `{{hello}}` और उसके बाद नाम print कीजिए।",
+      "hint": "`=` के आसपास कोई space नहीं: `{{nameVar}}=Kim`। फिर `echo \"{{hello}} ${{nameVar}}\"` इस्तेमाल कीजिए।"
     },
     "rakna": {
       "text": "`$(( ))` से 17 × 23 निकालिए।"
     },
     "substitution": {
-      "text": "`$(...)` और `wc -l` से `~/dokument/server.log` की lines की संख्या variable `rader` में save कीजिए।",
-      "hint": "`wc -l < file` file के नाम के बिना सिर्फ़ संख्या print करता है: `rader=$(wc -l < ~/dokument/server.log)`"
+      "text": "`$(...)` और `wc -l` से `~/{{documents}}/server.log` की lines की संख्या variable `{{linesVar}}` में save कीजिए।",
+      "hint": "`wc -l < file` file के नाम के बिना सिर्फ़ संख्या print करता है: `{{linesVar}}=$(wc -l < ~/{{documents}}/server.log)`"
     },
     "if": {
-      "text": "एक `if` statement लिखिए जो file `~/.bashrc` मौजूद होने पर `finns` (“मौजूद है”) print करे।",
-      "hint": "`if [ -f ~/.bashrc ]; then echo finns; fi` – square brackets के अंदर के spaces मत भूलिए।"
+      "text": "एक `if` statement लिखिए जो file `~/.bashrc` मौजूद होने पर `{{exists}}` print करे।",
+      "hint": "`if [ -f ~/.bashrc ]; then echo {{exists}}; fi` – square brackets के अंदर के spaces मत भूलिए।"
     },
     "for": {
       "text": "`for` loop से 1 से 5 तक के numbers print कीजिए, हर line पर एक।",
       "hint": "या तो `for i in 1 2 3 4 5; do ...; done` या `for i in $(seq 1 5); do ...; done`।"
     },
     "while-read": {
-      "text": "`while read` से `~/dokument/frukter.txt` को line by line पढ़िए और हर line के आगे `Frukt: ` (Swedish में “फल”) print कीजिए।",
-      "hint": "`while read rad; do echo \"Frukt: $rad\"; done < ~/dokument/frukter.txt`"
+      "text": "`while read` से `~/{{documents}}/{{fruits}}` को line by line पढ़िए और हर line के आगे `{{fruitLabel}}: ` print कीजिए।",
+      "hint": "`while read {{lineVar}}; do echo \"{{fruitLabel}}: ${{lineVar}}\"; done < ~/{{documents}}/{{fruits}}`"
     },
     "funktion": {
-      "text": "Function `dubbla` (“दोगुना”) बनाइए जो अपने पहले argument का दोगुना print करे। इसे `dubbla 21` से test कीजिए।",
-      "hint": "`dubbla() { echo $(( $1 * 2 )); }` – और फिर `dubbla 21`।"
+      "text": "Function `{{doubleFn}}` बनाइए जो अपने पहले argument का दोगुना print करे। इसे `{{doubleFn}} 21` से test कीजिए।",
+      "hint": "`{{doubleFn}}() { echo $(( $1 * 2 )); }` – और फिर `{{doubleFn}} 21`।"
     },
     "backup": {
-      "text": "Script `~/backup.sh` लिखिए, जो पहले argument के रूप में दी गई file को उसी नाम से, आख़िर में `.bak` लगाकर, copy करे। उसे executable बनाइए और अपनी home directory में `./backup.sh anteckningar.txt` चलाइए।",
-      "hint": "File को `cat > ~/backup.sh << 'SLUT'` से बनाइए, अलग-अलग lines पर `#!/bin/bash` और `cp \"$1\" \"$1.bak\"` लिखिए, और `SLUT` से ख़त्म कीजिए।"
+      "text": "Script `~/backup.sh` लिखिए, जो पहले argument के रूप में दी गई file को उसी नाम से, आख़िर में `.bak` लगाकर, copy करे। उसे executable बनाइए और अपनी home directory में `./backup.sh {{notes}}` चलाइए।",
+      "hint": "File को `cat > ~/backup.sh << '{{heredocEnd}}'` से बनाइए, अलग-अलग lines पर `#!/bin/bash` और `cp \"$1\" \"$1.bak\"` लिखिए, और `{{heredocEnd}}` से ख़त्म कीजिए।"
     }
   }
 }

@@ -338,7 +338,7 @@ address से ले लेता है):
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` files download करने के लिए बना है। यह हमेशा file में save करता है, progress
@@ -358,10 +358,10 @@ File का नाम ख़ुद चुनने के लिए capital `-O`
 `sshd` चलती है, और आप client `ssh` से connect करते हैं:
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` का मतलब है "computer server.lan पर user elev"। Host के बाद वाला
+`{{user}}@server.lan` का मतलब है "computer server.lan पर user {{user}}"। Host के बाद वाला
 command (`hostname`) server पर चलता है और उसका जवाब यहाँ दिखता है – उसमें
 `server` लिखा आता है, `ubuntu` नहीं।
 
@@ -381,8 +381,8 @@ save हो जाती है। अगर बाद में key बदल �
 Command quotes के अंदर कई commands भी हो सकता है:
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 बिना command के ssh login कर देता है और आपको दूसरे computer पर एक shell मिल जाता
@@ -396,7 +396,7 @@ Password की जगह आप एक **key pair** से login कर सक�
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 `ssh-keygen` के सवालों पर Enter दबाइए, ताकि बिना passphrase के default file

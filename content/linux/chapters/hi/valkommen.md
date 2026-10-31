@@ -49,10 +49,10 @@ LTS** चलाता है। डिस्ट्रीब्यूशन म�
 यहाँ के टर्मिनल में यह ऐसा दिखता है:
 
 ```text
-elev@ubuntu:~$
+{{user}}@ubuntu:~$
 ```
 
-यह बताता है कि आप कौन हैं (`elev`), किस कंप्यूटर पर हैं (`ubuntu`) और
+यह बताता है कि आप कौन हैं (`{{user}}`), किस कंप्यूटर पर हैं (`ubuntu`) और
 file system में कहाँ हैं (`~` का मतलब है आपकी home directory)। `$` का निशान
 बताता है कि आप एक सामान्य user हैं। अगर आप administrator (*root*) हैं, तो
 इसकी जगह `#` दिखेगा।
@@ -69,11 +69,11 @@ file system में कहाँ हैं (`~` का मतलब है आ
 Terminal में click कीजिए, नीचे दिया command टाइप कीजिए और **Enter** दबाइए:
 
 ```sh
-echo Hej världen
+echo {{helloWorld}}
 ```
 
-`echo` बस वही print कर देता है जो आप उसे देते हैं – यहाँ *Hej världen*, जो
-Swedish में "Hello world" है। ज़्यादातर commands इसी pattern पर चलते हैं:
+`echo` बस वही print कर देता है जो आप उसे देते हैं – यहाँ *{{helloWorld}}*।
+ज़्यादातर commands इसी pattern पर चलते हैं:
 
 ```text
 command  -options  arguments
@@ -96,7 +96,7 @@ ls       -l        /etc
 `echo` को अपने ख़ुद के टेक्स्ट के साथ आज़माइए:
 
 ```try
-echo Linux is fun
+echo Linux मज़ेदार है
 ---
 `echo` ने ठीक वही शब्द छाप दिए जो आपने उसे दिए।
 ```
@@ -135,19 +135,3 @@ cat /etc/os-release
 Tab कमांड और फ़ाइल नाम पूरे करता है। **Ctrl+C** पंक्ति रद्द करता है और
 **Ctrl+L** स्क्रीन साफ़ करता है।
 ```
-
-### कुछ Swedish शब्द
-
-यह गाइड मूल रूप से Swedish में लिखी गई थी, इसलिए simulator में user और practice
-files के नाम Swedish में हैं। आपको Swedish आने की ज़रूरत नहीं – commands बिल्कुल
-वही हैं – लेकिन यह छोटी-सी शब्दावली आपकी मदद कर सकती है:
-
-| नाम | मतलब |
-|---|---|
-| `elev` | छात्र (आपका user name) |
-| `dokument` | documents |
-| `anteckningar.txt` | notes |
-| `frukter.txt` | फल |
-| `betyg.csv` | ग्रेड / अंक |
-| `bilder` | तस्वीरें |
-| `gammalt` | पुराना सामान |

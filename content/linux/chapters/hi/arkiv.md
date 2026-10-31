@@ -42,18 +42,18 @@ compression programs (`xz`, `bzip2` और `zstd`) के साथ।
 
 ## `tar` से pack करना
 
-अपनी home directory में जाइए और `dokument` directory को pack कीजिए:
+अपनी home directory में जाइए और `{{documents}}` directory को pack कीजिए:
 
 ```sh
 cd ~
-tar -cvf dokument.tar dokument
+tar -cvf {{documents}}.tar {{documents}}
 ```
 
 ```text
-dokument/
-dokument/betyg.csv
-dokument/frukter.txt
-dokument/server.log
+{{documents}}/
+{{documents}}/{{fruits}}
+{{documents}}/{{grades}}
+{{documents}}/server.log
 ```
 
 `-c` का मतलब है *archive बनाओ*, `-v` tar से कहता है कि वह जो कर रहा है वह दिखाए, और
@@ -61,7 +61,7 @@ dokument/server.log
 वह pack हो जाता है – जितनी चाहें उतनी files और directories।
 
 > **ध्यान दीजिए!** Order है *पहले archive, फिर files*। अगर आप order उलट दें, जैसे
-> `tar -cvf dokument dokument.tar`, तो tar directory को overwrite करने की कोशिश करता
+> `tar -cvf {{documents}} {{documents}}.tar`, तो tar directory को overwrite करने की कोशिश करता
 > है – या इससे भी बुरा, किसी ऐसी file को जिसे आप रखना चाहते थे।
 
 ## याद रखने लायक़ options
@@ -101,13 +101,13 @@ Options को साथ में लिखते समय `f` को हम�
 `z` जोड़िए और archive रास्ते में gzip से होकर गुज़रता है:
 
 ```sh
-tar -czvf dokument.tar.gz dokument
-ls -l dokument.tar dokument.tar.gz
+tar -czvf {{documents}}.tar.gz {{documents}}
+ls -l {{documents}}.tar {{documents}}.tar.gz
 ```
 
 ```text
--rw-r--r-- 1 elev elev 10240 Oct 30 12:00 dokument.tar
--rw-r--r-- 1 elev elev   837 Oct 30 12:00 dokument.tar.gz
+-rw-r--r-- 1 {{user}} {{user}} 10240 Oct 30 12:00 {{documents}}.tar
+-rw-r--r-- 1 {{user}} {{user}}   892 Oct 30 12:00 {{documents}}.tar.gz
 ```
 
 बिना compression वाला archive पूरे 10,240 bytes का है, जबकि फ़ाइलें मिलाकर 1,000
@@ -119,14 +119,14 @@ bytes से थोड़ी ज़्यादा हैं। ऐसा इस
 आपको इंसानों के पढ़ने लायक़ sizes मिलते हैं, और `-s` से पूरी directory का कुल जोड़:
 
 ```sh
-du -h dokument.tar dokument.tar.gz
-du -sh dokument
+du -h {{documents}}.tar {{documents}}.tar.gz
+du -sh {{documents}}
 ```
 
 ```text
-12K	dokument.tar
-4.0K	dokument.tar.gz
-16K	dokument
+12K	{{documents}}.tar
+4.0K	{{documents}}.tar.gz
+16K	{{documents}}
 ```
 
 Disk 4 KiB के blocks में बँटी होती है, इसलिए किसी ख़ाली न होने वाली file के लिए `du`
@@ -136,14 +136,14 @@ Disk 4 KiB के blocks में बँटी होती है, इसल�
 ## Unpack करने से पहले archive के अंदर देखिए
 
 ```sh
-tar -tzvf dokument.tar.gz
+tar -tzvf {{documents}}.tar.gz
 ```
 
 ```text
-drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
--rw-r--r-- elev/elev       146 2026-10-30 12:00 dokument/betyg.csv
--rw-r--r-- elev/elev        64 2026-10-30 12:00 dokument/frukter.txt
--rw-r--r-- elev/elev       848 2026-10-30 12:00 dokument/server.log
+drwxr-xr-x {{user}}/{{user}}   0 2026-10-30 12:00 {{documents}}/
+-rw-r--r-- {{user}}/{{user}} 127 2026-10-30 12:00 {{documents}}/{{fruits}}
+-rw-r--r-- {{user}}/{{user}} 244 2026-10-30 12:00 {{documents}}/{{grades}}
+-rw-r--r-- {{user}}/{{user}} 824 2026-10-30 12:00 {{documents}}/server.log
 ```
 
 `v` के साथ content `ls -l` की तरह दिखता है, permissions, owner और size के साथ। पहले
@@ -153,14 +153,14 @@ drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
 ## Unpack करना
 
 ```sh
-mkdir uppackat
-tar -xzvf dokument.tar.gz -C uppackat
+mkdir {{unpacked}}
+tar -xzvf {{documents}}.tar.gz -C {{unpacked}}
 ```
 
-`-C` (capital C) वह directory चुनता है जिसमें tar unpack करता है (*uppackat* का मतलब
-है "unpack किया हुआ")। इसके बिना सब कुछ उसी directory में पहुँच जाता है जिसमें आप हैं।
+`-C` (capital C) वह directory चुनता है जिसमें tar unpack करता है। इसके बिना सब कुछ उसी
+directory में पहुँच जाता है जिसमें आप हैं।
 tar के modern versions unpack करते समय ख़ुद पहचान लेते हैं कि archive compressed है या
-नहीं, इसलिए `tar -xf dokument.tar.gz` भी काम करता है।
+नहीं, इसलिए `tar -xf {{documents}}.tar.gz` भी काम करता है।
 
 > **सावधान!** पहले से मौजूद files को overwrite करने से पहले tar कुछ नहीं पूछता। अगर
 > आप पक्का न हों, तो पहले content की list देख लीजिए।
@@ -171,29 +171,29 @@ tar के modern versions unpack करते समय ख़ुद पहच�
 archive को कहीं भी unpack किया जा सके:
 
 ```sh
-tar -czf backup.tar.gz ~/dokument
+tar -czf backup.tar.gz ~/{{documents}}
 ```
 
 ```text
 tar: Removing leading `/' from member names
 ```
 
-अब archive में `home/elev/dokument/...` है। अगर आप archive में सिर्फ़ `dokument/`
+अब archive में `home/{{user}}/{{documents}}/...` है। अगर आप archive में सिर्फ़ `{{documents}}/`
 चाहते हैं, तो `-C` से tar को पहले directory बदलने दीजिए:
 
 ```sh
-tar -czf backup.tar.gz -C ~ dokument
+tar -czf backup.tar.gz -C ~ {{documents}}
 tar -tzf backup.tar.gz
 ```
 
 ```quiz
-आप `tar -czf backup.tar.gz -C ~ dokument` चलाते हैं। आर्काइव में क्या है?
-- [x] `dokument/` और उसके अंदर की फ़ाइलें
-- [ ] `home/elev/dokument/` और उसके अंदर की फ़ाइलें
-- [ ] `/home/elev/dokument/` और उसके अंदर की फ़ाइलें
+आप `tar -czf backup.tar.gz -C ~ {{documents}}` चलाते हैं। आर्काइव में क्या है?
+- [x] `{{documents}}/` और उसके अंदर की फ़ाइलें
+- [ ] `home/{{user}}/{{documents}}/` और उसके अंदर की फ़ाइलें
+- [ ] `/home/{{user}}/{{documents}}/` और उसके अंदर की फ़ाइलें
 ---
 `-C ~` से tar पहले आपकी होम डायरेक्टरी में जाता है, इसलिए आर्काइव में नाम
-`dokument/` से शुरू होते हैं।
+`{{documents}}/` से शुरू होते हैं।
 ```
 
 ## `gzip` से अकेली files compress करना
@@ -202,12 +202,12 @@ tar -tzf backup.tar.gz
 Permissions और timestamp बने रहते हैं:
 
 ```sh
-cp dokument/server.log .
+cp {{documents}}/server.log .
 gzip -v server.log
 ```
 
 ```text
-server.log:	 39.0% -- replaced with server.log.gz
+server.log:	 39.8% -- replaced with server.log.gz
 ```
 
 `gzip -l` पहले और बाद का size दिखाता है, और `gunzip` file को फिर से unpack करता है:
@@ -222,21 +222,21 @@ gunzip server.log.gz
 है जिसमें दूसरी चीज़ों के साथ file का नाम भी होता है:
 
 ```sh
-cp dokument/frukter.txt .
-gzip -kv frukter.txt
+cp {{old}}/{{oldNotes}} .
+gzip -kv {{oldNotes}}
 ```
 
 ```text
-frukter.txt:	-20.3% -- created frukter.txt.gz
+{{oldNotes}}:	-51.6% -- created {{oldNotes}}.gz
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ cp dokument/server.log .
-$ gzip frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ cp {{documents}}/server.log .
+$ gzip {{fruits}}
 $ gzip -k server.log
-$ ls frukter* server*
-frukter.txt.gz  server.log  server.log.gz
+$ ls {{fruits}}* server*
+{{fruits}}.gz  server.log  server.log.gz
 ---
 सादा `gzip` फ़ाइल को `.gz` फ़ाइल से बदल देता है; `-k` मूल फ़ाइल को बनाए रखता है।
 ```
@@ -279,14 +279,14 @@ sudo apt install zip unzip
 directory जोड़ता है, उसके अंदर की files नहीं:
 
 ```sh
-zip -r dokument.zip dokument
+zip -r {{documents}}.zip {{documents}}
 ```
 
 ```text
-  adding: dokument/ (stored 0%)
-  adding: dokument/betyg.csv (deflated 17%)
-  adding: dokument/frukter.txt (deflated 27%)
-  adding: dokument/server.log (deflated 42%)
+  adding: {{documents}}/ (stored 0%)
+  adding: {{documents}}/{{fruits}} (deflated 39%)
+  adding: {{documents}}/{{grades}} (deflated 34%)
+  adding: {{documents}}/server.log (deflated 43%)
 ```
 
 ध्यान दीजिए कि order वही है जो tar में: पहले archive, फिर files। `unzip -l` content की
@@ -294,17 +294,17 @@ list दिखाता है, और `-d` चुनता है कि कह
 जाती है):
 
 ```sh
-unzip -l dokument.zip
-unzip dokument.zip -d fran-zip
+unzip -l {{documents}}.zip
+unzip {{documents}}.zip -d {{fromZip}}
 ```
 
 अगर files पहले से मौजूद हैं, तो unzip उन्हें छोड़ देता है। `unzip -o` के साथ वे
 overwrite हो जाती हैं।
 
 ```quiz
-आप `-r` के बिना `zip dokument.zip dokument` चलाते हैं। zip फ़ाइल में क्या पहुँचता है?
-- [ ] `dokument` की सभी फ़ाइलें
-- [x] सिर्फ़ ख़ाली डायरेक्टरी `dokument/`
+आप `-r` के बिना `zip {{documents}}.zip {{documents}}` चलाते हैं। zip फ़ाइल में क्या पहुँचता है?
+- [ ] `{{documents}}` की सभी फ़ाइलें
+- [x] सिर्फ़ ख़ाली डायरेक्टरी `{{documents}}/`
 - [ ] कुछ नहीं – zip चलने से मना कर देता है
 ---
 `-r` (*recursive*) के बिना zip डायरेक्टरी के अंदर नहीं जाता।

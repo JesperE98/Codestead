@@ -88,9 +88,8 @@ lsblk
 lsblk -f
 ```
 
-`sdb1` पर ध्यान दीजिए: एक `vfat` file system जिसका label `USBMINNE` है (Swedish
-में "USB memory") और जो कहीं mount नहीं है। यही वह USB stick है जिसे हम लगाने वाले
-हैं।
+`sdb1` पर ध्यान दीजिए: एक `vfat` file system जिसका label `USBMINNE` है और जो कहीं
+mount नहीं है। यही वह USB stick है जिसे हम लगाने वाले हैं।
 
 ## अलग-अलग file systems
 
@@ -135,7 +134,7 @@ file systems हैं। आम mount points:
 | `/` | Root file system |
 | `/boot`, `/boot/efi` | Kernel और EFI partition |
 | `/mnt` | अस्थायी mounts जो आप हाथ से करते हैं |
-| `/media/elev/…` या `/run/media/elev/…` | जहाँ desktop USB sticks को अपने-आप mount करता है |
+| `/media/{{user}}/…` या `/run/media/{{user}}/…` | जहाँ desktop USB sticks को अपने-आप mount करता है |
 
 ## कितनी जगह बची है? – `df`
 
@@ -212,7 +211,7 @@ df -h /mnt/usb
 directory में copy कीजिए:
 
 ```sh
-cp /mnt/usb/att-gora.txt ~
+cp /mnt/usb/{{todo}} ~
 ```
 
 > **सब कुछ root का क्यों है?** FAT में Linux permissions नहीं होतीं। इसलिए जब FAT

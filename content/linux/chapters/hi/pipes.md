@@ -45,16 +45,16 @@ two
 `<` किसी program को उसका stdin एक file से पढ़ने देता है:
 
 ```sh
-wc -l < dokument/frukter.txt
+wc -l < {{documents}}/{{fruits}}
 ```
 
 अब `wc` को फ़ाइल का नाम दिखता ही नहीं – उसे stdin पर सिर्फ़ टेक्स्ट मिलता है –
 इसलिए वह सिर्फ़ संख्या छापता है।
 
 ```predict
-$ wc -l dokument/frukter.txt
-$ wc -l < dokument/frukter.txt
-10 dokument/frukter.txt
+$ wc -l {{documents}}/{{fruits}}
+$ wc -l < {{documents}}/{{fruits}}
+10 {{documents}}/{{fruits}}
 10
 ---
 आर्ग्युमेंट के रूप में फ़ाइल का नाम मिलने पर `wc` नाम भी छापता है। `<` के साथ उसे
@@ -67,15 +67,13 @@ Error messages stderr में जाते हैं और `>` का उन 
 संभालने के लिए stream का number आगे लिखिए:
 
 ```sh
-ls /finnsinte 2> fel.txt
+ls /{{missing}} 2> errors.txt
 ```
 
-(*Finns inte* Swedish में "मौजूद नहीं है" होता है, और *fel* का मतलब है "error"।)
-
 ```quiz
-आप `ls /finnsinte > fel.txt` चलाते हैं। त्रुटि संदेश कहाँ पहुँचता है?
-- [ ] `fel.txt` में
-- [x] स्क्रीन पर – `fel.txt` ख़ाली रहती है
+आप `ls /{{missing}} > errors.txt` चलाते हैं। त्रुटि संदेश कहाँ पहुँचता है?
+- [ ] `errors.txt` में
+- [x] स्क्रीन पर – `errors.txt` ख़ाली रहती है
 - [ ] कहीं नहीं, वह ग़ायब हो जाता है
 ---
 `>` सिर्फ़ stdout (स्ट्रीम 1) को रीडायरेक्ट करता है। त्रुटि संदेश stderr
@@ -93,14 +91,14 @@ Unix philosophy का दिल है: *एक काम करो और उ�
 मिलकर काम करने दो*।
 
 ```sh
-grep INFO dokument/server.log | wc -l
+grep INFO {{documents}}/server.log | wc -l
 ```
 
 `grep` lines ढूँढता है और `wc -l` उन्हें गिनता है। आप जितने चाहें उतने commands
 जोड़ सकते हैं:
 
 ```sh
-sort dokument/frukter.txt | uniq -c | sort -rn
+sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ```
 
 इसे step by step पढ़िए: फलों को sort करो, गिनो कि हर फल कितनी बार है
@@ -117,7 +115,7 @@ ls /etc | wc -l
 `tee` अपना input आगे भी भेजता है *और* उसकी एक copy file में save भी करता है:
 
 ```sh
-ls /etc | tee etc-lista.txt | wc -l
+ls /etc | tee etc-list.txt | wc -l
 ```
 
 ## Chains – `;`, `&&` और `||`
@@ -131,13 +129,13 @@ ls /etc | tee etc-lista.txt | wc -l
 | `a \|\| b` | b तभी चलाओ जब a fail हुआ हो |
 
 ```sh
-mkdir -p ny && cd ny
+mkdir -p new && cd new
 ```
 
 ```predict
-$ mkdir dokument 2> /dev/null && echo created || echo failed
+$ mkdir {{documents}} 2> /dev/null && echo created || echo failed
 failed
 ---
-`dokument` पहले से मौजूद है, इसलिए `mkdir` विफल होता है (उसका त्रुटि संदेश
+`{{documents}}` पहले से मौजूद है, इसलिए `mkdir` विफल होता है (उसका त्रुटि संदेश
 `/dev/null` में ग़ायब हो जाता है)। `echo created` छोड़ दिया जाता है और `echo failed` चलता है।
 ```

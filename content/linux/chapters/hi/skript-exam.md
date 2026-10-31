@@ -13,15 +13,15 @@
 ```
 
 ```quiz
-`namn = Kim` से त्रुटि `command not found` मिलती है। क्यों?
-- [x] `=` के आसपास के स्पेस की वजह से शेल `namn` को एक कमांड मान लेता है
+`{{nameVar}} = Kim` से त्रुटि `command not found` मिलती है। क्यों?
+- [x] `=` के आसपास के स्पेस की वजह से शेल `{{nameVar}}` को एक कमांड मान लेता है
 - [ ] वेरिएबल के नाम बड़े अक्षरों में लिखने ज़रूरी हैं
-- [ ] आपको `$namn = Kim` लिखना होगा
+- [ ] आपको `${{nameVar}} = Kim` लिखना होगा
 ```
 
 ```predict
-$ antal=$(ls ~/dokument | wc -l)
-$ echo "$antal files"
+$ count=$(ls ~/{{documents}} | wc -l)
+$ echo "$count files"
 3 files
 ```
 
@@ -50,13 +50,13 @@ $ echo $a
 ```
 
 ```predict
-$ [ -d ~/finnsinte ] && echo yes || echo no
+$ [ -d ~/{{missing}} ] && echo yes || echo no
 no
 ```
 
 ```predict
-$ fil=rapport.txt
-$ case $fil in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
+$ file=report.txt
+$ case $file in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
 A text file
 ```
 
@@ -91,9 +91,9 @@ $ for i in 1 2 3 4 5; do if [ $i -eq 3 ]; then continue; fi; echo $i; done
 ```
 
 ```quiz
-आप `cat > hej.sh << 'SLUT'` से एक here document शुरू करते हैं। यह कब ख़त्म होता है?
+आप `cat > {{helloScript}} << '{{heredocEnd}}'` से एक here document शुरू करते हैं। यह कब ख़त्म होता है?
 - [ ] जब आप ख़ाली पंक्ति पर Enter दबाते हैं
-- [x] पंक्ति `SLUT` पर
+- [x] पंक्ति `{{heredocEnd}}` पर
 - [ ] दस पंक्तियों के बाद
 ```
 

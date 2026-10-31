@@ -22,16 +22,16 @@
       "hint": "Ubuntu पर curl इंस्टॉल करना पड़ता है: `sudo apt install curl`। अगर आपको *Couldn't connect to server* मिले, तो myserver रुका हुआ है – उसे `myserver` से शुरू कीजिए।"
     },
     "spara": {
-      "text": "Web page `https://example.com` को file `~/exempel.html` के रूप में save कीजिए।",
-      "hint": "अपनी home directory में जाइए और `curl -o exempel.html https://example.com` या `wget -O exempel.html https://example.com` इस्तेमाल कीजिए।"
+      "text": "Web page `https://example.com` को file `~/{{exampleHtml}}` के रूप में save कीजिए।",
+      "hint": "अपनी home directory में जाइए और `curl -o {{exampleHtml}} https://example.com` या `wget -O {{exampleHtml}} https://example.com` इस्तेमाल कीजिए।"
     },
     "hosts": {
       "text": "Server `192.168.1.10` का नाम `server.lan` होना चाहिए, लेकिन यह name DNS में नहीं है। इसे `/etc/hosts` में जोड़िए और फिर `server.lan` को ping कीजिए।",
       "hint": "File का owner root है: `echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts` और फिर `ping -c 3 server.lan`।"
     },
     "ssh": {
-      "text": "`ssh` से server `server.lan` पर user `elev` के रूप में command `hostname` चलाइए।",
-      "hint": "`ssh elev@server.lan hostname` – और होस्ट कुंजी (host key) वाले सवाल का जवाब `yes` दीजिए।"
+      "text": "`ssh` से server `server.lan` पर user `{{user}}` के रूप में command `hostname` चलाइए।",
+      "hint": "`ssh {{user}}@server.lan hostname` – और होस्ट कुंजी (host key) वाले सवाल का जवाब `yes` दीजिए।"
     }
   }
 }

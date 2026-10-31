@@ -5,7 +5,7 @@ Linux इस तरह बना है कि कई users एक ही comput
 
 ## Users और groups
 
-आप user `elev` के रूप में logged in हैं। हर user एक या ज़्यादा **groups** का
+आप user `{{user}}` के रूप में logged in हैं। हर user एक या ज़्यादा **groups** का
 हिस्सा होता है:
 
 ```sh
@@ -21,8 +21,8 @@ Root के रूप में login कम ही किया जाता �
 `ls -l` चलाइए और पहला column देखिए:
 
 ```text
--rw-r--r-- 1 elev elev  174 Oct 29 13:55 anteckningar.txt
-drwxr-xr-x 2 elev elev 4096 Oct 29 13:55 dokument
+-rw-r--r-- 1 {{user}} {{user}}  441 Oct 29 13:55 {{notes}}
+drwxr-xr-x 2 {{user}} {{user}} 4096 Oct 29 13:55 {{documents}}
 ```
 
 पहला character type बताता है: file के लिए `-`, directory के लिए `d`। उसके बाद
@@ -39,7 +39,7 @@ type  owner   group   others
 | `w` (write) | Content बदलना | उसमें files बनाना और delete करना |
 | `x` (execute) | File को program की तरह चलाना | `cd` से directory में जाना |
 
-उसके बाद owner (`elev`) और group (`elev`) आते हैं।
+उसके बाद owner (`{{user}}`) और group (`{{user}}`) आते हैं।
 
 ```quiz
 एक डायरेक्टरी की अनुमतियाँ `drwxr-x---` हैं। उसके समूह के सदस्य क्या कर सकते हैं?
@@ -63,15 +63,15 @@ r = 4, w = 2 और x = 1 का जोड़ होता है:
 | `600` | `rw-------` | गुप्त files |
 
 ```sh
-chmod 644 anteckningar.txt
+chmod 644 {{notes}}
 ```
 
 या **symbols** से: `u` (owner), `g` (group), `o` (others), `a` (all), उसके बाद
 `+`, `-` या `=` और permissions:
 
 ```sh
-chmod u+x skript.sh
-chmod go-w fil.txt
+chmod u+x script.sh
+chmod go-w file.txt
 ```
 
 ```predict
@@ -89,16 +89,16 @@ $ ls -l plan.txt | awk '{print $1}'
 program से चलाई जाए:
 
 ```sh
-echo '#!/bin/bash' > datum.sh
-echo 'echo "Today is:"; date' >> datum.sh
-cat datum.sh
+echo '#!/bin/bash' > date.sh
+echo 'echo "Today is:"; date' >> date.sh
+cat date.sh
 ```
 
 Script को program की तरह चलाने के लिए उसका executable होना ज़रूरी है:
 
 ```sh
-chmod +x datum.sh
-./datum.sh
+chmod +x date.sh
+./date.sh
 ```
 
 `./` इसलिए ज़रूरी है क्योंकि जिस directory में आप हैं, वह `PATH` का हिस्सा नहीं है।

@@ -56,7 +56,7 @@ Login करने पर आपको कौन-सा shell मिलता �
 field है, और यह variable `$SHELL` में भी होता है:
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 echo $SHELL
 ```
 
@@ -100,7 +100,7 @@ zsh
 | `1` | सारी settings वाला main menu (simulator में उपलब्ध नहीं) |
 | `2` | सुझाई गई settings के साथ `~/.zshrc` बनाओ |
 
-`2` जवाब दीजिए। Prompt बदलकर `elev@ubuntu ~ %` हो जाता है – zsh में `%`
+`2` जवाब दीजिए। Prompt बदलकर `{{user}}@ubuntu ~ %` हो जाता है – zsh में `%`
 सामान्य user का आम निशान है (root को `#` मिलता है, बिल्कुल bash की तरह)।
 
 अभी आप कौन-सा shell चला रहे हैं? Variable `$0` में shell का नाम होता है:
@@ -124,7 +124,7 @@ zsh लगभग सारा bash syntax समझता है। Pipes, redir
 functions वैसे ही काम करते हैं जैसे आप आदी हैं:
 
 ```sh
-for f in ~/dokument/*.txt; do wc -l $f; done
+for f in ~/{{documents}}/*.txt; do wc -l $f; done
 ```
 
 ### Feature 1: `**` सारी subdirectories में ढूँढ़ता है
@@ -145,7 +145,7 @@ bash में `**` एक साधारण `*` की तरह काम क
 के लिए आपको बस उसका नाम टाइप करना होता है – `cd` की ज़रूरत नहीं:
 
 ```sh
-dokument
+{{documents}}
 ..
 ```
 
@@ -162,8 +162,8 @@ setopt autocd
 bash में बिना quotes वाला variable spaces पर split हो जाता है। zsh में नहीं होता:
 
 ```sh
-filer="a.txt b.txt"
-for f in $filer; do echo "[$f]"; done
+files="a.txt b.txt"
+for f in $files; do echo "[$f]"; done
 ```
 
 bash `[a.txt]` और `[b.txt]` print करता है – zsh `[a.txt b.txt]` print करता है। zsh
@@ -180,7 +180,7 @@ zsh में हमेशा वही काम नहीं करता। (
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
-$ zsh -c 'filer="x.txt y.txt z.txt"; for f in $filer; do echo "<$f>"; done'
+$ zsh -c 'files="x.txt y.txt z.txt"; for f in $files; do echo "<$f>"; done'
 <x.txt y.txt z.txt>
 ---
 zsh वेरिएबल को स्पेस पर नहीं बाँटता, इसलिए लूप पूरे मान के साथ एक बार चलता है।
@@ -255,16 +255,16 @@ sudo apt install fish
 fish
 ```
 
-fish आपका स्वागत करता है और prompt `elev@ubuntu ~>` बन जाता है। कुछ
+fish आपका स्वागत करता है और prompt `{{user}}@ubuntu ~>` बन जाता है। कुछ
 directories नीचे जाइए और देखिए कि fish prompt में path को कैसे छोटा करता है:
 
 ```sh
-mkdir -p ~/dokument/projekt
-cd ~/dokument/projekt
+mkdir -p ~/{{documents}}/{{project}}
+cd ~/{{documents}}/{{project}}
 cd ~
 ```
 
-Directory `~/dokument/projekt` में prompt `~/d/projekt>` दिखाता है – आख़िरी को
+Directory `~/{{documents}}/{{project}}` में prompt `~/d/{{project}}>` दिखाता है – आख़िरी को
 छोड़कर हर directory एक अक्षर तक छोटी कर दी जाती है।
 
 ### fish का अपना syntax है
@@ -273,39 +273,38 @@ Directory `~/dokument/projekt` में prompt `~/d/projekt>` दिखात�
 
 | क्या | bash और zsh | fish |
 |---|---|---|
-| Variable set करना | `frukt=äpple` | `set frukt äpple` |
+| Variable set करना | `{{fruitVar}}={{fruitWord}}` | `set {{fruitVar}} {{fruitWord}}` |
 | Environment variable | `export EDITOR=nano` | `set -x EDITOR nano` |
-| Variable हटाना | `unset frukt` | `set -e frukt` |
+| Variable हटाना | `unset {{fruitVar}}` | `set -e {{fruitVar}}` |
 | Command substitution | `$(pwd)` | `(pwd)` |
 | आख़िरी exit status | `$?` | `$status` |
 | Script arguments | `$@`, `$1` | `$argv`, `$argv[1]` |
 | Condition | `if …; then …; fi` | `if …; …; end` |
 | Loop | `for …; do …; done` | `for …; …; end` |
-| Function | `hej() { …; }` | `function hej; …; end` |
+| Function | `greet() { …; }` | `function greet; …; end` |
 | गणित | `$((17 * 23))` | `math 17 x 23` |
 
 ### set के साथ variables
 
-bash के तरीक़े से एक variable set करके देखिए (`frukt` Swedish में fruit है, और
-`äpple` apple):
+bash के तरीक़े से एक variable set करके देखिए:
 
 ```sh
-frukt=äpple
+{{fruitVar}}={{fruitWord}}
 ```
 
 fish मना कर देता है और बताता है कि इसे कैसे लिखें:
 
 ```text
-fish: Unsupported use of '='. In fish, please use 'set frukt äpple'.
+fish: Unsupported use of '='. In fish, please use 'set {{fruitVar}} {{fruitWord}}'.
 ```
 
 fish में यह ऐसे किया जाता है:
 
 ```sh
-set frukt äpple
-echo $frukt
+set {{fruitVar}} {{fruitWord}}
+echo ${{fruitVar}}
 set -x EDITOR nano
-set -e frukt
+set -e {{fruitVar}}
 ```
 
 `-x` (*export*) variable को एक environment variable बना देता है जिसे आपके start किए
@@ -314,17 +313,17 @@ programs देख सकते हैं, और `-e` (*erase*) उसे ह�
 fish में हर variable एक **list** है। Elements की numbering 1 से शुरू होती है:
 
 ```sh
-set frukter äpple päron banan
-echo $frukter[2]
-count $frukter
+set fruits सेब नाशपाती केला
+echo $fruits[2]
+count $fruits
 ```
 
 `-c` fish में भी काम करता है। आख़िरी कमांड क्या छापता है?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y fish > /dev/null 2>&1
-$ fish -c 'set frukter äpple päron banan; echo $frukter[3]'
-banan
+$ fish -c 'set fruits सेब नाशपाती केला; echo $fruits[3]'
+केला
 ---
 fish की सूची के तत्वों की गिनती 1 से शुरू होती है, इसलिए `[3]` तीसरा और आख़िरी
 तत्व है।
@@ -373,7 +372,7 @@ if test -f ~/.bashrc; echo exists; else; echo missing; end
 करता है:
 
 ```sh
-for f in ~/dokument/*.txt
+for f in ~/{{documents}}/*.txt
 echo (basename $f)
 end
 ```
@@ -428,14 +427,14 @@ Terminal में आप कौन-सा shell इस्तेमाल कर
 एक bash script लिखकर उसे fish से चलाकर देखिए:
 
 ```sh
-cat > ~/hej.sh << 'SLUT'
+cat > ~/{{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
 name=Kim
 echo "Hello $name, I am run by bash"
-SLUT
-chmod +x ~/hej.sh
+{{heredocEnd}}
+chmod +x ~/{{helloScript}}
 fish
-~/hej.sh
+~/{{helloScript}}
 exit
 ```
 
@@ -462,7 +461,7 @@ Script fish में चलता है, भले ही वहाँ `name=K
 
 ```sh
 chsh -s /usr/bin/zsh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 - Shell उसके पूरे path के साथ देना होता है और उसका `/etc/shells` में list होना
@@ -515,7 +514,7 @@ $ echo $SHELL
 | `zsh` / `fish` / `exit` | दूसरा shell start करें / वापस जाएँ |
 | `ls ~/**/*.txt` | सारी subdirectories में ढूँढ़ें (zsh, fish) |
 | `setopt autocd` | zsh का कोई option चालू करें |
-| `set frukt äpple` | fish में variable set करें |
+| `set {{fruitVar}} {{fruitWord}}` | fish में variable set करें |
 | `set -x NAME value` | fish में environment variable set करें |
 | `chsh -s /usr/bin/zsh` | अपना login shell बदलें |
 
