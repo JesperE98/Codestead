@@ -9,7 +9,7 @@ até o hardware – fica em **uma única árvore** de diretórios que começa na
 | Diretório | Conteúdo |
 |---|---|
 | `/` | A raiz – o topo da árvore |
-| `/home` | Os diretórios pessoais dos usuários, por exemplo `/home/elev` |
+| `/home` | Os diretórios pessoais dos usuários, por exemplo `/home/{{user}}` |
 | `/root` | O diretório pessoal do administrador, o root |
 | `/etc` | Configurações do sistema (arquivos de configuração) |
 | `/usr/bin` | Programas (comandos) como `ls` e `cat` |
@@ -96,15 +96,15 @@ Existem dois tipos de caminho:
   em `/`, pode chegar a `/var/log` com apenas `cd var/log`.
 
 ```quiz
-Você está em `/home`. Quais comandos levam você para `/home/elev/dokument`? (Escolha todos os que funcionam.)
-- [x] `cd elev/dokument`
-- [x] `cd /home/elev/dokument`
-- [ ] `cd /elev/dokument`
-- [ ] `cd dokument`
+Você está em `/home`. Quais comandos levam você para `/home/{{user}}/{{documents}}`? (Escolha todos os que funcionam.)
+- [x] `cd {{user}}/{{documents}}`
+- [x] `cd /home/{{user}}/{{documents}}`
+- [ ] `cd /{{user}}/{{documents}}`
+- [ ] `cd {{documents}}`
 ---
-`elev/dokument` é relativo a `/home`, e `/home/elev/dokument` é absoluto,
-então funciona de qualquer lugar. `/elev/dokument` começa na raiz, onde não
-existe nenhum `elev`.
+`{{user}}/{{documents}}` é relativo a `/home`, e `/home/{{user}}/{{documents}}` é absoluto,
+então funciona de qualquer lugar. `/{{user}}/{{documents}}` começa na raiz, onde não
+existe nenhum `{{user}}`.
 ```
 
 Vale a pena conhecer alguns nomes especiais:

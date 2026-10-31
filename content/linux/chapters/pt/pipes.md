@@ -46,16 +46,16 @@ O segundo `>` sobrescreveu o arquivo. Com `>>`, ele conteria as duas linhas.
 O `<` faz um programa ler o stdin a partir de um arquivo:
 
 ```sh
-wc -l < dokument/frukter.txt
+wc -l < {{documents}}/{{fruits}}
 ```
 
 Agora o `wc` nunca vê o nome do arquivo – ele só recebe o texto pela stdin –,
 então imprime apenas o número.
 
 ```predict
-$ wc -l dokument/frukter.txt
-$ wc -l < dokument/frukter.txt
-10 dokument/frukter.txt
+$ wc -l {{documents}}/{{fruits}}
+$ wc -l < {{documents}}/{{fruits}}
+10 {{documents}}/{{fruits}}
 10
 ---
 Com um nome de arquivo como argumento, o `wc` imprime o nome também. Com `<`,
@@ -68,15 +68,13 @@ As mensagens de erro vão para o stderr e não são afetadas pelo `>`. Para
 lidar com elas, escreva o número do fluxo na frente:
 
 ```sh
-ls /finnsinte 2> fel.txt
+ls /{{missing}} 2> erros.txt
 ```
 
-(*Finns inte* é "não existe" em sueco, e *fel* significa "erro".)
-
 ```quiz
-Você executa `ls /finnsinte > fel.txt`. Para onde vai a mensagem de erro?
-- [ ] Para `fel.txt`
-- [x] Para a tela – `fel.txt` fica vazio
+Você executa `ls /{{missing}} > erros.txt`. Para onde vai a mensagem de erro?
+- [ ] Para `erros.txt`
+- [x] Para a tela – `erros.txt` fica vazio
 - [ ] Para lugar nenhum, ela desaparece
 ---
 O `>` só redireciona a stdout (fluxo 1). A mensagem de erro vai para a stderr
@@ -94,14 +92,14 @@ Esse é o coração da filosofia Unix: *faça uma coisa e faça bem feito, e dei
 os programas trabalharem juntos*.
 
 ```sh
-grep INFO dokument/server.log | wc -l
+grep INFO {{documents}}/server.log | wc -l
 ```
 
 O `grep` encontra as linhas e o `wc -l` as conta. Você pode encadear quantos
 comandos quiser:
 
 ```sh
-sort dokument/frukter.txt | uniq -c | sort -rn
+sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ```
 
 Leia passo a passo: ordene as frutas, conte quantas há de cada uma
@@ -118,7 +116,7 @@ ls /etc | wc -l
 O `tee` repassa a sua entrada *e* salva uma cópia em um arquivo:
 
 ```sh
-ls /etc | tee etc-lista.txt | wc -l
+ls /etc | tee lista-etc.txt | wc -l
 ```
 
 ## Encadeamentos – `;`, `&&` e `||`
@@ -132,13 +130,13 @@ Vários comandos podem ficar na mesma linha:
 | `a \|\| b` | Executa b só se a tiver falhado |
 
 ```sh
-mkdir -p ny && cd ny
+mkdir -p novo && cd novo
 ```
 
 ```predict
-$ mkdir dokument 2> /dev/null && echo created || echo failed
+$ mkdir {{documents}} 2> /dev/null && echo created || echo failed
 failed
 ---
-`dokument` já existe, então o `mkdir` falha (a mensagem de erro dele some em
+`{{documents}}` já existe, então o `mkdir` falha (a mensagem de erro dele some em
 `/dev/null`). O `echo created` é pulado e o `echo failed` é executado.
 ```

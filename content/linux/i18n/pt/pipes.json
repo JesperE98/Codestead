@@ -2,23 +2,23 @@
   "title": "Redirecionamento e pipes",
   "tasks": {
     "redirect": {
-      "text": "Escreva o texto `Hej från shell` (“Olá do shell” em sueco) no arquivo `~/hej.txt` usando `echo` e `>`."
+      "text": "Escreva o texto `{{helloShell}}` no arquivo `~/{{helloFile}}` usando `echo` e `>`."
     },
     "append": {
-      "text": "Acrescente mais uma linha a `~/hej.txt` – sem sobrescrever a primeira.",
+      "text": "Acrescente mais uma linha a `~/{{helloFile}}` – sem sobrescrever a primeira.",
       "hint": "Use `>>` em vez de `>`."
     },
     "count-errors": {
       "text": "Conte o número de linhas que contêm `ERROR` no server.log, passando o `grep` por um pipe para o `wc -l`."
     },
     "uniq": {
-      "text": "Mostre quantas vezes cada fruta aparece em `frukter.txt`, usando `sort` e `uniq -c`."
+      "text": "Mostre quantas vezes cada fruta aparece em `{{fruits}}`, usando `sort` e `uniq -c`."
     },
     "save-ls": {
-      "text": "Salve uma lista dos arquivos de `/etc` no arquivo `~/etc-filer.txt`."
+      "text": "Salve uma lista dos arquivos de `/etc` no arquivo `~/{{etcFiles}}`."
     },
     "devnull": {
-      "text": "Execute `ls /finnsinte`, mas mande a mensagem de erro para `/dev/null`, para que nada apareça."
+      "text": "Execute `ls /{{missing}}`, mas mande a mensagem de erro para `/dev/null`, para que nada apareça."
     }
   }
 }

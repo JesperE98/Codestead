@@ -22,16 +22,16 @@
       "hint": "No Ubuntu é preciso instalar o curl: `sudo apt install curl`. Se você receber *Couldn't connect to server*, o myserver está parado – inicie-o com `myserver`."
     },
     "spara": {
-      "text": "Salve a página web `https://example.com` como o arquivo `~/exempel.html`.",
-      "hint": "Fique no seu diretório pessoal e use `curl -o exempel.html https://example.com` ou `wget -O exempel.html https://example.com`."
+      "text": "Salve a página web `https://example.com` como o arquivo `~/{{exampleHtml}}`.",
+      "hint": "Fique no seu diretório pessoal e use `curl -o {{exampleHtml}} https://example.com` ou `wget -O {{exampleHtml}} https://example.com`."
     },
     "hosts": {
       "text": "O servidor `192.168.1.10` deveria se chamar `server.lan`, mas o nome não está no DNS. Adicione-o ao `/etc/hosts` e depois pingue `server.lan`.",
       "hint": "O arquivo pertence ao root: `echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts` e depois `ping -c 3 server.lan`."
     },
     "ssh": {
-      "text": "Rode o comando `hostname` no servidor `server.lan` com `ssh` como o usuário `elev`.",
-      "hint": "`ssh elev@server.lan hostname` – e responda `yes` à pergunta sobre a chave do host."
+      "text": "Rode o comando `hostname` no servidor `server.lan` com `ssh` como o usuário `{{user}}`.",
+      "hint": "`ssh {{user}}@server.lan hostname` – e responda `yes` à pergunta sobre a chave do host."
     }
   }
 }

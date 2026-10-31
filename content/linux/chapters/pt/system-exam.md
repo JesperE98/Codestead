@@ -4,7 +4,7 @@ Responda às perguntas sobre variáveis, permissões, processos e arquivamento �
 
 ```predict
 $ echo "$HOME" '$USER'
-/home/elev $USER
+/home/{{user}} $USER
 ---
 As aspas duplas substituem a variável pelo valor dela; as aspas simples a
 imprimem exatamente como foi escrita.
@@ -36,10 +36,10 @@ Dono: 4 + 2 + 1 = 7. Grupo: 4 + 1 = 5. Outros: 0.
 ```
 
 ```predict
-$ touch verktyg.sh
-$ chmod 755 verktyg.sh
-$ chmod go-x verktyg.sh
-$ ls -l verktyg.sh | awk '{print $1}'
+$ touch ferramenta.sh
+$ chmod 755 ferramenta.sh
+$ chmod go-x ferramenta.sh
+$ ls -l ferramenta.sh | awk '{print $1}'
 -rwxr--r--
 ```
 
@@ -47,7 +47,7 @@ $ ls -l verktyg.sh | awk '{print $1}'
 No Ubuntu, os membros de qual grupo podem usar o `sudo`?
 - [x] `sudo`
 - [ ] `root`
-- [ ] `elev`
+- [ ] `{{user}}`
 ```
 
 ```quiz
@@ -87,18 +87,18 @@ Qual é a diferença entre o `pkill` e o `killall`?
 ```
 
 ```quiz
-O que está errado em `tar -cvf dokument dokument.tar`?
+O que está errado em `tar -cvf {{documents}} {{documents}}.tar`?
 - [ ] `-v` não pode ser combinado com `-c`
 - [x] A ordem: o nome do arquivo tar tem que vir logo depois do `f`, antes dos arquivos
 - [ ] Um arquivo tar tem que terminar em `.tgz`
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ gzip frukter.txt
-$ gunzip frukter.txt.gz
-$ ls frukter*
-frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ gzip {{fruits}}
+$ gunzip {{fruits}}.gz
+$ ls frutas*
+{{fruits}}
 ```
 
 ```quiz
@@ -111,7 +111,7 @@ O `zcat` é o mesmo que `gzip -dc`: descompacta para a saída padrão.
 ```
 
 ```try
-du -sh dokument
+du -sh {{documents}}
 ---
 O `-s` dá um único total para o diretório inteiro e o `-h` deixa o tamanho fácil de ler.
 ```

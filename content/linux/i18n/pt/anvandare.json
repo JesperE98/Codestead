@@ -14,8 +14,8 @@
       "hint": "Só o root pode definir senhas para outros: `sudo passwd kim`. Digite a mesma senha duas vezes – ela não aparece enquanto você digita."
     },
     "grupp": {
-      "text": "Crie o grupo `utvecklare` (\"desenvolvedores\" em sueco) e adicione a `kim` a ele.",
-      "hint": "Primeiro `sudo groupadd utvecklare`, depois `sudo usermod -aG utvecklare kim`."
+      "text": "Crie o grupo `{{devGroup}}` e adicione a `kim` a ele.",
+      "hint": "Primeiro `sudo groupadd {{devGroup}}`, depois `sudo usermod -aG {{devGroup}} kim`."
     },
     "sudo-ratt": {
       "text": "Permita que a `kim` use o `sudo` adicionando a conta ao grupo `sudo`.",
@@ -26,12 +26,12 @@
       "hint": "`sudo -u kim whoami`"
     },
     "su": {
-      "text": "Faça login como `kim` com `su -` e rode `id`. Depois volte para `elev` com `exit`.",
+      "text": "Faça login como `kim` com `su -` e rode `id`. Depois volte para `{{user}}` com `exit`.",
       "hint": "Digite `su - kim` e depois a senha da kim – a que você escolheu com `passwd`. O prompt mostra que você é a kim."
     },
     "userdel": {
-      "text": "Crie um usuário temporário `vikarie` (\"substituto\" em sueco) com diretório pessoal – e depois exclua-o de novo, **incluindo** o diretório pessoal.",
-      "hint": "`sudo useradd -m vikarie` e depois `sudo userdel -r vikarie`."
+      "text": "Crie um usuário temporário `{{tempUser}}` com diretório pessoal – e depois exclua-o de novo, **incluindo** o diretório pessoal.",
+      "hint": "`sudo useradd -m {{tempUser}}` e depois `sudo userdel -r {{tempUser}}`."
     }
   }
 }

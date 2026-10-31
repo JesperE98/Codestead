@@ -7,7 +7,7 @@ Qual destes caminhos é **absoluto**?
 - [ ] `var/log`
 - [ ] `../etc`
 - [x] `/usr/bin`
-- [ ] `dokument`
+- [ ] `{{documents}}`
 ---
 Um caminho absoluto começa com `/`, na raiz. Os outros partem do diretório em
 que você está.
@@ -30,10 +30,10 @@ O que o `cd -` faz?
 ```
 
 ```quiz
-Você quer copiar o diretório inteiro `bilder`, com tudo o que há dentro dele, para `bilder-kopia`. Qual comando funciona?
-- [ ] `cp bilder bilder-kopia`
-- [x] `cp -r bilder bilder-kopia`
-- [ ] `mv bilder bilder-kopia`
+Você quer copiar o diretório inteiro `{{pictures}}`, com tudo o que há dentro dele, para `{{pictures}}-copia`. Qual comando funciona?
+- [ ] `cp {{pictures}} {{pictures}}-copia`
+- [x] `cp -r {{pictures}} {{pictures}}-copia`
+- [ ] `mv {{pictures}} {{pictures}}-copia`
 ---
 Um diretório é copiado com `-r` (*recursive*). O `mv` o moveria em vez de
 copiá-lo.
@@ -48,17 +48,17 @@ O `-p` cria `a`, `a/b` e `a/b/c` de uma vez, então `a/b` contém `c`.
 ```
 
 ```quiz
-Você digita `touch min fil.txt` – sem aspas. O que acontece?
-- [ ] É criado um arquivo chamado `min fil.txt`
-- [x] São criados dois arquivos: `min` e `fil.txt`
+Você digita `touch meu arquivo.txt` – sem aspas. O que acontece?
+- [ ] É criado um arquivo chamado `meu arquivo.txt`
+- [x] São criados dois arquivos: `meu` e `arquivo.txt`
 - [ ] Nada, porque o nome contém um espaço
 ---
 O shell divide a linha nos espaços, então o `touch` recebe dois argumentos.
-Escreva `touch "min fil.txt"` para obter um arquivo só.
+Escreva `touch "meu arquivo.txt"` para obter um arquivo só.
 ```
 
 ```quiz
-Quais linhas o `grep -i error dokument/server.log` mostra?
+Quais linhas o `grep -i error {{documents}}/server.log` mostra?
 - [ ] Só as linhas com `error` em minúsculas
 - [ ] Só as linhas com `ERROR` em maiúsculas
 - [x] As linhas com `error` em qualquer mistura de maiúsculas e minúsculas
@@ -66,9 +66,9 @@ Quais linhas o `grep -i error dokument/server.log` mostra?
 
 ```quiz
 Você quer acompanhar um arquivo de log e ver as linhas novas à medida que são escritas. Qual comando serve?
-- [ ] `head -n 10 dokument/server.log`
-- [x] `tail -f dokument/server.log`
-- [ ] `wc -l dokument/server.log`
+- [ ] `head -n 10 {{documents}}/server.log`
+- [x] `tail -f {{documents}}/server.log`
+- [ ] `wc -l {{documents}}/server.log`
 ---
 O `tail -f` *acompanha* o arquivo. Interrompa-o com **Ctrl+C**.
 ```
@@ -98,9 +98,9 @@ Quando o `b` é executado em `a || b`?
 ```
 
 ```try
-grep ERROR ~/dokument/server.log | tee fel.txt | wc -l
+grep ERROR ~/{{documents}}/server.log | tee erros.txt | wc -l
 ---
-O `tee` salvou as linhas de erro em `fel.txt` e as passou adiante para o
+O `tee` salvou as linhas de erro em `erros.txt` e as passou adiante para o
 `wc -l`, que as contou.
 ```
 

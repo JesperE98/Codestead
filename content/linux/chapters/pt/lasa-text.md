@@ -2,17 +2,17 @@
 
 Quase tudo no Linux é texto: configurações, logs, listas. Por isso existem
 muitas ferramentas pequenas para ler e pesquisar arquivos de texto. No seu
-diretório pessoal há um diretório chamado `dokument` com arquivos para
-praticar, entre eles `frukter.txt` (uma lista de frutas) e `server.log` (o log
-de um servidor web inventado). O conteúdo está em sueco, mas as palavras que você
-vai procurar – `INFO`, `WARN` e `ERROR` – são as mesmas dos logs de verdade.
+diretório pessoal há um diretório chamado `{{documents}}` com arquivos para
+praticar, entre eles `{{fruits}}`, uma lista de frutas, e `server.log`, o log
+de um servidor web inventado. As palavras que você vai procurar no log – `INFO`,
+`WARN` e `ERROR` – são as mesmas dos logs de verdade.
 
 ## Mostrando um arquivo – `cat` e `less`
 
 O `cat` imprime o arquivo inteiro:
 
 ```sh
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 Para arquivos longos, o `less` é melhor. Nele você rola com as setas e a barra
@@ -21,7 +21,7 @@ de espaço, pesquisa com `/palavra` e sai com `q`.
 Veja a lista de frutas – você vai precisar dela na próxima pergunta:
 
 ```try
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 ## O começo e o fim – `head` e `tail`
@@ -30,16 +30,16 @@ O `head` mostra as primeiras linhas e o `tail`, as últimas. O padrão é 10
 linhas, mas você pode escolher com `-n`:
 
 ```sh
-head -n 5 dokument/server.log
-tail -n 3 dokument/server.log
+head -n 5 {{documents}}/server.log
+tail -n 3 {{documents}}/server.log
 ```
 
 O `tail -f` *acompanha* um arquivo e mostra as linhas novas à medida que são
 escritas – perfeito para logs. Interrompa com **Ctrl+C**.
 
 ```predict
-$ tail -n 1 dokument/frukter.txt
-mango
+$ tail -n 1 {{documents}}/{{fruits}}
+manga
 ---
 O `tail -n 1` mostra só a última linha.
 ```
@@ -49,7 +49,7 @@ O `tail -n 1` mostra só a última linha.
 O `wc` (*word count*) conta linhas, palavras e bytes:
 
 ```sh
-wc dokument/frukter.txt
+wc {{documents}}/{{fruits}}
 ```
 
 Muitas vezes você só quer o número de linhas: `wc -l`.
@@ -60,7 +60,7 @@ O `grep` é um dos comandos mais úteis que existem. Ele mostra todas as linhas
 que contêm um padrão:
 
 ```sh
-grep INFO dokument/server.log
+grep INFO {{documents}}/server.log
 ```
 
 Algumas opções que você vai usar bastante:
@@ -75,7 +75,7 @@ Algumas opções que você vai usar bastante:
 | `-E` | Padrões estendidos, por exemplo `"ERROR|WARN"` |
 
 ```sh
-grep -n WARN dokument/server.log
+grep -n WARN {{documents}}/server.log
 ```
 
 O padrão é uma *expressão regular*. Alguns exemplos: `^` significa o início da
@@ -84,7 +84,7 @@ começam com 2026.
 
 ```quiz
 O `server.log` tem duas linhas com `WARN` e uma linha com `warn` em minúsculas.
-O que `grep -c WARN dokument/server.log` imprime?
+O que `grep -c WARN {{documents}}/server.log` imprime?
 - [ ] 1
 - [x] 2
 - [ ] 3
@@ -95,9 +95,9 @@ diferentes. O `grep -ic WARN` contaria as três.
 
 ```quiz
 Qual comando mostra todas as linhas do `server.log` que **não** contêm `INFO`?
-- [ ] `grep -i INFO dokument/server.log`
-- [ ] `grep -c INFO dokument/server.log`
-- [x] `grep -v INFO dokument/server.log`
+- [ ] `grep -i INFO {{documents}}/server.log`
+- [ ] `grep -c INFO {{documents}}/server.log`
+- [x] `grep -v INFO {{documents}}/server.log`
 ```
 
 ## Ordenando – `sort` e `uniq`
@@ -107,7 +107,7 @@ inversa). O `uniq` remove as linhas idênticas à linha *imediatamente acima* �
 e é por isso que ele quase sempre é usado depois do `sort`:
 
 ```sh
-sort dokument/frukter.txt
+sort {{documents}}/{{fruits}}
 ```
 
 ```quiz

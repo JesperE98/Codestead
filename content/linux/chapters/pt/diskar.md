@@ -94,8 +94,7 @@ lsblk -f
 ```
 
 Repare no `sdb1`: um sistema de arquivos `vfat` com o rótulo `USBMINNE`
-("memória USB" em sueco) que não está montado em lugar nenhum. É o pendrive
-que vamos conectar.
+que não está montado em lugar nenhum. É o pendrive que vamos conectar.
 
 ## Sistemas de arquivos diferentes
 
@@ -142,7 +141,7 @@ sistemas de arquivos na RAM. Pontos de montagem comuns:
 | `/` | O sistema de arquivos raiz |
 | `/boot`, `/boot/efi` | O kernel e a partição EFI |
 | `/mnt` | Montagens temporárias que você faz à mão |
-| `/media/elev/…` ou `/run/media/elev/…` | Onde o ambiente gráfico monta pendrives automaticamente |
+| `/media/{{user}}/…` ou `/run/media/{{user}}/…` | Onde o ambiente gráfico monta pendrives automaticamente |
 
 ## Quanto espaço sobra? – `df`
 
@@ -223,7 +222,7 @@ A partir daqui o pendrive funciona como qualquer outro diretório. Copie um
 arquivo para o seu diretório pessoal:
 
 ```sh
-cp /mnt/usb/att-gora.txt ~
+cp /mnt/usb/{{todo}} ~
 ```
 
 > **Por que tudo pertence ao root?** O FAT não tem permissões do Linux.

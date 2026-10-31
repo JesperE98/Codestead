@@ -15,11 +15,11 @@ no stdout. Isso faz delas a combinação perfeita para pipes. E o arquivo
 original **não** é alterado (com uma exceção, o `sed -i`, que veremos mais
 adiante).
 
-Em `dokument` há um terceiro arquivo de exercício, um arquivo CSV com as
-pontuações dos alunos (*namn* = nome, *ämne* = matéria, *poäng* = pontos):
+Em `{{documents}}` há um terceiro arquivo de exercício, um arquivo CSV com as
+pontuações dos alunos em diferentes disciplinas:
 
 ```sh
-cat ~/dokument/betyg.csv
+cat ~/{{documents}}/{{grades}}
 ```
 
 CSV significa *comma-separated values* (valores separados por vírgula) – as
@@ -40,14 +40,14 @@ HELLO FROM CAFé
 ```
 
 Percebeu o é? O `tr` trabalha com *bytes* individuais, e letras como é, ç e ã
-– ou as suecas å, ä e ö – não fazem parte de `a-z`. Vale a pena saber disso –
+não fazem parte de `a-z`. Vale a pena saber disso –
 o GNU `awk` (mais abaixo) lida melhor com elas.
 
 O `tr` lê **apenas** do stdin, nunca de arquivos. Se quiser usar um arquivo,
 alimente-o com `<` ou com um pipe:
 
 ```sh
-tr a-z A-Z < ~/dokument/frukter.txt
+tr a-z A-Z < ~/{{documents}}/{{fruits}}
 ```
 
 Um truque clássico é transformar dois-pontos em quebras de linha (`\n`), para
@@ -88,11 +88,11 @@ O `sed` (*stream editor*) lê o texto linha por linha e executa um pequeno
 ### Substituindo texto – `s`
 
 ```sh
-sed 's/ERROR/FEL/' ~/dokument/server.log
+sed 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log
 ```
 
-O script `s/ERROR/FEL/` significa: substitua `ERROR` por `FEL` ("erro" em
-sueco). Ele tem a forma
+O script `s/ERROR/{{errorWord}}/` significa: substitua `ERROR` por
+`{{errorWord}}`. Ele tem a forma
 
 ```text
 s/PADRÃO/SUBSTITUIÇÃO/FLAGS
@@ -117,14 +117,14 @@ A flag `i` faz a busca ignorar maiúsculas e minúsculas, assim como o
 `grep -i`:
 
 ```sh
-sed 's/warn/WARNING/i' ~/dokument/server.log
+sed 's/warn/WARNING/i' ~/{{documents}}/server.log
 ```
 
 O padrão é uma *expressão regular*, como no `grep`. Aqui removemos a data no
 início de cada linha (`^` = início da linha, `[0-9-]*` = dígitos e hifens):
 
 ```sh
-sed 's/^[0-9-]* //' ~/dokument/server.log
+sed 's/^[0-9-]* //' ~/{{documents}}/server.log
 ```
 
 Na substituição, `&` significa "o trecho que correspondeu":
@@ -146,7 +146,7 @@ partes da correspondência com parênteses e usá-las na substituição como `\1
 `\2` … Aqui invertemos a data:
 
 ```sh
-sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/dokument/server.log
+sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/{{documents}}/server.log
 ```
 
 ### Escolhendo linhas – endereços
@@ -156,8 +156,8 @@ linhas ele se aplica. O comando `d` (*delete*) apaga linhas e o `p` (*print*)
 as imprime:
 
 ```sh
-sed '/INFO/d' ~/dokument/server.log
-sed '1d' ~/dokument/betyg.csv
+sed '/INFO/d' ~/{{documents}}/server.log
+sed '1d' ~/{{documents}}/{{grades}}
 ```
 
 O primeiro apaga todas as linhas que contêm `INFO`; o segundo apaga a linha 1
@@ -168,7 +168,7 @@ isso, e então só é impresso o que o `p` pedir. Veja como mostrar as linhas
 5 a 8:
 
 ```sh
-sed -n '5,8p' ~/dokument/server.log
+sed -n '5,8p' ~/{{documents}}/server.log
 ```
 
 | Endereço | Significa |
@@ -184,7 +184,7 @@ Os endereços funcionam com todos os comandos, inclusive o `s`. Aqui só as
 linhas de erro são marcadas:
 
 ```sh
-sed '/ERROR/s/^/>>> /' ~/dokument/server.log
+sed '/ERROR/s/^/>>> /' ~/{{documents}}/server.log
 ```
 
 O comando `q` (*quit*) para depois de uma determinada linha – então `sed 3q`
@@ -192,7 +192,7 @@ faz o mesmo que `head -n 3`. Você separa vários comandos com `;` ou com vário
 `-e`:
 
 ```sh
-sed -e '/INFO/d' -e 's/ERROR/FEL/' ~/dokument/server.log
+sed -e '/INFO/d' -e 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log
 ```
 
 ### Editando o próprio arquivo – `sed -i`
@@ -202,9 +202,9 @@ conferir com `cat`. Com `-i` (*in-place*), o `sed` grava o resultado de volta
 no arquivo. Experimente em uma cópia:
 
 ```sh
-cp ~/dokument/frukter.txt ~/frukter-kopia.txt
-sed -i 's/kiwi/kiwifruit/' ~/frukter-kopia.txt
-cat ~/frukter-kopia.txt
+cp ~/{{documents}}/{{fruits}} ~/frutas-copia.txt
+sed -i 's/kiwi/kiwifruit/' ~/frutas-copia.txt
+cat ~/frutas-copia.txt
 ```
 
 Não existe desfazer para o `sed -i`. Uma boa forma de trabalhar é executar o
@@ -213,7 +213,7 @@ quando estiver tudo certo. Se você escrever `-i.bak`, o original também é
 salvo como `arquivo.bak`.
 
 ```quiz
-Você executa `sed 's/kiwi/KIWI/' ~/dokument/frukter.txt`. O que acontece com o arquivo?
+Você executa `sed 's/kiwi/KIWI/' ~/{{documents}}/{{fruits}}`. O que acontece com o arquivo?
 - [ ] Todo `kiwi` do arquivo vira `KIWI`
 - [ ] Só o primeiro `kiwi` do arquivo vira `KIWI`
 - [x] Nada – o resultado só é impresso, o arquivo continua igual
@@ -232,7 +232,7 @@ consegue pegar um campo. O `-d` escolhe o separador (*delimiter*) e o `-f`,
 qual campo manter. Aqui estão as matérias – o campo 2 – do arquivo CSV:
 
 ```sh
-cut -d, -f2 ~/dokument/betyg.csv
+cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
 
 No `/etc/passwd`, os campos são separados por dois-pontos e o campo 1 é o nome
@@ -257,7 +257,7 @@ Por padrão, os campos são separados por espaços (em qualquer quantidade). No
 `server.log`, o campo 3 é o nível do log:
 
 ```sh
-awk '{print $3}' ~/dokument/server.log
+awk '{print $3}' ~/{{documents}}/server.log
 ```
 
 O programa fica entre `{ }` e é executado para cada linha. Sempre coloque o
@@ -267,7 +267,7 @@ programa do awk entre aspas **simples** – caso contrário, o shell acha que
 O awk se encaixa perfeitamente em um pipe. Quantas linhas há de cada nível?
 
 ```sh
-awk '{print $3}' ~/dokument/server.log | sort | uniq -c
+awk '{print $3}' ~/{{documents}}/server.log | sort | uniq -c
 ```
 
 ### Outros separadores – `-F`
@@ -291,7 +291,7 @@ consegue reordenar os campos, misturar texto e lidar com vários espaços
 seguidos.
 
 ```predict
-$ echo "Alva,matte,87" | awk -F, '{print $3, $1}'
+$ echo "Alva,matemática,87" | awk -F, '{print $3, $1}'
 87 Alva
 ---
 O `-F,` divide a linha nas vírgulas. O awk imprime primeiro o campo 3, depois o
@@ -305,37 +305,37 @@ executado para as linhas que correspondem. O padrão pode ser uma expressão
 regular, como no `grep`:
 
 ```sh
-awk '/ERROR/ {print $2}' ~/dokument/server.log
+awk '/ERROR/ {print $2}' ~/{{documents}}/server.log
 ```
 
 … ou uma condição. Texto vai entre aspas duplas:
 
 ```sh
-awk -F, '$2 == "matte" {print $1, $3}' ~/dokument/betyg.csv
+awk -F, '$2 == "matemática" {print $1, $3}' ~/{{documents}}/{{grades}}
 ```
 
-(*Matte* é "matemática" em sueco.) As comparações são escritas `==`, `!=`,
+As comparações são escritas `==`, `!=`,
 `<`, `<=`, `>` e `>=`, e as condições são combinadas com `&&` (e), `||` (ou)
 e `!` (não). Aqui estão todos os alunos com pelo menos 90 pontos (sem `{ }`, a
 linha inteira é impressa):
 
 ```sh
-awk -F, '$3 >= 90' ~/dokument/betyg.csv
+awk -F, '$3 >= 90' ~/{{documents}}/{{grades}}
 ```
 
-A linha de cabeçalho apareceu também? Nela, o campo 3 é a palavra `poäng`, e
-quando um valor não é um número, o awk o compara como *texto* – e `"poäng"`
+A linha de cabeçalho apareceu também? Nela, o campo 3 é a palavra `pontos`, e
+quando um valor não é um número, o awk o compara como *texto* – e `"pontos"`
 vem depois de `"90"` na ordem alfabética. Você pula o cabeçalho com `NR > 1`:
 
 ```sh
-awk -F, 'NR > 1 && $3 >= 90' ~/dokument/betyg.csv
+awk -F, 'NR > 1 && $3 >= 90' ~/{{documents}}/{{grades}}
 ```
 
-Experimente um padrão seu – os nomes de todos que estudam *svenska*
-(sueco):
+Experimente um padrão seu – os nomes de todos que estudam
+*português*:
 
 ```try
-awk -F, '$2 == "svenska" {print $1}' ~/dokument/betyg.csv
+awk -F, '$2 == "português" {print $1}' ~/{{documents}}/{{grades}}
 ```
 
 ### Contando – variáveis e `END`
@@ -345,15 +345,14 @@ O awk tem variáveis que você não precisa declarar – elas começam em 0. O b
 jeito fácil de somar uma coluna:
 
 ```sh
-awk -F, 'NR > 1 {summa += $3} END {print summa}' ~/dokument/betyg.csv
+awk -F, 'NR > 1 {soma += $3} END {print soma}' ~/{{documents}}/{{grades}}
 ```
 
-`summa += $3` significa "some o campo 3 a summa" (*summa* é "soma" em sueco).
-Se você contar as linhas ao mesmo tempo (`antal++` aumenta *antal*, a
-contagem, em 1), pode calcular a média:
+`soma += $3` significa "some o campo 3 a `soma`". Se você contar as linhas ao
+mesmo tempo (`contagem++` aumenta `contagem` em 1), pode calcular a média:
 
 ```sh
-awk -F, 'NR > 1 {summa += $3; antal++} END {print "Média:", summa / antal}' ~/dokument/betyg.csv
+awk -F, 'NR > 1 {soma += $3; contagem++} END {print "Média:", soma / contagem}' ~/{{documents}}/{{grades}}
 ```
 
 Também existe o `BEGIN { }`, que é executado **antes** da primeira linha – útil
@@ -362,19 +361,19 @@ para cabeçalhos. E com o `printf` você decide exatamente como fica a saída:
 em 5 caracteres.
 
 ```sh
-awk -F, 'BEGIN {print "Aluno     Nota"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/dokument/betyg.csv
+awk -F, 'BEGIN {print "Aluno     Nota"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/{{documents}}/{{grades}}
 ```
 
 O awk também tem funções, como `length()`, `toupper()` e `tolower()`:
 
 ```sh
-awk '{print toupper($0)}' ~/dokument/frukter.txt
+awk '{print toupper($0)}' ~/{{documents}}/{{fruits}}
 ```
 
-Olhe com atenção para `äpple` e `päron`. No Ubuntu, que é o que o terminal
+Olhe com atenção para `{{fruitWord}}`. No Ubuntu, que é o que o terminal
 aqui executa, o `awk` é por padrão o **mawk**, uma variante pequena e rápida.
 Em programas simples como estes você não vai notar diferença nenhuma – mas o
-mawk não converte å, ä e ö com `toupper()`. O **GNU awk** (o pacote `gawk`)
+mawk não converte letras como ç e ã com `toupper()`. O **GNU awk** (o pacote `gawk`)
 converte, ao contrário do `tr`. As distribuições diferem em qual awk usam e em
 como você instala programas – isso vem no capítulo sobre distribuições.
 
@@ -394,5 +393,5 @@ O verdadeiro poder vem de combiná-las. Quais níveis existem entre as linhas
 que *não* são INFO – se ignorarmos maiúsculas e minúsculas?
 
 ```sh
-grep -v INFO ~/dokument/server.log | awk '{print $3}' | tr A-Z a-z | sort | uniq -c
+grep -v INFO ~/{{documents}}/server.log | awk '{print $3}' | tr A-Z a-z | sort | uniq -c
 ```

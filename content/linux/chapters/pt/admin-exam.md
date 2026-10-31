@@ -128,7 +128,7 @@ Quem está no grupo `sudo`?
 
 ```predict
 $ grep ^sudo /etc/group | cut -d: -f4
-elev
+{{user}}
 ```
 
 ```quiz
