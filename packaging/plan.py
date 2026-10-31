@@ -43,7 +43,16 @@ def changed_since(sha, paths):
 
 def main():
     want = os.environ.get("WANT_PUBLISH") == "true"
-    secrets_ok = os.environ.get("SECRETS_OK") == "true" and os.path.exists("build/catalog-signing.pub.pem")
+    # Everything publishing needs, with what is missing named one by one.
+    needed = {
+        "the secret RELEASES_TOKEN": os.environ.get("HAS_RELEASES_TOKEN") == "true",
+        "the secret CATALOG_SIGNING_KEY": os.environ.get("HAS_CATALOG_SIGNING_KEY") == "true",
+        "the file build/catalog-signing.pub.pem": os.path.exists("build/catalog-signing.pub.pem"),
+    }
+    for what, ok in needed.items():
+        print(f"{what}: {'found' if ok else 'MISSING'}")
+    missing = [what for what, ok in needed.items() if not ok]
+    secrets_ok = not missing
     tags = releases()
     products, publish = [], []
     for p in json.load(open("packaging/products.json")):
@@ -69,8 +78,8 @@ def main():
         state = "new version" if changed else "no changes since the last release"
         print(f"{product['name']} {version}: {state}" + (", will be published" if product in publish else ""))
     if want and not secrets_ok and any(True for _ in products):
-        print("::warning::Nothing is published: the secrets RELEASES_TOKEN and CATALOG_SIGNING_KEY and the file "
-              "build/catalog-signing.pub.pem are all needed (see docs/DEVELOPMENT.md).")
+        print(f"::warning::Nothing is published. Missing: {', '.join(missing)}. Secrets must be repository "
+              "secrets under Settings -> Secrets and variables -> Actions (see docs/DEVELOPMENT.md).")
     with open(os.environ.get("GITHUB_OUTPUT", os.devnull), "a") as f:
         f.write(f"products={json.dumps(products)}\n")
         f.write(f"publish={json.dumps(publish)}\n")

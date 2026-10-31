@@ -10,3 +10,8 @@ artifacts/
 .DS_Store
 *.log
 .claude/worktrees/
+
+# Private keys must never be committed (the catalog signing key lives only in the
+# CATALOG_SIGNING_KEY secret and a password manager, see docs/DEVELOPMENT.md).
+*.pem
+!build/catalog-signing.pub.pem

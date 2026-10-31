@@ -65,7 +65,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.RELEASES_TOKEN || github.token }}
           WANT_PUBLISH: ${{ github.event_name == 'push' || inputs.publish == true }}
-          SECRETS_OK: ${{ secrets.RELEASES_TOKEN != '' && secrets.CATALOG_SIGNING_KEY != '' }}
+          HAS_RELEASES_TOKEN: ${{ secrets.RELEASES_TOKEN != '' }}
+          HAS_CATALOG_SIGNING_KEY: ${{ secrets.CATALOG_SIGNING_KEY != '' }}
         run: python3 packaging/plan.py
 
   # The tests run once; the packaging jobs below only build.
