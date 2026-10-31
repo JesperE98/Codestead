@@ -890,7 +890,7 @@ SYNOPSIS
 
 BESKRIVNING
        Bara root kan byta ägare på filer, så du behöver oftast sudo:
-           sudo chown elev:elev fil.txt
+           sudo chown $USER:$USER fil.txt
 
 FLAGGOR
        -R    ändra rekursivt i kataloger

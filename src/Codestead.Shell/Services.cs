@@ -153,17 +153,17 @@ public static partial class ServicesLib
         public string? Comment { get; set; }
     }
 
-    /// <summary>The configuration file rapportd needs (and that is missing from the start).</summary>
-    public const string RapportdConf = "/etc/rapportd.conf";
+    /// <summary>The configuration file reportd needs (and that is missing from the start).</summary>
+    public const string ReportdConf = "/etc/reportd.conf";
 
-    private const string RapportdExample = $"""
-        # Exempelkonfiguration för rapportd.
-        # Kopiera den till {RapportdConf} och ändra efter behov:
-        #   sudo cp {RapportdConf}.example {RapportdConf}
+    private const string ReportdExample = $"""
+        # Example configuration for reportd.
+        # Copy it to {ReportdConf} and change it as needed:
+        #   sudo cp {ReportdConf}.example {ReportdConf}
 
         port = 9090
-        rapportkatalog = /var/lib/rapportd
-        intervall = 1h
+        report_dir = /var/lib/reportd
+        interval = 1h
 
         """;
 
@@ -425,44 +425,44 @@ public static partial class ServicesLib
         {
             new()
             {
-                Name = "rapportd.service",
-                Description = "Rapportd report service",
-                Exec = $"/usr/local/bin/rapportd --config {RapportdConf}",
+                Name = "reportd.service",
+                Description = "Reportd report service",
+                Exec = $"/usr/local/bin/reportd --config {ReportdConf}",
                 Type = "notify",
                 After = "network.target",
                 WantedBy = "multi-user.target",
                 Admin = true,
                 Enabled = true,
                 Pid = 655,
-                Log = new() { $"Reading configuration from {RapportdConf}", "Report scheduler ready (interval 1h)" },
-                Check = sh => sh.Vfs.TryLookup(RapportdConf, sh.RootUser())?.Type == "file"
+                Log = new() { $"Reading configuration from {ReportdConf}", "Report scheduler ready (interval 1h)" },
+                Check = sh => sh.Vfs.TryLookup(ReportdConf, sh.RootUser())?.Type == "file"
                     ? null
                     : new StartFailure
                     {
                         Log = new()
                         {
-                            $"error: cannot open config file {RapportdConf}: No such file or directory",
-                            $"hint: an example configuration is installed as {RapportdConf}.example",
+                            $"error: cannot open config file {ReportdConf}: No such file or directory",
+                            $"hint: an example configuration is installed as {ReportdConf}.example",
                         },
                         Status = 1,
                         StatusName = "FAILURE",
                     },
-                Comment = "# Rapportd skapar rapporter varje timme. Installerad av administratören.",
+                Comment = "# reportd creates reports every hour. Installed by the administrator.",
             },
             new()
             {
-                Name = "minserver.service",
-                Description = "Minserver web server (practice server)",
-                Exec = "/usr/local/bin/minserver --port 8080",
+                Name = "myserver.service",
+                Description = "Myserver web server (practice server)",
+                Exec = "/usr/local/bin/myserver --port 8080",
                 Reload = "/bin/kill -HUP $MAINPID",
                 After = "network.target",
                 WantedBy = "multi-user.target",
                 Admin = true,
                 Manual = true,
                 Pid = ProcsLib.ServerPid,
-                Log = new() { "Reading configuration from /etc/minserver.conf", "Listening on port 8080" },
+                Log = new() { "Reading configuration from /etc/myserver.conf", "Listening on port 8080" },
                 StopLog = new() { "Shutting down, closing connections" },
-                Comment = "# Övningsservern från kapitlet om processer.",
+                Comment = "# The practice server from the chapter about processes.",
             },
         };
 
@@ -586,7 +586,7 @@ public static partial class ServicesLib
             }
         }
         var etc = sh.Vfs.Lookup("/etc", sh.RootUser());
-        if (!etc.Children!.ContainsKey("rapportd.conf.example")) etc.Children["rapportd.conf.example"] = VfsLib.MakeFile(RapportdExample);
+        if (!etc.Children!.ContainsKey("reportd.conf.example")) etc.Children["reportd.conf.example"] = VfsLib.MakeFile(ReportdExample);
     }
 
     /// <summary>Finds the unit file of a service (the administrator's copy wins over the package's).</summary>
@@ -620,7 +620,7 @@ public static partial class ServicesLib
     private static readonly Regex DigitsRe = new(@"^[0-9]+\z", RegexOptions.CultureInvariant);
     private static readonly Regex HasSuffixRe = new(@"\.[a-z]+\z", RegexOptions.CultureInvariant);
 
-    /// <summary>Translates "minserver", "sshd" (alias) or "minserver.service" to a loaded service.</summary>
+    /// <summary>Translates "myserver", "sshd" (alias) or "myserver.service" to a loaded service.</summary>
     public static UnitRt? ResolveUnit(Shell sh, string arg)
     {
         var st = sh.Services;
@@ -636,7 +636,7 @@ public static partial class ServicesLib
         return LoadUnit(sh, name);
     }
 
-    /// <summary>The full name of the service for error messages ("minserver" → "minserver.service").</summary>
+    /// <summary>The full name of the service for error messages ("myserver" → "myserver.service").</summary>
     public static string UnitName(string arg) => HasSuffixRe.IsMatch(arg) ? arg : $"{arg}.service";
 
     public static ParsedUnit UnitInfo(UnitRt rt) => ParseUnit(rt.Loaded);
@@ -837,7 +837,7 @@ public static partial class ServicesLib
 
         if (mode != "record")
         {
-            var template = ProcsLib.InitialProcs(sh.Distro).Procs.Find(p => p.Pid == pid && p.Cmd == info.Exec);
+            var template = ProcsLib.InitialProcs(sh.Distro, sh.World.User).Procs.Find(p => p.Pid == pid && p.Cmd == info.Exec);
             if (mode == "real" || (!HasProc(sh, pid) && template is null))
             {
                 if (!HasProc(sh, pid))
@@ -897,7 +897,7 @@ public static partial class ServicesLib
 
     /// <summary>
     /// Reconciles the services with the process table: if the main process has been killed
-    /// (e.g. with `sudo pkill minserver`) the service is no longer running.
+    /// (e.g. with `sudo pkill myserver`) the service is no longer running.
     /// </summary>
     public static void SyncServices(Shell sh, long? t = null)
     {
@@ -1055,14 +1055,14 @@ public static partial class ServicesLib
         sh.Services = st;
         WriteUnitFiles(sh);
         foreach (var def in ServiceDefs(sh.Distro)) LoadUnit(sh, def.Name);
-        var student = sh.GetUser("elev");
+        var student = sh.GetUser(sh.World.User);
         var now = Js.Now();
         var bootStart = now - (2 * 3600 + 14 * 60) * 1000L;
 
-        // The previous boot (yesterday) – only journal lines. rapportd.conf existed then.
+        // The previous boot (yesterday) – only journal lines. reportd.conf existed then.
         var prevStart = bootStart - 24 * 3600 * 1000L;
         var t = BootUp(sh, prevStart, "record", student);
-        var server = st.Units["minserver.service"];
+        var server = st.Units["myserver.service"];
         t += 30_000;
         StartUnit(sh, server, t, "record");
         Shutdown(sh, prevStart + 9 * 3600 * 1000L, "record");
@@ -1071,7 +1071,7 @@ public static partial class ServicesLib
         t = BootUp(sh, bootStart, "init", student);
         // The administrator started the exercise server by hand – but never enabled it.
         t += 10_000;
-        Log(sh, t, "sudo", $"{student.Name} : TTY=pts/0 ; PWD=/home/{student.Name} ; USER=root ; COMMAND=/usr/bin/systemctl start minserver", pid: 1240);
+        Log(sh, t, "sudo", $"{student.Name} : TTY=pts/0 ; PWD=/home/{student.Name} ; USER=root ; COMMAND=/usr/bin/systemctl start myserver", pid: 1240);
         StartUnit(sh, server, t, "init", true);
         // Processes killed before the model existed (older saved terminals).
         SyncServices(sh, now);
@@ -1086,7 +1086,7 @@ public static partial class ServicesLib
         Shutdown(sh, now, "real");
         // Everything that is not a service disappears – except the base that always exists.
         var servicePids = new HashSet<int?>(ServiceDefs(sh.Distro).Select(d => d.Pid));
-        var @base = ProcsLib.InitialProcs(sh.Distro).Procs.Where(p => !servicePids.Contains(p.Pid) && p.Pid != ProcsLib.RunawayPid).ToList();
+        var @base = ProcsLib.InitialProcs(sh.Distro, sh.World.User).Procs.Where(p => !servicePids.Contains(p.Pid) && p.Pid != ProcsLib.RunawayPid).ToList();
         sh.Proc.Procs = @base;
         sh.Proc.Jobs = new List<Job>();
         foreach (var rt in sh.Services.Units.Values)
@@ -1095,6 +1095,6 @@ public static partial class ServicesLib
             rt.ExitInfo = null;
             rt.Since = null;
         }
-        BootUp(sh, now + 3000, "real", sh.GetUser("elev"));
+        BootUp(sh, now + 3000, "real", sh.GetUser(sh.World.User));
     }
 }

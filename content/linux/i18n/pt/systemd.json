@@ -14,24 +14,24 @@
       "hint": "`-p err` escolhe a prioridade e `-b`, o último boot: `journalctl -p err -b`."
     },
     "journal-u": {
-      "text": "Leia o log do serviço quebrado `rapportd` com `journalctl`. Por que ele não inicia?",
-      "hint": "`-u` mostra só as linhas de um serviço: `journalctl -u rapportd`. Com `-xe` você pula para o final e recebe explicações."
+      "text": "Leia o log do serviço quebrado `reportd` com `journalctl`. Por que ele não inicia?",
+      "hint": "`-u` mostra só as linhas de um serviço: `journalctl -u reportd`. Com `-xe` você pula para o final e recebe explicações."
     },
     "fix": {
-      "text": "Corrija o problema que o log aponta e depois reinicie o `rapportd` com `systemctl` para que ele rode.",
-      "hint": "O arquivo de configuração está faltando, mas existe um exemplo: `sudo cp /etc/rapportd.conf.example /etc/rapportd.conf`. Depois reinicie com `sudo systemctl restart rapportd`."
+      "text": "Corrija o problema que o log aponta e depois reinicie o `reportd` com `systemctl` para que ele rode.",
+      "hint": "O arquivo de configuração está faltando, mas existe um exemplo: `sudo cp /etc/reportd.conf.example /etc/reportd.conf`. Depois reinicie com `sudo systemctl restart reportd`."
     },
-    "start-minserver": {
-      "text": "Inicie o serviço `minserver` (a menos que ele já esteja rodando) e depois mostre o status dele. Qual PID ele recebeu?",
-      "hint": "`sudo systemctl start minserver` e depois `systemctl status minserver`."
+    "start-myserver": {
+      "text": "Inicie o serviço `myserver` (a menos que ele já esteja rodando) e depois mostre o status dele. Qual PID ele recebeu?",
+      "hint": "`sudo systemctl start myserver` e depois `systemctl status myserver`."
     },
     "stop": {
-      "text": "Pare o `minserver` com `systemctl`. Se quiser, confira com `pgrep minserver` que o processo sumiu.",
-      "hint": "`sudo systemctl stop minserver`"
+      "text": "Pare o `myserver` com `systemctl`. Se quiser, confira com `pgrep myserver` que o processo sumiu.",
+      "hint": "`sudo systemctl stop myserver`"
     },
     "enable": {
-      "text": "Faça com que o `minserver` inicie automaticamente toda vez que o computador der boot – e inicie-o agora também, com um único comando.",
-      "hint": "O `enable` vale para o boot e o `--now` inicia na hora: `sudo systemctl enable --now minserver`."
+      "text": "Faça com que o `myserver` inicie automaticamente toda vez que o computador der boot – e inicie-o agora também, com um único comando.",
+      "hint": "O `enable` vale para o boot e o `--now` inicia na hora: `sudo systemctl enable --now myserver`."
     }
   }
 }

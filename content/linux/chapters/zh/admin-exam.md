@@ -4,19 +4,19 @@
 才能通过。
 
 ```quiz
-`minserver` 应该在每次开机时自动启动，但现在**不**能启动它。哪条命令恰好做到这一点？
-- [ ] `sudo systemctl start minserver`
-- [x] `sudo systemctl enable minserver`
-- [ ] `sudo systemctl enable --now minserver`
-- [ ] `sudo systemctl restart minserver`
+`myserver` 应该在每次开机时自动启动，但现在**不**能启动它。哪条命令恰好做到这一点？
+- [ ] `sudo systemctl start myserver`
+- [x] `sudo systemctl enable myserver`
+- [ ] `sudo systemctl enable --now myserver`
+- [ ] `sudo systemctl restart myserver`
 ---
 `enable` 在开机时生效，`start` 立即生效，`--now` 两者都做。
 ```
 
-这台计算机上的服务 `rapportd` 启动失败了。这条命令会输出什么？
+这台计算机上的服务 `reportd` 启动失败了。这条命令会输出什么？
 
 ```predict
-$ systemctl is-active rapportd
+$ systemctl is-active reportd
 failed
 ---
 `is-active` 只输出一个词——这里就是 `systemctl --failed` 列出的那个状态。只有当答案是
@@ -24,25 +24,25 @@ failed
 ```
 
 ```quiz
-你想在测试 `minserver` 时盯着它的日志，让新行一出现就显示出来。你用哪条命令？
+你想在测试 `myserver` 时盯着它的日志，让新行一出现就显示出来。你用哪条命令？
 - [ ] `journalctl -n 20`
-- [x] `journalctl -u minserver -f`
+- [x] `journalctl -u myserver -f`
 - [ ] `journalctl -p err -b`
-- [ ] `systemctl status minserver --all`
+- [ ] `systemctl status myserver --all`
 ---
 `-u` 选择一个单元，`-f` 会持续显示新行，直到你按下 Ctrl+C。
 ```
 
 ```try
-systemctl cat minserver
+systemctl cat myserver
 ---
 `ExecStart=` 是启动服务的命令，`WantedBy=` 则是 `enable` 要用到的。
 ```
 
 ```quiz
-你不加 `sudo` 运行 `systemctl stop minserver`，结果得到
+你不加 `sudo` 运行 `systemctl stop myserver`，结果得到
 *Interactive authentication required*。为什么？
-- [ ] minserver 没有在运行
+- [ ] myserver 没有在运行
 - [x] 所有改变服务的操作都需要 root
 - [ ] 你必须先运行 `daemon-reload`
 - [ ] `stop` 只对已启用的服务有效

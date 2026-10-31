@@ -19,7 +19,7 @@
     },
     "curl-localhost": {
       "text": "用 `curl` 获取你自己计算机上练习服务器的首页 `http://localhost:8080`。",
-      "hint": "在 Ubuntu 上需要先安装 curl：`sudo apt install curl`。如果你得到 *Couldn't connect to server*，说明 minserver 已停止——用 `minserver` 启动它。"
+      "hint": "在 Ubuntu 上需要先安装 curl：`sudo apt install curl`。如果你得到 *Couldn't connect to server*，说明 myserver 已停止——用 `myserver` 启动它。"
     },
     "spara": {
       "text": "把网页 `https://example.com` 保存为文件 `~/exempel.html`。",

@@ -19,7 +19,7 @@
     },
     "curl-localhost": {
       "text": "Busque a página inicial do servidor de treino no seu próprio computador, `http://localhost:8080`, com `curl`.",
-      "hint": "No Ubuntu é preciso instalar o curl: `sudo apt install curl`. Se você receber *Couldn't connect to server*, o minserver está parado – inicie-o com `minserver`."
+      "hint": "No Ubuntu é preciso instalar o curl: `sudo apt install curl`. Se você receber *Couldn't connect to server*, o myserver está parado – inicie-o com `myserver`."
     },
     "spara": {
       "text": "Salve a página web `https://example.com` como o arquivo `~/exempel.html`.",

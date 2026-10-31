@@ -5,7 +5,7 @@ namespace Codestead.Shell.Commands;
 // All state lives in the virtual file system, just like on a real system:
 //   Flatpak: /var/lib/flatpak (system) and ~/.local/share/flatpak (--user)
 //   Snap:    /snap/<name>/<revision> and /snap/bin
-//   AppImage: a single executable file, e.g. ~/Nedladdningar/Kalkylator.AppImage
+//   AppImage: a single executable file, e.g. ~/Downloads/Calculator.AppImage
 // Graphical programs cannot be shown in the simulator – they print a dimmed line instead.
 
 public static partial class UniversalCmd
@@ -687,7 +687,7 @@ EXAMPLES
         new SnapDef { Name = "gimp", Version = "3.0.6", Rev = 532, Publisher = "snapcrafters✪", Summary = "GNU Image Manipulation Program", Gui = true, Base = "core24", SizeMb = 380 },
         new SnapDef { Name = "code", Version = "1.105.1", Rev = 208, Publisher = "vscode✓", Summary = "Code editing. Redefined.", Gui = true, Classic = true, Base = "core22", SizeMb = 330 },
         new SnapDef { Name = "spotify", Version = "1.2.74.477", Rev = 88, Publisher = "spotify✓", Summary = "Music for everyone", Gui = true, Base = "core22", SizeMb = 190 },
-        new SnapDef { Name = "kalkylator", Version = "2.3.1", Rev = 12, Publisher = "kalkylab", Summary = "A simple calculator (also available as an AppImage)", Gui = true, Base = "core24", SizeMb = 48 },
+        new SnapDef { Name = "calculator", Version = "2.3.1", Rev = 12, Publisher = "calclab", Summary = "A simple calculator (also available as an AppImage)", Gui = true, Base = "core24", SizeMb = 48 },
     };
 
     private static readonly string[] UbuntuSeed = { "bare", "core22", "core24", "firefox", "gnome-42-2204", "gtk-common-themes", "snapd" };
@@ -1033,13 +1033,14 @@ EXAMPLES
 
     // ================================================================ AppImage
 
-    public const string AppimageDir = "Nedladdningar";
-    public const string AppimageName = "Kalkylator.AppImage";
-
-    /// <summary>A downloaded AppImage (as in the initial file system): a single file, not yet executable.</summary>
-    public static FsNode AppImageNode(string owner, string? group = null)
+    /// <summary>
+    /// A downloaded AppImage (as in the initial file system): a single file, not yet executable.
+    /// Its name is the world's {{calculator}} in {{downloads}}, e.g. ~/Downloads/Calculator.AppImage.
+    /// </summary>
+    public static FsNode AppImageNode(World w, string owner, string? group = null)
     {
-        var node = SimBinary("appimage-runtime", owner, Js.Oct(644), group ?? owner, "AppImage: Kalkylator 2.3.1\nDesktop: kalkylator.desktop\nType 2 AppImage (squashfs)\n");
+        var desktop = w["calculator"].Replace(".AppImage", "", StringComparison.Ordinal).ToLowerInvariant();
+        var node = SimBinary("appimage-runtime", owner, Js.Oct(644), group ?? owner, $"AppImage: {w["calcName"]} 2.3.1\nDesktop: {desktop}.desktop\nType 2 AppImage (squashfs)\n");
         node.Size = 48_312_832;
         return node;
     }

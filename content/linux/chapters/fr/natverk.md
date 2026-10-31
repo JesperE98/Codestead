@@ -289,14 +289,14 @@ appartenant à d'autres utilisateurs – avec `sudo`, vous les voyez tous :
 sudo ss -tulpn
 ```
 
-Si le serveur d'exercice `minserver` du chapitre sur les processus tourne,
+Si le serveur d'exercice `myserver` du chapitre sur les processus tourne,
 vous le voyez ici sur le port 8080. L'ancienne commande `netstat -tulpn` (de
 *net-tools*) fait la même chose.
 
 ## Récupérer sur le web : curl et wget
 
 `curl` récupère ce qui se trouve à une adresse (une **URL**) et l'affiche dans
-le terminal. Essayez-le avec minserver sur votre propre ordinateur :
+le terminal. Essayez-le avec myserver sur votre propre ordinateur :
 
 Sur Ubuntu, `curl` n'est pas préinstallé (mais `wget` l'est) :
 
@@ -309,11 +309,11 @@ curl http://localhost:8080
 ```
 
 Vous obtenez `Couldn't connect to server` ? Alors rien n'écoute sur ce port –
-vous avez peut-être arrêté minserver dans le chapitre sur les processus.
+vous avez peut-être arrêté myserver dans le chapitre sur les processus.
 Relancez-le :
 
 ```sh
-minserver
+myserver
 ```
 
 Avec `-I`, curl n'affiche que les **en-têtes** de la réponse, dont la première

@@ -19,7 +19,7 @@
     },
     "curl-localhost": {
       "text": "अपने ही computer पर चल रहे practice server का start page, `http://localhost:8080`, `curl` से लाइए।",
-      "hint": "Ubuntu पर curl इंस्टॉल करना पड़ता है: `sudo apt install curl`। अगर आपको *Couldn't connect to server* मिले, तो minserver रुका हुआ है – उसे `minserver` से शुरू कीजिए।"
+      "hint": "Ubuntu पर curl इंस्टॉल करना पड़ता है: `sudo apt install curl`। अगर आपको *Couldn't connect to server* मिले, तो myserver रुका हुआ है – उसे `myserver` से शुरू कीजिए।"
     },
     "spara": {
       "text": "Web page `https://example.com` को file `~/exempel.html` के रूप में save कीजिए।",

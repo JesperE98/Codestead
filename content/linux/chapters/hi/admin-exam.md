@@ -4,20 +4,20 @@
 हैं, और पास होने के लिए आपको 80 % सही चाहिए।
 
 ```quiz
-`minserver` को हर बार कंप्यूटर बूट होने पर अपने-आप शुरू होना चाहिए, लेकिन उसे अभी
+`myserver` को हर बार कंप्यूटर बूट होने पर अपने-आप शुरू होना चाहिए, लेकिन उसे अभी
 **नहीं** शुरू होना चाहिए। कौन-सा कमांड ठीक यही करता है?
-- [ ] `sudo systemctl start minserver`
-- [x] `sudo systemctl enable minserver`
-- [ ] `sudo systemctl enable --now minserver`
-- [ ] `sudo systemctl restart minserver`
+- [ ] `sudo systemctl start myserver`
+- [x] `sudo systemctl enable myserver`
+- [ ] `sudo systemctl enable --now myserver`
+- [ ] `sudo systemctl restart myserver`
 ---
 `enable` बूट पर लागू होता है, `start` अभी लागू होता है, और `--now` दोनों करता है।
 ```
 
-इस कंप्यूटर पर सेवा `rapportd` शुरू होने में विफल रही है। यह कमांड क्या छापता है?
+इस कंप्यूटर पर सेवा `reportd` शुरू होने में विफल रही है। यह कमांड क्या छापता है?
 
 ```predict
-$ systemctl is-active rapportd
+$ systemctl is-active reportd
 failed
 ---
 `is-active` सिर्फ़ एक शब्द छापता है – यहाँ वही स्थिति जो `systemctl --failed` दिखाता
@@ -25,28 +25,28 @@ failed
 ```
 
 ```quiz
-आप `minserver` को परखते समय उसका लॉग देखना चाहते हैं, जिसमें नई पंक्तियाँ आते ही
+आप `myserver` को परखते समय उसका लॉग देखना चाहते हैं, जिसमें नई पंक्तियाँ आते ही
 दिखें। आप कौन-सा कमांड इस्तेमाल करते हैं?
 - [ ] `journalctl -n 20`
-- [x] `journalctl -u minserver -f`
+- [x] `journalctl -u myserver -f`
 - [ ] `journalctl -p err -b`
-- [ ] `systemctl status minserver --all`
+- [ ] `systemctl status myserver --all`
 ---
 `-u` एक unit चुनता है और `-f` तब तक नई पंक्तियाँ दिखाता रहता है जब तक आप Ctrl+C न
 दबाएँ।
 ```
 
 ```try
-systemctl cat minserver
+systemctl cat myserver
 ---
 `ExecStart=` वह कमांड है जो सेवा शुरू करता है, और `WantedBy=` वह है जिसे `enable`
 इस्तेमाल करता है।
 ```
 
 ```quiz
-आप `sudo` के बिना `systemctl stop minserver` चलाते हैं और
+आप `sudo` के बिना `systemctl stop myserver` चलाते हैं और
 *Interactive authentication required* मिलता है। क्यों?
-- [ ] minserver चल नहीं रहा है
+- [ ] myserver चल नहीं रहा है
 - [x] सेवा को बदलने वाली हर चीज़ के लिए root चाहिए
 - [ ] आपको पहले `daemon-reload` चलाना होगा
 - [ ] `stop` सिर्फ़ enable की गई सेवाओं के लिए काम करता है

@@ -69,7 +69,7 @@ public static partial class ProcsLib
         return proc;
     }
 
-    public static ProcState InitialProcs(Distro distro)
+    public static ProcState InitialProcs(Distro distro, string student)
     {
         var common = new List<Proc>
         {
@@ -104,10 +104,10 @@ public static partial class ProcsLib
         procs.AddRange(common);
         procs.AddRange(family);
         procs.Add(P(733, 1, "root", "/usr/sbin/sshd -D"));
-        procs.Add(P(ServerPid, 1, "root", "/usr/local/bin/minserver --port 8080", p => { p.Cpu = 1.2; p.Mem = 1.8; p.Time = "0:41"; }));
-        procs.Add(P(1201, 1, "elev", "/usr/lib/systemd/systemd --user"));
-        procs.Add(P(ShellPid, 1201, "elev", "-bash", p => { p.Tty = "pts/0"; p.Stat = "Ss"; p.Start = "10:02"; }));
-        procs.Add(P(RunawayPid, 1201, "elev", "yes", p => { p.Cpu = 99.7; p.Mem = 0.0; p.Stat = "R"; p.Start = "10:05"; p.Time = "42:13"; }));
+        procs.Add(P(ServerPid, 1, "root", "/usr/local/bin/myserver --port 8080", p => { p.Cpu = 1.2; p.Mem = 1.8; p.Time = "0:41"; }));
+        procs.Add(P(1201, 1, student, "/usr/lib/systemd/systemd --user"));
+        procs.Add(P(ShellPid, 1201, student, "-bash", p => { p.Tty = "pts/0"; p.Stat = "Ss"; p.Start = "10:02"; }));
+        procs.Add(P(RunawayPid, 1201, student, "yes", p => { p.Cpu = 99.7; p.Mem = 0.0; p.Stat = "R"; p.Start = "10:05"; p.Time = "42:13"; }));
         return new ProcState { Procs = procs, Jobs = new List<Job>(), NextPid = 4200 };
     }
 

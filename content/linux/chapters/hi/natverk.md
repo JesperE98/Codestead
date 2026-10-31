@@ -276,14 +276,14 @@ computer के सभी addresses पर port 22 पर listen कर रह�
 sudo ss -tulpn
 ```
 
-अगर processes वाले chapter का practice server `minserver` चल रहा है, तो वह आपको
+अगर processes वाले chapter का practice server `myserver` चल रहा है, तो वह आपको
 यहाँ port 8080 पर दिखेगा। पुराना command `netstat -tulpn` (*net-tools* से) भी यही
 काम करता है।
 
 ## Web से लाना: curl और wget
 
 `curl` किसी address (एक **URL**) पर जो कुछ है उसे लाकर terminal में print करता
-है। इसे अपने ही computer पर minserver के साथ आज़माइए:
+है। इसे अपने ही computer पर myserver के साथ आज़माइए:
 
 Ubuntu पर `curl` पहले से इंस्टॉल नहीं होता (लेकिन `wget` होता है):
 
@@ -296,11 +296,11 @@ curl http://localhost:8080
 ```
 
 क्या आपको `Couldn't connect to server` मिला? तो उस port पर कुछ भी listen नहीं कर
-रहा – शायद आपने processes वाले chapter में minserver रोक दिया था। उसे फिर से
+रहा – शायद आपने processes वाले chapter में myserver रोक दिया था। उसे फिर से
 start कीजिए:
 
 ```sh
-minserver
+myserver
 ```
 
 `-I` के साथ curl सिर्फ़ response के **headers** दिखाता है, जिनकी पहली line एक

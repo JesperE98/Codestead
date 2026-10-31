@@ -26,7 +26,7 @@
       "text": "Termina el trabajo en segundo plano con `kill` y el número de trabajo (`%1`) o su PID."
     },
     "server": {
-      "text": "El servidor `minserver` se está ejecutando como root. Detenlo con `pkill` o `kill` y los privilegios adecuados.",
+      "text": "El servidor `myserver` se está ejecutando como root. Detenlo con `pkill` o `kill` y los privilegios adecuados.",
       "hint": "Como usuario normal obtendrás \"Operation not permitted\". Pon `sudo` delante."
     }
   }

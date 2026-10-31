@@ -14,24 +14,24 @@
       "hint": "`-p err` wählt die Priorität und `-b` den letzten Bootvorgang: `journalctl -p err -b`."
     },
     "journal-u": {
-      "text": "Lies mit `journalctl` das Log des kaputten Dienstes `rapportd`. Warum startet er nicht?",
-      "hint": "`-u` zeigt nur die Zeilen eines Dienstes: `journalctl -u rapportd`. Mit `-xe` springst du ans Ende und bekommst Erklärungen."
+      "text": "Lies mit `journalctl` das Log des kaputten Dienstes `reportd`. Warum startet er nicht?",
+      "hint": "`-u` zeigt nur die Zeilen eines Dienstes: `journalctl -u reportd`. Mit `-xe` springst du ans Ende und bekommst Erklärungen."
     },
     "fix": {
-      "text": "Behebe das Problem, von dem das Log erzählt, und starte `rapportd` dann mit `systemctl` neu, sodass er läuft.",
-      "hint": "Die Konfigurationsdatei fehlt, aber es gibt ein Beispiel: `sudo cp /etc/rapportd.conf.example /etc/rapportd.conf`. Starte dann mit `sudo systemctl restart rapportd` neu."
+      "text": "Behebe das Problem, von dem das Log erzählt, und starte `reportd` dann mit `systemctl` neu, sodass er läuft.",
+      "hint": "Die Konfigurationsdatei fehlt, aber es gibt ein Beispiel: `sudo cp /etc/reportd.conf.example /etc/reportd.conf`. Starte dann mit `sudo systemctl restart reportd` neu."
     },
-    "start-minserver": {
-      "text": "Starte den Dienst `minserver` (falls er nicht schon läuft) und zeige dann seinen Status an. Welche PID hat er bekommen?",
-      "hint": "`sudo systemctl start minserver` und dann `systemctl status minserver`."
+    "start-myserver": {
+      "text": "Starte den Dienst `myserver` (falls er nicht schon läuft) und zeige dann seinen Status an. Welche PID hat er bekommen?",
+      "hint": "`sudo systemctl start myserver` und dann `systemctl status myserver`."
     },
     "stop": {
-      "text": "Stoppe `minserver` mit `systemctl`. Prüfe ruhig mit `pgrep minserver`, dass der Prozess weg ist.",
-      "hint": "`sudo systemctl stop minserver`"
+      "text": "Stoppe `myserver` mit `systemctl`. Prüfe ruhig mit `pgrep myserver`, dass der Prozess weg ist.",
+      "hint": "`sudo systemctl stop myserver`"
     },
     "enable": {
-      "text": "Sorge dafür, dass `minserver` bei jedem Booten des Rechners automatisch startet – und starte ihn auch gleich jetzt, mit einem einzigen Befehl.",
-      "hint": "`enable` gilt beim Booten und `--now` startet ihn sofort: `sudo systemctl enable --now minserver`."
+      "text": "Sorge dafür, dass `myserver` bei jedem Booten des Rechners automatisch startet – und starte ihn auch gleich jetzt, mit einem einzigen Befehl.",
+      "hint": "`enable` gilt beim Booten und `--now` startet ihn sofort: `sudo systemctl enable --now myserver`."
     }
   }
 }

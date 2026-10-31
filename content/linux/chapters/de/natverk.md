@@ -286,14 +286,14 @@ für IPv6. Die Spalte *Process* ist bei Prozessen anderer Benutzer leer – mit
 sudo ss -tulpn
 ```
 
-Wenn der Übungsserver `minserver` aus dem Kapitel über Prozesse läuft, siehst du
+Wenn der Übungsserver `myserver` aus dem Kapitel über Prozesse läuft, siehst du
 ihn hier auf Port 8080. Der ältere Befehl `netstat -tulpn` (aus *net-tools*)
 macht dasselbe.
 
 ## Aus dem Web holen: curl und wget
 
 `curl` holt, was unter einer Adresse (einer **URL**) liegt, und gibt es im
-Terminal aus. Probiere es mit minserver auf deinem eigenen Rechner:
+Terminal aus. Probiere es mit myserver auf deinem eigenen Rechner:
 
 Unter Ubuntu ist `curl` nicht vorinstalliert (`wget` aber schon):
 
@@ -306,10 +306,10 @@ curl http://localhost:8080
 ```
 
 Bekommst du `Couldn't connect to server`? Dann lauscht nichts auf dem Port –
-vielleicht hast du minserver im Kapitel über Prozesse beendet. Starte ihn neu:
+vielleicht hast du myserver im Kapitel über Prozesse beendet. Starte ihn neu:
 
 ```sh
-minserver
+myserver
 ```
 
 Mit `-I` zeigt curl nur die **Header** der Antwort, deren erste Zeile ein

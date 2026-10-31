@@ -19,7 +19,7 @@
     },
     "curl-localhost": {
       "text": "`curl` で、自分のコンピューター上の練習用サーバーのトップページ `http://localhost:8080` を取ってきてください。",
-      "hint": "Ubuntu では curl をインストールする必要があります: `sudo apt install curl`。*Couldn't connect to server* と表示されたら minserver が止まっているので、`minserver` で起動してください。"
+      "hint": "Ubuntu では curl をインストールする必要があります: `sudo apt install curl`。*Couldn't connect to server* と表示されたら myserver が止まっているので、`myserver` で起動してください。"
     },
     "spara": {
       "text": "Web ページ `https://example.com` を `~/exempel.html` というファイルに保存してください。",

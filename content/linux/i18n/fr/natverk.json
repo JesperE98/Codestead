@@ -19,7 +19,7 @@
     },
     "curl-localhost": {
       "text": "Récupérez la page d'accueil du serveur d'exercice sur votre propre ordinateur, `http://localhost:8080`, avec `curl`.",
-      "hint": "Sur Ubuntu, il faut installer curl : `sudo apt install curl`. Si vous obtenez *Couldn't connect to server*, minserver est arrêté – relancez-le avec `minserver`."
+      "hint": "Sur Ubuntu, il faut installer curl : `sudo apt install curl`. Si vous obtenez *Couldn't connect to server*, myserver est arrêté – relancez-le avec `myserver`."
     },
     "spara": {
       "text": "Enregistrez la page web `https://example.com` dans le fichier `~/exempel.html`.",

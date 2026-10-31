@@ -20,7 +20,7 @@ public class GitTests
 
     private static S MakeShell(string distro = "arch", bool identity = true, bool git = true)
     {
-        var sh = Shell.Create(distro);
+        var sh = Shell.Create(distro, "sv");
         sh.Lang = "en";
         if (git) PackagesLib.InstallPackage(sh, PackagesLib.Packages.Find(p => p.Id == "git")!);
         var s = new S { Sh = sh };
@@ -504,7 +504,7 @@ public class GitTests
     [Fact(DisplayName = "gamla sparade terminaler får övningskatalogen")]
     public void OldSnapshotsGetPracticeDirectory()
     {
-        var sh = Shell.Create("fedora");
+        var sh = Shell.Create("fedora", "sv");
         var snap = Js.Clone(sh.Snapshot());
         snap.Fs.Children!["home"].Children!["elev"].Children!.Remove("projekt-webb");
         foreach (var k in snap.Flags.Keys.ToList())

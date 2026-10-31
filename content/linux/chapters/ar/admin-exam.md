@@ -4,20 +4,20 @@
 إلى 80 % من الإجابات الصحيحة للنجاح.
 
 ```quiz
-يجب أن يبدأ `minserver` تلقائيًا في كل مرة يُقلع فيها الحاسوب، لكن **لا** يجب
+يجب أن يبدأ `myserver` تلقائيًا في كل مرة يُقلع فيها الحاسوب، لكن **لا** يجب
 تشغيله الآن. أيّ أمر يفعل ذلك بالضبط؟
-- [ ] `sudo systemctl start minserver`
-- [x] `sudo systemctl enable minserver`
-- [ ] `sudo systemctl enable --now minserver`
-- [ ] `sudo systemctl restart minserver`
+- [ ] `sudo systemctl start myserver`
+- [x] `sudo systemctl enable myserver`
+- [ ] `sudo systemctl enable --now myserver`
+- [ ] `sudo systemctl restart myserver`
 ---
 يسري `enable` عند الإقلاع، ويسري `start` الآن، ويفعل `--now` الأمرين معًا.
 ```
 
-فشلت الخدمة `rapportd` في البدء على هذا الحاسوب. ماذا يطبع هذا الأمر؟
+فشلت الخدمة `reportd` في البدء على هذا الحاسوب. ماذا يطبع هذا الأمر؟
 
 ```predict
-$ systemctl is-active rapportd
+$ systemctl is-active reportd
 failed
 ---
 لا يطبع `is-active` سوى كلمة واحدة – وهي هنا الحالة نفسها التي يسردها
@@ -25,26 +25,26 @@ failed
 ```
 
 ```quiz
-تريد مراقبة سجل `minserver` وأنت تختبره، بحيث تظهر الأسطر الجديدة فور وصولها.
+تريد مراقبة سجل `myserver` وأنت تختبره، بحيث تظهر الأسطر الجديدة فور وصولها.
 أيّ أمر تستخدم؟
 - [ ] `journalctl -n 20`
-- [x] `journalctl -u minserver -f`
+- [x] `journalctl -u myserver -f`
 - [ ] `journalctl -p err -b`
-- [ ] `systemctl status minserver --all`
+- [ ] `systemctl status myserver --all`
 ---
 يختار `-u` وحدة واحدة، ويواصل `-f` عرض الأسطر الجديدة حتى تضغط Ctrl+C.
 ```
 
 ```try
-systemctl cat minserver
+systemctl cat myserver
 ---
 `ExecStart=` هو الأمر الذي يبدأ الخدمة، و`WantedBy=` هو ما يستخدمه `enable`.
 ```
 
 ```quiz
-تشغّل `systemctl stop minserver` دون `sudo` فتحصل على
+تشغّل `systemctl stop myserver` دون `sudo` فتحصل على
 *Interactive authentication required*. لماذا؟
-- [ ] لأن minserver لا يعمل
+- [ ] لأن myserver لا يعمل
 - [x] لأن كل ما يغيّر خدمة يتطلب صلاحيات root
 - [ ] لأن عليك أن تشغّل `daemon-reload` أولًا
 - [ ] لأن `stop` لا يعمل إلا مع الخدمات المفعّلة

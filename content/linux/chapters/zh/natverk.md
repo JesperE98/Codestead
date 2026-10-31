@@ -214,11 +214,11 @@ ss -tulpn
 sudo ss -tulpn
 ```
 
-如果进程那一章中的练习服务器 `minserver` 正在运行，你会在这里看到它监听在 8080 端口。旧命令 `netstat -tulpn`（来自 *net-tools*）的作用相同。
+如果进程那一章中的练习服务器 `myserver` 正在运行，你会在这里看到它监听在 8080 端口。旧命令 `netstat -tulpn`（来自 *net-tools*）的作用相同。
 
 ## 从网上获取内容：curl 和 wget
 
-`curl` 会获取某个地址（**URL**）上的内容，并把它打印到终端上。用你自己计算机上的 minserver 试一试：
+`curl` 会获取某个地址（**URL**）上的内容，并把它打印到终端上。用你自己计算机上的 myserver 试一试：
 
 在 Ubuntu 上，`curl` 没有预装（但 `wget` 有）：
 
@@ -230,10 +230,10 @@ sudo apt install curl
 curl http://localhost:8080
 ```
 
-你得到的是 `Couldn't connect to server` 吗？那说明没有程序在这个端口上监听——也许你在进程那一章里把 minserver 停掉了。重新启动它：
+你得到的是 `Couldn't connect to server` 吗？那说明没有程序在这个端口上监听——也许你在进程那一章里把 myserver 停掉了。重新启动它：
 
 ```sh
-minserver
+myserver
 ```
 
 加上 `-I`，curl 只显示响应的**头部**（headers），其中第一行是**状态码**：

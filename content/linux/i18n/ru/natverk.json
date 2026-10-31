@@ -19,7 +19,7 @@
     },
     "curl-localhost": {
       "text": "Загрузите с помощью `curl` стартовую страницу учебного сервера на своём компьютере, `http://localhost:8080`.",
-      "hint": "В Ubuntu curl нужно установить: `sudo apt install curl`. Если вы получили *Couldn't connect to server*, minserver остановлен – запустите его командой `minserver`."
+      "hint": "В Ubuntu curl нужно установить: `sudo apt install curl`. Если вы получили *Couldn't connect to server*, myserver остановлен – запустите его командой `myserver`."
     },
     "spara": {
       "text": "Сохраните веб-страницу `https://example.com` в файл `~/exempel.html`.",

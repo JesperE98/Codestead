@@ -189,8 +189,10 @@ public sealed class MainWindow : Window
 
     private ShellType LoadShell(string distroId)
     {
-        var sh = ShellType.RestoreJson(storage.LoadText($"shell.{distroId}")) ?? ShellType.Create(distroId);
+        var sh = ShellType.RestoreJson(storage.LoadText($"shell.{distroId}")) ?? ShellType.Create(distroId, Lang);
         sh.Lang = Lang;
+        // A terminal saved in another language: its exercise files and user follow the current language.
+        WorldMigration.Translate(sh, Lang);
         return sh;
     }
 
@@ -451,7 +453,7 @@ public sealed class MainWindow : Window
         var distroId = DistroOf(chapter).Id;
         ShellType Sandbox()
         {
-            var sh = ShellType.Create(distroId);
+            var sh = ShellType.Create(distroId, Lang);
             sh.Lang = Lang;
             return sh;
         }
@@ -797,7 +799,7 @@ public sealed class MainWindow : Window
         }
 
         var hint = I18nLib.TaskHint(chapter, task, Lang, Distro);
-        var solution = task.Solution.Resolve(Distro);
+        var solution = task.SolutionFor(Distro, shell.World);
         int attempts = state.Attempts.TryGetValue(key, out var a) ? a : 0;
         bool SolutionUnlocked() => done || attempts >= AttemptsBeforeSolution || state.HintSeen.Contains(key);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
@@ -954,6 +956,9 @@ public sealed class MainWindow : Window
         if (code == Lang || !LanguagesLib.IsLang(code)) return;
         state.Lang = code;
         SaveState();
+        // The exercise files, folders and the user get names and texts in the new language (see World.cs).
+        WorldMigration.Translate(shell, code);
+        SaveShell();
         ApplyLanguage();
     }
 
@@ -1006,7 +1011,7 @@ public sealed class MainWindow : Window
         overlay.Confirm(T("reset.terminal.title"), T("reset.terminal.confirm", ("distro", Distro.Name)), T("reset.terminal.button"), T("dialog.cancel"), true, () =>
         {
             storage.Remove($"shell.{Distro.Id}");
-            shell = ShellType.Create(Distro.Id);
+            shell = ShellType.Create(Distro.Id, Lang);
             shell.Lang = Lang;
             terminal.Shell = shell;
             RenderAll();
@@ -1167,7 +1172,7 @@ public sealed class MainWindow : Window
             ApplyLanguage();
             var task = Chapter.Tasks[0];
             var before = state.Progress.ContainsKey(ChaptersLib.TaskKey(Chapter.Id, task.Id, task.PerFamily, Distro.Family));
-            foreach (var cmd in task.Solution.Resolve(Distro))
+            foreach (var cmd in task.SolutionFor(Distro, shell.World))
             {
                 terminal.Inject(cmd);
                 OnResult(shell.Execute(cmd));

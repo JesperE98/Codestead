@@ -1172,7 +1172,7 @@ public static partial class UsersCmd
                -d 0        tvinga fram ett lösenordsbyte vid nästa inloggning
 
         EXEMPEL
-               chage -l elev
+               chage -l $USER
                sudo chage -M 90 kim
                sudo chage -E 2026-12-31 vikarie
         """,
@@ -1193,7 +1193,7 @@ public static partial class UsersCmd
                -d 0        force a password change at the next login
 
         EXAMPLES
-               chage -l elev
+               chage -l $USER
                sudo chage -M 90 kim
                sudo chage -E 2026-12-31 substitute
         """,
@@ -1772,7 +1772,7 @@ public static partial class UsersCmd
     }
 
     /// <summary>The user logged in at the terminal – not the one you switched to with su.</summary>
-    private static string LoginName(Shell sh) => sh.UserStack.Count > 0 ? sh.UserStack[0] : "elev";
+    private static string LoginName(Shell sh) => sh.UserStack.Count > 0 ? sh.UserStack[0] : sh.World.User;
 
     private static readonly CommandDef Who = new()
     {

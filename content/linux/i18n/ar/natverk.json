@@ -19,7 +19,7 @@
     },
     "curl-localhost": {
       "text": "اجلب الصفحة الرئيسية لخادم التدريب على حاسوبك، `http://localhost:8080`، باستخدام `curl`.",
-      "hint": "على Ubuntu يجب تثبيت curl: `sudo apt install curl`. إذا حصلت على *Couldn't connect to server* فإن minserver متوقف – شغّله باستخدام `minserver`."
+      "hint": "على Ubuntu يجب تثبيت curl: `sudo apt install curl`. إذا حصلت على *Couldn't connect to server* فإن myserver متوقف – شغّله باستخدام `myserver`."
     },
     "spara": {
       "text": "احفظ صفحة الويب `https://example.com` في الملف `~/exempel.html`.",

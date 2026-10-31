@@ -283,14 +283,14 @@ usuarios; con `sudo` los ves todos:
 sudo ss -tulpn
 ```
 
-Si el servidor de prácticas `minserver` del capítulo de procesos está en
+Si el servidor de prácticas `myserver` del capítulo de procesos está en
 marcha, lo verás aquí en el puerto 8080. El comando antiguo `netstat -tulpn`
 (de *net-tools*) hace lo mismo.
 
 ## Descargar de la web: curl y wget
 
 `curl` descarga lo que haya en una dirección (una **URL**) y lo muestra en la
-terminal. Pruébalo con minserver en tu propio ordenador:
+terminal. Pruébalo con myserver en tu propio ordenador:
 
 En Ubuntu `curl` no viene preinstalado (pero `wget` sí):
 
@@ -303,11 +303,11 @@ curl http://localhost:8080
 ```
 
 ¿Te sale `Couldn't connect to server`? Entonces no hay nada escuchando en ese
-puerto; quizá detuviste minserver en el capítulo de procesos. Vuelve a
+puerto; quizá detuviste myserver en el capítulo de procesos. Vuelve a
 iniciarlo:
 
 ```sh
-minserver
+myserver
 ```
 
 Con `-I`, curl muestra solo las **cabeceras** (*headers*) de la respuesta,

@@ -26,7 +26,7 @@
       "text": "Terminez le job en arrière-plan avec `kill` et le numéro du job (`%1`) ou son PID."
     },
     "server": {
-      "text": "Le serveur `minserver` tourne en tant que root. Arrêtez-le – avec `pkill` ou `kill` et les bons privilèges.",
+      "text": "Le serveur `myserver` tourne en tant que root. Arrêtez-le – avec `pkill` ou `kill` et les bons privilèges.",
       "hint": "En tant qu'utilisateur ordinaire, vous obtiendrez « Operation not permitted ». Mettez `sudo` devant."
     }
   }

@@ -384,8 +384,8 @@ public static partial class SystemdCmd
 
             EXEMPEL
                    systemctl status sshd
-                   sudo systemctl restart minserver
-                   sudo systemctl enable --now minserver
+                   sudo systemctl restart myserver
+                   sudo systemctl enable --now myserver
                    systemctl --failed
             """,
         ManEn = """
@@ -427,8 +427,8 @@ public static partial class SystemdCmd
 
             EXAMPLES
                    systemctl status sshd
-                   sudo systemctl restart minserver
-                   sudo systemctl enable --now minserver
+                   sudo systemctl restart myserver
+                   sudo systemctl enable --now myserver
                    systemctl --failed
             """,
         Run = RunSystemctl,
@@ -750,10 +750,10 @@ public static partial class SystemdCmd
         ServicesLib.Reboot(sh);
         // Every session disappears at reboot: the student logs in again in the home directory.
         sh.UserStack.Clear();
-        sh.UserStack.Add("elev");
-        var home = "/home/elev";
-        sh.Env["USER"] = "elev";
-        sh.Env["LOGNAME"] = "elev";
+        sh.UserStack.Add(sh.World.User);
+        var home = sh.World.Home;
+        sh.Env["USER"] = sh.World.User;
+        sh.Env["LOGNAME"] = sh.World.User;
         sh.Env["HOME"] = home;
         sh.Env["PWD"] = home;
         sh.Cwd = home;
@@ -947,8 +947,8 @@ public static partial class SystemdCmd
                    --disk-usage     visa hur mycket plats journalen tar
 
             EXEMPEL
-                   journalctl -u minserver
-                   journalctl -xeu rapportd
+                   journalctl -u myserver
+                   journalctl -xeu reportd
                    journalctl -p err -b
                    journalctl --since today -u ssh
                    journalctl -f
@@ -987,8 +987,8 @@ public static partial class SystemdCmd
                    --disk-usage     show how much space the journal uses
 
             EXAMPLES
-                   journalctl -u minserver
-                   journalctl -xeu rapportd
+                   journalctl -u myserver
+                   journalctl -xeu reportd
                    journalctl -p err -b
                    journalctl --since today -u ssh
                    journalctl -f

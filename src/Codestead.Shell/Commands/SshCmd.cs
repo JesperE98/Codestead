@@ -4,7 +4,7 @@ namespace Codestead.Shell.Commands;
 
 // Port of src/shell/commands/ssh.ts – ssh, ssh-keygen and ssh-copy-id. The server server.lan
 // (192.168.1.10) is a small shell of its own (Debian) that lives in memory as long as the app is
-// open. Commands sent with "ssh elev@server.lan COMMAND" really run there.
+// open. Commands sent with "ssh student@server.lan COMMAND" really run there (the student's own user name).
 
 public static partial class SshCmd
 {
@@ -24,9 +24,11 @@ public static partial class SshCmd
     /// <summary>The server that belongs to the student's computer (created the first time it is needed).</summary>
     public static Shell ServerFor(Shell sh)
     {
+        // The server speaks the student's language too: same user name, files in the same language.
+        if (Servers.TryGetValue(sh, out var cached) && cached.World != sh.World) Servers.Remove(sh);
         if (!Servers.TryGetValue(sh, out var server))
         {
-            server = Shell.Create("debian");
+            server = Shell.Create("debian", sh.World.Lang);
             var distro = Js.Clone(server.Distro);
             distro.Hostname = NetworkLib.ServerName;
             server.Distro = distro;
@@ -34,7 +36,7 @@ public static partial class SshCmd
             var root = server.RootUser();
             server.Vfs.WriteFile("/etc/hostname", $"{NetworkLib.ServerName}\n", root);
             server.Vfs.WriteFile("/etc/hosts", $"127.0.0.1\tlocalhost\n127.0.1.1\t{NetworkLib.ServerName}.lan {NetworkLib.ServerName}\n::1\t\tlocalhost ip6-localhost ip6-loopback\n", root);
-            server.Vfs.WriteFile("/home/elev/välkommen.txt", "Välkommen till servern! / Welcome to the server!\n", server.CurrentUser());
+            server.Vfs.WriteFile($"{server.World.Home}/{server.World["welcomeFile"]}", server.World.File("welcome"), server.CurrentUser());
             server.Proc.Procs = server.Proc.Procs.Where(p => p.Pid != ProcsLib.RunawayPid).ToList();
             Servers.AddOrUpdate(sh, server);
         }
@@ -47,9 +49,10 @@ public static partial class SshCmd
 
     private static void AddAuthorizedKey(Shell server, string pub)
     {
-        var user = server.GetUser("elev");
-        const string dir = "/home/elev/.ssh";
-        if (server.Vfs.TryLookup(dir, user) is null) server.Vfs.Insert(dir, VfsLib.MakeDir("elev", Js.Oct(700), Js.Obj<FsNode>(), "elev"), user);
+        var name = server.World.User;
+        var user = server.GetUser(name);
+        var dir = $"{server.World.Home}/.ssh";
+        if (server.Vfs.TryLookup(dir, user) is null) server.Vfs.Insert(dir, VfsLib.MakeDir(name, Js.Oct(700), Js.Obj<FsNode>(), name), user);
         var file = $"{dir}/authorized_keys";
         var existing = server.Vfs.TryLookup(file, user)?.Content ?? "";
         if (!existing.Contains(pub.Trim(), StringComparison.Ordinal)) server.Vfs.WriteFile(file, existing + pub.Trim() + "\n", user);
@@ -231,7 +234,7 @@ public static partial class SshCmd
         {
             io.Err($"{d.User}@{d.Host}'s password: {Dim(sh, "common.skipsPassword")}");
         }
-        if (d.User != "elev")
+        if (d.User != sh.World.User)
         {
             io.Err($"{d.User}@{d.Host}: Permission denied (publickey,password).\n");
             return false;
@@ -267,18 +270,18 @@ public static partial class SshCmd
                    Första gången frågar ssh om du litar på datorns värdnyckel; svaret
                    sparas i ~/.ssh/known_hosts.
 
-                   I simulatorn finns servern server.lan (192.168.1.10) med
-                   användaren elev. Interaktiva inloggningar stöds inte – skriv
-                   kommandot efter värden.
+                   I simulatorn finns servern server.lan (192.168.1.10) med samma
+                   användare som på din egen dator ($USER). Interaktiva inloggningar
+                   stöds inte – skriv kommandot efter värden.
 
             FLAGGOR
                    -p PORT   anslut till en annan port än 22
                    -l NAMN   användarnamn (samma som NAMN@VÄRD)
 
             EXEMPEL
-                   ssh elev@server.lan hostname
-                   ssh elev@server.lan 'ls -l; cat välkommen.txt'
-                   ssh elev@192.168.1.10 uptime
+                   ssh $USER@server.lan hostname
+                   ssh $USER@server.lan 'ls -l; cat *.txt'
+                   ssh $USER@192.168.1.10 uptime
             """,
         ManEn = """
             NAME
@@ -293,18 +296,18 @@ public static partial class SshCmd
                    here. The first time, ssh asks whether you trust the computer's host
                    key; the answer is saved in ~/.ssh/known_hosts.
 
-                   The simulator has the server server.lan (192.168.1.10) with the user
-                   elev. Interactive logins are not supported – put the command after
-                   the host.
+                   The simulator has the server server.lan (192.168.1.10) with the same
+                   user as on your own computer ($USER). Interactive logins are not
+                   supported – put the command after the host.
 
             OPTIONS
                    -p PORT   connect to a port other than 22
                    -l NAME   user name (same as NAME@HOST)
 
             EXAMPLES
-                   ssh elev@server.lan hostname
-                   ssh elev@server.lan 'ls -l; cat välkommen.txt'
-                   ssh elev@192.168.1.10 uptime
+                   ssh $USER@server.lan hostname
+                   ssh $USER@server.lan 'ls -l; cat *.txt'
+                   ssh $USER@192.168.1.10 uptime
             """,
         Run = ctx =>
         {
@@ -570,7 +573,7 @@ public static partial class SshCmd
 
             EXEMPEL
                    ssh-keygen
-                   ssh-copy-id elev@server.lan
+                   ssh-copy-id $USER@server.lan
             """,
         ManEn = """
             NAME
@@ -585,7 +588,7 @@ public static partial class SshCmd
 
             EXAMPLES
                    ssh-keygen
-                   ssh-copy-id elev@server.lan
+                   ssh-copy-id $USER@server.lan
             """,
         Run = ctx =>
         {
@@ -610,8 +613,8 @@ public static partial class SshCmd
             {
                 io.Err("/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed\n");
                 var server = ServerFor(sh);
-                var existing = server.Vfs.TryLookup("/home/elev/.ssh/authorized_keys", server.RootUser())?.Content ?? "";
-                if (d.User == "elev" && existing.Contains(pub.Trim(), StringComparison.Ordinal))
+                var existing = server.Vfs.TryLookup($"{server.World.Home}/.ssh/authorized_keys", server.RootUser())?.Content ?? "";
+                if (d.User == sh.World.User && existing.Contains(pub.Trim(), StringComparison.Ordinal))
                 {
                     io.Err("\n/usr/bin/ssh-copy-id: WARNING: All keys were skipped because they already exist on the remote system.\n\t\t(if you think this is a mistake, you may want to use -f option)\n\n");
                     return 0;

@@ -19,7 +19,7 @@
     },
     "curl-localhost": {
       "text": "Hole mit `curl` die Startseite des Übungsservers auf deinem eigenen Rechner, `http://localhost:8080`.",
-      "hint": "Unter Ubuntu muss curl erst installiert werden: `sudo apt install curl`. Bekommst du *Couldn't connect to server*, ist minserver beendet – starte ihn mit `minserver`."
+      "hint": "Unter Ubuntu muss curl erst installiert werden: `sudo apt install curl`. Bekommst du *Couldn't connect to server*, ist myserver beendet – starte ihn mit `myserver`."
     },
     "spara": {
       "text": "Speichere die Webseite `https://example.com` als Datei `~/exempel.html`.",

@@ -57,34 +57,34 @@ public class ServicesTests
         Assert.Equal(4, arch.ExitCode);
     }
 
-    // ---------- den trasiga tjänsten rapportd ----------
+    // ---------- den trasiga tjänsten reportd ----------
 
     [Fact(DisplayName = "syns i --failed och journalen förklarar felet")]
-    public void RapportdFailedAndJournal()
+    public void ReportdFailedAndJournal()
     {
         var t = new TestShell();
         var failed = t.Run("systemctl --failed");
-        Assert.Matches(@"● rapportd\.service\s+loaded failed failed", failed.Out);
+        Assert.Matches(@"● reportd\.service\s+loaded failed failed", failed.Out);
         Assert.Contains("1 loaded units listed.", failed.Out);
-        var status = t.Run("systemctl status rapportd");
+        var status = t.Run("systemctl status reportd");
         Assert.Equal(3, status.ExitCode);
-        Assert.Contains("× rapportd.service", status.Out);
+        Assert.Contains("× reportd.service", status.Out);
         Assert.Contains("Active: failed (Result: exit-code)", status.Out);
         Assert.Contains("status=1/FAILURE", status.Out);
-        var log = t.Run("journalctl -u rapportd -b");
-        Assert.Contains("error: cannot open config file /etc/rapportd.conf: No such file or directory", log.Out);
+        var log = t.Run("journalctl -u reportd -b");
+        Assert.Contains("error: cannot open config file /etc/reportd.conf: No such file or directory", log.Out);
         Assert.DoesNotContain("Report scheduler ready", log.Out);
         // Yesterday it worked.
-        Assert.Contains("Report scheduler ready", t.Run("journalctl -u rapportd -b -1").Out);
+        Assert.Contains("Report scheduler ready", t.Run("journalctl -u reportd -b -1").Out);
     }
 
     [Fact(DisplayName = "-xeu ger förklaringar")]
     public void XeuExplains()
     {
         var t = new TestShell("debian");
-        var r = t.Run("journalctl -xeu rapportd");
+        var r = t.Run("journalctl -xeu reportd");
         Assert.Contains("░░ Subject: Unit failed", r.Out);
-        Assert.Contains("░░ The unit rapportd.service has entered the 'failed' state with result 'exit-code'.", r.Out);
+        Assert.Contains("░░ The unit reportd.service has entered the 'failed' state with result 'exit-code'.", r.Out);
         Assert.Contains("░░ Support: https://www.debian.org/support", r.Out);
     }
 
@@ -92,57 +92,57 @@ public class ServicesTests
     public void RestartNeedsRootAndConfig()
     {
         var t = new TestShell("fedora");
-        var noRoot = t.Run("systemctl restart rapportd");
+        var noRoot = t.Run("systemctl restart reportd");
         Assert.Equal(1, noRoot.ExitCode);
-        Assert.Contains("Failed to restart rapportd.service: Interactive authentication required.", noRoot.Out);
-        var again = t.Run("sudo systemctl restart rapportd");
+        Assert.Contains("Failed to restart reportd.service: Interactive authentication required.", noRoot.Out);
+        var again = t.Run("sudo systemctl restart reportd");
         Assert.Equal(1, again.ExitCode);
-        Assert.Contains("Job for rapportd.service failed because the control process exited with error code.", again.Out);
-        Assert.Contains("journalctl -xeu rapportd.service", again.Out);
-        Assert.Empty(Procs(t, "rapportd"));
+        Assert.Contains("Job for reportd.service failed because the control process exited with error code.", again.Out);
+        Assert.Contains("journalctl -xeu reportd.service", again.Out);
+        Assert.Empty(Procs(t, "reportd"));
 
-        Assert.Equal(0, t.Run("sudo cp /etc/rapportd.conf.example /etc/rapportd.conf").ExitCode);
-        var ok = t.Run("sudo systemctl restart rapportd");
+        Assert.Equal(0, t.Run("sudo cp /etc/reportd.conf.example /etc/reportd.conf").ExitCode);
+        var ok = t.Run("sudo systemctl restart reportd");
         Assert.Equal(0, ok.ExitCode);
-        Assert.Equal("active", t.Sh.Services.Units["rapportd.service"].Active);
-        Assert.Single(Procs(t, "rapportd"));
-        Assert.Equal("active\n", t.Run("systemctl is-active rapportd").Out);
+        Assert.Equal("active", t.Sh.Services.Units["reportd.service"].Active);
+        Assert.Single(Procs(t, "reportd"));
+        Assert.Equal("active\n", t.Run("systemctl is-active reportd").Out);
         Assert.Contains("0 loaded units listed.", t.Run("systemctl --failed").Out);
-        var status = t.Run("systemctl status rapportd").Out;
+        var status = t.Run("systemctl status reportd").Out;
         Assert.Contains("Active: active (running)", status);
         Assert.Contains("Report scheduler ready (interval 1h)", status);
         Assert.DoesNotContain("cannot open config file", status);
     }
 
-    // ---------- minserver och processtabellen ----------
+    // ---------- myserver och processtabellen ----------
 
     [Fact(DisplayName = "stop tar bort processen och start lägger tillbaka den med ny PID")]
-    public void StopAndStartMinserver()
+    public void StopAndStartMyserver()
     {
         var t = new TestShell();
-        Assert.Equal(ProcsLib.ServerPid, Procs(t, "minserver")[0].Pid);
-        Assert.Equal(1, t.Run("systemctl stop minserver").ExitCode);
-        Assert.Single(Procs(t, "minserver"));
-        Assert.Equal(0, t.Run("sudo systemctl stop minserver").ExitCode);
-        Assert.Empty(Procs(t, "minserver"));
-        Assert.Contains("Active: inactive (dead)", t.Run("systemctl status minserver").Out);
-        Assert.Equal(3, t.Run("systemctl is-active minserver").ExitCode);
-        Assert.Equal(0, t.Run("sudo systemctl start minserver").ExitCode);
-        var proc = Procs(t, "minserver")[0];
+        Assert.Equal(ProcsLib.ServerPid, Procs(t, "myserver")[0].Pid);
+        Assert.Equal(1, t.Run("systemctl stop myserver").ExitCode);
+        Assert.Single(Procs(t, "myserver"));
+        Assert.Equal(0, t.Run("sudo systemctl stop myserver").ExitCode);
+        Assert.Empty(Procs(t, "myserver"));
+        Assert.Contains("Active: inactive (dead)", t.Run("systemctl status myserver").Out);
+        Assert.Equal(3, t.Run("systemctl is-active myserver").ExitCode);
+        Assert.Equal(0, t.Run("sudo systemctl start myserver").ExitCode);
+        var proc = Procs(t, "myserver")[0];
         Assert.NotEqual(ProcsLib.ServerPid, proc.Pid);
-        Assert.Equal($"{proc.Pid}\n", t.Run("pgrep minserver").Out);
-        Assert.Contains($"Main PID: {proc.Pid} (minserver)", t.Run("systemctl status minserver").Out);
+        Assert.Equal($"{proc.Pid}\n", t.Run("pgrep myserver").Out);
+        Assert.Contains($"Main PID: {proc.Pid} (myserver)", t.Run("systemctl status myserver").Out);
     }
 
     [Fact(DisplayName = "systemd märker när processen dödas med kill")]
     public void NoticesKill()
     {
         var t = new TestShell("arch");
-        t.Run("sudo pkill minserver");
-        var r = t.Run("systemctl status minserver");
-        Assert.Contains("○ minserver.service", r.Out);
+        t.Run("sudo pkill myserver");
+        var r = t.Run("systemctl status myserver");
+        Assert.Contains("○ myserver.service", r.Out);
         Assert.Contains("Active: inactive (dead)", r.Out);
-        Assert.Contains("minserver.service: Deactivated successfully.", r.Out);
+        Assert.Contains("myserver.service: Deactivated successfully.", r.Out);
     }
 
     [Fact(DisplayName = "enable, disable och is-enabled")]
@@ -150,19 +150,19 @@ public class ServicesTests
     {
         var t = new TestShell("debian");
         var sh = t.Sh;
-        const string wants = "/etc/systemd/system/multi-user.target.wants/minserver.service";
-        Assert.Equal("disabled\n", t.Run("systemctl is-enabled minserver").Out);
-        Assert.Contains("Failed to enable unit: Interactive authentication required.", t.Run("systemctl enable minserver").Out);
-        var r = t.Run("sudo systemctl enable minserver");
-        Assert.Contains($"Created symlink {wants} → /etc/systemd/system/minserver.service.", r.Out);
+        const string wants = "/etc/systemd/system/multi-user.target.wants/myserver.service";
+        Assert.Equal("disabled\n", t.Run("systemctl is-enabled myserver").Out);
+        Assert.Contains("Failed to enable unit: Interactive authentication required.", t.Run("systemctl enable myserver").Out);
+        var r = t.Run("sudo systemctl enable myserver");
+        Assert.Contains($"Created symlink {wants} → /etc/systemd/system/myserver.service.", r.Out);
         Assert.NotNull(sh.Vfs.TryLookup(wants, sh.RootUser()));
-        Assert.Equal("enabled\n", t.Run("systemctl is-enabled minserver").Out);
-        Assert.Equal("", t.Run("sudo systemctl enable minserver").Out);
-        Assert.Contains($"Removed \"{wants}\".", t.Run("sudo systemctl disable --now minserver").Out);
-        Assert.Equal("inactive", sh.Services.Units["minserver.service"].Active);
-        Assert.Equal(1, t.Run("systemctl is-enabled minserver").ExitCode);
-        Assert.Equal(0, t.Run("sudo systemctl enable --now minserver").ExitCode);
-        Assert.Equal("active", sh.Services.Units["minserver.service"].Active);
+        Assert.Equal("enabled\n", t.Run("systemctl is-enabled myserver").Out);
+        Assert.Equal("", t.Run("sudo systemctl enable myserver").Out);
+        Assert.Contains($"Removed \"{wants}\".", t.Run("sudo systemctl disable --now myserver").Out);
+        Assert.Equal("inactive", sh.Services.Units["myserver.service"].Active);
+        Assert.Equal(1, t.Run("systemctl is-enabled myserver").ExitCode);
+        Assert.Equal(0, t.Run("sudo systemctl enable --now myserver").ExitCode);
+        Assert.Equal("active", sh.Services.Units["myserver.service"].Active);
         Assert.Equal("alias\n", t.Run("systemctl is-enabled sshd").Out);
         Assert.Contains("no installation config", t.Run("sudo systemctl enable systemd-logind").Out);
     }
@@ -171,11 +171,11 @@ public class ServicesTests
     public void ReloadNeedsSupportAndRunning()
     {
         var t = new TestShell();
-        Assert.Equal(0, t.Run("sudo systemctl reload minserver").ExitCode);
-        Assert.Contains("Reloaded minserver.service", t.Run("journalctl -u minserver -n 2").Out);
+        Assert.Equal(0, t.Run("sudo systemctl reload myserver").ExitCode);
+        Assert.Contains("Reloaded myserver.service", t.Run("journalctl -u myserver -n 2").Out);
         Assert.Contains("Job type reload is not applicable", t.Run("sudo systemctl reload cron").Out);
-        t.Run("sudo systemctl stop minserver");
-        Assert.Contains("is not active", t.Run("sudo systemctl reload minserver").Out);
+        t.Run("sudo systemctl stop myserver");
+        Assert.Contains("is not active", t.Run("sudo systemctl reload myserver").Out);
     }
 
     // ---------- journalctl ----------
@@ -189,7 +189,7 @@ public class ServicesTests
         var lines = Lines(r.Out);
         Assert.True(lines.Length >= 3);
         Assert.Contains("ACPI BIOS Error", r.Out);
-        Assert.Contains("rapportd", r.Out);
+        Assert.Contains("reportd", r.Out);
         Assert.DoesNotContain("Started", r.Out);
         var cur = sh.Services.Boots.Count - 1;
         var errs = sh.Services.Journal.Where(e => e.Boot == cur && e.Prio <= 3).ToList();
@@ -221,7 +221,7 @@ public class ServicesTests
         Assert.Equal(3, Lines(t.Run("journalctl --list-boots").Out).Length);
         Assert.Equal(1, t.Run("journalctl -b -5").ExitCode);
         Assert.Equal("-- No entries --\n", t.Run("journalctl --since today -u nisse").Out);
-        Assert.Equal("-- No entries --\n", t.Run("journalctl --since \"1 hour ago\" -u rapportd").Out);
+        Assert.Equal("-- No entries --\n", t.Run("journalctl --since \"1 hour ago\" -u reportd").Out);
         Assert.Contains("Failed to parse timestamp", t.Run("journalctl --since igår").Out);
         Assert.Equal(1, t.Run("journalctl --nope").ExitCode);
         Assert.Contains("-- Boot ", t.Run("journalctl").Out);
@@ -250,17 +250,17 @@ public class ServicesTests
         var cat = t.Run("systemctl cat sshd").Out;
         Assert.Contains("# /usr/lib/systemd/system/sshd.service", cat);
         Assert.Contains("ExecStart=/usr/sbin/sshd -D", cat);
-        Assert.Contains("minserver.service", t.Run("ls /etc/systemd/system").Out);
-        Assert.Matches(@"minserver\.service\s+disabled\s+disabled", t.Run("systemctl list-unit-files").Out);
+        Assert.Contains("myserver.service", t.Run("ls /etc/systemd/system").Out);
+        Assert.Matches(@"myserver\.service\s+disabled\s+disabled", t.Run("systemctl list-unit-files").Out);
 
-        t.Run("sudo sed -i \"s/practice server/övning/\" /etc/systemd/system/minserver.service");
-        Assert.Contains("changed on disk. Run 'systemctl daemon-reload'", t.Run("systemctl status minserver").Out);
+        t.Run("sudo sed -i \"s/practice server/övning/\" /etc/systemd/system/myserver.service");
+        Assert.Contains("changed on disk. Run 'systemctl daemon-reload'", t.Run("systemctl status myserver").Out);
         Assert.Equal(1, t.Run("systemctl daemon-reload").ExitCode);
         t.Run("sudo systemctl daemon-reload");
-        var status = t.Run("systemctl status minserver").Out;
+        var status = t.Run("systemctl status myserver").Out;
         Assert.DoesNotContain("changed on disk", status);
-        Assert.Contains("minserver.service - Minserver web server (övning)", status);
-        Assert.Contains("(övning)", sh.Services.Units["minserver.service"].Loaded);
+        Assert.Contains("myserver.service - Myserver web server (övning)", status);
+        Assert.Contains("(övning)", sh.Services.Units["myserver.service"].Loaded);
     }
 
     [Fact(DisplayName = "egna tjänster: start och 203/EXEC")]
@@ -291,21 +291,21 @@ public class ServicesTests
     {
         var t = new TestShell("arch");
         var sh = t.Sh;
-        t.Run("sudo pkill minserver");
+        t.Run("sudo pkill myserver");
         t.Run("sleep 300 &");
         Assert.Equal(1, t.Run("reboot").ExitCode);
         Assert.Equal(0, t.Run("sudo reboot").ExitCode);
-        Assert.Empty(Procs(t, "minserver"));
+        Assert.Empty(Procs(t, "myserver"));
         Assert.Empty(sh.Proc.Jobs);
         Assert.Single(Procs(t, "/usr/sbin/sshd"));
-        Assert.Equal("failed", sh.Services.Units["rapportd.service"].Active);
+        Assert.Equal("failed", sh.Services.Units["reportd.service"].Active);
         Assert.Equal("/home/elev", sh.Cwd);
 
-        t.Run("sudo systemctl enable minserver");
-        t.Run("sudo cp /etc/rapportd.conf.example /etc/rapportd.conf");
+        t.Run("sudo systemctl enable myserver");
+        t.Run("sudo cp /etc/reportd.conf.example /etc/reportd.conf");
         t.Run("sudo systemctl reboot");
-        Assert.Equal(ProcsLib.ServerPid, Procs(t, "minserver").FirstOrDefault()?.Pid);
-        Assert.Equal("active", sh.Services.Units["rapportd.service"].Active);
+        Assert.Equal(ProcsLib.ServerPid, Procs(t, "myserver").FirstOrDefault()?.Pid);
+        Assert.Equal("active", sh.Services.Units["reportd.service"].Active);
         Assert.Equal(5, Lines(t.Run("journalctl --list-boots").Out).Length); // header + 4 boots
         Assert.Contains("reboot: Restarting system", t.Run("journalctl -b -1 -n 1").Out);
     }
@@ -319,15 +319,15 @@ public class ServicesTests
         Assert.Equal("inactive", copy.Services.Units["ssh.service"].Active);
         Assert.Equal("inactive\n", copy.Execute("systemctl is-active ssh").Output);
 
-        // A terminal saved before systemd existed, where minserver had already been killed.
-        var old = Shell.Create("debian");
-        old.Execute("sudo pkill minserver");
+        // A terminal saved before systemd existed, where myserver had already been killed.
+        var old = Shell.Create("debian", "sv");
+        old.Execute("sudo pkill myserver");
         var snap = Js.Parse<ShellSnapshot>(old.SnapshotJson())!;
         snap.Services = null;
         var restored = Shell.Restore(snap)!;
-        Assert.Equal("inactive", restored.Services.Units["minserver.service"].Active);
+        Assert.Equal("inactive", restored.Services.Units["myserver.service"].Active);
         Assert.Equal("active", restored.Services.Units["ssh.service"].Active);
-        Assert.Equal(3, restored.Execute("systemctl status rapportd").ExitCode);
+        Assert.Equal(3, restored.Execute("systemctl status reportd").ExitCode);
     }
 
     // ---------- hostnamectl och systemd-analyze ----------
@@ -353,7 +353,7 @@ public class ServicesTests
         Assert.Matches(@"^Startup finished in 2\.153s \(kernel\) \+ [0-9.]+s \(userspace\)", t.Run("systemd-analyze").Out);
         var blame = t.Run("systemd-analyze blame").Out;
         Assert.Contains("ssh.service", blame);
-        Assert.Contains("rapportd.service", blame);
+        Assert.Contains("reportd.service", blame);
     }
 
     [Fact(DisplayName = "kommandona kommer från paketet systemd")]

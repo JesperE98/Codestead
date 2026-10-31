@@ -19,7 +19,7 @@
     },
     "curl-localhost": {
       "text": "Fetch the start page of the practice server on your own computer, `http://localhost:8080`, with `curl`.",
-      "hint": "On Ubuntu curl must be installed: `sudo apt install curl`. If you get *Couldn't connect to server*, minserver is stopped – start it with `minserver`."
+      "hint": "On Ubuntu curl must be installed: `sudo apt install curl`. If you get *Couldn't connect to server*, myserver is stopped – start it with `myserver`."
     },
     "spara": {
       "text": "Save the web page `https://example.com` as the file `~/exempel.html`.",

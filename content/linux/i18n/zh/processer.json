@@ -26,7 +26,7 @@
       "text": "用 `kill` 加上作业编号（`%1`）或 PID 结束这个后台作业。"
     },
     "server": {
-      "text": "服务器 `minserver` 正以 root 身份运行。停止它——使用 `pkill` 或 `kill`，并具备相应的权限。",
+      "text": "服务器 `myserver` 正以 root 身份运行。停止它——使用 `pkill` 或 `kill`，并具备相应的权限。",
       "hint": "以普通用户身份运行会得到 \"Operation not permitted\"。在前面加上 `sudo`。"
     }
   }

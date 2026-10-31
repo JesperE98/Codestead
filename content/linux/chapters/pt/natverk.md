@@ -286,14 +286,14 @@ com `sudo` você vê todos:
 sudo ss -tulpn
 ```
 
-Se o servidor de treino `minserver` do capítulo de processos estiver rodando,
+Se o servidor de treino `myserver` do capítulo de processos estiver rodando,
 você o vê aqui na porta 8080. O comando mais antigo `netstat -tulpn` (do
 *net-tools*) faz a mesma coisa.
 
 ## Baixando da web: curl e wget
 
 O `curl` busca o que estiver em um endereço (uma **URL**) e imprime no
-terminal. Experimente com o minserver no seu próprio computador:
+terminal. Experimente com o myserver no seu próprio computador:
 
 No Ubuntu o `curl` não vem pré-instalado (mas o `wget` vem):
 
@@ -306,11 +306,11 @@ curl http://localhost:8080
 ```
 
 Recebeu `Couldn't connect to server`? Então nada está escutando na porta –
-talvez você tenha parado o minserver no capítulo de processos. Inicie-o de
+talvez você tenha parado o myserver no capítulo de processos. Inicie-o de
 novo:
 
 ```sh
-minserver
+myserver
 ```
 
 Com `-I` o curl mostra só os **cabeçalhos** (*headers*) da resposta, em que a

@@ -79,7 +79,7 @@ Para ver o que o *sistema* resolve, use `getent hosts server.lan`.
 ```
 
 ```quiz
-O `minserver` escuta na porta 8080 e roda como um usuário comum. O que seria
+O `myserver` escuta na porta 8080 e roda como um usuário comum. O que seria
 diferente se ele escutasse na porta 80?
 - [ ] Nada
 - [x] Só o root pode abrir portas abaixo de 1024

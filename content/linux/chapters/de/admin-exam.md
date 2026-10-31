@@ -4,21 +4,21 @@ Zeig, was du über Dienste, Festplatten und Benutzer gelernt hast. Die Fragen
 decken den ganzen Teil ab, und zum Bestehen brauchst du 80 % richtig.
 
 ```quiz
-`minserver` soll jedes Mal automatisch starten, wenn der Rechner bootet, darf
+`myserver` soll jedes Mal automatisch starten, wenn der Rechner bootet, darf
 aber **nicht** jetzt gleich gestartet werden. Welcher Befehl macht genau das?
-- [ ] `sudo systemctl start minserver`
-- [x] `sudo systemctl enable minserver`
-- [ ] `sudo systemctl enable --now minserver`
-- [ ] `sudo systemctl restart minserver`
+- [ ] `sudo systemctl start myserver`
+- [x] `sudo systemctl enable myserver`
+- [ ] `sudo systemctl enable --now myserver`
+- [ ] `sudo systemctl restart myserver`
 ---
 `enable` gilt beim Booten, `start` gilt jetzt, und `--now` macht beides.
 ```
 
-Der Dienst `rapportd` auf diesem Rechner konnte nicht starten. Was gibt
+Der Dienst `reportd` auf diesem Rechner konnte nicht starten. Was gibt
 dieser Befehl aus?
 
 ```predict
-$ systemctl is-active rapportd
+$ systemctl is-active reportd
 failed
 ---
 `is-active` gibt nur ein einziges Wort aus – hier denselben Zustand, den
@@ -27,28 +27,28 @@ Antwort `active` lautet.
 ```
 
 ```quiz
-Du willst das Log von `minserver` beobachten, während du ihn testest, und
+Du willst das Log von `myserver` beobachten, während du ihn testest, und
 neue Zeilen sollen erscheinen, sobald sie ankommen. Welchen Befehl nimmst du?
 - [ ] `journalctl -n 20`
-- [x] `journalctl -u minserver -f`
+- [x] `journalctl -u myserver -f`
 - [ ] `journalctl -p err -b`
-- [ ] `systemctl status minserver --all`
+- [ ] `systemctl status myserver --all`
 ---
 `-u` wählt eine Unit aus, und `-f` zeigt weiter neue Zeilen an, bis du
 Strg+C drückst.
 ```
 
 ```try
-systemctl cat minserver
+systemctl cat myserver
 ---
 `ExecStart=` ist der Befehl, der den Dienst startet, und `WantedBy=` ist das,
 was `enable` verwendet.
 ```
 
 ```quiz
-Du führst `systemctl stop minserver` ohne `sudo` aus und bekommst
+Du führst `systemctl stop myserver` ohne `sudo` aus und bekommst
 *Interactive authentication required*. Warum?
-- [ ] minserver läuft nicht
+- [ ] myserver läuft nicht
 - [x] Alles, was einen Dienst verändert, braucht root-Rechte
 - [ ] Du musst zuerst `daemon-reload` ausführen
 - [ ] `stop` funktioniert nur bei aktivierten Diensten

@@ -14,24 +14,24 @@
       "hint": "`-p err` 选择优先级，`-b` 选择最近一次开机：`journalctl -p err -b`。"
     },
     "journal-u": {
-      "text": "用 `journalctl` 阅读出故障的服务 `rapportd` 的日志。它为什么启动不了？",
-      "hint": "`-u` 只显示某一个服务的日志行：`journalctl -u rapportd`。加上 `-xe` 会跳到末尾并给出解释。"
+      "text": "用 `journalctl` 阅读出故障的服务 `reportd` 的日志。它为什么启动不了？",
+      "hint": "`-u` 只显示某一个服务的日志行：`journalctl -u reportd`。加上 `-xe` 会跳到末尾并给出解释。"
     },
     "fix": {
-      "text": "解决日志中提到的问题，然后用 `systemctl` 重启 `rapportd`，让它运行起来。",
-      "hint": "配置文件缺失了，但有一个示例文件：`sudo cp /etc/rapportd.conf.example /etc/rapportd.conf`。然后用 `sudo systemctl restart rapportd` 重启。"
+      "text": "解决日志中提到的问题，然后用 `systemctl` 重启 `reportd`，让它运行起来。",
+      "hint": "配置文件缺失了，但有一个示例文件：`sudo cp /etc/reportd.conf.example /etc/reportd.conf`。然后用 `sudo systemctl restart reportd` 重启。"
     },
-    "start-minserver": {
-      "text": "启动服务 `minserver`（如果它还没有运行的话），然后显示它的状态。它得到的 PID 是多少？",
-      "hint": "`sudo systemctl start minserver`，然后 `systemctl status minserver`。"
+    "start-myserver": {
+      "text": "启动服务 `myserver`（如果它还没有运行的话），然后显示它的状态。它得到的 PID 是多少？",
+      "hint": "`sudo systemctl start myserver`，然后 `systemctl status myserver`。"
     },
     "stop": {
-      "text": "用 `systemctl` 停止 `minserver`。可以用 `pgrep minserver` 检查一下进程是否已经消失。",
-      "hint": "`sudo systemctl stop minserver`"
+      "text": "用 `systemctl` 停止 `myserver`。可以用 `pgrep myserver` 检查一下进程是否已经消失。",
+      "hint": "`sudo systemctl stop myserver`"
     },
     "enable": {
-      "text": "用一条命令让 `minserver` 在每次开机时自动启动——并且现在就启动它。",
-      "hint": "`enable` 在开机时生效，`--now` 会立即启动它：`sudo systemctl enable --now minserver`。"
+      "text": "用一条命令让 `myserver` 在每次开机时自动启动——并且现在就启动它。",
+      "hint": "`enable` 在开机时生效，`--now` 会立即启动它：`sudo systemctl enable --now myserver`。"
     }
   }
 }

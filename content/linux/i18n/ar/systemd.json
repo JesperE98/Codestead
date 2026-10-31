@@ -14,24 +14,24 @@
       "hint": "يختار `-p err` الأولوية ويختار `-b` آخر إقلاع: `journalctl -p err -b`."
     },
     "journal-u": {
-      "text": "اقرأ سجل الخدمة المعطّلة `rapportd` باستخدام `journalctl`. لماذا لا تبدأ؟",
-      "hint": "يعرض `-u` الأسطر الخاصة بخدمة واحدة فقط: `journalctl -u rapportd`. ومع `-xe` تقفز إلى النهاية وتحصل على شروحات."
+      "text": "اقرأ سجل الخدمة المعطّلة `reportd` باستخدام `journalctl`. لماذا لا تبدأ؟",
+      "hint": "يعرض `-u` الأسطر الخاصة بخدمة واحدة فقط: `journalctl -u reportd`. ومع `-xe` تقفز إلى النهاية وتحصل على شروحات."
     },
     "fix": {
-      "text": "أصلح المشكلة التي يخبرك بها السجل، ثم أعد تشغيل `rapportd` باستخدام `systemctl` لكي تعمل.",
-      "hint": "ملف الإعدادات مفقود، لكن هناك مثالًا: `sudo cp /etc/rapportd.conf.example /etc/rapportd.conf`. ثم أعد التشغيل باستخدام `sudo systemctl restart rapportd`."
+      "text": "أصلح المشكلة التي يخبرك بها السجل، ثم أعد تشغيل `reportd` باستخدام `systemctl` لكي تعمل.",
+      "hint": "ملف الإعدادات مفقود، لكن هناك مثالًا: `sudo cp /etc/reportd.conf.example /etc/reportd.conf`. ثم أعد التشغيل باستخدام `sudo systemctl restart reportd`."
     },
-    "start-minserver": {
-      "text": "ابدأ الخدمة `minserver` (ما لم تكن تعمل بالفعل) ثم اعرض حالتها. ما رقم PID الذي حصلت عليه؟",
-      "hint": "`sudo systemctl start minserver` ثم `systemctl status minserver`."
+    "start-myserver": {
+      "text": "ابدأ الخدمة `myserver` (ما لم تكن تعمل بالفعل) ثم اعرض حالتها. ما رقم PID الذي حصلت عليه؟",
+      "hint": "`sudo systemctl start myserver` ثم `systemctl status myserver`."
     },
     "stop": {
-      "text": "أوقف `minserver` باستخدام `systemctl`. ويمكنك التحقّق باستخدام `pgrep minserver` من أن العملية اختفت.",
-      "hint": "`sudo systemctl stop minserver`"
+      "text": "أوقف `myserver` باستخدام `systemctl`. ويمكنك التحقّق باستخدام `pgrep myserver` من أن العملية اختفت.",
+      "hint": "`sudo systemctl stop myserver`"
     },
     "enable": {
-      "text": "تأكّد من أن `minserver` يبدأ تلقائيًا في كل مرة يُقلع فيها الحاسوب – وابدأه الآن أيضًا، بأمر واحد.",
-      "hint": "يسري `enable` عند الإقلاع ويبدؤه `--now` فورًا: `sudo systemctl enable --now minserver`."
+      "text": "تأكّد من أن `myserver` يبدأ تلقائيًا في كل مرة يُقلع فيها الحاسوب – وابدأه الآن أيضًا، بأمر واحد.",
+      "hint": "يسري `enable` عند الإقلاع ويبدؤه `--now` فورًا: `sudo systemctl enable --now myserver`."
     }
   }
 }

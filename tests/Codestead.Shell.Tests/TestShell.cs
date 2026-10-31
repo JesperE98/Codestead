@@ -25,7 +25,7 @@ public sealed class TestShell
 
     public TestShell(string distro = "ubuntu", string? lang = null)
     {
-        Sh = Shell.Create(distro);
+        Sh = Shell.Create(distro, "sv");
         if (lang is not null) Sh.Lang = lang;
     }
 

@@ -277,14 +277,14 @@ alla:
 sudo ss -tulpn
 ```
 
-Om övningsservern `minserver` från kapitlet om processer körs, ser du den
+Om övningsservern `myserver` från kapitlet om processer körs, ser du den
 här på port 8080. Det äldre kommandot `netstat -tulpn` (från *net-tools*) gör samma
 sak.
 
 ## Hämta från webben: curl och wget
 
 `curl` hämtar det som finns på en adress (en **URL**) och skriver ut det i
-terminalen. Prova med minserver på din egen dator:
+terminalen. Prova med myserver på din egen dator:
 
 I Ubuntu är `curl` inte förinstallerat (men `wget` är det):
 
@@ -297,10 +297,10 @@ curl http://localhost:8080
 ```
 
 Får du `Couldn't connect to server`? Då lyssnar ingenting på porten – du
-kanske stoppade minserver i kapitlet om processer. Starta den igen:
+kanske stoppade myserver i kapitlet om processer. Starta den igen:
 
 ```sh
-minserver
+myserver
 ```
 
 Med `-I` visar curl bara svarets **huvuden** (*headers*), där den första

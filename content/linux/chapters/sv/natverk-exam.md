@@ -78,7 +78,7 @@ För att se vad *systemet* slår upp använder du `getent hosts server.lan`.
 ```
 
 ```quiz
-`minserver` lyssnar på port 8080 och körs som en vanlig användare. Vad skulle
+`myserver` lyssnar på port 8080 och körs som en vanlig användare. Vad skulle
 vara annorlunda om den lyssnade på port 80?
 - [ ] Ingenting
 - [x] Bara root får öppna portar under 1024

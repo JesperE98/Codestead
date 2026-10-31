@@ -280,14 +280,14 @@ IPv6. The *Process* column is empty for processes owned by other users – with
 sudo ss -tulpn
 ```
 
-If the practice server `minserver` from the processes chapter is running,
+If the practice server `myserver` from the processes chapter is running,
 you see it here on port 8080. The older command `netstat -tulpn` (from
 *net-tools*) does the same thing.
 
 ## Fetching from the web: curl and wget
 
 `curl` fetches whatever is at an address (a **URL**) and prints it in the
-terminal. Try it with minserver on your own computer:
+terminal. Try it with myserver on your own computer:
 
 On Ubuntu `curl` is not preinstalled (but `wget` is):
 
@@ -300,10 +300,10 @@ curl http://localhost:8080
 ```
 
 Do you get `Couldn't connect to server`? Then nothing is listening on the
-port – maybe you stopped minserver in the processes chapter. Start it again:
+port – maybe you stopped myserver in the processes chapter. Start it again:
 
 ```sh
-minserver
+myserver
 ```
 
 With `-I` curl shows only the response **headers**, where the first line is a

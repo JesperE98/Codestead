@@ -14,24 +14,24 @@
       "hint": "`-p err` で優先度を、`-b` で最新のブートを選びます: `journalctl -p err -b`。"
     },
     "journal-u": {
-      "text": "`journalctl` で、壊れたサービス `rapportd` のログを読んでください。なぜ起動しないのでしょうか？",
-      "hint": "`-u` を付けると 1 つのサービスの行だけが表示されます: `journalctl -u rapportd`。`-xe` を付けると末尾にジャンプし、説明も表示されます。"
+      "text": "`journalctl` で、壊れたサービス `reportd` のログを読んでください。なぜ起動しないのでしょうか？",
+      "hint": "`-u` を付けると 1 つのサービスの行だけが表示されます: `journalctl -u reportd`。`-xe` を付けると末尾にジャンプし、説明も表示されます。"
     },
     "fix": {
-      "text": "ログに書かれている問題を修正し、`systemctl` で `rapportd` を再起動して、動くようにしてください。",
-      "hint": "設定ファイルがありませんが、見本があります: `sudo cp /etc/rapportd.conf.example /etc/rapportd.conf`。そのあと `sudo systemctl restart rapportd` で再起動します。"
+      "text": "ログに書かれている問題を修正し、`systemctl` で `reportd` を再起動して、動くようにしてください。",
+      "hint": "設定ファイルがありませんが、見本があります: `sudo cp /etc/reportd.conf.example /etc/reportd.conf`。そのあと `sudo systemctl restart reportd` で再起動します。"
     },
-    "start-minserver": {
-      "text": "サービス `minserver` を（まだ動いていなければ）起動し、その状態を表示してください。どの PID になりましたか？",
-      "hint": "`sudo systemctl start minserver`、そのあと `systemctl status minserver` です。"
+    "start-myserver": {
+      "text": "サービス `myserver` を（まだ動いていなければ）起動し、その状態を表示してください。どの PID になりましたか？",
+      "hint": "`sudo systemctl start myserver`、そのあと `systemctl status myserver` です。"
     },
     "stop": {
-      "text": "`systemctl` で `minserver` を停止してください。`pgrep minserver` でプロセスが消えたことを確認してみるのもよいでしょう。",
-      "hint": "`sudo systemctl stop minserver`"
+      "text": "`systemctl` で `myserver` を停止してください。`pgrep myserver` でプロセスが消えたことを確認してみるのもよいでしょう。",
+      "hint": "`sudo systemctl stop myserver`"
     },
     "enable": {
-      "text": "`minserver` がコンピューターのブートのたびに自動的に起動するようにし、さらにいますぐ起動もしてください。1 つのコマンドで行います。",
-      "hint": "`enable` はブート時に効き、`--now` はすぐに起動します: `sudo systemctl enable --now minserver`。"
+      "text": "`myserver` がコンピューターのブートのたびに自動的に起動するようにし、さらにいますぐ起動もしてください。1 つのコマンドで行います。",
+      "hint": "`enable` はブート時に効き、`--now` はすぐに起動します: `sudo systemctl enable --now myserver`。"
     }
   }
 }

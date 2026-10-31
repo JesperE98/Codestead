@@ -39,7 +39,7 @@ ls /etc/systemd/system
 
 较旧的 Debian 和 Ubuntu 版本经常写的是 `/lib/systemd/system`。这是同一个目录——`/lib` 是指向 `/usr/lib` 的链接。
 
-服务的名字就是文件名，例如 `minserver.service`。输入命令时可以省略 `.service`：`systemctl status minserver` 也一样能用。
+服务的名字就是文件名，例如 `myserver.service`。输入命令时可以省略 `.service`：`systemctl status myserver` 也一样能用。
 
 ## 服务运行得怎么样？——`systemctl status`
 
@@ -87,21 +87,21 @@ Oct 30 07:54:07 ubuntu systemd[1]: Started ssh.service - OpenBSD Secure Shell se
 ## 启动、停止和重启
 
 ```text
-sudo systemctl start minserver      # 立即启动
-sudo systemctl stop minserver       # 立即停止
-sudo systemctl restart minserver    # 停止后再启动
-sudo systemctl reload minserver     # 让它重新读取配置
+sudo systemctl start myserver      # 立即启动
+sudo systemctl stop myserver       # 立即停止
+sudo systemctl restart myserver    # 停止后再启动
+sudo systemctl reload myserver     # 让它重新读取配置
 ```
 
 所有会**改变**状态的操作都需要 root 权限，所以别忘了 `sudo`。如果不加，systemctl 会回答：
 
 ```text
-Failed to start minserver.service: Interactive authentication required.
+Failed to start myserver.service: Interactive authentication required.
 ```
 
 `reload` 只适用于支持它的服务。它的好处是服务在此期间会一直运行——不会断开任何连接。修改了服务的配置文件之后，最后一步就是 `reload` 或 `restart`。
 
-> **试试看！** 在进程那一章中，你用 `pkill` 停止了练习服务器。看看 `systemctl status minserver`——systemd 注意到了这个进程已经消失。用 `systemctl` 重新启动它，然后把它的 PID 和 `pgrep -l minserver` 的结果比较一下。
+> **试试看！** 在进程那一章中，你用 `pkill` 停止了练习服务器。看看 `systemctl status myserver`——systemd 注意到了这个进程已经消失。用 `systemctl` 重新启动它，然后把它的 PID 和 `pgrep -l myserver` 的结果比较一下。
 
 ## 现在还是开机时？`start` 和 `enable`
 
@@ -117,32 +117,32 @@ Failed to start minserver.service: Interactive authentication required.
 `enable` 会在一个目录中创建一个链接，这个目录以单元文件 `[Install]` 部分中指定的 target 命名，通常是 `multi-user.target.wants`：
 
 ```text
-$ sudo systemctl enable --now minserver
-Created symlink /etc/systemd/system/multi-user.target.wants/minserver.service → /etc/systemd/system/minserver.service.
+$ sudo systemctl enable --now myserver
+Created symlink /etc/systemd/system/multi-user.target.wants/myserver.service → /etc/systemd/system/myserver.service.
 ```
 
 计算机开机时，systemd 会遍历这个目录，并启动其中的所有内容。你可以这样查询状态：
 
 ```sh
-systemctl is-active minserver
-systemctl is-enabled minserver
+systemctl is-active myserver
+systemctl is-enabled myserver
 ```
 
 `is-active` 和 `is-enabled` 非常适合在脚本中使用——它们只输出一个单词，如果答案是“是”，就以状态 0 退出。加上 `-q`，它们会完全不输出任何内容：
 
 ```text
-if systemctl is-active -q minserver; then echo "the server is running"; fi
+if systemctl is-active -q myserver; then echo "the server is running"; fi
 ```
 
-在模拟器中一台刚刚启动的计算机上，`minserver` 正在运行，但没有人启用过它。下面这两条命令会打印什么？
+在模拟器中一台刚刚启动的计算机上，`myserver` 正在运行，但没有人启用过它。下面这两条命令会打印什么？
 
 ```predict
-$ systemctl is-active minserver
-$ systemctl is-enabled minserver
+$ systemctl is-active myserver
+$ systemctl is-enabled myserver
 active
 disabled
 ---
-minserver **现在**正在运行，但没有人运行过 `enable`——重启之后它就不会被启动。`start` 和 `enable` 确实是两回事。
+myserver **现在**正在运行，但没有人运行过 `enable`——重启之后它就不会被启动。`start` 和 `enable` 确实是两回事。
 ```
 
 ## 列出服务
@@ -182,9 +182,9 @@ journalctl
 这些选项可以组合使用。几个经典用法：
 
 ```sh
-journalctl -u minserver -n 5
+journalctl -u myserver -n 5
 journalctl -p err -b
-journalctl --since today -u minserver
+journalctl --since today -u myserver
 ```
 
 ### 优先级
@@ -219,7 +219,7 @@ journal 中的每一行都有一个**优先级**（priority）。`-p` 会显示�
 
 ## 排查无法启动的服务
 
-有人在这台计算机上设置了 **rapportd** 服务，但出了点问题。通常的排查步骤如下：
+有人在这台计算机上设置了 **reportd** 服务，但出了点问题。通常的排查步骤如下：
 
 1. **什么失败了？** 列出失败的服务：
 
@@ -230,24 +230,24 @@ journal 中的每一行都有一个**优先级**（priority）。`-p` 会显示�
 2. **查看状态。** 最后几行往往就够了：
 
    ```sh
-   systemctl status rapportd
+   systemctl status reportd
    ```
 
 3. **阅读该服务的完整日志。** 它几乎总会告诉你哪里出了问题——仔细地、一个词一个词地读：
 
    ```sh
-   journalctl -xeu rapportd
+   journalctl -xeu reportd
    ```
 
-   启动失败时，`systemctl` 自己也会建议你用这个命令：`See "systemctl status rapportd.service" and "journalctl -xeu rapportd.service" for details.`
+   启动失败时，`systemctl` 自己也会建议你用这个命令：`See "systemctl status reportd.service" and "journalctl -xeu reportd.service" for details.`
 
 4. **解决问题**，例如某个配置文件缺失或者有拼写错误。
 
 5. **重启并检查：**
 
    ```text
-   sudo systemctl restart rapportd
-   systemctl status rapportd
+   sudo systemctl restart reportd
+   systemctl status reportd
    ```
 
 `Main process exited, code=exited, status=1/FAILURE` 这一行表示程序自己因错误而退出了。如果显示的是 `status=203/EXEC`，说明 systemd 根本找不到这个程序——检查 `ExecStart=` 中的路径。
@@ -267,17 +267,17 @@ journal 中的每一行都有一个**优先级**（priority）。`-p` 会显示�
 要确切了解一个服务是如何启动的，就读一读它的单元文件：
 
 ```sh
-systemctl cat minserver
+systemctl cat myserver
 ```
 
 ```text
-# /etc/systemd/system/minserver.service
+# /etc/systemd/system/myserver.service
 [Unit]
-Description=Minserver web server (practice server)
+Description=Myserver web server (practice server)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/minserver --port 8080
+ExecStart=/usr/local/bin/myserver --port 8080
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]
