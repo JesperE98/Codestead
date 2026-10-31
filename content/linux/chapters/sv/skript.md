@@ -10,26 +10,26 @@ variabler, villkor, loopar och funktioner.
 
 Ett skript är en vanlig textfil. På riktiga datorer skriver man den i en
 texteditor som `nano` eller `vim`. Ett annat sätt, som fungerar både här och
-på servrar, är ett **here-dokument**: allt mellan `<< 'SLUT'` och raden
-`SLUT` skickas in till kommandot.
+på servrar, är ett **here-dokument**: allt mellan `<< '{{heredocEnd}}'` och raden
+`{{heredocEnd}}` skickas in till kommandot.
 
 Skriv första raden och tryck Enter. Prompten ändras till `> ` – skalet väntar
-på resten. Skriv raderna en i taget och avsluta med `SLUT`:
+på resten. Skriv raderna en i taget och avsluta med `{{heredocEnd}}`:
 
 ```sh
-cat > hej.sh << 'SLUT'
+cat > {{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
 echo "Hej från ett skript!"
 echo "Idag är det $(date)"
-SLUT
+{{heredocEnd}}
 ```
 
 Första raden, `#!/bin/bash`, kallas *shebang* och talar om vilket program som
 ska köra filen. Gör skriptet körbart och kör det:
 
 ```sh
-chmod +x hej.sh
-./hej.sh
+chmod +x {{helloScript}}
+./{{helloScript}}
 ```
 
 Rader som börjar med `#` (förutom shebang-raden) är **kommentarer** som skalet
@@ -155,7 +155,7 @@ skriva `&&` och `||` och jämföra mot mönster som `[[ $fil == *.txt ]]`.
 För korta villkor räcker ofta `&&` och `||`:
 
 ```sh
-[ -d ~/bilder ] && echo "Bildkatalogen finns"
+[ -d ~/{{pictures}} ] && echo "Bildkatalogen finns"
 ```
 
 ```predict
@@ -175,7 +175,7 @@ for frukt in äpple banan kiwi; do echo "Jag gillar $frukt"; done
 Listan kan komma från jokertecken eller ett kommando:
 
 ```sh
-for fil in ~/dokument/*; do echo "Fil: $fil"; done
+for fil in ~/{{documents}}/*; do echo "Fil: $fil"; done
 for i in $(seq 1 3); do echo "Varv $i"; done
 ```
 
@@ -189,7 +189,7 @@ Det vanligaste sättet att gå igenom en fil rad för rad är `while read`, med
 filen inskickad med `<` efter `done`:
 
 ```sh
-while read rad; do echo "> $rad"; done < ~/dokument/frukter.txt
+while read {{lineVar}}; do echo "> ${{lineVar}}"; done < ~/{{documents}}/{{fruits}}
 ```
 
 `break` avbryter en loop och `continue` hoppar direkt till nästa varv.
@@ -234,7 +234,7 @@ Variabler som bara ska finnas inne i funktionen skapar du med `local`, och
 `read` läser en rad från tangentbordet till en variabel:
 
 ```sh
-read -p "Vad heter du? " namn; echo "Hej $namn!"
+read -p "Vad heter du? " {{nameVar}}; echo "{{hello}} ${{nameVar}}!"
 ```
 
 ## Ett komplett exempel

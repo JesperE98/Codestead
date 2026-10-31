@@ -9,7 +9,7 @@ till och med hårdvara – finns i **ett enda träd** av kataloger som börjar i
 | Katalog | Innehåll |
 |---|---|
 | `/` | Roten – toppen av trädet |
-| `/home` | Användarnas hemkataloger, t.ex. `/home/elev` |
+| `/home` | Användarnas hemkataloger, t.ex. `/home/{{user}}` |
 | `/root` | Hemkatalogen för administratören root |
 | `/etc` | Systemets inställningar (konfigurationsfiler) |
 | `/usr/bin` | Program (kommandon) som `ls` och `cat` |
@@ -95,15 +95,15 @@ Det finns två sorters sökvägar:
   `/var/log` med bara `cd var/log`.
 
 ```quiz
-Du står i `/home`. Vilka kommandon tar dig till `/home/elev/dokument`? (Välj alla som fungerar.)
-- [x] `cd elev/dokument`
-- [x] `cd /home/elev/dokument`
-- [ ] `cd /elev/dokument`
-- [ ] `cd dokument`
+Du står i `/home`. Vilka kommandon tar dig till `/home/{{user}}/{{documents}}`? (Välj alla som fungerar.)
+- [x] `cd {{user}}/{{documents}}`
+- [x] `cd /home/{{user}}/{{documents}}`
+- [ ] `cd /{{user}}/{{documents}}`
+- [ ] `cd {{documents}}`
 ---
-`elev/dokument` är relativ till `/home`, och `/home/elev/dokument` är absolut,
-så den fungerar varifrån som helst. `/elev/dokument` börjar i roten, där det
-inte finns någon `elev`.
+`{{user}}/{{documents}}` är relativ till `/home`, och `/home/{{user}}/{{documents}}` är absolut,
+så den fungerar varifrån som helst. `/{{user}}/{{documents}}` börjar i roten, där det
+inte finns någon `{{user}}`.
 ```
 
 Några specialnamn är bra att kunna:

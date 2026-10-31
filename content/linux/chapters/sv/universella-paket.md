@@ -247,15 +247,15 @@ inget root. Vill du bli av med programmet tar du bort filen.
 Det ligger redan en nedladdad AppImage i din hemkatalog:
 
 ```sh
-cd ~/Nedladdningar
+cd ~/{{downloads}}
 ls -l
 ```
 
 Vad händer om du startar den direkt?
 
 ```predict
-$ ~/Nedladdningar/Kalkylator.AppImage
-bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+$ ~/{{downloads}}/{{calculator}}
+bash: /home/{{user}}/{{downloads}}/{{calculator}}: Permission denied
 ---
 Filen har inte rättigheten `x`.
 ```
@@ -263,14 +263,14 @@ Filen har inte rättigheten `x`.
 Nedladdade filer är aldrig körbara från början. Gör den körbar och starta den:
 
 ```sh
-chmod +x Kalkylator.AppImage
-./Kalkylator.AppImage
+chmod +x {{calculator}}
+./{{calculator}}
 ```
 
 ```try
-chmod +x ~/Nedladdningar/Kalkylator.AppImage
+chmod +x ~/{{downloads}}/{{calculator}}
 ---
-Nu är filen körbar. Kontrollera med `ls -l ~/Nedladdningar`.
+Nu är filen körbar. Kontrollera med `ls -l ~/{{downloads}}`.
 ```
 
 ### FUSE
@@ -286,7 +286,7 @@ I Ubuntu 24.04 och Debian 13 heter paketet `libfuse2t64` (*t64* kommer från
 ```sh
 sudo apt update
 sudo apt install libfuse2t64
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 
 > Installera **inte** paketet `fuse` i Ubuntu – det ersätter `fuse3`, som
@@ -298,7 +298,7 @@ I Arch heter paketet `fuse2`:
 
 ```sh
 sudo pacman -S fuse2
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -307,7 +307,7 @@ I Fedora heter paketet `fuse-libs`:
 
 ```sh
 sudo dnf install fuse-libs
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -316,7 +316,7 @@ sudo dnf install fuse-libs
 En AppImage kan också packas upp. Det fungerar även utan FUSE:
 
 ```sh
-./Kalkylator.AppImage --appimage-extract
+./{{calculator}} --appimage-extract
 ls squashfs-root
 ./squashfs-root/AppRun
 ```

@@ -2,7 +2,7 @@
 
 Det mesta i Linux är text: inställningar, loggar, listor. Därför finns många
 små verktyg för att läsa och söka i textfiler. I din hemkatalog finns
-katalogen `dokument` med filer att öva på, bland annat `frukter.txt` (en lista
+katalogen `{{documents}}` med filer att öva på, bland annat `{{fruits}}` (en lista
 med frukter) och `server.log` (en logg från en påhittad webbserver).
 
 ## Visa en fil – `cat` och `less`
@@ -10,7 +10,7 @@ med frukter) och `server.log` (en logg från en påhittad webbserver).
 `cat` skriver ut hela filen:
 
 ```sh
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 För långa filer är `less` bättre. Där bläddrar du med piltangenterna och
@@ -19,7 +19,7 @@ mellanslag, söker med `/ord` och avslutar med `q`.
 Titta på fruktlistan – du behöver den till nästa fråga:
 
 ```try
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 ## Början och slutet – `head` och `tail`
@@ -28,15 +28,15 @@ cat dokument/frukter.txt
 med `-n` väljer du själv:
 
 ```sh
-head -n 5 dokument/server.log
-tail -n 3 dokument/server.log
+head -n 5 {{documents}}/server.log
+tail -n 3 {{documents}}/server.log
 ```
 
 `tail -f` *följer* en fil och visar nya rader när de skrivs – perfekt för
 loggar. Avsluta med **Ctrl+C**.
 
 ```predict
-$ tail -n 1 dokument/frukter.txt
+$ tail -n 1 {{documents}}/{{fruits}}
 mango
 ---
 `tail -n 1` visar bara den allra sista raden.
@@ -47,7 +47,7 @@ mango
 `wc` (*word count*) räknar rader, ord och byte:
 
 ```sh
-wc dokument/frukter.txt
+wc {{documents}}/{{fruits}}
 ```
 
 Ofta vill man bara ha antalet rader: `wc -l`.
@@ -58,7 +58,7 @@ Ofta vill man bara ha antalet rader: `wc -l`.
 som innehåller ett mönster:
 
 ```sh
-grep INFO dokument/server.log
+grep INFO {{documents}}/server.log
 ```
 
 Några flaggor du kommer att använda ofta:
@@ -73,7 +73,7 @@ Några flaggor du kommer att använda ofta:
 | `-E` | Utökade mönster, t.ex. `"ERROR|WARN"` |
 
 ```sh
-grep -n WARN dokument/server.log
+grep -n WARN {{documents}}/server.log
 ```
 
 Mönstret är ett *reguljärt uttryck*. Ett par exempel: `^` betyder radens
@@ -81,7 +81,7 @@ början och `$` radens slut, så `grep "^2026"` hittar rader som börjar med 202
 
 ```quiz
 `server.log` har två rader med `WARN` och en rad med `warn` i små bokstäver.
-Vad skriver `grep -c WARN dokument/server.log` ut?
+Vad skriver `grep -c WARN {{documents}}/server.log` ut?
 - [ ] 1
 - [x] 2
 - [ ] 3
@@ -92,9 +92,9 @@ Vad skriver `grep -c WARN dokument/server.log` ut?
 
 ```quiz
 Vilket kommando visar alla rader i `server.log` som **inte** innehåller `INFO`?
-- [ ] `grep -i INFO dokument/server.log`
-- [ ] `grep -c INFO dokument/server.log`
-- [x] `grep -v INFO dokument/server.log`
+- [ ] `grep -i INFO {{documents}}/server.log`
+- [ ] `grep -c INFO {{documents}}/server.log`
+- [x] `grep -v INFO {{documents}}/server.log`
 ```
 
 ## Sortera – `sort` och `uniq`
@@ -104,7 +104,7 @@ ordning). `uniq` tar bort rader som är likadana som raden *direkt ovanför* –
 därför används den nästan alltid efter `sort`:
 
 ```sh
-sort dokument/frukter.txt
+sort {{documents}}/{{fruits}}
 ```
 
 ```quiz

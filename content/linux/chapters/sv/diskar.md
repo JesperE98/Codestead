@@ -136,7 +136,7 @@ i RAM-minnet. Vanliga monteringspunkter:
 | `/` | Rotfilsystemet |
 | `/boot`, `/boot/efi` | Kärnan och EFI-partitionen |
 | `/mnt` | Tillfälliga monteringar som du gör för hand |
-| `/media/elev/…` eller `/run/media/elev/…` | Där skrivbordsmiljön automatiskt monterar USB-stickor |
+| `/media/{{user}}/…` eller `/run/media/{{user}}/…` | Där skrivbordsmiljön automatiskt monterar USB-stickor |
 
 ## Hur mycket plats finns kvar? – `df`
 
@@ -214,7 +214,7 @@ Härifrån fungerar stickan som vilken katalog som helst. Kopiera en fil till
 hemkatalogen:
 
 ```sh
-cp /mnt/usb/att-gora.txt ~
+cp /mnt/usb/{{todo}} ~
 ```
 
 > **Varför ägs allt av root?** FAT har inga Linux-rättigheter. När en

@@ -259,7 +259,7 @@ public static partial class ChaptersLib
                 {
                     Id = "sed-s",
                     Text = "Visa `~/{{documents}}/server.log` med ordet `ERROR` utbytt mot `{{errorWord}}` på alla rader, med `sed`.",
-                    Hint = "Kommandot `s/{{old}}/nytt/` byter ut text: `sed 's/ERROR/{{errorWord}}/' fil`",
+                    Hint = "Kommandot `s/gammalt/nytt/` byter ut text: `sed 's/ERROR/{{errorWord}}/' fil`",
                     Solution = Cmds("sed 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log"),
                     Check = c =>
                         Ran(c, Re(@"^sed\b")) && OutLines(c).Count == 15 && Re(c, "{{errorWord}} Could not connect").IsMatch(c.Output) && !c.Output.Contains("ERROR"),

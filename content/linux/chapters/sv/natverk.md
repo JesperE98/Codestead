@@ -338,7 +338,7 @@ från adressen):
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` är gjort för att ladda ner filer. Det sparar alltid till en fil,
@@ -358,10 +358,10 @@ distans, och allt som skickas är krypterat. Servern kör tjänsten `sshd` på
 port 22, och du ansluter med klienten `ssh`:
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` betyder "användaren elev på datorn server.lan". Kommandot
+`{{user}}@server.lan` betyder "användaren {{user}} på datorn server.lan". Kommandot
 efter värden (`hostname`) körs på servern och svaret visas hos dig – det står
 `server` och inte `ubuntu`.
 
@@ -380,8 +380,8 @@ det kan betyda att någon försöker utge sig för att vara servern.
 Kommandot kan vara flera kommandon inom citattecken:
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 Utan kommando loggar ssh in och du får ett skal på den andra datorn, som du
@@ -395,7 +395,7 @@ nyckeln stannar hos dig, och den publika läggs på servern:
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 Tryck Enter på frågorna från `ssh-keygen` för att använda standardfilen

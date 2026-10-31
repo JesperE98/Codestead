@@ -42,18 +42,18 @@ men med andra komprimeringsprogram (`xz`, `bzip2` och `zstd`).
 
 ## Packa ihop med `tar`
 
-Ställ dig i hemkatalogen och packa ihop katalogen `dokument`:
+Ställ dig i hemkatalogen och packa ihop katalogen `{{documents}}`:
 
 ```sh
 cd ~
-tar -cvf dokument.tar dokument
+tar -cvf {{documents}}.tar {{documents}}
 ```
 
 ```text
-dokument/
-dokument/betyg.csv
-dokument/frukter.txt
-dokument/server.log
+{{documents}}/
+{{documents}}/{{grades}}
+{{documents}}/{{fruits}}
+{{documents}}/server.log
 ```
 
 `-c` betyder *skapa ett arkiv*, `-v` att tar ska visa vad det gör och `-f`
@@ -61,7 +61,7 @@ att namnet på arkivfilen kommer härnäst. Allt som står efter arkivnamnet
 packas ihop – det kan vara hur många filer och kataloger som helst.
 
 > **Obs!** Ordningen är *arkivet först, sedan filerna*. Skriver du fel ordning,
-> som `tar -cvf dokument dokument.tar`, försöker tar skriva över katalogen –
+> som `tar -cvf {{documents}} {{documents}}.tar`, försöker tar skriva över katalogen –
 > eller värre, en fil du ville behålla.
 
 ## Flaggorna att komma ihåg
@@ -101,13 +101,13 @@ Vad gör `tar -xzvf backup.tar.gz`?
 Lägg till `z` så skickas arkivet genom gzip på vägen:
 
 ```sh
-tar -czvf dokument.tar.gz dokument
-ls -l dokument.tar dokument.tar.gz
+tar -czvf {{documents}}.tar.gz {{documents}}
+ls -l {{documents}}.tar {{documents}}.tar.gz
 ```
 
 ```text
--rw-r--r-- 1 elev elev 10240 Oct 30 12:00 dokument.tar
--rw-r--r-- 1 elev elev   837 Oct 30 12:00 dokument.tar.gz
+-rw-r--r-- 1 {{user}} {{user}} 10240 Oct 30 12:00 {{documents}}.tar
+-rw-r--r-- 1 {{user}} {{user}}   816 Oct 30 12:00 {{documents}}.tar.gz
 ```
 
 Arkivet utan komprimering är hela 10 240 byte, fast filerna bara är på drygt
@@ -119,14 +119,14 @@ Kommandot `du` (*disk usage*) visar hur mycket plats något tar på disken.
 Med `-h` får du läsbara storlekar och med `-s` en summa för en hel katalog:
 
 ```sh
-du -h dokument.tar dokument.tar.gz
-du -sh dokument
+du -h {{documents}}.tar {{documents}}.tar.gz
+du -sh {{documents}}
 ```
 
 ```text
-12K	dokument.tar
-4.0K	dokument.tar.gz
-16K	dokument
+12K	{{documents}}.tar
+4.0K	{{documents}}.tar.gz
+16K	{{documents}}
 ```
 
 Disken delas in i block om 4 KiB, så `du` visar aldrig mindre än `4.0K` för en
@@ -135,14 +135,14 @@ fil som inte är tom. Den exakta storleken ser du med `ls -l` (eller `ls -lh`).
 ## Titta i ett arkiv innan du packar upp
 
 ```sh
-tar -tzvf dokument.tar.gz
+tar -tzvf {{documents}}.tar.gz
 ```
 
 ```text
-drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
--rw-r--r-- elev/elev       146 2026-10-30 12:00 dokument/betyg.csv
--rw-r--r-- elev/elev        64 2026-10-30 12:00 dokument/frukter.txt
--rw-r--r-- elev/elev       848 2026-10-30 12:00 dokument/server.log
+drwxr-xr-x {{user}}/{{user}}         0 2026-10-30 12:00 {{documents}}/
+-rw-r--r-- {{user}}/{{user}}       146 2026-10-30 12:00 {{documents}}/{{grades}}
+-rw-r--r-- {{user}}/{{user}}        64 2026-10-30 12:00 {{documents}}/{{fruits}}
+-rw-r--r-- {{user}}/{{user}}       824 2026-10-30 12:00 {{documents}}/server.log
 ```
 
 Med `v` visas innehållet som i `ls -l`, med rättigheter, ägare och storlek.
@@ -152,13 +152,13 @@ Det är en god vana att titta först: en del arkiv saknar en gemensam katalog
 ## Packa upp
 
 ```sh
-mkdir uppackat
-tar -xzvf dokument.tar.gz -C uppackat
+mkdir {{unpacked}}
+tar -xzvf {{documents}}.tar.gz -C {{unpacked}}
 ```
 
 `-C` (stort C) väljer katalogen som tar packar upp i. Utan den hamnar allt i
 katalogen du står i. Moderna versioner av tar känner själva igen om arkivet är
-komprimerat när de packar upp, så `tar -xf dokument.tar.gz` fungerar också.
+komprimerat när de packar upp, så `tar -xf {{documents}}.tar.gz` fungerar också.
 
 > **Varning!** tar frågar inte innan det skriver över filer som redan finns.
 > Lista innehållet först om du är osäker.
@@ -169,29 +169,29 @@ Om du packar ihop en absolut sökväg tas det inledande `/` bort, så att arkive
 går att packa upp var som helst:
 
 ```sh
-tar -czf backup.tar.gz ~/dokument
+tar -czf backup.tar.gz ~/{{documents}}
 ```
 
 ```text
 tar: Removing leading `/' from member names
 ```
 
-Arkivet innehåller nu `home/elev/dokument/...`. Vill du bara ha `dokument/`
+Arkivet innehåller nu `home/{{user}}/{{documents}}/...`. Vill du bara ha `{{documents}}/`
 i arkivet kan du låta tar byta katalog först med `-C`:
 
 ```sh
-tar -czf backup.tar.gz -C ~ dokument
+tar -czf backup.tar.gz -C ~ {{documents}}
 tar -tzf backup.tar.gz
 ```
 
 ```quiz
-Du kör `tar -czf backup.tar.gz -C ~ dokument`. Vad innehåller arkivet?
-- [x] `dokument/` och filerna i den
-- [ ] `home/elev/dokument/` och filerna i den
-- [ ] `/home/elev/dokument/` och filerna i den
+Du kör `tar -czf backup.tar.gz -C ~ {{documents}}`. Vad innehåller arkivet?
+- [x] `{{documents}}/` och filerna i den
+- [ ] `home/{{user}}/{{documents}}/` och filerna i den
+- [ ] `/home/{{user}}/{{documents}}/` och filerna i den
 ---
 `-C ~` gör att tar först byter till din hemkatalog, så namnen i arkivet börjar
-med `dokument/`.
+med `{{documents}}/`.
 ```
 
 ## Komprimera enskilda filer med `gzip`
@@ -200,12 +200,12 @@ med `dokument/`.
 och tidsstämpeln följer med:
 
 ```sh
-cp dokument/server.log .
+cp {{documents}}/server.log .
 gzip -v server.log
 ```
 
 ```text
-server.log:	 39.0% -- replaced with server.log.gz
+server.log:	 39.8% -- replaced with server.log.gz
 ```
 
 `gzip -l` visar storleken före och efter, och `gunzip` packar upp filen igen:
@@ -220,21 +220,21 @@ liten fil – den blir faktiskt **större**, eftersom gzip lägger till ett huvu
 med bland annat filnamnet:
 
 ```sh
-cp dokument/frukter.txt .
-gzip -kv frukter.txt
+cp {{documents}}/{{fruits}} .
+gzip -kv {{fruits}}
 ```
 
 ```text
-frukter.txt:	-20.3% -- created frukter.txt.gz
+{{fruits}}:	-20.3% -- created {{fruits}}.gz
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ cp dokument/server.log .
-$ gzip frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ cp {{documents}}/server.log .
+$ gzip {{fruits}}
 $ gzip -k server.log
-$ ls frukter* server*
-frukter.txt.gz  server.log  server.log.gz
+$ ls {{fruits}}* server*
+{{fruits}}.gz  server.log  server.log.gz
 ---
 Vanligt `gzip` ersätter filen med en `.gz`-fil; `-k` behåller originalet.
 ```
@@ -278,14 +278,14 @@ Packa sedan ihop katalogen. Glöm inte `-r` (*recursive*) – utan den lägger z
 bara till den tomma katalogen, inte filerna i den:
 
 ```sh
-zip -r dokument.zip dokument
+zip -r {{documents}}.zip {{documents}}
 ```
 
 ```text
-  adding: dokument/ (stored 0%)
-  adding: dokument/betyg.csv (deflated 17%)
-  adding: dokument/frukter.txt (deflated 27%)
-  adding: dokument/server.log (deflated 42%)
+  adding: {{documents}}/ (stored 0%)
+  adding: {{documents}}/{{grades}} (deflated 17%)
+  adding: {{documents}}/{{fruits}} (deflated 27%)
+  adding: {{documents}}/server.log (deflated 43%)
 ```
 
 Lägg märke till att ordningen är densamma som för tar: arkivet först, sedan
@@ -293,16 +293,16 @@ filerna. `unzip -l` listar innehållet och `-d` väljer var det packas upp
 (katalogen skapas om den inte finns):
 
 ```sh
-unzip -l dokument.zip
-unzip dokument.zip -d fran-zip
+unzip -l {{documents}}.zip
+unzip {{documents}}.zip -d {{fromZip}}
 ```
 
 Finns filerna redan hoppar unzip över dem. Med `unzip -o` skrivs de över.
 
 ```quiz
-Du kör `zip dokument.zip dokument` utan `-r`. Vad hamnar i zip-filen?
-- [ ] Alla filer i `dokument`
-- [x] Bara den tomma katalogen `dokument/`
+Du kör `zip {{documents}}.zip {{documents}}` utan `-r`. Vad hamnar i zip-filen?
+- [ ] Alla filer i `{{documents}}`
+- [x] Bara den tomma katalogen `{{documents}}/`
 - [ ] Ingenting – zip vägrar köra
 ---
 Utan `-r` (*recursive*) går zip inte in i katalogen.

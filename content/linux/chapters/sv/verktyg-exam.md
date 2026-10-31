@@ -30,20 +30,20 @@ committas.
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
 $ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
-$ git merge ny-design > /dev/null
+$ git merge {{newDesign}} > /dev/null
 $ git log --oneline | wc -l
 2
 ---
 `main` hade inte ändrats sedan grenen skapades, så sammanslagningen blev en
-*fast-forward*: git flyttade bara fram `main` till commiten i `ny-design`.
+*fast-forward*: git flyttade bara fram `main` till commiten i `{{newDesign}}`.
 Ingen merge-commit skapades.
 ```
 
@@ -146,7 +146,7 @@ Vilken fil läser zsh när det startar?
 ```
 
 ```try
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ---
 Det sista fältet på raden är ditt inloggningsskal – det som `chsh -s` ändrar.
 ```

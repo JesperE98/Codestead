@@ -26,7 +26,7 @@ touch inkopslista.txt
 ```
 
 ```quiz
-Vad gör `touch anteckningar.txt` om filen redan finns?
+Vad gör `touch {{notes}}` om filen redan finns?
 - [ ] Den tömmer filen
 - [ ] Den klagar på att filen finns
 - [x] Den uppdaterar bara filens tidsstämpel – innehållet är oförändrat
@@ -35,21 +35,21 @@ Vad gör `touch anteckningar.txt` om filen redan finns?
 ## Kopiera – `cp`
 
 ```sh
-cp anteckningar.txt anteckningar-kopia.txt
+cp {{notes}} anteckningar-kopia.txt
 ```
 
 Om målet är en katalog hamnar kopian i den, med samma namn. För att kopiera en
 hel katalog behövs `-r` (*recursive*):
 
 ```sh
-cp -r dokument dokument-backup
+cp -r {{documents}} {{documents}}-backup
 ```
 
 ```predict
 $ mkdir kopior
-$ cp anteckningar.txt kopior
+$ cp {{notes}} kopior
 $ ls kopior
-anteckningar.txt
+{{notes}}
 ---
 `kopior` är en katalog, så kopian hamnar i den med samma namn.
 ```
@@ -59,8 +59,8 @@ anteckningar.txt
 I Linux är *flytta* och *byta namn* samma sak. `mv` gör båda:
 
 ```sh
-mv inkopslista.txt dokument/
-mv dokument/inkopslista.txt dokument/handla.txt
+mv inkopslista.txt {{documents}}/
+mv {{documents}}/inkopslista.txt {{documents}}/handla.txt
 ```
 
 ```quiz
@@ -82,7 +82,7 @@ rm anteckningar-kopia.txt
 används `rm -r`:
 
 ```sh
-rm -r dokument-backup
+rm -r {{documents}}-backup
 ```
 
 > **Varning!** Det finns ingen papperskorg i terminalen. Det du tar bort med
@@ -91,10 +91,10 @@ rm -r dokument-backup
 > Enter.
 
 ```quiz
-Vilket kommando tar bort katalogen `gammalt` *bara* om den är tom?
-- [ ] `rm gammalt`
-- [x] `rmdir gammalt`
-- [ ] `rm -r gammalt`
+Vilket kommando tar bort katalogen `{{old}}` *bara* om den är tom?
+- [ ] `rm {{old}}`
+- [x] `rmdir {{old}}`
+- [ ] `rm -r {{old}}`
 ---
 `rmdir` vägrar ta bort en katalog som fortfarande har något i sig.
 `rm -r` tar bort katalogen och allt som finns i den.
@@ -110,22 +110,22 @@ Skalet kan expandera mönster till flera filnamn innan kommandot körs:
 | `?` | Exakt ett tecken |
 | `[abc]` | Ett av tecknen a, b eller c |
 
-Katalogen `dokument` i din hemkatalog innehåller tre filer: `betyg.csv`,
-`frukter.txt` och `server.log`. Det här listar bara dem som slutar på `.txt`:
+Katalogen `{{documents}}` i din hemkatalog innehåller tre filer: `{{grades}}`,
+`{{fruits}}` och `server.log`. Det här listar bara dem som slutar på `.txt`:
 
 ```sh
-ls dokument/*.txt
+ls {{documents}}/*.txt
 ```
 
-Här ser `ls` aldrig stjärnan – skalet har redan bytt ut `dokument/*.txt` mot
+Här ser `ls` aldrig stjärnan – skalet har redan bytt ut `{{documents}}/*.txt` mot
 alla matchande filnamn.
 
 ```predict
-$ ls dokument/?????.*
-dokument/betyg.csv
+$ ls {{documents}}/?????.*
+{{documents}}/{{grades}}
 ---
 Varje `?` är exakt ett tecken, så namnet före punkten måste vara fem tecken
-långt. Det är bara `betyg` – `frukter` och `server` är längre.
+långt. Det gäller bara `{{grades}}` – `{{fruits}}` och `server.log` har längre namn.
 ```
 
 ## Mellanslag i filnamn

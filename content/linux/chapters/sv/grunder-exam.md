@@ -7,7 +7,7 @@ Vilken av de här sökvägarna är **absolut**?
 - [ ] `var/log`
 - [ ] `../etc`
 - [x] `/usr/bin`
-- [ ] `dokument`
+- [ ] `{{documents}}`
 ---
 En absolut sökväg börjar med `/`, i roten. De andra utgår från katalogen du
 står i.
@@ -30,10 +30,10 @@ Vad gör `cd -`?
 ```
 
 ```quiz
-Du vill kopiera hela katalogen `bilder`, med allt innehåll, till `bilder-kopia`. Vilket kommando fungerar?
-- [ ] `cp bilder bilder-kopia`
-- [x] `cp -r bilder bilder-kopia`
-- [ ] `mv bilder bilder-kopia`
+Du vill kopiera hela katalogen `{{pictures}}`, med allt innehåll, till `{{pictures}}-kopia`. Vilket kommando fungerar?
+- [ ] `cp {{pictures}} {{pictures}}-kopia`
+- [x] `cp -r {{pictures}} {{pictures}}-kopia`
+- [ ] `mv {{pictures}} {{pictures}}-kopia`
 ---
 En katalog kopieras med `-r` (*recursive*). `mv` skulle flytta den i stället
 för att kopiera den.
@@ -58,7 +58,7 @@ Skalet delar upp raden vid mellanslag, så `touch` får två argument. Skriv
 ```
 
 ```quiz
-Vilka rader visar `grep -i error dokument/server.log`?
+Vilka rader visar `grep -i error {{documents}}/server.log`?
 - [ ] Bara rader med `error` i små bokstäver
 - [ ] Bara rader med `ERROR` i stora bokstäver
 - [x] Rader med `error` i valfri blandning av stora och små bokstäver
@@ -66,9 +66,9 @@ Vilka rader visar `grep -i error dokument/server.log`?
 
 ```quiz
 Du vill följa en loggfil och se nya rader när de skrivs. Vilket kommando passar?
-- [ ] `head -n 10 dokument/server.log`
-- [x] `tail -f dokument/server.log`
-- [ ] `wc -l dokument/server.log`
+- [ ] `head -n 10 {{documents}}/server.log`
+- [x] `tail -f {{documents}}/server.log`
+- [ ] `wc -l {{documents}}/server.log`
 ---
 `tail -f` *följer* filen. Avsluta med **Ctrl+C**.
 ```
@@ -98,7 +98,7 @@ När körs `b` i `a || b`?
 ```
 
 ```try
-grep ERROR ~/dokument/server.log | tee fel.txt | wc -l
+grep ERROR ~/{{documents}}/server.log | tee fel.txt | wc -l
 ---
 `tee` sparade felraderna i `fel.txt` och skickade dem vidare till `wc -l`, som
 räknade dem.

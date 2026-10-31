@@ -5,7 +5,7 @@ har varje fil en ägare och regler för vem som får göra vad.
 
 ## Användare och grupper
 
-Du är inloggad som användaren `elev`. Varje användare tillhör en eller flera
+Du är inloggad som användaren `{{user}}`. Varje användare tillhör en eller flera
 **grupper**:
 
 ```sh
@@ -20,8 +20,8 @@ Man loggar sällan in som root. I stället använder man `sudo` (se nedan).
 Kör `ls -l` och titta på första kolumnen:
 
 ```text
--rw-r--r-- 1 elev elev  174 Oct 29 13:55 anteckningar.txt
-drwxr-xr-x 2 elev elev 4096 Oct 29 13:55 dokument
+-rw-r--r-- 1 {{user}} {{user}}  174 Oct 29 13:55 {{notes}}
+drwxr-xr-x 2 {{user}} {{user}} 4096 Oct 29 13:55 {{documents}}
 ```
 
 Det första tecknet är typen: `-` för fil, `d` för katalog. Sedan kommer tre
@@ -38,7 +38,7 @@ typ ägaren  gruppen övriga
 | `w` (write) | Ändra innehållet | Skapa och ta bort filer i den |
 | `x` (execute) | Köra filen som program | Gå in i katalogen med `cd` |
 
-Därefter visas ägaren (`elev`) och gruppen (`elev`).
+Därefter visas ägaren (`{{user}}`) och gruppen (`{{user}}`).
 
 ```quiz
 En katalog har rättigheterna `drwxr-x---`. Vad får medlemmarna i dess grupp göra?
@@ -62,7 +62,7 @@ av r = 4, w = 2 och x = 1:
 | `600` | `rw-------` | Hemliga filer |
 
 ```sh
-chmod 644 anteckningar.txt
+chmod 644 {{notes}}
 ```
 
 Eller med **symboler**: `u` (ägaren), `g` (gruppen), `o` (övriga), `a` (alla),
