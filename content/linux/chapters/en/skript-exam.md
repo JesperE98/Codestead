@@ -13,15 +13,15 @@ executable.
 ```
 
 ```quiz
-`namn = Kim` gives the error `command not found`. Why?
-- [x] The spaces around `=` make the shell treat `namn` as a command
+`{{nameVar}} = Kim` gives the error `command not found`. Why?
+- [x] The spaces around `=` make the shell treat `{{nameVar}}` as a command
 - [ ] Variable names must be written in capital letters
-- [ ] You have to write `$namn = Kim`
+- [ ] You have to write `${{nameVar}} = Kim`
 ```
 
 ```predict
-$ antal=$(ls ~/dokument | wc -l)
-$ echo "$antal files"
+$ count=$(ls ~/{{documents}} | wc -l)
+$ echo "$count files"
 3 files
 ```
 
@@ -50,13 +50,13 @@ text.
 ```
 
 ```predict
-$ [ -d ~/finnsinte ] && echo yes || echo no
+$ [ -d ~/{{missing}} ] && echo yes || echo no
 no
 ```
 
 ```predict
-$ fil=rapport.txt
-$ case $fil in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
+$ file=report.txt
+$ case $file in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
 A text file
 ```
 
@@ -91,9 +91,9 @@ Why does a script end with `exit 1` when something goes wrong?
 ```
 
 ```quiz
-You start a here document with `cat > hej.sh << 'SLUT'`. When does it end?
+You start a here document with `cat > {{helloScript}} << '{{heredocEnd}}'`. When does it end?
 - [ ] When you press Enter on an empty line
-- [x] At the line `SLUT`
+- [x] At the line `{{heredocEnd}}`
 - [ ] After ten lines
 ```
 

@@ -2,23 +2,23 @@
   "title": "Reading and searching text",
   "tasks": {
     "head": {
-      "text": "Show the **first 3** lines of `~/dokument/server.log`."
+      "text": "Show the **first 3** lines of `~/{{documents}}/server.log`."
     },
     "tail": {
-      "text": "Show the **last 2** lines of `~/dokument/server.log`."
+      "text": "Show the **last 2** lines of `~/{{documents}}/server.log`."
     },
     "grep": {
-      "text": "Show every line containing `ERROR` in `~/dokument/server.log`."
+      "text": "Show every line containing `ERROR` in `~/{{documents}}/server.log`."
     },
     "grep-i": {
       "text": "Search for `warn` in server.log **without** caring about upper or lower case.",
       "hint": "The `-i` option makes the search case-insensitive. You should get 3 matches."
     },
     "wc": {
-      "text": "Count how many lines `~/dokument/frukter.txt` has."
+      "text": "Count how many lines `~/{{documents}}/{{fruits}}` has."
     },
     "sort": {
-      "text": "Show the fruits in `~/dokument/frukter.txt` in alphabetical order."
+      "text": "Show the fruits in `~/{{documents}}/{{fruits}}` in alphabetical order."
     }
   }
 }

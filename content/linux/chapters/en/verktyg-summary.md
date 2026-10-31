@@ -83,7 +83,7 @@ around them: variables, loops, conditions and the prompt.
 | `zsh` / `fish` / `exit` | Start another shell / go back |
 | `zsh -c '…'` / `fish -c '…'` | Run one command in another shell |
 | `setopt autocd` / `unsetopt autocd` | Turn a zsh option on / off |
-| `set frukt äpple` / `set -e frukt` | Set / remove a variable in fish |
+| `set {{fruitVar}} {{fruitWord}}` / `set -e {{fruitVar}}` | Set / remove a variable in fish |
 | `set -x NAME value` | Set an environment variable in fish |
 | `math 17 x 23` | Arithmetic in fish |
 | `chsh -s /usr/bin/zsh` | Change your login shell |

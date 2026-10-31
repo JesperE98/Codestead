@@ -6,14 +6,14 @@ delete things.
 ## Creating directories – `mkdir`
 
 ```sh
-mkdir bilder2
+mkdir photos
 ```
 
 If you want to create several levels at once, you need `-p` (*parents*).
 Without it, `mkdir` complains if the parent directory doesn't exist:
 
 ```sh
-mkdir -p resa/2026/juni
+mkdir -p trip/2026/june
 ```
 
 ## Creating empty files – `touch`
@@ -22,11 +22,11 @@ mkdir -p resa/2026/juni
 its timestamp):
 
 ```sh
-touch inkopslista.txt
+touch shopping-list.txt
 ```
 
 ```quiz
-What does `touch anteckningar.txt` do if the file already exists?
+What does `touch {{notes}}` do if the file already exists?
 - [ ] It empties the file
 - [ ] It complains that the file exists
 - [x] It only updates the file's timestamp – the contents stay the same
@@ -35,23 +35,23 @@ What does `touch anteckningar.txt` do if the file already exists?
 ## Copying – `cp`
 
 ```sh
-cp anteckningar.txt anteckningar-kopia.txt
+cp {{notes}} notes-copy.txt
 ```
 
 If the target is a directory, the copy ends up inside it with the same name.
 To copy an entire directory you need `-r` (*recursive*):
 
 ```sh
-cp -r dokument dokument-backup
+cp -r {{documents}} {{documents}}-backup
 ```
 
 ```predict
-$ mkdir kopior
-$ cp anteckningar.txt kopior
-$ ls kopior
-anteckningar.txt
+$ mkdir copies
+$ cp {{notes}} copies
+$ ls copies
+{{notes}}
 ---
-`kopior` is a directory, so the copy ends up inside it with the same name.
+`copies` is a directory, so the copy ends up inside it with the same name.
 ```
 
 ## Moving and renaming – `mv`
@@ -59,8 +59,8 @@ anteckningar.txt
 In Linux, *moving* and *renaming* are the same thing. `mv` does both:
 
 ```sh
-mv inkopslista.txt dokument/
-mv dokument/inkopslista.txt dokument/handla.txt
+mv shopping-list.txt {{documents}}/
+mv {{documents}}/shopping-list.txt {{documents}}/groceries.txt
 ```
 
 ```quiz
@@ -75,14 +75,14 @@ Moving and renaming are the same thing. Afterwards there is only `b.txt`.
 ## Deleting – `rm` and `rmdir`
 
 ```sh
-rm anteckningar-kopia.txt
+rm notes-copy.txt
 ```
 
 `rmdir` removes *empty* directories. To remove a directory along with
 everything in it, use `rm -r`:
 
 ```sh
-rm -r dokument-backup
+rm -r {{documents}}-backup
 ```
 
 > **Warning!** There is no recycle bin in the terminal. What you delete with
@@ -91,10 +91,10 @@ rm -r dokument-backup
 > press Enter.
 
 ```quiz
-Which command removes the directory `gammalt` *only* if it is empty?
-- [ ] `rm gammalt`
-- [x] `rmdir gammalt`
-- [ ] `rm -r gammalt`
+Which command removes the directory `{{old}}` *only* if it is empty?
+- [ ] `rm {{old}}`
+- [x] `rmdir {{old}}`
+- [ ] `rm -r {{old}}`
 ---
 `rmdir` refuses to remove a directory that still has something in it.
 `rm -r` removes the directory and everything inside.
@@ -111,23 +111,23 @@ runs:
 | `?` | Exactly one character |
 | `[abc]` | One of the characters a, b or c |
 
-The directory `dokument` in your home directory contains three files:
-`betyg.csv`, `frukter.txt` and `server.log`. This lists only those that end
+The directory `{{documents}}` in your home directory contains three files:
+`{{fruits}}`, `{{grades}}` and `server.log`. This lists only those that end
 in `.txt`:
 
 ```sh
-ls dokument/*.txt
+ls {{documents}}/*.txt
 ```
 
 Here `ls` never sees the asterisk – the shell has already replaced
-`dokument/*.txt` with all the matching file names.
+`{{documents}}/*.txt` with all the matching file names.
 
 ```predict
-$ ls dokument/?????.*
-dokument/betyg.csv
+$ ls {{documents}}/?r*
+{{documents}}/{{fruits}}  {{documents}}/{{grades}}
 ---
-Each `?` is exactly one character, so the name before the dot must be five
-characters long. Only `betyg` is – `frukter` and `server` are longer.
+`?` is exactly one character, so the second letter of the name must be `r`.
+That's true of `{{fruits}}` and `{{grades}}`, but not of `server.log`.
 ```
 
 ## Spaces in file names
@@ -136,8 +136,8 @@ The shell splits the command line at spaces. If a file has a space in its
 name, you must use quotes (or a `\` before the space):
 
 ```sh
-touch "min fil.txt"
-ls -l "min fil.txt"
+touch "my file.txt"
+ls -l "my file.txt"
 ```
 
 That's why many people prefer hyphens or underscores in file names.

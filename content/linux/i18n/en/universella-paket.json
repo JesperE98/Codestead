@@ -38,15 +38,15 @@
       }
     },
     "appimage-chmod": {
-      "text": "There is a downloaded AppImage in `~/Nedladdningar`. Make the file `Kalkylator.AppImage` executable.",
-      "hint": "`chmod +x ~/Nedladdningar/Kalkylator.AppImage`"
+      "text": "There is a downloaded AppImage in `~/{{downloads}}`. Make the file `{{calculator}}` executable.",
+      "hint": "`chmod +x ~/{{downloads}}/{{calculator}}`"
     },
     "appimage-run": {
-      "text": "Start Kalkylator. Does it complain about FUSE? Install the missing library and try again.",
+      "text": "Start {{calcName}}. Does it complain about FUSE? Install the missing library and try again.",
       "hint": {
-        "debian": "The library is in the package `libfuse2t64`. Then start it with `~/Nedladdningar/Kalkylator.AppImage`.",
-        "arch": "The library is in the package `fuse2`. Then start it with `~/Nedladdningar/Kalkylator.AppImage`.",
-        "redhat": "The library is in the package `fuse-libs`. Then start it with `~/Nedladdningar/Kalkylator.AppImage`."
+        "debian": "The library is in the package `libfuse2t64`. Then start it with `~/{{downloads}}/{{calculator}}`.",
+        "arch": "The library is in the package `fuse2`. Then start it with `~/{{downloads}}/{{calculator}}`.",
+        "redhat": "The library is in the package `fuse-libs`. Then start it with `~/{{downloads}}/{{calculator}}`."
       }
     }
   }

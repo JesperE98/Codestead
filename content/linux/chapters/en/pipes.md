@@ -45,16 +45,16 @@ The second `>` overwrote the file. With `>>` it would contain both lines.
 `<` lets a program read its stdin from a file:
 
 ```sh
-wc -l < dokument/frukter.txt
+wc -l < {{documents}}/{{fruits}}
 ```
 
 Now `wc` never sees the file name – it only gets the text on stdin – so it
 prints just the number.
 
 ```predict
-$ wc -l dokument/frukter.txt
-$ wc -l < dokument/frukter.txt
-10 dokument/frukter.txt
+$ wc -l {{documents}}/{{fruits}}
+$ wc -l < {{documents}}/{{fruits}}
+10 {{documents}}/{{fruits}}
 10
 ---
 With a file name as an argument, `wc` prints the name too. With `<`, it only
@@ -67,15 +67,13 @@ Error messages go to stderr and aren't affected by `>`. To deal with them,
 write the stream's number in front:
 
 ```sh
-ls /finnsinte 2> fel.txt
+ls /{{missing}} 2> errors.txt
 ```
 
-(*Finns inte* is Swedish for "doesn't exist", and *fel* means "error".)
-
 ```quiz
-You run `ls /finnsinte > fel.txt`. Where does the error message end up?
-- [ ] In `fel.txt`
-- [x] On the screen – `fel.txt` stays empty
+You run `ls /{{missing}} > errors.txt`. Where does the error message end up?
+- [ ] In `errors.txt`
+- [x] On the screen – `errors.txt` stays empty
 - [ ] Nowhere, it disappears
 ---
 `>` only redirects stdout (stream 1). The error message goes to stderr
@@ -93,14 +91,14 @@ next. This is the heart of the Unix philosophy: *do one thing and do it well,
 and let programs work together*.
 
 ```sh
-grep INFO dokument/server.log | wc -l
+grep INFO {{documents}}/server.log | wc -l
 ```
 
 `grep` finds the lines and `wc -l` counts them. You can chain together as
 many as you like:
 
 ```sh
-sort dokument/frukter.txt | uniq -c | sort -rn
+sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ```
 
 Read it step by step: sort the fruits, count how many there are of each
@@ -117,7 +115,7 @@ ls /etc | wc -l
 `tee` passes its input along *and* saves a copy in a file:
 
 ```sh
-ls /etc | tee etc-lista.txt | wc -l
+ls /etc | tee etc-list.txt | wc -l
 ```
 
 ## Chains – `;`, `&&` and `||`
@@ -131,13 +129,13 @@ Several commands can go on the same line:
 | `a \|\| b` | Run b only if a failed |
 
 ```sh
-mkdir -p ny && cd ny
+mkdir -p new && cd new
 ```
 
 ```predict
-$ mkdir dokument 2> /dev/null && echo created || echo failed
+$ mkdir {{documents}} 2> /dev/null && echo created || echo failed
 failed
 ---
-`dokument` already exists, so `mkdir` fails (its error message disappears in
+`{{documents}}` already exists, so `mkdir` fails (its error message disappears in
 `/dev/null`). `echo created` is skipped and `echo failed` runs.
 ```

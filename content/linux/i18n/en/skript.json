@@ -2,35 +2,35 @@
   "title": "Shell scripts",
   "tasks": {
     "variabel": {
-      "text": "Create the variable `namn` (Swedish for “name”) containing your name, and then use `echo` to print `Hej` (“Hi”) followed by the name.",
-      "hint": "No spaces around `=`: `namn=Kim`. Then use `echo \"Hej $namn\"`."
+      "text": "Create the variable `{{nameVar}}` containing your name, and then use `echo` to print `{{hello}}` followed by the name.",
+      "hint": "No spaces around `=`: `{{nameVar}}=Kim`. Then use `echo \"{{hello}} ${{nameVar}}\"`."
     },
     "rakna": {
       "text": "Work out 17 × 23 with `$(( ))`."
     },
     "substitution": {
-      "text": "Save the number of lines in `~/dokument/server.log` in the variable `rader`, using `$(...)` and `wc -l`.",
-      "hint": "`wc -l < file` prints just the number, without the file name: `rader=$(wc -l < ~/dokument/server.log)`"
+      "text": "Save the number of lines in `~/{{documents}}/server.log` in the variable `{{linesVar}}`, using `$(...)` and `wc -l`.",
+      "hint": "`wc -l < file` prints just the number, without the file name: `{{linesVar}}=$(wc -l < ~/{{documents}}/server.log)`"
     },
     "if": {
-      "text": "Write an `if` statement that prints `finns` (“exists”) if the file `~/.bashrc` exists.",
-      "hint": "`if [ -f ~/.bashrc ]; then echo finns; fi` – don't forget the spaces inside the square brackets."
+      "text": "Write an `if` statement that prints `{{exists}}` if the file `~/.bashrc` exists.",
+      "hint": "`if [ -f ~/.bashrc ]; then echo {{exists}}; fi` – don't forget the spaces inside the square brackets."
     },
     "for": {
       "text": "Print the numbers 1 to 5, one per line, with a `for` loop.",
       "hint": "Either `for i in 1 2 3 4 5; do ...; done` or `for i in $(seq 1 5); do ...; done`."
     },
     "while-read": {
-      "text": "Read `~/dokument/frukter.txt` line by line with `while read` and print `Frukt: ` (Swedish for “Fruit”) in front of each line.",
-      "hint": "`while read rad; do echo \"Frukt: $rad\"; done < ~/dokument/frukter.txt`"
+      "text": "Read `~/{{documents}}/{{fruits}}` line by line with `while read` and print `{{fruitLabel}}: ` in front of each line.",
+      "hint": "`while read {{lineVar}}; do echo \"{{fruitLabel}}: ${{lineVar}}\"; done < ~/{{documents}}/{{fruits}}`"
     },
     "funktion": {
-      "text": "Create the function `dubbla` (“double”) that prints its first argument times two. Test it with `dubbla 21`.",
-      "hint": "`dubbla() { echo $(( $1 * 2 )); }` – and then `dubbla 21`."
+      "text": "Create the function `{{doubleFn}}` that prints its first argument times two. Test it with `{{doubleFn}} 21`.",
+      "hint": "`{{doubleFn}}() { echo $(( $1 * 2 )); }` – and then `{{doubleFn}} 21`."
     },
     "backup": {
-      "text": "Write the script `~/backup.sh`, which copies the file given as the first argument to the same name with `.bak` at the end. Make it executable and run `./backup.sh anteckningar.txt` in your home directory.",
-      "hint": "Create the file with `cat > ~/backup.sh << 'SLUT'`, write `#!/bin/bash` and `cp \"$1\" \"$1.bak\"` on separate lines, and finish with `SLUT`."
+      "text": "Write the script `~/backup.sh`, which copies the file given as the first argument to the same name with `.bak` at the end. Make it executable and run `./backup.sh {{notes}}` in your home directory.",
+      "hint": "Create the file with `cat > ~/backup.sh << '{{heredocEnd}}'`, write `#!/bin/bash` and `cp \"$1\" \"$1.bak\"` on separate lines, and finish with `{{heredocEnd}}`."
     }
   }
 }

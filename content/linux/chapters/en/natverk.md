@@ -341,7 +341,7 @@ the address):
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` is made for downloading files. It always saves to a file, shows
@@ -361,10 +361,10 @@ remotely, and everything sent is encrypted. The server runs the service
 `sshd` on port 22, and you connect with the client `ssh`:
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` means "the user elev on the computer server.lan". The
+`{{user}}@server.lan` means "the user {{user}} on the computer server.lan". The
 command after the host (`hostname`) runs on the server and the answer is
 shown here – it says `server`, not `ubuntu`.
 
@@ -383,8 +383,8 @@ mean someone is pretending to be the server.
 The command can be several commands inside quotes:
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 Without a command, ssh logs in and you get a shell on the other computer,
@@ -398,7 +398,7 @@ stays with you, and the public one is put on the server:
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 Press Enter at the questions from `ssh-keygen` to use the default file

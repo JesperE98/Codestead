@@ -38,12 +38,12 @@ cat /etc/passwd
 Each line has seven fields separated by colons. Look at your own line:
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 ```text
-elev:x:1000:1000:Elev,,,:/home/elev:/bin/bash
- 1   2  3    4      5        6          7
+{{user}}:x:1000:1000:{{userFull}},,,:/home/{{user}}:/bin/bash
+   1    2  3    4       5            6           7
 ```
 
 | Field | Meaning |
@@ -61,7 +61,7 @@ finds users who aren't in the file, for example at a school or company where
 the accounts live on a central server:
 
 ```sh
-getent passwd elev
+getent passwd {{user}}
 ```
 
 ### System users
@@ -105,7 +105,7 @@ cat /etc/group
 ```
 
 ```text
-sudo:x:27:elev
+sudo:x:27:{{user}}
  1   2  3   4
 ```
 
@@ -115,7 +115,7 @@ comma-separated list of members.
 Every user has **one primary group** (the GID field in `/etc/passwd`) and can
 also be a member of any number of **supplementary groups**. New files you
 create get your primary group. In most distributions every user gets a
-private primary group with the same name – `elev` is in the group `elev`.
+private primary group with the same name – `{{user}}` is in the group `{{user}}`.
 
 ```sh
 groups
@@ -123,9 +123,9 @@ id
 ```
 
 ```quiz
-You (`elev`) are in the groups `elev` and `sudo`, and your primary group is
-`elev`. Which group gets a new file you create?
-- [x] `elev`
+You (`{{user}}`) are in the groups `{{user}}` and `sudo`, and your primary group is
+`{{user}}`. Which group gets a new file you create?
+- [x] `{{user}}`
 - [ ] `sudo`
 - [ ] Both
 - [ ] `root`
@@ -161,13 +161,13 @@ compared with the stored one. `$y$` means the *yescrypt* method is used. A
 changed and when it expires. `chage` shows them in plain text:
 
 ```sh
-chage -l elev
+chage -l {{user}}
 ```
 
 ```try
-chage -l elev
+chage -l {{user}}
 ---
-`Password expires: never` – elev's password never has to be changed.
+`Password expires: never` – the password of `{{user}}` never has to be changed.
 ```
 
 ## Creating a user – `useradd`
@@ -183,7 +183,7 @@ sudo useradd -m -s /bin/bash kim
 |---|---|
 | `-m` | Create the home directory `/home/kim` |
 | `-s /bin/bash` | The user's shell |
-| `-c "Kim Svensson"` | The comment (full name) |
+| `-c "Kim Jensen"` | The comment (full name) |
 | `-G group1,group2` | Supplementary groups right away |
 
 `useradd` finds the next free UID from 1000 upwards – `kim` gets 1001. The
@@ -240,8 +240,8 @@ passwd root
 Create a group and add a member:
 
 ```sh
-sudo groupadd utvecklare
-sudo usermod -aG utvecklare kim
+sudo groupadd {{devGroup}}
+sudo usermod -aG {{devGroup}} kim
 groups kim
 ```
 
@@ -251,12 +251,12 @@ user is removed from every other group, such as the sudo group. A common way
 to lock yourself out.
 
 ```quiz
-`kim` is in the supplementary groups `sudo` and `utvecklare`. An
+`kim` is in the supplementary groups `sudo` and `{{devGroup}}`. An
 administrator runs `sudo usermod -G backup kim`. Which supplementary groups
 is kim in afterwards?
-- [ ] `sudo`, `utvecklare` and `backup`
+- [ ] `sudo`, `{{devGroup}}` and `backup`
 - [x] Only `backup`
-- [ ] `sudo` and `utvecklare` – the command fails without `-a`
+- [ ] `sudo` and `{{devGroup}}` – the command fails without `-a`
 - [ ] None
 ---
 Without `-a` the list is set to exactly what you type. With
@@ -266,8 +266,8 @@ Without `-a` the list is set to exactly what you type. With
 `gpasswd` does the same thing and can also remove members:
 
 ```sh
-sudo gpasswd -a kim utvecklare
-sudo gpasswd -d kim utvecklare
+sudo gpasswd -a kim {{devGroup}}
+sudo gpasswd -d kim {{devGroup}}
 ```
 
 On a real computer a new group membership only takes effect the next time
@@ -277,10 +277,10 @@ Groups are used for shared directories. Make the group the owner and give it
 write permission with `chgrp` and `chmod`:
 
 ```sh
-sudo mkdir /srv/projekt
-sudo chgrp utvecklare /srv/projekt
-sudo chmod 775 /srv/projekt
-ls -ld /srv/projekt
+sudo mkdir /srv/project
+sudo chgrp {{devGroup}} /srv/project
+sudo chmod 775 /srv/project
+ls -ld /srv/project
 ```
 
 ## Granting sudo rights – the `sudo` group
@@ -371,15 +371,15 @@ Then `userdel` removes the user. With `-r` the home directory goes too –
 without `-r` the files are left behind:
 
 ```sh
-sudo useradd -m vikarie
-sudo userdel -r vikarie
+sudo useradd -m {{tempUser}}
+sudo userdel -r {{tempUser}}
 ```
 
 Ubuntu also has `deluser`, the counterpart of `adduser`:
-`sudo deluser --remove-home vikarie`. `sudo deluser kim sudo` removes kim from
+`sudo deluser --remove-home {{tempUser}}`. `sudo deluser kim sudo` removes kim from
 the group sudo.
 
-`userdel` refuses to delete a user who is logged in – try `sudo userdel elev`.
+`userdel` refuses to delete a user who is logged in – try `sudo userdel {{user}}`.
 
 ## Summary
 

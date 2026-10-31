@@ -2,17 +2,16 @@
 
 Almost everything in Linux is text: settings, logs, lists. That's why there
 are lots of small tools for reading and searching text files. In your home
-directory there's a directory called `dokument` with files to practice on,
-among them `frukter.txt` (a list of fruits) and `server.log` (a log from a
-made-up web server). Their contents are in Swedish, but the words you'll search for –
-`INFO`, `WARN` and `ERROR` – are the same as in real logs.
+directory there's a directory called `{{documents}}` with files to practice on,
+among them `{{fruits}}`, a list of fruits, and `server.log`, a log from a
+made-up web server.
 
 ## Showing a file – `cat` and `less`
 
 `cat` prints the whole file:
 
 ```sh
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 For long files, `less` is better. There you scroll with the arrow keys and
@@ -21,7 +20,7 @@ the space bar, search with `/word` and quit with `q`.
 Look at the list of fruits – you'll need it for the next question:
 
 ```try
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 ## The beginning and the end – `head` and `tail`
@@ -30,15 +29,15 @@ cat dokument/frukter.txt
 lines, but you can choose with `-n`:
 
 ```sh
-head -n 5 dokument/server.log
-tail -n 3 dokument/server.log
+head -n 5 {{documents}}/server.log
+tail -n 3 {{documents}}/server.log
 ```
 
 `tail -f` *follows* a file and shows new lines as they're written – perfect
 for logs. Stop it with **Ctrl+C**.
 
 ```predict
-$ tail -n 1 dokument/frukter.txt
+$ tail -n 1 {{documents}}/{{fruits}}
 mango
 ---
 `tail -n 1` shows only the very last line.
@@ -49,7 +48,7 @@ mango
 `wc` (*word count*) counts lines, words and bytes:
 
 ```sh
-wc dokument/frukter.txt
+wc {{documents}}/{{fruits}}
 ```
 
 Often you only want the number of lines: `wc -l`.
@@ -60,7 +59,7 @@ Often you only want the number of lines: `wc -l`.
 contains a pattern:
 
 ```sh
-grep INFO dokument/server.log
+grep INFO {{documents}}/server.log
 ```
 
 A few options you'll use a lot:
@@ -75,7 +74,7 @@ A few options you'll use a lot:
 | `-E` | Extended patterns, e.g. `"ERROR|WARN"` |
 
 ```sh
-grep -n WARN dokument/server.log
+grep -n WARN {{documents}}/server.log
 ```
 
 The pattern is a *regular expression*. A couple of examples: `^` means the
@@ -84,7 +83,7 @@ that start with 2026.
 
 ```quiz
 `server.log` has two lines with `WARN` and one line with `warn` in lower case.
-What does `grep -c WARN dokument/server.log` print?
+What does `grep -c WARN {{documents}}/server.log` print?
 - [ ] 1
 - [x] 2
 - [ ] 3
@@ -95,9 +94,9 @@ different. `grep -ic WARN` would count all three.
 
 ```quiz
 Which command shows every line in `server.log` that does **not** contain `INFO`?
-- [ ] `grep -i INFO dokument/server.log`
-- [ ] `grep -c INFO dokument/server.log`
-- [x] `grep -v INFO dokument/server.log`
+- [ ] `grep -i INFO {{documents}}/server.log`
+- [ ] `grep -c INFO {{documents}}/server.log`
+- [x] `grep -v INFO {{documents}}/server.log`
 ```
 
 ## Sorting – `sort` and `uniq`
@@ -107,7 +106,7 @@ Which command shows every line in `server.log` that does **not** contain `INFO`?
 is why it is almost always used after `sort`:
 
 ```sh
-sort dokument/frukter.txt
+sort {{documents}}/{{fruits}}
 ```
 
 ```quiz

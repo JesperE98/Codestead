@@ -7,7 +7,7 @@ Which of these paths is **absolute**?
 - [ ] `var/log`
 - [ ] `../etc`
 - [x] `/usr/bin`
-- [ ] `dokument`
+- [ ] `{{documents}}`
 ---
 An absolute path starts with `/`, at the root. The others start from the
 directory you're in.
@@ -30,10 +30,10 @@ What does `cd -` do?
 ```
 
 ```quiz
-You want to copy the whole directory `bilder`, with everything in it, to `bilder-kopia`. Which command works?
-- [ ] `cp bilder bilder-kopia`
-- [x] `cp -r bilder bilder-kopia`
-- [ ] `mv bilder bilder-kopia`
+You want to copy the whole directory `{{pictures}}`, with everything in it, to `{{pictures}}-copy`. Which command works?
+- [ ] `cp {{pictures}} {{pictures}}-copy`
+- [x] `cp -r {{pictures}} {{pictures}}-copy`
+- [ ] `mv {{pictures}} {{pictures}}-copy`
 ---
 A directory is copied with `-r` (*recursive*). `mv` would move it instead of
 copying it.
@@ -48,17 +48,17 @@ c
 ```
 
 ```quiz
-You type `touch min fil.txt` – without quotes. What happens?
-- [ ] A file called `min fil.txt` is created
-- [x] Two files are created: `min` and `fil.txt`
+You type `touch my file.txt` – without quotes. What happens?
+- [ ] A file called `my file.txt` is created
+- [x] Two files are created: `my` and `file.txt`
 - [ ] Nothing, because the name contains a space
 ---
 The shell splits the line at spaces, so `touch` gets two arguments. Write
-`touch "min fil.txt"` to get one file.
+`touch "my file.txt"` to get one file.
 ```
 
 ```quiz
-Which lines does `grep -i error dokument/server.log` show?
+Which lines does `grep -i error {{documents}}/server.log` show?
 - [ ] Only lines with `error` in lower case
 - [ ] Only lines with `ERROR` in upper case
 - [x] Lines with `error` in any mix of upper and lower case
@@ -66,9 +66,9 @@ Which lines does `grep -i error dokument/server.log` show?
 
 ```quiz
 You want to watch a log file and see new lines as they're written. Which command fits?
-- [ ] `head -n 10 dokument/server.log`
-- [x] `tail -f dokument/server.log`
-- [ ] `wc -l dokument/server.log`
+- [ ] `head -n 10 {{documents}}/server.log`
+- [x] `tail -f {{documents}}/server.log`
+- [ ] `wc -l {{documents}}/server.log`
 ---
 `tail -f` *follows* the file. Stop it with **Ctrl+C**.
 ```
@@ -98,9 +98,9 @@ When does `b` run in `a || b`?
 ```
 
 ```try
-grep ERROR ~/dokument/server.log | tee fel.txt | wc -l
+grep ERROR ~/{{documents}}/server.log | tee errors.txt | wc -l
 ---
-`tee` saved the error lines in `fel.txt` and passed them on to `wc -l`, which
+`tee` saved the error lines in `errors.txt` and passed them on to `wc -l`, which
 counted them.
 ```
 

@@ -14,8 +14,8 @@
       "hint": "Only root may set passwords for others: `sudo passwd kim`. Type the same password twice – it isn't shown as you type."
     },
     "grupp": {
-      "text": "Create the group `utvecklare` (Swedish for developers) and add `kim` to it.",
-      "hint": "First `sudo groupadd utvecklare`, then `sudo usermod -aG utvecklare kim`."
+      "text": "Create the group `{{devGroup}}` and add `kim` to it.",
+      "hint": "First `sudo groupadd {{devGroup}}`, then `sudo usermod -aG {{devGroup}} kim`."
     },
     "sudo-ratt": {
       "text": "Allow `kim` to use `sudo` by adding the account to the `sudo` group.",
@@ -26,12 +26,12 @@
       "hint": "`sudo -u kim whoami`"
     },
     "su": {
-      "text": "Log in as `kim` with `su -` and run `id`. Then go back to `elev` with `exit`.",
+      "text": "Log in as `kim` with `su -` and run `id`. Then go back to `{{user}}` with `exit`.",
       "hint": "Type `su - kim` and then kim's password – the one you chose with `passwd`. The prompt shows that you are kim."
     },
     "userdel": {
-      "text": "Create a temporary user `vikarie` (Swedish for substitute) with a home directory – then delete it again, **including** the home directory.",
-      "hint": "`sudo useradd -m vikarie` and then `sudo userdel -r vikarie`."
+      "text": "Create a temporary user `{{tempUser}}` with a home directory – then delete it again, **including** the home directory.",
+      "hint": "`sudo useradd -m {{tempUser}}` and then `sudo userdel -r {{tempUser}}`."
     }
   }
 }

@@ -2,21 +2,21 @@
   "title": "Files and directories",
   "tasks": {
     "mkdir": {
-      "text": "Create the directory `~/projekt/src` with **one** command.",
-      "hint": "`mkdir` needs the `-p` option to create both `projekt` and `src` in one go."
+      "text": "Create the directory `~/{{project}}/src` with **one** command.",
+      "hint": "`mkdir` needs the `-p` option to create both `{{project}}` and `src` in one go."
     },
     "touch": {
-      "text": "Create an empty file called `~/projekt/README.md`."
+      "text": "Create an empty file called `~/{{project}}/README.md`."
     },
     "cp": {
-      "text": "Copy `~/anteckningar.txt` into the directory `~/projekt/`."
+      "text": "Copy `~/{{notes}}` into the directory `~/{{project}}/`."
     },
     "mv": {
-      "text": "Rename `~/projekt/anteckningar.txt` to `~/projekt/att-gora.txt`.",
+      "text": "Rename `~/{{project}}/{{notes}}` to `~/{{project}}/{{todo}}`.",
       "hint": "Renaming is the same as moving – use `mv`."
     },
     "rm": {
-      "text": "Delete the directory `~/gammalt` and everything in it.",
+      "text": "Delete the directory `~/{{old}}` and everything in it.",
       "hint": "The directory isn't empty, so `rmdir` won't do. Use `rm -r`."
     }
   }

@@ -8,17 +8,17 @@
       "text": "Try to read `/etc/shadow` with `cat` – and then do it with `sudo`."
     },
     "script": {
-      "text": "Create the script `~/hej.sh` containing the line `echo Hej från mitt skript` (Swedish for “Hello from my script”).",
-      "hint": "Use single quotes: `echo 'echo Hej från mitt skript' > ~/hej.sh`"
+      "text": "Create the script `~/{{helloScript}}` containing the line `echo {{helloScriptText}}`.",
+      "hint": "Use single quotes: `echo 'echo {{helloScriptText}}' > ~/{{helloScript}}`"
     },
     "chmod-x": {
-      "text": "Make `~/hej.sh` executable."
+      "text": "Make `~/{{helloScript}}` executable."
     },
     "run-script": {
-      "text": "Run the script with `./hej.sh` (from your home directory)."
+      "text": "Run the script with `./{{helloScript}}` (from your home directory)."
     },
     "chmod-600": {
-      "text": "Make `~/anteckningar.txt` readable and writable **only** by you (`rw-------`).",
+      "text": "Make `~/{{notes}}` readable and writable **only** by you (`rw-------`).",
       "hint": "r = 4, w = 2, x = 1. The owner should have 4 + 2 and everyone else 0."
     }
   }

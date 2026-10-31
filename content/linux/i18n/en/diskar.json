@@ -21,12 +21,12 @@
       "hint": "Both creating directories in `/mnt` and mounting require root: `sudo mkdir -p /mnt/usb` and then `sudo mount /dev/sdb1 /mnt/usb`."
     },
     "fran-usb": {
-      "text": "Copy `rapport.pdf` from the USB stick to your home directory.",
-      "hint": "The stick's files are now in `/mnt/usb`: `cp /mnt/usb/rapport.pdf ~`."
+      "text": "Copy `{{report}}` from the USB stick to your home directory.",
+      "hint": "The stick's files are now in `/mnt/usb`: `cp /mnt/usb/{{report}} ~`."
     },
     "till-usb": {
-      "text": "Save a copy of `~/dokument/frukter.txt` on the USB stick.",
-      "hint": "The files on the stick are owned by root – FAT has no Linux permissions – so you need `sudo`: `sudo cp ~/dokument/frukter.txt /mnt/usb/`."
+      "text": "Save a copy of `~/{{documents}}/{{fruits}}` on the USB stick.",
+      "hint": "The files on the stick are owned by root – FAT has no Linux permissions – so you need `sudo`: `sudo cp ~/{{documents}}/{{fruits}} /mnt/usb/`."
     },
     "avmontera": {
       "text": "Unmount the USB stick, so that it is safe to pull out.",

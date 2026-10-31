@@ -91,9 +91,8 @@ much is free:
 lsblk -f
 ```
 
-Notice `sdb1`: a `vfat` file system labelled `USBMINNE` ("USB memory" in
-Swedish) that is not mounted anywhere. That is the USB stick we are going to
-plug in.
+Notice `sdb1`: a `vfat` file system labelled `USBMINNE` that is not mounted
+anywhere. That is the USB stick we are going to plug in.
 
 ## Different file systems
 
@@ -139,7 +138,7 @@ file systems in RAM. Common mount points:
 | `/` | The root file system |
 | `/boot`, `/boot/efi` | The kernel and the EFI partition |
 | `/mnt` | Temporary mounts you make by hand |
-| `/media/elev/…` or `/run/media/elev/…` | Where the desktop automatically mounts USB sticks |
+| `/media/{{user}}/…` or `/run/media/{{user}}/…` | Where the desktop automatically mounts USB sticks |
 
 ## How much space is left? – `df`
 
@@ -217,7 +216,7 @@ From here on the stick works like any other directory. Copy a file to your
 home directory:
 
 ```sh
-cp /mnt/usb/att-gora.txt ~
+cp /mnt/usb/{{todo}} ~
 ```
 
 > **Why is everything owned by root?** FAT has no Linux permissions. When a

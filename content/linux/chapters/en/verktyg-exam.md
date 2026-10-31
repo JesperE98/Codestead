@@ -6,14 +6,14 @@ install the program they need – `> /dev/null 2>&1` throws away the output of
 those lines.
 
 ```quiz
-You have changed `index.html` and created the new file `kontakt.html`. You
+You have changed `index.html` and created the new file `contact.html`. You
 run `git commit -am "Contact page"`. What ends up in the commit?
 - [x] Only the change to `index.html`
-- [ ] Only `kontakt.html`
+- [ ] Only `contact.html`
 - [ ] Both files
 ---
 `-a` adds every changed file git already follows – but never new files.
-`kontakt.html` has to be added with `git add` first.
+`contact.html` has to be added with `git add` first.
 ```
 
 ```quiz
@@ -29,20 +29,20 @@ the change is in the index. `--staged` shows what is waiting to be committed.
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "{{commitFirst}}" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
-$ git merge ny-design > /dev/null
+$ git merge {{newDesign}} > /dev/null
 $ git log --oneline | wc -l
 2
 ---
 `main` had not changed since the branch was created, so the merge was a
-*fast-forward*: git only moved `main` forward to the commit of `ny-design`.
+*fast-forward*: git only moved `main` forward to the commit of `{{newDesign}}`.
 No merge commit was created.
 ```
 
@@ -67,12 +67,12 @@ the merge. `git restore` would throw away your fix.
 ```
 
 ```quiz
-The file `fel.log` was committed by mistake. You add `*.log` to `.gitignore`,
+The file `error.log` was committed by mistake. You add `*.log` to `.gitignore`,
 but git still follows the file. How do you remove it from the repository but
 keep it on the disk?
-- [ ] `rm fel.log`
-- [x] `git rm --cached fel.log`
-- [ ] `git restore fel.log`
+- [ ] `rm error.log`
+- [x] `git rm --cached error.log`
+- [ ] `git restore error.log`
 ---
 `.gitignore` only applies to files git doesn't already follow. `--cached`
 removes the file from git but leaves it on the disk.
@@ -146,7 +146,7 @@ Which file does zsh read when it starts?
 ```
 
 ```try
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ---
 The last field of the line is your login shell – the one `chsh -s` changes.
 ```

@@ -56,7 +56,7 @@ Which shell you get when you log in is the last field of your line in
 `/etc/passwd`, and it is also in the variable `$SHELL`:
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 echo $SHELL
 ```
 
@@ -101,7 +101,7 @@ started:
 | `1` | The main menu with all settings (not available in the simulator) |
 | `2` | Create `~/.zshrc` with the recommended settings |
 
-Answer `2`. The prompt changes to `elev@ubuntu ~ %` – in zsh, `%` is
+Answer `2`. The prompt changes to `{{user}}@ubuntu ~ %` – in zsh, `%` is
 the usual sign for a regular user (root gets `#`, just like in bash).
 
 Which shell are you running now? The variable `$0` holds the name of the
@@ -126,7 +126,7 @@ zsh understands almost all bash syntax. Pipes, redirection, variables, `if`,
 `for` and functions work the way you are used to:
 
 ```sh
-for f in ~/dokument/*.txt; do wc -l $f; done
+for f in ~/{{documents}}/*.txt; do wc -l $f; done
 ```
 
 ### Feature 1: `**` searches all subdirectories
@@ -147,7 +147,7 @@ With the `autocd` option (part of the recommended settings) you only need to
 type the name of a directory to go there – no `cd`:
 
 ```sh
-dokument
+{{documents}}
 ..
 ```
 
@@ -164,8 +164,8 @@ setopt autocd
 In bash, an unquoted variable is split on spaces. In zsh it is not:
 
 ```sh
-filer="a.txt b.txt"
-for f in $filer; do echo "[$f]"; done
+files="a.txt b.txt"
+for f in $files; do echo "[$f]"; done
 ```
 
 bash prints `[a.txt]` and `[b.txt]` – zsh prints `[a.txt b.txt]`. The zsh way
@@ -182,7 +182,7 @@ command print?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
-$ zsh -c 'filer="x.txt y.txt z.txt"; for f in $filer; do echo "<$f>"; done'
+$ zsh -c 'files="x.txt y.txt z.txt"; for f in $files; do echo "<$f>"; done'
 <x.txt y.txt z.txt>
 ---
 zsh does not split the variable on spaces, so the loop runs once with the
@@ -258,16 +258,16 @@ sudo apt install fish
 fish
 ```
 
-fish welcomes you and the prompt becomes `elev@ubuntu ~>`. Go down a
+fish welcomes you and the prompt becomes `{{user}}@ubuntu ~>`. Go down a
 few directories and see how fish shortens the path in the prompt:
 
 ```sh
-mkdir -p ~/dokument/projekt
-cd ~/dokument/projekt
+mkdir -p ~/{{documents}}/{{project}}
+cd ~/{{documents}}/{{project}}
 cd ~
 ```
 
-In the directory `~/dokument/projekt` the prompt shows `~/d/projekt>` – every
+In the directory `~/{{documents}}/{{project}}` the prompt shows `~/d/{{project}}>` – every
 directory except the last is shortened to one letter.
 
 ### fish has its own syntax
@@ -276,39 +276,38 @@ This is where fish differs most from bash and zsh:
 
 | This | bash and zsh | fish |
 |---|---|---|
-| Set a variable | `frukt=äpple` | `set frukt äpple` |
+| Set a variable | `{{fruitVar}}={{fruitWord}}` | `set {{fruitVar}} {{fruitWord}}` |
 | Environment variable | `export EDITOR=nano` | `set -x EDITOR nano` |
-| Remove a variable | `unset frukt` | `set -e frukt` |
+| Remove a variable | `unset {{fruitVar}}` | `set -e {{fruitVar}}` |
 | Command substitution | `$(pwd)` | `(pwd)` |
 | Last exit status | `$?` | `$status` |
 | Script arguments | `$@`, `$1` | `$argv`, `$argv[1]` |
 | Condition | `if …; then …; fi` | `if …; …; end` |
 | Loop | `for …; do …; done` | `for …; …; end` |
-| Function | `hej() { …; }` | `function hej; …; end` |
+| Function | `hello() { …; }` | `function hello; …; end` |
 | Arithmetic | `$((17 * 23))` | `math 17 x 23` |
 
 ### Variables with set
 
-Try setting a variable the bash way (`frukt` is Swedish for fruit, `äpple`
-for apple):
+Try setting a variable the bash way:
 
 ```sh
-frukt=äpple
+{{fruitVar}}={{fruitWord}}
 ```
 
 fish refuses and tells you how to write it:
 
 ```text
-fish: Unsupported use of '='. In fish, please use 'set frukt äpple'.
+fish: Unsupported use of '='. In fish, please use 'set {{fruitVar}} {{fruitWord}}'.
 ```
 
 This is how it is done in fish:
 
 ```sh
-set frukt äpple
-echo $frukt
+set {{fruitVar}} {{fruitWord}}
+echo ${{fruitVar}}
 set -x EDITOR nano
-set -e frukt
+set -e {{fruitVar}}
 ```
 
 `-x` (*export*) makes the variable an environment variable that programs you
@@ -317,17 +316,17 @@ start can see, and `-e` (*erase*) removes it.
 In fish, every variable is a **list**. The elements are numbered from 1:
 
 ```sh
-set frukter äpple päron banan
-echo $frukter[2]
-count $frukter
+set fruits apple pear banana
+echo $fruits[2]
+count $fruits
 ```
 
 `-c` works in fish too. What does the last command print?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y fish > /dev/null 2>&1
-$ fish -c 'set frukter äpple päron banan; echo $frukter[3]'
-banan
+$ fish -c 'set fruits apple pear banana; echo $fruits[3]'
+banana
 ---
 The elements of a fish list are numbered from 1, so `[3]` is the third and
 last element.
@@ -376,7 +375,7 @@ You can also write the block over several lines. The shell waits for `end`
 before it runs the loop:
 
 ```sh
-for f in ~/dokument/*.txt
+for f in ~/{{documents}}/*.txt
 echo (basename $f)
 end
 ```
@@ -433,14 +432,14 @@ almost always written for bash (or for POSIX `sh`):
 Try writing a bash script and running it from fish:
 
 ```sh
-cat > ~/hej.sh << 'SLUT'
+cat > ~/{{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
 name=Kim
 echo "Hello $name, I am run by bash"
-SLUT
-chmod +x ~/hej.sh
+{{heredocEnd}}
+chmod +x ~/{{helloScript}}
 fish
-~/hej.sh
+~/{{helloScript}}
 exit
 ```
 
@@ -466,7 +465,7 @@ shell*) you change your **login shell** – the one in `/etc/passwd`:
 
 ```sh
 chsh -s /usr/bin/zsh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 - The shell must be given with its full path and be listed in `/etc/shells`.
@@ -519,7 +518,7 @@ next login. The terminal you have open keeps bash, and so does `$SHELL`.
 | `zsh` / `fish` / `exit` | Start another shell / go back |
 | `ls ~/**/*.txt` | Search all subdirectories (zsh, fish) |
 | `setopt autocd` | Turn on a zsh option |
-| `set frukt äpple` | Set a variable in fish |
+| `set {{fruitVar}} {{fruitWord}}` | Set a variable in fish |
 | `set -x NAME value` | Set an environment variable in fish |
 | `chsh -s /usr/bin/zsh` | Change your login shell |
 
