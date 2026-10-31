@@ -87,7 +87,7 @@ lsblk
 lsblk -f
 ```
 
-لاحظ `sdb1`: نظام ملفات `vfat` يحمل التسمية `USBMINNE` وغير
+لاحظ `sdb1`: نظام ملفات `vfat` يحمل التسمية `USBSTICK` وغير
 مركّب في أي مكان. هذه هي ذاكرة USB التي سنوصلها.
 
 ## أنظمة ملفات مختلفة
@@ -187,7 +187,7 @@ du -h -d 1 ~
 ## تركيب ذاكرة USB
 
 لنوصل الآن ذاكرة USB. أولًا: أيّ جهاز هي؟ أظهر `lsblk -f` قرصًا قابلًا للنزع،
-`sdb`، فيه القسم `sdb1` الذي يحمل التسمية `USBMINNE`. و**القسم** هو ما تركّبه،
+`sdb`، فيه القسم `sdb1` الذي يحمل التسمية `USBSTICK`. و**القسم** هو ما تركّبه،
 لا القرص كله.
 
 بعد ذلك تحتاج إلى نقطة تركيب – مجلد عادي فارغ. وكلٌّ من إنشائه والتركيب
@@ -220,7 +220,7 @@ cp /mnt/usb/{{todo}} ~
 > المستخدم الخاص بك – انظر `id`).
 
 يمكنك أيضًا التركيب بالتسمية بدلًا من اسم الجهاز:
-`sudo mount LABEL=USBMINNE /mnt/usb`. وعلى حاسوب فيه سطح مكتب، يفعل مدير
+`sudo mount LABEL=USBSTICK /mnt/usb`. وعلى حاسوب فيه سطح مكتب، يفعل مدير
 الملفات كل هذا تلقائيًا عندما توصل الذاكرة.
 
 ```quiz
@@ -319,7 +319,7 @@ vfat
 مثل هذا:
 
 ```text
-LABEL=USBMINNE  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
+LABEL=USBSTICK  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
 ```
 
 تعني `noauto` أنها لا تُركَّب عند الإقلاع (فقد لا تكون الذاكرة موصولة)، وتعني
@@ -359,7 +359,7 @@ sudo fdisk -l
 
 ```text
 sudo umount /mnt/usb
-sudo mkfs.vfat -n USBMINNE /dev/sdb1    # FAT32 – يعمل في كل مكان
+sudo mkfs.vfat -n USBSTICK /dev/sdb1    # FAT32 – يعمل في كل مكان
 sudo mkfs.ext4 -L BACKUP /dev/sdb1      # ext4 – صلاحيات Linux، لكن لـ Linux فقط
 ```
 

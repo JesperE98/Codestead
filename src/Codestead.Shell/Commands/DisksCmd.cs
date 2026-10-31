@@ -1391,7 +1391,7 @@ public static partial class DisksCmd
                blkid
                blkid /dev/sdb1
                blkid -s UUID -o value /dev/sdb1
-               blkid -L USBMINNE
+               blkid -L USBSTICK
         """;
 
     private const string BlkidManEn = """
@@ -1418,7 +1418,7 @@ public static partial class DisksCmd
                blkid
                blkid /dev/sdb1
                blkid -s UUID -o value /dev/sdb1
-               blkid -L USBMINNE
+               blkid -L USBSTICK
         """;
 
     private const string MountMan = """
@@ -1758,7 +1758,7 @@ public static partial class DisksCmd
         EXEMPEL
                sudo umount /mnt/usb
                sudo mkfs.ext4 -L BACKUP /dev/sdb1
-               sudo mkfs.vfat -n USBMINNE /dev/sdb1
+               sudo mkfs.vfat -n USBSTICK /dev/sdb1
         """;
 
     private const string MkfsManEn = """
@@ -1792,7 +1792,7 @@ public static partial class DisksCmd
         EXAMPLES
                sudo umount /mnt/usb
                sudo mkfs.ext4 -L BACKUP /dev/sdb1
-               sudo mkfs.vfat -n USBMINNE /dev/sdb1
+               sudo mkfs.vfat -n USBSTICK /dev/sdb1
         """;
 
 }

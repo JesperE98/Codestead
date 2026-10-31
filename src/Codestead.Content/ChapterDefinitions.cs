@@ -730,7 +730,7 @@ public static partial class ChaptersLib
                     Text = "Visa alla diskar och partitioner tillsammans med filsystemens typ, etikett och UUID.",
                     Hint = "`lsblk` visar diskarna som ett träd. Med `-f` kommer filsystemen med: `lsblk -f`.",
                     Solution = Cmds("lsblk -f"),
-                    Check = c => Ran(c, Re(@"^lsblk\b")) && c.Output.Contains("FSTYPE") && c.Output.Contains("USBMINNE"),
+                    Check = c => Ran(c, Re(@"^lsblk\b")) && c.Output.Contains("FSTYPE") && c.Output.Contains("USBSTICK"),
                 },
                 new()
                 {
@@ -1289,7 +1289,7 @@ public static partial class ChaptersLib
                 {
                     Id = "appimage-run",
                     PerFamily = true,
-                    Text = "Starta Kalkylator. Klagar den på FUSE? Installera biblioteket som saknas och försök igen.",
+                    Text = "Starta {{calcName}}. Klagar den på FUSE? Installera biblioteket som saknas och försök igen.",
                     Hint = ByFamily(
                         debian: "Biblioteket finns i paketet `libfuse2t64`. Starta sedan med `~/{{downloads}}/{{calculator}}`.",
                         arch: "Biblioteket finns i paketet `fuse2`. Starta sedan med `~/{{downloads}}/{{calculator}}`.",

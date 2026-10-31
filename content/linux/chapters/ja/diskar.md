@@ -92,7 +92,7 @@ lsblk
 lsblk -f
 ```
 
-`sdb1` に注目してください。`USBMINNE` というラベルの付いた `vfat`
+`sdb1` に注目してください。`USBSTICK` というラベルの付いた `vfat`
 ファイルシステムで、どこにもマウントされていません。
 これがこれから差し込む USB メモリです。
 
@@ -197,7 +197,7 @@ du -h -d 1 ~
 ## USB メモリをマウントする
 
 それでは USB メモリを差し込んでみましょう。まず、どのデバイスでしょうか？
-`lsblk -f` には、取り外し可能なディスク `sdb` と、`USBMINNE` というラベルの
+`lsblk -f` には、取り外し可能なディスク `sdb` と、`USBSTICK` というラベルの
 付いたパーティション `sdb1` が表示されていました。マウントするのは
 ディスク全体ではなく **パーティション** です。
 
@@ -233,7 +233,7 @@ cp /mnt/usb/{{todo}} ~
 > あなたのユーザー ID です – `id` で確認できます）。
 
 デバイス名の代わりにラベルでマウントすることもできます:
-`sudo mount LABEL=USBMINNE /mnt/usb`。デスクトップ環境のあるコンピューターでは、
+`sudo mount LABEL=USBSTICK /mnt/usb`。デスクトップ環境のあるコンピューターでは、
 USB メモリを差し込むとファイルマネージャーがこれをすべて自動的に行います。
 
 ```quiz
@@ -337,7 +337,7 @@ USB メモリをいつでも `/mnt/usb` にマウントできるようにした�
 行を追加できます。
 
 ```text
-LABEL=USBMINNE  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
+LABEL=USBSTICK  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
 ```
 
 `noauto` は起動時にはマウントしない（USB メモリが差し込まれていないかもしれない
@@ -381,7 +381,7 @@ sudo fdisk -l
 
 ```text
 sudo umount /mnt/usb
-sudo mkfs.vfat -n USBMINNE /dev/sdb1    # FAT32 – どこでも使える
+sudo mkfs.vfat -n USBSTICK /dev/sdb1    # FAT32 – どこでも使える
 sudo mkfs.ext4 -L BACKUP /dev/sdb1      # ext4 – Linux の権限があるが、Linux 専用
 ```
 

@@ -1051,7 +1051,7 @@ EXAMPLES
 
     private static readonly Dictionary<string, string> FusePkg = new() { ["debian"] = "libfuse2t64", ["arch"] = "fuse2", ["redhat"] = "fuse-libs" };
 
-    private static readonly Regex AppImageHeader = new(@"^AppImage: (\S+)", RegexOptions.Multiline | RegexOptions.CultureInvariant);
+    private static readonly Regex AppImageHeader = new(@"^AppImage: (.+?)(?: [0-9][0-9.]*)?$", RegexOptions.Multiline | RegexOptions.CultureInvariant);
     private static readonly Regex DesktopHeader = new(@"^Desktop: (\S+)\.desktop$", RegexOptions.Multiline | RegexOptions.CultureInvariant);
     private static readonly Regex AppImageExt = new(@"\.AppImage\z", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 

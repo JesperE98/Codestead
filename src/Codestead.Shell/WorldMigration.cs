@@ -242,6 +242,7 @@ public static class WorldMigration
         ("minserver", "myserver"),
         ("Minserver", "Myserver"),
         ("rapportd", "reportd"),
+        ("USBMINNE", "USBSTICK"),
         ("Rapportd", "Reportd"),
         ("# Exempelkonfiguration för reportd.", "# Example configuration for reportd."),
         ("# Kopiera den till /etc/reportd.conf och ändra efter behov:", "# Copy it to /etc/reportd.conf and change it as needed:"),

@@ -93,7 +93,7 @@ frei ist:
 lsblk -f
 ```
 
-Achte auf `sdb1`: ein `vfat`-Dateisystem mit dem Label `USBMINNE`, das
+Achte auf `sdb1`: ein `vfat`-Dateisystem mit dem Label `USBSTICK`, das
 nirgends eingehängt ist. Das ist der USB-Stick, den wir gleich einstecken.
 
 ## Verschiedene Dateisysteme
@@ -198,7 +198,7 @@ du -h -d 1 ~
 
 Jetzt stecken wir den USB-Stick ein. Zuerst: Welches Gerät ist es? `lsblk -f`
 hat einen entfernbaren Datenträger gezeigt, `sdb`, mit der Partition `sdb1`
-und dem Label `USBMINNE`. Eingehängt wird die **Partition**, nicht der ganze
+und dem Label `USBSTICK`. Eingehängt wird die **Partition**, nicht der ganze
 Datenträger.
 
 Dann brauchst du einen Mountpunkt – ein ganz normales, leeres Verzeichnis.
@@ -234,7 +234,7 @@ cp /mnt/usb/{{todo}} ~
 > Benutzer-ID – siehe `id`).
 
 Du kannst auch über das Label statt über den Gerätenamen einhängen:
-`sudo mount LABEL=USBMINNE /mnt/usb`. Auf einem Rechner mit Desktop erledigt
+`sudo mount LABEL=USBSTICK /mnt/usb`. Auf einem Rechner mit Desktop erledigt
 der Dateimanager das alles automatisch, wenn du den Stick einsteckst.
 
 ```quiz
@@ -339,7 +339,7 @@ Wenn sich der Stick immer auf `/mnt/usb` einhängen lassen soll, kannst du eine
 Zeile wie diese hinzufügen:
 
 ```text
-LABEL=USBMINNE  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
+LABEL=USBSTICK  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
 ```
 
 `noauto` bedeutet, dass er beim Booten nicht eingehängt wird (der Stick steckt
@@ -384,7 +384,7 @@ du formatierst:
 
 ```text
 sudo umount /mnt/usb
-sudo mkfs.vfat -n USBMINNE /dev/sdb1    # FAT32 – funktioniert überall
+sudo mkfs.vfat -n USBSTICK /dev/sdb1    # FAT32 – funktioniert überall
 sudo mkfs.ext4 -L BACKUP /dev/sdb1      # ext4 – Linux-Rechte, aber nur für Linux
 ```
 

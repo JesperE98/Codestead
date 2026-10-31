@@ -93,7 +93,7 @@ UUID y cuánto espacio libre queda:
 lsblk -f
 ```
 
-Fíjate en `sdb1`: un sistema de archivos `vfat` con la etiqueta `USBMINNE`
+Fíjate en `sdb1`: un sistema de archivos `vfat` con la etiqueta `USBSTICK`
 que no está montado en ninguna parte. Es la memoria
 USB que vamos a conectar.
 
@@ -198,7 +198,7 @@ du -h -d 1 ~
 
 Ahora vamos a conectar la memoria USB. Primero: ¿qué dispositivo es?
 `lsblk -f` mostró un disco extraíble, `sdb`, con la partición `sdb1` con la
-etiqueta `USBMINNE`. Lo que se monta es la **partición**, no el disco entero.
+etiqueta `USBSTICK`. Lo que se monta es la **partición**, no el disco entero.
 
 Después necesitas un punto de montaje: un directorio normal y vacío. Tanto
 crearlo como montar requieren root:
@@ -233,7 +233,7 @@ cp /mnt/usb/{{todo}} ~
 > usuario: mira `id`).
 
 También puedes montar por etiqueta en lugar de por nombre de dispositivo:
-`sudo mount LABEL=USBMINNE /mnt/usb`. En un ordenador con escritorio, el
+`sudo mount LABEL=USBSTICK /mnt/usb`. En un ordenador con escritorio, el
 gestor de archivos hace todo esto automáticamente cuando conectas la memoria.
 
 ```quiz
@@ -338,7 +338,7 @@ Si quieres que la memoria siempre se pueda montar en `/mnt/usb`, puedes añadir
 una línea como esta:
 
 ```text
-LABEL=USBMINNE  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
+LABEL=USBSTICK  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
 ```
 
 `noauto` significa que no se monta al arrancar (puede que la memoria no esté
@@ -383,7 +383,7 @@ decir, formateas:
 
 ```text
 sudo umount /mnt/usb
-sudo mkfs.vfat -n USBMINNE /dev/sdb1    # FAT32: funciona en todas partes
+sudo mkfs.vfat -n USBSTICK /dev/sdb1    # FAT32: funciona en todas partes
 sudo mkfs.ext4 -L BACKUP /dev/sdb1      # ext4: permisos de Linux, pero solo Linux
 ```
 

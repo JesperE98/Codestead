@@ -124,7 +124,7 @@ public static partial class DisksLib
 
     public const string UsbDisk = "sdb";
     public const string UsbPart = "sdb1";
-    public const string UsbLabel = "USBMINNE";
+    public const string UsbLabel = "USBSTICK";
     public const string UsbUuid = "7E21-9A4F";
 
     private sealed class Ids
@@ -578,7 +578,7 @@ public static partial class DisksLib
     private static readonly Regex SpecRe = new(@"^(LABEL|UUID|PARTUUID)=(.*)\z", RegexOptions.CultureInvariant);
     private static readonly Regex QuoteRe = new(@"^[""']|[""']\z", RegexOptions.CultureInvariant);
 
-    /// <summary>Finds a device from /dev/sdb1, LABEL=USBMINNE or UUID=...</summary>
+    /// <summary>Finds a device from /dev/sdb1, LABEL=USBSTICK or UUID=...</summary>
     public static Block? FindBlock(DiskState state, string spec)
     {
         var blocks = AllBlocks(state);

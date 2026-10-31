@@ -96,7 +96,7 @@ lsblk -f
 ```
 
 Remarquez `sdb1` : un système de fichiers `vfat` portant l'étiquette
-`USBMINNE` (« mémoire USB » en suédois) qui n'est monté nulle part. C'est la
+`USBSTICK` qui n'est monté nulle part. C'est la
 clé USB que nous allons brancher.
 
 ## Les différents systèmes de fichiers
@@ -202,7 +202,7 @@ du -h -d 1 ~
 
 Branchons maintenant la clé USB. D'abord : de quel périphérique s'agit-il ?
 `lsblk -f` montrait un disque amovible, `sdb`, avec la partition `sdb1`
-étiquetée `USBMINNE`. C'est la **partition** que l'on monte, pas le disque
+étiquetée `USBSTICK`. C'est la **partition** que l'on monte, pas le disque
 entier.
 
 Il faut ensuite un point de montage – un répertoire ordinaire et vide. Le
@@ -238,7 +238,7 @@ cp /mnt/usb/{{todo}} ~
 > identifiant d'utilisateur – voir `id`).
 
 Vous pouvez aussi monter par étiquette plutôt que par nom de périphérique :
-`sudo mount LABEL=USBMINNE /mnt/usb`. Sur un ordinateur avec un environnement
+`sudo mount LABEL=USBSTICK /mnt/usb`. Sur un ordinateur avec un environnement
 de bureau, le gestionnaire de fichiers fait tout cela automatiquement quand
 vous branchez la clé.
 
@@ -345,7 +345,7 @@ Si vous voulez que la clé puisse toujours être montée sur `/mnt/usb`, vous
 pouvez ajouter une ligne comme celle-ci :
 
 ```text
-LABEL=USBMINNE  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
+LABEL=USBSTICK  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
 ```
 
 `noauto` signifie qu'elle n'est pas montée au démarrage (la clé n'est
@@ -390,7 +390,7 @@ de fichiers – vous formatez :
 
 ```text
 sudo umount /mnt/usb
-sudo mkfs.vfat -n USBMINNE /dev/sdb1    # FAT32 – fonctionne partout
+sudo mkfs.vfat -n USBSTICK /dev/sdb1    # FAT32 – fonctionne partout
 sudo mkfs.ext4 -L BACKUP /dev/sdb1      # ext4 – permissions Linux, mais uniquement sous Linux
 ```
 

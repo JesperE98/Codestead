@@ -88,7 +88,7 @@ lsblk
 lsblk -f
 ```
 
-`sdb1` पर ध्यान दीजिए: एक `vfat` file system जिसका label `USBMINNE` है और जो कहीं
+`sdb1` पर ध्यान दीजिए: एक `vfat` file system जिसका label `USBSTICK` है और जो कहीं
 mount नहीं है। यही वह USB stick है जिसे हम लगाने वाले हैं।
 
 ## अलग-अलग file systems
@@ -188,7 +188,7 @@ du -h -d 1 ~
 ## USB stick mount करना
 
 अब USB stick लगाते हैं। पहले: यह कौन-सा device है? `lsblk -f` ने एक removable
-disk, `sdb`, दिखाई थी, जिस पर `USBMINNE` label वाला partition `sdb1` है। Mount आप
+disk, `sdb`, दिखाई थी, जिस पर `USBSTICK` label वाला partition `sdb1` है। Mount आप
 **partition** को करते हैं, पूरी disk को नहीं।
 
 फिर आपको एक mount point चाहिए – एक साधारण, ख़ाली directory। उसे बनाने और mount
@@ -222,7 +222,7 @@ cp /mnt/usb/{{todo}} ~
 > `id` देखिए)।
 
 Device name की जगह label से भी mount किया जा सकता है:
-`sudo mount LABEL=USBMINNE /mnt/usb`। Desktop वाले computer पर stick लगाते ही
+`sudo mount LABEL=USBSTICK /mnt/usb`। Desktop वाले computer पर stick लगाते ही
 file manager यह सब अपने-आप कर देता है।
 
 ```quiz
@@ -323,7 +323,7 @@ vfat
 एक line जोड़ सकते हैं:
 
 ```text
-LABEL=USBMINNE  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
+LABEL=USBSTICK  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
 ```
 
 `noauto` का मतलब है कि यह boot पर mount नहीं होती (हो सकता है stick लगी ही न हो),
@@ -364,7 +364,7 @@ sudo fdisk -l
 
 ```text
 sudo umount /mnt/usb
-sudo mkfs.vfat -n USBMINNE /dev/sdb1    # FAT32 – हर जगह चलता है
+sudo mkfs.vfat -n USBSTICK /dev/sdb1    # FAT32 – हर जगह चलता है
 sudo mkfs.ext4 -L BACKUP /dev/sdb1      # ext4 – Linux permissions, लेकिन सिर्फ़ Linux पर
 ```
 

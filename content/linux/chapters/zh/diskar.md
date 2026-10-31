@@ -65,7 +65,7 @@ lsblk
 lsblk -f
 ```
 
-注意 `sdb1`：一个卷标为 `USBMINNE` 的 `vfat` 文件系统，它没有挂载在任何地方。这就是我们接下来要插入的 U 盘。
+注意 `sdb1`：一个卷标为 `USBSTICK` 的 `vfat` 文件系统，它没有挂载在任何地方。这就是我们接下来要插入的 U 盘。
 
 ## 不同的文件系统
 
@@ -154,7 +154,7 @@ du -h -d 1 ~
 
 ## 挂载 U 盘
 
-现在来插入 U 盘。首先：它是哪个设备？`lsblk -f` 显示了一块可移动磁盘 `sdb`，上面有一个卷标为 `USBMINNE` 的分区 `sdb1`。你要挂载的是**分区**，而不是整块磁盘。
+现在来插入 U 盘。首先：它是哪个设备？`lsblk -f` 显示了一块可移动磁盘 `sdb`，上面有一个卷标为 `USBSTICK` 的分区 `sdb1`。你要挂载的是**分区**，而不是整块磁盘。
 
 然后你需要一个挂载点——一个普通的空目录。创建目录和挂载都需要 root 权限：
 
@@ -178,7 +178,7 @@ cp /mnt/usb/{{todo}} ~
 
 > **为什么所有东西都属于 root？** FAT 没有 Linux 权限。因此，FAT 格式的 U 盘被挂载后，*所有*文件都会拥有相同的所有者和权限——所有者就是挂载它的人，也就是 root。要往 U 盘里写入，你要么需要 `sudo`，要么在挂载时让自己成为所有者：`sudo mount -o uid=1000,gid=1000 /dev/sdb1 /mnt/usb`（1000 是你的用户 ID——参见 `id`）。
 
-你也可以用卷标代替设备名来挂载：`sudo mount LABEL=USBMINNE /mnt/usb`。在有桌面环境的计算机上，插入 U 盘时文件管理器会自动完成这一切。
+你也可以用卷标代替设备名来挂载：`sudo mount LABEL=USBSTICK /mnt/usb`。在有桌面环境的计算机上，插入 U 盘时文件管理器会自动完成这一切。
 
 ```quiz
 执行 `sudo mount /dev/sdb1 /mnt/usb` 之后，FAT U 盘上的每个文件都归 root 所有。为什么？
@@ -260,7 +260,7 @@ vfat
 如果你希望 U 盘总是可以挂载到 `/mnt/usb`，可以添加这样一行：
 
 ```text
-LABEL=USBMINNE  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
+LABEL=USBSTICK  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
 ```
 
 `noauto` 表示开机时不挂载它（U 盘可能没有插着），`user` 表示普通用户也可以挂载它——这样只需 `mount /mnt/usb` 就够了，不用 `sudo`。
@@ -290,7 +290,7 @@ sudo fdisk -l
 
 ```text
 sudo umount /mnt/usb
-sudo mkfs.vfat -n USBMINNE /dev/sdb1    # FAT32——到处都能用
+sudo mkfs.vfat -n USBSTICK /dev/sdb1    # FAT32——到处都能用
 sudo mkfs.ext4 -L BACKUP /dev/sdb1      # ext4——有 Linux 权限，但只能在 Linux 上用
 ```
 

@@ -14,7 +14,7 @@ Status: **ogranskad**
 | Enhetsfilerna ägs av root och gruppen `disk` |  | ogranskad |  |
 | `lsblk`-kolumnerna NAME, RM, SIZE, TYPE, MOUNTPOINTS |  | ogranskad |  |
 | På den här datorn: `sda1` EFI på `/boot/efi`, `sda2` rot `/`, `sda3` swap |  | ogranskad |  |
-| `lsblk -f` visar typ, etikett, UUID och ledigt utrymme; `sdb1` är `vfat` med etiketten `USBMINNE` |  | ogranskad |  |
+| `lsblk -f` visar typ, etikett, UUID och ledigt utrymme; `sdb1` är `vfat` med etiketten `USBSTICK` |  | ogranskad |  |
 | Tabellen över filsystem: ext4 (Debian/Ubuntu), btrfs (standard i Fedora och openSUSE), xfs (standard i RHEL), vfat (ingen Linux-behörighet, högst 4 GiB per fil, EFI-partitionen måste vara FAT), exfat, ntfs, swap, tmpfs |  | ogranskad |  |
 | Montering hänger in ett filsystem på en monteringspunkt i trädet |  | ogranskad |  |
 | `findmnt` och `mount` listar monteringar; `proc`, `sysfs` och `tmpfs` |  | ogranskad |  |
@@ -24,7 +24,7 @@ Status: **ogranskad**
 | `df` frågar filsystemet, `du` går igenom filerna; `du -h -d 1` |  | ogranskad |  |
 | Både att skapa `/mnt/usb` och att montera kräver root; `mount` känner igen FAT själv, `-t vfat` |  | ogranskad |  |
 | På FAT får alla filer samma ägare – den som monterade, root; `-o uid=1000,gid=1000` |  | ogranskad |  |
-| Montering med `LABEL=USBMINNE`; skrivbordets filhanterare monterar automatiskt |  | ogranskad |  |
+| Montering med `LABEL=USBSTICK`; skrivbordets filhanterare monterar automatiskt |  | ogranskad |  |
 | Ändringar samlas i RAM (cache); `umount` skriver allt som väntar och kopplar loss; `sync` skriver utan att avmontera |  | ogranskad |  |
 | `umount: /mnt/usb: target is busy.` när skalet står i katalogen |  | ogranskad |  |
 | `/etc/fstab` och de sex kolumnerna (enhet, monteringspunkt, typ, flaggor, dump, pass) |  | ogranskad |  |

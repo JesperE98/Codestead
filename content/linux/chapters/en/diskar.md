@@ -91,7 +91,7 @@ much is free:
 lsblk -f
 ```
 
-Notice `sdb1`: a `vfat` file system labelled `USBMINNE` that is not mounted
+Notice `sdb1`: a `vfat` file system labelled `USBSTICK` that is not mounted
 anywhere. That is the USB stick we are going to plug in.
 
 ## Different file systems
@@ -194,7 +194,7 @@ du -h -d 1 ~
 
 Now let's plug in the USB stick. First: which device is it? `lsblk -f`
 showed a removable disk, `sdb`, with the partition `sdb1` labelled
-`USBMINNE`. It is the **partition** you mount, not the whole disk.
+`USBSTICK`. It is the **partition** you mount, not the whole disk.
 
 Then you need a mount point – an ordinary, empty directory. Both creating it
 and mounting require root:
@@ -227,7 +227,7 @@ cp /mnt/usb/{{todo}} ~
 > user id – see `id`).
 
 You can also mount by label instead of device name:
-`sudo mount LABEL=USBMINNE /mnt/usb`. On a computer with a desktop, the file
+`sudo mount LABEL=USBSTICK /mnt/usb`. On a computer with a desktop, the file
 manager does all of this automatically when you plug in the stick.
 
 ```quiz
@@ -330,7 +330,7 @@ If you want the stick to always be mountable on `/mnt/usb`, you can add a
 line like this one:
 
 ```text
-LABEL=USBMINNE  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
+LABEL=USBSTICK  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
 ```
 
 `noauto` means it is not mounted at boot (the stick might not be plugged
@@ -372,7 +372,7 @@ you format:
 
 ```text
 sudo umount /mnt/usb
-sudo mkfs.vfat -n USBMINNE /dev/sdb1    # FAT32 – works everywhere
+sudo mkfs.vfat -n USBSTICK /dev/sdb1    # FAT32 – works everywhere
 sudo mkfs.ext4 -L BACKUP /dev/sdb1      # ext4 – Linux permissions, but Linux only
 ```
 
