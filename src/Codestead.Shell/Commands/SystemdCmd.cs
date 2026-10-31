@@ -757,7 +757,7 @@ public static partial class SystemdCmd
         sh.Env["HOME"] = home;
         sh.Env["PWD"] = home;
         sh.Cwd = home;
-        ctx.Out($"{UtilCmd.Color.Dim}{sh.Msg("systemd.rebooted")}{UtilCmd.Color.Reset}\n");
+        ctx.Out($"{UtilCmd.Color.Dim}{sh.Msg("systemd.rebooted", ("user", sh.World.User))}{UtilCmd.Color.Reset}\n");
         return 0;
     }
 

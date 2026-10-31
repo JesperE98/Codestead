@@ -82,7 +82,7 @@
     "systemd.journalFollow": "（journalctl -f 会持续显示新行，直到你按下 Ctrl+C。模拟器只显示最新的几行。）",
     "systemd.needsRoot": "（修改服务需要 root 权限——在命令前加上 sudo。）",
     "systemd.noUserServices": "（模拟器只有系统服务——去掉 --user。）",
-    "systemd.rebooted": "（电脑正在重启……完成！你又以 elev 身份登录了。用 journalctl -b -1（上一次启动）和 journalctl -b 查看发生了什么。）",
+    "systemd.rebooted": "（电脑正在重启……完成！你又以 {user} 身份登录了。用 journalctl -b -1（上一次启动）和 journalctl -b 查看发生了什么。）",
     "text.tailFollow": "模拟器：-f 不会跟踪文件——在真实终端中用 Ctrl+C 停止",
     "textproc.awkNote": "这里只提供 awk 的一部分：模式、BEGIN/END、字段、变量、数组、if/while/for、print、printf 和最常用的函数。请参阅 `man awk`。",
     "textproc.awkTooManySteps": "程序因步数过多而被中止——也许是死循环？",

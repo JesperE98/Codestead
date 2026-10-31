@@ -82,7 +82,7 @@
     "systemd.journalFollow": "(journalctl -f fortsätter att visa nya rader tills du trycker Ctrl+C. Simulatorn visar bara de senaste raderna.)",
     "systemd.needsRoot": "(Att ändra tjänster kräver root – sätt sudo framför kommandot.)",
     "systemd.noUserServices": "(Simulatorn har bara systemtjänster – skippa --user.)",
-    "systemd.rebooted": "(Datorn startar om … klart! Du är inloggad som elev igen. Se vad som hände med journalctl -b -1 (förra uppstarten) och journalctl -b.)",
+    "systemd.rebooted": "(Datorn startar om … klart! Du är inloggad som {user} igen. Se vad som hände med journalctl -b -1 (förra uppstarten) och journalctl -b.)",
     "text.tailFollow": "simulatorn: -f följer inte filen – i en riktig terminal avslutar du med Ctrl+C",
     "textproc.awkNote": "här finns bara en del av awk: mönster, BEGIN/END, fält, variabler, arrayer, if/while/for, print, printf och de vanligaste funktionerna. Se `man awk`.",
     "textproc.awkTooManySteps": "programmet avbröts efter för många steg – kanske en oändlig loop?",

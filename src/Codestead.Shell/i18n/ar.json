@@ -82,7 +82,7 @@
     "systemd.journalFollow": "(يستمر journalctl -f في عرض الأسطر الجديدة حتى تضغط Ctrl+C. المحاكي يعرض أحدث الأسطر فقط.)",
     "systemd.needsRoot": "(تغيير الخدمات يتطلب root – ضع sudo قبل الأمر.)",
     "systemd.noUserServices": "(المحاكي لا يحتوي إلا على خدمات النظام – احذف --user.)",
-    "systemd.rebooted": "(يُعاد تشغيل الحاسوب … تم! أنت مسجّل الدخول باسم elev من جديد. اطّلع على ما حدث بـ journalctl -b -1 (الإقلاع السابق) وjournalctl -b.)",
+    "systemd.rebooted": "(يُعاد تشغيل الحاسوب … تم! أنت مسجّل الدخول باسم {user} من جديد. اطّلع على ما حدث بـ journalctl -b -1 (الإقلاع السابق) وjournalctl -b.)",
     "text.tailFollow": "المحاكي: الخيار -f لا يتابع الملف – في طرفية حقيقية توقفه بـ Ctrl+C",
     "textproc.awkNote": "لا يتوفر هنا إلا جزء من awk: الأنماط، وBEGIN/END، والحقول، والمتغيرات، والمصفوفات، وif/while/for، وprint، وprintf، والدوال الأكثر شيوعًا. راجع `man awk`.",
     "textproc.awkTooManySteps": "أُوقف البرنامج بعد عدد كبير جدًا من الخطوات – ربما حلقة لا نهائية؟",

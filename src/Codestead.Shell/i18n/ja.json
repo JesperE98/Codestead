@@ -82,7 +82,7 @@
     "systemd.journalFollow": "（journalctl -f は Ctrl+C を押すまで新しい行を表示し続けます。シミュレーターでは最新の行だけを表示します。）",
     "systemd.needsRoot": "（サービスの変更には root が必要です。コマンドの前に sudo を付けてください。）",
     "systemd.noUserServices": "（シミュレーターにはシステムサービスしかありません。--user は付けないでください。）",
-    "systemd.rebooted": "（コンピューターを再起動しています … 完了！再び elev としてログインしました。何が起きたかは journalctl -b -1（前回の起動）と journalctl -b で確認できます。）",
+    "systemd.rebooted": "（コンピューターを再起動しています … 完了！再び {user} としてログインしました。何が起きたかは journalctl -b -1（前回の起動）と journalctl -b で確認できます。）",
     "text.tailFollow": "シミュレーター: -f でもファイルを追跡しません。本物のターミナルでは Ctrl+C で止めます",
     "textproc.awkNote": "ここで使えるのは awk の一部だけです: パターン、BEGIN/END、フィールド、変数、配列、if/while/for、print、printf、よく使う関数。`man awk` を見てください。",
     "textproc.awkTooManySteps": "ステップ数が多すぎるため、プログラムを停止しました。無限ループかもしれません。",

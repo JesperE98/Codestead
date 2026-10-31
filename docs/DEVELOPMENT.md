@@ -49,6 +49,7 @@ src/
 │   ├── Parser.cs            Bash-parser (syntaxträd)
 │   ├── Vfs.cs               Virtuellt filsystem med ägare och rwx-rättigheter
 │   ├── Initfs.cs            Startfilerna för varje distribution
+│   ├── World.cs, world/     Elevens dator på elevens språk (namn, ord, övningsfiler), WorldMigration.cs
 │   ├── Packages.cs          Paketdatabasen (olika paketnamn per familj)
 │   ├── Services.cs, Disks.cs, Users.cs, Network.cs, Procs.cs, Fish.cs, Shellmode.cs
 │   ├── Js.cs                Hjälpfunktioner med JavaScript-semantik (från porteringen)
@@ -72,7 +73,8 @@ packaging/                   Byggskript, installationstester, products.json (vil
    `content/linux/i18n/en/mitt-kapitel.json`, och motsvarande filer för de andra tio språken.
    - Kodblock märkta ` ```sh ` blir klickbara – ett klick lägger in kommandot i terminalen.
    - Text som bara gäller en familj läggs i `:::debian` / `:::arch` / `:::redhat` … `:::`.
-   - Platshållare: `{{distro}}`, `{{hostname}}`, `{{family}}`, `{{pm}}`, `{{adminGroup}}`.
+   - Platshållare: `{{distro}}`, `{{hostname}}`, `{{family}}`, `{{pm}}`, `{{adminGroup}}`, och elevens
+     dator på elevens språk (se nedan), t.ex. `~/{{documents}}/{{fruits}}` eller `/home/{{user}}`.
    - **Kontrollfrågor** i texten låser upp terminalen och uppgifterna. Tre sorter:
 
      ````markdown
@@ -111,6 +113,37 @@ packaging/                   Byggskript, installationstester, products.json (vil
 
 Behövs ett nytt kommando lägger du det i `src/Codestead.Shell/Commands/`. Ska det installeras med
 pakethanteraren lägger du också till ett paket i `Packages.cs`.
+
+## Elevens dator på elevens språk
+
+Den simulerade datorns användare, övningsfiler och mappar (och vad som står i filerna) finns på varje
+språk i `src/Codestead.Shell/world/<språk>.json`:
+
+```json
+{
+  "locale": "en_US.UTF-8",
+  "names": { "user": "student", "documents": "documents", "fruits": "fruits.txt" },
+  "words": { "helloWorld": "Hello world", "siteTitle": "My website" },
+  "files": { "fruits": "apple\nbanana\n…" }
+}
+```
+
+- `names` är det eleven skriver (användare, filer, mappar, grupper, variabler). De är ASCII; språk med
+  annan skrift (ru, zh, ja, ar, hi) använder de engelska namnen.
+- `words` är korta texter på språket, `files` innehållet i övningsfilerna.
+- `en.json` är källan: alla språk har samma nycklar (testerna i `WorldTests.cs` kontrollerar det).
+- Kapiteltexter, uppgiftstexter, lösningar och kontroller skriver namnen som platshållare: `{{documents}}`,
+  `{{user}}`. I `ChapterDefinitions.cs` fyller hjälpfunktionerna (`Node`, `Re(c, …)`, `Env`, `W(c)`) i dem.
+- Det program skriver (loggar, konfigurationsfiler, systemfiler) är engelska på alla språk, som på en
+  riktig dator. `$LANG` följer språket, och `sort` sorterar därefter.
+- När eleven byter språk översätts terminalen på plats (`WorldMigration.Translate`): övningsfilerna och
+  användaren byter namn, och orörda filer får det nya språkets text. Elevens egna filer och git-repon
+  lämnas som de är.
+- Testerna löser alla uppgifter med varje språks dator och kör kontrollfrågorna (`predict`, `try`) i
+  simulatorn på varje språk.
+
+Med miljövariabeln `CODESTEAD_WORLD_DIR` läses world-filer från en katalog i stället för de inbyggda,
+så att en översättning kan provas utan att bygga om.
 
 ## Simulatorns egna texter
 

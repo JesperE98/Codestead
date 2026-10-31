@@ -82,7 +82,7 @@
     "systemd.journalFollow": "(journalctl -f sigue mostrando líneas nuevas hasta que pulsas Ctrl+C. El simulador solo muestra las últimas líneas.)",
     "systemd.needsRoot": "(Cambiar servicios requiere root: pon sudo delante del comando.)",
     "systemd.noUserServices": "(El simulador solo tiene servicios del sistema: omite --user.)",
-    "systemd.rebooted": "(El ordenador se reinicia… ¡listo! Vuelves a tener la sesión iniciada como elev. Mira lo que pasó con journalctl -b -1 (arranque anterior) y journalctl -b.)",
+    "systemd.rebooted": "(El ordenador se reinicia… ¡listo! Vuelves a tener la sesión iniciada como {user}. Mira lo que pasó con journalctl -b -1 (arranque anterior) y journalctl -b.)",
     "text.tailFollow": "simulador: -f no sigue el archivo; en una terminal real lo detienes con Ctrl+C",
     "textproc.awkNote": "aquí solo hay una parte de awk: patrones, BEGIN/END, campos, variables, arrays, if/while/for, print, printf y las funciones más comunes. Consulta `man awk`.",
     "textproc.awkTooManySteps": "el programa se detuvo tras demasiados pasos: ¿quizá un bucle infinito?",

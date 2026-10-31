@@ -77,25 +77,46 @@ public sealed partial class World
             var n = resource.Replace('\\', '/');
             if (!n.StartsWith(Prefix, StringComparison.Ordinal) || !n.EndsWith(".json", StringComparison.Ordinal)) continue;
             using var stream = Asm.GetManifestResourceStream(resource)!;
-            using var doc = JsonDocument.Parse(stream);
-            Dictionary<string, string> Map(string prop)
-            {
-                var d = new Dictionary<string, string>(StringComparer.Ordinal);
-                if (doc.RootElement.TryGetProperty(prop, out var o))
-                    foreach (var p in o.EnumerateObject()) d[p.Name] = p.Value.GetString() ?? "";
-                return d;
-            }
-            var lang = n[Prefix.Length..^".json".Length];
-            all[lang] = new World
-            {
-                Lang = lang,
-                Locale = doc.RootElement.TryGetProperty("locale", out var l) ? l.GetString() ?? "en_US.UTF-8" : "en_US.UTF-8",
-                Names = Map("names"),
-                Words = Map("words"),
-                Files = Map("files"),
-            };
+            var w = Read(n[Prefix.Length..^".json".Length], stream);
+            if (w is not null) all[w.Lang] = w;
         }
+        // For translators: world files on disk override the built-in ones (see docs/DEVELOPMENT.md).
+        var dir = Environment.GetEnvironmentVariable("CODESTEAD_WORLD_DIR");
+        if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+            foreach (var file in Directory.GetFiles(dir, "*.json"))
+            {
+                try
+                {
+                    using var stream = System.IO.File.OpenRead(file);
+                    var world = Read(Path.GetFileNameWithoutExtension(file), stream);
+                    if (world is not null) all[world.Lang] = world;
+                }
+                catch (JsonException)
+                {
+                    // A file that is being written: keep the built-in world.
+                }
+            }
         return all;
+    }
+
+    private static World? Read(string lang, Stream stream)
+    {
+        using var doc = JsonDocument.Parse(stream);
+        Dictionary<string, string> Map(string prop)
+        {
+            var d = new Dictionary<string, string>(StringComparer.Ordinal);
+            if (doc.RootElement.TryGetProperty(prop, out var o))
+                foreach (var p in o.EnumerateObject()) d[p.Name] = p.Value.GetString() ?? "";
+            return d;
+        }
+        return new World
+        {
+            Lang = lang,
+            Locale = doc.RootElement.TryGetProperty("locale", out var l) ? l.GetString() ?? "en_US.UTF-8" : "en_US.UTF-8",
+            Names = Map("names"),
+            Words = Map("words"),
+            Files = Map("files"),
+        };
     }
 
     /// <summary>The language codes that have a world.</summary>
