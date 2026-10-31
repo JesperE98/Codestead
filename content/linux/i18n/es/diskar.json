@@ -21,12 +21,12 @@
       "hint": "Tanto crear directorios en `/mnt` como montar requieren root: `sudo mkdir -p /mnt/usb` y luego `sudo mount /dev/sdb1 /mnt/usb`."
     },
     "fran-usb": {
-      "text": "Copia `rapport.pdf` de la memoria USB a tu directorio personal.",
-      "hint": "Los archivos de la memoria están ahora en `/mnt/usb`: `cp /mnt/usb/rapport.pdf ~`."
+      "text": "Copia `{{report}}` de la memoria USB a tu directorio personal.",
+      "hint": "Los archivos de la memoria están ahora en `/mnt/usb`: `cp /mnt/usb/{{report}} ~`."
     },
     "till-usb": {
-      "text": "Guarda una copia de `~/dokument/frukter.txt` en la memoria USB.",
-      "hint": "Los archivos de la memoria pertenecen a root (FAT no tiene permisos de Linux), así que necesitas `sudo`: `sudo cp ~/dokument/frukter.txt /mnt/usb/`."
+      "text": "Guarda una copia de `~/{{documents}}/{{fruits}}` en la memoria USB.",
+      "hint": "Los archivos de la memoria pertenecen a root (FAT no tiene permisos de Linux), así que necesitas `sudo`: `sudo cp ~/{{documents}}/{{fruits}} /mnt/usb/`."
     },
     "avmontera": {
       "text": "Desmonta la memoria USB para poder sacarla sin peligro.",

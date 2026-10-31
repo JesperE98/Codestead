@@ -346,7 +346,7 @@ archivo de la dirección):
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` está hecho para descargar archivos. Siempre guarda en un archivo,
@@ -367,13 +367,12 @@ Linux a distancia, y todo lo que se envía va cifrado. El servidor ejecuta el
 servicio `sshd` en el puerto 22, y tú te conectas con el cliente `ssh`:
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` significa «el usuario elev en el ordenador server.lan»
-(*elev* es «alumno» en sueco). El comando que va después del host (`hostname`) se
-ejecuta en el servidor y la respuesta se muestra aquí: pone `server`, no
-`ubuntu`.
+`{{user}}@server.lan` significa «el usuario {{user}} en el ordenador server.lan».
+El comando que va después del host (`hostname`) se ejecuta en el servidor y
+la respuesta se muestra aquí: pone `server`, no `ubuntu`.
 
 La primera vez que te conectas a un ordenador, ssh te pregunta si confías en
 él:
@@ -392,8 +391,8 @@ servidor.
 El comando pueden ser varios comandos entre comillas:
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 Sin ningún comando, ssh inicia sesión y obtienes un shell en el otro
@@ -407,7 +406,7 @@ clave privada se queda contigo, y la pública se coloca en el servidor:
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 Pulsa Intro en las preguntas de `ssh-keygen` para usar el archivo por defecto

@@ -46,16 +46,16 @@ El segundo `>` sobrescribió el archivo. Con `>>` contendría las dos líneas.
 `<` hace que un programa lea su stdin desde un archivo:
 
 ```sh
-wc -l < dokument/frukter.txt
+wc -l < {{documents}}/{{fruits}}
 ```
 
 Ahora `wc` nunca ve el nombre del archivo –solo recibe el texto por stdin–, así
 que imprime únicamente el número.
 
 ```predict
-$ wc -l dokument/frukter.txt
-$ wc -l < dokument/frukter.txt
-10 dokument/frukter.txt
+$ wc -l {{documents}}/{{fruits}}
+$ wc -l < {{documents}}/{{fruits}}
+10 {{documents}}/{{fruits}}
 10
 ---
 Con un nombre de archivo como argumento, `wc` imprime también el nombre. Con `<`,
@@ -68,15 +68,13 @@ Los mensajes de error van a stderr y no se ven afectados por `>`. Para
 manejarlos, escribe el número del flujo delante:
 
 ```sh
-ls /finnsinte 2> fel.txt
+ls /{{missing}} 2> errores.txt
 ```
 
-(*Finns inte* significa «no existe» en sueco, y *fel* significa «error».)
-
 ```quiz
-Ejecutas `ls /finnsinte > fel.txt`. ¿Dónde acaba el mensaje de error?
-- [ ] En `fel.txt`
-- [x] En la pantalla: `fel.txt` se queda vacío
+Ejecutas `ls /{{missing}} > errores.txt`. ¿Dónde acaba el mensaje de error?
+- [ ] En `errores.txt`
+- [x] En la pantalla: `errores.txt` se queda vacío
 - [ ] En ninguna parte, desaparece
 ---
 `>` solo redirige stdout (el flujo 1). El mensaje de error va a stderr
@@ -94,14 +92,14 @@ siguiente. Este es el corazón de la filosofía Unix: *haz una sola cosa y hazla
 bien, y deja que los programas colaboren*.
 
 ```sh
-grep INFO dokument/server.log | wc -l
+grep INFO {{documents}}/server.log | wc -l
 ```
 
 `grep` encuentra las líneas y `wc -l` las cuenta. Puedes encadenar tantos
 comandos como quieras:
 
 ```sh
-sort dokument/frukter.txt | uniq -c | sort -rn
+sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ```
 
 Léelo paso a paso: ordena las frutas, cuenta cuántas hay de cada una
@@ -132,13 +130,13 @@ Se pueden poner varios comandos en la misma línea:
 | `a \|\| b` | Ejecuta b solo si a falló |
 
 ```sh
-mkdir -p ny && cd ny
+mkdir -p nuevo && cd nuevo
 ```
 
 ```predict
-$ mkdir dokument 2> /dev/null && echo created || echo failed
+$ mkdir {{documents}} 2> /dev/null && echo created || echo failed
 failed
 ---
-`dokument` ya existe, así que `mkdir` falla (su mensaje de error desaparece en
+`{{documents}}` ya existe, así que `mkdir` falla (su mensaje de error desaparece en
 `/dev/null`). `echo created` se omite y se ejecuta `echo failed`.
 ```

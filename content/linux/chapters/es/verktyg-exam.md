@@ -6,14 +6,14 @@ nueva, así que primero instalan el programa que necesitan: `> /dev/null 2>&1`
 descarta la salida de esas líneas.
 
 ```quiz
-Has modificado `index.html` y has creado el archivo nuevo `kontakt.html`.
+Has modificado `index.html` y has creado el archivo nuevo `contacto.html`.
 Ejecutas `git commit -am "Contact page"`. ¿Qué entra en el commit?
 - [x] Solo el cambio de `index.html`
-- [ ] Solo `kontakt.html`
+- [ ] Solo `contacto.html`
 - [ ] Los dos archivos
 ---
 `-a` añade todos los archivos modificados que git ya sigue, pero nunca
-archivos nuevos. `kontakt.html` hay que añadirlo antes con `git add`.
+archivos nuevos. `contacto.html` hay que añadirlo antes con `git add`.
 ```
 
 ```quiz
@@ -30,21 +30,21 @@ entrar en un commit.
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "Primera versión" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
-$ git merge ny-design > /dev/null
+$ git merge {{newDesign}} > /dev/null
 $ git log --oneline | wc -l
 2
 ---
 `main` no había cambiado desde que se creó la rama, así que la fusión fue un
 *fast-forward*: git solo movió `main` hacia delante hasta el commit de
-`ny-design`. No se creó ningún commit de fusión.
+`{{newDesign}}`. No se creó ningún commit de fusión.
 ```
 
 ```quiz
@@ -68,12 +68,12 @@ la fusión. `git restore` descartaría tu arreglo.
 ```
 
 ```quiz
-El archivo `fel.log` se incluyó en un commit por error. Añades `*.log` a
+El archivo `errores.log` se incluyó en un commit por error. Añades `*.log` a
 `.gitignore`, pero git sigue siguiendo el archivo. ¿Cómo lo quitas del
 repositorio pero lo conservas en el disco?
-- [ ] `rm fel.log`
-- [x] `git rm --cached fel.log`
-- [ ] `git restore fel.log`
+- [ ] `rm errores.log`
+- [x] `git rm --cached errores.log`
+- [ ] `git restore errores.log`
 ---
 `.gitignore` solo se aplica a archivos que git aún no sigue. `--cached` quita
 el archivo de git pero lo deja en el disco.
@@ -148,7 +148,7 @@ siempre falla.
 ```
 
 ```try
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ---
 El último campo de la línea es tu shell de inicio de sesión: la que cambia
 `chsh -s`.

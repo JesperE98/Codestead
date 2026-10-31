@@ -28,12 +28,12 @@ export EDITOR=nano
 ```
 
 ```quiz
-¿Qué línea crea la variable `FARG` con el valor `blue`?
-- [ ] `FARG = blue`
-- [x] `FARG=blue`
-- [ ] `$FARG=blue`
+¿Qué línea crea la variable `COLOR` con el valor `blue`?
+- [ ] `COLOR = blue`
+- [x] `COLOR=blue`
+- [ ] `$COLOR=blue`
 ---
-No puede haber espacios alrededor del `=`. Con espacios, la shell cree que `FARG`
+No puede haber espacios alrededor del `=`. Con espacios, la shell cree que `COLOR`
 es un comando. El `$` solo se usa cuando *lees* una variable.
 ```
 
@@ -80,13 +80,13 @@ ruta, por ejemplo `./miprograma` para un archivo del directorio en el que
 estás.
 
 ```quiz
-Tienes un programa llamado `hej` en el directorio en el que estás, y ese
+Tienes un programa llamado `hola` en el directorio en el que estás, y ese
 directorio no está en `PATH`. ¿Cómo lo ejecutas?
-- [ ] `hej`
-- [x] `./hej`
-- [ ] `type hej`
+- [ ] `hola`
+- [x] `./hola`
+- [ ] `type hola`
 ---
-Sin una ruta, la shell solo busca en los directorios de `PATH`. `./hej`
+Sin una ruta, la shell solo busca en los directorios de `PATH`. `./hola`
 dice exactamente dónde está el archivo: en el directorio actual.
 ```
 
@@ -97,7 +97,7 @@ fue bien, y cualquier otro valor indica un error. El último código de salida
 se guarda en `$?`:
 
 ```sh
-ls /finnsinte
+ls /{{missing}}
 echo $?
 ```
 
@@ -115,8 +115,8 @@ ll
 `alias` sin argumentos muestra todos los alias, y `unalias ll` elimina uno.
 
 ```predict
-$ alias hej='echo Hello'
-$ hej
+$ alias hola='echo Hello'
+$ hola
 Hello
 ```
 

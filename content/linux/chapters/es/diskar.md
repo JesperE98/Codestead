@@ -94,7 +94,7 @@ lsblk -f
 ```
 
 Fíjate en `sdb1`: un sistema de archivos `vfat` con la etiqueta `USBMINNE`
-(«memoria USB» en sueco) que no está montado en ninguna parte. Es la memoria
+que no está montado en ninguna parte. Es la memoria
 USB que vamos a conectar.
 
 ## Distintos sistemas de archivos
@@ -141,7 +141,7 @@ de archivos en la RAM. Puntos de montaje habituales:
 | `/` | El sistema de archivos raíz |
 | `/boot`, `/boot/efi` | El kernel y la partición EFI |
 | `/mnt` | Montajes temporales que haces a mano |
-| `/media/elev/…` o `/run/media/elev/…` | Donde el escritorio monta automáticamente las memorias USB |
+| `/media/{{user}}/…` o `/run/media/{{user}}/…` | Donde el escritorio monta automáticamente las memorias USB |
 
 ## ¿Cuánto espacio queda? – `df`
 
@@ -221,7 +221,7 @@ A partir de aquí, la memoria funciona como cualquier otro directorio. Copia un
 archivo a tu directorio personal:
 
 ```sh
-cp /mnt/usb/att-gora.txt ~
+cp /mnt/usb/{{todo}} ~
 ```
 
 > **¿Por qué todo pertenece a root?** FAT no tiene permisos de Linux. Cuando

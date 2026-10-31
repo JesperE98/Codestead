@@ -2,23 +2,23 @@
   "title": "Leer y buscar texto",
   "tasks": {
     "head": {
-      "text": "Muestra las **3 primeras** líneas de `~/dokument/server.log`."
+      "text": "Muestra las **3 primeras** líneas de `~/{{documents}}/server.log`."
     },
     "tail": {
-      "text": "Muestra las **2 últimas** líneas de `~/dokument/server.log`."
+      "text": "Muestra las **2 últimas** líneas de `~/{{documents}}/server.log`."
     },
     "grep": {
-      "text": "Muestra todas las líneas que contienen `ERROR` en `~/dokument/server.log`."
+      "text": "Muestra todas las líneas que contienen `ERROR` en `~/{{documents}}/server.log`."
     },
     "grep-i": {
       "text": "Busca `warn` en server.log **sin** distinguir entre mayúsculas y minúsculas.",
       "hint": "La opción `-i` hace que la búsqueda no distinga mayúsculas de minúsculas. Deberías obtener 3 coincidencias."
     },
     "wc": {
-      "text": "Cuenta cuántas líneas tiene `~/dokument/frukter.txt`."
+      "text": "Cuenta cuántas líneas tiene `~/{{documents}}/{{fruits}}`."
     },
     "sort": {
-      "text": "Muestra las frutas de `~/dokument/frukter.txt` en orden alfabético."
+      "text": "Muestra las frutas de `~/{{documents}}/{{fruits}}` en orden alfabético."
     }
   }
 }

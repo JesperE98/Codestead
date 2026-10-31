@@ -82,11 +82,11 @@ dnf pregunta `Is this ok [y/N]` y tú solo pulsas Intro. ¿Qué pasa?
 ```
 
 ```predict
-$ ~/Nedladdningar/Kalkylator.AppImage
-bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+$ ~/{{downloads}}/{{calculator}}
+bash: /home/{{user}}/{{downloads}}/{{calculator}}: Permission denied
 ---
 Un archivo descargado nunca es ejecutable de entrada. Ejecuta primero
-`chmod +x ~/Nedladdningar/Kalkylator.AppImage`.
+`chmod +x ~/{{downloads}}/{{calculator}}`.
 ```
 
 ```quiz
