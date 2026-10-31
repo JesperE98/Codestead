@@ -2,35 +2,35 @@
   "title": "Shell-Skripte",
   "tasks": {
     "variabel": {
-      "text": "Lege die Variable `namn` (Schwedisch für „Name“) mit deinem Namen an und gib dann mit `echo` `Hej` („Hallo“) gefolgt vom Namen aus.",
-      "hint": "Keine Leerzeichen um `=`: `namn=Kim`. Dann `echo \"Hej $namn\"`."
+      "text": "Lege die Variable `{{nameVar}}` mit deinem Namen an und gib dann mit `echo` `{{hello}}` gefolgt vom Namen aus.",
+      "hint": "Keine Leerzeichen um `=`: `{{nameVar}}=Kim`. Dann `echo \"{{hello}} ${{nameVar}}\"`."
     },
     "rakna": {
       "text": "Berechne 17 × 23 mit `$(( ))`."
     },
     "substitution": {
-      "text": "Speichere mit `$(...)` und `wc -l` die Anzahl der Zeilen in `~/dokument/server.log` in der Variable `rader`.",
-      "hint": "`wc -l < file` gibt nur die Zahl aus, ohne den Dateinamen: `rader=$(wc -l < ~/dokument/server.log)`"
+      "text": "Speichere mit `$(...)` und `wc -l` die Anzahl der Zeilen in `~/{{documents}}/server.log` in der Variable `{{linesVar}}`.",
+      "hint": "`wc -l < datei` gibt nur die Zahl aus, ohne den Dateinamen: `{{linesVar}}=$(wc -l < ~/{{documents}}/server.log)`"
     },
     "if": {
-      "text": "Schreibe eine `if`-Anweisung, die `finns` („existiert“) ausgibt, wenn die Datei `~/.bashrc` existiert.",
-      "hint": "`if [ -f ~/.bashrc ]; then echo finns; fi` – vergiss die Leerzeichen innerhalb der eckigen Klammern nicht."
+      "text": "Schreibe eine `if`-Anweisung, die `{{exists}}` ausgibt, wenn die Datei `~/.bashrc` existiert.",
+      "hint": "`if [ -f ~/.bashrc ]; then echo {{exists}}; fi` – vergiss die Leerzeichen innerhalb der eckigen Klammern nicht."
     },
     "for": {
       "text": "Gib mit einer `for`-Schleife die Zahlen 1 bis 5 aus, eine pro Zeile.",
       "hint": "Entweder `for i in 1 2 3 4 5; do ...; done` oder `for i in $(seq 1 5); do ...; done`."
     },
     "while-read": {
-      "text": "Lies `~/dokument/frukter.txt` mit `while read` Zeile für Zeile und gib vor jeder Zeile `Frukt: ` (Schwedisch für „Frucht“) aus.",
-      "hint": "`while read rad; do echo \"Frukt: $rad\"; done < ~/dokument/frukter.txt`"
+      "text": "Lies `~/{{documents}}/{{fruits}}` mit `while read` Zeile für Zeile und gib vor jeder Zeile `{{fruitLabel}}: ` aus.",
+      "hint": "`while read {{lineVar}}; do echo \"{{fruitLabel}}: ${{lineVar}}\"; done < ~/{{documents}}/{{fruits}}`"
     },
     "funktion": {
-      "text": "Lege die Funktion `dubbla` („verdoppeln“) an, die ihr erstes Argument mal zwei ausgibt. Teste sie mit `dubbla 21`.",
-      "hint": "`dubbla() { echo $(( $1 * 2 )); }` – und dann `dubbla 21`."
+      "text": "Lege die Funktion `{{doubleFn}}` an, die ihr erstes Argument mal zwei ausgibt. Teste sie mit `{{doubleFn}} 21`.",
+      "hint": "`{{doubleFn}}() { echo $(( $1 * 2 )); }` – und dann `{{doubleFn}} 21`."
     },
     "backup": {
-      "text": "Schreibe das Skript `~/backup.sh`, das die als erstes Argument übergebene Datei unter demselben Namen mit `.bak` am Ende kopiert. Mach es ausführbar und führe in deinem Home-Verzeichnis `./backup.sh anteckningar.txt` aus.",
-      "hint": "Lege die Datei mit `cat > ~/backup.sh << 'SLUT'` an, schreib `#!/bin/bash` und `cp \"$1\" \"$1.bak\"` in eigene Zeilen und schließe mit `SLUT` ab."
+      "text": "Schreibe das Skript `~/backup.sh`, das die als erstes Argument übergebene Datei unter demselben Namen mit `.bak` am Ende kopiert. Mach es ausführbar und führe in deinem Home-Verzeichnis `./backup.sh {{notes}}` aus.",
+      "hint": "Lege die Datei mit `cat > ~/backup.sh << '{{heredocEnd}}'` an, schreib `#!/bin/bash` und `cp \"$1\" \"$1.bak\"` in eigene Zeilen und schließe mit `{{heredocEnd}}` ab."
     }
   }
 }

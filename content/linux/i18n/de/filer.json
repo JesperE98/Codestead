@@ -2,21 +2,21 @@
   "title": "Dateien und Verzeichnisse",
   "tasks": {
     "mkdir": {
-      "text": "Lege das Verzeichnis `~/projekt/src` mit **einem** Befehl an.",
-      "hint": "`mkdir` braucht die Option `-p`, um `projekt` und `src` in einem Rutsch anzulegen."
+      "text": "Lege das Verzeichnis `~/{{project}}/src` mit **einem** Befehl an.",
+      "hint": "`mkdir` braucht die Option `-p`, um `{{project}}` und `src` in einem Rutsch anzulegen."
     },
     "touch": {
-      "text": "Lege eine leere Datei namens `~/projekt/README.md` an."
+      "text": "Lege eine leere Datei namens `~/{{project}}/README.md` an."
     },
     "cp": {
-      "text": "Kopiere `~/anteckningar.txt` in das Verzeichnis `~/projekt/`."
+      "text": "Kopiere `~/{{notes}}` in das Verzeichnis `~/{{project}}/`."
     },
     "mv": {
-      "text": "Benenne `~/projekt/anteckningar.txt` in `~/projekt/att-gora.txt` um.",
+      "text": "Benenne `~/{{project}}/{{notes}}` in `~/{{project}}/{{todo}}` um.",
       "hint": "Umbenennen ist dasselbe wie Verschieben – nimm `mv`."
     },
     "rm": {
-      "text": "Lösche das Verzeichnis `~/gammalt` samt seinem gesamten Inhalt.",
+      "text": "Lösche das Verzeichnis `~/{{old}}` samt seinem gesamten Inhalt.",
       "hint": "Das Verzeichnis ist nicht leer, also reicht `rmdir` nicht. Nimm `rm -r`."
     }
   }

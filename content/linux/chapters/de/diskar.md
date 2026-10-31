@@ -93,9 +93,8 @@ frei ist:
 lsblk -f
 ```
 
-Achte auf `sdb1`: ein `vfat`-Dateisystem mit dem Label `USBMINNE`
-(„USB-Speicher“ auf Schwedisch), das nirgends eingehängt ist. Das ist der
-USB-Stick, den wir gleich einstecken.
+Achte auf `sdb1`: ein `vfat`-Dateisystem mit dem Label `USBMINNE`, das
+nirgends eingehängt ist. Das ist der USB-Stick, den wir gleich einstecken.
 
 ## Verschiedene Dateisysteme
 
@@ -141,7 +140,7 @@ Du siehst auch Dinge, die keine Datenträger sind: `proc` auf `/proc` und
 | `/` | Das Root-Dateisystem |
 | `/boot`, `/boot/efi` | Den Kernel und die EFI-Partition |
 | `/mnt` | Vorübergehende Einhängungen, die du von Hand machst |
-| `/media/elev/…` oder `/run/media/elev/…` | Wo der Desktop USB-Sticks automatisch einhängt |
+| `/media/{{user}}/…` oder `/run/media/{{user}}/…` | Wo der Desktop USB-Sticks automatisch einhängt |
 
 ## Wie viel Platz ist noch frei? – `df`
 
@@ -223,7 +222,7 @@ Ab jetzt funktioniert der Stick wie jedes andere Verzeichnis. Kopiere eine
 Datei in dein Home-Verzeichnis:
 
 ```sh
-cp /mnt/usb/att-gora.txt ~
+cp /mnt/usb/{{todo}} ~
 ```
 
 > **Warum gehört alles root?** FAT hat keine Linux-Rechte. Wenn ein FAT-Stick

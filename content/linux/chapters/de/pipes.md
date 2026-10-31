@@ -33,10 +33,10 @@ cat test.txt
 ```
 
 ```predict
-$ echo one > t.txt
-$ echo two > t.txt
+$ echo eins > t.txt
+$ echo zwei > t.txt
 $ cat t.txt
-two
+zwei
 ---
 Das zweite `>` hat die Datei überschrieben. Mit `>>` stünden beide Zeilen darin.
 ```
@@ -46,16 +46,16 @@ Das zweite `>` hat die Datei überschrieben. Mit `>>` stünden beide Zeilen dari
 Mit `<` liest ein Programm sein stdin aus einer Datei:
 
 ```sh
-wc -l < dokument/frukter.txt
+wc -l < {{documents}}/{{fruits}}
 ```
 
 Jetzt bekommt `wc` den Dateinamen nie zu sehen – es bekommt nur den Text über
 stdin – und gibt deshalb nur die Zahl aus.
 
 ```predict
-$ wc -l dokument/frukter.txt
-$ wc -l < dokument/frukter.txt
-10 dokument/frukter.txt
+$ wc -l {{documents}}/{{fruits}}
+$ wc -l < {{documents}}/{{fruits}}
+10 {{documents}}/{{fruits}}
 10
 ---
 Mit einem Dateinamen als Argument gibt `wc` auch den Namen aus. Mit `<` bekommt
@@ -68,16 +68,13 @@ Fehlermeldungen gehen nach stderr und sind von `>` nicht betroffen. Um sie
 umzuleiten, schreibst du die Nummer des Stroms davor:
 
 ```sh
-ls /finnsinte 2> fel.txt
+ls /{{missing}} 2> fehler.txt
 ```
 
-(*Finns inte* ist Schwedisch für „existiert nicht“, und *fel* bedeutet
-„Fehler“.)
-
 ```quiz
-Du führst `ls /finnsinte > fel.txt` aus. Wo landet die Fehlermeldung?
-- [ ] In `fel.txt`
-- [x] Auf dem Bildschirm – `fel.txt` bleibt leer
+Du führst `ls /{{missing}} > fehler.txt` aus. Wo landet die Fehlermeldung?
+- [ ] In `fehler.txt`
+- [x] Auf dem Bildschirm – `fehler.txt` bleibt leer
 - [ ] Nirgends, sie verschwindet
 ---
 `>` leitet nur stdout (Strom 1) um. Die Fehlermeldung geht nach stderr
@@ -95,14 +92,14 @@ Das ist das Herz der Unix-Philosophie: *Mach eine Sache und mach sie gut, und
 lass Programme zusammenarbeiten*.
 
 ```sh
-grep INFO dokument/server.log | wc -l
+grep INFO {{documents}}/server.log | wc -l
 ```
 
 `grep` findet die Zeilen und `wc -l` zählt sie. Du kannst so viele
 hintereinanderschalten, wie du willst:
 
 ```sh
-sort dokument/frukter.txt | uniq -c | sort -rn
+sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ```
 
 Lies es Schritt für Schritt: Sortiere die Früchte, zähle, wie viele es von
@@ -120,7 +117,7 @@ ls /etc | wc -l
 `tee` reicht seine Eingabe weiter *und* speichert eine Kopie in einer Datei:
 
 ```sh
-ls /etc | tee etc-lista.txt | wc -l
+ls /etc | tee etc-liste.txt | wc -l
 ```
 
 ## Verkettungen – `;`, `&&` und `||`
@@ -134,14 +131,14 @@ Mehrere Befehle können in derselben Zeile stehen:
 | `a \|\| b` | Führe b nur aus, wenn a fehlgeschlagen ist |
 
 ```sh
-mkdir -p ny && cd ny
+mkdir -p neu && cd neu
 ```
 
 ```predict
-$ mkdir dokument 2> /dev/null && echo created || echo failed
-failed
+$ mkdir {{documents}} 2> /dev/null && echo angelegt || echo fehlgeschlagen
+fehlgeschlagen
 ---
-`dokument` existiert schon, also schlägt `mkdir` fehl (seine Fehlermeldung
-verschwindet in `/dev/null`). `echo created` wird übersprungen, und
-`echo failed` läuft.
+`{{documents}}` existiert schon, also schlägt `mkdir` fehl (seine Fehlermeldung
+verschwindet in `/dev/null`). `echo angelegt` wird übersprungen, und
+`echo fehlgeschlagen` läuft.
 ```

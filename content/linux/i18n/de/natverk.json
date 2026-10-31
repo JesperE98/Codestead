@@ -22,16 +22,16 @@
       "hint": "Unter Ubuntu muss curl erst installiert werden: `sudo apt install curl`. Bekommst du *Couldn't connect to server*, ist myserver beendet – starte ihn mit `myserver`."
     },
     "spara": {
-      "text": "Speichere die Webseite `https://example.com` als Datei `~/exempel.html`.",
-      "hint": "Geh in dein Home-Verzeichnis und nimm `curl -o exempel.html https://example.com` oder `wget -O exempel.html https://example.com`."
+      "text": "Speichere die Webseite `https://example.com` als Datei `~/{{exampleHtml}}`.",
+      "hint": "Geh in dein Home-Verzeichnis und nimm `curl -o {{exampleHtml}} https://example.com` oder `wget -O {{exampleHtml}} https://example.com`."
     },
     "hosts": {
       "text": "Der Server `192.168.1.10` soll `server.lan` heißen, aber der Name steht nicht im DNS. Trage ihn in `/etc/hosts` ein und pinge danach `server.lan` an.",
       "hint": "Die Datei gehört root: `echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts` und dann `ping -c 3 server.lan`."
     },
     "ssh": {
-      "text": "Führe mit `ssh` als Benutzer `elev` den Befehl `hostname` auf dem Server `server.lan` aus.",
-      "hint": "`ssh elev@server.lan hostname` – und antworte `yes` auf die Frage nach dem Host-Key."
+      "text": "Führe mit `ssh` als Benutzer `{{user}}` den Befehl `hostname` auf dem Server `server.lan` aus.",
+      "hint": "`ssh {{user}}@server.lan hostname` – und antworte `yes` auf die Frage nach dem Host-Key."
     }
   }
 }

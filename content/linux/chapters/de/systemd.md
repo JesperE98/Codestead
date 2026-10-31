@@ -169,7 +169,7 @@ und beenden sich mit Status 0, wenn die Antwort „ja“ lautet. Mit `-q` sind s
 völlig still:
 
 ```text
-if systemctl is-active -q myserver; then echo "the server is running"; fi
+if systemctl is-active -q myserver; then echo "der Server läuft"; fi
 ```
 
 Auf einem frisch gestarteten Rechner im Simulator läuft `myserver`, aber

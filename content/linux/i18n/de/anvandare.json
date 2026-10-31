@@ -14,8 +14,8 @@
       "hint": "Nur root darf Passwörter für andere setzen: `sudo passwd kim`. Tippe zweimal dasselbe Passwort – es wird beim Tippen nicht angezeigt."
     },
     "grupp": {
-      "text": "Lege die Gruppe `utvecklare` (Schwedisch für „Entwickler“) an und füge `kim` hinzu.",
-      "hint": "Zuerst `sudo groupadd utvecklare`, dann `sudo usermod -aG utvecklare kim`."
+      "text": "Lege die Gruppe `{{devGroup}}` an und füge `kim` hinzu.",
+      "hint": "Zuerst `sudo groupadd {{devGroup}}`, dann `sudo usermod -aG {{devGroup}} kim`."
     },
     "sudo-ratt": {
       "text": "Erlaube `kim`, `sudo` zu benutzen, indem du das Konto zur Gruppe `sudo` hinzufügst.",
@@ -26,12 +26,12 @@
       "hint": "`sudo -u kim whoami`"
     },
     "su": {
-      "text": "Melde dich mit `su -` als `kim` an und führe `id` aus. Geh danach mit `exit` zurück zu `elev`.",
+      "text": "Melde dich mit `su -` als `kim` an und führe `id` aus. Geh danach mit `exit` zurück zu `{{user}}`.",
       "hint": "Tippe `su - kim` und dann kims Passwort – das, das du mit `passwd` gewählt hast. Der Prompt zeigt, dass du kim bist."
     },
     "userdel": {
-      "text": "Lege einen vorübergehenden Benutzer `vikarie` (Schwedisch für „Vertretung“) mit Home-Verzeichnis an – und lösche ihn dann wieder, **einschließlich** des Home-Verzeichnisses.",
-      "hint": "`sudo useradd -m vikarie` und dann `sudo userdel -r vikarie`."
+      "text": "Lege einen vorübergehenden Benutzer `{{tempUser}}` mit Home-Verzeichnis an – und lösche ihn dann wieder, **einschließlich** des Home-Verzeichnisses.",
+      "hint": "`sudo useradd -m {{tempUser}}` und dann `sudo userdel -r {{tempUser}}`."
     }
   }
 }

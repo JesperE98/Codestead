@@ -347,7 +347,7 @@ Dateinamen aus der Adresse übernimmt):
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` ist zum Herunterladen von Dateien gemacht. Es speichert immer in eine
@@ -369,10 +369,10 @@ läuft der Dienst `sshd` auf Port 22, und du verbindest dich mit dem Client
 `ssh`:
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` bedeutet „der Benutzer elev auf dem Rechner server.lan“. Der
+`{{user}}@server.lan` bedeutet „der Benutzer {{user}} auf dem Rechner server.lan“. Der
 Befehl nach dem Host (`hostname`) läuft auf dem Server, und die Antwort wird
 hier angezeigt – dort steht `server`, nicht `ubuntu`.
 
@@ -392,8 +392,8 @@ lautstark – es könnte bedeuten, dass sich jemand als der Server ausgibt.
 Der Befehl kann auch aus mehreren Befehlen in Anführungszeichen bestehen:
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 Ohne Befehl meldet ssh dich an, und du bekommst eine Shell auf dem anderen
@@ -407,7 +407,7 @@ Der private Schlüssel bleibt bei dir, der öffentliche kommt auf den Server:
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 Drücke bei den Fragen von `ssh-keygen` Enter, um die Standarddatei

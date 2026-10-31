@@ -28,13 +28,13 @@ export EDITOR=nano
 ```
 
 ```quiz
-Welche Zeile legt die Variable `FARG` mit dem Wert `blue` an?
-- [ ] `FARG = blue`
-- [x] `FARG=blue`
-- [ ] `$FARG=blue`
+Welche Zeile legt die Variable `FARBE` mit dem Wert `blau` an?
+- [ ] `FARBE = blau`
+- [x] `FARBE=blau`
+- [ ] `$FARBE=blau`
 ---
 Um das `=` dürfen keine Leerzeichen stehen. Mit Leerzeichen hält die Shell
-`FARG` für einen Befehl. Das `$` brauchst du nur, wenn du eine Variable *liest*.
+`FARBE` für einen Befehl. Das `$` brauchst du nur, wenn du eine Variable *liest*.
 ```
 
 ## Einfache und doppelte Anführungszeichen
@@ -52,10 +52,10 @@ dasteht.
 
 ```predict
 $ x=linux
-$ echo "I like $x"
-$ echo 'I like $x'
-I like linux
-I like $x
+$ echo "Ich mag $x"
+$ echo 'Ich mag $x'
+Ich mag linux
+Ich mag $x
 ```
 
 ## PATH – wo werden Befehle gefunden?
@@ -81,13 +81,13 @@ Pfad angeben, zum Beispiel `./myprogram` für eine Datei im aktuellen
 Verzeichnis.
 
 ```quiz
-Du hast ein Programm namens `hej` in dem Verzeichnis, in dem du bist, und
+Du hast ein Programm namens `hallo` in dem Verzeichnis, in dem du bist, und
 dieses Verzeichnis liegt nicht im `PATH`. Wie führst du es aus?
-- [ ] `hej`
-- [x] `./hej`
-- [ ] `type hej`
+- [ ] `hallo`
+- [x] `./hallo`
+- [ ] `type hallo`
 ---
-Ohne Pfad sucht die Shell nur in den Verzeichnissen aus `PATH`. `./hej` sagt
+Ohne Pfad sucht die Shell nur in den Verzeichnissen aus `PATH`. `./hallo` sagt
 genau, wo die Datei liegt: im aktuellen Verzeichnis.
 ```
 
@@ -98,7 +98,7 @@ alles gut gegangen ist, alles andere bedeutet einen Fehler. Der letzte
 Exit-Code steht in `$?`:
 
 ```sh
-ls /finnsinte
+ls /{{missing}}
 echo $?
 ```
 
@@ -116,9 +116,9 @@ ll
 `alias` ohne Argumente listet alle Aliase auf, und `unalias ll` entfernt einen.
 
 ```predict
-$ alias hej='echo Hello'
-$ hej
-Hello
+$ alias hallo='echo Hallo'
+$ hallo
+Hallo
 ```
 
 ## Einstellungen speichern – `~/.bashrc`

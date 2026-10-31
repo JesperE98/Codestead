@@ -2,23 +2,23 @@
   "title": "Text lesen und durchsuchen",
   "tasks": {
     "head": {
-      "text": "Zeige die **ersten 3** Zeilen von `~/dokument/server.log` an."
+      "text": "Zeige die **ersten 3** Zeilen von `~/{{documents}}/server.log` an."
     },
     "tail": {
-      "text": "Zeige die **letzten 2** Zeilen von `~/dokument/server.log` an."
+      "text": "Zeige die **letzten 2** Zeilen von `~/{{documents}}/server.log` an."
     },
     "grep": {
-      "text": "Zeige alle Zeilen in `~/dokument/server.log` an, die `ERROR` enthalten."
+      "text": "Zeige alle Zeilen in `~/{{documents}}/server.log` an, die `ERROR` enthalten."
     },
     "grep-i": {
       "text": "Suche in server.log nach `warn`, **ohne** auf Groß- und Kleinschreibung zu achten.",
       "hint": "Mit der Option `-i` ignoriert die Suche Groß- und Kleinschreibung. Du solltest 3 Treffer bekommen."
     },
     "wc": {
-      "text": "Zähle, wie viele Zeilen `~/dokument/frukter.txt` hat."
+      "text": "Zähle, wie viele Zeilen `~/{{documents}}/{{fruits}}` hat."
     },
     "sort": {
-      "text": "Zeige die Früchte in `~/dokument/frukter.txt` in alphabetischer Reihenfolge an."
+      "text": "Zeige die Früchte in `~/{{documents}}/{{fruits}}` in alphabetischer Reihenfolge an."
     }
   }
 }

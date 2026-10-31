@@ -13,16 +13,16 @@ Sie heißt *Shebang*. Um die Datei ausführbar zu machen, brauchst du trotzdem
 ```
 
 ```quiz
-`namn = Kim` ergibt den Fehler `command not found`. Warum?
-- [x] Durch die Leerzeichen um `=` hält die Shell `namn` für einen Befehl
+`{{nameVar}} = Kim` ergibt den Fehler `command not found`. Warum?
+- [x] Durch die Leerzeichen um `=` hält die Shell `{{nameVar}}` für einen Befehl
 - [ ] Variablennamen müssen in Großbuchstaben geschrieben werden
-- [ ] Du musst `$namn = Kim` schreiben
+- [ ] Du musst `${{nameVar}} = Kim` schreiben
 ```
 
 ```predict
-$ antal=$(ls ~/dokument | wc -l)
-$ echo "$antal files"
-3 files
+$ anzahl=$(ls ~/{{documents}} | wc -l)
+$ echo "$anzahl Dateien"
+3 Dateien
 ```
 
 ```predict
@@ -50,14 +50,14 @@ vergleichen Text.
 ```
 
 ```predict
-$ [ -d ~/finnsinte ] && echo yes || echo no
-no
+$ [ -d ~/{{missing}} ] && echo ja || echo nein
+nein
 ```
 
 ```predict
-$ fil=rapport.txt
-$ case $fil in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
-A text file
+$ datei=bericht.txt
+$ case $datei in *.jpg|*.png) echo "Ein Bild";; *.txt) echo "Eine Textdatei";; *) echo "Unbekannter Typ";; esac
+Eine Textdatei
 ```
 
 ```predict
@@ -91,12 +91,12 @@ Warum endet ein Skript mit `exit 1`, wenn etwas schiefgeht?
 ```
 
 ```quiz
-Du beginnst ein Here-Document mit `cat > hej.sh << 'SLUT'`. Wann endet es?
+Du beginnst ein Here-Document mit `cat > {{helloScript}} << '{{heredocEnd}}'`. Wann endet es?
 - [ ] Wenn du in einer leeren Zeile Enter drückst
-- [x] Bei der Zeile `SLUT`
+- [x] Bei der Zeile `{{heredocEnd}}`
 - [ ] Nach zehn Zeilen
 ```
 
 ```try
-for i in $(seq 1 3); do echo "Round $i"; done
+for i in $(seq 1 3); do echo "Runde $i"; done
 ```

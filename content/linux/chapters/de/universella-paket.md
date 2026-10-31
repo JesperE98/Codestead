@@ -251,18 +251,18 @@ es – ohne Installation und ohne root. Um das Programm loszuwerden, löschst du
 die Datei.
 
 In deinem Home-Verzeichnis liegt bereits ein heruntergeladenes AppImage, in
-`~/Nedladdningar` (Schwedisch für „Downloads“):
+`~/{{downloads}}`:
 
 ```sh
-cd ~/Nedladdningar
+cd ~/{{downloads}}
 ls -l
 ```
 
 Was passiert, wenn du es gleich startest?
 
 ```predict
-$ ~/Nedladdningar/Kalkylator.AppImage
-bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+$ ~/{{downloads}}/{{calculator}}
+bash: /home/{{user}}/{{downloads}}/{{calculator}}: Permission denied
 ---
 Die Datei hat kein `x`-Recht.
 ```
@@ -271,14 +271,14 @@ Heruntergeladene Dateien sind anfangs nie ausführbar. Mach sie ausführbar und
 starte sie:
 
 ```sh
-chmod +x Kalkylator.AppImage
-./Kalkylator.AppImage
+chmod +x {{calculator}}
+./{{calculator}}
 ```
 
 ```try
-chmod +x ~/Nedladdningar/Kalkylator.AppImage
+chmod +x ~/{{downloads}}/{{calculator}}
 ---
-Jetzt ist die Datei ausführbar. Prüf es mit `ls -l ~/Nedladdningar`.
+Jetzt ist die Datei ausführbar. Prüf es mit `ls -l ~/{{downloads}}`.
 ```
 
 ### FUSE
@@ -295,7 +295,7 @@ von der Umstellung auf 64-Bit-Zeit; in älteren Versionen hieß es
 ```sh
 sudo apt update
 sudo apt install libfuse2t64
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 
 > Installiere unter Ubuntu **nicht** das Paket `fuse` – es ersetzt `fuse3`,
@@ -307,7 +307,7 @@ Unter Arch heißt das Paket `fuse2`:
 
 ```sh
 sudo pacman -S fuse2
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -316,7 +316,7 @@ Unter Fedora heißt das Paket `fuse-libs`:
 
 ```sh
 sudo dnf install fuse-libs
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -325,7 +325,7 @@ sudo dnf install fuse-libs
 Ein AppImage lässt sich auch auspacken. Das funktioniert sogar ohne FUSE:
 
 ```sh
-./Kalkylator.AppImage --appimage-extract
+./{{calculator}} --appimage-extract
 ls squashfs-root
 ./squashfs-root/AppRun
 ```
