@@ -352,7 +352,7 @@ nom du fichier dans l'adresse) :
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` est fait pour télécharger des fichiers. Il enregistre toujours dans un
@@ -374,10 +374,10 @@ le service `sshd` sur le port 22, et vous vous connectez avec le client
 `ssh` :
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` signifie « l'utilisateur elev sur l'ordinateur
+`{{user}}@server.lan` signifie « l'utilisateur {{user}} sur l'ordinateur
 server.lan ». La commande après l'hôte (`hostname`) s'exécute sur le serveur
 et la réponse s'affiche ici – elle dit `server`, et non `ubuntu`.
 
@@ -398,8 +398,8 @@ le serveur.
 La commande peut regrouper plusieurs commandes entre guillemets :
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 Sans commande, ssh vous connecte et vous obtenez un shell sur l'autre
@@ -414,7 +414,7 @@ serveur :
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 Appuyez sur Entrée aux questions de `ssh-keygen` pour utiliser le fichier par

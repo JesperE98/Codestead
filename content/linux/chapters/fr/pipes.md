@@ -46,16 +46,16 @@ Le second `>` a écrasé le fichier. Avec `>>`, il contiendrait les deux lignes.
 `<` permet à un programme de lire son stdin depuis un fichier :
 
 ```sh
-wc -l < dokument/frukter.txt
+wc -l < {{documents}}/{{fruits}}
 ```
 
 Ici, `wc` ne voit jamais le nom du fichier – il reçoit seulement le texte sur
 stdin – donc il n'affiche que le nombre.
 
 ```predict
-$ wc -l dokument/frukter.txt
-$ wc -l < dokument/frukter.txt
-10 dokument/frukter.txt
+$ wc -l {{documents}}/{{fruits}}
+$ wc -l < {{documents}}/{{fruits}}
+10 {{documents}}/{{fruits}}
 10
 ---
 Avec un nom de fichier en argument, `wc` affiche aussi le nom. Avec `<`, il ne
@@ -68,16 +68,13 @@ Les messages d'erreur partent sur stderr et ne sont pas concernés par `>`.
 Pour les gérer, écrivez le numéro du flux devant :
 
 ```sh
-ls /finnsinte 2> fel.txt
+ls /{{missing}} 2> erreurs.txt
 ```
 
-(*Finns inte* signifie « n'existe pas » en suédois, et *fel* veut dire
-« erreur ».)
-
 ```quiz
-Vous lancez `ls /finnsinte > fel.txt`. Où atterrit le message d'erreur ?
-- [ ] Dans `fel.txt`
-- [x] À l'écran – `fel.txt` reste vide
+Vous lancez `ls /{{missing}} > erreurs.txt`. Où atterrit le message d'erreur ?
+- [ ] Dans `erreurs.txt`
+- [x] À l'écran – `erreurs.txt` reste vide
 - [ ] Nulle part, il disparaît
 ---
 `>` ne redirige que stdout (le flux 1). Le message d'erreur part sur stderr
@@ -95,14 +92,14 @@ suivante. C'est le cœur de la philosophie Unix : *faire une seule chose et la
 faire bien, et laisser les programmes travailler ensemble*.
 
 ```sh
-grep INFO dokument/server.log | wc -l
+grep INFO {{documents}}/server.log | wc -l
 ```
 
 `grep` trouve les lignes et `wc -l` les compte. Vous pouvez en enchaîner
 autant que vous voulez :
 
 ```sh
-sort dokument/frukter.txt | uniq -c | sort -rn
+sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ```
 
 Lisez-le étape par étape : on trie les fruits, on compte combien il y en a de
@@ -122,7 +119,7 @@ ls /etc | wc -l
 fichier :
 
 ```sh
-ls /etc | tee etc-lista.txt | wc -l
+ls /etc | tee liste-etc.txt | wc -l
 ```
 
 ## Enchaînements – `;`, `&&` et `||`
@@ -136,13 +133,13 @@ Plusieurs commandes peuvent tenir sur la même ligne :
 | `a \|\| b` | Exécuter b seulement si a a échoué |
 
 ```sh
-mkdir -p ny && cd ny
+mkdir -p nouveau && cd nouveau
 ```
 
 ```predict
-$ mkdir dokument 2> /dev/null && echo created || echo failed
+$ mkdir {{documents}} 2> /dev/null && echo created || echo failed
 failed
 ---
-`dokument` existe déjà, donc `mkdir` échoue (son message d'erreur disparaît
+`{{documents}}` existe déjà, donc `mkdir` échoue (son message d'erreur disparaît
 dans `/dev/null`). `echo created` est sauté et `echo failed` s'exécute.
 ```

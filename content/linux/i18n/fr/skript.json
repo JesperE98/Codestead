@@ -2,35 +2,35 @@
   "title": "Les scripts shell",
   "tasks": {
     "variabel": {
-      "text": "Créez la variable `namn` (« nom » en suédois) contenant votre nom, puis utilisez `echo` pour afficher `Hej` (« Salut ») suivi du nom.",
-      "hint": "Pas d'espace autour du `=` : `namn=Kim`. Utilisez ensuite `echo \"Hej $namn\"`."
+      "text": "Créez la variable `{{nameVar}}` contenant votre nom, puis utilisez `echo` pour afficher `{{hello}}` suivi du nom.",
+      "hint": "Pas d'espace autour du `=` : `{{nameVar}}=Kim`. Utilisez ensuite `echo \"{{hello}} ${{nameVar}}\"`."
     },
     "rakna": {
       "text": "Calculez 17 × 23 avec `$(( ))`."
     },
     "substitution": {
-      "text": "Enregistrez le nombre de lignes de `~/dokument/server.log` dans la variable `rader`, à l'aide de `$(...)` et `wc -l`.",
-      "hint": "`wc -l < file` n'affiche que le nombre, sans le nom du fichier : `rader=$(wc -l < ~/dokument/server.log)`"
+      "text": "Enregistrez le nombre de lignes de `~/{{documents}}/server.log` dans la variable `{{linesVar}}`, à l'aide de `$(...)` et `wc -l`.",
+      "hint": "`wc -l < file` n'affiche que le nombre, sans le nom du fichier : `{{linesVar}}=$(wc -l < ~/{{documents}}/server.log)`"
     },
     "if": {
-      "text": "Écrivez une instruction `if` qui affiche `finns` (« existe ») si le fichier `~/.bashrc` existe.",
-      "hint": "`if [ -f ~/.bashrc ]; then echo finns; fi` – n'oubliez pas les espaces à l'intérieur des crochets."
+      "text": "Écrivez une instruction `if` qui affiche `{{exists}}` si le fichier `~/.bashrc` existe.",
+      "hint": "`if [ -f ~/.bashrc ]; then echo {{exists}}; fi` – n'oubliez pas les espaces à l'intérieur des crochets."
     },
     "for": {
       "text": "Affichez les nombres de 1 à 5, un par ligne, avec une boucle `for`.",
       "hint": "Soit `for i in 1 2 3 4 5; do ...; done`, soit `for i in $(seq 1 5); do ...; done`."
     },
     "while-read": {
-      "text": "Lisez `~/dokument/frukter.txt` ligne par ligne avec `while read` et affichez `Frukt: ` (« Fruit » en suédois) devant chaque ligne.",
-      "hint": "`while read rad; do echo \"Frukt: $rad\"; done < ~/dokument/frukter.txt`"
+      "text": "Lisez `~/{{documents}}/{{fruits}}` ligne par ligne avec `while read` et affichez `{{fruitLabel}}: ` devant chaque ligne.",
+      "hint": "`while read {{lineVar}}; do echo \"{{fruitLabel}}: ${{lineVar}}\"; done < ~/{{documents}}/{{fruits}}`"
     },
     "funktion": {
-      "text": "Créez la fonction `dubbla` (« doubler ») qui affiche son premier argument multiplié par deux. Testez-la avec `dubbla 21`.",
-      "hint": "`dubbla() { echo $(( $1 * 2 )); }` – puis `dubbla 21`."
+      "text": "Créez la fonction `{{doubleFn}}` qui affiche son premier argument multiplié par deux. Testez-la avec `{{doubleFn}} 21`.",
+      "hint": "`{{doubleFn}}() { echo $(( $1 * 2 )); }` – puis `{{doubleFn}} 21`."
     },
     "backup": {
-      "text": "Écrivez le script `~/backup.sh`, qui copie le fichier passé en premier argument vers le même nom suivi de `.bak`. Rendez-le exécutable et lancez `./backup.sh anteckningar.txt` dans votre répertoire personnel.",
-      "hint": "Créez le fichier avec `cat > ~/backup.sh << 'SLUT'`, écrivez `#!/bin/bash` et `cp \"$1\" \"$1.bak\"` sur des lignes séparées, et terminez par `SLUT`."
+      "text": "Écrivez le script `~/backup.sh`, qui copie le fichier passé en premier argument vers le même nom suivi de `.bak`. Rendez-le exécutable et lancez `./backup.sh {{notes}}` dans votre répertoire personnel.",
+      "hint": "Créez le fichier avec `cat > ~/backup.sh << '{{heredocEnd}}'`, écrivez `#!/bin/bash` et `cp \"$1\" \"$1.bak\"` sur des lignes séparées, et terminez par `{{heredocEnd}}`."
     }
   }
 }

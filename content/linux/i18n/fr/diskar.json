@@ -21,12 +21,12 @@
       "hint": "Créer des répertoires dans `/mnt` comme monter nécessitent les droits root : `sudo mkdir -p /mnt/usb`, puis `sudo mount /dev/sdb1 /mnt/usb`."
     },
     "fran-usb": {
-      "text": "Copiez `rapport.pdf` depuis la clé USB vers votre répertoire personnel.",
-      "hint": "Les fichiers de la clé se trouvent maintenant dans `/mnt/usb` : `cp /mnt/usb/rapport.pdf ~`."
+      "text": "Copiez `{{report}}` depuis la clé USB vers votre répertoire personnel.",
+      "hint": "Les fichiers de la clé se trouvent maintenant dans `/mnt/usb` : `cp /mnt/usb/{{report}} ~`."
     },
     "till-usb": {
-      "text": "Enregistrez une copie de `~/dokument/frukter.txt` sur la clé USB.",
-      "hint": "Les fichiers de la clé appartiennent à root – FAT n'a pas de permissions Linux – il vous faut donc `sudo` : `sudo cp ~/dokument/frukter.txt /mnt/usb/`."
+      "text": "Enregistrez une copie de `~/{{documents}}/{{fruits}}` sur la clé USB.",
+      "hint": "Les fichiers de la clé appartiennent à root – FAT n'a pas de permissions Linux – il vous faut donc `sudo` : `sudo cp ~/{{documents}}/{{fruits}} /mnt/usb/`."
     },
     "avmontera": {
       "text": "Démontez la clé USB, pour pouvoir la retirer sans risque.",

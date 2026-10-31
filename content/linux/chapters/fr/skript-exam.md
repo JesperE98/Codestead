@@ -13,16 +13,16 @@ fichier exécutable.
 ```
 
 ```quiz
-`namn = Kim` donne l'erreur `command not found`. Pourquoi ?
-- [x] Les espaces autour de `=` font que le shell traite `namn` comme une commande
+`{{nameVar}} = Kim` donne l'erreur `command not found`. Pourquoi ?
+- [x] Les espaces autour de `=` font que le shell traite `{{nameVar}}` comme une commande
 - [ ] Les noms de variables doivent être écrits en majuscules
-- [ ] Il faut écrire `$namn = Kim`
+- [ ] Il faut écrire `${{nameVar}} = Kim`
 ```
 
 ```predict
-$ antal=$(ls ~/dokument | wc -l)
-$ echo "$antal files"
-3 files
+$ nombre=$(ls ~/{{documents}} | wc -l)
+$ echo "$nombre fichiers"
+3 fichiers
 ```
 
 ```predict
@@ -50,13 +50,13 @@ Les nombres se comparent avec `-eq`, `-lt`, `-gt` et ainsi de suite ; `=` et
 ```
 
 ```predict
-$ [ -d ~/finnsinte ] && echo yes || echo no
+$ [ -d ~/{{missing}} ] && echo yes || echo no
 no
 ```
 
 ```predict
-$ fil=rapport.txt
-$ case $fil in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
+$ fichier=rapport.txt
+$ case $fichier in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
 A text file
 ```
 
@@ -91,9 +91,9 @@ Pourquoi un script se termine-t-il par `exit 1` quand quelque chose se passe mal
 ```
 
 ```quiz
-Vous commencez un here document avec `cat > hej.sh << 'SLUT'`. Quand se termine-t-il ?
+Vous commencez un here document avec `cat > {{helloScript}} << '{{heredocEnd}}'`. Quand se termine-t-il ?
 - [ ] Quand vous appuyez sur Entrée sur une ligne vide
-- [x] À la ligne `SLUT`
+- [x] À la ligne `{{heredocEnd}}`
 - [ ] Après dix lignes
 ```
 

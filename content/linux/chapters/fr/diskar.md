@@ -144,7 +144,7 @@ les `tmpfs` sont des systèmes de fichiers en RAM. Points de montage courants :
 | `/` | Le système de fichiers racine |
 | `/boot`, `/boot/efi` | Le noyau et la partition EFI |
 | `/mnt` | Les montages temporaires que vous faites à la main |
-| `/media/elev/…` ou `/run/media/elev/…` | Là où le bureau monte automatiquement les clés USB |
+| `/media/{{user}}/…` ou `/run/media/{{user}}/…` | Là où le bureau monte automatiquement les clés USB |
 
 ## Combien de place reste-t-il ? – `df`
 
@@ -226,7 +226,7 @@ df -h /mnt/usb
 Copiez un fichier dans votre répertoire personnel :
 
 ```sh
-cp /mnt/usb/att-gora.txt ~
+cp /mnt/usb/{{todo}} ~
 ```
 
 > **Pourquoi tout appartient-il à root ?** FAT n'a pas de permissions Linux.

@@ -3,17 +3,17 @@
 Presque tout, sous Linux, est du texte : les réglages, les journaux, les
 listes. C'est pourquoi il existe une foule de petits outils pour lire et
 rechercher dans des fichiers texte. Dans votre répertoire personnel se trouve
-un répertoire `dokument` avec des fichiers pour vous entraîner, dont
-`frukter.txt` (une liste de fruits) et `server.log` (le journal d'un serveur
-web imaginaire). Leur contenu est en suédois, mais les mots que vous allez
-chercher – `INFO`, `WARN` et `ERROR` – sont les mêmes que dans de vrais logs.
+un répertoire `{{documents}}` avec des fichiers pour vous entraîner, dont
+`{{fruits}}`, une liste de fruits, et `server.log`, le journal d'un serveur
+web imaginaire, avec des lignes `INFO`, `WARN` et `ERROR` comme dans de vrais
+logs.
 
 ## Afficher un fichier – `cat` et `less`
 
 `cat` affiche le fichier en entier :
 
 ```sh
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 Pour les fichiers longs, `less` est plus pratique. On y fait défiler le texte
@@ -23,7 +23,7 @@ avec `q`.
 Regardez la liste des fruits – vous en aurez besoin pour la question suivante :
 
 ```try
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 ## Le début et la fin – `head` et `tail`
@@ -32,16 +32,16 @@ cat dokument/frukter.txt
 10 lignes, mais vous pouvez choisir avec `-n` :
 
 ```sh
-head -n 5 dokument/server.log
-tail -n 3 dokument/server.log
+head -n 5 {{documents}}/server.log
+tail -n 3 {{documents}}/server.log
 ```
 
 `tail -f` *suit* un fichier et affiche les nouvelles lignes au fur et à mesure
 qu'elles sont écrites – parfait pour les logs. Arrêtez-le avec **Ctrl+C**.
 
 ```predict
-$ tail -n 1 dokument/frukter.txt
-mango
+$ tail -n 1 {{documents}}/{{fruits}}
+mangue
 ---
 `tail -n 1` n'affiche que la toute dernière ligne.
 ```
@@ -51,7 +51,7 @@ mango
 `wc` (*word count*) compte les lignes, les mots et les octets :
 
 ```sh
-wc dokument/frukter.txt
+wc {{documents}}/{{fruits}}
 ```
 
 Souvent, on ne veut que le nombre de lignes : `wc -l`.
@@ -62,7 +62,7 @@ Souvent, on ne veut que le nombre de lignes : `wc -l`.
 les lignes qui contiennent un motif :
 
 ```sh
-grep INFO dokument/server.log
+grep INFO {{documents}}/server.log
 ```
 
 Quelques options que vous utiliserez souvent :
@@ -77,7 +77,7 @@ Quelques options que vous utiliserez souvent :
 | `-E` | Motifs étendus, p. ex. `"ERROR|WARN"` |
 
 ```sh
-grep -n WARN dokument/server.log
+grep -n WARN {{documents}}/server.log
 ```
 
 Le motif est une *expression régulière* (regex). Quelques exemples : `^`
@@ -86,7 +86,7 @@ trouve les lignes qui commencent par 2026.
 
 ```quiz
 `server.log` contient deux lignes avec `WARN` et une ligne avec `warn` en
-minuscules. Qu'affiche `grep -c WARN dokument/server.log` ?
+minuscules. Qu'affiche `grep -c WARN {{documents}}/server.log` ?
 - [ ] 1
 - [x] 2
 - [ ] 3
@@ -97,9 +97,9 @@ minuscules sont différentes. `grep -ic WARN` compterait les trois.
 
 ```quiz
 Quelle commande affiche toutes les lignes de `server.log` qui ne contiennent **pas** `INFO` ?
-- [ ] `grep -i INFO dokument/server.log`
-- [ ] `grep -c INFO dokument/server.log`
-- [x] `grep -v INFO dokument/server.log`
+- [ ] `grep -i INFO {{documents}}/server.log`
+- [ ] `grep -c INFO {{documents}}/server.log`
+- [x] `grep -v INFO {{documents}}/server.log`
 ```
 
 ## Trier – `sort` et `uniq`
@@ -110,7 +110,7 @@ pour l'ordre inverse). `uniq` supprime les lignes identiques à la ligne
 `sort` :
 
 ```sh
-sort dokument/frukter.txt
+sort {{documents}}/{{fruits}}
 ```
 
 ```quiz

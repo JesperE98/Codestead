@@ -2,8 +2,8 @@
   "title": "Traitement de texte avec sed, tr et awk",
   "tasks": {
     "sed-s": {
-      "text": "Affichez `~/dokument/server.log` avec le mot `ERROR` remplacé par `FEL` sur chaque ligne, à l'aide de `sed`.",
-      "hint": "La commande `s/ancien/nouveau/` remplace du texte : `sed 's/ERROR/FEL/' fichier`"
+      "text": "Affichez `~/{{documents}}/server.log` avec le mot `ERROR` remplacé par `{{errorWord}}` sur chaque ligne, à l'aide de `sed`.",
+      "hint": "La commande `s/ancien/nouveau/` remplace du texte : `sed 's/ERROR/{{errorWord}}/' fichier`"
     },
     "sed-d": {
       "text": "Affichez server.log **sans** toutes les lignes contenant `INFO`, à l'aide de `sed`.",
@@ -22,11 +22,11 @@
       "hint": "Les champs sont séparés par des deux-points, utilisez donc `-F:`. Le programme est `'{print $1, $7}'`."
     },
     "awk-sum": {
-      "text": "Calculez la **somme** des points (colonne 3) de `~/dokument/betyg.csv` avec `awk`.",
-      "hint": "Sautez la ligne d'en-tête avec `NR > 1`, additionnez avec `summa += $3` et affichez le résultat dans `END { }`. Le séparateur est une virgule : `-F,`."
+      "text": "Calculez la **somme** des points (colonne 3) de `~/{{documents}}/{{grades}}` avec `awk`.",
+      "hint": "Sautez la ligne d'en-tête avec `NR > 1`, additionnez avec `{{sumVar}} += $3` et affichez le résultat dans `END { }`. Le séparateur est une virgule : `-F,`."
     },
     "sed-i": {
-      "text": "Remplacez `Linux` par `GNU/Linux` **directement dans le fichier** `~/anteckningar.txt`.",
+      "text": "Remplacez `Linux` par `GNU/Linux` **directement dans le fichier** `~/{{notes}}`.",
       "hint": "Utilisez `sed -i`. Comme le remplacement contient un `/`, le plus simple est de changer de délimiteur : `s|Linux|GNU/Linux|`."
     }
   }

@@ -4,7 +4,7 @@ Répondez aux questions sur les variables, les permissions, les processus et les
 
 ```predict
 $ echo "$HOME" '$USER'
-/home/elev $USER
+/home/{{user}} $USER
 ---
 Les guillemets doubles remplacent la variable par sa valeur ; les guillemets
 simples l'affichent exactement telle quelle.
@@ -36,10 +36,10 @@ Propriétaire : 4 + 2 + 1 = 7. Groupe : 4 + 1 = 5. Autres : 0.
 ```
 
 ```predict
-$ touch verktyg.sh
-$ chmod 755 verktyg.sh
-$ chmod go-x verktyg.sh
-$ ls -l verktyg.sh | awk '{print $1}'
+$ touch outil.sh
+$ chmod 755 outil.sh
+$ chmod go-x outil.sh
+$ ls -l outil.sh | awk '{print $1}'
 -rwxr--r--
 ```
 
@@ -47,7 +47,7 @@ $ ls -l verktyg.sh | awk '{print $1}'
 Sur Ubuntu, les membres de quel groupe ont le droit d'utiliser `sudo` ?
 - [x] `sudo`
 - [ ] `root`
-- [ ] `elev`
+- [ ] `{{user}}`
 ```
 
 ```quiz
@@ -87,18 +87,18 @@ Quelle est la différence entre `pkill` et `killall` ?
 ```
 
 ```quiz
-Qu'est-ce qui ne va pas dans `tar -cvf dokument dokument.tar` ?
+Qu'est-ce qui ne va pas dans `tar -cvf {{documents}} {{documents}}.tar` ?
 - [ ] `-v` ne peut pas être combiné avec `-c`
 - [x] L'ordre : le nom de l'archive doit venir juste après `f`, avant les fichiers
 - [ ] Une archive tar doit se terminer par `.tgz`
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ gzip frukter.txt
-$ gunzip frukter.txt.gz
-$ ls frukter*
-frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ gzip {{fruits}}
+$ gunzip {{fruits}}.gz
+$ ls {{fruits}}*
+{{fruits}}
 ```
 
 ```quiz
@@ -111,7 +111,7 @@ Que fait `zcat server.log.gz` ?
 ```
 
 ```try
-du -sh dokument
+du -sh {{documents}}
 ---
 `-s` donne un seul total pour tout le répertoire et `-h` rend la taille facile à lire.
 ```

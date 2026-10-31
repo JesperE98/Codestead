@@ -28,13 +28,13 @@ export EDITOR=nano
 ```
 
 ```quiz
-Quelle ligne crée la variable `FARG` avec la valeur `blue` ?
-- [ ] `FARG = blue`
-- [x] `FARG=blue`
-- [ ] `$FARG=blue`
+Quelle ligne crée la variable `COULEUR` avec la valeur `blue` ?
+- [ ] `COULEUR = blue`
+- [x] `COULEUR=blue`
+- [ ] `$COULEUR=blue`
 ---
 Il ne doit pas y avoir d'espace autour du `=`. Avec des espaces, le shell croit
-que `FARG` est une commande. Le `$` ne sert que quand on *lit* une variable.
+que `COULEUR` est une commande. Le `$` ne sert que quand on *lit* une variable.
 ```
 
 ## Guillemets simples et doubles
@@ -81,13 +81,13 @@ indiquer son chemin, par exemple `./monprogramme` pour un fichier situé dans
 le répertoire où vous êtes.
 
 ```quiz
-Vous avez un programme nommé `hej` dans le répertoire où vous êtes, et ce
+Vous avez un programme nommé `salut` dans le répertoire où vous êtes, et ce
 répertoire n'est pas dans `PATH`. Comment le lancez-vous ?
-- [ ] `hej`
-- [x] `./hej`
-- [ ] `type hej`
+- [ ] `salut`
+- [x] `./salut`
+- [ ] `type salut`
 ---
-Sans chemin, le shell ne cherche que dans les répertoires de `PATH`. `./hej`
+Sans chemin, le shell ne cherche que dans les répertoires de `PATH`. `./salut`
 indique exactement où se trouve le fichier : dans le répertoire courant.
 ```
 
@@ -98,7 +98,7 @@ termine : `0` signifie que tout s'est bien passé, toute autre valeur indique
 une erreur. Le dernier code de retour est stocké dans `$?` :
 
 ```sh
-ls /finnsinte
+ls /{{missing}}
 echo $?
 ```
 
@@ -116,8 +116,8 @@ ll
 `alias` sans argument liste tous les alias, et `unalias ll` en supprime un.
 
 ```predict
-$ alias hej='echo Hello'
-$ hej
+$ alias salut='echo Hello'
+$ salut
 Hello
 ```
 
