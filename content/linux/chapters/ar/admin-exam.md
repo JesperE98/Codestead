@@ -118,7 +118,7 @@ $ df -h ~ | awk 'NR > 1 {print $6}'
 
 ```predict
 $ grep ^sudo /etc/group | cut -d: -f4
-elev
+{{user}}
 ```
 
 ```quiz

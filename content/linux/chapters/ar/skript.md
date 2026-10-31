@@ -9,26 +9,26 @@
 
 السكربت ملف نصي عادي. على الحواسيب الحقيقية تكتبه في محرر نصوص مثل `nano` أو
 `vim`. وهناك طريقة أخرى تعمل هنا وعلى الخوادم أيضًا، وهي **here document**: كل ما
-بين `<< 'SLUT'` والسطر `SLUT` يُمرَّر إلى الأمر. (*Slut* تعني ببساطة "النهاية"
-بالسويدية – يمكنك اختيار أي كلمة تريدها، و`EOF` اختيار شائع.)
+بين `<< '{{heredocEnd}}'` والسطر `{{heredocEnd}}` يُمرَّر إلى الأمر. (يمكنك اختيار
+أي كلمة تريدها، و`EOF` اختيار شائع.)
 
 اكتب السطر الأول واضغط Enter. يتغير المحث إلى `> ` – فالـ shell ينتظر البقية.
-اكتب الأسطر واحدًا تلو الآخر، واختم بـ `SLUT`:
+اكتب الأسطر واحدًا تلو الآخر، واختم بـ `{{heredocEnd}}`:
 
 ```sh
-cat > hej.sh << 'SLUT'
+cat > {{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
 echo "Hello from a script!"
 echo "Today is $(date)"
-SLUT
+{{heredocEnd}}
 ```
 
 السطر الأول، `#!/bin/bash`، يسمى *shebang* ويخبر النظام بالبرنامج الذي يجب أن
 يشغّل الملف. اجعل السكربت قابلًا للتنفيذ وشغّله:
 
 ```sh
-chmod +x hej.sh
-./hej.sh
+chmod +x {{helloScript}}
+./{{helloScript}}
 ```
 
 الأسطر التي تبدأ بـ `#` (باستثناء سطر الـ shebang) هي **تعليقات** يتخطاها الـ
@@ -40,25 +40,25 @@ shell. استخدمها لتشرح ما تفعله الشيفرة!
 وإلا ظن الـ shell أن `name` أمر.
 
 ```sh
-stad=Göteborg
-echo "I live in $stad"
+city=Cairo
+echo "I live in $city"
 ```
 
-(*Stad* تعني "مدينة".) ضع المتغيرات دائمًا داخل **علامات اقتباس مزدوجة** عندما
+ضع المتغيرات دائمًا داخل **علامات اقتباس مزدوجة** عندما
 تستخدمها. فمن دون علامات الاقتباس تُقسَّم القيمة عند المسافات، ما يسبب أخطاء غريبة
 عندما يحتوي اسم ملف على مسافة. وإذا أردت كتابة نص مباشرة بعد اسم المتغير، فاستخدم
-الأقواس المعقوصة: `"${stad}_2026"` – فمن دونها سيبحث bash عن متغير اسمه
-`stad_2026`.
+الأقواس المعقوصة: `"${city}_2026"` – فمن دونها سيبحث bash عن متغير اسمه
+`city_2026`.
 
 ```quiz
-يحتوي `stad` على `Göteborg`، ولا يوجد متغير اسمه `stad_2026`. ماذا يطبع
-`echo "$stad_2026"`؟
-- [ ] `Göteborg_2026`
-- [ ] `Göteborg`
+يحتوي `city` على `Cairo`، ولا يوجد متغير اسمه `city_2026`. ماذا يطبع
+`echo "$city_2026"`؟
+- [ ] `Cairo_2026`
+- [ ] `Cairo`
 - [x] سطرًا فارغًا
 ---
-يقرأ bash الاسم كاملًا `stad_2026`، وهذا المتغير غير موجود.
-اكتب `"${stad}_2026"` لتحصل على `Göteborg_2026`.
+يقرأ bash الاسم كاملًا `city_2026`، وهذا المتغير غير موجود.
+اكتب `"${city}_2026"` لتحصل على `Cairo_2026`.
 ```
 
 ## استبدال الأوامر – `$(...)`
@@ -66,9 +66,9 @@ echo "I live in $stad"
 يُستبدل `$(command)` بما يطبعه الأمر. وهكذا تحفظ نتيجة أمر في متغير:
 
 ```sh
-idag=$(date)
-filer=$(ls ~ | wc -l)
-echo "There are $filer items in your home directory"
+today=$(date)
+items=$(ls ~ | wc -l)
+echo "There are $items items in your home directory"
 ```
 
 ## الحساب – `$(( ))`
@@ -93,7 +93,7 @@ $ echo $(( 7 / 2 )) $(( 7 % 2 ))
 
 ## الوسائط
 
-عندما تشغّل `./skript.sh one two`، يستطيع السكربت قراءة الوسائط:
+عندما تشغّل `./script.sh one two`، يستطيع السكربت قراءة الوسائط:
 
 | المتغير | يحتوي على |
 |---|---|
@@ -104,8 +104,8 @@ $ echo $(( 7 / 2 )) $(( 7 % 2 ))
 | `$?` | رمز خروج الأمر السابق |
 
 ```quiz
-يُشغَّل سكربت بالأمر `./skript.sh red green blue`. ماذا يحتوي `$1` و`$#`؟
-- [ ] `$1` هو `./skript.sh` و`$#` هو `4`
+يُشغَّل سكربت بالأمر `./script.sh red green blue`. ماذا يحتوي `$1` و`$#`؟
+- [ ] `$1` هو `./script.sh` و`$#` هو `4`
 - [x] `$1` هو `red` و`$#` هو `3`
 - [ ] `$1` هو `red` و`$#` هو `blue`
 ---
@@ -152,7 +152,7 @@ fi
 للشروط القصيرة، غالبًا ما يكفي `&&` و`||`:
 
 ```sh
-[ -d ~/bilder ] && echo "The pictures directory exists"
+[ -d ~/{{pictures}} ] && echo "The pictures directory exists"
 ```
 
 ```predict
@@ -166,13 +166,13 @@ empty
 **حلقة for** تفعل الشيء نفسه لكل عنصر في قائمة:
 
 ```sh
-for frukt in äpple banan kiwi; do echo "I like $frukt"; done
+for fruit in apple banana kiwi; do echo "I like $fruit"; done
 ```
 
 يمكن أن تأتي القائمة من أحرف البدل أو من أمر:
 
 ```sh
-for fil in ~/dokument/*; do echo "File: $fil"; done
+for file in ~/{{documents}}/*; do echo "File: $file"; done
 for i in $(seq 1 3); do echo "Round $i"; done
 ```
 
@@ -186,7 +186,7 @@ i=1; while [ $i -le 3 ]; do echo $i; (( i++ )); done
 باستخدام `<` بعد `done`:
 
 ```sh
-while read rad; do echo "> $rad"; done < ~/dokument/frukter.txt
+while read line; do echo "> $line"; done < ~/{{documents}}/{{fruits}}
 ```
 
 يخرج `break` من الحلقة، وينتقل `continue` مباشرة إلى الدورة التالية.
@@ -208,8 +208,8 @@ $ for x in 2 4 6; do echo $(( x * 10 )); done
 `elif`:
 
 ```sh
-fil=semester.jpg
-case $fil in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
+file={{vacationPic}}
+case $file in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
 ```
 
 كل بديل ينتهي بـ `;;`، و`*)` يلتقط كل ما عدا ذلك.
@@ -220,8 +220,8 @@ case $fil in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo 
 تستقبل الوسائط بالطريقة نفسها التي يستقبلها بها السكربت – `$1` و`$2` و`$#`:
 
 ```sh
-halsa() { echo "Hello $1, welcome!"; }
-halsa Kim
+greet() { echo "Hello $1, welcome!"; }
+greet Kim
 ```
 
 المتغيرات التي يجب أن توجد داخل الدالة فقط تُنشأ بـ `local`، وينهي `return` الدالة
@@ -232,7 +232,7 @@ halsa Kim
 يقرأ `read` سطرًا من لوحة المفاتيح إلى متغير:
 
 ```sh
-read -p "What's your name? " namn; echo "Hello $namn!"
+read -p "What's your name? " name; echo "Hello $name!"
 ```
 
 ## مثال كامل

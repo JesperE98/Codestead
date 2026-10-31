@@ -7,7 +7,7 @@
 - [ ] `var/log`
 - [ ] `../etc`
 - [x] `/usr/bin`
-- [ ] `dokument`
+- [ ] `{{documents}}`
 ---
 يبدأ المسار المطلق بـ `/`، أي من الجذر. أما البقية فتبدأ من المجلد الذي أنت فيه.
 ```
@@ -29,10 +29,10 @@ $ pwd
 ```
 
 ```quiz
-تريد نسخ المجلد `bilder` كاملًا، بكل ما فيه، إلى `bilder-kopia`. أيّ أمر يعمل؟
-- [ ] `cp bilder bilder-kopia`
-- [x] `cp -r bilder bilder-kopia`
-- [ ] `mv bilder bilder-kopia`
+تريد نسخ المجلد `{{pictures}}` كاملًا، بكل ما فيه، إلى `pictures-copy`. أيّ أمر يعمل؟
+- [ ] `cp {{pictures}} pictures-copy`
+- [x] `cp -r {{pictures}} pictures-copy`
+- [ ] `mv {{pictures}} pictures-copy`
 ---
 يُنسخ المجلد باستخدام `-r` (*recursive*، أي تكراري). أما `mv` فكان سينقله بدلًا من
 نسخه.
@@ -47,17 +47,17 @@ c
 ```
 
 ```quiz
-تكتب `touch min fil.txt` – دون علامات اقتباس. ماذا يحدث؟
-- [ ] يُنشأ ملف اسمه `min fil.txt`
-- [x] يُنشأ ملفان: `min` و`fil.txt`
+تكتب `touch my file.txt` – دون علامات اقتباس. ماذا يحدث؟
+- [ ] يُنشأ ملف اسمه `my file.txt`
+- [x] يُنشأ ملفان: `my` و`file.txt`
 - [ ] لا شيء، لأن الاسم يحتوي على مسافة
 ---
 يقسم الـ shell السطر عند المسافات، فيحصل `touch` على وسيطين. اكتب
-`touch "min fil.txt"` لتحصل على ملف واحد.
+`touch "my file.txt"` لتحصل على ملف واحد.
 ```
 
 ```quiz
-ما الأسطر التي يعرضها `grep -i error dokument/server.log`؟
+ما الأسطر التي يعرضها `grep -i error {{documents}}/server.log`؟
 - [ ] الأسطر التي فيها `error` بأحرف صغيرة فقط
 - [ ] الأسطر التي فيها `ERROR` بأحرف كبيرة فقط
 - [x] الأسطر التي فيها `error` بأي مزيج من الأحرف الكبيرة والصغيرة
@@ -65,9 +65,9 @@ c
 
 ```quiz
 تريد مراقبة ملف سجل ورؤية الأسطر الجديدة عند كتابتها. أيّ أمر يناسب؟
-- [ ] `head -n 10 dokument/server.log`
-- [x] `tail -f dokument/server.log`
-- [ ] `wc -l dokument/server.log`
+- [ ] `head -n 10 {{documents}}/server.log`
+- [x] `tail -f {{documents}}/server.log`
+- [ ] `wc -l {{documents}}/server.log`
 ---
 يتابع `tail -f` (*follow*) الملف. أوقفه باستخدام **Ctrl+C**.
 ```
@@ -97,9 +97,9 @@ c
 ```
 
 ```try
-grep ERROR ~/dokument/server.log | tee fel.txt | wc -l
+grep ERROR ~/{{documents}}/server.log | tee errors.txt | wc -l
 ---
-حفظ `tee` أسطر الأخطاء في `fel.txt` ومرّرها إلى `wc -l` الذي عدّها.
+حفظ `tee` أسطر الأخطاء في `errors.txt` ومرّرها إلى `wc -l` الذي عدّها.
 ```
 
 ```predict

@@ -14,8 +14,8 @@
       "hint": "لا يحق إلا لـ root تعيين كلمات مرور للآخرين: `sudo passwd kim`. اكتب كلمة المرور نفسها مرتين – فهي لا تظهر أثناء الكتابة."
     },
     "grupp": {
-      "text": "أنشئ المجموعة `utvecklare` (وتعني «المطوّرون» بالسويدية) وأضف `kim` إليها.",
-      "hint": "أولًا `sudo groupadd utvecklare`، ثم `sudo usermod -aG utvecklare kim`."
+      "text": "أنشئ المجموعة `{{devGroup}}` وأضف `kim` إليها.",
+      "hint": "أولًا `sudo groupadd {{devGroup}}`، ثم `sudo usermod -aG {{devGroup}} kim`."
     },
     "sudo-ratt": {
       "text": "اسمح لـ `kim` باستخدام `sudo` بإضافة الحساب إلى المجموعة `sudo`.",
@@ -26,12 +26,12 @@
       "hint": "`sudo -u kim whoami`"
     },
     "su": {
-      "text": "سجّل الدخول باسم `kim` باستخدام `su -` وشغّل `id`. ثم عُد إلى `elev` باستخدام `exit`.",
+      "text": "سجّل الدخول باسم `kim` باستخدام `su -` وشغّل `id`. ثم عُد إلى `{{user}}` باستخدام `exit`.",
       "hint": "اكتب `su - kim` ثم كلمة مرور kim – التي اخترتها باستخدام `passwd`. ويُظهر المحث أنك kim."
     },
     "userdel": {
-      "text": "أنشئ مستخدمًا مؤقتًا `vikarie` (وتعني «بديل» بالسويدية) مع مجلد منزل – ثم احذفه من جديد، **مع** مجلد المنزل.",
-      "hint": "`sudo useradd -m vikarie` ثم `sudo userdel -r vikarie`."
+      "text": "أنشئ مستخدمًا مؤقتًا `{{tempUser}}` مع مجلد منزل – ثم احذفه من جديد، **مع** مجلد المنزل.",
+      "hint": "`sudo useradd -m {{tempUser}}` ثم `sudo userdel -r {{tempUser}}`."
     }
   }
 }

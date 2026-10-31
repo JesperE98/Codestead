@@ -2,23 +2,23 @@
   "title": "قراءة النصوص والبحث فيها",
   "tasks": {
     "head": {
-      "text": "اعرض **أول 3** أسطر من `~/dokument/server.log`."
+      "text": "اعرض **أول 3** أسطر من `~/{{documents}}/server.log`."
     },
     "tail": {
-      "text": "اعرض **آخر سطرين** من `~/dokument/server.log`."
+      "text": "اعرض **آخر سطرين** من `~/{{documents}}/server.log`."
     },
     "grep": {
-      "text": "اعرض كل سطر يحتوي على `ERROR` في `~/dokument/server.log`."
+      "text": "اعرض كل سطر يحتوي على `ERROR` في `~/{{documents}}/server.log`."
     },
     "grep-i": {
       "text": "ابحث عن `warn` في server.log **من دون** الاهتمام بالأحرف الكبيرة أو الصغيرة.",
       "hint": "الخيار `-i` يجعل البحث غير حساس لحالة الأحرف. يجب أن تحصل على 3 نتائج."
     },
     "wc": {
-      "text": "احسب عدد أسطر الملف `~/dokument/frukter.txt`."
+      "text": "احسب عدد أسطر الملف `~/{{documents}}/{{fruits}}`."
     },
     "sort": {
-      "text": "اعرض الفواكه في `~/dokument/frukter.txt` مرتّبة أبجديًا."
+      "text": "اعرض الفواكه في `~/{{documents}}/{{fruits}}` مرتّبة أبجديًا."
     }
   }
 }

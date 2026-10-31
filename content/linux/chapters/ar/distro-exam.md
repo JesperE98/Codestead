@@ -81,11 +81,11 @@ uname -r
 ```
 
 ```predict
-$ ~/Nedladdningar/Kalkylator.AppImage
-bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+$ ~/{{downloads}}/{{calculator}}
+bash: /home/{{user}}/{{downloads}}/{{calculator}}: Permission denied
 ---
 الملف المنزّل لا يكون قابلًا للتنفيذ في البداية أبدًا. شغّل
-`chmod +x ~/Nedladdningar/Kalkylator.AppImage` أولًا.
+`chmod +x ~/{{downloads}}/{{calculator}}` أولًا.
 ```
 
 ```quiz

@@ -235,19 +235,19 @@ sudo snap remove hello-world
 **AppImage** برنامج كامل في **ملف واحد فقط**. تنزّله من موقع البرنامج، وتجعله
 قابلًا للتنفيذ وتشغّله – دون تثبيت ودون root. وللتخلص من البرنامج تحذف الملف.
 
-يوجد في مجلد المنزل الخاص بك ملف AppImage منزَّل مسبقًا، في `~/Nedladdningar`
-(وتعني بالسويدية «التنزيلات»):
+يوجد في مجلد المنزل الخاص بك ملف AppImage منزَّل مسبقًا، في
+`~/{{downloads}}`:
 
 ```sh
-cd ~/Nedladdningar
+cd ~/{{downloads}}
 ls -l
 ```
 
 ماذا يحدث إذا شغّلته فورًا؟
 
 ```predict
-$ ~/Nedladdningar/Kalkylator.AppImage
-bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+$ ~/{{downloads}}/{{calculator}}
+bash: /home/{{user}}/{{downloads}}/{{calculator}}: Permission denied
 ---
 ليست للملف الصلاحية `x`.
 ```
@@ -256,14 +256,14 @@ bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
 وشغّله:
 
 ```sh
-chmod +x Kalkylator.AppImage
-./Kalkylator.AppImage
+chmod +x {{calculator}}
+./{{calculator}}
 ```
 
 ```try
-chmod +x ~/Nedladdningar/Kalkylator.AppImage
+chmod +x ~/{{downloads}}/{{calculator}}
 ---
-الآن صار الملف قابلًا للتنفيذ. تحقّق من ذلك باستخدام `ls -l ~/Nedladdningar`.
+الآن صار الملف قابلًا للتنفيذ. تحقّق من ذلك باستخدام `ls -l ~/{{downloads}}`.
 ```
 
 ### FUSE
@@ -279,7 +279,7 @@ chmod +x ~/Nedladdningar/Kalkylator.AppImage
 ```sh
 sudo apt update
 sudo apt install libfuse2t64
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 
 > **لا** تثبّت الحزمة `fuse` على Ubuntu – فهي تستبدل `fuse3`، التي يحتاجها سطح
@@ -291,7 +291,7 @@ sudo apt install libfuse2t64
 
 ```sh
 sudo pacman -S fuse2
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -300,7 +300,7 @@ sudo pacman -S fuse2
 
 ```sh
 sudo dnf install fuse-libs
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -309,7 +309,7 @@ sudo dnf install fuse-libs
 يمكن أيضًا فكّ AppImage. وهذا يعمل حتى دون FUSE:
 
 ```sh
-./Kalkylator.AppImage --appimage-extract
+./{{calculator}} --appimage-extract
 ls squashfs-root
 ./squashfs-root/AppRun
 ```

@@ -38,15 +38,15 @@
       }
     },
     "appimage-chmod": {
-      "text": "يوجد ملف AppImage منزَّل في `~/Nedladdningar` (وتعني بالسويدية «التنزيلات»). اجعل الملف `Kalkylator.AppImage` قابلًا للتنفيذ.",
-      "hint": "`chmod +x ~/Nedladdningar/Kalkylator.AppImage`"
+      "text": "يوجد ملف AppImage منزَّل في `~/{{downloads}}`. اجعل الملف `{{calculator}}` قابلًا للتنفيذ.",
+      "hint": "`chmod +x ~/{{downloads}}/{{calculator}}`"
     },
     "appimage-run": {
-      "text": "شغّل Kalkylator (وتعني «الآلة الحاسبة»). هل يشتكي من FUSE؟ ثبّت المكتبة الناقصة وحاول مرة أخرى.",
+      "text": "شغّل {{calcName}}. هل يشتكي من FUSE؟ ثبّت المكتبة الناقصة وحاول مرة أخرى.",
       "hint": {
-        "debian": "المكتبة موجودة في الحزمة `libfuse2t64`. ثم شغّله باستخدام `~/Nedladdningar/Kalkylator.AppImage`.",
-        "arch": "المكتبة موجودة في الحزمة `fuse2`. ثم شغّله باستخدام `~/Nedladdningar/Kalkylator.AppImage`.",
-        "redhat": "المكتبة موجودة في الحزمة `fuse-libs`. ثم شغّله باستخدام `~/Nedladdningar/Kalkylator.AppImage`."
+        "debian": "المكتبة موجودة في الحزمة `libfuse2t64`. ثم شغّله باستخدام `~/{{downloads}}/{{calculator}}`.",
+        "arch": "المكتبة موجودة في الحزمة `fuse2`. ثم شغّله باستخدام `~/{{downloads}}/{{calculator}}`.",
+        "redhat": "المكتبة موجودة في الحزمة `fuse-libs`. ثم شغّله باستخدام `~/{{downloads}}/{{calculator}}`."
       }
     }
   }

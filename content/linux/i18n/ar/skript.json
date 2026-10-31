@@ -2,35 +2,35 @@
   "title": "سكربتات الـ shell",
   "tasks": {
     "variabel": {
-      "text": "أنشئ المتغير `namn` (وتعني بالسويدية «الاسم») الذي يحتوي على اسمك، ثم استخدم `echo` لطباعة `Hej` («مرحبًا») متبوعة بالاسم.",
-      "hint": "من دون مسافات حول `=`: `namn=Kim`. ثم استخدم `echo \"Hej $namn\"`."
+      "text": "أنشئ المتغير `{{nameVar}}` الذي يحتوي على اسمك، ثم استخدم `echo` لطباعة `{{hello}}` متبوعة بالاسم.",
+      "hint": "من دون مسافات حول `=`: `{{nameVar}}=Kim`. ثم استخدم `echo \"{{hello}} ${{nameVar}}\"`."
     },
     "rakna": {
       "text": "احسب 17 × 23 باستخدام `$(( ))`."
     },
     "substitution": {
-      "text": "احفظ عدد أسطر `~/dokument/server.log` في المتغير `rader`، باستخدام `$(...)` و`wc -l`.",
-      "hint": "`wc -l < file` يطبع العدد وحده، من دون اسم الملف: `rader=$(wc -l < ~/dokument/server.log)`"
+      "text": "احفظ عدد أسطر `~/{{documents}}/server.log` في المتغير `{{linesVar}}`، باستخدام `$(...)` و`wc -l`.",
+      "hint": "`wc -l < file` يطبع العدد وحده، من دون اسم الملف: `{{linesVar}}=$(wc -l < ~/{{documents}}/server.log)`"
     },
     "if": {
-      "text": "اكتب عبارة `if` تطبع `finns` («موجود») إذا كان الملف `~/.bashrc` موجودًا.",
-      "hint": "`if [ -f ~/.bashrc ]; then echo finns; fi` – لا تنسَ المسافات داخل الأقواس المربعة."
+      "text": "اكتب عبارة `if` تطبع `{{exists}}` إذا كان الملف `~/.bashrc` موجودًا.",
+      "hint": "`if [ -f ~/.bashrc ]; then echo {{exists}}; fi` – لا تنسَ المسافات داخل الأقواس المربعة."
     },
     "for": {
       "text": "اطبع الأعداد من 1 إلى 5، كل عدد في سطر، باستخدام حلقة `for`.",
       "hint": "إما `for i in 1 2 3 4 5; do ...; done` أو `for i in $(seq 1 5); do ...; done`."
     },
     "while-read": {
-      "text": "اقرأ `~/dokument/frukter.txt` سطرًا سطرًا باستخدام `while read` واطبع `Frukt: ` (وتعني بالسويدية «فاكهة») قبل كل سطر.",
-      "hint": "`while read rad; do echo \"Frukt: $rad\"; done < ~/dokument/frukter.txt`"
+      "text": "اقرأ `~/{{documents}}/{{fruits}}` سطرًا سطرًا باستخدام `while read` واطبع `{{fruitLabel}}: ` قبل كل سطر.",
+      "hint": "`while read {{lineVar}}; do echo \"{{fruitLabel}}: ${{lineVar}}\"; done < ~/{{documents}}/{{fruits}}`"
     },
     "funktion": {
-      "text": "أنشئ الدالة `dubbla` («ضاعِف») التي تطبع وسيطها الأول مضروبًا في اثنين. اختبرها باستخدام `dubbla 21`.",
-      "hint": "`dubbla() { echo $(( $1 * 2 )); }` – ثم `dubbla 21`."
+      "text": "أنشئ الدالة `{{doubleFn}}` التي تطبع وسيطها الأول مضروبًا في اثنين. اختبرها باستخدام `{{doubleFn}} 21`.",
+      "hint": "`{{doubleFn}}() { echo $(( $1 * 2 )); }` – ثم `{{doubleFn}} 21`."
     },
     "backup": {
-      "text": "اكتب السكربت `~/backup.sh` الذي ينسخ الملف المعطى كوسيط أول إلى الاسم نفسه مع `.bak` في نهايته. اجعله قابلًا للتنفيذ وشغّل `./backup.sh anteckningar.txt` في مجلد المنزل الخاص بك.",
-      "hint": "أنشئ الملف باستخدام `cat > ~/backup.sh << 'SLUT'`، واكتب `#!/bin/bash` و`cp \"$1\" \"$1.bak\"` في سطرين منفصلين، واختم بـ `SLUT`."
+      "text": "اكتب السكربت `~/backup.sh` الذي ينسخ الملف المعطى كوسيط أول إلى الاسم نفسه مع `.bak` في نهايته. اجعله قابلًا للتنفيذ وشغّل `./backup.sh {{notes}}` في مجلد المنزل الخاص بك.",
+      "hint": "أنشئ الملف باستخدام `cat > ~/backup.sh << '{{heredocEnd}}'`، واكتب `#!/bin/bash` و`cp \"$1\" \"$1.bak\"` في سطرين منفصلين، واختم بـ `{{heredocEnd}}`."
     }
   }
 }
