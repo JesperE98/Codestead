@@ -344,7 +344,7 @@ curl -s https://example.com | grep title
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` создан для скачивания файлов. Он всегда сохраняет в файл, показывает
@@ -365,10 +365,10 @@ Linux, и всё передаваемое шифруется. На сервер�
 порту 22, а подключаетесь вы с помощью клиента `ssh`:
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` означает «пользователь elev на компьютере server.lan».
+`{{user}}@server.lan` означает «пользователь {{user}} на компьютере server.lan».
 Команда после хоста (`hostname`) выполняется на сервере, а ответ
 показывается здесь – там написано `server`, а не `ubuntu`.
 
@@ -387,8 +387,8 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])?
 Команда может состоять из нескольких команд в кавычках:
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 Без команды ssh входит в систему, и вы получаете shell на другом компьютере,
@@ -402,7 +402,7 @@ ssh elev@server.lan cat välkommen.txt
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 Нажимайте Enter на вопросы `ssh-keygen`, чтобы использовать файл по

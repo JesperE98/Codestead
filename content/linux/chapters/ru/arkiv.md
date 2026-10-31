@@ -43,18 +43,18 @@ tar-архив сам по себе не меньше файлов, которы
 
 ## Упаковка с помощью `tar`
 
-Перейдите в домашний каталог и упакуйте каталог `dokument`:
+Перейдите в домашний каталог и упакуйте каталог `{{documents}}`:
 
 ```sh
 cd ~
-tar -cvf dokument.tar dokument
+tar -cvf {{documents}}.tar {{documents}}
 ```
 
 ```text
-dokument/
-dokument/betyg.csv
-dokument/frukter.txt
-dokument/server.log
+{{documents}}/
+{{documents}}/{{fruits}}
+{{documents}}/{{grades}}
+{{documents}}/server.log
 ```
 
 `-c` означает *создать архив*, `-v` велит tar показывать, что он делает, а
@@ -62,7 +62,7 @@ dokument/server.log
 архива, упаковывается – сколько угодно файлов и каталогов.
 
 > **Внимание!** Порядок такой: *сначала архив, потом файлы*. Если перепутать
-> порядок, как в `tar -cvf dokument dokument.tar`, tar попытается
+> порядок, как в `tar -cvf {{documents}} {{documents}}.tar`, tar попытается
 > перезаписать каталог – или, хуже того, файл, который вы хотели сохранить.
 
 ## Опции, которые стоит запомнить
@@ -103,13 +103,13 @@ tar, *что* делать. Остальные – модификаторы. П�
 Добавьте `z`, и архив по пути пройдёт через gzip:
 
 ```sh
-tar -czvf dokument.tar.gz dokument
-ls -l dokument.tar dokument.tar.gz
+tar -czvf {{documents}}.tar.gz {{documents}}
+ls -l {{documents}}.tar {{documents}}.tar.gz
 ```
 
 ```text
--rw-r--r-- 1 elev elev 10240 Oct 30 12:00 dokument.tar
--rw-r--r-- 1 elev elev   837 Oct 30 12:00 dokument.tar.gz
+-rw-r--r-- 1 {{user}} {{user}} 10240 Oct 30 12:00 {{documents}}.tar
+-rw-r--r-- 1 {{user}} {{user}}   888 Oct 30 12:00 {{documents}}.tar.gz
 ```
 
 Несжатый архив занимает целых 10 240 байт, хотя в сумме файлы весят чуть
@@ -122,14 +122,14 @@ ls -l dokument.tar dokument.tar.gz
 целого каталога:
 
 ```sh
-du -h dokument.tar dokument.tar.gz
-du -sh dokument
+du -h {{documents}}.tar {{documents}}.tar.gz
+du -sh {{documents}}
 ```
 
 ```text
-12K	dokument.tar
-4.0K	dokument.tar.gz
-16K	dokument
+12K	{{documents}}.tar
+4.0K	{{documents}}.tar.gz
+16K	{{documents}}
 ```
 
 Диск разбит на блоки по 4 КиБ, поэтому `du` никогда не показывает меньше
@@ -139,14 +139,14 @@ du -sh dokument
 ## Загляните в архив перед распаковкой
 
 ```sh
-tar -tzvf dokument.tar.gz
+tar -tzvf {{documents}}.tar.gz
 ```
 
 ```text
-drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
--rw-r--r-- elev/elev       146 2026-10-30 12:00 dokument/betyg.csv
--rw-r--r-- elev/elev        64 2026-10-30 12:00 dokument/frukter.txt
--rw-r--r-- elev/elev       848 2026-10-30 12:00 dokument/server.log
+drwxr-xr-x {{user}}/{{user}}   0 2026-10-30 12:00 {{documents}}/
+-rw-r--r-- {{user}}/{{user}} 118 2026-10-30 12:00 {{documents}}/{{fruits}}
+-rw-r--r-- {{user}}/{{user}} 251 2026-10-30 12:00 {{documents}}/{{grades}}
+-rw-r--r-- {{user}}/{{user}} 824 2026-10-30 12:00 {{documents}}/server.log
 ```
 
 С `v` содержимое показывается как в `ls -l` – с правами, владельцем и
@@ -157,14 +157,13 @@ drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
 ## Распаковка
 
 ```sh
-mkdir uppackat
-tar -xzvf dokument.tar.gz -C uppackat
+mkdir {{unpacked}}
+tar -xzvf {{documents}}.tar.gz -C {{unpacked}}
 ```
 
-`-C` (заглавная C) задаёт каталог, в который tar распаковывает файлы
-(*uppackat* по-шведски значит «распакованное»). Без неё всё окажется в
+`-C` (заглавная C) задаёт каталог, в который tar распаковывает файлы. Без неё всё окажется в
 текущем каталоге. Современные версии tar при распаковке сами определяют,
-сжат ли архив, так что `tar -xf dokument.tar.gz` тоже работает.
+сжат ли архив, так что `tar -xf {{documents}}.tar.gz` тоже работает.
 
 > **Осторожно!** tar не спрашивает, прежде чем перезаписать уже существующие
 > файлы. Если сомневаетесь, сначала посмотрите содержимое.
@@ -175,30 +174,30 @@ tar -xzvf dokument.tar.gz -C uppackat
 было распаковать где угодно:
 
 ```sh
-tar -czf backup.tar.gz ~/dokument
+tar -czf backup.tar.gz ~/{{documents}}
 ```
 
 ```text
 tar: Removing leading `/' from member names
 ```
 
-Теперь архив содержит `home/elev/dokument/...`. Если вы хотите, чтобы в архиве
-был только `dokument/`, можно попросить tar сначала сменить каталог с помощью
+Теперь архив содержит `home/{{user}}/{{documents}}/...`. Если вы хотите, чтобы в архиве
+был только `{{documents}}/`, можно попросить tar сначала сменить каталог с помощью
 `-C`:
 
 ```sh
-tar -czf backup.tar.gz -C ~ dokument
+tar -czf backup.tar.gz -C ~ {{documents}}
 tar -tzf backup.tar.gz
 ```
 
 ```quiz
-Вы выполняете `tar -czf backup.tar.gz -C ~ dokument`. Что содержит архив?
-- [x] `dokument/` и файлы в нём
-- [ ] `home/elev/dokument/` и файлы в нём
-- [ ] `/home/elev/dokument/` и файлы в нём
+Вы выполняете `tar -czf backup.tar.gz -C ~ {{documents}}`. Что содержит архив?
+- [x] `{{documents}}/` и файлы в нём
+- [ ] `home/{{user}}/{{documents}}/` и файлы в нём
+- [ ] `/home/{{user}}/{{documents}}/` и файлы в нём
 ---
 `-C ~` заставляет tar сначала перейти в ваш домашний каталог, поэтому имена в
-архиве начинаются с `dokument/`.
+архиве начинаются с `{{documents}}/`.
 ```
 
 ## Сжатие отдельных файлов с помощью `gzip`
@@ -207,12 +206,12 @@ tar -tzf backup.tar.gz
 времени сохраняются:
 
 ```sh
-cp dokument/server.log .
+cp {{documents}}/server.log .
 gzip -v server.log
 ```
 
 ```text
-server.log:	 39.0% -- replaced with server.log.gz
+server.log:	 39.8% -- replaced with server.log.gz
 ```
 
 `gzip -l` показывает размер до и после, а `gunzip` снова распаковывает файл:
@@ -227,21 +226,21 @@ gunzip server.log.gz
 добавляет заголовок, в котором, помимо прочего, хранится имя файла:
 
 ```sh
-cp dokument/frukter.txt .
-gzip -kv frukter.txt
+echo "{{helloWorld}}" > {{helloFile}}
+gzip -kv {{helloFile}}
 ```
 
 ```text
-frukter.txt:	-20.3% -- created frukter.txt.gz
+{{helloFile}}:	-152.4% -- created {{helloFile}}.gz
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ cp dokument/server.log .
-$ gzip frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ cp {{documents}}/server.log .
+$ gzip {{fruits}}
 $ gzip -k server.log
-$ ls frukter* server*
-frukter.txt.gz  server.log  server.log.gz
+$ ls {{fruits}}* server*
+{{fruits}}.gz  server.log  server.log.gz
 ---
 Простой `gzip` заменяет файл файлом `.gz`; `-k` сохраняет оригинал.
 ```
@@ -284,14 +283,14 @@ sudo apt install zip unzip
 только пустой каталог, а не файлы внутри него:
 
 ```sh
-zip -r dokument.zip dokument
+zip -r {{documents}}.zip {{documents}}
 ```
 
 ```text
-  adding: dokument/ (stored 0%)
-  adding: dokument/betyg.csv (deflated 17%)
-  adding: dokument/frukter.txt (deflated 27%)
-  adding: dokument/server.log (deflated 42%)
+  adding: {{documents}}/ (stored 0%)
+  adding: {{documents}}/{{fruits}} (deflated 37%)
+  adding: {{documents}}/{{grades}} (deflated 35%)
+  adding: {{documents}}/server.log (deflated 43%)
 ```
 
 Обратите внимание: порядок тот же, что и у tar, – сначала архив, потом файлы.
@@ -299,17 +298,17 @@ zip -r dokument.zip dokument
 создаётся, если его нет):
 
 ```sh
-unzip -l dokument.zip
-unzip dokument.zip -d fran-zip
+unzip -l {{documents}}.zip
+unzip {{documents}}.zip -d {{fromZip}}
 ```
 
 Если файлы уже существуют, unzip их пропускает. С `unzip -o` они
 перезаписываются.
 
 ```quiz
-Вы выполняете `zip dokument.zip dokument` без `-r`. Что окажется в zip-файле?
-- [ ] Все файлы из `dokument`
-- [x] Только пустой каталог `dokument/`
+Вы выполняете `zip {{documents}}.zip {{documents}}` без `-r`. Что окажется в zip-файле?
+- [ ] Все файлы из `{{documents}}`
+- [x] Только пустой каталог `{{documents}}/`
 - [ ] Ничего – zip откажется работать
 ---
 Без `-r` (*recursive*) zip не заходит внутрь каталога.

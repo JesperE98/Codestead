@@ -250,35 +250,35 @@ sudo snap remove hello-world
 скачиваете его с сайта программы, делаете исполняемым и запускаете – без
 установки и без root. Чтобы избавиться от программы, просто удалите файл.
 
-В вашем домашнем каталоге, в `~/Nedladdningar` (по-шведски «Загрузки»), уже
+В вашем домашнем каталоге, в `~/{{downloads}}`, уже
 лежит скачанный AppImage:
 
 ```sh
-cd ~/Nedladdningar
+cd ~/{{downloads}}
 ls -l
 ```
 
 Что произойдёт, если сразу его запустить?
 
 ```predict
-$ ~/Nedladdningar/Kalkylator.AppImage
-bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+$ ~/{{downloads}}/{{calculator}}
+bash: /home/{{user}}/{{downloads}}/{{calculator}}: Permission denied
 ---
 У файла нет права `x`.
 ```
 
 Скачанные файлы изначально никогда не бывают исполняемыми. Сделайте файл
-исполняемым и запустите его (*Kalkylator* по-шведски – «калькулятор»):
+исполняемым и запустите его:
 
 ```sh
-chmod +x Kalkylator.AppImage
-./Kalkylator.AppImage
+chmod +x {{calculator}}
+./{{calculator}}
 ```
 
 ```try
-chmod +x ~/Nedladdningar/Kalkylator.AppImage
+chmod +x ~/{{downloads}}/{{calculator}}
 ---
-Теперь файл исполняемый. Проверьте с помощью `ls -l ~/Nedladdningar`.
+Теперь файл исполняемый. Проверьте с помощью `ls -l ~/{{downloads}}`.
 ```
 
 ### FUSE
@@ -295,7 +295,7 @@ AppImage монтирует сам себя как файловую систем
 ```sh
 sudo apt update
 sudo apt install libfuse2t64
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 
 > **Не** устанавливайте в Ubuntu пакет `fuse` – он заменяет `fuse3`, который
@@ -307,7 +307,7 @@ sudo apt install libfuse2t64
 
 ```sh
 sudo pacman -S fuse2
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -316,7 +316,7 @@ sudo pacman -S fuse2
 
 ```sh
 sudo dnf install fuse-libs
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -325,7 +325,7 @@ sudo dnf install fuse-libs
 AppImage можно также распаковать. Это работает даже без FUSE:
 
 ```sh
-./Kalkylator.AppImage --appimage-extract
+./{{calculator}} --appimage-extract
 ls squashfs-root
 ./squashfs-root/AppRun
 ```

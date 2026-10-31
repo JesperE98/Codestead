@@ -6,14 +6,14 @@
 этих строк.
 
 ```quiz
-Вы изменили `index.html` и создали новый файл `kontakt.html`. Вы выполняете
+Вы изменили `index.html` и создали новый файл `contact.html`. Вы выполняете
 `git commit -am "Contact page"`. Что попадёт в коммит?
 - [x] Только изменение в `index.html`
-- [ ] Только `kontakt.html`
+- [ ] Только `contact.html`
 - [ ] Оба файла
 ---
 `-a` добавляет все изменённые файлы, которые git уже отслеживает, – но никогда
-не добавляет новые. `kontakt.html` нужно сначала добавить через `git add`.
+не добавляет новые. `contact.html` нужно сначала добавить через `git add`.
 ```
 
 ```quiz
@@ -30,20 +30,20 @@
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "Первая версия" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
-$ git merge ny-design > /dev/null
+$ git merge {{newDesign}} > /dev/null
 $ git log --oneline | wc -l
 2
 ---
 `main` не менялась с момента создания ветки, поэтому слияние было
-*fast-forward*: git лишь передвинул `main` вперёд на коммит `ny-design`.
+*fast-forward*: git лишь передвинул `main` вперёд на коммит `{{newDesign}}`.
 Коммит слияния не создавался.
 ```
 
@@ -68,12 +68,12 @@ $ git log --oneline | wc -l
 ```
 
 ```quiz
-Файл `fel.log` закоммитили по ошибке. Вы добавляете `*.log` в `.gitignore`,
+Файл `error.log` закоммитили по ошибке. Вы добавляете `*.log` в `.gitignore`,
 но git всё ещё отслеживает файл. Как удалить его из репозитория, но оставить
 на диске?
-- [ ] `rm fel.log`
-- [x] `git rm --cached fel.log`
-- [ ] `git restore fel.log`
+- [ ] `rm error.log`
+- [x] `git rm --cached error.log`
+- [ ] `git restore error.log`
 ---
 `.gitignore` действует только на файлы, которые git ещё не отслеживает.
 `--cached` удаляет файл из git, но оставляет его на диске.
@@ -147,7 +147,7 @@ $ fish -c 'false; echo $status'
 ```
 
 ```try
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ---
 Последнее поле строки – ваш login shell, тот самый, который меняет `chsh -s`.
 ```

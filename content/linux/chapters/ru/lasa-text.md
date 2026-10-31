@@ -2,17 +2,17 @@
 
 Почти всё в Linux – это текст: настройки, журналы, списки. Поэтому есть
 множество маленьких инструментов для чтения текстовых файлов и поиска в них.
-В вашем домашнем каталоге есть каталог `dokument` с файлами для
-практики, среди них `frukter.txt` (список фруктов) и `server.log` (журнал
-выдуманного веб-сервера). Их содержимое на шведском, но слова, которые вы будете искать,
-– `INFO`, `WARN` и `ERROR` – такие же, как в настоящих логах.
+В вашем домашнем каталоге есть каталог `{{documents}}` с файлами для
+практики, среди них список фруктов `{{fruits}}` и `server.log` – журнал
+выдуманного веб-сервера. Слова, которые вы будете искать в журнале, – `INFO`,
+`WARN` и `ERROR` – такие же, как в настоящих логах.
 
 ## Показать файл – `cat` и `less`
 
 `cat` выводит весь файл:
 
 ```sh
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 Для длинных файлов лучше подходит `less`. В нём вы листаете стрелками и
@@ -21,7 +21,7 @@ cat dokument/frukter.txt
 Посмотрите на список фруктов – он понадобится для следующего вопроса:
 
 ```try
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 ## Начало и конец – `head` и `tail`
@@ -30,16 +30,16 @@ cat dokument/frukter.txt
 10 строк, но число можно задать опцией `-n`:
 
 ```sh
-head -n 5 dokument/server.log
-tail -n 3 dokument/server.log
+head -n 5 {{documents}}/server.log
+tail -n 3 {{documents}}/server.log
 ```
 
 `tail -f` *следит* за файлом и показывает новые строки по мере их
 появления – идеально для логов. Остановить можно клавишами **Ctrl+C**.
 
 ```predict
-$ tail -n 1 dokument/frukter.txt
-mango
+$ tail -n 1 {{documents}}/{{fruits}}
+манго
 ---
 `tail -n 1` показывает только самую последнюю строку.
 ```
@@ -49,7 +49,7 @@ mango
 `wc` (*word count*) считает строки, слова и байты:
 
 ```sh
-wc dokument/frukter.txt
+wc {{documents}}/{{fruits}}
 ```
 
 Часто нужно только число строк: `wc -l`.
@@ -60,7 +60,7 @@ wc dokument/frukter.txt
 содержащие шаблон:
 
 ```sh
-grep INFO dokument/server.log
+grep INFO {{documents}}/server.log
 ```
 
 Несколько опций, которыми вы будете пользоваться постоянно:
@@ -75,7 +75,7 @@ grep INFO dokument/server.log
 | `-E` | Расширенные шаблоны, например `"ERROR|WARN"` |
 
 ```sh
-grep -n WARN dokument/server.log
+grep -n WARN {{documents}}/server.log
 ```
 
 Шаблон – это *регулярное выражение*. Пара примеров: `^` означает начало
@@ -84,7 +84,7 @@ grep -n WARN dokument/server.log
 
 ```quiz
 В `server.log` две строки с `WARN` и одна строка с `warn` строчными буквами.
-Что выведет `grep -c WARN dokument/server.log`?
+Что выведет `grep -c WARN {{documents}}/server.log`?
 - [ ] 1
 - [x] 2
 - [ ] 3
@@ -95,9 +95,9 @@ grep -n WARN dokument/server.log
 
 ```quiz
 Какая команда показывает все строки `server.log`, которые **не** содержат `INFO`?
-- [ ] `grep -i INFO dokument/server.log`
-- [ ] `grep -c INFO dokument/server.log`
-- [x] `grep -v INFO dokument/server.log`
+- [ ] `grep -i INFO {{documents}}/server.log`
+- [ ] `grep -c INFO {{documents}}/server.log`
+- [x] `grep -v INFO {{documents}}/server.log`
 ```
 
 ## Сортировка – `sort` и `uniq`
@@ -107,7 +107,7 @@ grep -n WARN dokument/server.log
 ними*, – поэтому его почти всегда используют после `sort`:
 
 ```sh
-sort dokument/frukter.txt
+sort {{documents}}/{{fruits}}
 ```
 
 ```quiz

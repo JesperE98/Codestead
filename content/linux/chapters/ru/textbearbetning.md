@@ -14,11 +14,10 @@
 в stdout. Поэтому они идеально подходят для конвейеров. А исходный файл
 **не** меняется (за одним исключением – `sed -i`, до него мы ещё дойдём).
 
-В `dokument` есть третий учебный файл – CSV-файл с баллами учеников
-(*namn* = имя, *ämne* = предмет, *poäng* = баллы):
+В `{{documents}}` есть третий учебный файл – CSV-файл с баллами учеников:
 
 ```sh
-cat ~/dokument/betyg.csv
+cat ~/{{documents}}/{{grades}}
 ```
 
 CSV расшифровывается как *comma-separated values* (значения, разделённые
@@ -37,15 +36,15 @@ echo "hello from café" | tr a-z A-Z
 HELLO FROM CAFé
 ```
 
-Заметили é? `tr` работает с отдельными *байтами*, а такие буквы, как é, –
-или шведские å, ä и ö, и уж тем более кириллица, – не входят в `a-z`. Это
-полезно знать: GNU `awk` (о нём ниже) справляется с этим лучше.
+Заметили é? `tr` работает с отдельными *байтами*, а такие буквы, как é, – и
+уж тем более кириллица – не входят в `a-z`. Это полезно знать: GNU `awk` (о
+нём ниже) справляется с этим лучше.
 
 `tr` читает **только** из stdin, никогда из файлов. Если нужно обработать
 файл, подайте его через `<` или конвейер:
 
 ```sh
-tr a-z A-Z < ~/dokument/frukter.txt
+tr a-z A-Z < ~/{{documents}}/{{fruits}}
 ```
 
 Классический приём – превратить двоеточия в переводы строк (`\n`), чтобы
@@ -87,11 +86,11 @@ echo "Комната 101, этаж 3" | tr -d '[:digit:]'
 ### Замена текста – `s`
 
 ```sh
-sed 's/ERROR/FEL/' ~/dokument/server.log
+sed 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log
 ```
 
-Скрипт `s/ERROR/FEL/` означает: заменить `ERROR` на `FEL` (по-шведски
-«ошибка»). Он имеет вид
+Скрипт `s/ERROR/{{errorWord}}/` означает: заменить `ERROR` на `{{errorWord}}`.
+Он имеет вид
 
 ```text
 s/ШАБЛОН/ЗАМЕНА/ФЛАГИ
@@ -115,7 +114,7 @@ bonana
 Флаг `i` делает поиск нечувствительным к регистру, как `grep -i`:
 
 ```sh
-sed 's/warn/WARNING/i' ~/dokument/server.log
+sed 's/warn/WARNING/i' ~/{{documents}}/server.log
 ```
 
 Шаблон – это *регулярное выражение*, так же как в `grep`. Здесь мы удаляем
@@ -123,7 +122,7 @@ sed 's/warn/WARNING/i' ~/dokument/server.log
 дефисы):
 
 ```sh
-sed 's/^[0-9-]* //' ~/dokument/server.log
+sed 's/^[0-9-]* //' ~/{{documents}}/server.log
 ```
 
 В замене `&` означает «то, что совпало»:
@@ -145,7 +144,7 @@ echo /usr/local/bin | sed 's|/usr/local|/opt|'
 Здесь мы переворачиваем дату:
 
 ```sh
-sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/dokument/server.log
+sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/{{documents}}/server.log
 ```
 
 ### Выбор строк – адреса
@@ -155,8 +154,8 @@ sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/dokument/server.log
 их:
 
 ```sh
-sed '/INFO/d' ~/dokument/server.log
-sed '1d' ~/dokument/betyg.csv
+sed '/INFO/d' ~/{{documents}}/server.log
+sed '1d' ~/{{documents}}/{{grades}}
 ```
 
 Первая удаляет все строки, содержащие `INFO`, вторая удаляет строку 1 –
@@ -166,7 +165,7 @@ sed '1d' ~/dokument/betyg.csv
 тогда выводится только то, что просит `p`. Вот как показать строки с 5 по 8:
 
 ```sh
-sed -n '5,8p' ~/dokument/server.log
+sed -n '5,8p' ~/{{documents}}/server.log
 ```
 
 | Адрес | Означает |
@@ -182,7 +181,7 @@ sed -n '5,8p' ~/dokument/server.log
 строки с ошибками:
 
 ```sh
-sed '/ERROR/s/^/>>> /' ~/dokument/server.log
+sed '/ERROR/s/^/>>> /' ~/{{documents}}/server.log
 ```
 
 Команда `q` (*quit*) останавливает работу после заданной строки, поэтому
@@ -190,7 +189,7 @@ sed '/ERROR/s/^/>>> /' ~/dokument/server.log
 через `;` или несколькими `-e`:
 
 ```sh
-sed -e '/INFO/d' -e 's/ERROR/FEL/' ~/dokument/server.log
+sed -e '/INFO/d' -e 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log
 ```
 
 ### Правка файла на месте – `sed -i`
@@ -200,9 +199,9 @@ sed -e '/INFO/d' -e 's/ERROR/FEL/' ~/dokument/server.log
 результат обратно в файл. Попробуйте на копии:
 
 ```sh
-cp ~/dokument/frukter.txt ~/frukter-kopia.txt
-sed -i 's/kiwi/kiwifruit/' ~/frukter-kopia.txt
-cat ~/frukter-kopia.txt
+cp ~/{{documents}}/{{fruits}} ~/fruits-copy.txt
+sed -i 's/апельсин/мандарин/' ~/fruits-copy.txt
+cat ~/fruits-copy.txt
 ```
 
 Отменить `sed -i` нельзя. Хороший подход – сначала выполнить команду **без**
@@ -211,9 +210,9 @@ cat ~/frukter-kopia.txt
 `file.bak`.
 
 ```quiz
-Вы выполняете `sed 's/kiwi/KIWI/' ~/dokument/frukter.txt`. Что происходит с файлом?
-- [ ] Каждое `kiwi` в файле становится `KIWI`
-- [ ] Только первое `kiwi` в файле становится `KIWI`
+Вы выполняете `sed 's/киви/КИВИ/' ~/{{documents}}/{{fruits}}`. Что происходит с файлом?
+- [ ] Каждое `киви` в файле становится `КИВИ`
+- [ ] Только первое `киви` в файле становится `КИВИ`
 - [x] Ничего – результат только выводится, файл не меняется
 ---
 Без `-i` `sed` пишет только в stdout. Файл остаётся прежним.
@@ -230,7 +229,7 @@ cat ~/frukter-kopia.txt
 предметы – поле 2 – из CSV-файла:
 
 ```sh
-cut -d, -f2 ~/dokument/betyg.csv
+cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
 
 В `/etc/passwd` поля разделены двоеточиями, а поле 1 – имя пользователя,
@@ -255,7 +254,7 @@ cut -d, -f2 ~/dokument/betyg.csv
 `server.log` поле 3 – это уровень записи в журнале:
 
 ```sh
-awk '{print $3}' ~/dokument/server.log
+awk '{print $3}' ~/{{documents}}/server.log
 ```
 
 Программа пишется внутри `{ }` и выполняется для каждой строки. Всегда
@@ -265,7 +264,7 @@ awk '{print $3}' ~/dokument/server.log
 awk отлично вписывается в конвейер. Сколько строк каждого уровня?
 
 ```sh
-awk '{print $3}' ~/dokument/server.log | sort | uniq -c
+awk '{print $3}' ~/{{documents}}/server.log | sort | uniq -c
 ```
 
 ### Другие разделители – `-F`
@@ -289,7 +288,7 @@ awk -F: '{print $1 " использует " $7}' /etc/passwd
 подряд.
 
 ```predict
-$ echo "Alva,matte,87" | awk -F, '{print $3, $1}'
+$ echo "Alva,математика,87" | awk -F, '{print $3, $1}'
 87 Alva
 ---
 `-F,` разбивает строку по запятым. awk выводит сначала поле 3, затем поле 1, с
@@ -302,37 +301,36 @@ $ echo "Alva,matte,87" | awk -F, '{print $3, $1}'
 подходящих строк. Шаблоном может быть регулярное выражение, как в `grep`:
 
 ```sh
-awk '/ERROR/ {print $2}' ~/dokument/server.log
+awk '/ERROR/ {print $2}' ~/{{documents}}/server.log
 ```
 
 … или условие. Текст пишется в двойных кавычках:
 
 ```sh
-awk -F, '$2 == "matte" {print $1, $3}' ~/dokument/betyg.csv
+awk -F, '$2 == "математика" {print $1, $3}' ~/{{documents}}/{{grades}}
 ```
 
-(*Matte* по-шведски – «математика».) Сравнения записываются как `==`, `!=`,
+Сравнения записываются как `==`, `!=`,
 `<`, `<=`, `>` и `>=`, а условия объединяются с помощью `&&` (и), `||` (или)
 и `!` (не). Вот все ученики, набравшие не меньше 90 баллов (без `{ }`
 выводится вся строка):
 
 ```sh
-awk -F, '$3 >= 90' ~/dokument/betyg.csv
+awk -F, '$3 >= 90' ~/{{documents}}/{{grades}}
 ```
 
-Строка заголовка тоже попала в вывод? В ней поле 3 – это слово `poäng`, а
-если значение не число, awk сравнивает его как *текст* – и `"poäng"` идёт в
+Строка заголовка тоже попала в вывод? В ней поле 3 – это слово `баллы`, а
+если значение не число, awk сравнивает его как *текст* – и `"баллы"` идёт в
 алфавитном порядке после `"90"`. Заголовок пропускается с помощью `NR > 1`:
 
 ```sh
-awk -F, 'NR > 1 && $3 >= 90' ~/dokument/betyg.csv
+awk -F, 'NR > 1 && $3 >= 90' ~/{{documents}}/{{grades}}
 ```
 
-Попробуйте собственный шаблон – имена всех, кто изучает *svenska* (шведский
-язык):
+Попробуйте собственный шаблон – имена всех, кто изучает русский язык:
 
 ```try
-awk -F, '$2 == "svenska" {print $1}' ~/dokument/betyg.csv
+awk -F, '$2 == "русский" {print $1}' ~/{{documents}}/{{grades}}
 ```
 
 ### Подсчёт – переменные и `END`
@@ -342,15 +340,14 @@ awk -F, '$2 == "svenska" {print $1}' ~/dokument/betyg.csv
 дают простой способ сложить столбец:
 
 ```sh
-awk -F, 'NR > 1 {summa += $3} END {print summa}' ~/dokument/betyg.csv
+awk -F, 'NR > 1 {{{sumVar}} += $3} END {print {{sumVar}}}' ~/{{documents}}/{{grades}}
 ```
 
-`summa += $3` означает «прибавить поле 3 к summa» (*summa* по-шведски –
-«сумма»). Если одновременно считать строки (`antal++` увеличивает *antal* –
-количество – на 1), можно вычислить среднее:
+`{{sumVar}} += $3` означает «прибавить поле 3 к {{sumVar}}». Если одновременно
+считать строки (`count++` увеличивает `count` на 1), можно вычислить среднее:
 
 ```sh
-awk -F, 'NR > 1 {summa += $3; antal++} END {print "Среднее:", summa / antal}' ~/dokument/betyg.csv
+awk -F, 'NR > 1 {{{sumVar}} += $3; count++} END {print "Среднее:", {{sumVar}} / count}' ~/{{documents}}/{{grades}}
 ```
 
 Есть ещё `BEGIN { }`, который выполняется **до** первой строки, – удобно для
@@ -359,20 +356,21 @@ awk -F, 'NR > 1 {summa += $3; antal++} END {print "Среднее:", summa / ant
 из 5 символов.
 
 ```sh
-awk -F, 'BEGIN {print "Ученик   Баллы"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/dokument/betyg.csv
+awk -F, 'BEGIN {print "Ученик   Баллы"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/{{documents}}/{{grades}}
 ```
 
 В awk есть и функции, например `length()`, `toupper()` и `tolower()`:
 
 ```sh
-awk '{print toupper($0)}' ~/dokument/frukter.txt
+awk '{print toupper($0)}' ~/{{documents}}/{{fruits}}
 ```
 
-Присмотритесь к `äpple` и `päron`. В Ubuntu, на которой работает здешний
-терминал, `awk` по умолчанию – это **mawk**, маленький и быстрый вариант. Для
-простых программ вроде этих разницы вы не заметите – но mawk не переводит å, ä
-и ö в верхний регистр с помощью `toupper()`. **GNU awk** (пакет `gawk`), в
-отличие от `tr`, это умеет. Дистрибутивы различаются тем, какой awk они
+Присмотритесь к выводу: ни одна буква не стала прописной. В Ubuntu, на
+которой работает здешний терминал, `awk` по умолчанию – это **mawk**,
+маленький и быстрый вариант. Для простых программ вроде этих разницы вы не
+заметите – но mawk не переводит кириллицу (и такие буквы, как é) в верхний
+регистр с помощью `toupper()`. **GNU awk** (пакет `gawk`), в отличие от `tr`,
+это умеет. Дистрибутивы различаются тем, какой awk они
 используют и как в них устанавливаются программы, – об этом в главе о
 дистрибутивах.
 
@@ -392,5 +390,5 @@ awk '{print toupper($0)}' ~/dokument/frukter.txt
 которые *не* INFO, если не обращать внимания на регистр?
 
 ```sh
-grep -v INFO ~/dokument/server.log | awk '{print $3}' | tr A-Z a-z | sort | uniq -c
+grep -v INFO ~/{{documents}}/server.log | awk '{print $3}' | tr A-Z a-z | sort | uniq -c
 ```

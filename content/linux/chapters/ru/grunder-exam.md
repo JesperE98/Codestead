@@ -7,7 +7,7 @@
 - [ ] `var/log`
 - [ ] `../etc`
 - [x] `/usr/bin`
-- [ ] `dokument`
+- [ ] `{{documents}}`
 ---
 Абсолютный путь начинается с `/`, от корня. Остальные отсчитываются от
 текущего каталога.
@@ -30,10 +30,10 @@ $ pwd
 ```
 
 ```quiz
-Вы хотите скопировать весь каталог `bilder` со всем содержимым в `bilder-kopia`. Какая команда сработает?
-- [ ] `cp bilder bilder-kopia`
-- [x] `cp -r bilder bilder-kopia`
-- [ ] `mv bilder bilder-kopia`
+Вы хотите скопировать весь каталог `{{pictures}}` со всем содержимым в `{{pictures}}-copy`. Какая команда сработает?
+- [ ] `cp {{pictures}} {{pictures}}-copy`
+- [x] `cp -r {{pictures}} {{pictures}}-copy`
+- [ ] `mv {{pictures}} {{pictures}}-copy`
 ---
 Каталог копируется с `-r` (*recursive*). `mv` переместил бы его, а не
 скопировал.
@@ -48,17 +48,17 @@ c
 ```
 
 ```quiz
-Вы вводите `touch min fil.txt` – без кавычек. Что произойдёт?
-- [ ] Будет создан файл `min fil.txt`
-- [x] Будут созданы два файла: `min` и `fil.txt`
+Вы вводите `touch my file.txt` – без кавычек. Что произойдёт?
+- [ ] Будет создан файл `my file.txt`
+- [x] Будут созданы два файла: `my` и `file.txt`
 - [ ] Ничего, потому что в имени есть пробел
 ---
 Shell разбивает строку по пробелам, поэтому `touch` получает два аргумента.
-Напишите `touch "min fil.txt"`, чтобы получить один файл.
+Напишите `touch "my file.txt"`, чтобы получить один файл.
 ```
 
 ```quiz
-Какие строки покажет `grep -i error dokument/server.log`?
+Какие строки покажет `grep -i error {{documents}}/server.log`?
 - [ ] Только строки с `error` строчными буквами
 - [ ] Только строки с `ERROR` прописными буквами
 - [x] Строки с `error` в любом сочетании прописных и строчных букв
@@ -66,9 +66,9 @@ Shell разбивает строку по пробелам, поэтому `tou
 
 ```quiz
 Вы хотите следить за файлом журнала и видеть новые строки по мере их записи. Какая команда подходит?
-- [ ] `head -n 10 dokument/server.log`
-- [x] `tail -f dokument/server.log`
-- [ ] `wc -l dokument/server.log`
+- [ ] `head -n 10 {{documents}}/server.log`
+- [x] `tail -f {{documents}}/server.log`
+- [ ] `wc -l {{documents}}/server.log`
 ---
 `tail -f` *следит* за файлом. Остановить можно клавишами **Ctrl+C**.
 ```
@@ -98,9 +98,9 @@ c
 ```
 
 ```try
-grep ERROR ~/dokument/server.log | tee fel.txt | wc -l
+grep ERROR ~/{{documents}}/server.log | tee errors.txt | wc -l
 ---
-`tee` сохранил строки с ошибками в `fel.txt` и передал их дальше в `wc -l`,
+`tee` сохранил строки с ошибками в `errors.txt` и передал их дальше в `wc -l`,
 который их посчитал.
 ```
 

@@ -6,14 +6,14 @@
 ## Создание каталогов – `mkdir`
 
 ```sh
-mkdir bilder2
+mkdir pictures2
 ```
 
 Чтобы создать сразу несколько уровней, нужна опция `-p` (*parents*). Без неё
 `mkdir` ругается, если родительского каталога не существует:
 
 ```sh
-mkdir -p resa/2026/juni
+mkdir -p trip/2026/june
 ```
 
 ## Создание пустых файлов – `touch`
@@ -22,11 +22,11 @@ mkdir -p resa/2026/juni
 отметку времени):
 
 ```sh
-touch inkopslista.txt
+touch shopping-list.txt
 ```
 
 ```quiz
-Что делает `touch anteckningar.txt`, если файл уже существует?
+Что делает `touch {{notes}}`, если файл уже существует?
 - [ ] Очищает файл
 - [ ] Сообщает, что файл уже существует
 - [x] Только обновляет отметку времени файла – содержимое остаётся прежним
@@ -35,23 +35,23 @@ touch inkopslista.txt
 ## Копирование – `cp`
 
 ```sh
-cp anteckningar.txt anteckningar-kopia.txt
+cp {{notes}} notes-copy.txt
 ```
 
 Если цель – каталог, копия окажется внутри него под тем же именем. Чтобы
 скопировать каталог целиком, нужна опция `-r` (*recursive*):
 
 ```sh
-cp -r dokument dokument-backup
+cp -r {{documents}} {{documents}}-backup
 ```
 
 ```predict
-$ mkdir kopior
-$ cp anteckningar.txt kopior
-$ ls kopior
-anteckningar.txt
+$ mkdir copies
+$ cp {{notes}} copies
+$ ls copies
+{{notes}}
 ---
-`kopior` – это каталог, поэтому копия оказывается внутри него под тем же именем.
+`copies` – это каталог, поэтому копия оказывается внутри него под тем же именем.
 ```
 
 ## Перемещение и переименование – `mv`
@@ -60,8 +60,8 @@ anteckningar.txt
 и другое:
 
 ```sh
-mv inkopslista.txt dokument/
-mv dokument/inkopslista.txt dokument/handla.txt
+mv shopping-list.txt {{documents}}/
+mv {{documents}}/shopping-list.txt {{documents}}/groceries.txt
 ```
 
 ```quiz
@@ -76,14 +76,14 @@ mv dokument/inkopslista.txt dokument/handla.txt
 ## Удаление – `rm` и `rmdir`
 
 ```sh
-rm anteckningar-kopia.txt
+rm notes-copy.txt
 ```
 
 `rmdir` удаляет *пустые* каталоги. Чтобы удалить каталог вместе со всем
 содержимым, используйте `rm -r`:
 
 ```sh
-rm -r dokument-backup
+rm -r {{documents}}-backup
 ```
 
 > **Осторожно!** В терминале нет корзины. То, что вы удалили с помощью `rm`,
@@ -92,10 +92,10 @@ rm -r dokument-backup
 > нажать Enter.
 
 ```quiz
-Какая команда удаляет каталог `gammalt`, *только* если он пуст?
-- [ ] `rm gammalt`
-- [x] `rmdir gammalt`
-- [ ] `rm -r gammalt`
+Какая команда удаляет каталог `{{old}}`, *только* если он пуст?
+- [ ] `rm {{old}}`
+- [x] `rmdir {{old}}`
+- [ ] `rm -r {{old}}`
 ---
 `rmdir` отказывается удалять каталог, в котором что-то есть.
 `rm -r` удаляет каталог со всем содержимым.
@@ -112,23 +112,24 @@ rm -r dokument-backup
 | `?` | Ровно одному символу |
 | `[abc]` | Одному из символов a, b или c |
 
-В каталоге `dokument` в вашем домашнем каталоге лежат три файла:
-`betyg.csv`, `frukter.txt` и `server.log`. Эта команда выводит только те,
+В каталоге `{{documents}}` в вашем домашнем каталоге лежат три файла:
+`{{grades}}`, `{{fruits}}` и `server.log`. Эта команда выводит только те,
 что заканчиваются на `.txt`:
 
 ```sh
-ls dokument/*.txt
+ls {{documents}}/*.txt
 ```
 
-Здесь `ls` вообще не видит звёздочку – shell уже заменил `dokument/*.txt`
+Здесь `ls` вообще не видит звёздочку – shell уже заменил `{{documents}}/*.txt`
 всеми подходящими именами файлов.
 
 ```predict
-$ ls dokument/?????.*
-dokument/betyg.csv
+$ ls {{documents}}/?????s.*
+{{documents}}/{{fruits}}  {{documents}}/{{grades}}
 ---
-Каждый `?` – ровно один символ, поэтому имя до точки должно состоять из пяти
-символов. Таких только `betyg` – `frukter` и `server` длиннее.
+Каждый `?` – ровно один символ, поэтому имя до точки должно состоять из шести
+символов и заканчиваться на `s`. Подходят `fruits` и `grades`, а `server`
+заканчивается на `r`.
 ```
 
 ## Пробелы в именах файлов
@@ -137,8 +138,8 @@ Shell разбивает командную строку по пробелам. 
 пробел, нужно использовать кавычки (или `\` перед пробелом):
 
 ```sh
-touch "min fil.txt"
-ls -l "min fil.txt"
+touch "my file.txt"
+ls -l "my file.txt"
 ```
 
 Поэтому многие предпочитают дефисы или подчёркивания в именах файлов.
