@@ -9,7 +9,7 @@ Linux には `C:` のようなドライブ文字がありません。ハード�
 | ディレクトリ | 内容 |
 |---|---|
 | `/` | ルート（ツリーのいちばん上） |
-| `/home` | ユーザーのホームディレクトリ。例: `/home/elev` |
+| `/home` | ユーザーのホームディレクトリ。例: `/home/{{user}}` |
 | `/root` | 管理者 root のホームディレクトリ |
 | `/etc` | システムの設定（設定ファイル） |
 | `/usr/bin` | `ls` や `cat` などのプログラム（コマンド） |
@@ -96,14 +96,14 @@ cd /var/log
   `cd var/log` だけで `/var/log` に移動できます。
 
 ```quiz
-いま `/home` にいます。`/home/elev/dokument` に移動できるコマンドはどれですか？（使えるものをすべて選んでください）
-- [x] `cd elev/dokument`
-- [x] `cd /home/elev/dokument`
-- [ ] `cd /elev/dokument`
-- [ ] `cd dokument`
+いま `/home` にいます。`/home/{{user}}/{{documents}}` に移動できるコマンドはどれですか？（使えるものをすべて選んでください）
+- [x] `cd {{user}}/{{documents}}`
+- [x] `cd /home/{{user}}/{{documents}}`
+- [ ] `cd /{{user}}/{{documents}}`
+- [ ] `cd {{documents}}`
 ---
-`elev/dokument` は `/home` からの相対パスで、`/home/elev/dokument` は絶対パスなので
-どこからでも使えます。`/elev/dokument` はルートから始まりますが、そこには `elev` はありません。
+`{{user}}/{{documents}}` は `/home` からの相対パスで、`/home/{{user}}/{{documents}}` は絶対パスなので
+どこからでも使えます。`/{{user}}/{{documents}}` はルートから始まりますが、そこには `{{user}}` はありません。
 ```
 
 覚えておくと便利な特別な名前がいくつかあります。

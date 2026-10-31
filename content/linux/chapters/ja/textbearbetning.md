@@ -16,11 +16,11 @@ stdout に書き出します。そのため、パイプとの相性は抜群で�
 ファイルは変更 **されません**（例外が 1 つだけあり、`sed -i` については
 後で説明します）。
 
-`dokument` には 3 つ目の練習用ファイルがあります。生徒の点数が入った CSV
-ファイルです（*namn* = 名前、*ämne* = 科目、*poäng* = 点数）。
+`{{documents}}` には 3 つ目の練習用ファイル `{{grades}}` があります。生徒の名前、
+科目、点数が入った CSV ファイルです。
 
 ```sh
-cat ~/dokument/betyg.csv
+cat ~/{{documents}}/{{grades}}
 ```
 
 CSV は *comma-separated values*（カンマ区切りの値）の略です。列はカンマで
@@ -39,15 +39,14 @@ echo "hello from café" | tr a-z A-Z
 HELLO FROM CAFé
 ```
 
-é に気づきましたか？ `tr` は 1 *バイト* ずつ処理するので、é のような文字
-（あるいはスウェーデン語の å、ä、ö）は `a-z` に含まれません。これは知って
-おくとよいでしょう。後で出てくる GNU `awk` のほうがうまく扱えます。
+é に気づきましたか？ `tr` は 1 *バイト* ずつ処理するので、é のような文字は
+`a-z` に含まれません。これは知っておくとよいでしょう。後で出てくる GNU `awk` のほうがうまく扱えます。
 
 `tr` は stdin から **しか** 読み込まず、ファイルから読むことはありません。
 ファイルを使いたい場合は、`<` かパイプで渡します。
 
 ```sh
-tr a-z A-Z < ~/dokument/frukter.txt
+tr a-z A-Z < ~/{{documents}}/server.log
 ```
 
 定番の技として、コロンを改行（`\n`）に変えて、`PATH` の各ディレクトリを
@@ -87,11 +86,11 @@ echo "Room 101, floor 3" | tr -d '[:digit:]'
 ### テキストを置き換える – `s`
 
 ```sh
-sed 's/ERROR/FEL/' ~/dokument/server.log
+sed 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log
 ```
 
-`s/ERROR/FEL/` というスクリプトは、`ERROR` を `FEL`（スウェーデン語で
-「エラー」）に置き換えるという意味です。形式は次のとおりです。
+`s/ERROR/{{errorWord}}/` というスクリプトは、`ERROR` を `{{errorWord}}` に置き換える
+という意味です。形式は次のとおりです。
 
 ```text
 s/パターン/置換文字列/フラグ
@@ -116,14 +115,14 @@ bonana
 検索します。
 
 ```sh
-sed 's/warn/WARNING/i' ~/dokument/server.log
+sed 's/warn/WARNING/i' ~/{{documents}}/server.log
 ```
 
 パターンは `grep` と同じく *正規表現* です。ここでは各行の先頭にある日付を
 取り除きます（`^` = 行頭、`[0-9-]*` = 数字とハイフン）。
 
 ```sh
-sed 's/^[0-9-]* //' ~/dokument/server.log
+sed 's/^[0-9-]* //' ~/{{documents}}/server.log
 ```
 
 置換文字列の中では、`&` が「一致した部分」を意味します。
@@ -145,7 +144,7 @@ echo /usr/local/bin | sed 's|/usr/local|/opt|'
 逆にしています。
 
 ```sh
-sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/dokument/server.log
+sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/{{documents}}/server.log
 ```
 
 ### 行を選ぶ – アドレス
@@ -154,8 +153,8 @@ sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/dokument/server.log
 コマンド（*delete*）は行を削除し、`p`（*print*）は行を表示します。
 
 ```sh
-sed '/INFO/d' ~/dokument/server.log
-sed '1d' ~/dokument/betyg.csv
+sed '/INFO/d' ~/{{documents}}/server.log
+sed '1d' ~/{{documents}}/{{grades}}
 ```
 
 1 つ目は `INFO` を含むすべての行を削除し、2 つ目は 1 行目（見出し）を削除します。
@@ -164,7 +163,7 @@ sed '1d' ~/dokument/betyg.csv
 指示したものだけが表示されます。5 行目から 8 行目を表示するには次のようにします。
 
 ```sh
-sed -n '5,8p' ~/dokument/server.log
+sed -n '5,8p' ~/{{documents}}/server.log
 ```
 
 | アドレス | 意味 |
@@ -180,7 +179,7 @@ sed -n '5,8p' ~/dokument/server.log
 印を付けています。
 
 ```sh
-sed '/ERROR/s/^/>>> /' ~/dokument/server.log
+sed '/ERROR/s/^/>>> /' ~/{{documents}}/server.log
 ```
 
 `q` コマンド（*quit*）は指定した行のあとで終了します。つまり `sed 3q` は
@@ -188,7 +187,7 @@ sed '/ERROR/s/^/>>> /' ~/dokument/server.log
 使って書きます。
 
 ```sh
-sed -e '/INFO/d' -e 's/ERROR/FEL/' ~/dokument/server.log
+sed -e '/INFO/d' -e 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log
 ```
 
 ### ファイルを直接編集する – `sed -i`
@@ -198,9 +197,9 @@ sed -e '/INFO/d' -e 's/ERROR/FEL/' ~/dokument/server.log
 結果をファイルに書き戻します。コピーで試してみましょう。
 
 ```sh
-cp ~/dokument/frukter.txt ~/frukter-kopia.txt
-sed -i 's/kiwi/kiwifruit/' ~/frukter-kopia.txt
-cat ~/frukter-kopia.txt
+cp ~/{{documents}}/{{fruits}} ~/fruits-copy.txt
+sed -i 's/キウイ/キウイフルーツ/' ~/fruits-copy.txt
+cat ~/fruits-copy.txt
 ```
 
 `sed -i` には元に戻す機能がありません。よいやり方は、まず `-i` **なしで**
@@ -208,9 +207,9 @@ cat ~/frukter-kopia.txt
 `-i.bak` と書くと、元のファイルが `file.bak` として保存されます。
 
 ```quiz
-`sed 's/kiwi/KIWI/' ~/dokument/frukter.txt` を実行しました。ファイルはどうなりますか？
-- [ ] ファイル内のすべての `kiwi` が `KIWI` になる
-- [ ] ファイル内の最初の `kiwi` だけが `KIWI` になる
+`sed 's/キウイ/kiwi/' ~/{{documents}}/{{fruits}}` を実行しました。ファイルはどうなりますか？
+- [ ] ファイル内のすべての `キウイ` が `kiwi` になる
+- [ ] ファイル内の最初の `キウイ` だけが `kiwi` になる
 - [x] 何も起こらない。結果が表示されるだけで、ファイルは変わらない
 ---
 `-i` がなければ、`sed` は stdout に書き出すだけです。ファイルは元のままです。
@@ -227,7 +226,7 @@ cat ~/frukter-kopia.txt
 フィールドを選びます。次は CSV ファイルから科目（フィールド 2）を取り出します。
 
 ```sh
-cut -d, -f2 ~/dokument/betyg.csv
+cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
 
 `/etc/passwd` ではフィールドがコロンで区切られ、フィールド 1 がユーザー名なので、
@@ -251,7 +250,7 @@ cut -d, -f2 ~/dokument/betyg.csv
 `server.log` では、3 番目のフィールドがログレベルです。
 
 ```sh
-awk '{print $3}' ~/dokument/server.log
+awk '{print $3}' ~/{{documents}}/server.log
 ```
 
 プログラムは `{ }` の中に書き、各行ごとに実行されます。awk のプログラムは
@@ -261,7 +260,7 @@ awk '{print $3}' ~/dokument/server.log
 awk はパイプにぴったり合います。各レベルの行はいくつあるでしょうか？
 
 ```sh
-awk '{print $3}' ~/dokument/server.log | sort | uniq -c
+awk '{print $3}' ~/{{documents}}/server.log | sort | uniq -c
 ```
 
 ### 別の区切り文字 – `-F`
@@ -285,7 +284,7 @@ awk -F: '{print $1 " uses " $7}' /etc/passwd
 入れ替えたり、テキストを混ぜたり、連続したスペースに対応したりできることです。
 
 ```predict
-$ echo "Alva,matte,87" | awk -F, '{print $3, $1}'
+$ echo "Alva,数学,87" | awk -F, '{print $3, $1}'
 87 Alva
 ---
 `-F,` で行をカンマごとに分割します。awk はフィールド 3、次にフィールド 1 を表示し、
@@ -298,37 +297,36 @@ $ echo "Alva,matte,87" | awk -F, '{print $3, $1}'
 だけ実行されます。パターンには `grep` と同じように正規表現を使えます。
 
 ```sh
-awk '/ERROR/ {print $2}' ~/dokument/server.log
+awk '/ERROR/ {print $2}' ~/{{documents}}/server.log
 ```
 
 … あるいは条件を書くこともできます。テキストはダブルクォートで囲みます。
 
 ```sh
-awk -F, '$2 == "matte" {print $1, $3}' ~/dokument/betyg.csv
+awk -F, '$2 == "数学" {print $1, $3}' ~/{{documents}}/{{grades}}
 ```
 
-（*matte* はスウェーデン語で「数学」です。）比較は `==`、`!=`、`<`、`<=`、`>`、
+比較は `==`、`!=`、`<`、`<=`、`>`、
 `>=` で書き、条件は `&&`（かつ）、`||`（または）、`!`（否定）で組み合わせます。
 次は 90 点以上の生徒全員です（`{ }` がなければ行全体が表示されます）。
 
 ```sh
-awk -F, '$3 >= 90' ~/dokument/betyg.csv
+awk -F, '$3 >= 90' ~/{{documents}}/{{grades}}
 ```
 
-見出しの行まで表示されましたか？ 見出しでは 3 番目のフィールドが `poäng` という
+見出しの行まで表示されましたか？ 見出しでは 3 番目のフィールドが `点数` という
 単語です。値が数値でない場合、awk はそれを *テキスト* として比較します。
-そして `"poäng"` はアルファベット順で `"90"` より後ろに来ます。見出しは
+そして文字列として比べると、`"点数"` は `"90"` より後ろに来ます。見出しは
 `NR > 1` で飛ばせます。
 
 ```sh
-awk -F, 'NR > 1 && $3 >= 90' ~/dokument/betyg.csv
+awk -F, 'NR > 1 && $3 >= 90' ~/{{documents}}/{{grades}}
 ```
 
-自分でもパターンを書いてみましょう。*svenska*（スウェーデン語）を学んでいる
-生徒全員の名前です。
+自分でもパターンを書いてみましょう。`国語` を学んでいる生徒全員の名前です。
 
 ```try
-awk -F, '$2 == "svenska" {print $1}' ~/dokument/betyg.csv
+awk -F, '$2 == "国語" {print $1}' ~/{{documents}}/{{grades}}
 ```
 
 ### 数える – 変数と `END`
@@ -338,15 +336,14 @@ awk には宣言しなくても使える変数があり、最初は 0 になっ�
 列を簡単に合計できます。
 
 ```sh
-awk -F, 'NR > 1 {summa += $3} END {print summa}' ~/dokument/betyg.csv
+awk -F, 'NR > 1 {{{sumVar}} += $3} END {print {{sumVar}}}' ~/{{documents}}/{{grades}}
 ```
 
-`summa += $3` は「3 番目のフィールドを summa に足す」という意味です（*summa* は
-スウェーデン語で「合計」）。同時に行数も数えれば（`antal++` は *antal*、つまり
-件数を 1 増やします）、平均を求められます。
+`{{sumVar}} += $3` は「3 番目のフィールドを {{sumVar}} に足す」という意味です。
+同時に行数も数えれば（`count++` は変数 `count` を 1 増やします）、平均を求められます。
 
 ```sh
-awk -F, 'NR > 1 {summa += $3; antal++} END {print "Average:", summa / antal}' ~/dokument/betyg.csv
+awk -F, 'NR > 1 {{{sumVar}} += $3; count++} END {print "Average:", {{sumVar}} / count}' ~/{{documents}}/{{grades}}
 ```
 
 最初の行の **前に** 実行される `BEGIN { }` もあり、見出しを付けるのに便利です。
@@ -354,19 +351,21 @@ awk -F, 'NR > 1 {summa += $3; antal++} END {print "Average:", summa / antal}' ~/
 左寄せのテキスト、`%5d` は 5 文字幅の整数です。
 
 ```sh
-awk -F, 'BEGIN {print "Student  Score"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/dokument/betyg.csv
+awk -F, 'BEGIN {print "Student  Score"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/{{documents}}/{{grades}}
 ```
 
 awk には `length()`、`toupper()`、`tolower()` などの関数もあります。
 
 ```sh
-awk '{print toupper($0)}' ~/dokument/frukter.txt
+echo "hello from café" | awk '{print toupper($0)}'
 ```
 
-`äpple` と `päron` をよく見てください。ここにあるターミナルで動いている Ubuntu では、
+é をよく見てください。ここにあるターミナルで動いている Ubuntu では、
 `awk` は標準で **mawk** という小さく高速な実装です。このような簡単なプログラムなら
-違いに気づくことはありませんが、mawk は `toupper()` で å、ä、ö を変換しません。
+違いに気づくことはありませんが、mawk は `toupper()` で é のような文字を変換しません。
 **GNU awk**（`gawk` パッケージ）は、`tr` とは違ってこれらも変換します。
+（ひらがな・カタカナ・漢字には大文字と小文字の区別がないので、どちらの awk でも
+そのまま出力されます。）
 どの awk を使うか、そしてソフトウェアをどうインストールするかはディストリビューション
 によって異なります。それはディストリビューションの章で扱います。
 
@@ -386,5 +385,5 @@ awk '{print toupper($0)}' ~/dokument/frukter.txt
 大文字と小文字を区別しなければ、どんなレベルがあるでしょうか？
 
 ```sh
-grep -v INFO ~/dokument/server.log | awk '{print $3}' | tr A-Z a-z | sort | uniq -c
+grep -v INFO ~/{{documents}}/server.log | awk '{print $3}' | tr A-Z a-z | sort | uniq -c
 ```

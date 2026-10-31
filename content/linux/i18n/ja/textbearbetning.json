@@ -2,8 +2,8 @@
   "title": "sed、tr、awk によるテキスト処理",
   "tasks": {
     "sed-s": {
-      "text": "`sed` を使って、各行の `ERROR` という単語を `FEL` に置き換えた `~/dokument/server.log` を表示してください。",
-      "hint": "`s/old/new/` コマンドでテキストを置き換えます: `sed 's/ERROR/FEL/' file`"
+      "text": "`sed` を使って、各行の `ERROR` という単語を `{{errorWord}}` に置き換えた `~/{{documents}}/server.log` を表示してください。",
+      "hint": "`s/old/new/` コマンドでテキストを置き換えます: `sed 's/ERROR/{{errorWord}}/' file`"
     },
     "sed-d": {
       "text": "`sed` を使って、`INFO` を含む行をすべて **除いた** server.log を表示してください。",
@@ -22,11 +22,11 @@
       "hint": "フィールドはコロンで区切られているので、`-F:` を使います。プログラムは `'{print $1, $7}'` です。"
     },
     "awk-sum": {
-      "text": "`awk` を使って、`~/dokument/betyg.csv` の点数（3 列目）の **合計** を求めてください。",
-      "hint": "`NR > 1` で見出しの行を飛ばし、`summa += $3` で合計し、`END { }` で結果を表示します。区切り文字はカンマです: `-F,`。"
+      "text": "`awk` を使って、`~/{{documents}}/{{grades}}` の点数（3 列目）の **合計** を求めてください。",
+      "hint": "`NR > 1` で見出しの行を飛ばし、`{{sumVar}} += $3` で合計し、`END { }` で結果を表示します。区切り文字はカンマです: `-F,`。"
     },
     "sed-i": {
-      "text": "`~/anteckningar.txt` の **ファイルを直接編集して**、`Linux` を `GNU/Linux` に置き換えてください。",
+      "text": "`~/{{notes}}` の **ファイルを直接編集して**、`Linux` を `GNU/Linux` に置き換えてください。",
       "hint": "`sed -i` を使います。置換文字列に `/` が含まれているので、区切り文字を変えるのがいちばん簡単です: `s|Linux|GNU/Linux|`。"
     }
   }

@@ -6,14 +6,14 @@
 ## ディレクトリを作成する – `mkdir`
 
 ```sh
-mkdir bilder2
+mkdir photos
 ```
 
 複数の階層を一度に作りたい場合は `-p`（*parents*）が必要です。
 これがないと、親ディレクトリが存在しないときに `mkdir` がエラーを出します。
 
 ```sh
-mkdir -p resa/2026/juni
+mkdir -p trip/2026/june
 ```
 
 ## 空のファイルを作成する – `touch`
@@ -22,11 +22,11 @@ mkdir -p resa/2026/juni
 タイムスタンプを更新するだけです）。
 
 ```sh
-touch inkopslista.txt
+touch shopping-list.txt
 ```
 
 ```quiz
-ファイルがすでに存在する場合、`touch anteckningar.txt` は何をしますか？
+ファイルがすでに存在する場合、`touch {{notes}}` は何をしますか？
 - [ ] ファイルを空にする
 - [ ] ファイルがすでにあるとエラーを出す
 - [x] ファイルのタイムスタンプを更新するだけで、内容はそのまま
@@ -35,23 +35,23 @@ touch inkopslista.txt
 ## コピーする – `cp`
 
 ```sh
-cp anteckningar.txt anteckningar-kopia.txt
+cp {{notes}} notes-copy.txt
 ```
 
 コピー先がディレクトリの場合、コピーは同じ名前でそのディレクトリの中に
 作られます。ディレクトリ全体をコピーするには `-r`（*recursive*）が必要です。
 
 ```sh
-cp -r dokument dokument-backup
+cp -r {{documents}} {{documents}}-backup
 ```
 
 ```predict
-$ mkdir kopior
-$ cp anteckningar.txt kopior
-$ ls kopior
-anteckningar.txt
+$ mkdir copies
+$ cp {{notes}} copies
+$ ls copies
+{{notes}}
 ---
-`kopior` はディレクトリなので、コピーは同じ名前でその中に作られます。
+`copies` はディレクトリなので、コピーは同じ名前でその中に作られます。
 ```
 
 ## 移動と名前の変更 – `mv`
@@ -59,8 +59,8 @@ anteckningar.txt
 Linux では、*移動* と *名前の変更* は同じことです。`mv` はその両方を行います。
 
 ```sh
-mv inkopslista.txt dokument/
-mv dokument/inkopslista.txt dokument/handla.txt
+mv shopping-list.txt {{documents}}/
+mv {{documents}}/shopping-list.txt {{documents}}/shopping.txt
 ```
 
 ```quiz
@@ -75,14 +75,14 @@ mv dokument/inkopslista.txt dokument/handla.txt
 ## 削除する – `rm` と `rmdir`
 
 ```sh
-rm anteckningar-kopia.txt
+rm notes-copy.txt
 ```
 
 `rmdir` は *空の* ディレクトリを削除します。中身ごとディレクトリを削除するには
 `rm -r` を使います。
 
 ```sh
-rm -r dokument-backup
+rm -r {{documents}}-backup
 ```
 
 > **注意！** ターミナルにはごみ箱がありません。`rm` で削除したものは
@@ -90,10 +90,10 @@ rm -r dokument-backup
 > エラーも出しません。Enter を押す前に、必ずパスを再確認しましょう。
 
 ```quiz
-ディレクトリ `gammalt` が空の場合 *だけ* 削除するコマンドはどれですか？
-- [ ] `rm gammalt`
-- [x] `rmdir gammalt`
-- [ ] `rm -r gammalt`
+ディレクトリ `{{old}}` が空の場合 *だけ* 削除するコマンドはどれですか？
+- [ ] `rm {{old}}`
+- [x] `rmdir {{old}}`
+- [ ] `rm -r {{old}}`
 ---
 `rmdir` は、中に何か残っているディレクトリの削除を拒否します。
 `rm -r` はディレクトリを中身ごと削除します。
@@ -109,23 +109,23 @@ rm -r dokument-backup
 | `?` | ちょうど 1 文字 |
 | `[abc]` | a、b、c のいずれか 1 文字 |
 
-ホームディレクトリにある `dokument` ディレクトリには、`betyg.csv`、`frukter.txt`、
+ホームディレクトリにある `{{documents}}` ディレクトリには、`{{grades}}`、`{{fruits}}`、
 `server.log` の 3 つのファイルがあります。次のコマンドは `.txt` で終わるものだけを
 一覧表示します。
 
 ```sh
-ls dokument/*.txt
+ls {{documents}}/*.txt
 ```
 
 ここで `ls` がアスタリスクを目にすることはありません。シェルがすでに
-`dokument/*.txt` を一致するすべてのファイル名に置き換えているからです。
+`{{documents}}/*.txt` を一致するすべてのファイル名に置き換えているからです。
 
 ```predict
-$ ls dokument/?????.*
-dokument/betyg.csv
+$ ls {{documents}}/??????.txt
+{{documents}}/{{fruits}}
 ---
-`?` はそれぞれちょうど 1 文字なので、ドットの前の名前は 5 文字でなければなりません。
-それに当てはまるのは `betyg` だけです。`frukter` と `server` はそれより長いからです。
+`?` はそれぞれちょうど 1 文字なので、ドットの前の名前は 6 文字で、その後に `.txt` が
+続かなければなりません。`{{grades}}` と `server.log` も名前は 6 文字ですが、拡張子が違います。
 ```
 
 ## ファイル名の中のスペース
@@ -134,8 +134,8 @@ dokument/betyg.csv
 場合は、引用符で囲む（またはスペースの前に `\` を付ける）必要があります。
 
 ```sh
-touch "min fil.txt"
-ls -l "min fil.txt"
+touch "my file.txt"
+ls -l "my file.txt"
 ```
 
 そのため、ファイル名にはハイフンやアンダースコアを使う人が多いのです。

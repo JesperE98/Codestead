@@ -22,16 +22,16 @@
       "hint": "Ubuntu では curl をインストールする必要があります: `sudo apt install curl`。*Couldn't connect to server* と表示されたら myserver が止まっているので、`myserver` で起動してください。"
     },
     "spara": {
-      "text": "Web ページ `https://example.com` を `~/exempel.html` というファイルに保存してください。",
-      "hint": "ホームディレクトリに移動して、`curl -o exempel.html https://example.com` または `wget -O exempel.html https://example.com` を使います。"
+      "text": "Web ページ `https://example.com` を `~/{{exampleHtml}}` というファイルに保存してください。",
+      "hint": "ホームディレクトリに移動して、`curl -o {{exampleHtml}} https://example.com` または `wget -O {{exampleHtml}} https://example.com` を使います。"
     },
     "hosts": {
       "text": "サーバー `192.168.1.10` を `server.lan` と呼びたいのですが、その名前は DNS に登録されていません。`/etc/hosts` に追加してから、`server.lan` に ping してください。",
       "hint": "このファイルの所有者は root です: `echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts`、そのあと `ping -c 3 server.lan` です。"
     },
     "ssh": {
-      "text": "`ssh` を使い、ユーザー `elev` としてサーバー `server.lan` 上でコマンド `hostname` を実行してください。",
-      "hint": "`ssh elev@server.lan hostname` です。ホスト鍵についての質問には `yes` と答えてください。"
+      "text": "`ssh` を使い、ユーザー `{{user}}` としてサーバー `server.lan` 上でコマンド `hostname` を実行してください。",
+      "hint": "`ssh {{user}}@server.lan hostname` です。ホスト鍵についての質問には `yes` と答えてください。"
     }
   }
 }

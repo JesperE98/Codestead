@@ -333,6 +333,7 @@ systemctl cat myserver
 
 ```text
 # /etc/systemd/system/myserver.service
+# The practice server from the chapter about processes.
 [Unit]
 Description=Myserver web server (practice server)
 After=network.target

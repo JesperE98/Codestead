@@ -2,21 +2,21 @@
   "title": "ファイルとディレクトリ",
   "tasks": {
     "mkdir": {
-      "text": "**1 つ** のコマンドで `~/projekt/src` ディレクトリを作成してください。",
-      "hint": "`projekt` と `src` を一度に作るには、`mkdir` に `-p` オプションが必要です。"
+      "text": "**1 つ** のコマンドで `~/{{project}}/src` ディレクトリを作成してください。",
+      "hint": "`{{project}}` と `src` を一度に作るには、`mkdir` に `-p` オプションが必要です。"
     },
     "touch": {
-      "text": "`~/projekt/README.md` という空のファイルを作成してください。"
+      "text": "`~/{{project}}/README.md` という空のファイルを作成してください。"
     },
     "cp": {
-      "text": "`~/anteckningar.txt` を `~/projekt/` ディレクトリにコピーしてください。"
+      "text": "`~/{{notes}}` を `~/{{project}}/` ディレクトリにコピーしてください。"
     },
     "mv": {
-      "text": "`~/projekt/anteckningar.txt` の名前を `~/projekt/att-gora.txt` に変更してください。",
+      "text": "`~/{{project}}/{{notes}}` の名前を `~/{{project}}/{{todo}}` に変更してください。",
       "hint": "名前の変更は移動と同じです。`mv` を使いましょう。"
     },
     "rm": {
-      "text": "`~/gammalt` ディレクトリを中身ごと削除してください。",
+      "text": "`~/{{old}}` ディレクトリを中身ごと削除してください。",
       "hint": "ディレクトリが空ではないので、`rmdir` では削除できません。`rm -r` を使いましょう。"
     }
   }

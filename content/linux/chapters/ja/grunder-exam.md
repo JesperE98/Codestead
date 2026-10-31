@@ -7,7 +7,7 @@
 - [ ] `var/log`
 - [ ] `../etc`
 - [x] `/usr/bin`
-- [ ] `dokument`
+- [ ] `{{documents}}`
 ---
 絶対パスはルートの `/` から始まります。ほかは今いるディレクトリから始まります。
 ```
@@ -29,10 +29,10 @@ $ pwd
 ```
 
 ```quiz
-ディレクトリ `bilder` を中身ごと `bilder-kopia` にコピーしたいです。どのコマンドを使えばよいですか？
-- [ ] `cp bilder bilder-kopia`
-- [x] `cp -r bilder bilder-kopia`
-- [ ] `mv bilder bilder-kopia`
+ディレクトリ `{{pictures}}` を中身ごと `{{pictures}}-copy` にコピーしたいです。どのコマンドを使えばよいですか？
+- [ ] `cp {{pictures}} {{pictures}}-copy`
+- [x] `cp -r {{pictures}} {{pictures}}-copy`
+- [ ] `mv {{pictures}} {{pictures}}-copy`
 ---
 ディレクトリは `-r`（*recursive*、再帰的）を付けてコピーします。`mv` だと
 コピーではなく移動になります。
@@ -47,17 +47,17 @@ c
 ```
 
 ```quiz
-引用符を付けずに `touch min fil.txt` と入力しました。どうなりますか？
-- [ ] `min fil.txt` という名前のファイルが 1 つできる
-- [x] `min` と `fil.txt` の 2 つのファイルができる
+引用符を付けずに `touch my file.txt` と入力しました。どうなりますか？
+- [ ] `my file.txt` という名前のファイルが 1 つできる
+- [x] `my` と `file.txt` の 2 つのファイルができる
 - [ ] 名前にスペースが含まれているので、何も起こらない
 ---
 シェルは行をスペースで区切るので、`touch` は 2 つの引数を受け取ります。
-ファイルを 1 つにするには `touch "min fil.txt"` と書きます。
+ファイルを 1 つにするには `touch "my file.txt"` と書きます。
 ```
 
 ```quiz
-`grep -i error dokument/server.log` はどの行を表示しますか？
+`grep -i error {{documents}}/server.log` はどの行を表示しますか？
 - [ ] 小文字の `error` を含む行だけ
 - [ ] 大文字の `ERROR` を含む行だけ
 - [x] 大文字と小文字がどう混ざっていても、`error` を含む行
@@ -65,9 +65,9 @@ c
 
 ```quiz
 ログファイルを見張って、新しい行が書き込まれるたびに表示したいです。どのコマンドが合っていますか？
-- [ ] `head -n 10 dokument/server.log`
-- [x] `tail -f dokument/server.log`
-- [ ] `wc -l dokument/server.log`
+- [ ] `head -n 10 {{documents}}/server.log`
+- [x] `tail -f {{documents}}/server.log`
+- [ ] `wc -l {{documents}}/server.log`
 ---
 `tail -f` はファイルを *追いかけます*（follow）。**Ctrl+C** で止めます。
 ```
@@ -97,9 +97,9 @@ c
 ```
 
 ```try
-grep ERROR ~/dokument/server.log | tee fel.txt | wc -l
+grep ERROR ~/{{documents}}/server.log | tee errors.txt | wc -l
 ---
-`tee` はエラーの行を `fel.txt` に保存し、`wc -l` に渡しました。`wc -l` が
+`tee` はエラーの行を `errors.txt` に保存し、`wc -l` に渡しました。`wc -l` が
 その行数を数えました。
 ```
 

@@ -22,8 +22,8 @@
       "hint": "`sudo apt update`、そのあと `sudo apt install fish` です。"
     },
     "fish-set": {
-      "text": "`fish` を起動してください。fish のやり方で、値が `äpple` の変数 `frukt` を作り、`echo` で表示してください。",
-      "hint": "fish では `frukt=äpple` は使えません。`set frukt äpple` と入力し、そのあと `echo $frukt` です。"
+      "text": "`fish` を起動してください。fish のやり方で、値が `{{fruitWord}}` の変数 `{{fruitVar}}` を作り、`echo` で表示してください。",
+      "hint": "fish では `{{fruitVar}}={{fruitWord}}` は使えません。`set {{fruitVar}} {{fruitWord}}` と入力し、そのあと `echo ${{fruitVar}}` です。"
     },
     "fish-for": {
       "text": "fish の構文で、数字の 1、2、3 を 1 行に 1 つずつ表示する `for` ループを書いてください。そのあと `exit` で bash に戻ってください。",
@@ -31,7 +31,7 @@
     },
     "chsh": {
       "text": "`/etc/shells` を見て、どのシェルがインストールされているか確認してください。そのあと `chsh` で zsh をログインシェルにしてください。",
-      "hint": "`cat /etc/shells`、そのあと `chsh -s /usr/bin/zsh` です。結果は `grep elev /etc/passwd` で確認できます。"
+      "hint": "`cat /etc/shells`、そのあと `chsh -s /usr/bin/zsh` です。結果は `grep {{user}} /etc/passwd` で確認できます。"
     }
   }
 }

@@ -44,18 +44,18 @@ gzip は一度に 1 つのファイルしか扱えず、ディレクトリのこ
 
 ## `tar` でまとめる
 
-ホームディレクトリに移動して、`dokument` ディレクトリをまとめてみましょう。
+ホームディレクトリに移動して、`{{documents}}` ディレクトリをまとめてみましょう。
 
 ```sh
 cd ~
-tar -cvf dokument.tar dokument
+tar -cvf {{documents}}.tar {{documents}}
 ```
 
 ```text
-dokument/
-dokument/betyg.csv
-dokument/frukter.txt
-dokument/server.log
+{{documents}}/
+{{documents}}/{{fruits}}
+{{documents}}/{{grades}}
+{{documents}}/server.log
 ```
 
 `-c` は *アーカイブを作成する*、`-v` は tar に処理内容を表示させる、`-f` は
@@ -63,7 +63,7 @@ dokument/server.log
 書いたものは、ファイルでもディレクトリでも、いくつでもまとめられます。
 
 > **注意！** 順序は *アーカイブが先、ファイルが後* です。
-> `tar -cvf dokument dokument.tar` のように順序を間違えると、tar はディレクトリ
+> `tar -cvf {{documents}} {{documents}}.tar` のように順序を間違えると、tar はディレクトリ
 > を上書きしようとします。さらに悪い場合は、残しておきたかったファイルを
 > 上書きしてしまいます。
 
@@ -105,13 +105,13 @@ dokument/server.log
 `z` を加えると、アーカイブは作成途中で gzip を通ります。
 
 ```sh
-tar -czvf dokument.tar.gz dokument
-ls -l dokument.tar dokument.tar.gz
+tar -czvf {{documents}}.tar.gz {{documents}}
+ls -l {{documents}}.tar {{documents}}.tar.gz
 ```
 
 ```text
--rw-r--r-- 1 elev elev 10240 Oct 30 12:00 dokument.tar
--rw-r--r-- 1 elev elev   837 Oct 30 12:00 dokument.tar.gz
+-rw-r--r-- 1 {{user}} {{user}} 10240 Oct 30 12:00 {{documents}}.tar
+-rw-r--r-- 1 {{user}} {{user}}   843 Oct 30 12:00 {{documents}}.tar.gz
 ```
 
 ファイルの合計は 1,000 バイトを少し超える程度なのに、圧縮していないアーカイブは 10,240 バイトも
@@ -124,14 +124,14 @@ ls -l dokument.tar dokument.tar.gz
 合計になります。
 
 ```sh
-du -h dokument.tar dokument.tar.gz
-du -sh dokument
+du -h {{documents}}.tar {{documents}}.tar.gz
+du -sh {{documents}}
 ```
 
 ```text
-12K	dokument.tar
-4.0K	dokument.tar.gz
-16K	dokument
+12K	{{documents}}.tar
+4.0K	{{documents}}.tar.gz
+16K	{{documents}}
 ```
 
 ディスクは 4 KiB 単位のブロックに分かれているので、空でないファイルについて
@@ -141,14 +141,14 @@ du -sh dokument
 ## 展開する前にアーカイブの中を見る
 
 ```sh
-tar -tzvf dokument.tar.gz
+tar -tzvf {{documents}}.tar.gz
 ```
 
 ```text
-drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
--rw-r--r-- elev/elev       146 2026-10-30 12:00 dokument/betyg.csv
--rw-r--r-- elev/elev        64 2026-10-30 12:00 dokument/frukter.txt
--rw-r--r-- elev/elev       848 2026-10-30 12:00 dokument/server.log
+drwxr-xr-x {{user}}/{{user}}   0 2026-10-30 12:00 {{documents}}/
+-rw-r--r-- {{user}}/{{user}} 103 2026-10-30 12:00 {{documents}}/{{fruits}}
+-rw-r--r-- {{user}}/{{user}} 145 2026-10-30 12:00 {{documents}}/{{grades}}
+-rw-r--r-- {{user}}/{{user}} 824 2026-10-30 12:00 {{documents}}/server.log
 ```
 
 `v` を付けると、`ls -l` と同じようにパーミッション、所有者、サイズ付きで内容が
@@ -159,14 +159,13 @@ drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
 ## 展開する
 
 ```sh
-mkdir uppackat
-tar -xzvf dokument.tar.gz -C uppackat
+mkdir {{unpacked}}
+tar -xzvf {{documents}}.tar.gz -C {{unpacked}}
 ```
 
-`-C`（大文字の C）で tar が展開する先のディレクトリを選びます（*uppackat* は
-スウェーデン語で「展開済み」という意味です）。これがないと、すべて今いる
+`-C`（大文字の C）で tar が展開する先のディレクトリを選びます。これがないと、すべて今いる
 ディレクトリに展開されます。最近の tar は、展開するときにアーカイブが
-圧縮されているかどうかを自動で判別するので、`tar -xf dokument.tar.gz` でも
+圧縮されているかどうかを自動で判別するので、`tar -xf {{documents}}.tar.gz` でも
 展開できます。
 
 > **注意！** tar は、すでに存在するファイルを上書きする前に確認しません。
@@ -177,30 +176,30 @@ tar -xzvf dokument.tar.gz -C uppackat
 絶対パスをまとめると、どこにでも展開できるように先頭の `/` が取り除かれます。
 
 ```sh
-tar -czf backup.tar.gz ~/dokument
+tar -czf backup.tar.gz ~/{{documents}}
 ```
 
 ```text
 tar: Removing leading `/' from member names
 ```
 
-このアーカイブには `home/elev/dokument/...` が入っています。アーカイブに
-`dokument/` だけを入れたい場合は、`-C` を使って先に tar にディレクトリを
+このアーカイブには `home/{{user}}/{{documents}}/...` が入っています。アーカイブに
+`{{documents}}/` だけを入れたい場合は、`-C` を使って先に tar にディレクトリを
 移動させます。
 
 ```sh
-tar -czf backup.tar.gz -C ~ dokument
+tar -czf backup.tar.gz -C ~ {{documents}}
 tar -tzf backup.tar.gz
 ```
 
 ```quiz
-`tar -czf backup.tar.gz -C ~ dokument` を実行しました。アーカイブには何が入っていますか？
-- [x] `dokument/` とその中のファイル
-- [ ] `home/elev/dokument/` とその中のファイル
-- [ ] `/home/elev/dokument/` とその中のファイル
+`tar -czf backup.tar.gz -C ~ {{documents}}` を実行しました。アーカイブには何が入っていますか？
+- [x] `{{documents}}/` とその中のファイル
+- [ ] `home/{{user}}/{{documents}}/` とその中のファイル
+- [ ] `/home/{{user}}/{{documents}}/` とその中のファイル
 ---
 `-C ~` によって tar はまずホームディレクトリに移動するので、アーカイブ内の
-名前は `dokument/` から始まります。
+名前は `{{documents}}/` から始まります。
 ```
 
 ## `gzip` で 1 つのファイルを圧縮する
@@ -209,12 +208,12 @@ tar -tzf backup.tar.gz
 パーミッションとタイムスタンプは保持されます。
 
 ```sh
-cp dokument/server.log .
+cp {{documents}}/server.log .
 gzip -v server.log
 ```
 
 ```text
-server.log:	 39.0% -- replaced with server.log.gz
+server.log:	 39.8% -- replaced with server.log.gz
 ```
 
 `gzip -l` は圧縮前後のサイズを表示し、`gunzip` はファイルを元に戻します。
@@ -229,21 +228,21 @@ gunzip server.log.gz
 などを含むヘッダーを追加するからです。
 
 ```sh
-cp dokument/frukter.txt .
-gzip -kv frukter.txt
+cp {{old}}/{{oldNotes}} .
+gzip -kv {{oldNotes}}
 ```
 
 ```text
-frukter.txt:	-20.3% -- created frukter.txt.gz
+{{oldNotes}}:	-92.5% -- created {{oldNotes}}.gz
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ cp dokument/server.log .
-$ gzip frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ cp {{documents}}/server.log .
+$ gzip {{fruits}}
 $ gzip -k server.log
-$ ls frukter* server*
-frukter.txt.gz  server.log  server.log.gz
+$ ls {{fruits}}* server*
+{{fruits}}.gz  server.log  server.log.gz
 ---
 ただの `gzip` はファイルを `.gz` ファイルに置き換えます。`-k` を付けると元のファイルが残ります。
 ```
@@ -286,31 +285,31 @@ apt はパッケージを 1 つも見つけられません。
 これがないと、zip は空のディレクトリだけを追加し、中のファイルは追加しません。
 
 ```sh
-zip -r dokument.zip dokument
+zip -r {{documents}}.zip {{documents}}
 ```
 
 ```text
-  adding: dokument/ (stored 0%)
-  adding: dokument/betyg.csv (deflated 17%)
-  adding: dokument/frukter.txt (deflated 27%)
-  adding: dokument/server.log (deflated 42%)
+  adding: {{documents}}/ (stored 0%)
+  adding: {{documents}}/{{fruits}} (deflated 32%)
+  adding: {{documents}}/{{grades}} (deflated 17%)
+  adding: {{documents}}/server.log (deflated 43%)
 ```
 
 順序は tar と同じで、アーカイブが先、ファイルが後です。`unzip -l` で内容を
 一覧表示し、`-d` で展開先を選びます（ディレクトリが存在しなければ作成されます）。
 
 ```sh
-unzip -l dokument.zip
-unzip dokument.zip -d fran-zip
+unzip -l {{documents}}.zip
+unzip {{documents}}.zip -d {{fromZip}}
 ```
 
 ファイルがすでに存在する場合、unzip はそれをスキップします。`unzip -o` を使うと
 上書きします。
 
 ```quiz
-`-r` を付けずに `zip dokument.zip dokument` を実行しました。zip ファイルには何が入りますか？
-- [ ] `dokument` の中のすべてのファイル
-- [x] 空のディレクトリ `dokument/` だけ
+`-r` を付けずに `zip {{documents}}.zip {{documents}}` を実行しました。zip ファイルには何が入りますか？
+- [ ] `{{documents}}` の中のすべてのファイル
+- [x] 空のディレクトリ `{{documents}}/` だけ
 - [ ] 何も入らない。zip は実行を拒否する
 ---
 `-r`（*recursive*）がないと、zip はディレクトリの中に入っていきません。

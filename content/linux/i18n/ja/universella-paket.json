@@ -38,15 +38,15 @@
       }
     },
     "appimage-chmod": {
-      "text": "`~/Nedladdningar` にダウンロード済みの AppImage があります。ファイル `Kalkylator.AppImage` を実行可能にしてください。",
-      "hint": "`chmod +x ~/Nedladdningar/Kalkylator.AppImage`"
+      "text": "`~/{{downloads}}` にダウンロード済みの AppImage があります。ファイル `{{calculator}}` を実行可能にしてください。",
+      "hint": "`chmod +x ~/{{downloads}}/{{calculator}}`"
     },
     "appimage-run": {
-      "text": "Kalkylator を起動してください。FUSE について文句を言われましたか？　足りないライブラリをインストールして、もう一度試しましょう。",
+      "text": "{{calcName}} を起動してください。FUSE について文句を言われましたか？　足りないライブラリをインストールして、もう一度試しましょう。",
       "hint": {
-        "debian": "ライブラリは `libfuse2t64` パッケージにあります。そのあと `~/Nedladdningar/Kalkylator.AppImage` で起動します。",
-        "arch": "ライブラリは `fuse2` パッケージにあります。そのあと `~/Nedladdningar/Kalkylator.AppImage` で起動します。",
-        "redhat": "ライブラリは `fuse-libs` パッケージにあります。そのあと `~/Nedladdningar/Kalkylator.AppImage` で起動します。"
+        "debian": "ライブラリは `libfuse2t64` パッケージにあります。そのあと `~/{{downloads}}/{{calculator}}` で起動します。",
+        "arch": "ライブラリは `fuse2` パッケージにあります。そのあと `~/{{downloads}}/{{calculator}}` で起動します。",
+        "redhat": "ライブラリは `fuse-libs` パッケージにあります。そのあと `~/{{downloads}}/{{calculator}}` で起動します。"
       }
     }
   }

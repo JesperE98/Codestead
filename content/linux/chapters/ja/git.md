@@ -44,8 +44,8 @@ git に保存されるバージョンには、それを作った人の名前と�
 これはコンピューターごとに 1 回だけ設定します。
 
 ```sh
-git config --global user.name "Elev Elevsson"
-git config --global user.email "elev@example.com"
+git config --global user.name "{{gitName}}"
+git config --global user.email "{{user}}@example.com"
 ```
 
 自分の名前を使ってもかまいません。`--global` は、その設定がすべてのプロジェクト
@@ -58,8 +58,8 @@ cat ~/.gitconfig
 
 ```text
 [user]
-	name = Elev Elevsson
-	email = elev@example.com
+	name = {{gitName}}
+	email = {{user}}@example.com
 ```
 
 この手順を忘れると、保存しようとしたときに git が
@@ -74,11 +74,10 @@ cat ~/.gitconfig
 ## 新しいリポジトリ
 
 ホームディレクトリには、3 つのファイルからなる小さな Web プロジェクト
-`~/projekt-webb`（スウェーデン語で「Web プロジェクト」）があります。そこへ移動
-して、中を見てみましょう。
+`~/{{webProject}}` があります。そこへ移動して、中を見てみましょう。
 
 ```sh
-cd ~/projekt-webb
+cd ~/{{webProject}}
 ls
 ```
 
@@ -90,7 +89,7 @@ git init
 ```
 
 ```text
-Initialized empty Git repository in /home/elev/projekt-webb/.git/
+Initialized empty Git repository in /home/{{user}}/{{webProject}}/.git/
 ```
 
 起きたのは、隠しディレクトリ `.git` が作られたことだけです。git はそこに履歴の
@@ -200,19 +199,18 @@ Changes to be committed:
 指定します。
 
 ```sh
-git commit -m "Första versionen av webbplatsen"
+git commit -m "{{commitFirst}}"
 ```
 
 ```text
-[main (root-commit) 3f2a9c1] Första versionen av webbplatsen
+[main (root-commit) 3f2a9c1] {{commitFirst}}
  3 files changed, 24 insertions(+)
  create mode 100644 README.md
  create mode 100644 index.html
  create mode 100644 style.css
 ```
 
-（このメッセージはスウェーデン語で「Web サイトの最初のバージョン」という意味
-です。あなたのメッセージは何語で書いてもかまいません。）`3f2a9c1` はコミットの
+メッセージは何語で書いてもかまいません。`3f2a9c1` はコミットの
 **ID** の先頭部分です。ID は内容から計算される 40 文字の *ハッシュ* です。日時や
 あなたの名前も計算に含まれるので、あなたの ID は違うものになります。コミットを
 特定するには、たいてい最初の 7 文字で十分です。
@@ -235,25 +233,24 @@ nothing to commit, working tree clean
 `README.md` に 1 行追加して、何が起きたのかを git に聞いてみましょう。
 
 ```sh
-echo 'Sidan är byggd med HTML och CSS.' >> README.md
+echo '{{builtWith}}' >> README.md
 git status
 git diff
 ```
 
 ```text
 diff --git a/README.md b/README.md
-index 1100cf4..e5bd3a0 100644
+index 8699aba..719c66c 100644
 --- a/README.md
 +++ b/README.md
 @@ -1,3 +1,4 @@
- # Min webbplats
+ # {{siteTitle}}
  
- En liten webbplats som jag versionshanterar med git.
-+Sidan är byggd med HTML och CSS.
+ gitでバージョン管理している小さなウェブサイトです。
++{{builtWith}}
 ```
 
-（追加した行はスウェーデン語で「このサイトは HTML と CSS で作られています。」と
-いう意味です。）`+` で始まる行は新しい行（緑）、`-` で始まる行は削除された行
+`+` で始まる行は新しい行（緑）、`-` で始まる行は削除された行
 （赤）で、残りは文脈として表示されています。`@@ -1,3 +1,4 @@` は、古い
 バージョンの 1～3 行目が、新しいバージョンの 1～4 行目に対応するという意味です。
 
@@ -265,7 +262,7 @@ index 1100cf4..e5bd3a0 100644
 すべてのファイルに対して `git add` を実行するので、1 回の操作で済みます。
 
 ```sh
-git commit -a -m "Beskriv hur sidan är byggd"
+git commit -a -m "{{commitDescribe}}"
 ```
 
 `-a` は、git がまだ追跡していない新しいファイルを含め *ない* ことに注意して
@@ -277,12 +274,12 @@ git commit -a -m "Beskriv hur sidan är byggd"
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ echo 'En rad till.' >> README.md
-$ git commit -m "En rad till" > /dev/null
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "{{commitFirst}}" > /dev/null
+$ echo 'もう1行。' >> README.md
+$ git commit -m "もう1行" > /dev/null
 $ git log --oneline | wc -l
 1
 ---
@@ -323,18 +320,17 @@ git log
 
 ```text
 commit 8d41b7e0c2a3f1d5e9b6a7c8d9e0f1a2b3c4d5e6 (HEAD -> main)
-Author: Elev Elevsson <elev@example.com>
+Author: {{gitName}} <{{user}}@example.com>
 Date:   Fri Oct 30 14:12:09 2026 +0100
 
-    Beskriv hur sidan är byggd
+    {{commitDescribe}}
 
 commit 3f2a9c1...
 ```
 
 最新のコミットが最初に表示されます。`HEAD -> main` は、あなたがブランチ `main`
-にいて、これがそのブランチの最新のコミットだという意味です（*Beskriv hur sidan
-är byggd* は「サイトの作り方を説明」という意味です）。便利な使い方をいくつか
-紹介します。
+にいて、これがそのブランチの最新のコミットだという意味です。便利な使い方を
+いくつか紹介します。
 
 ```sh
 git log --oneline
@@ -386,20 +382,20 @@ cat index.html
 
 ```sh
 git branch
-git switch -c ny-design
+git switch -c {{newDesign}}
 git branch
 ```
 
-`git switch -c ny-design`（*ny-design* は「新しいデザイン」という意味）は、
+`git switch -c {{newDesign}}` は、
 ブランチを作成してそこへ切り替えます。`git branch` のアスタリスクは、いまどこに
 いるのかを示しています。変更を加えて、そのブランチでコミットしましょう。
 
 ```sh
 echo 'h1 { color: purple; }' >> style.css
-git commit -am "Lila rubriker"
+git commit -am "{{commitPurple}}"
 ```
 
-（*Lila rubriker* は「紫の見出し」という意味です。）`main` に戻って、
+`main` に戻って、
 `style.css` を見てみましょう。
 
 ```sh
@@ -408,14 +404,14 @@ tail -3 style.css
 ```
 
 紫色が消えています！　ブランチを切り替えると、git は作業ツリーをそのブランチの
-最新のコミットの状態に書き換えます。変更は `ny-design` に安全に残っています。
+最新のコミットの状態に書き換えます。変更は `{{newDesign}}` に安全に残っています。
 `git log --oneline --all` ですべてのブランチを表示できます。
 
 ```sh
 git log --oneline --all
 ```
 
-> **ヒント:** 古い解説では、よく `git checkout ny-design` や
+> **ヒント:** 古い解説では、よく `git checkout {{newDesign}}` や
 > `git checkout -b new-branch` が使われています。`checkout` は `switch` と
 > 同じことをしますが、ファイルを復元することもできます。新しいコマンドの
 > `switch` と `restore` は役割を分けているので、覚えやすくなっています。
@@ -429,18 +425,18 @@ git log --oneline --all
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "{{commitFirst}}" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
 $ grep purple style.css | wc -l
 0
 ---
-purple の行は `ny-design` でコミットされました。`main` に切り替えると、git は
+purple の行は `{{newDesign}}` でコミットされました。`main` に切り替えると、git は
 作業ツリーを `main` の最新のコミットと同じ状態にします。そこにはまだその行が
 ありません。
 ```
@@ -450,7 +446,7 @@ purple の行は `ny-design` でコミットされました。`main` に切り�
 変更を *受け取る* ほうのブランチ（ここでは `main`）にいる状態で、マージします。
 
 ```sh
-git merge ny-design
+git merge {{newDesign}}
 ```
 
 ```text
@@ -461,7 +457,7 @@ Fast-forward
 ```
 
 *Fast-forward*（早送り）は、ブランチを作ってから `main` が変わっていないという
-意味です。その場合 git は、`main` を `ny-design` と同じコミットまで進めるだけで
+意味です。その場合 git は、`main` を `{{newDesign}}` と同じコミットまで進めるだけで
 済みます。
 
 両方のブランチに新しいコミットがある場合、git は **3-way マージ** を行います。
@@ -470,35 +466,35 @@ Fast-forward
 様子がわかります。
 
 ```text
-*   e4b1d0a (HEAD -> main) Merge branch 'rubrik'
+*   e4b1d0a (HEAD -> main) Merge branch 'heading'
 |\
-| * 7c3f9e2 (rubrik) Vänligare rubrik
-* | 52d8a71 Kortare text
+| * 7c3f9e2 (heading) 見出しをもっと親しみやすく
+* | 52d8a71 テキストを短く
 |/
-* c19e2f4 Lila rubriker
+* c19e2f4 {{commitPurple}}
 ```
 
 マージしたブランチはもう必要ないので、削除できます。`-d` は、いまいるブランチに
 含まれていないコミットがそのブランチにある場合、削除を拒否します。
 
 ```sh
-git branch -d ny-design
+git branch -d {{newDesign}}
 ```
 
 ## コンフリクト
 
 両方のブランチが *同じ行* を変更した場合、git にはどちらのバージョンが正しいのか
 わかりません。これを **コンフリクト**（衝突）と呼び、その場合はあなたが決めます。
-わざと 1 つ起こしてみましょう（*rubrik* はスウェーデン語で「見出し」です）。
+わざと 1 つ起こしてみましょう。
 
 ```sh
-git switch -c rubrik
-sed -i 's/Välkommen!/Hej och välkommen!/' index.html
-git commit -am "Vänligare rubrik"
+git switch -c heading
+sed -i 's/ようこそ!/こんにちは、ようこそ!/' index.html
+git commit -am "見出しをもっと親しみやすく"
 git switch main
-sed -i 's/Välkommen!/Välkommen till min sida!/' index.html
-git commit -am "Längre rubrik"
-git merge rubrik
+sed -i 's/ようこそ!/私のサイトへようこそ!/' index.html
+git commit -am "見出しを長く"
+git merge heading
 ```
 
 ```text
@@ -517,15 +513,14 @@ cat index.html
 
 ```text
 <<<<<<< HEAD
-  <h1>Välkommen till min sida!</h1>
+  <h1>私のサイトへようこそ!</h1>
 =======
-  <h1>Hej och välkommen!</h1>
->>>>>>> rubrik
+  <h1>こんにちは、ようこそ!</h1>
+>>>>>>> heading
 ```
 
-（「ようこそ、私のサイトへ！」と「こんにちは、ようこそ！」という意味です。）
 `<<<<<<< HEAD` と `=======` のあいだがあなたのバージョン（いまいるブランチ）、
-`=======` と `>>>>>>> rubrik` のあいだがもう一方のブランチのバージョンです。
+`=======` と `>>>>>>> heading` のあいだがもう一方のブランチのバージョンです。
 コンフリクトは次のようにして解決します。
 
 1. エディターでファイルを開いて、望む形に直します。どちらかの行を選んでも、
@@ -541,7 +536,7 @@ cat index.html
 git checkout --theirs index.html
 git add index.html
 git status
-git commit -m "Slå ihop grenen rubrik"
+git commit -m "ブランチ heading をマージ"
 ```
 
 コンフリクトの途中で気が変わったら、`git merge --abort` でマージ前の状態に
@@ -552,13 +547,13 @@ git commit -m "Slå ihop grenen rubrik"
 ことです。
 
 ```quiz
-`main` にいるときに `git merge rubrik` を実行しました。ファイルにコンフリクトが起きています。
+`main` にいるときに `git merge heading` を実行しました。ファイルにコンフリクトが起きています。
 
     <<<<<<< HEAD
       <h1>Hello!</h1>
     =======
       <h1>Welcome!</h1>
-    >>>>>>> rubrik
+    >>>>>>> heading
 
 `main` から来ている行はどれですか？
 - [x] `<h1>Hello!</h1>`
@@ -576,9 +571,9 @@ git commit -m "Slå ihop grenen rubrik"
 ルートにある `.gitignore` というファイルに書きます。
 
 ```sh
-echo 'password=secret' > hemligt.txt
-echo 'error' > fel.log
-printf 'hemligt.txt\n*.log\nbuild/\n' > .gitignore
+echo 'password=secret' > secret.txt
+echo 'error' > error.log
+printf 'secret.txt\n*.log\nbuild/\n' > .gitignore
 git status
 ```
 
@@ -588,14 +583,14 @@ Untracked files:
 	.gitignore
 ```
 
-`hemligt.txt`（「秘密.txt」）と `fel.log`（「エラー.log」）はもう表示されません。
+`secret.txt` と `error.log` はもう表示されません。
 `git add .` でさえ拾いません。`*` は何にでもマッチし、末尾のスラッシュ
 （`build/`）はディレクトリ全体を意味します。一方、`.gitignore` 自体はコミット
 すべきです。そうすれば、プロジェクトで作業する全員が同じものを無視できます。
 
 ```sh
 git add .gitignore
-git commit -m "Ignorera hemligheter och loggar"
+git commit -m "秘密のファイルとログを無視する"
 ```
 
 `.gitignore` が効くのは、git がまだ追跡していないファイルだけであることに注意
@@ -625,12 +620,12 @@ SSH 鍵かアクセストークンを使います。
 これにはすべてネットワークが必要ですが、シミュレーターにはネットワークがありま
 せん。それでも、`clone`、`push`、`pull` は同じコンピューター上の 2 つの
 リポジトリのあいだでも同じように動くので、試してみることはできます。プロジェクト
-を新しいディレクトリにクローンしましょう（*kopia* は「コピー」という意味です）。
+を新しいディレクトリにクローンしましょう。
 
 ```sh
 cd ~
-git clone ~/projekt-webb ~/kopia
-cd ~/kopia
+git clone ~/{{webProject}} ~/copy
+cd ~/copy
 git log --oneline
 git remote -v
 ```
@@ -641,7 +636,7 @@ GitHub のようなサーバーには履歴だけがあり、作業ツリーは�
 
 ```sh
 git init --bare ~/server.git
-cd ~/projekt-webb
+cd ~/{{webProject}}
 git remote add origin ~/server.git
 git push -u origin main
 git status

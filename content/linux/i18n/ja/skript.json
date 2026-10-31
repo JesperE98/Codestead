@@ -2,35 +2,35 @@
   "title": "シェルスクリプト",
   "tasks": {
     "variabel": {
-      "text": "自分の名前を入れた変数 `namn`（スウェーデン語で「名前」）を作成し、`echo` を使って `Hej`（「やあ」）の後に名前を続けて表示してください。",
-      "hint": "`=` の前後にスペースを入れないでください: `namn=Kim`。そのあと `echo \"Hej $namn\"` を使います。"
+      "text": "自分の名前を入れた変数 `{{nameVar}}` を作成し、`echo` を使って `{{hello}}` の後に名前を続けて表示してください。",
+      "hint": "`=` の前後にスペースを入れないでください: `{{nameVar}}=Kim`。そのあと `echo \"{{hello}} ${{nameVar}}\"` を使います。"
     },
     "rakna": {
       "text": "`$(( ))` を使って 17 × 23 を計算してください。"
     },
     "substitution": {
-      "text": "`$(...)` と `wc -l` を使って、`~/dokument/server.log` の行数を変数 `rader` に保存してください。",
-      "hint": "`wc -l < file` はファイル名なしで数だけを表示します: `rader=$(wc -l < ~/dokument/server.log)`"
+      "text": "`$(...)` と `wc -l` を使って、`~/{{documents}}/server.log` の行数を変数 `{{linesVar}}` に保存してください。",
+      "hint": "`wc -l < file` はファイル名なしで数だけを表示します: `{{linesVar}}=$(wc -l < ~/{{documents}}/server.log)`"
     },
     "if": {
-      "text": "`~/.bashrc` ファイルが存在する場合に `finns`（「存在する」）と表示する `if` 文を書いてください。",
-      "hint": "`if [ -f ~/.bashrc ]; then echo finns; fi` – 角かっこの内側のスペースを忘れないでください。"
+      "text": "`~/.bashrc` ファイルが存在する場合に `{{exists}}` と表示する `if` 文を書いてください。",
+      "hint": "`if [ -f ~/.bashrc ]; then echo {{exists}}; fi` – 角かっこの内側のスペースを忘れないでください。"
     },
     "for": {
       "text": "`for` ループを使って、1 から 5 までの数を 1 行に 1 つずつ表示してください。",
       "hint": "`for i in 1 2 3 4 5; do ...; done` か `for i in $(seq 1 5); do ...; done` のどちらかです。"
     },
     "while-read": {
-      "text": "`while read` で `~/dokument/frukter.txt` を 1 行ずつ読み、各行の前に `Frukt: `（スウェーデン語で「果物」）を付けて表示してください。",
-      "hint": "`while read rad; do echo \"Frukt: $rad\"; done < ~/dokument/frukter.txt`"
+      "text": "`while read` で `~/{{documents}}/{{fruits}}` を 1 行ずつ読み、各行の前に `{{fruitLabel}}: ` を付けて表示してください。",
+      "hint": "`while read {{lineVar}}; do echo \"{{fruitLabel}}: ${{lineVar}}\"; done < ~/{{documents}}/{{fruits}}`"
     },
     "funktion": {
-      "text": "最初の引数を 2 倍にして表示する関数 `dubbla`（「2 倍にする」）を作成してください。`dubbla 21` で試してみましょう。",
-      "hint": "`dubbla() { echo $(( $1 * 2 )); }` – そのあと `dubbla 21` です。"
+      "text": "最初の引数を 2 倍にして表示する関数 `{{doubleFn}}` を作成してください。`{{doubleFn}} 21` で試してみましょう。",
+      "hint": "`{{doubleFn}}() { echo $(( $1 * 2 )); }` – そのあと `{{doubleFn}} 21` です。"
     },
     "backup": {
-      "text": "最初の引数で渡されたファイルを、末尾に `.bak` を付けた名前にコピーするスクリプト `~/backup.sh` を書いてください。実行可能にして、ホームディレクトリで `./backup.sh anteckningar.txt` を実行してください。",
-      "hint": "`cat > ~/backup.sh << 'SLUT'` でファイルを作成し、`#!/bin/bash` と `cp \"$1\" \"$1.bak\"` を別々の行に書いて、最後に `SLUT` で終えます。"
+      "text": "最初の引数で渡されたファイルを、末尾に `.bak` を付けた名前にコピーするスクリプト `~/backup.sh` を書いてください。実行可能にして、ホームディレクトリで `./backup.sh {{notes}}` を実行してください。",
+      "hint": "`cat > ~/backup.sh << '{{heredocEnd}}'` でファイルを作成し、`#!/bin/bash` と `cp \"$1\" \"$1.bak\"` を別々の行に書いて、最後に `{{heredocEnd}}` で終えます。"
     }
   }
 }

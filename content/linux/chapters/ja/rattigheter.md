@@ -6,7 +6,7 @@ Linux は、複数のユーザーが同じコンピューターを共有でき�
 
 ## ユーザーとグループ
 
-あなたはユーザー `elev` としてログインしています。どのユーザーも 1 つ以上の
+あなたはユーザー `{{user}}` としてログインしています。どのユーザーも 1 つ以上の
 **グループ** に属しています。
 
 ```sh
@@ -21,8 +21,8 @@ id
 `ls -l` を実行して、最初の列を見てみましょう。
 
 ```text
--rw-r--r-- 1 elev elev  174 Oct 29 13:55 anteckningar.txt
-drwxr-xr-x 2 elev elev 4096 Oct 29 13:55 dokument
+drwxr-xr-x 2 {{user}} {{user}} 4096 Oct 29 13:55 {{documents}}
+-rw-r--r-- 1 {{user}} {{user}}  227 Oct 29 13:55 {{notes}}
 ```
 
 最初の文字は種類を表します。`-` はファイル、`d` はディレクトリです。その後に
@@ -39,7 +39,7 @@ drwxr-xr-x 2 elev elev 4096 Oct 29 13:55 dokument
 | `w`（write） | 内容を変更する | 中にファイルを作成・削除する |
 | `x`（execute） | ファイルをプログラムとして実行する | `cd` でディレクトリに入る |
 
-その後に所有者（`elev`）とグループ（`elev`）が続きます。
+その後に所有者（`{{user}}`）とグループ（`{{user}}`）が続きます。
 
 ```quiz
 あるディレクトリのパーミッションが `drwxr-x---` です。グループのメンバーは何ができますか？
@@ -63,15 +63,15 @@ drwxr-xr-x 2 elev elev 4096 Oct 29 13:55 dokument
 | `600` | `rw-------` | 秘密のファイル |
 
 ```sh
-chmod 644 anteckningar.txt
+chmod 644 {{notes}}
 ```
 
 **記号** でも指定できます。`u`（所有者）、`g`（グループ）、`o`（その他）、
 `a`（全員）の後に、`+`、`-`、`=` のいずれかとパーミッションを続けます。
 
 ```sh
-chmod u+x skript.sh
-chmod go-w fil.txt
+chmod u+x script.sh
+chmod go-w file.txt
 ```
 
 ```predict
@@ -89,16 +89,16 @@ $ ls -l plan.txt | awk '{print $1}'
 実行するかをシステムに伝えます。
 
 ```sh
-echo '#!/bin/bash' > datum.sh
-echo 'echo "今日の日付:"; date' >> datum.sh
-cat datum.sh
+echo '#!/bin/bash' > today.sh
+echo 'echo "今日の日付:"; date' >> today.sh
+cat today.sh
 ```
 
 スクリプトをプログラムとして実行するには、実行可能にする必要があります。
 
 ```sh
-chmod +x datum.sh
-./datum.sh
+chmod +x today.sh
+./today.sh
 ```
 
 今いるディレクトリは `PATH` に含まれていないので、`./` が必要です。

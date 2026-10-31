@@ -2,32 +2,32 @@
   "title": "アーカイブと圧縮",
   "tasks": {
     "tar-czf": {
-      "text": "`~/dokument` ディレクトリを、圧縮アーカイブ `~/dokument.tar.gz` にまとめてください。",
-      "hint": "ホームディレクトリに移動して、*create zipped verbose file* を使いましょう: `tar -czvf dokument.tar.gz dokument`。"
+      "text": "`~/{{documents}}` ディレクトリを、圧縮アーカイブ `~/{{documents}}.tar.gz` にまとめてください。",
+      "hint": "ホームディレクトリに移動して、*create zipped verbose file* を使いましょう: `tar -czvf {{documents}}.tar.gz {{documents}}`。"
     },
     "tar-t": {
-      "text": "`~/dokument.tar.gz` を展開せずに、その内容を一覧表示してください。",
-      "hint": "`t` は一覧表示を意味します: `tar -tzvf ~/dokument.tar.gz`。"
+      "text": "`~/{{documents}}.tar.gz` を展開せずに、その内容を一覧表示してください。",
+      "hint": "`t` は一覧表示を意味します: `tar -tzvf ~/{{documents}}.tar.gz`。"
     },
     "tar-x": {
-      "text": "`~/uppackat` ディレクトリを作成し、その中に `~/dokument.tar.gz` を展開してください。",
-      "hint": "`-C` で tar の展開先を選べます: `tar -xzvf ~/dokument.tar.gz -C ~/uppackat`。"
+      "text": "`~/{{unpacked}}` ディレクトリを作成し、その中に `~/{{documents}}.tar.gz` を展開してください。",
+      "hint": "`-C` で tar の展開先を選べます: `tar -xzvf ~/{{documents}}.tar.gz -C ~/{{unpacked}}`。"
     },
     "gzip": {
-      "text": "`~/dokument/server.log` をホームディレクトリにコピーし、そのコピーを `gzip` で圧縮して `~/server.log.gz` を作ってください。",
-      "hint": "まず `cp ~/dokument/server.log ~`、次に `gzip ~/server.log` です。"
+      "text": "`~/{{documents}}/server.log` をホームディレクトリにコピーし、そのコピーを `gzip` で圧縮して `~/server.log.gz` を作ってください。",
+      "hint": "まず `cp ~/{{documents}}/server.log ~`、次に `gzip ~/server.log` です。"
     },
     "zcat": {
       "text": "ファイルを展開せずに、`~/server.log.gz` の中で `ERROR` を含む行を表示してください。",
       "hint": "`zcat` は .gz ファイルの内容を表示します。それを `grep` にパイプでつなぎましょう。"
     },
     "zip": {
-      "text": "`zip` と `unzip` パッケージをインストールし、そのあと `~/dokument` を `~/dokument.zip` にまとめてください。",
-      "hint": "`sudo apt update` と `sudo apt install zip unzip` を実行します。zip には `-r` を忘れずに: `zip -r dokument.zip dokument`。"
+      "text": "`zip` と `unzip` パッケージをインストールし、そのあと `~/{{documents}}` を `~/{{documents}}.zip` にまとめてください。",
+      "hint": "`sudo apt update` と `sudo apt install zip unzip` を実行します。zip には `-r` を忘れずに: `zip -r {{documents}}.zip {{documents}}`。"
     },
     "unzip": {
-      "text": "`unzip` を使って、`~/dokument.zip` を新しいディレクトリ `~/fran-zip` に展開してください。",
-      "hint": "`-d` で展開先のディレクトリを選びます。存在しなければ作成されます: `unzip ~/dokument.zip -d ~/fran-zip`。"
+      "text": "`unzip` を使って、`~/{{documents}}.zip` を新しいディレクトリ `~/{{fromZip}}` に展開してください。",
+      "hint": "`-d` で展開先のディレクトリを選びます。存在しなければ作成されます: `unzip ~/{{documents}}.zip -d ~/{{fromZip}}`。"
     }
   }
 }

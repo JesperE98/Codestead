@@ -351,7 +351,7 @@ curl -s https://example.com | grep title
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` はファイルのダウンロードのために作られています。常にファイルに保存し、
@@ -371,10 +371,10 @@ cat cheatsheet.txt
 `sshd` というサービスが動いていて、クライアントの `ssh` で接続します。
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` は「コンピューター server.lan 上のユーザー elev」という意味です。
+`{{user}}@server.lan` は「コンピューター server.lan 上のユーザー {{user}}」という意味です。
 ホストの後ろのコマンド（`hostname`）はサーバー上で実行され、その結果が
 ここに表示されます。表示されるのは `ubuntu` ではなく `server` です。
 
@@ -394,8 +394,8 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])?
 コマンドは、引用符で囲んで複数のコマンドにすることもできます。
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 コマンドを付けないと、ssh はログインして、相手のコンピューター上のシェルが
@@ -410,7 +410,7 @@ ssh elev@server.lan cat välkommen.txt
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 `ssh-keygen` の質問には Enter を押して、パスフレーズなしで既定のファイル

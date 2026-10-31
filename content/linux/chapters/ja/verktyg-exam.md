@@ -5,14 +5,14 @@ git とほかのシェルについての 14 問です。合格には 80 % の正
 インストールします。`> /dev/null 2>&1` は、それらの行の出力を捨てています。
 
 ```quiz
-`index.html` を変更し、新しいファイル `kontakt.html` を作りました。
+`index.html` を変更し、新しいファイル `contact.html` を作りました。
 `git commit -am "Contact page"` を実行すると、コミットには何が入りますか？
 - [x] `index.html` の変更だけ
-- [ ] `kontakt.html` だけ
+- [ ] `contact.html` だけ
 - [ ] 両方のファイル
 ---
 `-a` は、git がすでに追跡している変更済みのファイルをすべて追加しますが、
-新しいファイルは決して追加しません。`kontakt.html` は先に `git add` で追加する
+新しいファイルは決して追加しません。`contact.html` は先に `git add` で追加する
 必要があります。
 ```
 
@@ -29,20 +29,20 @@ git とほかのシェルについての 14 問です。合格には 80 % の正
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "{{commitFirst}}" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
-$ git merge ny-design > /dev/null
+$ git merge {{newDesign}} > /dev/null
 $ git log --oneline | wc -l
 2
 ---
 ブランチを作ってから `main` は変わっていなかったので、マージは
-*fast-forward*（早送り）になりました。git は `main` を `ny-design` の
+*fast-forward*（早送り）になりました。git は `main` を `{{newDesign}}` の
 コミットまで進めただけです。マージコミットは作られませんでした。
 ```
 
@@ -67,12 +67,12 @@ $ git log --oneline | wc -l
 ```
 
 ```quiz
-ファイル `fel.log` を間違えてコミットしてしまいました。`.gitignore` に `*.log`
+ファイル `error.log` を間違えてコミットしてしまいました。`.gitignore` に `*.log`
 を追加しましたが、git はまだファイルを追跡しています。ディスクには残したまま、
 リポジトリから取り除くにはどうしますか？
-- [ ] `rm fel.log`
-- [x] `git rm --cached fel.log`
-- [ ] `git restore fel.log`
+- [ ] `rm error.log`
+- [x] `git rm --cached error.log`
+- [ ] `git restore error.log`
 ---
 `.gitignore` は、git がまだ追跡していないファイルにだけ効きます。`--cached` は
 ファイルを git から取り除きますが、ディスクには残します。
@@ -145,7 +145,7 @@ zsh は起動するときにどのファイルを読みますか？
 ```
 
 ```try
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ---
 行の最後のフィールドがログインシェルです。`chsh -s` が変更するのはこれです。
 ```
