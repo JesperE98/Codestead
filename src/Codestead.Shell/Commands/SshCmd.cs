@@ -491,7 +491,7 @@ public static partial class SshCmd
                         : type == "ecdsa"
                             ? $"ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBB{RandomB64(86)}="
                             : $"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI{RandomB64(43)}";
-                var priv = $"-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\n{RandomB64(70)}\n{RandomB64(70)}\n(simulerad privat nyckel – visa den aldrig för någon!)\n-----END OPENSSH PRIVATE KEY-----\n";
+                var priv = $"-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\n{RandomB64(70)}\n{RandomB64(70)}\n(simulated private key - never show it to anyone!)\n-----END OPENSSH PRIVATE KEY-----\n";
                 try
                 {
                     var path = sh.Resolve(file);

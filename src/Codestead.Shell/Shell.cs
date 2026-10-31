@@ -1070,7 +1070,7 @@ public partial class Shell
         }
     }
 
-    private static readonly Regex ElfImplRe = new("^\u007fELF[^(]*\\(simulerad binärfil: ([^)\\s]+)\\)", RegexOptions.CultureInvariant);
+    private static readonly Regex ElfImplRe = new("^\u007fELF[^(]*\\((?:simulated binary|simulerad binärfil): ([^)\\s]+)\\)", RegexOptions.CultureInvariant);
 
     public ResolvedCommand ResolveCommand(string name)
     {
