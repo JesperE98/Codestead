@@ -4,13 +4,13 @@
 所以它们会先安装需要的程序——`> /dev/null 2>&1` 会丢掉这些行的输出。
 
 ```quiz
-你修改了 `index.html`，又创建了新文件 `kontakt.html`。你运行
+你修改了 `index.html`，又创建了新文件 `contact.html`。你运行
 `git commit -am "Contact page"`。哪些内容会进入这次提交？
 - [x] 只有对 `index.html` 的修改
-- [ ] 只有 `kontakt.html`
+- [ ] 只有 `contact.html`
 - [ ] 两个文件都会
 ---
-`-a` 会添加 git 已经在跟踪的所有已修改文件——但从不添加新文件。`kontakt.html`
+`-a` 会添加 git 已经在跟踪的所有已修改文件——但从不添加新文件。`contact.html`
 必须先用 `git add` 添加。
 ```
 
@@ -26,20 +26,20 @@
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "{{commitFirst}}" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
-$ git merge ny-design > /dev/null
+$ git merge {{newDesign}} > /dev/null
 $ git log --oneline | wc -l
 2
 ---
 自从创建分支以来，`main` 一直没有变化，所以这次合并是一次*快进*（fast-forward）：git 只是把
-`main` 向前移动到 `ny-design` 的那个提交。没有创建合并提交。
+`main` 向前移动到 `{{newDesign}}` 的那个提交。没有创建合并提交。
 ```
 
 ```quiz
@@ -62,11 +62,11 @@ $ git log --oneline | wc -l
 ```
 
 ```quiz
-文件 `fel.log` 被误提交了。你把 `*.log` 添加到 `.gitignore` 中，但 git 仍然在跟踪这个文件。
+文件 `error.log` 被误提交了。你把 `*.log` 添加到 `.gitignore` 中，但 git 仍然在跟踪这个文件。
 怎样才能把它从仓库中移除，但保留在磁盘上？
-- [ ] `rm fel.log`
-- [x] `git rm --cached fel.log`
-- [ ] `git restore fel.log`
+- [ ] `rm error.log`
+- [x] `git rm --cached error.log`
+- [ ] `git restore error.log`
 ---
 `.gitignore` 只对 git 尚未跟踪的文件生效。`--cached` 会把文件从 git 中移除，但把它留在磁盘上。
 ```
@@ -134,7 +134,7 @@ zsh 启动时会读取哪个文件？
 ```
 
 ```try
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ---
 这一行的最后一个字段就是你的登录 shell——也就是 `chsh -s` 要修改的那个。
 ```

@@ -4,7 +4,7 @@ Linux 的设计允许多个用户共用同一台计算机。因此每个文件�
 
 ## 用户和组
 
-你是以用户 `elev` 的身份登录的。每个用户都属于一个或多个**组**（group）：
+你是以用户 `{{user}}` 的身份登录的。每个用户都属于一个或多个**组**（group）：
 
 ```sh
 id
@@ -17,8 +17,8 @@ id
 运行 `ls -l`，看看第一列：
 
 ```text
--rw-r--r-- 1 elev elev  174 Oct 29 13:55 anteckningar.txt
-drwxr-xr-x 2 elev elev 4096 Oct 29 13:55 dokument
+drwxr-xr-x 2 {{user}} {{user}} 4096 Oct 29 13:55 {{documents}}
+-rw-r--r-- 1 {{user}} {{user}}  151 Oct 29 13:55 {{notes}}
 ```
 
 第一个字符表示类型：`-` 表示文件，`d` 表示目录。接下来是三组字符，每组三个，依次对应所有者（owner）、所属组（group）和其他人（others）：
@@ -34,7 +34,7 @@ type  owner   group   others
 | `w`（写） | 修改内容 | 在其中创建和删除文件 |
 | `x`（执行） | 把文件作为程序运行 | 用 `cd` 进入该目录 |
 
-再往后是所有者（`elev`）和所属组（`elev`）。
+再往后是所有者（`{{user}}`）和所属组（`{{user}}`）。
 
 ```quiz
 某个目录的权限是 `drwxr-x---`。它所属组的成员可以做什么？
@@ -56,14 +56,14 @@ type  owner   group   others
 | `600` | `rw-------` | 机密文件 |
 
 ```sh
-chmod 644 anteckningar.txt
+chmod 644 {{notes}}
 ```
 
 也可以用**符号**表示：`u`（所有者）、`g`（所属组）、`o`（其他人）、`a`（所有人），后面跟上 `+`、`-` 或 `=` 以及具体的权限：
 
 ```sh
-chmod u+x skript.sh
-chmod go-w fil.txt
+chmod u+x script.sh
+chmod go-w file.txt
 ```
 
 ```predict
@@ -79,16 +79,16 @@ $ ls -l plan.txt | awk '{print $1}'
 **脚本**（script）是包含命令的文本文件。第一行 `#!/bin/bash` 叫做 *shebang*，它告诉系统应该用哪个程序来运行这个文件：
 
 ```sh
-echo '#!/bin/bash' > datum.sh
-echo 'echo "Today is:"; date' >> datum.sh
-cat datum.sh
+echo '#!/bin/bash' > date.sh
+echo 'echo "Today is:"; date' >> date.sh
+cat date.sh
 ```
 
 要把脚本作为程序运行，它必须是可执行的：
 
 ```sh
-chmod +x datum.sh
-./datum.sh
+chmod +x date.sh
+./date.sh
 ```
 
 之所以需要 `./`，是因为你当前所在的目录不在 `PATH` 中。

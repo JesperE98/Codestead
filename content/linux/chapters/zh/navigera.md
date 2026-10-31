@@ -7,7 +7,7 @@ Linux 没有像 `C:` 这样的盘符。所有东西——硬盘、U 盘，甚至
 | 目录 | 内容 |
 |---|---|
 | `/` | 根目录——整棵树的顶端 |
-| `/home` | 用户的主目录，例如 `/home/elev` |
+| `/home` | 用户的主目录，例如 `/home/{{user}}` |
 | `/root` | 管理员 root 的主目录 |
 | `/etc` | 系统设置（配置文件） |
 | `/usr/bin` | 程序（命令），例如 `ls` 和 `cat` |
@@ -88,13 +88,13 @@ cd /var/log
 - **相对路径**从你当前所在的目录出发。如果你在 `/`，只需 `cd var/log` 就能到达 `/var/log`。
 
 ```quiz
-你在 `/home`。哪些命令能把你带到 `/home/elev/dokument`？（选出所有可行的。）
-- [x] `cd elev/dokument`
-- [x] `cd /home/elev/dokument`
-- [ ] `cd /elev/dokument`
-- [ ] `cd dokument`
+你在 `/home`。哪些命令能把你带到 `/home/{{user}}/{{documents}}`？（选出所有可行的。）
+- [x] `cd {{user}}/{{documents}}`
+- [x] `cd /home/{{user}}/{{documents}}`
+- [ ] `cd /{{user}}/{{documents}}`
+- [ ] `cd {{documents}}`
 ---
-`elev/dokument` 是相对于 `/home` 的路径，而 `/home/elev/dokument` 是绝对路径，所以在任何地方都有效。`/elev/dokument` 从根目录出发，而根目录下并没有 `elev`。
+`{{user}}/{{documents}}` 是相对于 `/home` 的路径，而 `/home/{{user}}/{{documents}}` 是绝对路径，所以在任何地方都有效。`/{{user}}/{{documents}}` 从根目录出发，而根目录下并没有 `{{user}}`。
 ```
 
 有几个特殊名称值得记住：

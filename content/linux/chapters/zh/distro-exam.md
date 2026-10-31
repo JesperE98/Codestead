@@ -81,11 +81,11 @@ Snap 软件包是怎样更新的？
 ```
 
 ```predict
-$ ~/Nedladdningar/Kalkylator.AppImage
-bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+$ ~/{{downloads}}/{{calculator}}
+bash: /home/{{user}}/{{downloads}}/{{calculator}}: Permission denied
 ---
 下载的文件一开始从来都不是可执行的。请先运行
-`chmod +x ~/Nedladdningar/Kalkylator.AppImage`。
+`chmod +x ~/{{downloads}}/{{calculator}}`。
 ```
 
 ```quiz

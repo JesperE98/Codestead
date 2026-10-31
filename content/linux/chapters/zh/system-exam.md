@@ -4,7 +4,7 @@
 
 ```predict
 $ echo "$HOME" '$USER'
-/home/elev $USER
+/home/{{user}} $USER
 ---
 双引号会把变量替换成它的值；单引号则按原样输出。
 ```
@@ -34,10 +34,10 @@ $ echo $?
 ```
 
 ```predict
-$ touch verktyg.sh
-$ chmod 755 verktyg.sh
-$ chmod go-x verktyg.sh
-$ ls -l verktyg.sh | awk '{print $1}'
+$ touch tools.sh
+$ chmod 755 tools.sh
+$ chmod go-x tools.sh
+$ ls -l tools.sh | awk '{print $1}'
 -rwxr--r--
 ```
 
@@ -45,7 +45,7 @@ $ ls -l verktyg.sh | awk '{print $1}'
 在 Ubuntu 上，哪个组的成员可以使用 `sudo`？
 - [x] `sudo`
 - [ ] `root`
-- [ ] `elev`
+- [ ] `{{user}}`
 ```
 
 ```quiz
@@ -85,18 +85,18 @@ $ ls -l verktyg.sh | awk '{print $1}'
 ```
 
 ```quiz
-`tar -cvf dokument dokument.tar` 有什么问题？
+`tar -cvf {{documents}} {{documents}}.tar` 有什么问题？
 - [ ] `-v` 不能和 `-c` 一起用
 - [x] 顺序不对：归档文件的名字必须紧跟在 `f` 后面，放在要打包的文件之前
 - [ ] tar 归档必须以 `.tgz` 结尾
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ gzip frukter.txt
-$ gunzip frukter.txt.gz
-$ ls frukter*
-frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ gzip {{fruits}}
+$ gunzip {{fruits}}.gz
+$ ls {{fruits}}*
+{{fruits}}
 ```
 
 ```quiz
@@ -109,7 +109,7 @@ frukter.txt
 ```
 
 ```try
-du -sh dokument
+du -sh {{documents}}
 ---
 `-s` 给出整个目录的总计，`-h` 让大小更易读。
 ```

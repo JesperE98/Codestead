@@ -22,16 +22,16 @@
       "hint": "在 Ubuntu 上需要先安装 curl：`sudo apt install curl`。如果你得到 *Couldn't connect to server*，说明 myserver 已停止——用 `myserver` 启动它。"
     },
     "spara": {
-      "text": "把网页 `https://example.com` 保存为文件 `~/exempel.html`。",
-      "hint": "先进入你的主目录，然后使用 `curl -o exempel.html https://example.com` 或 `wget -O exempel.html https://example.com`。"
+      "text": "把网页 `https://example.com` 保存为文件 `~/{{exampleHtml}}`。",
+      "hint": "先进入你的主目录，然后使用 `curl -o {{exampleHtml}} https://example.com` 或 `wget -O {{exampleHtml}} https://example.com`。"
     },
     "hosts": {
       "text": "服务器 `192.168.1.10` 应该叫 `server.lan`，但这个名字不在 DNS 中。把它添加到 `/etc/hosts`，然后 ping `server.lan`。",
       "hint": "这个文件属于 root：`echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts`，然后 `ping -c 3 server.lan`。"
     },
     "ssh": {
-      "text": "以用户 `elev` 的身份，用 `ssh` 在服务器 `server.lan` 上运行命令 `hostname`。",
-      "hint": "`ssh elev@server.lan hostname`——并对主机密钥的提问回答 `yes`。"
+      "text": "以用户 `{{user}}` 的身份，用 `ssh` 在服务器 `server.lan` 上运行命令 `hostname`。",
+      "hint": "`ssh {{user}}@server.lan hostname`——并对主机密钥的提问回答 `yes`。"
     }
   }
 }

@@ -10,28 +10,28 @@
       "hint": "两条命令：`git config --global user.name \"你的名字\"` 和 `git config --global user.email \"you@example.com\"`。"
     },
     "init": {
-      "text": "进入目录 `~/projekt-webb`，用 `git init` 把它变成一个 git 仓库。",
-      "hint": "先 `cd ~/projekt-webb`，再 `git init`。用 `ls -a` 看看新出现的隐藏目录。"
+      "text": "进入目录 `~/{{webProject}}`，用 `git init` 把它变成一个 git 仓库。",
+      "hint": "先 `cd ~/{{webProject}}`，再 `git init`。用 `ls -a` 看看新出现的隐藏目录。"
     },
     "forsta-commit": {
       "text": "用 `git add` 把三个文件都添加到暂存区，然后用一条有描述性的提交信息完成你的第一次提交。",
-      "hint": "`git add .` 会添加目录中的所有内容。然后运行 `git commit -m \"网站的第一个版本\"`。在提交前后都用 `git status` 查看一下状态！"
+      "hint": "`git add .` 会添加目录中的所有内容。然后运行 `git commit -m \"{{commitFirst}}\"`。在提交前后都用 `git status` 查看一下状态！"
     },
     "diff": {
       "text": "在 `README.md` 的末尾加一行，然后用 `git diff` 查看这项修改。",
-      "hint": "`echo '网站用 HTML 和 CSS 构建。' >> README.md`，然后运行 `git diff`。以 `+` 开头的行是新增的。"
+      "hint": "`echo '{{builtWith}}' >> README.md`，然后运行 `git diff`。以 `+` 开头的行是新增的。"
     },
     "commit-a": {
       "text": "提交对 `README.md` 的修改。试试 `-a` 选项，它会包含 git 已经在跟踪的所有被修改的文件。",
-      "hint": "`git commit -a -m \"说明网站是如何构建的\"`——或者更简短的 `git commit -am \"…\"`。"
+      "hint": "`git commit -a -m \"{{commitDescribe}}\"`——或者更简短的 `git commit -am \"…\"`。"
     },
     "gren": {
-      "text": "创建分支 `ny-design` 并切换过去。在 `style.css` 中改点东西，然后在这个新分支上提交修改。",
-      "hint": "`git switch -c ny-design` 会创建分支并切换过去。然后修改文件，例如用 `echo 'h1 { color: purple; }' >> style.css`，再运行 `git commit -am \"紫色标题\"`。"
+      "text": "创建分支 `{{newDesign}}` 并切换过去。在 `style.css` 中改点东西，然后在这个新分支上提交修改。",
+      "hint": "`git switch -c {{newDesign}}` 会创建分支并切换过去。然后修改文件，例如用 `echo 'h1 { color: purple; }' >> style.css`，再运行 `git commit -am \"{{commitPurple}}\"`。"
     },
     "merge": {
-      "text": "切换回 `main`，用 `git merge` 合并分支 `ny-design`。",
-      "hint": "先 `git switch main`，再 `git merge ny-design`。由于自从你创建分支以来 `main` 没有变化，这将是一次 *fast-forward*（快进）合并。"
+      "text": "切换回 `main`，用 `git merge` 合并分支 `{{newDesign}}`。",
+      "hint": "先 `git switch main`，再 `git merge {{newDesign}}`。由于自从你创建分支以来 `main` 没有变化，这将是一次 *fast-forward*（快进）合并。"
     },
     "logg": {
       "text": "用 `git log --oneline` 显示历史，每个提交一行。",

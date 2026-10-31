@@ -8,17 +8,17 @@
       "text": "试着用 `cat` 读取 `/etc/shadow`——然后再用 `sudo` 试一次。"
     },
     "script": {
-      "text": "创建脚本 `~/hej.sh`，其中包含一行 `echo Hej från mitt skript`（瑞典语的“来自我的脚本的问候”）。",
-      "hint": "使用单引号：`echo 'echo Hej från mitt skript' > ~/hej.sh`"
+      "text": "创建脚本 `~/{{helloScript}}`，其中包含一行 `echo {{helloScriptText}}`。",
+      "hint": "使用单引号：`echo 'echo {{helloScriptText}}' > ~/{{helloScript}}`"
     },
     "chmod-x": {
-      "text": "让 `~/hej.sh` 变成可执行文件。"
+      "text": "让 `~/{{helloScript}}` 变成可执行文件。"
     },
     "run-script": {
-      "text": "（在你的主目录中）用 `./hej.sh` 运行这个脚本。"
+      "text": "（在你的主目录中）用 `./{{helloScript}}` 运行这个脚本。"
     },
     "chmod-600": {
-      "text": "让 `~/anteckningar.txt` **只有**你自己可以读写（`rw-------`）。",
+      "text": "让 `~/{{notes}}` **只有**你自己可以读写（`rw-------`）。",
       "hint": "r = 4，w = 2，x = 1。所有者应该是 4 + 2，其他所有人都是 0。"
     }
   }

@@ -65,7 +65,7 @@ lsblk
 lsblk -f
 ```
 
-注意 `sdb1`：一个卷标为 `USBMINNE`（瑞典语“U 盘”的意思）的 `vfat` 文件系统，它没有挂载在任何地方。这就是我们接下来要插入的 U 盘。
+注意 `sdb1`：一个卷标为 `USBMINNE` 的 `vfat` 文件系统，它没有挂载在任何地方。这就是我们接下来要插入的 U 盘。
 
 ## 不同的文件系统
 
@@ -105,7 +105,7 @@ mount
 | `/` | 根文件系统 |
 | `/boot`, `/boot/efi` | 内核和 EFI 分区 |
 | `/mnt` | 你手动进行的临时挂载 |
-| `/media/elev/…` 或 `/run/media/elev/…` | 桌面环境自动挂载 U 盘的位置 |
+| `/media/{{user}}/…` 或 `/run/media/{{user}}/…` | 桌面环境自动挂载 U 盘的位置 |
 
 ## 还剩多少空间？——`df`
 
@@ -173,7 +173,7 @@ df -h /mnt/usb
 从现在起，U 盘用起来就和其他目录一样。把一个文件复制到你的主目录：
 
 ```sh
-cp /mnt/usb/att-gora.txt ~
+cp /mnt/usb/{{todo}} ~
 ```
 
 > **为什么所有东西都属于 root？** FAT 没有 Linux 权限。因此，FAT 格式的 U 盘被挂载后，*所有*文件都会拥有相同的所有者和权限——所有者就是挂载它的人，也就是 root。要往 U 盘里写入，你要么需要 `sudo`，要么在挂载时让自己成为所有者：`sudo mount -o uid=1000,gid=1000 /dev/sdb1 /mnt/usb`（1000 是你的用户 ID——参见 `id`）。

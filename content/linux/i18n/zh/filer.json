@@ -2,21 +2,21 @@
   "title": "文件和目录",
   "tasks": {
     "mkdir": {
-      "text": "用**一条**命令创建目录 `~/projekt/src`。",
-      "hint": "`mkdir` 需要 `-p` 选项，才能一次性同时创建 `projekt` 和 `src`。"
+      "text": "用**一条**命令创建目录 `~/{{project}}/src`。",
+      "hint": "`mkdir` 需要 `-p` 选项，才能一次性同时创建 `{{project}}` 和 `src`。"
     },
     "touch": {
-      "text": "创建一个名为 `~/projekt/README.md` 的空文件。"
+      "text": "创建一个名为 `~/{{project}}/README.md` 的空文件。"
     },
     "cp": {
-      "text": "把 `~/anteckningar.txt` 复制到目录 `~/projekt/` 中。"
+      "text": "把 `~/{{notes}}` 复制到目录 `~/{{project}}/` 中。"
     },
     "mv": {
-      "text": "把 `~/projekt/anteckningar.txt` 重命名为 `~/projekt/att-gora.txt`。",
+      "text": "把 `~/{{project}}/{{notes}}` 重命名为 `~/{{project}}/{{todo}}`。",
       "hint": "重命名和移动是一回事——用 `mv`。"
     },
     "rm": {
-      "text": "删除目录 `~/gammalt` 及其中的所有内容。",
+      "text": "删除目录 `~/{{old}}` 及其中的所有内容。",
       "hint": "这个目录不是空的，所以 `rmdir` 不管用。请使用 `rm -r`。"
     }
   }

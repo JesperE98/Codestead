@@ -24,12 +24,12 @@ export EDITOR=nano
 ```
 
 ```quiz
-哪一行会创建值为 `blue` 的变量 `FARG`？
-- [ ] `FARG = blue`
-- [x] `FARG=blue`
-- [ ] `$FARG=blue`
+哪一行会创建值为 `blue` 的变量 `COLOR`？
+- [ ] `COLOR = blue`
+- [x] `COLOR=blue`
+- [ ] `$COLOR=blue`
 ---
-`=` 两边不能有空格。如果有空格，shell 会以为 `FARG` 是一个命令。`$` 只在*读取*变量时使用。
+`=` 两边不能有空格。如果有空格，shell 会以为 `COLOR` 是一个命令。`$` 只在*读取*变量时使用。
 ```
 
 ## 单引号和双引号
@@ -69,12 +69,12 @@ type cd
 如果你想运行一个不在 `PATH` 中的程序，就必须给出它的路径，例如对于当前目录中的文件，要写成 `./myprogram`。
 
 ```quiz
-当前目录中有一个名为 `hej` 的程序，而这个目录不在 `PATH` 中。你要怎样运行它？
-- [ ] `hej`
-- [x] `./hej`
-- [ ] `type hej`
+当前目录中有一个名为 `hello` 的程序，而这个目录不在 `PATH` 中。你要怎样运行它？
+- [ ] `hello`
+- [x] `./hello`
+- [ ] `type hello`
 ---
-不带路径时，shell 只会在 `PATH` 中的目录里查找。`./hej` 准确地指出了文件所在的位置：当前目录。
+不带路径时，shell 只会在 `PATH` 中的目录里查找。`./hello` 准确地指出了文件所在的位置：当前目录。
 ```
 
 ## 退出码——`$?`
@@ -82,7 +82,7 @@ type cd
 每个命令结束时都会留下一个**退出码**（exit code）：`0` 表示一切顺利，其他任何值都表示出错。最近一次的退出码保存在 `$?` 中：
 
 ```sh
-ls /finnsinte
+ls /{{missing}}
 echo $?
 ```
 
@@ -100,8 +100,8 @@ ll
 不带参数的 `alias` 会列出所有别名，而 `unalias ll` 可以删除一个别名。
 
 ```predict
-$ alias hej='echo Hello'
-$ hej
+$ alias hi='echo Hello'
+$ hi
 Hello
 ```
 
