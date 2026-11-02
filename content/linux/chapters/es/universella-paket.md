@@ -256,7 +256,14 @@ cd ~/{{downloads}}
 ls -l
 ```
 
-¿Qué pasa si la inicias directamente?
+```text
+total 47184
+-rw-r--r-- 1 {{user}} {{user}} 48312832 Oct 30 12:00 {{calculator}}
+```
+
+Los mensajes de error de bash tienen la forma `bash: RUTA: MOTIVO`, y la ruta
+se muestra tal como la ve bash: con `~` ya sustituido por `/home/{{user}}`.
+¿Qué pasa si inicias el archivo directamente?
 
 ```predict
 $ ~/{{downloads}}/{{calculator}}

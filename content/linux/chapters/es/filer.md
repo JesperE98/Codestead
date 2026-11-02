@@ -124,7 +124,9 @@ ls {{documents}}/*.txt
 ```
 
 Aquí `ls` nunca llega a ver el asterisco: la shell ya ha sustituido
-`{{documents}}/*.txt` por todos los nombres de archivo que coinciden.
+`{{documents}}/*.txt` por todos los nombres de archivo que coinciden. Cuando
+coinciden varios nombres, `ls` los muestra en orden alfabético, uno al lado
+del otro en una sola línea.
 
 ```predict
 $ ls {{documents}}/??????.*

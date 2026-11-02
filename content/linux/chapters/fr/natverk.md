@@ -159,7 +159,8 @@ indiqué dans `/etc/resolv.conf` :
 cat /etc/resolv.conf
 ```
 
-Sur Ubuntu, on y lit `127.0.0.53` – c'est **systemd-resolved**, un
+Sur Ubuntu, la ligne importante est `nameserver 127.0.0.53` – c'est
+**systemd-resolved**, un
 intermédiaire local sur votre propre ordinateur qui interroge à son tour le
 routeur. Certaines autres distributions indiquent directement le routeur,
 `192.168.1.1`.
@@ -242,8 +243,14 @@ dig +short server.lan
 getent hosts server.lan
 ```
 
-L'ordre (d'abord le fichier, puis le DNS) est défini par la ligne `hosts:` de
-`/etc/nsswitch.conf`.
+`dig` n'affiche rien, mais `getent` répond avec l'adresse suivie du nom :
+
+```text
+192.168.1.10    server.lan
+```
+
+L'ordre (d'abord le fichier, puis le DNS) est défini par la ligne
+`hosts: files dns` de `/etc/nsswitch.conf`.
 
 ```quiz
 Pourquoi `sudo echo '192.168.1.10 server.lan' >> /etc/hosts` donne-t-il

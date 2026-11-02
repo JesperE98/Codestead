@@ -437,7 +437,9 @@ sauf si elles entrent en conflit avec l'autre branche. Dans ce cas, git refuse
 et vous demande de committer d'abord (ou de mettre les modifications de côté
 temporairement avec `git stash` et de les récupérer avec `git stash pop`).
 
-Combien de lignes contenant `purple` le fichier `style.css` a-t-il à la fin ?
+Le `style.css` d'origine ne contient aucun `purple` – ses titres sont en
+`navy`. Combien de lignes contenant `purple` le fichier `style.css` a-t-il à
+la fin ?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1

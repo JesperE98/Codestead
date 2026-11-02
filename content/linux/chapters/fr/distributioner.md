@@ -31,6 +31,10 @@ vous pouvez donc faire les trois.
 - **systemd**, qui démarre le système et gère les services, sur presque
   toutes les grandes distributions.
 
+La variable `SHELL` contient le chemin complet du shell avec lequel vous vous
+connectez – pour bash, le même chemin que celui que vous écrivez dans la ligne
+shebang d'un script.
+
 ```predict
 $ echo $SHELL
 /bin/bash

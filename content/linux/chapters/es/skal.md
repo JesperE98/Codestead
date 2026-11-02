@@ -348,7 +348,9 @@ echo "Estoy en" (pwd)
 ```
 
 Dentro de las comillas, los paréntesis son texto normal; por eso `(pwd)` va
-fuera. El estado de salida del último comando se llama `$status`:
+fuera. El estado de salida del último comando se llama `$status`. `false`
+es un comando diminuto que no hace nada más que fallar; su estado de salida
+siempre es 1:
 
 ```sh
 false

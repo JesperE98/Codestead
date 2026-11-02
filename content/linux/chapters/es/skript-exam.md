@@ -19,6 +19,9 @@ ejecutable.
 - [ ] Hay que escribir `${{nameVar}} = Kim`
 ```
 
+`~/{{documents}}` contiene los tres archivos de práctica `{{fruits}}`,
+`{{grades}}` y `server.log`.
+
 ```predict
 $ cantidad=$(ls ~/{{documents}} | wc -l)
 $ echo "$cantidad archivos"

@@ -155,8 +155,9 @@ está indicado en `/etc/resolv.conf`:
 cat /etc/resolv.conf
 ```
 
-En Ubuntu pone `127.0.0.53`: es **systemd-resolved**, un intermediario local
-en tu propio ordenador que a su vez le pregunta al router. Algunas otras
+En Ubuntu la línea importante es `nameserver 127.0.0.53`: es
+**systemd-resolved**, un intermediario local en tu propio ordenador que a su
+vez le pregunta al router. Algunas otras
 distribuciones ponen directamente el router, `192.168.1.1`.
 
 Para consultar el DNS tú mismo se usan `dig`, `host` o `nslookup`. No vienen
@@ -236,8 +237,15 @@ dig +short server.lan
 getent hosts server.lan
 ```
 
-El orden (primero el archivo, luego el DNS) lo determina la línea `hosts:` de
-`/etc/nsswitch.conf`.
+`dig` no imprime nada, pero `getent` responde con la dirección seguida del
+nombre:
+
+```text
+192.168.1.10    server.lan
+```
+
+El orden (primero el archivo, luego el DNS) lo determina la línea
+`hosts: files dns` de `/etc/nsswitch.conf`.
 
 ```quiz
 ¿Por qué `sudo echo '192.168.1.10 server.lan' >> /etc/hosts` da

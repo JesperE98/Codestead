@@ -258,7 +258,14 @@ cd ~/{{downloads}}
 ls -l
 ```
 
-Que se passe-t-il si vous la lancez tout de suite ?
+```text
+total 47184
+-rw-r--r-- 1 {{user}} {{user}} 48312832 Oct 30 12:00 {{calculator}}
+```
+
+Les messages d'erreur de bash ont la forme `bash: CHEMIN: RAISON`, et le
+chemin est affiché tel que bash le voit – avec `~` déjà remplacé par
+`/home/{{user}}`. Que se passe-t-il si vous lancez le fichier tout de suite ?
 
 ```predict
 $ ~/{{downloads}}/{{calculator}}
