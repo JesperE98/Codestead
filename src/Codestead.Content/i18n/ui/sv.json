@@ -79,6 +79,7 @@
   "checkpoint.answer": "Ditt svar",
   "checkpoint.showAnswer": "Visa svaret",
   "checkpoint.almostPath": "Nästan! Titta på hur sökvägarna skrivs: ls visar varje namn som du angav det, med katalogen först.",
+  "checkpoint.tryPredict": "Prova i en terminal",
   "tasks.solutionLocked": "Lösningen visas efter {n} försök till (eller öppna tipset)",
   "references.title": "Källor och vidare läsning",
   "summary.label": "Sammanfattning",

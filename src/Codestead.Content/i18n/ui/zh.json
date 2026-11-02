@@ -78,6 +78,7 @@
   "checkpoint.answer": "你的答案",
   "checkpoint.showAnswer": "显示答案",
   "checkpoint.almostPath": "差一点！注意路径的写法：ls 会按你给出的方式显示每个名字，前面带着目录。",
+  "checkpoint.tryPredict": "在终端中试一试",
   "tasks.solutionLocked": "再尝试 {n} 次后显示答案（或打开提示）",
   "references.title": "资料来源与延伸阅读",
   "summary.label": "总结",
