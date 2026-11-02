@@ -162,7 +162,9 @@ systemctl is-enabled myserver
 ```
 
 `is-active` と `is-enabled` はスクリプトでとても便利です。1 つの単語を出力し、
-答えが「はい」なら終了ステータス 0 で終わります。`-q` を付けると完全に
+答えが「はい」なら終了ステータス 0 で終わります。出力される単語は
+`systemctl status` に表示されるのと同じ状態（`active`、`inactive`、`failed`、
+そして `enabled`、`disabled`、`static`）です。`-q` を付けると完全に
 何も表示しません。
 
 ```text

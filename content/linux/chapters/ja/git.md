@@ -421,6 +421,7 @@ git log --oneline --all
 先にコミットするよう求めます（または、`git stash` で変更を一時的に退避し、
 `git stash pop` で戻すこともできます）。
 
+元の `style.css` には `purple` はありません。見出しは navy（紺色）です。
 最後に、`style.css` には `purple` を含む行がいくつありますか？
 
 ```predict

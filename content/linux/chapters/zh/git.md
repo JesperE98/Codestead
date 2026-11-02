@@ -331,7 +331,7 @@ git log --oneline --all
 
 切换分支时，未提交的修改会被一起带过去——除非它们和另一个分支冲突。这时 git 会拒绝切换，并要求你先提交（或者用 `git stash` 把修改暂时放到一边，之后再用 `git stash pop` 取回来）。
 
-最后，`style.css` 中有多少行包含 `purple`？
+原来的 `style.css` 里没有 `purple`——它的标题是 navy（藏青色）。最后，`style.css` 中有多少行包含 `purple`？
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1

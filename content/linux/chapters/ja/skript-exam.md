@@ -19,6 +19,9 @@
 - [ ] `${{nameVar}} = Kim` と書かなければならないから
 ```
 
+`~/{{documents}}` には、練習用の 3 つのファイル `{{fruits}}`、`{{grades}}`、
+`server.log` が入っています。
+
 ```predict
 $ count=$(ls ~/{{documents}} | wc -l)
 $ echo "$count files"

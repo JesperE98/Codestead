@@ -113,7 +113,7 @@ ping -c 3 example.com
 cat /etc/resolv.conf
 ```
 
-在 Ubuntu 上，这里写的是 `127.0.0.53`——那是 **systemd-resolved**，一个运行在你自己计算机上的本地“中间人”，它再去询问路由器。另外一些发行版直接列出路由器 `192.168.1.1`。
+在 Ubuntu 上，重要的是 `nameserver 127.0.0.53` 这一行——那是 **systemd-resolved**，一个运行在你自己计算机上的本地“中间人”，它再去询问路由器。另外一些发行版直接列出路由器 `192.168.1.1`。
 
 要自己查询 DNS，可以使用 `dig`、`host` 或 `nslookup`。它们并不是一开始就安装好的。在 Ubuntu 上，它们包含在 `dnsutils` 软件包中（其他家族给这个软件包起了别的名字）：
 
@@ -178,7 +178,13 @@ dig +short server.lan
 getent hosts server.lan
 ```
 
-查找顺序（先查文件，再查 DNS）由 `/etc/nsswitch.conf` 中的 `hosts:` 这一行决定。
+`dig` 什么也不打印，而 `getent` 会给出地址，后面跟着名字：
+
+```text
+192.168.1.10    server.lan
+```
+
+查找顺序（先查文件，再查 DNS）由 `/etc/nsswitch.conf` 中的 `hosts: files dns` 这一行决定。
 
 ```quiz
 为什么 `sudo echo '192.168.1.10 server.lan' >> /etc/hosts` 会报 *Permission denied*？

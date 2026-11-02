@@ -156,10 +156,10 @@ System*）はインターネットの電話帳で、`example.com` を IP アド�
 cat /etc/resolv.conf
 ```
 
-Ubuntu では `127.0.0.53` と書かれています。これは **systemd-resolved** で、
-自分のコンピューター上にあるローカルな仲介役です。そこからさらにルーターに
-問い合わせます。ほかのディストリビューションには、ルーターの `192.168.1.1` が
-直接書かれているものもあります。
+Ubuntu で大事なのは `nameserver 127.0.0.53` という行です。これは
+**systemd-resolved** で、自分のコンピューター上にあるローカルな仲介役です。
+そこからさらにルーターに問い合わせます。ほかのディストリビューションには、
+ルーターの `192.168.1.1` が直接書かれているものもあります。
 
 自分で DNS に問い合わせるには `dig`、`host`、`nslookup` を使います。これらは
 最初からはインストールされていません。Ubuntu では `dnsutils` パッケージに
@@ -241,8 +241,14 @@ dig +short server.lan
 getent hosts server.lan
 ```
 
-この順序（まずファイル、次に DNS）は、`/etc/nsswitch.conf` の `hosts:` の行で
-決められています。
+`dig` は何も表示しませんが、`getent` はアドレスとその後に名前を返します。
+
+```text
+192.168.1.10    server.lan
+```
+
+この順序（まずファイル、次に DNS）は、`/etc/nsswitch.conf` の
+`hosts: files dns` という行で決められています。
 
 ```quiz
 `sudo echo '192.168.1.10 server.lan' >> /etc/hosts` が *Permission denied* に
