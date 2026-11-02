@@ -6,7 +6,7 @@ In diesem Teil hast du Befehle in eigene Programme verwandelt.
 
 Ein Skript ist eine Textdatei mit Befehlen, die mit dem Shebang `#!/bin/bash`
 beginnt. Du kannst es mit einem Here-Document schreiben
-(`cat > file << 'SLUT'`), mit `chmod +x` ausführbar machen und mit `./`
+(`cat > datei << '{{heredocEnd}}'`), mit `chmod +x` ausführbar machen und mit `./`
 ausführen. Zeilen, die mit `#` beginnen, sind Kommentare.
 
 Variablen legst du mit `name=wert` an – ohne Leerzeichen – und verwendest sie
@@ -28,7 +28,7 @@ Skript aufgerufen hat, dass etwas schiefgegangen ist.
 | Syntax | Tut |
 |---|---|
 | `#!/bin/bash` | Der Shebang: welches Programm das Skript ausführt |
-| `cat > file << 'SLUT'` | Zeilen in eine Datei schreiben, bis zur Zeile `SLUT` |
+| `cat > datei << '{{heredocEnd}}'` | Zeilen in eine Datei schreiben, bis zur Zeile `{{heredocEnd}}` |
 | `name=value` · `"$name"` · `"${name}"` | Eine Variable anlegen · verwenden |
 | `$(command)` | Wird durch das ersetzt, was der Befehl ausgibt |
 | `$(( a * 6 ))` · `(( a++ ))` | Rechnen mit ganzen Zahlen · eine Variable ändern |

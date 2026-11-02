@@ -2,35 +2,35 @@
   "title": "Shell 脚本",
   "tasks": {
     "variabel": {
-      "text": "创建变量 `namn`（瑞典语的“名字”），内容为你的名字，然后用 `echo` 打印 `Hej`（“你好”）加上这个名字。",
-      "hint": "`=` 两边不能有空格：`namn=Kim`。然后使用 `echo \"Hej $namn\"`。"
+      "text": "创建变量 `{{nameVar}}`，内容为你的名字，然后用 `echo` 打印 `{{hello}}` 加上这个名字。",
+      "hint": "`=` 两边不能有空格：`{{nameVar}}=Kim`。然后使用 `echo \"{{hello}} ${{nameVar}}\"`。"
     },
     "rakna": {
       "text": "用 `$(( ))` 计算 17 × 23。"
     },
     "substitution": {
-      "text": "使用 `$(...)` 和 `wc -l`，把 `~/dokument/server.log` 的行数保存到变量 `rader` 中。",
-      "hint": "`wc -l < file` 只打印数字，不带文件名：`rader=$(wc -l < ~/dokument/server.log)`"
+      "text": "使用 `$(...)` 和 `wc -l`，把 `~/{{documents}}/server.log` 的行数保存到变量 `{{linesVar}}` 中。",
+      "hint": "`wc -l < file` 只打印数字，不带文件名：`{{linesVar}}=$(wc -l < ~/{{documents}}/server.log)`"
     },
     "if": {
-      "text": "写一个 `if` 语句：如果文件 `~/.bashrc` 存在，就打印 `finns`（“存在”）。",
-      "hint": "`if [ -f ~/.bashrc ]; then echo finns; fi`——别忘了方括号内侧的空格。"
+      "text": "写一个 `if` 语句：如果文件 `~/.bashrc` 存在，就打印 `{{exists}}`。",
+      "hint": "`if [ -f ~/.bashrc ]; then echo {{exists}}; fi`——别忘了方括号内侧的空格。"
     },
     "for": {
       "text": "用 `for` 循环打印数字 1 到 5，每行一个。",
       "hint": "可以用 `for i in 1 2 3 4 5; do ...; done`，也可以用 `for i in $(seq 1 5); do ...; done`。"
     },
     "while-read": {
-      "text": "用 `while read` 逐行读取 `~/dokument/frukter.txt`，并在每一行前面打印 `Frukt: `（瑞典语的“水果”）。",
-      "hint": "`while read rad; do echo \"Frukt: $rad\"; done < ~/dokument/frukter.txt`"
+      "text": "用 `while read` 逐行读取 `~/{{documents}}/{{fruits}}`，并在每一行前面打印 `{{fruitLabel}}: `。",
+      "hint": "`while read {{lineVar}}; do echo \"{{fruitLabel}}: ${{lineVar}}\"; done < ~/{{documents}}/{{fruits}}`"
     },
     "funktion": {
-      "text": "创建函数 `dubbla`（“加倍”），让它打印第一个参数乘以二的结果。用 `dubbla 21` 测试它。",
-      "hint": "`dubbla() { echo $(( $1 * 2 )); }`——然后运行 `dubbla 21`。"
+      "text": "创建函数 `{{doubleFn}}`，让它打印第一个参数乘以二的结果。用 `{{doubleFn}} 21` 测试它。",
+      "hint": "`{{doubleFn}}() { echo $(( $1 * 2 )); }`——然后运行 `{{doubleFn}} 21`。"
     },
     "backup": {
-      "text": "编写脚本 `~/backup.sh`，把作为第一个参数传入的文件复制为同名但末尾加上 `.bak` 的文件。给它加上可执行权限，然后在你的主目录中运行 `./backup.sh anteckningar.txt`。",
-      "hint": "用 `cat > ~/backup.sh << 'SLUT'` 创建文件，分行写上 `#!/bin/bash` 和 `cp \"$1\" \"$1.bak\"`，最后以 `SLUT` 结束。"
+      "text": "编写脚本 `~/backup.sh`，把作为第一个参数传入的文件复制为同名但末尾加上 `.bak` 的文件。给它加上可执行权限，然后在你的主目录中运行 `./backup.sh {{notes}}`。",
+      "hint": "用 `cat > ~/backup.sh << '{{heredocEnd}}'` 创建文件，分行写上 `#!/bin/bash` 和 `cp \"$1\" \"$1.bak\"`，最后以 `{{heredocEnd}}` 结束。"
     }
   }
 }

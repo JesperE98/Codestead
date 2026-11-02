@@ -4,7 +4,7 @@
 
 ```predict
 $ echo "$HOME" '$USER'
-/home/elev $USER
+/home/{{user}} $USER
 ---
 ダブルクォートでは変数がその値に置き換えられ、シングルクォートでは書いたとおりに
 表示されます。
@@ -36,10 +36,10 @@ $ echo $?
 ```
 
 ```predict
-$ touch verktyg.sh
-$ chmod 755 verktyg.sh
-$ chmod go-x verktyg.sh
-$ ls -l verktyg.sh | awk '{print $1}'
+$ touch tool.sh
+$ chmod 755 tool.sh
+$ chmod go-x tool.sh
+$ ls -l tool.sh | awk '{print $1}'
 -rwxr--r--
 ```
 
@@ -47,7 +47,7 @@ $ ls -l verktyg.sh | awk '{print $1}'
 Ubuntu では、どのグループのメンバーが `sudo` を使えますか？
 - [x] `sudo`
 - [ ] `root`
-- [ ] `elev`
+- [ ] `{{user}}`
 ```
 
 ```quiz
@@ -87,18 +87,18 @@ root のプロセスに `kill 812` を試したところ、`Operation not permit
 ```
 
 ```quiz
-`tar -cvf dokument dokument.tar` のどこが間違っていますか？
+`tar -cvf {{documents}} {{documents}}.tar` のどこが間違っていますか？
 - [ ] `-v` は `-c` と組み合わせられない
 - [x] 順番。アーカイブの名前は `f` の直後、ファイルより前に来なければならない
 - [ ] tar アーカイブの名前は `.tgz` で終わらなければならない
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ gzip frukter.txt
-$ gunzip frukter.txt.gz
-$ ls frukter*
-frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ gzip {{fruits}}
+$ gunzip {{fruits}}.gz
+$ ls {{fruits}}*
+{{fruits}}
 ```
 
 ```quiz
@@ -111,7 +111,7 @@ frukter.txt
 ```
 
 ```try
-du -sh dokument
+du -sh {{documents}}
 ---
 `-s` はディレクトリ全体の合計を 1 つだけ表示し、`-h` はサイズを読みやすくします。
 ```

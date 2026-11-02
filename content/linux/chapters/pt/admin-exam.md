@@ -4,22 +4,22 @@ Mostre o que você aprendeu sobre serviços, discos e usuários. As perguntas
 cobrem a parte inteira, e você precisa de 80 % de acertos para ser aprovado.
 
 ```quiz
-O `minserver` deve iniciar automaticamente toda vez que o computador der
+O `myserver` deve iniciar automaticamente toda vez que o computador der
 boot, mas **não** pode ser iniciado agora. Qual comando faz exatamente isso?
-- [ ] `sudo systemctl start minserver`
-- [x] `sudo systemctl enable minserver`
-- [ ] `sudo systemctl enable --now minserver`
-- [ ] `sudo systemctl restart minserver`
+- [ ] `sudo systemctl start myserver`
+- [x] `sudo systemctl enable myserver`
+- [ ] `sudo systemctl enable --now myserver`
+- [ ] `sudo systemctl restart myserver`
 ---
 O `enable` vale para o boot, o `start` vale para agora, e o `--now` faz as
 duas coisas.
 ```
 
-O serviço `rapportd` deste computador não conseguiu iniciar. O que este
+O serviço `reportd` deste computador não conseguiu iniciar. O que este
 comando imprime?
 
 ```predict
-$ systemctl is-active rapportd
+$ systemctl is-active reportd
 failed
 ---
 O `is-active` imprime só uma palavra – aqui, o mesmo estado que o
@@ -28,28 +28,28 @@ O `is-active` imprime só uma palavra – aqui, o mesmo estado que o
 ```
 
 ```quiz
-Você quer acompanhar o log do `minserver` enquanto o testa, com as linhas
+Você quer acompanhar o log do `myserver` enquanto o testa, com as linhas
 novas aparecendo assim que chegam. Qual comando você usa?
 - [ ] `journalctl -n 20`
-- [x] `journalctl -u minserver -f`
+- [x] `journalctl -u myserver -f`
 - [ ] `journalctl -p err -b`
-- [ ] `systemctl status minserver --all`
+- [ ] `systemctl status myserver --all`
 ---
 O `-u` escolhe uma unit e o `-f` continua mostrando linhas novas até você
 pressionar Ctrl+C.
 ```
 
 ```try
-systemctl cat minserver
+systemctl cat myserver
 ---
 `ExecStart=` é o comando que inicia o serviço, e `WantedBy=` é o que o
 `enable` usa.
 ```
 
 ```quiz
-Você executa `systemctl stop minserver` sem `sudo` e recebe
+Você executa `systemctl stop myserver` sem `sudo` e recebe
 *Interactive authentication required*. Por quê?
-- [ ] O minserver não está rodando
+- [ ] O myserver não está rodando
 - [x] Tudo o que altera um serviço exige root
 - [ ] Você precisa executar `daemon-reload` primeiro
 - [ ] O `stop` só funciona com serviços habilitados
@@ -128,7 +128,7 @@ Quem está no grupo `sudo`?
 
 ```predict
 $ grep ^sudo /etc/group | cut -d: -f4
-elev
+{{user}}
 ```
 
 ```quiz

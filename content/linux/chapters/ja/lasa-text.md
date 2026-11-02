@@ -2,17 +2,16 @@
 
 Linux では、設定、ログ、リストなど、ほとんどすべてがテキストです。そのため、
 テキストファイルを読んだり検索したりするための小さなツールがたくさんあります。
-ホームディレクトリには `dokument` というディレクトリがあり、練習用のファイルが
-入っています。その中には `frukter.txt`（果物のリスト）と `server.log`（架空の Web
-サーバーのログ）があります。中身はスウェーデン語ですが、これから検索する単語
-（`INFO`、`WARN`、`ERROR`）は本物のログと同じです。
+ホームディレクトリには `{{documents}}` というディレクトリがあり、練習用のファイルが
+入っています。その中には果物のリスト `{{fruits}}` と、架空の Web サーバーのログ
+`server.log` があります。
 
 ## ファイルを表示する – `cat` と `less`
 
 `cat` はファイル全体を表示します。
 
 ```sh
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 長いファイルには `less` のほうが向いています。矢印キーとスペースキーで
@@ -21,7 +20,7 @@ cat dokument/frukter.txt
 果物のリストを見てみましょう。次の問題で必要になります。
 
 ```try
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 ## 先頭と末尾 – `head` と `tail`
@@ -30,16 +29,16 @@ cat dokument/frukter.txt
 `-n` で行数を指定できます。
 
 ```sh
-head -n 5 dokument/server.log
-tail -n 3 dokument/server.log
+head -n 5 {{documents}}/server.log
+tail -n 3 {{documents}}/server.log
 ```
 
 `tail -f` はファイルを *追いかけ*、新しい行が書き込まれるたびに表示します。
 ログを見るのにぴったりです。**Ctrl+C** で止めます。
 
 ```predict
-$ tail -n 1 dokument/frukter.txt
-mango
+$ tail -n 1 {{documents}}/{{fruits}}
+マンゴー
 ---
 `tail -n 1` はいちばん最後の行だけを表示します。
 ```
@@ -49,7 +48,7 @@ mango
 `wc`（*word count*）は行数、単語数、バイト数を数えます。
 
 ```sh
-wc dokument/frukter.txt
+wc {{documents}}/{{fruits}}
 ```
 
 行数だけ知りたいことがよくあります。その場合は `wc -l` を使います。
@@ -60,7 +59,7 @@ wc dokument/frukter.txt
 すべての行を表示します。
 
 ```sh
-grep INFO dokument/server.log
+grep INFO {{documents}}/server.log
 ```
 
 よく使うオプションをいくつか紹介します。
@@ -75,7 +74,7 @@ grep INFO dokument/server.log
 | `-E` | 拡張パターン。例: `"ERROR|WARN"` |
 
 ```sh
-grep -n WARN dokument/server.log
+grep -n WARN {{documents}}/server.log
 ```
 
 パターンは *正規表現* です。例を 2 つ挙げると、`^` は行頭、`$` は行末を
@@ -83,7 +82,7 @@ grep -n WARN dokument/server.log
 
 ```quiz
 `server.log` には `WARN` を含む行が 2 行、小文字の `warn` を含む行が 1 行あります。
-`grep -c WARN dokument/server.log` は何を表示しますか？
+`grep -c WARN {{documents}}/server.log` は何を表示しますか？
 - [ ] 1
 - [x] 2
 - [ ] 3
@@ -94,9 +93,9 @@ grep -n WARN dokument/server.log
 
 ```quiz
 `server.log` の中で `INFO` を含ま **ない** 行をすべて表示するコマンドはどれですか？
-- [ ] `grep -i INFO dokument/server.log`
-- [ ] `grep -c INFO dokument/server.log`
-- [x] `grep -v INFO dokument/server.log`
+- [ ] `grep -i INFO {{documents}}/server.log`
+- [ ] `grep -c INFO {{documents}}/server.log`
+- [x] `grep -v INFO {{documents}}/server.log`
 ```
 
 ## 並べ替える – `sort` と `uniq`
@@ -106,7 +105,7 @@ grep -n WARN dokument/server.log
 いつも `sort` のあとに使われます。
 
 ```sh
-sort dokument/frukter.txt
+sort {{documents}}/{{fruits}}
 ```
 
 ```quiz

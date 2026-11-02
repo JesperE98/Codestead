@@ -247,19 +247,18 @@ Um **AppImage** é um programa inteiro em **um único arquivo**. Você o baixa d
 site do programa, torna-o executável e o inicia – sem instalação e sem root.
 Para se livrar do programa, basta apagar o arquivo.
 
-Já existe um AppImage baixado no seu diretório pessoal, em `~/Nedladdningar`
-(“Downloads” em sueco):
+Já existe um AppImage baixado no seu diretório pessoal, em `~/{{downloads}}`:
 
 ```sh
-cd ~/Nedladdningar
+cd ~/{{downloads}}
 ls -l
 ```
 
 O que acontece se você o iniciar na hora?
 
 ```predict
-$ ~/Nedladdningar/Kalkylator.AppImage
-bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+$ ~/{{downloads}}/{{calculator}}
+bash: /home/{{user}}/{{downloads}}/{{calculator}}: Permission denied
 ---
 O arquivo não tem a permissão `x`.
 ```
@@ -268,14 +267,14 @@ Arquivos baixados nunca são executáveis de início. Torne-o executável e
 inicie-o:
 
 ```sh
-chmod +x Kalkylator.AppImage
-./Kalkylator.AppImage
+chmod +x {{calculator}}
+./{{calculator}}
 ```
 
 ```try
-chmod +x ~/Nedladdningar/Kalkylator.AppImage
+chmod +x ~/{{downloads}}/{{calculator}}
 ---
-Agora o arquivo é executável. Confira com `ls -l ~/Nedladdningar`.
+Agora o arquivo é executável. Confira com `ls -l ~/{{downloads}}`.
 ```
 
 ### FUSE
@@ -292,7 +291,7 @@ da transição para tempo de 64 bits; em versões mais antigas ele se chamava
 ```sh
 sudo apt update
 sudo apt install libfuse2t64
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 
 > **Não** instale o pacote `fuse` no Ubuntu – ele substitui o `fuse3`, de que
@@ -304,7 +303,7 @@ No Arch, o pacote se chama `fuse2`:
 
 ```sh
 sudo pacman -S fuse2
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -313,7 +312,7 @@ No Fedora, o pacote se chama `fuse-libs`:
 
 ```sh
 sudo dnf install fuse-libs
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -322,7 +321,7 @@ sudo dnf install fuse-libs
 Um AppImage também pode ser descompactado. Isso funciona até sem FUSE:
 
 ```sh
-./Kalkylator.AppImage --appimage-extract
+./{{calculator}} --appimage-extract
 ls squashfs-root
 ./squashfs-root/AppRun
 ```

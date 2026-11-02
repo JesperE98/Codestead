@@ -2,21 +2,21 @@
   "title": "Fichiers et répertoires",
   "tasks": {
     "mkdir": {
-      "text": "Créez le répertoire `~/projekt/src` en **une seule** commande.",
-      "hint": "`mkdir` a besoin de l'option `-p` pour créer à la fois `projekt` et `src` d'un coup."
+      "text": "Créez le répertoire `~/{{project}}/src` en **une seule** commande.",
+      "hint": "`mkdir` a besoin de l'option `-p` pour créer à la fois `{{project}}` et `src` d'un coup."
     },
     "touch": {
-      "text": "Créez un fichier vide nommé `~/projekt/README.md`."
+      "text": "Créez un fichier vide nommé `~/{{project}}/README.md`."
     },
     "cp": {
-      "text": "Copiez `~/anteckningar.txt` dans le répertoire `~/projekt/`."
+      "text": "Copiez `~/{{notes}}` dans le répertoire `~/{{project}}/`."
     },
     "mv": {
-      "text": "Renommez `~/projekt/anteckningar.txt` en `~/projekt/att-gora.txt`.",
+      "text": "Renommez `~/{{project}}/{{notes}}` en `~/{{project}}/{{todo}}`.",
       "hint": "Renommer, c'est la même chose que déplacer – utilisez `mv`."
     },
     "rm": {
-      "text": "Supprimez le répertoire `~/gammalt` et tout son contenu.",
+      "text": "Supprimez le répertoire `~/{{old}}` et tout son contenu.",
       "hint": "Le répertoire n'est pas vide, donc `rmdir` ne suffira pas. Utilisez `rm -r`."
     }
   }

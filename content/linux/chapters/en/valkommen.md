@@ -50,10 +50,10 @@ When the shell is waiting for a command, it shows a **prompt**. In the
 terminal here it looks like this:
 
 ```text
-elev@ubuntu:~$
+{{user}}@ubuntu:~$
 ```
 
-It tells you who you are (`elev`), which computer you are on (`ubuntu`)
+It tells you who you are (`{{user}}`), which computer you are on (`ubuntu`)
 and where in the file system you are (`~` means your home directory). The `$`
 sign shows that you are a regular user. If you are the administrator (*root*),
 you'll see a `#` instead.
@@ -70,11 +70,11 @@ The prompt ends in `#` instead of `$`. What does that tell you?
 Click in the terminal, type the command below and press **Enter**:
 
 ```sh
-echo Hej världen
+echo {{helloWorld}}
 ```
 
-`echo` simply prints whatever you give it – here *Hej världen*, which is
-Swedish for "Hello world". Most commands follow the same pattern:
+`echo` simply prints whatever you give it – here *{{helloWorld}}*. Most
+commands follow the same pattern:
 
 ```text
 command  -options  arguments
@@ -136,19 +136,3 @@ You have typed `ech` and press **Tab**. What happens?
 Tab completes commands and file names. **Ctrl+C** cancels the line and
 **Ctrl+L** clears the screen.
 ```
-
-### A few Swedish words
-
-This guide was originally written in Swedish, so the user and the practice
-files in the simulator have Swedish names. You don't need to speak Swedish –
-the commands are exactly the same – but this little glossary may help:
-
-| Name | Meaning |
-|---|---|
-| `elev` | student (your user name) |
-| `dokument` | documents |
-| `anteckningar.txt` | notes |
-| `frukter.txt` | fruits |
-| `betyg.csv` | grades |
-| `bilder` | pictures |
-| `gammalt` | old stuff |

@@ -3,7 +3,7 @@ using static Codestead.Shell.NetworkLib;
 namespace Codestead.Shell.Commands;
 
 // Port of src/shell/commands/net.ts – network commands: ip, ping, ss, dig, host, nslookup, getent,
-// traceroute, curl, wget and the practice server minserver. The network itself is in ../Network.cs.
+// traceroute, curl, wget and the practice server myserver. The network itself is in ../Network.cs.
 
 public static partial class NetCmd
 {
@@ -893,7 +893,7 @@ public static partial class NetCmd
             EXEMPEL
                    getent hosts example.com
                    getent hosts localhost
-                   getent passwd elev
+                   getent passwd $USER
             """,
         ManEn = """
             NAME
@@ -915,7 +915,7 @@ public static partial class NetCmd
             EXAMPLES
                    getent hosts example.com
                    getent hosts localhost
-                   getent passwd elev
+                   getent passwd $USER
             """,
         Run = ctx =>
         {
@@ -1542,19 +1542,19 @@ public static partial class NetCmd
         },
     };
 
-    // ---------- minserver ----------
+    // ---------- myserver ----------
 
-    private static readonly CommandDef Minserver = new()
+    private static readonly CommandDef Myserver = new()
     {
-        Name = "minserver",
+        Name = "myserver",
         Summary = "Startar övningsservern (en liten webbserver)",
         SummaryEn = "Start the practice server (a tiny web server)",
         Man = """
             NAMN
-                   minserver - en liten webbserver att öva på
+                   myserver - en liten webbserver att öva på
 
             SYNOPSIS
-                   minserver [--port PORT]
+                   myserver [--port PORT]
 
             BESKRIVNING
                    Startar en webbserver som körs i bakgrunden (som en tjänst) och
@@ -1562,16 +1562,16 @@ public static partial class NetCmd
                    "ss -tlpn". Portar under 1024 kräver root.
 
             EXEMPEL
-                   minserver
-                   minserver --port 9090
-                   pkill minserver
+                   myserver
+                   myserver --port 9090
+                   pkill myserver
             """,
         ManEn = """
             NAME
-                   minserver - a tiny web server to practise with
+                   myserver - a tiny web server to practise with
 
             SYNOPSIS
-                   minserver [--port PORT]
+                   myserver [--port PORT]
 
             DESCRIPTION
                    Starts a web server that runs in the background (as a service) and
@@ -1579,9 +1579,9 @@ public static partial class NetCmd
                    "ss -tlpn". Ports below 1024 require root.
 
             EXAMPLES
-                   minserver
-                   minserver --port 9090
-                   pkill minserver
+                   myserver
+                   myserver --port 9090
+                   pkill myserver
             """,
         Run = ctx =>
         {
@@ -1591,18 +1591,18 @@ public static partial class NetCmd
             var portNum = o.Values.TryGetValue("p", out var pv) ? Js.Number(pv) : 8080;
             if (!IsInteger(portNum) || portNum < 1 || portNum > 65535)
             {
-                ctx.Err($"minserver: invalid port '{pv}'\n");
+                ctx.Err($"myserver: invalid port '{pv}'\n");
                 return 2;
             }
             var port = (int)portNum;
             if (Listeners(sh).Any(l => l.Proto == "tcp" && l.Port == port))
             {
-                ctx.Err($"minserver: bind 0.0.0.0:{port}: Address already in use\n");
+                ctx.Err($"myserver: bind 0.0.0.0:{port}: Address already in use\n");
                 return 1;
             }
             if (port < 1024 && !IsRoot(ctx))
             {
-                ctx.Err($"minserver: bind 0.0.0.0:{port}: Permission denied\n");
+                ctx.Err($"myserver: bind 0.0.0.0:{port}: Permission denied\n");
                 return 1;
             }
             var pid = sh.Proc.NextPid++;
@@ -1611,7 +1611,7 @@ public static partial class NetCmd
                 Pid = pid,
                 Ppid = 1,
                 User = sh.CurrentUser().Name,
-                Cmd = $"/usr/local/bin/minserver --port {port}",
+                Cmd = $"/usr/local/bin/myserver --port {port}",
                 Cpu = 0.3,
                 Mem = 1.2,
                 Vsz = 182_340,
@@ -1621,14 +1621,14 @@ public static partial class NetCmd
                 Start = Js.LocalNow().ToString("HH:mm", CultureInfo.InvariantCulture),
                 Time = "0:00",
             });
-            ctx.Out($"minserver 1.0: listening on http://0.0.0.0:{port}/ (pid {pid})\n");
+            ctx.Out($"myserver 1.0: listening on http://0.0.0.0:{port}/ (pid {pid})\n");
             if (ctx.IsTTY)
             {
-                Note(ctx, "net.minserverBackground", ("port", port));
+                Note(ctx, "net.myserverBackground", ("port", port));
             }
             return 0;
         },
     };
 
-    public static List<CommandDef> All { get; } = new() { Ip, Ping, Ss, Dig, Host, Nslookup, Getent, Traceroute, Curl, Wget, Minserver };
+    public static List<CommandDef> All { get; } = new() { Ip, Ping, Ss, Dig, Host, Nslookup, Getent, Traceroute, Curl, Wget, Myserver };
 }

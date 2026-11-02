@@ -4,21 +4,21 @@
 このパート全体から出題され、合格には 80 % の正解が必要です。
 
 ```quiz
-`minserver` をコンピューターが起動するたびに自動的に開始させたいですが、今すぐ
+`myserver` をコンピューターが起動するたびに自動的に開始させたいですが、今すぐ
 開始しては **いけません**。ちょうどそのとおりにするコマンドはどれですか？
-- [ ] `sudo systemctl start minserver`
-- [x] `sudo systemctl enable minserver`
-- [ ] `sudo systemctl enable --now minserver`
-- [ ] `sudo systemctl restart minserver`
+- [ ] `sudo systemctl start myserver`
+- [x] `sudo systemctl enable myserver`
+- [ ] `sudo systemctl enable --now myserver`
+- [ ] `sudo systemctl restart myserver`
 ---
 `enable` は起動時に、`start` は今すぐ効き、`--now` はその両方を行います。
 ```
 
-このコンピューターでは、サービス `rapportd` の起動が失敗しています。次の
+このコンピューターでは、サービス `reportd` の起動が失敗しています。次の
 コマンドは何を表示しますか？
 
 ```predict
-$ systemctl is-active rapportd
+$ systemctl is-active reportd
 failed
 ---
 `is-active` は一語だけを表示します。ここでは `systemctl --failed` が一覧表示する
@@ -26,27 +26,27 @@ failed
 ```
 
 ```quiz
-`minserver` をテストしながらそのログを見張り、新しい行が届くたびに表示させたい
+`myserver` をテストしながらそのログを見張り、新しい行が届くたびに表示させたい
 です。どのコマンドを使いますか？
 - [ ] `journalctl -n 20`
-- [x] `journalctl -u minserver -f`
+- [x] `journalctl -u myserver -f`
 - [ ] `journalctl -p err -b`
-- [ ] `systemctl status minserver --all`
+- [ ] `systemctl status myserver --all`
 ---
 `-u` は 1 つのユニットを選び、`-f` は Ctrl+C を押すまで新しい行を表示し続けます。
 ```
 
 ```try
-systemctl cat minserver
+systemctl cat myserver
 ---
 `ExecStart=` はサービスを起動するコマンドで、`WantedBy=` は `enable` が使う
 ものです。
 ```
 
 ```quiz
-`sudo` を付けずに `systemctl stop minserver` を実行したところ、
+`sudo` を付けずに `systemctl stop myserver` を実行したところ、
 *Interactive authentication required* と表示されました。なぜですか？
-- [ ] minserver が動いていないから
+- [ ] myserver が動いていないから
 - [x] サービスを変更することにはすべて root 権限が必要だから
 - [ ] 先に `daemon-reload` を実行する必要があるから
 - [ ] `stop` は有効化されたサービスにしか使えないから
@@ -124,7 +124,7 @@ $ df -h ~ | awk 'NR > 1 {print $6}'
 
 ```predict
 $ grep ^sudo /etc/group | cut -d: -f4
-elev
+{{user}}
 ```
 
 ```quiz

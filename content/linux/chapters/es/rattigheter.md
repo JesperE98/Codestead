@@ -6,7 +6,7 @@ puede hacer qué.
 
 ## Usuarios y grupos
 
-Has iniciado sesión como el usuario `elev`. Cada usuario pertenece a uno o
+Has iniciado sesión como el usuario `{{user}}`. Cada usuario pertenece a uno o
 más **grupos**:
 
 ```sh
@@ -22,8 +22,8 @@ para hacerlo todo. Rara vez se inicia sesión como root. En su lugar se usa
 Ejecuta `ls -l` y fíjate en la primera columna:
 
 ```text
--rw-r--r-- 1 elev elev  174 Oct 29 13:55 anteckningar.txt
-drwxr-xr-x 2 elev elev 4096 Oct 29 13:55 dokument
+-rw-r--r-- 1 {{user}} {{user}}  205 Oct 29 13:55 {{notes}}
+drwxr-xr-x 2 {{user}} {{user}} 4096 Oct 29 13:55 {{documents}}
 ```
 
 El primer carácter es el tipo: `-` para un archivo, `d` para un directorio.
@@ -40,7 +40,7 @@ tipo  propietario  grupo   otros
 | `w` (write, escribir) | Modificar el contenido | Crear y eliminar archivos dentro |
 | `x` (execute, ejecutar) | Ejecutar el archivo como programa | Entrar en el directorio con `cd` |
 
-A continuación vienen el propietario (`elev`) y el grupo (`elev`).
+A continuación vienen el propietario (`{{user}}`) y el grupo (`{{user}}`).
 
 ```quiz
 Un directorio tiene los permisos `drwxr-x---`. ¿Qué pueden hacer los miembros de su grupo?
@@ -64,15 +64,15 @@ que es la suma de r = 4, w = 2 y x = 1:
 | `600` | `rw-------` | Archivos secretos |
 
 ```sh
-chmod 644 anteckningar.txt
+chmod 644 {{notes}}
 ```
 
 O con **símbolos**: `u` (el propietario), `g` (el grupo), `o` (los otros), `a`
 (todos), seguidos de `+`, `-` o `=` y los permisos:
 
 ```sh
-chmod u+x skript.sh
-chmod go-w fil.txt
+chmod u+x script.sh
+chmod go-w archivo.txt
 ```
 
 ```predict
@@ -90,16 +90,16 @@ Un **script** es un archivo de texto que contiene comandos. La primera línea,
 ejecutar el archivo:
 
 ```sh
-echo '#!/bin/bash' > datum.sh
-echo 'echo "Hoy es:"; date' >> datum.sh
-cat datum.sh
+echo '#!/bin/bash' > fecha.sh
+echo 'echo "Hoy es:"; date' >> fecha.sh
+cat fecha.sh
 ```
 
 Para ejecutar el script como un programa, tiene que ser ejecutable:
 
 ```sh
-chmod +x datum.sh
-./datum.sh
+chmod +x fecha.sh
+./fecha.sh
 ```
 
 El `./` es necesario porque el directorio en el que estás no forma parte de

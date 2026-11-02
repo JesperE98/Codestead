@@ -40,7 +40,7 @@ cat /etc/shells
 你登录时得到哪个 shell，由 `/etc/passwd` 中你那一行的最后一个字段决定，它也保存在变量 `$SHELL` 中：
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 echo $SHELL
 ```
 
@@ -80,7 +80,7 @@ zsh
 | `1` | 包含所有设置的主菜单（模拟器中不可用） |
 | `2` | 创建带有推荐设置的 `~/.zshrc` |
 
-回答 `2`。提示符变成了 `elev@ubuntu ~ %`——在 zsh 中，`%` 是普通用户的常用标志（root 则是 `#`，和 bash 一样）。
+回答 `2`。提示符变成了 `{{user}}@ubuntu ~ %`——在 zsh 中，`%` 是普通用户的常用标志（root 则是 `#`，和 bash 一样）。
 
 你现在运行的是哪个 shell？变量 `$0` 保存着 shell 的名字：
 
@@ -100,7 +100,7 @@ echo $SHELL
 zsh 几乎能理解 bash 的所有语法。pipe、重定向、变量、`if`、`for` 和函数都和你习惯的用法一样：
 
 ```sh
-for f in ~/dokument/*.txt; do wc -l $f; done
+for f in ~/{{documents}}/*.txt; do wc -l $f; done
 ```
 
 ### 功能 1：`**` 搜索所有子目录
@@ -118,7 +118,7 @@ ls ~/**/*.txt
 开启 `autocd` 选项后（它是推荐设置的一部分），你只需输入目录名就能进入那个目录——不需要 `cd`：
 
 ```sh
-dokument
+{{documents}}
 ..
 ```
 
@@ -135,8 +135,8 @@ setopt autocd
 在 bash 中，没有加引号的变量会按空格拆分。在 zsh 中则不会：
 
 ```sh
-filer="a.txt b.txt"
-for f in $filer; do echo "[$f]"; done
+files="a.txt b.txt"
+for f in $files; do echo "[$f]"; done
 ```
 
 bash 会输出 `[a.txt]` 和 `[b.txt]`——zsh 则输出 `[a.txt b.txt]`。zsh 的做法通常正是你想要的，但这意味着 bash 脚本在 zsh 中不一定会做同样的事。（使用 `setopt shwordsplit` 后，zsh 的行为就会和 bash 一样。）
@@ -147,7 +147,7 @@ bash 会输出 `[a.txt]` 和 `[b.txt]`——zsh 则输出 `[a.txt b.txt]`。zsh 
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
-$ zsh -c 'filer="x.txt y.txt z.txt"; for f in $filer; do echo "<$f>"; done'
+$ zsh -c 'files="x.txt y.txt z.txt"; for f in $files; do echo "<$f>"; done'
 <x.txt y.txt z.txt>
 ---
 zsh 不会按空格拆分变量，所以循环只用整个值运行一次。在 bash 中，同样的循环会打印三行：`<x.txt>`、`<y.txt>` 和 `<z.txt>`。
@@ -210,15 +210,15 @@ sudo apt install fish
 fish
 ```
 
-fish 会向你打招呼，提示符变成 `elev@ubuntu ~>`。往下进入几层目录，看看 fish 是如何缩短提示符中的路径的：
+fish 会向你打招呼，提示符变成 `{{user}}@ubuntu ~>`。往下进入几层目录，看看 fish 是如何缩短提示符中的路径的：
 
 ```sh
-mkdir -p ~/dokument/projekt
-cd ~/dokument/projekt
+mkdir -p ~/{{documents}}/{{project}}
+cd ~/{{documents}}/{{project}}
 cd ~
 ```
 
-在目录 `~/dokument/projekt` 中，提示符显示为 `~/d/projekt>`——除了最后一个目录，其他每个目录都被缩写成一个字母。
+在目录 `~/{{documents}}/{{project}}` 中，提示符显示为 `~/d/{{project}}>`——除了最后一个目录，其他每个目录都被缩写成一个字母。
 
 ### fish 有自己的语法
 
@@ -226,38 +226,38 @@ cd ~
 
 | 操作 | bash 和 zsh | fish |
 |---|---|---|
-| 设置变量 | `frukt=äpple` | `set frukt äpple` |
+| 设置变量 | `{{fruitVar}}={{fruitWord}}` | `set {{fruitVar}} {{fruitWord}}` |
 | 环境变量 | `export EDITOR=nano` | `set -x EDITOR nano` |
-| 删除变量 | `unset frukt` | `set -e frukt` |
+| 删除变量 | `unset {{fruitVar}}` | `set -e {{fruitVar}}` |
 | 命令替换 | `$(pwd)` | `(pwd)` |
 | 上一条命令的退出状态 | `$?` | `$status` |
 | 脚本参数 | `$@`, `$1` | `$argv`, `$argv[1]` |
 | 条件判断 | `if …; then …; fi` | `if …; …; end` |
 | 循环 | `for …; do …; done` | `for …; …; end` |
-| 函数 | `hej() { …; }` | `function hej; …; end` |
+| 函数 | `hello() { …; }` | `function hello; …; end` |
 | 算术运算 | `$((17 * 23))` | `math 17 x 23` |
 
 ### 用 set 设置变量
 
-试试用 bash 的方式设置一个变量（`frukt` 是瑞典语“水果”，`äpple` 是“苹果”）：
+试试用 bash 的方式设置一个变量：
 
 ```sh
-frukt=äpple
+{{fruitVar}}={{fruitWord}}
 ```
 
 fish 会拒绝，并告诉你应该怎么写：
 
 ```text
-fish: Unsupported use of '='. In fish, please use 'set frukt äpple'.
+fish: Unsupported use of '='. In fish, please use 'set {{fruitVar}} {{fruitWord}}'.
 ```
 
 在 fish 中要这样做：
 
 ```sh
-set frukt äpple
-echo $frukt
+set {{fruitVar}} {{fruitWord}}
+echo ${{fruitVar}}
 set -x EDITOR nano
-set -e frukt
+set -e {{fruitVar}}
 ```
 
 `-x`（*export*，导出）让变量成为环境变量，你启动的程序都能看到它；`-e`（*erase*，擦除）则删除变量。
@@ -265,17 +265,17 @@ set -e frukt
 在 fish 中，每个变量都是一个**列表**。元素从 1 开始编号：
 
 ```sh
-set frukter äpple päron banan
-echo $frukter[2]
-count $frukter
+set fruits 苹果 梨 香蕉
+echo $fruits[2]
+count $fruits
 ```
 
 `-c` 在 fish 中也能用。最后一条命令会打印什么？
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y fish > /dev/null 2>&1
-$ fish -c 'set frukter äpple päron banan; echo $frukter[3]'
-banan
+$ fish -c 'set fruits 苹果 梨 香蕉; echo $fruits[3]'
+香蕉
 ---
 fish 列表中的元素从 1 开始编号，所以 `[3]` 是第三个，也是最后一个元素。
 ```
@@ -318,7 +318,7 @@ if test -f ~/.bashrc; echo exists; else; echo missing; end
 你也可以把代码块写成多行。shell 会等到 `end` 出现后才运行循环：
 
 ```sh
-for f in ~/dokument/*.txt
+for f in ~/{{documents}}/*.txt
 echo (basename $f)
 end
 ```
@@ -367,14 +367,14 @@ exit
 试着写一个 bash 脚本，然后在 fish 中运行它：
 
 ```sh
-cat > ~/hej.sh << 'SLUT'
+cat > ~/{{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
 name=Kim
 echo "Hello $name, I am run by bash"
-SLUT
-chmod +x ~/hej.sh
+{{heredocEnd}}
+chmod +x ~/{{helloScript}}
 fish
-~/hej.sh
+~/{{helloScript}}
 exit
 ```
 
@@ -395,7 +395,7 @@ exit
 
 ```sh
 chsh -s /usr/bin/zsh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 - shell 必须用完整路径给出，并且要列在 `/etc/shells` 中。
@@ -439,7 +439,7 @@ $ echo $SHELL
 | `zsh` / `fish` / `exit` | 启动另一个 shell / 返回 |
 | `ls ~/**/*.txt` | 搜索所有子目录（zsh、fish） |
 | `setopt autocd` | 开启一个 zsh 选项 |
-| `set frukt äpple` | 在 fish 中设置变量 |
+| `set {{fruitVar}} {{fruitWord}}` | 在 fish 中设置变量 |
 | `set -x NAME value` | 在 fish 中设置环境变量 |
 | `chsh -s /usr/bin/zsh` | 更改你的登录 shell |
 

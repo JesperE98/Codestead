@@ -22,7 +22,7 @@ public class I18nTests
     [Fact(DisplayName = "varje kommando har en engelsk sammanfattning")]
     public void EveryCommandHasAnEnglishSummary()
     {
-        var sv = Shell.Create("ubuntu");
+        var sv = Shell.Create("ubuntu", "sv");
         var sh = NewShell().Sh;
         foreach (var def in IndexCmd.Commands.Values)
         {
@@ -83,7 +83,7 @@ public class I18nTests
         var sh = NewShell().Sh;
         Assert.Contains("Simulated terminal", UtilCmd.StripAnsi(sh.Welcome()));
         NotMatch(Swedish, sh.Welcome(), "welcome");
-        Assert.Contains("Simulerad terminal", Shell.Create("ubuntu").Welcome());
+        Assert.Contains("Simulerad terminal", Shell.Create("ubuntu", "sv").Welcome());
     }
 
     [Theory(DisplayName = "inga svenska tecken i utskrifterna")]

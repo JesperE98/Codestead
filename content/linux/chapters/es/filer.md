@@ -5,14 +5,14 @@ Ahora que ya sabes moverte, es hora de crear, copiar, mover y eliminar cosas.
 ## Crear directorios – `mkdir`
 
 ```sh
-mkdir bilder2
+mkdir fotos
 ```
 
 Si quieres crear varios niveles a la vez, necesitas `-p` (*parents*, padres).
 Sin esta opción, `mkdir` se queja si el directorio padre no existe:
 
 ```sh
-mkdir -p resa/2026/juni
+mkdir -p viaje/2026/junio
 ```
 
 ## Crear archivos vacíos – `touch`
@@ -21,11 +21,11 @@ mkdir -p resa/2026/juni
 fecha de modificación):
 
 ```sh
-touch inkopslista.txt
+touch lista-compra.txt
 ```
 
 ```quiz
-¿Qué hace `touch anteckningar.txt` si el archivo ya existe?
+¿Qué hace `touch {{notes}}` si el archivo ya existe?
 - [ ] Vacía el archivo
 - [ ] Se queja de que el archivo ya existe
 - [x] Solo actualiza la fecha del archivo: el contenido no cambia
@@ -34,7 +34,7 @@ touch inkopslista.txt
 ## Copiar – `cp`
 
 ```sh
-cp anteckningar.txt anteckningar-kopia.txt
+cp {{notes}} notas-copia.txt
 ```
 
 Si el destino es un directorio, la copia acaba dentro de él con el mismo
@@ -42,16 +42,16 @@ nombre. Para copiar un directorio entero necesitas `-r` (*recursive*,
 recursivo):
 
 ```sh
-cp -r dokument dokument-backup
+cp -r {{documents}} {{documents}}-backup
 ```
 
 ```predict
-$ mkdir kopior
-$ cp anteckningar.txt kopior
-$ ls kopior
-anteckningar.txt
+$ mkdir copias
+$ cp {{notes}} copias
+$ ls copias
+{{notes}}
 ---
-`kopior` es un directorio, así que la copia acaba dentro de él con el mismo nombre.
+`copias` es un directorio, así que la copia acaba dentro de él con el mismo nombre.
 ```
 
 ## Mover y renombrar – `mv`
@@ -59,8 +59,8 @@ anteckningar.txt
 En Linux, *mover* y *renombrar* son lo mismo. `mv` hace las dos cosas:
 
 ```sh
-mv inkopslista.txt dokument/
-mv dokument/inkopslista.txt dokument/handla.txt
+mv lista-compra.txt {{documents}}/
+mv {{documents}}/lista-compra.txt {{documents}}/compras.txt
 ```
 
 ```quiz
@@ -75,14 +75,14 @@ Mover y renombrar son lo mismo. Después solo queda `b.txt`.
 ## Eliminar – `rm` y `rmdir`
 
 ```sh
-rm anteckningar-kopia.txt
+rm notas-copia.txt
 ```
 
 `rmdir` elimina directorios *vacíos*. Para eliminar un directorio con todo lo
 que contiene, usa `rm -r`:
 
 ```sh
-rm -r dokument-backup
+rm -r {{documents}}-backup
 ```
 
 > **¡Cuidado!** En la terminal no hay papelera de reciclaje. Lo que eliminas
@@ -91,10 +91,10 @@ rm -r dokument-backup
 > antes de pulsar Enter.
 
 ```quiz
-¿Qué comando elimina el directorio `gammalt` *solo* si está vacío?
-- [ ] `rm gammalt`
-- [x] `rmdir gammalt`
-- [ ] `rm -r gammalt`
+¿Qué comando elimina el directorio `{{old}}` *solo* si está vacío?
+- [ ] `rm {{old}}`
+- [x] `rmdir {{old}}`
+- [ ] `rm -r {{old}}`
 ---
 `rmdir` se niega a eliminar un directorio que todavía contiene algo.
 `rm -r` elimina el directorio y todo lo que hay dentro.
@@ -111,23 +111,24 @@ ejecute el comando:
 | `?` | Exactamente un carácter |
 | `[abc]` | Uno de los caracteres a, b o c |
 
-El directorio `dokument` de tu directorio personal contiene tres archivos:
-`betyg.csv`, `frukter.txt` y `server.log`. Esto muestra solo los que terminan
+El directorio `{{documents}}` de tu directorio personal contiene tres archivos:
+`{{grades}}`, `{{fruits}}` y `server.log`. Esto muestra solo los que terminan
 en `.txt`:
 
 ```sh
-ls dokument/*.txt
+ls {{documents}}/*.txt
 ```
 
 Aquí `ls` nunca llega a ver el asterisco: la shell ya ha sustituido
-`dokument/*.txt` por todos los nombres de archivo que coinciden.
+`{{documents}}/*.txt` por todos los nombres de archivo que coinciden.
 
 ```predict
-$ ls dokument/?????.*
-dokument/betyg.csv
+$ ls {{documents}}/??????.*
+{{documents}}/{{fruits}}  {{documents}}/server.log
 ---
 Cada `?` es exactamente un carácter, así que el nombre antes del punto debe
-tener cinco caracteres. Solo `betyg` los tiene: `frukter` y `server` son más largos.
+tener seis caracteres. `frutas` y `server` los tienen; `calificaciones` es más
+largo.
 ```
 
 ## Espacios en los nombres de archivo
@@ -136,8 +137,8 @@ La shell divide la línea de comandos por los espacios. Si un archivo tiene un
 espacio en el nombre, tienes que usar comillas (o una `\` antes del espacio):
 
 ```sh
-touch "min fil.txt"
-ls -l "min fil.txt"
+touch "mi archivo.txt"
+ls -l "mi archivo.txt"
 ```
 
 Por eso mucha gente prefiere guiones o guiones bajos en los nombres de

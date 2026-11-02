@@ -4,22 +4,22 @@ Demuestra lo que has aprendido sobre servicios, discos y usuarios. Las
 preguntas abarcan toda la parte, y necesitas un 80 % de aciertos para aprobar.
 
 ```quiz
-`minserver` debe arrancar automáticamente cada vez que se inicia el ordenador,
+`myserver` debe arrancar automáticamente cada vez que se inicia el ordenador,
 pero **no** debe iniciarse ahora mismo. ¿Qué comando hace exactamente eso?
-- [ ] `sudo systemctl start minserver`
-- [x] `sudo systemctl enable minserver`
-- [ ] `sudo systemctl enable --now minserver`
-- [ ] `sudo systemctl restart minserver`
+- [ ] `sudo systemctl start myserver`
+- [x] `sudo systemctl enable myserver`
+- [ ] `sudo systemctl enable --now myserver`
+- [ ] `sudo systemctl restart myserver`
 ---
 `enable` se aplica al arrancar, `start` se aplica ahora, y `--now` hace las
 dos cosas.
 ```
 
-El servicio `rapportd` de este ordenador no ha conseguido arrancar. ¿Qué
+El servicio `reportd` de este ordenador no ha conseguido arrancar. ¿Qué
 muestra este comando?
 
 ```predict
-$ systemctl is-active rapportd
+$ systemctl is-active reportd
 failed
 ---
 `is-active` muestra una sola palabra: aquí el mismo estado que lista
@@ -28,28 +28,28 @@ failed
 ```
 
 ```quiz
-Quieres vigilar el log de `minserver` mientras lo pruebas, viendo las líneas
+Quieres vigilar el log de `myserver` mientras lo pruebas, viendo las líneas
 nuevas a medida que llegan. ¿Qué comando usas?
 - [ ] `journalctl -n 20`
-- [x] `journalctl -u minserver -f`
+- [x] `journalctl -u myserver -f`
 - [ ] `journalctl -p err -b`
-- [ ] `systemctl status minserver --all`
+- [ ] `systemctl status myserver --all`
 ---
 `-u` elige una unidad y `-f` sigue mostrando líneas nuevas hasta que pulsas
 Ctrl+C.
 ```
 
 ```try
-systemctl cat minserver
+systemctl cat myserver
 ---
 `ExecStart=` es el comando que inicia el servicio, y `WantedBy=` es lo que
 usa `enable`.
 ```
 
 ```quiz
-Ejecutas `systemctl stop minserver` sin `sudo` y obtienes
+Ejecutas `systemctl stop myserver` sin `sudo` y obtienes
 *Interactive authentication required*. ¿Por qué?
-- [ ] minserver no se está ejecutando
+- [ ] myserver no se está ejecutando
 - [x] Todo lo que modifica un servicio requiere root
 - [ ] Primero tienes que ejecutar `daemon-reload`
 - [ ] `stop` solo funciona con servicios habilitados
@@ -128,7 +128,7 @@ miembros. ¿Quién está en el grupo `sudo`?
 
 ```predict
 $ grep ^sudo /etc/group | cut -d: -f4
-elev
+{{user}}
 ```
 
 ```quiz

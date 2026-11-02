@@ -38,15 +38,15 @@
       }
     },
     "appimage-chmod": {
-      "text": "`~/Nedladdningar` 中有一个下载好的 AppImage。让文件 `Kalkylator.AppImage` 变成可执行文件。",
-      "hint": "`chmod +x ~/Nedladdningar/Kalkylator.AppImage`"
+      "text": "`~/{{downloads}}` 中有一个下载好的 AppImage。让文件 `{{calculator}}` 变成可执行文件。",
+      "hint": "`chmod +x ~/{{downloads}}/{{calculator}}`"
     },
     "appimage-run": {
-      "text": "启动 Kalkylator（瑞典语的“计算器”）。它是不是在抱怨 FUSE？安装缺失的库，然后再试一次。",
+      "text": "启动 {{calcName}}。它是不是在抱怨 FUSE？安装缺失的库，然后再试一次。",
       "hint": {
-        "debian": "这个库在 `libfuse2t64` 软件包中。然后用 `~/Nedladdningar/Kalkylator.AppImage` 启动它。",
-        "arch": "这个库在 `fuse2` 软件包中。然后用 `~/Nedladdningar/Kalkylator.AppImage` 启动它。",
-        "redhat": "这个库在 `fuse-libs` 软件包中。然后用 `~/Nedladdningar/Kalkylator.AppImage` 启动它。"
+        "debian": "这个库在 `libfuse2t64` 软件包中。然后用 `~/{{downloads}}/{{calculator}}` 启动它。",
+        "arch": "这个库在 `fuse2` 软件包中。然后用 `~/{{downloads}}/{{calculator}}` 启动它。",
+        "redhat": "这个库在 `fuse-libs` 软件包中。然后用 `~/{{downloads}}/{{calculator}}` 启动它。"
       }
     }
   }

@@ -14,8 +14,8 @@
       "hint": "ほかのユーザーのパスワードを設定できるのは root だけです: `sudo passwd kim`。同じパスワードを 2 回入力します。入力中は表示されません。"
     },
     "grupp": {
-      "text": "グループ `utvecklare`（スウェーデン語で「開発者」）を作成し、`kim` をそのグループに追加してください。",
-      "hint": "まず `sudo groupadd utvecklare`、次に `sudo usermod -aG utvecklare kim` です。"
+      "text": "グループ `{{devGroup}}` を作成し、`kim` をそのグループに追加してください。",
+      "hint": "まず `sudo groupadd {{devGroup}}`、次に `sudo usermod -aG {{devGroup}} kim` です。"
     },
     "sudo-ratt": {
       "text": "`kim` をグループ `sudo` に追加して、`sudo` を使えるようにしてください。",
@@ -26,12 +26,12 @@
       "hint": "`sudo -u kim whoami`"
     },
     "su": {
-      "text": "`su -` で `kim` としてログインし、`id` を実行してください。そのあと `exit` で `elev` に戻ってください。",
+      "text": "`su -` で `kim` としてログインし、`id` を実行してください。そのあと `exit` で `{{user}}` に戻ってください。",
       "hint": "`su - kim` と入力し、続けて kim のパスワード（`passwd` で決めたもの）を入力します。プロンプトに、あなたが kim であることが表示されます。"
     },
     "userdel": {
-      "text": "ホームディレクトリ付きの一時的なユーザー `vikarie`（スウェーデン語で「代理の人」）を作成し、それをホームディレクトリ **ごと** 削除してください。",
-      "hint": "`sudo useradd -m vikarie`、そのあと `sudo userdel -r vikarie` です。"
+      "text": "ホームディレクトリ付きの一時的なユーザー `{{tempUser}}` を作成し、それをホームディレクトリ **ごと** 削除してください。",
+      "hint": "`sudo useradd -m {{tempUser}}`、そのあと `sudo userdel -r {{tempUser}}` です。"
     }
   }
 }

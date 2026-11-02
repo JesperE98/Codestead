@@ -57,9 +57,9 @@ ls /etc/systemd/system
 Versões mais antigas do Debian e do Ubuntu muitas vezes dizem
 `/lib/systemd/system`. É o mesmo diretório – `/lib` é um link para `/usr/lib`.
 
-O nome de um serviço é o nome do arquivo, por exemplo `minserver.service`.
+O nome de um serviço é o nome do arquivo, por exemplo `myserver.service`.
 Ao digitar comandos você pode omitir o `.service`: `systemctl status
-minserver` funciona do mesmo jeito.
+myserver` funciona do mesmo jeito.
 
 ## Como vai o serviço? – `systemctl status`
 
@@ -111,17 +111,17 @@ iniciado quando outra unit precisa dele.
 ## Iniciar, parar e reiniciar
 
 ```text
-sudo systemctl start minserver      # inicia agora
-sudo systemctl stop minserver       # para agora
-sudo systemctl restart minserver    # para e inicia de novo
-sudo systemctl reload minserver     # pede que ele releia a configuração
+sudo systemctl start myserver      # inicia agora
+sudo systemctl stop myserver       # para agora
+sudo systemctl restart myserver    # para e inicia de novo
+sudo systemctl reload myserver     # pede que ele releia a configuração
 ```
 
 Tudo o que **altera** alguma coisa exige root, então não esqueça o `sudo`.
 Sem ele o systemctl responde:
 
 ```text
-Failed to start minserver.service: Interactive authentication required.
+Failed to start myserver.service: Interactive authentication required.
 ```
 
 O `reload` só funciona com serviços que dão suporte a ele. A vantagem é que o
@@ -130,9 +130,9 @@ alterou o arquivo de configuração de um serviço, `reload` ou `restart` é o
 último passo.
 
 > **Experimente!** No capítulo sobre processos você parou o servidor de
-> treino com `pkill`. Olhe o `systemctl status minserver` – o systemd
+> treino com `pkill`. Olhe o `systemctl status myserver` – o systemd
 > percebeu que o processo sumiu. Inicie-o de novo com `systemctl` e compare o
-> PID com `pgrep -l minserver`.
+> PID com `pgrep -l myserver`.
 
 ## Agora ou no boot? `start` e `enable`
 
@@ -150,16 +150,16 @@ O `enable` cria um link em um diretório com o nome do target da seção
 `[Install]` do arquivo de unit, normalmente `multi-user.target.wants`:
 
 ```text
-$ sudo systemctl enable --now minserver
-Created symlink /etc/systemd/system/multi-user.target.wants/minserver.service → /etc/systemd/system/minserver.service.
+$ sudo systemctl enable --now myserver
+Created symlink /etc/systemd/system/multi-user.target.wants/myserver.service → /etc/systemd/system/myserver.service.
 ```
 
 Quando o computador dá boot, o systemd percorre esse diretório e inicia tudo
 o que está nele. Você pode perguntar pelo estado:
 
 ```sh
-systemctl is-active minserver
-systemctl is-enabled minserver
+systemctl is-active myserver
+systemctl is-enabled myserver
 ```
 
 `is-active` e `is-enabled` são ótimos em scripts – eles imprimem uma palavra
@@ -167,19 +167,19 @@ e terminam com status 0 se a resposta for "sim". Com `-q` ficam totalmente
 em silêncio:
 
 ```text
-if systemctl is-active -q minserver; then echo "the server is running"; fi
+if systemctl is-active -q myserver; then echo "the server is running"; fi
 ```
 
-Em um computador recém-iniciado no simulador, o `minserver` está rodando, mas
+Em um computador recém-iniciado no simulador, o `myserver` está rodando, mas
 ninguém o habilitou. O que estes dois comandos imprimem?
 
 ```predict
-$ systemctl is-active minserver
-$ systemctl is-enabled minserver
+$ systemctl is-active myserver
+$ systemctl is-enabled myserver
 active
 disabled
 ---
-O minserver está rodando **agora**, mas ninguém executou `enable` – depois de
+O myserver está rodando **agora**, mas ninguém executou `enable` – depois de
 um reboot, ele não seria iniciado. `start` e `enable` são mesmo duas coisas
 diferentes.
 ```
@@ -226,9 +226,9 @@ Isso rapidamente vira muita coisa, então quase sempre você filtra:
 As opções podem ser combinadas. Alguns clássicos:
 
 ```sh
-journalctl -u minserver -n 5
+journalctl -u myserver -n 5
 journalctl -p err -b
-journalctl --since today -u minserver
+journalctl --since today -u myserver
 ```
 
 ### Prioridades
@@ -270,7 +270,7 @@ seja, tudo com o mesmo número ou um número menor (`warning` é 4).
 
 ## Investigando um serviço que não inicia
 
-Alguém configurou o serviço **rapportd** neste computador, mas algo está
+Alguém configurou o serviço **reportd** neste computador, mas algo está
 errado. Este é o caminho habitual:
 
 1. **O que falhou?** Liste os serviços que falharam:
@@ -282,19 +282,19 @@ errado. Este é o caminho habitual:
 2. **Olhe o status.** As últimas linhas muitas vezes bastam:
 
    ```sh
-   systemctl status rapportd
+   systemctl status reportd
    ```
 
 3. **Leia o log inteiro** do serviço. Ele quase sempre diz o que está errado
    – leia com atenção, palavra por palavra:
 
    ```sh
-   journalctl -xeu rapportd
+   journalctl -xeu reportd
    ```
 
    O próprio `systemctl` sugere exatamente esse comando quando uma
-   inicialização falha: `See "systemctl status rapportd.service" and
-   "journalctl -xeu rapportd.service" for details.`
+   inicialização falha: `See "systemctl status reportd.service" and
+   "journalctl -xeu reportd.service" for details.`
 
 4. **Corrija o problema**, por exemplo um arquivo de configuração que está
    faltando ou tem um erro de digitação.
@@ -302,8 +302,8 @@ errado. Este é o caminho habitual:
 5. **Reinicie e confira:**
 
    ```text
-   sudo systemctl restart rapportd
-   systemctl status rapportd
+   sudo systemctl restart reportd
+   systemctl status reportd
    ```
 
 A linha `Main process exited, code=exited, status=1/FAILURE` significa que o
@@ -327,17 +327,18 @@ inicia e depois termina com um erro dá `status=1/FAILURE`.
 Para ver exatamente como um serviço é iniciado, leia o arquivo de unit dele:
 
 ```sh
-systemctl cat minserver
+systemctl cat myserver
 ```
 
 ```text
-# /etc/systemd/system/minserver.service
+# /etc/systemd/system/myserver.service
+# The practice server from the chapter about processes.
 [Unit]
-Description=Minserver web server (practice server)
+Description=Myserver web server (practice server)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/minserver --port 8080
+ExecStart=/usr/local/bin/myserver --port 8080
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]

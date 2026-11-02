@@ -33,7 +33,7 @@ public class DisksTests
         var t = new TestShell();
         var @out = t.Run("lsblk -f").Out;
         Assert.Matches(@"^NAME +FSTYPE FSVER LABEL +UUID +FSAVAIL FSUSE% MOUNTPOINTS", @out);
-        Assert.Matches(@"sdb1 vfat +FAT32 USBMINNE 7E21-9A4F\n", @out);
+        Assert.Matches(@"sdb1 vfat +FAT32 USBSTICK 7E21-9A4F\n", @out);
         Assert.Contains(DisksLib.RootUuid(DistrosLib.GetDistro("ubuntu")), @out);
     }
 
@@ -65,9 +65,9 @@ public class DisksTests
         var t = new TestShell("arch");
         Assert.Equal($"{DisksLib.UsbUuid}\n", t.Run("blkid -s UUID -o value /dev/sdb1").Out);
         Assert.Equal(
-            $"/dev/sdb1: LABEL=\"USBMINNE\" UUID=\"{DisksLib.UsbUuid}\" BLOCK_SIZE=\"512\" TYPE=\"vfat\" PARTUUID=\"5d3a1c7e-01\"\n",
+            $"/dev/sdb1: LABEL=\"USBSTICK\" UUID=\"{DisksLib.UsbUuid}\" BLOCK_SIZE=\"512\" TYPE=\"vfat\" PARTUUID=\"5d3a1c7e-01\"\n",
             t.Run("blkid /dev/sdb1").Out);
-        Assert.Equal("/dev/sdb1\n", t.Run("blkid -L USBMINNE").Out);
+        Assert.Equal("/dev/sdb1\n", t.Run("blkid -L USBSTICK").Out);
         Assert.Equal("/dev/sda3\n", t.Run($"blkid -U {DisksLib.RootUuid(DistrosLib.GetDistro("arch"))}").Out);
         Assert.Equal(2, t.Run("blkid -L FINNSINTE").ExitCode);
     }
@@ -178,7 +178,7 @@ public class DisksTests
         Assert.DoesNotContain("sdb1", t.Run("cat /proc/mounts").Out);
 
         // Mounted again – with the label and owned by elev.
-        Assert.Equal(0, t.Run("sudo mount -o uid=1000,gid=1000 LABEL=USBMINNE /mnt/usb").ExitCode);
+        Assert.Equal(0, t.Run("sudo mount -o uid=1000,gid=1000 LABEL=USBSTICK /mnt/usb").ExitCode);
         Assert.Equal("att-gora.txt\nfrukter.txt\nrapport.pdf\nsemester.jpg\n", t.Run("ls -1 /mnt/usb").Out);
         Assert.Equal("elev", t.Node("/mnt/usb/frukter.txt")?.Owner);
         Assert.Equal(0, t.Run("touch /mnt/usb/egen.txt").ExitCode);
@@ -251,7 +251,7 @@ public class DisksTests
     {
         var t = new TestShell("fedora");
         t.Run("sudo mkdir -p /mnt/usb");
-        t.Run("echo 'LABEL=USBMINNE /mnt/usb vfat noauto,user,uid=1000,gid=1000 0 0' | sudo tee -a /etc/fstab");
+        t.Run("echo 'LABEL=USBSTICK /mnt/usb vfat noauto,user,uid=1000,gid=1000 0 0' | sudo tee -a /etc/fstab");
         // noauto: mount -a skips it, and everything else is already mounted.
         Assert.Equal(0, t.Run("sudo mount -a").ExitCode);
         Assert.Null(UsbMounted(t));
@@ -297,7 +297,7 @@ public class DisksTests
         var t = new TestShell();
         Assert.Contains("Permission denied", t.Run("mkfs.ext4 /dev/sdb1").Out);
         var r = t.Run("sudo mkfs.ext4 -L BACKUP /dev/sdb1");
-        Assert.Contains("/dev/sdb1 contains a vfat file system labelled 'USBMINNE'", r.Out);
+        Assert.Contains("/dev/sdb1 contains a vfat file system labelled 'USBSTICK'", r.Out);
         Assert.True(r.Pending);
         Assert.Equal(1, t.Run("n").ExitCode);
         Assert.Equal("vfat\n", t.Run("blkid -s TYPE -o value /dev/sdb1").Out);
@@ -314,8 +314,8 @@ public class DisksTests
         Assert.Contains("is mounted", t.Run("sudo mkfs.ext4 /dev/sda2").Out);
         Assert.Contains("apparently in use by the system", t.Run("sudo mkfs.ext4 /dev/sda3").Out);
         t.Run("sudo umount /mnt/usb");
-        Assert.Equal(0, t.Run("sudo mkfs.vfat -n USBMINNE /dev/sdb1").ExitCode);
-        Assert.Equal("USBMINNE\n", t.Run("blkid -s LABEL -o value /dev/sdb1").Out);
+        Assert.Equal(0, t.Run("sudo mkfs.vfat -n USBSTICK /dev/sdb1").ExitCode);
+        Assert.Equal("USBSTICK\n", t.Run("blkid -s LABEL -o value /dev/sdb1").Out);
         Assert.Contains("failed to execute mkfs.xfs", t.Run("sudo mkfs -t xfs /dev/sdb1").Out);
     }
 

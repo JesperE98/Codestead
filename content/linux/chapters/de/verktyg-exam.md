@@ -7,7 +7,7 @@ Terminal, deshalb installieren sie zuerst das Programm, das sie brauchen –
 
 ```quiz
 Du hast `index.html` geändert und die neue Datei `kontakt.html` angelegt. Du
-führst `git commit -am "Contact page"` aus. Was landet im Commit?
+führst `git commit -am "Kontaktseite"` aus. Was landet im Commit?
 - [x] Nur die Änderung an `index.html`
 - [ ] Nur `kontakt.html`
 - [ ] Beide Dateien
@@ -30,20 +30,20 @@ committet zu werden.
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "{{commitFirst}}" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
-$ git merge ny-design > /dev/null
+$ git merge {{newDesign}} > /dev/null
 $ git log --oneline | wc -l
 2
 ---
 `main` hatte sich seit dem Anlegen des Branches nicht geändert, also war der
-Merge ein *Fast-Forward*: git hat `main` nur auf den Commit von `ny-design`
+Merge ein *Fast-Forward*: git hat `main` nur auf den Commit von `{{newDesign}}`
 vorgeschoben. Es wurde kein Merge-Commit angelegt.
 ```
 
@@ -68,12 +68,12 @@ den Merge ab. `git restore` würde deine Reparatur wegwerfen.
 ```
 
 ```quiz
-Die Datei `fel.log` wurde versehentlich committet. Du fügst `*.log` zu
+Die Datei `fehler.log` wurde versehentlich committet. Du fügst `*.log` zu
 `.gitignore` hinzu, aber git verfolgt die Datei immer noch. Wie entfernst du
 sie aus dem Repository, behältst sie aber auf der Festplatte?
-- [ ] `rm fel.log`
-- [x] `git rm --cached fel.log`
-- [ ] `git restore fel.log`
+- [ ] `rm fehler.log`
+- [x] `git rm --cached fehler.log`
+- [ ] `git restore fehler.log`
 ---
 `.gitignore` gilt nur für Dateien, die git nicht schon verfolgt. `--cached`
 entfernt die Datei aus git, lässt sie aber auf der Festplatte.
@@ -147,7 +147,7 @@ Welche Datei liest zsh, wenn es startet?
 ```
 
 ```try
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ---
 Das letzte Feld der Zeile ist deine Login-Shell – die, die `chsh -s` ändert.
 ```

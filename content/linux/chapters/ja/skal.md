@@ -57,7 +57,7 @@ cat /etc/shells
 最後のフィールドで決まり、変数 `$SHELL` にも入っています。
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 echo $SHELL
 ```
 
@@ -101,7 +101,7 @@ zsh
 | `1` | すべての設定があるメインメニュー（シミュレーターでは使えない） |
 | `2` | おすすめの設定で `~/.zshrc` を作成する |
 
-`2` と答えてください。プロンプトが `elev@ubuntu ~ %` に変わります。
+`2` と答えてください。プロンプトが `{{user}}@ubuntu ~ %` に変わります。
 zsh では、`%` が一般ユーザーを表すふつうの記号です（root は bash と同じく
 `#` になります）。
 
@@ -128,7 +128,7 @@ zsh は bash の構文のほとんどを理解します。パイプ、リダイ�
 `for`、関数は、慣れているとおりに動きます。
 
 ```sh
-for f in ~/dokument/*.txt; do wc -l $f; done
+for f in ~/{{documents}}/*.txt; do wc -l $f; done
 ```
 
 ### 機能 1: `**` ですべてのサブディレクトリを検索
@@ -150,7 +150,7 @@ bash では、先に `shopt -s globstar` で有効にしない限り、`**` は�
 名前を入力するだけでそこへ移動できます。`cd` は不要です。
 
 ```sh
-dokument
+{{documents}}
 ..
 ```
 
@@ -168,8 +168,8 @@ bash では、引用符で囲まれていない変数は空白で分割されま
 分割されません。
 
 ```sh
-filer="a.txt b.txt"
-for f in $filer; do echo "[$f]"; done
+files="a.txt b.txt"
+for f in $files; do echo "[$f]"; done
 ```
 
 bash は `[a.txt]` と `[b.txt]` を出力しますが、zsh は `[a.txt b.txt]` を
@@ -186,7 +186,7 @@ bash は `[a.txt]` と `[b.txt]` を出力しますが、zsh は `[a.txt b.txt]`
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
-$ zsh -c 'filer="x.txt y.txt z.txt"; for f in $filer; do echo "<$f>"; done'
+$ zsh -c 'files="x.txt y.txt z.txt"; for f in $files; do echo "<$f>"; done'
 <x.txt y.txt z.txt>
 ---
 zsh は変数をスペースで分割しないので、ループは値全体で 1 回だけ実行されます。
@@ -262,17 +262,17 @@ sudo apt install fish
 fish
 ```
 
-fish があいさつしてくれて、プロンプトが `elev@ubuntu ~>` になります。
+fish があいさつしてくれて、プロンプトが `{{user}}@ubuntu ~>` になります。
 いくつか下のディレクトリへ移動して、fish がプロンプトのパスをどう短縮するか
 見てみましょう。
 
 ```sh
-mkdir -p ~/dokument/projekt
-cd ~/dokument/projekt
+mkdir -p ~/{{documents}}/{{project}}
+cd ~/{{documents}}/{{project}}
 cd ~
 ```
 
-ディレクトリ `~/dokument/projekt` では、プロンプトに `~/d/projekt>` と表示されます。
+ディレクトリ `~/{{documents}}/{{project}}` では、プロンプトに `~/d/{{project}}>` と表示されます。
 最後以外のディレクトリは、すべて 1 文字に短縮されるのです。
 
 ### fish には独自の構文がある
@@ -281,39 +281,38 @@ fish が bash や zsh と最も違うのはここです。
 
 | やりたいこと | bash と zsh | fish |
 |---|---|---|
-| 変数を設定する | `frukt=äpple` | `set frukt äpple` |
+| 変数を設定する | `{{fruitVar}}={{fruitWord}}` | `set {{fruitVar}} {{fruitWord}}` |
 | 環境変数 | `export EDITOR=nano` | `set -x EDITOR nano` |
-| 変数を削除する | `unset frukt` | `set -e frukt` |
+| 変数を削除する | `unset {{fruitVar}}` | `set -e {{fruitVar}}` |
 | コマンド置換 | `$(pwd)` | `(pwd)` |
 | 直前の終了ステータス | `$?` | `$status` |
 | スクリプトの引数 | `$@`, `$1` | `$argv`, `$argv[1]` |
 | 条件 | `if …; then …; fi` | `if …; …; end` |
 | ループ | `for …; do …; done` | `for …; …; end` |
-| 関数 | `hej() { …; }` | `function hej; …; end` |
+| 関数 | `hello() { …; }` | `function hello; …; end` |
 | 算術 | `$((17 * 23))` | `math 17 x 23` |
 
 ### set で変数を設定する
 
-bash のやり方で変数を設定してみましょう（`frukt` はスウェーデン語で
-「果物」、`äpple` は「りんご」です）。
+bash のやり方で変数を設定してみましょう。
 
 ```sh
-frukt=äpple
+{{fruitVar}}={{fruitWord}}
 ```
 
 fish は拒否して、どう書けばよいかを教えてくれます。
 
 ```text
-fish: Unsupported use of '='. In fish, please use 'set frukt äpple'.
+fish: Unsupported use of '='. In fish, please use 'set {{fruitVar}} {{fruitWord}}'.
 ```
 
 fish では次のように書きます。
 
 ```sh
-set frukt äpple
-echo $frukt
+set {{fruitVar}} {{fruitWord}}
+echo ${{fruitVar}}
 set -x EDITOR nano
-set -e frukt
+set -e {{fruitVar}}
 ```
 
 `-x`（*export*）は変数を環境変数にし、起動したプログラムから見えるようにします。
@@ -322,17 +321,17 @@ set -e frukt
 fish では、どの変数も **リスト** です。要素には 1 から番号が付きます。
 
 ```sh
-set frukter äpple päron banan
-echo $frukter[2]
-count $frukter
+set fruits りんご なし バナナ
+echo $fruits[2]
+count $fruits
 ```
 
 `-c` は fish でも使えます。最後のコマンドは何を表示しますか？
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y fish > /dev/null 2>&1
-$ fish -c 'set frukter äpple päron banan; echo $frukter[3]'
-banan
+$ fish -c 'set fruits りんご なし バナナ; echo $fruits[3]'
+バナナ
 ---
 fish のリストの要素には 1 から番号が付くので、`[3]` は 3 番目、つまり最後の要素です。
 ```
@@ -380,7 +379,7 @@ if test -f ~/.bashrc; echo exists; else; echo missing; end
 ループを実行します。
 
 ```sh
-for f in ~/dokument/*.txt
+for f in ~/{{documents}}/*.txt
 echo (basename $f)
 end
 ```
@@ -437,14 +436,14 @@ exit
 bash のスクリプトを書いて、fish から実行してみましょう。
 
 ```sh
-cat > ~/hej.sh << 'SLUT'
+cat > ~/{{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
 name=Kim
 echo "Hello $name, I am run by bash"
-SLUT
-chmod +x ~/hej.sh
+{{heredocEnd}}
+chmod +x ~/{{helloScript}}
 fish
-~/hej.sh
+~/{{helloScript}}
 exit
 ```
 
@@ -472,7 +471,7 @@ fish を使っているときに、`#!/bin/bash` で始まり `count=3` とい�
 
 ```sh
 chsh -s /usr/bin/zsh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 - シェルはフルパスで指定し、`/etc/shells` に書かれている必要があります。
@@ -524,7 +523,7 @@ $ echo $SHELL
 | `zsh` / `fish` / `exit` | 別のシェルを起動する / 戻る |
 | `ls ~/**/*.txt` | すべてのサブディレクトリを検索する（zsh、fish） |
 | `setopt autocd` | zsh のオプションを有効にする |
-| `set frukt äpple` | fish で変数を設定する |
+| `set {{fruitVar}} {{fruitWord}}` | fish で変数を設定する |
 | `set -x NAME value` | fish で環境変数を設定する |
 | `chsh -s /usr/bin/zsh` | ログインシェルを変更する |
 

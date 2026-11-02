@@ -30,12 +30,12 @@ cat /etc/passwd
 每一行有七个字段，用冒号分隔。看看你自己的那一行：
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 ```text
-elev:x:1000:1000:Elev,,,:/home/elev:/bin/bash
- 1   2  3    4      5        6          7
+{{user}}:x:1000:1000:{{userFull}},,,:/home/{{user}}:/bin/bash
+   1    2  3    4      5          6           7
 ```
 
 | 字段 | 含义 |
@@ -51,7 +51,7 @@ elev:x:1000:1000:Elev,,,:/home/elev:/bin/bash
 `getent` 命令也能做同样的查询。区别在于，它还能找到不在这个文件中的用户，例如在学校或公司里，账户存放在一台中央服务器上：
 
 ```sh
-getent passwd elev
+getent passwd {{user}}
 ```
 
 ### 系统用户
@@ -86,13 +86,13 @@ cat /etc/group
 ```
 
 ```text
-sudo:x:27:elev
+sudo:x:27:{{user}}
  1   2  3   4
 ```
 
 各字段依次是组名、`x`、组的编号（**GID**）以及用逗号分隔的成员列表。
 
-每个用户都有**一个主组**（`/etc/passwd` 中的 GID 字段），此外还可以是任意多个**附加组**（supplementary group）的成员。你新建的文件会归属于你的主组。在大多数发行版中，每个用户都会得到一个同名的私有主组——`elev` 就在 `elev` 组中。
+每个用户都有**一个主组**（`/etc/passwd` 中的 GID 字段），此外还可以是任意多个**附加组**（supplementary group）的成员。你新建的文件会归属于你的主组。在大多数发行版中，每个用户都会得到一个同名的私有主组——`{{user}}` 就在 `{{user}}` 组中。
 
 ```sh
 groups
@@ -100,8 +100,8 @@ id
 ```
 
 ```quiz
-你（`elev`）属于 `elev` 和 `sudo` 两个组，你的主组是 `elev`。你新建的文件会归属于哪个组？
-- [x] `elev`
+你（`{{user}}`）属于 `{{user}}` 和 `sudo` 两个组，你的主组是 `{{user}}`。你新建的文件会归属于哪个组？
+- [x] `{{user}}`
 - [ ] `sudo`
 - [ ] 两个都是
 - [ ] `root`
@@ -125,13 +125,13 @@ kim:$y$j9T$Tm9...$Kx2...:20756:0:99999:7:::
 第 2 个字段并不是密码本身，而是一个**哈希值**（hash）——一种无法逆推的“指纹”。登录时，系统会计算你输入内容的哈希值，然后与存储的哈希值进行比较。`$y$` 表示使用的是 *yescrypt* 算法。如果这里是 `!` 或 `*`，则表示没有密码，或者账户已被**锁定**。其余字段记录了密码最后一次修改的时间以及何时过期。`chage` 会以易读的文字显示它们：
 
 ```sh
-chage -l elev
+chage -l {{user}}
 ```
 
 ```try
-chage -l elev
+chage -l {{user}}
 ---
-`Password expires: never`——elev 的密码永远不需要修改。
+`Password expires: never`——{{user}} 的密码永远不需要修改。
 ```
 
 ## 创建用户——`useradd`
@@ -146,7 +146,7 @@ sudo useradd -m -s /bin/bash kim
 |---|---|
 | `-m` | 创建主目录 `/home/kim` |
 | `-s /bin/bash` | 用户的 shell |
-| `-c "Kim Svensson"` | 注释（全名） |
+| `-c "Kim Zhang"` | 注释（全名） |
 | `-G group1,group2` | 同时加入附加组 |
 
 `useradd` 会从 1000 开始往上找下一个空闲的 UID——`kim` 得到的是 1001。这些范围设置在 `/etc/login.defs` 中。同时还会创建一个 `kim` 组，并把 `/etc/skel`（*skeleton*，骨架）中的文件复制到新的主目录。在那里放些东西，每个新用户都会得到它：
@@ -188,18 +188,18 @@ passwd root
 创建一个组并添加一个成员：
 
 ```sh
-sudo groupadd utvecklare
-sudo usermod -aG utvecklare kim
+sudo groupadd {{devGroup}}
+sudo usermod -aG {{devGroup}} kim
 groups kim
 ```
 
 `-aG` 的意思是 *append to Groups*（追加到组）。**别忘了 `-a`！** 如果只用 `-G`，附加组列表会被设置成你输入的内容，一个不多一个不少——用户会被移出其他所有组，比如 sudo 组。这是把自己锁在门外的常见方式。
 
 ```quiz
-`kim` 属于附加组 `sudo` 和 `utvecklare`。管理员运行了 `sudo usermod -G backup kim`。之后 kim 属于哪些附加组？
-- [ ] `sudo`、`utvecklare` 和 `backup`
+`kim` 属于附加组 `sudo` 和 `{{devGroup}}`。管理员运行了 `sudo usermod -G backup kim`。之后 kim 属于哪些附加组？
+- [ ] `sudo`、`{{devGroup}}` 和 `backup`
 - [x] 只有 `backup`
-- [ ] `sudo` 和 `utvecklare`——不加 `-a` 命令会失败
+- [ ] `sudo` 和 `{{devGroup}}`——不加 `-a` 命令会失败
 - [ ] 一个都没有
 ---
 不加 `-a` 时，列表会被设置成你输入的内容，一个不多一个不少。如果用 `sudo usermod -aG backup kim`，kim 就会保留其他组。
@@ -208,8 +208,8 @@ groups kim
 `gpasswd` 也能做同样的事，而且还能移除成员：
 
 ```sh
-sudo gpasswd -a kim utvecklare
-sudo gpasswd -d kim utvecklare
+sudo gpasswd -a kim {{devGroup}}
+sudo gpasswd -d kim {{devGroup}}
 ```
 
 在真实的计算机上，新的组成员身份要等用户下次登录时才会生效。模拟器更友好一些——在这里会立即生效。
@@ -217,10 +217,10 @@ sudo gpasswd -d kim utvecklare
 组常用于共享目录。用 `chgrp` 和 `chmod` 让组成为目录的所有者，并给它写权限：
 
 ```sh
-sudo mkdir /srv/projekt
-sudo chgrp utvecklare /srv/projekt
-sudo chmod 775 /srv/projekt
-ls -ld /srv/projekt
+sudo mkdir /srv/project
+sudo chgrp {{devGroup}} /srv/project
+sudo chmod 775 /srv/project
+ls -ld /srv/project
 ```
 
 ## 授予 sudo 权限——`sudo` 组
@@ -295,13 +295,13 @@ last
 然后用 `userdel` 删除用户。加上 `-r` 会连同主目录一起删除——不加 `-r` 的话，文件会被留下：
 
 ```sh
-sudo useradd -m vikarie
-sudo userdel -r vikarie
+sudo useradd -m {{tempUser}}
+sudo userdel -r {{tempUser}}
 ```
 
-Ubuntu 还有 `deluser`，它是 `adduser` 的对应命令：`sudo deluser --remove-home vikarie`。`sudo deluser kim sudo` 会把 kim 从 sudo 组中移除。
+Ubuntu 还有 `deluser`，它是 `adduser` 的对应命令：`sudo deluser --remove-home {{tempUser}}`。`sudo deluser kim sudo` 会把 kim 从 sudo 组中移除。
 
-`userdel` 拒绝删除已登录的用户——试试 `sudo userdel elev`。
+`userdel` 拒绝删除已登录的用户——试试 `sudo userdel {{user}}`。
 
 ## 小结
 

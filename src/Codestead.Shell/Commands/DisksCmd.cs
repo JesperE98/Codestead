@@ -51,14 +51,14 @@ public static partial class DisksCmd
     /// <summary>Tree branches drawn by lsblk and findmnt.</summary>
     private static string Branch(bool isLast) => isLast ? "└─" : "├─";
 
-    private static string UserFromSpec(string spec)
+    private static string UserFromSpec(Shell sh, string spec)
     {
         if (spec == "0" || spec == "root") return "root";
-        if (spec == "1000" || spec == InitfsLib.Student) return InitfsLib.Student;
+        if (spec == "1000" || spec == sh.World.User) return sh.World.User;
         return spec;
     }
 
-    private static string UidOf(string name) => name == "root" ? "0" : name == InitfsLib.Student ? "1000" : name;
+    private static string UidOf(Shell sh, string name) => name == "root" ? "0" : name == sh.World.User ? "1000" : name;
 
     /// <summary>All values for a flag that may be repeated, e.g. `df -x tmpfs -x devtmpfs`.</summary>
     private static List<string> Repeated(List<string> args, string @short, string @long)
@@ -423,7 +423,7 @@ public static partial class DisksCmd
         return double.IsNaN(n) ? 0 : (int)n;
     }
 
-    private static ParsedOpts ParseMountOptions(IEnumerable<string> list)
+    private static ParsedOpts ParseMountOptions(Shell sh, IEnumerable<string> list)
     {
         var p = new ParsedOpts();
         foreach (var opt in list.SelectMany(l => l.Split(',')).Where(s => s != ""))
@@ -433,8 +433,8 @@ public static partial class DisksCmd
             var v = kv.Length > 1 ? kv[1] : "";
             if (k == "ro") p.Ro = true;
             else if (k == "rw") p.Ro = false;
-            else if (k == "uid") p.Uid = UserFromSpec(v);
-            else if (k == "gid") p.Gid = UserFromSpec(v);
+            else if (k == "uid") p.Uid = UserFromSpec(sh, v);
+            else if (k == "gid") p.Gid = UserFromSpec(sh, v);
             else if (k == "umask") p.Fmask = p.Dmask = OctOrZero(v);
             else if (k == "fmask") p.Fmask = OctOrZero(v);
             else if (k == "dmask") p.Dmask = OctOrZero(v);
@@ -459,7 +459,7 @@ public static partial class DisksCmd
     private static string Oct4(int n) =>
         (n < 0 ? "-" + Convert.ToString(-(long)n, 8) : Convert.ToString(n, 8)).PadLeft(4, '0');
 
-    private static string OptionString(string fstype, ParsedOpts p)
+    private static string OptionString(Shell sh, string fstype, ParsedOpts p)
     {
         var head = new List<string> { p.Ro ? "ro" : "rw" };
         head.AddRange(p.Generic);
@@ -469,8 +469,8 @@ public static partial class DisksCmd
             case "vfat":
             {
                 var ids = new List<string>();
-                if (!string.IsNullOrEmpty(p.Uid)) ids.Add($"uid={UidOf(p.Uid)}");
-                if (!string.IsNullOrEmpty(p.Gid)) ids.Add($"gid={UidOf(p.Gid)}");
+                if (!string.IsNullOrEmpty(p.Uid)) ids.Add($"uid={UidOf(sh, p.Uid)}");
+                if (!string.IsNullOrEmpty(p.Gid)) ids.Add($"gid={UidOf(sh, p.Gid)}");
                 return string.Join(",", head.Concat(ids).Concat(new[] { $"fmask={Oct4(p.Fmask)}", $"dmask={Oct4(p.Dmask)}", VfatExtra }));
             }
             case "tmpfs":
@@ -578,7 +578,7 @@ public static partial class DisksCmd
                 Source = sourceSpec,
                 Target = target,
                 Fstype = "tmpfs",
-                Options = OptionString("tmpfs", opts),
+                Options = OptionString(ctx.Sh, "tmpfs", opts),
                 Size = opts.Size is double sz ? (long)sz : 8_073_420 / 2 * 1024L,
                 Under = tunder,
             });
@@ -643,7 +643,7 @@ public static partial class DisksCmd
         var (dir, name) = sh.Vfs.Parent(target, root);
         var under = dir.Children!.Get(name);
         dir.Children![name] = fsRoot;
-        state.Mounts.Add(new Mount { Source = block.Path, Target = target, Fstype = fstype, Options = OptionString(fstype, opts), Dev = block.Name, Under = under });
+        state.Mounts.Add(new Mount { Source = block.Path, Target = target, Fstype = fstype, Options = OptionString(ctx.Sh, fstype, opts), Dev = block.Name, Under = under });
         DisksLib.WriteProcMounts(sh.Vfs, state);
         if (verbose) ctx.Out($"mount: {block.Path} mounted on {target}.\n");
         return 0;
@@ -696,7 +696,7 @@ public static partial class DisksCmd
                 foreach (var e in ReadFstab(ctx))
                 {
                     if (e.Type == "swap" || e.File == "none") continue;
-                    var opts = ParseMountOptions(new[] { e.Options });
+                    var opts = ParseMountOptions(ctx.Sh, new[] { e.Options });
                     if (opts.Noauto) continue;
                     var b = DisksLib.FindBlock(sh.Disks, e.Spec);
                     if (b is not null && DisksLib.MountsOf(sh.Disks, b.Name).Any(m => m.Target == e.File)) continue;
@@ -721,11 +721,11 @@ public static partial class DisksCmd
                     else ctx.Err($"mount: {arg}: can't find in /etc/fstab.\n");
                     return 1;
                 }
-                var opts = ParseMountOptions(new[] { e.Options }.Concat(optList));
+                var opts = ParseMountOptions(ctx.Sh, new[] { e.Options }.Concat(optList));
                 return DoMount(ctx, e.Spec, e.File, o.Values.Get("t") ?? (e.Type == "auto" ? null : e.Type), opts, verbose, true);
             }
             if (o.Operands.Count > 2) return UtilCmd.BadOption(ctx, "bad usage");
-            return DoMount(ctx, o.Operands[0], o.Operands[1], o.Values.Get("t"), ParseMountOptions(optList), verbose);
+            return DoMount(ctx, o.Operands[0], o.Operands[1], o.Values.Get("t"), ParseMountOptions(ctx.Sh, optList), verbose);
         },
     };
 
@@ -1391,7 +1391,7 @@ public static partial class DisksCmd
                blkid
                blkid /dev/sdb1
                blkid -s UUID -o value /dev/sdb1
-               blkid -L USBMINNE
+               blkid -L USBSTICK
         """;
 
     private const string BlkidManEn = """
@@ -1418,7 +1418,7 @@ public static partial class DisksCmd
                blkid
                blkid /dev/sdb1
                blkid -s UUID -o value /dev/sdb1
-               blkid -L USBMINNE
+               blkid -L USBSTICK
         """;
 
     private const string MountMan = """
@@ -1758,7 +1758,7 @@ public static partial class DisksCmd
         EXEMPEL
                sudo umount /mnt/usb
                sudo mkfs.ext4 -L BACKUP /dev/sdb1
-               sudo mkfs.vfat -n USBMINNE /dev/sdb1
+               sudo mkfs.vfat -n USBSTICK /dev/sdb1
         """;
 
     private const string MkfsManEn = """
@@ -1792,7 +1792,7 @@ public static partial class DisksCmd
         EXAMPLES
                sudo umount /mnt/usb
                sudo mkfs.ext4 -L BACKUP /dev/sdb1
-               sudo mkfs.vfat -n USBMINNE /dev/sdb1
+               sudo mkfs.vfat -n USBSTICK /dev/sdb1
         """;
 
 }

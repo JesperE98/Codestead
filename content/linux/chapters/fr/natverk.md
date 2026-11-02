@@ -289,14 +289,14 @@ appartenant à d'autres utilisateurs – avec `sudo`, vous les voyez tous :
 sudo ss -tulpn
 ```
 
-Si le serveur d'exercice `minserver` du chapitre sur les processus tourne,
+Si le serveur d'exercice `myserver` du chapitre sur les processus tourne,
 vous le voyez ici sur le port 8080. L'ancienne commande `netstat -tulpn` (de
 *net-tools*) fait la même chose.
 
 ## Récupérer sur le web : curl et wget
 
 `curl` récupère ce qui se trouve à une adresse (une **URL**) et l'affiche dans
-le terminal. Essayez-le avec minserver sur votre propre ordinateur :
+le terminal. Essayez-le avec myserver sur votre propre ordinateur :
 
 Sur Ubuntu, `curl` n'est pas préinstallé (mais `wget` l'est) :
 
@@ -309,11 +309,11 @@ curl http://localhost:8080
 ```
 
 Vous obtenez `Couldn't connect to server` ? Alors rien n'écoute sur ce port –
-vous avez peut-être arrêté minserver dans le chapitre sur les processus.
+vous avez peut-être arrêté myserver dans le chapitre sur les processus.
 Relancez-le :
 
 ```sh
-minserver
+myserver
 ```
 
 Avec `-I`, curl n'affiche que les **en-têtes** de la réponse, dont la première
@@ -352,7 +352,7 @@ nom du fichier dans l'adresse) :
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` est fait pour télécharger des fichiers. Il enregistre toujours dans un
@@ -374,10 +374,10 @@ le service `sshd` sur le port 22, et vous vous connectez avec le client
 `ssh` :
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` signifie « l'utilisateur elev sur l'ordinateur
+`{{user}}@server.lan` signifie « l'utilisateur {{user}} sur l'ordinateur
 server.lan ». La commande après l'hôte (`hostname`) s'exécute sur le serveur
 et la réponse s'affiche ici – elle dit `server`, et non `ubuntu`.
 
@@ -398,8 +398,8 @@ le serveur.
 La commande peut regrouper plusieurs commandes entre guillemets :
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 Sans commande, ssh vous connecte et vous obtenez un shell sur l'autre
@@ -414,7 +414,7 @@ serveur :
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 Appuyez sur Entrée aux questions de `ssh-keygen` pour utiliser le fichier par

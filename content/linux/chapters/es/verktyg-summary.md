@@ -87,7 +87,7 @@ los rodea: variables, bucles, condiciones y el prompt.
 | `zsh` / `fish` / `exit` | Inicia otra shell / vuelve |
 | `zsh -c '…'` / `fish -c '…'` | Ejecuta un comando en otra shell |
 | `setopt autocd` / `unsetopt autocd` | Activa / desactiva una opción de zsh |
-| `set frukt äpple` / `set -e frukt` | Crea / elimina una variable en fish |
+| `set {{fruitVar}} {{fruitWord}}` / `set -e {{fruitVar}}` | Crea / elimina una variable en fish |
 | `set -x NAME value` | Crea una variable de entorno en fish |
 | `math 17 x 23` | Aritmética en fish |
 | `chsh -s /usr/bin/zsh` | Cambia tu shell de inicio de sesión |

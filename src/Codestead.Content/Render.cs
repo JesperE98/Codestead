@@ -5,9 +5,14 @@ namespace Codestead.Content;
 
 public static partial class RenderLib
 {
+    /// <summary>
+    /// The {{placeholders}} in chapter and task texts: the distribution, and the names and words of the
+    /// student's world in this language (see Shell/World.cs), e.g. {{documents}} or {{user}}.
+    /// </summary>
     public static OrderedDictionary<string, string> Placeholders(Distro d, Lang lang = "sv")
     {
         var values = Js.Obj<string>();
+        foreach (var (k, v) in World.Get(lang).Placeholders) values[k] = v;
         values["distro"] = d.Name;
         values["hostname"] = d.Hostname;
         values["family"] = UiStrings.Translate(lang, $"family.{d.Family}");

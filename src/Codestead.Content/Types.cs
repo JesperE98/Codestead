@@ -69,6 +69,9 @@ public partial class ChapterTask
     /// <summary>The task is counted separately for each distribution family.</summary>
     public bool? PerFamily { get; set; }
     public Func<CheckContext, bool> Check { get; set; } = _ => false;
+
+    /// <summary>The solution for a distribution, with the student's world filled in (e.g. ~/{{documents}} → ~/documents).</summary>
+    public List<string> SolutionFor(Distro d, World w) => Solution.Resolve(d).Select(w.Expand).ToList();
 }
 
 public partial class Chapter

@@ -12,27 +12,26 @@ funções.
 Um script é um arquivo de texto comum. Em computadores de verdade, você o
 escreveria em um editor de texto como o `nano` ou o `vim`. Outro jeito, que
 funciona tanto aqui quanto em servidores, é um **here document**: tudo o que
-estiver entre `<< 'SLUT'` e a linha `SLUT` é passado para o comando. (*Slut* é
-simplesmente "fim" em sueco – você pode escolher a palavra que quiser; `EOF` é
-uma escolha comum.)
+estiver entre `<< '{{heredocEnd}}'` e a linha `{{heredocEnd}}` é passado para o comando. (Você
+pode escolher a palavra que quiser; `EOF` é uma escolha comum.)
 
 Digite a primeira linha e pressione Enter. O prompt muda para `> ` – o shell
-está esperando o resto. Digite as linhas uma por vez e termine com `SLUT`:
+está esperando o resto. Digite as linhas uma por vez e termine com `{{heredocEnd}}`:
 
 ```sh
-cat > hej.sh << 'SLUT'
+cat > {{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
 echo "Olá de um script!"
 echo "Hoje é $(date)"
-SLUT
+{{heredocEnd}}
 ```
 
 A primeira linha, `#!/bin/bash`, se chama *shebang* e diz ao sistema qual
 programa deve executar o arquivo. Torne o script executável e execute-o:
 
 ```sh
-chmod +x hej.sh
-./hej.sh
+chmod +x {{helloScript}}
+./{{helloScript}}
 ```
 
 As linhas que começam com `#` (fora a linha do shebang) são **comentários**,
@@ -44,25 +43,25 @@ Você cria uma variável com `nome=valor`. **Não** pode haver espaços em volta
 do sinal de igual – senão o shell acha que `nome` é um comando.
 
 ```sh
-stad=Göteborg
-echo "Eu moro em $stad"
+cidade=Salvador
+echo "Eu moro em $cidade"
 ```
 
-(*Stad* significa "cidade".) Sempre coloque as variáveis entre **aspas
+Sempre coloque as variáveis entre **aspas
 duplas** quando for usá-las. Sem aspas, o valor é dividido nos espaços, o que
 causa erros estranhos quando um nome de arquivo tem espaço. Se quiser escrever
-texto logo depois do nome da variável, use chaves: `"${stad}_2026"` – sem
-elas, o bash procuraria uma variável chamada `stad_2026`.
+texto logo depois do nome da variável, use chaves: `"${cidade}_2026"` – sem
+elas, o bash procuraria uma variável chamada `cidade_2026`.
 
 ```quiz
-`stad` contém `Göteborg`, e não existe nenhuma variável chamada `stad_2026`. O
-que `echo "$stad_2026"` imprime?
-- [ ] `Göteborg_2026`
-- [ ] `Göteborg`
+`cidade` contém `Salvador`, e não existe nenhuma variável chamada `cidade_2026`.
+O que `echo "$cidade_2026"` imprime?
+- [ ] `Salvador_2026`
+- [ ] `Salvador`
 - [x] Uma linha vazia
 ---
-O bash lê o nome inteiro `stad_2026`, e essa variável não existe.
-Escreva `"${stad}_2026"` para obter `Göteborg_2026`.
+O bash lê o nome inteiro `cidade_2026`, e essa variável não existe.
+Escreva `"${cidade}_2026"` para obter `Salvador_2026`.
 ```
 
 ## Substituição de comandos – `$(...)`
@@ -71,9 +70,9 @@ Escreva `"${stad}_2026"` para obter `Göteborg_2026`.
 guarda o resultado de um comando em uma variável:
 
 ```sh
-idag=$(date)
-filer=$(ls ~ | wc -l)
-echo "Há $filer itens no seu diretório pessoal"
+hoje=$(date)
+itens=$(ls ~ | wc -l)
+echo "Há $itens itens no seu diretório pessoal"
 ```
 
 ## Aritmética – `$(( ))`
@@ -84,10 +83,10 @@ parênteses você não precisa de `$` na frente das variáveis:
 ```sh
 a=7
 echo $(( a * 6 ))
-echo $(( 17 / 5 )) remainder $(( 17 % 5 ))
+echo $(( 17 / 5 )) resto $(( 17 % 5 ))
 ```
 
-(*Remainder* é "resto" em inglês.) Para alterar uma variável, escreva
+Para alterar uma variável, escreva
 `(( a++ ))` ou `(( a += 10 ))`.
 
 ```predict
@@ -99,7 +98,7 @@ O bash só calcula com números inteiros: 7 / 2 dá 3, e o resto (`%`) é 1.
 
 ## Argumentos
 
-Quando você executa `./skript.sh um dois`, o script consegue ler os
+Quando você executa `./script.sh um dois`, o script consegue ler os
 argumentos:
 
 | Variável | Contém |
@@ -111,11 +110,11 @@ argumentos:
 | `$?` | O código de saída do comando anterior |
 
 ```quiz
-Um script é executado com `./skript.sh red green blue`. O que `$1` e `$#`
+Um script é executado com `./script.sh vermelho verde azul`. O que `$1` e `$#`
 contêm?
-- [ ] `$1` é `./skript.sh` e `$#` é `4`
-- [x] `$1` é `red` e `$#` é `3`
-- [ ] `$1` é `red` e `$#` é `blue`
+- [ ] `$1` é `./script.sh` e `$#` é `4`
+- [x] `$1` é `vermelho` e `$#` é `3`
+- [ ] `$1` é `vermelho` e `$#` é `azul`
 ---
 O nome do próprio script fica em `$0`, então ele não é contado em `$#`.
 ```
@@ -163,7 +162,7 @@ como `[[ $file == *.txt ]]`.
 Para condições curtas, muitas vezes o `&&` e o `||` bastam:
 
 ```sh
-[ -d ~/bilder ] && echo "O diretório de imagens existe"
+[ -d ~/{{pictures}} ] && echo "O diretório de imagens existe"
 ```
 
 ```predict
@@ -177,13 +176,13 @@ empty
 Um **laço for** faz a mesma coisa para cada item de uma lista:
 
 ```sh
-for frukt in äpple banan kiwi; do echo "Eu gosto de $frukt"; done
+for fruta in maçã banana kiwi; do echo "Eu gosto de $fruta"; done
 ```
 
 A lista pode vir de curingas ou de um comando:
 
 ```sh
-for fil in ~/dokument/*; do echo "Arquivo: $fil"; done
+for arq in ~/{{documents}}/*; do echo "Arquivo: $arq"; done
 for i in $(seq 1 3); do echo "Rodada $i"; done
 ```
 
@@ -197,7 +196,7 @@ O jeito mais comum de percorrer um arquivo linha por linha é o `while read`,
 com o arquivo alimentado por um `<` depois do `done`:
 
 ```sh
-while read rad; do echo "> $rad"; done < ~/dokument/frukter.txt
+while read linha; do echo "> $linha"; done < ~/{{documents}}/{{fruits}}
 ```
 
 O `break` sai de um laço, e o `continue` pula direto para a próxima rodada.
@@ -219,8 +218,8 @@ Quando uma variável pode ter muitos valores diferentes, o `case` é mais claro
 do que uma longa cadeia de `elif`:
 
 ```sh
-fil=semester.jpg
-case $fil in *.jpg|*.png) echo "Uma imagem";; *.txt) echo "Um arquivo de texto";; *) echo "Tipo desconhecido";; esac
+arq={{vacationPic}}
+case $arq in *.jpg|*.png) echo "Uma imagem";; *.txt) echo "Um arquivo de texto";; *) echo "Tipo desconhecido";; esac
 ```
 
 Cada alternativa termina com `;;`, e `*)` pega todo o resto.
@@ -232,8 +231,8 @@ fosse um comando. Ela recebe argumentos do mesmo jeito que um script – `$1`,
 `$2` e `$#`:
 
 ```sh
-halsa() { echo "Olá, $1, seja bem-vindo!"; }
-halsa Kim
+saudar() { echo "Olá, $1, seja bem-vindo!"; }
+saudar Kim
 ```
 
 As variáveis que só devem existir dentro da função são criadas com `local`, e
@@ -244,7 +243,7 @@ o `return` encerra a função com um código de saída.
 O `read` lê uma linha do teclado para uma variável:
 
 ```sh
-read -p "Qual é o seu nome? " namn; echo "Olá, $namn!"
+read -p "Qual é o seu nome? " nome; echo "Olá, $nome!"
 ```
 
 ## Um exemplo completo

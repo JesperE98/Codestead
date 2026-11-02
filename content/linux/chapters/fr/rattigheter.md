@@ -6,7 +6,7 @@ définissent qui a le droit de faire quoi.
 
 ## Utilisateurs et groupes
 
-Vous êtes connecté en tant qu'utilisateur `elev`. Chaque utilisateur
+Vous êtes connecté en tant qu'utilisateur `{{user}}`. Chaque utilisateur
 appartient à un ou plusieurs **groupes** :
 
 ```sh
@@ -22,8 +22,8 @@ plutôt `sudo` (voir plus bas).
 Lancez `ls -l` et regardez la première colonne :
 
 ```text
--rw-r--r-- 1 elev elev  174 Oct 29 13:55 anteckningar.txt
-drwxr-xr-x 2 elev elev 4096 Oct 29 13:55 dokument
+drwxr-xr-x 2 {{user}} {{user}} 4096 Oct 29 13:55 {{documents}}
+-rw-r--r-- 1 {{user}} {{user}}  231 Oct 29 13:55 {{notes}}
 ```
 
 Le premier caractère indique le type : `-` pour un fichier, `d` pour un
@@ -40,7 +40,7 @@ type  propriétaire   groupe  autres
 | `w` (write) | Modifier le contenu | Créer et supprimer des fichiers dedans |
 | `x` (execute) | Exécuter le fichier comme un programme | Entrer dans le répertoire avec `cd` |
 
-Après cela viennent le propriétaire (`elev`) et le groupe (`elev`).
+Après cela viennent le propriétaire (`{{user}}`) et le groupe (`{{user}}`).
 
 ```quiz
 Un répertoire a les permissions `drwxr-x---`. Que peuvent faire les membres de son groupe ?
@@ -64,7 +64,7 @@ chiffre qui est la somme de r = 4, w = 2 et x = 1 :
 | `600` | `rw-------` | Fichiers secrets |
 
 ```sh
-chmod 644 anteckningar.txt
+chmod 644 {{notes}}
 ```
 
 Ou avec des **symboles** : `u` (le propriétaire, *user*), `g` (le groupe),
@@ -72,8 +72,8 @@ Ou avec des **symboles** : `u` (le propriétaire, *user*), `g` (le groupe),
 permissions :
 
 ```sh
-chmod u+x skript.sh
-chmod go-w fil.txt
+chmod u+x script.sh
+chmod go-w fichier.txt
 ```
 
 ```predict
@@ -91,16 +91,16 @@ ligne, `#!/bin/bash`, s'appelle le *shebang* et indique au système quel
 programme doit exécuter le fichier :
 
 ```sh
-echo '#!/bin/bash' > datum.sh
-echo 'echo "Date du jour :"; date' >> datum.sh
-cat datum.sh
+echo '#!/bin/bash' > date.sh
+echo 'echo "Date du jour :"; date' >> date.sh
+cat date.sh
 ```
 
 Pour lancer le script comme un programme, il doit être exécutable :
 
 ```sh
-chmod +x datum.sh
-./datum.sh
+chmod +x date.sh
+./date.sh
 ```
 
 Le `./` est nécessaire parce que le répertoire où vous êtes ne fait pas

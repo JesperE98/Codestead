@@ -485,7 +485,39 @@ EXEMPEL
         return matchedAny ? 0 : 1;
     }
 
-    private static readonly CompareInfo Swedish = new CultureInfo("sv").CompareInfo;
+    /// <summary>
+    /// How sort orders text: by the terminal's $LANG, like GNU sort (sv_SE.UTF-8 puts å, ä, ö last,
+    /// en_US.UTF-8 sorts them with a and o). Unknown locales fall back to the invariant culture.
+    /// </summary>
+    public static CompareInfo Collation(Shell sh)
+    {
+        var lang = sh.Env.Get("LC_ALL") is { Length: > 0 } all ? all : sh.Env.Get("LANG") ?? "";
+        var name = lang.Split('.')[0].Replace('_', '-');
+        if (name is "" or "C" or "POSIX") return CultureInfo.InvariantCulture.CompareInfo;
+        try
+        {
+            return CultureInfo.GetCultureInfo(name).CompareInfo;
+        }
+        catch (CultureNotFoundException)
+        {
+            return CultureInfo.InvariantCulture.CompareInfo;
+        }
+    }
+
+    /// <summary>Plain `sort` of some lines, as the simulator does it.</summary>
+    public static List<string> SortLines(Shell sh, IEnumerable<string> lines)
+    {
+        var ci = Collation(sh);
+        var list = lines.ToList();
+        list.StableSort((a, b) =>
+        {
+            int c = ci.Compare(a, b, CompareOptions.None);
+            if (c != 0) return c;
+            int o = string.CompareOrdinal(a, b);
+            return o < 0 ? -1 : o > 0 ? 1 : 0;
+        });
+        return list;
+    }
 
     private static readonly CommandDef Sort = new()
     {
@@ -526,6 +558,7 @@ EXEMPEL
             bool hasField = field != 0 && !double.IsNaN(field);
             string Key(string l) => hasField ? string.Join(" ", Js.Slice(SplitWordsKeepEmpty(JsTrim(l)), ToIndex(field - 1))) : l;
             var compareOptions = o.Flags.Contains("f") ? CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace : CompareOptions.None;
+            var collation = Collation(ctx.Sh);
             int Cmp(string a, string b)
             {
                 var ka = Key(a);
@@ -540,7 +573,7 @@ EXEMPEL
                 }
                 else
                 {
-                    int c = Swedish.Compare(ka, kb, compareOptions);
+                    int c = collation.Compare(ka, kb, compareOptions);
                     if (c != 0) return c;
                 }
                 int o2 = string.CompareOrdinal(a, b);

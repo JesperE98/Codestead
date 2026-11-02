@@ -45,7 +45,7 @@ public class ArchiveTests
         Assert.Contains("anteckningar.txt\n", t.Run("tar --list --file=d2.tgz").Out);
         t.Run("rm -r dokument");
         Assert.Equal(0, t.Run("tar -xzf d.tar.gz").ExitCode);
-        Assert.Contains("Servern startar", t.Node("~/dokument/server.log")?.Content);
+        Assert.Contains("Server starting", t.Node("~/dokument/server.log")?.Content);
     }
 
     [Fact(DisplayName = "tar -tv visar rättigheter, ägare och storlek som ls -l")]
@@ -68,7 +68,7 @@ public class ArchiveTests
         Assert.Contains(" 10240 ", t.Run("ls -l d.tar").Out);
         Assert.Equal("12K\td.tar\n4.0K\td.tar.gz\n", t.Run("du -h d.tar d.tar.gz").Out);
         var cat = t.Run("cat d.tar.gz").Out;
-        Assert.DoesNotContain("Servern startar", cat);
+        Assert.DoesNotContain("Server starting", cat);
         Assert.DoesNotContain("frukter", cat);
         Assert.Equal("tar.gz", ArchiveCmd.ReadArchive(t.Node("~/d.tar.gz")!.Content!)?.Format);
     }
@@ -154,7 +154,7 @@ public class ArchiveTests
         Assert.True(VfsLib.NodeSize(gz) < original!.Length);
         Assert.Equal(Js.Oct(640), gz.Mode & Js.Oct(777));
         Assert.Equal(original, t.Run("zcat dokument/server.log.gz").Out);
-        Assert.Matches(@"compressed\s+uncompressed\s+ratio uncompressed_name\n\s+[0-9]+\s+848\s+[0-9]+\.[0-9]% dokument/server\.log\n", t.Run("gzip -l dokument/server.log.gz").Out);
+        Assert.Matches(@"compressed\s+uncompressed\s+ratio uncompressed_name\n\s+[0-9]+\s+824\s+[0-9]+\.[0-9]% dokument/server\.log\n", t.Run("gzip -l dokument/server.log.gz").Out);
         t.Run("gunzip dokument/server.log.gz");
         Assert.Equal(original, t.Node("~/dokument/server.log")?.Content);
         Assert.Null(t.Node("~/dokument/server.log.gz"));
@@ -237,7 +237,7 @@ public class ArchiveTests
         Assert.Matches(
             @"^ {2}updating: dokument/ \(stored 0%\)\n {2}adding: dokument/frukter\.txt \((deflated [0-9]+%|stored 0%)\)\n {2}adding: dokument/server\.log \(deflated [0-9]+%\)\n\z",
             t.Run("zip -r d.zip dokument").Out);
-        Assert.Contains("      848  ", t.Run("unzip -l d.zip").Out);
+        Assert.Contains("      824  ", t.Run("unzip -l d.zip").Out);
         var r = t.Run("unzip d.zip -d ut");
         Assert.Contains("Archive:  d.zip\n   creating: ut/dokument/\n", r.Out);
         Assert.Contains("  inflating: ut/dokument/server.log\n", r.Out);
@@ -257,7 +257,7 @@ public class ArchiveTests
         Assert.Equal("12K\tdokument\n", t.Run("du -sh dokument").Out);
         Assert.Equal("12\tdokument\n", t.Run("du -s dokument").Out);
         Assert.Equal("4\tdokument/frukter.txt\n4\tdokument/server.log\n12\tdokument\n", t.Run("du -a dokument").Out);
-        Assert.Equal($"{4096 + 64 + 848}\tdokument\n", t.Run("du -sb dokument").Out);
+        Assert.Equal($"{4096 + 64 + 824}\tdokument\n", t.Run("du -sb dokument").Out);
         Assert.Equal("du: cannot access 'finnsinte': No such file or directory\n", t.Run("du finnsinte").Out);
     }
 

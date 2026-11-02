@@ -7,7 +7,7 @@ Welcher dieser Pfade ist **absolut**?
 - [ ] `var/log`
 - [ ] `../etc`
 - [x] `/usr/bin`
-- [ ] `dokument`
+- [ ] `{{documents}}`
 ---
 Ein absoluter Pfad beginnt mit `/`, bei der Wurzel. Die anderen gehen von dem
 Verzeichnis aus, in dem du gerade bist.
@@ -31,10 +31,10 @@ Was macht `cd -`?
 ```
 
 ```quiz
-Du willst das ganze Verzeichnis `bilder` mit allem, was darin ist, nach `bilder-kopia` kopieren. Welcher Befehl funktioniert?
-- [ ] `cp bilder bilder-kopia`
-- [x] `cp -r bilder bilder-kopia`
-- [ ] `mv bilder bilder-kopia`
+Du willst das ganze Verzeichnis `{{pictures}}` mit allem, was darin ist, nach `{{pictures}}-kopie` kopieren. Welcher Befehl funktioniert?
+- [ ] `cp {{pictures}} {{pictures}}-kopie`
+- [x] `cp -r {{pictures}} {{pictures}}-kopie`
+- [ ] `mv {{pictures}} {{pictures}}-kopie`
 ---
 Ein Verzeichnis wird mit `-r` (*rekursiv*) kopiert. `mv` würde es
 verschieben, statt es zu kopieren.
@@ -50,17 +50,17 @@ Verzeichnis `c`.
 ```
 
 ```quiz
-Du tippst `touch min fil.txt` – ohne Anführungszeichen. Was passiert?
-- [ ] Eine Datei namens `min fil.txt` wird angelegt
-- [x] Zwei Dateien werden angelegt: `min` und `fil.txt`
+Du tippst `touch meine datei.txt` – ohne Anführungszeichen. Was passiert?
+- [ ] Eine Datei namens `meine datei.txt` wird angelegt
+- [x] Zwei Dateien werden angelegt: `meine` und `datei.txt`
 - [ ] Nichts, weil der Name ein Leerzeichen enthält
 ---
 Die Shell teilt die Zeile an Leerzeichen auf, also bekommt `touch` zwei
-Argumente. Schreib `touch "min fil.txt"`, um eine einzige Datei zu bekommen.
+Argumente. Schreib `touch "meine datei.txt"`, um eine einzige Datei zu bekommen.
 ```
 
 ```quiz
-Welche Zeilen zeigt `grep -i error dokument/server.log`?
+Welche Zeilen zeigt `grep -i error {{documents}}/server.log`?
 - [ ] Nur Zeilen mit `error` in Kleinbuchstaben
 - [ ] Nur Zeilen mit `ERROR` in Großbuchstaben
 - [x] Zeilen mit `error` in beliebiger Groß- und Kleinschreibung
@@ -68,9 +68,9 @@ Welche Zeilen zeigt `grep -i error dokument/server.log`?
 
 ```quiz
 Du willst eine Logdatei beobachten und neue Zeilen sehen, sobald sie geschrieben werden. Welcher Befehl passt?
-- [ ] `head -n 10 dokument/server.log`
-- [x] `tail -f dokument/server.log`
-- [ ] `wc -l dokument/server.log`
+- [ ] `head -n 10 {{documents}}/server.log`
+- [x] `tail -f {{documents}}/server.log`
+- [ ] `wc -l {{documents}}/server.log`
 ---
 `tail -f` *verfolgt* die Datei. Beende es mit **Strg+C**.
 ```
@@ -101,9 +101,9 @@ Wann läuft `b` in `a || b`?
 ```
 
 ```try
-grep ERROR ~/dokument/server.log | tee fel.txt | wc -l
+grep ERROR ~/{{documents}}/server.log | tee fehler.txt | wc -l
 ---
-`tee` hat die Fehlerzeilen in `fel.txt` gespeichert und an `wc -l`
+`tee` hat die Fehlerzeilen in `fehler.txt` gespeichert und an `wc -l`
 weitergereicht, das sie gezählt hat.
 ```
 

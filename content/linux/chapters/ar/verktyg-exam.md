@@ -5,14 +5,14 @@
 تحتاج إليه – ويتخلص `> /dev/null 2>&1` من مخرجات تلك الأسطر.
 
 ```quiz
-غيّرت `index.html` وأنشأت الملف الجديد `kontakt.html`. ثم
+غيّرت `index.html` وأنشأت الملف الجديد `contact.html`. ثم
 شغّلت `git commit -am "Contact page"`. ما الذي ينتهي في الـ commit؟
 - [x] التغيير في `index.html` فقط
-- [ ] `kontakt.html` فقط
+- [ ] `contact.html` فقط
 - [ ] كلا الملفين
 ---
 يضيف `-a` كل ملف متغيّر يتتبّعه git أصلًا – لكن لا يضيف الملفات الجديدة أبدًا.
-يجب أن يُضاف `kontakt.html` باستخدام `git add` أولًا.
+يجب أن يُضاف `contact.html` باستخدام `git add` أولًا.
 ```
 
 ```quiz
@@ -28,20 +28,20 @@
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "{{commitFirst}}" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
-$ git merge ny-design > /dev/null
+$ git merge {{newDesign}} > /dev/null
 $ git log --oneline | wc -l
 2
 ---
 لم يتغير `main` منذ إنشاء الفرع، لذا كان الدمج *fast-forward* (تقديمًا سريعًا):
-لم يفعل git سوى تحريك `main` إلى الأمام حتى commit الفرع `ny-design`.
+لم يفعل git سوى تحريك `main` إلى الأمام حتى commit الفرع `{{newDesign}}`.
 ولم يُنشأ commit دمج.
 ```
 
@@ -145,7 +145,7 @@ $ fish -c 'false; echo $status'
 ```
 
 ```try
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ---
 الحقل الأخير في السطر هو الـ shell الخاص بتسجيل دخولك – وهو ما يغيّره `chsh -s`.
 ```

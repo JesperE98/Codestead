@@ -37,11 +37,11 @@ cat /etc/passwd
 Varje rad har sju fält som skiljs åt av kolon. Titta på din egen rad:
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 ```text
-elev:x:1000:1000:Elev,,,:/home/elev:/bin/bash
+{{user}}:x:1000:1000:{{userFull}},,,:/home/{{user}}:/bin/bash
  1   2  3    4      5        6          7
 ```
 
@@ -60,7 +60,7 @@ användare som inte står i filen, till exempel på en skola eller ett företag
 där kontona finns på en central server:
 
 ```sh
-getent passwd elev
+getent passwd {{user}}
 ```
 
 ### Systemanvändare
@@ -104,7 +104,7 @@ cat /etc/group
 ```
 
 ```text
-sudo:x:27:elev
+sudo:x:27:{{user}}
  1   2  3   4
 ```
 
@@ -114,7 +114,7 @@ kommaseparerad lista med medlemmar.
 Varje användare har **en primär grupp** (GID-fältet i `/etc/passwd`) och kan
 dessutom vara med i hur många **extra grupper** som helst. Nya filer som du
 skapar får din primära grupp. I de flesta distributioner får varje användare
-en egen primär grupp med samma namn – `elev` är med i gruppen `elev`.
+en egen primär grupp med samma namn – `{{user}}` är med i gruppen `{{user}}`.
 
 ```sh
 groups
@@ -122,9 +122,9 @@ id
 ```
 
 ```quiz
-Du (`elev`) är med i grupperna `elev` och `sudo`, och din primära grupp är
-`elev`. Vilken grupp får en ny fil som du skapar?
-- [x] `elev`
+Du (`{{user}}`) är med i grupperna `{{user}}` och `sudo`, och din primära grupp är
+`{{user}}`. Vilken grupp får en ny fil som du skapar?
+- [x] `{{user}}`
 - [ ] `sudo`
 - [ ] Båda
 - [ ] `root`
@@ -158,13 +158,13 @@ kontot **låst**. Resten av fälten handlar om när lösenordet senast byttes oc
 när det går ut. Dem visar `chage` i klartext:
 
 ```sh
-chage -l elev
+chage -l {{user}}
 ```
 
 ```try
-chage -l elev
+chage -l {{user}}
 ---
-`Password expires: never` – elevs lösenord behöver aldrig bytas.
+`Password expires: never` – ditt lösenord behöver aldrig bytas.
 ```
 
 ## Skapa en användare – `useradd`
@@ -236,8 +236,8 @@ passwd root
 Skapa en grupp och lägg till en medlem:
 
 ```sh
-sudo groupadd utvecklare
-sudo usermod -aG utvecklare kim
+sudo groupadd {{devGroup}}
+sudo usermod -aG {{devGroup}} kim
 groups kim
 ```
 
@@ -247,11 +247,11 @@ ur alla andra grupper, till exempel sudo-gruppen. Ett vanligt sätt att låsa
 ute sig själv.
 
 ```quiz
-`kim` är med i de extra grupperna `sudo` och `utvecklare`. En administratör
+`kim` är med i de extra grupperna `sudo` och `{{devGroup}}`. En administratör
 kör `sudo usermod -G backup kim`. Vilka extra grupper är kim med i efteråt?
-- [ ] `sudo`, `utvecklare` och `backup`
+- [ ] `sudo`, `{{devGroup}}` och `backup`
 - [x] Bara `backup`
-- [ ] `sudo` och `utvecklare` – kommandot misslyckas utan `-a`
+- [ ] `sudo` och `{{devGroup}}` – kommandot misslyckas utan `-a`
 - [ ] Inga
 ---
 Utan `-a` sätts listan till exakt det du skriver. Med
@@ -261,8 +261,8 @@ Utan `-a` sätts listan till exakt det du skriver. Med
 `gpasswd` gör samma sak och kan också ta bort medlemmar:
 
 ```sh
-sudo gpasswd -a kim utvecklare
-sudo gpasswd -d kim utvecklare
+sudo gpasswd -a kim {{devGroup}}
+sudo gpasswd -d kim {{devGroup}}
 ```
 
 På en riktig dator gäller ett nytt gruppmedlemskap först när användaren
@@ -273,7 +273,7 @@ skrivrätt med `chgrp` och `chmod`:
 
 ```sh
 sudo mkdir /srv/projekt
-sudo chgrp utvecklare /srv/projekt
+sudo chgrp {{devGroup}} /srv/projekt
 sudo chmod 775 /srv/projekt
 ls -ld /srv/projekt
 ```
@@ -366,16 +366,16 @@ Sedan tar `userdel` bort användaren. Med `-r` försvinner också hemkatalogen
 – utan `-r` ligger filerna kvar:
 
 ```sh
-sudo useradd -m vikarie
-sudo userdel -r vikarie
+sudo useradd -m {{tempUser}}
+sudo userdel -r {{tempUser}}
 ```
 
 Ubuntu har också `deluser`, motsvarigheten till `adduser`:
-`sudo deluser --remove-home vikarie`. `sudo deluser kim sudo` tar bort kim
+`sudo deluser --remove-home {{tempUser}}`. `sudo deluser kim sudo` tar bort kim
 ur gruppen sudo.
 
 `userdel` vägrar ta bort en användare som är inloggad – prova `sudo userdel
-elev`.
+{{user}}`.
 
 ## Sammanfattning
 

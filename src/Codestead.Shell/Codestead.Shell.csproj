@@ -11,4 +11,10 @@
       <LogicalName>shell-i18n/%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
+  <!-- The student's computer in every language: names, words and exercise files (see World.cs). -->
+  <ItemGroup>
+    <EmbeddedResource Include="world/*.json">
+      <LogicalName>world/%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

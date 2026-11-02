@@ -43,15 +43,15 @@ two
 `<` 让程序从文件中读取它的 stdin：
 
 ```sh
-wc -l < dokument/frukter.txt
+wc -l < {{documents}}/{{fruits}}
 ```
 
 这样 `wc` 根本看不到文件名——它只从 stdin 拿到文本——所以只会打印出数字。
 
 ```predict
-$ wc -l dokument/frukter.txt
-$ wc -l < dokument/frukter.txt
-10 dokument/frukter.txt
+$ wc -l {{documents}}/{{fruits}}
+$ wc -l < {{documents}}/{{fruits}}
+10 {{documents}}/{{fruits}}
 10
 ---
 把文件名作为参数时，`wc` 也会打印出文件名。使用 `<` 时，它只拿到文本。
@@ -62,15 +62,13 @@ $ wc -l < dokument/frukter.txt
 错误信息会发送到 stderr，不受 `>` 影响。要处理它们，需要在前面写上流的编号：
 
 ```sh
-ls /finnsinte 2> fel.txt
+ls /{{missing}} 2> errors.txt
 ```
 
-（*Finns inte* 是瑞典语的“不存在”，*fel* 的意思是“错误”。）
-
 ```quiz
-你运行 `ls /finnsinte > fel.txt`。错误信息会出现在哪里？
-- [ ] 在 `fel.txt` 中
-- [x] 在屏幕上——`fel.txt` 仍然是空的
+你运行 `ls /{{missing}} > errors.txt`。错误信息会出现在哪里？
+- [ ] 在 `errors.txt` 中
+- [x] 在屏幕上——`errors.txt` 仍然是空的
 - [ ] 哪儿都没有，它消失了
 ---
 `>` 只重定向 stdout（流 1）。错误信息发送到 stderr（流 2），它仍然输出到屏幕。你需要使用 `2>`。
@@ -83,13 +81,13 @@ ls /finnsinte 2> fel.txt
 **管道**（pipe）把一个命令的 stdout 直接送进下一个命令的 stdin。这正是 Unix 哲学的核心：*只做一件事，并把它做好；让程序彼此协作*。
 
 ```sh
-grep INFO dokument/server.log | wc -l
+grep INFO {{documents}}/server.log | wc -l
 ```
 
 `grep` 找出这些行，`wc -l` 统计它们的数量。你想串联多少个命令都可以：
 
 ```sh
-sort dokument/frukter.txt | uniq -c | sort -rn
+sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ```
 
 一步一步地读：先对水果排序，再统计每种水果有多少个（`uniq -c`），最后按数字排序，最大的排在最前面（`sort -rn`）。
@@ -105,7 +103,7 @@ ls /etc | wc -l
 `tee` 会把输入继续往下传，*同时*在文件中保存一份副本：
 
 ```sh
-ls /etc | tee etc-lista.txt | wc -l
+ls /etc | tee etc-list.txt | wc -l
 ```
 
 ## 命令链——`;`、`&&` 和 `||`
@@ -119,12 +117,12 @@ ls /etc | tee etc-lista.txt | wc -l
 | `a \|\| b` | 只有 a 失败时才运行 b |
 
 ```sh
-mkdir -p ny && cd ny
+mkdir -p new && cd new
 ```
 
 ```predict
-$ mkdir dokument 2> /dev/null && echo created || echo failed
+$ mkdir {{documents}} 2> /dev/null && echo created || echo failed
 failed
 ---
-`dokument` 已经存在，所以 `mkdir` 失败了（它的错误信息消失在 `/dev/null` 中）。`echo created` 被跳过，而 `echo failed` 被执行。
+`{{documents}}` 已经存在，所以 `mkdir` 失败了（它的错误信息消失在 `/dev/null` 中）。`echo created` 被跳过，而 `echo failed` 被执行。
 ```

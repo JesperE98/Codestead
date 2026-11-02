@@ -9,7 +9,7 @@ Verzeichnissen, der bei der **Wurzel** (*root*) beginnt, geschrieben `/`.
 | Verzeichnis | Inhalt |
 |---|---|
 | `/` | Die Wurzel – die Spitze des Baums |
-| `/home` | Die Home-Verzeichnisse der Benutzer, z. B. `/home/elev` |
+| `/home` | Die Home-Verzeichnisse der Benutzer, z. B. `/home/{{user}}` |
 | `/root` | Das Home-Verzeichnis des Administrators root |
 | `/etc` | Systemeinstellungen (Konfigurationsdateien) |
 | `/usr/bin` | Programme (Befehle) wie `ls` und `cat` |
@@ -97,15 +97,15 @@ Es gibt zwei Arten von Pfaden:
   in `/` bist, erreichst du `/var/log` einfach mit `cd var/log`.
 
 ```quiz
-Du bist in `/home`. Welche Befehle bringen dich nach `/home/elev/dokument`? (Wähle alle, die funktionieren.)
-- [x] `cd elev/dokument`
-- [x] `cd /home/elev/dokument`
-- [ ] `cd /elev/dokument`
-- [ ] `cd dokument`
+Du bist in `/home`. Welche Befehle bringen dich nach `/home/{{user}}/{{documents}}`? (Wähle alle, die funktionieren.)
+- [x] `cd {{user}}/{{documents}}`
+- [x] `cd /home/{{user}}/{{documents}}`
+- [ ] `cd /{{user}}/{{documents}}`
+- [ ] `cd {{documents}}`
 ---
-`elev/dokument` ist relativ zu `/home`, und `/home/elev/dokument` ist absolut,
-funktioniert also von überall. `/elev/dokument` beginnt bei der Wurzel, und dort
-gibt es kein `elev`.
+`{{user}}/{{documents}}` ist relativ zu `/home`, und `/home/{{user}}/{{documents}}` ist absolut,
+funktioniert also von überall. `/{{user}}/{{documents}}` beginnt bei der Wurzel, und dort
+gibt es kein `{{user}}`.
 ```
 
 Ein paar besondere Namen solltest du kennen:

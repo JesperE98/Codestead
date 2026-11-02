@@ -40,8 +40,8 @@ git --version
 حاسوب:
 
 ```sh
-git config --global user.name "Elev Elevsson"
-git config --global user.email "elev@example.com"
+git config --global user.name "{{gitName}}"
+git config --global user.email "{{user}}@example.com"
 ```
 
 لا تتردد في استخدام اسمك أنت. يعني `--global` أن الإعداد ينطبق على كل مشاريعك،
@@ -53,8 +53,8 @@ cat ~/.gitconfig
 
 ```text
 [user]
-	name = Elev Elevsson
-	email = elev@example.com
+	name = {{gitName}}
+	email = {{user}}@example.com
 ```
 
 إذا نسيت هذه الخطوة، فسيشتكي git عندما تحاول الحفظ:
@@ -66,11 +66,11 @@ cat ~/.gitconfig
 
 ## مستودع جديد
 
-في مجلد المنزل الخاص بك مشروع ويب صغير، `~/projekt-webb` (وتعني بالسويدية
-*مشروع ويب*)، فيه ثلاثة ملفات. انتقل إليه وألقِ نظرة:
+في مجلد المنزل الخاص بك مشروع ويب صغير، `~/{{webProject}}`، فيه ثلاثة
+ملفات. انتقل إليه وألقِ نظرة:
 
 ```sh
-cd ~/projekt-webb
+cd ~/{{webProject}}
 ls
 ```
 
@@ -82,7 +82,7 @@ git init
 ```
 
 ```text
-Initialized empty Git repository in /home/elev/projekt-webb/.git/
+Initialized empty Git repository in /home/{{user}}/{{webProject}}/.git/
 ```
 
 كل ما حدث هو إنشاء مجلد مخفي اسمه `.git`. وفيه يحفظ git التاريخ كله. ولا يلمس git
@@ -186,19 +186,18 @@ Changes to be committed:
 احفظ اللقطة باستخدام `git commit`. والخيار `-m` يحدد الرسالة:
 
 ```sh
-git commit -m "Första versionen av webbplatsen"
+git commit -m "{{commitFirst}}"
 ```
 
 ```text
-[main (root-commit) 3f2a9c1] Första versionen av webbplatsen
+[main (root-commit) 3f2a9c1] {{commitFirst}}
  3 files changed, 24 insertions(+)
  create mode 100644 README.md
  create mode 100644 index.html
  create mode 100644 style.css
 ```
 
-(الرسالة بالسويدية وتعني *النسخة الأولى من الموقع* – اكتب رسالتك بأي لغة تشاء.)
-`3f2a9c1` هو بداية **معرّف** الـ commit – وهو *hash* من 40 محرفًا يُحسب من
+يمكنك كتابة الرسالة بأي لغة تشاء. و`3f2a9c1` هو بداية **معرّف** الـ commit – وهو *hash* من 40 محرفًا يُحسب من
 المحتوى. وسيختلف معرّفك، لأن الوقت واسمك جزء منه. وعادةً تكفي المحارف السبعة
 الأولى لتمييز الـ commit.
 
@@ -220,21 +219,21 @@ nothing to commit, working tree clean
 أضف سطرًا إلى `README.md` واسأل git عمّا حدث:
 
 ```sh
-echo 'Sidan är byggd med HTML och CSS.' >> README.md
+echo '{{builtWith}}' >> README.md
 git status
 git diff
 ```
 
 ```text
 diff --git a/README.md b/README.md
-index 1100cf4..e5bd3a0 100644
+index 6b9db42..d0ee2c5 100644
 --- a/README.md
 +++ b/README.md
 @@ -1,3 +1,4 @@
- # Min webbplats
+ # {{siteTitle}}
  
- En liten webbplats som jag versionshanterar med git.
-+Sidan är byggd med HTML och CSS.
+ موقع إلكتروني صغير أدير نسخه باستخدام git.
++{{builtWith}}
 ```
 
 السطر الذي يبدأ بـ `+` جديد (أخضر)، والأسطر التي تبدأ بـ `-` حُذفت (أحمر)، والبقية
@@ -248,7 +247,7 @@ index 1100cf4..e5bd3a0 100644
 أصلًا، فيتم الأمر في خطوة واحدة:
 
 ```sh
-git commit -a -m "Beskriv hur sidan är byggd"
+git commit -a -m "{{commitDescribe}}"
 ```
 
 لاحظ أن `-a` *لا* يشمل الملفات الجديدة التي لا يتتبّعها git بعد. فهذه يجب أن تضيفها
@@ -260,12 +259,12 @@ git commit -a -m "Beskriv hur sidan är byggd"
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ echo 'En rad till.' >> README.md
-$ git commit -m "En rad till" > /dev/null
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "{{commitFirst}}" > /dev/null
+$ echo '{{anotherLine}}' >> README.md
+$ git commit -m "{{anotherLine}}" > /dev/null
 $ git log --oneline | wc -l
 1
 ---
@@ -302,10 +301,10 @@ git log
 
 ```text
 commit 8d41b7e0c2a3f1d5e9b6a7c8d9e0f1a2b3c4d5e6 (HEAD -> main)
-Author: Elev Elevsson <elev@example.com>
+Author: {{gitName}} <{{user}}@example.com>
 Date:   Fri Oct 30 14:12:09 2026 +0100
 
-    Beskriv hur sidan är byggd
+    {{commitDescribe}}
 
 commit 3f2a9c1...
 ```
@@ -359,16 +358,16 @@ cat index.html
 
 ```sh
 git branch
-git switch -c ny-design
+git switch -c {{newDesign}}
 git branch
 ```
 
-ينشئ `git switch -c ny-design` (وتعني *تصميم جديد*) الفرع وينتقل إليه. وتُظهر
+ينشئ `git switch -c {{newDesign}}` الفرع وينتقل إليه. وتُظهر
 النجمة في `git branch` أين أنت. عدّل شيئًا واعمل له commit على الفرع:
 
 ```sh
 echo 'h1 { color: purple; }' >> style.css
-git commit -am "Lila rubriker"
+git commit -am "{{commitPurple}}"
 ```
 
 عُد إلى `main` وانظر إلى `style.css`:
@@ -379,14 +378,14 @@ tail -3 style.css
 ```
 
 اختفى اللون البنفسجي! فعندما تنتقل بين الفروع، يعيد git كتابة شجرة العمل لتطابق آخر
-commit في الفرع. والتغيير في أمان داخل `ny-design`. ويعرض `git log --oneline --all`
+commit في الفرع. والتغيير في أمان داخل `{{newDesign}}`. ويعرض `git log --oneline --all`
 كل الفروع:
 
 ```sh
 git log --oneline --all
 ```
 
-> **نصيحة:** كثيرًا ما تستخدم الأدلة الأقدم `git checkout ny-design`
+> **نصيحة:** كثيرًا ما تستخدم الأدلة الأقدم `git checkout {{newDesign}}`
 > و`git checkout -b new-branch`. يفعل `checkout` ما يفعله `switch`، لكنه يستطيع
 > أيضًا استعادة الملفات. أما الأمران الأحدث `switch` و`restore` فيقسمان المهمتين
 > بينهما، وهما أسهل في التذكّر.
@@ -399,18 +398,18 @@ git log --oneline --all
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "{{commitFirst}}" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
 $ grep purple style.css | wc -l
 0
 ---
-حُفظ السطر البنفسجي في commit على `ny-design`. وعندما تنتقل إلى `main`، يجعل git
+حُفظ السطر البنفسجي في commit على `{{newDesign}}`. وعندما تنتقل إلى `main`، يجعل git
 شجرة العمل تبدو مثل آخر commit في `main` – حيث لا يوجد السطر بعد.
 ```
 
@@ -419,7 +418,7 @@ $ grep purple style.css | wc -l
 قف على الفرع الذي يجب أن *يستقبل* التغييرات – وهو هنا `main` – وادمج:
 
 ```sh
-git merge ny-design
+git merge {{newDesign}}
 ```
 
 ```text
@@ -430,42 +429,41 @@ Fast-forward
 ```
 
 يعني *Fast-forward* أن `main` لم يتغيّر منذ إنشاء الفرع. لذا لا يحتاج git إلا إلى
-تحريك `main` إلى الأمام إلى الـ commit نفسه الذي يشير إليه `ny-design`.
+تحريك `main` إلى الأمام إلى الـ commit نفسه الذي يشير إليه `{{newDesign}}`.
 
 أما إذا كانت في الفرعين commits جديدة، فيقوم git بـ **دمج ثلاثي** (three-way
 merge): يقارن الفرعين بسلفهما المشترك، وينشئ *merge commit* جديدًا له أبوان. ويعرض
 `git log --oneline --graph --all` كيف يتفرّع التاريخ ثم يلتقي من جديد:
 
 ```text
-*   e4b1d0a (HEAD -> main) Merge branch 'rubrik'
+*   e4b1d0a (HEAD -> main) Merge branch 'heading'
 |\
-| * 7c3f9e2 (rubrik) Vänligare rubrik
-* | 52d8a71 Kortare text
+| * 7c3f9e2 (heading) عنوان أكبر
+* | 52d8a71 عنوان أحمر
 |/
-* c19e2f4 Lila rubriker
+* c19e2f4 {{commitPurple}}
 ```
 
 الفرع المدموج لم تعد له حاجة ويمكن حذفه. ويرفض `-d` الحذف إذا كانت في الفرع commits
 غير موجودة في الفرع الذي أنت عليه:
 
 ```sh
-git branch -d ny-design
+git branch -d {{newDesign}}
 ```
 
 ## التعارضات
 
 إذا غيّر الفرعان كلاهما *الأسطر نفسها*، فلا يستطيع git أن يعرف أي النسختين هي
-الصحيحة. وهذا يسمى **تعارضًا** (conflict)، وعندها تقرّر أنت. لننشئ تعارضًا عن قصد
-(*rubrik* تعني بالسويدية *عنوان*):
+الصحيحة. وهذا يسمى **تعارضًا** (conflict)، وعندها تقرّر أنت. لننشئ تعارضًا عن قصد:
 
 ```sh
-git switch -c rubrik
-sed -i 's/Välkommen!/Hej och välkommen!/' index.html
-git commit -am "Vänligare rubrik"
+git switch -c heading
+sed -i 's/<h1>/<h1 class="big">/' index.html
+git commit -am "عنوان أكبر"
 git switch main
-sed -i 's/Välkommen!/Välkommen till min sida!/' index.html
-git commit -am "Längre rubrik"
-git merge rubrik
+sed -i 's/<h1>/<h1 class="red">/' index.html
+git commit -am "عنوان أحمر"
+git merge heading
 ```
 
 ```text
@@ -484,14 +482,14 @@ cat index.html
 
 ```text
 <<<<<<< HEAD
-  <h1>Välkommen till min sida!</h1>
+  <h1 class="red">أهلا وسهلا!</h1>
 =======
-  <h1>Hej och välkommen!</h1>
->>>>>>> rubrik
+  <h1 class="big">أهلا وسهلا!</h1>
+>>>>>>> heading
 ```
 
 ما بين `<<<<<<< HEAD` و`=======` هو نسختك (الفرع الذي أنت عليه)؛ وما بين `=======`
-و`>>>>>>> rubrik` هو نسخة الفرع الآخر. وهكذا تحلّ التعارض:
+و`>>>>>>> heading` هو نسخة الفرع الآخر. وهكذا تحلّ التعارض:
 
 1. افتح الملف في محرر واجعله كما تريد – اختر أحد السطرين أو اجمع بينهما – واحذف
    أسطر العلامات.
@@ -505,7 +503,7 @@ cat index.html
 git checkout --theirs index.html
 git add index.html
 git status
-git commit -m "Slå ihop grenen rubrik"
+git commit -m "دمج فرع العنوان"
 ```
 
 وإذا غيّرت رأيك في منتصف التعارض، فإن `git merge --abort` يعيدك إلى ما كنت عليه
@@ -515,13 +513,13 @@ git commit -m "Slå ihop grenen rubrik"
 لتقليلها أن تعمل commits صغيرة وأن تدمج كثيرًا.
 
 ```quiz
-أنت على `main` وتشغّل `git merge rubrik`. فيحصل الملف على تعارض:
+أنت على `main` وتشغّل `git merge heading`. فيحصل الملف على تعارض:
 
     <<<<<<< HEAD
       <h1>Hello!</h1>
     =======
       <h1>Welcome!</h1>
-    >>>>>>> rubrik
+    >>>>>>> heading
 
 أيّ سطر يأتي من `main`؟
 - [x] `<h1>Hello!</h1>`
@@ -538,9 +536,9 @@ git commit -m "Slå ihop grenen rubrik"
 `.gitignore` في جذر المستودع:
 
 ```sh
-echo 'password=secret' > hemligt.txt
-echo 'error' > fel.log
-printf 'hemligt.txt\n*.log\nbuild/\n' > .gitignore
+echo 'password=secret' > secret.txt
+echo 'error' > error.log
+printf 'secret.txt\n*.log\nbuild/\n' > .gitignore
 git status
 ```
 
@@ -550,14 +548,13 @@ Untracked files:
 	.gitignore
 ```
 
-لم يعد `hemligt.txt` و`fel.log` يظهران (*hemligt* تعني «سري» و*fel* تعني «خطأ»)
-– بل لا يلتقطهما حتى `git add .`. تطابق `*` أي شيء، والشرطة المائلة في النهاية (`build/`) تعني مجلدًا
+لم يعد `secret.txt` و`error.log` يظهران – بل لا يلتقطهما حتى `git add .`. تطابق `*` أي شيء، والشرطة المائلة في النهاية (`build/`) تعني مجلدًا
 كاملًا. أما `.gitignore` نفسه فينبغي أن يُعمل له commit، حتى يتجاهل كل من يعمل على
 المشروع الأشياء نفسها:
 
 ```sh
 git add .gitignore
-git commit -m "Ignorera hemligheter och loggar"
+git commit -m "تجاهل الأسرار والسجلات"
 ```
 
 لاحظ أن `.gitignore` لا ينطبق إلا على الملفات التي لا يتتبّعها git أصلًا. فإذا كان
@@ -588,8 +585,8 @@ GitHub وGitLab مفتاح SSH أو رمز وصول (access token) لتسجيل 
 
 ```sh
 cd ~
-git clone ~/projekt-webb ~/kopia
-cd ~/kopia
+git clone ~/{{webProject}} ~/copy
+cd ~/copy
 git log --oneline
 git remote -v
 ```
@@ -600,7 +597,7 @@ git remote -v
 
 ```sh
 git init --bare ~/server.git
-cd ~/projekt-webb
+cd ~/{{webProject}}
 git remote add origin ~/server.git
 git push -u origin main
 git status

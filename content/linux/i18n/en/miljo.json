@@ -5,7 +5,7 @@
       "text": "Show the contents of the `PATH` variable."
     },
     "export": {
-      "text": "Create the environment variable `FAVORIT` with the value `linux`.",
+      "text": "Create the environment variable `{{favVar}}` with the value `linux`.",
       "hint": "No spaces around the equals sign: `export NAME=value`."
     },
     "which": {
@@ -16,7 +16,7 @@
     },
     "exitcode": {
       "text": "Run a command that fails, and then show its exit code with `echo $?`.",
-      "hint": "Try `ls /finnsinte` followed by `echo $?`. The exit code should not be 0."
+      "hint": "Try `ls /{{missing}}` followed by `echo $?`. The exit code should not be 0."
     }
   }
 }

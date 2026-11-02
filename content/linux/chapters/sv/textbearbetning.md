@@ -14,10 +14,10 @@ Alla tre är *filter*: de läser text, gör något med den och skriver resultate
 till stdout. Därför passar de perfekt i pipes. Och originalfilen ändras **inte**
 (med ett undantag, `sed -i`, som vi kommer till).
 
-I `dokument` finns en tredje övningsfil, en CSV-fil med elevernas poäng:
+I `{{documents}}` finns en tredje övningsfil, en CSV-fil med elevernas poäng:
 
 ```sh
-cat ~/dokument/betyg.csv
+cat ~/{{documents}}/{{grades}}
 ```
 
 CSV betyder *comma-separated values* – kolumnerna skiljs åt av kommatecken,
@@ -43,7 +43,7 @@ Ser du å:et? `tr` arbetar med enskilda *byte*, och å, ä och ö ingår inte i
 skickar du in den med `<` eller en pipe:
 
 ```sh
-tr a-z A-Z < ~/dokument/frukter.txt
+tr a-z A-Z < ~/{{documents}}/{{fruits}}
 ```
 
 Ett klassiskt knep är att byta kolon mot radbrytning (`\n`), så att varje
@@ -83,10 +83,10 @@ varje rad. Det vanligaste kommandot är `s` – *substitute*, byt ut.
 ### Byta ut text – `s`
 
 ```sh
-sed 's/ERROR/FEL/' ~/dokument/server.log
+sed 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log
 ```
 
-Skriptet `s/ERROR/FEL/` betyder: byt `ERROR` mot `FEL`. Det har formen
+Skriptet `s/ERROR/{{errorWord}}/` betyder: byt `ERROR` mot `{{errorWord}}`. Det har formen
 
 ```text
 s/MÖNSTER/ERSÄTTNING/FLAGGOR
@@ -110,7 +110,7 @@ Utan `g` byts bara det första `a`:et på raden.
 Flaggan `i` gör sökningen skiftlägesokänslig, precis som `grep -i`:
 
 ```sh
-sed 's/warn/VARNING/i' ~/dokument/server.log
+sed 's/warn/VARNING/i' ~/{{documents}}/server.log
 ```
 
 Mönstret är ett *reguljärt uttryck*, precis som i `grep`. Här tar vi bort
@@ -118,7 +118,7 @@ datumet i början av varje rad (`^` = radens början, `[0-9-]*` = siffror och
 bindestreck):
 
 ```sh
-sed 's/^[0-9-]* //' ~/dokument/server.log
+sed 's/^[0-9-]* //' ~/{{documents}}/server.log
 ```
 
 I ersättningen betyder `&` "det som matchade":
@@ -140,7 +140,7 @@ träffen med parenteser och använda dem i ersättningen som `\1`, `\2` …
 Här vänder vi på datumet:
 
 ```sh
-sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/dokument/server.log
+sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/{{documents}}/server.log
 ```
 
 ### Välja rader – adresser
@@ -150,8 +150,8 @@ gäller. Kommandot `d` (*delete*) tar bort rader och `p` (*print*) skriver ut
 dem:
 
 ```sh
-sed '/INFO/d' ~/dokument/server.log
-sed '1d' ~/dokument/betyg.csv
+sed '/INFO/d' ~/{{documents}}/server.log
+sed '1d' ~/{{documents}}/{{grades}}
 ```
 
 Det första tar bort alla rader som innehåller `INFO`, det andra tar bort rad 1
@@ -161,7 +161,7 @@ Det första tar bort alla rader som innehåller `INFO`, det andra tar bort rad 1
 skrivs bara det ut som `p` ber om. Så här visar du rad 5 till 8:
 
 ```sh
-sed -n '5,8p' ~/dokument/server.log
+sed -n '5,8p' ~/{{documents}}/server.log
 ```
 
 | Adress | Betyder |
@@ -176,7 +176,7 @@ sed -n '5,8p' ~/dokument/server.log
 Adresser fungerar med alla kommandon, även `s`. Här markeras bara felraderna:
 
 ```sh
-sed '/ERROR/s/^/>>> /' ~/dokument/server.log
+sed '/ERROR/s/^/>>> /' ~/{{documents}}/server.log
 ```
 
 Kommandot `q` (*quit*) avslutar efter en viss rad – `sed 3q` gör alltså samma
@@ -184,7 +184,7 @@ sak som `head -n 3`. Flera kommandon skiljer du åt med `;` eller med flera
 `-e`:
 
 ```sh
-sed -e '/INFO/d' -e 's/ERROR/FEL/' ~/dokument/server.log
+sed -e '/INFO/d' -e 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log
 ```
 
 ### Ändra filen på plats – `sed -i`
@@ -194,7 +194,7 @@ med `cat`. Med `-i` (*in-place*) skriver `sed` i stället tillbaka resultatet
 till filen. Prova på en kopia:
 
 ```sh
-cp ~/dokument/frukter.txt ~/frukter-kopia.txt
+cp ~/{{documents}}/{{fruits}} ~/frukter-kopia.txt
 sed -i 's/kiwi/kiwifrukt/' ~/frukter-kopia.txt
 cat ~/frukter-kopia.txt
 ```
@@ -204,7 +204,7 @@ cat ~/frukter-kopia.txt
 ut. Skriver du `-i.bak` sparas dessutom originalet som `fil.bak`.
 
 ```quiz
-Du kör `sed 's/kiwi/KIWI/' ~/dokument/frukter.txt`. Vad händer med filen?
+Du kör `sed 's/kiwi/KIWI/' ~/{{documents}}/{{fruits}}`. Vad händer med filen?
 - [ ] Varje `kiwi` i filen blir `KIWI`
 - [ ] Bara det första `kiwi` i filen blir `KIWI`
 - [x] Ingenting – resultatet skrivs bara ut, filen är oförändrad
@@ -223,7 +223,7 @@ fält. `-d` väljer avgränsaren (*delimiter*) och `-f` vilket fält som ska
 behållas. Här är ämnena – fält 2 – i CSV-filen:
 
 ```sh
-cut -d, -f2 ~/dokument/betyg.csv
+cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
 
 I `/etc/passwd` skiljs fälten åt av kolon och fält 1 är användarnamnet, så
@@ -247,7 +247,7 @@ Som standard skiljs fälten åt av mellanslag (hur många som helst). I
 `server.log` är fält 3 loggnivån:
 
 ```sh
-awk '{print $3}' ~/dokument/server.log
+awk '{print $3}' ~/{{documents}}/server.log
 ```
 
 Programmet står inom `{ }` och körs för varje rad. Skriv alltid
@@ -257,7 +257,7 @@ skalvariabel och byter ut den innan awk ens startar.
 awk passar perfekt i en pipe. Hur många rader finns det av varje nivå?
 
 ```sh
-awk '{print $3}' ~/dokument/server.log | sort | uniq -c
+awk '{print $3}' ~/{{documents}}/server.log | sort | uniq -c
 ```
 
 ### Andra avgränsare – `-F`
@@ -293,13 +293,13 @@ Före `{ }` kan du skriva ett *mönster*. Då körs programmet bara för de rade
 som matchar. Mönstret kan vara ett reguljärt uttryck, som i `grep`:
 
 ```sh
-awk '/ERROR/ {print $2}' ~/dokument/server.log
+awk '/ERROR/ {print $2}' ~/{{documents}}/server.log
 ```
 
 … eller ett villkor. Text står inom dubbla citattecken:
 
 ```sh
-awk -F, '$2 == "matte" {print $1, $3}' ~/dokument/betyg.csv
+awk -F, '$2 == "matte" {print $1, $3}' ~/{{documents}}/{{grades}}
 ```
 
 Jämförelser skrivs `==`, `!=`, `<`, `<=`, `>` och `>=`, och villkor kombineras
@@ -307,7 +307,7 @@ med `&&` (och), `||` (eller) och `!` (inte). Här är alla elever med minst 90
 poäng (utan `{ }` skrivs hela raden ut):
 
 ```sh
-awk -F, '$3 >= 90' ~/dokument/betyg.csv
+awk -F, '$3 >= 90' ~/{{documents}}/{{grades}}
 ```
 
 Fick du med rubrikraden också? I den är fält 3 ordet `poäng`, och när ett
@@ -315,13 +315,13 @@ värde inte är ett tal jämför awk som *text* – och `"poäng"` kommer efter
 `"90"` i bokstavsordning. Rubrikraden hoppar du över med `NR > 1`:
 
 ```sh
-awk -F, 'NR > 1 && $3 >= 90' ~/dokument/betyg.csv
+awk -F, 'NR > 1 && $3 >= 90' ~/{{documents}}/{{grades}}
 ```
 
 Prova ett eget mönster – namnen på alla som läser svenska:
 
 ```try
-awk -F, '$2 == "svenska" {print $1}' ~/dokument/betyg.csv
+awk -F, '$2 == "svenska" {print $1}' ~/{{documents}}/{{grades}}
 ```
 
 ### Räkna – variabler och `END`
@@ -331,14 +331,14 @@ awk har variabler som du inte behöver deklarera – de börjar på 0. Blocket
 sätt att summera en kolumn:
 
 ```sh
-awk -F, 'NR > 1 {summa += $3} END {print summa}' ~/dokument/betyg.csv
+awk -F, 'NR > 1 {summa += $3} END {print summa}' ~/{{documents}}/{{grades}}
 ```
 
 `summa += $3` betyder "lägg till fält 3 till summa". Räknar du samtidigt
 antalet rader (`antal++` ökar med 1) kan du räkna ut medelvärdet:
 
 ```sh
-awk -F, 'NR > 1 {summa += $3; antal++} END {print "Medel:", summa / antal}' ~/dokument/betyg.csv
+awk -F, 'NR > 1 {summa += $3; antal++} END {print "Medel:", summa / antal}' ~/{{documents}}/{{grades}}
 ```
 
 Det finns också `BEGIN { }`, som körs **innan** första raden – bra för
@@ -346,14 +346,14 @@ rubriker. Och med `printf` bestämmer du exakt hur utskriften ska se ut:
 `%-8s` är text vänsterjusterad på 8 tecken och `%3d` ett heltal på 3 tecken.
 
 ```sh
-awk -F, 'BEGIN {print "Elev     Poäng"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/dokument/betyg.csv
+awk -F, 'BEGIN {print "Elev     Poäng"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/{{documents}}/{{grades}}
 ```
 
 awk har också funktioner, till exempel `length()`, `toupper()` och
 `tolower()`:
 
 ```sh
-awk '{print toupper($0)}' ~/dokument/frukter.txt
+awk '{print toupper($0)}' ~/{{documents}}/{{fruits}}
 ```
 
 Titta noga på `äpple` och `päron`. På Ubuntu, som terminalen här kör, är
@@ -379,5 +379,5 @@ Det riktigt kraftfulla är att kombinera dem. Vilka nivåer finns bland
 raderna som *inte* är INFO – om vi struntar i stora och små bokstäver?
 
 ```sh
-grep -v INFO ~/dokument/server.log | awk '{print $3}' | tr A-Z a-z | sort | uniq -c
+grep -v INFO ~/{{documents}}/server.log | awk '{print $3}' | tr A-Z a-z | sort | uniq -c
 ```

@@ -8,17 +8,17 @@
       "text": "`cat` से `/etc/shadow` पढ़ने की कोशिश कीजिए – और फिर यही `sudo` के साथ कीजिए।"
     },
     "script": {
-      "text": "Script `~/hej.sh` बनाइए जिसमें line `echo Hej från mitt skript` (Swedish में “मेरी script की ओर से नमस्ते”) हो।",
-      "hint": "Single quotes इस्तेमाल कीजिए: `echo 'echo Hej från mitt skript' > ~/hej.sh`"
+      "text": "Script `~/{{helloScript}}` बनाइए जिसमें line `echo {{helloScriptText}}` हो।",
+      "hint": "Single quotes इस्तेमाल कीजिए: `echo 'echo {{helloScriptText}}' > ~/{{helloScript}}`"
     },
     "chmod-x": {
-      "text": "`~/hej.sh` को executable बनाइए।"
+      "text": "`~/{{helloScript}}` को executable बनाइए।"
     },
     "run-script": {
-      "text": "Script को `./hej.sh` से चलाइए (अपनी home directory से)।"
+      "text": "Script को `./{{helloScript}}` से चलाइए (अपनी home directory से)।"
     },
     "chmod-600": {
-      "text": "`~/anteckningar.txt` को ऐसा बनाइए कि उसे **सिर्फ़** आप पढ़ और लिख सकें (`rw-------`)।",
+      "text": "`~/{{notes}}` को ऐसा बनाइए कि उसे **सिर्फ़** आप पढ़ और लिख सकें (`rw-------`)।",
       "hint": "r = 4, w = 2, x = 1। Owner को 4 + 2 मिलना चाहिए और बाक़ी सबको 0।"
     }
   }

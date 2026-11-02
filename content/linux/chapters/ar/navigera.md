@@ -9,7 +9,7 @@
 | المجلد | المحتوى |
 |---|---|
 | `/` | الجذر – قمة الشجرة |
-| `/home` | مجلدات المنزل للمستخدمين، مثل `/home/elev` |
+| `/home` | مجلدات المنزل للمستخدمين، مثل `/home/{{user}}` |
 | `/root` | مجلد المنزل الخاص بالمدير root |
 | `/etc` | إعدادات النظام (ملفات الإعداد) |
 | `/usr/bin` | البرامج (الأوامر) مثل `ls` و`cat` |
@@ -95,15 +95,15 @@ cd /var/log
   إلى `/var/log` بمجرد `cd var/log`.
 
 ```quiz
-أنت في `/home`. أيّ الأوامر تنقلك إلى `/home/elev/dokument`؟ (اختر كل ما يعمل.)
-- [x] `cd elev/dokument`
-- [x] `cd /home/elev/dokument`
-- [ ] `cd /elev/dokument`
-- [ ] `cd dokument`
+أنت في `/home`. أيّ الأوامر تنقلك إلى `/home/{{user}}/{{documents}}`؟ (اختر كل ما يعمل.)
+- [x] `cd {{user}}/{{documents}}`
+- [x] `cd /home/{{user}}/{{documents}}`
+- [ ] `cd /{{user}}/{{documents}}`
+- [ ] `cd {{documents}}`
 ---
-`elev/dokument` مسار نسبي إلى `/home`، و`/home/elev/dokument` مسار مطلق،
-لذا يعمل من أي مكان. أما `/elev/dokument` فيبدأ من الجذر، حيث لا يوجد
-`elev`.
+`{{user}}/{{documents}}` مسار نسبي إلى `/home`، و`/home/{{user}}/{{documents}}` مسار مطلق،
+لذا يعمل من أي مكان. أما `/{{user}}/{{documents}}` فيبدأ من الجذر، حيث لا يوجد
+`{{user}}`.
 ```
 
 هناك بعض الأسماء الخاصة التي تستحق المعرفة:

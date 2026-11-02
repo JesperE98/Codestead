@@ -6,14 +6,14 @@
 ## Directories बनाना – `mkdir`
 
 ```sh
-mkdir bilder2
+mkdir photos
 ```
 
 अगर आप एक साथ कई levels बनाना चाहते हैं, तो `-p` (*parents*) चाहिए। इसके बिना,
 parent directory मौजूद न होने पर `mkdir` शिकायत करता है:
 
 ```sh
-mkdir -p resa/2026/juni
+mkdir -p trip/2026/june
 ```
 
 ## ख़ाली files बनाना – `touch`
@@ -22,11 +22,11 @@ mkdir -p resa/2026/juni
 update करता है):
 
 ```sh
-touch inkopslista.txt
+touch shopping-list.txt
 ```
 
 ```quiz
-अगर फ़ाइल पहले से मौजूद हो, तो `touch anteckningar.txt` क्या करता है?
+अगर फ़ाइल पहले से मौजूद हो, तो `touch {{notes}}` क्या करता है?
 - [ ] फ़ाइल को ख़ाली कर देता है
 - [ ] शिकायत करता है कि फ़ाइल मौजूद है
 - [x] सिर्फ़ फ़ाइल का टाइमस्टैम्प अपडेट करता है – सामग्री वैसी ही रहती है
@@ -35,23 +35,23 @@ touch inkopslista.txt
 ## Copy करना – `cp`
 
 ```sh
-cp anteckningar.txt anteckningar-kopia.txt
+cp {{notes}} notes-copy.txt
 ```
 
 अगर target एक directory है, तो copy उसी नाम से उसके अंदर पहुँच जाती है। पूरी
 directory copy करने के लिए `-r` (*recursive*) चाहिए:
 
 ```sh
-cp -r dokument dokument-backup
+cp -r {{documents}} {{documents}}-backup
 ```
 
 ```predict
-$ mkdir kopior
-$ cp anteckningar.txt kopior
-$ ls kopior
-anteckningar.txt
+$ mkdir copies
+$ cp {{notes}} copies
+$ ls copies
+{{notes}}
 ---
-`kopior` एक डायरेक्टरी है, इसलिए कॉपी उसी नाम से उसके अंदर पहुँच जाती है।
+`copies` एक डायरेक्टरी है, इसलिए कॉपी उसी नाम से उसके अंदर पहुँच जाती है।
 ```
 
 ## Move करना और नाम बदलना – `mv`
@@ -59,8 +59,8 @@ anteckningar.txt
 Linux में *move* करना और *rename* करना एक ही बात है। `mv` दोनों काम करता है:
 
 ```sh
-mv inkopslista.txt dokument/
-mv dokument/inkopslista.txt dokument/handla.txt
+mv shopping-list.txt {{documents}}/
+mv {{documents}}/shopping-list.txt {{documents}}/shopping.txt
 ```
 
 ```quiz
@@ -75,14 +75,14 @@ mv dokument/inkopslista.txt dokument/handla.txt
 ## Delete करना – `rm` और `rmdir`
 
 ```sh
-rm anteckningar-kopia.txt
+rm notes-copy.txt
 ```
 
 `rmdir` *ख़ाली* directories हटाता है। किसी directory को उसके अंदर की हर चीज़ के
 साथ हटाने के लिए `rm -r` इस्तेमाल कीजिए:
 
 ```sh
-rm -r dokument-backup
+rm -r {{documents}}-backup
 ```
 
 > **सावधान!** Terminal में कोई recycle bin नहीं होता। जो आप `rm` से delete
@@ -91,10 +91,10 @@ rm -r dokument-backup
 > दोबारा जाँच लीजिए।
 
 ```quiz
-कौन-सा कमांड डायरेक्टरी `gammalt` को *सिर्फ़* तभी हटाता है जब वह ख़ाली हो?
-- [ ] `rm gammalt`
-- [x] `rmdir gammalt`
-- [ ] `rm -r gammalt`
+कौन-सा कमांड डायरेक्टरी `{{old}}` को *सिर्फ़* तभी हटाता है जब वह ख़ाली हो?
+- [ ] `rm {{old}}`
+- [x] `rmdir {{old}}`
+- [ ] `rm -r {{old}}`
 ---
 `rmdir` ऐसी डायरेक्टरी को हटाने से मना कर देता है जिसमें अभी भी कुछ है।
 `rm -r` डायरेक्टरी और उसके अंदर की हर चीज़ हटा देता है।
@@ -111,23 +111,24 @@ Command चलने से पहले shell patterns को कई file names
 | `?` | ठीक एक character |
 | `[abc]` | a, b या c में से कोई एक character |
 
-आपकी होम डायरेक्टरी की डायरेक्टरी `dokument` में तीन फ़ाइलें हैं:
-`betyg.csv`, `frukter.txt` और `server.log`। यह कमांड सिर्फ़ उन्हें दिखाता है
+आपकी होम डायरेक्टरी की डायरेक्टरी `{{documents}}` में तीन फ़ाइलें हैं:
+`{{grades}}`, `{{fruits}}` और `server.log`। यह कमांड सिर्फ़ उन्हें दिखाता है
 जिनके अंत में `.txt` है:
 
 ```sh
-ls dokument/*.txt
+ls {{documents}}/*.txt
 ```
 
-यहाँ `ls` को asterisk कभी दिखता ही नहीं – shell पहले ही `dokument/*.txt` को
+यहाँ `ls` को asterisk कभी दिखता ही नहीं – shell पहले ही `{{documents}}/*.txt` को
 सभी matching file names से बदल चुका होता है।
 
 ```predict
-$ ls dokument/?????.*
-dokument/betyg.csv
+$ ls {{documents}}/??????.txt
+{{documents}}/{{fruits}}
 ---
-हर `?` ठीक एक अक्षर है, इसलिए बिंदु से पहले का नाम पाँच अक्षरों का होना
-चाहिए। सिर्फ़ `betyg` ऐसा है – `frukter` और `server` लंबे हैं।
+हर `?` ठीक एक अक्षर है, इसलिए बिंदु से पहले का नाम छह अक्षरों का होना
+चाहिए, और उसके बाद `.txt` आना चाहिए। तीनों नाम छह अक्षरों के हैं, लेकिन सिर्फ़
+`{{fruits}}` के अंत में `.txt` है।
 ```
 
 ## File names में spaces
@@ -136,8 +137,8 @@ Shell command line को spaces पर तोड़ता है। अगर �
 तो आपको quotes (या space से पहले `\`) लगाने होंगे:
 
 ```sh
-touch "min fil.txt"
-ls -l "min fil.txt"
+touch "my file.txt"
+ls -l "my file.txt"
 ```
 
 इसीलिए बहुत से लोग file names में hyphens या underscores पसंद करते हैं।

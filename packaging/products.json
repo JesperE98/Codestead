@@ -4,6 +4,7 @@
     "project": "src/Codestead.Linux/Codestead.Linux.csproj",
     "idProperty": "CodesteadLinuxId",
     "nameProperty": "CodesteadLinuxName",
+    "title": "Codestead Linux",
     "summary": "Learn the Linux shell by doing",
     "versionProperty": "CodesteadLinuxVersion",
     "paths": [
@@ -23,6 +24,7 @@
     "project": "src/Codestead.Hub/Codestead.Hub.csproj",
     "idProperty": "CodesteadHubId",
     "nameProperty": "CodesteadHubName",
+    "title": "Codestead hub",
     "summary": "Install and update the Codestead learning tools",
     "versionProperty": "CodesteadHubVersion",
     "paths": [

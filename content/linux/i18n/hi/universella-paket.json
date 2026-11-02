@@ -38,15 +38,15 @@
       }
     },
     "appimage-chmod": {
-      "text": "`~/Nedladdningar` में एक download किया हुआ AppImage है। File `Kalkylator.AppImage` को executable बनाइए।",
-      "hint": "`chmod +x ~/Nedladdningar/Kalkylator.AppImage`"
+      "text": "`~/{{downloads}}` में एक download किया हुआ AppImage है। File `{{calculator}}` को executable बनाइए।",
+      "hint": "`chmod +x ~/{{downloads}}/{{calculator}}`"
     },
     "appimage-run": {
-      "text": "Kalkylator start कीजिए। क्या यह FUSE के बारे में शिकायत करता है? छूटी हुई library install कीजिए और फिर से कोशिश कीजिए।",
+      "text": "{{calcName}} start कीजिए। क्या यह FUSE के बारे में शिकायत करता है? छूटी हुई library install कीजिए और फिर से कोशिश कीजिए।",
       "hint": {
-        "debian": "Library package `libfuse2t64` में है। फिर इसे `~/Nedladdningar/Kalkylator.AppImage` से start कीजिए।",
-        "arch": "Library package `fuse2` में है। फिर इसे `~/Nedladdningar/Kalkylator.AppImage` से start कीजिए।",
-        "redhat": "Library package `fuse-libs` में है। फिर इसे `~/Nedladdningar/Kalkylator.AppImage` से start कीजिए।"
+        "debian": "Library package `libfuse2t64` में है। फिर इसे `~/{{downloads}}/{{calculator}}` से start कीजिए।",
+        "arch": "Library package `fuse2` में है। फिर इसे `~/{{downloads}}/{{calculator}}` से start कीजिए।",
+        "redhat": "Library package `fuse-libs` में है। फिर इसे `~/{{downloads}}/{{calculator}}` से start कीजिए।"
       }
     }
   }

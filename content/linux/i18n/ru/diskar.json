@@ -21,12 +21,12 @@
       "hint": "И создание каталогов в `/mnt`, и монтирование требуют прав root: `sudo mkdir -p /mnt/usb`, а затем `sudo mount /dev/sdb1 /mnt/usb`."
     },
     "fran-usb": {
-      "text": "Скопируйте `rapport.pdf` с флешки в свой домашний каталог.",
-      "hint": "Файлы с флешки теперь находятся в `/mnt/usb`: `cp /mnt/usb/rapport.pdf ~`."
+      "text": "Скопируйте `{{report}}` с флешки в свой домашний каталог.",
+      "hint": "Файлы с флешки теперь находятся в `/mnt/usb`: `cp /mnt/usb/{{report}} ~`."
     },
     "till-usb": {
-      "text": "Сохраните копию `~/dokument/frukter.txt` на флешку.",
-      "hint": "Файлы на флешке принадлежат root – в FAT нет прав Linux, – поэтому нужен `sudo`: `sudo cp ~/dokument/frukter.txt /mnt/usb/`."
+      "text": "Сохраните копию `~/{{documents}}/{{fruits}}` на флешку.",
+      "hint": "Файлы на флешке принадлежат root – в FAT нет прав Linux, – поэтому нужен `sudo`: `sudo cp ~/{{documents}}/{{fruits}} /mnt/usb/`."
     },
     "avmontera": {
       "text": "Размонтируйте флешку, чтобы её можно было безопасно извлечь.",

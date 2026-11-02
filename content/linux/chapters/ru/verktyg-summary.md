@@ -87,7 +87,7 @@ Ubuntu он устанавливается командой `sudo apt install gi
 | `zsh` / `fish` / `exit` | Запустить другой shell / вернуться назад |
 | `zsh -c '…'` / `fish -c '…'` | Выполнить одну команду в другом shell |
 | `setopt autocd` / `unsetopt autocd` | Включить / выключить опцию zsh |
-| `set frukt äpple` / `set -e frukt` | Задать / удалить переменную в fish |
+| `set {{fruitVar}} {{fruitWord}}` / `set -e {{fruitVar}}` | Задать / удалить переменную в fish |
 | `set -x NAME value` | Задать переменную окружения в fish |
 | `math 17 x 23` | Арифметика в fish |
 | `chsh -s /usr/bin/zsh` | Сменить login shell |

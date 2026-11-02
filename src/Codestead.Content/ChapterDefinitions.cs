@@ -19,9 +19,9 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "echo",
-                    Text = "Skriv ut texten `Hej världen` med `echo`.",
-                    Solution = Cmds("echo Hej världen"),
-                    Check = c => Ran(c, Re(@"^echo\b")) && Re(@"hej,?\s+världen", "i").IsMatch(c.Output),
+                    Text = "Skriv ut texten `{{helloWorld}}` med `echo`.",
+                    Solution = Cmds("echo {{helloWorld}}"),
+                    Check = c => Ran(c, Re(@"^echo\b")) && c.Output.Contains(W(c)["helloWorld"], StringComparison.OrdinalIgnoreCase),
                 },
                 new()
                 {
@@ -67,7 +67,7 @@ public static partial class ChaptersLib
                     Text = "Visa de dolda filerna i din hemkatalog.",
                     Hint = "Flaggan `-a` visar filer som börjar med punkt. Din hemkatalog är `~`.",
                     Solution = Cmds("ls -a ~"),
-                    Check = c => Ran(c, Re(@"^ls\b.*\s-\w*[aA]")) && (c.Sh.Cwd == Home || Re(@"\s(~\/?|\/home\/elev\/?)(\s|$)").IsMatch(c.Line)),
+                    Check = c => Ran(c, Re(@"^ls\b.*\s-\w*[aA]")) && (c.Sh.Cwd == Home(c) || Re(c, @"\s(~\/?|\/home\/{{user}}\/?)(\s|$)").IsMatch(c.Line)),
                 },
                 new()
                 {
@@ -80,7 +80,7 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "up",
-                    Text = "Gå upp en nivå med `cd ..`.",
+                    Text = "Gå upp en nivå med `cd ..` (cd, mellanslag och två punkter).",
                     Solution = Cmds("cd .."),
                     Check = c => Ran(c, Re(@"^cd\s+\.\.\/?\s*$")),
                 },
@@ -89,7 +89,7 @@ public static partial class ChaptersLib
                     Id = "home",
                     Text = "Gå tillbaka till din hemkatalog med bara `cd`, utan argument.",
                     Solution = Cmds("cd"),
-                    Check = c => c.Line == "cd" && c.Sh.Cwd == Home,
+                    Check = c => c.Line == "cd" && c.Sh.Cwd == Home(c),
                 },
             },
         },
@@ -103,40 +103,40 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "mkdir",
-                    Text = "Skapa katalogen `~/projekt/src` med **ett** kommando.",
-                    Hint = "`mkdir` behöver flaggan `-p` för att skapa `projekt` och `src` på en gång.",
-                    Solution = Cmds("mkdir -p ~/projekt/src"),
-                    Check = c => IsDir(c, "~/projekt/src"),
+                    Text = "Skapa katalogen `~/{{project}}/src` med **ett** kommando.",
+                    Hint = "`mkdir` behöver flaggan `-p` för att skapa `{{project}}` och `src` på en gång.",
+                    Solution = Cmds("mkdir -p ~/{{project}}/src"),
+                    Check = c => IsDir(c, "~/{{project}}/src"),
                 },
                 new()
                 {
                     Id = "touch",
-                    Text = "Skapa en tom fil som heter `~/projekt/README.md`.",
-                    Solution = Cmds("touch ~/projekt/README.md"),
-                    Check = c => IsFile(c, "~/projekt/README.md"),
+                    Text = "Skapa en tom fil som heter `~/{{project}}/README.md`.",
+                    Solution = Cmds("touch ~/{{project}}/README.md"),
+                    Check = c => IsFile(c, "~/{{project}}/README.md"),
                 },
                 new()
                 {
                     Id = "cp",
-                    Text = "Kopiera `~/anteckningar.txt` till katalogen `~/projekt/`.",
-                    Solution = Cmds("cp ~/anteckningar.txt ~/projekt/"),
-                    Check = c => IsFile(c, "~/projekt/anteckningar.txt") && IsFile(c, "~/anteckningar.txt"),
+                    Text = "Kopiera `~/{{notes}}` till katalogen `~/{{project}}/`.",
+                    Solution = Cmds("cp ~/{{notes}} ~/{{project}}/"),
+                    Check = c => IsFile(c, "~/{{project}}/{{notes}}") && IsFile(c, "~/{{notes}}"),
                 },
                 new()
                 {
                     Id = "mv",
-                    Text = "Byt namn på `~/projekt/anteckningar.txt` till `~/projekt/att-gora.txt`.",
+                    Text = "Byt namn på `~/{{project}}/{{notes}}` till `~/{{project}}/{{todo}}`.",
                     Hint = "Att byta namn är samma sak som att flytta – använd `mv`.",
-                    Solution = Cmds("mv ~/projekt/anteckningar.txt ~/projekt/att-gora.txt"),
-                    Check = c => IsFile(c, "~/projekt/att-gora.txt") && !Exists(c, "~/projekt/anteckningar.txt"),
+                    Solution = Cmds("mv ~/{{project}}/{{notes}} ~/{{project}}/{{todo}}"),
+                    Check = c => IsFile(c, "~/{{project}}/{{todo}}") && !Exists(c, "~/{{project}}/{{notes}}"),
                 },
                 new()
                 {
                     Id = "rm",
-                    Text = "Ta bort katalogen `~/gammalt` och allt som finns i den.",
+                    Text = "Ta bort katalogen `~/{{old}}` och allt som finns i den.",
                     Hint = "Katalogen är inte tom, så `rmdir` räcker inte. Använd `rm -r`.",
-                    Solution = Cmds("rm -r ~/gammalt"),
-                    Check = c => !Exists(c, "~/gammalt"),
+                    Solution = Cmds("rm -r ~/{{old}}"),
+                    Check = c => !Exists(c, "~/{{old}}"),
                 },
             },
         },
@@ -150,22 +150,22 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "head",
-                    Text = "Visa de **3 första** raderna i `~/dokument/server.log`.",
-                    Solution = Cmds("head -n 3 ~/dokument/server.log"),
-                    Check = c => Ran(c, Re(@"^head\b")) && OutLines(c).Count == 3 && c.Output.Contains("Servern startar"),
+                    Text = "Visa de **3 första** raderna i `~/{{documents}}/server.log`.",
+                    Solution = Cmds("head -n 3 ~/{{documents}}/server.log"),
+                    Check = c => Ran(c, Re(@"^head\b")) && OutLines(c).Count == 3 && c.Output.Contains("Server starting"),
                 },
                 new()
                 {
                     Id = "tail",
-                    Text = "Visa de **2 sista** raderna i `~/dokument/server.log`.",
-                    Solution = Cmds("tail -n 2 ~/dokument/server.log"),
-                    Check = c => Ran(c, Re(@"^tail\b")) && OutLines(c).Count == 2 && c.Output.Contains("roteras"),
+                    Text = "Visa de **2 sista** raderna i `~/{{documents}}/server.log`.",
+                    Solution = Cmds("tail -n 2 ~/{{documents}}/server.log"),
+                    Check = c => Ran(c, Re(@"^tail\b")) && OutLines(c).Count == 2 && c.Output.Contains("Rotating"),
                 },
                 new()
                 {
                     Id = "grep",
-                    Text = "Visa alla rader som innehåller `ERROR` i `~/dokument/server.log`.",
-                    Solution = Cmds("grep ERROR ~/dokument/server.log"),
+                    Text = "Visa alla rader som innehåller `ERROR` i `~/{{documents}}/server.log`.",
+                    Solution = Cmds("grep ERROR ~/{{documents}}/server.log"),
                     Check = c => Ran(c, Re(@"^grep\b")) && OutLines(c).Count == 3 && OutLines(c).All(l => l.Contains("ERROR")),
                 },
                 new()
@@ -173,22 +173,22 @@ public static partial class ChaptersLib
                     Id = "grep-i",
                     Text = "Sök efter `warn` i server.log **utan** att bry dig om stora eller små bokstäver.",
                     Hint = "Flaggan `-i` gör sökningen skiftlägesokänslig. Det ska bli 3 träffar.",
-                    Solution = Cmds("grep -i warn ~/dokument/server.log"),
+                    Solution = Cmds("grep -i warn ~/{{documents}}/server.log"),
                     Check = c => Ran(c, Re(@"^grep\b.*\s-\w*i")) && Re("warn", "i").IsMatch(c.Line) && (OutLines(c).Count == 3 || c.Output.Trim() == "3"),
                 },
                 new()
                 {
                     Id = "wc",
-                    Text = "Räkna hur många rader `~/dokument/frukter.txt` har.",
-                    Solution = Cmds("wc -l ~/dokument/frukter.txt"),
+                    Text = "Räkna hur många rader `~/{{documents}}/{{fruits}}` har.",
+                    Solution = Cmds("wc -l ~/{{documents}}/{{fruits}}"),
                     Check = c => Ran(c, Re(@"\bwc\b.*-\w*l")) && Re(@"\b10\b").IsMatch(c.Output),
                 },
                 new()
                 {
                     Id = "sort",
-                    Text = "Visa frukterna i `~/dokument/frukter.txt` i bokstavsordning.",
-                    Solution = Cmds("sort ~/dokument/frukter.txt"),
-                    Check = c => Ran(c, Re(@"\bsort\b")) && Re("frukter").IsMatch(c.Line) && OutLines(c).At(0) == "apelsin",
+                    Text = "Visa frukterna i `~/{{documents}}/{{fruits}}` i bokstavsordning.",
+                    Solution = Cmds("sort ~/{{documents}}/{{fruits}}"),
+                    Check = c => Ran(c, Re(@"\bsort\b")) && c.Line.Contains(W(c)["fruits"], StringComparison.Ordinal) && OutLines(c).At(0) == SortedLines(c, W(c).File("fruits"))[0],
                 },
             },
         },
@@ -202,49 +202,49 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "redirect",
-                    Text = "Skriv texten `Hej från shell` till filen `~/hej.txt` med `echo` och `>`.",
-                    Solution = Cmds("echo \"Hej från shell\" > ~/hej.txt"),
-                    Check = c => Content(c, "~/hej.txt").Contains("Hej från shell"),
+                    Text = "Skriv texten `{{helloShell}}` till filen `~/{{helloFile}}` med `echo` och `>`.",
+                    Solution = Cmds("echo \"{{helloShell}}\" > ~/{{helloFile}}"),
+                    Check = c => Content(c, "~/{{helloFile}}").Contains(W(c)["helloShell"]),
                 },
                 new()
                 {
                     Id = "append",
-                    Text = "Lägg till en rad till i `~/hej.txt` – utan att skriva över den första.",
+                    Text = "Lägg till en rad till i `~/{{helloFile}}` – utan att skriva över den första.",
                     Hint = "Använd `>>` i stället för `>`.",
-                    Solution = Cmds("echo \"En rad till\" >> ~/hej.txt"),
+                    Solution = Cmds("echo \"{{anotherLine}}\" >> ~/{{helloFile}}"),
                     Check = c =>
                     {
-                        var lines = Content(c, "~/hej.txt").Split('\n').Where(l => l != "").ToList();
-                        return lines.Count >= 2 && lines[0].Contains("Hej från shell");
+                        var lines = Content(c, "~/{{helloFile}}").Split('\n').Where(l => l != "").ToList();
+                        return lines.Count >= 2 && lines[0].Contains(W(c)["helloShell"]);
                     },
                 },
                 new()
                 {
                     Id = "count-errors",
                     Text = "Räkna antalet rader med `ERROR` i server.log genom att skicka `grep` vidare till `wc -l` med en pipe.",
-                    Solution = Cmds("grep ERROR ~/dokument/server.log | wc -l"),
+                    Solution = Cmds("grep ERROR ~/{{documents}}/server.log | wc -l"),
                     Check = c => Ran(c, Re(@"grep.*\|\s*wc\s+-l")) && c.Output.Trim() == "3",
                 },
                 new()
                 {
                     Id = "uniq",
-                    Text = "Visa hur många gånger varje frukt förekommer i `frukter.txt`, med `sort` och `uniq -c`.",
-                    Solution = Cmds("sort ~/dokument/frukter.txt | uniq -c"),
-                    Check = c => Ran(c, Re(@"sort.*\|\s*uniq\s+-c")) && Re("3 äpple").IsMatch(c.Output),
+                    Text = "Visa hur många gånger varje frukt förekommer i `{{fruits}}`, med `sort` och `uniq -c`.",
+                    Solution = Cmds("sort ~/{{documents}}/{{fruits}} | uniq -c"),
+                    Check = c => Ran(c, Re(@"sort.*\|\s*uniq\s+-c")) && c.Output.Contains("3 " + W(c).File("fruits").Split('\n')[0], StringComparison.Ordinal),
                 },
                 new()
                 {
                     Id = "save-ls",
-                    Text = "Spara en lista över filerna i `/etc` i filen `~/etc-filer.txt`.",
-                    Solution = Cmds("ls /etc > ~/etc-filer.txt"),
-                    Check = c => Content(c, "~/etc-filer.txt").Contains("os-release"),
+                    Text = "Spara en lista över filerna i `/etc` i filen `~/{{etcFiles}}`.",
+                    Solution = Cmds("ls /etc > ~/{{etcFiles}}"),
+                    Check = c => Content(c, "~/{{etcFiles}}").Contains("os-release"),
                 },
                 new()
                 {
                     Id = "devnull",
-                    Text = "Kör `ls /finnsinte`, men skicka felmeddelandet till `/dev/null` så att inget syns.",
-                    Solution = Cmds("ls /finnsinte 2> /dev/null"),
-                    Check = c => Re(@"^ls\s+\/finnsinte\b.*2>\s*\/dev\/null").IsMatch(c.Line) && c.Output.Trim() == "",
+                    Text = "Kör `ls /{{missing}}`, men skicka felmeddelandet till `/dev/null` så att inget syns.",
+                    Solution = Cmds("ls /{{missing}} 2> /dev/null"),
+                    Check = c => Re(c, @"^ls\s+\/{{missing}}\b.*2>\s*\/dev\/null").IsMatch(c.Line) && c.Output.Trim() == "",
                 },
             },
         },
@@ -258,18 +258,18 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "sed-s",
-                    Text = "Visa `~/dokument/server.log` med ordet `ERROR` utbytt mot `FEL` på alla rader, med `sed`.",
-                    Hint = "Kommandot `s/gammalt/nytt/` byter ut text: `sed 's/ERROR/FEL/' fil`",
-                    Solution = Cmds("sed 's/ERROR/FEL/' ~/dokument/server.log"),
+                    Text = "Visa `~/{{documents}}/server.log` med ordet `ERROR` utbytt mot `{{errorWord}}` på alla rader, med `sed`.",
+                    Hint = "Kommandot `s/gammalt/nytt/` byter ut text: `sed 's/ERROR/{{errorWord}}/' fil`",
+                    Solution = Cmds("sed 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log"),
                     Check = c =>
-                        Ran(c, Re(@"^sed\b")) && OutLines(c).Count == 15 && Re("FEL Kunde inte ansluta").IsMatch(c.Output) && !c.Output.Contains("ERROR"),
+                        Ran(c, Re(@"^sed\b")) && OutLines(c).Count == 15 && Re(c, "{{errorWord}} Could not connect").IsMatch(c.Output) && !c.Output.Contains("ERROR"),
                 },
                 new()
                 {
                     Id = "sed-d",
                     Text = "Visa server.log **utan** alla rader som innehåller `INFO`, med `sed`.",
                     Hint = "Adressen `/INFO/` väljer raderna och kommandot `d` tar bort dem: `sed '/INFO/d' fil`",
-                    Solution = Cmds("sed '/INFO/d' ~/dokument/server.log"),
+                    Solution = Cmds("sed '/INFO/d' ~/{{documents}}/server.log"),
                     Check = c => Ran(c, Re(@"^sed\b")) && OutLines(c).Count == 6 && !c.Output.Contains("INFO"),
                 },
                 new()
@@ -278,7 +278,7 @@ public static partial class ChaptersLib
                     Text = "Skriv ut alla användarnamn i `/etc/passwd` med **versaler**: plocka ut fält 1 med `cut` och skicka vidare till `tr`.",
                     Hint = "`cut -d: -f1 /etc/passwd` ger användarnamnen. Lägg till `| tr a-z A-Z`.",
                     Solution = Cmds("cut -d: -f1 /etc/passwd | tr a-z A-Z"),
-                    Check = c => Ran(c, Re(@"\|\s*tr\b")) && OutLines(c).Contains("ROOT") && OutLines(c).Contains("ELEV"),
+                    Check = c => Ran(c, Re(@"\|\s*tr\b")) && OutLines(c).Contains("ROOT") && OutLines(c).Contains(W(c).User.ToUpperInvariant()),
                 },
                 new()
                 {
@@ -295,24 +295,24 @@ public static partial class ChaptersLib
                     Hint = "Fälten skiljs åt av kolon, så använd `-F:`. Programmet blir `'{print $1, $7}'`.",
                     Solution = Cmds("awk -F: '{print $1, $7}' /etc/passwd"),
                     Check = c =>
-                        Ran(c, Re(@"^awk\b")) && OutLines(c).Any(l => Re(@"^elev\b.*\/bin\/bash$").IsMatch(l) && !l.Contains("1000")),
+                        Ran(c, Re(@"^awk\b")) && OutLines(c).Any(l => Re(c, @"^{{user}}\b.*\/bin\/bash$").IsMatch(l) && !l.Contains("1000")),
                 },
                 new()
                 {
                     Id = "awk-sum",
-                    Text = "Räkna ut **summan** av poängen (kolumn 3) i `~/dokument/betyg.csv` med `awk`.",
-                    Hint = "Hoppa över rubrikraden med `NR > 1`, lägg ihop med `summa += $3` och skriv ut i `END { }`. Avgränsaren är komma: `-F,`.",
-                    Solution = Cmds("awk -F, 'NR > 1 {summa += $3} END {print summa}' ~/dokument/betyg.csv"),
+                    Text = "Räkna ut **summan** av poängen (kolumn 3) i `~/{{documents}}/{{grades}}` med `awk`.",
+                    Hint = "Hoppa över rubrikraden med `NR > 1`, lägg ihop med `{{sumVar}} += $3` och skriv ut i `END { }`. Avgränsaren är komma: `-F,`.",
+                    Solution = Cmds("awk -F, 'NR > 1 {{{sumVar}} += $3} END {print {{sumVar}}}' ~/{{documents}}/{{grades}}"),
                     Check = c => Ran(c, Re(@"\bawk\b")) && Re(@"(^|\D)590(\D|$)").IsMatch(c.Output),
                 },
                 new()
                 {
                     Id = "sed-i",
-                    Text = "Byt ut `Linux` mot `GNU/Linux` **direkt i filen** `~/anteckningar.txt`.",
+                    Text = "Byt ut `Linux` mot `GNU/Linux` **direkt i filen** `~/{{notes}}`.",
                     Hint = "Använd `sed -i`. Eftersom ersättningen innehåller `/` är det enklast att byta avgränsare: `s|Linux|GNU/Linux|`.",
-                    Solution = Cmds("sed -i 's|Linux|GNU/Linux|' ~/anteckningar.txt"),
+                    Solution = Cmds("sed -i 's|Linux|GNU/Linux|' ~/{{notes}}"),
                     Check = c =>
-                        c.ExitCode == 0 && Re(@"^sed\b.*\s-\w*i").IsMatch(Unsudo(c.Line)) && Content(c, "~/anteckningar.txt").Contains("GNU/Linux"),
+                        c.ExitCode == 0 && Re(@"^sed\b.*\s-\w*i").IsMatch(Unsudo(c.Line)) && Content(c, "~/{{notes}}").Contains("GNU/Linux"),
                 },
             },
         },
@@ -333,10 +333,10 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "export",
-                    Text = "Skapa miljövariabeln `FAVORIT` med värdet `linux`.",
+                    Text = "Skapa miljövariabeln `{{favVar}}` med värdet `linux`.",
                     Hint = "Inga mellanslag runt likhetstecknet: `export NAMN=värde`.",
-                    Solution = Cmds("export FAVORIT=linux"),
-                    Check = c => Env(c, "FAVORIT") == "linux",
+                    Solution = Cmds("export {{favVar}}=linux"),
+                    Check = c => Env(c, "{{favVar}}") == "linux",
                 },
                 new()
                 {
@@ -356,8 +356,8 @@ public static partial class ChaptersLib
                 {
                     Id = "exitcode",
                     Text = "Kör ett kommando som misslyckas, och visa sedan dess slutkod med `echo $?`.",
-                    Hint = "Prova `ls /finnsinte` följt av `echo $?`. Slutkoden ska inte vara 0.",
-                    Solution = Cmds("ls /finnsinte", "echo $?"),
+                    Hint = "Prova `ls /{{missing}}` följt av `echo $?`. Slutkoden ska inte vara 0.",
+                    Solution = Cmds("ls /{{missing}}", "echo $?"),
                     Check = c => Re(@"(^|[;&]\s*)echo\s+""?\$\?""?\s*$").IsMatch(c.Line) && Re(@"^[1-9]\d*$").IsMatch(c.Output.Trim()),
                 },
             },
@@ -386,32 +386,32 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "script",
-                    Text = "Skapa skriptet `~/hej.sh` som innehåller raden `echo Hej från mitt skript`.",
-                    Hint = "Använd enkla citattecken: `echo 'echo Hej från mitt skript' > ~/hej.sh`",
-                    Solution = Cmds("echo 'echo Hej från mitt skript' > ~/hej.sh"),
-                    Check = c => Re(@"echo\s+.*Hej från mitt skript").IsMatch(Content(c, "~/hej.sh")),
+                    Text = "Skapa skriptet `~/{{helloScript}}` som innehåller raden `echo {{helloScriptText}}`.",
+                    Hint = "Använd enkla citattecken: `echo 'echo {{helloScriptText}}' > ~/{{helloScript}}`",
+                    Solution = Cmds("echo 'echo {{helloScriptText}}' > ~/{{helloScript}}"),
+                    Check = c => Re(c, @"echo\s+.*{{helloScriptText}}").IsMatch(Content(c, "~/{{helloScript}}")),
                 },
                 new()
                 {
                     Id = "chmod-x",
-                    Text = "Gör `~/hej.sh` körbart.",
-                    Solution = Cmds("chmod +x ~/hej.sh"),
-                    Check = c => (Mode(c, "~/hej.sh") & Js.Oct(100)) != 0,
+                    Text = "Gör `~/{{helloScript}}` körbart.",
+                    Solution = Cmds("chmod +x ~/{{helloScript}}"),
+                    Check = c => (Mode(c, "~/{{helloScript}}") & Js.Oct(100)) != 0,
                 },
                 new()
                 {
                     Id = "run-script",
-                    Text = "Kör skriptet med `./hej.sh` (stå i hemkatalogen).",
-                    Solution = Cmds("cd ~", "./hej.sh"),
-                    Check = c => Ran(c, Re(@"(\.\/|~\/|\/home\/elev\/)hej\.sh\s*$")) && c.Output.Contains("Hej från mitt skript"),
+                    Text = "Kör skriptet med `./{{helloScript}}` (stå i hemkatalogen).",
+                    Solution = Cmds("cd ~", "./{{helloScript}}"),
+                    Check = c => Ran(c, Re(c, @"(\.\/|~\/|\/home\/{{user}}\/){{helloScript}}\s*$")) && c.Output.Contains(W(c)["helloScriptText"]),
                 },
                 new()
                 {
                     Id = "chmod-600",
-                    Text = "Gör `~/anteckningar.txt` läsbar och skrivbar **bara** för dig (`rw-------`).",
+                    Text = "Gör `~/{{notes}}` läsbar och skrivbar **bara** för dig (`rw-------`).",
                     Hint = "r = 4, w = 2, x = 1. Ägaren ska ha 4 + 2 och övriga 0.",
-                    Solution = Cmds("chmod 600 ~/anteckningar.txt"),
-                    Check = c => (Mode(c, "~/anteckningar.txt") & Js.Oct(777)) == Js.Oct(600),
+                    Solution = Cmds("chmod 600 ~/{{notes}}"),
+                    Check = c => (Mode(c, "~/{{notes}}") & Js.Oct(777)) == Js.Oct(600),
                 },
             },
         },
@@ -477,9 +477,9 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "server",
-                    Text = "Servern `minserver` körs som root. Stoppa den – med `pkill` eller `kill` och rätt behörighet.",
+                    Text = "Servern `myserver` körs som root. Stoppa den – med `pkill` eller `kill` och rätt behörighet.",
                     Hint = "Som vanlig användare får du \"Operation not permitted\". Sätt `sudo` framför.",
-                    Solution = Cmds("sudo pkill minserver"),
+                    Solution = Cmds("sudo pkill myserver"),
                     Check = c => !c.Sh.Proc.Procs.Any(p => p.Pid == ProcsLib.ServerPid),
                 },
             },
@@ -494,34 +494,34 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "tar-czf",
-                    Text = "Packa ihop katalogen `~/dokument` till det komprimerade arkivet `~/dokument.tar.gz`.",
-                    Hint = "Stå i hemkatalogen och använd *create zipped verbose file*: `tar -czvf dokument.tar.gz dokument`.",
-                    Solution = Cmds("cd ~", "tar -czvf dokument.tar.gz dokument"),
-                    Check = c => ArchiveHas(c, "~/dokument.tar.gz", "tar.gz", "dokument/frukter.txt"),
+                    Text = "Packa ihop katalogen `~/{{documents}}` till det komprimerade arkivet `~/{{documents}}.tar.gz`.",
+                    Hint = "Stå i hemkatalogen och använd *create zipped verbose file*: `tar -czvf {{documents}}.tar.gz {{documents}}`.",
+                    Solution = Cmds("cd ~", "tar -czvf {{documents}}.tar.gz {{documents}}"),
+                    Check = c => ArchiveHas(c, "~/{{documents}}.tar.gz", "tar.gz", "{{documents}}/{{fruits}}"),
                 },
                 new()
                 {
                     Id = "tar-t",
-                    Text = "Lista innehållet i `~/dokument.tar.gz` – utan att packa upp det.",
-                    Hint = "`t` betyder lista: `tar -tzvf ~/dokument.tar.gz`.",
-                    Solution = Cmds("tar -tzvf ~/dokument.tar.gz"),
-                    Check = c => Ran(c, Re(@"\btar\b")) && TarOps(c.Line) == "t" && c.Output.Contains("dokument/server.log"),
+                    Text = "Lista innehållet i `~/{{documents}}.tar.gz` – utan att packa upp det.",
+                    Hint = "`t` betyder lista: `tar -tzvf ~/{{documents}}.tar.gz`.",
+                    Solution = Cmds("tar -tzvf ~/{{documents}}.tar.gz"),
+                    Check = c => Ran(c, Re(@"\btar\b")) && TarOps(c.Line) == "t" && c.Output.Contains(X(c, "{{documents}}/server.log")),
                 },
                 new()
                 {
                     Id = "tar-x",
-                    Text = "Skapa katalogen `~/uppackat` och packa upp `~/dokument.tar.gz` i den.",
-                    Hint = "Med `-C` väljer du var tar packar upp: `tar -xzvf ~/dokument.tar.gz -C ~/uppackat`.",
-                    Solution = Cmds("mkdir ~/uppackat", "tar -xzvf ~/dokument.tar.gz -C ~/uppackat"),
-                    Check = c => TarOps(c.Line).Contains('x') && IsFile(c, "~/uppackat/dokument/frukter.txt"),
+                    Text = "Skapa katalogen `~/{{unpacked}}` och packa upp `~/{{documents}}.tar.gz` i den.",
+                    Hint = "Med `-C` väljer du var tar packar upp: `tar -xzvf ~/{{documents}}.tar.gz -C ~/{{unpacked}}`.",
+                    Solution = Cmds("mkdir ~/{{unpacked}}", "tar -xzvf ~/{{documents}}.tar.gz -C ~/{{unpacked}}"),
+                    Check = c => TarOps(c.Line).Contains('x') && IsFile(c, "~/{{unpacked}}/{{documents}}/{{fruits}}"),
                 },
                 new()
                 {
                     Id = "gzip",
-                    Text = "Kopiera `~/dokument/server.log` till din hemkatalog och komprimera kopian med `gzip`, så att du får `~/server.log.gz`.",
-                    Hint = "Först `cp ~/dokument/server.log ~`, sedan `gzip ~/server.log`.",
-                    Solution = Cmds("cp ~/dokument/server.log ~", "gzip -v ~/server.log"),
-                    Check = c => ArchiveCmd.GunzipString(Content(c, "~/server.log.gz"))?.D.Contains("Servern startar") ?? false,
+                    Text = "Kopiera `~/{{documents}}/server.log` till din hemkatalog och komprimera kopian med `gzip`, så att du får `~/server.log.gz`.",
+                    Hint = "Först `cp ~/{{documents}}/server.log ~`, sedan `gzip ~/server.log`.",
+                    Solution = Cmds("cp ~/{{documents}}/server.log ~", "gzip -v ~/server.log"),
+                    Check = c => ArchiveCmd.GunzipString(Content(c, "~/server.log.gz"))?.D.Contains("Server starting") ?? false,
                 },
                 new()
                 {
@@ -537,20 +537,20 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "zip",
-                    Text = "Installera paketen `zip` och `unzip`, och packa sedan ihop `~/dokument` till `~/dokument.zip`.",
-                    Hint = "Kör `sudo apt update` och `sudo apt install zip unzip`. Glöm inte `-r` till zip: `zip -r dokument.zip dokument`.",
-                    Solution = Cmds("sudo apt update", "sudo apt install zip unzip", "cd ~", "zip -r dokument.zip dokument"),
-                    Check = c => ArchiveHas(c, "~/dokument.zip", "zip", "dokument/frukter.txt"),
+                    Text = "Installera paketen `zip` och `unzip`, och packa sedan ihop `~/{{documents}}` till `~/{{documents}}.zip`.",
+                    Hint = "Kör `sudo apt update` och `sudo apt install zip unzip`. Glöm inte `-r` till zip: `zip -r {{documents}}.zip {{documents}}`.",
+                    Solution = Cmds("sudo apt update", "sudo apt install zip unzip", "cd ~", "zip -r {{documents}}.zip {{documents}}"),
+                    Check = c => ArchiveHas(c, "~/{{documents}}.zip", "zip", "{{documents}}/{{fruits}}"),
                 },
                 new()
                 {
                     Id = "unzip",
-                    Text = "Packa upp `~/dokument.zip` i den nya katalogen `~/fran-zip` med `unzip`.",
-                    Hint = "`-d` väljer katalog och skapar den om den saknas: `unzip ~/dokument.zip -d ~/fran-zip`.",
-                    Solution = Cmds("unzip ~/dokument.zip -d ~/fran-zip"),
+                    Text = "Packa upp `~/{{documents}}.zip` i den nya katalogen `~/{{fromZip}}` med `unzip`.",
+                    Hint = "`-d` väljer katalog och skapar den om den saknas: `unzip ~/{{documents}}.zip -d ~/{{fromZip}}`.",
+                    Solution = Cmds("unzip ~/{{documents}}.zip -d ~/{{fromZip}}"),
                     Check = c =>
                         Re(@"\bunzip\b").IsMatch(c.Line) &&
-                        (IsFile(c, "~/fran-zip/dokument/frukter.txt") || IsFile(c, "~/fran-zip/home/elev/dokument/frukter.txt")),
+                        (IsFile(c, "~/{{fromZip}}/{{documents}}/{{fruits}}") || IsFile(c, "~/{{fromZip}}/home/{{user}}/{{documents}}/{{fruits}}")),
                 },
             },
         },
@@ -592,46 +592,46 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "journal-u",
-                    Text = "Läs loggen för den trasiga tjänsten `rapportd` med `journalctl`. Varför startar den inte?",
-                    Hint = "`-u` visar bara raderna från en tjänst: `journalctl -u rapportd`. Med `-xe` hoppar du till slutet och får förklaringar.",
-                    Solution = Cmds("journalctl -u rapportd"),
-                    Check = c => Ran(c, Re(@"\bjournalctl\b.*\brapportd\b")) && c.Output.Contains("rapportd.conf"),
+                    Text = "Läs loggen för den trasiga tjänsten `reportd` med `journalctl`. Varför startar den inte?",
+                    Hint = "`-u` visar bara raderna från en tjänst: `journalctl -u reportd`. Med `-xe` hoppar du till slutet och får förklaringar.",
+                    Solution = Cmds("journalctl -u reportd"),
+                    Check = c => Ran(c, Re(@"\bjournalctl\b.*\breportd\b")) && c.Output.Contains("reportd.conf"),
                 },
                 new()
                 {
                     Id = "fix",
-                    Text = "Rätta felet som loggen berättar om och starta sedan om `rapportd` med `systemctl`, så att den kör.",
-                    Hint = "Konfigurationsfilen saknas, men det finns ett exempel: `sudo cp /etc/rapportd.conf.example /etc/rapportd.conf`. Starta sedan om med `sudo systemctl restart rapportd`.",
-                    Solution = Cmds("sudo cp /etc/rapportd.conf.example /etc/rapportd.conf", "sudo systemctl restart rapportd"),
-                    Check = c => Re(@"\bsystemctl\b.*\brapportd\b").IsMatch(c.Line) && c.Sh.Services.Units.Get("rapportd.service")?.Active == "active",
+                    Text = "Rätta felet som loggen berättar om och starta sedan om `reportd` med `systemctl`, så att den kör.",
+                    Hint = "Konfigurationsfilen saknas, men det finns ett exempel: `sudo cp /etc/reportd.conf.example /etc/reportd.conf`. Starta sedan om med `sudo systemctl restart reportd`.",
+                    Solution = Cmds("sudo cp /etc/reportd.conf.example /etc/reportd.conf", "sudo systemctl restart reportd"),
+                    Check = c => Re(@"\bsystemctl\b.*\breportd\b").IsMatch(c.Line) && c.Sh.Services.Units.Get("reportd.service")?.Active == "active",
                 },
                 new()
                 {
-                    Id = "start-minserver",
-                    Text = "Starta tjänsten `minserver` (om den inte redan kör) och visa sedan dess status. Vilket PID fick den?",
-                    Hint = "`sudo systemctl start minserver` och sedan `systemctl status minserver`.",
-                    Solution = Cmds("sudo systemctl start minserver", "systemctl status minserver"),
-                    Check = c => Ran(c, Re(@"\bsystemctl\b.*\bstatus\b.*\bminserver\b")) && c.Output.Contains("active (running)"),
+                    Id = "start-myserver",
+                    Text = "Starta tjänsten `myserver` (om den inte redan kör) och visa sedan dess status. Vilket PID fick den?",
+                    Hint = "`sudo systemctl start myserver` och sedan `systemctl status myserver`.",
+                    Solution = Cmds("sudo systemctl start myserver", "systemctl status myserver"),
+                    Check = c => Ran(c, Re(@"\bsystemctl\b.*\bstatus\b.*\bmyserver\b")) && c.Output.Contains("active (running)"),
                 },
                 new()
                 {
                     Id = "stop",
-                    Text = "Stoppa `minserver` med `systemctl`. Kontrollera gärna med `pgrep minserver` att processen är borta.",
-                    Hint = "`sudo systemctl stop minserver`",
-                    Solution = Cmds("sudo systemctl stop minserver", "pgrep minserver"),
+                    Text = "Stoppa `myserver` med `systemctl`. Kontrollera gärna med `pgrep myserver` att processen är borta.",
+                    Hint = "`sudo systemctl stop myserver`",
+                    Solution = Cmds("sudo systemctl stop myserver", "pgrep myserver"),
                     Check = c =>
-                        Ran(c, Re(@"\bsystemctl\b.*\bstop\b.*\bminserver\b")) && !c.Sh.Proc.Procs.Any(p => p.Cmd.Contains("/minserver")),
+                        Ran(c, Re(@"\bsystemctl\b.*\bstop\b.*\bmyserver\b")) && !c.Sh.Proc.Procs.Any(p => p.Cmd.Contains("/myserver")),
                 },
                 new()
                 {
                     Id = "enable",
-                    Text = "Se till att `minserver` startar automatiskt varje gång datorn startar – och starta den nu också, med ett enda kommando.",
-                    Hint = "`enable` gäller vid uppstart och `--now` startar den direkt: `sudo systemctl enable --now minserver`.",
-                    Solution = Cmds("sudo systemctl enable --now minserver"),
+                    Text = "Se till att `myserver` startar automatiskt varje gång datorn startar – och starta den nu också, med ett enda kommando.",
+                    Hint = "`enable` gäller vid uppstart och `--now` startar den direkt: `sudo systemctl enable --now myserver`.",
+                    Solution = Cmds("sudo systemctl enable --now myserver"),
                     Check = c =>
                         Re(@"\bsystemctl\b.*\benable\b").IsMatch(c.Line) &&
-                        IsFile(c, "/etc/systemd/system/multi-user.target.wants/minserver.service") &&
-                        c.Sh.Services.Units.Get("minserver.service")?.Active == "active",
+                        IsFile(c, "/etc/systemd/system/multi-user.target.wants/myserver.service") &&
+                        c.Sh.Services.Units.Get("myserver.service")?.Active == "active",
                 },
             },
         },
@@ -679,17 +679,17 @@ public static partial class ChaptersLib
                 {
                     Id = "curl-localhost",
                     Text = "Hämta startsidan från övningsservern på din egen dator, `http://localhost:8080`, med `curl`.",
-                    Hint = "I Ubuntu måste curl installeras: `sudo apt install curl`. Får du *Couldn't connect to server* är minserver stoppad – starta den med `minserver`.",
-                    Solution = Cmds("sudo apt update", "sudo apt install curl", "minserver", "curl http://localhost:8080"),
-                    Check = c => Ran(c, Re(@"^curl\b.*\b(localhost|127\.0\.0\.1|192\.168\.1\.42):8080\b")) && c.Output.Contains("Hello from minserver"),
+                    Hint = "I Ubuntu måste curl installeras: `sudo apt install curl`. Får du *Couldn't connect to server* är myserver stoppad – starta den med `myserver`.",
+                    Solution = Cmds("sudo apt update", "sudo apt install curl", "myserver", "curl http://localhost:8080"),
+                    Check = c => Ran(c, Re(@"^curl\b.*\b(localhost|127\.0\.0\.1|192\.168\.1\.42):8080\b")) && c.Output.Contains("Hello from myserver"),
                 },
                 new()
                 {
                     Id = "spara",
-                    Text = "Spara webbsidan `https://example.com` som filen `~/exempel.html`.",
-                    Hint = "Stå i hemkatalogen och använd `curl -o exempel.html https://example.com` eller `wget -O exempel.html https://example.com`.",
-                    Solution = Cmds("cd ~", "wget -O exempel.html https://example.com"),
-                    Check = c => Content(c, "~/exempel.html").Contains("Example Domain"),
+                    Text = "Spara webbsidan `https://example.com` som filen `~/{{exampleHtml}}`.",
+                    Hint = "Stå i hemkatalogen och använd `curl -o {{exampleHtml}} https://example.com` eller `wget -O {{exampleHtml}} https://example.com`.",
+                    Solution = Cmds("cd ~", "wget -O {{exampleHtml}} https://example.com"),
+                    Check = c => Content(c, "~/{{exampleHtml}}").Contains("Example Domain"),
                 },
                 new()
                 {
@@ -702,9 +702,9 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "ssh",
-                    Text = "Kör kommandot `hostname` på servern `server.lan` med `ssh` som användaren `elev`.",
-                    Hint = "`ssh elev@server.lan hostname` – och svara `yes` på frågan om värdnyckeln.",
-                    Solution = Cmds("ssh elev@server.lan hostname", "yes"),
+                    Text = "Kör kommandot `hostname` på servern `server.lan` med `ssh` som användaren `{{user}}`.",
+                    Hint = "`ssh {{user}}@server.lan hostname` – och svara `yes` på frågan om värdnyckeln.",
+                    Solution = Cmds("ssh {{user}}@server.lan hostname", "yes"),
                     Check = c => Ran(c, Re(@"^ssh\b.*(server\.lan|192\.168\.1\.10)")) && OutLines(c).Any(l => l.Trim() == "server"),
                 },
             },
@@ -730,7 +730,7 @@ public static partial class ChaptersLib
                     Text = "Visa alla diskar och partitioner tillsammans med filsystemens typ, etikett och UUID.",
                     Hint = "`lsblk` visar diskarna som ett träd. Med `-f` kommer filsystemen med: `lsblk -f`.",
                     Solution = Cmds("lsblk -f"),
-                    Check = c => Ran(c, Re(@"^lsblk\b")) && c.Output.Contains("FSTYPE") && c.Output.Contains("USBMINNE"),
+                    Check = c => Ran(c, Re(@"^lsblk\b")) && c.Output.Contains("FSTYPE") && c.Output.Contains("USBSTICK"),
                 },
                 new()
                 {
@@ -758,18 +758,18 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "fran-usb",
-                    Text = "Kopiera `rapport.pdf` från USB-stickan till din hemkatalog.",
-                    Hint = "Stickans filer finns nu i `/mnt/usb`: `cp /mnt/usb/rapport.pdf ~`.",
-                    Solution = Cmds("cp /mnt/usb/rapport.pdf ~"),
-                    Check = c => Content(c, "~/rapport.pdf").StartsWith("%PDF", StringComparison.Ordinal),
+                    Text = "Kopiera `{{report}}` från USB-stickan till din hemkatalog.",
+                    Hint = "Stickans filer finns nu i `/mnt/usb`: `cp /mnt/usb/{{report}} ~`.",
+                    Solution = Cmds("cp /mnt/usb/{{report}} ~"),
+                    Check = c => Content(c, "~/{{report}}").StartsWith("%PDF", StringComparison.Ordinal),
                 },
                 new()
                 {
                     Id = "till-usb",
-                    Text = "Spara en kopia av `~/dokument/frukter.txt` på USB-stickan.",
-                    Hint = "Filerna på stickan ägs av root – FAT har inga Linux-rättigheter – så du behöver `sudo`: `sudo cp ~/dokument/frukter.txt /mnt/usb/`.",
-                    Solution = Cmds("sudo cp ~/dokument/frukter.txt /mnt/usb/"),
-                    Check = c => DisksLib.PartitionRoot(c.Sh.Vfs, c.Sh.Disks, DisksLib.UsbPart, c.Sh.RootUser())?.Children?.Get("frukter.txt") is not null,
+                    Text = "Spara en kopia av `~/{{documents}}/{{fruits}}` på USB-stickan.",
+                    Hint = "Filerna på stickan ägs av root – FAT har inga Linux-rättigheter – så du behöver `sudo`: `sudo cp ~/{{documents}}/{{fruits}} /mnt/usb/`.",
+                    Solution = Cmds("sudo cp ~/{{documents}}/{{fruits}} /mnt/usb/"),
+                    Check = c => DisksLib.PartitionRoot(c.Sh.Vfs, c.Sh.Disks, DisksLib.UsbPart, c.Sh.RootUser())?.Children?.Get(W(c)["fruits"]) is not null,
                 },
                 new()
                 {
@@ -1280,25 +1280,25 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "appimage-chmod",
-                    Text = "I `~/Nedladdningar` ligger en nedladdad AppImage. Gör filen `Kalkylator.AppImage` körbar.",
-                    Hint = "`chmod +x ~/Nedladdningar/Kalkylator.AppImage`",
-                    Solution = Cmds("chmod +x ~/Nedladdningar/Kalkylator.AppImage"),
-                    Check = c => Ran(c, Re(@"^chmod\b")) && (Mode(c, "~/Nedladdningar/Kalkylator.AppImage") & Js.Oct(100)) != 0,
+                    Text = "I `~/{{downloads}}` ligger en nedladdad AppImage. Gör filen `{{calculator}}` körbar.",
+                    Hint = "`chmod +x ~/{{downloads}}/{{calculator}}`",
+                    Solution = Cmds("chmod +x ~/{{downloads}}/{{calculator}}"),
+                    Check = c => Ran(c, Re(@"^chmod\b")) && (Mode(c, "~/{{downloads}}/{{calculator}}") & Js.Oct(100)) != 0,
                 },
                 new()
                 {
                     Id = "appimage-run",
                     PerFamily = true,
-                    Text = "Starta Kalkylator. Klagar den på FUSE? Installera biblioteket som saknas och försök igen.",
+                    Text = "Starta {{calcName}}. Klagar den på FUSE? Installera biblioteket som saknas och försök igen.",
                     Hint = ByFamily(
-                        debian: "Biblioteket finns i paketet `libfuse2t64`. Starta sedan med `~/Nedladdningar/Kalkylator.AppImage`.",
-                        arch: "Biblioteket finns i paketet `fuse2`. Starta sedan med `~/Nedladdningar/Kalkylator.AppImage`.",
-                        redhat: "Biblioteket finns i paketet `fuse-libs`. Starta sedan med `~/Nedladdningar/Kalkylator.AppImage`."),
+                        debian: "Biblioteket finns i paketet `libfuse2t64`. Starta sedan med `~/{{downloads}}/{{calculator}}`.",
+                        arch: "Biblioteket finns i paketet `fuse2`. Starta sedan med `~/{{downloads}}/{{calculator}}`.",
+                        redhat: "Biblioteket finns i paketet `fuse-libs`. Starta sedan med `~/{{downloads}}/{{calculator}}`."),
                     Solution = ByFamily(
-                        debian: Cmds("sudo apt update", "sudo apt install libfuse2t64", "~/Nedladdningar/Kalkylator.AppImage"),
-                        arch: Cmds("sudo pacman -S fuse2", "y", "~/Nedladdningar/Kalkylator.AppImage"),
-                        redhat: Cmds("sudo dnf install fuse-libs", "y", "~/Nedladdningar/Kalkylator.AppImage")),
-                    Check = c => Ran(c, Re(@"Kalkylator\.AppImage|\bAppRun\b")) && !Re(@"--appimage-extract(\s|$)").IsMatch(c.Line),
+                        debian: Cmds("sudo apt update", "sudo apt install libfuse2t64", "~/{{downloads}}/{{calculator}}"),
+                        arch: Cmds("sudo pacman -S fuse2", "y", "~/{{downloads}}/{{calculator}}"),
+                        redhat: Cmds("sudo dnf install fuse-libs", "y", "~/{{downloads}}/{{calculator}}")),
+                    Check = c => Ran(c, Re(c, @"{{calculator}}|\bAppRun\b")) && !Re(@"--appimage-extract(\s|$)").IsMatch(c.Line),
                 },
             },
         },
@@ -1312,10 +1312,10 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "variabel",
-                    Text = "Skapa variabeln `namn` med ditt namn, och skriv sedan ut `Hej` följt av namnet med `echo`.",
-                    Hint = "Inga mellanslag runt `=`: `namn=Kim`. Använd sedan `echo \"Hej $namn\"`.",
-                    Solution = Cmds("namn=Kim", "echo \"Hej $namn\""),
-                    Check = c => Ran(c, Re(@"^echo\b.*\$\{?namn\b")) && !string.IsNullOrEmpty(Env(c, "namn")) && c.Output.Trim() == $"Hej {Env(c, "namn")}",
+                    Text = "Skapa variabeln `{{nameVar}}` med ditt namn, och skriv sedan ut `{{hello}}` följt av namnet med `echo`.",
+                    Hint = "Inga mellanslag runt `=`: `{{nameVar}}=Kim`. Använd sedan `echo \"{{hello}} ${{nameVar}}\"`.",
+                    Solution = Cmds("{{nameVar}}=Kim", "echo \"{{hello}} ${{nameVar}}\""),
+                    Check = c => Ran(c, Re(c, @"^echo\b.*\$\{?{{nameVar}}\b")) && !string.IsNullOrEmpty(Env(c, "{{nameVar}}")) && c.Output.Trim() == $"{W(c)["hello"]} {Env(c, "{{nameVar}}")}",
                 },
                 new()
                 {
@@ -1327,18 +1327,18 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "substitution",
-                    Text = "Spara antalet rader i `~/dokument/server.log` i variabeln `rader`, med `$(...)` och `wc -l`.",
-                    Hint = "`wc -l < fil` skriver bara ut antalet, utan filnamnet: `rader=$(wc -l < ~/dokument/server.log)`",
-                    Solution = Cmds("rader=$(wc -l < ~/dokument/server.log)"),
-                    Check = c => (Env(c, "rader") ?? "").Trim() == "15",
+                    Text = "Spara antalet rader i `~/{{documents}}/server.log` i variabeln `{{linesVar}}`, med `$(...)` och `wc -l`.",
+                    Hint = "`wc -l < fil` skriver bara ut antalet, utan filnamnet: `{{linesVar}}=$(wc -l < ~/{{documents}}/server.log)`",
+                    Solution = Cmds("{{linesVar}}=$(wc -l < ~/{{documents}}/server.log)"),
+                    Check = c => (Env(c, "{{linesVar}}") ?? "").Trim() == "15",
                 },
                 new()
                 {
                     Id = "if",
-                    Text = "Skriv ett `if`-villkor som skriver ut `finns` om filen `~/.bashrc` finns.",
-                    Hint = "`if [ -f ~/.bashrc ]; then echo finns; fi` – glöm inte mellanslagen innanför hakparenteserna.",
-                    Solution = Cmds("if [ -f ~/.bashrc ]; then echo finns; fi"),
-                    Check = c => Ran(c, Re(@"^if\b")) && Re(@"\[|\btest\b").IsMatch(c.Line) && c.Output.Trim() == "finns",
+                    Text = "Skriv ett `if`-villkor som skriver ut `{{exists}}` om filen `~/.bashrc` finns.",
+                    Hint = "`if [ -f ~/.bashrc ]; then echo {{exists}}; fi` – glöm inte mellanslagen innanför hakparenteserna.",
+                    Solution = Cmds("if [ -f ~/.bashrc ]; then echo {{exists}}; fi"),
+                    Check = c => Ran(c, Re(@"^if\b")) && Re(@"\[|\btest\b").IsMatch(c.Line) && c.Output.Trim() == W(c)["exists"],
                 },
                 new()
                 {
@@ -1351,27 +1351,27 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "while-read",
-                    Text = "Läs `~/dokument/frukter.txt` rad för rad med `while read` och skriv ut `Frukt: ` framför varje rad.",
-                    Hint = "`while read rad; do echo \"Frukt: $rad\"; done < ~/dokument/frukter.txt`",
-                    Solution = Cmds("while read rad; do echo \"Frukt: $rad\"; done < ~/dokument/frukter.txt"),
-                    Check = c => Ran(c, Re(@"\bwhile\s+read\b")) && OutLines(c).Count == 10 && OutLines(c).At(0) == "Frukt: äpple",
+                    Text = "Läs `~/{{documents}}/{{fruits}}` rad för rad med `while read` och skriv ut `{{fruitLabel}}: ` framför varje rad.",
+                    Hint = "`while read {{lineVar}}; do echo \"{{fruitLabel}}: ${{lineVar}}\"; done < ~/{{documents}}/{{fruits}}`",
+                    Solution = Cmds("while read {{lineVar}}; do echo \"{{fruitLabel}}: ${{lineVar}}\"; done < ~/{{documents}}/{{fruits}}"),
+                    Check = c => Ran(c, Re(@"\bwhile\s+read\b")) && OutLines(c).Count == 10 && OutLines(c).At(0) == $"{W(c)["fruitLabel"]}: {W(c).File("fruits").Split('\n')[0]}",
                 },
                 new()
                 {
                     Id = "funktion",
-                    Text = "Skapa funktionen `dubbla` som skriver ut sitt första argument gånger två. Testa med `dubbla 21`.",
-                    Hint = "`dubbla() { echo $(( $1 * 2 )); }` – och sedan `dubbla 21`.",
-                    Solution = Cmds("dubbla() { echo $(( $1 * 2 )); }", "dubbla 21"),
-                    Check = c => Ran(c, Re(@"^dubbla\s+21\s*$")) && c.Sh.Functions.ContainsKey("dubbla") && c.Output.Trim() == "42",
+                    Text = "Skapa funktionen `{{doubleFn}}` som skriver ut sitt första argument gånger två. Testa med `{{doubleFn}} 21`.",
+                    Hint = "`{{doubleFn}}() { echo $(( $1 * 2 )); }` – och sedan `{{doubleFn}} 21`.",
+                    Solution = Cmds("{{doubleFn}}() { echo $(( $1 * 2 )); }", "{{doubleFn}} 21"),
+                    Check = c => Ran(c, Re(c, @"^{{doubleFn}}\s+21\s*$")) && c.Sh.Functions.ContainsKey(W(c)["doubleFn"]) && c.Output.Trim() == "42",
                 },
                 new()
                 {
                     Id = "backup",
-                    Text = "Skriv skriptet `~/backup.sh` som kopierar filen i första argumentet till samma namn med `.bak` på slutet. Gör det körbart och kör `./backup.sh anteckningar.txt` i hemkatalogen.",
-                    Hint = "Skapa filen med `cat > ~/backup.sh << 'SLUT'`, skriv `#!/bin/bash` och `cp \"$1\" \"$1.bak\"` på varsin rad och avsluta med `SLUT`.",
-                    Solution = Cmds("cat > ~/backup.sh << 'SLUT'", "#!/bin/bash", "cp \"$1\" \"$1.bak\"", "SLUT", "chmod +x ~/backup.sh", "cd ~", "./backup.sh anteckningar.txt"),
+                    Text = "Skriv skriptet `~/backup.sh` som kopierar filen i första argumentet till samma namn med `.bak` på slutet. Gör det körbart och kör `./backup.sh {{notes}}` i hemkatalogen.",
+                    Hint = "Skapa filen med `cat > ~/backup.sh << '{{heredocEnd}}'`, skriv `#!/bin/bash` och `cp \"$1\" \"$1.bak\"` på varsin rad och avsluta med `{{heredocEnd}}`.",
+                    Solution = Cmds("cat > ~/backup.sh << '{{heredocEnd}}'", "#!/bin/bash", "cp \"$1\" \"$1.bak\"", "{{heredocEnd}}", "chmod +x ~/backup.sh", "cd ~", "./backup.sh {{notes}}"),
                     Check = c =>
-                        Ran(c, Re(@"backup\.sh\s+anteckningar\.txt\s*$")) && Content(c, "~/backup.sh").Contains("$1") && IsFile(c, "~/anteckningar.txt.bak"),
+                        Ran(c, Re(c, @"backup\.sh\s+{{notes}}\s*$")) && Content(c, "~/backup.sh").Contains("$1") && IsFile(c, "~/{{notes}}.bak"),
                 },
             },
         },
@@ -1395,28 +1395,28 @@ public static partial class ChaptersLib
                     Id = "identitet",
                     Text = "Berätta för git vem du är: ställ in ditt namn (`user.name`) och din e-postadress (`user.email`) med `git config --global`.",
                     Hint = "Två kommandon: `git config --global user.name \"Ditt Namn\"` och `git config --global user.email \"du@example.com\"`.",
-                    Solution = Cmds("git config --global user.name \"Elev Elevsson\"", "git config --global user.email \"elev@example.com\""),
+                    Solution = Cmds("git config --global user.name \"{{gitName}}\"", "git config --global user.email \"{{user}}@example.com\""),
                     Check = c =>
-                        !string.IsNullOrEmpty(GitCmd.GitGlobalConfig(c.Sh, Home, "user.name")) &&
-                        !string.IsNullOrEmpty(GitCmd.GitGlobalConfig(c.Sh, Home, "user.email")),
+                        !string.IsNullOrEmpty(GitCmd.GitGlobalConfig(c.Sh, Home(c), "user.name")) &&
+                        !string.IsNullOrEmpty(GitCmd.GitGlobalConfig(c.Sh, Home(c), "user.email")),
                 },
                 new()
                 {
                     Id = "init",
-                    Text = "Gå till katalogen `~/projekt-webb` och gör den till ett git-repo med `git init`.",
-                    Hint = "`cd ~/projekt-webb` och sedan `git init`. Titta gärna på den nya dolda katalogen med `ls -a`.",
-                    Solution = Cmds("cd ~/projekt-webb", "git init"),
-                    Check = c => Ran(c, Re(@"(^|[;&]\s*)git\s+init\b")) && GitCmd.GitRepoState(c.Sh, Web) is not null,
+                    Text = "Gå till katalogen `~/{{webProject}}` och gör den till ett git-repo med `git init`.",
+                    Hint = "`cd ~/{{webProject}}` och sedan `git init`. Titta gärna på den nya dolda katalogen med `ls -a`.",
+                    Solution = Cmds("cd ~/{{webProject}}", "git init"),
+                    Check = c => Ran(c, Re(@"(^|[;&]\s*)git\s+init\b")) && GitCmd.GitRepoState(c.Sh, Web(c)) is not null,
                 },
                 new()
                 {
                     Id = "forsta-commit",
                     Text = "Lägg till alla tre filerna i indexet med `git add` och gör din första commit med ett beskrivande meddelande.",
-                    Hint = "`git add .` lägger till allt i katalogen. Sedan `git commit -m \"Första versionen av webbplatsen\"`. Kolla läget med `git status` före och efter!",
-                    Solution = Cmds("cd ~/projekt-webb", "git add .", "git commit -m \"Första versionen av webbplatsen\""),
+                    Hint = "`git add .` lägger till allt i katalogen. Sedan `git commit -m \"{{commitFirst}}\"`. Kolla läget med `git status` före och efter!",
+                    Solution = Cmds("cd ~/{{webProject}}", "git add .", "git commit -m \"{{commitFirst}}\""),
                     Check = c =>
                     {
-                        var s = GitCmd.GitRepoState(c.Sh, Web);
+                        var s = GitCmd.GitRepoState(c.Sh, Web(c));
                         return !string.IsNullOrEmpty(s?.Head) && new[] { "index.html", "style.css", "README.md" }.All(f => s.Files.Contains(f));
                     },
                 },
@@ -1424,48 +1424,48 @@ public static partial class ChaptersLib
                 {
                     Id = "diff",
                     Text = "Lägg till en rad i slutet av `README.md` och titta på ändringen med `git diff`.",
-                    Hint = "`echo 'Sidan är byggd med HTML och CSS.' >> README.md` och sedan `git diff`. Rader som börjar med `+` är nya.",
-                    Solution = Cmds("cd ~/projekt-webb", "echo 'Sidan är byggd med HTML och CSS.' >> README.md", "git diff"),
+                    Hint = "`echo '{{builtWith}}' >> README.md` och sedan `git diff`. Rader som börjar med `+` är nya.",
+                    Solution = Cmds("cd ~/{{webProject}}", "echo '{{builtWith}}' >> README.md", "git diff"),
                     Check = c => Ran(c, Re(@"(^|[;&|]\s*)git\s+diff\b")) && OutLines(c).Any(l => Re(@"^\+(?!\+\+ )").IsMatch(l)),
                 },
                 new()
                 {
                     Id = "commit-a",
                     Text = "Committa ändringen i `README.md`. Prova flaggan `-a`, som tar med alla ändrade filer som git redan följer.",
-                    Hint = "`git commit -a -m \"Beskriv hur sidan är byggd\"` – eller kortare `git commit -am \"…\"`.",
-                    Solution = Cmds("cd ~/projekt-webb", "git commit -am \"Beskriv hur sidan är byggd\""),
-                    Check = c => Ran(c, Re(@"(^|[;&]\s*)git\s+commit\b")) && (GitCmd.GitRepoState(c.Sh, Web)?.Commits ?? 0) >= 2,
+                    Hint = "`git commit -a -m \"{{commitDescribe}}\"` – eller kortare `git commit -am \"…\"`.",
+                    Solution = Cmds("cd ~/{{webProject}}", "git commit -am \"{{commitDescribe}}\""),
+                    Check = c => Ran(c, Re(@"(^|[;&]\s*)git\s+commit\b")) && (GitCmd.GitRepoState(c.Sh, Web(c))?.Commits ?? 0) >= 2,
                 },
                 new()
                 {
                     Id = "gren",
-                    Text = "Skapa grenen `ny-design` och byt till den. Ändra något i `style.css` och committa ändringen på den nya grenen.",
-                    Hint = "`git switch -c ny-design` skapar grenen och byter till den. Ändra sedan t.ex. med `echo 'h1 { color: purple; }' >> style.css` och kör `git commit -am \"Lila rubriker\"`.",
-                    Solution = Cmds("cd ~/projekt-webb", "git switch -c ny-design", "echo 'h1 { color: purple; }' >> style.css", "git commit -am \"Lila rubriker\""),
+                    Text = "Skapa grenen `{{newDesign}}` och byt till den. Ändra något i `style.css` och committa ändringen på den nya grenen.",
+                    Hint = "`git switch -c {{newDesign}}` skapar grenen och byter till den. Ändra sedan t.ex. med `echo 'h1 { color: purple; }' >> style.css` och kör `git commit -am \"{{commitPurple}}\"`.",
+                    Solution = Cmds("cd ~/{{webProject}}", "git switch -c {{newDesign}}", "echo 'h1 { color: purple; }' >> style.css", "git commit -am \"{{commitPurple}}\""),
                     Check = c =>
                     {
-                        var s = GitCmd.GitRepoState(c.Sh, Web);
-                        var design = s?.Branches.Get("ny-design");
+                        var s = GitCmd.GitRepoState(c.Sh, Web(c));
+                        var design = s?.Branches.Get(W(c)["newDesign"]);
                         var main = s is null ? null : s.Branches.Get("main") ?? s.Branches.Get("master");
-                        return !string.IsNullOrEmpty(design) && !string.IsNullOrEmpty(main) && !GitCmd.GitIsAncestor(c.Sh, Web, design, main);
+                        return !string.IsNullOrEmpty(design) && !string.IsNullOrEmpty(main) && !GitCmd.GitIsAncestor(c.Sh, Web(c), design, main);
                     },
                 },
                 new()
                 {
                     Id = "merge",
-                    Text = "Byt tillbaka till `main` och slå ihop grenen `ny-design` med `git merge`.",
-                    Hint = "`git switch main` och sedan `git merge ny-design`. Eftersom `main` inte ändrats sedan du skapade grenen blir det en *fast-forward*.",
-                    Solution = Cmds("cd ~/projekt-webb", "git switch main", "git merge ny-design"),
+                    Text = "Byt tillbaka till `main` och slå ihop grenen `{{newDesign}}` med `git merge`.",
+                    Hint = "`git switch main` och sedan `git merge {{newDesign}}`. Eftersom `main` inte ändrats sedan du skapade grenen blir det en *fast-forward*.",
+                    Solution = Cmds("cd ~/{{webProject}}", "git switch main", "git merge {{newDesign}}"),
                     Check = c =>
                     {
-                        var s = GitCmd.GitRepoState(c.Sh, Web);
-                        var design = s?.Branches.Get("ny-design");
+                        var s = GitCmd.GitRepoState(c.Sh, Web(c));
+                        var design = s?.Branches.Get(W(c)["newDesign"]);
                         return
                             Ran(c, Re(@"(^|[;&]\s*)git\s+(merge|pull)\b")) &&
                             !string.IsNullOrEmpty(s?.Head) &&
                             (s.Branch == "main" || s.Branch == "master") &&
                             !string.IsNullOrEmpty(design) &&
-                            GitCmd.GitIsAncestor(c.Sh, Web, design, s.Head);
+                            GitCmd.GitIsAncestor(c.Sh, Web(c), design, s.Head);
                     },
                 },
                 new()
@@ -1473,7 +1473,7 @@ public static partial class ChaptersLib
                     Id = "logg",
                     Text = "Visa historiken med en rad per commit med `git log --oneline`.",
                     Hint = "Prova också `git log --oneline --graph --all` för att se grenarna.",
-                    Solution = Cmds("cd ~/projekt-webb", "git log --oneline"),
+                    Solution = Cmds("cd ~/{{webProject}}", "git log --oneline"),
                     Check = c => Ran(c, Re(@"(^|[;&]\s*)git\s+log\b.*--oneline")) && OutLines(c).Count >= 3,
                 },
             },
@@ -1507,7 +1507,7 @@ public static partial class ChaptersLib
                     Text = "Använd zsh:s `**` för att lista alla `.txt`-filer i hemkatalogen **och alla underkataloger** med ett enda `ls`.",
                     Hint = "`ls ~/**/*.txt` – `**` betyder \"alla kataloger, på alla nivåer\".",
                     Solution = Cmds("ls ~/**/*.txt"),
-                    Check = c => c.Sh.ShellMode == "zsh" && Ran(c, Re(@"\*\*\/")) && c.Output.Contains("dokument/frukter.txt"),
+                    Check = c => c.Sh.ShellMode == "zsh" && Ran(c, Re(@"\*\*\/")) && c.Output.Contains(X(c, "{{documents}}/{{fruits}}")),
                 },
                 new()
                 {
@@ -1528,10 +1528,10 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "fish-set",
-                    Text = "Starta `fish`. Skapa variabeln `frukt` med värdet `äpple` på fish-sättet och skriv ut den med `echo`.",
-                    Hint = "`frukt=äpple` fungerar inte i fish. Skriv `set frukt äpple` och sedan `echo $frukt`.",
-                    Solution = Cmds("fish", "set frukt äpple", "echo $frukt"),
-                    Check = c => c.Sh.ShellMode == "fish" && Ran(c, Re(@"^echo\b.*\$frukt\b")) && Env(c, "frukt") == "äpple" && c.Output.Trim() == "äpple",
+                    Text = "Starta `fish`. Skapa variabeln `{{fruitVar}}` med värdet `{{fruitWord}}` på fish-sättet och skriv ut den med `echo`.",
+                    Hint = "`{{fruitVar}}={{fruitWord}}` fungerar inte i fish. Skriv `set {{fruitVar}} {{fruitWord}}` och sedan `echo ${{fruitVar}}`.",
+                    Solution = Cmds("fish", "set {{fruitVar}} {{fruitWord}}", "echo ${{fruitVar}}"),
+                    Check = c => c.Sh.ShellMode == "fish" && Ran(c, Re(c, @"^echo\b.*\${{fruitVar}}\b")) && Env(c, "{{fruitVar}}") == W(c)["fruitWord"] && c.Output.Trim() == W(c)["fruitWord"],
                 },
                 new()
                 {
@@ -1545,9 +1545,9 @@ public static partial class ChaptersLib
                 {
                     Id = "chsh",
                     Text = "Se efter i `/etc/shells` vilka skal som är installerade. Gör sedan zsh till ditt inloggningsskal med `chsh`.",
-                    Hint = "`cat /etc/shells` och sedan `chsh -s /usr/bin/zsh`. Kontrollera resultatet med `grep elev /etc/passwd`.",
+                    Hint = "`cat /etc/shells` och sedan `chsh -s /usr/bin/zsh`. Kontrollera resultatet med `grep {{user}} /etc/passwd`.",
                     Solution = Cmds("cat /etc/shells", "chsh -s /usr/bin/zsh"),
-                    Check = c => Re(@"^elev:.*:\/(usr\/)?bin\/zsh$", "m").IsMatch(Content(c, "/etc/passwd")),
+                    Check = c => Re(c, @"^{{user}}:.*:\/(usr\/)?bin\/zsh$", "m").IsMatch(Content(c, "/etc/passwd")),
                 },
             },
         },
@@ -1583,16 +1583,16 @@ public static partial class ChaptersLib
                     Id = "losenord",
                     Text = "Ge `kim` ett lösenord med `passwd`.",
                     Hint = "Bara root får sätta lösenord åt andra: `sudo passwd kim`. Skriv samma lösenord två gånger – det syns inte när du skriver.",
-                    Solution = Cmds("sudo passwd kim", "hemligt123", "hemligt123"),
+                    Solution = Cmds("sudo passwd kim", "{{password}}", "{{password}}"),
                     Check = c => (UsersLib.ShadowHash(c.Sh, "kim") ?? "").StartsWith('$'),
                 },
                 new()
                 {
                     Id = "grupp",
-                    Text = "Skapa gruppen `utvecklare` och lägg till `kim` i den.",
-                    Hint = "Först `sudo groupadd utvecklare`, sedan `sudo usermod -aG utvecklare kim`.",
-                    Solution = Cmds("sudo groupadd utvecklare", "sudo usermod -aG utvecklare kim"),
-                    Check = c => UsersLib.FindGroup(c.Sh, "utvecklare")?.Members.Contains("kim") == true,
+                    Text = "Skapa gruppen `{{devGroup}}` och lägg till `kim` i den.",
+                    Hint = "Först `sudo groupadd {{devGroup}}`, sedan `sudo usermod -aG {{devGroup}} kim`.",
+                    Solution = Cmds("sudo groupadd {{devGroup}}", "sudo usermod -aG {{devGroup}} kim"),
+                    Check = c => UsersLib.FindGroup(c.Sh, W(c)["devGroup"])?.Members.Contains("kim") == true,
                 },
                 new()
                 {
@@ -1613,19 +1613,19 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "su",
-                    Text = "Logga in som `kim` med `su -` och kör `id`. Gå sedan tillbaka till `elev` med `exit`.",
+                    Text = "Logga in som `kim` med `su -` och kör `id`. Gå sedan tillbaka till `{{user}}` med `exit`.",
                     Hint = "Skriv `su - kim` och sedan kims lösenord – det du valde med `passwd`. Prompten visar att du är kim.",
-                    Solution = Cmds("su - kim", "hemligt123", "id", "exit"),
+                    Solution = Cmds("su - kim", "{{password}}", "id", "exit"),
                     Check = c => Ran(c, Re(@"^id\s*$")) && c.Sh.CurrentUser().Name == "kim",
                 },
                 new()
                 {
                     Id = "userdel",
-                    Text = "Skapa en tillfällig användare `vikarie` med hemkatalog – och ta sedan bort den igen, **inklusive** hemkatalogen.",
-                    Hint = "`sudo useradd -m vikarie` och sedan `sudo userdel -r vikarie`.",
-                    Solution = Cmds("sudo useradd -m vikarie", "sudo userdel -r vikarie"),
+                    Text = "Skapa en tillfällig användare `{{tempUser}}` med hemkatalog – och ta sedan bort den igen, **inklusive** hemkatalogen.",
+                    Hint = "`sudo useradd -m {{tempUser}}` och sedan `sudo userdel -r {{tempUser}}`.",
+                    Solution = Cmds("sudo useradd -m {{tempUser}}", "sudo userdel -r {{tempUser}}"),
                     Check = c =>
-                        c.ExitCode == 0 && Re(@"^(userdel|deluser)\b.*\bvikarie\b").IsMatch(Unsudo(c.Line)) && UsersLib.FindUser(c.Sh, "vikarie") is null && !Exists(c, "/home/vikarie"),
+                        c.ExitCode == 0 && Re(c, @"^(userdel|deluser)\b.*\b{{tempUser}}\b").IsMatch(Unsudo(c.Line)) && UsersLib.FindUser(c.Sh, W(c)["tempUser"]) is null && !Exists(c, "/home/{{tempUser}}"),
                 },
             },
         },

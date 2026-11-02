@@ -20,7 +20,7 @@ körbar.
 ```
 
 ```predict
-$ antal=$(ls ~/dokument | wc -l)
+$ antal=$(ls ~/{{documents}} | wc -l)
 $ echo "$antal files"
 3 files
 ```
@@ -49,7 +49,7 @@ Tal jämförs med `-eq`, `-lt`, `-gt` och så vidare; `=` och `<` jämför text.
 ```
 
 ```predict
-$ [ -d ~/finnsinte ] && echo yes || echo no
+$ [ -d ~/{{missing}} ] && echo yes || echo no
 no
 ```
 
@@ -90,9 +90,9 @@ Varför avslutas ett skript med `exit 1` när något går fel?
 ```
 
 ```quiz
-Du startar ett here-dokument med `cat > hej.sh << 'SLUT'`. När tar det slut?
+Du startar ett here-dokument med `cat > {{helloScript}} << '{{heredocEnd}}'`. När tar det slut?
 - [ ] När du trycker Enter på en tom rad
-- [x] Vid raden `SLUT`
+- [x] Vid raden `{{heredocEnd}}`
 - [ ] Efter tio rader
 ```
 

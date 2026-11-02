@@ -189,8 +189,10 @@ public sealed class MainWindow : Window
 
     private ShellType LoadShell(string distroId)
     {
-        var sh = ShellType.RestoreJson(storage.LoadText($"shell.{distroId}")) ?? ShellType.Create(distroId);
+        var sh = ShellType.RestoreJson(storage.LoadText($"shell.{distroId}")) ?? ShellType.Create(distroId, Lang);
         sh.Lang = Lang;
+        // A terminal saved in another language: its exercise files and user follow the current language.
+        WorldMigration.Translate(sh, Lang);
         return sh;
     }
 
@@ -225,14 +227,14 @@ public sealed class MainWindow : Window
     private Control BuildLayout()
     {
         // Top bar
-        var brandMark = new Border
+        // The Codestead logo (build/icon.svg): a house with a prompt inside.
+        var brandMark = new Image
         {
-            Background = new SolidColorBrush(Color.Parse("#0f1318")),
-            CornerRadius = new CornerRadius(7),
+            Source = new Bitmap(AssetLoader.Open(new Uri("avares://Codestead.Linux/Assets/icon.png"))),
             Width = 30,
             Height = 30,
-            Child = new TextBlock { Text = ">_", Foreground = new SolidColorBrush(Color.Parse("#7ee787")), FontWeight = FontWeight.Bold, FontFamily = new FontFamily("Cascadia Mono, DejaVu Sans Mono, monospace"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
         };
+        RenderOptions.SetBitmapInterpolationMode(brandMark, Avalonia.Media.Imaging.BitmapInterpolationMode.HighQuality);
         var brand = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, VerticalAlignment = VerticalAlignment.Center };
         brand.Children.Add(brandMark);
         brand.Children.Add(new TextBlock { Text = ProductInfo.Name, FontSize = 17, FontWeight = FontWeight.Bold, VerticalAlignment = VerticalAlignment.Center });
@@ -242,15 +244,18 @@ public sealed class MainWindow : Window
         progress.Children.Add(totalBar);
         progress.Children.Add(totalText);
 
+        // Changing distribution or language rebuilds both pickers (FillPickers). That must wait until the
+        // picker has finished its own selection change: clearing a ComboBox's items from inside its
+        // SelectionChanged event crashes Avalonia, which closed the whole app.
         distroPicker.SelectionChanged += (_, _) =>
         {
             if (updatingPickers || distroPicker.SelectedItem is not ComboBoxItem { Tag: string id }) return;
-            ChangeDistro(id);
+            Dispatcher.UIThread.Post(() => ChangeDistro(id));
         };
         langPicker.SelectionChanged += (_, _) =>
         {
             if (updatingPickers || langPicker.SelectedItem is not ComboBoxItem { Tag: string code }) return;
-            ChangeLanguage(code);
+            Dispatcher.UIThread.Post(() => ChangeLanguage(code));
         };
         settingsButton.Classes.Add("flat");
         settingsButton.Click += (_, _) => OpenSettings();
@@ -448,7 +453,7 @@ public sealed class MainWindow : Window
         var distroId = DistroOf(chapter).Id;
         ShellType Sandbox()
         {
-            var sh = ShellType.Create(distroId);
+            var sh = ShellType.Create(distroId, Lang);
             sh.Lang = Lang;
             return sh;
         }
@@ -794,7 +799,7 @@ public sealed class MainWindow : Window
         }
 
         var hint = I18nLib.TaskHint(chapter, task, Lang, Distro);
-        var solution = task.Solution.Resolve(Distro);
+        var solution = task.SolutionFor(Distro, shell.World);
         int attempts = state.Attempts.TryGetValue(key, out var a) ? a : 0;
         bool SolutionUnlocked() => done || attempts >= AttemptsBeforeSolution || state.HintSeen.Contains(key);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
@@ -951,6 +956,9 @@ public sealed class MainWindow : Window
         if (code == Lang || !LanguagesLib.IsLang(code)) return;
         state.Lang = code;
         SaveState();
+        // The exercise files, folders and the user get names and texts in the new language (see World.cs).
+        WorldMigration.Translate(shell, code);
+        SaveShell();
         ApplyLanguage();
     }
 
@@ -1003,7 +1011,7 @@ public sealed class MainWindow : Window
         overlay.Confirm(T("reset.terminal.title"), T("reset.terminal.confirm", ("distro", Distro.Name)), T("reset.terminal.button"), T("dialog.cancel"), true, () =>
         {
             storage.Remove($"shell.{Distro.Id}");
-            shell = ShellType.Create(Distro.Id);
+            shell = ShellType.Create(Distro.Id, Lang);
             shell.Lang = Lang;
             terminal.Shell = shell;
             RenderAll();
@@ -1140,6 +1148,23 @@ public sealed class MainWindow : Window
                     RenderAll();
                 }
             }
+            // Switching language and distribution in the pickers, as a click does, must not crash
+            // (it once closed the app: the pickers were rebuilt inside their own SelectionChanged).
+            foreach (var lc in new[] { "sv", "ar", "en" })
+            {
+                langPicker.SelectedItem = langPicker.Items.OfType<ComboBoxItem>().First(i => Equals(i.Tag, lc));
+                Dispatcher.UIThread.RunJobs();
+                if (Lang != lc) throw new InvalidOperationException($"The language picker did not switch to {lc}.");
+            }
+            state.Chapter = ChaptersLib.Chapters.First(c => ChaptersLib.DistrosFor(c).Count() > 1).Id;
+            UseShellFor(Chapter);
+            FillPickers();
+            foreach (var id in distroPicker.Items.OfType<ComboBoxItem>().Select(i => i.Tag).OfType<string>().ToList())
+            {
+                distroPicker.SelectedItem = distroPicker.Items.OfType<ComboBoxItem>().First(i => Equals(i.Tag, id));
+                Dispatcher.UIThread.RunJobs();
+                if (Distro.Id != id) throw new InvalidOperationException($"The distribution picker did not switch to {id}.");
+            }
             // Solve the first task of the first chapter in the real terminal.
             state.Lang = "en";
             state.Chapter = ChaptersLib.Chapters[0].Id;
@@ -1147,7 +1172,7 @@ public sealed class MainWindow : Window
             ApplyLanguage();
             var task = Chapter.Tasks[0];
             var before = state.Progress.ContainsKey(ChaptersLib.TaskKey(Chapter.Id, task.Id, task.PerFamily, Distro.Family));
-            foreach (var cmd in task.Solution.Resolve(Distro))
+            foreach (var cmd in task.SolutionFor(Distro, shell.World))
             {
                 terminal.Inject(cmd);
                 OnResult(shell.Execute(cmd));

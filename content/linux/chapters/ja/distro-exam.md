@@ -82,11 +82,11 @@ Snap パッケージはどのように更新されますか？
 ```
 
 ```predict
-$ ~/Nedladdningar/Kalkylator.AppImage
-bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+$ ~/{{downloads}}/{{calculator}}
+bash: /home/{{user}}/{{downloads}}/{{calculator}}: Permission denied
 ---
 ダウンロードしたファイルは、最初は決して実行可能になっていません。先に
-`chmod +x ~/Nedladdningar/Kalkylator.AppImage` を実行しましょう。
+`chmod +x ~/{{downloads}}/{{calculator}}` を実行しましょう。
 ```
 
 ```quiz

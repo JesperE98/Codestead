@@ -81,7 +81,7 @@ git, जो आपकी फ़ाइलों का इतिहास रख�
 | `zsh` / `fish` / `exit` | कोई दूसरा शेल शुरू करना / वापस जाना |
 | `zsh -c '…'` / `fish -c '…'` | किसी दूसरे शेल में एक कमांड चलाना |
 | `setopt autocd` / `unsetopt autocd` | zsh का कोई ऑप्शन चालू / बंद करना |
-| `set frukt äpple` / `set -e frukt` | fish में वेरिएबल सेट करना / हटाना |
+| `set {{fruitVar}} {{fruitWord}}` / `set -e {{fruitVar}}` | fish में वेरिएबल सेट करना / हटाना |
 | `set -x NAME value` | fish में एनवायरनमेंट वेरिएबल सेट करना |
 | `math 17 x 23` | fish में गणित |
 | `chsh -s /usr/bin/zsh` | अपना लॉगिन शेल बदलना |

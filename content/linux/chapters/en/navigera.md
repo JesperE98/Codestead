@@ -9,7 +9,7 @@ even hardware – lives in **one single tree** of directories that starts at the
 | Directory | Contents |
 |---|---|
 | `/` | The root – the top of the tree |
-| `/home` | Users' home directories, e.g. `/home/elev` |
+| `/home` | Users' home directories, e.g. `/home/{{user}}` |
 | `/root` | The home directory of the administrator, root |
 | `/etc` | System settings (configuration files) |
 | `/usr/bin` | Programs (commands) such as `ls` and `cat` |
@@ -96,15 +96,15 @@ There are two kinds of paths:
   you can reach `/var/log` with just `cd var/log`.
 
 ```quiz
-You are in `/home`. Which commands take you to `/home/elev/dokument`? (Choose all that work.)
-- [x] `cd elev/dokument`
-- [x] `cd /home/elev/dokument`
-- [ ] `cd /elev/dokument`
-- [ ] `cd dokument`
+You are in `/home`. Which commands take you to `/home/{{user}}/{{documents}}`? (Choose all that work.)
+- [x] `cd {{user}}/{{documents}}`
+- [x] `cd /home/{{user}}/{{documents}}`
+- [ ] `cd /{{user}}/{{documents}}`
+- [ ] `cd {{documents}}`
 ---
-`elev/dokument` is relative to `/home`, and `/home/elev/dokument` is absolute,
-so it works from anywhere. `/elev/dokument` starts at the root, where there is
-no `elev`.
+`{{user}}/{{documents}}` is relative to `/home`, and `/home/{{user}}/{{documents}}` is absolute,
+so it works from anywhere. `/{{user}}/{{documents}}` starts at the root, where there is
+no `{{user}}`.
 ```
 
 A few special names are worth knowing:

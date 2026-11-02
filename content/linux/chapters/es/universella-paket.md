@@ -249,19 +249,18 @@ del sitio web del programa, la haces ejecutable y la inicias: sin instalación
 y sin root. Para deshacerte del programa, borras el archivo.
 
 Ya hay una AppImage descargada en tu directorio personal, en
-`~/Nedladdningar` («Descargas» en sueco; *Kalkylator* significa
-«calculadora»):
+`~/{{downloads}}`:
 
 ```sh
-cd ~/Nedladdningar
+cd ~/{{downloads}}
 ls -l
 ```
 
 ¿Qué pasa si la inicias directamente?
 
 ```predict
-$ ~/Nedladdningar/Kalkylator.AppImage
-bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+$ ~/{{downloads}}/{{calculator}}
+bash: /home/{{user}}/{{downloads}}/{{calculator}}: Permission denied
 ---
 El archivo no tiene el permiso `x`.
 ```
@@ -270,14 +269,14 @@ Los archivos descargados nunca son ejecutables de entrada. Hazla ejecutable e
 iníciala:
 
 ```sh
-chmod +x Kalkylator.AppImage
-./Kalkylator.AppImage
+chmod +x {{calculator}}
+./{{calculator}}
 ```
 
 ```try
-chmod +x ~/Nedladdningar/Kalkylator.AppImage
+chmod +x ~/{{downloads}}/{{calculator}}
 ---
-Ahora el archivo es ejecutable. Compruébalo con `ls -l ~/Nedladdningar`.
+Ahora el archivo es ejecutable. Compruébalo con `ls -l ~/{{downloads}}`.
 ```
 
 ### FUSE
@@ -294,7 +293,7 @@ la transición al tiempo de 64 bits; en versiones anteriores se llamaba
 ```sh
 sudo apt update
 sudo apt install libfuse2t64
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 
 > **No** instales el paquete `fuse` en Ubuntu: sustituye a `fuse3`, que el
@@ -306,7 +305,7 @@ En Arch el paquete se llama `fuse2`:
 
 ```sh
 sudo pacman -S fuse2
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -315,7 +314,7 @@ En Fedora el paquete se llama `fuse-libs`:
 
 ```sh
 sudo dnf install fuse-libs
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -324,7 +323,7 @@ sudo dnf install fuse-libs
 Una AppImage también se puede desempaquetar. Eso funciona incluso sin FUSE:
 
 ```sh
-./Kalkylator.AppImage --appimage-extract
+./{{calculator}} --appimage-extract
 ls squashfs-root
 ./squashfs-root/AppRun
 ```

@@ -22,8 +22,8 @@
       "hint": "`sudo apt update`, а затем `sudo apt install fish`."
     },
     "fish-set": {
-      "text": "Запустите `fish`. Создайте переменную `frukt` со значением `äpple` так, как это делается в fish, и выведите её с помощью `echo`.",
-      "hint": "`frukt=äpple` в fish не работает. Введите `set frukt äpple`, а затем `echo $frukt`."
+      "text": "Запустите `fish`. Создайте переменную `{{fruitVar}}` со значением `{{fruitWord}}` так, как это делается в fish, и выведите её с помощью `echo`.",
+      "hint": "`{{fruitVar}}={{fruitWord}}` в fish не работает. Введите `set {{fruitVar}} {{fruitWord}}`, а затем `echo ${{fruitVar}}`."
     },
     "fish-for": {
       "text": "Напишите цикл `for` в синтаксисе fish, который выводит числа 1, 2 и 3, по одному на строку. Затем вернитесь в bash с помощью `exit`.",
@@ -31,7 +31,7 @@
     },
     "chsh": {
       "text": "Посмотрите в `/etc/shells`, какие shell установлены. Затем сделайте zsh своим login shell с помощью `chsh`.",
-      "hint": "`cat /etc/shells`, а затем `chsh -s /usr/bin/zsh`. Проверьте результат с помощью `grep elev /etc/passwd`."
+      "hint": "`cat /etc/shells`, а затем `chsh -s /usr/bin/zsh`. Проверьте результат с помощью `grep {{user}} /etc/passwd`."
     }
   }
 }

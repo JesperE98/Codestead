@@ -45,16 +45,16 @@ Det andra `>` skrev över filen. Med `>>` hade den innehållit båda raderna.
 `<` låter ett program läsa stdin från en fil:
 
 ```sh
-wc -l < dokument/frukter.txt
+wc -l < {{documents}}/{{fruits}}
 ```
 
 Nu ser `wc` aldrig filnamnet – det får bara texten på stdin – så det skriver
 bara ut antalet.
 
 ```predict
-$ wc -l dokument/frukter.txt
-$ wc -l < dokument/frukter.txt
-10 dokument/frukter.txt
+$ wc -l {{documents}}/{{fruits}}
+$ wc -l < {{documents}}/{{fruits}}
+10 {{documents}}/{{fruits}}
 10
 ---
 Med ett filnamn som argument skriver `wc` ut namnet också. Med `<` får det
@@ -67,11 +67,11 @@ Felmeddelanden går till stderr och påverkas inte av `>`. Vill du ta hand om
 dem skriver du strömmens nummer framför:
 
 ```sh
-ls /finnsinte 2> fel.txt
+ls /{{missing}} 2> fel.txt
 ```
 
 ```quiz
-Du kör `ls /finnsinte > fel.txt`. Var hamnar felmeddelandet?
+Du kör `ls /{{missing}} > fel.txt`. Var hamnar felmeddelandet?
 - [ ] I `fel.txt`
 - [x] På skärmen – `fel.txt` förblir tom
 - [ ] Ingenstans, det försvinner
@@ -90,14 +90,14 @@ Det här är kärnan i Unix-filosofin: *gör en sak och gör den bra, och låt
 programmen samarbeta*.
 
 ```sh
-grep INFO dokument/server.log | wc -l
+grep INFO {{documents}}/server.log | wc -l
 ```
 
 `grep` hittar raderna, `wc -l` räknar dem. Du kan koppla ihop hur många som
 helst:
 
 ```sh
-sort dokument/frukter.txt | uniq -c | sort -rn
+sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ```
 
 Läs det steg för steg: sortera frukterna, räkna hur många av varje (`uniq -c`)
@@ -132,9 +132,9 @@ mkdir -p ny && cd ny
 ```
 
 ```predict
-$ mkdir dokument 2> /dev/null && echo created || echo failed
+$ mkdir {{documents}} 2> /dev/null && echo created || echo failed
 failed
 ---
-`dokument` finns redan, så `mkdir` misslyckas (felmeddelandet försvinner i
+`{{documents}}` finns redan, så `mkdir` misslyckas (felmeddelandet försvinner i
 `/dev/null`). `echo created` hoppas över och `echo failed` körs.
 ```

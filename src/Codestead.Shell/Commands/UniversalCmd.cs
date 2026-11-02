@@ -5,7 +5,7 @@ namespace Codestead.Shell.Commands;
 // All state lives in the virtual file system, just like on a real system:
 //   Flatpak: /var/lib/flatpak (system) and ~/.local/share/flatpak (--user)
 //   Snap:    /snap/<name>/<revision> and /snap/bin
-//   AppImage: a single executable file, e.g. ~/Nedladdningar/Kalkylator.AppImage
+//   AppImage: a single executable file, e.g. ~/Downloads/Calculator.AppImage
 // Graphical programs cannot be shown in the simulator – they print a dimmed line instead.
 
 public static partial class UniversalCmd
@@ -20,7 +20,7 @@ public static partial class UniversalCmd
 
     private static FsNode SimBinary(string impl, string owner = "root", int mode = -1, string? group = null, string extra = "")
     {
-        var node = VfsLib.MakeFile($"{VfsLib.Elf}\u0002\u0001\u0001 (simulerad binärfil: {impl})\n{extra}", owner, mode < 0 ? Js.Oct(755) : mode, group ?? owner);
+        var node = VfsLib.MakeFile($"{VfsLib.Elf}\u0002\u0001\u0001 (simulated binary: {impl})\n{extra}", owner, mode < 0 ? Js.Oct(755) : mode, group ?? owner);
         node.Size = 40_000;
         return node;
     }
@@ -183,7 +183,7 @@ public static partial class UniversalCmd
         var user = inst == "system" ? sh.RootUser() : sh.CurrentUser();
         sh.Vfs.WriteFile($"{dir}/metadata", meta, user);
         var files = sh.Vfs.Lookup(dir, user);
-        var blob = VfsLib.MakeFile("(simulerade programfiler)\n", user.Name, Js.Oct(644), user.Groups.FirstOrDefault());
+        var blob = VfsLib.MakeFile("(simulated program files)\n", user.Name, Js.Oct(644), user.Groups.FirstOrDefault());
         blob.Size = sizeMb * 1_000_000L;
         files.Children!["files"] = VfsLib.MakeDir(user.Name, Js.Oct(755), Kids(("program.bin", blob)), user.Groups.FirstOrDefault());
     }
@@ -687,7 +687,7 @@ EXAMPLES
         new SnapDef { Name = "gimp", Version = "3.0.6", Rev = 532, Publisher = "snapcrafters✪", Summary = "GNU Image Manipulation Program", Gui = true, Base = "core24", SizeMb = 380 },
         new SnapDef { Name = "code", Version = "1.105.1", Rev = 208, Publisher = "vscode✓", Summary = "Code editing. Redefined.", Gui = true, Classic = true, Base = "core22", SizeMb = 330 },
         new SnapDef { Name = "spotify", Version = "1.2.74.477", Rev = 88, Publisher = "spotify✓", Summary = "Music for everyone", Gui = true, Base = "core22", SizeMb = 190 },
-        new SnapDef { Name = "kalkylator", Version = "2.3.1", Rev = 12, Publisher = "kalkylab", Summary = "A simple calculator (also available as an AppImage)", Gui = true, Base = "core24", SizeMb = 48 },
+        new SnapDef { Name = "calculator", Version = "2.3.1", Rev = 12, Publisher = "calclab", Summary = "A simple calculator (also available as an AppImage)", Gui = true, Base = "core24", SizeMb = 48 },
     };
 
     private static readonly string[] UbuntuSeed = { "bare", "core22", "core24", "firefox", "gnome-42-2204", "gtk-common-themes", "snapd" };
@@ -728,7 +728,7 @@ EXAMPLES
             $"name: {def.Name}\nversion: '{def.Version}'\nsummary: {def.Summary}\n{(def.Base is not null ? $"base: {def.Base}\n" : "")}confinement: {(classic ? "classic" : "strict")}\n",
             sh.RootUser());
         ExtrarepoLib.EnsureDir(sh, "/var/lib/snapd/snaps");
-        var blob = VfsLib.MakeFile("hsqs (simulerad squashfs-avbild)\n", "root", Js.Oct(600));
+        var blob = VfsLib.MakeFile("hsqs (simulated squashfs image)\n", "root", Js.Oct(600));
         blob.Size = def.SizeMb * 1_000_000L;
         sh.Vfs.Insert($"/var/lib/snapd/snaps/{def.Name}_{def.Rev}.snap", blob, sh.RootUser());
         if (def.Notes == "base" || def.Notes == "snapd" || def.Apps?.Count == 0) return;
@@ -1033,13 +1033,14 @@ EXAMPLES
 
     // ================================================================ AppImage
 
-    public const string AppimageDir = "Nedladdningar";
-    public const string AppimageName = "Kalkylator.AppImage";
-
-    /// <summary>A downloaded AppImage (as in the initial file system): a single file, not yet executable.</summary>
-    public static FsNode AppImageNode(string owner, string? group = null)
+    /// <summary>
+    /// A downloaded AppImage (as in the initial file system): a single file, not yet executable.
+    /// Its name is the world's {{calculator}} in {{downloads}}, e.g. ~/Downloads/Calculator.AppImage.
+    /// </summary>
+    public static FsNode AppImageNode(World w, string owner, string? group = null)
     {
-        var node = SimBinary("appimage-runtime", owner, Js.Oct(644), group ?? owner, "AppImage: Kalkylator 2.3.1\nDesktop: kalkylator.desktop\nType 2 AppImage (squashfs)\n");
+        var desktop = w["calculator"].Replace(".AppImage", "", StringComparison.Ordinal).ToLowerInvariant();
+        var node = SimBinary("appimage-runtime", owner, Js.Oct(644), group ?? owner, $"AppImage: {w["calcName"]} 2.3.1\nDesktop: {desktop}.desktop\nType 2 AppImage (squashfs)\n");
         node.Size = 48_312_832;
         return node;
     }
@@ -1050,7 +1051,8 @@ EXAMPLES
 
     private static readonly Dictionary<string, string> FusePkg = new() { ["debian"] = "libfuse2t64", ["arch"] = "fuse2", ["redhat"] = "fuse-libs" };
 
-    private static readonly Regex AppImageHeader = new(@"^AppImage: (\S+)", RegexOptions.Multiline | RegexOptions.CultureInvariant);
+    private static readonly Regex AppImageHeader = new(@"^AppImage: (.+?)(?: [0-9][0-9.]*)?$", RegexOptions.Multiline | RegexOptions.CultureInvariant);
+    private static readonly Regex DesktopHeader = new(@"^Desktop: (\S+)\.desktop$", RegexOptions.Multiline | RegexOptions.CultureInvariant);
     private static readonly Regex AppImageExt = new(@"\.AppImage\z", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     /// <summary>Runs when an AppImage (or its extracted AppRun) is started.</summary>
@@ -1111,18 +1113,20 @@ OPTIONS
         {
             var user = sh.CurrentUser();
             var g = user.Groups.FirstOrDefault();
-            var lower = appName.ToLowerInvariant();
+            // File names come from the desktop id (ASCII), not from the app's name in the student's language.
+            var dm = DesktopHeader.Match(self);
+            var lower = dm.Success ? dm.Groups[1].Value : appName.ToLowerInvariant();
             var files = new List<(string Name, FsNode Node)>
             {
-                ("AppRun", SimBinary("appimage-runtime", user.Name, Js.Oct(755), g, $"AppImage: {appName}\n")),
+                ("AppRun", SimBinary("appimage-runtime", user.Name, Js.Oct(755), g, $"AppImage: {appName}\nDesktop: {lower}.desktop\n")),
                 ($"{lower}.desktop", VfsLib.MakeFile($"[Desktop Entry]\nType=Application\nName={appName}\nExec={lower}\nIcon={lower}\nCategories=Utility;Calculator;\n", user.Name, Js.Oct(644), g)),
-                ($"{lower}.png", VfsLib.MakeFile("\u0089PNG (simulerad ikon)\n", user.Name, Js.Oct(644), g)),
-                (".DirIcon", VfsLib.MakeFile("\u0089PNG (simulerad ikon)\n", user.Name, Js.Oct(644), g)),
+                ($"{lower}.png", VfsLib.MakeFile("\u0089PNG (simulated icon)\n", user.Name, Js.Oct(644), g)),
+                (".DirIcon", VfsLib.MakeFile("\u0089PNG (simulated icon)\n", user.Name, Js.Oct(644), g)),
             };
             var tree = VfsLib.MakeDir(user.Name, Js.Oct(755), Kids(files.ToArray()), g);
             tree.Children!["usr"] = VfsLib.MakeDir(user.Name, Js.Oct(755), Kids(
-                ("bin", VfsLib.MakeDir(user.Name, Js.Oct(755), Kids((lower, SimBinary("appimage-runtime", user.Name, Js.Oct(755), g, $"AppImage: {appName}\n"))), g)),
-                ("lib", VfsLib.MakeDir(user.Name, Js.Oct(755), Kids(("libQt6Core.so.6", VfsLib.MakeFile("(simulerat bibliotek)\n", user.Name, Js.Oct(644), g))), g))), g);
+                ("bin", VfsLib.MakeDir(user.Name, Js.Oct(755), Kids((lower, SimBinary("appimage-runtime", user.Name, Js.Oct(755), g, $"AppImage: {appName}\nDesktop: {lower}.desktop\n"))), g)),
+                ("lib", VfsLib.MakeDir(user.Name, Js.Oct(755), Kids(("libQt6Core.so.6", VfsLib.MakeFile("(simulated library)\n", user.Name, Js.Oct(644), g))), g))), g);
             try
             {
                 sh.Vfs.Insert(sh.Resolve("squashfs-root"), tree, user);

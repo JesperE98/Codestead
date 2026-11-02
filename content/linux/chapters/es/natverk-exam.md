@@ -80,7 +80,7 @@ Para ver lo que resuelve el *sistema*, usa `getent hosts server.lan`.
 ```
 
 ```quiz
-`minserver` escucha en el puerto 8080 y se ejecuta como un usuario normal.
+`myserver` escucha en el puerto 8080 y se ejecuta como un usuario normal.
 ¿Qué cambiaría si escuchara en el puerto 80?
 - [ ] Nada
 - [x] Solo root puede abrir puertos por debajo de 1024

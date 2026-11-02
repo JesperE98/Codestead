@@ -3,100 +3,45 @@ using Codestead.Shell.Commands;
 namespace Codestead.Shell;
 
 // Port of src/shell/initfs.ts – builds the initial file system for a distribution: system
-// directories, configuration files and a few exercise files in the home directory.
+// directories, configuration files and a few exercise files in the home directory (see World.cs).
 
 public static partial class InitfsLib
 {
-    public const string Student = "elev";
-
-    private const string ServerLog = """
-        2026-10-28 08:00:01 INFO  Servern startar
-        2026-10-28 08:00:02 INFO  Läser konfiguration från /etc/minserver.conf
-        2026-10-28 08:00:02 WARN  Konfigurationsnyckeln "timeout" saknas, använder 30s
-        2026-10-28 08:00:03 INFO  Lyssnar på port 8080
+    /// <summary>What myserver has written to its log (programs write English, see World.cs).</summary>
+    public const string ServerLog = """
+        2026-10-28 08:00:01 INFO  Server starting
+        2026-10-28 08:00:02 INFO  Reading configuration from /etc/myserver.conf
+        2026-10-28 08:00:02 WARN  Configuration key "timeout" is missing, using 30s
+        2026-10-28 08:00:03 INFO  Listening on port 8080
         2026-10-28 09:14:55 INFO  GET /index.html 200
-        2026-10-28 09:15:10 ERROR Kunde inte ansluta till databasen
-        2026-10-28 09:15:11 INFO  Försöker igen om 5 sekunder
-        2026-10-28 09:15:16 INFO  Ansluten till databasen
-        2026-10-28 11:42:03 WARN  Långsam förfrågan: GET /rapport tog 4.2s
-        2026-10-28 12:01:37 INFO  GET /om.html 200
-        2026-10-28 13:30:00 ERROR Disken /var är 95% full
-        2026-10-28 14:05:12 INFO  GET /bilder/logo.png 404
-        2026-10-28 16:20:44 warn  Certifikatet går ut om 14 dagar
-        2026-10-28 18:00:00 ERROR Tidsgräns överskriden för jobbet "backup"
-        2026-10-28 23:59:59 INFO  Dagens loggar roteras
+        2026-10-28 09:15:10 ERROR Could not connect to the database
+        2026-10-28 09:15:11 INFO  Trying again in 5 seconds
+        2026-10-28 09:15:16 INFO  Connected to the database
+        2026-10-28 11:42:03 WARN  Slow request: GET /report took 4.2s
+        2026-10-28 12:01:37 INFO  GET /about.html 200
+        2026-10-28 13:30:00 ERROR Disk /var is 95% full
+        2026-10-28 14:05:12 INFO  GET /images/logo.png 404
+        2026-10-28 16:20:44 warn  Certificate expires in 14 days
+        2026-10-28 18:00:00 ERROR Time limit exceeded for job "backup"
+        2026-10-28 23:59:59 INFO  Rotating today's logs
 
         """;
 
-    private const string Fruits = """
-        äpple
-        banan
-        kiwi
-        äpple
-        apelsin
-        banan
-        päron
-        kiwi
-        äpple
-        mango
+    public const string Bashrc = """
+        # ~/.bashrc: executed by bash for interactive shells.
+        # This is where aliases and your own settings usually go.
 
-        """;
-
-    private const string Grades = """
-        namn,ämne,poäng
-        Alva,matte,87
-        Bilal,matte,64
-        Cleo,svenska,92
-        David,engelska,45
-        Elin,svenska,78
-        Farid,matte,95
-        Greta,engelska,58
-        Hugo,svenska,71
-
-        """;
-
-    private const string Notes = """
-        Saker att lära mig om Linux:
-        - navigera i filsystemet
-        - hantera filer och kataloger
-        - pipes och omdirigering
-        - rättigheter och sudo
-        - pakethantering i olika distributioner
-
-        """;
-
-    private const string Bashrc = """
-        # ~/.bashrc: körs av bash för interaktiva skal.
-        # Här brukar man lägga alias och egna inställningar.
-
-        # Exempel:
+        # Examples:
         # alias ll='ls -la'
         # export EDITOR=nano
 
         """;
 
-    private const string Profile = """
-        # ~/.profile: körs av inloggningsskal.
+    public const string Profile = """
+        # ~/.profile: executed by login shells.
         if [ -d "$HOME/bin" ] ; then
             PATH="$HOME/bin:$PATH"
         fi
-
-        """;
-
-    // The exercise project in the git chapter.
-    private const string WebIndex = """
-        <!DOCTYPE html>
-        <html lang="sv">
-        <head>
-          <meta charset="utf-8">
-          <title>Min webbplats</title>
-          <link rel="stylesheet" href="style.css">
-        </head>
-        <body>
-          <h1>Välkommen!</h1>
-          <p>Det här är min första webbplats.</p>
-        </body>
-        </html>
 
         """;
 
@@ -113,15 +58,8 @@ public static partial class InitfsLib
 
         """;
 
-    private const string WebReadme = """
-        # Min webbplats
-
-        En liten webbplats som jag versionshanterar med git.
-
-        """;
-
     private const string LoginDefs =
-        "# /etc/login.defs – inställningar för useradd, passwd m.fl. (utdrag)\n" +
+        "# /etc/login.defs - settings for useradd, passwd and others (excerpt)\n" +
         "PASS_MAX_DAYS\t99999\n" +
         "PASS_MIN_DAYS\t0\n" +
         "PASS_WARN_AGE\t7\n" +
@@ -248,7 +186,7 @@ public static partial class InitfsLib
         _ => throw new ArgumentException($"Unknown family: {distro.Family}"),
     };
 
-    /// <summary>System groups. The admin group (sudo/wheel) gets elev as a member in BuildFs.</summary>
+    /// <summary>System groups. The admin group (sudo/wheel) gets the student as a member in BuildFs.</summary>
     private static List<string> SystemGroups(Distro distro)
     {
         var admin = $"{distro.AdminGroup}:x:{distro.AdminGid}:";
@@ -274,33 +212,39 @@ public static partial class InitfsLib
         };
     }
 
-    public static FsNode BuildFs(Distro distro)
+    /// <summary>The exercise files in the student's home directory, in the language of the world.</summary>
+    public static FsNode BuildHome(World w)
     {
-        const string u = Student;
-        const string ug = Student;
-
-        var home = D(u, Js.Oct(750), Ch(
+        var u = w.User;
+        var ug = w.User;
+        return D(u, Js.Oct(750), Ch(
             (".bashrc", F(Bashrc, u, Js.Oct(644), ug)),
             (".profile", F(Profile, u, Js.Oct(644), ug)),
-            ("anteckningar.txt", F(Notes, u, Js.Oct(644), ug)),
-            ("dokument", D(u, Js.Oct(755), Ch(
-                ("betyg.csv", F(Grades, u, Js.Oct(644), ug)),
-                ("frukter.txt", F(Fruits, u, Js.Oct(644), ug)),
+            (w["notes"], F(w.File("notes"), u, Js.Oct(644), ug)),
+            (w["documents"], D(u, Js.Oct(755), Ch(
+                (w["grades"], F(w.File("grades"), u, Js.Oct(644), ug)),
+                (w["fruits"], F(w.File("fruits"), u, Js.Oct(644), ug)),
                 ("server.log", F(ServerLog, u, Js.Oct(644), ug))), ug)),
-            ("gammalt", D(u, Js.Oct(755), Ch(
-                ("gamla-anteckningar.txt", F("Det här behövs inte längre.\n", u, Js.Oct(644), ug)),
-                ("kopia.bak", F("backup från 2019\n", u, Js.Oct(644), ug)),
-                ("arkiv", D(u, Js.Oct(755), Ch(("logg-2019.txt", F("gammal logg\n", u, Js.Oct(644), ug))), ug))), ug)),
-            ("bilder", D(u, Js.Oct(755), Ch(), ug)),
-            ("projekt-webb", D(u, Js.Oct(755), Ch(
-                ("index.html", F(WebIndex, u, Js.Oct(644), ug)),
+            (w["old"], D(u, Js.Oct(755), Ch(
+                (w["oldNotes"], F(w.File("oldNotes"), u, Js.Oct(644), ug)),
+                (w["backup"], F(w.File("backup"), u, Js.Oct(644), ug)),
+                (w["archive"], D(u, Js.Oct(755), Ch((w["oldLog"], F(w.File("oldLog"), u, Js.Oct(644), ug))), ug))), ug)),
+            (w["pictures"], D(u, Js.Oct(755), Ch(), ug)),
+            (w["webProject"], D(u, Js.Oct(755), Ch(
+                ("index.html", F(w.File("webIndex"), u, Js.Oct(644), ug)),
                 ("style.css", F(WebStyle, u, Js.Oct(644), ug)),
-                ("README.md", F(WebReadme, u, Js.Oct(644), ug))), ug)),
-            // A downloaded AppImage (chapter "Flatpak, Snap och AppImage").
-            (UniversalCmd.AppimageDir, D(u, Js.Oct(755), Ch((UniversalCmd.AppimageName, UniversalCmd.AppImageNode(u, ug))), ug))), ug);
+                ("README.md", F(w.File("webReadme"), u, Js.Oct(644), ug))), ug)),
+            // A downloaded AppImage (chapter "Flatpak, Snap and AppImage").
+            (w["downloads"], D(u, Js.Oct(755), Ch((w["calculator"], UniversalCmd.AppImageNode(w, u, ug))), ug))), ug);
+    }
+
+    public static FsNode BuildFs(Distro distro, World w)
+    {
+        var u = w.User;
+        var home = BuildHome(w);
 
         // Users and groups (see users.ts). The system users differ a little between the families.
-        var passwd = string.Join("\n", [.. SystemUsers(distro), $"{u}:x:1000:1000:Elev,,,:/home/{u}:/bin/bash"]) + "\n";
+        var passwd = string.Join("\n", [.. SystemUsers(distro), $"{u}:x:1000:1000:{w["userFull"]},,,:/home/{u}:/bin/bash"]) + "\n";
 
         var group = string.Join("\n", [
             .. SystemGroups(distro).Select(g => g.StartsWith($"{distro.AdminGroup}:", StringComparison.Ordinal) ? g + u : g),
@@ -321,14 +265,14 @@ public static partial class InitfsLib
             ("group", F(group)),
             ("shadow", F(
                 string.Concat(SystemUsers(distro).Select(l => $"{l.Split(':')[0]}:*:20000:0:99999:7:::\n")) +
-                    $"{u}:$y$j9T$Qm1x...simulerad...hash:20000:0:99999:7:::\n",
+                    $"{u}:$y$j9T$Qm1x...simulated...hash:20000:0:99999:7:::\n",
                 "root",
                 shadowMode,
                 distro.Family == "debian" ? "shadow" : "root")),
             ("login.defs", F(LoginDefs + (distro.Family == "redhat" ? "CREATE_HOME\tyes\n" : ""))),
             ("skel", D("root", Js.Oct(755), Ch((".bashrc", F(Bashrc)), (".profile", F(Profile))))),
             ("sudoers", F(
-                $"# Se sudoers(5). Redigera alltid med visudo!\nDefaults\tenv_reset\nroot\tALL=(ALL:ALL) ALL\n%{distro.AdminGroup}\tALL=(ALL:ALL) ALL\n",
+                $"# See sudoers(5). Always edit with visudo!\nDefaults\tenv_reset\nroot\tALL=(ALL:ALL) ALL\n%{distro.AdminGroup}\tALL=(ALL:ALL) ALL\n",
                 "root",
                 Js.Oct(440))),
             ("hosts", F($"127.0.0.1\tlocalhost\n127.0.1.1\t{distro.Hostname}\n::1\t\tlocalhost ip6-localhost ip6-loopback\n")),
@@ -341,7 +285,7 @@ public static partial class InitfsLib
 
         return D("root", Js.Oct(755), Ch(
             ("boot", D("root", Js.Oct(755), Ch(
-                ($"vmlinuz-{distro.Kernel}", F("(kärnan – simulerad)\n", "root", Js.Oct(600)))))),
+                ($"vmlinuz-{distro.Kernel}", F("(the kernel - simulated)\n", "root", Js.Oct(600)))))),
             ("dev", D("root", Js.Oct(755), Ch(("null", F("", "root", Js.Oct(666)))))),
             ("etc", etc),
             ("home", D("root", Js.Oct(755), Ch((u, home)))),
@@ -349,15 +293,15 @@ public static partial class InitfsLib
             ("mnt", D()),
             ("opt", D()),
             ("proc", D("root", Js.Oct(555), Ch(
-                ("version", F($"Linux version {distro.Kernel} (simulerad) #1 SMP PREEMPT_DYNAMIC\n", "root", Js.Oct(444))),
-                ("cpuinfo", F("processor\t: 0\nvendor_id\t: GenuineIntel\nmodel name\t: Simulerad CPU @ 3.00GHz\ncpu cores\t: 4\n", "root", Js.Oct(444)))))),
+                ("version", F($"Linux version {distro.Kernel} (simulated) #1 SMP PREEMPT_DYNAMIC\n", "root", Js.Oct(444))),
+                ("cpuinfo", F("processor\t: 0\nvendor_id\t: GenuineIntel\nmodel name\t: Simulated CPU @ 3.00GHz\ncpu cores\t: 4\n", "root", Js.Oct(444)))))),
             ("root", D("root", Js.Oct(700), Ch((".bashrc", F(Bashrc))))),
             ("srv", D()),
             ("tmp", D("root", Js.Oct(1777))),
             ("usr", D("root", Js.Oct(755), Ch(
                 ("bin", D()),
                 ("lib", D()),
-                ("local", D("root", Js.Oct(755), Ch(("bin", D("root", Js.Oct(755), Ch(("minserver", NetworkLib.MinserverBinary()))))))),
+                ("local", D("root", Js.Oct(755), Ch(("bin", D("root", Js.Oct(755), Ch(("myserver", NetworkLib.MyserverBinary()))))))),
                 ("sbin", D()),
                 ("share", D("root", Js.Oct(755), Ch(("doc", D()), ("man", D()))))))),
             ("var", D("root", Js.Oct(755), Ch(

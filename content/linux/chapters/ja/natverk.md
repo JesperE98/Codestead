@@ -288,14 +288,14 @@ ss -tulpn
 sudo ss -tulpn
 ```
 
-プロセスの章で使った練習用サーバー `minserver` が動いていれば、ここで
+プロセスの章で使った練習用サーバー `myserver` が動いていれば、ここで
 ポート 8080 に表示されます。古いコマンド `netstat -tulpn`（*net-tools*）も
 同じことをします。
 
 ## Web から取ってくる: curl と wget
 
 `curl` は、あるアドレス（**URL**）にあるものを取ってきて、ターミナルに表示します。
-自分のコンピューター上の minserver で試してみましょう。
+自分のコンピューター上の myserver で試してみましょう。
 
 Ubuntu では `curl` はプリインストールされていません（`wget` は入っています）。
 
@@ -308,11 +308,11 @@ curl http://localhost:8080
 ```
 
 `Couldn't connect to server` と表示されましたか？ それなら、そのポートでは
-何も待ち受けていません。プロセスの章で minserver を止めたのかもしれません。
+何も待ち受けていません。プロセスの章で myserver を止めたのかもしれません。
 もう一度起動しましょう。
 
 ```sh
-minserver
+myserver
 ```
 
 `-I` を付けると、curl は応答の **ヘッダー** だけを表示します。その最初の行が
@@ -351,7 +351,7 @@ curl -s https://example.com | grep title
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` はファイルのダウンロードのために作られています。常にファイルに保存し、
@@ -371,10 +371,10 @@ cat cheatsheet.txt
 `sshd` というサービスが動いていて、クライアントの `ssh` で接続します。
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` は「コンピューター server.lan 上のユーザー elev」という意味です。
+`{{user}}@server.lan` は「コンピューター server.lan 上のユーザー {{user}}」という意味です。
 ホストの後ろのコマンド（`hostname`）はサーバー上で実行され、その結果が
 ここに表示されます。表示されるのは `ubuntu` ではなく `server` です。
 
@@ -394,8 +394,8 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])?
 コマンドは、引用符で囲んで複数のコマンドにすることもできます。
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 コマンドを付けないと、ssh はログインして、相手のコンピューター上のシェルが
@@ -410,7 +410,7 @@ ssh elev@server.lan cat välkommen.txt
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 `ssh-keygen` の質問には Enter を押して、パスフレーズなしで既定のファイル

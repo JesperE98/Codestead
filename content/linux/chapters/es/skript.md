@@ -12,19 +12,18 @@ funciones.
 Un script es un archivo de texto normal. En un ordenador real lo escribirías
 en un editor de texto como `nano` o `vim`. Otra forma, que funciona tanto aquí
 como en los servidores, es un **here document**: todo lo que hay entre
-`<< 'SLUT'` y la línea `SLUT` se pasa al comando. (*Slut* simplemente
-significa «fin» en sueco; puedes elegir la palabra que quieras, y `EOF` es una
-opción habitual).
+`<< '{{heredocEnd}}'` y la línea `{{heredocEnd}}` se pasa al comando. Puedes
+elegir la palabra que quieras; `EOF` es una opción habitual.
 
 Escribe la primera línea y pulsa Enter. El prompt cambia a `> `: la shell está
-esperando el resto. Escribe las líneas de una en una y termina con `SLUT`:
+esperando el resto. Escribe las líneas de una en una y termina con `{{heredocEnd}}`:
 
 ```sh
-cat > hej.sh << 'SLUT'
+cat > {{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
 echo "¡Hola desde un script!"
 echo "Hoy es $(date)"
-SLUT
+{{heredocEnd}}
 ```
 
 La primera línea, `#!/bin/bash`, se llama *shebang* e indica al sistema qué
@@ -32,8 +31,8 @@ programa debe ejecutar el archivo. Haz que el script sea ejecutable y
 ejecútalo:
 
 ```sh
-chmod +x hej.sh
-./hej.sh
+chmod +x {{helloScript}}
+./{{helloScript}}
 ```
 
 Las líneas que empiezan por `#` (salvo la línea del shebang) son
@@ -46,26 +45,26 @@ Una variable se crea con `nombre=valor`. **No** puede haber espacios alrededor
 del signo igual; si los hay, la shell cree que `nombre` es un comando.
 
 ```sh
-stad=Göteborg
-echo "Vivo en $stad"
+ciudad=Sevilla
+echo "Vivo en $ciudad"
 ```
 
-(*Stad* significa «ciudad»). Pon siempre las variables entre **comillas
+Pon siempre las variables entre **comillas
 dobles** cuando las uses. Sin comillas, el valor se divide por los espacios,
 lo que provoca errores extraños cuando un nombre de archivo contiene un
 espacio. Si quieres escribir texto justo después del nombre de la variable,
-usa llaves: `"${stad}_2026"`; sin ellas, bash buscaría una variable llamada
-`stad_2026`.
+usa llaves: `"${ciudad}_2026"`; sin ellas, bash buscaría una variable llamada
+`ciudad_2026`.
 
 ```quiz
-`stad` contiene `Göteborg`, y no existe ninguna variable llamada `stad_2026`.
-¿Qué imprime `echo "$stad_2026"`?
-- [ ] `Göteborg_2026`
-- [ ] `Göteborg`
+`ciudad` contiene `Sevilla`, y no existe ninguna variable llamada `ciudad_2026`.
+¿Qué imprime `echo "$ciudad_2026"`?
+- [ ] `Sevilla_2026`
+- [ ] `Sevilla`
 - [x] Una línea vacía
 ---
-Bash lee el nombre completo `stad_2026`, y esa variable no existe.
-Escribe `"${stad}_2026"` para obtener `Göteborg_2026`.
+Bash lee el nombre completo `ciudad_2026`, y esa variable no existe.
+Escribe `"${ciudad}_2026"` para obtener `Sevilla_2026`.
 ```
 
 ## Sustitución de comandos – `$(...)`
@@ -74,9 +73,9 @@ Escribe `"${stad}_2026"` para obtener `Göteborg_2026`.
 resultado de un comando en una variable:
 
 ```sh
-idag=$(date)
-filer=$(ls ~ | wc -l)
-echo "Hay $filer elementos en tu directorio personal"
+hoy=$(date)
+archivos=$(ls ~ | wc -l)
+echo "Hay $archivos elementos en tu directorio personal"
 ```
 
 ## Aritmética – `$(( ))`
@@ -101,7 +100,7 @@ Bash solo calcula con enteros: 7 / 2 es 3, y el resto (`%`) es 1.
 
 ## Argumentos
 
-Cuando ejecutas `./skript.sh uno dos`, el script puede leer los argumentos:
+Cuando ejecutas `./script.sh uno dos`, el script puede leer los argumentos:
 
 | Variable | Contiene |
 |---|---|
@@ -112,8 +111,8 @@ Cuando ejecutas `./skript.sh uno dos`, el script puede leer los argumentos:
 | `$?` | El código de salida del comando anterior |
 
 ```quiz
-Un script se ejecuta con `./skript.sh red green blue`. ¿Qué contienen `$1` y `$#`?
-- [ ] `$1` es `./skript.sh` y `$#` es `4`
+Un script se ejecuta con `./script.sh red green blue`. ¿Qué contienen `$1` y `$#`?
+- [ ] `$1` es `./script.sh` y `$#` es `4`
 - [x] `$1` es `red` y `$#` es `3`
 - [ ] `$1` es `red` y `$#` es `blue`
 ---
@@ -163,7 +162,7 @@ listo: ahí puedes escribir `&&` y `||` y comparar con patrones como
 Para condiciones cortas, a menudo basta con `&&` y `||`:
 
 ```sh
-[ -d ~/bilder ] && echo "El directorio de imágenes existe"
+[ -d ~/{{pictures}} ] && echo "El directorio de imágenes existe"
 ```
 
 ```predict
@@ -177,13 +176,13 @@ empty
 Un **bucle for** hace lo mismo con cada elemento de una lista:
 
 ```sh
-for frukt in äpple banan kiwi; do echo "Me gusta: $frukt"; done
+for fruta in manzana pera kiwi; do echo "Me gusta: $fruta"; done
 ```
 
 La lista puede venir de comodines o de un comando:
 
 ```sh
-for fil in ~/dokument/*; do echo "Archivo: $fil"; done
+for archivo in ~/{{documents}}/*; do echo "Archivo: $archivo"; done
 for i in $(seq 1 3); do echo "Vuelta $i"; done
 ```
 
@@ -197,7 +196,7 @@ La forma más habitual de recorrer un archivo línea a línea es `while read`,
 pasándole el archivo con `<` después de `done`:
 
 ```sh
-while read rad; do echo "> $rad"; done < ~/dokument/frukter.txt
+while read {{lineVar}}; do echo "> ${{lineVar}}"; done < ~/{{documents}}/{{fruits}}
 ```
 
 `break` sale de un bucle, y `continue` salta directamente a la siguiente
@@ -220,8 +219,8 @@ Cuando una variable puede tener muchos valores distintos, `case` es más claro
 que una larga cadena de `elif`:
 
 ```sh
-fil=semester.jpg
-case $fil in *.jpg|*.png) echo "Una imagen";; *.txt) echo "Un archivo de texto";; *) echo "Tipo desconocido";; esac
+archivo={{vacationPic}}
+case $archivo in *.jpg|*.png) echo "Una imagen";; *.txt) echo "Un archivo de texto";; *) echo "Tipo desconocido";; esac
 ```
 
 Cada alternativa termina con `;;`, y `*)` atrapa todo lo demás.
@@ -233,8 +232,8 @@ fuera un comando más. Recibe los argumentos igual que un script: `$1`, `$2` y
 `$#`:
 
 ```sh
-halsa() { echo "Hola, $1. ¡Bienvenido!"; }
-halsa Kim
+saludar() { echo "Hola, $1. ¡Bienvenido!"; }
+saludar Kim
 ```
 
 Las variables que solo deben existir dentro de la función se crean con
@@ -245,7 +244,7 @@ Las variables que solo deben existir dentro de la función se crean con
 `read` lee una línea del teclado y la guarda en una variable:
 
 ```sh
-read -p "¿Cómo te llamas? " namn; echo "¡Hola, $namn!"
+read -p "¿Cómo te llamas? " {{nameVar}}; echo "¡Hola, ${{nameVar}}!"
 ```
 
 ## Un ejemplo completo

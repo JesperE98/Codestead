@@ -6,14 +6,14 @@ coisas.
 ## Criando diretórios – `mkdir`
 
 ```sh
-mkdir bilder2
+mkdir imagens2
 ```
 
 Se quiser criar vários níveis de uma vez, você precisa do `-p` (*parents*).
 Sem ele, o `mkdir` reclama se o diretório pai não existir:
 
 ```sh
-mkdir -p resa/2026/juni
+mkdir -p viagem/2026/junho
 ```
 
 ## Criando arquivos vazios – `touch`
@@ -22,11 +22,11 @@ O `touch` cria um arquivo vazio se ele não existir (e, caso contrário, apenas
 atualiza a data e hora de modificação):
 
 ```sh
-touch inkopslista.txt
+touch lista-de-compras.txt
 ```
 
 ```quiz
-O que `touch anteckningar.txt` faz se o arquivo já existir?
+O que `touch {{notes}}` faz se o arquivo já existir?
 - [ ] Esvazia o arquivo
 - [ ] Reclama que o arquivo já existe
 - [x] Apenas atualiza a data e hora do arquivo – o conteúdo continua o mesmo
@@ -35,23 +35,23 @@ O que `touch anteckningar.txt` faz se o arquivo já existir?
 ## Copiando – `cp`
 
 ```sh
-cp anteckningar.txt anteckningar-kopia.txt
+cp {{notes}} anotacoes-copia.txt
 ```
 
 Se o destino for um diretório, a cópia vai parar dentro dele com o mesmo nome.
 Para copiar um diretório inteiro, você precisa do `-r` (*recursive*):
 
 ```sh
-cp -r dokument dokument-backup
+cp -r {{documents}} {{documents}}-backup
 ```
 
 ```predict
-$ mkdir kopior
-$ cp anteckningar.txt kopior
-$ ls kopior
-anteckningar.txt
+$ mkdir copias
+$ cp {{notes}} copias
+$ ls copias
+{{notes}}
 ---
-`kopior` é um diretório, então a cópia vai parar dentro dele com o mesmo nome.
+`copias` é um diretório, então a cópia vai parar dentro dele com o mesmo nome.
 ```
 
 ## Movendo e renomeando – `mv`
@@ -59,8 +59,8 @@ anteckningar.txt
 No Linux, *mover* e *renomear* são a mesma coisa. O `mv` faz as duas:
 
 ```sh
-mv inkopslista.txt dokument/
-mv dokument/inkopslista.txt dokument/handla.txt
+mv lista-de-compras.txt {{documents}}/
+mv {{documents}}/lista-de-compras.txt {{documents}}/compras.txt
 ```
 
 ```quiz
@@ -75,14 +75,14 @@ Mover e renomear são a mesma coisa. Depois disso, só existe `b.txt`.
 ## Apagando – `rm` e `rmdir`
 
 ```sh
-rm anteckningar-kopia.txt
+rm anotacoes-copia.txt
 ```
 
 O `rmdir` remove diretórios *vazios*. Para remover um diretório junto com tudo
 o que há dentro dele, use `rm -r`:
 
 ```sh
-rm -r dokument-backup
+rm -r {{documents}}-backup
 ```
 
 > **Atenção!** Não existe lixeira no terminal. O que você apaga com `rm` some
@@ -91,10 +91,10 @@ rm -r dokument-backup
 > Enter.
 
 ```quiz
-Qual comando remove o diretório `gammalt` *apenas* se ele estiver vazio?
-- [ ] `rm gammalt`
-- [x] `rmdir gammalt`
-- [ ] `rm -r gammalt`
+Qual comando remove o diretório `{{old}}` *apenas* se ele estiver vazio?
+- [ ] `rm {{old}}`
+- [x] `rmdir {{old}}`
+- [ ] `rm -r {{old}}`
 ---
 O `rmdir` se recusa a remover um diretório que ainda tenha algo dentro.
 O `rm -r` remove o diretório e tudo o que há dentro dele.
@@ -111,23 +111,23 @@ comando ser executado:
 | `?` | Exatamente um caractere |
 | `[abc]` | Um dos caracteres a, b ou c |
 
-O diretório `dokument` no seu diretório pessoal contém três arquivos:
-`betyg.csv`, `frukter.txt` e `server.log`. Isto lista apenas os que terminam
+O diretório `{{documents}}` no seu diretório pessoal contém três arquivos:
+`{{grades}}`, `{{fruits}}` e `server.log`. Isto lista apenas os que terminam
 em `.txt`:
 
 ```sh
-ls dokument/*.txt
+ls {{documents}}/*.txt
 ```
 
-Aqui o `ls` nunca vê o asterisco – o shell já substituiu `dokument/*.txt` por
+Aqui o `ls` nunca vê o asterisco – o shell já substituiu `{{documents}}/*.txt` por
 todos os nomes de arquivo correspondentes.
 
 ```predict
-$ ls dokument/?????.*
-dokument/betyg.csv
+$ ls {{documents}}/?????.*
+{{documents}}/{{grades}}
 ---
 Cada `?` é exatamente um caractere, então o nome antes do ponto precisa ter
-cinco caracteres. Só `betyg` tem – `frukter` e `server` são mais longos.
+cinco caracteres. Só `notas` tem – `frutas` e `server` são mais longos.
 ```
 
 ## Espaços em nomes de arquivo
@@ -136,8 +136,8 @@ O shell divide a linha de comando nos espaços. Se um arquivo tiver um espaço
 no nome, você precisa usar aspas (ou uma `\` antes do espaço):
 
 ```sh
-touch "min fil.txt"
-ls -l "min fil.txt"
+touch "meu arquivo.txt"
+ls -l "meu arquivo.txt"
 ```
 
 É por isso que muita gente prefere hifens ou sublinhados nos nomes de arquivo.

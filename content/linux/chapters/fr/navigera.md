@@ -9,7 +9,7 @@ répertoires qui commence à la **racine**, notée `/`.
 | Répertoire | Contenu |
 |---|---|
 | `/` | La racine – le sommet de l'arborescence |
-| `/home` | Les répertoires personnels des utilisateurs, p. ex. `/home/elev` |
+| `/home` | Les répertoires personnels des utilisateurs, p. ex. `/home/{{user}}` |
 | `/root` | Le répertoire personnel de l'administrateur, root |
 | `/etc` | Les réglages du système (fichiers de configuration) |
 | `/usr/bin` | Les programmes (commandes) comme `ls` et `cat` |
@@ -99,15 +99,15 @@ Il existe deux sortes de chemins :
   `/`, vous pouvez atteindre `/var/log` avec simplement `cd var/log`.
 
 ```quiz
-Vous êtes dans `/home`. Quelles commandes vous amènent dans `/home/elev/dokument` ? (Cochez toutes celles qui fonctionnent.)
-- [x] `cd elev/dokument`
-- [x] `cd /home/elev/dokument`
-- [ ] `cd /elev/dokument`
-- [ ] `cd dokument`
+Vous êtes dans `/home`. Quelles commandes vous amènent dans `/home/{{user}}/{{documents}}` ? (Cochez toutes celles qui fonctionnent.)
+- [x] `cd {{user}}/{{documents}}`
+- [x] `cd /home/{{user}}/{{documents}}`
+- [ ] `cd /{{user}}/{{documents}}`
+- [ ] `cd {{documents}}`
 ---
-`elev/dokument` est relatif à `/home`, et `/home/elev/dokument` est absolu,
-donc il fonctionne de partout. `/elev/dokument` part de la racine, où il n'y a
-pas de `elev`.
+`{{user}}/{{documents}}` est relatif à `/home`, et `/home/{{user}}/{{documents}}` est absolu,
+donc il fonctionne de partout. `/{{user}}/{{documents}}` part de la racine, où il n'y a
+pas de `{{user}}`.
 ```
 
 Quelques noms spéciaux à connaître :

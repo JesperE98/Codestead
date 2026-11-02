@@ -286,14 +286,14 @@ für IPv6. Die Spalte *Process* ist bei Prozessen anderer Benutzer leer – mit
 sudo ss -tulpn
 ```
 
-Wenn der Übungsserver `minserver` aus dem Kapitel über Prozesse läuft, siehst du
+Wenn der Übungsserver `myserver` aus dem Kapitel über Prozesse läuft, siehst du
 ihn hier auf Port 8080. Der ältere Befehl `netstat -tulpn` (aus *net-tools*)
 macht dasselbe.
 
 ## Aus dem Web holen: curl und wget
 
 `curl` holt, was unter einer Adresse (einer **URL**) liegt, und gibt es im
-Terminal aus. Probiere es mit minserver auf deinem eigenen Rechner:
+Terminal aus. Probiere es mit myserver auf deinem eigenen Rechner:
 
 Unter Ubuntu ist `curl` nicht vorinstalliert (`wget` aber schon):
 
@@ -306,10 +306,10 @@ curl http://localhost:8080
 ```
 
 Bekommst du `Couldn't connect to server`? Dann lauscht nichts auf dem Port –
-vielleicht hast du minserver im Kapitel über Prozesse beendet. Starte ihn neu:
+vielleicht hast du myserver im Kapitel über Prozesse beendet. Starte ihn neu:
 
 ```sh
-minserver
+myserver
 ```
 
 Mit `-I` zeigt curl nur die **Header** der Antwort, deren erste Zeile ein
@@ -347,7 +347,7 @@ Dateinamen aus der Adresse übernimmt):
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` ist zum Herunterladen von Dateien gemacht. Es speichert immer in eine
@@ -369,10 +369,10 @@ läuft der Dienst `sshd` auf Port 22, und du verbindest dich mit dem Client
 `ssh`:
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` bedeutet „der Benutzer elev auf dem Rechner server.lan“. Der
+`{{user}}@server.lan` bedeutet „der Benutzer {{user}} auf dem Rechner server.lan“. Der
 Befehl nach dem Host (`hostname`) läuft auf dem Server, und die Antwort wird
 hier angezeigt – dort steht `server`, nicht `ubuntu`.
 
@@ -392,8 +392,8 @@ lautstark – es könnte bedeuten, dass sich jemand als der Server ausgibt.
 Der Befehl kann auch aus mehreren Befehlen in Anführungszeichen bestehen:
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 Ohne Befehl meldet ssh dich an, und du bekommst eine Shell auf dem anderen
@@ -407,7 +407,7 @@ Der private Schlüssel bleibt bei dir, der öffentliche kommt auf den Server:
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 Drücke bei den Fragen von `ssh-keygen` Enter, um die Standarddatei

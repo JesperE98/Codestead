@@ -2,23 +2,23 @@
   "title": "重定向和管道",
   "tasks": {
     "redirect": {
-      "text": "使用 `echo` 和 `>`，把文本 `Hej från shell`（瑞典语的“来自 shell 的问候”）写入文件 `~/hej.txt`。"
+      "text": "使用 `echo` 和 `>`，把文本 `{{helloShell}}` 写入文件 `~/{{helloFile}}`。"
     },
     "append": {
-      "text": "再往 `~/hej.txt` 中添加一行——不要覆盖第一行。",
+      "text": "再往 `~/{{helloFile}}` 中添加一行——不要覆盖第一行。",
       "hint": "用 `>>` 代替 `>`。"
     },
     "count-errors": {
       "text": "通过把 `grep` 的输出用管道传给 `wc -l`，统计 server.log 中包含 `ERROR` 的行数。"
     },
     "uniq": {
-      "text": "使用 `sort` 和 `uniq -c`，显示 `frukter.txt` 中每种水果出现的次数。"
+      "text": "使用 `sort` 和 `uniq -c`，显示 `{{fruits}}` 中每种水果出现的次数。"
     },
     "save-ls": {
-      "text": "把 `/etc` 中的文件列表保存到文件 `~/etc-filer.txt` 中。"
+      "text": "把 `/etc` 中的文件列表保存到文件 `~/{{etcFiles}}` 中。"
     },
     "devnull": {
-      "text": "运行 `ls /finnsinte`，但把错误信息发送到 `/dev/null`，让屏幕上什么都不显示。"
+      "text": "运行 `ls /{{missing}}`，但把错误信息发送到 `/dev/null`，让屏幕上什么都不显示。"
     }
   }
 }

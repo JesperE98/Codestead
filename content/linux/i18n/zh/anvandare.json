@@ -14,8 +14,8 @@
       "hint": "只有 root 才能为其他用户设置密码：`sudo passwd kim`。把同一个密码输入两次——输入时不会显示。"
     },
     "grupp": {
-      "text": "创建组 `utvecklare`（瑞典语“开发者”的意思），并把 `kim` 加入其中。",
-      "hint": "先 `sudo groupadd utvecklare`，然后 `sudo usermod -aG utvecklare kim`。"
+      "text": "创建组 `{{devGroup}}`，并把 `kim` 加入其中。",
+      "hint": "先 `sudo groupadd {{devGroup}}`，然后 `sudo usermod -aG {{devGroup}} kim`。"
     },
     "sudo-ratt": {
       "text": "把 `kim` 加入 `sudo` 组，让这个账户可以使用 `sudo`。",
@@ -26,12 +26,12 @@
       "hint": "`sudo -u kim whoami`"
     },
     "su": {
-      "text": "用 `su -` 以 `kim` 的身份登录，并运行 `id`。然后用 `exit` 回到 `elev`。",
+      "text": "用 `su -` 以 `kim` 的身份登录，并运行 `id`。然后用 `exit` 回到 `{{user}}`。",
       "hint": "输入 `su - kim`，然后输入 kim 的密码——就是你用 `passwd` 设置的那个。提示符会显示你现在是 kim。"
     },
     "userdel": {
-      "text": "创建一个带主目录的临时用户 `vikarie`（瑞典语“代课老师”的意思）——然后再把它删除，**包括**主目录。",
-      "hint": "`sudo useradd -m vikarie`，然后 `sudo userdel -r vikarie`。"
+      "text": "创建一个带主目录的临时用户 `{{tempUser}}`——然后再把它删除，**包括**主目录。",
+      "hint": "`sudo useradd -m {{tempUser}}`，然后 `sudo userdel -r {{tempUser}}`。"
     }
   }
 }

@@ -58,8 +58,8 @@ ls /etc/systemd/system
 `/lib/systemd/system`. Это тот же самый каталог – `/lib` является ссылкой на
 `/usr/lib`.
 
-Имя службы – это имя файла, например `minserver.service`. При вводе команд
-`.service` можно опускать: `systemctl status minserver` работает точно так
+Имя службы – это имя файла, например `myserver.service`. При вводе команд
+`.service` можно опускать: `systemctl status myserver` работает точно так
 же.
 
 ## Как дела у службы? – `systemctl status`
@@ -111,17 +111,17 @@ Oct 30 07:54:07 ubuntu systemd[1]: Started ssh.service - OpenBSD Secure Shell se
 ## Запуск, остановка и перезапуск
 
 ```text
-sudo systemctl start minserver      # запустить сейчас
-sudo systemctl stop minserver       # остановить сейчас
-sudo systemctl restart minserver    # остановить и запустить снова
-sudo systemctl reload minserver     # попросить перечитать конфигурацию
+sudo systemctl start myserver      # запустить сейчас
+sudo systemctl stop myserver       # остановить сейчас
+sudo systemctl restart myserver    # остановить и запустить снова
+sudo systemctl reload myserver     # попросить перечитать конфигурацию
 ```
 
 Всё, что что-то **меняет**, требует прав root, так что не забывайте `sudo`.
 Без него systemctl ответит:
 
 ```text
-Failed to start minserver.service: Interactive authentication required.
+Failed to start myserver.service: Interactive authentication required.
 ```
 
 `reload` работает только для служб, которые его поддерживают. Преимущество в
@@ -130,9 +130,9 @@ Failed to start minserver.service: Interactive authentication required.
 `restart` – последний шаг.
 
 > **Попробуйте!** В главе о процессах вы остановили учебный сервер с помощью
-> `pkill`. Посмотрите на `systemctl status minserver` – systemd заметил, что
+> `pkill`. Посмотрите на `systemctl status myserver` – systemd заметил, что
 > процесс исчез. Запустите его снова через `systemctl` и сравните PID с
-> `pgrep -l minserver`.
+> `pgrep -l myserver`.
 
 ## Сейчас или при загрузке? `start` и `enable`
 
@@ -150,16 +150,16 @@ Failed to start minserver.service: Interactive authentication required.
 `[Install]` юнит-файла, обычно `multi-user.target.wants`:
 
 ```text
-$ sudo systemctl enable --now minserver
-Created symlink /etc/systemd/system/multi-user.target.wants/minserver.service → /etc/systemd/system/minserver.service.
+$ sudo systemctl enable --now myserver
+Created symlink /etc/systemd/system/multi-user.target.wants/myserver.service → /etc/systemd/system/myserver.service.
 ```
 
 Когда компьютер загружается, systemd проходит по этому каталогу и запускает
 всё, что в нём лежит. Состояние можно запросить:
 
 ```sh
-systemctl is-active minserver
-systemctl is-enabled minserver
+systemctl is-active myserver
+systemctl is-enabled myserver
 ```
 
 `is-active` и `is-enabled` отлично подходят для скриптов – они выводят одно
@@ -167,19 +167,19 @@ systemctl is-enabled minserver
 молчат:
 
 ```text
-if systemctl is-active -q minserver; then echo "сервер работает"; fi
+if systemctl is-active -q myserver; then echo "сервер работает"; fi
 ```
 
-На только что запущенном компьютере в симуляторе `minserver` работает, но
+На только что запущенном компьютере в симуляторе `myserver` работает, но
 никто его не включил. Что выведут эти две команды?
 
 ```predict
-$ systemctl is-active minserver
-$ systemctl is-enabled minserver
+$ systemctl is-active myserver
+$ systemctl is-enabled myserver
 active
 disabled
 ---
-minserver работает **сейчас**, но `enable` никто не выполнял – после
+myserver работает **сейчас**, но `enable` никто не выполнял – после
 перезагрузки он бы не запустился. `start` и `enable` – действительно две
 разные вещи.
 ```
@@ -226,9 +226,9 @@ journalctl
 Опции можно комбинировать. Пара классических примеров:
 
 ```sh
-journalctl -u minserver -n 5
+journalctl -u myserver -n 5
 journalctl -p err -b
-journalctl --since today -u minserver
+journalctl --since today -u myserver
 ```
 
 ### Приоритеты
@@ -270,7 +270,7 @@ journalctl --since today -u minserver
 
 ## Диагностика службы, которая не запускается
 
-Кто-то настроил на этом компьютере службу **rapportd**, но с ней что-то не
+Кто-то настроил на этом компьютере службу **reportd**, но с ней что-то не
 так. Обычно действуют так:
 
 1. **Что завершилось сбоем?** Выведите список служб со сбоем:
@@ -282,19 +282,19 @@ journalctl --since today -u minserver
 2. **Посмотрите на состояние.** Часто хватает последних строк:
 
    ```sh
-   systemctl status rapportd
+   systemctl status reportd
    ```
 
 3. **Прочитайте весь журнал** службы. Почти всегда там написано, в чём
    проблема, – читайте внимательно, слово за словом:
 
    ```sh
-   journalctl -xeu rapportd
+   journalctl -xeu reportd
    ```
 
    Сам `systemctl` предлагает именно эту команду, когда запуск не удался:
-   `See "systemctl status rapportd.service" and "journalctl -xeu
-   rapportd.service" for details.`
+   `See "systemctl status reportd.service" and "journalctl -xeu
+   reportd.service" for details.`
 
 4. **Устраните проблему**, например отсутствующий конфигурационный файл или
    опечатку в нём.
@@ -302,8 +302,8 @@ journalctl --since today -u minserver
 5. **Перезапустите и проверьте:**
 
    ```text
-   sudo systemctl restart rapportd
-   systemctl status rapportd
+   sudo systemctl restart reportd
+   systemctl status reportd
    ```
 
 Строка `Main process exited, code=exited, status=1/FAILURE` означает, что
@@ -328,17 +328,17 @@ systemd вообще не смог найти программу – прове�
 Чтобы точно увидеть, как запускается служба, прочитайте её юнит-файл:
 
 ```sh
-systemctl cat minserver
+systemctl cat myserver
 ```
 
 ```text
-# /etc/systemd/system/minserver.service
+# /etc/systemd/system/myserver.service
 [Unit]
-Description=Minserver web server (practice server)
+Description=Myserver web server (practice server)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/minserver --port 8080
+ExecStart=/usr/local/bin/myserver --port 8080
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]

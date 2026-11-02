@@ -58,7 +58,7 @@ El shell que recibes al iniciar sesión es el último campo de tu línea en
 `/etc/passwd`, y también está en la variable `$SHELL`:
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 echo $SHELL
 ```
 
@@ -102,7 +102,7 @@ ningún archivo de configuración para zsh. Es un menú que te ayuda a empezar:
 | `1` | El menú principal con todos los ajustes (no disponible en el simulador) |
 | `2` | Crear `~/.zshrc` con los ajustes recomendados |
 
-Responde `2`. El prompt cambia a `elev@ubuntu ~ %`: en zsh, `%` es el
+Responde `2`. El prompt cambia a `{{user}}@ubuntu ~ %`: en zsh, `%` es el
 signo habitual de un usuario normal (root recibe `#`, igual que en bash).
 
 ¿Qué shell estás ejecutando ahora? La variable `$0` contiene el nombre del
@@ -128,7 +128,7 @@ zsh entiende casi toda la sintaxis de bash. Las pipes, las redirecciones, las
 variables, `if`, `for` y las funciones funcionan como estás acostumbrado:
 
 ```sh
-for f in ~/dokument/*.txt; do wc -l $f; done
+for f in ~/{{documents}}/*.txt; do wc -l $f; done
 ```
 
 ### Función 1: `**` busca en todos los subdirectorios
@@ -150,7 +150,7 @@ Con la opción `autocd` (que forma parte de los ajustes recomendados) solo
 tienes que escribir el nombre de un directorio para ir a él, sin `cd`:
 
 ```sh
-dokument
+{{documents}}
 ..
 ```
 
@@ -167,8 +167,8 @@ setopt autocd
 En bash, una variable sin comillas se divide por los espacios. En zsh, no:
 
 ```sh
-filer="a.txt b.txt"
-for f in $filer; do echo "[$f]"; done
+archivos="a.txt b.txt"
+for f in $archivos; do echo "[$f]"; done
 ```
 
 bash escribe `[a.txt]` y `[b.txt]`; zsh escribe `[a.txt b.txt]`. La forma de
@@ -185,7 +185,7 @@ zsh. `> /dev/null 2>&1` descarta la salida de esa línea. ¿Qué imprime el
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
-$ zsh -c 'filer="x.txt y.txt z.txt"; for f in $filer; do echo "<$f>"; done'
+$ zsh -c 'archivos="x.txt y.txt z.txt"; for f in $archivos; do echo "<$f>"; done'
 <x.txt y.txt z.txt>
 ---
 zsh no divide la variable por los espacios, así que el bucle se ejecuta una vez
@@ -264,16 +264,16 @@ sudo apt install fish
 fish
 ```
 
-fish te da la bienvenida y el prompt pasa a ser `elev@ubuntu ~>`. Baja
+fish te da la bienvenida y el prompt pasa a ser `{{user}}@ubuntu ~>`. Baja
 unos cuantos directorios y mira cómo fish acorta la ruta en el prompt:
 
 ```sh
-mkdir -p ~/dokument/projekt
-cd ~/dokument/projekt
+mkdir -p ~/{{documents}}/proyecto
+cd ~/{{documents}}/proyecto
 cd ~
 ```
 
-En el directorio `~/dokument/projekt`, el prompt muestra `~/d/projekt>`: todos
+En el directorio `~/{{documents}}/proyecto`, el prompt muestra `~/d/proyecto>`: todos
 los directorios menos el último se acortan a una sola letra.
 
 ### fish tiene su propia sintaxis
@@ -282,39 +282,38 @@ Aquí es donde fish más se diferencia de bash y zsh:
 
 | Esto | bash y zsh | fish |
 |---|---|---|
-| Asignar una variable | `frukt=äpple` | `set frukt äpple` |
+| Asignar una variable | `{{fruitVar}}={{fruitWord}}` | `set {{fruitVar}} {{fruitWord}}` |
 | Variable de entorno | `export EDITOR=nano` | `set -x EDITOR nano` |
-| Eliminar una variable | `unset frukt` | `set -e frukt` |
+| Eliminar una variable | `unset {{fruitVar}}` | `set -e {{fruitVar}}` |
 | Sustitución de comandos | `$(pwd)` | `(pwd)` |
 | Último estado de salida | `$?` | `$status` |
 | Argumentos del script | `$@`, `$1` | `$argv`, `$argv[1]` |
 | Condición | `if …; then …; fi` | `if …; …; end` |
 | Bucle | `for …; do …; done` | `for …; …; end` |
-| Función | `hej() { …; }` | `function hej; …; end` |
+| Función | `hola() { …; }` | `function hola; …; end` |
 | Aritmética | `$((17 * 23))` | `math 17 x 23` |
 
 ### Variables con set
 
-Prueba a asignar una variable a la manera de bash (`frukt` es «fruta» en sueco
-y `äpple`, «manzana»):
+Prueba a asignar una variable a la manera de bash:
 
 ```sh
-frukt=äpple
+{{fruitVar}}={{fruitWord}}
 ```
 
 fish se niega y te dice cómo escribirlo:
 
 ```text
-fish: Unsupported use of '='. In fish, please use 'set frukt äpple'.
+fish: Unsupported use of '='. In fish, please use 'set {{fruitVar}} {{fruitWord}}'.
 ```
 
 Así se hace en fish:
 
 ```sh
-set frukt äpple
-echo $frukt
+set {{fruitVar}} {{fruitWord}}
+echo ${{fruitVar}}
 set -x EDITOR nano
-set -e frukt
+set -e {{fruitVar}}
 ```
 
 `-x` (*export*) convierte la variable en una variable de entorno que pueden
@@ -324,17 +323,17 @@ En fish, todas las variables son **listas**. Los elementos se numeran desde
 1:
 
 ```sh
-set frukter äpple päron banan
-echo $frukter[2]
-count $frukter
+set frutas manzana pera kiwi
+echo $frutas[2]
+count $frutas
 ```
 
 `-c` también funciona en fish. ¿Qué imprime el último comando?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y fish > /dev/null 2>&1
-$ fish -c 'set frukter äpple päron banan; echo $frukter[3]'
-banan
+$ fish -c 'set frutas manzana pera kiwi; echo $frutas[3]'
+kiwi
 ---
 Los elementos de una lista de fish se numeran desde 1, así que `[3]` es el
 tercer y último elemento.
@@ -383,7 +382,7 @@ También puedes escribir el bloque en varias líneas. El shell espera a `end`
 antes de ejecutar el bucle:
 
 ```sh
-for f in ~/dokument/*.txt
+for f in ~/{{documents}}/*.txt
 echo (basename $f)
 end
 ```
@@ -441,14 +440,14 @@ escriben casi siempre para bash (o para el `sh` de POSIX):
 Prueba a escribir un script de bash y ejecutarlo desde fish:
 
 ```sh
-cat > ~/hej.sh << 'SLUT'
+cat > ~/{{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
 name=Kim
 echo "Hola $name, me ejecuta bash"
-SLUT
-chmod +x ~/hej.sh
+{{heredocEnd}}
+chmod +x ~/{{helloScript}}
 fish
-~/hej.sh
+~/{{helloScript}}
 exit
 ```
 
@@ -475,7 +474,7 @@ Escribir `zsh` cada vez que abres una terminal acaba cansando. Con `chsh`
 
 ```sh
 chsh -s /usr/bin/zsh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 - El shell tiene que indicarse con su ruta completa y estar en `/etc/shells`.
@@ -531,7 +530,7 @@ próximo inicio de sesión. La terminal que tienes abierta conserva bash, y
 | `zsh` / `fish` / `exit` | Iniciar otro shell / volver |
 | `ls ~/**/*.txt` | Buscar en todos los subdirectorios (zsh, fish) |
 | `setopt autocd` | Activar una opción de zsh |
-| `set frukt äpple` | Asignar una variable en fish |
+| `set {{fruitVar}} {{fruitWord}}` | Asignar una variable en fish |
 | `set -x NAME value` | Asignar una variable de entorno en fish |
 | `chsh -s /usr/bin/zsh` | Cambiar tu shell de inicio de sesión |
 

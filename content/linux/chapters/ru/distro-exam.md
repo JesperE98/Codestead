@@ -82,11 +82,11 @@ dnf спрашивает `Is this ok [y/N]`, а вы просто нажимае
 ```
 
 ```predict
-$ ~/Nedladdningar/Kalkylator.AppImage
-bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+$ ~/{{downloads}}/{{calculator}}
+bash: /home/{{user}}/{{downloads}}/{{calculator}}: Permission denied
 ---
 Скачанный файл изначально никогда не бывает исполняемым. Сначала выполните
-`chmod +x ~/Nedladdningar/Kalkylator.AppImage`.
+`chmod +x ~/{{downloads}}/{{calculator}}`.
 ```
 
 ```quiz

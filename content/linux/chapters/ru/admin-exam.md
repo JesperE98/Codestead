@@ -4,22 +4,22 @@
 всю часть, и для сдачи нужно 80 % правильных ответов.
 
 ```quiz
-`minserver` должен автоматически запускаться при каждой загрузке компьютера,
+`myserver` должен автоматически запускаться при каждой загрузке компьютера,
 но прямо сейчас его запускать **нельзя**. Какая команда делает ровно это?
-- [ ] `sudo systemctl start minserver`
-- [x] `sudo systemctl enable minserver`
-- [ ] `sudo systemctl enable --now minserver`
-- [ ] `sudo systemctl restart minserver`
+- [ ] `sudo systemctl start myserver`
+- [x] `sudo systemctl enable myserver`
+- [ ] `sudo systemctl enable --now myserver`
+- [ ] `sudo systemctl restart myserver`
 ---
 `enable` действует при загрузке, `start` – сейчас, а `--now` делает и то, и
 другое.
 ```
 
-Служба `rapportd` на этом компьютере не смогла запуститься. Что выведет эта
+Служба `reportd` на этом компьютере не смогла запуститься. Что выведет эта
 команда?
 
 ```predict
-$ systemctl is-active rapportd
+$ systemctl is-active reportd
 failed
 ---
 `is-active` выводит всего одно слово – здесь то же состояние, которое
@@ -28,28 +28,28 @@ failed
 ```
 
 ```quiz
-Вы хотите следить за журналом `minserver`, пока тестируете его, чтобы новые
+Вы хотите следить за журналом `myserver`, пока тестируете его, чтобы новые
 строки появлялись по мере поступления. Какую команду использовать?
 - [ ] `journalctl -n 20`
-- [x] `journalctl -u minserver -f`
+- [x] `journalctl -u myserver -f`
 - [ ] `journalctl -p err -b`
-- [ ] `systemctl status minserver --all`
+- [ ] `systemctl status myserver --all`
 ---
 `-u` выбирает один юнит, а `-f` продолжает показывать новые строки, пока вы не
 нажмёте Ctrl+C.
 ```
 
 ```try
-systemctl cat minserver
+systemctl cat myserver
 ---
 `ExecStart=` – команда, которая запускает службу, а `WantedBy=` использует
 `enable`.
 ```
 
 ```quiz
-Вы выполняете `systemctl stop minserver` без `sudo` и получаете
+Вы выполняете `systemctl stop myserver` без `sudo` и получаете
 *Interactive authentication required*. Почему?
-- [ ] minserver не запущен
+- [ ] myserver не запущен
 - [x] Всё, что меняет службу, требует прав root
 - [ ] Сначала нужно выполнить `daemon-reload`
 - [ ] `stop` работает только для включённых служб
@@ -126,7 +126,7 @@ $ df -h ~ | awk 'NR > 1 {print $6}'
 
 ```predict
 $ grep ^sudo /etc/group | cut -d: -f4
-elev
+{{user}}
 ```
 
 ```quiz

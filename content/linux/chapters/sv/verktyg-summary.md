@@ -86,7 +86,7 @@ dem: variabler, loopar, villkor och prompten.
 | `zsh` / `fish` / `exit` | Starta ett annat skal / gå tillbaka |
 | `zsh -c '…'` / `fish -c '…'` | Kör ett kommando i ett annat skal |
 | `setopt autocd` / `unsetopt autocd` | Slå på / av en zsh-inställning |
-| `set frukt äpple` / `set -e frukt` | Sätt / ta bort en variabel i fish |
+| `set {{fruitVar}} {{fruitWord}}` / `set -e {{fruitVar}}` | Sätt / ta bort en variabel i fish |
 | `set -x NAMN värde` | Sätt en miljövariabel i fish |
 | `math 17 x 23` | Räkna i fish |
 | `chsh -s /usr/bin/zsh` | Byt inloggningsskal |

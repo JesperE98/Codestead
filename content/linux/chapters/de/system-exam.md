@@ -4,7 +4,7 @@ Beantworte die Fragen zu Variablen, Rechten, Prozessen und Archiven – zum Best
 
 ```predict
 $ echo "$HOME" '$USER'
-/home/elev $USER
+/home/{{user}} $USER
 ---
 Doppelte Anführungszeichen ersetzen die Variable durch ihren Wert; einfache
 Anführungszeichen geben sie genau so aus, wie sie dasteht.
@@ -36,10 +36,10 @@ Besitzer: 4 + 2 + 1 = 7. Gruppe: 4 + 1 = 5. Andere: 0.
 ```
 
 ```predict
-$ touch verktyg.sh
-$ chmod 755 verktyg.sh
-$ chmod go-x verktyg.sh
-$ ls -l verktyg.sh | awk '{print $1}'
+$ touch werkzeug.sh
+$ chmod 755 werkzeug.sh
+$ chmod go-x werkzeug.sh
+$ ls -l werkzeug.sh | awk '{print $1}'
 -rwxr--r--
 ```
 
@@ -47,7 +47,7 @@ $ ls -l verktyg.sh | awk '{print $1}'
 Die Mitglieder welcher Gruppe dürfen unter Ubuntu `sudo` verwenden?
 - [x] `sudo`
 - [ ] `root`
-- [ ] `elev`
+- [ ] `{{user}}`
 ```
 
 ```quiz
@@ -87,18 +87,18 @@ Was ist der Unterschied zwischen `pkill` und `killall`?
 ```
 
 ```quiz
-Was ist falsch an `tar -cvf dokument dokument.tar`?
+Was ist falsch an `tar -cvf {{documents}} {{documents}}.tar`?
 - [ ] `-v` lässt sich nicht mit `-c` kombinieren
 - [x] Die Reihenfolge: Der Name des Archivs muss direkt nach `f` kommen, vor den Dateien
 - [ ] Ein tar-Archiv muss auf `.tgz` enden
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ gzip frukter.txt
-$ gunzip frukter.txt.gz
-$ ls frukter*
-frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ gzip {{fruits}}
+$ gunzip {{fruits}}.gz
+$ ls fruechte*
+{{fruits}}
 ```
 
 ```quiz
@@ -111,7 +111,7 @@ Was macht `zcat server.log.gz`?
 ```
 
 ```try
-du -sh dokument
+du -sh {{documents}}
 ---
 `-s` gibt eine einzige Summe für das ganze Verzeichnis, und `-h` macht die
 Größe leicht lesbar.

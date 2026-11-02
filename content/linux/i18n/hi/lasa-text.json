@@ -2,23 +2,23 @@
   "title": "Text पढ़ना और खोजना",
   "tasks": {
     "head": {
-      "text": "`~/dokument/server.log` की **पहली 3** lines दिखाइए।"
+      "text": "`~/{{documents}}/server.log` की **पहली 3** lines दिखाइए।"
     },
     "tail": {
-      "text": "`~/dokument/server.log` की **आख़िरी 2** lines दिखाइए।"
+      "text": "`~/{{documents}}/server.log` की **आख़िरी 2** lines दिखाइए।"
     },
     "grep": {
-      "text": "`~/dokument/server.log` में `ERROR` वाली हर line दिखाइए।"
+      "text": "`~/{{documents}}/server.log` में `ERROR` वाली हर line दिखाइए।"
     },
     "grep-i": {
       "text": "server.log में `warn` खोजिए, upper या lower case की परवाह **किए बिना**।",
       "hint": "`-i` option खोज को case-insensitive बना देता है। आपको 3 matches मिलने चाहिए।"
     },
     "wc": {
-      "text": "गिनिए कि `~/dokument/frukter.txt` में कितनी lines हैं।"
+      "text": "गिनिए कि `~/{{documents}}/{{fruits}}` में कितनी lines हैं।"
     },
     "sort": {
-      "text": "`~/dokument/frukter.txt` के फलों को alphabetical order में दिखाइए।"
+      "text": "`~/{{documents}}/{{fruits}}` के फलों को alphabetical order में दिखाइए।"
     }
   }
 }

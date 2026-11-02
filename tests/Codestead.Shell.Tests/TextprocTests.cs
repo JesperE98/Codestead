@@ -81,9 +81,9 @@ public class TextprocTests
     {
         var t = new TestShell();
         const string log = "dokument/server.log";
-        Assert.Contains("Läser konfiguration", t.Run($"sed -n '2p' {log}").Out);
+        Assert.Contains("Reading configuration", t.Run($"sed -n '2p' {log}").Out);
         Assert.Equal(3, NonEmptyLines(t.Run($"sed -n '2,4p' {log}").Out));
-        Assert.Contains("roteras", t.Run($"sed -n '$p' {log}").Out);
+        Assert.Contains("Rotating", t.Run($"sed -n '$p' {log}").Out);
         Assert.Equal(6, NonEmptyLines(t.Run($"sed '/INFO/d' {log}").Out));
         Assert.Equal(3, NonEmptyLines(t.Run($"sed '/ERROR/!d' {log}").Out));
         Assert.Equal(4 + 3, NonEmptyLines(t.Run($"sed -n '/WARN/,/ERROR/p' {log}").Out));

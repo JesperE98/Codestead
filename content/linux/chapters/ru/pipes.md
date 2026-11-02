@@ -46,16 +46,16 @@ two
 `<` позволяет программе читать stdin из файла:
 
 ```sh
-wc -l < dokument/frukter.txt
+wc -l < {{documents}}/{{fruits}}
 ```
 
 Теперь `wc` вообще не видит имени файла – он получает только текст на stdin, –
 поэтому выводит одно число.
 
 ```predict
-$ wc -l dokument/frukter.txt
-$ wc -l < dokument/frukter.txt
-10 dokument/frukter.txt
+$ wc -l {{documents}}/{{fruits}}
+$ wc -l < {{documents}}/{{fruits}}
+10 {{documents}}/{{fruits}}
 10
 ---
 Если имя файла передано аргументом, `wc` выводит и его. С `<` он получает
@@ -68,15 +68,13 @@ $ wc -l < dokument/frukter.txt
 перенаправить их, укажите перед знаком номер потока:
 
 ```sh
-ls /finnsinte 2> fel.txt
+ls /{{missing}} 2> errors.txt
 ```
 
-(*Finns inte* по-шведски значит «не существует», а *fel* – «ошибка».)
-
 ```quiz
-Вы выполняете `ls /finnsinte > fel.txt`. Куда попадёт сообщение об ошибке?
-- [ ] В `fel.txt`
-- [x] На экран – `fel.txt` останется пустым
+Вы выполняете `ls /{{missing}} > errors.txt`. Куда попадёт сообщение об ошибке?
+- [ ] В `errors.txt`
+- [x] На экран – `errors.txt` останется пустым
 - [ ] Никуда, оно пропадёт
 ---
 `>` перенаправляет только stdout (поток 1). Сообщение об ошибке идёт в stderr
@@ -94,14 +92,14 @@ ls /finnsinte 2> fel.txt
 программы пусть работают вместе*.
 
 ```sh
-grep INFO dokument/server.log | wc -l
+grep INFO {{documents}}/server.log | wc -l
 ```
 
 `grep` находит строки, а `wc -l` их считает. Соединять можно сколько угодно
 команд:
 
 ```sh
-sort dokument/frukter.txt | uniq -c | sort -rn
+sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ```
 
 Читайте по шагам: отсортировать фрукты, посчитать, сколько раз встречается
@@ -119,7 +117,7 @@ ls /etc | wc -l
 `tee` передаёт свой ввод дальше *и* сохраняет копию в файл:
 
 ```sh
-ls /etc | tee etc-lista.txt | wc -l
+ls /etc | tee etc-list.txt | wc -l
 ```
 
 ## Цепочки – `;`, `&&` и `||`
@@ -133,14 +131,14 @@ ls /etc | tee etc-lista.txt | wc -l
 | `a \|\| b` | Выполнить b, только если a завершилась с ошибкой |
 
 ```sh
-mkdir -p ny && cd ny
+mkdir -p new && cd new
 ```
 
 ```predict
-$ mkdir dokument 2> /dev/null && echo created || echo failed
+$ mkdir {{documents}} 2> /dev/null && echo created || echo failed
 failed
 ---
-`dokument` уже существует, поэтому `mkdir` завершается с ошибкой (сообщение
+`{{documents}}` уже существует, поэтому `mkdir` завершается с ошибкой (сообщение
 об ошибке исчезает в `/dev/null`). `echo created` пропускается, и выполняется
 `echo failed`.
 ```

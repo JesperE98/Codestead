@@ -283,14 +283,14 @@ usuarios; con `sudo` los ves todos:
 sudo ss -tulpn
 ```
 
-Si el servidor de prácticas `minserver` del capítulo de procesos está en
+Si el servidor de prácticas `myserver` del capítulo de procesos está en
 marcha, lo verás aquí en el puerto 8080. El comando antiguo `netstat -tulpn`
 (de *net-tools*) hace lo mismo.
 
 ## Descargar de la web: curl y wget
 
 `curl` descarga lo que haya en una dirección (una **URL**) y lo muestra en la
-terminal. Pruébalo con minserver en tu propio ordenador:
+terminal. Pruébalo con myserver en tu propio ordenador:
 
 En Ubuntu `curl` no viene preinstalado (pero `wget` sí):
 
@@ -303,11 +303,11 @@ curl http://localhost:8080
 ```
 
 ¿Te sale `Couldn't connect to server`? Entonces no hay nada escuchando en ese
-puerto; quizá detuviste minserver en el capítulo de procesos. Vuelve a
+puerto; quizá detuviste myserver en el capítulo de procesos. Vuelve a
 iniciarlo:
 
 ```sh
-minserver
+myserver
 ```
 
 Con `-I`, curl muestra solo las **cabeceras** (*headers*) de la respuesta,
@@ -346,7 +346,7 @@ archivo de la dirección):
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` está hecho para descargar archivos. Siempre guarda en un archivo,
@@ -367,13 +367,12 @@ Linux a distancia, y todo lo que se envía va cifrado. El servidor ejecuta el
 servicio `sshd` en el puerto 22, y tú te conectas con el cliente `ssh`:
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` significa «el usuario elev en el ordenador server.lan»
-(*elev* es «alumno» en sueco). El comando que va después del host (`hostname`) se
-ejecuta en el servidor y la respuesta se muestra aquí: pone `server`, no
-`ubuntu`.
+`{{user}}@server.lan` significa «el usuario {{user}} en el ordenador server.lan».
+El comando que va después del host (`hostname`) se ejecuta en el servidor y
+la respuesta se muestra aquí: pone `server`, no `ubuntu`.
 
 La primera vez que te conectas a un ordenador, ssh te pregunta si confías en
 él:
@@ -392,8 +391,8 @@ servidor.
 El comando pueden ser varios comandos entre comillas:
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 Sin ningún comando, ssh inicia sesión y obtienes un shell en el otro
@@ -407,7 +406,7 @@ clave privada se queda contigo, y la pública se coloca en el servidor:
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 Pulsa Intro en las preguntas de `ssh-keygen` para usar el archivo por defecto

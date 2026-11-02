@@ -54,10 +54,10 @@ Quand le shell attend une commande, il affiche une **invite** (*prompt*). Dans
 le terminal ici, elle ressemble à ceci :
 
 ```text
-elev@ubuntu:~$
+{{user}}@ubuntu:~$
 ```
 
-Elle vous indique qui vous êtes (`elev`), sur quel ordinateur vous vous
+Elle vous indique qui vous êtes (`{{user}}`), sur quel ordinateur vous vous
 trouvez (`ubuntu`) et où vous êtes dans le système de fichiers (`~`
 désigne votre répertoire personnel). Le signe `$` montre que vous êtes un
 utilisateur ordinaire. Si vous êtes l'administrateur (*root*), vous verrez un
@@ -76,12 +76,11 @@ Cliquez dans le terminal, tapez la commande ci-dessous et appuyez sur
 **Entrée** :
 
 ```sh
-echo Hej världen
+echo {{helloWorld}}
 ```
 
-`echo` affiche simplement ce que vous lui donnez – ici *Hej världen*, qui
-signifie « Bonjour le monde » en suédois. La plupart des commandes suivent le
-même schéma :
+`echo` affiche simplement ce que vous lui donnez. La plupart des commandes
+suivent le même schéma :
 
 ```text
 commande  -options  arguments
@@ -146,20 +145,3 @@ Vous avez tapé `ech` et appuyez sur **Tab**. Que se passe-t-il ?
 Tab complète les noms de commandes et de fichiers. **Ctrl+C** annule la ligne
 et **Ctrl+L** efface l'écran.
 ```
-
-### Quelques mots de suédois
-
-Ce guide a été écrit à l'origine en suédois, c'est pourquoi l'utilisateur et
-les fichiers d'exercice du simulateur ont des noms suédois. Pas besoin de
-parler suédois – les commandes sont exactement les mêmes – mais ce petit
-glossaire peut vous aider :
-
-| Nom | Signification |
-|---|---|
-| `elev` | élève (votre nom d'utilisateur) |
-| `dokument` | documents |
-| `anteckningar.txt` | notes |
-| `frukter.txt` | fruits |
-| `betyg.csv` | notes scolaires |
-| `bilder` | images |
-| `gammalt` | vieilleries |

@@ -24,7 +24,7 @@ Status: **ogranskad**
 | `start` gäller nu, `enable` vid uppstart, `enable --now` båda, `disable --now` stoppar också |  | ogranskad |  |
 | `enable` skapar en länk i katalogen för målet i `[Install]`, oftast `multi-user.target.wants` |  | ogranskad |  |
 | `is-active`/`is-enabled` skriver ett ord och avslutas med 0 om svaret är ja; `-q` gör dem tysta |  | ogranskad |  |
-| Kontrollfråga: i simulatorn är minserver `active` men `disabled` från början |  | ogranskad |  |
+| Kontrollfråga: i simulatorn är myserver `active` men `disabled` från början |  | ogranskad |  |
 | `list-units` visar igångvarande/misslyckade tjänster, `--all` tar med stoppade, `--failed` bara misslyckade, `list-unit-files` alla unit-filer |  | ogranskad |  |
 | Journalen samlar utskrifter från tjänster, kärnan och systemd; `journalctl` utan flaggor visar allt, äldst först |  | ogranskad |  |
 | Flaggorna `-u`, `-n`, `-f`, `-b`, `-b -1`, `--since`, `-p`, `-xe`, `-k` och vad de visar |  | ogranskad |  |

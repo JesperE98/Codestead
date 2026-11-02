@@ -146,7 +146,7 @@ public class NetworkTests
         Assert.Equal(0, t.Run("ping -c 1 1.1.1.1").ExitCode);
     }
 
-    // ---------- ss och minserver ----------
+    // ---------- ss och myserver ----------
 
     [Fact(DisplayName = "ss -tulpn visar lyssnande portar, processerna bara med sudo")]
     public void SsListening()
@@ -158,22 +158,22 @@ public class NetworkTests
         Assert.DoesNotContain("users:", r.Out);
         var root = t.Run("sudo ss -tulpn");
         Assert.Contains("users:((\"sshd\",pid=733", root.Out);
-        Assert.Contains("users:((\"minserver\",pid=812", root.Out);
+        Assert.Contains("users:((\"myserver\",pid=812", root.Out);
         Assert.Contains("0.0.0.0:ssh", t.Run("ss -tl").Out);
     }
 
-    [Fact(DisplayName = "minserver kan stoppas och startas igen")]
-    public void MinserverRestart()
+    [Fact(DisplayName = "myserver kan stoppas och startas igen")]
+    public void MyserverRestart()
     {
         var t = Shell();
-        Assert.Contains("Address already in use", t.Run("minserver").Out);
-        t.Run("sudo pkill minserver");
+        Assert.Contains("Address already in use", t.Run("myserver").Out);
+        t.Run("sudo pkill myserver");
         Assert.DoesNotContain(":8080", t.Run("ss -tln").Out);
         Assert.Equal(7, t.Run("curl http://localhost:8080").ExitCode);
-        Assert.Contains("Permission denied", t.Run("minserver --port 80").Out);
-        Assert.Equal(0, t.Run("minserver").ExitCode);
-        Assert.Contains("users:((\"minserver\"", t.Run("ss -tlpn").Out);
-        Assert.Contains("Hello from minserver!", t.Run("curl -s localhost:8080").Out);
+        Assert.Contains("Permission denied", t.Run("myserver --port 80").Out);
+        Assert.Equal(0, t.Run("myserver").ExitCode);
+        Assert.Contains("users:((\"myserver\"", t.Run("ss -tlpn").Out);
+        Assert.Contains("Hello from myserver!", t.Run("curl -s localhost:8080").Out);
     }
 
     // ---------- curl och wget ----------
@@ -182,13 +182,13 @@ public class NetworkTests
     public void CurlPages()
     {
         var t = Shell();
-        Assert.Contains("<h1>Hello from minserver!</h1>", t.Run("curl http://localhost:8080").Out);
+        Assert.Contains("<h1>Hello from myserver!</h1>", t.Run("curl http://localhost:8080").Out);
         var head = t.Run("curl -I https://example.com");
         Assert.Matches(@"^HTTP/2 200\n", head.Out);
         Assert.Contains("content-type: text/html", head.Out);
         Assert.DoesNotContain("<html>", head.Out);
         Assert.Contains("<title>Example Domain</title>", t.Run("curl -s https://example.com | grep title").Out);
-        Assert.Matches(@"^HTTP/1\.0 200 OK\n[\s\S]*Server: minserver/1\.0[\s\S]*About minserver", t.Run("curl -i http://localhost:8080/om.html").Out);
+        Assert.Matches(@"^HTTP/1\.0 200 OK\n[\s\S]*Server: myserver/1\.0[\s\S]*About myserver", t.Run("curl -i http://localhost:8080/about.html").Out);
     }
 
     [Fact(DisplayName = "omdirigeringar följs bara med -L")]
@@ -244,7 +244,7 @@ public class NetworkTests
         Assert.Contains("Example Domain", t.Content("~/exempel.html"));
         Assert.Equal(8, t.Run("wget https://example.com/saknas").ExitCode);
         Assert.Equal(4, t.Run("wget http://finns-inte.example").ExitCode);
-        Assert.Contains("Hello from minserver!", t.Run("wget -O - http://localhost:8080").Out);
+        Assert.Contains("Hello from myserver!", t.Run("wget -O - http://localhost:8080").Out);
     }
 
     // ---------- ssh ----------
@@ -272,7 +272,7 @@ public class NetworkTests
         Assert.Matches(@"^server\.lan ssh-ed25519 ", t.Content("~/.ssh/known_hosts"));
         Assert.Equal(Js.Oct(700), t.Node("~/.ssh")?.Mode);
         // The second time: no question.
-        var again = t.Run("ssh elev@server.lan 'whoami; cat välkommen.txt'");
+        var again = t.Run("ssh elev@server.lan 'whoami; cat valkommen.txt'");
         Assert.False(again.Pending);
         Assert.Contains("elev\nVälkommen till servern!", again.Out);
     }
@@ -386,18 +386,18 @@ public class NetworkTests
 
     // ---------- sparade terminaler ----------
 
-    [Fact(DisplayName = "resolv.conf och minserver läggs till i gamla sparade tillstånd")]
+    [Fact(DisplayName = "resolv.conf och myserver läggs till i gamla sparade tillstånd")]
     public void OldSnapshots()
     {
-        var sh = Codestead.Shell.Shell.Create("ubuntu");
+        var sh = Codestead.Shell.Shell.Create("ubuntu", "sv");
         var root = sh.RootUser();
         sh.Vfs.Remove("/etc/resolv.conf", root);
-        sh.Vfs.Remove("/usr/local/bin/minserver", root);
+        sh.Vfs.Remove("/usr/local/bin/myserver", root);
         var snap = Js.Parse<ShellSnapshot>(sh.SnapshotJson())!;
         snap.Flags.Remove("default:file:/etc/resolv.conf");
-        snap.Flags.Remove("default:file:/usr/local/bin/minserver");
+        snap.Flags.Remove("default:file:/usr/local/bin/myserver");
         var restored = Codestead.Shell.Shell.Restore(snap)!;
         Assert.Contains("127.0.0.53", restored.Vfs.TryLookup("/etc/resolv.conf", root)?.Content);
-        Assert.Equal("/usr/local/bin/minserver\n", UtilCmd.StripAnsi(restored.Execute("which minserver").Output));
+        Assert.Equal("/usr/local/bin/myserver\n", UtilCmd.StripAnsi(restored.Execute("which myserver").Output));
     }
 }

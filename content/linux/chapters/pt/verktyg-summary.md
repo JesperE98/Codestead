@@ -88,7 +88,7 @@ em volta deles: variáveis, loops, condições e o prompt.
 | `zsh` / `fish` / `exit` | Inicia outro shell / volta |
 | `zsh -c '…'` / `fish -c '…'` | Executa um comando em outro shell |
 | `setopt autocd` / `unsetopt autocd` | Liga / desliga uma opção do zsh |
-| `set frukt äpple` / `set -e frukt` | Define / remove uma variável no fish |
+| `set {{fruitVar}} {{fruitWord}}` / `set -e {{fruitVar}}` | Define / remove uma variável no fish |
 | `set -x NAME value` | Define uma variável de ambiente no fish |
 | `math 17 x 23` | Aritmética no fish |
 | `chsh -s /usr/bin/zsh` | Muda o seu shell de login |

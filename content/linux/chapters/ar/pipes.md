@@ -46,16 +46,16 @@ two
 يتيح `<` للبرنامج أن يقرأ مدخلاته stdin من ملف:
 
 ```sh
-wc -l < dokument/frukter.txt
+wc -l < {{documents}}/{{fruits}}
 ```
 
 الآن لا يرى `wc` اسم الملف أبدًا – بل يحصل على النص فقط عبر stdin – لذا يطبع
 العدد وحده.
 
 ```predict
-$ wc -l dokument/frukter.txt
-$ wc -l < dokument/frukter.txt
-10 dokument/frukter.txt
+$ wc -l {{documents}}/{{fruits}}
+$ wc -l < {{documents}}/{{fruits}}
+10 {{documents}}/{{fruits}}
 10
 ---
 عندما يُعطى اسم الملف وسيطًا، يطبع `wc` الاسم أيضًا. ومع `<` لا يحصل إلا على
@@ -68,15 +68,13 @@ $ wc -l < dokument/frukter.txt
 قبلها:
 
 ```sh
-ls /finnsinte 2> fel.txt
+ls /{{missing}} 2> errors.txt
 ```
 
-(*Finns inte* تعني بالسويدية "غير موجود"، و*fel* تعني "خطأ".)
-
 ```quiz
-تشغّل `ls /finnsinte > fel.txt`. أين تنتهي رسالة الخطأ؟
-- [ ] في `fel.txt`
-- [x] على الشاشة – ويبقى `fel.txt` فارغًا
+تشغّل `ls /{{missing}} > errors.txt`. أين تنتهي رسالة الخطأ؟
+- [ ] في `errors.txt`
+- [x] على الشاشة – ويبقى `errors.txt` فارغًا
 - [ ] لا مكان، فهي تختفي
 ---
 لا يعيد `>` توجيه سوى stdout (التدفق 1). أما رسالة الخطأ فتذهب إلى stderr
@@ -93,13 +91,13 @@ ls /finnsinte 2> fel.txt
 معًا*.
 
 ```sh
-grep INFO dokument/server.log | wc -l
+grep INFO {{documents}}/server.log | wc -l
 ```
 
 يجد `grep` الأسطر ويعدّها `wc -l`. ويمكنك أن تربط معًا أي عدد تريده:
 
 ```sh
-sort dokument/frukter.txt | uniq -c | sort -rn
+sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ```
 
 اقرأه خطوة بخطوة: رتّب الفواكه، ثم احسب عدد مرات ظهور كل منها (`uniq -c`)، ثم
@@ -116,7 +114,7 @@ ls /etc | wc -l
 يمرّر `tee` مدخلاته إلى الأمام *ويحفظ* نسخة منها في ملف:
 
 ```sh
-ls /etc | tee etc-lista.txt | wc -l
+ls /etc | tee etc-list.txt | wc -l
 ```
 
 ## السلاسل – `;` و`&&` و`||`
@@ -130,13 +128,13 @@ ls /etc | tee etc-lista.txt | wc -l
 | `a \|\| b` | شغّل b فقط إذا فشل a |
 
 ```sh
-mkdir -p ny && cd ny
+mkdir -p new && cd new
 ```
 
 ```predict
-$ mkdir dokument 2> /dev/null && echo created || echo failed
+$ mkdir {{documents}} 2> /dev/null && echo created || echo failed
 failed
 ---
-`dokument` موجود بالفعل، لذا يفشل `mkdir` (وتختفي رسالة خطئه في
+`{{documents}}` موجود بالفعل، لذا يفشل `mkdir` (وتختفي رسالة خطئه في
 `/dev/null`). فيُتخطّى `echo created` ويُنفَّذ `echo failed`.
 ```

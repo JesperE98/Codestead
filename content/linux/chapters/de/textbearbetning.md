@@ -15,11 +15,11 @@ Ergebnis nach stdout. Deshalb passen sie perfekt in Pipes. Und die
 Originaldatei wird **nicht** verändert (mit einer Ausnahme, `sed -i`, zu der
 wir noch kommen).
 
-In `dokument` gibt es eine dritte Übungsdatei, eine CSV-Datei mit den Punkten der
-Schüler (*namn* = Name, *ämne* = Fach, *poäng* = Punkte):
+In `{{documents}}` gibt es eine dritte Übungsdatei, `{{grades}}`, eine CSV-Datei mit
+den Punkten der Schüler in verschiedenen Fächern:
 
 ```sh
-cat ~/dokument/betyg.csv
+cat ~/{{documents}}/{{grades}}
 ```
 
 CSV steht für *comma-separated values* – die Spalten sind durch Kommas
@@ -47,7 +47,7 @@ wissen – GNU `awk` (weiter unten) kommt damit besser zurecht.
 füttere sie mit `<` oder einer Pipe hinein:
 
 ```sh
-tr a-z A-Z < ~/dokument/frukter.txt
+tr a-z A-Z < ~/{{documents}}/{{fruits}}
 ```
 
 Ein klassischer Trick ist, Doppelpunkte in Zeilenumbrüche (`\n`) zu
@@ -89,11 +89,11 @@ ein kleines *Skript* aus. Der häufigste Befehl ist `s` – *substitute*
 ### Text ersetzen – `s`
 
 ```sh
-sed 's/ERROR/FEL/' ~/dokument/server.log
+sed 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log
 ```
 
-Das Skript `s/ERROR/FEL/` bedeutet: Ersetze `ERROR` durch `FEL` (Schwedisch
-für „Fehler“). Es hat die Form
+Das Skript `s/ERROR/{{errorWord}}/` bedeutet: Ersetze `ERROR` durch
+`{{errorWord}}`. Es hat die Form
 
 ```text
 s/MUSTER/ERSETZUNG/FLAGS
@@ -118,7 +118,7 @@ Das Flag `i` macht die Suche unabhängig von Groß- und Kleinschreibung, genau w
 `grep -i`:
 
 ```sh
-sed 's/warn/WARNUNG/i' ~/dokument/server.log
+sed 's/warn/WARNUNG/i' ~/{{documents}}/server.log
 ```
 
 Das Muster ist ein *regulärer Ausdruck*, genau wie bei `grep`. Hier entfernen
@@ -126,7 +126,7 @@ wir das Datum am Anfang jeder Zeile (`^` = Zeilenanfang, `[0-9-]*` = Ziffern
 und Bindestriche):
 
 ```sh
-sed 's/^[0-9-]* //' ~/dokument/server.log
+sed 's/^[0-9-]* //' ~/{{documents}}/server.log
 ```
 
 In der Ersetzung bedeutet `&` „das, was gepasst hat“:
@@ -148,7 +148,7 @@ Treffers mit Klammern einfangen und sie in der Ersetzung als `\1`, `\2` …
 verwenden. Hier drehen wir das Datum um:
 
 ```sh
-sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/dokument/server.log
+sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/{{documents}}/server.log
 ```
 
 ### Zeilen auswählen – Adressen
@@ -158,8 +158,8 @@ Zeilen er gilt. Der Befehl `d` (*delete*) löscht Zeilen und `p` (*print*) gibt
 sie aus:
 
 ```sh
-sed '/INFO/d' ~/dokument/server.log
-sed '1d' ~/dokument/betyg.csv
+sed '/INFO/d' ~/{{documents}}/server.log
+sed '1d' ~/{{documents}}/{{grades}}
 ```
 
 Der erste löscht jede Zeile, die `INFO` enthält, der zweite löscht Zeile 1 –
@@ -169,7 +169,7 @@ die Kopfzeile.
 dann wird nur ausgegeben, was `p` verlangt. So zeigst du die Zeilen 5 bis 8 an:
 
 ```sh
-sed -n '5,8p' ~/dokument/server.log
+sed -n '5,8p' ~/{{documents}}/server.log
 ```
 
 | Adresse | Bedeutet |
@@ -185,7 +185,7 @@ Adressen funktionieren mit jedem Befehl, auch mit `s`. Hier werden nur die
 Fehlerzeilen markiert:
 
 ```sh
-sed '/ERROR/s/^/>>> /' ~/dokument/server.log
+sed '/ERROR/s/^/>>> /' ~/{{documents}}/server.log
 ```
 
 Der Befehl `q` (*quit*) hört nach einer bestimmten Zeile auf – `sed 3q` macht
@@ -193,7 +193,7 @@ also dasselbe wie `head -n 3`. Mehrere Befehle trennst du mit `;` oder mit
 mehreren `-e`:
 
 ```sh
-sed -e '/INFO/d' -e 's/ERROR/FEL/' ~/dokument/server.log
+sed -e '/INFO/d' -e 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log
 ```
 
 ### Die Datei direkt bearbeiten – `sed -i`
@@ -203,20 +203,20 @@ es ruhig mit `cat`. Mit `-i` (*in-place*) schreibt `sed` das Ergebnis
 stattdessen zurück in die Datei. Probier es an einer Kopie aus:
 
 ```sh
-cp ~/dokument/frukter.txt ~/frukter-kopia.txt
-sed -i 's/kiwi/kiwifrucht/' ~/frukter-kopia.txt
-cat ~/frukter-kopia.txt
+cp ~/{{documents}}/{{fruits}} ~/fruechte-kopie.txt
+sed -i 's/Kiwi/Kiwifrucht/' ~/fruechte-kopie.txt
+cat ~/fruechte-kopie.txt
 ```
 
 Für `sed -i` gibt es kein Rückgängig. Eine gute Arbeitsweise ist, den Befehl
 zuerst **ohne** `-i` auszuführen und dir das Ergebnis anzusehen und `-i` erst
 hinzuzufügen, wenn es richtig aussieht. Schreibst du `-i.bak`, wird das
-Original außerdem als `file.bak` gespeichert.
+Original außerdem als `datei.bak` gespeichert.
 
 ```quiz
-Du führst `sed 's/kiwi/KIWI/' ~/dokument/frukter.txt` aus. Was passiert mit der Datei?
-- [ ] Jedes `kiwi` in der Datei wird zu `KIWI`
-- [ ] Nur das erste `kiwi` in der Datei wird zu `KIWI`
+Du führst `sed 's/Kiwi/KIWI/' ~/{{documents}}/{{fruits}}` aus. Was passiert mit der Datei?
+- [ ] Jedes `Kiwi` in der Datei wird zu `KIWI`
+- [ ] Nur das erste `Kiwi` in der Datei wird zu `KIWI`
 - [x] Nichts – das Ergebnis wird nur ausgegeben, die Datei bleibt unverändert
 ---
 Ohne `-i` schreibt `sed` nur nach stdout. Die Datei bleibt, wie sie war.
@@ -233,7 +233,7 @@ ein Feld herauspicken. `-d` wählt das Trennzeichen (*delimiter*) und `-f`, welc
 Feld übrig bleiben soll. Hier sind die Fächer – Feld 2 – aus der CSV-Datei:
 
 ```sh
-cut -d, -f2 ~/dokument/betyg.csv
+cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
 
 In `/etc/passwd` sind die Felder durch Doppelpunkte getrennt, und Feld 1 ist
@@ -258,7 +258,7 @@ Standardmäßig werden Felder durch Leerzeichen getrennt (beliebig viele). In
 `server.log` ist Feld 3 der Log-Level:
 
 ```sh
-awk '{print $3}' ~/dokument/server.log
+awk '{print $3}' ~/{{documents}}/server.log
 ```
 
 Das Programm steht innerhalb von `{ }` und läuft für jede Zeile. Setze das
@@ -268,7 +268,7 @@ awk-Programm immer in **einfache** Anführungszeichen – sonst hält die Shell
 awk passt perfekt in eine Pipe. Wie viele Zeilen gibt es von jedem Level?
 
 ```sh
-awk '{print $3}' ~/dokument/server.log | sort | uniq -c
+awk '{print $3}' ~/{{documents}}/server.log | sort | uniq -c
 ```
 
 ### Andere Trennzeichen – `-F`
@@ -293,7 +293,7 @@ dass awk die Felder umsortieren, Text einfügen und mit mehreren Leerzeichen
 hintereinander umgehen kann.
 
 ```predict
-$ echo "Alva,matte,87" | awk -F, '{print $3, $1}'
+$ echo "Alva,mathe,87" | awk -F, '{print $3, $1}'
 87 Alva
 ---
 `-F,` teilt die Zeile an den Kommas. awk gibt zuerst Feld 3 aus, dann Feld 1,
@@ -307,37 +307,36 @@ die Zeilen, die passen. Das Muster kann ein regulärer Ausdruck sein, wie bei
 `grep`:
 
 ```sh
-awk '/ERROR/ {print $2}' ~/dokument/server.log
+awk '/ERROR/ {print $2}' ~/{{documents}}/server.log
 ```
 
 … oder eine Bedingung. Text steht in doppelten Anführungszeichen:
 
 ```sh
-awk -F, '$2 == "matte" {print $1, $3}' ~/dokument/betyg.csv
+awk -F, '$2 == "mathe" {print $1, $3}' ~/{{documents}}/{{grades}}
 ```
 
-(*Matte* ist Schwedisch für „Mathe“.) Vergleiche schreibt man `==`, `!=`, `<`,
-`<=`, `>` und `>=`, und Bedingungen verknüpft man mit `&&` (und), `||` (oder)
-und `!` (nicht). Hier sind alle Schüler mit mindestens 90 Punkten (ohne `{ }`
-wird die ganze Zeile ausgegeben):
+Vergleiche schreibt man `==`, `!=`, `<`, `<=`, `>` und `>=`, und Bedingungen
+verknüpft man mit `&&` (und), `||` (oder) und `!` (nicht). Hier sind alle
+Schüler mit mindestens 90 Punkten (ohne `{ }` wird die ganze Zeile
+ausgegeben):
 
 ```sh
-awk -F, '$3 >= 90' ~/dokument/betyg.csv
+awk -F, '$3 >= 90' ~/{{documents}}/{{grades}}
 ```
 
-Hast du die Kopfzeile auch bekommen? Darin ist Feld 3 das Wort `poäng`, und
-wenn ein Wert keine Zahl ist, vergleicht awk ihn als *Text* – und `"poäng"`
+Hast du die Kopfzeile auch bekommen? Darin ist Feld 3 das Wort `punkte`, und
+wenn ein Wert keine Zahl ist, vergleicht awk ihn als *Text* – und `"punkte"`
 kommt alphabetisch nach `"90"`. Die Kopfzeile überspringst du mit `NR > 1`:
 
 ```sh
-awk -F, 'NR > 1 && $3 >= 90' ~/dokument/betyg.csv
+awk -F, 'NR > 1 && $3 >= 90' ~/{{documents}}/{{grades}}
 ```
 
-Probier ein eigenes Muster aus – die Namen aller, die *svenska* (Schwedisch)
-lernen:
+Probier ein eigenes Muster aus – die Namen aller, die Deutsch lernen:
 
 ```try
-awk -F, '$2 == "svenska" {print $1}' ~/dokument/betyg.csv
+awk -F, '$2 == "deutsch" {print $1}' ~/{{documents}}/{{grades}}
 ```
 
 ### Zählen – Variablen und `END`
@@ -347,15 +346,15 @@ Block `END { }` läuft einmal, **nach** der letzten Zeile. Zusammen ergeben sie
 eine einfache Möglichkeit, eine Spalte zu summieren:
 
 ```sh
-awk -F, 'NR > 1 {summa += $3} END {print summa}' ~/dokument/betyg.csv
+awk -F, 'NR > 1 {{{sumVar}} += $3} END {print {{sumVar}}}' ~/{{documents}}/{{grades}}
 ```
 
-`summa += $3` bedeutet „addiere Feld 3 zu summa“ (*summa* ist Schwedisch für
-„Summe“). Zählst du gleichzeitig die Zeilen (`antal++` erhöht *antal*, die
-Anzahl, um 1), kannst du den Durchschnitt ausrechnen:
+`{{sumVar}} += $3` bedeutet „addiere Feld 3 zu {{sumVar}}“. Zählst du
+gleichzeitig die Zeilen (`anzahl++` erhöht `anzahl` um 1), kannst du den
+Durchschnitt ausrechnen:
 
 ```sh
-awk -F, 'NR > 1 {summa += $3; antal++} END {print "Durchschnitt:", summa / antal}' ~/dokument/betyg.csv
+awk -F, 'NR > 1 {{{sumVar}} += $3; anzahl++} END {print "Durchschnitt:", {{sumVar}} / anzahl}' ~/{{documents}}/{{grades}}
 ```
 
 Es gibt auch `BEGIN { }`, das **vor** der ersten Zeile läuft – praktisch für
@@ -364,19 +363,20 @@ Es gibt auch `BEGIN { }`, das **vor** der ersten Zeile läuft – praktisch für
 Zeichen.
 
 ```sh
-awk -F, 'BEGIN {print "Schüler Punkte"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/dokument/betyg.csv
+awk -F, 'BEGIN {print "Schüler Punkte"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/{{documents}}/{{grades}}
 ```
 
 awk hat auch Funktionen wie `length()`, `toupper()` und `tolower()`:
 
 ```sh
-awk '{print toupper($0)}' ~/dokument/frukter.txt
+awk '{print toupper($0)}' ~/{{documents}}/{{fruits}}
+echo "Grüße aus Köln" | awk '{print toupper($0)}'
 ```
 
-Schau dir `äpple` und `päron` genau an. Unter Ubuntu, auf dem das Terminal hier
+Schau dir die zweite Zeile genau an. Unter Ubuntu, auf dem das Terminal hier
 läuft, ist `awk` standardmäßig **mawk**, eine kleine und schnelle Variante. Bei
 einfachen Programmen wie diesen merkst du keinen Unterschied – aber mawk
-wandelt å, ä und ö mit `toupper()` nicht um. **GNU awk** (das Paket `gawk`)
+wandelt ä, ö und ü mit `toupper()` nicht um. **GNU awk** (das Paket `gawk`)
 kann das, anders als `tr`. Distributionen unterscheiden sich darin, welches awk
 sie verwenden und wie man Software installiert – das kommt im Kapitel über
 Distributionen.
@@ -398,5 +398,5 @@ den Zeilen, die *nicht* INFO sind – wenn wir Groß- und Kleinschreibung
 ignorieren?
 
 ```sh
-grep -v INFO ~/dokument/server.log | awk '{print $3}' | tr A-Z a-z | sort | uniq -c
+grep -v INFO ~/{{documents}}/server.log | awk '{print $3}' | tr A-Z a-z | sort | uniq -c
 ```

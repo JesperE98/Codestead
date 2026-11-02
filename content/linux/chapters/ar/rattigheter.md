@@ -5,7 +5,7 @@
 
 ## المستخدمون والمجموعات
 
-أنت مسجّل الدخول بالمستخدم `elev`. ينتمي كل مستخدم إلى **مجموعة** (group) واحدة
+أنت مسجّل الدخول بالمستخدم `{{user}}`. ينتمي كل مستخدم إلى **مجموعة** (group) واحدة
 أو أكثر:
 
 ```sh
@@ -20,8 +20,8 @@ id
 شغّل `ls -l` وانظر إلى العمود الأول:
 
 ```text
--rw-r--r-- 1 elev elev  174 Oct 29 13:55 anteckningar.txt
-drwxr-xr-x 2 elev elev 4096 Oct 29 13:55 dokument
+drwxr-xr-x 2 {{user}} {{user}} 4096 Oct 29 13:55 {{documents}}
+-rw-r--r-- 1 {{user}} {{user}}  292 Oct 29 13:55 {{notes}}
 ```
 
 المحرف الأول هو النوع: `-` للملف و`d` للمجلد. ثم تأتي ثلاث مجموعات، كل منها من
@@ -38,7 +38,7 @@ type  owner   group   others
 | `w` (write) | تعديل المحتوى | إنشاء الملفات وحذفها فيه |
 | `x` (execute) | تشغيل الملف كبرنامج | الدخول إلى المجلد بـ `cd` |
 
-بعد ذلك يأتي المالك (`elev`) والمجموعة (`elev`).
+بعد ذلك يأتي المالك (`{{user}}`) والمجموعة (`{{user}}`).
 
 ```quiz
 لمجلد ما الصلاحيات `drwxr-x---`. ماذا يحق لأعضاء مجموعته أن يفعلوا؟
@@ -62,15 +62,15 @@ type  owner   group   others
 | `600` | `rw-------` | الملفات السرية |
 
 ```sh
-chmod 644 anteckningar.txt
+chmod 644 {{notes}}
 ```
 
 أو باستخدام **الرموز**: `u` (المالك)، `g` (المجموعة)، `o` (الآخرون)، `a` (الجميع)،
 يتبعها `+` أو `-` أو `=` ثم الصلاحيات:
 
 ```sh
-chmod u+x skript.sh
-chmod go-w fil.txt
+chmod u+x script.sh
+chmod go-w file.txt
 ```
 
 ```predict
@@ -87,16 +87,16 @@ $ ls -l plan.txt | awk '{print $1}'
 *shebang* ويخبر النظام بالبرنامج الذي يجب أن يشغّل الملف:
 
 ```sh
-echo '#!/bin/bash' > datum.sh
-echo 'echo "Today is:"; date' >> datum.sh
-cat datum.sh
+echo '#!/bin/bash' > date.sh
+echo 'echo "Today is:"; date' >> date.sh
+cat date.sh
 ```
 
 لتشغيل السكربت كبرنامج، يجب أن يكون قابلًا للتنفيذ:
 
 ```sh
-chmod +x datum.sh
-./datum.sh
+chmod +x date.sh
+./date.sh
 ```
 
 نحتاج إلى `./` لأن المجلد الذي أنت فيه ليس جزءًا من `PATH`.

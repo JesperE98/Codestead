@@ -51,10 +51,10 @@ Wenn die Shell auf einen Befehl wartet, zeigt sie einen **Prompt** (eine
 Eingabeaufforderung) an. Im Terminal hier sieht er so aus:
 
 ```text
-elev@ubuntu:~$
+{{user}}@ubuntu:~$
 ```
 
-Er verrät dir, wer du bist (`elev`), an welchem Rechner du sitzt
+Er verrät dir, wer du bist (`{{user}}`), an welchem Rechner du sitzt
 (`ubuntu`) und wo im Dateisystem du dich befindest (`~` bedeutet dein
 Home-Verzeichnis). Das `$`-Zeichen zeigt, dass du ein normaler Benutzer bist.
 Bist du der Administrator (*root*), siehst du stattdessen ein `#`.
@@ -71,11 +71,11 @@ Der Prompt endet mit `#` statt mit `$`. Was sagt dir das?
 Klicke ins Terminal, tippe den folgenden Befehl ein und drücke **Enter**:
 
 ```sh
-echo Hej världen
+echo {{helloWorld}}
 ```
 
-`echo` gibt einfach aus, was du ihm übergibst – hier *Hej världen*, das ist
-Schwedisch für „Hallo Welt“. Die meisten Befehle folgen demselben Muster:
+`echo` gibt einfach aus, was du ihm übergibst – hier *{{helloWorld}}*. Die
+meisten Befehle folgen demselben Muster:
 
 ```text
 Befehl   -Optionen  Argumente
@@ -99,7 +99,7 @@ das, womit `ls` arbeiten soll.
 Probier `echo` mit einem eigenen Text aus:
 
 ```try
-echo Linux is fun
+echo Linux macht Spaß
 ---
 `echo` hat genau die Wörter ausgegeben, die du ihm übergeben hast.
 ```
@@ -140,20 +140,3 @@ Du hast `ech` getippt und drückst **Tab**. Was passiert?
 Tab vervollständigt Befehle und Dateinamen. **Strg+C** bricht die Zeile ab,
 und **Strg+L** leert den Bildschirm.
 ```
-
-### Ein paar schwedische Wörter
-
-Diese Anleitung wurde ursprünglich auf Schwedisch geschrieben, deshalb haben
-der Benutzer und die Übungsdateien im Simulator schwedische Namen. Du musst
-kein Schwedisch können – die Befehle sind genau dieselben –, aber dieses
-kleine Glossar hilft dir vielleicht:
-
-| Name | Bedeutung |
-|---|---|
-| `elev` | Schüler (dein Benutzername) |
-| `dokument` | Dokumente |
-| `anteckningar.txt` | Notizen |
-| `frukter.txt` | Früchte |
-| `betyg.csv` | Noten |
-| `bilder` | Bilder |
-| `gammalt` | altes Zeug |

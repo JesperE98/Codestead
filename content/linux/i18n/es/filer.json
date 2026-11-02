@@ -2,21 +2,21 @@
   "title": "Archivos y directorios",
   "tasks": {
     "mkdir": {
-      "text": "Crea el directorio `~/projekt/src` con **un solo** comando.",
-      "hint": "`mkdir` necesita la opción `-p` para crear `projekt` y `src` de una vez."
+      "text": "Crea el directorio `~/{{project}}/src` con **un solo** comando.",
+      "hint": "`mkdir` necesita la opción `-p` para crear `{{project}}` y `src` de una vez."
     },
     "touch": {
-      "text": "Crea un archivo vacío llamado `~/projekt/README.md`."
+      "text": "Crea un archivo vacío llamado `~/{{project}}/README.md`."
     },
     "cp": {
-      "text": "Copia `~/anteckningar.txt` dentro del directorio `~/projekt/`."
+      "text": "Copia `~/{{notes}}` dentro del directorio `~/{{project}}/`."
     },
     "mv": {
-      "text": "Cambia el nombre de `~/projekt/anteckningar.txt` a `~/projekt/att-gora.txt`.",
+      "text": "Cambia el nombre de `~/{{project}}/{{notes}}` a `~/{{project}}/{{todo}}`.",
       "hint": "Renombrar es lo mismo que mover: usa `mv`."
     },
     "rm": {
-      "text": "Elimina el directorio `~/gammalt` y todo su contenido.",
+      "text": "Elimina el directorio `~/{{old}}` y todo su contenido.",
       "hint": "El directorio no está vacío, así que `rmdir` no sirve. Usa `rm -r`."
     }
   }

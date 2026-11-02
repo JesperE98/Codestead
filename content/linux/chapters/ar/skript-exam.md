@@ -13,15 +13,15 @@
 ```
 
 ```quiz
-يعطي `namn = Kim` الخطأ `command not found`. لماذا؟
-- [x] المسافات حول `=` تجعل الـ shell يعامل `namn` كأمر
+يعطي `name = Kim` الخطأ `command not found`. لماذا؟
+- [x] المسافات حول `=` تجعل الـ shell يعامل `name` كأمر
 - [ ] يجب أن تُكتب أسماء المتغيرات بأحرف كبيرة
-- [ ] يجب أن تكتب `$namn = Kim`
+- [ ] يجب أن تكتب `$name = Kim`
 ```
 
 ```predict
-$ antal=$(ls ~/dokument | wc -l)
-$ echo "$antal files"
+$ count=$(ls ~/{{documents}} | wc -l)
+$ echo "$count files"
 3 files
 ```
 
@@ -50,13 +50,13 @@ $ echo $a
 ```
 
 ```predict
-$ [ -d ~/finnsinte ] && echo yes || echo no
+$ [ -d ~/{{missing}} ] && echo yes || echo no
 no
 ```
 
 ```predict
-$ fil=rapport.txt
-$ case $fil in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
+$ file=report.txt
+$ case $file in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
 A text file
 ```
 
@@ -91,9 +91,9 @@ $ for i in 1 2 3 4 5; do if [ $i -eq 3 ]; then continue; fi; echo $i; done
 ```
 
 ```quiz
-تبدأ here document باستخدام `cat > hej.sh << 'SLUT'`. متى ينتهي؟
+تبدأ here document باستخدام `cat > {{helloScript}} << '{{heredocEnd}}'`. متى ينتهي؟
 - [ ] عندما تضغط Enter على سطر فارغ
-- [x] عند السطر `SLUT`
+- [x] عند السطر `{{heredocEnd}}`
 - [ ] بعد عشرة أسطر
 ```
 

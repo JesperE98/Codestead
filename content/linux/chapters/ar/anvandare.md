@@ -35,12 +35,12 @@ cat /etc/passwd
 في كل سطر سبعة حقول تفصل بينها نقطتان (:). انظر إلى سطرك أنت:
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 ```text
-elev:x:1000:1000:Elev,,,:/home/elev:/bin/bash
- 1   2  3    4      5        6          7
+{{user}}:x:1000:1000:{{userFull}},,,:/home/{{user}}:/bin/bash
+   1    2  3    4      5          6           7
 ```
 
 | الحقل | المعنى |
@@ -57,7 +57,7 @@ elev:x:1000:1000:Elev,,,:/home/elev:/bin/bash
 في الملف، مثلًا في مدرسة أو شركة تكون فيها الحسابات على خادم مركزي:
 
 ```sh
-getent passwd elev
+getent passwd {{user}}
 ```
 
 ### مستخدمو النظام
@@ -100,7 +100,7 @@ cat /etc/group
 ```
 
 ```text
-sudo:x:27:elev
+sudo:x:27:{{user}}
  1   2  3   4
 ```
 
@@ -110,7 +110,7 @@ sudo:x:27:elev
 لكل مستخدم **مجموعة أساسية واحدة** (حقل GID في `/etc/passwd`)، ويمكن أن يكون
 أيضًا عضوًا في أي عدد من **المجموعات الإضافية** (supplementary groups). والملفات
 الجديدة التي تنشئها تحصل على مجموعتك الأساسية. وفي معظم التوزيعات يحصل كل
-مستخدم على مجموعة أساسية خاصة بالاسم نفسه – فـ `elev` موجود في المجموعة `elev`.
+مستخدم على مجموعة أساسية خاصة بالاسم نفسه – فـ `{{user}}` موجود في المجموعة `{{user}}`.
 
 ```sh
 groups
@@ -118,9 +118,9 @@ id
 ```
 
 ```quiz
-أنت (`elev`) في المجموعتين `elev` و`sudo`، ومجموعتك الأساسية هي `elev`. أيّ
+أنت (`{{user}}`) في المجموعتين `{{user}}` و`sudo`، ومجموعتك الأساسية هي `{{user}}`. أيّ
 مجموعة يحصل عليها ملف جديد تنشئه؟
-- [x] `elev`
+- [x] `{{user}}`
 - [ ] `sudo`
 - [ ] كلتاهما
 - [ ] `root`
@@ -153,13 +153,13 @@ kim:$y$j9T$Tm9...$Kx2...:20756:0:99999:7:::
 المرور وموعد انتهاء صلاحيتها. ويعرضها `chage` بنص واضح:
 
 ```sh
-chage -l elev
+chage -l {{user}}
 ```
 
 ```try
-chage -l elev
+chage -l {{user}}
 ---
-`Password expires: never` – لا يلزم أبدًا تغيير كلمة مرور elev.
+`Password expires: never` – لا يلزم أبدًا تغيير كلمة مرور {{user}}.
 ```
 
 ## إنشاء مستخدم – `useradd`
@@ -175,7 +175,7 @@ sudo useradd -m -s /bin/bash kim
 |---|---|
 | `-m` | أنشئ مجلد المنزل `/home/kim` |
 | `-s /bin/bash` | الـ shell الخاص بالمستخدم |
-| `-c "Kim Svensson"` | التعليق (الاسم الكامل) |
+| `-c "Kim Hassan"` | التعليق (الاسم الكامل) |
 | `-G group1,group2` | مجموعات إضافية من البداية |
 
 يجد `useradd` أول UID متاح بدءًا من 1000 فصاعدًا – فيحصل `kim` على 1001. والحدود
@@ -228,8 +228,8 @@ passwd root
 أنشئ مجموعة وأضف إليها عضوًا:
 
 ```sh
-sudo groupadd utvecklare
-sudo usermod -aG utvecklare kim
+sudo groupadd {{devGroup}}
+sudo usermod -aG {{devGroup}} kim
 groups kim
 ```
 
@@ -238,11 +238,11 @@ groups kim
 كل المجموعات الأخرى، مثل مجموعة sudo. وهذه طريقة شائعة لإقفال الباب على نفسك.
 
 ```quiz
-`kim` عضو في المجموعتين الإضافيتين `sudo` و`utvecklare`. يشغّل أحد المسؤولين
+`kim` عضو في المجموعتين الإضافيتين `sudo` و`{{devGroup}}`. يشغّل أحد المسؤولين
 `sudo usermod -G backup kim`. في أيّ المجموعات الإضافية يكون kim بعد ذلك؟
-- [ ] `sudo` و`utvecklare` و`backup`
+- [ ] `sudo` و`{{devGroup}}` و`backup`
 - [x] `backup` فقط
-- [ ] `sudo` و`utvecklare` – يفشل الأمر من دون `-a`
+- [ ] `sudo` و`{{devGroup}}` – يفشل الأمر من دون `-a`
 - [ ] لا شيء
 ---
 من دون `-a` تُضبط القائمة على ما تكتبه بالضبط. ومع
@@ -252,8 +252,8 @@ groups kim
 يفعل `gpasswd` الشيء نفسه ويستطيع أيضًا إزالة الأعضاء:
 
 ```sh
-sudo gpasswd -a kim utvecklare
-sudo gpasswd -d kim utvecklare
+sudo gpasswd -a kim {{devGroup}}
+sudo gpasswd -d kim {{devGroup}}
 ```
 
 على حاسوب حقيقي لا تسري العضوية الجديدة في المجموعة إلا في المرة القادمة التي
@@ -263,10 +263,10 @@ sudo gpasswd -d kim utvecklare
 الكتابة باستخدام `chgrp` و`chmod`:
 
 ```sh
-sudo mkdir /srv/projekt
-sudo chgrp utvecklare /srv/projekt
-sudo chmod 775 /srv/projekt
-ls -ld /srv/projekt
+sudo mkdir /srv/project
+sudo chgrp {{devGroup}} /srv/project
+sudo chmod 775 /srv/project
+ls -ld /srv/project
 ```
 
 ## منح صلاحيات sudo – المجموعة `sudo`
@@ -356,15 +356,15 @@ last
 تبقى الملفات:
 
 ```sh
-sudo useradd -m vikarie
-sudo userdel -r vikarie
+sudo useradd -m {{tempUser}}
+sudo userdel -r {{tempUser}}
 ```
 
 لدى Ubuntu أيضًا `deluser`، نظير `adduser`:
-`sudo deluser --remove-home vikarie`. ويزيل `sudo deluser kim sudo` المستخدم kim
+`sudo deluser --remove-home {{tempUser}}`. ويزيل `sudo deluser kim sudo` المستخدم kim
 من المجموعة sudo.
 
-يرفض `userdel` حذف مستخدم مسجّل الدخول – جرّب `sudo userdel elev`.
+يرفض `userdel` حذف مستخدم مسجّل الدخول – جرّب `sudo userdel {{user}}`.
 
 ## ملخّص
 

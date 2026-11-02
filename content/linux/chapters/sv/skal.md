@@ -56,7 +56,7 @@ Vilket skal du får när du loggar in står i sista fältet på din rad i
 `/etc/passwd`, och finns också i variabeln `$SHELL`:
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 echo $SHELL
 ```
 
@@ -100,7 +100,7 @@ konfigurationsfil för zsh ännu. Det är en meny som hjälper dig komma igång:
 | `1` | Huvudmenyn med alla inställningar (finns inte i simulatorn) |
 | `2` | Skapa `~/.zshrc` med rekommenderade inställningar |
 
-Svara `2`. Prompten ändras till `elev@ubuntu ~ %` – i zsh är `%`
+Svara `2`. Prompten ändras till `{{user}}@ubuntu ~ %` – i zsh är `%`
 det vanliga tecknet för en vanlig användare (root får `#`, precis som i bash).
 
 Vilket skal kör du nu? Variabeln `$0` innehåller namnet på skalet:
@@ -124,7 +124,7 @@ zsh förstår nästan all bash-syntax. Pipes, omdirigering, variabler, `if`,
 `for` och funktioner fungerar som du är van vid:
 
 ```sh
-for f in ~/dokument/*.txt; do wc -l $f; done
+for f in ~/{{documents}}/*.txt; do wc -l $f; done
 ```
 
 ### Finess 1: `**` letar i alla underkataloger
@@ -145,7 +145,7 @@ Med inställningen `autocd` (som finns i de rekommenderade inställningarna)
 räcker det att skriva namnet på en katalog för att gå dit – utan `cd`:
 
 ```sh
-dokument
+{{documents}}
 ..
 ```
 
@@ -257,16 +257,16 @@ sudo apt install fish
 fish
 ```
 
-fish hälsar dig välkommen och prompten blir `elev@ubuntu ~>`. Gå ner i
+fish hälsar dig välkommen och prompten blir `{{user}}@ubuntu ~>`. Gå ner i
 några kataloger och se hur fish förkortar sökvägen i prompten:
 
 ```sh
-mkdir -p ~/dokument/projekt
-cd ~/dokument/projekt
+mkdir -p ~/{{documents}}/{{project}}
+cd ~/{{documents}}/{{project}}
 cd ~
 ```
 
-I katalogen `~/dokument/projekt` visar prompten `~/d/projekt>` – varje
+I katalogen `~/{{documents}}/{{project}}` visar prompten `~/d/{{project}}>` – varje
 katalog utom den sista förkortas till en bokstav.
 
 ### fish har en egen syntax
@@ -275,9 +275,9 @@ Här skiljer sig fish mest från bash och zsh:
 
 | Det här | bash och zsh | fish |
 |---|---|---|
-| Sätta en variabel | `frukt=äpple` | `set frukt äpple` |
+| Sätta en variabel | `{{fruitVar}}={{fruitWord}}` | `set {{fruitVar}} {{fruitWord}}` |
 | Miljövariabel | `export EDITOR=nano` | `set -x EDITOR nano` |
-| Ta bort en variabel | `unset frukt` | `set -e frukt` |
+| Ta bort en variabel | `unset {{fruitVar}}` | `set -e {{fruitVar}}` |
 | Kommandosubstitution | `$(pwd)` | `(pwd)` |
 | Senaste felkoden | `$?` | `$status` |
 | Skriptets argument | `$@`, `$1` | `$argv`, `$argv[1]` |
@@ -291,22 +291,22 @@ Här skiljer sig fish mest från bash och zsh:
 Prova att sätta en variabel på bash-sättet:
 
 ```sh
-frukt=äpple
+{{fruitVar}}={{fruitWord}}
 ```
 
 fish vägrar och talar om hur det ska skrivas:
 
 ```text
-fish: Unsupported use of '='. In fish, please use 'set frukt äpple'.
+fish: Unsupported use of '='. In fish, please use 'set {{fruitVar}} {{fruitWord}}'.
 ```
 
 Så här gör man i fish:
 
 ```sh
-set frukt äpple
-echo $frukt
+set {{fruitVar}} {{fruitWord}}
+echo ${{fruitVar}}
 set -x EDITOR nano
-set -e frukt
+set -e {{fruitVar}}
 ```
 
 `-x` (*export*) gör variabeln till en miljövariabel som program du startar
@@ -374,7 +374,7 @@ Du kan också skriva blocket på flera rader. Skalet väntar på `end` innan det
 kör loopen:
 
 ```sh
-for f in ~/dokument/*.txt
+for f in ~/{{documents}}/*.txt
 echo (basename $f)
 end
 ```
@@ -431,18 +431,18 @@ nästan alltid för bash (eller för POSIX `sh`):
 Prova att skriva ett bash-skript och köra det från fish:
 
 ```sh
-cat > ~/hej.sh << 'SLUT'
+cat > ~/{{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
-namn=Kim
-echo "Hej $namn, jag körs av bash"
-SLUT
-chmod +x ~/hej.sh
+{{nameVar}}=Kim
+echo "{{hello}} ${{nameVar}}, jag körs av bash"
+{{heredocEnd}}
+chmod +x ~/{{helloScript}}
 fish
-~/hej.sh
+~/{{helloScript}}
 exit
 ```
 
-Skriptet fungerar i fish, trots att `namn=Kim` är förbjudet där – för det är
+Skriptet fungerar i fish, trots att `{{nameVar}}=Kim` är förbjudet där – för det är
 bash som kör det. Därför är `#!/bin/bash` (eller `#!/usr/bin/env bash`) så
 viktig. Ett skript som ska fungera överallt, även där bash saknas, skriver man
 med `#!/bin/sh` och bara POSIX-syntax.
@@ -465,7 +465,7 @@ Att skriva `zsh` varje gång du öppnar en terminal blir tjatigt. Med `chsh`
 
 ```sh
 chsh -s /usr/bin/zsh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 - Skalet måste anges med hela sökvägen och finnas med i `/etc/shells`.
@@ -517,7 +517,7 @@ inloggning. Terminalen du har öppen behåller bash, och det gör `$SHELL` ocks�
 | `zsh` / `fish` / `exit` | Starta ett annat skal / gå tillbaka |
 | `ls ~/**/*.txt` | Leta i alla underkataloger (zsh, fish) |
 | `setopt autocd` | Slå på en zsh-inställning |
-| `set frukt äpple` | Sätt en variabel i fish |
+| `set {{fruitVar}} {{fruitWord}}` | Sätt en variabel i fish |
 | `set -x NAMN värde` | Sätt en miljövariabel i fish |
 | `chsh -s /usr/bin/zsh` | Byt inloggningsskal |
 

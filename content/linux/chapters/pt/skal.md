@@ -57,7 +57,7 @@ O shell que você recebe ao fazer login é o último campo da sua linha em
 `/etc/passwd`, e ele também está na variável `$SHELL`:
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 echo $SHELL
 ```
 
@@ -102,7 +102,7 @@ começar:
 | `1` | O menu principal com todas as configurações (não disponível no simulador) |
 | `2` | Cria o `~/.zshrc` com as configurações recomendadas |
 
-Responda `2`. O prompt muda para `elev@ubuntu ~ %` – no zsh, `%` é o
+Responda `2`. O prompt muda para `{{user}}@ubuntu ~ %` – no zsh, `%` é o
 sinal habitual para um usuário comum (o root recebe `#`, igual no bash).
 
 Qual shell você está rodando agora? A variável `$0` contém o nome do shell:
@@ -127,7 +127,7 @@ O zsh entende quase toda a sintaxe do bash. Pipes, redirecionamento,
 variáveis, `if`, `for` e funções funcionam do jeito que você está acostumado:
 
 ```sh
-for f in ~/dokument/*.txt; do wc -l $f; done
+for f in ~/{{documents}}/*.txt; do wc -l $f; done
 ```
 
 ### Recurso 1: `**` busca em todos os subdiretórios
@@ -149,7 +149,7 @@ Com a opção `autocd` (parte das configurações recomendadas) você só precis
 digitar o nome de um diretório para ir até ele – sem `cd`:
 
 ```sh
-dokument
+{{documents}}
 ..
 ```
 
@@ -166,8 +166,8 @@ setopt autocd
 No bash, uma variável sem aspas é dividida nos espaços. No zsh, não:
 
 ```sh
-filer="a.txt b.txt"
-for f in $filer; do echo "[$f]"; done
+arquivos="a.txt b.txt"
+for f in $arquivos; do echo "[$f]"; done
 ```
 
 O bash imprime `[a.txt]` e `[b.txt]` – o zsh imprime `[a.txt b.txt]`. O jeito
@@ -185,7 +185,7 @@ imprime?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
-$ zsh -c 'filer="x.txt y.txt z.txt"; for f in $filer; do echo "<$f>"; done'
+$ zsh -c 'arquivos="x.txt y.txt z.txt"; for f in $arquivos; do echo "<$f>"; done'
 <x.txt y.txt z.txt>
 ---
 O zsh não divide a variável nos espaços, então o loop roda uma vez com o valor
@@ -264,16 +264,16 @@ sudo apt install fish
 fish
 ```
 
-O fish dá as boas-vindas e o prompt vira `elev@ubuntu ~>`. Desça alguns
+O fish dá as boas-vindas e o prompt vira `{{user}}@ubuntu ~>`. Desça alguns
 diretórios e veja como o fish encurta o caminho no prompt:
 
 ```sh
-mkdir -p ~/dokument/projekt
-cd ~/dokument/projekt
+mkdir -p ~/{{documents}}/projeto
+cd ~/{{documents}}/projeto
 cd ~
 ```
 
-No diretório `~/dokument/projekt` o prompt mostra `~/d/projekt>` – todos os
+No diretório `~/{{documents}}/projeto` o prompt mostra `~/d/projeto>` – todos os
 diretórios, menos o último, são encurtados para uma letra.
 
 ### O fish tem sintaxe própria
@@ -282,39 +282,38 @@ diretórios, menos o último, são encurtados para uma letra.
 
 | Isto | bash e zsh | fish |
 |---|---|---|
-| Definir uma variável | `frukt=äpple` | `set frukt äpple` |
+| Definir uma variável | `{{fruitVar}}={{fruitWord}}` | `set {{fruitVar}} {{fruitWord}}` |
 | Variável de ambiente | `export EDITOR=nano` | `set -x EDITOR nano` |
-| Remover uma variável | `unset frukt` | `set -e frukt` |
+| Remover uma variável | `unset {{fruitVar}}` | `set -e {{fruitVar}}` |
 | Substituição de comando | `$(pwd)` | `(pwd)` |
 | Último status de saída | `$?` | `$status` |
 | Argumentos do script | `$@`, `$1` | `$argv`, `$argv[1]` |
 | Condição | `if …; then …; fi` | `if …; …; end` |
 | Loop | `for …; do …; done` | `for …; …; end` |
-| Função | `hej() { …; }` | `function hej; …; end` |
+| Função | `ola() { …; }` | `function ola; …; end` |
 | Aritmética | `$((17 * 23))` | `math 17 x 23` |
 
 ### Variáveis com set
 
-Tente definir uma variável do jeito do bash (`frukt` é "fruta" em sueco, e
-`äpple`, "maçã"):
+Tente definir uma variável do jeito do bash:
 
 ```sh
-frukt=äpple
+{{fruitVar}}={{fruitWord}}
 ```
 
 O fish se recusa e diz como escrever:
 
 ```text
-fish: Unsupported use of '='. In fish, please use 'set frukt äpple'.
+fish: Unsupported use of '='. In fish, please use 'set {{fruitVar}} {{fruitWord}}'.
 ```
 
 É assim que se faz no fish:
 
 ```sh
-set frukt äpple
-echo $frukt
+set {{fruitVar}} {{fruitWord}}
+echo ${{fruitVar}}
 set -x EDITOR nano
-set -e frukt
+set -e {{fruitVar}}
 ```
 
 O `-x` (*export*) transforma a variável em uma variável de ambiente que os
@@ -324,17 +323,17 @@ No fish, toda variável é uma **lista**. Os elementos são numerados a partir
 de 1:
 
 ```sh
-set frukter äpple päron banan
-echo $frukter[2]
-count $frukter
+set frutas maçã pera banana
+echo $frutas[2]
+count $frutas
 ```
 
 O `-c` também funciona no fish. O que o último comando imprime?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y fish > /dev/null 2>&1
-$ fish -c 'set frukter äpple päron banan; echo $frukter[3]'
-banan
+$ fish -c 'set frutas maçã pera banana; echo $frutas[3]'
+banana
 ---
 Os elementos de uma lista do fish são numerados a partir de 1, então `[3]` é o
 terceiro e último elemento.
@@ -361,8 +360,8 @@ echo $status
 O fish tem comandos próprios para encadear condições:
 
 ```sh
-test -f ~/.bashrc; and echo exists
-test -f ~/missing.txt; or echo missing
+test -f ~/.bashrc; and echo existe
+test -f ~/faltando.txt; or echo falta
 ```
 
 Versões mais novas do fish (3.0 em diante) também entendem `&&` e `||`, e a
@@ -376,14 +375,14 @@ com `end`. Não existe `then`, `do`, `done` nem `fi`:
 
 ```sh
 for i in 1 2 3; echo $i; end
-if test -f ~/.bashrc; echo exists; else; echo missing; end
+if test -f ~/.bashrc; echo existe; else; echo falta; end
 ```
 
 Você também pode escrever o bloco em várias linhas. O shell espera pelo
 `end` antes de executar o loop:
 
 ```sh
-for f in ~/dokument/*.txt
+for f in ~/{{documents}}/*.txt
 echo (basename $f)
 end
 ```
@@ -391,8 +390,8 @@ end
 As funções recebem os argumentos na lista `$argv`:
 
 ```sh
-function hello; echo "Olá, $argv!"; end
-hello Kim
+function saudar; echo "Olá, $argv!"; end
+saudar Kim
 ```
 
 ### Aritmética com math
@@ -441,18 +440,18 @@ quase sempre escritos para o bash (ou para o `sh` POSIX):
 Experimente escrever um script de bash e executá-lo a partir do fish:
 
 ```sh
-cat > ~/hej.sh << 'SLUT'
+cat > ~/{{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
-name=Kim
-echo "Olá, $name, quem me executa é o bash"
-SLUT
-chmod +x ~/hej.sh
+nome=Kim
+echo "Olá, $nome, quem me executa é o bash"
+{{heredocEnd}}
+chmod +x ~/{{helloScript}}
 fish
-~/hej.sh
+~/{{helloScript}}
 exit
 ```
 
-O script funciona no fish, mesmo que `name=Kim` seja proibido lá – porque
+O script funciona no fish, mesmo que `nome=Kim` seja proibido lá – porque
 quem o executa é o bash. É por isso que o `#!/bin/bash` (ou
 `#!/usr/bin/env bash`) importa tanto. Um script que precisa funcionar em todo
 lugar, até onde não há bash, é escrito com `#!/bin/sh` e só com sintaxe
@@ -475,7 +474,7 @@ shell*) você muda o seu **shell de login** – o que está em `/etc/passwd`:
 
 ```sh
 chsh -s /usr/bin/zsh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 - O shell precisa ser informado com o caminho completo e estar listado em
@@ -531,7 +530,7 @@ próximo login. O terminal que você tem aberto mantém o bash, e o `$SHELL` tam
 | `zsh` / `fish` / `exit` | Inicia outro shell / volta |
 | `ls ~/**/*.txt` | Busca em todos os subdiretórios (zsh, fish) |
 | `setopt autocd` | Liga uma opção do zsh |
-| `set frukt äpple` | Define uma variável no fish |
+| `set {{fruitVar}} {{fruitWord}}` | Define uma variável no fish |
 | `set -x NOME valor` | Define uma variável de ambiente no fish |
 | `chsh -s /usr/bin/zsh` | Muda o seu shell de login |
 

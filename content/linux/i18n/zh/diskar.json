@@ -21,12 +21,12 @@
       "hint": "在 `/mnt` 中创建目录和挂载都需要 root 权限：`sudo mkdir -p /mnt/usb`，然后 `sudo mount /dev/sdb1 /mnt/usb`。"
     },
     "fran-usb": {
-      "text": "把 U 盘上的 `rapport.pdf` 复制到你的主目录。",
-      "hint": "U 盘上的文件现在位于 `/mnt/usb`：`cp /mnt/usb/rapport.pdf ~`。"
+      "text": "把 U 盘上的 `{{report}}` 复制到你的主目录。",
+      "hint": "U 盘上的文件现在位于 `/mnt/usb`：`cp /mnt/usb/{{report}} ~`。"
     },
     "till-usb": {
-      "text": "在 U 盘上保存一份 `~/dokument/frukter.txt` 的副本。",
-      "hint": "U 盘上的文件属于 root——FAT 没有 Linux 权限——所以你需要 `sudo`：`sudo cp ~/dokument/frukter.txt /mnt/usb/`。"
+      "text": "在 U 盘上保存一份 `~/{{documents}}/{{fruits}}` 的副本。",
+      "hint": "U 盘上的文件属于 root——FAT 没有 Linux 权限——所以你需要 `sudo`：`sudo cp ~/{{documents}}/{{fruits}} /mnt/usb/`。"
     },
     "avmontera": {
       "text": "卸载 U 盘，让它可以安全拔出。",

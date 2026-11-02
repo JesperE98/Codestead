@@ -6,7 +6,7 @@ o quê.
 
 ## Usuários e grupos
 
-Você está logado como o usuário `elev`. Todo usuário pertence a um ou mais
+Você está logado como o usuário `{{user}}`. Todo usuário pertence a um ou mais
 **grupos**:
 
 ```sh
@@ -22,8 +22,8 @@ usa-se o `sudo` (veja abaixo).
 Execute `ls -l` e olhe para a primeira coluna:
 
 ```text
--rw-r--r-- 1 elev elev  174 Oct 29 13:55 anteckningar.txt
-drwxr-xr-x 2 elev elev 4096 Oct 29 13:55 dokument
+-rw-r--r-- 1 {{user}} {{user}}  209 Oct 29 13:55 {{notes}}
+drwxr-xr-x 2 {{user}} {{user}} 4096 Oct 29 13:55 {{documents}}
 ```
 
 O primeiro caractere é o tipo: `-` para arquivo, `d` para diretório. Depois
@@ -40,7 +40,7 @@ tipo  dono    grupo   outros
 | `w` (write) | Alterar o conteúdo | Criar e apagar arquivos dentro dele |
 | `x` (execute) | Executar o arquivo como programa | Entrar no diretório com `cd` |
 
-Em seguida vêm o dono (`elev`) e o grupo (`elev`).
+Em seguida vêm o dono (`{{user}}`) e o grupo (`{{user}}`).
 
 ```quiz
 Um diretório tem as permissões `drwxr-x---`. O que os membros do grupo dele podem fazer?
@@ -64,22 +64,22 @@ que é a soma de r = 4, w = 2 e x = 1:
 | `600` | `rw-------` | Arquivos secretos |
 
 ```sh
-chmod 644 anteckningar.txt
+chmod 644 {{notes}}
 ```
 
 Ou com **símbolos**: `u` (o dono), `g` (o grupo), `o` (os outros), `a`
 (todos), seguidos de `+`, `-` ou `=` e das permissões:
 
 ```sh
-chmod u+x skript.sh
-chmod go-w fil.txt
+chmod u+x script.sh
+chmod go-w arquivo.txt
 ```
 
 ```predict
-$ touch plan.txt
-$ chmod 600 plan.txt
-$ chmod g+r plan.txt
-$ ls -l plan.txt | awk '{print $1}'
+$ touch plano.txt
+$ chmod 600 plano.txt
+$ chmod g+r plano.txt
+$ ls -l plano.txt | awk '{print $1}'
 -rw-r-----
 ```
 
@@ -90,16 +90,16 @@ Um **script** é um arquivo de texto com comandos. A primeira linha,
 o arquivo:
 
 ```sh
-echo '#!/bin/bash' > datum.sh
-echo 'echo "Hoje é:"; date' >> datum.sh
-cat datum.sh
+echo '#!/bin/bash' > data.sh
+echo 'echo "Hoje é:"; date' >> data.sh
+cat data.sh
 ```
 
 Para executar o script como um programa, ele precisa ser executável:
 
 ```sh
-chmod +x datum.sh
-./datum.sh
+chmod +x data.sh
+./data.sh
 ```
 
 O `./` é necessário porque o diretório em que você está não faz parte do

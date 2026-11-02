@@ -5,7 +5,7 @@ I den här delen har du gjort om kommandon till egna program.
 ## Shell-skript
 
 Ett skript är en textfil med kommandon som börjar med shebang-raden
-`#!/bin/bash`. Du kan skriva den med ett here-dokument (`cat > fil << 'SLUT'`),
+`#!/bin/bash`. Du kan skriva den med ett here-dokument (`cat > fil << '{{heredocEnd}}'`),
 göra den körbar med `chmod +x` och köra den med `./`. Rader som börjar med `#`
 är kommentarer.
 
@@ -27,7 +27,7 @@ read` går igenom en fil rad för rad. `case` väljer mellan mönster, funktione
 | Syntax | Gör |
 |---|---|
 | `#!/bin/bash` | Shebang-raden: vilket program som kör skriptet |
-| `cat > fil << 'SLUT'` | Skriv rader till en fil fram till raden `SLUT` |
+| `cat > fil << '{{heredocEnd}}'` | Skriv rader till en fil fram till raden `{{heredocEnd}}` |
 | `namn=värde` · `"$namn"` · `"${namn}"` | Skapa · använd en variabel |
 | `$(kommando)` | Ersätts med det som kommandot skriver ut |
 | `$(( a * 6 ))` · `(( a++ ))` | Räkna med heltal · ändra en variabel |
@@ -39,7 +39,7 @@ read` går igenom en fil rad för rad. `case` väljer mellan mönster, funktione
 | `[[ $fil == *.txt ]]` | Bashs smartare test, med mönster |
 | `for x in lista; do ...; done` | Loopa över en lista |
 | `while [ ... ]; do ...; done` | Loopa så länge villkoret är sant |
-| `while read rad; do ...; done < fil` | Gå igenom en fil rad för rad |
+| `while read {{lineVar}}; do ...; done < fil` | Gå igenom en fil rad för rad |
 | `break` · `continue` | Lämna loopen · gå till nästa varv |
 | `case $x in mönster) ...;; *) ...;; esac` | Välj efter mönster |
 | `namn() { ...; }` · `local` · `return` | En funktion · lokal variabel · avsluta funktionen |

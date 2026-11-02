@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -106,14 +107,14 @@ public sealed class MainWindow : Window
 
     private Control BuildLayout()
     {
-        var mark = new Border
+        // The Codestead logo (build/icon.svg): a house with a prompt inside.
+        var mark = new Image
         {
-            Background = new SolidColorBrush(Color.Parse("#0f1318")),
-            CornerRadius = new CornerRadius(8),
+            Source = new Bitmap(AssetLoader.Open(new Uri("avares://Codestead.Hub/Assets/icon.png"))),
             Width = 34,
             Height = 34,
-            Child = new TextBlock { Text = ">_", Foreground = new SolidColorBrush(Color.Parse("#7ee787")), FontWeight = FontWeight.Bold, FontFamily = new FontFamily("Cascadia Mono, DejaVu Sans Mono, monospace"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
         };
+        RenderOptions.SetBitmapInterpolationMode(mark, Avalonia.Media.Imaging.BitmapInterpolationMode.HighQuality);
         var brand = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
         brand.Children.Add(mark);
         brand.Children.Add(brandName);

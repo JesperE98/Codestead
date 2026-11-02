@@ -4,7 +4,7 @@
 
 ```predict
 $ echo "$HOME" '$USER'
-/home/elev $USER
+/home/{{user}} $USER
 ---
 تستبدل علامات الاقتباس المزدوجة المتغير بقيمته، أما المفردة فتطبعه كما كُتب
 تمامًا.
@@ -36,10 +36,10 @@ $ echo $?
 ```
 
 ```predict
-$ touch verktyg.sh
-$ chmod 755 verktyg.sh
-$ chmod go-x verktyg.sh
-$ ls -l verktyg.sh | awk '{print $1}'
+$ touch tool.sh
+$ chmod 755 tool.sh
+$ chmod go-x tool.sh
+$ ls -l tool.sh | awk '{print $1}'
 -rwxr--r--
 ```
 
@@ -47,7 +47,7 @@ $ ls -l verktyg.sh | awk '{print $1}'
 على Ubuntu، أعضاء أيّ مجموعة يحق لهم استخدام `sudo`؟
 - [x] `sudo`
 - [ ] `root`
-- [ ] `elev`
+- [ ] `{{user}}`
 ```
 
 ```quiz
@@ -87,18 +87,18 @@ $ ls -l verktyg.sh | awk '{print $1}'
 ```
 
 ```quiz
-ما الخطأ في `tar -cvf dokument dokument.tar`؟
+ما الخطأ في `tar -cvf {{documents}} {{documents}}.tar`؟
 - [ ] لا يمكن الجمع بين `-v` و`-c`
 - [x] الترتيب: يجب أن يأتي اسم الأرشيف مباشرةً بعد `f`، قبل الملفات
 - [ ] يجب أن ينتهي أرشيف tar بـ `.tgz`
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ gzip frukter.txt
-$ gunzip frukter.txt.gz
-$ ls frukter*
-frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ gzip {{fruits}}
+$ gunzip {{fruits}}.gz
+$ ls fruits*
+{{fruits}}
 ```
 
 ```quiz
@@ -111,7 +111,7 @@ frukter.txt
 ```
 
 ```try
-du -sh dokument
+du -sh {{documents}}
 ---
 يعطي `-s` مجموعًا واحدًا للمجلد كله، ويجعل `-h` الحجم سهل القراءة.
 ```

@@ -2,17 +2,17 @@
 
 Linux में लगभग सब कुछ text है: settings, logs, lists। इसीलिए text files पढ़ने
 और उनमें खोजने के लिए बहुत सारे छोटे-छोटे tools हैं। आपकी home directory में
-`dokument` नाम की एक डायरेक्टरी है जिसमें अभ्यास के लिए फ़ाइलें हैं, जिनमें
-`frukter.txt` (फलों की सूची) और `server.log` (एक काल्पनिक वेब सर्वर का लॉग) भी हैं।
-इनका content Swedish में है, लेकिन जिन शब्दों को आप खोजेंगे – `INFO`, `WARN`
-और `ERROR` – वे असली logs जैसे ही हैं।
+`{{documents}}` नाम की एक डायरेक्टरी है जिसमें अभ्यास के लिए फ़ाइलें हैं, जिनमें
+`{{fruits}}` (फलों की सूची) और `server.log` (एक काल्पनिक वेब सर्वर का लॉग) भी हैं।
+Log में हर line पर `INFO`, `WARN` या `ERROR` जैसा कोई level है, बिल्कुल असली
+logs की तरह।
 
 ## File दिखाना – `cat` और `less`
 
 `cat` पूरी file print करता है:
 
 ```sh
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 लंबी files के लिए `less` बेहतर है। उसमें आप arrow keys और space bar से scroll
@@ -21,7 +21,7 @@ cat dokument/frukter.txt
 फलों की सूची देखिए – अगले सवाल के लिए आपको इसकी ज़रूरत पड़ेगी:
 
 ```try
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 ## शुरुआत और अंत – `head` और `tail`
@@ -30,16 +30,16 @@ cat dokument/frukter.txt
 `-n` से चुन सकते हैं:
 
 ```sh
-head -n 5 dokument/server.log
-tail -n 3 dokument/server.log
+head -n 5 {{documents}}/server.log
+tail -n 3 {{documents}}/server.log
 ```
 
 `tail -f` किसी file को *follow* करता है और नई lines लिखे जाते ही दिखाता है –
 logs के लिए बिल्कुल सही। इसे **Ctrl+C** से रोकिए।
 
 ```predict
-$ tail -n 1 dokument/frukter.txt
-mango
+$ tail -n 1 {{documents}}/{{fruits}}
+आम
 ---
 `tail -n 1` सिर्फ़ सबसे आख़िरी पंक्ति दिखाता है।
 ```
@@ -49,7 +49,7 @@ mango
 `wc` (*word count*) lines, words और bytes गिनता है:
 
 ```sh
-wc dokument/frukter.txt
+wc {{documents}}/{{fruits}}
 ```
 
 अक्सर आपको सिर्फ़ lines की संख्या चाहिए होती है: `wc -l`।
@@ -60,7 +60,7 @@ wc dokument/frukter.txt
 pattern हो:
 
 ```sh
-grep INFO dokument/server.log
+grep INFO {{documents}}/server.log
 ```
 
 कुछ options जो आप बहुत इस्तेमाल करेंगे:
@@ -75,7 +75,7 @@ grep INFO dokument/server.log
 | `-E` | Extended patterns, जैसे `"ERROR|WARN"` |
 
 ```sh
-grep -n WARN dokument/server.log
+grep -n WARN {{documents}}/server.log
 ```
 
 Pattern एक *regular expression* होता है। कुछ उदाहरण: `^` का मतलब है line की
@@ -84,7 +84,7 @@ Pattern एक *regular expression* होता है। कुछ उदा�
 
 ```quiz
 `server.log` में दो पंक्तियों में `WARN` है और एक पंक्ति में छोटे अक्षरों में `warn` है।
-`grep -c WARN dokument/server.log` क्या छापता है?
+`grep -c WARN {{documents}}/server.log` क्या छापता है?
 - [ ] 1
 - [x] 2
 - [ ] 3
@@ -95,9 +95,9 @@ Pattern एक *regular expression* होता है। कुछ उदा�
 
 ```quiz
 कौन-सा कमांड `server.log` की हर वह पंक्ति दिखाता है जिसमें `INFO` **नहीं** है?
-- [ ] `grep -i INFO dokument/server.log`
-- [ ] `grep -c INFO dokument/server.log`
-- [x] `grep -v INFO dokument/server.log`
+- [ ] `grep -i INFO {{documents}}/server.log`
+- [ ] `grep -c INFO {{documents}}/server.log`
+- [x] `grep -v INFO {{documents}}/server.log`
 ```
 
 ## Sort करना – `sort` और `uniq`
@@ -107,7 +107,7 @@ order के लिए `-r`)। `uniq` वे lines हटा देता ह�
 हों – इसीलिए यह लगभग हमेशा `sort` के बाद इस्तेमाल होता है:
 
 ```sh
-sort dokument/frukter.txt
+sort {{documents}}/{{fruits}}
 ```
 
 ```quiz

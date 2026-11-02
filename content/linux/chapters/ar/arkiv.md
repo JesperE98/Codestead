@@ -39,18 +39,18 @@ tar وحده ليس أصغر من الملفات التي فيه.
 
 ## الحزم بـ `tar`
 
-انتقل إلى مجلد المنزل الخاص بك واحزم المجلد `dokument`:
+انتقل إلى مجلد المنزل الخاص بك واحزم المجلد `{{documents}}`:
 
 ```sh
 cd ~
-tar -cvf dokument.tar dokument
+tar -cvf {{documents}}.tar {{documents}}
 ```
 
 ```text
-dokument/
-dokument/betyg.csv
-dokument/frukter.txt
-dokument/server.log
+{{documents}}/
+{{documents}}/{{fruits}}
+{{documents}}/{{grades}}
+{{documents}}/server.log
 ```
 
 `-c` تعني *أنشئ أرشيفًا*، و`-v` تطلب من tar أن يعرض ما يفعله، و`-f` تقول إن اسم
@@ -58,7 +58,7 @@ dokument/server.log
 والمجلدات.
 
 > **انتبه!** الترتيب هو *الأرشيف أولًا، ثم الملفات*. إذا أخطأت في الترتيب، كما في
-> `tar -cvf dokument dokument.tar`، فسيحاول tar الكتابة فوق المجلد – أو ما هو
+> `tar -cvf {{documents}} {{documents}}.tar`، فسيحاول tar الكتابة فوق المجلد – أو ما هو
 > أسوأ، فوق ملف كنت تريد الاحتفاظ به.
 
 ## الخيارات التي يجب تذكّرها
@@ -98,13 +98,13 @@ dokument/server.log
 أضف `z` وسيُمرَّر الأرشيف عبر gzip في الطريق:
 
 ```sh
-tar -czvf dokument.tar.gz dokument
-ls -l dokument.tar dokument.tar.gz
+tar -czvf {{documents}}.tar.gz {{documents}}
+ls -l {{documents}}.tar {{documents}}.tar.gz
 ```
 
 ```text
--rw-r--r-- 1 elev elev 10240 Oct 30 12:00 dokument.tar
--rw-r--r-- 1 elev elev   837 Oct 30 12:00 dokument.tar.gz
+-rw-r--r-- 1 {{user}} {{user}} 10240 Oct 30 12:00 {{documents}}.tar
+-rw-r--r-- 1 {{user}} {{user}}   894 Oct 30 12:00 {{documents}}.tar.gz
 ```
 
 يبلغ حجم الأرشيف غير المضغوط 10,240 بايت كاملة، مع أن مجموع الملفات يزيد قليلًا على
@@ -115,14 +115,14 @@ ls -l dokument.tar dokument.tar.gz
 `-h` تحصل على أحجام سهلة القراءة، ومع `-s` على المجموع لمجلد كامل:
 
 ```sh
-du -h dokument.tar dokument.tar.gz
-du -sh dokument
+du -h {{documents}}.tar {{documents}}.tar.gz
+du -sh {{documents}}
 ```
 
 ```text
-12K	dokument.tar
-4.0K	dokument.tar.gz
-16K	dokument
+12K	{{documents}}.tar
+4.0K	{{documents}}.tar.gz
+16K	{{documents}}
 ```
 
 القرص مقسّم إلى كتل حجمها 4 KiB، لذا لا يعرض `du` أبدًا أقل من `4.0K` لملف غير
@@ -131,14 +131,14 @@ du -sh dokument
 ## انظر داخل الأرشيف قبل فكّه
 
 ```sh
-tar -tzvf dokument.tar.gz
+tar -tzvf {{documents}}.tar.gz
 ```
 
 ```text
-drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
--rw-r--r-- elev/elev       146 2026-10-30 12:00 dokument/betyg.csv
--rw-r--r-- elev/elev        64 2026-10-30 12:00 dokument/frukter.txt
--rw-r--r-- elev/elev       848 2026-10-30 12:00 dokument/server.log
+drwxr-xr-x {{user}}/{{user}}   0 2026-10-30 12:00 {{documents}}/
+-rw-r--r-- {{user}}/{{user}}  94 2026-10-30 12:00 {{documents}}/{{fruits}}
+-rw-r--r-- {{user}}/{{user}} 269 2026-10-30 12:00 {{documents}}/{{grades}}
+-rw-r--r-- {{user}}/{{user}} 824 2026-10-30 12:00 {{documents}}/server.log
 ```
 
 مع `v` يُعرض المحتوى كما في `ls -l`، بالصلاحيات والمالك والحجم. النظر أولًا عادة
@@ -148,13 +148,12 @@ drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
 ## الفك
 
 ```sh
-mkdir uppackat
-tar -xzvf dokument.tar.gz -C uppackat
+mkdir {{unpacked}}
+tar -xzvf {{documents}}.tar.gz -C {{unpacked}}
 ```
 
-يختار `-C` (حرف C كبير) المجلد الذي يفك فيه tar الأرشيف (*uppackat* تعني
-"مفكوك"). ومن دونه ينتهي كل شيء في المجلد الذي أنت فيه. والإصدارات الحديثة من tar
-تكتشف بنفسها عند الفك ما إذا كان الأرشيف مضغوطًا، لذا يعمل `tar -xf dokument.tar.gz`
+يختار `-C` (حرف C كبير) المجلد الذي يفك فيه tar الأرشيف. ومن دونه ينتهي كل شيء في
+المجلد الذي أنت فيه. والإصدارات الحديثة من tar تكتشف بنفسها عند الفك ما إذا كان الأرشيف مضغوطًا، لذا يعمل `tar -xf {{documents}}.tar.gz`
 أيضًا.
 
 > **تحذير!** لا يسأل tar قبل الكتابة فوق ملفات موجودة أصلًا. اعرض المحتوى أولًا
@@ -165,29 +164,29 @@ tar -xzvf dokument.tar.gz -C uppackat
 إذا حزمت مسارًا مطلقًا، تُزال `/` البادئة حتى يمكن فك الأرشيف في أي مكان:
 
 ```sh
-tar -czf backup.tar.gz ~/dokument
+tar -czf backup.tar.gz ~/{{documents}}
 ```
 
 ```text
 tar: Removing leading `/' from member names
 ```
 
-يحتوي الأرشيف الآن على `home/elev/dokument/...`. وإذا أردت أن يحتوي الأرشيف على
-`dokument/` فقط، يمكنك أن تجعل tar ينتقل إلى مجلد آخر أولًا باستخدام `-C`:
+يحتوي الأرشيف الآن على `home/{{user}}/{{documents}}/...`. وإذا أردت أن يحتوي الأرشيف على
+`{{documents}}/` فقط، يمكنك أن تجعل tar ينتقل إلى مجلد آخر أولًا باستخدام `-C`:
 
 ```sh
-tar -czf backup.tar.gz -C ~ dokument
+tar -czf backup.tar.gz -C ~ {{documents}}
 tar -tzf backup.tar.gz
 ```
 
 ```quiz
-تشغّل `tar -czf backup.tar.gz -C ~ dokument`. ماذا يحتوي الأرشيف؟
-- [x] `dokument/` والملفات التي فيه
-- [ ] `home/elev/dokument/` والملفات التي فيه
-- [ ] `/home/elev/dokument/` والملفات التي فيه
+تشغّل `tar -czf backup.tar.gz -C ~ {{documents}}`. ماذا يحتوي الأرشيف؟
+- [x] `{{documents}}/` والملفات التي فيه
+- [ ] `home/{{user}}/{{documents}}/` والملفات التي فيه
+- [ ] `/home/{{user}}/{{documents}}/` والملفات التي فيه
 ---
 يجعل `-C ~` الأمر tar ينتقل إلى مجلد المنزل أولًا، لذا تبدأ الأسماء في الأرشيف
-بـ `dokument/`.
+بـ `{{documents}}/`.
 ```
 
 ## ضغط ملفات مفردة بـ `gzip`
@@ -195,12 +194,12 @@ tar -tzf backup.tar.gz
 يضغط `gzip` ملفًا **ويستبدله** بملف `.gz`. وتُحفظ الصلاحيات والطابع الزمني:
 
 ```sh
-cp dokument/server.log .
+cp {{documents}}/server.log .
 gzip -v server.log
 ```
 
 ```text
-server.log:	 39.0% -- replaced with server.log.gz
+server.log:	 39.8% -- replaced with server.log.gz
 ```
 
 يعرض `gzip -l` الحجم قبل الضغط وبعده، ويفك `gunzip` الملف مرة أخرى:
@@ -215,21 +214,21 @@ gunzip server.log.gz
 الملف:
 
 ```sh
-cp dokument/frukter.txt .
-gzip -kv frukter.txt
+cp {{documents}}/{{fruits}} .
+gzip -kv {{fruits}}
 ```
 
 ```text
-frukter.txt:	-20.3% -- created frukter.txt.gz
+{{fruits}}:	 -3.2% -- created {{fruits}}.gz
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ cp dokument/server.log .
-$ gzip frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ cp {{documents}}/server.log .
+$ gzip {{fruits}}
 $ gzip -k server.log
-$ ls frukter* server*
-frukter.txt.gz  server.log  server.log.gz
+$ ls fruits* server*
+{{fruits}}.gz  server.log  server.log.gz
 ---
 يستبدل `gzip` العادي الملف بملف `.gz`، أما `-k` فيحتفظ بالأصل.
 ```
@@ -270,30 +269,30 @@ sudo apt install zip unzip
 الفارغ، لا الملفات التي بداخله:
 
 ```sh
-zip -r dokument.zip dokument
+zip -r {{documents}}.zip {{documents}}
 ```
 
 ```text
-  adding: dokument/ (stored 0%)
-  adding: dokument/betyg.csv (deflated 17%)
-  adding: dokument/frukter.txt (deflated 27%)
-  adding: dokument/server.log (deflated 42%)
+  adding: {{documents}}/ (stored 0%)
+  adding: {{documents}}/{{fruits}} (deflated 28%)
+  adding: {{documents}}/{{grades}} (deflated 35%)
+  adding: {{documents}}/server.log (deflated 43%)
 ```
 
 لاحظ أن الترتيب هو نفسه كما في tar: الأرشيف أولًا، ثم الملفات. يعرض `unzip -l`
 المحتوى، ويختار `-d` مكان الفك (ويُنشأ المجلد إن لم يكن موجودًا):
 
 ```sh
-unzip -l dokument.zip
-unzip dokument.zip -d fran-zip
+unzip -l {{documents}}.zip
+unzip {{documents}}.zip -d {{fromZip}}
 ```
 
 إذا كانت الملفات موجودة أصلًا، يتخطاها unzip. ومع `unzip -o` يُكتب فوقها.
 
 ```quiz
-تشغّل `zip dokument.zip dokument` من دون `-r`. ماذا ينتهي في ملف zip؟
-- [ ] كل الملفات الموجودة في `dokument`
-- [x] المجلد الفارغ `dokument/` فقط
+تشغّل `zip {{documents}}.zip {{documents}}` من دون `-r`. ماذا ينتهي في ملف zip؟
+- [ ] كل الملفات الموجودة في `{{documents}}`
+- [x] المجلد الفارغ `{{documents}}/` فقط
 - [ ] لا شيء – يرفض zip العمل
 ---
 من دون `-r` (*recursive*) لا يدخل zip إلى المجلد.

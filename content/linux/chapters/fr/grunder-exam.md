@@ -8,7 +8,7 @@ Lequel de ces chemins est **absolu** ?
 - [ ] `var/log`
 - [ ] `../etc`
 - [x] `/usr/bin`
-- [ ] `dokument`
+- [ ] `{{documents}}`
 ---
 Un chemin absolu commence par `/`, à la racine. Les autres partent du
 répertoire où vous êtes.
@@ -31,10 +31,10 @@ Que fait `cd -` ?
 ```
 
 ```quiz
-Vous voulez copier tout le répertoire `bilder`, avec tout son contenu, vers `bilder-kopia`. Quelle commande fonctionne ?
-- [ ] `cp bilder bilder-kopia`
-- [x] `cp -r bilder bilder-kopia`
-- [ ] `mv bilder bilder-kopia`
+Vous voulez copier tout le répertoire `{{pictures}}`, avec tout son contenu, vers `{{pictures}}-copie`. Quelle commande fonctionne ?
+- [ ] `cp {{pictures}} {{pictures}}-copie`
+- [x] `cp -r {{pictures}} {{pictures}}-copie`
+- [ ] `mv {{pictures}} {{pictures}}-copie`
 ---
 Un répertoire se copie avec `-r` (*récursif*). `mv` le déplacerait au lieu de
 le copier.
@@ -49,17 +49,17 @@ c
 ```
 
 ```quiz
-Vous tapez `touch min fil.txt` – sans guillemets. Que se passe-t-il ?
-- [ ] Un fichier nommé `min fil.txt` est créé
-- [x] Deux fichiers sont créés : `min` et `fil.txt`
+Vous tapez `touch mon fichier.txt` – sans guillemets. Que se passe-t-il ?
+- [ ] Un fichier nommé `mon fichier.txt` est créé
+- [x] Deux fichiers sont créés : `mon` et `fichier.txt`
 - [ ] Rien, car le nom contient un espace
 ---
 Le shell découpe la ligne aux espaces, donc `touch` reçoit deux arguments.
-Écrivez `touch "min fil.txt"` pour obtenir un seul fichier.
+Écrivez `touch "mon fichier.txt"` pour obtenir un seul fichier.
 ```
 
 ```quiz
-Quelles lignes `grep -i error dokument/server.log` affiche-t-il ?
+Quelles lignes `grep -i error {{documents}}/server.log` affiche-t-il ?
 - [ ] Seulement les lignes avec `error` en minuscules
 - [ ] Seulement les lignes avec `ERROR` en majuscules
 - [x] Les lignes avec `error`, quel que soit le mélange de majuscules et de minuscules
@@ -67,9 +67,9 @@ Quelles lignes `grep -i error dokument/server.log` affiche-t-il ?
 
 ```quiz
 Vous voulez surveiller un fichier journal et voir les nouvelles lignes au fur et à mesure qu'elles sont écrites. Quelle commande convient ?
-- [ ] `head -n 10 dokument/server.log`
-- [x] `tail -f dokument/server.log`
-- [ ] `wc -l dokument/server.log`
+- [ ] `head -n 10 {{documents}}/server.log`
+- [x] `tail -f {{documents}}/server.log`
+- [ ] `wc -l {{documents}}/server.log`
 ---
 `tail -f` *suit* le fichier. Arrêtez-le avec **Ctrl+C**.
 ```
@@ -99,9 +99,9 @@ Quand `b` s'exécute-t-il dans `a || b` ?
 ```
 
 ```try
-grep ERROR ~/dokument/server.log | tee fel.txt | wc -l
+grep ERROR ~/{{documents}}/server.log | tee erreurs.txt | wc -l
 ---
-`tee` a enregistré les lignes d'erreur dans `fel.txt` et les a transmises à
+`tee` a enregistré les lignes d'erreur dans `erreurs.txt` et les a transmises à
 `wc -l`, qui les a comptées.
 ```
 

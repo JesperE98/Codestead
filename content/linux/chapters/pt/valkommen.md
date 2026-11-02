@@ -52,10 +52,10 @@ Quando o shell está esperando um comando, ele mostra um **prompt**. No
 terminal aqui, ele é assim:
 
 ```text
-elev@ubuntu:~$
+{{user}}@ubuntu:~$
 ```
 
-Ele informa quem você é (`elev`), em qual computador você está (`ubuntu`) e
+Ele informa quem você é (`{{user}}`), em qual computador você está (`ubuntu`) e
 onde você está no sistema de arquivos (`~` significa o seu diretório
 pessoal). O sinal `$` mostra que você é um usuário comum. Se você for o
 administrador (*root*), verá um `#` no lugar.
@@ -72,11 +72,11 @@ O prompt termina em `#` em vez de `$`. O que isso diz a você?
 Clique no terminal, digite o comando abaixo e pressione **Enter**:
 
 ```sh
-echo Hej världen
+echo {{helloWorld}}
 ```
 
-O `echo` simplesmente imprime o que você passar para ele – aqui, *Hej
-världen*, que é "Olá, mundo" em sueco. A maioria dos comandos segue o mesmo
+O `echo` simplesmente imprime o que você passar para ele – aqui, *{{helloWorld}}*.
+A maioria dos comandos segue o mesmo
 padrão:
 
 ```text
@@ -140,20 +140,3 @@ Você digitou `ech` e pressiona **Tab**. O que acontece?
 O Tab completa comandos e nomes de arquivos. **Ctrl+C** cancela a linha e
 **Ctrl+L** limpa a tela.
 ```
-
-### Algumas palavras em sueco
-
-Este guia foi escrito originalmente em sueco, por isso o usuário e os arquivos
-de exercício do simulador têm nomes em sueco. Você não precisa saber sueco –
-os comandos são exatamente os mesmos –, mas este pequeno glossário pode
-ajudar:
-
-| Nome | Significado |
-|---|---|
-| `elev` | aluno (o seu nome de usuário) |
-| `dokument` | documentos |
-| `anteckningar.txt` | anotações |
-| `frukter.txt` | frutas |
-| `betyg.csv` | notas |
-| `bilder` | imagens |
-| `gammalt` | coisas velhas |

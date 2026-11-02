@@ -4,21 +4,21 @@ Show what you have learned about services, disks and users. The questions
 cover the whole part, and you need 80 % right to pass.
 
 ```quiz
-`minserver` should start automatically every time the computer boots, but
+`myserver` should start automatically every time the computer boots, but
 it must **not** be started right now. Which command does exactly that?
-- [ ] `sudo systemctl start minserver`
-- [x] `sudo systemctl enable minserver`
-- [ ] `sudo systemctl enable --now minserver`
-- [ ] `sudo systemctl restart minserver`
+- [ ] `sudo systemctl start myserver`
+- [x] `sudo systemctl enable myserver`
+- [ ] `sudo systemctl enable --now myserver`
+- [ ] `sudo systemctl restart myserver`
 ---
 `enable` applies at boot, `start` applies now, and `--now` does both.
 ```
 
-The service `rapportd` on this computer has failed to start. What does this
+The service `reportd` on this computer has failed to start. What does this
 command print?
 
 ```predict
-$ systemctl is-active rapportd
+$ systemctl is-active reportd
 failed
 ---
 `is-active` prints just one word – here the same state that `systemctl --failed`
@@ -26,27 +26,27 @@ lists. The exit status is 0 only when the answer is `active`.
 ```
 
 ```quiz
-You want to watch the log of `minserver` while you test it, with new lines
+You want to watch the log of `myserver` while you test it, with new lines
 appearing as they arrive. Which command do you use?
 - [ ] `journalctl -n 20`
-- [x] `journalctl -u minserver -f`
+- [x] `journalctl -u myserver -f`
 - [ ] `journalctl -p err -b`
-- [ ] `systemctl status minserver --all`
+- [ ] `systemctl status myserver --all`
 ---
 `-u` picks one unit and `-f` keeps showing new lines until you press Ctrl+C.
 ```
 
 ```try
-systemctl cat minserver
+systemctl cat myserver
 ---
 `ExecStart=` is the command that starts the service, and `WantedBy=` is
 what `enable` uses.
 ```
 
 ```quiz
-You run `systemctl stop minserver` without `sudo` and get
+You run `systemctl stop myserver` without `sudo` and get
 *Interactive authentication required*. Why?
-- [ ] minserver is not running
+- [ ] myserver is not running
 - [x] Everything that changes a service requires root
 - [ ] You must run `daemon-reload` first
 - [ ] `stop` only works for enabled services
@@ -124,7 +124,7 @@ Who is in the group `sudo`?
 
 ```predict
 $ grep ^sudo /etc/group | cut -d: -f4
-elev
+{{user}}
 ```
 
 ```quiz

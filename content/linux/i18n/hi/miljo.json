@@ -5,7 +5,7 @@
       "text": "`PATH` variable का content दिखाइए।"
     },
     "export": {
-      "text": "Value `linux` के साथ environment variable `FAVORIT` बनाइए।",
+      "text": "Value `linux` के साथ environment variable `{{favVar}}` बनाइए।",
       "hint": "Equals sign के आसपास कोई space नहीं: `export NAME=value`।"
     },
     "which": {
@@ -16,7 +16,7 @@
     },
     "exitcode": {
       "text": "कोई ऐसा command चलाइए जो fail हो, और फिर `echo $?` से उसका exit code दिखाइए।",
-      "hint": "`ls /finnsinte` और उसके बाद `echo $?` आज़माइए। Exit code 0 नहीं होना चाहिए।"
+      "hint": "`ls /{{missing}}` और उसके बाद `echo $?` आज़माइए। Exit code 0 नहीं होना चाहिए।"
     }
   }
 }

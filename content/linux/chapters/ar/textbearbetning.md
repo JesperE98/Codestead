@@ -14,11 +14,10 @@
 إلى stdout. وهذا يجعلها مناسبة تمامًا للأنابيب. والملف الأصلي **لا** يتغير (مع
 استثناء واحد، `sed -i`، وسنصل إليه).
 
-في `dokument` يوجد ملف تمرين ثالث، وهو ملف CSV فيه درجات الطلاب (*namn* = الاسم،
-*ämne* = المادة، *poäng* = النقاط):
+في `{{documents}}` يوجد ملف تمرين ثالث، وهو ملف CSV فيه درجات الطلاب:
 
 ```sh
-cat ~/dokument/betyg.csv
+cat ~/{{documents}}/{{grades}}
 ```
 
 CSV اختصار لـ *comma-separated values* (قيم مفصولة بفواصل) – فالأعمدة مفصولة
@@ -37,15 +36,15 @@ echo "hello from café" | tr a-z A-Z
 HELLO FROM CAFé
 ```
 
-هل لاحظت الحرف é؟ يعمل `tr` على *البايتات* المفردة، والأحرف مثل é – أو الأحرف
-السويدية å وä وö – ليست جزءًا من `a-z`. من المفيد معرفة ذلك – فـ GNU `awk` (أدناه)
+هل لاحظت الحرف é؟ يعمل `tr` على *البايتات* المفردة، والأحرف مثل é وü ليست
+جزءًا من `a-z`. من المفيد معرفة ذلك – فـ GNU `awk` (أدناه)
 يتعامل معها بشكل أفضل.
 
 يقرأ `tr` من stdin **فقط**، ولا يقرأ من الملفات أبدًا. إذا أردت استخدام ملف،
 فمرّره باستخدام `<` أو أنبوب:
 
 ```sh
-tr a-z A-Z < ~/dokument/frukter.txt
+tr a-z A-Z < ~/{{documents}}/server.log
 ```
 
 من الحيل الكلاسيكية تحويل النقطتين الرأسيتين إلى أسطر جديدة (`\n`)، بحيث يظهر كل
@@ -86,10 +85,10 @@ echo "Room 101, floor 3" | tr -d '[:digit:]'
 ### استبدال النص – `s`
 
 ```sh
-sed 's/ERROR/FEL/' ~/dokument/server.log
+sed 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log
 ```
 
-السكربت `s/ERROR/FEL/` يعني: استبدل `ERROR` بـ `FEL` (وتعني "خطأ" بالسويدية).
+السكربت `s/ERROR/{{errorWord}}/` يعني: استبدل `ERROR` بـ `{{errorWord}}`.
 وصيغته هي
 
 ```text
@@ -114,14 +113,14 @@ bonana
 العَلَم `i` يجعل البحث غير حساس لحالة الأحرف، تمامًا مثل `grep -i`:
 
 ```sh
-sed 's/warn/WARNING/i' ~/dokument/server.log
+sed 's/warn/WARNING/i' ~/{{documents}}/server.log
 ```
 
 النمط *تعبير نمطي* (regular expression)، تمامًا كما في `grep`. هنا نحذف التاريخ
 من بداية كل سطر (`^` = بداية السطر، `[0-9-]*` = أرقام وشرطات):
 
 ```sh
-sed 's/^[0-9-]* //' ~/dokument/server.log
+sed 's/^[0-9-]* //' ~/{{documents}}/server.log
 ```
 
 في البديل، تعني `&` "ما تمت مطابقته":
@@ -142,7 +141,7 @@ echo /usr/local/bin | sed 's|/usr/local|/opt|'
 بالأقواس واستخدامها في البديل بصيغة `\1` و`\2` … هنا نعكس ترتيب التاريخ:
 
 ```sh
-sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/dokument/server.log
+sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/{{documents}}/server.log
 ```
 
 ### اختيار الأسطر – العناوين
@@ -151,8 +150,8 @@ sed -E 's|^([0-9]+)-([0-9]+)-([0-9]+)|\3/\2/\1|' ~/dokument/server.log
 `d` (*delete*) يحذف الأسطر، و`p` (*print*) يطبعها:
 
 ```sh
-sed '/INFO/d' ~/dokument/server.log
-sed '1d' ~/dokument/betyg.csv
+sed '/INFO/d' ~/{{documents}}/server.log
+sed '1d' ~/{{documents}}/{{grades}}
 ```
 
 الأول يحذف كل سطر يحتوي على `INFO`، والثاني يحذف السطر 1 – أي الترويسة.
@@ -161,7 +160,7 @@ sed '1d' ~/dokument/betyg.csv
 هكذا تعرض الأسطر من 5 إلى 8:
 
 ```sh
-sed -n '5,8p' ~/dokument/server.log
+sed -n '5,8p' ~/{{documents}}/server.log
 ```
 
 | العنوان | المعنى |
@@ -176,14 +175,14 @@ sed -n '5,8p' ~/dokument/server.log
 تعمل العناوين مع كل الأوامر، بما فيها `s`. هنا تُعلَّم أسطر الأخطاء فقط:
 
 ```sh
-sed '/ERROR/s/^/>>> /' ~/dokument/server.log
+sed '/ERROR/s/^/>>> /' ~/{{documents}}/server.log
 ```
 
 الأمر `q` (*quit*) يتوقف بعد سطر معيّن – لذا فإن `sed 3q` يفعل ما يفعله
 `head -n 3`. وتفصل بين عدة أوامر بـ `;` أو بعدة خيارات `-e`:
 
 ```sh
-sed -e '/INFO/d' -e 's/ERROR/FEL/' ~/dokument/server.log
+sed -e '/INFO/d' -e 's/ERROR/{{errorWord}}/' ~/{{documents}}/server.log
 ```
 
 ### تعديل الملف في مكانه – `sed -i`
@@ -193,9 +192,9 @@ sed -e '/INFO/d' -e 's/ERROR/FEL/' ~/dokument/server.log
 نسخة:
 
 ```sh
-cp ~/dokument/frukter.txt ~/frukter-kopia.txt
-sed -i 's/kiwi/kiwifruit/' ~/frukter-kopia.txt
-cat ~/frukter-kopia.txt
+cp ~/{{documents}}/{{fruits}} ~/fruits-copy.txt
+sed -i 's/^/* /' ~/fruits-copy.txt
+cat ~/fruits-copy.txt
 ```
 
 لا يوجد تراجع عن `sed -i`. ومن طرق العمل الجيدة أن تشغّل الأمر **من دون** `-i`
@@ -203,9 +202,9 @@ cat ~/frukter-kopia.txt
 الأصل أيضًا باسم `file.bak`.
 
 ```quiz
-تشغّل `sed 's/kiwi/KIWI/' ~/dokument/frukter.txt`. ماذا يحدث للملف؟
-- [ ] يصبح كل `kiwi` في الملف `KIWI`
-- [ ] يصبح أول `kiwi` فقط في الملف `KIWI`
+تشغّل `sed 's/^/* /' ~/{{documents}}/{{fruits}}`. ماذا يحدث للملف؟
+- [ ] تُضاف `* ` إلى بداية كل سطر في الملف
+- [ ] تُضاف `* ` إلى السطر الأول فقط في الملف
 - [x] لا شيء – تُطبع النتيجة فقط، ويبقى الملف دون تغيير
 ---
 من دون `-i` لا يكتب `sed` إلا إلى stdout. ويبقى الملف كما كان.
@@ -221,7 +220,7 @@ cat ~/frukter-kopia.txt
 2 – من ملف CSV:
 
 ```sh
-cut -d, -f2 ~/dokument/betyg.csv
+cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
 
 في `/etc/passwd` تُفصل الحقول بنقطتين رأسيتين، والحقل 1 هو اسم المستخدم، لذا
@@ -245,7 +244,7 @@ cut -d, -f2 ~/dokument/betyg.csv
 مستوى السجل:
 
 ```sh
-awk '{print $3}' ~/dokument/server.log
+awk '{print $3}' ~/{{documents}}/server.log
 ```
 
 يوضع البرنامج داخل `{ }` ويُشغَّل لكل سطر. ضع برنامج awk دائمًا بين علامتي اقتباس
@@ -254,7 +253,7 @@ awk '{print $3}' ~/dokument/server.log
 يناسب awk الأنابيب تمامًا. كم سطرًا يوجد من كل مستوى؟
 
 ```sh
-awk '{print $3}' ~/dokument/server.log | sort | uniq -c
+awk '{print $3}' ~/{{documents}}/server.log | sort | uniq -c
 ```
 
 ### فواصل أخرى – `-F`
@@ -277,8 +276,8 @@ awk -F: '{print $1 " uses " $7}' /etc/passwd
 ومزج النص، والتعامل مع عدة مسافات متتالية.
 
 ```predict
-$ echo "Alva,matte,87" | awk -F, '{print $3, $1}'
-87 Alva
+$ echo "ألفا,رياضيات,87" | awk -F, '{print $3, $1}'
+87 ألفا
 ---
 يقسّم `-F,` السطر عند الفواصل. ويطبع awk الحقل 3 أولًا، ثم الحقل 1، مع مسافة
 بينهما بسبب الفاصلة في `print`.
@@ -290,35 +289,35 @@ $ echo "Alva,matte,87" | awk -F, '{print $3, $1}'
 المطابقة. ويمكن أن يكون النمط تعبيرًا نمطيًا، كما في `grep`:
 
 ```sh
-awk '/ERROR/ {print $2}' ~/dokument/server.log
+awk '/ERROR/ {print $2}' ~/{{documents}}/server.log
 ```
 
 … أو شرطًا. ويوضع النص بين علامتي اقتباس مزدوجتين:
 
 ```sh
-awk -F, '$2 == "matte" {print $1, $3}' ~/dokument/betyg.csv
+awk -F, '$2 == "رياضيات" {print $1, $3}' ~/{{documents}}/{{grades}}
 ```
 
-(*Matte* تعني "رياضيات" بالسويدية.) تُكتب المقارنات `==` و`!=` و`<` و`<=` و`>`
+تُكتب المقارنات `==` و`!=` و`<` و`<=` و`>`
 و`>=`، وتُدمج الشروط بـ `&&` (و)، و`||` (أو)، و`!` (ليس). وهؤلاء هم كل الطلاب
 الحاصلين على 90 نقطة على الأقل (من دون `{ }` يُطبع السطر كاملًا):
 
 ```sh
-awk -F, '$3 >= 90' ~/dokument/betyg.csv
+awk -F, '$3 >= 90' ~/{{documents}}/{{grades}}
 ```
 
-هل حصلت على سطر الترويسة أيضًا؟ الحقل 3 فيه هو الكلمة `poäng`، وعندما لا تكون
-القيمة رقمًا، يقارنها awk *كنص* – و`"poäng"` تأتي بعد `"90"` في الترتيب الأبجدي.
+هل حصلت على سطر الترويسة أيضًا؟ الحقل 3 فيه هو الكلمة `الدرجة`، وعندما لا تكون
+القيمة رقمًا، يقارنها awk *كنص* – و`"الدرجة"` تأتي بعد `"90"` في ترتيب المحارف.
 تتخطى الترويسة باستخدام `NR > 1`:
 
 ```sh
-awk -F, 'NR > 1 && $3 >= 90' ~/dokument/betyg.csv
+awk -F, 'NR > 1 && $3 >= 90' ~/{{documents}}/{{grades}}
 ```
 
-جرّب نمطًا من عندك – أسماء كل من يدرس *svenska* (اللغة السويدية):
+جرّب نمطًا من عندك – أسماء كل من يدرس *العربية*:
 
 ```try
-awk -F, '$2 == "svenska" {print $1}' ~/dokument/betyg.csv
+awk -F, '$2 == "العربية" {print $1}' ~/{{documents}}/{{grades}}
 ```
 
 ### العدّ – المتغيرات و`END`
@@ -327,15 +326,15 @@ awk -F, '$2 == "svenska" {print $1}' ~/dokument/betyg.csv
 تُشغَّل مرة واحدة، **بعد** السطر الأخير. ومعًا يقدّمان طريقة سهلة لجمع عمود:
 
 ```sh
-awk -F, 'NR > 1 {summa += $3} END {print summa}' ~/dokument/betyg.csv
+awk -F, 'NR > 1 {{{sumVar}} += $3} END {print {{sumVar}}}' ~/{{documents}}/{{grades}}
 ```
 
-`summa += $3` تعني "أضف الحقل 3 إلى summa" (*summa* تعني "المجموع" بالسويدية).
-وإذا عددت الأسطر في الوقت نفسه (`antal++` يزيد *antal*، أي العدد، بمقدار 1)،
+`{{sumVar}} += $3` تعني "أضف الحقل 3 إلى {{sumVar}}".
+وإذا عددت الأسطر في الوقت نفسه (`count++` يزيد `count` بمقدار 1)،
 يمكنك حساب المتوسط:
 
 ```sh
-awk -F, 'NR > 1 {summa += $3; antal++} END {print "Average:", summa / antal}' ~/dokument/betyg.csv
+awk -F, 'NR > 1 {{{sumVar}} += $3; count++} END {print "Average:", {{sumVar}} / count}' ~/{{documents}}/{{grades}}
 ```
 
 هناك أيضًا `BEGIN { }`، التي تُشغَّل **قبل** السطر الأول – وهي مفيدة للعناوين. ومع
@@ -343,18 +342,18 @@ awk -F, 'NR > 1 {summa += $3; antal++} END {print "Average:", summa / antal}' ~/
 عدد صحيح في 5 محارف.
 
 ```sh
-awk -F, 'BEGIN {print "Student  Score"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/dokument/betyg.csv
+awk -F, 'BEGIN {print "Student  Score"} NR > 1 {printf "%-8s %5d\n", $1, $3}' ~/{{documents}}/{{grades}}
 ```
 
 لدى awk أيضًا دوال، مثل `length()` و`toupper()` و`tolower()`:
 
 ```sh
-awk '{print toupper($0)}' ~/dokument/frukter.txt
+echo "café crème" | awk '{print toupper($0)}'
 ```
 
-انظر جيدًا إلى `äpple` و`päron`. على Ubuntu، الذي تعمل عليه الطرفية هنا، يكون
+انظر جيدًا إلى `é` و`è`. على Ubuntu، الذي تعمل عليه الطرفية هنا، يكون
 `awk` افتراضيًا هو **mawk**، وهو نسخة صغيرة وسريعة. في البرامج البسيطة مثل هذه
-لن تلاحظ أي فرق – لكن mawk لا يحوّل å وä وö باستخدام `toupper()`. أما **GNU awk**
+لن تلاحظ أي فرق – لكن mawk لا يحوّل الأحرف مثل é وè باستخدام `toupper()`. أما **GNU awk**
 (الحزمة `gawk`) فيحوّلها، بخلاف `tr`. وتختلف التوزيعات في نوع awk الذي تستخدمه
 وفي طريقة تثبيت البرامج – وهذا يأتي في الفصل الخاص بالتوزيعات.
 
@@ -374,5 +373,5 @@ awk '{print toupper($0)}' ~/dokument/frukter.txt
 INFO – إذا تجاهلنا حالة الأحرف؟
 
 ```sh
-grep -v INFO ~/dokument/server.log | awk '{print $3}' | tr A-Z a-z | sort | uniq -c
+grep -v INFO ~/{{documents}}/server.log | awk '{print $3}' | tr A-Z a-z | sort | uniq -c
 ```

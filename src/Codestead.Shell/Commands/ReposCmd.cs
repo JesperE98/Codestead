@@ -979,7 +979,7 @@ EXAMPLES
                 foreach (var f in SourceFiles(name, entry))
                 {
                     io.Out($"  -> Downloading {f}...\n");
-                    var node = VfsLib.MakeFile($"(källkod för {name} – simulerad)\n", user.Name, Js.Oct(644), g);
+                    var node = VfsLib.MakeFile($"(source code of {name} - simulated)\n", user.Name, Js.Oct(644), g);
                     node.Size = Round(pkg.SizeKb * 300);
                     Write($"{dir}/{f}", node);
                 }
@@ -999,7 +999,7 @@ EXAMPLES
                 Write($"{dir}/pkg", VfsLib.MakeDir(user.Name, Js.Oct(755), Kids((name, VfsLib.MakeDir(user.Name, Js.Oct(755), Js.Obj<FsNode>(), g))), g));
                 io.Out(MakepkgTidy);
                 io.Out($"==> Creating package \"{name}\"...\n  -> Generating .PKGINFO file...\n  -> Generating .BUILDINFO file...\n  -> Generating .MTREE file...\n  -> Compressing package...\n");
-                var outFile = VfsLib.MakeFile($"(byggt paket {name}-{entry.Pkgver}-{entry.Pkgrel} – simulerat)\n", user.Name, Js.Oct(644), g);
+                var outFile = VfsLib.MakeFile($"(built package {name}-{entry.Pkgver}-{entry.Pkgrel} - simulated)\n", user.Name, Js.Oct(644), g);
                 outFile.Size = Round(pkg.SizeKb * 400);
                 Write(pkgFile, outFile);
                 io.Out($"==> Leaving fakeroot environment.\n==> Finished making: {full} ({UtilCmd.LongDate()})\n");
@@ -1230,7 +1230,7 @@ OPTIONS
                     if (sh.Vfs.TryLookup(path, user) is null) sh.Vfs.Mkdir(path, user);
                 }
                 sh.Vfs.Insert($"{cache}/PKGBUILD", VfsLib.MakeFile(Pkgbuild(t, e), user.Name, Js.Oct(644), g), user);
-                var built = VfsLib.MakeFile($"(byggt paket {t} – simulerat)\n", user.Name, Js.Oct(644), g);
+                var built = VfsLib.MakeFile($"(built package {t} - simulated)\n", user.Name, Js.Oct(644), g);
                 built.Size = Round(PkgById(e.PkgId).SizeKb * 400);
                 sh.Vfs.Insert($"{cache}/{PkgFileName(t, e)}", built, user);
             }

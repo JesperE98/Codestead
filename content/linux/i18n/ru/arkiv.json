@@ -2,32 +2,32 @@
   "title": "Архивы и сжатие",
   "tasks": {
     "tar-czf": {
-      "text": "Упакуйте каталог `~/dokument` в сжатый архив `~/dokument.tar.gz`.",
-      "hint": "Перейдите в домашний каталог и используйте *create zipped verbose file*: `tar -czvf dokument.tar.gz dokument`."
+      "text": "Упакуйте каталог `~/{{documents}}` в сжатый архив `~/{{documents}}.tar.gz`.",
+      "hint": "Перейдите в домашний каталог и используйте *create zipped verbose file*: `tar -czvf {{documents}}.tar.gz {{documents}}`."
     },
     "tar-t": {
-      "text": "Покажите содержимое `~/dokument.tar.gz` – не распаковывая его.",
-      "hint": "`t` означает «показать содержимое»: `tar -tzvf ~/dokument.tar.gz`."
+      "text": "Покажите содержимое `~/{{documents}}.tar.gz` – не распаковывая его.",
+      "hint": "`t` означает «показать содержимое»: `tar -tzvf ~/{{documents}}.tar.gz`."
     },
     "tar-x": {
-      "text": "Создайте каталог `~/uppackat` и распакуйте в него `~/dokument.tar.gz`.",
-      "hint": "С помощью `-C` вы выбираете, куда tar распаковывает файлы: `tar -xzvf ~/dokument.tar.gz -C ~/uppackat`."
+      "text": "Создайте каталог `~/{{unpacked}}` и распакуйте в него `~/{{documents}}.tar.gz`.",
+      "hint": "С помощью `-C` вы выбираете, куда tar распаковывает файлы: `tar -xzvf ~/{{documents}}.tar.gz -C ~/{{unpacked}}`."
     },
     "gzip": {
-      "text": "Скопируйте `~/dokument/server.log` в домашний каталог и сожмите копию с помощью `gzip`, чтобы получился `~/server.log.gz`.",
-      "hint": "Сначала `cp ~/dokument/server.log ~`, затем `gzip ~/server.log`."
+      "text": "Скопируйте `~/{{documents}}/server.log` в домашний каталог и сожмите копию с помощью `gzip`, чтобы получился `~/server.log.gz`.",
+      "hint": "Сначала `cp ~/{{documents}}/server.log ~`, затем `gzip ~/server.log`."
     },
     "zcat": {
       "text": "Покажите строки с `ERROR` из `~/server.log.gz` – не распаковывая файл.",
       "hint": "`zcat` выводит содержимое файла .gz. Передайте его по конвейеру в `grep`."
     },
     "zip": {
-      "text": "Установите пакеты `zip` и `unzip`, а затем упакуйте `~/dokument` в `~/dokument.zip`.",
-      "hint": "Выполните `sudo apt update` и `sudo apt install zip unzip`. Не забудьте `-r` для zip: `zip -r dokument.zip dokument`."
+      "text": "Установите пакеты `zip` и `unzip`, а затем упакуйте `~/{{documents}}` в `~/{{documents}}.zip`.",
+      "hint": "Выполните `sudo apt update` и `sudo apt install zip unzip`. Не забудьте `-r` для zip: `zip -r {{documents}}.zip {{documents}}`."
     },
     "unzip": {
-      "text": "Распакуйте `~/dokument.zip` с помощью `unzip` в новый каталог `~/fran-zip`.",
-      "hint": "`-d` задаёт каталог и создаёт его, если его нет: `unzip ~/dokument.zip -d ~/fran-zip`."
+      "text": "Распакуйте `~/{{documents}}.zip` с помощью `unzip` в новый каталог `~/{{fromZip}}`.",
+      "hint": "`-d` задаёт каталог и создаёт его, если его нет: `unzip ~/{{documents}}.zip -d ~/{{fromZip}}`."
     }
   }
 }

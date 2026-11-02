@@ -47,18 +47,18 @@ mais avec d'autres programmes de compression (`xz`, `bzip2` et `zstd`).
 ## Empaqueter avec `tar`
 
 Allez dans votre répertoire personnel et empaquetez le répertoire
-`dokument` :
+`{{documents}}` :
 
 ```sh
 cd ~
-tar -cvf dokument.tar dokument
+tar -cvf {{documents}}.tar {{documents}}
 ```
 
 ```text
-dokument/
-dokument/betyg.csv
-dokument/frukter.txt
-dokument/server.log
+{{documents}}/
+{{documents}}/{{fruits}}
+{{documents}}/{{grades}}
+{{documents}}/server.log
 ```
 
 `-c` signifie *créer une archive* (*create*), `-v` demande à tar de montrer
@@ -67,7 +67,7 @@ Tout ce qui suit le nom de l'archive est empaqueté – autant de fichiers et de
 répertoires que vous voulez.
 
 > **Attention !** L'ordre est *d'abord l'archive, puis les fichiers*. Si vous
-> vous trompez d'ordre, comme dans `tar -cvf dokument dokument.tar`, tar
+> vous trompez d'ordre, comme dans `tar -cvf {{documents}} {{documents}}.tar`, tar
 > essaie d'écraser le répertoire – ou pire, un fichier que vous vouliez
 > garder.
 
@@ -110,13 +110,13 @@ Que fait `tar -xzvf backup.tar.gz` ?
 Ajoutez `z`, et l'archive passe par gzip au passage :
 
 ```sh
-tar -czvf dokument.tar.gz dokument
-ls -l dokument.tar dokument.tar.gz
+tar -czvf {{documents}}.tar.gz {{documents}}
+ls -l {{documents}}.tar {{documents}}.tar.gz
 ```
 
 ```text
--rw-r--r-- 1 elev elev 10240 Oct 30 12:00 dokument.tar
--rw-r--r-- 1 elev elev   837 Oct 30 12:00 dokument.tar.gz
+-rw-r--r-- 1 {{user}} {{user}} 10240 Oct 30 12:00 {{documents}}.tar
+-rw-r--r-- 1 {{user}} {{user}}   821 Oct 30 12:00 {{documents}}.tar.gz
 ```
 
 L'archive non compressée pèse 10 240 octets, alors que les fichiers font en
@@ -129,14 +129,14 @@ sur le disque. Avec `-h`, vous obtenez des tailles lisibles par un humain, et
 avec `-s`, un total pour tout un répertoire :
 
 ```sh
-du -h dokument.tar dokument.tar.gz
-du -sh dokument
+du -h {{documents}}.tar {{documents}}.tar.gz
+du -sh {{documents}}
 ```
 
 ```text
-12K	dokument.tar
-4.0K	dokument.tar.gz
-16K	dokument
+12K	{{documents}}.tar
+4.0K	{{documents}}.tar.gz
+16K	{{documents}}
 ```
 
 Le disque est divisé en blocs de 4 Kio, donc `du` n'affiche jamais moins de
@@ -146,14 +146,14 @@ Le disque est divisé en blocs de 4 Kio, donc `du` n'affiche jamais moins de
 ## Regarder dans une archive avant de l'extraire
 
 ```sh
-tar -tzvf dokument.tar.gz
+tar -tzvf {{documents}}.tar.gz
 ```
 
 ```text
-drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
--rw-r--r-- elev/elev       146 2026-10-30 12:00 dokument/betyg.csv
--rw-r--r-- elev/elev        64 2026-10-30 12:00 dokument/frukter.txt
--rw-r--r-- elev/elev       848 2026-10-30 12:00 dokument/server.log
+drwxr-xr-x {{user}}/{{user}}       0 2026-10-30 12:00 {{documents}}/
+-rw-r--r-- {{user}}/{{user}}      62 2026-10-30 12:00 {{documents}}/{{fruits}}
+-rw-r--r-- {{user}}/{{user}}     152 2026-10-30 12:00 {{documents}}/{{grades}}
+-rw-r--r-- {{user}}/{{user}}     824 2026-10-30 12:00 {{documents}}/server.log
 ```
 
 Avec `v`, le contenu s'affiche comme avec `ls -l`, avec permissions,
@@ -164,15 +164,14 @@ de fichiers là où vous vous trouvez au moment de les extraire.
 ## Extraire
 
 ```sh
-mkdir uppackat
-tar -xzvf dokument.tar.gz -C uppackat
+mkdir {{unpacked}}
+tar -xzvf {{documents}}.tar.gz -C {{unpacked}}
 ```
 
-`-C` (C majuscule) choisit le répertoire dans lequel tar extrait (*uppackat*
-signifie « décompressé »). Sans cette option, tout atterrit dans le
+`-C` (C majuscule) choisit le répertoire dans lequel tar extrait. Sans cette option, tout atterrit dans le
 répertoire où vous êtes. Les versions modernes de tar détectent toutes seules
 si une archive est compressée lors de l'extraction, donc
-`tar -xf dokument.tar.gz` fonctionne aussi.
+`tar -xf {{documents}}.tar.gz` fonctionne aussi.
 
 > **Attention !** tar ne demande rien avant d'écraser des fichiers qui
 > existent déjà. Listez d'abord le contenu si vous avez un doute.
@@ -183,30 +182,30 @@ Si vous empaquetez un chemin absolu, le `/` du début est retiré pour que
 l'archive puisse être extraite n'importe où :
 
 ```sh
-tar -czf backup.tar.gz ~/dokument
+tar -czf backup.tar.gz ~/{{documents}}
 ```
 
 ```text
 tar: Removing leading `/' from member names
 ```
 
-L'archive contient maintenant `home/elev/dokument/...`. Si vous voulez
-seulement `dokument/` dans l'archive, vous pouvez demander à tar de changer
+L'archive contient maintenant `home/{{user}}/{{documents}}/...`. Si vous voulez
+seulement `{{documents}}/` dans l'archive, vous pouvez demander à tar de changer
 d'abord de répertoire avec `-C` :
 
 ```sh
-tar -czf backup.tar.gz -C ~ dokument
+tar -czf backup.tar.gz -C ~ {{documents}}
 tar -tzf backup.tar.gz
 ```
 
 ```quiz
-Vous lancez `tar -czf backup.tar.gz -C ~ dokument`. Que contient l'archive ?
-- [x] `dokument/` et les fichiers qu'il contient
-- [ ] `home/elev/dokument/` et les fichiers qu'il contient
-- [ ] `/home/elev/dokument/` et les fichiers qu'il contient
+Vous lancez `tar -czf backup.tar.gz -C ~ {{documents}}`. Que contient l'archive ?
+- [x] `{{documents}}/` et les fichiers qu'il contient
+- [ ] `home/{{user}}/{{documents}}/` et les fichiers qu'il contient
+- [ ] `/home/{{user}}/{{documents}}/` et les fichiers qu'il contient
 ---
 `-C ~` demande à tar de passer d'abord dans votre répertoire personnel, donc
-les noms dans l'archive commencent à `dokument/`.
+les noms dans l'archive commencent à `{{documents}}/`.
 ```
 
 ## Compresser un seul fichier avec `gzip`
@@ -215,12 +214,12 @@ les noms dans l'archive commencent à `dokument/`.
 permissions et l'horodatage sont conservés :
 
 ```sh
-cp dokument/server.log .
+cp {{documents}}/server.log .
 gzip -v server.log
 ```
 
 ```text
-server.log:	 39.0% -- replaced with server.log.gz
+server.log:	 39.8% -- replaced with server.log.gz
 ```
 
 `gzip -l` affiche la taille avant et après, et `gunzip` décompresse à nouveau
@@ -236,21 +235,21 @@ tout petit fichier – il devient en fait **plus gros**, car gzip ajoute un
 en-tête contenant, entre autres, le nom du fichier :
 
 ```sh
-cp dokument/frukter.txt .
-gzip -kv frukter.txt
+cp {{documents}}/{{fruits}} .
+gzip -kv {{fruits}}
 ```
 
 ```text
-frukter.txt:	-20.3% -- created frukter.txt.gz
+{{fruits}}:	-17.7% -- created {{fruits}}.gz
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ cp dokument/server.log .
-$ gzip frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ cp {{documents}}/server.log .
+$ gzip {{fruits}}
 $ gzip -k server.log
-$ ls frukter* server*
-frukter.txt.gz  server.log  server.log.gz
+$ ls {{fruits}}* server*
+{{fruits}}.gz  server.log  server.log.gz
 ---
 Un simple `gzip` remplace le fichier par un fichier `.gz` ; `-k` garde
 l'original.
@@ -296,14 +295,14 @@ cette option, zip n'ajoute que le répertoire vide, pas les fichiers qu'il
 contient :
 
 ```sh
-zip -r dokument.zip dokument
+zip -r {{documents}}.zip {{documents}}
 ```
 
 ```text
-  adding: dokument/ (stored 0%)
-  adding: dokument/betyg.csv (deflated 17%)
-  adding: dokument/frukter.txt (deflated 27%)
-  adding: dokument/server.log (deflated 42%)
+  adding: {{documents}}/ (stored 0%)
+  adding: {{documents}}/{{fruits}} (deflated 29%)
+  adding: {{documents}}/{{grades}} (deflated 20%)
+  adding: {{documents}}/server.log (deflated 43%)
 ```
 
 Remarquez que l'ordre est le même que pour tar : d'abord l'archive, puis les
@@ -311,17 +310,17 @@ fichiers. `unzip -l` liste le contenu, et `-d` choisit où extraire (le
 répertoire est créé s'il n'existe pas) :
 
 ```sh
-unzip -l dokument.zip
-unzip dokument.zip -d fran-zip
+unzip -l {{documents}}.zip
+unzip {{documents}}.zip -d {{fromZip}}
 ```
 
 Si les fichiers existent déjà, unzip les ignore. Avec `unzip -o`, ils sont
 écrasés.
 
 ```quiz
-Vous lancez `zip dokument.zip dokument` sans `-r`. Que contient le fichier zip ?
-- [ ] Tous les fichiers de `dokument`
-- [x] Seulement le répertoire vide `dokument/`
+Vous lancez `zip {{documents}}.zip {{documents}}` sans `-r`. Que contient le fichier zip ?
+- [ ] Tous les fichiers de `{{documents}}`
+- [x] Seulement le répertoire vide `{{documents}}/`
 - [ ] Rien – zip refuse de s'exécuter
 ---
 Sans `-r` (*recursive*), zip n'entre pas dans le répertoire.

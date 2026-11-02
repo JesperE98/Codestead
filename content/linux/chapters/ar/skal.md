@@ -54,7 +54,7 @@ cat /etc/shells
 `/etc/passwd`، وهو موجود أيضًا في المتغيّر `$SHELL`:
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 echo $SHELL
 ```
 
@@ -96,7 +96,7 @@ zsh
 | `1` | القائمة الرئيسية بكل الإعدادات (غير متاحة في المحاكي) |
 | `2` | أنشئ `~/.zshrc` بالإعدادات الموصى بها |
 
-أجب بـ `2`. يتغيّر المحث إلى `elev@ubuntu ~ %` – ففي zsh تكون `%` العلامة
+أجب بـ `2`. يتغيّر المحث إلى `{{user}}@ubuntu ~ %` – ففي zsh تكون `%` العلامة
 المعتادة للمستخدم العادي (ويحصل root على `#`، تمامًا كما في bash).
 
 أيّ shell تشغّل الآن؟ يحمل المتغيّر `$0` اسم الـ shell:
@@ -120,7 +120,7 @@ echo $SHELL
 و`for` والدوال تعمل بالطريقة التي اعتدت عليها:
 
 ```sh
-for f in ~/dokument/*.txt; do wc -l $f; done
+for f in ~/{{documents}}/*.txt; do wc -l $f; done
 ```
 
 ### الميزة 1: `**` تبحث في كل المجلدات الفرعية
@@ -141,7 +141,7 @@ ls ~/**/*.txt
 المجلد لتنتقل إليه – من دون `cd`:
 
 ```sh
-dokument
+{{documents}}
 ..
 ```
 
@@ -158,8 +158,8 @@ setopt autocd
 في bash يُقسَّم المتغيّر غير المحاط بعلامات اقتباس عند المسافات. أما في zsh فلا:
 
 ```sh
-filer="a.txt b.txt"
-for f in $filer; do echo "[$f]"; done
+files="a.txt b.txt"
+for f in $files; do echo "[$f]"; done
 ```
 
 يطبع bash `[a.txt]` و`[b.txt]` – بينما يطبع zsh `[a.txt b.txt]`. وطريقة zsh هي
@@ -174,7 +174,7 @@ for f in $filer; do echo "[$f]"; done
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
-$ zsh -c 'filer="x.txt y.txt z.txt"; for f in $filer; do echo "<$f>"; done'
+$ zsh -c 'files="x.txt y.txt z.txt"; for f in $files; do echo "<$f>"; done'
 <x.txt y.txt z.txt>
 ---
 لا يقسّم zsh المتغيّر عند المسافات، لذا تعمل الحلقة مرة واحدة بالقيمة كاملة. أما
@@ -249,16 +249,16 @@ sudo apt install fish
 fish
 ```
 
-يرحّب بك fish ويصبح المحث `elev@ubuntu ~>`. انزل بضعة مجلدات وانظر كيف
+يرحّب بك fish ويصبح المحث `{{user}}@ubuntu ~>`. انزل بضعة مجلدات وانظر كيف
 يختصر fish المسار في المحث:
 
 ```sh
-mkdir -p ~/dokument/projekt
-cd ~/dokument/projekt
+mkdir -p ~/{{documents}}/{{project}}
+cd ~/{{documents}}/{{project}}
 cd ~
 ```
 
-في المجلد `~/dokument/projekt` يعرض المحث `~/d/projekt>` – فكل مجلد ما عدا
+في المجلد `~/{{documents}}/{{project}}` يعرض المحث `~/d/{{project}}>` – فكل مجلد ما عدا
 الأخير يُختصر إلى حرف واحد.
 
 ### لـ fish صياغته الخاصة
@@ -267,39 +267,38 @@ cd ~
 
 | هذا | bash وzsh | fish |
 |---|---|---|
-| تعيين متغيّر | `frukt=äpple` | `set frukt äpple` |
+| تعيين متغيّر | `{{fruitVar}}={{fruitWord}}` | `set {{fruitVar}} {{fruitWord}}` |
 | متغيّر بيئة | `export EDITOR=nano` | `set -x EDITOR nano` |
-| حذف متغيّر | `unset frukt` | `set -e frukt` |
+| حذف متغيّر | `unset {{fruitVar}}` | `set -e {{fruitVar}}` |
 | استبدال الأوامر | `$(pwd)` | `(pwd)` |
 | حالة الخروج الأخيرة | `$?` | `$status` |
 | وسائط السكربت | `$@`، `$1` | `$argv`، `$argv[1]` |
 | الشرط | `if …; then …; fi` | `if …; …; end` |
 | الحلقة | `for …; do …; done` | `for …; …; end` |
-| الدالة | `hej() { …; }` | `function hej; …; end` |
+| الدالة | `hello() { …; }` | `function hello; …; end` |
 | الحساب | `$((17 * 23))` | `math 17 x 23` |
 
 ### المتغيّرات مع set
 
-جرّب تعيين متغيّر بطريقة bash (`frukt` تعني "فاكهة" بالسويدية، و`äpple` تعني
-"تفاحة"):
+جرّب تعيين متغيّر بطريقة bash:
 
 ```sh
-frukt=äpple
+{{fruitVar}}={{fruitWord}}
 ```
 
 يرفض fish ويخبرك بالطريقة الصحيحة لكتابته:
 
 ```text
-fish: Unsupported use of '='. In fish, please use 'set frukt äpple'.
+fish: Unsupported use of '='. In fish, please use 'set {{fruitVar}} {{fruitWord}}'.
 ```
 
 هكذا يتم الأمر في fish:
 
 ```sh
-set frukt äpple
-echo $frukt
+set {{fruitVar}} {{fruitWord}}
+echo ${{fruitVar}}
 set -x EDITOR nano
-set -e frukt
+set -e {{fruitVar}}
 ```
 
 يجعل `-x` (*export*) المتغيّر متغيّر بيئة تستطيع رؤيته البرامج التي تبدؤها،
@@ -308,17 +307,17 @@ set -e frukt
 في fish كل متغيّر هو **قائمة**. وتُرقَّم العناصر بدءًا من 1:
 
 ```sh
-set frukter äpple päron banan
-echo $frukter[2]
-count $frukter
+set fruits تفاح كمثرى موز
+echo $fruits[2]
+count $fruits
 ```
 
 يعمل `-c` في fish أيضًا. ماذا يطبع الأمر الأخير؟
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y fish > /dev/null 2>&1
-$ fish -c 'set frukter äpple päron banan; echo $frukter[3]'
-banan
+$ fish -c 'set fruits تفاح كمثرى موز; echo $fruits[3]'
+موز
 ---
 تُرقَّم عناصر القائمة في fish بدءًا من 1، لذا فإن `[3]` هو العنصر الثالث
 والأخير.
@@ -367,7 +366,7 @@ if test -f ~/.bashrc; echo exists; else; echo missing; end
 يشغّل الحلقة:
 
 ```sh
-for f in ~/dokument/*.txt
+for f in ~/{{documents}}/*.txt
 echo (basename $f)
 end
 ```
@@ -423,14 +422,14 @@ exit
 جرّب كتابة سكربت bash وتشغيله من fish:
 
 ```sh
-cat > ~/hej.sh << 'SLUT'
+cat > ~/{{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
 name=Kim
 echo "Hello $name, I am run by bash"
-SLUT
-chmod +x ~/hej.sh
+{{heredocEnd}}
+chmod +x ~/{{helloScript}}
 fish
-~/hej.sh
+~/{{helloScript}}
 exit
 ```
 
@@ -456,7 +455,7 @@ exit
 
 ```sh
 chsh -s /usr/bin/zsh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 - يجب أن يُعطى الـ shell بمساره الكامل وأن يكون مسرودًا في `/etc/shells`.
@@ -508,7 +507,7 @@ $ echo $SHELL
 | `zsh` / `fish` / `exit` | يبدأ shell آخر / يعود |
 | `ls ~/**/*.txt` | يبحث في كل المجلدات الفرعية (zsh، fish) |
 | `setopt autocd` | يفعّل خيارًا في zsh |
-| `set frukt äpple` | يعيّن متغيّرًا في fish |
+| `set {{fruitVar}} {{fruitWord}}` | يعيّن متغيّرًا في fish |
 | `set -x NAME value` | يعيّن متغيّر بيئة في fish |
 | `chsh -s /usr/bin/zsh` | يغيّر الـ login shell الخاص بك |
 

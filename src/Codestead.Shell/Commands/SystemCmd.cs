@@ -492,7 +492,7 @@ BESKRIVNING
     {
         var sh = ctx.Sh;
         var name = sh.CurrentUser().Name;
-        var flag = name == "elev" ? "sudoNoticeShown" : $"sudoNoticeShown:{name}";
+        var flag = name == sh.World.User ? "sudoNoticeShown" : $"sudoNoticeShown:{name}";
         if (sh.Flags.TryGetValue(flag, out var shown) && shown) return;
         sh.Flags[flag] = true;
         ctx.Err($"[sudo] password for {name}: {UtilCmd.Color.Dim}{sh.Msg("common.skipsPassword")}{UtilCmd.Color.Reset}\n");

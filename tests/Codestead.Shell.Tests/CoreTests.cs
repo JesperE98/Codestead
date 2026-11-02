@@ -101,7 +101,7 @@ public class CoreTests
     [Fact(DisplayName = "ögonblicksbilden kan sparas som JSON och läsas in igen")]
     public void SnapshotRoundTrip()
     {
-        var sh = Shell.Create("ubuntu");
+        var sh = Shell.Create("ubuntu", "sv");
         sh.Functions["hej"] = ((FuncDefNode)((ListNode)ParserLib.Parse("hej() { echo hej; }")).Items[0].Node).Body;
         sh.Env["X"] = "1";
         var json = sh.SnapshotJson();

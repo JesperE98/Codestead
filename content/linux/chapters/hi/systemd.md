@@ -54,8 +54,8 @@ ls /etc/systemd/system
 पुराने Debian और Ubuntu versions में अक्सर इसकी जगह `/lib/systemd/system` लिखा
 होता है। यह वही directory है – `/lib` बस `/usr/lib` का link है।
 
-Service का नाम file का नाम होता है, जैसे `minserver.service`। Commands लिखते समय
-आप `.service` छोड़ सकते हैं: `systemctl status minserver` भी उतना ही अच्छा काम
+Service का नाम file का नाम होता है, जैसे `myserver.service`। Commands लिखते समय
+आप `.service` छोड़ सकते हैं: `systemctl status myserver` भी उतना ही अच्छा काम
 करता है।
 
 ## Service का हाल कैसा है? – `systemctl status`
@@ -106,17 +106,17 @@ start होती है जब किसी दूसरी unit को इस
 ## Start, stop और restart
 
 ```text
-sudo systemctl start minserver      # अभी start करो
-sudo systemctl stop minserver       # अभी रोको
-sudo systemctl restart minserver    # रोककर फिर से start करो
-sudo systemctl reload minserver     # इससे configuration दोबारा पढ़ने को कहो
+sudo systemctl start myserver      # अभी start करो
+sudo systemctl stop myserver       # अभी रोको
+sudo systemctl restart myserver    # रोककर फिर से start करो
+sudo systemctl reload myserver     # इससे configuration दोबारा पढ़ने को कहो
 ```
 
 जो कुछ भी कुछ **बदलता** है, उसके लिए root चाहिए, इसलिए `sudo` मत भूलिए। इसके बिना
 systemctl जवाब देता है:
 
 ```text
-Failed to start minserver.service: Interactive authentication required.
+Failed to start myserver.service: Interactive authentication required.
 ```
 
 `reload` सिर्फ़ उन services के साथ काम करता है जो इसे support करती हैं। फ़ायदा यह
@@ -124,9 +124,9 @@ Failed to start minserver.service: Interactive authentication required.
 service की configuration file बदली हो, तो `reload` या `restart` आख़िरी step है।
 
 > **आज़माइए!** Processes वाले chapter में आपने practice server को `pkill` से रोका
-> था। `systemctl status minserver` देखिए – systemd ने ध्यान दिया कि process ग़ायब
+> था। `systemctl status myserver` देखिए – systemd ने ध्यान दिया कि process ग़ायब
 > हो गया। इसे `systemctl` से फिर से start कीजिए और PID की तुलना
-> `pgrep -l minserver` से कीजिए।
+> `pgrep -l myserver` से कीजिए।
 
 ## अभी या boot पर? `start` और `enable`
 
@@ -144,16 +144,16 @@ systemd के बारे में यह सबसे आम ग़लतफ
 वाले target पर होता है, आम तौर पर `multi-user.target.wants`:
 
 ```text
-$ sudo systemctl enable --now minserver
-Created symlink /etc/systemd/system/multi-user.target.wants/minserver.service → /etc/systemd/system/minserver.service.
+$ sudo systemctl enable --now myserver
+Created symlink /etc/systemd/system/multi-user.target.wants/myserver.service → /etc/systemd/system/myserver.service.
 ```
 
 जब computer boot होता है, तो systemd उस directory में से गुज़रता है और उसमें की
 हर चीज़ start करता है। आप state के बारे में पूछ सकते हैं:
 
 ```sh
-systemctl is-active minserver
-systemctl is-enabled minserver
+systemctl is-active myserver
+systemctl is-enabled myserver
 ```
 
 `is-active` और `is-enabled` scripts में बहुत काम के हैं – ये एक शब्द print करते हैं
@@ -161,19 +161,19 @@ systemctl is-enabled minserver
 रहते हैं:
 
 ```text
-if systemctl is-active -q minserver; then echo "the server is running"; fi
+if systemctl is-active -q myserver; then echo "the server is running"; fi
 ```
 
-सिम्युलेटर में अभी-अभी चालू हुए कंप्यूटर पर `minserver` चल रहा है, लेकिन किसी ने
+सिम्युलेटर में अभी-अभी चालू हुए कंप्यूटर पर `myserver` चल रहा है, लेकिन किसी ने
 उसे enable नहीं किया है। ये दो कमांड क्या छापते हैं?
 
 ```predict
-$ systemctl is-active minserver
-$ systemctl is-enabled minserver
+$ systemctl is-active myserver
+$ systemctl is-enabled myserver
 active
 disabled
 ---
-minserver **अभी** चल रहा है, लेकिन किसी ने `enable` नहीं चलाया – रीबूट के बाद वह
+myserver **अभी** चल रहा है, लेकिन किसी ने `enable` नहीं चलाया – रीबूट के बाद वह
 शुरू नहीं होगा। `start` और `enable` सच में दो अलग चीज़ें हैं।
 ```
 
@@ -218,9 +218,9 @@ journalctl
 Options को जोड़ा जा सकता है। कुछ classic उदाहरण:
 
 ```sh
-journalctl -u minserver -n 5
+journalctl -u myserver -n 5
 journalctl -p err -b
-journalctl --since today -u minserver
+journalctl --since today -u myserver
 ```
 
 ### Priorities
@@ -262,7 +262,7 @@ Journal की हर line की एक **priority** होती है। `-p
 
 ## Start न होने वाली service की troubleshooting
 
-किसी ने इस computer पर service **rapportd** set up की है, लेकिन कुछ गड़बड़ है। इसे
+किसी ने इस computer पर service **reportd** set up की है, लेकिन कुछ गड़बड़ है। इसे
 सुलझाने का आम तरीक़ा यह है:
 
 1. **क्या fail हुआ है?** Fail हुई services की list देखिए:
@@ -274,19 +274,19 @@ Journal की हर line की एक **priority** होती है। `-p
 2. **Status देखिए।** अक्सर आख़िरी lines ही काफ़ी होती हैं:
 
    ```sh
-   systemctl status rapportd
+   systemctl status reportd
    ```
 
 3. Service का **पूरा log पढ़िए**। यह लगभग हमेशा बता देता है कि क्या ग़लत है – इसे
    ध्यान से, शब्द-दर-शब्द पढ़िए:
 
    ```sh
-   journalctl -xeu rapportd
+   journalctl -xeu reportd
    ```
 
    Start fail होने पर `systemctl` ख़ुद ठीक यही command सुझाता है:
-   `See "systemctl status rapportd.service" and "journalctl -xeu
-   rapportd.service" for details.`
+   `See "systemctl status reportd.service" and "journalctl -xeu
+   reportd.service" for details.`
 
 4. **Problem ठीक कीजिए**, जैसे कोई configuration file जो ग़ायब है या जिसमें typo
    है।
@@ -294,8 +294,8 @@ Journal की हर line की एक **priority** होती है। `-p
 5. **Restart करके जाँचिए:**
 
    ```text
-   sudo systemctl restart rapportd
-   systemctl status rapportd
+   sudo systemctl restart reportd
+   systemctl status reportd
    ```
 
 `Main process exited, code=exited, status=1/FAILURE` वाली line का मतलब है कि
@@ -319,17 +319,17 @@ program मिला ही नहीं – `ExecStart=` में path जा�
 Service ठीक-ठीक कैसे start होती है, यह देखने के लिए उसकी unit file पढ़िए:
 
 ```sh
-systemctl cat minserver
+systemctl cat myserver
 ```
 
 ```text
-# /etc/systemd/system/minserver.service
+# /etc/systemd/system/myserver.service
 [Unit]
-Description=Minserver web server (practice server)
+Description=Myserver web server (practice server)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/minserver --port 8080
+ExecStart=/usr/local/bin/myserver --port 8080
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]

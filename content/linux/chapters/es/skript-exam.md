@@ -13,16 +13,16 @@ ejecutable.
 ```
 
 ```quiz
-`namn = Kim` da el error `command not found`. ¿Por qué?
-- [x] Los espacios alrededor de `=` hacen que la shell trate `namn` como un comando
+`{{nameVar}} = Kim` da el error `command not found`. ¿Por qué?
+- [x] Los espacios alrededor de `=` hacen que la shell trate `{{nameVar}}` como un comando
 - [ ] Los nombres de variable deben escribirse en mayúsculas
-- [ ] Hay que escribir `$namn = Kim`
+- [ ] Hay que escribir `${{nameVar}} = Kim`
 ```
 
 ```predict
-$ antal=$(ls ~/dokument | wc -l)
-$ echo "$antal files"
-3 files
+$ cantidad=$(ls ~/{{documents}} | wc -l)
+$ echo "$cantidad archivos"
+3 archivos
 ```
 
 ```predict
@@ -50,13 +50,13 @@ texto.
 ```
 
 ```predict
-$ [ -d ~/finnsinte ] && echo yes || echo no
+$ [ -d ~/{{missing}} ] && echo yes || echo no
 no
 ```
 
 ```predict
-$ fil=rapport.txt
-$ case $fil in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
+$ archivo=informe.txt
+$ case $archivo in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
 A text file
 ```
 
@@ -92,9 +92,9 @@ muestra.
 ```
 
 ```quiz
-Empiezas un here document con `cat > hej.sh << 'SLUT'`. ¿Cuándo termina?
+Empiezas un here document con `cat > {{helloScript}} << '{{heredocEnd}}'`. ¿Cuándo termina?
 - [ ] Cuando pulsas Intro en una línea vacía
-- [x] En la línea `SLUT`
+- [x] En la línea `{{heredocEnd}}`
 - [ ] Después de diez líneas
 ```
 

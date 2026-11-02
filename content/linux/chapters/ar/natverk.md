@@ -270,13 +270,13 @@ ss -tulpn
 sudo ss -tulpn
 ```
 
-إذا كان خادم التدريب `minserver` من فصل العمليات يعمل، فستراه هنا على
+إذا كان خادم التدريب `myserver` من فصل العمليات يعمل، فستراه هنا على
 المنفذ 8080. والأمر الأقدم `netstat -tulpn` (من *net-tools*) يفعل الشيء نفسه.
 
 ## الجلب من الويب: curl وwget
 
 يجلب `curl` ما يوجد في عنوان ما (**URL**) ويطبعه في الطرفية. جرّبه مع
-minserver على حاسوبك:
+myserver على حاسوبك:
 
 على Ubuntu لا يكون `curl` مثبّتًا مسبقًا (لكن `wget` مثبّت):
 
@@ -289,10 +289,10 @@ curl http://localhost:8080
 ```
 
 هل حصلت على `Couldn't connect to server`؟ إذن لا شيء يستمع على المنفذ – ربما
-أوقفت minserver في فصل العمليات. شغّله من جديد:
+أوقفت myserver في فصل العمليات. شغّله من جديد:
 
 ```sh
-minserver
+myserver
 ```
 
 مع `-I` يعرض curl **ترويسات** (headers) الرد فقط، وأول سطر فيها هو **رمز
@@ -329,7 +329,7 @@ curl -s https://example.com | grep title
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 صُنع `wget` لتنزيل الملفات. فهو يحفظ دائمًا في ملف، ويعرض التقدّم، ويتبع
@@ -349,10 +349,10 @@ cat cheatsheet.txt
 باستخدام العميل `ssh`:
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-تعني `elev@server.lan` "المستخدم elev على الحاسوب server.lan". والأمر الذي
+تعني `{{user}}@server.lan` "المستخدم {{user}} على الحاسوب server.lan". والأمر الذي
 يأتي بعد المضيف (`hostname`) يعمل على الخادم ويُعرض الجواب هنا – وهو يقول
 `server`، لا `ubuntu`.
 
@@ -371,8 +371,8 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])?
 يمكن أن يكون الأمر عدة أوامر داخل علامات اقتباس:
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 من دون أمر، يسجّل ssh الدخول وتحصل على shell على الحاسوب الآخر، وتخرج منه
@@ -386,7 +386,7 @@ ssh elev@server.lan cat välkommen.txt
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 اضغط Enter عند أسئلة `ssh-keygen` لتستخدم الملف الافتراضي `~/.ssh/id_ed25519`

@@ -80,7 +80,7 @@ Pour voir ce que le *système* résout, utilisez `getent hosts server.lan`.
 ```
 
 ```quiz
-`minserver` écoute sur le port 8080 et tourne en tant qu'utilisateur
+`myserver` écoute sur le port 8080 et tourne en tant qu'utilisateur
 ordinaire. Qu'est-ce qui changerait s'il écoutait sur le port 80 ?
 - [ ] Rien
 - [x] Seul root peut ouvrir des ports en dessous de 1024

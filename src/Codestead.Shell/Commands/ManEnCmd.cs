@@ -372,7 +372,7 @@ public static partial class ManEnCmd
 
             DESCRIPTION
                    Only root can change the owner of files, so you usually need sudo:
-                       sudo chown elev:elev file.txt
+                       sudo chown $USER:$USER file.txt
 
             OPTIONS
                    -R    change recursively in directories
@@ -1165,7 +1165,7 @@ public static partial class ManEnCmd
             {{KillByNameOptions}}
 
             EXAMPLES
-                   pkill minserver
+                   pkill myserver
             """),
         ["pgrep"] = ("Shows the PIDs of processes whose names match a pattern", """
             NAME
@@ -1180,7 +1180,7 @@ public static partial class ManEnCmd
                    -u USER   only processes owned by USER
 
             EXAMPLES
-                   pgrep minserver
+                   pgrep myserver
             """),
         ["jobs"] = ("Shows the background jobs in this terminal", """
             NAME

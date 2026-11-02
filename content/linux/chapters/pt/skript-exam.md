@@ -13,16 +13,16 @@ arquivo executável.
 ```
 
 ```quiz
-`namn = Kim` dá o erro `command not found`. Por quê?
-- [x] Os espaços em volta do `=` fazem o shell tratar `namn` como um comando
+`nome = Kim` dá o erro `command not found`. Por quê?
+- [x] Os espaços em volta do `=` fazem o shell tratar `nome` como um comando
 - [ ] Nomes de variáveis precisam ser escritos em letras maiúsculas
-- [ ] Você precisa escrever `$namn = Kim`
+- [ ] Você precisa escrever `$nome = Kim`
 ```
 
 ```predict
-$ antal=$(ls ~/dokument | wc -l)
-$ echo "$antal files"
-3 files
+$ qtd=$(ls ~/{{documents}} | wc -l)
+$ echo "$qtd arquivos"
+3 arquivos
 ```
 
 ```predict
@@ -50,19 +50,19 @@ comparam texto.
 ```
 
 ```predict
-$ [ -d ~/finnsinte ] && echo yes || echo no
-no
+$ [ -d ~/{{missing}} ] && echo sim || echo não
+não
 ```
 
 ```predict
-$ fil=rapport.txt
-$ case $fil in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
-A text file
+$ arq=relatorio.txt
+$ case $arq in *.jpg|*.png) echo "Uma imagem";; *.txt) echo "Um arquivo de texto";; *) echo "Tipo desconhecido";; esac
+Um arquivo de texto
 ```
 
 ```predict
-$ plus() { echo $(( $1 + $2 )); }
-$ plus 4 5
+$ somar() { echo $(( $1 + $2 )); }
+$ somar 4 5
 9
 ```
 
@@ -91,12 +91,12 @@ Por que um script termina com `exit 1` quando algo dá errado?
 ```
 
 ```quiz
-Você começa um here document com `cat > hej.sh << 'SLUT'`. Quando ele termina?
+Você começa um here document com `cat > {{helloScript}} << '{{heredocEnd}}'`. Quando ele termina?
 - [ ] Quando você pressiona Enter em uma linha vazia
-- [x] Na linha `SLUT`
+- [x] Na linha `{{heredocEnd}}`
 - [ ] Depois de dez linhas
 ```
 
 ```try
-for i in $(seq 1 3); do echo "Round $i"; done
+for i in $(seq 1 3); do echo "Rodada $i"; done
 ```

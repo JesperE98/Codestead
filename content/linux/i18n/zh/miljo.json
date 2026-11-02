@@ -5,7 +5,7 @@
       "text": "显示 `PATH` 变量的内容。"
     },
     "export": {
-      "text": "创建值为 `linux` 的环境变量 `FAVORIT`。",
+      "text": "创建值为 `linux` 的环境变量 `{{favVar}}`。",
       "hint": "等号两边不能有空格：`export NAME=value`。"
     },
     "which": {
@@ -16,7 +16,7 @@
     },
     "exitcode": {
       "text": "运行一个会失败的命令，然后用 `echo $?` 显示它的退出码。",
-      "hint": "试试先运行 `ls /finnsinte`，再运行 `echo $?`。退出码应该不是 0。"
+      "hint": "试试先运行 `ls /{{missing}}`，再运行 `echo $?`。退出码应该不是 0。"
     }
   }
 }

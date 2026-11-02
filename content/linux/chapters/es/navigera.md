@@ -9,7 +9,7 @@ la **raíz**, que se escribe `/`.
 | Directorio | Contenido |
 |---|---|
 | `/` | La raíz: la parte más alta del árbol |
-| `/home` | Los directorios personales de los usuarios, p. ej. `/home/elev` |
+| `/home` | Los directorios personales de los usuarios, p. ej. `/home/{{user}}` |
 | `/root` | El directorio personal del administrador, root |
 | `/etc` | Configuración del sistema (archivos de configuración) |
 | `/usr/bin` | Programas (comandos) como `ls` y `cat` |
@@ -97,15 +97,15 @@ Hay dos tipos de rutas:
   puedes llegar a `/var/log` simplemente con `cd var/log`.
 
 ```quiz
-Estás en `/home`. ¿Qué comandos te llevan a `/home/elev/dokument`? (Elige todos los que funcionen).
-- [x] `cd elev/dokument`
-- [x] `cd /home/elev/dokument`
-- [ ] `cd /elev/dokument`
-- [ ] `cd dokument`
+Estás en `/home`. ¿Qué comandos te llevan a `/home/{{user}}/{{documents}}`? (Elige todos los que funcionen).
+- [x] `cd {{user}}/{{documents}}`
+- [x] `cd /home/{{user}}/{{documents}}`
+- [ ] `cd /{{user}}/{{documents}}`
+- [ ] `cd {{documents}}`
 ---
-`elev/dokument` es relativa a `/home`, y `/home/elev/dokument` es absoluta,
-así que funciona desde cualquier sitio. `/elev/dokument` parte de la raíz, donde
-no hay ningún `elev`.
+`{{user}}/{{documents}}` es relativa a `/home`, y `/home/{{user}}/{{documents}}` es absoluta,
+así que funciona desde cualquier sitio. `/{{user}}/{{documents}}` parte de la raíz, donde
+no hay ningún `{{user}}`.
 ```
 
 Conviene conocer algunos nombres especiales:

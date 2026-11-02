@@ -222,7 +222,7 @@ public static partial class UsersLib
         {
             user = Root;
         }
-        else if (name == InitfsLib.Student)
+        else if (name == sh.World.User)
         {
             // Fallback if someone has destroyed /etc/passwd – the student must always be able to continue.
             user = new User { Name = name, Uid = 1000, Groups = new() { name, sh.Distro.AdminGroup }, Home = $"/home/{name}" };

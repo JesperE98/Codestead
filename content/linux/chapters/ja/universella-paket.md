@@ -245,20 +245,19 @@ Snap には批判もあります。Snap Store は Canonical だけが運営し�
 の Web サイトからダウンロードし、実行可能にして起動するだけです。インストールも
 root も必要ありません。プログラムを取り除きたければ、ファイルを削除します。
 
-ホームディレクトリの `~/Nedladdningar`（スウェーデン語で「ダウンロード」）には、
-ダウンロード済みの AppImage がすでにあります（*Kalkylator* は「電卓」という
-意味です）。
+ホームディレクトリの `~/{{downloads}}` には、ダウンロード済みの AppImage
+`{{calculator}}`（{{calcName}}）がすでにあります。
 
 ```sh
-cd ~/Nedladdningar
+cd ~/{{downloads}}
 ls -l
 ```
 
 すぐに起動すると、どうなるでしょうか？
 
 ```predict
-$ ~/Nedladdningar/Kalkylator.AppImage
-bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+$ ~/{{downloads}}/{{calculator}}
+bash: /home/{{user}}/{{downloads}}/{{calculator}}: Permission denied
 ---
 このファイルには `x` パーミッションがありません。
 ```
@@ -267,14 +266,14 @@ bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
 起動しましょう。
 
 ```sh
-chmod +x Kalkylator.AppImage
-./Kalkylator.AppImage
+chmod +x {{calculator}}
+./{{calculator}}
 ```
 
 ```try
-chmod +x ~/Nedladdningar/Kalkylator.AppImage
+chmod +x ~/{{downloads}}/{{calculator}}
 ---
-これでファイルが実行可能になりました。`ls -l ~/Nedladdningar` で確認しましょう。
+これでファイルが実行可能になりました。`ls -l ~/{{downloads}}` で確認しましょう。
 ```
 
 ### FUSE
@@ -291,7 +290,7 @@ Ubuntu 24.04 と Debian 13 では、パッケージ名は `libfuse2t64` です�
 ```sh
 sudo apt update
 sudo apt install libfuse2t64
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 
 > Ubuntu では `fuse` パッケージをインストール **しないでください**。デスクトップ
@@ -303,7 +302,7 @@ Arch では、パッケージ名は `fuse2` です。
 
 ```sh
 sudo pacman -S fuse2
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -312,7 +311,7 @@ Fedora では、パッケージ名は `fuse-libs` です。
 
 ```sh
 sudo dnf install fuse-libs
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -321,7 +320,7 @@ sudo dnf install fuse-libs
 AppImage は展開することもできます。これは FUSE がなくても動きます。
 
 ```sh
-./Kalkylator.AppImage --appimage-extract
+./{{calculator}} --appimage-extract
 ls squashfs-root
 ./squashfs-root/AppRun
 ```

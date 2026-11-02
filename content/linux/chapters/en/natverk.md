@@ -280,14 +280,14 @@ IPv6. The *Process* column is empty for processes owned by other users – with
 sudo ss -tulpn
 ```
 
-If the practice server `minserver` from the processes chapter is running,
+If the practice server `myserver` from the processes chapter is running,
 you see it here on port 8080. The older command `netstat -tulpn` (from
 *net-tools*) does the same thing.
 
 ## Fetching from the web: curl and wget
 
 `curl` fetches whatever is at an address (a **URL**) and prints it in the
-terminal. Try it with minserver on your own computer:
+terminal. Try it with myserver on your own computer:
 
 On Ubuntu `curl` is not preinstalled (but `wget` is):
 
@@ -300,10 +300,10 @@ curl http://localhost:8080
 ```
 
 Do you get `Couldn't connect to server`? Then nothing is listening on the
-port – maybe you stopped minserver in the processes chapter. Start it again:
+port – maybe you stopped myserver in the processes chapter. Start it again:
 
 ```sh
-minserver
+myserver
 ```
 
 With `-I` curl shows only the response **headers**, where the first line is a
@@ -341,7 +341,7 @@ the address):
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` is made for downloading files. It always saves to a file, shows
@@ -361,10 +361,10 @@ remotely, and everything sent is encrypted. The server runs the service
 `sshd` on port 22, and you connect with the client `ssh`:
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` means "the user elev on the computer server.lan". The
+`{{user}}@server.lan` means "the user {{user}} on the computer server.lan". The
 command after the host (`hostname`) runs on the server and the answer is
 shown here – it says `server`, not `ubuntu`.
 
@@ -383,8 +383,8 @@ mean someone is pretending to be the server.
 The command can be several commands inside quotes:
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 Without a command, ssh logs in and you get a shell on the other computer,
@@ -398,7 +398,7 @@ stays with you, and the public one is put on the server:
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 Press Enter at the questions from `ssh-keygen` to use the default file

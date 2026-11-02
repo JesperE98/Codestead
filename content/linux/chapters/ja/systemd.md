@@ -57,9 +57,9 @@ ls /etc/systemd/system
 古い Debian や Ubuntu では、代わりに `/lib/systemd/system` と書かれていることが
 よくあります。同じディレクトリです。`/lib` は `/usr/lib` へのリンクです。
 
-サービスの名前はファイル名で、たとえば `minserver.service` です。コマンドを
+サービスの名前はファイル名で、たとえば `myserver.service` です。コマンドを
 入力するときは `.service` を省略してもかまいません。`systemctl status
-minserver` でも同じように動きます。
+myserver` でも同じように動きます。
 
 ## サービスの調子は？ – `systemctl status`
 
@@ -110,17 +110,17 @@ Oct 30 07:54:07 ubuntu systemd[1]: Started ssh.service - OpenBSD Secure Shell se
 ## 起動、停止、再起動
 
 ```text
-sudo systemctl start minserver      # いますぐ起動する
-sudo systemctl stop minserver       # いますぐ停止する
-sudo systemctl restart minserver    # 停止してからもう一度起動する
-sudo systemctl reload minserver     # 設定を読み直すよう頼む
+sudo systemctl start myserver      # いますぐ起動する
+sudo systemctl stop myserver       # いますぐ停止する
+sudo systemctl restart myserver    # 停止してからもう一度起動する
+sudo systemctl reload myserver     # 設定を読み直すよう頼む
 ```
 
 何かを **変更する** 操作にはすべて root 権限が必要なので、`sudo` を
 忘れないでください。`sudo` がないと、systemctl は次のように答えます。
 
 ```text
-Failed to start minserver.service: Interactive authentication required.
+Failed to start myserver.service: Interactive authentication required.
 ```
 
 `reload` は、それに対応しているサービスでしか使えません。利点は、その間も
@@ -128,9 +128,9 @@ Failed to start minserver.service: Interactive authentication required.
 設定ファイルを変更したら、最後の手順は `reload` か `restart` です。
 
 > **試してみよう！** プロセスの章では、練習用サーバーを `pkill` で止めました。
-> `systemctl status minserver` を見てください。systemd はプロセスが消えた
+> `systemctl status myserver` を見てください。systemd はプロセスが消えた
 > ことに気づいています。`systemctl` でもう一度起動し、PID を
-> `pgrep -l minserver` と比べてみましょう。
+> `pgrep -l myserver` と比べてみましょう。
 
 ## いますぐ？ それともブート時？ `start` と `enable`
 
@@ -149,16 +149,16 @@ systemd について最もよくある誤解がこれです。**`start` と `ena
 作ります。
 
 ```text
-$ sudo systemctl enable --now minserver
-Created symlink /etc/systemd/system/multi-user.target.wants/minserver.service → /etc/systemd/system/minserver.service.
+$ sudo systemctl enable --now myserver
+Created symlink /etc/systemd/system/multi-user.target.wants/myserver.service → /etc/systemd/system/myserver.service.
 ```
 
 コンピューターがブートするとき、systemd はそのディレクトリを調べ、中にある
 ものをすべて起動します。状態は次のように問い合わせられます。
 
 ```sh
-systemctl is-active minserver
-systemctl is-enabled minserver
+systemctl is-active myserver
+systemctl is-enabled myserver
 ```
 
 `is-active` と `is-enabled` はスクリプトでとても便利です。1 つの単語を出力し、
@@ -166,19 +166,19 @@ systemctl is-enabled minserver
 何も表示しません。
 
 ```text
-if systemctl is-active -q minserver; then echo "the server is running"; fi
+if systemctl is-active -q myserver; then echo "the server is running"; fi
 ```
 
-シミュレーターで起動したばかりのコンピューターでは、`minserver` は動いていますが、
+シミュレーターで起動したばかりのコンピューターでは、`myserver` は動いていますが、
 誰も有効化していません。次の 2 つのコマンドは何を表示しますか？
 
 ```predict
-$ systemctl is-active minserver
-$ systemctl is-enabled minserver
+$ systemctl is-active myserver
+$ systemctl is-enabled myserver
 active
 disabled
 ---
-minserver は **いま** 動いていますが、誰も `enable` を実行していないので、
+myserver は **いま** 動いていますが、誰も `enable` を実行していないので、
 再起動すると起動されません。`start` と `enable` は本当に別のものなのです。
 ```
 
@@ -224,9 +224,9 @@ journalctl
 オプションは組み合わせられます。定番をいくつか紹介します。
 
 ```sh
-journalctl -u minserver -n 5
+journalctl -u myserver -n 5
 journalctl -p err -b
-journalctl --since today -u minserver
+journalctl --since today -u myserver
 ```
 
 ### 優先度
@@ -269,7 +269,7 @@ journalctl --since today -u minserver
 
 ## 起動しないサービスのトラブルシューティング
 
-誰かがこのコンピューターに **rapportd** というサービスを設定しましたが、
+誰かがこのコンピューターに **reportd** というサービスを設定しましたが、
 何かがおかしいようです。ふつうは次の手順で進めます。
 
 1. **何が失敗した？** 失敗したサービスの一覧を表示します。
@@ -281,19 +281,19 @@ journalctl --since today -u minserver
 2. **状態を確認する。** 最後の数行だけでわかることもよくあります。
 
    ```sh
-   systemctl status rapportd
+   systemctl status reportd
    ```
 
 3. サービスの **ログ全体を読む。** ほとんどの場合、何が悪いのかが書かれています。
    1 語ずつ、注意深く読みましょう。
 
    ```sh
-   journalctl -xeu rapportd
+   journalctl -xeu reportd
    ```
 
    起動に失敗すると、`systemctl` 自身がまさにこのコマンドを勧めてきます:
-   `See "systemctl status rapportd.service" and "journalctl -xeu
-   rapportd.service" for details.`
+   `See "systemctl status reportd.service" and "journalctl -xeu
+   reportd.service" for details.`
 
 4. **問題を修正する。** たとえば、設定ファイルが存在しない、またはタイプミスが
    ある、といった問題です。
@@ -301,8 +301,8 @@ journalctl --since today -u minserver
 5. **再起動して確認する:**
 
    ```text
-   sudo systemctl restart rapportd
-   systemctl status rapportd
+   sudo systemctl restart reportd
+   systemctl status reportd
    ```
 
 `Main process exited, code=exited, status=1/FAILURE` という行は、プログラムが
@@ -328,17 +328,18 @@ systemd はプログラムをまったく見つけられなかったというこ
 読みます。
 
 ```sh
-systemctl cat minserver
+systemctl cat myserver
 ```
 
 ```text
-# /etc/systemd/system/minserver.service
+# /etc/systemd/system/myserver.service
+# The practice server from the chapter about processes.
 [Unit]
-Description=Minserver web server (practice server)
+Description=Myserver web server (practice server)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/minserver --port 8080
+ExecStart=/usr/local/bin/myserver --port 8080
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]

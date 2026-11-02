@@ -70,7 +70,10 @@ def main():
             version = f"{minor}.{patches[-1] + 1}" if changed else last
         else:
             changed, version = True, f"{minor}.0"
-        product = {"key": p["key"], "id": pid, "name": props[p["nameProperty"]], "version": version,
+        name = props[p["nameProperty"]]
+        product = {"key": p["key"], "id": pid, "name": name, "version": version,
+                   # The title of its releases in codestead-releases (several products share that repository).
+                   "title": p.get("title", name),
                    "exe": props["AssemblyName"], "project": p["project"], "summary": p["summary"]}
         products.append(product)
         if want and changed and secrets_ok:

@@ -87,7 +87,7 @@ Ubuntu では `sudo apt install git` でインストールします。ほかの
 | `zsh` / `fish` / `exit` | 別のシェルを起動する / 戻る |
 | `zsh -c '…'` / `fish -c '…'` | 別のシェルでコマンドを 1 つ実行する |
 | `setopt autocd` / `unsetopt autocd` | zsh のオプションをオン / オフにする |
-| `set frukt äpple` / `set -e frukt` | fish で変数を設定する / 削除する |
+| `set {{fruitVar}} {{fruitWord}}` / `set -e {{fruitVar}}` | fish で変数を設定する / 削除する |
 | `set -x NAME value` | fish で環境変数を設定する |
 | `math 17 x 23` | fish での計算 |
 | `chsh -s /usr/bin/zsh` | ログインシェルを変更する |

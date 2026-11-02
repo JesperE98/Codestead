@@ -93,9 +93,8 @@ Com `-f`, o `lsblk` também mostra os sistemas de arquivos – tipo, rótulo
 lsblk -f
 ```
 
-Repare no `sdb1`: um sistema de arquivos `vfat` com o rótulo `USBMINNE`
-("memória USB" em sueco) que não está montado em lugar nenhum. É o pendrive
-que vamos conectar.
+Repare no `sdb1`: um sistema de arquivos `vfat` com o rótulo `USBSTICK`
+que não está montado em lugar nenhum. É o pendrive que vamos conectar.
 
 ## Sistemas de arquivos diferentes
 
@@ -142,7 +141,7 @@ sistemas de arquivos na RAM. Pontos de montagem comuns:
 | `/` | O sistema de arquivos raiz |
 | `/boot`, `/boot/efi` | O kernel e a partição EFI |
 | `/mnt` | Montagens temporárias que você faz à mão |
-| `/media/elev/…` ou `/run/media/elev/…` | Onde o ambiente gráfico monta pendrives automaticamente |
+| `/media/{{user}}/…` ou `/run/media/{{user}}/…` | Onde o ambiente gráfico monta pendrives automaticamente |
 
 ## Quanto espaço sobra? – `df`
 
@@ -200,7 +199,7 @@ du -h -d 1 ~
 
 Agora vamos conectar o pendrive. Primeiro: qual dispositivo é ele? O
 `lsblk -f` mostrou um disco removível, `sdb`, com a partição `sdb1` de rótulo
-`USBMINNE`. É a **partição** que você monta, não o disco inteiro.
+`USBSTICK`. É a **partição** que você monta, não o disco inteiro.
 
 Depois você precisa de um ponto de montagem – um diretório comum e vazio.
 Tanto criá-lo quanto montar exigem root:
@@ -223,7 +222,7 @@ A partir daqui o pendrive funciona como qualquer outro diretório. Copie um
 arquivo para o seu diretório pessoal:
 
 ```sh
-cp /mnt/usb/att-gora.txt ~
+cp /mnt/usb/{{todo}} ~
 ```
 
 > **Por que tudo pertence ao root?** O FAT não tem permissões do Linux.
@@ -234,7 +233,7 @@ cp /mnt/usb/att-gora.txt ~
 > (1000 é o seu id de usuário – veja `id`).
 
 Você também pode montar pelo rótulo em vez do nome do dispositivo:
-`sudo mount LABEL=USBMINNE /mnt/usb`. Em um computador com ambiente gráfico,
+`sudo mount LABEL=USBSTICK /mnt/usb`. Em um computador com ambiente gráfico,
 o gerenciador de arquivos faz tudo isso automaticamente quando você conecta o
 pendrive.
 
@@ -341,7 +340,7 @@ Se você quiser que o pendrive sempre possa ser montado em `/mnt/usb`, pode
 acrescentar uma linha como esta:
 
 ```text
-LABEL=USBMINNE  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
+LABEL=USBSTICK  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
 ```
 
 `noauto` significa que ele não é montado no boot (o pendrive pode não estar
@@ -385,7 +384,7 @@ você formata:
 
 ```text
 sudo umount /mnt/usb
-sudo mkfs.vfat -n USBMINNE /dev/sdb1    # FAT32 – funciona em todo lugar
+sudo mkfs.vfat -n USBSTICK /dev/sdb1    # FAT32 – funciona em todo lugar
 sudo mkfs.ext4 -L BACKUP /dev/sdb1      # ext4 – permissões do Linux, mas só no Linux
 ```
 

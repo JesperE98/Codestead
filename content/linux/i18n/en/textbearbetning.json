@@ -2,8 +2,8 @@
   "title": "Text processing with sed, tr and awk",
   "tasks": {
     "sed-s": {
-      "text": "Show `~/dokument/server.log` with the word `ERROR` replaced by `FEL` on every line, using `sed`.",
-      "hint": "The command `s/old/new/` replaces text: `sed 's/ERROR/FEL/' file`"
+      "text": "Show `~/{{documents}}/server.log` with the word `ERROR` replaced by `{{errorWord}}` on every line, using `sed`.",
+      "hint": "The command `s/old/new/` replaces text: `sed 's/ERROR/{{errorWord}}/' file`"
     },
     "sed-d": {
       "text": "Show server.log **without** all the lines containing `INFO`, using `sed`.",
@@ -22,11 +22,11 @@
       "hint": "The fields are separated by colons, so use `-F:`. The program is `'{print $1, $7}'`."
     },
     "awk-sum": {
-      "text": "Work out the **sum** of the points (column 3) in `~/dokument/betyg.csv` with `awk`.",
-      "hint": "Skip the header line with `NR > 1`, add up with `summa += $3` and print the result in `END { }`. The separator is a comma: `-F,`."
+      "text": "Work out the **sum** of the points (column 3) in `~/{{documents}}/{{grades}}` with `awk`.",
+      "hint": "Skip the header line with `NR > 1`, add up with `{{sumVar}} += $3` and print the result in `END { }`. The separator is a comma: `-F,`."
     },
     "sed-i": {
-      "text": "Replace `Linux` with `GNU/Linux` **directly in the file** `~/anteckningar.txt`.",
+      "text": "Replace `Linux` with `GNU/Linux` **directly in the file** `~/{{notes}}`.",
       "hint": "Use `sed -i`. Since the replacement contains a `/`, it's easiest to switch delimiter: `s|Linux|GNU/Linux|`."
     }
   }

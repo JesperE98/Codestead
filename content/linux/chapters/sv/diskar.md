@@ -90,7 +90,7 @@ hur mycket som är ledigt:
 lsblk -f
 ```
 
-Lägg märke till `sdb1`: ett `vfat`-filsystem med etiketten `USBMINNE` som
+Lägg märke till `sdb1`: ett `vfat`-filsystem med etiketten `USBSTICK` som
 inte är monterat någonstans. Det är USB-stickan vi ska koppla in.
 
 ## Olika filsystem
@@ -136,7 +136,7 @@ i RAM-minnet. Vanliga monteringspunkter:
 | `/` | Rotfilsystemet |
 | `/boot`, `/boot/efi` | Kärnan och EFI-partitionen |
 | `/mnt` | Tillfälliga monteringar som du gör för hand |
-| `/media/elev/…` eller `/run/media/elev/…` | Där skrivbordsmiljön automatiskt monterar USB-stickor |
+| `/media/{{user}}/…` eller `/run/media/{{user}}/…` | Där skrivbordsmiljön automatiskt monterar USB-stickor |
 
 ## Hur mycket plats finns kvar? – `df`
 
@@ -192,7 +192,7 @@ du -h -d 1 ~
 
 Nu ska vi koppla in USB-stickan. Först: vilken enhet är den? `lsblk -f`
 visade en löstagbar disk, `sdb`, med partitionen `sdb1` och etiketten
-`USBMINNE`. Det är **partitionen** man monterar, inte hela disken.
+`USBSTICK`. Det är **partitionen** man monterar, inte hela disken.
 
 Sedan behövs en monteringspunkt – en vanlig, tom katalog. Både den och
 själva monteringen kräver root:
@@ -214,7 +214,7 @@ Härifrån fungerar stickan som vilken katalog som helst. Kopiera en fil till
 hemkatalogen:
 
 ```sh
-cp /mnt/usb/att-gora.txt ~
+cp /mnt/usb/{{todo}} ~
 ```
 
 > **Varför ägs allt av root?** FAT har inga Linux-rättigheter. När en
@@ -225,7 +225,7 @@ cp /mnt/usb/att-gora.txt ~
 > användar-id – se `id`).
 
 Du kan också montera med etiketten i stället för enhetsnamnet:
-`sudo mount LABEL=USBMINNE /mnt/usb`. På en dator med skrivbordsmiljö gör
+`sudo mount LABEL=USBSTICK /mnt/usb`. På en dator med skrivbordsmiljö gör
 filhanteraren allt detta automatiskt när du sätter i stickan.
 
 ```quiz
@@ -327,7 +327,7 @@ Vill du att stickan alltid ska kunna monteras på `/mnt/usb` kan du lägga
 till en rad som den här:
 
 ```text
-LABEL=USBMINNE  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
+LABEL=USBSTICK  /mnt/usb  vfat  noauto,user,uid=1000,gid=1000  0  0
 ```
 
 `noauto` betyder att den inte monteras vid start (stickan sitter kanske inte
@@ -368,7 +368,7 @@ partitionstabellen, och med `mkfs` skapar man ett nytt filsystem – formaterar:
 
 ```text
 sudo umount /mnt/usb
-sudo mkfs.vfat -n USBMINNE /dev/sdb1    # FAT32 – fungerar överallt
+sudo mkfs.vfat -n USBSTICK /dev/sdb1    # FAT32 – fungerar överallt
 sudo mkfs.ext4 -L BACKUP /dev/sdb1      # ext4 – Linux-rättigheter, men bara för Linux
 ```
 

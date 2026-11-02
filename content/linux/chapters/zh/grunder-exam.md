@@ -7,7 +7,7 @@
 - [ ] `var/log`
 - [ ] `../etc`
 - [x] `/usr/bin`
-- [ ] `dokument`
+- [ ] `{{documents}}`
 ---
 绝对路径以 `/` 开头，从根目录出发。其他几个都从你当前所在的目录出发。
 ```
@@ -29,10 +29,10 @@ $ pwd
 ```
 
 ```quiz
-你想把整个 `bilder` 目录连同其中的所有内容复制到 `bilder-kopia`。哪条命令可以做到？
-- [ ] `cp bilder bilder-kopia`
-- [x] `cp -r bilder bilder-kopia`
-- [ ] `mv bilder bilder-kopia`
+你想把整个 `{{pictures}}` 目录连同其中的所有内容复制到 `{{pictures}}-copy`。哪条命令可以做到？
+- [ ] `cp {{pictures}} {{pictures}}-copy`
+- [x] `cp -r {{pictures}} {{pictures}}-copy`
+- [ ] `mv {{pictures}} {{pictures}}-copy`
 ---
 复制目录要用 `-r`（*recursive*，递归）。`mv` 会移动它，而不是复制。
 ```
@@ -46,17 +46,17 @@ c
 ```
 
 ```quiz
-你输入 `touch min fil.txt`——没有加引号。会发生什么？
-- [ ] 创建一个名为 `min fil.txt` 的文件
-- [x] 创建两个文件：`min` 和 `fil.txt`
+你输入 `touch my file.txt`——没有加引号。会发生什么？
+- [ ] 创建一个名为 `my file.txt` 的文件
+- [x] 创建两个文件：`my` 和 `file.txt`
 - [ ] 什么也不会发生，因为名字里有空格
 ---
 shell 会在空格处拆分这一行，所以 `touch` 收到两个参数。写成
-`touch "min fil.txt"` 才能得到一个文件。
+`touch "my file.txt"` 才能得到一个文件。
 ```
 
 ```quiz
-`grep -i error dokument/server.log` 会显示哪些行？
+`grep -i error {{documents}}/server.log` 会显示哪些行？
 - [ ] 只显示小写 `error` 的行
 - [ ] 只显示大写 `ERROR` 的行
 - [x] 显示含有 `error` 的行，不论大小写如何组合
@@ -64,9 +64,9 @@ shell 会在空格处拆分这一行，所以 `touch` 收到两个参数。写�
 
 ```quiz
 你想盯着一个日志文件，看到写入的新行。哪条命令合适？
-- [ ] `head -n 10 dokument/server.log`
-- [x] `tail -f dokument/server.log`
-- [ ] `wc -l dokument/server.log`
+- [ ] `head -n 10 {{documents}}/server.log`
+- [x] `tail -f {{documents}}/server.log`
+- [ ] `wc -l {{documents}}/server.log`
 ---
 `tail -f` 会*跟踪*（follow）这个文件。按 **Ctrl+C** 停止。
 ```
@@ -96,9 +96,9 @@ c
 ```
 
 ```try
-grep ERROR ~/dokument/server.log | tee fel.txt | wc -l
+grep ERROR ~/{{documents}}/server.log | tee errors.txt | wc -l
 ---
-`tee` 把错误行保存到 `fel.txt`，并把它们继续传给 `wc -l`，由它来计数。
+`tee` 把错误行保存到 `errors.txt`，并把它们继续传给 `wc -l`，由它来计数。
 ```
 
 ```predict

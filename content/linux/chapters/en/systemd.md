@@ -55,9 +55,9 @@ ls /etc/systemd/system
 Older Debian and Ubuntu versions often say `/lib/systemd/system` instead.
 It's the same directory – `/lib` is a link to `/usr/lib`.
 
-The name of a service is the file name, for example `minserver.service`.
+The name of a service is the file name, for example `myserver.service`.
 When you type commands you may leave out `.service`: `systemctl status
-minserver` works just as well.
+myserver` works just as well.
 
 ## How is the service doing? – `systemctl status`
 
@@ -108,17 +108,17 @@ another unit needs it.
 ## Start, stop and restart
 
 ```text
-sudo systemctl start minserver      # start now
-sudo systemctl stop minserver       # stop now
-sudo systemctl restart minserver    # stop and start again
-sudo systemctl reload minserver     # ask it to re-read its configuration
+sudo systemctl start myserver      # start now
+sudo systemctl stop myserver       # stop now
+sudo systemctl restart myserver    # stop and start again
+sudo systemctl reload myserver     # ask it to re-read its configuration
 ```
 
 Everything that **changes** something requires root, so don't forget
 `sudo`. Without it systemctl answers:
 
 ```text
-Failed to start minserver.service: Interactive authentication required.
+Failed to start myserver.service: Interactive authentication required.
 ```
 
 `reload` only works for services that support it. The advantage is that
@@ -127,9 +127,9 @@ changed a service's configuration file, `reload` or `restart` is the final
 step.
 
 > **Try it!** In the chapter on processes you stopped the practice server
-> with `pkill`. Look at `systemctl status minserver` – systemd noticed that
+> with `pkill`. Look at `systemctl status myserver` – systemd noticed that
 > the process disappeared. Start it again with `systemctl` and compare the
-> PID with `pgrep -l minserver`.
+> PID with `pgrep -l myserver`.
 
 ## Now or at boot? `start` and `enable`
 
@@ -147,16 +147,16 @@ This is the most common misunderstanding about systemd: **`start` and
 `[Install]` section of the unit file, usually `multi-user.target.wants`:
 
 ```text
-$ sudo systemctl enable --now minserver
-Created symlink /etc/systemd/system/multi-user.target.wants/minserver.service → /etc/systemd/system/minserver.service.
+$ sudo systemctl enable --now myserver
+Created symlink /etc/systemd/system/multi-user.target.wants/myserver.service → /etc/systemd/system/myserver.service.
 ```
 
 When the computer boots, systemd goes through that directory and starts
 everything in it. You can ask about the state:
 
 ```sh
-systemctl is-active minserver
-systemctl is-enabled minserver
+systemctl is-active myserver
+systemctl is-enabled myserver
 ```
 
 `is-active` and `is-enabled` are great in scripts – they print one word and
@@ -164,19 +164,19 @@ exit with status 0 if the answer is "yes". With `-q` they're completely
 silent:
 
 ```text
-if systemctl is-active -q minserver; then echo "the server is running"; fi
+if systemctl is-active -q myserver; then echo "the server is running"; fi
 ```
 
-On a freshly started computer in the simulator, `minserver` is running, but
+On a freshly started computer in the simulator, `myserver` is running, but
 nobody has enabled it. What do these two commands print?
 
 ```predict
-$ systemctl is-active minserver
-$ systemctl is-enabled minserver
+$ systemctl is-active myserver
+$ systemctl is-enabled myserver
 active
 disabled
 ---
-minserver is running **now**, but nobody has run `enable` – after a reboot
+myserver is running **now**, but nobody has run `enable` – after a reboot
 it would not be started. `start` and `enable` really are two different
 things.
 ```
@@ -222,9 +222,9 @@ That quickly becomes a lot, so you almost always filter:
 The options can be combined. A couple of classics:
 
 ```sh
-journalctl -u minserver -n 5
+journalctl -u myserver -n 5
 journalctl -p err -b
-journalctl --since today -u minserver
+journalctl --since today -u myserver
 ```
 
 ### Priorities
@@ -266,7 +266,7 @@ everything with the same or a lower number (`warning` is 4).
 
 ## Troubleshooting a service that won't start
 
-Someone has set up the service **rapportd** on this computer, but something
+Someone has set up the service **reportd** on this computer, but something
 is wrong. This is the usual way to go about it:
 
 1. **What has failed?** List the failed services:
@@ -278,19 +278,19 @@ is wrong. This is the usual way to go about it:
 2. **Look at the status.** The last lines are often enough:
 
    ```sh
-   systemctl status rapportd
+   systemctl status reportd
    ```
 
 3. **Read the whole log** for the service. It almost always tells you what's
    wrong – read it carefully, word by word:
 
    ```sh
-   journalctl -xeu rapportd
+   journalctl -xeu reportd
    ```
 
    `systemctl` itself suggests exactly that command when a start fails:
-   `See "systemctl status rapportd.service" and "journalctl -xeu
-   rapportd.service" for details.`
+   `See "systemctl status reportd.service" and "journalctl -xeu
+   reportd.service" for details.`
 
 4. **Fix the problem**, for example a configuration file that is missing or
    has a typo.
@@ -298,8 +298,8 @@ is wrong. This is the usual way to go about it:
 5. **Restart and check:**
 
    ```text
-   sudo systemctl restart rapportd
-   systemctl status rapportd
+   sudo systemctl restart reportd
+   systemctl status reportd
    ```
 
 The line `Main process exited, code=exited, status=1/FAILURE` means the
@@ -323,17 +323,17 @@ starts and then exits with an error gives `status=1/FAILURE` instead.
 To see exactly how a service is started, read its unit file:
 
 ```sh
-systemctl cat minserver
+systemctl cat myserver
 ```
 
 ```text
-# /etc/systemd/system/minserver.service
+# /etc/systemd/system/myserver.service
 [Unit]
-Description=Minserver web server (practice server)
+Description=Myserver web server (practice server)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/minserver --port 8080
+ExecStart=/usr/local/bin/myserver --port 8080
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]

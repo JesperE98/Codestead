@@ -21,12 +21,12 @@
       "hint": "`/mnt` में directories बनाने और mount करने, दोनों के लिए root चाहिए: `sudo mkdir -p /mnt/usb` और फिर `sudo mount /dev/sdb1 /mnt/usb`।"
     },
     "fran-usb": {
-      "text": "USB stick से `rapport.pdf` को अपनी home directory में copy कीजिए।",
-      "hint": "Stick की files अब `/mnt/usb` में हैं: `cp /mnt/usb/rapport.pdf ~`।"
+      "text": "USB stick से `{{report}}` को अपनी home directory में copy कीजिए।",
+      "hint": "Stick की files अब `/mnt/usb` में हैं: `cp /mnt/usb/{{report}} ~`।"
     },
     "till-usb": {
-      "text": "`~/dokument/frukter.txt` की एक copy USB stick पर save कीजिए।",
-      "hint": "Stick पर files का owner root है – FAT में Linux permissions नहीं होतीं – इसलिए आपको `sudo` चाहिए: `sudo cp ~/dokument/frukter.txt /mnt/usb/`।"
+      "text": "`~/{{documents}}/{{fruits}}` की एक copy USB stick पर save कीजिए।",
+      "hint": "Stick पर files का owner root है – FAT में Linux permissions नहीं होतीं – इसलिए आपको `sudo` चाहिए: `sudo cp ~/{{documents}}/{{fruits}} /mnt/usb/`।"
     },
     "avmontera": {
       "text": "USB stick को unmount कीजिए, ताकि उसे निकालना सुरक्षित हो।",

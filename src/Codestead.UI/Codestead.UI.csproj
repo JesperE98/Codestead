@@ -13,4 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="../Codestead.Shell/Codestead.Shell.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Codestead.UI.Tests" />
+  </ItemGroup>
 </Project>

@@ -5,23 +5,23 @@ utilisateurs. Les questions couvrent toute la partie, et il faut 80 % de
 bonnes réponses pour réussir.
 
 ```quiz
-`minserver` doit démarrer automatiquement à chaque démarrage de l'ordinateur,
+`myserver` doit démarrer automatiquement à chaque démarrage de l'ordinateur,
 mais il ne doit **pas** être lancé tout de suite. Quelle commande fait
 exactement cela ?
-- [ ] `sudo systemctl start minserver`
-- [x] `sudo systemctl enable minserver`
-- [ ] `sudo systemctl enable --now minserver`
-- [ ] `sudo systemctl restart minserver`
+- [ ] `sudo systemctl start myserver`
+- [x] `sudo systemctl enable myserver`
+- [ ] `sudo systemctl enable --now myserver`
+- [ ] `sudo systemctl restart myserver`
 ---
 `enable` s'applique au démarrage, `start` s'applique maintenant, et `--now`
 fait les deux.
 ```
 
-Le service `rapportd` de cet ordinateur n'a pas réussi à démarrer.
+Le service `reportd` de cet ordinateur n'a pas réussi à démarrer.
 Qu'affiche cette commande ?
 
 ```predict
-$ systemctl is-active rapportd
+$ systemctl is-active reportd
 failed
 ---
 `is-active` n'affiche qu'un seul mot – ici le même état que celui listé par
@@ -30,29 +30,29 @@ failed
 ```
 
 ```quiz
-Vous voulez surveiller le journal de `minserver` pendant que vous le testez,
+Vous voulez surveiller le journal de `myserver` pendant que vous le testez,
 avec les nouvelles lignes qui apparaissent au fur et à mesure. Quelle
 commande utilisez-vous ?
 - [ ] `journalctl -n 20`
-- [x] `journalctl -u minserver -f`
+- [x] `journalctl -u myserver -f`
 - [ ] `journalctl -p err -b`
-- [ ] `systemctl status minserver --all`
+- [ ] `systemctl status myserver --all`
 ---
 `-u` choisit une unité et `-f` continue d'afficher les nouvelles lignes
 jusqu'à ce que vous appuyiez sur Ctrl+C.
 ```
 
 ```try
-systemctl cat minserver
+systemctl cat myserver
 ---
 `ExecStart=` est la commande qui démarre le service, et `WantedBy=` est ce
 qu'utilise `enable`.
 ```
 
 ```quiz
-Vous lancez `systemctl stop minserver` sans `sudo` et obtenez
+Vous lancez `systemctl stop myserver` sans `sudo` et obtenez
 *Interactive authentication required*. Pourquoi ?
-- [ ] minserver ne tourne pas
+- [ ] myserver ne tourne pas
 - [x] Tout ce qui modifie un service nécessite les droits root
 - [ ] Vous devez d'abord lancer `daemon-reload`
 - [ ] `stop` ne fonctionne que pour les services activés
@@ -132,7 +132,7 @@ Qui fait partie du groupe `sudo` ?
 
 ```predict
 $ grep ^sudo /etc/group | cut -d: -f4
-elev
+{{user}}
 ```
 
 ```quiz

@@ -6,15 +6,15 @@ terminal neuf, elles installent donc d'abord le programme dont elles ont
 besoin – `> /dev/null 2>&1` jette la sortie de ces lignes.
 
 ```quiz
-Vous avez modifié `index.html` et créé le nouveau fichier `kontakt.html`.
+Vous avez modifié `index.html` et créé le nouveau fichier `contact.html`.
 Vous lancez `git commit -am "Contact page"`. Qu'est-ce qui se retrouve dans
 le commit ?
 - [x] Seulement la modification de `index.html`
-- [ ] Seulement `kontakt.html`
+- [ ] Seulement `contact.html`
 - [ ] Les deux fichiers
 ---
 `-a` ajoute tous les fichiers modifiés que git suit déjà – mais jamais les
-nouveaux fichiers. `kontakt.html` doit d'abord être ajouté avec `git add`.
+nouveaux fichiers. `contact.html` doit d'abord être ajouté avec `git add`.
 ```
 
 ```quiz
@@ -31,21 +31,21 @@ attend d'être committé.
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "Première version" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
-$ git merge ny-design > /dev/null
+$ git merge {{newDesign}} > /dev/null
 $ git log --oneline | wc -l
 2
 ---
 `main` n'avait pas changé depuis la création de la branche, la fusion a donc
 été un *fast-forward* : git a seulement avancé `main` jusqu'au commit de
-`ny-design`. Aucun commit de fusion n'a été créé.
+`{{newDesign}}`. Aucun commit de fusion n'a été créé.
 ```
 
 ```quiz
@@ -70,12 +70,12 @@ fusion. `git restore` jetterait votre correction.
 ```
 
 ```quiz
-Le fichier `fel.log` a été committé par erreur. Vous ajoutez `*.log` à
+Le fichier `erreur.log` a été committé par erreur. Vous ajoutez `*.log` à
 `.gitignore`, mais git suit toujours le fichier. Comment le retirer du dépôt
 tout en le gardant sur le disque ?
-- [ ] `rm fel.log`
-- [x] `git rm --cached fel.log`
-- [ ] `git restore fel.log`
+- [ ] `rm erreur.log`
+- [x] `git rm --cached erreur.log`
+- [ ] `git restore erreur.log`
 ---
 `.gitignore` ne s'applique qu'aux fichiers que git ne suit pas encore.
 `--cached` retire le fichier de git mais le laisse sur le disque.
@@ -150,7 +150,7 @@ Quel fichier zsh lit-il au démarrage ?
 ```
 
 ```try
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ---
 Le dernier champ de la ligne est votre shell de connexion – celui que
 `chsh -s` modifie.

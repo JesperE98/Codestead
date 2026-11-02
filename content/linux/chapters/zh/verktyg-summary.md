@@ -53,7 +53,7 @@
 | `zsh` / `fish` / `exit` | 启动另一个 shell / 返回 |
 | `zsh -c '…'` / `fish -c '…'` | 在另一个 shell 中运行一条命令 |
 | `setopt autocd` / `unsetopt autocd` | 开启 / 关闭一个 zsh 选项 |
-| `set frukt äpple` / `set -e frukt` | 在 fish 中设置 / 删除变量 |
+| `set {{fruitVar}} {{fruitWord}}` / `set -e {{fruitVar}}` | 在 fish 中设置 / 删除变量 |
 | `set -x NAME value` | 在 fish 中设置环境变量 |
 | `math 17 x 23` | 在 fish 中做算术运算 |
 | `chsh -s /usr/bin/zsh` | 更改你的登录 shell |

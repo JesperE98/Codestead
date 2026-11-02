@@ -19,19 +19,19 @@
     },
     "curl-localhost": {
       "text": "اجلب الصفحة الرئيسية لخادم التدريب على حاسوبك، `http://localhost:8080`، باستخدام `curl`.",
-      "hint": "على Ubuntu يجب تثبيت curl: `sudo apt install curl`. إذا حصلت على *Couldn't connect to server* فإن minserver متوقف – شغّله باستخدام `minserver`."
+      "hint": "على Ubuntu يجب تثبيت curl: `sudo apt install curl`. إذا حصلت على *Couldn't connect to server* فإن myserver متوقف – شغّله باستخدام `myserver`."
     },
     "spara": {
-      "text": "احفظ صفحة الويب `https://example.com` في الملف `~/exempel.html`.",
-      "hint": "قف في مجلد المنزل واستخدم `curl -o exempel.html https://example.com` أو `wget -O exempel.html https://example.com`."
+      "text": "احفظ صفحة الويب `https://example.com` في الملف `~/{{exampleHtml}}`.",
+      "hint": "قف في مجلد المنزل واستخدم `curl -o {{exampleHtml}} https://example.com` أو `wget -O {{exampleHtml}} https://example.com`."
     },
     "hosts": {
       "text": "يجب أن يُسمّى الخادم `192.168.1.10` باسم `server.lan`، لكن الاسم غير موجود في DNS. أضفه إلى `/etc/hosts` ثم أرسل ping إلى `server.lan`.",
       "hint": "الملف مملوك لـ root: `echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts` ثم `ping -c 3 server.lan`."
     },
     "ssh": {
-      "text": "شغّل الأمر `hostname` على الخادم `server.lan` باستخدام `ssh` بوصفك المستخدم `elev`.",
-      "hint": "`ssh elev@server.lan hostname` – وأجب بـ `yes` عن السؤال المتعلق بمفتاح المضيف."
+      "text": "شغّل الأمر `hostname` على الخادم `server.lan` باستخدام `ssh` بوصفك المستخدم `{{user}}`.",
+      "hint": "`ssh {{user}}@server.lan hostname` – وأجب بـ `yes` عن السؤال المتعلق بمفتاح المضيف."
     }
   }
 }

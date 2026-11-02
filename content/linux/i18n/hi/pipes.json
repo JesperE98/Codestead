@@ -2,23 +2,23 @@
   "title": "Redirection और pipes",
   "tasks": {
     "redirect": {
-      "text": "`echo` और `>` से text `Hej från shell` (Swedish में “shell की ओर से नमस्ते”) को file `~/hej.txt` में लिखिए।"
+      "text": "`echo` और `>` से text `{{helloShell}}` को file `~/{{helloFile}}` में लिखिए।"
     },
     "append": {
-      "text": "`~/hej.txt` में एक और line जोड़िए – पहली line को overwrite किए बिना।",
+      "text": "`~/{{helloFile}}` में एक और line जोड़िए – पहली line को overwrite किए बिना।",
       "hint": "`>` की जगह `>>` इस्तेमाल कीजिए।"
     },
     "count-errors": {
       "text": "`grep` को pipe से `wc -l` में भेजकर गिनिए कि server.log की कितनी lines में `ERROR` है।"
     },
     "uniq": {
-      "text": "`sort` और `uniq -c` से दिखाइए कि `frukter.txt` में हर फल कितनी बार आता है।"
+      "text": "`sort` और `uniq -c` से दिखाइए कि `{{fruits}}` में हर फल कितनी बार आता है।"
     },
     "save-ls": {
-      "text": "`/etc` की files की list को file `~/etc-filer.txt` में save कीजिए।"
+      "text": "`/etc` की files की list को file `~/{{etcFiles}}` में save कीजिए।"
     },
     "devnull": {
-      "text": "`ls /finnsinte` चलाइए, लेकिन error message को `/dev/null` में भेज दीजिए ताकि कुछ भी न दिखे।"
+      "text": "`ls /{{missing}}` चलाइए, लेकिन error message को `/dev/null` में भेज दीजिए ताकि कुछ भी न दिखे।"
     }
   }
 }

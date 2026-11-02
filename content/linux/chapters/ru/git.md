@@ -45,8 +45,8 @@ git --version
 сохранить. Это настраивается один раз на каждом компьютере:
 
 ```sh
-git config --global user.name "Elev Elevsson"
-git config --global user.email "elev@example.com"
+git config --global user.name "{{gitName}}"
+git config --global user.email "{{user}}@example.com"
 ```
 
 Можете указать своё имя. `--global` означает, что настройка действует для
@@ -58,8 +58,8 @@ cat ~/.gitconfig
 
 ```text
 [user]
-	name = Elev Elevsson
-	email = elev@example.com
+	name = {{gitName}}
+	email = {{user}}@example.com
 ```
 
 Если пропустить этот шаг, git возмутится, когда вы попытаетесь что-то
@@ -73,11 +73,11 @@ cat ~/.gitconfig
 
 ## Новый репозиторий
 
-В вашем домашнем каталоге есть небольшой веб-проект `~/projekt-webb`
-(по-шведски «веб-проект») с тремя файлами. Перейдите туда и осмотритесь:
+В вашем домашнем каталоге есть небольшой веб-проект `~/{{webProject}}`
+с тремя файлами. Перейдите туда и осмотритесь:
 
 ```sh
-cd ~/projekt-webb
+cd ~/{{webProject}}
 ls
 ```
 
@@ -89,7 +89,7 @@ git init
 ```
 
 ```text
-Initialized empty Git repository in /home/elev/projekt-webb/.git/
+Initialized empty Git repository in /home/{{user}}/{{webProject}}/.git/
 ```
 
 Произошло только одно: был создан скрытый каталог `.git`. Именно там git
@@ -198,19 +198,18 @@ Changes to be committed:
 Сохраните снимок командой `git commit`. Опция `-m` задаёт сообщение:
 
 ```sh
-git commit -m "Första versionen av webbplatsen"
+git commit -m "{{commitFirst}}"
 ```
 
 ```text
-[main (root-commit) 3f2a9c1] Första versionen av webbplatsen
+[main (root-commit) 3f2a9c1] {{commitFirst}}
  3 files changed, 24 insertions(+)
  create mode 100644 README.md
  create mode 100644 index.html
  create mode 100644 style.css
 ```
 
-(Сообщение по-шведски значит «Первая версия сайта» – свои сообщения пишите на
-любом языке.) `3f2a9c1` – начало **идентификатора** коммита: 40-символьного
+`3f2a9c1` – начало **идентификатора** коммита: 40-символьного
 *хеша*, вычисленного из содержимого. Ваш идентификатор будет другим, ведь в
 него входят время и ваше имя. Обычно первых семи символов достаточно, чтобы
 однозначно указать коммит.
@@ -233,7 +232,7 @@ nothing to commit, working tree clean
 Добавьте строку в `README.md` и спросите git, что произошло:
 
 ```sh
-echo 'Sidan är byggd med HTML och CSS.' >> README.md
+echo '{{builtWith}}' >> README.md
 git status
 git diff
 ```
@@ -244,10 +243,10 @@ index 1100cf4..e5bd3a0 100644
 --- a/README.md
 +++ b/README.md
 @@ -1,3 +1,4 @@
- # Min webbplats
+ # {{siteTitle}}
  
- En liten webbplats som jag versionshanterar med git.
-+Sidan är byggd med HTML och CSS.
+ Небольшой сайт, версии которого я храню в git.
++{{builtWith}}
 ```
 
 Строка, начинающаяся с `+`, новая (зелёная), строки, начинающиеся с `-`, были
@@ -262,7 +261,7 @@ index 1100cf4..e5bd3a0 100644
 файлов, которые git уже отслеживает, так что хватит одного шага:
 
 ```sh
-git commit -a -m "Beskriv hur sidan är byggd"
+git commit -a -m "{{commitDescribe}}"
 ```
 
 Обратите внимание: `-a` *не* включает новые файлы, которые git пока не
@@ -275,12 +274,12 @@ git commit -a -m "Beskriv hur sidan är byggd"
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ echo 'En rad till.' >> README.md
-$ git commit -m "En rad till" > /dev/null
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "Первая версия" > /dev/null
+$ echo 'Ещё одна строка.' >> README.md
+$ git commit -m "Ещё одна строка" > /dev/null
 $ git log --oneline | wc -l
 1
 ---
@@ -322,10 +321,10 @@ git log
 
 ```text
 commit 8d41b7e0c2a3f1d5e9b6a7c8d9e0f1a2b3c4d5e6 (HEAD -> main)
-Author: Elev Elevsson <elev@example.com>
+Author: {{gitName}} <{{user}}@example.com>
 Date:   Fri Oct 30 14:12:09 2026 +0100
 
-    Beskriv hur sidan är byggd
+    {{commitDescribe}}
 
 commit 3f2a9c1...
 ```
@@ -383,17 +382,17 @@ cat index.html
 
 ```sh
 git branch
-git switch -c ny-design
+git switch -c {{newDesign}}
 git branch
 ```
 
-`git switch -c ny-design` (по-шведски «новый дизайн») создаёт ветку и
+`git switch -c {{newDesign}}` создаёт ветку и
 переключается на неё. Звёздочка в выводе `git branch` показывает, где вы
 находитесь. Внесите изменение и закоммитьте его в ветке:
 
 ```sh
 echo 'h1 { color: purple; }' >> style.css
-git commit -am "Lila rubriker"
+git commit -am "{{commitPurple}}"
 ```
 
 Вернитесь на `main` и посмотрите на `style.css`:
@@ -405,13 +404,13 @@ tail -3 style.css
 
 Фиолетовый цвет исчез! При переключении веток git переписывает рабочий
 каталог так, чтобы он соответствовал последнему коммиту ветки. Изменение надёжно
-сохранено в `ny-design`. `git log --oneline --all` показывает все ветки:
+сохранено в `{{newDesign}}`. `git log --oneline --all` показывает все ветки:
 
 ```sh
 git log --oneline --all
 ```
 
-> **Совет:** В старых руководствах часто используют `git checkout ny-design` и
+> **Совет:** В старых руководствах часто используют `git checkout {{newDesign}}` и
 > `git checkout -b new-branch`. `checkout` делает то же, что `switch`, но
 > умеет ещё и восстанавливать файлы. Более новые команды `switch` и `restore`
 > разделяют эти задачи, и их проще запомнить.
@@ -425,18 +424,18 @@ git log --oneline --all
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "Первая версия" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
 $ grep purple style.css | wc -l
 0
 ---
-Строка с purple была закоммичена в `ny-design`. Когда вы переключаетесь на
+Строка с purple была закоммичена в `{{newDesign}}`. Когда вы переключаетесь на
 `main`, git приводит рабочий каталог к последнему коммиту `main` – а там этой
 строки ещё нет.
 ```
@@ -447,7 +446,7 @@ $ grep purple style.css | wc -l
 и выполните слияние:
 
 ```sh
-git merge ny-design
+git merge {{newDesign}}
 ```
 
 ```text
@@ -459,7 +458,7 @@ Fast-forward
 
 *Fast-forward* («перемотка вперёд») означает, что `main` не менялась с тех
 пор, как была создана ветка. Тогда git остаётся только передвинуть `main`
-вперёд на тот же коммит, что и `ny-design`.
+вперёд на тот же коммит, что и `{{newDesign}}`.
 
 Если в обеих ветках есть новые коммиты, git выполняет **трёхстороннее
 слияние**: он сравнивает обе ветки с их общим предком и создаёт новый *коммит
@@ -467,35 +466,35 @@ Fast-forward
 показывает, как история расходится и снова сходится:
 
 ```text
-*   e4b1d0a (HEAD -> main) Merge branch 'rubrik'
+*   e4b1d0a (HEAD -> main) Merge branch 'heading'
 |\
-| * 7c3f9e2 (rubrik) Vänligare rubrik
-* | 52d8a71 Kortare text
+| * 7c3f9e2 (heading) Более дружелюбный заголовок
+* | 52d8a71 Более короткий текст
 |/
-* c19e2f4 Lila rubriker
+* c19e2f4 {{commitPurple}}
 ```
 
 Слитая ветка больше не нужна, и её можно удалить. `-d` откажется это делать,
 если в ветке есть коммиты, которых нет в той, на которой вы находитесь:
 
 ```sh
-git branch -d ny-design
+git branch -d {{newDesign}}
 ```
 
 ## Конфликты
 
 Если в обеих ветках изменены *одни и те же строки*, git не может знать, какая
 версия правильная. Это называется **конфликтом**, и тогда решаете вы. Давайте
-создадим конфликт нарочно (*rubrik* по-шведски значит «заголовок»):
+создадим конфликт нарочно:
 
 ```sh
-git switch -c rubrik
-sed -i 's/Välkommen!/Hej och välkommen!/' index.html
-git commit -am "Vänligare rubrik"
+git switch -c heading
+sed -i 's/Добро пожаловать!/Привет и добро пожаловать!/' index.html
+git commit -am "Более дружелюбный заголовок"
 git switch main
-sed -i 's/Välkommen!/Välkommen till min sida!/' index.html
-git commit -am "Längre rubrik"
-git merge rubrik
+sed -i 's/Добро пожаловать!/Добро пожаловать на мой сайт!/' index.html
+git commit -am "Более длинный заголовок"
+git merge heading
 ```
 
 ```text
@@ -514,14 +513,14 @@ cat index.html
 
 ```text
 <<<<<<< HEAD
-  <h1>Välkommen till min sida!</h1>
+  <h1>Добро пожаловать на мой сайт!</h1>
 =======
-  <h1>Hej och välkommen!</h1>
->>>>>>> rubrik
+  <h1>Привет и добро пожаловать!</h1>
+>>>>>>> heading
 ```
 
 Между `<<<<<<< HEAD` и `=======` находится ваша версия (ветки, на которой вы
-стоите); между `=======` и `>>>>>>> rubrik` – версия другой ветки. Конфликт
+стоите); между `=======` и `>>>>>>> heading` – версия другой ветки. Конфликт
 разрешается так:
 
 1. Откройте файл в редакторе и приведите его к нужному виду – выберите одну из
@@ -537,7 +536,7 @@ cat index.html
 git checkout --theirs index.html
 git add index.html
 git status
-git commit -m "Slå ihop grenen rubrik"
+git commit -m "Слить ветку heading"
 ```
 
 Если вы передумаете посреди конфликта, `git merge --abort` вернёт вас туда,
@@ -548,13 +547,13 @@ git commit -m "Slå ihop grenen rubrik"
 и часто сливать ветки.
 
 ```quiz
-Вы находитесь в `main` и выполняете `git merge rubrik`. В файле возникает конфликт:
+Вы находитесь в `main` и выполняете `git merge heading`. В файле возникает конфликт:
 
     <<<<<<< HEAD
       <h1>Hello!</h1>
     =======
       <h1>Welcome!</h1>
-    >>>>>>> rubrik
+    >>>>>>> heading
 
 Какая строка пришла из `main`?
 - [x] `<h1>Hello!</h1>`
@@ -571,9 +570,9 @@ git commit -m "Slå ihop grenen rubrik"
 шаблоны в файл `.gitignore` в корне репозитория:
 
 ```sh
-echo 'password=secret' > hemligt.txt
-echo 'error' > fel.log
-printf 'hemligt.txt\n*.log\nbuild/\n' > .gitignore
+echo 'password=secret' > secret.txt
+echo 'error' > error.log
+printf 'secret.txt\n*.log\nbuild/\n' > .gitignore
 git status
 ```
 
@@ -583,14 +582,14 @@ Untracked files:
 	.gitignore
 ```
 
-`hemligt.txt` («секретное») и `fel.log` («ошибка») больше не показываются –
+`secret.txt` и `error.log` больше не показываются –
 их не подхватывает даже `git add .`. `*` соответствует чему угодно, а косая
 черта в конце (`build/`) означает целый каталог. А вот сам `.gitignore` нужно
 закоммитить, чтобы все, кто работает над проектом, игнорировали одно и то же:
 
 ```sh
 git add .gitignore
-git commit -m "Ignorera hemligheter och loggar"
+git commit -m "Игнорировать секреты и логи"
 ```
 
 Учтите, что `.gitignore` действует только на файлы, которые git ещё не
@@ -619,13 +618,12 @@ SSH-ключ или токен доступа, а не пароль.
 
 Для всего этого нужна сеть, а в симуляторе её нет. Но `clone`, `push` и
 `pull` так же хорошо работают между двумя репозиториями на одном компьютере,
-так что попробовать всё равно можно. Склонируйте свой проект в новый каталог
-(*kopia* по-шведски – «копия»):
+так что попробовать всё равно можно. Склонируйте свой проект в новый каталог:
 
 ```sh
 cd ~
-git clone ~/projekt-webb ~/kopia
-cd ~/kopia
+git clone ~/{{webProject}} ~/copy
+cd ~/copy
 git log --oneline
 git remote -v
 ```
@@ -636,7 +634,7 @@ git remote -v
 
 ```sh
 git init --bare ~/server.git
-cd ~/projekt-webb
+cd ~/{{webProject}}
 git remote add origin ~/server.git
 git push -u origin main
 git status

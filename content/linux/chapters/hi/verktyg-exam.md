@@ -5,14 +5,14 @@ git और दूसरे शेलों के बारे में चौ�
 प्रोग्राम इंस्टॉल करते हैं – `> /dev/null 2>&1` उन पंक्तियों का आउटपुट फेंक देता है।
 
 ```quiz
-आपने `index.html` बदली है और नई फ़ाइल `kontakt.html` बनाई है। आप
+आपने `index.html` बदली है और नई फ़ाइल `contact.html` बनाई है। आप
 `git commit -am "Contact page"` चलाते हैं। कमिट में क्या पहुँचता है?
 - [x] सिर्फ़ `index.html` का बदलाव
-- [ ] सिर्फ़ `kontakt.html`
+- [ ] सिर्फ़ `contact.html`
 - [ ] दोनों फ़ाइलें
 ---
 `-a` हर उस बदली हुई फ़ाइल को जोड़ता है जिस पर git पहले से नज़र रखता है – लेकिन नई
-फ़ाइलों को कभी नहीं। `kontakt.html` को पहले `git add` से जोड़ना होगा।
+फ़ाइलों को कभी नहीं। `contact.html` को पहले `git add` से जोड़ना होगा।
 ```
 
 ```quiz
@@ -28,20 +28,20 @@ git और दूसरे शेलों के बारे में चौ�
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "{{commitFirst}}" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
-$ git merge ny-design > /dev/null
+$ git merge {{newDesign}} > /dev/null
 $ git log --oneline | wc -l
 2
 ---
 ब्रांच बनने के बाद से `main` नहीं बदली थी, इसलिए मर्ज एक *fast-forward* था: git ने
-सिर्फ़ `main` को आगे `ny-design` के कमिट तक खिसका दिया। कोई मर्ज कमिट नहीं बना।
+सिर्फ़ `main` को आगे `{{newDesign}}` के कमिट तक खिसका दिया। कोई मर्ज कमिट नहीं बना।
 ```
 
 ```quiz
@@ -65,12 +65,12 @@ $ git log --oneline | wc -l
 ```
 
 ```quiz
-फ़ाइल `fel.log` ग़लती से कमिट हो गई थी। आप `.gitignore` में `*.log` जोड़ते हैं,
+फ़ाइल `error.log` ग़लती से कमिट हो गई थी। आप `.gitignore` में `*.log` जोड़ते हैं,
 लेकिन git अब भी उस फ़ाइल पर नज़र रखता है। आप उसे रिपॉज़िटरी से कैसे हटाएँगे लेकिन
 डिस्क पर रखेंगे?
-- [ ] `rm fel.log`
-- [x] `git rm --cached fel.log`
-- [ ] `git restore fel.log`
+- [ ] `rm error.log`
+- [x] `git rm --cached error.log`
+- [ ] `git restore error.log`
 ---
 `.gitignore` सिर्फ़ उन फ़ाइलों पर लागू होती है जिन पर git पहले से नज़र नहीं रखता।
 `--cached` फ़ाइल को git से हटा देता है लेकिन डिस्क पर छोड़ देता है।
@@ -142,7 +142,7 @@ fish में आप `EDITOR` को `nano` मान वाला एनवा
 ```
 
 ```try
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ---
 पंक्ति का आख़िरी फ़ील्ड आपका लॉगिन शेल है – वही जिसे `chsh -s` बदलता है।
 ```

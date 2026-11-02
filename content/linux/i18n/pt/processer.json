@@ -26,7 +26,7 @@
       "text": "Encerre o job em segundo plano com `kill` e o número do job (`%1`) ou o PID dele."
     },
     "server": {
-      "text": "O servidor `minserver` está rodando como root. Pare-o – com `pkill` ou `kill` e as permissões certas.",
+      "text": "O servidor `myserver` está rodando como root. Pare-o – com `pkill` ou `kill` e as permissões certas.",
       "hint": "Como usuário comum, você vai receber \"Operation not permitted\". Coloque `sudo` na frente."
     }
   }

@@ -2,35 +2,35 @@
   "title": "Scripts de shell",
   "tasks": {
     "variabel": {
-      "text": "Crie a variável `namn` (“nome” em sueco) com o seu nome e depois use `echo` para imprimir `Hej` (“Oi”) seguido do nome.",
-      "hint": "Sem espaços em volta do `=`: `namn=Kim`. Depois use `echo \"Hej $namn\"`."
+      "text": "Crie a variável `{{nameVar}}` com o seu nome e depois use `echo` para imprimir `{{hello}}` seguido do nome.",
+      "hint": "Sem espaços em volta do `=`: `{{nameVar}}=Kim`. Depois use `echo \"{{hello}} ${{nameVar}}\"`."
     },
     "rakna": {
       "text": "Calcule 17 × 23 com `$(( ))`."
     },
     "substitution": {
-      "text": "Guarde o número de linhas de `~/dokument/server.log` na variável `rader`, usando `$(...)` e `wc -l`.",
-      "hint": "`wc -l < arquivo` imprime só o número, sem o nome do arquivo: `rader=$(wc -l < ~/dokument/server.log)`"
+      "text": "Guarde o número de linhas de `~/{{documents}}/server.log` na variável `{{linesVar}}`, usando `$(...)` e `wc -l`.",
+      "hint": "`wc -l < arquivo` imprime só o número, sem o nome do arquivo: `{{linesVar}}=$(wc -l < ~/{{documents}}/server.log)`"
     },
     "if": {
-      "text": "Escreva um `if` que imprima `finns` (“existe”) se o arquivo `~/.bashrc` existir.",
-      "hint": "`if [ -f ~/.bashrc ]; then echo finns; fi` – não esqueça os espaços dentro dos colchetes."
+      "text": "Escreva um `if` que imprima `{{exists}}` se o arquivo `~/.bashrc` existir.",
+      "hint": "`if [ -f ~/.bashrc ]; then echo {{exists}}; fi` – não esqueça os espaços dentro dos colchetes."
     },
     "for": {
       "text": "Imprima os números de 1 a 5, um por linha, com um laço `for`.",
       "hint": "Ou `for i in 1 2 3 4 5; do ...; done` ou `for i in $(seq 1 5); do ...; done`."
     },
     "while-read": {
-      "text": "Leia `~/dokument/frukter.txt` linha por linha com `while read` e imprima `Frukt: ` (“Fruta” em sueco) na frente de cada linha.",
-      "hint": "`while read rad; do echo \"Frukt: $rad\"; done < ~/dokument/frukter.txt`"
+      "text": "Leia `~/{{documents}}/{{fruits}}` linha por linha com `while read` e imprima `{{fruitLabel}}: ` na frente de cada linha.",
+      "hint": "`while read {{lineVar}}; do echo \"{{fruitLabel}}: ${{lineVar}}\"; done < ~/{{documents}}/{{fruits}}`"
     },
     "funktion": {
-      "text": "Crie a função `dubbla` (“dobrar”), que imprime o primeiro argumento multiplicado por dois. Teste-a com `dubbla 21`.",
-      "hint": "`dubbla() { echo $(( $1 * 2 )); }` – e depois `dubbla 21`."
+      "text": "Crie a função `{{doubleFn}}`, que imprime o primeiro argumento multiplicado por dois. Teste-a com `{{doubleFn}} 21`.",
+      "hint": "`{{doubleFn}}() { echo $(( $1 * 2 )); }` – e depois `{{doubleFn}} 21`."
     },
     "backup": {
-      "text": "Escreva o script `~/backup.sh`, que copia o arquivo passado como primeiro argumento para o mesmo nome com `.bak` no final. Torne-o executável e execute `./backup.sh anteckningar.txt` no seu diretório pessoal.",
-      "hint": "Crie o arquivo com `cat > ~/backup.sh << 'SLUT'`, escreva `#!/bin/bash` e `cp \"$1\" \"$1.bak\"` em linhas separadas e termine com `SLUT`."
+      "text": "Escreva o script `~/backup.sh`, que copia o arquivo passado como primeiro argumento para o mesmo nome com `.bak` no final. Torne-o executável e execute `./backup.sh {{notes}}` no seu diretório pessoal.",
+      "hint": "Crie o arquivo com `cat > ~/backup.sh << '{{heredocEnd}}'`, escreva `#!/bin/bash` e `cp \"$1\" \"$1.bak\"` em linhas separadas e termine com `{{heredocEnd}}`."
     }
   }
 }

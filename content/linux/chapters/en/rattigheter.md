@@ -5,7 +5,7 @@ every file has an owner and rules for who may do what.
 
 ## Users and groups
 
-You're logged in as the user `elev`. Every user belongs to one or more
+You're logged in as the user `{{user}}`. Every user belongs to one or more
 **groups**:
 
 ```sh
@@ -20,8 +20,8 @@ anything. You rarely log in as root. Instead you use `sudo` (see below).
 Run `ls -l` and look at the first column:
 
 ```text
--rw-r--r-- 1 elev elev  174 Oct 29 13:55 anteckningar.txt
-drwxr-xr-x 2 elev elev 4096 Oct 29 13:55 dokument
+drwxr-xr-x 2 {{user}} {{user}} 4096 Oct 29 13:55 {{documents}}
+-rw-r--r-- 1 {{user}} {{user}}  186 Oct 29 13:55 {{notes}}
 ```
 
 The first character is the type: `-` for a file, `d` for a directory. Then
@@ -38,7 +38,7 @@ type  owner   group   others
 | `w` (write) | Change the contents | Create and delete files in it |
 | `x` (execute) | Run the file as a program | Enter the directory with `cd` |
 
-After that come the owner (`elev`) and the group (`elev`).
+After that come the owner (`{{user}}`) and the group (`{{user}}`).
 
 ```quiz
 A directory has the permissions `drwxr-x---`. What may members of its group do?
@@ -62,15 +62,15 @@ sum of r = 4, w = 2 and x = 1:
 | `600` | `rw-------` | Secret files |
 
 ```sh
-chmod 644 anteckningar.txt
+chmod 644 {{notes}}
 ```
 
 Or with **symbols**: `u` (the owner), `g` (the group), `o` (others), `a` (all),
 followed by `+`, `-` or `=` and the permissions:
 
 ```sh
-chmod u+x skript.sh
-chmod go-w fil.txt
+chmod u+x script.sh
+chmod go-w file.txt
 ```
 
 ```predict
@@ -88,16 +88,16 @@ A **script** is a text file containing commands. The first line,
 should run the file:
 
 ```sh
-echo '#!/bin/bash' > datum.sh
-echo 'echo "Today is:"; date' >> datum.sh
-cat datum.sh
+echo '#!/bin/bash' > today.sh
+echo 'echo "Today is:"; date' >> today.sh
+cat today.sh
 ```
 
 To run the script as a program, it has to be executable:
 
 ```sh
-chmod +x datum.sh
-./datum.sh
+chmod +x today.sh
+./today.sh
 ```
 
 The `./` is needed because the directory you're in isn't part of `PATH`.

@@ -4,7 +4,7 @@
 
 ```predict
 $ echo "$HOME" '$USER'
-/home/elev $USER
+/home/{{user}} $USER
 ---
 Двойные кавычки заменяют переменную её значением; одинарные выводят её в
 точности так, как написано.
@@ -36,10 +36,10 @@ $ echo $?
 ```
 
 ```predict
-$ touch verktyg.sh
-$ chmod 755 verktyg.sh
-$ chmod go-x verktyg.sh
-$ ls -l verktyg.sh | awk '{print $1}'
+$ touch tool.sh
+$ chmod 755 tool.sh
+$ chmod go-x tool.sh
+$ ls -l tool.sh | awk '{print $1}'
 -rwxr--r--
 ```
 
@@ -47,7 +47,7 @@ $ ls -l verktyg.sh | awk '{print $1}'
 Члены какой группы в Ubuntu могут пользоваться `sudo`?
 - [x] `sudo`
 - [ ] `root`
-- [ ] `elev`
+- [ ] `{{user}}`
 ```
 
 ```quiz
@@ -87,18 +87,18 @@ $ ls -l verktyg.sh | awk '{print $1}'
 ```
 
 ```quiz
-Что не так с `tar -cvf dokument dokument.tar`?
+Что не так с `tar -cvf {{documents}} {{documents}}.tar`?
 - [ ] `-v` нельзя сочетать с `-c`
 - [x] Порядок: имя архива должно идти сразу после `f`, перед файлами
 - [ ] tar-архив должен заканчиваться на `.tgz`
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ gzip frukter.txt
-$ gunzip frukter.txt.gz
-$ ls frukter*
-frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ gzip {{fruits}}
+$ gunzip {{fruits}}.gz
+$ ls {{fruits}}*
+{{fruits}}
 ```
 
 ```quiz
@@ -111,7 +111,7 @@ frukter.txt
 ```
 
 ```try
-du -sh dokument
+du -sh {{documents}}
 ---
 `-s` даёт один итог для всего каталога, а `-h` делает размер удобочитаемым.
 ```

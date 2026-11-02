@@ -2,18 +2,17 @@
 
 Fast alles unter Linux ist Text: Einstellungen, Logs, Listen. Deshalb gibt es
 viele kleine Werkzeuge zum Lesen und Durchsuchen von Textdateien. In deinem
-Home-Verzeichnis liegt ein Verzeichnis namens `dokument` mit Dateien zum Üben,
-darunter `frukter.txt` (eine Liste von Früchten) und `server.log` (ein Log eines
-ausgedachten Webservers). Ihr Inhalt ist auf Schwedisch, aber die Wörter, nach
-denen du suchen wirst – `INFO`, `WARN` und `ERROR` –, sind dieselben wie in
-echten Logs.
+Home-Verzeichnis liegt ein Verzeichnis namens `{{documents}}` mit Dateien zum Üben,
+darunter `{{fruits}}`, eine Liste von Früchten, und `server.log`, das Log eines
+ausgedachten Webservers. Die Wörter, nach denen du suchen wirst – `INFO`,
+`WARN` und `ERROR` –, sind dieselben wie in echten Logs.
 
 ## Eine Datei anzeigen – `cat` und `less`
 
 `cat` gibt die ganze Datei aus:
 
 ```sh
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 Für lange Dateien ist `less` besser. Dort blätterst du mit den Pfeiltasten und
@@ -22,7 +21,7 @@ der Leertaste, suchst mit `/word` und beendest mit `q`.
 Sieh dir die Liste der Früchte an – du brauchst sie für die nächste Frage:
 
 ```try
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 ## Anfang und Ende – `head` und `tail`
@@ -31,16 +30,16 @@ cat dokument/frukter.txt
 Zeilen, aber mit `-n` kannst du selbst wählen:
 
 ```sh
-head -n 5 dokument/server.log
-tail -n 3 dokument/server.log
+head -n 5 {{documents}}/server.log
+tail -n 3 {{documents}}/server.log
 ```
 
 `tail -f` *verfolgt* eine Datei und zeigt neue Zeilen, sobald sie geschrieben
 werden – perfekt für Logs. Beende es mit **Strg+C**.
 
 ```predict
-$ tail -n 1 dokument/frukter.txt
-mango
+$ tail -n 1 {{documents}}/{{fruits}}
+Mango
 ---
 `tail -n 1` zeigt nur die allerletzte Zeile.
 ```
@@ -50,7 +49,7 @@ mango
 `wc` (*word count*) zählt Zeilen, Wörter und Bytes:
 
 ```sh
-wc dokument/frukter.txt
+wc {{documents}}/{{fruits}}
 ```
 
 Oft willst du nur die Anzahl der Zeilen: `wc -l`.
@@ -61,7 +60,7 @@ Oft willst du nur die Anzahl der Zeilen: `wc -l`.
 ein Muster enthält:
 
 ```sh
-grep INFO dokument/server.log
+grep INFO {{documents}}/server.log
 ```
 
 Ein paar Optionen, die du oft brauchen wirst:
@@ -76,7 +75,7 @@ Ein paar Optionen, die du oft brauchen wirst:
 | `-E` | Erweiterte Muster, z. B. `"ERROR|WARN"` |
 
 ```sh
-grep -n WARN dokument/server.log
+grep -n WARN {{documents}}/server.log
 ```
 
 Das Muster ist ein *regulärer Ausdruck*. Ein paar Beispiele: `^` bedeutet
@@ -85,7 +84,7 @@ Zeilenanfang und `$` Zeilenende, also findet `grep "^2026"` Zeilen, die mit
 
 ```quiz
 `server.log` hat zwei Zeilen mit `WARN` und eine Zeile mit `warn` in
-Kleinbuchstaben. Was gibt `grep -c WARN dokument/server.log` aus?
+Kleinbuchstaben. Was gibt `grep -c WARN {{documents}}/server.log` aus?
 - [ ] 1
 - [x] 2
 - [ ] 3
@@ -96,9 +95,9 @@ unterschieden. `grep -ic WARN` würde alle drei zählen.
 
 ```quiz
 Welcher Befehl zeigt jede Zeile in `server.log`, die **nicht** `INFO` enthält?
-- [ ] `grep -i INFO dokument/server.log`
-- [ ] `grep -c INFO dokument/server.log`
-- [x] `grep -v INFO dokument/server.log`
+- [ ] `grep -i INFO {{documents}}/server.log`
+- [ ] `grep -c INFO {{documents}}/server.log`
+- [x] `grep -v INFO {{documents}}/server.log`
 ```
 
 ## Sortieren – `sort` und `uniq`
@@ -108,7 +107,7 @@ Reihenfolge). `uniq` entfernt Zeilen, die mit der Zeile *direkt darüber*
 identisch sind – deshalb wird es fast immer nach `sort` verwendet:
 
 ```sh
-sort dokument/frukter.txt
+sort {{documents}}/{{fruits}}
 ```
 
 ```quiz

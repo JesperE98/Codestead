@@ -2,7 +2,7 @@
   "title": "Linux shell में आपका स्वागत है",
   "tasks": {
     "echo": {
-      "text": "`echo` से text `Hej världen` (Swedish में “Hello world”) print कीजिए।"
+      "text": "`echo` से text `{{helloWorld}}` print कीजिए।"
     },
     "whoami": {
       "text": "`whoami` से पता कीजिए कि आप किस user के रूप में logged in हैं।"

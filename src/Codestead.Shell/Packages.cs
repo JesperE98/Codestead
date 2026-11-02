@@ -715,7 +715,7 @@ public static partial class PackagesLib
     public static void InstallCommand(Shell sh, string cmd)
     {
         var bin = sh.Vfs.Lookup("/usr/bin", sh.RootUser());
-        var node = VfsLib.MakeFile($"{VfsLib.Elf}\u0002\u0001\u0001 (simulerad binärfil: {cmd})", "root", cmd == "sudo" ? Js.Oct(4755) : Js.Oct(755));
+        var node = VfsLib.MakeFile($"{VfsLib.Elf}\u0002\u0001\u0001 (simulated binary: {cmd})", "root", cmd == "sudo" ? Js.Oct(4755) : Js.Oct(755));
         node.Size = 30_000 + ((cmd.Length * 7919L) % 150_000);
         bin.Children![cmd] = node;
     }

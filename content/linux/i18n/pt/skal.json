@@ -22,8 +22,8 @@
       "hint": "`sudo apt update` e depois `sudo apt install fish`."
     },
     "fish-set": {
-      "text": "Inicie o `fish`. Crie a variável `frukt` com o valor `äpple` do jeito do fish e imprima-a com `echo`.",
-      "hint": "`frukt=äpple` não funciona no fish. Digite `set frukt äpple` e depois `echo $frukt`."
+      "text": "Inicie o `fish`. Crie a variável `{{fruitVar}}` com o valor `{{fruitWord}}` do jeito do fish e imprima-a com `echo`.",
+      "hint": "`{{fruitVar}}={{fruitWord}}` não funciona no fish. Digite `set {{fruitVar}} {{fruitWord}}` e depois `echo ${{fruitVar}}`."
     },
     "fish-for": {
       "text": "Escreva um loop `for` na sintaxe do fish que imprima os números 1, 2 e 3, um por linha. Depois volte ao bash com `exit`.",
@@ -31,7 +31,7 @@
     },
     "chsh": {
       "text": "Olhe em `/etc/shells` para ver quais shells estão instalados. Depois faça do zsh o seu shell de login com `chsh`.",
-      "hint": "`cat /etc/shells` e depois `chsh -s /usr/bin/zsh`. Confira o resultado com `grep elev /etc/passwd`."
+      "hint": "`cat /etc/shells` e depois `chsh -s /usr/bin/zsh`. Confira o resultado com `grep {{user}} /etc/passwd`."
     }
   }
 }

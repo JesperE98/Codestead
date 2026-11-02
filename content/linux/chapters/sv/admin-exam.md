@@ -4,21 +4,21 @@ Visa vad du har lärt dig om tjänster, diskar och användare. Frågorna täcker
 hela delen, och du behöver 80 % rätt för godkänt.
 
 ```quiz
-`minserver` ska starta automatiskt varje gång datorn startar, men den får
+`myserver` ska starta automatiskt varje gång datorn startar, men den får
 **inte** startas just nu. Vilket kommando gör precis det?
-- [ ] `sudo systemctl start minserver`
-- [x] `sudo systemctl enable minserver`
-- [ ] `sudo systemctl enable --now minserver`
-- [ ] `sudo systemctl restart minserver`
+- [ ] `sudo systemctl start myserver`
+- [x] `sudo systemctl enable myserver`
+- [ ] `sudo systemctl enable --now myserver`
+- [ ] `sudo systemctl restart myserver`
 ---
 `enable` gäller vid uppstart, `start` gäller nu, och `--now` gör båda.
 ```
 
-Tjänsten `rapportd` på den här datorn har misslyckats med att starta. Vad
+Tjänsten `reportd` på den här datorn har misslyckats med att starta. Vad
 skriver det här kommandot ut?
 
 ```predict
-$ systemctl is-active rapportd
+$ systemctl is-active reportd
 failed
 ---
 `is-active` skriver bara ut ett ord – här samma tillstånd som `systemctl
@@ -26,28 +26,28 @@ failed
 ```
 
 ```quiz
-Du vill följa loggen för `minserver` medan du testar den, så att nya rader
+Du vill följa loggen för `myserver` medan du testar den, så att nya rader
 dyker upp när de kommer. Vilket kommando använder du?
 - [ ] `journalctl -n 20`
-- [x] `journalctl -u minserver -f`
+- [x] `journalctl -u myserver -f`
 - [ ] `journalctl -p err -b`
-- [ ] `systemctl status minserver --all`
+- [ ] `systemctl status myserver --all`
 ---
 `-u` väljer en unit och `-f` fortsätter att visa nya rader tills du trycker
 Ctrl+C.
 ```
 
 ```try
-systemctl cat minserver
+systemctl cat myserver
 ---
 `ExecStart=` är kommandot som startar tjänsten, och `WantedBy=` är det som
 `enable` använder.
 ```
 
 ```quiz
-Du kör `systemctl stop minserver` utan `sudo` och får
+Du kör `systemctl stop myserver` utan `sudo` och får
 *Interactive authentication required*. Varför?
-- [ ] minserver är inte igång
+- [ ] myserver är inte igång
 - [x] Allt som ändrar en tjänst kräver root
 - [ ] Du måste köra `daemon-reload` först
 - [ ] `stop` fungerar bara för aktiverade tjänster
@@ -125,7 +125,7 @@ gruppen `sudo`?
 
 ```predict
 $ grep ^sudo /etc/group | cut -d: -f4
-elev
+{{user}}
 ```
 
 ```quiz

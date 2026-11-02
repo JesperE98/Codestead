@@ -276,14 +276,14 @@ computer के सभी addresses पर port 22 पर listen कर रह�
 sudo ss -tulpn
 ```
 
-अगर processes वाले chapter का practice server `minserver` चल रहा है, तो वह आपको
+अगर processes वाले chapter का practice server `myserver` चल रहा है, तो वह आपको
 यहाँ port 8080 पर दिखेगा। पुराना command `netstat -tulpn` (*net-tools* से) भी यही
 काम करता है।
 
 ## Web से लाना: curl और wget
 
 `curl` किसी address (एक **URL**) पर जो कुछ है उसे लाकर terminal में print करता
-है। इसे अपने ही computer पर minserver के साथ आज़माइए:
+है। इसे अपने ही computer पर myserver के साथ आज़माइए:
 
 Ubuntu पर `curl` पहले से इंस्टॉल नहीं होता (लेकिन `wget` होता है):
 
@@ -296,11 +296,11 @@ curl http://localhost:8080
 ```
 
 क्या आपको `Couldn't connect to server` मिला? तो उस port पर कुछ भी listen नहीं कर
-रहा – शायद आपने processes वाले chapter में minserver रोक दिया था। उसे फिर से
+रहा – शायद आपने processes वाले chapter में myserver रोक दिया था। उसे फिर से
 start कीजिए:
 
 ```sh
-minserver
+myserver
 ```
 
 `-I` के साथ curl सिर्फ़ response के **headers** दिखाता है, जिनकी पहली line एक
@@ -338,7 +338,7 @@ address से ले लेता है):
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` files download करने के लिए बना है। यह हमेशा file में save करता है, progress
@@ -358,10 +358,10 @@ File का नाम ख़ुद चुनने के लिए capital `-O`
 `sshd` चलती है, और आप client `ssh` से connect करते हैं:
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` का मतलब है "computer server.lan पर user elev"। Host के बाद वाला
+`{{user}}@server.lan` का मतलब है "computer server.lan पर user {{user}}"। Host के बाद वाला
 command (`hostname`) server पर चलता है और उसका जवाब यहाँ दिखता है – उसमें
 `server` लिखा आता है, `ubuntu` नहीं।
 
@@ -381,8 +381,8 @@ save हो जाती है। अगर बाद में key बदल �
 Command quotes के अंदर कई commands भी हो सकता है:
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 बिना command के ssh login कर देता है और आपको दूसरे computer पर एक shell मिल जाता
@@ -396,7 +396,7 @@ Password की जगह आप एक **key pair** से login कर सक�
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 `ssh-keygen` के सवालों पर Enter दबाइए, ताकि बिना passphrase के default file

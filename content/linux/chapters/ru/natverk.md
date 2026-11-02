@@ -282,14 +282,14 @@ ss -tulpn
 sudo ss -tulpn
 ```
 
-Если учебный сервер `minserver` из главы о процессах запущен, вы увидите его
+Если учебный сервер `myserver` из главы о процессах запущен, вы увидите его
 здесь на порту 8080. Старая команда `netstat -tulpn` (из *net-tools*) делает
 то же самое.
 
 ## Загрузка из интернета: curl и wget
 
 `curl` загружает то, что находится по адресу (**URL**), и выводит это в
-терминал. Попробуйте на minserver на своём компьютере:
+терминал. Попробуйте на myserver на своём компьютере:
 
 В Ubuntu `curl` не предустановлен (а `wget` – да):
 
@@ -302,10 +302,10 @@ curl http://localhost:8080
 ```
 
 Получили `Couldn't connect to server`? Значит, порт никто не слушает –
-возможно, вы остановили minserver в главе о процессах. Запустите его снова:
+возможно, вы остановили myserver в главе о процессах. Запустите его снова:
 
 ```sh
-minserver
+myserver
 ```
 
 С `-I` curl показывает только **заголовки** ответа, где первая строка – это
@@ -344,7 +344,7 @@ curl -s https://example.com | grep title
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` создан для скачивания файлов. Он всегда сохраняет в файл, показывает
@@ -365,10 +365,10 @@ Linux, и всё передаваемое шифруется. На сервер�
 порту 22, а подключаетесь вы с помощью клиента `ssh`:
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` означает «пользователь elev на компьютере server.lan».
+`{{user}}@server.lan` означает «пользователь {{user}} на компьютере server.lan».
 Команда после хоста (`hostname`) выполняется на сервере, а ответ
 показывается здесь – там написано `server`, а не `ubuntu`.
 
@@ -387,8 +387,8 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])?
 Команда может состоять из нескольких команд в кавычках:
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 Без команды ssh входит в систему, и вы получаете shell на другом компьютере,
@@ -402,7 +402,7 @@ ssh elev@server.lan cat välkommen.txt
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 Нажимайте Enter на вопросы `ssh-keygen`, чтобы использовать файл по

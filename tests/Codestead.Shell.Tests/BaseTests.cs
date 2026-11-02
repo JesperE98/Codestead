@@ -9,7 +9,7 @@ public class BaseTests
     [MemberData(nameof(Distros))]
     public void CoreutilsInstalled(string distro)
     {
-        var sh = Shell.Create(distro);
+        var sh = Shell.Create(distro, "sv");
         var root = sh.RootUser();
         var coreutils = PackagesLib.FindPackage(sh.Distro.Family, "coreutils")!;
         Assert.True(PackagesLib.IsInstalled(sh, coreutils));
@@ -29,7 +29,7 @@ public class BaseTests
     [MemberData(nameof(Distros))]
     public void ExerciseFiles(string distro)
     {
-        var sh = Shell.Create(distro);
+        var sh = Shell.Create(distro, "sv");
         var root = sh.RootUser();
         var fruits = sh.Vfs.Lookup("/home/elev/dokument/frukter.txt", root);
         Assert.Equal("äpple\nbanan\nkiwi\näpple\napelsin\nbanan\npäron\nkiwi\näpple\nmango\n", fruits.Content);
@@ -48,7 +48,7 @@ public class BaseTests
     [Fact(DisplayName = "användare, grupper och shadow per familj")]
     public void UsersAndGroups()
     {
-        var ubuntu = Shell.Create("ubuntu");
+        var ubuntu = Shell.Create("ubuntu", "sv");
         var root = ubuntu.RootUser();
         Assert.EndsWith("elev:x:1000:1000:Elev,,,:/home/elev:/bin/bash\n", ubuntu.Vfs.ReadFile("/etc/passwd", root));
         Assert.Contains("\nsudo:x:27:elev\n", ubuntu.Vfs.ReadFile("/etc/group", root));
@@ -56,16 +56,16 @@ public class BaseTests
         Assert.Equal(Js.Oct(640), shadow.Mode);
         Assert.Equal("shadow", shadow.Group);
         Assert.StartsWith("root:*:20000:0:99999:7:::\n", shadow.Content);
-        Assert.EndsWith("elev:$y$j9T$Qm1x...simulerad...hash:20000:0:99999:7:::\n", shadow.Content);
+        Assert.EndsWith("elev:$y$j9T$Qm1x...simulated...hash:20000:0:99999:7:::\n", shadow.Content);
         Assert.Contains("ubuntu.sources", ubuntu.Vfs.ListDir("/etc/apt/sources.list.d", root));
 
-        var arch = Shell.Create("arch");
+        var arch = Shell.Create("arch", "sv");
         Assert.Contains("\nwheel:x:998:elev\n", arch.Vfs.ReadFile("/etc/group", root));
         Assert.Equal(Js.Oct(600), arch.Vfs.Lookup("/etc/shadow", root).Mode);
         Assert.NotNull(arch.Vfs.TryLookup("/etc/pacman.d/mirrorlist", root));
         Assert.NotNull(arch.Vfs.TryLookup("/var/log/pacman.log", root));
 
-        var fedora = Shell.Create("fedora");
+        var fedora = Shell.Create("fedora", "sv");
         Assert.Equal(0, fedora.Vfs.Lookup("/etc/shadow", root).Mode);
         Assert.EndsWith("ENCRYPT_METHOD YESCRYPT\nCREATE_HOME\tyes\n", fedora.Vfs.ReadFile("/etc/login.defs", root));
         Assert.NotNull(fedora.Vfs.TryLookup("/etc/yum.repos.d/fedora.repo", root));
@@ -102,10 +102,10 @@ public class BaseTests
     public void PreinstalledPackages()
     {
         static bool Has(Shell sh, string cmd) => sh.Vfs.TryLookup($"/usr/bin/{cmd}", sh.RootUser()) is not null;
-        var ubuntu = Shell.Create("ubuntu");
-        var debian = Shell.Create("debian");
-        var arch = Shell.Create("arch");
-        var fedora = Shell.Create("fedora");
+        var ubuntu = Shell.Create("ubuntu", "sv");
+        var debian = Shell.Create("debian", "sv");
+        var arch = Shell.Create("arch", "sv");
+        var fedora = Shell.Create("fedora", "sv");
         Assert.True(Has(ubuntu, "apt") && Has(ubuntu, "adduser") && Has(ubuntu, "wget") && Has(ubuntu, "snap"));
         Assert.False(Has(debian, "snap"));
         Assert.True(Has(arch, "pacman") && Has(arch, "curl"));
@@ -120,7 +120,7 @@ public class BaseTests
     [Fact(DisplayName = "installera och ta bort paket med skal")]
     public void InstallAndRemoveShellPackage()
     {
-        var sh = Shell.Create("fedora");
+        var sh = Shell.Create("fedora", "sv");
         var root = sh.RootUser();
         var zsh = PackagesLib.FindPackage("redhat", "zsh", sh)!;
         Assert.DoesNotContain(zsh, PackagesLib.Upgradable(sh));
@@ -168,7 +168,7 @@ public class BaseTests
         Assert.Null(ExtrarepoLib.ParseCopr("bara-ett-ord"));
 
         // The PPA package shows up when the PPA has been added and apt update has run.
-        var sh = Shell.Create("ubuntu");
+        var sh = Shell.Create("ubuntu", "sv");
         var root = sh.RootUser();
         Assert.Null(PackagesLib.FindPackage("debian", "moonphase", sh));
         Assert.Null(PackagesLib.FindPackage("debian", "moonphase"));
@@ -180,7 +180,7 @@ public class BaseTests
         Assert.Equal("moonphase", PackagesLib.FindPackage("debian", "moonphase", sh)?.Id);
 
         // COPR: enabled once the .repo file says enabled=1.
-        var fedora = Shell.Create("fedora");
+        var fedora = Shell.Create("fedora", "sv");
         var c = ExtrarepoLib.ParseCopr("lunatool/moonphase")!;
         Assert.Null(PackagesLib.FindPackage("redhat", "moonphase", fedora));
         fedora.Vfs.WriteFile(ExtrarepoLib.CoprRepoPath(c), "[x]\nname=x\nenabled=0\n", root);
@@ -190,7 +190,7 @@ public class BaseTests
         Assert.Equal("moonphase", PackagesLib.FindPackage("redhat", "moonphase", fedora)?.Id);
 
         // AUR packages are never in the repositories.
-        var arch = Shell.Create("arch");
+        var arch = Shell.Create("arch", "sv");
         Assert.Null(PackagesLib.FindPackage("arch", "moonphase", arch));
         Assert.False(ExtrarepoLib.ExtraRepoEnabled(arch, "aur"));
     }

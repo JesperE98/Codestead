@@ -45,16 +45,16 @@ two
 `<` を使うと、プログラムは stdin をファイルから読み込みます。
 
 ```sh
-wc -l < dokument/frukter.txt
+wc -l < {{documents}}/{{fruits}}
 ```
 
 この場合 `wc` はファイル名を目にしません。stdin でテキストを受け取るだけなので、
 数だけを表示します。
 
 ```predict
-$ wc -l dokument/frukter.txt
-$ wc -l < dokument/frukter.txt
-10 dokument/frukter.txt
+$ wc -l {{documents}}/{{fruits}}
+$ wc -l < {{documents}}/{{fruits}}
+10 {{documents}}/{{fruits}}
 10
 ---
 ファイル名を引数として渡すと、`wc` は名前も表示します。`<` を使うと、
@@ -67,15 +67,13 @@ $ wc -l < dokument/frukter.txt
 エラーメッセージを扱うには、ストリームの番号を前に書きます。
 
 ```sh
-ls /finnsinte 2> fel.txt
+ls /{{missing}} 2> errors.txt
 ```
 
-（*finns inte* はスウェーデン語で「存在しない」、*fel* は「エラー」という意味です。）
-
 ```quiz
-`ls /finnsinte > fel.txt` を実行しました。エラーメッセージはどこに行きますか？
-- [ ] `fel.txt` の中
-- [x] 画面に表示され、`fel.txt` は空のまま
+`ls /{{missing}} > errors.txt` を実行しました。エラーメッセージはどこに行きますか？
+- [ ] `errors.txt` の中
+- [x] 画面に表示され、`errors.txt` は空のまま
 - [ ] どこにも行かず、消える
 ---
 `>` がリダイレクトするのは stdout（ストリーム 1）だけです。エラーメッセージは
@@ -93,13 +91,13 @@ stderr が stdout と同じ行き先に送られます。
 協力させる* という考え方です。
 
 ```sh
-grep INFO dokument/server.log | wc -l
+grep INFO {{documents}}/server.log | wc -l
 ```
 
 `grep` が行を見つけ、`wc -l` がそれを数えます。いくつでもつなげられます。
 
 ```sh
-sort dokument/frukter.txt | uniq -c | sort -rn
+sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ```
 
 1 段ずつ読んでみましょう。果物を並べ替え、それぞれがいくつあるかを数え
@@ -116,7 +114,7 @@ ls /etc | wc -l
 `tee` は入力をそのまま次へ渡し、*さらに* ファイルにコピーを保存します。
 
 ```sh
-ls /etc | tee etc-lista.txt | wc -l
+ls /etc | tee etc-list.txt | wc -l
 ```
 
 ## コマンドの連結 – `;`、`&&`、`||`
@@ -130,13 +128,13 @@ ls /etc | tee etc-lista.txt | wc -l
 | `a \|\| b` | a が失敗したときだけ b を実行する |
 
 ```sh
-mkdir -p ny && cd ny
+mkdir -p new && cd new
 ```
 
 ```predict
-$ mkdir dokument 2> /dev/null && echo created || echo failed
+$ mkdir {{documents}} 2> /dev/null && echo created || echo failed
 failed
 ---
-`dokument` はすでに存在するので、`mkdir` は失敗します（そのエラーメッセージは
+`{{documents}}` はすでに存在するので、`mkdir` は失敗します（そのエラーメッセージは
 `/dev/null` に消えます）。`echo created` は飛ばされ、`echo failed` が実行されます。
 ```

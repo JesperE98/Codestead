@@ -54,8 +54,8 @@ ls /etc/systemd/system
 I äldre Debian- och Ubuntuversioner står det ofta `/lib/systemd/system` i
 stället. Det är samma katalog – `/lib` är en länk till `/usr/lib`.
 
-Namnet på en tjänst är filnamnet, till exempel `minserver.service`. När du
-skriver kommandon får du hoppa över `.service`: `systemctl status minserver`
+Namnet på en tjänst är filnamnet, till exempel `myserver.service`. När du
+skriver kommandon får du hoppa över `.service`: `systemctl status myserver`
 fungerar lika bra.
 
 ## Hur mår tjänsten? – `systemctl status`
@@ -107,17 +107,17 @@ annan unit behöver den.
 ## Starta, stoppa och starta om
 
 ```text
-sudo systemctl start minserver      # starta nu
-sudo systemctl stop minserver       # stoppa nu
-sudo systemctl restart minserver    # stoppa och starta igen
-sudo systemctl reload minserver     # be den läsa om sina inställningar
+sudo systemctl start myserver      # starta nu
+sudo systemctl stop myserver       # stoppa nu
+sudo systemctl restart myserver    # stoppa och starta igen
+sudo systemctl reload myserver     # be den läsa om sina inställningar
 ```
 
 Allt som **ändrar** något kräver root, så glöm inte `sudo`. Utan det svarar
 systemctl:
 
 ```text
-Failed to start minserver.service: Interactive authentication required.
+Failed to start myserver.service: Interactive authentication required.
 ```
 
 `reload` fungerar bara för tjänster som har stöd för det. Fördelen är att
@@ -126,9 +126,9 @@ tjänsten fortsätter köra under tiden – ingen anslutning bryts. När du har
 steget.
 
 > **Prova!** I kapitlet om processer stoppade du övningsservern med `pkill`.
-> Titta på `systemctl status minserver` – systemd märkte att processen
+> Titta på `systemctl status myserver` – systemd märkte att processen
 > försvann. Starta den igen med `systemctl` och jämför PID med `pgrep -l
-> minserver`.
+> myserver`.
 
 ## Starta nu eller vid uppstart? `start` och `enable`
 
@@ -146,35 +146,35 @@ Det här är den vanligaste missuppfattningen om systemd: **`start` och
 `[Install]`-del, oftast `multi-user.target.wants`:
 
 ```text
-$ sudo systemctl enable --now minserver
-Created symlink /etc/systemd/system/multi-user.target.wants/minserver.service → /etc/systemd/system/minserver.service.
+$ sudo systemctl enable --now myserver
+Created symlink /etc/systemd/system/multi-user.target.wants/myserver.service → /etc/systemd/system/myserver.service.
 ```
 
 När datorn startar går systemd igenom katalogen och startar allt som finns
 där. Du kan fråga om läget:
 
 ```sh
-systemctl is-active minserver
-systemctl is-enabled minserver
+systemctl is-active myserver
+systemctl is-enabled myserver
 ```
 
 `is-active` och `is-enabled` passar utmärkt i skript – de skriver ett ord och
 avslutas med statuskod 0 om svaret är "ja". Med `-q` blir de helt tysta:
 
 ```text
-if systemctl is-active -q minserver; then echo "servern kör"; fi
+if systemctl is-active -q myserver; then echo "servern kör"; fi
 ```
 
-På en nystartad dator i simulatorn kör `minserver`, men ingen har aktiverat
+På en nystartad dator i simulatorn kör `myserver`, men ingen har aktiverat
 den. Vad skriver de här två kommandona ut?
 
 ```predict
-$ systemctl is-active minserver
-$ systemctl is-enabled minserver
+$ systemctl is-active myserver
+$ systemctl is-enabled myserver
 active
 disabled
 ---
-minserver kör **nu**, men ingen har kört `enable` – efter en omstart skulle
+myserver kör **nu**, men ingen har kört `enable` – efter en omstart skulle
 den inte startas. `start` och `enable` är verkligen två olika saker.
 ```
 
@@ -219,9 +219,9 @@ Det blir snabbt mycket, så man filtrerar nästan alltid:
 Flaggorna går att kombinera. Ett par klassiker:
 
 ```sh
-journalctl -u minserver -n 5
+journalctl -u myserver -n 5
 journalctl -p err -b
-journalctl --since today -u minserver
+journalctl --since today -u myserver
 ```
 
 ### Prioriteter
@@ -262,7 +262,7 @@ med samma eller lägre nummer (`warning` är 4).
 
 ## Felsök en tjänst som inte startar
 
-Någon har satt upp tjänsten **rapportd** på den här datorn, men något är
+Någon har satt upp tjänsten **reportd** på den här datorn, men något är
 fel. Så här brukar man gå till väga:
 
 1. **Vad har gått fel?** Lista tjänsterna som misslyckats:
@@ -274,19 +274,19 @@ fel. Så här brukar man gå till väga:
 2. **Titta på statusen.** De sista raderna är ofta tillräckliga:
 
    ```sh
-   systemctl status rapportd
+   systemctl status reportd
    ```
 
 3. **Läs hela loggen** för tjänsten. Den berättar nästan alltid vad som är
    fel – läs den noga, ord för ord:
 
    ```sh
-   journalctl -xeu rapportd
+   journalctl -xeu reportd
    ```
 
    `systemctl` föreslår själv precis det kommandot när en start misslyckas:
-   `See "systemctl status rapportd.service" and "journalctl -xeu
-   rapportd.service" for details.`
+   `See "systemctl status reportd.service" and "journalctl -xeu
+   reportd.service" for details.`
 
 4. **Rätta felet**, till exempel en konfigurationsfil som saknas eller har
    ett stavfel.
@@ -294,8 +294,8 @@ fel. Så här brukar man gå till väga:
 5. **Starta om och kontrollera:**
 
    ```text
-   sudo systemctl restart rapportd
-   systemctl status rapportd
+   sudo systemctl restart reportd
+   systemctl status reportd
    ```
 
 Raden `Main process exited, code=exited, status=1/FAILURE` betyder att
@@ -319,17 +319,18 @@ startar och sedan avslutas med ett fel ger i stället `status=1/FAILURE`.
 Vill du veta exakt hur en tjänst startas läser du dess unit-fil:
 
 ```sh
-systemctl cat minserver
+systemctl cat myserver
 ```
 
 ```text
-# /etc/systemd/system/minserver.service
+# /etc/systemd/system/myserver.service
+# The practice server from the chapter about processes.
 [Unit]
-Description=Minserver web server (practice server)
+Description=Myserver web server (practice server)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/minserver --port 8080
+ExecStart=/usr/local/bin/myserver --port 8080
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]

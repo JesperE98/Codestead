@@ -2,7 +2,7 @@
   "title": "Willkommen in der Linux-Shell",
   "tasks": {
     "echo": {
-      "text": "Gib den Text `Hej världen` (Schwedisch für „Hallo Welt“) mit `echo` aus."
+      "text": "Gib den Text `{{helloWorld}}` mit `echo` aus."
     },
     "whoami": {
       "text": "Finde mit `whoami` heraus, als welcher Benutzer du angemeldet bist."

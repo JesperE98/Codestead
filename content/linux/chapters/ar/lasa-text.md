@@ -2,16 +2,16 @@
 
 كل شيء تقريبًا في لينكس عبارة عن نص: الإعدادات، والسجلات، والقوائم. لهذا توجد
 أدوات صغيرة كثيرة لقراءة الملفات النصية والبحث فيها. في مجلد المنزل الخاص بك
-مجلد اسمه `dokument` فيه ملفات للتدرّب عليها، منها `frukter.txt` (قائمة بالفواكه)
-و`server.log` (سجل لخادم ويب وهمي). محتواهما بالسويدية، لكن الكلمات التي ستبحث
-عنها – `INFO` و`WARN` و`ERROR` – هي نفسها الموجودة في السجلات الحقيقية.
+مجلد اسمه `{{documents}}` فيه ملفات للتدرّب عليها، منها قائمة بالفواكه `{{fruits}}`
+و`server.log`، وهو سجل لخادم ويب وهمي. والكلمات التي ستبحث عنها فيه – `INFO`
+و`WARN` و`ERROR` – هي نفسها الموجودة في السجلات الحقيقية.
 
 ## عرض ملف – `cat` و`less`
 
 يطبع `cat` الملف كاملًا:
 
 ```sh
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 أما للملفات الطويلة فالأمر `less` أفضل. فيه تتنقل بمفاتيح الأسهم ومفتاح المسافة،
@@ -20,7 +20,7 @@ cat dokument/frukter.txt
 ألقِ نظرة على قائمة الفواكه – ستحتاج إليها في السؤال التالي:
 
 ```try
-cat dokument/frukter.txt
+cat {{documents}}/{{fruits}}
 ```
 
 ## البداية والنهاية – `head` و`tail`
@@ -29,16 +29,16 @@ cat dokument/frukter.txt
 لكن يمكنك اختيار العدد بـ `-n`:
 
 ```sh
-head -n 5 dokument/server.log
-tail -n 3 dokument/server.log
+head -n 5 {{documents}}/server.log
+tail -n 3 {{documents}}/server.log
 ```
 
 يقوم `tail -f` *بمتابعة* الملف ويعرض الأسطر الجديدة فور كتابتها – وهذا مثالي
 للسجلات. أوقفه بـ **Ctrl+C**.
 
 ```predict
-$ tail -n 1 dokument/frukter.txt
-mango
+$ tail -n 1 {{documents}}/{{fruits}}
+مانجو
 ---
 يعرض `tail -n 1` السطر الأخير فقط.
 ```
@@ -48,7 +48,7 @@ mango
 يعدّ `wc` (*word count*) الأسطر والكلمات والبايتات:
 
 ```sh
-wc dokument/frukter.txt
+wc {{documents}}/{{fruits}}
 ```
 
 غالبًا ما تريد عدد الأسطر فقط: `wc -l`.
@@ -58,7 +58,7 @@ wc dokument/frukter.txt
 `grep` من أكثر الأوامر فائدة على الإطلاق. فهو يعرض كل سطر يحتوي على نمط معيّن:
 
 ```sh
-grep INFO dokument/server.log
+grep INFO {{documents}}/server.log
 ```
 
 بعض الخيارات التي ستستخدمها كثيرًا:
@@ -73,7 +73,7 @@ grep INFO dokument/server.log
 | `-E` | أنماط موسّعة، مثل `"ERROR|WARN"` |
 
 ```sh
-grep -n WARN dokument/server.log
+grep -n WARN {{documents}}/server.log
 ```
 
 النمط هو *تعبير نمطي* (regular expression). مثالان: `^` تعني بداية السطر و`$`
@@ -81,7 +81,7 @@ grep -n WARN dokument/server.log
 
 ```quiz
 في `server.log` سطران فيهما `WARN` وسطر واحد فيه `warn` بأحرف صغيرة.
-ماذا يطبع `grep -c WARN dokument/server.log`؟
+ماذا يطبع `grep -c WARN {{documents}}/server.log`؟
 - [ ] 1
 - [x] 2
 - [ ] 3
@@ -92,9 +92,9 @@ grep -n WARN dokument/server.log
 
 ```quiz
 أيّ أمر يعرض كل سطر في `server.log` **لا** يحتوي على `INFO`؟
-- [ ] `grep -i INFO dokument/server.log`
-- [ ] `grep -c INFO dokument/server.log`
-- [x] `grep -v INFO dokument/server.log`
+- [ ] `grep -i INFO {{documents}}/server.log`
+- [ ] `grep -c INFO {{documents}}/server.log`
+- [x] `grep -v INFO {{documents}}/server.log`
 ```
 
 ## الترتيب – `sort` و`uniq`
@@ -104,7 +104,7 @@ grep -n WARN dokument/server.log
 بعد `sort`:
 
 ```sh
-sort dokument/frukter.txt
+sort {{documents}}/{{fruits}}
 ```
 
 ```quiz

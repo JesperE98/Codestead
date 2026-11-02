@@ -5,8 +5,9 @@ namespace Codestead.Content.Tests;
 
 /// <summary>
 /// Rules for the interactive parts of the chapters: checkpoints in the text, summaries, exams and sources.
-/// English is the source language; every translation must have the same checkpoints with the same commands
-/// and answers, so a student gets the same questions in every language.
+/// English is the source language; every translation must have the same checkpoints, so a student gets the
+/// same questions in every language. Their commands and answers use the student's world (file names in the
+/// student's language) and are checked in the simulator for every language.
 /// </summary>
 public class LearningContentTests
 {
@@ -29,13 +30,22 @@ public class LearningContentTests
 
     public static TheoryData<string> ChapterIds() => new(ChaptersLib.Chapters.Select(c => c.Id));
 
+    /// <summary>The checkpoints as the student sees them: placeholders filled in for the language's world.</summary>
     private static List<Checkpoint> Parse(Chapter chapter, string lang) =>
-        Checkpoint.ParseAll(I18nLib.ChapterMarkdown(chapter, lang));
+        Checkpoint.ParseAll(RenderLib.Preprocess(I18nLib.ChapterMarkdown(chapter, lang), DistroOf(chapter), lang));
+
+    private static Codestead.Shell.Distro DistroOf(Chapter chapter) => Codestead.Shell.DistrosLib.GetDistro(ChaptersLib.DistroFor(chapter, ChaptersLib.DefaultDistro));
+
+    /// <summary>Every language with a text for the chapter, with English first.</summary>
+    private static IEnumerable<string> Langs(Chapter chapter) =>
+        I18nLib.LanguagesWithMarkdown(chapter).OrderBy(l => l == "en" ? "" : l, StringComparer.Ordinal);
 
     [Theory(DisplayName = "kontrollpunkterna är likadana på alla språk")]
     [MemberData(nameof(ChapterIds))]
     public void CheckpointsMatchEnglish(string chapterId)
     {
+        // The same questions in every language. Commands and answers may differ, because file names, the user
+        // name and example words are in the student's language; each language is checked in the simulator below.
         var chapter = ChaptersLib.Chapters.First(c => c.Id == chapterId);
         var source = Parse(chapter, "en");
         foreach (var lang in I18nLib.LanguagesWithMarkdown(chapter))
@@ -48,17 +58,16 @@ public class LearningContentTests
                 var where = $"{lang}/{chapterId} checkpoint {i}";
                 Assert.True(en.Kind == tr.Kind, $"{where}: {tr.Kind}, English has {en.Kind}");
                 Assert.True(en.Options.Select(o => o.Correct).SequenceEqual(tr.Options.Select(o => o.Correct)), $"{where}: the options or the right answers differ from English");
-                Assert.True(en.Commands.SequenceEqual(tr.Commands), $"{where}: the commands differ from English");
-                Assert.True(en.Expected == tr.Expected, $"{where}: the expected output differs from English");
+                Assert.True(en.Commands.Count == tr.Commands.Count, $"{where}: {tr.Commands.Count} commands, English has {en.Commands.Count}");
             }
         }
     }
 
-    /// <summary>A fresh shell like the app's checkpoint sandbox (English, the source language).</summary>
-    private static Codestead.Shell.Shell Sandbox(Chapter chapter)
+    /// <summary>A fresh shell like the app's checkpoint sandbox, in the language's world.</summary>
+    private static Codestead.Shell.Shell Sandbox(Chapter chapter, string lang)
     {
-        var sh = Codestead.Shell.Shell.Create(ChaptersLib.DistroFor(chapter, ChaptersLib.DefaultDistro));
-        sh.Lang = "en";
+        var sh = Codestead.Shell.Shell.Create(DistroOf(chapter).Id, lang);
+        sh.Lang = lang;
         return sh;
     }
 
@@ -67,15 +76,16 @@ public class LearningContentTests
     public void PredictionsMatchTheSimulator(string chapterId)
     {
         var chapter = ChaptersLib.Chapters.First(c => c.Id == chapterId);
-        foreach (var cp in Parse(chapter, "en").Where(c => c.Kind == Checkpoint.Predict))
-        {
-            var sh = Sandbox(chapter);
-            var output = string.Join("\n", cp.Commands
-                .Select(c => UtilCmd.StripAnsi(sh.Execute(c).Output).TrimEnd('\n'))
-                .Where(o => o != ""));
-            Assert.True(Checkpoint.Normalize(output) == Checkpoint.Normalize(cp.Expected),
-                $"{chapterId} checkpoint {cp.Index}: the simulator prints\n{output}\nbut the answer is\n{cp.Expected}");
-        }
+        foreach (var lang in Langs(chapter))
+            foreach (var cp in Parse(chapter, lang).Where(c => c.Kind == Checkpoint.Predict))
+            {
+                var sh = Sandbox(chapter, lang);
+                var output = string.Join("\n", cp.Commands
+                    .Select(c => UtilCmd.StripAnsi(sh.Execute(c).Output).TrimEnd('\n'))
+                    .Where(o => o != ""));
+                Assert.True(Checkpoint.Normalize(output) == Checkpoint.Normalize(cp.Expected),
+                    $"{lang}/{chapterId} checkpoint {cp.Index}: the simulator prints\n{output}\nbut the answer is\n{cp.Expected}");
+            }
     }
 
     [Theory(DisplayName = "try-kommandona fungerar i en ny sandlåda")]
@@ -83,11 +93,12 @@ public class LearningContentTests
     public void TryCommandsWork(string chapterId)
     {
         var chapter = ChaptersLib.Chapters.First(c => c.Id == chapterId);
-        foreach (var cp in Parse(chapter, "en").Where(c => c.Kind == Checkpoint.Try))
-        {
-            var r = Sandbox(chapter).Execute(cp.Commands[0]);
-            Assert.True(r.ExitCode == 0, $"{chapterId} checkpoint {cp.Index}: \"{cp.Commands[0]}\" exits with {r.ExitCode}: {UtilCmd.StripAnsi(r.Output)}");
-        }
+        foreach (var lang in Langs(chapter))
+            foreach (var cp in Parse(chapter, lang).Where(c => c.Kind == Checkpoint.Try))
+            {
+                var r = Sandbox(chapter, lang).Execute(cp.Commands[0]);
+                Assert.True(r.ExitCode == 0, $"{lang}/{chapterId} checkpoint {cp.Index}: \"{cp.Commands[0]}\" exits with {r.ExitCode}: {UtilCmd.StripAnsi(r.Output)}");
+            }
     }
 
     [Fact(DisplayName = "varje prov har minst 10 frågor och föregås av en sammanfattning")]

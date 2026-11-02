@@ -124,7 +124,7 @@ public static partial class DisksLib
 
     public const string UsbDisk = "sdb";
     public const string UsbPart = "sdb1";
-    public const string UsbLabel = "USBMINNE";
+    public const string UsbLabel = "USBSTICK";
     public const string UsbUuid = "7E21-9A4F";
 
     private sealed class Ids
@@ -179,17 +179,16 @@ public static partial class DisksLib
         return n;
     }
 
-    private static FsNode UsbFiles()
+    /// <summary>The files on the USB stick, in the language of the student's world.</summary>
+    private static FsNode UsbFiles(World w)
     {
         long t = new DateTimeOffset(2026, 7, 14, 10, 32, 0, TimeSpan.Zero).ToUnixTimeMilliseconds();
         var root = VfsLib.MakeDir("root", Js.Oct(755));
         root.Mtime = t;
         var children = Js.Obj<FsNode>();
-        children["semester.jpg"] = UsbFile("ÿØÿà\u0000\u0010JFIF\u0000 (simulerad bild)\n", t, 3_481_216);
-        children["rapport.pdf"] = UsbFile("%PDF-1.7\n%simulerad PDF: Rapport om Linux i skolan\n", t + 3_600_000, 842_113);
-        children["att-gora.txt"] = UsbFile(
-            "Att göra:\n- säkerhetskopiera semesterbilderna\n- skriva ut rapporten\n- lära mig mount och umount\n",
-            t + 7_200_000);
+        children[w["vacationPic"]] = UsbFile("ÿØÿà\u0000\u0010JFIF\u0000 (simulated image)\n", t, 3_481_216);
+        children[w["report"]] = UsbFile(w.File("report"), t + 3_600_000, 842_113);
+        children[w["todo"]] = UsbFile(w.File("usbTodo"), t + 7_200_000);
         root.Children = children;
         return root;
     }
@@ -209,7 +208,7 @@ public static partial class DisksLib
         return copy;
     }
 
-    public static DiskState InitialDisks(Distro distro)
+    public static DiskState InitialDisks(Distro distro, World w)
     {
         var ids = IdsByFamily[distro.Family];
         string Pu(int n) => $"{ids.Disk.Slice(0, 8).ToLowerInvariant()}-0000-4000-8000-00000000000{n}";
@@ -324,7 +323,7 @@ public static partial class DisksLib
                         Label = UsbLabel,
                         Uuid = UsbUuid,
                         Base = 0,
-                        Root = UsbFiles(),
+                        Root = UsbFiles(w),
                     },
                 },
             },
@@ -522,9 +521,9 @@ public static partial class DisksLib
     /// Creates the disk model for a new (or old saved) shell: device files in /dev, the mount points,
     /// /proc/mounts and an /etc/fstab that matches the disks.
     /// </summary>
-    public static DiskState SetupDisks(Distro distro, VFS vfs)
+    public static DiskState SetupDisks(Distro distro, VFS vfs, World w)
     {
-        var state = InitialDisks(distro);
+        var state = InitialDisks(distro, w);
         var root = vfs.Root;
         FsNode? Dir(string path)
         {
@@ -579,7 +578,7 @@ public static partial class DisksLib
     private static readonly Regex SpecRe = new(@"^(LABEL|UUID|PARTUUID)=(.*)\z", RegexOptions.CultureInvariant);
     private static readonly Regex QuoteRe = new(@"^[""']|[""']\z", RegexOptions.CultureInvariant);
 
-    /// <summary>Finds a device from /dev/sdb1, LABEL=USBMINNE or UUID=...</summary>
+    /// <summary>Finds a device from /dev/sdb1, LABEL=USBSTICK or UUID=...</summary>
     public static Block? FindBlock(DiskState state, string spec)
     {
         var blocks = AllBlocks(state);

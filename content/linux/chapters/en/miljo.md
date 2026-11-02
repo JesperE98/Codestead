@@ -28,12 +28,12 @@ export EDITOR=nano
 ```
 
 ```quiz
-Which line creates the variable `FARG` with the value `blue`?
-- [ ] `FARG = blue`
-- [x] `FARG=blue`
-- [ ] `$FARG=blue`
+Which line creates the variable `COLOR` with the value `blue`?
+- [ ] `COLOR = blue`
+- [x] `COLOR=blue`
+- [ ] `$COLOR=blue`
 ---
-There must be no spaces around the `=`. With spaces, the shell thinks `FARG`
+There must be no spaces around the `=`. With spaces, the shell thinks `COLOR`
 is a command. The `$` is only used when you *read* a variable.
 ```
 
@@ -78,13 +78,13 @@ If you want to run a program that isn't in `PATH`, you have to give its path,
 for example `./myprogram` for a file in the directory you're in.
 
 ```quiz
-You have a program called `hej` in the directory you're in, and that
+You have a program called `hello` in the directory you're in, and that
 directory isn't in `PATH`. How do you run it?
-- [ ] `hej`
-- [x] `./hej`
-- [ ] `type hej`
+- [ ] `hello`
+- [x] `./hello`
+- [ ] `type hello`
 ---
-Without a path, the shell only looks in the directories in `PATH`. `./hej`
+Without a path, the shell only looks in the directories in `PATH`. `./hello`
 says exactly where the file is: in the current directory.
 ```
 
@@ -95,7 +95,7 @@ went well, anything else means an error. The most recent exit code is stored
 in `$?`:
 
 ```sh
-ls /finnsinte
+ls /{{missing}}
 echo $?
 ```
 
@@ -113,8 +113,8 @@ ll
 `alias` without arguments lists all aliases, and `unalias ll` removes one.
 
 ```predict
-$ alias hej='echo Hello'
-$ hej
+$ alias hi='echo Hello'
+$ hi
 Hello
 ```
 

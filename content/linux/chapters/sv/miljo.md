@@ -93,7 +93,7 @@ Varje kommando lämnar en **slutkod** (*exit code*) när det är klart: `0` bety
 att allt gick bra, allt annat betyder fel. Den senaste slutkoden finns i `$?`:
 
 ```sh
-ls /finnsinte
+ls /{{missing}}
 echo $?
 ```
 

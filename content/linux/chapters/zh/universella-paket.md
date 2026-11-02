@@ -203,18 +203,18 @@ Snap 也有批评者：Snap Store 完全由 Canonical 一家运营，自动更�
 
 **AppImage** 就是把整个程序装进**一个单独的文件**里。你从程序的网站上下载它，让它可执行，然后启动——无需安装，也无需 root。想去掉这个程序，删掉这个文件就行了。
 
-你的主目录中已经有一个下载好的 AppImage，在 `~/Nedladdningar`（瑞典语的“下载”）里：
+你的主目录中已经有一个下载好的 AppImage，在 `~/{{downloads}}` 里：
 
 ```sh
-cd ~/Nedladdningar
+cd ~/{{downloads}}
 ls -l
 ```
 
 如果你马上启动它，会发生什么？
 
 ```predict
-$ ~/Nedladdningar/Kalkylator.AppImage
-bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
+$ ~/{{downloads}}/{{calculator}}
+bash: /home/{{user}}/{{downloads}}/{{calculator}}: Permission denied
 ---
 这个文件没有 `x` 权限。
 ```
@@ -222,14 +222,14 @@ bash: /home/elev/Nedladdningar/Kalkylator.AppImage: Permission denied
 下载下来的文件一开始总是不可执行的。让它变成可执行文件，然后启动它：
 
 ```sh
-chmod +x Kalkylator.AppImage
-./Kalkylator.AppImage
+chmod +x {{calculator}}
+./{{calculator}}
 ```
 
 ```try
-chmod +x ~/Nedladdningar/Kalkylator.AppImage
+chmod +x ~/{{downloads}}/{{calculator}}
 ---
-现在这个文件可执行了。用 `ls -l ~/Nedladdningar` 检查一下。
+现在这个文件可执行了。用 `ls -l ~/{{downloads}}` 检查一下。
 ```
 
 ### FUSE
@@ -242,7 +242,7 @@ AppImage 会借助 **FUSE** 把自己挂载成一个文件系统，并且需要�
 ```sh
 sudo apt update
 sudo apt install libfuse2t64
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 
 > 在 Ubuntu 上**不要**安装 `fuse` 软件包——它会替换掉桌面所需的 `fuse3`。
@@ -253,7 +253,7 @@ sudo apt install libfuse2t64
 
 ```sh
 sudo pacman -S fuse2
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -262,7 +262,7 @@ sudo pacman -S fuse2
 
 ```sh
 sudo dnf install fuse-libs
-./Kalkylator.AppImage
+./{{calculator}}
 ```
 :::
 
@@ -271,7 +271,7 @@ sudo dnf install fuse-libs
 AppImage 也可以被解包。即使没有 FUSE 也能做到：
 
 ```sh
-./Kalkylator.AppImage --appimage-extract
+./{{calculator}} --appimage-extract
 ls squashfs-root
 ./squashfs-root/AppRun
 ```

@@ -21,11 +21,14 @@ public class ChaptersTests
     // (distro, chapter) pair is reported as its own test.
     private static readonly ConcurrentDictionary<string, Lazy<Dictionary<string, string?>>> runs = new();
 
-    private static Dictionary<string, string?> SolveAll(string distroId) =>
-        runs.GetOrAdd(distroId, id => new Lazy<Dictionary<string, string?>>(() => RunSolutions(id))).Value;
+    private static Dictionary<string, string?> SolveAll(string distroId, string lang) =>
+        runs.GetOrAdd($"{distroId}/{lang}", _ => new Lazy<Dictionary<string, string?>>(() => RunSolutions(distroId, lang))).Value;
 
-    /// <summary>Chapter id → null when every task got done, otherwise the failure message.</summary>
-    private static Dictionary<string, string?> RunSolutions(string distroId)
+    /// <summary>
+    /// Chapter id → null when every task got done, otherwise the failure message. <paramref name="lang"/> is the
+    /// language of the student's world (file names, user name ...), so the checks are tried with every world.
+    /// </summary>
+    private static Dictionary<string, string?> RunSolutions(string distroId, string lang)
     {
         // Like the app: one shell per distribution, and each chapter runs on ChaptersLib.DistroFor
         // (Ubuntu outside the distro main chapter, the student's choice – within the family – inside it).
@@ -35,13 +38,13 @@ public class ChaptersTests
         foreach (var chapter in ChaptersLib.Chapters)
         {
             var distro = DistrosLib.GetDistro(ChaptersLib.DistroFor(chapter, distroId));
-            if (!shells.TryGetValue(distro.Id, out var sh)) shells[distro.Id] = sh = Shell.Shell.Create(distro.Id);
+            if (!shells.TryGetValue(distro.Id, out var sh)) shells[distro.Id] = sh = Shell.Shell.Create(distro.Id, lang);
             string? failure = null;
             try
             {
                 foreach (var task in chapter.Tasks)
                 {
-                    foreach (var line in TypesLib.Resolve(task.Solution, distro))
+                    foreach (var line in task.SolutionFor(distro, sh.World))
                     {
                         var result = sh.Execute(line);
                         foreach (var key in ProgressLib.EvaluateTasks(chapter, sh, result, completed)) completed[key] = true;
@@ -63,20 +66,23 @@ public class ChaptersTests
         return results;
     }
 
-    public static TheoryData<string, string> DistroChapters()
+    /// <summary>Every distribution with an English world, and Ubuntu with the world of every language.</summary>
+    public static TheoryData<string, string, string> DistroChapters()
     {
-        var data = new TheoryData<string, string>();
-        foreach (var d in DistrosLib.Distros)
+        var data = new TheoryData<string, string, string>();
+        var runs = DistrosLib.Distros.Select(d => (d.Id, "en"))
+            .Concat(World.Languages.Where(l => l != "en").OrderBy(l => l, StringComparer.Ordinal).Select(l => ("ubuntu", l)));
+        foreach (var (distro, lang) in runs)
             foreach (var c in ChaptersLib.Chapters)
-                data.Add(d.Id, c.Id);
+                data.Add(distro, lang, c.Id);
         return data;
     }
 
     [Theory(DisplayName = "alla uppgifter går att lösa i")]
     [MemberData(nameof(DistroChapters))]
-    public void AllTasksCanBeSolved(string distroId, string chapterId)
+    public void AllTasksCanBeSolved(string distroId, string lang, string chapterId)
     {
-        var failure = SolveAll(distroId)[chapterId];
+        var failure = SolveAll(distroId, lang)[chapterId];
         Assert.True(failure is null, failure);
     }
 
@@ -102,7 +108,7 @@ public class ChaptersTests
         {
             foreach (var d in DistrosLib.Distros)
             {
-                var md = RenderLib.Preprocess(I18nLib.ChapterMarkdown(chapter, lang), d);
+                var md = RenderLib.Preprocess(I18nLib.ChapterMarkdown(chapter, lang), d, lang);
                 Assert.True(H1.IsMatch(md), $"{lang}/{chapter.Id}: no level-1 heading");
                 Assert.False(LeftoverPlaceholder.IsMatch(md), $"{lang}/{chapter.Id}: leftover {{{{placeholder}}}}");
                 Assert.False(LeftoverBlock.IsMatch(md), $"{lang}/{chapter.Id}: leftover :::");

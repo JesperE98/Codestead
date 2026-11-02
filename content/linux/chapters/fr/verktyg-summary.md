@@ -93,7 +93,7 @@ boucles, conditions et invite.
 | `zsh` / `fish` / `exit` | Lancer un autre shell / revenir |
 | `zsh -c '…'` / `fish -c '…'` | Exécuter une commande dans un autre shell |
 | `setopt autocd` / `unsetopt autocd` | Activer / désactiver une option de zsh |
-| `set frukt äpple` / `set -e frukt` | Définir / supprimer une variable dans fish |
+| `set {{fruitVar}} {{fruitWord}}` / `set -e {{fruitVar}}` | Définir / supprimer une variable dans fish |
 | `set -x NAME value` | Définir une variable d'environnement dans fish |
 | `math 17 x 23` | Arithmétique dans fish |
 | `chsh -s /usr/bin/zsh` | Changer votre shell de connexion |

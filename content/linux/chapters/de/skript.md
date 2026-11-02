@@ -11,28 +11,28 @@ Programmiersprache, mit Variablen, Bedingungen, Schleifen und Funktionen.
 Ein Skript ist eine ganz normale Textdatei. Auf echten Rechnern würdest du sie
 in einem Texteditor wie `nano` oder `vim` schreiben. Ein anderer Weg, der
 sowohl hier als auch auf Servern funktioniert, ist ein **Here-Dokument**: Alles
-zwischen `<< 'SLUT'` und der Zeile `SLUT` wird an den Befehl übergeben.
-(*Slut* ist einfach Schwedisch für „Ende“ – du kannst jedes beliebige Wort
-nehmen, `EOF` ist eine verbreitete Wahl.)
+zwischen `<< '{{heredocEnd}}'` und der Zeile `{{heredocEnd}}` wird an den Befehl
+übergeben. Du kannst jedes beliebige Wort nehmen, `EOF` ist eine verbreitete
+Wahl.
 
 Tippe die erste Zeile und drücke Enter. Der Prompt wechselt zu `> ` – die Shell
-wartet auf den Rest. Tippe die Zeilen nacheinander ein und schließe mit `SLUT`
-ab:
+wartet auf den Rest. Tippe die Zeilen nacheinander ein und schließe mit
+`{{heredocEnd}}` ab:
 
 ```sh
-cat > hej.sh << 'SLUT'
+cat > {{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
 echo "Hallo aus einem Skript!"
 echo "Heute ist $(date)"
-SLUT
+{{heredocEnd}}
 ```
 
 Die erste Zeile, `#!/bin/bash`, heißt *Shebang* und sagt dem System, welches
 Programm die Datei ausführen soll. Mach das Skript ausführbar und starte es:
 
 ```sh
-chmod +x hej.sh
-./hej.sh
+chmod +x {{helloScript}}
+./{{helloScript}}
 ```
 
 Zeilen, die mit `#` beginnen (abgesehen von der Shebang-Zeile), sind
@@ -44,26 +44,26 @@ Eine Variable legst du mit `name=value` an. Um das Gleichheitszeichen dürfen
 **keine** Leerzeichen stehen – sonst hält die Shell `name` für einen Befehl.
 
 ```sh
-stad=Göteborg
-echo "Ich wohne in $stad"
+stadt=Hamburg
+echo "Ich wohne in $stadt"
 ```
 
-(*Stad* bedeutet „Stadt“.) Setze Variablen immer in **doppelte
+Setze Variablen immer in **doppelte
 Anführungszeichen**, wenn du sie verwendest. Ohne Anführungszeichen wird der
 Wert an Leerzeichen aufgeteilt, was zu seltsamen Fehlern führt, wenn ein
 Dateiname ein Leerzeichen enthält. Willst du direkt nach dem Variablennamen
-Text schreiben, nimm geschweifte Klammern: `"${stad}_2026"` – ohne sie würde
-bash nach einer Variable namens `stad_2026` suchen.
+Text schreiben, nimm geschweifte Klammern: `"${stadt}_2026"` – ohne sie würde
+bash nach einer Variable namens `stadt_2026` suchen.
 
 ```quiz
-`stad` enthält `Göteborg`, und es gibt keine Variable namens `stad_2026`. Was
-gibt `echo "$stad_2026"` aus?
-- [ ] `Göteborg_2026`
-- [ ] `Göteborg`
+`stadt` enthält `Hamburg`, und es gibt keine Variable namens `stadt_2026`. Was
+gibt `echo "$stadt_2026"` aus?
+- [ ] `Hamburg_2026`
+- [ ] `Hamburg`
 - [x] Eine leere Zeile
 ---
-Bash liest den ganzen Namen `stad_2026`, und diese Variable gibt es nicht.
-Schreib `"${stad}_2026"`, um `Göteborg_2026` zu bekommen.
+Bash liest den ganzen Namen `stadt_2026`, und diese Variable gibt es nicht.
+Schreib `"${stadt}_2026"`, um `Hamburg_2026` zu bekommen.
 ```
 
 ## Befehlssubstitution – `$(...)`
@@ -72,9 +72,9 @@ Schreib `"${stad}_2026"`, um `Göteborg_2026` zu bekommen.
 das Ergebnis eines Befehls in einer Variable:
 
 ```sh
-idag=$(date)
-filer=$(ls ~ | wc -l)
-echo "In deinem Home-Verzeichnis liegen $filer Einträge"
+heute=$(date)
+anzahl=$(ls ~ | wc -l)
+echo "In deinem Home-Verzeichnis liegen $anzahl Einträge"
 ```
 
 ## Rechnen – `$(( ))`
@@ -99,7 +99,7 @@ Bash rechnet nur mit ganzen Zahlen: 7 / 2 ist 3, und der Rest (`%`) ist 1.
 
 ## Argumente
 
-Wenn du `./skript.sh one two` ausführst, kann das Skript die Argumente lesen:
+Wenn du `./skript.sh eins zwei` ausführst, kann das Skript die Argumente lesen:
 
 | Variable | Enthält |
 |---|---|
@@ -110,11 +110,11 @@ Wenn du `./skript.sh one two` ausführst, kann das Skript die Argumente lesen:
 | `$?` | Den Exit-Code des vorherigen Befehls |
 
 ```quiz
-Ein Skript wird mit `./skript.sh red green blue` ausgeführt. Was enthalten `$1`
+Ein Skript wird mit `./skript.sh rot grün blau` ausgeführt. Was enthalten `$1`
 und `$#`?
 - [ ] `$1` ist `./skript.sh` und `$#` ist `4`
-- [x] `$1` ist `red` und `$#` ist `3`
-- [ ] `$1` ist `red` und `$#` ist `blue`
+- [x] `$1` ist `rot` und `$#` ist `3`
+- [ ] `$1` ist `rot` und `$#` ist `blau`
 ---
 Der Name des Skripts selbst steht in `$0` und wird deshalb in `$#` nicht
 mitgezählt.
@@ -163,13 +163,13 @@ schlauer ist: Dort kannst du `&&` und `||` schreiben und gegen Muster wie
 Für kurze Bedingungen reichen oft `&&` und `||`:
 
 ```sh
-[ -d ~/bilder ] && echo "Das Verzeichnis bilder existiert"
+[ -d ~/{{pictures}} ] && echo "Das Verzeichnis {{pictures}} existiert"
 ```
 
 ```predict
 $ x=""
-$ if [ -z "$x" ]; then echo empty; else echo "not empty"; fi
-empty
+$ if [ -z "$x" ]; then echo leer; else echo "nicht leer"; fi
+leer
 ```
 
 ## Schleifen
@@ -177,13 +177,13 @@ empty
 Eine **for-Schleife** macht dasselbe für jedes Element einer Liste:
 
 ```sh
-for frukt in äpple banan kiwi; do echo "Ich mag $frukt"; done
+for frucht in Apfel Banane Kiwi; do echo "Ich mag $frucht"; done
 ```
 
 Die Liste kann aus Wildcards oder einem Befehl stammen:
 
 ```sh
-for fil in ~/dokument/*; do echo "Datei: $fil"; done
+for datei in ~/{{documents}}/*; do echo "Datei: $datei"; done
 for i in $(seq 1 3); do echo "Runde $i"; done
 ```
 
@@ -197,7 +197,7 @@ Der gängigste Weg, eine Datei Zeile für Zeile durchzugehen, ist `while read`,
 wobei die Datei mit `<` nach `done` hineingefüttert wird:
 
 ```sh
-while read rad; do echo "> $rad"; done < ~/dokument/frukter.txt
+while read {{lineVar}}; do echo "> ${{lineVar}}"; done < ~/{{documents}}/{{fruits}}
 ```
 
 `break` verlässt eine Schleife, und `continue` springt direkt zur nächsten
@@ -220,8 +220,8 @@ Wenn eine Variable viele verschiedene Werte haben kann, ist `case`
 übersichtlicher als eine lange Kette von `elif`:
 
 ```sh
-fil=semester.jpg
-case $fil in *.jpg|*.png) echo "Ein Bild";; *.txt) echo "Eine Textdatei";; *) echo "Unbekannter Typ";; esac
+datei={{vacationPic}}
+case $datei in *.jpg|*.png) echo "Ein Bild";; *.txt) echo "Eine Textdatei";; *) echo "Unbekannter Typ";; esac
 ```
 
 Jede Alternative endet mit `;;`, und `*)` fängt alles andere ab.
@@ -233,8 +233,8 @@ aufrufen kannst. Sie bekommt Argumente genauso wie ein Skript – `$1`, `$2` und
 `$#`:
 
 ```sh
-halsa() { echo "Hallo $1, willkommen!"; }
-halsa Kim
+gruessen() { echo "Hallo $1, willkommen!"; }
+gruessen Kim
 ```
 
 Variablen, die nur innerhalb der Funktion existieren sollen, legst du mit
@@ -245,7 +245,7 @@ Variablen, die nur innerhalb der Funktion existieren sollen, legst du mit
 `read` liest eine Zeile von der Tastatur in eine Variable:
 
 ```sh
-read -p "Wie heißt du? " namn; echo "Hallo $namn!"
+read -p "Wie heißt du? " {{nameVar}}; echo "{{hello}} ${{nameVar}}!"
 ```
 
 ## Ein vollständiges Beispiel

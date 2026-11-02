@@ -8,8 +8,8 @@ Status: **ogranskad**
 |---|---|---|---|
 | Provet kräver 80 % rätt |  | ogranskad |  |
 | `enable` gäller vid uppstart, `start` nu, `--now` båda |  | ogranskad |  |
-| `systemctl is-active rapportd` ger `failed` i simulatorn; exit 0 bara för active |  | ogranskad |  |
-| `journalctl -u minserver -f` följer en tjänsts logg |  | ogranskad |  |
+| `systemctl is-active reportd` ger `failed` i simulatorn; exit 0 bara för active |  | ogranskad |  |
+| `journalctl -u myserver -f` följer en tjänsts logg |  | ogranskad |  |
 | `systemctl cat` visar unit-filen; `ExecStart=` och `WantedBy=` |  | ogranskad |  |
 | Att ändra en tjänst kräver root (*Interactive authentication required*) |  | ogranskad |  |
 | UUID i fstab eftersom enhetsnamn kan ändras |  | ogranskad |  |

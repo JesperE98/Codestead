@@ -49,10 +49,10 @@ När skalet väntar på ett kommando visar det en **prompt**. I terminalen här 
 den ut så här:
 
 ```text
-elev@ubuntu:~$
+{{user}}@ubuntu:~$
 ```
 
-Den berättar vem du är (`elev`), vilken dator du är på (`ubuntu`) och var i
+Den berättar vem du är (`{{user}}`), vilken dator du är på (`ubuntu`) och var i
 filsystemet du står (`~` betyder din hemkatalog). Tecknet `$` visar att du är
 en vanlig användare. Är du administratör (*root*) visas `#` i stället.
 
@@ -68,7 +68,7 @@ Prompten slutar med `#` i stället för `$`. Vad betyder det?
 Klicka i terminalen, skriv kommandot nedan och tryck **Enter**:
 
 ```sh
-echo Hej världen
+echo {{helloWorld}}
 ```
 
 `echo` skriver helt enkelt ut det du ger det. De flesta kommandon har samma

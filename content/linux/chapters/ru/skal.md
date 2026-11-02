@@ -58,7 +58,7 @@ cat /etc/shells
 вашей строки в `/etc/passwd`, а также в переменной `$SHELL`:
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 echo $SHELL
 ```
 
@@ -102,7 +102,7 @@ zsh
 | `1` | Главное меню со всеми настройками (в симуляторе недоступно) |
 | `2` | Создать `~/.zshrc` с рекомендуемыми настройками |
 
-Ответьте `2`. Приглашение изменится на `elev@ubuntu ~ %` – в zsh `%`
+Ответьте `2`. Приглашение изменится на `{{user}}@ubuntu ~ %` – в zsh `%`
 является обычным знаком для обычного пользователя (root получает `#`, как и
 в bash).
 
@@ -128,7 +128,7 @@ zsh понимает почти весь синтаксис bash. Pipe, пере
 `if`, `for` и функции работают так, как вы привыкли:
 
 ```sh
-for f in ~/dokument/*.txt; do wc -l $f; done
+for f in ~/{{documents}}/*.txt; do wc -l $f; done
 ```
 
 ### Возможность 1: `**` ищет во всех подкаталогах
@@ -149,7 +149,7 @@ ls ~/**/*.txt
 имя каталога, чтобы перейти в него, – без `cd`:
 
 ```sh
-dokument
+{{documents}}
 ..
 ```
 
@@ -166,8 +166,8 @@ setopt autocd
 В bash переменная без кавычек разбивается по пробелам. В zsh – нет:
 
 ```sh
-filer="a.txt b.txt"
-for f in $filer; do echo "[$f]"; done
+files="a.txt b.txt"
+for f in $files; do echo "[$f]"; done
 ```
 
 bash выводит `[a.txt]` и `[b.txt]`, а zsh – `[a.txt b.txt]`. Поведение zsh
@@ -184,7 +184,7 @@ bash выводит `[a.txt]` и `[b.txt]`, а zsh – `[a.txt b.txt]`. Пове
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y zsh > /dev/null 2>&1
-$ zsh -c 'filer="x.txt y.txt z.txt"; for f in $filer; do echo "<$f>"; done'
+$ zsh -c 'files="x.txt y.txt z.txt"; for f in $files; do echo "<$f>"; done'
 <x.txt y.txt z.txt>
 ---
 zsh не разбивает переменную по пробелам, поэтому цикл выполняется один раз со
@@ -262,17 +262,17 @@ sudo apt install fish
 fish
 ```
 
-fish поприветствует вас, а приглашение станет `elev@ubuntu ~>`.
+fish поприветствует вас, а приглашение станет `{{user}}@ubuntu ~>`.
 Спуститесь на несколько каталогов вниз и посмотрите, как fish сокращает путь
 в приглашении:
 
 ```sh
-mkdir -p ~/dokument/projekt
-cd ~/dokument/projekt
+mkdir -p ~/{{documents}}/{{project}}
+cd ~/{{documents}}/{{project}}
 cd ~
 ```
 
-В каталоге `~/dokument/projekt` приглашение показывает `~/d/projekt>` –
+В каталоге `~/{{documents}}/{{project}}` приглашение показывает `~/d/{{project}}>` –
 каждый каталог, кроме последнего, сокращается до одной буквы.
 
 ### У fish свой синтаксис
@@ -281,39 +281,38 @@ cd ~
 
 | Что | bash и zsh | fish |
 |---|---|---|
-| Задать переменную | `frukt=äpple` | `set frukt äpple` |
+| Задать переменную | `{{fruitVar}}={{fruitWord}}` | `set {{fruitVar}} {{fruitWord}}` |
 | Переменная окружения | `export EDITOR=nano` | `set -x EDITOR nano` |
-| Удалить переменную | `unset frukt` | `set -e frukt` |
+| Удалить переменную | `unset {{fruitVar}}` | `set -e {{fruitVar}}` |
 | Подстановка команды | `$(pwd)` | `(pwd)` |
 | Код завершения последней команды | `$?` | `$status` |
 | Аргументы скрипта | `$@`, `$1` | `$argv`, `$argv[1]` |
 | Условие | `if …; then …; fi` | `if …; …; end` |
 | Цикл | `for …; do …; done` | `for …; …; end` |
-| Функция | `hej() { …; }` | `function hej; …; end` |
+| Функция | `hello() { …; }` | `function hello; …; end` |
 | Арифметика | `$((17 * 23))` | `math 17 x 23` |
 
 ### Переменные через set
 
-Попробуйте задать переменную так, как это делается в bash (`frukt` по-шведски «фрукт»,
-`äpple` – «яблоко»):
+Попробуйте задать переменную так, как это делается в bash:
 
 ```sh
-frukt=äpple
+{{fruitVar}}={{fruitWord}}
 ```
 
 fish откажется и подскажет, как это записать:
 
 ```text
-fish: Unsupported use of '='. In fish, please use 'set frukt äpple'.
+fish: Unsupported use of '='. In fish, please use 'set {{fruitVar}} {{fruitWord}}'.
 ```
 
 Вот как это делается в fish:
 
 ```sh
-set frukt äpple
-echo $frukt
+set {{fruitVar}} {{fruitWord}}
+echo ${{fruitVar}}
 set -x EDITOR nano
-set -e frukt
+set -e {{fruitVar}}
 ```
 
 `-x` (*export*) делает переменную переменной окружения, которую видят
@@ -322,17 +321,17 @@ set -e frukt
 В fish каждая переменная – это **список**. Элементы нумеруются с 1:
 
 ```sh
-set frukter äpple päron banan
-echo $frukter[2]
-count $frukter
+set fruits яблоко груша банан
+echo $fruits[2]
+count $fruits
 ```
 
 `-c` работает и в fish. Что выведет последняя команда?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y fish > /dev/null 2>&1
-$ fish -c 'set frukter äpple päron banan; echo $frukter[3]'
-banan
+$ fish -c 'set fruits яблоко груша банан; echo $fruits[3]'
+банан
 ---
 Элементы списка в fish нумеруются с 1, поэтому `[3]` – третий и последний
 элемент.
@@ -381,7 +380,7 @@ if test -f ~/.bashrc; echo exists; else; echo missing; end
 выполнить цикл:
 
 ```sh
-for f in ~/dokument/*.txt
+for f in ~/{{documents}}/*.txt
 echo (basename $f)
 end
 ```
@@ -438,14 +437,14 @@ exit
 Попробуйте написать скрипт для bash и запустить его из fish:
 
 ```sh
-cat > ~/hej.sh << 'SLUT'
+cat > ~/{{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
 name=Kim
 echo "Привет, $name, меня запускает bash"
-SLUT
-chmod +x ~/hej.sh
+{{heredocEnd}}
+chmod +x ~/{{helloScript}}
 fish
-~/hej.sh
+~/{{helloScript}}
 exit
 ```
 
@@ -472,7 +471,7 @@ exit
 
 ```sh
 chsh -s /usr/bin/zsh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 - Shell нужно указывать полным путём, и он должен быть перечислен в
@@ -529,7 +528,7 @@ $ echo $SHELL
 | `zsh` / `fish` / `exit` | Запускает другой shell / возвращает назад |
 | `ls ~/**/*.txt` | Ищет во всех подкаталогах (zsh, fish) |
 | `setopt autocd` | Включает опцию zsh |
-| `set frukt äpple` | Задаёт переменную в fish |
+| `set {{fruitVar}} {{fruitWord}}` | Задаёт переменную в fish |
 | `set -x NAME value` | Задаёт переменную окружения в fish |
 | `chsh -s /usr/bin/zsh` | Меняет ваш login shell |
 

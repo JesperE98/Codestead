@@ -286,14 +286,14 @@ com `sudo` você vê todos:
 sudo ss -tulpn
 ```
 
-Se o servidor de treino `minserver` do capítulo de processos estiver rodando,
+Se o servidor de treino `myserver` do capítulo de processos estiver rodando,
 você o vê aqui na porta 8080. O comando mais antigo `netstat -tulpn` (do
 *net-tools*) faz a mesma coisa.
 
 ## Baixando da web: curl e wget
 
 O `curl` busca o que estiver em um endereço (uma **URL**) e imprime no
-terminal. Experimente com o minserver no seu próprio computador:
+terminal. Experimente com o myserver no seu próprio computador:
 
 No Ubuntu o `curl` não vem pré-instalado (mas o `wget` vem):
 
@@ -306,11 +306,11 @@ curl http://localhost:8080
 ```
 
 Recebeu `Couldn't connect to server`? Então nada está escutando na porta –
-talvez você tenha parado o minserver no capítulo de processos. Inicie-o de
+talvez você tenha parado o myserver no capítulo de processos. Inicie-o de
 novo:
 
 ```sh
-minserver
+myserver
 ```
 
 Com `-I` o curl mostra só os **cabeçalhos** (*headers*) da resposta, em que a
@@ -348,7 +348,7 @@ arquivo do endereço):
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 O `wget` foi feito para baixar arquivos. Ele sempre salva em um arquivo,
@@ -369,10 +369,10 @@ Linux remotamente, e tudo o que é enviado vai criptografado. O servidor roda o
 serviço `sshd` na porta 22, e você se conecta com o cliente `ssh`:
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` significa "o usuário elev no computador server.lan". O
+`{{user}}@server.lan` significa "o usuário {{user}} no computador server.lan". O
 comando depois do host (`hostname`) roda no servidor e a resposta aparece
 aqui – ela diz `server`, não `ubuntu`.
 
@@ -393,8 +393,8 @@ servidor.
 O comando pode ser vários comandos entre aspas:
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 Sem um comando, o ssh faz login e você recebe um shell no outro computador,
@@ -408,7 +408,7 @@ privada fica com você, e a pública é colocada no servidor:
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 Aperte Enter nas perguntas do `ssh-keygen` para usar o arquivo padrão

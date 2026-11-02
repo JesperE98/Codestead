@@ -9,7 +9,7 @@ Linux में `C:` जैसे drive letters नहीं होते। स
 | Directory | क्या रहता है |
 |---|---|
 | `/` | Root – tree का सबसे ऊपरी हिस्सा |
-| `/home` | Users की home directories, जैसे `/home/elev` |
+| `/home` | Users की home directories, जैसे `/home/{{user}}` |
 | `/root` | Administrator, यानी root, की home directory |
 | `/etc` | System settings (configuration files) |
 | `/usr/bin` | Programs (commands) जैसे `ls` और `cat` |
@@ -96,15 +96,15 @@ Paths दो तरह के होते हैं:
   में हैं, तो `/var/log` तक सिर्फ़ `cd var/log` से पहुँच सकते हैं।
 
 ```quiz
-आप `/home` में हैं। कौन-से कमांड आपको `/home/elev/dokument` तक ले जाते हैं? (जो भी काम करें, सब चुनें।)
-- [x] `cd elev/dokument`
-- [x] `cd /home/elev/dokument`
-- [ ] `cd /elev/dokument`
-- [ ] `cd dokument`
+आप `/home` में हैं। कौन-से कमांड आपको `/home/{{user}}/{{documents}}` तक ले जाते हैं? (जो भी काम करें, सब चुनें।)
+- [x] `cd {{user}}/{{documents}}`
+- [x] `cd /home/{{user}}/{{documents}}`
+- [ ] `cd /{{user}}/{{documents}}`
+- [ ] `cd {{documents}}`
 ---
-`elev/dokument` `/home` के सापेक्ष है, और `/home/elev/dokument` निरपेक्ष (absolute) है,
-इसलिए वह कहीं से भी काम करता है। `/elev/dokument` रूट से शुरू होता है, जहाँ
-कोई `elev` नहीं है।
+`{{user}}/{{documents}}` `/home` के सापेक्ष है, और `/home/{{user}}/{{documents}}` निरपेक्ष (absolute) है,
+इसलिए वह कहीं से भी काम करता है। `/{{user}}/{{documents}}` रूट से शुरू होता है, जहाँ
+कोई `{{user}}` नहीं है।
 ```
 
 कुछ ख़ास नाम जानने लायक़ हैं:

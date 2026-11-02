@@ -14,8 +14,8 @@
       "hint": "Seul root peut définir le mot de passe des autres : `sudo passwd kim`. Tapez deux fois le même mot de passe – il ne s'affiche pas pendant la saisie."
     },
     "grupp": {
-      "text": "Créez le groupe `utvecklare` (« développeurs » en suédois) et ajoutez-y `kim`.",
-      "hint": "D'abord `sudo groupadd utvecklare`, puis `sudo usermod -aG utvecklare kim`."
+      "text": "Créez le groupe `{{devGroup}}` et ajoutez-y `kim`.",
+      "hint": "D'abord `sudo groupadd {{devGroup}}`, puis `sudo usermod -aG {{devGroup}} kim`."
     },
     "sudo-ratt": {
       "text": "Autorisez `kim` à utiliser `sudo` en ajoutant le compte au groupe `sudo`.",
@@ -26,12 +26,12 @@
       "hint": "`sudo -u kim whoami`"
     },
     "su": {
-      "text": "Connectez-vous en tant que `kim` avec `su -` et lancez `id`. Revenez ensuite à `elev` avec `exit`.",
+      "text": "Connectez-vous en tant que `kim` avec `su -` et lancez `id`. Revenez ensuite à `{{user}}` avec `exit`.",
       "hint": "Tapez `su - kim`, puis le mot de passe de kim – celui que vous avez choisi avec `passwd`. L'invite montre que vous êtes kim."
     },
     "userdel": {
-      "text": "Créez un utilisateur temporaire `vikarie` (« remplaçant » en suédois) avec un répertoire personnel – puis supprimez-le, **y compris** son répertoire personnel.",
-      "hint": "`sudo useradd -m vikarie`, puis `sudo userdel -r vikarie`."
+      "text": "Créez un utilisateur temporaire `{{tempUser}}` avec un répertoire personnel – puis supprimez-le, **y compris** son répertoire personnel.",
+      "hint": "`sudo useradd -m {{tempUser}}`, puis `sudo userdel -r {{tempUser}}`."
     }
   }
 }

@@ -43,18 +43,18 @@ mesma, mas com outros programas de compressão (`xz`, `bzip2` e `zstd`).
 
 ## Empacotando com o `tar`
 
-Vá para o seu diretório pessoal e empacote o diretório `dokument`:
+Vá para o seu diretório pessoal e empacote o diretório `{{documents}}`:
 
 ```sh
 cd ~
-tar -cvf dokument.tar dokument
+tar -cvf {{documents}}.tar {{documents}}
 ```
 
 ```text
-dokument/
-dokument/betyg.csv
-dokument/frukter.txt
-dokument/server.log
+{{documents}}/
+{{documents}}/{{fruits}}
+{{documents}}/{{grades}}
+{{documents}}/server.log
 ```
 
 O `-c` significa *criar um arquivo tar*, o `-v` faz o tar mostrar o que está
@@ -63,7 +63,7 @@ que vier depois do nome do arquivo tar é empacotado – quantos arquivos e
 diretórios você quiser.
 
 > **Atenção!** A ordem é *primeiro o arquivo tar, depois os arquivos*. Se você
-> trocar a ordem, como em `tar -cvf dokument dokument.tar`, o tar tenta
+> trocar a ordem, como em `tar -cvf {{documents}} {{documents}}.tar`, o tar tenta
 > sobrescrever o diretório – ou pior, um arquivo que você queria manter.
 
 ## As opções para guardar de cabeça
@@ -104,13 +104,13 @@ o `f` é seguido pelo nome do arquivo tar.
 Acrescente o `z` e o arquivo tar passa pelo gzip no caminho:
 
 ```sh
-tar -czvf dokument.tar.gz dokument
-ls -l dokument.tar dokument.tar.gz
+tar -czvf {{documents}}.tar.gz {{documents}}
+ls -l {{documents}}.tar {{documents}}.tar.gz
 ```
 
 ```text
--rw-r--r-- 1 elev elev 10240 Oct 30 12:00 dokument.tar
--rw-r--r-- 1 elev elev   837 Oct 30 12:00 dokument.tar.gz
+-rw-r--r-- 1 {{user}} {{user}} 10240 Oct 30 12:00 {{documents}}.tar
+-rw-r--r-- 1 {{user}} {{user}}   833 Oct 30 12:00 {{documents}}.tar.gz
 ```
 
 O arquivo tar sem compressão tem nada menos que 10.240 bytes, embora os
@@ -123,14 +123,14 @@ O comando `du` (*disk usage*) mostra quanto espaço algo ocupa no disco. Com
 diretório inteiro:
 
 ```sh
-du -h dokument.tar dokument.tar.gz
-du -sh dokument
+du -h {{documents}}.tar {{documents}}.tar.gz
+du -sh {{documents}}
 ```
 
 ```text
-12K	dokument.tar
-4.0K	dokument.tar.gz
-16K	dokument
+12K	{{documents}}.tar
+4.0K	{{documents}}.tar.gz
+16K	{{documents}}
 ```
 
 O disco é dividido em blocos de 4 KiB, então o `du` nunca mostra menos de
@@ -140,14 +140,14 @@ O disco é dividido em blocos de 4 KiB, então o `du` nunca mostra menos de
 ## Olhe dentro do arquivo tar antes de descompactar
 
 ```sh
-tar -tzvf dokument.tar.gz
+tar -tzvf {{documents}}.tar.gz
 ```
 
 ```text
-drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
--rw-r--r-- elev/elev       146 2026-10-30 12:00 dokument/betyg.csv
--rw-r--r-- elev/elev        64 2026-10-30 12:00 dokument/frukter.txt
--rw-r--r-- elev/elev       848 2026-10-30 12:00 dokument/server.log
+drwxr-xr-x {{user}}/{{user}}         0 2026-10-30 12:00 {{documents}}/
+-rw-r--r-- {{user}}/{{user}}        64 2026-10-30 12:00 {{documents}}/{{fruits}}
+-rw-r--r-- {{user}}/{{user}}       176 2026-10-30 12:00 {{documents}}/{{grades}}
+-rw-r--r-- {{user}}/{{user}}       824 2026-10-30 12:00 {{documents}}/server.log
 ```
 
 Com o `v`, o conteúdo aparece como no `ls -l`, com permissões, dono e
@@ -158,15 +158,14 @@ esteja quando os descompacta.
 ## Descompactando
 
 ```sh
-mkdir uppackat
-tar -xzvf dokument.tar.gz -C uppackat
+mkdir {{unpacked}}
+tar -xzvf {{documents}}.tar.gz -C {{unpacked}}
 ```
 
-O `-C` (C maiúsculo) escolhe o diretório onde o tar descompacta (*uppackat*
-significa "descompactado"). Sem ele, tudo vai parar no diretório em que você
-está. As versões modernas do tar detectam sozinhas, na hora de descompactar,
-se um arquivo está comprimido, então `tar -xf dokument.tar.gz` também
-funciona.
+O `-C` (C maiúsculo) escolhe o diretório onde o tar descompacta. Sem ele,
+tudo vai parar no diretório em que você está. As versões modernas do tar
+detectam sozinhas, na hora de descompactar, se um arquivo está comprimido,
+então `tar -xf {{documents}}.tar.gz` também funciona.
 
 > **Atenção!** O tar não pergunta antes de sobrescrever arquivos que já
 > existem. Liste o conteúdo antes se não tiver certeza.
@@ -177,30 +176,30 @@ Se você empacotar um caminho absoluto, a `/` inicial é removida para que o
 arquivo tar possa ser descompactado em qualquer lugar:
 
 ```sh
-tar -czf backup.tar.gz ~/dokument
+tar -czf backup.tar.gz ~/{{documents}}
 ```
 
 ```text
 tar: Removing leading `/' from member names
 ```
 
-O arquivo tar agora contém `home/elev/dokument/...`. Se você quiser apenas
-`dokument/` no arquivo tar, pode deixar o tar mudar de diretório antes com
+O arquivo tar agora contém `home/{{user}}/{{documents}}/...`. Se você quiser apenas
+`{{documents}}/` no arquivo tar, pode deixar o tar mudar de diretório antes com
 `-C`:
 
 ```sh
-tar -czf backup.tar.gz -C ~ dokument
+tar -czf backup.tar.gz -C ~ {{documents}}
 tar -tzf backup.tar.gz
 ```
 
 ```quiz
-Você executa `tar -czf backup.tar.gz -C ~ dokument`. O que o arquivo tar contém?
-- [x] `dokument/` e os arquivos dentro dele
-- [ ] `home/elev/dokument/` e os arquivos dentro dele
-- [ ] `/home/elev/dokument/` e os arquivos dentro dele
+Você executa `tar -czf backup.tar.gz -C ~ {{documents}}`. O que o arquivo tar contém?
+- [x] `{{documents}}/` e os arquivos dentro dele
+- [ ] `home/{{user}}/{{documents}}/` e os arquivos dentro dele
+- [ ] `/home/{{user}}/{{documents}}/` e os arquivos dentro dele
 ---
 O `-C ~` faz o tar mudar primeiro para o seu diretório pessoal, então os nomes no
-arquivo tar começam em `dokument/`.
+arquivo tar começam em `{{documents}}/`.
 ```
 
 ## Comprimindo arquivos individuais com o `gzip`
@@ -209,12 +208,12 @@ O `gzip` comprime um arquivo e o **substitui** por um arquivo `.gz`. As
 permissões e a data são mantidas:
 
 ```sh
-cp dokument/server.log .
+cp {{documents}}/server.log .
 gzip -v server.log
 ```
 
 ```text
-server.log:	 39.0% -- replaced with server.log.gz
+server.log:	 39.8% -- replaced with server.log.gz
 ```
 
 O `gzip -l` mostra o tamanho antes e depois, e o `gunzip` descompacta o
@@ -230,21 +229,21 @@ arquivo bem pequeno – ele na verdade fica **maior**, porque o gzip acrescenta
 um cabeçalho que contém, entre outras coisas, o nome do arquivo:
 
 ```sh
-cp dokument/frukter.txt .
-gzip -kv frukter.txt
+cp {{documents}}/{{fruits}} .
+gzip -kv {{fruits}}
 ```
 
 ```text
-frukter.txt:	-20.3% -- created frukter.txt.gz
+{{fruits}}:	-15.6% -- created {{fruits}}.gz
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ cp dokument/server.log .
-$ gzip frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ cp {{documents}}/server.log .
+$ gzip {{fruits}}
 $ gzip -k server.log
-$ ls frukter* server*
-frukter.txt.gz  server.log  server.log.gz
+$ ls frutas* server*
+{{fruits}}.gz  server.log  server.log.gz
 ---
 O `gzip` sozinho substitui o arquivo por um arquivo `.gz`; o `-k` mantém o original.
 ```
@@ -288,14 +287,14 @@ Depois, empacote o diretório. Não esqueça o `-r` (*recursive*) – sem ele, o
 zip só adiciona o diretório vazio, não os arquivos que estão dentro dele:
 
 ```sh
-zip -r dokument.zip dokument
+zip -r {{documents}}.zip {{documents}}
 ```
 
 ```text
-  adding: dokument/ (stored 0%)
-  adding: dokument/betyg.csv (deflated 17%)
-  adding: dokument/frukter.txt (deflated 27%)
-  adding: dokument/server.log (deflated 42%)
+  adding: {{documents}}/ (stored 0%)
+  adding: {{documents}}/{{fruits}} (deflated 30%)
+  adding: {{documents}}/{{grades}} (deflated 24%)
+  adding: {{documents}}/server.log (deflated 43%)
 ```
 
 Repare que a ordem é a mesma do tar: primeiro o arquivo zip, depois os
@@ -303,17 +302,17 @@ arquivos. O `unzip -l` lista o conteúdo, e o `-d` escolhe onde descompactar
 (o diretório é criado se não existir):
 
 ```sh
-unzip -l dokument.zip
-unzip dokument.zip -d fran-zip
+unzip -l {{documents}}.zip
+unzip {{documents}}.zip -d {{fromZip}}
 ```
 
 Se os arquivos já existirem, o unzip os pula. Com `unzip -o` eles são
 sobrescritos.
 
 ```quiz
-Você executa `zip dokument.zip dokument` sem `-r`. O que vai parar no arquivo zip?
-- [ ] Todos os arquivos de `dokument`
-- [x] Só o diretório vazio `dokument/`
+Você executa `zip {{documents}}.zip {{documents}}` sem `-r`. O que vai parar no arquivo zip?
+- [ ] Todos os arquivos de `{{documents}}`
+- [x] Só o diretório vazio `{{documents}}/`
 - [ ] Nada – o zip se recusa a executar
 ---
 Sem `-r` (*recursive*), o zip não entra no diretório.

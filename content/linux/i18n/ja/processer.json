@@ -26,7 +26,7 @@
       "text": "`kill` とジョブ番号（`%1`）または PID を使って、バックグラウンドジョブを終了してください。"
     },
     "server": {
-      "text": "サーバー `minserver` が root として動いています。`pkill` か `kill` と適切な権限を使って止めてください。",
+      "text": "サーバー `myserver` が root として動いています。`pkill` か `kill` と適切な権限を使って止めてください。",
       "hint": "一般ユーザーのままだと \"Operation not permitted\" と表示されます。前に `sudo` を付けましょう。"
     }
   }

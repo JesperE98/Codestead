@@ -214,11 +214,11 @@ ss -tulpn
 sudo ss -tulpn
 ```
 
-如果进程那一章中的练习服务器 `minserver` 正在运行，你会在这里看到它监听在 8080 端口。旧命令 `netstat -tulpn`（来自 *net-tools*）的作用相同。
+如果进程那一章中的练习服务器 `myserver` 正在运行，你会在这里看到它监听在 8080 端口。旧命令 `netstat -tulpn`（来自 *net-tools*）的作用相同。
 
 ## 从网上获取内容：curl 和 wget
 
-`curl` 会获取某个地址（**URL**）上的内容，并把它打印到终端上。用你自己计算机上的 minserver 试一试：
+`curl` 会获取某个地址（**URL**）上的内容，并把它打印到终端上。用你自己计算机上的 myserver 试一试：
 
 在 Ubuntu 上，`curl` 没有预装（但 `wget` 有）：
 
@@ -230,10 +230,10 @@ sudo apt install curl
 curl http://localhost:8080
 ```
 
-你得到的是 `Couldn't connect to server` 吗？那说明没有程序在这个端口上监听——也许你在进程那一章里把 minserver 停掉了。重新启动它：
+你得到的是 `Couldn't connect to server` 吗？那说明没有程序在这个端口上监听——也许你在进程那一章里把 myserver 停掉了。重新启动它：
 
 ```sh
-minserver
+myserver
 ```
 
 加上 `-I`，curl 只显示响应的**头部**（headers），其中第一行是**状态码**：
@@ -267,7 +267,7 @@ curl -s https://example.com | grep title
 
 ```sh
 cd ~
-curl -o exempel.html https://example.com
+curl -o {{exampleHtml}} https://example.com
 ```
 
 `wget` 是专门用来下载文件的。它总是保存到文件，会显示进度，并且会自动跟随重定向：
@@ -284,10 +284,10 @@ cat cheatsheet.txt
 **SSH**（*Secure Shell*，安全外壳）是远程控制 Linux 计算机的常用方式，所有传输的内容都是加密的。服务器在 22 端口上运行 `sshd` 服务，你用客户端 `ssh` 连接它：
 
 ```sh
-ssh elev@server.lan hostname
+ssh {{user}}@server.lan hostname
 ```
 
-`elev@server.lan` 的意思是“计算机 server.lan 上的用户 elev”。主机后面的命令（`hostname`）在服务器上运行，结果显示在这里——它显示的是 `server`，而不是 `ubuntu`。
+`{{user}}@server.lan` 的意思是“计算机 server.lan 上的用户 {{user}}”。主机后面的命令（`hostname`）在服务器上运行，结果显示在这里——它显示的是 `server`，而不是 `ubuntu`。
 
 第一次连接某台计算机时，ssh 会问你是否信任它：
 
@@ -302,8 +302,8 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])?
 命令也可以是放在引号里的多条命令：
 
 ```sh
-ssh elev@server.lan 'whoami; uptime; ls'
-ssh elev@server.lan cat välkommen.txt
+ssh {{user}}@server.lan 'whoami; uptime; ls'
+ssh {{user}}@server.lan cat {{welcomeFile}}
 ```
 
 如果不带命令，ssh 会直接登录，你会得到另一台计算机上的 shell，用 `exit` 退出。模拟器不支持这种方式——在这里你总是要把命令直接写在主机后面。
@@ -314,7 +314,7 @@ ssh elev@server.lan cat välkommen.txt
 
 ```sh
 ssh-keygen
-ssh-copy-id elev@server.lan
+ssh-copy-id {{user}}@server.lan
 ```
 
 在 `ssh-keygen` 提问时按 Enter，就会使用默认文件 `~/.ssh/id_ed25519`，并且不设密码短语（passphrase）。`ssh-copy-id` 会把公钥（`id_ed25519.pub`）添加到服务器上的 `~/.ssh/authorized_keys` 中。之后 ssh 就不再询问密码了。永远不要把私钥给任何人看！

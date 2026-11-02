@@ -19,19 +19,19 @@
     },
     "curl-localhost": {
       "text": "Загрузите с помощью `curl` стартовую страницу учебного сервера на своём компьютере, `http://localhost:8080`.",
-      "hint": "В Ubuntu curl нужно установить: `sudo apt install curl`. Если вы получили *Couldn't connect to server*, minserver остановлен – запустите его командой `minserver`."
+      "hint": "В Ubuntu curl нужно установить: `sudo apt install curl`. Если вы получили *Couldn't connect to server*, myserver остановлен – запустите его командой `myserver`."
     },
     "spara": {
-      "text": "Сохраните веб-страницу `https://example.com` в файл `~/exempel.html`.",
-      "hint": "Перейдите в домашний каталог и используйте `curl -o exempel.html https://example.com` или `wget -O exempel.html https://example.com`."
+      "text": "Сохраните веб-страницу `https://example.com` в файл `~/{{exampleHtml}}`.",
+      "hint": "Перейдите в домашний каталог и используйте `curl -o {{exampleHtml}} https://example.com` или `wget -O {{exampleHtml}} https://example.com`."
     },
     "hosts": {
       "text": "Сервер `192.168.1.10` должен называться `server.lan`, но этого имени нет в DNS. Добавьте его в `/etc/hosts`, а затем пропингуйте `server.lan`.",
       "hint": "Файл принадлежит root: `echo '192.168.1.10 server.lan' | sudo tee -a /etc/hosts`, а затем `ping -c 3 server.lan`."
     },
     "ssh": {
-      "text": "Выполните команду `hostname` на сервере `server.lan` с помощью `ssh` от имени пользователя `elev`.",
-      "hint": "`ssh elev@server.lan hostname` – и ответьте `yes` на вопрос о ключе хоста."
+      "text": "Выполните команду `hostname` на сервере `server.lan` с помощью `ssh` от имени пользователя `{{user}}`.",
+      "hint": "`ssh {{user}}@server.lan hostname` – и ответьте `yes` на вопрос о ключе хоста."
     }
   }
 }

@@ -41,12 +41,12 @@ Chaque ligne comporte sept champs séparés par des deux-points. Regardez votre
 propre ligne :
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 ```text
-elev:x:1000:1000:Elev,,,:/home/elev:/bin/bash
- 1   2  3    4      5        6          7
+{{user}}:x:1000:1000:{{userFull}},,,:/home/{{user}}:/bin/bash
+  1   2  3    4      5          6          7
 ```
 
 | Champ | Signification |
@@ -65,7 +65,7 @@ dans une école ou une entreprise où les comptes se trouvent sur un serveur
 central :
 
 ```sh
-getent passwd elev
+getent passwd {{user}}
 ```
 
 ### Les utilisateurs système
@@ -113,7 +113,7 @@ cat /etc/group
 ```
 
 ```text
-sudo:x:27:elev
+sudo:x:27:{{user}}
  1   2  3   4
 ```
 
@@ -124,7 +124,7 @@ Chaque utilisateur a **un groupe principal** (le champ GID de `/etc/passwd`)
 et peut en plus être membre d'un nombre quelconque de **groupes
 secondaires**. Les nouveaux fichiers que vous créez reçoivent votre groupe
 principal. Sur la plupart des distributions, chaque utilisateur reçoit un
-groupe principal privé du même nom – `elev` est dans le groupe `elev`.
+groupe principal privé du même nom – `{{user}}` est dans le groupe `{{user}}`.
 
 ```sh
 groups
@@ -132,9 +132,9 @@ id
 ```
 
 ```quiz
-Vous (`elev`) êtes dans les groupes `elev` et `sudo`, et votre groupe principal
-est `elev`. Quel groupe reçoit un nouveau fichier que vous créez ?
-- [x] `elev`
+Vous (`{{user}}`) êtes dans les groupes `{{user}}` et `sudo`, et votre groupe
+principal est `{{user}}`. Quel groupe reçoit un nouveau fichier que vous créez ?
+- [x] `{{user}}`
 - [ ] `sudo`
 - [ ] Les deux
 - [ ] `root`
@@ -172,13 +172,13 @@ changé pour la dernière fois et quand il expire. `chage` les affiche en
 clair :
 
 ```sh
-chage -l elev
+chage -l {{user}}
 ```
 
 ```try
-chage -l elev
+chage -l {{user}}
 ---
-`Password expires: never` – le mot de passe d'elev n'a jamais besoin d'être
+`Password expires: never` – le mot de passe de {{user}} n'a jamais besoin d'être
 changé.
 ```
 
@@ -195,7 +195,7 @@ sudo useradd -m -s /bin/bash kim
 |---|---|
 | `-m` | Crée le répertoire personnel `/home/kim` |
 | `-s /bin/bash` | Le shell de l'utilisateur |
-| `-c "Kim Svensson"` | Le commentaire (nom complet) |
+| `-c "Kim Dupont"` | Le commentaire (nom complet) |
 | `-G group1,group2` | Des groupes secondaires dès le départ |
 
 `useradd` trouve le prochain UID libre à partir de 1000 – `kim` reçoit 1001.
@@ -255,8 +255,8 @@ passwd root
 Créez un groupe et ajoutez-y un membre :
 
 ```sh
-sudo groupadd utvecklare
-sudo usermod -aG utvecklare kim
+sudo groupadd {{devGroup}}
+sudo usermod -aG {{devGroup}} kim
 groups kim
 ```
 
@@ -266,12 +266,12 @@ exactement ce que vous tapez – et l'utilisateur est retiré de tous les autres
 groupes, comme le groupe sudo. Une façon classique de s'enfermer dehors.
 
 ```quiz
-`kim` est dans les groupes secondaires `sudo` et `utvecklare`. Un
+`kim` est dans les groupes secondaires `sudo` et `{{devGroup}}`. Un
 administrateur lance `sudo usermod -G backup kim`. Dans quels groupes
 secondaires kim se trouve-t-il ensuite ?
-- [ ] `sudo`, `utvecklare` et `backup`
+- [ ] `sudo`, `{{devGroup}}` et `backup`
 - [x] Seulement `backup`
-- [ ] `sudo` et `utvecklare` – la commande échoue sans `-a`
+- [ ] `sudo` et `{{devGroup}}` – la commande échoue sans `-a`
 - [ ] Aucun
 ---
 Sans `-a`, la liste devient exactement ce que vous tapez. Avec
@@ -281,8 +281,8 @@ Sans `-a`, la liste devient exactement ce que vous tapez. Avec
 `gpasswd` fait la même chose et sait aussi retirer des membres :
 
 ```sh
-sudo gpasswd -a kim utvecklare
-sudo gpasswd -d kim utvecklare
+sudo gpasswd -a kim {{devGroup}}
+sudo gpasswd -d kim {{devGroup}}
 ```
 
 Sur un vrai ordinateur, une nouvelle appartenance à un groupe ne prend effet
@@ -293,10 +293,10 @@ Les groupes servent pour les répertoires partagés. Faites du groupe le
 propriétaire et donnez-lui le droit d'écriture avec `chgrp` et `chmod` :
 
 ```sh
-sudo mkdir /srv/projekt
-sudo chgrp utvecklare /srv/projekt
-sudo chmod 775 /srv/projekt
-ls -ld /srv/projekt
+sudo mkdir /srv/projet
+sudo chgrp {{devGroup}} /srv/projet
+sudo chmod 775 /srv/projet
+ls -ld /srv/projet
 ```
 
 ## Donner les droits sudo – le groupe `sudo`
@@ -392,16 +392,16 @@ Ensuite, `userdel` supprime l'utilisateur. Avec `-r`, le répertoire personnel
 disparaît aussi – sans `-r`, les fichiers restent :
 
 ```sh
-sudo useradd -m vikarie
-sudo userdel -r vikarie
+sudo useradd -m {{tempUser}}
+sudo userdel -r {{tempUser}}
 ```
 
 Ubuntu a aussi `deluser`, le pendant d'`adduser` :
-`sudo deluser --remove-home vikarie`. `sudo deluser kim sudo` retire kim du
+`sudo deluser --remove-home {{tempUser}}`. `sudo deluser kim sudo` retire kim du
 groupe sudo.
 
 `userdel` refuse de supprimer un utilisateur connecté – essayez
-`sudo userdel elev`.
+`sudo userdel {{user}}`.
 
 ## Résumé
 

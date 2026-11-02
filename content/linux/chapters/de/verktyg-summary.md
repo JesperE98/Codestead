@@ -90,7 +90,7 @@ und der Prompt.
 | `zsh` / `fish` / `exit` | Eine andere Shell starten / zurückgehen |
 | `zsh -c '…'` / `fish -c '…'` | Einen Befehl in einer anderen Shell ausführen |
 | `setopt autocd` / `unsetopt autocd` | Eine zsh-Option ein- / ausschalten |
-| `set frukt äpple` / `set -e frukt` | Eine Variable in fish setzen / entfernen |
+| `set {{fruitVar}} {{fruitWord}}` / `set -e {{fruitVar}}` | Eine Variable in fish setzen / entfernen |
 | `set -x NAME value` | Eine Umgebungsvariable in fish setzen |
 | `math 17 x 23` | Rechnen in fish |
 | `chsh -s /usr/bin/zsh` | Deine Login-Shell ändern |

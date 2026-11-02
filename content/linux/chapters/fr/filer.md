@@ -6,14 +6,14 @@ déplacer et supprimer des choses.
 ## Créer des répertoires – `mkdir`
 
 ```sh
-mkdir bilder2
+mkdir images2
 ```
 
 Pour créer plusieurs niveaux d'un coup, il faut `-p` (*parents*). Sans cette
 option, `mkdir` proteste si le répertoire parent n'existe pas :
 
 ```sh
-mkdir -p resa/2026/juni
+mkdir -p voyage/2026/juin
 ```
 
 ## Créer des fichiers vides – `touch`
@@ -22,11 +22,11 @@ mkdir -p resa/2026/juni
 jour son horodatage) :
 
 ```sh
-touch inkopslista.txt
+touch liste-courses.txt
 ```
 
 ```quiz
-Que fait `touch anteckningar.txt` si le fichier existe déjà ?
+Que fait `touch {{notes}}` si le fichier existe déjà ?
 - [ ] Il vide le fichier
 - [ ] Il se plaint que le fichier existe
 - [x] Il met seulement à jour l'horodatage du fichier – le contenu reste le même
@@ -35,23 +35,23 @@ Que fait `touch anteckningar.txt` si le fichier existe déjà ?
 ## Copier – `cp`
 
 ```sh
-cp anteckningar.txt anteckningar-kopia.txt
+cp {{notes}} notes-copie.txt
 ```
 
 Si la cible est un répertoire, la copie atterrit à l'intérieur, sous le même
 nom. Pour copier un répertoire entier, il faut `-r` (*recursive*) :
 
 ```sh
-cp -r dokument dokument-backup
+cp -r {{documents}} {{documents}}-backup
 ```
 
 ```predict
-$ mkdir kopior
-$ cp anteckningar.txt kopior
-$ ls kopior
-anteckningar.txt
+$ mkdir copies
+$ cp {{notes}} copies
+$ ls copies
+{{notes}}
 ---
-`kopior` est un répertoire, donc la copie atterrit à l'intérieur, sous le même
+`copies` est un répertoire, donc la copie atterrit à l'intérieur, sous le même
 nom.
 ```
 
@@ -61,8 +61,8 @@ Sous Linux, *déplacer* et *renommer*, c'est la même chose. `mv` fait les
 deux :
 
 ```sh
-mv inkopslista.txt dokument/
-mv dokument/inkopslista.txt dokument/handla.txt
+mv liste-courses.txt {{documents}}/
+mv {{documents}}/liste-courses.txt {{documents}}/courses.txt
 ```
 
 ```quiz
@@ -77,14 +77,14 @@ Déplacer et renommer, c'est la même chose. Ensuite, il n'y a plus que `b.txt`.
 ## Supprimer – `rm` et `rmdir`
 
 ```sh
-rm anteckningar-kopia.txt
+rm notes-copie.txt
 ```
 
 `rmdir` supprime les répertoires *vides*. Pour supprimer un répertoire avec
 tout son contenu, utilisez `rm -r` :
 
 ```sh
-rm -r dokument-backup
+rm -r {{documents}}-backup
 ```
 
 > **Attention !** Il n'y a pas de corbeille dans le terminal. Ce que vous
@@ -93,10 +93,10 @@ rm -r dokument-backup
 > chemin avant d'appuyer sur Entrée.
 
 ```quiz
-Quelle commande supprime le répertoire `gammalt` *uniquement* s'il est vide ?
-- [ ] `rm gammalt`
-- [x] `rmdir gammalt`
-- [ ] `rm -r gammalt`
+Quelle commande supprime le répertoire `{{old}}` *uniquement* s'il est vide ?
+- [ ] `rm {{old}}`
+- [x] `rmdir {{old}}`
+- [ ] `rm -r {{old}}`
 ---
 `rmdir` refuse de supprimer un répertoire qui contient encore quelque chose.
 `rm -r` supprime le répertoire et tout ce qu'il contient.
@@ -113,24 +113,24 @@ commande ne s'exécute :
 | `?` | Exactement un caractère |
 | `[abc]` | L'un des caractères a, b ou c |
 
-Le répertoire `dokument` de votre dossier personnel contient trois fichiers :
-`betyg.csv`, `frukter.txt` et `server.log`. Ceci liste uniquement ceux qui se
+Le répertoire `{{documents}}` de votre dossier personnel contient trois fichiers :
+`{{fruits}}`, `{{grades}}` et `server.log`. Ceci liste uniquement ceux qui se
 terminent par `.txt` :
 
 ```sh
-ls dokument/*.txt
+ls {{documents}}/*.txt
 ```
 
 Ici, `ls` ne voit jamais l'astérisque – le shell a déjà remplacé
-`dokument/*.txt` par tous les noms de fichiers correspondants.
+`{{documents}}/*.txt` par tous les noms de fichiers correspondants.
 
 ```predict
-$ ls dokument/?????.*
-dokument/betyg.csv
+$ ls {{documents}}/??????.*
+{{documents}}/{{fruits}}  {{documents}}/server.log
 ---
 Chaque `?` correspond à exactement un caractère, donc le nom avant le point
-doit faire cinq caractères. Seul `betyg` les fait – `frukter` et `server` sont
-plus longs.
+doit faire six caractères. C'est le cas de `fruits` et de `server` –
+`resultats` est plus long.
 ```
 
 ## Les espaces dans les noms de fichiers
@@ -140,8 +140,8 @@ espace dans son nom, vous devez utiliser des guillemets (ou un `\` devant
 l'espace) :
 
 ```sh
-touch "min fil.txt"
-ls -l "min fil.txt"
+touch "mon fichier.txt"
+ls -l "mon fichier.txt"
 ```
 
 C'est pourquoi beaucoup de gens préfèrent les tirets ou les tirets bas

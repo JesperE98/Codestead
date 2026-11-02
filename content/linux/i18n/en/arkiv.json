@@ -2,32 +2,32 @@
   "title": "Archives and compression",
   "tasks": {
     "tar-czf": {
-      "text": "Pack the directory `~/dokument` into the compressed archive `~/dokument.tar.gz`.",
-      "hint": "Go to your home directory and use *create zipped verbose file*: `tar -czvf dokument.tar.gz dokument`."
+      "text": "Pack the directory `~/{{documents}}` into the compressed archive `~/{{documents}}.tar.gz`.",
+      "hint": "Go to your home directory and use *create zipped verbose file*: `tar -czvf {{documents}}.tar.gz {{documents}}`."
     },
     "tar-t": {
-      "text": "List the contents of `~/dokument.tar.gz` – without unpacking it.",
-      "hint": "`t` means list: `tar -tzvf ~/dokument.tar.gz`."
+      "text": "List the contents of `~/{{documents}}.tar.gz` – without unpacking it.",
+      "hint": "`t` means list: `tar -tzvf ~/{{documents}}.tar.gz`."
     },
     "tar-x": {
-      "text": "Create the directory `~/uppackat` and unpack `~/dokument.tar.gz` into it.",
-      "hint": "With `-C` you choose where tar unpacks: `tar -xzvf ~/dokument.tar.gz -C ~/uppackat`."
+      "text": "Create the directory `~/{{unpacked}}` and unpack `~/{{documents}}.tar.gz` into it.",
+      "hint": "With `-C` you choose where tar unpacks: `tar -xzvf ~/{{documents}}.tar.gz -C ~/{{unpacked}}`."
     },
     "gzip": {
-      "text": "Copy `~/dokument/server.log` to your home directory and compress the copy with `gzip`, so that you get `~/server.log.gz`.",
-      "hint": "First `cp ~/dokument/server.log ~`, then `gzip ~/server.log`."
+      "text": "Copy `~/{{documents}}/server.log` to your home directory and compress the copy with `gzip`, so that you get `~/server.log.gz`.",
+      "hint": "First `cp ~/{{documents}}/server.log ~`, then `gzip ~/server.log`."
     },
     "zcat": {
       "text": "Show the lines containing `ERROR` in `~/server.log.gz` – without unpacking the file.",
       "hint": "`zcat` prints the contents of a .gz file. Pipe it into `grep`."
     },
     "zip": {
-      "text": "Install the `zip` and `unzip` packages, and then pack `~/dokument` into `~/dokument.zip`.",
-      "hint": "Run `sudo apt update` and `sudo apt install zip unzip`. Don't forget `-r` for zip: `zip -r dokument.zip dokument`."
+      "text": "Install the `zip` and `unzip` packages, and then pack `~/{{documents}}` into `~/{{documents}}.zip`.",
+      "hint": "Run `sudo apt update` and `sudo apt install zip unzip`. Don't forget `-r` for zip: `zip -r {{documents}}.zip {{documents}}`."
     },
     "unzip": {
-      "text": "Unpack `~/dokument.zip` into the new directory `~/fran-zip` with `unzip`.",
-      "hint": "`-d` chooses the directory and creates it if it's missing: `unzip ~/dokument.zip -d ~/fran-zip`."
+      "text": "Unpack `~/{{documents}}.zip` into the new directory `~/{{fromZip}}` with `unzip`.",
+      "hint": "`-d` chooses the directory and creates it if it's missing: `unzip ~/{{documents}}.zip -d ~/{{fromZip}}`."
     }
   }
 }

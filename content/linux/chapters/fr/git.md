@@ -49,8 +49,8 @@ vous puissiez enregistrer quoi que ce soit. On le règle une fois par
 ordinateur :
 
 ```sh
-git config --global user.name "Elev Elevsson"
-git config --global user.email "elev@example.com"
+git config --global user.name "{{gitName}}"
+git config --global user.email "{{user}}@example.com"
 ```
 
 N'hésitez pas à utiliser votre propre nom. `--global` signifie que le réglage
@@ -63,8 +63,8 @@ cat ~/.gitconfig
 
 ```text
 [user]
-	name = Elev Elevsson
-	email = elev@example.com
+	name = {{gitName}}
+	email = {{user}}@example.com
 ```
 
 Si vous oubliez cette étape, git se plaint quand vous essayez d'enregistrer :
@@ -78,11 +78,11 @@ commandes.
 
 ## Un nouveau dépôt
 
-Votre répertoire personnel contient un petit projet web, `~/projekt-webb`
-(« projet web » en suédois), avec trois fichiers. Allez-y et jetez un œil :
+Votre répertoire personnel contient un petit projet web, `~/{{webProject}}`,
+avec trois fichiers. Allez-y et jetez un œil :
 
 ```sh
-cd ~/projekt-webb
+cd ~/{{webProject}}
 ls
 ```
 
@@ -94,7 +94,7 @@ git init
 ```
 
 ```text
-Initialized empty Git repository in /home/elev/projekt-webb/.git/
+Initialized empty Git repository in /home/{{user}}/{{webProject}}/.git/
 ```
 
 La seule chose qui s'est passée, c'est la création d'un répertoire caché,
@@ -207,19 +207,18 @@ ajoute toutes les modifications de l'ensemble du dépôt.
 Enregistrez l'instantané avec `git commit`. L'option `-m` donne le message :
 
 ```sh
-git commit -m "Första versionen av webbplatsen"
+git commit -m "{{commitFirst}}"
 ```
 
 ```text
-[main (root-commit) 3f2a9c1] Första versionen av webbplatsen
+[main (root-commit) 3f2a9c1] {{commitFirst}}
  3 files changed, 24 insertions(+)
  create mode 100644 README.md
  create mode 100644 index.html
  create mode 100644 style.css
 ```
 
-(Le message signifie « Première version du site web » en suédois – écrivez
-les vôtres dans la langue de votre choix.) `3f2a9c1` est le début de
+`3f2a9c1` est le début de
 l'**identifiant** du commit – un *hash* de 40 caractères calculé à partir du
 contenu. Le vôtre sera différent, puisque la date et votre nom en font partie.
 Les sept premiers caractères suffisent généralement à identifier un commit.
@@ -242,21 +241,21 @@ nothing to commit, working tree clean
 Ajoutez une ligne à `README.md` et demandez à git ce qui s'est passé :
 
 ```sh
-echo 'Sidan är byggd med HTML och CSS.' >> README.md
+echo '{{builtWith}}' >> README.md
 git status
 git diff
 ```
 
 ```text
 diff --git a/README.md b/README.md
-index 1100cf4..e5bd3a0 100644
+index fd866ad..2278ef6 100644
 --- a/README.md
 +++ b/README.md
 @@ -1,3 +1,4 @@
- # Min webbplats
+ # {{siteTitle}}
  
- En liten webbplats som jag versionshanterar med git.
-+Sidan är byggd med HTML och CSS.
+ Un petit site web que je gère avec git.
++{{builtWith}}
 ```
 
 La ligne qui commence par `+` est nouvelle (en vert), les lignes qui
@@ -272,7 +271,7 @@ Ajoutez et committez la modification. L'option `-a` lance `git add` sur tous
 les fichiers que git suit déjà, ce qui ne prend qu'une seule étape :
 
 ```sh
-git commit -a -m "Beskriv hur sidan är byggd"
+git commit -a -m "{{commitDescribe}}"
 ```
 
 Notez que `-a` n'inclut *pas* les nouveaux fichiers que git ne suit pas
@@ -286,12 +285,12 @@ commande ?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ echo 'En rad till.' >> README.md
-$ git commit -m "En rad till" > /dev/null
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "Première version" > /dev/null
+$ echo 'Encore une ligne.' >> README.md
+$ git commit -m "Encore une ligne" > /dev/null
 $ git log --oneline | wc -l
 1
 ---
@@ -334,10 +333,10 @@ git log
 
 ```text
 commit 8d41b7e0c2a3f1d5e9b6a7c8d9e0f1a2b3c4d5e6 (HEAD -> main)
-Author: Elev Elevsson <elev@example.com>
+Author: {{gitName}} <{{user}}@example.com>
 Date:   Fri Oct 30 14:12:09 2026 +0100
 
-    Beskriv hur sidan är byggd
+    {{commitDescribe}}
 
 commit 3f2a9c1...
 ```
@@ -398,17 +397,17 @@ ne coûtent presque rien dans git – utilisez-les souvent !
 
 ```sh
 git branch
-git switch -c ny-design
+git switch -c {{newDesign}}
 git branch
 ```
 
-`git switch -c ny-design` (« nouveau design ») crée la branche et bascule
+`git switch -c {{newDesign}}` crée la branche et bascule
 dessus. L'étoile dans `git branch` indique où vous êtes. Faites une
 modification et committez-la sur la branche :
 
 ```sh
 echo 'h1 { color: purple; }' >> style.css
-git commit -am "Lila rubriker"
+git commit -am "{{commitPurple}}"
 ```
 
 Revenez sur `main` et regardez `style.css` :
@@ -420,14 +419,14 @@ tail -3 style.css
 
 La couleur violette a disparu ! Quand vous changez de branche, git réécrit le
 répertoire de travail pour qu'il ressemble au dernier commit de la branche. La
-modification est en sécurité dans `ny-design`. `git log --oneline --all`
+modification est en sécurité dans `{{newDesign}}`. `git log --oneline --all`
 affiche toutes les branches :
 
 ```sh
 git log --oneline --all
 ```
 
-> **Astuce :** les anciens guides utilisent souvent `git checkout ny-design`
+> **Astuce :** les anciens guides utilisent souvent `git checkout {{newDesign}}`
 > et `git checkout -b nouvelle-branche`. `checkout` fait la même chose que
 > `switch`, mais sait aussi restaurer des fichiers. Les commandes plus
 > récentes `switch` et `restore` se partagent ces tâches et sont plus faciles
@@ -442,18 +441,18 @@ Combien de lignes contenant `purple` le fichier `style.css` a-t-il à la fin ?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "Première version" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
 $ grep purple style.css | wc -l
 0
 ---
-La ligne violette a été committée sur `ny-design`. Quand vous passez sur
+La ligne violette a été committée sur `{{newDesign}}`. Quand vous passez sur
 `main`, git rend le répertoire de travail identique au dernier commit de
 `main` – où la ligne n'existe pas encore.
 ```
@@ -464,7 +463,7 @@ Placez-vous sur la branche qui doit *recevoir* les modifications – ici `main`
 – et fusionnez :
 
 ```sh
-git merge ny-design
+git merge {{newDesign}}
 ```
 
 ```text
@@ -476,7 +475,7 @@ Fast-forward
 
 *Fast-forward* (avance rapide) signifie que `main` n'a pas changé depuis la
 création de la branche. Git n'a alors qu'à avancer `main` jusqu'au même commit
-que `ny-design`.
+que `{{newDesign}}`.
 
 Si les deux branches ont de nouveaux commits, git fait une **fusion à trois
 points** (*three-way merge*) : il compare les deux branches avec leur ancêtre
@@ -485,12 +484,12 @@ parents. `git log --oneline --graph --all` montre comment l'historique se
 sépare puis se rejoint :
 
 ```text
-*   e4b1d0a (HEAD -> main) Merge branch 'rubrik'
+*   e4b1d0a (HEAD -> main) Merge branch 'titre'
 |\
-| * 7c3f9e2 (rubrik) Vänligare rubrik
-* | 52d8a71 Kortare text
+| * 7c3f9e2 (titre) Titre plus accueillant
+* | 52d8a71 Texte plus court
 |/
-* c19e2f4 Lila rubriker
+* c19e2f4 {{commitPurple}}
 ```
 
 Une branche fusionnée n'est plus nécessaire et peut être supprimée. `-d`
@@ -498,24 +497,23 @@ refuse si la branche contient des commits qui ne sont pas dans celle où vous
 êtes :
 
 ```sh
-git branch -d ny-design
+git branch -d {{newDesign}}
 ```
 
 ## Les conflits
 
 Si les deux branches ont modifié *les mêmes lignes*, git ne peut pas savoir
 quelle version est la bonne. On appelle cela un **conflit**, et c'est alors à
-vous de décider. Créons-en un exprès (*rubrik* signifie « titre » en
-suédois) :
+vous de décider. Créons-en un exprès :
 
 ```sh
-git switch -c rubrik
-sed -i 's/Välkommen!/Hej och välkommen!/' index.html
-git commit -am "Vänligare rubrik"
+git switch -c titre
+sed -i 's/Bienvenue !/Bonjour et bienvenue !/' index.html
+git commit -am "Titre plus accueillant"
 git switch main
-sed -i 's/Välkommen!/Välkommen till min sida!/' index.html
-git commit -am "Längre rubrik"
-git merge rubrik
+sed -i 's/Bienvenue !/Bienvenue sur mon site !/' index.html
+git commit -am "Titre plus long"
+git merge titre
 ```
 
 ```text
@@ -534,14 +532,14 @@ cat index.html
 
 ```text
 <<<<<<< HEAD
-  <h1>Välkommen till min sida!</h1>
+  <h1>Bienvenue sur mon site !</h1>
 =======
-  <h1>Hej och välkommen!</h1>
->>>>>>> rubrik
+  <h1>Bonjour et bienvenue !</h1>
+>>>>>>> titre
 ```
 
 Entre `<<<<<<< HEAD` et `=======` se trouve votre version (celle de la branche
-où vous êtes) ; entre `=======` et `>>>>>>> rubrik`, celle de l'autre branche.
+où vous êtes) ; entre `=======` et `>>>>>>> titre`, celle de l'autre branche.
 Voici comment résoudre le conflit :
 
 1. Ouvrez le fichier dans un éditeur et mettez-le dans l'état voulu – gardez
@@ -557,7 +555,7 @@ choisir la version de l'un des deux côtés, git peut le faire pour vous :
 git checkout --theirs index.html
 git add index.html
 git status
-git commit -m "Slå ihop grenen rubrik"
+git commit -m "Fusionner la branche titre"
 ```
 
 Si vous changez d'avis au milieu d'un conflit, `git merge --abort` vous ramène
@@ -568,13 +566,13 @@ sur le même projet. Un bon moyen d'en avoir moins, c'est de faire de petits
 commits et de fusionner souvent.
 
 ```quiz
-Vous êtes sur `main` et lancez `git merge rubrik`. Le fichier a un conflit :
+Vous êtes sur `main` et lancez `git merge titre`. Le fichier a un conflit :
 
     <<<<<<< HEAD
       <h1>Hello!</h1>
     =======
       <h1>Welcome!</h1>
-    >>>>>>> rubrik
+    >>>>>>> titre
 
 Quelle ligne vient de `main` ?
 - [x] `<h1>Hello!</h1>`
@@ -593,9 +591,9 @@ automatiquement. Écrivez leurs noms ou des motifs dans le fichier `.gitignore`
 à la racine du dépôt :
 
 ```sh
-echo 'password=secret' > hemligt.txt
-echo 'error' > fel.log
-printf 'hemligt.txt\n*.log\nbuild/\n' > .gitignore
+echo 'password=secret' > secret.txt
+echo 'error' > erreur.log
+printf 'secret.txt\n*.log\nbuild/\n' > .gitignore
 git status
 ```
 
@@ -605,7 +603,7 @@ Untracked files:
 	.gitignore
 ```
 
-`hemligt.txt` (« secret.txt ») et `fel.log` (« erreur.log ») ne sont plus
+`secret.txt` et `erreur.log` ne sont plus
 affichés – même `git add .` ne les prend pas. Un `*` correspond à n'importe
 quoi, et une barre oblique finale (`build/`) désigne un répertoire entier.
 `.gitignore` lui-même, en revanche, doit être committé, pour que tous ceux qui
@@ -613,7 +611,7 @@ travaillent sur le projet ignorent les mêmes choses :
 
 ```sh
 git add .gitignore
-git commit -m "Ignorera hemligheter och loggar"
+git commit -m "Ignorer les secrets et les journaux"
 ```
 
 Notez que `.gitignore` ne s'applique qu'aux fichiers que git ne suit pas
@@ -648,8 +646,8 @@ un nouveau répertoire :
 
 ```sh
 cd ~
-git clone ~/projekt-webb ~/kopia
-cd ~/kopia
+git clone ~/{{webProject}} ~/copie
+cd ~/copie
 git log --oneline
 git remote -v
 ```
@@ -660,7 +658,7 @@ votre compte GitHub et poussez `main` dessus :
 
 ```sh
 git init --bare ~/server.git
-cd ~/projekt-webb
+cd ~/{{webProject}}
 git remote add origin ~/server.git
 git push -u origin main
 git status

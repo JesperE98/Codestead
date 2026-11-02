@@ -14,8 +14,8 @@
       "hint": "दूसरों के passwords सिर्फ़ root set कर सकता है: `sudo passwd kim`। एक ही password दो बार टाइप कीजिए – टाइप करते समय वह दिखता नहीं।"
     },
     "grupp": {
-      "text": "Group `utvecklare` (Swedish में developers) बनाइए और उसमें `kim` को जोड़िए।",
-      "hint": "पहले `sudo groupadd utvecklare`, फिर `sudo usermod -aG utvecklare kim`।"
+      "text": "Group `{{devGroup}}` बनाइए और उसमें `kim` को जोड़िए।",
+      "hint": "पहले `sudo groupadd {{devGroup}}`, फिर `sudo usermod -aG {{devGroup}} kim`।"
     },
     "sudo-ratt": {
       "text": "`kim` के खाते को `sudo` समूह में जोड़कर उसे `sudo` इस्तेमाल करने की अनुमति दीजिए।",
@@ -26,12 +26,12 @@
       "hint": "`sudo -u kim whoami`"
     },
     "su": {
-      "text": "`su -` से `kim` के रूप में login कीजिए और `id` चलाइए। फिर `exit` से वापस `elev` पर जाइए।",
+      "text": "`su -` से `kim` के रूप में login कीजिए और `id` चलाइए। फिर `exit` से वापस `{{user}}` पर जाइए।",
       "hint": "`su - kim` टाइप कीजिए और फिर kim का password – वही जो आपने `passwd` से चुना था। Prompt दिखाता है कि आप kim हैं।"
     },
     "userdel": {
-      "text": "एक अस्थायी user `vikarie` (Swedish में substitute) home directory के साथ बनाइए – फिर उसे home directory **समेत** दोबारा delete कीजिए।",
-      "hint": "`sudo useradd -m vikarie` और फिर `sudo userdel -r vikarie`।"
+      "text": "एक अस्थायी user `{{tempUser}}` home directory के साथ बनाइए – फिर उसे home directory **समेत** दोबारा delete कीजिए।",
+      "hint": "`sudo useradd -m {{tempUser}}` और फिर `sudo userdel -r {{tempUser}}`।"
     }
   }
 }

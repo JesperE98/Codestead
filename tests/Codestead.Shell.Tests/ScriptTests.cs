@@ -81,7 +81,7 @@ public class ScriptTests
         var t = new TestShell();
         Assert.Equal("10\n", t.Run("n=0; while read rad; do n=$((n+1)); done < dokument/frukter.txt; echo $n").Out);
         Assert.Equal(
-            "09:15:10 Kunde inte ansluta till databasen\n13:30:00 Disken /var är 95% full\n18:00:00 Tidsgräns överskriden för jobbet \"backup\"\n",
+            "09:15:10 Could not connect to the database\n13:30:00 Disk /var is 95% full\n18:00:00 Time limit exceeded for job \"backup\"\n",
             t.Run("grep ERROR dokument/server.log | while read datum tid niva rest; do echo \"$tid $rest\"; done").Out);
     }
 

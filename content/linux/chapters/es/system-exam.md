@@ -4,7 +4,7 @@ Responde las preguntas sobre variables, permisos, procesos y archivos comprimido
 
 ```predict
 $ echo "$HOME" '$USER'
-/home/elev $USER
+/home/{{user}} $USER
 ---
 Las comillas dobles sustituyen la variable por su valor; las comillas simples
 la muestran tal cual está escrita.
@@ -36,10 +36,10 @@ Propietario: 4 + 2 + 1 = 7. Grupo: 4 + 1 = 5. Los demás: 0.
 ```
 
 ```predict
-$ touch verktyg.sh
-$ chmod 755 verktyg.sh
-$ chmod go-x verktyg.sh
-$ ls -l verktyg.sh | awk '{print $1}'
+$ touch herramienta.sh
+$ chmod 755 herramienta.sh
+$ chmod go-x herramienta.sh
+$ ls -l herramienta.sh | awk '{print $1}'
 -rwxr--r--
 ```
 
@@ -47,7 +47,7 @@ $ ls -l verktyg.sh | awk '{print $1}'
 En Ubuntu, ¿los miembros de qué grupo pueden usar `sudo`?
 - [x] `sudo`
 - [ ] `root`
-- [ ] `elev`
+- [ ] `{{user}}`
 ```
 
 ```quiz
@@ -87,18 +87,18 @@ Pruebas `kill 812` con un proceso que pertenece a root y obtienes
 ```
 
 ```quiz
-¿Qué está mal en `tar -cvf dokument dokument.tar`?
+¿Qué está mal en `tar -cvf {{documents}} {{documents}}.tar`?
 - [ ] `-v` no se puede combinar con `-c`
 - [x] El orden: el nombre del archivo empaquetado debe ir justo después de `f`, antes de los archivos
 - [ ] Un archivo tar tiene que terminar en `.tgz`
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ gzip frukter.txt
-$ gunzip frukter.txt.gz
-$ ls frukter*
-frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ gzip {{fruits}}
+$ gunzip {{fruits}}.gz
+$ ls frutas*
+{{fruits}}
 ```
 
 ```quiz
@@ -111,7 +111,7 @@ frukter.txt
 ```
 
 ```try
-du -sh dokument
+du -sh {{documents}}
 ---
 `-s` da un único total para todo el directorio y `-h` hace que el tamaño sea fácil de leer.
 ```

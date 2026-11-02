@@ -44,8 +44,8 @@ gjorde den. Därför vill git veta vem du är innan du kan spara något. Det
 ställer du in en gång per dator:
 
 ```sh
-git config --global user.name "Elev Elevsson"
-git config --global user.email "elev@example.com"
+git config --global user.name "{{gitName}}"
+git config --global user.email "{{user}}@example.com"
 ```
 
 Byt gärna till ditt eget namn. `--global` betyder att inställningen gäller
@@ -57,8 +57,8 @@ cat ~/.gitconfig
 
 ```text
 [user]
-	name = Elev Elevsson
-	email = elev@example.com
+	name = {{gitName}}
+	email = {{user}}@example.com
 ```
 
 Glömmer du det här säger git ifrån när du försöker spara:
@@ -72,11 +72,11 @@ kommandona.
 
 ## Ett nytt repo
 
-I hemkatalogen finns ett litet webbprojekt, `~/projekt-webb`, med tre filer.
+I hemkatalogen finns ett litet webbprojekt, `~/{{webProject}}`, med tre filer.
 Gå dit och titta:
 
 ```sh
-cd ~/projekt-webb
+cd ~/{{webProject}}
 ls
 ```
 
@@ -88,7 +88,7 @@ git init
 ```
 
 ```text
-Initialized empty Git repository in /home/elev/projekt-webb/.git/
+Initialized empty Git repository in /home/{{user}}/{{webProject}}/.git/
 ```
 
 Det enda som hände var att en dold katalog, `.git`, skapades. Där sparar git
@@ -193,11 +193,11 @@ i hela repot.
 Spara ögonblicksbilden med `git commit`. Flaggan `-m` anger meddelandet:
 
 ```sh
-git commit -m "Första versionen av webbplatsen"
+git commit -m "{{commitFirst}}"
 ```
 
 ```text
-[main (root-commit) 3f2a9c1] Första versionen av webbplatsen
+[main (root-commit) 3f2a9c1] {{commitFirst}}
  3 files changed, 24 insertions(+)
  create mode 100644 README.md
  create mode 100644 index.html
@@ -226,21 +226,21 @@ nothing to commit, working tree clean
 Lägg till en rad i `README.md` och fråga git vad som hänt:
 
 ```sh
-echo 'Sidan är byggd med HTML och CSS.' >> README.md
+echo '{{builtWith}}' >> README.md
 git status
 git diff
 ```
 
 ```text
 diff --git a/README.md b/README.md
-index 1100cf4..e5bd3a0 100644
+index 1100cf4..de5864d 100644
 --- a/README.md
 +++ b/README.md
 @@ -1,3 +1,4 @@
  # Min webbplats
  
  En liten webbplats som jag versionshanterar med git.
-+Sidan är byggd med HTML och CSS.
++{{builtWith}}
 ```
 
 Raden som börjar med `+` är ny (grön), rader som börjar med `-` är borttagna
@@ -255,7 +255,7 @@ Lägg till och committa ändringen. Flaggan `-a` gör `git add` på alla filer
 som git redan följer, så det går i ett steg:
 
 ```sh
-git commit -a -m "Beskriv hur sidan är byggd"
+git commit -a -m "{{commitDescribe}}"
 ```
 
 Observera att `-a` *inte* tar med nya filer som git inte följer än. Dem måste
@@ -268,9 +268,9 @@ pipes. Vad skriver det sista kommandot ut?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
 $ git add . && git commit -m "Första versionen" > /dev/null
 $ echo 'En rad till.' >> README.md
 $ git commit -m "En rad till" > /dev/null
@@ -310,10 +310,10 @@ git log
 
 ```text
 commit 8d41b7e0c2a3f1d5e9b6a7c8d9e0f1a2b3c4d5e6 (HEAD -> main)
-Author: Elev Elevsson <elev@example.com>
+Author: {{gitName}} <{{user}}@example.com>
 Date:   Fri Oct 30 14:12:09 2026 +0100
 
-    Beskriv hur sidan är byggd
+    {{commitDescribe}}
 
 commit 3f2a9c1...
 ```
@@ -369,16 +369,16 @@ när du gör nya commits. Därför är grenar billiga i git – använd dem ofta
 
 ```sh
 git branch
-git switch -c ny-design
+git switch -c {{newDesign}}
 git branch
 ```
 
-`git switch -c ny-design` skapar grenen och byter till den. Stjärnan i
+`git switch -c {{newDesign}}` skapar grenen och byter till den. Stjärnan i
 `git branch` visar var du står. Gör en ändring och committa den på grenen:
 
 ```sh
 echo 'h1 { color: purple; }' >> style.css
-git commit -am "Lila rubriker"
+git commit -am "{{commitPurple}}"
 ```
 
 Byt tillbaka till `main` och titta i `style.css`:
@@ -390,13 +390,13 @@ tail -3 style.css
 
 Den lila färgen är borta! När du byter gren gör git om arbetskatalogen så
 att den ser ut som grenens senaste commit. Ändringen ligger tryggt kvar i
-`ny-design`. `git log --oneline --all` visar alla grenar:
+`{{newDesign}}`. `git log --oneline --all` visar alla grenar:
 
 ```sh
 git log --oneline --all
 ```
 
-> **Tips:** Du ser ofta `git checkout ny-design` och `git checkout -b ny-gren`
+> **Tips:** Du ser ofta `git checkout {{newDesign}}` och `git checkout -b ny-gren`
 > i äldre guider. `checkout` gör samma sak som `switch`, men kan även
 > återställa filer. De nyare kommandona `switch` och `restore` delar upp
 > uppgifterna och är lättare att komma ihåg.
@@ -410,18 +410,18 @@ Hur många rader med `purple` har `style.css` till slut?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
 $ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
 $ grep purple style.css | wc -l
 0
 ---
-Den lila raden committades på `ny-design`. När du byter till `main` gör git
+Den lila raden committades på `{{newDesign}}`. När du byter till `main` gör git
 arbetskatalogen som den senaste commiten på `main` – där raden inte finns än.
 ```
 
@@ -430,7 +430,7 @@ arbetskatalogen som den senaste commiten på `main` – där raden inte finns ä
 Stå på grenen som ska *ta emot* ändringarna – här `main` – och slå ihop:
 
 ```sh
-git merge ny-design
+git merge {{newDesign}}
 ```
 
 ```text
@@ -441,7 +441,7 @@ Fast-forward
 ```
 
 *Fast-forward* betyder att `main` inte har ändrats sedan grenen skapades.
-Git behöver då bara flytta fram `main` till samma commit som `ny-design`.
+Git behöver då bara flytta fram `main` till samma commit som `{{newDesign}}`.
 
 Har båda grenarna fått nya commits gör git en **trevägssammanfogning**: den
 jämför båda grenarna med deras gemensamma ursprung och skapar en ny
@@ -454,14 +454,14 @@ du hur historiken delar sig och går ihop igen:
 | * 7c3f9e2 (rubrik) Vänligare rubrik
 * | 52d8a71 Kortare text
 |/
-* c19e2f4 Lila rubriker
+* c19e2f4 {{commitPurple}}
 ```
 
 En gren som är ihopslagen behövs inte längre och kan tas bort. `-d` vägrar
 om grenen innehåller commits som inte finns i den du står på:
 
 ```sh
-git branch -d ny-design
+git branch -d {{newDesign}}
 ```
 
 ## Konflikter
@@ -604,7 +604,7 @@ och `pull` fungerar lika bra mellan två repon på samma dator, så du kan prova
 
 ```sh
 cd ~
-git clone ~/projekt-webb ~/kopia
+git clone ~/{{webProject}} ~/kopia
 cd ~/kopia
 git log --oneline
 git remote -v
@@ -616,7 +616,7 @@ GitHub och skicka upp `main` dit:
 
 ```sh
 git init --bare ~/server.git
-cd ~/projekt-webb
+cd ~/{{webProject}}
 git remote add origin ~/server.git
 git push -u origin main
 git status

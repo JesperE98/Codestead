@@ -4,7 +4,7 @@ Svara på frågorna om variabler, rättigheter, processer och arkiv – du behö
 
 ```predict
 $ echo "$HOME" '$USER'
-/home/elev $USER
+/home/{{user}} $USER
 ---
 Dubbla citattecken byter ut variabeln mot sitt värde; enkla citattecken
 skriver ut den precis som den står.
@@ -46,7 +46,7 @@ $ ls -l verktyg.sh | awk '{print $1}'
 Medlemmar i vilken grupp får använda `sudo` i Ubuntu?
 - [x] `sudo`
 - [ ] `root`
-- [ ] `elev`
+- [ ] `{{user}}`
 ```
 
 ```quiz
@@ -86,18 +86,18 @@ Vad är skillnaden mellan `pkill` och `killall`?
 ```
 
 ```quiz
-Vad är fel med `tar -cvf dokument dokument.tar`?
+Vad är fel med `tar -cvf {{documents}} {{documents}}.tar`?
 - [ ] `-v` kan inte kombineras med `-c`
 - [x] Ordningen: arkivets namn måste komma direkt efter `f`, före filerna
 - [ ] Ett tar-arkiv måste sluta på `.tgz`
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ gzip frukter.txt
-$ gunzip frukter.txt.gz
-$ ls frukter*
-frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ gzip {{fruits}}
+$ gunzip {{fruits}}.gz
+$ ls {{fruits}}*
+{{fruits}}
 ```
 
 ```quiz
@@ -110,7 +110,7 @@ Vad gör `zcat server.log.gz`?
 ```
 
 ```try
-du -sh dokument
+du -sh {{documents}}
 ---
 `-s` ger en summa för hela katalogen och `-h` gör storleken lätt att läsa.
 ```

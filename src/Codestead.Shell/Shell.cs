@@ -10,6 +10,11 @@ public partial class ShellSnapshot
 {
     public int Version { get; set; } = 1;
     public string DistroId { get; set; } = "";
+    /// <summary>
+    /// The language of the exercise files and the user name (see World.cs). Null in terminals saved before
+    /// the world was translated: they are Swedish and are brought up to date by WorldMigration.
+    /// </summary>
+    public string? World { get; set; }
     public FsNode Fs { get; set; } = null!;
     public string Cwd { get; set; } = "";
     public OrderedDictionary<string, string> Env { get; set; } = Js.Obj<string>();
@@ -107,6 +112,11 @@ public partial class Shell
     public int LastExit { get; set; }
     public Pending? PendingQuestion { get; set; }
     /// <summary>
+    /// The language of the exercise files and the user name (see World.cs). Changed with
+    /// <see cref="WorldMigration.Translate"/>, which also renames what is already there.
+    /// </summary>
+    public World World { get; internal set; }
+    /// <summary>
     /// The UI language code (en, sv, de ...). Controls the simulator's own hint lines and help summaries
     /// (see <see cref="ShellI18n"/>); man pages are Swedish for "sv" and English otherwise.
     /// </summary>
@@ -132,6 +142,7 @@ public partial class Shell
     private Shell(ShellSnapshot s)
     {
         Distro = DistrosLib.GetDistro(s.DistroId);
+        World = Codestead.Shell.World.Get(s.World ?? WorldMigration.LegacyWorld);
         Vfs = new VFS(s.Fs);
         Cwd = s.Cwd;
         Env = s.Env;
@@ -140,34 +151,37 @@ public partial class Shell
         Installed = s.Installed;
         Flags = s.Flags;
         Functions = s.Functions ?? Js.Obj<Node>();
-        Proc = s.Proc ?? ProcsLib.InitialProcs(Distro);
-        Disks = s.Disks ?? DisksLib.SetupDisks(Distro, Vfs);
-        UserStack = s.UserStack.Count > 0 ? s.UserStack : new List<string> { InitfsLib.Student };
+        Proc = s.Proc ?? ProcsLib.InitialProcs(Distro, World.User);
+        Disks = s.Disks ?? DisksLib.SetupDisks(Distro, Vfs, World);
+        UserStack = s.UserStack.Count > 0 ? s.UserStack : new List<string> { World.User };
         Services = s.Services ?? ServicesLib.InitialServices(this);
         ShellStack = s.Shells ?? new List<ShellFrame>();
     }
 
-    public static Shell Create(string distroId)
+    /// <summary>A new computer. <paramref name="world"/> is the language of the exercise files and the user name.</summary>
+    public static Shell Create(string distroId, string world = Codestead.Shell.World.Source)
     {
         var distro = DistrosLib.GetDistro(distroId);
-        var home = $"/home/{InitfsLib.Student}";
+        var w = Codestead.Shell.World.Get(world);
+        var home = w.Home;
         var env = Js.Obj<string>();
         env["HOME"] = home;
-        env["USER"] = InitfsLib.Student;
-        env["LOGNAME"] = InitfsLib.Student;
+        env["USER"] = w.User;
+        env["LOGNAME"] = w.User;
         env["SHELL"] = "/bin/bash";
         env["PATH"] = "/usr/local/bin:/usr/bin:/bin";
         env["PWD"] = home;
-        env["LANG"] = "sv_SE.UTF-8";
+        env["LANG"] = w.Locale;
         env["TERM"] = "xterm-256color";
         var sh = new Shell(new ShellSnapshot
         {
             Version = 1,
             DistroId = distro.Id,
-            Fs = InitfsLib.BuildFs(distro),
+            World = w.Lang,
+            Fs = InitfsLib.BuildFs(distro, w),
             Cwd = home,
             Env = env,
-            UserStack = new List<string> { InitfsLib.Student },
+            UserStack = new List<string> { w.User },
         });
         sh.AddMissingDefaults();
         return sh;
@@ -176,6 +190,8 @@ public partial class Shell
     public static Shell? Restore(ShellSnapshot? s)
     {
         if (s is null || s.Version != 1 || s.Fs is null || string.IsNullOrEmpty(s.DistroId)) return null;
+        // Terminals saved before the world was translated: new program names, and a known world (Swedish).
+        if (s.World is null) s = WorldMigration.MigrateLegacy(s);
         var sh = new Shell(s);
         sh.AddMissingDefaults();
         return sh;
@@ -223,9 +239,9 @@ public partial class Shell
                 Flags[key] = true;
             }
         }
-        var fresh = new VFS(InitfsLib.BuildFs(Distro));
+        var fresh = new VFS(InitfsLib.BuildFs(Distro, World));
         var root = RootUser();
-        var home = $"/home/{InitfsLib.Student}";
+        var home = World.Home;
         void Walk(string path)
         {
             var node = fresh.TryLookup(path, root);
@@ -242,21 +258,22 @@ public partial class Shell
             }
             if (node.Type == "dir") foreach (var name in node.Children!.Keys.ToList()) Walk($"{path}/{name}");
         }
-        Walk($"{home}/dokument");
-        Walk($"{home}/projekt-webb");
+        Walk($"{home}/{World["documents"]}");
+        Walk($"{home}/{World["webProject"]}");
         // The template for new home directories (useradd -m) and the settings for useradd.
         Walk("/etc/skel");
         Walk("/etc/login.defs");
         // The networking chapter: the DNS setting and the exercise server.
         Walk("/etc/resolv.conf");
-        Walk("/usr/local/bin/minserver");
-        Walk($"{home}/Nedladdningar");
+        Walk("/usr/local/bin/myserver");
+        Walk($"{home}/{World["downloads"]}");
     }
 
     public ShellSnapshot Snapshot() => new()
     {
         Version = 1,
         DistroId = Distro.Id,
+        World = World.Lang,
         Fs = Vfs.Root,
         Cwd = Cwd,
         Env = Env,
@@ -282,7 +299,7 @@ public partial class Shell
 
     public User RootUser() => GetUser("root");
 
-    public User CurrentUser() => GetUser(overrides.Count > 0 ? overrides[^1] : UserStack.Count > 0 ? UserStack[^1] : InitfsLib.Student);
+    public User CurrentUser() => GetUser(overrides.Count > 0 ? overrides[^1] : UserStack.Count > 0 ? UserStack[^1] : World.User);
 
     /// <summary>Runs fn as another user (used by sudo).</summary>
     public T RunAs<T>(string user, Func<T> fn)
@@ -298,7 +315,7 @@ public partial class Shell
         }
     }
 
-    public string Home => Env.TryGetValue("HOME", out var h) ? h : $"/home/{InitfsLib.Student}";
+    public string Home => Env.TryGetValue("HOME", out var h) ? h : World.Home;
 
     public string Resolve(string path) => VfsLib.ResolvePath(Cwd, path);
 
@@ -1053,7 +1070,7 @@ public partial class Shell
         }
     }
 
-    private static readonly Regex ElfImplRe = new("^\u007fELF[^(]*\\(simulerad binärfil: ([^)\\s]+)\\)", RegexOptions.CultureInvariant);
+    private static readonly Regex ElfImplRe = new("^\u007fELF[^(]*\\((?:simulated binary|simulerad binärfil): ([^)\\s]+)\\)", RegexOptions.CultureInvariant);
 
     public ResolvedCommand ResolveCommand(string name)
     {
@@ -1064,7 +1081,7 @@ public partial class Shell
             if (!VfsLib.HasPerm(node, user, 'x')) return new ResolvedCommand { Kind = "error", Message = "Permission denied" };
             var content = node.Content ?? "";
             // The binary says itself which program it is, so it works even when renamed
-            // (e.g. ./Kalkylator.AppImage or /snap/bin/hello-world which points to snap).
+            // (e.g. ./Calculator.AppImage or /snap/bin/hello-world which points to snap).
             var m = ElfImplRe.Match(content);
             var impl = m.Success ? m.Groups[1].Value : VfsLib.Basename(path);
             if (content.StartsWith(VfsLib.Elf, StringComparison.Ordinal)) return new ResolvedCommand { Kind = "binary", Impl = impl, Path = path };

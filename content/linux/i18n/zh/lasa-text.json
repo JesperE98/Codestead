@@ -2,23 +2,23 @@
   "title": "阅读和搜索文本",
   "tasks": {
     "head": {
-      "text": "显示 `~/dokument/server.log` 的**前 3 行**。"
+      "text": "显示 `~/{{documents}}/server.log` 的**前 3 行**。"
     },
     "tail": {
-      "text": "显示 `~/dokument/server.log` 的**最后 2 行**。"
+      "text": "显示 `~/{{documents}}/server.log` 的**最后 2 行**。"
     },
     "grep": {
-      "text": "显示 `~/dokument/server.log` 中所有包含 `ERROR` 的行。"
+      "text": "显示 `~/{{documents}}/server.log` 中所有包含 `ERROR` 的行。"
     },
     "grep-i": {
       "text": "在 server.log 中搜索 `warn`，并且**不**区分大小写。",
       "hint": "`-i` 选项让搜索不区分大小写。你应该会得到 3 个匹配结果。"
     },
     "wc": {
-      "text": "统计 `~/dokument/frukter.txt` 有多少行。"
+      "text": "统计 `~/{{documents}}/{{fruits}}` 有多少行。"
     },
     "sort": {
-      "text": "按字母顺序显示 `~/dokument/frukter.txt` 中的水果。"
+      "text": "按字母顺序显示 `~/{{documents}}/{{fruits}}` 中的水果。"
     }
   }
 }

@@ -4,23 +4,23 @@
 
 ## 第一个脚本
 
-脚本就是一个普通的文本文件。在真实的计算机上，你会用 `nano` 或 `vim` 这样的文本编辑器来编写它。另一种方法是使用 **here document**（here 文档），它在这里和服务器上都能用：`<< 'SLUT'` 和 `SLUT` 那一行之间的所有内容都会被送进命令。（*Slut* 在瑞典语中就是“结束”的意思——你可以随意选择任何单词，`EOF` 是常见的选择。）
+脚本就是一个普通的文本文件。在真实的计算机上，你会用 `nano` 或 `vim` 这样的文本编辑器来编写它。另一种方法是使用 **here document**（here 文档），它在这里和服务器上都能用：`<< '{{heredocEnd}}'` 和 `{{heredocEnd}}` 那一行之间的所有内容都会被送进命令。（结束词可以随意选择，`EOF` 是常见的选择。）
 
-输入第一行并按 Enter。提示符会变成 `> `——shell 正在等待剩下的内容。逐行输入，最后以 `SLUT` 结束：
+输入第一行并按 Enter。提示符会变成 `> `——shell 正在等待剩下的内容。逐行输入，最后以 `{{heredocEnd}}` 结束：
 
 ```sh
-cat > hej.sh << 'SLUT'
+cat > {{helloScript}} << '{{heredocEnd}}'
 #!/bin/bash
 echo "Hello from a script!"
 echo "Today is $(date)"
-SLUT
+{{heredocEnd}}
 ```
 
 第一行 `#!/bin/bash` 叫做 *shebang*，它告诉系统应该用哪个程序来运行这个文件。给脚本加上可执行权限，然后运行它：
 
 ```sh
-chmod +x hej.sh
-./hej.sh
+chmod +x {{helloScript}}
+./{{helloScript}}
 ```
 
 以 `#` 开头的行（shebang 行除外）是**注释**，shell 会跳过它们。用注释来解释代码的作用吧！
@@ -30,19 +30,19 @@ chmod +x hej.sh
 用 `name=value` 来创建变量。等号两边**不能**有空格——否则 shell 会以为 `name` 是一个命令。
 
 ```sh
-stad=Göteborg
-echo "I live in $stad"
+city=北京
+echo "I live in $city"
 ```
 
-（*Stad* 的意思是“城市”。）使用变量时，一定要把它放在**双引号**中。如果不加引号，变量的值会在空格处被拆开，当文件名中含有空格时就会导致奇怪的错误。如果你想在变量名后面紧接着写文本，请使用花括号：`"${stad}_2026"`——如果不加花括号，bash 会去找一个名为 `stad_2026` 的变量。
+使用变量时，一定要把它放在**双引号**中。如果不加引号，变量的值会在空格处被拆开，当文件名中含有空格时就会导致奇怪的错误。如果你想在变量名后面紧接着写文本，请使用花括号：`"${city}_2026"`——如果不加花括号，bash 会去找一个名为 `city_2026` 的变量。
 
 ```quiz
-`stad` 的值是 `Göteborg`，并且不存在名为 `stad_2026` 的变量。`echo "$stad_2026"` 会打印什么？
-- [ ] `Göteborg_2026`
-- [ ] `Göteborg`
+`city` 的值是 `北京`，并且不存在名为 `city_2026` 的变量。`echo "$city_2026"` 会打印什么？
+- [ ] `北京_2026`
+- [ ] `北京`
 - [x] 一个空行
 ---
-bash 会把整个名字 `stad_2026` 读作变量名，而这个变量并不存在。写成 `"${stad}_2026"` 才能得到 `Göteborg_2026`。
+bash 会把整个名字 `city_2026` 读作变量名，而这个变量并不存在。写成 `"${city}_2026"` 才能得到 `北京_2026`。
 ```
 
 ## 命令替换——`$(...)`
@@ -50,9 +50,9 @@ bash 会把整个名字 `stad_2026` 读作变量名，而这个变量并不存�
 `$(command)` 会被替换成该命令打印出的内容。这样就可以把命令的结果保存到变量中：
 
 ```sh
-idag=$(date)
-filer=$(ls ~ | wc -l)
-echo "There are $filer items in your home directory"
+today=$(date)
+files=$(ls ~ | wc -l)
+echo "There are $files items in your home directory"
 ```
 
 ## 算术运算——`$(( ))`
@@ -76,7 +76,7 @@ bash 只用整数计算：7 / 2 得 3，余数（`%`）是 1。
 
 ## 参数
 
-当你运行 `./skript.sh one two` 时，脚本可以读取这些参数：
+当你运行 `./script.sh one two` 时，脚本可以读取这些参数：
 
 | 变量 | 内容 |
 |---|---|
@@ -87,8 +87,8 @@ bash 只用整数计算：7 / 2 得 3，余数（`%`）是 1。
 | `$?` | 上一条命令的退出码 |
 
 ```quiz
-用 `./skript.sh red green blue` 运行一个脚本。`$1` 和 `$#` 的内容是什么？
-- [ ] `$1` 是 `./skript.sh`，`$#` 是 `4`
+用 `./script.sh red green blue` 运行一个脚本。`$1` 和 `$#` 的内容是什么？
+- [ ] `$1` 是 `./script.sh`，`$#` 是 `4`
 - [x] `$1` 是 `red`，`$#` 是 `3`
 - [ ] `$1` 是 `red`，`$#` 是 `blue`
 ---
@@ -132,7 +132,7 @@ fi
 对于简短的条件，用 `&&` 和 `||` 通常就够了：
 
 ```sh
-[ -d ~/bilder ] && echo "The pictures directory exists"
+[ -d ~/{{pictures}} ] && echo "The pictures directory exists"
 ```
 
 ```predict
@@ -146,13 +146,13 @@ empty
 **for 循环**会对列表中的每一项做同样的事：
 
 ```sh
-for frukt in äpple banan kiwi; do echo "I like $frukt"; done
+for fruit in 苹果 香蕉 猕猴桃; do echo "I like $fruit"; done
 ```
 
 列表可以来自通配符或命令：
 
 ```sh
-for fil in ~/dokument/*; do echo "File: $fil"; done
+for file in ~/{{documents}}/*; do echo "File: $file"; done
 for i in $(seq 1 3); do echo "Round $i"; done
 ```
 
@@ -165,7 +165,7 @@ i=1; while [ $i -le 3 ]; do echo $i; (( i++ )); done
 逐行处理文件最常用的方法是 `while read`，并在 `done` 后面用 `<` 把文件送进去：
 
 ```sh
-while read rad; do echo "> $rad"; done < ~/dokument/frukter.txt
+while read {{lineVar}}; do echo "> ${{lineVar}}"; done < ~/{{documents}}/{{fruits}}
 ```
 
 `break` 用来跳出循环，`continue` 则直接跳到下一轮。
@@ -184,8 +184,8 @@ $ for x in 2 4 6; do echo $(( x * 10 )); done
 当一个变量可能有很多不同的取值时，`case` 比一长串 `elif` 更清晰：
 
 ```sh
-fil=semester.jpg
-case $fil in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
+file={{vacationPic}}
+case $file in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
 ```
 
 每个分支都以 `;;` 结尾，而 `*)` 会匹配其他所有情况。
@@ -195,8 +195,8 @@ case $fil in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo 
 **函数**（function）是一段有名字的代码，你可以像调用独立命令一样调用它。它接收参数的方式和脚本相同——`$1`、`$2` 和 `$#`：
 
 ```sh
-halsa() { echo "Hello $1, welcome!"; }
-halsa Kim
+greet() { echo "Hello $1, welcome!"; }
+greet Kim
 ```
 
 只应存在于函数内部的变量要用 `local` 来创建，而 `return` 会以一个退出码结束函数。
@@ -206,7 +206,7 @@ halsa Kim
 `read` 从键盘读取一行内容，存入一个变量：
 
 ```sh
-read -p "What's your name? " namn; echo "Hello $namn!"
+read -p "What's your name? " {{nameVar}}; echo "Hello ${{nameVar}}!"
 ```
 
 ## 一个完整的例子

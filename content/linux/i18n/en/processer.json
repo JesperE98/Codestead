@@ -26,7 +26,7 @@
       "text": "End the background job with `kill` and the job number (`%1`) or its PID."
     },
     "server": {
-      "text": "The server `minserver` is running as root. Stop it – with `pkill` or `kill` and the right privileges.",
+      "text": "The server `myserver` is running as root. Stop it – with `pkill` or `kill` and the right privileges.",
       "hint": "As a regular user you'll get \"Operation not permitted\". Put `sudo` in front."
     }
   }

@@ -13,15 +13,15 @@
 ```
 
 ```quiz
-`namn = Kim` は `command not found` というエラーになります。なぜですか？
-- [x] `=` の前後のスペースのせいで、シェルが `namn` をコマンドとして扱うから
+`{{nameVar}} = Kim` は `command not found` というエラーになります。なぜですか？
+- [x] `=` の前後のスペースのせいで、シェルが `{{nameVar}}` をコマンドとして扱うから
 - [ ] 変数名は大文字で書かなければならないから
-- [ ] `$namn = Kim` と書かなければならないから
+- [ ] `${{nameVar}} = Kim` と書かなければならないから
 ```
 
 ```predict
-$ antal=$(ls ~/dokument | wc -l)
-$ echo "$antal files"
+$ count=$(ls ~/{{documents}} | wc -l)
+$ echo "$count files"
 3 files
 ```
 
@@ -49,13 +49,13 @@ $ echo $a
 ```
 
 ```predict
-$ [ -d ~/finnsinte ] && echo yes || echo no
+$ [ -d ~/{{missing}} ] && echo yes || echo no
 no
 ```
 
 ```predict
-$ fil=rapport.txt
-$ case $fil in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
+$ file=report.txt
+$ case $file in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
 A text file
 ```
 
@@ -90,9 +90,9 @@ $ for i in 1 2 3 4 5; do if [ $i -eq 3 ]; then continue; fi; echo $i; done
 ```
 
 ```quiz
-`cat > hej.sh << 'SLUT'` でヒアドキュメントを始めました。いつ終わりますか？
+`cat > {{helloScript}} << '{{heredocEnd}}'` でヒアドキュメントを始めました。いつ終わりますか？
 - [ ] 空の行で Enter を押したとき
-- [x] `SLUT` の行で
+- [x] `{{heredocEnd}}` の行で
 - [ ] 10 行のあと
 ```
 

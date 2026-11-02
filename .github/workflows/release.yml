@@ -106,6 +106,9 @@ jobs:
           name: linux-${{ matrix.product.id }}
           path: artifacts/
           if-no-files-found: error
+          # Only the install tests and the publish job of this run use the files; keeping them longer
+          # fills the repository's artifact storage (one run uploads four builds).
+          retention-days: 1
 
   build-windows:
     needs: plan
@@ -127,6 +130,9 @@ jobs:
           name: windows-${{ matrix.product.id }}
           path: artifacts/
           if-no-files-found: error
+          # Only the install tests and the publish job of this run use the files; keeping them longer
+          # fills the repository's artifact storage (one run uploads four builds).
+          retention-days: 1
 
   # Installation tests on clean systems: a fresh container per distribution, installing the package
   # exactly like a user would, starting the app (--smoke-test) on a virtual display and removing it again.
@@ -224,6 +230,8 @@ jobs:
       CATALOG_SIGNING_KEY: ${{ secrets.CATALOG_SIGNING_KEY }}
       ID: ${{ matrix.product.id }}
       NAME: ${{ matrix.product.name }}
+      # The title of the releases ("Codestead Linux", "Codestead hub"): the products share the repository.
+      TITLE: ${{ matrix.product.title || matrix.product.name }}
       VERSION: ${{ matrix.product.version }}
       EXE: ${{ matrix.product.exe }}
     steps:
@@ -266,14 +274,20 @@ jobs:
           notes=".github/release-notes/$ID.md"
           # The hidden source comment tells the next run what changed since this release (packaging/plan.py).
           { cat "$notes"; echo; echo "<!-- codestead-source: $GITHUB_SHA -->"; } > "$RUNNER_TEMP/notes.md"
-          gh release create "$ID-v$VERSION" release/* --repo "$RELEASES_REPO" --title "$NAME $VERSION" --notes-file "$RUNNER_TEMP/notes.md" --latest=false
+          gh release create "$ID-v$VERSION" release/* --repo "$RELEASES_REPO" --title "$TITLE $VERSION" --notes-file "$RUNNER_TEMP/notes.md" --latest=false
+          # Older releases of the product get the same kind of title (they were once named after $NAME only).
+          for tag in $(gh release list --repo "$RELEASES_REPO" --limit 500 --json tagName --jq ".[].tagName | select(startswith(\"$ID-v\"))"); do
+            gh release edit "$tag" --repo "$RELEASES_REPO" --title "$TITLE ${tag#"$ID-v"}" > /dev/null
+          done
       - name: Update ${{ matrix.product.id }}-latest
         run: |
           tag="$ID-latest"
           if ! gh release view "$tag" --repo "$RELEASES_REPO" >/dev/null 2>&1; then
-            gh release create "$tag" --repo "$RELEASES_REPO" --title "$NAME – latest version" --latest=false \
-              --notes "The latest version of $NAME, always at the same address. Every version: see the releases named $ID-v…"
+            gh release create "$tag" --repo "$RELEASES_REPO" --title "$TITLE – latest version" --latest=false \
+              --notes "The latest version of $TITLE, always at the same address. Every version: see the releases named $ID-v…"
           fi
+          gh release edit "$tag" --repo "$RELEASES_REPO" --title "$TITLE – latest version" \
+            --notes "The latest version of $TITLE ($VERSION), always at the same address. Every version: see the releases named $ID-v…" > /dev/null
           gh release upload "$tag" latest/* --repo "$RELEASES_REPO" --clobber
           # Remove files of older versions (old update packages).
           for asset in $(gh release view "$tag" --repo "$RELEASES_REPO" --json assets --jq '.assets[].name'); do
@@ -283,9 +297,10 @@ jobs:
         run: |
           base="https://github.com/$RELEASES_REPO/releases/download/$ID-v$VERSION"
           if ! gh release view catalog --repo "$RELEASES_REPO" >/dev/null 2>&1; then
-            gh release create catalog --repo "$RELEASES_REPO" --title "Catalog" --latest=false \
+            gh release create catalog --repo "$RELEASES_REPO" --title "Catalog for the Codestead hub" --latest=false \
               --notes "The list of tools for the Codestead hub (catalog.json, signed: catalog.json.sig)."
           fi
+          gh release edit catalog --repo "$RELEASES_REPO" --title "Catalog for the Codestead hub" > /dev/null
           gh release download catalog --repo "$RELEASES_REPO" --pattern catalog.json --dir . 2>/dev/null || true
           python3 packaging/catalog.py --catalog catalog.json --id "$ID" --name "$NAME" --version "$VERSION" \
             --notes-url "https://github.com/$RELEASES_REPO/releases/tag/$ID-v$VERSION" \
@@ -297,3 +312,18 @@ jobs:
           openssl dgst -sha256 -verify build/catalog-signing.pub.pem -signature <(base64 -d catalog.json.sig) catalog.json
           gh release upload catalog catalog.json catalog.json.sig --repo "$RELEASES_REPO" --clobber
           rm -f "$RUNNER_TEMP/key.pem"
+      - name: Update the README of the releases repository
+        # One page that explains what is there: every product with its latest version and downloads.
+        run: |
+          gh release list --repo "$RELEASES_REPO" --limit 500 --json tagName --jq '.[].tagName' > "$RUNNER_TEMP/tags.txt"
+          python3 packaging/releases_readme.py --repo "$RELEASES_REPO" --tags "$RUNNER_TEMP/tags.txt" --out "$RUNNER_TEMP/README.md"
+          old=$(gh api "repos/$RELEASES_REPO/contents/README.md" -H "Accept: application/vnd.github.raw" 2>/dev/null || true)
+          if [[ "$old" == "$(cat "$RUNNER_TEMP/README.md")" ]]; then
+            echo "The README is up to date."
+            exit 0
+          fi
+          sha=$(gh api "repos/$RELEASES_REPO/contents/README.md" --jq '.sha' 2>/dev/null || true)
+          args=(-X PUT "repos/$RELEASES_REPO/contents/README.md" -f message="Downloads: $TITLE $VERSION" -f content="$(base64 -w0 "$RUNNER_TEMP/README.md")")
+          [[ -n "$sha" ]] && args+=(-f sha="$sha")
+          gh api "${args[@]}" > /dev/null
+          echo "Updated https://github.com/$RELEASES_REPO#readme"

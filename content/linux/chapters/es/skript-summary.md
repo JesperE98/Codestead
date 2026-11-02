@@ -5,7 +5,7 @@ En esta parte has convertido comandos en programas propios.
 ## Scripts de shell
 
 Un script es un archivo de texto con comandos que empieza por el shebang
-`#!/bin/bash`. Puedes escribirlo con un here document (`cat > file << 'SLUT'`),
+`#!/bin/bash`. Puedes escribirlo con un here document (`cat > file << '{{heredocEnd}}'`),
 hacerlo ejecutable con `chmod +x` y ejecutarlo con `./`. Las líneas que
 empiezan por `#` son comentarios.
 
@@ -28,7 +28,7 @@ algo salió mal.
 | Sintaxis | Qué hace |
 |---|---|
 | `#!/bin/bash` | El shebang: qué programa ejecuta el script |
-| `cat > file << 'SLUT'` | Escribe líneas en un archivo hasta la línea `SLUT` |
+| `cat > file << '{{heredocEnd}}'` | Escribe líneas en un archivo hasta la línea `{{heredocEnd}}` |
 | `name=value` · `"$name"` · `"${name}"` | Crea · usa una variable |
 | `$(command)` | Se sustituye por lo que muestra el comando |
 | `$(( a * 6 ))` · `(( a++ ))` | Aritmética entera · modifica una variable |

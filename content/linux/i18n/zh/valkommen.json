@@ -2,7 +2,7 @@
   "title": "欢迎来到 Linux shell",
   "tasks": {
     "echo": {
-      "text": "用 `echo` 打印文本 `Hej världen`（瑞典语的“你好，世界”）。"
+      "text": "用 `echo` 打印文本 `{{helloWorld}}`。"
     },
     "whoami": {
       "text": "用 `whoami` 查看你当前以哪个用户身份登录。"

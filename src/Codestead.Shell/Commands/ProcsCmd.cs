@@ -375,7 +375,7 @@ public static partial class ProcsCmd
                        -u ANV    bara processer som tillhör ANV
 
                 EXEMPEL
-                       {name} {(name == "killall" ? "firefox" : "minserver")}
+                       {name} {(name == "killall" ? "firefox" : "myserver")}
                 """,
             Run = ctx =>
             {

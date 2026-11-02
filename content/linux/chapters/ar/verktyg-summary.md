@@ -78,7 +78,7 @@
 | `zsh` / `fish` / `exit` | يبدأ shell آخر / يعود |
 | `zsh -c '…'` / `fish -c '…'` | يشغّل أمرًا واحدًا في shell آخر |
 | `setopt autocd` / `unsetopt autocd` | يفعّل / يعطّل خيارًا في zsh |
-| `set frukt äpple` / `set -e frukt` | يعيّن / يزيل متغيّرًا في fish |
+| `set {{fruitVar}} {{fruitWord}}` / `set -e {{fruitVar}}` | يعيّن / يزيل متغيّرًا في fish |
 | `set -x NAME value` | يعيّن متغيّر بيئة في fish |
 | `math 17 x 23` | الحساب في fish |
 | `chsh -s /usr/bin/zsh` | يغيّر الـ shell الخاص بتسجيل دخولك |

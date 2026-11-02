@@ -14,7 +14,7 @@
       "hint": "Um caminho relativo não começa com `/`. Se você estiver em `/`, basta `cd var/log`."
     },
     "up": {
-      "text": "Suba um nível com `cd ..`."
+      "text": "Suba um nível com `cd ..` (cd, um espaço e dois pontos)."
     },
     "home": {
       "text": "Volte para o seu diretório pessoal só com `cd`, sem nenhum argumento."

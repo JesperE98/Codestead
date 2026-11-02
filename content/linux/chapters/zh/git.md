@@ -28,8 +28,8 @@ git --version
 git 中保存的每个版本都包含创建者的姓名和电子邮件地址。所以在你保存任何东西之前，git 需要知道你是谁。每台计算机只需设置一次：
 
 ```sh
-git config --global user.name "Elev Elevsson"
-git config --global user.email "elev@example.com"
+git config --global user.name "{{gitName}}"
+git config --global user.email "{{user}}@example.com"
 ```
 
 你可以随意填写自己的名字。`--global` 表示这项设置对你所有的项目都生效。它保存在普通的文本文件 `~/.gitconfig` 中：
@@ -40,8 +40,8 @@ cat ~/.gitconfig
 
 ```text
 [user]
-	name = Elev Elevsson
-	email = elev@example.com
+	name = {{gitName}}
+	email = {{user}}@example.com
 ```
 
 如果你忘了这一步，git 会在你尝试保存时报错：`*** Please tell me who you are.`——并且建议你运行的正是这两条命令。
@@ -50,10 +50,10 @@ cat ~/.gitconfig
 
 ## 新建一个仓库
 
-你的主目录中有一个小型网站项目 `~/projekt-webb`（瑞典语的“网站项目”），里面有三个文件。进去看看：
+你的主目录中有一个小型网站项目 `~/{{webProject}}`，里面有三个文件。进去看看：
 
 ```sh
-cd ~/projekt-webb
+cd ~/{{webProject}}
 ls
 ```
 
@@ -64,7 +64,7 @@ git init
 ```
 
 ```text
-Initialized empty Git repository in /home/elev/projekt-webb/.git/
+Initialized empty Git repository in /home/{{user}}/{{webProject}}/.git/
 ```
 
 唯一发生的变化是创建了一个隐藏目录 `.git`。git 把全部历史都保存在那里。git 不会动你的文件。
@@ -153,18 +153,18 @@ Changes to be committed:
 用 `git commit` 保存快照。`-m` 选项用来给出提交信息：
 
 ```sh
-git commit -m "Första versionen av webbplatsen"
+git commit -m "{{commitFirst}}"
 ```
 
 ```text
-[main (root-commit) 3f2a9c1] Första versionen av webbplatsen
+[main (root-commit) 3f2a9c1] {{commitFirst}}
  3 files changed, 24 insertions(+)
  create mode 100644 README.md
  create mode 100644 index.html
  create mode 100644 style.css
 ```
 
-（这条信息是瑞典语的“网站的第一个版本”——你自己的提交信息可以用任何语言来写。）`3f2a9c1` 是这个提交的 **ID** 的开头——它是一个根据内容计算出来的 40 个字符的*哈希值*（hash）。你的 ID 会不一样，因为时间和你的名字也是计算的一部分。通常前七个字符就足以确定一个提交。
+`3f2a9c1` 是这个提交的 **ID** 的开头——它是一个根据内容计算出来的 40 个字符的*哈希值*（hash）。你的 ID 会不一样，因为时间和你的名字也是计算的一部分。通常前七个字符就足以确定一个提交。
 
 再运行一次 `git status`：
 
@@ -184,21 +184,21 @@ nothing to commit, working tree clean
 在 `README.md` 中加一行，然后问问 git 发生了什么：
 
 ```sh
-echo 'Sidan är byggd med HTML och CSS.' >> README.md
+echo '{{builtWith}}' >> README.md
 git status
 git diff
 ```
 
 ```text
 diff --git a/README.md b/README.md
-index 1100cf4..e5bd3a0 100644
+index eb0e5f5..cb4c5c5 100644
 --- a/README.md
 +++ b/README.md
 @@ -1,3 +1,4 @@
- # Min webbplats
+ # {{siteTitle}}
  
- En liten webbplats som jag versionshanterar med git.
-+Sidan är byggd med HTML och CSS.
+ 一个用 git 做版本控制的小网站。
++{{builtWith}}
 ```
 
 以 `+` 开头的行是新增的（绿色），以 `-` 开头的行是被删除的（红色），其余的行作为上下文显示。`@@ -1,3 +1,4 @@` 表示旧版本的第 1–3 行对应新版本的第 1–4 行。
@@ -208,7 +208,7 @@ index 1100cf4..e5bd3a0 100644
 添加并提交这项修改。`-a` 选项会对 git 已经在跟踪的所有文件运行 `git add`，所以一步就能完成：
 
 ```sh
-git commit -a -m "Beskriv hur sidan är byggd"
+git commit -a -m "{{commitDescribe}}"
 ```
 
 注意，`-a` *不会*包含 git 还没有跟踪的新文件。这些文件你总是需要先用 `git add` 添加。
@@ -217,12 +217,12 @@ git commit -a -m "Beskriv hur sidan är byggd"
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ echo 'En rad till.' >> README.md
-$ git commit -m "En rad till" > /dev/null
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "{{commitFirst}}" > /dev/null
+$ echo '{{anotherLine}}' >> README.md
+$ git commit -m "{{anotherLine}}" > /dev/null
 $ git log --oneline | wc -l
 1
 ---
@@ -254,10 +254,10 @@ git log
 
 ```text
 commit 8d41b7e0c2a3f1d5e9b6a7c8d9e0f1a2b3c4d5e6 (HEAD -> main)
-Author: Elev Elevsson <elev@example.com>
+Author: {{gitName}} <{{user}}@example.com>
 Date:   Fri Oct 30 14:12:09 2026 +0100
 
-    Beskriv hur sidan är byggd
+    {{commitDescribe}}
 
 commit 3f2a9c1...
 ```
@@ -303,31 +303,31 @@ cat index.html
 
 ```sh
 git branch
-git switch -c ny-design
+git switch -c {{newDesign}}
 git branch
 ```
 
-`git switch -c ny-design`（瑞典语的“新设计”）会创建这个分支并切换过去。`git branch` 中的星号表示你当前所在的位置。做一处修改，然后在这个分支上提交：
+`git switch -c {{newDesign}}` 会创建这个分支并切换过去。`git branch` 中的星号表示你当前所在的位置。做一处修改，然后在这个分支上提交：
 
 ```sh
 echo 'h1 { color: purple; }' >> style.css
-git commit -am "Lila rubriker"
+git commit -am "{{commitPurple}}"
 ```
 
-（*Lila rubriker* 的意思是“紫色标题”。）切换回 `main`，看看 `style.css`：
+切换回 `main`，看看 `style.css`：
 
 ```sh
 git switch main
 tail -3 style.css
 ```
 
-紫色不见了！当你切换分支时，git 会把工作区改写成该分支最新提交的样子。这项修改安全地保存在 `ny-design` 中。`git log --oneline --all` 会显示所有分支：
+紫色不见了！当你切换分支时，git 会把工作区改写成该分支最新提交的样子。这项修改安全地保存在 `{{newDesign}}` 中。`git log --oneline --all` 会显示所有分支：
 
 ```sh
 git log --oneline --all
 ```
 
-> **提示：** 旧的教程经常使用 `git checkout ny-design` 和 `git checkout -b new-branch`。`checkout` 和 `switch` 做的是同一件事，但它还能恢复文件。较新的命令 `switch` 和 `restore` 把这些工作分开了，更容易记住。
+> **提示：** 旧的教程经常使用 `git checkout {{newDesign}}` 和 `git checkout -b new-branch`。`checkout` 和 `switch` 做的是同一件事，但它还能恢复文件。较新的命令 `switch` 和 `restore` 把这些工作分开了，更容易记住。
 
 切换分支时，未提交的修改会被一起带过去——除非它们和另一个分支冲突。这时 git 会拒绝切换，并要求你先提交（或者用 `git stash` 把修改暂时放到一边，之后再用 `git stash pop` 取回来）。
 
@@ -335,18 +335,18 @@ git log --oneline --all
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "{{commitFirst}}" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
 $ grep purple style.css | wc -l
 0
 ---
-紫色的那一行是在 `ny-design` 上提交的。当你切换到 `main` 时，git 会让工作区变成 `main` 最新一次提交的样子——而那里还没有这一行。
+紫色的那一行是在 `{{newDesign}}` 上提交的。当你切换到 `main` 时，git 会让工作区变成 `main` 最新一次提交的样子——而那里还没有这一行。
 ```
 
 ## 合并分支：`git merge`
@@ -354,7 +354,7 @@ $ grep purple style.css | wc -l
 先站在要*接收*修改的分支上——这里是 `main`——然后合并：
 
 ```sh
-git merge ny-design
+git merge {{newDesign}}
 ```
 
 ```text
@@ -364,37 +364,37 @@ Fast-forward
  1 file changed, 1 insertion(+)
 ```
 
-*Fast-forward*（快进）表示自从创建分支以来，`main` 没有发生变化。这时 git 只需要把 `main` 向前移动到和 `ny-design` 相同的提交即可。
+*Fast-forward*（快进）表示自从创建分支以来，`main` 没有发生变化。这时 git 只需要把 `main` 向前移动到和 `{{newDesign}}` 相同的提交即可。
 
 如果两个分支都有新的提交，git 就会做**三方合并**（three-way merge）：它把两个分支和它们的共同祖先进行比较，并创建一个新的、有两个父提交的*合并提交*（merge commit）。`git log --oneline --graph --all` 会显示历史是如何分叉、又如何重新汇合的：
 
 ```text
-*   e4b1d0a (HEAD -> main) Merge branch 'rubrik'
+*   e4b1d0a (HEAD -> main) Merge branch 'heading'
 |\
-| * 7c3f9e2 (rubrik) Vänligare rubrik
-* | 52d8a71 Kortare text
+| * 7c3f9e2 (heading) 更友好的标题
+* | 52d8a71 更短的文字
 |/
-* c19e2f4 Lila rubriker
+* c19e2f4 {{commitPurple}}
 ```
 
 合并完的分支就不再需要了，可以删除。如果该分支中有尚未进入当前分支的提交，`-d` 会拒绝删除：
 
 ```sh
-git branch -d ny-design
+git branch -d {{newDesign}}
 ```
 
 ## 冲突
 
-如果两个分支修改了*同样的行*，git 就无法知道哪个版本才是对的。这叫做**冲突**（conflict），这时由你来决定。我们故意制造一个冲突（*rubrik* 是瑞典语的“标题”）：
+如果两个分支修改了*同样的行*，git 就无法知道哪个版本才是对的。这叫做**冲突**（conflict），这时由你来决定。我们故意制造一个冲突：
 
 ```sh
-git switch -c rubrik
-sed -i 's/Välkommen!/Hej och välkommen!/' index.html
-git commit -am "Vänligare rubrik"
+git switch -c heading
+sed -i 's/欢迎！/你好，欢迎！/' index.html
+git commit -am "更友好的标题"
 git switch main
-sed -i 's/Välkommen!/Välkommen till min sida!/' index.html
-git commit -am "Längre rubrik"
-git merge rubrik
+sed -i 's/欢迎！/欢迎来到我的网站！/' index.html
+git commit -am "更长的标题"
+git merge heading
 ```
 
 ```text
@@ -412,13 +412,13 @@ cat index.html
 
 ```text
 <<<<<<< HEAD
-  <h1>Välkommen till min sida!</h1>
+  <h1>欢迎来到我的网站！</h1>
 =======
-  <h1>Hej och välkommen!</h1>
->>>>>>> rubrik
+  <h1>你好，欢迎！</h1>
+>>>>>>> heading
 ```
 
-`<<<<<<< HEAD` 和 `=======` 之间是你的版本（你当前所在的分支）；`=======` 和 `>>>>>>> rubrik` 之间是另一个分支的版本。解决冲突的方法如下：
+`<<<<<<< HEAD` 和 `=======` 之间是你的版本（你当前所在的分支）；`=======` 和 `>>>>>>> heading` 之间是另一个分支的版本。解决冲突的方法如下：
 
 1. 在编辑器中打开文件，把它改成你想要的样子——选其中一行，或者把两行结合起来——然后删掉那些标记行。
 2. 用 `git add FILE` 告诉 git 冲突已经解决。
@@ -430,7 +430,7 @@ cat index.html
 git checkout --theirs index.html
 git add index.html
 git status
-git commit -m "Slå ihop grenen rubrik"
+git commit -m "合并 heading 分支"
 ```
 
 如果你在解决冲突的过程中改变了主意，`git merge --abort` 会让你回到合并之前的状态。
@@ -438,13 +438,13 @@ git commit -m "Slå ihop grenen rubrik"
 当多人在同一个项目上工作时，冲突是再正常不过的事。想减少冲突，一个好办法是多做小提交、经常合并。
 
 ```quiz
-你在 `main` 上运行 `git merge rubrik`。文件出现了冲突：
+你在 `main` 上运行 `git merge heading`。文件出现了冲突：
 
     <<<<<<< HEAD
       <h1>Hello!</h1>
     =======
       <h1>Welcome!</h1>
-    >>>>>>> rubrik
+    >>>>>>> heading
 
 哪一行来自 `main`？
 - [x] `<h1>Hello!</h1>`
@@ -458,9 +458,9 @@ git commit -m "Slå ihop grenen rubrik"
 有些文件永远不应该进入历史记录：密码和密钥、日志、临时文件，以及自动构建出来的东西。把它们的名字或匹配模式写进仓库根目录下的 `.gitignore` 文件：
 
 ```sh
-echo 'password=secret' > hemligt.txt
-echo 'error' > fel.log
-printf 'hemligt.txt\n*.log\nbuild/\n' > .gitignore
+echo 'password=secret' > secret.txt
+echo 'error' > error.log
+printf 'secret.txt\n*.log\nbuild/\n' > .gitignore
 git status
 ```
 
@@ -470,11 +470,11 @@ Untracked files:
 	.gitignore
 ```
 
-`hemligt.txt`（瑞典语的“秘密.txt”）和 `fel.log`（“错误.log”）不再显示了——连 `git add .` 也不会把它们加进去。`*` 可以匹配任意内容，末尾的斜杠（`build/`）表示整个目录。而 `.gitignore` 本身则应该提交，这样参与项目的每个人都会忽略同样的东西：
+`secret.txt` 和 `error.log` 不再显示了——连 `git add .` 也不会把它们加进去。`*` 可以匹配任意内容，末尾的斜杠（`build/`）表示整个目录。而 `.gitignore` 本身则应该提交，这样参与项目的每个人都会忽略同样的东西：
 
 ```sh
 git add .gitignore
-git commit -m "Ignorera hemligheter och loggar"
+git commit -m "忽略机密文件和日志"
 ```
 
 注意，`.gitignore` 只对 git 还没有跟踪的文件起作用。如果某个文件已经被提交过了，可以用 `git rm --cached FILE` 把它从仓库中移除（但不会从磁盘上删除）。
@@ -497,8 +497,8 @@ git commit -m "Ignorera hemligheter och loggar"
 
 ```sh
 cd ~
-git clone ~/projekt-webb ~/kopia
-cd ~/kopia
+git clone ~/{{webProject}} ~/copy
+cd ~/copy
 git log --oneline
 git remote -v
 ```
@@ -507,7 +507,7 @@ git remote -v
 
 ```sh
 git init --bare ~/server.git
-cd ~/projekt-webb
+cd ~/{{webProject}}
 git remote add origin ~/server.git
 git push -u origin main
 git status

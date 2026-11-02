@@ -8,7 +8,7 @@ parte.
 - [ ] `var/log`
 - [ ] `../etc`
 - [x] `/usr/bin`
-- [ ] `dokument`
+- [ ] `{{documents}}`
 ---
 Una ruta absoluta empieza por `/`, en la raíz. Las demás parten del directorio
 en el que estás.
@@ -31,10 +31,10 @@ Cada `..` sube un nivel: de `/var/log` a `/var`, y luego a `/`.
 ```
 
 ```quiz
-Quieres copiar el directorio entero `bilder`, con todo su contenido, a `bilder-kopia`. ¿Qué comando funciona?
-- [ ] `cp bilder bilder-kopia`
-- [x] `cp -r bilder bilder-kopia`
-- [ ] `mv bilder bilder-kopia`
+Quieres copiar el directorio entero `{{pictures}}`, con todo su contenido, a `{{pictures}}-copia`. ¿Qué comando funciona?
+- [ ] `cp {{pictures}} {{pictures}}-copia`
+- [x] `cp -r {{pictures}} {{pictures}}-copia`
+- [ ] `mv {{pictures}} {{pictures}}-copia`
 ---
 Un directorio se copia con `-r` (*recursive*). `mv` lo movería en lugar de
 copiarlo.
@@ -49,17 +49,17 @@ c
 ```
 
 ```quiz
-Escribes `touch min fil.txt`, sin comillas. ¿Qué pasa?
-- [ ] Se crea un archivo llamado `min fil.txt`
-- [x] Se crean dos archivos: `min` y `fil.txt`
+Escribes `touch mi archivo.txt`, sin comillas. ¿Qué pasa?
+- [ ] Se crea un archivo llamado `mi archivo.txt`
+- [x] Se crean dos archivos: `mi` y `archivo.txt`
 - [ ] Nada, porque el nombre contiene un espacio
 ---
 La shell divide la línea por los espacios, así que `touch` recibe dos
-argumentos. Escribe `touch "min fil.txt"` para obtener un solo archivo.
+argumentos. Escribe `touch "mi archivo.txt"` para obtener un solo archivo.
 ```
 
 ```quiz
-¿Qué líneas muestra `grep -i error dokument/server.log`?
+¿Qué líneas muestra `grep -i error {{documents}}/server.log`?
 - [ ] Solo las líneas con `error` en minúsculas
 - [ ] Solo las líneas con `ERROR` en mayúsculas
 - [x] Las líneas con `error` en cualquier combinación de mayúsculas y minúsculas
@@ -67,9 +67,9 @@ argumentos. Escribe `touch "min fil.txt"` para obtener un solo archivo.
 
 ```quiz
 Quieres vigilar un archivo de registro y ver las líneas nuevas a medida que se escriben. ¿Qué comando encaja?
-- [ ] `head -n 10 dokument/server.log`
-- [x] `tail -f dokument/server.log`
-- [ ] `wc -l dokument/server.log`
+- [ ] `head -n 10 {{documents}}/server.log`
+- [x] `tail -f {{documents}}/server.log`
+- [ ] `wc -l {{documents}}/server.log`
 ---
 `tail -f` *sigue* el archivo. Detenlo con **Ctrl+C**.
 ```
@@ -99,9 +99,9 @@ c
 ```
 
 ```try
-grep ERROR ~/dokument/server.log | tee fel.txt | wc -l
+grep ERROR ~/{{documents}}/server.log | tee errores.txt | wc -l
 ---
-`tee` guardó las líneas de error en `fel.txt` y se las pasó a `wc -l`, que
+`tee` guardó las líneas de error en `errores.txt` y se las pasó a `wc -l`, que
 las contó.
 ```
 

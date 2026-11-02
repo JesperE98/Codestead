@@ -40,12 +40,12 @@ cat /etc/passwd
 строку:
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 ```text
-elev:x:1000:1000:Elev,,,:/home/elev:/bin/bash
- 1   2  3    4      5        6          7
+{{user}}:x:1000:1000:{{userFull}},,,:/home/{{user}}:/bin/bash
+   1    2  3    4      5             6           7
 ```
 
 | Поле | Значение |
@@ -63,7 +63,7 @@ elev:x:1000:1000:Elev,,,:/home/elev:/bin/bash
 учётные записи хранятся на центральном сервере:
 
 ```sh
-getent passwd elev
+getent passwd {{user}}
 ```
 
 ### Системные пользователи
@@ -108,7 +108,7 @@ cat /etc/group
 ```
 
 ```text
-sudo:x:27:elev
+sudo:x:27:{{user}}
  1   2  3   4
 ```
 
@@ -119,7 +119,7 @@ sudo:x:27:elev
 `/etc/passwd`), и он может также состоять в любом количестве
 **дополнительных групп**. Новые файлы, которые вы создаёте, получают вашу
 основную группу. В большинстве дистрибутивов каждый пользователь получает
-личную основную группу с тем же именем – `elev` состоит в группе `elev`.
+личную основную группу с тем же именем – `{{user}}` состоит в группе `{{user}}`.
 
 ```sh
 groups
@@ -127,9 +127,9 @@ id
 ```
 
 ```quiz
-Вы (`elev`) состоите в группах `elev` и `sudo`, а ваша основная группа – `elev`.
+Вы (`{{user}}`) состоите в группах `{{user}}` и `sudo`, а ваша основная группа – `{{user}}`.
 Какую группу получит новый файл, который вы создадите?
-- [x] `elev`
+- [x] `{{user}}`
 - [ ] `sudo`
 - [ ] Обе
 - [ ] `root`
@@ -166,13 +166,13 @@ kim:$y$j9T$Tm9...$Kx2...:20756:0:99999:7:::
 текстом:
 
 ```sh
-chage -l elev
+chage -l {{user}}
 ```
 
 ```try
-chage -l elev
+chage -l {{user}}
 ---
-`Password expires: never` – пароль elev никогда не нужно менять.
+`Password expires: never` – пароль {{user}} никогда не нужно менять.
 ```
 
 ## Создание пользователя – `useradd`
@@ -188,7 +188,7 @@ sudo useradd -m -s /bin/bash kim
 |---|---|
 | `-m` | Создать домашний каталог `/home/kim` |
 | `-s /bin/bash` | Shell пользователя |
-| `-c "Kim Svensson"` | Комментарий (полное имя) |
+| `-c "Kim Ivanov"` | Комментарий (полное имя) |
 | `-G group1,group2` | Сразу задать дополнительные группы |
 
 `useradd` находит следующий свободный UID начиная с 1000 – `kim` получит
@@ -246,8 +246,8 @@ passwd root
 Создайте группу и добавьте в неё участника:
 
 ```sh
-sudo groupadd utvecklare
-sudo usermod -aG utvecklare kim
+sudo groupadd {{devGroup}}
+sudo usermod -aG {{devGroup}} kim
 groups kim
 ```
 
@@ -257,12 +257,12 @@ groups kim
 например из группы sudo. Распространённый способ лишить себя доступа.
 
 ```quiz
-`kim` состоит в дополнительных группах `sudo` и `utvecklare`. Администратор
+`kim` состоит в дополнительных группах `sudo` и `{{devGroup}}`. Администратор
 выполняет `sudo usermod -G backup kim`. В каких дополнительных группах kim
 окажется после этого?
-- [ ] `sudo`, `utvecklare` и `backup`
+- [ ] `sudo`, `{{devGroup}}` и `backup`
 - [x] Только `backup`
-- [ ] `sudo` и `utvecklare` – без `-a` команда завершится ошибкой
+- [ ] `sudo` и `{{devGroup}}` – без `-a` команда завершится ошибкой
 - [ ] Ни в одной
 ---
 Без `-a` список заменяется ровно тем, что вы ввели. С
@@ -272,8 +272,8 @@ groups kim
 `gpasswd` делает то же самое и умеет ещё удалять участников:
 
 ```sh
-sudo gpasswd -a kim utvecklare
-sudo gpasswd -d kim utvecklare
+sudo gpasswd -a kim {{devGroup}}
+sudo gpasswd -d kim {{devGroup}}
 ```
 
 На настоящем компьютере новое членство в группе вступает в силу только при
@@ -284,10 +284,10 @@ sudo gpasswd -d kim utvecklare
 право на запись с помощью `chgrp` и `chmod`:
 
 ```sh
-sudo mkdir /srv/projekt
-sudo chgrp utvecklare /srv/projekt
-sudo chmod 775 /srv/projekt
-ls -ld /srv/projekt
+sudo mkdir /srv/{{project}}
+sudo chgrp {{devGroup}} /srv/{{project}}
+sudo chmod 775 /srv/{{project}}
+ls -ld /srv/{{project}}
 ```
 
 ## Выдача прав sudo – группа `sudo`
@@ -383,16 +383,16 @@ last
 без `-r` файлы остаются:
 
 ```sh
-sudo useradd -m vikarie
-sudo userdel -r vikarie
+sudo useradd -m {{tempUser}}
+sudo userdel -r {{tempUser}}
 ```
 
 В Ubuntu есть также `deluser`, парный к `adduser`:
-`sudo deluser --remove-home vikarie`. `sudo deluser kim sudo` удаляет kim из
+`sudo deluser --remove-home {{tempUser}}`. `sudo deluser kim sudo` удаляет kim из
 группы sudo.
 
 `userdel` отказывается удалять пользователя, который сейчас в системе, –
-попробуйте `sudo userdel elev`.
+попробуйте `sudo userdel {{user}}`.
 
 ## Итоги
 

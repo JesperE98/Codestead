@@ -12,15 +12,15 @@
 ```
 
 ```quiz
-`namn = Kim` 报错 `command not found`。为什么？
-- [x] `=` 两边的空格让 shell 把 `namn` 当成了一条命令
+`{{nameVar}} = Kim` 报错 `command not found`。为什么？
+- [x] `=` 两边的空格让 shell 把 `{{nameVar}}` 当成了一条命令
 - [ ] 变量名必须用大写字母
-- [ ] 你必须写成 `$namn = Kim`
+- [ ] 你必须写成 `${{nameVar}} = Kim`
 ```
 
 ```predict
-$ antal=$(ls ~/dokument | wc -l)
-$ echo "$antal files"
+$ count=$(ls ~/{{documents}} | wc -l)
+$ echo "$count files"
 3 files
 ```
 
@@ -48,13 +48,13 @@ $ echo $a
 ```
 
 ```predict
-$ [ -d ~/finnsinte ] && echo yes || echo no
+$ [ -d ~/{{missing}} ] && echo yes || echo no
 no
 ```
 
 ```predict
-$ fil=rapport.txt
-$ case $fil in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
+$ file=report.txt
+$ case $file in *.jpg|*.png) echo "An image";; *.txt) echo "A text file";; *) echo "Unknown type";; esac
 A text file
 ```
 
@@ -89,9 +89,9 @@ $ for i in 1 2 3 4 5; do if [ $i -eq 3 ]; then continue; fi; echo $i; done
 ```
 
 ```quiz
-你用 `cat > hej.sh << 'SLUT'` 开始一个 here 文档。它在什么时候结束？
+你用 `cat > {{helloScript}} << '{{heredocEnd}}'` 开始一个 here 文档。它在什么时候结束？
 - [ ] 在空行上按 Enter 时
-- [x] 在 `SLUT` 这一行
+- [x] 在 `{{heredocEnd}}` 这一行
 - [ ] 十行之后
 ```
 

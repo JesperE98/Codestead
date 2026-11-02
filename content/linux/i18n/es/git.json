@@ -10,28 +10,28 @@
       "hint": "Dos comandos: `git config --global user.name \"Tu Nombre\"` y `git config --global user.email \"tu@example.com\"`."
     },
     "init": {
-      "text": "Entra en el directorio `~/projekt-webb` y conviértelo en un repositorio git con `git init`.",
-      "hint": "`cd ~/projekt-webb` y después `git init`. Mira el nuevo directorio oculto con `ls -a`."
+      "text": "Entra en el directorio `~/{{webProject}}` y conviértelo en un repositorio git con `git init`.",
+      "hint": "`cd ~/{{webProject}}` y después `git init`. Mira el nuevo directorio oculto con `ls -a`."
     },
     "forsta-commit": {
       "text": "Añade los tres archivos al índice con `git add` y haz tu primer commit con un mensaje descriptivo.",
-      "hint": "`git add .` añade todo lo que hay en el directorio. Después, `git commit -m \"Primera versión del sitio web\"`. ¡Comprueba el estado con `git status` antes y después!"
+      "hint": "`git add .` añade todo lo que hay en el directorio. Después, `git commit -m \"{{commitFirst}}\"`. ¡Comprueba el estado con `git status` antes y después!"
     },
     "diff": {
       "text": "Añade una línea al final de `README.md` y mira el cambio con `git diff`.",
-      "hint": "`echo 'Hecha con HTML y CSS.' >> README.md` y después `git diff`. Las líneas que empiezan por `+` son nuevas."
+      "hint": "`echo '{{builtWith}}' >> README.md` y después `git diff`. Las líneas que empiezan por `+` son nuevas."
     },
     "commit-a": {
       "text": "Haz un commit del cambio en `README.md`. Prueba la opción `-a`, que incluye todos los archivos modificados que git ya sigue.",
-      "hint": "`git commit -a -m \"Describe cómo está hecha la página\"`, o más corto, `git commit -am \"…\"`."
+      "hint": "`git commit -a -m \"{{commitDescribe}}\"`, o más corto, `git commit -am \"…\"`."
     },
     "gren": {
-      "text": "Crea la rama `ny-design` y cámbiate a ella. Cambia algo en `style.css` y haz un commit del cambio en la rama nueva.",
-      "hint": "`git switch -c ny-design` crea la rama y se cambia a ella. Después cambia el archivo, por ejemplo con `echo 'h1 { color: purple; }' >> style.css`, y ejecuta `git commit -am \"Títulos morados\"`."
+      "text": "Crea la rama `{{newDesign}}` y cámbiate a ella. Cambia algo en `style.css` y haz un commit del cambio en la rama nueva.",
+      "hint": "`git switch -c {{newDesign}}` crea la rama y se cambia a ella. Después cambia el archivo, por ejemplo con `echo 'h1 { color: purple; }' >> style.css`, y ejecuta `git commit -am \"{{commitPurple}}\"`."
     },
     "merge": {
-      "text": "Vuelve a `main` y fusiona la rama `ny-design` con `git merge`.",
-      "hint": "`git switch main` y después `git merge ny-design`. Como `main` no ha cambiado desde que creaste la rama, será un *fast-forward*."
+      "text": "Vuelve a `main` y fusiona la rama `{{newDesign}}` con `git merge`.",
+      "hint": "`git switch main` y después `git merge {{newDesign}}`. Como `main` no ha cambiado desde que creaste la rama, será un *fast-forward*."
     },
     "logg": {
       "text": "Muestra el historial con una línea por commit usando `git log --oneline`.",

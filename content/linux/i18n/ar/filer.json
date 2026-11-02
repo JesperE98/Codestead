@@ -2,21 +2,21 @@
   "title": "الملفات والمجلدات",
   "tasks": {
     "mkdir": {
-      "text": "أنشئ المجلد `~/projekt/src` بأمر **واحد**.",
-      "hint": "يحتاج `mkdir` إلى الخيار `-p` لإنشاء `projekt` و`src` دفعة واحدة."
+      "text": "أنشئ المجلد `~/{{project}}/src` بأمر **واحد**.",
+      "hint": "يحتاج `mkdir` إلى الخيار `-p` لإنشاء `{{project}}` و`src` دفعة واحدة."
     },
     "touch": {
-      "text": "أنشئ ملفًا فارغًا باسم `~/projekt/README.md`."
+      "text": "أنشئ ملفًا فارغًا باسم `~/{{project}}/README.md`."
     },
     "cp": {
-      "text": "انسخ `~/anteckningar.txt` إلى المجلد `~/projekt/`."
+      "text": "انسخ `~/{{notes}}` إلى المجلد `~/{{project}}/`."
     },
     "mv": {
-      "text": "أعد تسمية `~/projekt/anteckningar.txt` إلى `~/projekt/att-gora.txt`.",
+      "text": "أعد تسمية `~/{{project}}/{{notes}}` إلى `~/{{project}}/{{todo}}`.",
       "hint": "إعادة التسمية هي نفسها النقل – استخدم `mv`."
     },
     "rm": {
-      "text": "احذف المجلد `~/gammalt` وكل ما فيه.",
+      "text": "احذف المجلد `~/{{old}}` وكل ما فيه.",
       "hint": "المجلد ليس فارغًا، لذا لن ينفع `rmdir`. استخدم `rm -r`."
     }
   }

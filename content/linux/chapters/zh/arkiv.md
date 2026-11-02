@@ -29,23 +29,23 @@ gzip 一次只能处理一个文件，对目录一无所知；而单独的 tar �
 
 ## 用 `tar` 打包
 
-进入你的主目录，把 `dokument` 目录打包：
+进入你的主目录，把 `{{documents}}` 目录打包：
 
 ```sh
 cd ~
-tar -cvf dokument.tar dokument
+tar -cvf {{documents}}.tar {{documents}}
 ```
 
 ```text
-dokument/
-dokument/betyg.csv
-dokument/frukter.txt
-dokument/server.log
+{{documents}}/
+{{documents}}/{{fruits}}
+{{documents}}/{{grades}}
+{{documents}}/server.log
 ```
 
 `-c` 表示*创建归档*（create），`-v` 让 tar 显示它正在做什么，`-f` 表示接下来是归档文件的名字。归档文件名之后的所有内容都会被打包——文件和目录想放多少都可以。
 
-> **注意！** 顺序是*先写归档文件名，再写要打包的文件*。如果你把顺序弄反了，比如写成 `tar -cvf dokument dokument.tar`，tar 会试图覆盖这个目录——或者更糟，覆盖一个你本想保留的文件。
+> **注意！** 顺序是*先写归档文件名，再写要打包的文件*。如果你把顺序弄反了，比如写成 `tar -cvf {{documents}} {{documents}}.tar`，tar 会试图覆盖这个目录——或者更糟，覆盖一个你本想保留的文件。
 
 ## 需要记住的选项
 
@@ -80,13 +80,13 @@ dokument/server.log
 加上 `z`，归档文件就会在生成过程中经过 gzip 处理：
 
 ```sh
-tar -czvf dokument.tar.gz dokument
-ls -l dokument.tar dokument.tar.gz
+tar -czvf {{documents}}.tar.gz {{documents}}
+ls -l {{documents}}.tar {{documents}}.tar.gz
 ```
 
 ```text
--rw-r--r-- 1 elev elev 10240 Oct 30 12:00 dokument.tar
--rw-r--r-- 1 elev elev   837 Oct 30 12:00 dokument.tar.gz
+-rw-r--r-- 1 {{user}} {{user}} 10240 Oct 30 12:00 {{documents}}.tar
+-rw-r--r-- 1 {{user}} {{user}}   824 Oct 30 12:00 {{documents}}.tar.gz
 ```
 
 未压缩的归档文件足足有 10,240 字节，而里面的文件加起来才刚过 1,000 字节。这是因为 tar 会在每个文件前加上一个 512 字节的头部，并把归档文件填充到完整的块大小。所有这些空白都会被 gzip 压缩掉。
@@ -94,14 +94,14 @@ ls -l dokument.tar dokument.tar.gz
 `du` 命令（*disk usage*，磁盘用量）显示某样东西在磁盘上占用了多少空间。加上 `-h` 可以得到易读的大小，加上 `-s` 则显示整个目录的总计：
 
 ```sh
-du -h dokument.tar dokument.tar.gz
-du -sh dokument
+du -h {{documents}}.tar {{documents}}.tar.gz
+du -sh {{documents}}
 ```
 
 ```text
-12K	dokument.tar
-4.0K	dokument.tar.gz
-16K	dokument
+12K	{{documents}}.tar
+4.0K	{{documents}}.tar.gz
+16K	{{documents}}
 ```
 
 磁盘被划分为 4 KiB 大小的块，所以对于非空文件，`du` 显示的值永远不会小于 `4.0K`。要查看确切的大小，请使用 `ls -l`（或 `ls -lh`）。
@@ -109,14 +109,14 @@ du -sh dokument
 ## 解包前先看看归档文件里有什么
 
 ```sh
-tar -tzvf dokument.tar.gz
+tar -tzvf {{documents}}.tar.gz
 ```
 
 ```text
-drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
--rw-r--r-- elev/elev       146 2026-10-30 12:00 dokument/betyg.csv
--rw-r--r-- elev/elev        64 2026-10-30 12:00 dokument/frukter.txt
--rw-r--r-- elev/elev       848 2026-10-30 12:00 dokument/server.log
+drwxr-xr-x {{user}}/{{user}}   0 2026-10-30 12:00 {{documents}}/
+-rw-r--r-- {{user}}/{{user}}  73 2026-10-30 12:00 {{documents}}/{{fruits}}
+-rw-r--r-- {{user}}/{{user}} 145 2026-10-30 12:00 {{documents}}/{{grades}}
+-rw-r--r-- {{user}}/{{user}} 824 2026-10-30 12:00 {{documents}}/server.log
 ```
 
 加上 `v` 后，内容会像 `ls -l` 那样显示，包括权限、所有者和大小。先看一眼是个好习惯：有些归档文件没有共同的顶层目录，解包时会把几百个文件撒得到处都是——就撒在你当时所在的目录里。
@@ -124,11 +124,11 @@ drwxr-xr-x elev/elev         0 2026-10-30 12:00 dokument/
 ## 解包
 
 ```sh
-mkdir uppackat
-tar -xzvf dokument.tar.gz -C uppackat
+mkdir {{unpacked}}
+tar -xzvf {{documents}}.tar.gz -C {{unpacked}}
 ```
 
-`-C`（大写 C）用来选择 tar 解包到哪个目录（*uppackat* 的意思是“已解包”）。如果不加，所有内容都会解包到你当前所在的目录。新版本的 tar 在解包时会自动检测归档文件是否经过压缩，所以 `tar -xf dokument.tar.gz` 也能正常工作。
+`-C`（大写 C）用来选择 tar 解包到哪个目录。如果不加，所有内容都会解包到你当前所在的目录。新版本的 tar 在解包时会自动检测归档文件是否经过压缩，所以 `tar -xf {{documents}}.tar.gz` 也能正常工作。
 
 > **警告！** tar 在覆盖已存在的文件之前不会询问。如果不确定，请先列出内容。
 
@@ -137,27 +137,27 @@ tar -xzvf dokument.tar.gz -C uppackat
 如果你打包的是绝对路径，开头的 `/` 会被去掉，这样归档文件就可以解包到任何地方：
 
 ```sh
-tar -czf backup.tar.gz ~/dokument
+tar -czf backup.tar.gz ~/{{documents}}
 ```
 
 ```text
 tar: Removing leading `/' from member names
 ```
 
-现在归档文件中包含的是 `home/elev/dokument/...`。如果你只想让归档文件中包含 `dokument/`，可以用 `-C` 让 tar 先切换目录：
+现在归档文件中包含的是 `home/{{user}}/{{documents}}/...`。如果你只想让归档文件中包含 `{{documents}}/`，可以用 `-C` 让 tar 先切换目录：
 
 ```sh
-tar -czf backup.tar.gz -C ~ dokument
+tar -czf backup.tar.gz -C ~ {{documents}}
 tar -tzf backup.tar.gz
 ```
 
 ```quiz
-你运行 `tar -czf backup.tar.gz -C ~ dokument`。归档文件中包含什么？
-- [x] `dokument/` 及其中的文件
-- [ ] `home/elev/dokument/` 及其中的文件
-- [ ] `/home/elev/dokument/` 及其中的文件
+你运行 `tar -czf backup.tar.gz -C ~ {{documents}}`。归档文件中包含什么？
+- [x] `{{documents}}/` 及其中的文件
+- [ ] `home/{{user}}/{{documents}}/` 及其中的文件
+- [ ] `/home/{{user}}/{{documents}}/` 及其中的文件
 ---
-`-C ~` 让 tar 先切换到你的主目录，所以归档文件中的名字从 `dokument/` 开始。
+`-C ~` 让 tar 先切换到你的主目录，所以归档文件中的名字从 `{{documents}}/` 开始。
 ```
 
 ## 用 `gzip` 压缩单个文件
@@ -165,12 +165,12 @@ tar -tzf backup.tar.gz
 `gzip` 会压缩一个文件，并用 `.gz` 文件**替换**它。权限和时间戳会保留下来：
 
 ```sh
-cp dokument/server.log .
+cp {{documents}}/server.log .
 gzip -v server.log
 ```
 
 ```text
-server.log:	 39.0% -- replaced with server.log.gz
+server.log:	 39.8% -- replaced with server.log.gz
 ```
 
 `gzip -l` 显示压缩前后的大小，`gunzip` 则把文件重新解压：
@@ -183,21 +183,21 @@ gunzip server.log.gz
 如果想保留原文件，请使用 `gzip -k`（*keep*，保留）。用一个非常小的文件试试——它实际上会变得**更大**，因为 gzip 会添加一个头部，其中包含文件名等信息：
 
 ```sh
-cp dokument/frukter.txt .
-gzip -kv frukter.txt
+cp {{documents}}/{{fruits}} .
+gzip -kv {{fruits}}
 ```
 
 ```text
-frukter.txt:	-20.3% -- created frukter.txt.gz
+{{fruits}}:	 -8.2% -- created {{fruits}}.gz
 ```
 
 ```predict
-$ cp dokument/frukter.txt .
-$ cp dokument/server.log .
-$ gzip frukter.txt
+$ cp {{documents}}/{{fruits}} .
+$ cp {{documents}}/server.log .
+$ gzip {{fruits}}
 $ gzip -k server.log
-$ ls frukter* server*
-frukter.txt.gz  server.log  server.log.gz
+$ ls {{fruits}}* server*
+{{fruits}}.gz  server.log  server.log.gz
 ---
 普通的 `gzip` 会用 `.gz` 文件替换原文件；`-k` 则会保留原文件。
 ```
@@ -229,29 +229,29 @@ sudo apt install zip unzip
 然后把目录打包。别忘了 `-r`（*recursive*，递归）——如果不加，zip 只会添加空目录，而不会添加其中的文件：
 
 ```sh
-zip -r dokument.zip dokument
+zip -r {{documents}}.zip {{documents}}
 ```
 
 ```text
-  adding: dokument/ (stored 0%)
-  adding: dokument/betyg.csv (deflated 17%)
-  adding: dokument/frukter.txt (deflated 27%)
-  adding: dokument/server.log (deflated 42%)
+  adding: {{documents}}/ (stored 0%)
+  adding: {{documents}}/{{fruits}} (deflated 32%)
+  adding: {{documents}}/{{grades}} (deflated 16%)
+  adding: {{documents}}/server.log (deflated 43%)
 ```
 
 注意，顺序和 tar 一样：先写归档文件名，再写要打包的文件。`unzip -l` 列出内容，`-d` 用来选择解包到哪里（如果该目录不存在，就会自动创建）：
 
 ```sh
-unzip -l dokument.zip
-unzip dokument.zip -d fran-zip
+unzip -l {{documents}}.zip
+unzip {{documents}}.zip -d {{fromZip}}
 ```
 
 如果文件已经存在，unzip 会跳过它们。使用 `unzip -o` 则会覆盖它们。
 
 ```quiz
-你运行了不带 `-r` 的 `zip dokument.zip dokument`。zip 文件里会有什么？
-- [ ] `dokument` 中的所有文件
-- [x] 只有空目录 `dokument/`
+你运行了不带 `-r` 的 `zip {{documents}}.zip {{documents}}`。zip 文件里会有什么？
+- [ ] `{{documents}}` 中的所有文件
+- [x] 只有空目录 `{{documents}}/`
 - [ ] 什么都没有——zip 拒绝运行
 ---
 不加 `-r`（*recursive*，递归），zip 就不会进入目录。

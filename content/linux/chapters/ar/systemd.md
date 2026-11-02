@@ -52,8 +52,8 @@ ls /etc/systemd/system
 في إصدارات Debian وUbuntu الأقدم غالبًا ما ترى `/lib/systemd/system` بدلًا من
 ذلك. وهو المجلد نفسه – فـ `/lib` رابط إلى `/usr/lib`.
 
-اسم الخدمة هو اسم الملف، مثل `minserver.service`. وعندما تكتب الأوامر يمكنك
-حذف `.service`: فالأمر `systemctl status minserver` يعمل بالقدر نفسه.
+اسم الخدمة هو اسم الملف، مثل `myserver.service`. وعندما تكتب الأوامر يمكنك
+حذف `.service`: فالأمر `systemctl status myserver` يعمل بالقدر نفسه.
 
 ## كيف حال الخدمة؟ – `systemctl status`
 
@@ -103,17 +103,17 @@ Oct 30 07:54:07 ubuntu systemd[1]: Started ssh.service - OpenBSD Secure Shell se
 ## البدء والإيقاف وإعادة التشغيل
 
 ```text
-sudo systemctl start minserver      # ابدأ الآن
-sudo systemctl stop minserver       # أوقف الآن
-sudo systemctl restart minserver    # أوقف وابدأ من جديد
-sudo systemctl reload minserver     # اطلب منها إعادة قراءة إعداداتها
+sudo systemctl start myserver      # ابدأ الآن
+sudo systemctl stop myserver       # أوقف الآن
+sudo systemctl restart myserver    # أوقف وابدأ من جديد
+sudo systemctl reload myserver     # اطلب منها إعادة قراءة إعداداتها
 ```
 
 كل ما **يغيّر** شيئًا يتطلّب root، لذا لا تنسَ `sudo`. فمن دونه يجيب
 systemctl:
 
 ```text
-Failed to start minserver.service: Interactive authentication required.
+Failed to start myserver.service: Interactive authentication required.
 ```
 
 لا يعمل `reload` إلا مع الخدمات التي تدعمه. وميزته أن الخدمة تستمر في العمل
@@ -121,8 +121,8 @@ Failed to start minserver.service: Interactive authentication required.
 `reload` أو `restart` هو الخطوة الأخيرة.
 
 > **جرّب ذلك!** في فصل العمليات أوقفت خادم التدريب باستخدام `pkill`. انظر إلى
-> `systemctl status minserver` – لقد لاحظ systemd أن العملية اختفت. شغّله من
-> جديد باستخدام `systemctl` وقارن رقم PID بما يعرضه `pgrep -l minserver`.
+> `systemctl status myserver` – لقد لاحظ systemd أن العملية اختفت. شغّله من
+> جديد باستخدام `systemctl` وقارن رقم PID بما يعرضه `pgrep -l myserver`.
 
 ## الآن أم عند الإقلاع؟ `start` و`enable`
 
@@ -139,35 +139,35 @@ Failed to start minserver.service: Interactive authentication required.
 `[Install]` من ملف الوحدة، وهو عادةً `multi-user.target.wants`:
 
 ```text
-$ sudo systemctl enable --now minserver
-Created symlink /etc/systemd/system/multi-user.target.wants/minserver.service → /etc/systemd/system/minserver.service.
+$ sudo systemctl enable --now myserver
+Created symlink /etc/systemd/system/multi-user.target.wants/myserver.service → /etc/systemd/system/myserver.service.
 ```
 
 عندما يُقلع الحاسوب، يمرّ systemd على ذلك المجلد ويبدأ كل ما فيه. ويمكنك
 السؤال عن الحالة:
 
 ```sh
-systemctl is-active minserver
-systemctl is-enabled minserver
+systemctl is-active myserver
+systemctl is-enabled myserver
 ```
 
 الأمران `is-active` و`is-enabled` رائعان في السكربتات – فهما يطبعان كلمة واحدة
 وينتهيان بالحالة 0 إذا كان الجواب "نعم". ومع `-q` يصمتان تمامًا:
 
 ```text
-if systemctl is-active -q minserver; then echo "the server is running"; fi
+if systemctl is-active -q myserver; then echo "the server is running"; fi
 ```
 
-على حاسوب بدأ للتو في المحاكي، تعمل `minserver`، لكن لم يفعّلها أحد. ماذا يطبع
+على حاسوب بدأ للتو في المحاكي، تعمل `myserver`، لكن لم يفعّلها أحد. ماذا يطبع
 هذان الأمران؟
 
 ```predict
-$ systemctl is-active minserver
-$ systemctl is-enabled minserver
+$ systemctl is-active myserver
+$ systemctl is-enabled myserver
 active
 disabled
 ---
-تعمل minserver **الآن**، لكن أحدًا لم يشغّل `enable` – فبعد إعادة التشغيل لن
+تعمل myserver **الآن**، لكن أحدًا لم يشغّل `enable` – فبعد إعادة التشغيل لن
 تبدأ. فـ `start` و`enable` شيئان مختلفان فعلًا.
 ```
 
@@ -212,9 +212,9 @@ journalctl
 يمكن الجمع بين الخيارات. وإليك بعض الأمثلة الكلاسيكية:
 
 ```sh
-journalctl -u minserver -n 5
+journalctl -u myserver -n 5
 journalctl -p err -b
-journalctl --since today -u minserver
+journalctl --since today -u myserver
 ```
 
 ### الأولويات
@@ -255,7 +255,7 @@ journalctl --since today -u minserver
 
 ## استكشاف أخطاء خدمة لا تبدأ
 
-أعدّ أحدهم الخدمة **rapportd** على هذا الحاسوب، لكن فيها خللًا ما. وهذه هي
+أعدّ أحدهم الخدمة **reportd** على هذا الحاسوب، لكن فيها خللًا ما. وهذه هي
 الطريقة المعتادة للتعامل مع ذلك:
 
 1. **ما الذي فشل؟** اسرد الخدمات التي فشلت:
@@ -267,27 +267,27 @@ journalctl --since today -u minserver
 2. **انظر إلى الحالة.** غالبًا ما تكفي الأسطر الأخيرة:
 
    ```sh
-   systemctl status rapportd
+   systemctl status reportd
    ```
 
 3. **اقرأ السجل كاملًا** للخدمة. فهو يخبرك دائمًا تقريبًا بما هو خطأ – اقرأه
    بعناية، كلمة كلمة:
 
    ```sh
-   journalctl -xeu rapportd
+   journalctl -xeu reportd
    ```
 
    يقترح `systemctl` نفسه هذا الأمر بالضبط عندما يفشل البدء:
-   `See "systemctl status rapportd.service" and "journalctl -xeu
-   rapportd.service" for details.`
+   `See "systemctl status reportd.service" and "journalctl -xeu
+   reportd.service" for details.`
 
 4. **أصلح المشكلة**، مثل ملف إعدادات مفقود أو فيه خطأ مطبعي.
 
 5. **أعد التشغيل وتحقّق:**
 
    ```text
-   sudo systemctl restart rapportd
-   systemctl status rapportd
+   sudo systemctl restart reportd
+   systemctl status reportd
    ```
 
 يعني السطر `Main process exited, code=exited, status=1/FAILURE` أن البرنامج
@@ -310,17 +310,17 @@ journalctl --since today -u minserver
 لترى بالضبط كيف تبدأ خدمة ما، اقرأ ملف الوحدة الخاص بها:
 
 ```sh
-systemctl cat minserver
+systemctl cat myserver
 ```
 
 ```text
-# /etc/systemd/system/minserver.service
+# /etc/systemd/system/myserver.service
 [Unit]
-Description=Minserver web server (practice server)
+Description=Myserver web server (practice server)
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/minserver --port 8080
+ExecStart=/usr/local/bin/myserver --port 8080
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]

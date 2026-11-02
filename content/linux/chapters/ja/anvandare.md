@@ -39,12 +39,12 @@ cat /etc/passwd
 見てみましょう。
 
 ```sh
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ```
 
 ```text
-elev:x:1000:1000:Elev,,,:/home/elev:/bin/bash
- 1   2  3    4      5        6          7
+{{user}}:x:1000:1000:{{userFull}},,,:/home/{{user}}:/bin/bash
+   1    2   3    4     5          6           7
 ```
 
 | フィールド | 意味 |
@@ -62,7 +62,7 @@ elev:x:1000:1000:Elev,,,:/home/elev:/bin/bash
 管理されている場合です。
 
 ```sh
-getent passwd elev
+getent passwd {{user}}
 ```
 
 ### システムユーザー
@@ -107,7 +107,7 @@ cat /etc/group
 ```
 
 ```text
-sudo:x:27:elev
+sudo:x:27:{{user}}
  1   2  3   4
 ```
 
@@ -118,7 +118,7 @@ sudo:x:27:elev
 フィールド）あり、さらにいくつでも **補助グループ** のメンバーになれます。
 あなたが作った新しいファイルには、あなたのプライマリグループが付きます。
 ほとんどのディストリビューションでは、どのユーザーにも同じ名前の個人用
-プライマリグループが作られます。`elev` はグループ `elev` に属しています。
+プライマリグループが作られます。`{{user}}` はグループ `{{user}}` に属しています。
 
 ```sh
 groups
@@ -126,9 +126,9 @@ id
 ```
 
 ```quiz
-あなた（`elev`）はグループ `elev` と `sudo` に属していて、プライマリグループは
-`elev` です。あなたが作った新しいファイルにはどのグループが付きますか？
-- [x] `elev`
+あなた（`{{user}}`）はグループ `{{user}}` と `sudo` に属していて、プライマリグループは
+`{{user}}` です。あなたが作った新しいファイルにはどのグループが付きますか？
+- [x] `{{user}}`
 - [ ] `sudo`
 - [ ] 両方
 - [ ] `root`
@@ -165,13 +165,13 @@ kim:$y$j9T$Tm9...$Kx2...:20756:0:99999:7:::
 `chage` を使うと、それらをわかりやすく表示できます。
 
 ```sh
-chage -l elev
+chage -l {{user}}
 ```
 
 ```try
-chage -l elev
+chage -l {{user}}
 ---
-`Password expires: never` – elev のパスワードは変更する必要がありません。
+`Password expires: never` – {{user}} のパスワードは変更する必要がありません。
 ```
 
 ## ユーザーを作成する – `useradd`
@@ -187,7 +187,7 @@ sudo useradd -m -s /bin/bash kim
 |---|---|
 | `-m` | ホームディレクトリ `/home/kim` を作成する |
 | `-s /bin/bash` | ユーザーのシェル |
-| `-c "Kim Svensson"` | コメント（フルネーム） |
+| `-c "Kim Tanaka"` | コメント（フルネーム） |
 | `-G group1,group2` | 最初から補助グループに入れる |
 
 `useradd` は 1000 から順に、次の空いている UID を探します。`kim` は 1001 に
@@ -244,8 +244,8 @@ passwd root
 グループを作成して、メンバーを追加します。
 
 ```sh
-sudo groupadd utvecklare
-sudo usermod -aG utvecklare kim
+sudo groupadd {{devGroup}}
+sudo usermod -aG {{devGroup}} kim
 groups kim
 ```
 
@@ -255,12 +255,12 @@ groups kim
 外されてしまいます。自分を締め出してしまう、よくあるパターンです。
 
 ```quiz
-`kim` は補助グループ `sudo` と `utvecklare` に属しています。管理者が
+`kim` は補助グループ `sudo` と `{{devGroup}}` に属しています。管理者が
 `sudo usermod -G backup kim` を実行しました。そのあと kim はどの補助グループに
 属していますか？
-- [ ] `sudo`、`utvecklare`、`backup`
+- [ ] `sudo`、`{{devGroup}}`、`backup`
 - [x] `backup` だけ
-- [ ] `sudo` と `utvecklare`。`-a` がないのでコマンドは失敗する
+- [ ] `sudo` と `{{devGroup}}`。`-a` がないのでコマンドは失敗する
 - [ ] どれにも属していない
 ---
 `-a` がないと、一覧は入力したものそのものになります。
@@ -270,8 +270,8 @@ groups kim
 `gpasswd` も同じことができ、メンバーを外すこともできます。
 
 ```sh
-sudo gpasswd -a kim utvecklare
-sudo gpasswd -d kim utvecklare
+sudo gpasswd -a kim {{devGroup}}
+sudo gpasswd -d kim {{devGroup}}
 ```
 
 本物のコンピューターでは、新しいグループのメンバーシップが有効になるのは、
@@ -282,10 +282,10 @@ sudo gpasswd -d kim utvecklare
 所有者にして書き込み権限を与えましょう。
 
 ```sh
-sudo mkdir /srv/projekt
-sudo chgrp utvecklare /srv/projekt
-sudo chmod 775 /srv/projekt
-ls -ld /srv/projekt
+sudo mkdir /srv/project
+sudo chgrp {{devGroup}} /srv/project
+sudo chmod 775 /srv/project
+ls -ld /srv/project
 ```
 
 ## sudo 権限を与える – `sudo` グループ
@@ -378,16 +378,16 @@ last
 削除されます。`-r` がないと、ファイルは残ったままになります。
 
 ```sh
-sudo useradd -m vikarie
-sudo userdel -r vikarie
+sudo useradd -m {{tempUser}}
+sudo userdel -r {{tempUser}}
 ```
 
 Ubuntu には、`adduser` の対になる `deluser` もあります:
-`sudo deluser --remove-home vikarie`。`sudo deluser kim sudo` は、kim を
+`sudo deluser --remove-home {{tempUser}}`。`sudo deluser kim sudo` は、kim を
 グループ sudo から外します。
 
 `userdel` は、ログイン中のユーザーを削除するのを拒否します。
-`sudo userdel elev` を試してみましょう。
+`sudo userdel {{user}}` を試してみましょう。
 
 ## まとめ
 

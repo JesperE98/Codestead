@@ -21,12 +21,12 @@
       "hint": "Tanto criar diretórios em `/mnt` quanto montar exigem root: `sudo mkdir -p /mnt/usb` e depois `sudo mount /dev/sdb1 /mnt/usb`."
     },
     "fran-usb": {
-      "text": "Copie o `rapport.pdf` do pendrive para o seu diretório pessoal.",
-      "hint": "Os arquivos do pendrive agora estão em `/mnt/usb`: `cp /mnt/usb/rapport.pdf ~`."
+      "text": "Copie o `{{report}}` do pendrive para o seu diretório pessoal.",
+      "hint": "Os arquivos do pendrive agora estão em `/mnt/usb`: `cp /mnt/usb/{{report}} ~`."
     },
     "till-usb": {
-      "text": "Salve uma cópia de `~/dokument/frukter.txt` no pendrive.",
-      "hint": "Os arquivos do pendrive pertencem ao root – o FAT não tem permissões do Linux –, então você precisa de `sudo`: `sudo cp ~/dokument/frukter.txt /mnt/usb/`."
+      "text": "Salve uma cópia de `~/{{documents}}/{{fruits}}` no pendrive.",
+      "hint": "Os arquivos do pendrive pertencem ao root – o FAT não tem permissões do Linux –, então você precisa de `sudo`: `sudo cp ~/{{documents}}/{{fruits}} /mnt/usb/`."
     },
     "avmontera": {
       "text": "Desmonte o pendrive, para que seja seguro tirá-lo.",

@@ -22,8 +22,8 @@
       "hint": "`sudo apt update` ثم `sudo apt install fish`."
     },
     "fish-set": {
-      "text": "ابدأ `fish`. أنشئ المتغيّر `frukt` بالقيمة `äpple` بطريقة fish واطبعه باستخدام `echo`.",
-      "hint": "لا يعمل `frukt=äpple` في fish. اكتب `set frukt äpple` ثم `echo $frukt`."
+      "text": "ابدأ `fish`. أنشئ المتغيّر `{{fruitVar}}` بالقيمة `{{fruitWord}}` بطريقة fish واطبعه باستخدام `echo`.",
+      "hint": "لا يعمل `{{fruitVar}}={{fruitWord}}` في fish. اكتب `set {{fruitVar}} {{fruitWord}}` ثم `echo ${{fruitVar}}`."
     },
     "fish-for": {
       "text": "اكتب حلقة `for` بصياغة fish تطبع الأرقام 1 و2 و3، رقمًا في كل سطر. ثم عُد إلى bash باستخدام `exit`.",
@@ -31,7 +31,7 @@
     },
     "chsh": {
       "text": "انظر في `/etc/shells` لترى الأصداف المثبّتة. ثم اجعل zsh هو الـ login shell الخاص بك باستخدام `chsh`.",
-      "hint": "`cat /etc/shells` ثم `chsh -s /usr/bin/zsh`. وتحقّق من النتيجة باستخدام `grep elev /etc/passwd`."
+      "hint": "`cat /etc/shells` ثم `chsh -s /usr/bin/zsh`. وتحقّق من النتيجة باستخدام `grep {{user}} /etc/passwd`."
     }
   }
 }

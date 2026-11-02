@@ -5,7 +5,7 @@ können. Deshalb hat jede Datei einen Besitzer und Regeln dafür, wer was darf.
 
 ## Benutzer und Gruppen
 
-Du bist als Benutzer `elev` angemeldet. Jeder Benutzer gehört zu einer oder
+Du bist als Benutzer `{{user}}` angemeldet. Jeder Benutzer gehört zu einer oder
 mehreren **Gruppen**:
 
 ```sh
@@ -20,8 +20,8 @@ root meldet man sich selten an. Stattdessen benutzt man `sudo` (siehe unten).
 Führe `ls -l` aus und sieh dir die erste Spalte an:
 
 ```text
--rw-r--r-- 1 elev elev  174 Oct 29 13:55 anteckningar.txt
-drwxr-xr-x 2 elev elev 4096 Oct 29 13:55 dokument
+-rw-r--r-- 1 {{user}} {{user}}  194 Oct 29 13:55 {{notes}}
+drwxr-xr-x 2 {{user}} {{user}} 4096 Oct 29 13:55 {{documents}}
 ```
 
 Das erste Zeichen ist der Typ: `-` für eine Datei, `d` für ein Verzeichnis.
@@ -38,7 +38,7 @@ Typ   Besitzer Gruppe  Andere
 | `w` (write) | Den Inhalt ändern | Darin Dateien anlegen und löschen |
 | `x` (execute) | Die Datei als Programm ausführen | Mit `cd` in das Verzeichnis wechseln |
 
-Danach folgen der Besitzer (`elev`) und die Gruppe (`elev`).
+Danach folgen der Besitzer (`{{user}}`) und die Gruppe (`{{user}}`).
 
 ```quiz
 Ein Verzeichnis hat die Rechte `drwxr-x---`. Was dürfen Mitglieder seiner Gruppe?
@@ -63,7 +63,7 @@ die die Summe aus r = 4, w = 2 und x = 1 ist:
 | `600` | `rw-------` | Geheime Dateien |
 
 ```sh
-chmod 644 anteckningar.txt
+chmod 644 {{notes}}
 ```
 
 Oder mit **Symbolen**: `u` (der Besitzer), `g` (die Gruppe), `o` (andere),
@@ -71,7 +71,7 @@ Oder mit **Symbolen**: `u` (der Besitzer), `g` (die Gruppe), `o` (andere),
 
 ```sh
 chmod u+x skript.sh
-chmod go-w fil.txt
+chmod go-w datei.txt
 ```
 
 ```predict

@@ -265,7 +265,7 @@ public static partial class ShellsCmd
             EXEMPEL
                    cat /etc/shells
                    chsh -s /usr/bin/zsh
-                   grep elev /etc/passwd
+                   grep $USER /etc/passwd
                    chsh -s /bin/bash
             """,
         ManEn = """
@@ -291,7 +291,7 @@ public static partial class ShellsCmd
             EXAMPLES
                    cat /etc/shells
                    chsh -s /usr/bin/zsh
-                   grep elev /etc/passwd
+                   grep $USER /etc/passwd
                    chsh -s /bin/bash
             """,
         Run = ctx =>

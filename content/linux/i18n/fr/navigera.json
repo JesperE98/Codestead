@@ -14,7 +14,7 @@
       "hint": "Un chemin relatif ne commence pas par `/`. Si vous êtes dans `/`, `cd var/log` suffit."
     },
     "up": {
-      "text": "Remontez d'un niveau avec `cd ..`."
+      "text": "Remontez d'un niveau avec `cd ..` (cd, une espace et deux points)."
     },
     "home": {
       "text": "Revenez dans votre répertoire personnel avec `cd` tout seul, sans argument."

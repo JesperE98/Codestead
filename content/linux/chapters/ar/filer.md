@@ -5,14 +5,14 @@
 ## إنشاء المجلدات – `mkdir`
 
 ```sh
-mkdir bilder2
+mkdir pictures2
 ```
 
 إذا أردت إنشاء عدة مستويات دفعة واحدة، فأنت بحاجة إلى `-p` (*parents*). ومن دونه
 يشتكي `mkdir` إذا لم يكن المجلد الأب موجودًا:
 
 ```sh
-mkdir -p resa/2026/juni
+mkdir -p trip/2026/june
 ```
 
 ## إنشاء ملفات فارغة – `touch`
@@ -20,11 +20,11 @@ mkdir -p resa/2026/juni
 ينشئ `touch` ملفًا فارغًا إذا لم يكن موجودًا (وإلا فإنه يحدّث طابعه الزمني فقط):
 
 ```sh
-touch inkopslista.txt
+touch shopping-list.txt
 ```
 
 ```quiz
-ماذا يفعل `touch anteckningar.txt` إذا كان الملف موجودًا بالفعل؟
+ماذا يفعل `touch {{notes}}` إذا كان الملف موجودًا بالفعل؟
 - [ ] يُفرغ الملف
 - [ ] يشتكي من أن الملف موجود
 - [x] يحدّث الطابع الزمني للملف فقط – ويبقى المحتوى كما هو
@@ -33,23 +33,23 @@ touch inkopslista.txt
 ## النسخ – `cp`
 
 ```sh
-cp anteckningar.txt anteckningar-kopia.txt
+cp {{notes}} notes-copy.txt
 ```
 
 إذا كانت الوجهة مجلدًا، فستنتهي النسخة داخله بالاسم نفسه. ولنسخ مجلد كامل تحتاج
 إلى `-r` (*recursive*، أي تعاوديًّا):
 
 ```sh
-cp -r dokument dokument-backup
+cp -r {{documents}} {{documents}}-backup
 ```
 
 ```predict
-$ mkdir kopior
-$ cp anteckningar.txt kopior
-$ ls kopior
-anteckningar.txt
+$ mkdir copies
+$ cp {{notes}} copies
+$ ls copies
+{{notes}}
 ---
-`kopior` مجلد، لذا تنتهي النسخة داخله بالاسم نفسه.
+`copies` مجلد، لذا تنتهي النسخة داخله بالاسم نفسه.
 ```
 
 ## النقل وإعادة التسمية – `mv`
@@ -57,8 +57,8 @@ anteckningar.txt
 في لينكس، *النقل* و*إعادة التسمية* شيء واحد. والأمر `mv` يقوم بالاثنين:
 
 ```sh
-mv inkopslista.txt dokument/
-mv dokument/inkopslista.txt dokument/handla.txt
+mv shopping-list.txt {{documents}}/
+mv {{documents}}/shopping-list.txt {{documents}}/groceries.txt
 ```
 
 ```quiz
@@ -73,13 +73,13 @@ mv dokument/inkopslista.txt dokument/handla.txt
 ## الحذف – `rm` و`rmdir`
 
 ```sh
-rm anteckningar-kopia.txt
+rm notes-copy.txt
 ```
 
 يحذف `rmdir` المجلدات *الفارغة*. ولحذف مجلد مع كل ما فيه، استخدم `rm -r`:
 
 ```sh
-rm -r dokument-backup
+rm -r {{documents}}-backup
 ```
 
 > **تحذير!** لا توجد سلة مهملات في الطرفية. ما تحذفه بـ `rm` يختفي إلى الأبد.
@@ -87,10 +87,10 @@ rm -r dokument-backup
 > دائمًا من المسار مرتين قبل أن تضغط Enter.
 
 ```quiz
-أيّ أمر يحذف المجلد `gammalt` *فقط* إذا كان فارغًا؟
-- [ ] `rm gammalt`
-- [x] `rmdir gammalt`
-- [ ] `rm -r gammalt`
+أيّ أمر يحذف المجلد `{{old}}` *فقط* إذا كان فارغًا؟
+- [ ] `rm {{old}}`
+- [x] `rmdir {{old}}`
+- [ ] `rm -r {{old}}`
 ---
 يرفض `rmdir` حذف مجلد ما زال فيه شيء.
 أما `rm -r` فيحذف المجلد وكل ما بداخله.
@@ -106,23 +106,23 @@ rm -r dokument-backup
 | `?` | محرفًا واحدًا بالضبط |
 | `[abc]` | أحد المحارف a أو b أو c |
 
-يحتوي المجلد `dokument` في مجلد المنزل على ثلاثة ملفات:
-`betyg.csv` و`frukter.txt` و`server.log`. هذا الأمر يعرض فقط تلك التي تنتهي
+يحتوي المجلد `{{documents}}` في مجلد المنزل على ثلاثة ملفات:
+`{{fruits}}` و`{{grades}}` و`server.log`. هذا الأمر يعرض فقط تلك التي تنتهي
 بـ `.txt`:
 
 ```sh
-ls dokument/*.txt
+ls {{documents}}/*.txt
 ```
 
-هنا لا يرى `ls` النجمة أبدًا – فقد استبدل الـ shell بالفعل `dokument/*.txt` بكل
+هنا لا يرى `ls` النجمة أبدًا – فقد استبدل الـ shell بالفعل `{{documents}}/*.txt` بكل
 أسماء الملفات المطابقة.
 
 ```predict
-$ ls dokument/?????.*
-dokument/betyg.csv
+$ ls {{documents}}/?????s.*
+{{documents}}/{{fruits}}  {{documents}}/{{grades}}
 ---
-كل `?` محرف واحد بالضبط، لذا يجب أن يكون الاسم قبل النقطة مكوّنًا من خمسة
-محارف. و`betyg` وحده كذلك – أما `frukter` و`server` فأطول.
+كل `?` محرف واحد بالضبط، لذا يجب أن يكون الاسم قبل النقطة مكوّنًا من ستة
+محارف آخرها `s`. و`fruits` و`grades` كذلك – أما `server` فلا ينتهي بـ `s`.
 ```
 
 ## المسافات في أسماء الملفات
@@ -131,8 +131,8 @@ dokument/betyg.csv
 علامات الاقتباس (أو `\` قبل المسافة):
 
 ```sh
-touch "min fil.txt"
-ls -l "min fil.txt"
+touch "my file.txt"
+ls -l "my file.txt"
 ```
 
 لهذا يفضّل كثيرون استخدام الشرطة أو الشرطة السفلية في أسماء الملفات.

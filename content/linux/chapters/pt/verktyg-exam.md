@@ -30,20 +30,20 @@ esperando o commit.
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1
-$ git config --global user.name "Elev Elevsson"
-$ git config --global user.email "elev@example.com"
-$ cd ~/projekt-webb && git init > /dev/null 2>&1
-$ git add . && git commit -m "Första versionen" > /dev/null
-$ git switch -c ny-design > /dev/null 2>&1
+$ git config --global user.name "{{gitName}}"
+$ git config --global user.email "{{user}}@example.com"
+$ cd ~/{{webProject}} && git init > /dev/null 2>&1
+$ git add . && git commit -m "Primeira versão" > /dev/null
+$ git switch -c {{newDesign}} > /dev/null 2>&1
 $ echo 'h1 { color: purple; }' >> style.css
-$ git commit -am "Lila rubriker" > /dev/null
+$ git commit -am "{{commitPurple}}" > /dev/null
 $ git switch main > /dev/null 2>&1
-$ git merge ny-design > /dev/null
+$ git merge {{newDesign}} > /dev/null
 $ git log --oneline | wc -l
 2
 ---
 O `main` não tinha mudado desde que o branch foi criado, então o merge foi
-um *fast-forward*: o git só avançou o `main` até o commit do `ny-design`.
+um *fast-forward*: o git só avançou o `main` até o commit do `{{newDesign}}`.
 Nenhum commit de merge foi criado.
 ```
 
@@ -68,12 +68,12 @@ conclui o merge. O `git restore` jogaria fora a sua correção.
 ```
 
 ```quiz
-O arquivo `fel.log` entrou em um commit por engano. Você acrescenta `*.log`
+O arquivo `erro.log` entrou em um commit por engano. Você acrescenta `*.log`
 ao `.gitignore`, mas o git continua acompanhando o arquivo. Como você o
 remove do repositório, mas o mantém no disco?
-- [ ] `rm fel.log`
-- [x] `git rm --cached fel.log`
-- [ ] `git restore fel.log`
+- [ ] `rm erro.log`
+- [x] `git rm --cached erro.log`
+- [ ] `git restore erro.log`
 ---
 O `.gitignore` só vale para arquivos que o git ainda não acompanha. O
 `--cached` remove o arquivo do git, mas o deixa no disco.
@@ -149,7 +149,7 @@ Qual arquivo o zsh lê quando inicia?
 ```
 
 ```try
-grep elev /etc/passwd
+grep {{user}} /etc/passwd
 ---
 O último campo da linha é o seu shell de login – aquele que o `chsh -s` muda.
 ```

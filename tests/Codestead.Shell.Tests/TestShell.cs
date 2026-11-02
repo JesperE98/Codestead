@@ -23,9 +23,10 @@ public sealed class TestShell
 {
     public Shell Sh { get; }
 
-    public TestShell(string distro = "ubuntu", string? lang = null)
+    /// <summary>A Swedish computer (the tests were written for it) unless <paramref name="world"/> says otherwise.</summary>
+    public TestShell(string distro = "ubuntu", string? lang = null, string world = "sv")
     {
-        Sh = Shell.Create(distro);
+        Sh = Shell.Create(distro, world);
         if (lang is not null) Sh.Lang = lang;
     }
 
