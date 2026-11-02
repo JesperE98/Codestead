@@ -29,6 +29,9 @@ always runs on a distribution from that family, so you can do all three.
 - **systemd**, which starts the system and manages services, on almost every
   major distribution.
 
+The variable `SHELL` holds the full path of the shell you log in with – for
+bash, the same path you write in a script's shebang line.
+
 ```predict
 $ echo $SHELL
 /bin/bash

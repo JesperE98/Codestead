@@ -341,7 +341,8 @@ echo "I am in" (pwd)
 ```
 
 Inside quotes, parentheses are ordinary text – that is why `(pwd)` is outside.
-The exit status of the last command is called `$status`:
+The exit status of the last command is called `$status`. `false` is a tiny
+command that does nothing but fail – its exit status is always 1:
 
 ```sh
 false

@@ -253,7 +253,14 @@ cd ~/{{downloads}}
 ls -l
 ```
 
-What happens if you start it right away?
+```text
+total 47184
+-rw-r--r-- 1 {{user}} {{user}} 48312832 Oct 30 12:00 {{calculator}}
+```
+
+Error messages from bash have the form `bash: PATH: REASON`, and the path is
+shown the way bash sees it – with `~` already replaced by `/home/{{user}}`.
+What happens if you start the file right away?
 
 ```predict
 $ ~/{{downloads}}/{{calculator}}

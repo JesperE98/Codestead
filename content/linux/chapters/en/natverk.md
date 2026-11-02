@@ -153,9 +153,10 @@ IP address. Which DNS server the computer asks is written in
 cat /etc/resolv.conf
 ```
 
-On Ubuntu it says `127.0.0.53` – that is **systemd-resolved**, a local
-middleman on your own computer that in turn asks the router. Some other
-distributions list the router, `192.168.1.1`, directly.
+On Ubuntu the important line is `nameserver 127.0.0.53` – that is
+**systemd-resolved**, a local middleman on your own computer that in turn
+asks the router. Some other distributions list the router, `192.168.1.1`,
+directly.
 
 To ask DNS yourself you use `dig`, `host` or `nslookup`. They are not
 installed from the start. On Ubuntu they come in the package `dnsutils`
@@ -233,8 +234,15 @@ dig +short server.lan
 getent hosts server.lan
 ```
 
-The order (first the file, then DNS) is set by the `hosts:` line in
-`/etc/nsswitch.conf`.
+`dig` prints nothing, but `getent` answers with the address followed by the
+name:
+
+```text
+192.168.1.10    server.lan
+```
+
+The order (first the file, then DNS) is set by the line `hosts: files dns`
+in `/etc/nsswitch.conf`.
 
 ```quiz
 Why does `sudo echo '192.168.1.10 server.lan' >> /etc/hosts` give

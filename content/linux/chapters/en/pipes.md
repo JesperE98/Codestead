@@ -42,6 +42,18 @@ The second `>` overwrote the file. With `>>` it would contain both lines.
 
 ## From a file – `<`
 
+`{{fruits}}` has ten lines, one fruit per line. When you give `wc -l` a file
+name, it prints the number of lines followed by the name – here for
+`{{grades}}`, which has nine lines:
+
+```sh
+wc -l {{documents}}/{{grades}}
+```
+
+```text
+9 {{documents}}/{{grades}}
+```
+
 `<` lets a program read its stdin from a file:
 
 ```sh
