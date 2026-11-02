@@ -19,6 +19,9 @@ Sie heißt *Shebang*. Um die Datei ausführbar zu machen, brauchst du trotzdem
 - [ ] Du musst `${{nameVar}} = Kim` schreiben
 ```
 
+`~/{{documents}}` enthält die drei Übungsdateien `{{fruits}}`, `{{grades}}`
+und `server.log`.
+
 ```predict
 $ anzahl=$(ls ~/{{documents}} | wc -l)
 $ echo "$anzahl Dateien"

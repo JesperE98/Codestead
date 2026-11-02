@@ -406,6 +406,7 @@ om de inte krockar med den andra grenen. Då vägrar git och ber dig committa
 först (eller lägga undan ändringarna tillfälligt med `git stash`, och ta
 fram dem igen med `git stash pop`).
 
+Den ursprungliga `style.css` innehåller inget `purple` – rubrikerna är navy.
 Hur många rader med `purple` har `style.css` till slut?
 
 ```predict

@@ -164,9 +164,10 @@ systemctl is-active myserver
 systemctl is-enabled myserver
 ```
 
-`is-active` und `is-enabled` sind prima in Skripten – sie geben ein Wort aus
-und beenden sich mit Status 0, wenn die Antwort „ja“ lautet. Mit `-q` sind sie
-völlig still:
+`is-active` und `is-enabled` sind prima in Skripten – sie geben ein Wort aus,
+den Zustand, den du auch in `systemctl status` siehst (`active`, `inactive` oder
+`failed` bzw. `enabled`, `disabled` oder `static`), und beenden sich mit
+Status 0, wenn die Antwort „ja“ lautet. Mit `-q` sind sie völlig still:
 
 ```text
 if systemctl is-active -q myserver; then echo "der Server läuft"; fi

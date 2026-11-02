@@ -394,7 +394,8 @@ git log --oneline --all
 الفرع الآخر. عندها يرفض git ويطلب منك عمل commit أولًا (أو وضع التغييرات جانبًا
 مؤقتًا باستخدام `git stash` واستعادتها باستخدام `git stash pop`).
 
-كم سطرًا يحتوي على `purple` في `style.css` في النهاية؟
+لا يحتوي `style.css` الأصلي على `purple` – فلون عناوينه `navy`. كم سطرًا يحتوي
+على `purple` في `style.css` في النهاية؟
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1

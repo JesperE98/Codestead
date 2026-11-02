@@ -157,10 +157,10 @@ IP-Adresse übersetzt. Welchen DNS-Server der Rechner fragt, steht in
 cat /etc/resolv.conf
 ```
 
-Unter Ubuntu steht dort `127.0.0.53` – das ist **systemd-resolved**, ein
-lokaler Vermittler auf deinem eigenen Rechner, der seinerseits den Router
-fragt. Manche andere Distributionen tragen den Router, `192.168.1.1`, direkt
-ein.
+Unter Ubuntu ist die wichtige Zeile `nameserver 127.0.0.53` – das ist
+**systemd-resolved**, ein lokaler Vermittler auf deinem eigenen Rechner, der
+seinerseits den Router fragt. Manche andere Distributionen tragen den Router,
+`192.168.1.1`, direkt ein.
 
 Um DNS selbst zu fragen, benutzt du `dig`, `host` oder `nslookup`. Sie sind
 nicht von Anfang an installiert. Unter Ubuntu kommen sie im Paket `dnsutils`
@@ -239,8 +239,15 @@ dig +short server.lan
 getent hosts server.lan
 ```
 
-Die Reihenfolge (zuerst die Datei, dann DNS) legt die Zeile `hosts:` in
-`/etc/nsswitch.conf` fest.
+`dig` gibt nichts aus, aber `getent` antwortet mit der Adresse, gefolgt vom
+Namen:
+
+```text
+192.168.1.10    server.lan
+```
+
+Die Reihenfolge (zuerst die Datei, dann DNS) legt die Zeile `hosts: files dns`
+in `/etc/nsswitch.conf` fest.
 
 ```quiz
 Warum ergibt `sudo echo '192.168.1.10 server.lan' >> /etc/hosts`

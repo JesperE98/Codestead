@@ -251,7 +251,14 @@ cd ~/{{downloads}}
 ls -l
 ```
 
-अगर आप इसे तुरंत चला दें, तो क्या होगा?
+```text
+total 47184
+-rw-r--r-- 1 {{user}} {{user}} 48312832 Oct 30 12:00 {{calculator}}
+```
+
+bash के error messages का रूप `bash: PATH: REASON` होता है, और path वैसे दिखता है
+जैसे bash उसे देखता है – `~` की जगह पहले से `/home/{{user}}` लिखा होता है। अगर
+आप file को तुरंत चला दें, तो क्या होगा?
 
 ```predict
 $ ~/{{downloads}}/{{calculator}}

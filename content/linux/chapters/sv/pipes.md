@@ -42,6 +42,17 @@ Det andra `>` skrev över filen. Med `>>` hade den innehållit båda raderna.
 
 ## Från en fil – `<`
 
+`{{fruits}}` har tio rader, en frukt per rad. Ger du `wc -l` ett filnamn skriver
+det ut antalet rader följt av namnet – här för `{{grades}}`, som har nio rader:
+
+```sh
+wc -l {{documents}}/{{grades}}
+```
+
+```text
+9 {{documents}}/{{grades}}
+```
+
 `<` låter ett program läsa stdin från en fil:
 
 ```sh

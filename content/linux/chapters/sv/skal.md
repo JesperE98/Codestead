@@ -340,7 +340,8 @@ echo "Jag står i" (pwd)
 ```
 
 Inom citattecken är parenteser vanlig text – därför står `(pwd)` utanför.
-Felkoden från senaste kommandot heter `$status`:
+Felkoden från senaste kommandot heter `$status`. `false` är ett litet kommando
+som inte gör något annat än misslyckas – dess felkod är alltid 1:
 
 ```sh
 false

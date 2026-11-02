@@ -351,7 +351,9 @@ echo "Ich bin in" (pwd)
 ```
 
 Innerhalb von Anführungszeichen sind Klammern normaler Text – deshalb steht
-`(pwd)` außerhalb. Der Exit-Status des letzten Befehls heißt `$status`:
+`(pwd)` außerhalb. Der Exit-Status des letzten Befehls heißt `$status`. `false`
+ist ein winziger Befehl, der nichts tut außer fehlzuschlagen – sein Exit-Status
+ist immer 1:
 
 ```sh
 false

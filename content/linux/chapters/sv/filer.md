@@ -122,7 +122,8 @@ ls {{documents}}/*.txt
 ```
 
 Här ser `ls` aldrig stjärnan – skalet har redan bytt ut `{{documents}}/*.txt` mot
-alla matchande filnamn.
+alla matchande filnamn. När flera namn matchar skriver `ls` ut dem i
+bokstavsordning, bredvid varandra på en rad.
 
 ```predict
 $ ls {{documents}}/?????.*

@@ -19,6 +19,9 @@ kan göra alla tre.
 - **systemd**, som startar systemet och hanterar tjänster, i nästan alla stora
   distributioner.
 
+Variabeln `SHELL` innehåller hela sökvägen till skalet du loggar in med – för
+bash samma sökväg som du skriver på shebang-raden i ett skript.
+
 ```predict
 $ echo $SHELL
 /bin/bash

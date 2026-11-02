@@ -19,6 +19,9 @@
 - [ ] يجب أن تكتب `$name = Kim`
 ```
 
+يحتوي `~/{{documents}}` على ملفات التدريب الثلاثة `{{fruits}}` و`{{grades}}`
+و`server.log`.
+
 ```predict
 $ count=$(ls ~/{{documents}} | wc -l)
 $ echo "$count files"

@@ -410,6 +410,7 @@ Branch बदलने पर uncommitted बदलाव साथ आ जा�
 टकराएँ नहीं। तब git मना कर देता है और आपसे पहले commit करने को कहता है (या बदलावों
 को `git stash` से कुछ देर के लिए अलग रखने और `git stash pop` से वापस लाने को)।
 
+मूल `style.css` में कहीं `purple` नहीं है – उसकी headings `navy` रंग की हैं।
 आख़िर में `style.css` में `purple` वाली कितनी पंक्तियाँ हैं?
 
 ```predict

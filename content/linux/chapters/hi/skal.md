@@ -338,7 +338,8 @@ echo "I am in" (pwd)
 ```
 
 Quotes के अंदर parentheses साधारण text होते हैं – इसीलिए `(pwd)` बाहर है। आख़िरी
-command के exit status का नाम `$status` है:
+command के exit status का नाम `$status` है। `false` एक छोटा-सा command है जो fail
+होने के सिवा कुछ नहीं करता – उसका exit status हमेशा 1 होता है:
 
 ```sh
 false

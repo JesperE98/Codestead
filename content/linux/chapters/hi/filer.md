@@ -124,7 +124,8 @@ ls {{documents}}/*.txt
 ```
 
 यहाँ `ls` को asterisk कभी दिखता ही नहीं – shell पहले ही `{{documents}}/*.txt` को
-सभी matching file names से बदल चुका होता है।
+सभी matching file names से बदल चुका होता है। जब कई नाम match करते हैं, तो `ls`
+उन्हें alphabetical order में, एक ही line पर साथ-साथ छापता है।
 
 ```predict
 $ ls {{documents}}/??????.txt

@@ -43,6 +43,18 @@ Das zweite `>` hat die Datei überschrieben. Mit `>>` stünden beide Zeilen dari
 
 ## Aus einer Datei – `<`
 
+`{{fruits}}` hat zehn Zeilen, eine Frucht pro Zeile. Gibst du `wc -l` einen
+Dateinamen, gibt es die Zahl der Zeilen gefolgt vom Namen aus – hier für
+`{{grades}}`, das neun Zeilen hat:
+
+```sh
+wc -l {{documents}}/{{grades}}
+```
+
+```text
+9 {{documents}}/{{grades}}
+```
+
 Mit `<` liest ein Programm sein stdin aus einer Datei:
 
 ```sh
