@@ -6,7 +6,7 @@
     <AssemblyTitle>$(CodesteadHubName)</AssemblyTitle>
     <!-- The release workflow passes the full version (-p:Version=x.y.z); local builds are x.y.0. -->
     <Version>$(CodesteadHubVersion).0</Version>
-    <ApplicationIcon>../../build/icon.ico</ApplicationIcon>
+    <ApplicationIcon>../../build/icons/codestead-hub.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
   </PropertyGroup>

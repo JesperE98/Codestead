@@ -26,6 +26,18 @@ en annan mapp, t.ex. för att börja om från noll.
 på alla språk, löser en uppgift och avslutar med `SMOKE OK`. Det är samma test som körs efter varje
 installation i release-flödet.
 
+## Ikoner
+
+Varje produkt har en egen ikon i `build/icons/<id>.svg` (hubben: ett hus med en prompt, Codestead Linux:
+en terminal). PNG- och ICO-filerna bredvid används av appen, paketen och installationsprogrammen, och
+hubben visar verktygens ikoner från `src/Codestead.Hub/Assets/tools/<id>.png`. Ändrar du en SVG:
+
+```bash
+rsvg-convert -w 1024 -h 1024 build/icons/codestead-linux.svg -o build/icons/codestead-linux.png
+```
+
+och gör om ICO-filen (16–256 px) och kopiorna under `Assets/`.
+
 ## Namn och version
 
 Produktnamn, id:n och versioner finns **bara** i `build/Codestead.props`. Byt namn där.

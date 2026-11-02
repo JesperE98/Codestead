@@ -1,4 +1,4 @@
-<p align="center"><img src="build/icon.svg" width="128" alt="Codestead logo: a house with a terminal prompt inside"></p>
+<p align="center"><img src="build/icons/codestead-linux.svg" width="128" alt="Codestead Linux icon: a terminal"></p>
 
 # Codestead Linux
 

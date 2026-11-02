@@ -228,7 +228,7 @@ public sealed class MainWindow : Window
     private Control BuildLayout()
     {
         // Top bar
-        // The Codestead logo (build/icon.svg): a house with a prompt inside.
+        // The Codestead Linux icon (build/icons/codestead-linux.svg): a terminal.
         var brandMark = new Image
         {
             Source = new Bitmap(AssetLoader.Open(new Uri("avares://Codestead.Linux/Assets/icon.png"))),
