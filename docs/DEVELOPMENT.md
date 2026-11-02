@@ -178,6 +178,11 @@ Linux från en signerad katalog. Därefter publiceras de ändrade produkterna i 
 | `<id>-latest` | Samma filer utan version i namnet (länkarna i README) och Velopacks uppdateringsflöde |
 | `catalog` | `catalog.json` och `catalog.json.sig`: listan som hubben läser |
 
+Release-titlarna kommer från `title` i `packaging/products.json` ("Codestead Linux 0.5.1",
+"Codestead hub 0.1.1"), eftersom alla produkter delar repot. Efter varje publicering skriver flödet om
+README:n i `codestead-releases` med `packaging/releases_readme.py`: en del per produkt med senaste
+version och nedladdningslänkar, och vad de olika releaserna är. Ändra den i skriptet, inte i repot.
+
 Flödet kan också startas för hand under Actions → **Release** → **Run workflow** (utan att publicera).
 
 GitHub har inga rena Windows 10/11-skrivbordsmaskiner, bara Windows Server. Gå därför igenom
