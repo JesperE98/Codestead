@@ -31,6 +31,10 @@ os três.
 - **O systemd**, que inicia o sistema e gerencia os serviços, em quase todas
   as grandes distribuições.
 
+A variável `SHELL` guarda o caminho completo do shell com que você faz login –
+no caso do bash, o mesmo caminho que você escreve na linha do shebang de um
+script.
+
 ```predict
 $ echo $SHELL
 /bin/bash

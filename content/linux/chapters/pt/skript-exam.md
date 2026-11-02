@@ -19,6 +19,9 @@ arquivo executável.
 - [ ] Você precisa escrever `$nome = Kim`
 ```
 
+`~/{{documents}}` contém os três arquivos de prática `{{fruits}}`, `{{grades}}`
+e `server.log`.
+
 ```predict
 $ qtd=$(ls ~/{{documents}} | wc -l)
 $ echo "$qtd arquivos"

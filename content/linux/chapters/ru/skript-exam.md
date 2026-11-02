@@ -19,6 +19,9 @@
 - [ ] Нужно писать `${{nameVar}} = Kim`
 ```
 
+В `~/{{documents}}` лежат три учебных файла: `{{fruits}}`, `{{grades}}`
+и `server.log`.
+
 ```predict
 $ count=$(ls ~/{{documents}} | wc -l)
 $ echo "$count files"
