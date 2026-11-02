@@ -76,5 +76,5 @@ contents:
       mode: 0755
   - src: ${GEN_DIR}/app.desktop
     dst: /usr/share/applications/${PKG_NAME}.desktop
-  - src: build/icon.png
+  - src: build/icons/${PKG_NAME}.png
     dst: /usr/share/icons/hicolor/1024x1024/apps/${PKG_NAME}.png

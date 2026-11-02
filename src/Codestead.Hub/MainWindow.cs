@@ -107,7 +107,7 @@ public sealed class MainWindow : Window
 
     private Control BuildLayout()
     {
-        // The Codestead logo (build/icon.svg): a house with a prompt inside.
+        // The Codestead logo (build/icons/codestead-hub.svg): a house with a prompt inside.
         var mark = new Image
         {
             Source = new Bitmap(AssetLoader.Open(new Uri("avares://Codestead.Hub/Assets/icon.png"))),
@@ -285,16 +285,28 @@ public sealed class MainWindow : Window
             info.Children.Add(e);
         }
 
-        var icon = new Border
+        // The tool's own icon (Assets/tools/<id>.png, from build/icons/<id>.svg), or a prompt for tools without one.
+        Control icon;
+        var iconUri = new Uri($"avares://Codestead.Hub/Assets/tools/{id}.png");
+        if (AssetLoader.Exists(iconUri))
         {
-            Width = 52,
-            Height = 52,
-            CornerRadius = new CornerRadius(12),
-            Background = new SolidColorBrush(Color.Parse("#0f1318")),
-            VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(0, 2, 16, 0),
-            Child = new TextBlock { Text = ">_", FontSize = 20, Foreground = new SolidColorBrush(Color.Parse("#7ee787")), FontWeight = FontWeight.Bold, FontFamily = new FontFamily("Cascadia Mono, DejaVu Sans Mono, monospace"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
-        };
+            var image = new Image { Source = new Bitmap(AssetLoader.Open(iconUri)), Width = 52, Height = 52 };
+            RenderOptions.SetBitmapInterpolationMode(image, Avalonia.Media.Imaging.BitmapInterpolationMode.HighQuality);
+            icon = image;
+        }
+        else
+        {
+            icon = new Border
+            {
+                Width = 52,
+                Height = 52,
+                CornerRadius = new CornerRadius(12),
+                Background = new SolidColorBrush(Color.Parse("#0f1318")),
+                Child = new TextBlock { Text = ">_", FontSize = 20, Foreground = new SolidColorBrush(Color.Parse("#7ee787")), FontWeight = FontWeight.Bold, FontFamily = new FontFamily("Cascadia Mono, DejaVu Sans Mono, monospace"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
+            };
+        }
+        icon.VerticalAlignment = VerticalAlignment.Top;
+        icon.Margin = new Thickness(0, 2, 16, 0);
         var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
         row.Children.Add(icon);
         Grid.SetColumn(info, 1);

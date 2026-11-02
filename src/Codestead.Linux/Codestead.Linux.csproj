@@ -6,7 +6,7 @@
     <AssemblyTitle>$(CodesteadLinuxName)</AssemblyTitle>
     <!-- The release workflow passes the full version (-p:Version=x.y.z); local builds are x.y.0. -->
     <Version>$(CodesteadLinuxVersion).0</Version>
-    <ApplicationIcon>../../build/icon.ico</ApplicationIcon>
+    <ApplicationIcon>../../build/icons/codestead-linux.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <!-- Release builds: no debugger attach info for users, smaller output. -->

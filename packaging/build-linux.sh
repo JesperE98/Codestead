@@ -44,7 +44,7 @@ nfpm package --config "$GEN_DIR/nfpm.yaml" --packager archlinux --target "$out/$
 
 # Self-updating AppImage.
 vpk pack --packId "$PKG_NAME" --packVersion "$VERSION" --packDir "$PUBLISH_DIR" \
-  --mainExe "$PKG_EXECUTABLE" --packTitle "$PKG_DISPLAY_NAME" --icon build/icon.png \
+  --mainExe "$PKG_EXECUTABLE" --packTitle "$PKG_DISPLAY_NAME" --icon "build/icons/$PKG_NAME.png" \
   --outputDir "$GEN_DIR/velopack" --runtime linux-x64
 cp "$GEN_DIR"/velopack/*.AppImage "$out/$PKG_NAME-$VERSION-linux-x86_64.AppImage"
 # Velopack update feed files (used for auto-update of the AppImage).
