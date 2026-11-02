@@ -170,6 +170,35 @@ public class CheckpointTests
         w.Close();
     });
 
+    [Fact(DisplayName = "predict: en egen miniterminal att prova i (bara i lektioner)")]
+    public void PredictHasATerminal()
+        => Ui.Run(() =>
+    {
+        var view = View("predict", "$ echo $((2 + 3))\n5");
+        var w = new Window { Content = view };
+        w.Show();
+        // Closed at first, so the student can guess before trying.
+        Assert.Null(view.PredictTerminal);
+        var open = view.GetLogicalDescendants().OfType<Button>().First(b => (b.Content as string)?.Contains("terminal") == true);
+        open.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+        var terminal = view.PredictTerminal;
+        Assert.NotNull(terminal);
+        Assert.True(terminal.IsEffectivelyVisible);
+        Assert.False(open.IsVisible);
+        string? output = null;
+        terminal.CommandExecuted += r => output = r.Output;
+        var input = terminal.GetLogicalDescendants().OfType<TextBox>().First();
+        input.Text = "echo $((2 + 3))";
+        input.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
+        Assert.Equal("5", output?.Trim());
+        // Running it does not answer the question: the answer is still written in the box.
+        Assert.False(view.IsSolved);
+        w.Close();
+
+        var exam = View("predict", "$ echo hej\nhej", exam: true);
+        Assert.DoesNotContain(exam.GetLogicalDescendants().OfType<Button>(), b => (b.Content as string)?.Contains("terminal") == true);
+    });
+
     [Fact(DisplayName = "try: rätt kommando – eller ett med samma utskrift – i miniterminalen löser den")]
     public void TrySolves()
         => Ui.Run(() =>

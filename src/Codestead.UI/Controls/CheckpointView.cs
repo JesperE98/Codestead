@@ -20,11 +20,13 @@ public sealed record CheckpointTexts(
     string AnswerPlaceholder,
     string Question,
     string ShowAnswer = "Show the answer",
-    string AlmostPath = "Almost! Look at how the paths are written: ls shows each name the way you gave it, with the directory in front.");
+    string AlmostPath = "Almost! Look at how the paths are written: ls shows each name the way you gave it, with the directory in front.",
+    string TryPredict = "Try it in a terminal");
 
 /// <summary>
 /// One interactive checkpoint in a lesson (or a question in an exam): a quiz, a "what does this print?"
-/// question or a "try it" mini terminal.
+/// question or a "try it" mini terminal. In lessons a "what does this print?" question can also open its
+/// own mini terminal to run the commands in (closed at first, so the student can guess before trying).
 /// In lesson mode answers are checked at once and the control turns green when solved.
 /// In exam mode (<see cref="ExamMode"/>) answers are only collected; <see cref="Grade"/> marks them.
 /// </summary>
@@ -80,7 +82,7 @@ public sealed class CheckpointView : UserControl
                 BuildQuiz(onCommandClicked);
                 break;
             case Checkpoint.Predict:
-                BuildPredict();
+                BuildPredict(sandbox);
                 break;
             default:
                 BuildTry(sandbox);
@@ -124,7 +126,7 @@ public sealed class CheckpointView : UserControl
         }
     }
 
-    private void BuildPredict()
+    private void BuildPredict(Func<ShellType> sandbox)
     {
         body.Children.Add(new TextBlock { Text = texts.PredictPrompt, TextWrapping = TextWrapping.Wrap });
         var code = new SelectableTextBlock { FontFamily = new FontFamily("Cascadia Mono, DejaVu Sans Mono, Liberation Mono, monospace"), FontSize = 14, Foreground = new SolidColorBrush(Color.Parse("#e6edf3")), Inlines = new InlineCollection() };
@@ -151,7 +153,34 @@ public sealed class CheckpointView : UserControl
                 CheckNow();
             }
         };
+        // Lessons only: an exam asks what the student can predict.
+        if (!examMode) AddPredictTerminal(sandbox);
         body.Children.Add(answerBox);
+    }
+
+    /// <summary>The "try it in a terminal" button of a predict question, and the terminal it opens.</summary>
+    internal TerminalView? PredictTerminal { get; private set; }
+
+    private void AddPredictTerminal(Func<ShellType> sandbox)
+    {
+        var open = new Button { Content = "▶ " + texts.TryPredict, HorizontalAlignment = HorizontalAlignment.Left };
+        open.Classes.Add("secondary");
+        var holder = new Border { CornerRadius = new CornerRadius(8), ClipToBounds = true, IsVisible = false };
+        open.Click += (_, _) =>
+        {
+            if (PredictTerminal is null)
+            {
+                // A fresh sandbox: the same computer the answer was written for, not the student's terminal.
+                PredictTerminal = new TerminalView { Shell = sandbox(), Height = 170 };
+                PredictTerminal.CommandExecuted += r => CommandRun?.Invoke(r.Line);
+                holder.Child = PredictTerminal;
+            }
+            open.IsVisible = false;
+            holder.IsVisible = true;
+            PredictTerminal.FocusInput();
+        };
+        body.Children.Add(open);
+        body.Children.Add(holder);
     }
 
     private void BuildTry(Func<ShellType> sandbox)

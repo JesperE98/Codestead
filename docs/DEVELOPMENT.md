@@ -109,7 +109,9 @@ packaging/                   Byggskript, installationstester, products.json (vil
      ````
 
      `quiz` med flera `[x]` kräver alla rätta svar. `predict` visar kommandot efter `$ ` och väntar sig
-     resten som svar (testerna kör kommandot i simulatorn och kontrollerar svaret). `try` ger en
+     resten som svar (testerna kör kommandot i simulatorn och kontrollerar svaret). I lektioner har
+     den en knapp "Prova i en terminal" som öppnar en egen miniterminal (en ny sandlåda), så att frågan
+     går att lösa utan huvudterminalen; i prov finns ingen sådan knapp. `try` ger en
      miniterminal; första raden är det kommando som visas, och alla rader godtas.
      Ett kapitel utan kontrollfrågor låses upp med knappen "Jag har läst kapitlet".
    - **Källor**: `content/linux/references/mitt-kapitel.json` med

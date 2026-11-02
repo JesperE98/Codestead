@@ -78,6 +78,7 @@
   "checkpoint.answer": "إجابتك",
   "checkpoint.showAnswer": "إظهار الإجابة",
   "checkpoint.almostPath": "اقتربت! انظر إلى طريقة كتابة المسارات: يعرض ls كل اسم كما كتبته، مع اسم المجلد قبله.",
+  "checkpoint.tryPredict": "جرّبه في طرفية",
   "tasks.solutionLocked": "يظهر الحل بعد {n} محاولات أخرى (أو افتح التلميح)",
   "references.title": "المصادر وقراءات إضافية",
   "summary.label": "ملخّص",

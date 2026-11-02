@@ -78,6 +78,7 @@
   "checkpoint.answer": "Tu respuesta",
   "checkpoint.showAnswer": "Mostrar la respuesta",
   "checkpoint.almostPath": "¡Casi! Fíjate en cómo se escriben las rutas: ls muestra cada nombre tal como lo diste, con el directorio delante.",
+  "checkpoint.tryPredict": "Probar en una terminal",
   "tasks.solutionLocked": "Solución tras {n} intentos más (o abre la pista)",
   "references.title": "Fuentes y lecturas adicionales",
   "summary.label": "Resumen",

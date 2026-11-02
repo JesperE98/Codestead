@@ -78,6 +78,7 @@
   "checkpoint.answer": "あなたの答え",
   "checkpoint.showAnswer": "答えを表示",
   "checkpoint.almostPath": "おしい！パスの書き方に注目してください。ls は指定したとおりに、ディレクトリを前に付けて名前を表示します。",
+  "checkpoint.tryPredict": "ターミナルで試す",
   "tasks.solutionLocked": "あと {n} 回試すと解答が表示されます（またはヒントを開く）",
   "references.title": "出典と参考資料",
   "summary.label": "まとめ",
