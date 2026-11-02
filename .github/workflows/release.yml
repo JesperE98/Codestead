@@ -106,6 +106,9 @@ jobs:
           name: linux-${{ matrix.product.id }}
           path: artifacts/
           if-no-files-found: error
+          # Only the install tests and the publish job of this run use the files; keeping them longer
+          # fills the repository's artifact storage (one run uploads four builds).
+          retention-days: 1
 
   build-windows:
     needs: plan
@@ -127,6 +130,9 @@ jobs:
           name: windows-${{ matrix.product.id }}
           path: artifacts/
           if-no-files-found: error
+          # Only the install tests and the publish job of this run use the files; keeping them longer
+          # fills the repository's artifact storage (one run uploads four builds).
+          retention-days: 1
 
   # Installation tests on clean systems: a fresh container per distribution, installing the package
   # exactly like a user would, starting the app (--smoke-test) on a virtual display and removing it again.
