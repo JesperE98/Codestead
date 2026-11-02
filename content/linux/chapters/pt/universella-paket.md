@@ -254,7 +254,14 @@ cd ~/{{downloads}}
 ls -l
 ```
 
-O que acontece se você o iniciar na hora?
+```text
+total 47184
+-rw-r--r-- 1 {{user}} {{user}} 48312832 Oct 30 12:00 {{calculator}}
+```
+
+As mensagens de erro do bash têm o formato `bash: CAMINHO: MOTIVO`, e o
+caminho aparece do jeito que o bash o vê – com o `~` já substituído por
+`/home/{{user}}`. O que acontece se você iniciar o arquivo na hora?
 
 ```predict
 $ ~/{{downloads}}/{{calculator}}

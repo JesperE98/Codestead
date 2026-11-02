@@ -348,7 +348,9 @@ echo "Estou em" (pwd)
 ```
 
 Dentro de aspas, parênteses são texto comum – é por isso que o `(pwd)` fica
-de fora. O status de saída do último comando se chama `$status`:
+de fora. O status de saída do último comando se chama `$status`. O `false` é
+um comando minúsculo que não faz nada além de falhar – o status de saída dele
+é sempre 1:
 
 ```sh
 false

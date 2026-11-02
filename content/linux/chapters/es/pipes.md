@@ -43,6 +43,18 @@ El segundo `>` sobrescribió el archivo. Con `>>` contendría las dos líneas.
 
 ## Desde un archivo – `<`
 
+`{{fruits}}` tiene diez líneas, una fruta por línea. Cuando le das a `wc -l`
+un nombre de archivo, imprime el número de líneas seguido del nombre; aquí
+para `{{grades}}`, que tiene nueve líneas:
+
+```sh
+wc -l {{documents}}/{{grades}}
+```
+
+```text
+9 {{documents}}/{{grades}}
+```
+
 `<` hace que un programa lea su stdin desde un archivo:
 
 ```sh

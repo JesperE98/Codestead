@@ -150,9 +150,9 @@ ping -c 3 example.com
 cat /etc/resolv.conf
 ```
 
-Ubuntu पर वहाँ `127.0.0.53` लिखा होता है – यह **systemd-resolved** है, आपके अपने
-कंप्यूटर पर एक लोकल बिचौलिया जो आगे राउटर से पूछता है। कुछ दूसरे डिस्ट्रीब्यूशन
-राउटर, `192.168.1.1`, को सीधे लिखते हैं।
+Ubuntu पर अहम line `nameserver 127.0.0.53` है – यह **systemd-resolved** है, आपके
+अपने कंप्यूटर पर एक लोकल बिचौलिया जो आगे राउटर से पूछता है। कुछ दूसरे
+डिस्ट्रीब्यूशन राउटर, `192.168.1.1`, को सीधे लिखते हैं।
 
 ख़ुद DNS से पूछने के लिए `dig`, `host` या `nslookup` इस्तेमाल होते हैं। ये शुरू से
 इंस्टॉल नहीं होते। Ubuntu पर ये पैकेज `dnsutils` में आते हैं (दूसरे परिवार इस
@@ -230,7 +230,14 @@ dig +short server.lan
 getent hosts server.lan
 ```
 
-क्रम (पहले file, फिर DNS) `/etc/nsswitch.conf` की `hosts:` line से तय होता है।
+`dig` कुछ नहीं छापता, लेकिन `getent` address और उसके बाद name के साथ जवाब देता है:
+
+```text
+192.168.1.10    server.lan
+```
+
+क्रम (पहले file, फिर DNS) `/etc/nsswitch.conf` की line `hosts: files dns` से तय
+होता है।
 
 ```quiz
 `sudo echo '192.168.1.10 server.lan' >> /etc/hosts` से *Permission denied* क्यों

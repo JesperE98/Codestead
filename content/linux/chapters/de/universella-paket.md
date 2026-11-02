@@ -258,7 +258,14 @@ cd ~/{{downloads}}
 ls -l
 ```
 
-Was passiert, wenn du es gleich startest?
+```text
+total 47184
+-rw-r--r-- 1 {{user}} {{user}} 48312832 Oct 30 12:00 {{calculator}}
+```
+
+Fehlermeldungen von bash haben die Form `bash: PFAD: GRUND`, und der Pfad wird
+so angezeigt, wie bash ihn sieht – mit `~` bereits ersetzt durch
+`/home/{{user}}`. Was passiert, wenn du die Datei gleich startest?
 
 ```predict
 $ ~/{{downloads}}/{{calculator}}

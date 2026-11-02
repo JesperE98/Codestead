@@ -253,7 +253,14 @@ cd ~/{{downloads}}
 ls -l
 ```
 
-すぐに起動すると、どうなるでしょうか？
+```text
+total 47184
+-rw-r--r-- 1 {{user}} {{user}} 48312832 Oct 30 12:00 {{calculator}}
+```
+
+bash のエラーメッセージは `bash: パス: 理由` という形で、パスは bash から見た形で
+表示されます。つまり `~` はすでに `/home/{{user}}` に置き換えられています。
+このファイルをすぐに起動すると、どうなるでしょうか？
 
 ```predict
 $ ~/{{downloads}}/{{calculator}}

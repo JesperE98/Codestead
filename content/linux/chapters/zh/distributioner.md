@@ -23,6 +23,8 @@
 - **目录布局**——`/etc`、`/home`、`/usr/bin` 等等。
 - **systemd**，几乎所有主流发行版都用它来启动系统和管理服务。
 
+变量 `SHELL` 保存着你登录时所用 shell 的完整路径——对 bash 来说，就是你在脚本的 shebang 行里写的那个路径。
+
 ```predict
 $ echo $SHELL
 /bin/bash

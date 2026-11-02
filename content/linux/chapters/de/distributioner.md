@@ -31,6 +31,10 @@ drei machen kannst.
 - **systemd**, das auf fast jeder großen Distribution das System startet und
   Dienste verwaltet.
 
+Die Variable `SHELL` enthält den vollständigen Pfad der Shell, mit der du dich
+anmeldest – bei bash denselben Pfad, den du in die Shebang-Zeile eines Skripts
+schreibst.
+
 ```predict
 $ echo $SHELL
 /bin/bash

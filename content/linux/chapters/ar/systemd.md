@@ -151,8 +151,10 @@ systemctl is-active myserver
 systemctl is-enabled myserver
 ```
 
-الأمران `is-active` و`is-enabled` رائعان في السكربتات – فهما يطبعان كلمة واحدة
-وينتهيان بالحالة 0 إذا كان الجواب "نعم". ومع `-q` يصمتان تمامًا:
+الأمران `is-active` و`is-enabled` رائعان في السكربتات – فهما يطبعان كلمة واحدة،
+هي الحالة نفسها التي تراها في `systemctl status` (`active` أو `inactive` أو
+`failed`، و`enabled` أو `disabled` أو `static`)، وينتهيان بالحالة 0 إذا كان
+الجواب "نعم". ومع `-q` يصمتان تمامًا:
 
 ```text
 if systemctl is-active -q myserver; then echo "the server is running"; fi

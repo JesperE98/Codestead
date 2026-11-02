@@ -150,9 +150,10 @@ IP-adress. Vilken DNS-server datorn frågar står i `/etc/resolv.conf`:
 cat /etc/resolv.conf
 ```
 
-I Ubuntu står det `127.0.0.53` – det är **systemd-resolved**, en lokal
-mellanhand på din egen dator som i sin tur frågar routern. En del andra
-distributioner har routern, `192.168.1.1`, där direkt.
+I Ubuntu är den viktiga raden `nameserver 127.0.0.53` – det är
+**systemd-resolved**, en lokal mellanhand på din egen dator som i sin tur
+frågar routern. En del andra distributioner har routern, `192.168.1.1`, där
+direkt.
 
 För att fråga DNS själv används `dig`, `host` eller `nslookup`. De finns
 inte från början. I Ubuntu ingår de i paketet `dnsutils` (andra familjer
@@ -230,7 +231,13 @@ dig +short server.lan
 getent hosts server.lan
 ```
 
-Ordningen (först filen, sedan DNS) bestäms av raden `hosts:` i
+`dig` skriver inte ut något, men `getent` svarar med adressen följd av namnet:
+
+```text
+192.168.1.10    server.lan
+```
+
+Ordningen (först filen, sedan DNS) bestäms av raden `hosts: files dns` i
 `/etc/nsswitch.conf`.
 
 ```quiz

@@ -210,7 +210,12 @@ cd ~/{{downloads}}
 ls -l
 ```
 
-如果你马上启动它，会发生什么？
+```text
+total 47184
+-rw-r--r-- 1 {{user}} {{user}} 48312832 Oct 30 12:00 {{calculator}}
+```
+
+bash 的错误信息格式是 `bash: 路径: 原因`，而且路径会以 bash 看到的样子显示——其中的 `~` 已经被替换成了 `/home/{{user}}`。如果你马上启动这个文件，会发生什么？
 
 ```predict
 $ ~/{{downloads}}/{{calculator}}

@@ -19,6 +19,9 @@
 - [ ] आपको `${{nameVar}} = Kim` लिखना होगा
 ```
 
+`~/{{documents}}` में अभ्यास की तीन फ़ाइलें हैं: `{{fruits}}`, `{{grades}}` और
+`server.log`।
+
 ```predict
 $ count=$(ls ~/{{documents}} | wc -l)
 $ echo "$count files"

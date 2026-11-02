@@ -420,7 +420,8 @@ con la otra rama. En ese caso git se niega y te pide que hagas un commit
 primero (o que apartes los cambios temporalmente con `git stash` y los
 recuperes con `git stash pop`).
 
-¿Cuántas líneas con `purple` tiene `style.css` al final?
+El `style.css` original no contiene ningún `purple`: sus títulos son
+`navy`. ¿Cuántas líneas con `purple` tiene `style.css` al final?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1

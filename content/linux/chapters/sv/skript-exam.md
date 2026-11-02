@@ -19,6 +19,9 @@ körbar.
 - [ ] Du måste skriva `$namn = Kim`
 ```
 
+`~/{{documents}}` innehåller de tre övningsfilerna `{{fruits}}`, `{{grades}}`
+och `server.log`.
+
 ```predict
 $ antal=$(ls ~/{{documents}} | wc -l)
 $ echo "$antal files"

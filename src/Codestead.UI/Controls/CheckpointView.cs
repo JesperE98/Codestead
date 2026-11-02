@@ -18,7 +18,9 @@ public sealed record CheckpointTexts(
     string TryPrompt,
     string Done,
     string AnswerPlaceholder,
-    string Question);
+    string Question,
+    string ShowAnswer = "Show the answer",
+    string AlmostPath = "Almost! Look at how the paths are written: ls shows each name the way you gave it, with the directory in front.");
 
 /// <summary>
 /// One interactive checkpoint in a lesson (or a question in an exam): a quiz, a "what does this print?"
@@ -90,7 +92,10 @@ public sealed class CheckpointView : UserControl
             checkButton = new Button { Content = texts.Check, HorizontalAlignment = HorizontalAlignment.Left };
             checkButton.Classes.Add("secondary");
             checkButton.Click += (_, _) => CheckNow();
-            body.Children.Add(checkButton);
+            showAnswerButton = new Button { Content = texts.ShowAnswer, IsVisible = false };
+            showAnswerButton.Classes.Add("secondary");
+            showAnswerButton.Click += (_, _) => ShowAnswer();
+            body.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { checkButton, showAnswerButton } });
         }
         body.Children.Add(feedback);
         if (cp.Explanation is not null)
@@ -182,19 +187,36 @@ public sealed class CheckpointView : UserControl
         _ => trySolved,
     };
 
+    /// <summary>Wrong answers before "Show the answer" appears (lessons only; exams are graded at the end).</summary>
+    public const int AttemptsBeforeAnswer = 2;
+
+    private int wrongAttempts;
+    private Button? showAnswerButton;
+
     private void CheckNow()
     {
         if (solved) return;
         if (IsAnswerRight())
         {
             MarkSolved(silent: false);
+            return;
         }
-        else
-        {
-            feedback.Text = "✗ " + texts.Wrong;
-            feedback.IsVisible = true;
-            feedback.Bind(TextBlock.ForegroundProperty, feedback.GetResourceObservable("CsDanger"));
-        }
+        wrongAttempts++;
+        // The most common slip in "what does this print?": the names without the directory ls prints in front.
+        bool almost = cp.Kind == Checkpoint.Predict && cp.IsRightWithoutDirectories(answerBox?.Text ?? "");
+        feedback.Text = "✗ " + (almost ? texts.AlmostPath : texts.Wrong);
+        feedback.IsVisible = true;
+        feedback.Bind(TextBlock.ForegroundProperty, feedback.GetResourceObservable("CsDanger"));
+        // Nobody should be stuck: after a few tries the answer can be shown (and the chapter goes on).
+        if (!examMode && cp.Kind != Checkpoint.Try && wrongAttempts >= AttemptsBeforeAnswer && showAnswerButton is not null)
+            showAnswerButton.IsVisible = true;
+    }
+
+    private void ShowAnswer()
+    {
+        if (solved) return;
+        if (answerBox is not null) answerBox.Text = cp.Expected;
+        MarkSolved(silent: false);
     }
 
     private void MarkSolved(bool silent)
@@ -202,6 +224,7 @@ public sealed class CheckpointView : UserControl
         if (solved) return;
         solved = true;
         if (checkButton is not null) checkButton.IsVisible = false;
+        if (showAnswerButton is not null) showAnswerButton.IsVisible = false;
         feedback.Text = "✓ " + (silent ? texts.Done : texts.Correct);
         feedback.IsVisible = true;
         feedback.Bind(TextBlock.ForegroundProperty, feedback.GetResourceObservable("CsAccent"));

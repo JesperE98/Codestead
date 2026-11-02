@@ -117,8 +117,13 @@ rm -r {{documents}}-backup
 ls {{documents}}/*.txt
 ```
 
+```text
+{{documents}}/{{fruits}}
+```
+
 ここで `ls` がアスタリスクを目にすることはありません。シェルがすでに
 `{{documents}}/*.txt` を一致するすべてのファイル名に置き換えているからです。
+複数の名前が一致した場合、`ls` はそれらをアルファベット順に 1 行に並べて表示します。
 
 ```predict
 $ ls {{documents}}/??????.txt

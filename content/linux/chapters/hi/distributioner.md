@@ -29,6 +29,9 @@
 - **systemd**, जो system को start करता है और services संभालता है, लगभग हर बड़े
   distribution पर।
 
+Variable `SHELL` में उस shell का पूरा path होता है जिससे आप login करते हैं – bash
+के लिए वही path जो आप script की shebang line में लिखते हैं।
+
 ```predict
 $ echo $SHELL
 /bin/bash

@@ -429,7 +429,8 @@ kollidieren mit dem anderen Branch. Dann weigert sich git und bittet dich,
 zuerst zu committen (oder die Änderungen mit `git stash` vorübergehend
 beiseitezulegen und sie mit `git stash pop` zurückzuholen).
 
-Wie viele Zeilen mit `purple` hat `style.css` am Ende?
+Die ursprüngliche `style.css` enthält kein `purple` – ihre Überschriften sind
+navy. Wie viele Zeilen mit `purple` hat `style.css` am Ende?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1

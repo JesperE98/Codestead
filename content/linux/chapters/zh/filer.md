@@ -107,7 +107,11 @@ rm -r {{documents}}-backup
 ls {{documents}}/*.txt
 ```
 
-在这里，`ls` 根本看不到星号——shell 已经把 `{{documents}}/*.txt` 替换成了所有匹配的文件名。
+```text
+{{documents}}/{{fruits}}
+```
+
+在这里，`ls` 根本看不到星号——shell 已经把 `{{documents}}/*.txt` 替换成了所有匹配的文件名。如果有多个名字匹配，`ls` 会按字母顺序把它们并排打印在同一行上。
 
 ```predict
 $ ls {{documents}}/?e????.*

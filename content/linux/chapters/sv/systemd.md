@@ -158,8 +158,10 @@ systemctl is-active myserver
 systemctl is-enabled myserver
 ```
 
-`is-active` och `is-enabled` passar utmärkt i skript – de skriver ett ord och
-avslutas med statuskod 0 om svaret är "ja". Med `-q` blir de helt tysta:
+`is-active` och `is-enabled` passar utmärkt i skript – de skriver ett ord,
+samma tillstånd som du ser i `systemctl status` (`active`, `inactive` eller
+`failed`, och `enabled`, `disabled` eller `static`), och avslutas med statuskod 0
+om svaret är "ja". Med `-q` blir de helt tysta:
 
 ```text
 if systemctl is-active -q myserver; then echo "servern kör"; fi

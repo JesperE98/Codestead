@@ -243,7 +243,14 @@ cd ~/{{downloads}}
 ls -l
 ```
 
-ماذا يحدث إذا شغّلته فورًا؟
+```text
+total 47184
+-rw-r--r-- 1 {{user}} {{user}} 48312832 Oct 30 12:00 {{calculator}}
+```
+
+رسائل الخطأ من bash تكون بالشكل `bash: PATH: REASON` (المسار ثم السبب)، ويظهر
+المسار كما يراه bash – بعد أن يكون قد استبدل `~` بـ `/home/{{user}}`. ماذا يحدث
+إذا شغّلت الملف فورًا؟
 
 ```predict
 $ ~/{{downloads}}/{{calculator}}

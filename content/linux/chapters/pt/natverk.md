@@ -157,10 +157,10 @@ endereço IP. Qual servidor DNS o computador consulta está escrito em
 cat /etc/resolv.conf
 ```
 
-No Ubuntu aparece `127.0.0.53` – esse é o **systemd-resolved**, um
-intermediário local no seu próprio computador que, por sua vez, consulta o
-roteador. Algumas outras distribuições mostram o roteador, `192.168.1.1`,
-diretamente.
+No Ubuntu, a linha importante é `nameserver 127.0.0.53` – esse é o
+**systemd-resolved**, um intermediário local no seu próprio computador que,
+por sua vez, consulta o roteador. Algumas outras distribuições mostram o
+roteador, `192.168.1.1`, diretamente.
 
 Para consultar o DNS você mesmo, use `dig`, `host` ou `nslookup`. Eles não vêm
 instalados de início. No Ubuntu, eles vêm no pacote `dnsutils` (outras
@@ -239,8 +239,15 @@ dig +short server.lan
 getent hosts server.lan
 ```
 
-A ordem (primeiro o arquivo, depois o DNS) é definida pela linha `hosts:` em
-`/etc/nsswitch.conf`.
+O `dig` não imprime nada, mas o `getent` responde com o endereço seguido do
+nome:
+
+```text
+192.168.1.10    server.lan
+```
+
+A ordem (primeiro o arquivo, depois o DNS) é definida pela linha
+`hosts: files dns` em `/etc/nsswitch.conf`.
 
 ```quiz
 Por que `sudo echo '192.168.1.10 server.lan' >> /etc/hosts` dá

@@ -121,8 +121,14 @@ terminent par `.txt` :
 ls {{documents}}/*.txt
 ```
 
+```text
+{{documents}}/{{fruits}}
+```
+
 Ici, `ls` ne voit jamais l'astérisque – le shell a déjà remplacé
-`{{documents}}/*.txt` par tous les noms de fichiers correspondants.
+`{{documents}}/*.txt` par tous les noms de fichiers correspondants. Quand
+plusieurs noms correspondent, `ls` les affiche par ordre alphabétique, côte à
+côte sur une seule ligne.
 
 ```predict
 $ ls {{documents}}/??????.*

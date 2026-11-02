@@ -43,6 +43,18 @@ Le second `>` a écrasé le fichier. Avec `>>`, il contiendrait les deux lignes.
 
 ## Depuis un fichier – `<`
 
+`{{fruits}}` compte dix lignes, un fruit par ligne. Quand vous donnez un nom
+de fichier à `wc -l`, il affiche le nombre de lignes suivi du nom – ici pour
+`{{grades}}`, qui compte neuf lignes :
+
+```sh
+wc -l {{documents}}/{{grades}}
+```
+
+```text
+9 {{documents}}/{{grades}}
+```
+
 `<` permet à un programme de lire son stdin depuis un fichier :
 
 ```sh

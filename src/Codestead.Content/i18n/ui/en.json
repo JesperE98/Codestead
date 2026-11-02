@@ -76,6 +76,8 @@
   "checkpoint.predict": "What does this print? Write the output exactly.",
   "checkpoint.try": "Try it yourself in the mini terminal:",
   "checkpoint.answer": "Your answer",
+  "checkpoint.showAnswer": "Show the answer",
+  "checkpoint.almostPath": "Almost! Look at how the paths are written: ls shows each name the way you gave it, with the directory in front.",
   "tasks.solutionLocked": "Solution after {n} more attempts (or open the hint)",
   "references.title": "Sources and further reading",
   "summary.label": "Summary",

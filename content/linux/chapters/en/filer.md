@@ -119,8 +119,13 @@ in `.txt`:
 ls {{documents}}/*.txt
 ```
 
+```text
+{{documents}}/{{fruits}}
+```
+
 Here `ls` never sees the asterisk – the shell has already replaced
-`{{documents}}/*.txt` with all the matching file names.
+`{{documents}}/*.txt` with all the matching file names. When several names
+match, `ls` prints them in alphabetical order, side by side on one line.
 
 ```predict
 $ ls {{documents}}/?r*

@@ -18,6 +18,8 @@
 - [ ] 你必须写成 `${{nameVar}} = Kim`
 ```
 
+`~/{{documents}}` 里有三个练习文件：`{{fruits}}`、`{{grades}}` 和 `server.log`。
+
 ```predict
 $ count=$(ls ~/{{documents}} | wc -l)
 $ echo "$count files"

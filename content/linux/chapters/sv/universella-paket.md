@@ -251,7 +251,14 @@ cd ~/{{downloads}}
 ls -l
 ```
 
-Vad händer om du startar den direkt?
+```text
+total 47184
+-rw-r--r-- 1 {{user}} {{user}} 48312832 Oct 30 12:00 {{calculator}}
+```
+
+Felmeddelanden från bash har formen `bash: SÖKVÄG: ORSAK`, och sökvägen visas
+så som bash ser den – med `~` redan ersatt av `/home/{{user}}`. Vad händer om
+du startar filen direkt?
 
 ```predict
 $ ~/{{downloads}}/{{calculator}}

@@ -18,7 +18,9 @@ name: Release
 #   how the next run knows what changed. Nothing is published until both secrets below exist.
 #
 # Run it by hand under Actions -> "Release" -> "Run workflow" to build and test without
-# publishing (or tick "publish" to publish from the selected branch).
+# publishing (or tick "publish" to publish from the selected branch). Pull requests only build:
+# the install tests need the builds as artifacts, which would fill the repository's artifact storage;
+# start the workflow by hand on the branch to install-test a pull request.
 #
 # Secrets: RELEASES_TOKEN (contents read/write on codestead-releases) and CATALOG_SIGNING_KEY
 # (the ECDSA P-256 private key whose public half is build/catalog-signing.pub.pem).
@@ -102,6 +104,9 @@ jobs:
           PKG_DESCRIPTION: ${{ matrix.product.name }} - ${{ matrix.product.summary }}.
         run: packaging/build-linux.sh "${{ matrix.product.project }}" "${{ matrix.product.id }}" "${{ matrix.product.name }}" "${{ matrix.product.version }}" artifacts
       - uses: actions/upload-artifact@v4
+        # Pull requests only check that everything builds: a run uploads about 1.6 GB of builds, and the
+        # repository's artifact storage must stay free for the runs on main that install and publish them.
+        if: github.event_name != 'pull_request'
         with:
           name: linux-${{ matrix.product.id }}
           path: artifacts/
@@ -126,6 +131,9 @@ jobs:
       - name: Build Windows artifacts
         run: packaging/build-windows.ps1 -Project "${{ matrix.product.project }}" -PackageName "${{ matrix.product.id }}" -DisplayName "${{ matrix.product.name }}" -Version "${{ matrix.product.version }}" -Out artifacts
       - uses: actions/upload-artifact@v4
+        # Pull requests only check that everything builds: a run uploads about 1.6 GB of builds, and the
+        # repository's artifact storage must stay free for the runs on main that install and publish them.
+        if: github.event_name != 'pull_request'
         with:
           name: windows-${{ matrix.product.id }}
           path: artifacts/
@@ -138,6 +146,8 @@ jobs:
   # exactly like a user would, starting the app (--smoke-test) on a virtual display and removing it again.
   test-linux:
     needs: [plan, build-linux]
+    # The install tests need the uploaded builds (main and Run workflow; not pull requests, see above).
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -166,6 +176,8 @@ jobs:
 
   test-windows:
     needs: [plan, build-windows]
+    # The install tests need the uploaded builds (main and Run workflow; not pull requests, see above).
+    if: github.event_name != 'pull_request'
     strategy:
       fail-fast: false
       matrix:
@@ -186,6 +198,8 @@ jobs:
   # The hub installs, starts and removes Codestead Linux from a signed catalog (throw-away key).
   test-hub:
     needs: [plan, build-linux, build-windows]
+    # The install tests need the uploaded builds (main and Run workflow; not pull requests, see above).
+    if: github.event_name != 'pull_request'
     strategy:
       fail-fast: false
       matrix:

@@ -409,7 +409,8 @@ with the other branch. Then git refuses and asks you to commit first (or to
 put the changes aside temporarily with `git stash` and bring them back with
 `git stash pop`).
 
-How many lines containing `purple` does `style.css` have at the end?
+The original `style.css` contains no `purple` – its headings are navy. How
+many lines containing `purple` does `style.css` have at the end?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1

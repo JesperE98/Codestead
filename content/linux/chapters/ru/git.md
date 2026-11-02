@@ -420,7 +420,8 @@ git log --oneline --all
 попросит сначала сделать коммит (или временно отложить изменения командой
 `git stash` и вернуть их потом командой `git stash pop`).
 
-Сколько строк со словом `purple` будет в `style.css` в конце?
+В исходном `style.css` нет ни одного `purple` – заголовки в нём тёмно-синие
+(`navy`). Сколько строк со словом `purple` будет в `style.css` в конце?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1

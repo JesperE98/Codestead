@@ -128,7 +128,7 @@ systemctl is-active myserver
 systemctl is-enabled myserver
 ```
 
-`is-active` 和 `is-enabled` 非常适合在脚本中使用——它们只输出一个单词，如果答案是“是”，就以状态 0 退出。加上 `-q`，它们会完全不输出任何内容：
+`is-active` 和 `is-enabled` 非常适合在脚本中使用——它们只输出一个单词，也就是你在 `systemctl status` 中看到的那个状态（`active`、`inactive` 或 `failed`，以及 `enabled`、`disabled` 或 `static`），如果答案是“是”，就以状态 0 退出。加上 `-q`，它们会完全不输出任何内容：
 
 ```text
 if systemctl is-active -q myserver; then echo "the server is running"; fi

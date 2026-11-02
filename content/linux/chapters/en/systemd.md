@@ -159,8 +159,10 @@ systemctl is-active myserver
 systemctl is-enabled myserver
 ```
 
-`is-active` and `is-enabled` are great in scripts – they print one word and
-exit with status 0 if the answer is "yes". With `-q` they're completely
+`is-active` and `is-enabled` are great in scripts – they print one word, the
+same state you see in `systemctl status` (`active`, `inactive` or `failed`,
+and `enabled`, `disabled` or `static`), and exit with status 0 if the answer
+is "yes". With `-q` they're completely
 silent:
 
 ```text

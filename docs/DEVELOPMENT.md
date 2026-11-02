@@ -184,6 +184,9 @@ README:n i `codestead-releases` med `packaging/releases_readme.py`: en del per p
 version och nedladdningslänkar, och vad de olika releaserna är. Ändra den i skriptet, inte i repot.
 
 Flödet kan också startas för hand under Actions → **Release** → **Run workflow** (utan att publicera).
+För pull requests byggs bara allt; installationstesterna körs på `main` (före publicering) och när
+flödet startas för hand. Byggena laddas upp som artefakter (ungefär 1,6 GB per körning, sparas en dag)
+och skulle annars fylla repots lagringsutrymme för artefakter.
 
 GitHub har inga rena Windows 10/11-skrivbordsmaskiner, bara Windows Server. Gå därför igenom
 [RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md) på en riktig Windows 10/11-dator före en större release.

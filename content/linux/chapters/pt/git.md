@@ -425,7 +425,8 @@ entrem em conflito com o outro branch. Aí o git se recusa e pede que você
 faça o commit primeiro (ou que guarde as alterações temporariamente com
 `git stash` e as traga de volta com `git stash pop`).
 
-Quantas linhas com `purple` o `style.css` tem no final?
+O `style.css` original não contém nenhum `purple` – os títulos dele são
+azul-marinho (`navy`). Quantas linhas com `purple` o `style.css` tem no final?
 
 ```predict
 $ sudo apt update > /dev/null 2>&1 && sudo apt install -y git > /dev/null 2>&1

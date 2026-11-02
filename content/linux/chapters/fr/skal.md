@@ -358,7 +358,8 @@ echo "Je suis dans" (pwd)
 
 À l'intérieur des guillemets, les parenthèses sont du texte ordinaire – c'est
 pourquoi `(pwd)` est en dehors. Le code de retour de la dernière commande
-s'appelle `$status` :
+s'appelle `$status`. `false` est une toute petite commande qui ne fait
+qu'échouer – son code de retour vaut toujours 1 :
 
 ```sh
 false

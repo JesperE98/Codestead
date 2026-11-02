@@ -30,6 +30,10 @@ así que puedes hacer los tres.
 - **systemd**, que arranca el sistema y gestiona los servicios, en casi todas
   las distribuciones importantes.
 
+La variable `SHELL` contiene la ruta completa de la shell con la que inicias
+sesión; en el caso de bash, la misma ruta que escribes en la línea shebang de
+un script.
+
 ```predict
 $ echo $SHELL
 /bin/bash

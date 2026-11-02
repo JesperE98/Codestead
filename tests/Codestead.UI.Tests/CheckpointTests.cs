@@ -111,6 +111,48 @@ public class CheckpointTests
         w.Close();
     });
 
+    [Fact(DisplayName = "predict: bara filnamnen utan katalogen ger en ledtråd")]
+    public void PredictWithoutDirectories()
+    {
+        var cp = Checkpoint.Parse("predict", "$ ls documents/?r*\ndocuments/fruits.txt  documents/grades.csv", 0);
+        Assert.True(cp.IsRightWithoutDirectories("fruits.txt grades.csv"));
+        Assert.False(cp.IsRightWithoutDirectories("documents/fruits.txt  documents/grades.csv")); // right, not a near miss
+        Assert.False(cp.IsRightWithoutDirectories("fruits.txt"));
+        Assert.True(Checkpoint.Parse("predict", "$ ls /home/student/documents/*.txt\n/home/student/documents/fruits.txt", 0).IsRightWithoutDirectories("fruits.txt"));
+        Assert.False(Checkpoint.Parse("predict", "$ echo hej\nhej", 0).IsRightWithoutDirectories("hej"));
+    }
+
+    [Fact(DisplayName = "efter två fel svar kan svaret visas, och frågan räknas som klar")]
+    public void ShowAnswerAfterTwoTries()
+        => Ui.Run(() =>
+    {
+        var view = View("predict", "$ ls documents/?r*\ndocuments/fruits.txt  documents/grades.csv");
+        int solved = 0;
+        view.Solved += _ => solved++;
+        var w = new Window { Content = view };
+        w.Show();
+        var box = view.GetLogicalDescendants().OfType<TextBox>().First();
+        var show = view.GetLogicalDescendants().OfType<Button>().First(b => b.Content as string == "Show the answer");
+        void Answer(string text)
+        {
+            box.Text = text;
+            box.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
+        }
+        Assert.False(show.IsVisible);
+        Answer("fruits.txt grades.csv");
+        Assert.Contains(view.GetLogicalDescendants().OfType<TextBlock>(), t => t.Text?.StartsWith("✗ Almost", StringComparison.Ordinal) == true);
+        Assert.False(show.IsVisible);
+        Answer("no idea");
+        Assert.True(show.IsVisible);
+        Assert.False(view.IsSolved);
+        show.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+        Assert.True(view.IsSolved);
+        Assert.Equal(1, solved);
+        Assert.Equal("documents/fruits.txt  documents/grades.csv", box.Text);
+        Assert.False(show.IsVisible);
+        w.Close();
+    });
+
     [Fact(DisplayName = "predict: svaret jämförs med förväntad utskrift")]
     public void PredictSolves()
         => Ui.Run(() =>
