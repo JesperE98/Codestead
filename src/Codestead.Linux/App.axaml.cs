@@ -10,6 +10,8 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // ~ with a dead key (Swedish and many other keyboards) on Linux, see DeadKeys.
+        Codestead.UI.DeadKeys.Install();
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = new MainWindow(Program.SmokeTest);

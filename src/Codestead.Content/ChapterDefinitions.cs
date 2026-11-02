@@ -80,7 +80,7 @@ public static partial class ChaptersLib
                 new()
                 {
                     Id = "up",
-                    Text = "Gå upp en nivå med `cd ..`.",
+                    Text = "Gå upp en nivå med `cd ..` (cd, mellanslag och två punkter).",
                     Solution = Cmds("cd .."),
                     Check = c => Ran(c, Re(@"^cd\s+\.\.\/?\s*$")),
                 },

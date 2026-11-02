@@ -20,6 +20,7 @@
           <SolidColorBrush x:Key="CsAccentSoft" Color="#e3f3ea" />
           <SolidColorBrush x:Key="CsLink" Color="#1a64c7" />
           <SolidColorBrush x:Key="CsCodeBg" Color="#eef0f3" />
+          <SolidColorBrush x:Key="CsInlineCodeBg" Color="#dfe3e9" />
           <SolidColorBrush x:Key="CsCodeText" Color="#1c2026" />
           <SolidColorBrush x:Key="CsWarnBg" Color="#fff6e0" />
           <SolidColorBrush x:Key="CsWarnBorder" Color="#e7c25d" />
@@ -37,6 +38,7 @@
           <SolidColorBrush x:Key="CsAccentSoft" Color="#1c3528" />
           <SolidColorBrush x:Key="CsLink" Color="#6cb0ff" />
           <SolidColorBrush x:Key="CsCodeBg" Color="#232830" />
+          <SolidColorBrush x:Key="CsInlineCodeBg" Color="#343b47" />
           <SolidColorBrush x:Key="CsCodeText" Color="#e3e7ed" />
           <SolidColorBrush x:Key="CsWarnBg" Color="#2d2615" />
           <SolidColorBrush x:Key="CsWarnBorder" Color="#8a6d1f" />

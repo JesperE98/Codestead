@@ -5,11 +5,13 @@
       <stop offset="1" stop-color="#11151a"/>
     </linearGradient>
   </defs>
-  <rect x="80" y="80" width="864" height="864" rx="190" fill="url(#bg)"/>
-  <rect x="80" y="80" width="864" height="864" rx="190" fill="none" stroke="#3a4552" stroke-width="8"/>
-  <circle cx="210" cy="200" r="22" fill="#ff7b72"/>
-  <circle cx="280" cy="200" r="22" fill="#e3b341"/>
-  <circle cx="350" cy="200" r="22" fill="#7ee787"/>
-  <path d="M250 400 L420 530 L250 660" fill="none" stroke="#7ee787" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M490 680 H760" stroke="#e6edf3" stroke-width="64" stroke-linecap="round"/>
+  <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#bg)"/>
+  <rect x="64" y="64" width="896" height="896" rx="200" fill="none" stroke="#3a4552" stroke-width="8"/>
+  <!-- the roof: a homestead -->
+  <path d="M212 478 L512 222 L812 478" fill="none" stroke="#7ee787" stroke-width="72" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- the walls -->
+  <path d="M292 470 V760 Q292 808 340 808 H684 Q732 808 732 760 V470" fill="none" stroke="#e6edf3" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- the prompt inside: >_ -->
+  <path d="M392 540 L480 616 L392 692" fill="none" stroke="#7ee787" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M528 700 H636" stroke="#e6edf3" stroke-width="52" stroke-linecap="round"/>
 </svg>

@@ -227,14 +227,14 @@ public sealed class MainWindow : Window
     private Control BuildLayout()
     {
         // Top bar
-        var brandMark = new Border
+        // The Codestead logo (build/icon.svg): a house with a prompt inside.
+        var brandMark = new Image
         {
-            Background = new SolidColorBrush(Color.Parse("#0f1318")),
-            CornerRadius = new CornerRadius(7),
+            Source = new Bitmap(AssetLoader.Open(new Uri("avares://Codestead.Linux/Assets/icon.png"))),
             Width = 30,
             Height = 30,
-            Child = new TextBlock { Text = ">_", Foreground = new SolidColorBrush(Color.Parse("#7ee787")), FontWeight = FontWeight.Bold, FontFamily = new FontFamily("Cascadia Mono, DejaVu Sans Mono, monospace"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
         };
+        RenderOptions.SetBitmapInterpolationMode(brandMark, Avalonia.Media.Imaging.BitmapInterpolationMode.HighQuality);
         var brand = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, VerticalAlignment = VerticalAlignment.Center };
         brand.Children.Add(brandMark);
         brand.Children.Add(new TextBlock { Text = ProductInfo.Name, FontSize = 17, FontWeight = FontWeight.Bold, VerticalAlignment = VerticalAlignment.Center });

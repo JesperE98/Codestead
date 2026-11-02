@@ -362,7 +362,8 @@ public sealed class MarkdownView : UserControl
             case CodeInline code:
             {
                 var run = new Run(code.Content) { FontFamily = Mono, FontSize = BaseFontSize * 0.88 };
-                run.Bind(TextElement.BackgroundProperty, this.GetResourceObservable("CsCodeBg"));
+                // A clearly visible background, so it is plain where the code ends (e.g. `cd ..` before a full stop).
+                run.Bind(TextElement.BackgroundProperty, this.GetResourceObservable("CsInlineCodeBg"));
                 target.Add(run);
                 break;
             }

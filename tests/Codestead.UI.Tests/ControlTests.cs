@@ -17,6 +17,25 @@ public class ControlTests
         w.CaptureRenderedFrame()?.Save(Path.Combine(dir, name + ".png"));
     }
 
+    [Fact(DisplayName = "död tilde + mellanslag blir ~, andra döda tangenter lämnas i fred")]
+    public void DeadTildeBecomesTilde()
+    {
+        // The dead key itself (swallowed by the input method), then a space that was not combined.
+        Assert.Null(DeadKeys.Filter(Key.RightAlt, null, KeyModifiers.None, null));
+        Assert.Null(DeadKeys.Filter(Key.None, null, KeyModifiers.None, null));
+        Assert.Equal("~", DeadKeys.Filter(Key.Space, " ", KeyModifiers.None, " "));
+        // An ordinary space afterwards stays a space.
+        Assert.Equal(" ", DeadKeys.Filter(Key.Space, " ", KeyModifiers.None, " "));
+        // A dead key the input method combined (^, ñ ...): the next space is a space.
+        Assert.Null(DeadKeys.Filter(Key.None, null, KeyModifiers.None, null));
+        Assert.Equal("^", DeadKeys.Filter(Key.None, null, KeyModifiers.None, "^"));
+        Assert.Equal(" ", DeadKeys.Filter(Key.Space, " ", KeyModifiers.None, " "));
+        // Dead key and a letter.
+        Assert.Null(DeadKeys.Filter(Key.None, null, KeyModifiers.None, null));
+        Assert.Equal("ñ", DeadKeys.Filter(Key.N, "n", KeyModifiers.None, "ñ"));
+        Assert.Equal("a", DeadKeys.Filter(Key.A, "a", KeyModifiers.None, "a"));
+    }
+
     [Fact(DisplayName = "ANSI-färger delas upp i segment")]
     public void AnsiSegments()
         => Ui.Run(() =>

@@ -1,3 +1,5 @@
+<p align="center"><img src="build/icon.svg" width="128" alt="Codestead logo: a house with a terminal prompt inside"></p>
+
 # Codestead Linux
 
 Learn the Linux shell chapter by chapter, by doing. Codestead Linux is the first tool in
