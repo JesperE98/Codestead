@@ -120,6 +120,10 @@ rm -r {{documents}}-backup
 ls {{documents}}/*.txt
 ```
 
+```text
+{{documents}}/{{fruits}}
+```
+
 Здесь `ls` вообще не видит звёздочку – shell уже заменил `{{documents}}/*.txt`
 всеми подходящими именами файлов.
 

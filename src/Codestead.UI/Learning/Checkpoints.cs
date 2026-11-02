@@ -125,6 +125,19 @@ public sealed class Checkpoint
     /// <summary>Is the predicted output right?</summary>
     public bool IsCorrectPrediction(string answer) => Normalize(answer) == Normalize(Expected);
 
+    private static readonly System.Text.RegularExpressions.Regex DirectoryPrefix =
+        new(@"(?<=^|\s)(?:[^\s/]*/)+(?=[^\s/]+(\s|$))", System.Text.RegularExpressions.RegexOptions.Multiline);
+
+    /// <summary>
+    /// Wrong, but only because the directory in front of the file names is missing
+    /// ("fruits.txt" where ls prints "documents/fruits.txt").
+    /// </summary>
+    public bool IsRightWithoutDirectories(string answer)
+    {
+        var bare = DirectoryPrefix.Replace(Expected, "");
+        return bare != Expected && !IsCorrectPrediction(answer) && Normalize(answer) == Normalize(bare);
+    }
+
     /// <summary>Is this set of chosen options right (exactly the correct ones)?</summary>
     public bool IsCorrectChoice(IReadOnlyCollection<int> chosen) =>
         Options.Select((o, i) => (o, i)).All(x => x.o.Correct == chosen.Contains(x.i));

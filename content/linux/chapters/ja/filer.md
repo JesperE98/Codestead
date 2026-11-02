@@ -117,6 +117,10 @@ rm -r {{documents}}-backup
 ls {{documents}}/*.txt
 ```
 
+```text
+{{documents}}/{{fruits}}
+```
+
 ここで `ls` がアスタリスクを目にすることはありません。シェルがすでに
 `{{documents}}/*.txt` を一致するすべてのファイル名に置き換えているからです。
 

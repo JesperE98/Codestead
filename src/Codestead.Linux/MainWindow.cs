@@ -180,7 +180,8 @@ public sealed class MainWindow : Window
 
     private CheckpointTexts CheckpointTexts() => new(
         T("checkpoint.check"), T("checkpoint.correct"), T("checkpoint.wrong"), T("checkpoint.predict"),
-        T("checkpoint.try"), T("checkpoint.done"), T("checkpoint.answer"), T("checkpoint.question"));
+        T("checkpoint.try"), T("checkpoint.done"), T("checkpoint.answer"), T("checkpoint.question"),
+        T("checkpoint.showAnswer"), T("checkpoint.almostPath"));
 
     private int ChapterIndex => Math.Max(0, ChaptersLib.Chapters.FindIndex(c => c.Id == state.Chapter));
     private Chapter Chapter => ChaptersLib.Chapters[ChapterIndex];

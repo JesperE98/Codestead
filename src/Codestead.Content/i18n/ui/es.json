@@ -76,6 +76,8 @@
   "checkpoint.predict": "¿Qué imprime esto? Escribe la salida exactamente.",
   "checkpoint.try": "Pruébalo tú mismo en la miniterminal:",
   "checkpoint.answer": "Tu respuesta",
+  "checkpoint.showAnswer": "Mostrar la respuesta",
+  "checkpoint.almostPath": "¡Casi! Fíjate en cómo se escriben las rutas: ls muestra cada nombre tal como lo diste, con el directorio delante.",
   "tasks.solutionLocked": "Solución tras {n} intentos más (o abre la pista)",
   "references.title": "Fuentes y lecturas adicionales",
   "summary.label": "Resumen",

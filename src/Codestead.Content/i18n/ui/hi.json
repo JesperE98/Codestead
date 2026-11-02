@@ -76,6 +76,8 @@
   "checkpoint.predict": "यह कमांड क्या दिखाएगा? आउटपुट बिल्कुल वैसा ही लिखें।",
   "checkpoint.try": "छोटे टर्मिनल में खुद आज़माएँ:",
   "checkpoint.answer": "आपका जवाब",
+  "checkpoint.showAnswer": "उत्तर दिखाएँ",
+  "checkpoint.almostPath": "लगभग सही! देखिए path कैसे लिखे गए हैं: ls हर नाम वैसे ही दिखाता है जैसे आपने दिया था, आगे directory के साथ।",
   "tasks.solutionLocked": "{n} और प्रयासों के बाद समाधान दिखेगा (या संकेत खोलें)",
   "references.title": "स्रोत और आगे पढ़ने के लिए",
   "summary.label": "सारांश",

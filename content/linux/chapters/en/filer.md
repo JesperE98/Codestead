@@ -119,6 +119,10 @@ in `.txt`:
 ls {{documents}}/*.txt
 ```
 
+```text
+{{documents}}/{{fruits}}
+```
+
 Here `ls` never sees the asterisk – the shell has already replaced
 `{{documents}}/*.txt` with all the matching file names.
 

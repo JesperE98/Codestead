@@ -76,6 +76,8 @@
   "checkpoint.predict": "Was gibt das aus? Schreib die Ausgabe genau so hin.",
   "checkpoint.try": "Probier es selbst im Mini-Terminal aus:",
   "checkpoint.answer": "Deine Antwort",
+  "checkpoint.showAnswer": "Antwort zeigen",
+  "checkpoint.almostPath": "Fast! Achte darauf, wie die Pfade geschrieben werden: ls zeigt jeden Namen so, wie du ihn angegeben hast, mit dem Verzeichnis davor.",
   "tasks.solutionLocked": "Lösung nach {n} weiteren Versuchen (oder öffne den Tipp)",
   "references.title": "Quellen und weiterführende Literatur",
   "summary.label": "Zusammenfassung",

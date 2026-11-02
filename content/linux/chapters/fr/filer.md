@@ -121,6 +121,10 @@ terminent par `.txt` :
 ls {{documents}}/*.txt
 ```
 
+```text
+{{documents}}/{{fruits}}
+```
+
 Ici, `ls` ne voit jamais l'astérisque – le shell a déjà remplacé
 `{{documents}}/*.txt` par tous les noms de fichiers correspondants.
 

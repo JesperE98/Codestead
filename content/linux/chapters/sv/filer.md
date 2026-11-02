@@ -117,6 +117,10 @@ Katalogen `{{documents}}` i din hemkatalog innehåller tre filer: `{{grades}}`,
 ls {{documents}}/*.txt
 ```
 
+```text
+{{documents}}/{{fruits}}
+```
+
 Här ser `ls` aldrig stjärnan – skalet har redan bytt ut `{{documents}}/*.txt` mot
 alla matchande filnamn.
 

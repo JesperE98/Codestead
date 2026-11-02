@@ -121,6 +121,10 @@ Das Verzeichnis `{{documents}}` in deinem Home-Verzeichnis enthält drei Dateien
 ls {{documents}}/*.txt
 ```
 
+```text
+{{documents}}/{{fruits}}
+```
+
 Hier bekommt `ls` das Sternchen nie zu sehen – die Shell hat
 `{{documents}}/*.txt` bereits durch alle passenden Dateinamen ersetzt.
 

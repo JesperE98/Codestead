@@ -119,6 +119,10 @@ Command चलने से पहले shell patterns को कई file names
 ls {{documents}}/*.txt
 ```
 
+```text
+{{documents}}/{{fruits}}
+```
+
 यहाँ `ls` को asterisk कभी दिखता ही नहीं – shell पहले ही `{{documents}}/*.txt` को
 सभी matching file names से बदल चुका होता है।
 

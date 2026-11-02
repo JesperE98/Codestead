@@ -114,6 +114,10 @@ rm -r {{documents}}-backup
 ls {{documents}}/*.txt
 ```
 
+```text
+{{documents}}/{{fruits}}
+```
+
 هنا لا يرى `ls` النجمة أبدًا – فقد استبدل الـ shell بالفعل `{{documents}}/*.txt` بكل
 أسماء الملفات المطابقة.
 
