@@ -23,6 +23,16 @@ patterns, functions are named pieces of code with their own `$1`, and `read`
 asks the user for input. `exit 1` tells whoever called the script that
 something went wrong.
 
+## Scheduled jobs with cron
+
+**cron** runs the jobs in your **crontab** at set times. Each line has five
+time fields – minute, hour, day of the month, month and day of the week – and
+then the command; `*` means every and `*/5` every fifth. `crontab -l` shows the
+jobs, and `crontab -` installs new ones from its input – replacing all the old
+ones. Jobs run without your terminal's settings, with a short `PATH`, so send
+their output to a file. `journalctl -u cron` shows each run, and
+`systemctl list-timers` shows systemd's timers.
+
 ## Commands and syntax
 
 | Syntax | Does |
@@ -47,3 +57,8 @@ something went wrong.
 | `read -p "Question " var` | Read a line from the keyboard |
 | `exit 1` | End the script with an exit code |
 | `set -euo pipefail` | Stop the script at the first error |
+| `crontab -l` · `crontab -r` | Show · remove your crontab |
+| `echo '* * * * * command' \| crontab -` | Install a crontab from the input (replaces the old one) |
+| `(crontab -l; echo 'LINE') \| crontab -` | Add a job and keep the old ones |
+| `MIN HOUR DAY MONTH WEEKDAY command` | A crontab line, e.g. `30 2 * * 1-5` |
+| `systemctl list-timers` | Show systemd's timers |

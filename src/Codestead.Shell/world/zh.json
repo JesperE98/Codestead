@@ -38,7 +38,8 @@
     "helloFile": "hello.txt",
     "nameVar": "name",
     "lineVar": "line",
-    "heredocEnd": "END"
+    "heredocEnd": "END",
+    "privateFile": "private.txt"
   },
   "words": {
     "userFull": "学生",

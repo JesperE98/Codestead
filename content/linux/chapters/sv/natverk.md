@@ -411,9 +411,8 @@ nyckeln (`id_ed25519.pub`) i `~/.ssh/authorized_keys` på servern. Efter
 det frågar ssh inte efter lösenord längre. Visa aldrig den privata nyckeln
 för någon!
 
-Med `scp` och `rsync` kan du kopiera filer över SSH, och i filen
-`~/.ssh/config` kan du ge servrar korta namn – men det får vänta till ett
-senare kapitel.
+Att kopiera filer över SSH med `scp` och `rsync`, och att ge servrar korta
+namn i `~/.ssh/config`, kommer i nästa kapitel.
 
 ## När nätet inte fungerar
 

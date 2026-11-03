@@ -38,7 +38,8 @@
     "helloFile": "hej.txt",
     "nameVar": "namn",
     "lineVar": "rad",
-    "heredocEnd": "SLUT"
+    "heredocEnd": "SLUT",
+    "privateFile": "privat.txt"
   },
   "words": {
     "userFull": "Elev",

@@ -26,6 +26,12 @@ apt. Med **SSH** kör du kommandon på en annan dator, krypterat; första gånge
 bekräftar du serverns värdnyckel, och med ett nyckelpar behöver du inte längre
 något lösenord.
 
+I `~/.ssh/config` ger du servrar korta namn med `Host`, `HostName` och `User`.
+`scp` kopierar som `cp`, men ena sidan skrivs `VÄRD:SÖKVÄG`, relativt
+hemkatalogen där. `rsync -av` kopierar bara det som ändrats; ett snedstreck
+sist i källan betyder "det som finns i katalogen", och `--delete` gör målet
+till en exakt kopia – prova med `-n` först.
+
 När "internet inte fungerar", gå inifrån och ut: adress, väg, router, en
 adress på internet och till sist ett namn. Om adresser fungerar men namn inte
 gör det, är det DNS.
@@ -49,3 +55,7 @@ gör det, är det DNS.
 | `curl -o FIL URL`, `wget URL`, `wget -O FIL URL` | Ladda ner till en fil |
 | `ssh ANVÄNDARE@VÄRD KOMMANDO` | Kör ett kommando på en annan dator |
 | `ssh-keygen`, `ssh-copy-id ANVÄNDARE@VÄRD` | Skapa ett nyckelpar och lägg den publika nyckeln på servern |
+| `ssh srv` med `Host srv` i `~/.ssh/config` | Logga in med ett kort namn |
+| `scp FIL VÄRD:` · `scp VÄRD:FIL .` · `scp -r` | Kopiera till · från en annan dator · hela kataloger |
+| `rsync -av KÄLLA/ MÅL` | Kopiera bara det som ändrats |
+| `rsync -avn --delete KÄLLA/ MÅL` | Provkör en spegling utan att göra något |

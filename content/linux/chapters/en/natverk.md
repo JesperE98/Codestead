@@ -414,9 +414,8 @@ Press Enter at the questions from `ssh-keygen` to use the default file
 (`id_ed25519.pub`) to `~/.ssh/authorized_keys` on the server. After that ssh
 no longer asks for a password. Never show the private key to anyone!
 
-With `scp` and `rsync` you can copy files over SSH, and in the file
-`~/.ssh/config` you can give servers short names – but that will have to
-wait for a later chapter.
+Copying files over SSH with `scp` and `rsync`, and giving servers short
+names in `~/.ssh/config`, comes in the next chapter.
 
 ## When the network doesn't work
 

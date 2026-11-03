@@ -38,7 +38,8 @@
     "helloFile": "hallo.txt",
     "nameVar": "name",
     "lineVar": "zeile",
-    "heredocEnd": "ENDE"
+    "heredocEnd": "ENDE",
+    "privateFile": "privat.txt"
   },
   "words": {
     "userFull": "Schüler",

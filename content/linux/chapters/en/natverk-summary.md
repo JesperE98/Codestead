@@ -27,6 +27,12 @@ With **SSH** you run commands on another computer, encrypted; the first time,
 you confirm the server's host key, and with a key pair you no longer need a
 password.
 
+In `~/.ssh/config` you give servers short names with `Host`, `HostName` and
+`User`. `scp` copies like `cp`, but one side is written `HOST:PATH`, relative
+to the home directory there. `rsync -av` only copies what has changed; a slash
+at the end of the source means "what is in the directory", and `--delete`
+makes the target an exact copy – try it with `-n` first.
+
 When "the internet doesn't work", go from the inside out: address, route,
 router, an address on the internet, and finally a name. If addresses work but
 names don't, it is DNS.
@@ -50,3 +56,7 @@ names don't, it is DNS.
 | `curl -o FILE URL`, `wget URL`, `wget -O FILE URL` | Download to a file |
 | `ssh USER@HOST COMMAND` | Run a command on another computer |
 | `ssh-keygen`, `ssh-copy-id USER@HOST` | Create a key pair and put the public key on the server |
+| `ssh srv` with `Host srv` in `~/.ssh/config` | Log in with a short name |
+| `scp FILE HOST:` · `scp HOST:FILE .` · `scp -r` | Copy to · from another computer · whole directories |
+| `rsync -av SOURCE/ TARGET` | Copy only what has changed |
+| `rsync -avn --delete SOURCE/ TARGET` | Try a mirror without doing anything |

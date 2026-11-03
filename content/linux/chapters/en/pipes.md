@@ -122,6 +122,32 @@ How many files and directories are there in `/etc`? Count them with a pipe:
 ls /etc | wc -l
 ```
 
+## From input to arguments – `xargs`
+
+Some commands don't read from a pipe at all – they want names as
+**arguments**: `rm`, `mkdir`, `touch`, and `wc` when it should count in files.
+`xargs` bridges the gap: it reads the words in its input and puts them after a
+command.
+
+```sh
+find {{documents}} -type f | xargs wc -l
+```
+
+That is the same as writing every file name after `wc -l` yourself. With
+`-n 1`, `xargs` runs the command once for every word, and with `-I {}` once
+for every line, with `{}` replaced by the line:
+
+```sh
+ls {{documents}} | xargs -I {} echo "File: {}"
+```
+
+```predict
+$ printf 'a\nb\nc\n' | xargs echo
+a b c
+---
+`xargs` collected the three lines and ran `echo a b c` – once.
+```
+
 ## Both screen and file – `tee`
 
 `tee` passes its input along *and* saves a copy in a file:

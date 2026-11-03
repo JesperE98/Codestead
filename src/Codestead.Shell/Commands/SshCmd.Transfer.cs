@@ -438,7 +438,8 @@ public static partial class SshCmd
                     lines.Add(rel == "" ? "./" : rel + "/");
                 }
                 var have = (existing ?? (dry ? null : dsh.Vfs.TryLookup(targetPath, du)))?.Children?.Keys.ToList() ?? new List<string>();
-                foreach (var (name, child) in src.Children!)
+                // rsync sends the files sorted by name.
+                foreach (var (name, child) in src.Children!.OrderBy(kv => kv.Key, StringComparer.Ordinal))
                 {
                     if (child.Type == "dir" && !o.Recursive) continue;
                     Put(child, JoinPath(targetPath, name), rel == "" ? name : $"{rel}/{name}");
@@ -455,7 +456,9 @@ public static partial class SshCmd
                 return;
             }
             total += VfsLib.NodeSize(src);
-            bool same = existing is not null && existing.Type == src.Type && existing.Content == src.Content && existing.Size == src.Size;
+            // rsync's quick check: the same size and modification time means the same file. Without -a (-t)
+            // the copies get new times, so every run sends everything again.
+            bool same = existing is not null && existing.Type == src.Type && VfsLib.NodeSize(existing) == VfsLib.NodeSize(src) && existing.Mtime == src.Mtime;
             if (same) return;
             sent += VfsLib.NodeSize(src);
             lines.Add(rel);

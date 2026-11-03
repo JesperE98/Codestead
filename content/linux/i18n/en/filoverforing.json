@@ -1,0 +1,33 @@
+{
+  "title": "Copying files over SSH",
+  "tasks": {
+    "config": {
+      "text": "Create `~/.ssh/config` so that `ssh srv` logs in as `{{user}}` on `192.168.1.10`. Then run `hostname` on the server with `ssh srv`.",
+      "hint": "Three lines: `Host srv`, `    HostName 192.168.1.10` and `    User {{user}}`. Write them with `echo ... >> ~/.ssh/config` and then run `ssh srv hostname`."
+    },
+    "scp-up": {
+      "text": "Copy `~/{{notes}}` to your home directory on the server with `scp`.",
+      "hint": "`scp ~/{{notes}} srv:` – the colon after `srv` means \"on the server\", and without a path the file ends up in the home directory there."
+    },
+    "scp-down": {
+      "text": "Fetch the file `{{welcomeFile}}` from the home directory on the server to the directory `~/{{downloads}}`.",
+      "hint": "The source first, the target last: `scp srv:{{welcomeFile}} ~/{{downloads}}/`."
+    },
+    "rsync-local": {
+      "text": "Back up the contents of `~/{{documents}}` to the directory `/tmp/{{documents}}` with `rsync -av`.",
+      "hint": "The slash after the source means \"what is in\": `rsync -av ~/{{documents}}/ /tmp/{{documents}}`."
+    },
+    "rsync-again": {
+      "text": "Create the file `~/{{documents}}/{{todo}}` and run the same `rsync -av` again. Only the new file should be sent.",
+      "hint": "`touch ~/{{documents}}/{{todo}}` and then `rsync -av ~/{{documents}}/ /tmp/{{documents}}`. Without `-a`, everything is sent every time."
+    },
+    "rsync-server": {
+      "text": "Sync the contents of `~/{{documents}}` to the directory `{{documents}}` in your home directory on the server.",
+      "hint": "The same as before, but with the server as the target: `rsync -av ~/{{documents}}/ srv:{{documents}}/`."
+    },
+    "dry-run": {
+      "text": "Remove `~/{{documents}}/{{todo}}` and then try `rsync -av --delete` to `/tmp/{{documents}}` with `-n` – so that you see what would be removed, without anything happening.",
+      "hint": "`rm ~/{{documents}}/{{todo}}` and then `rsync -avn --delete ~/{{documents}}/ /tmp/{{documents}}`."
+    }
+  }
+}

@@ -128,3 +128,12 @@ server. Never show the private key to anyone!
 - [ ] The network card is down
 - [ ] `/etc/hosts` is missing
 ```
+
+```quiz
+You want `/tmp/x` to contain the files that are in `{{documents}}`, not a directory `{{documents}}`. Which command is right?
+- [ ] `rsync -a {{documents}} /tmp/x`
+- [x] `rsync -a {{documents}}/ /tmp/x`
+- [ ] `scp {{documents}} /tmp/x`
+---
+The slash at the end of the source means "what is in the directory".
+```
