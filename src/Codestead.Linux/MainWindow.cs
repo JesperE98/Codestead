@@ -1000,7 +1000,7 @@ public sealed class MainWindow : Window
             afterClose?.Invoke();
         }
         var texts = new WhatsNewTexts(T("whatsnew.title", ("name", ProductInfo.Name)), T("whatsnew.version"), T("whatsnew.close"));
-        overlay.ShowDialog(WhatsNewView.Build(texts, entries, Lang, Close), Close, 560);
+        overlay.ShowDialog(WhatsNewView.Build(texts, entries, Lang, Close), Close, 560, scroll: false);
     }
 
     private async Task OfferUpdate()

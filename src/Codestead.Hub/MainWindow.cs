@@ -363,7 +363,7 @@ public sealed class MainWindow : Window
     private void ShowNews(string name, IEnumerable<ChangelogEntry> entries)
     {
         var texts = new WhatsNewTexts(T("whatsnew.title", ("name", name)), T("whatsnew.version"), T("whatsnew.close"));
-        overlay.ShowDialog(WhatsNewView.Build(texts, entries, Lang, overlay.CloseDialog), overlay.CloseDialog, 560);
+        overlay.ShowDialog(WhatsNewView.Build(texts, entries, Lang, overlay.CloseDialog), overlay.CloseDialog, 560, scroll: false);
     }
 
     private async Task<InstalledTool?> Install(CatalogTool tool, CatalogAsset asset)

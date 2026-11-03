@@ -29,19 +29,25 @@ public sealed class OverlayHost : Grid
     }
 
     /// <summary>Shows a panel centred on a dimmed background. Escape or a click outside closes it (calls <paramref name="onClose"/>).</summary>
-    public void ShowDialog(Control panel, Action onClose, double width = 480)
+    /// <param name="scroll">
+    /// True: the whole panel scrolls when it is taller than the dialog. False: the panel scrolls by itself
+    /// (it gets the dialog's height), so that it can keep e.g. its buttons in view.
+    /// </param>
+    public void ShowDialog(Control panel, Action onClose, double width = 480, bool scroll = true)
     {
         var card = new Border
         {
             Width = width,
             MaxHeight = 640,
+            // Some room around the dialog when the window is small.
+            Margin = new Thickness(16),
             CornerRadius = new CornerRadius(12),
             Padding = new Thickness(24, 20),
             BorderThickness = new Thickness(1),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             BoxShadow = BoxShadows.Parse("0 8 32 0 #40000000"),
-            Child = new ScrollViewer { Content = panel },
+            Child = scroll ? new ScrollViewer { Content = panel } : panel,
         };
         card.Bind(Border.BackgroundProperty, card.GetResourceObservable("CsSurface"));
         card.Bind(Border.BorderBrushProperty, card.GetResourceObservable("CsBorder"));
