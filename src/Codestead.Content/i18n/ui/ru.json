@@ -95,5 +95,9 @@
   "update.text": "Доступна версия {version} приложения. Обновить сейчас? Приложение перезапустится, ваш прогресс сохранится.",
   "update.button": "Обновить и перезапустить",
   "update.later": "Позже",
-  "update.downloading": "Загрузка обновления …"
+  "update.downloading": "Загрузка обновления …",
+  "whatsnew.title": "Что нового в {name}",
+  "whatsnew.version": "Версия {version} · {date}",
+  "whatsnew.close": "OK",
+  "settings.whatsNew": "Что нового"
 }

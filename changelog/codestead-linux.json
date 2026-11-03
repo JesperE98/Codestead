@@ -1,0 +1,302 @@
+[
+  {
+    "version": "0.5.5",
+    "date": "2026-11-03",
+    "changes": {
+      "en": [
+        "After an update, a **What's new** box shows what changed. You can open it again from the settings."
+      ],
+      "sv": [
+        "Efter en uppdatering visar rutan **Vad är nytt** vad som har ändrats. Du kan öppna den igen från inställningarna."
+      ],
+      "de": [
+        "Nach einem Update zeigt das Fenster **Neuigkeiten**, was sich geändert hat. Du kannst es in den Einstellungen erneut öffnen."
+      ],
+      "fr": [
+        "Après une mise à jour, la fenêtre **Nouveautés** montre ce qui a changé. Vous pouvez la rouvrir depuis les paramètres."
+      ],
+      "es": [
+        "Después de una actualización, la ventana **Novedades** muestra lo que ha cambiado. Puedes volver a abrirla desde los ajustes."
+      ],
+      "pt": [
+        "Depois de uma atualização, a janela **Novidades** mostra o que mudou. Você pode abri-la de novo nas configurações."
+      ],
+      "ru": [
+        "После обновления окно **Что нового** показывает, что изменилось. Его можно снова открыть в настройках."
+      ],
+      "zh": [
+        "更新后，**新功能** 窗口会显示有哪些变化。你也可以在设置中再次打开它。"
+      ],
+      "ja": [
+        "更新後、**新機能** ウィンドウに変更点が表示されます。設定からもう一度開くこともできます。"
+      ],
+      "ar": [
+        "بعد التحديث، تعرض نافذة **ما الجديد** ما الذي تغيّر. يمكنك فتحها مرة أخرى من الإعدادات."
+      ],
+      "hi": [
+        "अपडेट के बाद **नया क्या है** बॉक्स दिखाता है कि क्या बदला है। आप इसे सेटिंग्स से फिर से खोल सकते हैं।"
+      ]
+    }
+  },
+  {
+    "version": "0.5.4",
+    "date": "2026-11-03",
+    "changes": {
+      "en": [
+        "Three new chapters: **Links and file information**, **Copying files over SSH** and **Scheduled jobs with cron**.",
+        "`xargs` in the chapter about pipes, and `nohup` and `watch` in the chapter about processes.",
+        "The simulator has symbolic and hard links, `stat`, `file`, `umask`, `scp`, `rsync`, `~/.ssh/config` and `crontab` – and cron really runs your jobs while the app is open.",
+        "Works on Fedora 45."
+      ],
+      "sv": [
+        "Tre nya kapitel: **Länkar och filinformation**, **Filöverföring och SSH-inställningar** och **Schemalagda jobb med cron**.",
+        "`xargs` i kapitlet om pipes, och `nohup` och `watch` i kapitlet om processer.",
+        "Simulatorn har symboliska och hårda länkar, `stat`, `file`, `umask`, `scp`, `rsync`, `~/.ssh/config` och `crontab` – och cron kör dina jobb på riktigt medan appen är öppen.",
+        "Fungerar på Fedora 45."
+      ],
+      "de": [
+        "Drei neue Kapitel: **Links und Dateiinformationen**, **Dateien über SSH kopieren** und **Zeitgesteuerte Jobs mit cron**.",
+        "`xargs` im Kapitel über Pipes sowie `nohup` und `watch` im Kapitel über Prozesse.",
+        "Der Simulator kennt symbolische und harte Links, `stat`, `file`, `umask`, `scp`, `rsync`, `~/.ssh/config` und `crontab` – und cron führt deine Jobs wirklich aus, solange die App geöffnet ist.",
+        "Läuft unter Fedora 45."
+      ],
+      "fr": [
+        "Trois nouveaux chapitres : **Liens et informations sur les fichiers**, **Copier des fichiers via SSH** et **Tâches planifiées avec cron**.",
+        "`xargs` dans le chapitre sur les pipes, ainsi que `nohup` et `watch` dans le chapitre sur les processus.",
+        "Le simulateur gère les liens symboliques et physiques, `stat`, `file`, `umask`, `scp`, `rsync`, `~/.ssh/config` et `crontab` – et cron exécute vraiment vos tâches tant que l’application est ouverte.",
+        "Fonctionne sous Fedora 45."
+      ],
+      "es": [
+        "Tres capítulos nuevos: **Enlaces e información de archivos**, **Copiar archivos por SSH** y **Tareas programadas con cron**.",
+        "`xargs` en el capítulo sobre pipes, y `nohup` y `watch` en el capítulo sobre procesos.",
+        "El simulador tiene enlaces simbólicos y duros, `stat`, `file`, `umask`, `scp`, `rsync`, `~/.ssh/config` y `crontab` – y cron ejecuta de verdad tus tareas mientras la aplicación está abierta.",
+        "Funciona en Fedora 45."
+      ],
+      "pt": [
+        "Três novos capítulos: **Links e informações de arquivos**, **Copiando arquivos via SSH** e **Tarefas agendadas com cron**.",
+        "`xargs` no capítulo sobre pipes, e `nohup` e `watch` no capítulo sobre processos.",
+        "O simulador tem links simbólicos e físicos, `stat`, `file`, `umask`, `scp`, `rsync`, `~/.ssh/config` e `crontab` – e o cron executa de verdade suas tarefas enquanto o aplicativo está aberto.",
+        "Funciona no Fedora 45."
+      ],
+      "ru": [
+        "Три новые главы: **Ссылки и информация о файлах**, **Копирование файлов по SSH** и **Задания по расписанию с cron**.",
+        "`xargs` в главе о конвейерах, а `nohup` и `watch` – в главе о процессах.",
+        "В симуляторе есть символические и жёсткие ссылки, `stat`, `file`, `umask`, `scp`, `rsync`, `~/.ssh/config` и `crontab` – а cron действительно выполняет ваши задания, пока приложение открыто.",
+        "Работает в Fedora 45."
+      ],
+      "zh": [
+        "三个新章节：**链接和文件信息**、**通过 SSH 复制文件** 和 **用 cron 运行定时任务**。",
+        "管道一章新增了 `xargs`，进程一章新增了 `nohup` 和 `watch`。",
+        "模拟器支持符号链接和硬链接，以及 `stat`、`file`、`umask`、`scp`、`rsync`、`~/.ssh/config` 和 `crontab`——而且在应用打开期间，cron 会真的运行你的任务。",
+        "可在 Fedora 45 上运行。"
+      ],
+      "ja": [
+        "新しい章が 3 つ増えました：**リンクとファイルの情報**、**SSH でファイルをコピーする**、**cron で定期的なジョブを実行する**。",
+        "パイプの章に `xargs`、プロセスの章に `nohup` と `watch` が加わりました。",
+        "シミュレーターがシンボリックリンクとハードリンク、`stat`、`file`、`umask`、`scp`、`rsync`、`~/.ssh/config`、`crontab` に対応しました。アプリを開いている間は、cron が実際にジョブを実行します。",
+        "Fedora 45 で動作します。"
+      ],
+      "ar": [
+        "ثلاثة فصول جديدة: **الروابط ومعلومات الملفات** و**نسخ الملفات عبر SSH** و**المهام المجدولة باستخدام cron**.",
+        "`xargs` في الفصل الخاص بالأنابيب، و`nohup` و`watch` في الفصل الخاص بالعمليات.",
+        "يدعم المحاكي الروابط الرمزية والصلبة، و`stat` و`file` و`umask` و`scp` و`rsync` و`~/.ssh/config` و`crontab` – ويشغّل cron مهامك فعلًا ما دام التطبيق مفتوحًا.",
+        "يعمل على Fedora 45."
+      ],
+      "hi": [
+        "तीन नए अध्याय: **Links और file की जानकारी**, **SSH के ऊपर files copy करना** और **cron से scheduled jobs**।",
+        "pipes वाले अध्याय में `xargs`, और processes वाले अध्याय में `nohup` और `watch`।",
+        "सिम्युलेटर में symbolic और hard links, `stat`, `file`, `umask`, `scp`, `rsync`, `~/.ssh/config` और `crontab` हैं – और जब तक ऐप खुला है, cron सच में आपके jobs चलाता है।",
+        "Fedora 45 पर चलता है।"
+      ]
+    }
+  },
+  {
+    "version": "0.5.3",
+    "date": "2026-11-02",
+    "changes": {
+      "en": [
+        "\"What does this print?\" questions have a **Try it in a terminal** button that opens a small terminal of their own."
+      ],
+      "sv": [
+        "\"Vad skriver det här ut?\"-frågor har knappen **Prova i en terminal**, som öppnar en egen liten terminal."
+      ],
+      "de": [
+        "Fragen vom Typ „Was gibt das aus?“ haben die Schaltfläche **In einem Terminal ausprobieren**, die ein eigenes kleines Terminal öffnet."
+      ],
+      "fr": [
+        "Les questions « Qu’est-ce que cela affiche ? » ont un bouton **Essayer dans un terminal** qui ouvre un petit terminal rien que pour elles."
+      ],
+      "es": [
+        "Las preguntas «¿Qué imprime esto?» tienen un botón **Probar en una terminal** que abre una pequeña terminal propia."
+      ],
+      "pt": [
+        "As perguntas \"O que isto imprime?\" têm um botão **Experimentar num terminal**, que abre um pequeno terminal próprio."
+      ],
+      "ru": [
+        "У вопросов «Что выведет эта команда?» есть кнопка **Попробовать в терминале**, которая открывает отдельный маленький терминал."
+      ],
+      "zh": [
+        "“这会输出什么？”类问题新增了 **在终端中试一试** 按钮，会打开一个专属的小终端。"
+      ],
+      "ja": [
+        "「これは何を出力しますか？」の問題に **ターミナルで試す** ボタンが付き、専用の小さなターミナルが開きます。"
+      ],
+      "ar": [
+        "أصبح لأسئلة «ماذا سيطبع هذا الأمر؟» زر **جرّبه في طرفية** يفتح طرفية صغيرة خاصة بها."
+      ],
+      "hi": [
+        "\"यह कमांड क्या दिखाएगा?\" वाले सवालों में **टर्मिनल में आज़माएँ** बटन है, जो उनका अपना छोटा टर्मिनल खोलता है।"
+      ]
+    }
+  },
+  {
+    "version": "0.5.2",
+    "date": "2026-11-02",
+    "changes": {
+      "en": [
+        "Codestead Linux has its own icon."
+      ],
+      "sv": [
+        "Codestead Linux har en egen ikon."
+      ],
+      "de": [
+        "Codestead Linux hat ein eigenes Symbol."
+      ],
+      "fr": [
+        "Codestead Linux a sa propre icône."
+      ],
+      "es": [
+        "Codestead Linux tiene su propio icono."
+      ],
+      "pt": [
+        "O Codestead Linux tem seu próprio ícone."
+      ],
+      "ru": [
+        "У Codestead Linux появилась собственная иконка."
+      ],
+      "zh": [
+        "Codestead Linux 有了自己的图标。"
+      ],
+      "ja": [
+        "Codestead Linux に専用のアイコンができました。"
+      ],
+      "ar": [
+        "أصبح لـ Codestead Linux أيقونته الخاصة."
+      ],
+      "hi": [
+        "Codestead Linux का अपना आइकन है।"
+      ]
+    }
+  },
+  {
+    "version": "0.5.1",
+    "date": "2026-11-02",
+    "changes": {
+      "en": [
+        "File names, file contents and the user name in the terminal follow your language – and change when you switch language.",
+        "Switching language no longer closes the app.",
+        "Questions can be answered without the terminal. After two tries, **Show the answer** appears.",
+        "`~` can be typed on keyboards where it is a dead key, such as the Swedish one."
+      ],
+      "sv": [
+        "Filnamn, filernas innehåll och användarnamnet i terminalen följer ditt språk – och byts när du byter språk.",
+        "Appen stängs inte längre när du byter språk.",
+        "Frågorna går att besvara utan terminalen. Efter två försök visas **Visa svaret**.",
+        "`~` går att skriva på tangentbord där det är en död tangent, som det svenska."
+      ],
+      "de": [
+        "Dateinamen, Dateiinhalte und der Benutzername im Terminal folgen deiner Sprache – und ändern sich, wenn du die Sprache wechselst.",
+        "Beim Wechseln der Sprache wird die App nicht mehr geschlossen.",
+        "Fragen lassen sich ohne das Terminal beantworten. Nach zwei Versuchen erscheint **Antwort zeigen**.",
+        "`~` lässt sich auf Tastaturen eingeben, auf denen es eine Tottaste ist, etwa auf der schwedischen."
+      ],
+      "fr": [
+        "Les noms de fichiers, le contenu des fichiers et le nom d’utilisateur dans le terminal suivent votre langue – et changent quand vous changez de langue.",
+        "Changer de langue ne ferme plus l’application.",
+        "Vous pouvez répondre aux questions sans le terminal. Après deux essais, **Afficher la réponse** apparaît.",
+        "`~` peut être saisi sur les claviers où c’est une touche morte, comme le clavier suédois."
+      ],
+      "es": [
+        "Los nombres de archivo, el contenido de los archivos y el nombre de usuario en la terminal siguen tu idioma – y cambian cuando cambias de idioma.",
+        "Cambiar de idioma ya no cierra la aplicación.",
+        "Las preguntas se pueden responder sin la terminal. Después de dos intentos aparece **Mostrar la respuesta**.",
+        "`~` se puede escribir en teclados donde es una tecla muerta, como el sueco."
+      ],
+      "pt": [
+        "Os nomes de arquivos, o conteúdo dos arquivos e o nome de usuário no terminal seguem o seu idioma – e mudam quando você troca de idioma.",
+        "Trocar de idioma não fecha mais o aplicativo.",
+        "As perguntas podem ser respondidas sem o terminal. Depois de duas tentativas, aparece **Mostrar a resposta**.",
+        "`~` pode ser digitado em teclados onde é uma tecla morta, como o sueco."
+      ],
+      "ru": [
+        "Имена файлов, их содержимое и имя пользователя в терминале следуют вашему языку – и меняются, когда вы переключаете язык.",
+        "Смена языка больше не закрывает приложение.",
+        "На вопросы можно отвечать без терминала. После двух попыток появляется кнопка **Показать ответ**.",
+        "`~` можно ввести на клавиатурах, где это мёртвая клавиша, например на шведской."
+      ],
+      "zh": [
+        "终端中的文件名、文件内容和用户名会跟随你的语言——切换语言时也会随之改变。",
+        "切换语言时应用不再关闭。",
+        "不用终端也能回答问题。尝试两次后会出现 **显示答案**。",
+        "`~` 在某些键盘（例如瑞典语键盘）上是死键，现在在这些键盘上也能输入。"
+      ],
+      "ja": [
+        "ターミナル内のファイル名、ファイルの内容、ユーザー名が選んだ言語に合わせて表示され、言語を切り替えると変わります。",
+        "言語を切り替えてもアプリが閉じなくなりました。",
+        "ターミナルを使わずに問題に答えられるようになりました。2 回試すと **答えを表示** が表示されます。",
+        "`~` がデッドキーになっているキーボード（スウェーデン語など）でも入力できるようになりました。"
+      ],
+      "ar": [
+        "تتبع أسماء الملفات ومحتواها واسم المستخدم في الطرفية لغتك – وتتغيّر عندما تغيّر اللغة.",
+        "لم يعد تغيير اللغة يُغلق التطبيق.",
+        "يمكن الإجابة عن الأسئلة دون الطرفية. بعد محاولتين يظهر زر **إظهار الإجابة**.",
+        "يمكن كتابة `~` على لوحات المفاتيح التي يكون فيها مفتاحًا ميتًا، مثل لوحة المفاتيح السويدية."
+      ],
+      "hi": [
+        "टर्मिनल में फ़ाइलों के नाम, फ़ाइलों की सामग्री और यूज़र नेम आपकी भाषा के अनुसार होते हैं – और भाषा बदलने पर बदल जाते हैं।",
+        "भाषा बदलने पर अब ऐप बंद नहीं होता।",
+        "सवालों के जवाब टर्मिनल के बिना भी दिए जा सकते हैं। दो कोशिशों के बाद **उत्तर दिखाएँ** दिखाई देता है।",
+        "`~` उन कीबोर्ड पर भी टाइप किया जा सकता है जहाँ यह dead key है, जैसे स्वीडिश कीबोर्ड।"
+      ]
+    }
+  },
+  {
+    "version": "0.5.0",
+    "date": "2026-10-31",
+    "changes": {
+      "en": [
+        "The first version that can be installed and updated with the Codestead hub."
+      ],
+      "sv": [
+        "Den första versionen som kan installeras och uppdateras med Codestead-hubben."
+      ],
+      "de": [
+        "Die erste Version, die sich mit dem Codestead-Hub installieren und aktualisieren lässt."
+      ],
+      "fr": [
+        "La première version qui peut être installée et mise à jour avec le hub Codestead."
+      ],
+      "es": [
+        "La primera versión que se puede instalar y actualizar con el hub de Codestead."
+      ],
+      "pt": [
+        "A primeira versão que pode ser instalada e atualizada com o hub do Codestead."
+      ],
+      "ru": [
+        "Первая версия, которую можно устанавливать и обновлять через хаб Codestead."
+      ],
+      "zh": [
+        "第一个可以通过 Codestead Hub 安装和更新的版本。"
+      ],
+      "ja": [
+        "Codestead ハブでインストール・更新できる最初のバージョンです。"
+      ],
+      "ar": [
+        "أول إصدار يمكن تثبيته وتحديثه باستخدام Codestead Hub."
+      ],
+      "hi": [
+        "पहला संस्करण जिसे Codestead हब से इंस्टॉल और अपडेट किया जा सकता है।"
+      ]
+    }
+  }
+]

@@ -87,7 +87,9 @@ public sealed class MainWindow : Window
     public MainWindow(bool smokeTest)
     {
         this.smokeTest = smokeTest;
-        state = storage.Load<AppState>("state") ?? new AppState();
+        var saved = storage.Load<AppState>("state");
+        existingUser = saved is not null;
+        state = saved ?? new AppState();
         if (!LanguagesLib.IsLang(state.Lang)) state.Lang = LanguagesLib.DetectLang();
         state.Distro = DistrosLib.GetDistro(state.Distro).Id;
         if (state.Chapter is null || ChaptersLib.Chapters.All(c => c.Id != state.Chapter)) state.Chapter = ChaptersLib.Chapters[0].Id;
@@ -123,7 +125,8 @@ public sealed class MainWindow : Window
             else
             {
                 terminal.FocusInput();
-                _ = OfferUpdate();
+                // After an update: what changed. The update offer waits until the news are closed.
+                if (!ShowNewsAfterUpdate()) _ = OfferUpdate();
             }
         };
         Closing += (_, _) => SaveAll();
@@ -978,6 +981,33 @@ public sealed class MainWindow : Window
     /// Installed with Setup.exe or as an AppImage, the app updates itself (Velopack). Installed by the hub or
     /// as a native package, the hub or the package manager does it instead.
     /// </summary>
+    /// <summary>True when the app had saved progress at start (so a missing "seen" version means an update, not a new installation).</summary>
+    private readonly bool existingUser;
+
+    /// <summary>The changelog embedded in the app.</summary>
+    private static readonly Lazy<List<ChangelogEntry>> ChangelogEntries = new(() => Changelog.Embedded(typeof(MainWindow).Assembly));
+
+    /// <summary>Shows "What's new" if the app was updated since it last ran. Returns false if there was nothing to show.</summary>
+    private bool ShowNewsAfterUpdate()
+    {
+        var news = Changelog.NewsAtStart(storage, ChangelogEntries.Value, ProductInfo.Version, existingUser);
+        if (news.Count == 0) return false;
+        ShowNews(news, () => _ = OfferUpdate());
+        return true;
+    }
+
+    /// <summary>The "What's new" dialog for some versions (newest first).</summary>
+    private void ShowNews(IEnumerable<ChangelogEntry> entries, Action? afterClose = null)
+    {
+        void Close()
+        {
+            overlay.CloseDialog();
+            afterClose?.Invoke();
+        }
+        var texts = new WhatsNewTexts(T("whatsnew.title", ("name", ProductInfo.Name)), T("whatsnew.version"), T("whatsnew.close"));
+        overlay.ShowDialog(WhatsNewView.Build(texts, entries, Lang, Close), Close, 560);
+    }
+
     private async Task OfferUpdate()
     {
         var updater = new SelfUpdate(ProductInfo.ReleasesRepo, ProductInfo.ToolId);
@@ -1112,7 +1142,16 @@ public sealed class MainWindow : Window
         close.Classes.Add("primary");
         close.Click += (_, _) => overlay.CloseDialog();
         panel.Children.Add(close);
-        panel.Children.Add(Text($"{ProductInfo.Name} {ProductInfo.Version}", 11.5, null, "muted"));
+        var version = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
+        version.Children.Add(Text($"{ProductInfo.Name} {ProductInfo.Version}", 11.5, null, "muted"));
+        if (ChangelogEntries.Value.Count > 0)
+        {
+            var news = new Button { Content = T("settings.whatsNew"), Padding = new Thickness(8, 2), FontSize = 11.5 };
+            news.Classes.Add("secondary");
+            news.Click += (_, _) => ShowNews(ChangelogEntries.Value.Take(5));
+            version.Children.Add(news);
+        }
+        panel.Children.Add(version);
         overlay.ShowDialog(panel, overlay.CloseDialog, 640);
     }
 

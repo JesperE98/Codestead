@@ -38,5 +38,9 @@
   "settings.folder": "Tools are installed in",
   "theme.system": "Match system",
   "theme.light": "Light",
-  "theme.dark": "Dark"
+  "theme.dark": "Dark",
+  "whatsnew.title": "What's new in {name}",
+  "whatsnew.version": "Version {version} · {date}",
+  "whatsnew.close": "OK",
+  "tool.whatsNew": "What's new"
 }

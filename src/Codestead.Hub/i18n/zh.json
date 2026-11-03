@@ -38,5 +38,9 @@
   "settings.folder": "工具的安装位置",
   "theme.system": "跟随系统",
   "theme.light": "浅色",
-  "theme.dark": "深色"
+  "theme.dark": "深色",
+  "whatsnew.title": "{name} 的新功能",
+  "whatsnew.version": "版本 {version} · {date}",
+  "whatsnew.close": "确定",
+  "tool.whatsNew": "新功能"
 }

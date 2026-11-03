@@ -53,6 +53,8 @@ public sealed class CatalogTool
     public Dictionary<string, string> Description { get; set; } = new();
     public string Version { get; set; } = "";
     public string? ReleaseNotesUrl { get; set; }
+    /// <summary>What changed in the latest versions, newest first (changelog/&lt;id&gt;.json). Older catalogs have none.</summary>
+    public List<CatalogChange>? Changes { get; set; }
     /// <summary>Downloads per platform, keyed by runtime id ("win-x64", "linux-x64").</summary>
     public Dictionary<string, CatalogAsset> Assets { get; set; } = new();
 
@@ -75,6 +77,14 @@ public sealed class CatalogTool
                 throw new CatalogException($"{Id}/{rid}: invalid executable \"{a.Executable}\".");
         }
     }
+}
+
+/// <summary>One version of a tool in the catalog's "changes": the changes per language code ("en" is always there).</summary>
+public sealed class CatalogChange
+{
+    public string Version { get; set; } = "";
+    public string Date { get; set; } = "";
+    public Dictionary<string, List<string>> Changes { get; set; } = new();
 }
 
 public sealed class CatalogAsset

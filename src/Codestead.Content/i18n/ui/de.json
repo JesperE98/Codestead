@@ -95,5 +95,9 @@
   "update.text": "Version {version} der App ist verfügbar. Jetzt aktualisieren? Die App startet neu, dein Fortschritt bleibt erhalten.",
   "update.button": "Aktualisieren und neu starten",
   "update.later": "Später",
-  "update.downloading": "Update wird heruntergeladen …"
+  "update.downloading": "Update wird heruntergeladen …",
+  "whatsnew.title": "Neu in {name}",
+  "whatsnew.version": "Version {version} · {date}",
+  "whatsnew.close": "OK",
+  "settings.whatsNew": "Neuigkeiten"
 }

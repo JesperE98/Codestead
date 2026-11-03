@@ -95,5 +95,9 @@
   "update.text": "ऐप का संस्करण {version} उपलब्ध है। क्या अभी अपडेट करें? ऐप फिर से शुरू होगा और आपकी प्रगति सुरक्षित रहेगी।",
   "update.button": "अपडेट करें और फिर से शुरू करें",
   "update.later": "बाद में",
-  "update.downloading": "अपडेट डाउनलोड हो रहा है …"
+  "update.downloading": "अपडेट डाउनलोड हो रहा है …",
+  "whatsnew.title": "{name} में नया क्या है",
+  "whatsnew.version": "संस्करण {version} · {date}",
+  "whatsnew.close": "ठीक है",
+  "settings.whatsNew": "नया क्या है"
 }

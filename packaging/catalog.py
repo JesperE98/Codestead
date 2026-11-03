@@ -4,6 +4,7 @@
 Usage:
   packaging/catalog.py --catalog catalog.json --id codestead-linux --name "Codestead Linux" \
       --version 0.4.0 --notes-url URL --description-file packaging/descriptions/codestead-linux.json \
+      --changelog-file changelog/codestead-linux.json \
       --asset linux-x64=FILE=URL=EXECUTABLE [--asset win-x64=FILE=URL=EXECUTABLE ...]
 
 The catalog file is created if it does not exist. Sizes and SHA-256 sums are computed from the files.
@@ -32,6 +33,7 @@ def main():
     p.add_argument("--version", required=True)
     p.add_argument("--notes-url")
     p.add_argument("--description-file", required=True)
+    p.add_argument("--changelog-file", help="changelog/<id>.json: the latest versions' changes are shown by the hub")
     p.add_argument("--asset", action="append", default=[], help="RID=FILE=URL=EXECUTABLE")
     a = p.parse_args()
 
@@ -52,6 +54,15 @@ def main():
     tool = {"id": a.id, "name": a.name, "description": description, "version": a.version, "assets": assets}
     if a.notes_url:
         tool["releaseNotesUrl"] = a.notes_url
+    if a.changelog_file:
+        with open(a.changelog_file, encoding="utf-8") as f:
+            changes = json.load(f)
+        # Only versions up to the one being published, newest first, and not the whole history.
+        def key(v):
+            return tuple(int(x) for x in v.split("."))
+        changes = [c for c in changes if key(c["version"]) <= key(a.version)]
+        changes.sort(key=lambda c: key(c["version"]), reverse=True)
+        tool["changes"] = changes[:10]
     catalog["tools"] = [t for t in catalog.get("tools", []) if t.get("id") != a.id] + [tool]
     catalog["tools"].sort(key=lambda t: t["id"])
     catalog["generated"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

@@ -52,6 +52,33 @@ säger till om hubben börjar använda något av dem. Skript som bara styr flöd
 installationstesterna …) hör inte till någon produkt. För nästa större version ändrar du `0.5` till
 `0.6`. Lokala byggen får versionen `x.y.0`.
 
+## Ändringslogg ("Vad är nytt")
+
+Vad som ändrats i varje version står i `changelog/codestead-linux.json` och `changelog/codestead-hub.json`,
+nyast först:
+
+```json
+[
+  {
+    "version": "0.5.5",
+    "date": "2026-11-03",
+    "changes": { "en": ["What changed, one short line each."], "sv": ["Vad som ändrats, en kort rad var."] }
+  }
+]
+```
+
+- **Varje PR som ger en produkt en ny version lägger till en post** för den versionen (nästa patchnummer
+  efter den senaste releasen), på alla elva språk och med lika många rader på varje språk.
+  `packaging/plan.py` stoppar både PR-bygget och releasen om posten saknas eller är ofullständig, och
+  testet `WhatsNewTests` kontrollerar filerna.
+- Skriv för användaren, inte för utvecklaren: vad man märker, inte vilka filer som ändrats.
+- **Codestead Linux** bäddar in sin fil och visar nyheterna första gången den startar efter en uppdatering
+  (och från inställningarna). Vilken version som visats sparas i `whatsnew.json` i appens datamapp.
+- **Hubben** visar sina egna nyheter på samma sätt. När release-flödet skriver katalogen tar det med de tio
+  senaste posterna för varje verktyg (`packaging/catalog.py --changelog-file`). Hubben visar dem när den
+  uppdaterat ett verktyg och skriver då in versionen i verktygets `whatsnew.json`, så att verktyget inte
+  visar samma nyheter igen. Varje verktyg har också knappen "Vad är nytt".
+
 ## Projektstruktur
 
 ```text

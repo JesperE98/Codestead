@@ -38,5 +38,9 @@
   "settings.folder": "Verktygen installeras i",
   "theme.system": "Som systemet",
   "theme.light": "Ljust",
-  "theme.dark": "Mörkt"
+  "theme.dark": "Mörkt",
+  "whatsnew.title": "Nytt i {name}",
+  "whatsnew.version": "Version {version} · {date}",
+  "whatsnew.close": "OK",
+  "tool.whatsNew": "Vad är nytt"
 }

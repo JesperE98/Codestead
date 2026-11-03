@@ -38,5 +38,9 @@
   "settings.folder": "ツールのインストール先",
   "theme.system": "システムに合わせる",
   "theme.light": "ライト",
-  "theme.dark": "ダーク"
+  "theme.dark": "ダーク",
+  "whatsnew.title": "{name} の新機能",
+  "whatsnew.version": "バージョン {version} · {date}",
+  "whatsnew.close": "OK",
+  "tool.whatsNew": "新機能"
 }

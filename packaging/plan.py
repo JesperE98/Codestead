@@ -48,6 +48,30 @@ def changed_since(sha, specs):
     return run("git", "diff", "--quiet", sha, "HEAD", "--", *specs).returncode != 0
 
 
+LANGUAGES = ["en", "sv", "de", "fr", "es", "pt", "ru", "zh", "ja", "ar", "hi"]
+
+
+def changelog_problem(path, version):
+    """Why the changelog is not ready for a release of `version`, or None.
+
+    Every new version must say what changed – the apps show it after an update ("What's new") – in all
+    languages, with as many lines in each language as in English."""
+    with open(path, encoding="utf-8") as f:
+        entries = json.load(f)
+    entry = next((e for e in entries if e.get("version") == version), None)
+    if entry is None:
+        return (f"{path} has no entry for version {version}, which this change will release. Add what changed "
+                f"(in all languages) – see \"Ändringslogg\" in docs/DEVELOPMENT.md.")
+    changes = entry.get("changes", {})
+    en = changes.get("en") or []
+    if not en:
+        return f"{path}: version {version} has no English changes."
+    missing = [lang for lang in LANGUAGES if len(changes.get(lang) or []) != len(en)]
+    if missing:
+        return f"{path}: version {version} needs {len(en)} lines in every language; check {', '.join(missing)}."
+    return None
+
+
 def main():
     want = os.environ.get("WANT_PUBLISH") == "true"
     # Everything publishing needs, with what is missing named one by one.
@@ -62,6 +86,7 @@ def main():
     secrets_ok = not missing
     tags = releases()
     products, publish = [], []
+    problems = []
     for p in json.load(open("packaging/products.json")):
         out = subprocess.check_output(["dotnet", "msbuild", p["project"], "-getProperty:AssemblyName",
                                        f"-getProperty:{p['idProperty']}", f"-getProperty:{p['nameProperty']}",
@@ -77,6 +102,10 @@ def main():
             version = f"{minor}.{patches[-1] + 1}" if changed else last
         else:
             changed, version = True, f"{minor}.0"
+        if changed and p.get("changelog"):
+            missing_note = changelog_problem(p["changelog"], version)
+            if missing_note:
+                problems.append(missing_note)
         name = props[p["nameProperty"]]
         product = {"key": p["key"], "id": pid, "name": name, "version": version,
                    # The title of its releases in codestead-releases (several products share that repository).
@@ -90,6 +119,10 @@ def main():
     if want and not secrets_ok and any(True for _ in products):
         print(f"::warning::Nothing is published. Missing: {', '.join(missing)}. Secrets must be repository "
               "secrets under Settings -> Secrets and variables -> Actions (see docs/DEVELOPMENT.md).")
+    if problems:
+        for problem in problems:
+            print(f"::error::{problem}")
+        raise SystemExit(1)
     with open(os.environ.get("GITHUB_OUTPUT", os.devnull), "a") as f:
         f.write(f"products={json.dumps(products)}\n")
         f.write(f"publish={json.dumps(publish)}\n")

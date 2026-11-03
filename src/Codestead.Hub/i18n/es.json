@@ -38,5 +38,9 @@
   "settings.folder": "Las herramientas se instalan en",
   "theme.system": "Como el sistema",
   "theme.light": "Claro",
-  "theme.dark": "Oscuro"
+  "theme.dark": "Oscuro",
+  "whatsnew.title": "Novedades en {name}",
+  "whatsnew.version": "Versión {version} · {date}",
+  "whatsnew.close": "OK",
+  "tool.whatsNew": "Novedades"
 }

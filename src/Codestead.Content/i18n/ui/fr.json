@@ -95,5 +95,9 @@
   "update.text": "La version {version} de l'application est disponible. Mettre à jour maintenant ? L'application redémarre et votre progression est conservée.",
   "update.button": "Mettre à jour et redémarrer",
   "update.later": "Plus tard",
-  "update.downloading": "Téléchargement de la mise à jour …"
+  "update.downloading": "Téléchargement de la mise à jour …",
+  "whatsnew.title": "Nouveautés dans {name}",
+  "whatsnew.version": "Version {version} · {date}",
+  "whatsnew.close": "OK",
+  "settings.whatsNew": "Nouveautés"
 }
