@@ -41,5 +41,20 @@
   "whatsnew.title": "Neu in {name}",
   "whatsnew.version": "Version {version} · {date}",
   "whatsnew.close": "OK",
-  "tool.whatsNew": "Neuigkeiten"
+  "tool.whatsNew": "Neuigkeiten",
+  "profile.achievements": "Erfolge",
+  "profile.total": "Gesamt: {xp} XP · 🏆 {unlocked} von {total} Erfolgen",
+  "profile.totalStreak": "🔥 Tage in Folge: {days}",
+  "profile.levelTooltip": "{xp} XP · noch {left} XP bis zum nächsten Level",
+  "profile.levelTooltipMax": "{xp} XP · höchstes Level",
+  "profile.streakTooltip": "Tage in Folge: {days} (Rekord: {best})",
+  "profile.streakWaiting": "Löse heute eine Aufgabe, damit die Serie weiterläuft.",
+  "profile.hiddenTitle": "???",
+  "profile.hiddenDesc": "Wird durch Erkunden des Werkzeugs gefunden.",
+  "profile.unlockedOn": "Freigeschaltet: {date}",
+  "profile.hiddenSection": "{title} · {found} von {total} gefunden",
+  "profile.galleryTitle": "{name} – Erfolge",
+  "profile.count": "{unlocked} von {total} freigeschaltet",
+  "profile.streakLine": "🔥 Tage in Folge: {days} · Rekord {best}",
+  "profile.streakNone": "Noch keine Serie"
 }

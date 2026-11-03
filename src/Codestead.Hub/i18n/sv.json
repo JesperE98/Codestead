@@ -41,5 +41,20 @@
   "whatsnew.title": "Nytt i {name}",
   "whatsnew.version": "Version {version} · {date}",
   "whatsnew.close": "OK",
-  "tool.whatsNew": "Vad är nytt"
+  "tool.whatsNew": "Vad är nytt",
+  "profile.achievements": "Utmärkelser",
+  "profile.total": "Totalt: {xp} XP · 🏆 {unlocked} av {total} utmärkelser",
+  "profile.totalStreak": "🔥 Dagar i rad: {days}",
+  "profile.levelTooltip": "{xp} XP · {left} XP kvar till nästa nivå",
+  "profile.levelTooltipMax": "{xp} XP · högsta nivån",
+  "profile.streakTooltip": "Dagar i rad: {days} (bäst: {best})",
+  "profile.streakWaiting": "Lös en uppgift i dag för att hålla det igång.",
+  "profile.hiddenTitle": "???",
+  "profile.hiddenDesc": "Hittas genom att utforska verktyget.",
+  "profile.unlockedOn": "Upplåst {date}",
+  "profile.hiddenSection": "{title} · {found} av {total} hittade",
+  "profile.galleryTitle": "{name} – utmärkelser",
+  "profile.count": "{unlocked} av {total} upplåsta",
+  "profile.streakLine": "🔥 Dagar i rad: {days} · bäst {best}",
+  "profile.streakNone": "Inga dagar i rad ännu"
 }

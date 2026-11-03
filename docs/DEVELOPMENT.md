@@ -79,6 +79,54 @@ nyast först:
   uppdaterat ett verktyg och skriver då in versionen i verktygets `whatsnew.json`, så att verktyget inte
   visar samma nyheter igen. Varje verktyg har också knappen "Vad är nytt".
 
+## Färgsystemet
+
+Färgerna har fasta betydelser i båda apparna (och i kommande verktyg). De finns som nycklar i
+`src/Codestead.UI/Themes/Codestead.axaml`, i både ljust och mörkt tema:
+
+| Nyckel | Betydelse | Används till |
+| --- | --- | --- |
+| `CsAccent`, `CsAccentSoft`, `CsOnAccent` | appens egen färg | primärknappar, valt kapitel, fokus – aldrig "rätt/klart" |
+| `CsSuccess`, `CsSuccessSoft` | klart, rätt, godkänt (grönt) | bockar, framstegsmätare, rätt svar, "kapitlet klart" |
+| `CsWarning`, `CsWarningSoft` | ledtråd, varning (bärnsten) | ledtrådar, "texten finns inte på ditt språk", katalogproblem |
+| `CsDanger`, `CsDangerSoft` | fel, underkänt, farligt (rött) | fel svar, underkänt prov, radera-knappar |
+| `CsInfo`, `CsInfoSoft`, `CsLink` | information, länkar (blått) | länkar, nedladdningsmätare |
+| `CsReward`, `CsRewardSoft`, `CsRewardStrong` | belöningar (guld) | XP, nivåer, utmärkelser, dagar i rad |
+
+- **Accentfärgen är appens varumärke**: `src/Codestead.UI/Themes/Brand.cs` har en färg per app (Linux
+  blågrön, hubben indigo) och appens `App.axaml.cs` lägger in den med `Brand.<App>.ApplyTo(Resources)`.
+  Ett nytt verktyg lägger till en egen `Brand`.
+- `CsWarnBg`/`CsWarnBorder` finns kvar för äldre kod; använd `CsWarningSoft`/`CsWarning` i ny kod.
+- `ThemeTests` kontrollerar att alla nycklar finns i båda teman och att text går att läsa (kontrast minst 4,5:1
+  mot bakgrunderna och mot den egna "Soft"-färgen, och för knapptext på accentfärgen). Byt en färg → kör testet.
+- Emoji visas i färg genom att fönstrets typsnitt (`CsUiFont`) har emoji-typsnitt som reserv.
+
+## Spelifiering (XP, nivåer, utmärkelser)
+
+Reglerna finns i `src/Codestead.Content/Game/` och är rena funktioner som testas i
+`tests/Codestead.Content.Tests/GameTests.cs`. Vyerna (topprad, notiser, firande, galleri, profilrad) finns i
+`src/Codestead.UI/Controls/Game/` och tar färdigöversatta texter, så att samma vyer fungerar i alla verktyg och
+i hubben. Codestead Linux kopplar ihop dem i `src/Codestead.Linux/MainWindow.Game.cs`.
+
+- **XP räknas fram** ur det som är gjort (`XpRules.Total`), så inget kan ges två gånger: uppgift 10, utan
+  ledtråd/lösning +5, fråga i texten 2, kapitel 25, del 50, godkänt prov 100, 100 % +50. Kapitel, delar och
+  prov som en gång räknats ligger kvar i `GameState` även om de senare "försvinner" (t.ex. vid byte av distro).
+- **Nivåer** 1–10 med trösklar i `Levels.Thresholds`; titlarna är UI-texterna `level.1` … `level.10`. Testet
+  ser till att hela kursen alltid räcker till högsta nivån.
+- **Dagar i rad**: en lokal kalenderdag räknas när man löser en uppgift eller svarar rätt på en fråga. En
+  missad dag startar om räkningen, men inget dras av.
+- **Ny utmärkelse**: lägg till en rad i `AchievementsLib.All` (id, emoji, kategori, villkor och gärna en
+  räknare för "x / y"), texterna `ach.<id>.title` och `ach.<id>.desc` på alla elva språk, och ett "vittne" i
+  `GameTests.Witnesses` (testet kräver ett för varje utmärkelse). Kategori `Hidden` = dold: titeln visas som
+  "???" tills den hittats och skrivs inte heller till profilfilen. Använd emoji från Unicode 11 eller äldre.
+- **Kommandon** analyseras med skalets parser (`CommandInfo`): namn (även genom sudo, time, xargs …), pipes,
+  omdirigeringar, loopar, skript och man-sidor.
+- **Gamla sparningar**: `GameEngine.Sync` körs vid start och ger tyst XP och utmärkelser för tidigare
+  framsteg; användaren får en notis om det en gång.
+- **Profil till hubben**: verktyget skriver `profile.json` (`ToolProfile`, `src/Codestead.UI/Controls/Game/Profile.cs`)
+  i sin datamapp när något märkbart ändras och vid start. Filen innehåller alla texter på alla språk, så hubben
+  kan visa nivå, dagar i rad och galleriet utan verktygets texter. Ett nytt verktyg skriver samma fil.
+
 ## Projektstruktur
 
 ```text

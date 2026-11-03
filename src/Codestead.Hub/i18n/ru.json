@@ -41,5 +41,20 @@
   "whatsnew.title": "Что нового в {name}",
   "whatsnew.version": "Версия {version} · {date}",
   "whatsnew.close": "OK",
-  "tool.whatsNew": "Что нового"
+  "tool.whatsNew": "Что нового",
+  "profile.achievements": "Достижения",
+  "profile.total": "Всего: {xp} XP · 🏆 достижения: {unlocked} из {total}",
+  "profile.totalStreak": "🔥 Дней подряд: {days}",
+  "profile.levelTooltip": "{xp} XP · до следующего уровня осталось {left} XP",
+  "profile.levelTooltipMax": "{xp} XP · максимальный уровень",
+  "profile.streakTooltip": "Дней подряд: {days} (рекорд: {best})",
+  "profile.streakWaiting": "Выполните задание сегодня, чтобы не прервать серию.",
+  "profile.hiddenTitle": "???",
+  "profile.hiddenDesc": "Открывается при исследовании инструмента.",
+  "profile.unlockedOn": "Открыто {date}",
+  "profile.hiddenSection": "{title} · найдено {found} из {total}",
+  "profile.galleryTitle": "{name} – достижения",
+  "profile.count": "Открыто {unlocked} из {total}",
+  "profile.streakLine": "🔥 Дней подряд: {days} · рекорд {best}",
+  "profile.streakNone": "Серии пока нет"
 }

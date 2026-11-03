@@ -1,5 +1,66 @@
 [
   {
+    "version": "0.2.0",
+    "date": "2026-11-03",
+    "changes": {
+      "en": [
+        "Each tool's **level, XP, days in a row and achievements** are shown on its card, with a button that opens all of its achievements.",
+        "A **total** for all your tools at the top of the page.",
+        "Clearer **colours** and an indigo accent colour of its own for the hub."
+      ],
+      "sv": [
+        "Varje verktygs **nivå, XP, dagar i rad och utmärkelser** visas på dess kort, med en knapp som öppnar alla dess utmärkelser.",
+        "En **summa** för alla dina verktyg högst upp på sidan.",
+        "Tydligare **färger** och en egen indigoblå accentfärg för hubben."
+      ],
+      "de": [
+        "**Level, XP, Tage in Folge und Erfolge** jedes Werkzeugs werden auf seiner Karte angezeigt, mit einer Schaltfläche, die alle seine Erfolge öffnet.",
+        "Eine **Gesamtsumme** für alle deine Werkzeuge oben auf der Seite.",
+        "Klarere **Farben** und eine eigene indigoblaue Akzentfarbe für den Hub."
+      ],
+      "fr": [
+        "Le **niveau, les XP, les jours d’affilée et les succès** de chaque outil s’affichent sur sa carte, avec un bouton qui ouvre tous ses succès.",
+        "Un **total** pour tous vos outils en haut de la page.",
+        "Des **couleurs** plus lisibles et une couleur d’accent indigo propre au hub."
+      ],
+      "es": [
+        "El **nivel, los XP, los días seguidos y los logros** de cada herramienta se muestran en su tarjeta, con un botón que abre todos sus logros.",
+        "Un **total** de todas tus herramientas en la parte superior de la página.",
+        "**Colores** más claros y un color de acento índigo propio para el hub."
+      ],
+      "pt": [
+        "O **nível, o XP, os dias seguidos e as conquistas** de cada ferramenta aparecem no seu cartão, com um botão que abre todas as conquistas dela.",
+        "Um **total** de todas as suas ferramentas no topo da página.",
+        "**Cores** mais nítidas e uma cor de destaque índigo própria para o hub."
+      ],
+      "ru": [
+        "**Уровень, XP, дни подряд и достижения** каждого инструмента показаны на его карточке, а кнопка открывает все его достижения.",
+        "**Итог** по всем вашим инструментам вверху страницы.",
+        "Более понятные **цвета** и собственный акцентный цвет индиго для хаба."
+      ],
+      "zh": [
+        "每个工具的 **等级、XP、连续天数和成就** 都显示在它的卡片上，还有一个按钮可以打开它的全部成就。",
+        "页面顶部显示你所有工具的 **总计**。",
+        "更清晰的 **颜色**，Hub 也有了自己的靛蓝色强调色。"
+      ],
+      "ja": [
+        "各ツールの **レベル、XP、連続日数、実績** がカードに表示され、ボタンからそのツールのすべての実績を開けます。",
+        "ページ上部に、すべてのツールの **合計** を表示します。",
+        "より分かりやすい **色** と、ハブ独自のインディゴのアクセントカラー。"
+      ],
+      "ar": [
+        "يظهر **المستوى وXP والأيام المتتالية والإنجازات** لكل أداة على بطاقتها، مع زر يفتح جميع إنجازاتها.",
+        "**مجموع** لكل أدواتك أعلى الصفحة.",
+        "**ألوان** أوضح ولون مميِّز نيلي خاص بالـHub."
+      ],
+      "hi": [
+        "हर टूल का **लेवल, XP, लगातार दिन और उपलब्धियाँ** उसके कार्ड पर दिखती हैं, साथ में एक बटन जो उसकी सभी उपलब्धियाँ खोलता है।",
+        "पेज में सबसे ऊपर आपके सभी टूल का **कुल**।",
+        "ज़्यादा साफ़ **रंग** और हब का अपना इंडिगो ऐक्सेंट रंग।"
+      ]
+    }
+  },
+  {
     "version": "0.1.6",
     "date": "2026-11-03",
     "changes": {

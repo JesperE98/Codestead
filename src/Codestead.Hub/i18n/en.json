@@ -41,5 +41,20 @@
   "whatsnew.title": "What's new in {name}",
   "whatsnew.version": "Version {version} · {date}",
   "whatsnew.close": "OK",
-  "tool.whatsNew": "What's new"
+  "tool.whatsNew": "What's new",
+  "profile.achievements": "Achievements",
+  "profile.total": "Total: {xp} XP · 🏆 {unlocked} of {total} achievements",
+  "profile.totalStreak": "🔥 Days in a row: {days}",
+  "profile.levelTooltip": "{xp} XP · {left} XP to the next level",
+  "profile.levelTooltipMax": "{xp} XP · top level",
+  "profile.streakTooltip": "Days in a row: {days} (best: {best})",
+  "profile.streakWaiting": "Solve a task today to keep it going.",
+  "profile.hiddenTitle": "???",
+  "profile.hiddenDesc": "Found by exploring the tool.",
+  "profile.unlockedOn": "Unlocked {date}",
+  "profile.hiddenSection": "{title} · {found} of {total} found",
+  "profile.galleryTitle": "{name} – achievements",
+  "profile.count": "{unlocked} of {total} unlocked",
+  "profile.streakLine": "🔥 Days in a row: {days} · best {best}",
+  "profile.streakNone": "No streak yet"
 }

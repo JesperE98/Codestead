@@ -6,7 +6,12 @@ namespace Codestead.Hub;
 
 public partial class App : Application
 {
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+        // The tool's own accent colour (the meaning colours come from the shared theme).
+        Codestead.UI.Themes.Brand.Hub.ApplyTo(Resources);
+    }
 
     public override void OnFrameworkInitializationCompleted()
     {

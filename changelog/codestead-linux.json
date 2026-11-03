@@ -1,5 +1,88 @@
 [
   {
+    "version": "0.6.0",
+    "date": "2026-11-03",
+    "changes": {
+      "en": [
+        "**Achievements and levels**: earn XP for tasks, questions, chapters and exams, climb ten levels from Guest to root and collect 32 achievements – plus 10 hidden ones that you find by exploring the terminal.",
+        "A short **celebration** when you finish a chapter, a whole part or pass an exam: the commands you practised, the XP you earned and your new achievements.",
+        "**Days in a row**: solve a task or answer a question every day to keep your streak going. Missing a day costs nothing.",
+        "All achievements are under **Achievements** at the bottom of the chapter list, or click your level in the top bar. The progress you already had counts.",
+        "Clearer **colours**: green means done, amber a hint or warning, red an error, blue a link and gold a reward. Codestead Linux has its own teal accent colour."
+      ],
+      "sv": [
+        "**Utmärkelser och nivåer**: du får XP för uppgifter, frågor, kapitel och prov, klättrar tio nivåer från Gäst till root och samlar 32 utmärkelser – plus 10 dolda som du hittar genom att utforska terminalen.",
+        "Ett kort **firande** när du blir klar med ett kapitel, en hel del eller klarar ett prov: kommandona du övade på, XP:n du fick och dina nya utmärkelser.",
+        "**Dagar i rad**: lös en uppgift eller svara på en fråga varje dag för att hålla det igång. Missar du en dag kostar det ingenting.",
+        "Alla utmärkelser finns under **Utmärkelser** längst ner i kapitellistan, eller klicka på din nivå i den översta raden. Framstegen du redan hade räknas.",
+        "Tydligare **färger**: grönt betyder klart, gult en ledtråd eller varning, rött ett fel, blått en länk och guld en belöning. Codestead Linux har en egen blågrön accentfärg."
+      ],
+      "de": [
+        "**Erfolge und Level**: Verdiene XP für Aufgaben, Fragen, Kapitel und Prüfungen, steig zehn Level von Gast bis root auf und sammle 32 Erfolge – plus 10 versteckte, die du beim Erkunden des Terminals findest.",
+        "Eine kurze **Feier**, wenn du ein Kapitel oder ein ganzes Hauptkapitel abschließt oder eine Prüfung bestehst: die Befehle, die du geübt hast, die verdienten XP und deine neuen Erfolge.",
+        "**Tage in Folge**: Löse jeden Tag eine Aufgabe oder beantworte eine Frage, damit deine Serie weiterläuft. Ein verpasster Tag kostet nichts.",
+        "Alle Erfolge findest du unter **Erfolge** ganz unten in der Kapitelliste, oder klicke oben in der Leiste auf dein Level. Dein bisheriger Fortschritt zählt mit.",
+        "Klarere **Farben**: Grün heißt erledigt, Bernstein ein Tipp oder eine Warnung, Rot ein Fehler, Blau ein Link und Gold eine Belohnung. Codestead Linux hat eine eigene blaugrüne Akzentfarbe."
+      ],
+      "fr": [
+        "**Succès et niveaux** : gagnez des XP pour les tâches, les questions, les chapitres et les examens, grimpez dix niveaux d’Invité à root et collectionnez 32 succès – plus 10 cachés que vous découvrez en explorant le terminal.",
+        "Une courte **célébration** quand vous terminez un chapitre ou un chapitre principal entier, ou réussissez un examen : les commandes pratiquées, les XP gagnés et vos nouveaux succès.",
+        "**Jours d’affilée** : résolvez une tâche ou répondez à une question chaque jour pour continuer votre série. Manquer un jour ne coûte rien.",
+        "Tous les succès se trouvent sous **Succès** en bas de la liste des chapitres, ou cliquez sur votre niveau dans la barre du haut. La progression que vous aviez déjà compte.",
+        "Des **couleurs** plus lisibles : vert signifie terminé, ambre un indice ou un avertissement, rouge une erreur, bleu un lien et or une récompense. Codestead Linux a sa propre couleur d’accent bleu-vert."
+      ],
+      "es": [
+        "**Logros y niveles**: gana XP con tareas, preguntas, capítulos y exámenes, sube diez niveles de Invitado a root y consigue 32 logros, además de 10 ocultos que encontrarás explorando la terminal.",
+        "Una breve **celebración** cuando terminas un capítulo o un capítulo principal entero, o apruebas un examen: los comandos que practicaste, los XP que ganaste y tus nuevos logros.",
+        "**Días seguidos**: resuelve una tarea o responde una pregunta cada día para mantener la racha. Saltarte un día no cuesta nada.",
+        "Todos los logros están en **Logros**, al final de la lista de capítulos, o haz clic en tu nivel en la barra superior. El progreso que ya tenías cuenta.",
+        "**Colores** más claros: verde significa hecho, ámbar una pista o advertencia, rojo un error, azul un enlace y dorado una recompensa. Codestead Linux tiene su propio color de acento verde azulado."
+      ],
+      "pt": [
+        "**Conquistas e níveis**: ganhe XP por tarefas, perguntas, capítulos e provas, suba dez níveis de Convidado a root e colecione 32 conquistas – além de 10 ocultas que você encontra explorando o terminal.",
+        "Uma breve **comemoração** quando você conclui um capítulo, uma parte inteira ou é aprovado numa prova: os comandos que você praticou, o XP que ganhou e suas novas conquistas.",
+        "**Dias seguidos**: resolva uma tarefa ou responda a uma pergunta todo dia para manter a sequência. Perder um dia não custa nada.",
+        "Todas as conquistas ficam em **Conquistas**, no fim da lista de capítulos, ou clique no seu nível na barra superior. O progresso que você já tinha conta.",
+        "**Cores** mais nítidas: verde significa concluído, âmbar uma dica ou aviso, vermelho um erro, azul um link e dourado uma recompensa. O Codestead Linux tem sua própria cor de destaque verde-azulada."
+      ],
+      "ru": [
+        "**Достижения и уровни**: получайте XP за задания, вопросы, главы и экзамены, пройдите десять уровней от Гостя до root и соберите 32 достижения – плюс 10 скрытых, которые можно найти, исследуя терминал.",
+        "Короткое **празднование**, когда вы проходите главу, целую часть или сдаёте экзамен: команды, которые вы отработали, заработанные XP и новые достижения.",
+        "**Дни подряд**: выполняйте задание или отвечайте на вопрос каждый день, чтобы не прерывать серию. Пропущенный день ничем не грозит.",
+        "Все достижения собраны в разделе **Достижения** внизу списка глав – или нажмите на свой уровень в верхней панели. Уже имеющийся прогресс засчитывается.",
+        "Более понятные **цвета**: зелёный означает «готово», янтарный – подсказку или предупреждение, красный – ошибку, синий – ссылку, золотой – награду. У Codestead Linux свой бирюзовый акцентный цвет."
+      ],
+      "zh": [
+        "**成就和等级**：完成任务、回答问题、学完章节和通过测验都能获得 XP，从访客一路升到 root，共十个等级，还能收集 32 个成就——另有 10 个隐藏成就，需要你探索终端才能发现。",
+        "完成一个章节、一整个部分或通过测验时，会有简短的 **庆祝**：展示你练习过的命令、获得的 XP 和新解锁的成就。",
+        "**连续天数**：每天完成一个任务或回答一个问题，就能保持连续记录。错过一天也没有任何损失。",
+        "所有成就都在章节列表底部的 **成就** 中，也可以点击顶栏中的等级查看。你之前的进度同样计入。",
+        "更清晰的 **颜色**：绿色表示完成，琥珀色表示提示或警告，红色表示错误，蓝色表示链接，金色表示奖励。Codestead Linux 有了自己的青绿色强调色。"
+      ],
+      "ja": [
+        "**実績とレベル**：課題、問題、章、テストで XP を獲得し、ゲストから root まで 10 のレベルを駆け上がり、32 個の実績を集めましょう。さらに、ターミナルを探索すると見つかる隠し実績が 10 個あります。",
+        "章やパート全体を終えたとき、またはテストに合格したときに、短い **お祝い** が表示されます。練習したコマンド、獲得した XP、新しい実績を確認できます。",
+        "**連続日数**：毎日、課題を解くか問題に答えると、連続記録が続きます。1 日休んでもペナルティはありません。",
+        "すべての実績は、章リストのいちばん下の **実績** から見られます。上部バーのレベルをクリックしても開きます。これまでの進捗もカウントされます。",
+        "より分かりやすい **色**：緑は完了、琥珀色はヒントや警告、赤はエラー、青はリンク、金色はごほうびを表します。Codestead Linux には独自のティールのアクセントカラーがあります。"
+      ],
+      "ar": [
+        "**الإنجازات والمستويات**: اكسب XP مقابل المهام والأسئلة والفصول والاختبارات، وتسلّق عشرة مستويات من ضيف إلى root، واجمع 32 إنجازًا – إضافة إلى 10 إنجازات مخفية تكتشفها باستكشاف الطرفية.",
+        "**احتفال** قصير عندما تنهي فصلًا أو جزءًا كاملًا أو تنجح في اختبار: الأوامر التي تدرّبت عليها، وXP الذي كسبته، وإنجازاتك الجديدة.",
+        "**أيام متتالية**: أنجز مهمة أو أجب عن سؤال كل يوم لتحافظ على سلسلتك. تفويت يوم لا يكلّفك شيئًا.",
+        "تجد كل الإنجازات تحت **الإنجازات** أسفل قائمة الفصول، أو انقر على مستواك في الشريط العلوي. التقدّم الذي أحرزته من قبل محسوب.",
+        "**ألوان** أوضح: الأخضر يعني منجزًا، والكهرماني تلميحًا أو تحذيرًا، والأحمر خطأً، والأزرق رابطًا، والذهبي مكافأة. لـ Codestead Linux لون مميِّز خاص به بالأزرق المخضرّ."
+      ],
+      "hi": [
+        "**उपलब्धियाँ और लेवल**: कार्यों, प्रश्नों, अध्यायों और परीक्षाओं के लिए XP कमाएँ, मेहमान से root तक दस लेवल चढ़ें और 32 उपलब्धियाँ जुटाएँ – साथ में 10 छिपी उपलब्धियाँ, जो टर्मिनल को खंगालने पर मिलती हैं।",
+        "जब आप कोई अध्याय या पूरा भाग ख़त्म करते हैं या परीक्षा पास करते हैं, तो एक छोटा-सा **जश्न**: जिन कमांड का आपने अभ्यास किया, आपके कमाए XP और आपकी नई उपलब्धियाँ।",
+        "**लगातार दिन**: अपना सिलसिला जारी रखने के लिए हर दिन कोई कार्य पूरा करें या किसी प्रश्न का उत्तर दें। एक दिन छूट जाए तो कोई नुकसान नहीं।",
+        "सभी उपलब्धियाँ अध्यायों की सूची में सबसे नीचे **उपलब्धियाँ** में हैं, या ऊपर की पट्टी में अपने लेवल पर क्लिक करें। आपकी पहले की प्रगति भी गिनी जाती है।",
+        "ज़्यादा साफ़ **रंग**: हरा मतलब पूरा, एम्बर संकेत या चेतावनी, लाल त्रुटि, नीला लिंक और सुनहरा इनाम। Codestead Linux का अपना टील ऐक्सेंट रंग है।"
+      ]
+    }
+  },
+  {
     "version": "0.5.6",
     "date": "2026-11-03",
     "changes": {

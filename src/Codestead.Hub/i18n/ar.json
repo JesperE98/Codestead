@@ -41,5 +41,20 @@
   "whatsnew.title": "ما الجديد في {name}",
   "whatsnew.version": "الإصدار {version} · {date}",
   "whatsnew.close": "حسنًا",
-  "tool.whatsNew": "ما الجديد"
+  "tool.whatsNew": "ما الجديد",
+  "profile.achievements": "الإنجازات",
+  "profile.total": "المجموع: {xp} XP · 🏆 الإنجازات: {unlocked} من {total}",
+  "profile.totalStreak": "🔥 أيام متتالية: {days}",
+  "profile.levelTooltip": "{xp} XP · بقي {left} XP للمستوى التالي",
+  "profile.levelTooltipMax": "{xp} XP · أعلى مستوى",
+  "profile.streakTooltip": "أيام متتالية: {days} (الأفضل: {best})",
+  "profile.streakWaiting": "أنجز مهمة اليوم لتحافظ على السلسلة.",
+  "profile.hiddenTitle": "???",
+  "profile.hiddenDesc": "يُكتشف باستكشاف الأداة.",
+  "profile.unlockedOn": "فُتح في {date}",
+  "profile.hiddenSection": "{title} · عُثر على {found} من {total}",
+  "profile.galleryTitle": "{name} – الإنجازات",
+  "profile.count": "فُتح {unlocked} من {total}",
+  "profile.streakLine": "🔥 أيام متتالية: {days} · الأفضل {best}",
+  "profile.streakNone": "لا أيام متتالية بعد"
 }

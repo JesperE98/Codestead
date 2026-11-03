@@ -6,7 +6,12 @@ namespace Codestead.Linux;
 
 public partial class App : Application
 {
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+        // The tool's own accent colour (the meaning colours come from the shared theme).
+        Codestead.UI.Themes.Brand.Linux.ApplyTo(Resources);
+    }
 
     public override void OnFrameworkInitializationCompleted()
     {

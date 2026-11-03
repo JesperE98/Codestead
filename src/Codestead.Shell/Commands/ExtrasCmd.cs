@@ -202,7 +202,7 @@ BESKRIVNING
                 "Uptime: 2 hours, 14 mins",
                 $"Packages: {Js.Num(count + 600)} ({pm})",
                 "Shell: bash 5.2",
-                "Terminal: LinuxLearningTool",
+                "Terminal: Codestead Linux",
             };
             var logo = Logos.Get(d.Id) ?? Logos["debian"];
             int width = logo.Max(l => l.Length);

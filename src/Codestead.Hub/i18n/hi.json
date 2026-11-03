@@ -41,5 +41,20 @@
   "whatsnew.title": "{name} में नया क्या है",
   "whatsnew.version": "संस्करण {version} · {date}",
   "whatsnew.close": "ठीक है",
-  "tool.whatsNew": "नया क्या है"
+  "tool.whatsNew": "नया क्या है",
+  "profile.achievements": "उपलब्धियाँ",
+  "profile.total": "कुल: {xp} XP · 🏆 {total} में से {unlocked} उपलब्धियाँ",
+  "profile.totalStreak": "🔥 लगातार {days} दिन",
+  "profile.levelTooltip": "{xp} XP · अगले लेवल तक {left} XP बाकी",
+  "profile.levelTooltipMax": "{xp} XP · सबसे ऊँचा लेवल",
+  "profile.streakTooltip": "लगातार {days} दिन (सबसे अच्छा: {best})",
+  "profile.streakWaiting": "सिलसिला जारी रखने के लिए आज कोई कार्य पूरा करें।",
+  "profile.hiddenTitle": "???",
+  "profile.hiddenDesc": "टूल को खंगालने पर मिलती है।",
+  "profile.unlockedOn": "{date} को अनलॉक हुई",
+  "profile.hiddenSection": "{title} · {total} में से {found} मिलीं",
+  "profile.galleryTitle": "{name} – उपलब्धियाँ",
+  "profile.count": "{total} में से {unlocked} अनलॉक",
+  "profile.streakLine": "🔥 लगातार {days} दिन · सबसे अच्छा {best}",
+  "profile.streakNone": "अभी कोई सिलसिला नहीं"
 }

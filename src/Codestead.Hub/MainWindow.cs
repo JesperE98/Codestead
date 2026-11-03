@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using Codestead.Hub.Core;
 using Codestead.UI;
 using Codestead.UI.Controls;
+using Codestead.UI.Controls.Game;
 
 namespace Codestead.Hub;
 
@@ -50,7 +51,7 @@ public sealed class MainWindow : Window
 
     private readonly StackPanel page = new() { MaxWidth = 860, Margin = new Thickness(32, 24, 32, 40), Spacing = 14 };
     private readonly TextBlock brandName = new() { FontSize = 18, FontWeight = FontWeight.Bold, VerticalAlignment = VerticalAlignment.Center };
-    private readonly Button settingsButton = new() { Content = "⚙", FontSize = 17, Padding = new Thickness(10, 4) };
+    private readonly Button settingsButton = new() { Content = Icons.Gear(19), Padding = new Thickness(10, 6) };
 
     private string Lang => state.Lang ?? "en";
     private string T(string key, params (string, object)[] args) => HubStrings.T(Lang, key, args);
@@ -87,6 +88,11 @@ public sealed class MainWindow : Window
         Content = overlay;
         ApplyTheme();
         Render();
+        // Back from a tool: its level and achievements may have changed.
+        Activated += (_, _) =>
+        {
+            if (!overlay.DialogOpen) Render();
+        };
 
         Opened += async (_, _) =>
         {
@@ -175,10 +181,13 @@ public sealed class MainWindow : Window
         header.Children.Add(check);
         page.Children.Add(header);
 
+        var profiles = ProfilesShown();
+        if (profiles.Count > 0) page.Children.Add(TotalRow(profiles));
+
         if (catalogProblem is not null)
         {
             var problem = new Border { Padding = new Thickness(14, 10), CornerRadius = new CornerRadius(8), Child = Text(catalogProblem, 13.5) };
-            problem.Bind(Border.BackgroundProperty, this.GetResourceObservable("CsWarnBg"));
+            problem.Bind(Border.BackgroundProperty, this.GetResourceObservable("CsWarningSoft"));
             page.Children.Add(problem);
         }
 
@@ -257,6 +266,7 @@ public sealed class MainWindow : Window
             : T("tool.installed", ("version", installed.Version)) + (updateAvailable ? " · " + T("tool.available", ("version", tool!.Version)) : " · " + T("tool.upToDate"));
         info.Children.Add(Text(status, 12.5, null, "muted"));
         if (tool is not null && asset is null) info.Children.Add(Text(T("tool.notForPlatform"), 12.5, null, "muted"));
+        if (installed is not null && LoadProfile(id) is { } profile) info.Children.Add(ProfileRow.Build(ProfileModelFor(profile), () => OpenAchievements(name, profile)));
 
         var actions = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
         void Add(Control c)
@@ -269,7 +279,7 @@ public sealed class MainWindow : Window
             var progress = new StackPanel { Spacing = 4, Width = 260 };
             progress.Children.Add(Text(pct < 0 ? T("tool.installing") : T("tool.downloading", ("percent", pct)), 13));
             var bar = new ProgressBar { Minimum = 0, Maximum = 100, Value = Math.Max(0, pct), IsIndeterminate = pct < 0, Height = 6, MinHeight = 6 };
-            bar.Bind(ProgressBar.ForegroundProperty, this.GetResourceObservable("CsAccent"));
+            bar.Bind(ProgressBar.ForegroundProperty, this.GetResourceObservable("CsInfo"));
             progress.Children.Add(bar);
             Add(progress);
         }
@@ -319,6 +329,58 @@ public sealed class MainWindow : Window
         var card = new Border { Padding = new Thickness(18, 16), Child = row };
         card.Classes.Add("card");
         return card;
+    }
+
+    // ---------- Profiles (level, streak and achievements written by each tool) ----------
+
+    private static ToolProfile? LoadProfile(string toolId) => ToolProfile.Load(new Storage(toolId));
+
+    /// <summary>The profiles of the installed tools.</summary>
+    private List<ToolProfile> ProfilesShown() =>
+        store.All().Select(t => LoadProfile(t.Id)).OfType<ToolProfile>().ToList();
+
+    private ProfileTexts ProfileTexts() => new(
+        (xp, next) => next is int n ? T("profile.levelTooltip", ("xp", xp), ("left", n - xp)) : T("profile.levelTooltipMax", ("xp", xp)),
+        (days, today, best) => T("profile.streakTooltip", ("days", days), ("best", Math.Max(best, days))) + (today ? "" : "\n" + T("profile.streakWaiting")),
+        T("profile.hiddenTitle"),
+        T("profile.hiddenDesc"),
+        date => T("profile.unlockedOn", ("date", date)),
+        (title, found, total) => T("profile.hiddenSection", ("title", title), ("found", found), ("total", total)));
+
+    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Now);
+
+    private ProfileModel ProfileModelFor(ToolProfile p)
+    {
+        var texts = ProfileTexts();
+        return new ProfileModel(ProfileModels.Level(p, Lang, texts), ProfileModels.Streak(p, Today, texts), p.Unlocked, p.Achievements.Count,
+            $"{p.Unlocked}/{p.Achievements.Count}", T("profile.achievements"));
+    }
+
+    /// <summary>All tools together: XP, achievements and the longest current streak.</summary>
+    private Control TotalRow(List<ToolProfile> profiles)
+    {
+        int xp = profiles.Sum(p => p.Xp), unlocked = profiles.Sum(p => p.Unlocked), total = profiles.Sum(p => p.Achievements.Count);
+        int streak = profiles.Max(p => p.StreakOn(Today).Days);
+        var text = T("profile.total", ("xp", xp), ("unlocked", unlocked), ("total", total));
+        if (streak > 0) text += " · " + T("profile.totalStreak", ("days", streak));
+        var label = Text(text, 14, FontWeight.SemiBold);
+        label.FontFamily = (FontFamily)Application.Current!.FindResource("CsUiFont")!;
+        var box = new Border { CornerRadius = new CornerRadius(10), Padding = new Thickness(14, 10), Child = label };
+        box.Bind(Border.BackgroundProperty, this.GetResourceObservable("CsRewardSoft"));
+        return box;
+    }
+
+    private void OpenAchievements(string name, ToolProfile p)
+    {
+        var texts = ProfileTexts();
+        var (days, _) = p.StreakOn(Today);
+        var gallery = new GalleryTexts(
+            T("profile.galleryTitle", ("name", name)),
+            T("profile.count", ("unlocked", p.Unlocked), ("total", p.Achievements.Count)),
+            days > 0 ? T("profile.streakLine", ("days", days), ("best", Math.Max(p.BestStreak, days))) : T("profile.streakNone"),
+            T("dialog.close"));
+        overlay.ShowDialog(AchievementGalleryView.Build(gallery, ProfileModels.Level(p, Lang, texts), ProfileModels.Sections(p, Lang, texts), overlay.CloseDialog),
+            overlay.CloseDialog, 800, scroll: false);
     }
 
     // ---------- Actions ----------
