@@ -41,5 +41,20 @@
   "whatsnew.title": "{name} の新機能",
   "whatsnew.version": "バージョン {version} · {date}",
   "whatsnew.close": "OK",
-  "tool.whatsNew": "新機能"
+  "tool.whatsNew": "新機能",
+  "profile.achievements": "実績",
+  "profile.total": "合計：{xp} XP · 🏆 {total} 個中 {unlocked} 個の実績",
+  "profile.totalStreak": "🔥 {days} 日連続",
+  "profile.levelTooltip": "{xp} XP · 次のレベルまであと {left} XP",
+  "profile.levelTooltipMax": "{xp} XP · 最高レベル",
+  "profile.streakTooltip": "{days} 日連続（最高：{best} 日）",
+  "profile.streakWaiting": "今日、課題を解くと連続記録が続きます。",
+  "profile.hiddenTitle": "???",
+  "profile.hiddenDesc": "ツールを探索すると見つかります。",
+  "profile.unlockedOn": "{date} に解除",
+  "profile.hiddenSection": "{title} · {total} 個中 {found} 個発見",
+  "profile.galleryTitle": "{name} – 実績",
+  "profile.count": "{total} 個中 {unlocked} 個を解除",
+  "profile.streakLine": "🔥 {days} 日連続 · 最高 {best} 日",
+  "profile.streakNone": "まだ連続記録はありません"
 }
