@@ -3,7 +3,7 @@ namespace Codestead.Shell;
 // Port of src/shell/extrarepo.ts – extra repositories outside the distribution's own: PPA
 // (Ubuntu/Debian) and COPR (Fedora). The state lives as files in the virtual file system – just
 // like in a real system – so it is saved automatically and the student can look at it with ls and cat.
-// AUR (Arch) is no repository for pacman at all; there you build the packages yourself (Commands/ReposCmd.cs).
+// AUR (Arch) is no repository for pacman at all; there you build the packages yourself (Commands/Repos/).
 
 public static partial class ExtrarepoLib
 {

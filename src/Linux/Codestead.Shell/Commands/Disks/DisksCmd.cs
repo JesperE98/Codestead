@@ -2,7 +2,7 @@ namespace Codestead.Shell.Commands;
 
 // Port of src/shell/commands/disks.ts – commands for disks and file systems: df, lsblk, blkid,
 // mount, umount, findmnt, fdisk, swapon, sync and mkfs (mkfs.ext4, mkfs.vfat ...).
-// The disk model itself is in ../Disks.cs.
+// The disk model itself is in Disks/ (DisksLib).
 
 public static partial class DisksCmd
 {

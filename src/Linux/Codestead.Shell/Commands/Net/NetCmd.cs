@@ -3,7 +3,7 @@ using static Codestead.Shell.NetworkLib;
 namespace Codestead.Shell.Commands;
 
 // Port of src/shell/commands/net.ts – network commands: ip, ping, ss, dig, host, nslookup, getent,
-// traceroute, curl, wget and the practice server myserver. The network itself is in ../Network.cs.
+// traceroute, curl, wget and the practice server myserver. The network itself is in Network/ (NetworkLib).
 
 public static partial class NetCmd
 {

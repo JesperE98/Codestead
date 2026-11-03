@@ -58,7 +58,7 @@ public static partial class VfsLib
     }
 
     /// <summary>
-    /// Simulated archives (tar, gzip, zip – see Commands/ArchiveCmd.cs) start with a marker followed
+    /// Simulated archives (tar, gzip, zip – see Commands/Archive/) start with a marker followed
     /// by their pretend size: MARKER NUL size NUL content.
     /// </summary>
     private static readonly Regex SizedBlob = new("^(?:\u0000SIMTAR1|\u001f\u008b\u0008SIMGZ1|PK\u0003\u0004SIMZIP1)\u0000(\\d+)\u0000", RegexOptions.CultureInvariant);

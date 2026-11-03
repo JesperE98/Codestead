@@ -8,7 +8,7 @@ public static partial class ReposCmd
 {
     private sealed class AurEntry
     {
-        /// <summary>The package's id in Packages.cs.</summary>
+        /// <summary>The package's id in Packages/PackagesLib.Catalog.cs.</summary>
         public required string PkgId { get; init; }
         public required string Pkgver { get; init; }
         public required string Pkgrel { get; init; }

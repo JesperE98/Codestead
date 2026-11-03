@@ -1,7 +1,7 @@
 namespace Codestead.Shell.Commands;
 
 // Port of src/shell/commands/systemd.ts – commands for services and logs: systemctl, journalctl,
-// hostnamectl, systemd-analyze and reboot. The model (services, journal, boots) is in ../Services.cs.
+// hostnamectl, systemd-analyze and reboot. The model (services, journal, boots) is in Services/ (ServicesLib).
 
 public static partial class SystemdCmd
 {

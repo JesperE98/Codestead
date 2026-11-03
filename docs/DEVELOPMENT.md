@@ -158,14 +158,14 @@ src/
 │   ├── Codestead.Content/       Kapitel och uppgifter (Chapters/, ChapterDefinitions.cs, Checks.cs), spelmotorn
 │   │                            (Game/), språk, UI-texter (i18n/ui/*.json)
 │   ├── Codestead.Shell/         Den simulerade terminalen (bash, zsh, fish, apt, pacman, dnf, git ...)
-│   │   ├── Shell.cs             Kör kommandorader: pipes, omdirigering, sudo, skript, jobb
-│   │   ├── Parser.cs            Bash-parser (syntaxträd)
-│   │   ├── Vfs.cs               Virtuellt filsystem med ägare och rwx-rättigheter
-│   │   ├── Initfs.cs            Startfilerna för varje distribution
+│   │   ├── Shell/               Kör kommandorader: pipes, omdirigering, sudo, skript, jobb (en partiell fil per del)
+│   │   ├── Parser/              Bash-parser: Lexer, Parser och syntaxträdet (Ast/, en nod per fil)
+│   │   ├── Vfs/                 Virtuellt filsystem med ägare och rwx-rättigheter
+│   │   ├── InitfsLib.cs         Startfilerna för varje distribution
 │   │   ├── World.cs, world/     Elevens dator på elevens språk (namn, ord, övningsfiler)
-│   │   ├── Packages.cs          Paketdatabasen (olika paketnamn per familj)
+│   │   ├── Packages/            Paketdatabasen (olika paketnamn per familj)
 │   │   ├── ShellI18n.cs, i18n/  Simulatorns egna tips och help-sammanfattningar
-│   │   └── Commands/            Alla kommandon: ls, grep, chmod, apt, pacman, dnf, git, ssh ...
+│   │   └── Commands/<Grupp>/    Alla kommandon, en mapp per grupp och en fil per kommando (Users/UsersCmd.Useradd.cs …)
 │   ├── content/
 │   │   ├── chapters/<språk>/    Kapiteltexterna (markdown), ett språk per katalog
 │   │   └── i18n/<språk>/        Översatta titlar och uppgiftstexter
@@ -236,7 +236,7 @@ sina id:n och versioner i `build/Codestead.props`.
    varje kapitel finns på alla språk, och att kontrollfrågorna är likadana på alla språk.
 
 Behövs ett nytt kommando lägger du det i `src/Linux/Codestead.Shell/Commands/`. Ska det installeras med
-pakethanteraren lägger du också till ett paket i `Packages.cs`.
+pakethanteraren lägger du också till ett paket i `Packages/PackagesLib.Catalog.cs`.
 
 ## Elevens dator på elevens språk
 
@@ -285,14 +285,14 @@ att inget har glömts.
 
 ## Simulatorns filsystem, cron och servern
 
-- **Länkar** (`Vfs.cs`): en symbolisk länk är en nod med `Type = "link"` och sökvägen i `Content`.
+- **Länkar** (`Vfs/`): en symbolisk länk är en nod med `Type = "link"` och sökvägen i `Content`.
   `VFS.Lookup` följer länkar (högst 40, sedan `ELOOP`); `Lookup(..., follow: false)` och
   `TryLookupLink` ger själva länken, som `lstat`. Kommandon som arbetar med namnet (rm, mv, rmdir,
   ls -l, find, tar) använder den varianten. En hård länk är samma nod i flera kataloger, med
   `Nlink` och ett gemensamt `Ino`; när en sparad terminal läses in fogar `JoinHardLinks` ihop dem
   igen. `VfsLib.CloneNode` (cp) ger alltid nya filer utan inodnummer.
 - **umask** finns på `VFS` och sparas med terminalen. `WriteFile` och `Mkdir` använder den.
-- **cron** (`Commands/CronCmd.cs`): användarnas crontab ligger i `/var/spool/cron/crontabs`
+- **cron** (`Commands/Cron/`): användarnas crontab ligger i `/var/spool/cron/crontabs`
   (Debian/Ubuntu) eller `/var/spool/cron`. `CronCmd.Tick` körs före varje kommandorad och kör de
   jobb vars minut har passerat sedan förra gången (högst en timme bakåt), men bara medan tjänsten
   cron/crond/cronie är igång. Tiden räknas inte medan appen är stängd, precis som en avstängd dator.

@@ -26,7 +26,7 @@ public partial class PackageDef
     public List<string>? BaseDistros { get; set; }
     /// <summary>
     /// Exists only in an extra repository: "ppa:user/name" (Debian/Ubuntu), "aur" (Arch)
-    /// or "copr:user/project" (Fedora). See Extrarepo/ExtrarepoLib.cs and Commands/ReposCmd.cs.
+    /// or "copr:user/project" (Fedora). See Extrarepo/ExtrarepoLib.cs and Commands/Repos/.
     /// </summary>
     public OrderedDictionary<Family, string>? ExtraRepo { get; set; }
 }

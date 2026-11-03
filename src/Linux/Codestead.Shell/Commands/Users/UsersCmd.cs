@@ -3,7 +3,7 @@ namespace Codestead.Shell.Commands;
 // Port of src/shell/commands/users.ts
 // User management: useradd, usermod, userdel, groupadd, groupdel, gpasswd, passwd, chpasswd, chage,
 // adduser/deluser/addgroup/delgroup (Debian), chgrp, who, w, last and getent.
-// Everything reads and writes /etc/passwd, /etc/group and /etc/shadow via Users.cs.
+// Everything reads and writes /etc/passwd, /etc/group and /etc/shadow via Users/ (UsersLib).
 
 public static partial class UsersCmd
 {

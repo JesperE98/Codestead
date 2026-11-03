@@ -13,14 +13,6 @@ using Codestead.UI.Controls.Game;
 
 namespace Codestead.Hub;
 
-/// <summary>Settings saved between runs.</summary>
-public sealed class HubState
-{
-    public string? Lang { get; set; }
-    /// <summary>null = follow the system, "light" or "dark".</summary>
-    public string? Theme { get; set; }
-}
-
 /// <summary>
 /// The hub: a list of Codestead tools with Install / Open / Update / Uninstall, like JetBrains Toolbox.
 /// The tool list comes from the signed catalog; tools are installed per user (see <see cref="ToolStore"/>).

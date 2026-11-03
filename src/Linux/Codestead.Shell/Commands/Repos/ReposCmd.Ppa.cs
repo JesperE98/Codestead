@@ -11,7 +11,7 @@ public static partial class ReposCmd
     {
         public required string Description { get; init; }
         public required string DisplayName { get; init; }
-        /// <summary>Packages (ids in Packages.cs) in the PPA.</summary>
+        /// <summary>Packages (ids in Packages/PackagesLib.Catalog.cs) in the PPA.</summary>
         public required List<string> Packages { get; init; }
     }
 
