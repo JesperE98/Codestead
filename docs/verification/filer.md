@@ -1,6 +1,6 @@
 # filer – Files and directories
 
-Huvudkapitel: `grunder`. Text: `content/linux/chapters/en/filer.md` (engelska är källspråket).
+Huvudkapitel: `grunder`. Text: `src/Linux/content/chapters/en/filer.md` (engelska är källspråket).
 
 Status: **ogranskad**
 

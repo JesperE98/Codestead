@@ -437,8 +437,8 @@ public class ReposTests
     private static string RepoRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null && !Directory.Exists(Path.Combine(dir.FullName, "content", "linux", "chapters"))) dir = dir.Parent;
-        return dir?.FullName ?? throw new DirectoryNotFoundException("content/linux/chapters");
+        while (dir is not null && !Directory.Exists(Path.Combine(dir.FullName, "src", "Linux", "content", "chapters"))) dir = dir.Parent;
+        return dir?.FullName ?? throw new DirectoryNotFoundException("src/Linux/content/chapters");
     }
 
     [Fact(DisplayName = "alla klickbara kommandon i kapiteltexterna fungerar")]
@@ -458,7 +458,7 @@ public class ReposTests
                 // The family chapter of the distro (apt/pacman/dnf and PPA/AUR/COPR), then the universal formats.
                 foreach (var id in new[] { $"familj-{d.Family}", "universella-paket" })
                 {
-                    var path = Path.Combine(root, "content", "linux", "chapters", lang, $"{id}.md");
+                    var path = Path.Combine(root, "src", "Linux", "content", "chapters", lang, $"{id}.md");
                     // A translation that hasn't been written yet is reported by the content tests, not here.
                     if (lang != "en" && !File.Exists(path)) continue;
                     var md = world.Expand(Preprocess(File.ReadAllText(path), d));

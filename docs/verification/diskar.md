@@ -1,6 +1,6 @@
 # Faktagranskning: diskar
 
-Kapitel: Diskar och filsystem (`content/linux/chapters/en/diskar.md`)
+Kapitel: Diskar och filsystem (`src/Linux/content/chapters/en/diskar.md`)
 
 Status: **ogranskad**
 

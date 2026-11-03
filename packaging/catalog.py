@@ -3,8 +3,8 @@
 
 Usage:
   packaging/catalog.py --catalog catalog.json --id codestead-linux --name "Codestead Linux" \
-      --version 0.4.0 --notes-url URL --description-file packaging/descriptions/codestead-linux.json \
-      --changelog-file changelog/codestead-linux.json \
+      --version 0.4.0 --notes-url URL --description-file src/Linux/description.json \
+      --changelog-file src/Linux/changelog.json \
       --asset linux-x64=FILE=URL=EXECUTABLE [--asset win-x64=FILE=URL=EXECUTABLE ...]
 
 The catalog file is created if it does not exist. Sizes and SHA-256 sums are computed from the files.
@@ -33,7 +33,7 @@ def main():
     p.add_argument("--version", required=True)
     p.add_argument("--notes-url")
     p.add_argument("--description-file", required=True)
-    p.add_argument("--changelog-file", help="changelog/<id>.json: the latest versions' changes are shown by the hub")
+    p.add_argument("--changelog-file", help="src/<App>/changelog.json: the latest versions' changes are shown by the hub")
     p.add_argument("--asset", action="append", default=[], help="RID=FILE=URL=EXECUTABLE")
     a = p.parse_args()
 

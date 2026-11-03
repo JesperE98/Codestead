@@ -13,7 +13,7 @@ officiell källa hittades).
 ## Officiella webbplatser
 
 Bara dessa får användas som källor, både i loggarna och i kapitlens källistor
-(`content/linux/references/*.json`). Listan kontrolleras av testet
+(`src/Linux/content/references/*.json`). Listan kontrolleras av testet
 `LearningContentTests.OfficialDomains`; ändra båda ställena samtidigt.
 
 | Område | Webbplatser |

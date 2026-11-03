@@ -9,17 +9,17 @@
     <InternalsVisibleTo Include="Codestead.Content.Tests" />
   </ItemGroup>
   <!--
-    Chapter texts and their translations live in content/linux/ (markdown and JSON) and are embedded here. Logical names always use forward slashes: chapters/<lang>/<id>.md,
+    Chapter texts and their translations live in src/Linux/content/ (markdown and JSON) and are embedded here. Logical names always use forward slashes: chapters/<lang>/<id>.md,
     i18n/<lang>/<id>.json and ui/<lang>.json.
   -->
   <ItemGroup>
-    <EmbeddedResource Include="../../content/linux/chapters/**/*.md">
+    <EmbeddedResource Include="../content/chapters/**/*.md">
       <LogicalName>chapters/$([System.String]::Copy('%(RecursiveDir)').Replace('\', '/'))%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="../../content/linux/i18n/**/*.json">
+    <EmbeddedResource Include="../content/i18n/**/*.json">
       <LogicalName>i18n/$([System.String]::Copy('%(RecursiveDir)').Replace('\', '/'))%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="../../content/linux/references/*.json">
+    <EmbeddedResource Include="../content/references/*.json">
       <LogicalName>references/%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="i18n/ui/*.json">

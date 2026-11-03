@@ -1,6 +1,6 @@
 # Faktagranskning: admin-exam
 
-Kapitel: Prov: Systemadministration (`content/linux/chapters/en/admin-exam.md`)
+Kapitel: Prov: Systemadministration (`src/Linux/content/chapters/en/admin-exam.md`)
 
 Status: **ogranskad**
 

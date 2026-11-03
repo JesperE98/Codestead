@@ -1,6 +1,6 @@
 # pipes – Redirection and pipes
 
-Huvudkapitel: `grunder`. Text: `content/linux/chapters/en/pipes.md` (engelska är källspråket).
+Huvudkapitel: `grunder`. Text: `src/Linux/content/chapters/en/pipes.md` (engelska är källspråket).
 
 Status: **ogranskad**
 

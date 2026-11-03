@@ -27,7 +27,7 @@ later) for you.
 
 Every release is automatically installed and started on clean systems before it is published: Windows
 Server 2022/2025, Ubuntu 22.04 and 24.04, Fedora, Arch Linux and CachyOS. The hub is also tested by
-having it install and start Codestead Linux. See [.github/release-notes/](.github/release-notes/)
+having it install and start Codestead Linux. See [src/Linux/release-notes.md](src/Linux/release-notes.md)
 for installation instructions.
 
 ## What you get

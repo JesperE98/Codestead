@@ -1,5 +1,5 @@
 # Builds the Windows artifacts for one Codestead tool: an installer (Velopack Setup.exe) and a portable .zip.
-# Usage: packaging/build-windows.ps1 -Project src/Codestead.Linux/Codestead.Linux.csproj -PackageName codestead-linux -DisplayName "Codestead Linux" -Version 0.4.0
+# Usage: packaging/build-windows.ps1 -Project src/Linux/Codestead.Linux/Codestead.Linux.csproj -PackageName codestead-linux -DisplayName "Codestead Linux" -Version 0.4.0
 param(
   [Parameter(Mandatory)] [string] $Project,
   [Parameter(Mandatory)] [string] $PackageName,

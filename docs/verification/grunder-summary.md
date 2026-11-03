@@ -1,6 +1,6 @@
 # grunder-summary – Summary: The basics
 
-Huvudkapitel: `grunder`. Text: `content/linux/chapters/en/grunder-summary.md` (engelska är källspråket).
+Huvudkapitel: `grunder`. Text: `src/Linux/content/chapters/en/grunder-summary.md` (engelska är källspråket).
 
 Status: **ogranskad**
 

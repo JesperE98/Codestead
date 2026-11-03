@@ -1,5 +1,44 @@
 [
   {
+    "version": "0.6.1",
+    "date": "2026-11-03",
+    "changes": {
+      "en": [
+        "Behind the scenes: the code is reorganised so that coming Codestead tools can share it. Nothing changes in how you use the app."
+      ],
+      "sv": [
+        "Bakom kulisserna: koden är omorganiserad så att kommande Codestead-verktyg kan dela på den. Inget ändras i hur du använder appen."
+      ],
+      "de": [
+        "Hinter den Kulissen: Der Code ist neu organisiert, damit künftige Codestead-Tools ihn gemeinsam nutzen können. An der Bedienung ändert sich nichts."
+      ],
+      "fr": [
+        "En coulisses : le code est réorganisé pour que les futurs outils Codestead puissent le partager. Rien ne change dans votre utilisation de l'application."
+      ],
+      "es": [
+        "Entre bastidores: el código se ha reorganizado para que las próximas herramientas de Codestead puedan compartirlo. No cambia nada en cómo usas la aplicación."
+      ],
+      "pt": [
+        "Nos bastidores: o código foi reorganizado para que as próximas ferramentas Codestead possam compartilhá-lo. Nada muda na forma como você usa o aplicativo."
+      ],
+      "ru": [
+        "За кулисами: код переорганизован, чтобы будущие инструменты Codestead могли использовать его совместно. В работе с приложением ничего не меняется."
+      ],
+      "zh": [
+        "幕后：代码已重新组织，以便未来的 Codestead 工具可以共用。你使用应用的方式没有任何变化。"
+      ],
+      "ja": [
+        "舞台裏：今後の Codestead ツールで共有できるようにコードを整理しました。アプリの使い方は何も変わりません。"
+      ],
+      "ar": [
+        "خلف الكواليس: أُعيد تنظيم الشيفرة حتى تتمكن أدوات Codestead القادمة من مشاركتها. لا يتغير شيء في طريقة استخدامك للتطبيق."
+      ],
+      "hi": [
+        "पर्दे के पीछे: कोड को फिर से व्यवस्थित किया गया है ताकि आने वाले Codestead टूल इसे साझा कर सकें। ऐप के इस्तेमाल में कुछ नहीं बदलता।"
+      ]
+    }
+  },
+  {
     "version": "0.6.0",
     "date": "2026-11-03",
     "changes": {

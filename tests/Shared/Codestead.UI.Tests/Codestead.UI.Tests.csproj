@@ -13,7 +13,7 @@
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Codestead.UI/Codestead.UI.csproj" />
+    <ProjectReference Include="../../../src/Shared/Codestead.UI/Codestead.UI.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />

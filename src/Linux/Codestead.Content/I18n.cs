@@ -66,7 +66,7 @@ public static partial class I18nLib
 
     private static readonly ConcurrentDictionary<string, List<Reference>> referencesCache = new(StringComparer.Ordinal);
 
-    /// <summary>Official sources for a chapter (content/linux/references/&lt;id&gt;.json). Empty if there are none.</summary>
+    /// <summary>Official sources for a chapter (src/Linux/content/references/&lt;id&gt;.json). Empty if there are none.</summary>
     public static List<Reference> References(Chapter chapter) =>
         referencesCache.GetOrAdd(chapter.Id, id => Resources.Read($"references/{id}.json") is { } json
             ? JsonSerializer.Deserialize<List<Reference>>(json, Js.JsonOptions) ?? new()

@@ -8,7 +8,9 @@ For each product in packaging/products.json:
   - a new version is only made if the product's files ("paths", minus "exclude") changed since the commit
     the newest release was built from (recorded as <!-- codestead-source: SHA --> in its release notes).
     "exclude" lists files in a shared folder that the product does not use, e.g. the lesson controls in
-    src/Codestead.UI for the hub (tests/Codestead.Hub.Tests checks that the hub really does not use them).
+    src/Shared/Codestead.UI for the hub (tests/Hub/Codestead.Hub.Tests checks that the hub really does not use them).
+  - every product has its own folder ("dir", e.g. src/Linux) with changelog.json (What's new, must have an entry
+    for the next version), description.json (shown by the hub) and release-notes.md (the release page).
 Publishing also needs WANT_PUBLISH=true (a run by hand on main with "publish" ticked) and both secrets.
 Merges to main do not publish: several pull requests are collected, and they all add their lines to the one
 changelog entry for the next version (which stays the same until it is published).
@@ -104,15 +106,15 @@ def main():
             version = f"{minor}.{patches[-1] + 1}" if changed else last
         else:
             changed, version = True, f"{minor}.0"
-        if changed and p.get("changelog"):
-            missing_note = changelog_problem(p["changelog"], version)
+        if changed:
+            missing_note = changelog_problem(f"{p['dir']}/changelog.json", version)
             if missing_note:
                 problems.append(missing_note)
         name = props[p["nameProperty"]]
         product = {"key": p["key"], "id": pid, "name": name, "version": version,
                    # The title of its releases in codestead-releases (several products share that repository).
                    "title": p.get("title", name),
-                   "exe": props["AssemblyName"], "project": p["project"], "summary": p["summary"]}
+                   "exe": props["AssemblyName"], "project": p["project"], "summary": p["summary"], "dir": p["dir"]}
         products.append(product)
         if want and changed and secrets_ok:
             publish.append(product)

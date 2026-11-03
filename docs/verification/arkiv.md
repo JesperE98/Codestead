@@ -2,7 +2,7 @@
 
 Status: **ogranskad**
 
-Källtext: `content/linux/chapters/en/arkiv.md` (inklusive kontrollfrågorna). Exempelutskrifterna
+Källtext: `src/Linux/content/chapters/en/arkiv.md` (inklusive kontrollfrågorna). Exempelutskrifterna
 (storlekar, `betyg.csv`) är hämtade från simulatorn i en ny Ubuntu-terminal.
 
 | Påstående | Källa | Status | Datum |

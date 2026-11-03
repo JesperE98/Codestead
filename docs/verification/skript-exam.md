@@ -2,7 +2,7 @@
 
 Status: **ogranskad**
 
-Källtext: `content/linux/chapters/en/skript-exam.md`. Predict-svaren kontrolleras av testet
+Källtext: `src/Linux/content/chapters/en/skript-exam.md`. Predict-svaren kontrolleras av testet
 `PredictionsMatchTheSimulator`; här granskas att frågorna och svaren stämmer på ett riktigt system.
 
 | Påstående | Källa | Status | Datum |

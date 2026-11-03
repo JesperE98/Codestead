@@ -2,7 +2,7 @@
 
 Status: **ogranskad**
 
-Källtext: `content/linux/chapters/en/schemalaggning.md` (inklusive kontrollfrågorna).
+Källtext: `src/Linux/content/chapters/en/schemalaggning.md` (inklusive kontrollfrågorna).
 
 | Påstående | Källa | Status | Datum |
 |---|---|---|---|

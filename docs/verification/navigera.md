@@ -1,6 +1,6 @@
 # navigera – Navigating the file system
 
-Huvudkapitel: `grunder`. Text: `content/linux/chapters/en/navigera.md` (engelska är källspråket).
+Huvudkapitel: `grunder`. Text: `src/Linux/content/chapters/en/navigera.md` (engelska är källspråket).
 
 Status: **ogranskad**
 
