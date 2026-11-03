@@ -2,9 +2,17 @@
         x:Class="Codestead.UI.Themes.CodesteadTheme"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <!--
-    The Codestead look, shared by every tool. Colours are the same tokens as the old web version
-    (styles.css): Bg, Surface, Surface2, Border, Text, TextMuted, Accent, AccentSoft, Link, CodeBg,
-    WarnBg, WarnBorder, TermBg, TermBar, TermText.
+    The Codestead look, shared by every tool.
+
+    Colours have fixed meanings (see "Färgsystemet" in docs/DEVELOPMENT.md):
+      Accent    the tool's own brand colour: primary buttons, the current chapter, focus.
+                Each app sets its own in App.axaml (CodesteadTheme has a neutral default).
+      Success   done, correct, passed            (green)
+      Warning   hints, warnings, things to check (amber)
+      Danger    wrong, failed, destructive       (red)
+      Info      information and links            (blue)
+      Reward    XP, levels, achievements, streak (gold)
+    Each has a "Soft" background, and OnAccent is the text colour on Accent.
   -->
   <Styles.Resources>
     <ResourceDictionary>
@@ -18,12 +26,23 @@
           <SolidColorBrush x:Key="CsTextMuted" Color="#5b6370" />
           <SolidColorBrush x:Key="CsAccent" Color="#1f7a4d" />
           <SolidColorBrush x:Key="CsAccentSoft" Color="#e3f3ea" />
-          <SolidColorBrush x:Key="CsLink" Color="#1a64c7" />
+          <SolidColorBrush x:Key="CsOnAccent" Color="#ffffff" />
+          <SolidColorBrush x:Key="CsSuccess" Color="#1a7f37" />
+          <SolidColorBrush x:Key="CsSuccessSoft" Color="#dcf5e2" />
+          <SolidColorBrush x:Key="CsWarning" Color="#8a5a00" />
+          <SolidColorBrush x:Key="CsWarningSoft" Color="#fff4d1" />
+          <SolidColorBrush x:Key="CsInfo" Color="#0b62c4" />
+          <SolidColorBrush x:Key="CsInfoSoft" Color="#e2efff" />
+          <SolidColorBrush x:Key="CsReward" Color="#9a6b00" />
+          <SolidColorBrush x:Key="CsRewardSoft" Color="#fff1cc" />
+          <SolidColorBrush x:Key="CsRewardStrong" Color="#e0a812" />
+          <SolidColorBrush x:Key="CsLink" Color="#0b62c4" />
           <SolidColorBrush x:Key="CsCodeBg" Color="#eef0f3" />
           <SolidColorBrush x:Key="CsInlineCodeBg" Color="#dfe3e9" />
           <SolidColorBrush x:Key="CsCodeText" Color="#1c2026" />
-          <SolidColorBrush x:Key="CsWarnBg" Color="#fff6e0" />
-          <SolidColorBrush x:Key="CsWarnBorder" Color="#e7c25d" />
+          <!-- Older names for the warning colours (hint boxes). -->
+          <SolidColorBrush x:Key="CsWarnBg" Color="#fff4d1" />
+          <SolidColorBrush x:Key="CsWarnBorder" Color="#e0b84a" />
           <SolidColorBrush x:Key="CsDanger" Color="#c62828" />
           <SolidColorBrush x:Key="CsDangerSoft" Color="#fdecea" />
         </ResourceDictionary>
@@ -36,11 +55,22 @@
           <SolidColorBrush x:Key="CsTextMuted" Color="#9aa3b0" />
           <SolidColorBrush x:Key="CsAccent" Color="#4fc283" />
           <SolidColorBrush x:Key="CsAccentSoft" Color="#1c3528" />
+          <SolidColorBrush x:Key="CsOnAccent" Color="#0d1a13" />
+          <SolidColorBrush x:Key="CsSuccess" Color="#4ac26b" />
+          <SolidColorBrush x:Key="CsSuccessSoft" Color="#15301e" />
+          <SolidColorBrush x:Key="CsWarning" Color="#e3b341" />
+          <SolidColorBrush x:Key="CsWarningSoft" Color="#2e2513" />
+          <SolidColorBrush x:Key="CsInfo" Color="#6cb0ff" />
+          <SolidColorBrush x:Key="CsInfoSoft" Color="#13253b" />
+          <SolidColorBrush x:Key="CsReward" Color="#f0c050" />
+          <SolidColorBrush x:Key="CsRewardSoft" Color="#302610" />
+          <SolidColorBrush x:Key="CsRewardStrong" Color="#e0a812" />
           <SolidColorBrush x:Key="CsLink" Color="#6cb0ff" />
           <SolidColorBrush x:Key="CsCodeBg" Color="#232830" />
           <SolidColorBrush x:Key="CsInlineCodeBg" Color="#343b47" />
           <SolidColorBrush x:Key="CsCodeText" Color="#e3e7ed" />
-          <SolidColorBrush x:Key="CsWarnBg" Color="#2d2615" />
+          <!-- Older names for the warning colours (hint boxes). -->
+          <SolidColorBrush x:Key="CsWarnBg" Color="#2e2513" />
           <SolidColorBrush x:Key="CsWarnBorder" Color="#8a6d1f" />
           <SolidColorBrush x:Key="CsDanger" Color="#ef5350" />
           <SolidColorBrush x:Key="CsDangerSoft" Color="#3a1d1d" />
@@ -51,6 +81,8 @@
       <SolidColorBrush x:Key="CsTermText" Color="#e6edf3" />
       <SolidColorBrush x:Key="CsTermMuted" Color="#7d8590" />
       <SolidColorBrush x:Key="CsTermGreen" Color="#7ee787" />
+      <!-- The text font, then colour emoji fonts so that emoji (💡 🏆 🔥) are drawn in colour everywhere. -->
+      <FontFamily x:Key="CsUiFont">fonts:Inter#Inter, Segoe UI Emoji, Noto Color Emoji, Apple Color Emoji</FontFamily>
       <FontFamily x:Key="CsMonoFont">Cascadia Mono, JetBrains Mono, DejaVu Sans Mono, Liberation Mono, Noto Sans Mono, Menlo, Consolas, monospace</FontFamily>
     </ResourceDictionary>
   </Styles.Resources>
@@ -59,6 +91,7 @@
   <Style Selector="Window">
     <Setter Property="Background" Value="{DynamicResource CsBg}" />
     <Setter Property="Foreground" Value="{DynamicResource CsText}" />
+    <Setter Property="FontFamily" Value="{StaticResource CsUiFont}" />
   </Style>
 
   <!-- Text styles -->
@@ -94,13 +127,13 @@
   </Style>
   <Style Selector="Button.primary">
     <Setter Property="Background" Value="{DynamicResource CsAccent}" />
-    <Setter Property="Foreground" Value="White" />
+    <Setter Property="Foreground" Value="{DynamicResource CsOnAccent}" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="Padding" Value="14,7" />
   </Style>
   <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource CsAccent}" />
-    <Setter Property="Foreground" Value="White" />
+    <Setter Property="Foreground" Value="{DynamicResource CsOnAccent}" />
     <Setter Property="Opacity" Value="0.9" />
   </Style>
   <Style Selector="Button.secondary">
