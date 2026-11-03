@@ -61,6 +61,8 @@
     "script.readInScripts": "في المحاكي، لا يستطيع read داخل سكربت القراءة إلا من أنبوب (pipe) أو من ملف، مثل \"echo text | ./script.sh\".",
     "script.readNoInput": "لا توجد مدخلات",
     "shell.commandInPackage": "تلميح من المحاكي: الأمر موجود في الحزمة '{pkg}'. راجع الفصل الخاص بإدارة الحزم.",
+    "shell.notInSimulator": "تلميح من المحاكي: '{cmd}' أمر Linux حقيقي، لكنه غير موجود في هذا المحاكي. اكتب 'help' لرؤية الأوامر التي تعمل هنا.",
+    "shell.didYouMean": "تلميح من المحاكي: هل تقصد {cmds}؟",
     "shell.exitNoSession": "هذه طرفية محاكاة، فلا توجد جلسة لإنهائها. استخدم 'clear' لمسح الشاشة.",
     "shell.internalError": "خطأ داخلي في المحاكي",
     "shell.nestingTooDeep": "تم تجاوز الحد الأقصى لمستوى التداخل",

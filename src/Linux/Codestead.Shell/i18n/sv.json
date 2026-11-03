@@ -61,6 +61,8 @@
     "script.readInScripts": "I simulatorn kan read inne i skript bara läsa från en pipe eller en fil, t.ex. \"echo text | ./skript.sh\".",
     "script.readNoInput": "ingen indata",
     "shell.commandInPackage": "Tips från simulatorn: kommandot finns i paketet '{pkg}'. Se kapitlet om pakethantering.",
+    "shell.notInSimulator": "Tips från simulatorn: '{cmd}' är ett riktigt Linux-kommando, men den här simulatorn har det inte. Skriv 'help' för att se kommandona som fungerar här.",
+    "shell.didYouMean": "Tips från simulatorn: menade du {cmds}?",
     "shell.exitNoSession": "Det här är en simulerad terminal, så det finns ingen session att avsluta. Använd 'clear' för att rensa skärmen.",
     "shell.internalError": "internt fel i simulatorn",
     "shell.nestingTooDeep": "för djup rekursion",

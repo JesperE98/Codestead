@@ -61,6 +61,8 @@
     "script.readInScripts": "In the simulator, read inside a script can only read from a pipe or a file, e.g. \"echo text | ./script.sh\".",
     "script.readNoInput": "no input",
     "shell.commandInPackage": "Tip from the simulator: the command is in the package '{pkg}'. See the chapter on package management.",
+    "shell.notInSimulator": "Tip from the simulator: '{cmd}' is a real Linux command, but this simulator does not have it. Type 'help' to see the commands that work here.",
+    "shell.didYouMean": "Tip from the simulator: did you mean {cmds}?",
     "shell.exitNoSession": "This is a simulated terminal, so there is no session to end. Use 'clear' to clear the screen.",
     "shell.internalError": "internal simulator error",
     "shell.nestingTooDeep": "maximum nesting level exceeded",
