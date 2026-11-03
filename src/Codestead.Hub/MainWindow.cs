@@ -50,7 +50,7 @@ public sealed class MainWindow : Window
 
     private readonly StackPanel page = new() { MaxWidth = 860, Margin = new Thickness(32, 24, 32, 40), Spacing = 14 };
     private readonly TextBlock brandName = new() { FontSize = 18, FontWeight = FontWeight.Bold, VerticalAlignment = VerticalAlignment.Center };
-    private readonly Button settingsButton = new() { Content = "⚙", FontSize = 17, Padding = new Thickness(10, 4) };
+    private readonly Button settingsButton = new() { Content = Icons.Gear(19), Padding = new Thickness(10, 6) };
 
     private string Lang => state.Lang ?? "en";
     private string T(string key, params (string, object)[] args) => HubStrings.T(Lang, key, args);

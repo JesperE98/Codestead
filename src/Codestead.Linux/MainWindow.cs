@@ -347,7 +347,7 @@ public sealed class MainWindow : Window
         shell.Lang = Lang;
         markdown.CommandHint = T("lesson.cmdTitle");
         terminal.InputLabel = T("terminal.input");
-        sidebarSettings.Content = "⚙  " + T("settings.open");
+        sidebarSettings.Content = Icons.Label(Icons.Gear(), T("settings.open"));
         terminalReset.Content = "↺  " + T("terminal.reset");
         ToolTip.SetTip(terminalReset, T("terminal.resetTitle"));
         FillPickers();

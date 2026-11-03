@@ -87,9 +87,9 @@ public class Mockups
         side.Bind(Border.BorderBrushProperty, side.GetResourceObservable("CsBorder"));
         var sideDock = new DockPanel();
         var bottom = new StackPanel { Spacing = 2, Margin = new Thickness(10, 8) };
-        foreach (var label in new[] { "🏆  Utmärkelser · 12/42", "⚙  Inställningar" })
+        foreach (var (icon, label) in new[] { (Icons.Trophy(), "Utmärkelser · 12/42"), (Icons.Gear(), "Inställningar") })
         {
-            var b = new Button { Content = label, HorizontalAlignment = HorizontalAlignment.Stretch };
+            var b = new Button { Content = Icons.Label(icon, label), HorizontalAlignment = HorizontalAlignment.Stretch };
             b.Classes.Add("nav-item");
             bottom.Children.Add(b);
         }
