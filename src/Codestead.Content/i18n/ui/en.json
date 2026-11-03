@@ -95,5 +95,9 @@
   "update.text": "Version {version} of the app is available. Update now? The app restarts and your progress is kept.",
   "update.button": "Update and restart",
   "update.later": "Later",
-  "update.downloading": "Downloading the update …"
+  "update.downloading": "Downloading the update …",
+  "whatsnew.title": "What's new in {name}",
+  "whatsnew.version": "Version {version} · {date}",
+  "whatsnew.close": "OK",
+  "settings.whatsNew": "What's new"
 }

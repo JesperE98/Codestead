@@ -22,8 +22,10 @@
       "packaging/nfpm.yaml",
       "packaging/linux",
       "global.json",
-      "Directory.Build.props"
-    ]
+      "Directory.Build.props",
+      "changelog/codestead-linux.json"
+    ],
+    "changelog": "changelog/codestead-linux.json"
   },
   {
     "key": "hub",
@@ -47,14 +49,15 @@
       "packaging/nfpm.yaml",
       "packaging/linux",
       "global.json",
-      "Directory.Build.props"
+      "Directory.Build.props",
+      "changelog/codestead-hub.json"
     ],
     "exclude": [
       "src/Codestead.UI/Learning",
       "src/Codestead.UI/Controls/CheckpointView.cs",
-      "src/Codestead.UI/Controls/MarkdownView.cs",
       "src/Codestead.UI/Controls/TerminalView.cs",
       "src/Codestead.UI/Ansi.cs"
-    ]
+    ],
+    "changelog": "changelog/codestead-hub.json"
   }
 ]

@@ -128,6 +128,17 @@ public class CatalogTests
         Assert.Null(t.AssetFor("win-x64"));
     }
 
+    [Fact(DisplayName = "katalogen kan ha verktygets ändringslogg, och äldre kataloger utan den fungerar")]
+    public void ParsesChanges()
+    {
+        var tool = $"{{\"id\":\"codestead-linux\",\"name\":\"Codestead Linux\",\"version\":\"0.5.5\",\"description\":{{\"en\":\"Learn\"}},\"assets\":{{}}";
+        var with = Catalog.Parse(Json(tool + ",\"changes\":[{\"version\":\"0.5.5\",\"date\":\"2026-11-03\",\"changes\":{\"en\":[\"New\"],\"sv\":[\"Nytt\"]}}]}"));
+        var change = Assert.Single(with.Tools[0].Changes!);
+        Assert.Equal("0.5.5", change.Version);
+        Assert.Equal(new[] { "Nytt" }, change.Changes["sv"]);
+        Assert.Null(Catalog.Parse(Json(tool + "}")).Tools[0].Changes);
+    }
+
     [Theory(DisplayName = "farliga eller trasiga kataloger avvisas")]
     [InlineData("../evil", "0.1.0", "https://example.org/a.tar.gz", "tool")]
     [InlineData("ok", "latest", "https://example.org/a.tar.gz", "tool")]

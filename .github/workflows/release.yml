@@ -320,6 +320,7 @@ jobs:
           python3 packaging/catalog.py --catalog catalog.json --id "$ID" --name "$NAME" --version "$VERSION" \
             --notes-url "https://github.com/$RELEASES_REPO/releases/tag/$ID-v$VERSION" \
             --description-file "packaging/descriptions/$ID.json" \
+            --changelog-file "changelog/$ID.json" \
             --asset "linux-x64=release/$ID-$VERSION-linux-x64.tar.gz=$base/$ID-$VERSION-linux-x64.tar.gz=$EXE" \
             --asset "win-x64=release/$ID-$VERSION-win-x64.zip=$base/$ID-$VERSION-win-x64.zip=$EXE.exe"
           openssl dgst -sha256 -sign "$RUNNER_TEMP/key.pem" catalog.json | base64 -w0 > catalog.json.sig

@@ -95,5 +95,9 @@
   "update.text": "Está disponible la versión {version} de la aplicación. ¿Actualizar ahora? La aplicación se reinicia y tu progreso se conserva.",
   "update.button": "Actualizar y reiniciar",
   "update.later": "Más tarde",
-  "update.downloading": "Descargando la actualización …"
+  "update.downloading": "Descargando la actualización …",
+  "whatsnew.title": "Novedades en {name}",
+  "whatsnew.version": "Versión {version} · {date}",
+  "whatsnew.close": "OK",
+  "settings.whatsNew": "Novedades"
 }

@@ -95,5 +95,9 @@
   "update.text": "الإصدار {version} من التطبيق متاح. هل تريد التحديث الآن؟ سيُعاد تشغيل التطبيق ويبقى تقدّمك محفوظًا.",
   "update.button": "التحديث وإعادة التشغيل",
   "update.later": "لاحقًا",
-  "update.downloading": "جارٍ تنزيل التحديث …"
+  "update.downloading": "جارٍ تنزيل التحديث …",
+  "whatsnew.title": "ما الجديد في {name}",
+  "whatsnew.version": "الإصدار {version} · {date}",
+  "whatsnew.close": "حسنًا",
+  "settings.whatsNew": "ما الجديد"
 }

@@ -60,7 +60,9 @@ public sealed class MainWindow : Window
     public MainWindow(HubOptions options)
     {
         this.options = options;
-        state = storage.Load<HubState>("state") ?? new HubState();
+        var saved = storage.Load<HubState>("state");
+        existingUser = saved is not null;
+        state = saved ?? new HubState();
         if (!HubStrings.IsLanguage(state.Lang)) state.Lang = "en";
 
         var verifier = new CatalogVerifier(options.SmokeTest && options.PublicKeyFile is not null ? File.ReadAllText(options.PublicKeyFile) : HubInfo.CatalogPublicKey());
@@ -94,6 +96,9 @@ public sealed class MainWindow : Window
                 Dispatcher.UIThread.Post(() => _ = RunSmokeTest(), DispatcherPriority.Background);
                 return;
             }
+            // After the hub updated itself: what changed.
+            var news = Changelog.NewsAtStart(storage, Changelog.Embedded(typeof(MainWindow).Assembly), HubInfo.Version, existingUser);
+            if (news.Count > 0) ShowNews(HubInfo.Name, news);
             await Refresh();
             DispatcherTimer.Run(() =>
             {
@@ -273,6 +278,7 @@ public sealed class MainWindow : Window
             if (installed is not null) Add(Action("▶  " + T("tool.open"), updateAvailable ? "secondary" : "primary", () => Open(id, name)));
             if (updateAvailable) Add(Action("⬇  " + T("tool.update", ("version", tool!.Version)), "primary", () => _ = Install(tool, asset!)));
             if (installed is null && tool is not null && asset is not null) Add(Action("⬇  " + T("tool.install"), "primary", () => _ = Install(tool, asset)));
+            if (tool?.Changes is { Count: > 0 }) Add(Action(T("tool.whatsNew"), "flat", () => ShowNews(tool.Name, Entries(tool).Take(5))));
             if (tool?.ReleaseNotesUrl is { } notes) Add(Action(T("tool.releaseNotes"), "flat", () => OpenUrl(notes)));
             if (installed?.Previous is { } previous) Add(Action("↶  " + T("tool.rollback", ("version", previous)), "flat", () => RollBack(id)));
             if (installed is not null) Add(Action(T("tool.uninstall"), "danger-outline", () => ConfirmUninstall(id, name)));
@@ -348,8 +354,22 @@ public sealed class MainWindow : Window
         Render();
     }
 
+    /// <summary>True when the hub had saved settings at start (a missing "seen" version then means an update).</summary>
+    private readonly bool existingUser;
+
+    private static List<ChangelogEntry> Entries(CatalogTool tool) =>
+        (tool.Changes ?? new()).Select(c => new ChangelogEntry { Version = c.Version, Date = c.Date, Changes = c.Changes }).ToList();
+
+    /// <summary>The "What's new" dialog for a tool (or the hub itself).</summary>
+    private void ShowNews(string name, IEnumerable<ChangelogEntry> entries)
+    {
+        var texts = new WhatsNewTexts(T("whatsnew.title", ("name", name)), T("whatsnew.version"), T("whatsnew.close"));
+        overlay.ShowDialog(WhatsNewView.Build(texts, entries, Lang, overlay.CloseDialog), overlay.CloseDialog, 560);
+    }
+
     private async Task<InstalledTool?> Install(CatalogTool tool, CatalogAsset asset)
     {
+        var before = store.Installed(tool.Id)?.Version;
         busy[tool.Id] = 0;
         errors.Remove(tool.Id);
         Render();
@@ -364,6 +384,11 @@ public sealed class MainWindow : Window
         {
             var installed = await Task.Run(() => store.InstallAsync(tool, asset, http, progress));
             overlay.Toast(T("tool.installed", ("version", installed.Version)) + " – " + tool.Name);
+            // An update: show what changed here, and tell the tool so that it doesn't show the same news again
+            // when it starts (the tools keep the version they have shown in their own storage).
+            var news = before is null ? new List<ChangelogEntry>() : Changelog.Between(Entries(tool), before, installed.Version);
+            Changelog.MarkSeen(new Storage(tool.Id), installed.Version);
+            if (news.Count > 0) ShowNews(tool.Name, news);
             return installed;
         }
         catch (Exception e)

@@ -38,5 +38,9 @@
   "settings.folder": "تُثبَّت الأدوات في",
   "theme.system": "مثل النظام",
   "theme.light": "فاتح",
-  "theme.dark": "داكن"
+  "theme.dark": "داكن",
+  "whatsnew.title": "ما الجديد في {name}",
+  "whatsnew.version": "الإصدار {version} · {date}",
+  "whatsnew.close": "حسنًا",
+  "tool.whatsNew": "ما الجديد"
 }

@@ -95,5 +95,9 @@
   "update.text": "アプリのバージョン {version} が利用できます。今すぐ更新しますか？アプリは再起動し、学習の進み具合は保存されます。",
   "update.button": "更新して再起動",
   "update.later": "後で",
-  "update.downloading": "更新をダウンロード中…"
+  "update.downloading": "更新をダウンロード中…",
+  "whatsnew.title": "{name} の新機能",
+  "whatsnew.version": "バージョン {version} · {date}",
+  "whatsnew.close": "OK",
+  "settings.whatsNew": "新機能"
 }

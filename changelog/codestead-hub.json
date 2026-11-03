@@ -1,0 +1,247 @@
+[
+  {
+    "version": "0.1.5",
+    "date": "2026-11-03",
+    "changes": {
+      "en": [
+        "After an update – of the hub or of a tool – a **What's new** box shows what changed.",
+        "Every tool has a **What's new** button."
+      ],
+      "sv": [
+        "Efter en uppdatering – av hubben eller av ett verktyg – visar rutan **Vad är nytt** vad som har ändrats.",
+        "Varje verktyg har knappen **Vad är nytt**."
+      ],
+      "de": [
+        "Nach einem Update – des Hubs oder eines Werkzeugs – zeigt das Fenster **Neuigkeiten**, was sich geändert hat.",
+        "Jedes Werkzeug hat eine Schaltfläche **Neuigkeiten**."
+      ],
+      "fr": [
+        "Après une mise à jour – du hub ou d’un outil –, la fenêtre **Nouveautés** montre ce qui a changé.",
+        "Chaque outil a un bouton **Nouveautés**."
+      ],
+      "es": [
+        "Después de una actualización – del hub o de una herramienta –, la ventana **Novedades** muestra lo que ha cambiado.",
+        "Cada herramienta tiene un botón **Novedades**."
+      ],
+      "pt": [
+        "Depois de uma atualização – do hub ou de uma ferramenta –, a janela **Novidades** mostra o que mudou.",
+        "Cada ferramenta tem um botão **Novidades**."
+      ],
+      "ru": [
+        "После обновления – хаба или инструмента – окно **Что нового** показывает, что изменилось.",
+        "У каждого инструмента есть кнопка **Что нового**."
+      ],
+      "zh": [
+        "更新后（无论是 Hub 还是某个工具），**新功能** 窗口会显示有哪些变化。",
+        "每个工具都有 **新功能** 按钮。"
+      ],
+      "ja": [
+        "ハブやツールを更新すると、**新機能** ウィンドウに変更点が表示されます。",
+        "各ツールに **新機能** ボタンが付きました。"
+      ],
+      "ar": [
+        "بعد التحديث – سواء لـ Hub أو لإحدى الأدوات – تعرض نافذة **ما الجديد** ما الذي تغيّر.",
+        "لكل أداة زر **ما الجديد**."
+      ],
+      "hi": [
+        "अपडेट के बाद – हब का या किसी टूल का – **नया क्या है** बॉक्स दिखाता है कि क्या बदला है।",
+        "हर टूल में **नया क्या है** बटन है।"
+      ]
+    }
+  },
+  {
+    "version": "0.1.4",
+    "date": "2026-11-03",
+    "changes": {
+      "en": [
+        "Works on Fedora 45."
+      ],
+      "sv": [
+        "Fungerar på Fedora 45."
+      ],
+      "de": [
+        "Läuft unter Fedora 45."
+      ],
+      "fr": [
+        "Fonctionne sous Fedora 45."
+      ],
+      "es": [
+        "Funciona en Fedora 45."
+      ],
+      "pt": [
+        "Funciona no Fedora 45."
+      ],
+      "ru": [
+        "Работает в Fedora 45."
+      ],
+      "zh": [
+        "可在 Fedora 45 上运行。"
+      ],
+      "ja": [
+        "Fedora 45 で動作します。"
+      ],
+      "ar": [
+        "يعمل على Fedora 45."
+      ],
+      "hi": [
+        "Fedora 45 पर चलता है।"
+      ]
+    }
+  },
+  {
+    "version": "0.1.3",
+    "date": "2026-11-02",
+    "changes": {
+      "en": [
+        "Small internal updates, nothing you will notice."
+      ],
+      "sv": [
+        "Små interna uppdateringar som du inte märker."
+      ],
+      "de": [
+        "Kleine interne Änderungen, von denen du nichts merkst."
+      ],
+      "fr": [
+        "Petites mises à jour internes, sans changement visible pour vous."
+      ],
+      "es": [
+        "Pequeñas actualizaciones internas que no notarás."
+      ],
+      "pt": [
+        "Pequenas atualizações internas que você não vai notar."
+      ],
+      "ru": [
+        "Небольшие внутренние изменения, которых вы не заметите."
+      ],
+      "zh": [
+        "一些内部的小改动，你不会察觉到。"
+      ],
+      "ja": [
+        "内部の細かな更新です。目に見える変化はありません。"
+      ],
+      "ar": [
+        "تحديثات داخلية صغيرة لن تلاحظها."
+      ],
+      "hi": [
+        "छोटे आंतरिक अपडेट, जिन पर आपका ध्यान नहीं जाएगा।"
+      ]
+    }
+  },
+  {
+    "version": "0.1.2",
+    "date": "2026-11-02",
+    "changes": {
+      "en": [
+        "The hub has its own icon, and Codestead Linux is shown with its icon in the list."
+      ],
+      "sv": [
+        "Hubben har en egen ikon, och Codestead Linux visas med sin ikon i listan."
+      ],
+      "de": [
+        "Der Hub hat ein eigenes Symbol, und Codestead Linux wird in der Liste mit seinem Symbol angezeigt."
+      ],
+      "fr": [
+        "Le hub a sa propre icône, et Codestead Linux apparaît avec son icône dans la liste."
+      ],
+      "es": [
+        "El hub tiene su propio icono, y Codestead Linux aparece con su icono en la lista."
+      ],
+      "pt": [
+        "O hub tem seu próprio ícone, e o Codestead Linux aparece com o ícone dele na lista."
+      ],
+      "ru": [
+        "У хаба появилась собственная иконка, а Codestead Linux показывается в списке со своей иконкой."
+      ],
+      "zh": [
+        "Hub 有了自己的图标，Codestead Linux 在列表中也会显示它的图标。"
+      ],
+      "ja": [
+        "ハブに専用のアイコンができ、一覧では Codestead Linux がそのアイコン付きで表示されます。"
+      ],
+      "ar": [
+        "أصبح لـ Hub أيقونته الخاصة، ويظهر Codestead Linux بأيقونته في القائمة."
+      ],
+      "hi": [
+        "हब का अपना आइकन है, और सूची में Codestead Linux अपने आइकन के साथ दिखता है।"
+      ]
+    }
+  },
+  {
+    "version": "0.1.1",
+    "date": "2026-11-02",
+    "changes": {
+      "en": [
+        "`~` can be typed on keyboards where it is a dead key, such as the Swedish one."
+      ],
+      "sv": [
+        "`~` går att skriva på tangentbord där det är en död tangent, som det svenska."
+      ],
+      "de": [
+        "`~` lässt sich auf Tastaturen eingeben, auf denen es eine Tottaste ist, etwa auf der schwedischen."
+      ],
+      "fr": [
+        "`~` peut être saisi sur les claviers où c’est une touche morte, comme le clavier suédois."
+      ],
+      "es": [
+        "`~` se puede escribir en teclados donde es una tecla muerta, como el sueco."
+      ],
+      "pt": [
+        "`~` pode ser digitado em teclados onde é uma tecla morta, como o sueco."
+      ],
+      "ru": [
+        "`~` можно ввести на клавиатурах, где это мёртвая клавиша, например на шведской."
+      ],
+      "zh": [
+        "`~` 在某些键盘（例如瑞典语键盘）上是死键，现在在这些键盘上也能输入。"
+      ],
+      "ja": [
+        "`~` がデッドキーになっているキーボード（スウェーデン語など）でも入力できるようになりました。"
+      ],
+      "ar": [
+        "يمكن كتابة `~` على لوحات المفاتيح التي يكون فيها مفتاحًا ميتًا، مثل لوحة المفاتيح السويدية."
+      ],
+      "hi": [
+        "`~` उन कीबोर्ड पर भी टाइप किया जा सकता है जहाँ यह dead key है, जैसे स्वीडिश कीबोर्ड।"
+      ]
+    }
+  },
+  {
+    "version": "0.1.0",
+    "date": "2026-10-31",
+    "changes": {
+      "en": [
+        "The first version: install, start, update and roll back the Codestead tools."
+      ],
+      "sv": [
+        "Den första versionen: installera, starta, uppdatera och gå tillbaka till en tidigare version av Codestead-verktygen."
+      ],
+      "de": [
+        "Die erste Version: Codestead-Werkzeuge installieren, starten, aktualisieren und zu einer früheren Version zurückkehren."
+      ],
+      "fr": [
+        "La première version : installer, lancer, mettre à jour les outils Codestead et revenir à une version précédente."
+      ],
+      "es": [
+        "La primera versión: instala, inicia y actualiza las herramientas de Codestead, y vuelve a una versión anterior."
+      ],
+      "pt": [
+        "A primeira versão: instale, inicie e atualize as ferramentas do Codestead, e volte para uma versão anterior."
+      ],
+      "ru": [
+        "Первая версия: установка, запуск, обновление инструментов Codestead и возврат к предыдущей версии."
+      ],
+      "zh": [
+        "第一个版本：安装、启动、更新 Codestead 工具，以及回到之前的版本。"
+      ],
+      "ja": [
+        "最初のバージョンです：Codestead のツールのインストール、起動、更新、以前のバージョンへの切り戻しができます。"
+      ],
+      "ar": [
+        "الإصدار الأول: تثبيت أدوات Codestead وتشغيلها وتحديثها والرجوع إلى إصدار سابق منها."
+      ],
+      "hi": [
+        "पहला संस्करण: Codestead टूल इंस्टॉल करें, शुरू करें, अपडेट करें और पिछले संस्करण पर वापस जाएँ।"
+      ]
+    }
+  }
+]

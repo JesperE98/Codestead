@@ -38,5 +38,9 @@
   "settings.folder": "टूल यहाँ इंस्टॉल होते हैं",
   "theme.system": "सिस्टम के अनुसार",
   "theme.light": "हल्का",
-  "theme.dark": "गहरा"
+  "theme.dark": "गहरा",
+  "whatsnew.title": "{name} में नया क्या है",
+  "whatsnew.version": "संस्करण {version} · {date}",
+  "whatsnew.close": "ठीक है",
+  "tool.whatsNew": "नया क्या है"
 }

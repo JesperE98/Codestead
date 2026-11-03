@@ -38,5 +38,9 @@
   "settings.folder": "Инструменты устанавливаются в",
   "theme.system": "Как в системе",
   "theme.light": "Светлая",
-  "theme.dark": "Тёмная"
+  "theme.dark": "Тёмная",
+  "whatsnew.title": "Что нового в {name}",
+  "whatsnew.version": "Версия {version} · {date}",
+  "whatsnew.close": "OK",
+  "tool.whatsNew": "Что нового"
 }

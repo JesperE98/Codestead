@@ -96,5 +96,9 @@
   "update.text": "Version {version} av appen finns. Vill du uppdatera nu? Appen startar om och dina framsteg sparas.",
   "update.button": "Uppdatera och starta om",
   "update.later": "Senare",
-  "update.downloading": "Laddar ner uppdateringen …"
+  "update.downloading": "Laddar ner uppdateringen …",
+  "whatsnew.title": "Nytt i {name}",
+  "whatsnew.version": "Version {version} · {date}",
+  "whatsnew.close": "OK",
+  "settings.whatsNew": "Vad är nytt"
 }

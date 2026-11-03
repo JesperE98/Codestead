@@ -27,6 +27,8 @@
   </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets/**" />
+    <!-- What changed in each version, shown after an update ("What's new"). -->
+    <EmbeddedResource Include="../../changelog/codestead-linux.json" LogicalName="changelog.json" />
   </ItemGroup>
   <!-- Expose the product name from build/Codestead.props to the code. -->
   <ItemGroup>
