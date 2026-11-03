@@ -1,22 +1,14 @@
+using Codestead.Learning.Game;
+using static Codestead.Learning.Game.CommonAchievements;
+
 namespace Codestead.Content.Game;
 
 public static class AchievementsLib
 {
-    private static Achievement Count(string id, string icon, AchievementCategory cat, Func<AchievementContext, int> current, int target) =>
-        new(id, icon, cat, c => current(c) >= target, c => (Math.Min(current(c), target), target));
-
-    private static bool Cmd(AchievementContext c, Func<CommandInfo, bool> test) => c.Command is { } cmd && test(cmd);
+    private static bool Cmd(AchievementContext c, Func<CommandInfo, bool> test) => c.Command is CommandInfo cmd && test(cmd);
 
     private static int Families(AchievementContext c) =>
         new[] { "@debian", "@arch", "@redhat" }.Count(f => c.Progress.Tasks.Any(t => t.EndsWith(f, StringComparison.Ordinal)));
-
-    private static Achievement PartDone(string part, string icon) =>
-        new($"part-{part}", icon, AchievementCategory.Learning, c => c.Game.CompletedParts.Contains(part),
-            c =>
-            {
-                var lessons = ChaptersLib.LessonsIn(part).Select(l => l.Id).ToList();
-                return (lessons.Count(c.Game.CompletedChapters.Contains), lessons.Count);
-            });
 
     private static readonly System.Text.RegularExpressions.Regex SandwichRe = new(@"^(sudo\s+)?make\s+me\s+a\s+sandwich\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
     private static readonly System.Text.RegularExpressions.Regex HelloRe = new(@"hello,?\s*world", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
@@ -29,18 +21,14 @@ public static class AchievementsLib
         return recursive && w.Skip(1).Any(a => a is "/" or "/*");
     });
 
-    /// <summary>The number of exams in the course.</summary>
-    private static int ExamCount => ChaptersLib.Chapters.Count(c => c.Kind == ChapterKinds.Exam);
-
     public static IReadOnlyList<Achievement> All { get; } = new List<Achievement>
     {
         // Learning
-        Count("first-task", "👋", AchievementCategory.Learning, c => c.Progress.Tasks.Count, 1),
-        Count("first-chapter", "📗", AchievementCategory.Learning, c => c.Game.CompletedChapters.Count, 1),
-        Count("tasks-25", "🧩", AchievementCategory.Learning, c => c.Progress.Tasks.Count, 25),
-        Count("tasks-100", "💯", AchievementCategory.Learning, c => c.Progress.Tasks.Count, 100),
-        new("tasks-all", "🏁", AchievementCategory.Learning, c => c.Progress.TasksTotal > 0 && c.Progress.TasksDone >= c.Progress.TasksTotal,
-            c => (c.Progress.TasksDone, c.Progress.TasksTotal)),
+        FirstTask,
+        FirstChapter,
+        Tasks(25, "🧩"),
+        Tasks(100, "💯"),
+        TasksAll,
         PartDone("grunder", "🧱"),
         PartDone("system", "⚙️"),
         PartDone("distro", "📦"),
@@ -49,12 +37,12 @@ public static class AchievementsLib
         PartDone("skript", "🤖"),
         PartDone("verktyg", "🧰"),
         Count("all-families", "🐧", AchievementCategory.Learning, Families, 3),
-        Count("checkpoints-50", "🤔", AchievementCategory.Learning, c => c.Progress.Checkpoints, 50),
+        Checkpoints(50, "🤔"),
         // Exams
-        Count("exam-first", "🎓", AchievementCategory.Exams, c => c.Game.ExamsPassed.Count, 1),
-        Count("exam-perfect", "⭐", AchievementCategory.Exams, c => c.Game.ExamsPerfect.Count, 1),
-        new("exam-all", "🏆", AchievementCategory.Exams, c => c.Game.ExamsPassed.Count >= ExamCount, c => (c.Game.ExamsPassed.Count, ExamCount)),
-        new("exam-comeback", "💪", AchievementCategory.Exams, c => c.Game.ExamsPassed.Any(c.Game.ExamsFailed.Contains)),
+        ExamFirst,
+        ExamPerfect,
+        ExamAll,
+        ExamComeback,
         // Terminal
         Count("sudo-first", "🔑", AchievementCategory.Terminal, c => c.Game.Stats.Sudo, 1),
         Count("pipe-first", "🔗", AchievementCategory.Terminal, c => c.Game.Stats.LongestPipe >= 2 ? 1 : 0, 1),
@@ -65,13 +53,12 @@ public static class AchievementsLib
         Count("commands-25", "📚", AchievementCategory.Terminal, c => c.Game.Stats.CommandNames.Count, 25),
         Count("commands-500", "⚡", AchievementCategory.Terminal, c => c.Game.Stats.Commands, 500),
         // Habits
-        Count("unaided-10", "🎯", AchievementCategory.Habits, c => c.Game.Unaided.Count, 10),
-        Count("unaided-50", "🧭", AchievementCategory.Habits, c => c.Game.Unaided.Count, 50),
-        Count("streak-3", "🌱", AchievementCategory.Habits, c => c.Game.BestStreak, 3),
-        Count("streak-7", "🔥", AchievementCategory.Habits, c => c.Game.BestStreak, 7),
-        Count("streak-30", "🌋", AchievementCategory.Habits, c => c.Game.BestStreak, 30),
-        new("level-max", "👑", AchievementCategory.Habits, c => c.Level >= Levels.Max,
-            c => (Math.Min(XpRules.Total(c.Game, c.Progress), Levels.Thresholds[^1]), Levels.Thresholds[^1])),
+        Unaided(10, "🎯"),
+        Unaided(50, "🧭"),
+        Streak(3, "🌱"),
+        Streak(7, "🔥"),
+        Streak(30, "🌋"),
+        LevelMax,
         // Hidden – found by exploring the terminal
         new("rm-rf-root", "💥", AchievementCategory.Hidden, c => Cmd(c, RmRoot)),
         new("cowsay", "🐄", AchievementCategory.Hidden, c => Cmd(c, cmd => cmd.ExitCode == 0 && cmd.Names.Contains("cowsay"))),

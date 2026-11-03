@@ -1,14 +1,14 @@
-namespace Codestead.Content.Game;
+namespace Codestead.Learning.Game;
 
 // The gamification: XP and levels, achievements, a day streak and some lifetime counters.
-// Everything is saved in the app's state (AppState.Game); see GameEngine for how it changes.
+// Everything is saved in the app's state (AppState.Game); see GameRules for how it changes.
 
 /// <summary>XP, achievements, streak and lifetime counters. Saved inside the app state.</summary>
 public sealed class GameState
 {
     public const int CurrentVersion = 1;
 
-    /// <summary>0 = saved by a version without gamification: <see cref="GameEngine.Sync"/> brings it up to date quietly.</summary>
+    /// <summary>0 = saved by a version without gamification: <see cref="GameRules.Sync"/> brings it up to date quietly.</summary>
     public int Version { get; set; }
 
     /// <summary>The XP last computed (to show "+n XP"). XP itself is always derived, see <see cref="XpRules"/>.</summary>

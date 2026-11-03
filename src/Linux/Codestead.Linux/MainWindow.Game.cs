@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Codestead.Content;
 using Codestead.Content.Game;
+using Codestead.Learning;
+using Codestead.Learning.Game;
 using Codestead.Shell;
 using Codestead.UI.Controls;
 using Codestead.UI.Controls.Game;
@@ -40,7 +42,7 @@ public sealed partial class MainWindow
     private void InitGame()
     {
         gameWelcomeBack = state.Game.Version == 0 && existingUser;
-        var ev = GameEngine.Sync(state.Game, Snapshot(), DateTime.Now);
+        var ev = LinuxGame.Rules.Sync(state.Game, Snapshot(), DateTime.Now);
         gameWelcomeBack &= state.Game.Xp > 0;
         if (ev.Changed) SaveState();
         WriteProfile();
@@ -66,7 +68,7 @@ public sealed partial class MainWindow
     private void ResetGame()
     {
         state.Game = new GameState();
-        GameEngine.Sync(state.Game, Snapshot(), DateTime.Now);
+        LinuxGame.Rules.Sync(state.Game, Snapshot(), DateTime.Now);
         WriteProfile();
     }
 
@@ -108,7 +110,7 @@ public sealed partial class MainWindow
     {
         var g = state.Game;
         var progress = Snapshot();
-        var ctx = new AchievementContext(g, progress, null, Array.Empty<string>(), DateTime.Now);
+        var ctx = new AchievementContext(LinuxGame.Outline, g, progress, null, Array.Empty<string>(), DateTime.Now);
         Dictionary<string, string> All(string key, params (string Name, object Value)[] args) =>
             langs.ToDictionary(l => l, l => UiStrings.Translate(l, key, args.Length == 0 ? null : args.ToDictionary(a => a.Name, a => a.Value)));
         var (level, start, next) = Levels.Progress(g.Xp);
@@ -175,7 +177,7 @@ public sealed partial class MainWindow
     private void UpdateGameViews()
     {
         var g = state.Game;
-        var (days, today) = GameEngine.StreakAt(g, DateOnly.FromDateTime(DateTime.Now));
+        var (days, today) = GameRules.StreakAt(g, DateOnly.FromDateTime(DateTime.Now));
         gameBar.Update(LevelModelFor(g.Xp), new StreakModel(days, today, StreakTooltip(days, today, g.BestStreak)));
         sidebarAchievements.Content = Icons.Label(Icons.Trophy(), T("game.achievementsShort", ("unlocked", g.Achievements.Count), ("total", AchievementsLib.All.Count)));
     }
@@ -185,7 +187,7 @@ public sealed partial class MainWindow
         var profile = BuildProfile(new[] { Lang });
         var texts = ProfileTexts();
         var g = state.Game;
-        var (days, _) = GameEngine.StreakAt(g, DateOnly.FromDateTime(DateTime.Now));
+        var (days, _) = GameRules.StreakAt(g, DateOnly.FromDateTime(DateTime.Now));
         var gallery = new GalleryTexts(
             T("game.achievements"),
             T("game.achievementsCount", ("unlocked", profile.Unlocked), ("total", profile.Achievements.Count)),
@@ -284,7 +286,7 @@ public sealed partial class MainWindow
             title = T("celebrate.part.title", ("part", T($"part.{part}")));
             var exam = chapters.FirstOrDefault(c => c.Part == part && c.Kind == ChapterKinds.Exam);
             subtitle = T(exam is null ? "celebrate.part.subtitleNoExam" : "celebrate.part.subtitle", ("count", lessons.Count));
-            commands = lessons.SelectMany(l => GameEngine.ChapterCommands(l, DistroOf(l), shell.World)).Distinct().Take(16).ToList();
+            commands = lessons.SelectMany(l => LinuxGame.ChapterCommands(l, DistroOf(l), shell.World)).Distinct().Take(16).ToList();
             seconds = lessons.Sum(l => state.Game.Stats.ChapterSeconds.GetValueOrDefault(l.Id));
             after = exam ?? chapters.SkipWhile(c => c.Id != lessons[^1].Id).Skip(1).FirstOrDefault();
             nextText = after is null ? null : exam is not null ? T("celebrate.toExam") : T("celebrate.next", ("title", I18nLib.ChapterTitle(after, Lang)));
@@ -298,7 +300,7 @@ public sealed partial class MainWindow
             icon = "✓";
             title = T("celebrate.chapter.title");
             subtitle = I18nLib.ChapterTitle(chapter, Lang);
-            commands = GameEngine.ChapterCommands(chapter, DistroOf(chapter), shell.World).Take(12).ToList();
+            commands = LinuxGame.ChapterCommands(chapter, DistroOf(chapter), shell.World).Take(12).ToList();
             seconds = state.Game.Stats.ChapterSeconds.GetValueOrDefault(chapter.Id);
             after = chapters.SkipWhile(c => c.Id != chapter.Id).Skip(1).FirstOrDefault();
             nextText = after is null ? null : T("celebrate.next", ("title", I18nLib.ChapterTitle(after, Lang)));

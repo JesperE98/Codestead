@@ -1,17 +1,13 @@
+using Codestead.Learning.Game;
 using Codestead.Shell.Commands;
 
 namespace Codestead.Content.Game;
 
 /// <summary>What a command line contained: command names, pipes, redirections, loops … (for statistics and achievements).</summary>
-public sealed class CommandInfo
+/// <remarks><see cref="CommandFacts.Names"/> are the commands the simulator knows, also those run through sudo, time,
+/// xargs …; <see cref="CommandFacts.FirstWords"/> the first word of each simple command, known or not (e.g. "sl", ":q").</remarks>
+public sealed class CommandInfo : CommandFacts
 {
-    public string Line { get; init; } = "";
-    public string Output { get; init; } = "";
-    public int ExitCode { get; init; }
-    /// <summary>Command names that the simulator knows, in order (also those run through sudo, time, xargs …).</summary>
-    public List<string> Names { get; } = new();
-    /// <summary>The first word of each simple command, known or not (e.g. "sl", ":q").</summary>
-    public List<string> FirstWords { get; } = new();
     /// <summary>The longest pipeline (1 = no pipe).</summary>
     public int MaxPipeline { get; private set; } = 1;
     public bool HasRedirect { get; private set; }
@@ -22,6 +18,18 @@ public sealed class CommandInfo
     public string? ManPage { get; private set; }
     /// <summary>The words of every simple command (after leading VAR=value).</summary>
     public List<List<string>> Commands { get; } = new();
+
+    /// <summary>The terminal's own counters: man pages, pipes, redirections, loops, scripts and sudo.</summary>
+    public override void CountInto(GameStats s)
+    {
+        if (ManPage is { } page && !s.ManPages.Contains(page)) s.ManPages.Add(page);
+        if (MaxPipeline > 1) s.Pipes++;
+        s.LongestPipe = Math.Max(s.LongestPipe, MaxPipeline);
+        if (HasRedirect) s.Redirects++;
+        if (HasLoop) s.Loops++;
+        if (IsScriptRun) s.Scripts++;
+        if (UsesSudo) s.Sudo++;
+    }
 
     private static readonly HashSet<string> Wrappers = new(StringComparer.Ordinal) { "sudo", "time", "nohup", "env", "xargs", "watch", "exec", "command", "builtin" };
     private static readonly HashSet<string> OutputRedirects = new(StringComparer.Ordinal) { ">", ">>", "&>", "2>", "2>>", "<" };

@@ -9,6 +9,8 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using Codestead.Content;
 using Codestead.Content.Game;
+using Codestead.Learning;
+using Codestead.Learning.Game;
 using Codestead.Shell;
 using Codestead.UI;
 using Codestead.UI.Controls;
@@ -61,7 +63,7 @@ public sealed partial class MainWindow : Window
     /// <summary>How many own attempts a task needs before its solution can be shown (unless the hint was opened).</summary>
     public const int AttemptsBeforeSolution = 3;
     /// <summary>Percentage needed to pass an exam.</summary>
-    public const int ExamPassPercent = GameEngine.ExamPassPercent;
+    public const int ExamPassPercent = GameRules.ExamPassPercent;
 
     private static readonly string[] FamilyOrder = { "debian", "arch", "redhat" };
 
@@ -446,7 +448,7 @@ public sealed partial class MainWindow : Window
                 bool wasUnlocked = IsUnlocked(chapter);
                 state.Checkpoints[key] = true;
                 SaveState();
-                var ev = GameEngine.OnCheckpoint(state.Game, Snapshot(), DateTime.Now);
+                var ev = LinuxGame.Rules.OnCheckpoint(state.Game, Snapshot(), DateTime.Now);
                 if (chapter.Id == Chapter.Id && ev.Celebrate) RenderSidebar();
                 Present(ev);
                 if (chapter.Id != Chapter.Id) return;
@@ -585,7 +587,7 @@ public sealed partial class MainWindow : Window
                 read.IsVisible = false;
                 overlay.Toast(T("gate.unlocked"));
                 Unlocked();
-                Present(GameEngine.Sync(state.Game, Snapshot(), DateTime.Now));
+                Present(LinuxGame.Rules.Sync(state.Game, Snapshot(), DateTime.Now));
             };
             lessonPanel.Children.Add(read);
         }
@@ -681,7 +683,7 @@ public sealed partial class MainWindow : Window
             retake.Click += (_, _) => RenderLesson();
             result.Children.Add(retake);
             RenderSidebar();
-            Present(GameEngine.OnExam(state.Game, Snapshot(), chapter.Part, percent, DateTime.Now));
+            Present(LinuxGame.Rules.OnExam(state.Game, Snapshot(), chapter.Part, percent, DateTime.Now));
         };
         lessonPanel.Children.Add(submit);
         lessonPanel.Children.Add(result);
@@ -804,7 +806,7 @@ public sealed partial class MainWindow : Window
             }
             if (which == "solution" && !done && !state.Game.SolutionSeen.Contains(key))
             {
-                GameEngine.OnSolutionShown(state.Game, key);
+                GameRules.OnSolutionShown(state.Game, key);
                 SaveState();
             }
             bool unlocked = SolutionUnlocked();
@@ -911,7 +913,7 @@ public sealed partial class MainWindow : Window
         if (!result.Pending && !result.Incomplete && result.Line.Trim() != "")
         {
             var solved = newly.Select(k => new SolvedTask(k, state.HintSeen.Contains(k) || state.Game.SolutionSeen.Contains(k))).ToList();
-            ev = GameEngine.OnCommand(state.Game, Snapshot(), CommandInfo.Analyze(result.Line, result.Output, result.ExitCode), Chapter.Id, solved, DateTime.Now);
+            ev = LinuxGame.Rules.OnCommand(state.Game, Snapshot(), CommandInfo.Analyze(result.Line, result.Output, result.ExitCode), Chapter.Id, solved, DateTime.Now);
         }
         if (newly.Count == 0)
         {

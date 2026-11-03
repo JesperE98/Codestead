@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The learning engine every tool shares, with no UI and no simulator: the course outline, XP, levels,
+       the day streak and achievements. A tool (Codestead Linux …) supplies its course and its own achievements. -->
+  <PropertyGroup>
+    <RootNamespace>Codestead.Learning</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Codestead.Common/Codestead.Common.csproj" />
+  </ItemGroup>
+</Project>

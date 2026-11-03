@@ -117,7 +117,12 @@ Färgerna har fasta betydelser i båda apparna (och i kommande verktyg). De finn
 
 ## Spelifiering (XP, nivåer, utmärkelser)
 
-Reglerna finns i `src/Linux/Codestead.Content/Game/` och är rena funktioner som testas i
+Motorn är gemensam för alla verktyg och vet inget om Linux: `src/Shared/Codestead.Learning/` (`GameRules`,
+`GameState`, `XpRules`, `Levels`, `CommonAchievements`), testad mot en påhittad kurs i
+`tests/Shared/Codestead.Learning.Tests`. Ett verktyg beskriver sin kurs med en `CourseOutline` (delar, lektioner,
+vilka delar som har prov) och skapar `new GameRules(outline, utmärkelser)`. Codestead Linux gör det i
+`src/Linux/Codestead.Content/Game/LinuxGame.cs`, med sina egna utmärkelser i `AchievementsLib.cs` och kommandoanalysen
+i `CommandInfo.cs` (en `CommandFacts` som också räknar pipes, sudo, loopar …); Linux-kursens tester finns i
 `tests/Linux/Codestead.Content.Tests/GameTests.cs`. Vyerna (topprad, notiser, firande, galleri, profilrad) finns i
 `src/Shared/Codestead.UI/Controls/Game/` och tar färdigöversatta texter, så att samma vyer fungerar i alla verktyg och
 i hubben. Codestead Linux kopplar ihop dem i `src/Linux/Codestead.Linux/MainWindow.Game.cs`.
@@ -129,13 +134,14 @@ i hubben. Codestead Linux kopplar ihop dem i `src/Linux/Codestead.Linux/MainWind
   ser till att hela kursen alltid räcker till högsta nivån.
 - **Dagar i rad**: en lokal kalenderdag räknas när man löser en uppgift eller svarar rätt på en fråga. En
   missad dag startar om räkningen, men inget dras av.
-- **Ny utmärkelse**: lägg till en rad i `AchievementsLib.All` (id, emoji, kategori, villkor och gärna en
+- **Ny utmärkelse**: lägg till en rad i verktygets lista (Linux: `AchievementsLib.All`; allmänna finns färdiga i
+  `CommonAchievements`) (id, emoji, kategori, villkor och gärna en
   räknare för "x / y"), texterna `ach.<id>.title` och `ach.<id>.desc` på alla erbjudna språk, och ett "vittne" i
   `GameTests.Witnesses` (testet kräver ett för varje utmärkelse). Kategori `Hidden` = dold: titeln visas som
   "???" tills den hittats och skrivs inte heller till profilfilen. Använd emoji från Unicode 11 eller äldre.
 - **Kommandon** analyseras med skalets parser (`CommandInfo`): namn (även genom sudo, time, xargs …), pipes,
   omdirigeringar, loopar, skript och man-sidor.
-- **Gamla sparningar**: `GameEngine.Sync` körs vid start och ger tyst XP och utmärkelser för tidigare
+- **Gamla sparningar**: `GameRules.Sync` körs vid start och ger tyst XP och utmärkelser för tidigare
   framsteg; användaren får en notis om det en gång.
 - **Profil till hubben**: verktyget skriver `profile.json` (`ToolProfile`, `src/Shared/Codestead.UI/Controls/Game/Profile/ToolProfile.cs`)
   i sin datamapp när något märkbart ändras och vid start. Filen innehåller alla texter på alla språk, så hubben
@@ -153,13 +159,14 @@ src/
 ├── Shared/                      Gemensamt för alla appar (beror aldrig på Linux-simulatorn)
 │   ├── Codestead.Common/        Ren .NET: språklistan (build/languages.json), översättning med platshållare,
 │   │                            JSON-inställningar, produktinfo (namn, id, version)
+│   ├── Codestead.Learning/      Lärmotorn utan UI: kursens disposition, XP, nivåer, dagar i rad, utmärkelser
 │   └── Codestead.UI/            Avalonia-delar: tema och färgsystem, markdown-vy, dialoger, kontrollfrågor
 │                                (med en ISandbox som verktyget ger), spelvyer, lagring, "Vad är nytt",
 │                                självuppdatering, och appskalet i App/ (start, inställningar, nyheter, snabbtest)
 ├── Linux/                       Codestead Linux
 │   ├── Codestead.Linux/         Själva appen (Avalonia): MainWindow, MainWindow.Game
 │   ├── Codestead.Terminal/      Terminalen (TerminalView, ANSI-färger) och ShellSandbox för kontrollfrågorna
-│   ├── Codestead.Content/       Kapitel och uppgifter (Chapters/, ChapterDefinitions.cs, Checks.cs), spelmotorn
+│   ├── Codestead.Content/       Linux-kursen: kapitel och uppgifter (Chapters/, ChapterDefinitions.cs, Checks.cs), Linux-spelet
 │   │                            (Game/), språk, UI-texter (i18n/ui/*.json)
 │   ├── Codestead.Shell/         Den simulerade terminalen (bash, zsh, fish, apt, pacman, dnf, git ...)
 │   │   ├── Shell/               Kör kommandorader: pipes, omdirigering, sudo, skript, jobb (en partiell fil per del)
@@ -181,6 +188,7 @@ src/
     ├── Codestead.Hub.Core/      Logik utan UI: signerad katalog, nedladdning, installation, uppdatering
     └── changelog.json, description.json, release-notes.md
 tests/
+├── Shared/Codestead.Learning.Tests/ Lärmotorn mot en påhittad kurs (utan Linux)
 ├── Shared/Codestead.UI.Tests/   UI (headless): kontroller, tema och kontrast, spelvyer, ändringsloggar
 ├── Linux/Codestead.Shell.Tests/ Simulatorn
 ├── Linux/Codestead.Terminal.Tests/ Terminalen och sandlådan med den riktiga simulatorn
