@@ -6,14 +6,6 @@ using System.Text.Json;
 
 namespace Codestead.Hub.Core;
 
-/// <summary>A tool installed by the hub.</summary>
-public sealed record InstalledTool(string Id, string Version, string Executable, string? Previous)
-{
-    /// <summary>Set by <see cref="ToolStore"/>: the folder of the installed version.</summary>
-    public string Directory { get; init; } = "";
-    public string ExecutablePath => Path.Combine(Directory, Executable);
-}
-
 /// <summary>
 /// Installs tools per user, without administrator rights:
 /// <c>&lt;root&gt;/tools/&lt;id&gt;/&lt;version&gt;/…</c> plus <c>&lt;root&gt;/tools/&lt;id&gt;/current.json</c>.

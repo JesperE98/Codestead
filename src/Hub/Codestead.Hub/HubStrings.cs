@@ -3,9 +3,6 @@ using System.Text.RegularExpressions;
 
 namespace Codestead.Hub;
 
-/// <summary>A language of the user interface (the same as Codestead Linux: build/languages.json).</summary>
-public sealed record HubLanguage(string Code, string Name, bool RightToLeft = false);
-
 /// <summary>The hub's texts in i18n/&lt;lang&gt;.json (embedded). Missing keys fall back to English.</summary>
 public static class HubStrings
 {

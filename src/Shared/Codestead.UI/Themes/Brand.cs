@@ -4,12 +4,6 @@ using Avalonia.Styling;
 
 namespace Codestead.UI.Themes;
 
-/// <summary>A tool's own accent colour, in the light and the dark theme (see "Färgsystemet" in docs/DEVELOPMENT.md).</summary>
-/// <param name="Accent">Primary buttons, the current item, focus.</param>
-/// <param name="AccentSoft">A light background in the same colour (selected items).</param>
-/// <param name="OnAccent">Text on <paramref name="Accent"/> – it must be easy to read.</param>
-public sealed record BrandShade(Color Accent, Color AccentSoft, Color OnAccent);
-
 /// <summary>The accent colours of the Codestead tools. Every tool has its own, so you can tell at a glance which one you are in.</summary>
 public sealed record Brand(string Name, BrandShade Light, BrandShade Dark)
 {

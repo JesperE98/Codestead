@@ -9,20 +9,6 @@ using ShellType = Codestead.Shell.Shell;
 
 namespace Codestead.UI.Controls;
 
-/// <summary>Localised texts used by the checkpoint controls.</summary>
-public sealed record CheckpointTexts(
-    string Check,
-    string Correct,
-    string Wrong,
-    string PredictPrompt,
-    string TryPrompt,
-    string Done,
-    string AnswerPlaceholder,
-    string Question,
-    string ShowAnswer = "Show the answer",
-    string AlmostPath = "Almost! Look at how the paths are written: ls shows each name the way you gave it, with the directory in front.",
-    string TryPredict = "Try it in a terminal");
-
 /// <summary>
 /// One interactive checkpoint in a lesson (or a question in an exam): a quiz, a "what does this print?"
 /// question or a "try it" mini terminal. In lessons a "what does this print?" question can also open its

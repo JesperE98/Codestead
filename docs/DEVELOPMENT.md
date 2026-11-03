@@ -137,7 +137,7 @@ i hubben. Codestead Linux kopplar ihop dem i `src/Linux/Codestead.Linux/MainWind
   omdirigeringar, loopar, skript och man-sidor.
 - **Gamla sparningar**: `GameEngine.Sync` körs vid start och ger tyst XP och utmärkelser för tidigare
   framsteg; användaren får en notis om det en gång.
-- **Profil till hubben**: verktyget skriver `profile.json` (`ToolProfile`, `src/Shared/Codestead.UI/Controls/Game/Profile.cs`)
+- **Profil till hubben**: verktyget skriver `profile.json` (`ToolProfile`, `src/Shared/Codestead.UI/Controls/Game/Profile/ToolProfile.cs`)
   i sin datamapp när något märkbart ändras och vid start. Filen innehåller alla texter på alla språk, så hubben
   kan visa nivå, dagar i rad och galleriet utan verktygets texter. Ett nytt verktyg skriver samma fil.
 
@@ -155,17 +155,17 @@ src/
 │                                (utmärkelser, firande), lagring, "Vad är nytt", självuppdatering (Velopack)
 ├── Linux/                       Codestead Linux
 │   ├── Codestead.Linux/         Själva appen (Avalonia): MainWindow, MainWindow.Game
-│   ├── Codestead.Content/       Kapitel, uppgifter och kontroller (ChapterDefinitions.cs), spelmotorn
+│   ├── Codestead.Content/       Kapitel och uppgifter (Chapters/, ChapterDefinitions.cs, Checks.cs), spelmotorn
 │   │                            (Game/), språk, UI-texter (i18n/ui/*.json)
 │   ├── Codestead.Shell/         Den simulerade terminalen (bash, zsh, fish, apt, pacman, dnf, git ...)
-│   │   ├── Shell.cs             Kör kommandorader: pipes, omdirigering, sudo, skript, jobb
-│   │   ├── Parser.cs            Bash-parser (syntaxträd)
-│   │   ├── Vfs.cs               Virtuellt filsystem med ägare och rwx-rättigheter
-│   │   ├── Initfs.cs            Startfilerna för varje distribution
+│   │   ├── Shell/               Kör kommandorader: pipes, omdirigering, sudo, skript, jobb (en partiell fil per del)
+│   │   ├── Parser/              Bash-parser: Lexer, Parser och syntaxträdet (Ast/, en nod per fil)
+│   │   ├── Vfs/                 Virtuellt filsystem med ägare och rwx-rättigheter
+│   │   ├── InitfsLib.cs         Startfilerna för varje distribution
 │   │   ├── World.cs, world/     Elevens dator på elevens språk (namn, ord, övningsfiler)
-│   │   ├── Packages.cs          Paketdatabasen (olika paketnamn per familj)
+│   │   ├── Packages/            Paketdatabasen (olika paketnamn per familj)
 │   │   ├── ShellI18n.cs, i18n/  Simulatorns egna tips och help-sammanfattningar
-│   │   └── Commands/            Alla kommandon: ls, grep, chmod, apt, pacman, dnf, git, ssh ...
+│   │   └── Commands/<Grupp>/    Alla kommandon, en mapp per grupp och en fil per kommando (Users/UsersCmd.Useradd.cs …)
 │   ├── content/
 │   │   ├── chapters/<språk>/    Kapiteltexterna (markdown), ett språk per katalog
 │   │   └── i18n/<språk>/        Översatta titlar och uppgiftstexter
@@ -229,13 +229,14 @@ sina id:n och versioner i `build/Codestead.props`.
    - **Sammanfattning och prov** för ett huvudkapitel: `<huvudkapitel>-summary.md` och
      `<huvudkapitel>-exam.md` (t.ex. `grunder-exam.md`). De läggs till sist i huvudkapitlet av sig själva.
      Provet består av kontrollfrågor (minst 10), öppnas när alla sub-kapitel är klara och kräver 80 %.
-2. Lägg till kapitlet med uppgifter i `src/Linux/Codestead.Content/ChapterDefinitions.cs`. Varje uppgift har
+2. Lägg till kapitlet med uppgifter i en egen fil, `src/Linux/Codestead.Content/Chapters/<huvudkapitel>/<id>.cs`,
+   och anropa det i listan i `ChapterDefinitions.cs` (ordningen där är kursens ordning). Varje uppgift har
    en `Check` som körs efter varje kommando och en `Solution` (lista med kommandon).
 3. Kör `dotnet test`. Testerna kör alla lösningar i alla distributioner och kontrollerar att
    varje kapitel finns på alla språk, och att kontrollfrågorna är likadana på alla språk.
 
 Behövs ett nytt kommando lägger du det i `src/Linux/Codestead.Shell/Commands/`. Ska det installeras med
-pakethanteraren lägger du också till ett paket i `Packages.cs`.
+pakethanteraren lägger du också till ett paket i `Packages/PackagesLib.Catalog.cs`.
 
 ## Elevens dator på elevens språk
 
@@ -256,7 +257,7 @@ språk i `src/Linux/Codestead.Shell/world/<språk>.json`:
 - `words` är korta texter på språket, `files` innehållet i övningsfilerna.
 - `en.json` är källan: alla språk har samma nycklar (testerna i `WorldTests.cs` kontrollerar det).
 - Kapiteltexter, uppgiftstexter, lösningar och kontroller skriver namnen som platshållare: `{{documents}}`,
-  `{{user}}`. I `ChapterDefinitions.cs` fyller hjälpfunktionerna (`Node`, `Re(c, …)`, `Env`, `W(c)`) i dem.
+  `{{user}}`. I kapitlens kontroller fyller hjälpfunktionerna i `Checks.cs` (`Node`, `Re(c, …)`, `Env`, `W(c)`) i dem.
 - Det program skriver (loggar, konfigurationsfiler, systemfiler) är engelska på alla språk, som på en
   riktig dator. `$LANG` följer språket, och `sort` sorterar därefter.
 - När eleven byter språk översätts terminalen på plats (`WorldMigration.Translate`): övningsfilerna och
@@ -284,14 +285,14 @@ att inget har glömts.
 
 ## Simulatorns filsystem, cron och servern
 
-- **Länkar** (`Vfs.cs`): en symbolisk länk är en nod med `Type = "link"` och sökvägen i `Content`.
+- **Länkar** (`Vfs/`): en symbolisk länk är en nod med `Type = "link"` och sökvägen i `Content`.
   `VFS.Lookup` följer länkar (högst 40, sedan `ELOOP`); `Lookup(..., follow: false)` och
   `TryLookupLink` ger själva länken, som `lstat`. Kommandon som arbetar med namnet (rm, mv, rmdir,
   ls -l, find, tar) använder den varianten. En hård länk är samma nod i flera kataloger, med
   `Nlink` och ett gemensamt `Ino`; när en sparad terminal läses in fogar `JoinHardLinks` ihop dem
   igen. `VfsLib.CloneNode` (cp) ger alltid nya filer utan inodnummer.
 - **umask** finns på `VFS` och sparas med terminalen. `WriteFile` och `Mkdir` använder den.
-- **cron** (`Commands/CronCmd.cs`): användarnas crontab ligger i `/var/spool/cron/crontabs`
+- **cron** (`Commands/Cron/`): användarnas crontab ligger i `/var/spool/cron/crontabs`
   (Debian/Ubuntu) eller `/var/spool/cron`. `CronCmd.Tick` körs före varje kommandorad och kör de
   jobb vars minut har passerat sedan förra gången (högst en timme bakåt), men bara medan tjänsten
   cron/crond/cronie är igång. Tiden räknas inte medan appen är stängd, precis som en avstängd dator.
