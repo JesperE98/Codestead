@@ -5,30 +5,37 @@
     "changes": {
       "en": [
         "Codestead now comes in **7 languages**: English, Swedish, Spanish, German, French, Chinese and Japanese. Portuguese, Russian, Arabic and Hindi are paused until native speakers have checked them – if you used one of them, the app now starts in English.",
+        "When a command is not found, the terminal now tells you why: a likely typo (\"did you mean `ls`?\"), a real Linux command that the simulator does not have, or a command in a package that is not installed.",
         "Behind the scenes: the code is reorganised so that coming Codestead tools can share it. Nothing changes in how you use the app."
       ],
       "sv": [
         "Codestead finns nu på **7 språk**: engelska, svenska, spanska, tyska, franska, kinesiska och japanska. Portugisiska, ryska, arabiska och hindi är pausade tills någon med språket som modersmål har granskat dem – använde du något av dem startar appen nu på engelska.",
+        "När ett kommando inte hittas säger terminalen nu varför: ett troligt stavfel (\"menade du `ls`?\"), ett riktigt Linux-kommando som simulatorn inte har, eller ett kommando i ett paket som inte är installerat.",
         "Bakom kulisserna: koden är omorganiserad så att kommande Codestead-verktyg kan dela på den. Inget ändras i hur du använder appen."
       ],
       "de": [
         "Codestead gibt es jetzt in **7 Sprachen**: Englisch, Schwedisch, Spanisch, Deutsch, Französisch, Chinesisch und Japanisch. Portugiesisch, Russisch, Arabisch und Hindi pausieren, bis Muttersprachler sie geprüft haben – wenn du eine davon genutzt hast, startet die App jetzt auf Englisch.",
+        "Wenn ein Befehl nicht gefunden wird, sagt dir das Terminal jetzt, warum: ein wahrscheinlicher Tippfehler (\"Meintest du `ls`?\"), ein echter Linux-Befehl, den der Simulator nicht hat, oder ein Befehl aus einem nicht installierten Paket.",
         "Hinter den Kulissen: Der Code ist neu organisiert, damit künftige Codestead-Tools ihn gemeinsam nutzen können. An der Bedienung ändert sich nichts."
       ],
       "fr": [
         "Codestead est désormais disponible en **7 langues** : anglais, suédois, espagnol, allemand, français, chinois et japonais. Le portugais, le russe, l'arabe et le hindi sont en pause jusqu'à leur relecture par des locuteurs natifs – si vous utilisiez l'une d'elles, l'application démarre maintenant en anglais.",
+        "Quand une commande est introuvable, le terminal vous dit maintenant pourquoi : une faute de frappe probable (« vouliez-vous dire `ls` ? »), une vraie commande Linux que le simulateur n'a pas, ou une commande d'un paquet non installé.",
         "En coulisses : le code est réorganisé pour que les futurs outils Codestead puissent le partager. Rien ne change dans votre utilisation de l'application."
       ],
       "es": [
         "Codestead está ahora disponible en **7 idiomas**: inglés, sueco, español, alemán, francés, chino y japonés. El portugués, el ruso, el árabe y el hindi quedan en pausa hasta que hablantes nativos los revisen; si usabas uno de ellos, la aplicación se abre ahora en inglés.",
+        "Cuando no se encuentra un comando, la terminal ahora te dice por qué: un probable error de escritura (\"¿quisiste decir `ls`?\"), un comando real de Linux que el simulador no tiene o un comando de un paquete que no está instalado.",
         "Entre bastidores: el código se ha reorganizado para que las próximas herramientas de Codestead puedan compartirlo. No cambia nada en cómo usas la aplicación."
       ],
       "zh": [
         "Codestead 现在提供 **7 种语言**：英语、瑞典语、西班牙语、德语、法语、中文和日语。葡萄牙语、俄语、阿拉伯语和印地语暂停提供，直到母语人士审校完毕——如果你之前使用其中一种，应用现在会以英语启动。",
+        "找不到命令时，终端现在会告诉你原因：可能是拼写错误（“你是想输入 `ls` 吗？”）、模拟器没有提供的真实 Linux 命令，或者是未安装的软件包中的命令。",
         "幕后：代码已重新组织，以便未来的 Codestead 工具可以共用。你使用应用的方式没有任何变化。"
       ],
       "ja": [
         "Codestead は **7 言語** に対応しました：英語、スウェーデン語、スペイン語、ドイツ語、フランス語、中国語、日本語。ポルトガル語、ロシア語、アラビア語、ヒンディー語はネイティブスピーカーの確認が済むまで一時停止します。これらを使っていた場合、アプリは英語で起動します。",
+        "コマンドが見つからないとき、ターミナルがその理由を教えてくれるようになりました：入力ミスの可能性（「もしかして `ls` ですか？」）、シミュレーターにない実在の Linux コマンド、またはインストールされていないパッケージのコマンドです。",
         "舞台裏：今後の Codestead ツールで共有できるようにコードを整理しました。アプリの使い方は何も変わりません。"
       ]
     }

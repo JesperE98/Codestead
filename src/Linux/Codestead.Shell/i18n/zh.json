@@ -61,6 +61,8 @@
     "script.readInScripts": "在模拟器中，脚本里的 read 只能从管道或文件读取，例如 \"echo text | ./script.sh\"。",
     "script.readNoInput": "没有输入",
     "shell.commandInPackage": "模拟器提示：该命令在软件包 '{pkg}' 中。请参阅关于软件包管理的章节。",
+    "shell.notInSimulator": "模拟器提示：'{cmd}' 是真实的 Linux 命令，但本模拟器没有提供。输入 'help' 查看这里可用的命令。",
+    "shell.didYouMean": "模拟器提示：你是想输入 {cmds} 吗？",
     "shell.exitNoSession": "这是一个模拟终端，没有可以结束的会话。用 'clear' 清屏。",
     "shell.internalError": "模拟器内部错误",
     "shell.nestingTooDeep": "超出最大嵌套层数",

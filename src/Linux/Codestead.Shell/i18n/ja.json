@@ -61,6 +61,8 @@
     "script.readInScripts": "シミュレーターでは、スクリプト内の read はパイプかファイルからしか読み込めません。例: \"echo text | ./script.sh\"",
     "script.readNoInput": "入力がありません",
     "shell.commandInPackage": "シミュレーターからのヒント: このコマンドはパッケージ '{pkg}' に入っています。パッケージ管理の章を見てください。",
+    "shell.notInSimulator": "シミュレーターからのヒント: '{cmd}' は実在する Linux コマンドですが、このシミュレーターにはありません。'help' と入力すると、ここで使えるコマンドが表示されます。",
+    "shell.didYouMean": "シミュレーターからのヒント: もしかして {cmds} ですか？",
     "shell.exitNoSession": "これはシミュレーションのターミナルなので、終了するセッションはありません。画面を消去するには 'clear' を使ってください。",
     "shell.internalError": "シミュレーターの内部エラー",
     "shell.nestingTooDeep": "入れ子の深さが上限を超えました",

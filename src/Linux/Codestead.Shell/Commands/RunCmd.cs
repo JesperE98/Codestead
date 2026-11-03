@@ -20,6 +20,7 @@ public static partial class RunCmd
         if (sh.ResolveCommand(name).Kind == "notfound")
         {
             io.Err($"{who}: {name}: No such file or directory\n");
+            if (!name.Contains('/')) sh.NotFoundHint(name, io);
             return 127;
         }
         return sh.Invoke(argv, io, viaSudo: true);

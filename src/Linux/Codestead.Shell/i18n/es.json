@@ -61,6 +61,8 @@
     "script.readInScripts": "En el simulador, read dentro de un script solo puede leer de una tubería o de un archivo, p. ej. \"echo text | ./script.sh\".",
     "script.readNoInput": "no hay entrada",
     "shell.commandInPackage": "Consejo del simulador: el comando está en el paquete '{pkg}'. Consulta el capítulo sobre gestión de paquetes.",
+    "shell.notInSimulator": "Consejo del simulador: '{cmd}' es un comando real de Linux, pero este simulador no lo tiene. Escribe 'help' para ver los comandos que funcionan aquí.",
+    "shell.didYouMean": "Consejo del simulador: ¿quisiste decir {cmds}?",
     "shell.exitNoSession": "Esta es una terminal simulada, así que no hay ninguna sesión que cerrar. Usa 'clear' para limpiar la pantalla.",
     "shell.internalError": "error interno del simulador",
     "shell.nestingTooDeep": "se ha superado el nivel máximo de anidamiento",

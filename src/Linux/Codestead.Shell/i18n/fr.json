@@ -61,6 +61,8 @@
     "script.readInScripts": "Dans le simulateur, read à l’intérieur d’un script ne peut lire que depuis un pipe ou un fichier, par ex. \"echo text | ./script.sh\".",
     "script.readNoInput": "aucune entrée",
     "shell.commandInPackage": "Astuce du simulateur : la commande se trouve dans le paquet '{pkg}'. Voir le chapitre sur la gestion des paquets.",
+    "shell.notInSimulator": "Astuce du simulateur : '{cmd}' est une vraie commande Linux, mais ce simulateur ne l'a pas. Tapez 'help' pour voir les commandes qui fonctionnent ici.",
+    "shell.didYouMean": "Astuce du simulateur : vouliez-vous dire {cmds} ?",
     "shell.exitNoSession": "Ceci est un terminal simulé, il n’y a donc pas de session à fermer. Utilisez 'clear' pour effacer l’écran.",
     "shell.internalError": "erreur interne du simulateur",
     "shell.nestingTooDeep": "niveau d’imbrication maximal dépassé",

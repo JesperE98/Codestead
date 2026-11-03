@@ -975,7 +975,11 @@ public partial class Shell
             switch (found.Kind)
             {
                 case "notfound":
-                    if (viaSudo) io.Err($"sudo: {name}: command not found\n");
+                    if (viaSudo)
+                    {
+                        io.Err($"sudo: {name}: command not found\n");
+                        NotFoundHint(name, io);
+                    }
                     else CommandNotFound(name, io);
                     return viaSudo ? 1 : 127;
                 case "error":
@@ -1127,10 +1131,48 @@ public partial class Shell
         }
         var mode = ShellMode;
         io.Err(mode == "zsh" ? $"zsh: command not found: {name}\n" : mode == "fish" ? $"fish: Unknown command: {name}\n" : $"bash: {name}: command not found\n");
+        NotFoundHint(name, io);
+    }
+
+    /// <summary>
+    /// After the real "command not found": a dim line from the simulator, so the learner knows whether the
+    /// mistake is theirs or the simulator's. A command in a package that is not installed → which package;
+    /// a real Linux command that the simulator does not have → say so; otherwise a likely typo → "Did you mean".
+    /// </summary>
+    public void NotFoundHint(string name, IO io)
+    {
+        var pkgName = PackagesLib.PackageProviding(Distro.Family, name)?.Names.Get(Distro.Family);
         if (pkgName is not null)
         {
             io.Err($"{Dim}{Msg("shell.commandInPackage", ("pkg", pkgName))}{Reset}\n");
+            return;
         }
+        if (KnownCommands.NotInSimulator(name))
+        {
+            io.Err($"{Dim}{Msg("shell.notInSimulator", ("cmd", name))}{Reset}\n");
+            return;
+        }
+        var similar = SimilarCommands(name);
+        if (similar.Count > 0) io.Err($"{Dim}{Msg("shell.didYouMean", ("cmds", string.Join(", ", similar)))}{Reset}\n");
+    }
+
+    /// <summary>Up to three commands that can be run here and are one or two typos away from <paramref name="name"/>.</summary>
+    public List<string> SimilarCommands(string name)
+    {
+        if (name.Length < 2 || name.Contains('/')) return new();
+        int max = name.Length <= 3 ? 1 : 2;
+        var runnable = IndexCmd.Commands
+            .Where(kv => kv.Key == kv.Value.Name && !kv.Key.StartsWith("__", StringComparison.Ordinal)
+                && (kv.Value.Builtin || ResolveCommand(kv.Key).Kind != "notfound"))
+            .Select(kv => kv.Key)
+            .Concat(Aliases.Keys)
+            .Concat(Functions.Keys)
+            .Distinct(StringComparer.Ordinal);
+        return runnable
+            .Select(c => (Cmd: c, D: UtilCmd.TypoDistance(name, c)))
+            .Where(x => x.D > 0 && x.D <= max)
+            .OrderBy(x => x.D).ThenBy(x => x.Cmd, StringComparer.Ordinal)
+            .Take(3).Select(x => x.Cmd).ToList();
     }
 
     /// <summary>

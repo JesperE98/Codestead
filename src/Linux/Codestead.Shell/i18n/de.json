@@ -61,6 +61,8 @@
     "script.readInScripts": "Im Simulator kann read in einem Skript nur aus einer Pipe oder einer Datei lesen, z. B. \"echo text | ./script.sh\".",
     "script.readNoInput": "keine Eingabe",
     "shell.commandInPackage": "Tipp vom Simulator: Der Befehl ist im Paket '{pkg}'. Siehe das Kapitel über Paketverwaltung.",
+    "shell.notInSimulator": "Tipp vom Simulator: '{cmd}' ist ein echter Linux-Befehl, aber dieser Simulator hat ihn nicht. Gib 'help' ein, um die Befehle zu sehen, die hier funktionieren.",
+    "shell.didYouMean": "Tipp vom Simulator: Meintest du {cmds}?",
     "shell.exitNoSession": "Das ist ein simuliertes Terminal, daher gibt es keine Sitzung, die man beenden kann. Mit 'clear' leerst du den Bildschirm.",
     "shell.internalError": "interner Fehler im Simulator",
     "shell.nestingTooDeep": "zu tiefe Rekursion",
