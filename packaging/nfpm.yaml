@@ -39,7 +39,9 @@ overrides:
       - glibc
       - libstdc++
       - zlib
-      - openssl-libs
+      # OpenSSL 3 by its library name: .NET 10 cannot use OpenSSL 4 (Fedora 45 and later), where it comes
+      # from the compatibility package openssl3-libs; before that it is in openssl-libs.
+      - libssl.so.3()(64bit)
       - fontconfig
       - libX11
       - libICE

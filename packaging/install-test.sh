@@ -32,7 +32,8 @@ case "$kind" in
       export DEBIAN_FRONTEND=noninteractive
       apt-get update -qq && apt-get install -y -qq xvfb xauth libfontconfig1 libx11-6 libice6 libsm6 libxrandr2 libxi6 libxcursor1 >/dev/null
     elif command -v dnf >/dev/null; then
-      dnf install -y -q xorg-x11-server-Xvfb xorg-x11-xauth fontconfig libX11 libICE libSM libXrandr libXi libXcursor >/dev/null
+      # OpenSSL 3 by its library name (openssl3-libs on Fedora 45 and later): .NET cannot use OpenSSL 4.
+      dnf install -y -q xorg-x11-server-Xvfb xorg-x11-xauth fontconfig libX11 libICE libSM libXrandr libXi libXcursor 'libssl.so.3()(64bit)' >/dev/null
     else
       pacman -Syu --noconfirm --needed xorg-server-xvfb xorg-xauth fontconfig libx11 libice libsm libxrandr libxi libxcursor >/dev/null
     fi

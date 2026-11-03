@@ -14,6 +14,9 @@
 On Arch Linux and CachyOS, fonts are needed to display Chinese, Japanese, Arabic and Hindi:
 `sudo pacman -S noto-fonts noto-fonts-cjk`. The Ubuntu and Fedora packages suggest them automatically.
 
+On Fedora 45 and later, the AppImage needs OpenSSL 3, which .NET still uses:
+`sudo dnf install openssl3-libs`. The `.rpm` package installs it automatically.
+
 ### First start
 
 The app is not yet signed with a developer certificate:
