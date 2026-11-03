@@ -378,8 +378,10 @@ Linux från en signerad katalog. Därefter publiceras de ändrade produkterna i 
 
 Release-titlarna kommer från `title` i `packaging/products.json` ("Codestead Linux 0.5.1",
 "Codestead hub 0.1.1"), eftersom alla produkter delar repot. Efter varje publicering skriver flödet om
-README:n i `codestead-releases` med `packaging/releases_readme.py`: en del per produkt med senaste
-version och nedladdningslänkar, och vad de olika releaserna är. Ändra den i skriptet, inte i repot.
+README:n i `codestead-releases` med `packaging/releases_readme.py` (på engelska: innehållsförteckning,
+kom igång med hubben, en del per produkt med senaste version och nedladdningar, kontroll av filer, SmartScreen och
+vad de olika releaserna är). Ändra den i skriptet, inte i repot; plan-jobbet provar skriptet på varje PR, och
+skriptet stoppar om en länk i innehållsförteckningen saknar sin rubrik.
 
 Utan **publish** (eller på en annan gren än `main`) bygger och installationstestar flödet utan att
 publicera – så provar du en PR på riktiga system. Installationstesterna körs bara i körningar för hand. Byggena laddas upp som artefakter (ungefär 1,6 GB per körning, sparas en dag)
