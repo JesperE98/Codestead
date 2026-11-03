@@ -1,20 +1,18 @@
 using Avalonia;
 using Avalonia.Media;
 using Codestead.Common;
-using Velopack;
 
 namespace Codestead.UI.App;
 
-/// <summary>The start of every Codestead app: installer hooks, --version, and the Avalonia app with the bundled font.</summary>
+/// <summary>The start of every Codestead app: --version and the Avalonia app with the bundled font.</summary>
 public static class AppHost
 {
     /// <summary>
-    /// Runs Velopack's install/update hooks (it exits when started for one of them), answers --version, and otherwise
-    /// starts the app.
+    /// Answers --version and otherwise starts the app. Call <c>VelopackApp.Build().Run()</c> in the app's own
+    /// <c>Program.Main</c> first: Velopack's packager checks for that call in the app's own assembly.
     /// </summary>
     public static int Run<TApp>(string[] args, ProductMeta product) where TApp : Application, new()
     {
-        VelopackApp.Build().Run();
         if (args.Contains("--version"))
         {
             Console.WriteLine(product.Version);

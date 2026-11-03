@@ -1,5 +1,6 @@
 using Avalonia;
 using Codestead.UI.App;
+using Velopack;
 
 namespace Codestead.Linux;
 
@@ -14,6 +15,9 @@ internal static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        // Velopack's install/update hooks; it exits when started for one of them. It must be called here, in the
+        // app's own assembly, because `vpk pack` checks for it.
+        VelopackApp.Build().Run();
         SmokeTest = args.Contains("--smoke-test");
         return AppHost.Run<App>(args, ProductInfo.Meta);
     }
