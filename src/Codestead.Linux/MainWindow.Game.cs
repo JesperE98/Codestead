@@ -58,7 +58,9 @@ public sealed partial class MainWindow
     {
         if (!gameWelcomeBack) return;
         gameWelcomeBack = false;
-        notices.Show(AchievementToast.Simple(T("game.welcomeBack", ("xp", state.Game.Xp), ("count", state.Game.Achievements.Count)), OpenAchievements), 8);
+        // After "What's new", so that it is not hidden behind it.
+        overlay.ShowWhenFree(() =>
+            notices.Show(AchievementToast.Simple(T("game.welcomeBack", ("xp", state.Game.Xp), ("count", state.Game.Achievements.Count)), OpenAchievements), 10));
     }
 
     private void ResetGame()
@@ -248,7 +250,7 @@ public sealed partial class MainWindow
     /// <summary>"About 14 minutes" from active seconds, or null when too short to mention.</summary>
     private string? TimeText(int seconds)
     {
-        if (seconds < 60) return null;
+        if (seconds < 90) return null; // never "about 1 minutes"
         int minutes = (int)Math.Round(seconds / 60.0);
         return minutes >= 120 ? T("celebrate.hours", ("hours", (int)Math.Round(minutes / 60.0))) : T("celebrate.minutes", ("minutes", minutes));
     }

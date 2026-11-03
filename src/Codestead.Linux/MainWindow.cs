@@ -130,9 +130,9 @@ public sealed partial class MainWindow : Window
             else
             {
                 terminal.FocusInput();
-                GameOpened();
                 // After an update: what changed. The update offer waits until the news are closed.
                 if (!ShowNewsAfterUpdate()) _ = OfferUpdate();
+                GameOpened();
             }
         };
         Closing += (_, _) => SaveAll();

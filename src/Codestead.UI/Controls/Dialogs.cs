@@ -99,8 +99,8 @@ public sealed class OverlayHost : Grid
 
     private void ShowNextWaiting()
     {
-        if (DialogOpen || waiting.Count == 0) return;
-        waiting.Dequeue()();
+        // An action may show something that is not a dialog (a notice): then go on to the next one.
+        while (!DialogOpen && waiting.Count > 0) waiting.Dequeue()();
     }
 
     public bool DialogOpen => dialogs.IsVisible;
