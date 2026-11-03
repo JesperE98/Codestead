@@ -25,20 +25,21 @@ public class ProductFilesTests
         var root = RepoRoot();
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "packaging", "products.json")));
         var hub = doc.RootElement.EnumerateArray().Single(p => p.GetProperty("key").GetString() == "hub");
-        var excluded = hub.GetProperty("exclude").EnumerateArray().Select(e => Path.Combine(root, e.GetString()!)).ToList();
+        // Full paths, so that "src/Codestead.UI/Ansi.cs" and what Directory.GetFiles returns compare equal on Windows too.
+        var excluded = hub.GetProperty("exclude").EnumerateArray().Select(e => Path.GetFullPath(Path.Combine(root, e.GetString()!))).ToList();
 
         var excludedFiles = new List<string>();
         foreach (var e in excluded)
         {
             Assert.True(File.Exists(e) || Directory.Exists(e), $"products.json excludes {e}, which does not exist");
-            excludedFiles.AddRange(Directory.Exists(e) ? Directory.GetFiles(e, "*.cs", SearchOption.AllDirectories) : [e]);
+            excludedFiles.AddRange(Directory.Exists(e) ? Directory.GetFiles(e, "*.cs", SearchOption.AllDirectories).Select(Path.GetFullPath) : [e]);
         }
         var types = excludedFiles.SelectMany(f => TypeRe.Matches(File.ReadAllText(f)).Select(m => m.Groups[1].Value)).ToHashSet();
         Assert.NotEmpty(types);
 
         static bool Built(string f) => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}");
         var users = new[] { "src/Codestead.Hub", "src/Codestead.Hub.Core", "src/Codestead.UI" }
-            .SelectMany(d => Directory.GetFiles(Path.Combine(root, d), "*.*", SearchOption.AllDirectories))
+            .SelectMany(d => Directory.GetFiles(Path.Combine(root, d), "*.*", SearchOption.AllDirectories).Select(Path.GetFullPath))
             .Where(f => (f.EndsWith(".cs") || f.EndsWith(".axaml")) && Built(f) && !excludedFiles.Contains(f));
         foreach (var file in users)
         {
