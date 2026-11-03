@@ -37,8 +37,6 @@ on:
       - build/**
       - packaging/**
       - src/**
-      - content/**
-      - changelog/**
       - global.json
       - Directory.Build.props
       - .github/workflows/release.yml
@@ -241,7 +239,7 @@ jobs:
           hub=$(ls dist/${{ matrix.platform }}-$hub_id/$hub_id-*-${{ matrix.rid }}.${{ matrix.ext }})
           tool=$(ls dist/${{ matrix.platform }}-$tool_id/$tool_id-*-${{ matrix.rid }}.${{ matrix.ext }})
           packaging/hub-e2e.sh "$hub" "$(get hub exe)" "$tool" "$tool_id" "$(get linux name)" "$(get linux version)" \
-            "$(get linux exe)${{ matrix.platform == 'windows' && '.exe' || '' }}" "${{ matrix.rid }}"
+            "$(get linux exe)${{ matrix.platform == 'windows' && '.exe' || '' }}" "${{ matrix.rid }}" "$(get linux dir)"
 
   publish:
     needs: [plan, test, test-linux, test-windows, test-hub]
@@ -262,6 +260,8 @@ jobs:
       TITLE: ${{ matrix.product.title || matrix.product.name }}
       VERSION: ${{ matrix.product.version }}
       EXE: ${{ matrix.product.exe }}
+      # The product's own folder: changelog.json, description.json, release-notes.md (packaging/products.json).
+      DIR: ${{ matrix.product.dir }}
     steps:
       - uses: actions/checkout@v4
       - name: Check the secrets
@@ -299,7 +299,7 @@ jobs:
           ls -la release latest
       - name: Publish release ${{ matrix.product.id }}-v${{ matrix.product.version }}
         run: |
-          notes=".github/release-notes/$ID.md"
+          notes="$DIR/release-notes.md"
           # The hidden source comment tells the next run what changed since this release (packaging/plan.py).
           { cat "$notes"; echo; echo "<!-- codestead-source: $GITHUB_SHA -->"; } > "$RUNNER_TEMP/notes.md"
           gh release create "$ID-v$VERSION" release/* --repo "$RELEASES_REPO" --title "$TITLE $VERSION" --notes-file "$RUNNER_TEMP/notes.md" --latest=false
@@ -332,8 +332,8 @@ jobs:
           gh release download catalog --repo "$RELEASES_REPO" --pattern catalog.json --dir . 2>/dev/null || true
           python3 packaging/catalog.py --catalog catalog.json --id "$ID" --name "$NAME" --version "$VERSION" \
             --notes-url "https://github.com/$RELEASES_REPO/releases/tag/$ID-v$VERSION" \
-            --description-file "packaging/descriptions/$ID.json" \
-            --changelog-file "changelog/$ID.json" \
+            --description-file "$DIR/description.json" \
+            --changelog-file "$DIR/changelog.json" \
             --asset "linux-x64=release/$ID-$VERSION-linux-x64.tar.gz=$base/$ID-$VERSION-linux-x64.tar.gz=$EXE" \
             --asset "win-x64=release/$ID-$VERSION-win-x64.zip=$base/$ID-$VERSION-win-x64.zip=$EXE.exe"
           openssl dgst -sha256 -sign "$RUNNER_TEMP/key.pem" catalog.json | base64 -w0 > catalog.json.sig

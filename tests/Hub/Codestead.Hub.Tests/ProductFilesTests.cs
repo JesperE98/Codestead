@@ -5,7 +5,7 @@ namespace Codestead.Hub.Tests;
 
 /// <summary>
 /// packaging/products.json says which files belong to each product; a product only gets a new version when
-/// they change. The hub leaves out parts of the shared src/Codestead.UI that only Codestead Linux uses – this
+/// they change. The hub leaves out parts of the shared src/Shared/Codestead.UI that only Codestead Linux uses – this
 /// checks that the hub (and the parts of Codestead.UI it does use) really never touch them.
 /// </summary>
 public class ProductFilesTests
@@ -25,7 +25,7 @@ public class ProductFilesTests
         var root = RepoRoot();
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "packaging", "products.json")));
         var hub = doc.RootElement.EnumerateArray().Single(p => p.GetProperty("key").GetString() == "hub");
-        // Full paths, so that "src/Codestead.UI/Ansi.cs" and what Directory.GetFiles returns compare equal on Windows too.
+        // Full paths, so that "src/Shared/Codestead.UI/Ansi.cs" and what Directory.GetFiles returns compare equal on Windows too.
         var excluded = hub.GetProperty("exclude").EnumerateArray().Select(e => Path.GetFullPath(Path.Combine(root, e.GetString()!))).ToList();
 
         var excludedFiles = new List<string>();
@@ -38,7 +38,7 @@ public class ProductFilesTests
         Assert.NotEmpty(types);
 
         static bool Built(string f) => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}");
-        var users = new[] { "src/Codestead.Hub", "src/Codestead.Hub.Core", "src/Codestead.UI" }
+        var users = new[] { "src/Hub", "src/Shared" }
             .SelectMany(d => Directory.GetFiles(Path.Combine(root, d), "*.*", SearchOption.AllDirectories).Select(Path.GetFullPath))
             .Where(f => (f.EndsWith(".cs") || f.EndsWith(".axaml")) && Built(f) && !excludedFiles.Contains(f));
         foreach (var file in users)

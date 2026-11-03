@@ -1,6 +1,6 @@
 # Faktagranskning: admin-summary
 
-Kapitel: Sammanfattning: Systemadministration (`content/linux/chapters/en/admin-summary.md`)
+Kapitel: Sammanfattning: Systemadministration (`src/Linux/content/chapters/en/admin-summary.md`)
 
 Status: **ogranskad**
 

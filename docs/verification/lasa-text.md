@@ -1,6 +1,6 @@
 # lasa-text – Reading and searching text
 
-Huvudkapitel: `grunder`. Text: `content/linux/chapters/en/lasa-text.md` (engelska är källspråket).
+Huvudkapitel: `grunder`. Text: `src/Linux/content/chapters/en/lasa-text.md` (engelska är källspråket).
 
 Status: **ogranskad**
 

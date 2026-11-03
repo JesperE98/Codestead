@@ -1,6 +1,6 @@
 # Faktagranskning: natverk
 
-Kapitel: Nätverk (`content/linux/chapters/en/natverk.md`)
+Kapitel: Nätverk (`src/Linux/content/chapters/en/natverk.md`)
 
 Status: **ogranskad**
 

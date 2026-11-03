@@ -1,6 +1,6 @@
 # Faktagranskning: systemd
 
-Kapitel: Tjänster och loggar med systemd (`content/linux/chapters/en/systemd.md`)
+Kapitel: Tjänster och loggar med systemd (`src/Linux/content/chapters/en/systemd.md`)
 
 Status: **ogranskad**
 

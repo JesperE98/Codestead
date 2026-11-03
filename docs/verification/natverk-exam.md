@@ -1,6 +1,6 @@
 # Faktagranskning: natverk-exam
 
-Kapitel: Prov: Nätverk (`content/linux/chapters/en/natverk-exam.md`)
+Kapitel: Prov: Nätverk (`src/Linux/content/chapters/en/natverk-exam.md`)
 
 Status: **ogranskad**
 

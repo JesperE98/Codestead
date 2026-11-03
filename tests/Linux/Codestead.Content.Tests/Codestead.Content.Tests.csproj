@@ -9,10 +9,10 @@
     <PackageReference Include="xunit.v3" Version="4.0.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Codestead.Shell/Codestead.Shell.csproj" />
-    <ProjectReference Include="../../src/Codestead.Content/Codestead.Content.csproj" />
+    <ProjectReference Include="../../../src/Linux/Codestead.Shell/Codestead.Shell.csproj" />
+    <ProjectReference Include="../../../src/Linux/Codestead.Content/Codestead.Content.csproj" />
     <!-- Only for the checkpoint parser (Codestead.UI.Learning), used to check the chapter texts. -->
-    <ProjectReference Include="../../src/Codestead.UI/Codestead.UI.csproj" />
+    <ProjectReference Include="../../../src/Shared/Codestead.UI/Codestead.UI.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />

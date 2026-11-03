@@ -19,7 +19,7 @@ public class ThemeTests
     /// <summary>Theme ("Light"/"Dark") → colour key → colour, read from Codestead.axaml.</summary>
     private static readonly Lazy<Dictionary<string, Dictionary<string, Color>>> Themes = new(() =>
     {
-        var doc = XDocument.Load(Path.Combine(RepoRoot(), "src", "Codestead.UI", "Themes", "Codestead.axaml"));
+        var doc = XDocument.Load(Path.Combine(RepoRoot(), "src", "Shared", "Codestead.UI", "Themes", "Codestead.axaml"));
         return doc.Descendants()
             .Where(e => e.Name.LocalName == "ResourceDictionary" && (string?)e.Attribute(X + "Key") is "Light" or "Dark")
             .ToDictionary(

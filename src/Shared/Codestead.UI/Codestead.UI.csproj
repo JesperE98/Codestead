@@ -11,7 +11,7 @@
     <PackageReference Include="Velopack" Version="1.2.161" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../Codestead.Shell/Codestead.Shell.csproj" />
+    <ProjectReference Include="../../Linux/Codestead.Shell/Codestead.Shell.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Codestead.UI.Tests" />

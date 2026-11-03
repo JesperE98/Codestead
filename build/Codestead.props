@@ -12,8 +12,9 @@
     <CodesteadPublisher>JesperE98</CodesteadPublisher>
     <CodesteadReleasesRepo>JesperE98/codestead-releases</CodesteadReleasesRepo>
     <!--
-      Versions: major.minor only. The release workflow adds the patch number itself (0.5.0, 0.5.1 ...):
-      every change to a product that reaches main becomes the next patch release. For 0.6 change 0.5 to 0.6.
+      Versions: major.minor only. The release workflow adds the patch number itself (0.6.0, 0.6.1 ...):
+      a release is made by hand (Actions -> Release -> Run workflow on main, "publish" ticked), and every
+      product that changed since its last release gets the next patch number. For 0.7 change 0.6 to 0.7.
       Local builds are x.y.0.
     -->
     <CodesteadLinuxVersion>0.6</CodesteadLinuxVersion>

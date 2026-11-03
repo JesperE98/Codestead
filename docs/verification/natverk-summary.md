@@ -1,6 +1,6 @@
 # Faktagranskning: natverk-summary
 
-Kapitel: Sammanfattning: Nätverk (`content/linux/chapters/en/natverk-summary.md`)
+Kapitel: Sammanfattning: Nätverk (`src/Linux/content/chapters/en/natverk-summary.md`)
 
 Status: **ogranskad**
 

@@ -1,6 +1,6 @@
 # textbearbetning – Text processing with sed, tr and awk
 
-Huvudkapitel: `grunder`. Text: `content/linux/chapters/en/textbearbetning.md` (engelska är källspråket).
+Huvudkapitel: `grunder`. Text: `src/Linux/content/chapters/en/textbearbetning.md` (engelska är källspråket).
 
 Status: **ogranskad**
 

@@ -2,7 +2,7 @@
 # Builds every Linux artifact for one Codestead tool:
 #   portable .tar.gz, .deb, .rpm, Arch .pkg.tar.zst (nfpm) and a self-updating .AppImage (Velopack).
 # Usage: packaging/build-linux.sh <project> <package-name> "<display name>" <version> [out-dir]
-#   e.g. packaging/build-linux.sh src/Codestead.Linux/Codestead.Linux.csproj codestead-linux "Codestead Linux" 0.4.0
+#   e.g. packaging/build-linux.sh src/Linux/Codestead.Linux/Codestead.Linux.csproj codestead-linux "Codestead Linux" 0.4.0
 # Needs: dotnet, nfpm, vpk (dotnet tool install -g vpk).
 set -euo pipefail
 

@@ -1,6 +1,6 @@
 # valkommen – Welcome to the Linux shell
 
-Huvudkapitel: `start`. Text: `content/linux/chapters/en/valkommen.md` (engelska är källspråket).
+Huvudkapitel: `start`. Text: `src/Linux/content/chapters/en/valkommen.md` (engelska är källspråket).
 
 Status: **ogranskad**
 

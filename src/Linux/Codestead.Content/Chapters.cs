@@ -177,7 +177,7 @@ public static partial class ChaptersLib
     /// <summary>
     /// All chapters, shown in the same order as the parts in <see cref="Parts"/>
     /// (stable sort keeps the order within a part). Each main chapter ends with a summary and an exam
-    /// when their texts exist (content/linux/chapters/&lt;lang&gt;/&lt;part&gt;-summary.md and -exam.md).
+    /// when their texts exist (src/Linux/content/chapters/&lt;lang&gt;/&lt;part&gt;-summary.md and -exam.md).
     /// </summary>
     public static List<Chapter> Chapters { get; } = WithSummariesAndExams(DefineChapters())
         .OrderBy(ch => Parts.FindIndex(p => p.Id == ch.Part))

@@ -77,11 +77,11 @@ public class WhatsNewTests
     });
 
     [Theory(DisplayName = "ändringsloggarna är kompletta på alla språk")]
-    [InlineData("codestead-linux")]
-    [InlineData("codestead-hub")]
+    [InlineData("Linux")]
+    [InlineData("Hub")]
     public void ChangelogsAreComplete(string product)
     {
-        var json = File.ReadAllText(Path.Combine(RepoRoot(), "changelog", product + ".json"));
+        var json = File.ReadAllText(Path.Combine(RepoRoot(), "src", product, "changelog.json"));
         var raw = JsonSerializer.Deserialize<List<ChangelogEntry>>(json, Changelog.Json)!;
         Assert.NotEmpty(raw);
         // Newest first, each version once, with a date.

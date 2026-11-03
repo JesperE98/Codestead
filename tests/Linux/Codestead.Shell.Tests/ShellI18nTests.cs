@@ -7,11 +7,11 @@ using Codestead.Shell.Commands;
 namespace Codestead.Shell.Tests;
 
 /// <summary>
-/// The simulator's own texts in src/Codestead.Shell/i18n/&lt;lang&gt;.json (see ShellI18n).
+/// The simulator's own texts in src/Linux/Codestead.Shell/i18n/&lt;lang&gt;.json (see ShellI18n).
 ///
 /// The summaries in en.json and sv.json are generated from CommandDef.SummaryEn/Summary. After changing
 /// a summary in the code, regenerate them with
-///   CODESTEAD_UPDATE_SHELL_I18N=1 dotnet test --project tests/Codestead.Shell.Tests
+///   CODESTEAD_UPDATE_SHELL_I18N=1 dotnet test --project tests/Linux/Codestead.Shell.Tests
 /// and translate the change in the other languages.
 /// </summary>
 public class ShellI18nTests
@@ -47,7 +47,7 @@ public class ShellI18nTests
         return dir?.FullName ?? throw new DirectoryNotFoundException("Codestead.sln");
     }
 
-    private static string I18nDir => Path.Combine(RepoRoot(), "src", "Codestead.Shell", "i18n");
+    private static string I18nDir => Path.Combine(RepoRoot(), "src", "Linux", "Codestead.Shell", "i18n");
 
     private static HashSet<string> Names(string text) => Placeholder.Matches(text).Select(m => m.Groups[1].Value).ToHashSet();
 
@@ -113,7 +113,7 @@ public class ShellI18nTests
             Assert.Equal(Commands().Select(d => d.Name), json.Keys.Order(StringComparer.Ordinal));
             foreach (var def in Commands())
                 Assert.True(json[def.Name] == summary(def),
-                    $"{lang}.json: the summary of {def.Name} differs from the code. Run CODESTEAD_UPDATE_SHELL_I18N=1 dotnet test --project tests/Codestead.Shell.Tests");
+                    $"{lang}.json: the summary of {def.Name} differs from the code. Run CODESTEAD_UPDATE_SHELL_I18N=1 dotnet test --project tests/Linux/Codestead.Shell.Tests");
         }
     }
 
@@ -131,7 +131,7 @@ public class ShellI18nTests
     [Fact(DisplayName = "varje nyckel i koden finns, och varje nyckel används")]
     public void EveryKeyExistsAndIsUsed()
     {
-        var src = Path.Combine(RepoRoot(), "src", "Codestead.Shell");
+        var src = Path.Combine(RepoRoot(), "src", "Linux", "Codestead.Shell");
         var used = Directory.EnumerateFiles(src, "*.cs", SearchOption.AllDirectories)
             .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
             .SelectMany(f => KeyInCode.Matches(File.ReadAllText(f)).Select(m => m.Groups[1].Value))

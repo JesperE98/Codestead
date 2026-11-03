@@ -2,7 +2,7 @@
 
 Status: **ogranskad**
 
-Källtext: `content/linux/chapters/en/skript-summary.md`. Allt bygger på sub-kapitlet skript;
+Källtext: `src/Linux/content/chapters/en/skript-summary.md`. Allt bygger på sub-kapitlet skript;
 här kontrolleras att sammanfattningen återger det rätt.
 
 | Påstående | Källa | Status | Datum |

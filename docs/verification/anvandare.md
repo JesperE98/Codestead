@@ -1,6 +1,6 @@
 # Faktagranskning: anvandare
 
-Kapitel: Användare och grupper (`content/linux/chapters/en/anvandare.md`)
+Kapitel: Användare och grupper (`src/Linux/content/chapters/en/anvandare.md`)
 
 Status: **ogranskad**
 

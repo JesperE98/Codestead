@@ -15,14 +15,14 @@ dotnet test
 ```
 
 ```bash
-dotnet run --project src/Codestead.Linux
+dotnet run --project src/Linux/Codestead.Linux
 ```
 
 Inställningar och terminaler sparas i `%APPDATA%\Codestead\codestead-linux` (Windows) respektive
 `~/.config/Codestead/codestead-linux` (Linux). Med miljövariabeln `CODESTEAD_DATA_DIR` kan du välja
 en annan mapp, t.ex. för att börja om från noll.
 
-`dotnet run --project src/Codestead.Linux -- --smoke-test` startar fönstret, går igenom alla kapitel
+`dotnet run --project src/Linux/Codestead.Linux -- --smoke-test` startar fönstret, går igenom alla kapitel
 på alla språk, löser en uppgift och avslutar med `SMOKE OK`. Det är samma test som körs efter varje
 installation i release-flödet.
 
@@ -30,7 +30,7 @@ installation i release-flödet.
 
 Varje produkt har en egen ikon i `build/icons/<id>.svg` (hubben: ett hus med en prompt, Codestead Linux:
 en terminal). PNG- och ICO-filerna bredvid används av appen, paketen och installationsprogrammen, och
-hubben visar verktygens ikoner från `src/Codestead.Hub/Assets/tools/<id>.png`. Ändrar du en SVG:
+hubben visar verktygens ikoner från `src/Hub/Codestead.Hub/Assets/tools/<id>.png`. Ändrar du en SVG:
 
 ```bash
 rsvg-convert -w 1024 -h 1024 build/icons/codestead-linux.svg -o build/icons/codestead-linux.png
@@ -47,15 +47,15 @@ Patchnumret sätts av release-flödet när du **släpper en version för hand** 
 varje produkt som ändrats sedan sin senaste release får nästa nummer (0.6.0, 0.6.1, 0.6.2 …). En merge till
 `main` släpper ingenting, så flera PR:er samlas i samma release. Vilka filer som hör till en produkt står i `packaging/products.json`:
 `paths` (mönster som `build/icons/codestead-hub.*` går bra) minus `exclude`. En produkt får bara en ny
-version när någon av dess filer har ändrats. Hubben undantar de delar av det delade `src/Codestead.UI`
-som bara Codestead Linux använder (lektionskontrollerna); ett test i `tests/Codestead.Hub.Tests`
+version när någon av dess filer har ändrats. Hubben undantar de delar av det delade `src/Shared/Codestead.UI`
+som bara Codestead Linux använder (lektionskontrollerna); ett test i `tests/Hub/Codestead.Hub.Tests`
 säger till om hubben börjar använda något av dem. Skript som bara styr flödet (`plan.py`,
 installationstesterna …) hör inte till någon produkt. För nästa större version ändrar du `0.6` till
 `0.7`. Lokala byggen får versionen `x.y.0`.
 
 ## Ändringslogg ("Vad är nytt")
 
-Vad som ändrats i varje version står i `changelog/codestead-linux.json` och `changelog/codestead-hub.json`,
+Vad som ändrats i varje version står i `src/Linux/changelog.json` och `src/Hub/changelog.json`,
 nyast först:
 
 ```json
@@ -84,7 +84,7 @@ nyast först:
 ## Färgsystemet
 
 Färgerna har fasta betydelser i båda apparna (och i kommande verktyg). De finns som nycklar i
-`src/Codestead.UI/Themes/Codestead.axaml`, i både ljust och mörkt tema:
+`src/Shared/Codestead.UI/Themes/Codestead.axaml`, i både ljust och mörkt tema:
 
 | Nyckel | Betydelse | Används till |
 | --- | --- | --- |
@@ -95,7 +95,7 @@ Färgerna har fasta betydelser i båda apparna (och i kommande verktyg). De finn
 | `CsInfo`, `CsInfoSoft`, `CsLink` | information, länkar (blått) | länkar, nedladdningsmätare |
 | `CsReward`, `CsRewardSoft`, `CsRewardStrong` | belöningar (guld) | XP, nivåer, utmärkelser, dagar i rad |
 
-- **Accentfärgen är appens varumärke**: `src/Codestead.UI/Themes/Brand.cs` har en färg per app (Linux
+- **Accentfärgen är appens varumärke**: `src/Shared/Codestead.UI/Themes/Brand.cs` har en färg per app (Linux
   blågrön, hubben indigo) och appens `App.axaml.cs` lägger in den med `Brand.<App>.ApplyTo(Resources)`.
   Ett nytt verktyg lägger till en egen `Brand`.
 - `CsWarnBg`/`CsWarnBorder` finns kvar för äldre kod; använd `CsWarningSoft`/`CsWarning` i ny kod.
@@ -105,10 +105,10 @@ Färgerna har fasta betydelser i båda apparna (och i kommande verktyg). De finn
 
 ## Spelifiering (XP, nivåer, utmärkelser)
 
-Reglerna finns i `src/Codestead.Content/Game/` och är rena funktioner som testas i
-`tests/Codestead.Content.Tests/GameTests.cs`. Vyerna (topprad, notiser, firande, galleri, profilrad) finns i
-`src/Codestead.UI/Controls/Game/` och tar färdigöversatta texter, så att samma vyer fungerar i alla verktyg och
-i hubben. Codestead Linux kopplar ihop dem i `src/Codestead.Linux/MainWindow.Game.cs`.
+Reglerna finns i `src/Linux/Codestead.Content/Game/` och är rena funktioner som testas i
+`tests/Linux/Codestead.Content.Tests/GameTests.cs`. Vyerna (topprad, notiser, firande, galleri, profilrad) finns i
+`src/Shared/Codestead.UI/Controls/Game/` och tar färdigöversatta texter, så att samma vyer fungerar i alla verktyg och
+i hubben. Codestead Linux kopplar ihop dem i `src/Linux/Codestead.Linux/MainWindow.Game.cs`.
 
 - **XP räknas fram** ur det som är gjort (`XpRules.Total`), så inget kan ges två gånger: uppgift 10, utan
   ledtråd/lösning +5, fråga i texten 2, kapitel 25, del 50, godkänt prov 100, 100 % +50. Kapitel, delar och
@@ -125,46 +125,61 @@ i hubben. Codestead Linux kopplar ihop dem i `src/Codestead.Linux/MainWindow.Gam
   omdirigeringar, loopar, skript och man-sidor.
 - **Gamla sparningar**: `GameEngine.Sync` körs vid start och ger tyst XP och utmärkelser för tidigare
   framsteg; användaren får en notis om det en gång.
-- **Profil till hubben**: verktyget skriver `profile.json` (`ToolProfile`, `src/Codestead.UI/Controls/Game/Profile.cs`)
+- **Profil till hubben**: verktyget skriver `profile.json` (`ToolProfile`, `src/Shared/Codestead.UI/Controls/Game/Profile.cs`)
   i sin datamapp när något märkbart ändras och vid start. Filen innehåller alla texter på alla språk, så hubben
   kan visa nivå, dagar i rad och galleriet utan verktygets texter. Ett nytt verktyg skriver samma fil.
 
 ## Projektstruktur
 
+Varje app har en egen mapp under `src/` (och samma under `tests/`); det som flera appar använder ligger i
+`src/Shared/`. En app äger allt i sin mapp: projekten, kapiteltexterna, ändringsloggen, beskrivningen som
+hubben visar och texten på release-sidan. `packaging/products.json` pekar på mappen (`"dir"`).
+
 ```text
-build/Codestead.props        Namn, id:n och version
-content/linux/
-├── chapters/<språk>/*.md    Kapiteltexterna (markdown), ett språk per katalog
-├── i18n/<språk>/*.json      Översatta titlar och uppgiftstexter
-└── references/*.json        Officiella källor per kapitel
+build/Codestead.props            Namn, id:n och version för alla produkter
 src/
-├── Codestead.Shell/         Den simulerade terminalen (bash, zsh, fish, apt, pacman, dnf, git ...)
-│   ├── Shell.cs             Kör kommandorader: pipes, omdirigering, sudo, skript, jobb
-│   ├── Parser.cs            Bash-parser (syntaxträd)
-│   ├── Vfs.cs               Virtuellt filsystem med ägare och rwx-rättigheter
-│   ├── Initfs.cs            Startfilerna för varje distribution
-│   ├── World.cs, world/     Elevens dator på elevens språk (namn, ord, övningsfiler), WorldMigration.cs
-│   ├── Packages.cs          Paketdatabasen (olika paketnamn per familj)
-│   ├── Services.cs, Disks.cs, Users.cs, Network.cs, Procs.cs, Fish.cs, Shellmode.cs
-│   ├── Js.cs                Hjälpfunktioner med JavaScript-semantik (från porteringen)
-│   ├── ShellI18n.cs, i18n/  Simulatorns egna tips och help-sammanfattningar på alla språk
-│   └── Commands/            Alla kommandon: ls, grep, chmod, apt, pacman, dnf, git, ssh ...
-├── Codestead.Content/       Kapitel, uppgifter och kontroller (ChapterDefinitions.cs), språk, UI-texter (i18n/ui/*.json)
-├── Codestead.UI/            Delade Avalonia-delar för alla verktyg: tema, terminal, markdown-vy, dialoger,
-│                            lagring, självuppdatering (Velopack)
-├── Codestead.Linux/         Själva appen (Avalonia)
-├── Codestead.Hub.Core/      Hubbens logik utan UI: signerad katalog, nedladdning, installation, uppdatering
-└── Codestead.Hub/           Hubben "Codestead" (Avalonia), texter i i18n/<språk>.json
-tests/                       xUnit: Shell (simulatorn), Content (alla uppgifter i alla distros och språk),
-                             UI (headless), Hub (katalog, signatur, installation)
-packaging/                   Byggskript, installationstester, products.json (vilka produkter som byggs),
-                             catalog.py (hubbens katalog) och hub-e2e.sh (hubben installerar Codestead Linux)
+├── Shared/                      Gemensamt för alla appar
+│   └── Codestead.UI/            Avalonia-delar: tema och färgsystem, markdown-vy, dialoger, spelvyer
+│                                (utmärkelser, firande), lagring, "Vad är nytt", självuppdatering (Velopack)
+├── Linux/                       Codestead Linux
+│   ├── Codestead.Linux/         Själva appen (Avalonia): MainWindow, MainWindow.Game
+│   ├── Codestead.Content/       Kapitel, uppgifter och kontroller (ChapterDefinitions.cs), spelmotorn
+│   │                            (Game/), språk, UI-texter (i18n/ui/*.json)
+│   ├── Codestead.Shell/         Den simulerade terminalen (bash, zsh, fish, apt, pacman, dnf, git ...)
+│   │   ├── Shell.cs             Kör kommandorader: pipes, omdirigering, sudo, skript, jobb
+│   │   ├── Parser.cs            Bash-parser (syntaxträd)
+│   │   ├── Vfs.cs               Virtuellt filsystem med ägare och rwx-rättigheter
+│   │   ├── Initfs.cs            Startfilerna för varje distribution
+│   │   ├── World.cs, world/     Elevens dator på elevens språk (namn, ord, övningsfiler)
+│   │   ├── Packages.cs          Paketdatabasen (olika paketnamn per familj)
+│   │   ├── ShellI18n.cs, i18n/  Simulatorns egna tips och help-sammanfattningar
+│   │   └── Commands/            Alla kommandon: ls, grep, chmod, apt, pacman, dnf, git, ssh ...
+│   ├── content/
+│   │   ├── chapters/<språk>/    Kapiteltexterna (markdown), ett språk per katalog
+│   │   └── i18n/<språk>/        Översatta titlar och uppgiftstexter
+│   ├── changelog.json           "Vad är nytt" (nyast först)
+│   ├── description.json         Beskrivningen i hubben, per språk
+│   └── release-notes.md         Texten på release-sidan
+└── Hub/                         Hubben "Codestead"
+    ├── Codestead.Hub/           Appen (Avalonia), texter i i18n/<språk>.json
+    ├── Codestead.Hub.Core/      Logik utan UI: signerad katalog, nedladdning, installation, uppdatering
+    └── changelog.json, description.json, release-notes.md
+tests/
+├── Shared/Codestead.UI.Tests/   UI (headless): kontroller, tema och kontrast, spelvyer, ändringsloggar
+├── Linux/Codestead.Shell.Tests/ Simulatorn
+├── Linux/Codestead.Content.Tests/ Alla uppgifter i alla distros och språk, spelmotorn, UI-texter
+└── Hub/Codestead.Hub.Tests/     Katalog, signatur, installation, hubbens texter
+packaging/                       Byggskript, installationstester, products.json (vilka produkter som byggs),
+                                 catalog.py (hubbens katalog) och hub-e2e.sh (hubben installerar Codestead Linux)
 ```
+
+En ny app (t.ex. C++) får en egen mapp `src/Cpp/` och `tests/Cpp/`, en post i `packaging/products.json` och
+sina id:n och versioner i `build/Codestead.props`.
 
 ## Skriva ett nytt kapitel
 
-1. Skriv `content/linux/chapters/en/mitt-kapitel.md` (engelska är källspråket) och
-   `content/linux/i18n/en/mitt-kapitel.json`, och motsvarande filer för de andra tio språken.
+1. Skriv `src/Linux/content/chapters/en/mitt-kapitel.md` (engelska är källspråket) och
+   `src/Linux/content/i18n/en/mitt-kapitel.json`, och motsvarande filer för de andra tio språken.
    - Kodblock märkta ` ```sh ` blir klickbara – ett klick lägger in kommandot i terminalen.
    - Text som bara gäller en familj läggs i `:::debian` / `:::arch` / `:::redhat` … `:::`.
    - Platshållare: `{{distro}}`, `{{hostname}}`, `{{family}}`, `{{pm}}`, `{{adminGroup}}`, och elevens
@@ -196,24 +211,24 @@ packaging/                   Byggskript, installationstester, products.json (vil
      går att lösa utan huvudterminalen; i prov finns ingen sådan knapp. `try` ger en
      miniterminal; första raden är det kommando som visas, och alla rader godtas.
      Ett kapitel utan kontrollfrågor låses upp med knappen "Jag har läst kapitlet".
-   - **Källor**: `content/linux/references/mitt-kapitel.json` med
+   - **Källor**: `src/Linux/content/references/mitt-kapitel.json` med
      `[{ "title": ..., "url": "https://...", "publisher": ... }]`. Bara officiella webbplatser
      (listan finns i [verification/README.md](verification/README.md)); testerna säger nej till andra.
    - **Sammanfattning och prov** för ett huvudkapitel: `<huvudkapitel>-summary.md` och
      `<huvudkapitel>-exam.md` (t.ex. `grunder-exam.md`). De läggs till sist i huvudkapitlet av sig själva.
      Provet består av kontrollfrågor (minst 10), öppnas när alla sub-kapitel är klara och kräver 80 %.
-2. Lägg till kapitlet med uppgifter i `src/Codestead.Content/ChapterDefinitions.cs`. Varje uppgift har
+2. Lägg till kapitlet med uppgifter i `src/Linux/Codestead.Content/ChapterDefinitions.cs`. Varje uppgift har
    en `Check` som körs efter varje kommando och en `Solution` (lista med kommandon).
 3. Kör `dotnet test`. Testerna kör alla lösningar i alla distributioner och kontrollerar att
    varje kapitel finns på alla språk, och att kontrollfrågorna är likadana på alla språk.
 
-Behövs ett nytt kommando lägger du det i `src/Codestead.Shell/Commands/`. Ska det installeras med
+Behövs ett nytt kommando lägger du det i `src/Linux/Codestead.Shell/Commands/`. Ska det installeras med
 pakethanteraren lägger du också till ett paket i `Packages.cs`.
 
 ## Elevens dator på elevens språk
 
 Den simulerade datorns användare, övningsfiler och mappar (och vad som står i filerna) finns på varje
-språk i `src/Codestead.Shell/world/<språk>.json`:
+språk i `src/Linux/Codestead.Shell/world/<språk>.json`:
 
 ```json
 {
@@ -244,14 +259,14 @@ så att en översättning kan provas utan att bygga om.
 ## Simulatorns egna texter
 
 Tips, anmärkningar och välkomsttexten som simulatorn skriver i terminalen finns i
-`src/Codestead.Shell/i18n/<språk>.json` (`messages`), och anropas med en nyckel:
+`src/Linux/Codestead.Shell/i18n/<språk>.json` (`messages`), och anropas med en nyckel:
 `sh.Msg("pkg.aptListsEmpty")` eller `Dim(sh, "users.noPasswordSet", ("user", name))`. Engelska
 (`en.json`) är källan; lägg till nyckeln i alla elva filer med samma `{platshållare}`. Utskrifter som
 härmar riktiga program (`ls: cannot access ...`) och manualsidor översätts inte.
 
 Sammanfattningarna som `help` visar (`summaries`) skrivs i koden (`Summary` på svenska,
 `SummaryEn` på engelska) och förs över till `sv.json` och `en.json` med
-`CODESTEAD_UPDATE_SHELL_I18N=1 dotnet test --project tests/Codestead.Shell.Tests`. Översätt sedan
+`CODESTEAD_UPDATE_SHELL_I18N=1 dotnet test --project tests/Linux/Codestead.Shell.Tests`. Översätt sedan
 ändringen i de andra språken. Testerna i `ShellI18nTests.cs` kontrollerar nycklar, platshållare och
 att inget har glömts.
 
@@ -337,7 +352,7 @@ Release-flödet kontrollerar att nyckeln och den publika nyckeln hör ihop innan
 Linux (kräver [nfpm](https://nfpm.goreleaser.com) och `dotnet tool install -g vpk`):
 
 ```bash
-packaging/build-linux.sh src/Codestead.Linux/Codestead.Linux.csproj codestead-linux "Codestead Linux" 0.4.0
+packaging/build-linux.sh src/Linux/Codestead.Linux/Codestead.Linux.csproj codestead-linux "Codestead Linux" 0.4.0
 ```
 
 ## Historik

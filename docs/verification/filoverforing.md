@@ -2,7 +2,7 @@
 
 Status: **ogranskad**
 
-Källtext: `content/linux/chapters/en/filoverforing.md` (inklusive kontrollfrågorna).
+Källtext: `src/Linux/content/chapters/en/filoverforing.md` (inklusive kontrollfrågorna).
 
 | Påstående | Källa | Status | Datum |
 |---|---|---|---|

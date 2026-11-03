@@ -1,6 +1,6 @@
 # grunder-exam – Exam: The basics
 
-Huvudkapitel: `grunder`. Text: `content/linux/chapters/en/grunder-exam.md` (engelska är källspråket).
+Huvudkapitel: `grunder`. Text: `src/Linux/content/chapters/en/grunder-exam.md` (engelska är källspråket).
 
 Status: **ogranskad**
 

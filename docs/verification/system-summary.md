@@ -2,7 +2,7 @@
 
 Status: **ogranskad**
 
-Källtext: `content/linux/chapters/en/system-summary.md`. Allt bygger på sub-kapitlen miljo,
+Källtext: `src/Linux/content/chapters/en/system-summary.md`. Allt bygger på sub-kapitlen miljo,
 rattigheter, processer och arkiv; påståendena granskas där och här kontrolleras att
 sammanfattningen återger dem rätt.
 

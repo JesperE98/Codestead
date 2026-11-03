@@ -1,20 +1,17 @@
 [
   {
     "key": "linux",
-    "project": "src/Codestead.Linux/Codestead.Linux.csproj",
+    "project": "src/Linux/Codestead.Linux/Codestead.Linux.csproj",
+    "dir": "src/Linux",
     "idProperty": "CodesteadLinuxId",
     "nameProperty": "CodesteadLinuxName",
     "title": "Codestead Linux",
     "summary": "Learn the Linux shell by doing",
     "versionProperty": "CodesteadLinuxVersion",
     "paths": [
-      "src/Codestead.Linux",
-      "src/Codestead.Shell",
-      "src/Codestead.Content",
-      "content/linux",
-      "src/Codestead.UI",
+      "src/Linux",
+      "src/Shared",
       "build/icons/codestead-linux.*",
-      "packaging/descriptions/codestead-linux.json",
       "build/Codestead.props",
       "build/Codestead.App.props",
       "packaging/build-linux.sh",
@@ -22,26 +19,23 @@
       "packaging/nfpm.yaml",
       "packaging/linux",
       "global.json",
-      "Directory.Build.props",
-      "changelog/codestead-linux.json"
-    ],
-    "changelog": "changelog/codestead-linux.json"
+      "Directory.Build.props"
+    ]
   },
   {
     "key": "hub",
-    "project": "src/Codestead.Hub/Codestead.Hub.csproj",
+    "project": "src/Hub/Codestead.Hub/Codestead.Hub.csproj",
+    "dir": "src/Hub",
     "idProperty": "CodesteadHubId",
     "nameProperty": "CodesteadHubName",
     "title": "Codestead hub",
     "summary": "Install and update the Codestead learning tools",
     "versionProperty": "CodesteadHubVersion",
     "paths": [
-      "src/Codestead.Hub",
-      "src/Codestead.Hub.Core",
-      "src/Codestead.UI",
+      "src/Hub",
+      "src/Shared",
       "build/icons/codestead-hub.*",
       "build/catalog-signing.pub.pem",
-      "packaging/descriptions/codestead-hub.json",
       "build/Codestead.props",
       "build/Codestead.App.props",
       "packaging/build-linux.sh",
@@ -49,15 +43,13 @@
       "packaging/nfpm.yaml",
       "packaging/linux",
       "global.json",
-      "Directory.Build.props",
-      "changelog/codestead-hub.json"
+      "Directory.Build.props"
     ],
     "exclude": [
-      "src/Codestead.UI/Learning",
-      "src/Codestead.UI/Controls/CheckpointView.cs",
-      "src/Codestead.UI/Controls/TerminalView.cs",
-      "src/Codestead.UI/Ansi.cs"
-    ],
-    "changelog": "changelog/codestead-hub.json"
+      "src/Shared/Codestead.UI/Learning",
+      "src/Shared/Codestead.UI/Controls/CheckpointView.cs",
+      "src/Shared/Codestead.UI/Controls/TerminalView.cs",
+      "src/Shared/Codestead.UI/Ansi.cs"
+    ]
   }
 ]

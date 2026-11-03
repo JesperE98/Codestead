@@ -2,9 +2,10 @@
 # End-to-end test of the hub (Linux or Windows/Git Bash): unpacks the portable hub, writes a catalog with the
 # portable tool package (as file:// URL), signs it with a throw-away key, and lets the hub install the tool,
 # start it with --smoke-test and uninstall it again – the same code path a user takes, minus the download.
-# Usage: packaging/hub-e2e.sh <hub-archive> <hub-exe> <tool-archive> <tool-id> <tool-name> <tool-version> <tool-exe> <rid>
+# Usage: packaging/hub-e2e.sh <hub-archive> <hub-exe> <tool-archive> <tool-id> <tool-name> <tool-version> <tool-exe> <rid> <tool-dir>
+#   <tool-dir>: the tool's folder in the repository (e.g. src/Linux), which has its description.json
 set -euo pipefail
-hub_archive="$1"; hub_exe="$2"; tool_archive="$3"; tool_id="$4"; tool_name="$5"; tool_version="$6"; tool_exe="$7"; rid="$8"
+hub_archive="$1"; hub_exe="$2"; tool_archive="$3"; tool_id="$4"; tool_name="$5"; tool_version="$6"; tool_exe="$7"; rid="$8"; tool_dir="$9"
 root="$(cd "$(dirname "$0")/.." && pwd)"
 work="$(mktemp -d)"
 native() { if command -v cygpath >/dev/null; then cygpath -w "$1"; else echo "$1"; fi; }
@@ -25,7 +26,7 @@ openssl ec -in "$(native "$work/key.pem")" -pubout -out "$(native "$work/pub.pem
 tool_file="$(native "$(abs "$tool_archive")")"
 url=$("$py" -c 'import pathlib,sys; print(pathlib.Path(sys.argv[1]).resolve().as_uri())' "$tool_file")
 "$py" "$(native "$root/packaging/catalog.py")" --catalog "$(native "$work/catalog.json")" --id "$tool_id" --name "$tool_name" \
-  --version "$tool_version" --description-file "$(native "$root/packaging/descriptions/$tool_id.json")" \
+  --version "$tool_version" --description-file "$(native "$root/$tool_dir/description.json")" \
   --asset "$rid=$tool_file=$url=$tool_exe"
 openssl dgst -sha256 -sign "$(native "$work/key.pem")" "$(native "$work/catalog.json")" | base64 | tr -d '\n' > "$work/catalog.json.sig"
 
