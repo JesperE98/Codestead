@@ -423,9 +423,8 @@ pública (`id_ed25519.pub`) a `~/.ssh/authorized_keys` en el servidor. A partir
 de ahí, ssh ya no te pide contraseña. ¡No le enseñes nunca la clave privada a
 nadie!
 
-Con `scp` y `rsync` puedes copiar archivos por SSH, y en el archivo
-`~/.ssh/config` puedes dar nombres cortos a los servidores, pero eso tendrá que
-esperar a un capítulo posterior.
+Copiar archivos por SSH con `scp` y `rsync`, y dar nombres cortos a los
+servidores en `~/.ssh/config`, lo verás en el próximo capítulo.
 
 ## Cuando la red no funciona
 

@@ -27,6 +27,13 @@ con apt. Con **SSH** ejecutas comandos en otro ordenador, de forma cifrada; la
 primera vez confirmas la clave de host del servidor, y con un par de claves ya
 no necesitas contraseña.
 
+En `~/.ssh/config` das nombres cortos a los servidores con `Host`, `HostName`
+y `User`. `scp` copia como `cp`, pero uno de los lados se escribe
+`HOST:PATH`, relativo al directorio personal de allí. `rsync -av` solo copia
+lo que ha cambiado; una barra al final del origen significa «lo que hay en el
+directorio», y `--delete` convierte el destino en una copia exacta: pruébalo
+primero con `-n`.
+
 Cuando «internet no funciona», ve de dentro hacia fuera: dirección, ruta,
 router, una dirección en internet y, por último, un nombre. Si las direcciones
 funcionan pero los nombres no, es el DNS.
@@ -50,3 +57,7 @@ funcionan pero los nombres no, es el DNS.
 | `curl -o FILE URL`, `wget URL`, `wget -O FILE URL` | Descarga a un archivo |
 | `ssh USER@HOST COMMAND` | Ejecuta un comando en otro ordenador |
 | `ssh-keygen`, `ssh-copy-id USER@HOST` | Crea un par de claves y pone la clave pública en el servidor |
+| `ssh srv` con `Host srv` en `~/.ssh/config` | Inicia sesión con un nombre corto |
+| `scp FILE HOST:` · `scp HOST:FILE .` · `scp -r` | Copia a · desde otro ordenador · directorios enteros |
+| `rsync -av SOURCE/ TARGET` | Copia solo lo que ha cambiado |
+| `rsync -avn --delete SOURCE/ TARGET` | Prueba un espejo sin hacer nada |

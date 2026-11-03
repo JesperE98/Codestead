@@ -36,7 +36,8 @@ Todo programa tiene tres flujos: stdin, stdout y stderr. `>` envía stdout a un
 archivo (y lo sobrescribe), `>>` añade al final, `<` lee stdin desde un
 archivo y `2>` redirige los mensajes de error, por ejemplo a `/dev/null`. Una
 pipe `|` envía la salida de un comando al siguiente, y `tee` guarda una copia
-por el camino. `;`, `&&` y `||` ejecutan varios comandos en una línea.
+por el camino. `xargs` convierte las palabras de su entrada en argumentos para
+un comando. `;`, `&&` y `||` ejecutan varios comandos en una línea.
 
 ## Procesar texto con sed, tr y awk
 
@@ -70,6 +71,7 @@ después de la última línea.
 | `uniq` | Elimina líneas repetidas contiguas | `-c` las cuenta |
 | `man` | Muestra la página del manual | |
 | `tee` | Pasa la entrada y guarda una copia | |
+| `xargs` | Convierte su entrada en argumentos para un comando | `-n 1` de uno en uno, `-I {}` una línea cada vez |
 | `tr` | Traduce caracteres | `-d` borrar, `-s` comprimir |
 | `sed` | Edita un flujo de líneas | `s/…/…/g`, `d`, `p`, `q`, `-n`, `-i`, `-E`, `-e` |
 | `cut` | Extrae campos | `-d` separador, `-f` campo |

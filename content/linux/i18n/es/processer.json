@@ -25,6 +25,10 @@
     "kill-jobb": {
       "text": "Termina el trabajo en segundo plano con `kill` y el número de trabajo (`%1`) o su PID."
     },
+    "nohup": {
+      "text": "Inicia `sleep 600` en segundo plano con `nohup`, para que siguiera ejecutándose aunque cerraras la sesión.",
+      "hint": "`nohup sleep 600 &`: `nohup` primero y `&` al final."
+    },
     "server": {
       "text": "El servidor `myserver` se está ejecutando como root. Detenlo con `pkill` o `kill` y los privilegios adecuados.",
       "hint": "Como usuario normal obtendrás \"Operation not permitted\". Pon `sudo` delante."

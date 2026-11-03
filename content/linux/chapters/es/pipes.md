@@ -123,6 +123,32 @@ Léelo paso a paso: ordena las frutas, cuenta cuántas hay de cada una
 ls /etc | wc -l
 ```
 
+## De la entrada a los argumentos – `xargs`
+
+Algunos comandos no leen de una pipe en absoluto, sino que quieren nombres
+como **argumentos**: `rm`, `mkdir`, `touch`, y `wc` cuando tiene que contar
+dentro de archivos. `xargs` tiende el puente: lee las palabras de su entrada y las
+pone detrás de un comando.
+
+```sh
+find {{documents}} -type f | xargs wc -l
+```
+
+Es lo mismo que escribir tú mismo cada nombre de archivo detrás de `wc -l`.
+Con `-n 1`, `xargs` ejecuta el comando una vez por cada palabra, y con `-I {}`
+una vez por cada línea, sustituyendo `{}` por la línea:
+
+```sh
+ls {{documents}} | xargs -I {} echo "File: {}"
+```
+
+```predict
+$ printf 'a\nb\nc\n' | xargs echo
+a b c
+---
+`xargs` reunió las tres líneas y ejecutó `echo a b c`, una sola vez.
+```
+
 ## En pantalla y en un archivo – `tee`
 
 `tee` pasa su entrada hacia delante *y* guarda una copia en un archivo:

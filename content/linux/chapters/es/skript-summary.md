@@ -23,6 +23,17 @@ patrones, las funciones son trozos de código con nombre y su propio `$1`, y
 `read` pide datos al usuario. `exit 1` le dice a quien llamó al script que
 algo salió mal.
 
+## Tareas programadas con cron
+
+**cron** ejecuta las tareas de tu **crontab** a horas fijas. Cada línea tiene
+cinco campos de tiempo (minuto, hora, día del mes, mes y día de la semana) y
+después el comando; `*` significa cada y `*/5` cada cinco. `crontab -l`
+muestra las tareas, y `crontab -` instala otras nuevas desde su entrada,
+sustituyendo todas las antiguas. Las tareas se ejecutan sin los ajustes de tu
+terminal y con un `PATH` corto, así que envía su salida a un archivo.
+`journalctl -u cron` muestra cada ejecución, y `systemctl list-timers` muestra
+los timers de systemd.
+
 ## Comandos y sintaxis
 
 | Sintaxis | Qué hace |
@@ -47,3 +58,8 @@ algo salió mal.
 | `read -p "Question " var` | Lee una línea del teclado |
 | `exit 1` | Termina el script con un código de salida |
 | `set -euo pipefail` | Detiene el script en el primer error |
+| `crontab -l` · `crontab -r` | Muestra · elimina tu crontab |
+| `echo '* * * * * command' \| crontab -` | Instala una crontab desde la entrada (sustituye la antigua) |
+| `(crontab -l; echo 'LINE') \| crontab -` | Añade una tarea y conserva las antiguas |
+| `MIN HOUR DAY MONTH WEEKDAY command` | Una línea de crontab, p. ej. `30 2 * * 1-5` |
+| `systemctl list-timers` | Muestra los timers de systemd |

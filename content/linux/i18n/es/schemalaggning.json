@@ -1,0 +1,28 @@
+{
+  "title": "Tareas programadas con cron",
+  "tasks": {
+    "crontab-l": {
+      "text": "Muestra tu crontab.",
+      "hint": "`crontab -l`. Si todavía no tienes tareas, responde *no crontab for {{user}}*."
+    },
+    "every-minute": {
+      "text": "Añade una tarea que ejecute `date >> ~/cron.log` cada minuto.",
+      "hint": "Cinco asteriscos significan cada minuto: `echo '* * * * * date >> ~/cron.log' | crontab -`."
+    },
+    "weekdays": {
+      "text": "Añade una tarea que ejecute `~/{{helloScript}}` a las 07:00 de lunes a viernes, sin eliminar la primera tarea.",
+      "hint": "Minuto 0, hora 7, día de la semana 1-5. Conserva las líneas antiguas: `(crontab -l; echo '0 7 * * 1-5 ~/{{helloScript}}') | crontab -`."
+    },
+    "journal": {
+      "text": "Muestra lo que el servicio `cron` ha escrito en el journal.",
+      "hint": "`journalctl -u cron`. Cuando tu tarea se haya ejecutado, aparece ahí como *CMD (date >> ~/cron.log)*."
+    },
+    "timers": {
+      "text": "Muestra los timers de systemd: las tareas que el propio systemd ejecuta a horas fijas."
+    },
+    "remove": {
+      "text": "Elimina la tarea que se ejecuta cada minuto, pero conserva la tarea de las 07:00.",
+      "hint": "Filtra la línea con `grep -v` e instala el resto: `crontab -l | grep -v cron.log | crontab -`."
+    }
+  }
+}

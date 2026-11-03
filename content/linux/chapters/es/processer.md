@@ -169,6 +169,40 @@ ejecutándose mientras conservas el prompt?
 segundo plano, mientras que `fg` lo traería de vuelta al primer plano.
 ```
 
+### Seguir después de cerrar la sesión – `nohup`
+
+Cuando cierras la terminal o la conexión ssh, los programas que iniciaste
+reciben la señal **SIGHUP** (*hang up*) y terminan, también los trabajos en
+segundo plano. `nohup` hace que un comando ignore esa señal:
+
+```sh
+nohup ./long-job.sh &
+```
+
+La salida que se habría mostrado en la terminal acaba en el archivo
+`nohup.out`:
+
+```predict
+$ nohup echo done
+$ cat nohup.out
+nohup: ignoring input and appending output to 'nohup.out'
+done
+```
+
+Para los programas que tienen que estar siempre en marcha es mejor un
+**servicio**; los conocerás en la parte sobre administración del sistema.
+
+### Vigilar un comando – `watch`
+
+`watch` vuelve a ejecutar un comando cada dos segundos y muestra el resultado
+en una pantalla limpia: muy útil para ver cómo crece un archivo o cómo se
+llena un disco. Sal con `Ctrl+C`. En el simulador el resultado se muestra una
+sola vez.
+
+```sh
+watch -n 5 'ls -l /tmp'
+```
+
 ## ¿Cómo está el ordenador?
 
 Dos pequeños comandos te dan una visión general rápida:
