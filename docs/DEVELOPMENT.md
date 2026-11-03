@@ -44,8 +44,13 @@ Produktnamn, id:n och versioner finns **bara** i `build/Codestead.props`. Byt na
 
 Versionerna anges bara som `major.minor` (`CodesteadLinuxVersion` = `0.5`, `CodesteadHubVersion` = `0.1`).
 Patchnumret sätts av release-flödet: varje ändring av en produkt som når `main` blir nästa version
-(0.5.0, 0.5.1, 0.5.2 …). Vilka filer som hör till en produkt står i `packaging/products.json`
-(`paths`). För nästa större version ändrar du `0.5` till `0.6`. Lokala byggen får versionen `x.y.0`.
+(0.5.0, 0.5.1, 0.5.2 …). Vilka filer som hör till en produkt står i `packaging/products.json`:
+`paths` (mönster som `build/icons/codestead-hub.*` går bra) minus `exclude`. En produkt får bara en ny
+version när någon av dess filer har ändrats. Hubben undantar de delar av det delade `src/Codestead.UI`
+som bara Codestead Linux använder (lektionskontrollerna); ett test i `tests/Codestead.Hub.Tests`
+säger till om hubben börjar använda något av dem. Skript som bara styr flödet (`plan.py`,
+installationstesterna …) hör inte till någon produkt. För nästa större version ändrar du `0.5` till
+`0.6`. Lokala byggen får versionen `x.y.0`.
 
 ## Projektstruktur
 
@@ -241,4 +246,5 @@ packaging/build-linux.sh src/Codestead.Linux/Codestead.Linux.csproj codestead-li
 ## Historik
 
 Fram till version 0.3.0 var appen skriven i TypeScript/React/Electron. Den portades rad för rad
-till C# (se [PORTING.md](PORTING.md)); TypeScript-koden finns kvar i git-historiken (commit `a0bbdda`).
+till C#; TypeScript-koden och reglerna för porteringen (`docs/PORTING.md`) finns kvar i git-historiken
+(commit `a0bbdda`). Kommentarer som "Port of src/shell/..." i koden pekar dit.
