@@ -87,6 +87,54 @@ public static partial class InitfsLib
         return o;
     }
 
+    private const string CronPlaceholder = "# DO NOT EDIT OR REMOVE\n# This file is a simple placeholder to keep dpkg from removing this directory\n";
+
+    /// <summary>The system crontab of Debian and Ubuntu (it has a user name before each command).</summary>
+    public const string DebianCrontab = """
+        # /etc/crontab: system-wide crontab
+        # Unlike any other crontab you don't have to run the `crontab'
+        # command to install the new version when you edit this file
+        # and files in /etc/cron.d. These files also have username fields,
+        # that none of the other crontabs do.
+
+        SHELL=/bin/sh
+        # You can also override PATH, but by default, newer versions inherit it from the environment
+        #PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+        # Example of job definition:
+        # .---------------- minute (0 - 59)
+        # |  .------------- hour (0 - 23)
+        # |  |  .---------- day of month (1 - 31)
+        # |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+        # |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+        # |  |  |  |  |
+        # *  *  *  *  * user-name command to be executed
+        17 *	* * *	root	cd / && run-parts --report /etc/cron.hourly
+        25 6	* * *	root	test -x /usr/sbin/anacron || { cd / && run-parts --report /etc/cron.daily; }
+        47 6	* * 7	root	test -x /usr/sbin/anacron || { cd / && run-parts --report /etc/cron.weekly; }
+        52 6	1 * *	root	test -x /usr/sbin/anacron || { cd / && run-parts --report /etc/cron.monthly; }
+        #
+
+        """;
+
+    public const string FedoraCrontab = """
+        SHELL=/bin/bash
+        PATH=/sbin:/bin:/usr/sbin:/usr/bin
+        MAILTO=root
+
+        # For details see man 4 crontabs
+
+        # Example of job definition:
+        # .---------------- minute (0 - 59)
+        # |  .------------- hour (0 - 23)
+        # |  |  .---------- day of month (1 - 31)
+        # |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+        # |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+        # |  |  |  |  |
+        # *  *  *  *  * user-name  command to be executed
+
+        """;
+
     private static OrderedDictionary<string, FsNode> FamilyEtc(Distro distro)
     {
         switch (distro.Family)
@@ -101,7 +149,17 @@ public static partial class InitfsLib
                         ("sources.list.d", D("root", Js.Oct(755), Ch(
                             (sourcesName, F(
                                 $"Types: deb\nURIs: {uri}\nSuites: {distro.Codename} {distro.Codename}-updates\nComponents: {comps}\nSigned-By: /usr/share/keyrings/{distro.Id}-archive-keyring.gpg\n"))))),
-                        ("apt.conf.d", D())))));
+                        ("apt.conf.d", D())))),
+                    ("crontab", F(DebianCrontab)),
+                    ("cron.d", D("root", Js.Oct(755), Ch((".placeholder", F(CronPlaceholder))))),
+                    ("cron.hourly", D("root", Js.Oct(755), Ch((".placeholder", F(CronPlaceholder))))),
+                    ("cron.daily", D("root", Js.Oct(755), Ch(
+                        ("apt-compat", F("#!/bin/sh\n# Updates the package lists and cleans the cache (apt).\nexec /usr/lib/apt/apt.systemd.daily\n", "root", Js.Oct(755))),
+                        ("dpkg", F("#!/bin/sh\n# Backs up the package database (dpkg).\ndpkg-db-backup\n", "root", Js.Oct(755))),
+                        ("logrotate", F("#!/bin/sh\n# Rotates the log files in /var/log.\n/usr/sbin/logrotate /etc/logrotate.conf\n", "root", Js.Oct(755))),
+                        ("man-db", F("#!/bin/sh\n# Updates the index of the manual pages.\nmandb --quiet\n", "root", Js.Oct(755)))))),
+                    ("cron.weekly", D("root", Js.Oct(755), Ch(("man-db", F("#!/bin/sh\n# Cleans old cached manual pages.\nmandb --quiet\n", "root", Js.Oct(755)))))),
+                    ("cron.monthly", D("root", Js.Oct(755), Ch((".placeholder", F(CronPlaceholder))))));
             }
             case "arch":
                 return Ch(
@@ -117,7 +175,13 @@ public static partial class InitfsLib
                         ("fedora.repo", F(
                             "[fedora]\nname=Fedora $releasever - $basearch\nmetalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-$releasever&arch=$basearch\nenabled=1\ngpgcheck=1\n")),
                         ("fedora-updates.repo", F(
-                            "[updates]\nname=Fedora $releasever - $basearch - Updates\nmetalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f$releasever&arch=$basearch\nenabled=1\ngpgcheck=1\n"))))));
+                            "[updates]\nname=Fedora $releasever - $basearch - Updates\nmetalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f$releasever&arch=$basearch\nenabled=1\ngpgcheck=1\n"))))),
+                    ("crontab", F(FedoraCrontab)),
+                    ("cron.d", D("root", Js.Oct(755), Ch(("0hourly", F("# Run the hourly jobs\nSHELL=/bin/bash\nPATH=/sbin:/bin:/usr/sbin:/usr/bin\nMAILTO=root\n01 * * * * root run-parts /etc/cron.hourly\n"))))),
+                    ("cron.hourly", D("root", Js.Oct(755), Ch(("0anacron", F("#!/usr/bin/sh\n# Runs the daily, weekly and monthly jobs (anacron).\nexec /usr/sbin/anacron -s\n", "root", Js.Oct(755)))))),
+                    ("cron.daily", D()),
+                    ("cron.weekly", D()),
+                    ("cron.monthly", D()));
             default:
                 throw new ArgumentException($"Unknown family: {distro.Family}");
         }

@@ -207,12 +207,14 @@ public static partial class UtilCmd
             if ((m & special) != 0) x = (bits & 1) != 0 ? ch : char.ToUpperInvariant(ch);
             return $"{r}{w}{x}";
         }
-        return (n.Type == "dir" ? "d" : "-") + Tri(6, Js.Oct(4000), 's') + Tri(3, Js.Oct(2000), 's') + Tri(0, Js.Oct(1000), 't');
+        return (n.Type == "dir" ? "d" : n.Type == "link" ? "l" : "-") + Tri(6, Js.Oct(4000), 's') + Tri(3, Js.Oct(2000), 's') + Tri(0, Js.Oct(1000), 't');
     }
 
-    public static string ColorName(string name, FsNode node, bool tty)
+    /// <param name="broken">For a symbolic link: it points to nothing (shown in red, like ls does).</param>
+    public static string ColorName(string name, FsNode node, bool tty, bool broken = false)
     {
         if (!tty) return name;
+        if (node.Type == "link") return broken ? $"\x1b[40;31;1m{name}{Color.Reset}" : $"\x1b[1;36m{name}{Color.Reset}";
         if (node.Type == "dir")
         {
             if ((node.Mode & Js.Oct(1002)) == Js.Oct(1002)) return $"\x1b[30;42m{name}{Color.Reset}";

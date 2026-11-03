@@ -248,6 +248,72 @@ public static partial class SystemdCmd
         return 0;
     }
 
+    /// <summary>The distribution's timers: (timer, what it starts, how often: "daily", "weekly", "hourly" or "15min").</summary>
+    private static List<(string Timer, string Service, string Every)> Timers(Distro d) => d.Family switch
+    {
+        "debian" => new()
+        {
+            ("apt-daily-upgrade.timer", "apt-daily-upgrade.service", "daily"),
+            ("apt-daily.timer", "apt-daily.service", "daily"),
+            ("dpkg-db-backup.timer", "dpkg-db-backup.service", "daily"),
+            ("e2scrub_all.timer", "e2scrub_all.service", "weekly"),
+            ("fstrim.timer", "fstrim.service", "weekly"),
+            ("logrotate.timer", "logrotate.service", "daily"),
+            ("man-db.timer", "man-db.service", "daily"),
+            ("systemd-tmpfiles-clean.timer", "systemd-tmpfiles-clean.service", "daily"),
+        },
+        "redhat" => new()
+        {
+            ("dnf-makecache.timer", "dnf-makecache.service", "hourly"),
+            ("fstrim.timer", "fstrim.service", "weekly"),
+            ("logrotate.timer", "logrotate.service", "daily"),
+            ("raid-check.timer", "raid-check.service", "weekly"),
+            ("systemd-tmpfiles-clean.timer", "systemd-tmpfiles-clean.service", "daily"),
+        },
+        _ => new()
+        {
+            ("archlinux-keyring-wkd-sync.timer", "archlinux-keyring-wkd-sync.service", "weekly"),
+            ("shadow.timer", "shadow.service", "daily"),
+            ("systemd-tmpfiles-clean.timer", "systemd-tmpfiles-clean.service", "daily"),
+        },
+    };
+
+    private static string Left(TimeSpan span)
+    {
+        if (span.TotalHours >= 24) return $"{(int)span.TotalDays} day{((int)span.TotalDays == 1 ? "" : "s")} {span.Hours}h";
+        if (span.TotalMinutes >= 60) return $"{(int)span.TotalHours}h {span.Minutes}min";
+        return $"{Math.Max(1, (int)span.TotalMinutes)}min";
+    }
+
+    /// <summary>systemctl list-timers: systemd's own way of running jobs at set times (instead of cron).</summary>
+    private static int ListTimers(CmdCtx ctx)
+    {
+        var now = Js.LocalNow();
+        string Stamp(DateTime d) => $"{d.ToString("ddd yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)} {TzName(d)}";
+        var rows = new List<List<string>> { new() { "NEXT", "LEFT", "LAST", "PASSED", "UNIT", "ACTIVATES" } };
+        var entries = Timers(ctx.Sh.Distro).Select(t =>
+        {
+            DateTime next = t.Every switch
+            {
+                "hourly" => now.Date.AddHours(now.Hour + 1),
+                "weekly" => now.Date.AddDays(((int)DayOfWeek.Monday - (int)now.DayOfWeek + 7) % 7 is 0 ? 7 : ((int)DayOfWeek.Monday - (int)now.DayOfWeek + 7) % 7),
+                _ => now.Date.AddDays(1),
+            };
+            var last = t.Every switch
+            {
+                "hourly" => next.AddHours(-1),
+                "weekly" => next.AddDays(-7),
+                _ => next.AddDays(-1),
+            };
+            return (Next: next, Last: last, t.Timer, t.Service);
+        }).OrderBy(e => e.Next).ThenBy(e => e.Timer, StringComparer.Ordinal).ToList();
+        foreach (var e in entries)
+            rows.Add(new() { Stamp(e.Next), Left(e.Next - now) + " left", Stamp(e.Last), Left(now - e.Last) + " ago", e.Timer, e.Service });
+        foreach (var line in Table(rows)) ctx.Out(line + "\n");
+        ctx.Out($"\n{entries.Count} timers listed.\nPass --all to see loaded but inactive timers, too.\n");
+        return 0;
+    }
+
     private static int ListUnitFiles(CmdCtx ctx, ListOpts o)
     {
         var sh = ctx.Sh;
@@ -287,6 +353,8 @@ public static partial class SystemdCmd
 
         Unit Commands:
           list-units [PATTERN...]             List units currently in memory
+          list-timers [PATTERN...]            List timer units currently in memory,
+                                              ordered by next elapse
           status [PATTERN...|PID...]          Show runtime status of one or more units
           cat PATTERN...                      Show files and drop-ins of specified units
           start UNIT...                       Start (activate) one or more units
@@ -370,6 +438,7 @@ public static partial class SystemdCmd
                    is-enabled TJÄNST    skriv ut enabled/disabled/static
                    list-units           lista tjänster som är laddade (--all: även stoppade)
                    list-unit-files      lista alla installerade unit-filer
+                   list-timers          lista timers (jobb som systemd kör på bestämda tider)
                    cat TJÄNST           visa tjänstens unit-fil
                    daemon-reload        läs om unit-filerna efter att du ändrat dem
                    reset-failed         glöm att en tjänst har misslyckats
@@ -413,6 +482,7 @@ public static partial class SystemdCmd
                    is-enabled UNIT      print enabled/disabled/static
                    list-units           list loaded services (--all: also stopped ones)
                    list-unit-files      list all installed unit files
+                   list-timers          list timers (jobs systemd runs at set times)
                    cat UNIT             show the unit file
                    daemon-reload        re-read unit files after you changed them
                    reset-failed         forget that a service has failed
@@ -545,6 +615,8 @@ public static partial class SystemdCmd
                 return ListUnits(ctx, o);
             case "list-unit-files":
                 return ListUnitFiles(ctx, o);
+            case "list-timers":
+                return ListTimers(ctx);
             case "status":
             {
                 if (units.Count == 0)

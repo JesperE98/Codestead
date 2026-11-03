@@ -503,6 +503,41 @@ public static partial class ServicesLib
         return string.Join("\n", lines) + "\n";
     }
 
+    /// <summary>
+    /// cronie on Arch: the package brings its own service (not enabled, like every Arch package). Called when
+    /// the package is installed or removed.
+    /// </summary>
+    public static void CronieUnit(Shell sh, bool installed)
+    {
+        var path = $"{SystemUnitDir}/cronie.service";
+        var root = sh.RootUser();
+        if (!installed)
+        {
+            if (sh.Vfs.TryLookup(path, root) is not null) sh.Vfs.Remove(path, root);
+            if (sh.Vfs.TryLookup("/usr/bin/crond", root) is not null) sh.Vfs.Remove("/usr/bin/crond", root);
+            return;
+        }
+        // The daemon itself (the service starts it).
+        PackagesLib.InstallCommand(sh, "crond");
+        EnsureDir(sh, SystemUnitDir).Children!["cronie.service"] = VfsLib.MakeFile(UnitFile(new ServiceDef
+        {
+            Name = "cronie.service",
+            Description = "Command Scheduler",
+            Exec = "/usr/bin/crond -n",
+            Reload = "/usr/bin/kill -HUP $MAINPID",
+            WantedBy = "multi-user.target",
+        }));
+        SyncServices(sh);
+    }
+
+    /// <summary>The cron service of the distribution: cron (Debian/Ubuntu), crond (Fedora) or cronie (Arch).</summary>
+    public static string CronUnit(Distro d) => d.Family switch
+    {
+        "debian" => "cron.service",
+        "redhat" => "crond.service",
+        _ => "cronie.service",
+    };
+
     // ---------- Unit files ----------
 
     private static readonly Regex SectionRe = new(@"^\[(.+)\]\z", RegexOptions.CultureInvariant);
@@ -582,7 +617,7 @@ public static partial class ServicesLib
             if (def.Enabled && !string.IsNullOrEmpty(def.WantedBy))
             {
                 var wants = EnsureDir(sh, $"{AdminUnitDir}/{def.WantedBy}.wants");
-                wants.Children![def.Name] = VfsLib.MakeFile(UnitFile(def));
+                wants.Children![def.Name] = VfsLib.MakeLink($"{(def.Admin ? AdminUnitDir : SystemUnitDir)}/{def.Name}");
             }
         }
         var etc = sh.Vfs.Lookup("/etc", sh.RootUser());
@@ -952,8 +987,8 @@ public static partial class ServicesLib
             var path = WantsPath(target, rt.Name);
             if (sh.Vfs.TryLookup(path, sh.RootUser()) is not null) continue;
             var dir = EnsureDir(sh, $"{AdminUnitDir}/{target}.wants");
-            // The virtual file system has no symbolic links – a copy of the unit file has to do.
-            dir.Children![rt.Name] = VfsLib.MakeFile(FindUnitFile(sh, rt.Name)?.Content ?? rt.Loaded);
+            // Enabling a service is a symbolic link from the target's .wants directory to the unit file.
+            dir.Children![rt.Name] = VfsLib.MakeLink(rt.Path);
             change.Created.Add($"{path} → {rt.Path}");
         }
         return change;
@@ -966,7 +1001,7 @@ public static partial class ServicesLib
         foreach (var target in info.WantedBy)
         {
             var path = WantsPath(target, rt.Name);
-            if (sh.Vfs.TryLookup(path, sh.RootUser()) is null) continue;
+            if (sh.Vfs.TryLookupLink(path, sh.RootUser()) is null) continue;
             sh.Vfs.Remove(path, sh.RootUser());
             change.Removed.Add(path);
         }
