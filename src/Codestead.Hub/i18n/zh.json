@@ -41,5 +41,20 @@
   "whatsnew.title": "{name} 的新功能",
   "whatsnew.version": "版本 {version} · {date}",
   "whatsnew.close": "确定",
-  "tool.whatsNew": "新功能"
+  "tool.whatsNew": "新功能",
+  "profile.achievements": "成就",
+  "profile.total": "总计：{xp} XP · 🏆 {unlocked}/{total} 个成就",
+  "profile.totalStreak": "🔥 连续 {days} 天",
+  "profile.levelTooltip": "{xp} XP · 距离下一级还差 {left} XP",
+  "profile.levelTooltipMax": "{xp} XP · 已达最高等级",
+  "profile.streakTooltip": "连续 {days} 天（最佳：{best} 天）",
+  "profile.streakWaiting": "今天完成一个任务，就能保持连续记录。",
+  "profile.hiddenTitle": "???",
+  "profile.hiddenDesc": "探索该工具即可发现。",
+  "profile.unlockedOn": "解锁于 {date}",
+  "profile.hiddenSection": "{title} · 已发现 {found}/{total}",
+  "profile.galleryTitle": "{name}——成就",
+  "profile.count": "已解锁 {unlocked}/{total}",
+  "profile.streakLine": "🔥 连续 {days} 天 · 最佳 {best} 天",
+  "profile.streakNone": "还没有连续记录"
 }
