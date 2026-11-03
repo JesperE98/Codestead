@@ -159,12 +159,16 @@ src/
 ├── Shared/                      Gemensamt för alla appar (beror aldrig på Linux-simulatorn)
 │   ├── Codestead.Common/        Ren .NET: språklistan (build/languages.json), översättning med platshållare,
 │   │                            JSON-inställningar, produktinfo (namn, id, version)
-│   ├── Codestead.Learning/      Lärmotorn utan UI: kursens disposition, XP, nivåer, dagar i rad, utmärkelser
+│   ├── Codestead.Learning/      Lärmotorn utan UI: kursens disposition, XP, nivåer, dagar i rad, utmärkelser,
+│   │                            LearningState (det som sparas i state.json)
+│   ├── Codestead.Learning.UI/   Lärfönstret alla verktyg delar (LearningWindow, en fil per del: Layout, Sidebar,
+│   │                            Lesson, Exam, Tasks, Workbench, Settings, Updates, Game, SmokeTest) och
+│   │                            LearningTool – det verktyget ger fönstret
 │   └── Codestead.UI/            Avalonia-delar: tema och färgsystem, markdown-vy, dialoger, kontrollfrågor
 │                                (med en ISandbox som verktyget ger), spelvyer, lagring, "Vad är nytt",
 │                                självuppdatering, och appskalet i App/ (start, inställningar, nyheter, snabbtest)
 ├── Linux/                       Codestead Linux
-│   ├── Codestead.Linux/         Själva appen (Avalonia): MainWindow, MainWindow.Game
+│   ├── Codestead.Linux/         Appen: LinuxTool (Linux-kursen och terminalen i lärfönstret), Program, App
 │   ├── Codestead.Terminal/      Terminalen (TerminalView, ANSI-färger) och ShellSandbox för kontrollfrågorna
 │   ├── Codestead.Content/       Linux-kursen: kapitel och uppgifter (Chapters/, ChapterDefinitions.cs, Checks.cs), Linux-spelet
 │   │                            (Game/), språk, UI-texter (i18n/ui/*.json)
@@ -199,7 +203,33 @@ packaging/                       Byggskript, installationstester, products.json 
 ```
 
 En ny app (t.ex. C++) får en egen mapp `src/Cpp/` och `tests/Cpp/`, en post i `packaging/products.json` och
-sina id:n och versioner i `build/Codestead.props`.
+sina id:n och versioner i `build/Codestead.props` – se "Så gör du ett nytt verktyg" nedan.
+
+## Så gör du ett nytt verktyg
+
+Allt som inte handlar om Linux finns i `src/Shared/` och används av Codestead Linux i dag. Ett nytt verktyg, t.ex.
+**Codestead C++**, behöver bara det som är unikt för ämnet:
+
+1. **Mappar och produkt**: `src/Cpp/Codestead.Cpp/` (appen), gärna `src/Cpp/Codestead.Cpp.Course/` (kursen),
+   `src/Cpp/changelog.json`, `description.json`, `release-notes.md`, ikoner i `build/icons/codestead-cpp.*`,
+   id/namn/version i `build/Codestead.props` och en post med `"dir": "src/Cpp"` i `packaging/products.json`.
+2. **Appen**: `Program.cs` anropar `AppHost.Run<App>(args, product)`; `App.axaml.cs` lägger in en egen `Brand`
+   (accentfärg) och öppnar `new LearningWindow(new CppTool(), smokeTest)`.
+3. **`CppTool : LearningTool`** (jämför `src/Linux/Codestead.Linux/LinuxTool*.cs`):
+   - kursen: kapitel (`CourseChapter`), titlar, texter per språk, källor, uppgifter som `TaskInfo` (text, ledtråd,
+     lösning) och deras nycklar;
+   - spelet: `new GameRules(outline, utmärkelser)` med `CommonAchievements` plus egna, och en `CommandFacts`-klass
+     om verktyget vill räkna egna saker (t.ex. kompileringar);
+   - varianter om ämnet har sådana (t.ex. kompilatorer: gcc/clang) – annars en enda;
+   - arbetsytan: kontrollen under uppgifterna (t.ex. en kodruta och en körknapp), som säger till efter varje körning
+     (`OnRan`) och avgör vilka uppgifter som löstes (`Evaluate`);
+   - en `ISandbox` för kontrollfrågornas "prova själv".
+4. **Texter**: verktygets UI-texter med samma nycklar som Codestead Linux använder för fönstret (se
+   `src/Linux/Codestead.Content/i18n/ui/en.json`) och de egna, på alla erbjudna språk.
+5. **Tester**: kursens uppgifter ska gå att lösa med sina lösningar (som `ChaptersTests` för Linux), och
+   `CodeLayoutTests`/`ProductFilesTests` gäller även den nya mappen.
+
+Hubben behöver ingen ändring: den läser verktygets `profile.json` och katalogen.
 
 ## Skriva ett nytt kapitel
 

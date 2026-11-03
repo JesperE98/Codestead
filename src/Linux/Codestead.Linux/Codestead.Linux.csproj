@@ -24,6 +24,7 @@
     <ProjectReference Include="../../Shared/Codestead.UI/Codestead.UI.csproj" />
     <ProjectReference Include="../Codestead.Content/Codestead.Content.csproj" />
     <ProjectReference Include="../Codestead.Terminal/Codestead.Terminal.csproj" />
+    <ProjectReference Include="../../Shared/Codestead.Learning.UI/Codestead.Learning.UI.csproj" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets/**" />

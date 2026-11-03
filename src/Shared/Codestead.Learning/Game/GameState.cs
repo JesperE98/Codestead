@@ -1,7 +1,7 @@
 namespace Codestead.Learning.Game;
 
 // The gamification: XP and levels, achievements, a day streak and some lifetime counters.
-// Everything is saved in the app's state (AppState.Game); see GameRules for how it changes.
+// Everything is saved in the tool's state (LearningState.Game); see GameRules for how it changes.
 
 /// <summary>XP, achievements, streak and lifetime counters. Saved inside the app state.</summary>
 public sealed class GameState
