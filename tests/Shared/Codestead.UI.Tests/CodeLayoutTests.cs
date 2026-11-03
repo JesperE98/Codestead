@@ -11,10 +11,7 @@ public class CodeLayoutTests
     public const int MaxLines = 800;
 
     /// <summary>Files allowed to be larger for now, with the reason. Remove an entry when the file is split.</summary>
-    private static readonly Dictionary<string, string> LargeForNow = new()
-    {
-        ["src/Linux/Codestead.Linux/MainWindow.cs"] = "becomes the shared learning window and a thin Linux part",
-    };
+    private static readonly Dictionary<string, string> LargeForNow = new();
 
     private static string RepoRoot()
     {
