@@ -56,5 +56,16 @@
   "profile.galleryTitle": "{name} – 実績",
   "profile.count": "{total} 個中 {unlocked} 個を解除",
   "profile.streakLine": "🔥 {days} 日連続 · 最高 {best} 日",
-  "profile.streakNone": "まだ連続記録はありません"
+  "profile.streakNone": "まだ連続記録はありません",
+  "settings.general": "全般",
+  "settings.hideOnToolOpen": "ツールを開いている間はシステムトレイに隠す",
+  "settings.closeToTray": "閉じるボタンでハブをシステムトレイに隠す",
+  "settings.noTray": "このデスクトップにはシステムトレイがないため、代わりにハブを最小化します。",
+  "settings.startWithComputer": "コンピューターの起動時に開始する",
+  "settings.autoCheck": "ハブを開いている間は更新を確認する",
+  "settings.autoInstall": "ツールの更新を自動でインストールする",
+  "tray.show": "Codestead を表示",
+  "tray.open": "{name} を開く",
+  "tray.quit": "終了",
+  "tool.autoUpdated": "{name} を {version} に更新しました"
 }

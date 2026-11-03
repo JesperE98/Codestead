@@ -11,13 +11,15 @@ public static class AppHost
     /// Answers --version and otherwise starts the app. Call <c>VelopackApp.Build().Run()</c> in the app's own
     /// <c>Program.Main</c> first: Velopack's packager checks for that call in the app's own assembly.
     /// </summary>
-    public static int Run<TApp>(string[] args, ProductMeta product) where TApp : Application, new()
+    /// <param name="shouldStart">Asked after the installer hooks: false ends here (e.g. the app already runs).</param>
+    public static int Run<TApp>(string[] args, ProductMeta product, Func<bool>? shouldStart = null) where TApp : Application, new()
     {
         if (args.Contains("--version"))
         {
             Console.WriteLine(product.Version);
             return 0;
         }
+        if (shouldStart is not null && !shouldStart()) return 0;
         return Build<TApp>().StartWithClassicDesktopLifetime(args);
     }
 

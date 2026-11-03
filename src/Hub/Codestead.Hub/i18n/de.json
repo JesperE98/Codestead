@@ -56,5 +56,16 @@
   "profile.galleryTitle": "{name} – Erfolge",
   "profile.count": "{unlocked} von {total} freigeschaltet",
   "profile.streakLine": "🔥 Tage in Folge: {days} · Rekord {best}",
-  "profile.streakNone": "Noch keine Serie"
+  "profile.streakNone": "Noch keine Serie",
+  "settings.general": "Allgemein",
+  "settings.hideOnToolOpen": "Im Infobereich verstecken, solange ein Tool geöffnet ist",
+  "settings.closeToTray": "Die Schließen-Schaltfläche versteckt den Hub im Infobereich",
+  "settings.noTray": "Dein Desktop hat keinen Infobereich, daher wird der Hub stattdessen minimiert.",
+  "settings.startWithComputer": "Beim Start des Computers starten",
+  "settings.autoCheck": "Nach Updates suchen, solange der Hub geöffnet ist",
+  "settings.autoInstall": "Tool-Updates automatisch installieren",
+  "tray.show": "Codestead anzeigen",
+  "tray.open": "{name} öffnen",
+  "tray.quit": "Beenden",
+  "tool.autoUpdated": "{name} wurde auf {version} aktualisiert"
 }
