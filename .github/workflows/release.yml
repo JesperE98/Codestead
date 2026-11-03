@@ -82,6 +82,11 @@ jobs:
           HAS_RELEASES_TOKEN: ${{ secrets.RELEASES_TOKEN != '' }}
           HAS_CATALOG_SIGNING_KEY: ${{ secrets.CATALOG_SIGNING_KEY != '' }}
         run: python3 packaging/plan.py
+      - name: Check the README of the releases repository
+        # The page is written when publishing; render it now so a broken link fails the pull request instead.
+        run: |
+          printf 'codestead-linux-v0.0.1\ncodestead-hub-v0.0.1\n' > "$RUNNER_TEMP/tags.txt"
+          python3 packaging/releases_readme.py --repo "$RELEASES_REPO" --tags "$RUNNER_TEMP/tags.txt" --out "$RUNNER_TEMP/README.md"
 
   # The tests run once; the packaging jobs below only build.
   test:
