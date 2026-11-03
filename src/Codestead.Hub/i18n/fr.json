@@ -12,7 +12,6 @@
   "tool.notForPlatform": "Pas encore disponible pour cet ordinateur.",
   "tool.downloading": "Téléchargement … {percent} %",
   "tool.installing": "Installation …",
-  "tool.releaseNotes": "Nouveautés",
   "tool.failed": "Un problème est survenu : {error}",
   "tool.startFailed": "Impossible de démarrer {name} : {error}",
   "uninstall.title": "Désinstaller {name} ?",

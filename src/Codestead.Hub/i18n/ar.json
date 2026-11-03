@@ -12,7 +12,6 @@
   "tool.notForPlatform": "غير متاح لهذا الحاسوب بعد.",
   "tool.downloading": "جارٍ التنزيل … {percent} %",
   "tool.installing": "جارٍ التثبيت …",
-  "tool.releaseNotes": "ما الجديد",
   "tool.failed": "حدث خطأ: {error}",
   "tool.startFailed": "تعذّر تشغيل {name}: {error}",
   "uninstall.title": "إلغاء تثبيت {name}؟",

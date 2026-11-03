@@ -12,7 +12,6 @@
   "tool.notForPlatform": "Пока недоступно для этого компьютера.",
   "tool.downloading": "Загрузка … {percent} %",
   "tool.installing": "Установка …",
-  "tool.releaseNotes": "Что нового",
   "tool.failed": "Что-то пошло не так: {error}",
   "tool.startFailed": "Не удалось запустить {name}: {error}",
   "uninstall.title": "Удалить {name}?",

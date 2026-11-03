@@ -1,5 +1,44 @@
 [
   {
+    "version": "0.1.6",
+    "date": "2026-11-03",
+    "changes": {
+      "en": [
+        "The button that opened the release notes on GitHub is gone – **What's new** shows the changes right in the hub."
+      ],
+      "sv": [
+        "Knappen som öppnade releaseanteckningarna på GitHub är borta – **Vad är nytt** visar ändringarna direkt i hubben."
+      ],
+      "de": [
+        "Die Schaltfläche, die die Versionshinweise auf GitHub öffnete, ist weg – **Neuigkeiten** zeigt die Änderungen direkt im Hub."
+      ],
+      "fr": [
+        "Le bouton qui ouvrait les notes de version sur GitHub a disparu – **Nouveautés** affiche les changements directement dans le hub."
+      ],
+      "es": [
+        "El botón que abría las notas de la versión en GitHub ya no está: **Novedades** muestra los cambios directamente en el hub."
+      ],
+      "pt": [
+        "O botão que abria as notas da versão no GitHub foi removido – **Novidades** mostra as mudanças direto no hub."
+      ],
+      "ru": [
+        "Кнопки, которая открывала заметки о выпуске на GitHub, больше нет – **Что нового** показывает изменения прямо в хабе."
+      ],
+      "zh": [
+        "打开 GitHub 上发布说明的按钮已移除——**新功能** 直接在 Hub 中显示更改。"
+      ],
+      "ja": [
+        "GitHub のリリースノートを開くボタンはなくなりました。**新機能** でハブの中で直接変更を確認できます。"
+      ],
+      "ar": [
+        "أُزيل الزر الذي كان يفتح ملاحظات الإصدار على GitHub – يعرض **ما الجديد** التغييرات مباشرة في الـHub."
+      ],
+      "hi": [
+        "GitHub पर रिलीज़ नोट्स खोलने वाला बटन हटा दिया गया है – **नया क्या है** बदलाव सीधे हब में दिखाता है।"
+      ]
+    }
+  },
+  {
     "version": "0.1.5",
     "date": "2026-11-03",
     "changes": {
