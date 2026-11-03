@@ -8,9 +8,11 @@ using Avalonia.Platform;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Codestead.Content;
+using Codestead.Content.Game;
 using Codestead.Shell;
 using Codestead.UI;
 using Codestead.UI.Controls;
+using Codestead.UI.Controls.Game;
 using ShellType = Codestead.Shell.Shell;
 
 namespace Codestead.Linux;
@@ -34,13 +36,15 @@ public sealed class AppState
     public List<string> HintSeen { get; set; } = new();
     /// <summary>Best exam result in percent, per main chapter.</summary>
     public OrderedDictionary<string, int> Exams { get; set; } = Js.Obj<int>();
+    /// <summary>XP, achievements, streak and counters (see Codestead.Content.Game).</summary>
+    public GameState Game { get; set; } = new();
 }
 
 /// <summary>
 /// The main window: top bar, chapter list, lesson text, tasks and the terminal.
 /// The layout follows the old web version: sidebar | lesson | workbench (tasks + terminal).
 /// </summary>
-public sealed class MainWindow : Window
+public sealed partial class MainWindow : Window
 {
     private readonly Storage storage = new(ProductInfo.ToolId);
     private readonly AppState state;
@@ -77,7 +81,7 @@ public sealed class MainWindow : Window
     /// <summary>How many own attempts a task needs before its solution can be shown (unless the hint was opened).</summary>
     public const int AttemptsBeforeSolution = 3;
     /// <summary>Percentage needed to pass an exam.</summary>
-    public const int ExamPassPercent = 80;
+    public const int ExamPassPercent = GameEngine.ExamPassPercent;
 
     private static readonly string[] FamilyOrder = { "debian", "arch", "redhat" };
 
@@ -108,7 +112,9 @@ public sealed class MainWindow : Window
         }
 
         overlay = new OverlayHost(BuildLayout());
+        overlay.Children.Add(notices);
         Content = overlay;
+        InitGame();
 
         terminal.Shell = shell;
         terminal.CommandExecuted += OnResult;
@@ -124,6 +130,7 @@ public sealed class MainWindow : Window
             else
             {
                 terminal.FocusInput();
+                GameOpened();
                 // After an update: what changed. The update offer waits until the news are closed.
                 if (!ShowNewsAfterUpdate()) _ = OfferUpdate();
             }
@@ -243,7 +250,7 @@ public sealed class MainWindow : Window
         brand.Children.Add(new TextBlock { Text = ProductInfo.Name, FontSize = 17, FontWeight = FontWeight.Bold, VerticalAlignment = VerticalAlignment.Center });
 
         var progress = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        totalBar.Bind(ProgressBar.ForegroundProperty, this.GetResourceObservable("CsAccent"));
+        totalBar.Bind(ProgressBar.ForegroundProperty, this.GetResourceObservable("CsSuccess"));
         progress.Children.Add(totalBar);
         progress.Children.Add(totalText);
 
@@ -262,6 +269,7 @@ public sealed class MainWindow : Window
         };
 
         var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, VerticalAlignment = VerticalAlignment.Center };
+        right.Children.Add(gameBar);
         right.Children.Add(progress);
         right.Children.Add(distroPicker);
         right.Children.Add(langPicker);
@@ -278,7 +286,10 @@ public sealed class MainWindow : Window
         sidebarSettings.Classes.Add("nav-item");
         sidebarSettings.Click += (_, _) => OpenSettings();
         var sidebarDock = new DockPanel();
-        var settingsBox = new Border { Padding = new Thickness(10, 8), BorderThickness = new Thickness(0, 1, 0, 0), Child = sidebarSettings };
+        var bottomMenu = new StackPanel { Spacing = 2 };
+        bottomMenu.Children.Add(sidebarAchievements);
+        bottomMenu.Children.Add(sidebarSettings);
+        var settingsBox = new Border { Padding = new Thickness(10, 8), BorderThickness = new Thickness(0, 1, 0, 0), Child = bottomMenu };
         settingsBox.Bind(Border.BorderBrushProperty, this.GetResourceObservable("CsBorder"));
         DockPanel.SetDock(settingsBox, Dock.Bottom);
         sidebarDock.Children.Add(settingsBox);
@@ -348,6 +359,7 @@ public sealed class MainWindow : Window
         markdown.CommandHint = T("lesson.cmdTitle");
         terminal.InputLabel = T("terminal.input");
         sidebarSettings.Content = Icons.Label(Icons.Gear(), T("settings.open"));
+        UpdateGameViews();
         terminalReset.Content = "↺  " + T("terminal.reset");
         ToolTip.SetTip(terminalReset, T("terminal.resetTitle"));
         FillPickers();
@@ -468,6 +480,9 @@ public sealed class MainWindow : Window
                 bool wasUnlocked = IsUnlocked(chapter);
                 state.Checkpoints[key] = true;
                 SaveState();
+                var ev = GameEngine.OnCheckpoint(state.Game, Snapshot(), DateTime.Now);
+                if (chapter.Id == Chapter.Id && ev.Celebrate) RenderSidebar();
+                Present(ev);
                 if (chapter.Id != Chapter.Id) return;
                 if (!wasUnlocked && IsUnlocked(chapter))
                 {
@@ -541,7 +556,7 @@ public sealed class MainWindow : Window
                 }
                 if (complete && ch.Kind == ChapterKinds.Lesson) mark = "✓";
                 var count = Text(mark, 12.5, complete ? FontWeight.Bold : null, complete ? null : "muted");
-                if (complete) count.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("CsAccent"));
+                if (complete) count.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("CsSuccess"));
                 count.Margin = new Thickness(8, 0, 0, 0);
                 Grid.SetColumn(count, 2);
                 row.Children.Add(no);
@@ -577,7 +592,7 @@ public sealed class MainWindow : Window
         if (!available.Contains(Lang))
         {
             var note = new Border { Padding = new Thickness(12, 8), CornerRadius = new CornerRadius(6), Margin = new Thickness(0, 10, 0, 0), Child = Text(T("lesson.fallback"), 13.5) };
-            note.Bind(Border.BackgroundProperty, this.GetResourceObservable("CsWarnBg"));
+            note.Bind(Border.BackgroundProperty, this.GetResourceObservable("CsWarningSoft"));
             lessonPanel.Children.Add(note);
         }
         markdown.FlowDirection = shownDir == "rtl" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
@@ -604,6 +619,7 @@ public sealed class MainWindow : Window
                 read.IsVisible = false;
                 overlay.Toast(T("gate.unlocked"));
                 Unlocked();
+                Present(GameEngine.Sync(state.Game, Snapshot(), DateTime.Now));
             };
             lessonPanel.Children.Add(read);
         }
@@ -618,7 +634,7 @@ public sealed class MainWindow : Window
             {
                 var content = new StackPanel { Spacing = 0 };
                 var title = Text("↗  " + r.Title, 14.5, FontWeight.SemiBold);
-                title.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("CsAccent"));
+                title.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("CsLink"));
                 content.Children.Add(title);
                 content.Children.Add(Text($"{r.Publisher} · {r.Url}", 12, null, "muted"));
                 var link = new Button { Content = content, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(8, 6) };
@@ -692,13 +708,14 @@ public sealed class MainWindow : Window
             var headline = Text(T("exam.result", ("score", score), ("total", views.Count), ("percent", percent)), 17, FontWeight.Bold);
             result.Children.Add(headline);
             var verdict = Text(passed ? "✓ " + T("exam.passed") : T("exam.failed", ("need", ExamPassPercent)), 15, FontWeight.SemiBold);
-            verdict.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable(passed ? "CsAccent" : "CsDanger"));
+            verdict.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable(passed ? "CsSuccess" : "CsDanger"));
             result.Children.Add(verdict);
             var retake = new Button { Content = "↺  " + T("exam.retake") };
             retake.Classes.Add("secondary");
             retake.Click += (_, _) => RenderLesson();
             result.Children.Add(retake);
             RenderSidebar();
+            Present(GameEngine.OnExam(state.Game, Snapshot(), chapter.Part, percent, DateTime.Now));
         };
         lessonPanel.Children.Add(submit);
         lessonPanel.Children.Add(result);
@@ -728,7 +745,7 @@ public sealed class MainWindow : Window
         header.Children.Add(count);
         taskPanel.Children.Add(header);
         var bar = new ProgressBar { Minimum = 0, Maximum = Math.Max(1, chapter.Tasks.Count), Value = done, Height = 4, MinHeight = 4, Margin = new Thickness(0, 10, 0, 6) };
-        bar.Bind(ProgressBar.ForegroundProperty, this.GetResourceObservable("CsAccent"));
+        bar.Bind(ProgressBar.ForegroundProperty, this.GetResourceObservable("CsSuccess"));
         taskPanel.Children.Add(bar);
 
         foreach (var task in chapter.Tasks) taskPanel.Children.Add(TaskItem(chapter, task));
@@ -750,7 +767,7 @@ public sealed class MainWindow : Window
                 box.Children.Add(Text(T("tasks.allDone")));
             }
             var card = new Border { Padding = new Thickness(14), CornerRadius = new CornerRadius(8), Child = box };
-            card.Bind(Border.BackgroundProperty, this.GetResourceObservable("CsAccentSoft"));
+            card.Bind(Border.BackgroundProperty, this.GetResourceObservable("CsSuccessSoft"));
             taskPanel.Children.Add(card);
         }
     }
@@ -771,8 +788,9 @@ public sealed class MainWindow : Window
             Margin = new Thickness(0, 2, 12, 0),
             Child = done ? new TextBlock { Text = "✓", Foreground = Brushes.White, FontWeight = FontWeight.Bold, FontSize = 13, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center } : null,
         };
-        check.Bind(Border.BorderBrushProperty, this.GetResourceObservable(done ? "CsAccent" : "CsBorder"));
-        if (done) check.Bind(Border.BackgroundProperty, this.GetResourceObservable("CsAccent"));
+        check.Bind(Border.BorderBrushProperty, this.GetResourceObservable(done ? "CsSuccess" : "CsBorder"));
+        if (done) check.Bind(Border.BackgroundProperty, this.GetResourceObservable("CsSuccess"));
+        if (done && fresh) Motion.Pop(check);
         AutomationPropertiesHelper.SetName(check, done ? T("tasks.done") : T("tasks.notDone"));
 
         var main = new StackPanel { Spacing = 6 };
@@ -788,8 +806,8 @@ public sealed class MainWindow : Window
             {
                 bool fDone = state.Progress.ContainsKey(ChaptersLib.TaskKey(chapter.Id, task.Id, true, f));
                 var chip = new Border { CornerRadius = new CornerRadius(10), Padding = new Thickness(8, 1), BorderThickness = new Thickness(1), Child = Text((fDone ? "✓ " : "") + FamilyShort(f), 11.5) };
-                chip.Bind(Border.BorderBrushProperty, this.GetResourceObservable(fDone ? "CsAccent" : "CsBorder"));
-                if (fDone) chip.Bind(Border.BackgroundProperty, this.GetResourceObservable("CsAccentSoft"));
+                chip.Bind(Border.BorderBrushProperty, this.GetResourceObservable(fDone ? "CsSuccess" : "CsBorder"));
+                if (fDone) chip.Bind(Border.BackgroundProperty, this.GetResourceObservable("CsSuccessSoft"));
                 if (f == Distro.Family) ((TextBlock)chip.Child!).FontWeight = FontWeight.Bold;
                 chips.Children.Add(chip);
             }
@@ -816,6 +834,11 @@ public sealed class MainWindow : Window
             if (which == "hint" && !state.HintSeen.Contains(key))
             {
                 state.HintSeen.Add(key);
+                SaveState();
+            }
+            if (which == "solution" && !done && !state.Game.SolutionSeen.Contains(key))
+            {
+                GameEngine.OnSolutionShown(state.Game, key);
                 SaveState();
             }
             bool unlocked = SolutionUnlocked();
@@ -868,7 +891,7 @@ public sealed class MainWindow : Window
         row.Children.Add(main);
         var item = new Border { Padding = new Thickness(6, 12), BorderThickness = new Thickness(0, 1, 0, 0), Child = row, CornerRadius = new CornerRadius(6) };
         item.Bind(Border.BorderBrushProperty, this.GetResourceObservable("CsSurface2"));
-        if (fresh) item.Bind(Border.BackgroundProperty, this.GetResourceObservable("CsAccentSoft"));
+        if (fresh) item.Bind(Border.BackgroundProperty, this.GetResourceObservable("CsSuccessSoft"));
         return item;
     }
 
@@ -916,16 +939,21 @@ public sealed class MainWindow : Window
                 if (n == AttemptsBeforeSolution) solutionUnlocked = true;
             }
         }
+        foreach (var k in newly) state.Progress[k] = true;
+        // The game counts every finished command line (statistics, hidden achievements) and the solved tasks.
+        GameEvents? ev = null;
+        if (!result.Pending && !result.Incomplete && result.Line.Trim() != "")
+        {
+            var solved = newly.Select(k => new SolvedTask(k, state.HintSeen.Contains(k) || state.Game.SolutionSeen.Contains(k))).ToList();
+            ev = GameEngine.OnCommand(state.Game, Snapshot(), CommandInfo.Analyze(result.Line, result.Output, result.ExitCode), Chapter.Id, solved, DateTime.Now);
+        }
         if (newly.Count == 0)
         {
-            if (solutionUnlocked)
-            {
-                SaveState();
-                RenderTasks();
-            }
+            if (solutionUnlocked || ev?.Changed == true) SaveState();
+            if (solutionUnlocked) RenderTasks();
+            if (ev is not null) Present(ev);
             return;
         }
-        foreach (var k in newly) state.Progress[k] = true;
         SaveState();
         justCompleted = newly;
         RenderProgress();
@@ -937,6 +965,7 @@ public sealed class MainWindow : Window
             justCompleted = new();
             RenderTasks();
         }, TimeSpan.FromSeconds(2));
+        if (ev is not null) Present(ev);
     }
 
     private void ChangeDistro(string id)
@@ -1017,7 +1046,7 @@ public sealed class MainWindow : Window
             return; // Offline or the release server is unavailable – try again next start.
         }
         if (version is null) return;
-        overlay.Confirm(T("update.title"), T("update.text", ("version", version)), T("update.button"), T("update.later"), false, async () =>
+        overlay.ShowWhenFree(() => overlay.Confirm(T("update.title"), T("update.text", ("version", version)), T("update.button"), T("update.later"), false, async () =>
         {
             overlay.Toast(T("update.downloading"), 30);
             try
@@ -1029,7 +1058,7 @@ public sealed class MainWindow : Window
             {
                 overlay.Toast(e.Message);
             }
-        });
+        }));
     }
 
     private void ConfirmResetTerminal()
@@ -1055,6 +1084,7 @@ public sealed class MainWindow : Window
             state.Attempts = Js.Obj<int>();
             state.HintSeen = new();
             state.Exams = Js.Obj<int>();
+            ResetGame();
             SaveState();
             RenderAll();
             overlay.Toast(T("toast.progressReset"));
@@ -1214,6 +1244,8 @@ public sealed class MainWindow : Window
             }
             var after = state.Progress.ContainsKey(ChaptersLib.TaskKey(Chapter.Id, task.Id, task.PerFamily, Distro.Family));
             if (!before && !after) throw new InvalidOperationException("The first task was not completed by its solution.");
+            if (state.Game.Xp <= 0 || !state.Game.Achievements.ContainsKey("first-task"))
+                throw new InvalidOperationException($"The game did not count the first task (XP {state.Game.Xp}).");
             Console.WriteLine($"SMOKE OK {ProductInfo.Name} {ProductInfo.Version} ({ChaptersLib.Chapters.Count} chapters, {LanguagesLib.Languages.Count} languages)");
         }
         catch (Exception e)

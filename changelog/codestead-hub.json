@@ -1,5 +1,21 @@
 [
   {
+    "version": "0.2.0",
+    "date": "2026-11-03",
+    "changes": {
+      "en": [
+        "Each tool's **level, XP, days in a row and achievements** are shown on its card, with a button that opens all of its achievements.",
+        "A **total** for all your tools at the top of the page.",
+        "Clearer **colours** and an indigo accent colour of its own for the hub."
+      ],
+      "sv": [
+        "Varje verktygs **nivå, XP, dagar i rad och utmärkelser** visas på dess kort, med en knapp som öppnar alla dess utmärkelser.",
+        "En **summa** för alla dina verktyg högst upp på sidan.",
+        "Tydligare **färger** och en egen indigoblå accentfärg för hubben."
+      ]
+    }
+  },
+  {
     "version": "0.1.6",
     "date": "2026-11-03",
     "changes": {

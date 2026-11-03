@@ -16,8 +16,8 @@
       every change to a product that reaches main becomes the next patch release. For 0.6 change 0.5 to 0.6.
       Local builds are x.y.0.
     -->
-    <CodesteadLinuxVersion>0.5</CodesteadLinuxVersion>
-    <CodesteadHubVersion>0.1</CodesteadHubVersion>
+    <CodesteadLinuxVersion>0.6</CodesteadLinuxVersion>
+    <CodesteadHubVersion>0.2</CodesteadHubVersion>
     <Company>$(CodesteadPublisher)</Company>
     <Product>$(CodesteadBrand)</Product>
     <Copyright>Copyright © 2026 JesperE98. All rights reserved.</Copyright>

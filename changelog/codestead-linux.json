@@ -1,5 +1,25 @@
 [
   {
+    "version": "0.6.0",
+    "date": "2026-11-03",
+    "changes": {
+      "en": [
+        "**Achievements and levels**: earn XP for tasks, questions, chapters and exams, climb ten levels from Guest to root and collect 32 achievements – plus 10 hidden ones that you find by exploring the terminal.",
+        "A short **celebration** when you finish a chapter, a whole part or pass an exam: the commands you practised, the XP you earned and your new achievements.",
+        "**Days in a row**: solve a task or answer a question every day to keep your streak going. Missing a day costs nothing.",
+        "All achievements are under **Achievements** at the bottom of the chapter list, or click your level in the top bar. The progress you already had counts.",
+        "Clearer **colours**: green means done, amber a hint or warning, red an error, blue a link and gold a reward. Codestead Linux has its own teal accent colour."
+      ],
+      "sv": [
+        "**Utmärkelser och nivåer**: du får XP för uppgifter, frågor, kapitel och prov, klättrar tio nivåer från Gäst till root och samlar 32 utmärkelser – plus 10 dolda som du hittar genom att utforska terminalen.",
+        "Ett kort **firande** när du blir klar med ett kapitel, en hel del eller klarar ett prov: kommandona du övade på, XP:n du fick och dina nya utmärkelser.",
+        "**Dagar i rad**: lös en uppgift eller svara på en fråga varje dag för att hålla det igång. Missar du en dag kostar det ingenting.",
+        "Alla utmärkelser finns under **Utmärkelser** längst ner i kapitellistan, eller klicka på din nivå i den översta raden. Framstegen du redan hade räknas.",
+        "Tydligare **färger**: grönt betyder klart, gult en ledtråd eller varning, rött ett fel, blått en länk och guld en belöning. Codestead Linux har en egen blågrön accentfärg."
+      ]
+    }
+  },
+  {
     "version": "0.5.6",
     "date": "2026-11-03",
     "changes": {
