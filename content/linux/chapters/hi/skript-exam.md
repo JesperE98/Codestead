@@ -103,3 +103,12 @@ $ for i in 1 2 3 4 5; do if [ $i -eq 3 ]; then continue; fi; echo $i; done
 ```try
 for i in $(seq 1 3); do echo "Round $i"; done
 ```
+
+```quiz
+crontab की कौन-सी पंक्ति हर रविवार 23:45 पर `~/backup.sh` चलाती है?
+- [ ] `23 45 * * 0 ~/backup.sh`
+- [x] `45 23 * * 0 ~/backup.sh`
+- [ ] `45 23 0 * * ~/backup.sh`
+---
+पहले मिनट, फिर घंटा: 45 23। रविवार हफ़्ते का दिन 0 (या 7) है, पाँचवें फ़ील्ड में।
+```
