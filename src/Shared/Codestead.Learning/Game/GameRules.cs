@@ -1,14 +1,21 @@
 using System.Globalization;
-using Codestead.Shell;
 
-namespace Codestead.Content.Game;
+namespace Codestead.Learning.Game;
 
 /// <summary>
 /// Updates the <see cref="GameState"/> after something happened (a command, a question, an exam) and says
 /// what changed. Pure functions of the state and a <see cref="ProgressView"/> – the app shows the result.
+/// A tool creates one with its course and its list of achievements.
 /// </summary>
-public static class GameEngine
+public sealed class GameRules(CourseOutline course, IReadOnlyList<Achievement> achievements)
 {
+    public CourseOutline Course => course;
+
+    /// <summary>The tool's achievements, in gallery order.</summary>
+    public IReadOnlyList<Achievement> Achievements => achievements;
+
+    public Achievement? Find(string id) => achievements.FirstOrDefault(a => a.Id == id);
+
     /// <summary>An exam is passed at this percentage.</summary>
     public const int ExamPassPercent = 80;
 
@@ -23,7 +30,7 @@ public static class GameEngine
     /// Brings the state up to date with the progress, e.g. when the app starts. An old save (from before the
     /// gamification) gets the XP and achievements its progress already earned. Nothing here is celebrated.
     /// </summary>
-    public static GameEvents Sync(GameState g, ProgressView p, DateTime now)
+    public GameEvents Sync(GameState g, ProgressView p, DateTime now)
     {
         var ev = Evaluate(g, p, null, Array.Empty<string>(), now);
         if (g.Version != GameState.CurrentVersion)
@@ -35,7 +42,7 @@ public static class GameEngine
     }
 
     /// <summary>After a command in the main terminal. <paramref name="solved"/>: the tasks it solved.</summary>
-    public static GameEvents OnCommand(GameState g, ProgressView p, CommandInfo? cmd, string chapterId, IReadOnlyList<SolvedTask> solved, DateTime now)
+    public GameEvents OnCommand(GameState g, ProgressView p, CommandFacts? cmd, string chapterId, IReadOnlyList<SolvedTask> solved, DateTime now)
     {
         if (cmd is not null) Count(g.Stats, cmd, chapterId, now);
         foreach (var task in solved)
@@ -48,7 +55,7 @@ public static class GameEngine
     }
 
     /// <summary>After a question in a lesson was answered correctly (it counts for the streak too).</summary>
-    public static GameEvents OnCheckpoint(GameState g, ProgressView p, DateTime now)
+    public GameEvents OnCheckpoint(GameState g, ProgressView p, DateTime now)
     {
         int? streak = Touch(g, DateOnly.FromDateTime(now));
         var ev = Evaluate(g, p, null, Array.Empty<string>(), now);
@@ -58,7 +65,7 @@ public static class GameEngine
     }
 
     /// <summary>After an exam was handed in. <paramref name="p"/> already holds the new best result.</summary>
-    public static GameEvents OnExam(GameState g, ProgressView p, string part, int percent, DateTime now)
+    public GameEvents OnExam(GameState g, ProgressView p, string part, int percent, DateTime now)
     {
         if (percent < ExamPassPercent && !g.ExamsFailed.Contains(part)) g.ExamsFailed.Add(part);
         bool passedBefore = g.ExamsPassed.Contains(part), perfectBefore = g.ExamsPerfect.Contains(part);
@@ -88,28 +95,6 @@ public static class GameEngine
         return (0, false);
     }
 
-    /// <summary>The commands practised in a chapter: the ones in its tasks' solutions, in order.</summary>
-    public static IReadOnlyList<string> ChapterCommands(Chapter ch, Distro d, World w)
-    {
-        var names = new List<string>();
-        foreach (var task in ch.Tasks)
-        {
-            List<string> lines;
-            try
-            {
-                lines = task.SolutionFor(d, w);
-            }
-            catch
-            {
-                continue;
-            }
-            foreach (var line in lines)
-                foreach (var name in CommandInfo.Analyze(line, "", 0).Names)
-                    if (!names.Contains(name)) names.Add(name);
-        }
-        return names;
-    }
-
     /// <summary>Counts a solve or a question for today. Returns the streak when this was the first of a new day.</summary>
     private static int? Touch(GameState g, DateOnly today)
     {
@@ -121,19 +106,13 @@ public static class GameEngine
         return g.Streak;
     }
 
-    private static void Count(GameStats s, CommandInfo cmd, string chapterId, DateTime now)
+    private static void Count(GameStats s, CommandFacts cmd, string chapterId, DateTime now)
     {
         if (cmd.Line.Length == 0) return;
         s.Commands++;
         foreach (var name in cmd.Names)
             if (!s.CommandNames.Contains(name)) s.CommandNames.Add(name);
-        if (cmd.ManPage is { } page && !s.ManPages.Contains(page)) s.ManPages.Add(page);
-        if (cmd.MaxPipeline > 1) s.Pipes++;
-        s.LongestPipe = Math.Max(s.LongestPipe, cmd.MaxPipeline);
-        if (cmd.HasRedirect) s.Redirects++;
-        if (cmd.HasLoop) s.Loops++;
-        if (cmd.IsScriptRun) s.Scripts++;
-        if (cmd.UsesSudo) s.Sudo++;
+        cmd.CountInto(s);
 
         long ms = new DateTimeOffset(now).ToUnixTimeMilliseconds();
         if (s.LastCommandChapter == chapterId && s.LastCommandAt > 0 && ms > s.LastCommandAt)
@@ -156,20 +135,19 @@ public static class GameEngine
     }
 
     /// <summary>Updates the sticky sets from the progress, recomputes XP and unlocks achievements.</summary>
-    private static GameEvents Evaluate(GameState g, ProgressView p, CommandInfo? cmd, IReadOnlyList<string> solvedNow, DateTime now)
+    private GameEvents Evaluate(GameState g, ProgressView p, CommandFacts? cmd, IReadOnlyList<string> solvedNow, DateTime now)
     {
         var ev = new GameEvents { XpBefore = g.Xp, LevelBefore = Levels.LevelOf(g.Xp) };
-        AddNew(g.CompletedChapters, ChaptersLib.Chapters.Where(c => p.CompleteLessons.Contains(c.Id)).Select(c => c.Id), ev.ChaptersCompleted);
-        AddNew(g.CompletedParts, ChaptersLib.Parts
-            .Select(part => (part.Id, Lessons: ChaptersLib.LessonsIn(part.Id)))
-            .Where(x => x.Lessons.Count > 0 && x.Lessons.All(l => g.CompletedChapters.Contains(l.Id)))
-            .Select(x => x.Id), ev.PartsCompleted);
+        AddNew(g.CompletedChapters, course.Lessons.Where(p.CompleteLessons.Contains), ev.ChaptersCompleted);
+        AddNew(g.CompletedParts, course.Parts
+            .Where(part => part.Lessons.Count > 0 && part.Lessons.All(g.CompletedChapters.Contains))
+            .Select(part => part.Id), ev.PartsCompleted);
         AddNew(g.ExamsPassed, p.Exams.Where(e => e.Value >= ExamPassPercent).Select(e => e.Key));
         AddNew(g.ExamsPerfect, p.Exams.Where(e => e.Value >= 100).Select(e => e.Key));
 
         // Achievements can depend on the level, and the level on nothing but XP, so one pass is enough.
-        var ctx = new AchievementContext(g, p, cmd, solvedNow, now);
-        foreach (var a in AchievementsLib.All)
+        var ctx = new AchievementContext(course, g, p, cmd, solvedNow, now);
+        foreach (var a in achievements)
         {
             if (g.Achievements.ContainsKey(a.Id)) continue;
             bool done;

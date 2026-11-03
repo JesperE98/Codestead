@@ -1,4 +1,4 @@
-namespace Codestead.Content.Game;
+namespace Codestead.Learning.Game;
 
 // One achievement: id, icon, category, check and counter.
 

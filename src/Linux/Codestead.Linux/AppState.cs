@@ -1,4 +1,6 @@
 using Codestead.Content.Game;
+using Codestead.Learning;
+using Codestead.Learning.Game;
 using Codestead.Shell;
 
 namespace Codestead.Linux;

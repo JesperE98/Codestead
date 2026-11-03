@@ -1,4 +1,4 @@
-namespace Codestead.Content.Game;
+namespace Codestead.Learning.Game;
 
 // A task solved by a command.
 

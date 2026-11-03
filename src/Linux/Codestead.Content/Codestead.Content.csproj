@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Codestead.Shell/Codestead.Shell.csproj" />
+    <ProjectReference Include="../../Shared/Codestead.Learning/Codestead.Learning.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Codestead.Content.Tests" />

@@ -48,6 +48,7 @@
       "Directory.Build.props"
     ],
     "exclude": [
+      "src/Shared/Codestead.Learning",
       "src/Shared/Codestead.UI/Learning",
       "src/Shared/Codestead.UI/Controls/CheckpointView.cs",
       "src/Shared/Codestead.UI/Controls/CheckpointTexts.cs",

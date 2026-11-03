@@ -1,4 +1,4 @@
-namespace Codestead.Content.Game;
+namespace Codestead.Learning.Game;
 
 /// <summary>Ten levels, from Guest to root. The titles are the UI strings level.1 … level.10.</summary>
 public static class Levels

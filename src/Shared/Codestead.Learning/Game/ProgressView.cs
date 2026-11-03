@@ -1,4 +1,4 @@
-namespace Codestead.Content.Game;
+namespace Codestead.Learning.Game;
 
 // The learner's course progress as the gamification sees it.
 

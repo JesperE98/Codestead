@@ -1,4 +1,6 @@
 using Codestead.Content.Game;
+using Codestead.Learning;
+using Codestead.Learning.Game;
 using Codestead.Shell;
 using Codestead.Shell.Commands;
 
@@ -20,7 +22,7 @@ public class GameTests
 
     private static GameEvents Run(GameState g, string line, string output = "", int exit = 0, ProgressView? p = null, DateTime? now = null,
         IReadOnlyList<SolvedTask>? solved = null) =>
-        GameEngine.OnCommand(g, p ?? P(), CommandInfo.Analyze(line, output, exit), "ch", solved ?? Array.Empty<SolvedTask>(), now ?? Noon);
+        LinuxGame.Rules.OnCommand(g, p ?? P(), CommandInfo.Analyze(line, output, exit), "ch", solved ?? Array.Empty<SolvedTask>(), now ?? Noon);
 
     // ---------- XP and levels ----------
 
@@ -75,13 +77,13 @@ public class GameTests
     {
         var g = new GameState();
         var day = new DateTime(2026, 11, 1, 20, 0, 0);
-        Assert.Equal(1, GameEngine.OnCheckpoint(g, P(), day).StreakExtendedTo);
-        Assert.Null(GameEngine.OnCheckpoint(g, P(), day.AddHours(1)).StreakExtendedTo); // same day
-        Assert.Equal(2, GameEngine.OnCheckpoint(g, P(), day.AddDays(1)).StreakExtendedTo);
-        Assert.Equal(3, GameEngine.OnCheckpoint(g, P(), day.AddDays(2)).StreakExtendedTo);
-        Assert.Null(GameEngine.OnCheckpoint(g, P(), day.AddDays(1)).StreakExtendedTo); // clock went back
+        Assert.Equal(1, LinuxGame.Rules.OnCheckpoint(g, P(), day).StreakExtendedTo);
+        Assert.Null(LinuxGame.Rules.OnCheckpoint(g, P(), day.AddHours(1)).StreakExtendedTo); // same day
+        Assert.Equal(2, LinuxGame.Rules.OnCheckpoint(g, P(), day.AddDays(1)).StreakExtendedTo);
+        Assert.Equal(3, LinuxGame.Rules.OnCheckpoint(g, P(), day.AddDays(2)).StreakExtendedTo);
+        Assert.Null(LinuxGame.Rules.OnCheckpoint(g, P(), day.AddDays(1)).StreakExtendedTo); // clock went back
         Assert.Equal(3, g.Streak);
-        Assert.Equal(1, GameEngine.OnCheckpoint(g, P(), day.AddDays(5)).StreakExtendedTo); // a gap
+        Assert.Equal(1, LinuxGame.Rules.OnCheckpoint(g, P(), day.AddDays(5)).StreakExtendedTo); // a gap
         Assert.Equal(1, g.Streak);
         Assert.Equal(3, g.BestStreak);
     }
@@ -90,10 +92,10 @@ public class GameTests
     public void Streak_is_shown_until_a_day_is_missed()
     {
         var g = new GameState { LastActiveDay = "2026-11-02", Streak = 4 };
-        Assert.Equal((4, true), GameEngine.StreakAt(g, new DateOnly(2026, 11, 2)));
-        Assert.Equal((4, false), GameEngine.StreakAt(g, new DateOnly(2026, 11, 3)));
-        Assert.Equal((0, false), GameEngine.StreakAt(g, new DateOnly(2026, 11, 4)));
-        Assert.Equal((0, false), GameEngine.StreakAt(new GameState(), new DateOnly(2026, 11, 4)));
+        Assert.Equal((4, true), GameRules.StreakAt(g, new DateOnly(2026, 11, 2)));
+        Assert.Equal((4, false), GameRules.StreakAt(g, new DateOnly(2026, 11, 3)));
+        Assert.Equal((0, false), GameRules.StreakAt(g, new DateOnly(2026, 11, 4)));
+        Assert.Equal((0, false), GameRules.StreakAt(new GameState(), new DateOnly(2026, 11, 4)));
     }
 
     [Fact]
@@ -112,7 +114,7 @@ public class GameTests
         var part = ChaptersLib.LessonsIn("grunder");
         var p = P(Keys(30), checkpoints: 10, exams: new() { ["grunder"] = 100 }, complete: part.Select(c => c.Id));
         var g = new GameState();
-        var first = GameEngine.Sync(g, p, Noon);
+        var first = LinuxGame.Rules.Sync(g, p, Noon);
         Assert.True(first.Changed);
         Assert.Equal(GameState.CurrentVersion, g.Version);
         Assert.Contains("tasks-25", g.Achievements.Keys);
@@ -121,7 +123,7 @@ public class GameTests
         Assert.Equal(XpRules.Total(g, p), g.Xp);
         Assert.Empty(g.Unaided); // never backfilled
 
-        var again = GameEngine.Sync(g, p, Noon.AddDays(1));
+        var again = LinuxGame.Rules.Sync(g, p, Noon.AddDays(1));
         Assert.False(again.Changed);
         Assert.Equal(0, again.XpGained);
         Assert.Empty(again.Achievements);
@@ -132,7 +134,7 @@ public class GameTests
     {
         var lessons = ChaptersLib.LessonsIn("start");
         var g = new GameState();
-        GameEngine.Sync(g, P(), Noon);
+        LinuxGame.Rules.Sync(g, P(), Noon);
         var ev = Run(g, "ls", p: P(Keys(1), complete: lessons.Select(c => c.Id)), solved: new[] { new SolvedTask("ch/t0", false) });
         Assert.True(ev.Celebrate);
         Assert.Equal(lessons.Select(c => c.Id), ev.ChaptersCompleted);
@@ -151,7 +153,7 @@ public class GameTests
     public void A_task_solved_after_the_solution_was_shown_is_not_unaided()
     {
         var g = new GameState();
-        GameEngine.OnSolutionShown(g, "ch/t0");
+        GameRules.OnSolutionShown(g, "ch/t0");
         Run(g, "ls", p: P(Keys(2)), solved: new[] { new SolvedTask("ch/t0", false), new SolvedTask("ch/t1", false) });
         Assert.Equal(new[] { "ch/t1" }, g.Unaided);
         Run(g, "ls", p: P(Keys(3)), solved: new[] { new SolvedTask("ch/t2", true) });
@@ -162,15 +164,15 @@ public class GameTests
     public void Exams_report_pass_and_perfect_the_first_time()
     {
         var g = new GameState();
-        var failed = GameEngine.OnExam(g, P(exams: new() { ["grunder"] = 60 }), "grunder", 60, Noon);
+        var failed = LinuxGame.Rules.OnExam(g, P(exams: new() { ["grunder"] = 60 }), "grunder", 60, Noon);
         Assert.Null(failed.ExamPassed);
         Assert.Contains("grunder", g.ExamsFailed);
-        var passed = GameEngine.OnExam(g, P(exams: new() { ["grunder"] = 90 }), "grunder", 90, Noon);
+        var passed = LinuxGame.Rules.OnExam(g, P(exams: new() { ["grunder"] = 90 }), "grunder", 90, Noon);
         Assert.Equal("grunder", passed.ExamPassed);
         Assert.False(passed.ExamPerfect);
         Assert.Contains("exam-comeback", passed.Achievements);
         Assert.True(passed.Celebrate);
-        var perfect = GameEngine.OnExam(g, P(exams: new() { ["grunder"] = 100 }), "grunder", 100, Noon);
+        var perfect = LinuxGame.Rules.OnExam(g, P(exams: new() { ["grunder"] = 100 }), "grunder", 100, Noon);
         Assert.Null(perfect.ExamPassed);
         Assert.True(perfect.ExamPerfect);
         Assert.Equal(50, perfect.XpGained);
@@ -180,11 +182,11 @@ public class GameTests
     public void Active_time_per_chapter_has_a_cap_between_commands()
     {
         var g = new GameState();
-        GameEngine.OnCommand(g, P(), CommandInfo.Analyze("ls", "", 0), "a", Array.Empty<SolvedTask>(), Noon);
-        GameEngine.OnCommand(g, P(), CommandInfo.Analyze("ls", "", 0), "a", Array.Empty<SolvedTask>(), Noon.AddSeconds(40));
-        GameEngine.OnCommand(g, P(), CommandInfo.Analyze("ls", "", 0), "a", Array.Empty<SolvedTask>(), Noon.AddHours(2));
-        GameEngine.OnCommand(g, P(), CommandInfo.Analyze("ls", "", 0), "b", Array.Empty<SolvedTask>(), Noon.AddHours(2).AddSeconds(30));
-        Assert.Equal(40 + GameEngine.MaxPauseSeconds, g.Stats.ChapterSeconds["a"]);
+        LinuxGame.Rules.OnCommand(g, P(), CommandInfo.Analyze("ls", "", 0), "a", Array.Empty<SolvedTask>(), Noon);
+        LinuxGame.Rules.OnCommand(g, P(), CommandInfo.Analyze("ls", "", 0), "a", Array.Empty<SolvedTask>(), Noon.AddSeconds(40));
+        LinuxGame.Rules.OnCommand(g, P(), CommandInfo.Analyze("ls", "", 0), "a", Array.Empty<SolvedTask>(), Noon.AddHours(2));
+        LinuxGame.Rules.OnCommand(g, P(), CommandInfo.Analyze("ls", "", 0), "b", Array.Empty<SolvedTask>(), Noon.AddHours(2).AddSeconds(30));
+        Assert.Equal(40 + GameRules.MaxPauseSeconds, g.Stats.ChapterSeconds["a"]);
         Assert.False(g.Stats.ChapterSeconds.ContainsKey("b"));
         Assert.Equal(4, g.Stats.Commands);
     }
@@ -194,7 +196,7 @@ public class GameTests
     {
         var ch = ChaptersLib.Chapters.First(c => c.Kind == ChapterKinds.Lesson && c.Tasks.Count > 0);
         var sh = Shell.Shell.Create(ChaptersLib.DefaultDistro, "en");
-        var names = GameEngine.ChapterCommands(ch, sh.Distro, sh.World);
+        var names = LinuxGame.ChapterCommands(ch, sh.Distro, sh.World);
         Assert.NotEmpty(names);
         Assert.All(names, n => Assert.True(IndexCmd.Commands.ContainsKey(n), n));
         Assert.Equal(names.Distinct(), names);
@@ -209,7 +211,7 @@ public class GameTests
         Assert.InRange(AchievementsLib.All.Count(a => a.Hidden), 8, 12);
         Assert.InRange(AchievementsLib.All.Count(a => !a.Hidden), 28, 36);
         var g = new GameState();
-        GameEngine.Sync(g, P(), Noon);
+        LinuxGame.Rules.Sync(g, P(), Noon);
         Assert.Empty(g.Achievements);
         Run(g, "ls");
         Run(g, "echo hi");
@@ -219,11 +221,11 @@ public class GameTests
     /// <summary>For every achievement: something that unlocks it.</summary>
     private static readonly Dictionary<string, Action<GameState>> Witnesses = new()
     {
-        ["first-task"] = g => GameEngine.Sync(g, P(Keys(1)), Noon),
-        ["first-chapter"] = g => GameEngine.Sync(g, P(complete: new[] { ChaptersLib.LessonsIn("grunder")[0].Id }), Noon),
-        ["tasks-25"] = g => GameEngine.Sync(g, P(Keys(25)), Noon),
-        ["tasks-100"] = g => GameEngine.Sync(g, P(Keys(100)), Noon),
-        ["tasks-all"] = g => GameEngine.Sync(g, P(Keys(5), done: 5, total: 5), Noon),
+        ["first-task"] = g => LinuxGame.Rules.Sync(g, P(Keys(1)), Noon),
+        ["first-chapter"] = g => LinuxGame.Rules.Sync(g, P(complete: new[] { ChaptersLib.LessonsIn("grunder")[0].Id }), Noon),
+        ["tasks-25"] = g => LinuxGame.Rules.Sync(g, P(Keys(25)), Noon),
+        ["tasks-100"] = g => LinuxGame.Rules.Sync(g, P(Keys(100)), Noon),
+        ["tasks-all"] = g => LinuxGame.Rules.Sync(g, P(Keys(5), done: 5, total: 5), Noon),
         ["part-grunder"] = g => Part(g, "grunder"),
         ["part-system"] = g => Part(g, "system"),
         ["part-distro"] = g => Part(g, "distro"),
@@ -231,15 +233,15 @@ public class GameTests
         ["part-natverk"] = g => Part(g, "natverk"),
         ["part-skript"] = g => Part(g, "skript"),
         ["part-verktyg"] = g => Part(g, "verktyg"),
-        ["all-families"] = g => GameEngine.Sync(g, P(new[] { "a/x@debian", "b/x@arch", "c/x@redhat" }), Noon),
-        ["checkpoints-50"] = g => GameEngine.Sync(g, P(checkpoints: 50), Noon),
-        ["exam-first"] = g => GameEngine.OnExam(g, P(exams: new() { ["grunder"] = 80 }), "grunder", 80, Noon),
-        ["exam-perfect"] = g => GameEngine.OnExam(g, P(exams: new() { ["grunder"] = 100 }), "grunder", 100, Noon),
-        ["exam-all"] = g => GameEngine.Sync(g, P(exams: ChaptersLib.Chapters.Where(c => c.Kind == ChapterKinds.Exam).ToDictionary(c => c.Part, _ => 85)), Noon),
+        ["all-families"] = g => LinuxGame.Rules.Sync(g, P(new[] { "a/x@debian", "b/x@arch", "c/x@redhat" }), Noon),
+        ["checkpoints-50"] = g => LinuxGame.Rules.Sync(g, P(checkpoints: 50), Noon),
+        ["exam-first"] = g => LinuxGame.Rules.OnExam(g, P(exams: new() { ["grunder"] = 80 }), "grunder", 80, Noon),
+        ["exam-perfect"] = g => LinuxGame.Rules.OnExam(g, P(exams: new() { ["grunder"] = 100 }), "grunder", 100, Noon),
+        ["exam-all"] = g => LinuxGame.Rules.Sync(g, P(exams: ChaptersLib.Chapters.Where(c => c.Kind == ChapterKinds.Exam).ToDictionary(c => c.Part, _ => 85)), Noon),
         ["exam-comeback"] = g =>
         {
-            GameEngine.OnExam(g, P(exams: new() { ["system"] = 10 }), "system", 10, Noon);
-            GameEngine.OnExam(g, P(exams: new() { ["system"] = 80 }), "system", 80, Noon);
+            LinuxGame.Rules.OnExam(g, P(exams: new() { ["system"] = 10 }), "system", 10, Noon);
+            LinuxGame.Rules.OnExam(g, P(exams: new() { ["system"] = 80 }), "system", 80, Noon);
         },
         ["sudo-first"] = g => Run(g, "sudo apt update"),
         ["pipe-first"] = g => Run(g, "ls | wc -l"),
@@ -260,7 +262,7 @@ public class GameTests
         ["streak-3"] = g => Days(g, 3),
         ["streak-7"] = g => Days(g, 7),
         ["streak-30"] = g => Days(g, 30),
-        ["level-max"] = g => GameEngine.Sync(g, P(Keys(370)), Noon),
+        ["level-max"] = g => LinuxGame.Rules.Sync(g, P(Keys(370)), Noon),
         ["rm-rf-root"] = g => Run(g, "sudo rm -rf /", exit: 1),
         ["cowsay"] = g => Run(g, "cowsay moo"),
         ["rtfm"] = g => Run(g, "man ls"),
@@ -277,11 +279,11 @@ public class GameTests
     };
 
     private static void Part(GameState g, string part) =>
-        GameEngine.Sync(g, P(complete: ChaptersLib.LessonsIn(part).Select(c => c.Id)), Noon);
+        LinuxGame.Rules.Sync(g, P(complete: ChaptersLib.LessonsIn(part).Select(c => c.Id)), Noon);
 
     private static void Days(GameState g, int n)
     {
-        for (int i = 0; i < n; i++) GameEngine.OnCheckpoint(g, P(), Noon.AddDays(i));
+        for (int i = 0; i < n; i++) LinuxGame.Rules.OnCheckpoint(g, P(), Noon.AddDays(i));
     }
 
     public static TheoryData<string> AchievementIds() => new(AchievementsLib.All.Select(a => a.Id));
@@ -297,7 +299,7 @@ public class GameTests
         var a = AchievementsLib.Find(id)!;
         if (a.Counter is not null)
         {
-            var (current, target) = a.Counter(new AchievementContext(new GameState(), P(), null, Array.Empty<string>(), Noon));
+            var (current, target) = a.Counter(new AchievementContext(LinuxGame.Outline, new GameState(), P(), null, Array.Empty<string>(), Noon));
             Assert.True(current < target || target == 0, $"{id} counter on a fresh state: {current}/{target}");
         }
     }

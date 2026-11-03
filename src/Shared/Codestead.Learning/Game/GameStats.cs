@@ -1,4 +1,4 @@
-namespace Codestead.Content.Game;
+namespace Codestead.Learning.Game;
 
 // Lifetime counters over what the learner has typed.
 
@@ -6,8 +6,9 @@ namespace Codestead.Content.Game;
 public sealed class GameStats
 {
     public int Commands { get; set; }
-    /// <summary>Different command names (only ones the simulator knows).</summary>
+    /// <summary>Different command names (only ones the tool knows).</summary>
     public List<string> CommandNames { get; set; } = new();
+    // Counted by Codestead Linux (its CommandInfo); other tools leave them at zero.
     public List<string> ManPages { get; set; } = new();
     public int Pipes { get; set; }
     public int LongestPipe { get; set; }
