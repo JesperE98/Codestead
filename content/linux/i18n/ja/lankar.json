@@ -1,0 +1,34 @@
+{
+  "title": "リンクとファイルの情報",
+  "tasks": {
+    "symlink": {
+      "text": "ディレクトリ `/var/log` を指すシンボリックリンク `~/log` を作ってください。",
+      "hint": "`ln -s リンク先 リンクの名前` です。リンク先が先です: `ln -s /var/log ~/log`。"
+    },
+    "relative": {
+      "text": "ホームディレクトリに移動して、`{{documents}}/{{fruits}}` を指すリンク `{{fruits}}` を相対パスで作ってください。",
+      "hint": "`cd ~` のあとに `ln -s {{documents}}/{{fruits}} {{fruits}}` です。リンクの中の相対パスは、リンクが置かれているディレクトリから数えられます。"
+    },
+    "readlink": {
+      "text": "リンク `~/{{fruits}}` がどこを指しているかを `readlink` で表示してください。"
+    },
+    "hardlink": {
+      "text": "`~/{{notes}}` にもう 1 つ名前を付けてください。`~/{{todo}}` という名前の **ハード** リンクです。",
+      "hint": "`-s` を付けない `ln` です: `ln ~/{{notes}} ~/{{todo}}`。`ls -li` を使うと、どちらも inode 番号が同じだとわかります。"
+    },
+    "stat": {
+      "text": "`stat` を使って、`/etc/shadow` のパーミッションを数字で調べてください。",
+      "hint": "`stat /etc/shadow` を実行して `Access: (0640/...)` の行を見ます。または、単に `stat -c %a /etc/shadow` です。"
+    },
+    "file": {
+      "text": "`~/{{documents}}/{{grades}}` の中身が何かを `file` で調べてください。"
+    },
+    "umask": {
+      "text": "新しいファイルを自分だけが読み書きできるように umask を変えてから、空のファイル `~/{{privateFile}}` を作ってください。",
+      "hint": "`umask 077` は、グループとその他からすべてのパーミッションを取り除きます。そのあと `touch ~/{{privateFile}}` でファイルを作ると、`rw-------` になります。"
+    },
+    "umask-back": {
+      "text": "umask をふつうの値 `022` に戻してください。"
+    }
+  }
+}
