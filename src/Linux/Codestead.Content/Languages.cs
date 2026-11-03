@@ -1,7 +1,8 @@
 namespace Codestead.Content;
 
-// Port of src/i18n/languages.ts – the languages the app is available in. Swedish is the original
-// language; English is the fallback for everything that lacks a translation.
+// The languages the app is available in, read from build/languages.json (shared with the hub and the
+// release flow). Swedish is the original language; English is the default and the fallback for
+// everything that lacks a translation.
 
 public partial class Language
 {
@@ -10,24 +11,27 @@ public partial class Language
     public string Name { get; set; } = "";
     /// <summary>Writing direction: "ltr" or "rtl".</summary>
     public string Dir { get; set; } = "ltr";
+    /// <summary>False: parked – not in the menus, its texts are not required (build/languages.json).</summary>
+    public bool Offered { get; set; } = true;
 }
 
 public static partial class LanguagesLib
 {
-    public static List<Language> Languages { get; } = new()
+    /// <summary>Every language with texts in the repository, offered or parked (build/languages.json).</summary>
+    public static IReadOnlyList<Language> All { get; } = Load();
+
+    /// <summary>The languages the app offers, in menu order. Parked languages are left out.</summary>
+    public static List<Language> Languages { get; } = All.Where(l => l.Offered).ToList();
+
+    private sealed record LanguageFile(List<Language> Languages);
+
+    private static List<Language> Load()
     {
-        new() { Code = "sv", Name = "Svenska", Dir = "ltr" },
-        new() { Code = "en", Name = "English", Dir = "ltr" },
-        new() { Code = "es", Name = "Español", Dir = "ltr" },
-        new() { Code = "zh", Name = "中文", Dir = "ltr" },
-        new() { Code = "hi", Name = "हिन्दी", Dir = "ltr" },
-        new() { Code = "ar", Name = "العربية", Dir = "rtl" },
-        new() { Code = "pt", Name = "Português", Dir = "ltr" },
-        new() { Code = "fr", Name = "Français", Dir = "ltr" },
-        new() { Code = "de", Name = "Deutsch", Dir = "ltr" },
-        new() { Code = "ru", Name = "Русский", Dir = "ltr" },
-        new() { Code = "ja", Name = "日本語", Dir = "ltr" },
-    };
+        using var s = typeof(LanguagesLib).Assembly.GetManifestResourceStream("languages.json")
+            ?? throw new InvalidOperationException("languages.json is not embedded (build/languages.json).");
+        var file = System.Text.Json.JsonSerializer.Deserialize<LanguageFile>(s, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        return file?.Languages ?? throw new InvalidOperationException("build/languages.json has no languages.");
+    }
 
     public static bool IsLang(string? code) => code is not null && Languages.Any(l => l.Code == code);
 

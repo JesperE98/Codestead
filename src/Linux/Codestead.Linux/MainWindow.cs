@@ -1215,7 +1215,7 @@ public sealed partial class MainWindow : Window
             }
             // Switching language and distribution in the pickers, as a click does, must not crash
             // (it once closed the app: the pickers were rebuilt inside their own SelectionChanged).
-            foreach (var lc in new[] { "sv", "ar", "en" })
+            foreach (var lc in new[] { "sv", "ja", "en" })
             {
                 langPicker.SelectedItem = langPicker.Items.OfType<ComboBoxItem>().First(i => Equals(i.Tag, lc));
                 Dispatcher.UIThread.RunJobs();
