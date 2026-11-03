@@ -84,7 +84,7 @@ public class CheckpointTests
     }
 
     private static CheckpointView View(string kind, string body, bool exam = false, bool solved = false) =>
-        new(Checkpoint.Parse(kind, body, 0), Texts, solved, () => Codestead.Shell.Shell.Create("ubuntu"), exam);
+        new(Checkpoint.Parse(kind, body, 0), Texts, solved, new FakeSandbox(), exam);
 
     [Fact(DisplayName = "quiz: fel svar låser inte upp, rätt svar gör det")]
     public void QuizSolves()
@@ -183,11 +183,11 @@ public class CheckpointTests
         open.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
         var terminal = view.PredictTerminal;
         Assert.NotNull(terminal);
-        Assert.True(terminal.IsEffectivelyVisible);
+        Assert.True(terminal.View.IsEffectivelyVisible);
         Assert.False(open.IsVisible);
         string? output = null;
-        terminal.CommandExecuted += r => output = r.Output;
-        var input = terminal.GetLogicalDescendants().OfType<TextBox>().First();
+        terminal.Ran += r => output = r.Output;
+        var input = (TextBox)terminal.View;
         input.Text = "echo $((2 + 3))";
         input.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
         Assert.Equal("5", output?.Trim());
@@ -208,7 +208,7 @@ public class CheckpointTests
             var view = View("try", "pwd");
             var w = new Window { Content = view };
             w.Show();
-            var input = view.GetLogicalDescendants().OfType<TerminalView>().First().GetLogicalDescendants().OfType<TextBox>().First();
+            var input = view.GetLogicalDescendants().OfType<TextBox>().First();
             input.Text = "ls";
             input.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
             Assert.False(view.IsSolved);

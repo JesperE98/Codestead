@@ -176,15 +176,8 @@ public static class Js
     /// <summary>s.replace(/re/g, fn) – convenience wrapper.</summary>
     public static string ReplaceAll(string s, Regex re, Func<Match, string> fn) => re.Replace(s, m => fn(m));
 
-    /// <summary>JSON options used for snapshots and deep clones (camelCase, like the original JSON).</summary>
-    public static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DictionaryKeyPolicy = null,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        WriteIndented = false,
-        IncludeFields = false,
-    };
+    /// <summary>JSON options used for snapshots and deep clones (camelCase, like the original JSON): the shared defaults.</summary>
+    public static readonly JsonSerializerOptions JsonOptions = Codestead.Common.JsonDefaults.Options;
 
     /// <summary>JSON.parse(JSON.stringify(x)) – deep clone.</summary>
     public static T Clone<T>(T value) =>

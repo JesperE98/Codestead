@@ -14,16 +14,14 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="12.1.4" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
-    <PackageReference Include="Velopack" Version="1.2.161" />
   </ItemGroup>
   <Import Project="../../../build/Codestead.App.props" />
   <ItemGroup>
     <ProjectReference Include="../Codestead.Shell/Codestead.Shell.csproj" />
     <ProjectReference Include="../../Shared/Codestead.UI/Codestead.UI.csproj" />
     <ProjectReference Include="../Codestead.Content/Codestead.Content.csproj" />
+    <ProjectReference Include="../Codestead.Terminal/Codestead.Terminal.csproj" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets/**" />

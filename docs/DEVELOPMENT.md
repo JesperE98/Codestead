@@ -150,11 +150,15 @@ hubben visar och texten på release-sidan. `packaging/products.json` pekar på m
 ```text
 build/Codestead.props            Namn, id:n och version för alla produkter
 src/
-├── Shared/                      Gemensamt för alla appar
-│   └── Codestead.UI/            Avalonia-delar: tema och färgsystem, markdown-vy, dialoger, spelvyer
-│                                (utmärkelser, firande), lagring, "Vad är nytt", självuppdatering (Velopack)
+├── Shared/                      Gemensamt för alla appar (beror aldrig på Linux-simulatorn)
+│   ├── Codestead.Common/        Ren .NET: språklistan (build/languages.json), översättning med platshållare,
+│   │                            JSON-inställningar, produktinfo (namn, id, version)
+│   └── Codestead.UI/            Avalonia-delar: tema och färgsystem, markdown-vy, dialoger, kontrollfrågor
+│                                (med en ISandbox som verktyget ger), spelvyer, lagring, "Vad är nytt",
+│                                självuppdatering, och appskalet i App/ (start, inställningar, nyheter, snabbtest)
 ├── Linux/                       Codestead Linux
 │   ├── Codestead.Linux/         Själva appen (Avalonia): MainWindow, MainWindow.Game
+│   ├── Codestead.Terminal/      Terminalen (TerminalView, ANSI-färger) och ShellSandbox för kontrollfrågorna
 │   ├── Codestead.Content/       Kapitel och uppgifter (Chapters/, ChapterDefinitions.cs, Checks.cs), spelmotorn
 │   │                            (Game/), språk, UI-texter (i18n/ui/*.json)
 │   ├── Codestead.Shell/         Den simulerade terminalen (bash, zsh, fish, apt, pacman, dnf, git ...)
@@ -179,6 +183,7 @@ src/
 tests/
 ├── Shared/Codestead.UI.Tests/   UI (headless): kontroller, tema och kontrast, spelvyer, ändringsloggar
 ├── Linux/Codestead.Shell.Tests/ Simulatorn
+├── Linux/Codestead.Terminal.Tests/ Terminalen och sandlådan med den riktiga simulatorn
 ├── Linux/Codestead.Content.Tests/ Alla uppgifter i alla distros och språk, spelmotorn, UI-texter
 └── Hub/Codestead.Hub.Tests/     Katalog, signatur, installation, hubbens texter
 packaging/                       Byggskript, installationstester, products.json (vilka produkter som byggs),
