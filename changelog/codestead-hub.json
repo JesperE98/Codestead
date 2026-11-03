@@ -1,5 +1,55 @@
 [
   {
+    "version": "0.1.6",
+    "date": "2026-11-03",
+    "changes": {
+      "en": [
+        "The button that opened the release notes on GitHub is gone – **What's new** shows the changes right in the hub.",
+        "The **OK** button in What's new is always visible, even when there is a lot of news – only the list scrolls."
+      ],
+      "sv": [
+        "Knappen som öppnade releaseanteckningarna på GitHub är borta – **Vad är nytt** visar ändringarna direkt i hubben.",
+        "Knappen **OK** i Vad är nytt syns alltid, även när det finns många nyheter – det är bara listan som rullar."
+      ],
+      "de": [
+        "Die Schaltfläche, die die Versionshinweise auf GitHub öffnete, ist weg – **Neuigkeiten** zeigt die Änderungen direkt im Hub.",
+        "Die Schaltfläche **OK** in den Neuigkeiten ist immer sichtbar, auch bei vielen Neuigkeiten – nur die Liste scrollt."
+      ],
+      "fr": [
+        "Le bouton qui ouvrait les notes de version sur GitHub a disparu – **Nouveautés** affiche les changements directement dans le hub.",
+        "Le bouton **OK** des Nouveautés est toujours visible, même quand il y a beaucoup de nouveautés – seule la liste défile."
+      ],
+      "es": [
+        "El botón que abría las notas de la versión en GitHub ya no está: **Novedades** muestra los cambios directamente en el hub.",
+        "El botón **OK** de Novedades siempre está visible, aunque haya muchas novedades: solo se desplaza la lista."
+      ],
+      "pt": [
+        "O botão que abria as notas da versão no GitHub foi removido – **Novidades** mostra as mudanças direto no hub.",
+        "O botão **OK** em Novidades fica sempre visível, mesmo quando há muitas novidades – só a lista rola."
+      ],
+      "ru": [
+        "Кнопки, которая открывала заметки о выпуске на GitHub, больше нет – **Что нового** показывает изменения прямо в хабе.",
+        "Кнопка **OK** в окне «Что нового» видна всегда, даже если новостей много, – прокручивается только список."
+      ],
+      "zh": [
+        "打开 GitHub 上发布说明的按钮已移除——**新功能** 直接在 Hub 中显示更改。",
+        "即使更新内容很多，新功能窗口中的 **确定** 按钮也始终可见——只有列表会滚动。"
+      ],
+      "ja": [
+        "GitHub のリリースノートを開くボタンはなくなりました。**新機能** でハブの中で直接変更を確認できます。",
+        "新機能の **OK** ボタンは、更新内容が多くても常に表示されます。スクロールするのはリストだけです。"
+      ],
+      "ar": [
+        "أُزيل الزر الذي كان يفتح ملاحظات الإصدار على GitHub – يعرض **ما الجديد** التغييرات مباشرة في الـHub.",
+        "زر **حسنًا** في ما الجديد ظاهر دائمًا، حتى عندما تكون الأخبار كثيرة – القائمة وحدها هي التي تُمرَّر."
+      ],
+      "hi": [
+        "GitHub पर रिलीज़ नोट्स खोलने वाला बटन हटा दिया गया है – **नया क्या है** बदलाव सीधे हब में दिखाता है।",
+        "नया क्या है में **ठीक है** बटन हमेशा दिखता है, भले ही बहुत सारी खबरें हों – सिर्फ़ सूची स्क्रॉल होती है।"
+      ]
+    }
+  },
+  {
     "version": "0.1.5",
     "date": "2026-11-03",
     "changes": {

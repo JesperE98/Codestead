@@ -1,5 +1,55 @@
 [
   {
+    "version": "0.5.6",
+    "date": "2026-11-03",
+    "changes": {
+      "en": [
+        "The settings are opened from the bottom of the chapter list – the extra button in the top right corner is gone.",
+        "The **OK** button in What's new is always visible, even when there is a lot of news – only the list scrolls."
+      ],
+      "sv": [
+        "Inställningarna öppnas längst ner i kapitellistan – den extra knappen uppe i högra hörnet är borta.",
+        "Knappen **OK** i Vad är nytt syns alltid, även när det finns många nyheter – det är bara listan som rullar."
+      ],
+      "de": [
+        "Die Einstellungen öffnest du unten in der Kapitelliste – die zusätzliche Schaltfläche oben rechts ist weg.",
+        "Die Schaltfläche **OK** in den Neuigkeiten ist immer sichtbar, auch bei vielen Neuigkeiten – nur die Liste scrollt."
+      ],
+      "fr": [
+        "Les paramètres s'ouvrent en bas de la liste des chapitres – le bouton supplémentaire en haut à droite a disparu.",
+        "Le bouton **OK** des Nouveautés est toujours visible, même quand il y a beaucoup de nouveautés – seule la liste défile."
+      ],
+      "es": [
+        "La configuración se abre al final de la lista de capítulos: el botón extra de la esquina superior derecha ya no está.",
+        "El botón **OK** de Novedades siempre está visible, aunque haya muchas novedades: solo se desplaza la lista."
+      ],
+      "pt": [
+        "As configurações são abertas no fim da lista de capítulos – o botão extra no canto superior direito foi removido.",
+        "O botão **OK** em Novidades fica sempre visível, mesmo quando há muitas novidades – só a lista rola."
+      ],
+      "ru": [
+        "Настройки открываются внизу списка глав – лишней кнопки в правом верхнем углу больше нет.",
+        "Кнопка **OK** в окне «Что нового» видна всегда, даже если новостей много, – прокручивается только список."
+      ],
+      "zh": [
+        "从章节列表底部打开设置——右上角多余的按钮已移除。",
+        "即使更新内容很多，新功能窗口中的 **确定** 按钮也始终可见——只有列表会滚动。"
+      ],
+      "ja": [
+        "設定は章リストのいちばん下から開きます。右上の余分なボタンはなくなりました。",
+        "新機能の **OK** ボタンは、更新内容が多くても常に表示されます。スクロールするのはリストだけです。"
+      ],
+      "ar": [
+        "تُفتح الإعدادات من أسفل قائمة الفصول – أُزيل الزر الإضافي في الزاوية العلوية اليمنى.",
+        "زر **حسنًا** في ما الجديد ظاهر دائمًا، حتى عندما تكون الأخبار كثيرة – القائمة وحدها هي التي تُمرَّر."
+      ],
+      "hi": [
+        "सेटिंग्स अब अध्यायों की सूची के नीचे से खुलती हैं – ऊपर दाएँ कोने का अतिरिक्त बटन हटा दिया गया है।",
+        "नया क्या है में **ठीक है** बटन हमेशा दिखता है, भले ही बहुत सारी खबरें हों – सिर्फ़ सूची स्क्रॉल होती है।"
+      ]
+    }
+  },
+  {
     "version": "0.5.5",
     "date": "2026-11-03",
     "changes": {

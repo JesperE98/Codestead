@@ -279,7 +279,6 @@ public sealed class MainWindow : Window
             if (updateAvailable) Add(Action("⬇  " + T("tool.update", ("version", tool!.Version)), "primary", () => _ = Install(tool, asset!)));
             if (installed is null && tool is not null && asset is not null) Add(Action("⬇  " + T("tool.install"), "primary", () => _ = Install(tool, asset)));
             if (tool?.Changes is { Count: > 0 }) Add(Action(T("tool.whatsNew"), "flat", () => ShowNews(tool.Name, Entries(tool).Take(5))));
-            if (tool?.ReleaseNotesUrl is { } notes) Add(Action(T("tool.releaseNotes"), "flat", () => OpenUrl(notes)));
             if (installed?.Previous is { } previous) Add(Action("↶  " + T("tool.rollback", ("version", previous)), "flat", () => RollBack(id)));
             if (installed is not null) Add(Action(T("tool.uninstall"), "danger-outline", () => ConfirmUninstall(id, name)));
         }
@@ -364,7 +363,7 @@ public sealed class MainWindow : Window
     private void ShowNews(string name, IEnumerable<ChangelogEntry> entries)
     {
         var texts = new WhatsNewTexts(T("whatsnew.title", ("name", name)), T("whatsnew.version"), T("whatsnew.close"));
-        overlay.ShowDialog(WhatsNewView.Build(texts, entries, Lang, overlay.CloseDialog), overlay.CloseDialog, 560);
+        overlay.ShowDialog(WhatsNewView.Build(texts, entries, Lang, overlay.CloseDialog), overlay.CloseDialog, 560, scroll: false);
     }
 
     private async Task<InstalledTool?> Install(CatalogTool tool, CatalogAsset asset)

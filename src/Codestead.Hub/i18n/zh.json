@@ -12,7 +12,6 @@
   "tool.notForPlatform": "暂不支持这台电脑。",
   "tool.downloading": "正在下载… {percent} %",
   "tool.installing": "正在安装…",
-  "tool.releaseNotes": "新功能",
   "tool.failed": "出错了：{error}",
   "tool.startFailed": "无法启动 {name}：{error}",
   "uninstall.title": "卸载 {name}？",

@@ -12,7 +12,6 @@
   "tool.notForPlatform": "इस कंप्यूटर के लिए अभी उपलब्ध नहीं है।",
   "tool.downloading": "डाउनलोड हो रहा है … {percent} %",
   "tool.installing": "इंस्टॉल हो रहा है …",
-  "tool.releaseNotes": "नया क्या है",
   "tool.failed": "कुछ गलत हो गया: {error}",
   "tool.startFailed": "{name} शुरू नहीं हो सका: {error}",
   "uninstall.title": "{name} अनइंस्टॉल करें?",

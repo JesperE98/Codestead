@@ -64,7 +64,6 @@ public sealed class MainWindow : Window
     private readonly TextBlock totalText = new() { FontSize = 13, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0) };
     private readonly ComboBox distroPicker = new() { MinWidth = 190 };
     private readonly ComboBox langPicker = new() { MinWidth = 150 };
-    private readonly Button settingsButton = new() { Content = "⚙", FontSize = 17, Padding = new Thickness(10, 4) };
     private bool updatingPickers;
 
     private readonly Grid body = new() { ColumnDefinitions = new ColumnDefinitions("270,*,4,560") };
@@ -261,14 +260,11 @@ public sealed class MainWindow : Window
             if (updatingPickers || langPicker.SelectedItem is not ComboBoxItem { Tag: string code }) return;
             Dispatcher.UIThread.Post(() => ChangeLanguage(code));
         };
-        settingsButton.Classes.Add("flat");
-        settingsButton.Click += (_, _) => OpenSettings();
 
         var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, VerticalAlignment = VerticalAlignment.Center };
         right.Children.Add(progress);
         right.Children.Add(distroPicker);
         right.Children.Add(langPicker);
-        right.Children.Add(settingsButton);
 
         var topGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto") };
         topGrid.Children.Add(brand);
@@ -352,7 +348,6 @@ public sealed class MainWindow : Window
         markdown.CommandHint = T("lesson.cmdTitle");
         terminal.InputLabel = T("terminal.input");
         sidebarSettings.Content = "⚙  " + T("settings.open");
-        ToolTip.SetTip(settingsButton, T("settings.open"));
         terminalReset.Content = "↺  " + T("terminal.reset");
         ToolTip.SetTip(terminalReset, T("terminal.resetTitle"));
         FillPickers();
@@ -1005,7 +1000,7 @@ public sealed class MainWindow : Window
             afterClose?.Invoke();
         }
         var texts = new WhatsNewTexts(T("whatsnew.title", ("name", ProductInfo.Name)), T("whatsnew.version"), T("whatsnew.close"));
-        overlay.ShowDialog(WhatsNewView.Build(texts, entries, Lang, Close), Close, 560);
+        overlay.ShowDialog(WhatsNewView.Build(texts, entries, Lang, Close), Close, 560, scroll: false);
     }
 
     private async Task OfferUpdate()

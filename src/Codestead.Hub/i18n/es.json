@@ -12,7 +12,6 @@
   "tool.notForPlatform": "Todavía no está disponible para este ordenador.",
   "tool.downloading": "Descargando … {percent} %",
   "tool.installing": "Instalando …",
-  "tool.releaseNotes": "Novedades",
   "tool.failed": "Algo salió mal: {error}",
   "tool.startFailed": "No se pudo iniciar {name}: {error}",
   "uninstall.title": "¿Desinstalar {name}?",

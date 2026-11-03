@@ -12,7 +12,6 @@
   "tool.notForPlatform": "Not available for this computer yet.",
   "tool.downloading": "Downloading … {percent} %",
   "tool.installing": "Installing …",
-  "tool.releaseNotes": "What's new",
   "tool.failed": "Something went wrong: {error}",
   "tool.startFailed": "{name} could not be started: {error}",
   "uninstall.title": "Uninstall {name}?",

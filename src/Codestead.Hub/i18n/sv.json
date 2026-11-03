@@ -12,7 +12,6 @@
   "tool.notForPlatform": "Finns inte för den här datorn än.",
   "tool.downloading": "Laddar ner … {percent} %",
   "tool.installing": "Installerar …",
-  "tool.releaseNotes": "Nyheter",
   "tool.failed": "Något gick fel: {error}",
   "tool.startFailed": "{name} kunde inte startas: {error}",
   "uninstall.title": "Avinstallera {name}?",
