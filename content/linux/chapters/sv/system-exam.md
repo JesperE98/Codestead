@@ -114,3 +114,13 @@ du -sh {{documents}}
 ---
 `-s` ger en summa för hela katalogen och `-h` gör storleken lätt att läsa.
 ```
+
+```quiz
+Du skapar `ln -s {{notes}} lank` och tar sedan bort `{{notes}}`. Vad händer när du kör `cat lank`?
+- [ ] Det gamla innehållet visas
+- [x] `No such file or directory` – länken är trasig
+- [ ] Länken tas också bort
+---
+En symbolisk länk innehåller bara en sökväg. När inget finns där längre är
+länken trasig. En hård länk hade hållit innehållet vid liv.
+```

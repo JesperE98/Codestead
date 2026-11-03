@@ -127,3 +127,12 @@ fel?
 - [ ] Nätverkskortet är avstängt
 - [ ] `/etc/hosts` saknas
 ```
+
+```quiz
+Du vill att `/tmp/x` ska innehålla filerna som finns i `{{documents}}`, inte en katalog `{{documents}}`. Vilket kommando är rätt?
+- [ ] `rsync -a {{documents}} /tmp/x`
+- [x] `rsync -a {{documents}}/ /tmp/x`
+- [ ] `scp {{documents}} /tmp/x`
+---
+Snedstrecket sist i källan betyder "det som finns i katalogen".
+```

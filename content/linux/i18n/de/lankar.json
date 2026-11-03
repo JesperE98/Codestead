@@ -1,0 +1,34 @@
+{
+  "title": "Links und Dateiinformationen",
+  "tasks": {
+    "symlink": {
+      "text": "Lege einen symbolischen Link `~/log` an, der auf das Verzeichnis `/var/log` zeigt.",
+      "hint": "`ln -s TARGET LINK_NAME` – das Ziel zuerst: `ln -s /var/log ~/log`."
+    },
+    "relative": {
+      "text": "Stell dich in dein Home-Verzeichnis und lege den Link `{{fruits}}` an, der auf `{{documents}}/{{fruits}}` zeigt – mit einem relativen Pfad.",
+      "hint": "`cd ~` und dann `ln -s {{documents}}/{{fruits}} {{fruits}}`. Ein relativer Pfad in einem Link zählt ab dem Verzeichnis, in dem der Link liegt."
+    },
+    "readlink": {
+      "text": "Zeige mit `readlink`, wohin der Link `~/{{fruits}}` zeigt."
+    },
+    "hardlink": {
+      "text": "Gib `~/{{notes}}` einen weiteren Namen: einen **harten** Link namens `~/{{todo}}`.",
+      "hint": "`ln` ohne `-s`: `ln ~/{{notes}} ~/{{todo}}`. Mit `ls -li` siehst du, dass beide dieselbe Inode-Nummer haben."
+    },
+    "stat": {
+      "text": "Finde mit `stat` die Rechte von `/etc/shadow` als Ziffern heraus.",
+      "hint": "`stat /etc/shadow` und sieh dir die Zeile `Access: (0640/...)` an – oder einfach `stat -c %a /etc/shadow`."
+    },
+    "file": {
+      "text": "Finde mit `file` heraus, was `~/{{documents}}/{{grades}}` enthält."
+    },
+    "umask": {
+      "text": "Ändere die umask so, dass neue Dateien nur von dir gelesen und geschrieben werden können, und lege dann die leere Datei `~/{{privateFile}}` an.",
+      "hint": "`umask 077` nimmt der Gruppe und allen anderen jedes Recht. Lege die Datei dann mit `touch ~/{{privateFile}}` an – sie bekommt `rw-------`."
+    },
+    "umask-back": {
+      "text": "Setze die umask wieder auf den üblichen Wert `022` zurück."
+    }
+  }
+}

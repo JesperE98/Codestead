@@ -116,3 +116,13 @@ du -sh {{documents}}
 `-s` gibt eine einzige Summe für das ganze Verzeichnis, und `-h` macht die
 Größe leicht lesbar.
 ```
+
+```quiz
+Du legst `ln -s {{notes}} link` an und entfernst dann `{{notes}}`. Was passiert, wenn du `cat link` ausführst?
+- [ ] Es zeigt den alten Inhalt
+- [x] `No such file or directory` – der Link ist kaputt
+- [ ] Der Link wird ebenfalls entfernt
+---
+Ein symbolischer Link enthält nur einen Pfad. Wenn dort nichts mehr ist, ist
+der Link kaputt. Ein harter Link hätte den Inhalt am Leben gehalten.
+```

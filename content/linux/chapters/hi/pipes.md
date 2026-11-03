@@ -122,6 +122,31 @@ sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ls /etc | wc -l
 ```
 
+## Input से arguments तक – `xargs`
+
+कुछ commands pipe से पढ़ते ही नहीं – उन्हें नाम **arguments** के रूप में चाहिए:
+`rm`, `mkdir`, `touch`, और `wc` जब उसे files के अंदर गिनना हो। `xargs` यह कमी पूरी
+करता है: वह अपने input के शब्द पढ़ता है और उन्हें किसी command के बाद लगा देता है।
+
+```sh
+find {{documents}} -type f | xargs wc -l
+```
+
+यह वैसा ही है जैसे आप हर file का नाम ख़ुद `wc -l` के बाद लिखें। `-n 1` के साथ
+`xargs` हर शब्द के लिए command एक बार चलाता है, और `-I {}` के साथ हर line के लिए
+एक बार, `{}` की जगह वह line रखकर:
+
+```sh
+ls {{documents}} | xargs -I {} echo "File: {}"
+```
+
+```predict
+$ printf 'a\nb\nc\n' | xargs echo
+a b c
+---
+`xargs` ने तीनों lines इकट्ठा कीं और `echo a b c` चलाया – एक बार।
+```
+
 ## Screen और file दोनों – `tee`
 
 `tee` अपना input आगे भी भेजता है *और* उसकी एक copy file में save भी करता है:

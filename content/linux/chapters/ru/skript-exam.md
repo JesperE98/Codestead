@@ -104,3 +104,13 @@ $ for i in 1 2 3 4 5; do if [ $i -eq 3 ]; then continue; fi; echo $i; done
 ```try
 for i in $(seq 1 3); do echo "Round $i"; done
 ```
+
+```quiz
+Какая строка crontab запускает `~/backup.sh` в 23:45 каждое воскресенье?
+- [ ] `23 45 * * 0 ~/backup.sh`
+- [x] `45 23 * * 0 ~/backup.sh`
+- [ ] `45 23 0 * * ~/backup.sh`
+---
+Сначала минута, потом час: 45 23. Воскресенье – день недели 0 (или 7), он
+указывается в пятом поле.
+```

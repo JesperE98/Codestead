@@ -392,6 +392,8 @@ EXEMPEL
         {
             void Walk(string label, FsNode node)
             {
+                // grep -r does not follow symbolic links inside the directories it searches.
+                if (node.Type == "link") return;
                 if (node.Type == "file")
                 {
                     if (VfsLib.HasPerm(node, user, 'r')) files.Add((label, node.Content ?? ""));

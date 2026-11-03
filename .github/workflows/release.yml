@@ -5,8 +5,9 @@ name: Release
 #
 # How versions work (packaging/products.json, build/Codestead.props):
 #   build/Codestead.props holds only major.minor per product (CodesteadLinuxVersion = 0.5).
-#   Every push to main that changes a product's files (its "paths" in products.json) since its last
-#   release becomes the next patch release: 0.5.0, 0.5.1, 0.5.2 ... For 0.6, change 0.5 to 0.6.
+#   Every push to main that changes a product's files (its "paths" minus "exclude" in products.json)
+#   since its last release becomes the next patch release: 0.5.0, 0.5.1, 0.5.2 ... For 0.6, change 0.5
+#   to 0.6. A product whose files did not change keeps its last release.
 #   => Windows and Linux artifacts are built for every product, installed and smoke-tested on clean
 #      systems (Windows Server 2022/2025, Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS), the hub
 #      installs and starts the tool end to end, and only then the changed products are published in

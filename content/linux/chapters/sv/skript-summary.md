@@ -22,6 +22,16 @@ read` går igenom en fil rad för rad. `case` väljer mellan mönster, funktione
 är namngivna kodbitar med egna `$1`, och `read` ber användaren om indata.
 `exit 1` talar om för den som anropade skriptet att något gick fel.
 
+## Schemalagda jobb med cron
+
+**cron** kör jobben i din **crontab** på bestämda tider. Varje rad har fem
+tidsfält – minut, timme, dag i månaden, månad och veckodag – och sedan
+kommandot; `*` betyder varje och `*/5` var femte. `crontab -l` visar jobben,
+och `crontab -` installerar nya från indata – och ersätter alla gamla. Jobben
+körs utan din terminals inställningar och med en kort `PATH`, så skicka deras
+utdata till en fil. `journalctl -u cron` visar varje körning, och
+`systemctl list-timers` visar systemd:s timers.
+
 ## Kommandon och syntax
 
 | Syntax | Gör |
@@ -46,3 +56,8 @@ read` går igenom en fil rad för rad. `case` väljer mellan mönster, funktione
 | `read -p "Fråga " var` | Läs en rad från tangentbordet |
 | `exit 1` | Avsluta skriptet med en slutkod |
 | `set -euo pipefail` | Stoppa skriptet vid första felet |
+| `crontab -l` · `crontab -r` | Visa · ta bort din crontab |
+| `echo '* * * * * kommando' \| crontab -` | Installera en crontab från indata (ersätter den gamla) |
+| `(crontab -l; echo 'RAD') \| crontab -` | Lägg till ett jobb och behåll de gamla |
+| `MIN TIMME DAG MÅNAD VECKODAG kommando` | En crontab-rad, t.ex. `30 2 * * 1-5` |
+| `systemctl list-timers` | Visa systemd:s timers |

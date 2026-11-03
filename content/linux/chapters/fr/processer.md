@@ -174,6 +174,40 @@ laisser continuer à tourner tout en gardant votre invite ?
 arrière-plan, alors que `fg` le ramènerait au premier plan.
 ```
 
+### Continuer après la déconnexion – `nohup`
+
+Quand vous fermez le terminal ou la connexion ssh, les programmes que vous avez
+lancés reçoivent le signal **SIGHUP** (*hang up*) et se terminent – les jobs en
+arrière-plan aussi. `nohup` fait ignorer ce signal à une commande :
+
+```sh
+nohup ./long-job.sh &
+```
+
+La sortie qui se serait affichée dans le terminal atterrit plutôt dans le
+fichier `nohup.out` :
+
+```predict
+$ nohup echo done
+$ cat nohup.out
+nohup: ignoring input and appending output to 'nohup.out'
+done
+```
+
+Pour les programmes qui doivent toujours tourner, un **service** vaut mieux –
+vous les découvrirez dans la partie sur l'administration système.
+
+### Surveiller une commande – `watch`
+
+`watch` relance une commande toutes les deux secondes et affiche le résultat
+sur un écran vierge – pratique pour regarder un fichier grossir ou un disque se
+remplir. Quittez avec `Ctrl+C`. Dans le simulateur, le résultat s'affiche une
+seule fois.
+
+```sh
+watch -n 5 'ls -l /tmp'
+```
+
 ## Comment va l'ordinateur ?
 
 Deux petites commandes donnent un aperçu rapide :

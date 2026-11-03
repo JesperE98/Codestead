@@ -1,0 +1,33 @@
+{
+  "title": "Copier des fichiers via SSH",
+  "tasks": {
+    "config": {
+      "text": "Créez `~/.ssh/config` pour que `ssh srv` vous connecte en tant que `{{user}}` sur `192.168.1.10`. Lancez ensuite `hostname` sur le serveur avec `ssh srv`.",
+      "hint": "Trois lignes : `Host srv`, `    HostName 192.168.1.10` et `    User {{user}}`. Écrivez-les avec `echo ... >> ~/.ssh/config`, puis lancez `ssh srv hostname`."
+    },
+    "scp-up": {
+      "text": "Copiez `~/{{notes}}` dans votre répertoire personnel sur le serveur avec `scp`.",
+      "hint": "`scp ~/{{notes}} srv:` – les deux-points après `srv` signifient « sur le serveur », et sans chemin, le fichier atterrit dans le répertoire personnel là-bas."
+    },
+    "scp-down": {
+      "text": "Récupérez le fichier `{{welcomeFile}}` du répertoire personnel sur le serveur dans le répertoire `~/{{downloads}}`.",
+      "hint": "La source d'abord, la destination en dernier : `scp srv:{{welcomeFile}} ~/{{downloads}}/`."
+    },
+    "rsync-local": {
+      "text": "Sauvegardez le contenu de `~/{{documents}}` dans le répertoire `/tmp/{{documents}}` avec `rsync -av`.",
+      "hint": "La barre oblique après la source signifie « ce qu'il contient » : `rsync -av ~/{{documents}}/ /tmp/{{documents}}`."
+    },
+    "rsync-again": {
+      "text": "Créez le fichier `~/{{documents}}/{{todo}}` et relancez le même `rsync -av`. Seul le nouveau fichier devrait être envoyé.",
+      "hint": "`touch ~/{{documents}}/{{todo}}` puis `rsync -av ~/{{documents}}/ /tmp/{{documents}}`. Sans `-a`, tout est envoyé à chaque fois."
+    },
+    "rsync-server": {
+      "text": "Synchronisez le contenu de `~/{{documents}}` vers le répertoire `{{documents}}` de votre répertoire personnel sur le serveur.",
+      "hint": "Comme avant, mais avec le serveur comme destination : `rsync -av ~/{{documents}}/ srv:{{documents}}/`."
+    },
+    "dry-run": {
+      "text": "Supprimez `~/{{documents}}/{{todo}}`, puis essayez `rsync -av --delete` vers `/tmp/{{documents}}` avec `-n` – pour voir ce qui serait supprimé, sans que rien ne se passe.",
+      "hint": "`rm ~/{{documents}}/{{todo}}` puis `rsync -avn --delete ~/{{documents}}/ /tmp/{{documents}}`."
+    }
+  }
+}

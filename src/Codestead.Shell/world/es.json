@@ -38,7 +38,8 @@
     "helloFile": "hola.txt",
     "nameVar": "nombre",
     "lineVar": "linea",
-    "heredocEnd": "FIN"
+    "heredocEnd": "FIN",
+    "privateFile": "privado.txt"
   },
   "words": {
     "userFull": "Alumno",

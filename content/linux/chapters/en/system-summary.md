@@ -24,13 +24,24 @@ is run with `./` because the directory you're in isn't part of `PATH`.
 `sudo` runs a single command as root and asks for your own password. On
 Ubuntu, the users in the group `sudo` may use it.
 
+## Links and file information
+
+A file's contents and permissions live in an **inode**, and the names in a
+directory point to inodes. `ln -s` makes a **symbolic link**, a small file with
+a path, which breaks if the target disappears; a relative path in it counts
+from the link's own directory. `ln` without `-s` makes a **hard link**, one
+more name for the same inode. `stat` shows everything about a file, `file`
+tells what it contains whatever its name, and the **umask** decides the
+permissions of new files: with `022` they get `644`, with `077` only `600`.
+
 ## Processes and jobs
 
 Every running program is a process with a PID and a parent (PPID). `ps aux`
 shows them all, and `top` shows them live, sorted by processor use. `kill`
 sends a signal: `SIGTERM` (15) by default, and `SIGKILL` (9) as the last
 resort. With `&` a command runs in the background, and `jobs`, `fg` and `bg`
-let you manage the jobs in your terminal.
+let you manage the jobs in your terminal. `nohup` keeps a command running
+after you log out, and `watch` runs a command again and again.
 
 ## Archives and compression
 
@@ -56,6 +67,12 @@ which are easy to share with Windows and macOS.
 | `chmod 644 file` · `chmod u+x file` | Change permissions with numbers · symbols |
 | `sudo command` · `sudo -i` | Run a command as root · start a root shell |
 | `sudo tee -a file` | At the end of a pipe: add text to a file that only root may change |
+| `ln -s target name` · `ln file name` | Create a symbolic · hard link |
+| `readlink link` · `realpath path` | Where a link points · the full path without links |
+| `ls -li` | Show inode numbers and link counts |
+| `stat file` · `stat -c '%a %U' file` | Everything about a file · just what you ask for |
+| `file file` | What a file contains |
+| `umask` · `umask 077` | Show · set the permissions new files lose |
 | `ps` · `ps aux` · `ps -ef` | Your processes · all processes · with the parent's PID |
 | `ps aux --sort=-%cpu` | All processes, the heaviest first |
 | `pgrep -l name` | Find the PID of a process by name |
@@ -64,6 +81,8 @@ which are easy to share with Windows and macOS.
 | `pkill pattern` · `killall name` | Stop processes by name |
 | `command &` | Run a command in the background |
 | `jobs` · `fg %1` · `bg %1` · `kill %1` | List · foreground · background · end a job |
+| `nohup command &` | Keep running after you log out |
+| `watch -n 5 command` | Run a command every five seconds |
 | `uptime` · `free -h` | Load · memory |
 | `tar -czvf archive.tar.gz dir` | Pack and compress a directory |
 | `tar -tzvf archive.tar.gz` | List the contents of an archive |

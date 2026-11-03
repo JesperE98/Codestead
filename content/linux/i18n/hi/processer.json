@@ -25,6 +25,10 @@
     "kill-jobb": {
       "text": "Background job को `kill` और job number (`%1`) या उसके PID से ख़त्म कीजिए।"
     },
+    "nohup": {
+      "text": "`nohup` के साथ `sleep 600` को background में start कीजिए, ताकि आपके logout करने पर भी वह चलता रहे।",
+      "hint": "`nohup sleep 600 &` – `nohup` पहले और `&` आख़िर में।"
+    },
     "server": {
       "text": "Server `myserver` root के रूप में चल रहा है। उसे रोकिए – `pkill` या `kill` और सही privileges के साथ।",
       "hint": "सामान्य user के रूप में आपको \"Operation not permitted\" मिलेगा। आगे `sudo` लगाइए।"

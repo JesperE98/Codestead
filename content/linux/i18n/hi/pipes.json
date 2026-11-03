@@ -19,6 +19,10 @@
     },
     "devnull": {
       "text": "`ls /{{missing}}` चलाइए, लेकिन error message को `/dev/null` में भेज दीजिए ताकि कुछ भी न दिखे।"
+    },
+    "xargs": {
+      "text": "`~/{{documents}}` की हर file की lines गिनिए: `find -type f` से files ढूँढिए और `xargs` से उन्हें `wc -l` को दीजिए।",
+      "hint": "`find ~/{{documents}} -type f | xargs wc -l` – `wc` pipe से file names नहीं पढ़ता, लेकिन `xargs` उन्हें arguments में बदल देता है।"
     }
   }
 }

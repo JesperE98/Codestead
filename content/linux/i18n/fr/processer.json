@@ -25,6 +25,10 @@
     "kill-jobb": {
       "text": "Terminez le job en arrière-plan avec `kill` et le numéro du job (`%1`) ou son PID."
     },
+    "nohup": {
+      "text": "Lancez `sleep 600` en arrière-plan avec `nohup`, pour qu'il continue à tourner même si vous vous déconnectiez.",
+      "hint": "`nohup sleep 600 &` – `nohup` en premier et `&` en dernier."
+    },
     "server": {
       "text": "Le serveur `myserver` tourne en tant que root. Arrêtez-le – avec `pkill` ou `kill` et les bons privilèges.",
       "hint": "En tant qu'utilisateur ordinaire, vous obtiendrez « Operation not permitted ». Mettez `sudo` devant."

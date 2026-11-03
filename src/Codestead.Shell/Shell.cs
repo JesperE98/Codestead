@@ -29,6 +29,8 @@ public partial class ShellSnapshot
     /// <summary>zsh/fish shells started on top of the first bash shell.</summary>
     public List<ShellFrame>? Shells { get; set; }
     public DiskState? Disks { get; set; }
+    /// <summary>The shell's umask (null means the usual 022).</summary>
+    public int? Umask { get; set; }
 }
 
 public partial class ExecResult
@@ -143,7 +145,8 @@ public partial class Shell
     {
         Distro = DistrosLib.GetDistro(s.DistroId);
         World = Codestead.Shell.World.Get(s.World ?? WorldMigration.LegacyWorld);
-        Vfs = new VFS(s.Fs);
+        Vfs = new VFS(s.Fs) { Umask = s.Umask ?? Js.Oct(22) };
+        Vfs.JoinHardLinks();
         Cwd = s.Cwd;
         Env = s.Env;
         Aliases = s.Aliases;
@@ -287,6 +290,7 @@ public partial class Shell
         Services = Services,
         Shells = ShellStack,
         Disks = Disks,
+        Umask = Vfs.Umask == Js.Oct(22) ? null : Vfs.Umask,
     };
 
     /// <summary>The snapshot as JSON, for saving.</summary>
@@ -477,6 +481,8 @@ public partial class Shell
             return Result(p.Line);
         }
 
+        // Scheduled jobs whose time has come run first (cron), as they would have while you were typing.
+        if (partial is null) Commands.CronCmd.Tick(this);
         var text = partial is not null ? $"{partial}\n{line}" : line;
         Node ast;
         try
@@ -1741,7 +1747,8 @@ public partial class Shell
             }
             results = next;
         }
-        var found = results.Where(r => r != "" && Vfs.TryLookup(Resolve(r), user) is not null).ToList();
+        // Broken symbolic links match too (they exist, even if what they point to does not).
+        var found = results.Where(r => r != "" && Vfs.TryLookupLink(Resolve(r), user) is not null).ToList();
         return segs.Contains("**") && ShellMode != "bash" ? found.SortJs() : found;
     }
 
@@ -1759,7 +1766,8 @@ public partial class Shell
             {
                 foreach (var (n, child) in node.Children!)
                 {
-                    if (child.Type == "file" && VfsLib.HasPerm(child, user, 'x')) names.Add(n);
+                    var target = child.Type == "link" ? Vfs.TryLookup($"{dir}/{n}", user) : child;
+                    if (target?.Type == "file" && VfsLib.HasPerm(target, user, 'x')) names.Add(n);
                 }
             }
         }
@@ -1797,7 +1805,7 @@ public partial class Shell
             if (node is null || node.Type != "dir") return (line, new List<string>());
             candidates = node.Children!
                 .Where(kv => kv.Key.StartsWith(prefix, StringComparison.Ordinal) && (prefix.StartsWith('.') || !kv.Key.StartsWith('.')))
-                .Select(kv => kv.Value.Type == "dir" ? $"{kv.Key}/" : kv.Key)
+                .Select(kv => kv.Value.Type == "dir" || (kv.Value.Type == "link" && Vfs.TryLookup(Resolve($"{dirPath.TrimEnd('/')}/{kv.Key}"), CurrentUser())?.Type == "dir") ? $"{kv.Key}/" : kv.Key)
                 .ToList()
                 .SortJs();
         }
@@ -1859,8 +1867,10 @@ public static partial class ShellLib
     /// <summary>If the node is `sleep N`: the number of seconds, otherwise null.</summary>
     public static double? SleepSeconds(Node node)
     {
-        if (node is not SimpleNode s || s.Words.Count != 2 || s.Words[0].Raw != "sleep") return null;
-        var m = SleepRe.Match(s.Words[1].Raw);
+        // "nohup sleep 60 &" is a sleep in the background too.
+        int skip = node is SimpleNode n0 && n0.Words.Count == 3 && n0.Words[0].Raw == "nohup" ? 1 : 0;
+        if (node is not SimpleNode s || s.Words.Count != 2 + skip || s.Words[skip].Raw != "sleep") return null;
+        var m = SleepRe.Match(s.Words[1 + skip].Raw);
         if (!m.Success) return null;
         var n = double.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
         return n * (m.Groups[2].Value == "m" ? 60 : m.Groups[2].Value == "h" ? 3600 : 1);

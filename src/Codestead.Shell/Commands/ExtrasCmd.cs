@@ -303,6 +303,15 @@ BESKRIVNING
        vim har lägen: tryck i för att skriva, Esc för att gå tillbaka,
        :w för att spara och :q för att avsluta (:q! utan att spara).
 """),
+        Editor("vi", "Texteditor (oftast vim i ett enklare läge)", """
+NAMN
+       vi - den klassiska texteditorn i Unix
+
+BESKRIVNING
+       I de flesta distributioner startar vi en enkel variant av vim. Samma
+       knappar gäller: i för att skriva, Esc, :w för att spara och :q för att
+       avsluta (:wq sparar och avslutar).
+"""),
         Editor("nano", "Enkel texteditor", """
 NAMN
        nano - en enkel texteditor

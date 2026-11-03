@@ -35,6 +35,7 @@ Every program has three streams: stdin, stdout and stderr. `>` sends stdout
 to a file (and overwrites it), `>>` appends, `<` reads stdin from a file and
 `2>` redirects error messages – for example to `/dev/null`. A pipe `|` sends
 the output of one command into the next, and `tee` saves a copy on the way.
+`xargs` turns the words in its input into arguments for a command.
 `;`, `&&` and `||` run several commands on one line.
 
 ## Text processing with sed, tr and awk
@@ -68,6 +69,7 @@ pattern before `{ }` chooses lines, and `END { }` runs after the last line.
 | `uniq` | Removes repeated adjacent lines | `-c` counts them |
 | `man` | Shows the manual page | |
 | `tee` | Passes input on and saves a copy | |
+| `xargs` | Turns its input into arguments for a command | `-n 1` one at a time, `-I {}` one per line |
 | `tr` | Translates characters | `-d` delete, `-s` squeeze |
 | `sed` | Edits a stream of lines | `s/…/…/g`, `d`, `p`, `q`, `-n`, `-i`, `-E`, `-e` |
 | `cut` | Picks out fields | `-d` separator, `-f` field |

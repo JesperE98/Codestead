@@ -169,6 +169,38 @@ O `Ctrl+Z` pausa o programa. O `bg` deixa um job parado continuar em
 segundo plano, enquanto o `fg` o traria de volta para o primeiro plano.
 ```
 
+### Continuar rodando depois do logout – `nohup`
+
+Quando você fecha o terminal ou a conexão ssh, os programas que você iniciou
+recebem o sinal **SIGHUP** (*hang up*) e se encerram – inclusive os jobs em
+segundo plano. O `nohup` faz um comando ignorar esse sinal:
+
+```sh
+nohup ./long-job.sh &
+```
+
+A saída que apareceria no terminal vai parar no arquivo `nohup.out`:
+
+```predict
+$ nohup echo done
+$ cat nohup.out
+nohup: ignoring input and appending output to 'nohup.out'
+done
+```
+
+Para programas que devem estar sempre rodando, um **serviço** é melhor – você
+vai conhecê-los na parte sobre administração de sistemas.
+
+### Acompanhando um comando – `watch`
+
+O `watch` executa um comando de novo a cada dois segundos e mostra o resultado
+em uma tela limpa – prático para ver um arquivo crescer ou um disco encher.
+Saia com `Ctrl+C`. No simulador, o resultado é mostrado uma vez.
+
+```sh
+watch -n 5 'ls -l /tmp'
+```
+
 ## Como está o computador?
 
 Dois comandos pequenos dão uma visão geral rápida:

@@ -1,0 +1,34 @@
+{
+  "title": "链接和文件信息",
+  "tasks": {
+    "symlink": {
+      "text": "创建一个指向目录 `/var/log` 的符号链接 `~/log`。",
+      "hint": "`ln -s 目标 链接名`——目标在前：`ln -s /var/log ~/log`。"
+    },
+    "relative": {
+      "text": "进入你的主目录，用相对路径创建指向 `{{documents}}/{{fruits}}` 的链接 `{{fruits}}`。",
+      "hint": "先 `cd ~`，然后 `ln -s {{documents}}/{{fruits}} {{fruits}}`。链接中的相对路径从链接所在的目录算起。"
+    },
+    "readlink": {
+      "text": "用 `readlink` 显示链接 `~/{{fruits}}` 指向哪里。"
+    },
+    "hardlink": {
+      "text": "给 `~/{{notes}}` 再起一个名字：一个名为 `~/{{todo}}` 的**硬**链接。",
+      "hint": "不加 `-s` 的 `ln`：`ln ~/{{notes}} ~/{{todo}}`。用 `ls -li` 可以看到两者的 inode 编号相同。"
+    },
+    "stat": {
+      "text": "用 `stat` 查出 `/etc/shadow` 的数字形式权限。",
+      "hint": "运行 `stat /etc/shadow`，看 `Access: (0640/...)` 这一行——或者直接用 `stat -c %a /etc/shadow`。"
+    },
+    "file": {
+      "text": "用 `file` 查出 `~/{{documents}}/{{grades}}` 包含什么。"
+    },
+    "umask": {
+      "text": "修改 umask，让新文件只有你自己能读写，然后创建空文件 `~/{{privateFile}}`。",
+      "hint": "`umask 077` 会去掉所属组和其他人的全部权限。然后用 `touch ~/{{privateFile}}` 创建文件——它会得到 `rw-------`。"
+    },
+    "umask-back": {
+      "text": "把 umask 改回常见的值 `022`。"
+    }
+  }
+}

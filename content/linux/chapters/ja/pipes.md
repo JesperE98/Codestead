@@ -120,6 +120,32 @@ sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ls /etc | wc -l
 ```
 
+## 入力から引数へ – `xargs`
+
+パイプからはまったく読まず、名前を **引数** として受け取りたいコマンドも
+あります。`rm`、`mkdir`、`touch`、そしてファイルの中を数えるときの `wc` です。
+`xargs` はその橋渡しをします。入力の単語を読み、それをコマンドの後ろに
+並べます。
+
+```sh
+find {{documents}} -type f | xargs wc -l
+```
+
+これは、すべてのファイル名を自分で `wc -l` の後ろに書くのと同じです。`-n 1` を
+付けると `xargs` は単語ごとに 1 回ずつコマンドを実行し、`-I {}` を付けると行ごとに
+1 回ずつ、`{}` をその行に置き換えて実行します。
+
+```sh
+ls {{documents}} | xargs -I {} echo "File: {}"
+```
+
+```predict
+$ printf 'a\nb\nc\n' | xargs echo
+a b c
+---
+`xargs` は 3 行を集めて、`echo a b c` を 1 回だけ実行しました。
+```
+
 ## 画面とファイルの両方へ – `tee`
 
 `tee` は入力をそのまま次へ渡し、*さらに* ファイルにコピーを保存します。

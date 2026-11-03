@@ -423,9 +423,8 @@ Drücke bei den Fragen von `ssh-keygen` Enter, um die Standarddatei
 Server ein. Danach fragt ssh nicht mehr nach einem Passwort. Zeige den privaten
 Schlüssel niemals jemandem!
 
-Mit `scp` und `rsync` kannst du Dateien über SSH kopieren, und in der Datei
-`~/.ssh/config` kannst du Servern kurze Namen geben – aber das muss bis zu
-einem späteren Kapitel warten.
+Wie du mit `scp` und `rsync` Dateien über SSH kopierst und Servern in
+`~/.ssh/config` kurze Namen gibst, lernst du im nächsten Kapitel.
 
 ## Wenn das Netzwerk nicht funktioniert
 

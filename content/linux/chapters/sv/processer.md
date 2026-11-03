@@ -160,6 +160,38 @@ köras medan du behåller prompten?
 bakgrunden, medan `fg` skulle ta tillbaka det till förgrunden.
 ```
 
+### Fortsätt efter utloggning – `nohup`
+
+När du stänger terminalen eller ssh-anslutningen får programmen du startat
+signalen **SIGHUP** (*hang up*) och avslutas – bakgrundsjobb också. `nohup`
+gör att ett kommando struntar i den signalen:
+
+```sh
+nohup ./langt-jobb.sh &
+```
+
+Utdata som skulle ha visats i terminalen hamnar i stället i filen `nohup.out`:
+
+```predict
+$ nohup echo done
+$ cat nohup.out
+nohup: ignoring input and appending output to 'nohup.out'
+done
+```
+
+För program som alltid ska köras är en **tjänst** bättre – dem möter du i
+delen om systemadministration.
+
+### Följ ett kommando – `watch`
+
+`watch` kör ett kommando igen varannan sekund och visar resultatet på en ren
+skärm – praktiskt för att se en fil växa eller en disk fyllas. Avsluta med
+`Ctrl+C`. I simulatorn visas resultatet en gång.
+
+```sh
+watch -n 5 'ls -l /tmp'
+```
+
 ## Hur mår datorn?
 
 Två små kommandon ger en snabb överblick:

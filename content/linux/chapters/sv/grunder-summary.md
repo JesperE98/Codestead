@@ -35,7 +35,8 @@ Varje program har tre strömmar: stdin, stdout och stderr. `>` skickar stdout
 till en fil (och skriver över den), `>>` lägger till, `<` läser stdin från en
 fil och `2>` omdirigerar felmeddelanden – till exempel till `/dev/null`. En
 pipe `|` skickar utdata från ett kommando in i nästa, och `tee` sparar en
-kopia på vägen. `;`, `&&` och `||` kör flera kommandon på en rad.
+kopia på vägen. `xargs` gör orden i sin indata till argument till ett kommando.
+`;`, `&&` och `||` kör flera kommandon på en rad.
 
 ## Textbearbetning med sed, tr och awk
 
@@ -69,6 +70,7 @@ raden.
 | `uniq` | Tar bort upprepade rader som ligger intill varandra | `-c` räknar dem |
 | `man` | Visar manualsidan | |
 | `tee` | Skickar indata vidare och sparar en kopia | |
+| `xargs` | Gör indata till argument till ett kommando | `-n 1` en i taget, `-I {}` en per rad |
 | `tr` | Byter tecken | `-d` ta bort, `-s` pressa ihop |
 | `sed` | Redigerar en ström av rader | `s/…/…/g`, `d`, `p`, `q`, `-n`, `-i`, `-E`, `-e` |
 | `cut` | Plockar ut fält | `-d` avgränsare, `-f` fält |

@@ -5,8 +5,10 @@ For each product in packaging/products.json:
   - major.minor comes from build/Codestead.props (e.g. CodesteadLinuxVersion = 0.5);
   - the patch number is one more than the newest release <id>-v<major.minor>.<patch> in the releases
     repository, or 0 if there is none;
-  - a new version is only made if the product's files ("paths") changed since the commit the newest
-    release was built from (recorded as <!-- codestead-source: SHA --> in its release notes).
+  - a new version is only made if the product's files ("paths", minus "exclude") changed since the commit
+    the newest release was built from (recorded as <!-- codestead-source: SHA --> in its release notes).
+    "exclude" lists files in a shared folder that the product does not use, e.g. the lesson controls in
+    src/Codestead.UI for the hub (tests/Codestead.Hub.Tests checks that the hub really does not use them).
 Publishing also needs WANT_PUBLISH=true (push to main, or "publish" ticked) and both secrets.
 Writes products=[...] and publish=[...] to $GITHUB_OUTPUT.
 """
@@ -33,12 +35,17 @@ def source_commit(tag):
     return m.group(1) if m else None
 
 
-def changed_since(sha, paths):
+def pathspecs(product):
+    """The product's files as git pathspecs: its paths (globs allowed) without its excludes."""
+    return list(product["paths"]) + [f":(exclude){e}" for e in product.get("exclude", [])]
+
+
+def changed_since(sha, specs):
     if sha is None:
         return True
     if run("git", "cat-file", "-e", f"{sha}^{{commit}}").returncode != 0:
         return True  # unknown commit (e.g. history rewritten): treat as changed
-    return run("git", "diff", "--quiet", sha, "HEAD", "--", *paths).returncode != 0
+    return run("git", "diff", "--quiet", sha, "HEAD", "--", *specs).returncode != 0
 
 
 def main():
@@ -66,7 +73,7 @@ def main():
         patches = sorted(int(m.group(1)) for t in tags if (m := re.fullmatch(rf"{re.escape(pid)}-v{re.escape(minor)}\.(\d+)", t)))
         if patches:
             last = f"{minor}.{patches[-1]}"
-            changed = changed_since(source_commit(f"{pid}-v{last}"), p["paths"])
+            changed = changed_since(source_commit(f"{pid}-v{last}"), pathspecs(p))
             version = f"{minor}.{patches[-1] + 1}" if changed else last
         else:
             changed, version = True, f"{minor}.0"

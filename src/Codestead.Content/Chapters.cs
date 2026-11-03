@@ -74,6 +74,45 @@ public static partial class ChaptersLib
     /// <summary>A shell variable; the name may be a {{placeholder}}.</summary>
     private static string? Env(CheckContext c, string name) => c.Sh.Env.Get(X(c, name));
 
+    /// <summary>A path itself, also when it is a symbolic link (like lstat); "~" and {{placeholders}} are filled in.</summary>
+    private static FsNode? LinkNode(CheckContext c, string p) => c.Sh.Vfs.TryLookupLink(Abs(c, p), c.Sh.RootUser());
+    /// <summary>The path without "~" and {{placeholders}}.</summary>
+    private static string Abs(CheckContext c, string p)
+    {
+        p = X(c, p);
+        return p.StartsWith('~') ? Home(c) + p[1..] : p;
+    }
+    /// <summary>The real path (symbolic links followed), or null.</summary>
+    private static string? RealPath(CheckContext c, string p)
+    {
+        try
+        {
+            return c.Sh.Vfs.RealPath(Abs(c, p), c.Sh.RootUser());
+        }
+        catch (FsError)
+        {
+            return null;
+        }
+    }
+    /// <summary>A file on the server (server.lan), with "~" meaning the home directory there.</summary>
+    private static FsNode? ServerNode(CheckContext c, string p)
+    {
+        var server = SshCmd.ServerFor(c.Sh);
+        p = X(c, p);
+        return server.Vfs.TryLookup(p.StartsWith('~') ? server.World.Home + p[1..] : p, server.RootUser());
+    }
+    /// <summary>The jobs in the student's crontab.</summary>
+    private static List<CronCmd.Job> CronJobs(CheckContext c)
+    {
+        var node = c.Sh.Vfs.TryLookup($"{CronCmd.SpoolDir(c.Sh)}/{W(c).User}", c.Sh.RootUser());
+        return node?.Type == "file" ? CronCmd.Parse(node.Content ?? "", W(c).User).Jobs : new List<CronCmd.Job>();
+    }
+    private static bool Every(HashSet<int> set, int min, int max) => Enumerable.Range(min, max - min + 1).All(set.Contains);
+    /// <summary>The file names rsync -v listed (between "sending incremental file list" and the empty line).</summary>
+    private static List<string> RsyncFiles(CheckContext c) =>
+        c.Output.Split('\n').SkipWhile(l => !l.StartsWith("sending incremental file list", StringComparison.Ordinal)).Skip(1)
+            .TakeWhile(l => l.Trim() != "").Where(l => !l.EndsWith('/') && !l.StartsWith("created directory", StringComparison.Ordinal)).ToList();
+
     private static PerDistro<T> ByFamily<T>(T debian, T arch, T redhat) =>
         new(d => d.Family switch
         {

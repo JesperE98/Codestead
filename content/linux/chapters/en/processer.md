@@ -165,6 +165,39 @@ carry on running while you keep your prompt?
 background, while `fg` would bring it back to the foreground.
 ```
 
+### Keep running after you log out – `nohup`
+
+When you close the terminal or the ssh connection, the programs you started
+get the signal **SIGHUP** (*hang up*) and exit – background jobs too.
+`nohup` makes a command ignore that signal:
+
+```sh
+nohup ./long-job.sh &
+```
+
+Output that would have been shown in the terminal ends up in the file
+`nohup.out` instead:
+
+```predict
+$ nohup echo done
+$ cat nohup.out
+nohup: ignoring input and appending output to 'nohup.out'
+done
+```
+
+For programs that should always run, a **service** is better – you'll meet
+those in the part about system administration.
+
+### Watching a command – `watch`
+
+`watch` runs a command again every two seconds and shows the result on a
+clean screen – handy for watching a file grow or a disk fill up. Exit with
+`Ctrl+C`. In the simulator the result is shown once.
+
+```sh
+watch -n 5 'ls -l /tmp'
+```
+
 ## How is the computer doing?
 
 Two small commands give you a quick overview:

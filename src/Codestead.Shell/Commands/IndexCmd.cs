@@ -19,6 +19,10 @@ public static partial class IndexCmd
         }
 
         Add(FsCmd.All);
+        // Links and file information (ln, readlink, realpath, stat, file, umask).
+        Add(FileinfoCmd.All);
+        // Commands that run other commands (xargs, nohup, watch).
+        Add(RunCmd.All);
         Add(TextCmd.All);
         Add(SystemCmd.All);
         Add(PkgCmd.All);
@@ -41,6 +45,10 @@ public static partial class IndexCmd
         // Networking (ip, ping, ss, dig, curl, wget, ssh ...).
         Add(NetCmd.All);
         Add(SshCmd.All);
+        // Copying files over ssh (scp, rsync).
+        Add(SshCmd.Transfer);
+        // Scheduled jobs (crontab).
+        Add(CronCmd.All);
 
         // getent exists in both the users and the networking chapter: host names are looked up by the
         // networking version (which also knows DNS), everything else by the users version.

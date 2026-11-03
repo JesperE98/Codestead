@@ -124,6 +124,32 @@ Wie viele Dateien und Verzeichnisse gibt es in `/etc`? Zähl sie mit einer Pipe:
 ls /etc | wc -l
 ```
 
+## Von der Eingabe zu Argumenten – `xargs`
+
+Manche Befehle lesen überhaupt nicht aus einer Pipe – sie wollen Namen als
+**Argumente**: `rm`, `mkdir`, `touch` und `wc`, wenn es in Dateien zählen
+soll. `xargs` schließt diese Lücke: Es liest die Wörter in seiner Eingabe und
+setzt sie hinter einen Befehl.
+
+```sh
+find {{documents}} -type f | xargs wc -l
+```
+
+Das ist dasselbe, als würdest du jeden Dateinamen selbst hinter `wc -l`
+schreiben. Mit `-n 1` führt `xargs` den Befehl für jedes Wort einmal aus, und
+mit `-I {}` für jede Zeile einmal, wobei `{}` durch die Zeile ersetzt wird:
+
+```sh
+ls {{documents}} | xargs -I {} echo "File: {}"
+```
+
+```predict
+$ printf 'a\nb\nc\n' | xargs echo
+a b c
+---
+`xargs` hat die drei Zeilen gesammelt und `echo a b c` ausgeführt – einmal.
+```
+
 ## Bildschirm und Datei zugleich – `tee`
 
 `tee` reicht seine Eingabe weiter *und* speichert eine Kopie in einer Datei:

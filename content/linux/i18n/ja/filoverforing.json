@@ -1,0 +1,33 @@
+{
+  "title": "SSH でファイルをコピーする",
+  "tasks": {
+    "config": {
+      "text": "`ssh srv` で `192.168.1.10` に `{{user}}` としてログインできるように、`~/.ssh/config` を作ってください。それから `ssh srv` を使って、サーバーで `hostname` を実行してください。",
+      "hint": "3 行です: `Host srv`、`    HostName 192.168.1.10`、`    User {{user}}`。`echo ... >> ~/.ssh/config` で書き込み、そのあと `ssh srv hostname` を実行します。"
+    },
+    "scp-up": {
+      "text": "`scp` を使って、`~/{{notes}}` をサーバー上のホームディレクトリにコピーしてください。",
+      "hint": "`scp ~/{{notes}} srv:` です。`srv` の後ろのコロンは「サーバー上の」という意味で、パスを書かなければ、ファイルはサーバーのホームディレクトリに置かれます。"
+    },
+    "scp-down": {
+      "text": "サーバー上のホームディレクトリにあるファイル `{{welcomeFile}}` を、ディレクトリ `~/{{downloads}}` に取ってきてください。",
+      "hint": "コピー元が先、コピー先が最後です: `scp srv:{{welcomeFile}} ~/{{downloads}}/`。"
+    },
+    "rsync-local": {
+      "text": "`rsync -av` を使って、`~/{{documents}}` の中身をディレクトリ `/tmp/{{documents}}` にバックアップしてください。",
+      "hint": "コピー元の後ろのスラッシュは「中にあるもの」という意味です: `rsync -av ~/{{documents}}/ /tmp/{{documents}}`。"
+    },
+    "rsync-again": {
+      "text": "ファイル `~/{{documents}}/{{todo}}` を作って、同じ `rsync -av` をもう一度実行してください。新しいファイルだけが送られるはずです。",
+      "hint": "`touch ~/{{documents}}/{{todo}}` のあとに `rsync -av ~/{{documents}}/ /tmp/{{documents}}` です。`-a` がないと、毎回すべてが送られます。"
+    },
+    "rsync-server": {
+      "text": "`~/{{documents}}` の中身を、サーバー上のホームディレクトリにあるディレクトリ `{{documents}}` に同期してください。",
+      "hint": "さっきと同じですが、コピー先がサーバーです: `rsync -av ~/{{documents}}/ srv:{{documents}}/`。"
+    },
+    "dry-run": {
+      "text": "`~/{{documents}}/{{todo}}` を削除してから、`/tmp/{{documents}}` に対して `-n` 付きで `rsync -av --delete` を試してください。何も実行されずに、何が削除されるかがわかります。",
+      "hint": "`rm ~/{{documents}}/{{todo}}` のあとに `rsync -avn --delete ~/{{documents}}/ /tmp/{{documents}}` です。"
+    }
+  }
+}

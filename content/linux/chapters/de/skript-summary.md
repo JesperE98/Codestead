@@ -23,6 +23,17 @@ wählt zwischen Mustern, Funktionen sind benannte Codestücke mit eigenem `$1`,
 und `read` fragt den Benutzer nach einer Eingabe. `exit 1` sagt dem, der das
 Skript aufgerufen hat, dass etwas schiefgegangen ist.
 
+## Zeitgesteuerte Jobs mit cron
+
+**cron** führt die Jobs in deiner **crontab** zu festen Zeiten aus. Jede Zeile
+hat fünf Zeitfelder – Minute, Stunde, Tag des Monats, Monat und Wochentag –
+und danach den Befehl; `*` bedeutet jede und `*/5` jede fünfte. `crontab -l`
+zeigt die Jobs, und `crontab -` installiert neue aus seiner Eingabe – und
+ersetzt dabei alle alten. Jobs laufen ohne die Einstellungen deines Terminals
+und mit einem kurzen `PATH`, also schick ihre Ausgabe in eine Datei.
+`journalctl -u cron` zeigt jeden Lauf, und `systemctl list-timers` zeigt die
+Timer von systemd.
+
 ## Befehle und Syntax
 
 | Syntax | Tut |
@@ -47,3 +58,8 @@ Skript aufgerufen hat, dass etwas schiefgegangen ist.
 | `read -p "Question " var` | Eine Zeile von der Tastatur lesen |
 | `exit 1` | Das Skript mit einem Exit-Code beenden |
 | `set -euo pipefail` | Das Skript beim ersten Fehler anhalten |
+| `crontab -l` · `crontab -r` | Deine crontab anzeigen · entfernen |
+| `echo '* * * * * command' \| crontab -` | Eine crontab aus der Eingabe installieren (ersetzt die alte) |
+| `(crontab -l; echo 'LINE') \| crontab -` | Einen Job hinzufügen und die alten behalten |
+| `MIN HOUR DAY MONTH WEEKDAY command` | Eine crontab-Zeile, z. B. `30 2 * * 1-5` |
+| `systemctl list-timers` | Die Timer von systemd anzeigen |

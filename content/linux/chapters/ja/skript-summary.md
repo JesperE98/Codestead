@@ -21,6 +21,16 @@
 を持つ名前の付いたコードのまとまりで、`read` はユーザーに入力を求めます。
 `exit 1` は、スクリプトを呼び出した側に何かがうまくいかなかったことを伝えます。
 
+## cron で定期的なジョブを実行する
+
+**cron** は、あなたの **crontab** にあるジョブを決まった時刻に実行します。
+各行には 5 つの時刻フィールド（分、時、日、月、曜日）があり、その後に
+コマンドが続きます。`*` は毎回、`*/5` は 5 ごとという意味です。`crontab -l` は
+ジョブを表示し、`crontab -` は入力から新しいジョブを登録します。このとき古い
+ジョブはすべて置き換えられます。ジョブはターミナルの設定なしで、短い `PATH` で
+実行されるので、出力はファイルに送りましょう。`journalctl -u cron` は実行の
+記録を表示し、`systemctl list-timers` は systemd のタイマーを表示します。
+
 ## コマンドと構文
 
 | 構文 | 何をするか |
@@ -45,3 +55,8 @@
 | `read -p "Question " var` | キーボードから 1 行読む |
 | `exit 1` | 終了コードを付けてスクリプトを終える |
 | `set -euo pipefail` | 最初のエラーでスクリプトを止める |
+| `crontab -l` · `crontab -r` | 自分の crontab を表示する · 削除する |
+| `echo '* * * * * command' \| crontab -` | 入力から crontab を登録する（古いものは置き換えられる） |
+| `(crontab -l; echo 'LINE') \| crontab -` | 古いジョブを残したままジョブを追加する |
+| `MIN HOUR DAY MONTH WEEKDAY command` | crontab の 1 行。たとえば `30 2 * * 1-5` |
+| `systemctl list-timers` | systemd のタイマーを表示する |

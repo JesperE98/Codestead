@@ -1,0 +1,33 @@
+{
+  "title": "Dateien über SSH kopieren",
+  "tasks": {
+    "config": {
+      "text": "Lege `~/.ssh/config` so an, dass `ssh srv` dich als `{{user}}` auf `192.168.1.10` anmeldet. Führe dann mit `ssh srv` den Befehl `hostname` auf dem Server aus.",
+      "hint": "Drei Zeilen: `Host srv`, `    HostName 192.168.1.10` und `    User {{user}}`. Schreib sie mit `echo ... >> ~/.ssh/config` und führe dann `ssh srv hostname` aus."
+    },
+    "scp-up": {
+      "text": "Kopiere `~/{{notes}}` mit `scp` in dein Home-Verzeichnis auf dem Server.",
+      "hint": "`scp ~/{{notes}} srv:` – der Doppelpunkt nach `srv` bedeutet „auf dem Server“, und ohne Pfad landet die Datei dort im Home-Verzeichnis."
+    },
+    "scp-down": {
+      "text": "Hol die Datei `{{welcomeFile}}` aus dem Home-Verzeichnis auf dem Server in das Verzeichnis `~/{{downloads}}`.",
+      "hint": "Die Quelle zuerst, das Ziel zuletzt: `scp srv:{{welcomeFile}} ~/{{downloads}}/`."
+    },
+    "rsync-local": {
+      "text": "Sichere den Inhalt von `~/{{documents}}` mit `rsync -av` in das Verzeichnis `/tmp/{{documents}}`.",
+      "hint": "Der Schrägstrich nach der Quelle bedeutet „was darin ist“: `rsync -av ~/{{documents}}/ /tmp/{{documents}}`."
+    },
+    "rsync-again": {
+      "text": "Lege die Datei `~/{{documents}}/{{todo}}` an und führe dasselbe `rsync -av` noch einmal aus. Nur die neue Datei sollte übertragen werden.",
+      "hint": "`touch ~/{{documents}}/{{todo}}` und dann `rsync -av ~/{{documents}}/ /tmp/{{documents}}`. Ohne `-a` wird jedes Mal alles übertragen."
+    },
+    "rsync-server": {
+      "text": "Synchronisiere den Inhalt von `~/{{documents}}` in das Verzeichnis `{{documents}}` in deinem Home-Verzeichnis auf dem Server.",
+      "hint": "Dasselbe wie vorher, nur mit dem Server als Ziel: `rsync -av ~/{{documents}}/ srv:{{documents}}/`."
+    },
+    "dry-run": {
+      "text": "Entferne `~/{{documents}}/{{todo}}` und probiere dann `rsync -av --delete` nach `/tmp/{{documents}}` mit `-n` aus – so siehst du, was gelöscht würde, ohne dass etwas passiert.",
+      "hint": "`rm ~/{{documents}}/{{todo}}` und dann `rsync -avn --delete ~/{{documents}}/ /tmp/{{documents}}`."
+    }
+  }
+}

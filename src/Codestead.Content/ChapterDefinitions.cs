@@ -246,6 +246,14 @@ public static partial class ChaptersLib
                     Solution = Cmds("ls /{{missing}} 2> /dev/null"),
                     Check = c => Re(c, @"^ls\s+\/{{missing}}\b.*2>\s*\/dev\/null").IsMatch(c.Line) && c.Output.Trim() == "",
                 },
+                new()
+                {
+                    Id = "xargs",
+                    Text = "Räkna raderna i varje fil i `~/{{documents}}`: hitta filerna med `find -type f` och ge dem till `wc -l` med `xargs`.",
+                    Hint = "`find ~/{{documents}} -type f | xargs wc -l` – `wc` läser inte filnamn från en pipe, men `xargs` gör dem till argument.",
+                    Solution = Cmds("find ~/{{documents}} -type f | xargs wc -l"),
+                    Check = c => Ran(c, Re(@"^find\b.*\|\s*xargs\s+(-\S+\s+)*wc\b")) && Re(@"\d+ total").IsMatch(c.Output),
+                },
             },
         },
         new()
@@ -417,6 +425,77 @@ public static partial class ChaptersLib
         },
         new()
         {
+            Id = "lankar",
+            Part = "system",
+            Title = "Länkar och filinformation",
+            Tasks = new()
+            {
+                new()
+                {
+                    Id = "symlink",
+                    Text = "Skapa en symbolisk länk `~/log` som pekar på katalogen `/var/log`.",
+                    Hint = "`ln -s MÅL LÄNKNAMN` – målet först: `ln -s /var/log ~/log`.",
+                    Solution = Cmds("ln -s /var/log ~/log"),
+                    Check = c => LinkNode(c, "~/log")?.Type == "link" && RealPath(c, "~/log") == "/var/log",
+                },
+                new()
+                {
+                    Id = "relative",
+                    Text = "Stå i hemkatalogen och skapa länken `{{fruits}}` som pekar på `{{documents}}/{{fruits}}` – med en relativ sökväg.",
+                    Hint = "`cd ~` och sedan `ln -s {{documents}}/{{fruits}} {{fruits}}`. En relativ sökväg i länken räknas från katalogen där länken ligger.",
+                    Solution = Cmds("cd ~", "ln -s {{documents}}/{{fruits}} {{fruits}}"),
+                    Check = c => LinkNode(c, "~/{{fruits}}") is { Type: "link" } l && !(l.Content ?? "").StartsWith('/') &&
+                        RealPath(c, "~/{{fruits}}") == Abs(c, "~/{{documents}}/{{fruits}}"),
+                },
+                new()
+                {
+                    Id = "readlink",
+                    Text = "Visa vart länken `~/{{fruits}}` pekar med `readlink`.",
+                    Solution = Cmds("readlink ~/{{fruits}}"),
+                    Check = c => Ran(c, Re(@"^readlink\b")) && c.Output.Contains(X(c, "{{documents}}/{{fruits}}"), StringComparison.Ordinal),
+                },
+                new()
+                {
+                    Id = "hardlink",
+                    Text = "Ge `~/{{notes}}` ett namn till: en **hård** länk som heter `~/{{todo}}`.",
+                    Hint = "`ln` utan `-s`: `ln ~/{{notes}} ~/{{todo}}`. Med `ls -li` ser du att båda har samma inodnummer.",
+                    Solution = Cmds("ln ~/{{notes}} ~/{{todo}}"),
+                    Check = c => LinkNode(c, "~/{{todo}}") is { Type: "file" } t && ReferenceEquals(t, LinkNode(c, "~/{{notes}}")),
+                },
+                new()
+                {
+                    Id = "stat",
+                    Text = "Ta reda på rättigheterna för `/etc/shadow` som siffror med `stat`.",
+                    Hint = "`stat /etc/shadow` och titta på raden `Access: (0640/...)` – eller bara `stat -c %a /etc/shadow`.",
+                    Solution = Cmds("stat -c %a /etc/shadow"),
+                    Check = c => Ran(c, Re(@"^stat\b.*\/etc\/shadow\b")) && Re(@"\b0?640\b").IsMatch(c.Output),
+                },
+                new()
+                {
+                    Id = "file",
+                    Text = "Ta reda på vad `~/{{documents}}/{{grades}}` innehåller med `file`.",
+                    Solution = Cmds("file ~/{{documents}}/{{grades}}"),
+                    Check = c => Ran(c, Re(@"^file\b")) && c.Output.Contains("CSV", StringComparison.Ordinal),
+                },
+                new()
+                {
+                    Id = "umask",
+                    Text = "Ändra umask så att nya filer bara kan läsas och skrivas av dig, och skapa sedan den tomma filen `~/{{privateFile}}`.",
+                    Hint = "`umask 077` tar bort alla rättigheter för gruppen och övriga. Skapa sedan filen med `touch ~/{{privateFile}}` – den får `rw-------`.",
+                    Solution = Cmds("umask 077", "touch ~/{{privateFile}}"),
+                    Check = c => (c.Sh.Vfs.Umask & Js.Oct(77)) == Js.Oct(77) && Node(c, "~/{{privateFile}}") is { Type: "file" } f && (f.Mode & Js.Oct(777)) == Js.Oct(600),
+                },
+                new()
+                {
+                    Id = "umask-back",
+                    Text = "Sätt tillbaka umask till det vanliga värdet `022`.",
+                    Solution = Cmds("umask 022"),
+                    Check = c => c.Sh.Vfs.Umask == Js.Oct(22) && Ran(c, Re(@"^umask\s")),
+                },
+            },
+        },
+        new()
+        {
             Id = "processer",
             Part = "system",
             Title = "Processer och jobb",
@@ -473,6 +552,14 @@ public static partial class ChaptersLib
                     Text = "Avsluta bakgrundsjobbet med `kill` och jobbnumret (`%1`) eller dess PID.",
                     Solution = Cmds("kill %1"),
                     Check = c => Ran(c, Re(@"^kill\b")) && Re("Terminated|Killed").IsMatch(c.Output),
+                },
+                new()
+                {
+                    Id = "nohup",
+                    Text = "Starta `sleep 600` i bakgrunden med `nohup`, så att det skulle fortsätta även om du loggade ut.",
+                    Hint = "`nohup sleep 600 &` – `nohup` först och `&` sist.",
+                    Solution = Cmds("nohup sleep 600 &"),
+                    Check = c => c.Sh.Proc.Jobs.Any(j => j.State == "Running" && Re(@"^nohup\s+sleep\s+600\b").IsMatch(j.Cmd)),
                 },
                 new()
                 {
@@ -706,6 +793,79 @@ public static partial class ChaptersLib
                     Hint = "`ssh {{user}}@server.lan hostname` – och svara `yes` på frågan om värdnyckeln.",
                     Solution = Cmds("ssh {{user}}@server.lan hostname", "yes"),
                     Check = c => Ran(c, Re(@"^ssh\b.*(server\.lan|192\.168\.1\.10)")) && OutLines(c).Any(l => l.Trim() == "server"),
+                },
+            },
+        },
+        new()
+        {
+            Id = "filoverforing",
+            Part = "natverk",
+            Title = "Filöverföring och SSH-inställningar",
+            Tasks = new()
+            {
+                new()
+                {
+                    Id = "config",
+                    Text = "Skapa `~/.ssh/config` så att `ssh srv` loggar in som `{{user}}` på `192.168.1.10`. Kör sedan `hostname` på servern med `ssh srv`.",
+                    Hint = "Tre rader: `Host srv`, `    HostName 192.168.1.10` och `    User {{user}}`. Skriv dem med `echo ... >> ~/.ssh/config` och kör sedan `ssh srv hostname`.",
+                    Solution = Cmds(
+                        "mkdir -p ~/.ssh",
+                        "echo 'Host srv' > ~/.ssh/config",
+                        "echo '    HostName 192.168.1.10' >> ~/.ssh/config",
+                        "echo '    User {{user}}' >> ~/.ssh/config",
+                        "chmod 600 ~/.ssh/config",
+                        "ssh srv hostname",
+                        "yes"),
+                    Check = c => Ran(c, Re(@"^ssh\s+(-\S+\s+)*srv\s+hostname\b")) && OutLines(c).Any(l => l.Trim() == "server"),
+                },
+                new()
+                {
+                    Id = "scp-up",
+                    Text = "Kopiera `~/{{notes}}` till din hemkatalog på servern med `scp`.",
+                    Hint = "`scp ~/{{notes}} srv:` – kolonet efter `srv` betyder \"på servern\", och utan sökväg hamnar filen i hemkatalogen där.",
+                    Solution = Cmds("scp ~/{{notes}} srv:"),
+                    Check = c => Ran(c, Re(@"^scp\b")) && ServerNode(c, "~/{{notes}}")?.Type == "file",
+                },
+                new()
+                {
+                    Id = "scp-down",
+                    Text = "Hämta filen `{{welcomeFile}}` från hemkatalogen på servern till katalogen `~/{{downloads}}`.",
+                    Hint = "Källan först, målet sist: `scp srv:{{welcomeFile}} ~/{{downloads}}/`.",
+                    Solution = Cmds("scp srv:{{welcomeFile}} ~/{{downloads}}/"),
+                    Check = c => Ran(c, Re(@"^scp\b")) && IsFile(c, "~/{{downloads}}/{{welcomeFile}}"),
+                },
+                new()
+                {
+                    Id = "rsync-local",
+                    Text = "Säkerhetskopiera innehållet i `~/{{documents}}` till katalogen `/tmp/{{documents}}` med `rsync -av`.",
+                    Hint = "Snedstrecket efter källan betyder \"innehållet i\": `rsync -av ~/{{documents}}/ /tmp/{{documents}}`.",
+                    Solution = Cmds("rsync -av ~/{{documents}}/ /tmp/{{documents}}"),
+                    Check = c => Ran(c, Re(@"^rsync\b")) && IsFile(c, "/tmp/{{documents}}/{{fruits}}"),
+                },
+                new()
+                {
+                    Id = "rsync-again",
+                    Text = "Skapa filen `~/{{documents}}/{{todo}}` och kör samma `rsync -av` igen. Bara den nya filen ska skickas.",
+                    Hint = "`touch ~/{{documents}}/{{todo}}` och sedan `rsync -av ~/{{documents}}/ /tmp/{{documents}}`. Utan `-a` skickas allt varje gång.",
+                    Solution = Cmds("touch ~/{{documents}}/{{todo}}", "rsync -av ~/{{documents}}/ /tmp/{{documents}}"),
+                    Check = c => Ran(c, Re(@"^rsync\b")) && IsFile(c, "/tmp/{{documents}}/{{todo}}") && RsyncFiles(c).SequenceEqual(new[] { W(c)["todo"] }),
+                },
+                new()
+                {
+                    Id = "rsync-server",
+                    Text = "Synka innehållet i `~/{{documents}}` till katalogen `{{documents}}` i din hemkatalog på servern.",
+                    Hint = "Samma som förut, men med servern som mål: `rsync -av ~/{{documents}}/ srv:{{documents}}/`.",
+                    Solution = Cmds("rsync -av ~/{{documents}}/ srv:{{documents}}/"),
+                    Check = c => Ran(c, Re(@"^rsync\b")) && ServerNode(c, "~/{{documents}}/{{fruits}}")?.Type == "file",
+                },
+                new()
+                {
+                    Id = "dry-run",
+                    Text = "Ta bort `~/{{documents}}/{{todo}}` och provkör sedan `rsync -av --delete` till `/tmp/{{documents}}` med `-n` – så att du ser vad som skulle tas bort, utan att något händer.",
+                    Hint = "`rm ~/{{documents}}/{{todo}}` och sedan `rsync -avn --delete ~/{{documents}}/ /tmp/{{documents}}`.",
+                    Solution = Cmds("rm ~/{{documents}}/{{todo}}", "rsync -avn --delete ~/{{documents}}/ /tmp/{{documents}}"),
+                    Check = c => Ran(c, Re(@"^rsync\b.*--delete")) && c.Output.Contains("(DRY RUN)", StringComparison.Ordinal) &&
+                        c.Output.Contains("deleting " + W(c)["todo"], StringComparison.Ordinal) && IsFile(c, "/tmp/{{documents}}/{{todo}}"),
                 },
             },
         },
@@ -1372,6 +1532,72 @@ public static partial class ChaptersLib
                     Solution = Cmds("cat > ~/backup.sh << '{{heredocEnd}}'", "#!/bin/bash", "cp \"$1\" \"$1.bak\"", "{{heredocEnd}}", "chmod +x ~/backup.sh", "cd ~", "./backup.sh {{notes}}"),
                     Check = c =>
                         Ran(c, Re(c, @"backup\.sh\s+{{notes}}\s*$")) && Content(c, "~/backup.sh").Contains("$1") && IsFile(c, "~/{{notes}}.bak"),
+                },
+            },
+        },
+        new()
+        {
+            Id = "schemalaggning",
+            Part = "skript",
+            Title = "Schemalagda jobb med cron",
+            Tasks = new()
+            {
+                new()
+                {
+                    Id = "crontab-l",
+                    Text = "Visa din crontab.",
+                    Hint = "`crontab -l`. Har du inga jobb än svarar den *no crontab for {{user}}*.",
+                    Solution = Cmds("crontab -l"),
+                    Check = c => Re(@"^crontab\s+-l\s*$").IsMatch(c.Line) && (c.ExitCode == 0 || c.Output.Contains("no crontab for", StringComparison.Ordinal)),
+                },
+                new()
+                {
+                    Id = "every-minute",
+                    Text = "Lägg till ett jobb som kör `date >> ~/cron.log` varje minut.",
+                    Hint = "Fem stjärnor betyder varje minut: `echo '* * * * * date >> ~/cron.log' | crontab -`.",
+                    Solution = Cmds("echo '* * * * * date >> ~/cron.log' | crontab -"),
+                    Check = c => CronJobs(c).Any(j => Every(j.When[0], 0, 59) && Every(j.When[1], 0, 23) && j.Command.Contains("date") && j.Command.Contains("cron.log")),
+                },
+                new()
+                {
+                    Id = "weekdays",
+                    Text = "Lägg till ett jobb som kör `~/{{helloScript}}` klockan 07.00 måndag till fredag – utan att ta bort det första jobbet.",
+                    Hint = "Minut 0, timme 7, veckodag 1-5. Behåll de gamla raderna: `(crontab -l; echo '0 7 * * 1-5 ~/{{helloScript}}') | crontab -`.",
+                    Solution = Cmds("(crontab -l; echo '0 7 * * 1-5 ~/{{helloScript}}') | crontab -"),
+                    Check = c =>
+                    {
+                        var jobs = CronJobs(c);
+                        return jobs.Any(j => j.Command.Contains("cron.log")) && jobs.Any(j =>
+                            j.When[0].SetEquals(new[] { 0 }) && j.When[1].SetEquals(new[] { 7 }) && Every(j.When[2], 1, 31) && Every(j.When[3], 1, 12) &&
+                            j.When[4].SetEquals(new[] { 1, 2, 3, 4, 5 }) && j.Command.Contains(W(c)["helloScript"], StringComparison.Ordinal));
+                    },
+                },
+                new()
+                {
+                    Id = "journal",
+                    Text = "Visa vad tjänsten `cron` har skrivit i journalen.",
+                    Hint = "`journalctl -u cron`. När ditt jobb har körts står det där som *CMD (date >> ~/cron.log)*.",
+                    Solution = Cmds("journalctl -u cron"),
+                    Check = c => Ran(c, Re(@"^(sudo\s+)?journalctl\b.*-u\s*cron\b")) && c.Output.Contains("cron", StringComparison.Ordinal),
+                },
+                new()
+                {
+                    Id = "timers",
+                    Text = "Visa systemd:s timers – jobben som systemd själv kör på bestämda tider.",
+                    Solution = Cmds("systemctl list-timers"),
+                    Check = c => Ran(c, Re(@"^systemctl\s+(-\S+\s+)*list-timers\b")),
+                },
+                new()
+                {
+                    Id = "remove",
+                    Text = "Ta bort jobbet som körs varje minut, men behåll jobbet klockan 07.00.",
+                    Hint = "Filtrera bort raden med `grep -v` och installera resten: `crontab -l | grep -v cron.log | crontab -`.",
+                    Solution = Cmds("crontab -l | grep -v cron.log | crontab -"),
+                    Check = c =>
+                    {
+                        var jobs = CronJobs(c);
+                        return !jobs.Any(j => j.Command.Contains("cron.log")) && jobs.Any(j => j.Command.Contains(W(c)["helloScript"], StringComparison.Ordinal));
+                    },
                 },
             },
         },

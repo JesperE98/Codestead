@@ -1,0 +1,33 @@
+{
+  "title": "نسخ الملفات عبر SSH",
+  "tasks": {
+    "config": {
+      "text": "أنشئ `~/.ssh/config` بحيث يسجّل `ssh srv` الدخول بالمستخدم `{{user}}` على `192.168.1.10`. ثم شغّل `hostname` على الخادم باستخدام `ssh srv`.",
+      "hint": "ثلاثة أسطر: `Host srv` و`    HostName 192.168.1.10` و`    User {{user}}`. اكتبها باستخدام `echo ... >> ~/.ssh/config` ثم شغّل `ssh srv hostname`."
+    },
+    "scp-up": {
+      "text": "انسخ `~/{{notes}}` إلى مجلد المنزل على الخادم باستخدام `scp`.",
+      "hint": "`scp ~/{{notes}} srv:` – النقطتان بعد `srv` تعنيان \"على الخادم\"، ومن دون مسار ينتهي الملف في مجلد المنزل هناك."
+    },
+    "scp-down": {
+      "text": "اجلب الملف `{{welcomeFile}}` من مجلد المنزل على الخادم إلى المجلد `~/{{downloads}}`.",
+      "hint": "المصدر أولًا والهدف أخيرًا: `scp srv:{{welcomeFile}} ~/{{downloads}}/`."
+    },
+    "rsync-local": {
+      "text": "اعمل نسخة احتياطية من محتوى `~/{{documents}}` في المجلد `/tmp/{{documents}}` باستخدام `rsync -av`.",
+      "hint": "الشرطة المائلة بعد المصدر تعني \"ما بداخله\": `rsync -av ~/{{documents}}/ /tmp/{{documents}}`."
+    },
+    "rsync-again": {
+      "text": "أنشئ الملف `~/{{documents}}/{{todo}}` وشغّل الأمر `rsync -av` نفسه مرة أخرى. يجب أن يُرسَل الملف الجديد فقط.",
+      "hint": "`touch ~/{{documents}}/{{todo}}` ثم `rsync -av ~/{{documents}}/ /tmp/{{documents}}`. من دون `-a` يُرسَل كل شيء في كل مرة."
+    },
+    "rsync-server": {
+      "text": "زامِن محتوى `~/{{documents}}` مع المجلد `{{documents}}` في مجلد المنزل على الخادم.",
+      "hint": "مثل السابق، لكن مع الخادم هدفًا: `rsync -av ~/{{documents}}/ srv:{{documents}}/`."
+    },
+    "dry-run": {
+      "text": "احذف `~/{{documents}}/{{todo}}` ثم جرّب `rsync -av --delete` إلى `/tmp/{{documents}}` مع `-n` – لترى ما الذي سيُحذف، من دون أن يحدث شيء.",
+      "hint": "`rm ~/{{documents}}/{{todo}}` ثم `rsync -avn --delete ~/{{documents}}/ /tmp/{{documents}}`."
+    }
+  }
+}

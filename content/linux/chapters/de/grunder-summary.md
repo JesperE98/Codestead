@@ -38,7 +38,8 @@ Jedes Programm hat drei Datenströme: stdin, stdout und stderr. `>` schickt
 stdout in eine Datei (und überschreibt sie), `>>` hängt an, `<` liest stdin
 aus einer Datei, und `2>` leitet Fehlermeldungen um – zum Beispiel nach
 `/dev/null`. Eine Pipe `|` schickt die Ausgabe eines Befehls in den nächsten,
-und `tee` speichert unterwegs eine Kopie. `;`, `&&` und `||` führen mehrere
+und `tee` speichert unterwegs eine Kopie. `xargs` macht aus den Wörtern in
+seiner Eingabe Argumente für einen Befehl. `;`, `&&` und `||` führen mehrere
 Befehle in einer Zeile aus.
 
 ## Textbearbeitung mit sed, tr und awk
@@ -73,6 +74,7 @@ Feld heraus, und `awk` arbeitet mit Spalten: `-F` legt das Trennzeichen fest,
 | `uniq` | Entfernt wiederholte benachbarte Zeilen | `-c` zählt sie |
 | `man` | Zeigt die Handbuchseite | |
 | `tee` | Reicht die Eingabe weiter und speichert eine Kopie | |
+| `xargs` | Macht aus der Eingabe Argumente für einen Befehl | `-n 1` einzeln, `-I {}` eine Zeile nach der anderen |
 | `tr` | Übersetzt Zeichen | `-d` löschen, `-s` stauchen |
 | `sed` | Bearbeitet einen Strom von Zeilen | `s/…/…/g`, `d`, `p`, `q`, `-n`, `-i`, `-E`, `-e` |
 | `cut` | Pickt Felder heraus | `-d` Trennzeichen, `-f` Feld |

@@ -100,3 +100,12 @@ $ for i in 1 2 3 4 5; do if [ $i -eq 3 ]; then continue; fi; echo $i; done
 ```try
 for i in $(seq 1 3); do echo "Round $i"; done
 ```
+
+```quiz
+哪一行 crontab 会在每个星期日的 23:45 运行 `~/backup.sh`？
+- [ ] `23 45 * * 0 ~/backup.sh`
+- [x] `45 23 * * 0 ~/backup.sh`
+- [ ] `45 23 0 * * ~/backup.sh`
+---
+先写分钟，再写小时：45 23。星期日是一周中的第 0 天（或第 7 天），写在第五个字段中。
+```

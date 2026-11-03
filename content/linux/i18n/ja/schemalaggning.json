@@ -1,0 +1,28 @@
+{
+  "title": "cron で定期的なジョブを実行する",
+  "tasks": {
+    "crontab-l": {
+      "text": "自分の crontab を表示してください。",
+      "hint": "`crontab -l` です。まだジョブがなければ、*no crontab for {{user}}* と返ってきます。"
+    },
+    "every-minute": {
+      "text": "毎分 `date >> ~/cron.log` を実行するジョブを追加してください。",
+      "hint": "星 5 つは毎分という意味です: `echo '* * * * * date >> ~/cron.log' | crontab -`。"
+    },
+    "weekdays": {
+      "text": "月曜日から金曜日の 07:00 に `~/{{helloScript}}` を実行するジョブを追加してください。最初のジョブは削除しないでください。",
+      "hint": "分が 0、時が 7、曜日が 1-5 です。古い行を残します: `(crontab -l; echo '0 7 * * 1-5 ~/{{helloScript}}') | crontab -`。"
+    },
+    "journal": {
+      "text": "サービス `cron` がジャーナルに書いた内容を表示してください。",
+      "hint": "`journalctl -u cron` です。ジョブが実行されると、そこに *CMD (date >> ~/cron.log)* として表示されます。"
+    },
+    "timers": {
+      "text": "systemd のタイマー、つまり systemd 自身が決まった時刻に実行するジョブを表示してください。"
+    },
+    "remove": {
+      "text": "毎分実行されるジョブを削除し、07:00 のジョブは残してください。",
+      "hint": "`grep -v` でその行を取り除き、残りを登録します: `crontab -l | grep -v cron.log | crontab -`。"
+    }
+  }
+}

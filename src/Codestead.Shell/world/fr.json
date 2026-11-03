@@ -38,7 +38,8 @@
     "helloFile": "bonjour.txt",
     "nameVar": "nom",
     "lineVar": "ligne",
-    "heredocEnd": "FIN"
+    "heredocEnd": "FIN",
+    "privateFile": "prive.txt"
   },
   "words": {
     "userFull": "Élève",

@@ -95,7 +95,7 @@ public class BaseTests
         // yay only exists in AUR – no hint for it.
         Assert.Null(PackagesLib.PackageProviding("arch", "yay"));
         Assert.True(PackagesLib.IsForeign("arch", PackagesLib.Packages.Single(p => p.Id == "yay")));
-        Assert.Equal(54, PackagesLib.Packages.Count);
+        Assert.Equal(58, PackagesLib.Packages.Count);
     }
 
     [Fact(DisplayName = "förinstallerade paket per distribution")]

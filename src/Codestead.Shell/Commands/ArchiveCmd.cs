@@ -20,7 +20,7 @@ public partial class ArchiveEntry
 {
     /// <summary>Relative path, without a trailing /.</summary>
     public string Path { get; set; } = "";
-    /// <summary>"file" or "dir".</summary>
+    /// <summary>"file", "dir" or "link" (a symbolic link: <see cref="Content"/> is where it points).</summary>
     public string Type { get; set; } = "file";
     public int Mode { get; set; }
     public string Owner { get; set; } = "";
@@ -399,6 +399,12 @@ public static partial class ArchiveCmd
     {
         if (h.Skip?.Invoke(abs, name) == true) return;
         int mode = node.Mode & Js.Oct(7777);
+        if (node.Type == "link")
+        {
+            // Archives keep symbolic links as links (they are not followed).
+            h.Add(new ArchiveEntry { Path = name, Type = "link", Mode = mode, Owner = node.Owner, Group = node.Group, Mtime = node.Mtime, Content = node.Content ?? "" });
+            return;
+        }
         if (node.Type == "file")
         {
             if (!VfsLib.HasPerm(node, user, 'r'))
@@ -464,7 +470,7 @@ public static partial class ArchiveCmd
             }
             if (segs.Count == 0) continue; // the entry "./" – the directory we extract into
             var abs = segs.Aggregate(@base, JoinPath);
-            var existing = sh.Vfs.TryLookup(abs, user);
+            var existing = e.Type == "link" ? sh.Vfs.TryLookupLink(abs, user) : sh.Vfs.TryLookup(abs, user);
             if (opts.Before is not null && !opts.Before(e, existing)) continue;
             try
             {
@@ -483,6 +489,14 @@ public static partial class ArchiveCmd
                     if (existing is null) sh.Vfs.Mkdir(abs, user);
                     var node = sh.Vfs.Lookup(abs, user);
                     if (existing is null || user.Uid == 0 || node.Owner == user.Name) dirFixes.Add((node, e));
+                }
+                else if (e.Type == "link")
+                {
+                    if (existing?.Type == "dir") throw new FsError("EISDIR");
+                    var (o, g) = OwnerOf(e);
+                    var link = VfsLib.MakeLink(e.Content ?? "", o, g);
+                    link.Mtime = e.Mtime;
+                    sh.Vfs.Insert(abs, link, user);
                 }
                 else
                 {

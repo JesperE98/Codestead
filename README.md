@@ -34,7 +34,7 @@ for installation instructions.
 
 - **A simulated Linux terminal** inside the app. Nothing needs to be installed, and nothing on your computer can break.
 - **Four distributions in three families**: Ubuntu and Debian (`apt`), Arch Linux (`pacman`) and Fedora (`dnf`).
-- **21 chapters with 140 tasks**: from your first commands to scripts, networking, systemd, users, disks and git.
+- **25 chapters with 191 tasks**: from your first commands to links, scripts, scheduled jobs, networking and file transfer, systemd, users, disks and git.
 - **11 languages**: English (default), Swedish, Spanish, Chinese, Hindi, Arabic, Portuguese, French, German, Russian and Japanese.
 - Your progress is saved automatically. Light and dark theme.
 

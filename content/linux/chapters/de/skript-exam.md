@@ -103,3 +103,13 @@ Du beginnst ein Here-Document mit `cat > {{helloScript}} << '{{heredocEnd}}'`. W
 ```try
 for i in $(seq 1 3); do echo "Runde $i"; done
 ```
+
+```quiz
+Welche crontab-Zeile führt `~/backup.sh` jeden Sonntag um 23:45 aus?
+- [ ] `23 45 * * 0 ~/backup.sh`
+- [x] `45 23 * * 0 ~/backup.sh`
+- [ ] `45 23 0 * * ~/backup.sh`
+---
+Zuerst die Minute, dann die Stunde: 45 23. Sonntag ist Wochentag 0 (oder 7),
+im fünften Feld.
+```

@@ -128,3 +128,12 @@ keine Zeile `default`. Was ist falsch?
 - [ ] Die Netzwerkkarte ist ausgeschaltet
 - [ ] `/etc/hosts` fehlt
 ```
+
+```quiz
+Du willst, dass `/tmp/x` die Dateien enthält, die in `{{documents}}` liegen, und kein Verzeichnis `{{documents}}`. Welcher Befehl ist richtig?
+- [ ] `rsync -a {{documents}} /tmp/x`
+- [x] `rsync -a {{documents}}/ /tmp/x`
+- [ ] `scp {{documents}} /tmp/x`
+---
+Der Schrägstrich am Ende der Quelle bedeutet „was im Verzeichnis ist“.
+```

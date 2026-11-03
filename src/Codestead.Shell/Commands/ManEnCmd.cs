@@ -201,10 +201,13 @@ public static partial class ManEnCmd
                    pwd - print the name of the current directory (print working directory)
 
             SYNOPSIS
-                   pwd
+                   pwd [-P]
 
             DESCRIPTION
                    Prints the absolute path of the directory you are in.
+
+            OPTIONS
+                   -P   show the real path, without symbolic links
             """),
         ["ls"] = ("Lists the contents of directories", """
             NAME
@@ -223,7 +226,9 @@ public static partial class ManEnCmd
                    -l              long format: permissions, owner, size, date
                    -h              human-readable sizes (1K, 4.0M) together with -l
                    -d              list the directory itself, not its contents
-                   -F              append / to directories and * to executable files
+                   -F              append / to directories, * to executable files and
+                                   @ to symbolic links
+                   -i              show the inode number before each name
                    -1              one file per line
 
             EXAMPLES
@@ -326,7 +331,8 @@ public static partial class ManEnCmd
             EXPRESSIONS
                    -name PATTERN     the file name matches PATTERN (e.g. "*.txt")
                    -iname PATTERN    like -name but case-insensitive
-                   -type f|d         only files (f) or directories (d)
+                   -type f|d|l       only files (f), directories (d) or symbolic
+                                     links (l)
                    -maxdepth N       descend at most N levels
                    -mindepth N       show nothing at levels shallower than N
 
@@ -924,6 +930,15 @@ public static partial class ManEnCmd
             DESCRIPTION
                    vim has modes: press i to type, Esc to go back, :w to save
                    and :q to quit (:q! to quit without saving).
+            """),
+        ["vi"] = ("Text editor (usually vim in a simpler mode)", """
+            NAME
+                   vi - the classic Unix text editor
+
+            DESCRIPTION
+                   In most distributions vi starts a small version of vim. The same
+                   keys apply: i to type, Esc, :w to save and :q to quit (:wq saves
+                   and quits).
             """),
         ["nano"] = ("Simple text editor", """
             NAME

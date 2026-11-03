@@ -103,3 +103,13 @@ You start a here document with `cat > {{helloScript}} << '{{heredocEnd}}'`. When
 ```try
 for i in $(seq 1 3); do echo "Round $i"; done
 ```
+
+```quiz
+Which crontab line runs `~/backup.sh` at 23:45 every Sunday?
+- [ ] `23 45 * * 0 ~/backup.sh`
+- [x] `45 23 * * 0 ~/backup.sh`
+- [ ] `45 23 0 * * ~/backup.sh`
+---
+Minute first, then the hour: 45 23. Sunday is day 0 (or 7) of the week, in the
+fifth field.
+```

@@ -411,9 +411,8 @@ ssh-copy-id {{user}}@server.lan
 server पर `~/.ssh/authorized_keys` में जोड़ देता है। उसके बाद ssh password नहीं
 माँगता। Private key कभी किसी को मत दिखाइए!
 
-`scp` और `rsync` से आप SSH के ऊपर files copy कर सकते हैं, और file
-`~/.ssh/config` में servers को छोटे नाम दे सकते हैं – लेकिन यह किसी अगले chapter
-के लिए रहेगा।
+`scp` और `rsync` से SSH के ऊपर files copy करना, और `~/.ssh/config` में servers को
+छोटे नाम देना, अगले chapter में आता है।
 
 ## जब network काम न करे
 

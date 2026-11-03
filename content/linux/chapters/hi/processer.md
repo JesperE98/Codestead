@@ -164,6 +164,38 @@ Variable `$!` में सबसे हाल के background job का PID 
 आगे चलने देता है, जबकि `fg` उसे वापस foreground में ले आता।
 ```
 
+### Logout के बाद भी चलते रहना – `nohup`
+
+जब आप terminal या ssh connection बंद करते हैं, तो आपके start किए programs को signal
+**SIGHUP** (*hang up*) मिलता है और वे बंद हो जाते हैं – background jobs भी। `nohup`
+command से इस signal को अनदेखा करवाता है:
+
+```sh
+nohup ./long-job.sh &
+```
+
+जो output terminal में दिखता, वह इसकी जगह file `nohup.out` में पहुँचता है:
+
+```predict
+$ nohup echo done
+$ cat nohup.out
+nohup: ignoring input and appending output to 'nohup.out'
+done
+```
+
+जिन programs को हमेशा चलना चाहिए, उनके लिए **service** बेहतर है – services से
+आप system administration वाले भाग में मिलेंगे।
+
+### किसी command पर नज़र रखना – `watch`
+
+`watch` किसी command को हर दो seconds में दोबारा चलाता है और नतीजा एक साफ़ screen
+पर दिखाता है – किसी file को बढ़ते हुए या disk को भरते हुए देखने के लिए काम का।
+`Ctrl+C` से बाहर निकलिए। Simulator में नतीजा एक बार दिखाया जाता है।
+
+```sh
+watch -n 5 'ls -l /tmp'
+```
+
 ## Computer का हाल कैसा है?
 
 दो छोटे commands आपको जल्दी से एक overview देते हैं:

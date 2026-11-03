@@ -1,0 +1,28 @@
+{
+  "title": "المهام المجدولة باستخدام cron",
+  "tasks": {
+    "crontab-l": {
+      "text": "اعرض ملف crontab الخاص بك.",
+      "hint": "`crontab -l`. إذا لم تكن لديك مهام بعد، فإنه يجيب *no crontab for {{user}}*."
+    },
+    "every-minute": {
+      "text": "أضف مهمة تشغّل `date >> ~/cron.log` كل دقيقة.",
+      "hint": "خمس نجوم تعني كل دقيقة: `echo '* * * * * date >> ~/cron.log' | crontab -`."
+    },
+    "weekdays": {
+      "text": "أضف مهمة تشغّل `~/{{helloScript}}` في 07:00 من الاثنين إلى الجمعة – من دون حذف المهمة الأولى.",
+      "hint": "الدقيقة 0، والساعة 7، ويوم الأسبوع 1-5. احتفظ بالأسطر القديمة: `(crontab -l; echo '0 7 * * 1-5 ~/{{helloScript}}') | crontab -`."
+    },
+    "journal": {
+      "text": "اعرض ما كتبته الخدمة `cron` في الـ journal.",
+      "hint": "`journalctl -u cron`. عندما تعمل مهمتك تظهر هناك على شكل *CMD (date >> ~/cron.log)*."
+    },
+    "timers": {
+      "text": "اعرض مؤقّتات systemd – المهام التي يشغّلها systemd نفسه في أوقات محدّدة."
+    },
+    "remove": {
+      "text": "احذف المهمة التي تعمل كل دقيقة، لكن احتفظ بمهمة الساعة 07:00.",
+      "hint": "استبعد السطر باستخدام `grep -v` وثبّت الباقي: `crontab -l | grep -v cron.log | crontab -`."
+    }
+  }
+}

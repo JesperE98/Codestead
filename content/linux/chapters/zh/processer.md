@@ -133,6 +133,33 @@ jobs
 `Ctrl+Z` 会暂停程序。`bg` 让已暂停的作业在后台继续运行，而 `fg` 会把它调回前台。
 ```
 
+### 退出登录后继续运行——`nohup`
+
+当你关闭终端或 ssh 连接时，你启动的程序会收到 **SIGHUP** 信号（*hang up*）并退出——后台作业也一样。`nohup` 让命令忽略这个信号：
+
+```sh
+nohup ./long-job.sh &
+```
+
+本来会显示在终端里的输出，会改为写入文件 `nohup.out`：
+
+```predict
+$ nohup echo done
+$ cat nohup.out
+nohup: ignoring input and appending output to 'nohup.out'
+done
+```
+
+对于需要一直运行的程序，**服务**是更好的选择——你会在系统管理的部分中认识它们。
+
+### 盯着一个命令——`watch`
+
+`watch` 每两秒重新运行一次命令，并在清空的屏幕上显示结果——很适合观察文件变大或磁盘被占满。按 `Ctrl+C` 退出。在模拟器中，结果只显示一次。
+
+```sh
+watch -n 5 'ls -l /tmp'
+```
+
 ## 计算机状态如何？
 
 有两个小命令可以让你快速了解概况：

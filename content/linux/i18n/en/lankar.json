@@ -1,0 +1,34 @@
+{
+  "title": "Links and file information",
+  "tasks": {
+    "symlink": {
+      "text": "Create a symbolic link `~/log` that points to the directory `/var/log`.",
+      "hint": "`ln -s TARGET LINK_NAME` – the target first: `ln -s /var/log ~/log`."
+    },
+    "relative": {
+      "text": "Stand in your home directory and create the link `{{fruits}}` that points to `{{documents}}/{{fruits}}` – with a relative path.",
+      "hint": "`cd ~` and then `ln -s {{documents}}/{{fruits}} {{fruits}}`. A relative path in a link counts from the directory the link is in."
+    },
+    "readlink": {
+      "text": "Show where the link `~/{{fruits}}` points with `readlink`."
+    },
+    "hardlink": {
+      "text": "Give `~/{{notes}}` one more name: a **hard** link called `~/{{todo}}`.",
+      "hint": "`ln` without `-s`: `ln ~/{{notes}} ~/{{todo}}`. With `ls -li` you can see that both have the same inode number."
+    },
+    "stat": {
+      "text": "Find out the permissions of `/etc/shadow` as digits with `stat`.",
+      "hint": "`stat /etc/shadow` and look at the line `Access: (0640/...)` – or just `stat -c %a /etc/shadow`."
+    },
+    "file": {
+      "text": "Find out what `~/{{documents}}/{{grades}}` contains with `file`."
+    },
+    "umask": {
+      "text": "Change the umask so that new files can only be read and written by you, and then create the empty file `~/{{privateFile}}`.",
+      "hint": "`umask 077` removes every permission for the group and others. Then create the file with `touch ~/{{privateFile}}` – it gets `rw-------`."
+    },
+    "umask-back": {
+      "text": "Set the umask back to the usual value `022`."
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "title": "SSH के ऊपर files copy करना",
+  "tasks": {
+    "config": {
+      "text": "`~/.ssh/config` ऐसे बनाइए कि `ssh srv` `192.168.1.10` पर `{{user}}` के रूप में login करे। फिर `ssh srv` से server पर `hostname` चलाइए।",
+      "hint": "तीन lines: `Host srv`, `    HostName 192.168.1.10` और `    User {{user}}`। उन्हें `echo ... >> ~/.ssh/config` से लिखिए और फिर `ssh srv hostname` चलाइए।"
+    },
+    "scp-up": {
+      "text": "`scp` से `~/{{notes}}` को server पर अपनी home directory में copy कीजिए।",
+      "hint": "`scp ~/{{notes}} srv:` – `srv` के बाद colon का मतलब है \"server पर\", और बिना path के file वहाँ की home directory में पहुँचती है।"
+    },
+    "scp-down": {
+      "text": "Server की home directory से file `{{welcomeFile}}` को directory `~/{{downloads}}` में ले आइए।",
+      "hint": "Source पहले, target आख़िर में: `scp srv:{{welcomeFile}} ~/{{downloads}}/`।"
+    },
+    "rsync-local": {
+      "text": "`rsync -av` से `~/{{documents}}` के content का backup directory `/tmp/{{documents}}` में लीजिए।",
+      "hint": "Source के बाद slash का मतलब है \"जो अंदर है\": `rsync -av ~/{{documents}}/ /tmp/{{documents}}`।"
+    },
+    "rsync-again": {
+      "text": "File `~/{{documents}}/{{todo}}` बनाइए और वही `rsync -av` दोबारा चलाइए। सिर्फ़ नई file भेजी जानी चाहिए।",
+      "hint": "`touch ~/{{documents}}/{{todo}}` और फिर `rsync -av ~/{{documents}}/ /tmp/{{documents}}`। `-a` के बिना हर बार सब कुछ भेजा जाता है।"
+    },
+    "rsync-server": {
+      "text": "`~/{{documents}}` के content को server पर आपकी home directory की directory `{{documents}}` में sync कीजिए।",
+      "hint": "पहले जैसा ही, लेकिन target server है: `rsync -av ~/{{documents}}/ srv:{{documents}}/`।"
+    },
+    "dry-run": {
+      "text": "`~/{{documents}}/{{todo}}` हटाइए और फिर `/tmp/{{documents}}` पर `rsync -av --delete` को `-n` के साथ आज़माइए – ताकि आप देख सकें कि क्या हटाया जाता, बिना कुछ हुए।",
+      "hint": "`rm ~/{{documents}}/{{todo}}` और फिर `rsync -avn --delete ~/{{documents}}/ /tmp/{{documents}}`।"
+    }
+  }
+}

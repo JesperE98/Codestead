@@ -424,9 +424,8 @@ adiciona a chave pública (`id_ed25519.pub`) a `~/.ssh/authorized_keys` no
 servidor. Depois disso o ssh não pede mais senha. Nunca mostre a chave
 privada para ninguém!
 
-Com `scp` e `rsync` você pode copiar arquivos via SSH, e no arquivo
-`~/.ssh/config` você pode dar nomes curtos aos servidores – mas isso vai ter
-que esperar um capítulo futuro.
+Copiar arquivos via SSH com `scp` e `rsync`, e dar nomes curtos aos
+servidores no `~/.ssh/config`, fica para o próximo capítulo.
 
 ## Quando a rede não funciona
 

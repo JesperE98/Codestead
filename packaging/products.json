@@ -13,8 +13,14 @@
       "src/Codestead.Content",
       "content/linux",
       "src/Codestead.UI",
-      "build",
-      "packaging",
+      "build/icons/codestead-linux.*",
+      "packaging/descriptions/codestead-linux.json",
+      "build/Codestead.props",
+      "build/Codestead.App.props",
+      "packaging/build-linux.sh",
+      "packaging/build-windows.ps1",
+      "packaging/nfpm.yaml",
+      "packaging/linux",
       "global.json",
       "Directory.Build.props"
     ]
@@ -31,10 +37,24 @@
       "src/Codestead.Hub",
       "src/Codestead.Hub.Core",
       "src/Codestead.UI",
-      "build",
-      "packaging",
+      "build/icons/codestead-hub.*",
+      "build/catalog-signing.pub.pem",
+      "packaging/descriptions/codestead-hub.json",
+      "build/Codestead.props",
+      "build/Codestead.App.props",
+      "packaging/build-linux.sh",
+      "packaging/build-windows.ps1",
+      "packaging/nfpm.yaml",
+      "packaging/linux",
       "global.json",
       "Directory.Build.props"
+    ],
+    "exclude": [
+      "src/Codestead.UI/Learning",
+      "src/Codestead.UI/Controls/CheckpointView.cs",
+      "src/Codestead.UI/Controls/MarkdownView.cs",
+      "src/Codestead.UI/Controls/TerminalView.cs",
+      "src/Codestead.UI/Ansi.cs"
     ]
   }
 ]

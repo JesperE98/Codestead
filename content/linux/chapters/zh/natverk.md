@@ -325,7 +325,7 @@ ssh-copy-id {{user}}@server.lan
 
 在 `ssh-keygen` 提问时按 Enter，就会使用默认文件 `~/.ssh/id_ed25519`，并且不设密码短语（passphrase）。`ssh-copy-id` 会把公钥（`id_ed25519.pub`）添加到服务器上的 `~/.ssh/authorized_keys` 中。之后 ssh 就不再询问密码了。永远不要把私钥给任何人看！
 
-用 `scp` 和 `rsync` 可以通过 SSH 复制文件，在 `~/.ssh/config` 文件中还可以给服务器起简短的别名——不过这些要留到后面的章节再讲。
+用 `scp` 和 `rsync` 通过 SSH 复制文件，以及在 `~/.ssh/config` 中给服务器起简短的名字，将在下一章中介绍。
 
 ## 网络不通的时候
 

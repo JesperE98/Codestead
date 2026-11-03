@@ -38,7 +38,8 @@
     "helloFile": "ola.txt",
     "nameVar": "nome",
     "lineVar": "linha",
-    "heredocEnd": "FIM"
+    "heredocEnd": "FIM",
+    "privateFile": "privado.txt"
   },
   "words": {
     "userFull": "Aluno",

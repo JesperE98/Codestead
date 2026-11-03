@@ -58,7 +58,7 @@ public static partial class PackagesLib
             NewVersion = Rec(debian: "9.4-3ubuntu6.1", arch: "9.8-3", redhat: "9.7-7.fc43"),
             Description = "GNU core utilities (ls, cp, mv, rm, cat ...)",
             SizeKb = 17_400,
-            Provides = new() { "ls", "cat", "mkdir", "touch", "rm", "rmdir", "cp", "mv", "head", "tail", "wc", "sort", "uniq", "cut", "tee", "chmod", "chown", "whoami", "id", "groups", "uname", "date", "env", "printenv", "true", "false", "sleep", "seq", "basename", "dirname", "pwd", "echo", "tr", "du", "who", "chgrp", "df", "sync" },
+            Provides = new() { "ls", "cat", "mkdir", "touch", "rm", "rmdir", "cp", "mv", "head", "tail", "wc", "sort", "uniq", "cut", "tee", "chmod", "chown", "whoami", "id", "groups", "uname", "date", "env", "printenv", "true", "false", "sleep", "seq", "basename", "dirname", "pwd", "echo", "tr", "du", "who", "chgrp", "df", "sync", "ln", "readlink", "realpath", "stat", "nohup" },
             Base = AllFamilies,
             Essential = true,
             ArchRepo = "core",
@@ -119,7 +119,7 @@ public static partial class PackagesLib
             Version = Rec(debian: "4.9.0-5build1", arch: "4.10.0-3", redhat: "4.10.0-6.fc43"),
             Description = "Utilities for finding files (find, xargs)",
             SizeKb = 1_700,
-            Provides = new() { "find" },
+            Provides = new() { "find", "xargs" },
             Base = AllFamilies,
             Essential = true,
             ArchRepo = "core",
@@ -239,7 +239,7 @@ public static partial class PackagesLib
             Version = Rec(debian: "2:4.0.4-4ubuntu3", arch: "4.0.5-3", redhat: "4.0.4-7.fc43"),
             Description = "Utilities for monitoring processes (ps, top, kill, pkill, free ...)",
             SizeKb = 2_100,
-            Provides = new() { "ps", "top", "pkill", "pgrep", "uptime", "free", "w" },
+            Provides = new() { "ps", "top", "pkill", "pgrep", "uptime", "free", "w", "watch" },
             Base = AllFamilies,
             Essential = true,
             ArchRepo = "core",
@@ -358,6 +358,29 @@ public static partial class PackagesLib
         },
         new PackageDef
         {
+            Id = "vi",
+            Names = Rec(debian: "vim-tiny", arch: "vi", redhat: "vim-minimal"),
+            Version = Rec(debian: "2:9.1.0016-1ubuntu7.9", arch: "1:070224-6", redhat: "2:9.1.1775-1.fc43"),
+            Description = "Vi IMproved – compact version of the vi editor",
+            SizeKb = 1_700,
+            Provides = new() { "vi" },
+            // Arch does not have vi from the start.
+            Base = new() { "debian", "redhat" },
+            ArchRepo = "core",
+        },
+        new PackageDef
+        {
+            Id = "file",
+            Names = Same("file"),
+            Version = Rec(debian: "1:5.45-3build1", arch: "5.46-5", redhat: "5.46-8.fc43"),
+            Description = "Recognize the type of data in a file using \"magic\" numbers",
+            SizeKb = 8_200,
+            Provides = new() { "file" },
+            Base = AllFamilies,
+            ArchRepo = "core",
+        },
+        new PackageDef
+        {
             Id = "vim",
             Names = Rec(debian: "vim", arch: "vim", redhat: "vim-enhanced"),
             Version = Rec(debian: "2:9.1.0016-1ubuntu7.9", arch: "9.1.1734-1", redhat: "2:9.1.1775-1.fc43"),
@@ -468,9 +491,32 @@ public static partial class PackagesLib
             Version = Rec(debian: "1:9.6p1-3ubuntu13.14", arch: "10.2p1-1", redhat: "10.0p1-5.fc43"),
             Description = "Secure shell (SSH) client for secure access to remote machines",
             SizeKb = 3_400,
-            Provides = new() { "ssh", "ssh-keygen", "ssh-copy-id" },
+            Provides = new() { "ssh", "ssh-keygen", "ssh-copy-id", "scp" },
             // Arch installerar inte ssh-klienten från början.
             Base = new() { "debian", "redhat" },
+        },
+        new PackageDef
+        {
+            Id = "rsync",
+            Names = Same("rsync"),
+            Version = Rec(debian: "3.2.7-1ubuntu1.2", arch: "3.4.1-2", redhat: "3.4.1-3.fc43"),
+            Description = "Fast, versatile, remote (and local) file-copying tool",
+            SizeKb = 760,
+            Provides = new() { "rsync" },
+            // Arch does not install rsync from the start.
+            Base = new() { "debian", "redhat" },
+        },
+        new PackageDef
+        {
+            Id = "cron",
+            Names = Rec(debian: "cron", arch: "cronie", redhat: "cronie"),
+            Version = Rec(debian: "3.0pl1-184ubuntu2", arch: "1.7.2-2", redhat: "1.7.2-6.fc43"),
+            Description = "Daemon to execute scheduled commands (cron)",
+            SizeKb = 300,
+            Provides = new() { "crontab" },
+            // Arch has no cron from the start: install cronie and start cronie.service.
+            Base = new() { "debian", "redhat" },
+            ArchRepo = "core",
         },
         // ---------- Nätverk ----------
         new PackageDef
@@ -703,6 +749,7 @@ public static partial class PackagesLib
         sh.Installed[pkg.Id] = AvailableVersion(sh, pkg);
         foreach (var cmd in pkg.Provides) InstallCommand(sh, cmd);
         if (pkg.Shells is not null) UpdateEtcShells(sh, pkg.Shells, true);
+        if (pkg.Id == "cron" && sh.Distro.Family == "arch") ServicesLib.CronieUnit(sh, true);
     }
 
     /// <summary>Puts the package's commands in /usr/bin.</summary>
@@ -737,6 +784,7 @@ public static partial class PackagesLib
         var bin = sh.Vfs.Lookup("/usr/bin", sh.RootUser());
         foreach (var cmd in pkg.Provides) bin.Children!.Remove(cmd);
         if (pkg.Shells is not null) UpdateEtcShells(sh, pkg.Shells, false);
+        if (pkg.Id == "cron" && sh.Distro.Family == "arch") ServicesLib.CronieUnit(sh, false);
     }
 
     public static string FormatKb(double kb)

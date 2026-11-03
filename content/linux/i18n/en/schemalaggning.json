@@ -1,0 +1,28 @@
+{
+  "title": "Scheduled jobs with cron",
+  "tasks": {
+    "crontab-l": {
+      "text": "Show your crontab.",
+      "hint": "`crontab -l`. If you have no jobs yet, it answers *no crontab for {{user}}*."
+    },
+    "every-minute": {
+      "text": "Add a job that runs `date >> ~/cron.log` every minute.",
+      "hint": "Five stars mean every minute: `echo '* * * * * date >> ~/cron.log' | crontab -`."
+    },
+    "weekdays": {
+      "text": "Add a job that runs `~/{{helloScript}}` at 07:00 Monday to Friday – without removing the first job.",
+      "hint": "Minute 0, hour 7, day of the week 1-5. Keep the old lines: `(crontab -l; echo '0 7 * * 1-5 ~/{{helloScript}}') | crontab -`."
+    },
+    "journal": {
+      "text": "Show what the service `cron` has written in the journal.",
+      "hint": "`journalctl -u cron`. When your job has run, it shows up there as *CMD (date >> ~/cron.log)*."
+    },
+    "timers": {
+      "text": "Show systemd's timers – the jobs systemd itself runs at set times."
+    },
+    "remove": {
+      "text": "Remove the job that runs every minute, but keep the job at 07:00.",
+      "hint": "Filter out the line with `grep -v` and install the rest: `crontab -l | grep -v cron.log | crontab -`."
+    }
+  }
+}

@@ -130,3 +130,12 @@ línea `default`. ¿Qué falla?
 - [ ] La tarjeta de red está apagada
 - [ ] Falta `/etc/hosts`
 ```
+
+```quiz
+Quieres que `/tmp/x` contenga los archivos que hay en `{{documents}}`, no un directorio `{{documents}}`. ¿Qué comando es el correcto?
+- [ ] `rsync -a {{documents}} /tmp/x`
+- [x] `rsync -a {{documents}}/ /tmp/x`
+- [ ] `scp {{documents}} /tmp/x`
+---
+La barra al final del origen significa «lo que hay en el directorio».
+```

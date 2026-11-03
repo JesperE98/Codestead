@@ -242,11 +242,102 @@ public static partial class SshCmd
         return true;
     }
 
-    private static Dest ParseDest(string raw, string? loginName, Shell sh, double port)
+    // ---------- ~/.ssh/config ----------
+
+    /// <summary>What ~/.ssh/config says about a host (null = not set).</summary>
+    private sealed class HostConfig
+    {
+        public string? HostName { get; set; }
+        public string? User { get; set; }
+        public double? Port { get; set; }
+    }
+
+    /// <summary>Options ssh knows but the simulator only accepts (they change nothing here).</summary>
+    private static readonly HashSet<string> AcceptedOptions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "identityfile", "identitiesonly", "forwardagent", "serveraliveinterval", "serveralivecountmax", "addkeystoagent",
+        "stricthostkeychecking", "userknownhostsfile", "compression", "proxyjump", "localforward", "remoteforward",
+        "loglevel", "connecttimeout", "preferredauthentications", "passwordauthentication", "hostkeyalias", "include",
+        "requesttty", "setenv", "sendenv", "controlmaster", "controlpath", "controlpersist", "visualhostkey",
+    };
+
+    private static readonly Regex ConfigLineRe = new(@"^\s*(\S+?)(?:\s*=\s*|\s+)(.*?)\s*$", RegexOptions.CultureInvariant);
+
+    private static bool HostMatches(string pattern, string host)
+    {
+        var re = new Regex("^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        return re.IsMatch(host);
+    }
+
+    /// <summary>
+    /// Reads ~/.ssh/config for <paramref name="host"/>. Like ssh, the first value found wins, and the file is
+    /// refused if others may write to it. Returns an error message (for stderr) when ssh would stop.
+    /// </summary>
+    private static (HostConfig Config, string? Error) ConfigFor(Shell sh, string host)
+    {
+        var cfg = new HostConfig();
+        var user = sh.CurrentUser();
+        var path = $"{SshDir(sh)}/config";
+        var node = sh.Vfs.TryLookup(path, user);
+        if (node?.Type != "file") return (cfg, null);
+        if ((node.Mode & Js.Oct(22)) != 0 || (node.Owner != user.Name && node.Owner != "root"))
+            return (cfg, $"Bad owner or permissions on {path}\n");
+        bool active = true;
+        var bad = new List<string>();
+        var lines = (node.Content ?? "").Split('\n');
+        for (int i = 0; i < lines.Length; i++)
+        {
+            var line = lines[i].Trim();
+            if (line == "" || line.StartsWith('#')) continue;
+            var m = ConfigLineRe.Match(line);
+            var key = m.Success ? m.Groups[1].Value : line;
+            var value = m.Success ? m.Groups[2].Value.Trim('"') : "";
+            switch (key.ToLowerInvariant())
+            {
+                case "host":
+                {
+                    var patterns = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    active = patterns.Any(p => !p.StartsWith('!') && HostMatches(p, host)) && !patterns.Any(p => p.StartsWith('!') && HostMatches(p[1..], host));
+                    break;
+                }
+                case "match":
+                    active = value.Trim().Equals("all", StringComparison.OrdinalIgnoreCase);
+                    break;
+                case "hostname":
+                    if (active) cfg.HostName ??= value;
+                    break;
+                case "user":
+                    if (active) cfg.User ??= value;
+                    break;
+                case "port":
+                {
+                    var port = Js.Number(value);
+                    if (double.IsNaN(port) || port < 1 || port > 65535 || port != Math.Floor(port))
+                        return (cfg, $"{path} line {i + 1}: Badly formatted port number.\n");
+                    if (active) cfg.Port ??= port;
+                    break;
+                }
+                default:
+                    if (!AcceptedOptions.Contains(key)) bad.Add($"{path}: line {i + 1}: Bad configuration option: {key.ToLowerInvariant()}\n");
+                    break;
+            }
+        }
+        if (bad.Count > 0) return (cfg, string.Concat(bad) + $"{path}: terminating, {bad.Count} bad configuration options\n");
+        return (cfg, null);
+    }
+
+    /// <summary>
+    /// [user@]host with ~/.ssh/config applied: a short name (Host) becomes its HostName, and User and Port
+    /// come from the file unless they were given on the command line.
+    /// </summary>
+    private static (Dest? Dest, string? Error) ParseDest(string raw, string? loginName, Shell sh, double? port)
     {
         var at = raw.LastIndexOf('@');
-        var user = at >= 0 ? raw[..at] : (loginName ?? sh.CurrentUser().Name);
-        return new Dest { User = user, Host = (at >= 0 ? raw[(at + 1)..] : raw).ToLowerInvariant(), Port = port };
+        var name = at >= 0 ? raw[(at + 1)..] : raw;
+        var (cfg, error) = ConfigFor(sh, name);
+        if (error is not null) return (null, error);
+        var user = at >= 0 ? raw[..at] : (loginName ?? cfg.User ?? sh.CurrentUser().Name);
+        return (new Dest { User = user, Host = (cfg.HostName ?? name).ToLowerInvariant(), Port = port ?? cfg.Port ?? 22 }, null);
     }
 
     private static readonly Regex ValueOptRe = new("^-[pliFoJLRDEWbcmQSweB]\\z", RegexOptions.CultureInvariant);
@@ -278,6 +369,16 @@ public static partial class SshCmd
                    -p PORT   anslut till en annan port än 22
                    -l NAMN   användarnamn (samma som NAMN@VÄRD)
 
+            ~/.ssh/config
+                   Ge datorer korta namn. Efter
+
+                       Host srv
+                           HostName 192.168.1.10
+                           User elev
+
+                   räcker det att skriva ssh srv (och scp fil srv:). Filen får
+                   bara du kunna skriva i (chmod 600).
+
             EXEMPEL
                    ssh $USER@server.lan hostname
                    ssh $USER@server.lan 'ls -l; cat *.txt'
@@ -304,6 +405,16 @@ public static partial class SshCmd
                    -p PORT   connect to a port other than 22
                    -l NAME   user name (same as NAME@HOST)
 
+            ~/.ssh/config
+                   Give computers short names. After
+
+                       Host srv
+                           HostName 192.168.1.10
+                           User student
+
+                   it is enough to type ssh srv (and scp file srv:). Only you may be
+                   able to write to the file (chmod 600).
+
             EXAMPLES
                    ssh $USER@server.lan hostname
                    ssh $USER@server.lan 'ls -l; cat *.txt'
@@ -313,7 +424,7 @@ public static partial class SshCmd
         {
             var sh = ctx.Sh;
             var args = new List<string>(ctx.Args);
-            double port = 22;
+            double? port = null;
             string? login = null;
             string? dest = null;
             while (args.Count > 0)
@@ -353,12 +464,17 @@ public static partial class SshCmd
                     "usage: ssh [-46AaCfGgKkMNnqsTtVvXxYy] [-B bind_interface] [-b bind_address]\n           [-c cipher_spec] [-D [bind_address:]port] [-E log_file]\n           [-e escape_char] [-F configfile] [-I pkcs11] [-i identity_file]\n           [-J destination] [-L address] [-l login_name] [-m mac_spec]\n           [-O ctl_cmd] [-o option] [-P tag] [-p port] [-R address]\n           [-S ctl_path] [-W host:port] [-w local_tun[:remote_tun]]\n           destination [command [argument ...]]\n");
                 return 255;
             }
-            if (double.IsNaN(port) || double.IsInfinity(port) || port != Math.Floor(port) || port < 1 || port > 65535)
+            if (port is double p && (double.IsNaN(p) || double.IsInfinity(p) || p != Math.Floor(p) || p < 1 || p > 65535))
             {
-                ctx.Err($"Bad port '{Js.Num(port)}'\n");
+                ctx.Err($"Bad port '{Js.Num(p)}'\n");
                 return 255;
             }
-            var d = ParseDest(dest, login, sh, port);
+            var (d, configError) = ParseDest(dest, login, sh, port);
+            if (d is null)
+            {
+                ctx.Err(configError!);
+                return 255;
+            }
             var command = string.Join(" ", args);
             return SshConnect(ctx, d, io =>
             {
@@ -607,7 +723,12 @@ public static partial class SshCmd
                 ctx.Err("/usr/bin/ssh-copy-id: ERROR: No identities found\n");
                 return 1;
             }
-            var d = ParseDest(o.Operands[0], null, sh, Js.Number(o.Values.Get("p") ?? "22"));
+            var (d, configError) = ParseDest(o.Operands[0], null, sh, o.Values.Get("p") is string pv ? Js.Number(pv) : null);
+            if (d is null)
+            {
+                ctx.Err(configError!);
+                return 1;
+            }
             ctx.Err($"/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: \"{source}\"\n");
             return SshConnect(ctx, d, io =>
             {

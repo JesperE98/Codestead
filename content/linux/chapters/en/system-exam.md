@@ -115,3 +115,13 @@ du -sh {{documents}}
 ---
 `-s` gives one total for the whole directory and `-h` makes the size easy to read.
 ```
+
+```quiz
+You create `ln -s {{notes}} link` and then remove `{{notes}}`. What happens when you run `cat link`?
+- [ ] It shows the old contents
+- [x] `No such file or directory` – the link is broken
+- [ ] The link is removed too
+---
+A symbolic link only contains a path. When nothing is there any longer, the
+link is broken. A hard link would have kept the contents alive.
+```

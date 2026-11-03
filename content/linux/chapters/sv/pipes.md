@@ -120,6 +120,32 @@ Hur många filer och kataloger finns det i `/etc`? Räkna dem med en pipe:
 ls /etc | wc -l
 ```
 
+## Från indata till argument – `xargs`
+
+Vissa kommandon läser inte från en pipe alls – de vill ha namn som
+**argument**: `rm`, `mkdir`, `touch`, och `wc` när den ska räkna i filer.
+`xargs` överbryggar det: den läser orden i sin indata och sätter dem efter ett
+kommando.
+
+```sh
+find {{documents}} -type f | xargs wc -l
+```
+
+Det är samma sak som att själv skriva alla filnamn efter `wc -l`. Med `-n 1`
+kör `xargs` kommandot en gång för varje ord, och med `-I {}` en gång för varje
+rad, där `{}` byts mot raden:
+
+```sh
+ls {{documents}} | xargs -I {} echo "Fil: {}"
+```
+
+```predict
+$ printf 'a\nb\nc\n' | xargs echo
+a b c
+---
+`xargs` samlade ihop de tre raderna och körde `echo a b c` – en gång.
+```
+
 ## Både skärm och fil – `tee`
 
 `tee` skickar indata vidare *och* sparar en kopia i en fil:
