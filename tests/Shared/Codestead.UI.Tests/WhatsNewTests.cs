@@ -14,7 +14,10 @@ public class WhatsNewTests
         return dir?.FullName ?? throw new InvalidOperationException("Codestead.sln not found");
     }
 
-    private static readonly string[] Languages = { "en", "sv", "de", "fr", "es", "pt", "ru", "zh", "ja", "ar", "hi" };
+    /// <summary>The languages the apps offer (build/languages.json); parked ones need no changelog lines.</summary>
+    private static readonly string[] Languages = JsonDocument.Parse(File.ReadAllText(Path.Combine(RepoRoot(), "build", "languages.json")))
+        .RootElement.GetProperty("languages").EnumerateArray()
+        .Where(l => l.GetProperty("offered").GetBoolean()).Select(l => l.GetProperty("code").GetString()!).ToArray();
 
     private static List<ChangelogEntry> Log(params string[] versions) =>
         versions.Select(v => new ChangelogEntry { Version = v, Date = "2026-11-03", Changes = new() { ["en"] = new() { $"In {v}" }, ["sv"] = new() { $"I {v}" } } }).ToList();

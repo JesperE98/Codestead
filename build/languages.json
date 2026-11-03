@@ -1,0 +1,16 @@
+{
+  "//": "The languages of every Codestead app, in menu order. \"offered\": false parks a language: it is not in the menus and its texts are not required, but its files stay so that it can come back with one change here once a native speaker has checked it. The first language is the default.",
+  "languages": [
+    { "code": "en", "name": "English", "dir": "ltr", "offered": true },
+    { "code": "sv", "name": "Svenska", "dir": "ltr", "offered": true },
+    { "code": "es", "name": "Español", "dir": "ltr", "offered": true },
+    { "code": "de", "name": "Deutsch", "dir": "ltr", "offered": true },
+    { "code": "fr", "name": "Français", "dir": "ltr", "offered": true },
+    { "code": "zh", "name": "中文", "dir": "ltr", "offered": true },
+    { "code": "ja", "name": "日本語", "dir": "ltr", "offered": true },
+    { "code": "pt", "name": "Português", "dir": "ltr", "offered": false },
+    { "code": "ru", "name": "Русский", "dir": "ltr", "offered": false },
+    { "code": "ar", "name": "العربية", "dir": "rtl", "offered": false },
+    { "code": "hi", "name": "हिन्दी", "dir": "ltr", "offered": false }
+  ]
+}

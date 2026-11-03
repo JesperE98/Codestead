@@ -53,6 +53,18 @@ säger till om hubben börjar använda något av dem. Skript som bara styr flöd
 installationstesterna …) hör inte till någon produkt. För nästa större version ändrar du `0.6` till
 `0.7`. Lokala byggen får versionen `x.y.0`.
 
+## Språk
+
+Alla appar har samma språk, i `build/languages.json` (kod, namn, skrivriktning och `offered`). Listan läses
+av Codestead Linux (`LanguagesLib`), hubben (`HubStrings`), release-flödet (`packaging/plan.py`) och testerna.
+
+- **Erbjudna språk** (`"offered": true`) visas i menyerna, och deras texter, kapitel och ändringslogg krävs av
+  testerna. I dag: engelska (standard), svenska, spanska, tyska, franska, kinesiska och japanska.
+- **Parkerade språk** (`"offered": false`: portugisiska, ryska, arabiska, hindi) finns inte i menyerna och
+  krävs inte, men filerna ligger kvar. En sparad parkerad språkkod blir engelska. För att ta tillbaka ett språk:
+  låt någon med språket som modersmål granska texterna, fyll på det som saknas och sätt `"offered": true`.
+- Stödet för höger-till-vänster (arabiska) finns kvar i koden och testas fortfarande.
+
 ## Ändringslogg ("Vad är nytt")
 
 Vad som ändrats i varje version står i `src/Linux/changelog.json` och `src/Hub/changelog.json`,
@@ -118,7 +130,7 @@ i hubben. Codestead Linux kopplar ihop dem i `src/Linux/Codestead.Linux/MainWind
 - **Dagar i rad**: en lokal kalenderdag räknas när man löser en uppgift eller svarar rätt på en fråga. En
   missad dag startar om räkningen, men inget dras av.
 - **Ny utmärkelse**: lägg till en rad i `AchievementsLib.All` (id, emoji, kategori, villkor och gärna en
-  räknare för "x / y"), texterna `ach.<id>.title` och `ach.<id>.desc` på alla elva språk, och ett "vittne" i
+  räknare för "x / y"), texterna `ach.<id>.title` och `ach.<id>.desc` på alla erbjudna språk, och ett "vittne" i
   `GameTests.Witnesses` (testet kräver ett för varje utmärkelse). Kategori `Hidden` = dold: titeln visas som
   "???" tills den hittats och skrivs inte heller till profilfilen. Använd emoji från Unicode 11 eller äldre.
 - **Kommandon** analyseras med skalets parser (`CommandInfo`): namn (även genom sudo, time, xargs …), pipes,
@@ -261,7 +273,7 @@ så att en översättning kan provas utan att bygga om.
 Tips, anmärkningar och välkomsttexten som simulatorn skriver i terminalen finns i
 `src/Linux/Codestead.Shell/i18n/<språk>.json` (`messages`), och anropas med en nyckel:
 `sh.Msg("pkg.aptListsEmpty")` eller `Dim(sh, "users.noPasswordSet", ("user", name))`. Engelska
-(`en.json`) är källan; lägg till nyckeln i alla elva filer med samma `{platshållare}`. Utskrifter som
+(`en.json`) är källan; lägg till nyckeln i filerna för alla erbjudna språk med samma `{platshållare}`. Utskrifter som
 härmar riktiga program (`ls: cannot access ...`) och manualsidor översätts inte.
 
 Sammanfattningarna som `help` visar (`summaries`) skrivs i koden (`Summary` på svenska,

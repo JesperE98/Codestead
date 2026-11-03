@@ -3,18 +3,27 @@ using System.Text.RegularExpressions;
 
 namespace Codestead.Hub;
 
-/// <summary>A language of the user interface (the same 11 as Codestead Linux).</summary>
+/// <summary>A language of the user interface (the same as Codestead Linux: build/languages.json).</summary>
 public sealed record HubLanguage(string Code, string Name, bool RightToLeft = false);
 
 /// <summary>The hub's texts in i18n/&lt;lang&gt;.json (embedded). Missing keys fall back to English.</summary>
 public static class HubStrings
 {
-    public static readonly IReadOnlyList<HubLanguage> Languages = new HubLanguage[]
+    /// <summary>The languages the hub offers, in menu order (parked languages are left out).</summary>
+    public static readonly IReadOnlyList<HubLanguage> Languages = LoadLanguages();
+
+    private sealed record LanguageEntry(string Code, string Name, string Dir, bool Offered);
+
+    private sealed record LanguageFile(List<LanguageEntry> Languages);
+
+    private static List<HubLanguage> LoadLanguages()
     {
-        new("en", "English"), new("sv", "Svenska"), new("es", "Español"), new("zh", "中文"),
-        new("hi", "हिन्दी"), new("ar", "العربية", true), new("pt", "Português"), new("fr", "Français"),
-        new("de", "Deutsch"), new("ru", "Русский"), new("ja", "日本語"),
-    };
+        using var s = typeof(HubStrings).Assembly.GetManifestResourceStream("languages.json")
+            ?? throw new InvalidOperationException("languages.json is not embedded (build/languages.json).");
+        var file = JsonSerializer.Deserialize<LanguageFile>(s, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+            ?? throw new InvalidOperationException("build/languages.json has no languages.");
+        return file.Languages.Where(l => l.Offered).Select(l => new HubLanguage(l.Code, l.Name, l.Dir == "rtl")).ToList();
+    }
 
     private static readonly Dictionary<string, Dictionary<string, string>> Texts = Languages.ToDictionary(l => l.Code, l => Load(l.Code));
 

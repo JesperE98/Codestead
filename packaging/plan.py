@@ -52,7 +52,9 @@ def changed_since(sha, specs):
     return run("git", "diff", "--quiet", sha, "HEAD", "--", *specs).returncode != 0
 
 
-LANGUAGES = ["en", "sv", "de", "fr", "es", "pt", "ru", "zh", "ja", "ar", "hi"]
+# The languages the apps offer (build/languages.json); parked languages need no changelog lines.
+with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "build", "languages.json"), encoding="utf-8") as _f:
+    LANGUAGES = [l["code"] for l in json.load(_f)["languages"] if l["offered"]]
 
 
 def changelog_problem(path, version):

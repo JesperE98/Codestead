@@ -27,6 +27,8 @@
     <EmbeddedResource Include="i18n/*.json" LogicalName="hub-i18n/%(Filename)%(Extension)" />
     <!-- What changed in each version of the hub, shown after an update ("What's new"). -->
     <EmbeddedResource Include="../changelog.json" LogicalName="changelog.json" />
+    <!-- The languages of all Codestead apps (offered and parked). -->
+    <EmbeddedResource Include="../../../build/languages.json" LogicalName="languages.json" />
     <!--
       The public key that catalog.json must be signed with. Without it the hub trusts no catalog.
       Create the key pair as described in docs/DEVELOPMENT.md ("Signeringsnyckel för katalogen").
