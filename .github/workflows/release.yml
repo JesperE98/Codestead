@@ -4,10 +4,12 @@ name: Release
 # (today: Codestead Linux and the hub "Codestead").
 #
 # How versions work (packaging/products.json, build/Codestead.props):
-#   build/Codestead.props holds only major.minor per product (CodesteadLinuxVersion = 0.5).
-#   Every push to main that changes a product's files (its "paths" minus "exclude" in products.json)
-#   since its last release becomes the next patch release: 0.5.0, 0.5.1, 0.5.2 ... For 0.6, change 0.5
-#   to 0.6. A product whose files did not change keeps its last release.
+#   build/Codestead.props holds only major.minor per product (CodesteadLinuxVersion = 0.6).
+#   Nothing is published when changes reach main: several pull requests are collected and released
+#   together. To release, run this workflow by hand on main with "publish" ticked (Actions -> "Release"
+#   -> "Run workflow"). Every product whose files (its "paths" minus "exclude" in products.json) changed
+#   since its last release then gets the next patch version: 0.6.0, 0.6.1, 0.6.2 ... For 0.7, change 0.6
+#   to 0.7. A product whose files did not change keeps its last release.
 #   => Windows and Linux artifacts are built for every product, installed and smoke-tested on clean
 #      systems (Windows Server 2022/2025, Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS), the hub
 #      installs and starts the tool end to end, and only then the changed products are published in
@@ -18,23 +20,27 @@ name: Release
 #   Each release records the source commit it was built from (a hidden comment in its notes); that is
 #   how the next run knows what changed. Nothing is published until both secrets below exist.
 #
-# Run it by hand under Actions -> "Release" -> "Run workflow" to build and test without
-# publishing (or tick "publish" to publish from the selected branch). Pull requests only build:
-# the install tests need the builds as artifacts, which would fill the repository's artifact storage;
-# start the workflow by hand on the branch to install-test a pull request.
+# Pull requests and pushes to main only plan (which also checks the changelog), test and build: the
+# install tests need the builds as artifacts, which would fill the repository's artifact storage. A run
+# by hand without "publish" builds, install-tests and stops before publishing (also on a branch, to
+# install-test a pull request).
 #
 # Secrets: RELEASES_TOKEN (contents read/write on codestead-releases) and CATALOG_SIGNING_KEY
 # (the ECDSA P-256 private key whose public half is build/catalog-signing.pub.pem).
 on:
   push:
     branches: [main]
+  # Every path a product is built from (packaging/products.json), so a pull request is told at once when
+  # its changelog entry is missing.
   pull_request:
     paths:
       - build/**
       - packaging/**
-      - src/Codestead.Linux/**
-      - src/Codestead.Hub/**
-      - src/Codestead.Hub.Core/**
+      - src/**
+      - content/**
+      - changelog/**
+      - global.json
+      - Directory.Build.props
       - .github/workflows/release.yml
   workflow_dispatch:
     inputs:
@@ -42,6 +48,12 @@ on:
         description: Publish new versions to codestead-releases
         type: boolean
         default: false
+
+# Two publishing runs at the same time would compute the same version; they wait for each other. Other runs
+# of the same branch replace an older one that is still running.
+concurrency:
+  group: ${{ github.event_name == 'workflow_dispatch' && 'release-by-hand' || format('release-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: '1'
@@ -67,7 +79,8 @@ jobs:
       - id: plan
         env:
           GH_TOKEN: ${{ secrets.RELEASES_TOKEN || github.token }}
-          WANT_PUBLISH: ${{ github.event_name == 'push' || inputs.publish == true }}
+          # Only by hand, with "publish" ticked, and only from main (a branch can be install-tested, not released).
+          WANT_PUBLISH: ${{ github.event_name == 'workflow_dispatch' && inputs.publish == true && github.ref == 'refs/heads/main' }}
           HAS_RELEASES_TOKEN: ${{ secrets.RELEASES_TOKEN != '' }}
           HAS_CATALOG_SIGNING_KEY: ${{ secrets.CATALOG_SIGNING_KEY != '' }}
         run: python3 packaging/plan.py
@@ -105,9 +118,9 @@ jobs:
           PKG_DESCRIPTION: ${{ matrix.product.name }} - ${{ matrix.product.summary }}.
         run: packaging/build-linux.sh "${{ matrix.product.project }}" "${{ matrix.product.id }}" "${{ matrix.product.name }}" "${{ matrix.product.version }}" artifacts
       - uses: actions/upload-artifact@v4
-        # Pull requests only check that everything builds: a run uploads about 1.6 GB of builds, and the
-        # repository's artifact storage must stay free for the runs on main that install and publish them.
-        if: github.event_name != 'pull_request'
+        # Pull requests and pushes only check that everything builds: a run uploads about 1.6 GB of builds,
+        # and the repository's artifact storage must stay free for the runs by hand that install and publish.
+        if: github.event_name == 'workflow_dispatch'
         with:
           name: linux-${{ matrix.product.id }}
           path: artifacts/
@@ -132,9 +145,9 @@ jobs:
       - name: Build Windows artifacts
         run: packaging/build-windows.ps1 -Project "${{ matrix.product.project }}" -PackageName "${{ matrix.product.id }}" -DisplayName "${{ matrix.product.name }}" -Version "${{ matrix.product.version }}" -Out artifacts
       - uses: actions/upload-artifact@v4
-        # Pull requests only check that everything builds: a run uploads about 1.6 GB of builds, and the
-        # repository's artifact storage must stay free for the runs on main that install and publish them.
-        if: github.event_name != 'pull_request'
+        # Pull requests and pushes only check that everything builds: a run uploads about 1.6 GB of builds,
+        # and the repository's artifact storage must stay free for the runs by hand that install and publish.
+        if: github.event_name == 'workflow_dispatch'
         with:
           name: windows-${{ matrix.product.id }}
           path: artifacts/
@@ -147,8 +160,8 @@ jobs:
   # exactly like a user would, starting the app (--smoke-test) on a virtual display and removing it again.
   test-linux:
     needs: [plan, build-linux]
-    # The install tests need the uploaded builds (main and Run workflow; not pull requests, see above).
-    if: github.event_name != 'pull_request'
+    # The install tests need the uploaded builds (only runs by hand, see above).
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -177,8 +190,8 @@ jobs:
 
   test-windows:
     needs: [plan, build-windows]
-    # The install tests need the uploaded builds (main and Run workflow; not pull requests, see above).
-    if: github.event_name != 'pull_request'
+    # The install tests need the uploaded builds (only runs by hand, see above).
+    if: github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -199,8 +212,8 @@ jobs:
   # The hub installs, starts and removes Codestead Linux from a signed catalog (throw-away key).
   test-hub:
     needs: [plan, build-linux, build-windows]
-    # The install tests need the uploaded builds (main and Run workflow; not pull requests, see above).
-    if: github.event_name != 'pull_request'
+    # The install tests need the uploaded builds (only runs by hand, see above).
+    if: github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:

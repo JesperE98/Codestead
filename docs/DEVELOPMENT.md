@@ -42,15 +42,16 @@ och gör om ICO-filen (16–256 px) och kopiorna under `Assets/`.
 
 Produktnamn, id:n och versioner finns **bara** i `build/Codestead.props`. Byt namn där.
 
-Versionerna anges bara som `major.minor` (`CodesteadLinuxVersion` = `0.5`, `CodesteadHubVersion` = `0.1`).
-Patchnumret sätts av release-flödet: varje ändring av en produkt som når `main` blir nästa version
-(0.5.0, 0.5.1, 0.5.2 …). Vilka filer som hör till en produkt står i `packaging/products.json`:
+Versionerna anges bara som `major.minor` (`CodesteadLinuxVersion` = `0.6`, `CodesteadHubVersion` = `0.2`).
+Patchnumret sätts av release-flödet när du **släpper en version för hand** (se "Bygga installationsfilerna"):
+varje produkt som ändrats sedan sin senaste release får nästa nummer (0.6.0, 0.6.1, 0.6.2 …). En merge till
+`main` släpper ingenting, så flera PR:er samlas i samma release. Vilka filer som hör till en produkt står i `packaging/products.json`:
 `paths` (mönster som `build/icons/codestead-hub.*` går bra) minus `exclude`. En produkt får bara en ny
 version när någon av dess filer har ändrats. Hubben undantar de delar av det delade `src/Codestead.UI`
 som bara Codestead Linux använder (lektionskontrollerna); ett test i `tests/Codestead.Hub.Tests`
 säger till om hubben börjar använda något av dem. Skript som bara styr flödet (`plan.py`,
-installationstesterna …) hör inte till någon produkt. För nästa större version ändrar du `0.5` till
-`0.6`. Lokala byggen får versionen `x.y.0`.
+installationstesterna …) hör inte till någon produkt. För nästa större version ändrar du `0.6` till
+`0.7`. Lokala byggen får versionen `x.y.0`.
 
 ## Ändringslogg ("Vad är nytt")
 
@@ -67,10 +68,11 @@ nyast först:
 ]
 ```
 
-- **Varje PR som ger en produkt en ny version lägger till en post** för den versionen (nästa patchnummer
-  efter den senaste releasen), på alla elva språk och med lika många rader på varje språk.
-  `packaging/plan.py` stoppar både PR-bygget och releasen om posten saknas eller är ofullständig, och
-  testet `WhatsNewTests` kontrollerar filerna.
+- **Det finns en post för nästa version** (senaste releasen + 1 i patchnumret). Den första PR:en efter en
+  release skapar den; **varje följande PR fyller på samma post** med sina rader, tills versionen släpps. Uppdatera
+  `date` till dagens datum när du lägger till rader. Posten ska finnas på alla språk med lika många rader på
+  varje språk. `packaging/plan.py` stoppar både PR-bygget och releasen om posten saknas eller är ofullständig,
+  och testet `WhatsNewTests` kontrollerar filerna.
 - Skriv för användaren, inte för utvecklaren: vad man märker, inte vilka filer som ändrats.
 - **Codestead Linux** bäddar in sin fil och visar nyheterna första gången den startar efter en uppdatering
   (och från inställningarna). Vilken version som visats sparas i `whatsnew.json` i appens datamapp.
@@ -276,8 +278,11 @@ att inget har glömts.
 Allt byggs av GitHub Actions (`.github/workflows/release.yml`), för varje produkt i
 `packaging/products.json` (Codestead Linux och hubben):
 
-1. Slå ihop ändringarna till `main`. Flödet (`packaging/plan.py`) räknar ut nästa patchversion för
-   varje produkt som ändrats sedan dess senaste release.
+1. Slå ihop PR:erna till `main`. Det släpper ingenting: pull requests och merges till `main` planerar (och
+   kontrollerar ändringsloggen), testar och bygger.
+2. **Släpp en version:** Actions → **Release** → **Run workflow**, välj `main` och kryssa i **publish**.
+   Flödet (`packaging/plan.py`) räknar ut nästa patchversion för varje produkt som ändrats sedan dess
+   senaste release. Två körningar för hand väntar på varandra, så samma version kan inte tas två gånger.
 
 Flödet bygger alla produkter och installerar och startar dem på rena system (Windows Server 2022/2025,
 Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS). Hubben får dessutom installera och starta Codestead
@@ -295,9 +300,8 @@ Release-titlarna kommer från `title` i `packaging/products.json` ("Codestead Li
 README:n i `codestead-releases` med `packaging/releases_readme.py`: en del per produkt med senaste
 version och nedladdningslänkar, och vad de olika releaserna är. Ändra den i skriptet, inte i repot.
 
-Flödet kan också startas för hand under Actions → **Release** → **Run workflow** (utan att publicera).
-För pull requests byggs bara allt; installationstesterna körs på `main` (före publicering) och när
-flödet startas för hand. Byggena laddas upp som artefakter (ungefär 1,6 GB per körning, sparas en dag)
+Utan **publish** (eller på en annan gren än `main`) bygger och installationstestar flödet utan att
+publicera – så provar du en PR på riktiga system. Installationstesterna körs bara i körningar för hand. Byggena laddas upp som artefakter (ungefär 1,6 GB per körning, sparas en dag)
 och skulle annars fylla repots lagringsutrymme för artefakter.
 
 GitHub har inga rena Windows 10/11-skrivbordsmaskiner, bara Windows Server. Gå därför igenom
