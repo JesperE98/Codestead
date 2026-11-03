@@ -3,6 +3,9 @@ namespace Codestead.Hub;
 /// <summary>Command line options. The catalog/key/install options are only honoured together with --smoke-test.</summary>
 public sealed record HubOptions(bool SmokeTest, Uri? Catalog, string? PublicKeyFile, string? Install)
 {
+    /// <summary>--background: started at login – stay in the tray (or minimised) until the user opens the hub.</summary>
+    public bool Background { get; init; }
+
     public static HubOptions Parse(string[] args)
     {
         string? Value(string name)
@@ -11,7 +14,7 @@ public sealed record HubOptions(bool SmokeTest, Uri? Catalog, string? PublicKeyF
             return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
         }
         bool smoke = args.Contains("--smoke-test");
-        if (!smoke) return new(false, null, null, null);
+        if (!smoke) return new(false, null, null, null) { Background = args.Contains("--background") };
         var catalog = Value("--catalog");
         return new(true,
             catalog is null ? null : new Uri(Path.IsPathRooted(catalog) ? catalog : Path.GetFullPath(catalog)),

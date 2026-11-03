@@ -4,30 +4,37 @@
     "date": "2026-11-03",
     "changes": {
       "en": [
+        "New **settings** in the hub: hide in the system tray while a tool is open, let the close button hide the hub in the tray, start with the computer, and look for and install tool updates by itself. Starting the hub again shows the one that is already running.",
         "Codestead now comes in **7 languages**: English, Swedish, Spanish, German, French, Chinese and Japanese. Portuguese, Russian, Arabic and Hindi are paused until native speakers have checked them – if you used one of them, the app now starts in English.",
         "Behind the scenes: the code is reorganised so that coming Codestead tools can share it. Nothing changes in how you use the app."
       ],
       "sv": [
+        "Nya **inställningar** i hubben: göm den i systemfältet medan ett verktyg är öppet, låt stängknappen gömma den i systemfältet, starta med datorn, och sök efter och installera verktygsuppdateringar automatiskt. Startar du hubben igen visas den som redan körs.",
         "Codestead finns nu på **7 språk**: engelska, svenska, spanska, tyska, franska, kinesiska och japanska. Portugisiska, ryska, arabiska och hindi är pausade tills någon med språket som modersmål har granskat dem – använde du något av dem startar appen nu på engelska.",
         "Bakom kulisserna: koden är omorganiserad så att kommande Codestead-verktyg kan dela på den. Inget ändras i hur du använder appen."
       ],
       "de": [
+        "Neue **Einstellungen** im Hub: im Infobereich verstecken, solange ein Tool geöffnet ist, die Schließen-Schaltfläche versteckt ihn im Infobereich, mit dem Computer starten, und Tool-Updates automatisch suchen und installieren. Startest du den Hub erneut, erscheint der bereits laufende.",
         "Codestead gibt es jetzt in **7 Sprachen**: Englisch, Schwedisch, Spanisch, Deutsch, Französisch, Chinesisch und Japanisch. Portugiesisch, Russisch, Arabisch und Hindi pausieren, bis Muttersprachler sie geprüft haben – wenn du eine davon genutzt hast, startet die App jetzt auf Englisch.",
         "Hinter den Kulissen: Der Code ist neu organisiert, damit künftige Codestead-Tools ihn gemeinsam nutzen können. An der Bedienung ändert sich nichts."
       ],
       "fr": [
+        "Nouveaux **paramètres** dans le hub : le masquer dans la zone de notification pendant qu'un outil est ouvert, faire masquer le hub par le bouton de fermeture, le démarrer avec l'ordinateur, et rechercher et installer automatiquement les mises à jour des outils. Relancer le hub affiche celui qui est déjà ouvert.",
         "Codestead est désormais disponible en **7 langues** : anglais, suédois, espagnol, allemand, français, chinois et japonais. Le portugais, le russe, l'arabe et le hindi sont en pause jusqu'à leur relecture par des locuteurs natifs – si vous utilisiez l'une d'elles, l'application démarre maintenant en anglais.",
         "En coulisses : le code est réorganisé pour que les futurs outils Codestead puissent le partager. Rien ne change dans votre utilisation de l'application."
       ],
       "es": [
+        "Nuevos **ajustes** en el hub: ocultarlo en la bandeja del sistema mientras una herramienta está abierta, que el botón de cerrar lo oculte en la bandeja, iniciarlo con el ordenador, y buscar e instalar las actualizaciones de las herramientas automáticamente. Si vuelves a abrir el hub, se muestra el que ya está en marcha.",
         "Codestead está ahora disponible en **7 idiomas**: inglés, sueco, español, alemán, francés, chino y japonés. El portugués, el ruso, el árabe y el hindi quedan en pausa hasta que hablantes nativos los revisen; si usabas uno de ellos, la aplicación se abre ahora en inglés.",
         "Entre bastidores: el código se ha reorganizado para que las próximas herramientas de Codestead puedan compartirlo. No cambia nada en cómo usas la aplicación."
       ],
       "zh": [
+        "Hub 新增**设置**：打开工具时隐藏到系统托盘、让关闭按钮把 Hub 隐藏到托盘、开机时启动，以及自动检查并安装工具更新。再次启动 Hub 会显示已在运行的那个。",
         "Codestead 现在提供 **7 种语言**：英语、瑞典语、西班牙语、德语、法语、中文和日语。葡萄牙语、俄语、阿拉伯语和印地语暂停提供，直到母语人士审校完毕——如果你之前使用其中一种，应用现在会以英语启动。",
         "幕后：代码已重新组织，以便未来的 Codestead 工具可以共用。你使用应用的方式没有任何变化。"
       ],
       "ja": [
+        "ハブに新しい**設定**：ツールを開いている間はシステムトレイに隠す、閉じるボタンでトレイに隠す、コンピューターの起動時に開始する、ツールの更新を自動で確認・インストールする。ハブをもう一度起動すると、すでに動いているハブが表示されます。",
         "Codestead は **7 言語** に対応しました：英語、スウェーデン語、スペイン語、ドイツ語、フランス語、中国語、日本語。ポルトガル語、ロシア語、アラビア語、ヒンディー語はネイティブスピーカーの確認が済むまで一時停止します。これらを使っていた場合、アプリは英語で起動します。",
         "舞台裏：今後の Codestead ツールで共有できるようにコードを整理しました。アプリの使い方は何も変わりません。"
       ]

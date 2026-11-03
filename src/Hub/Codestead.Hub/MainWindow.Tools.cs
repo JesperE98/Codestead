@@ -48,6 +48,7 @@ public sealed partial class MainWindow
         }
         loading = false;
         Render();
+        await InstallUpdatesByItself();
     }
 
     /// <summary>True when the hub had saved settings at start (a missing "seen" version then means an update).</summary>
@@ -100,7 +101,7 @@ public sealed partial class MainWindow
     {
         try
         {
-            store.Launch(id, Array.Empty<string>());
+            Started(id, store.Launch(id, Array.Empty<string>()));
         }
         catch (Exception e)
         {

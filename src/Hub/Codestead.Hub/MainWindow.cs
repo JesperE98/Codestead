@@ -82,6 +82,7 @@ public sealed partial class MainWindow : Window
         Content = overlay;
         ApplyTheme();
         Render();
+        SetUpBackground();
         // Back from a tool: its level and achievements may have changed.
         Activated += (_, _) =>
         {
@@ -102,7 +103,7 @@ public sealed partial class MainWindow : Window
             await Refresh();
             DispatcherTimer.Run(() =>
             {
-                _ = Refresh();
+                if (state.AutoCheckUpdates) _ = Refresh();
                 return true;
             }, CheckInterval);
         };

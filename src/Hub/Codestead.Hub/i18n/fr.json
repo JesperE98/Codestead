@@ -56,5 +56,16 @@
   "profile.galleryTitle": "{name} – succès",
   "profile.count": "{unlocked} sur {total} débloqués",
   "profile.streakLine": "🔥 Jours d’affilée : {days} · record {best}",
-  "profile.streakNone": "Pas encore de série"
+  "profile.streakNone": "Pas encore de série",
+  "settings.general": "Général",
+  "settings.hideOnToolOpen": "Masquer dans la zone de notification pendant qu'un outil est ouvert",
+  "settings.closeToTray": "Le bouton de fermeture masque le hub dans la zone de notification",
+  "settings.noTray": "Votre bureau n'a pas de zone de notification : le hub est réduit à la place.",
+  "settings.startWithComputer": "Démarrer avec l'ordinateur",
+  "settings.autoCheck": "Rechercher les mises à jour pendant que le hub est ouvert",
+  "settings.autoInstall": "Installer automatiquement les mises à jour des outils",
+  "tray.show": "Afficher Codestead",
+  "tray.open": "Ouvrir {name}",
+  "tray.quit": "Quitter",
+  "tool.autoUpdated": "{name} a été mis à jour vers {version}"
 }

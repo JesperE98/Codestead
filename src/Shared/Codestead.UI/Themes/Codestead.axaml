@@ -223,4 +223,17 @@
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius" Value="10" />
   </Style>
+  <!-- Switches (settings) in the app's accent colour instead of Fluent's blue. -->
+  <Style Selector="ToggleSwitch:checked /template/ Border#SwitchKnobBounds">
+    <Setter Property="Background" Value="{DynamicResource CsAccent}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CsAccent}" />
+  </Style>
+  <Style Selector="ToggleSwitch:checked:pointerover /template/ Border#SwitchKnobBounds">
+    <Setter Property="Background" Value="{DynamicResource CsAccent}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CsAccent}" />
+    <Setter Property="Opacity" Value="0.9" />
+  </Style>
+  <Style Selector="ToggleSwitch:checked /template/ Ellipse#SwitchKnobOn">
+    <Setter Property="Fill" Value="{DynamicResource CsOnAccent}" />
+  </Style>
 </Styles>

@@ -56,5 +56,16 @@
   "profile.galleryTitle": "{name} – achievements",
   "profile.count": "{unlocked} of {total} unlocked",
   "profile.streakLine": "🔥 Days in a row: {days} · best {best}",
-  "profile.streakNone": "No streak yet"
+  "profile.streakNone": "No streak yet",
+  "settings.general": "General",
+  "settings.hideOnToolOpen": "Hide in the system tray while a tool is open",
+  "settings.closeToTray": "The close button hides the hub in the system tray",
+  "settings.noTray": "Your desktop has no system tray, so the hub is minimised instead.",
+  "settings.startWithComputer": "Start when the computer starts",
+  "settings.autoCheck": "Look for updates while the hub is open",
+  "settings.autoInstall": "Install tool updates automatically",
+  "tray.show": "Show Codestead",
+  "tray.open": "Open {name}",
+  "tray.quit": "Quit",
+  "tool.autoUpdated": "{name} was updated to {version}"
 }

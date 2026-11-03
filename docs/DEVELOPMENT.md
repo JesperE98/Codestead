@@ -53,6 +53,16 @@ säger till om hubben börjar använda något av dem. Skript som bara styr flöd
 installationstesterna …) hör inte till någon produkt. För nästa större version ändrar du `0.6` till
 `0.7`. Lokala byggen får versionen `x.y.0`.
 
+## Hubbens bakgrundsläge
+
+Hubben kan ligga i systemfältet (`HubTray`): när ett verktyg öppnas (inställning, på som standard), när
+stängknappen trycks (av som standard) och när den startar med datorn (`Autostart` i `Codestead.Hub.Core`:
+`HKCU\…\Run` på Windows, `~/.config/autostart/codestead-hub.desktop` på Linux, startar med `--background`).
+Saknas systemfält (`TraySupport`: på Linux krävs en StatusNotifierItem-värd, t.ex. GNOME med AppIndicator)
+minimeras hubben i stället, så den aldrig försvinner. Bara en hubb kör per användare (`SingleInstance`): en andra
+start visar den första. Med "Installera verktygsuppdateringar automatiskt" installerar hubben nya versioner efter
+varje koll i katalogen, aldrig medan verktyget körs. Snabbtestet (`--smoke-test`) hoppar över allt detta.
+
 ## Språk
 
 Alla appar har samma språk, i `build/languages.json` (kod, namn, skrivriktning och `offered`). Listan läses

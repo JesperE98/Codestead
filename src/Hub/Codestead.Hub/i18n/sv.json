@@ -56,5 +56,16 @@
   "profile.galleryTitle": "{name} – utmärkelser",
   "profile.count": "{unlocked} av {total} upplåsta",
   "profile.streakLine": "🔥 Dagar i rad: {days} · bäst {best}",
-  "profile.streakNone": "Inga dagar i rad ännu"
+  "profile.streakNone": "Inga dagar i rad ännu",
+  "settings.general": "Allmänt",
+  "settings.hideOnToolOpen": "Göm i systemfältet medan ett verktyg är öppet",
+  "settings.closeToTray": "Stängknappen gömmer hubben i systemfältet",
+  "settings.noTray": "Ditt skrivbord har inget systemfält, så hubben minimeras i stället.",
+  "settings.startWithComputer": "Starta när datorn startar",
+  "settings.autoCheck": "Sök efter uppdateringar medan hubben är öppen",
+  "settings.autoInstall": "Installera verktygsuppdateringar automatiskt",
+  "tray.show": "Visa Codestead",
+  "tray.open": "Öppna {name}",
+  "tray.quit": "Avsluta",
+  "tool.autoUpdated": "{name} uppdaterades till {version}"
 }
