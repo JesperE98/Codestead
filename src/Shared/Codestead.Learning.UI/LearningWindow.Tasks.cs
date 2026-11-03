@@ -7,49 +7,45 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Styling;
 using Avalonia.Threading;
-using Codestead.Content;
-using Codestead.Content.Game;
-using Codestead.Learning;
+using Codestead.Common;
 using Codestead.Learning.Game;
-using Codestead.Shell;
 using Codestead.UI;
+using Codestead.UI.App;
 using Codestead.UI.Controls;
 using Codestead.UI.Controls.Game;
-using Codestead.Terminal;
-using Codestead.UI.App;
 using static Codestead.UI.App.UiParts;
-using ShellType = Codestead.Shell.Shell;
 
-namespace Codestead.Linux;
+namespace Codestead.Learning.UI;
 
 // The tasks of a chapter: check marks, hints, the solution and the per-family chips.
-public sealed partial class MainWindow
+public partial class LearningWindow
 {
     private void RenderTasks()
     {
         var chapter = Chapter;
+        var tasks = tool.Tasks(chapter.Id, Lang);
         taskPanel.Children.Clear();
-        int done = chapter.Tasks.Count(t => state.Progress.ContainsKey(ChaptersLib.TaskKey(chapter.Id, t.Id, t.PerFamily, Distro.Family)));
+        int done = tasks.Count(t => state.Progress.ContainsKey(t.Key));
         var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
         header.Children.Add(Text(T("tasks.title"), 16, FontWeight.Bold));
-        var count = Text(T("tasks.count", ("done", done), ("total", chapter.Tasks.Count)), 13, null, "muted");
+        var count = Text(T("tasks.count", ("done", done), ("total", tasks.Count)), 13, null, "muted");
         Grid.SetColumn(count, 1);
         header.Children.Add(count);
         taskPanel.Children.Add(header);
-        var bar = new ProgressBar { Minimum = 0, Maximum = Math.Max(1, chapter.Tasks.Count), Value = done, Height = 4, MinHeight = 4, Margin = new Thickness(0, 10, 0, 6) };
+        var bar = new ProgressBar { Minimum = 0, Maximum = Math.Max(1, tasks.Count), Value = done, Height = 4, MinHeight = 4, Margin = new Thickness(0, 10, 0, 6) };
         bar.Bind(ProgressBar.ForegroundProperty, this.GetResourceObservable("CsSuccess"));
         taskPanel.Children.Add(bar);
 
-        foreach (var task in chapter.Tasks) taskPanel.Children.Add(TaskItem(chapter, task));
+        foreach (var task in tasks) taskPanel.Children.Add(TaskItem(task));
 
-        if (done == chapter.Tasks.Count)
+        if (done == tasks.Count)
         {
             var box = new StackPanel { Spacing = 10, Margin = new Thickness(0, 14, 0, 0) };
             box.Children.Add(Text(T("tasks.chapterDone"), 15, FontWeight.Bold));
-            if (ChapterIndex < ChaptersLib.Chapters.Count - 1)
+            if (ChapterIndex < Chapters.Count - 1)
             {
-                var next = ChaptersLib.Chapters[ChapterIndex + 1];
-                var b = new Button { Content = T("tasks.next", ("title", I18nLib.ChapterTitle(next, Lang))) + " →" };
+                var next = Chapters[ChapterIndex + 1];
+                var b = new Button { Content = T("tasks.next", ("title", tool.ChapterTitle(next.Id, Lang))) + " →" };
                 b.Classes.Add("primary");
                 b.Click += (_, _) => Navigate(next.Id);
                 box.Children.Add(b);
@@ -64,9 +60,9 @@ public sealed partial class MainWindow
         }
     }
 
-    private Control TaskItem(Chapter chapter, ChapterTask task)
+    private Control TaskItem(TaskInfo task)
     {
-        var key = ChaptersLib.TaskKey(chapter.Id, task.Id, task.PerFamily, Distro.Family);
+        var key = task.Key;
         bool done = state.Progress.ContainsKey(key);
         bool fresh = justCompleted.Contains(key);
 
@@ -87,28 +83,28 @@ public sealed partial class MainWindow
 
         var main = new StackPanel { Spacing = 6 };
         var text = new MarkdownView { BaseFontSize = 14.5 };
-        text.CommandClicked += cmd => terminal.Inject(cmd);
-        text.SetMarkdown(RenderLib.Preprocess(I18nLib.TaskText(chapter, task, Lang, Distro), Distro, Lang));
+        text.CommandClicked += cmd => tool.Inject(cmd);
+        text.SetMarkdown(task.Text);
         main.Children.Add(text);
 
-        if (task.PerFamily == true)
+        if (task.Chips.Count > 0)
         {
             var chips = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-            foreach (var f in FamilyOrder)
+            foreach (var f in task.Chips)
             {
-                bool fDone = state.Progress.ContainsKey(ChaptersLib.TaskKey(chapter.Id, task.Id, true, f));
-                var chip = new Border { CornerRadius = new CornerRadius(10), Padding = new Thickness(8, 1), BorderThickness = new Thickness(1), Child = Text((fDone ? "✓ " : "") + FamilyShort(f), 11.5) };
+                bool fDone = state.Progress.ContainsKey(f.Key);
+                var chip = new Border { CornerRadius = new CornerRadius(10), Padding = new Thickness(8, 1), BorderThickness = new Thickness(1), Child = Text((fDone ? "✓ " : "") + f.Label, 11.5) };
                 chip.Bind(Border.BorderBrushProperty, this.GetResourceObservable(fDone ? "CsSuccess" : "CsBorder"));
                 if (fDone) chip.Bind(Border.BackgroundProperty, this.GetResourceObservable("CsSuccessSoft"));
-                if (f == Distro.Family) ((TextBlock)chip.Child!).FontWeight = FontWeight.Bold;
+                if (f.Current) ((TextBlock)chip.Child!).FontWeight = FontWeight.Bold;
                 chips.Children.Add(chip);
             }
             ToolTip.SetTip(chips, T("tasks.perFamily"));
             main.Children.Add(chips);
         }
 
-        var hint = I18nLib.TaskHint(chapter, task, Lang, Distro);
-        var solution = task.SolutionFor(Distro, shell.World);
+        var hint = task.Hint;
+        var solution = task.Solution;
         int attempts = state.Attempts.TryGetValue(key, out var a) ? a : 0;
         bool SolutionUnlocked() => done || attempts >= AttemptsBeforeSolution || state.HintSeen.Contains(key);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
@@ -142,8 +138,8 @@ public sealed partial class MainWindow
             if (which == "hint" && hint is not null)
             {
                 var h = new MarkdownView { BaseFontSize = 13.5 };
-                h.CommandClicked += cmd => terminal.Inject(cmd);
-                h.SetMarkdown(RenderLib.Preprocess(hint, Distro, Lang));
+                h.CommandClicked += cmd => tool.Inject(cmd);
+                h.SetMarkdown(hint);
                 details.Children.Add(h);
             }
             if (which == "solution")
@@ -156,7 +152,7 @@ public sealed partial class MainWindow
                     b.Classes.Add("solution");
                     ToolTip.SetTip(b, T("lesson.cmdTitle"));
                     var c = cmd;
-                    b.Click += (_, _) => terminal.Inject(c);
+                    b.Click += (_, _) => tool.Inject(c);
                     cmds.Children.Add(b);
                 }
                 details.Children.Add(cmds);
@@ -187,7 +183,4 @@ public sealed partial class MainWindow
         return item;
     }
 
-    private static string FamilyShort(string f) => f switch { "debian" => "Debian", "arch" => "Arch", _ => "Red Hat" };
-
-    // ---------- Actions ----------
 }

@@ -7,40 +7,35 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Styling;
 using Avalonia.Threading;
-using Codestead.Content;
-using Codestead.Content.Game;
-using Codestead.Learning;
+using Codestead.Common;
 using Codestead.Learning.Game;
-using Codestead.Shell;
 using Codestead.UI;
+using Codestead.UI.App;
 using Codestead.UI.Controls;
 using Codestead.UI.Controls.Game;
-using Codestead.Terminal;
-using Codestead.UI.App;
 using static Codestead.UI.App.UiParts;
-using ShellType = Codestead.Shell.Shell;
 
-namespace Codestead.Linux;
+namespace Codestead.Learning.UI;
 
 // The exam of a main chapter.
-public sealed partial class MainWindow
+public partial class LearningWindow
 {
     /// <summary>
     /// The exam of a main chapter: locked until every sub-chapter is complete, then all questions at once.
     /// Answers are graded on "Submit"; 80 % passes and the exam can be retaken.
     /// </summary>
-    private void RenderExam(Chapter chapter, string text)
+    private void RenderExam(CourseChapter chapter, string text)
     {
-        var remaining = ChaptersLib.LessonsIn(chapter.Part).Where(l => !IsLessonComplete(l)).ToList();
+        var remaining = LessonsIn(chapter.Part).Where(l => !IsLessonComplete(l)).ToList();
         if (remaining.Count > 0)
         {
             var box = new StackPanel { Spacing = 8 };
-            box.Children.Add(Text(I18nLib.ChapterTitle(chapter, Lang), 30, FontWeight.Bold));
+            box.Children.Add(Text(tool.ChapterTitle(chapter.Id, Lang), 30, FontWeight.Bold));
             box.Children.Add(Text("🔒  " + T("exam.locked"), 15));
             box.Children.Add(Text(T("exam.remaining"), 14, FontWeight.SemiBold));
             foreach (var l in remaining)
             {
-                var b = new Button { Content = "→  " + I18nLib.ChapterTitle(l, Lang), HorizontalAlignment = HorizontalAlignment.Left };
+                var b = new Button { Content = "→  " + tool.ChapterTitle(l.Id, Lang), HorizontalAlignment = HorizontalAlignment.Left };
                 b.Classes.Add("flat");
                 var id = l.Id;
                 b.Click += (_, _) => Navigate(id);
@@ -79,7 +74,7 @@ public sealed partial class MainWindow
             retake.Click += (_, _) => RenderLesson();
             result.Children.Add(retake);
             RenderSidebar();
-            Present(LinuxGame.Rules.OnExam(state.Game, Snapshot(), chapter.Part, percent, DateTime.Now));
+            Present(tool.Rules.OnExam(state.Game, Snapshot(), chapter.Part, percent, DateTime.Now));
         };
         lessonPanel.Children.Add(submit);
         lessonPanel.Children.Add(result);

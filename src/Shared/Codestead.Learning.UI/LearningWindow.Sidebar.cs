@@ -7,54 +7,49 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Styling;
 using Avalonia.Threading;
-using Codestead.Content;
-using Codestead.Content.Game;
-using Codestead.Learning;
+using Codestead.Common;
 using Codestead.Learning.Game;
-using Codestead.Shell;
 using Codestead.UI;
+using Codestead.UI.App;
 using Codestead.UI.Controls;
 using Codestead.UI.Controls.Game;
-using Codestead.Terminal;
-using Codestead.UI.App;
 using static Codestead.UI.App.UiParts;
-using ShellType = Codestead.Shell.Shell;
 
-namespace Codestead.Linux;
+namespace Codestead.Learning.UI;
 
 // The chapter list in the sidebar and the progress meter in the top bar.
-public sealed partial class MainWindow
+public partial class LearningWindow
 {
     private void RenderProgress()
     {
         int done = 0, total = 0;
-        foreach (var ch in ChaptersLib.Chapters)
+        foreach (var ch in Chapters)
         {
-            var p = ProgressLib.ChapterProgress(ch, state.Progress, DistroOf(ch));
+            var p = ChapterProgress(ch);
             done += p.Done;
             total += p.Total;
         }
         totalBar.Maximum = Math.Max(1, total);
         totalBar.Value = done;
         totalText.Text = T("progress.short", ("done", done), ("total", total));
-        ToolTip.SetTip(totalBar.Parent as Control ?? totalBar, T("progress.title", ("done", done), ("total", total), ("family", T($"family.{Distro.Family}"))));
+        ToolTip.SetTip(totalBar.Parent as Control ?? totalBar, tool.ProgressTitle(done, total));
     }
 
     private void RenderSidebar()
     {
         sidebarList.Children.Clear();
         int number = 0;
-        foreach (var part in ChaptersLib.Parts)
+        foreach (var part in tool.Parts)
         {
-            var chapters = ChaptersLib.Chapters.Where(c => c.Part == part.Id).ToList();
+            var chapters = Chapters.Where(c => c.Part == part).ToList();
             if (chapters.Count == 0) continue;
-            var header = Text(T($"part.{part.Id}").ToUpperInvariant(), 11.5, FontWeight.Bold, "muted");
+            var header = Text(T($"part.{part}").ToUpperInvariant(), 11.5, FontWeight.Bold, "muted");
             header.Margin = new Thickness(10, sidebarList.Children.Count == 0 ? 0 : 16, 10, 6);
             header.LetterSpacing = 0.6;
             sidebarList.Children.Add(header);
             foreach (var ch in chapters)
             {
-                var (done, total) = ProgressLib.ChapterProgress(ch, state.Progress, DistroOf(ch));
+                var (done, total) = ChapterProgress(ch);
                 var row = new Grid { ColumnDefinitions = new ColumnDefinitions("26,*,Auto") };
                 var no = Text(ch.Kind switch
                 {
@@ -62,7 +57,7 @@ public sealed partial class MainWindow
                     ChapterKinds.Exam => "★",
                     _ => (++number).ToString(),
                 }, 13, null, "muted");
-                var title = Text(I18nLib.ChapterTitle(ch, Lang), 14);
+                var title = Text(tool.ChapterTitle(ch.Id, Lang), 14);
                 Grid.SetColumn(title, 1);
                 bool complete;
                 string mark;

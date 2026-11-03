@@ -1,4 +1,4 @@
-namespace Codestead.Content;
+namespace Codestead.Learning;
 
 // The kinds of chapter: lesson, summary and exam.
 

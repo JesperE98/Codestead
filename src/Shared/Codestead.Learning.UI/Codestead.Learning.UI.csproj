@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The learning window every tool shares: chapter list, lessons with checkpoints, exams, tasks, settings and
+       the game. A tool plugs in its course, its workbench (Codestead Linux: the terminal) and its texts through
+       LearningTool. -->
+  <PropertyGroup>
+    <RootNamespace>Codestead.Learning.UI</RootNamespace>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Codestead.UI/Codestead.UI.csproj" />
+    <ProjectReference Include="../Codestead.Learning/Codestead.Learning.csproj" />
+  </ItemGroup>
+</Project>

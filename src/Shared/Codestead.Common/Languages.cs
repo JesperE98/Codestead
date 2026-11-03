@@ -23,6 +23,9 @@ public static class Languages
 
     public static LanguageInfo? Find(string? code) => All.FirstOrDefault(l => l.Code == code);
 
+    /// <summary>The order texts are looked for when one is missing in a language: the language, English, Swedish (the original).</summary>
+    public static IReadOnlyList<string> FallbackChain(string lang) => new[] { lang, "en", "sv" }.Distinct().ToList();
+
     private static List<LanguageInfo> Load()
     {
         using var s = typeof(Languages).Assembly.GetManifestResourceStream("languages.json")

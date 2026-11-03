@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace Codestead.Linux;
+namespace Codestead.Learning.UI;
 
 /// <summary>Small wrapper so screen-reader names can be set without importing the automation namespace everywhere.</summary>
 internal static class AutomationPropertiesHelper

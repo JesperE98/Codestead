@@ -19,7 +19,7 @@ public partial class App : Application
         Codestead.UI.DeadKeys.Install();
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow(Program.SmokeTest);
+            desktop.MainWindow = new Codestead.Learning.UI.LearningWindow(new LinuxTool(), Program.SmokeTest);
         }
         base.OnFrameworkInitializationCompleted();
     }

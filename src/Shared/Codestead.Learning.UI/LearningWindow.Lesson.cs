@@ -7,23 +7,18 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Styling;
 using Avalonia.Threading;
-using Codestead.Content;
-using Codestead.Content.Game;
-using Codestead.Learning;
+using Codestead.Common;
 using Codestead.Learning.Game;
-using Codestead.Shell;
 using Codestead.UI;
+using Codestead.UI.App;
 using Codestead.UI.Controls;
 using Codestead.UI.Controls.Game;
-using Codestead.Terminal;
-using Codestead.UI.App;
 using static Codestead.UI.App.UiParts;
-using ShellType = Codestead.Shell.Shell;
 
-namespace Codestead.Linux;
+namespace Codestead.Learning.UI;
 
 // The lesson text with its interactive checkpoints, and the previous/next buttons.
-public sealed partial class MainWindow
+public partial class LearningWindow
 {
     /// <summary>Turns ```quiz / ```predict / ```try blocks in a lesson or exam into interactive checkpoints.</summary>
     private int nextCheckpoint;
@@ -38,8 +33,7 @@ public sealed partial class MainWindow
         int index = nextCheckpoint++;
         var cp = Codestead.UI.Learning.Checkpoint.Parse(kind, fenced.Lines.ToString().TrimEnd('\n', '\r'), index);
         var key = CheckpointKey(chapter, index);
-        var distroId = DistroOf(chapter).Id;
-        var view = new CheckpointView(cp, CheckpointTexts(), state.Checkpoints.ContainsKey(key), new ShellSandbox(distroId, Lang), renderingExam, cmd => terminal.Inject(cmd));
+        var view = new CheckpointView(cp, CheckpointTexts(), state.Checkpoints.ContainsKey(key), tool.Sandbox(chapter.Id), renderingExam, cmd => tool.Inject(cmd));
         if (renderingExam)
         {
             examViews.Add(view);
@@ -51,7 +45,7 @@ public sealed partial class MainWindow
                 bool wasUnlocked = IsUnlocked(chapter);
                 state.Checkpoints[key] = true;
                 SaveState();
-                var ev = LinuxGame.Rules.OnCheckpoint(state.Game, Snapshot(), DateTime.Now);
+                var ev = tool.Rules.OnCheckpoint(state.Game, Snapshot(), DateTime.Now);
                 if (chapter.Id == Chapter.Id && ev.Celebrate) RenderSidebar();
                 Present(ev);
                 if (chapter.Id != Chapter.Id) return;
@@ -72,9 +66,9 @@ public sealed partial class MainWindow
     private void RenderLesson()
     {
         var chapter = Chapter;
-        var available = I18nLib.LanguagesWithMarkdown(chapter);
-        var shownLang = LanguagesLib.FallbackChain(Lang).FirstOrDefault(l => available.Contains(l)) ?? "sv";
-        var shownDir = LanguagesLib.Languages.FirstOrDefault(l => l.Code == shownLang)?.Dir ?? "ltr";
+        var available = tool.LanguagesWithText(chapter.Id);
+        var shownLang = Languages.FallbackChain(Lang).FirstOrDefault(l => available.Contains(l)) ?? "sv";
+        var shownDir = Languages.Find(shownLang)?.Dir ?? "ltr";
 
         lessonPanel.Children.Clear();
         var eyebrowText = chapter.Kind switch
@@ -82,7 +76,7 @@ public sealed partial class MainWindow
             ChapterKinds.Summary => T($"part.{chapter.Part}") + " · " + T("summary.label"),
             ChapterKinds.Exam => T($"part.{chapter.Part}") + " · " + T("exam.label"),
             // Numbered like the sidebar: lessons only (summaries and exams are not counted).
-            _ => T("lesson.chapter", ("n", Lessons.IndexOf(chapter) + 1), ("total", Lessons.Count)),
+            _ => T("lesson.chapter", ("n", Lessons.ToList().IndexOf(chapter) + 1), ("total", Lessons.Count)),
         };
         var eyebrow = Text(eyebrowText.ToUpperInvariant(), 12.5, null, "eyebrow");
         lessonPanel.Children.Add(eyebrow);
@@ -93,7 +87,7 @@ public sealed partial class MainWindow
             lessonPanel.Children.Add(note);
         }
         markdown.FlowDirection = shownDir == "rtl" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
-        var text = RenderLib.Preprocess(I18nLib.ChapterMarkdown(chapter, Lang), Distro, Lang);
+        var text = tool.LessonText(chapter.Id, Lang);
         nextCheckpoint = 0;
         examViews.Clear();
         if (chapter.Kind == ChapterKinds.Exam) RenderExam(chapter, text);
@@ -116,13 +110,13 @@ public sealed partial class MainWindow
                 read.IsVisible = false;
                 overlay.Toast(T("gate.unlocked"));
                 Unlocked();
-                Present(LinuxGame.Rules.Sync(state.Game, Snapshot(), DateTime.Now));
+                Present(tool.Rules.Sync(state.Game, Snapshot(), DateTime.Now));
             };
             lessonPanel.Children.Add(read);
         }
 
         // Official sources for the chapter.
-        var references = I18nLib.References(chapter);
+        var references = tool.References(chapter.Id);
         if (references.Count > 0)
         {
             var refs = new StackPanel { Spacing = 2, Margin = new Thickness(0, 30, 0, 0) };
@@ -147,10 +141,10 @@ public sealed partial class MainWindow
         // Previous / next
         var nav = new Grid { ColumnDefinitions = new ColumnDefinitions("*,16,*"), Margin = new Thickness(0, 36, 0, 0) };
         int i = ChapterIndex;
-        if (i > 0) nav.Children.Add(NavButton(ChaptersLib.Chapters[i - 1], "← " + T("lesson.prev"), HorizontalAlignment.Left));
-        if (i < ChaptersLib.Chapters.Count - 1)
+        if (i > 0) nav.Children.Add(NavButton(Chapters[i - 1], "← " + T("lesson.prev"), HorizontalAlignment.Left));
+        if (i < Chapters.Count - 1)
         {
-            var next = NavButton(ChaptersLib.Chapters[i + 1], T("lesson.next") + " →", HorizontalAlignment.Right);
+            var next = NavButton(Chapters[i + 1], T("lesson.next") + " →", HorizontalAlignment.Right);
             Grid.SetColumn(next, 2);
             nav.Children.Add(next);
         }
@@ -158,11 +152,11 @@ public sealed partial class MainWindow
         lessonScroll.Offset = new Vector(0, 0);
     }
 
-    private Button NavButton(Chapter target, string direction, HorizontalAlignment align)
+    private Button NavButton(CourseChapter target, string direction, HorizontalAlignment align)
     {
         var content = new StackPanel { Spacing = 2 };
         content.Children.Add(Text(direction, 12.5, null, "muted"));
-        content.Children.Add(Text(I18nLib.ChapterTitle(target, Lang), 15, FontWeight.SemiBold));
+        content.Children.Add(Text(tool.ChapterTitle(target.Id, Lang), 15, FontWeight.SemiBold));
         var b = new Button { Content = content, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = align, Padding = new Thickness(14, 10) };
         b.Classes.Add("secondary");
         var id = target.Id;

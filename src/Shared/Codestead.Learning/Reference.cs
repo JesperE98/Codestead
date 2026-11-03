@@ -1,4 +1,4 @@
-namespace Codestead.Content;
+namespace Codestead.Learning;
 
 // A link to an official source at the end of a chapter.
 

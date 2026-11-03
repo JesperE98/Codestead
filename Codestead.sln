@@ -49,6 +49,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codestead.Learning", "src\S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codestead.Learning.Tests", "tests\Shared\Codestead.Learning.Tests\Codestead.Learning.Tests.csproj", "{236E5426-656F-4A2C-BC06-A53E65F2F5DC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codestead.Learning.UI", "src\Shared\Codestead.Learning.UI\Codestead.Learning.UI.csproj", "{F30B8127-E4DD-4245-96BC-3000DD539D92}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -239,6 +241,18 @@ Global
 		{236E5426-656F-4A2C-BC06-A53E65F2F5DC}.Release|x64.Build.0 = Release|Any CPU
 		{236E5426-656F-4A2C-BC06-A53E65F2F5DC}.Release|x86.ActiveCfg = Release|Any CPU
 		{236E5426-656F-4A2C-BC06-A53E65F2F5DC}.Release|x86.Build.0 = Release|Any CPU
+		{F30B8127-E4DD-4245-96BC-3000DD539D92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F30B8127-E4DD-4245-96BC-3000DD539D92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F30B8127-E4DD-4245-96BC-3000DD539D92}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F30B8127-E4DD-4245-96BC-3000DD539D92}.Debug|x64.Build.0 = Debug|Any CPU
+		{F30B8127-E4DD-4245-96BC-3000DD539D92}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F30B8127-E4DD-4245-96BC-3000DD539D92}.Debug|x86.Build.0 = Debug|Any CPU
+		{F30B8127-E4DD-4245-96BC-3000DD539D92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F30B8127-E4DD-4245-96BC-3000DD539D92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F30B8127-E4DD-4245-96BC-3000DD539D92}.Release|x64.ActiveCfg = Release|Any CPU
+		{F30B8127-E4DD-4245-96BC-3000DD539D92}.Release|x64.Build.0 = Release|Any CPU
+		{F30B8127-E4DD-4245-96BC-3000DD539D92}.Release|x86.ActiveCfg = Release|Any CPU
+		{F30B8127-E4DD-4245-96BC-3000DD539D92}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -265,5 +279,6 @@ Global
 		{607F99EF-E25C-4929-878A-78EFCD32743D} = {A467EE09-17AD-3CD0-EAED-97C2708DC564}
 		{D6F462C9-DFD4-4AA4-AF35-7B295D15472F} = {C8E42992-5E42-0C2B-DBFE-AA848D06431C}
 		{236E5426-656F-4A2C-BC06-A53E65F2F5DC} = {D0D6B8B0-AC35-B3FA-0B96-A9B0E4A3253E}
+		{F30B8127-E4DD-4245-96BC-3000DD539D92} = {C8E42992-5E42-0C2B-DBFE-AA848D06431C}
 	EndGlobalSection
 EndGlobal
