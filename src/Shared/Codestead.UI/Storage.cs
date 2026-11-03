@@ -9,7 +9,7 @@ namespace Codestead.UI;
 /// </summary>
 public sealed class Storage
 {
-    private static readonly JsonSerializerOptions Options = Codestead.Shell.Js.JsonOptions;
+    private static readonly JsonSerializerOptions Options = Codestead.Common.JsonDefaults.Options;
 
     public string Directory { get; }
 

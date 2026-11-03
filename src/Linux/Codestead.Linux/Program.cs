@@ -1,5 +1,5 @@
 using Avalonia;
-using Avalonia.Media;
+using Codestead.UI.App;
 using Velopack;
 
 namespace Codestead.Linux;
@@ -15,22 +15,13 @@ internal static class Program
     [STAThread]
     public static int Main(string[] args)
     {
-        // Velopack (installer and auto-update) runs its install/update hooks here and exits if it was one of them.
+        // Velopack's install/update hooks; it exits when started for one of them. It must be called here, in the
+        // app's own assembly, because `vpk pack` checks for it.
         VelopackApp.Build().Run();
         SmokeTest = args.Contains("--smoke-test");
-        if (args.Contains("--version"))
-        {
-            Console.WriteLine(ProductInfo.Version);
-            return 0;
-        }
-        return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        return AppHost.Run<App>(args, ProductInfo.Meta);
     }
 
-    public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>()
-        .UsePlatformDetect()
-        .WithInterFont()
-        // The bundled Inter font is the default, so the app also starts on systems without any fonts
-        // installed (minimal Arch/CachyOS installations, containers). Other scripts fall back to system fonts.
-        .With(new FontManagerOptions { DefaultFamilyName = "fonts:Inter#Inter" })
-        .LogToTrace();
+    /// <summary>Used by the Avalonia designer.</summary>
+    public static AppBuilder BuildAvaloniaApp() => AppHost.Build<App>();
 }

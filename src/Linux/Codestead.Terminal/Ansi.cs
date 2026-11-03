@@ -1,7 +1,7 @@
 using Avalonia.Controls.Documents;
 using Avalonia.Media;
 
-namespace Codestead.UI;
+namespace Codestead.Terminal;
 
 /// <summary>Splits text with ANSI colour codes (\x1b[...m) into segments and turns them into Avalonia runs.</summary>
 public static class Ansi

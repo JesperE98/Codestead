@@ -13,10 +13,6 @@
     i18n/<lang>/<id>.json and ui/<lang>.json.
   -->
   <ItemGroup>
-    <!-- The languages of all Codestead apps (offered and parked). -->
-    <EmbeddedResource Include="../../../build/languages.json" LogicalName="languages.json" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="../content/chapters/**/*.md">
       <LogicalName>chapters/$([System.String]::Copy('%(RecursiveDir)').Replace('\', '/'))%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>

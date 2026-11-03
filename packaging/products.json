@@ -51,9 +51,7 @@
       "src/Shared/Codestead.UI/Learning",
       "src/Shared/Codestead.UI/Controls/CheckpointView.cs",
       "src/Shared/Codestead.UI/Controls/CheckpointTexts.cs",
-      "src/Shared/Codestead.UI/Controls/TerminalView.cs",
-      "src/Shared/Codestead.UI/Ansi.cs",
-      "src/Shared/Codestead.UI/AnsiSegment.cs"
+      "src/Shared/Codestead.UI/Controls/Sandbox"
     ]
   }
 ]

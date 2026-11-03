@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The terminal of Codestead Linux on top of the simulator: TerminalView, ANSI colours and the lesson sandbox. -->
+  <PropertyGroup>
+    <RootNamespace>Codestead.Terminal</RootNamespace>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Codestead.Shell/Codestead.Shell.csproj" />
+    <ProjectReference Include="../../Shared/Codestead.UI/Codestead.UI.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Codestead.Terminal.Tests" />
+  </ItemGroup>
+</Project>

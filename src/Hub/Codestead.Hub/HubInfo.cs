@@ -1,18 +1,16 @@
-using System.Reflection;
+using Codestead.Common;
 
 namespace Codestead.Hub;
 
 /// <summary>Name, id, version and releases repository – from build/Codestead.props.</summary>
 public static class HubInfo
 {
-    private static string Meta(string key, string fallback) =>
-        typeof(HubInfo).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == key)?.Value ?? fallback;
+    public static ProductMeta Meta { get; } = ProductMeta.Of(typeof(HubInfo).Assembly, "Codestead", "codestead-hub");
 
-    public static string Name => Meta("ProductName", "Codestead");
-    public static string Id => Meta("ToolId", "codestead-hub");
-    public static string ReleasesRepo => Meta("ReleasesRepo", "JesperE98/codestead-releases");
-    public static string Version =>
-        typeof(HubInfo).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "0.0.0";
+    public static string Name => Meta.Name;
+    public static string Id => Meta.Id;
+    public static string ReleasesRepo => Meta.ReleasesRepo;
+    public static string Version => Meta.Version;
 
     /// <summary>The built-in public key for catalog.json, or null in a build without one.</summary>
     public static string? CatalogPublicKey()

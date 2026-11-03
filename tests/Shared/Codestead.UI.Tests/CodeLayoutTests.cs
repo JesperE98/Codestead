@@ -64,4 +64,18 @@ public class CodeLayoutTests
         foreach (var file in LargeForNow.Keys)
             Assert.True(File.Exists(Path.Combine(root, file)), $"{file} no longer exists: remove it from LargeForNow");
     }
+
+    [Fact(DisplayName = "varje app anropar Velopack i sin egen Main")]
+    public void AppsCallVelopackInTheirOwnMain()
+    {
+        // `vpk pack` refuses to package an app whose own assembly does not call VelopackApp.Build().Run().
+        var root = RepoRoot();
+        var apps = Directory.GetFiles(Path.Combine(root, "src"), "Program.cs", SearchOption.AllDirectories)
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+            .ToList();
+        Assert.NotEmpty(apps);
+        foreach (var program in apps)
+            Assert.True(File.ReadAllText(program).Contains("VelopackApp.Build().Run();"),
+                $"{Path.GetRelativePath(root, program)}: call VelopackApp.Build().Run() first in Main");
+    }
 }

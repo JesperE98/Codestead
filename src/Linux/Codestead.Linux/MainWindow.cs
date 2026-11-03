@@ -13,6 +13,9 @@ using Codestead.Shell;
 using Codestead.UI;
 using Codestead.UI.Controls;
 using Codestead.UI.Controls.Game;
+using Codestead.Terminal;
+using Codestead.UI.App;
+using static Codestead.UI.App.UiParts;
 using ShellType = Codestead.Shell.Shell;
 
 namespace Codestead.Linux;
@@ -197,14 +200,6 @@ public sealed partial class MainWindow : Window
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || (uri.Scheme != "https" && uri.Scheme != "http")) return;
         await Launcher.LaunchUriAsync(uri);
-    }
-
-    private static TextBlock Text(string text, double size = 14, FontWeight? weight = null, string? cls = null)
-    {
-        var tb = new TextBlock { Text = text, FontSize = size, TextWrapping = TextWrapping.Wrap };
-        if (weight is not null) tb.FontWeight = weight.Value;
-        if (cls is not null) tb.Classes.Add(cls);
-        return tb;
     }
 
     private static Border Divider() => new() { Height = 1, Margin = new Thickness(0, 10) };
@@ -439,13 +434,7 @@ public sealed partial class MainWindow : Window
         var cp = Codestead.UI.Learning.Checkpoint.Parse(kind, fenced.Lines.ToString().TrimEnd('\n', '\r'), index);
         var key = CheckpointKey(chapter, index);
         var distroId = DistroOf(chapter).Id;
-        ShellType Sandbox()
-        {
-            var sh = ShellType.Create(distroId, Lang);
-            sh.Lang = Lang;
-            return sh;
-        }
-        var view = new CheckpointView(cp, CheckpointTexts(), state.Checkpoints.ContainsKey(key), Sandbox, renderingExam, cmd => terminal.Inject(cmd));
+        var view = new CheckpointView(cp, CheckpointTexts(), state.Checkpoints.ContainsKey(key), new ShellSandbox(distroId, Lang), renderingExam, cmd => terminal.Inject(cmd));
         if (renderingExam)
         {
             examViews.Add(view);
@@ -967,16 +956,7 @@ public sealed partial class MainWindow : Window
         ApplyLanguage();
     }
 
-    private void ApplyTheme()
-    {
-        if (Application.Current is null) return;
-        Application.Current.RequestedThemeVariant = state.Theme switch
-        {
-            "light" => ThemeVariant.Light,
-            "dark" => ThemeVariant.Dark,
-            _ => ThemeVariant.Default,
-        };
-    }
+    private void ApplyTheme() => ThemeSwitcher.Apply(state.Theme);
 
     /// <summary>
     /// Installed with Setup.exe or as an AppImage, the app updates itself (Velopack). Installed by the hub or
@@ -998,16 +978,8 @@ public sealed partial class MainWindow : Window
     }
 
     /// <summary>The "What's new" dialog for some versions (newest first).</summary>
-    private void ShowNews(IEnumerable<ChangelogEntry> entries, Action? afterClose = null)
-    {
-        void Close()
-        {
-            overlay.CloseDialog();
-            afterClose?.Invoke();
-        }
-        var texts = new WhatsNewTexts(T("whatsnew.title", ("name", ProductInfo.Name)), T("whatsnew.version"), T("whatsnew.close"));
-        overlay.ShowDialog(WhatsNewView.Build(texts, entries, Lang, Close), Close, 560, scroll: false);
-    }
+    private void ShowNews(IEnumerable<ChangelogEntry> entries, Action? afterClose = null) =>
+        NewsDialog.Show(overlay, new WhatsNewTexts(T("whatsnew.title", ("name", ProductInfo.Name)), T("whatsnew.version"), T("whatsnew.close")), entries, Lang, afterClose);
 
     private async Task OfferUpdate()
     {
@@ -1071,46 +1043,26 @@ public sealed partial class MainWindow : Window
     private void OpenSettings()
     {
         var panel = new StackPanel { Spacing = 10 };
-        panel.Children.Add(Text(T("settings.title"), 21, FontWeight.Bold));
+        panel.Children.Add(SettingsSections.Title(T("settings.title")));
 
         // Language
-        panel.Children.Add(Text(T("settings.language"), 15, FontWeight.SemiBold));
-        var langs = new WrapPanel();
-        foreach (var l in LanguagesLib.Languages)
+        panel.Children.Add(SettingsSections.Heading(T("settings.language")));
+        panel.Children.Add(SettingsSections.Languages(Lang, code =>
         {
-            var b = new Button { Content = l.Name, Margin = new Thickness(0, 0, 8, 8), MinWidth = 120 };
-            b.Classes.Add("chip");
-            if (l.Code == Lang) b.Classes.Add("active");
-            var code = l.Code;
-            b.Click += (_, _) =>
-            {
-                ChangeLanguage(code);
-                OpenSettings();
-            };
-            langs.Children.Add(b);
-        }
-        panel.Children.Add(langs);
+            ChangeLanguage(code);
+            OpenSettings();
+        }));
         if (Lang != "sv" && Lang != "en") panel.Children.Add(Text(T("settings.languageNote"), 12.5, null, "muted"));
 
         // Theme
-        panel.Children.Add(Text(T("settings.theme"), 15, FontWeight.SemiBold));
-        var themes = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-        foreach (var (value, label) in new (string?, string)[] { (null, T("theme.system")), ("light", T("theme.light")), ("dark", T("theme.dark")) })
+        panel.Children.Add(SettingsSections.Heading(T("settings.theme")));
+        panel.Children.Add(SettingsSections.Theme(state.Theme, T("theme.system"), T("theme.light"), T("theme.dark"), v =>
         {
-            var b = new Button { Content = label };
-            b.Classes.Add("chip");
-            if (state.Theme == value) b.Classes.Add("active");
-            var v = value;
-            b.Click += (_, _) =>
-            {
-                state.Theme = v;
-                SaveState();
-                ApplyTheme();
-                OpenSettings();
-            };
-            themes.Children.Add(b);
-        }
-        panel.Children.Add(themes);
+            state.Theme = v;
+            SaveState();
+            ApplyTheme();
+            OpenSettings();
+        }));
 
         // Distro
         panel.Children.Add(Text(T("settings.distro"), 15, FontWeight.SemiBold));
@@ -1140,20 +1092,10 @@ public sealed partial class MainWindow : Window
         dangerBox.Bind(Border.BorderBrushProperty, this.GetResourceObservable("CsDanger"));
         panel.Children.Add(dangerBox);
 
-        var close = new Button { Content = T("dialog.close"), HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 8, 0, 0) };
-        close.Classes.Add("primary");
-        close.Click += (_, _) => overlay.CloseDialog();
-        panel.Children.Add(close);
-        var version = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
-        version.Children.Add(Text($"{ProductInfo.Name} {ProductInfo.Version}", 11.5, null, "muted"));
-        if (ChangelogEntries.Value.Count > 0)
-        {
-            var news = new Button { Content = T("settings.whatsNew"), Padding = new Thickness(8, 2), FontSize = 11.5 };
-            news.Classes.Add("secondary");
-            news.Click += (_, _) => ShowNews(ChangelogEntries.Value.Take(5));
-            version.Children.Add(news);
-        }
-        panel.Children.Add(version);
+        panel.Children.Add(SettingsSections.Close(T("dialog.close"), overlay.CloseDialog));
+        panel.Children.Add(ChangelogEntries.Value.Count > 0
+            ? SettingsSections.Version(ProductInfo.Meta, T("settings.whatsNew"), () => ShowNews(ChangelogEntries.Value.Take(5)))
+            : SettingsSections.Version(ProductInfo.Meta));
         overlay.ShowDialog(panel, overlay.CloseDialog, 640);
     }
 
@@ -1174,64 +1116,53 @@ public sealed partial class MainWindow : Window
 
     // ---------- Smoke test (installation tests) ----------
 
-    private void RunSmokeTest()
+    private void RunSmokeTest() => SmokeTest.Run(this, ProductInfo.Meta, () =>
     {
-        int code = 0;
-        try
+        // Every chapter renders in every language without throwing.
+        foreach (var l in LanguagesLib.Languages)
         {
-            // Every chapter renders in every language without throwing.
-            foreach (var l in LanguagesLib.Languages)
+            state.Lang = l.Code;
+            foreach (var ch in ChaptersLib.Chapters)
             {
-                state.Lang = l.Code;
-                foreach (var ch in ChaptersLib.Chapters)
-                {
-                    state.Chapter = ch.Id;
-                    UseShellFor(ch);
-                    RenderAll();
-                }
+                state.Chapter = ch.Id;
+                UseShellFor(ch);
+                RenderAll();
             }
-            // Switching language and distribution in the pickers, as a click does, must not crash
-            // (it once closed the app: the pickers were rebuilt inside their own SelectionChanged).
-            foreach (var lc in new[] { "sv", "ja", "en" })
-            {
-                langPicker.SelectedItem = langPicker.Items.OfType<ComboBoxItem>().First(i => Equals(i.Tag, lc));
-                Dispatcher.UIThread.RunJobs();
-                if (Lang != lc) throw new InvalidOperationException($"The language picker did not switch to {lc}.");
-            }
-            state.Chapter = ChaptersLib.Chapters.First(c => ChaptersLib.DistrosFor(c).Count() > 1).Id;
-            UseShellFor(Chapter);
-            FillPickers();
-            foreach (var id in distroPicker.Items.OfType<ComboBoxItem>().Select(i => i.Tag).OfType<string>().ToList())
-            {
-                distroPicker.SelectedItem = distroPicker.Items.OfType<ComboBoxItem>().First(i => Equals(i.Tag, id));
-                Dispatcher.UIThread.RunJobs();
-                if (Distro.Id != id) throw new InvalidOperationException($"The distribution picker did not switch to {id}.");
-            }
-            // Solve the first task of the first chapter in the real terminal.
-            state.Lang = "en";
-            state.Chapter = ChaptersLib.Chapters[0].Id;
-            UseShellFor(Chapter);
-            ApplyLanguage();
-            var task = Chapter.Tasks[0];
-            var before = state.Progress.ContainsKey(ChaptersLib.TaskKey(Chapter.Id, task.Id, task.PerFamily, Distro.Family));
-            foreach (var cmd in task.SolutionFor(Distro, shell.World))
-            {
-                terminal.Inject(cmd);
-                OnResult(shell.Execute(cmd));
-            }
-            var after = state.Progress.ContainsKey(ChaptersLib.TaskKey(Chapter.Id, task.Id, task.PerFamily, Distro.Family));
-            if (!before && !after) throw new InvalidOperationException("The first task was not completed by its solution.");
-            if (state.Game.Xp <= 0 || !state.Game.Achievements.ContainsKey("first-task"))
-                throw new InvalidOperationException($"The game did not count the first task (XP {state.Game.Xp}).");
-            Console.WriteLine($"SMOKE OK {ProductInfo.Name} {ProductInfo.Version} ({ChaptersLib.Chapters.Count} chapters, {LanguagesLib.Languages.Count} languages)");
         }
-        catch (Exception e)
+        // Switching language and distribution in the pickers, as a click does, must not crash
+        // (it once closed the app: the pickers were rebuilt inside their own SelectionChanged).
+        foreach (var lc in new[] { "sv", "ja", "en" })
         {
-            Console.Error.WriteLine("SMOKE FAILED: " + e);
-            code = 1;
+            langPicker.SelectedItem = langPicker.Items.OfType<ComboBoxItem>().First(i => Equals(i.Tag, lc));
+            Dispatcher.UIThread.RunJobs();
+            if (Lang != lc) throw new InvalidOperationException($"The language picker did not switch to {lc}.");
         }
-        Environment.ExitCode = code;
-        Close();
-    }
+        state.Chapter = ChaptersLib.Chapters.First(c => ChaptersLib.DistrosFor(c).Count() > 1).Id;
+        UseShellFor(Chapter);
+        FillPickers();
+        foreach (var id in distroPicker.Items.OfType<ComboBoxItem>().Select(i => i.Tag).OfType<string>().ToList())
+        {
+            distroPicker.SelectedItem = distroPicker.Items.OfType<ComboBoxItem>().First(i => Equals(i.Tag, id));
+            Dispatcher.UIThread.RunJobs();
+            if (Distro.Id != id) throw new InvalidOperationException($"The distribution picker did not switch to {id}.");
+        }
+        // Solve the first task of the first chapter in the real terminal.
+        state.Lang = "en";
+        state.Chapter = ChaptersLib.Chapters[0].Id;
+        UseShellFor(Chapter);
+        ApplyLanguage();
+        var task = Chapter.Tasks[0];
+        var before = state.Progress.ContainsKey(ChaptersLib.TaskKey(Chapter.Id, task.Id, task.PerFamily, Distro.Family));
+        foreach (var cmd in task.SolutionFor(Distro, shell.World))
+        {
+            terminal.Inject(cmd);
+            OnResult(shell.Execute(cmd));
+        }
+        var after = state.Progress.ContainsKey(ChaptersLib.TaskKey(Chapter.Id, task.Id, task.PerFamily, Distro.Family));
+        if (!before && !after) throw new InvalidOperationException("The first task was not completed by its solution.");
+        if (state.Game.Xp <= 0 || !state.Game.Achievements.ContainsKey("first-task"))
+            throw new InvalidOperationException($"The game did not count the first task (XP {state.Game.Xp}).");
+        return $"{ChaptersLib.Chapters.Count} chapters, {LanguagesLib.Languages.Count} languages";
+    });
 }
 

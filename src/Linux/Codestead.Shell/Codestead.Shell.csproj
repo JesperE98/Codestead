@@ -5,6 +5,9 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Codestead.Shell.Tests" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../Shared/Codestead.Common/Codestead.Common.csproj" />
+  </ItemGroup>
   <!-- The simulator's own messages and help summaries in every language (see ShellI18n.cs). -->
   <ItemGroup>
     <EmbeddedResource Include="i18n/*.json">

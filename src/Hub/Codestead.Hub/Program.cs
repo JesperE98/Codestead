@@ -1,5 +1,5 @@
 using Avalonia;
-using Avalonia.Media;
+using Codestead.UI.App;
 using Velopack;
 
 namespace Codestead.Hub;
@@ -16,19 +16,13 @@ internal static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        // Velopack's install/update hooks; it exits when started for one of them. It must be called here, in the
+        // app's own assembly, because `vpk pack` checks for it.
         VelopackApp.Build().Run();
-        if (args.Contains("--version"))
-        {
-            Console.WriteLine(HubInfo.Version);
-            return 0;
-        }
         Options = HubOptions.Parse(args);
-        return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        return AppHost.Run<App>(args, HubInfo.Meta);
     }
 
-    public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>()
-        .UsePlatformDetect()
-        .WithInterFont()
-        .With(new FontManagerOptions { DefaultFamilyName = "fonts:Inter#Inter" })
-        .LogToTrace();
+    /// <summary>Used by the Avalonia designer.</summary>
+    public static AppBuilder BuildAvaloniaApp() => AppHost.Build<App>();
 }

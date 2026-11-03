@@ -36,18 +36,6 @@ public class ControlTests
         Assert.Equal("a", DeadKeys.Filter(Key.A, "a", KeyModifiers.None, "a"));
     }
 
-    [Fact(DisplayName = "ANSI-färger delas upp i segment")]
-    public void AnsiSegments()
-        => Ui.Run(() =>
-    {
-        var segs = Ansi.Parse("a\x1b[1;32mgrön\x1b[0m b");
-        Assert.Equal(3, segs.Count);
-        Assert.Equal("grön", segs[1].Text);
-        Assert.Equal(32, segs[1].Fg);
-        Assert.True(segs[1].Bold);
-        Assert.Equal(0, segs[2].Fg);
-    });
-
     [Fact(DisplayName = "markdown blir rubriker, stycken, listor, tabeller och klickbara kommandon")]
     public void MarkdownRenders()
         => Ui.Run(() =>
@@ -89,27 +77,4 @@ public class ControlTests
         Snap(w, "markdown");
         w.Close();
     });
-
-    [Fact(DisplayName = "terminalen kör kommandon och visar prompten")]
-    public void TerminalRuns()
-        => Ui.Run(() =>
-    {
-        var sh = Codestead.Shell.Shell.Create("ubuntu");
-        var term = new TerminalView { Shell = sh };
-        Codestead.Shell.ExecResult? last = null;
-        term.CommandExecuted += r => last = r;
-        var w = new Window { Width = 700, Height = 400, Content = term };
-        w.Show();
-        // Assignments are handled by the shell core itself (no command module needed).
-        term.Inject("X=hej");
-        var input = term.GetLogicalDescendants().OfType<TextBox>().First();
-        Assert.Equal("X=hej", input.Text);
-        input.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
-        Assert.NotNull(last);
-        Assert.Equal("hej", sh.Env["X"]);
-        Assert.Equal("", input.Text);
-        Snap(w, "terminal");
-        w.Close();
-    });
 }
-

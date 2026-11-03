@@ -1,4 +1,4 @@
-namespace Codestead.UI;
+namespace Codestead.Terminal;
 
 // A piece of terminal text with its ANSI attributes.
 

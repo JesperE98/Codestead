@@ -10,6 +10,8 @@ using Codestead.Hub.Core;
 using Codestead.UI;
 using Codestead.UI.Controls;
 using Codestead.UI.Controls.Game;
+using Codestead.UI.App;
+using static Codestead.UI.App.UiParts;
 
 namespace Codestead.Hub;
 
@@ -136,14 +138,6 @@ public sealed class MainWindow : Window
         dock.Children.Add(top);
         dock.Children.Add(new ScrollViewer { Content = page });
         return dock;
-    }
-
-    private static TextBlock Text(string text, double size = 14, FontWeight? weight = null, string? cls = null)
-    {
-        var tb = new TextBlock { Text = text, FontSize = size, TextWrapping = TextWrapping.Wrap };
-        if (weight is not null) tb.FontWeight = weight.Value;
-        if (cls is not null) tb.Classes.Add(cls);
-        return tb;
     }
 
     private Button Action(string label, string cls, Action onClick, bool enabled = true)
@@ -414,11 +408,8 @@ public sealed class MainWindow : Window
         (tool.Changes ?? new()).Select(c => new ChangelogEntry { Version = c.Version, Date = c.Date, Changes = c.Changes }).ToList();
 
     /// <summary>The "What's new" dialog for a tool (or the hub itself).</summary>
-    private void ShowNews(string name, IEnumerable<ChangelogEntry> entries)
-    {
-        var texts = new WhatsNewTexts(T("whatsnew.title", ("name", name)), T("whatsnew.version"), T("whatsnew.close"));
-        overlay.ShowDialog(WhatsNewView.Build(texts, entries, Lang, overlay.CloseDialog), overlay.CloseDialog, 560, scroll: false);
-    }
+    private void ShowNews(string name, IEnumerable<ChangelogEntry> entries) =>
+        NewsDialog.Show(overlay, new WhatsNewTexts(T("whatsnew.title", ("name", name)), T("whatsnew.version"), T("whatsnew.close")), entries, Lang);
 
     private async Task<InstalledTool?> Install(CatalogTool tool, CatalogAsset asset)
     {
@@ -496,115 +487,72 @@ public sealed class MainWindow : Window
         if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == "https") await Launcher.LaunchUriAsync(uri);
     }
 
-    private void ApplyTheme()
-    {
-        if (Application.Current is null) return;
-        Application.Current.RequestedThemeVariant = state.Theme switch
-        {
-            "light" => ThemeVariant.Light,
-            "dark" => ThemeVariant.Dark,
-            _ => ThemeVariant.Default,
-        };
-    }
+    private void ApplyTheme() => ThemeSwitcher.Apply(state.Theme);
 
     private void OpenSettings()
     {
         var panel = new StackPanel { Spacing = 10 };
-        panel.Children.Add(Text(T("settings.title"), 21, FontWeight.Bold));
-        panel.Children.Add(Text(T("settings.language"), 15, FontWeight.SemiBold));
-        var langs = new WrapPanel();
-        foreach (var l in HubStrings.Languages)
+        panel.Children.Add(SettingsSections.Title(T("settings.title")));
+        panel.Children.Add(SettingsSections.Heading(T("settings.language")));
+        panel.Children.Add(SettingsSections.Languages(Lang, code =>
         {
-            var b = new Button { Content = l.Name, Margin = new Thickness(0, 0, 8, 8), MinWidth = 110 };
-            b.Classes.Add("chip");
-            if (l.Code == Lang) b.Classes.Add("active");
-            var code = l.Code;
-            b.Click += (_, _) =>
-            {
-                state.Lang = code;
-                storage.Save("state", state);
-                Render();
-                OpenSettings();
-            };
-            langs.Children.Add(b);
-        }
-        panel.Children.Add(langs);
+            state.Lang = code;
+            storage.Save("state", state);
+            Render();
+            OpenSettings();
+        }, minWidth: 110));
 
-        panel.Children.Add(Text(T("settings.theme"), 15, FontWeight.SemiBold));
-        var themes = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-        foreach (var (value, label) in new (string?, string)[] { (null, T("theme.system")), ("light", T("theme.light")), ("dark", T("theme.dark")) })
+        panel.Children.Add(SettingsSections.Heading(T("settings.theme")));
+        panel.Children.Add(SettingsSections.Theme(state.Theme, T("theme.system"), T("theme.light"), T("theme.dark"), v =>
         {
-            var b = new Button { Content = label };
-            b.Classes.Add("chip");
-            if (state.Theme == value) b.Classes.Add("active");
-            var v = value;
-            b.Click += (_, _) =>
-            {
-                state.Theme = v;
-                storage.Save("state", state);
-                ApplyTheme();
-                OpenSettings();
-            };
-            themes.Children.Add(b);
-        }
-        panel.Children.Add(themes);
+            state.Theme = v;
+            storage.Save("state", state);
+            ApplyTheme();
+            OpenSettings();
+        }));
 
-        panel.Children.Add(Text(T("settings.folder"), 15, FontWeight.SemiBold));
+        panel.Children.Add(SettingsSections.Heading(T("settings.folder")));
         var folder = new SelectableTextBlock { Text = store.Root, FontFamily = new FontFamily("Cascadia Mono, DejaVu Sans Mono, monospace"), FontSize = 13, TextWrapping = TextWrapping.Wrap, FlowDirection = FlowDirection.LeftToRight };
         panel.Children.Add(folder);
 
-        var close = new Button { Content = T("dialog.close"), HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 8, 0, 0) };
-        close.Classes.Add("primary");
-        close.Click += (_, _) => overlay.CloseDialog();
-        panel.Children.Add(close);
-        panel.Children.Add(Text($"{HubInfo.Name} {HubInfo.Version}", 11.5, null, "muted"));
+        panel.Children.Add(SettingsSections.Close(T("dialog.close"), overlay.CloseDialog));
+        panel.Children.Add(SettingsSections.Version(HubInfo.Meta));
         overlay.ShowDialog(panel, overlay.CloseDialog, 600);
     }
 
     // ---------- Smoke test (installation tests) ----------
 
-    private async Task RunSmokeTest()
+    private Task RunSmokeTest() => SmokeTest.RunAsync(this, HubInfo.Meta, async () =>
     {
-        int code = 0;
-        try
+        foreach (var l in HubStrings.Languages)
         {
-            foreach (var l in HubStrings.Languages)
+            state.Lang = l.Code;
+            Render();
+        }
+        state.Lang = "en";
+        var detail = "";
+        if (options.Catalog is not null)
+        {
+            await Refresh();
+            if (catalog is null) throw new InvalidOperationException(catalogProblem ?? "no catalog");
+            if (options.Install is { } id)
             {
-                state.Lang = l.Code;
-                Render();
-            }
-            state.Lang = "en";
-            var detail = "";
-            if (options.Catalog is not null)
-            {
-                await Refresh();
-                if (catalog is null) throw new InvalidOperationException(catalogProblem ?? "no catalog");
-                if (options.Install is { } id)
+                var tool = catalog.Find(id) ?? throw new InvalidOperationException($"{id} is not in the catalog.");
+                var asset = tool.AssetFor(Platform.Rid ?? "") ?? throw new InvalidOperationException($"{id} has no package for {Platform.Rid}.");
+                var installed = await Install(tool, asset) ?? throw new InvalidOperationException(errors.GetValueOrDefault(id, "install failed"));
+                using (var p = store.Launch(id, new[] { "--smoke-test" }, captureOutput: true))
                 {
-                    var tool = catalog.Find(id) ?? throw new InvalidOperationException($"{id} is not in the catalog.");
-                    var asset = tool.AssetFor(Platform.Rid ?? "") ?? throw new InvalidOperationException($"{id} has no package for {Platform.Rid}.");
-                    var installed = await Install(tool, asset) ?? throw new InvalidOperationException(errors.GetValueOrDefault(id, "install failed"));
-                    using (var p = store.Launch(id, new[] { "--smoke-test" }, captureOutput: true))
-                    {
-                        var output = await p.StandardOutput.ReadToEndAsync();
-                        await p.WaitForExitAsync(new CancellationTokenSource(TimeSpan.FromMinutes(3)).Token);
-                        p.WaitForExit(); // also waits until the output is fully read and the process is gone
-                        Console.WriteLine(output.Trim());
-                        if (p.ExitCode != 0 || !output.Contains("SMOKE OK")) throw new InvalidOperationException($"{id} --smoke-test failed (exit {p.ExitCode}).");
-                    }
-                    store.Uninstall(id);
-                    if (store.Installed(id) is not null) throw new InvalidOperationException($"{id} is still installed after uninstalling.");
-                    detail = $", installed, started and removed {id} {installed.Version}";
+                    var output = await p.StandardOutput.ReadToEndAsync();
+                    await p.WaitForExitAsync(new CancellationTokenSource(TimeSpan.FromMinutes(3)).Token);
+                    p.WaitForExit(); // also waits until the output is fully read and the process is gone
+                    Console.WriteLine(output.Trim());
+                    if (p.ExitCode != 0 || !output.Contains("SMOKE OK")) throw new InvalidOperationException($"{id} --smoke-test failed (exit {p.ExitCode}).");
                 }
+                store.Uninstall(id);
+                if (store.Installed(id) is not null) throw new InvalidOperationException($"{id} is still installed after uninstalling.");
+                detail = $", installed, started and removed {id} {installed.Version}";
             }
-            Console.WriteLine($"SMOKE OK {HubInfo.Name} {HubInfo.Version} ({HubStrings.Languages.Count} languages{detail})");
         }
-        catch (Exception e)
-        {
-            Console.Error.WriteLine("SMOKE FAILED: " + e);
-            code = 1;
-        }
-        Environment.ExitCode = code;
-        Close();
-    }
+        return $"{HubStrings.Languages.Count} languages{detail}";
+    });
 }

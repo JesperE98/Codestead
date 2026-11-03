@@ -10,7 +10,7 @@ using Avalonia.Threading;
 using Codestead.Shell;
 using ShellType = Codestead.Shell.Shell;
 
-namespace Codestead.UI.Controls;
+namespace Codestead.Terminal;
 
 /// <summary>
 /// The simulated terminal: shows output with ANSI colours and an input line with the prompt.

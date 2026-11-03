@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Plain .NET code shared by every Codestead app and library: no UI and no simulator. -->
+  <PropertyGroup>
+    <RootNamespace>Codestead.Common</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The languages of all Codestead apps (offered and parked). -->
+    <EmbeddedResource Include="../../../build/languages.json" LogicalName="languages.json" />
+  </ItemGroup>
+</Project>

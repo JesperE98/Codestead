@@ -33,23 +33,9 @@ public static partial class UiStrings
         return all;
     }
 
-    private static readonly Regex PlaceholderRe = new(@"\{([A-Za-z0-9_]+)\}", RegexOptions.CultureInvariant);
-
     /// <summary>Translates a key and fills in {placeholders}.</summary>
-    public static string Translate(Lang lang, string key, IReadOnlyDictionary<string, object>? parameters = null)
-    {
-        var text = key;
-        foreach (var l in LanguagesLib.FallbackChain(lang))
-        {
-            if (Ui.TryGetValue(l, out var dict) && dict.TryGetValue(key, out var v))
-            {
-                text = v;
-                break;
-            }
-        }
-        return PlaceholderRe.Replace(text, m =>
-            parameters is not null && parameters.TryGetValue(m.Groups[1].Value, out var value) ? JsString(value) : m.Value);
-    }
+    public static string Translate(Lang lang, string key, IReadOnlyDictionary<string, object>? parameters = null) =>
+        Codestead.Common.Translator.Translate(l => Ui.TryGetValue(l, out var d) ? d : null, LanguagesLib.FallbackChain(lang), key, parameters, JsString);
 
     /// <summary>String(value) in JS for the parameter types the UI uses (strings and numbers).</summary>
     private static string JsString(object? value) => value switch

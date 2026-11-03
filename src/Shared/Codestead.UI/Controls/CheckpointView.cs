@@ -5,7 +5,6 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Codestead.UI.Learning;
-using ShellType = Codestead.Shell.Shell;
 
 namespace Codestead.UI.Controls;
 
@@ -40,8 +39,8 @@ public sealed class CheckpointView : UserControl
     public bool IsSolved => solved;
     public bool ExamMode => examMode;
 
-    /// <param name="sandbox">Creates the shell for "try" blocks (a separate sandbox, not the student's terminal).</param>
-    public CheckpointView(Checkpoint cp, CheckpointTexts texts, bool alreadySolved, Func<ShellType> sandbox, bool examMode = false, Action<string>? onCommandClicked = null)
+    /// <param name="sandbox">Where "try" blocks and the predict terminal run (separate from the student's own work).</param>
+    public CheckpointView(Checkpoint cp, CheckpointTexts texts, bool alreadySolved, ISandbox sandbox, bool examMode = false, Action<string>? onCommandClicked = null)
     {
         this.cp = cp;
         this.texts = texts;
@@ -112,7 +111,7 @@ public sealed class CheckpointView : UserControl
         }
     }
 
-    private void BuildPredict(Func<ShellType> sandbox)
+    private void BuildPredict(ISandbox sandbox)
     {
         body.Children.Add(new TextBlock { Text = texts.PredictPrompt, TextWrapping = TextWrapping.Wrap });
         var code = new SelectableTextBlock { FontFamily = new FontFamily("Cascadia Mono, DejaVu Sans Mono, Liberation Mono, monospace"), FontSize = 14, Foreground = new SolidColorBrush(Color.Parse("#e6edf3")), Inlines = new InlineCollection() };
@@ -145,9 +144,9 @@ public sealed class CheckpointView : UserControl
     }
 
     /// <summary>The "try it in a terminal" button of a predict question, and the terminal it opens.</summary>
-    internal TerminalView? PredictTerminal { get; private set; }
+    internal ISandboxTerminal? PredictTerminal { get; private set; }
 
-    private void AddPredictTerminal(Func<ShellType> sandbox)
+    private void AddPredictTerminal(ISandbox sandbox)
     {
         var open = new Button { Content = "▶ " + texts.TryPredict, HorizontalAlignment = HorizontalAlignment.Left };
         open.Classes.Add("secondary");
@@ -157,42 +156,43 @@ public sealed class CheckpointView : UserControl
             if (PredictTerminal is null)
             {
                 // A fresh sandbox: the same computer the answer was written for, not the student's terminal.
-                PredictTerminal = new TerminalView { Shell = sandbox(), Height = 170 };
-                PredictTerminal.CommandExecuted += r => CommandRun?.Invoke(r.Line);
-                holder.Child = PredictTerminal;
+                PredictTerminal = sandbox.NewTerminal();
+                PredictTerminal.View.Height = 170;
+                PredictTerminal.Ran += r => CommandRun?.Invoke(r.Line);
+                holder.Child = PredictTerminal.View;
             }
             open.IsVisible = false;
             holder.IsVisible = true;
-            PredictTerminal.FocusInput();
+            PredictTerminal.Focus();
         };
         body.Children.Add(open);
         body.Children.Add(holder);
     }
 
-    private void BuildTry(Func<ShellType> sandbox)
+    private void BuildTry(ISandbox sandbox)
     {
         var prompt = new TextBlock { Text = texts.TryPrompt, TextWrapping = TextWrapping.Wrap };
         body.Children.Add(prompt);
         var hint = new SelectableTextBlock { FontFamily = new FontFamily("Cascadia Mono, DejaVu Sans Mono, Liberation Mono, monospace"), FontSize = 14, Text = string.Join("\n", cp.Commands.Take(1)), FlowDirection = FlowDirection.LeftToRight };
         hint.Bind(TextBlock.ForegroundProperty, hint.GetResourceObservable("CsAccent"));
         body.Children.Add(hint);
-        var shell = sandbox();
         // The output the reference command gives in a fresh sandbox – another command with the same output also counts.
-        var expected = Codestead.Shell.Commands.UtilCmd.StripAnsi(sandbox().Execute(cp.Commands[0]).Output).Trim();
-        var terminal = new TerminalView { Shell = shell, Height = 170 };
-        terminal.CommandExecuted += r =>
+        var expected = sandbox.OutputOf(cp.Commands[0]).Trim();
+        var terminal = sandbox.NewTerminal();
+        terminal.View.Height = 170;
+        terminal.Ran += r =>
         {
             CommandRun?.Invoke(r.Line);
-            if (r.Pending || r.Incomplete) return;
+            if (!r.Finished) return;
             var line = Checkpoint.Normalize(r.Line);
-            var output = Codestead.Shell.Commands.UtilCmd.StripAnsi(r.Output).Trim();
+            var output = r.Output.Trim();
             if (cp.Commands.Any(c => Checkpoint.Normalize(c) == line) || (expected != "" && output == expected && r.ExitCode == 0))
             {
                 trySolved = true;
                 if (!examMode) MarkSolved(silent: false);
             }
         };
-        body.Children.Add(new Border { CornerRadius = new CornerRadius(8), ClipToBounds = true, Child = terminal });
+        body.Children.Add(new Border { CornerRadius = new CornerRadius(8), ClipToBounds = true, Child = terminal.View });
     }
 
     private bool IsAnswerRight() => cp.Kind switch
