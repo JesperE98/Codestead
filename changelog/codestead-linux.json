@@ -1,5 +1,44 @@
 [
   {
+    "version": "0.5.6",
+    "date": "2026-11-03",
+    "changes": {
+      "en": [
+        "The settings are opened from the bottom of the chapter list – the extra button in the top right corner is gone."
+      ],
+      "sv": [
+        "Inställningarna öppnas längst ner i kapitellistan – den extra knappen uppe i högra hörnet är borta."
+      ],
+      "de": [
+        "Die Einstellungen öffnest du unten in der Kapitelliste – die zusätzliche Schaltfläche oben rechts ist weg."
+      ],
+      "fr": [
+        "Les paramètres s'ouvrent en bas de la liste des chapitres – le bouton supplémentaire en haut à droite a disparu."
+      ],
+      "es": [
+        "La configuración se abre al final de la lista de capítulos: el botón extra de la esquina superior derecha ya no está."
+      ],
+      "pt": [
+        "As configurações são abertas no fim da lista de capítulos – o botão extra no canto superior direito foi removido."
+      ],
+      "ru": [
+        "Настройки открываются внизу списка глав – лишней кнопки в правом верхнем углу больше нет."
+      ],
+      "zh": [
+        "从章节列表底部打开设置——右上角多余的按钮已移除。"
+      ],
+      "ja": [
+        "設定は章リストのいちばん下から開きます。右上の余分なボタンはなくなりました。"
+      ],
+      "ar": [
+        "تُفتح الإعدادات من أسفل قائمة الفصول – أُزيل الزر الإضافي في الزاوية العلوية اليمنى."
+      ],
+      "hi": [
+        "सेटिंग्स अब अध्यायों की सूची के नीचे से खुलती हैं – ऊपर दाएँ कोने का अतिरिक्त बटन हटा दिया गया है।"
+      ]
+    }
+  },
+  {
     "version": "0.5.5",
     "date": "2026-11-03",
     "changes": {
