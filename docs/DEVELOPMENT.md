@@ -178,6 +178,24 @@ Sammanfattningarna som `help` visar (`summaries`) skrivs i koden (`Summary` på 
 ändringen i de andra språken. Testerna i `ShellI18nTests.cs` kontrollerar nycklar, platshållare och
 att inget har glömts.
 
+## Simulatorns filsystem, cron och servern
+
+- **Länkar** (`Vfs.cs`): en symbolisk länk är en nod med `Type = "link"` och sökvägen i `Content`.
+  `VFS.Lookup` följer länkar (högst 40, sedan `ELOOP`); `Lookup(..., follow: false)` och
+  `TryLookupLink` ger själva länken, som `lstat`. Kommandon som arbetar med namnet (rm, mv, rmdir,
+  ls -l, find, tar) använder den varianten. En hård länk är samma nod i flera kataloger, med
+  `Nlink` och ett gemensamt `Ino`; när en sparad terminal läses in fogar `JoinHardLinks` ihop dem
+  igen. `VfsLib.CloneNode` (cp) ger alltid nya filer utan inodnummer.
+- **umask** finns på `VFS` och sparas med terminalen. `WriteFile` och `Mkdir` använder den.
+- **cron** (`Commands/CronCmd.cs`): användarnas crontab ligger i `/var/spool/cron/crontabs`
+  (Debian/Ubuntu) eller `/var/spool/cron`. `CronCmd.Tick` körs före varje kommandorad och kör de
+  jobb vars minut har passerat sedan förra gången (högst en timme bakåt), men bara medan tjänsten
+  cron/crond/cronie är igång. Tiden räknas inte medan appen är stängd, precis som en avstängd dator.
+  Systemets egna jobb (`run-parts`) loggas men körs inte.
+- **Servern** `192.168.1.10` (`SshCmd.ServerFor`) är en egen Debian-terminal i minnet. ssh, scp och
+  rsync kör mot den, och `~/.ssh/config` (`Host`, `HostName`, `User`, `Port`) läses på samma sätt
+  som av OpenSSH. Serverns filer sparas inte när appen stängs.
+
 ## Bygga installationsfilerna
 
 Allt byggs av GitHub Actions (`.github/workflows/release.yml`), för varje produkt i
