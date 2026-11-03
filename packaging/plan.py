@@ -9,7 +9,9 @@ For each product in packaging/products.json:
     the newest release was built from (recorded as <!-- codestead-source: SHA --> in its release notes).
     "exclude" lists files in a shared folder that the product does not use, e.g. the lesson controls in
     src/Codestead.UI for the hub (tests/Codestead.Hub.Tests checks that the hub really does not use them).
-Publishing also needs WANT_PUBLISH=true (push to main, or "publish" ticked) and both secrets.
+Publishing also needs WANT_PUBLISH=true (a run by hand on main with "publish" ticked) and both secrets.
+Merges to main do not publish: several pull requests are collected, and they all add their lines to the one
+changelog entry for the next version (which stays the same until it is published).
 Writes products=[...] and publish=[...] to $GITHUB_OUTPUT.
 """
 import json
