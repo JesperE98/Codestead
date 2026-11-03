@@ -4,17 +4,6 @@ namespace Codestead.Content;
 // release flow). Swedish is the original language; English is the default and the fallback for
 // everything that lacks a translation.
 
-public partial class Language
-{
-    public Lang Code { get; set; } = "";
-    /// <summary>The language's name in the language itself.</summary>
-    public string Name { get; set; } = "";
-    /// <summary>Writing direction: "ltr" or "rtl".</summary>
-    public string Dir { get; set; } = "ltr";
-    /// <summary>False: parked – not in the menus, its texts are not required (build/languages.json).</summary>
-    public bool Offered { get; set; } = true;
-}
-
 public static partial class LanguagesLib
 {
     /// <summary>Every language with texts in the repository, offered or parked (build/languages.json).</summary>

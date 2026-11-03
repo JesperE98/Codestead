@@ -1,28 +1,5 @@
 namespace Codestead.Content.Game;
 
-public enum AchievementCategory { Learning, Exams, Terminal, Habits, Hidden }
-
-/// <summary>Everything an achievement can look at when it is checked.</summary>
-/// <param name="Command">The command just run, if the check comes from a command.</param>
-/// <param name="SolvedNow">Tasks solved by that command.</param>
-/// <param name="Now">Local time.</param>
-public sealed record AchievementContext(GameState Game, ProgressView Progress, CommandInfo? Command, IReadOnlyList<string> SolvedNow, DateTime Now)
-{
-    public int Level => Levels.LevelOf(XpRules.Total(Game, Progress));
-}
-
-/// <summary>
-/// An achievement. Title and description are the UI strings ach.&lt;id&gt;.title and ach.&lt;id&gt;.desc. Hidden ones
-/// are shown as "???" until found. <see cref="Counter"/> gives the progress ("62 / 100") of counting ones.
-/// </summary>
-public sealed record Achievement(string Id, string Icon, AchievementCategory Category, Func<AchievementContext, bool> Done,
-    Func<AchievementContext, (int Current, int Target)>? Counter = null)
-{
-    public bool Hidden => Category == AchievementCategory.Hidden;
-    public string TitleKey => $"ach.{Id}.title";
-    public string DescKey => $"ach.{Id}.desc";
-}
-
 public static class AchievementsLib
 {
     private static Achievement Count(string id, string icon, AchievementCategory cat, Func<AchievementContext, int> current, int target) =>

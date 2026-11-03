@@ -1,8 +1,5 @@
 namespace Codestead.UI.Learning;
 
-/// <summary>One answer option in a quiz.</summary>
-public sealed record QuizOption(string Text, bool Correct);
-
 /// <summary>
 /// An interactive checkpoint inside a lesson text. Written as fenced blocks in the chapter markdown,
 /// so translators keep the same structure in every language:

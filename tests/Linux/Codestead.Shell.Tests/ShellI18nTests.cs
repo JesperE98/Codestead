@@ -16,7 +16,7 @@ namespace Codestead.Shell.Tests;
 /// </summary>
 public class ShellI18nTests
 {
-    /// <summary>The app's languages (Codestead.Content/Languages.cs).</summary>
+    /// <summary>The app's languages (Codestead.Content/LanguagesLib.cs).</summary>
     private static readonly string[] LangCodes = ["en", "sv", "es", "zh", "hi", "ar", "pt", "fr", "de", "ru", "ja"];
 
     public static TheoryData<string> Languages => new(LangCodes);

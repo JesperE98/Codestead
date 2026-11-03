@@ -137,7 +137,7 @@ i hubben. Codestead Linux kopplar ihop dem i `src/Linux/Codestead.Linux/MainWind
   omdirigeringar, loopar, skript och man-sidor.
 - **Gamla sparningar**: `GameEngine.Sync` körs vid start och ger tyst XP och utmärkelser för tidigare
   framsteg; användaren får en notis om det en gång.
-- **Profil till hubben**: verktyget skriver `profile.json` (`ToolProfile`, `src/Shared/Codestead.UI/Controls/Game/Profile.cs`)
+- **Profil till hubben**: verktyget skriver `profile.json` (`ToolProfile`, `src/Shared/Codestead.UI/Controls/Game/Profile/ToolProfile.cs`)
   i sin datamapp när något märkbart ändras och vid start. Filen innehåller alla texter på alla språk, så hubben
   kan visa nivå, dagar i rad och galleriet utan verktygets texter. Ett nytt verktyg skriver samma fil.
 
@@ -155,7 +155,7 @@ src/
 │                                (utmärkelser, firande), lagring, "Vad är nytt", självuppdatering (Velopack)
 ├── Linux/                       Codestead Linux
 │   ├── Codestead.Linux/         Själva appen (Avalonia): MainWindow, MainWindow.Game
-│   ├── Codestead.Content/       Kapitel, uppgifter och kontroller (ChapterDefinitions.cs), spelmotorn
+│   ├── Codestead.Content/       Kapitel och uppgifter (Chapters/, ChapterDefinitions.cs, Checks.cs), spelmotorn
 │   │                            (Game/), språk, UI-texter (i18n/ui/*.json)
 │   ├── Codestead.Shell/         Den simulerade terminalen (bash, zsh, fish, apt, pacman, dnf, git ...)
 │   │   ├── Shell.cs             Kör kommandorader: pipes, omdirigering, sudo, skript, jobb
@@ -229,7 +229,8 @@ sina id:n och versioner i `build/Codestead.props`.
    - **Sammanfattning och prov** för ett huvudkapitel: `<huvudkapitel>-summary.md` och
      `<huvudkapitel>-exam.md` (t.ex. `grunder-exam.md`). De läggs till sist i huvudkapitlet av sig själva.
      Provet består av kontrollfrågor (minst 10), öppnas när alla sub-kapitel är klara och kräver 80 %.
-2. Lägg till kapitlet med uppgifter i `src/Linux/Codestead.Content/ChapterDefinitions.cs`. Varje uppgift har
+2. Lägg till kapitlet med uppgifter i en egen fil, `src/Linux/Codestead.Content/Chapters/<huvudkapitel>/<id>.cs`,
+   och anropa det i listan i `ChapterDefinitions.cs` (ordningen där är kursens ordning). Varje uppgift har
    en `Check` som körs efter varje kommando och en `Solution` (lista med kommandon).
 3. Kör `dotnet test`. Testerna kör alla lösningar i alla distributioner och kontrollerar att
    varje kapitel finns på alla språk, och att kontrollfrågorna är likadana på alla språk.
@@ -256,7 +257,7 @@ språk i `src/Linux/Codestead.Shell/world/<språk>.json`:
 - `words` är korta texter på språket, `files` innehållet i övningsfilerna.
 - `en.json` är källan: alla språk har samma nycklar (testerna i `WorldTests.cs` kontrollerar det).
 - Kapiteltexter, uppgiftstexter, lösningar och kontroller skriver namnen som platshållare: `{{documents}}`,
-  `{{user}}`. I `ChapterDefinitions.cs` fyller hjälpfunktionerna (`Node`, `Re(c, …)`, `Env`, `W(c)`) i dem.
+  `{{user}}`. I kapitlens kontroller fyller hjälpfunktionerna i `Checks.cs` (`Node`, `Re(c, …)`, `Env`, `W(c)`) i dem.
 - Det program skriver (loggar, konfigurationsfiler, systemfiler) är engelska på alla språk, som på en
   riktig dator. `$LANG` följer språket, och `sort` sorterar därefter.
 - När eleven byter språk översätts terminalen på plats (`WorldMigration.Translate`): övningsfilerna och
