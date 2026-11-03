@@ -1,0 +1,34 @@
+{
+  "title": "Links और file की जानकारी",
+  "tasks": {
+    "symlink": {
+      "text": "एक symbolic link `~/log` बनाइए जो directory `/var/log` की ओर इशारा करे।",
+      "hint": "`ln -s TARGET LINK_NAME` – target पहले: `ln -s /var/log ~/log`।"
+    },
+    "relative": {
+      "text": "अपनी home directory में जाइए और link `{{fruits}}` बनाइए जो `{{documents}}/{{fruits}}` की ओर इशारा करे – relative path के साथ।",
+      "hint": "`cd ~` और फिर `ln -s {{documents}}/{{fruits}} {{fruits}}`। Link में relative path उस directory से गिना जाता है जिसमें link है।"
+    },
+    "readlink": {
+      "text": "`readlink` से दिखाइए कि link `~/{{fruits}}` किस ओर इशारा करता है।"
+    },
+    "hardlink": {
+      "text": "`~/{{notes}}` को एक और नाम दीजिए: `~/{{todo}}` नाम का एक **hard** link।",
+      "hint": "`-s` के बिना `ln`: `ln ~/{{notes}} ~/{{todo}}`। `ls -li` से आप देख सकते हैं कि दोनों का inode number एक ही है।"
+    },
+    "stat": {
+      "text": "`stat` से `/etc/shadow` की permissions अंकों में पता कीजिए।",
+      "hint": "`stat /etc/shadow` चलाइए और line `Access: (0640/...)` देखिए – या सीधे `stat -c %a /etc/shadow`।"
+    },
+    "file": {
+      "text": "`file` से पता कीजिए कि `~/{{documents}}/{{grades}}` में क्या है।"
+    },
+    "umask": {
+      "text": "Umask ऐसे बदलिए कि नई files को सिर्फ़ आप पढ़ और लिख सकें, और फिर ख़ाली file `~/{{privateFile}}` बनाइए।",
+      "hint": "`umask 077` group और others से हर permission हटा देता है। फिर `touch ~/{{privateFile}}` से file बनाइए – उसे `rw-------` मिलता है।"
+    },
+    "umask-back": {
+      "text": "Umask को वापस आम value `022` पर सेट कीजिए।"
+    }
+  }
+}

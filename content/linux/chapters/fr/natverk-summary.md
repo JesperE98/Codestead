@@ -29,6 +29,13 @@ ordinateur, de façon chiffrée ; la première fois, vous confirmez la clé
 d'hôte du serveur, et avec une paire de clés, vous n'avez plus besoin de mot
 de passe.
 
+Dans `~/.ssh/config`, vous donnez des noms courts aux serveurs avec `Host`,
+`HostName` et `User`. `scp` copie comme `cp`, mais l'un des côtés s'écrit
+`HOST:PATH`, relatif au répertoire personnel de l'autre machine. `rsync -av`
+ne copie que ce qui a changé ; une barre oblique à la fin de la source signifie
+« ce que contient le répertoire », et `--delete` fait de la destination une
+copie exacte – essayez d'abord avec `-n`.
+
 Quand « Internet ne marche pas », procédez de l'intérieur vers l'extérieur :
 adresse, route, routeur, une adresse sur Internet et enfin un nom. Si les
 adresses fonctionnent mais pas les noms, c'est le DNS.
@@ -52,3 +59,7 @@ adresses fonctionnent mais pas les noms, c'est le DNS.
 | `curl -o FILE URL`, `wget URL`, `wget -O FILE URL` | Télécharger dans un fichier |
 | `ssh USER@HOST COMMAND` | Lancer une commande sur un autre ordinateur |
 | `ssh-keygen`, `ssh-copy-id USER@HOST` | Créer une paire de clés et mettre la clé publique sur le serveur |
+| `ssh srv` avec `Host srv` dans `~/.ssh/config` | Se connecter avec un nom court |
+| `scp FILE HOST:` · `scp HOST:FILE .` · `scp -r` | Copier vers · depuis un autre ordinateur · des répertoires entiers |
+| `rsync -av SOURCE/ TARGET` | Ne copier que ce qui a changé |
+| `rsync -avn --delete SOURCE/ TARGET` | Essayer un miroir sans rien faire |

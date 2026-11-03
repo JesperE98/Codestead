@@ -430,9 +430,8 @@ publique (`id_ed25519.pub`) à `~/.ssh/authorized_keys` sur le serveur. Ensuite,
 ssh ne vous demande plus de mot de passe. Ne montrez jamais la clé privée à
 personne !
 
-Avec `scp` et `rsync`, vous pouvez copier des fichiers via SSH, et dans le
-fichier `~/.ssh/config`, vous pouvez donner des noms courts aux serveurs –
-mais cela attendra un prochain chapitre.
+Copier des fichiers via SSH avec `scp` et `rsync`, et donner des noms courts
+aux serveurs dans `~/.ssh/config` : ce sera pour le chapitre suivant.
 
 ## Quand le réseau ne fonctionne pas
 

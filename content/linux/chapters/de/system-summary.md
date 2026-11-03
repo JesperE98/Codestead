@@ -25,6 +25,17 @@ bist, nicht zu `PATH` gehört. `sudo` führt einen einzelnen Befehl als root aus
 und fragt nach deinem eigenen Passwort. Unter Ubuntu dürfen die Benutzer in
 der Gruppe `sudo` es verwenden.
 
+## Links und Dateiinformationen
+
+Der Inhalt und die Rechte einer Datei stehen in einem **Inode**, und die Namen
+in einem Verzeichnis zeigen auf Inodes. `ln -s` legt einen **symbolischen
+Link** an, eine kleine Datei mit einem Pfad, die kaputtgeht, wenn das Ziel
+verschwindet; ein relativer Pfad darin zählt ab dem Verzeichnis des Links.
+`ln` ohne `-s` legt einen **harten Link** an, einen weiteren Namen für
+denselben Inode. `stat` zeigt alles über eine Datei, `file` sagt, was sie
+enthält – egal, wie sie heißt –, und die **umask** bestimmt die Rechte neuer
+Dateien: Mit `022` bekommen sie `644`, mit `077` nur `600`.
+
 ## Prozesse und Jobs
 
 Jedes laufende Programm ist ein Prozess mit einer PID und einem Elternprozess
@@ -32,7 +43,8 @@ Jedes laufende Programm ist ein Prozess mit einer PID und einem Elternprozess
 Prozessorauslastung sortiert. `kill` schickt ein Signal: standardmäßig
 `SIGTERM` (15) und als letztes Mittel `SIGKILL` (9). Mit `&` läuft ein Befehl
 im Hintergrund, und mit `jobs`, `fg` und `bg` verwaltest du die Jobs in
-deinem Terminal.
+deinem Terminal. `nohup` lässt einen Befehl weiterlaufen, nachdem du dich
+abgemeldet hast, und `watch` führt einen Befehl immer wieder aus.
 
 ## Archive und Komprimierung
 
@@ -58,6 +70,12 @@ sich um zip-Dateien, die sich leicht mit Windows und macOS teilen lassen.
 | `chmod 644 file` · `chmod u+x file` | Rechte mit Zahlen · Symbolen ändern |
 | `sudo command` · `sudo -i` | Einen Befehl als root ausführen · eine root-Shell starten |
 | `sudo tee -a file` | Am Ende einer Pipe: Text an eine Datei anhängen, die nur root ändern darf |
+| `ln -s target name` · `ln file name` | Einen symbolischen · harten Link anlegen |
+| `readlink link` · `realpath path` | Wohin ein Link zeigt · der vollständige Pfad ohne Links |
+| `ls -li` | Inode-Nummern und Linkzähler anzeigen |
+| `stat file` · `stat -c '%a %U' file` | Alles über eine Datei · nur das, wonach du fragst |
+| `file file` | Was eine Datei enthält |
+| `umask` · `umask 077` | Die Rechte anzeigen · festlegen, die neue Dateien verlieren |
 | `ps` · `ps aux` · `ps -ef` | Deine Prozesse · alle Prozesse · mit der PID des Elternprozesses |
 | `ps aux --sort=-%cpu` | Alle Prozesse, die schwersten zuerst |
 | `pgrep -l name` | Die PID eines Prozesses anhand des Namens finden |
@@ -66,6 +84,8 @@ sich um zip-Dateien, die sich leicht mit Windows und macOS teilen lassen.
 | `pkill pattern` · `killall name` | Prozesse anhand des Namens beenden |
 | `command &` | Einen Befehl im Hintergrund ausführen |
 | `jobs` · `fg %1` · `bg %1` · `kill %1` | Jobs auflisten · in den Vordergrund · in den Hintergrund · einen Job beenden |
+| `nohup command &` | Nach dem Abmelden weiterlaufen |
+| `watch -n 5 command` | Einen Befehl alle fünf Sekunden ausführen |
 | `uptime` · `free -h` | Last · Arbeitsspeicher |
 | `tar -czvf archive.tar.gz dir` | Ein Verzeichnis packen und komprimieren |
 | `tar -tzvf archive.tar.gz` | Den Inhalt eines Archivs auflisten |

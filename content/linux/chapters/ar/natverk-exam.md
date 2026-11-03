@@ -128,3 +128,12 @@ hosts: files dns
 - [ ] بطاقة الشبكة متوقفة
 - [ ] الملف `/etc/hosts` مفقود
 ```
+
+```quiz
+تريد أن يحتوي `/tmp/x` على الملفات الموجودة في `{{documents}}`، لا على مجلد `{{documents}}`. أي أمر هو الصحيح؟
+- [ ] `rsync -a {{documents}} /tmp/x`
+- [x] `rsync -a {{documents}}/ /tmp/x`
+- [ ] `scp {{documents}} /tmp/x`
+---
+الشرطة المائلة في نهاية المصدر تعني "ما بداخل المجلد".
+```

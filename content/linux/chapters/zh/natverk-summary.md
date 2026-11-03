@@ -10,6 +10,8 @@
 
 **端口**指向计算机上的某个程序，`ss -tulpn` 显示哪些端口正在监听。`curl` 获取一个 URL 并把内容打印出来，`wget` 则下载到文件——在 Ubuntu 上，`wget` 是预装的，而 `curl` 要用 apt 安装。借助 **SSH**，你可以在另一台计算机上运行命令，并且传输是加密的；第一次连接时，你需要确认服务器的主机密钥，而有了密钥对，你就不再需要密码了。
 
+在 `~/.ssh/config` 中，你用 `Host`、`HostName` 和 `User` 给服务器起简短的名字。`scp` 像 `cp` 一样复制，只是其中一方写成 `HOST:PATH`，路径相对于那台计算机上的主目录。`rsync -av` 只复制变化的内容；源末尾的斜杠表示“目录里面的内容”，`--delete` 让目标成为完全相同的副本——先用 `-n` 试运行。
+
 当“上不了网”时，要由内向外排查：地址、路由、路由器、互联网上的某个地址，最后是名字。如果地址能通而名字不行，那就是 DNS 的问题。
 
 ## 命令
@@ -31,3 +33,7 @@
 | `curl -o FILE URL`、`wget URL`、`wget -O FILE URL` | 下载到文件 |
 | `ssh USER@HOST COMMAND` | 在另一台计算机上运行命令 |
 | `ssh-keygen`、`ssh-copy-id USER@HOST` | 创建密钥对，并把公钥放到服务器上 |
+| `ssh srv`，配合 `~/.ssh/config` 中的 `Host srv` | 用简短的名字登录 |
+| `scp FILE HOST:` · `scp HOST:FILE .` · `scp -r` | 复制到另一台计算机 · 从另一台计算机复制 · 复制整个目录 |
+| `rsync -av SOURCE/ TARGET` | 只复制变化的内容 |
+| `rsync -avn --delete SOURCE/ TARGET` | 试运行镜像，不做任何操作 |

@@ -1,0 +1,28 @@
+{
+  "title": "cron से scheduled jobs",
+  "tasks": {
+    "crontab-l": {
+      "text": "अपना crontab दिखाइए।",
+      "hint": "`crontab -l`। अगर आपकी अभी कोई jobs नहीं हैं, तो जवाब आता है *no crontab for {{user}}*।"
+    },
+    "every-minute": {
+      "text": "एक job जोड़िए जो हर minute `date >> ~/cron.log` चलाए।",
+      "hint": "पाँच stars का मतलब है हर minute: `echo '* * * * * date >> ~/cron.log' | crontab -`।"
+    },
+    "weekdays": {
+      "text": "एक job जोड़िए जो सोमवार से शुक्रवार 07:00 पर `~/{{helloScript}}` चलाए – पहली job को हटाए बिना।",
+      "hint": "Minute 0, घंटा 7, हफ़्ते का दिन 1-5। पुरानी lines रखिए: `(crontab -l; echo '0 7 * * 1-5 ~/{{helloScript}}') | crontab -`।"
+    },
+    "journal": {
+      "text": "दिखाइए कि service `cron` ने journal में क्या लिखा है।",
+      "hint": "`journalctl -u cron`। जब आपकी job चल चुकी होती है, तो वह वहाँ *CMD (date >> ~/cron.log)* के रूप में दिखती है।"
+    },
+    "timers": {
+      "text": "systemd के timers दिखाइए – वे jobs जो systemd ख़ुद तय समय पर चलाता है।"
+    },
+    "remove": {
+      "text": "हर minute चलने वाली job हटाइए, लेकिन 07:00 वाली job रखिए।",
+      "hint": "`grep -v` से line छाँटिए और बाक़ी को install कीजिए: `crontab -l | grep -v cron.log | crontab -`।"
+    }
+  }
+}

@@ -102,3 +102,13 @@ $ for i in 1 2 3 4 5; do if [ $i -eq 3 ]; then continue; fi; echo $i; done
 ```try
 for i in $(seq 1 3); do echo "Round $i"; done
 ```
+
+```quiz
+毎週日曜日の 23:45 に `~/backup.sh` を実行する crontab の行はどれですか？
+- [ ] `23 45 * * 0 ~/backup.sh`
+- [x] `45 23 * * 0 ~/backup.sh`
+- [ ] `45 23 0 * * ~/backup.sh`
+---
+分が先で、次に時です。つまり 45 23 です。日曜日は曜日の 0（または 7）で、
+5 番目のフィールドに書きます。
+```

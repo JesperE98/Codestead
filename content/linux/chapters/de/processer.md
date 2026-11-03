@@ -171,6 +171,41 @@ weiterlaufen und behältst trotzdem deinen Prompt?
 weiterlaufen, während `fg` ihn wieder in den Vordergrund holen würde.
 ```
 
+### Weiterlaufen nach dem Abmelden – `nohup`
+
+Wenn du das Terminal oder die ssh-Verbindung schließt, bekommen die Programme,
+die du gestartet hast, das Signal **SIGHUP** (*hang up*) und beenden sich –
+auch Hintergrundjobs. `nohup` sorgt dafür, dass ein Befehl dieses Signal
+ignoriert:
+
+```sh
+nohup ./long-job.sh &
+```
+
+Ausgaben, die im Terminal erschienen wären, landen stattdessen in der Datei
+`nohup.out`:
+
+```predict
+$ nohup echo done
+$ cat nohup.out
+nohup: ignoring input and appending output to 'nohup.out'
+done
+```
+
+Für Programme, die immer laufen sollen, ist ein **Dienst** besser – die lernst
+du im Teil über die Systemverwaltung kennen.
+
+### Einen Befehl beobachten – `watch`
+
+`watch` führt einen Befehl alle zwei Sekunden erneut aus und zeigt das Ergebnis
+auf einem leeren Bildschirm – praktisch, um zuzusehen, wie eine Datei wächst
+oder eine Festplatte voll wird. Beenden mit `Ctrl+C`. Im Simulator wird das
+Ergebnis einmal angezeigt.
+
+```sh
+watch -n 5 'ls -l /tmp'
+```
+
 ## Wie geht es dem Rechner?
 
 Zwei kleine Befehle geben dir einen schnellen Überblick:

@@ -130,3 +130,13 @@ serveur. Ne montrez jamais la clé privée à personne !
 - [ ] La carte réseau est désactivée
 - [ ] `/etc/hosts` est manquant
 ```
+
+```quiz
+Vous voulez que `/tmp/x` contienne les fichiers qui sont dans `{{documents}}`, et non un répertoire `{{documents}}`. Quelle commande est la bonne ?
+- [ ] `rsync -a {{documents}} /tmp/x`
+- [x] `rsync -a {{documents}}/ /tmp/x`
+- [ ] `scp {{documents}} /tmp/x`
+---
+La barre oblique à la fin de la source signifie « ce que contient le
+répertoire ».
+```

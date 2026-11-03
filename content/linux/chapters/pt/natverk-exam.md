@@ -129,3 +129,12 @@ O `ip a` mostra um endereço, e você consegue pingar outros computadores em
 - [ ] A placa de rede está desligada
 - [ ] O `/etc/hosts` está faltando
 ```
+
+```quiz
+Você quer que `/tmp/x` contenha os arquivos que estão em `{{documents}}`, não um diretório `{{documents}}`. Qual comando está certo?
+- [ ] `rsync -a {{documents}} /tmp/x`
+- [x] `rsync -a {{documents}}/ /tmp/x`
+- [ ] `scp {{documents}} /tmp/x`
+---
+A barra no final da origem significa "o que há dentro do diretório".
+```

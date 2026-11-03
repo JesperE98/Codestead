@@ -1,0 +1,28 @@
+{
+  "title": "Zeitgesteuerte Jobs mit cron",
+  "tasks": {
+    "crontab-l": {
+      "text": "Zeige deine crontab an.",
+      "hint": "`crontab -l`. Wenn du noch keine Jobs hast, antwortet es mit *no crontab for {{user}}*."
+    },
+    "every-minute": {
+      "text": "Füge einen Job hinzu, der jede Minute `date >> ~/cron.log` ausführt.",
+      "hint": "Fünf Sterne bedeuten jede Minute: `echo '* * * * * date >> ~/cron.log' | crontab -`."
+    },
+    "weekdays": {
+      "text": "Füge einen Job hinzu, der `~/{{helloScript}}` von Montag bis Freitag um 07:00 ausführt – ohne den ersten Job zu entfernen.",
+      "hint": "Minute 0, Stunde 7, Wochentag 1-5. Behalte die alten Zeilen: `(crontab -l; echo '0 7 * * 1-5 ~/{{helloScript}}') | crontab -`."
+    },
+    "journal": {
+      "text": "Zeige, was der Dienst `cron` ins Journal geschrieben hat.",
+      "hint": "`journalctl -u cron`. Wenn dein Job gelaufen ist, taucht er dort als *CMD (date >> ~/cron.log)* auf."
+    },
+    "timers": {
+      "text": "Zeige die Timer von systemd an – die Jobs, die systemd selbst zu festen Zeiten ausführt."
+    },
+    "remove": {
+      "text": "Entferne den Job, der jede Minute läuft, aber behalte den Job um 07:00.",
+      "hint": "Filtere die Zeile mit `grep -v` heraus und installiere den Rest: `crontab -l | grep -v cron.log | crontab -`."
+    }
+  }
+}

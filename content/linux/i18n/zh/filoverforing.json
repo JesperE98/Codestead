@@ -1,0 +1,33 @@
+{
+  "title": "通过 SSH 复制文件",
+  "tasks": {
+    "config": {
+      "text": "创建 `~/.ssh/config`，让 `ssh srv` 以 `{{user}}` 身份登录 `192.168.1.10`。然后用 `ssh srv` 在服务器上运行 `hostname`。",
+      "hint": "三行：`Host srv`、`    HostName 192.168.1.10` 和 `    User {{user}}`。用 `echo ... >> ~/.ssh/config` 把它们写进去，然后运行 `ssh srv hostname`。"
+    },
+    "scp-up": {
+      "text": "用 `scp` 把 `~/{{notes}}` 复制到你在服务器上的主目录。",
+      "hint": "`scp ~/{{notes}} srv:`——`srv` 后面的冒号表示“在服务器上”，不写路径时，文件会放到那边的主目录中。"
+    },
+    "scp-down": {
+      "text": "把服务器主目录中的文件 `{{welcomeFile}}` 取回到目录 `~/{{downloads}}`。",
+      "hint": "源在前，目标在后：`scp srv:{{welcomeFile}} ~/{{downloads}}/`。"
+    },
+    "rsync-local": {
+      "text": "用 `rsync -av` 把 `~/{{documents}}` 的内容备份到目录 `/tmp/{{documents}}`。",
+      "hint": "源后面的斜杠表示“里面的内容”：`rsync -av ~/{{documents}}/ /tmp/{{documents}}`。"
+    },
+    "rsync-again": {
+      "text": "创建文件 `~/{{documents}}/{{todo}}`，然后再次运行同样的 `rsync -av`。应该只发送这个新文件。",
+      "hint": "先 `touch ~/{{documents}}/{{todo}}`，然后 `rsync -av ~/{{documents}}/ /tmp/{{documents}}`。不加 `-a` 的话，每次都会发送全部内容。"
+    },
+    "rsync-server": {
+      "text": "把 `~/{{documents}}` 的内容同步到你在服务器主目录中的 `{{documents}}` 目录。",
+      "hint": "和前面一样，只是目标换成服务器：`rsync -av ~/{{documents}}/ srv:{{documents}}/`。"
+    },
+    "dry-run": {
+      "text": "删除 `~/{{documents}}/{{todo}}`，然后用 `-n` 试运行 `rsync -av --delete` 到 `/tmp/{{documents}}`——这样你能看到哪些文件会被删除，而不会真的发生任何事。",
+      "hint": "先 `rm ~/{{documents}}/{{todo}}`，然后 `rsync -avn --delete ~/{{documents}}/ /tmp/{{documents}}`。"
+    }
+  }
+}

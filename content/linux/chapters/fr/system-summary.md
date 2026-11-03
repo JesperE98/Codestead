@@ -26,6 +26,17 @@ fait pas partie de `PATH`. `sudo` lance une seule commande en root et demande
 votre propre mot de passe. Sur Ubuntu, les utilisateurs du groupe `sudo` ont
 le droit de l'utiliser.
 
+## Liens et informations sur les fichiers
+
+Le contenu et les permissions d'un fichier se trouvent dans un **inode**, et
+les noms d'un répertoire pointent vers des inodes. `ln -s` crée un **lien
+symbolique**, un petit fichier contenant un chemin, qui se casse si la cible
+disparaît ; un chemin relatif dans ce lien part du répertoire du lien
+lui-même. `ln` sans `-s` crée un **lien physique**, un nom de plus pour le même
+inode. `stat` montre tout sur un fichier, `file` dit ce qu'il contient, quel
+que soit son nom, et le **umask** décide des permissions des nouveaux
+fichiers : avec `022`, ils reçoivent `644`, avec `077` seulement `600`.
+
 ## Processus et jobs
 
 Chaque programme en cours d'exécution est un processus avec un PID et un
@@ -33,7 +44,8 @@ parent (PPID). `ps aux` les montre tous, et `top` les montre en direct, triés
 par utilisation du processeur. `kill` envoie un signal : `SIGTERM` (15) par
 défaut, et `SIGKILL` (9) en dernier recours. Avec `&`, une commande tourne en
 arrière-plan, et `jobs`, `fg` et `bg` vous permettent de gérer les jobs de
-votre terminal.
+votre terminal. `nohup` garde une commande en vie après votre déconnexion, et
+`watch` relance une commande encore et encore.
 
 ## Archives et compression
 
@@ -59,6 +71,12 @@ l'archive. `zcat` lit un fichier `.gz` sans le décompresser, et `zip -r` /
 | `chmod 644 file` · `chmod u+x file` | Changer les permissions avec des chiffres · des symboles |
 | `sudo command` · `sudo -i` | Lancer une commande en root · ouvrir un shell root |
 | `sudo tee -a file` | En bout de pipe : ajouter du texte à un fichier que seul root peut modifier |
+| `ln -s target name` · `ln file name` | Créer un lien symbolique · physique |
+| `readlink link` · `realpath path` | Vers où pointe un lien · le chemin complet sans liens |
+| `ls -li` | Afficher les numéros d'inode et les compteurs de liens |
+| `stat file` · `stat -c '%a %U' file` | Tout sur un fichier · seulement ce que vous demandez |
+| `file file` | Ce que contient un fichier |
+| `umask` · `umask 077` | Afficher · définir les permissions que perdent les nouveaux fichiers |
 | `ps` · `ps aux` · `ps -ef` | Vos processus · tous les processus · avec le PID du parent |
 | `ps aux --sort=-%cpu` | Tous les processus, les plus gourmands d'abord |
 | `pgrep -l name` | Trouver le PID d'un processus par son nom |
@@ -67,6 +85,8 @@ l'archive. `zcat` lit un fichier `.gz` sans le décompresser, et `zip -r` /
 | `pkill pattern` · `killall name` | Arrêter des processus par leur nom |
 | `command &` | Lancer une commande en arrière-plan |
 | `jobs` · `fg %1` · `bg %1` · `kill %1` | Lister · premier plan · arrière-plan · terminer un job |
+| `nohup command &` | Continuer à tourner après la déconnexion |
+| `watch -n 5 command` | Lancer une commande toutes les cinq secondes |
 | `uptime` · `free -h` | Charge · mémoire |
 | `tar -czvf archive.tar.gz dir` | Empaqueter et compresser un répertoire |
 | `tar -tzvf archive.tar.gz` | Lister le contenu d'une archive |

@@ -115,3 +115,13 @@ du -sh {{documents}}
 ---
 `-s` donne un seul total pour tout le répertoire et `-h` rend la taille facile à lire.
 ```
+
+```quiz
+Vous créez `ln -s {{notes}} link`, puis vous supprimez `{{notes}}`. Que se passe-t-il quand vous lancez `cat link` ?
+- [ ] Il affiche l'ancien contenu
+- [x] `No such file or directory` – le lien est cassé
+- [ ] Le lien est supprimé lui aussi
+---
+Un lien symbolique ne contient qu'un chemin. Quand il n'y a plus rien à cet
+endroit, le lien est cassé. Un lien physique aurait gardé le contenu en vie.
+```

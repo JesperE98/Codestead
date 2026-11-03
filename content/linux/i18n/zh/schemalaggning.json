@@ -1,0 +1,28 @@
+{
+  "title": "用 cron 运行定时任务",
+  "tasks": {
+    "crontab-l": {
+      "text": "显示你的 crontab。",
+      "hint": "`crontab -l`。如果你还没有任务，它会回答 *no crontab for {{user}}*。"
+    },
+    "every-minute": {
+      "text": "添加一个每分钟运行 `date >> ~/cron.log` 的任务。",
+      "hint": "五个星号表示每分钟：`echo '* * * * * date >> ~/cron.log' | crontab -`。"
+    },
+    "weekdays": {
+      "text": "添加一个在星期一到星期五 07:00 运行 `~/{{helloScript}}` 的任务——不要删除第一个任务。",
+      "hint": "第 0 分钟、7 点、星期 1-5。保留旧的行：`(crontab -l; echo '0 7 * * 1-5 ~/{{helloScript}}') | crontab -`。"
+    },
+    "journal": {
+      "text": "显示 `cron` 服务在 journal 中写了些什么。",
+      "hint": "`journalctl -u cron`。你的任务运行之后，会在那里显示为 *CMD (date >> ~/cron.log)*。"
+    },
+    "timers": {
+      "text": "显示 systemd 的定时器——也就是 systemd 自己在设定时间运行的任务。"
+    },
+    "remove": {
+      "text": "删除每分钟运行的那个任务，但保留 07:00 的任务。",
+      "hint": "用 `grep -v` 过滤掉那一行，再安装剩下的部分：`crontab -l | grep -v cron.log | crontab -`。"
+    }
+  }
+}

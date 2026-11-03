@@ -19,6 +19,10 @@
     },
     "devnull": {
       "text": "`ls /{{missing}}` を実行し、エラーメッセージを `/dev/null` に送って何も表示されないようにしてください。"
+    },
+    "xargs": {
+      "text": "`~/{{documents}}` にあるすべてのファイルの行数を数えてください。`find -type f` でファイルを見つけ、`xargs` を使って `wc -l` に渡します。",
+      "hint": "`find ~/{{documents}} -type f | xargs wc -l` です。`wc` はパイプからファイル名を読みませんが、`xargs` がファイル名を引数に変えてくれます。"
     }
   }
 }

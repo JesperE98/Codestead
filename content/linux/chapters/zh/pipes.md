@@ -108,6 +108,27 @@ sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ls /etc | wc -l
 ```
 
+## 从输入到参数——`xargs`
+
+有些命令根本不从管道读取——它们要的是作为**参数**的名字：`rm`、`mkdir`、`touch`，以及要统计文件内容时的 `wc`。`xargs` 在两者之间架起桥梁：它读取输入中的单词，并把它们放到某个命令的后面。
+
+```sh
+find {{documents}} -type f | xargs wc -l
+```
+
+这和你自己把每个文件名都写在 `wc -l` 后面是一样的。加上 `-n 1`，`xargs` 会为每个单词运行一次命令；加上 `-I {}`，则为每一行运行一次，并把 `{}` 替换成这一行：
+
+```sh
+ls {{documents}} | xargs -I {} echo "File: {}"
+```
+
+```predict
+$ printf 'a\nb\nc\n' | xargs echo
+a b c
+---
+`xargs` 把三行收集起来，运行了 `echo a b c`——只运行了一次。
+```
+
 ## 同时输出到屏幕和文件——`tee`
 
 `tee` 会把输入继续往下传，*同时*在文件中保存一份副本：

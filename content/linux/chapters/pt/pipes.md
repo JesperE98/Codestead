@@ -123,6 +123,32 @@ Quantos arquivos e diretórios existem em `/etc`? Conte-os com um pipe:
 ls /etc | wc -l
 ```
 
+## Da entrada para argumentos – `xargs`
+
+Alguns comandos nem leem de um pipe – eles querem nomes como **argumentos**:
+`rm`, `mkdir`, `touch` e o `wc` quando ele deve contar dentro de arquivos. O
+`xargs` faz a ponte: ele lê as palavras da sua entrada e as coloca depois de
+um comando.
+
+```sh
+find {{documents}} -type f | xargs wc -l
+```
+
+Isso é o mesmo que escrever você mesmo cada nome de arquivo depois de
+`wc -l`. Com `-n 1`, o `xargs` executa o comando uma vez para cada palavra, e
+com `-I {}` uma vez para cada linha, com `{}` substituído pela linha:
+
+```sh
+ls {{documents}} | xargs -I {} echo "File: {}"
+```
+
+```predict
+$ printf 'a\nb\nc\n' | xargs echo
+a b c
+---
+O `xargs` juntou as três linhas e executou `echo a b c` – uma vez só.
+```
+
 ## Tela e arquivo ao mesmo tempo – `tee`
 
 O `tee` repassa a sua entrada *e* salva uma cópia em um arquivo:

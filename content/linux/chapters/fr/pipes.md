@@ -125,6 +125,32 @@ un pipe :
 ls /etc | wc -l
 ```
 
+## De l'entrée aux arguments – `xargs`
+
+Certaines commandes ne lisent pas du tout depuis un pipe – elles veulent des
+noms comme **arguments** : `rm`, `mkdir`, `touch`, et `wc` quand il doit
+compter dans des fichiers. `xargs` fait le pont : il lit les mots de son entrée
+et les place après une commande.
+
+```sh
+find {{documents}} -type f | xargs wc -l
+```
+
+Cela revient à écrire vous-même chaque nom de fichier après `wc -l`. Avec
+`-n 1`, `xargs` lance la commande une fois par mot, et avec `-I {}` une fois
+par ligne, en remplaçant `{}` par la ligne :
+
+```sh
+ls {{documents}} | xargs -I {} echo "File: {}"
+```
+
+```predict
+$ printf 'a\nb\nc\n' | xargs echo
+a b c
+---
+`xargs` a rassemblé les trois lignes et lancé `echo a b c` – une seule fois.
+```
+
 ## À l'écran et dans un fichier – `tee`
 
 `tee` transmet son entrée plus loin *et* en enregistre une copie dans un

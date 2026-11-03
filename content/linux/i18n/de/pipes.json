@@ -19,6 +19,10 @@
     },
     "devnull": {
       "text": "Führe `ls /{{missing}}` aus, aber schicke die Fehlermeldung nach `/dev/null`, sodass nichts angezeigt wird."
+    },
+    "xargs": {
+      "text": "Zähle die Zeilen in jeder Datei in `~/{{documents}}`: Finde die Dateien mit `find -type f` und gib sie mit `xargs` an `wc -l` weiter.",
+      "hint": "`find ~/{{documents}} -type f | xargs wc -l` – `wc` liest keine Dateinamen aus einer Pipe, aber `xargs` macht Argumente daraus."
     }
   }
 }

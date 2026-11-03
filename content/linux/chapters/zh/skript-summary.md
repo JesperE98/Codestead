@@ -10,6 +10,10 @@
 
 `if` 查看命令的退出码，通常是测试命令 `[ ]` 的退出码。数字用 `-eq`、`-lt` 等来比较；文本用 `=` 和 `!=` 来比较。`for` 遍历一个列表，`while` 只要条件为真就一直运行，`while read` 逐行处理文件。`case` 在多个模式之间进行选择，函数是有名字的代码片段，有自己的 `$1`，而 `read` 让用户输入内容。`exit 1` 告诉调用脚本的一方出了问题。
 
+## 用 cron 运行定时任务
+
+**cron** 在设定的时间运行你的 **crontab** 中的任务。每一行有五个时间字段——分钟、小时、日期、月份和星期几——后面是命令；`*` 表示每一个，`*/5` 表示每隔五个。`crontab -l` 显示任务，`crontab -` 从输入安装新任务——同时替换掉所有旧任务。任务运行时不带你终端的设置，`PATH` 也很短，所以要把它们的输出发送到文件。`journalctl -u cron` 显示每次运行，`systemctl list-timers` 显示 systemd 的定时器。
+
 ## 命令和语法
 
 | 语法 | 作用 |
@@ -34,3 +38,8 @@
 | `read -p "Question " var` | 从键盘读取一行 |
 | `exit 1` | 以一个退出码结束脚本 |
 | `set -euo pipefail` | 遇到第一个错误就停止脚本 |
+| `crontab -l` · `crontab -r` | 显示 · 删除你的 crontab |
+| `echo '* * * * * command' \| crontab -` | 从输入安装 crontab（替换旧的） |
+| `(crontab -l; echo 'LINE') \| crontab -` | 添加一个任务并保留旧任务 |
+| `MIN HOUR DAY MONTH WEEKDAY command` | 一行 crontab，例如 `30 2 * * 1-5` |
+| `systemctl list-timers` | 显示 systemd 的定时器 |

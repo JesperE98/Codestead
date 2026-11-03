@@ -1,0 +1,34 @@
+{
+  "title": "Links e informações de arquivos",
+  "tasks": {
+    "symlink": {
+      "text": "Crie um link simbólico `~/log` que aponte para o diretório `/var/log`.",
+      "hint": "`ln -s DESTINO NOME_DO_LINK` – o destino primeiro: `ln -s /var/log ~/log`."
+    },
+    "relative": {
+      "text": "Fique no seu diretório pessoal e crie o link `{{fruits}}` que aponta para `{{documents}}/{{fruits}}` – com um caminho relativo.",
+      "hint": "`cd ~` e depois `ln -s {{documents}}/{{fruits}} {{fruits}}`. Um caminho relativo em um link é contado a partir do diretório onde o link está."
+    },
+    "readlink": {
+      "text": "Mostre para onde o link `~/{{fruits}}` aponta com o `readlink`."
+    },
+    "hardlink": {
+      "text": "Dê mais um nome a `~/{{notes}}`: um link **físico** chamado `~/{{todo}}`.",
+      "hint": "`ln` sem `-s`: `ln ~/{{notes}} ~/{{todo}}`. Com `ls -li` você vê que os dois têm o mesmo número de inode."
+    },
+    "stat": {
+      "text": "Descubra as permissões de `/etc/shadow` em dígitos com o `stat`.",
+      "hint": "`stat /etc/shadow` e olhe a linha `Access: (0640/...)` – ou simplesmente `stat -c %a /etc/shadow`."
+    },
+    "file": {
+      "text": "Descubra o que `~/{{documents}}/{{grades}}` contém com o `file`."
+    },
+    "umask": {
+      "text": "Mude a umask para que os arquivos novos só possam ser lidos e escritos por você e depois crie o arquivo vazio `~/{{privateFile}}`.",
+      "hint": "`umask 077` tira todas as permissões do grupo e dos outros. Depois crie o arquivo com `touch ~/{{privateFile}}` – ele recebe `rw-------`."
+    },
+    "umask-back": {
+      "text": "Volte a umask para o valor habitual `022`."
+    }
+  }
+}

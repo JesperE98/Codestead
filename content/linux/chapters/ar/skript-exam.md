@@ -103,3 +103,13 @@ $ for i in 1 2 3 4 5; do if [ $i -eq 3 ]; then continue; fi; echo $i; done
 ```try
 for i in $(seq 1 3); do echo "Round $i"; done
 ```
+
+```quiz
+أي سطر في crontab يشغّل `~/backup.sh` في 23:45 كل أحد؟
+- [ ] `23 45 * * 0 ~/backup.sh`
+- [x] `45 23 * * 0 ~/backup.sh`
+- [ ] `45 23 0 * * ~/backup.sh`
+---
+الدقيقة أولًا، ثم الساعة: 45 23. والأحد هو اليوم 0 (أو 7) من الأسبوع، في الحقل
+الخامس.
+```

@@ -40,12 +40,12 @@ Cada linha de uma crontab tem cinco campos de tempo e depois o comando:
 
 | Linha | Executa |
 |---|---|
-| `* * * * * comando` | A cada minuto |
-| `*/5 * * * * comando` | A cada cinco minutos |
-| `30 2 * * * comando` | Às 02:30 toda noite |
-| `0 7 * * 1-5 comando` | Às 07:00 de segunda a sexta |
-| `0 0 1 * * comando` | À meia-noite do dia 1 de cada mês |
-| `@reboot comando` | Uma vez, quando o computador liga |
+| `* * * * * command` | A cada minuto |
+| `*/5 * * * * command` | A cada cinco minutos |
+| `30 2 * * * command` | Às 02:30 toda noite |
+| `0 7 * * 1-5 command` | Às 07:00 de segunda a sexta |
+| `0 0 1 * * command` | À meia-noite do dia 1 de cada mês |
+| `@reboot command` | Uma vez, quando o computador liga |
 
 `@hourly`, `@daily`, `@weekly` e `@monthly` também são atalhos.
 
@@ -60,7 +60,7 @@ qualquer data, qualquer mês, dia 6 – sábado.
 ```
 
 ```quiz
-Com que frequência `0 */2 * * * comando` é executado?
+Com que frequência `0 */2 * * * command` é executado?
 - [ ] A cada dois minutos
 - [x] De duas em duas horas, na hora cheia
 - [ ] Duas vezes por dia

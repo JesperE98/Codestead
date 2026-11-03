@@ -27,6 +27,13 @@ mit apt installiert. Mit **SSH** führst du verschlüsselt Befehle auf einem
 anderen Rechner aus; beim ersten Mal bestätigst du den Host-Key des Servers,
 und mit einem Schlüsselpaar brauchst du kein Passwort mehr.
 
+In `~/.ssh/config` gibst du Servern mit `Host`, `HostName` und `User` kurze
+Namen. `scp` kopiert wie `cp`, aber eine Seite wird als `HOST:PATH`
+geschrieben, relativ zum Home-Verzeichnis dort. `rsync -av` kopiert nur, was
+sich geändert hat; ein Schrägstrich am Ende der Quelle bedeutet „was im
+Verzeichnis ist“, und `--delete` macht das Ziel zu einer exakten Kopie –
+probiere es zuerst mit `-n` aus.
+
 Wenn „das Internet nicht geht“, arbeite dich von innen nach außen vor:
 Adresse, Route, Router, eine Adresse im Internet und zuletzt ein Name.
 Funktionieren Adressen, aber keine Namen, liegt es an DNS.
@@ -50,3 +57,7 @@ Funktionieren Adressen, aber keine Namen, liegt es an DNS.
 | `curl -o FILE URL`, `wget URL`, `wget -O FILE URL` | In eine Datei herunterladen |
 | `ssh USER@HOST COMMAND` | Einen Befehl auf einem anderen Rechner ausführen |
 | `ssh-keygen`, `ssh-copy-id USER@HOST` | Ein Schlüsselpaar erzeugen und den öffentlichen Schlüssel auf den Server legen |
+| `ssh srv` mit `Host srv` in `~/.ssh/config` | Mit einem kurzen Namen anmelden |
+| `scp FILE HOST:` · `scp HOST:FILE .` · `scp -r` | Auf einen · von einem anderen Rechner kopieren · ganze Verzeichnisse |
+| `rsync -av SOURCE/ TARGET` | Nur kopieren, was sich geändert hat |
+| `rsync -avn --delete SOURCE/ TARGET` | Einen Spiegel ausprobieren, ohne etwas zu tun |

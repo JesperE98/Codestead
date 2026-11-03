@@ -117,3 +117,12 @@ hosts: files dns
 - [ ] 网卡已关闭
 - [ ] 缺少 `/etc/hosts`
 ```
+
+```quiz
+你希望 `/tmp/x` 中包含 `{{documents}}` 里的文件，而不是一个 `{{documents}}` 目录。哪条命令是正确的？
+- [ ] `rsync -a {{documents}} /tmp/x`
+- [x] `rsync -a {{documents}}/ /tmp/x`
+- [ ] `scp {{documents}} /tmp/x`
+---
+源末尾的斜杠表示“目录里面的内容”。
+```

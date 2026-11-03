@@ -25,6 +25,10 @@
     "kill-jobb": {
       "text": "Beende den Hintergrundjob mit `kill` und der Jobnummer (`%1`) oder seiner PID."
     },
+    "nohup": {
+      "text": "Starte `sleep 600` mit `nohup` im Hintergrund, sodass es weiterlaufen würde, selbst wenn du dich abmeldest.",
+      "hint": "`nohup sleep 600 &` – `nohup` zuerst und `&` zuletzt."
+    },
     "server": {
       "text": "Der Server `myserver` läuft als root. Stoppe ihn – mit `pkill` oder `kill` und den richtigen Rechten.",
       "hint": "Als normaler Benutzer bekommst du \"Operation not permitted\". Setze `sudo` davor."

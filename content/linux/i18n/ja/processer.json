@@ -25,6 +25,10 @@
     "kill-jobb": {
       "text": "`kill` とジョブ番号（`%1`）または PID を使って、バックグラウンドジョブを終了してください。"
     },
+    "nohup": {
+      "text": "`nohup` を使って `sleep 600` をバックグラウンドで起動し、ログアウトしても動き続けるようにしてください。",
+      "hint": "`nohup sleep 600 &` です。`nohup` が先で、`&` が最後です。"
+    },
     "server": {
       "text": "サーバー `myserver` が root として動いています。`pkill` か `kill` と適切な権限を使って止めてください。",
       "hint": "一般ユーザーのままだと \"Operation not permitted\" と表示されます。前に `sudo` を付けましょう。"
