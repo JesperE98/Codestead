@@ -2,30 +2,6 @@ namespace Codestead.Shell.Commands;
 
 // Port of src/shell/commands/util.ts
 
-public partial class Opts
-{
-    public HashSet<string> Flags { get; set; } = new();
-    public OrderedDictionary<string, string> Values { get; set; } = Js.Obj<string>();
-    public List<string> Operands { get; set; } = new();
-    public string? Error { get; set; }
-}
-
-public partial class OptSpec
-{
-    /// <summary>Flags without a value, e.g. "laR".</summary>
-    public string? Flags { get; init; }
-    /// <summary>Flags that take a value, e.g. "n" for `head -n 5`.</summary>
-    public string? Values { get; init; }
-    /// <summary>Long flags (--all) mapped to short ones (a).</summary>
-    public Dictionary<string, string>? Long { get; init; }
-}
-
-public partial class Input
-{
-    public string Label { get; set; } = "";
-    public string Content { get; set; } = "";
-}
-
 public static partial class UtilCmd
 {
     /// <summary>Edit distance: insertions, deletions and substitutions (git's "most similar command").</summary>
