@@ -28,3 +28,5 @@ The hub is not yet signed with a developer certificate:
 
 - **Windows**: SmartScreen may show "Windows protected your PC". Click **More info** → **Run anyway**.
 - **AppImage**: some distributions need FUSE 2 (Ubuntu: `sudo apt install libfuse2t64`).
+- **AppImage on Fedora 45 and later**: install OpenSSL 3, which .NET still uses: `sudo dnf install openssl3-libs`
+  (the `.rpm` package does this automatically).
