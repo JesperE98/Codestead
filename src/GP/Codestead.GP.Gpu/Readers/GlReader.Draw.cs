@@ -6,7 +6,7 @@ namespace Codestead.GP.Gpu.Readers;
 // glDrawArrays and glDrawElements: the vertex data comes from the bound vertex array object, as on a real GPU.
 public sealed partial class GlReader
 {
-    private void Draw(string mode, string? indexType, int first, int count, string call, int line)
+    private void Draw(string mode, string? indexType, int first, int count, string call, int line, int instances = 1)
     {
         var lineText = line.ToString();
         if (gl.CurrentProgram is not { } cur || !gl.Programs.TryGetValue(cur, out var program))
@@ -49,7 +49,7 @@ public sealed partial class GlReader
             var dict = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
             foreach (var (loc, attr) in vao.Attributes)
             {
-                if (!attr.Enabled || attr.Buffer is null || !gl.Buffers.TryGetValue(attr.Buffer, out var data) || data is null) continue;
+                if (attr.Divisor > 0 || !attr.Enabled || attr.Buffer is null || !gl.Buffers.TryGetValue(attr.Buffer, out var data) || data is null) continue;
                 int stride = attr.StrideBytes == 0 ? attr.Size : attr.StrideBytes / 4;
                 int start = attr.OffsetBytes / 4 + v * stride;
                 var comps = new double[attr.Size];
@@ -70,20 +70,52 @@ public sealed partial class GlReader
                 scene.Notes.Add(SimNote.Warning("attribDisabled", ("location", loc.ToString()), ("name", input.Id)));
         }
 
-        var uniforms = program.Uniforms.ToList();
-        var textures = Samplers(program);
-        var draw = new DrawCall
+        // Per-instance attributes (glVertexAttribDivisor): one value per instance (per divisor instances).
+        List<Dictionary<string, ShaderValue>>? perInstance = null;
+        int divisor = 1;
+        foreach (var (loc, attr) in vao.Attributes.Where(x => x.Value.Divisor > 0 && x.Value.Enabled))
         {
-            VertexShader = program.Vertex,
-            FragmentShader = program.Fragment,
+            if (attr.Buffer is null || !gl.Buffers.TryGetValue(attr.Buffer, out var data) || data is null) continue;
+            divisor = attr.Divisor;
+            int stride = attr.StrideBytes == 0 ? attr.Size : attr.StrideBytes / 4;
+            int n = Math.Max(1, (instances + divisor - 1) / divisor);
+            perInstance ??= Enumerable.Range(0, n).Select(_ => new Dictionary<string, ShaderValue>(StringComparer.Ordinal)).ToList();
+            for (int i = 0; i < n && i < perInstance.Count; i++)
+            {
+                int start = attr.OffsetBytes / 4 + i * stride;
+                perInstance[i][loc.ToString()] = ShaderValue.Vec(Enumerable.Range(0, attr.Size).Select(k => start + k < data.Count ? data[start + k] : 0).ToArray());
+            }
+        }
+
+        var draw = MakeDraw(program, vertices, indices, indices is null ? first : 0, indices?.Length ?? count, TopologyOf(mode), instances, perInstance, divisor);
+        if (inLoop) scene.Draws.Add(draw);
+        else setupDraws.Add(draw);
+    }
+
+    /// <summary>A draw with the program's shaders and uniforms, its textures and the current fixed-function state.</summary>
+    private DrawCall MakeDraw(GlState.ProgramObject program, List<Dictionary<string, ShaderValue>> vertices, int[]? indices, int first, int count,
+        Topology topology, int instances = 1, List<Dictionary<string, ShaderValue>>? perInstance = null, int divisor = 1,
+        Func<string, double, double, double[]>? textures = null)
+    {
+        var uniforms = program.Uniforms.ToList();
+        var blocks = BlockUniforms(program);
+        var (samplers, cubes) = Samplers(program);
+        return new DrawCall
+        {
+            VertexShader = program.Vertex!,
+            FragmentShader = program.Fragment!,
+            GeometryShader = program.Geometry,
             Vertices = vertices,
             Indices = indices,
-            First = indices is null ? first : 0,
-            Count = indices?.Length ?? count,
-            Topology = TopologyOf(mode),
+            First = first,
+            Count = count,
+            Instances = Math.Max(1, instances),
+            InstanceVertices = perInstance,
+            InstanceDivisor = divisor,
+            Topology = topology,
             Uniforms = t =>
             {
-                var d = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+                var d = new Dictionary<string, ShaderValue>(blocks, StringComparer.Ordinal);
                 foreach (var (name, f) in uniforms)
                     if (f(t) is { } value) d[name] = value;
                 return d;
@@ -92,34 +124,56 @@ public sealed partial class GlReader
             FrontCcw = gl.FrontCcw,
             Wireframe = gl.Wireframe,
             DepthTest = gl.DepthTest,
-            Textures = textures,
+            DepthFunc = gl.DepthFunc,
+            DepthWrite = gl.DepthMask,
+            Stencil = gl.StencilTest ? gl.Stencil : null,
+            Blend = gl.Blend ? gl.BlendState : null,
+            ColorMask = gl.ColorMask.ToArray(),
+            PointSize = gl.PointSize,
+            ProgramPointSize = gl.ProgramPointSize,
+            Target = DrawTarget(),
+            Textures = textures ?? samplers,
+            CubeTextures = cubes,
         };
-        if (inLoop) scene.Draws.Add(draw);
-        else setupDraws.Add(draw);
     }
 
     /// <summary>
     /// The textures the shaders sample: each sampler2D uniform reads the texture unit its value names (0 unless set with
     /// glUniform1i / setInt), and the texture bound to that unit now. An incomplete texture reads black.
     /// </summary>
-    private Func<string, double, double, double[]>? Samplers(GlState.ProgramObject program)
+    private (Func<string, double, double, double[]>?, Func<string, double, double, double, double[]?>?) Samplers(GlState.ProgramObject program)
     {
-        var samplers = SamplerNames(program.Vertex!).Concat(SamplerNames(program.Fragment!)).Distinct().ToList();
-        if (samplers.Count == 0) return null;
+        var samplers = SamplerNames(program.Vertex!).Concat(SamplerNames(program.Fragment!))
+            .Concat(program.Geometry is { } g ? SamplerNames(g) : []).Distinct().ToList();
+        if (samplers.Count == 0) return (null, null);
         var bound = new Dictionary<string, Textures.Texture?>(StringComparer.Ordinal);
+        var cubes = new Dictionary<string, Textures.CubeTexture>(StringComparer.Ordinal);
         foreach (var name in samplers)
         {
             int unit = program.Uniforms.TryGetValue(name, out var f) && f(1.0) is { } v ? (int)v.X : 0;
             Textures.Texture? texture = null;
-            if (gl.Units.TryGetValue(unit, out var texName) && gl.TextureObjects.TryGetValue(texName, out var t) && t.Image is not null)
+            if (gl.Units.TryGetValue(unit, out var texName) && gl.TextureObjects.TryGetValue(texName, out var t) && (t.Image is not null || t.IsCube || t.Framebuffer is not null))
             {
+                var sampler = new Textures.SamplerState(t.WrapS, t.WrapT, !t.MagFilter.Contains("NEAREST", StringComparison.Ordinal), t.Border);
                 if (!t.Complete) scene.Notes.Add(SimNote.Warning("textureIncomplete", ("name", name), ("filter", t.MinFilter)));
-                else texture = new Textures.Texture(t.Image, new Textures.SamplerState(t.WrapS, t.WrapT, !t.MagFilter.Contains("NEAREST", StringComparison.Ordinal), t.Border)) { Components = t.Components };
+                else if (t.IsCube)
+                {
+                    cubes[name] = new Textures.CubeTexture(t.Faces.Select(f => f is null ? null : new Textures.Texture(f, sampler) { Components = t.Components }).ToList());
+                    continue;
+                }
+                else if (t.Framebuffer is { } fbo)
+                {
+                    // A texture a framebuffer object draws into: what has been drawn so far in this frame.
+                    var (attachment, depth) = (t.Attachment, t.IsDepth);
+                    texture = new Textures.Texture(() => Raster.Rasterizer.TargetImage(fbo, attachment, depth), sampler) { Components = 4 };
+                }
+                else texture = new Textures.Texture(t.Image!, sampler) { Components = t.Components };
             }
             else scene.Notes.Add(SimNote.Warning("noTextureOnUnit", ("name", name), ("unit", unit.ToString())));
             bound[name] = texture;
         }
-        return (name, u, v) => bound.TryGetValue(name, out var t) && t is not null ? t.Sample(u, v) : [0, 0, 0, 1];
+        return ((name, u, v) => bound.TryGetValue(name, out var t) && t is not null ? t.Sample(u, v) : [0, 0, 0, 1],
+            cubes.Count == 0 ? null : (name, x, y, z) => cubes.TryGetValue(name, out var c) ? c.Sample(x, y, z) : null);
     }
 
     /// <summary>
@@ -133,7 +187,7 @@ public sealed partial class GlReader
             scene.Notes.Add(SimNote.Error("noProgram", ("call", "Draw"), ("line", line.ToString())));
             return;
         }
-        bool flipUv = Models.ModelFiles.FlipUVs(src);
+        bool flipUv = Models.ModelFiles.FlipUVs(src, project);
         bool flipImages = System.Text.RegularExpressions.Regex.IsMatch(src.Code, @"stbi_set_flip_vertically_on_load\s*\(\s*(?:true|1)\s*\)");
         var uniforms = program.Uniforms.ToList();
         foreach (var mesh in model.Meshes)
@@ -150,26 +204,8 @@ public sealed partial class GlReader
                 ["texture_specular1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.SpecularMap, flipImages),
                 ["texture_normal1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.NormalMap, flipImages),
             };
-            var draw = new DrawCall
-            {
-                VertexShader = program.Vertex,
-                FragmentShader = program.Fragment,
-                Vertices = vertices,
-                Indices = mesh.Indices.ToArray(),
-                Count = mesh.Indices.Count,
-                Uniforms = t =>
-                {
-                    var d = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
-                    foreach (var (name, f) in uniforms)
-                        if (f(t) is { } value) d[name] = value;
-                    return d;
-                },
-                Cull = !gl.CullFace ? CullMode.None : CullMode.Back,
-                FrontCcw = gl.FrontCcw,
-                Wireframe = gl.Wireframe,
-                DepthTest = gl.DepthTest,
-                Textures = (name, u, v) => maps.TryGetValue(name, out var t) && t is not null ? t.Sample(u, v) : [0, 0, 0, 1],
-            };
+            var draw = MakeDraw(program, vertices, mesh.Indices.ToArray(), 0, mesh.Indices.Count, Topology.Triangles,
+                textures: (name, u, v) => maps.TryGetValue(name, out var t) && t is not null ? t.Sample(u, v) : [0, 0, 0, 1]);
             if (inLoop) scene.Draws.Add(draw);
             else setupDraws.Add(draw);
         }

@@ -18,6 +18,12 @@ public sealed class Scene
     /// <summary>RGBA; null when the frame is never cleared.</summary>
     public double[]? ClearColor { get; set; }
     public List<DrawCall> Draws { get; } = new();
+    /// <summary>Off-screen render targets by id (framebuffer objects …); draws name them in <see cref="DrawCall.Target"/>.</summary>
+    public Dictionary<string, RenderTarget> Targets { get; } = new(StringComparer.Ordinal);
+    /// <summary>Clears and copies between draws, in program order (the window's first clear is <see cref="ClearColor"/>).</summary>
+    public List<FrameOp> Ops { get; } = new();
+    /// <summary>Samples per pixel of the window (multisample anti-aliasing: glfwWindowHint(GLFW_SAMPLES, 4) …).</summary>
+    public int Samples { get; set; } = 1;
     public List<SimNote> Notes { get; } = new();
     /// <summary>Lines the program writes while it runs (as a real program would print them).</summary>
     public List<string> Log { get; } = new();

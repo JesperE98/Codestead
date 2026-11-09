@@ -11,8 +11,10 @@ internal static class ModelFiles
     public static string? Path(CppSource src) =>
         Regex.Match(src.Code, "\"([^\"\\n]+\\.obj)\"") is { Success: true } m ? m.Groups[1].Value : null;
 
-    /// <summary>Assimp's aiProcess_FlipUVs: v becomes 1 - v.</summary>
-    public static bool FlipUVs(CppSource src) => src.Uses("aiProcess_FlipUVs");
+    /// <summary>Assimp's aiProcess_FlipUVs (in main.cpp or a header such as learnopengl's model.h): v becomes 1 - v.</summary>
+    public static bool FlipUVs(CppSource src, GpuProject project) =>
+        src.Uses("aiProcess_FlipUVs") || project.Files.Any(f => (f.Key.EndsWith(".h", StringComparison.Ordinal) || f.Key.EndsWith(".hpp", StringComparison.Ordinal) || f.Key.EndsWith(".cpp", StringComparison.Ordinal))
+            && Regex.IsMatch(CppSource.BlankComments(f.Value), @"\baiProcess_FlipUVs\b"));
 
     /// <summary>A texture of a material, next to the model, loaded like the program's stb_image calls.</summary>
     public static Texture? Texture(GpuProject project, string modelPath, string? file, bool flip)

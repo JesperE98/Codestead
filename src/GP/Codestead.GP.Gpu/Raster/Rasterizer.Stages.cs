@@ -20,6 +20,13 @@ public static partial class Rasterizer
         private readonly List<Global> vsOutputs;
         private readonly List<Global> fsInputs;
         private readonly Global? fsOutput;
+        /// <summary>The fragment shader's outputs by colour attachment (layout(location = n) out …).</summary>
+        private readonly Global?[] fsOutputs;
+        private readonly ShaderRunner? gs;
+        private readonly List<Global> gsInputs = new();
+        private readonly List<Global> gsOutputs = new();
+
+        public bool HasGeometry => gs is not null;
 
         public Stages(DrawCall draw, double time, int height, double scale, bool yDown)
         {
@@ -27,18 +34,28 @@ public static partial class Rasterizer
             this.height = height;
             this.scale = scale;
             this.yDown = yDown;
-            vs = new ShaderRunner(draw.VertexShader) { Time = time, Sample = draw.Textures };
-            fs = new ShaderRunner(draw.FragmentShader) { Time = time, Sample = draw.Textures };
+            vs = new ShaderRunner(draw.VertexShader) { Time = time, Sample = draw.Textures, SampleCube = draw.CubeTextures };
+            fs = new ShaderRunner(draw.FragmentShader) { Time = time, Sample = draw.Textures, SampleCube = draw.CubeTextures };
+            if (draw.GeometryShader is { } geometry)
+            {
+                gs = new ShaderRunner(geometry) { Time = time, Sample = draw.Textures, SampleCube = draw.CubeTextures };
+                gsInputs = geometry.Globals.Where(g => g.Storage == "in").ToList();
+                gsOutputs = geometry.Globals.Where(g => g.Storage == "out").ToList();
+            }
             var uniforms = draw.Uniforms(time);
             foreach (var (k, v) in uniforms)
             {
                 SetUniform(vs, k, v);
                 SetUniform(fs, k, v);
+                if (gs is not null) SetUniform(gs, k, v);
             }
             vsInputs = draw.VertexShader.Globals.Where(g => g.Storage == "in").ToList();
             vsOutputs = draw.VertexShader.Globals.Where(g => g.Storage == "out").ToList();
             fsInputs = draw.FragmentShader.Globals.Where(g => g.Storage == "in").ToList();
-            fsOutput = draw.FragmentShader.Globals.Where(g => g.Storage == "out").OrderBy(g => g.Location ?? 0).FirstOrDefault();
+            var outs = draw.FragmentShader.Globals.Where(g => g.Storage == "out").ToList();
+            fsOutput = outs.OrderBy(g => g.Location ?? 0).FirstOrDefault();
+            fsOutputs = new Global?[outs.Count == 0 ? 0 : outs.Select((g, i) => g.Location ?? i).Max() + 1];
+            for (int i = 0; i < outs.Count; i++) fsOutputs[outs[i].Location ?? i] = outs[i];
             if (!draw.Hlsl)
             {
                 if (draw.VertexShader.FindFunction("main") is null) throw new ShaderRuntimeException("the vertex shader has no main()", 0);
@@ -118,6 +135,13 @@ public static partial class Rasterizer
         public ShadedVertex Vertex(int index, int instance)
         {
             var data = index >= 0 && index < draw.Vertices.Count ? draw.Vertices[index] : new Dictionary<string, ShaderValue>();
+            if (draw.InstanceVertices is { Count: > 0 } perInstance)
+            {
+                // Per-instance attributes: the same values for every vertex of an instance.
+                var extra = perInstance[Math.Min(perInstance.Count - 1, instance / Math.Max(1, draw.InstanceDivisor))];
+                data = new Dictionary<string, ShaderValue>(data, StringComparer.Ordinal);
+                foreach (var (k, v) in extra) data[k] = v;
+            }
             return draw.Hlsl ? HlslVertex(data, index, instance) : GlslVertex(data, index, instance);
         }
 
@@ -132,16 +156,45 @@ public static partial class Rasterizer
             vs.Globals["gl_VertexID"] = vs.Globals["gl_VertexIndex"] = ShaderValue.Scalar(index);
             vs.Globals["gl_InstanceID"] = vs.Globals["gl_InstanceIndex"] = ShaderValue.Scalar(instance);
             vs.Globals["gl_Position"] = ShaderValue.Vec(0, 0, 0, 1);
+            vs.Globals["gl_PointSize"] = ShaderValue.Scalar(double.NaN);
             vs.Call("main", []);
+            var size = vs.Globals["gl_PointSize"].X;
+            return new ShadedVertex(vs.Globals["gl_Position"].Padded(4), Outputs(vs, vsOutputs), double.IsNaN(size) ? null : size);
+        }
+
+        /// <summary>The outputs of a GLSL stage, by name, by "@location" and, for an interface block, by "block:Type".</summary>
+        private static Dictionary<string, ShaderValue> Outputs(ShaderRunner runner, List<Global> globals)
+        {
             var outputs = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
-            for (int i = 0; i < vsOutputs.Count; i++)
+            for (int i = 0; i < globals.Count; i++)
             {
-                var g = vsOutputs[i];
-                var value = vs.Globals[g.Id].Clone();
-                outputs[g.Id] = value;
+                var g = globals[i];
+                var key = g.Block is not null && g.Id == "" ? null : g.Id;
+                ShaderValue value;
+                if (key is null)
+                    value = ShaderValue.Struct(g.Block!.ToDictionary(f => f.Id, f => runner.Globals.TryGetValue(f.Id, out var v) ? v.Clone() : ShaderValue.Scalar(0)));
+                else if (!runner.Globals.TryGetValue(key, out var v)) continue;
+                else value = v.Clone();
+                if (key is not null) outputs[key] = value;
                 outputs["@" + (g.Location ?? i)] = value;
+                if (g.Block is not null) outputs["block:" + g.Type] = value;
             }
-            return new ShadedVertex(vs.Globals["gl_Position"].Padded(4), outputs);
+            return outputs;
+        }
+
+        /// <summary>The key a GLSL stage's input is matched by: the block name, the location (Vulkan) or the name.</summary>
+        private string InputKey(Global g, int i) =>
+            g.Block is not null && !draw.MatchByLocation ? "block:" + g.Type : draw.MatchByLocation ? "@" + (g.Location ?? i) : g.Id;
+
+        /// <summary>Sets a GLSL stage's input (a block without an instance name puts its fields in the globals).</summary>
+        private static void SetInput(ShaderRunner runner, Global g, ShaderValue value)
+        {
+            if (g.Block is not null && g.Id == "" && value.Fields is not null)
+            {
+                foreach (var (k, v) in value.Fields) runner.Globals[k] = v;
+                return;
+            }
+            runner.Globals[g.Id] = value;
         }
 
         private ShadedVertex HlslVertex(Dictionary<string, ShaderValue> data, int index, int instance)
@@ -184,21 +237,19 @@ public static partial class Rasterizer
             return Sized(type, data.TryGetValue(Semantic(semantic), out var v) ? v : null);
         }
 
-        public double[]? Fragment(ShadedVertex[] vs3, double p0, double p1, double p2, double x, double y, double z, double invW)
+        public double[]?[]? Fragment(ShadedVertex[] vs3, double p0, double p1, double p2, double x, double y, double z, double invW, bool front)
         {
             Dictionary<string, ShaderValue> Interp()
             {
                 var d = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
                 foreach (var (k, a) in vs3[0].Outputs)
                 {
-                    if (a.V is null || a.IsMatrix || !vs3[1].Outputs.TryGetValue(k, out var b) || !vs3[2].Outputs.TryGetValue(k, out var c) || b.V is null || c.V is null)
+                    if (!vs3[1].Outputs.TryGetValue(k, out var b) || !vs3[2].Outputs.TryGetValue(k, out var c))
                     {
                         d[k] = a;
                         continue;
                     }
-                    var r = new double[a.V.Length];
-                    for (int i = 0; i < r.Length; i++) r[i] = p0 * a.V[i] + p1 * b.V[Math.Min(i, b.V.Length - 1)] + p2 * c.V[Math.Min(i, c.V.Length - 1)];
-                    d[k] = ShaderValue.Vec(r);
+                    d[k] = Interpolate(a, b, c, p0, p1, p2);
                 }
                 return d;
             }
@@ -206,29 +257,50 @@ public static partial class Rasterizer
             // Window coordinates of the real window: OpenGL counts y from the bottom, Vulkan and DirectX from the top.
             double fx = x * scale, fy = (yDown || draw.Hlsl ? y : height - y) * scale;
             var fragCoord = ShaderValue.Vec(fx, fy, z, invW);
-            return draw.Hlsl ? HlslFragment(varyings, fragCoord) : GlslFragment(varyings, fragCoord);
+            return draw.Hlsl ? HlslFragment(varyings, fragCoord, front) : GlslFragment(varyings, fragCoord, front);
         }
 
-        private double[]? GlslFragment(Dictionary<string, ShaderValue> varyings, ShaderValue fragCoord)
+        /// <summary>
+        /// Perspective-correct interpolation of numbers, struct fields and array items. Equal values stay exactly equal
+        /// (flat integers such as a material index).
+        /// </summary>
+        private static ShaderValue Interpolate(ShaderValue a, ShaderValue b, ShaderValue c, double p0, double p1, double p2)
+        {
+            if (a.V is not null && !a.IsMatrix && b.V is not null && c.V is not null)
+            {
+                if (a.V.AsSpan().SequenceEqual(b.V) && a.V.AsSpan().SequenceEqual(c.V)) return a;
+                var r = new double[a.V.Length];
+                for (int i = 0; i < r.Length; i++) r[i] = p0 * a.V[i] + p1 * b.V[Math.Min(i, b.V.Length - 1)] + p2 * c.V[Math.Min(i, c.V.Length - 1)];
+                return ShaderValue.Vec(r);
+            }
+            if (a.Fields is not null && b.Fields is not null && c.Fields is not null)
+                return ShaderValue.Struct(a.Fields.ToDictionary(kv => kv.Key,
+                    kv => b.Fields.TryGetValue(kv.Key, out var fb) && c.Fields.TryGetValue(kv.Key, out var fc) ? Interpolate(kv.Value, fb, fc, p0, p1, p2) : kv.Value));
+            if (a.Items is not null && b.Items is not null && c.Items is not null && a.Items.Length == b.Items.Length && a.Items.Length == c.Items.Length)
+                return ShaderValue.Array(a.Items.Select((x, i) => Interpolate(x, b.Items[i], c.Items[i], p0, p1, p2)).ToArray());
+            return a;
+        }
+
+        private double[]?[]? GlslFragment(Dictionary<string, ShaderValue> varyings, ShaderValue fragCoord, bool front)
         {
             for (int i = 0; i < fsInputs.Count; i++)
             {
                 var g = fsInputs[i];
-                var key = draw.MatchByLocation ? "@" + (g.Location ?? i) : g.Id;
-                fs.Globals[g.Id] = varyings.TryGetValue(key, out var v) ? v : fs.Default(g.Type);
+                if (varyings.TryGetValue(InputKey(g, i), out var v)) SetInput(fs, g, v);
+                else if (g.Block is null) fs.Globals[g.Id] = fs.Default(g.Type);
             }
             fs.Globals["gl_FragCoord"] = fragCoord;
-            var r = fs.Call("main", []);
-            _ = r;
+            fs.Globals["gl_FrontFacing"] = ShaderValue.Scalar(front ? 1 : 0);
+            fs.Call("main", []);
             if (fs.Discarded)
             {
                 ResetDiscard();
                 return null;
             }
-            return fs.Globals[fsOutput!.Id].Padded(4);
+            return fsOutputs.Select(o => o is null ? null : fs.Globals[o.Id].V is { } v ? v.ToArray() : null).ToArray();
         }
 
-        private double[]? HlslFragment(Dictionary<string, ShaderValue> varyings, ShaderValue fragCoord)
+        private double[]?[]? HlslFragment(Dictionary<string, ShaderValue> varyings, ShaderValue fragCoord, bool front)
         {
             var f = draw.FragmentShader.FindFunction(draw.FragmentEntry) ?? throw new ShaderRuntimeException($"the pixel shader has no function '{draw.FragmentEntry}'", 0);
             var args = new List<ShaderValue>();
@@ -240,12 +312,14 @@ public static partial class Rasterizer
                     foreach (var field in st.Fields)
                     {
                         if (IsPosition(field.Semantic)) fields[field.Id] = fragCoord;
+                        else if (IsFrontFace(field.Semantic)) fields[field.Id] = ShaderValue.Scalar(front ? 1 : 0);
                         else if (field.Semantic is not null && varyings.TryGetValue("@" + Semantic(field.Semantic), out var v)) fields[field.Id] = v;
                         else fields[field.Id] = varyings.TryGetValue(field.Id, out var v2) ? v2 : fs.Default(field.Type);
                     }
                     args.Add(ShaderValue.Struct(fields));
                 }
                 else if (IsPosition(p.Semantic)) args.Add(fragCoord);
+                else if (IsFrontFace(p.Semantic)) args.Add(ShaderValue.Scalar(front ? 1 : 0));
                 else args.Add(p.Semantic is not null && varyings.TryGetValue("@" + Semantic(p.Semantic), out var v) ? v : fs.Default(p.Type));
             }
             var result = fs.Call(f.Id, args);
@@ -254,9 +328,118 @@ public static partial class Rasterizer
                 ResetDiscard();
                 return null;
             }
-            return (result ?? ShaderValue.Vec(0, 0, 0, 1)).Padded(4);
+            result ??= ShaderValue.Vec(0, 0, 0, 1);
+            // A struct with SV_Target0, SV_Target1 …: one colour per render target.
+            if (result.Fields is not null && draw.FragmentShader.FindStruct(f.ReturnType) is { } rs)
+            {
+                var targets = new List<double[]?>();
+                foreach (var field in rs.Fields)
+                {
+                    if (field.Semantic is null || !field.Semantic.StartsWith("SV_TARGET", StringComparison.OrdinalIgnoreCase)) continue;
+                    int n = field.Semantic.Length > 9 && int.TryParse(field.Semantic[9..], out var k) ? k : 0;
+                    while (targets.Count <= n) targets.Add(null);
+                    targets[n] = result.Fields.TryGetValue(field.Id, out var v) && v.V is not null ? v.V.ToArray() : null;
+                }
+                return targets.ToArray();
+            }
+            return [result.V?.ToArray() ?? [0, 0, 0, 1]];
         }
 
+        private static bool IsFrontFace(string? semantic) => semantic is not null && semantic.Equals("SV_IsFrontFace", StringComparison.OrdinalIgnoreCase);
+
         private void ResetDiscard() => fs.ClearDiscard();
+
+        /// <summary>
+        /// Runs the geometry shader on one input primitive and returns the primitives it emits: points, the lines of a
+        /// line strip or the triangles of a triangle strip (EndPrimitive / RestartStrip starts a new strip).
+        /// </summary>
+        public List<(Topology Kind, ShadedVertex[] Vertices)> Geometry(ShadedVertex[] input)
+        {
+            var geometry = draw.GeometryShader!;
+            var strips = new List<List<ShadedVertex>> { new() };
+            if (draw.Hlsl)
+            {
+                var f = geometry.FindFunction(draw.GeometryEntry) ?? throw new ShaderRuntimeException($"the geometry shader has no function '{draw.GeometryEntry}'", 0);
+                var args = new List<ShaderValue>();
+                foreach (var p in f.Params)
+                {
+                    if (p.Out)
+                    {
+                        args.Add(ShaderValue.Scalar(0));
+                        continue;
+                    }
+                    var st = geometry.FindStruct(p.Type);
+                    args.Add(ShaderValue.Array(input.Select(v => st is null ? ShaderValue.Vec(v.Clip)
+                        : ShaderValue.Struct(st.Fields.ToDictionary(fl => fl.Id, fl => IsPosition(fl.Semantic) ? ShaderValue.Vec(v.Clip)
+                            : v.Outputs.TryGetValue(fl.Id, out var o) ? o : fl.Semantic is not null && v.Outputs.TryGetValue("@" + Semantic(fl.Semantic), out var o2) ? o2 : gs!.Default(fl.Type)))).ToArray()));
+                }
+                gs!.Emit = (kind, value) =>
+                {
+                    if (kind == "RestartStrip")
+                    {
+                        strips.Add(new());
+                        return;
+                    }
+                    if (value?.Fields is null) return;
+                    var outputs = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+                    double[]? clip = null;
+                    var outStruct = geometry.Structs.FirstOrDefault(st => st.Fields.Select(x => x.Id).ToHashSet().SetEquals(value.Fields.Keys));
+                    foreach (var (k, v) in value.Fields)
+                    {
+                        outputs[k] = v.Clone();
+                        var semantic = outStruct?.Fields.FirstOrDefault(x => x.Id == k)?.Semantic;
+                        if (IsPosition(semantic)) clip = v.Padded(4);
+                        else if (semantic is not null) outputs["@" + Semantic(semantic)] = outputs[k];
+                    }
+                    strips[^1].Add(new ShadedVertex(clip ?? [0, 0, 0, 1], outputs));
+                };
+                gs.Call(f.Id, args);
+            }
+            else
+            {
+                gs!.Globals["gl_in"] = ShaderValue.Array(input.Select(v => ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+                {
+                    ["gl_Position"] = ShaderValue.Vec(v.Clip),
+                    ["gl_PointSize"] = ShaderValue.Scalar(v.PointSize ?? 1),
+                })).ToArray());
+                for (int i = 0; i < gsInputs.Count; i++)
+                {
+                    var g = gsInputs[i];
+                    var key = InputKey(g, i);
+                    gs.Globals[g.Id == "" ? g.Type : g.Id] = ShaderValue.Array(input.Select(v => v.Outputs.TryGetValue(key, out var o) ? o : gs.Default(g.Type)).ToArray());
+                }
+                gs.Globals["gl_PrimitiveIDIn"] = ShaderValue.Scalar(0);
+                gs.Emit = (kind, _) =>
+                {
+                    if (kind == "EndPrimitive")
+                    {
+                        strips.Add(new());
+                        return;
+                    }
+                    var position = gs.Globals.TryGetValue("gl_Position", out var p) ? p.Padded(4) : [0, 0, 0, 1];
+                    strips[^1].Add(new ShadedVertex(position, Outputs(gs, gsOutputs)));
+                };
+                gs.Globals["gl_Position"] = ShaderValue.Vec(0, 0, 0, 1);
+                gs.Call("main", []);
+            }
+            var result = new List<(Topology, ShadedVertex[])>();
+            foreach (var strip in strips)
+            {
+                switch (geometry.OutputPrimitive)
+                {
+                    case "points":
+                        result.AddRange(strip.Select(v => (Topology.Points, new[] { v })));
+                        break;
+                    case "line_strip":
+                        for (int i = 0; i + 1 < strip.Count; i++) result.Add((Topology.Lines, new[] { strip[i], strip[i + 1] }));
+                        break;
+                    default:
+                        for (int i = 0; i + 2 < strip.Count; i++)
+                            result.Add((Topology.Triangles, i % 2 == 0 ? new[] { strip[i], strip[i + 1], strip[i + 2] } : new[] { strip[i + 1], strip[i], strip[i + 2] }));
+                        break;
+                }
+            }
+            return result;
+        }
     }
 }

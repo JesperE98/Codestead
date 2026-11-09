@@ -205,7 +205,7 @@ public sealed partial class D3D12Reader
             scene.Notes.Add(SimNote.Error("modelFileMissing", ("file", path ?? "?")));
             return;
         }
-        bool flipUv = Models.ModelFiles.FlipUVs(src);
+        bool flipUv = Models.ModelFiles.FlipUVs(src, project);
         var textureNames = TextureBinding.ShaderTextures(vs, ps);
         foreach (var mesh in model.Meshes)
         {

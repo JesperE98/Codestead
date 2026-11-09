@@ -1,58 +1,143 @@
 using Codestead.GP.Gpu.Scene;
 using Codestead.GP.Gpu.Shading;
+using Codestead.GP.Gpu.Textures;
 
 namespace Codestead.GP.Gpu.Raster;
 
 /// <summary>
-/// The simulated GPU: runs the vertex shader on every vertex, assembles triangles, culls, rasterises them with
-/// perspective-correct interpolation and a depth test, and runs the fragment shader per pixel. The shader stages
-/// are in Rasterizer.Stages.cs.
+/// The simulated GPU: runs the vertex shader on every vertex (and a geometry shader on every primitive), assembles
+/// triangles, lines and points, culls, rasterises them with perspective-correct interpolation and runs the fragment
+/// shader per pixel, then the per-sample tests and blending (Rasterizer.Fragments.cs). The window and every off-screen
+/// target is a <see cref="Framebuffer"/>; a target drawn earlier in the frame can be sampled as a texture.
 /// </summary>
 public static partial class Rasterizer
 {
+    /// <summary>The targets of the frame being rendered on this thread (render-target textures read them).</summary>
+    [ThreadStatic] private static RenderContext? current;
+
+    private sealed class RenderContext(Func<string, Framebuffer> target, bool bottomUp)
+    {
+        private readonly Dictionary<(string, int, bool), Image> images = new();
+        public Func<string, Framebuffer> Target { get; } = target;
+        public bool BottomUp { get; } = bottomUp;
+
+        public Image Image(string id, int attachment, bool depth)
+        {
+            if (!images.TryGetValue((id, attachment, depth), out var image))
+            {
+                var fb = Target(id);
+                images[(id, attachment, depth)] = image = depth ? fb.DepthImage(BottomUp) : fb.ColorImage(BottomUp, attachment);
+            }
+            return image;
+        }
+
+        public void Changed(string? id)
+        {
+            if (id is null) return;
+            foreach (var key in images.Keys.Where(k => k.Item1 == id).ToList()) images.Remove(key);
+        }
+    }
+
+    /// <summary>
+    /// The image of a render target as drawn so far in the frame being rendered (null outside a render): its colour
+    /// attachment, or its depth (shadow maps).
+    /// </summary>
+    public static Image? TargetImage(string id, int attachment = 0, bool depth = false) => current?.Image(id, attachment, depth);
+
     /// <summary>Renders one frame of a scene at a width in pixels (the height follows the window's aspect ratio).</summary>
     public static Frame Render(Scene.Scene scene, int width, double time = 1.0)
     {
         // A program that reads the clock is read again at that time (its uniforms, transforms … change).
         if (scene.Animated && scene.AtTime is { } at && time != 1.0) scene = at(time);
         int height = Math.Max(1, (int)Math.Round(width * (double)scene.Height / Math.Max(1, scene.Width)));
-        var pixels = new byte[width * height * 4];
-        var depth = new double[width * height];
-        Array.Fill(depth, double.MaxValue);
-        var clear = scene.ClearColor ?? [0, 0, 0, 1];
-        for (int i = 0; i < width * height; i++) Put(pixels, i, clear);
+        double scale = scene.Width / (double)width;
         var errors = new List<string>();
         bool yDown = scene.Api == Apis.Vulkan;
         bool zMinusOneToOne = scene.Api == Apis.OpenGL;
-        double scale = scene.Width / (double)width;
-        foreach (var draw in scene.Draws)
-        {
-            try
-            {
-                DrawOne(draw, time, width, height, scale, yDown, zMinusOneToOne, pixels, depth);
-            }
-            catch (ShaderRuntimeException e)
-            {
-                errors.Add(e.Line > 0 ? $"line {e.Line}: {e.Message}" : e.Message);
-            }
-        }
-        return new Frame(width, height, pixels, errors);
-    }
 
-    private static void Put(byte[] pixels, int index, double[] rgba)
-    {
-        int i = index * 4;
-        pixels[i] = ToByte(rgba[2]);
-        pixels[i + 1] = ToByte(rgba[1]);
-        pixels[i + 2] = ToByte(rgba[0]);
-        pixels[i + 3] = 255;
+        var window = new Framebuffer(width, height, scene.Samples);
+        window.Clear(scene.ClearColor ?? [0, 0, 0, 1], 1.0, 0);
+        var targets = new Dictionary<string, Framebuffer>(StringComparer.Ordinal);
+        Framebuffer Fb(string? id)
+        {
+            if (id is null) return window;
+            if (!targets.TryGetValue(id, out var fb))
+            {
+                var t = scene.Targets.GetValueOrDefault(id) ?? new RenderTarget(id);
+                int w = t.Width > 0 ? Math.Max(1, (int)Math.Round(t.Width / scale)) : width;
+                int h = t.Height > 0 ? Math.Max(1, (int)Math.Round(t.Height / scale)) : height;
+                targets[id] = fb = new Framebuffer(w, h, t.Samples, t.Float, t.ColorAttachments);
+            }
+            return fb;
+        }
+        // The size in the program's own pixels (gl_FragCoord) of a target.
+        double LogicalWidth(string? id) => id is not null && scene.Targets.GetValueOrDefault(id) is { Width: > 0 } t ? t.Width : scene.Width;
+
+        var previous = current;
+        var context = new RenderContext(id => Fb(id), zMinusOneToOne);
+        current = context;
+        try
+        {
+            void Ops(Func<int, bool> when)
+            {
+                foreach (var op in scene.Ops.Where(o => when(o.BeforeDraw)))
+                {
+                    switch (op)
+                    {
+                        case ClearOp c:
+                            Fb(c.Target).Clear(c.Color, c.Depth, c.Stencil);
+                            context.Changed(c.Target);
+                            break;
+                        case CopyOp c:
+                            Fb(c.To).CopyFrom(Fb(c.From));
+                            context.Changed(c.To);
+                            break;
+                    }
+                }
+            }
+            for (int i = 0; i < scene.Draws.Count; i++)
+            {
+                int at2 = i;
+                Ops(b => b == at2);
+                var draw = scene.Draws[i];
+                var fb = Fb(draw.Target);
+                try
+                {
+                    DrawOne(draw, time, fb, LogicalWidth(draw.Target) / fb.Width, yDown, zMinusOneToOne);
+                }
+                catch (ShaderRuntimeException e)
+                {
+                    errors.Add(e.Line > 0 ? $"line {e.Line}: {e.Message}" : e.Message);
+                }
+                context.Changed(draw.Target);
+            }
+            int count = scene.Draws.Count;
+            Ops(b => b >= count);
+        }
+        finally
+        {
+            current = previous;
+        }
+
+        var pixels = new byte[width * height * 4];
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+            {
+                var c = window.Resolved(x, y);
+                int i = (y * width + x) * 4;
+                pixels[i] = ToByte(c[2]);
+                pixels[i + 1] = ToByte(c[1]);
+                pixels[i + 2] = ToByte(c[0]);
+                pixels[i + 3] = 255;
+            }
+        return new Frame(width, height, pixels, errors);
     }
 
     private static byte ToByte(double v) => (byte)Math.Round(Math.Clamp(double.IsNaN(v) ? 0 : v, 0, 1) * 255);
 
-    private static void DrawOne(DrawCall draw, double time, int width, int height, double scale, bool yDown, bool zMinusOneToOne, byte[] pixels, double[] depth)
+    private static void DrawOne(DrawCall draw, double time, Framebuffer fb, double scale, bool yDown, bool zMinusOneToOne)
     {
-        var stages = new Stages(draw, time, height, scale, yDown);
+        var stages = new Stages(draw, time, fb.Height, scale, yDown);
         for (int instance = 0; instance < Math.Max(1, draw.Instances); instance++)
         {
             var order = draw.Indices ?? Enumerable.Range(draw.First, Math.Max(0, draw.Count)).ToArray();
@@ -62,28 +147,83 @@ public static partial class Rasterizer
                 if (!cache.TryGetValue(index, out var v)) cache[index] = v = stages.Vertex(index, instance);
                 return v;
             }
-            foreach (var (a, b, c) in Triangles(order, draw.Topology))
-                foreach (var (p, q, r) in ClipNear(Vertex(a), Vertex(b), Vertex(c), zMinusOneToOne))
-                    Triangle(p, q, r, draw, stages, width, height, yDown, zMinusOneToOne, pixels, depth);
+            foreach (var primitive in Primitives(order, draw.Topology))
+            {
+                var input = primitive.Select(Vertex).ToArray();
+                var output = stages.HasGeometry ? stages.Geometry(input) : [(KindOf(draw.Topology), input)];
+                foreach (var (kind, v) in output)
+                {
+                    switch (kind)
+                    {
+                        case Topology.Points:
+                            Point(v[0], draw, stages, fb, scale, yDown, zMinusOneToOne);
+                            break;
+                        case Topology.Lines:
+                            foreach (var (p, q) in ClipNearLine(v[0], v[1], zMinusOneToOne))
+                                Line(p, q, draw, stages, fb, yDown, zMinusOneToOne);
+                            break;
+                        default:
+                            foreach (var (p, q, r) in ClipNear(v[0], v[1], v[2], zMinusOneToOne))
+                                Triangle(p, q, r, draw, stages, fb, yDown, zMinusOneToOne);
+                            break;
+                    }
+                }
+            }
         }
     }
 
+    /// <summary>The kind of primitive a topology makes: points, lines or triangles.</summary>
+    private static Topology KindOf(Topology t) => t switch
+    {
+        Topology.Points => Topology.Points,
+        Topology.Lines or Topology.LineStrip => Topology.Lines,
+        _ => Topology.Triangles,
+    };
+
+    private static IEnumerable<int[]> Primitives(int[] order, Topology topology)
+    {
+        switch (topology)
+        {
+            case Topology.Triangles:
+                for (int i = 0; i + 2 < order.Length; i += 3) yield return [order[i], order[i + 1], order[i + 2]];
+                break;
+            case Topology.TriangleStrip:
+                for (int i = 0; i + 2 < order.Length; i++)
+                    yield return i % 2 == 0 ? [order[i], order[i + 1], order[i + 2]] : [order[i + 1], order[i], order[i + 2]];
+                break;
+            case Topology.TriangleFan:
+                for (int i = 1; i + 1 < order.Length; i++) yield return [order[0], order[i], order[i + 1]];
+                break;
+            case Topology.Lines:
+                for (int i = 0; i + 1 < order.Length; i += 2) yield return [order[i], order[i + 1]];
+                break;
+            case Topology.LineStrip:
+                for (int i = 0; i + 1 < order.Length; i++) yield return [order[i], order[i + 1]];
+                break;
+            case Topology.Points:
+                foreach (var i in order) yield return [i];
+                break;
+        }
+    }
+
+    /// <summary>Distance to the near plane in clip space (OpenGL: z ≥ -w, Vulkan and Direct3D: z ≥ 0).</summary>
+    private static double NearDistance(ShadedVertex v, bool zMinusOneToOne) => zMinusOneToOne ? v.Clip[2] + v.Clip[3] : v.Clip[2];
+
     /// <summary>
-    /// Clips a triangle against the near plane (OpenGL: z ≥ -w, Vulkan and Direct3D: z ≥ 0) in clip space, as the GPU
-    /// does, so geometry crossing the camera's near plane is cut instead of dropped.
+    /// Clips a triangle against the near plane in clip space, as the GPU does, so geometry crossing the camera's near
+    /// plane is cut instead of dropped.
     /// </summary>
     private static List<(ShadedVertex, ShadedVertex, ShadedVertex)> ClipNear(ShadedVertex a, ShadedVertex b, ShadedVertex c, bool zMinusOneToOne)
     {
-        double D(ShadedVertex v) => zMinusOneToOne ? v.Clip[2] + v.Clip[3] : v.Clip[2];
         var input = new[] { a, b, c };
-        if (input.All(v => D(v) >= 0)) return [(a, b, c)];
-        if (input.All(v => D(v) < 0)) return [];
+        if (input.All(v => NearDistance(v, zMinusOneToOne) >= 0)) return [(a, b, c)];
+        if (input.All(v => NearDistance(v, zMinusOneToOne) < 0)) return [];
         var poly = new List<ShadedVertex>();
         for (int i = 0; i < 3; i++)
         {
             var cur = input[i];
             var next = input[(i + 1) % 3];
-            double dc = D(cur), dn = D(next);
+            double dc = NearDistance(cur, zMinusOneToOne), dn = NearDistance(next, zMinusOneToOne);
             if (dc >= 0) poly.Add(cur);
             if ((dc >= 0) != (dn >= 0)) poly.Add(Lerp(cur, next, dc / (dc - dn)));
         }
@@ -92,104 +232,39 @@ public static partial class Rasterizer
         return result;
     }
 
+    private static List<(ShadedVertex, ShadedVertex)> ClipNearLine(ShadedVertex a, ShadedVertex b, bool zMinusOneToOne)
+    {
+        double da = NearDistance(a, zMinusOneToOne), db = NearDistance(b, zMinusOneToOne);
+        if (da >= 0 && db >= 0) return [(a, b)];
+        if (da < 0 && db < 0) return [];
+        var cut = Lerp(a, b, da / (da - db));
+        return da >= 0 ? [(a, cut)] : [(cut, b)];
+    }
+
     private static ShadedVertex Lerp(ShadedVertex a, ShadedVertex b, double t)
     {
         var clip = new double[4];
         for (int i = 0; i < 4; i++) clip[i] = a.Clip[i] + (b.Clip[i] - a.Clip[i]) * t;
         var outputs = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
         foreach (var (k, va) in a.Outputs)
-        {
-            if (va.V is null || va.IsMatrix || !b.Outputs.TryGetValue(k, out var vb) || vb.V is null)
-            {
-                outputs[k] = va;
-                continue;
-            }
-            outputs[k] = ShaderValue.Vec(va.V.Select((x, i) => x + (vb.V[Math.Min(i, vb.V.Length - 1)] - x) * t).ToArray());
-        }
-        return new ShadedVertex(clip, outputs);
+            outputs[k] = b.Outputs.TryGetValue(k, out var vb) ? Mix(va, vb, 1 - t, t) : va;
+        return new ShadedVertex(clip, outputs, a.PointSize);
     }
 
-    private static IEnumerable<(int, int, int)> Triangles(int[] order, Topology topology)
+    /// <summary>a·wa + b·wb for numbers, fields and array items (other values: a's).</summary>
+    private static ShaderValue Mix(ShaderValue a, ShaderValue b, double wa, double wb)
     {
-        switch (topology)
+        if (a.V is not null && !a.IsMatrix && b.V is not null)
         {
-            case Topology.Triangles:
-                for (int i = 0; i + 2 < order.Length; i += 3) yield return (order[i], order[i + 1], order[i + 2]);
-                break;
-            case Topology.TriangleStrip:
-                for (int i = 0; i + 2 < order.Length; i++)
-                    yield return i % 2 == 0 ? (order[i], order[i + 1], order[i + 2]) : (order[i + 1], order[i], order[i + 2]);
-                break;
-            case Topology.TriangleFan:
-                for (int i = 1; i + 1 < order.Length; i++) yield return (order[0], order[i], order[i + 1]);
-                break;
+            var r = new double[a.V.Length];
+            for (int i = 0; i < r.Length; i++) r[i] = wa * a.V[i] + wb * b.V[Math.Min(i, b.V.Length - 1)];
+            return ShaderValue.Vec(r);
         }
-    }
-
-    private static void Triangle(ShadedVertex v0, ShadedVertex v1, ShadedVertex v2, DrawCall draw, Stages stages, int width, int height, bool yDown, bool zMinusOneToOne, byte[] pixels, double[] depth)
-    {
-        var vs = new[] { v0, v1, v2 };
-        if (vs.Any(v => v.Clip[3] <= 1e-9)) return;
-        var sx = new double[3];
-        var sy = new double[3];
-        var sz = new double[3];
-        var invW = new double[3];
-        for (int i = 0; i < 3; i++)
-        {
-            var c = vs[i].Clip;
-            double nx = c[0] / c[3], ny = c[1] / c[3], nz = c[2] / c[3];
-            sx[i] = (nx + 1) / 2 * width;
-            sy[i] = yDown ? (1 + ny) / 2 * height : (1 - ny) / 2 * height;
-            sz[i] = zMinusOneToOne ? (nz + 1) / 2 : nz;
-            invW[i] = 1 / c[3];
-        }
-        // Signed area on screen (y down): negative means counter-clockwise as you look at the screen.
-        double area = (sx[1] - sx[0]) * (sy[2] - sy[0]) - (sx[2] - sx[0]) * (sy[1] - sy[0]);
-        if (Math.Abs(area) < 1e-12) return;
-        bool ccw = area < 0;
-        bool front = draw.FrontCcw ? ccw : !ccw;
-        if (draw.Cull == CullMode.FrontAndBack || (draw.Cull == CullMode.Back && !front) || (draw.Cull == CullMode.Front && front)) return;
-
-        int minX = Math.Max(0, (int)Math.Floor(sx.Min())), maxX = Math.Min(width - 1, (int)Math.Ceiling(sx.Max()));
-        int minY = Math.Max(0, (int)Math.Floor(sy.Min())), maxY = Math.Min(height - 1, (int)Math.Ceiling(sy.Max()));
-        double[] edgeLen =
-        [
-            Math.Sqrt(Sq(sx[2] - sx[1]) + Sq(sy[2] - sy[1])),
-            Math.Sqrt(Sq(sx[0] - sx[2]) + Sq(sy[0] - sy[2])),
-            Math.Sqrt(Sq(sx[1] - sx[0]) + Sq(sy[1] - sy[0])),
-        ];
-        for (int py = minY; py <= maxY; py++)
-        {
-            for (int px = minX; px <= maxX; px++)
-            {
-                double x = px + 0.5, y = py + 0.5;
-                double w0 = ((sx[2] - sx[1]) * (y - sy[1]) - (sy[2] - sy[1]) * (x - sx[1])) / area;
-                double w1 = ((sx[0] - sx[2]) * (y - sy[2]) - (sy[0] - sy[2]) * (x - sx[2])) / area;
-                double w2 = 1 - w0 - w1;
-                if (w0 < -1e-9 || w1 < -1e-9 || w2 < -1e-9) continue;
-                if (draw.Wireframe)
-                {
-                    double d0 = Math.Abs(w0 * area) / edgeLen[0], d1 = Math.Abs(w1 * area) / edgeLen[1], d2 = Math.Abs(w2 * area) / edgeLen[2];
-                    if (Math.Min(d0, Math.Min(d1, d2)) > 0.8) continue;
-                }
-                double z = w0 * sz[0] + w1 * sz[1] + w2 * sz[2];
-                int index = py * width + px;
-                if (draw.DepthTest)
-                {
-                    if (z >= depth[index] || z < 0 || z > 1) continue;
-                }
-                // Perspective-correct weights.
-                double p0 = w0 * invW[0], p1 = w1 * invW[1], p2 = w2 * invW[2];
-                double sum = p0 + p1 + p2;
-                p0 /= sum;
-                p1 /= sum;
-                p2 /= sum;
-                var color = stages.Fragment(vs, p0, p1, p2, x, y, z, sum);
-                if (color is null) continue;
-                if (draw.DepthTest) depth[index] = z;
-                Put(pixels, index, color);
-            }
-        }
+        if (a.Fields is not null && b.Fields is not null)
+            return ShaderValue.Struct(a.Fields.ToDictionary(kv => kv.Key, kv => b.Fields.TryGetValue(kv.Key, out var fb) ? Mix(kv.Value, fb, wa, wb) : kv.Value));
+        if (a.Items is not null && b.Items is not null && a.Items.Length == b.Items.Length)
+            return ShaderValue.Array(a.Items.Select((x, i) => Mix(x, b.Items[i], wa, wb)).ToArray());
+        return a;
     }
 
     private static double Sq(double v) => v * v;

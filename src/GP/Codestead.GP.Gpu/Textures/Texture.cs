@@ -5,18 +5,36 @@ namespace Codestead.GP.Gpu.Textures;
 /// of the uploaded data (the top of the file, unless it was flipped when loaded – OpenGL programs flip it, because
 /// OpenGL puts v = 0 at the bottom of an image).
 /// </summary>
-public sealed class Texture(Image image, SamplerState sampler)
+public sealed class Texture
 {
-    public Image Image { get; } = image;
-    public SamplerState Sampler { get; } = sampler;
+    private static readonly Image Empty = new(1, 1, 4, [0, 0, 0, 255]);
+    private readonly Image? image;
+    private readonly Func<Image?>? source;
+
+    public Texture(Image image, SamplerState sampler)
+    {
+        this.image = image;
+        Sampler = sampler;
+    }
+
+    /// <summary>A texture whose image is made while the frame renders (a render target's colour or depth).</summary>
+    public Texture(Func<Image?> source, SamplerState sampler)
+    {
+        this.source = source;
+        Sampler = sampler;
+    }
+
+    public Image Image => image ?? source?.Invoke() ?? Empty;
+    public SamplerState Sampler { get; }
     /// <summary>The colour channels the shader sees (3: alpha reads as 1).</summary>
     public int Components { get; init; } = 4;
 
     public double[] Sample(double u, double v)
     {
-        int w = Image.Width, h = Image.Height;
+        var img = Image;
+        int w = img.Width, h = img.Height;
         if (!Sampler.Linear)
-            return Texel(Coord(u * w - 0.5 + 0.5, w, Sampler.WrapS, out var outS), Coord(v * h, h, Sampler.WrapT, out var outT), outS || outT);
+            return Texel(img, Coord(u * w - 0.5 + 0.5, w, Sampler.WrapS, out var outS), Coord(v * h, h, Sampler.WrapT, out var outT), outS || outT);
         double x = u * w - 0.5, y = v * h - 0.5;
         int x0 = (int)Math.Floor(x), y0 = (int)Math.Floor(y);
         double fx = x - x0, fy = y - y0;
@@ -26,7 +44,7 @@ public sealed class Texture(Image image, SamplerState sampler)
             {
                 double weight = (dx == 0 ? 1 - fx : fx) * (dy == 0 ? 1 - fy : fy);
                 if (weight == 0) continue;
-                var t = Texel(Coord(x0 + dx + 0.5, w, Sampler.WrapS, out var o1), Coord(y0 + dy + 0.5, h, Sampler.WrapT, out var o2), o1 || o2);
+                var t = Texel(img, Coord(x0 + dx + 0.5, w, Sampler.WrapS, out var o1), Coord(y0 + dy + 0.5, h, Sampler.WrapT, out var o2), o1 || o2);
                 for (int k = 0; k < 4; k++) r[k] += weight * t[k];
             }
         return r;
@@ -55,11 +73,19 @@ public sealed class Texture(Image image, SamplerState sampler)
         }
     }
 
-    private double[] Texel(int x, int y, bool outside)
+    /// <summary>The texel at integer coordinates (texelFetch, Load).</summary>
+    public double[] Fetch(int x, int y)
+    {
+        var img = Image;
+        return Texel(img, Math.Clamp(x, 0, img.Width - 1), Math.Clamp(y, 0, img.Height - 1), x < 0 || y < 0 || x >= img.Width || y >= img.Height);
+    }
+
+    private double[] Texel(Image img, int x, int y, bool outside)
     {
         if (outside) return Sampler.Border ?? [0, 0, 0, 0];
-        int i = (y * Image.Width + x) * 4;
-        var d = Image.Rgba;
+        int i = (y * img.Width + x) * 4;
+        if (img.Floats is { } f) return [f[i], f[i + 1], f[i + 2], Components == 4 ? f[i + 3] : 1.0];
+        var d = img.Rgba;
         return [d[i] / 255.0, d[i + 1] / 255.0, d[i + 2] / 255.0, Components == 4 ? d[i + 3] / 255.0 : 1.0];
     }
 }

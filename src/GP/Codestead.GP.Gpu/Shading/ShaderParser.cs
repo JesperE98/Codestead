@@ -76,6 +76,13 @@ public sealed partial class ShaderParser
         "unsigned", "signed", "constexpr", "volatile", "inline",
     };
 
+    private static readonly HashSet<string> Primitives = new(StringComparer.Ordinal)
+    {
+        "points", "lines", "lines_adjacency", "triangles", "triangles_adjacency", "line_strip", "triangle_strip",
+    };
+
+    private string? hlslInputPrimitive, hlslOutputPrimitive;
+
     private ShaderProgram Program()
     {
         var program = new ShaderProgram();
@@ -109,6 +116,8 @@ public sealed partial class ShaderParser
             }
             Global(program);
         }
+        program.InputPrimitive ??= hlslInputPrimitive;
+        program.OutputPrimitive ??= hlslOutputPrimitive;
         return program;
     }
 
@@ -209,6 +218,8 @@ public sealed partial class ShaderParser
         int line = Peek.Line;
         int? location = null, binding = null;
         bool pushConstant = false;
+        string? primitive = null;
+        int? maxVertices = null;
         if (Accept("layout"))
         {
             Expect("(");
@@ -217,6 +228,8 @@ public sealed partial class ShaderParser
                 var key = Next();
                 if (key.Kind == ShaderTokenKind.End) throw new ShaderSyntaxException("expected ')' at end of input", key.Line);
                 if (key.Is("push_constant")) pushConstant = true;
+                if (key.Kind == ShaderTokenKind.Identifier && Primitives.Contains(key.Text)) primitive = key.Text;
+                if (key.Is("max_vertices") && Peek.Is("=") && PeekAt(1).Kind == ShaderTokenKind.Number) maxVertices = (int)double.Parse(PeekAt(1).Text, CultureInfo.InvariantCulture);
                 if ((key.Is("location") || key.Is("binding")) && Accept("="))
                 {
                     var v = Next();
@@ -236,8 +249,14 @@ public sealed partial class ShaderParser
             if (q is "in" or "out" or "uniform" or "buffer") storage = q;
             else if (q == "const" && storage == "") storage = "const";
         }
-        // "layout(local_size_x = 8) in;"
-        if (Accept(";")) return;
+        // "layout(local_size_x = 8) in;", and a geometry shader's "layout (points) in;" / "layout (triangle_strip, max_vertices = 3) out;"
+        if (Accept(";"))
+        {
+            if (storage == "in" && primitive is not null) program.InputPrimitive = primitive;
+            if (storage == "out" && primitive is not null) program.OutputPrimitive = primitive;
+            if (storage == "out" && maxVertices is not null) program.MaxVertices = maxVertices.Value;
+            return;
+        }
         var type = TypeName();
         // A block: uniform Name { … } instance;
         if (Peek.Is("{"))
@@ -292,7 +311,13 @@ public sealed partial class ShaderParser
                     bool isOut = false;
                     while (Peek.Kind == ShaderTokenKind.Identifier && Qualifiers.Contains(Peek.Text))
                         if (Next().Text is "out" or "inout") isOut = true;
+                    // An HLSL geometry shader's input: "triangle VSOutput input[3]".
+                    if (Peek.Kind == ShaderTokenKind.Identifier && Peek.Text is "point" or "line" or "triangle" or "lineadj" or "triangleadj"
+                        && PeekAt(1).Kind == ShaderTokenKind.Identifier && PeekAt(2).Kind == ShaderTokenKind.Identifier)
+                        hlslInputPrimitive = Next().Text switch { "point" => "points", "line" => "lines", "triangle" => "triangles", var x => x };
                     var type = TypeName();
+                    if (type is "PointStream" or "LineStream" or "TriangleStream")
+                        hlslOutputPrimitive = type switch { "PointStream" => "points", "LineStream" => "line_strip", _ => "triangle_strip" };
                     var name = Identifier();
                     ArraySuffix();
                     string? semantic = Accept(":") ? Identifier() : null;

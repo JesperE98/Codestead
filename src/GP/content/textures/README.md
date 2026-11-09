@@ -12,3 +12,12 @@ copies next to their code (`projects/<api>/<chapter>/start/`), as a real project
 - `container2.png` (256×256, RGB): wooden planks in a steel frame with rivets – the diffuse map of the lighting chapters.
 - `container2_specular.png`: its specular map – the steel bright, the wood almost black.
 - `matrix.png`: an emission map of glowing green glyphs on black (the "Lighting maps" exercise).
+
+For the Advanced OpenGL chapters (drawn by `make_advanced.py`):
+- `marble.png` (256×256, RGB): light marble with dark veins – the cubes of the depth, stencil and blending chapters.
+- `metal.png` (256×256, RGB): a steel floor plate with a diamond pattern and four bolts – the floor.
+- `grass.png` (128×128, RGBA): grass blades on a fully transparent background (alpha is 0 or 255): the discard example.
+- `window.png` (128×128, RGBA): red tinted glass (alpha about 0.55) in an opaque frame: the blending example.
+- `skybox/right.png`, `left.png`, `top.png`, `bottom.png`, `front.png`, `back.png` (256×256, RGB): the six faces
+  (+X, -X, +Y, -Y, +Z, -Z) of one sky – clouds, a sun towards -Z (in front of the default camera) and green fields
+  below the horizon – made with the cube map rule of the OpenGL specification, so they join without seams.

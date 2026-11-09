@@ -31,6 +31,30 @@ public sealed class DrawCall
     public bool FrontCcw { get; init; } = true;
     public bool Wireframe { get; init; }
     public bool DepthTest { get; init; }
+    public CompareFunc DepthFunc { get; init; } = CompareFunc.Less;
+    /// <summary>The depth test writes the depth of the fragments that pass (glDepthMask(GL_TRUE)).</summary>
+    public bool DepthWrite { get; init; } = true;
+    /// <summary>The stencil test, or null when it is off.</summary>
+    public StencilState? Stencil { get; init; }
+    /// <summary>Blending, or null when it is off.</summary>
+    public BlendState? Blend { get; init; }
+    /// <summary>The colour channels written (glColorMask): R, G, B, A.</summary>
+    public bool[] ColorMask { get; init; } = [true, true, true, true];
+    /// <summary>The render target drawn into (<see cref="Scene.Targets"/>), or null for the window.</summary>
+    public string? Target { get; init; }
+    /// <summary>The size of points in pixels (glPointSize) unless the vertex shader writes gl_PointSize.</summary>
+    public double PointSize { get; init; } = 1;
+    /// <summary>The vertex shader may set gl_PointSize (GL_PROGRAM_POINT_SIZE; always in Vulkan).</summary>
+    public bool ProgramPointSize { get; init; }
+    /// <summary>A geometry shader between the vertex and the fragment shader, or null.</summary>
+    public ShaderProgram? GeometryShader { get; init; }
+    public string GeometryEntry { get; init; } = "main";
+    /// <summary>Per-instance attributes (glVertexAttribDivisor, VK_VERTEX_INPUT_RATE_INSTANCE, D3D12 per-instance data):
+    /// the values for instance i are InstanceVertices[i / divisor], keyed like <see cref="Vertices"/>.</summary>
+    public List<Dictionary<string, ShaderValue>>? InstanceVertices { get; init; }
+    public int InstanceDivisor { get; init; } = 1;
     /// <summary>Textures for texture()/Sample(): (name, u, v) → RGBA.</summary>
     public Func<string, double, double, double[]>? Textures { get; init; }
+    /// <summary>Cube maps: (name, direction x, y, z) → RGBA, or null when the name is not a cube map.</summary>
+    public Func<string, double, double, double, double[]?>? CubeTextures { get; init; }
 }

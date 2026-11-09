@@ -23,6 +23,10 @@ internal sealed class GlState
         public string? FragmentFile;
         /// <summary>Uniform name → a function of time giving its value.</summary>
         public Dictionary<string, Func<double, ShaderValue?>> Uniforms = new(StringComparer.Ordinal);
+        public ShaderProgram? Geometry;
+        public string? GeometryFile;
+        /// <summary>glUniformBlockBinding: block name → binding point.</summary>
+        public Dictionary<string, int> BlockBindings = new(StringComparer.Ordinal);
     }
 
     public sealed class Attribute
@@ -32,6 +36,8 @@ internal sealed class GlState
         public int StrideBytes;
         public int OffsetBytes;
         public bool Enabled;
+        /// <summary>glVertexAttribDivisor: 0 = per vertex, n = a new value every n instances.</summary>
+        public int Divisor;
     }
 
     public sealed class VertexArray
@@ -51,9 +57,48 @@ internal sealed class GlState
         public string MagFilter = "GL_LINEAR";
         public bool Mipmaps;
         public double[]? Border;
+        /// <summary>A cube map (GL_TEXTURE_CUBE_MAP): its six faces.</summary>
+        public bool IsCube;
+        public Image?[] Faces = new Image?[6];
+        /// <summary>Size and format from glTexImage2D with no data (a render target), and where it is attached.</summary>
+        public int Width, Height;
+        public bool Float, IsDepth;
+        public int Samples = 1;
+        public string? Framebuffer;
+        public int Attachment;
 
-        public bool Complete => Image is not null && (Mipmaps || !MinFilter.Contains("MIPMAP", StringComparison.Ordinal));
+        public bool Complete => (Image is not null || IsCube || Framebuffer is not null) && (Mipmaps || !MinFilter.Contains("MIPMAP", StringComparison.Ordinal));
     }
+
+    /// <summary>A framebuffer object: its colour textures by attachment, its depth (texture or renderbuffer).</summary>
+    public sealed class FramebufferObject
+    {
+        public Dictionary<int, TextureObject> Colors = new();
+        public bool Depth, Stencil;
+        public int Samples = 1;
+        public int Width, Height;
+    }
+
+    public sealed class Renderbuffer
+    {
+        public string Format = "";
+        public int Samples = 1;
+        public int Width, Height;
+    }
+
+    public Dictionary<string, FramebufferObject> Framebuffers { get; } = new(StringComparer.Ordinal);
+    public Dictionary<string, Renderbuffer> Renderbuffers { get; } = new(StringComparer.Ordinal);
+    public string? DrawFramebuffer, ReadFramebuffer, CurrentRenderbuffer;
+
+    /// <summary>Uniform buffers: binding point → (buffer, offset); writes into a buffer by byte offset.</summary>
+    public Dictionary<int, (string Buffer, int Offset)> UniformBindings { get; } = new();
+    public Dictionary<string, SortedDictionary<int, ShaderValue>> BufferWrites { get; } = new(StringComparer.Ordinal);
+    public string? UniformBuffer;
+    /// <summary>A variable holding a uniform block index → the block's name.</summary>
+    public Dictionary<string, string> BlockIndices { get; } = new(StringComparer.Ordinal);
+    /// <summary>A variable holding a mapped buffer pointer (glMapBuffer) → the buffer.</summary>
+    public Dictionary<string, string> Mapped { get; } = new(StringComparer.Ordinal);
+    public string? CopyReadBuffer, CopyWriteBuffer;
 
     public Dictionary<string, TextureObject> TextureObjects { get; } = new(StringComparer.Ordinal);
     /// <summary>Texture unit → the texture bound to it.</summary>
@@ -78,4 +123,13 @@ internal sealed class GlState
     public string CullFaceMode = "GL_BACK";
     public bool FrontCcw = true;
     public bool DepthTest;
+    public Scene.CompareFunc DepthFunc = Scene.CompareFunc.Less;
+    public bool DepthMask = true;
+    public bool StencilTest;
+    public Scene.StencilState Stencil = new();
+    public bool Blend;
+    public Scene.BlendState BlendState = new();
+    public bool[] ColorMask = [true, true, true, true];
+    public double PointSize = 1;
+    public bool ProgramPointSize;
 }

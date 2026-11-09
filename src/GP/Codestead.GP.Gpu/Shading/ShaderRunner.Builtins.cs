@@ -16,6 +16,11 @@ public sealed partial class ShaderRunner
             if (Lenient && Hook?.Invoke(name, c.Args) is { } methodHooked) return methodHooked;
             return Method(name[1..], c);
         }
+        if (name is "EmitVertex" or "EndPrimitive" && Emit is not null)
+        {
+            Emit(name, null);
+            return ShaderValue.Scalar(0);
+        }
         if (name is "glfwGetTime")
         {
             UsedTime = true;
@@ -131,9 +136,23 @@ public sealed partial class ShaderRunner
                 // HLSL: mul(vector, matrix) treats the vector as a row; mul(matrix, vector) as a column.
                 if (a.Count != 2) throw Arity();
                 return MatrixMultiply(a[0], a[1], c.Line);
-            case "texture" or "texture2D":
+            case "texture" or "texture2D" or "textureCube" or "textureLod":
                 if (a.Count < 2) throw Arity();
                 return SampleTexture(c.Args[0], a[1]);
+            case "texelFetch":
+            {
+                // texelFetch(sampler, ivec2 texel, lod): the texel's centre.
+                if (a.Count < 2) throw Arity();
+                var size = TextureSize?.Invoke(PathOf(c.Args[0])) ?? (1, 1);
+                var p = a[1].Padded(2);
+                return SampleTexture(c.Args[0], ShaderValue.Vec((Math.Floor(p[0]) + 0.5) / size.Width, (Math.Floor(p[1]) + 0.5) / size.Height));
+            }
+            case "textureSize":
+            {
+                if (a.Count < 1) throw Arity();
+                var size = TextureSize?.Invoke(PathOf(c.Args[0])) ?? (1, 1);
+                return ShaderValue.Vec(size.Width, size.Height);
+            }
             default:
                 if (Lenient) return ShaderValue.Scalar(0);
                 throw new ShaderRuntimeException($"'{name}' was not declared in this scope", c.Line);
@@ -171,6 +190,12 @@ public sealed partial class ShaderRunner
     {
         switch (method)
         {
+            case "Append" when Emit is not null && c.Args.Count >= 2:
+                Emit("Append", Eval(c.Args[1]));
+                return ShaderValue.Scalar(0);
+            case "RestartStrip" when Emit is not null:
+                Emit("RestartStrip", null);
+                return ShaderValue.Scalar(0);
             case "Sample" or "SampleLevel" when c.Args.Count >= 3:
                 // HLSL names the sampler: the texture is looked up as "texture|sampler".
                 return SampleTexture(c.Args[0], Eval(c.Args[2]), PathOf(c.Args[1]));
@@ -190,6 +215,7 @@ public sealed partial class ShaderRunner
     private ShaderValue SampleTexture(Expr texture, ShaderValue uv, string? sampler = null)
     {
         var id = sampler is null ? PathOf(texture) : PathOf(texture) + "|" + sampler;
+        if (uv.Size >= 3 && SampleCube?.Invoke(id, uv.V![0], uv.V[1], uv.V[2]) is { } cube) return ShaderValue.Vec(cube);
         var rgba = Sample?.Invoke(id, uv.Padded(2)[0], uv.Padded(2)[1]) ?? [1, 0, 1, 1];
         return ShaderValue.Vec(rgba);
     }

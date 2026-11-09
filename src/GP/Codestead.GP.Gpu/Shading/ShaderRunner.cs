@@ -22,6 +22,15 @@ public sealed partial class ShaderRunner
     /// <summary>Reads a texture: (texture or sampler name, u, v) → RGBA.</summary>
     public Func<string, double, double, double[]>? Sample { get; set; }
 
+    /// <summary>Reads a cube map: (name, direction) → RGBA, or null when the name is not a cube map.</summary>
+    public Func<string, double, double, double, double[]?>? SampleCube { get; set; }
+
+    /// <summary>Texture sizes for textureSize(): name → (width, height).</summary>
+    public Func<string, (int Width, int Height)?>? TextureSize { get; set; }
+
+    /// <summary>Geometry shaders: EmitVertex() / EndPrimitive() (GLSL), stream.Append(v) / stream.RestartStrip() (HLSL).</summary>
+    public Action<string, ShaderValue?>? Emit { get; set; }
+
     /// <summary>The value of glfwGetTime() and friends, in seconds.</summary>
     public double Time { get; set; } = 1.0;
 

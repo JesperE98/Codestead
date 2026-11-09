@@ -27,6 +27,16 @@ public sealed partial class GlReader
                 if (inLoop) scene.Presents = true;
                 return;
         }
+        if (name == "memcpy")
+        {
+            Memcpy(a);
+            return;
+        }
+        if (name == "glfwWindowHint" && A(0).Contains("GLFW_SAMPLES", StringComparison.Ordinal))
+        {
+            scene.Samples = Int(A(1)) ?? 1;
+            return;
+        }
         if (!name.StartsWith("gl", StringComparison.Ordinal) || name.StartsWith("glfw", StringComparison.Ordinal)) return;
         if (!gladLoaded)
         {
@@ -34,6 +44,7 @@ public sealed partial class GlReader
             if (!scene.Notes.Any(n => n.Key == "gladMissing")) scene.Notes.Add(SimNote.Error("gladMissing", ("call", name), ("line", line.ToString())));
             return;
         }
+        if (AdvancedCall(name, a, lhs, line)) return;
         switch (name)
         {
             case "glClearColor":
@@ -47,14 +58,34 @@ public sealed partial class GlReader
                 return;
             }
             case "glClear":
-                if (A(0).Contains("GL_COLOR_BUFFER_BIT", StringComparison.Ordinal) && inLoop)
+            {
+                if (!inLoop) return;
+                bool color = A(0).Contains("GL_COLOR_BUFFER_BIT", StringComparison.Ordinal);
+                double? depth = A(0).Contains("GL_DEPTH_BUFFER_BIT", StringComparison.Ordinal) ? 1.0 : null;
+                int? stencil = A(0).Contains("GL_STENCIL_BUFFER_BIT", StringComparison.Ordinal) ? 0 : null;
+                if (gl.DrawFramebuffer is { } fbo)
+                {
+                    // A framebuffer object: cleared between the draws of the frame.
+                    if (gl.Framebuffers.ContainsKey(fbo)) DrawTarget();
+                    scene.Ops.Add(new ClearOp(scene.Draws.Count, fbo, color ? gl.ClearColor.ToArray() : null, depth, stencil));
+                    return;
+                }
+                if (scene.Draws.Count > 0 && scene.Draws.Any(d => d.Target is not null))
+                {
+                    // The window, after drawing into framebuffer objects (post-processing).
+                    scene.Ops.Add(new ClearOp(scene.Draws.Count, null, color ? gl.ClearColor.ToArray() : null, depth, stencil));
+                    return;
+                }
+                if (color)
                 {
                     scene.ClearColor = gl.ClearColor.ToArray();
                     scene.Draws.Clear();
+                    scene.Ops.Clear();
                 }
                 return;
+            }
             case "glCreateShader":
-                if (lhs is not null) gl.ShaderObjects[lhs] = new GlState.ShaderObject { Stage = A(0).Contains("FRAGMENT", StringComparison.Ordinal) ? "fragment" : A(0).Contains("VERTEX", StringComparison.Ordinal) ? "vertex" : "other" };
+                if (lhs is not null) gl.ShaderObjects[lhs] = new GlState.ShaderObject { Stage = A(0).Contains("FRAGMENT", StringComparison.Ordinal) ? "fragment" : A(0).Contains("VERTEX", StringComparison.Ordinal) ? "vertex" : A(0).Contains("GEOMETRY", StringComparison.Ordinal) ? "geometry" : "other" };
                 return;
             case "glShaderSource":
                 if (gl.ShaderObjects.TryGetValue(Obj(A(0)), out var so))
@@ -88,19 +119,29 @@ public sealed partial class GlReader
             case "glBindBuffer":
             {
                 var b = Obj(A(1)) is "0" ? null : Obj(A(1));
-                if (A(0).Contains("GL_ARRAY_BUFFER", StringComparison.Ordinal)) gl.ArrayBuffer = b;
-                else if (A(0).Contains("GL_ELEMENT_ARRAY_BUFFER", StringComparison.Ordinal) && Vao is { } vao) vao.ElementBuffer = b;
+                if (A(0).Contains("GL_ELEMENT_ARRAY_BUFFER", StringComparison.Ordinal))
+                {
+                    if (Vao is { } vao) vao.ElementBuffer = b;
+                }
+                else if (A(0).Contains("GL_UNIFORM_BUFFER", StringComparison.Ordinal)) gl.UniformBuffer = b;
+                else if (A(0).Contains("GL_COPY_READ_BUFFER", StringComparison.Ordinal)) gl.CopyReadBuffer = b;
+                else if (A(0).Contains("GL_COPY_WRITE_BUFFER", StringComparison.Ordinal)) gl.CopyWriteBuffer = b;
+                else if (A(0).Contains("GL_ARRAY_BUFFER", StringComparison.Ordinal)) gl.ArrayBuffer = b;
                 return;
             }
             case "glBufferData":
             {
-                var target = A(0).Contains("GL_ELEMENT_ARRAY_BUFFER", StringComparison.Ordinal) ? Vao?.ElementBuffer : gl.ArrayBuffer;
+                var target = BufferOf(A(0));
                 if (target is null)
                 {
                     scene.Notes.Add(SimNote.Warning("noBufferBound", ("line", line.ToString())));
                     return;
                 }
-                gl.Buffers[target] = Numbers(DataName(A(2)));
+                if (A(0).Contains("GL_UNIFORM_BUFFER", StringComparison.Ordinal)) return;
+                // glBufferData(…, size, NULL, …) only makes room: glBufferSubData / glMapBuffer fill it later.
+                gl.Buffers[target] = A(2).Trim() is "NULL" or "nullptr" or "0"
+                    ? Enumerable.Repeat(0.0, Math.Max(0, (Int(A(1)) ?? 0) / 4)).ToList()
+                    : Numbers(DataName(A(2)));
                 return;
             }
             case "glVertexAttribPointer":
@@ -137,6 +178,9 @@ public sealed partial class GlReader
                 bool on = name == "glEnable";
                 if (A(0).Contains("GL_CULL_FACE", StringComparison.Ordinal)) gl.CullFace = on;
                 if (A(0).Contains("GL_DEPTH_TEST", StringComparison.Ordinal)) gl.DepthTest = on;
+                if (A(0).Contains("GL_STENCIL_TEST", StringComparison.Ordinal)) gl.StencilTest = on;
+                if (A(0).Contains("GL_BLEND", StringComparison.Ordinal)) gl.Blend = on;
+                if (A(0).Contains("GL_PROGRAM_POINT_SIZE", StringComparison.Ordinal)) gl.ProgramPointSize = on;
                 return;
             }
             case "glCullFace":
@@ -156,7 +200,11 @@ public sealed partial class GlReader
             }
             case "glBindTexture":
                 if (Obj(A(1)) is "0") gl.Units.Remove(gl.ActiveUnit);
-                else gl.Units[gl.ActiveUnit] = Obj(A(1));
+                else
+                {
+                    gl.Units[gl.ActiveUnit] = Obj(A(1));
+                    if (A(0).Contains("GL_TEXTURE_CUBE_MAP", StringComparison.Ordinal) && BoundTexture is { } cube) cube.IsCube = true;
+                }
                 return;
             case "glTexParameteri" or "glTexParameterf" or "glTexParameterfv" or "glTexParameteriv":
             {
@@ -199,7 +247,26 @@ public sealed partial class GlReader
             scene.Notes.Add(SimNote.Warning("noTextureBound", ("line", line.ToString())));
             return;
         }
+        // A cube map face: GL_TEXTURE_CUBE_MAP_POSITIVE_X + i.
+        int face = -1;
+        var faceMatch = System.Text.RegularExpressions.Regex.Match(a[0].Trim(), @"GL_TEXTURE_CUBE_MAP_(POSITIVE|NEGATIVE)_([XYZ])\s*(?:\+\s*(.+))?$");
+        if (faceMatch.Success)
+        {
+            face = "XYZ".IndexOf(faceMatch.Groups[2].Value[0]) * 2 + (faceMatch.Groups[1].Value == "NEGATIVE" ? 1 : 0)
+                + (faceMatch.Groups[3].Success ? Int(faceMatch.Groups[3].Value) ?? 0 : 0);
+            tex.IsCube = true;
+        }
         var data = DataName(a[8]);
+        if (data is "NULL" or "nullptr" or "0")
+        {
+            // No data: the texture is drawn into (a framebuffer's colour or depth attachment).
+            tex.Width = Int(a[3]) ?? 0;
+            tex.Height = Int(a[4]) ?? 0;
+            tex.Float = IsFloatFormat(a[2]);
+            tex.IsDepth = a[2].Contains("DEPTH", StringComparison.Ordinal);
+            tex.Components = 4;
+            return;
+        }
         var loaded = images.LastOrDefault(i => i.Variable == data && i.Offset < statementOffset);
         var image = loaded?.Image;
         if (loaded is not null && image is null && loaded.File == "" && Eval(loaded.Arg)?.Text is { } path)
@@ -212,7 +279,12 @@ public sealed partial class GlReader
         if (image is null) return;
         int components = Components(a[6]);
         tex.Components = components == 4 ? 4 : 3;
-        tex.Image = image.Channels == components || components == 0 ? image : Reinterpret(image, image.Channels, components);
+        var uploaded = image.Channels == components || components == 0 ? image : Reinterpret(image, image.Channels, components);
+        if (face >= 0)
+        {
+            if (face < 6) tex.Faces[face] = uploaded;
+        }
+        else tex.Image = uploaded;
         if (image.Channels != components && components != 0)
             scene.Notes.Add(SimNote.Warning("textureFormatMismatch", ("file", loaded!.File), ("channels", image.Channels.ToString()), ("format", a[6].Trim())));
         tex.Mipmaps = false;
@@ -305,6 +377,7 @@ public sealed partial class GlReader
             var parsed = ParseShader(so.Source, so.Stage, null);
             if (so.Stage == "vertex") program.Vertex = parsed;
             else if (so.Stage == "fragment") program.Fragment = parsed;
+            else if (so.Stage == "geometry") program.Geometry = parsed;
         }
         program.Linked = program.Vertex is not null && program.Fragment is not null;
         if (!program.Linked && program.Shaders.Count > 0 && !scene.Notes.Any(n => n.Key == "shaderSyntax"))
@@ -329,7 +402,7 @@ public sealed partial class GlReader
 
     // ---------- learnopengl.com's Shader class (shader_s.h / shader.h) ----------
 
-    private void ShaderClass(string name, string vsFile, string fsFile, int line)
+    private void ShaderClass(string name, string vsFile, string fsFile, string? gsFile, int line)
     {
         var program = new GlState.ProgramObject();
         gl.Programs[name] = program;
@@ -338,7 +411,9 @@ public sealed partial class GlReader
             scene.Notes.Add(SimNote.Error("gladMissing", ("call", "Shader"), ("line", line.ToString())));
             return;
         }
-        foreach (var (file, stage) in new[] { (vsFile, "vertex"), (fsFile, "fragment") })
+        var files = new List<(string, string)> { (vsFile, "vertex"), (fsFile, "fragment") };
+        if (gsFile is not null) files.Add((gsFile, "geometry"));
+        foreach (var (file, stage) in files)
         {
             var text = project.Find(file);
             if (text is null)
@@ -352,6 +427,11 @@ public sealed partial class GlReader
             {
                 program.Vertex = parsed;
                 program.VertexFile = project.PathOf(file);
+            }
+            else if (stage == "geometry")
+            {
+                program.Geometry = parsed;
+                program.GeometryFile = project.PathOf(file);
             }
             else
             {
@@ -375,7 +455,7 @@ public sealed partial class GlReader
             gl.CurrentProgram = obj;
             return;
         }
-        if (a.Count < 2 || CppSource.StringArg(a[0]) is not { } uniform) return;
+        if (a.Count < 2 || (CppSource.StringArg(a[0]) ?? Eval(a[0])?.Text) is not { } uniform) return;
         if (gl.CurrentProgram != obj)
         {
             // glUniform* works on the program in use; the Shader class's setters call glUniform* directly.
