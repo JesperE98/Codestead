@@ -56,6 +56,38 @@ public sealed record StbImage(string File, Image? Image, int Offset, string? Var
         return list;
     }
 
+    /// <summary>
+    /// The images in the order the program loads them, for the explicit APIs: a stbi_load inside a helper whose path is a
+    /// parameter (LoadTexture("container2.png", …)) counts once per call of the helper, with that call's file name.
+    /// </summary>
+    public static List<StbImage> InLoadOrder(CppSource src, GpuProject project, Scene.Scene scene)
+    {
+        var list = new List<(int Order, StbImage Image)>();
+        foreach (var img in All(src, project, scene))
+        {
+            if (img.File != "" || img.Arg.Trim() == "")
+            {
+                list.Add((img.Offset, img));
+                continue;
+            }
+            var fn = src.FunctionAt(img.Offset);
+            var header = fn is null ? null : System.Text.RegularExpressions.Regex.Match(src.Code, @"(?<![\w.>])" + System.Text.RegularExpressions.Regex.Escape(fn) + @"\s*\(([^()]*)\)\s*(?:const\s*)?\{");
+            if (header is not { Success: true }) continue;
+            var parameters = CppSource.SplitArgs(header.Groups[1].Value).Select(p => System.Text.RegularExpressions.Regex.Match(p, @"(\w+)\s*$").Groups[1].Value).ToList();
+            int index = parameters.IndexOf(System.Text.RegularExpressions.Regex.Replace(img.Arg.Trim(), @"\.c_str\(\)$", ""));
+            if (index < 0) continue;
+            foreach (var call in src.Calls(fn).Concat(src.Calls("." + fn)).OrderBy(c => c.Offset))
+            {
+                var file = CppSource.StringArg(call.Arg(index));
+                if (file is null) continue;
+                var image = Load(project, file, img.Flip, img.Wanted);
+                if (image is null) scene.Notes.Add(SimNote.Error("textureFileMissing", ("file", file)));
+                list.Add((call.Offset, img with { File = file, Image = image }));
+            }
+        }
+        return list.OrderBy(x => x.Order).Select(x => x.Image).ToList();
+    }
+
     /// <summary>The sampler state of a Vulkan VkSamplerCreateInfo or a DirectX 12 sampler description, by its field values.</summary>
     public static Wrap WrapOf(string? value) => value switch
     {

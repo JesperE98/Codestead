@@ -165,7 +165,7 @@ public sealed partial class D3D12Reader
             return (_, _, _) => [0, 0, 0, 1];
         }
         if (!Has("UpdateSubresources") && !Has("CopyTextureRegion")) scene.Notes.Add(SimNote.Error("dxNoTextureUpload"));
-        var images = StbImage.All(src, project, scene);
+        var images = StbImage.InLoadOrder(src, project, scene);
         if (images.Count < names.Count) scene.Notes.Add(SimNote.Warning("tooFewTextures", ("count", names.Count.ToString()), ("loaded", images.Count.ToString())));
         // Static samplers: each description (sampler, samplers[0], samplers[1] …) by its ShaderRegister; the HLSL
         // Sample(…) call names the sampler, whose register picks the description.

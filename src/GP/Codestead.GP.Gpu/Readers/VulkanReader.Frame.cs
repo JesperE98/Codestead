@@ -56,6 +56,13 @@ public sealed partial class VulkanReader
 
         var vs = Shader(".vert", "vert");
         var fs = Shader(".frag", "frag");
+        // One pipeline: its own shaders (by the file names it was created with), not just the first in the project.
+        var created = Pipelines();
+        if (created.Count == 1)
+        {
+            vs = created.Values.First().Vs;
+            fs = created.Values.First().Fs;
+        }
         if (vs is null || fs is null) return;
 
         var inputs = vs.Globals.Where(g => g.Storage == "in").ToList();
@@ -198,7 +205,7 @@ public sealed partial class VulkanReader
             return (_, _, _) => [0, 0, 0, 1];
         }
         if (!src.HasCall("vkCmdPipelineBarrier")) scene.Notes.Add(SimNote.Error("vkNoLayoutTransition"));
-        var images = StbImage.All(src, project, scene);
+        var images = StbImage.InLoadOrder(src, project, scene);
         if (images.Count < names.Count) scene.Notes.Add(SimNote.Warning("tooFewTextures", ("count", names.Count.ToString()), ("loaded", images.Count.ToString())));
         // Each vkCreateSampler(…, &name) takes the sampler fields set before it; each binding gets the sampler of the
         // image info its descriptor write points to (info.sampler = name; descriptorWrites[i].pImageInfo = &info).

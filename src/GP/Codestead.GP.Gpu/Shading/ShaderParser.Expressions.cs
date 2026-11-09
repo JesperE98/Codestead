@@ -50,15 +50,16 @@ public sealed partial class ShaderParser
             // &x and *p (C++): the value itself is what matters to the simulator.
             return op is "+" or "&" or "*" ? operand : new Unary(op, operand, line);
         }
-        // C-style casts: (float)x, (void*)0, (GLfloat)x.
+        // C-style casts: (float)x, (void*)0, (GLfloat)x – and HLSL's (float3x3)m, (float3)v, which convert.
         if (Peek.Is("(") && PeekAt(1).Kind == ShaderTokenKind.Identifier && (PeekAt(2).Is(")") || (PeekAt(2).Is("*") && PeekAt(3).Is(")")))
-            && IsCastType(PeekAt(1).Text))
+            && (IsCastType(PeekAt(1).Text) || ShaderRunner.MatrixSize(PeekAt(1).Text) > 0 || ShaderRunner.ComponentCount(PeekAt(1).Text) > 1))
         {
             Next();
-            Next();
+            var type = Next().Text;
             Accept("*");
             Expect(")");
-            return UnaryExpr();
+            var operand = UnaryExpr();
+            return ShaderRunner.MatrixSize(type) > 0 || ShaderRunner.ComponentCount(type) > 1 ? new Call(type, [operand], line) : operand;
         }
         return Postfix(Primary());
     }

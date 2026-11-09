@@ -12,7 +12,7 @@ public static partial class TaskChecks
     [
         ("colors", new()
         {
-            ["object-color"] = c => c.AnyDrawnPixel(Coral) && c.HasInShaders(@"lightColor \* objectColor|objectColor \* lightColor"),
+            ["object-color"] = c => c.AnyDrawnPixel(Coral) && c.HasInShaders(@"lightColor \* (?:\w+\.)?objectColor|objectColor \* (?:\w+\.)?lightColor"),
             ["lamp-shader"] = c => c.Built && c.HasInShaders(@"vec4 \( 1\.0 \)|vec4 \( 1\.0f?(?: , 1\.0f?){3} \)|float4 \( 1\.0f?(?: , 1\.0f?){3} \)"),
             ["lamp"] = c => c.Scene?.Draws.Count >= 2 && c.AnyDrawnPixel(White),
         }),
@@ -34,7 +34,7 @@ public static partial class TaskChecks
         ("lighting-maps", new()
         {
             ["texcoords"] = c => c.Built && c.HasInShaders(@"(?i)(in vec2 \w*tex\w*|: ?TEXCOORD)"),
-            ["diffuse-map"] = c => c.Drew && c.Has(@"container2\.png") && c.HasInShaders(@"(?i)(texture \( material\.diffuse|\.Sample \()"),
+            ["diffuse-map"] = c => c.Drew && c.Has(@"container2\.png") && c.HasInShaders(@"(?i)(texture \( (?:material\.diffuse|diffuseMap)|diffuseMap\.Sample \()"),
             ["specular-map"] = c => c.Drew && c.Has(@"container2_specular\.png"),
             ["emission"] = c => c.Drew && c.Has(@"matrix\.png"),
         }),

@@ -1,0 +1,398 @@
+=== task: dir-light
+--- file: multiple_lights.hlsl
+--- find:
+// The rest of the material.
+struct Material
+{
+    float shininess;
+};
+--- replace:
+// The rest of the material.
+struct Material
+{
+    float shininess;
+};
+
+struct DirLight
+{
+    float3 direction;
+
+    float3 ambient;
+    float3 diffuse;
+    float3 specular;
+};
+--- file: multiple_lights.hlsl
+--- find:
+    float3 viewPos;
+    Material material;
+};
+--- replace:
+    float3 viewPos;
+    Material material;
+    DirLight dirLight;
+};
+--- file: multiple_lights.hlsl
+--- find:
+// The pixel shader: runs once per pixel a triangle covers and returns its colour (RGBA).
+--- replace:
+// calculates the color when using a directional light.
+float3 CalcDirLight(DirLight light, float3 normal, float3 viewDir, float2 texCoord)
+{
+    float3 lightDir = normalize(-light.direction);
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0f);
+    // specular shading
+    float3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0f), material.shininess);
+    // combine results
+    float3 ambient = light.ambient * diffuseMap.Sample(wrapSampler, texCoord).rgb;
+    float3 diffuse = light.diffuse * diff * diffuseMap.Sample(wrapSampler, texCoord).rgb;
+    float3 specular = light.specular * spec * specularMap.Sample(wrapSampler, texCoord).rgb;
+    return (ambient + diffuse + specular);
+}
+
+// The pixel shader: runs once per pixel a triangle covers and returns its colour (RGBA).
+--- file: multiple_lights.hlsl
+--- find:
+    float3 result = float3(0.0f, 0.0f, 0.0f);
+    // TODO: phase 1: directional lighting
+--- replace:
+    // phase 1: directional lighting
+    float3 result = CalcDirLight(dirLight, norm, viewDir, input.texCoord);
+--- file: main.cpp
+--- find:
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer.
+--- replace:
+    // The lights: what the shaders see as structs DirLight, PointLight and SpotLight.
+    struct DirLight
+    {
+        XMFLOAT3 direction;
+        float padding0;
+        XMFLOAT3 ambient;
+        float padding1;
+        XMFLOAT3 diffuse;
+        float padding2;
+        XMFLOAT3 specular;
+        float padding3;
+    };
+
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer.
+--- file: main.cpp
+--- find:
+        float padding0;
+        Material material;
+    };
+--- replace:
+        float padding0;
+        Material material;
+        DirLight dirLight;
+    };
+--- file: main.cpp
+--- find:
+    // TODO: directional light
+--- replace:
+    // directional light
+    constantBufferData.dirLight.direction = XMFLOAT3(-0.2f, -1.0f, -0.3f);
+    constantBufferData.dirLight.ambient = XMFLOAT3(0.05f, 0.05f, 0.05f);
+    constantBufferData.dirLight.diffuse = XMFLOAT3(0.4f, 0.4f, 0.4f);
+    constantBufferData.dirLight.specular = XMFLOAT3(0.5f, 0.5f, 0.5f);
+
+=== task: point-lights
+--- file: multiple_lights.hlsl
+--- find:
+struct DirLight
+{
+    float3 direction;
+
+    float3 ambient;
+    float3 diffuse;
+    float3 specular;
+};
+--- replace:
+struct DirLight
+{
+    float3 direction;
+
+    float3 ambient;
+    float3 diffuse;
+    float3 specular;
+};
+
+// (linear is a word of HLSL: the attenuation terms are called constantTerm, linearTerm
+// and quadraticTerm.)
+struct PointLight
+{
+    float3 position;
+
+    float constantTerm;
+    float linearTerm;
+    float quadraticTerm;
+
+    float3 ambient;
+    float3 diffuse;
+    float3 specular;
+};
+
+#define NR_POINT_LIGHTS 4
+--- file: multiple_lights.hlsl
+--- find:
+    DirLight dirLight;
+};
+--- replace:
+    DirLight dirLight;
+    PointLight pointLights[NR_POINT_LIGHTS];
+};
+--- file: multiple_lights.hlsl
+--- find:
+    return (ambient + diffuse + specular);
+}
+--- replace:
+    return (ambient + diffuse + specular);
+}
+
+// calculates the color when using a point light.
+float3 CalcPointLight(PointLight light, float3 normal, float3 fragPos, float3 viewDir, float2 texCoord)
+{
+    float3 lightDir = normalize(light.position - fragPos);
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0f);
+    // specular shading
+    float3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0f), material.shininess);
+    // attenuation (dist: distance is the name of an HLSL function)
+    float dist = length(light.position - fragPos);
+    float attenuation = 1.0f / (light.constantTerm + light.linearTerm * dist + light.quadraticTerm * (dist * dist));
+    // combine results
+    float3 ambient = light.ambient * diffuseMap.Sample(wrapSampler, texCoord).rgb;
+    float3 diffuse = light.diffuse * diff * diffuseMap.Sample(wrapSampler, texCoord).rgb;
+    float3 specular = light.specular * spec * specularMap.Sample(wrapSampler, texCoord).rgb;
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
+    return (ambient + diffuse + specular);
+}
+--- file: multiple_lights.hlsl
+--- find:
+    // TODO: phase 2: point lights
+--- replace:
+    // phase 2: point lights
+    for (int i = 0; i < NR_POINT_LIGHTS; i++)
+        result += CalcPointLight(pointLights[i], norm, input.fragPos, viewDir, input.texCoord);
+--- file: main.cpp
+--- find:
+// Zoom: the field of view, in degrees.
+float fov   =  45.0f;
+--- replace:
+// Zoom: the field of view, in degrees.
+float fov   =  45.0f;
+
+// positions of the point lights
+XMFLOAT3 pointLightPositions[] =
+{
+    XMFLOAT3( 0.7f,  0.2f,  2.0f),
+    XMFLOAT3( 2.3f, -3.3f, -4.0f),
+    XMFLOAT3(-4.0f,  2.0f, -12.0f),
+    XMFLOAT3( 0.0f,  0.0f, -3.0f)
+};
+--- file: main.cpp
+--- find:
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer.
+--- replace:
+    struct PointLight
+    {
+        XMFLOAT3 position;
+        float constantTerm;    // fills the row of position
+        float linearTerm;
+        float quadraticTerm;
+        float padding0[2];     // ambient would cross into the next row: HLSL starts it there
+        XMFLOAT3 ambient;
+        float padding1;
+        XMFLOAT3 diffuse;
+        float padding2;
+        XMFLOAT3 specular;
+        float padding3;
+    };
+
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer.
+--- file: main.cpp
+--- find:
+        DirLight dirLight;
+    };
+--- replace:
+        DirLight dirLight;
+        PointLight pointLights[4];    // NR_POINT_LIGHTS: each element starts a new 16-byte row (80 bytes each)
+    };
+--- file: main.cpp
+--- find:
+    // TODO: point lights 1 to 4
+--- replace:
+    // point light 1
+    constantBufferData.pointLights[0].position = pointLightPositions[0];
+    constantBufferData.pointLights[0].ambient = XMFLOAT3(0.05f, 0.05f, 0.05f);
+    constantBufferData.pointLights[0].diffuse = XMFLOAT3(0.8f, 0.8f, 0.8f);
+    constantBufferData.pointLights[0].specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+    constantBufferData.pointLights[0].constantTerm = 1.0f;
+    constantBufferData.pointLights[0].linearTerm = 0.09f;
+    constantBufferData.pointLights[0].quadraticTerm = 0.032f;
+    // point light 2
+    constantBufferData.pointLights[1].position = pointLightPositions[1];
+    constantBufferData.pointLights[1].ambient = XMFLOAT3(0.05f, 0.05f, 0.05f);
+    constantBufferData.pointLights[1].diffuse = XMFLOAT3(0.8f, 0.8f, 0.8f);
+    constantBufferData.pointLights[1].specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+    constantBufferData.pointLights[1].constantTerm = 1.0f;
+    constantBufferData.pointLights[1].linearTerm = 0.09f;
+    constantBufferData.pointLights[1].quadraticTerm = 0.032f;
+    // point light 3
+    constantBufferData.pointLights[2].position = pointLightPositions[2];
+    constantBufferData.pointLights[2].ambient = XMFLOAT3(0.05f, 0.05f, 0.05f);
+    constantBufferData.pointLights[2].diffuse = XMFLOAT3(0.8f, 0.8f, 0.8f);
+    constantBufferData.pointLights[2].specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+    constantBufferData.pointLights[2].constantTerm = 1.0f;
+    constantBufferData.pointLights[2].linearTerm = 0.09f;
+    constantBufferData.pointLights[2].quadraticTerm = 0.032f;
+    // point light 4
+    constantBufferData.pointLights[3].position = pointLightPositions[3];
+    constantBufferData.pointLights[3].ambient = XMFLOAT3(0.05f, 0.05f, 0.05f);
+    constantBufferData.pointLights[3].diffuse = XMFLOAT3(0.8f, 0.8f, 0.8f);
+    constantBufferData.pointLights[3].specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+    constantBufferData.pointLights[3].constantTerm = 1.0f;
+    constantBufferData.pointLights[3].linearTerm = 0.09f;
+    constantBufferData.pointLights[3].quadraticTerm = 0.032f;
+
+=== task: spot-light
+--- file: multiple_lights.hlsl
+--- find:
+#define NR_POINT_LIGHTS 4
+--- replace:
+struct SpotLight
+{
+    float3 position;
+    float3 direction;
+    float cutOff;
+    float outerCutOff;
+
+    float constantTerm;
+    float linearTerm;
+    float quadraticTerm;
+
+    float3 ambient;
+    float3 diffuse;
+    float3 specular;
+};
+
+#define NR_POINT_LIGHTS 4
+--- file: multiple_lights.hlsl
+--- find:
+    PointLight pointLights[NR_POINT_LIGHTS];
+};
+--- replace:
+    PointLight pointLights[NR_POINT_LIGHTS];
+    SpotLight spotLight;
+};
+--- file: multiple_lights.hlsl
+--- find:
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
+    return (ambient + diffuse + specular);
+}
+--- replace:
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
+    return (ambient + diffuse + specular);
+}
+
+// calculates the color when using a spot light.
+float3 CalcSpotLight(SpotLight light, float3 normal, float3 fragPos, float3 viewDir, float2 texCoord)
+{
+    float3 lightDir = normalize(light.position - fragPos);
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0f);
+    // specular shading
+    float3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0f), material.shininess);
+    // attenuation (dist: distance is the name of an HLSL function)
+    float dist = length(light.position - fragPos);
+    float attenuation = 1.0f / (light.constantTerm + light.linearTerm * dist + light.quadraticTerm * (dist * dist));
+    // spotlight intensity
+    float theta = dot(lightDir, normalize(-light.direction));
+    float epsilon = light.cutOff - light.outerCutOff;
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0f, 1.0f);
+    // combine results
+    float3 ambient = light.ambient * diffuseMap.Sample(wrapSampler, texCoord).rgb;
+    float3 diffuse = light.diffuse * diff * diffuseMap.Sample(wrapSampler, texCoord).rgb;
+    float3 specular = light.specular * spec * specularMap.Sample(wrapSampler, texCoord).rgb;
+    ambient *= attenuation * intensity;
+    diffuse *= attenuation * intensity;
+    specular *= attenuation * intensity;
+    return (ambient + diffuse + specular);
+}
+--- file: multiple_lights.hlsl
+--- find:
+    // TODO: phase 3: spot light
+--- replace:
+    // phase 3: spot light
+    result += CalcSpotLight(spotLight, norm, input.fragPos, viewDir, input.texCoord);
+--- file: main.cpp
+--- find:
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer.
+--- replace:
+    struct SpotLight
+    {
+        XMFLOAT3 position;
+        float padding0;
+        XMFLOAT3 direction;
+        float cutOff;          // fills the row of direction
+        float outerCutOff;     // outerCutOff and the three terms fill the next row
+        float constantTerm;
+        float linearTerm;
+        float quadraticTerm;
+        XMFLOAT3 ambient;
+        float padding1;
+        XMFLOAT3 diffuse;
+        float padding2;
+        XMFLOAT3 specular;
+        float padding3;
+    };
+
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer.
+--- file: main.cpp
+--- find:
+        PointLight pointLights[4];    // NR_POINT_LIGHTS: each element starts a new 16-byte row (80 bytes each)
+    };
+--- replace:
+        PointLight pointLights[4];    // NR_POINT_LIGHTS: each element starts a new 16-byte row (80 bytes each)
+        SpotLight spotLight;
+    };
+--- file: main.cpp
+--- find:
+    // TODO: spot light (the flashlight)
+--- replace:
+    // spotLight
+    XMStoreFloat3(&constantBufferData.spotLight.position, cameraPos);
+    XMStoreFloat3(&constantBufferData.spotLight.direction, cameraFront);
+    constantBufferData.spotLight.ambient = XMFLOAT3(0.0f, 0.0f, 0.0f);
+    constantBufferData.spotLight.diffuse = XMFLOAT3(1.0f, 1.0f, 1.0f);
+    constantBufferData.spotLight.specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+    constantBufferData.spotLight.constantTerm = 1.0f;
+    constantBufferData.spotLight.linearTerm = 0.09f;
+    constantBufferData.spotLight.quadraticTerm = 0.032f;
+    constantBufferData.spotLight.cutOff = std::cos(XMConvertToRadians(12.5f));
+    constantBufferData.spotLight.outerCutOff = std::cos(XMConvertToRadians(15.0f));
+
+=== task: lamps
+--- file: main.cpp
+--- find:
+    // TODO: also draw the lamp objects: a small white cube at each point light's position, with m_lightCubePipelineState
+--- replace:
+    // also draw the lamp object(s): with the lamp's pipeline state, a small cube (scale 0.2)
+    // at each point light's position
+    m_commandList->SetPipelineState(m_lightCubePipelineState.Get());
+    for (UINT i = 0; i < 4; i++)
+    {
+        XMMATRIX model = XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z);
+        XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+        m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+        m_commandList->DrawInstanced(36, 1, 0, 0);
+    }
