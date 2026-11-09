@@ -46,8 +46,8 @@ lamp (640, 195), background (400, 300) = (26, 26, 26).
 - **Hint:** The more a face points towards the light (the smaller the angle between normal and light direction), the
   brighter it is; `max(…, 0.0)` keeps faces turned away from going negative.
 - **When done:** the front face (facing the lamp) lit, brighter towards the lamp: F1 = (201, 101, 62),
-  F2 = (228, 114, 71), F3 = (192, 96, 60); the left face (turned away from the light) stays ambient-only
-  L = (26, 13, 8); lamp white.
+  F2 = (228, 114, 71), F3 = (192, 96, 60), (245, 280) = (192, 96, 60); the left face (turned away from the light)
+  stays ambient-only L = (26, 13, 8); lamp white.
 
 ## normal-matrix
 - **Task:** Transform the normals with the normal matrix: `fragNormal = mat3(transpose(inverse(pc.model))) * inNormal;`.
@@ -64,8 +64,9 @@ lamp (640, 195), background (400, 300) = (26, 26, 26).
   specular) * ubo.objectColor`.
 - **Hint:** The highlight appears where the light is reflected towards the eye; 32 is the shininess (the higher, the
   smaller and sharper the highlight).
-- **When done:** a highlight in the upper left of the front face: brightest about (268, 270) = (255, 154, 95);
-  (245, 280) = (255, 144, 89), F3 = (255, 130, 80), F2 = (237, 118, 73), F1 = (203, 101, 63); L = (26, 13, 8).
+- **When done:** a highlight in the upper left of the front face (brightest just below the top edge, about
+  x 255..275): (245, 280) = (255, 144, 89), (260, 290) = (255, 139, 86), F3 = (255, 130, 80), F2 = (237, 118, 73),
+  F1 = (203, 101, 63); L = (26, 13, 8).
 
 ## moving-light
 - **Task:** Move the light over time (learnopengl's exercise): at the start of `updateUniformBuffer()`

@@ -98,6 +98,11 @@ PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL)
     constantBufferData.lightPos = lightPos;
 
 === task: normal-matrix
+--- file: main.cpp
+--- find:
+        // Root parameter 0: root constants for register b0 (the model matrix).
+--- replace:
+        // Root parameter 0: root constants for register b0 (the model and normal matrices).
 --- file: basic_lighting.hlsl
 --- find:
 cbuffer ModelConstants : register(b0)

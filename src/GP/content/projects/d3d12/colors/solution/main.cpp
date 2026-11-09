@@ -289,7 +289,7 @@ void D3D12App::LoadAssets()
         // Root parameter 0: root constants for register b0 (the model matrix).
         // Only the vertex shader reads them.
         // Root parameter 1: a descriptor table with the constant buffer view (b1:
-        // view and projection, the colours), for the vertex and the pixel shader.
+        // view, projection and the lighting values), for the vertex and the pixel shader.
         CD3DX12_ROOT_PARAMETER rootParameters[2];
         rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
         rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);

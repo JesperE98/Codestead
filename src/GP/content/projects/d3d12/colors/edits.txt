@@ -35,7 +35,7 @@
         // view and projection), for the vertex shader.
 --- replace:
         // Root parameter 1: a descriptor table with the constant buffer view (b1:
-        // view and projection, the colours), for the vertex and the pixel shader.
+        // view, projection and the lighting values), for the vertex and the pixel shader.
 --- file: main.cpp
 --- find:
         rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_VERTEX);

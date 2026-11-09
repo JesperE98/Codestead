@@ -13,10 +13,10 @@ block a `vec3` and a struct both start at a multiple of 16 bytes and a struct's 
 the C++ struct names and field names are the ones of the shader (`Material material; Light light;` in both blocks).
 
 Colours measured on lavapipe, identical to the OpenGL version of this chapter, pixel for pixel. Named points: left face
-L (160, 370), front face F1 (300, 370), F2 (330, 300), F3 (250, 300), highlight H (268, 270), lamp (640, 195) (always
+L (160, 370), front face F1 (300, 370), F2 (330, 300), F3 (250, 300), highlight H (245, 280), lamp (640, 195) (always
 white (255, 255, 255)), background (400, 300) = (26, 26, 26).
 - start (= "Basic Lighting" after `specular`): L = (26, 13, 8), F1 = (203, 101, 63), F2 = (237, 118, 73),
-  F3 = (255, 130, 80), H = (255, 154, 95).
+  F3 = (255, 130, 80), H = (255, 144, 89).
 
 ## material
 - **Task:** Describe the surface with a material: in materials.frag `struct Material { vec3 ambient; vec3 diffuse;
@@ -31,7 +31,7 @@ white (255, 255, 255)), background (400, 300) = (26, 26, 26).
 - **Hint:** Each lighting component now has its own colour on the object; the light colour is still white, so the
   ambient part is the whole coral colour – far too bright (the next task fixes that).
 - **When done:** the cube much brighter: L = (255, 128, 79) (ambient only, full coral), F1 = (255, 217, 135),
-  F2 = (255, 237, 150), F3 = (255, 255, 198), H = (255, 255, 239); lamp white, background (26, 26, 26).
+  F2 = (255, 237, 150), F3 = (255, 255, 198), H = (255, 255, 226); lamp white, background (26, 26, 26).
 
 ## light
 - **Task:** Give the light its own strengths per component: `struct Light { vec3 position; vec3 ambient; vec3 diffuse;
@@ -44,7 +44,7 @@ white (255, 255, 255)), background (400, 300) = (26, 26, 26).
 - **Hint:** A light's ambient part is usually weak, its diffuse part the colour of the light, and its specular part
   full white.
 - **When done:** the cube coral again, with a clear highlight: L = (51, 26, 16), F1 = (140, 71, 45),
-  F2 = (161, 85, 56), F3 = (201, 134, 108), H = (244, 175, 148); lamp white, background (26, 26, 26).
+  F2 = (161, 85, 56), F3 = (201, 134, 108), H = (230, 163, 137); lamp white, background (26, 26, 26).
 
 ## light-color
 - **Task:** Change the light's colour over time: in `updateUniformBuffer()` `glm::vec3 lightColor;` with
@@ -55,7 +55,7 @@ white (255, 255, 255)), background (400, 300) = (26, 26, 26).
   red.
 - **When done:** the cube's colour changes over time (time-dependent; the lamp stays white – its shader ignores the
   light colour). At t = 1 s lightColor = (0.91, 0.64, 0.96): L = (23, 8, 8), F1 = (105, 38, 35),
-  F2 = (124, 49, 46), F3 = (166, 102, 99), H = (209, 142, 139); lamp (255, 255, 255), background (26, 26, 26).
+  F2 = (124, 49, 46), F3 = (166, 102, 99), H = (195, 131, 128); lamp (255, 255, 255), background (26, 26, 26).
 
 ## Optional (described, not a task)
 - learnopengl's exercise: simulate a real-world material from the table at devernay.free.fr (e.g. cyan plastic:

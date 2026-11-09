@@ -75,5 +75,5 @@ right edge of the frame S3 (352, 380), lamp (640, 195) (white), background (400,
 - **Hint:** Emission is light the surface gives off itself: it is added after the lighting and does not depend on any
   light.
 - **When done:** green glyphs glow over both faces, in the dark too (the left face): W1 = (28, 146, 48),
-  W2 = (82, 236, 83), (230, 350) = (30, 227, 90); points without a glyph unchanged: S1 = (133, 134, 138),
+  W2 = (82, 236, 83); points without a glyph unchanged: S1 = (133, 134, 138),
   S2 = (182, 183, 186). Lamp white, background (26, 26, 26).
