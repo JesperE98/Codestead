@@ -63,8 +63,50 @@ public static partial class Rasterizer
                 return v;
             }
             foreach (var (a, b, c) in Triangles(order, draw.Topology))
-                Triangle(Vertex(a), Vertex(b), Vertex(c), draw, stages, width, height, yDown, zMinusOneToOne, pixels, depth);
+                foreach (var (p, q, r) in ClipNear(Vertex(a), Vertex(b), Vertex(c), zMinusOneToOne))
+                    Triangle(p, q, r, draw, stages, width, height, yDown, zMinusOneToOne, pixels, depth);
         }
+    }
+
+    /// <summary>
+    /// Clips a triangle against the near plane (OpenGL: z ≥ -w, Vulkan and Direct3D: z ≥ 0) in clip space, as the GPU
+    /// does, so geometry crossing the camera's near plane is cut instead of dropped.
+    /// </summary>
+    private static List<(ShadedVertex, ShadedVertex, ShadedVertex)> ClipNear(ShadedVertex a, ShadedVertex b, ShadedVertex c, bool zMinusOneToOne)
+    {
+        double D(ShadedVertex v) => zMinusOneToOne ? v.Clip[2] + v.Clip[3] : v.Clip[2];
+        var input = new[] { a, b, c };
+        if (input.All(v => D(v) >= 0)) return [(a, b, c)];
+        if (input.All(v => D(v) < 0)) return [];
+        var poly = new List<ShadedVertex>();
+        for (int i = 0; i < 3; i++)
+        {
+            var cur = input[i];
+            var next = input[(i + 1) % 3];
+            double dc = D(cur), dn = D(next);
+            if (dc >= 0) poly.Add(cur);
+            if ((dc >= 0) != (dn >= 0)) poly.Add(Lerp(cur, next, dc / (dc - dn)));
+        }
+        var result = new List<(ShadedVertex, ShadedVertex, ShadedVertex)>();
+        for (int i = 1; i + 1 < poly.Count; i++) result.Add((poly[0], poly[i], poly[i + 1]));
+        return result;
+    }
+
+    private static ShadedVertex Lerp(ShadedVertex a, ShadedVertex b, double t)
+    {
+        var clip = new double[4];
+        for (int i = 0; i < 4; i++) clip[i] = a.Clip[i] + (b.Clip[i] - a.Clip[i]) * t;
+        var outputs = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+        foreach (var (k, va) in a.Outputs)
+        {
+            if (va.V is null || va.IsMatrix || !b.Outputs.TryGetValue(k, out var vb) || vb.V is null)
+            {
+                outputs[k] = va;
+                continue;
+            }
+            outputs[k] = ShaderValue.Vec(va.V.Select((x, i) => x + (vb.V[Math.Min(i, vb.V.Length - 1)] - x) * t).ToArray());
+        }
+        return new ShadedVertex(clip, outputs);
     }
 
     private static IEnumerable<(int, int, int)> Triangles(int[] order, Topology topology)

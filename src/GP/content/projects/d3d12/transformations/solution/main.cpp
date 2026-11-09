@@ -643,11 +643,9 @@ void D3D12App::PopulateCommandList()
     auto currentTime = std::chrono::high_resolution_clock::now();
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-    // Create the transformation: rotate about the z axis by the time (in radians),
-    // then move to the bottom right. DirectXMath multiplies a row vector by the
-    // matrices (v * M), so they apply from left to right.
-    // Switched the order: the container is now moved first and then rotated about
-    // the origin (it circles the centre of the window).
+    // Create the transformation, with the order switched: first move to the bottom
+    // right, then rotate about the origin by the time - the container now circles
+    // the centre of the window. (DirectXMath applies the matrices from left to right.)
     XMMATRIX transform = XMMatrixTranslation(0.5f, -0.5f, 0.0f) * XMMatrixRotationZ(time);
 
     // Root parameter 1: the matrix for the vertex shader. It is stored transposed,

@@ -1,0 +1,538 @@
+=== task: uniform-buffer
+--- file: main.cpp
+--- find:
+// TODO: struct UniformBufferObject with the view and projection matrices (glm::mat4 view, proj)
+--- replace:
+// The same layout as the uniform block in the vertex shader: the matrices that stay the same for every draw of a frame.
+struct UniformBufferObject {
+    glm::mat4 view;
+    glm::mat4 proj;
+};
+--- file: main.cpp
+--- find:
+    // TODO: the uniform buffer, its memory and the pointer to the mapped memory
+--- replace:
+    VkBuffer uniformBuffer;
+    VkDeviceMemory uniformBufferMemory;
+    void* uniformBufferMapped;
+--- file: main.cpp
+--- find:
+    void createUniformBuffers() {
+        // TODO: create the uniform buffer and map its memory for good
+    }
+--- replace:
+    void createUniformBuffers() {
+        VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffer, uniformBufferMemory);
+
+        // "persistent mapping": the memory stays mapped while the program runs, we write to it every frame
+        vkMapMemory(device, uniformBufferMemory, 0, bufferSize, 0, &uniformBufferMapped);
+    }
+--- file: main.cpp
+--- find:
+        // TODO: destroy the uniform buffer and free its memory
+--- replace:
+        vkDestroyBuffer(device, uniformBuffer, nullptr);
+        vkFreeMemory(device, uniformBufferMemory, nullptr);
+
+=== task: uniform-descriptor
+--- file: main.cpp
+--- find:
+        // TODO: binding 2: the uniform buffer (vertex stage)
+
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {samplerLayoutBinding, faceSamplerLayoutBinding};
+--- replace:
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 2;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {samplerLayoutBinding, faceSamplerLayoutBinding, uboLayoutBinding};
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorPoolSize, 1> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[0].descriptorCount = 2; // the set has two combined image samplers
+--- replace:
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[0].descriptorCount = 2; // the set has two combined image samplers
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[1].descriptorCount = 1; // and one uniform buffer
+--- file: main.cpp
+--- find:
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+--- replace:
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+--- file: main.cpp
+--- find:
+        descriptorWrites[1].pImageInfo = &faceImageInfo;
+
+--- replace:
+        descriptorWrites[1].pImageInfo = &faceImageInfo;
+
+        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[2].dstSet = descriptorSet;
+        descriptorWrites[2].dstBinding = 2;
+        descriptorWrites[2].dstArrayElement = 0;
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[2].descriptorCount = 1;
+        descriptorWrites[2].pBufferInfo = &bufferInfo;
+
+
+=== task: plane
+--- file: main.cpp
+--- find:
+#include <glm/glm.hpp>
+--- replace:
+// Vulkan's depth range is 0..1 (OpenGL's is -1..1): make glm::perspective use it.
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+--- file: main.cpp
+--- find:
+    void updateUniformBuffer() {
+        // TODO: fill a UniformBufferObject with the view and projection matrices and copy it into the uniform buffer
+    }
+--- replace:
+    void updateUniformBuffer() {
+        UniformBufferObject ubo{};
+        // note that we're translating the scene in the reverse direction of where we want to move
+        ubo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
+        ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 100.0f);
+        // GLM is made for OpenGL, where clip space y points up: flip it for Vulkan (this replaces the flip in the shader)
+        ubo.proj[1][1] *= -1;
+
+        memcpy(uniformBufferMapped, &ubo, sizeof(ubo));
+    }
+--- file: main.cpp
+--- find:
+        // TODO: compute the model matrix and push it to the vertex shader (vkCmdPushConstants)
+--- replace:
+        // the model matrix: tilt the plane back
+        glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+        PushConstants constants{};
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+--- file: shaders/shader.vert
+--- find:
+// TODO: the uniform buffer block (binding 2) with the view and projection matrices
+// TODO: the push constant block with the model matrix
+--- replace:
+layout(binding = 2) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+} ubo;
+
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+} pc;
+--- file: shaders/shader.vert
+--- find:
+    gl_Position = vec4(inPosition, 1.0);
+    // learnopengl's +y points up, Vulkan's clip space +y points down: flip y
+    gl_Position.y = -gl_Position.y;
+--- replace:
+    // note that we read the multiplication from right to left
+    gl_Position = ubo.proj * ubo.view * pc.model * vec4(inPosition, 1.0);
+
+=== task: cube
+--- file: main.cpp
+--- find:
+// learnopengl's rectangle: +y points up, like in OpenGL.
+// v = 0 is the top row of the image in Vulkan, so the texture coordinates are upright without flipping the image.
+const std::vector<Vertex> vertices = {
+    {{0.5f, 0.5f, 0.0f}, {1.0f, 0.0f}},   // top right
+    {{0.5f, -0.5f, 0.0f}, {1.0f, 1.0f}},  // bottom right
+    {{-0.5f, -0.5f, 0.0f}, {0.0f, 1.0f}}, // bottom left
+    {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f}}   // top left
+};
+
+const std::vector<uint16_t> indices = {
+    0, 1, 3, // first triangle
+    1, 2, 3  // second triangle
+};
+--- replace:
+// learnopengl's cube: 6 faces of 2 triangles, 36 vertices (no index buffer).
+// The texture coordinates have v flipped (1 - v) because learnopengl flips the images when loading them.
+const std::vector<Vertex> vertices = {
+    // back (z = -0.5)
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 1.0f}},
+    {{0.5f, -0.5f, -0.5f}, {1.0f, 1.0f}},
+    {{0.5f, 0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{0.5f, 0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{-0.5f, 0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 1.0f}},
+
+    // front (z = +0.5)
+    {{-0.5f, -0.5f, 0.5f}, {0.0f, 1.0f}},
+    {{0.5f, -0.5f, 0.5f}, {1.0f, 1.0f}},
+    {{0.5f, 0.5f, 0.5f}, {1.0f, 0.0f}},
+    {{0.5f, 0.5f, 0.5f}, {1.0f, 0.0f}},
+    {{-0.5f, 0.5f, 0.5f}, {0.0f, 0.0f}},
+    {{-0.5f, -0.5f, 0.5f}, {0.0f, 1.0f}},
+
+    // left (x = -0.5)
+    {{-0.5f, 0.5f, 0.5f}, {1.0f, 1.0f}},
+    {{-0.5f, 0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{-0.5f, -0.5f, 0.5f}, {0.0f, 1.0f}},
+    {{-0.5f, 0.5f, 0.5f}, {1.0f, 1.0f}},
+
+    // right (x = +0.5)
+    {{0.5f, 0.5f, 0.5f}, {1.0f, 1.0f}},
+    {{0.5f, 0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{0.5f, -0.5f, 0.5f}, {0.0f, 1.0f}},
+    {{0.5f, 0.5f, 0.5f}, {1.0f, 1.0f}},
+
+    // bottom (y = -0.5)
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{0.5f, -0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{0.5f, -0.5f, 0.5f}, {1.0f, 1.0f}},
+    {{0.5f, -0.5f, 0.5f}, {1.0f, 1.0f}},
+    {{-0.5f, -0.5f, 0.5f}, {0.0f, 1.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+
+    // top (y = +0.5)
+    {{-0.5f, 0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{0.5f, 0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{0.5f, 0.5f, 0.5f}, {1.0f, 1.0f}},
+    {{0.5f, 0.5f, 0.5f}, {1.0f, 1.0f}},
+    {{-0.5f, 0.5f, 0.5f}, {0.0f, 1.0f}},
+    {{-0.5f, 0.5f, -0.5f}, {0.0f, 0.0f}}
+};
+--- file: main.cpp
+--- find:
+    VkDeviceMemory vertexBufferMemory;
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
+--- replace:
+    VkDeviceMemory vertexBufferMemory;
+--- file: main.cpp
+--- find:
+        createVertexBuffer();
+        createIndexBuffer();
+--- replace:
+        createVertexBuffer();
+--- file: main.cpp
+--- find:
+        vkDestroyFence(device, inFlightFence, nullptr);
+
+        vkDestroyBuffer(device, indexBuffer, nullptr);
+        vkFreeMemory(device, indexBufferMemory, nullptr);
+--- replace:
+        vkDestroyFence(device, inFlightFence, nullptr);
+--- file: main.cpp
+--- find:
+    void createIndexBuffer() {
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = sizeof(indices[0]) * indices.size();
+        bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if (vkCreateBuffer(device, &bufferInfo, nullptr, &indexBuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create index buffer!");
+        }
+
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(device, indexBuffer, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        if (vkAllocateMemory(device, &allocInfo, nullptr, &indexBufferMemory) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate index buffer memory!");
+        }
+
+        vkBindBufferMemory(device, indexBuffer, indexBufferMemory, 0);
+
+        void* data;
+        vkMapMemory(device, indexBufferMemory, 0, bufferInfo.size, 0, &data);
+            memcpy(data, indices.data(), (size_t) bufferInfo.size);
+        vkUnmapMemory(device, indexBufferMemory);
+    }
+
+    void createUniformBuffers() {
+--- replace:
+    void createUniformBuffers() {
+--- file: main.cpp
+--- find:
+        rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+--- replace:
+        rasterizer.cullMode = VK_CULL_MODE_NONE; // the cube's triangles are not all wound the same way
+--- file: main.cpp
+--- find:
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+        vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+--- replace:
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+--- file: main.cpp
+--- find:
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+--- replace:
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+
+=== task: spin
+--- file: main.cpp
+--- find:
+        // the model matrix: tilt the plane back
+        glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+--- replace:
+        // the model matrix: rotate the cube over time
+        glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+
+=== task: depth-image
+--- file: main.cpp
+--- find:
+    // TODO: the depth image, its memory and its view
+--- replace:
+    VkImage depthImage;
+    VkDeviceMemory depthImageMemory;
+    VkImageView depthImageView;
+--- file: main.cpp
+--- find:
+        // TODO: destroy the depth image view and the depth image, free its memory
+--- replace:
+        vkDestroyImageView(device, depthImageView, nullptr);
+        vkDestroyImage(device, depthImage, nullptr);
+        vkFreeMemory(device, depthImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+    void createDepthResources() {
+        // TODO: create the depth image and its view
+    }
+--- replace:
+    void createDepthResources() {
+        VkFormat depthFormat = findDepthFormat();
+
+        createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+        depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+    }
+
+    VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) {
+        for (VkFormat format : candidates) {
+            VkFormatProperties props;
+            vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &props);
+
+            if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+                return format;
+            } else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+                return format;
+            }
+        }
+
+        throw std::runtime_error("failed to find supported format!");
+    }
+
+    VkFormat findDepthFormat() {
+        return findSupportedFormat(
+            {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+        );
+    }
+--- file: main.cpp
+--- find:
+    VkImageView createImageView(VkImage image, VkFormat format) {
+--- replace:
+    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) {
+--- file: main.cpp
+--- find:
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+--- replace:
+        viewInfo.subresourceRange.aspectMask = aspectFlags;
+--- file: main.cpp
+--- find:
+            swapChainImageViews[i] = createImageView(swapChainImages[i], swapChainImageFormat);
+--- replace:
+            swapChainImageViews[i] = createImageView(swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+--- file: main.cpp
+--- find:
+        textureImageView = createImageView(textureImage, VK_FORMAT_R8G8B8A8_UNORM);
+        faceTextureImageView = createImageView(faceTextureImage, VK_FORMAT_R8G8B8A8_UNORM);
+--- replace:
+        textureImageView = createImageView(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+        faceTextureImageView = createImageView(faceTextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+
+=== task: depth-test
+--- file: main.cpp
+--- find:
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+--- replace:
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthFormat();
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+--- file: main.cpp
+--- find:
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+--- replace:
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 1;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+--- file: main.cpp
+--- find:
+        subpass.pColorAttachments = &colorAttachmentRef;
+
+--- replace:
+        subpass.pColorAttachments = &colorAttachmentRef;
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+--- file: main.cpp
+--- find:
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.srcAccessMask = 0;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = &colorAttachment;
+--- replace:
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+        std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderPassInfo.pAttachments = attachments.data();
+--- file: main.cpp
+--- find:
+        VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+--- replace:
+        VkPipelineDepthStencilStateCreateInfo depthStencil{};
+        depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depthStencil.depthTestEnable = VK_TRUE;
+        depthStencil.depthWriteEnable = VK_TRUE;
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthBoundsTestEnable = VK_FALSE;
+        depthStencil.stencilTestEnable = VK_FALSE;
+
+        VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+--- file: main.cpp
+--- find:
+        pipelineInfo.pColorBlendState = &colorBlending;
+--- replace:
+        pipelineInfo.pDepthStencilState = &depthStencil;
+        pipelineInfo.pColorBlendState = &colorBlending;
+--- file: main.cpp
+--- find:
+            VkImageView attachments[] = {
+                swapChainImageViews[i]
+            };
+--- replace:
+            std::array<VkImageView, 2> attachments = {
+                swapChainImageViews[i],
+                depthImageView
+            };
+--- file: main.cpp
+--- find:
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = attachments;
+--- replace:
+            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+            framebufferInfo.pAttachments = attachments.data();
+--- file: main.cpp
+--- find:
+        VkClearValue clearColor = {{{0.2f, 0.3f, 0.3f, 1.0f}}};
+        renderPassInfo.clearValueCount = 1;
+        renderPassInfo.pClearValues = &clearColor;
+--- replace:
+        // one clear value per attachment: the colour, and the depth 1.0 (the far plane)
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {{0.2f, 0.3f, 0.3f, 1.0f}};
+        clearValues[1].depthStencil = {1.0f, 0};
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+
+=== task: ten-cubes
+--- file: main.cpp
+--- find:
+// The same layout as the push constant block in the vertex shader: the model matrix of one draw.
+--- replace:
+// world space positions of our cubes
+const std::vector<glm::vec3> cubePositions = {
+    glm::vec3( 0.0f,  0.0f,  0.0f),
+    glm::vec3( 2.0f,  5.0f, -15.0f),
+    glm::vec3(-1.5f, -2.2f, -2.5f),
+    glm::vec3(-3.8f, -2.0f, -12.3f),
+    glm::vec3( 2.4f, -0.4f, -3.5f),
+    glm::vec3(-1.7f,  3.0f, -7.5f),
+    glm::vec3( 1.3f, -2.0f, -2.5f),
+    glm::vec3( 1.5f,  2.0f, -2.5f),
+    glm::vec3( 1.5f,  0.2f, -1.5f),
+    glm::vec3(-1.3f,  1.0f, -1.5f)
+};
+
+// The same layout as the push constant block in the vertex shader: the model matrix of one draw.
+--- file: main.cpp
+--- find:
+        // the model matrix: rotate the cube over time
+        glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+
+        PushConstants constants{};
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+--- replace:
+        for (unsigned int i = 0; i < 10; i++) {
+            // calculate the model matrix for each object and push it before drawing
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+
+            PushConstants constants{};
+            constants.model = model;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+            vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+        }
+
+=== task: rotate-every-third
+--- file: main.cpp
+--- find:
+            float angle = 20.0f * i;
+--- replace:
+            float angle = 20.0f * i;
+            if (i % 3 == 0) { // every 3rd iteration (including the first) we set the angle using GLFW's time function
+                angle = (float)glfwGetTime() * 25.0f;
+            }
