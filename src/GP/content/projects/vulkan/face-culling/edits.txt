@@ -1,0 +1,142 @@
+=== task: ccw-cube
+--- file: main.cpp
+--- find:
+// The cube (vertices 0..35): learnopengl's 36 vertices with position and texture coordinates (v flipped, 1 - v, so
+// the images are upright: stb_image's first row, v = 0, is the top of the image).
+const std::vector<Vertex> vertices = {
+    // back (z = -0.5)
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 1.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, {1.0f, 1.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{-0.5f,  0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 1.0f}},
+
+    // front (z = +0.5)
+    {{-0.5f, -0.5f,  0.5f}, {0.0f, 1.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 0.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 0.0f}},
+    {{-0.5f,  0.5f,  0.5f}, {0.0f, 0.0f}},
+    {{-0.5f, -0.5f,  0.5f}, {0.0f, 1.0f}},
+
+    // left (x = -0.5)
+    {{-0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{-0.5f,  0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{-0.5f, -0.5f,  0.5f}, {0.0f, 1.0f}},
+    {{-0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
+
+    // right (x = +0.5)
+    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, {0.0f, 1.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
+
+    // bottom (y = -0.5)
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{-0.5f, -0.5f,  0.5f}, {0.0f, 1.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+
+    // top (y = +0.5)
+    {{-0.5f,  0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{-0.5f,  0.5f,  0.5f}, {0.0f, 1.0f}},
+    {{-0.5f,  0.5f, -0.5f}, {0.0f, 0.0f}},
+--- replace:
+// The cube (vertices 0..35): every face counter-clockwise seen from outside the cube (learnopengl's face culling
+// chapter): the same vertices and texture coordinates as before, two of them swapped in the triangles of the back,
+// right and top faces.
+const std::vector<Vertex> vertices = {
+    // back (z = -0.5)
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 1.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, {1.0f, 1.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 1.0f}},
+    {{-0.5f,  0.5f, -0.5f}, {0.0f, 0.0f}},
+
+    // front (z = +0.5)
+    {{-0.5f, -0.5f,  0.5f}, {0.0f, 1.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 0.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 0.0f}},
+    {{-0.5f,  0.5f,  0.5f}, {0.0f, 0.0f}},
+    {{-0.5f, -0.5f,  0.5f}, {0.0f, 1.0f}},
+
+    // left (x = -0.5)
+    {{-0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{-0.5f,  0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{-0.5f, -0.5f,  0.5f}, {0.0f, 1.0f}},
+    {{-0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
+
+    // right (x = +0.5)
+    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, {0.0f, 1.0f}},
+
+    // bottom (y = -0.5)
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{-0.5f, -0.5f,  0.5f}, {0.0f, 1.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+
+    // top (y = +0.5)
+    {{-0.5f,  0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, {1.0f, 0.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{-0.5f,  0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{-0.5f,  0.5f,  0.5f}, {0.0f, 1.0f}},
+
+=== task: cull-back
+--- file: main.cpp
+--- find:
+        rasterizer.cullMode = VK_CULL_MODE_NONE; // learnopengl's cube: its triangles are not all wound the same way
+        rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+--- replace:
+        // Skip the triangles that face away from the camera. Front = counter-clockwise on screen, like OpenGL's GL_CCW:
+        // the y flip in the projection (proj[1][1] *= -1) shows the scene upright, so a triangle that is counter-clockwise
+        // seen from outside is counter-clockwise on screen too (without the flip the picture and the winding would be
+        // upside down).
+        rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+--- file: main.cpp
+--- find:
+    // floor (y = -0.5): vertices 36..41; the texture coordinates go up to 2.0, the sampler repeats the image
+    {{ 5.0f, -0.5f,  5.0f}, {2.0f, 2.0f}},
+    {{-5.0f, -0.5f,  5.0f}, {0.0f, 2.0f}},
+    {{-5.0f, -0.5f, -5.0f}, {0.0f, 0.0f}},
+    {{ 5.0f, -0.5f,  5.0f}, {2.0f, 2.0f}},
+    {{-5.0f, -0.5f, -5.0f}, {0.0f, 0.0f}},
+    {{ 5.0f, -0.5f, -5.0f}, {2.0f, 0.0f}}
+--- replace:
+    // floor (y = -0.5): vertices 36..41, counter-clockwise seen from above (it was clockwise)
+    {{ 5.0f, -0.5f,  5.0f}, {2.0f, 2.0f}},
+    {{-5.0f, -0.5f, -5.0f}, {0.0f, 0.0f}},
+    {{-5.0f, -0.5f,  5.0f}, {0.0f, 2.0f}},
+    {{ 5.0f, -0.5f,  5.0f}, {2.0f, 2.0f}},
+    {{ 5.0f, -0.5f, -5.0f}, {2.0f, 0.0f}},
+    {{-5.0f, -0.5f, -5.0f}, {0.0f, 0.0f}}
+
+=== task: cull-front
+--- file: main.cpp
+--- find:
+        rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+--- replace:
+        rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT; // the exercise: skip the front faces instead

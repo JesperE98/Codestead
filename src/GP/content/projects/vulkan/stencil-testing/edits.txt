@@ -1,0 +1,161 @@
+=== task: stencil-buffer
+--- file: main.cpp
+--- find:
+            {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+--- replace:
+            {VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT}, // depth with an 8-bit stencil buffer
+--- file: main.cpp
+--- find:
+        depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+--- replace:
+        depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+--- file: main.cpp
+--- find:
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+--- replace:
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; // don't forget to clear the stencil buffer!
+--- file: main.cpp
+--- find:
+        // one clear value per attachment: the colour, and the depth 1.0 (the far plane)
+--- replace:
+        // one clear value per attachment: the colour, and the depth 1.0 (the far plane) with the stencil value 0
+--- file: main.cpp
+--- find:
+        depthStencil.stencilTestEnable = VK_FALSE;
+--- replace:
+        depthStencil.stencilTestEnable = VK_TRUE;
+        depthStencil.front.failOp = VK_STENCIL_OP_KEEP;      // the stencil test fails: keep the stored value
+        depthStencil.front.depthFailOp = VK_STENCIL_OP_KEEP; // the stencil test passes, the depth test fails: keep it
+        depthStencil.front.passOp = VK_STENCIL_OP_REPLACE;   // both pass: store the reference value
+        depthStencil.front.compareOp = VK_COMPARE_OP_ALWAYS;
+        depthStencil.front.compareMask = 0xFF;
+        depthStencil.front.writeMask = 0xFF;
+        depthStencil.front.reference = 1;
+        depthStencil.back = depthStencil.front; // the same for triangles seen from behind
+
+=== task: single-color
+--- file: shaders/stencil_single_color.frag
+--- find:
+    // TODO: one colour for every fragment: the outline's vec4(0.04, 0.28, 0.26, 1.0)
+--- replace:
+    outColor = vec4(0.04, 0.28, 0.26, 1.0);
+
+=== task: write-stencil
+--- file: main.cpp
+--- find:
+    VkPipeline graphicsPipeline;
+--- replace:
+    VkPipeline floorPipeline;
+    VkPipeline graphicsPipeline;
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/stencil_testing.vert.spv", "shaders/stencil_testing.frag.spv", graphicsPipeline);
+--- replace:
+        // the floor does not write to the stencil buffer (write mask 0x00); the cubes write 1 wherever they are drawn
+        createPipeline("shaders/stencil_testing.vert.spv", "shaders/stencil_testing.frag.spv", VK_COMPARE_OP_ALWAYS, 0x00, floorPipeline);
+        createPipeline("shaders/stencil_testing.vert.spv", "shaders/stencil_testing.frag.spv", VK_COMPARE_OP_ALWAYS, 0xFF, graphicsPipeline);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, floorPipeline, nullptr);
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+--- file: main.cpp
+--- find:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkPipeline& pipeline) {
+--- replace:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkCompareOp stencilCompareOp, uint32_t stencilWriteMask, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        depthStencil.front.compareOp = VK_COMPARE_OP_ALWAYS;
+        depthStencil.front.compareMask = 0xFF;
+        depthStencil.front.writeMask = 0xFF;
+--- replace:
+        depthStencil.front.compareOp = stencilCompareOp;
+        depthStencil.front.compareMask = 0xFF;
+        depthStencil.front.writeMask = stencilWriteMask;
+--- file: main.cpp
+--- find:
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+
+        VkViewport viewport{};
+--- replace:
+        // draw floor as normal, but don't write the floor to the stencil buffer, we only care about the containers
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, floorPipeline);
+
+        VkViewport viewport{};
+--- file: main.cpp
+--- find:
+        // cubes
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &cubeDescriptorSet, 0, nullptr);
+--- replace:
+        // 1st. render pass, draw objects as normal, writing to the stencil buffer
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+        // cubes
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &cubeDescriptorSet, 0, nullptr);
+
+=== task: outline
+--- file: main.cpp
+--- find:
+    VkPipeline graphicsPipeline;
+--- replace:
+    VkPipeline graphicsPipeline;
+    VkPipeline outlinePipeline;
+--- file: main.cpp
+--- find:
+        // the floor does not write to the stencil buffer (write mask 0x00); the cubes write 1 wherever they are drawn
+        createPipeline("shaders/stencil_testing.vert.spv", "shaders/stencil_testing.frag.spv", VK_COMPARE_OP_ALWAYS, 0x00, floorPipeline);
+        createPipeline("shaders/stencil_testing.vert.spv", "shaders/stencil_testing.frag.spv", VK_COMPARE_OP_ALWAYS, 0xFF, graphicsPipeline);
+--- replace:
+        // the floor does not write to the stencil buffer (write mask 0x00); the cubes write 1 wherever they are drawn
+        createPipeline("shaders/stencil_testing.vert.spv", "shaders/stencil_testing.frag.spv", VK_TRUE, VK_COMPARE_OP_ALWAYS, 0x00, floorPipeline);
+        createPipeline("shaders/stencil_testing.vert.spv", "shaders/stencil_testing.frag.spv", VK_TRUE, VK_COMPARE_OP_ALWAYS, 0xFF, graphicsPipeline);
+        // the outlines: one colour, only where the stencil value is not 1, no stencil writes, no depth test
+        createPipeline("shaders/stencil_testing.vert.spv", "shaders/stencil_single_color.frag.spv", VK_FALSE, VK_COMPARE_OP_NOT_EQUAL, 0x00, outlinePipeline);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+        vkDestroyPipeline(device, outlinePipeline, nullptr);
+--- file: main.cpp
+--- find:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkCompareOp stencilCompareOp, uint32_t stencilWriteMask, VkPipeline& pipeline) {
+--- replace:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkBool32 depthTestEnable, VkCompareOp stencilCompareOp, uint32_t stencilWriteMask, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        depthStencil.depthTestEnable = VK_TRUE;
+        depthStencil.depthWriteEnable = VK_TRUE;
+--- replace:
+        depthStencil.depthTestEnable = depthTestEnable;
+        depthStencil.depthWriteEnable = depthTestEnable; // with the test off nothing is written either (like glDisable(GL_DEPTH_TEST))
+--- file: main.cpp
+--- find:
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+
+        vkCmdEndRenderPass(commandBuffer);
+--- replace:
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+
+        // 2nd. render pass: now draw slightly scaled versions of the objects, this time disabling stencil writing.
+        // Because the stencil buffer is now filled with several 1s. The parts of the buffer that are 1 are not drawn, thus only drawing
+        // the objects' size differences, making it look like borders.
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, outlinePipeline);
+        float scale = 1.1f;
+        // cubes
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+        // nothing to restore: every pipeline carries its own depth and stencil state
+
+        vkCmdEndRenderPass(commandBuffer);

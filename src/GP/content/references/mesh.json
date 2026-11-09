@@ -1,0 +1,14 @@
+[
+  { "title": "Mesh", "url": "https://learnopengl.com/Model-Loading/Mesh", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: mesh.h", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/includes/learnopengl/mesh.h", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "glVertexAttribPointer", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glVertexAttribPointer.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "offsetof", "url": "https://en.cppreference.com/w/cpp/types/offsetof", "publisher": "cppreference.com", "api": "opengl" },
+  { "title": "Vertex buffers: Staging buffer", "url": "https://vulkan-tutorial.com/Vertex_buffers/Staging_buffer", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Vertex buffers: Index buffer", "url": "https://vulkan-tutorial.com/Vertex_buffers/Index_buffer", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Loading models: Vertex deduplication", "url": "https://vulkan-tutorial.com/Loading_models", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "std::hash", "url": "https://en.cppreference.com/w/cpp/utility/hash", "publisher": "cppreference.com", "api": "vulkan" },
+  { "title": "Descriptors overview (null descriptors)", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/descriptors-overview", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "ID3D12Device::CreateShaderResourceView", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createshaderresourceview", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "ID3D12GraphicsCommandList::DrawIndexedInstanced", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawindexedinstanced", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "D3D12HelloTriangle sample", "url": "https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Samples/Desktop/D3D12HelloWorld/src/HelloTriangle", "publisher": "Microsoft (GitHub)", "api": "d3d12" }
+]

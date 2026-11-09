@@ -1,0 +1,154 @@
+=== task: stencil-buffer
+--- file: main.cpp
+--- find:
+        // TODO: a format with a stencil part, DXGI_FORMAT_D24_UNORM_S8_UINT, here (4 times) and in the PSO's DSVFormat
+        D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+        depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+--- replace:
+        // A depth stencil buffer: 24 bits of depth and 8 bits of stencil per pixel.
+        D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+        depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+--- file: main.cpp
+--- find:
+        // The value the depth buffer is usually cleared to: 1.0, the far plane.
+        D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+        depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+--- replace:
+        // The values the buffer is usually cleared to: depth 1.0 (the far plane), stencil 0.
+        D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+        depthOptimizedClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+--- file: main.cpp
+--- find:
+        // A texture as big as the window, one 32-bit float depth per pixel (1 array
+        // slice, 1 mip level), in a default heap and in the DEPTH_WRITE state.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC depthDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT,
+--- replace:
+        // A texture as big as the window, 32 bits per pixel: depth and stencil (1 array
+        // slice, 1 mip level), in a default heap and in the DEPTH_WRITE state.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC depthDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D24_UNORM_S8_UINT,
+--- file: main.cpp
+--- find:
+        psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+--- replace:
+        psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+--- file: main.cpp
+--- find:
+        // TODO: enable the stencil test, and replace the stored stencil value with the reference value when a pixel passes both the stencil and the depth test (front and back faces)
+--- replace:
+        // The stencil test: on. What happens to the stored stencil value when the stencil
+        // test fails: keep it; when the stencil test passes but the depth test fails: keep
+        // it; when both pass: replace it with the reference value (OMSetStencilRef). The
+        // same for triangles seen from the front and from the back.
+        psoDesc.DepthStencilState.StencilEnable = TRUE;
+        psoDesc.DepthStencilState.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+        psoDesc.DepthStencilState.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+        psoDesc.DepthStencilState.FrontFace.StencilPassOp = D3D12_STENCIL_OP_REPLACE;
+        psoDesc.DepthStencilState.BackFace = psoDesc.DepthStencilState.FrontFace;
+--- file: main.cpp
+--- find:
+    // TODO: also clear the stencil buffer
+    m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+--- replace:
+    m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);    // don't forget to clear the stencil buffer!
+
+=== task: single-color
+--- file: stencil_single_color.hlsl
+--- find:
+    // TODO: every pixel of the outline gets the same colour: float4(0.04f, 0.28f, 0.26f, 1.0f)
+    return float4(0.0f, 0.0f, 0.0f, 1.0f);
+--- replace:
+    return float4(0.04f, 0.28f, 0.26f, 1.0f);
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+--- replace:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+    ComPtr<ID3D12PipelineState> m_singleColorPipelineState;
+--- file: main.cpp
+--- find:
+        // TODO: a second pipeline state for the outlines (m_singleColorPipelineState): the shaders of stencil_single_color.hlsl
+--- replace:
+        // The outlines: the same description with the shaders of stencil_single_color.hlsl.
+        ComPtr<ID3DBlob> singleColorVertexShader;
+        ComPtr<ID3DBlob> singleColorPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"stencil_single_color.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &singleColorVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"stencil_single_color.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &singleColorPixelShader, nullptr));
+
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(singleColorVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(singleColorPixelShader.Get());
+        // TODO: the outline's depth and stencil state
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_singleColorPipelineState)));
+
+=== task: write-stencil
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+--- replace:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+    ComPtr<ID3D12PipelineState> m_floorPipelineState;
+--- file: main.cpp
+--- find:
+        psoDesc.SampleDesc.Count = 1;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+--- replace:
+        psoDesc.SampleDesc.Count = 1;
+
+        // The floor: drawn as normal, but it does not write to the stencil buffer (we only
+        // care about the containers): stencil write mask 0x00.
+        psoDesc.DepthStencilState.StencilWriteMask = 0x00;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_floorPipelineState)));
+
+        // The containers: all pixels pass the stencil test (ALWAYS) and write the reference
+        // value (StencilPassOp REPLACE) with all 8 bits (write mask 0xFF).
+        psoDesc.DepthStencilState.StencilWriteMask = 0xFF;
+        psoDesc.DepthStencilState.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+        psoDesc.DepthStencilState.BackFace = psoDesc.DepthStencilState.FrontFace;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+--- file: main.cpp
+--- find:
+    // TODO: the floor must not write to the stencil buffer (a pipeline state of its own)
+--- replace:
+    // draw floor as normal, but don't write the floor to the stencil buffer, we only care about the containers
+    m_commandList->SetPipelineState(m_floorPipelineState.Get());
+--- file: main.cpp
+--- find:
+    // TODO: 1st pass: the cubes as normal, every pixel they draw writes 1 to the stencil buffer
+--- replace:
+    // 1st. render pass, draw objects as normal, writing to the stencil buffer: the reference
+    // value 1 wherever a cube is drawn
+    m_commandList->SetPipelineState(m_pipelineState.Get());
+    m_commandList->OMSetStencilRef(1);
+
+=== task: outline
+--- file: main.cpp
+--- find:
+        // TODO: the outline's depth and stencil state
+--- replace:
+        // Only where the stencil value is not 1 (NOT_EQUAL with the reference value 1), no
+        // stencil writes, and no depth test: the outlines are drawn over everything.
+        psoDesc.DepthStencilState.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_NOT_EQUAL;
+        psoDesc.DepthStencilState.BackFace = psoDesc.DepthStencilState.FrontFace;
+        psoDesc.DepthStencilState.StencilWriteMask = 0x00;
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+--- file: main.cpp
+--- find:
+    // TODO: 2nd pass: the cubes again, scaled by 1.1, in one colour, only where the stencil value is not 1 and without the depth test
+--- replace:
+    // 2nd. render pass: now draw slightly scaled versions of the objects, this time disabling stencil writing.
+    // Because the stencil buffer is now filled with several 1s. The parts of the buffer that are 1 are not drawn, thus only drawing
+    // the objects' size differences, making it look like borders.
+    m_commandList->SetPipelineState(m_singleColorPipelineState.Get());
+    float scale = 1.1f;
+    model = XMMatrixScaling(scale, scale, scale) * XMMatrixTranslation(-1.0f, 0.0f, -1.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    model = XMMatrixScaling(scale, scale, scale) * XMMatrixTranslation(2.0f, 0.0f, 0.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    // Nothing to restore for the next frame: the depth and stencil states belong to the
+    // pipeline state objects, Reset sets the stencil reference back to 0, and
+    // ClearDepthStencilView ignores the write mask (OpenGL's glClear obeys glStencilMask).

@@ -1,0 +1,9 @@
+[
+  { "title": "Assimp", "url": "https://learnopengl.com/Model-Loading/Assimp", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: model.h (loading a model with Assimp)", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/includes/learnopengl/model.h", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "LearnOpenGL source code: model_loading.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/3.model_loading/1.model_loading/model_loading.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "Loading models (tinyobjloader)", "url": "https://vulkan-tutorial.com/Loading_models", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Vulkan Tutorial source code: 28_model_loading.cpp", "url": "https://github.com/Overv/VulkanTutorial/blob/main/code/28_model_loading.cpp", "publisher": "Alexander Overvoorde (GitHub)", "api": "vulkan" },
+  { "title": "What is vcpkg?", "url": "https://learn.microsoft.com/en-us/vcpkg/get_started/overview", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Tutorial: Install and use packages with MSBuild in Visual Studio", "url": "https://learn.microsoft.com/en-us/vcpkg/get_started/get-started-msbuild", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

@@ -1,0 +1,184 @@
+=== task: grass
+--- file: main.cpp
+--- find:
+    {{ 5.0f, -0.5f, -5.0f}, {2.0f, 0.0f}}
+};
+--- replace:
+    {{ 5.0f, -0.5f, -5.0f}, {2.0f, 0.0f}},
+
+    // transparent quad (x 0..1, y -0.5..0.5): vertices 42..47; v = 0 at the top edge, so the image is upright
+    {{ 0.0f,  0.5f,  0.0f}, {0.0f, 0.0f}},
+    {{ 0.0f, -0.5f,  0.0f}, {0.0f, 1.0f}},
+    {{ 1.0f, -0.5f,  0.0f}, {1.0f, 1.0f}},
+
+    {{ 0.0f,  0.5f,  0.0f}, {0.0f, 0.0f}},
+    {{ 1.0f, -0.5f,  0.0f}, {1.0f, 1.0f}},
+    {{ 1.0f,  0.5f,  0.0f}, {1.0f, 0.0f}}
+};
+
+// transparent vegetation locations
+const std::vector<glm::vec3> vegetation = {
+    glm::vec3(-1.5f, 0.0f, -0.48f),
+    glm::vec3( 1.5f, 0.0f,  0.51f),
+    glm::vec3( 0.0f, 0.0f,  0.7f),
+    glm::vec3(-0.3f, 0.0f, -2.3f),
+    glm::vec3( 0.5f, 0.0f, -0.6f)
+};
+--- file: main.cpp
+--- find:
+    VkImageView floorTextureImageView;
+
+    VkSampler textureSampler;
+--- replace:
+    VkImageView floorTextureImageView;
+
+    VkImage transparentTextureImage;
+    VkDeviceMemory transparentTextureImageMemory;
+    VkImageView transparentTextureImageView;
+
+    VkSampler textureSampler;
+    VkSampler transparentSampler;
+--- file: main.cpp
+--- find:
+    VkDescriptorSet floorDescriptorSet; // the uniform buffer and the metal texture
+--- replace:
+    VkDescriptorSet floorDescriptorSet; // the uniform buffer and the metal texture
+    VkDescriptorSet transparentDescriptorSet; // the uniform buffer and the transparent texture
+--- file: main.cpp
+--- find:
+        createTextureSampler(VK_SAMPLER_ADDRESS_MODE_REPEAT, textureSampler);
+--- replace:
+        loadTexture("textures/grass.png", transparentTextureImage, transparentTextureImageMemory, transparentTextureImageView);
+        createTextureSampler(VK_SAMPLER_ADDRESS_MODE_REPEAT, textureSampler);
+        // clamp to edge: at the top edge, linear filtering would otherwise mix in the opaque bottom row of the image
+        createTextureSampler(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, transparentSampler);
+--- file: main.cpp
+--- find:
+        createDescriptorSet(floorTextureImageView, textureSampler, floorDescriptorSet);
+--- replace:
+        createDescriptorSet(floorTextureImageView, textureSampler, floorDescriptorSet);
+        createDescriptorSet(transparentTextureImageView, transparentSampler, transparentDescriptorSet);
+--- file: main.cpp
+--- find:
+        vkDestroySampler(device, textureSampler, nullptr);
+--- replace:
+        vkDestroySampler(device, textureSampler, nullptr);
+        vkDestroySampler(device, transparentSampler, nullptr);
+--- file: main.cpp
+--- find:
+        vkFreeMemory(device, floorTextureImageMemory, nullptr);
+--- replace:
+        vkFreeMemory(device, floorTextureImageMemory, nullptr);
+
+        vkDestroyImageView(device, transparentTextureImageView, nullptr);
+        vkDestroyImage(device, transparentTextureImage, nullptr);
+        vkFreeMemory(device, transparentTextureImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        poolSizes[0].descriptorCount = 2;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 2;
+--- replace:
+        poolSizes[0].descriptorCount = 3;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 3;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 2;
+--- replace:
+        poolInfo.maxSets = 3;
+--- file: main.cpp
+--- find:
+        // TODO: the vegetation: a grass quad at each position (learnopengl's transparentVertices, grass.png)
+--- replace:
+        // vegetation
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &transparentDescriptorSet, 0, nullptr);
+        for (unsigned int i = 0; i < vegetation.size(); i++) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, vegetation[i]);
+            constants.model = model;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+            vkCmdDraw(commandBuffer, 6, 1, 42, 0); // the quad's 6 vertices start at vertex 42
+        }
+
+=== task: discard
+--- file: shaders/blending.frag
+--- find:
+void main() {
+    outColor = texture(texSampler, fragTexCoord);
+}
+--- replace:
+void main() {
+    vec4 texColor = texture(texSampler, fragTexCoord);
+    if (texColor.a < 0.1) {
+        discard; // (almost) fully transparent: no colour, no depth for this fragment
+    }
+    outColor = texColor;
+}
+
+=== task: blend
+--- file: main.cpp
+--- find:
+// transparent vegetation locations
+const std::vector<glm::vec3> vegetation = {
+--- replace:
+// transparent window locations
+const std::vector<glm::vec3> windows = {
+--- file: main.cpp
+--- find:
+        loadTexture("textures/grass.png", transparentTextureImage, transparentTextureImageMemory, transparentTextureImageView);
+--- replace:
+        loadTexture("textures/window.png", transparentTextureImage, transparentTextureImageMemory, transparentTextureImageView);
+--- file: main.cpp
+--- find:
+        colorBlendAttachment.blendEnable = VK_FALSE;
+--- replace:
+        // alpha blending: colour = src.rgb * src.a + dst.rgb * (1 - src.a)
+        colorBlendAttachment.blendEnable = VK_TRUE;
+        colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+        colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+--- file: main.cpp
+--- find:
+        // vegetation
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &transparentDescriptorSet, 0, nullptr);
+        for (unsigned int i = 0; i < vegetation.size(); i++) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, vegetation[i]);
+--- replace:
+        // windows
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &transparentDescriptorSet, 0, nullptr);
+        for (unsigned int i = 0; i < windows.size(); i++) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, windows[i]);
+
+=== task: sort
+--- file: main.cpp
+--- find:
+#include <set>
+--- replace:
+#include <set>
+#include <map>
+--- file: main.cpp
+--- find:
+        // windows
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &transparentDescriptorSet, 0, nullptr);
+        for (unsigned int i = 0; i < windows.size(); i++) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, windows[i]);
+--- replace:
+        // sort the transparent windows before rendering
+        std::map<float, glm::vec3> sorted;
+        for (unsigned int i = 0; i < windows.size(); i++) {
+            float distance = glm::length(cameraPos - windows[i]);
+            sorted[distance] = windows[i];
+        }
+
+        // windows (from furthest to nearest)
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &transparentDescriptorSet, 0, nullptr);
+        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, it->second);

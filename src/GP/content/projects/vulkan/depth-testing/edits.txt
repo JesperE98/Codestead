@@ -1,0 +1,51 @@
+=== task: depth-always
+--- file: main.cpp
+--- find:
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS; // keep the fragment if it is nearer than the stored depth
+--- replace:
+        depthStencil.depthCompareOp = VK_COMPARE_OP_ALWAYS; // always pass the depth test (same effect as depthTestEnable = VK_FALSE)
+
+=== task: depth-less
+--- file: main.cpp
+--- find:
+        depthStencil.depthCompareOp = VK_COMPARE_OP_ALWAYS; // always pass the depth test (same effect as depthTestEnable = VK_FALSE)
+--- replace:
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS; // keep the fragment if it is nearer than the stored depth
+
+=== task: visualize-depth
+--- file: shaders/depth_testing.frag
+--- find:
+void main() {
+    outColor = texture(texSampler, fragTexCoord);
+}
+--- replace:
+void main() {
+    // the fragment's depth in the depth buffer (0.0 at the near plane, 1.0 at the far plane) as a grey
+    outColor = vec4(vec3(gl_FragCoord.z), 1.0);
+}
+
+=== task: linear-depth
+--- file: shaders/depth_testing.frag
+--- find:
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    // the fragment's depth in the depth buffer (0.0 at the near plane, 1.0 at the far plane) as a grey
+    outColor = vec4(vec3(gl_FragCoord.z), 1.0);
+}
+--- replace:
+layout(location = 0) out vec4 outColor;
+
+float near = 0.1;
+float far = 100.0;
+
+// The depth buffer's value back to the distance from the camera (the inverse of the projection's depth).
+// Vulkan's depth is already 0..1 (GLM_FORCE_DEPTH_ZERO_TO_ONE): no "depth * 2.0 - 1.0" back to NDC as in OpenGL.
+float LinearizeDepth(float depth) {
+    return (near * far) / (far - depth * (far - near));
+}
+
+void main() {
+    float depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far to get depth in range [0,1] for visualization purposes
+    outColor = vec4(vec3(depth), 1.0);
+}
