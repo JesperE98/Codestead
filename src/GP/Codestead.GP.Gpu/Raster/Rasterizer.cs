@@ -124,6 +124,7 @@ public static partial class Rasterizer
             for (int x = 0; x < width; x++)
             {
                 var c = window.Resolved(x, y);
+                if (scene.WindowSrgb) c = [SrgbCurve.FromLinear(c[0]), SrgbCurve.FromLinear(c[1]), SrgbCurve.FromLinear(c[2]), c.Length > 3 ? c[3] : 1];
                 int i = (y * width + x) * 4;
                 pixels[i] = ToByte(c[2]);
                 pixels[i + 1] = ToByte(c[1]);

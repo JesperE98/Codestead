@@ -119,6 +119,7 @@ public sealed partial class VulkanReader
         var device = new VulkanDevice(project, src) { WindowWidth = scene.Width, WindowHeight = scene.Height };
         var recorder = new FrameRecorder(src, time, scene, blocks, transposeMatrices: false, device) { Project = project };
         recorder.Setup();
+        if (device.WindowSrgb) scene.WindowSrgb = true;
         foreach (var fn in UpdateFunctions(blocks)) recorder.Run(fn);
         if (src.FunctionAt(call.Offset) is { } recordFn) recorder.Run(recordFn);
         var buffer = recorder.BufferContents();

@@ -24,6 +24,12 @@ public sealed class Scene
     public List<FrameOp> Ops { get; } = new();
     /// <summary>Samples per pixel of the window (multisample anti-aliasing: glfwWindowHint(GLFW_SAMPLES, 4) …).</summary>
     public int Samples { get; set; } = 1;
+
+    /// <summary>
+    /// The window is written through an sRGB format (GL_FRAMEBUFFER_SRGB, an _SRGB swap chain format or render target
+    /// view): the shaders' linear colours are encoded with the sRGB curve when stored.
+    /// </summary>
+    public bool WindowSrgb { get; set; }
     public List<SimNote> Notes { get; } = new();
     /// <summary>Lines the program writes while it runs (as a real program would print them).</summary>
     public List<string> Log { get; } = new();

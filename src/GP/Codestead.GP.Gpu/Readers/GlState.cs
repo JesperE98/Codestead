@@ -57,6 +57,8 @@ internal sealed class GlState
         public string MagFilter = "GL_LINEAR";
         public bool Mipmaps;
         public double[]? Border;
+        /// <summary>An sRGB internal format (GL_SRGB, GL_SRGB_ALPHA …): sampling decodes to linear.</summary>
+        public bool Srgb;
         /// <summary>A cube map (GL_TEXTURE_CUBE_MAP): its six faces.</summary>
         public bool IsCube;
         public Image?[] Faces = new Image?[6];

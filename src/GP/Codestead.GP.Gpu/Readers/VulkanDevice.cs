@@ -27,7 +27,7 @@ internal sealed class VulkanDevice : IDeviceModel
         public int Id;
         public bool Window;
         public int Width, Height, Layers = 1, Samples = 1;
-        public bool Cube, Depth, Float;
+        public bool Cube, Depth, Float, Srgb;
         public readonly List<Image?> LayerImages = new();
         public string TargetId => "img:" + Id;
     }
@@ -57,6 +57,11 @@ internal sealed class VulkanDevice : IDeviceModel
     private readonly List<ImageObject> images = new();
     /// <summary>Image views: the image and whether it is viewed as a cube map.</summary>
     private readonly Dictionary<string, (string Image, bool Cube)> views = new(StringComparer.Ordinal);
+    /// <summary>Image views with an sRGB format.</summary>
+    private readonly HashSet<string> srgbViews = new(StringComparer.Ordinal);
+
+    /// <summary>The swap chain's images have an sRGB format: what is drawn into them is encoded.</summary>
+    public bool WindowSrgb { get; private set; }
     private readonly Dictionary<string, SamplerState> samplers = new(StringComparer.Ordinal);
     /// <summary>Framebuffers: their colour attachment's view (the render pass's colour attachment, else the first).</summary>
     private readonly Dictionary<string, string> framebuffers = new(StringComparer.Ordinal);
@@ -205,6 +210,7 @@ internal sealed class VulkanDevice : IDeviceModel
                 var format = Text(info, "format") ?? "";
                 img.Depth = format.Contains("_D16", StringComparison.Ordinal) || format.Contains("_D24", StringComparison.Ordinal) || format.Contains("_D32", StringComparison.Ordinal);
                 img.Float = format.Contains("SFLOAT", StringComparison.Ordinal) && !img.Depth;
+                img.Srgb = format.Contains("_SRGB", StringComparison.Ordinal);
                 Set(args[3], ShaderValue.Str(img.TargetId));
                 return ShaderValue.Str("VK_SUCCESS");
             }
@@ -245,6 +251,7 @@ internal sealed class VulkanDevice : IDeviceModel
                 var info = Eval(Strip(args[1]));
                 var view = Set(args[3], "view");
                 views[view] = (Text(info, "image") ?? "", (Text(info, "viewType") ?? "").Contains("CUBE", StringComparison.Ordinal));
+                if ((Text(info, "format") ?? "").Contains("_SRGB", StringComparison.Ordinal)) srgbViews.Add(view);
                 return ShaderValue.Str("VK_SUCCESS");
             }
             case "vkCreateSampler" when args.Count >= 4:
@@ -317,6 +324,21 @@ internal sealed class VulkanDevice : IDeviceModel
             case "isDeviceSuitable":
                 // The simulated GPU has the queues, extensions and swap chain support the tutorial asks for.
                 return ShaderValue.Scalar(1);
+            case "chooseSwapSurfaceFormat" when exec.Runner is not null:
+            {
+                // The format the program asks for (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM): the simulated
+                // surface offers it.
+                var wanted = System.Text.RegularExpressions.Regex.Match(src.FunctionBody("chooseSwapSurfaceFormat") ?? "", @"\.format\s*==\s*(VK_FORMAT_\w+)");
+                if (!wanted.Success) return null;
+                return ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+                {
+                    ["format"] = ShaderValue.Str(wanted.Groups[1].Value),
+                    ["colorSpace"] = ShaderValue.Str("VK_COLOR_SPACE_SRGB_NONLINEAR_KHR"),
+                });
+            }
+            case "vkCreateSwapchainKHR" when args.Count >= 2:
+                WindowSrgb = (Text(Eval(Strip(args[1])), "imageFormat") ?? "").Contains("_SRGB", StringComparison.Ordinal);
+                return null;
             case "chooseSwapExtent":
                 // The swap chain's images are the window's size.
                 return ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["width"] = ShaderValue.Scalar(WindowWidth), ["height"] = ShaderValue.Scalar(WindowHeight) });
@@ -496,7 +518,7 @@ internal sealed class VulkanDevice : IDeviceModel
         var sampler = b.Sampler is not null && samplers.TryGetValue(b.Sampler, out var st) ? st : SamplerState.Default;
         if (view.Cube || img.Cube)
             return (null, new CubeTexture(img.LayerImages.Select(i => i is null ? null : new Texture(i, sampler) { Components = 4 }).ToList()));
-        if (img.LayerImages.FirstOrDefault() is { } image) return (new Texture(image, sampler) { Components = image.Channels == 4 ? 4 : 3 }, null);
+        if (img.LayerImages.FirstOrDefault() is { } image) return (new Texture(image, sampler) { Components = image.Channels == 4 ? 4 : 3, Srgb = img.Srgb || srgbViews.Contains(b.View) }, null);
         var id = img.TargetId;
         bool depth = img.Depth;
         return (new Texture(() => Raster.Rasterizer.TargetImage(id, 0, depth), sampler) { Components = 4 }, null);

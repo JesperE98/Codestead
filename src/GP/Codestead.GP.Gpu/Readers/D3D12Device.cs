@@ -20,7 +20,7 @@ internal sealed class D3D12Device : IDeviceModel
         public int Id;
         public bool Buffer;
         public int Width, Height, ArraySize = 1, Samples = 1;
-        public bool Float, Depth, Window;
+        public bool Float, Depth, Window, Srgb;
         /// <summary>A buffer's contents by byte offset (4-byte numbers; 2-byte for 16-bit index data).</summary>
         public readonly SortedDictionary<long, double> Memory = new();
         /// <summary>A texture's images (one per array slice: six for a cube map).</summary>
@@ -42,6 +42,11 @@ internal sealed class D3D12Device : IDeviceModel
     private readonly Dictionary<string, Image?> images = new(StringComparer.Ordinal);
     /// <summary>SRVs by handle: the resource and whether it is viewed as a cube map.</summary>
     public readonly Dictionary<long, (int Resource, bool Cube)> Srvs = new();
+    /// <summary>SRVs that read their texture as sRGB (an _SRGB view format, or the resource's own).</summary>
+    private readonly HashSet<long> srgbSrvs = new();
+
+    /// <summary>The back buffer's render target view has an _SRGB format: what is drawn into the window is encoded.</summary>
+    public bool WindowSrgb { get; private set; }
     public readonly Dictionary<long, int> Rtvs = new();
     public readonly Dictionary<long, int> Dsvs = new();
     private bool flip;
@@ -125,6 +130,7 @@ internal sealed class D3D12Device : IDeviceModel
             r.ArraySize = Math.Max(1, Int("DepthOrArraySize", 1));
             var format = Text("Format");
             r.Float = format.Contains("FLOAT", StringComparison.Ordinal) && !format.StartsWith("DXGI_FORMAT_D", StringComparison.Ordinal);
+            r.Srgb = format.Contains("_SRGB", StringComparison.Ordinal);
             r.Depth = format.StartsWith("DXGI_FORMAT_D", StringComparison.Ordinal) || Text("Flags").Contains("DEPTH_STENCIL", StringComparison.Ordinal);
             if (f.TryGetValue("SampleDesc", out var sd) && sd.Fields?.TryGetValue("Count", out var c) == true && c.V is { Length: > 0 } cv) r.Samples = (int)cv[0];
         }
@@ -244,11 +250,20 @@ internal sealed class D3D12Device : IDeviceModel
                     var desc = args[2] is Name { Id: "nullptr" or "NULL" } ? null : Eval(Strip(args[2]));
                     bool cube = desc?.Fields?.GetValueOrDefault("ViewDimension")?.Text?.Contains("TEXTURECUBE", StringComparison.Ordinal) == true;
                     Srvs[(long)Num(args[3])] = (viewed.Id, cube);
+                    var srvFormat = desc?.Fields?.GetValueOrDefault("Format")?.Text;
+                    if (srvFormat is not null ? srvFormat.Contains("_SRGB", StringComparison.Ordinal) : viewed.Srgb) srgbSrvs.Add((long)Num(args[3]));
+                    else srgbSrvs.Remove((long)Num(args[3]));
                 }
                 return ShaderValue.Scalar(0);
             }
             case ".CreateRenderTargetView" when args.Count >= 4:
-                if (ResourceOf(args[1]) is { } rt) Rtvs[(long)Num(args[3])] = rt.Id;
+                if (ResourceOf(args[1]) is { } rt)
+                {
+                    Rtvs[(long)Num(args[3])] = rt.Id;
+                    // A back buffer viewed as _SRGB: what is drawn into the window is encoded.
+                    var rtvFormat = args[2] is Name { Id: "nullptr" or "NULL" } ? null : Eval(Strip(args[2]))?.Fields?.GetValueOrDefault("Format")?.Text;
+                    if (rt.Window && rtvFormat is not null) WindowSrgb = rtvFormat.Contains("_SRGB", StringComparison.Ordinal);
+                }
                 return ShaderValue.Scalar(0);
             case ".CreateDepthStencilView" when args.Count >= 4:
                 if (ResourceOf(args[1]) is { } ds) Dsvs[(long)Num(args[3])] = ds.Id;
@@ -458,7 +473,7 @@ internal sealed class D3D12Device : IDeviceModel
     {
         if (!Srvs.TryGetValue(handle, out var srv) || ResourceAt(srv.Resource) is not { } res) return (null, null);
         if (srv.Cube) return (null, new CubeTexture(res.Images.Select(i => i is null ? null : new Texture(i, sampler) { Components = i.Channels == 4 ? 4 : 3 }).ToList()));
-        if (res.Images.FirstOrDefault() is { } image) return (new Texture(image, sampler) { Components = image.Channels == 4 ? 4 : 3 }, null);
+        if (res.Images.FirstOrDefault() is { } image) return (new Texture(image, sampler) { Components = image.Channels == 4 ? 4 : 3, Srgb = srgbSrvs.Contains(handle) }, null);
         if (res.Images.Count == 0 && !res.Buffer)
         {
             var id = res.TargetId;

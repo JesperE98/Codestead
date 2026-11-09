@@ -269,6 +269,24 @@ public class RasterTests
         AssertColor([1, 0, 1], frame.At(50, 50));
     }
 
+    [Fact(DisplayName = "sRGB: en sRGB-textur avkodas till linjära värden, ett sRGB-fönster kodar dem igen")]
+    public void Srgb()
+    {
+        var image = new Image(1, 1, 4, [188, 128, 0, 255]);
+        var linear = new Texture(image, SamplerState.Default).Sample(0.5, 0.5);
+        var decoded = new Texture(image, SamplerState.Default) { Srgb = true }.Sample(0.5, 0.5);
+        Assert.Equal(188 / 255.0, linear[0], 3);
+        Assert.Equal(0.5029, decoded[0], 3);   // sRGB 188 is linear 0.503
+        Assert.Equal(0.2158, decoded[1], 3);   // sRGB 128 is linear 0.216
+        Assert.Equal(0.0, decoded[2], 6);
+        var fs = """
+            #version 330 core
+            out vec4 FragColor;
+            void main() { FragColor = vec4(0.5029, 0.2158, 0.0, 1.0); }
+            """;
+        AssertColor([188 / 255.0, 128 / 255.0, 0], Render(s => s.WindowSrgb = true, Draw(Quad(-1, -1, 1, 1), fs)).At(50, 50));
+    }
+
     [Fact(DisplayName = "C++: std::map sorterar fönstren och reverse_iterator går bakifrån")]
     public void MapReverseIterator()
     {

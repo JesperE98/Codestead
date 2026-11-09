@@ -101,6 +101,7 @@ public sealed partial class D3D12Reader
         var device = new D3D12Device(src, project);
         var recorder = new FrameRecorder(src, time, scene, blocks, transposeMatrices: true, device);
         recorder.Setup();
+        if (device.WindowSrgb) scene.WindowSrgb = true;
         foreach (var fn in new[] { "OnUpdate" }.Where(src.Functions.ContainsKey)) recorder.Run(fn);
         if (src.FunctionAt(call.Offset) is { } recordFn) recorder.Run(recordFn);
         var buffer = recorder.BufferContents();

@@ -29,6 +29,14 @@ public sealed class Texture
     /// <summary>The colour channels the shader sees (3: alpha reads as 1).</summary>
     public int Components { get; init; } = 4;
 
+    /// <summary>
+    /// An sRGB texture (GL_SRGB, VK_FORMAT_R8G8B8A8_SRGB, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB): sampling returns the
+    /// colours decoded to linear values (alpha stays as stored).
+    /// </summary>
+    public bool Srgb { get; init; }
+
+    private static readonly double[] SrgbToLinear = Enumerable.Range(0, 256).Select(i => Raster.SrgbCurve.ToLinear(i / 255.0)).ToArray();
+
     public double[] Sample(double u, double v)
     {
         var img = Image;
@@ -86,6 +94,7 @@ public sealed class Texture
         int i = (y * img.Width + x) * 4;
         if (img.Floats is { } f) return [f[i], f[i + 1], f[i + 2], Components == 4 ? f[i + 3] : 1.0];
         var d = img.Rgba;
+        if (Srgb) return [SrgbToLinear[d[i]], SrgbToLinear[d[i + 1]], SrgbToLinear[d[i + 2]], Components == 4 ? d[i + 3] / 255.0 : 1.0];
         return [d[i] / 255.0, d[i + 1] / 255.0, d[i + 2] / 255.0, Components == 4 ? d[i + 3] / 255.0 : 1.0];
     }
 }

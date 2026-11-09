@@ -181,6 +181,7 @@ public sealed partial class GlReader
                 if (A(0).Contains("GL_STENCIL_TEST", StringComparison.Ordinal)) gl.StencilTest = on;
                 if (A(0).Contains("GL_BLEND", StringComparison.Ordinal)) gl.Blend = on;
                 if (A(0).Contains("GL_PROGRAM_POINT_SIZE", StringComparison.Ordinal)) gl.ProgramPointSize = on;
+                if (A(0).Contains("GL_FRAMEBUFFER_SRGB", StringComparison.Ordinal)) scene.WindowSrgb = on;
                 return;
             }
             case "glCullFace":
@@ -358,6 +359,8 @@ public sealed partial class GlReader
             loaded = loaded with { File = path };
         }
         if (image is null) return;
+        // The internal format: GL_SRGB / GL_SRGB_ALPHA (also through a variable: learnopengl's loadTexture with gammaCorrection).
+        tex.Srgb = a[2].Contains("SRGB", StringComparison.Ordinal) || (Eval(a[2])?.Text ?? "").Contains("SRGB", StringComparison.Ordinal);
         int components = Components(a[6]);
         // A format in a variable (learnopengl's loadTexture: GL_RED / GL_RGB / GL_RGBA by nrComponents) fits the image.
         tex.Components = components == 4 || (components == 0 && image.Channels == 4) ? 4 : 3;

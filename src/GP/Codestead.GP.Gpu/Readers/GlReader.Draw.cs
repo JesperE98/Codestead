@@ -168,7 +168,7 @@ public sealed partial class GlReader
                     var (attachment, depth) = (t.Attachment, t.IsDepth);
                     texture = new Textures.Texture(() => Raster.Rasterizer.TargetImage(fbo, attachment, depth), sampler) { Components = 4 };
                 }
-                else texture = new Textures.Texture(t.Image!, sampler) { Components = t.Components };
+                else texture = new Textures.Texture(t.Image!, sampler) { Components = t.Components, Srgb = t.Srgb };
             }
             else scene.Notes.Add(SimNote.Warning("noTextureOnUnit", ("name", name), ("unit", unit.ToString())));
             bound[name] = texture;
