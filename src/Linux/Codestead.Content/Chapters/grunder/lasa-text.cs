@@ -55,6 +55,15 @@ public static partial class ChaptersLib
                     Solution = Cmds("sort ~/{{documents}}/{{fruits}}"),
                     Check = c => Ran(c, Re(@"\bsort\b")) && c.Line.Contains(W(c)["fruits"], StringComparison.Ordinal) && OutLines(c).At(0) == SortedLines(c, W(c).File("fruits"))[0],
                 },
+                new()
+                {
+                    Id = "cut",
+                    Text = "Visa bara ämnena – fält 2 – i `~/{{documents}}/{{grades}}` med `cut`.",
+                    Hint = "Fälten skiljs åt av kommatecken: `-d,` väljer avgränsaren och `-f2` fältet.",
+                    Solution = Cmds("cut -d, -f2 ~/{{documents}}/{{grades}}"),
+                    Check = c =>
+                        Ran(c, Re(@"^cut\b")) && OutLines(c).SequenceEqual(W(c).File("grades").Split('\n').Where(l => l.Trim() != "").Select(l => l.Split(',')[1])),
+                },
             },
         };
 }

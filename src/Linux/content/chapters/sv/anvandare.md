@@ -76,8 +76,8 @@ distributionerna):
 grep www-data /etc/passwd
 ```
 
-Med `awk` från kapitlet om textbearbetning kan du lista alla med UID 1000
-eller mer – de vanliga användarna:
+Med `awk`, som du lär dig mer om i kapitlet om textbearbetning, kan du lista
+alla med UID 1000 eller mer – de vanliga användarna:
 
 ```sh
 awk -F: '$3 >= 1000 {print $1}' /etc/passwd

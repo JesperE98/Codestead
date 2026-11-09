@@ -5,8 +5,8 @@ using ShellType = Codestead.Shell.Shell;
 namespace Codestead.Terminal;
 
 /// <summary>
-/// The sandbox of the lessons' "try it" questions: a fresh simulated computer of a distribution for every question,
-/// in the learner's language – separate from the learner's own terminal.
+/// The sandbox of the lessons' "try it" questions: a fresh simulated computer of a distribution, in the learner's
+/// language – separate from the learner's own terminal. It tells what a command prints there.
 /// </summary>
 public sealed class ShellSandbox(string distroId, string lang) : ISandbox
 {
@@ -16,8 +16,6 @@ public sealed class ShellSandbox(string distroId, string lang) : ISandbox
         sh.Lang = lang;
         return sh;
     }
-
-    public ISandboxTerminal NewTerminal() => new ShellSandboxTerminal(new TerminalView { Shell = Fresh() });
 
     public string OutputOf(string command) => UtilCmd.StripAnsi(Fresh().Execute(command).Output);
 }

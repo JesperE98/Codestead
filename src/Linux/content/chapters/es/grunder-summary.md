@@ -28,7 +28,7 @@ muestran el principio y el final (`-n` elige cuántas líneas, `tail -f` sigue
 un archivo). `wc` cuenta líneas, palabras y bytes. `grep` muestra las líneas
 que coinciden con un patrón, `sort` ordena líneas y `uniq` elimina las líneas
 repetidas que están una al lado de otra. `man` muestra el manual de un
-comando.
+comando. `cut` extrae un campo (`-d` fija el separador y `-f` el campo).
 
 ## Redirecciones y pipes
 
@@ -37,17 +37,7 @@ archivo (y lo sobrescribe), `>>` añade al final, `<` lee stdin desde un
 archivo y `2>` redirige los mensajes de error, por ejemplo a `/dev/null`. Una
 pipe `|` envía la salida de un comando al siguiente, y `tee` guarda una copia
 por el camino. `xargs` convierte las palabras de su entrada en argumentos para
-un comando. `;`, `&&` y `||` ejecutan varios comandos en una línea.
-
-## Procesar texto con sed, tr y awk
-
-`tr` sustituye, borra (`-d`) o comprime (`-s`) caracteres sueltos y solo lee
-stdin. `sed` edita líneas: `s/viejo/nuevo/` sustituye (`g` para todas las
-coincidencias), las direcciones eligen líneas, `d` borra y `-n` con `p`
-muestra solo lo que pides. `sed -i` modifica el propio archivo. `cut` extrae
-un campo, y `awk` trabaja con columnas: `-F` fija el separador, `$1` … `$NF`
-son los campos, un patrón delante de `{ }` elige líneas y `END { }` se ejecuta
-después de la última línea.
+un comando. `;`, `&&` y `||` ejecutan varios comandos en una línea. `tr` sustituye, borra (`-d`) o comprime (`-s`) caracteres sueltos y solo lee stdin.
 
 ## Comandos y opciones
 
@@ -73,9 +63,7 @@ después de la última línea.
 | `tee` | Pasa la entrada y guarda una copia | |
 | `xargs` | Convierte su entrada en argumentos para un comando | `-n 1` de uno en uno, `-I {}` una línea cada vez |
 | `tr` | Traduce caracteres | `-d` borrar, `-s` comprimir |
-| `sed` | Edita un flujo de líneas | `s/…/…/g`, `d`, `p`, `q`, `-n`, `-i`, `-E`, `-e` |
 | `cut` | Extrae campos | `-d` separador, `-f` campo |
-| `awk` | Trabaja con columnas | `-F` separador, `$1`, `$NF`, `NF`, `NR`, `BEGIN`, `END` |
 
 | Sintaxis | Significa |
 |---|---|

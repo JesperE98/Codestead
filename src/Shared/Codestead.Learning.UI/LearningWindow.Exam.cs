@@ -26,9 +26,9 @@ public partial class LearningWindow
     /// </summary>
     private void RenderExam(CourseChapter chapter, string text)
     {
-        var remaining = LessonsIn(chapter.Part).Where(l => !IsLessonComplete(l)).ToList();
-        if (remaining.Count > 0)
+        if (!IsExamOpen(chapter))
         {
+            var remaining = LessonsIn(chapter.Part).Where(l => !IsLessonComplete(l)).ToList();
             var box = new StackPanel { Spacing = 8 };
             box.Children.Add(Text(tool.ChapterTitle(chapter.Id, Lang), 30, FontWeight.Bold));
             box.Children.Add(Text("🔒  " + T("exam.locked"), 15));
@@ -79,4 +79,7 @@ public partial class LearningWindow
         lessonPanel.Children.Add(submit);
         lessonPanel.Children.Add(result);
     }
+
+    /// <summary>An exam opens when every sub-chapter of its main chapter is complete.</summary>
+    private bool IsExamOpen(CourseChapter exam) => LessonsIn(exam.Part).All(IsLessonComplete);
 }

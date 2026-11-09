@@ -30,7 +30,7 @@ Leerzeichen brauchen Anführungszeichen.
 Zeilen, `tail -f` verfolgt eine Datei). `wc` zählt Zeilen, Wörter und Bytes.
 `grep` zeigt die Zeilen, die zu einem Muster passen, `sort` sortiert Zeilen,
 und `uniq` entfernt wiederholte Zeilen, die direkt aufeinander folgen. `man`
-zeigt das Handbuch zu einem Befehl.
+zeigt das Handbuch zu einem Befehl. `cut` pickt ein Feld heraus (`-d` legt das Trennzeichen fest, `-f` das Feld).
 
 ## Umleitungen und Pipes
 
@@ -40,17 +40,7 @@ aus einer Datei, und `2>` leitet Fehlermeldungen um – zum Beispiel nach
 `/dev/null`. Eine Pipe `|` schickt die Ausgabe eines Befehls in den nächsten,
 und `tee` speichert unterwegs eine Kopie. `xargs` macht aus den Wörtern in
 seiner Eingabe Argumente für einen Befehl. `;`, `&&` und `||` führen mehrere
-Befehle in einer Zeile aus.
-
-## Textbearbeitung mit sed, tr und awk
-
-`tr` ersetzt, löscht (`-d`) oder staucht (`-s`) einzelne Zeichen und liest
-nur von stdin. `sed` bearbeitet Zeilen: `s/alt/neu/` ersetzt (`g` für jeden
-Treffer), Adressen wählen Zeilen aus, `d` löscht, und `-n` mit `p` gibt nur
-das aus, worum du bittest. `sed -i` ändert die Datei selbst. `cut` pickt ein
-Feld heraus, und `awk` arbeitet mit Spalten: `-F` legt das Trennzeichen fest,
-`$1` … `$NF` sind die Felder, ein Muster vor `{ }` wählt Zeilen aus, und
-`END { }` läuft nach der letzten Zeile.
+Befehle in einer Zeile aus. `tr` ersetzt, löscht (`-d`) oder staucht (`-s`) einzelne Zeichen und liest nur von stdin.
 
 ## Befehle und Optionen
 
@@ -76,9 +66,7 @@ Feld heraus, und `awk` arbeitet mit Spalten: `-F` legt das Trennzeichen fest,
 | `tee` | Reicht die Eingabe weiter und speichert eine Kopie | |
 | `xargs` | Macht aus der Eingabe Argumente für einen Befehl | `-n 1` einzeln, `-I {}` eine Zeile nach der anderen |
 | `tr` | Übersetzt Zeichen | `-d` löschen, `-s` stauchen |
-| `sed` | Bearbeitet einen Strom von Zeilen | `s/…/…/g`, `d`, `p`, `q`, `-n`, `-i`, `-E`, `-e` |
 | `cut` | Pickt Felder heraus | `-d` Trennzeichen, `-f` Feld |
-| `awk` | Arbeitet mit Spalten | `-F` Trennzeichen, `$1`, `$NF`, `NF`, `NR`, `BEGIN`, `END` |
 
 | Syntax | Bedeutet |
 |---|---|

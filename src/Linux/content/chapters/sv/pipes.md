@@ -120,6 +120,51 @@ Hur många filer och kataloger finns det i `/etc`? Räkna dem med en pipe:
 ls /etc | wc -l
 ```
 
+## Byta tecken – `tr`
+
+`tr` (*translate*) byter varje tecken i den första mängden mot tecknet på samma
+plats i den andra. `a-z` betyder alla bokstäver från a till z:
+
+```sh
+echo "hej från terminalen" | tr a-z A-Z
+```
+
+```text
+HEJ FRåN TERMINALEN
+```
+
+Ser du å:et? `tr` arbetar med enskilda *byte*, och å, ä och ö ingår inte i
+`a-z`.
+
+`tr` läser **bara** från stdin, aldrig från filer. Vill du använda en fil
+skickar du in den med `<` eller en pipe:
+
+```sh
+tr a-z A-Z < ~/{{documents}}/{{fruits}}
+```
+
+Med `-d` (*delete*) tar du bort tecken och med `-s` (*squeeze*) pressar du
+ihop flera likadana tecken i rad till ett:
+
+```sh
+echo "070-123 45 67" | tr -d ' -'
+echo "för     många      mellanslag" | tr -s ' '
+```
+
+```predict
+$ echo "hello world" | tr -d o
+hell wrld
+---
+`-d` tar bort varje `o`, var det än står.
+```
+
+I stället för intervall kan du skriva *klasser*, t.ex. `[:upper:]` (versaler),
+`[:lower:]` (gemener), `[:digit:]` (siffror) och `[:space:]` (blanktecken):
+
+```sh
+echo "Rum 101, våning 3" | tr -d '[:digit:]'
+```
+
 ## Från indata till argument – `xargs`
 
 Vissa kommandon läser inte från en pipe alls – de vill ha namn som

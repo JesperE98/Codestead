@@ -20,6 +20,10 @@
     "devnull": {
       "text": "`ls /{{missing}}` を実行し、エラーメッセージを `/dev/null` に送って何も表示されないようにしてください。"
     },
+    "tr-upper": {
+      "text": "`/etc/passwd` のすべてのユーザー名を **大文字** で表示してください。`cut` で 1 番目のフィールドを取り出し、`tr` に渡します。",
+      "hint": "`cut -d: -f1 /etc/passwd` でユーザー名が得られます。`| tr a-z A-Z` を付け加えましょう。"
+    },
     "xargs": {
       "text": "`~/{{documents}}` にあるすべてのファイルの行数を数えてください。`find -type f` でファイルを見つけ、`xargs` を使って `wc -l` に渡します。",
       "hint": "`find ~/{{documents}} -type f | xargs wc -l` です。`wc` はパイプからファイル名を読みませんが、`xargs` がファイル名を引数に変えてくれます。"

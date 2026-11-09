@@ -10,7 +10,7 @@ förväntade utskrifter (predict) och try-kommandon är kontrollerade mot simula
 
 | Påstående | Källa | Status | Datum |
 |---|---|---|---|
-| All recap statements repeat facts from navigera, filer, lasa-text, pipes and textbearbetning (see their logs) |  | ogranskad |  |
+| All recap statements repeat facts from navigera, filer, lasa-text and pipes (see their logs) |  | ogranskad |  |
 | `rm -f`: no questions (from `rm -rf` = recursive, force) |  | ogranskad |  |
 | `less`: `/word` searches, `q` quits |  | ogranskad |  |
 | `uniq -c` counts repeated adjacent lines |  | ogranskad |  |

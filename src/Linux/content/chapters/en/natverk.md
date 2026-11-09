@@ -103,7 +103,7 @@ goes via the default route to the gateway.
 ```
 
 ```predict
-$ ip route | grep default | awk '{print $3}'
+$ ip route | grep default | cut -d' ' -f3
 192.168.1.1
 ---
 The third word on the `default` line is the gateway's address.

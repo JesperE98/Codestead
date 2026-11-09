@@ -39,7 +39,7 @@ Owner: 4 + 2 + 1 = 7. Group: 4 + 1 = 5. Others: 0.
 $ touch tool.sh
 $ chmod 755 tool.sh
 $ chmod go-x tool.sh
-$ ls -l tool.sh | awk '{print $1}'
+$ ls -l tool.sh | cut -d' ' -f1
 -rwxr--r--
 ```
 

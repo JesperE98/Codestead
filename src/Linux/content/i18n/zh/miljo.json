@@ -4,6 +4,10 @@
     "path": {
       "text": "显示 `PATH` 变量的内容。"
     },
+    "tr-path": {
+      "text": "使用 `tr` 把 `:` 替换成换行符，让 `$PATH` 中的目录**各占一行**显示。",
+      "hint": "换行符写作 `\\n`：`echo $PATH | tr ':' '\\n'`"
+    },
     "export": {
       "text": "创建值为 `linux` 的环境变量 `{{favVar}}`。",
       "hint": "等号两边不能有空格：`export NAME=value`。"

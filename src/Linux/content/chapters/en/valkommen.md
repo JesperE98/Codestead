@@ -3,8 +3,8 @@
 This guide teaches you how to use Linux from the command line – from your very
 first commands all the way to package management on different distributions.
 Each chapter explains one topic. Along the way there are short **questions** in
-the text; answer them, and the terminal on the right and the chapter's
-**tasks** unlock. A task is ticked off automatically as soon as you get it
+the text; some of them you try out in the terminal on the right. Answer them all,
+and the chapter's **tasks** unlock. A task is ticked off automatically as soon as you get it
 right. The best way to learn is by *doing*: read, try, make mistakes, and try
 again.
 

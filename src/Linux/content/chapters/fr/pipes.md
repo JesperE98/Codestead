@@ -125,6 +125,53 @@ un pipe :
 ls /etc | wc -l
 ```
 
+## Transformer des caractères – `tr`
+
+`tr` (*translate*) remplace chaque caractère du premier ensemble par le
+caractère à la même position dans le second. `a-z` désigne toutes les lettres
+de a à z :
+
+```sh
+echo "hello from café" | tr a-z A-Z
+```
+
+```text
+HELLO FROM CAFé
+```
+
+Vous avez remarqué le é ? `tr` travaille sur des *octets* individuels, et les
+lettres comme é – ou è, à et ç – ne font pas partie de `a-z`.
+
+`tr` lit **uniquement** depuis stdin, jamais depuis des fichiers. Pour
+utiliser un fichier, faites-le entrer avec `<` ou un pipe :
+
+```sh
+tr a-z A-Z < ~/{{documents}}/{{fruits}}
+```
+
+Avec `-d` (*delete*), vous supprimez des caractères, et avec `-s` (*squeeze*),
+vous réduisez plusieurs caractères identiques consécutifs à un seul :
+
+```sh
+echo "070-123 45 67" | tr -d ' -'
+echo "beaucoup     trop      espacé" | tr -s ' '
+```
+
+```predict
+$ echo "hello world" | tr -d o
+hell wrld
+---
+`-d` supprime chaque `o`, où qu'il se trouve.
+```
+
+Au lieu de plages, vous pouvez écrire des *classes*, p. ex. `[:upper:]`
+(majuscules), `[:lower:]` (minuscules), `[:digit:]` (chiffres) et
+`[:space:]` (espaces) :
+
+```sh
+echo "Salle 101, étage 3" | tr -d '[:digit:]'
+```
+
 ## De l'entrée aux arguments – `xargs`
 
 Certaines commandes ne lisent pas du tout depuis un pipe – elles veulent des

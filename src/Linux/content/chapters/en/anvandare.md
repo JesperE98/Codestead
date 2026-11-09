@@ -77,8 +77,8 @@ distributions):
 grep www-data /etc/passwd
 ```
 
-With `awk` from the text processing chapter you can list everyone with UID
-1000 or more – the regular users:
+With `awk`, which you'll get to know properly in the chapter on text
+processing, you can list everyone with UID 1000 or more – the regular users:
 
 ```sh
 awk -F: '$3 >= 1000 {print $1}' /etc/passwd

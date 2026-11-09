@@ -82,6 +82,9 @@ public abstract class LearningTool
     /// <summary>The variant to use for what the learner chose (null: nothing yet) – e.g. a default or a known id.</summary>
     public virtual string? NormalizeVariant(string? chosen) => chosen;
 
+    /// <summary>Tasks that moved to another chapter: old progress key → new key (saved progress follows them).</summary>
+    public virtual IReadOnlyDictionary<string, string> MovedTasks => new Dictionary<string, string>();
+
     /// <summary>Every variant there is, for the settings (null: no variant section).</summary>
     public virtual IReadOnlyList<VariantOption>? AllVariants => null;
 

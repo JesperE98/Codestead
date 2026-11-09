@@ -102,6 +102,24 @@ sort {{documents}}/{{fruits}}
 - [ ] `sort` 删除重复行，`uniq` 再把它们放回去
 ```
 
+## 截取字段——`cut`
+
+`{{documents}}` 中有第三个练习文件 `{{grades}}`，这是一个记录学生分数的 CSV 文件：
+
+```sh
+cat ~/{{documents}}/{{grades}}
+```
+
+CSV 是 *comma-separated values*（逗号分隔值）的缩写——各列之间用逗号分隔，第一行是表头。
+
+当一个文件由字段组成、字段之间有分隔符时，`cut` 可以挑出其中一个字段。`-d` 选择分隔符（*delimiter*），`-f` 选择要保留哪个字段。下面是 CSV 文件中的科目——第 2 个字段：
+
+```sh
+cut -d, -f2 ~/{{documents}}/{{grades}}
+```
+
+在 `/etc/passwd` 中，字段之间用冒号分隔，第 1 个字段是用户名，所以 `cut -d: -f1 /etc/passwd` 会列出所有用户。
+
 ## 手册——`man`
 
 忘了某个选项是做什么的？每个命令都有手册页：

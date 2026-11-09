@@ -124,6 +124,53 @@ Wie viele Dateien und Verzeichnisse gibt es in `/etc`? Zähl sie mit einer Pipe:
 ls /etc | wc -l
 ```
 
+## Zeichen übersetzen – `tr`
+
+`tr` (*translate*) ersetzt jedes Zeichen aus der ersten Menge durch das Zeichen
+an derselben Position in der zweiten. `a-z` bedeutet alle Buchstaben von a bis
+z:
+
+```sh
+echo "hallo aus dem café" | tr a-z A-Z
+```
+
+```text
+HALLO AUS DEM CAFé
+```
+
+Ist dir das é aufgefallen? `tr` arbeitet mit einzelnen *Bytes*, und Buchstaben
+wie é – oder die Umlaute ä, ö und ü – gehören nicht zu `a-z`.
+
+`tr` liest **nur** von stdin, nie aus Dateien. Willst du eine Datei verwenden,
+füttere sie mit `<` oder einer Pipe hinein:
+
+```sh
+tr a-z A-Z < ~/{{documents}}/{{fruits}}
+```
+
+Mit `-d` (*delete*) entfernst du Zeichen, und mit `-s` (*squeeze*) presst du
+mehrere gleiche Zeichen hintereinander zu einem zusammen:
+
+```sh
+echo "070-123 45 67" | tr -d ' -'
+echo "zu     viele      Leerzeichen" | tr -s ' '
+```
+
+```predict
+$ echo "hello world" | tr -d o
+hell wrld
+---
+`-d` löscht jedes `o`, egal wo es steht.
+```
+
+Statt Bereichen kannst du *Klassen* schreiben, z. B. `[:upper:]`
+(Großbuchstaben), `[:lower:]` (Kleinbuchstaben), `[:digit:]` (Ziffern) und
+`[:space:]` (Leerraum):
+
+```sh
+echo "Raum 101, Etage 3" | tr -d '[:digit:]'
+```
+
 ## Von der Eingabe zu Argumenten – `xargs`
 
 Manche Befehle lesen überhaupt nicht aus einer Pipe – sie wollen Namen als

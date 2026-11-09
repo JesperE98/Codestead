@@ -1,82 +1,18 @@
-# Text processing with sed, tr and awk
+# Text processing with sed and awk
 
-With `grep` you can *find* lines. But often you want to do more than that:
-replace a word, delete certain lines, pick out a column or add up some
-numbers. That's when you reach for three classic tools:
+You already know a few tools for text: `grep` finds lines, `cut` picks out a
+field and `tr` changes single characters. This chapter is about two more
+powerful ones, for when you want to replace words, delete lines or add up
+numbers:
 
 | Tool | Works on | Typical job |
 |---|---|---|
-| `tr` | single **characters** | convert to uppercase, turn `:` into newlines |
 | `sed` | **lines** | replace a word, delete lines |
 | `awk` | **columns** (fields) | pick out columns, add up, count |
 
-All three are *filters*: they read text, do something with it and write the
+Both are *filters*: they read text, do something with it and write the
 result to stdout. That makes them a perfect fit for pipes. And the original
 file is **not** changed (with one exception, `sed -i`, which we'll get to).
-
-In `{{documents}}` there's a third practice file, `{{grades}}`, a CSV file with
-the students' scores:
-
-```sh
-cat ~/{{documents}}/{{grades}}
-```
-
-CSV stands for *comma-separated values* – the columns are separated by
-commas, and the first line is a header.
-
-## Translating characters – `tr`
-
-`tr` (*translate*) replaces every character in the first set with the
-character in the same position in the second. `a-z` means all the letters
-from a to z:
-
-```sh
-echo "hello from café" | tr a-z A-Z
-```
-
-```text
-HELLO FROM CAFé
-```
-
-Did you spot the é? `tr` works on individual *bytes*, and letters such as é,
-ñ and ü aren't part of `a-z`. That's worth knowing – GNU
-`awk` (further down) handles it better.
-
-`tr` **only** reads from stdin, never from files. If you want to use a file,
-feed it in with `<` or a pipe:
-
-```sh
-tr a-z A-Z < ~/{{documents}}/{{fruits}}
-```
-
-A classic trick is to turn colons into newlines (`\n`), so that each
-directory in `PATH` ends up on a line of its own:
-
-```sh
-echo $PATH | tr ':' '\n'
-```
-
-With `-d` (*delete*) you remove characters, and with `-s` (*squeeze*) you
-squeeze several identical characters in a row into one:
-
-```sh
-echo "070-123 45 67" | tr -d ' -'
-echo "too     many      spaces" | tr -s ' '
-```
-
-```predict
-$ echo "hello world" | tr -d o
-hell wrld
----
-`-d` deletes every `o`, wherever it is.
-```
-
-Instead of ranges you can write *classes*, e.g. `[:upper:]` (uppercase),
-`[:lower:]` (lowercase), `[:digit:]` (digits) and `[:space:]` (whitespace):
-
-```sh
-echo "Room 101, floor 3" | tr -d '[:digit:]'
-```
 
 ## The stream editor – `sed`
 
@@ -220,20 +156,6 @@ Configuration files in `/etc` are owned by root, so there you need
 `sudo sed -i ...`. It's a common way to change a setting from a script
 without opening a text editor.
 
-## Cutting out fields – `cut`
-
-When a file is made up of fields with a separator between them, `cut` can
-pick out one field. `-d` chooses the separator (*delimiter*) and `-f` which
-field to keep. Here are the subjects – field 2 – from the CSV file:
-
-```sh
-cut -d, -f2 ~/{{documents}}/{{grades}}
-```
-
-In `/etc/passwd`, the fields are separated by colons and field 1 is the user
-name, so `cut -d: -f1 /etc/passwd` lists all the users. Like the other
-filters, `cut` fits in a pipe – for example in front of `tr`.
-
 ## Columns – `awk`
 
 `awk` is really a whole little programming language, but most of the time
@@ -281,7 +203,7 @@ fields are glued together, and then you can mix in text of your own:
 awk -F: '{print $1 " uses " $7}' /etc/passwd
 ```
 
-Compare with `cut -d: -f1` from the previous section. The difference is that
+Compare with `cut -d: -f1` from the chapter on reading and searching text. The difference is that
 awk can reorder the fields, mix in text and cope with several spaces in a row.
 
 ```predict
@@ -373,7 +295,7 @@ small and fast variant. For simple programs like these you won't notice any
 difference – but mawk doesn't convert letters such as è, û and é with
 `toupper()`. **GNU awk** (the `gawk` package) does, unlike `tr`.
 Distributions differ in which awk they use and in how you install software –
-that comes in the chapter on distributions.
+you met that in the part on distributions.
 
 The simulator only knows part of the awk language – what's covered here and
 a little more (`if`, loops and arrays). See `man awk`.

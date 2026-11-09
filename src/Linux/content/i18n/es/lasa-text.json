@@ -19,6 +19,10 @@
     },
     "sort": {
       "text": "Muestra las frutas de `~/{{documents}}/{{fruits}}` en orden alfabético."
+    },
+    "cut": {
+      "text": "Muestra solo las asignaturas (el campo 2) de `~/{{documents}}/{{grades}}` con `cut`.",
+      "hint": "Los campos están separados por comas: `-d,` elige el separador y `-f2` el campo."
     }
   }
 }

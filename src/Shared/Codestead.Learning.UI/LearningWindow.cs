@@ -69,6 +69,7 @@ public partial class LearningWindow : Window
         state = saved ?? new LearningState();
         if (!Languages.IsOffered(state.Lang)) state.Lang = Languages.Default;
         state.Variant = tool.NormalizeVariant(state.Variant);
+        if (state.MoveTasks(tool.MovedTasks)) storage.Save("state", state);
         if (state.Chapter is null || tool.Chapters.All(c => c.Id != state.Chapter)) state.Chapter = tool.Chapters[0].Id;
         tool.ChapterShown(Chapter.Id);
 
@@ -166,7 +167,7 @@ public partial class LearningWindow : Window
     }
 
     /// <summary>
-    /// Are the workbench and the tasks unlocked? Only after the learner has worked through the text:
+    /// Are the tasks unlocked? Only after the learner has worked through the text:
     /// all checkpoints answered, or (in a text without checkpoints) marked as read.
     /// Chapters where a task is already done stay unlocked.
     /// </summary>
@@ -187,7 +188,7 @@ public partial class LearningWindow : Window
     private CheckpointTexts CheckpointTexts() => new(
         T("checkpoint.check"), T("checkpoint.correct"), T("checkpoint.wrong"), T("checkpoint.predict"),
         T("checkpoint.try"), T("checkpoint.done"), T("checkpoint.answer"), T("checkpoint.question"),
-        T("checkpoint.showAnswer"), T("checkpoint.almostPath"), T("checkpoint.tryPredict"));
+        T("checkpoint.showAnswer"), T("checkpoint.almostPath"));
 
     private int ChapterIndex => Math.Max(0, Chapters.ToList().FindIndex(c => c.Id == state.Chapter));
     private CourseChapter Chapter => Chapters[ChapterIndex];

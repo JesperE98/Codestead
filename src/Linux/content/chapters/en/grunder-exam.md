@@ -110,17 +110,3 @@ b
 ---
 `-d,` makes the comma the separator, and `-f2` keeps field 2.
 ```
-
-```predict
-$ echo "x y z" | awk '{print NF}'
-3
----
-`NF` is the number of fields on the line. Fields are separated by spaces.
-```
-
-```quiz
-Why should an awk program such as `'{print $3}'` be written in **single** quotes?
-- [ ] awk can't read double quotes
-- [x] Otherwise the shell thinks `$3` is a shell variable and replaces it before awk starts
-- [ ] Single quotes make awk run faster
-```

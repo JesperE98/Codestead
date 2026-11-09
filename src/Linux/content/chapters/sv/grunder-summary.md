@@ -27,7 +27,7 @@ kommandot körs, och namn med mellanslag behöver citattecken.
 `tail` visar början och slutet (`-n` väljer hur många rader, `tail -f` följer
 en fil). `wc` räknar rader, ord och byte. `grep` visar raderna som matchar ett
 mönster, `sort` sorterar rader och `uniq` tar bort upprepade rader som ligger
-intill varandra. `man` visar manualen för ett kommando.
+intill varandra. `man` visar manualen för ett kommando. `cut` plockar ut ett fält (`-d` väljer avgränsare, `-f` fältet).
 
 ## Omdirigering och pipes
 
@@ -36,17 +36,7 @@ till en fil (och skriver över den), `>>` lägger till, `<` läser stdin från e
 fil och `2>` omdirigerar felmeddelanden – till exempel till `/dev/null`. En
 pipe `|` skickar utdata från ett kommando in i nästa, och `tee` sparar en
 kopia på vägen. `xargs` gör orden i sin indata till argument till ett kommando.
-`;`, `&&` och `||` kör flera kommandon på en rad.
-
-## Textbearbetning med sed, tr och awk
-
-`tr` byter, tar bort (`-d`) eller pressar ihop (`-s`) enskilda tecken och
-läser bara från stdin. `sed` redigerar rader: `s/gammalt/nytt/` byter ut (`g`
-för alla träffar), adresser väljer rader, `d` tar bort och `-n` med `p` skriver
-bara ut det du ber om. `sed -i` ändrar själva filen. `cut` plockar ut ett
-fält, och `awk` arbetar med kolumner: `-F` väljer avgränsare, `$1` … `$NF` är
-fälten, ett mönster före `{ }` väljer rader och `END { }` körs efter sista
-raden.
+`;`, `&&` och `||` kör flera kommandon på en rad. `tr` byter, tar bort (`-d`) eller pressar ihop (`-s`) enskilda tecken och läser bara från stdin.
 
 ## Kommandon och flaggor
 
@@ -72,9 +62,7 @@ raden.
 | `tee` | Skickar indata vidare och sparar en kopia | |
 | `xargs` | Gör indata till argument till ett kommando | `-n 1` en i taget, `-I {}` en per rad |
 | `tr` | Byter tecken | `-d` ta bort, `-s` pressa ihop |
-| `sed` | Redigerar en ström av rader | `s/…/…/g`, `d`, `p`, `q`, `-n`, `-i`, `-E`, `-e` |
 | `cut` | Plockar ut fält | `-d` avgränsare, `-f` fält |
-| `awk` | Arbetar med kolumner | `-F` avgränsare, `$1`, `$NF`, `NF`, `NR`, `BEGIN`, `END` |
 
 | Syntax | Betyder |
 |---|---|

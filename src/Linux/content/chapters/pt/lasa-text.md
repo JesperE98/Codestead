@@ -117,6 +117,29 @@ Por que o `uniq` quase sempre é usado depois do `sort`?
 - [ ] O `sort` remove as duplicatas e o `uniq` as coloca de volta
 ```
 
+## Recortando campos – `cut`
+
+Em `{{documents}}` há um terceiro arquivo de exercício, um arquivo CSV com as
+pontuações dos alunos em diferentes disciplinas:
+
+```sh
+cat ~/{{documents}}/{{grades}}
+```
+
+CSV significa *comma-separated values* (valores separados por vírgula) – as
+colunas são separadas por vírgulas, e a primeira linha é um cabeçalho.
+
+Quando um arquivo é formado por campos com um separador entre eles, o `cut`
+consegue pegar um campo. O `-d` escolhe o separador (*delimiter*) e o `-f`,
+qual campo manter. Aqui estão as matérias – o campo 2 – do arquivo CSV:
+
+```sh
+cut -d, -f2 ~/{{documents}}/{{grades}}
+```
+
+No `/etc/passwd`, os campos são separados por dois-pontos e o campo 1 é o nome
+de usuário, então `cut -d: -f1 /etc/passwd` lista todos os usuários.
+
 ## O manual – `man`
 
 Esqueceu o que uma opção faz? Todo comando tem uma página de manual:

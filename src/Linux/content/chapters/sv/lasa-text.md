@@ -114,6 +114,28 @@ Varför används `uniq` nästan alltid efter `sort`?
 - [ ] `sort` tar bort dubbletter och `uniq` lägger tillbaka dem
 ```
 
+## Klippa ut fält – `cut`
+
+I `{{documents}}` finns en tredje övningsfil, en CSV-fil med elevernas poäng:
+
+```sh
+cat ~/{{documents}}/{{grades}}
+```
+
+CSV betyder *comma-separated values* – kolumnerna skiljs åt av kommatecken,
+och första raden är en rubrikrad.
+
+När en fil består av fält med en avgränsare emellan kan `cut` plocka ut ett
+fält. `-d` väljer avgränsaren (*delimiter*) och `-f` vilket fält som ska
+behållas. Här är ämnena – fält 2 – i CSV-filen:
+
+```sh
+cut -d, -f2 ~/{{documents}}/{{grades}}
+```
+
+I `/etc/passwd` skiljs fälten åt av kolon och fält 1 är användarnamnet, så
+`cut -d: -f1 /etc/passwd` listar alla användare.
+
 ## Manualen – `man`
 
 Glömt vad en flagga gör? Varje kommando har en manualsida:

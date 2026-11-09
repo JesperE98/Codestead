@@ -2,6 +2,10 @@
 
 In this part you've turned commands into programs of your own.
 
+## Text processing with sed and awk
+
+`sed` edits lines: `s/old/new/` replaces (`g` for every match), addresses choose lines, `d` deletes and `-n` with `p` prints only what you ask for. `sed -i` changes the file itself. `awk` works with columns: `-F` sets the separator, `$1` … `$NF` are the fields, a pattern before `{ }` chooses lines, and `END { }` runs after the last line.
+
 ## Shell scripts
 
 A script is a text file with commands that starts with the shebang
@@ -37,6 +41,8 @@ their output to a file. `journalctl -u cron` shows each run, and
 
 | Syntax | Does |
 |---|---|
+| `sed`: `s/…/…/g`, `d`, `p`, `q`, `-n`, `-i`, `-E`, `-e` | Edits a stream of lines |
+| `awk`: `-F` separator, `$1`, `$NF`, `NF`, `NR`, `BEGIN`, `END` | Works with columns |
 | `#!/bin/bash` | The shebang: which program runs the script |
 | `cat > file << '{{heredocEnd}}'` | Write lines into a file until the line `{{heredocEnd}}` |
 | `name=value` · `"$name"` · `"${name}"` | Create · use a variable |

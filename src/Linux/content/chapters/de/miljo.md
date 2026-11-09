@@ -67,6 +67,13 @@ der Variable `PATH` stehen, nach einer Datei namens `ls`:
 echo $PATH
 ```
 
+Ein klassischer Trick ist, Doppelpunkte in Zeilenumbrüche (`\n`) zu
+verwandeln, damit jedes Verzeichnis in `PATH` in einer eigenen Zeile landet:
+
+```sh
+echo $PATH | tr ':' '\n'
+```
+
 `which` zeigt, wo ein Programm gefunden wurde. Manche Befehle wie `cd` sind gar
 keine Dateien, sondern in die Shell *eingebaut* (*Builtins*) – `type` verrät
 dir, was ein Name ist:

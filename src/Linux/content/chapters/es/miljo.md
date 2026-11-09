@@ -66,6 +66,13 @@ directorios que aparecen en la variable `PATH`, uno tras otro:
 echo $PATH
 ```
 
+Un truco clásico es convertir los dos puntos en saltos de línea (`\n`), de
+modo que cada directorio de `PATH` quede en su propia línea:
+
+```sh
+echo $PATH | tr ':' '\n'
+```
+
 `which` muestra dónde se encontró un programa. Algunos comandos, como `cd`, no
 son archivos, sino que están *integrados* en la shell (son *builtins*); `type`
 te dice qué es un nombre:

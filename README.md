@@ -38,7 +38,7 @@ Codestead is a family of learning tools, plus a small launcher called the **Code
 
 | App | What it does |
 |---|---|
-| **Codestead Linux** | Learn the Linux shell in a simulated terminal: 25 chapters, 191 tasks, checkpoints and exams. |
+| **Codestead Linux** | Learn the Linux shell in a simulated terminal: 25 chapters, 192 tasks, checkpoints and exams. |
 | **Codestead hub** | Installs, starts and updates the tools, and shows your level and achievements in each. |
 
 More tools (such as Python and C++) are planned. They will share the same learning window, game and hub.
@@ -68,7 +68,7 @@ Windows Server 2022/2025, Ubuntu 22.04 and 24.04, Fedora, Arch Linux and CachyOS
 
 - **A simulated Linux terminal** inside the app. Nothing needs to be installed, and nothing on your computer can break.
 - **Four distributions in three families**: Ubuntu and Debian (`apt`), Arch Linux (`pacman`) and Fedora (`dnf`).
-- **25 chapters with 191 tasks**: from your first commands to links, scripts, scheduled jobs, networking, file
+- **25 chapters with 192 tasks**: from your first commands to links, scripts, scheduled jobs, networking, file
   transfer, systemd, users, disks and git. Every chapter has checkpoints, and every part ends with an exam.
 - **Helpful mistakes**: when a command is not found, the terminal tells you whether it is a typo
   ("did you mean `ls`?"), a real command the simulator does not have, or a package that is not installed.

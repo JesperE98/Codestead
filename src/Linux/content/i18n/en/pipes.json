@@ -20,6 +20,10 @@
     "devnull": {
       "text": "Run `ls /{{missing}}`, but send the error message to `/dev/null` so that nothing shows up."
     },
+    "tr-upper": {
+      "text": "Print every user name in `/etc/passwd` in **uppercase**: pick out field 1 with `cut` and pass it on to `tr`.",
+      "hint": "`cut -d: -f1 /etc/passwd` gives you the user names. Add `| tr a-z A-Z`."
+    },
     "xargs": {
       "text": "Count the lines in every file in `~/{{documents}}`: find the files with `find -type f` and give them to `wc -l` with `xargs`.",
       "hint": "`find ~/{{documents}} -type f | xargs wc -l` – `wc` doesn't read file names from a pipe, but `xargs` turns them into arguments."

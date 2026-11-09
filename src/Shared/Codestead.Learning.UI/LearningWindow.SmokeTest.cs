@@ -61,11 +61,25 @@ public partial class LearningWindow
         ApplyLanguage();
         var task = tool.Tasks(Chapter.Id, Lang)[0];
         var before = state.Progress.ContainsKey(task.Key);
-        foreach (var cmd in task.Solution)
+        void Solve()
         {
-            tool.Inject(cmd);
-            tool.Run(cmd);
+            foreach (var cmd in task.Solution)
+            {
+                tool.Inject(cmd);
+                tool.Run(cmd);
+            }
         }
+        if (!IsUnlocked(Chapter))
+        {
+            // The terminal is there from the start, but the tasks stay locked until the text is done.
+            if (!workbenchFrame.IsVisible) throw new InvalidOperationException("The terminal of a locked lesson is hidden.");
+            Solve();
+            if (state.Progress.ContainsKey(task.Key)) throw new InvalidOperationException("A task was checked before the lesson was unlocked.");
+            for (int i = 0; i < CheckpointCount(Chapter); i++) state.Checkpoints[CheckpointKey(Chapter, i)] = true;
+            if (!state.Read.Contains(Chapter.Id)) state.Read.Add(Chapter.Id);
+            RenderAll();
+        }
+        Solve();
         var after = state.Progress.ContainsKey(task.Key);
         if (!before && !after) throw new InvalidOperationException("The first task was not completed by its solution.");
         if (state.Game.Xp <= 0 || !state.Game.Achievements.ContainsKey("first-task"))

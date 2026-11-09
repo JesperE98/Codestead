@@ -120,6 +120,51 @@ sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ls /etc | wc -l
 ```
 
+## 文字を変換する – `tr`
+
+`tr`（*translate*）は、1 つ目の集合に含まれる各文字を、2 つ目の集合の同じ位置に
+ある文字に置き換えます。`a-z` は a から z までのすべての文字を意味します。
+
+```sh
+echo "hello from café" | tr a-z A-Z
+```
+
+```text
+HELLO FROM CAFé
+```
+
+é に気づきましたか？ `tr` は 1 *バイト* ずつ処理するので、é のような文字は
+`a-z` に含まれません。
+
+`tr` は stdin から **しか** 読み込まず、ファイルから読むことはありません。
+ファイルを使いたい場合は、`<` かパイプで渡します。
+
+```sh
+tr a-z A-Z < ~/{{documents}}/server.log
+```
+
+`-d`（*delete*）で文字を削除し、`-s`（*squeeze*）で同じ文字が連続しているものを
+1 つにまとめます。
+
+```sh
+echo "070-123 45 67" | tr -d ' -'
+echo "too     many      spaces" | tr -s ' '
+```
+
+```predict
+$ echo "hello world" | tr -d o
+hell wrld
+---
+`-d` は、どこにあってもすべての `o` を削除します。
+```
+
+範囲の代わりに *クラス* を書くこともできます。たとえば `[:upper:]`（大文字）、
+`[:lower:]`（小文字）、`[:digit:]`（数字）、`[:space:]`（空白文字）です。
+
+```sh
+echo "Room 101, floor 3" | tr -d '[:digit:]'
+```
+
 ## 入力から引数へ – `xargs`
 
 パイプからはまったく読まず、名前を **引数** として受け取りたいコマンドも

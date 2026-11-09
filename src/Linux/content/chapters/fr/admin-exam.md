@@ -85,7 +85,7 @@ Sur cet ordinateur, votre répertoire personnel n'est pas sur un système de
 fichiers à part. Qu'est-ce que ceci affiche ?
 
 ```predict
-$ df -h ~ | awk 'NR > 1 {print $6}'
+$ df -h ~ | tail -n 1 | tr -s ' ' | cut -d' ' -f6
 /
 ---
 Avec un chemin, `df` ne montre que le système de fichiers où il se trouve. La

@@ -1,6 +1,6 @@
-# textbearbetning – Text processing with sed, tr and awk
+# textbearbetning – Text processing with sed and awk
 
-Huvudkapitel: `grunder`. Text: `src/Linux/content/chapters/en/textbearbetning.md` (engelska är källspråket).
+Huvudkapitel: `skript`. Text: `src/Linux/content/chapters/en/textbearbetning.md` (engelska är källspråket).
 
 Status: **ogranskad**
 
@@ -10,14 +10,8 @@ förväntade utskrifter (predict) och try-kommandon är kontrollerade mot simula
 
 | Påstående | Källa | Status | Datum |
 |---|---|---|---|
-| `tr` works on characters, `sed` on lines, `awk` on columns (fields) |  | ogranskad |  |
-| `tr`, `sed` and `awk` are filters: read text, write the result to stdout; the original file is unchanged (except `sed -i`) |  | ogranskad |  |
-| CSV = comma-separated values; columns separated by commas, first line a header |  | ogranskad |  |
-| `tr` replaces each character in the first set with the character at the same position in the second; `a-z` is a range |  | ogranskad |  |
-| `tr` works on single bytes; letters such as é, å, ä, ö are not in `a-z` |  | ogranskad |  |
-| `tr` only reads stdin, never files |  | ogranskad |  |
-| `tr -d` deletes characters; `tr -s` squeezes repeated characters into one |  | ogranskad |  |
-| Character classes `[:upper:]`, `[:lower:]`, `[:digit:]`, `[:space:]` |  | ogranskad |  |
+| `sed` works on lines, `awk` on columns (fields) |  | ogranskad |  |
+| `sed` and `awk` are filters: read text, write the result to stdout; the original file is unchanged (except `sed -i`) |  | ogranskad |  |
 | `sed` = stream editor; runs a script on each line; `s` = substitute |  | ogranskad |  |
 | `s/PATTERN/REPLACEMENT/FLAGS`; without flags only the first match on each line is replaced; `g` replaces all |  | ogranskad |  |
 | The `i` flag makes `s` case-insensitive |  | ogranskad |  |
@@ -33,7 +27,6 @@ förväntade utskrifter (predict) och try-kommandon är kontrollerade mot simula
 | `sed -i` writes the result back to the file; no undo |  | ogranskad |  |
 | `sed -i.bak` saves the original as `file.bak` |  | ogranskad |  |
 | Files in `/etc` are owned by root, so `sudo sed -i` is needed there |  | ogranskad |  |
-| `cut -d` chooses the delimiter and `-f` the field to keep (new section; verified only in the simulator) |  | ogranskad |  |
 | In `/etc/passwd` fields are separated by colons; field 1 is the user name and field 7 the shell |  | ogranskad |  |
 | awk fields: `$1`…, `$0` whole line, `NF` number of fields, `$NF` last field, `NR` line number |  | ogranskad |  |
 | awk fields are separated by spaces (any number) by default |  | ogranskad |  |
@@ -52,7 +45,6 @@ förväntade utskrifter (predict) och try-kommandon är kontrollerade mot simula
 | mawk does not convert å, ä and ö with `toupper()`; GNU awk (package `gawk`) does |  | ogranskad |  |
 | Distributions differ in which awk they use (previous text: GNU awk on Arch Linux and the Red Hat family) |  | ogranskad |  |
 | The simulator only implements part of the awk language (incl. `if`, loops and arrays) |  | ogranskad |  |
-| Checkpoint (predict): `echo "hello world" \| tr -d o` prints `hell wrld` |  | ogranskad |  |
 | Checkpoint (predict): `echo banana \| sed 's/a/o/'` prints `bonana` |  | ogranskad |  |
 | Checkpoint (quiz): `sed 's/kiwi/KIWI/' file` without `-i` leaves the file unchanged |  | ogranskad |  |
 | Checkpoint (predict): `echo "Alva,matte,87" \| awk -F, '{print $3, $1}'` prints `87 Alva` |  | ogranskad |  |

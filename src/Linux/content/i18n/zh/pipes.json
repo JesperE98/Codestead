@@ -20,6 +20,10 @@
     "devnull": {
       "text": "运行 `ls /{{missing}}`，但把错误信息发送到 `/dev/null`，让屏幕上什么都不显示。"
     },
+    "tr-upper": {
+      "text": "以**大写**形式打印 `/etc/passwd` 中的所有用户名：用 `cut` 挑出第 1 个字段，再传给 `tr`。",
+      "hint": "`cut -d: -f1 /etc/passwd` 会给出用户名。再加上 `| tr a-z A-Z`。"
+    },
     "xargs": {
       "text": "统计 `~/{{documents}}` 中每个文件的行数：用 `find -type f` 找出这些文件，再用 `xargs` 把它们交给 `wc -l`。",
       "hint": "`find ~/{{documents}} -type f | xargs wc -l`——`wc` 不会从管道读取文件名，但 `xargs` 会把它们变成参数。"

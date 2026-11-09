@@ -16,7 +16,7 @@ Status: **ogranskad**
 | `127.0.0.1` = localhost = den här datorn; trafiken lämnar aldrig datorn |  | ogranskad |  |
 | `/24` = de första 24 bitarna är nätets adress; annat skickas till gatewayen |  | ogranskad |  |
 | `ip route`: `default via 192.168.1.1`; `proto dhcp` = inställningar via DHCP |  | ogranskad |  |
-| Kontrollfråga: `ip route \| grep default \| awk '{print $3}'` ger 192.168.1.1 |  | ogranskad |  |
+| Kontrollfråga: `ip route \| grep default \| cut -d' ' -f3` ger 192.168.1.1 |  | ogranskad |  |
 | `ping -c`; utan `-c` tills Ctrl+C; `time=`, packet loss, `Destination Host Unreachable` |  | ogranskad |  |
 | Många servrar och brandväggar svarar inte på ping med flit |  | ogranskad |  |
 | DNS översätter namn till adresser; DNS-servern står i `/etc/resolv.conf` |  | ogranskad |  |

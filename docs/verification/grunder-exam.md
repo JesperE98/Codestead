@@ -23,5 +23,3 @@ förväntade utskrifter (predict) och try-kommandon är kontrollerade mot simula
 | Quiz: in `a \|\| b`, b runs only if a failed |  | ogranskad |  |
 | Try: `grep ERROR ~/dokument/server.log \| tee fel.txt \| wc -l` works; tee saves a copy and passes the lines on |  | ogranskad |  |
 | Predict: `echo "a,b,c" \| cut -d, -f2` prints `b` |  | ogranskad |  |
-| Predict: `echo "x y z" \| awk '{print NF}'` prints `3` |  | ogranskad |  |
-| Quiz: an awk program is written in single quotes so the shell does not replace `$3` before awk starts |  | ogranskad |  |
