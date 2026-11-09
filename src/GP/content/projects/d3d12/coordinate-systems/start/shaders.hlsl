@@ -17,7 +17,7 @@ cbuffer ModelConstants : register(b0)
 struct PSInput
 {
     float4 position : SV_POSITION;
-    float2 texCoord : TEXCOORD;      // the texture coordinates, interpolated across the rectangle
+    float2 texCoord : TEXCOORD;      // the texture coordinates, interpolated across each triangle
 };
 
 // The vertex shader: runs once per vertex.
@@ -34,7 +34,7 @@ PSInput VSMain(float4 position : POSITION, float2 texCoord : TEXCOORD)
     return result;
 }
 
-// The pixel shader: runs once per pixel the rectangle covers and returns its colour (RGBA).
+// The pixel shader: runs once per pixel a triangle covers and returns its colour (RGBA).
 float4 PSMain(PSInput input) : SV_TARGET
 {
     // Linearly interpolate between both textures (80% container, 20% face).

@@ -694,6 +694,7 @@ void D3D12App::OnUpdate()
         cameraPos -= XMVector3Normalize(XMVector3Cross(cameraFront, cameraUp)) * cameraSpeed;
     if (keys['D'])
         cameraPos += XMVector3Normalize(XMVector3Cross(cameraFront, cameraUp)) * cameraSpeed;
+
     // The view matrix: look from cameraPos in the direction of cameraFront.
     XMMATRIX view = XMMatrixLookAtRH(cameraPos, cameraPos + cameraFront, cameraUp);
 

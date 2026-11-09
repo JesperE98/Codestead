@@ -18,14 +18,14 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-// camera: look at the cube and the lamp from above-left
-glm::vec3 cameraPos   = glm::vec3(-1.5f, 1.5f,  5.0f);
-glm::vec3 cameraFront = glm::normalize(glm::vec3(0.4f, -0.3f, -1.0f));
+// camera: look at the cube's lit front and the lamp from the left
+glm::vec3 cameraPos   = glm::vec3(-3.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::normalize(glm::vec3(3.5f, 0.4f, -2.2f));
 glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
 bool firstMouse = true;
-float yaw   = -68.2f; // yaw and pitch (in degrees) of cameraFront, so the first mouse movement does not make the camera jump
-float pitch = -15.6f;
+float yaw   = -32.2f; // yaw and pitch (in degrees) of cameraFront, so the first mouse movement does not make the camera jump
+float pitch =   5.5f;
 float lastX =  800.0f / 2.0f;
 float lastY =  600.0f / 2.0f;
 float fov   =  45.0f;

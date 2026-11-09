@@ -20,8 +20,10 @@ public sealed partial class VulkanReader
         }
         var loadOp = src.LastFieldValue("loadOp");
         var clearVar = Regex.Match(src.Code, @"\bVkClearValue\s+(\w+)");
-        if (loadOp is not null && loadOp.Contains("CLEAR", StringComparison.Ordinal) && clearVar.Success
-            && src.Numbers(clearVar.Groups[1].Value) is { Count: >= 4 } c)
+        // std::array<VkClearValue, 2> clearValues{}; clearValues[0].color = {{0.2f, 0.3f, 0.3f, 1.0f}};
+        var colorField = Regex.Match(src.Code, @"(\w+)\s*\[\s*0\s*\]\s*\.\s*color\s*=\s*(\{[^;]*\})\s*;");
+        var clearNumbers = colorField.Success ? src.Numbers(colorField.Groups[2].Value) : clearVar.Success ? src.Numbers(clearVar.Groups[1].Value) : null;
+        if (loadOp is not null && loadOp.Contains("CLEAR", StringComparison.Ordinal) && clearNumbers is { Count: >= 4 } c)
             scene.ClearColor = [c[0], c[1], c[2], c[3]];
         else if (loadOp is not null && !loadOp.Contains("CLEAR", StringComparison.Ordinal))
             scene.Notes.Add(SimNote.Warning("vkLoadOpNotClear", ("value", loadOp)));

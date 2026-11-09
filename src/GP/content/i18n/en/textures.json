@@ -13,6 +13,14 @@
         "d3d12": "`int width, height, nrChannels;` – `stbi_load` fills them. 4 channels match `DXGI_FORMAT_R8G8B8A8_UNORM`. No flip: in Direct3D v = 0 is the image's top row."
       }
     },
+    "texture": {
+      "text": {
+        "d3d12": "Create the texture `m_texture1`: a `D3D12_RESOURCE_DESC` for a 2D texture (`DXGI_FORMAT_R8G8B8A8_UNORM`, `width` × `height`, 1 mip level, 1 array slice, 1 sample) and `CreateCommittedResource` in a `D3D12_HEAP_TYPE_DEFAULT` heap in state `D3D12_RESOURCE_STATE_COPY_DEST`."
+      },
+      "hint": {
+        "d3d12": "A default heap is GPU memory the CPU can't write – the pixels arrive by a copy in the next task, so the texture starts as a copy destination. Use a local `CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);`, never the address of a temporary."
+      }
+    },
     "create-texture": {
       "text": {
         "opengl": "Create a texture object `texture1` with `glGenTextures`, bind it to `GL_TEXTURE_2D` and set its wrapping (`GL_REPEAT` on S and T) and filtering (`GL_LINEAR_MIPMAP_LINEAR` for minifying, `GL_LINEAR` for magnifying); delete it at the end with `glDeleteTextures`."
