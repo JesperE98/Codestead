@@ -1,0 +1,12 @@
+[
+  { "title": "Light casters", "url": "https://learnopengl.com/Lighting/Light-casters", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: light_casters_point.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/2.lighting/5.2.light_casters_point/light_casters_point.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "LearnOpenGL source code: light_casters_spot_soft.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/2.lighting/5.4.light_casters_spot_soft/light_casters_spot_soft.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "LearnOpenGL source code: 5.4.light_casters.fs", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/2.lighting/5.4.light_casters_spot_soft/5.4.light_casters.fs", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "LearnOpenGL source code: 5.4.light_casters.fs", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/2.lighting/5.4.light_casters_spot_soft/5.4.light_casters.fs", "publisher": "Joey de Vries (GitHub)", "api": "vulkan" },
+  { "title": "Descriptor pool and sets: Alignment requirements", "url": "https://vulkan-tutorial.com/Uniform_buffers/Descriptor_pool_and_sets", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Vulkan Guide: Shader Memory Layout", "url": "https://docs.vulkan.org/guide/latest/shader_memory_layout.html", "publisher": "Khronos (docs.vulkan.org)", "api": "vulkan" },
+  { "title": "Packing rules for constant variables", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-packing-rules", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "HLSL keywords", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-appendix-keywords", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Sample (DirectX HLSL Texture Object)", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-sample", "publisher": "Microsoft Learn", "api": "d3d12" }
+]
