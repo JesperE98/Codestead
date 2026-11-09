@@ -48,7 +48,10 @@ public sealed partial class D3D12Reader
         var entry = vs.FindFunction(vsEntry);
         bool needsInput = entry is not null && entry.Params.Any(p => p.Semantic is not null && !p.Semantic.StartsWith("SV_", StringComparison.OrdinalIgnoreCase)
             || vs.FindStruct(p.Type) is not null);
-        if (needsInput && !modelOnly && !VertexData(vertices)) return;
+        // The vertex data: from the vertex buffer views the command list sets (the device model), else from the array
+        // copied into the vertex buffer (the earlier chapters' single buffer).
+        int notesBefore = scene.Notes.Count;
+        bool staticVertices = !needsInput || modelOnly || VertexData(vertices);
 
         int[]? indices = null;
         int first = 0, count, instances;
@@ -94,18 +97,28 @@ public sealed partial class D3D12Reader
         var topo = GlReader.TopologyOf(topology);
 
         // Run the frame: OnUpdate and the recorded command list (each draw with the root constants set before it).
-        var blocks = vs.Globals.Concat(ps.Globals).Where(g => g.Block is not null).ToList();
-        var recorder = new FrameRecorder(src, time, scene, blocks, transposeMatrices: true);
+        var blocks = VulkanReader.AllShaderBlocks(project, [".hlsl"], vs, ps);
+        var device = new D3D12Device(src, project);
+        var recorder = new FrameRecorder(src, time, scene, blocks, transposeMatrices: true, device);
+        recorder.Setup();
         foreach (var fn in new[] { "OnUpdate" }.Where(src.Functions.ContainsKey)) recorder.Run(fn);
         if (src.FunctionAt(call.Offset) is { } recordFn) recorder.Run(recordFn);
         var buffer = recorder.BufferContents();
-        var indexData = drawIndexed is not null ? IndexData() : null;
+        bool deviceVertices = needsInput && !modelOnly && recorder.Draws.Any(d => d.State is D3D12Device.DrawState { VertexBuffers.Count: > 0 } st && device.Read(st.VertexBuffers.Values.First().Address, 0, 1) is not null);
+        if (!staticVertices && !deviceVertices) return;
+        if (deviceVertices) scene.Notes.RemoveRange(notesBefore, scene.Notes.Count - notesBefore);
+        var indexData = drawIndexed is not null && !deviceVertices ? IndexData() : null;
+        var layouts = deviceVertices ? InputLayouts() : [];
+        // Render targets the frame draws into, clears and resolves (the device model's ops, by recorded draw).
+        var opsByDraw = device.Ops.GroupBy(o => o.BeforeDraw).ToDictionary(g => g.Key, g => g.ToList());
         var pipelines = recorder.Draws.Any(d => d.Pipeline is not null) ? Pipelines() : new();
         if (recorder.Draws.Count > 0)
         {
             var fallback = Constants(vs, ps);
-            foreach (var d in recorder.Draws)
+            for (int di = 0; di < recorder.Draws.Count; di++)
             {
+                var d = recorder.Draws[di];
+                if (opsByDraw.TryGetValue(di, out var ops)) AddOps(ops, device);
                 // With several pipeline state objects, the draw uses the one set before it.
                 var pl = d.Pipeline is not null && pipelines.Count > 1 && pipelines.TryGetValue(d.Pipeline, out var p) ? p : null;
                 if (d.Model)
@@ -119,15 +132,35 @@ public sealed partial class D3D12Reader
                 var values = new Dictionary<string, ShaderValue>(fallback(time), StringComparer.Ordinal);
                 foreach (var (k, v) in buffer) values[k] = v;
                 foreach (var (k, v) in d.Constants) values[k] = v;
+                var dvs = pl?.Vs ?? vs;
+                var dps = pl?.Fs ?? ps;
+                var dVertices = vertices;
+                int[]? dIndices = d.Indexed ? indexData?.Skip(d.First).Take(d.Count).Select(x => (int)x).ToArray() : null;
+                List<Dictionary<string, ShaderValue>>? perInstance = null;
+                int stepRate = 1;
+                if (deviceVertices && d.State is D3D12Device.DrawState ds)
+                {
+                    if (d.Indexed && ds.IndexBuffer is { } ib)
+                        dIndices = Enumerable.Range(0, d.Count).Select(k => (int)(device.ReadIndex(ib.Address, (long)(d.First + k) * ib.Bytes, ib.Bytes) ?? 0)).ToArray();
+                    int vertexCount = d.Indexed ? (dIndices is { Length: > 0 } ? dIndices.Max() + 1 : 0) : d.First + d.Count;
+                    (dVertices, perInstance, stepRate) = DeviceVertices(device, ds, ChooseLayout(layouts, dvs, pl?.VsEntry ?? vsEntry), vertexCount, Math.Max(1, d.Instances));
+                }
+                var (deviceTextures, deviceCubes) = d.State is D3D12Device.DrawState { Tables.Count: > 0 } ts ? DeviceTextures(device, ts, dvs, dps) : (null, null);
+                var target = (d.State as D3D12Device.DrawState)?.RenderTarget is { } rt ? device.TargetOf(rt) : null;
+                if (target is not null) RegisterTarget(device, target);
                 scene.Draws.Add(new DrawCall
                 {
-                    VertexShader = pl?.Vs ?? vs,
-                    FragmentShader = pl?.Fs ?? ps,
+                    Target = target,
+                    InstanceVertices = perInstance,
+                    InstanceDivisor = stepRate,
+                    CubeTextures = deviceCubes,
+                    VertexShader = dvs,
+                    FragmentShader = dps,
                     VertexEntry = pl?.VsEntry ?? vsEntry,
                     FragmentEntry = pl?.FsEntry ?? psEntry,
                     Hlsl = true,
-                    Vertices = vertices,
-                    Indices = d.Indexed ? indexData?.Skip(d.First).Take(d.Count).Select(x => (int)x).ToArray() : null,
+                    Vertices = dVertices,
+                    Indices = dIndices,
                     First = d.Indexed ? 0 : d.First,
                     Count = d.Count,
                     Instances = Math.Max(1, d.Instances),
@@ -141,9 +174,13 @@ public sealed partial class D3D12Reader
                     DepthWrite = (pl?.State ?? state).DepthWrite,
                     Stencil = (pl?.State ?? state).Stencil is { } st ? st with { Ref = d.StencilRef ?? st.Ref } : null,
                     Blend = (pl?.State ?? state).Blend,
-                    Textures = PerDrawTextures(pl?.Vs ?? vs, pl?.Fs ?? ps, d.Bound) ?? (pl is null ? textures : Textures(pl.Vs, pl.Fs) ?? textures),
+                    Textures = deviceTextures ?? PerDrawTextures(pl?.Vs ?? vs, pl?.Fs ?? ps, d.Bound) ?? (pl is null ? textures : Textures(pl.Vs, pl.Fs) ?? textures),
                 });
             }
+            if (opsByDraw.TryGetValue(recorder.Draws.Count, out var lastOps)) AddOps(lastOps, device);
+            // Textures found through the device model's descriptors: the load-order count does not apply.
+            if (recorder.Draws.Any(d => d.State is D3D12Device.DrawState { Tables.Count: > 0 } ts && device.Srvs.Keys.Any(k => ts.Tables.Values.Contains(k))))
+                scene.Notes.RemoveAll(n => n.Key == "tooFewTextures");
             if (recorder.Runner.UsedTime || src.UsedTime) scene.Animated = true;
             return;
         }
@@ -231,6 +268,140 @@ public sealed partial class D3D12Reader
     }
 
     private DrawTextures? drawTextures;
+
+    /// <summary>Clears and resolves of the device model, in the scene's draw numbering (a Model draw adds several draws).</summary>
+    private void AddOps(List<FrameOp> ops, D3D12Device device)
+    {
+        foreach (var op in ops)
+        {
+            var at = scene.Draws.Count;
+            switch (op)
+            {
+                case ClearOp c:
+                    if (c.Target is not null) RegisterTarget(device, c.Target);
+                    scene.Ops.Add(c with { BeforeDraw = at });
+                    // The first clear of the window is the frame's clear colour.
+                    if (c.Target is null && c.Color is not null && scene.Draws.Count == 0 && !scene.Ops.Any(o => o is ClearOp { Target: null } other && other != scene.Ops[^1])) scene.ClearColor ??= c.Color;
+                    break;
+                case CopyOp cp:
+                    if (cp.From is not null) RegisterTarget(device, cp.From);
+                    if (cp.To is not null) RegisterTarget(device, cp.To);
+                    scene.Ops.Add(cp with { BeforeDraw = at });
+                    break;
+            }
+        }
+    }
+
+    /// <summary>An off-screen render target of the device model ("res:N") in the scene, with its size and format.</summary>
+    private void RegisterTarget(D3D12Device device, string id)
+    {
+        if (scene.Targets.ContainsKey(id) || !int.TryParse(id[4..], out var n) || device.ResourceAt(n) is not { } r) return;
+        scene.Targets[id] = new RenderTarget(id, r.Width, r.Height, 1, true, true, Math.Max(1, r.Samples), r.Float);
+    }
+
+    /// <summary>Every input layout of the program: (semantic, input slot, byte offset, floats, per instance, step rate).</summary>
+    private List<List<(string Semantic, int Slot, int Offset, int Comps, bool Instance, int Step)>> InputLayouts()
+    {
+        var result = new List<List<(string, int, int, int, bool, int)>>();
+        foreach (Match m in Regex.Matches(src.Code, @"D3D12_INPUT_ELEMENT_DESC\s+(\w+)\s*\["))
+        {
+            if (src.Initializer(m.Groups[1].Value) is not { } layout) continue;
+            var elements = new List<(string, int, int, int, bool, int)>();
+            var nextOffset = new Dictionary<int, int>();
+            foreach (var item in CppSource.SplitArgs(layout.Trim()[1..^1]))
+            {
+                var parts = CppSource.SplitArgs(item.Trim().TrimStart('{').TrimEnd('}'));
+                if (parts.Count < 5) continue;
+                var semantic = (CppSource.StringArg(parts[0]) ?? "").ToUpperInvariant() + (src.Int(parts[1]) ?? 0);
+                int comps = Components(parts[2]);
+                int slot = src.Int(parts[3]) ?? 0;
+                int offset = parts[4].Contains("APPEND_ALIGNED", StringComparison.Ordinal) ? nextOffset.GetValueOrDefault(slot) : src.Int(parts[4]) ?? 0;
+                nextOffset[slot] = offset + comps * 4;
+                bool instance = parts.Count > 5 && parts[5].Contains("INSTANCE", StringComparison.Ordinal);
+                int step = parts.Count > 6 ? Math.Max(1, src.Int(parts[6]) ?? 1) : 1;
+                elements.Add((semantic, slot, offset, comps, instance, step));
+            }
+            result.Add(elements);
+        }
+        return result;
+    }
+
+    /// <summary>The input layout that feeds a vertex shader best: the one with the most of its input semantics.</summary>
+    private static List<(string Semantic, int Slot, int Offset, int Comps, bool Instance, int Step)> ChooseLayout(
+        List<List<(string Semantic, int Slot, int Offset, int Comps, bool Instance, int Step)>> layouts, ShaderProgram vs, string entry)
+    {
+        var f = vs.FindFunction(entry);
+        var wanted = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (f is not null)
+            foreach (var p in f.Params)
+            {
+                if (p.Semantic is not null) wanted.Add(Rasterizer_Semantic(p.Semantic));
+                if (vs.FindStruct(p.Type) is { } st)
+                    foreach (var field in st.Fields.Where(x => x.Semantic is not null)) wanted.Add(Rasterizer_Semantic(field.Semantic!));
+            }
+        return layouts.OrderByDescending(l => l.Count(e => wanted.Contains(e.Semantic))).ThenBy(l => Math.Abs(l.Count - wanted.Count)).FirstOrDefault() ?? [];
+    }
+
+    private static string Rasterizer_Semantic(string s) => char.IsDigit(s[^1]) ? s.ToUpperInvariant() : s.ToUpperInvariant() + "0";
+
+    /// <summary>Vertices (and per-instance values) read from the vertex buffers bound at the draw, through the layout.</summary>
+    private static (List<Dictionary<string, ShaderValue>>, List<Dictionary<string, ShaderValue>>?, int) DeviceVertices(D3D12Device device, D3D12Device.DrawState state,
+        List<(string Semantic, int Slot, int Offset, int Comps, bool Instance, int Step)> layout, int count, int instances)
+    {
+        var vertices = new List<Dictionary<string, ShaderValue>>();
+        for (int i = 0; i < count; i++)
+        {
+            var dict = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+            foreach (var e in layout.Where(e => !e.Instance))
+                if (state.VertexBuffers.TryGetValue(e.Slot, out var vb) && device.Read(vb.Address, (long)i * vb.Stride + e.Offset, e.Comps) is { } v)
+                    dict[e.Semantic] = ShaderValue.Vec(v);
+            vertices.Add(dict);
+        }
+        var perInstance = layout.Where(e => e.Instance).ToList();
+        if (perInstance.Count == 0) return (vertices, null, 1);
+        int step = perInstance[0].Step;
+        var instanceData = new List<Dictionary<string, ShaderValue>>();
+        for (int i = 0; i < (instances + step - 1) / step; i++)
+        {
+            var dict = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+            foreach (var e in perInstance)
+                if (state.VertexBuffers.TryGetValue(e.Slot, out var vb) && device.Read(vb.Address, (long)i * vb.Stride + e.Offset, e.Comps) is { } v)
+                    dict[e.Semantic] = ShaderValue.Vec(v);
+            instanceData.Add(dict);
+        }
+        return (vertices, instanceData, step);
+    }
+
+    /// <summary>
+    /// The textures of a draw through its descriptor tables: register tk of a table starting at handle h reads the
+    /// SRV at h + k – a loaded image, a cube map (TextureCube) or a render target drawn earlier in the frame.
+    /// </summary>
+    private (Func<string, double, double, double[]>?, Func<string, double, double, double, double[]?>?) DeviceTextures(
+        D3D12Device device, D3D12Device.DrawState state, ShaderProgram vs, ShaderProgram ps)
+    {
+        var names = TextureBinding.ShaderTextures(vs, ps);
+        if (names.Count == 0) return (null, null);
+        var registers = vs.Globals.Concat(ps.Globals).Where(g => names.Contains(g.Id)).GroupBy(g => g.Id).ToDictionary(g => g.Key, g => g.First().Binding ?? 0);
+        int lowest = registers.Values.DefaultIfEmpty(0).Min();
+        var table = state.Tables.OrderByDescending(t => t.Key).Select(t => (long?)t.Value).FirstOrDefault(h => device.Srvs.ContainsKey(h!.Value + lowest));
+        if (table is not long start) return (null, null);
+        var sampler = SamplersByRegister(vs, ps);
+        var flat = new Dictionary<string, Codestead.GP.Gpu.Textures.Texture?>(StringComparer.Ordinal);
+        var cubes = new Dictionary<string, Codestead.GP.Gpu.Textures.CubeTexture?>(StringComparer.Ordinal);
+        (Codestead.GP.Gpu.Textures.Texture?, Codestead.GP.Gpu.Textures.CubeTexture?) Lookup(string id)
+        {
+            var parts = id.Split('|');
+            if (!flat.ContainsKey(id))
+            {
+                var (t, c) = registers.TryGetValue(parts[0], out var reg) ? device.TextureAt(start + reg, sampler(parts.Length > 1 ? parts[1] : null)) : (null, null);
+                flat[id] = t;
+                cubes[id] = c;
+            }
+            return (flat[id], cubes[id]);
+        }
+        return ((id, u, v) => Lookup(id).Item1 is { } t ? t.Sample(u, v) : [0, 0, 0, 1],
+            (id, x, y, z) => Lookup(id).Item2 is { } c ? c.Sample(x, y, z) : null);
+    }
 
     /// <summary>
     /// Static samplers: each description (sampler, samplers[0], samplers[1] …) by its ShaderRegister – a description

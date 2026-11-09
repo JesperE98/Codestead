@@ -1,0 +1,333 @@
+=== task: pass-through
+--- file: shader_m.h
+--- find:
+    // TODO: a third, optional parameter for a geometry shader file: const char* geometryPath = nullptr
+    Shader(const char* vertexPath, const char* fragmentPath)
+--- replace:
+    Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr)
+--- file: shader_m.h
+--- find:
+        checkCompileErrors(fragment, "FRAGMENT");
+        // TODO: if a geometry shader file is given: read it and compile it as a GL_GEOMETRY_SHADER
+--- replace:
+        checkCompileErrors(fragment, "FRAGMENT");
+        // if a geometry shader file is given, read and compile it too
+        unsigned int geometry = 0;
+        if (geometryPath != nullptr)
+        {
+            std::string geometryCode;
+            std::ifstream gShaderFile;
+            gShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+            try
+            {
+                gShaderFile.open(geometryPath);
+                std::stringstream gShaderStream;
+                gShaderStream << gShaderFile.rdbuf();
+                gShaderFile.close();
+                geometryCode = gShaderStream.str();
+            }
+            catch (std::ifstream::failure& e)
+            {
+                std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+            }
+            const char * gShaderCode = geometryCode.c_str();
+            geometry = glCreateShader(GL_GEOMETRY_SHADER);
+            glShaderSource(geometry, 1, &gShaderCode, NULL);
+            glCompileShader(geometry);
+            checkCompileErrors(geometry, "GEOMETRY");
+        }
+--- file: shader_m.h
+--- find:
+        glAttachShader(ID, fragment);
+        // TODO: attach the geometry shader too (if there is one)
+--- replace:
+        glAttachShader(ID, fragment);
+        if (geometryPath != nullptr)
+            glAttachShader(ID, geometry);
+--- file: shader_m.h
+--- find:
+        glDeleteShader(fragment);
+        // TODO: and delete the geometry shader (if there is one)
+--- replace:
+        glDeleteShader(fragment);
+        if (geometryPath != nullptr)
+            glDeleteShader(geometry);
+--- file: geometry_shader.gs
+--- find:
+#version 330 core
+// TODO: a geometry shader that passes each point through unchanged (input: points, output: points, 1 vertex)
+--- replace:
+#version 330 core
+layout (points) in;
+layout (points, max_vertices = 1) out;
+
+in VS_OUT {
+    vec3 color;
+} gs_in[];
+
+out vec3 fColor;
+
+void main()
+{
+    fColor = gs_in[0].color; // gs_in[0] since there's only one input vertex
+    gl_Position = gl_in[0].gl_Position;
+    EmitVertex();
+    EndPrimitive();
+}
+--- file: geometry_shader.vs
+--- find:
+out vec3 fColor;
+
+void main()
+{
+    fColor = aColor;
+--- replace:
+out VS_OUT {
+    vec3 color;
+} vs_out;
+
+void main()
+{
+    vs_out.color = aColor;
+--- file: main.cpp
+--- find:
+Shader shader("geometry_shader.vs", "geometry_shader.fs");
+--- replace:
+Shader shader("geometry_shader.vs", "geometry_shader.fs", "geometry_shader.gs");
+
+=== task: houses
+--- file: geometry_shader.gs
+--- find:
+layout (points, max_vertices = 1) out;
+--- replace:
+layout (triangle_strip, max_vertices = 5) out;
+--- file: geometry_shader.gs
+--- find:
+void main()
+{
+    fColor = gs_in[0].color; // gs_in[0] since there's only one input vertex
+    gl_Position = gl_in[0].gl_Position;
+    EmitVertex();
+    EndPrimitive();
+}
+--- replace:
+void build_house(vec4 position)
+{
+    fColor = gs_in[0].color; // gs_in[0] since there's only one input vertex
+    gl_Position = position + vec4(-0.2, -0.2, 0.0, 0.0); // 1:bottom-left
+    EmitVertex();
+    gl_Position = position + vec4( 0.2, -0.2, 0.0, 0.0); // 2:bottom-right
+    EmitVertex();
+    gl_Position = position + vec4(-0.2,  0.2, 0.0, 0.0); // 3:top-left
+    EmitVertex();
+    gl_Position = position + vec4( 0.2,  0.2, 0.0, 0.0); // 4:top-right
+    EmitVertex();
+    gl_Position = position + vec4( 0.0,  0.4, 0.0, 0.0); // 5:top
+    EmitVertex();
+    EndPrimitive();
+}
+
+void main()
+{
+    build_house(gl_in[0].gl_Position);
+}
+
+=== task: roof-white
+--- file: geometry_shader.gs
+--- find:
+    gl_Position = position + vec4( 0.0,  0.4, 0.0, 0.0); // 5:top
+    EmitVertex();
+--- replace:
+    gl_Position = position + vec4( 0.0,  0.4, 0.0, 0.0); // 5:top
+    fColor = vec3(1.0, 1.0, 1.0); // the roof's tip is white: snow
+    EmitVertex();
+
+=== task: planet
+--- file: main.cpp
+--- find:
+const unsigned int SCR_HEIGHT = 600;
+--- replace:
+const unsigned int SCR_HEIGHT = 600;
+
+// camera: at (0, 0, 3) looking down -z
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+--- file: main.cpp
+--- find:
+Shader shader("geometry_shader.vs", "geometry_shader.fs", "geometry_shader.gs");
+
+    // set up vertex data (and buffer(s)) and configure vertex attributes
+    // ------------------------------------------------------------------
+    float points[] = {
+        -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // top-left
+         0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // top-right
+         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // bottom-right
+        -0.5f, -0.5f, 1.0f, 1.0f, 0.0f  // bottom-left
+    };
+    unsigned int VBO, VAO;
+    glGenBuffers(1, &VBO);
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(points), &points, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+    glBindVertexArray(0);
+--- replace:
+Shader shader("explode.vs", "explode.fs", "explode.gs");
+
+    // load models
+    // -----------
+    // (aiProcess_FlipUVs in model.h turns the texture coordinates the right way up: no stbi_set_flip_vertically_on_load)
+    Model ourModel("models/planet.obj");
+--- file: main.cpp
+--- find:
+        // draw points
+        shader.use();
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_POINTS, 0, 4);
+--- replace:
+        // configure transformation matrices
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // centre of the scene
+        model = glm::rotate(model, glm::radians(25.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // tilt it so the ring shows
+        model = glm::scale(model, glm::vec3(0.5f));                 // planet radius 0.5, ring up to 1.0
+        shader.use();
+        shader.setMat4("projection", projection);
+        shader.setMat4("view", view);
+        shader.setMat4("model", model);
+
+        // draw model
+        ourModel.Draw(shader);
+--- file: main.cpp
+--- find:
+    }
+
+    // optional: de-allocate all resources once they've outlived their purpose:
+    // ------------------------------------------------------------------------
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+
+    // glfw: terminate
+--- replace:
+    }
+
+    // glfw: terminate
+
+=== task: explode
+--- file: explode.gs
+--- find:
+// TODO: uniform float time; explode(position, normal) and GetNormal() - move each triangle along its normal
+--- replace:
+uniform float time;
+
+vec4 explode(vec4 position, vec3 normal)
+{
+    float magnitude = 2.0;
+    vec3 direction = normal * ((sin(time) + 1.0) / 2.0) * magnitude; // 0 .. 2 and back, following sin(time)
+    return position + vec4(direction, 0.0);
+}
+
+vec3 GetNormal()
+{
+    vec3 a = vec3(gl_in[0].gl_Position) - vec3(gl_in[1].gl_Position);
+    vec3 b = vec3(gl_in[2].gl_Position) - vec3(gl_in[1].gl_Position);
+    return normalize(cross(a, b));
+}
+--- file: explode.gs
+--- find:
+void main() {
+    gl_Position = gl_in[0].gl_Position;
+    TexCoords = gs_in[0].texCoords;
+    EmitVertex();
+    gl_Position = gl_in[1].gl_Position;
+    TexCoords = gs_in[1].texCoords;
+    EmitVertex();
+    gl_Position = gl_in[2].gl_Position;
+--- replace:
+void main() {
+    vec3 normal = GetNormal();
+
+    gl_Position = explode(gl_in[0].gl_Position, normal);
+    TexCoords = gs_in[0].texCoords;
+    EmitVertex();
+    gl_Position = explode(gl_in[1].gl_Position, normal);
+    TexCoords = gs_in[1].texCoords;
+    EmitVertex();
+    gl_Position = explode(gl_in[2].gl_Position, normal);
+--- file: main.cpp
+--- find:
+        shader.setMat4("model", model);
+--- replace:
+        shader.setMat4("model", model);
+
+        // add time component to geometry shader in the form of a uniform
+        shader.setFloat("time", static_cast<float>(glfwGetTime()));
+
+=== task: normals
+--- file: normal_visualization.gs
+--- find:
+#version 330 core
+// TODO: for every vertex of a triangle, emit a line (line_strip, 6 vertices in all) from the vertex along its normal (length 0.2), projected with the projection matrix
+--- replace:
+#version 330 core
+layout (triangles) in;
+layout (line_strip, max_vertices = 6) out;
+
+in VS_OUT {
+    vec3 normal;
+} gs_in[];
+
+const float MAGNITUDE = 0.2;
+
+uniform mat4 projection;
+
+void GenerateLine(int index)
+{
+    gl_Position = projection * gl_in[index].gl_Position;
+    EmitVertex();
+    gl_Position = projection * (gl_in[index].gl_Position + vec4(gs_in[index].normal, 0.0) * MAGNITUDE);
+    EmitVertex();
+    EndPrimitive();
+}
+
+void main()
+{
+    GenerateLine(0); // first vertex normal
+    GenerateLine(1); // second vertex normal
+    GenerateLine(2); // third vertex normal
+}
+--- file: main.cpp
+--- find:
+Shader shader("explode.vs", "explode.fs", "explode.gs");
+--- replace:
+Shader shader("default.vs", "default.fs");
+    Shader normalShader("normal_visualization.vs", "normal_visualization.fs", "normal_visualization.gs");
+--- file: main.cpp
+--- find:
+        shader.setMat4("model", model);
+
+        // add time component to geometry shader in the form of a uniform
+        shader.setFloat("time", static_cast<float>(glfwGetTime()));
+--- replace:
+        shader.setMat4("model", model);
+--- file: main.cpp
+--- find:
+        // draw model
+        ourModel.Draw(shader);
+--- replace:
+        // draw model as usual
+        ourModel.Draw(shader);
+
+        // then draw model with normal visualizing geometry shader
+        normalShader.use();
+        normalShader.setMat4("projection", projection);
+        normalShader.setMat4("view", view);
+        normalShader.setMat4("model", model);
+
+        ourModel.Draw(normalShader);

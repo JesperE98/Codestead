@@ -294,4 +294,25 @@ public class RasterTests
         // Farthest first: z = -2.3, then 0.51, then 0.7.
         Assert.Equal(((-2.3 * 10) + 0.51) * 10 + 0.7, runner.Globals["result"].X, 6);
     }
+
+    [Fact(DisplayName = "C++: rand() ger glibc:s tal, och strängar byggs med + och to_string")]
+    public void RandAndStrings()
+    {
+        var runner = new ShaderRunner(new ShaderProgram()) { Lenient = true };
+        runner.RunStatements(ShaderParser.ParseStatementsLenient("""
+            {
+                srand(42);
+                int a = rand();
+                int b = rand();
+                int i = 7;
+                std::string name = "offsets[" + std::to_string(i) + "]";
+                glm::mat4* matrices;
+                matrices = new glm::mat4[3];
+            }
+            """));
+        Assert.Equal(71876166, runner.Globals["a"].X);
+        Assert.Equal(708592740, runner.Globals["b"].X);
+        Assert.Equal("offsets[7]", runner.Globals["name"].Text);
+        Assert.Equal(3, runner.Globals["matrices"].Items!.Length);
+    }
 }

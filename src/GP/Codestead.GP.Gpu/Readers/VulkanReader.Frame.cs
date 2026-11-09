@@ -67,7 +67,10 @@ public sealed partial class VulkanReader
 
         var inputs = vs.Globals.Where(g => g.Storage == "in").ToList();
         var vertices = new List<Dictionary<string, ShaderValue>>();
-        if (inputs.Count > 0 && !VertexData(inputs, vertices)) return;
+        // The vertex data: from the buffers the command buffer binds (the device model), else from `vertices`.
+        int notesBefore = scene.Notes.Count;
+        bool staticVertices = inputs.Count == 0 || VertexData(inputs, vertices);
+        int notesAfterVertices = scene.Notes.Count;
 
         int[]? indices = null;
         int first = 0, count;
@@ -79,12 +82,7 @@ public sealed partial class VulkanReader
                 scene.Notes.Add(SimNote.Error("vkNoIndexBuffer"));
                 return;
             }
-            var data = modelIndices ?? src.Numbers("indices");
-            if (data is null)
-            {
-                scene.Notes.Add(SimNote.Error("vkNoIndexBuffer"));
-                return;
-            }
+            var data = modelIndices ?? src.Numbers("indices") ?? [];
             count = src.Int(call.Arg(1)) ?? 0;
             instances = src.Int(call.Arg(2)) ?? 1;
             int firstIndex = src.Int(call.Arg(3)) ?? 0;
@@ -96,7 +94,7 @@ public sealed partial class VulkanReader
             instances = src.Int(call.Arg(2)) ?? 1;
             first = src.Int(call.Arg(3)) ?? 0;
         }
-        if (inputs.Count > 0 && vertices.Count < (indices is null ? first + count : (indices.Length == 0 ? 0 : indices.Max() + 1)))
+        if (staticVertices && inputs.Count > 0 && vertices.Count < (indices is null ? first + count : (indices.Length == 0 ? 0 : indices.Max() + 1)))
             scene.Notes.Add(SimNote.Warning("readsPastEnd", ("call", call.Name), ("line", call.Line.ToString())));
 
         var cull = src.LastFieldValue("cullMode") ?? "VK_CULL_MODE_NONE";
@@ -115,28 +113,50 @@ public sealed partial class VulkanReader
         var pipeState = PipelineState.Vulkan(src.LastFieldValue, f => src.LastFieldValue(f) is { } v ? src.Int(v) : null);
 
         // Run the frame: the uniform buffer update and the recorded commands (each draw with its push constants).
-        var blocks = vs.Globals.Concat(fs.Globals).Where(g => g.Block is not null).ToList();
-        var recorder = new FrameRecorder(src, time, scene, blocks, transposeMatrices: false);
+        var blocks = AllShaderBlocks([".vert", ".frag", ".geom"], vs, fs);
+        var device = new VulkanDevice(project, src);
+        var recorder = new FrameRecorder(src, time, scene, blocks, transposeMatrices: false, device);
+        recorder.Setup();
         foreach (var fn in UpdateFunctions(blocks)) recorder.Run(fn);
         if (src.FunctionAt(call.Offset) is { } recordFn) recorder.Run(recordFn);
         var buffer = recorder.BufferContents();
+        bool deviceVertices = inputs.Count > 0 && modelIndices is null && recorder.Draws.Any(d => d.State is VulkanDevice.DrawState { VertexBuffers.Count: > 0 } st
+            && device.Read(st.VertexBuffers.Values.First().Buffer, st.VertexBuffers.Values.First().Offset, 1) is not null);
+        if (!staticVertices && !deviceVertices) return;
+        if (deviceVertices && !staticVertices) scene.Notes.RemoveRange(notesBefore, notesAfterVertices - notesBefore);
+        var opsByDraw = device.Ops.GroupBy(o => o.BeforeDraw).ToDictionary(g => g.Key, g => g.ToList());
         var indexData = drawIndexed is not null ? modelIndices ?? src.Numbers("indices") : null;
         var pipelines = recorder.Draws.Any(d => d.Pipeline is not null) ? Pipelines() : new();
         if (recorder.Draws.Count > 0)
         {
-            foreach (var d in recorder.Draws)
+            for (int di = 0; di < recorder.Draws.Count; di++)
             {
+                var d = recorder.Draws[di];
+                if (opsByDraw.TryGetValue(di, out var ops)) AddDeviceOps(ops, device);
                 // With several pipelines, the draw uses the one bound before it.
                 var pl = d.Pipeline is not null && pipelines.Count > 1 && pipelines.TryGetValue(d.Pipeline, out var p) ? p : null;
                 var dvs = pl?.Vs ?? vs;
                 var dfs = pl?.Fs ?? fs;
                 var dVertices = vertices;
-                if (pl is not null)
+                int[]? dIndices = d.Indexed ? indexData?.Skip(d.First).Take(d.Count).Select(x => (int)x).ToArray() : null;
+                List<Dictionary<string, ShaderValue>>? perInstance = null;
+                var ds = d.State as VulkanDevice.DrawState;
+                if (deviceVertices && ds is { VertexBuffers.Count: > 0 })
+                {
+                    if (d.Indexed && ds.IndexBuffer is { } ib)
+                        dIndices = Enumerable.Range(0, d.Count).Select(k => (int)(device.ReadIndex(ib.Buffer, ib.Offset + (long)(d.First + k) * ib.Bytes) ?? 0)).ToArray();
+                    int vertexCount = d.Indexed ? (dIndices is { Length: > 0 } ? dIndices.Max() + 1 : 0) : d.First + d.Count;
+                    (dVertices, perInstance) = DeviceVertices(device, ds, vertexCount, Math.Max(1, d.Instances));
+                }
+                else if (pl is not null)
                 {
                     var dInputs = dvs.Globals.Where(g => g.Storage == "in").ToList();
                     dVertices = new List<Dictionary<string, ShaderValue>>();
                     if (dInputs.Count > 0 && !VertexData(dInputs, dVertices)) continue;
                 }
+                var (deviceTextures, deviceCubes) = ds is not null ? DeviceTextures(device, ds, dvs, dfs) : (null, null);
+                var target = device.TargetOf(ds?.Framebuffer);
+                if (target is not null) RegisterTarget(device, target);
                 var values = new Dictionary<string, ShaderValue>(buffer, StringComparer.Ordinal);
                 foreach (var (k, v) in d.Constants) values[k] = v;
                 scene.Draws.Add(new DrawCall
@@ -145,7 +165,10 @@ public sealed partial class VulkanReader
                     FragmentShader = dfs,
                     MatchByLocation = true,
                     Vertices = dVertices,
-                    Indices = d.Indexed ? indexData?.Skip(d.First).Take(d.Count).Select(x => (int)x).ToArray() : null,
+                    Indices = dIndices,
+                    InstanceVertices = perInstance,
+                    Target = target,
+                    CubeTextures = deviceCubes,
                     First = d.Indexed ? 0 : d.First,
                     Count = d.Count,
                     Instances = Math.Max(1, d.Instances),
@@ -159,9 +182,12 @@ public sealed partial class VulkanReader
                     DepthWrite = (pl?.State ?? pipeState).DepthWrite,
                     Stencil = (pl?.State ?? pipeState).Stencil is { } st ? st with { Ref = d.StencilRef ?? st.Ref } : null,
                     Blend = (pl?.State ?? pipeState).Blend,
-                    Textures = PerDrawTextures(dvs, dfs, d.Bound) ?? (pl is null ? textures : Textures(dvs, dfs) ?? textures),
+                    Textures = deviceTextures ?? PerDrawTextures(dvs, dfs, d.Bound) ?? (pl is null ? textures : Textures(dvs, dfs) ?? textures),
                 });
             }
+            if (opsByDraw.TryGetValue(recorder.Draws.Count, out var lastOps)) AddDeviceOps(lastOps, device);
+            if (recorder.Draws.Any(d => d.State is VulkanDevice.DrawState { Sets.Count: > 0 } s && device.HasSet(s.Sets.GetValueOrDefault(0) ?? "")))
+                scene.Notes.RemoveAll(n => n.Key == "tooFewTextures");
             if (recorder.Runner.UsedTime) scene.Animated = true;
             return;
         }

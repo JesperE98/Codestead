@@ -66,5 +66,59 @@ public static partial class TaskChecks
             // Front faces culled: the floor (facing up at the camera) disappears, the cubes show their inside.
             ["cull-front"] = c => c.Drew && c.IsClear(100 / 800.0, 500 / 600.0) && At(c, 193, 300, Marble),
         }),
+        ("framebuffers", new()
+        {
+            // The scene goes into the off-screen target: the window shows only its (white) clear colour.
+            ["offscreen-target"] = c => c.Shows && At(c, 193, 300, White) && At(c, 400, 300, White),
+            ["screen-quad"] = c => c.Drew && At(c, 193, 300, Marble) && At(c, 100, 500, Metal),
+            ["inversion"] = c => c.Drew && At(c, 400, 100, p => Grey(p) && p[0] > 0.8),
+            ["grayscale"] = c => c.Drew && At(c, 100, 500, Grey) && At(c, 400, 100, p => p[0] < 0.15),
+            ["sharpen"] = c => c.Drew && c.HasInShaders(@"-1\.0f? , 9\.0f? , -1\.0f?"),
+            ["blur"] = c => c.Drew && c.HasInShaders(@"/ 16"),
+            ["edge-detection"] = c => c.Drew && c.HasInShaders(@"-8\.0f?") && At(c, 400, 100, p => p[0] < 0.03 && p[1] < 0.03 && p[2] < 0.03),
+        }),
+        ("cubemaps", new()
+        {
+            ["load-cubemap"] = c => c.Drew && c.Has(@"GL_TEXTURE_CUBE_MAP_POSITIVE_X \+ i|VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT|D3D12_SRV_DIMENSION_TEXTURECUBE"),
+            // The sky behind the cubes: blue at the top of the window.
+            ["skybox"] = c => c.Drew && At(c, 400, 100, p => p[2] > p[0] + 0.1),
+            ["skybox-last"] = c => c.Drew && At(c, 400, 100, p => p[2] > p[0] + 0.1) && c.HasInShaders(@"\.xyww") && c.Has(@"GL_LEQUAL|VK_COMPARE_OP_LESS_OR_EQUAL|D3D12_COMPARISON_FUNC_LESS_EQUAL"),
+            ["reflection"] = c => c.Drew && c.HasInShaders(@"reflect \(") && At(c, 193, 300, p => p[2] > p[0]),
+            ["refraction"] = c => c.Drew && c.HasInShaders(@"refract \("),
+        }),
+        ("advanced-data", new()
+        {
+            // No step changes the picture: the scene stays, the code changes.
+            ["buffer-sub-data"] = c => Scene(c) && c.Has(@"glBufferSubData \( GL_ARRAY_BUFFER"),
+            ["map-buffer"] = c => Scene(c) && (c.Api == "opengl" ? c.Has(@"glMapBuffer \(") : c.Has("m_floorVertexBufferView")),
+            ["batched-attributes"] = c => Scene(c) && c.Api switch
+            {
+                "opengl" => c.Has(@"sizeof \( cubePositions \)"),
+                "vulkan" => c.Has(@"getBindingDescriptions \( \)"),
+                _ => c.Has(@"m_vertexBufferViews \[ 2 \]"),
+            },
+            ["copy-buffer"] = c => Scene(c) && c.Api switch
+            {
+                "opengl" => c.Has(@"glCopyBufferSubData \("),
+                "vulkan" => c.Has(@"memcpy \( data , positions \. data \( \)"),
+                _ => c.Has("m_floorCopyBuffer"),
+            },
+            ["map-memory"] = c => Scene(c) && c.Has(@"vertices \. data \( \) \+ 36"),
+            ["update-buffer"] = c => Scene(c) && c.Has(@"vkCmdUpdateBuffer \("),
+            ["default-heap"] = c => Scene(c) && c.Has(@"CopyBufferRegion \( m_vertexBuffer"),
+        }),
+        ("advanced-glsl", new()
+        {
+            // Left of x = 400 red, right of it green.
+            ["frag-coord"] = c => c.Drew && At(c, 193, 300, p => p[0] > 0.5 && p[1] < 0.2) && At(c, 600, 450, p => p[1] > 0.5 && p[0] < 0.2),
+            // Front faces culled: the cubes' insides (back faces) show the metal texture.
+            ["front-facing"] = c => c.Drew && At(c, 193, 300, Metal) && c.HasInShaders(@"gl_FrontFacing|SV_IsFrontFace"),
+            ["interface-block"] = c => c.Drew && At(c, 193, 300, Metal) && c.HasInShaders("VS_OUT"),
+            // learnopengl's four cubes: yellow bottom-right … green top-right.
+            ["uniform-buffer"] = c => c.Drew && At(c, 100, 500, p => p[0] > 0.9 && p[1] > 0.9 && p[2] < 0.1) && At(c, 470, 230, p => p[1] > 0.9 && p[0] < 0.1),
+        }),
     ];
+
+    /// <summary>The depth-testing scene, unchanged: marble cube 0 and the metal floor.</summary>
+    private static bool Scene(CheckContext c) => c.Drew && At(c, 193, 300, Marble) && At(c, 100, 500, Metal);
 }

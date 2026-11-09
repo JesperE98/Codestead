@@ -136,6 +136,18 @@ public sealed partial class ShaderParser
                     return inner;
                 }
                 if (t.Text is "true" or "false") return new Number(t.Text == "true" ? 1 : 0, t.Line);
+                // C++: new glm::mat4[amount] – an array of zeroed values.
+                if (lenient && t.Text == "new" && Peek.Kind == ShaderTokenKind.Identifier)
+                {
+                    var type = TypeName();
+                    if (Accept("["))
+                    {
+                        var count = Expression();
+                        Expect("]");
+                        return new Call("__newarray", [new Name(type, t.Line), count], t.Line);
+                    }
+                    return Peek.Is("(") ? new Call(type, CallArgs(), t.Line) : new Call(type, [], t.Line);
+                }
                 // vec2[](…) – an array constructor; float3x3(…) and friends are plain calls.
                 if (Peek.Is("[") && PeekAt(1).Is("]") && PeekAt(2).Is("("))
                 {

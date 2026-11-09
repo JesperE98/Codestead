@@ -33,6 +33,23 @@ public sealed partial class ShaderRunner
             return ShaderValue.Scalar(0);
         }
         if (name is "sizeof") return ShaderValue.Scalar(SizeOf(c.Args.FirstOrDefault()));
+        if (Lenient && name == "__newarray" && c.Args is [Name elementType, var countExpr])
+        {
+            int newCount = (int)Math.Max(0, Math.Min(100000, Eval(countExpr).X));
+            return ShaderValue.Array(Enumerable.Range(0, newCount).Select(_ => Default(elementType.Id)).ToArray());
+        }
+        // The C library's random numbers, as glibc makes them (the same sequence for the same seed on Linux).
+        if (Lenient && name is "srand" && c.Args.Count == 1)
+        {
+            random = new GlibcRandom((uint)Eval(c.Args[0]).X);
+            return ShaderValue.Scalar(0);
+        }
+        if (Lenient && name is "rand" && c.Args.Count == 0) return ShaderValue.Scalar((random ??= new GlibcRandom(1)).Next());
+        if (Lenient && name is "to_string" && c.Args.Count == 1)
+        {
+            var x = Eval(c.Args[0]);
+            return ShaderValue.Str(x.Text ?? (x.X == Math.Floor(x.X) && Math.Abs(x.X) < 1e15 ? ((long)x.X).ToString(System.Globalization.CultureInfo.InvariantCulture) : x.X.ToString("0.000000", System.Globalization.CultureInfo.InvariantCulture)));
+        }
         // _countof(array): the number of elements of a C array (MSVC's macro, used by the D3D12 samples).
         if (name is "_countof" && c.Args.Count == 1)
         {
@@ -196,6 +213,8 @@ public sealed partial class ShaderRunner
             if (comps > 0) return 4 * comps;
             int m = MatrixSize(n.Id);
             if (m > 0) return 4 * m * m;
+            // A struct of the program (sizeof(Vertex)): its fields' numbers.
+            if (program.FindStruct(n.Id) is not null) return 4 * CountNumbers(Default(n.Id));
         }
         if (e is null) return 0;
         try
@@ -233,6 +252,22 @@ public sealed partial class ShaderRunner
                 return new ShaderValue { Iterator = new MapIterator(map, method.EndsWith("end", StringComparison.Ordinal) && !method.EndsWith("begin", StringComparison.Ordinal) ? map.Count : 0, method.StartsWith('r')) };
             case "data" or "c_str":
                 return Eval(c.Args[0]);
+            case "push_back" or "emplace_back" when Lenient && c.Args.Count >= 2:
+            {
+                // vector.push_back(x): the variable holds a new, longer array.
+                var vec = Eval(c.Args[0]);
+                var item = Eval(c.Args[1]).Clone();
+                Store(c.Args[0], ShaderValue.Array([.. vec.Items ?? [], item]));
+                return ShaderValue.Scalar(0);
+            }
+            case "resize" when Lenient && c.Args.Count >= 2:
+            {
+                var vec = Eval(c.Args[0]);
+                int n = (int)Math.Max(0, Math.Min(4096, Eval(c.Args[1]).X));
+                var old = vec.Items ?? [];
+                Store(c.Args[0], ShaderValue.Array(Enumerable.Range(0, n).Select(i => i < old.Length ? old[i] : ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal))).ToArray()));
+                return ShaderValue.Scalar(0);
+            }
             default:
                 if (Lenient) return ShaderValue.Scalar(0);
                 throw new ShaderRuntimeException($"no member function '{method}'", c.Line);

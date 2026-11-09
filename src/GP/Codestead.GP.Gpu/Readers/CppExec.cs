@@ -56,8 +56,28 @@ public sealed class CppExec
             case "m_height":
                 return ShaderValue.Scalar(Size.H);
         }
+        // A member of a struct type the runner does not know (D3D12_VERTEX_BUFFER_VIEW m_vertexBufferViews[2] = {};):
+        // empty structs that keep the fields the program sets.
+        if (src.DeclaredType(name) is { } declared && Runner.Default(declared.Replace("glm::", "").Replace("DirectX::", "")).Text is not null
+            && declared is not ("float" or "double" or "int" or "UINT" or "bool" or "auto") && !declared.StartsWith("std::", StringComparison.Ordinal)
+            && System.Text.RegularExpressions.Regex.IsMatch(src.Code, @"\b" + System.Text.RegularExpressions.Regex.Escape(declared) + @"\s+" + System.Text.RegularExpressions.Regex.Escape(name) + @"\s*(?:\[[^\]]*\]\s*)?(?:=\s*\{\s*\}\s*)?;"))
+        {
+            var size = System.Text.RegularExpressions.Regex.Match(src.Code, @"\b" + System.Text.RegularExpressions.Regex.Escape(name) + @"\s*\[\s*([^\]]+)\]");
+            ShaderValue empty() => ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal));
+            var made = size.Success && (src.Int(size.Groups[1].Value) ?? 0) is int n and > 0 and < 4096
+                ? ShaderValue.Array(Enumerable.Range(0, n).Select(_ => empty()).ToArray())
+                : empty();
+            Runner.Globals[name] = made;
+            return made;
+        }
         if (src.Evaluate(name, Runner.Time) is { } v)
         {
+            // An array of the program's structs (const std::vector<Vertex> vertices = { … }): its elements as structs.
+            if (v.Items is not null && src.DeclaredType(name) is { } arrayType
+                && System.Text.RegularExpressions.Regex.Match(arrayType, @"^(?:const)?(?:std::)?(?:vector|array)<(\w+)") is { Success: true } elem)
+                v = Runner.AsStructArray(elem.Groups[1].Value, v);
+            else if (v.Items is not null && src.DeclaredType(name) is { } plainType && System.Text.RegularExpressions.Regex.IsMatch(src.Code, @"\b" + System.Text.RegularExpressions.Regex.Escape(plainType) + @"\s+" + System.Text.RegularExpressions.Regex.Escape(name) + @"\s*\["))
+                v = Runner.AsStructArray(plainType, v);
             if (src.UsedTime) Runner.UsedTime = true;
             // A global of the program: kept, so assignments to it (lightPos.x = …) last.
             if (v.Text is null) Runner.Globals[name] = v;
@@ -74,6 +94,8 @@ public sealed class CppExec
                 return value;
             }
         }
+        // An API constant (DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_SRV_DIMENSION_TEXTURECUBE): its name, so descriptions keep it.
+        if (System.Text.RegularExpressions.Regex.IsMatch(name, @"^(?:D3D12|DXGI|D3D|VK|GL)_[A-Z0-9_]+$")) return ShaderValue.Str(name);
         return null;
     }
 

@@ -38,6 +38,10 @@ public static class GpCourse
         ("stencil-testing", "advanced-opengl"),
         ("blending", "advanced-opengl"),
         ("face-culling", "advanced-opengl"),
+        ("framebuffers", "advanced-opengl"),
+        ("cubemaps", "advanced-opengl"),
+        ("advanced-data", "advanced-opengl"),
+        ("advanced-glsl", "advanced-opengl"),
     ];
 
     public static IReadOnlyList<CourseChapter> Chapters { get; } = Build();

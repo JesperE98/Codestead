@@ -29,7 +29,7 @@ public static class ShaderAst
     public abstract record Stmt(int Line);
 
     /// <summary>T name[N] = value; (Value may be null.)</summary>
-    public sealed record Declare(string Type, string Id, Expr? Value, int Line, bool IsArray = false, int ArraySize = 0) : Stmt(Line);
+    public sealed record Declare(string Type, string Id, Expr? Value, int Line, bool IsArray = false, int ArraySize = 0, Expr? SizeExpr = null) : Stmt(Line);
 
     /// <summary>target op value; with op "=", "+=", "-=", "*=" or "/=".</summary>
     public sealed record Assign(Expr Target, string Op, Expr Value, int Line) : Stmt(Line);
@@ -42,6 +42,9 @@ public static class ShaderAst
     public sealed record For(Stmt? Init, Expr? Condition, Stmt? Step, IReadOnlyList<Stmt> Body, int Line) : Stmt(Line);
 
     public sealed record Discard(int Line) : Stmt(Line);
+
+    /// <summary>C++: for (const T&amp; name : container) body.</summary>
+    public sealed record ForEach(string Id, Expr Container, IReadOnlyList<Stmt> Body, int Line) : Stmt(Line);
 
     /// <summary>An expression used as a statement (a call, i++).</summary>
     public sealed record ExprStmt(Expr Value, int Line) : Stmt(Line);

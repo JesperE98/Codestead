@@ -1,0 +1,240 @@
+=== task: frag-coord
+--- file: advanced_glsl.hlsl
+--- find:
+    return texture1.Sample(wrapSampler, input.texCoord);
+--- replace:
+    // SV_POSITION in the pixel shader: the pixel's position in the window, in pixels
+    // (origin at the top-left; GLSL's gl_FragCoord has its origin at the bottom-left).
+    if (input.position.x < 400.0f)
+        return float4(1.0f, 0.0f, 0.0f, 1.0f);
+    else
+        return float4(0.0f, 1.0f, 0.0f, 1.0f);
+
+=== task: front-facing
+--- file: main.cpp
+--- find:
+        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;    // no face culling: draw both sides of every triangle
+        // TODO: face culling for the SV_IsFrontFace task: cull the FRONT faces, so you look at the cubes' insides
+--- replace:
+        // Cull the front faces: only the back faces are drawn - the insides of the cubes (and
+        // the floor, which is clockwise seen from above).
+        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_FRONT;
+--- file: main.cpp
+--- find:
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1, and
+        // 1 SRV at register t0 (the texture of the draw), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+--- replace:
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1, and
+        // 2 SRVs at registers t0 and t1 (the front and the back faces' textures: two
+        // descriptors next to each other in the heap), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
+--- file: main.cpp
+--- find:
+    // The textures' SRVs in the heap: GPU handles of slots 1 and 2. Root parameter 2 (the
+    // texture the pixel shader reads) is set to one of them before each draw.
+    CD3DX12_GPU_DESCRIPTOR_HANDLE cubeTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE floorTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
+--- replace:
+    // The textures' SRVs in the heap: the table of root parameter 2 starts at slot 1, so
+    // t0 = slot 1 (marble, for the front faces) and t1 = slot 2 (metal, for the back faces).
+    CD3DX12_GPU_DESCRIPTOR_HANDLE faceTextures(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
+--- file: main.cpp
+--- find:
+    // cubes: the marble texture (root parameter 2) and a model matrix each (root parameter 0)
+    ModelConstants modelConstants = {};
+    m_commandList->SetGraphicsRootDescriptorTable(2, cubeTexture);
+--- replace:
+    // cubes: the two textures (root parameter 2) and a model matrix each (root parameter 0)
+    ModelConstants modelConstants = {};
+    m_commandList->SetGraphicsRootDescriptorTable(2, faceTextures);
+--- file: main.cpp
+--- find:
+    // floor: the metal texture, no model transformation, 6 vertices from vertex 36 on
+    m_commandList->SetGraphicsRootDescriptorTable(2, floorTexture);
+--- replace:
+    // floor: the same two textures (it is a back face: metal), no model transformation,
+    // 6 vertices from vertex 36 on
+--- file: advanced_glsl.hlsl
+--- find:
+// The texture of the draw: register t0, in the descriptor table of root parameter 2.
+Texture2D texture1 : register(t0);
+--- replace:
+// The textures of the draw: registers t0 and t1, in the descriptor table of root parameter 2.
+Texture2D frontTexture : register(t0);
+Texture2D backTexture : register(t1);
+--- file: advanced_glsl.hlsl
+--- find:
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    // SV_POSITION in the pixel shader: the pixel's position in the window, in pixels
+    // (origin at the top-left; GLSL's gl_FragCoord has its origin at the bottom-left).
+    if (input.position.x < 400.0f)
+        return float4(1.0f, 0.0f, 0.0f, 1.0f);
+    else
+        return float4(0.0f, 1.0f, 0.0f, 1.0f);
+--- replace:
+// SV_IsFrontFace: true for the front faces (counter-clockwise on the screen, the PSO's
+// FrontCounterClockwise), false for the back faces - GLSL's gl_FrontFacing.
+float4 PSMain(PSInput input, bool isFrontFace : SV_IsFrontFace) : SV_TARGET
+{
+    if (isFrontFace)
+        return frontTexture.Sample(wrapSampler, input.texCoord);
+    else
+        return backTexture.Sample(wrapSampler, input.texCoord);
+
+=== task: interface-block
+--- file: advanced_glsl.hlsl
+--- find:
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+struct PSInput
+{
+    float4 position : SV_POSITION;
+    float2 texCoord : TEXCOORD;
+};
+
+// The vertex shader: runs once per vertex.
+PSInput VSMain(float4 position : POSITION, float2 texCoord : TEXCOORD)
+{
+    PSInput result;
+
+    // model, then view, then projection (GLSL: projection * view * model * position).
+    result.position = mul(mul(mul(position, model), view), projection);
+    result.texCoord = texCoord;
+
+    return result;
+}
+--- replace:
+// What the vertex shader hands on to the pixel shader, as one block: a struct is HLSL's
+// interface block (GLSL: out VS_OUT { ... } vs_out; / in VS_OUT { ... } fs_in;). The
+// semantics (TEXCOORD ...) match the fields of the two stages.
+struct VS_OUT
+{
+    float4 position : SV_POSITION;
+    float2 texCoord : TEXCOORD;
+};
+
+// The vertex shader: runs once per vertex.
+VS_OUT VSMain(float4 position : POSITION, float2 texCoord : TEXCOORD)
+{
+    VS_OUT vs_out;
+
+    // model, then view, then projection (GLSL: projection * view * model * position).
+    vs_out.position = mul(mul(mul(position, model), view), projection);
+    vs_out.texCoord = texCoord;
+
+    return vs_out;
+}
+--- file: advanced_glsl.hlsl
+--- find:
+float4 PSMain(PSInput input, bool isFrontFace : SV_IsFrontFace) : SV_TARGET
+{
+    if (isFrontFace)
+        return frontTexture.Sample(wrapSampler, input.texCoord);
+    else
+        return backTexture.Sample(wrapSampler, input.texCoord);
+--- replace:
+float4 PSMain(VS_OUT fs_in, bool isFrontFace : SV_IsFrontFace) : SV_TARGET
+{
+    if (isFrontFace)
+        return frontTexture.Sample(wrapSampler, fs_in.texCoord);
+    else
+        return backTexture.Sample(wrapSampler, fs_in.texCoord);
+
+=== task: uniform-buffer
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+--- replace:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+    ComPtr<ID3D12PipelineState> m_redPipelineState;
+    ComPtr<ID3D12PipelineState> m_greenPipelineState;
+    ComPtr<ID3D12PipelineState> m_bluePipelineState;
+    ComPtr<ID3D12PipelineState> m_yellowPipelineState;
+--- file: main.cpp
+--- find:
+        // TODO: the four pipeline states of learnopengl's uniform buffer demo: uniform_buffer.hlsl's VSMain with the PSMain of red.hlsl, green.hlsl, blue.hlsl and yellow.hlsl, no face culling
+--- replace:
+        // learnopengl's uniform buffer demo: four pipeline states, the same vertex shader
+        // (uniform_buffer.hlsl) with a pixel shader each. All four read view and projection
+        // from the one constant buffer (SceneConstantBuffer at b1, the CBV of root parameter 1),
+        // which OnUpdate writes once per frame.
+        ComPtr<ID3DBlob> uboVertexShader;
+        ThrowIfFailed(D3DCompileFromFile(L"uniform_buffer.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &uboVertexShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(uboVertexShader.Get());
+        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;    // no face culling, like learnopengl's demo
+
+        ComPtr<ID3DBlob> redPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"red.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &redPixelShader, nullptr));
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(redPixelShader.Get());
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_redPipelineState)));
+
+        ComPtr<ID3DBlob> greenPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"green.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &greenPixelShader, nullptr));
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(greenPixelShader.Get());
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_greenPipelineState)));
+
+        ComPtr<ID3DBlob> bluePixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"blue.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &bluePixelShader, nullptr));
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(bluePixelShader.Get());
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_bluePipelineState)));
+
+        ComPtr<ID3DBlob> yellowPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"yellow.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &yellowPixelShader, nullptr));
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(yellowPixelShader.Get());
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_yellowPipelineState)));
+--- file: main.cpp
+--- find:
+    // TODO: learnopengl's uniform buffer demo: four cubes at (-0.75, 0.75, 0), (0.75, 0.75, 0), (-0.75, -0.75, 0), (0.75, -0.75, 0), red, green, yellow, blue, instead of the scene
+    // cubes: the two textures (root parameter 2) and a model matrix each (root parameter 0)
+    ModelConstants modelConstants = {};
+    m_commandList->SetGraphicsRootDescriptorTable(2, faceTextures);
+    XMMATRIX model = XMMatrixTranslation(-1.0f, 0.0f, -1.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    model = XMMatrixTranslation(2.0f, 0.0f, 0.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    // floor: the same two textures (it is a back face: metal), no model transformation,
+    // 6 vertices from vertex 36 on
+    model = XMMatrixIdentity();
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(6, 1, 36, 0);
+--- replace:
+    // learnopengl's uniform buffer demo: four cubes, each with its own pipeline state (its
+    // colour) and model matrix, all with the view and projection of the one constant buffer
+    // (root parameter 1, set above). Root parameter 2 stays set to the textures, which these
+    // shaders do not read.
+    ModelConstants modelConstants = {};
+    m_commandList->SetGraphicsRootDescriptorTable(2, faceTextures);
+    // RED
+    m_commandList->SetPipelineState(m_redPipelineState.Get());
+    XMMATRIX model = XMMatrixTranslation(-0.75f, 0.75f, 0.0f);    // move top-left
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    // GREEN
+    m_commandList->SetPipelineState(m_greenPipelineState.Get());
+    model = XMMatrixTranslation(0.75f, 0.75f, 0.0f);    // move top-right
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    // YELLOW
+    m_commandList->SetPipelineState(m_yellowPipelineState.Get());
+    model = XMMatrixTranslation(-0.75f, -0.75f, 0.0f);    // move bottom-left
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    // BLUE
+    m_commandList->SetPipelineState(m_bluePipelineState.Get());
+    model = XMMatrixTranslation(0.75f, -0.75f, 0.0f);    // move bottom-right
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);

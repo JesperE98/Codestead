@@ -187,17 +187,28 @@ public sealed partial class ShaderParser
     }
 
     /// <summary>A type name, with template arguments (Texture2D&lt;float4&gt;, matrix&lt;float, 4, 4&gt;).</summary>
+    /// <summary>The template arguments of the last type name read (std::array&lt;VkClearValue, 2&gt; → "VkClearValue", "2").</summary>
+    private List<List<ShaderToken>> templateArgs = new();
+
     private string TypeName()
     {
         var type = Identifier();
+        templateArgs = new();
         if (Peek.Is("<"))
         {
             int depth = 0;
+            var current = new List<ShaderToken>();
             do
             {
                 var t = Next();
                 if (t.Is("<")) depth++;
                 else if (t.Is(">")) depth--;
+                if (depth == 1 && t.Is(",") || depth == 0 && t.Is(">"))
+                {
+                    templateArgs.Add(current);
+                    current = new();
+                }
+                else if (!(depth == 1 && t.Is("<"))) current.Add(t);
             } while (depth > 0 && Peek.Kind != ShaderTokenKind.End);
         }
         // A nested C++ type: std::map<float, glm::vec3>::reverse_iterator.

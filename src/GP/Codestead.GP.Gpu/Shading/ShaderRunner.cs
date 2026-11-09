@@ -74,7 +74,42 @@ public sealed partial class ShaderRunner
         }
     }
 
+    /// <summary>
+    /// C++ mode: runs a function body of the program with its parameters in a scope of their own, statement by
+    /// statement (one that fails is skipped). Returns the return value and the parameters' values at the end (the
+    /// caller writes reference parameters back).
+    /// </summary>
+    public (ShaderValue? Value, Dictionary<string, ShaderValue> Scope) RunBody(IReadOnlyList<Stmt> body, Dictionary<string, ShaderValue> parameters)
+    {
+        var scope = new Dictionary<string, ShaderValue>(parameters, StringComparer.Ordinal);
+        scopes.Add(scope);
+        try
+        {
+            foreach (var s in body)
+            {
+                try
+                {
+                    var flow = Exec(s);
+                    if (flow.Returned) return (flow.Value, scope);
+                }
+                catch (ShaderRuntimeException) when (Lenient)
+                {
+                }
+            }
+            return (null, scope);
+        }
+        finally
+        {
+            scopes.RemoveAt(scopes.Count - 1);
+        }
+    }
+
+    /// <summary>Assigns to a variable, member or element (for hooks that write through an out-parameter).</summary>
+    public void Assign(Expr target, ShaderValue value) => Store(target, value);
+
     private const int MaxSteps = 20000;
+
+    private GlibcRandom? random;
 
     public ShaderRunner(ShaderProgram program)
     {
@@ -96,6 +131,44 @@ public sealed partial class ShaderRunner
     /// <summary>A fresh runner for an expression with no shader around it (C++ values).</summary>
     public static ShaderRunner ForExpressions(Func<string, ShaderValue?> resolve, double time = 1.0) =>
         new(new ShaderProgram()) { Resolve = resolve, Time = time };
+
+    /// <summary>
+    /// A declared variable's zero value; in C++ mode a struct the runner does not know (D3D12_RESOURCE_DESC desc = {};)
+    /// is an empty struct that takes the fields assigned to it.
+    /// </summary>
+    private ShaderValue LenientDefault(string type, int arraySize)
+    {
+        if (Lenient && arraySize > 0) return ShaderValue.Array(Enumerable.Range(0, arraySize).Select(_ => LenientDefault(type, 0)).ToArray());
+        var v = Default(type, arraySize);
+        return Lenient && v.Text is not null ? ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)) : v;
+    }
+
+    /// <summary>
+    /// The elements of an array of a struct type, as structs: { {x, y, z}, {} } fills the fields in order and a missing
+    /// or empty one is zero (C++ aggregate initialisation) – so a Vertex array keeps its layout when copied.
+    /// </summary>
+    /// <summary>An array value as elements of a struct type of the program (for globals read from their initializers).</summary>
+    public ShaderValue AsStructArray(string type, ShaderValue value) => StructItems(type, value);
+
+    private ShaderValue StructItems(string type, ShaderValue value)
+    {
+        if (program.FindStruct(type) is not { } st || value.Items is null) return value;
+        return ShaderValue.Array(value.Items.Select(item => AsStruct(st, item)).ToArray());
+    }
+
+    private ShaderValue AsStruct(Struct st, ShaderValue item)
+    {
+        if (item.Fields is not null) return item;
+        var parts = item.Items ?? (item.V is { Length: > 0 } ? item.V.Select(ShaderValue.Scalar).ToArray() : []);
+        var fields = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+        for (int i = 0; i < st.Fields.Count; i++)
+        {
+            var f = st.Fields[i];
+            var part = i < parts.Length ? parts[i] : null;
+            fields[f.Id] = part is null || part.V is { Length: 0 } || part.Items is { Length: 0 } ? Default(f.Type, f.ArraySize) : Coerce(f.Type, part);
+        }
+        return ShaderValue.Struct(fields);
+    }
 
     /// <summary>A zero value of a type (struct types get their fields).</summary>
     public ShaderValue Default(string type, int arraySize = 0)
@@ -182,8 +255,15 @@ public sealed partial class ShaderRunner
             case Declare d:
             {
                 // C++: Type name{} / Type name = {} is a zero-initialised struct.
-                if (d.Value is InitList { Items.Count: 0 }) scopes[^1][d.Id] = Default(d.Type);
-                else scopes[^1][d.Id] = d.Value is null ? Default(d.Type, d.ArraySize) : Coerce(d.Type, Eval(d.Value)).Clone();
+                int arraySize = d.SizeExpr is not null ? (int)Math.Max(0, Math.Min(4096, Eval(d.SizeExpr).X)) : d.ArraySize;
+                if (d.SizeExpr is not null && d.Value is InitList { Items.Count: > 0 } && Eval(d.Value) is { Items: { } given } && given.Length < arraySize)
+                {
+                    // std::array<VkImageView, 2> attachments = { a, b }: the elements given, the rest zero.
+                    scopes[^1][d.Id] = StructItems(d.Type, ShaderValue.Array(given.Concat(Enumerable.Range(0, arraySize - given.Length).Select(_ => LenientDefault(d.Type, 0))).ToArray())).Clone();
+                }
+                else if (d.Value is null && d.SizeExpr is not null && arraySize == 0) scopes[^1][d.Id] = ShaderValue.Array([]);
+                else if (d.Value is InitList { Items.Count: 0 } || d.Value is null && d.SizeExpr is not null) scopes[^1][d.Id] = LenientDefault(d.Type, arraySize);
+                else scopes[^1][d.Id] = d.Value is null ? LenientDefault(d.Type, d.ArraySize) : (d.IsArray ? StructItems(d.Type, Eval(d.Value)) : Coerce(d.Type, Eval(d.Value))).Clone();
                 return default;
             }
             case Assign a:
@@ -223,6 +303,26 @@ public sealed partial class ShaderRunner
             case ExprStmt e:
                 Eval(e.Value);
                 return default;
+            case ForEach fe:
+            {
+                var container = Eval(fe.Container);
+                var items = container.Items ?? container.Map?.Values.ToArray() ?? (container.V?.Select(ShaderValue.Scalar).ToArray()) ?? [];
+                scopes.Add(new Dictionary<string, ShaderValue>(StringComparer.Ordinal));
+                try
+                {
+                    foreach (var item in items.Take(4096))
+                    {
+                        scopes[^1][fe.Id] = item;
+                        var flow = Run(fe.Body);
+                        if (flow.Returned || flow.Discarded) return flow;
+                    }
+                    return default;
+                }
+                finally
+                {
+                    scopes.RemoveAt(scopes.Count - 1);
+                }
+            }
             default:
                 return default;
         }
@@ -264,7 +364,17 @@ public sealed partial class ShaderRunner
             }
             case Member m:
             {
-                var owner = Eval(m.Target);
+                ShaderValue owner;
+                try
+                {
+                    owner = Eval(m.Target);
+                }
+                catch (ShaderRuntimeException) when (Lenient && m.Target is Member or IndexOf)
+                {
+                    // C++ mode: a nested struct not set yet (imageInfo.extent.width = …).
+                    Store(m.Target, ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)));
+                    owner = Eval(m.Target);
+                }
                 if (owner.Fields is not null)
                 {
                     owner.Fields[m.Field] = owner.Fields.TryGetValue(m.Field, out var old) ? Like(old, value) : value;
@@ -289,13 +399,31 @@ public sealed partial class ShaderRunner
             }
             case IndexOf ix:
             {
-                var owner = Eval(ix.Target);
+                ShaderValue owner;
+                try
+                {
+                    owner = Eval(ix.Target);
+                }
+                catch (ShaderRuntimeException) when (Lenient && ix.Target is Name)
+                {
+                    // C++ mode: an array member the runner has not seen (ComPtr<ID3D12Resource> m_renderTargets[FrameCount];).
+                    owner = ShaderValue.Array([]);
+                    Globals[((Name)ix.Target).Id] = owner;
+                }
+                // The subscript is evaluated once (translations[index++] = …).
+                var atValue = Eval(ix.At);
+                if (Lenient && owner.Items is not null && ix.Target is Name grow && atValue.X >= owner.Items.Length && atValue.X < 4096)
+                {
+                    var items = owner.Items.Concat(Enumerable.Range(0, (int)atValue.X + 1 - owner.Items.Length).Select(_ => ShaderValue.Scalar(0))).ToArray();
+                    owner = ShaderValue.Array(items);
+                    Store(grow, owner);
+                }
                 if (owner.Map is not null)
                 {
-                    owner.Map[Eval(ix.At).X] = value.Clone();
+                    owner.Map[atValue.X] = value.Clone();
                     return;
                 }
-                int at = (int)Math.Floor(Eval(ix.At).X);
+                int at = (int)Math.Floor(atValue.X);
                 if (owner.Items is not null && at >= 0 && at < owner.Items.Length) owner.Items[at] = value;
                 else if (owner.V is not null && at >= 0 && at < owner.V.Length && owner.Cols == 0) owner.V[at] = value.X;
                 else if (owner.IsMatrix && at >= 0 && at < owner.Cols)

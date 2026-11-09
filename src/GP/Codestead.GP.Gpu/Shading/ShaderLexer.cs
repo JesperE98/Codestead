@@ -150,6 +150,21 @@ public static class ShaderLexer
                 i++;
                 continue;
             }
+            // Other scopes stay part of the name: CD3DX12_RESOURCE_DESC::Buffer(…), Assimp::Importer.
+            if (tokens[i].Kind == ShaderTokenKind.Identifier && i + 2 < tokens.Count && tokens[i + 1].Is("::") && tokens[i + 2].Kind == ShaderTokenKind.Identifier
+                && (result.Count == 0 || !result[^1].Is("::")))
+            {
+                var joined = tokens[i].Text;
+                int j = i;
+                while (j + 2 < tokens.Count && tokens[j + 1].Is("::") && tokens[j + 2].Kind == ShaderTokenKind.Identifier && tokens[j + 2].Text is not ("glm" or "std" or "DirectX"))
+                {
+                    joined += "::" + tokens[j + 2].Text;
+                    j += 2;
+                }
+                result.Add(tokens[i] with { Text = joined });
+                i = j;
+                continue;
+            }
             result.Add(tokens[i]);
         }
         return result;

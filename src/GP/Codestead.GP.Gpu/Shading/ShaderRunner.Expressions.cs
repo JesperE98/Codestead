@@ -24,6 +24,8 @@ public sealed partial class ShaderRunner
                 }
                 if (owner.Fields is not null)
                     return owner.Fields.TryGetValue(m.Field, out var f) ? f : throw new ShaderRuntimeException($"no member named '{m.Field}'", m.Line);
+                // C++ mode: a descriptor handle held as a number (handle.ptr).
+                if (Lenient && m.Field == "ptr" && owner.V is { Length: 1 }) return owner;
                 if (owner.V is not null && !owner.IsMatrix && Swizzle(m.Field) is { } idx)
                 {
                     if (idx.Any(i => i >= owner.V.Length)) throw new ShaderRuntimeException($"vector has no component '.{m.Field}'", m.Line);
@@ -112,6 +114,9 @@ public sealed partial class ShaderRunner
 
     private ShaderValue BinaryOp(string op, ShaderValue a, ShaderValue b, int line)
     {
+        // C++ strings: "offsets[" + std::to_string(i) + "]".
+        if (op == "+" && (a.Text is not null || b.Text is not null) && Lenient)
+            return ShaderValue.Str((a.Text ?? a.ToString()) + (b.Text ?? b.ToString()));
         if (a.Iterator is { } ia && b.Iterator is { } ib && op is "==" or "!=")
             return ShaderValue.Scalar((ia.Position == ib.Position) == (op == "==") ? 1 : 0);
         if (a.V is null || b.V is null) throw new ShaderRuntimeException($"invalid operands to binary '{op}'", line);

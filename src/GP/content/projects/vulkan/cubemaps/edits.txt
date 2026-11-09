@@ -315,8 +315,12 @@
 === task: skybox-last
 --- file: main.cpp
 --- find:
+        // the skybox only needs the position, and it does not write to the depth buffer: everything drawn after it is
+        // drawn in front of it
         createPipeline("shaders/skybox.vert.spv", "shaders/skybox.frag.spv", 1, VK_FALSE, VK_COMPARE_OP_LESS, skyboxPipeline);
 --- replace:
+        // the skybox only needs the position; drawn last at depth 1.0, it passes the test where the depth buffer still
+        // holds 1.0 (LESS_OR_EQUAL), and it never needs to write depth
         createPipeline("shaders/skybox.vert.spv", "shaders/skybox.frag.spv", 1, VK_FALSE, VK_COMPARE_OP_LESS_OR_EQUAL, skyboxPipeline);
 --- file: main.cpp
 --- find:
@@ -360,7 +364,6 @@ struct Vertex {
 struct Vertex {
     glm::vec3 pos;
     glm::vec3 normal;
-
 --- file: main.cpp
 --- find:
         attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
@@ -368,7 +371,6 @@ struct Vertex {
 --- replace:
         attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
         attributeDescriptions[1].offset = offsetof(Vertex, normal);
-
 --- file: main.cpp
 --- find:
 // All the vertices of the scene in one vertex buffer; each draw picks its part with firstVertex (vkCmdDraw).
@@ -473,13 +475,11 @@ const std::vector<Vertex> vertices = {
     {{ 0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}},
     {{-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}},
     {{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}},
-
 --- file: main.cpp
 --- find:
     // (the texture coordinates stay 0: the skybox's shader does not read them)
 --- replace:
     // (the normals stay 0: the skybox's shader does not read them)
-
 --- file: main.cpp
 --- find:
 struct UniformBufferObject {
@@ -492,76 +492,66 @@ struct UniformBufferObject {
     glm::mat4 proj;
     glm::vec3 cameraPos; // the fragment shader needs it for the view direction
 };
-
 --- file: main.cpp
 --- find:
+    VkImageView depthImageView;
+
     VkImage cubeTextureImage;
     VkDeviceMemory cubeTextureImageMemory;
     VkImageView cubeTextureImageView;
 
     VkSampler textureSampler;
-
-
 --- replace:
-
-
+    VkImageView depthImageView;
 --- file: main.cpp
 --- find:
     VkDescriptorSet cubeDescriptorSet; // the uniform buffer and the marble texture
     VkDescriptorSet skyboxDescriptorSet; // the uniform buffer and the cube map
 --- replace:
     VkDescriptorSet skyboxDescriptorSet; // the uniform buffer and the cube map: for the skybox and the cubes
-
 --- file: main.cpp
 --- find:
+        createCommandPool();
         loadTexture("textures/marble.png", cubeTextureImage, cubeTextureImageMemory, cubeTextureImageView);
-
 --- replace:
-
-
+        createCommandPool();
 --- file: main.cpp
 --- find:
         createTextureSampler(VK_SAMPLER_ADDRESS_MODE_REPEAT, textureSampler);
-
+        createTextureSampler(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, cubemapSampler); // no seams where two faces meet
 --- replace:
-
-
+        createTextureSampler(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, cubemapSampler); // no seams where two faces meet
 --- file: main.cpp
 --- find:
         createDescriptorSet(cubeTextureImageView, textureSampler, cubeDescriptorSet);
-
+        createDescriptorSet(cubemapImageView, cubemapSampler, skyboxDescriptorSet);
 --- replace:
-
-
+        createDescriptorSet(cubemapImageView, cubemapSampler, skyboxDescriptorSet);
 --- file: main.cpp
 --- find:
         createPipeline("shaders/cubemaps.vert.spv", "shaders/cubemaps.frag.spv", 2, VK_TRUE, VK_COMPARE_OP_LESS, graphicsPipeline); // position and texture coordinates
 --- replace:
         createPipeline("shaders/cubemaps.vert.spv", "shaders/cubemaps.frag.spv", 2, VK_TRUE, VK_COMPARE_OP_LESS, graphicsPipeline); // position and normal
-
 --- file: main.cpp
 --- find:
         vkDestroySampler(device, textureSampler, nullptr);
-
+        vkDestroySampler(device, cubemapSampler, nullptr);
 --- replace:
-
-
+        vkDestroySampler(device, cubemapSampler, nullptr);
 --- file: main.cpp
 --- find:
+        vkFreeMemory(device, cubemapImageMemory, nullptr);
+
         vkDestroyImageView(device, cubeTextureImageView, nullptr);
         vkDestroyImage(device, cubeTextureImage, nullptr);
         vkFreeMemory(device, cubeTextureImageMemory, nullptr);
-
-
 --- replace:
-
-
+        vkFreeMemory(device, cubemapImageMemory, nullptr);
 --- file: main.cpp
 --- find:
         uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 --- replace:
         uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; // cameraPos for the fragment shader
-
 --- file: main.cpp
 --- find:
         poolSizes[0].descriptorCount = 2;
@@ -571,28 +561,22 @@ struct UniformBufferObject {
         poolSizes[0].descriptorCount = 1;
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolSizes[1].descriptorCount = 1;
-
 --- file: main.cpp
 --- find:
         poolInfo.maxSets = 2;
 --- replace:
         poolInfo.maxSets = 1;
-
 --- file: main.cpp
 --- find:
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &cubeDescriptorSet, 0, nullptr);
 --- replace:
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &skyboxDescriptorSet, 0, nullptr); // the cubes reflect the sky
-
 --- file: main.cpp
 --- find:
         ubo.proj[1][1] *= -1;
-
 --- replace:
         ubo.proj[1][1] *= -1;
         ubo.cameraPos = cameraPos;
-
-
 --- file: shaders/cubemaps.vert
 --- find:
 #version 450
@@ -639,7 +623,6 @@ void main() {
     fragPosition = vec3(pc.model * vec4(inPosition, 1.0));
     gl_Position = ubo.proj * ubo.view * pc.model * vec4(inPosition, 1.0);
 }
-
 --- file: shaders/cubemaps.frag
 --- find:
 #version 450

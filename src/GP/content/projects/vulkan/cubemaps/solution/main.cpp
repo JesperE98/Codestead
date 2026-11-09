@@ -316,8 +316,6 @@ private:
     VkDeviceMemory depthImageMemory;
     VkImageView depthImageView;
 
-
-
     // the sky: one cube map image (6 array layers), its cube view and its sampler
     VkImage cubemapImage;
     VkDeviceMemory cubemapImageMemory;
@@ -366,13 +364,12 @@ private:
         createDescriptorSetLayout();
         createPipelineLayout();
         createPipeline("shaders/cubemaps.vert.spv", "shaders/cubemaps.frag.spv", 2, VK_TRUE, VK_COMPARE_OP_LESS, graphicsPipeline); // position and normal
-        // the skybox only needs the position, and it does not write to the depth buffer: everything drawn after it is
-        // drawn in front of it
+        // the skybox only needs the position; drawn last at depth 1.0, it passes the test where the depth buffer still
+        // holds 1.0 (LESS_OR_EQUAL), and it never needs to write depth
         createPipeline("shaders/skybox.vert.spv", "shaders/skybox.frag.spv", 1, VK_FALSE, VK_COMPARE_OP_LESS_OR_EQUAL, skyboxPipeline);
         createDepthResources();
         createFramebuffers();
         createCommandPool();
-
         std::vector<std::string> faces = {
             "textures/skybox/right.png",
             "textures/skybox/left.png",
@@ -382,12 +379,10 @@ private:
             "textures/skybox/back.png"
         };
         loadCubemap(faces, cubemapImage, cubemapImageMemory, cubemapImageView);
-
         createTextureSampler(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, cubemapSampler); // no seams where two faces meet
         createVertexBuffer();
         createUniformBuffers();
         createDescriptorPool();
-
         createDescriptorSet(cubemapImageView, cubemapSampler, skyboxDescriptorSet);
         createCommandBuffer();
         createSyncObjects();
@@ -443,14 +438,11 @@ private:
 
         vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 
-
         vkDestroySampler(device, cubemapSampler, nullptr);
 
         vkDestroyImageView(device, cubemapImageView, nullptr);
         vkDestroyImage(device, cubemapImage, nullptr);
         vkFreeMemory(device, cubemapImageMemory, nullptr);
-
-
 
         vkDestroyCommandPool(device, commandPool, nullptr);
 

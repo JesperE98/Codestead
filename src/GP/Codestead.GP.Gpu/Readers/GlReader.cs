@@ -217,6 +217,6 @@ public sealed partial class GlReader
         if (!scene.Presents) scene.Notes.Add(SimNote.Warning("noPresent", ("call", "glfwSwapBuffers(window)")));
         if (!src.HasCall("glfwPollEvents")) scene.Notes.Add(SimNote.Warning("noPollEvents"));
         if (setupDraws.Count > 0 && scene.Draws.Count == 0) scene.Notes.Add(SimNote.Warning("drawOutsideLoop", ("call", "glDrawArrays")));
-        if (scene.ClearColor is null && !scene.Ops.Any(o => o is ClearOp { Target: null, Color: not null }) && (gl.ClearColorSet || scene.Draws.Count > 0)) scene.Notes.Add(SimNote.Warning("noClear", ("call", "glClear(GL_COLOR_BUFFER_BIT)")));
+        if (scene.ClearColor is null && !scene.Ops.Any(o => o is ClearOp { Target: null, Color: not null } or CopyOp { To: null }) && (gl.ClearColorSet || scene.Draws.Count > 0)) scene.Notes.Add(SimNote.Warning("noClear", ("call", "glClear(GL_COLOR_BUFFER_BIT)")));
     }
 }
