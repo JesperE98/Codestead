@@ -229,7 +229,8 @@ public sealed partial class VulkanReader
     /// <summary>The shader loaded from "shaders/vert.spv" is the one built from the project's .vert file.</summary>
     private ShaderProgram? Shader(string extension, string spvHint)
     {
-        bool loaded = src.Calls("readFile").Any(c => (CppSource.StringArg(c.Arg(0)) ?? "").Contains(spvHint, StringComparison.Ordinal));
+        // readFile("shaders/vert.spv"), or a helper called with the file names: createPipeline("shaders/lighting.vert.spv", …).
+        bool loaded = src.HasCall("readFile") && Regex.IsMatch(src.Code, "\"[^\"\\n]*" + Regex.Escape(spvHint) + "[^\"\\n]*\\.spv\"");
         var file = project.Files.Keys.FirstOrDefault(k => k.EndsWith(extension, StringComparison.Ordinal));
         if (!loaded || file is null)
         {

@@ -71,6 +71,44 @@ public sealed partial class GlReader
         return scene;
     }
 
+    private int inlineDepth;
+    private string?[]? inlineReturn;
+
+    /// <summary>Runs a function of the program with its arguments; returns the name of the variable it returns.</summary>
+    private string? Inline(string fn, IReadOnlyList<string> args)
+    {
+        var header = Regex.Match(src.Code, @"(?<![\w.>])" + Regex.Escape(fn) + @"\s*\(([^()]*)\)\s*\{");
+        var parameters = header.Success
+            ? CppSource.SplitArgs(header.Groups[1].Value).Select(p => Regex.Match(p, @"(\w+)\s*$").Groups[1].Value).ToList()
+            : [];
+        var values = args.Select(a => Eval(a)).ToList();
+        for (int i = 0; i < parameters.Count && i < values.Count; i++)
+            if (values[i] is { } v) env.Runner.Globals[parameters[i]] = v;
+        var saved = inlineReturn;
+        inlineReturn = new string?[1];
+        inlineDepth++;
+        try
+        {
+            foreach (var st in CppStatements.Walk(src, fn))
+                if (st.Kind is "stmt" or "for") Statement(st);
+            return inlineReturn[0];
+        }
+        finally
+        {
+            inlineDepth--;
+            inlineReturn = saved;
+        }
+    }
+
+    /// <summary>A variable that now names the same OpenGL object as another (unsigned int diffuseMap = loadTexture(…)).</summary>
+    private void Alias(string name, string existing)
+    {
+        if (gl.TextureObjects.TryGetValue(existing, out var t)) gl.TextureObjects[name] = t;
+        if (gl.VertexArrays.TryGetValue(existing, out var v)) gl.VertexArrays[name] = v;
+        if (gl.Buffers.TryGetValue(existing, out var b)) gl.Buffers[name] = b;
+        if (gl.Programs.TryGetValue(existing, out var p)) gl.Programs[name] = p;
+    }
+
     /// <summary>for (init; condition; step) { … }: runs the body while the condition holds (at most 1000 times).</summary>
     private void For(CppStatement loop)
     {
@@ -98,6 +136,20 @@ public sealed partial class GlReader
         statementOffset = st.Offset;
         // The program's own variables (GL calls do nothing here; they are followed below).
         env.Run(text + ";");
+        if (inlineReturn is not null && Regex.Match(text, @"^return\s+(\w+)$") is { Success: true } ret) inlineReturn[0] = ret.Groups[1].Value;
+        // The program's own functions that make GL calls (learnopengl's loadTexture): followed as if written here.
+        foreach (Match call in Regex.Matches(text, @"(?<![\w.>])(\w+)\s*\("))
+        {
+            var fn = call.Groups[1].Value;
+            if (fn == "main" || inlineDepth > 6 || !src.Functions.ContainsKey(fn) || src.FunctionBody(fn) is not { } body || !Regex.IsMatch(body, @"\bgl[A-Z]\w*\s*\(")) continue;
+            int open = call.Index + call.Length - 1;
+            int close = CppSource.MatchBracket(text, open);
+            if (close < 0) continue;
+            var returned = Inline(fn, CppSource.SplitArgs(text[(open + 1)..close]));
+            var lhsMatch = AssignRe.Match(text);
+            if (returned is not null && lhsMatch.Success) Alias(lhsMatch.Groups["lhs"].Value, returned);
+        }
+        statementOffset = st.Offset;
         var shaderClass = ShaderClassRe.Match(text);
         if (shaderClass.Success)
         {

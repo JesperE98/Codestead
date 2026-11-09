@@ -1,0 +1,101 @@
+=== task: object-color
+--- file: colors.hlsl
+--- find:
+    float4x4 view;
+    float4x4 projection;
+};
+--- replace:
+    float4x4 view;
+    float4x4 projection;
+    float3 objectColor;
+    float3 lightColor;
+};
+--- file: colors.hlsl
+--- find:
+    // TODO: the colour of the object as we see it: the light's colour times the object's colour
+    return float4(1.0f, 1.0f, 1.0f, 1.0f);
+--- replace:
+    return float4(lightColor * objectColor, 1.0f);
+--- file: main.cpp
+--- find:
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+    };
+--- replace:
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+        XMFLOAT3 objectColor;
+        float padding0;
+        XMFLOAT3 lightColor;
+        float padding1;
+    };
+--- file: main.cpp
+--- find:
+        // Root parameter 1: a descriptor table with the constant buffer view (b1:
+        // view and projection), for the vertex shader.
+--- replace:
+        // Root parameter 1: a descriptor table with the constant buffer view (b1:
+        // view and projection, the colours), for the vertex and the pixel shader.
+--- file: main.cpp
+--- find:
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_VERTEX);
+--- replace:
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+--- file: main.cpp
+--- find:
+    // TODO: set the object's colour (objectColor) and the light's colour (lightColor)
+--- replace:
+    // The object's colour (coral) and the light's colour (white).
+    constantBufferData.objectColor = XMFLOAT3(1.0f, 0.5f, 0.31f);
+    constantBufferData.lightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
+
+=== task: lamp-shader
+--- file: light_cube.hlsl
+--- find:
+    // TODO: the lamp is always bright white
+    return float4(0.0f, 0.0f, 0.0f, 1.0f);
+--- replace:
+    return float4(1.0f, 1.0f, 1.0f, 1.0f); // set all 4 vector values to 1.0
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+--- replace:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+    ComPtr<ID3D12PipelineState> m_lightCubePipelineState;
+--- file: main.cpp
+--- find:
+        // TODO: the lamp's pipeline state (m_lightCubePipelineState): the same description with the shaders of light_cube.hlsl
+--- replace:
+        // The lamp: its own shaders (light_cube.hlsl) in the same description - the same
+        // root signature, input layout and depth test.
+        ComPtr<ID3DBlob> lightCubeVertexShader;
+        ComPtr<ID3DBlob> lightCubePixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"light_cube.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &lightCubeVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"light_cube.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &lightCubePixelShader, nullptr));
+
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(lightCubeVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(lightCubePixelShader.Get());
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_lightCubePipelineState)));
+
+=== task: lamp
+--- file: main.cpp
+--- find:
+// Zoom: the field of view, in degrees.
+float fov   =  45.0f;
+--- replace:
+// Zoom: the field of view, in degrees.
+float fov   =  45.0f;
+
+// lighting
+XMFLOAT3 lightPos = XMFLOAT3(1.2f, 1.0f, 2.0f);
+--- file: main.cpp
+--- find:
+    // TODO: also draw the lamp object: a small cube (scale 0.2) at lightPos, with m_lightCubePipelineState
+--- replace:
+    // Also draw the lamp object: the same cube, with the lamp's pipeline state (its own
+    // shaders), made smaller (scale 0.2) and moved to lightPos.
+    m_commandList->SetPipelineState(m_lightCubePipelineState.Get());
+    model = XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(lightPos.x, lightPos.y, lightPos.z);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);

@@ -202,6 +202,13 @@ public sealed partial class GlReader
         var data = DataName(a[8]);
         var loaded = images.LastOrDefault(i => i.Variable == data && i.Offset < statementOffset);
         var image = loaded?.Image;
+        if (loaded is not null && image is null && loaded.File == "" && Eval(loaded.Arg)?.Text is { } path)
+        {
+            // stbi_load(path, …) inside a helper: the path is the helper's argument.
+            image = StbImage.Load(project, path, loaded.Flip, loaded.Wanted);
+            if (image is null) scene.Notes.Add(SimNote.Error("textureFileMissing", ("file", path)));
+            loaded = loaded with { File = path };
+        }
         if (image is null) return;
         int components = Components(a[6]);
         tex.Components = components == 4 ? 4 : 3;

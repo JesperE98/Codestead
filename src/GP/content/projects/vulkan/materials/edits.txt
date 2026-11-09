@@ -1,0 +1,229 @@
+=== task: material
+--- file: shaders/materials.frag
+--- find:
+#version 450
+
+layout(binding = 2) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    vec3 objectColor;
+    vec3 lightColor;
+    vec3 lightPos;
+    vec3 viewPos;
+} ubo;
+--- replace:
+#version 450
+
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+};
+
+layout(binding = 2) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    vec3 lightColor;
+    vec3 lightPos;
+    vec3 viewPos;
+    Material material;
+} ubo;
+--- file: shaders/materials.frag
+--- find:
+    float ambientStrength = 0.1;
+    vec3 ambient = ambientStrength * ubo.lightColor;
+--- replace:
+    vec3 ambient = ubo.lightColor * ubo.material.ambient;
+--- file: shaders/materials.frag
+--- find:
+    vec3 diffuse = diff * ubo.lightColor;
+--- replace:
+    vec3 diffuse = ubo.lightColor * (diff * ubo.material.diffuse);
+--- file: shaders/materials.frag
+--- find:
+    float specularStrength = 0.5;
+    vec3 viewDir = normalize(ubo.viewPos - fragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    vec3 specular = specularStrength * spec * ubo.lightColor;
+
+    vec3 result = (ambient + diffuse + specular) * ubo.objectColor;
+--- replace:
+    vec3 viewDir = normalize(ubo.viewPos - fragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), ubo.material.shininess);
+    vec3 specular = ubo.lightColor * (spec * ubo.material.specular);
+
+    vec3 result = ambient + diffuse + specular;
+--- file: main.cpp
+--- find:
+// The same layout as the uniform block in the shaders: the values that stay the same for every draw of a frame.
+--- replace:
+// The same layout as the Material struct in the fragment shader. A struct in a uniform block also starts at a
+// multiple of 16 bytes and its size is rounded up to one; with a float after every vec3 it is 48 bytes, in C++ too.
+struct Material {
+    glm::vec3 ambient;
+    float pad1;
+    glm::vec3 diffuse;
+    float pad2;
+    glm::vec3 specular;
+    float shininess; // fills the 4 bytes after specular
+};
+
+// The same layout as the uniform block in the shaders: the values that stay the same for every draw of a frame.
+--- file: main.cpp
+--- find:
+struct UniformBufferObject {
+    glm::mat4 view;
+    glm::mat4 proj;
+    glm::vec3 objectColor;
+    float pad1;
+    glm::vec3 lightColor;
+    float pad2;
+    glm::vec3 lightPos;
+    float pad3;
+    glm::vec3 viewPos;
+    float pad4;
+};
+--- replace:
+struct UniformBufferObject {
+    glm::mat4 view;
+    glm::mat4 proj;
+    glm::vec3 lightColor;
+    float pad1;
+    glm::vec3 lightPos;
+    float pad2;
+    glm::vec3 viewPos;
+    float pad3;
+    Material material;
+};
+--- file: main.cpp
+--- find:
+        ubo.objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
+        ubo.lightColor  = glm::vec3(1.0f, 1.0f, 1.0f);
+        ubo.lightPos    = lightPos;
+        ubo.viewPos     = cameraPos;
+--- replace:
+        ubo.lightColor  = glm::vec3(1.0f, 1.0f, 1.0f);
+        ubo.lightPos    = lightPos;
+        ubo.viewPos     = cameraPos;
+
+        // material properties
+        ubo.material.ambient   = glm::vec3(1.0f, 0.5f, 0.31f);
+        ubo.material.diffuse   = glm::vec3(1.0f, 0.5f, 0.31f);
+        ubo.material.specular  = glm::vec3(0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
+        ubo.material.shininess = 32.0f;
+
+=== task: light
+--- file: shaders/materials.frag
+--- find:
+    float shininess;
+};
+--- replace:
+    float shininess;
+};
+
+struct Light {
+    vec3 position;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+--- file: shaders/materials.frag
+--- find:
+    vec3 lightColor;
+    vec3 lightPos;
+    vec3 viewPos;
+    Material material;
+} ubo;
+--- replace:
+    vec3 viewPos;
+    Material material;
+    Light light;
+} ubo;
+--- file: shaders/materials.frag
+--- find:
+    vec3 ambient = ubo.lightColor * ubo.material.ambient;
+--- replace:
+    vec3 ambient = ubo.light.ambient * ubo.material.ambient;
+--- file: shaders/materials.frag
+--- find:
+    vec3 lightDir = normalize(ubo.lightPos - fragPos);
+--- replace:
+    vec3 lightDir = normalize(ubo.light.position - fragPos);
+--- file: shaders/materials.frag
+--- find:
+    vec3 diffuse = ubo.lightColor * (diff * ubo.material.diffuse);
+--- replace:
+    vec3 diffuse = ubo.light.diffuse * (diff * ubo.material.diffuse);
+--- file: shaders/materials.frag
+--- find:
+    vec3 specular = ubo.lightColor * (spec * ubo.material.specular);
+--- replace:
+    vec3 specular = ubo.light.specular * (spec * ubo.material.specular);
+--- file: main.cpp
+--- find:
+    float shininess; // fills the 4 bytes after specular
+};
+--- replace:
+    float shininess; // fills the 4 bytes after specular
+};
+
+// learnopengl's Light: a position and the strength of each light component
+struct Light {
+    glm::vec3 position;
+    float pad1;
+
+    glm::vec3 ambient;
+    float pad2;
+    glm::vec3 diffuse;
+    float pad3;
+    glm::vec3 specular;
+    float pad4;
+};
+--- file: main.cpp
+--- find:
+    glm::vec3 lightColor;
+    float pad1;
+    glm::vec3 lightPos;
+    float pad2;
+    glm::vec3 viewPos;
+    float pad3;
+    Material material;
+};
+--- replace:
+    glm::vec3 viewPos;
+    float pad1;
+    Material material;
+    Light light;
+};
+--- file: main.cpp
+--- find:
+        ubo.lightColor  = glm::vec3(1.0f, 1.0f, 1.0f);
+        ubo.lightPos    = lightPos;
+        ubo.viewPos     = cameraPos;
+--- replace:
+        ubo.light.position = lightPos;
+        ubo.viewPos = cameraPos;
+
+        // light properties
+        ubo.light.ambient  = glm::vec3(0.2f, 0.2f, 0.2f);
+        ubo.light.diffuse  = glm::vec3(0.5f, 0.5f, 0.5f); // darken diffuse light a bit
+        ubo.light.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+
+=== task: light-color
+--- file: main.cpp
+--- find:
+        ubo.light.ambient  = glm::vec3(0.2f, 0.2f, 0.2f);
+        ubo.light.diffuse  = glm::vec3(0.5f, 0.5f, 0.5f); // darken diffuse light a bit
+--- replace:
+        glm::vec3 lightColor;
+        lightColor.x = static_cast<float>(std::sin(glfwGetTime() * 2.0));
+        lightColor.y = static_cast<float>(std::sin(glfwGetTime() * 0.7));
+        lightColor.z = static_cast<float>(std::sin(glfwGetTime() * 1.3));
+        glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); // decrease the influence
+        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
+        ubo.light.ambient  = ambientColor;
+        ubo.light.diffuse  = diffuseColor;

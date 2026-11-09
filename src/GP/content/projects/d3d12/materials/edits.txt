@@ -1,0 +1,259 @@
+=== task: material
+--- file: materials.hlsl
+--- find:
+// The constant buffer at register b1 (the CBV in root parameter 1's table): the values
+// that are the same for every draw of a frame.
+cbuffer SceneConstantBuffer : register(b1)
+{
+    float4x4 view;
+    float4x4 projection;
+    float3 objectColor;
+    float3 lightColor;
+    float3 lightPos;
+    float3 viewPos;
+};
+--- replace:
+// The surface of the object: the colours it reflects under ambient, diffuse and
+// specular light, and how sharp its highlight is.
+struct Material
+{
+    float3 ambient;
+    float3 diffuse;
+    float3 specular;
+    float shininess;
+};
+
+// The constant buffer at register b1 (the CBV in root parameter 1's table): the values
+// that are the same for every draw of a frame.
+cbuffer SceneConstantBuffer : register(b1)
+{
+    float4x4 view;
+    float4x4 projection;
+    float3 lightColor;
+    float3 lightPos;
+    float3 viewPos;
+    Material material;
+};
+--- file: materials.hlsl
+--- find:
+    // ambient
+    float ambientStrength = 0.1f;
+    float3 ambient = ambientStrength * lightColor;
+--- replace:
+    // ambient
+    float3 ambient = lightColor * material.ambient;
+--- file: materials.hlsl
+--- find:
+    float3 diffuse = diff * lightColor;
+
+    // specular
+    float specularStrength = 0.5f;
+    float3 viewDir = normalize(viewPos - input.fragPos);
+    float3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0f), 32);
+    float3 specular = specularStrength * spec * lightColor;
+
+    float3 result = (ambient + diffuse + specular) * objectColor;
+--- replace:
+    float3 diffuse = lightColor * (diff * material.diffuse);
+
+    // specular
+    float3 viewDir = normalize(viewPos - input.fragPos);
+    float3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0f), material.shininess);
+    float3 specular = lightColor * (spec * material.specular);
+
+    float3 result = ambient + diffuse + specular;
+--- file: main.cpp
+--- find:
+    struct SceneConstantBuffer
+    {
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+        XMFLOAT3 objectColor;
+        float padding0;
+        XMFLOAT3 lightColor;
+        float padding1;
+        XMFLOAT3 lightPos;
+        float padding2;
+        XMFLOAT3 viewPos;
+        float padding3;
+    };
+--- replace:
+    struct SceneConstantBuffer
+    {
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+        XMFLOAT3 lightColor;
+        float padding0;
+        XMFLOAT3 lightPos;
+        float padding1;
+        XMFLOAT3 viewPos;
+        float padding2;
+        Material material;
+    };
+--- file: main.cpp
+--- find:
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer.
+--- replace:
+    // The material: what the shaders see as struct Material. Laid out as HLSL does:
+    // each float3 starts a new 16-byte row, shininess fills the row of specular.
+    struct Material
+    {
+        XMFLOAT3 ambient;
+        float padding0;
+        XMFLOAT3 diffuse;
+        float padding1;
+        XMFLOAT3 specular;
+        float shininess;
+    };
+
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer.
+--- file: main.cpp
+--- find:
+    // The object's colour (coral) and the light's colour (white).
+    constantBufferData.objectColor = XMFLOAT3(1.0f, 0.5f, 0.31f);
+    constantBufferData.lightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
+--- replace:
+    // The light's colour (white).
+    constantBufferData.lightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
+--- file: main.cpp
+--- find:
+    XMStoreFloat3(&constantBufferData.viewPos, cameraPos);    // the camera's position
+--- replace:
+    XMStoreFloat3(&constantBufferData.viewPos, cameraPos);    // the camera's position
+
+    // material properties
+    constantBufferData.material.ambient = XMFLOAT3(1.0f, 0.5f, 0.31f);
+    constantBufferData.material.diffuse = XMFLOAT3(1.0f, 0.5f, 0.31f);
+    constantBufferData.material.specular = XMFLOAT3(0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
+    constantBufferData.material.shininess = 32.0f;
+
+=== task: light
+--- file: materials.hlsl
+--- find:
+// The constant buffer at register b1 (the CBV in root parameter 1's table): the values
+// that are the same for every draw of a frame.
+cbuffer SceneConstantBuffer : register(b1)
+{
+    float4x4 view;
+    float4x4 projection;
+    float3 lightColor;
+    float3 lightPos;
+    float3 viewPos;
+    Material material;
+};
+--- replace:
+// The light: where it is and how strong its ambient, diffuse and specular parts are.
+struct Light
+{
+    float3 position;
+    float3 ambient;
+    float3 diffuse;
+    float3 specular;
+};
+
+// The constant buffer at register b1 (the CBV in root parameter 1's table): the values
+// that are the same for every draw of a frame.
+cbuffer SceneConstantBuffer : register(b1)
+{
+    float4x4 view;
+    float4x4 projection;
+    float3 viewPos;
+    Material material;
+    Light light;
+};
+--- file: materials.hlsl
+--- find:
+    float3 ambient = lightColor * material.ambient;
+--- replace:
+    float3 ambient = light.ambient * material.ambient;
+--- file: materials.hlsl
+--- find:
+    float3 lightDir = normalize(lightPos - input.fragPos);
+    float diff = max(dot(norm, lightDir), 0.0f);
+    float3 diffuse = lightColor * (diff * material.diffuse);
+--- replace:
+    float3 lightDir = normalize(light.position - input.fragPos);
+    float diff = max(dot(norm, lightDir), 0.0f);
+    float3 diffuse = light.diffuse * (diff * material.diffuse);
+--- file: materials.hlsl
+--- find:
+    float3 specular = lightColor * (spec * material.specular);
+--- replace:
+    float3 specular = light.specular * (spec * material.specular);
+--- file: main.cpp
+--- find:
+    struct SceneConstantBuffer
+    {
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+        XMFLOAT3 lightColor;
+        float padding0;
+        XMFLOAT3 lightPos;
+        float padding1;
+        XMFLOAT3 viewPos;
+        float padding2;
+        Material material;
+    };
+--- replace:
+    struct SceneConstantBuffer
+    {
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+        XMFLOAT3 viewPos;
+        float padding0;
+        Material material;
+        Light light;
+    };
+--- file: main.cpp
+--- find:
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer.
+--- replace:
+    // The light: what the shaders see as struct Light.
+    struct Light
+    {
+        XMFLOAT3 position;
+        float padding0;
+        XMFLOAT3 ambient;
+        float padding1;
+        XMFLOAT3 diffuse;
+        float padding2;
+        XMFLOAT3 specular;
+        float padding3;
+    };
+
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer.
+--- file: main.cpp
+--- find:
+    // The light's colour (white).
+    constantBufferData.lightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
+    constantBufferData.lightPos = lightPos;
+    XMStoreFloat3(&constantBufferData.viewPos, cameraPos);    // the camera's position
+--- replace:
+    constantBufferData.light.position = lightPos;
+    XMStoreFloat3(&constantBufferData.viewPos, cameraPos);    // the camera's position
+
+    // light properties
+    constantBufferData.light.ambient = XMFLOAT3(0.2f, 0.2f, 0.2f);
+    constantBufferData.light.diffuse = XMFLOAT3(0.5f, 0.5f, 0.5f); // darken diffuse light a bit
+    constantBufferData.light.specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+
+=== task: light-color
+--- file: main.cpp
+--- find:
+    // light properties
+    constantBufferData.light.ambient = XMFLOAT3(0.2f, 0.2f, 0.2f);
+    constantBufferData.light.diffuse = XMFLOAT3(0.5f, 0.5f, 0.5f); // darken diffuse light a bit
+--- replace:
+    // light properties: the colour changes over time
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - startTime).count();
+    XMFLOAT3 lightColor;
+    lightColor.x = std::sin(time * 2.0f);
+    lightColor.y = std::sin(time * 0.7f);
+    lightColor.z = std::sin(time * 1.3f);
+    XMVECTOR diffuseColor = XMLoadFloat3(&lightColor) * 0.5f; // decrease the influence
+    XMVECTOR ambientColor = diffuseColor * 0.2f; // low influence
+    XMStoreFloat3(&constantBufferData.light.ambient, ambientColor);
+    XMStoreFloat3(&constantBufferData.light.diffuse, diffuseColor);

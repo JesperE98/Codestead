@@ -22,6 +22,7 @@ public static partial class TaskChecks
         Add("transformations", Transformations);
         Add("coordinate-systems", CoordinateSystems);
         Add("camera", Camera);
+        foreach (var (chapter, checks) in Lighting) Add(chapter, checks);
         return d;
     });
 

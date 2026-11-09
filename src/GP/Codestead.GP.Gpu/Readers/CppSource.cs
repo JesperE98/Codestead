@@ -217,7 +217,7 @@ public sealed partial class CppSource
     /// </summary>
     public string? Initializer(string name)
     {
-        var re = new Regex(@"(?<![\w.>])" + Regex.Escape(name) + @"\s*(?:\[[^\]]*\]\s*)*(?<eq>=\s*)?(?<brace>\{)?", RegexOptions.CultureInvariant);
+        var re = new Regex(@"(?<![\w.>])" + Regex.Escape(name) + @"\s*(?:\[[^\]]*\]\s*)*(?<eq>=\s*)?(?<brace>\{)?(?<paren>\()?", RegexOptions.CultureInvariant);
         string? found = null, foundBraces = null;
         foreach (Match m in re.Matches(Code))
         {
@@ -230,6 +230,16 @@ public sealed partial class CppSource
             while (k >= 0 && (char.IsLetterOrDigit(Code[k]) || Code[k] == '_')) k--;
             var word = Code[(k + 1)..(j + 1)];
             if (word is "return" or "else" or "case" or "delete" or "new" or "throw") continue;
+            if (m.Groups["paren"].Success && !m.Groups["eq"].Success && !m.Groups["brace"].Success)
+            {
+                // Type name(args); – a constructor call: glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+                int open = m.Index + m.Length - 1;
+                int close = MatchBracket(Code, open);
+                int typeEnd = j + 1, typeStart = typeEnd;
+                while (typeStart > 0 && (char.IsLetterOrDigit(Code[typeStart - 1]) || Code[typeStart - 1] is '_' or ':')) typeStart--;
+                if (close > 0 && close + 1 < Code.Length && Code[(close + 1)..].TrimStart().StartsWith(';')) found = Code[typeStart..typeEnd] + Code[open..(close + 1)];
+                continue;
+            }
             if (m.Groups["brace"].Success)
             {
                 int open = m.Index + m.Length - 1;

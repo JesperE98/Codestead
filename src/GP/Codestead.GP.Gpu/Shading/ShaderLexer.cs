@@ -14,6 +14,7 @@ public static class ShaderLexer
 
     public static List<ShaderToken> Tokenize(string source)
     {
+        var defines = new Dictionary<string, string>(StringComparer.Ordinal);
         var tokens = new List<ShaderToken>();
         int i = 0, line = 1;
         bool lineStart = true;
@@ -34,7 +35,11 @@ public static class ShaderLexer
             }
             if (c == '#' && lineStart)
             {
-                // A preprocessor line: skip it (and its continuation lines).
+                // A preprocessor line: skip it (and its continuation lines); #define NAME value is remembered.
+                int endOfLine = source.IndexOf('\n', i);
+                var directive = source[i..(endOfLine < 0 ? source.Length : endOfLine)];
+                var define = System.Text.RegularExpressions.Regex.Match(directive, @"^#\s*define\s+([A-Za-z_]\w*)\s+(.+)$");
+                if (define.Success) defines[define.Groups[1].Value] = define.Groups[2].Value.Trim();
                 while (i < source.Length && source[i] != '\n')
                 {
                     if (source[i] == '\\' && i + 1 < source.Length && source[i + 1] == '\n')
@@ -94,6 +99,12 @@ public static class ShaderLexer
                 var word = source[start..i];
                 // L"wide" and u8"utf-8" strings.
                 if (i < source.Length && source[i] == '"' && word is "L" or "u8" or "u" or "U") continue;
+                if (defines.TryGetValue(word, out var replacement))
+                {
+                    // An object-like macro: its tokens instead of the name (on this line).
+                    foreach (var t in Tokenize(replacement).Where(t => t.Kind != ShaderTokenKind.End)) tokens.Add(t with { Line = line });
+                    continue;
+                }
                 tokens.Add(new ShaderToken(ShaderTokenKind.Identifier, word, line));
                 continue;
             }

@@ -149,5 +149,19 @@ public sealed class CheckContext
         return false;
     }
 
+    /// <summary>The picture changes over time: the frame at 2.3 s differs from the one at 1 s in more than a few pixels.</summary>
+    public bool ChangesOverTime
+    {
+        get
+        {
+            if (Frame is not { } f || !Scene!.Animated) return false;
+            var later = Rasterizer.Render(Scene, 160, 2.3);
+            int differ = 0;
+            for (int i = 0; i < f.Pixels.Length; i += 4)
+                if (Math.Abs(f.Pixels[i] - later.Pixels[i]) + Math.Abs(f.Pixels[i + 1] - later.Pixels[i + 1]) + Math.Abs(f.Pixels[i + 2] - later.Pixels[i + 2]) > 12) differ++;
+            return differ > 20;
+        }
+    }
+
     public static bool Near(double a, double b, double tolerance = 0.01) => Math.Abs(a - b) <= tolerance;
 }

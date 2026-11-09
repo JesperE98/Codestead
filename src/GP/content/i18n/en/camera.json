@@ -1,0 +1,77 @@
+{
+  "title": "Camera",
+  "tasks": {
+    "look-at": {
+      "text": {
+        "opengl": "Build the view matrix with `glm::lookAt` instead of the translation: a camera at (0, 0, 3) looking at the origin, with (0, 1, 0) as up.",
+        "vulkan": "In `updateUniformBuffer()`, build `ubo.view` with `glm::lookAt` instead of the translation: a camera at (0, 0, 3) looking at the origin, with (0, 1, 0) as up.",
+        "d3d12": "In `OnUpdate`, build the view matrix with `XMMatrixLookAtRH` instead of `XMMatrixTranslation`: a camera at (0, 0, 3) looking at the origin, with (0, 1, 0) as up (`XMVectorSet(…, 0.0f)` for each)."
+      },
+      "hint": {
+        "opengl": "`glm::lookAt(position, target, up)` builds the camera's axes and the translation for you. It is the same matrix as before, so the picture doesn't change.",
+        "vulkan": "`glm::lookAt(position, target, up)` builds the camera's axes and the translation for you. It is the same matrix as before, so the picture doesn't change.",
+        "d3d12": "`XMMatrixLookAtRH(eye, focus, up)` – RH: right-handed like OpenGL, +z points out of the screen. It is the same matrix as before, so the picture doesn't change."
+      }
+    },
+    "circle": {
+      "text": {
+        "opengl": "Let the camera circle the scene: `float radius = 10.0f;`, `camX = sin(glfwGetTime()) * radius`, `camZ = cos(glfwGetTime()) * radius`, and look from (camX, 0, camZ) at the origin.",
+        "vulkan": "Let the camera circle the scene: `float radius = 10.0f;`, `camX = std::sin(glfwGetTime()) * radius`, `camZ = std::cos(glfwGetTime()) * radius`, and look from (camX, 0, camZ) at the origin.",
+        "d3d12": "Let the camera circle the scene: measure the seconds since the first frame with `std::chrono` (`static auto startTime`), then `float radius = 10.0f;`, `camX = std::sin(time) * radius`, `camZ = std::cos(time) * radius`, and look from (camX, 0, camZ) at the origin."
+      },
+      "hint": {
+        "opengl": "`float camX = static_cast<float>(sin(glfwGetTime()) * radius);` (and `cos` for `camZ`), then `glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f))`.",
+        "vulkan": "`float camX = static_cast<float>(std::sin(glfwGetTime()) * radius);` (and `std::cos` for `camZ`), then `glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f))`.",
+        "d3d12": "`float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();` – (sin t, cos t) · 10 runs round a circle in the xz plane; at 0 s the camera is at (0, 0, 10)."
+      }
+    },
+    "free-camera": {
+      "text": {
+        "opengl": "Replace the circling camera with globals `cameraPos` (0, 0, 3), `cameraFront` (0, 0, -1) and `cameraUp` (0, 1, 0), and `view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp)`.",
+        "vulkan": "Add globals `cameraPos` (0, 0, 3), `cameraFront` (0, 0, -1) and `cameraUp` (0, 1, 0) before the `PushConstants` struct, and replace the circle with `ubo.view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp)`.",
+        "d3d12": "Add global `XMVECTOR`s `cameraPos` (0, 0, 3), `cameraFront` (0, 0, -1) and `cameraUp` (0, 1, 0) before `class D3D12App`, and replace the circle and its time lines with `XMMatrixLookAtRH(cameraPos, cameraPos + cameraFront, cameraUp)`."
+      },
+      "hint": {
+        "opengl": "`cameraPos + cameraFront` is a point straight in front of the camera, so it keeps looking along `cameraFront` wherever it moves. Put the globals under the settings, before `main`.",
+        "vulkan": "`cameraPos + cameraFront` is a point straight in front of the camera, so it keeps looking along `cameraFront` wherever it moves.",
+        "d3d12": "`cameraPos + cameraFront` is a point straight in front of the camera (DirectXMath overloads `+` for `XMVECTOR`). Globals, so that `WindowProc` can change them later."
+      }
+    },
+    "wasd": {
+      "text": {
+        "opengl": "Move the camera with W/A/S/D in `processInput` at 2.5 units per second: globals `deltaTime` and `lastFrame`, the per-frame time logic at the top of the render loop, and `cameraSpeed = 2.5 * deltaTime`.",
+        "vulkan": "Move the camera with W/A/S/D at 2.5 units per second: globals `deltaTime` and `lastFrame`, the per-frame time logic in `mainLoop()`, and a member `processInput()` (Escape closes) called after `glfwPollEvents()`.",
+        "d3d12": "Move the camera with W/A/S/D: a global `bool keys[256]` set on `WM_KEYDOWN` and cleared on a new `WM_KEYUP` case; at the start of `OnUpdate` compute `deltaTime` with `std::chrono` and move `cameraPos` by `2.5f * deltaTime`."
+      },
+      "hint": {
+        "opengl": "`float currentFrame = static_cast<float>(glfwGetTime()); deltaTime = currentFrame - lastFrame; lastFrame = currentFrame;` – W/S move along `cameraFront`, A/D along `glm::normalize(glm::cross(cameraFront, cameraUp))`.",
+        "vulkan": "`float cameraSpeed = 2.5f * deltaTime;` – W/S move along `cameraFront`, A/D along `glm::normalize(glm::cross(cameraFront, cameraUp))`, the camera's right vector.",
+        "d3d12": "`keys[static_cast<UINT8>(wParam)] = true;` – a letter's virtual-key code is its capital (`keys['W']`). A/D move along `XMVector3Normalize(XMVector3Cross(cameraFront, cameraUp))`."
+      }
+    },
+    "mouse-look": {
+      "text": {
+        "opengl": "Look around with the mouse: capture the cursor, register a `mouse_callback` that turns the mouse movement into `yaw`/`pitch` (sensitivity 0.1, pitch within ±89°) and sets `cameraFront` from them; use `firstMouse` against the first jump.",
+        "vulkan": "Look around with the mouse: globals `firstMouse`, `yaw`, `pitch`, `lastX`, `lastY`, a free function `mouse_callback` (sensitivity 0.1, pitch within ±89°, `cameraFront` from yaw/pitch), registered and the cursor captured in `initWindow()`.",
+        "d3d12": "Look around with the mouse: globals `firstMouse`, `yaw`, `pitch`, `lastX`, `lastY`, a function `OnMouseMove` (sensitivity 0.1, pitch within ±89°, `cameraFront` from yaw/pitch), a `WM_MOUSEMOVE` case that calls it and recentres the cursor, `ShowCursor(FALSE)` and `#include <windowsx.h>`."
+      },
+      "hint": {
+        "opengl": "`glfwSetCursorPosCallback(window, mouse_callback);` and `glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);`. Yaw starts at -90°; the y offset is reversed (`lastY - ypos`) because window y grows downwards.",
+        "vulkan": "Register right after `glfwCreateWindow`: `glfwSetCursorPosCallback(window, mouse_callback);` and `glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);`. Yaw starts at -90°; the y offset is `lastY - ypos`.",
+        "d3d12": "Only while `GetForegroundWindow() == hWnd`. Read the position with `GET_X_LPARAM`/`GET_Y_LPARAM`; set `lastX`/`lastY` to the centre before `SetCursorPos`, so the jump back has an offset of 0."
+      }
+    },
+    "zoom": {
+      "text": {
+        "opengl": "Zoom with the scroll wheel: a global `float fov = 45.0f;` that a `scroll_callback` decreases by `yoffset`, kept between 1 and 45, and `glm::radians(fov)` in the projection.",
+        "vulkan": "Zoom with the scroll wheel: a global `float fov = 45.0f;` that a free function `scroll_callback` decreases by `yoffset`, kept between 1 and 45, registered in `initWindow()`, and `glm::radians(fov)` in `ubo.proj`.",
+        "d3d12": "Zoom with the mouse wheel: a global `float fov = 45.0f;`, a function `OnMouseWheel` that subtracts the notches and keeps fov between 1 and 45, a `WM_MOUSEWHEEL` case that calls it, and `XMConvertToRadians(fov)` in the projection."
+      },
+      "hint": {
+        "opengl": "`glfwSetScrollCallback(window, scroll_callback);` – `fov -= (float)yoffset;` then clamp. The projection is already set every frame.",
+        "vulkan": "`glfwSetScrollCallback(window, scroll_callback);` – `fov -= static_cast<float>(yoffset);` then clamp. `updateUniformBuffer()` already rebuilds the projection every frame.",
+        "d3d12": "`OnMouseWheel(static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA);` – one notch is `WHEEL_DELTA` (120); away from you is positive and zooms in."
+      }
+    }
+  }
+}

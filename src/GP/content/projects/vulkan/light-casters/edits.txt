@@ -1,0 +1,381 @@
+=== task: directional
+--- file: shaders/light_casters.frag
+--- find:
+struct Light {
+    vec3 position;
+--- replace:
+struct Light {
+    // vec3 position; // no longer needed when using directional lights
+    vec3 direction;
+--- file: shaders/light_casters.frag
+--- find:
+    vec3 lightDir = normalize(ubo.light.position - fragPos);
+--- replace:
+    vec3 lightDir = normalize(-ubo.light.direction);
+--- file: main.cpp
+--- find:
+struct Light {
+    glm::vec3 position;
+    float pad1;
+--- replace:
+struct Light {
+    glm::vec3 direction;
+    float pad1;
+--- file: main.cpp
+--- find:
+        ubo.light.position = lightPos;
+--- replace:
+        ubo.light.direction = glm::vec3(-0.2f, -1.0f, -0.3f);
+--- file: main.cpp
+--- find:
+        ubo.material.shininess = 64.0f;
+--- replace:
+        ubo.material.shininess = 32.0f;
+--- file: main.cpp
+--- find:
+        // also draw the lamp object
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightCubePipeline);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+--- replace:
+        // a lamp object is weird when we only have a directional light, don't render the light object
+        // vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightCubePipeline);
+        // model = glm::mat4(1.0f);
+        // model = glm::translate(model, lightPos);
+        // model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        // constants.model = model;
+        // vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+        // vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+
+=== task: point-light
+--- file: shaders/light_casters.frag
+--- find:
+    // vec3 position; // no longer needed when using directional lights
+    vec3 direction;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+--- replace:
+    vec3 position;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+
+    float constant;
+    float linear;
+    float quadratic;
+};
+--- file: shaders/light_casters.frag
+--- find:
+    vec3 lightDir = normalize(-ubo.light.direction);
+--- replace:
+    vec3 lightDir = normalize(ubo.light.position - fragPos);
+--- file: shaders/light_casters.frag
+--- find:
+    vec3 result = ambient + diffuse + specular;
+--- replace:
+    // attenuation
+    float distance    = length(ubo.light.position - fragPos);
+    float attenuation = 1.0 / (ubo.light.constant + ubo.light.linear * distance + ubo.light.quadratic * (distance * distance));
+
+    ambient  *= attenuation;
+    diffuse  *= attenuation;
+    specular *= attenuation;
+
+    vec3 result = ambient + diffuse + specular;
+--- file: main.cpp
+--- find:
+struct Light {
+    glm::vec3 direction;
+    float pad1;
+
+    glm::vec3 ambient;
+    float pad2;
+    glm::vec3 diffuse;
+    float pad3;
+    glm::vec3 specular;
+    float pad4;
+};
+--- replace:
+struct Light {
+    glm::vec3 position;
+    float pad1;
+
+    glm::vec3 ambient;
+    float pad2;
+    glm::vec3 diffuse;
+    float pad3;
+    glm::vec3 specular;
+
+    float constant; // fills the 4 bytes after specular
+    float linear;
+    float quadratic;
+    float pad4; // the size of a struct in a uniform block is rounded up to a multiple of 16 bytes
+    float pad5;
+};
+--- file: main.cpp
+--- find:
+        ubo.light.direction = glm::vec3(-0.2f, -1.0f, -0.3f);
+--- replace:
+        ubo.light.position = lightPos;
+--- file: main.cpp
+--- find:
+        ubo.light.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+--- replace:
+        ubo.light.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+        ubo.light.constant  = 1.0f;
+        ubo.light.linear    = 0.09f;
+        ubo.light.quadratic = 0.032f;
+--- file: main.cpp
+--- find:
+        // a lamp object is weird when we only have a directional light, don't render the light object
+        // vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightCubePipeline);
+        // model = glm::mat4(1.0f);
+        // model = glm::translate(model, lightPos);
+        // model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        // constants.model = model;
+        // vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+        // vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+--- replace:
+        // also draw the lamp object
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightCubePipeline);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+
+=== task: spotlight
+--- file: shaders/light_casters.frag
+--- find:
+    vec3 position;
+
+    vec3 ambient;
+--- replace:
+    vec3 position;
+    vec3 direction;
+    float cutOff;
+
+    vec3 ambient;
+--- file: shaders/light_casters.frag
+--- find:
+void main() {
+    // ambient
+    vec3 ambient = ubo.light.ambient * texture(diffuseMap, fragTexCoord).rgb;
+
+    // diffuse
+    vec3 norm = normalize(fragNormal);
+    vec3 lightDir = normalize(ubo.light.position - fragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = ubo.light.diffuse * diff * texture(diffuseMap, fragTexCoord).rgb;
+
+    // specular
+    vec3 viewDir = normalize(ubo.viewPos - fragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), ubo.material.shininess);
+    vec3 specular = ubo.light.specular * spec * texture(specularMap, fragTexCoord).rgb;
+
+    // attenuation
+    float distance    = length(ubo.light.position - fragPos);
+    float attenuation = 1.0 / (ubo.light.constant + ubo.light.linear * distance + ubo.light.quadratic * (distance * distance));
+
+    ambient  *= attenuation;
+    diffuse  *= attenuation;
+    specular *= attenuation;
+
+    vec3 result = ambient + diffuse + specular;
+    outColor = vec4(result, 1.0);
+}
+--- replace:
+void main() {
+    vec3 lightDir = normalize(ubo.light.position - fragPos);
+
+    // check if lighting is inside the spotlight cone
+    float theta = dot(lightDir, normalize(-ubo.light.direction));
+
+    if (theta > ubo.light.cutOff) { // remember that we're working with angles as cosines instead of degrees so a '>' is used.
+        // ambient
+        vec3 ambient = ubo.light.ambient * texture(diffuseMap, fragTexCoord).rgb;
+
+        // diffuse
+        vec3 norm = normalize(fragNormal);
+        float diff = max(dot(norm, lightDir), 0.0);
+        vec3 diffuse = ubo.light.diffuse * diff * texture(diffuseMap, fragTexCoord).rgb;
+
+        // specular
+        vec3 viewDir = normalize(ubo.viewPos - fragPos);
+        vec3 reflectDir = reflect(-lightDir, norm);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), ubo.material.shininess);
+        vec3 specular = ubo.light.specular * spec * texture(specularMap, fragTexCoord).rgb;
+
+        // attenuation
+        float distance    = length(ubo.light.position - fragPos);
+        float attenuation = 1.0 / (ubo.light.constant + ubo.light.linear * distance + ubo.light.quadratic * (distance * distance));
+
+        // ambient  *= attenuation; // remove attenuation from ambient, as otherwise at large distances the light would be darker inside than outside the spotlight due the ambient term in the else branch
+        diffuse  *= attenuation;
+        specular *= attenuation;
+
+        vec3 result = ambient + diffuse + specular;
+        outColor = vec4(result, 1.0);
+    } else {
+        // else, use ambient light so scene isn't completely dark outside the spotlight.
+        outColor = vec4(ubo.light.ambient * texture(diffuseMap, fragTexCoord).rgb, 1.0);
+    }
+}
+--- file: main.cpp
+--- find:
+    glm::vec3 position;
+    float pad1;
+
+    glm::vec3 ambient;
+--- replace:
+    glm::vec3 position;
+    float pad1;
+    glm::vec3 direction;
+    float cutOff; // fills the 4 bytes after direction
+
+    glm::vec3 ambient;
+--- file: main.cpp
+--- find:
+        ubo.light.position = lightPos;
+--- replace:
+        ubo.light.position = cameraPos;
+        ubo.light.direction = cameraFront;
+        ubo.light.cutOff = glm::cos(glm::radians(12.5f));
+--- file: main.cpp
+--- find:
+        ubo.light.ambient  = glm::vec3(0.2f, 0.2f, 0.2f);
+        ubo.light.diffuse  = glm::vec3(0.5f, 0.5f, 0.5f);
+--- replace:
+        ubo.light.ambient  = glm::vec3(0.1f, 0.1f, 0.1f);
+        // we configure the diffuse intensity slightly higher; the right lighting conditions differ with each lighting method and environment.
+        ubo.light.diffuse  = glm::vec3(0.8f, 0.8f, 0.8f);
+--- file: main.cpp
+--- find:
+        // also draw the lamp object
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightCubePipeline);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+--- replace:
+        // again, a lamp object is weird when we only have a spot light, don't render the light object
+        // vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightCubePipeline);
+        // model = glm::mat4(1.0f);
+        // model = glm::translate(model, lightPos);
+        // model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        // constants.model = model;
+        // vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+        // vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+
+=== task: soft-edges
+--- file: shaders/light_casters.frag
+--- find:
+    float cutOff;
+--- replace:
+    float cutOff;
+    float outerCutOff;
+--- file: shaders/light_casters.frag
+--- find:
+void main() {
+    vec3 lightDir = normalize(ubo.light.position - fragPos);
+
+    // check if lighting is inside the spotlight cone
+    float theta = dot(lightDir, normalize(-ubo.light.direction));
+
+    if (theta > ubo.light.cutOff) { // remember that we're working with angles as cosines instead of degrees so a '>' is used.
+        // ambient
+        vec3 ambient = ubo.light.ambient * texture(diffuseMap, fragTexCoord).rgb;
+
+        // diffuse
+        vec3 norm = normalize(fragNormal);
+        float diff = max(dot(norm, lightDir), 0.0);
+        vec3 diffuse = ubo.light.diffuse * diff * texture(diffuseMap, fragTexCoord).rgb;
+
+        // specular
+        vec3 viewDir = normalize(ubo.viewPos - fragPos);
+        vec3 reflectDir = reflect(-lightDir, norm);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), ubo.material.shininess);
+        vec3 specular = ubo.light.specular * spec * texture(specularMap, fragTexCoord).rgb;
+
+        // attenuation
+        float distance    = length(ubo.light.position - fragPos);
+        float attenuation = 1.0 / (ubo.light.constant + ubo.light.linear * distance + ubo.light.quadratic * (distance * distance));
+
+        // ambient  *= attenuation; // remove attenuation from ambient, as otherwise at large distances the light would be darker inside than outside the spotlight due the ambient term in the else branch
+        diffuse  *= attenuation;
+        specular *= attenuation;
+
+        vec3 result = ambient + diffuse + specular;
+        outColor = vec4(result, 1.0);
+    } else {
+        // else, use ambient light so scene isn't completely dark outside the spotlight.
+        outColor = vec4(ubo.light.ambient * texture(diffuseMap, fragTexCoord).rgb, 1.0);
+    }
+}
+--- replace:
+void main() {
+    // ambient
+    vec3 ambient = ubo.light.ambient * texture(diffuseMap, fragTexCoord).rgb;
+
+    // diffuse
+    vec3 norm = normalize(fragNormal);
+    vec3 lightDir = normalize(ubo.light.position - fragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = ubo.light.diffuse * diff * texture(diffuseMap, fragTexCoord).rgb;
+
+    // specular
+    vec3 viewDir = normalize(ubo.viewPos - fragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), ubo.material.shininess);
+    vec3 specular = ubo.light.specular * spec * texture(specularMap, fragTexCoord).rgb;
+
+    // spotlight (soft edges)
+    float theta = dot(lightDir, normalize(-ubo.light.direction));
+    float epsilon = (ubo.light.cutOff - ubo.light.outerCutOff);
+    float intensity = clamp((theta - ubo.light.outerCutOff) / epsilon, 0.0, 1.0);
+    diffuse  *= intensity;
+    specular *= intensity;
+
+    // attenuation
+    float distance    = length(ubo.light.position - fragPos);
+    float attenuation = 1.0 / (ubo.light.constant + ubo.light.linear * distance + ubo.light.quadratic * (distance * distance));
+    ambient  *= attenuation;
+    diffuse  *= attenuation;
+    specular *= attenuation;
+
+    vec3 result = ambient + diffuse + specular;
+    outColor = vec4(result, 1.0);
+}
+--- file: main.cpp
+--- find:
+    float cutOff; // fills the 4 bytes after direction
+--- replace:
+    float cutOff; // fills the 4 bytes after direction
+    float outerCutOff;
+    float pad6; // ambient (a vec3) starts at the next multiple of 16 bytes
+    float pad7;
+    float pad8;
+--- file: main.cpp
+--- find:
+        ubo.light.cutOff = glm::cos(glm::radians(12.5f));
+--- replace:
+        ubo.light.cutOff = glm::cos(glm::radians(12.5f));
+        ubo.light.outerCutOff = glm::cos(glm::radians(17.5f));

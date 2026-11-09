@@ -1,0 +1,77 @@
+{
+  "title": "Kamera",
+  "tasks": {
+    "look-at": {
+      "text": {
+        "opengl": "Bygg vymatrisen med `glm::lookAt` i stället för förflyttningen: en kamera i (0, 0, 3) som tittar mot origo, med (0, 1, 0) som uppåt.",
+        "vulkan": "Bygg `ubo.view` i `updateUniformBuffer()` med `glm::lookAt` i stället för förflyttningen: en kamera i (0, 0, 3) som tittar mot origo, med (0, 1, 0) som uppåt.",
+        "d3d12": "Bygg vymatrisen i `OnUpdate` med `XMMatrixLookAtRH` i stället för `XMMatrixTranslation`: en kamera i (0, 0, 3) som tittar mot origo, med (0, 1, 0) som uppåt (`XMVectorSet(…, 0.0f)` för var och en)."
+      },
+      "hint": {
+        "opengl": "`glm::lookAt(position, target, up)` bygger kamerans axlar och förflyttningen åt dig. Det är samma matris som innan, så bilden ändras inte.",
+        "vulkan": "`glm::lookAt(position, target, up)` bygger kamerans axlar och förflyttningen åt dig. Det är samma matris som innan, så bilden ändras inte.",
+        "d3d12": "`XMMatrixLookAtRH(eye, focus, up)` – RH: högerhänt som OpenGL, +z pekar ut ur skärmen. Det är samma matris som innan, så bilden ändras inte."
+      }
+    },
+    "circle": {
+      "text": {
+        "opengl": "Låt kameran cirkla runt scenen: `float radius = 10.0f;`, `camX = sin(glfwGetTime()) * radius`, `camZ = cos(glfwGetTime()) * radius`, och titta från (camX, 0, camZ) mot origo.",
+        "vulkan": "Låt kameran cirkla runt scenen: `float radius = 10.0f;`, `camX = std::sin(glfwGetTime()) * radius`, `camZ = std::cos(glfwGetTime()) * radius`, och titta från (camX, 0, camZ) mot origo.",
+        "d3d12": "Låt kameran cirkla runt scenen: mät sekunderna sedan första bildrutan med `std::chrono` (`static auto startTime`), sedan `float radius = 10.0f;`, `camX = std::sin(time) * radius`, `camZ = std::cos(time) * radius`, och titta från (camX, 0, camZ) mot origo."
+      },
+      "hint": {
+        "opengl": "`float camX = static_cast<float>(sin(glfwGetTime()) * radius);` (och `cos` för `camZ`), sedan `glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f))`.",
+        "vulkan": "`float camX = static_cast<float>(std::sin(glfwGetTime()) * radius);` (och `std::cos` för `camZ`), sedan `glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f))`.",
+        "d3d12": "`float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();` – (sin t, cos t) · 10 går runt en cirkel i xz-planet; vid 0 s står kameran i (0, 0, 10)."
+      }
+    },
+    "free-camera": {
+      "text": {
+        "opengl": "Ersätt den cirklande kameran med globala `cameraPos` (0, 0, 3), `cameraFront` (0, 0, -1) och `cameraUp` (0, 1, 0), och `view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp)`.",
+        "vulkan": "Lägg till globala `cameraPos` (0, 0, 3), `cameraFront` (0, 0, -1) och `cameraUp` (0, 1, 0) före structen `PushConstants`, och ersätt cirkeln med `ubo.view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp)`.",
+        "d3d12": "Lägg till globala `XMVECTOR` `cameraPos` (0, 0, 3), `cameraFront` (0, 0, -1) och `cameraUp` (0, 1, 0) före `class D3D12App`, och ersätt cirkeln och dess tidsrader med `XMMatrixLookAtRH(cameraPos, cameraPos + cameraFront, cameraUp)`."
+      },
+      "hint": {
+        "opengl": "`cameraPos + cameraFront` är en punkt rakt framför kameran, så den fortsätter titta längs `cameraFront` vart den än flyttar sig. Lägg de globala variablerna under inställningarna, före `main`.",
+        "vulkan": "`cameraPos + cameraFront` är en punkt rakt framför kameran, så den fortsätter titta längs `cameraFront` vart den än flyttar sig.",
+        "d3d12": "`cameraPos + cameraFront` är en punkt rakt framför kameran (DirectXMath överlagrar `+` för `XMVECTOR`). Globala, så att `WindowProc` kan ändra dem senare."
+      }
+    },
+    "wasd": {
+      "text": {
+        "opengl": "Flytta kameran med W/A/S/D i `processInput` med 2,5 enheter per sekund: globala `deltaTime` och `lastFrame`, tidslogiken per bildruta överst i renderloopen, och `cameraSpeed = 2.5 * deltaTime`.",
+        "vulkan": "Flytta kameran med W/A/S/D med 2,5 enheter per sekund: globala `deltaTime` och `lastFrame`, tidslogiken per bildruta i `mainLoop()`, och en medlem `processInput()` (Escape stänger) som anropas efter `glfwPollEvents()`.",
+        "d3d12": "Flytta kameran med W/A/S/D: en global `bool keys[256]` som sätts vid `WM_KEYDOWN` och nollställs i ett nytt case `WM_KEYUP`; räkna i början av `OnUpdate` ut `deltaTime` med `std::chrono` och flytta `cameraPos` med `2.5f * deltaTime`."
+      },
+      "hint": {
+        "opengl": "`float currentFrame = static_cast<float>(glfwGetTime()); deltaTime = currentFrame - lastFrame; lastFrame = currentFrame;` – W/S flyttar längs `cameraFront`, A/D längs `glm::normalize(glm::cross(cameraFront, cameraUp))`.",
+        "vulkan": "`float cameraSpeed = 2.5f * deltaTime;` – W/S flyttar längs `cameraFront`, A/D längs `glm::normalize(glm::cross(cameraFront, cameraUp))`, kamerans högervektor.",
+        "d3d12": "`keys[static_cast<UINT8>(wParam)] = true;` – en bokstavs virtual-key code är den stora bokstaven (`keys['W']`). A/D flyttar längs `XMVector3Normalize(XMVector3Cross(cameraFront, cameraUp))`."
+      }
+    },
+    "mouse-look": {
+      "text": {
+        "opengl": "Se dig omkring med musen: fånga markören, registrera en `mouse_callback` som gör om musrörelsen till `yaw`/`pitch` (känslighet 0.1, pitch inom ±89°) och sätter `cameraFront` utifrån dem; använd `firstMouse` mot det första hoppet.",
+        "vulkan": "Se dig omkring med musen: globala `firstMouse`, `yaw`, `pitch`, `lastX`, `lastY`, en fri funktion `mouse_callback` (känslighet 0.1, pitch inom ±89°, `cameraFront` från yaw/pitch), registrerad och med fångad markör i `initWindow()`.",
+        "d3d12": "Se dig omkring med musen: globala `firstMouse`, `yaw`, `pitch`, `lastX`, `lastY`, en funktion `OnMouseMove` (känslighet 0.1, pitch inom ±89°, `cameraFront` från yaw/pitch), ett case `WM_MOUSEMOVE` som anropar den och centrerar markören, `ShowCursor(FALSE)` och `#include <windowsx.h>`."
+      },
+      "hint": {
+        "opengl": "`glfwSetCursorPosCallback(window, mouse_callback);` och `glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);`. Yaw börjar på -90°; y-förflyttningen är omvänd (`lastY - ypos`) eftersom fönstrets y växer nedåt.",
+        "vulkan": "Registrera direkt efter `glfwCreateWindow`: `glfwSetCursorPosCallback(window, mouse_callback);` och `glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);`. Yaw börjar på -90°; y-förflyttningen är `lastY - ypos`.",
+        "d3d12": "Bara medan `GetForegroundWindow() == hWnd`. Läs positionen med `GET_X_LPARAM`/`GET_Y_LPARAM`; sätt `lastX`/`lastY` till mitten före `SetCursorPos`, så att hoppet tillbaka får förflyttningen 0."
+      }
+    },
+    "zoom": {
+      "text": {
+        "opengl": "Zooma med scrollhjulet: en global `float fov = 45.0f;` som en `scroll_callback` minskar med `yoffset`, hållen mellan 1 och 45, och `glm::radians(fov)` i projektionen.",
+        "vulkan": "Zooma med scrollhjulet: en global `float fov = 45.0f;` som en fri funktion `scroll_callback` minskar med `yoffset`, hållen mellan 1 och 45, registrerad i `initWindow()`, och `glm::radians(fov)` i `ubo.proj`.",
+        "d3d12": "Zooma med mushjulet: en global `float fov = 45.0f;`, en funktion `OnMouseWheel` som drar av antalet hack och håller fov mellan 1 och 45, ett case `WM_MOUSEWHEEL` som anropar den, och `XMConvertToRadians(fov)` i projektionen."
+      },
+      "hint": {
+        "opengl": "`glfwSetScrollCallback(window, scroll_callback);` – `fov -= (float)yoffset;` och begränsa sedan. Projektionen sätts redan varje bildruta.",
+        "vulkan": "`glfwSetScrollCallback(window, scroll_callback);` – `fov -= static_cast<float>(yoffset);` och begränsa sedan. `updateUniformBuffer()` bygger redan om projektionen varje bildruta.",
+        "d3d12": "`OnMouseWheel(static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA);` – ett hack är `WHEEL_DELTA` (120); bort från dig är positivt och zoomar in."
+      }
+    }
+  }
+}

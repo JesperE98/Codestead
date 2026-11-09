@@ -59,6 +59,8 @@ public sealed class CppExec
         if (src.Evaluate(name, Runner.Time) is { } v)
         {
             if (src.UsedTime) Runner.UsedTime = true;
+            // A global of the program: kept, so assignments to it (lightPos.x = …) last.
+            if (v.Text is null) Runner.Globals[name] = v;
             return v;
         }
         // A member or global of a struct type with no initializer: zero-initialised, kept between statements.

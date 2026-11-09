@@ -137,7 +137,7 @@ public sealed partial class ShaderParser
                 Expr? value = null;
                 if (Accept("=")) value = Initializer();
                 else if (Peek.Is("{")) value = Initializer(); // C++: Type name{ … }
-                else if (Peek.Is("(") && !type.StartsWith("vec", StringComparison.Ordinal)) value = new Call(type, CallArgs(), line); // C++: Type name(args)
+                else if (Peek.Is("(")) value = new Call(type, CallArgs(), line); // C++: Type name(args)
                 list.Add(new Declare(type, id, value, line, size != 0));
             } while (Accept(","));
             return list;
