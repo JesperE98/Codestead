@@ -1,0 +1,66 @@
+namespace Codestead.GP.Gpu.Shading;
+
+/// <summary>The syntax tree of the shader subset the simulator runs (and of C++ value expressions).</summary>
+public static class ShaderAst
+{
+    public abstract record Expr(int Line);
+
+    public sealed record Number(double Value, int Line) : Expr(Line);
+
+    public sealed record Name(string Id, int Line) : Expr(Line);
+
+    /// <summary>a.b – a struct member or a swizzle (.xyz, .rgb).</summary>
+    public sealed record Member(Expr Target, string Field, int Line) : Expr(Line);
+
+    public sealed record IndexOf(Expr Target, Expr At, int Line) : Expr(Line);
+
+    /// <summary>f(args) – a function, a constructor (vec4, float3) or an array constructor (vec2[]).</summary>
+    public sealed record Call(string Function, IReadOnlyList<Expr> Args, int Line, bool ArrayConstructor = false) : Expr(Line);
+
+    public sealed record Unary(string Op, Expr Operand, int Line) : Expr(Line);
+
+    public sealed record Binary(string Op, Expr Left, Expr Right, int Line) : Expr(Line);
+
+    public sealed record Conditional(Expr Condition, Expr Then, Expr Else, int Line) : Expr(Line);
+
+    /// <summary>{ a, b, c } – an initializer list (C++ and HLSL).</summary>
+    public sealed record InitList(IReadOnlyList<Expr> Items, int Line) : Expr(Line);
+
+    public abstract record Stmt(int Line);
+
+    /// <summary>T name[N] = value; (Value may be null.)</summary>
+    public sealed record Declare(string Type, string Id, Expr? Value, int Line, bool IsArray = false) : Stmt(Line);
+
+    /// <summary>target op value; with op "=", "+=", "-=", "*=" or "/=".</summary>
+    public sealed record Assign(Expr Target, string Op, Expr Value, int Line) : Stmt(Line);
+
+    public sealed record Return(Expr? Value, int Line) : Stmt(Line);
+
+    public sealed record If(Expr Condition, IReadOnlyList<Stmt> Then, IReadOnlyList<Stmt>? Else, int Line) : Stmt(Line);
+
+    /// <summary>for (init; condition; step) body – only loops with a small, known number of steps run.</summary>
+    public sealed record For(Stmt? Init, Expr? Condition, Stmt? Step, IReadOnlyList<Stmt> Body, int Line) : Stmt(Line);
+
+    public sealed record Discard(int Line) : Stmt(Line);
+
+    /// <summary>An expression used as a statement (a call, i++).</summary>
+    public sealed record ExprStmt(Expr Value, int Line) : Stmt(Line);
+
+    /// <summary>A function parameter: type, name, qualifiers (in/out), HLSL semantic (POSITION, SV_TARGET …).</summary>
+    public sealed record Param(string Type, string Id, string? Semantic, bool Out);
+
+    public sealed record Function(string ReturnType, string Id, IReadOnlyList<Param> Params, string? Semantic, IReadOnlyList<Stmt> Body, int Line);
+
+    /// <summary>A struct member (HLSL members can have a semantic).</summary>
+    public sealed record Field(string Type, string Id, string? Semantic, int ArraySize);
+
+    public sealed record Struct(string Id, IReadOnlyList<Field> Fields);
+
+    /// <summary>
+    /// A global: "in"/"out"/"uniform"/"const"/plain, with GLSL layout(location = n) / layout(push_constant) /
+    /// layout(binding = n), or an HLSL cbuffer/Texture2D/SamplerState with register(..).
+    /// A uniform or cbuffer block has <see cref="Block"/> fields; <see cref="Id"/> is then the instance name
+    /// (or empty: the fields are globals).
+    /// </summary>
+    public sealed record Global(string Storage, string Type, string Id, int? Location, bool PushConstant, IReadOnlyList<Field>? Block, Expr? Value, int ArraySize, int Line);
+}

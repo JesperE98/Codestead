@@ -1,0 +1,227 @@
+using System.Text.RegularExpressions;
+using Codestead.GP.Gpu.Scene;
+using Codestead.GP.Gpu.Shading;
+
+namespace Codestead.GP.Gpu.Readers;
+
+// The draw call: shaders compiled with D3DCompileFromFile, the input layout, the vertex and index data copied into
+// upload buffers, the rasterizer state of the pipeline state object, root constants and the Draw*Instanced call.
+public sealed partial class D3D12Reader
+{
+    private void Draw()
+    {
+        var draw = src.Calls(".DrawInstanced").FirstOrDefault();
+        var drawIndexed = src.Calls(".DrawIndexedInstanced").FirstOrDefault();
+        var call = drawIndexed ?? draw;
+        if (call is null) return;
+        if (!Has("CreateGraphicsPipelineState"))
+        {
+            scene.Notes.Add(SimNote.Error("dxNoPso", ("call", call.Name)));
+            return;
+        }
+        if (!Has("SetGraphicsRootSignature"))
+        {
+            scene.Notes.Add(SimNote.Error("dxNoRootSignature", ("call", call.Name)));
+            return;
+        }
+        if (!Has("RSSetViewports") || !Has("RSSetScissorRects"))
+        {
+            scene.Notes.Add(SimNote.Warning("dxNoViewport"));
+            return;
+        }
+        var vsInfo = Compile("vs_");
+        var psInfo = Compile("ps_");
+        if (vsInfo is null || psInfo is null) return;
+        var (vs, vsEntry) = vsInfo.Value;
+        var (ps, psEntry) = psInfo.Value;
+
+        var vertices = new List<Dictionary<string, ShaderValue>>();
+        var entry = vs.FindFunction(vsEntry);
+        bool needsInput = entry is not null && entry.Params.Any(p => p.Semantic is not null && !p.Semantic.StartsWith("SV_", StringComparison.OrdinalIgnoreCase)
+            || vs.FindStruct(p.Type) is not null);
+        if (needsInput && !VertexData(vertices)) return;
+
+        int[]? indices = null;
+        int first = 0, count, instances;
+        if (call == drawIndexed)
+        {
+            if (!Has("IASetIndexBuffer") || IndexData() is not { } data)
+            {
+                scene.Notes.Add(SimNote.Error("dxNoIndexBuffer"));
+                return;
+            }
+            count = src.Int(call.Arg(0)) ?? 0;
+            instances = src.Int(call.Arg(1)) ?? 1;
+            int start = src.Int(call.Arg(2)) ?? 0;
+            indices = data.Skip(start).Take(count).Select(d => (int)d).ToArray();
+        }
+        else
+        {
+            count = src.Int(call.Arg(0)) ?? 0;
+            instances = src.Int(call.Arg(1)) ?? 1;
+            first = src.Int(call.Arg(2)) ?? 0;
+        }
+
+        var topology = src.Calls(".IASetPrimitiveTopology").FirstOrDefault()?.Arg(0);
+        if (topology is null)
+        {
+            scene.Notes.Add(SimNote.Warning("dxNoTopology"));
+            return;
+        }
+        // The rasterizer state: CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT) culls back faces, front = clockwise.
+        var cull = src.LastFieldValue("CullMode") ?? "D3D12_CULL_MODE_BACK";
+        var fill = src.LastFieldValue("FillMode") ?? "D3D12_FILL_MODE_SOLID";
+        var frontCcw = src.LastFieldValue("FrontCounterClockwise") is { } f && (src.Int(f) ?? 0) != 0;
+        bool depth = src.LastFieldValue("DepthEnable") is { } de && (src.Int(de) ?? 0) != 0;
+
+        scene.Draws.Add(new DrawCall
+        {
+            VertexShader = vs,
+            FragmentShader = ps,
+            VertexEntry = vsEntry,
+            FragmentEntry = psEntry,
+            Hlsl = true,
+            Vertices = vertices,
+            Indices = indices,
+            First = first,
+            Count = indices?.Length ?? count,
+            Instances = Math.Max(1, instances),
+            Topology = GlReader.TopologyOf(topology),
+            Uniforms = Constants(vs, ps),
+            Cull = cull.Contains("NONE", StringComparison.Ordinal) ? CullMode.None : cull.Contains("FRONT", StringComparison.Ordinal) ? CullMode.Front : CullMode.Back,
+            FrontCcw = frontCcw,
+            Wireframe = fill.Contains("WIREFRAME", StringComparison.Ordinal),
+            DepthTest = depth,
+        });
+        foreach (var d in scene.Draws) d.Uniforms(1.0);
+        if (src.UsedTime) scene.Animated = true;
+    }
+
+    /// <summary>The shader compiled for a target ("vs_5_0", "ps_5_0"): D3DCompileFromFile(L"shaders.hlsl", …, "VSMain", "vs_5_0", …).</summary>
+    private (ShaderProgram Program, string Entry)? Compile(string targetPrefix)
+    {
+        foreach (var c in src.Calls("D3DCompileFromFile"))
+        {
+            var target = CppSource.StringArg(c.Arg(4)) ?? "";
+            if (!target.StartsWith(targetPrefix, StringComparison.Ordinal)) continue;
+            var file = CppSource.StringArg(c.Arg(0)) ?? (src.Evaluate(c.Arg(0))?.Text ?? "");
+            var entry = CppSource.StringArg(c.Arg(3)) ?? "main";
+            var text = project.Find(file);
+            if (text is null)
+            {
+                scene.Notes.Add(SimNote.Error("shaderFileMissing", ("file", file)));
+                return null;
+            }
+            try
+            {
+                var program = ShaderParser.ParseProgram(text);
+                if (program.FindFunction(entry) is null)
+                {
+                    scene.Notes.Add(SimNote.Error("dxNoEntryPoint", ("entry", entry), ("file", file)));
+                    return null;
+                }
+                return (program, entry);
+            }
+            catch (ShaderSyntaxException)
+            {
+                return null; // The build reported it.
+            }
+        }
+        scene.Notes.Add(SimNote.Error("dxShaderNotCompiled", ("target", targetPrefix + "5_0")));
+        return null;
+    }
+
+    private static int Components(string format)
+    {
+        var m = Regex.Match(format, @"DXGI_FORMAT_((?:[RGBA]\d+)+)_");
+        return m.Success ? Regex.Matches(m.Groups[1].Value, @"[RGBA]\d+").Count : 4;
+    }
+
+    /// <summary>The vertex array copied into the vertex buffer, laid out by the input layout (semantic → floats at a byte offset).</summary>
+    private bool VertexData(List<Dictionary<string, ShaderValue>> into)
+    {
+        var layoutName = Regex.Match(src.Code, @"D3D12_INPUT_ELEMENT_DESC\s+(\w+)\s*\[");
+        var layout = layoutName.Success ? src.Initializer(layoutName.Groups[1].Value) : null;
+        if (layout is null || !Has("IASetVertexBuffers"))
+        {
+            scene.Notes.Add(SimNote.Error("dxNoInputLayout"));
+            return false;
+        }
+        var elements = new List<(string Semantic, int Offset, int Comps)>();
+        int nextOffset = 0;
+        foreach (var item in CppSource.SplitArgs(layout.Trim()[1..^1]))
+        {
+            var parts = CppSource.SplitArgs(item.Trim().TrimStart('{').TrimEnd('}'));
+            if (parts.Count < 5) continue;
+            var semantic = (CppSource.StringArg(parts[0]) ?? "").ToUpperInvariant() + (src.Int(parts[1]) ?? 0);
+            int comps = Components(parts[2]);
+            int offset = parts[4].Contains("APPEND_ALIGNED", StringComparison.Ordinal) ? nextOffset : src.Int(parts[4]) ?? 0;
+            nextOffset = offset + comps * 4;
+            elements.Add((semantic, offset, comps));
+        }
+        var source = VertexArrayName();
+        if (source is null || src.Initializer(source) is not { } init || src.Evaluate(init) is not { } value)
+        {
+            scene.Notes.Add(SimNote.Error("dxNoVertexData"));
+            return false;
+        }
+        foreach (var item in value.Items ?? [value])
+        {
+            var nums = new List<double>();
+            Flatten(item, nums);
+            var dict = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+            foreach (var (semantic, offset, comps) in elements)
+                dict[semantic] = ShaderValue.Vec(nums.Skip(offset / 4).Take(comps).ToArray());
+            into.Add(dict);
+        }
+        return true;
+    }
+
+    private static void Flatten(ShaderValue v, List<double> into)
+    {
+        if (v.V is not null) into.AddRange(v.V);
+        else if (v.Items is not null) foreach (var i in v.Items) Flatten(i, into);
+    }
+
+    private static bool IsIndexType(string? type) => type is not null && Regex.IsMatch(type, @"^(?:UINT16|uint16_t|UINT|uint32_t|DWORD|WORD|unsigned(?:int|short)?|std::(?:vector|array)<(?:UINT16|uint16_t|UINT|uint32_t|DWORD|WORD)[^>]*>)$");
+
+    /// <summary>The arrays copied with memcpy into the mapped buffers: the vertex array is the one that is not of an index type.</summary>
+    private string? VertexArrayName() =>
+        src.Calls("memcpy").Select(c => Regex.Replace(c.Arg(1).Trim().TrimStart('&'), @"\.data\(\)$|\[0\]$", ""))
+            .FirstOrDefault(n => Regex.IsMatch(n, @"^\w+$") && !IsIndexType(src.DeclaredType(n)) && src.Initializer(n) is { } i && i.TrimStart().StartsWith('{'));
+
+    private List<double>? IndexData()
+    {
+        var name = src.Calls("memcpy").Select(c => Regex.Replace(c.Arg(1).Trim().TrimStart('&'), @"\.data\(\)$|\[0\]$", ""))
+            .FirstOrDefault(n => Regex.IsMatch(n, @"^\w+$") && IsIndexType(src.DeclaredType(n)));
+        return name is null ? null : src.Numbers(name);
+    }
+
+    /// <summary>
+    /// Constants: an HLSL cbuffer whose name matches a C++ struct; the fields assigned to a variable of that type
+    /// (constants.color = XMFLOAT4(…)) are its values. They must reach the GPU (root constants or a constant buffer).
+    /// </summary>
+    private Func<double, Dictionary<string, ShaderValue>> Constants(ShaderProgram vs, ShaderProgram ps)
+    {
+        var blocks = vs.Globals.Concat(ps.Globals).Where(g => g.Block is not null).ToList();
+        if (blocks.Count == 0) return _ => new();
+        var assignments = new List<(string Field, string Expr)>();
+        foreach (var block in blocks)
+        {
+            var variables = Regex.Matches(src.Code, @"\b" + Regex.Escape(block.Type) + @"\s+(\w+)\s*(?:\{[^;]*\}|=[^;]*)?\s*;").Select(m => m.Groups[1].Value).ToHashSet();
+            if (variables.Count == 0) continue;
+            if (!Has("SetGraphicsRoot32BitConstants") && !Has("SetGraphicsRootConstantBufferView") && !Has("SetGraphicsRootDescriptorTable"))
+                scene.Notes.Add(SimNote.Warning("dxConstantsNotSet", ("type", block.Type)));
+            foreach (var field in block.Block!)
+                foreach (var a in src.FieldAssignments(field.Id))
+                    if (variables.Contains(a.Target)) assignments.Add((field.Id, a.Value));
+        }
+        return t =>
+        {
+            var d = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+            foreach (var (field, expr) in assignments)
+                if (src.Evaluate(expr, t) is { } v) d[field] = v;
+            return d;
+        };
+    }
+}

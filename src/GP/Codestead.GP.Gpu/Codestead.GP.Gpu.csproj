@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The simulated GPU of Codestead GP, with no UI: it "builds" the learner's project (catches the mistakes a
+       compiler would), reads what the program draws (window, clear colour, vertex data, shaders, draw calls) for
+       OpenGL, Vulkan and DirectX 12, runs the shaders and rasterises the result in software. -->
+  <PropertyGroup>
+    <RootNamespace>Codestead.GP.Gpu</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Codestead.GP.Tests" />
+  </ItemGroup>
+  <!-- Every function, type and constant of each API, taken from the real headers (see symbols/README.md). -->
+  <ItemGroup>
+    <EmbeddedResource Include="symbols/*.txt">
+      <LogicalName>symbols/%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

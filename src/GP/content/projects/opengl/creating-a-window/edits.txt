@@ -1,0 +1,45 @@
+=== task: glfw-init
+--- file: main.cpp
+--- find:
+    // TODO: initialize GLFW (glfwInit) and ask for an OpenGL 3.3 core profile context (glfwWindowHint)
+--- replace:
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+#ifdef __APPLE__
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+
+=== task: create-window
+--- file: main.cpp
+--- find:
+    // TODO: create an 800x600 window called "LearnOpenGL" (glfwCreateWindow), check it and make its context current
+--- replace:
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+    if (window == NULL)
+    {
+        std::cout << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+    glfwMakeContextCurrent(window);
+
+=== task: glad
+--- file: main.cpp
+--- find:
+    // TODO: load the OpenGL function pointers with GLAD (gladLoadGLLoader) and check that it worked
+--- replace:
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        return -1;
+    }
+
+=== task: terminate
+--- file: main.cpp
+--- find:
+    // TODO: clean up GLFW before the program ends (glfwTerminate)
+--- replace:
+    glfwTerminate();

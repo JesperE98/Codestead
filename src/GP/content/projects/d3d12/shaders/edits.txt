@@ -1,0 +1,242 @@
+=== task: in-out
+--- file: shaders.hlsl
+--- find:
+    float4 position : SV_POSITION;
+};
+--- replace:
+    float4 position : SV_POSITION;
+    float4 color : COLOR;            // out of the vertex shader, into the pixel shader
+};
+--- file: shaders.hlsl
+--- find:
+    result.position = position;
+--- replace:
+    result.position = position;
+    result.color = float4(0.5f, 0.0f, 0.0f, 1.0f);    // dark red
+--- file: shaders.hlsl
+--- find:
+    return float4(1.0f, 0.5f, 0.2f, 1.0f);
+--- replace:
+    // The colour from the vertex shader, interpolated across the triangle.
+    return input.color;
+
+=== task: uniform
+--- file: shaders.hlsl
+--- find:
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+--- replace:
+// Root constants set from main.cpp with SetGraphicsRoot32BitConstants: the shaders
+// see them as a constant buffer at register b0.
+cbuffer ColorConstants : register(b0)
+{
+    float4 color;
+};
+
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+--- file: shaders.hlsl
+--- find:
+    // The colour from the vertex shader, interpolated across the triangle.
+    return input.color;
+--- replace:
+    // The colour set from the CPU.
+    return color;
+--- file: main.cpp
+--- find:
+#include <climits>
+#include <cstdio>
+--- replace:
+#include <chrono>
+#include <climits>
+#include <cmath>
+#include <cstdio>
+--- file: main.cpp
+--- find:
+    struct Vertex
+    {
+        XMFLOAT3 position;
+    };
+--- replace:
+    struct Vertex
+    {
+        XMFLOAT3 position;
+    };
+
+    // The root constants: what the shaders see as cbuffer ColorConstants.
+    struct ColorConstants
+    {
+        XMFLOAT4 color;
+    };
+--- file: main.cpp
+--- find:
+    // Create an empty root signature.
+    {
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+--- replace:
+    // Create a root signature with one parameter: root constants for register b0.
+    {
+        // Root constants live in the root signature itself, as 32-bit values:
+        // sizeof(ColorConstants) / 4 of them, visible to all shader stages.
+        CD3DX12_ROOT_PARAMETER rootParameters[1];
+        rootParameters[0].InitAsConstants(sizeof(ColorConstants) / 4, 0);
+
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+--- file: main.cpp
+--- find:
+    m_commandList->RSSetScissorRects(1, &m_scissorRect);
+--- replace:
+    m_commandList->RSSetScissorRects(1, &m_scissorRect);
+
+    // The colour for the pixel shader: green goes up and down with the time.
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+    float greenValue = std::sin(time) / 2.0f + 0.5f;
+
+    ColorConstants colorConstants = {};
+    colorConstants.color = XMFLOAT4(0.0f, greenValue, 0.0f, 1.0f);
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ColorConstants) / 4, &colorConstants, 0);
+
+=== task: vertex-colors
+--- file: main.cpp
+--- find:
+        XMFLOAT3 position;
+    };
+--- replace:
+        XMFLOAT3 position;
+        XMFLOAT3 color;
+    };
+--- file: main.cpp
+--- find:
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+--- replace:
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+--- file: main.cpp
+--- find:
+            { { 0.0f, 0.5f, 0.0f } },
+            { { 0.5f, -0.5f, 0.0f } },
+            { { -0.5f, -0.5f, 0.0f } }
+--- replace:
+            // position               color
+            { { 0.0f, 0.5f, 0.0f },   { 0.0f, 0.0f, 1.0f } },    // top: blue
+            { { 0.5f, -0.5f, 0.0f },  { 1.0f, 0.0f, 0.0f } },    // bottom right: red
+            { { -0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f } }     // bottom left: green
+--- file: shaders.hlsl
+--- find:
+// Root constants set from main.cpp with SetGraphicsRoot32BitConstants: the shaders
+// see them as a constant buffer at register b0.
+cbuffer ColorConstants : register(b0)
+{
+    float4 color;
+};
+
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+--- replace:
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+--- file: shaders.hlsl
+--- find:
+PSInput VSMain(float4 position : POSITION)
+--- replace:
+PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
+--- file: shaders.hlsl
+--- find:
+    result.color = float4(0.5f, 0.0f, 0.0f, 1.0f);    // dark red
+--- replace:
+    result.color = color;    // the vertex's colour from the vertex buffer
+--- file: shaders.hlsl
+--- find:
+    // The colour set from the CPU.
+    return color;
+--- replace:
+    // The colour from the vertex shader, interpolated across the triangle.
+    return input.color;
+
+=== task: upside-down
+--- file: shaders.hlsl
+--- find:
+    result.position = position;
+--- replace:
+    result.position = float4(position.x, -position.y, position.z, 1.0f);    // y flipped: upside down
+--- file: main.cpp
+--- find:
+        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+--- replace:
+        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        // Flipping y turns clockwise triangles counter-clockwise: back faces, which the
+        // default state culls. Draw both sides.
+        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+
+=== task: offset
+--- file: shaders.hlsl
+--- find:
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+--- replace:
+// Root constants set from main.cpp with SetGraphicsRoot32BitConstants: the shaders
+// see them as a constant buffer at register b0.
+cbuffer OffsetConstants : register(b0)
+{
+    float xOffset;
+};
+
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+--- file: shaders.hlsl
+--- find:
+    result.position = float4(position.x, -position.y, position.z, 1.0f);    // y flipped: upside down
+--- replace:
+    result.position = float4(position.x + xOffset, -position.y, position.z, 1.0f);    // upside down, moved right
+--- file: main.cpp
+--- find:
+#include <chrono>
+#include <climits>
+#include <cmath>
+#include <cstdio>
+--- replace:
+#include <climits>
+#include <cstdio>
+--- file: main.cpp
+--- find:
+    // The root constants: what the shaders see as cbuffer ColorConstants.
+    struct ColorConstants
+    {
+        XMFLOAT4 color;
+    };
+--- replace:
+    // The root constants: what the shaders see as cbuffer OffsetConstants.
+    struct OffsetConstants
+    {
+        float xOffset;
+    };
+--- file: main.cpp
+--- find:
+        // sizeof(ColorConstants) / 4 of them, visible to all shader stages.
+        CD3DX12_ROOT_PARAMETER rootParameters[1];
+        rootParameters[0].InitAsConstants(sizeof(ColorConstants) / 4, 0);
+--- replace:
+        // sizeof(OffsetConstants) / 4 of them, visible to all shader stages.
+        CD3DX12_ROOT_PARAMETER rootParameters[1];
+        rootParameters[0].InitAsConstants(sizeof(OffsetConstants) / 4, 0);
+--- file: main.cpp
+--- find:
+    // The colour for the pixel shader: green goes up and down with the time.
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+    float greenValue = std::sin(time) / 2.0f + 0.5f;
+
+    ColorConstants colorConstants = {};
+    colorConstants.color = XMFLOAT4(0.0f, greenValue, 0.0f, 1.0f);
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ColorConstants) / 4, &colorConstants, 0);
+--- replace:
+    // The offset for the vertex shader: moves the triangle to the right.
+    OffsetConstants offsetConstants = {};
+    offsetConstants.xOffset = 0.5f;
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(OffsetConstants) / 4, &offsetConstants, 0);
+
+=== task: position-color
+--- file: shaders.hlsl
+--- find:
+    result.color = color;    // the vertex's colour from the vertex buffer
+--- replace:
+    result.color = position;    // the position as the colour: x -> red, y -> green, z -> blue

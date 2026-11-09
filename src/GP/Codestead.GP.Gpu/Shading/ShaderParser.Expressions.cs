@@ -1,0 +1,170 @@
+using System.Globalization;
+using static Codestead.GP.Gpu.Shading.ShaderAst;
+
+namespace Codestead.GP.Gpu.Shading;
+
+// Expressions, by precedence: ?:, ||, &&, == !=, < > <= >=, + -, * / %, unary, postfix (calls, members, indexing).
+public sealed partial class ShaderParser
+{
+    private Expr Expression()
+    {
+        var cond = Binary(0);
+        if (!Accept("?")) return cond;
+        var then = Expression();
+        Expect(":");
+        return new Conditional(cond, then, Expression(), cond.Line);
+    }
+
+    private static readonly string[][] Levels =
+    {
+        new[] { "||" },
+        new[] { "&&" },
+        new[] { "|" },
+        new[] { "^" },
+        new[] { "&" },
+        new[] { "==", "!=" },
+        new[] { "<", ">", "<=", ">=" },
+        new[] { "+", "-" },
+        new[] { "*", "/", "%" },
+    };
+
+    private Expr Binary(int level)
+    {
+        if (level == Levels.Length) return UnaryExpr();
+        var left = Binary(level + 1);
+        while (Peek.Kind == ShaderTokenKind.Symbol && Levels[level].Contains(Peek.Text))
+        {
+            var op = Next();
+            left = new ShaderAst.Binary(op.Text, left, Binary(level + 1), op.Line);
+        }
+        return left;
+    }
+
+    private Expr UnaryExpr()
+    {
+        int line = Peek.Line;
+        if (Peek.Kind == ShaderTokenKind.Symbol && Peek.Text is "-" or "+" or "!" or "~" or "++" or "--" or "&" or "*")
+        {
+            var op = Next().Text;
+            var operand = UnaryExpr();
+            // &x and *p (C++): the value itself is what matters to the simulator.
+            return op is "+" or "&" or "*" ? operand : new Unary(op, operand, line);
+        }
+        // C-style casts: (float)x, (void*)0, (GLfloat)x.
+        if (Peek.Is("(") && PeekAt(1).Kind == ShaderTokenKind.Identifier && (PeekAt(2).Is(")") || (PeekAt(2).Is("*") && PeekAt(3).Is(")")))
+            && IsCastType(PeekAt(1).Text))
+        {
+            Next();
+            Next();
+            Accept("*");
+            Expect(")");
+            return UnaryExpr();
+        }
+        return Postfix(Primary());
+    }
+
+    private static bool IsCastType(string t) => t is "float" or "double" or "int" or "uint" or "unsigned" or "void" or "GLfloat" or "GLint" or "GLuint" or "GLsizei" or "uint32_t" or "int32_t" or "size_t" or "UINT" or "FLOAT" or "half" or "char";
+
+    private Expr Postfix(Expr e)
+    {
+        while (true)
+        {
+            int line = Peek.Line;
+            if (Accept("."))
+            {
+                var field = Identifier();
+                if (Peek.Is("(")) e = new Call("." + field, new List<Expr> { e }.Concat(CallArgs()).ToList(), line);
+                else e = new Member(e, field, line);
+            }
+            else if (Accept("->"))
+            {
+                var field = Identifier();
+                if (Peek.Is("(")) e = new Call("." + field, new List<Expr> { e }.Concat(CallArgs()).ToList(), line);
+                else e = new Member(e, field, line);
+            }
+            else if (Accept("["))
+            {
+                var at = Expression();
+                Expect("]");
+                e = new IndexOf(e, at, line);
+            }
+            else if (Peek.Is("++") || Peek.Is("--"))
+            {
+                var op = Next().Text;
+                e = new Unary("post" + op, e, line);
+            }
+            else return e;
+        }
+    }
+
+    private List<Expr> CallArgs()
+    {
+        Expect("(");
+        var args = new List<Expr>();
+        if (Accept(")")) return args;
+        do args.Add(Initializer());
+        while (Accept(","));
+        Expect(")");
+        return args;
+    }
+
+    private Expr Primary()
+    {
+        var t = Peek;
+        switch (t.Kind)
+        {
+            case ShaderTokenKind.Number:
+                Next();
+                return new Number(double.Parse(t.Text, CultureInfo.InvariantCulture), t.Line);
+            case ShaderTokenKind.String:
+                Next();
+                // Adjacent string literals are joined, as in C++.
+                var text = t.Text;
+                while (Peek.Kind == ShaderTokenKind.String) text += Next().Text;
+                return new Call("string", [new Name(text, t.Line)], t.Line);
+            case ShaderTokenKind.Identifier:
+            {
+                Next();
+                // static_cast<float>(x) and friends.
+                if (t.Text is "static_cast" or "reinterpret_cast" or "const_cast" && Peek.Is("<"))
+                {
+                    while (!Accept(">")) Next();
+                    Expect("(");
+                    var inner = Expression();
+                    Expect(")");
+                    return inner;
+                }
+                if (t.Text is "true" or "false") return new Number(t.Text == "true" ? 1 : 0, t.Line);
+                // vec2[](…) – an array constructor; float3x3(…) and friends are plain calls.
+                if (Peek.Is("[") && PeekAt(1).Is("]") && PeekAt(2).Is("("))
+                {
+                    Next();
+                    Next();
+                    return new Call(t.Text, CallArgs(), t.Line, ArrayConstructor: true);
+                }
+                if (Peek.Is("(")) return new Call(t.Text, CallArgs(), t.Line);
+                // C++ brace construction: glm::vec4{1, 0, 0, 1}, XMFLOAT4{…}
+                if (Peek.Is("{") && char.IsLetter(t.Text[0]) && LooksLikeType(t.Text))
+                {
+                    var init = (InitList)Initializer();
+                    return new Call(t.Text, init.Items, t.Line);
+                }
+                return new Name(t.Text, t.Line);
+            }
+            case ShaderTokenKind.Symbol when t.Is("("):
+            {
+                Next();
+                var e = Expression();
+                Expect(")");
+                return e;
+            }
+            case ShaderTokenKind.Symbol when t.Is("{"):
+                return Initializer();
+            default:
+                throw new ShaderSyntaxException(t.Kind == ShaderTokenKind.End ? "expected an expression at end of input" : $"expected an expression before '{t.Text}'", t.Line);
+        }
+    }
+
+    private static bool LooksLikeType(string id) =>
+        id.StartsWith("vec", StringComparison.Ordinal) || id.StartsWith("XMFLOAT", StringComparison.Ordinal) || id.StartsWith("float", StringComparison.Ordinal) || char.IsUpper(id[0]);
+}

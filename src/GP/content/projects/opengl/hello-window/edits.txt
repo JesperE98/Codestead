@@ -1,0 +1,75 @@
+=== task: render-loop
+--- file: main.cpp
+--- find:
+    // TODO: keep the window open: loop until it should close, swapping the buffers and polling events each frame
+--- replace:
+    while (!glfwWindowShouldClose(window))
+    {
+        // input
+        // -----
+        // TODO: process the input (processInput)
+
+        // render
+        // ------
+        // TODO: clear the screen with a colour
+
+        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+        // -------------------------------------------------------------------------------
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+=== task: viewport
+--- file: main.cpp
+--- find:
+// TODO: declare framebuffer_size_callback (defined at the bottom of this file)
+--- replace:
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+--- file: main.cpp
+--- find:
+    // TODO: tell GLFW to call framebuffer_size_callback when the window is resized (glfwSetFramebufferSizeCallback)
+--- replace:
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+--- file: main.cpp
+--- find:
+// TODO: framebuffer_size_callback: make the viewport match the new window size (glViewport)
+--- replace:
+// glfw: whenever the window size changed (by OS or user resize) this callback function executes
+// ---------------------------------------------------------------------------------------------
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    // make sure the viewport matches the new window dimensions; note that width and
+    // height will be significantly larger than specified on retina displays.
+    glViewport(0, 0, width, height);
+}
+
+=== task: input
+--- file: main.cpp
+--- find:
+// TODO: declare processInput (defined at the bottom of this file)
+--- replace:
+void processInput(GLFWwindow *window);
+--- file: main.cpp
+--- find:
+        // TODO: process the input (processInput)
+--- replace:
+        processInput(window);
+--- file: main.cpp
+--- find:
+// TODO: processInput: close the window when Escape is pressed
+--- replace:
+// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
+// ---------------------------------------------------------------------------------------------------------
+void processInput(GLFWwindow *window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+}
+
+=== task: clear
+--- file: main.cpp
+--- find:
+        // TODO: clear the screen with a colour
+--- replace:
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
