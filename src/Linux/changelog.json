@@ -1,55 +1,75 @@
 [
   {
-    "version": "0.6.1",
+    "version": "0.6.2",
     "date": "2026-11-09",
+    "changes": {
+      "en": [
+        "The big terminal is back: it is always next to the lesson, also before the tasks are unlocked. The small terminals in the questions are gone – \"try it\" questions are answered in the big terminal. The tasks still unlock only when you have answered every question in the chapter.",
+        "The basics are easier to get into: `cut` is now in \"Reading and searching text\" and `tr` in \"Redirection and pipes\", and `sed` and `awk` have their own chapter at the start of \"Scripts and automation\" – after variables and quotes, which awk needs. A new task practises `cut`, and the tasks you already solved count where they are now."
+      ],
+      "sv": [
+        "Den stora terminalen är tillbaka: den finns alltid bredvid lektionen, även innan uppgifterna är upplåsta. De små terminalerna i frågorna är borta – \"prova själv\"-frågor besvaras i den stora terminalen. Uppgifterna låses fortfarande upp först när du har svarat på alla frågor i kapitlet.",
+        "Grunderna är lättare att komma in i: `cut` finns nu i \"Läsa och söka i text\" och `tr` i \"Omdirigering och pipes\", och `sed` och `awk` har fått ett eget kapitel först i \"Skript och automatisering\" – efter variabler och citattecken, som awk behöver. En ny uppgift övar `cut`, och uppgifter du redan har klarat räknas där de ligger nu."
+      ],
+      "de": [
+        "Das große Terminal ist zurück: Es steht immer neben der Lektion, auch bevor die Aufgaben freigeschaltet sind. Die kleinen Terminals in den Fragen sind weg – „Probier es aus“-Fragen beantwortest du im großen Terminal. Die Aufgaben werden weiterhin erst freigeschaltet, wenn du alle Fragen des Kapitels beantwortet hast.",
+        "Der Einstieg in die Grundlagen ist leichter: `cut` steht jetzt in „Text lesen und durchsuchen“ und `tr` in „Umleitungen und Pipes“, und `sed` und `awk` haben ein eigenes Kapitel am Anfang von „Skripte und Automatisierung“ – nach Variablen und Anführungszeichen, die awk braucht. Eine neue Aufgabe übt `cut`, und bereits gelöste Aufgaben zählen dort, wo sie jetzt stehen."
+      ],
+      "fr": [
+        "Le grand terminal est de retour : il est toujours à côté de la leçon, même avant que les tâches soient débloquées. Les petits terminaux dans les questions ont disparu – les questions « Essayez » se font dans le grand terminal. Les tâches ne se débloquent toujours qu'une fois toutes les questions du chapitre répondues.",
+        "Les bases sont plus faciles à aborder : `cut` est maintenant dans « Lire et rechercher du texte » et `tr` dans « Redirections et pipes », et `sed` et `awk` ont leur propre chapitre au début de « Scripts et automatisation » – après les variables et les guillemets, dont awk a besoin. Un nouvel exercice entraîne `cut`, et les exercices déjà réussis comptent là où ils se trouvent maintenant."
+      ],
+      "es": [
+        "La terminal grande ha vuelto: siempre está junto a la lección, también antes de que se desbloqueen las tareas. Las terminales pequeñas de las preguntas ya no están: las preguntas de \"pruébalo\" se responden en la terminal grande. Las tareas siguen desbloqueándose solo cuando has respondido todas las preguntas del capítulo.",
+        "Los fundamentos son más fáciles de empezar: `cut` está ahora en \"Leer y buscar texto\" y `tr` en \"Redirecciones y pipes\", y `sed` y `awk` tienen su propio capítulo al comienzo de \"Scripts y automatización\", después de las variables y las comillas, que awk necesita. Una tarea nueva practica `cut`, y las tareas que ya resolviste cuentan donde están ahora."
+      ],
+      "zh": [
+        "大终端回来了：它始终显示在课程旁边，即使任务尚未解锁。问题中的小终端已移除——“试一试”类问题改在大终端中完成。只有回答完本章的所有问题后，任务才会解锁，这一点保持不变。",
+        "基础部分更容易上手了：`cut` 现在位于“阅读和搜索文本”，`tr` 位于“重定向和管道”，`sed` 和 `awk` 则在“脚本与自动化”的开头有了单独的一章——放在 awk 所需的变量和引号之后。新增了一个练习 `cut` 的任务，你已经完成的任务会在新的位置继续计入。"
+      ],
+      "ja": [
+        "大きなターミナルが戻りました。課題のロックが解除される前から、常にレッスンの隣に表示されます。問題の中の小さなターミナルはなくなり、「試してみよう」の問題は大きなターミナルで答えます。課題のロックが解除されるのは、これまでどおり章のすべての問題に答えたときです。",
+        "基礎編に入りやすくなりました。`cut` は「テキストを読む・検索する」に、`tr` は「リダイレクトとパイプ」に移り、`sed` と `awk` は「スクリプトと自動化」の最初に独立した章になりました。awk に必要な変数と引用符を学んだ後に来ます。`cut` を練習する課題が 1 つ増え、すでに解いた課題は新しい場所でもそのまま数えられます。"
+      ]
+    }
+  },
+  {
+    "version": "0.6.1",
+    "date": "2026-11-03",
     "changes": {
       "en": [
         "Codestead now comes in **7 languages**: English, Swedish, Spanish, German, French, Chinese and Japanese. Portuguese, Russian, Arabic and Hindi are paused until native speakers have checked them – if you used one of them, the app now starts in English.",
         "When a command is not found, the terminal now tells you why: a likely typo (\"did you mean `ls`?\"), a real Linux command that the simulator does not have, or a command in a package that is not installed.",
-        "The big terminal is back: it is always next to the lesson, also before the tasks are unlocked. The small terminals in the questions are gone – \"try it\" questions are answered in the big terminal. The tasks still unlock only when you have answered every question in the chapter.",
-        "The basics are easier to get into: `cut` is now in \"Reading and searching text\" and `tr` in \"Redirection and pipes\", and `sed` and `awk` have their own chapter at the start of \"Scripts and automation\" – after variables and quotes, which awk needs. A new task practises `cut`, and the tasks you already solved count where they are now.",
         "Behind the scenes: the code is reorganised so that coming Codestead tools can share it. Nothing changes in how you use the app."
       ],
       "sv": [
         "Codestead finns nu på **7 språk**: engelska, svenska, spanska, tyska, franska, kinesiska och japanska. Portugisiska, ryska, arabiska och hindi är pausade tills någon med språket som modersmål har granskat dem – använde du något av dem startar appen nu på engelska.",
         "När ett kommando inte hittas säger terminalen nu varför: ett troligt stavfel (\"menade du `ls`?\"), ett riktigt Linux-kommando som simulatorn inte har, eller ett kommando i ett paket som inte är installerat.",
-        "Den stora terminalen är tillbaka: den finns alltid bredvid lektionen, även innan uppgifterna är upplåsta. De små terminalerna i frågorna är borta – \"prova själv\"-frågor besvaras i den stora terminalen. Uppgifterna låses fortfarande upp först när du har svarat på alla frågor i kapitlet.",
-        "Grunderna är lättare att komma in i: `cut` finns nu i \"Läsa och söka i text\" och `tr` i \"Omdirigering och pipes\", och `sed` och `awk` har fått ett eget kapitel först i \"Skript och automatisering\" – efter variabler och citattecken, som awk behöver. En ny uppgift övar `cut`, och uppgifter du redan har klarat räknas där de ligger nu.",
         "Bakom kulisserna: koden är omorganiserad så att kommande Codestead-verktyg kan dela på den. Inget ändras i hur du använder appen."
       ],
       "de": [
         "Codestead gibt es jetzt in **7 Sprachen**: Englisch, Schwedisch, Spanisch, Deutsch, Französisch, Chinesisch und Japanisch. Portugiesisch, Russisch, Arabisch und Hindi pausieren, bis Muttersprachler sie geprüft haben – wenn du eine davon genutzt hast, startet die App jetzt auf Englisch.",
         "Wenn ein Befehl nicht gefunden wird, sagt dir das Terminal jetzt, warum: ein wahrscheinlicher Tippfehler (\"Meintest du `ls`?\"), ein echter Linux-Befehl, den der Simulator nicht hat, oder ein Befehl aus einem nicht installierten Paket.",
-        "Das große Terminal ist zurück: Es steht immer neben der Lektion, auch bevor die Aufgaben freigeschaltet sind. Die kleinen Terminals in den Fragen sind weg – „Probier es aus“-Fragen beantwortest du im großen Terminal. Die Aufgaben werden weiterhin erst freigeschaltet, wenn du alle Fragen des Kapitels beantwortet hast.",
-        "Der Einstieg in die Grundlagen ist leichter: `cut` steht jetzt in „Text lesen und durchsuchen“ und `tr` in „Umleitungen und Pipes“, und `sed` und `awk` haben ein eigenes Kapitel am Anfang von „Skripte und Automatisierung“ – nach Variablen und Anführungszeichen, die awk braucht. Eine neue Aufgabe übt `cut`, und bereits gelöste Aufgaben zählen dort, wo sie jetzt stehen.",
         "Hinter den Kulissen: Der Code ist neu organisiert, damit künftige Codestead-Tools ihn gemeinsam nutzen können. An der Bedienung ändert sich nichts."
       ],
       "fr": [
         "Codestead est désormais disponible en **7 langues** : anglais, suédois, espagnol, allemand, français, chinois et japonais. Le portugais, le russe, l'arabe et le hindi sont en pause jusqu'à leur relecture par des locuteurs natifs – si vous utilisiez l'une d'elles, l'application démarre maintenant en anglais.",
         "Quand une commande est introuvable, le terminal vous dit maintenant pourquoi : une faute de frappe probable (« vouliez-vous dire `ls` ? »), une vraie commande Linux que le simulateur n'a pas, ou une commande d'un paquet non installé.",
-        "Le grand terminal est de retour : il est toujours à côté de la leçon, même avant que les tâches soient débloquées. Les petits terminaux dans les questions ont disparu – les questions « Essayez » se font dans le grand terminal. Les tâches ne se débloquent toujours qu'une fois toutes les questions du chapitre répondues.",
-        "Les bases sont plus faciles à aborder : `cut` est maintenant dans « Lire et rechercher du texte » et `tr` dans « Redirections et pipes », et `sed` et `awk` ont leur propre chapitre au début de « Scripts et automatisation » – après les variables et les guillemets, dont awk a besoin. Un nouvel exercice entraîne `cut`, et les exercices déjà réussis comptent là où ils se trouvent maintenant.",
         "En coulisses : le code est réorganisé pour que les futurs outils Codestead puissent le partager. Rien ne change dans votre utilisation de l'application."
       ],
       "es": [
         "Codestead está ahora disponible en **7 idiomas**: inglés, sueco, español, alemán, francés, chino y japonés. El portugués, el ruso, el árabe y el hindi quedan en pausa hasta que hablantes nativos los revisen; si usabas uno de ellos, la aplicación se abre ahora en inglés.",
         "Cuando no se encuentra un comando, la terminal ahora te dice por qué: un probable error de escritura (\"¿quisiste decir `ls`?\"), un comando real de Linux que el simulador no tiene o un comando de un paquete que no está instalado.",
-        "La terminal grande ha vuelto: siempre está junto a la lección, también antes de que se desbloqueen las tareas. Las terminales pequeñas de las preguntas ya no están: las preguntas de \"pruébalo\" se responden en la terminal grande. Las tareas siguen desbloqueándose solo cuando has respondido todas las preguntas del capítulo.",
-        "Los fundamentos son más fáciles de empezar: `cut` está ahora en \"Leer y buscar texto\" y `tr` en \"Redirecciones y pipes\", y `sed` y `awk` tienen su propio capítulo al comienzo de \"Scripts y automatización\", después de las variables y las comillas, que awk necesita. Una tarea nueva practica `cut`, y las tareas que ya resolviste cuentan donde están ahora.",
         "Entre bastidores: el código se ha reorganizado para que las próximas herramientas de Codestead puedan compartirlo. No cambia nada en cómo usas la aplicación."
       ],
       "zh": [
         "Codestead 现在提供 **7 种语言**：英语、瑞典语、西班牙语、德语、法语、中文和日语。葡萄牙语、俄语、阿拉伯语和印地语暂停提供，直到母语人士审校完毕——如果你之前使用其中一种，应用现在会以英语启动。",
         "找不到命令时，终端现在会告诉你原因：可能是拼写错误（“你是想输入 `ls` 吗？”）、模拟器没有提供的真实 Linux 命令，或者是未安装的软件包中的命令。",
-        "大终端回来了：它始终显示在课程旁边，即使任务尚未解锁。问题中的小终端已移除——“试一试”类问题改在大终端中完成。只有回答完本章的所有问题后，任务才会解锁，这一点保持不变。",
-        "基础部分更容易上手了：`cut` 现在位于“阅读和搜索文本”，`tr` 位于“重定向和管道”，`sed` 和 `awk` 则在“脚本与自动化”的开头有了单独的一章——放在 awk 所需的变量和引号之后。新增了一个练习 `cut` 的任务，你已经完成的任务会在新的位置继续计入。",
         "幕后：代码已重新组织，以便未来的 Codestead 工具可以共用。你使用应用的方式没有任何变化。"
       ],
       "ja": [
         "Codestead は **7 言語** に対応しました：英語、スウェーデン語、スペイン語、ドイツ語、フランス語、中国語、日本語。ポルトガル語、ロシア語、アラビア語、ヒンディー語はネイティブスピーカーの確認が済むまで一時停止します。これらを使っていた場合、アプリは英語で起動します。",
         "コマンドが見つからないとき、ターミナルがその理由を教えてくれるようになりました：入力ミスの可能性（「もしかして `ls` ですか？」）、シミュレーターにない実在の Linux コマンド、またはインストールされていないパッケージのコマンドです。",
-        "大きなターミナルが戻りました。課題のロックが解除される前から、常にレッスンの隣に表示されます。問題の中の小さなターミナルはなくなり、「試してみよう」の問題は大きなターミナルで答えます。課題のロックが解除されるのは、これまでどおり章のすべての問題に答えたときです。",
-        "基礎編に入りやすくなりました。`cut` は「テキストを読む・検索する」に、`tr` は「リダイレクトとパイプ」に移り、`sed` と `awk` は「スクリプトと自動化」の最初に独立した章になりました。awk に必要な変数と引用符を学んだ後に来ます。`cut` を練習する課題が 1 つ増え、すでに解いた課題は新しい場所でもそのまま数えられます。",
         "舞台裏：今後の Codestead ツールで共有できるようにコードを整理しました。アプリの使い方は何も変わりません。"
       ]
     }
