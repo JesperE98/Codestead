@@ -1,0 +1,38 @@
+[
+  {
+    "title": "Introduction",
+    "url": "https://learnopengl.com/Introduction",
+    "publisher": "LearnOpenGL",
+    "api": "opengl"
+  },
+  {
+    "title": "Hello Triangle",
+    "url": "https://learnopengl.com/Getting-started/Hello-Triangle",
+    "publisher": "LearnOpenGL",
+    "api": "opengl"
+  },
+  {
+    "title": "Introduction",
+    "url": "https://vulkan-tutorial.com/Introduction",
+    "publisher": "Vulkan Tutorial",
+    "api": "vulkan"
+  },
+  {
+    "title": "Vulkan Tutorial (source)",
+    "url": "https://github.com/Overv/VulkanTutorial",
+    "publisher": "GitHub – Overv",
+    "api": "vulkan"
+  },
+  {
+    "title": "Direct3D 12 programming guide",
+    "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/directx-12-programming-guide",
+    "publisher": "Microsoft Learn",
+    "api": "d3d12"
+  },
+  {
+    "title": "D3D12HelloWorld samples",
+    "url": "https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Samples/Desktop/D3D12HelloWorld",
+    "publisher": "GitHub – Microsoft",
+    "api": "d3d12"
+  }
+]

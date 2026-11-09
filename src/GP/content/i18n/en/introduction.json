@@ -1,0 +1,25 @@
+{
+  "title": "Welcome to graphics programming",
+  "tasks": {
+    "build-run": {
+      "text": "Press **Build & run** (Ctrl+Enter) and look at the window: an orange triangle on a dark teal background.",
+      "hint": {
+        "opengl": "Nothing to edit yet: `main.cpp` is the complete program you will write yourself in the coming chapters.",
+        "vulkan": "Nothing to edit yet: the program is complete. It opens an 800×600 window titled \"Vulkan\".",
+        "d3d12": "Nothing to edit yet: `main.cpp` sets up Direct3D 12 and draws, `shaders.hlsl` holds the two shaders."
+      }
+    },
+    "color": {
+      "text": {
+        "opengl": "Make the triangle green: in the fragment shader (`fragmentShaderSource`), change the colour to `vec4(0.2f, 0.8f, 0.3f, 1.0f)`.",
+        "vulkan": "Make the triangle green: in `shaders/shader.frag`, change the colour written to `outColor` to `vec4(0.2, 0.8, 0.3, 1.0)`.",
+        "d3d12": "Make the triangle green: in `shaders.hlsl`, let `PSMain` return `float4(0.2f, 0.8f, 0.3f, 1.0f)`."
+      },
+      "hint": {
+        "opengl": "The line `FragColor = vec4(r, g, b, a);` sets the colour of every pixel of the triangle; each value goes from 0.0 to 1.0.",
+        "vulkan": "The fragment shader runs for every pixel of the triangle; `outColor` is its output at location 0 (red, green, blue, alpha, 0.0 to 1.0).",
+        "d3d12": "The pixel shader's return value is the colour of every pixel of the triangle (red, green, blue, alpha, 0.0 to 1.0)."
+      }
+    }
+  }
+}

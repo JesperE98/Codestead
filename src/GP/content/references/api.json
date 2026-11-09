@@ -1,0 +1,62 @@
+[
+  {
+    "title": "OpenGL",
+    "url": "https://learnopengl.com/Getting-started/OpenGL",
+    "publisher": "LearnOpenGL",
+    "api": "opengl"
+  },
+  {
+    "title": "OpenGL overview",
+    "url": "https://www.khronos.org/opengl/",
+    "publisher": "Khronos Group",
+    "api": "opengl"
+  },
+  {
+    "title": "OpenGL registry",
+    "url": "https://registry.khronos.org/OpenGL/index_gl.php",
+    "publisher": "Khronos Group",
+    "api": "opengl"
+  },
+  {
+    "title": "Overview",
+    "url": "https://vulkan-tutorial.com/Overview",
+    "publisher": "Vulkan Tutorial",
+    "api": "vulkan"
+  },
+  {
+    "title": "Vulkan Guide",
+    "url": "https://docs.vulkan.org/guide/latest/index.html",
+    "publisher": "Khronos Group",
+    "api": "vulkan"
+  },
+  {
+    "title": "Vulkan specification",
+    "url": "https://docs.vulkan.org/spec/latest/index.html",
+    "publisher": "Khronos Group",
+    "api": "vulkan"
+  },
+  {
+    "title": "What is Direct3D 12?",
+    "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/what-is-directx-12-",
+    "publisher": "Microsoft Learn",
+    "api": "d3d12"
+  },
+  {
+    "title": "Important changes from Direct3D 11 to Direct3D 12",
+    "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/important-changes-from-directx-11-to-directx-12",
+    "publisher": "Microsoft Learn",
+    "api": "d3d12"
+  },
+  {
+    "title": "Hardware feature levels",
+    "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/hardware-feature-levels",
+    "publisher": "Microsoft Learn",
+    "api": "d3d12"
+  },
+  {
+    "title": "Direct3D 12 programming environment setup (debug layer)",
+    "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/directx-12-programming-environment-set-up",
+    "publisher": "Microsoft Learn",
+    "api": "d3d12"
+  }
+]
