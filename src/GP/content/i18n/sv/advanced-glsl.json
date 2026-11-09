@@ -1,0 +1,53 @@
+{
+  "title": "Advanced GLSL",
+  "tasks": {
+    "frag-coord": {
+      "text": {
+        "opengl": "Färga varje fragment efter dess fönsterposition i `advanced_glsl.fs`: rött där `gl_FragCoord.x < 400`, annars grönt.",
+        "vulkan": "Färga varje fragment efter dess fönsterposition i `advanced_glsl.frag`: rött där `gl_FragCoord.x < 400`, annars grönt.",
+        "d3d12": "Färga varje pixel efter dess fönsterposition i `PSMain` (`advanced_glsl.hlsl`): rött där `input.position.x < 400.0f`, annars grönt."
+      },
+      "hint": {
+        "opengl": "`gl_FragCoord` håller fönsterkoordinaterna i pixlar, med origo längst ned till vänster. `FragColor = vec4(1.0, 0.0, 0.0, 1.0);` för rött, `vec4(0.0, 1.0, 0.0, 1.0)` för grönt.",
+        "vulkan": "`gl_FragCoord` håller fönsterkoordinaterna i pixlar; i Vulkan ligger origo längst upp till vänster (x är detsamma som i OpenGL). `outColor = vec4(1.0, 0.0, 0.0, 1.0);` för rött.",
+        "d3d12": "I pixel shadern är `SV_POSITION` pixelns fönsterposition i pixlar, med origo längst upp till vänster. `return float4(1.0f, 0.0f, 0.0f, 1.0f);` för rött."
+      }
+    },
+    "front-facing": {
+      "text": {
+        "opengl": "Texturera framsidor med marmor (`frontTexture`, enhet 0) och baksidor med metall (`backTexture`, enhet 1) med `gl_FrontFacing`, och culla framsidorna: `glEnable(GL_CULL_FACE); glCullFace(GL_FRONT);`.",
+        "vulkan": "Texturera framsidor med marmor och baksidor med metall med `gl_FrontFacing` (en andra textur på binding 2), med `frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE` och `cullMode = VK_CULL_MODE_FRONT_BIT`.",
+        "d3d12": "Culla framsidorna (`CullMode = D3D12_CULL_MODE_FRONT`) och texturera med `SV_IsFrontFace`: framsidor marmor (`frontTexture`, t0), baksidor metall (`backTexture`, t1)."
+      },
+      "hint": {
+        "opengl": "`if(gl_FrontFacing) FragColor = texture(frontTexture, TexCoords); else FragColor = texture(backTexture, TexCoords);` – `setInt` 0 och 1, och bind `cubeTexture` till `GL_TEXTURE0`, `floorTexture` till `GL_TEXTURE1` före kuberna.",
+        "vulkan": "Descriptor set-layout: en combined image sampler på binding 2; `createDescriptorSet` får en andra image view och `descriptorWrites[2]`; poolen: 4 bild-descriptors. Kuberna: marmor + metall, golvet: metall + metall.",
+        "d3d12": "`PSMain(PSInput input, bool isFrontFace : SV_IsFrontFace)`. `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0)`; ett handtag `faceTextures` på heap-plats 1 ger t0 = marmor, t1 = metall – sätt det en gång före kuberna."
+      }
+    },
+    "interface-block": {
+      "text": {
+        "opengl": "Samla vertex shaderns utdata i ett interface block: `out VS_OUT { vec2 TexCoords; } vs_out;` i `advanced_glsl.vs` och `in VS_OUT { vec2 TexCoords; } fs_in;` i `advanced_glsl.fs`.",
+        "vulkan": "Skicka texturkoordinaterna i ett interface block: `layout(location = 0) out VS_OUT { vec2 texCoord; } vs_out;` i vertex shadern och `layout(location = 0) in VS_OUT { vec2 texCoord; } fs_in;` i fragment shadern.",
+        "d3d12": "Gör structen mellan stegen till learnopengls interface block: byt namn på `PSInput` till `VS_OUT`, vertex shaderns variabel till `vs_out` och pixel shaderns parameter till `fs_in`."
+      },
+      "hint": {
+        "opengl": "Blocknamnet `VS_OUT` måste vara detsamma i båda shadrarna; instansnamnen får skilja sig. Skriv `vs_out.TexCoords = aTexCoords;` och läs `fs_in.TexCoords`.",
+        "vulkan": "Vulkan kopplar ihop stegens utdata och indata via `location`, så blocket får en. Skriv `vs_out.texCoord = inTexCoord;` och läs `fs_in.texCoord`.",
+        "d3d12": "HLSL kopplar ihop stegen via semantik (`SV_POSITION`, `TEXCOORD`), inte via namn. `VS_OUT VSMain(…)` med `VS_OUT vs_out; … return vs_out;`, `PSMain(VS_OUT fs_in, bool isFrontFace : SV_IsFrontFace)`."
+      }
+    },
+    "uniform-buffer": {
+      "text": {
+        "opengl": "Bygg learnopengls uniform buffer-demo: fyra kuber, var och en med eget program (`uniform_buffer.vs` + `red.fs` …), som delar projektion och vy genom std140-uniform blocket `Matrices` på binding point 0.",
+        "vulkan": "Bygg learnopengls uniform buffer-demo: deklarera uniform blocket i `uniform_buffer.vert`, skapa fyra pipelines (`redPipeline` …) och rita fyra kuber som delar uniform buffern genom ett enda descriptor set.",
+        "d3d12": "Bygg learnopengls uniform buffer-demo: fyra pipeline states (`m_redPipelineState` …) med vertex shadern i `uniform_buffer.hlsl` och var sin färg-pixel shader, som ritar fyra kuber som delar constant buffern."
+      },
+      "hint": {
+        "opengl": "`layout (std140) uniform Matrices { mat4 projection; mat4 view; };`, `glUniformBlockBinding(shaderX.ID, glGetUniformBlockIndex(shaderX.ID, \"Matrices\"), 0)` för varje program, `glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2 * sizeof(glm::mat4))`. Projektionen på offset 0 en gång, vyn på 64 varje frame.",
+        "vulkan": "`layout(binding = 0) uniform UniformBufferObject { mat4 view; mat4 proj; } ubo;`. `createPipeline` får en `attributeCount` (1); culling av; bind `cubeDescriptorSet` en gång, sedan per kub `vkCmdBindPipeline`, skicka modellmatrisen, rita 36.",
+        "d3d12": "Kompilera `VSMain` i `uniform_buffer.hlsl` en gång; per färg kompilerar du `PSMain`, sätter `psoDesc.PS` och anropar `CreateGraphicsPipelineState`. Sätt `CullMode = D3D12_CULL_MODE_NONE` först. Per kub: `SetPipelineState`, modellmatrisen, `DrawInstanced(36, 1, 0, 0)`."
+      }
+    }
+  }
+}

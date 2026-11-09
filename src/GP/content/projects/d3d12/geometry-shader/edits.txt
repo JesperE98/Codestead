@@ -1,0 +1,508 @@
+=== task: pass-through
+--- file: geometry_shader.hlsl
+--- find:
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+struct PSInput
+{
+    float4 position : SV_POSITION;
+    float3 color : COLOR;
+};
+
+// The vertex shader: the point's position is already in normalized device coordinates.
+PSInput VSMain(float2 position : POSITION, float3 color : COLOR)
+{
+    PSInput result;
+--- replace:
+// What the vertex shader hands on to the geometry shader.
+struct VSOutput
+{
+    float4 position : SV_POSITION;
+    float3 color : COLOR;
+};
+
+// What the geometry shader hands on to the rasterizer and the pixel shader.
+struct GSOutput
+{
+    float4 position : SV_POSITION;
+    float3 color : COLOR;
+};
+
+// The vertex shader: the point's position is already in normalized device coordinates.
+VSOutput VSMain(float2 position : POSITION, float3 color : COLOR)
+{
+    VSOutput result;
+--- file: geometry_shader.hlsl
+--- find:
+// TODO: a geometry shader GSMain that passes each point through unchanged (input: one point, output: a PointStream of at most 1 vertex)
+
+// The pixel shader: the colour of the point.
+float4 PSMain(PSInput input) : SV_TARGET
+--- replace:
+// The geometry shader: runs once per primitive - here a point, so input has one vertex -
+// and appends the vertices of the primitives it makes to the output stream: at most 1
+// vertex ([maxvertexcount(1)]), a point.
+[maxvertexcount(1)]
+void GSMain(point VSOutput input[1], inout PointStream<GSOutput> outputStream)
+{
+    GSOutput output;
+    output.color = input[0].color;    // input[0] since there's only one input vertex
+    output.position = input[0].position;
+    outputStream.Append(output);
+    outputStream.RestartStrip();
+}
+
+// The pixel shader: the colour of the point.
+float4 PSMain(GSOutput input) : SV_TARGET
+--- file: main.cpp
+--- find:
+        ComPtr<ID3DBlob> vertexShader;
+        ComPtr<ID3DBlob> pixelShader;
+--- replace:
+        ComPtr<ID3DBlob> vertexShader;
+        ComPtr<ID3DBlob> geometryShader;
+        ComPtr<ID3DBlob> pixelShader;
+--- file: main.cpp
+--- find:
+        // The vertex shader (VSMain) and the pixel shader (PSMain) in geometry_shader.hlsl.
+        ThrowIfFailed(D3DCompileFromFile(L"geometry_shader.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
+        // TODO: compile the geometry shader GSMain of geometry_shader.hlsl too (target gs_5_0)
+--- replace:
+        // The vertex shader (VSMain), the geometry shader (GSMain) and the pixel shader
+        // (PSMain) in geometry_shader.hlsl.
+        ThrowIfFailed(D3DCompileFromFile(L"geometry_shader.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"geometry_shader.hlsl", nullptr, nullptr, "GSMain", "gs_5_0", compileFlags, 0, &geometryShader, nullptr));
+--- file: main.cpp
+--- find:
+        // TODO: the geometry shader stage (psoDesc.GS), between the vertex and the pixel shader
+--- replace:
+        psoDesc.GS = CD3DX12_SHADER_BYTECODE(geometryShader.Get());
+
+=== task: houses
+--- file: geometry_shader.hlsl
+--- find:
+// The geometry shader: runs once per primitive - here a point, so input has one vertex -
+// and appends the vertices of the primitives it makes to the output stream: at most 1
+// vertex ([maxvertexcount(1)]), a point.
+[maxvertexcount(1)]
+void GSMain(point VSOutput input[1], inout PointStream<GSOutput> outputStream)
+{
+    GSOutput output;
+    output.color = input[0].color;    // input[0] since there's only one input vertex
+    output.position = input[0].position;
+    outputStream.Append(output);
+    outputStream.RestartStrip();
+}
+--- replace:
+// A house around a point: a triangle strip of 5 vertices, i.e. 3 triangles - two for the
+// walls, one for the roof.
+void build_house(float4 position, float3 color, inout TriangleStream<GSOutput> triStream)
+{
+    GSOutput output;
+    output.color = color;
+    output.position = position + float4(-0.2f, -0.2f, 0.0f, 0.0f);    // 1:bottom-left
+    triStream.Append(output);
+    output.position = position + float4( 0.2f, -0.2f, 0.0f, 0.0f);    // 2:bottom-right
+    triStream.Append(output);
+    output.position = position + float4(-0.2f,  0.2f, 0.0f, 0.0f);    // 3:top-left
+    triStream.Append(output);
+    output.position = position + float4( 0.2f,  0.2f, 0.0f, 0.0f);    // 4:top-right
+    triStream.Append(output);
+    output.position = position + float4( 0.0f,  0.4f, 0.0f, 0.0f);    // 5:top
+    triStream.Append(output);
+    triStream.RestartStrip();
+}
+
+// The geometry shader: runs once per point and outputs a triangle strip of at most 5
+// vertices: a house.
+[maxvertexcount(5)]
+void GSMain(point VSOutput input[1], inout TriangleStream<GSOutput> triStream)
+{
+    build_house(input[0].position, input[0].color, triStream);    // input[0] since there's only one input vertex
+}
+
+=== task: roof-white
+--- file: geometry_shader.hlsl
+--- find:
+    output.position = position + float4( 0.0f,  0.4f, 0.0f, 0.0f);    // 5:top
+    triStream.Append(output);
+--- replace:
+    output.position = position + float4( 0.0f,  0.4f, 0.0f, 0.0f);    // 5:top
+    output.color = float3(1.0f, 1.0f, 1.0f);    // the roof's tip is white: snow
+    triStream.Append(output);
+
+=== task: planet
+--- file: main.cpp
+--- find:
+// A vertex of a mesh: the layout of the vertex buffer, which the input layout describes
+--- replace:
+// The camera: where it is, the direction it looks in, and which way is up.
+// camera: at (0, 0, 3) looking down -z, at the model in the centre of the scene
+XMVECTOR cameraPos   = XMVectorSet(0.0f, 0.0f,  3.0f, 0.0f);
+XMVECTOR cameraFront = XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f);
+XMVECTOR cameraUp    = XMVectorSet(0.0f, 1.0f,  0.0f, 0.0f);
+
+// A vertex of a mesh: the layout of the vertex buffer, which the input layout describes
+--- file: main.cpp
+--- find:
+    // A point: a 2D position (in normalized device coordinates) and a colour - the layout
+    // of the points' vertex buffer.
+    struct PointVertex
+    {
+        XMFLOAT2 position;
+        XMFLOAT3 color;
+    };
+
+    // The root constants: what the vertex shader sees as cbuffer ModelConstants.
+--- replace:
+    // The root constants: what the vertex shader sees as cbuffer ModelConstants.
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_vertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+    Model m_model;
+--- replace:
+    Model m_model;
+--- file: main.cpp
+--- find:
+        // The vertex shader (VSMain), the geometry shader (GSMain) and the pixel shader
+        // (PSMain) in geometry_shader.hlsl.
+        ThrowIfFailed(D3DCompileFromFile(L"geometry_shader.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"geometry_shader.hlsl", nullptr, nullptr, "GSMain", "gs_5_0", compileFlags, 0, &geometryShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"geometry_shader.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+
+        // Define the vertex input layout: a point is a 2D position and a colour (2 + 3
+        // floats, at byte offsets 0 and 8).
+        D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
+        {
+            { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 8, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+        };
+--- replace:
+        // The vertex shader (VSMain), the geometry shader (GSMain) and the pixel shader
+        // (PSMain) in explode.hlsl.
+        ThrowIfFailed(D3DCompileFromFile(L"explode.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"explode.hlsl", nullptr, nullptr, "GSMain", "gs_5_0", compileFlags, 0, &geometryShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"explode.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+
+        // Define the vertex input layout: a vertex of a mesh is a position, a normal and
+        // texture coordinates (3 + 3 + 2 floats, at byte offsets 0, 12 and 24).
+        D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
+        {
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+        };
+--- file: main.cpp
+--- find:
+        // The primitives the input assembler makes of the vertices: points (with a
+        // geometry shader, this is the primitive the geometry shader takes as its input).
+        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+--- replace:
+        // The primitives the input assembler makes of the vertices: triangles (with a
+        // geometry shader, this is the primitive the geometry shader takes as its input).
+        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+--- file: main.cpp
+--- find:
+    // Create the vertex buffer: learnopengl's four points.
+    {
+        // A position in normalized device coordinates (x and y from -1 to 1) and a colour.
+        PointVertex points[] =
+        {
+            { { -0.5f,  0.5f }, { 1.0f, 0.0f, 0.0f } },    // top-left
+            { {  0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f } },    // top-right
+            { {  0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f } },    // bottom-right
+            { { -0.5f, -0.5f }, { 1.0f, 1.0f, 0.0f } }     // bottom-left
+        };
+
+        const UINT vertexBufferSize = sizeof(points);
+
+        // Note: using upload heaps to transfer static data like vert buffers is not
+        // recommended. Every time the GPU needs it, the upload heap will be marshalled
+        // over. Please read up on Default Heap usage. An upload heap is used here for
+        // code simplicity and because there are very few verts to actually transfer.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_vertexBuffer)));
+
+        // Copy the vertex data to the vertex buffer.
+        UINT8* pVertexDataBegin = nullptr;
+        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+        ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+        memcpy(pVertexDataBegin, points, sizeof(points));
+        m_vertexBuffer->Unmap(0, nullptr);
+
+        // Initialize the vertex buffer view.
+        m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+        m_vertexBufferView.StrideInBytes = sizeof(PointVertex);
+        m_vertexBufferView.SizeInBytes = vertexBufferSize;
+    }
+--- replace:
+    // Load the model: its meshes (vertex and index buffers) and its textures, whose copies
+    // are recorded in this command list. The meshes' texture views go into the CBV/SRV heap
+    // from slot 1 on (slot 0 is the CBV).
+    // (aiProcess_FlipUVs turns the texture coordinates the right way up for Direct3D, whose
+    // v = 0 is the image's top row: no flip when the images are loaded.)
+    m_model.Load("models/planet.obj", m_device.Get(), m_commandList.Get(), m_cbvSrvHeap.Get(), 1);
+--- file: main.cpp
+--- find:
+        // complete before continuing.
+        WaitForPreviousFrame();
+    }
+}
+--- replace:
+        // complete before continuing.
+        WaitForPreviousFrame();
+
+        // The textures have been copied: their upload buffers can go.
+        m_model.uploadHeaps.clear();
+    }
+}
+--- file: main.cpp
+--- find:
+    // Nothing changes from frame to frame yet (the planet tasks write the view and
+    // projection matrices into the constant buffer here).
+--- replace:
+    // The view matrix: look from cameraPos in the direction of cameraFront.
+    XMMATRIX view = XMMatrixLookAtRH(cameraPos, cameraPos + cameraFront, cameraUp);
+
+    // The projection matrix adds perspective: a field of view of 45 degrees, the window's
+    // aspect ratio, and the near and far planes at 0.1 and 100 units.
+    XMMATRIX projection = XMMatrixPerspectiveFovRH(XMConvertToRadians(45.0f), static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 100.0f);
+
+    // Copy both into the constant buffer, transposed (HLSL reads a matrix column by
+    // column). The GPU has finished the previous frame (OnRender waits for it).
+    SceneConstantBuffer constantBufferData = {};
+    XMStoreFloat4x4(&constantBufferData.view, XMMatrixTranspose(view));
+    XMStoreFloat4x4(&constantBufferData.projection, XMMatrixTranspose(projection));
+    memcpy(m_pCbvDataBegin, &constantBufferData, sizeof(constantBufferData));
+--- file: main.cpp
+--- find:
+    // draw points (a point is one pixel)
+    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+    m_commandList->DrawInstanced(4, 1, 0, 0);
+--- replace:
+    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    // The model matrix (root parameter 0): scale, then tilt, then move - learnopengl's
+    // translate * rotate * scale, written in the order DirectXMath applies it.
+    XMMATRIX model = XMMatrixScaling(0.5f, 0.5f, 0.5f)                                            // planet radius 0.5, ring up to 1.0
+        * XMMatrixRotationAxis(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), XMConvertToRadians(25.0f))   // tilt it so the ring shows
+        * XMMatrixTranslation(0.0f, 0.0f, 0.0f);                                                  // centre of the scene
+    ModelConstants modelConstants = {};
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+
+    // draw model: each mesh binds its textures and draws itself
+    m_model.Draw(m_commandList.Get());
+
+=== task: explode
+--- file: explode.hlsl
+--- find:
+    float4x4 view;
+    float4x4 projection;
+};
+--- replace:
+    float4x4 view;
+    float4x4 projection;
+    float time;    // seconds since the first frame
+};
+--- file: explode.hlsl
+--- find:
+// TODO: float time in the constant buffer; explode(position, normal) and GetNormal(...) - move each triangle along its normal
+--- replace:
+// Moves a position along a direction: 0 .. 2 units and back, following sin(time).
+float4 explode(float4 position, float3 normal)
+{
+    float magnitude = 2.0f;
+    float3 direction = normal * ((sin(time) + 1.0f) / 2.0f) * magnitude;
+    return position + float4(direction, 0.0f);
+}
+
+// The normal of a triangle: the cross product of two of its sides.
+float3 GetNormal(float4 position0, float4 position1, float4 position2)
+{
+    float3 a = position0.xyz - position1.xyz;
+    float3 b = position2.xyz - position1.xyz;
+    return normalize(cross(a, b));
+}
+--- file: explode.hlsl
+--- find:
+    GSOutput output;
+
+    output.position = input[0].position;
+    output.texCoords = input[0].texCoords;
+    triStream.Append(output);
+    output.position = input[1].position;
+    output.texCoords = input[1].texCoords;
+    triStream.Append(output);
+    output.position = input[2].position;
+--- replace:
+    GSOutput output;
+    float3 normal = GetNormal(input[0].position, input[1].position, input[2].position);
+
+    output.position = explode(input[0].position, normal);
+    output.texCoords = input[0].texCoords;
+    triStream.Append(output);
+    output.position = explode(input[1].position, normal);
+    output.texCoords = input[1].texCoords;
+    triStream.Append(output);
+    output.position = explode(input[2].position, normal);
+--- file: main.cpp
+--- find:
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+    };
+--- replace:
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+        float time;
+    };
+--- file: main.cpp
+--- find:
+    XMStoreFloat4x4(&constantBufferData.projection, XMMatrixTranspose(projection));
+    memcpy(
+--- replace:
+    XMStoreFloat4x4(&constantBufferData.projection, XMMatrixTranspose(projection));
+
+    // The time in seconds since the first frame, for the geometry shader.
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    constantBufferData.time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+    memcpy(
+
+=== task: normals
+--- file: main.cpp
+--- find:
+    // The root constants: what the vertex shader sees as cbuffer ModelConstants.
+    // A 4x4 matrix is 16 floats: 16 32-bit root constants.
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+    };
+--- replace:
+    // The root constants: what the vertex shader sees as cbuffer ModelConstants.
+    // Two 4x4 matrices are 32 floats: 32 32-bit root constants.
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+        XMFLOAT4X4 normalMatrix;
+    };
+--- file: main.cpp
+--- find:
+        XMFLOAT4X4 projection;
+        float time;
+    };
+--- replace:
+        XMFLOAT4X4 projection;
+    };
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+--- replace:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+    ComPtr<ID3D12PipelineState> m_normalPipelineState;    // the model with its normals as lines
+--- file: main.cpp
+--- find:
+        // The vertex shader (VSMain), the geometry shader (GSMain) and the pixel shader
+        // (PSMain) in explode.hlsl.
+        ThrowIfFailed(D3DCompileFromFile(L"explode.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"explode.hlsl", nullptr, nullptr, "GSMain", "gs_5_0", compileFlags, 0, &geometryShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"explode.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+--- replace:
+        // The vertex shader (VSMain) and the pixel shader (PSMain) in default.hlsl: the
+        // model as usual.
+        ThrowIfFailed(D3DCompileFromFile(L"default.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"default.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+--- file: main.cpp
+--- find:
+        psoDesc.GS = CD3DX12_SHADER_BYTECODE(geometryShader.Get());
+--- replace:
+
+--- file: main.cpp
+--- find:
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+    }
+--- replace:
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+
+        // The normals' pipeline state: the same description with the three shaders of
+        // normal_visualization.hlsl. The geometry shader takes triangles (the
+        // PrimitiveTopologyType) and outputs lines.
+        ComPtr<ID3DBlob> normalVertexShader;
+        ComPtr<ID3DBlob> normalPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"normal_visualization.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &normalVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"normal_visualization.hlsl", nullptr, nullptr, "GSMain", "gs_5_0", compileFlags, 0, &geometryShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"normal_visualization.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &normalPixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(normalVertexShader.Get());
+        psoDesc.GS = CD3DX12_SHADER_BYTECODE(geometryShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(normalPixelShader.Get());
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_normalPipelineState)));
+    }
+--- file: main.cpp
+--- find:
+    XMStoreFloat4x4(&constantBufferData.projection, XMMatrixTranspose(projection));
+
+    // The time in seconds since the first frame, for the geometry shader.
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    constantBufferData.time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+    memcpy(
+--- replace:
+    XMStoreFloat4x4(&constantBufferData.projection, XMMatrixTranspose(projection));
+    memcpy(
+--- file: main.cpp
+--- find:
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+
+    // draw model: each mesh binds its textures and draws itself
+    m_model.Draw(m_commandList.Get());
+--- replace:
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+
+    // The normal matrix: the transpose of the inverse of the model matrix. It keeps the
+    // normals perpendicular to the surface even when the model matrix scales unevenly.
+    XMMATRIX normalMatrix = XMMatrixTranspose(XMMatrixInverse(nullptr, model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixTranspose(normalMatrix));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+
+    // draw model as usual: each mesh binds its textures and draws itself
+    m_model.Draw(m_commandList.Get());
+
+    // then draw model with normal visualizing geometry shader
+    m_commandList->SetPipelineState(m_normalPipelineState.Get());
+    m_model.Draw(m_commandList.Get());
+--- file: normal_visualization.hlsl
+--- find:
+// TODO: a geometry shader GSMain: for every vertex of a triangle, a line (LineStream, 6 vertices in all) from the vertex along its normal (length 0.2), projected with the projection matrix
+--- replace:
+static const float MAGNITUDE = 0.2f;
+
+// A line from a vertex along its normal, as a strip of 2 vertices.
+void GenerateLine(VSOutput vertex, inout LineStream<GSOutput> lineStream)
+{
+    GSOutput output;
+    output.position = mul(vertex.position, projection);
+    lineStream.Append(output);
+    output.position = mul(vertex.position + float4(vertex.normal, 0.0f) * MAGNITUDE, projection);
+    lineStream.Append(output);
+    lineStream.RestartStrip();
+}
+
+// The geometry shader: runs once per triangle and outputs three lines (6 vertices).
+[maxvertexcount(6)]
+void GSMain(triangle VSOutput input[3], inout LineStream<GSOutput> lineStream)
+{
+    GenerateLine(input[0], lineStream);    // first vertex normal
+    GenerateLine(input[1], lineStream);    // second vertex normal
+    GenerateLine(input[2], lineStream);    // third vertex normal
+}

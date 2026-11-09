@@ -1,0 +1,425 @@
+=== task: pass-through
+--- file: main.cpp
+--- find:
+        deviceFeatures.samplerAnisotropy = VK_TRUE;
+        // TODO: turn on the optional geometryShader feature (and check that the device has it in isDeviceSuitable)
+--- replace:
+        deviceFeatures.samplerAnisotropy = VK_TRUE;
+        deviceFeatures.geometryShader = VK_TRUE; // geometry shaders are an optional feature: turn it on
+--- file: main.cpp
+--- find:
+        return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
+--- replace:
+        return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy && supportedFeatures.geometryShader;
+--- file: main.cpp
+--- find:
+    // One graphics pipeline from a vertex and a fragment shader, with the fixed functions and the pipeline layout
+    // (descriptor set + push constants) of the earlier chapters. The primitives (points, triangles ...) and the vertex
+    // input (the layout of one vertex in the vertex buffer) are parameters.
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkPrimitiveTopology topology,
+--- replace:
+    // One graphics pipeline from a vertex, an optional geometry ("" = none) and a fragment shader, with the fixed
+    // functions and the pipeline layout (descriptor set + push constants) of the earlier chapters. The primitives
+    // (points, triangles ...) and the vertex input (the layout of one vertex in the vertex buffer) are parameters.
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, const std::string& geomShaderFile, VkPrimitiveTopology topology,
+--- file: main.cpp
+--- find:
+        // TODO: a third, optional shader file (a parameter after fragShaderFile): a geometry shader stage
+        VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
+--- replace:
+        std::vector<VkPipelineShaderStageCreateInfo> shaderStages = {vertShaderStageInfo, fragShaderStageInfo};
+
+        // the geometry shader, if there is one: it runs between the vertex and the fragment shader
+        VkShaderModule geomShaderModule = VK_NULL_HANDLE;
+        if (!geomShaderFile.empty()) {
+            auto geomShaderCode = readFile(geomShaderFile);
+            geomShaderModule = createShaderModule(geomShaderCode);
+
+            VkPipelineShaderStageCreateInfo geomShaderStageInfo{};
+            geomShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            geomShaderStageInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
+            geomShaderStageInfo.module = geomShaderModule;
+            geomShaderStageInfo.pName = "main";
+            shaderStages.push_back(geomShaderStageInfo);
+        }
+--- file: main.cpp
+--- find:
+        pipelineInfo.stageCount = 2;
+        pipelineInfo.pStages = shaderStages;
+--- replace:
+        pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
+        pipelineInfo.pStages = shaderStages.data();
+--- file: main.cpp
+--- find:
+        vkDestroyShaderModule(device, fragShaderModule, nullptr);
+        vkDestroyShaderModule(device, vertShaderModule, nullptr);
+--- replace:
+        vkDestroyShaderModule(device, fragShaderModule, nullptr);
+        vkDestroyShaderModule(device, vertShaderModule, nullptr);
+        if (geomShaderModule != VK_NULL_HANDLE) {
+            vkDestroyShaderModule(device, geomShaderModule, nullptr);
+        }
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/geometry_shader.vert.spv", "shaders/geometry_shader.frag.spv", VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
+--- replace:
+        createPipeline("shaders/geometry_shader.vert.spv", "shaders/geometry_shader.frag.spv", "shaders/geometry_shader.geom.spv", VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
+--- file: shaders/geometry_shader.geom
+--- find:
+layout(points, max_vertices = 1) out;
+
+// TODO: pass each point through unchanged: its colour (from the vertex shader) and its position, one vertex (EmitVertex), then EndPrimitive
+
+void main() {
+}
+--- replace:
+layout(points, max_vertices = 1) out;
+
+layout(location = 0) in VS_OUT {
+    vec3 color;
+} gs_in[];
+
+layout(location = 0) out vec3 fragColor;
+
+void main() {
+    fragColor = gs_in[0].color; // gs_in[0] since there's only one input vertex
+    gl_Position = gl_in[0].gl_Position;
+    EmitVertex();
+    EndPrimitive();
+}
+--- file: shaders/geometry_shader.vert
+--- find:
+layout(location = 0) out vec3 fragColor;
+
+void main() {
+    fragColor = inColor;
+--- replace:
+// the outputs for the geometry shader, in an interface block
+layout(location = 0) out VS_OUT {
+    vec3 color;
+} vs_out;
+
+void main() {
+    vs_out.color = inColor;
+
+=== task: houses
+--- file: shaders/geometry_shader.geom
+--- find:
+layout(points, max_vertices = 1) out;
+--- replace:
+layout(triangle_strip, max_vertices = 5) out;
+--- file: shaders/geometry_shader.geom
+--- find:
+void main() {
+    fragColor = gs_in[0].color; // gs_in[0] since there's only one input vertex
+    gl_Position = gl_in[0].gl_Position;
+    EmitVertex();
+    EndPrimitive();
+}
+--- replace:
+// Vulkan's y points down: the house's bottom is at +0.2, its roof's top at -0.4
+void build_house(vec4 position) {
+    fragColor = gs_in[0].color; // gs_in[0] since there's only one input vertex
+    gl_Position = position + vec4(-0.2,  0.2, 0.0, 0.0); // 1:bottom-left
+    EmitVertex();
+    gl_Position = position + vec4( 0.2,  0.2, 0.0, 0.0); // 2:bottom-right
+    EmitVertex();
+    gl_Position = position + vec4(-0.2, -0.2, 0.0, 0.0); // 3:top-left
+    EmitVertex();
+    gl_Position = position + vec4( 0.2, -0.2, 0.0, 0.0); // 4:top-right
+    EmitVertex();
+    gl_Position = position + vec4( 0.0, -0.4, 0.0, 0.0); // 5:top
+    EmitVertex();
+    EndPrimitive();
+}
+
+void main() {
+    build_house(gl_in[0].gl_Position);
+}
+
+=== task: roof-white
+--- file: shaders/geometry_shader.geom
+--- find:
+    gl_Position = position + vec4( 0.0, -0.4, 0.0, 0.0); // 5:top
+    EmitVertex();
+--- replace:
+    gl_Position = position + vec4( 0.0, -0.4, 0.0, 0.0); // 5:top
+    fragColor = vec3(1.0, 1.0, 1.0); // the roof's tip is white: snow
+    EmitVertex();
+
+=== task: planet
+--- file: main.cpp
+--- find:
+const uint32_t HEIGHT = 600;
+--- replace:
+const uint32_t HEIGHT = 600;
+
+// camera: at (0, 0, 3) looking down -z
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+--- file: main.cpp
+--- find:
+// One of learnopengl's points: a position (x, y in normalized device coordinates) and a colour.
+struct PointVertex {
+    glm::vec2 pos;
+    glm::vec3 color;
+
+    static VkVertexInputBindingDescription getBindingDescription() {
+        VkVertexInputBindingDescription bindingDescription{};
+        bindingDescription.binding = 0;
+        bindingDescription.stride = sizeof(PointVertex);
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        return bindingDescription;
+    }
+
+    static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions() {
+        std::vector<VkVertexInputAttributeDescription> attributeDescriptions(2);
+
+        attributeDescriptions[0].binding = 0;
+        attributeDescriptions[0].location = 0;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[0].offset = offsetof(PointVertex, pos);
+
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(PointVertex, color);
+
+        return attributeDescriptions;
+    }
+};
+
+// learnopengl's four points, in Vulkan's normalized device coordinates: y points down, so -0.5 is the upper row
+const std::vector<PointVertex> points = {
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}}, // top-left: red
+    {{ 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}}, // top-right: green
+    {{ 0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}}, // bottom-right: blue
+    {{-0.5f,  0.5f}, {1.0f, 1.0f, 0.0f}}  // bottom-left: yellow
+};
+
+// One vertex of a mesh: everything a vertex of a model has.
+--- replace:
+// One vertex of a mesh: everything a vertex of a model has.
+--- file: main.cpp
+--- find:
+    VkBuffer pointsVertexBuffer; // learnopengl's four points
+    VkDeviceMemory pointsVertexBufferMemory;
+
+    // The mesh's data
+--- replace:
+    // The mesh's data
+--- file: main.cpp
+--- find:
+        // the points: a point list, each vertex a PointVertex
+        createPipeline("shaders/geometry_shader.vert.spv", "shaders/geometry_shader.frag.spv", "shaders/geometry_shader.geom.spv", VK_PRIMITIVE_TOPOLOGY_POINT_LIST, PointVertex::getBindingDescription(), PointVertex::getAttributeDescriptions(), graphicsPipeline);
+--- replace:
+        // the model: a triangle list, each vertex a Vertex; the geometry shader gets one triangle at a time
+        createPipeline("shaders/explode.vert.spv", "shaders/explode.frag.spv", "shaders/explode.geom.spv", VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, Vertex::getBindingDescription(), Vertex::getAttributeDescriptions(), graphicsPipeline);
+--- file: main.cpp
+--- find:
+        createVertexBuffer(points.data(), sizeof(points[0]) * points.size(), pointsVertexBuffer, pointsVertexBufferMemory);
+        // the model (Model chapter): its vertices and indices, used from the planet task on
+        loadModel();
+--- replace:
+        // the model (Model chapter): its vertices and indices
+        loadModel();
+--- file: main.cpp
+--- find:
+        vkDestroyBuffer(device, pointsVertexBuffer, nullptr);
+        vkFreeMemory(device, pointsVertexBufferMemory, nullptr);
+
+        vkDestroyBuffer(device, vertexBuffer, nullptr);
+--- replace:
+        vkDestroyBuffer(device, vertexBuffer, nullptr);
+--- file: main.cpp
+--- find:
+        // draw points
+        VkBuffer vertexBuffers[] = {pointsVertexBuffer};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(points.size()), 1, 0, 0);
+--- replace:
+        // the model's vertices and indices, and the descriptor set with its textures
+        VkBuffer vertexBuffers[] = {vertexBuffer};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+        // the indices are uint32_t: a model can have more than 65536 vertices
+        vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+
+        // configure the model matrix
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // centre of the scene
+        model = glm::rotate(model, glm::radians(25.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // tilt it so the ring shows
+        model = glm::scale(model, glm::vec3(0.5f));                 // planet radius 0.5, ring up to 1.0
+        PushConstants constants{};
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+        // draw model
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+--- file: main.cpp
+--- find:
+        // TODO (planet task): the camera's view and the projection - the points do not read the uniform buffer
+--- replace:
+        ubo.view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 100.0f);
+        // GLM is made for OpenGL, where clip space y points up: flip it for Vulkan
+        ubo.proj[1][1] *= -1;
+
+=== task: explode
+--- file: shaders/explode.geom
+--- find:
+// TODO: the time (from the uniform buffer), explode(position, normal) and GetNormal() - move each triangle along its normal
+--- replace:
+// the time in seconds: a new member of the uniform buffer (the matrices before it are not used here)
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    float time;
+} ubo;
+
+vec4 explode(vec4 position, vec3 normal) {
+    float magnitude = 2.0;
+    vec3 direction = normal * ((sin(ubo.time) + 1.0) / 2.0) * magnitude; // 0 .. 2 and back, following sin(time)
+    return position + vec4(direction, 0.0);
+}
+
+vec3 GetNormal() {
+    vec3 a = vec3(gl_in[0].gl_Position) - vec3(gl_in[1].gl_Position);
+    vec3 b = vec3(gl_in[2].gl_Position) - vec3(gl_in[1].gl_Position);
+    // learnopengl returns cross(a, b); Vulkan's projection flips y (proj[1][1] *= -1), which mirrors clip space and
+    // turns that vector around: b x a points out of the model here
+    return normalize(cross(b, a));
+}
+--- file: shaders/explode.geom
+--- find:
+void main() {
+    gl_Position = gl_in[0].gl_Position;
+--- replace:
+void main() {
+    vec3 normal = GetNormal();
+
+    gl_Position = explode(gl_in[0].gl_Position, normal);
+--- file: shaders/explode.geom
+--- find:
+    gl_Position = gl_in[1].gl_Position;
+--- replace:
+    gl_Position = explode(gl_in[1].gl_Position, normal);
+--- file: shaders/explode.geom
+--- find:
+    gl_Position = gl_in[2].gl_Position;
+--- replace:
+    gl_Position = explode(gl_in[2].gl_Position, normal);
+--- file: main.cpp
+--- find:
+struct UniformBufferObject {
+    glm::mat4 view;
+    glm::mat4 proj;
+};
+--- replace:
+struct UniformBufferObject {
+    glm::mat4 view;
+    glm::mat4 proj;
+    float time; // for the geometry shader
+};
+--- file: main.cpp
+--- find:
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+--- replace:
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT; // the geometry shader reads it too
+--- file: main.cpp
+--- find:
+        ubo.proj[1][1] *= -1;
+--- replace:
+        ubo.proj[1][1] *= -1;
+
+        // add time component to geometry shader in the form of a uniform
+        ubo.time = static_cast<float>(glfwGetTime());
+
+=== task: normals
+--- file: shaders/normal_visualization.geom
+--- find:
+layout(line_strip, max_vertices = 6) out;
+
+// TODO: for every vertex of the triangle, emit a line (two vertices, then EndPrimitive) from the vertex along its normal (length 0.2), projected with the projection matrix of the uniform buffer
+
+void main() {
+}
+--- replace:
+layout(line_strip, max_vertices = 6) out;
+
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+} ubo;
+
+layout(location = 0) in VS_OUT {
+    vec3 normal;
+} gs_in[];
+
+const float MAGNITUDE = 0.2;
+
+void GenerateLine(int index) {
+    gl_Position = ubo.proj * gl_in[index].gl_Position;
+    EmitVertex();
+    gl_Position = ubo.proj * (gl_in[index].gl_Position + vec4(gs_in[index].normal, 0.0) * MAGNITUDE);
+    EmitVertex();
+    EndPrimitive();
+}
+
+void main() {
+    GenerateLine(0); // first vertex normal
+    GenerateLine(1); // second vertex normal
+    GenerateLine(2); // third vertex normal
+}
+--- file: main.cpp
+--- find:
+    VkPipeline graphicsPipeline;
+--- replace:
+    VkPipeline graphicsPipeline;
+    VkPipeline normalPipeline; // the normals as lines
+--- file: main.cpp
+--- find:
+        // the model: a triangle list, each vertex a Vertex; the geometry shader gets one triangle at a time
+        createPipeline("shaders/explode.vert.spv", "shaders/explode.frag.spv", "shaders/explode.geom.spv", VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, Vertex::getBindingDescription(), Vertex::getAttributeDescriptions(), graphicsPipeline);
+--- replace:
+        // the model: a triangle list, each vertex a Vertex - drawn as usual, then its normals with a geometry shader
+        createPipeline("shaders/default.vert.spv", "shaders/default.frag.spv", "", VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, Vertex::getBindingDescription(), Vertex::getAttributeDescriptions(), graphicsPipeline);
+        createPipeline("shaders/normal_visualization.vert.spv", "shaders/normal_visualization.frag.spv", "shaders/normal_visualization.geom.spv", VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, Vertex::getBindingDescription(), Vertex::getAttributeDescriptions(), normalPipeline);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+        vkDestroyPipeline(device, normalPipeline, nullptr);
+--- file: main.cpp
+--- find:
+    glm::mat4 proj;
+    float time; // for the geometry shader
+--- replace:
+    glm::mat4 proj;
+--- file: main.cpp
+--- find:
+        ubo.proj[1][1] *= -1;
+
+        // add time component to geometry shader in the form of a uniform
+        ubo.time = static_cast<float>(glfwGetTime());
+--- replace:
+        ubo.proj[1][1] *= -1;
+--- file: main.cpp
+--- find:
+        // draw model
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+--- replace:
+        // draw model as usual
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
+        // then draw model with normal visualizing geometry shader (the same buffers, descriptor set and push constants)
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, normalPipeline);
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);

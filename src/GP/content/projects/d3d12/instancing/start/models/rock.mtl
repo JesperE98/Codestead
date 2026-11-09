@@ -1,0 +1,7 @@
+# Material of rock.obj - drawn for Codestead GP.
+newmtl rock
+Ka 0.0 0.0 0.0
+Kd 1.0 1.0 1.0
+Ks 0.1 0.1 0.1
+Ns 8.0
+map_Kd rock.png

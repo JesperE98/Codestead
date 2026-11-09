@@ -1,0 +1,14 @@
+[
+  { "title": "Advanced Data", "url": "https://learnopengl.com/Advanced-OpenGL/Advanced-Data", "publisher": "LearnOpenGL" },
+  { "title": "glBufferSubData", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBufferSubData.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "glMapBuffer", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glMapBuffer.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "glCopyBufferSubData", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCopyBufferSubData.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Vertex buffers: Staging buffer", "url": "https://vulkan-tutorial.com/Vertex_buffers/Staging_buffer", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "vkMapMemory", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/vkMapMemory.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "vkCmdUpdateBuffer", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/vkCmdUpdateBuffer.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "vkCmdCopyBuffer", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/vkCmdCopyBuffer.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "ID3D12Resource::Map method", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12resource-map", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "ID3D12GraphicsCommandList::CopyBufferRegion method", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-copybufferregion", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "D3D12_HEAP_TYPE enumeration", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_heap_type", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Using resource barriers to synchronize resource states in Direct3D 12", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/using-resource-barriers-to-synchronize-resource-states-in-direct3d-12", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

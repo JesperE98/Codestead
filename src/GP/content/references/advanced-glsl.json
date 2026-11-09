@@ -1,0 +1,13 @@
+[
+  { "title": "Advanced GLSL", "url": "https://learnopengl.com/Advanced-OpenGL/Advanced-GLSL", "publisher": "LearnOpenGL" },
+  { "title": "advanced_glsl_ubo.cpp (the uniform buffer demo)", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/4.advanced_opengl/8.advanced_glsl_ubo/advanced_glsl_ubo.cpp", "publisher": "LearnOpenGL", "api": "opengl" },
+  { "title": "Interface Block (GLSL)", "url": "https://www.khronos.org/opengl/wiki/Interface_Block_(GLSL)", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "glUniformBlockBinding", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glUniformBlockBinding.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "gl_FragCoord", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/gl_FragCoord.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "GL_KHR_vulkan_glsl", "url": "https://github.com/KhronosGroup/GLSL/blob/main/extensions/khr/GL_KHR_vulkan_glsl.txt", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Shader memory layout", "url": "https://docs.vulkan.org/guide/latest/shader_memory_layout.html", "publisher": "Vulkan Guide", "api": "vulkan" },
+  { "title": "Uniform buffers: Descriptor pool and sets (alignment requirements)", "url": "https://vulkan-tutorial.com/Uniform_buffers/Descriptor_pool_and_sets", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Semantics", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Packing rules for constant variables", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-packing-rules", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "D3D12_CONSTANT_BUFFER_VIEW_DESC structure", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_constant_buffer_view_desc", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

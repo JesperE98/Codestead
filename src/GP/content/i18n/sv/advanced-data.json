@@ -1,0 +1,55 @@
+{
+  "title": "Advanced Data",
+  "tasks": {
+    "buffer-sub-data": {
+      "text": { "opengl": "Fyll kubens buffer i två steg: reservera minnet med `glBufferData(…, NULL, …)`, kopiera sedan in `cubeVertices` från byte 0 med `glBufferSubData`." },
+      "hint": { "opengl": "`glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), NULL, GL_STATIC_DRAW);` sedan `glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(cubeVertices), &cubeVertices);` – target, offset i byte, storlek, data." }
+    },
+    "map-buffer": {
+      "text": {
+        "opengl": "Fyll golvets buffer genom en pekare: reservera den med `glBufferData(…, NULL, …)`, hämta en pekare med `glMapBuffer`, `memcpy` in vertexarna och anropa `glUnmapBuffer`.",
+        "d3d12": "Ge golvet en egen vertex buffer i en upload heap, `m_floorVertexBuffer`, fylld genom pekaren från `Map`, `memcpy` och `Unmap`, och rita golvet från den."
+      },
+      "hint": {
+        "opengl": "`void *ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY); memcpy(ptr, planeVertices, sizeof(planeVertices)); glUnmapBuffer(GL_ARRAY_BUFFER);` – `memcpy` behöver `#include <cstring>`. Använd inte pekaren efter unmap.",
+        "d3d12": "Flytta golvets 6 vertexar till `Vertex planeVertices[]`. `Map(0, &readRange, …)` med `readRange(0, 0)`, `Unmap(0, &writtenRange)` med `writtenRange(0, sizeof(planeVertices))`. Bind `m_floorVertexBufferView` före golvets ritanrop: `DrawInstanced(6, 1, 0, 0)`."
+      }
+    },
+    "map-memory": {
+      "text": { "vulkan": "Kopiera vertexarna del för del i `createVertexBuffer()`: mappa bara kubens intervall (offset 0, `sizeof(Vertex) * 36`), kopiera och gör unmap, sedan golvets intervall (offset `cubeSize`, `sizeof(Vertex) * 6`)." },
+      "hint": { "vulkan": "`vkMapMemory(device, vertexBufferMemory, offset, size, 0, &data)` mappar bara det intervallet och pekar på dess första byte. Kopiera `vertices.data() + 36` för golvet. Gör unmap innan du mappar nästa intervall." }
+    },
+    "update-buffer": {
+      "text": { "vulkan": "Skriv uniform buffern med `vkCmdUpdateBuffer`: skapa den som device-local transfer destination (ingen mappning), spela in uppdateringen och en buffer-barriär i `updateUniformBuffer(commandBuffer)`, och anropa den före render passet." },
+      "hint": { "vulkan": "`VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT` i `VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT`. Barriär: `TRANSFER_WRITE` → `UNIFORM_READ`, steg `TRANSFER` → `VERTEX_SHADER`. Anropa den direkt efter `vkBeginCommandBuffer`; ta bort anropet i `drawFrame()`." }
+    },
+    "batched-attributes": {
+      "text": {
+        "opengl": "Lagra kubens data blockvis: `cubePositions` och `cubeTexCoords` i stället för `cubeVertices`, två `glBufferSubData`-anrop efter varandra, och attributpekare till de två blocken.",
+        "vulkan": "Lagra vertexarna blockvis – alla positioner, sedan alla texturkoordinater – och läs dem genom två vertex input-bindningar, med samma buffer bunden två gånger med två offset.",
+        "d3d12": "Lagra kubens data blockvis – `XMFLOAT3 cubePositions[]`, sedan `XMFLOAT2 cubeTexCoords[]` – och läs dem från två input slots med en vertex buffer view var (golvet också)."
+      },
+      "hint": {
+        "opengl": "Reservera `sizeof(cubePositions) + sizeof(cubeTexCoords)` byte. Positioner: stride `3 * sizeof(float)`, offset 0; texturkoordinater: stride `2 * sizeof(float)`, offset `sizeof(cubePositions)`.",
+        "vulkan": "`getBindingDescriptions()`: binding 0 stride `sizeof(glm::vec3)`, binding 1 stride `sizeof(glm::vec2)`; attribut 1 läser binding 1, båda offset 0. `offsets[] = {0, sizeof(glm::vec3) * vertices.size()}`, `vkCmdBindVertexBuffers(commandBuffer, 0, 2, …)`.",
+        "d3d12": "`TEXCOORD` från input slot 1 på offset 0. Vy 0: början, stride 12; vy 1: början + `sizeof(cubePositions)`, stride 8. Golvet förblir omväxlande: två vyer, båda med stride `sizeof(Vertex)`, den andra `sizeof(XMFLOAT3)` byte in."
+      }
+    },
+    "copy-buffer": {
+      "text": {
+        "opengl": "Kopiera golvets vertexar till en ny buffer `planeCopyVBO` med `glCopyBufferSubData` (`GL_COPY_READ_BUFFER` → `GL_COPY_WRITE_BUFFER`) och låt golvets VAO läsa från kopian.",
+        "vulkan": "Lägg vertex buffern i device-local minne: skriv de två blocken till en staging buffer och kopiera över dem med vulkan-tutorials `copyBuffer` (`vkCmdCopyBuffer`).",
+        "d3d12": "Kopiera golvets vertexar till `m_floorCopyBuffer`, en buffer i en default heap, med `CopyBufferRegion` plus en barriär, och rita golvet från kopian."
+      },
+      "hint": {
+        "opengl": "Reservera kopian med `glBufferData(GL_COPY_WRITE_BUFFER, sizeof(planeVertices), NULL, GL_STATIC_DRAW)`, sedan `glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(planeVertices))`. Bind `planeCopyVBO` till `GL_ARRAY_BUFFER` före attributpekarna; radera den i slutet.",
+        "vulkan": "Staging buffer: `TRANSFER_SRC`, host-visible och coherent. Vertex buffer: `TRANSFER_DST | VERTEX_BUFFER`, `DEVICE_LOCAL`. `copyBuffer` spelar in `vkCmdCopyBuffer` i en engångs-command buffer; förstör staging buffern efteråt.",
+        "d3d12": "Skapa den i `D3D12_RESOURCE_STATE_COMMON` (kopieringen befordrar den till COPY_DEST). `CopyBufferRegion(m_floorCopyBuffer.Get(), 0, m_floorVertexBuffer.Get(), 0, planeVertexBufferSize)`, sedan en barriär COPY_DEST → VERTEX_AND_CONSTANT_BUFFER. Peka golvets båda vyer in i kopian."
+      }
+    },
+    "default-heap": {
+      "text": { "d3d12": "Lägg kubens vertex buffer i en default heap: fyll en upload buffer `vertexBufferUploadHeap` med de två blocken och kopiera den till `m_vertexBuffer` med `CopyBufferRegion`." },
+      "hint": { "d3d12": "`m_vertexBuffer`: `D3D12_HEAP_TYPE_DEFAULT`, `D3D12_RESOURCE_STATE_COMMON`. Deklarera `vertexBufferUploadHeap` före vertex buffer-blocket så att den lever tills command listen har exekverats. Sedan barriären COPY_DEST → VERTEX_AND_CONSTANT_BUFFER." }
+    }
+  }
+}
