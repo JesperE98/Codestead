@@ -1,0 +1,29 @@
+{
+  "title": "Face culling",
+  "tasks": {
+    "ccw-cube": {
+      "text": "Ersätt kubens 36 vertexar med en kub där varje triangel går moturs när du tittar på dess sida utifrån; behåll varje vertex texturkoordinater.",
+      "hint": "I learnopengls kub går bak-, höger- och ovansidan medurs sett utifrån: byt plats på 2:a och 3:e hörnet i var och en av deras trianglar. Kontroll: (b − a) × (c − a) pekar ut ur kuben. Inget synligt ändras än."
+    },
+    "cull-back": {
+      "text": {
+        "opengl": "Slå på face culling: `glEnable(GL_CULL_FACE)`, culla baksidorna (`glCullFace(GL_BACK)`) med moturs framsidor (`glFrontFace(GL_CCW)`), och gör golvets trianglar moturs sett ovanifrån.",
+        "vulkan": "Culla baksidorna: `rasterizer.cullMode = VK_CULL_MODE_BACK_BIT` med `rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE`, och gör golvets trianglar moturs sett ovanifrån.",
+        "d3d12": "Culla baksidorna: `CullMode = D3D12_CULL_MODE_BACK` med `FrontCounterClockwise = TRUE` i `psoDesc.RasterizerState`, och gör golvets trianglar moturs sett ovanifrån."
+      },
+      "hint": {
+        "opengl": "De tre anropen hamnar efter `glDepthFunc` (de två sista är standardvärdena). learnopengls `planeVertices` går medurs ovanifrån: byt plats på 2:a och 3:e vertexen i båda trianglarna, annars försvinner golvet.",
+        "vulkan": "Vändningen av y i projektionen (`proj[1][1] *= -1`) visar scenen upprätt, så moturs utifrån är moturs på skärmen, som i OpenGL. Golvet: byt plats på 2:a och 3:e vertexen i båda trianglarna.",
+        "d3d12": "Ersätt raden med `D3D12_CULL_MODE_NONE`. Med de högerhänta matriserna ser skärmen ut som i OpenGL, så moturs är framsidan. Golvet: byt plats på 2:a och 3:e vertexen i båda trianglarna."
+      }
+    },
+    "cull-front": {
+      "text": {
+        "opengl": "Culla framsidorna i stället: `glCullFace(GL_FRONT)`.",
+        "vulkan": "Culla framsidorna i stället: `rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT`.",
+        "d3d12": "Culla framsidorna i stället: `CullMode = D3D12_CULL_MODE_FRONT`."
+      },
+      "hint": "Nu ritas bara de sidor som är vända bort från kameran: du tittar in i kuberna, och golvet, vars framsida pekar uppåt, försvinner."
+    }
+  }
+}

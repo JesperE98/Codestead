@@ -110,7 +110,20 @@ def sky(d):
     ground = np.where(rows[..., None] > 0, np.array([70, 120, 50.0]), np.array([95, 140, 60.0]))
     haze = np.clip(1 - (-up) * 6, 0, 1)[..., None]
     ground = ground * (1 - haze) + horizon * haze * 0.9
-    return np.where((up < 0)[..., None], ground, col)
+    col = np.where((up < 0)[..., None], ground, col)
+    # mountains along the horizon (blue-grey, lighter with distance), so every direction looks different
+    az = np.arctan2(x, -z)
+    ridge = 0.05 + 0.05 * np.sin(az * 3 + 1) + 0.03 * np.sin(az * 7 + 2) + 0.015 * np.sin(az * 17)
+    mountain = (up >= 0) & (up < ridge)
+    mcol = np.array([92, 104, 128.0]) + (up / np.maximum(ridge, 1e-3))[..., None] * 30
+    col = np.where(mountain[..., None], mcol, col)
+    # a red and white striped tower towards +Z (behind the default camera): the cube maps' mirrors show it
+    side = np.abs(x / np.maximum(z, 1e-3))
+    tower = (z > 0) & (side < 0.035) & (up > -0.02) & (up < 0.42)
+    stripes = (np.floor(up / 0.06) % 2 == 0)
+    tcol = np.where(stripes[..., None], np.array([200, 40, 40.0]), np.array([245, 245, 245.0]))
+    col = np.where(tower[..., None], tcol, col)
+    return col
 
 
 faces = {

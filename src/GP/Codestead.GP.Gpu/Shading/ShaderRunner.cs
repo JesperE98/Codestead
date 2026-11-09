@@ -183,7 +183,7 @@ public sealed partial class ShaderRunner
             {
                 // C++: Type name{} / Type name = {} is a zero-initialised struct.
                 if (d.Value is InitList { Items.Count: 0 }) scopes[^1][d.Id] = Default(d.Type);
-                else scopes[^1][d.Id] = d.Value is null ? Default(d.Type) : Coerce(d.Type, Eval(d.Value)).Clone();
+                else scopes[^1][d.Id] = d.Value is null ? Default(d.Type, d.ArraySize) : Coerce(d.Type, Eval(d.Value)).Clone();
                 return default;
             }
             case Assign a:

@@ -1,0 +1,53 @@
+{
+  "title": "Depth testing",
+  "tasks": {
+    "depth-always": {
+      "text": {
+        "opengl": "Make every fragment pass the depth test: set the depth function to `GL_ALWAYS` with `glDepthFunc` (at the TODO after `glEnable(GL_DEPTH_TEST);`).",
+        "vulkan": "Make every fragment pass the depth test: in `createPipeline()` set `depthStencil.depthCompareOp = VK_COMPARE_OP_ALWAYS;`.",
+        "d3d12": "Make every pixel pass the depth test: set the PSO's `DepthStencilState.DepthFunc` to `D3D12_COMPARISON_FUNC_ALWAYS`."
+      },
+      "hint": {
+        "opengl": "`glDepthFunc(GL_ALWAYS);` – with ALWAYS the last thing drawn wins, as if the depth test were off. The floor is drawn last, so it covers the cubes' lower parts.",
+        "vulkan": "The depth function is part of the pipeline (OpenGL's `glDepthFunc`). With ALWAYS the last fragment drawn wins – the floor, drawn last, covers the cubes' lower parts.",
+        "d3d12": "It is the line `psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;` in `LoadAssets` – the depth state belongs to the PSO. With ALWAYS the last draw wins."
+      }
+    },
+    "depth-less": {
+      "text": {
+        "opengl": "Set the depth function back to `GL_LESS`: a fragment passes when it is nearer than the depth stored in the depth buffer.",
+        "vulkan": "Set the depth function back to `VK_COMPARE_OP_LESS`: a fragment passes when it is nearer than the depth stored in the depth buffer.",
+        "d3d12": "Set the depth function back to `D3D12_COMPARISON_FUNC_LESS`: a pixel passes when it is nearer than the depth stored in the depth buffer."
+      },
+      "hint": {
+        "opengl": "`glDepthFunc(GL_LESS);` – OpenGL's default. The start picture comes back.",
+        "vulkan": "`depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;` – OpenGL's default `GL_LESS`. The start picture comes back.",
+        "d3d12": "`psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;` – the default. The start picture comes back."
+      }
+    },
+    "visualize-depth": {
+      "text": {
+        "opengl": "Show the depth buffer: in `depth_testing.fs` output the fragment's depth `gl_FragCoord.z` as a grey value instead of the texture.",
+        "vulkan": "Show the depth buffer: in `shaders/depth_testing.frag` output the fragment's depth as a grey: `outColor = vec4(vec3(gl_FragCoord.z), 1.0);`.",
+        "d3d12": "Show the depth buffer: let `PSMain` in `depth_testing.hlsl` return the pixel's depth as a grey: `return float4(input.position.zzz, 1.0f);`."
+      },
+      "hint": {
+        "opengl": "`FragColor = vec4(vec3(gl_FragCoord.z), 1.0);` – keep the texture line as a comment. Almost everything turns white: the depth is far from linear.",
+        "vulkan": "`gl_FragCoord.z` is the value the depth test compares: 0.0 at the near plane, 1.0 at the far plane, and far from linear – almost everything turns white.",
+        "d3d12": "In the pixel shader, `SV_POSITION.z` is the pixel's depth (GLSL's `gl_FragCoord.z`): 0 at the near plane, 1 at the far plane. Almost everything turns white."
+      }
+    },
+    "linear-depth": {
+      "text": {
+        "opengl": "Make the depth linear: add learnopengl's `LinearizeDepth` (`near` 0.1, `far` 100.0) to `depth_testing.fs` and output `LinearizeDepth(gl_FragCoord.z) / far` as grey.",
+        "vulkan": "Make the depth linear: add `near` 0.1, `far` 100.0 and `LinearizeDepth(depth) = (near * far) / (far - depth * (far - near))`, and output `LinearizeDepth(gl_FragCoord.z) / far` as grey.",
+        "d3d12": "Make the depth linear: add `static const float near = 0.1f;`, `far = 100.0f` and `LinearizeDepth(depth) = (near * far) / (far - depth * (far - near))`, and return `LinearizeDepth(input.position.z) / far` as grey."
+      },
+      "hint": {
+        "opengl": "First back to NDC: `float z = depth * 2.0 - 1.0;`, then `return (2.0 * near * far) / (far + near - z * (far - near));`. Dividing by `far` gives 0..1.",
+        "vulkan": "Vulkan's depth is already NDC z (0..1), so there is no `depth * 2.0 - 1.0` as in learnopengl – that would give distances that are too large. Dividing by `far` gives 0..1.",
+        "d3d12": "Direct3D's depth is already NDC z (0..1), so there is no `depth * 2.0 - 1.0` as in learnopengl. Without `static`, a global would be a constant-buffer value set from the CPU."
+      }
+    }
+  }
+}

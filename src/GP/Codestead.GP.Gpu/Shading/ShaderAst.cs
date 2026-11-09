@@ -29,7 +29,7 @@ public static class ShaderAst
     public abstract record Stmt(int Line);
 
     /// <summary>T name[N] = value; (Value may be null.)</summary>
-    public sealed record Declare(string Type, string Id, Expr? Value, int Line, bool IsArray = false) : Stmt(Line);
+    public sealed record Declare(string Type, string Id, Expr? Value, int Line, bool IsArray = false, int ArraySize = 0) : Stmt(Line);
 
     /// <summary>target op value; with op "=", "+=", "-=", "*=" or "/=".</summary>
     public sealed record Assign(Expr Target, string Op, Expr Value, int Line) : Stmt(Line);

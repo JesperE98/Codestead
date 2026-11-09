@@ -1,0 +1,53 @@
+{
+  "title": "Blending",
+  "tasks": {
+    "grass": {
+      "text": {
+        "opengl": "Add the vegetation: a transparent quad (`transparentVertices`, 6 vertices) with its own VAO, `grass.png` loaded as `transparentTexture`, a `std::vector<glm::vec3> vegetation` with the five positions, and after the floor one draw per position.",
+        "vulkan": "Add the vegetation: append the transparent quad to `vertices` (vertices 42..47), add the global `vegetation` positions, load `textures/grass.png`, create `transparentSampler` (`CLAMP_TO_EDGE`) and `transparentDescriptorSet` (pool: 3 sets), and after the floor draw the quad once per position with `vkCmdDraw(commandBuffer, 6, 1, 42, 0)`.",
+        "d3d12": "Add the vegetation: the transparent quad as vertices 42–47, `grass.png` loaded into heap slot 3 (`m_transparentTexture`, 4 descriptors) with its GPU handle, and after the floor one `DrawInstanced(6, 1, 42, 0)` per position in `XMFLOAT3 vegetation[]`."
+      },
+      "hint": {
+        "opengl": "The quad goes from (0, -0.5) to (1, 0.5) at z = 0, so `glm::translate(model, vegetation[i])` puts its bottom on the floor. `#include <vector>`. Bind `transparentVAO` and `transparentTexture`, then loop and call `glDrawArrays(GL_TRIANGLES, 0, 6)`.",
+        "vulkan": "learnopengl's texture coordinates already have v = 0 at the top edge, so the grass stands upright. Bind `transparentDescriptorSet`, then push `glm::translate(glm::mat4(1.0f), vegetation[i])` before each draw. Destroy the new sampler, view, image and memory in `cleanup()`.",
+        "d3d12": "`CD3DX12_GPU_DESCRIPTOR_HANDLE transparentTexture(heapStart, 3, m_cbvSrvDescriptorSize)`, `SetGraphicsRootDescriptorTable(2, transparentTexture)`, and per position `XMMatrixTranslation`, the root constants and the draw."
+      }
+    },
+    "discard": {
+      "text": {
+        "opengl": "Throw away the transparent fragments: in `blending.fs` `discard` every fragment whose texture alpha is below 0.1, and let `loadTexture` use `GL_CLAMP_TO_EDGE` for RGBA images.",
+        "vulkan": "Throw away the transparent fragments: in `shaders/blending.frag` read the texel into `vec4 texColor` and `discard` it when `texColor.a < 0.1`, else output it.",
+        "d3d12": "Throw away the transparent pixels: a second static sampler `s1` (CLAMP), a pixel shader `PSTransparent` that samples with it and discards alpha below 0.1, a second PSO `m_transparentPipelineState` with it, set before the vegetation is drawn."
+      },
+      "hint": {
+        "opengl": "`vec4 texColor = texture(texture1, TexCoords); if(texColor.a < 0.1) discard; FragColor = texColor;`. Wrapping: `format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT` for `WRAP_S` and `WRAP_T`.",
+        "vulkan": "A discarded fragment writes neither colour nor depth, so what is behind the quad stays visible. The clamping sampler is already there from the first task.",
+        "d3d12": "`samplers[2]`, `samplers[1] = samplers[0];` with `AddressU/V/W = D3D12_TEXTURE_ADDRESS_MODE_CLAMP` and `ShaderRegister = 1`; HLSL: `SamplerState clampSampler : register(s1);`. Compile `\"PSTransparent\"` (`ps_5_0`), put it into `psoDesc.PS` and create the second PSO after the first."
+      }
+    },
+    "blend": {
+      "text": {
+        "opengl": "Turn the grass into windows: load `window.png` instead of `grass.png`, rename the positions to `windows`, and enable blending with `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)`.",
+        "vulkan": "Turn the grass into windows: load `textures/window.png`, rename `vegetation` to `windows`, and enable alpha blending in `createPipeline()` (`blendEnable = VK_TRUE`, colour factors `SRC_ALPHA` / `ONE_MINUS_SRC_ALPHA`, alpha factors `ONE` / `ZERO`, both ops `ADD`).",
+        "d3d12": "Turn the grass into windows: enable blending in the transparent PSO (`SrcBlend = D3D12_BLEND_SRC_ALPHA`, `DestBlend = D3D12_BLEND_INV_SRC_ALPHA`, the same for alpha, ops `ADD`), load `window.png` instead of `grass.png`, and call the positions `windows`."
+      },
+      "hint": {
+        "opengl": "`glEnable(GL_BLEND);` next to the depth test. The result is `src * src.alpha + dst * (1 - src.alpha)`. The `discard` can stay – no window texel is below 0.1.",
+        "vulkan": "This is OpenGL's `glEnable(GL_BLEND)` + `glBlendFunc(...)`, as part of the one pipeline; the opaque objects (alpha 1) don't change. Replace the line `colorBlendAttachment.blendEnable = VK_FALSE;`.",
+        "d3d12": "Set `psoDesc.BlendState.RenderTarget[0]`'s `BlendEnable = TRUE`, `SrcBlend`, `DestBlend`, `BlendOp`, `SrcBlendAlpha`, `DestBlendAlpha` and `BlendOpAlpha` after `psoDesc.PS` is switched to `PSTransparent`, before the second PSO is created."
+      }
+    },
+    "sort": {
+      "text": {
+        "opengl": "Draw the windows from the farthest to the nearest: each frame fill a `std::map<float, glm::vec3> sorted` with `glm::length(cameraPos - windows[i])` as key, then draw with a `reverse_iterator` from `sorted.rbegin()` to `sorted.rend()`.",
+        "vulkan": "Draw the windows from the farthest to the nearest: in `recordCommandBuffer()` fill a `std::map<float, glm::vec3> sorted` with `glm::length(cameraPos - windows[i])` as key, then draw with a `reverse_iterator` from `sorted.rbegin()` to `sorted.rend()`.",
+        "d3d12": "Draw the windows from the farthest to the nearest: fill a `std::map<float, XMFLOAT3> sorted` with the distance to `cameraPos` as key, then draw with a `reverse_iterator` from `sorted.rbegin()` to `sorted.rend()`."
+      },
+      "hint": {
+        "opengl": "`#include <map>`; the sort goes right after `processInput(window);`. A map keeps its keys sorted (smallest first), so walking it backwards gives the farthest window first. Use `it->second` as the position.",
+        "vulkan": "`#include <map>`. A map keeps its keys sorted (smallest first), so walking it backwards gives the farthest window first. Use `glm::translate(model, it->second)`.",
+        "d3d12": "`#include <map>`; `float distance = XMVectorGetX(XMVector3Length(cameraPos - XMLoadFloat3(&windows[i])));` and `XMMatrixTranslation(it->second.x, it->second.y, it->second.z)`."
+      }
+    }
+  }
+}

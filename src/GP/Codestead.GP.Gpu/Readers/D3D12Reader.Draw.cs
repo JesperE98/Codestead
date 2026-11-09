@@ -141,7 +141,7 @@ public sealed partial class D3D12Reader
                     DepthWrite = (pl?.State ?? state).DepthWrite,
                     Stencil = (pl?.State ?? state).Stencil is { } st ? st with { Ref = d.StencilRef ?? st.Ref } : null,
                     Blend = (pl?.State ?? state).Blend,
-                    Textures = pl is null ? textures : Textures(pl.Vs, pl.Fs) ?? textures,
+                    Textures = PerDrawTextures(pl?.Vs ?? vs, pl?.Fs ?? ps, d.Bound) ?? (pl is null ? textures : Textures(pl.Vs, pl.Fs) ?? textures),
                 });
             }
             if (recorder.Runner.UsedTime || src.UsedTime) scene.Animated = true;
@@ -195,20 +195,66 @@ public sealed partial class D3D12Reader
         var images = StbImage.InLoadOrder(src, project, scene);
         // A Model's textures come from its .mtl file, not from stbi_load calls with a file name.
         if (images.Count < names.Count && !src.Code.Contains("aiProcess_", StringComparison.Ordinal)) scene.Notes.Add(SimNote.Warning("tooFewTextures", ("count", names.Count.ToString()), ("loaded", images.Count.ToString())));
-        // Static samplers: each description (sampler, samplers[0], samplers[1] …) by its ShaderRegister; the HLSL
-        // Sample(…) call names the sampler, whose register picks the description.
+        var sampler = SamplersByRegister(vs, ps);
+        return TextureBinding.Bind(names, images, (_, name) => sampler(name));
+    }
+
+    /// <summary>
+    /// The textures of one draw when the descriptor table bound before it starts at a heap slot whose texture a
+    /// loading helper put there (LoadTexture("metal.png", …, 2)): register tk reads slot N + k. Null otherwise.
+    /// </summary>
+    private Func<string, double, double, double[]>? PerDrawTextures(ShaderProgram vs, ShaderProgram ps, IReadOnlyDictionary<int, string>? bound)
+    {
+        if (bound is null || bound.Count == 0) return null;
+        drawTextures ??= new DrawTextures(src, project);
+        if (!drawTextures.HasSlots) return null;
+        var names = TextureBinding.ShaderTextures(vs, ps);
+        if (names.Count == 0) return null;
+        var registers = vs.Globals.Concat(ps.Globals).Where(g => names.Contains(g.Id)).GroupBy(g => g.Id).ToDictionary(g => g.Key, g => g.First().Binding ?? 0);
+        foreach (var (_, text) in bound.OrderByDescending(b => b.Key))
+        {
+            if (drawTextures.D3D12Slot(text) is not int slot || drawTextures.SlotImage(slot + registers.Values.DefaultIfEmpty(0).Min()) is null) continue;
+            var samplers = SamplersByRegister(vs, ps);
+            var cache = new Dictionary<string, Codestead.GP.Gpu.Textures.Texture?>(StringComparer.Ordinal);
+            return (id, u, v) =>
+            {
+                if (!cache.TryGetValue(id, out var t))
+                {
+                    var parts = id.Split('|');
+                    var image = registers.TryGetValue(parts[0], out var reg) ? drawTextures.SlotImage(slot + reg) : null;
+                    cache[id] = t = image is null ? null : new Codestead.GP.Gpu.Textures.Texture(image, samplers(parts.Length > 1 ? parts[1] : null)) { Components = image.Channels == 4 ? 4 : 3 };
+                }
+                return t is not null ? t.Sample(u, v) : [0, 0, 0, 1];
+            };
+        }
+        return null;
+    }
+
+    private DrawTextures? drawTextures;
+
+    /// <summary>
+    /// Static samplers: each description (sampler, samplers[0], samplers[1] …) by its ShaderRegister – a description
+    /// copied from another (samplers[1] = samplers[0];) keeps the other's fields it does not set itself. The HLSL
+    /// Sample(…) call names the sampler, whose register picks the description.
+    /// </summary>
+    private Func<string?, Codestead.GP.Gpu.Textures.SamplerState> SamplersByRegister(ShaderProgram vs, ShaderProgram ps)
+    {
         var byRegister = new Dictionary<int, Codestead.GP.Gpu.Textures.SamplerState>();
         var targets = src.FieldAssignments("Filter").Select(a => a.Target).Concat(src.FieldAssignments("AddressU").Select(a => a.Target)).Distinct().ToList();
+        string? Copied(string t) =>
+            Regex.Match(src.Code, @"(?<![\w.])" + Regex.Escape(t) + @"\s*=\s*([A-Za-z_]\w*(?:\[\d+\])?)\s*;") is { Success: true } m ? m.Groups[1].Value : null;
+        string? FieldOf(string t, string f, int depth = 0) =>
+            src.FieldAssignments(f).Where(a => a.Target == t).Select(a => a.Value).LastOrDefault()
+            ?? (depth < 3 && Copied(t) is { } from ? FieldOf(from, f, depth + 1) : null);
         for (int i = 0; i < targets.Count; i++)
         {
             var t = targets[i];
             var reg = src.FieldAssignments("ShaderRegister").Where(a => a.Target == t).Select(a => src.Int(a.Value)).LastOrDefault() ?? (Regex.Match(t, @"\[(\d+)\]") is { Success: true } m ? int.Parse(m.Groups[1].Value) : i);
-            byRegister[reg] = TextureBinding.FromFields(f => src.FieldAssignments(f).Where(a => a.Target == t).Select(a => a.Value).LastOrDefault(), d3d: true);
+            byRegister[reg] = TextureBinding.FromFields(f => FieldOf(t, f), d3d: true);
         }
         var samplerRegister = vs.Globals.Concat(ps.Globals).Where(g => g.Type.StartsWith("SamplerState", StringComparison.Ordinal)).GroupBy(g => g.Id).ToDictionary(g => g.Key, g => g.First().Binding ?? 0);
         var fallback = byRegister.GetValueOrDefault(0) ?? byRegister.Values.FirstOrDefault() ?? Codestead.GP.Gpu.Textures.SamplerState.Default;
-        return TextureBinding.Bind(names, images, (_, sampler) =>
-            sampler is not null && samplerRegister.TryGetValue(sampler, out var r) && byRegister.TryGetValue(r, out var state) ? state : fallback);
+        return name => name is not null && samplerRegister.TryGetValue(name, out var r) && byRegister.TryGetValue(r, out var state) ? state : fallback;
     }
 
     /// <summary>

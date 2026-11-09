@@ -335,10 +335,10 @@ en för varje objekt i filen.
 :::opengl
 ```quiz
 `processNode` får en `aiNode`. Var finns den faktiska vertexdatan för nodens i:te mesh?
-- [ ] I `node->mMeshes[i]`, en `aiMesh` som lagras i noden
+- [ ] I `scene->mRootNode->mMeshes[i]`, vilken nod som än bearbetas
 - [x] I `scene->mMeshes[node->mMeshes[i]]`: noden har bara indexet till en mesh som scenen äger
 - [ ] I `node->mChildren[i]`: varje mesh är en barnnod
-- [ ] I `scene->mRootNode->mMeshes[i]`, vilken nod som än bearbetas
+- [ ] I `node->mMeshes[i]`, en `aiMesh` som lagras i noden
 ---
 Alla meshar finns i scenens array `mMeshes`; en nod listar bara indexen för de meshar som hör till den. På så vis kan flera noder till och med dela en mesh.
 ```
@@ -421,10 +421,10 @@ OBJ-filer innehålla ett godtyckligt antal vertices, medan vårt program bara ka
 
 ```quiz
 `shape.mesh.indices[i]` är en `tinyobj::index_t`. Vad innehåller den?
-- [ ] Vertexens nummer i vertex buffern
 - [x] Tre separata index: `vertex_index`, `normal_index` och `texcoord_index`, in i `attrib.vertices`, `attrib.normals` och `attrib.texcoords`
 - [ ] De tre indexen för en triangel
 - [ ] Själva positionen, som tre floats
+- [ ] Vertexens nummer i vertex buffern
 ---
 OBJ indexerar varje attribut för sig, så ett hörn i en yta kan kombinera vilken position som helst med vilken normal och vilken texturkoordinat som helst. Vår vertex buffer behöver ett index per komplett vertex, så `loadModel()` måste bygga de vertices själv.
 ```
@@ -432,10 +432,10 @@ OBJ indexerar varje attribut för sig, så ett hörn i en yta kan kombinera vilk
 :::d3d12
 ```quiz
 `processNode` får en `aiNode`. Var finns den faktiska vertexdatan för nodens i:te mesh?
-- [ ] I `node->mMeshes[i]`, en `aiMesh` som lagras i noden
-- [x] I `scene->mMeshes[node->mMeshes[i]]`: noden har bara indexet till en mesh som scenen äger
 - [ ] I `node->mChildren[i]`: varje mesh är en barnnod
 - [ ] I `scene->mRootNode->mMeshes[i]`, vilken nod som än bearbetas
+- [ ] I `node->mMeshes[i]`, en `aiMesh` som lagras i noden
+- [x] I `scene->mMeshes[node->mMeshes[i]]`: noden har bara indexet till en mesh som scenen äger
 ---
 Alla meshar finns i scenens array `mMeshes`; en nod listar bara indexen för de meshar som hör till den. På så vis kan flera noder till och med dela en mesh.
 ```
@@ -456,10 +456,10 @@ grafikerna som skapade modellerna.
 :::opengl
 ```quiz
 Varför går `processNode` rekursivt igenom nodträdet, när en loop över `scene->mMeshes` skulle hitta samma två meshar?
-- [ ] För att `scene->mMeshes` bara innehåller rotnodens meshar
-- [ ] För att Assimp frigör varje mesh när dess nod har besökts
-- [x] Noderna bevarar de förälder–barn-relationer som grafikern definierade; att gå igenom dem behåller möjligheten att använda relationerna, till exempel för att flytta en del tillsammans med allt som sitter fast i den
 - [ ] Rekursion är snabbare än en loop för arrayer av pekare
+- [ ] För att Assimp frigör varje mesh när dess nod har besökts
+- [ ] För att `scene->mMeshes` bara innehåller rotnodens meshar
+- [x] Noderna bevarar de förälder–barn-relationer som grafikern definierade; att gå igenom dem behåller möjligheten att använda relationerna, till exempel för att flytta en del tillsammans med allt som sitter fast i den
 ---
 För vår planet ger båda sätten samma två meshar. Trädet spelar roll så fort du vill använda modellens struktur – en bils hjul som ska följa med bilen.
 ```
@@ -545,10 +545,10 @@ hänvisar de 3168 indexen (1056 trianglar) till bara 657 olika vertices.
 
 ```quiz
 Varför slår `loadModel()` upp varje vertex i `uniqueVertices` innan den läggs till?
-- [x] Så att en vertex som delas av flera trianglar lagras en gång och återanvänds via index buffern, i stället för en gång per triangelhörn
 - [ ] För att Vulkan inte godtar en vertex buffer med två lika vertices
 - [ ] För att sortera vertices efter material, så att ett draw-anrop räcker
 - [ ] För att `vkCmdDrawIndexed` behöver indexen i stigande ordning
+- [x] Så att en vertex som delas av flera trianglar lagras en gång och återanvänds via index buffern, i stället för en gång per triangelhörn
 ---
 Utan mappen vore varje hörn en egen vertex: 3168 vertices med indexen 0, 1, 2, 3 …. Med den innehåller vertex buffern 657, och index buffern talar om vilka av dem varje triangel använder.
 ```
@@ -563,10 +563,10 @@ fortfarande ett enda `vkCmdDrawIndexed`, nu med alla modellens index.
 :::d3d12
 ```quiz
 Varför går `processNode` rekursivt igenom nodträdet, när en loop över `scene->mMeshes` skulle hitta samma två meshar?
+- [ ] Rekursion är snabbare än en loop för arrayer av pekare
+- [x] Noderna bevarar de förälder–barn-relationer som grafikern definierade; att gå igenom dem behåller möjligheten att använda relationerna, till exempel för att flytta en del tillsammans med allt som sitter fast i den
 - [ ] För att `scene->mMeshes` bara innehåller rotnodens meshar
 - [ ] För att Assimp frigör varje mesh när dess nod har besökts
-- [x] Noderna bevarar de förälder–barn-relationer som grafikern definierade; att gå igenom dem behåller möjligheten att använda relationerna, till exempel för att flytta en del tillsammans med allt som sitter fast i den
-- [ ] Rekursion är snabbare än en loop för arrayer av pekare
 ---
 För vår planet ger båda sätten samma två meshar. Trädet spelar roll så fort du vill använda modellens struktur – en bils hjul som ska följa med bilen.
 ```
@@ -817,8 +817,8 @@ används inte heller: programmet behåller learnopengls högerhänta matematik, 
 ```quiz
 `planet.obj` räknar v från bildens nederkant, och stb_image levererar den översta raden först. Hur många gånger måste programmet vända v (eller bilden) för att planeten ska bli upprätt?
 - [ ] Aldrig: modellfiler görs alltid för det API som läser in dem
-- [x] Exakt en gång – om programmet vänder koordinaterna eller bilden spelar ingen roll
 - [ ] Två gånger: en gång för koordinaterna och en gång för bilden, som learnopengls model_loading.cpp gör
+- [x] Exakt en gång – om programmet vänder koordinaterna eller bilden spelar ingen roll
 - [ ] Det beror på bildens storlek
 ---
 Varje vändning vänder texturen upp och ner, så två vändningar tar ut varandra. learnopengl vänder två gånger för sin ryggsäck bara för att den modellens koordinater redan är lagrade vända; för vår är en vändning rätt.
@@ -1049,9 +1049,9 @@ inläst nu; det ritas bara inte än.
 
 ```quiz
 Vad sparar `textures_loaded` när två meshar i en modell använder samma bildfil?
-- [ ] Ingenting: varje mesh behöver ett eget texturobjekt, så filen läses in två gånger ändå
 - [x] Den andra meshen får den `Texture` som redan skapades för den första – samma textur-id – så filen läses och laddas upp bara en gång
 - [ ] Den sparar bildens pixlar så att den andra texturen kan skapas utan att filen läses
+- [ ] Ingenting: varje mesh behöver ett eget texturobjekt, så filen läses in två gånger ändå
 - [ ] Den gör om de två mesharna till en, så att de ritas med ett draw-anrop
 ---
 Jämförelsen sker på sökvägen, namnet som materialet anger. Ett texturobjekt kan bindas för hur många draw-anrop som helst, så det gör inget att meshar delar det.
@@ -1275,9 +1275,9 @@ bilden från learnopengls `model_loading.cpp`: bara diffuse-texturen, ingen ljus
 
 ```quiz
 Planeten och ringen har olika diffuse maps, men hela modellen är ett enda `vkCmdDrawIndexed`. Hur får ett fragment på ringen färgen från `rings.png`?
-- [ ] Descriptor setet byts halvvägs genom draw-anropet
-- [x] Varje vertex bär sitt materials nummer; fragment shadern får det som `fragMaterialIndex` och behåller samplet från `ringsDiffuseMap` när det är 1
 - [ ] Ringens texturkoordinater ligger utanför 0..1, vilket väljer den andra texturen
+- [x] Varje vertex bär sitt materials nummer; fragment shadern får det som `fragMaterialIndex` och behåller samplet från `ringsDiffuseMap` när det är 1
+- [ ] Descriptor setet byts halvvägs genom draw-anropet
 - [ ] Samplern väljer texturen efter bindingnumret i vertexen
 ---
 `loadModel()` kopierade varje ytas post i `material_ids` till dess vertices. Båda texturerna är bundna hela tiden; materialindexet avgör vilket sampel som blir färgen.
@@ -1285,9 +1285,9 @@ Planeten och ringen har olika diffuse maps, men hela modellen är ett enda `vkCm
 
 ```quiz
 Varför deklareras `fragMaterialIndex` som `flat`?
-- [ ] Så att det skickas som push constant i stället för som vertexattribut
 - [ ] För att `flat` gör triangelns skuggning platt, vilket ringen behöver
 - [x] Heltalsutdata kan inte interpoleras: `flat` ger varje fragment värdet från en av triangelns vertices oförändrat
+- [ ] Så att det skickas som push constant i stället för som vertexattribut
 - [ ] För att fragment shadern ska slippa normalisera det
 ---
 Interpolering är till för värden som övergår mjukt, som texturkoordinater och normaler. Ett materialnummer måste komma fram exakt som det var – och GLSL kräver `flat` för heltalsindata i en fragment shader.
@@ -1355,9 +1355,9 @@ sig, sedd lite ovanifrån. Ringens närmaste del går framför planeten; bakom p
 
 ```quiz
 Fragment shadern samplar bara `texture_diffuse1`, men ändå visar planeten `planet_diffuse.png` och ringen `rings.png`. Varför?
-- [ ] Shadern kompileras två gånger, en gång per mesh
 - [x] Varje mesh ritas för sig: före dess `glDrawElements` binder `Mesh::Draw` meshens diffuse-textur till en enhet och pekar `texture_diffuse1` på den
 - [ ] `texture_diffuse1` är en array som innehåller båda texturerna
+- [ ] Shadern kompileras två gånger, en gång per mesh
 - [ ] OpenGL väljer den textur vars namn stämmer med meshens namn
 ---
 `Model::Draw` anropar `Mesh::Draw` för varje mesh, och varje anrop binder sina egna texturer innan det ritar. Samplerns namn är detsamma; det som är bundet till den ändras mellan draw-anropen.
@@ -1423,8 +1423,8 @@ går framför planeten; bakom planeten döljer djuptestet den.
 
 ```quiz
 När får `LoadAssets` släppa texturernas upload-buffrar (`m_model.uploadHeaps.clear()`)?
-- [ ] Direkt efter `m_model.Load(…)`, eftersom `TextureFromFile` har kopierat pixlarna då
 - [ ] Aldrig: texturerna läser från sina upload-buffrar varje frame
+- [ ] Direkt efter `m_model.Load(…)`, eftersom `TextureFromFile` har kopierat pixlarna då
 - [x] Efter `WaitForPreviousFrame()`: kopieringarna spelades bara in i command listen, och de läser från upload-buffrarna när GPU:n kör den
 - [ ] Före `m_commandList->Close()`, så att den stängda command listen inte hänvisar till dem
 ---
@@ -1433,10 +1433,10 @@ När får `LoadAssets` släppa texturernas upload-buffrar (`m_model.uploadHeaps.
 
 ```quiz
 Pixel shadern samplar bara `texture_diffuse1` (register `t0`), men ändå visar planeten `planet_diffuse.png` och ringen `rings.png`. Varför?
-- [ ] Shadern kompileras två gånger, en gång per mesh
-- [x] Varje mesh ritas för sig, och `Mesh::Draw` sätter först root-parameter 2 till meshens två platser i heapen, så `t0` är planetens diffuse map i det ena draw-anropet och ringens i det andra
-- [ ] `t0` är en array som innehåller båda texturerna
 - [ ] Den statiska samplern väljer texturen efter meshens namn
+- [ ] `t0` är en array som innehåller båda texturerna
+- [x] Varje mesh ritas för sig, och `Mesh::Draw` sätter först root-parameter 2 till meshens två platser i heapen, så `t0` är planetens diffuse map i det ena draw-anropet och ringens i det andra
+- [ ] Shadern kompileras två gånger, en gång per mesh
 ---
 `SetGraphicsRootDescriptorTable(2, m_srvHandle)` pekar tabellen på meshens egna SRV:er. Registret är detsamma; descriptorerna det läser ändras mellan draw-anropen.
 ```
@@ -1873,10 +1873,10 @@ fläck.
 
 ```quiz
 När ljussättningen är klar är högdagern vid ljusets reflex bara en svag fläck. Varför?
-- [ ] Shininess 32 är för lågt för en synlig högdager
-- [ ] Ljuset har ingen spekulär komponent
 - [x] Reflexen hamnar på land, där planetens specular map är mörk; på ett hav, där kartan är ljus, är samma högdager stark
+- [ ] Shininess 32 är för lågt för en synlig högdager
 - [ ] Spekulär ljussättning fungerar inte på en modell som lästs in från en fil
+- [ ] Ljuset har ingen spekulär komponent
 ---
 Den spekulära termen multipliceras med specular mapens färg i det fragmentet. Flytta kameran så att reflexen hamnar på vatten, så lyser högdagern upp.
 ```

@@ -159,7 +159,7 @@ public sealed partial class VulkanReader
                     DepthWrite = (pl?.State ?? pipeState).DepthWrite,
                     Stencil = (pl?.State ?? pipeState).Stencil is { } st ? st with { Ref = d.StencilRef ?? st.Ref } : null,
                     Blend = (pl?.State ?? pipeState).Blend,
-                    Textures = pl is null ? textures : Textures(dvs, dfs) ?? textures,
+                    Textures = PerDrawTextures(dvs, dfs, d.Bound) ?? (pl is null ? textures : Textures(dvs, dfs) ?? textures),
                 });
             }
             if (recorder.Runner.UsedTime) scene.Animated = true;
@@ -218,12 +218,7 @@ public sealed partial class VulkanReader
         if (images.Count < names.Count) scene.Notes.Add(SimNote.Warning("tooFewTextures", ("count", names.Count.ToString()), ("loaded", images.Count.ToString())));
         // Each vkCreateSampler(…, &name) takes the sampler fields set before it; each binding gets the sampler of the
         // image info its descriptor write points to (info.sampler = name; descriptorWrites[i].pImageInfo = &info).
-        var samplers = new Dictionary<string, Codestead.GP.Gpu.Textures.SamplerState>(StringComparer.Ordinal);
-        foreach (var create in src.Calls("vkCreateSampler"))
-        {
-            var name = create.Arg(3).Trim().TrimStart('&').Trim();
-            samplers[name] = TextureBinding.FromFields(f => src.FieldValueBefore(f, create.Offset), d3d: false);
-        }
+        var samplers = Samplers();
         var infoSampler = Regex.Matches(src.Code, @"(\w+)\s*\.\s*sampler\s*=\s*(\w+)").GroupBy(m => m.Groups[1].Value).ToDictionary(g => g.Key, g => g.Last().Groups[2].Value);
         var writeInfo = Regex.Matches(src.Code, @"descriptorWrites\s*\[\s*(\d+)\s*\]\s*\.\s*pImageInfo\s*=\s*&\s*(\w+)").GroupBy(m => m.Groups[1].Value).ToDictionary(g => g.Key, g => g.Last().Groups[2].Value);
         var writeBinding = Regex.Matches(src.Code, @"descriptorWrites\s*\[\s*(\d+)\s*\]\s*\.\s*dstBinding\s*=\s*(\d+)").GroupBy(m => m.Groups[1].Value).ToDictionary(g => g.Key, g => int.Parse(g.Last().Groups[2].Value));
@@ -237,6 +232,55 @@ public sealed partial class VulkanReader
             return fallback;
         });
     }
+
+    /// <summary>
+    /// Each vkCreateSampler(…, &amp;name) with the sampler fields set before it – also in a helper called once per sampler,
+    /// createTextureSampler(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, transparentSampler), with the call's arguments.
+    /// </summary>
+    private Dictionary<string, Codestead.GP.Gpu.Textures.SamplerState> Samplers()
+    {
+        var samplers = new Dictionary<string, Codestead.GP.Gpu.Textures.SamplerState>(StringComparer.Ordinal);
+        foreach (var create in src.Calls("vkCreateSampler"))
+        {
+            var name = create.Arg(3).Trim().TrimStart('&').Trim();
+            var fn = src.FunctionAt(create.Offset);
+            var parameters = fn is null ? [] : Parameters(fn);
+            if (fn is not null && parameters.Contains(name))
+            {
+                var (start, _) = src.Functions[fn];
+                foreach (var call in src.Calls(fn))
+                {
+                    string Sub(string x) => parameters.IndexOf(x.Trim()) is int i and >= 0 ? call.Arg(i).Trim() : x;
+                    var callName = Sub(name).TrimStart('&').Trim();
+                    samplers[callName] = TextureBinding.FromFields(f => src.FieldAssignments(f).Where(a => a.Offset >= start && a.Offset < create.Offset).Select(a => Sub(a.Value)).LastOrDefault(), d3d: false);
+                }
+                continue;
+            }
+            samplers[name] = TextureBinding.FromFields(f => src.FieldValueBefore(f, create.Offset), d3d: false);
+        }
+        return samplers;
+    }
+
+    /// <summary>
+    /// The textures of one draw when its descriptor set (bound with vkCmdBindDescriptorSets) was written by a helper
+    /// with a view made by a texture-loading helper (see <see cref="DrawTextures"/>); null otherwise.
+    /// </summary>
+    private Func<string, double, double, double[]>? PerDrawTextures(ShaderProgram vs, ShaderProgram fs, IReadOnlyDictionary<int, string>? bound)
+    {
+        if (bound is null || !bound.TryGetValue(0, out var setText)) return null;
+        drawTextures ??= new DrawTextures(src, project);
+        if (!drawTextures.Any) return null;
+        var samplers = Samplers();
+        var set = drawTextures.VulkanSet(setText, n => samplers.GetValueOrDefault(n));
+        if (set is null) return null;
+        var bindingOf = vs.Globals.Concat(fs.Globals).Where(g => g.Type.StartsWith("sampler", StringComparison.Ordinal)).GroupBy(g => g.Id).ToDictionary(g => g.Key, g => g.First().Binding ?? 0);
+        var textures = new Dictionary<string, Codestead.GP.Gpu.Textures.Texture>(StringComparer.Ordinal);
+        foreach (var (name, binding) in bindingOf)
+            if (set.TryGetValue(binding, out var t)) textures[name] = new Codestead.GP.Gpu.Textures.Texture(t.Image, t.Sampler) { Components = t.Image.Channels == 4 ? 4 : 3 };
+        return (id, u, v) => textures.TryGetValue(id.Split('|')[0], out var tex) ? tex.Sample(u, v) : [0, 0, 0, 1];
+    }
+
+    private DrawTextures? drawTextures;
 
     /// <summary>The functions that fill a uniform buffer struct (updateUniformBuffer): they declare a variable of a block's type.</summary>
     private IEnumerable<string> UpdateFunctions(List<ShaderAst.Global> blocks) =>

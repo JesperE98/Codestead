@@ -105,7 +105,7 @@ internal sealed class FrameRecorder
         }
         // Other API calls do nothing here (their arguments name API objects the runner does not have).
         return name.StartsWith("vk", StringComparison.Ordinal) || name.StartsWith("glfw", StringComparison.Ordinal) && name != "glfwGetTime"
-            || (name.StartsWith('.') && name != ".size" && name != ".data") || name is "memcpy" or "ThrowIfFailed" or "WaitForPreviousFrame"
+            || (name.StartsWith('.') && name is not (".size" or ".data" or ".begin" or ".end" or ".rbegin" or ".rend")) || name is "memcpy" or "ThrowIfFailed" or "WaitForPreviousFrame"
             ? ShaderValue.Scalar(0) : null;
     }
 

@@ -181,7 +181,7 @@ int main()
 
         // TODO: draw the skybox first (skyboxShader, skyboxVAO, the cube map), without writing to the depth buffer
 
-        // cubes
+        // draw scene as normal
         shader.use();
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);

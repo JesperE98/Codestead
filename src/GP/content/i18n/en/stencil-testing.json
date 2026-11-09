@@ -1,0 +1,53 @@
+{
+  "title": "Stencil testing",
+  "tasks": {
+    "stencil-buffer": {
+      "text": {
+        "opengl": "Enable the stencil test, set `glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE)`, and clear the stencil buffer every frame with the colour and depth buffers.",
+        "vulkan": "Give the depth image a stencil part and switch the stencil test on: S8 formats in `findDepthFormat()`, depth + stencil aspects in the view, `stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR`, and in `createPipeline()` the stencil state KEEP, KEEP, REPLACE, ALWAYS, masks `0xFF`, reference 1 for `front` and `back`.",
+        "d3d12": "Give the depth buffer a stencil part (`DXGI_FORMAT_D24_UNORM_S8_UINT` in the view, the clear value, the texture and `DSVFormat`), switch the stencil test on in the PSO with KEEP, KEEP, REPLACE for both faces, and clear the stencil buffer too."
+      },
+      "hint": {
+        "opengl": "`glEnable(GL_STENCIL_TEST);` and `glStencilOp(sfail, dpfail, dppass)` after `glDepthFunc`; in the loop `glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);`. Nothing visible changes.",
+        "vulkan": "Candidates `{VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT}`, `VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT`, `stencilTestEnable = VK_TRUE`, `front.failOp`/`depthFailOp`/`passOp`/`compareOp`/`compareMask`/`writeMask`/`reference`, then `depthStencil.back = depthStencil.front;`. Nothing visible changes.",
+        "d3d12": "`StencilEnable = TRUE`, `FrontFace.StencilFailOp`/`StencilDepthFailOp` = `D3D12_STENCIL_OP_KEEP`, `StencilPassOp = D3D12_STENCIL_OP_REPLACE`, `BackFace = FrontFace`; clear with `D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL` (stencil 0 is the 4th argument). Nothing visible changes."
+      }
+    },
+    "single-color": {
+      "text": {
+        "opengl": "Write the outline shader: `stencil_single_color.fs` outputs `vec4(0.04, 0.28, 0.26, 1.0)`; build `shaderSingleColor` from `stencil_testing.vs` and `stencil_single_color.fs`, and give it the view and projection matrices every frame.",
+        "vulkan": "Write the outline's fragment shader `shaders/stencil_single_color.frag`: `outColor = vec4(0.04, 0.28, 0.26, 1.0);`.",
+        "d3d12": "Make `PSMain` in `stencil_single_color.hlsl` return `float4(0.04f, 0.28f, 0.26f, 1.0f)`, and create a second PSO, `m_singleColorPipelineState`, with that file's shaders."
+      },
+      "hint": {
+        "opengl": "`Shader shaderSingleColor(\"stencil_testing.vs\", \"stencil_single_color.fs\");`. In the loop: `shaderSingleColor.use();` before its two `setMat4` calls – a program must be in use to set its uniforms.",
+        "vulkan": "learnopengl's `stencil_single_color.fs`: one colour, no texture. No pipeline uses it yet, so nothing changes.",
+        "d3d12": "Compile `VSMain`/`PSMain` of `stencil_single_color.hlsl` into `singleColorVertexShader`/`singleColorPixelShader`, set `psoDesc.VS`/`PS` and call `CreateGraphicsPipelineState` again. Keep the TODO line before it for the last task."
+      }
+    },
+    "write-stencil": {
+      "text": {
+        "opengl": "Fill the stencil buffer: the floor must not write to it (`glStencilMask(0x00)`), the cubes write 1 everywhere they are drawn (`glStencilFunc(GL_ALWAYS, 1, 0xFF)` and `glStencilMask(0xFF)`).",
+        "vulkan": "Give `createPipeline()` the parameters `VkCompareOp stencilCompareOp, uint32_t stencilWriteMask`; create `floorPipeline` with `(VK_COMPARE_OP_ALWAYS, 0x00)` and `graphicsPipeline` with `(VK_COMPARE_OP_ALWAYS, 0xFF)`, and bind `floorPipeline` for the floor and `graphicsPipeline` before the cubes.",
+        "d3d12": "Draw the floor with a PSO that writes no stencil (`m_floorPipelineState`, `StencilWriteMask = 0x00`) and the cubes with `m_pipelineState` (`StencilFunc` ALWAYS, write mask `0xFF`) after `OMSetStencilRef(1)`."
+      },
+      "hint": {
+        "opengl": "The mask is ANDed with the value written: 0x00 writes nothing, 0xFF writes it as is. With `GL_ALWAYS` and `GL_REPLACE` every cube fragment stores 1. Nothing visible changes.",
+        "vulkan": "Assign the parameters to `depthStencil.front.compareOp` and `.writeMask`; destroy both pipelines in `cleanup()`. The floor's `vkCmdBindPipeline` replaces the one at the start of the render pass. Nothing visible changes.",
+        "d3d12": "Before `m_pipelineState`: `StencilWriteMask = 0x00` and create `m_floorPipelineState`; then `StencilWriteMask = 0xFF`, `FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS`, `BackFace = FrontFace`. In `PopulateCommandList`: `SetPipelineState` before each part."
+      }
+    },
+    "outline": {
+      "text": {
+        "opengl": "2nd pass: draw both cubes again scaled by 1.1 with `shaderSingleColor`, only where the stencil value is not 1 (`glStencilFunc(GL_NOTEQUAL, 1, 0xFF)`), with `glStencilMask(0x00)` and the depth test off. Then restore: mask `0xFF`, `glStencilFunc(GL_ALWAYS, 0, 0xFF)`, depth test on.",
+        "vulkan": "Add a `VkBool32 depthTestEnable` parameter (for `depthTestEnable` and `depthWriteEnable`), create `outlinePipeline` from `stencil_testing.vert` + `stencil_single_color.frag` with `(VK_FALSE, VK_COMPARE_OP_NOT_EQUAL, 0x00)`, and after the cubes draw both again with it, scaled by `1.1f`.",
+        "d3d12": "Give the outline PSO the state \"only where the stencil value is not 1, no stencil writes, no depth test\", and after the cubes draw both again with it, scaled by 1.1."
+      },
+      "hint": {
+        "opengl": "`float scale = 1.1f;` and `model = glm::scale(model, glm::vec3(scale, scale, scale));` after the translation. Only a ring around each cube passes NOTEQUAL; `glDisable(GL_DEPTH_TEST)` keeps the floor from hiding it.",
+        "vulkan": "The other two pipelines get `VK_TRUE`; destroy `outlinePipeline` in `cleanup()`. `model = glm::scale(model, glm::vec3(scale, scale, scale))` after the translate. Nothing to restore afterwards: each pipeline carries its own state.",
+        "d3d12": "Before `m_singleColorPipelineState`: `FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_NOT_EQUAL`, `BackFace = FrontFace`, `StencilWriteMask = 0x00`, `DepthEnable = FALSE`. Then `SetPipelineState(m_singleColorPipelineState.Get())` and `model = XMMatrixScaling(scale, scale, scale) * XMMatrixTranslation(…)` per cube."
+      }
+    }
+  }
+}

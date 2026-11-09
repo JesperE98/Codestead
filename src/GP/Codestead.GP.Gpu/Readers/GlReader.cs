@@ -42,7 +42,7 @@ public sealed partial class GlReader
     private List<double>? Numbers(string expr) => env.Numbers(expr) ?? src.Numbers(expr, env.Runner.Time);
 
     private static readonly Regex CallStart = new(@"(?<![\w.>])(?<name>gl[A-Z]\w*|glfw[A-Z]\w*|gladLoadGL(?:Loader)?|memcpy)\s*\(|(?<obj>[A-Za-z_]\w*)\s*\.\s*(?<method>use|setFloat|setInt|setBool|setVec2|setVec3|setVec4|setMat4|Draw)\s*\(", RegexOptions.CultureInvariant);
-    private static readonly Regex AssignRe = new(@"^(?:[A-Za-z_][\w:<>]*\s*[*&]?\s+)*(?<lhs>[A-Za-z_]\w*(?:\[\d+\])?)\s*=\s*(?<rhs>[\s\S]+)$", RegexOptions.CultureInvariant);
+    private static readonly Regex AssignRe = new(@"^(?:[A-Za-z_][\w:<>]*(?:\s*[*&]+\s*|\s+))*(?<lhs>[A-Za-z_]\w*(?:\[\d+\])?)\s*=\s*(?<rhs>[\s\S]+)$", RegexOptions.CultureInvariant);
     private static readonly Regex ModelRe = new(@"^Model\s+(?<name>\w+)\s*\(\s*""(?<path>[^""]+)""", RegexOptions.CultureInvariant);
     private readonly Dictionary<string, (Models.ObjModel Model, string Path)> models = new(StringComparer.Ordinal);
 
@@ -213,6 +213,6 @@ public sealed partial class GlReader
         if (!scene.Presents) scene.Notes.Add(SimNote.Warning("noPresent", ("call", "glfwSwapBuffers(window)")));
         if (!src.HasCall("glfwPollEvents")) scene.Notes.Add(SimNote.Warning("noPollEvents"));
         if (setupDraws.Count > 0 && scene.Draws.Count == 0) scene.Notes.Add(SimNote.Warning("drawOutsideLoop", ("call", "glDrawArrays")));
-        if (scene.ClearColor is null && (gl.ClearColorSet || scene.Draws.Count > 0)) scene.Notes.Add(SimNote.Warning("noClear", ("call", "glClear(GL_COLOR_BUFFER_BIT)")));
+        if (scene.ClearColor is null && !scene.Ops.Any(o => o is ClearOp { Target: null, Color: not null }) && (gl.ClearColorSet || scene.Draws.Count > 0)) scene.Notes.Add(SimNote.Warning("noClear", ("call", "glClear(GL_COLOR_BUFFER_BIT)")));
     }
 }

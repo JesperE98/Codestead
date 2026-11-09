@@ -33,6 +33,19 @@ public sealed partial class ShaderRunner
             return ShaderValue.Scalar(0);
         }
         if (name is "sizeof") return ShaderValue.Scalar(SizeOf(c.Args.FirstOrDefault()));
+        // _countof(array): the number of elements of a C array (MSVC's macro, used by the D3D12 samples).
+        if (name is "_countof" && c.Args.Count == 1)
+        {
+            try
+            {
+                var arr = Eval(c.Args[0]);
+                return ShaderValue.Scalar(arr.Items?.Length ?? arr.Map?.Count ?? arr.V?.Length ?? 0);
+            }
+            catch (ShaderRuntimeException) when (Lenient)
+            {
+                return ShaderValue.Scalar(0);
+            }
+        }
 
         // The shader's own functions and structs.
         if (program.FindFunction(name) is { } f)
@@ -128,6 +141,18 @@ public sealed partial class ShaderRunner
                 if (!Need(2)) throw Arity();
                 double d = a[0].V!.Zip(a[1].V!, (x, y) => x * y).Sum();
                 return ShaderValue.Vec(a[0].V!.Zip(a[1].V!, (i, nn) => i - 2 * d * nn).ToArray());
+            }
+            case "refract":
+            {
+                // refract(I, N, eta): the GLSL/HLSL formula; a zero vector past the critical angle.
+                if (a.Count != 3 || a.Any(x => x.V is null)) throw Arity();
+                var i = a[0].V!;
+                var nn = a[1].V!;
+                double eta = a[2].X, d = i.Zip(nn, (x, y) => x * y).Sum();
+                double k = 1 - eta * eta * (1 - d * d);
+                if (k < 0) return ShaderValue.Vec(new double[i.Length]);
+                double factor = eta * d + Math.Sqrt(k);
+                return ShaderValue.Vec(i.Select((x, j) => eta * x - factor * nn[Math.Min(j, nn.Length - 1)]).ToArray());
             }
             case "transpose":
                 if (a.Count != 1 || !a[0].IsMatrix) throw Arity();

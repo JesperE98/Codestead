@@ -245,7 +245,7 @@ int main()
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
-        // cubes
+        // draw scene as normal
         shader.use();
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);

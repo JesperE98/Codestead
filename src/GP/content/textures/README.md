@@ -19,5 +19,6 @@ For the Advanced OpenGL chapters (drawn by `make_advanced.py`):
 - `grass.png` (128×128, RGBA): grass blades on a fully transparent background (alpha is 0 or 255): the discard example.
 - `window.png` (128×128, RGBA): red tinted glass (alpha about 0.55) in an opaque frame: the blending example.
 - `skybox/right.png`, `left.png`, `top.png`, `bottom.png`, `front.png`, `back.png` (256×256, RGB): the six faces
-  (+X, -X, +Y, -Y, +Z, -Z) of one sky – clouds, a sun towards -Z (in front of the default camera) and green fields
+  (+X, -X, +Y, -Y, +Z, -Z) of one sky – clouds, a sun towards -Z (in front of the default camera), mountains on the
+  horizon, a red and white striped tower towards +Z (behind the camera: what mirrors facing it show) and green fields
   below the horizon – made with the cube map rule of the OpenGL specification, so they join without seams.

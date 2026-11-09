@@ -178,8 +178,28 @@ public sealed partial class ShaderRunner
             }
             case "XMVectorSet" when a.Count == 4:
                 return ShaderValue.Vec(S(0), S(1), S(2), S(3));
+            case "XMLoadFloat3" when a.Count == 1 && !a[0].IsMatrix:
+                // An XMVECTOR has four components: w = 0 for a loaded XMFLOAT3.
+                return ShaderValue.Vec(a[0].Padded(3)[0], a[0].Padded(3)[1], a[0].Padded(3)[2], 0);
             case "XMLoadFloat3" or "XMLoadFloat4" or "XMLoadFloat4x4" or "XMLoadFloat3x3" when a.Count == 1:
                 return a[0];
+            case "XMVectorGetX" or "XMVectorGetY" or "XMVectorGetZ" or "XMVectorGetW" when a.Count == 1:
+                return ShaderValue.Scalar(a[0].Padded(4)["XYZW".IndexOf(name[^1])]);
+            case "XMVector3Length" when a.Count == 1:
+            {
+                var v = V3(a[0]);
+                double len = Math.Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+                return ShaderValue.Vec(len, len, len, len);
+            }
+            case "XMVector3Dot" when a.Count == 2:
+            {
+                var p = V3(a[0]);
+                var q = V3(a[1]);
+                double dot = p[0] * q[0] + p[1] * q[1] + p[2] * q[2];
+                return ShaderValue.Vec(dot, dot, dot, dot);
+            }
+            case "XMVectorNegate" when a.Count == 1:
+                return ShaderValue.Vec(a[0].Padded(4).Select(x => -x).ToArray());
             case "XMVector3Normalize" when a.Count == 1:
             {
                 var n = Normalize3(V3(a[0]));

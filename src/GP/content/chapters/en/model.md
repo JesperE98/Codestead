@@ -338,10 +338,10 @@ stops. For `planet.obj` this gives two meshes, `planet` and `rings`, one for eac
 :::opengl
 ```quiz
 `processNode` gets an `aiNode`. Where is the actual vertex data of the node's i-th mesh?
-- [ ] In `node->mMeshes[i]`, an `aiMesh` stored in the node
+- [ ] In `scene->mRootNode->mMeshes[i]`, whatever node is being processed
 - [x] In `scene->mMeshes[node->mMeshes[i]]`: the node only holds the index of a mesh that the scene owns
 - [ ] In `node->mChildren[i]`: every mesh is a child node
-- [ ] In `scene->mRootNode->mMeshes[i]`, whatever node is being processed
+- [ ] In `node->mMeshes[i]`, an `aiMesh` stored in the node
 ---
 All meshes live in the scene's `mMeshes` array; a node just lists the indices of the meshes that belong to it. That way several nodes could even share one mesh.
 ```
@@ -424,10 +424,10 @@ So `tinyobj::attrib_t` is roughly Assimp's per-mesh vertex arrays for the whole 
 
 ```quiz
 `shape.mesh.indices[i]` is a `tinyobj::index_t`. What does it contain?
-- [ ] The number of the vertex in the vertex buffer
 - [x] Three separate indices: `vertex_index`, `normal_index` and `texcoord_index`, into `attrib.vertices`, `attrib.normals` and `attrib.texcoords`
 - [ ] The three indices of a triangle
 - [ ] The position itself, as three floats
+- [ ] The number of the vertex in the vertex buffer
 ---
 OBJ indexes each attribute separately, so one corner of a face can combine any position with any normal and any texture coordinate. Our vertex buffer needs one index per complete vertex, so `loadModel()` has to build those vertices itself.
 ```
@@ -435,10 +435,10 @@ OBJ indexes each attribute separately, so one corner of a face can combine any p
 :::d3d12
 ```quiz
 `processNode` gets an `aiNode`. Where is the actual vertex data of the node's i-th mesh?
-- [ ] In `node->mMeshes[i]`, an `aiMesh` stored in the node
-- [x] In `scene->mMeshes[node->mMeshes[i]]`: the node only holds the index of a mesh that the scene owns
 - [ ] In `node->mChildren[i]`: every mesh is a child node
 - [ ] In `scene->mRootNode->mMeshes[i]`, whatever node is being processed
+- [ ] In `node->mMeshes[i]`, an `aiMesh` stored in the node
+- [x] In `scene->mMeshes[node->mMeshes[i]]`: the node only holds the index of a mesh that the scene owns
 ---
 All meshes live in the scene's `mMeshes` array; a node just lists the indices of the meshes that belong to it. That way several nodes could even share one mesh.
 ```
@@ -460,10 +460,10 @@ who created the models.
 :::opengl
 ```quiz
 Why does `processNode` walk through the node tree recursively, when looping over `scene->mMeshes` would find the same two meshes?
-- [ ] Because `scene->mMeshes` only holds the root node's meshes
-- [ ] Because Assimp frees each mesh once its node has been visited
-- [x] The nodes keep the parent-child relations the artist defined; walking them keeps the option to use those relations, for example to move a part together with everything attached to it
 - [ ] Recursion is faster than a loop for arrays of pointers
+- [ ] Because Assimp frees each mesh once its node has been visited
+- [ ] Because `scene->mMeshes` only holds the root node's meshes
+- [x] The nodes keep the parent-child relations the artist defined; walking them keeps the option to use those relations, for example to move a part together with everything attached to it
 ---
 For our planet both ways give the same two meshes. The tree matters as soon as you want to use the model's structure – a car's wheels that should move with the car.
 ```
@@ -551,10 +551,10 @@ normal, texture coordinates and material before. If not, we add it to `vertices`
 
 ```quiz
 Why does `loadModel()` look every vertex up in `uniqueVertices` before adding it?
-- [x] So that a vertex shared by several triangles is stored once and reused through the index buffer, instead of once per triangle corner
 - [ ] Because Vulkan rejects a vertex buffer with two equal vertices
 - [ ] To sort the vertices by material, so that one draw call is enough
 - [ ] Because `vkCmdDrawIndexed` needs the indices in increasing order
+- [x] So that a vertex shared by several triangles is stored once and reused through the index buffer, instead of once per triangle corner
 ---
 Without the map every corner would be a vertex of its own: 3168 vertices with indices 0, 1, 2, 3 …. With it the vertex buffer holds 657, and the index buffer says which of them each triangle uses.
 ```
@@ -569,10 +569,10 @@ seam, where its texture coordinates wrap around. All of it is still one `vkCmdDr
 :::d3d12
 ```quiz
 Why does `processNode` walk through the node tree recursively, when looping over `scene->mMeshes` would find the same two meshes?
+- [ ] Recursion is faster than a loop for arrays of pointers
+- [x] The nodes keep the parent-child relations the artist defined; walking them keeps the option to use those relations, for example to move a part together with everything attached to it
 - [ ] Because `scene->mMeshes` only holds the root node's meshes
 - [ ] Because Assimp frees each mesh once its node has been visited
-- [x] The nodes keep the parent-child relations the artist defined; walking them keeps the option to use those relations, for example to move a part together with everything attached to it
-- [ ] Recursion is faster than a loop for arrays of pointers
 ---
 For our planet both ways give the same two meshes. The tree matters as soon as you want to use the model's structure – a car's wheels that should move with the car.
 ```
@@ -823,8 +823,8 @@ learnopengl's right-handed maths, `XMMatrixLookAtRH` and `XMMatrixPerspectiveFov
 ```quiz
 `planet.obj` counts v from the bottom of the image, and stb_image delivers the top row first. How many times must the program flip v (or the image) for the planet to be upright?
 - [ ] Never: model files are always made for the API that loads them
-- [x] Exactly once – whether it flips the coordinates or the image doesn't matter
 - [ ] Twice: once for the coordinates and once for the image, as learnopengl's model_loading.cpp does
+- [x] Exactly once – whether it flips the coordinates or the image doesn't matter
 - [ ] It depends on the size of the image
 ---
 Each flip turns the texture upside down, so two flips cancel out. learnopengl flips twice for its backpack only because that model's coordinates are already stored flipped; for ours, one flip is right.
@@ -1056,9 +1056,9 @@ Now do the task **material-textures**: `loadMaterialTextures` with the cache, an
 
 ```quiz
 What does `textures_loaded` save when two meshes of a model use the same image file?
-- [ ] Nothing: each mesh needs its own texture object, so the file is loaded twice anyway
 - [x] The second mesh gets the `Texture` that was already created for the first – same texture id – so the file is read and uploaded only once
 - [ ] It stores the image's pixels so that the second texture can be created without reading the file
+- [ ] Nothing: each mesh needs its own texture object, so the file is loaded twice anyway
 - [ ] It makes the two meshes into one, so that they're drawn with one draw call
 ---
 The comparison is by path, the name the material gives. A texture object can be bound for any number of draws, so sharing it between meshes is no problem.
@@ -1281,9 +1281,9 @@ slightly above. This is the picture of learnopengl's `model_loading.cpp`: the di
 
 ```quiz
 The planet and the ring have different diffuse maps, but the whole model is one `vkCmdDrawIndexed`. How does a fragment of the ring get the colour of `rings.png`?
-- [ ] The descriptor set is switched halfway through the draw call
-- [x] Each vertex carries its material's number; the fragment shader receives it as `fragMaterialIndex` and keeps the sample of `ringsDiffuseMap` when it is 1
 - [ ] The ring's texture coordinates lie outside 0..1, which selects the second texture
+- [x] Each vertex carries its material's number; the fragment shader receives it as `fragMaterialIndex` and keeps the sample of `ringsDiffuseMap` when it is 1
+- [ ] The descriptor set is switched halfway through the draw call
 - [ ] The sampler chooses the texture by the binding number in the vertex
 ---
 `loadModel()` copied each face's `material_ids` entry into its vertices. Both textures are bound all the time; the material index decides which sample becomes the colour.
@@ -1291,9 +1291,9 @@ The planet and the ring have different diffuse maps, but the whole model is one 
 
 ```quiz
 Why is `fragMaterialIndex` declared `flat`?
-- [ ] So that it is passed as a push constant instead of a vertex attribute
 - [ ] Because `flat` makes the triangle's shading flat, which the ring needs
 - [x] Integer outputs cannot be interpolated: `flat` gives every fragment the value of one of the triangle's vertices unchanged
+- [ ] So that it is passed as a push constant instead of a vertex attribute
 - [ ] To save the fragment shader from normalizing it
 ---
 Interpolation is for values that blend smoothly, like texture coordinates and normals. A material number must arrive exactly as it was – and GLSL requires `flat` for integer inputs of a fragment shader.
@@ -1362,9 +1362,9 @@ it, seen slightly from above. Its near side passes in front of the planet; behin
 
 ```quiz
 The fragment shader samples only `texture_diffuse1`, yet the planet shows `planet_diffuse.png` and the ring `rings.png`. Why?
-- [ ] The shader is compiled twice, once per mesh
 - [x] Each mesh is drawn on its own: before its `glDrawElements`, `Mesh::Draw` binds that mesh's diffuse texture to a unit and points `texture_diffuse1` at it
 - [ ] `texture_diffuse1` is an array that holds both textures
+- [ ] The shader is compiled twice, once per mesh
 - [ ] OpenGL picks the texture whose name matches the mesh's name
 ---
 `Model::Draw` calls `Mesh::Draw` for each mesh, and each call binds its own textures before drawing. The sampler's name stays the same; what is bound to it changes between the draws.
@@ -1430,8 +1430,8 @@ in front of the planet; behind the planet the depth test hides it.
 
 ```quiz
 When may `LoadAssets` release the textures' upload buffers (`m_model.uploadHeaps.clear()`)?
-- [ ] Right after `m_model.Load(…)`, because `TextureFromFile` has copied the pixels by then
 - [ ] Never: the textures read from their upload buffers every frame
+- [ ] Right after `m_model.Load(…)`, because `TextureFromFile` has copied the pixels by then
 - [x] After `WaitForPreviousFrame()`: the copies were only recorded in the command list, and they read from the upload buffers when the GPU executes it
 - [ ] Before `m_commandList->Close()`, so that the closed command list doesn't refer to them
 ---
@@ -1440,10 +1440,10 @@ When may `LoadAssets` release the textures' upload buffers (`m_model.uploadHeaps
 
 ```quiz
 The pixel shader samples only `texture_diffuse1` (register `t0`), yet the planet shows `planet_diffuse.png` and the ring `rings.png`. Why?
-- [ ] The shader is compiled twice, once per mesh
-- [x] Each mesh is drawn on its own, and `Mesh::Draw` first sets root parameter 2 to that mesh's two heap slots, so `t0` is the planet's diffuse map in one draw and the ring's in the other
-- [ ] `t0` is an array that holds both textures
 - [ ] The static sampler chooses the texture by the mesh's name
+- [ ] `t0` is an array that holds both textures
+- [x] Each mesh is drawn on its own, and `Mesh::Draw` first sets root parameter 2 to that mesh's two heap slots, so `t0` is the planet's diffuse map in one draw and the ring's in the other
+- [ ] The shader is compiled twice, once per mesh
 ---
 `SetGraphicsRootDescriptorTable(2, m_srvHandle)` points the table at the mesh's own SRVs. The register stays the same; the descriptors it reads change between the draws.
 ```
@@ -1881,10 +1881,10 @@ lands on an ocean, and it becomes a small bright spot.
 
 ```quiz
 With the lighting done, the highlight at the light's reflection is only a faint spot. Why?
-- [ ] The shininess of 32 is too low for a visible highlight
-- [ ] The light has no specular component
 - [x] The reflection falls on land, where the planet's specular map is dark; on an ocean, where the map is bright, the same highlight is strong
+- [ ] The shininess of 32 is too low for a visible highlight
 - [ ] Specular lighting doesn't work on a model loaded from a file
+- [ ] The light has no specular component
 ---
 The specular term is multiplied by the specular map's colour at that fragment. Move the camera so the reflection lands on water, and the highlight lights up.
 ```

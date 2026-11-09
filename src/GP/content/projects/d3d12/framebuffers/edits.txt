@@ -1,0 +1,266 @@
+=== task: offscreen-target
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_depthStencil;
+--- replace:
+    ComPtr<ID3D12Resource> m_depthStencil;
+    ComPtr<ID3D12Resource> m_offscreenTarget;    // the off-screen render target: the scene is drawn into this texture
+--- file: main.cpp
+--- find:
+        rtvHeapDesc.NumDescriptors = FrameCount;
+--- replace:
+        rtvHeapDesc.NumDescriptors = FrameCount + 1;    // the swap chain's buffers + the off-screen render target
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 3;    // one CBV + one SRV per texture
+--- replace:
+        cbvSrvHeapDesc.NumDescriptors = 4;    // one CBV + one SRV per texture + the off-screen render target's SRV
+--- file: main.cpp
+--- find:
+    // TODO: the off-screen render target (m_offscreenTarget): a texture as big as the window that can be a render target, its RTV (RTV heap slot FrameCount) and its SRV (CBV/SRV heap slot 3)
+--- replace:
+    // Create the off-screen render target: a texture the scene is drawn into (OpenGL: the
+    // framebuffer's colour attachment), which the screen quad then reads. The scene uses
+    // the depth buffer above with it.
+    {
+        // A texture as big as the window, in the back buffer's format, that can be a render
+        // target (ALLOW_RENDER_TARGET). It starts in the PIXEL_SHADER_RESOURCE state: every
+        // frame turns it into a render target for the scene, and back for the screen quad.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+
+        // The colour it is usually cleared to (clearing to this colour is fastest).
+        const float optimizedClearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+        CD3DX12_CLEAR_VALUE clearValue(DXGI_FORMAT_R8G8B8A8_UNORM, optimizedClearColor);
+
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+            &clearValue,
+            IID_PPV_ARGS(&m_offscreenTarget)));
+
+        // A render target view, to draw into it: in the RTV heap after the swap chain's buffers.
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_rtvDescriptorSize);
+        m_device->CreateRenderTargetView(m_offscreenTarget.Get(), nullptr, rtvHandle);
+
+        // A shader resource view, to read it in a pixel shader: slot 3 of the CBV/SRV heap.
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 3, m_cbvSrvDescriptorSize);
+        m_device->CreateShaderResourceView(m_offscreenTarget.Get(), &srvDesc, srvHandle);
+    }
+--- file: main.cpp
+--- find:
+    // TODO: first pass: draw the scene into the off-screen render target with the depth buffer (barrier PIXEL_SHADER_RESOURCE -> RENDER_TARGET)
+
+    // Indicate that the back buffer will be used as a render target.
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+
+    // Record commands.
+    const float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+    m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+--- replace:
+    // First pass: the scene, drawn into the off-screen render target with the depth buffer.
+    // The screen quad of the previous frame read the texture: now it is written again.
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_offscreenTarget.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE offscreenRtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_rtvDescriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+    m_commandList->OMSetRenderTargets(1, &offscreenRtvHandle, FALSE, &dsvHandle);
+
+    // Record commands.
+    const float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+    m_commandList->ClearRenderTargetView(offscreenRtvHandle, clearColor, 0, nullptr);
+--- file: main.cpp
+--- find:
+    // TODO: second pass: the window (barriers: the off-screen texture RENDER_TARGET -> PIXEL_SHADER_RESOURCE, the back buffer PRESENT -> RENDER_TARGET), no depth buffer, cleared to white
+--- replace:
+    // The scene is in the texture: from now on the pixel shader reads it.
+    barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_offscreenTarget.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    // Second pass: the window. Indicate that the back buffer will be used as a render target.
+    barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    // The back buffer, without a depth buffer: the screen quad needs no depth test.
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+
+    // Clear it to white (not really necessary: the screen quad covers the whole window).
+    const float screenClearColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    m_commandList->ClearRenderTargetView(rtvHandle, screenClearColor, 0, nullptr);
+
+    // TODO: draw the screen quad (m_screenPipelineState, 6 vertices from vertex 42 on) with the off-screen texture (CBV/SRV heap slot 3)
+
+=== task: screen-quad
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+--- replace:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+    ComPtr<ID3D12PipelineState> m_screenPipelineState;    // the screen quad's
+--- file: main.cpp
+--- find:
+        // TODO: the screen quad's pipeline state (m_screenPipelineState): the shaders of framebuffers_screen.hlsl, no depth buffer and no depth test
+--- replace:
+        // The screen quad's pipeline state: the same description, but the shaders of
+        // framebuffers_screen.hlsl, and no depth buffer (the window's pass has none) and so
+        // no depth test (learnopengl: glDisable(GL_DEPTH_TEST)).
+        ComPtr<ID3DBlob> screenVertexShader;
+        ComPtr<ID3DBlob> screenPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"framebuffers_screen.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &screenVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"framebuffers_screen.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &screenPixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(screenVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(screenPixelShader.Get());
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_screenPipelineState)));
+--- file: main.cpp
+--- find:
+            { {  5.0f, -0.5f, -5.0f }, { 2.0f, 0.0f } }
+            // TODO: the screen quad (vertices 42 to 47): two triangles that fill the whole window, in normalized device coordinates
+--- replace:
+            { {  5.0f, -0.5f, -5.0f }, { 2.0f, 0.0f } },
+
+            // the screen quad: vertices 42 to 47 - two triangles that fill the whole window,
+            // in normalized device coordinates (x and y from -1 to 1; z is not used). The
+            // texture coordinates are learnopengl.com's with v flipped: v = 0 at the top.
+            { { -1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f } },
+            { { -1.0f, -1.0f, 0.0f }, { 0.0f, 1.0f } },
+            { {  1.0f, -1.0f, 0.0f }, { 1.0f, 1.0f } },
+
+            { { -1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f } },
+            { {  1.0f, -1.0f, 0.0f }, { 1.0f, 1.0f } },
+            { {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f } }
+--- file: main.cpp
+--- find:
+    // TODO: draw the screen quad (m_screenPipelineState, 6 vertices from vertex 42 on) with the off-screen texture (CBV/SRV heap slot 3)
+--- replace:
+    // The screen quad: its pipeline state, the off-screen texture (heap slot 3) as the
+    // texture of root parameter 2, and its 6 vertices from vertex 42 on.
+    CD3DX12_GPU_DESCRIPTOR_HANDLE screenTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_cbvSrvDescriptorSize);
+    m_commandList->SetPipelineState(m_screenPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(2, screenTexture);
+    m_commandList->DrawInstanced(6, 1, 42, 0);
+--- file: framebuffers_screen.hlsl
+--- find:
+    // TODO: return the colour of the off-screen texture (screenTexture) at input.texCoord, with alpha 1.0
+    return float4(0.0f, 0.0f, 0.0f, 1.0f);
+--- replace:
+    float3 col = screenTexture.Sample(wrapSampler, input.texCoord).rgb;
+    return float4(col, 1.0f);
+
+=== task: inversion
+--- file: framebuffers_screen.hlsl
+--- find:
+    float3 col = screenTexture.Sample(wrapSampler, input.texCoord).rgb;
+    return float4(col, 1.0f);
+--- replace:
+    return float4(1.0f - screenTexture.Sample(wrapSampler, input.texCoord).rgb, 1.0f);    // every colour channel inverted
+
+=== task: grayscale
+--- file: framebuffers_screen.hlsl
+--- find:
+    return float4(1.0f - screenTexture.Sample(wrapSampler, input.texCoord).rgb, 1.0f);    // every colour channel inverted
+--- replace:
+    float4 color = screenTexture.Sample(wrapSampler, input.texCoord);
+    // weighted average: the human eye is most sensitive to green and least to blue
+    float average = 0.2126f * color.r + 0.7152f * color.g + 0.0722f * color.b;
+    return float4(average, average, average, 1.0f);
+
+=== task: sharpen
+--- file: framebuffers_screen.hlsl
+--- find:
+// The pixel shader: the colour of the window's pixel.
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    float4 color = screenTexture.Sample(wrapSampler, input.texCoord);
+    // weighted average: the human eye is most sensitive to green and least to blue
+    float average = 0.2126f * color.r + 0.7152f * color.g + 0.0722f * color.b;
+    return float4(average, average, average, 1.0f);
+--- replace:
+// The distance to the neighbouring samples, in texture coordinates.
+static const float offset = 1.0f / 300.0f;
+
+// The pixel shader: the colour of the window's pixel.
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    // The 3x3 samples around the pixel. v grows downwards in Direct3D, so the top row
+    // is at -offset (learnopengl's GLSL, where v grows upwards, has +offset there).
+    float2 offsets[9] =
+    {
+        float2(-offset, -offset),    // top-left
+        float2( 0.0f,   -offset),    // top-center
+        float2( offset, -offset),    // top-right
+        float2(-offset,  0.0f),      // center-left
+        float2( 0.0f,    0.0f),      // center-center
+        float2( offset,  0.0f),      // center-right
+        float2(-offset,  offset),    // bottom-left
+        float2( 0.0f,    offset),    // bottom-center
+        float2( offset,  offset)     // bottom-right
+    };
+
+    // The kernel: how much each sample counts.
+    float kernel[9] =
+    {
+        -1.0f, -1.0f, -1.0f,
+        -1.0f,  9.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f
+    };
+
+    float3 sampleTex[9];
+    for (int i = 0; i < 9; i++)
+    {
+        sampleTex[i] = screenTexture.Sample(wrapSampler, input.texCoord + offsets[i]).rgb;
+    }
+    float3 col = float3(0.0f, 0.0f, 0.0f);
+    for (int k = 0; k < 9; k++)
+        col += sampleTex[k] * kernel[k];
+
+    return float4(col, 1.0f);
+
+=== task: blur
+--- file: framebuffers_screen.hlsl
+--- find:
+    float kernel[9] =
+    {
+        -1.0f, -1.0f, -1.0f,
+        -1.0f,  9.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f
+    };
+--- replace:
+    float kernel[9] =
+    {
+        1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f,
+        2.0f / 16.0f, 4.0f / 16.0f, 2.0f / 16.0f,
+        1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f
+    };
+
+=== task: edge-detection
+--- file: framebuffers_screen.hlsl
+--- find:
+    float kernel[9] =
+    {
+        1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f,
+        2.0f / 16.0f, 4.0f / 16.0f, 2.0f / 16.0f,
+        1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f
+    };
+--- replace:
+    float kernel[9] =
+    {
+        1.0f,  1.0f, 1.0f,
+        1.0f, -8.0f, 1.0f,
+        1.0f,  1.0f, 1.0f
+    };

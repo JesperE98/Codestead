@@ -1,0 +1,29 @@
+{
+  "title": "Face culling",
+  "tasks": {
+    "ccw-cube": {
+      "text": "Replace the cube's 36 vertices with a cube whose every triangle is counter-clockwise when you look at its face from outside; keep each vertex's texture coordinates.",
+      "hint": "In learnopengl's cube the back, right and top faces are clockwise from outside: swap the 2nd and 3rd corner of each of their triangles. Check: (b − a) × (c − a) points out of the cube. Nothing visible changes yet."
+    },
+    "cull-back": {
+      "text": {
+        "opengl": "Enable face culling: `glEnable(GL_CULL_FACE)`, cull the back faces (`glCullFace(GL_BACK)`) with counter-clockwise front faces (`glFrontFace(GL_CCW)`), and make the floor's triangles counter-clockwise seen from above.",
+        "vulkan": "Cull the back faces: `rasterizer.cullMode = VK_CULL_MODE_BACK_BIT` with `rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE`, and make the floor's triangles counter-clockwise seen from above.",
+        "d3d12": "Cull the back faces: `CullMode = D3D12_CULL_MODE_BACK` with `FrontCounterClockwise = TRUE` in `psoDesc.RasterizerState`, and make the floor's triangles counter-clockwise seen from above."
+      },
+      "hint": {
+        "opengl": "The three calls go after `glDepthFunc` (the last two are the defaults). learnopengl's `planeVertices` are clockwise from above: swap the 2nd and 3rd vertex of both triangles, or the floor vanishes.",
+        "vulkan": "The y flip in the projection (`proj[1][1] *= -1`) shows the scene upright, so counter-clockwise from outside is counter-clockwise on screen, as in OpenGL. Floor: swap the 2nd and 3rd vertex of both triangles.",
+        "d3d12": "Replace the `D3D12_CULL_MODE_NONE` line. With the right-handed matrices the screen looks like OpenGL's, so counter-clockwise is the front. Floor: swap the 2nd and 3rd vertex of both triangles."
+      }
+    },
+    "cull-front": {
+      "text": {
+        "opengl": "Cull the front faces instead: `glCullFace(GL_FRONT)`.",
+        "vulkan": "Cull the front faces instead: `rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT`.",
+        "d3d12": "Cull the front faces instead: `CullMode = D3D12_CULL_MODE_FRONT`."
+      },
+      "hint": "Now only the faces turned away from the camera are drawn: you look into the cubes, and the floor, whose front face points up, disappears."
+    }
+  }
+}

@@ -1,0 +1,427 @@
+=== task: offscreen-target
+--- file: main.cpp
+--- find:
+    VkRenderPass renderPass;
+--- replace:
+    VkRenderPass renderPass;
+    VkRenderPass offscreenRenderPass; // the scene is drawn into offscreenImage with this render pass
+--- file: main.cpp
+--- find:
+    VkImageView depthImageView;
+--- replace:
+    VkImageView depthImageView;
+
+    // the offscreen target (learnopengl's framebuffer object): a colour image the scene is drawn into and that is
+    // sampled afterwards, with a depth image of its own
+    VkImage offscreenImage;
+    VkDeviceMemory offscreenImageMemory;
+    VkImageView offscreenImageView;
+    VkImage offscreenDepthImage;
+    VkDeviceMemory offscreenDepthImageMemory;
+    VkImageView offscreenDepthImageView;
+    VkFramebuffer offscreenFramebuffer;
+--- file: main.cpp
+--- find:
+        // TODO: the offscreen render pass (createOffscreenRenderPass): the scene is drawn into an image of our own
+        createDescriptorSetLayout();
+        createPipelineLayout();
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/framebuffers.frag.spv", graphicsPipeline);
+--- replace:
+        createOffscreenRenderPass();
+        createDescriptorSetLayout();
+        createPipelineLayout();
+        // a pipeline is made for one render pass: the scene's pipeline for the offscreen one
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, graphicsPipeline);
+--- file: main.cpp
+--- find:
+        // TODO: the offscreen target (createOffscreenFramebuffer): a colour image and a depth image of the window's size, and their framebuffer
+--- replace:
+        createOffscreenFramebuffer();
+--- file: main.cpp
+--- find:
+        vkDestroyImageView(device, depthImageView, nullptr);
+        vkDestroyImage(device, depthImage, nullptr);
+        vkFreeMemory(device, depthImageMemory, nullptr);
+--- replace:
+        vkDestroyImageView(device, depthImageView, nullptr);
+        vkDestroyImage(device, depthImage, nullptr);
+        vkFreeMemory(device, depthImageMemory, nullptr);
+
+        vkDestroyFramebuffer(device, offscreenFramebuffer, nullptr);
+        vkDestroyImageView(device, offscreenImageView, nullptr);
+        vkDestroyImage(device, offscreenImage, nullptr);
+        vkFreeMemory(device, offscreenImageMemory, nullptr);
+        vkDestroyImageView(device, offscreenDepthImageView, nullptr);
+        vkDestroyImage(device, offscreenDepthImage, nullptr);
+        vkFreeMemory(device, offscreenDepthImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyRenderPass(device, renderPass, nullptr);
+--- replace:
+        vkDestroyRenderPass(device, renderPass, nullptr);
+        vkDestroyRenderPass(device, offscreenRenderPass, nullptr);
+--- file: main.cpp
+--- find:
+    // TODO: createOffscreenRenderPass(): like createRenderPass(), with a colour attachment of our own format
+    // (VK_FORMAT_R8G8B8A8_UNORM) that ends in VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, ready to be sampled
+--- replace:
+    // The render pass that draws into the offscreen target: like createRenderPass(), but the colour attachment is an
+    // image of our own, and at the end of the pass it is left ready to be read by a shader (not presented).
+    void createOffscreenRenderPass() {
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = VK_FORMAT_R8G8B8A8_UNORM;
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // keep the picture: the screen quad reads it
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthFormat();
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference colorAttachmentRef{};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 1;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: wait until the last frame's screen quad has read the image and its depth writes are done
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        // after the pass: the fragment shaders that sample the image wait until the scene has been written
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderPassInfo.pAttachments = attachments.data();
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &offscreenRenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create offscreen render pass!");
+        }
+    }
+--- file: main.cpp
+--- find:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkPipeline& pipeline) {
+--- replace:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        pipelineInfo.renderPass = renderPass;
+--- replace:
+        pipelineInfo.renderPass = pipelineRenderPass;
+--- file: main.cpp
+--- find:
+    // TODO: createOffscreenFramebuffer(): the offscreen colour image (colour attachment + sampled) and a depth image,
+    // their views, and a framebuffer for offscreenRenderPass
+--- replace:
+    // The offscreen target, the size of the window: a colour image that is drawn into (colour attachment) and read by
+    // a shader later (sampled) - learnopengl's colour texture -, a depth image of its own - learnopengl's depth
+    // renderbuffer - and the framebuffer that puts them together for offscreenRenderPass.
+    void createOffscreenFramebuffer() {
+        createImage(swapChainExtent.width, swapChainExtent.height, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, offscreenImage, offscreenImageMemory);
+        offscreenImageView = createImageView(offscreenImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+
+        VkFormat depthFormat = findDepthFormat();
+        createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, offscreenDepthImage, offscreenDepthImageMemory);
+        offscreenDepthImageView = createImageView(offscreenDepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+        std::array<VkImageView, 2> attachments = {
+            offscreenImageView,
+            offscreenDepthImageView
+        };
+
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = offscreenRenderPass;
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        framebufferInfo.pAttachments = attachments.data();
+        framebufferInfo.width = swapChainExtent.width;
+        framebufferInfo.height = swapChainExtent.height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &offscreenFramebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create offscreen framebuffer!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        // TODO: draw the scene into the offscreen framebuffer instead: begin offscreenRenderPass here, with its own clear values
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = swapChainExtent;
+
+        // one clear value per attachment: the colour, and the depth 1.0 (the far plane)
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};
+        clearValues[1].depthStencil = {1.0f, 0};
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+--- replace:
+        // 1. the scene, drawn into the offscreen target as we normally would (learnopengl: glBindFramebuffer(GL_FRAMEBUFFER, framebuffer))
+        VkRenderPassBeginInfo offscreenPassInfo{};
+        offscreenPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        offscreenPassInfo.renderPass = offscreenRenderPass;
+        offscreenPassInfo.framebuffer = offscreenFramebuffer;
+        offscreenPassInfo.renderArea.offset = {0, 0};
+        offscreenPassInfo.renderArea.extent = swapChainExtent;
+
+        // one clear value per attachment: the colour, and the depth 1.0 (the far plane)
+        std::array<VkClearValue, 2> offscreenClearValues{};
+        offscreenClearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};
+        offscreenClearValues[1].depthStencil = {1.0f, 0};
+
+        offscreenPassInfo.clearValueCount = static_cast<uint32_t>(offscreenClearValues.size());
+        offscreenPassInfo.pClearValues = offscreenClearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &offscreenPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+--- file: main.cpp
+--- find:
+        // TODO: end the offscreen render pass, then begin the window's render pass (cleared to white) and end it
+        vkCmdEndRenderPass(commandBuffer);
+--- replace:
+        vkCmdEndRenderPass(commandBuffer); // the offscreen image is now in VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+
+        // 2. the window (learnopengl: glBindFramebuffer(GL_FRAMEBUFFER, 0))
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = swapChainExtent;
+
+        // white (not really necessary actually, since we won't be able to see behind the quad anyways)
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {{1.0f, 1.0f, 1.0f, 1.0f}};
+        clearValues[1].depthStencil = {1.0f, 0};
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        // TODO: draw the screen quad (screenPipeline, screenDescriptorSet, its 6 vertices) with the offscreen image as its texture
+
+        vkCmdEndRenderPass(commandBuffer);
+
+=== task: screen-quad
+--- file: main.cpp
+--- find:
+    {{ 5.0f, -0.5f, -5.0f}, {2.0f, 0.0f}}
+    // TODO: the screen quad (vertices 42..47): learnopengl's quadVertices, 2 triangles covering the window (x, y = -1..1, z = 0)
+--- replace:
+    {{ 5.0f, -0.5f, -5.0f}, {2.0f, 0.0f}},
+
+    // screen quad: vertices 42..47, learnopengl's quadVertices (positions already in normalized device coordinates,
+    // z = 0) with its texture coordinates unchanged: in Vulkan both the y of the window and the v of an image point
+    // down, so the two flips cancel and the offscreen picture shows upright
+    {{-1.0f,  1.0f,  0.0f}, {0.0f, 1.0f}},
+    {{-1.0f, -1.0f,  0.0f}, {0.0f, 0.0f}},
+    {{ 1.0f, -1.0f,  0.0f}, {1.0f, 0.0f}},
+
+    {{-1.0f,  1.0f,  0.0f}, {0.0f, 1.0f}},
+    {{ 1.0f, -1.0f,  0.0f}, {1.0f, 0.0f}},
+    {{ 1.0f,  1.0f,  0.0f}, {1.0f, 1.0f}}
+--- file: main.cpp
+--- find:
+    VkPipeline graphicsPipeline;
+--- replace:
+    VkPipeline graphicsPipeline;
+    VkPipeline screenPipeline; // the screen quad
+--- file: main.cpp
+--- find:
+    VkDescriptorSet floorDescriptorSet; // the uniform buffer and the metal texture
+--- replace:
+    VkDescriptorSet floorDescriptorSet; // the uniform buffer and the metal texture
+    VkDescriptorSet screenDescriptorSet; // the uniform buffer (not used) and the offscreen colour image
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, graphicsPipeline);
+        // TODO: the screen quad's pipeline (screenPipeline): framebuffers_screen.vert/.frag, for the window's render pass, depth test off
+--- replace:
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, VK_TRUE, graphicsPipeline);
+        // the screen quad: for the window's render pass, without the depth test (it must never be hidden)
+        createPipeline("shaders/framebuffers_screen.vert.spv", "shaders/framebuffers_screen.frag.spv", renderPass, VK_FALSE, screenPipeline);
+--- file: main.cpp
+--- find:
+        // TODO: the screen quad's descriptor set (screenDescriptorSet): the offscreen colour image, read with textureSampler
+--- replace:
+        createDescriptorSet(offscreenImageView, textureSampler, screenDescriptorSet);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+        vkDestroyPipeline(device, screenPipeline, nullptr);
+--- file: main.cpp
+--- find:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, VkPipeline& pipeline) {
+--- replace:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, VkBool32 depthTestEnable, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        depthStencil.depthTestEnable = VK_TRUE;
+        depthStencil.depthWriteEnable = VK_TRUE;
+--- replace:
+        depthStencil.depthTestEnable = depthTestEnable;
+        depthStencil.depthWriteEnable = depthTestEnable; // with the test off nothing is written either (like glDisable(GL_DEPTH_TEST))
+--- file: main.cpp
+--- find:
+        poolSizes[0].descriptorCount = 2;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 2;
+--- replace:
+        poolSizes[0].descriptorCount = 3;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 3;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 2;
+--- replace:
+        poolInfo.maxSets = 3;
+--- file: main.cpp
+--- find:
+        // TODO: draw the screen quad (screenPipeline, screenDescriptorSet, its 6 vertices) with the offscreen image as its texture
+--- replace:
+        // the screen quad with the offscreen image as its texture (the viewport, scissor and vertex buffer set above still apply)
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, screenPipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &screenDescriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 42, 0); // the screen quad's 6 vertices start at vertex 42
+--- file: shaders/framebuffers_screen.frag
+--- find:
+    // TODO: the colour of the offscreen image (screenTexture) at fragTexCoord, with alpha 1.0
+--- replace:
+    vec3 col = texture(screenTexture, fragTexCoord).rgb;
+    outColor = vec4(col, 1.0);
+
+=== task: inversion
+--- file: shaders/framebuffers_screen.frag
+--- find:
+    vec3 col = texture(screenTexture, fragTexCoord).rgb;
+    outColor = vec4(col, 1.0);
+--- replace:
+    outColor = vec4(vec3(1.0 - texture(screenTexture, fragTexCoord)), 1.0); // every colour channel inverted
+
+=== task: grayscale
+--- file: shaders/framebuffers_screen.frag
+--- find:
+    outColor = vec4(vec3(1.0 - texture(screenTexture, fragTexCoord)), 1.0); // every colour channel inverted
+--- replace:
+    outColor = texture(screenTexture, fragTexCoord);
+    // weighted average: the human eye is most sensitive to green and least to blue
+    float average = 0.2126 * outColor.r + 0.7152 * outColor.g + 0.0722 * outColor.b;
+    outColor = vec4(average, average, average, 1.0);
+
+=== task: sharpen
+--- file: shaders/framebuffers_screen.frag
+--- find:
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = texture(screenTexture, fragTexCoord);
+    // weighted average: the human eye is most sensitive to green and least to blue
+    float average = 0.2126 * outColor.r + 0.7152 * outColor.g + 0.0722 * outColor.b;
+    outColor = vec4(average, average, average, 1.0);
+--- replace:
+layout(location = 0) out vec4 outColor;
+
+const float offset = 1.0 / 300.0; // the distance to the neighbouring samples
+
+void main() {
+    // in Vulkan v points down in an image: -offset is the row above
+    vec2 offsets[9] = vec2[](
+        vec2(-offset, -offset), // top-left
+        vec2( 0.0,    -offset), // top-center
+        vec2( offset, -offset), // top-right
+        vec2(-offset,  0.0),    // center-left
+        vec2( 0.0,     0.0),    // center-center
+        vec2( offset,  0.0),    // center-right
+        vec2(-offset,  offset), // bottom-left
+        vec2( 0.0,     offset), // bottom-center
+        vec2( offset,  offset)  // bottom-right
+    );
+
+    float kernel[9] = float[](
+        -1.0, -1.0, -1.0,
+        -1.0,  9.0, -1.0,
+        -1.0, -1.0, -1.0
+    );
+
+    vec3 sampleTex[9];
+    for (int i = 0; i < 9; i++) {
+        sampleTex[i] = vec3(texture(screenTexture, fragTexCoord.st + offsets[i]));
+    }
+    vec3 col = vec3(0.0);
+    for (int i = 0; i < 9; i++) {
+        col += sampleTex[i] * kernel[i];
+    }
+
+    outColor = vec4(col, 1.0);
+
+=== task: blur
+--- file: shaders/framebuffers_screen.frag
+--- find:
+    float kernel[9] = float[](
+        -1.0, -1.0, -1.0,
+        -1.0,  9.0, -1.0,
+        -1.0, -1.0, -1.0
+    );
+--- replace:
+    float kernel[9] = float[](
+        1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0,
+        2.0 / 16.0, 4.0 / 16.0, 2.0 / 16.0,
+        1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0
+    );
+
+=== task: edge-detection
+--- file: shaders/framebuffers_screen.frag
+--- find:
+    float kernel[9] = float[](
+        1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0,
+        2.0 / 16.0, 4.0 / 16.0, 2.0 / 16.0,
+        1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0
+    );
+--- replace:
+    float kernel[9] = float[](
+        1.0,  1.0, 1.0,
+        1.0, -8.0, 1.0,
+        1.0,  1.0, 1.0
+    );

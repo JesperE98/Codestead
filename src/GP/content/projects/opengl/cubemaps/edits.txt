@@ -205,9 +205,9 @@ unsigned int loadCubemap(std::vector<std::string> faces)
         glBindVertexArray(0);
         glDepthMask(GL_TRUE);
 
-        // cubes
+        // draw scene as normal
 --- replace:
-        // cubes
+        // draw scene as normal
 --- file: main.cpp
 --- find:
         shader.setMat4("model", model);

@@ -25,10 +25,15 @@ public sealed record StbImage(string File, Image? Image, int Offset, string? Var
     /// <summary>Every stbi_load call in source order, with the image (null when the file is not in the project).</summary>
     public static List<StbImage> All(CppSource src, GpuProject project, Scene.Scene scene)
     {
-        bool flip = Regex.IsMatch(src.Code, @"stbi_set_flip_vertically_on_load\s*\(\s*(?:true|1|TRUE)\s*\)");
+        var flips = src.Calls("stbi_set_flip_vertically_on_load").Select(c => (c.Offset, On: Regex.IsMatch(c.Arg(0), @"^\s*(?:true|1|TRUE)\s*$"), Fn: src.FunctionAt(c.Offset))).ToList();
         var list = new List<StbImage>();
         foreach (var call in src.Calls("stbi_load"))
         {
+            // The flip in effect: a call earlier in the same function (learnopengl's loadCubemap turns it off), else
+            // the program's setting (stbi_set_flip_vertically_on_load(true) in main).
+            var fnHere = src.FunctionAt(call.Offset);
+            var local = flips.LastOrDefault(f => f.Fn == fnHere && f.Offset < call.Offset);
+            bool flip = local.Fn is not null ? local.On : flips.Any(f => f.On);
             var literal = CppSource.StringArg(call.Arg(0))
                 ?? src.Evaluate(System.Text.RegularExpressions.Regex.Replace(call.Arg(0).Trim(), @"\.c_str\(\)$", ""))?.Text;
             var file = literal ?? "";
