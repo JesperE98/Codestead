@@ -56,6 +56,21 @@ public class ContentTests
         if (GpCourse.Chapter(chapter).Kind == Learning.ChapterKinds.Exam) Assert.True(counts[0] >= 10, "an exam needs at least 10 questions");
     }
 
+    [Theory(DisplayName = "rätt svar står inte nästan alltid på samma plats")]
+    [MemberData(nameof(Lessons))]
+    public void AnswersAreSpreadOut(string chapter)
+    {
+        // The app shows the options in the file's order: a quiz whose right answer is always first (or second) can
+        // be answered without reading. Single-choice quizzes in English, all APIs' blocks together.
+        var text = File.ReadAllText(Path.Combine(Repo.Content, "chapters", "en", chapter + ".md"));
+        var positions = Checkpoint.ParseAll(text.Replace(":::", "\n"))
+            .Where(c => c.Kind == Checkpoint.Quiz && !c.MultipleAnswers)
+            .Select(c => c.Options.FindIndex(o => o.Correct)).ToList();
+        if (positions.Count < 5) return;
+        var most = positions.GroupBy(p => p).Max(g => g.Count());
+        Assert.True(most <= positions.Count * 0.75, $"{chapter}: {most} of {positions.Count} right answers are in the same place – vary the order");
+    }
+
     [Theory(DisplayName = "varje uppgift har en text på engelska och svenska")]
     [MemberData(nameof(Lessons))]
     public void TasksHaveTexts(string chapter)
