@@ -122,6 +122,59 @@ public sealed partial class GlReader
         return (name, u, v) => bound.TryGetValue(name, out var t) && t is not null ? t.Sample(u, v) : [0, 0, 0, 1];
     }
 
+    /// <summary>
+    /// Model::Draw(shader) of learnopengl.com: each mesh drawn with its vertices (location 0 position, 1 normal, 2
+    /// texture coordinates) and its material's textures as texture_diffuse1, texture_specular1, texture_normal1.
+    /// </summary>
+    private void DrawModel(Models.ObjModel model, string path, string shader, int line)
+    {
+        if (!gl.Programs.TryGetValue(shader, out var program) || !program.Linked || program.Vertex is null || program.Fragment is null)
+        {
+            scene.Notes.Add(SimNote.Error("noProgram", ("call", "Draw"), ("line", line.ToString())));
+            return;
+        }
+        bool flipUv = Models.ModelFiles.FlipUVs(src);
+        bool flipImages = System.Text.RegularExpressions.Regex.IsMatch(src.Code, @"stbi_set_flip_vertically_on_load\s*\(\s*(?:true|1)\s*\)");
+        var uniforms = program.Uniforms.ToList();
+        foreach (var mesh in model.Meshes)
+        {
+            var vertices = mesh.Positions.Select((p, i) => new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+            {
+                ["0"] = ShaderValue.Vec(p),
+                ["1"] = ShaderValue.Vec(mesh.Normals[i]),
+                ["2"] = ShaderValue.Vec(mesh.TexCoords[i][0], flipUv ? 1 - mesh.TexCoords[i][1] : mesh.TexCoords[i][1]),
+            }).ToList();
+            var maps = new Dictionary<string, Textures.Texture?>(StringComparer.Ordinal)
+            {
+                ["texture_diffuse1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.DiffuseMap, flipImages),
+                ["texture_specular1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.SpecularMap, flipImages),
+                ["texture_normal1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.NormalMap, flipImages),
+            };
+            var draw = new DrawCall
+            {
+                VertexShader = program.Vertex,
+                FragmentShader = program.Fragment,
+                Vertices = vertices,
+                Indices = mesh.Indices.ToArray(),
+                Count = mesh.Indices.Count,
+                Uniforms = t =>
+                {
+                    var d = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+                    foreach (var (name, f) in uniforms)
+                        if (f(t) is { } value) d[name] = value;
+                    return d;
+                },
+                Cull = !gl.CullFace ? CullMode.None : CullMode.Back,
+                FrontCcw = gl.FrontCcw,
+                Wireframe = gl.Wireframe,
+                DepthTest = gl.DepthTest,
+                Textures = (name, u, v) => maps.TryGetValue(name, out var t) && t is not null ? t.Sample(u, v) : [0, 0, 0, 1],
+            };
+            if (inLoop) scene.Draws.Add(draw);
+            else setupDraws.Add(draw);
+        }
+    }
+
     /// <summary>The sampler uniforms of a shader, with struct fields ("material.diffuse") and array elements ("maps[1]").</summary>
     private static IEnumerable<string> SamplerNames(ShaderProgram shader)
     {

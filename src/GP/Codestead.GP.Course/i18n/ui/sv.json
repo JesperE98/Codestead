@@ -273,6 +273,7 @@
   "ach.magenta.title": "Felsökningsrosa",
   "ach.magenta.desc": "Du rensade skärmen till ren magenta – färgen på saknade texturer överallt.",
   "sim.textureFileMissing": "Bilden {file} finns inte i projektet, så stbi_load ger ingenting.",
+  "sim.modelFileMissing": "Modellfilen {file} finns inte i projektet (eller gick inte att läsa som OBJ-fil), så ingenting laddas.",
   "sim.textureNotPng": "Bilden {file} gick inte att läsa (simulatorn läser PNG-filer).",
   "sim.noTextureBound": "glTexImage2D (rad {line}) anropas utan bunden textur (glBindTexture).",
   "sim.textureFormatMismatch": "{file} har {channels} kanaler, men glTexImage2D läser den som {format}: färgerna blir huller om buller.",

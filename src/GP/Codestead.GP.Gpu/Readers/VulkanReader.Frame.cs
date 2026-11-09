@@ -79,7 +79,7 @@ public sealed partial class VulkanReader
                 scene.Notes.Add(SimNote.Error("vkNoIndexBuffer"));
                 return;
             }
-            var data = src.Numbers("indices");
+            var data = modelIndices ?? src.Numbers("indices");
             if (data is null)
             {
                 scene.Notes.Add(SimNote.Error("vkNoIndexBuffer"));
@@ -119,7 +119,7 @@ public sealed partial class VulkanReader
         foreach (var fn in UpdateFunctions(blocks)) recorder.Run(fn);
         if (src.FunctionAt(call.Offset) is { } recordFn) recorder.Run(recordFn);
         var buffer = recorder.BufferContents();
-        var indexData = drawIndexed is not null ? src.Numbers("indices") : null;
+        var indexData = drawIndexed is not null ? modelIndices ?? src.Numbers("indices") : null;
         var pipelines = recorder.Draws.Any(d => d.Pipeline is not null) ? Pipelines() : new();
         if (recorder.Draws.Count > 0)
         {
@@ -265,6 +265,19 @@ public sealed partial class VulkanReader
         var type = src.DeclaredType("vertices") ?? "";
         var structName = Regex.Match(type, @"<\s*(\w+)\s*>").Groups[1].Value;
         var fields = structName == "" ? null : StructLayout.Fields(src, structName);
+        if (fields is not null && src.HasCall("LoadObj"))
+        {
+            if (!ModelVertices(fields, into)) return false;
+            // indices.size() and vertices.size() are the loaded model's.
+            int vertexCount = into.Count;
+            src.Extra = name => name switch
+            {
+                "indices" => ShaderValue.Array(modelIndices!.Select(ShaderValue.Scalar).ToArray()),
+                "vertices" => ShaderValue.Array(Enumerable.Range(0, vertexCount).Select(_ => ShaderValue.Scalar(0)).ToArray()),
+                _ => null,
+            };
+            return true;
+        }
         var init = src.Initializer("vertices");
         if (fields is null || init is null)
         {
@@ -302,6 +315,49 @@ public sealed partial class VulkanReader
                 if (locs.Count == 0 || locationOf.ContainsKey(name)) dict[loc.ToString()] = ShaderValue.Vec(comps);
             }
             into.Add(dict);
+        }
+        return true;
+    }
+
+    /// <summary>The indices of a model loaded with tinyobjloader (null when the program has none).</summary>
+    private List<double>? modelIndices;
+
+    /// <summary>
+    /// vulkan-tutorial's loadModel: tinyobj::LoadObj fills vertices and indices – positions, texCoord with v flipped
+    /// (1 - v), colour white, and a normal when the Vertex struct has one – for every mesh of the file.
+    /// </summary>
+    private bool ModelVertices(List<(string Type, string Name, int Floats)> fields, List<Dictionary<string, ShaderValue>> into)
+    {
+        var path = Models.ModelFiles.Path(src);
+        var model = path is null ? null : Models.ObjModel.Load(project, path);
+        if (model is null)
+        {
+            scene.Notes.Add(SimNote.Error("modelFileMissing", ("file", path ?? "?")));
+            return false;
+        }
+        var locs = Regex.Matches(src.Code, @"attributeDescriptions\s*\[\s*(\d+)\s*\]\s*\.\s*location\s*=\s*(\d+)").GroupBy(m => m.Groups[1].Value).ToDictionary(g => g.Key, g => int.Parse(g.Last().Groups[2].Value));
+        var locationOf = new Dictionary<string, int>();
+        foreach (Match m in Regex.Matches(src.Code, @"attributeDescriptions\s*\[\s*(\d+)\s*\]\s*\.\s*offset\s*=\s*offsetof\s*\(\s*\w+\s*,\s*(\w+)\s*\)"))
+            if (locs.TryGetValue(m.Groups[1].Value, out var loc)) locationOf[m.Groups[2].Value] = loc;
+        modelIndices = new List<double>();
+        foreach (var mesh in model.Meshes)
+        {
+            int baseVertex = into.Count;
+            for (int i = 0; i < mesh.Positions.Count; i++)
+            {
+                var dict = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+                for (int f = 0; f < fields.Count; f++)
+                {
+                    var name = fields[f].Name;
+                    var value = name.Contains("pos", StringComparison.OrdinalIgnoreCase) ? ShaderValue.Vec(mesh.Positions[i])
+                        : name.Contains("tex", StringComparison.OrdinalIgnoreCase) || name.Contains("uv", StringComparison.OrdinalIgnoreCase) ? ShaderValue.Vec(mesh.TexCoords[i][0], 1 - mesh.TexCoords[i][1])
+                        : name.Contains("normal", StringComparison.OrdinalIgnoreCase) ? ShaderValue.Vec(mesh.Normals[i])
+                        : ShaderValue.Vec(1, 1, 1);
+                    dict[(locationOf.TryGetValue(name, out var l) ? l : f).ToString()] = value;
+                }
+                into.Add(dict);
+            }
+            modelIndices.AddRange(mesh.Indices.Select(x => (double)(x + baseVertex)));
         }
         return true;
     }

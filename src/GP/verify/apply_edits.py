@@ -56,7 +56,7 @@ def read_dir(d):
         for n in names:
             p = os.path.join(root, n)
             key = os.path.relpath(p, d).replace(os.sep, "/")
-            if n.lower().endswith((".png", ".jpg")):
+            if n.lower().endswith((".png", ".jpg", ".obj", ".mtl")):
                 files[key] = open(p, "rb").read()  # images: compared as bytes, never edited
             else:
                 files[key] = open(p, encoding="utf-8").read().replace("\r\n", "\n")

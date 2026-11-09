@@ -93,6 +93,14 @@ public sealed partial class D3D12Reader
             {
                 // With several pipeline state objects, the draw uses the one set before it.
                 var pl = d.Pipeline is not null && pipelines.Count > 1 && pipelines.TryGetValue(d.Pipeline, out var p) ? p : null;
+                if (d.Model)
+                {
+                    var mValues = new Dictionary<string, ShaderValue>(fallback(time), StringComparer.Ordinal);
+                    foreach (var (k, v) in buffer) mValues[k] = v;
+                    foreach (var (k, v) in d.Constants) mValues[k] = v;
+                    ModelDraws(pl?.Vs ?? vs, pl?.Fs ?? ps, pl?.VsEntry ?? vsEntry, pl?.FsEntry ?? psEntry, mValues, pl?.Cull ?? cullMode, pl?.FrontCcw ?? frontCcw, pl?.DepthTest ?? depth);
+                    continue;
+                }
                 var values = new Dictionary<string, ShaderValue>(fallback(time), StringComparer.Ordinal);
                 foreach (var (k, v) in buffer) values[k] = v;
                 foreach (var (k, v) in d.Constants) values[k] = v;
@@ -181,6 +189,56 @@ public sealed partial class D3D12Reader
         var fallback = byRegister.GetValueOrDefault(0) ?? byRegister.Values.FirstOrDefault() ?? Codestead.GP.Gpu.Textures.SamplerState.Default;
         return TextureBinding.Bind(names, images, (_, sampler) =>
             sampler is not null && samplerRegister.TryGetValue(sampler, out var r) && byRegister.TryGetValue(r, out var state) ? state : fallback);
+    }
+
+    /// <summary>
+    /// A Model::Draw (the course's port of learnopengl's Model class): one draw per mesh, vertices by the input layout's
+    /// semantics (POSITION, NORMAL, TEXCOORD – v flipped with aiProcess_FlipUVs), and the mesh's diffuse / specular maps
+    /// as the shader's first and second Texture2D.
+    /// </summary>
+    private void ModelDraws(ShaderProgram vs, ShaderProgram ps, string vsEntry, string psEntry, Dictionary<string, ShaderValue> values, CullMode cull, bool frontCcw, bool depth)
+    {
+        var path = Models.ModelFiles.Path(src);
+        var model = path is null ? null : Models.ObjModel.Load(project, path);
+        if (model is null)
+        {
+            scene.Notes.Add(SimNote.Error("modelFileMissing", ("file", path ?? "?")));
+            return;
+        }
+        bool flipUv = Models.ModelFiles.FlipUVs(src);
+        var textureNames = TextureBinding.ShaderTextures(vs, ps);
+        foreach (var mesh in model.Meshes)
+        {
+            var vertices = mesh.Positions.Select((pos, i) => new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+            {
+                ["POSITION0"] = ShaderValue.Vec(pos),
+                ["NORMAL0"] = ShaderValue.Vec(mesh.Normals[i]),
+                ["TEXCOORD0"] = ShaderValue.Vec(mesh.TexCoords[i][0], flipUv ? 1 - mesh.TexCoords[i][1] : mesh.TexCoords[i][1]),
+            }).ToList();
+            var maps = new[] { mesh.Material?.DiffuseMap, mesh.Material?.SpecularMap, mesh.Material?.NormalMap }
+                .Select(f => Models.ModelFiles.Texture(project, path!, f, false)).ToList();
+            scene.Draws.Add(new DrawCall
+            {
+                VertexShader = vs,
+                FragmentShader = ps,
+                VertexEntry = vsEntry,
+                FragmentEntry = psEntry,
+                Hlsl = true,
+                Vertices = vertices,
+                Indices = mesh.Indices.ToArray(),
+                Count = mesh.Indices.Count,
+                Uniforms = _ => values,
+                Cull = cull,
+                FrontCcw = frontCcw,
+                DepthTest = depth,
+                Textures = (id, u, v) =>
+                {
+                    var name = id.Split('|')[0];
+                    int i = textureNames.IndexOf(name);
+                    return i >= 0 && i < maps.Count && maps[i] is { } t ? t.Sample(u, v) : [0, 0, 0, 1];
+                },
+            });
+        }
     }
 
     /// <summary>

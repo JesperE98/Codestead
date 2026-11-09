@@ -1,0 +1,15 @@
+# Materials of planet.obj - drawn for Codestead GP.
+newmtl planet
+Ka 0.0 0.0 0.0
+Kd 1.0 1.0 1.0
+Ks 0.5 0.5 0.5
+Ns 32.0
+map_Kd planet_diffuse.png
+map_Ks planet_specular.png
+
+newmtl rings
+Ka 0.0 0.0 0.0
+Kd 1.0 1.0 1.0
+Ks 0.1 0.1 0.1
+Ns 8.0
+map_Kd rings.png

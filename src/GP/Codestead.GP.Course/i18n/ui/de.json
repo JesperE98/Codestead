@@ -273,6 +273,7 @@
   "ach.magenta.title": "Debug-Pink",
   "ach.magenta.desc": "Du hast den Bildschirm mit reinem Magenta gelöscht – der Farbe, die überall für fehlende Texturen steht.",
   "sim.textureFileMissing": "Das Bild {file} ist nicht im Projekt, also liefert stbi_load nichts.",
+  "sim.modelFileMissing": "Die Modelldatei {file} ist nicht im Projekt (oder konnte nicht als OBJ-Datei gelesen werden), daher wird nichts geladen.",
   "sim.textureNotPng": "Das Bild {file} konnte nicht gelesen werden (der Simulator liest PNG-Dateien).",
   "sim.noTextureBound": "glTexImage2D (Zeile {line}) wird aufgerufen, ohne dass eine Textur gebunden ist (glBindTexture).",
   "sim.textureFormatMismatch": "{file} hat {channels} Kanäle, aber glTexImage2D liest es als {format}: Die Farben geraten durcheinander.",

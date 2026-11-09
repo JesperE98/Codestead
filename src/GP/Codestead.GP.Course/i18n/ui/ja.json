@@ -273,6 +273,7 @@
   "ach.magenta.title": "デバッグピンク",
   "ach.magenta.desc": "画面を純粋なマゼンタでクリアしました – どこでも「テクスチャがない」ことを示す色です。",
   "sim.textureFileMissing": "画像 {file} がプロジェクトにないため、stbi_load は何も返しません。",
+  "sim.modelFileMissing": "モデルファイル {file} がプロジェクトにない（または OBJ ファイルとして読めない）ため、何も読み込まれません。",
   "sim.textureNotPng": "画像 {file} を読み込めませんでした（シミュレーターは PNG ファイルを読み込みます）。",
   "sim.noTextureBound": "glTexImage2D（{line} 行目）が、テクスチャがバインドされていない状態で呼ばれています（glBindTexture）。",
   "sim.textureFormatMismatch": "{file} のチャンネル数は {channels} ですが、glTexImage2D はそれを {format} として読み込みます：色がめちゃくちゃになります。",

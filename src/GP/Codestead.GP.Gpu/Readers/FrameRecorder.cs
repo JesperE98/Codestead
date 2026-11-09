@@ -10,7 +10,8 @@ namespace Codestead.GP.Gpu.Readers;
 /// </summary>
 internal sealed class FrameRecorder
 {
-    public sealed record RecordedDraw(bool Indexed, int Count, int Instances, int First, Dictionary<string, ShaderValue> Constants, string? Pipeline);
+    /// <param name="Model">The draw is a Model::Draw (learnopengl's Model class): one draw per mesh of the model.</param>
+    public sealed record RecordedDraw(bool Indexed, int Count, int Instances, int First, Dictionary<string, ShaderValue> Constants, string? Pipeline, bool Model = false);
 
     /// <summary>The pipeline / pipeline state object bound now (vkCmdBindPipeline, SetPipelineState, Reset(…, pso)).</summary>
     private string? pipeline;
@@ -25,6 +26,7 @@ internal sealed class FrameRecorder
     };
 
     private readonly CppExec exec;
+    private readonly CppSource source;
     private readonly IReadOnlyList<Global> blocks;
     private readonly bool transposeMatrices;
     private Dictionary<string, ShaderValue> constants = new(StringComparer.Ordinal);
@@ -39,6 +41,7 @@ internal sealed class FrameRecorder
     {
         this.blocks = blocks;
         this.transposeMatrices = transposeMatrices;
+        source = src;
         exec = new CppExec(src, time, Hook, scene);
     }
 
@@ -71,6 +74,9 @@ internal sealed class FrameRecorder
                 return ShaderValue.Scalar(0);
             case "vkCmdDrawIndexed" when args.Count >= 6:
                 Draws.Add(new RecordedDraw(true, Int(args[1]), Int(args[2]), Int(args[3]), new(constants), pipeline));
+                return ShaderValue.Scalar(0);
+            case ".Draw" when args.Count >= 1 && NameOf(args[0]) is { } target && (source.DeclaredType(target) ?? "").Contains("Model", StringComparison.Ordinal):
+                Draws.Add(new RecordedDraw(true, 0, 1, 0, new(constants), pipeline, Model: true));
                 return ShaderValue.Scalar(0);
             case ".DrawInstanced" when args.Count >= 5:
                 Draws.Add(new RecordedDraw(false, Int(args[1]), Int(args[2]), Int(args[3]), new(constants), pipeline));

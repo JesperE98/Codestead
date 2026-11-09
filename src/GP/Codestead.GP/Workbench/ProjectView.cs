@@ -199,8 +199,20 @@ public sealed partial class ProjectView : Border
     private void LoadFile()
     {
         bool asset = project.Assets.TryGetValue(file, out var bytes);
-        editor.IsVisible = !asset;
-        assetView.IsVisible = asset;
+        bool image = asset && (file.EndsWith(".png", StringComparison.OrdinalIgnoreCase) || file.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase));
+        editor.IsVisible = !image;
+        assetView.IsVisible = image;
+        editor.IsReadOnly = asset;
+        if (asset && !image)
+        {
+            // A model or material file: shown, not edited.
+            loading = true;
+            editor.Text = System.Text.Encoding.UTF8.GetString(bytes!);
+            editor.CaretIndex = 0;
+            loading = false;
+            status.Text = file;
+            return;
+        }
         if (asset)
         {
             try

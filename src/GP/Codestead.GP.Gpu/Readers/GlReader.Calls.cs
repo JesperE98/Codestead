@@ -364,6 +364,11 @@ public sealed partial class GlReader
 
     private void ShaderMethod(string obj, string method, IReadOnlyList<string> a, int line)
     {
+        if (method == "Draw" && models.TryGetValue(obj, out var model))
+        {
+            DrawModel(model.Model, model.Path, a.Count > 0 ? Obj(a[0]) : "", line);
+            return;
+        }
         if (!gl.Programs.TryGetValue(obj, out var program)) return;
         if (method == "use")
         {

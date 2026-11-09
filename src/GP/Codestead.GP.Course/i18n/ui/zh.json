@@ -273,6 +273,7 @@
   "ach.magenta.title": "调试粉",
   "ach.magenta.desc": "你把屏幕清除成了纯洋红色——到处都代表缺失纹理的那种颜色。",
   "sim.textureFileMissing": "图像 {file} 不在项目中，因此 stbi_load 什么也读不到。",
+  "sim.modelFileMissing": "模型文件 {file} 不在项目中（或无法作为 OBJ 文件读取），因此没有加载任何内容。",
   "sim.textureNotPng": "无法读取图像 {file}（模拟器读取的是 PNG 文件）。",
   "sim.noTextureBound": "调用 glTexImage2D（第 {line} 行）时没有绑定任何纹理（glBindTexture）。",
   "sim.textureFormatMismatch": "{file} 有 {channels} 个通道，但 glTexImage2D 把它当作 {format} 读取：颜色会变得错乱。",

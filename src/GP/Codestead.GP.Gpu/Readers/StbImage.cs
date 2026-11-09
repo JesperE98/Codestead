@@ -29,7 +29,8 @@ public sealed record StbImage(string File, Image? Image, int Offset, string? Var
         var list = new List<StbImage>();
         foreach (var call in src.Calls("stbi_load"))
         {
-            var literal = CppSource.StringArg(call.Arg(0));
+            var literal = CppSource.StringArg(call.Arg(0))
+                ?? src.Evaluate(System.Text.RegularExpressions.Regex.Replace(call.Arg(0).Trim(), @"\.c_str\(\)$", ""))?.Text;
             var file = literal ?? "";
             int wanted = src.Int(call.Arg(4).Replace("STBI_rgb_alpha", "4").Replace("STBI_rgb", "3").Replace("STBI_default", "0")) ?? 0;
             if (literal is null)
