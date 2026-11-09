@@ -423,9 +423,9 @@ There we go! We just managed to send a value from the vertex shader to the fragm
 :::opengl
 ```quiz
 How does OpenGL connect an `out` variable of the vertex shader to an `in` variable of the fragment shader in this project?
-- [x] They must have the same name and the same type; the connection is made when the program is linked
 - [ ] By the order in which they are declared, whatever their names
 - [ ] With `glVertexAttribPointer`, like a vertex attribute
+- [x] They must have the same name and the same type; the connection is made when the program is linked
 ---
 With GLSL 3.30 (and no explicit locations on the outputs), the linker pairs outputs and inputs by name and type. `glVertexAttribPointer` is only for the vertex shader's inputs from the vertex data.
 ```
@@ -433,8 +433,8 @@ With GLSL 3.30 (and no explicit locations on the outputs), the linker pairs outp
 :::vulkan
 ```quiz
 How does Vulkan connect an `out` variable of the vertex shader to an `in` variable of the fragment shader?
-- [x] By the `location` (with matching types); the names don't matter
 - [ ] By name, like in OpenGL
+- [x] By the `location` (with matching types); the names don't matter
 - [ ] With a vertex attribute description in `main.cpp`
 ---
 In Vulkan the interface between stages is matched by location. The attribute descriptions only feed the vertex shader's inputs from the vertex buffer.
@@ -725,9 +725,9 @@ include more data in the vertex attributes which is what we're going to do now.
 :::opengl
 ```quiz
 Where in the render loop must `glUniform4f(vertexColorLocation, ...)` be called?
-- [x] After `ourShader.use()`, because `glUniform*` sets the uniform of the currently active program
-- [ ] Before `ourShader.use()`, because `glUseProgram` resets all uniforms
 - [ ] Anywhere: `glGetUniformLocation` has already bound the uniform to the program
+- [ ] Before `ourShader.use()`, because `glUseProgram` resets all uniforms
+- [x] After `ourShader.use()`, because `glUniform*` sets the uniform of the currently active program
 ---
 `glGetUniformLocation` only looks up the location; it doesn't need the program to be active. `glUniform*` writes into the active program, so `glUseProgram` (here `ourShader.use()`) must come first.
 ```
@@ -735,9 +735,9 @@ Where in the render loop must `glUniform4f(vertexColorLocation, ...)` be called?
 :::vulkan
 ```quiz
 The fragment shader reads a push constant block. What must the `VkPushConstantRange` in the pipeline layout contain?
-- [x] `VK_SHADER_STAGE_FRAGMENT_BIT` in `stageFlags`, and an offset and size that cover the block
-- [ ] A descriptor set with a uniform buffer for the block
 - [ ] Nothing: push constants don't have to be declared in the pipeline layout
+- [ ] A descriptor set with a uniform buffer for the block
+- [x] `VK_SHADER_STAGE_FRAGMENT_BIT` in `stageFlags`, and an offset and size that cover the block
 ---
 The pipeline layout declares which stages read which bytes of the push constants, and `vkCmdPushConstants` must use stage flags and a range that fit inside it. Descriptor sets are for uniform buffers, which push constants don't need.
 ```
@@ -745,9 +745,9 @@ The pipeline layout declares which stages read which bytes of the push constants
 :::d3d12
 ```quiz
 How does the pixel shader see the root constants that `SetGraphicsRoot32BitConstants(0, ...)` sets?
+- [ ] As a constant buffer view that has to be created in a descriptor heap first
 - [x] As a constant buffer (`cbuffer`) at the register given to `InitAsConstants`, here `b0`
 - [ ] As a vertex attribute with semantic `COLOR`
-- [ ] As a constant buffer view that has to be created in a descriptor heap first
 ---
 Root constants live in the root signature itself. Root parameter 0 was created with `InitAsConstants(..., 0)`, so it maps to register `b0`, where the shader declares its `cbuffer`. Constant buffer views are the other, more general way, which we will use later.
 ```
@@ -1009,9 +1009,9 @@ is harmless – no shader reads them any more – and we will reuse the root par
 
 ```quiz
 Each vertex now holds 3 position floats followed by 3 colour floats (a float is 4 bytes). At which byte offset does a vertex's colour start, and how many bytes is it from one vertex to the next?
+- [ ] Offset 24, 12 bytes to the next vertex
 - [ ] Offset 0, 12 bytes to the next vertex
 - [x] Offset 12, 24 bytes to the next vertex
-- [ ] Offset 24, 12 bytes to the next vertex
 - [ ] Offset 12, 12 bytes to the next vertex
 ---
 The colour comes after the three position floats: 3 × 4 = 12 bytes. One whole vertex is 6 floats, so the stride is 6 × 4 = 24 bytes – for both attributes, since they live in the same buffer.
@@ -1039,8 +1039,8 @@ purple and then to blue. Fragment interpolation is applied to all the fragment s
 ```quiz
 A fragment lies exactly halfway along the edge between the red corner (1, 0, 0) and the green corner (0, 1, 0). Which colour does the fragment shader receive?
 - [ ] Red or green, whichever corner the rasterizer processed first
-- [x] (0.5, 0.5, 0.0): half red and half green
 - [ ] (1.0, 1.0, 0.0): both colours added together
+- [x] (0.5, 0.5, 0.0): half red and half green
 - [ ] The colour of the third corner, blue
 ---
 The outputs of the vertex shader are interpolated linearly across the triangle. Halfway along an edge, each of the two corners contributes 50%, and the third corner (not on that edge) contributes nothing.
@@ -1391,9 +1391,9 @@ OpenGL compiles GLSL at run time, in the driver: `glCompileShader` and `glLinkPr
 :::vulkan
 ```quiz
 When are this project's shaders compiled?
-- [x] Before the program runs: `glslc` compiles them to SPIR-V, which the program loads at run time
-- [ ] While the program runs: the driver compiles the GLSL source text
 - [ ] Never: the GPU runs the GLSL source text directly
+- [ ] While the program runs: the driver compiles the GLSL source text
+- [x] Before the program runs: `glslc` compiles them to SPIR-V, which the program loads at run time
 ---
 Vulkan only accepts SPIR-V, so the GLSL is compiled beforehand. At run time the driver translates the SPIR-V into the GPU's own code when the pipeline is created.
 ```
@@ -1401,9 +1401,9 @@ Vulkan only accepts SPIR-V, so the GLSL is compiled beforehand. At run time the 
 :::d3d12
 ```quiz
 When are this project's shaders compiled?
+- [ ] Never: the GPU runs the HLSL source text directly
 - [ ] Before the program runs, by the C++ build
 - [x] While the program runs: `D3DCompileFromFile` compiles `shaders.hlsl` into bytecode for the pipeline state object
-- [ ] Never: the GPU runs the HLSL source text directly
 ---
 The sample compiles HLSL at run time with the D3DCompiler library; real applications often compile ahead of time with `fxc` or `dxc`.
 ```
@@ -1499,8 +1499,8 @@ The winding order decides which side of a triangle is the front. That only matte
 :::vulkan
 ```quiz
 Why does the upside-down task also change `rasterizer.frontFace` to `VK_FRONT_FACE_COUNTER_CLOCKWISE`?
-- [x] Flipping y reverses the order of the corners on screen, so with back-face culling the triangle would otherwise be culled
 - [ ] Because Vulkan's y axis points down, every shader that changes y needs it
+- [x] Flipping y reverses the order of the corners on screen, so with back-face culling the triangle would otherwise be culled
 - [ ] To make the colours interpolate in the right direction
 ---
 The pipeline culls back faces and decides the front from the winding order on screen. The flip turns our clockwise triangle counter-clockwise, so we declare counter-clockwise triangles the front faces.
@@ -1510,8 +1510,8 @@ The pipeline culls back faces and decides the front from the winding order on sc
 ```quiz
 Why does the upside-down task also set `CullMode` to `D3D12_CULL_MODE_NONE`?
 - [x] Flipping y reverses the order of the corners on screen, so the triangle becomes a back face, which the default rasterizer state culls
-- [ ] Because the pixel shader can't write to a mirrored triangle
 - [ ] To make the colours interpolate in the right direction
+- [ ] Because the pixel shader can't write to a mirrored triangle
 ---
 The default rasterizer state treats clockwise triangles as front faces and culls back faces. After the flip our triangle is counter-clockwise on screen, so we draw both sides.
 ```
@@ -1719,8 +1719,8 @@ interpolated values stay negative for a good distance from that corner, a large 
 Why is one corner of the triangle black when the position is output as the colour?
 - [ ] The rasterizer does not interpolate positions, only colours
 - [x] Its x and y are not positive, and colour components below 0 are clamped to 0 when they are written to the colour buffer
-- [ ] The vertex shader no longer writes a colour for that vertex
 - [ ] The offset pushes that corner outside the window
+- [ ] The vertex shader no longer writes a colour for that vertex
 ---
 Positions from -0.5 to 0.5 become colours from -0.5 to 0.5. The colour buffer stores values between 0 and 1, so a vertex with only zero or negative components ends up black – and so does the area where the interpolated values are still negative.
 ```

@@ -111,10 +111,10 @@ coordinate system in more detail below.
 
 ```quiz
 In which order does a vertex pass through the coordinate systems?
-- [ ] world space → local space → view space → clip space → screen space
+- [ ] local space → clip space → world space → view space → screen space
 - [x] local space → world space → view space → clip space → screen space
 - [ ] local space → view space → world space → clip space → screen space
-- [ ] local space → clip space → world space → view space → screen space
+- [ ] world space → local space → view space → clip space → screen space
 ---
 The model matrix takes local coordinates into the world, the view matrix brings the world in front of the camera, the projection matrix produces clip coordinates, and the GPU's perspective divide and viewport transform end on the screen.
 ```
@@ -249,10 +249,10 @@ use the same view space as GLM and OpenGL: with them, every number in this chapt
 :::opengl
 ```quiz
 After the perspective divide, a vertex of the scene has z = 0.5. Is it inside OpenGL's view volume, and what would z = -0.5 be?
-- [x] Both are visible: OpenGL keeps z between -1 (near) and 1 (far)
 - [ ] z = 0.5 is visible, z = -0.5 is clipped because it lies in front of the near plane
 - [ ] Both are clipped: z must be exactly 0 in NDC
 - [ ] Only z = -0.5 is visible, because +z points away from the camera
+- [x] Both are visible: OpenGL keeps z between -1 (near) and 1 (far)
 ---
 OpenGL's NDC cube runs from -1 to 1 on all three axes. Vulkan and Direct3D use 0..1 for z, which is why their projection matrices are built differently.
 ```
@@ -260,9 +260,9 @@ OpenGL's NDC cube runs from -1 to 1 on all three axes. Vulkan and Direct3D use 0
 :::vulkan
 ```quiz
 After the perspective divide, a vertex of the scene has z = -0.5. What happens to it in Vulkan?
-- [ ] It is drawn: Vulkan keeps z between -1 and 1 like OpenGL
 - [x] It is clipped: Vulkan keeps z between 0 (near) and 1 (far)
 - [ ] It is drawn at the top of the window, because Vulkan's y points down
+- [ ] It is drawn: Vulkan keeps z between -1 and 1 like OpenGL
 - [ ] It is drawn, but behind every other vertex
 ---
 Vulkan's depth range in NDC is 0..1. That's why `GLM_FORCE_DEPTH_ZERO_TO_ONE` is needed: GLM's default (OpenGL) projection would put everything in the near half of the frustum at negative z.
@@ -271,10 +271,10 @@ Vulkan's depth range in NDC is 0..1. That's why `GLM_FORCE_DEPTH_ZERO_TO_ONE` is
 :::d3d12
 ```quiz
 After the perspective divide, a vertex of the scene has z = -0.5. What happens to it in Direct3D?
-- [ ] It is drawn: Direct3D keeps z between -1 and 1 like OpenGL
-- [x] It is clipped: Direct3D keeps z between 0 (near) and 1 (far)
 - [ ] It is drawn at the top of the window, because Direct3D's y points down
+- [ ] It is drawn: Direct3D keeps z between -1 and 1 like OpenGL
 - [ ] It is drawn, but behind every other vertex
+- [x] It is clipped: Direct3D keeps z between 0 (near) and 1 (far)
 ---
 Direct3D's depth range in NDC is 0..1, and its y points up like OpenGL's. DirectXMath's projection functions produce this range for you.
 ```
@@ -533,10 +533,10 @@ matter how far away it is.
 
 ```quiz
 Two identical cubes stand in front of a perspective camera, one 2 units away and one 4 units away. Why does the far one look half as big?
-- [ ] The projection matrix multiplies far vertices by a smaller scale factor in x and y
 - [x] The projection puts the distance into w, and dividing x and y by w (perspective division) halves the far cube's coordinates
 - [ ] The rasterizer skips every second pixel of objects that are far away
 - [ ] The far plane pulls far vertices towards the centre of the screen
+- [ ] The projection matrix multiplies far vertices by a smaller scale factor in x and y
 ---
 The x and y scale in the projection matrix is the same for every vertex. The difference comes from w = -z: the far cube's w is twice as large, so after the division its x and y are half as large.
 ```
@@ -832,10 +832,10 @@ Now do the task **constant-buffer**. The picture doesn't change – nothing read
 :::opengl
 ```quiz
 In the ten-cubes loop you call `ourShader.setMat4("model", model)` before each `glDrawArrays`. Why does every cube get its own model matrix?
-- [x] Each draw call uses the uniform values the program has at the moment of the call
-- [ ] OpenGL draws all ten cubes at `glfwSwapBuffers`, each with the model matrix of its own loop iteration stored in the VAO
 - [ ] `glDrawArrays` resets the uniforms to the identity matrix after drawing
 - [ ] It doesn't: all cubes get the last model matrix, and only view and projection differ
+- [ ] OpenGL draws all ten cubes at `glfwSwapBuffers`, each with the model matrix of its own loop iteration stored in the VAO
+- [x] Each draw call uses the uniform values the program has at the moment of the call
 ---
 A uniform is program state. Setting it between two draw calls changes it for the next draw; OpenGL makes sure the earlier draw still uses the earlier value.
 ```
@@ -843,10 +843,10 @@ A uniform is program state. Setting it between two draw calls changes it for the
 :::vulkan
 ```quiz
 Why does the model matrix go into a push constant while view and projection go into the uniform buffer?
-- [x] Push constants are recorded into the command buffer with each draw; the uniform buffer's contents are read when the GPU executes the commands, so all draws of a frame see the same values
-- [ ] A uniform buffer can't hold more than two matrices
 - [ ] Push constants are only visible to the fragment shader
 - [ ] The uniform buffer may only be written once, when the program starts
+- [ ] A uniform buffer can't hold more than two matrices
+- [x] Push constants are recorded into the command buffer with each draw; the uniform buffer's contents are read when the GPU executes the commands, so all draws of a frame see the same values
 ---
 Ten pushes and ten draws give ten model matrices. Ten writes into one uniform buffer during recording would leave only the last one for all ten draws – fine for view and projection, which don't change within a frame.
 ```
@@ -854,10 +854,10 @@ Ten pushes and ten draws give ten model matrices. Ten writes into one uniform bu
 :::d3d12
 ```quiz
 Why does the model matrix go into root constants while view and projection go into the constant buffer?
+- [ ] The constant buffer may only be written once, when the program starts
 - [x] Root constants are recorded into the command list with each draw; the constant buffer's contents are read when the GPU executes the commands, so all draws of a frame see the same values
 - [ ] A constant buffer can't hold more than two matrices
 - [ ] Root constants are only visible to the pixel shader
-- [ ] The constant buffer may only be written once, when the program starts
 ---
 Ten `SetGraphicsRoot32BitConstants` calls and ten draws give ten model matrices. Ten writes into one constant buffer during recording would leave only the last one for all ten draws – fine for view and projection, which don't change within a frame.
 ```
@@ -1183,10 +1183,10 @@ not getting the same result, compare your code with the code excerpts above.
 
 ```quiz
 You want the camera 3 units further back, at z = +3, looking down -z. What do you put in the view matrix?
-- [ ] A translation by (0, 0, 3): the camera moves in +z
-- [x] A translation by (0, 0, -3): moving the camera back is the same as moving the whole scene forward
 - [ ] A rotation by 180° about the y axis
+- [ ] A translation by (0, 0, 3): the camera moves in +z
 - [ ] Nothing – the projection's near plane at 0.1 moves the camera back automatically
+- [x] A translation by (0, 0, -3): moving the camera back is the same as moving the whole scene forward
 ---
 The view matrix moves the world, not the camera, so it uses the inverse of the camera's movement. Put the scene at z = -3 and it lies 3 units in front of a camera at the origin looking down -z.
 ```
@@ -1451,9 +1451,9 @@ whatever face comes later in `vertices` wins, near or far.
 ```quiz
 Without depth testing, why can you see faces at the back of the cube through the front ones?
 - [ ] The back faces are drawn with inverted texture coordinates
-- [ ] The projection matrix maps the far side of the cube in front of the near side
-- [x] Every fragment simply overwrites the pixel; triangles drawn later cover earlier ones no matter which is nearer
 - [ ] The texture's alpha channel makes the front faces transparent
+- [x] Every fragment simply overwrites the pixel; triangles drawn later cover earlier ones no matter which is nearer
+- [ ] The projection matrix maps the far side of the cube in front of the near side
 ---
 Without a depth test, the only thing that decides which colour stays in a pixel is the drawing order. Something must remember how far away the pixel's current colour is: the depth buffer.
 ```
@@ -1800,10 +1800,10 @@ Now do the task **depth-test**. There you go! A fully textured cube with proper 
 
 ```quiz
 The depth buffer is cleared to 1.0 every frame, and the depth test is "less". What does that achieve?
-- [ ] Only fragments exactly on the far plane are drawn
-- [ ] Fragments are drawn back to front, so far faces cover near ones
-- [x] The first fragment on a pixel always passes, and after that only fragments nearer than the stored depth replace it
 - [ ] Nothing changes as long as you don't clear the color buffer too
+- [ ] Only fragments exactly on the far plane are drawn
+- [x] The first fragment on a pixel always passes, and after that only fragments nearer than the stored depth replace it
+- [ ] Fragments are drawn back to front, so far faces cover near ones
 ---
 1.0 is the far plane, so every visible fragment is nearer than the cleared value. Each passing fragment writes its depth, and later fragments must beat it. Without clearing, last frame's depths would block this frame's fragments.
 ```

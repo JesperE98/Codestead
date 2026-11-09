@@ -173,8 +173,8 @@ sampler som skapas i en descriptor heap för samplers kan ha vilken kantfärg so
 ```quiz
 En rektangels texturkoordinater går från 0.0 till 2.0 längs båda axlarna, och texturen läses med repeat (wrap). Vad ser du?
 - [x] Bilden fyra gånger, i ett rutnät på 2 × 2
-- [ ] Bilden en gång, utsträckt över hela rektangeln
 - [ ] Bilden en gång i en fjärdedel, och bildens kantpixlar utdragna över resten
+- [ ] Bilden en gång, utsträckt över hela rektangeln
 ---
 Med repeat räknas bara koordinatens decimaldel, så både 0..1 och 1..2 täcker hela bilden: två gånger på bredden och två på höjden. Det tredje svaret beskriver clamp-to-edge, som du använder i övningarna.
 ```
@@ -241,9 +241,9 @@ Det finns också `D3D12_FILTER_ANISOTROPIC` (med `MaxAnisotropy`), som förbätt
 
 ```quiz
 I kapitlets projekt täcker en textur på 256×256 en rektangel på 400×300 pixlar. Vilken filterinställning avgör hur den ser ut, och vad skulle nearest-filtrering visa?
+- [ ] Mipmapfiltret; nearest-filtrering skulle välja en mindre mipnivå
 - [x] Förstoringsfiltret; nearest-filtrering skulle visa varje texel som ett litet block med skarpa kanter
 - [ ] Förminskningsfiltret; nearest-filtrering skulle göra bilden suddig
-- [ ] Mipmapfiltret; nearest-filtrering skulle välja en mindre mipnivå
 ---
 Varje texel täcker mer än en pixel, så texturen förstoras. Nearest-filtrering ger varje pixel färgen från den närmaste texeln – block – medan linjär filtrering blandar närliggande texlar till en mjuk bild.
 ```
@@ -312,9 +312,9 @@ välja mellan. Eftersom vår rektangel förstorar texturen skulle mipmaps inte a
 
 ```quiz
 Varför används mipmaps bara när en textur förminskas (ritas mindre än sin storlek)?
-- [x] När många texlar hamnar på en pixel ger en mindre, förfiltrerad nivå rätt medelfärg utan artefakter och med mindre minnestrafik; vid förstoring är nivån i full storlek redan den mest detaljerade
-- [ ] Mipmaps är större än originalbilden, så de får bara plats på skärmen när texturen förminskas
 - [ ] Mipmaps beräknas om varje bildruta, vilket bara går tillräckligt snabbt för texturer som syns små
+- [ ] Mipmaps är större än originalbilden, så de får bara plats på skärmen när texturen förminskas
+- [x] När många texlar hamnar på en pixel ger en mindre, förfiltrerad nivå rätt medelfärg utan artefakter och med mindre minnestrafik; vid förstoring är nivån i full storlek redan den mest detaljerade
 ---
 Varje mipnivå är hälften så stor som den föregående och beräknas en gång, när texturen skapas. En förstorad textur har färre texlar än pixlar, så en ännu mindre nivå har inget att tillföra.
 ```
@@ -449,8 +449,8 @@ avbryts programmet med ett undantag.
 
 ```quiz
 OpenGL-versionen av kapitlet anropar `stbi_set_flip_vertically_on_load(true)`; versionerna för Vulkan och Direct3D 12 gör det inte. Varför?
-- [x] Bildfiler lagrar den översta raden först. OpenGL betraktar texturkoordinat 0 på den vertikala axeln som bildens nederkant, Vulkan och Direct3D betraktar den som överkanten
 - [ ] `stb_image.h` läser in bilder upp och ned på vissa plattformar, och bara OpenGL rättar till det
+- [x] Bildfiler lagrar den översta raden först. OpenGL betraktar texturkoordinat 0 på den vertikala axeln som bildens nederkant, Vulkan och Direct3D betraktar den som överkanten
 - [ ] Vulkan och Direct3D 12 vänder själva varje bild när texturen skapas
 ---
 I alla tre API:erna hamnar den första raden du laddar upp på vertikal texturkoordinat 0. I OpenGL är det texturens nederkant, så bilden vänds vid inläsningen; i Vulkan och Direct3D är v = 0 överkanten, vilket stämmer med filen.
@@ -1152,8 +1152,8 @@ Gör nu uppgiften **srv**. Bilden ändras fortfarande inte – shadern vet inget
 :::opengl
 ```quiz
 `glTexParameteri` och `glTexImage2D` tar inget texturobjekt som argument. Vilken textur ändrar de?
-- [x] Den textur som just nu är bunden till `GL_TEXTURE_2D` (för den aktiva texturenheten), därför kommer `glBindTexture(GL_TEXTURE_2D, texture1)` först
 - [ ] Den textur som senast skapades med `glGenTextures`
+- [x] Den textur som just nu är bunden till `GL_TEXTURE_2D` (för den aktiva texturenheten), därför kommer `glBindTexture(GL_TEXTURE_2D, texture1)` först
 - [ ] Alla texturobjekt på en gång
 ---
 OpenGL är en tillståndsmaskin: funktionerna arbetar på det objekt som är bundet till det target du anger. Genom att binda `texture1` först ställer alla följande `GL_TEXTURE_2D`-anrop in och fyller just den texturen.
@@ -1162,9 +1162,9 @@ OpenGL är en tillståndsmaskin: funktionerna arbetar på det objekt som är bun
 :::vulkan
 ```quiz
 Varför kopierar `createTextureImage()` först pixlarna till en staging buffer i stället för att skriva dem direkt till imagen?
+- [ ] Därför att en staging buffer är det enda sättet att byta layout på en image
 - [x] Imagen ligger i device-local-minne med optimal tiling: CPU:n kan i allmänhet inte mappa det minnet och känner inte till texlarnas ordning, så GPU:n kopierar från en host-visible-buffert med `vkCmdCopyBufferToImage`
 - [ ] Därför att `stbi_load` returnerar minne som Vulkan inte får läsa
-- [ ] Därför att en staging buffer är det enda sättet att byta layout på en image
 ---
 Device-local-minne är snabbast för GPU:n men oftast inte host-visible, och `VK_IMAGE_TILING_OPTIMAL` använder en implementationsdefinierad ordning. Kopieringskommandot sköter omflyttningen; layoutövergångarna görs av barriärerna runt det.
 ```
@@ -1664,8 +1664,8 @@ svart.
 ```quiz
 Före uppgiften texture-units sätter programmet aldrig uniformen `texture1`. Varför samplar fragment shadern ändå lådan?
 - [x] En sampler-uniform som inte satts är 0, vilket betyder texturenhet 0 – den aktiva enheten som standard, där `glBindTexture` band lådan
-- [ ] `texture()` läser alltid den textur som skapades senast
 - [ ] `glBindTexture` sätter alla sampler-uniforms i det aktiva programmet till den bundna texturen
+- [ ] `texture()` läser alltid den textur som skapades senast
 ---
 Samplers refererar till texturenheter, inte till texturobjekt. Enhet 0 är aktiv som standard, så när lådan binds och samplern får vara 0 hör de ihop. Med två texturer måste du sätta samplerna själv.
 ```
@@ -1674,8 +1674,8 @@ Samplers refererar till texturenheter, inte till texturobjekt. Enhet 0 är aktiv
 ```quiz
 Hur når `layout(binding = 0) uniform sampler2D texSampler;` i `shader.frag` lådan?
 - [x] Via bindning 0 i det descriptor set som binds med `vkCmdBindDescriptorSets`: en combined image sampler-descriptor som pekar på `textureImageView` och `textureSampler`
-- [ ] Via texturenhet 0, som imagen binds till när den skapas
 - [ ] Via vertexattributet på location 0
+- [ ] Via texturenhet 0, som imagen binds till när den skapas
 ---
 Descriptor set layouten deklarerar bindning 0 som en combined image sampler, `vkUpdateDescriptorSets` skriver in viewn och samplern, och när setet binds som set 0 blir det synligt för shadern.
 ```
@@ -1683,9 +1683,9 @@ Descriptor set layouten deklarerar bindning 0 som en combined image sampler, `vk
 :::d3d12
 ```quiz
 Hur når `Texture2D texture1 : register(t0);` i `shaders.hlsl` lådans textur?
+- [ ] Via den ordning texturerna skapades i med `CreateCommittedResource`
 - [x] Root parameter 0 är en descriptor table vars SRV-intervall börjar på t0; `SetGraphicsRootDescriptorTable` pekar den på SRV-heapens första descriptor, SRV:n för `m_texture1`
 - [ ] Static samplern s0 innehåller texturen
-- [ ] Via den ordning texturerna skapades i med `CreateCommittedResource`
 ---
 Registret kopplar shadern till root signaturen, tabellen kopplar root signaturen till en plats i den shader-synliga heapen, och SRV:n där beskriver texturresursen.
 ```
@@ -1934,8 +1934,8 @@ kapitel.)
 ```quiz
 Utanför ansiktet är lådan mörkare efter blandningen med 0.2 än den var ensam. Varför?
 - [x] Ansiktets genomskinliga pixlar är lagrade som svarta med alfa 0; blandningen bryr sig inte om alfa och blandar in 20 % av det svarta i lådan
-- [ ] En blandning halverar alltid ljusstyrkan hos båda indata
 - [ ] Ansiktstexturen samplas utanför 0..1 där och returnerar en svart kantfärg
+- [ ] En blandning halverar alltid ljusstyrkan hos båda indata
 ---
 En genomskinlig pixel har ändå ett RGB-värde, och i `awesomeface.png` är det svart. För att lämna lådan orörd där ansiktet är genomskinligt kan du använda ansiktets alfa i blandningsvikten – ansiktets `.a` gånger 0.2.
 ```

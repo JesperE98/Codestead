@@ -13,8 +13,8 @@ coordinate vector. A mesh should also contain indices for indexed drawing, and m
 ```quiz
 What does a mesh minimally need, so that it can be drawn on its own?
 - [ ] Only its vertex positions; normals and textures belong to the model
-- [x] Its vertices (position, normal, texture coordinates), the indices of its triangles, and its material's textures (diffuse and specular maps)
 - [ ] A node hierarchy, like Assimp's scene
+- [x] Its vertices (position, normal, texture coordinates), the indices of its triangles, and its material's textures (diffuse and specular maps)
 ---
 Everything a draw of the mesh reads: the vertex attributes the shaders take in, the indices that form the triangles, and the lighting maps of its material. The hierarchy and the collection of meshes are the model's business – the next chapter.
 ```
@@ -744,9 +744,9 @@ Now do the task **mesh-textures**. The picture doesn't change.
 :::opengl
 ```quiz
 `glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));` – what do `sizeof(Vertex)` and `offsetof(Vertex, TexCoords)` give for our `Vertex`?
-- [ ] 8 and 6: the number of floats in a vertex and before the texture coordinates
-- [x] 32 and 24: a vertex is 8 floats of 4 bytes, and the texture coordinates come after 3 + 3 floats
 - [ ] 32 and 0: every attribute starts at the beginning of the vertex
+- [x] 32 and 24: a vertex is 8 floats of 4 bytes, and the texture coordinates come after 3 + 3 floats
+- [ ] 8 and 6: the number of floats in a vertex and before the texture coordinates
 ---
 The stride and the offset are in bytes. Because the struct's members lie one after the other, the vertex buffer is interleaved exactly like the cube's 8 floats per vertex in the lighting chapters – but `sizeof` and `offsetof` compute the numbers, and they stay right when the struct grows.
 ```
@@ -754,9 +754,9 @@ The stride and the offset are in bytes. Because the struct's members lie one aft
 :::vulkan
 ```quiz
 The material number is `uint32_t materialIndex`. Which attribute description and shader input fit it?
-- [ ] `VK_FORMAT_R32_SFLOAT` and `in float inMaterialIndex`, because vertex attributes are always floats
 - [x] `VK_FORMAT_R32_UINT` at `offsetof(Vertex, materialIndex)` and `layout(location = 3) in uint inMaterialIndex`
 - [ ] `VK_FORMAT_R8_UINT`, since there are only two materials
+- [ ] `VK_FORMAT_R32_SFLOAT` and `in float inMaterialIndex`, because vertex attributes are always floats
 ---
 The format describes the bytes in the buffer: one 32-bit unsigned integer, 32 bytes into the vertex. Its numeric type (UINT) must match the shader's input type (`uint`). R8 would read only the first byte of the four.
 ```
@@ -764,9 +764,9 @@ The format describes the bytes in the buffer: one 32-bit unsigned integer, 32 by
 :::d3d12
 ```quiz
 The project's input layout puts `NORMAL` at byte 12 and `TEXCOORD` at byte 24. Why does that fit our `Vertex`?
-- [ ] Because Direct3D 12 sorts the members of a vertex by size
-- [x] The members of a struct lie one after the other: `position` takes bytes 0–11, `normal` 12–23, `texCoord` 24–31, so a `std::vector<Vertex>` is exactly the vertex buffer the input layout describes, with a stride of `sizeof(Vertex)` = 32
 - [ ] It doesn't matter: the input layout finds the members by their names
+- [x] The members of a struct lie one after the other: `position` takes bytes 0–11, `normal` 12–23, `texCoord` 24–31, so a `std::vector<Vertex>` is exactly the vertex buffer the input layout describes, with a stride of `sizeof(Vertex)` = 32
+- [ ] Because Direct3D 12 sorts the members of a vertex by size
 ---
 The semantics (`POSITION`, `NORMAL`, `TEXCOORD`) connect the input layout to the shader's inputs; the byte offsets connect it to the buffer. Both must match the struct – the offsets are what `offsetof` would compute.
 ```
@@ -939,9 +939,9 @@ the planet and one for the ring, and calls their `Draw`.
 :::opengl
 ```quiz
 A mesh has the textures (in this order) diffuse, specular, diffuse. Which sampler reads which texture unit?
-- [ ] `texture_diffuse1` = unit 0, `texture_diffuse2` = unit 1, `texture_specular1` = unit 2
-- [x] `texture_diffuse1` = unit 0, `texture_specular1` = unit 1, `texture_diffuse2` = unit 2
 - [ ] `texture_diffuse1` = unit 1, `texture_specular1` = unit 2, `texture_diffuse3` = unit 3
+- [x] `texture_diffuse1` = unit 0, `texture_specular1` = unit 1, `texture_diffuse2` = unit 2
+- [ ] `texture_diffuse1` = unit 0, `texture_diffuse2` = unit 1, `texture_specular1` = unit 2
 ---
 Texture `i` goes to unit `i`. The number in the name counts per type and starts at 1: `diffuseNr++` hands out 1, then 2, and `specularNr++` its own 1. So the second diffuse texture is `texture_diffuse2` on unit 2.
 ```
@@ -949,9 +949,9 @@ Texture `i` goes to unit `i`. The number in the name counts per type and starts 
 :::vulkan
 ```quiz
 Why does this chapter fill `vertices` and `indices` with a test square instead of leaving them empty until the model is loaded?
-- [ ] Because a Vulkan pipeline needs exactly four vertices
 - [x] The vertex and index buffers are created from the vectors, and Vulkan cannot create a buffer of size 0
 - [ ] Because `vkCmdDrawIndexed` fails on more than 6 indices
+- [ ] Because a Vulkan pipeline needs exactly four vertices
 ---
 `VkBufferCreateInfo::size` must be greater than 0. learnopengl's empty `Mesh` is never set up before it has data, but our buffers are created in `initVulkan()` – so they get a small mesh until the *Model* chapter loads the planet into the same vectors.
 ```
@@ -959,8 +959,8 @@ Why does this chapter fill `vertices` and `indices` with a test square instead o
 :::d3d12
 ```quiz
 Suppose a mesh's material has no specular map. What does `SetupMesh` put into the mesh's second slot then, and why?
-- [ ] Nothing: the slot stays empty, and the table is one descriptor shorter
 - [x] A null SRV (null resource, full description): the table of root parameter 2 always covers t0 and t1, and reading a null view returns zeros – black, so no highlight
+- [ ] Nothing: the slot stays empty, and the table is one descriptor shorter
 - [ ] The diffuse map again, so the shader always has two textures
 ---
 A descriptor table is a fixed run of slots, and a slot the shader may read must hold a valid descriptor. `CreateShaderResourceView(nullptr, &srvDesc, …)` makes a null descriptor; the description says what kind of view the slot is.
@@ -970,9 +970,9 @@ A descriptor table is a fixed run of slots, and a slot the shader may read must 
 :::opengl
 ```quiz
 Why does `Draw` take the shader as a parameter?
-- [ ] Because `glDrawElements` needs the shader's ID
-- [x] To point each sampler (`texture_diffuse1`, …) at the texture unit of its texture, it has to look the sampler up in that shader with `glGetUniformLocation(shader.ID, …)`
 - [ ] So that the mesh can compile the shader the first time it is drawn
+- [x] To point each sampler (`texture_diffuse1`, …) at the texture unit of its texture, it has to look the sampler up in that shader with `glGetUniformLocation(shader.ID, …)`
+- [ ] Because `glDrawElements` needs the shader's ID
 ---
 The sampler uniforms belong to a shader program. The mesh knows its textures and units; only with the shader can it set `glUniform1i(location, i)` for each name. The shader must be in use (`ourShader.use()`) when `Draw` is called.
 ```
@@ -980,9 +980,9 @@ The sampler uniforms belong to a shader program. The mesh knows its textures and
 :::vulkan
 ```quiz
 `vertices` and `indices` are copied into buffers in device-local memory through a staging buffer. Why the detour?
-- [ ] Because `memcpy` cannot write more than 64 KB at a time
-- [x] Device-local memory is the fastest for the GPU to read, but the CPU often can't map it: the CPU writes a host-visible staging buffer, and `vkCmdCopyBuffer` on the GPU moves the data
 - [ ] Because a vertex buffer must always be created twice
+- [x] Device-local memory is the fastest for the GPU to read, but the CPU often can't map it: the CPU writes a host-visible staging buffer, and `vkCmdCopyBuffer` on the GPU moves the data
+- [ ] Because `memcpy` cannot write more than 64 KB at a time
 ---
 The staging buffer is `TRANSFER_SRC` in host-visible, coherent memory; the vertex buffer is `TRANSFER_DST | VERTEX_BUFFER` in `DEVICE_LOCAL` memory. After the copy has finished (`endSingleTimeCommands` waits for it), the staging buffer is destroyed.
 ```
@@ -1001,8 +1001,8 @@ Root arguments are recorded state: a draw sees the values that were set when it 
 :::opengl
 ```quiz
 `glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);` – why `GL_UNSIGNED_INT`?
-- [ ] Because the vertex positions are unsigned
 - [x] It is the type of the indices in the EBO: `std::vector<unsigned int>`, 4 bytes each; with `GL_UNSIGNED_SHORT` OpenGL would read every index as two 2-byte indices
+- [ ] Because the vertex positions are unsigned
 - [ ] Because OpenGL 3.3 has no other index type
 ---
 The type must describe what the element buffer holds. 32-bit indices also let a mesh have more than 65536 vertices – models often do.
@@ -1012,8 +1012,8 @@ The type must describe what the element buffer holds. 32-bit indices also let a 
 ```quiz
 `vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32)` – what would `VK_INDEX_TYPE_UINT16` do with our index buffer?
 - [ ] Nothing different; Vulkan detects the type from the buffer's size
-- [x] The GPU would read every 4-byte `uint32_t` index as two 2-byte indices – wrong vertices, broken triangles
 - [ ] It would just limit the mesh to 65536 vertices
+- [x] The GPU would read every 4-byte `uint32_t` index as two 2-byte indices – wrong vertices, broken triangles
 ---
 The index type tells the GPU how to read the buffer's bytes, so it must match the type of `indices` (`uint32_t`). 32-bit indices also allow more than 65536 vertices, which a model can easily have.
 ```
@@ -1022,8 +1022,8 @@ The index type tells the GPU how to read the buffer's bytes, so it must match th
 ```quiz
 `m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;` – what would `DXGI_FORMAT_R16_UINT` do with our index buffer?
 - [ ] Nothing different; Direct3D 12 detects the type from the buffer's size
-- [x] The GPU would read every 4-byte `UINT` index as two 2-byte indices – wrong vertices, broken triangles
 - [ ] It would just limit the mesh to 65536 vertices
+- [x] The GPU would read every 4-byte `UINT` index as two 2-byte indices – wrong vertices, broken triangles
 ---
 The format of the index buffer view tells the input assembler how to read the buffer's bytes, so it must match the type of `indices` (`UINT`, 32 bits). 32-bit indices also allow more than 65536 vertices, which a model can easily have.
 ```

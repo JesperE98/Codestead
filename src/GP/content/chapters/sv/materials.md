@@ -89,9 +89,9 @@ Det är inte ovanligt att helt förstöra ett föremåls utseende med ett felakt
 
 ```quiz
 Du höjer materialets `shininess` från 32 till 256. Vad händer med den spekulära högdagern?
-- [ ] Den blir större och ljusare, eftersom ytan reflekterar mer ljus
 - [x] Den blir mindre och skarpare: den spekulära faktorn upphöjs till en högre potens och avtar därför snabbare bort från den perfekta reflektionen
 - [ ] Ingenting: shininess påverkar bara den ambienta komponenten
+- [ ] Den blir större och ljusare, eftersom ytan reflekterar mer ljus
 ---
 `spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess)`. Skalärprodukten är högst 1, så en högre exponent trycker alla värden under 1 närmare 0: bara riktningar mycket nära reflektionen behåller en synlig högdager. En blank yta (polerad metall) har en liten, tät högdager; en grov yta en bred, mjuk.
 ```
@@ -387,9 +387,9 @@ En uniform-struct är inte mycket mer än ett namnområde: `material.ambient`, `
 :::vulkan
 ```quiz
 C++-structen `Material` har `pad1` efter `ambient` och `pad2` efter `diffuse`, men ingen utfyllnad efter `specular`. Varför?
-- [ ] Den sista `vec3`:n i en struct behöver aldrig utfyllnad i std140
 - [x] I std140 börjar varje `vec3` på en multipel av 16 byte, och `shininess`, en ensam `float`, får plats i de 4 lediga byten efter `specular` (offset 44) – i shadern och i C++
 - [ ] `glm::vec3` är 16 byte, så bara de två första behöver extra floats
+- [ ] Den sista `vec3`:n i en struct behöver aldrig utfyllnad i std140
 ---
 `glm::vec3` är 12 byte. Utan `pad1` och `pad2` skulle `diffuse` börja på byte 12 i C++ men på byte 16 i shadern. Efter `specular` (byte 32–43) lägger shadern floaten `shininess` på 44, precis där C++-structen lägger den, och structen slutar på 48, en multipel av 16.
 ```
@@ -397,8 +397,8 @@ C++-structen `Material` har `pad1` efter `ambient` och `pad2` efter `diffuse`, m
 :::d3d12
 ```quiz
 C++-structen `Material` har `padding0` efter `ambient` och `padding1` efter `diffuse`, men ingen utfyllnad efter `specular`. Varför?
-- [ ] HLSL fyller aldrig ut den sista `float3`:n i en struct
 - [x] Varje `float3` tar de första 12 byten av en 16-byte-rad, och `shininess`, en ensam `float`, får plats i de sista 4 byten på raden för `specular` – i HLSL och i C++
+- [ ] HLSL fyller aldrig ut den sista `float3`:n i en struct
 - [ ] `XMFLOAT3` är 16 byte, så bara de två första behöver extra floats
 ---
 `XMFLOAT3` är 12 byte. Utan utfyllnadsfloatarna skulle `diffuse` börja på byte 12 i C++ men på andra raden (byte 16) i HLSL. Efter `specular` (byte 32–43) packar HLSL floaten `shininess` på samma rad, på byte 44, precis där C++-structen lägger den.
@@ -640,8 +640,8 @@ spekulära färg är vit, dämpad av materialets spekulära färg 0.5.
 
 ```quiz
 Med `light.ambient` = (0.2, 0.2, 0.2) och `material.ambient` = (1.0, 0.5, 0.31), vilken färg får en sida som bara nås av ambient ljus?
-- [ ] (1.0, 0.5, 0.31) – materialets ambienta färg
 - [x] (0.2, 0.1, 0.062) – de två vektorerna multiplicerade komponent för komponent
+- [ ] (1.0, 0.5, 0.31) – materialets ambienta färg
 - [ ] (1.2, 0.7, 0.51) – ljusets ambienta del adderad till materialets färg
 ---
 Ljuskomponenterna multiplicerar ljusets intensitet med materialets färg, komponent för komponent: 0.2 × 1.0, 0.2 × 0.5, 0.2 × 0.31. Det är den vänstra sidan: en femtedel av korallfärgen, mörk men inte svart.
@@ -722,9 +722,9 @@ inte till ljusfärgen – att låta den följa ljuset är ett trevligt extra om 
 
 ```quiz
 Efter en sekund är ljusfärgen ungefär (0.91, 0.64, 0.96), en blek lila. Varför ser den korallfärgade kuben rödbrun ut och inte lila?
-- [ ] Den spekulära delen, som förblir vit, täcker över det lila
 - [x] Ljuset och materialet multipliceras komponent för komponent: kuben reflekterar 1.0 av det röda, men bara 0.5 av det gröna och 0.31 av det blå
 - [ ] Eftersom `sin` returnerar radianer omvandlas färgen innan den används
+- [ ] Den spekulära delen, som förblir vit, täcker över det lila
 ---
 Ett föremål reflekterar bara det dess material tillåter: (0.91 × 1.0, 0.64 × 0.5, 0.96 × 0.31) ≈ (0.91, 0.32, 0.30) före den diffusa och ambienta skalningen – mest rött. Ljusets blå del absorberas till stor del av den korallfärgade ytan.
 ```
@@ -787,9 +787,9 @@ som ser ut som plast. Andra material ur tabellen fungerar på samma sätt.
 
 ```quiz
 Varför sätter övningen med cyanfärgad plast alla tre ljusintensiteterna till (1.0, 1.0, 1.0)?
+- [ ] Eftersom ljusets ambienta och diffusa delar alltid måste vara lika
 - [ ] Eftersom plast behöver mer ljus än det korallfärgade materialet för att synas
 - [x] Tabellens materialvärden innehåller redan hur starkt varje komponent ska synas; med ljus på full intensitet kommer de ut oförändrade
-- [ ] Eftersom ljusets ambienta och diffusa delar alltid måste vara lika
 ---
 Tabellen gjordes för ett vitt ljus på full styrka: dess ambienta värden är redan mycket mörkare än dess diffusa. Vårt ljus 0.2 och 0.5 skulle skala ner dem en gång till. Med (1, 1, 1) bestämmer materialet ensamt färgen.
 ```

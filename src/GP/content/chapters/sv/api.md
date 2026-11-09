@@ -29,8 +29,8 @@ sig är specifikationen för version 3.3 (den som kursen använder) en bra, om �
 
 ```quiz
 Vad är OpenGL, strikt talat?
-- [ ] Ett bibliotek skrivet av Khronos Group som du installerar bredvid ditt program
 - [x] En specifikation: den säger vad varje funktion måste göra, och grafikkortstillverkarna implementerar den i sina drivrutiner
+- [ ] Ett bibliotek skrivet av Khronos Group som du installerar bredvid ditt program
 - [ ] En del av operativsystemet som fungerar likadant på alla grafikkort
 ---
 OpenGL i sig är bara en specifikation. Koden som körs när du anropar `glDrawArrays` är drivrutinens implementation, och därför åtgärdas buggar i OpenGL oftast genom att uppdatera drivrutinen.
@@ -90,9 +90,9 @@ flesta tekniker i kursen räcker OpenGL 3.3; där en extension behövs säger ka
 
 ```quiz
 Vad är en extension i OpenGL?
+- [ ] En nyare OpenGL-version som alla grafikkort stöder
 - [x] Funktionalitet som en drivrutin erbjuder utöver core-specifikationen, och som ditt program måste kontrollera innan det använder den
 - [ ] En filtyp för OpenGL-shaders
-- [ ] En nyare OpenGL-version som alla grafikkort stöder
 ---
 Extensions låter tillverkare leverera nya funktioner innan de ingår i specifikationen. Eftersom inte alla drivrutiner har dem kontrollerar du att en extension finns innan du använder den; populära extensions blir ofta en del av en senare OpenGL-version.
 ```
@@ -123,9 +123,9 @@ tillståndsmaskin i huvudet, så blir mycket av OpenGL:s uppbyggnad begriplig.
 
 ```quiz
 I render loopen följs `glClearColor(0.2f, 0.3f, 0.3f, 1.0f);` av `glClear(GL_COLOR_BUFFER_BIT);`. Vilket påstående stämmer?
-- [ ] `glClearColor` fyller fönstret, och `glClear` gör resultatet synligt
-- [x] `glClearColor` ändrar bara tillståndet (rensningsfärgen); `glClear` använder det tillståndet och fyller fönstret med det
 - [ ] Båda anropen fyller fönstret, så ett av dem kunde tas bort
+- [x] `glClearColor` ändrar bara tillståndet (rensningsfärgen); `glClear` använder det tillståndet och fyller fönstret med det
+- [ ] `glClearColor` fyller fönstret, och `glClear` gör resultatet synligt
 ---
 `glClearColor` är en tillståndsändrande funktion och `glClear` en tillståndsanvändande. Färgen ligger kvar i kontexten tills du ändrar den igen.
 ```
@@ -208,9 +208,9 @@ tillverkarnas kompilatorer. Och grafik och beräkningar går genom samma API.
 
 ```quiz
 Varför konstruerades Vulkan som ett explicit API?
+- [ ] Eftersom det bara behöver köras på Windows
 - [ ] För att den första triangeln ska bli kortare att skriva än i OpenGL
 - [x] Så att drivrutinen inte längre behöver gissa vad programmeraren menar: du säger exakt vad du vill, vilket minskar drivrutinens overhead och gör att kommandon kan spelas in på flera trådar
-- [ ] Eftersom det bara behöver köras på Windows
 ---
 Äldre API:er lät drivrutinen lista ut vad du menade, vilket kostade prestanda och gav skillnader mellan tillverkare. Vulkan låter dig säga det rakt ut – mer kod, men förutsägbart beteende.
 ```
@@ -301,8 +301,8 @@ ligga i, allokerar själv ett `VkDeviceMemory` och binder ihop de två.
 
 ```quiz
 Vad är skillnaden mellan en `VkPhysicalDevice` och en `VkDevice`?
-- [ ] De är två namn på samma objekt
 - [x] Physical device är ett grafikkort du kan välja; logical device är din koppling till det, med de funktioner och köer du bad om
+- [ ] De är två namn på samma objekt
 - [ ] Physical device är till för att rita, logical device för att presentera i fönstret
 ---
 Du väljer en `VkPhysicalDevice` med `pickPhysicalDevice()` och skapar sedan en `VkDevice` för den i `createLogicalDevice()`. Nästan alla andra objekt skapas från den logiska enheten.
@@ -319,9 +319,9 @@ många gånger.
 
 ```quiz
 Hur når ett ritkommando GPU:n i Vulkan?
+- [ ] Drivrutinen samlar ihop alla anrop och skickar dem till GPU:n på egen hand
 - [ ] `vkCmdDraw` ritar triangeln direkt
 - [x] Det spelas in i en command buffer, som skickas till en kö med `vkQueueSubmit` och utförs asynkront
-- [ ] Drivrutinen samlar ihop alla anrop och skickar dem till GPU:n på egen hand
 ---
 Funktionerna `vkCmd…` spelar bara in. Ingenting händer på GPU:n förrän command buffern har skickats till en kö.
 ```
@@ -352,8 +352,8 @@ program som fungerar på en GPU men inte på en annan. Därför är nästa verkt
 ```quiz
 Vad gör fencet `inFlightFence` i `drawFrame()`?
 - [ ] Det får GPU:n att vänta tills swap chain-bilden är tillgänglig
-- [x] Det får CPU:n att vänta tills GPU:n är klar med föregående bildruta, så att command buffern inte spelas in på nytt medan den används
 - [ ] Det begränsar bildfrekvensen till skärmens uppdateringsfrekvens
+- [x] Det får CPU:n att vänta tills GPU:n är klar med föregående bildruta, så att command buffern inte spelas in på nytt medan den används
 ---
 Fences är till för att CPU:n ska vänta på GPU:n. Ordningen mellan operationer på GPU:n – hämta bild, rendera, presentera – sköts med semaforer.
 ```
@@ -395,9 +395,9 @@ inga valideringsfel – behandla vart och ett som en bugg.
 
 ```quiz
 Du gör ett fel i ett Vulkan-anrop, och validation layers är inte påslagna. Vad händer?
+- [ ] Drivrutinen rättar felet automatiskt
 - [ ] Vulkan rapporterar alltid felet med ett tydligt meddelande
 - [x] Kanske inget synligt: beteendet är odefinierat, så programmet kan krascha, rita fel eller råka fungera på din GPU
-- [ ] Drivrutinen rättar felet automatiskt
 ---
 Vulkan självt kontrollerar väldigt lite för att hålla drivrutinen snabb. Validation layers gör kontrollerna under utvecklingen och skriver ut ett meddelande för varje felaktig användning de hittar.
 ```
@@ -487,8 +487,8 @@ inline void ThrowIfFailed(HRESULT hr)
 
 ```quiz
 Vad gör en `ComPtr<ID3D12Device>` åt dig?
-- [ ] Den väntar tills GPU:n är klar med devicen innan den tas bort
 - [x] Den anropar `Release` på COM-objektet automatiskt när `ComPtr` försvinner, så att du inte läcker referenser
+- [ ] Den väntar tills GPU:n är klar med devicen innan den tas bort
 - [ ] Den skapar devicen när den deklareras
 ---
 `ComPtr` sköter COM:s referensräkning. Den vet ingenting om GPU:n, och därför väntar programmet på GPU:n (i `OnDestroy()`) innan dess objekt släpps.
@@ -630,9 +630,9 @@ bildruta. De följande kapitlen behåller det så för enkelhetens skull, precis
 
 ```quiz
 Varför väntar `WaitForPreviousFrame()` på fencet innan nästa bildruta spelas in?
+- [ ] Eftersom `ExecuteCommandLists` först returnerar när GPU:n är klar
 - [ ] För att begränsa bildfrekvensen till skärmens uppdateringsfrekvens
 - [x] Så att command allocatorn och back buffern inte återanvänds medan GPU:n fortfarande arbetar med föregående bildruta
-- [ ] Eftersom `ExecuteCommandLists` först returnerar när GPU:n är klar
 ---
 `ExecuteCommandLists` returnerar direkt; GPU:n arbetar på egen hand. Fencet talar om för CPU:n när GPU:n har nått punkten där kön signalerade det.
 ```
@@ -664,8 +664,8 @@ skapas, och det kräver Windows-tillvalet "Graphics Tools". Projektet slår på 
 ```quiz
 När måste debuglagret slås på?
 - [x] Innan devicen skapas: slås det på efteråt blir devicen ogiltig
-- [ ] När som helst, till exempel när ett fel har inträffat
 - [ ] Bara i release-byggen
+- [ ] När som helst, till exempel när ett fel har inträffat
 ---
 `EnableDebugLayer()` måste anropas före `D3D12CreateDevice`. Projektet gör det i början av `LoadPipeline()`, och bara i debug-byggen.
 ```

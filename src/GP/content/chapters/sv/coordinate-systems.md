@@ -110,10 +110,10 @@ koordinatsystem mer i detalj nedan.
 
 ```quiz
 I vilken ordning passerar en vertex koordinatsystemen?
-- [ ] världsrum → lokalt rum → vyrum → klipprum → skärmrum
+- [ ] lokalt rum → klipprum → världsrum → vyrum → skärmrum
 - [x] lokalt rum → världsrum → vyrum → klipprum → skärmrum
 - [ ] lokalt rum → vyrum → världsrum → klipprum → skärmrum
-- [ ] lokalt rum → klipprum → världsrum → vyrum → skärmrum
+- [ ] världsrum → lokalt rum → vyrum → klipprum → skärmrum
 ---
 Model-matrisen för de lokala koordinaterna ut i världen, view-matrisen ställer världen framför kameran, projection-matrisen ger klippkoordinater, och GPU:ns perspektivdivision och viewport-transformation slutar på skärmen.
 ```
@@ -247,10 +247,10 @@ samma vyrum som GLM och OpenGL: med dem är varje tal i det här kapitlet detsam
 :::opengl
 ```quiz
 Efter perspektivdivisionen har en vertex i scenen z = 0.5. Ligger den inom OpenGL:s synvolym, och hur är det med z = -0.5?
-- [x] Båda syns: OpenGL behåller z mellan -1 (nära) och 1 (bortre)
 - [ ] z = 0.5 syns, z = -0.5 klipps eftersom den ligger framför det nära planet
 - [ ] Båda klipps: z måste vara exakt 0 i NDC
 - [ ] Bara z = -0.5 syns, eftersom +z pekar bort från kameran
+- [x] Båda syns: OpenGL behåller z mellan -1 (nära) och 1 (bortre)
 ---
 OpenGL:s NDC-kub går från -1 till 1 längs alla tre axlarna. Vulkan och Direct3D använder 0..1 för z, och därför byggs deras projektionsmatriser annorlunda.
 ```
@@ -258,9 +258,9 @@ OpenGL:s NDC-kub går från -1 till 1 längs alla tre axlarna. Vulkan och Direct
 :::vulkan
 ```quiz
 Efter perspektivdivisionen har en vertex i scenen z = -0.5. Vad händer med den i Vulkan?
-- [ ] Den ritas: Vulkan behåller z mellan -1 och 1 som OpenGL
 - [x] Den klipps: Vulkan behåller z mellan 0 (nära) och 1 (bortre)
 - [ ] Den ritas överst i fönstret, eftersom Vulkans y pekar nedåt
+- [ ] Den ritas: Vulkan behåller z mellan -1 och 1 som OpenGL
 - [ ] Den ritas, men bakom alla andra vertexar
 ---
 Vulkans djupintervall i NDC är 0..1. Därför behövs `GLM_FORCE_DEPTH_ZERO_TO_ONE`: GLM:s standardprojektion (för OpenGL) skulle ge allt i den nära halvan av frustumet negativt z.
@@ -269,10 +269,10 @@ Vulkans djupintervall i NDC är 0..1. Därför behövs `GLM_FORCE_DEPTH_ZERO_TO_
 :::d3d12
 ```quiz
 Efter perspektivdivisionen har en vertex i scenen z = -0.5. Vad händer med den i Direct3D?
-- [ ] Den ritas: Direct3D behåller z mellan -1 och 1 som OpenGL
-- [x] Den klipps: Direct3D behåller z mellan 0 (nära) och 1 (bortre)
 - [ ] Den ritas överst i fönstret, eftersom Direct3D:s y pekar nedåt
+- [ ] Den ritas: Direct3D behåller z mellan -1 och 1 som OpenGL
 - [ ] Den ritas, men bakom alla andra vertexar
+- [x] Den klipps: Direct3D behåller z mellan 0 (nära) och 1 (bortre)
 ---
 Direct3D:s djupintervall i NDC är 0..1, och dess y pekar uppåt som i OpenGL. DirectXMaths projektionsfunktioner ger dig detta intervall.
 ```
@@ -529,10 +529,10 @@ ritar varje kub lika stor, oavsett hur långt bort den är.
 
 ```quiz
 Två likadana kuber står framför en perspektivkamera, den ena 2 enheter bort och den andra 4 enheter bort. Varför ser den bortre hälften så stor ut?
-- [ ] Projektionsmatrisen multiplicerar avlägsna vertexar med en mindre skalfaktor i x och y
 - [x] Projektionen lägger avståndet i w, och när x och y divideras med w (perspektivdivisionen) halveras den bortre kubens koordinater
 - [ ] Rastreringen hoppar över varannan pixel i föremål som är långt bort
 - [ ] Det bortre planet drar avlägsna vertexar mot skärmens mitt
+- [ ] Projektionsmatrisen multiplicerar avlägsna vertexar med en mindre skalfaktor i x och y
 ---
 Skalningen av x och y i projektionsmatrisen är densamma för alla vertexar. Skillnaden kommer från w = -z: den bortre kubens w är dubbelt så stort, så efter divisionen är dess x och y hälften så stora.
 ```
@@ -829,10 +829,10 @@ Gör nu uppgiften **constant-buffer**. Bilden ändras inte – inget läser buff
 :::opengl
 ```quiz
 I loopen med tio kuber anropar du `ourShader.setMat4("model", model)` före varje `glDrawArrays`. Varför får varje kub sin egen model-matris?
-- [x] Varje draw-anrop använder de uniform-värden programmet har i det ögonblick anropet görs
-- [ ] OpenGL ritar alla tio kuber vid `glfwSwapBuffers`, var och en med model-matrisen från sitt eget varv, lagrad i VAO:n
 - [ ] `glDrawArrays` återställer uniforms till enhetsmatrisen efter ritningen
 - [ ] Det gör den inte: alla kuber får den sista model-matrisen, och bara view och projection skiljer sig
+- [ ] OpenGL ritar alla tio kuber vid `glfwSwapBuffers`, var och en med model-matrisen från sitt eget varv, lagrad i VAO:n
+- [x] Varje draw-anrop använder de uniform-värden programmet har i det ögonblick anropet görs
 ---
 En uniform är programtillstånd. Att sätta den mellan två draw-anrop ändrar den för nästa anrop; OpenGL ser till att det tidigare anropet ändå använder det tidigare värdet.
 ```
@@ -840,10 +840,10 @@ En uniform är programtillstånd. Att sätta den mellan två draw-anrop ändrar 
 :::vulkan
 ```quiz
 Varför hamnar model-matrisen i en push constant medan view och projection hamnar i uniform buffern?
-- [x] Push constants spelas in i command buffern med varje draw-anrop; uniform bufferns innehåll läses när GPU:n utför kommandona, så alla draw-anrop i en bildruta ser samma värden
-- [ ] En uniform buffer kan inte rymma mer än två matriser
 - [ ] Push constants syns bara för fragment shadern
 - [ ] Uniform buffern får bara skrivas en gång, när programmet startar
+- [ ] En uniform buffer kan inte rymma mer än två matriser
+- [x] Push constants spelas in i command buffern med varje draw-anrop; uniform bufferns innehåll läses när GPU:n utför kommandona, så alla draw-anrop i en bildruta ser samma värden
 ---
 Tio pushar och tio draw-anrop ger tio model-matriser. Tio skrivningar i en och samma uniform buffer under inspelningen skulle bara lämna den sista åt alla tio draw-anrop – bra för view och projection, som inte ändras under en bildruta.
 ```
@@ -851,10 +851,10 @@ Tio pushar och tio draw-anrop ger tio model-matriser. Tio skrivningar i en och s
 :::d3d12
 ```quiz
 Varför hamnar model-matrisen i root-konstanter medan view och projection hamnar i constant buffern?
+- [ ] Constant buffern får bara skrivas en gång, när programmet startar
 - [x] Root-konstanter spelas in i command listan med varje draw-anrop; constant bufferns innehåll läses när GPU:n utför kommandona, så alla draw-anrop i en bildruta ser samma värden
 - [ ] En constant buffer kan inte rymma mer än två matriser
 - [ ] Root-konstanter syns bara för pixel shadern
-- [ ] Constant buffern får bara skrivas en gång, när programmet startar
 ---
 Tio anrop till `SetGraphicsRoot32BitConstants` och tio draw-anrop ger tio model-matriser. Tio skrivningar i en och samma constant buffer under inspelningen skulle bara lämna den sista åt alla tio draw-anrop – bra för view och projection, som inte ändras under en bildruta.
 ```
@@ -1179,10 +1179,10 @@ resultat, jämför din kod med kodutdragen ovan.
 
 ```quiz
 Du vill ha kameran 3 enheter längre bak, på z = +3, tittande längs -z. Vad lägger du i view-matrisen?
-- [ ] En förflyttning med (0, 0, 3): kameran rör sig i +z
-- [x] En förflyttning med (0, 0, -3): att flytta kameran bakåt är detsamma som att flytta hela scenen framåt
 - [ ] En rotation med 180° runt y-axeln
+- [ ] En förflyttning med (0, 0, 3): kameran rör sig i +z
 - [ ] Ingenting – projektionens nära plan på 0.1 flyttar kameran bakåt automatiskt
+- [x] En förflyttning med (0, 0, -3): att flytta kameran bakåt är detsamma som att flytta hela scenen framåt
 ---
 View-matrisen flyttar världen, inte kameran, så den använder det omvända av kamerans rörelse. Lägg scenen på z = -3 så ligger den 3 enheter framför en kamera i origo som tittar längs -z.
 ```
@@ -1446,9 +1446,9 @@ den ena tydligt borde ligga bakom den andra: den sida som kommer senare i `verti
 ```quiz
 Varför kan du utan djuptest se sidor på kubens baksida genom de främre?
 - [ ] Baksidorna ritas med omvända texturkoordinater
-- [ ] Projektionsmatrisen lägger kubens bortre sida framför den närmre
-- [x] Varje fragment skriver helt enkelt över pixeln; trianglar som ritas senare täcker tidigare, oavsett vilken som är närmast
 - [ ] Texturens alfakanal gör de främre sidorna genomskinliga
+- [x] Varje fragment skriver helt enkelt över pixeln; trianglar som ritas senare täcker tidigare, oavsett vilken som är närmast
+- [ ] Projektionsmatrisen lägger kubens bortre sida framför den närmre
 ---
 Utan djuptest är det bara ritordningen som avgör vilken färg som blir kvar i en pixel. Något måste komma ihåg hur långt bort pixelns nuvarande färg ligger: depth buffern.
 ```
@@ -1793,10 +1793,10 @@ Gör nu uppgiften **depth-test**. Varsågod! En fullt texturerad kub med korrekt
 
 ```quiz
 Depth buffern rensas till 1.0 varje bildruta, och djuptestet är "mindre än". Vad uppnår det?
-- [ ] Bara fragment som ligger exakt på det bortre planet ritas
-- [ ] Fragment ritas bakifrån och fram, så bortre sidor täcker närmare
-- [x] Det första fragmentet på en pixel klarar alltid testet, och därefter ersätter bara fragment som är närmare än det lagrade djupet det
 - [ ] Ingenting ändras så länge du inte också rensar färgbuffern
+- [ ] Bara fragment som ligger exakt på det bortre planet ritas
+- [x] Det första fragmentet på en pixel klarar alltid testet, och därefter ersätter bara fragment som är närmare än det lagrade djupet det
+- [ ] Fragment ritas bakifrån och fram, så bortre sidor täcker närmare
 ---
 1.0 är det bortre planet, så varje synligt fragment ligger närmare än det rensade värdet. Varje fragment som klarar testet skriver sitt djup, och senare fragment måste slå det. Utan rensning skulle förra bildrutans djup blockera den här bildrutans fragment.
 ```

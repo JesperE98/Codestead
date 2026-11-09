@@ -109,8 +109,8 @@ look something like a very dark coral silhouette.
 
 ```quiz
 After the task **ambient** every visible face of the cube has the same very dark coral colour. Why?
-- [ ] The light is too far away from the cube to light it
 - [x] The ambient term is a constant – 0.1 × lightColor – that doesn't depend on the light's position or on which way a face points
+- [ ] The light is too far away from the cube to light it
 - [ ] The ambient term only lights the faces that point away from the light
 ---
 Ambient light stands in for light that has bounced around everywhere, so it is the same for every fragment. Differences between the faces need a term that depends on direction: diffuse lighting.
@@ -374,8 +374,8 @@ Now do the task **normals**. Nothing uses the new values yet, so the picture doe
 ```quiz
 Why does the lamp's VAO use a stride of `6 * sizeof(float)` although the lamp only reads the position?
 - [ ] Because every attribute must have the same stride as the largest attribute
-- [x] Because the stride is the distance from one vertex to the next in the shared VBO, and each vertex now takes 6 floats – the lamp just skips the normal
 - [ ] Because the lamp's shader reads the normal too, to stay white
+- [x] Because the stride is the distance from one vertex to the next in the shared VBO, and each vertex now takes 6 floats – the lamp just skips the normal
 ---
 The lamp's VAO points into the same VBO as the cube's. With a stride of `3 * sizeof(float)`, the second vertex position would be read from the first vertex's normal.
 ```
@@ -383,8 +383,8 @@ The lamp's VAO points into the same VBO as the cube's. With a stride of `3 * siz
 :::vulkan
 ```quiz
 Why is the lamp's pipeline created with an `attributeCount` of 1 while the cube's gets 2?
-- [ ] Because the lamp is drawn from a separate vertex buffer that contains only positions
 - [x] Because the lamp's vertex shader reads only the position (location 0), while the cube's reads the position and the normal; both read the same 24-byte vertices
+- [ ] Because the lamp is drawn from a separate vertex buffer that contains only positions
 - [ ] Because a pipeline can't describe more attributes than the previous pipeline
 ---
 Both pipelines use the same binding with a stride of `sizeof(Vertex)`, so the lamp still finds every position. It simply doesn't describe the normal its shader never reads.
@@ -394,8 +394,8 @@ Both pipelines use the same binding with a stride of `sizeof(Vertex)`, so the la
 ```quiz
 Why does the `NORMAL` element of the input layout have the byte offset 12?
 - [ ] Because every input element must start at a multiple of 12 bytes
-- [x] Because each vertex starts with its position, an `XMFLOAT3` of 3 × 4 = 12 bytes, and the normal follows right after it
 - [ ] Because the normal is stored 12 vertices after the position in the vertex buffer
+- [x] Because each vertex starts with its position, an `XMFLOAT3` of 3 × 4 = 12 bytes, and the normal follows right after it
 ---
 The offset is measured from the start of each vertex. The vertex buffer view's stride, `sizeof(Vertex)` = 24, takes the input assembler from one vertex to the next.
 ```
@@ -585,9 +585,9 @@ is (1.2, 1.0, 1.5), of length 2.17, so `lightDir` = (0.55, 0.46, 0.69). With the
 
 ```quiz
 Why does the cube's left face stay as dark as with ambient light alone?
+- [ ] Because the rasterizer interpolates the normals of the front face across the left face
 - [ ] Because the camera looks at the left face from too steep an angle
 - [x] Because its normal (-1, 0, 0) points away from the lamp at x = 1.2, so the dot product with the light direction is negative and `max(…, 0.0)` makes the diffuse term 0
-- [ ] Because the rasterizer interpolates the normals of the front face across the left face
 ---
 The lamp is to the right of the cube, the left face points left: the angle between its normal and the direction to the light is more than 90°. Only the ambient term is left.
 ```
@@ -713,8 +713,8 @@ matrix.
 
 ```quiz
 Why can't we transform the normals with the model matrix itself when the model matrix scales non-uniformly?
-- [ ] Because normals must not be scaled at all, not even uniformly
 - [x] Because a non-uniform scale tilts the surface one way and the normal another, so the transformed normal is no longer perpendicular to the surface
+- [ ] Because normals must not be scaled at all, not even uniformly
 - [ ] Because the model matrix would move the normals to the object's position
 ---
 The translation is dealt with separately (the upper-left 3x3, or w = 0). The non-uniform scale is the reason for the transpose of the inverse: it scales the normal by the inverse amounts, which keeps it perpendicular.
@@ -1028,9 +1028,9 @@ between – a highlight that falls between the corners is missed or smeared acro
 
 ```quiz
 With Gouraud shading the highlight on our cube looks blocky or disappears. Why?
-- [ ] Because the vertex shader can't use the `reflect` and `pow` functions
 - [x] Because the lighting is only computed at the corner vertices of each face and interpolated in between, so a small highlight between the corners can't be represented
 - [ ] Because the normals are not interpolated in the vertex shader
+- [ ] Because the vertex shader can't use the `reflect` and `pow` functions
 ---
 Phong shading interpolates the normal and position and lights every fragment; Gouraud shading interpolates the finished colours. With 4 corners per face, a sharp highlight in the middle of a face simply falls through the gaps.
 ```

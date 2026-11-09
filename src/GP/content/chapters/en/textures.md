@@ -176,8 +176,8 @@ created in a sampler descriptor heap can have any border color.
 ```quiz
 A rectangle's texture coordinates go from 0.0 to 2.0 on both axes, and the texture is read with repeat (wrap) addressing. What do you see?
 - [x] The image four times, in a 2 × 2 grid
-- [ ] The image once, stretched over the whole rectangle
 - [ ] The image once in one quarter, and the image's edge pixels stretched over the rest
+- [ ] The image once, stretched over the whole rectangle
 ---
 With repeat addressing only the fractional part of a coordinate counts, so 0..1 and 1..2 both cover the whole image: twice across and twice down. The third answer describes clamp-to-edge, which you will use in the exercises.
 ```
@@ -246,9 +246,9 @@ There is also `D3D12_FILTER_ANISOTROPIC` (with `MaxAnisotropy`), which improves 
 
 ```quiz
 In this chapter's project a 256×256 texture covers a rectangle of 400×300 pixels. Which filter setting decides how it looks, and what would nearest filtering show?
+- [ ] The mipmap filter; nearest filtering would pick a smaller mip level
 - [x] The magnification filter; nearest filtering would show every texel as a small block with hard edges
 - [ ] The minification filter; nearest filtering would blur the image
-- [ ] The mipmap filter; nearest filtering would pick a smaller mip level
 ---
 Each texel covers more than one pixel, so the texture is magnified. Nearest filtering gives every pixel the color of the closest texel – blocks – while linear filtering blends neighboring texels into a smooth image.
 ```
@@ -319,9 +319,9 @@ between. Since our rectangle magnifies the texture, mipmaps would not be used he
 
 ```quiz
 Why are mipmaps only used when a texture is minified (drawn smaller than its size)?
-- [x] When many texels fall on one pixel, a smaller, pre-filtered level gives the right average color without artifacts and with less memory traffic; when magnified, the full-size level is already the most detailed one
-- [ ] Mipmaps are larger than the original image, so they only fit on screen when the texture is minified
 - [ ] Mipmaps are recomputed every frame, which is only fast enough for textures that appear small
+- [ ] Mipmaps are larger than the original image, so they only fit on screen when the texture is minified
+- [x] When many texels fall on one pixel, a smaller, pre-filtered level gives the right average color without artifacts and with less memory traffic; when magnified, the full-size level is already the most detailed one
 ---
 Each mip level is half the size of the previous one and is computed once, when the texture is created. A magnified texture has fewer texels than pixels, so there is nothing to gain from an even smaller level.
 ```
@@ -459,8 +459,8 @@ stops with an exception.
 
 ```quiz
 The OpenGL version of this chapter calls `stbi_set_flip_vertically_on_load(true)`; the Vulkan and Direct3D 12 versions don't. Why?
-- [x] Image files store the top row first. OpenGL treats texture coordinate 0 on the vertical axis as the bottom of the image, Vulkan and Direct3D treat it as the top
 - [ ] `stb_image.h` loads images upside down on some platforms, and only OpenGL corrects it
+- [x] Image files store the top row first. OpenGL treats texture coordinate 0 on the vertical axis as the bottom of the image, Vulkan and Direct3D treat it as the top
 - [ ] Vulkan and Direct3D 12 flip every image themselves when the texture is created
 ---
 In all three APIs the first row you upload sits at vertical texture coordinate 0. In OpenGL that is the bottom of the texture, so the image is flipped while loading; in Vulkan and Direct3D v = 0 is the top, which matches the file.
@@ -1164,8 +1164,8 @@ Now do the task **srv**. The picture still doesn't change – the shader doesn't
 :::opengl
 ```quiz
 `glTexParameteri` and `glTexImage2D` take no texture object as an argument. Which texture do they change?
-- [x] The texture currently bound to `GL_TEXTURE_2D` (of the active texture unit), which is why `glBindTexture(GL_TEXTURE_2D, texture1)` comes first
 - [ ] The texture created most recently by `glGenTextures`
+- [x] The texture currently bound to `GL_TEXTURE_2D` (of the active texture unit), which is why `glBindTexture(GL_TEXTURE_2D, texture1)` comes first
 - [ ] Every texture object at once
 ---
 OpenGL is a state machine: these functions act on whatever object is bound to the target you name. Binding `texture1` first makes all following `GL_TEXTURE_2D` calls configure and fill that texture.
@@ -1174,9 +1174,9 @@ OpenGL is a state machine: these functions act on whatever object is bound to th
 :::vulkan
 ```quiz
 Why does `createTextureImage()` copy the pixels into a staging buffer first instead of writing them into the image directly?
+- [ ] Because a staging buffer is the only way to change an image's layout
 - [x] The image lives in device-local memory with optimal tiling: the CPU generally can't map that memory and doesn't know the texel arrangement, so the GPU copies from a host-visible buffer with `vkCmdCopyBufferToImage`
 - [ ] Because `stbi_load` returns memory that Vulkan is not allowed to read
-- [ ] Because a staging buffer is the only way to change an image's layout
 ---
 Device-local memory is fastest for the GPU but usually not host-visible, and `VK_IMAGE_TILING_OPTIMAL` uses an implementation-defined order. The copy command does the rearranging; the layout transitions are done by the barriers around it.
 ```
@@ -1675,8 +1675,8 @@ black.
 ```quiz
 Before the task texture-units, the program never sets the uniform `texture1`. Why does the fragment shader still sample the crate?
 - [x] An unset sampler uniform is 0, which means texture unit 0 – the default active unit, where `glBindTexture` bound the crate
-- [ ] `texture()` always reads the texture that was created most recently
 - [ ] `glBindTexture` sets every sampler uniform of the active program to the bound texture
+- [ ] `texture()` always reads the texture that was created most recently
 ---
 Samplers refer to texture units, not to texture objects. Unit 0 is active by default, so binding the crate and leaving the sampler at 0 connects them. With two textures you have to set the samplers yourself.
 ```
@@ -1685,8 +1685,8 @@ Samplers refer to texture units, not to texture objects. Unit 0 is active by def
 ```quiz
 How does `layout(binding = 0) uniform sampler2D texSampler;` in `shader.frag` reach the crate?
 - [x] Through binding 0 of the descriptor set bound with `vkCmdBindDescriptorSets`: a combined image sampler descriptor that points at `textureImageView` and `textureSampler`
-- [ ] Through texture unit 0, which the image is bound to when it is created
 - [ ] Through the vertex attribute at location 0
+- [ ] Through texture unit 0, which the image is bound to when it is created
 ---
 The descriptor set layout declares binding 0 as a combined image sampler, `vkUpdateDescriptorSets` writes the view and sampler into it, and binding the set as set 0 makes it visible to the shader.
 ```
@@ -1694,9 +1694,9 @@ The descriptor set layout declares binding 0 as a combined image sampler, `vkUpd
 :::d3d12
 ```quiz
 How does `Texture2D texture1 : register(t0);` in `shaders.hlsl` reach the crate?
+- [ ] Through the order in which the textures were created with `CreateCommittedResource`
 - [x] Root parameter 0 is a descriptor table whose SRV range starts at t0; `SetGraphicsRootDescriptorTable` points it at the SRV heap's first descriptor, the SRV of `m_texture1`
 - [ ] The static sampler s0 holds the texture
-- [ ] Through the order in which the textures were created with `CreateCommittedResource`
 ---
 The register connects the shader to the root signature, the table connects the root signature to a place in the shader-visible heap, and the SRV there describes the texture resource.
 ```
@@ -1946,8 +1946,8 @@ channel is the topic of a later chapter.)
 ```quiz
 Outside the face, the crate is darker after mixing with 0.2 than it was on its own. Why?
 - [x] The face's transparent pixels are stored as black with alpha 0; the mix ignores alpha and blends 20% of that black into the crate
-- [ ] Mixing always halves the brightness of both inputs
 - [ ] The face texture is sampled outside 0..1 there and returns a black border color
+- [ ] Mixing always halves the brightness of both inputs
 ---
 A transparent pixel still has an RGB value, and in `awesomeface.png` it is black. To leave the crate untouched where the face is transparent, you could use the face's alpha in the mix weight – the face's `.a` times 0.2.
 ```

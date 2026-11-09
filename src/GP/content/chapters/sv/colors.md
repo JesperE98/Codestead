@@ -316,9 +316,9 @@ och med de gamla värdena (-90°, 0°) skulle kameran hoppa tillbaka till att ti
 
 ```quiz
 Varför låter kursen kameran börja i (-3, 0, 3) i stället för learnopengl:s (0, 0, 3)?
+- [ ] För att belysningsberäkningarna bara fungerar när kameran inte står på z-axeln
 - [ ] För att lampan skulle vara dold bakom kuben från (0, 0, 3)
 - [x] För att lampan i (1.2, 1.0, 2.0) ligger för långt åt sidan för en kamera i (0, 0, 3) – utanför synfältet – och snett framifrån från vänster syns både en sida vänd mot ljuset och en vänd bort från det
-- [ ] För att belysningsberäkningarna bara fungerar när kameran inte står på z-axeln
 ---
 Sett från (0, 0, 3) ligger lampan 1 enhet framför men 1.2 enheter till höger: ungefär 50° från siktlinjen, långt utanför ett synfält på 45°. Inget i själva belysningen beror på var kameran står – det handlar bara om vad du får se.
 ```
@@ -487,9 +487,9 @@ Och `OnUpdate` sätter färgerna – vårt korallobjekt och ett vitt ljus – f�
 :::opengl
 ```quiz
 Varför ligger de två `setVec3`-anropen efter `lightingShader.use()`?
-- [x] `glUniform*`-funktionerna sätter uniformen i det program som används just nu, så belysningsprogrammet måste vara aktivt först
 - [ ] `use()` nollställer alla uniforms, så allt som sätts före det skulle gå förlorat
 - [ ] Uniforms av typen `vec3` kan bara sättas medan ett VAO är bundet, och `use()` binder ett
+- [x] `glUniform*`-funktionerna sätter uniformen i det program som används just nu, så belysningsprogrammet måste vara aktivt först
 ---
 En uniform tillhör ett programobjekt, och `glUniform3f` skriver till det program som gjorts aktivt med `glUseProgram`. Satta före `use()` skulle värdena hamna i det program som var aktivt då (från andra bildrutan och framåt: lampans, som användes sist).
 ```
@@ -497,8 +497,8 @@ En uniform tillhör ett programobjekt, och `glUniform3f` skriver till det progra
 :::vulkan
 ```quiz
 Varför har `UniformBufferObject` en `float pad1;` mellan `objectColor` och `lightColor`?
-- [ ] Vulkan kräver att varje medlem i en uniform buffer är 16 byte lång
 - [x] I layouten std140 börjar en `vec3` på en multipel av 16 byte, så shadern läser `lightColor` på offset 144; utan utfyllnadsfloaten skulle C++-structen lägga den på 140
+- [ ] Vulkan kräver att varje medlem i en uniform buffer är 16 byte lång
 - [ ] Utfyllnaden lagrar alfavärdet för `objectColor`
 ---
 `objectColor` börjar på 128 och slutar på 140. Shadern väntar sig nästa `vec3` på nästa multipel av 16, byte 144, medan en `glm::vec3` bara behöver justeringen 4 byte. Utfyllnadsfloaten får båda sidor att stämma överens.
@@ -525,9 +525,9 @@ nästa kapitel handlar om.
 
 ```quiz
 Efter uppgiften **object-color** har kubens båda synliga sidor exakt samma korallfärg. Varför?
-- [ ] För att kameran tittar på båda sidorna från samma vinkel
 - [ ] För att vitt ljus inte kan ge skuggning – färgat ljus skulle göra det
 - [x] För att färgen bara är lightColor × objectColor: shadern vet inte var ljuset är eller åt vilket håll en sida pekar, så varje fragment får samma resultat
+- [ ] För att kameran tittar på båda sidorna från samma vinkel
 ---
 Riktig skuggning kräver ljusets position och ytans riktning (dess normal). Båda kommer i nästa kapitel, *Basic Lighting*.
 ```
@@ -637,8 +637,8 @@ vi en kub på samma plats som ljuskällan.
 
 ```quiz
 Varför får lampan egna shaders i stället för att ritas med kubens belysningsshaders?
-- [ ] För att en shader bara kan rita ett objekt per bildruta
 - [x] För att lampan ska behålla en konstant ljus färg: belysningsberäkningarna som vi lägger till i kubens shaders i de kommande kapitlen får inte ändra lampan
+- [ ] För att en shader bara kan rita ett objekt per bildruta
 - [ ] För att lampan har andra hörndata än kuben
 ---
 Lampan använder exakt samma 36 hörn som kuben. Det som skiljer är hur dess fragment ska se ut: alltid vita, vad belysningsshaderna än gör.
@@ -765,9 +765,9 @@ listen, inte i pipeline state, och ligger också kvar. Bara pipeline state och m
 :::opengl
 ```quiz
 Lampan använder samma VBO som kuben. Varför får den ändå ett eget VAO, `lightCubeVAO`?
-- [ ] För att ett VBO bara kan refereras av ett VAO
 - [x] För att kubens hörndata och attributpekare kommer att ändras i de kommande kapitlen, och lampans attributuppsättning (bara positioner) ska inte påverkas
 - [ ] För att ett VAO lagrar shaderprogrammet, och lampan har ett eget program
+- [ ] För att ett VBO bara kan refereras av ett VAO
 ---
 Ett VAO sparar attributuppsättningen – vilken buffer, vilka attribut, vilka steg. Flera VAO:er kan peka in i samma VBO. Med ett eget VAO för lampan lämnar senare ändringar av kubens attribut lampan i fred.
 ```
@@ -775,9 +775,9 @@ Ett VAO sparar attributuppsättningen – vilken buffer, vilka attribut, vilka s
 :::vulkan
 ```quiz
 Innan lampan ritas binder `recordCommandBuffer()` `lightCubePipeline`, men binder inte descriptor setet eller vertex buffern igen. Varför får lampan ändå vy- och projektionsmatriserna?
-- [ ] För att lampans vertex shader har matriserna inkompilerade
 - [ ] För att `vkCmdBindPipeline` kopierar alla bindningar från den förra pipelinen till den nya
 - [x] För att båda pipelines använder samma pipeline layout, så det bundna descriptor setet gäller fortfarande, och vertex buffer-bindningar är inte alls en del av pipelinen
+- [ ] För att lampans vertex shader har matriserna inkompilerade
 ---
 Descriptor sets förblir bundna över pipelinebyten så länge pipeline layouterna är kompatibla – här är de identiska. Vertex buffers är, liksom dynamiska viewport- och scissorvärden, tillstånd i command buffern.
 ```
@@ -785,9 +785,9 @@ Descriptor sets förblir bundna över pipelinebyten så länge pipeline layouter
 :::d3d12
 ```quiz
 Innan lampan ritas anropar `PopulateCommandList` `SetPipelineState`, men sätter inte descriptor tablen eller vertex buffern igen. Varför får lampan ändå vy- och projektionsmatriserna?
-- [ ] För att lampans vertex shader har matriserna inkompilerade
 - [ ] För att `SetPipelineState` kopierar root-argumenten in i det nya pipeline state object
 - [x] För att root signaturen är densamma, så root-argumenten som satts på command listen ligger kvar, och vertex buffern är tillstånd i command listen, inte en del av pipeline state
+- [ ] För att lampans vertex shader har matriserna inkompilerade
 ---
 Root-argumenten hör till command listen och behålls så länge root signaturen inte ändras. Pipeline state object innehåller bara shaders och fixed-function-tillstånd.
 ```

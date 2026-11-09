@@ -40,9 +40,9 @@ run the program on your own machine, each API has a short *building it yourself*
 ```quiz
 Why does a graphics program need a library like GLFW, or the operating system's own window functions, to get a window?
 - [ ] Because the graphics API's own window functions are deprecated
-- [x] Because creating windows is operating-system specific and not part of the graphics API
-- [ ] Because the GPU can only draw into windows that GLFW created
 - [ ] Because without it, the program cannot use the graphics card at all
+- [ ] Because the GPU can only draw into windows that GLFW created
+- [x] Because creating windows is operating-system specific and not part of the graphics API
 ---
 OpenGL, Vulkan and Direct3D 12 only render. The window (and, for OpenGL, the context) comes from the operating system –
 directly through Win32, or through a library such as GLFW that hides the differences between operating systems.
@@ -84,10 +84,10 @@ headers and the library. On macOS, `brew install glfw` does the same.
 
 ```quiz
 What does CMake do with GLFW's source code?
+- [ ] It loads the OpenGL functions at runtime
+- [ ] It downloads the pre-compiled binaries that match your system
 - [ ] It compiles the source code into `glfw3.lib` by itself
 - [x] It generates project files (a Visual Studio solution, Makefiles …) for your compiler, which you then build
-- [ ] It downloads the pre-compiled binaries that match your system
-- [ ] It loads the OpenGL functions at runtime
 ---
 CMake is a *build system generator*: from `CMakeLists.txt` it writes the project files for the tool you chose. The
 compiling is done afterwards, by Visual Studio or `make`.
@@ -168,10 +168,10 @@ Be sure to include GLAD before GLFW. GLAD's header includes the required OpenGL 
 
 ```quiz
 Why must `glad/glad.h` be included before `GLFW/glfw3.h`?
-- [ ] GLFW calls GLAD's functions while it is being included
-- [x] GLAD's header provides the OpenGL declarations itself, so it must come before any header that would otherwise pull in the system's OpenGL header
 - [ ] The order doesn't matter; it is only a convention
+- [ ] GLFW calls GLAD's functions while it is being included
 - [ ] `glad.h` defines `SCR_WIDTH` and `SCR_HEIGHT`
+- [x] GLAD's header provides the OpenGL declarations itself, so it must come before any header that would otherwise pull in the system's OpenGL header
 ---
 GLFW includes the system's OpenGL header unless one has already been included. GLAD's header defines all OpenGL
 declarations up to 3.3 itself and refuses to work if `gl.h` came first – so GLAD goes first.
@@ -209,10 +209,10 @@ Build & run: nothing visible happens yet, but the program should build and exit 
 
 ```quiz
 You ask GLFW for an OpenGL 3.3 core profile context, but the computer's driver only supports OpenGL 2.1. What happens?
+- [ ] The program crashes the first time it draws
 - [ ] GLFW quietly creates a 2.1 context instead
 - [ ] `glfwInit()` fails
 - [x] Creating the window (and its context) fails: `glfwCreateWindow` returns `NULL`
-- [ ] The program crashes the first time it draws
 ---
 The window hints are requirements for the context. If the driver can't satisfy them, `glfwCreateWindow` returns
 `NULL` – which is why we check its return value.
@@ -263,10 +263,10 @@ Now do the third task: put the GLAD initialization right after `glfwMakeContextC
 
 ```quiz
 Why must `gladLoadGLLoader` be called after `glfwMakeContextCurrent(window)`?
-- [ ] Because GLAD needs the window's width and height
 - [x] Because the function addresses are asked from the current context (through `glfwGetProcAddress`); without a current context there is nothing to ask
-- [ ] Because `glfwMakeContextCurrent` deletes the function pointers GLAD loaded earlier
 - [ ] It doesn't have to be – the order doesn't matter
+- [ ] Because GLAD needs the window's width and height
+- [ ] Because `glfwMakeContextCurrent` deletes the function pointers GLAD loaded earlier
 ---
 The addresses belong to the driver behind the context. `glfwGetProcAddress` only works while a context is current,
 so: create the window, make its context current, then load GLAD.
@@ -292,10 +292,10 @@ compare your code with the hints of the tasks.
 
 ```quiz
 The finished program opens its window and closes it again at once. Why?
-- [ ] Because the window has no viewport yet
-- [ ] Because GLAD failed to load
-- [x] Because `main` has no loop: right after setting everything up it calls `glfwTerminate()` and returns
 - [ ] Because the core profile doesn't allow windows to stay open
+- [ ] Because GLAD failed to load
+- [ ] Because the window has no viewport yet
+- [x] Because `main` has no loop: right after setting everything up it calls `glfwTerminate()` and returns
 ---
 A window only stays as long as the program runs. In the next chapter, Hello Window, you add a *render loop* that
 keeps the window open and draws into it until it is closed.
@@ -428,10 +428,10 @@ black (undefined, really) – nothing will be shown in it until the next chapter
 
 ```quiz
 Why does `initWindow` call `glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)`?
-- [ ] To make the window full screen
 - [x] Because GLFW would otherwise create an OpenGL context for the window, which a Vulkan program doesn't use
-- [ ] To stop the user from resizing the window
 - [ ] To tell GLFW to load the Vulkan functions
+- [ ] To stop the user from resizing the window
+- [ ] To make the window full screen
 ---
 GLFW creates an OpenGL context with every window by default. Vulkan talks to the window in its own way (through a
 surface, in the next chapter), so we switch the context off. Resizing is switched off by the *other* hint.
@@ -519,10 +519,10 @@ but an instance now exists behind it.
 
 ```quiz
 Why does `createInstance` enable the extensions returned by `glfwGetRequiredInstanceExtensions`?
+- [ ] Because without them `vkCreateInstance` can't find a graphics card
+- [ ] Because they turn on the validation layers
 - [ ] Because GLFW can't open a window without them
 - [x] Because Vulkan is platform agnostic: talking to the window system needs instance extensions (such as `VK_KHR_surface`), and GLFW knows which ones this platform needs
-- [ ] Because they turn on the validation layers
-- [ ] Because without them `vkCreateInstance` can't find a graphics card
 ---
 The window already exists without Vulkan. The extensions are what lets *Vulkan* present images to it later –
 `VK_KHR_surface` plus a platform-specific one such as `VK_KHR_win32_surface` or `VK_KHR_xlib_surface`.
@@ -732,8 +732,8 @@ them – watch out for those from now on.
 ```quiz
 Why is a `VkDebugUtilsMessengerCreateInfoEXT` also chained into `pNext` of `VkInstanceCreateInfo`?
 - [ ] Because `setupDebugMessenger` doesn't work without it
-- [ ] To enable the `VK_EXT_debug_utils` extension
 - [x] So that `vkCreateInstance` and `vkDestroyInstance` are checked too: the normal messenger can only exist between those two calls
+- [ ] To enable the `VK_EXT_debug_utils` extension
 - [ ] To pass the validation layer names to the driver
 ---
 `debugMessenger` needs an instance to be created and must be destroyed before it. The create info in `pNext` gives
@@ -940,11 +940,11 @@ graphics card – in the next chapter we connect it to the window and show the f
 
 ```quiz
 Which of these objects does `cleanup()` destroy explicitly? (Choose all that apply.)
-- [x] The logical device (`vkDestroyDevice`)
-- [x] The debug messenger (`DestroyDebugUtilsMessengerEXT`)
-- [x] The instance (`vkDestroyInstance`)
 - [ ] The physical device
 - [ ] The graphics queue
+- [x] The logical device (`vkDestroyDevice`)
+- [x] The instance (`vkDestroyInstance`)
+- [x] The debug messenger (`DestroyDebugUtilsMessengerEXT`)
 ---
 Everything you create is destroyed, in reverse order. The physical device and the queue are not created by you – they
 are only retrieved – and go away together with the instance and the device.
@@ -1073,10 +1073,10 @@ drawn into it – that only happens once there is a swap chain, in the next chap
 
 ```quiz
 Why does `wWinMain` call `AdjustWindowRect` before `CreateWindowW`?
-- [ ] To centre the window on the screen
 - [ ] To make the window resizable
 - [x] Because the size given to `CreateWindowW` includes the title bar and borders: `AdjustWindowRect` computes the window size that leaves a client area of exactly 800×600
 - [ ] Because Direct3D 12 requires it before it can create a device
+- [ ] To centre the window on the screen
 ---
 We draw into the client area, so that is the part that must be 800×600. `AdjustWindowRect` adds the size of the
 frame that the `WS_OVERLAPPEDWINDOW` style puts around it.
@@ -1117,10 +1117,10 @@ window looks the same.
 
 ```quiz
 What is DXGI responsible for? (Choose all that apply.)
-- [x] Enumerating the graphics adapters in the system
-- [x] Creating the swap chains that show images in a window
-- [ ] Compiling HLSL shaders
 - [ ] Recording draw commands
+- [x] Creating the swap chains that show images in a window
+- [x] Enumerating the graphics adapters in the system
+- [ ] Compiling HLSL shaders
 ---
 DXGI handles what is shared by all Direct3D versions: adapters, outputs and swap chains. Shaders are compiled by the
 shader compiler (`d3dcompiler`), and commands are recorded into Direct3D 12 command lists.
@@ -1166,10 +1166,10 @@ Do the second task now.
 
 ```quiz
 Why must the debug layer be enabled before `D3D12CreateDevice` is called?
-- [ ] Because `D3D12GetDebugInterface` needs the DXGI factory
-- [x] Because enabling it after the device has been created removes (invalidates) that device
 - [ ] Because the debug layer creates the device itself
+- [ ] Because `D3D12GetDebugInterface` needs the DXGI factory
 - [ ] It doesn't have to be – it can be switched on at any time
+- [x] Because enabling it after the device has been created removes (invalidates) that device
 ---
 The debug layer wraps the device when it is created. That is why the samples enable it first thing in
 `LoadPipeline`, before the factory and the device.
@@ -1242,9 +1242,9 @@ create the device in `LoadPipeline`. (The samples can also use **WARP**, Windows
 ```quiz
 In `GetHardwareAdapter`, what does `D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)` do?
 - [ ] It creates the device that `LoadPipeline` uses
-- [x] It only tests whether a Direct3D 12 device could be created on this adapter; with `nullptr` as the last argument no device is created
-- [ ] It creates a software (WARP) device
 - [ ] It turns on feature level 11_0 for the adapter
+- [ ] It creates a software (WARP) device
+- [x] It only tests whether a Direct3D 12 device could be created on this adapter; with `nullptr` as the last argument no device is created
 ---
 Passing `nullptr` for the device pointer makes `D3D12CreateDevice` a check. The real device is created afterwards in
 `LoadPipeline`, on the adapter that passed.
@@ -1277,9 +1277,9 @@ device. In the next chapter the queue gets a swap chain, and you clear the windo
 ```quiz
 Why is the command queue created with `D3D12_COMMAND_LIST_TYPE_DIRECT`?
 - [ ] Because it is the only type a device can create
-- [x] Because a direct queue accepts every kind of command – drawing, compute and copies
 - [ ] Because direct queues bypass the command lists
 - [ ] Because the debug layer requires it
+- [x] Because a direct queue accepts every kind of command – drawing, compute and copies
 ---
 Compute and copy queues only take a subset of commands. To draw, we need a direct queue.
 ```

@@ -151,9 +151,9 @@ och alla de nämnda artefakterna försvinner.
 ```quiz
 Varför renderar fönsterprogram i en back buffer i stället för direkt i bilden som syns på skärmen?
 - [ ] Eftersom GPU:n bara kan skriva till buffertar som inte syns
-- [x] Så att betraktaren aldrig ser en halvfärdig bild: framen visas först när den är helt ritad
 - [ ] Eftersom två buffertar fördubblar fönstrets upplösning
 - [ ] Så att programmet slipper rensa skärmen varje frame
+- [x] Så att betraktaren aldrig ser en halvfärdig bild: framen visas först när den är helt ritad
 ---
 Att rita tar tid och sker bit för bit. Med en front- och en back buffer visar skärmen alltid en färdig frame,
 medan nästa ritas utom synhåll.
@@ -162,10 +162,10 @@ medan nästa ritas utom synhåll.
 :::opengl
 ```quiz
 Vad händer om du utelämnar `glfwPollEvents()` i render loopen?
-- [ ] Fönstret stängs omedelbart
 - [x] Fönstrets händelser behandlas aldrig, så ett klick på stängknappen gör ingenting och fönstret slutar svara
-- [ ] Ingenting visas, eftersom det är `glfwPollEvents` som presenterar framen
+- [ ] Fönstret stängs omedelbart
 - [ ] Ingenting ändras, GLFW hämtar händelser automatiskt
+- [ ] Ingenting visas, eftersom det är `glfwPollEvents` som presenterar framen
 ---
 Det är `glfwPollEvents` som behandlar händelserna och uppdaterar fönstrets tillstånd – inklusive flaggan som
 `glfwWindowShouldClose` läser. Utan den tar loopen aldrig slut och operativsystemet anser att fönstret inte svarar.
@@ -467,9 +467,9 @@ enheten, med `vkDestroySwapchainKHR(device, swapChain, nullptr);`.
 
 ```quiz
 Swap chainen använder `VK_PRESENT_MODE_FIFO_KHR` och dess kö av bilder som väntar på att visas är full. Vad händer när programmet vill presentera ännu en bild?
-- [ ] Den äldsta bilden i kön ersätts av den nya
-- [x] Programmet måste vänta tills skärmen tar en bild ur kön vid nästa vertical blank
 - [ ] Bilden visas direkt, kanske med tearing
+- [x] Programmet måste vänta tills skärmen tar en bild ur kön vid nästa vertical blank
+- [ ] Den äldsta bilden i kön ersätts av den nya
 - [ ] `vkQueuePresentKHR` misslyckas och bilden går förlorad
 ---
 FIFO är en kö som skärmen tömmer en gång per uppdatering – precis som vsync. Att ersätta bilder i kön är vad
@@ -578,10 +578,10 @@ gränssnittet `IDXGISwapChain3` (ett COM-`QueryInterface`), som har `GetCurrentB
 
 ```quiz
 Swap chainen använder `DXGI_SWAP_EFFECT_FLIP_DISCARD`. Vad betyder det för din rendering?
-- [ ] Swap chainen kopierar back buffern till fönstret och behåller innehållet till nästa frame
 - [x] Efter `Present` kastas back bufferns innehåll, så varje frame måste rita hela bufferten igen
-- [ ] Frames som inte är klara till nästa vertical blank kastas
+- [ ] Swap chainen kopierar back buffern till fönstret och behåller innehållet till nästa frame
 - [ ] Swap chainen fungerar bara med en enda buffert
+- [ ] Frames som inte är klara till nästa vertical blank kastas
 ---
 Med flip-modellen byter buffertarna roller vid `Present`; "discard" betyder att DXGI inte sparar något av back
 bufferns gamla innehåll åt dig. Att rensa hela render targeten varje frame tar hand om det.
@@ -724,10 +724,10 @@ ritas.
 
 ```quiz
 Viewporten är satt med `glViewport(0, 0, 800, 600)`. Var hamnar en behandlad punkt på `(-0.5, 0.5)` i fönsterkoordinater?
-- [ ] (400, 300)
 - [x] (200, 450)
-- [ ] (-400, 300)
+- [ ] (400, 300)
 - [ ] (600, 150)
+- [ ] (-400, 300)
 ---
 Viewporten avbildar x från -1…1 på 0…800 och y från -1…1 på 0…600: x = (-0.5 + 1) / 2 × 800 = 200 och
 y = (0.5 + 1) / 2 × 600 = 450 (räknat från nedre vänstra hörnet).
@@ -754,10 +754,10 @@ ingen uppgift i det här avsnittet.
 
 ```quiz
 Varför behöver Vulkan-programmet i det här kapitlet ingen `framebuffer_size_callback`?
+- [ ] Swap chainens extent är alltid skärmens storlek, inte fönstrets
+- [ ] `glfwPollEvents` uppdaterar viewporten själv
 - [ ] Vulkan ändrar storleken på swap chainens bilder automatiskt när fönstret ändrar storlek
 - [x] Fönstret skapas utan möjlighet att ändra storlek, och en ny storlek skulle kräva att swap chainen skapas om – det kommer senare
-- [ ] `glfwPollEvents` uppdaterar viewporten själv
-- [ ] Swap chainens extent är alltid skärmens storlek, inte fönstrets
 ---
 Swap chainens bilder behåller den extent de skapades med. En storleksändring kräver att swap chainen (och dess
 image views och framebuffers) skapas om; tills det har gåtts igenom är `GLFW_RESIZABLE` `GLFW_FALSE`.
@@ -779,9 +779,9 @@ avsnittet.
 
 ```quiz
 Var sätter ett Direct3D 12-program viewporten?
-- [ ] I `DXGI_SWAP_CHAIN_DESC1`, när swap chainen skapas
-- [x] I command listen, med `RSSetViewports`, varje gång listen spelas in
 - [ ] En gång på devicen, som OpenGL:s `glViewport`
+- [x] I command listen, med `RSSetViewports`, varje gång listen spelas in
+- [ ] I `DXGI_SWAP_CHAIN_DESC1`, när swap chainen skapas
 - [ ] Ingenstans: Direct3D 12 ritar alltid till hela render targeten
 ---
 En command list tar inte med sig något tillstånd från tidigare inspelningar, så viewporten (och
@@ -892,8 +892,8 @@ Gör nu uppgiften **clear**: lägg de två anropen i loopens renderingsdel, i st
 
 ```quiz
 Vilket av dessa anrop är en *tillståndsanvändande* funktion?
-- [ ] `glClearColor`
 - [x] `glClear`
+- [ ] `glClearColor`
 - [ ] `glViewport`
 ---
 `glClearColor` och `glViewport` ändrar bara OpenGL:s tillstånd. `glClear` gör faktiskt något – fyller
@@ -902,10 +902,10 @@ färgbufferten – och tar färgen från det aktuella tillståndet.
 
 ```quiz
 Vad skulle du se om render loopen aldrig anropade `glClear`, medan programmet ritar ett objekt som rör sig?
-- [ ] Ett tomt fönster, eftersom ingenting visas utan rensning
+- [ ] Ett fel från OpenGL
 - [x] Rester av tidigare frames, eftersom varje frame ritar ovanpå det som redan finns i bufferten
 - [ ] Exakt samma sak, eftersom `glfwSwapBuffers` rensar bufferten
-- [ ] Ett fel från OpenGL
+- [ ] Ett tomt fönster, eftersom ingenting visas utan rensning
 ---
 Bytet av buffertar rensar ingenting, så utan `glClear` börjar varje frame med gammalt (eller odefinierat)
 innehåll. Därför börjar renderingen oftast med att skärmen rensas.
@@ -1115,10 +1115,10 @@ använder den.
 
 ```quiz
 Vad är det i Vulkan-programmet som faktiskt rensar bilden i swap chainen till `(0.2, 0.3, 0.3, 1.0)`?
-- [ ] Ett `vkCmdClearColorImage`-kommando som spelas in efter `vkCmdBeginRenderPass`
 - [x] Att render passen startar: attachmentets `loadOp` är `VK_ATTACHMENT_LOAD_OP_CLEAR`, och färgen kommer från `pClearValues` i `VkRenderPassBeginInfo`
 - [ ] Swap chainen, som rensar varje bild med färgen från `VkSwapchainCreateInfoKHR`
 - [ ] `vkQueuePresentKHR`, som fyller bilden innan den visas
+- [ ] Ett `vkCmdClearColorImage`-kommando som spelas in efter `vkCmdBeginRenderPass`
 ---
 Load-operationen körs när render passen startar och använder rensningsvärdet som skickas till
 `vkCmdBeginRenderPass`. Därför räcker en tom render pass för att rensa fönstret.
@@ -1276,9 +1276,9 @@ vulkan-tutorial tar bort den begränsningen i ett senare kapitel ("Frames in fli
 
 ```quiz
 Varför skapas `inFlightFence` med `VK_FENCE_CREATE_SIGNALED_BIT`?
-- [ ] Så att `vkQueueSubmit` inte behöver någon fence vid första framen
-- [x] Så att `vkWaitForFences` i början av första framen returnerar direkt i stället för att vänta för evigt
 - [ ] Eftersom bara signalerade fences kan nollställas med `vkResetFences`
+- [x] Så att `vkWaitForFences` i början av första framen returnerar direkt i stället för att vänta för evigt
+- [ ] Så att `vkQueueSubmit` inte behöver någon fence vid första framen
 - [ ] Så att GPU:n kan börja rendera innan bilden har hämtats
 ---
 `drawFrame()` väntar på förra framens fence innan något annat. Vid första framen har ingen submit signalerat den
@@ -1463,10 +1463,10 @@ ThrowIfFailed(m_commandList->Close());
 
 ```quiz
 Varför spelar `PopulateCommandList` in en resource barrier före `ClearRenderTargetView`?
+- [ ] Eftersom `ClearRenderTargetView` bara fungerar på resurser som delas mellan köer
+- [ ] För att kopiera back buffern till front buffern
 - [ ] För att vänta tills förra framen har presenterats
 - [x] Back buffern är i tillståndet `PRESENT`; den måste övergå till `RENDER_TARGET` innan man kan rendera till den
-- [ ] För att kopiera back buffern till front buffern
-- [ ] Eftersom `ClearRenderTargetView` bara fungerar på resurser som delas mellan köer
 ---
 Resurser har tillstånd. Swap chainen behöver bufferten i `PRESENT`, rendering behöver `RENDER_TARGET`, så listen
 för den dit och tillbaka igen.
@@ -1522,10 +1522,10 @@ else
 
 ```quiz
 Varför anropar `OnRender` `WaitForPreviousFrame()` efter `Present`?
-- [ ] `Present` fungerar bara när GPU:n är sysslolös
-- [x] Så att GPU:n är klar med den här framen innan nästa `PopulateCommandList` nollställer command allocatorn och spelar in i den igen
 - [ ] För att vänta på användarens nästa meddelande
 - [ ] Så att fence-värdet aldrig ändras
+- [x] Så att GPU:n är klar med den här framen innan nästa `PopulateCommandList` nollställer command allocatorn och spelar in i den igen
+- [ ] `Present` fungerar bara när GPU:n är sysslolös
 ---
 Inspelningen återanvänder allocatorns minne, vilket bara är tillåtet när GPU:n inte längre kör de kommandona. Att
 vänta varje frame garanterar det – enkelt, men CPU:n och GPU:n turas om i stället för att arbeta parallellt.
@@ -1543,9 +1543,9 @@ kapitlen hamnar mellan rensningen och presentationen.
 
 ```quiz
 I alla API:er följer en frame i det här kapitlets program samma ordning. Vilken?
+- [ ] Rensa front buffern medan den syns på skärmen, behandla sedan händelserna
 - [ ] Presentera bilden, rensa den sedan
 - [x] Behandla fönstrets händelser, rensa back buffern (bilden) och presentera den sedan
-- [ ] Rensa front buffern medan den syns på skärmen, behandla sedan händelserna
 - [ ] Skapa swap chainen (eller default framebuffern), rensa den, förstör den
 ---
 Först händelser (indata, stängknappen), sedan rendering i bufferten som inte syns, sedan visas den:

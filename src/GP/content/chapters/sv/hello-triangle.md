@@ -86,8 +86,8 @@ vertex shadern och pixel shadern själv, i HLSL.
 
 ```quiz
 Vilket steg omvandlar en triangel till de fragment (pixlarna som ska färgas) som den täcker?
-- [ ] Vertex shadern
 - [x] Rasteriseringen
+- [ ] Vertex shadern
 - [ ] Blendingen
 ---
 Vertex shadern arbetar bara med hörnen. Rasteriseringen räknar ut vilka pixlar triangeln täcker och skapar ett fragment för var och en; fragment shadern färgar sedan varje fragment.
@@ -167,8 +167,8 @@ shader.
 ```quiz
 Fönstret är 800×600 och viewporten täcker hela det. Vilken av de här vertexpositionerna ligger utanför det synliga området?
 - [ ] (0.9, -0.9, 0.0)
-- [x] (1.2, 0.0, 0.0)
 - [ ] (0.0, 0.0, 0.0)
+- [x] (1.2, 0.0, 0.0)
 ---
 Bara koordinater mellan -1.0 och 1.0 ligger inom normalized device coordinates; x = 1.2 ligger till höger om fönstrets kant och klipps bort. (0, 0) är fönstrets mitt.
 ```
@@ -635,8 +635,8 @@ den fjärde uppgiften, tillsammans med resten av pipeline state.
 :::opengl
 ```quiz
 När kompileras GLSL-koden i `vertexShaderSource`?
-- [ ] När C++-projektet byggs
 - [x] Medan programmet körs, av OpenGL-drivrutinen, när programmet anropar `glCompileShader`
+- [ ] När C++-projektet byggs
 - [ ] Första gången `glDrawArrays` anropas
 ---
 Shadern är bara en sträng i ditt program. OpenGL kompilerar den medan programmet körs, och därför kontrollerar du `GL_COMPILE_STATUS` själv.
@@ -645,8 +645,8 @@ Shadern är bara en sträng i ditt program. OpenGL kompilerar den medan programm
 :::vulkan
 ```quiz
 Vad får `vkCreateShaderModule` från programmet?
-- [ ] GLSL-källkod, som drivrutinen kompilerar
 - [x] SPIR-V-bytekod, kompilerad från GLSL innan programmet körs
+- [ ] GLSL-källkod, som drivrutinen kompilerar
 - [ ] HLSL-källkod
 ---
 Vulkan tar bara emot SPIR-V. GLSL-filerna kompileras till `vert.spv` och `frag.spv` när du bygger, och `readFile` laddar den bytekoden.
@@ -656,8 +656,8 @@ Vulkan tar bara emot SPIR-V. GLSL-filerna kompileras till `vert.spv` och `frag.s
 ```quiz
 När kompileras `VSMain` och `PSMain` i det här projektet?
 - [ ] När C++-projektet byggs
-- [x] Medan programmet körs, av `D3DCompileFromFile` i `LoadAssets`
 - [ ] Av drivrutinen, vid första `DrawInstanced`
+- [x] Medan programmet körs, av `D3DCompileFromFile` i `LoadAssets`
 ---
 `D3DCompileFromFile` läser `shaders.hlsl` medan programmet körs och returnerar bytekod. Drivrutinen gör om bytekoden till GPU-kod när pipeline state-objektet skapas.
 ```
@@ -1076,9 +1076,9 @@ clear-färgen, men från och med nu stoppar ett fel i `shaders.hlsl` programmet 
 :::opengl
 ```quiz
 Det första argumentet till `glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0)` är `0`. Vad syftar det på?
-- [x] `location = 0` för indatan `aPos` i vertex shadern
-- [ ] Byte-offseten till den första vertexen i bufferten
 - [ ] Vertex buffer objectets ID
+- [ ] Byte-offseten till den första vertexen i bufferten
+- [x] `location = 0` för indatan `aPos` i vertex shadern
 ---
 Det första argumentet är vertexattributets location. Offseten är det sista argumentet; bufferten är det VBO som är bundet till `GL_ARRAY_BUFFER` när anropet görs.
 ```
@@ -1381,10 +1381,10 @@ buffer view. Bygg & kör: fortfarande bara clear-färgen; ingenting ritas än.
 :::opengl
 ```quiz
 Vad sparar ett vertex array object (VAO)? (Välj alla som stämmer.)
+- [ ] Shaderprogrammet som det ska ritas med
+- [x] Om varje vertexattribut är aktiverat (`glEnableVertexAttribArray`)
 - [x] Konfigurationerna av vertexattribut som görs med `glVertexAttribPointer`
 - [x] Vilket vertex buffer object varje attribut läser från
-- [x] Om varje vertexattribut är aktiverat (`glEnableVertexAttribArray`)
-- [ ] Shaderprogrammet som det ska ritas med
 ---
 Shaderprogrammet aktiveras separat med `glUseProgram`. (En VAO sparar också det bundna element buffer object, som du ser nedan.)
 ```
@@ -1402,9 +1402,9 @@ Formatet låses när pipelinen skapas; bufferten kan bytas från ett ritanrop ti
 :::d3d12
 ```quiz
 Direct3D 12 har ingen VAO. Var hamnar informationen som en VAO i OpenGL innehåller? (Välj alla som stämmer.)
+- [ ] I ett `ID3D12VertexArray`-objekt
 - [x] Vertexdatans format hamnar i pipeline state-objektets input layout
 - [x] Bufferten som ska läsas sätts på command listen med `IASetVertexBuffers` och en vertex buffer view
-- [ ] I ett `ID3D12VertexArray`-objekt
 ---
 Formatet låses när PSO:n skapas; bufferten kan bytas från ett ritanrop till nästa. Det finns ingen `ID3D12VertexArray` i Direct3D 12.
 ```
@@ -1539,8 +1539,8 @@ scissor-rektangeln och render target alla är satta.
 ```quiz
 Du byter plats på de två första vertexarna, så att triangelns hörn nu går medurs på skärmen. Vad händer i det här programmet?
 - [x] Triangeln ritas fortfarande: face culling är avstängt som standard i OpenGL
-- [ ] Triangeln försvinner, eftersom den nu är en baksida
 - [ ] Triangeln ritas upp och ner
+- [ ] Triangeln försvinner, eftersom den nu är en baksida
 ---
 OpenGL kastar bara baksidor när du slår på face culling med `glEnable(GL_CULL_FACE)` – det gör ett senare kapitel. Utan det spelar vertexarnas ordning ingen roll här.
 ```
@@ -1558,8 +1558,8 @@ Du ändrar bara `rasterizer.frontFace` till `VK_FRONT_FACE_COUNTER_CLOCKWISE`. V
 :::d3d12
 ```quiz
 Du använder learnopengls vertexordning i stället: vänster (-0.5, -0.5), höger (0.5, -0.5), överst (0.0, 0.5). Vad ser du med `CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT)`?
-- [ ] Samma orange triangel
 - [x] Bara clear-färgen: triangeln går moturs på skärmen, så den är en baksida och cullas
+- [ ] Samma orange triangel
 - [ ] Triangeln upp och ner
 ---
 Standardinställningen för rasterizern cullar baksidor (`D3D12_CULL_MODE_BACK`) och räknar medurs trianglar som framsidor (`FrontCounterClockwise = FALSE`).
@@ -1842,8 +1842,8 @@ Gör nu den åttonde uppgiften: lägg till de två medlemmarna, indexbuffertbloc
 ```quiz
 Hur mycket data använder den indexerade rektangeln?
 - [ ] 6 vertexar och inga index
-- [x] 4 vertexar och 6 index
 - [ ] 4 vertexar och 4 index
+- [x] 4 vertexar och 6 index
 ---
 Var och en av de två trianglarna behöver 3 index, men de två hörn de delar lagras bara en gång i vertexbufferten.
 ```

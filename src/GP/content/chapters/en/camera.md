@@ -148,8 +148,8 @@ the first task.
 ```quiz
 The camera's direction vector is computed as `normalize(cameraPos - cameraTarget)`. Which way does it point?
 - [ ] From the camera towards the target – the way the camera looks
-- [x] From the target towards the camera – opposite to the way the camera looks, along the positive z-axis of view space
 - [ ] Along the world's up axis, perpendicular to the line of sight
+- [x] From the target towards the camera – opposite to the way the camera looks, along the positive z-axis of view space
 ---
 The camera looks down its own negative z-axis, so the view space's positive z-axis points backwards, out of the screen. Subtracting the target from the position gives exactly that axis – which is why the name *direction* is a little misleading.
 ```
@@ -242,9 +242,9 @@ translation by -cameraPos = (0, 0, -3): exactly the matrix you had before.
 
 ```quiz
 After the task **look-at** the picture is identical to before. Why does a look-at matrix from (0, 0, 3) towards the origin, with (0, 1, 0) as up, equal a translation by (0, 0, -3)?
-- [x] The camera's right, up and direction vectors are the world's x, y and z axes, so the rotation part is the identity and only the translation by -cameraPos is left
 - [ ] The look-at function ignores its target when the target is the origin
 - [ ] The two matrices are different, but the difference is too small to see in an 800×600 window
+- [x] The camera's right, up and direction vectors are the world's x, y and z axes, so the rotation part is the identity and only the translation by -cameraPos is left
 ---
 The LookAt matrix is a rotation (the camera's axes as rows) times a translation by the negated position. With the camera's axes equal to the world's axes the rotation does nothing, so the matrices are exactly equal – not just similar.
 ```
@@ -677,8 +677,8 @@ You've probably wondered by now: how do we set and modify these yaw and pitch va
 
 ```quiz
 With yaw = 0° and pitch = 0° the formula gives the direction (cos 0 · cos 0, sin 0, sin 0 · cos 0). Where would the camera look, and why does the code start with yaw = -90°?
-- [x] Along +x, to the right; yaw = -90° gives (0, 0, -1), the direction the camera looked before
 - [ ] Along -z; yaw = -90° turns the camera upside down to match the window's y axis
+- [x] Along +x, to the right; yaw = -90° gives (0, 0, -1), the direction the camera looked before
 - [ ] Straight up along +y; -90° tilts it down to the horizon
 ---
 cos 0 = 1 and sin 0 = 0, so the direction is (1, 0, 0). With yaw = -90°, cos(-90°) = 0 and sin(-90°) = -1: the direction is (0, 0, -1), down the negative z-axis, so the scene looks the same as before the mouse code was added.
@@ -1070,9 +1070,9 @@ moving it up looks up – but never beyond ±89° – and W now walks where you 
 :::opengl vulkan
 ```quiz
 What does `glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED)` do for mouse look?
-- [x] It hides the cursor and keeps it in the window; GLFW reports a virtual, unlimited cursor position, so the camera can keep turning without the cursor stopping at the window's edge
 - [ ] It turns the cursor-position callback off until the user clicks into the window
 - [ ] It pins the cursor to the window's centre, so `mouse_callback` always receives 400 and 300
+- [x] It hides the cursor and keeps it in the window; GLFW reports a virtual, unlimited cursor position, so the camera can keep turning without the cursor stopping at the window's edge
 ---
 The positions passed to `mouse_callback` keep changing – that is how the callback computes its offsets – but they are no longer limited by the window. Without capturing, the cursor would stop at the screen's edge and the camera with it.
 ```
@@ -1080,9 +1080,9 @@ The positions passed to `mouse_callback` keep changing – that is how the callb
 :::d3d12
 ```quiz
 The `WM_MOUSEMOVE` handler puts the cursor back into the window's centre with `SetCursorPos`, and before that sets `lastX` and `lastY` to the centre. Why move `lastX` and `lastY` too?
+- [ ] It sets `firstMouse` back to `true`, so the next move starts fresh
 - [x] `SetCursorPos` causes another `WM_MOUSEMOVE` at the centre; with `lastX`/`lastY` already there its offset is 0, so the jump back doesn't turn the camera
 - [ ] `SetCursorPos` only moves the cursor to the position stored in `lastX` and `lastY`
-- [ ] It sets `firstMouse` back to `true`, so the next move starts fresh
 ---
 Without it, every real movement would be followed by an equally large movement back to the centre, and the camera would turn back to where it was.
 ```
@@ -1216,9 +1216,9 @@ environment.
 
 ```quiz
 Scrolling up three notches changes `fov` from 45 to 42. What happens to the picture?
+- [ ] Nothing, until the program is restarted and the projection matrix is created again
 - [x] The crates look slightly bigger: a smaller field of view projects a smaller part of the scene onto the same window
 - [ ] The crates look smaller, because a smaller field of view moves the camera back
-- [ ] Nothing, until the program is restarted and the projection matrix is created again
 ---
 The camera doesn't move – only the projection changes. A narrower view volume is stretched over the same normalized device coordinates, so everything in it is drawn larger. Because the projection matrix is rebuilt every frame from `fov`, the change shows at once.
 ```

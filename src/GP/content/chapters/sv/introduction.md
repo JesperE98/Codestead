@@ -80,8 +80,8 @@ funktioner i ungefär samma takt som i OpenGL.
 ```quiz
 Du har gjort de första kapitlen med OpenGL och byter till Vulkan. Vad händer med dina framsteg i OpenGL?
 - [ ] De raderas, eftersom du bara kan följa kursen med ett API
-- [x] De sparas: varje API har sina egna projekt och framsteg, och du kan byta tillbaka när som helst
 - [ ] De kopieras till Vulkan, så att Vulkan-uppgifterna redan är klara
+- [x] De sparas: varje API har sina egna projekt och framsteg, och du kan byta tillbaka när som helst
 ---
 Varje API räknas för sig. Ett byte ändrar bara vilken text, vilket projekt och vilka uppgifter du ser.
 ```
@@ -125,8 +125,8 @@ klara uppgifter finns kvar).
 
 ```quiz
 Hur kompilerar och kör du projektet i editorn? (Välj alla som fungerar.)
-- [x] Tryck på **Bygg & kör**
 - [x] Tryck på Ctrl+Enter
+- [x] Tryck på **Bygg & kör**
 - [ ] Svara på frågorna i texten igen
 ---
 Båda startar samma bygge: projektet kompileras, och om det lyckas körs det och förhandsvisningen visar dess fönster.
@@ -212,8 +212,8 @@ vart och ett från `0.0` till `1.0`. `(1.0, 0.5, 0.2)` är full röd, halv grön
 
 ```quiz
 Vilken rad gör triangeln helt röd?
-- [x] `outColor = vec4(1.0, 0.0, 0.0, 1.0);`
 - [ ] `outColor = vec4(255.0, 0.0, 0.0, 255.0);`
+- [x] `outColor = vec4(1.0, 0.0, 0.0, 1.0);`
 - [ ] `outColor = vec4(0.0, 0.0, 1.0, 1.0);`
 ---
 Färgvärden i en shader går från 0.0 till 1.0, i ordningen röd, grön, blå, alfa. 255 är intervallet för 8-bitars pixelvärden, inte för färger i shaders; `(0, 0, 1)` vore blått.
@@ -237,9 +237,9 @@ lite blå: orange.
 
 ```quiz
 Vilken rad gör triangeln helt röd?
+- [ ] `return float4(0.0f, 0.0f, 1.0f, 1.0f);`
 - [x] `return float4(1.0f, 0.0f, 0.0f, 1.0f);`
 - [ ] `return float4(255.0f, 0.0f, 0.0f, 255.0f);`
-- [ ] `return float4(0.0f, 0.0f, 1.0f, 1.0f);`
 ---
 Färgvärden i en shader går från 0.0 till 1.0, i ordningen röd, grön, blå, alfa. 255 är intervallet för 8-bitars pixelvärden, inte för färger i shaders; `(0, 0, 1)` vore blått.
 ```

@@ -91,9 +91,9 @@ material.
 
 ```quiz
 You raise the material's `shininess` from 32 to 256. What happens to the specular highlight?
-- [ ] It becomes larger and brighter, because the surface reflects more light
 - [x] It becomes smaller and sharper: the specular factor is raised to a higher power, so it falls off faster away from the perfect reflection
 - [ ] Nothing: shininess only matters for the ambient component
+- [ ] It becomes larger and brighter, because the surface reflects more light
 ---
 `spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess)`. The dot product is at most 1, so a higher exponent pushes every value below 1 closer to 0: only directions very close to the reflection keep a visible highlight. A shiny surface (polished metal) has a small, tight highlight; a rough one a wide, soft one.
 ```
@@ -390,9 +390,9 @@ A uniform struct is little more than a namespace: `material.ambient`, `material.
 :::vulkan
 ```quiz
 The C++ `Material` has `pad1` after `ambient` and `pad2` after `diffuse`, but no padding after `specular`. Why?
-- [ ] The last `vec3` of a struct never needs padding in std140
 - [x] In std140 every `vec3` starts at a multiple of 16 bytes, and `shininess`, a single `float`, fits into the 4 free bytes after `specular` (offset 44) – in the shader and in C++
 - [ ] `glm::vec3` is 16 bytes, so only the first two need extra floats
+- [ ] The last `vec3` of a struct never needs padding in std140
 ---
 `glm::vec3` is 12 bytes. Without `pad1` and `pad2`, `diffuse` would start at byte 12 in C++ but at byte 16 in the shader. After `specular` (bytes 32–43) the shader puts the float `shininess` at 44, exactly where the C++ struct puts it, and the struct ends at 48, a multiple of 16.
 ```
@@ -400,8 +400,8 @@ The C++ `Material` has `pad1` after `ambient` and `pad2` after `diffuse`, but no
 :::d3d12
 ```quiz
 The C++ `Material` has `padding0` after `ambient` and `padding1` after `diffuse`, but no padding after `specular`. Why?
-- [ ] HLSL never pads the last `float3` of a struct
 - [x] Each `float3` takes the first 12 bytes of a 16-byte row, and `shininess`, a single `float`, fits into the last 4 bytes of the row of `specular` – in HLSL and in C++
+- [ ] HLSL never pads the last `float3` of a struct
 - [ ] `XMFLOAT3` is 16 bytes, so only the first two need extra floats
 ---
 `XMFLOAT3` is 12 bytes. Without the padding floats, `diffuse` would start at byte 12 in C++ but at the second row (byte 16) in HLSL. After `specular` (bytes 32–43) HLSL packs the float `shininess` into the same row, at byte 44, exactly where the C++ struct puts it.
@@ -641,8 +641,8 @@ colour is white, toned down by the material's specular colour of 0.5.
 
 ```quiz
 With `light.ambient` = (0.2, 0.2, 0.2) and `material.ambient` = (1.0, 0.5, 0.31), what colour does a face get that only ambient light reaches?
-- [ ] (1.0, 0.5, 0.31) – the material's ambient colour
 - [x] (0.2, 0.1, 0.062) – the two vectors multiplied component by component
+- [ ] (1.0, 0.5, 0.31) – the material's ambient colour
 - [ ] (1.2, 0.7, 0.51) – the light's ambient part added to the material's colour
 ---
 The lighting components multiply the light's intensity with the material's colour, component by component: 0.2 × 1.0, 0.2 × 0.5, 0.2 × 0.31. That's the left face: a fifth of the coral colour, dark but not black.
@@ -725,9 +725,9 @@ shader doesn't know the light colour – making it follow the light is a nice ex
 
 ```quiz
 At one second the light colour is about (0.91, 0.64, 0.96), a pale purple. Why does the coral cube look red-brown and not purple?
-- [ ] The specular part, which stays white, covers the purple
 - [x] The light and the material are multiplied component by component: the cube reflects 1.0 of the red, but only 0.5 of the green and 0.31 of the blue
 - [ ] Because `sin` returns radians, the colour is converted before it is used
+- [ ] The specular part, which stays white, covers the purple
 ---
 An object only reflects what its material lets it: (0.91 × 1.0, 0.64 × 0.5, 0.96 × 0.31) ≈ (0.91, 0.32, 0.30) before the diffuse and ambient scaling – mostly red. The blue of the light is largely absorbed by the coral surface.
 ```
@@ -789,9 +789,9 @@ plastic-looking highlight. Other materials from the table work the same way.
 
 ```quiz
 Why does the cyan plastic exercise set all three light intensities to (1.0, 1.0, 1.0)?
+- [ ] Because the light's ambient and diffuse parts must always be equal
 - [ ] Because plastic needs more light than coral to be visible
 - [x] The table's material values already include how strongly each component should show; with full-intensity light they come out unchanged
-- [ ] Because the light's ambient and diffuse parts must always be equal
 ---
 The table was made for a white light at full strength: its ambient values are already much darker than its diffuse values. Our light's 0.2 and 0.5 would scale them down a second time. With (1, 1, 1) the material alone decides the colour.
 ```

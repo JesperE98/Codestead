@@ -152,9 +152,9 @@ the aforementioned artifacts.
 ```quiz
 Why do windowing applications render into a back buffer instead of directly into the image that is on screen?
 - [ ] Because the GPU can only write to buffers that are not visible
-- [x] So the viewer never sees a half-finished image: the frame is shown only once it is completely drawn
 - [ ] Because two buffers double the resolution of the window
 - [ ] So the application can skip clearing the screen every frame
+- [x] So the viewer never sees a half-finished image: the frame is shown only once it is completely drawn
 ---
 Drawing takes time and happens piece by piece. With a front and a back buffer the screen only ever shows a
 finished frame, while the next one is drawn out of sight.
@@ -163,10 +163,10 @@ finished frame, while the next one is drawn out of sight.
 :::opengl
 ```quiz
 What happens if you leave out `glfwPollEvents()` in the render loop?
-- [ ] The window closes immediately
 - [x] The window's events are never processed, so clicking the close button does nothing and the window stops responding
-- [ ] Nothing is shown, because `glfwPollEvents` presents the frame
+- [ ] The window closes immediately
 - [ ] Nothing changes, GLFW polls events automatically
+- [ ] Nothing is shown, because `glfwPollEvents` presents the frame
 ---
 `glfwPollEvents` is what processes the events and updates the window state – including the flag that
 `glfwWindowShouldClose` reads. Without it the loop never ends and the operating system considers the window
@@ -473,9 +473,9 @@ The images are owned by the swap chain and are destroyed with it. The swap chain
 
 ```quiz
 The swap chain uses `VK_PRESENT_MODE_FIFO_KHR` and its queue of images waiting to be shown is full. What happens when the program wants to present another image?
-- [ ] The oldest queued image is replaced with the new one
-- [x] The program has to wait until the display takes an image from the queue at the next vertical blank
 - [ ] The image is shown immediately, possibly with tearing
+- [x] The program has to wait until the display takes an image from the queue at the next vertical blank
+- [ ] The oldest queued image is replaced with the new one
 - [ ] `vkQueuePresentKHR` fails and the image is lost
 ---
 FIFO is a queue that the display empties once per refresh – just like vertical sync. Replacing queued images is
@@ -585,10 +585,10 @@ interface `IDXGISwapChain3` (a COM `QueryInterface`), which has `GetCurrentBackB
 
 ```quiz
 The swap chain uses `DXGI_SWAP_EFFECT_FLIP_DISCARD`. What does that mean for your rendering?
-- [ ] The swap chain copies the back buffer to the window and keeps its content for the next frame
 - [x] After `Present` the content of the back buffer is discarded, so every frame has to draw the whole buffer again
-- [ ] Frames that are not ready by the next vertical blank are discarded
+- [ ] The swap chain copies the back buffer to the window and keeps its content for the next frame
 - [ ] The swap chain only works with a single buffer
+- [ ] Frames that are not ready by the next vertical blank are discarded
 ---
 With the flip model the buffers swap roles on `Present`; "discard" means DXGI keeps nothing of the back buffer's
 old content for you. Clearing the whole render target every frame takes care of that.
@@ -736,10 +736,10 @@ since nothing is drawn.
 
 ```quiz
 The viewport is set with `glViewport(0, 0, 800, 600)`. Where does a processed point at `(-0.5, 0.5)` end up in window coordinates?
-- [ ] (400, 300)
 - [x] (200, 450)
-- [ ] (-400, 300)
+- [ ] (400, 300)
 - [ ] (600, 150)
+- [ ] (-400, 300)
 ---
 The viewport maps x from -1…1 to 0…800 and y from -1…1 to 0…600: x = (-0.5 + 1) / 2 × 800 = 200 and
 y = (0.5 + 1) / 2 × 600 = 450 (measured from the lower left corner).
@@ -766,10 +766,10 @@ this section.
 
 ```quiz
 Why does the Vulkan program in this chapter not need a `framebuffer_size_callback`?
+- [ ] The swap chain extent is always the size of the screen, not of the window
+- [ ] `glfwPollEvents` updates the viewport itself
 - [ ] Vulkan resizes the swap chain images automatically when the window changes size
 - [x] The window is created non-resizable, and handling a new size would mean recreating the swap chain – that comes later
-- [ ] `glfwPollEvents` updates the viewport itself
-- [ ] The swap chain extent is always the size of the screen, not of the window
 ---
 The swap chain images keep the extent they were created with. A size change requires recreating the swap chain
 (and its image views and framebuffers); until that is covered, `GLFW_RESIZABLE` is `GLFW_FALSE`.
@@ -790,9 +790,9 @@ window handles the `WM_SIZE` message: it waits for the GPU, releases its referen
 
 ```quiz
 Where does a Direct3D 12 program set the viewport?
-- [ ] In the `DXGI_SWAP_CHAIN_DESC1`, when the swap chain is created
-- [x] In the command list, with `RSSetViewports`, every time the list is recorded
 - [ ] Once on the device, like OpenGL's `glViewport`
+- [x] In the command list, with `RSSetViewports`, every time the list is recorded
+- [ ] In the `DXGI_SWAP_CHAIN_DESC1`, when the swap chain is created
 - [ ] Nowhere: Direct3D 12 always draws to the whole render target
 ---
 A command list carries no state over from earlier recordings, so the viewport (and scissor rectangle) is recorded
@@ -905,8 +905,8 @@ Now do the task **clear**: put the two calls in the render section of the loop, 
 
 ```quiz
 Which of these calls is a *state-using* function?
-- [ ] `glClearColor`
 - [x] `glClear`
+- [ ] `glClearColor`
 - [ ] `glViewport`
 ---
 `glClearColor` and `glViewport` only change OpenGL's state. `glClear` actually does something – fill the colour
@@ -915,10 +915,10 @@ buffer – and takes the colour from the current state.
 
 ```quiz
 What would you see if the render loop never called `glClear`, while the program draws a moving object?
-- [ ] An empty window, because nothing is shown without clearing
+- [ ] An error from OpenGL
 - [x] Leftovers of earlier frames, because each frame draws on top of whatever is already in the buffer
 - [ ] Exactly the same, because `glfwSwapBuffers` clears the buffer
-- [ ] An error from OpenGL
+- [ ] An empty window, because nothing is shown without clearing
 ---
 Swapping does not clear anything, so without `glClear` each frame starts with old (or undefined) content. That is
 why rendering usually begins with clearing the screen.
@@ -1131,10 +1131,10 @@ it.
 
 ```quiz
 In the Vulkan program, what actually clears the swap chain image to `(0.2, 0.3, 0.3, 1.0)`?
-- [ ] A `vkCmdClearColorImage` command recorded after `vkCmdBeginRenderPass`
 - [x] Beginning the render pass: the attachment's `loadOp` is `VK_ATTACHMENT_LOAD_OP_CLEAR`, and the colour comes from `pClearValues` in `VkRenderPassBeginInfo`
 - [ ] The swap chain, which clears every image with the colour from `VkSwapchainCreateInfoKHR`
 - [ ] `vkQueuePresentKHR`, which fills the image before showing it
+- [ ] A `vkCmdClearColorImage` command recorded after `vkCmdBeginRenderPass`
 ---
 The load operation runs when the render pass begins and uses the clear value passed to `vkCmdBeginRenderPass`.
 That's why an empty render pass is enough to clear the window.
@@ -1294,9 +1294,9 @@ vulkan-tutorial lifts that restriction in a later chapter ("Frames in flight").
 
 ```quiz
 Why is `inFlightFence` created with `VK_FENCE_CREATE_SIGNALED_BIT`?
-- [ ] So that `vkQueueSubmit` doesn't need a fence on the first frame
-- [x] So that the `vkWaitForFences` at the start of the first frame returns immediately instead of waiting forever
 - [ ] Because only signalled fences can be reset with `vkResetFences`
+- [x] So that the `vkWaitForFences` at the start of the first frame returns immediately instead of waiting forever
+- [ ] So that `vkQueueSubmit` doesn't need a fence on the first frame
 - [ ] So that the GPU can start rendering before the image is acquired
 ---
 `drawFrame()` waits for the previous frame's fence before anything else. On the first frame no submit has
@@ -1483,10 +1483,10 @@ ThrowIfFailed(m_commandList->Close());
 
 ```quiz
 Why does `PopulateCommandList` record a resource barrier before `ClearRenderTargetView`?
+- [ ] Because `ClearRenderTargetView` only works on resources that are shared between queues
+- [ ] To copy the back buffer into the front buffer
 - [ ] To wait until the previous frame has been presented
 - [x] The back buffer is in the `PRESENT` state; it has to be transitioned to `RENDER_TARGET` before it can be rendered into
-- [ ] To copy the back buffer into the front buffer
-- [ ] Because `ClearRenderTargetView` only works on resources that are shared between queues
 ---
 Resources have states. The swap chain needs the buffer in `PRESENT`, rendering needs `RENDER_TARGET`, so the
 list transitions it there and back again.
@@ -1542,10 +1542,10 @@ else
 
 ```quiz
 Why does `OnRender` call `WaitForPreviousFrame()` after `Present`?
-- [ ] `Present` only works once the GPU is idle
-- [x] So that the GPU has finished this frame before the next `PopulateCommandList` resets the command allocator and records into it again
 - [ ] To wait for the user's next message
 - [ ] So that the fence value never changes
+- [x] So that the GPU has finished this frame before the next `PopulateCommandList` resets the command allocator and records into it again
+- [ ] `Present` only works once the GPU is idle
 ---
 Recording reuses the allocator's memory, which is only allowed when the GPU no longer executes those commands.
 Waiting every frame guarantees that – simple, but the CPU and GPU take turns instead of working in parallel.
@@ -1563,9 +1563,9 @@ following chapters goes in between clearing and presenting.
 
 ```quiz
 In every API, one frame of this chapter's program follows the same order. Which one?
+- [ ] Clear the front buffer while it is on screen, then process the events
 - [ ] Present the image, then clear it
 - [x] Process the window's events, clear the back buffer (image), then present it
-- [ ] Clear the front buffer while it is on screen, then process the events
 - [ ] Create the swap chain (or default framebuffer), clear it, destroy it
 ---
 Events first (input, close button), then render into the buffer that is not on screen, then show it:

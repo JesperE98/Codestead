@@ -86,8 +86,8 @@ and the pixel shader yourself, in HLSL.
 
 ```quiz
 Which stage turns a triangle into the fragments (the pixels to be coloured) that it covers?
-- [ ] The vertex shader
 - [x] Rasterization
+- [ ] The vertex shader
 - [ ] Blending
 ---
 The vertex shader only works on the corners. The rasterizer works out which pixels the triangle covers and creates a fragment for each of them; the fragment shader then colours each fragment.
@@ -168,8 +168,8 @@ fragment shader.
 ```quiz
 The window is 800×600 and the viewport covers all of it. Which of these vertex positions lies outside the visible region?
 - [ ] (0.9, -0.9, 0.0)
-- [x] (1.2, 0.0, 0.0)
 - [ ] (0.0, 0.0, 0.0)
+- [x] (1.2, 0.0, 0.0)
 ---
 Only coordinates between -1.0 and 1.0 are inside the normalized device coordinates; x = 1.2 lies to the right of the window's edge and is clipped. (0, 0) is the centre of the window.
 ```
@@ -635,8 +635,8 @@ the fourth task, together with the rest of the pipeline state.
 :::opengl
 ```quiz
 When is the GLSL code in `vertexShaderSource` compiled?
-- [ ] When the C++ project is built
 - [x] At run time, by the OpenGL driver, when the program calls `glCompileShader`
+- [ ] When the C++ project is built
 - [ ] The first time `glDrawArrays` is called
 ---
 The shader is just a string in your program. OpenGL compiles it while the program runs, which is why you check `GL_COMPILE_STATUS` yourself.
@@ -645,8 +645,8 @@ The shader is just a string in your program. OpenGL compiles it while the progra
 :::vulkan
 ```quiz
 What does `vkCreateShaderModule` get from the program?
-- [ ] GLSL source text, which the driver compiles
 - [x] SPIR-V bytecode, compiled from GLSL before the program runs
+- [ ] GLSL source text, which the driver compiles
 - [ ] HLSL source text
 ---
 Vulkan only accepts SPIR-V. The GLSL files are compiled to `vert.spv` and `frag.spv` at build time, and `readFile` loads that bytecode.
@@ -656,8 +656,8 @@ Vulkan only accepts SPIR-V. The GLSL files are compiled to `vert.spv` and `frag.
 ```quiz
 When are `VSMain` and `PSMain` compiled in this project?
 - [ ] When the C++ project is built
-- [x] At run time, by `D3DCompileFromFile` in `LoadAssets`
 - [ ] By the driver, at the first `DrawInstanced`
+- [x] At run time, by `D3DCompileFromFile` in `LoadAssets`
 ---
 `D3DCompileFromFile` reads `shaders.hlsl` while the program runs and returns bytecode. The driver turns that bytecode into GPU code when the pipeline state object is created.
 ```
@@ -1078,9 +1078,9 @@ but from now on a mistake in `shaders.hlsl` stops the program at start-up with a
 :::opengl
 ```quiz
 The first argument of `glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0)` is `0`. What does it refer to?
-- [x] The `location = 0` of the input `aPos` in the vertex shader
-- [ ] The byte offset of the first vertex in the buffer
 - [ ] The ID of the vertex buffer object
+- [ ] The byte offset of the first vertex in the buffer
+- [x] The `location = 0` of the input `aPos` in the vertex shader
 ---
 The first argument is the vertex attribute's location. The offset is the last argument; the buffer is whichever VBO is bound to `GL_ARRAY_BUFFER` at the time of the call.
 ```
@@ -1388,10 +1388,10 @@ buffer view. Build & run: still only the clear colour; nothing draws yet.
 :::opengl
 ```quiz
 What does a vertex array object (VAO) store? (Choose all that apply.)
+- [ ] The shader program to draw with
+- [x] Whether each vertex attribute is enabled (`glEnableVertexAttribArray`)
 - [x] The vertex attribute configurations made with `glVertexAttribPointer`
 - [x] Which vertex buffer object each attribute reads from
-- [x] Whether each vertex attribute is enabled (`glEnableVertexAttribArray`)
-- [ ] The shader program to draw with
 ---
 The shader program is activated separately with `glUseProgram`. (A VAO also stores the bound element buffer object, as you'll see below.)
 ```
@@ -1409,9 +1409,9 @@ The format is fixed when the pipeline is created; the buffer can change from one
 :::d3d12
 ```quiz
 Direct3D 12 has no VAO. Where does the information an OpenGL VAO holds go? (Choose all that apply.)
+- [ ] Into an `ID3D12VertexArray` object
 - [x] The vertex data's format goes into the input layout of the pipeline state object
 - [x] The buffer to read from is set on the command list with `IASetVertexBuffers` and a vertex buffer view
-- [ ] Into an `ID3D12VertexArray` object
 ---
 The format is fixed when the PSO is created; the buffer can change from one draw to the next. There is no `ID3D12VertexArray` in Direct3D 12.
 ```
@@ -1546,8 +1546,8 @@ viewport, the scissor rectangle and the render target are all set.
 ```quiz
 You swap the first two vertices, so the triangle's corners are now in clockwise order on the screen. What happens in this program?
 - [x] The triangle is still drawn: face culling is off by default in OpenGL
-- [ ] The triangle disappears, because it is now a back face
 - [ ] The triangle is drawn upside down
+- [ ] The triangle disappears, because it is now a back face
 ---
 OpenGL only discards back faces when you enable face culling with `glEnable(GL_CULL_FACE)` – a later chapter does that. Without it, the order of the vertices doesn't matter here.
 ```
@@ -1565,8 +1565,8 @@ You change only `rasterizer.frontFace` to `VK_FRONT_FACE_COUNTER_CLOCKWISE`. Wha
 :::d3d12
 ```quiz
 You use learnopengl's vertex order instead: left (-0.5, -0.5), right (0.5, -0.5), top (0.0, 0.5). What do you see with `CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT)`?
-- [ ] The same orange triangle
 - [x] Only the clear colour: the triangle is counter-clockwise on the screen, so it is a back face and is culled
+- [ ] The same orange triangle
 - [ ] The triangle upside down
 ---
 The default rasterizer state culls back faces (`D3D12_CULL_MODE_BACK`) and treats clockwise triangles as front faces (`FrontCounterClockwise = FALSE`).
@@ -1846,8 +1846,8 @@ Press **Build & run**: you should see an orange rectangle covering the pixels (2
 ```quiz
 How much data does the indexed rectangle use?
 - [ ] 6 vertices and no indices
-- [x] 4 vertices and 6 indices
 - [ ] 4 vertices and 4 indices
+- [x] 4 vertices and 6 indices
 ---
 Each of the two triangles needs 3 indices, but the two corners they share are stored only once in the vertex buffer.
 ```

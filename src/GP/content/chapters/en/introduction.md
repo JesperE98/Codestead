@@ -81,8 +81,8 @@ chapters add features at about the same pace as in OpenGL.
 ```quiz
 You have done the first chapters with OpenGL and switch to Vulkan. What happens to your OpenGL progress?
 - [ ] It is deleted, because you can only follow the course with one API
-- [x] It is kept: each API has its own projects and progress, and you can switch back at any time
 - [ ] It is copied to Vulkan, so the Vulkan tasks are already done
+- [x] It is kept: each API has its own projects and progress, and you can switch back at any time
 ---
 Each API is counted separately. Switching only changes which text, project and tasks you see.
 ```
@@ -126,8 +126,8 @@ If you want to start a chapter over, **Reset** puts the project back the way it 
 
 ```quiz
 How do you compile and run the project in the editor? (Choose all that work.)
-- [x] Press **Build & run**
 - [x] Press Ctrl+Enter
+- [x] Press **Build & run**
 - [ ] Answer the questions in the text again
 ---
 Both start the same build: the project is compiled, and if that succeeds it runs and the preview shows its window.
@@ -213,8 +213,8 @@ into. The line `outColor = vec4(1.0, 0.5, 0.2, 1.0);` sets the colour: four valu
 
 ```quiz
 Which line makes the triangle pure red?
-- [x] `outColor = vec4(1.0, 0.0, 0.0, 1.0);`
 - [ ] `outColor = vec4(255.0, 0.0, 0.0, 255.0);`
+- [x] `outColor = vec4(1.0, 0.0, 0.0, 1.0);`
 - [ ] `outColor = vec4(0.0, 0.0, 1.0, 1.0);`
 ---
 Colour values in a shader go from 0.0 to 1.0, in the order red, green, blue, alpha. 255 is the range of 8-bit pixel values, not of shader colours; `(0, 0, 1)` would be blue.
@@ -238,9 +238,9 @@ half green and a little blue: orange.
 
 ```quiz
 Which line makes the triangle pure red?
+- [ ] `return float4(0.0f, 0.0f, 1.0f, 1.0f);`
 - [x] `return float4(1.0f, 0.0f, 0.0f, 1.0f);`
 - [ ] `return float4(255.0f, 0.0f, 0.0f, 255.0f);`
-- [ ] `return float4(0.0f, 0.0f, 1.0f, 1.0f);`
 ---
 Colour values in a shader go from 0.0 to 1.0, in the order red, green, blue, alpha. 255 is the range of 8-bit pixel values, not of shader colours; `(0, 0, 1)` would be blue.
 ```

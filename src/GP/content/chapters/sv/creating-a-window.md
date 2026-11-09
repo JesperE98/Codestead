@@ -40,9 +40,9 @@ på din egen dator finns det för varje API ett kort avsnitt *bygga själv* här
 ```quiz
 Varför behöver ett grafikprogram ett bibliotek som GLFW, eller operativsystemets egna fönsterfunktioner, för att få ett fönster?
 - [ ] Därför att grafik-API:ets egna fönsterfunktioner är föråldrade
-- [x] Därför att fönster skapas på olika sätt i varje operativsystem och inte ingår i grafik-API:et
-- [ ] Därför att grafikkortet bara kan rita i fönster som GLFW har skapat
 - [ ] Därför att programmet annars inte kan använda grafikkortet alls
+- [ ] Därför att grafikkortet bara kan rita i fönster som GLFW har skapat
+- [x] Därför att fönster skapas på olika sätt i varje operativsystem och inte ingår i grafik-API:et
 ---
 OpenGL, Vulkan och Direct3D 12 renderar bara. Fönstret (och för OpenGL kontexten) kommer från operativsystemet –
 direkt via Win32, eller via ett bibliotek som GLFW som döljer skillnaderna mellan operativsystemen.
@@ -83,10 +83,10 @@ och biblioteket. På macOS gör `brew install glfw` samma sak.
 
 ```quiz
 Vad gör CMake med GLFW:s källkod?
+- [ ] Det laddar OpenGL-funktionerna när programmet körs
+- [ ] Det laddar ner de förkompilerade binärer som passar ditt system
 - [ ] Det kompilerar själv källkoden till `glfw3.lib`
 - [x] Det genererar projektfiler (en Visual Studio-solution, Makefiles …) för din kompilator, som du sedan bygger
-- [ ] Det laddar ner de förkompilerade binärer som passar ditt system
-- [ ] Det laddar OpenGL-funktionerna när programmet körs
 ---
 CMake är en *byggsystemsgenerator*: från `CMakeLists.txt` skriver det projektfilerna för det verktyg du valt. Själva
 kompileringen görs efteråt, av Visual Studio eller `make`.
@@ -167,10 +167,10 @@ Se till att inkludera GLAD före GLFW. GLAD:s headerfil inkluderar de OpenGL-hea
 
 ```quiz
 Varför måste `glad/glad.h` inkluderas före `GLFW/glfw3.h`?
-- [ ] GLFW anropar GLAD:s funktioner medan den inkluderas
-- [x] GLAD:s headerfil ger själv OpenGL-deklarationerna, så den måste komma före alla headers som annars skulle dra in systemets OpenGL-header
 - [ ] Ordningen spelar ingen roll; det är bara en konvention
+- [ ] GLFW anropar GLAD:s funktioner medan den inkluderas
 - [ ] `glad.h` definierar `SCR_WIDTH` och `SCR_HEIGHT`
+- [x] GLAD:s headerfil ger själv OpenGL-deklarationerna, så den måste komma före alla headers som annars skulle dra in systemets OpenGL-header
 ---
 GLFW inkluderar systemets OpenGL-header om ingen redan har inkluderats. GLAD:s header definierar själv alla
 OpenGL-deklarationer upp till 3.3 och vägrar fungera om `gl.h` kom först – så GLAD går först.
@@ -207,10 +207,10 @@ fönsterhinten. Bygg & kör: ingenting syns ännu, men programmet ska byggas och
 
 ```quiz
 Du ber GLFW om en OpenGL 3.3-kontext med core-profil, men datorns drivrutin stöder bara OpenGL 2.1. Vad händer?
+- [ ] Programmet kraschar första gången det ritar
 - [ ] GLFW skapar i tysthet en 2.1-kontext i stället
 - [ ] `glfwInit()` misslyckas
 - [x] Att skapa fönstret (och dess kontext) misslyckas: `glfwCreateWindow` returnerar `NULL`
-- [ ] Programmet kraschar första gången det ritar
 ---
 Fönsterhinten är krav på kontexten. Om drivrutinen inte kan uppfylla dem returnerar `glfwCreateWindow` `NULL` – därför
 kontrollerar vi returvärdet.
@@ -261,10 +261,10 @@ Gör nu den tredje uppgiften: lägg initieringen av GLAD direkt efter `glfwMakeC
 
 ```quiz
 Varför måste `gladLoadGLLoader` anropas efter `glfwMakeContextCurrent(window)`?
-- [ ] Därför att GLAD behöver fönstrets bredd och höjd
 - [x] Därför att funktionsadresserna hämtas från den aktuella kontexten (via `glfwGetProcAddress`); utan en aktuell kontext finns det ingen att fråga
-- [ ] Därför att `glfwMakeContextCurrent` raderar de funktionspekare som GLAD laddat tidigare
 - [ ] Det måste den inte – ordningen spelar ingen roll
+- [ ] Därför att GLAD behöver fönstrets bredd och höjd
+- [ ] Därför att `glfwMakeContextCurrent` raderar de funktionspekare som GLAD laddat tidigare
 ---
 Adresserna hör till drivrutinen bakom kontexten. `glfwGetProcAddress` fungerar bara medan en kontext är aktuell, så:
 skapa fönstret, gör dess kontext aktuell, ladda sedan GLAD.
@@ -290,10 +290,10 @@ uppgifternas tips.
 
 ```quiz
 Det färdiga programmet öppnar sitt fönster och stänger det igen direkt. Varför?
-- [ ] Därför att fönstret inte har någon viewport ännu
-- [ ] Därför att GLAD inte kunde laddas
-- [x] Därför att `main` saknar en loop: direkt efter att allt satts upp anropar den `glfwTerminate()` och returnerar
 - [ ] Därför att core-profilen inte tillåter att fönster förblir öppna
+- [ ] Därför att GLAD inte kunde laddas
+- [ ] Därför att fönstret inte har någon viewport ännu
+- [x] Därför att `main` saknar en loop: direkt efter att allt satts upp anropar den `glfwTerminate()` och returnerar
 ---
 Ett fönster finns bara så länge programmet körs. I nästa kapitel, Hello Window, lägger du till en *render loop* som
 håller fönstret öppet och ritar i det tills det stängs.
@@ -426,10 +426,10 @@ innehåll är svart (egentligen odefinierat) – ingenting visas i det förrän 
 
 ```quiz
 Varför anropar `initWindow` `glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)`?
-- [ ] För att göra fönstret till helskärm
 - [x] Därför att GLFW annars skulle skapa en OpenGL-kontext för fönstret, som ett Vulkan-program inte använder
-- [ ] För att hindra användaren från att ändra fönstrets storlek
 - [ ] För att säga åt GLFW att ladda Vulkan-funktionerna
+- [ ] För att hindra användaren från att ändra fönstrets storlek
+- [ ] För att göra fönstret till helskärm
 ---
 GLFW skapar som standard en OpenGL-kontext till varje fönster. Vulkan pratar med fönstret på sitt eget sätt (via en
 surface, i nästa kapitel), så vi stänger av kontexten. Storleksändring stängs av med det *andra* hintet.
@@ -518,10 +518,10 @@ nu finns det en instans bakom det.
 
 ```quiz
 Varför aktiverar `createInstance` de extensions som `glfwGetRequiredInstanceExtensions` returnerar?
+- [ ] Därför att `vkCreateInstance` annars inte hittar något grafikkort
+- [ ] Därför att de slår på valideringslagren
 - [ ] Därför att GLFW inte kan öppna ett fönster utan dem
 - [x] Därför att Vulkan är plattformsoberoende: att prata med fönstersystemet kräver instans-extensions (som `VK_KHR_surface`), och GLFW vet vilka den här plattformen behöver
-- [ ] Därför att de slår på valideringslagren
-- [ ] Därför att `vkCreateInstance` annars inte hittar något grafikkort
 ---
 Fönstret finns redan utan Vulkan. Det är extensionerna som gör att *Vulkan* senare kan visa bilder i det –
 `VK_KHR_surface` plus en plattformsspecifik som `VK_KHR_win32_surface` eller `VK_KHR_xlib_surface`.
@@ -729,8 +729,8 @@ och med nu.
 ```quiz
 Varför kedjas en `VkDebugUtilsMessengerCreateInfoEXT` också in i `pNext` i `VkInstanceCreateInfo`?
 - [ ] Därför att `setupDebugMessenger` inte fungerar utan den
-- [ ] För att aktivera extensionen `VK_EXT_debug_utils`
 - [x] För att även `vkCreateInstance` och `vkDestroyInstance` ska kontrolleras: den vanliga messengern kan bara finnas mellan de två anropen
+- [ ] För att aktivera extensionen `VK_EXT_debug_utils`
 - [ ] För att skicka valideringslagrens namn till drivrutinen
 ---
 `debugMessenger` behöver en instans för att kunna skapas och måste förstöras före den. Create-infon i `pNext` ger de
@@ -935,11 +935,11 @@ grafikkortet – i nästa kapitel kopplar vi det till fönstret och visar den f�
 
 ```quiz
 Vilka av de här objekten förstör `cleanup()` uttryckligen? (Välj alla som stämmer.)
-- [x] Den logiska enheten (`vkDestroyDevice`)
-- [x] Debug-messengern (`DestroyDebugUtilsMessengerEXT`)
-- [x] Instansen (`vkDestroyInstance`)
 - [ ] Den fysiska enheten
 - [ ] Grafikkön
+- [x] Den logiska enheten (`vkDestroyDevice`)
+- [x] Instansen (`vkDestroyInstance`)
+- [x] Debug-messengern (`DestroyDebugUtilsMessengerEXT`)
 ---
 Allt du skapar förstörs, i omvänd ordning. Den fysiska enheten och kön skapas inte av dig – de bara hämtas – och
 försvinner tillsammans med instansen och enheten.
@@ -1068,10 +1068,10 @@ Ingenting ritas i det – det händer först när det finns en swap chain, i nä
 
 ```quiz
 Varför anropar `wWinMain` `AdjustWindowRect` före `CreateWindowW`?
-- [ ] För att centrera fönstret på skärmen
 - [ ] För att göra fönstret storleksändringsbart
 - [x] Därför att storleken som ges till `CreateWindowW` inkluderar titelraden och kanterna: `AdjustWindowRect` räknar ut den fönsterstorlek som ger en klientyta på exakt 800×600
 - [ ] Därför att Direct3D 12 kräver det innan det kan skapa en enhet
+- [ ] För att centrera fönstret på skärmen
 ---
 Vi ritar i klientytan, så det är den delen som måste vara 800×600. `AdjustWindowRect` lägger till storleken på ramen
 som stilen `WS_OVERLAPPEDWINDOW` sätter runt den.
@@ -1112,10 +1112,10 @@ fönstret ser likadant ut.
 
 ```quiz
 Vad ansvarar DXGI för? (Välj alla som stämmer.)
-- [x] Att räkna upp grafikadaptrarna i systemet
-- [x] Att skapa de swap chains som visar bilder i ett fönster
-- [ ] Att kompilera HLSL-shaders
 - [ ] Att spela in ritkommandon
+- [x] Att skapa de swap chains som visar bilder i ett fönster
+- [x] Att räkna upp grafikadaptrarna i systemet
+- [ ] Att kompilera HLSL-shaders
 ---
 DXGI sköter det som är gemensamt för alla Direct3D-versioner: adaptrar, utgångar (outputs) och swap chains. Shaders
 kompileras av shaderkompilatorn (`d3dcompiler`), och kommandon spelas in i Direct3D 12:s command lists.
@@ -1161,10 +1161,10 @@ den andra uppgiften.
 
 ```quiz
 Varför måste debug-lagret aktiveras innan `D3D12CreateDevice` anropas?
-- [ ] Därför att `D3D12GetDebugInterface` behöver DXGI-fabriken
-- [x] Därför att om det aktiveras efter att enheten skapats tas den enheten bort (blir ogiltig)
 - [ ] Därför att debug-lagret självt skapar enheten
+- [ ] Därför att `D3D12GetDebugInterface` behöver DXGI-fabriken
 - [ ] Det måste det inte – det kan slås på när som helst
+- [x] Därför att om det aktiveras efter att enheten skapats tas den enheten bort (blir ogiltig)
 ---
 Debug-lagret omsluter enheten när den skapas. Därför aktiverar exemplen det allra först i `LoadPipeline`, före fabriken
 och enheten.
@@ -1238,9 +1238,9 @@ enheten i `LoadPipeline`. (Exemplen kan också använda **WARP**, Windows mjukva
 ```quiz
 Vad gör `D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)` i `GetHardwareAdapter`?
 - [ ] Den skapar enheten som `LoadPipeline` använder
-- [x] Den testar bara om en Direct3D 12-enhet skulle kunna skapas på den här adaptern; med `nullptr` som sista argument skapas ingen enhet
-- [ ] Den skapar en mjukvaruenhet (WARP)
 - [ ] Den slår på feature level 11_0 för adaptern
+- [ ] Den skapar en mjukvaruenhet (WARP)
+- [x] Den testar bara om en Direct3D 12-enhet skulle kunna skapas på den här adaptern; med `nullptr` som sista argument skapas ingen enhet
 ---
 Med `nullptr` som enhetspekare blir `D3D12CreateDevice` en kontroll. Den riktiga enheten skapas efteråt i
 `LoadPipeline`, på adaptern som klarade testet.
@@ -1273,9 +1273,9 @@ kapitel får kön en swap chain, och du fyller fönstret med en färg.
 ```quiz
 Varför skapas kommandokön med `D3D12_COMMAND_LIST_TYPE_DIRECT`?
 - [ ] Därför att det är den enda typen en enhet kan skapa
-- [x] Därför att en direct-kö tar emot alla sorters kommandon – ritning, beräkning och kopiering
 - [ ] Därför att direct-köer går förbi command lists
 - [ ] Därför att debug-lagret kräver det
+- [x] Därför att en direct-kö tar emot alla sorters kommandon – ritning, beräkning och kopiering
 ---
 Compute- och copy-köer tar bara emot en delmängd av kommandona. För att rita behöver vi en direct-kö.
 ```

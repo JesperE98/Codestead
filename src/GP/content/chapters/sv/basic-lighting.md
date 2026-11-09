@@ -109,8 +109,8 @@ mörk korallfärgad siluett.
 
 ```quiz
 Efter uppgiften **ambient** har varje synlig sida av kuben samma mycket mörka korallfärg. Varför?
-- [ ] Ljuset är för långt från kuben för att lysa upp den
 - [x] Ambient-termen är en konstant – 0.1 × lightColor – som inte beror på ljusets position eller på åt vilket håll en sida pekar
+- [ ] Ljuset är för långt från kuben för att lysa upp den
 - [ ] Ambient-termen lyser bara upp de sidor som pekar bort från ljuset
 ---
 Ambient ljus står för ljus som har studsat runt överallt, så det är detsamma för varje fragment. Skillnader mellan sidorna kräver en term som beror på riktningen: diffust ljus.
@@ -368,8 +368,8 @@ Gör nu uppgiften **normals**. Inget använder de nya värdena än, så bilden �
 ```quiz
 Varför använder lampans VAO steget `6 * sizeof(float)` fast lampan bara läser positionen?
 - [ ] För att alla attribut måste ha samma steg som det största attributet
-- [x] För att steget är avståndet från ett hörn till nästa i det delade VBO:t, och varje hörn tar nu 6 floats – lampan hoppar bara över normalen
 - [ ] För att lampans shader också läser normalen, för att förbli vit
+- [x] För att steget är avståndet från ett hörn till nästa i det delade VBO:t, och varje hörn tar nu 6 floats – lampan hoppar bara över normalen
 ---
 Lampans VAO pekar in i samma VBO som kubens. Med steget `3 * sizeof(float)` skulle den andra hörnpositionen läsas från det första hörnets normal.
 ```
@@ -377,8 +377,8 @@ Lampans VAO pekar in i samma VBO som kubens. Med steget `3 * sizeof(float)` skul
 :::vulkan
 ```quiz
 Varför skapas lampans pipeline med `attributeCount` 1 medan kubens får 2?
-- [ ] För att lampan ritas från en separat vertex buffer som bara innehåller positioner
 - [x] För att lampans vertex shader bara läser positionen (location 0), medan kubens läser positionen och normalen; båda läser samma hörn på 24 byte
+- [ ] För att lampan ritas från en separat vertex buffer som bara innehåller positioner
 - [ ] För att en pipeline inte kan beskriva fler attribut än den förra pipelinen
 ---
 Båda pipelines använder samma bindning med steget `sizeof(Vertex)`, så lampan hittar fortfarande varje position. Den beskriver helt enkelt inte normalen, som dess shader aldrig läser.
@@ -388,8 +388,8 @@ Båda pipelines använder samma bindning med steget `sizeof(Vertex)`, så lampan
 ```quiz
 Varför har elementet `NORMAL` i input layouten byteoffseten 12?
 - [ ] För att varje indataelement måste börja på en multipel av 12 byte
-- [x] För att varje hörn börjar med sin position, en `XMFLOAT3` på 3 × 4 = 12 byte, och normalen följer direkt efter den
 - [ ] För att normalen lagras 12 hörn efter positionen i vertex buffern
+- [x] För att varje hörn börjar med sin position, en `XMFLOAT3` på 3 × 4 = 12 byte, och normalen följer direkt efter den
 ---
 Offseten räknas från början av varje hörn. Vertex buffer-vyns steg, `sizeof(Vertex)` = 24, tar input assemblern från ett hörn till nästa.
 ```
@@ -576,9 +576,9 @@ Låt oss kontrollera värdet i mitten av framsidan, (0, 0, 0.5): riktningen mot 
 
 ```quiz
 Varför förblir kubens vänstersida lika mörk som med bara ambient ljus?
+- [ ] För att rastreraren interpolerar framsidans normaler över vänstersidan
 - [ ] För att kameran tittar på vänstersidan från en för brant vinkel
 - [x] För att dess normal (-1, 0, 0) pekar bort från lampan vid x = 1.2, så skalärprodukten med ljusriktningen är negativ och `max(…, 0.0)` gör den diffusa termen till 0
-- [ ] För att rastreraren interpolerar framsidans normaler över vänstersidan
 ---
 Lampan står till höger om kuben, vänstersidan pekar åt vänster: vinkeln mellan dess normal och riktningen mot ljuset är mer än 90°. Bara ambient-termen återstår.
 ```
@@ -703,8 +703,8 @@ olikformig skalning är det avgörande att du multiplicerar normalvektorerna med
 
 ```quiz
 Varför kan vi inte omvandla normalerna med själva modellmatrisen när den skalar olikformigt?
-- [ ] För att normaler inte får skalas alls, inte ens likformigt
 - [x] För att en olikformig skalning lutar ytan åt ett håll och normalen åt ett annat, så den omvandlade normalen inte längre är vinkelrät mot ytan
+- [ ] För att normaler inte får skalas alls, inte ens likformigt
 - [ ] För att modellmatrisen skulle flytta normalerna till objektets position
 ---
 Förflyttningen hanteras för sig (den övre vänstra 3x3-delen, eller w = 0). Den olikformiga skalningen är skälet till transponatet av inversen: den skalar normalen med de omvända faktorerna, vilket håller den vinkelrät.
@@ -1009,9 +1009,9 @@ hamnar mellan hörnen missas eller smetas ut över en hel triangel.
 
 ```quiz
 Med Gouraud shading ser högdagern på vår kub hackig ut eller försvinner. Varför?
-- [ ] För att vertex shadern inte kan använda funktionerna `reflect` och `pow`
 - [x] För att belysningen bara räknas ut i varje sidas hörn och interpoleras däremellan, så en liten högdager mellan hörnen kan inte återges
 - [ ] För att normalerna inte interpoleras i vertex shadern
+- [ ] För att vertex shadern inte kan använda funktionerna `reflect` och `pow`
 ---
 Phong shading interpolerar normalen och positionen och belyser varje fragment; Gouraud shading interpolerar de färdiga färgerna. Med 4 hörn per sida faller en skarp högdager mitt på en sida helt enkelt mellan stolarna.
 ```

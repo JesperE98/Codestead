@@ -288,9 +288,9 @@ behållare lyses upp exakt lika starkt som en nära: ett riktat ljus har inget a
 
 ```quiz
 Ljusets riktning är (-0.2, -1.0, -0.3), men shadern räknar ut `lightDir` från `-light.direction`. Varför minustecknet?
-- [ ] Därför att ljuset lyser uppåt och måste vändas för att lysa nedåt
-- [x] Därför att beräkningarna av diffuse och specular förväntar sig en vektor från fragmentet mot ljuset, medan ljusets riktning pekar från ljuset in i scenen
 - [ ] Därför att behållarnas normalvektorer pekar inåt
+- [x] Därför att beräkningarna av diffuse och specular förväntar sig en vektor från fragmentet mot ljuset, medan ljusets riktning pekar från ljuset in i scenen
+- [ ] Därför att ljuset lyser uppåt och måste vändas för att lysa nedåt
 ---
 `dot(norm, lightDir)` är störst när normalen pekar *mot* ljuset. Riktningen vi anger pekar bort från ljuset (nedåt, som solljus), så shadern vänder den en gång och normaliserar den.
 ```
@@ -381,9 +381,9 @@ se deras effekt i din implementation. I vår miljö räcker ett avstånd på 32 
 
 ```quiz
 Med konstant 1.0, linjär 0.09 och kvadratisk 0.032 – ungefär hur mycket av ljusets styrka når ett fragment 10 enheter från ljuset?
-- [ ] Ungefär 50 % – den linjära termen halverar den var tionde enhet
-- [x] Ungefär 20 % – 1.0 / (1.0 + 0.9 + 3.2) ≈ 0.2
 - [ ] Ungefär 90 % – den kvadratiska termen spelar bara roll bortom 50 enheter
+- [x] Ungefär 20 % – 1.0 / (1.0 + 0.9 + 3.2) ≈ 0.2
+- [ ] Ungefär 50 % – den linjära termen halverar den var tionde enhet
 ---
 Vid d = 10 är nämnaren 1.0 + 0.09 · 10 + 0.032 · 100 = 5.1, så F_att ≈ 0.196. På det här avståndet dominerar redan den kvadratiska termen (3.2) över den linjära (0.9).
 ```
@@ -618,9 +618,9 @@ OpenGL har ingen enskild uniform för en struct: varje medlem får en egen locat
 :::vulkan
 ```quiz
 Punktljusets C++-struct `Light` slutar med `float quadratic; float pad4; float pad5;`. Varför de två utfyllnadsfloatarna i slutet?
-- [ ] Utan dem skulle `quadratic` hamna på fel offset
 - [x] I std140 avrundas storleken på en struct uppåt till en multipel av 16 byte: medlemmarna slutar på 72, så structen tar 80 byte
 - [ ] glm kräver att varje struct slutar med två utfyllnadsfloats
+- [ ] Utan dem skulle `quadratic` hamna på fel offset
 ---
 Inget följer efter ljuset i uniform-blocket, så här ändrar de två floatarna ingen offset – men de gör `sizeof(Light)` lika med shaderns 80 byte, vilket spelar roll så snart något följer efter structen eller structen är ett element i en array (som i nästa kapitel).
 ```
@@ -628,9 +628,9 @@ Inget följer efter ljuset i uniform-blocket, så här ändrar de två floatarna
 :::d3d12
 ```quiz
 I HLSL-punktljuset följs `position` (en `float3`) av `constantTerm`, `linearTerm` och `quadraticTerm`. På vilken byte-offset börjar `ambient`?
-- [ ] 24 – direkt efter `quadraticTerm`
 - [x] 32 – en `float3` får inte gå över en rad på 16 byte, och bara 8 byte är kvar i raden som börjar på 16
 - [ ] 28 – HLSL justerar en `float3` till 4 byte
+- [ ] 24 – direkt efter `quadraticTerm`
 ---
 Raderna är 16 byte. `position` + `constantTerm` fyller rad 0 (0–15), `linearTerm` och `quadraticTerm` tar 16–23, och den 12 byte stora `ambient` skulle nå in i nästa rad, så den börjar på 32. Därför har C++-structen `float padding0[2];` före `ambient`.
 ```
@@ -858,9 +858,9 @@ vi vill att vektorerna ska peka mot ljuskällan i stället för från den). Se t
 
 ```quiz
 `light.cutOff` innehåller cos(12.5°) ≈ 0.976. Vilka fragment lyser `theta > light.cutOff` upp?
-- [ ] De som ligger mer än 12.5° från strålkastarens riktning, eftersom deras skalärprodukt är större
 - [x] De som ligger mindre än 12.5° från strålkastarens riktning: ju mindre vinkel, desto större cosinus
 - [ ] Bara de som ligger exakt 12.5° bort, där theta är lika med gränsvärdet
+- [ ] De som ligger mer än 12.5° från strålkastarens riktning, eftersom deras skalärprodukt är större
 ---
 Mellan 0° och 90° minskar cosinus när vinkeln växer: 0° ger 1.0, 12.5° ger 0.976. Så "vinkeln är mindre än gränsvinkeln" blir "cosinus är större än gränsens cosinus" – och shadern behöver aldrig den dyra arcus cosinus.
 ```
@@ -903,8 +903,8 @@ rör dig och tittar runt på din egen dator.
 :::opengl
 ```quiz
 Anta att du stavar fel på ett medlemsnamn: `lightingShader.setFloat("light.cutoff", …)` i stället för `"light.cutOff"`. Vad händer?
-- [ ] Programmet går inte att kompilera
 - [ ] OpenGL skapar en ny uniform som heter `light.cutoff`
+- [ ] Programmet går inte att kompilera
 - [x] `glGetUniformLocation` returnerar -1, anropet `glUniform1f` med location -1 ignoreras i tysthet, och `light.cutOff` behåller sitt standardvärde 0
 ---
 Uniformnamn slås bara upp när programmet körs, så varken C++-kompilatorn eller OpenGL rapporterar felstavningen. Med cutOff = 0 räknas varje fragment mindre än 90° från ficklampans riktning som innanför konen – ingen synlig ljusfläck alls. När en uniform inte verkar ha någon effekt: kontrollera namnet först.
@@ -914,8 +914,8 @@ Uniformnamn slås bara upp när programmet körs, så varken C++-kompilatorn ell
 ```quiz
 I strålkastarens C++-struct `Light` följer `cutOff` direkt efter `glm::vec3 direction` utan utfyllnadsfloat. På vilken offset lägger std140 shaderns `cutOff`?
 - [x] 28 – en float behöver bara 4-bytesjustering, så den fyller de sista 4 byten i den 16-bytesplats som `direction` börjar
-- [ ] 32 – varje medlem i ett uniform-block börjar på en multipel av 16
 - [ ] 40 – efter `direction`, som std140 lagrar som 16 byte plus 8 byte utfyllnad
+- [ ] 32 – varje medlem i ett uniform-block börjar på en multipel av 16
 ---
 `direction` (en vec3) behöver en multipel av 16 och börjar på 16; den tar 12 byte, fram till 28. Där får `cutOff` plats. Nästa vec3, `ambient`, börjar då på nästa multipel av 16: 32.
 ```
@@ -923,9 +923,9 @@ I strålkastarens C++-struct `Light` följer `cutOff` direkt efter `glm::vec3 di
 :::d3d12
 ```quiz
 Varför samplar strålkastarens pixel shader `diffuseMap` och `specularMap` en gång före `if`-satsen i stället för inne i grenarna?
+- [ ] För att göra shadern snabbare: en textur kan bara samplas en gång per pixel
 - [ ] Sampling är inte tillåten inne i en `if` i HLSL över huvud taget
 - [x] `Sample` väljer detaljnivån utifrån grannpixlarnas texturkoordinater; inne i en förgrening per pixel kan en granne ha tagit den andra vägen, så den informationen är odefinierad
-- [ ] För att göra shadern snabbare: en textur kan bara samplas en gång per pixel
 ---
 GPU:n kör pixlar i grupper om 2×2 och jämför deras texturkoordinater för att välja mipnivå. Att sampla före förgreningen, där alla pixlar kör samma kod, håller det väldefinierat; grenarna använder de sparade färgerna.
 ```
@@ -1016,9 +1016,9 @@ alla tre termerna med dämpningen igen, som för punktljuset.
 
 ```quiz
 Ett fragment ligger 5° från ficklampans riktning. Dess `(theta - outerCutOff) / epsilon` blir ungefär 1.9. Vilken intensitet använder shadern?
-- [ ] 1.9 – fragmentet lyses upp nästan dubbelt så starkt som ljusets diffuse-färg
-- [x] 1.0 – `clamp` begränsar värdet till [0, 1], så allt inne i den inre konen får fullt ljus
 - [ ] 0.0 – värden över 1 betyder att fragmentet ligger utanför konen
+- [x] 1.0 – `clamp` begränsar värdet till [0, 1], så allt inne i den inre konen får fullt ljus
+- [ ] 1.9 – fragmentet lyses upp nästan dubbelt så starkt som ljusets diffuse-färg
 ---
 Inne i den inre konen ger formeln värden över 1, utanför den yttre konen negativa värden. `clamp` gör dem till exakt 1.0 och 0.0, och bara den mjuka zonen mellan 12.5° och 17.5° får värdena däremellan.
 ```

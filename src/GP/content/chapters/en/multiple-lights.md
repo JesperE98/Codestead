@@ -391,8 +391,8 @@ at the top left – more clearly. It's the directional light of *Light casters*,
 ```quiz
 learnopengl defines `CalcDirLight` below `main`, but `main` calls it. Why does the shader still compile?
 - [ ] GLSL compiles all functions first and resolves the calls afterwards, so the order never matters
-- [x] The prototype `vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);` above `main` declares the function before it's called
 - [ ] Functions whose names start with `Calc` are treated as built-in functions
+- [x] The prototype `vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);` above `main` declares the function before it's called
 ---
 Like C, GLSL requires a function to be declared before its first call. The prototype gives the name, return type and parameters; the body can then follow anywhere below.
 ```
@@ -410,9 +410,9 @@ Like C, GLSL requires a function to be declared before its first call. The proto
 :::d3d12
 ```quiz
 Why does the HLSL `CalcDirLight` have a fourth parameter, `float2 texCoord`, which learnopengl's GLSL version doesn't have?
-- [ ] HLSL functions must have at least four parameters
-- [x] The texture coordinates are part of `PSMain`'s parameter `input`, not a global, so a function only sees them if they're passed in
 - [ ] `Sample` only accepts texture coordinates that arrive as a function parameter
+- [x] The texture coordinates are part of `PSMain`'s parameter `input`, not a global, so a function only sees them if they're passed in
+- [ ] HLSL functions must have at least four parameters
 ---
 In GLSL, `TexCoords` is a global input that every function can read. In HLSL the interpolated values reach the shader as the parameter of its entry point, so `PSMain` passes `input.texCoord` on. The cbuffer, the textures and the sampler are globals and need no parameter.
 ```
@@ -610,8 +610,8 @@ that iterates over the point light array that calls `CalcPointLight` for each po
 ```quiz
 Each of the four point lights has an ambient strength of 0.05, and `CalcPointLight` attenuates the ambient term too. Why attenuate it here?
 - [ ] Ambient light is not allowed to exceed 0.05 in total
-- [x] With several lights, every light adds its own ambient term; without attenuation the ambient terms of all lights – even far away ones – would stack up everywhere and wash out the scene
 - [ ] The attenuation makes the ambient term brighter near the light, which is needed for the specular highlights
+- [x] With several lights, every light adds its own ambient term; without attenuation the ambient terms of all lights – even far away ones – would stack up everywhere and wash out the scene
 ---
 This is the note from *Light casters*: one light's unattenuated ambient is harmless, but here five lights' ambient terms add up at every fragment. Attenuated, a point light's ambient only matters near that light.
 ```
@@ -899,9 +899,9 @@ a far container at the top of the window is lit now, by the point light at (-4.0
 :::opengl
 ```quiz
 How do you set the `linear` term of the *third* point light from `main.cpp`?
+- [ ] `lightingShader.setFloat("pointLights[3].linear", 0.09f);`
 - [ ] `lightingShader.setFloat("pointLights.linear[2]", 0.09f);`
 - [x] `lightingShader.setFloat("pointLights[2].linear", 0.09f);`
-- [ ] `lightingShader.setFloat("pointLights[3].linear", 0.09f);`
 ---
 Every member of every array element is a uniform of its own, named like a C expression: array, index (starting at 0, so the third light is `[2]`), then the member.
 ```
@@ -910,8 +910,8 @@ Every member of every array element is a uniform of its own, named like a C expr
 ```quiz
 The shader's `PointLight` ends at byte 76. Where does `pointLights[1]` start, relative to `pointLights[0]`?
 - [ ] 76 bytes later – right after the last member
-- [x] 80 bytes later – in std140 the array stride is the struct size rounded up to a multiple of 16
 - [ ] 128 bytes later – std140 rounds array elements up to a power of two
+- [x] 80 bytes later – in std140 the array stride is the struct size rounded up to a multiple of 16
 ---
 That's why the C++ `PointLight` ends with `pad5`: with it `sizeof(PointLight)` is 80, the same as the shader's stride, so `ubo.pointLights[1]` lands where the shader reads `pointLights[1]`.
 ```
@@ -919,9 +919,9 @@ That's why the C++ `PointLight` ends with `pad5`: with it `sizeof(PointLight)` i
 :::d3d12
 ```quiz
 The HLSL `PointLight` ends at byte 76. Where does `pointLights[1]` start, relative to `pointLights[0]`?
-- [ ] 76 bytes later – HLSL packs array elements tightly
-- [x] 80 bytes later – every array element starts a new 16-byte row
 - [ ] 96 bytes later – a struct in a cbuffer always takes six rows
+- [x] 80 bytes later – every array element starts a new 16-byte row
+- [ ] 76 bytes later – HLSL packs array elements tightly
 ---
 HLSL doesn't pack arrays: each element starts at a row boundary. That's why the C++ `PointLight` ends with `padding3`: with it `sizeof(PointLight)` is 80, so the C++ array has HLSL's stride.
 ```
@@ -1206,9 +1206,9 @@ After the task **spot-light** the corners of container 0 and all the other conta
 
 ```quiz
 In the centre of container 0 the six lights together give a colour whose components can add up to more than 1.0. What happens to such a value?
-- [ ] The whole colour is divided by its largest component, so the hue stays the same
-- [ ] The value wraps around and becomes dark again
 - [x] It is clamped to 1.0 when it is written to the window's image, which stores normalized 8-bit values – brightly lit parts saturate towards white
+- [ ] The value wraps around and becomes dark again
+- [ ] The whole colour is divided by its largest component, so the hue stays the same
 ---
 The window's image holds each component as 0–255, i.e. 0.0–1.0. Higher results are simply clamped, which is why the top of container 0's steel frame comes out nearly white (255 in the blue channel). Handling brightness above 1.0 properly is the subject of HDR, much later in learnopengl.
 ```
@@ -1290,9 +1290,9 @@ and look around with the mouse, and the four lamps appear where the light comes 
 
 ```quiz
 After the task **lamps** you only see a thin white sliver at the right border. Where are the other lamps?
+- [ ] They are not drawn, because only the first lamp's model matrix is pushed
 - [ ] They are drawn black, because the lamp shader has no light
 - [x] With the camera at (0, 0, 3) one is below the window, and two are behind containers 9 and 0, so the depth test hides them
-- [ ] They are not drawn, because only the first lamp's model matrix is pushed
 ---
 All four lamps are drawn every frame. The camera just isn't placed to see them: lamp 2 is out of view, lamps 3 and 4 fail the depth test behind closer containers, and lamp 1 is mostly beside the view.
 ```

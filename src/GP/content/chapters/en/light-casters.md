@@ -291,9 +291,9 @@ clearly brighter. And a far container is lit exactly as strongly as a near one: 
 
 ```quiz
 The light's direction is (-0.2, -1.0, -0.3), but the shader computes `lightDir` from `-light.direction`. Why the minus?
-- [ ] Because the light shines upwards and must be flipped to shine downwards
-- [x] Because the diffuse and specular calculations expect a vector from the fragment towards the light, while the light's direction points from the light into the scene
 - [ ] Because the normal vectors of the containers point inwards
+- [x] Because the diffuse and specular calculations expect a vector from the fragment towards the light, while the light's direction points from the light into the scene
+- [ ] Because the light shines upwards and must be flipped to shine downwards
 ---
 `dot(norm, lightDir)` is largest when the normal points *at* the light. The direction we specify points away from the light (downwards, like sunlight), so the shader reverses it once and normalizes it.
 ```
@@ -389,9 +389,9 @@ their effect in your implementation. In our environment a distance of 32 to 100 
 
 ```quiz
 With constant 1.0, linear 0.09 and quadratic 0.032, roughly how much of the light's strength reaches a fragment 10 units away from the light?
-- [ ] About 50% – the linear term halves it every 10 units
-- [x] About 20% – 1.0 / (1.0 + 0.9 + 3.2) ≈ 0.2
 - [ ] About 90% – the quadratic term only matters beyond 50 units
+- [x] About 20% – 1.0 / (1.0 + 0.9 + 3.2) ≈ 0.2
+- [ ] About 50% – the linear term halves it every 10 units
 ---
 At d = 10 the denominator is 1.0 + 0.09 · 10 + 0.032 · 100 = 5.1, so F_att ≈ 0.196. At this distance the quadratic term (3.2) already dominates the linear one (0.9).
 ```
@@ -628,9 +628,9 @@ OpenGL has no single uniform for a struct: each member gets its own location, an
 :::vulkan
 ```quiz
 The point light's C++ `Light` struct ends with `float quadratic; float pad4; float pad5;`. Why the two padding floats at the end?
-- [ ] Without them `quadratic` would start at a wrong offset
 - [x] In std140 the size of a struct is rounded up to a multiple of 16 bytes: the members end at 72, so the struct takes 80 bytes
 - [ ] glm requires every struct to end with two padding floats
+- [ ] Without them `quadratic` would start at a wrong offset
 ---
 Nothing follows the light in the uniform block, so here the two floats change no offset – but they make `sizeof(Light)` equal the shader's 80 bytes, which matters as soon as something follows the struct or the struct is an array element (as in the next chapter).
 ```
@@ -638,9 +638,9 @@ Nothing follows the light in the uniform block, so here the two floats change no
 :::d3d12
 ```quiz
 In the HLSL point light, `position` (a `float3`) is followed by `constantTerm`, `linearTerm` and `quadraticTerm`. At which byte offset does `ambient` start?
-- [ ] 24 – right after `quadraticTerm`
 - [x] 32 – a `float3` may not cross a 16-byte row, and only 8 bytes are left in the row that starts at 16
 - [ ] 28 – HLSL aligns a `float3` to 4 bytes
+- [ ] 24 – right after `quadraticTerm`
 ---
 Rows are 16 bytes. `position` + `constantTerm` fill row 0 (0–15), `linearTerm` and `quadraticTerm` take 16–23, and the 12-byte `ambient` would reach into the next row, so it starts at 32. That's why the C++ struct has `float padding0[2];` before `ambient`.
 ```
@@ -872,9 +872,9 @@ vectors.
 
 ```quiz
 `light.cutOff` holds cos(12.5°) ≈ 0.976. Which fragments does `theta > light.cutOff` light?
-- [ ] Those more than 12.5° away from the spotlight's direction, because their dot product is larger
 - [x] Those less than 12.5° away from the spotlight's direction: the smaller the angle, the larger its cosine
 - [ ] Only those exactly 12.5° away, where theta equals the cutoff
+- [ ] Those more than 12.5° away from the spotlight's direction, because their dot product is larger
 ---
 Between 0° and 90° the cosine shrinks as the angle grows: 0° gives 1.0, 12.5° gives 0.976. So "angle smaller than the cutoff angle" becomes "cosine larger than the cutoff cosine" – and the shader never needs the expensive inverse cosine.
 ```
@@ -918,8 +918,8 @@ on your own computer it follows you when you move and look around.
 :::opengl
 ```quiz
 Suppose you misspell a member name: `lightingShader.setFloat("light.cutoff", …)` instead of `"light.cutOff"`. What happens?
-- [ ] The program fails to compile
 - [ ] OpenGL creates a new uniform named `light.cutoff`
+- [ ] The program fails to compile
 - [x] `glGetUniformLocation` returns -1, the `glUniform1f` call with location -1 is silently ignored, and `light.cutOff` keeps its default value 0
 ---
 Uniform names are only looked up at run time, so neither the C++ compiler nor OpenGL reports the typo. With cutOff = 0 every fragment less than 90° from the flashlight's direction counts as inside the cone – no visible spot at all. When a uniform seems to have no effect, check its name first.
@@ -929,8 +929,8 @@ Uniform names are only looked up at run time, so neither the C++ compiler nor Op
 ```quiz
 In the spotlight's C++ `Light`, `cutOff` directly follows `glm::vec3 direction` without a padding float. At which offset does std140 put the shader's `cutOff`?
 - [x] 28 – a float only needs 4-byte alignment, so it fills the last 4 bytes of the 16-byte slot that `direction` starts
-- [ ] 32 – every member of a uniform block starts at a multiple of 16
 - [ ] 40 – after `direction`, which std140 stores as 16 bytes plus 8 bytes of padding
+- [ ] 32 – every member of a uniform block starts at a multiple of 16
 ---
 `direction` (a vec3) needs a multiple of 16 and starts at 16; it takes 12 bytes, up to 28. `cutOff` fits right there. The next vec3, `ambient`, then starts at the next multiple of 16: 32.
 ```
@@ -938,9 +938,9 @@ In the spotlight's C++ `Light`, `cutOff` directly follows `glm::vec3 direction` 
 :::d3d12
 ```quiz
 Why does the spotlight's pixel shader sample `diffuseMap` and `specularMap` once before the `if` instead of inside its branches?
+- [ ] To make the shader faster: a texture can only be sampled once per pixel
 - [ ] Sampling is not allowed inside an `if` in HLSL at all
 - [x] `Sample` picks the level of detail from the texture coordinates of neighbouring pixels; inside a per-pixel branch a neighbour may have taken the other path, so that information is undefined
-- [ ] To make the shader faster: a texture can only be sampled once per pixel
 ---
 The GPU runs pixels in 2×2 groups and compares their texture coordinates to choose the mip level. Sampling before the branch, where all pixels run the same code, keeps that well-defined; the branches use the stored colours.
 ```
@@ -1031,9 +1031,9 @@ all three terms by the attenuation again, as for the point light.
 
 ```quiz
 A fragment lies 5° away from the flashlight's direction. Its `(theta - outerCutOff) / epsilon` comes out at about 1.9. What intensity does the shader use?
-- [ ] 1.9 – the fragment is lit almost twice as brightly as the light's diffuse colour
-- [x] 1.0 – `clamp` limits the value to [0, 1], so everything inside the inner cone gets the full light
 - [ ] 0.0 – values above 1 mean the fragment is outside the cone
+- [x] 1.0 – `clamp` limits the value to [0, 1], so everything inside the inner cone gets the full light
+- [ ] 1.9 – the fragment is lit almost twice as brightly as the light's diffuse colour
 ---
 Inside the inner cone the formula gives values above 1, outside the outer cone negative values. `clamp` turns them into exactly 1.0 and 0.0, and only the soft zone between 12.5° and 17.5° gets the values in between.
 ```

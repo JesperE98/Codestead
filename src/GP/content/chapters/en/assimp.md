@@ -101,9 +101,9 @@ position, texture coordinate and normal.
 
 ```quiz
 A corner of a face in the `.obj` file is written `563/563/562`. Why can't the GPU use these numbers directly as its index buffer?
-- [ ] Because OBJ indices are floats
 - [x] They are three separate indices – into the positions, the texture coordinates and the normals – while an index buffer has one index per vertex that selects all its attributes together
 - [ ] Because the GPU can only draw quads, and OBJ faces are triangles
+- [ ] Because OBJ indices are floats
 ---
 The file stores each list without repeats, and every corner picks from each list on its own. The GPU's vertex fetch reads one vertex – position, normal and texture coordinates side by side – per index. So the loader turns every distinct triple into one vertex (OBJ indices also start at 1, the GPU's at 0).
 ```
@@ -149,9 +149,9 @@ contain in a single `Model` object.
 
 ```quiz
 In Assimp's structure, where is the vertex data of a mesh actually stored?
-- [ ] In the node: every `aiNode` holds its own vertices
 - [x] In the `aiMesh` objects of the scene's `mMeshes` array; a node only holds indices into that array
 - [ ] In the material, next to the textures
+- [ ] In the node: every `aiNode` holds its own vertices
 ---
 The scene owns all meshes and materials. Nodes only organise them – which meshes belong together and how the parts are related (parent/children) – by storing indices into `scene->mMeshes`. So the loader walks the nodes and looks every mesh up in the scene.
 ```
@@ -171,9 +171,9 @@ For an `.obj` file, Assimp makes a root node with a child node per object, and e
 
 ```quiz
 Why does `planet.obj` consist of two meshes, `planet` and `rings`, and not one?
-- [ ] Because a mesh can have at most 1000 triangles
-- [x] A mesh has exactly one material, and the planet and the ring have different materials (different diffuse and specular maps)
 - [ ] Because Assimp can only load objects that are spheres
+- [x] A mesh has exactly one material, and the planet and the ring have different materials (different diffuse and specular maps)
+- [ ] Because a mesh can have at most 1000 triangles
 ---
 A mesh is the smallest unit we draw with one set of textures. Everything that needs other textures – here the ring with `rings.png` and `rings_specular.png` – becomes a mesh of its own, and the model is the collection of both.
 ```
@@ -273,9 +273,9 @@ the model unchanged.
 :::opengl
 ```quiz
 Your OpenGL program now calls `Assimp::Importer::ReadFile`. What does the build need in addition to the earlier chapters?
-- [ ] Nothing: Assimp is part of OpenGL
-- [x] Assimp's headers (`<assimp/Importer.hpp>`, `<assimp/scene.h>`, `<assimp/postprocess.h>`) and its library at link time – `-lassimp` on Linux
 - [ ] Only `#define ASSIMP_IMPLEMENTATION` in one source file, like stb_image
+- [x] Assimp's headers (`<assimp/Importer.hpp>`, `<assimp/scene.h>`, `<assimp/postprocess.h>`) and its library at link time – `-lassimp` on Linux
+- [ ] Nothing: Assimp is part of OpenGL
 ---
 Assimp is a compiled library, not a single header: the headers declare its classes and functions, and the linker needs the library that contains them. That's why the build gets `-lassimp` (or Assimp's `.lib` and DLL on Windows).
 ```
@@ -283,9 +283,9 @@ Assimp is a compiled library, not a single header: the headers declare its class
 :::vulkan
 ```quiz
 How does the Vulkan program get tinyobjloader's code into the build?
-- [ ] It links with `-ltinyobjloader`
 - [x] `#define TINYOBJLOADER_IMPLEMENTATION` before `#include <tiny_obj_loader.h>` in exactly one source file – the header then contains the library's code
 - [ ] Vulkan loads `.obj` files itself; tinyobjloader is only needed for the `.mtl` file
+- [ ] It links with `-ltinyobjloader`
 ---
 tinyobjloader is a single-header library like `stb_image.h`: normally the header only declares, and in the one file with the define it also compiles the implementation. There is nothing to link.
 ```
@@ -293,9 +293,9 @@ tinyobjloader is a single-header library like `stb_image.h`: normally the header
 :::d3d12
 ```quiz
 The DirectX 12 program calls `Assimp::Importer::ReadFile`. What does the project need for that?
-- [ ] Nothing: Assimp is part of the Windows SDK, like `d3d12.lib`
 - [x] Assimp's include folder and its library at link time (and its DLL next to the `.exe`) – for example installed with `vcpkg install assimp`
 - [ ] Only `#define ASSIMP_IMPLEMENTATION` in one source file, like stb_image
+- [ ] Nothing: Assimp is part of the Windows SDK, like `d3d12.lib`
 ---
 Assimp is a compiled library, not a single header: the headers declare its classes and functions, the linker needs its `.lib`, and the program loads its DLL when it starts. vcpkg's integration sets up the include folder and the library for you.
 ```
@@ -350,9 +350,9 @@ Assimp's headers arrive in the *Model* chapter.
 
 ```quiz
 In the next chapters, how will the program draw the loaded planet?
-- [ ] As one object with one texture, since a model is a single shape
-- [x] By drawing each of its meshes – the planet and the ring – with that mesh's own vertices, indices and textures
 - [ ] By asking the model loader to draw it
+- [x] By drawing each of its meshes – the planet and the ring – with that mesh's own vertices, indices and textures
+- [ ] As one object with one texture, since a model is a single shape
 ---
 A model loader only reads data; drawing is our job. A model is a collection of meshes, so drawing the model means drawing every mesh with its own material's textures.
 ```

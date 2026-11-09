@@ -102,9 +102,9 @@ that we control ambient with the light. So there's no need to store it separatel
 
 ```quiz
 Why does the material no longer have its own ambient colour once the diffuse map arrives?
+- [ ] A texture can only replace one of the colours, and learnopengl chose diffuse
 - [ ] Ambient lighting is switched off when a texture is used
 - [x] The ambient colour of a surface is practically always its diffuse colour, and the light's `ambient` intensity already controls how strong it is – so the ambient term samples the diffuse map too
-- [ ] A texture can only replace one of the colours, and learnopengl chose diffuse
 ---
 Both terms describe the surface's own colour; only the light decides how much of it shows (0.2 for ambient, 0.5 for diffuse in this project). So `ambient = light.ambient * diffuse colour` and `diffuse = light.diffuse * diff * diffuse colour`, both from the same texel.
 ```
@@ -557,9 +557,9 @@ one 16-byte row – and `OnUpdate` keeps the specular colour at 0.5 and, like le
 :::opengl
 ```quiz
 `lightingShader.setInt("material.diffuse", 0);` runs once, before the render loop. What does it do?
+- [ ] It binds `diffuseMap` to texture unit 0 for the rest of the program
 - [ ] It uploads the diffuse map's pixels to the shader
 - [x] It tells the sampler `material.diffuse` to read from texture unit 0 – whatever texture is bound to `GL_TEXTURE0` when the cube is drawn
-- [ ] It binds `diffuseMap` to texture unit 0 for the rest of the program
 ---
 A sampler uniform holds a texture unit number, not a texture. The texture itself is attached to the unit with `glActiveTexture(GL_TEXTURE0)` and `glBindTexture` in the render loop; the shader reads whatever is bound there at draw time.
 ```
@@ -578,8 +578,8 @@ The layout declares binding 0 as a combined image sampler for the fragment stage
 ```quiz
 How does the pixel shader's `Texture2D diffuseMap : register(t0);` end up reading `container2.png`?
 - [ ] `LoadTexture` binds the texture to register t0 directly
-- [x] `LoadTexture` puts its SRV in heap slot 1; root parameter 2 is a table whose SRV range starts at t0, and `SetGraphicsRootDescriptorTable(2, …)` points it at slot 1
 - [ ] The static sampler s0 holds the texture
+- [x] `LoadTexture` puts its SRV in heap slot 1; root parameter 2 is a table whose SRV range starts at t0, and `SetGraphicsRootDescriptorTable(2, …)` points it at slot 1
 ---
 Registers are reached through the root signature: the range `SRV, 1, 0` says "the table's first descriptor is t0", and the GPU handle given to `SetGraphicsRootDescriptorTable` says where the table starts in the heap – slot 1, where the SRV is. The static sampler only says *how* to read the texture.
 ```
@@ -621,9 +621,9 @@ by cutting out some parts, transforming it to black and white and increasing the
 
 ```quiz
 In the specular map, the wooden planks are almost black and the steel frame is bright. What does that mean for the lighting?
-- [ ] The wood is drawn black and the steel white
 - [x] The specular term is multiplied by the map: on the wood it becomes almost 0 (no highlight), on the steel it keeps nearly the light's full specular intensity
 - [ ] The wood gets a higher shininess and the steel a lower one
+- [ ] The wood is drawn black and the steel white
 ---
 The specular map only scales the specular component; the colour of the surface still comes from the diffuse map. Black (0, 0, 0) removes the highlight, white (1, 1, 1) lets it through at full strength, grey values lie in between.
 ```
@@ -794,8 +794,8 @@ row, so the row of `shininess` has to be filled up in C++:
 :::opengl
 ```quiz
 Both maps are bound with `glBindTexture(GL_TEXTURE_2D, …)`. Why doesn't the second call replace the first?
-- [ ] Because the two textures have different sizes
 - [x] `glActiveTexture(GL_TEXTURE1)` selects texture unit 1 first, so the specular map is bound to unit 1 while the diffuse map stays on unit 0
+- [ ] Because the two textures have different sizes
 - [ ] `glBindTexture` adds textures to a list; the shader takes them in order
 ---
 `glBindTexture` binds to the *active* texture unit. With `glActiveTexture(GL_TEXTURE0)` before the first bind and `GL_TEXTURE1` before the second, each sampler (`material.diffuse` = 0, `material.specular` = 1) finds its own texture.
@@ -804,9 +804,9 @@ Both maps are bound with `glBindTexture(GL_TEXTURE_2D, …)`. Why doesn't the se
 :::vulkan
 ```quiz
 Why are the maps `layout(binding = N) uniform sampler2D` declarations next to the uniform block instead of members of `Material`, as in learnopengl?
+- [ ] Because samplers must always use binding numbers below the uniform buffer's
 - [ ] Because Vulkan allows only one texture per struct
 - [x] A uniform block cannot contain samplers, and `Material` lives in the uniform block; samplers are opaque types that the descriptor set provides, each through a binding of its own
-- [ ] Because samplers must always use binding numbers below the uniform buffer's
 ---
 The block is plain memory read at fixed offsets; a sampler is a handle to an image view and a sampler object, provided by a combined image sampler descriptor – and Vulkan GLSL doesn't allow opaque types in structs at all. So each map gets its own binding (0, 1 and later 3), and the struct keeps only the numbers.
 ```
@@ -878,9 +878,9 @@ The first three exercises are for you to try on your own. For the second, only t
 
 ```quiz
 You invert the specular map in the shader (1 minus the sampled value). What do you see?
-- [ ] The whole crate turns into its photographic negative
-- [x] The wood gets a highlight and the steel frame loses most of it – only the dark cracks in the steel still shine a little
 - [ ] Nothing changes, because the specular map is black and white
+- [x] The wood gets a highlight and the steel frame loses most of it – only the dark cracks in the steel still shine a little
+- [ ] The whole crate turns into its photographic negative
 ---
 Only the specular factor is inverted, not the colour: the almost-black wood becomes almost white in the map, so it now lets the highlight through, while the bright steel blocks it. The diffuse map – the crate's colour – is untouched.
 ```

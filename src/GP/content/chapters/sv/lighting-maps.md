@@ -99,9 +99,9 @@ när vi styr det ambienta med ljuset. Det finns alltså ingen anledning att lagr
 
 ```quiz
 Varför har materialet ingen egen ambient färg längre när diffuse mapen kommer in?
+- [ ] En textur kan bara ersätta en av färgerna, och learnopengl valde den diffusa
 - [ ] Ambient belysning stängs av när en textur används
 - [x] En ytas ambienta färg är i praktiken alltid dess diffusa färg, och ljusets `ambient`-intensitet styr redan hur stark den är – så den ambienta termen läser också diffuse mapen
-- [ ] En textur kan bara ersätta en av färgerna, och learnopengl valde den diffusa
 ---
 Båda termerna beskriver ytans egen färg; bara ljuset avgör hur mycket av den som syns (0.2 för ambient, 0.5 för diffust i det här projektet). Alltså `ambient = light.ambient * diffus färg` och `diffuse = light.diffuse * diff * diffus färg`, båda från samma texel.
 ```
@@ -555,9 +555,9 @@ shininess 64:
 :::opengl
 ```quiz
 `lightingShader.setInt("material.diffuse", 0);` körs en gång, före renderloopen. Vad gör den?
+- [ ] Den binder `diffuseMap` till texturenhet 0 för resten av programmet
 - [ ] Den laddar upp diffuse mapens pixlar till shadern
 - [x] Den talar om för samplern `material.diffuse` att den ska läsa från texturenhet 0 – vilken textur som än är bunden till `GL_TEXTURE0` när kuben ritas
-- [ ] Den binder `diffuseMap` till texturenhet 0 för resten av programmet
 ---
 En sampler-uniform innehåller ett texturenhetsnummer, inte en textur. Själva texturen kopplas till enheten med `glActiveTexture(GL_TEXTURE0)` och `glBindTexture` i renderloopen; shadern läser det som är bundet där när ritanropet görs.
 ```
@@ -576,8 +576,8 @@ Layouten deklarerar binding 0 som en combined image sampler för fragmentsteget,
 ```quiz
 Hur kommer det sig att pixel shaderns `Texture2D diffuseMap : register(t0);` läser `container2.png`?
 - [ ] `LoadTexture` binder texturen direkt till register t0
-- [x] `LoadTexture` lägger dess SRV i heap-plats 1; root parameter 2 är en tabell vars SRV-range börjar på t0, och `SetGraphicsRootDescriptorTable(2, …)` pekar den på plats 1
 - [ ] Den statiska samplern s0 innehåller texturen
+- [x] `LoadTexture` lägger dess SRV i heap-plats 1; root parameter 2 är en tabell vars SRV-range börjar på t0, och `SetGraphicsRootDescriptorTable(2, …)` pekar den på plats 1
 ---
 Register nås genom root signaturen: rangen `SRV, 1, 0` säger "tabellens första descriptor är t0", och GPU-handtaget till `SetGraphicsRootDescriptorTable` säger var tabellen börjar i heapen – plats 1, där SRV:n ligger. Den statiska samplern säger bara *hur* texturen ska läsas.
 ```
@@ -618,9 +618,9 @@ genom att klippa bort vissa delar, göra den svartvit och öka ljusstyrkan/kontr
 
 ```quiz
 I specular mapen är träplankorna nästan svarta och stålramen ljus. Vad betyder det för belysningen?
-- [ ] Träet ritas svart och stålet vitt
 - [x] Den spekulära termen multipliceras med kartan: på träet blir den nästan 0 (ingen högdager), på stålet behåller den nästan ljusets fulla spekulära intensitet
 - [ ] Träet får högre shininess och stålet lägre
+- [ ] Träet ritas svart och stålet vitt
 ---
 Specular mapen skalar bara den spekulära komponenten; ytans färg kommer fortfarande från diffuse mapen. Svart (0, 0, 0) tar bort högdagern, vitt (1, 1, 1) släpper igenom den med full styrka, gråa värden ligger där emellan.
 ```
@@ -789,8 +789,8 @@ ny 16-byte-rad, så raden med `shininess` måste fyllas ut i C++:
 :::opengl
 ```quiz
 Båda kartorna binds med `glBindTexture(GL_TEXTURE_2D, …)`. Varför ersätter inte det andra anropet det första?
-- [ ] Eftersom de två texturerna har olika storlek
 - [x] `glActiveTexture(GL_TEXTURE1)` väljer först texturenhet 1, så specular mapen binds till enhet 1 medan diffuse mapen stannar på enhet 0
+- [ ] Eftersom de två texturerna har olika storlek
 - [ ] `glBindTexture` lägger till texturer i en lista; shadern tar dem i ordning
 ---
 `glBindTexture` binder till den *aktiva* texturenheten. Med `glActiveTexture(GL_TEXTURE0)` före den första bindningen och `GL_TEXTURE1` före den andra hittar varje sampler (`material.diffuse` = 0, `material.specular` = 1) sin egen textur.
@@ -799,9 +799,9 @@ Båda kartorna binds med `glBindTexture(GL_TEXTURE_2D, …)`. Varför ersätter 
 :::vulkan
 ```quiz
 Varför är kartorna deklarationer `layout(binding = N) uniform sampler2D` bredvid uniform-blocket i stället för medlemmar i `Material`, som i learnopengl?
+- [ ] Eftersom samplers alltid måste ha lägre binding-nummer än uniform buffern
 - [ ] Eftersom Vulkan bara tillåter en textur per struct
 - [x] Ett uniform-block kan inte innehålla samplers, och `Material` ligger i uniform-blocket; samplers är opaka typer som descriptor setet tillhandahåller, var och en genom en egen binding
-- [ ] Eftersom samplers alltid måste ha lägre binding-nummer än uniform buffern
 ---
 Blocket är vanligt minne som läses på fasta offset; en sampler är ett handtag till en image view och ett samplerobjekt, som en combined image sampler-descriptor tillhandahåller – och Vulkan-GLSL tillåter inte opaka typer i structar alls. Därför får varje karta en egen binding (0, 1 och senare 3), och structen behåller bara talen.
 ```
@@ -869,9 +869,9 @@ De tre första övningarna provar du på egen hand. För den andra ändras bara 
 
 ```quiz
 Du inverterar specular mapen i shadern (1 minus det lästa värdet). Vad ser du?
-- [ ] Hela lådan blir sitt eget fotografiska negativ
-- [x] Träet får en högdager och stålramen förlorar det mesta av sin – bara de mörka sprickorna i stålet glänser fortfarande lite
 - [ ] Ingenting ändras, eftersom specular mapen är svartvit
+- [x] Träet får en högdager och stålramen förlorar det mesta av sin – bara de mörka sprickorna i stålet glänser fortfarande lite
+- [ ] Hela lådan blir sitt eget fotografiska negativ
 ---
 Bara den spekulära faktorn inverteras, inte färgen: det nästan svarta träet blir nästan vitt i kartan och släpper nu igenom högdagern, medan det ljusa stålet stoppar den. Diffuse mapen – lådans färg – är orörd.
 ```

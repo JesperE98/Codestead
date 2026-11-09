@@ -416,9 +416,9 @@ Där har vi det! Vi har just lyckats skicka ett värde från vertex shadern till
 :::opengl
 ```quiz
 Hur kopplar OpenGL ihop en `out`-variabel i vertex shadern med en `in`-variabel i fragment shadern i det här projektet?
-- [x] De måste ha samma namn och samma typ; kopplingen görs när programmet länkas
 - [ ] Genom ordningen de deklareras i, oavsett namn
 - [ ] Med `glVertexAttribPointer`, som ett vertexattribut
+- [x] De måste ha samma namn och samma typ; kopplingen görs när programmet länkas
 ---
 Med GLSL 3.30 (och utan explicita locations på utdatan) parar länkaren ihop utdata och indata efter namn och typ. `glVertexAttribPointer` gäller bara vertex shaderns indata från vertexdatan.
 ```
@@ -426,8 +426,8 @@ Med GLSL 3.30 (och utan explicita locations på utdatan) parar länkaren ihop ut
 :::vulkan
 ```quiz
 Hur kopplar Vulkan ihop en `out`-variabel i vertex shadern med en `in`-variabel i fragment shadern?
-- [x] Genom `location` (med matchande typer); namnen spelar ingen roll
 - [ ] Efter namn, som i OpenGL
+- [x] Genom `location` (med matchande typer); namnen spelar ingen roll
 - [ ] Med en attributbeskrivning i `main.cpp`
 ---
 I Vulkan matchas gränssnittet mellan stegen efter location. Attributbeskrivningarna matar bara vertex shaderns indata från vertex buffern.
@@ -713,9 +713,9 @@ vertexattributen, och det är vad vi ska göra nu.
 :::opengl
 ```quiz
 Var i renderingsloopen måste `glUniform4f(vertexColorLocation, ...)` anropas?
-- [x] Efter `ourShader.use()`, eftersom `glUniform*` sätter uniformen i det program som är aktivt
-- [ ] Före `ourShader.use()`, eftersom `glUseProgram` nollställer alla uniforms
 - [ ] Var som helst: `glGetUniformLocation` har redan bundit uniformen till programmet
+- [ ] Före `ourShader.use()`, eftersom `glUseProgram` nollställer alla uniforms
+- [x] Efter `ourShader.use()`, eftersom `glUniform*` sätter uniformen i det program som är aktivt
 ---
 `glGetUniformLocation` slår bara upp location; programmet behöver inte vara aktivt för det. `glUniform*` skriver i det aktiva programmet, så `glUseProgram` (här `ourShader.use()`) måste komma först.
 ```
@@ -723,9 +723,9 @@ Var i renderingsloopen måste `glUniform4f(vertexColorLocation, ...)` anropas?
 :::vulkan
 ```quiz
 Fragment shadern läser ett push constant-block. Vad måste `VkPushConstantRange` i pipeline layouten innehålla?
-- [x] `VK_SHADER_STAGE_FRAGMENT_BIT` i `stageFlags`, och en offset och storlek som täcker blocket
-- [ ] En descriptor set med en uniform buffer för blocket
 - [ ] Ingenting: push constants behöver inte deklareras i pipeline layouten
+- [ ] En descriptor set med en uniform buffer för blocket
+- [x] `VK_SHADER_STAGE_FRAGMENT_BIT` i `stageFlags`, och en offset och storlek som täcker blocket
 ---
 Pipeline layouten deklarerar vilka steg som läser vilka byte av push constants, och `vkCmdPushConstants` måste använda stegflaggor och ett intervall som ryms inom den. Descriptor sets är till för uniform buffers, som push constants inte behöver.
 ```
@@ -733,9 +733,9 @@ Pipeline layouten deklarerar vilka steg som läser vilka byte av push constants,
 :::d3d12
 ```quiz
 Hur ser pixel shadern de root constants som `SetGraphicsRoot32BitConstants(0, ...)` sätter?
+- [ ] Som en constant buffer view som först måste skapas i en descriptor heap
 - [x] Som en constant buffer (`cbuffer`) på det register som gavs till `InitAsConstants`, här `b0`
 - [ ] Som ett vertexattribut med semantiken `COLOR`
-- [ ] Som en constant buffer view som först måste skapas i en descriptor heap
 ---
 Root constants ligger i själva root signaturen. Root parameter 0 skapades med `InitAsConstants(..., 0)`, så den hör till register `b0`, där shadern deklarerar sin `cbuffer`. Constant buffer views är det andra, mer allmänna sättet, som vi kommer att använda senare.
 ```
@@ -994,9 +994,9 @@ shader läser dem längre – och vi återanvänder root parametern i övningarn
 
 ```quiz
 Varje vertex innehåller nu 3 floats för positionen följda av 3 floats för färgen (en float är 4 byte). På vilken byteoffset börjar en vertex färg, och hur många byte är det från en vertex till nästa?
+- [ ] Offset 24, 12 byte till nästa vertex
 - [ ] Offset 0, 12 byte till nästa vertex
 - [x] Offset 12, 24 byte till nästa vertex
-- [ ] Offset 24, 12 byte till nästa vertex
 - [ ] Offset 12, 12 byte till nästa vertex
 ---
 Färgen kommer efter positionens tre floats: 3 × 4 = 12 byte. En hel vertex är 6 floats, så stride är 6 × 4 = 24 byte – för båda attributen, eftersom de ligger i samma buffer.
@@ -1022,8 +1022,8 @@ Fragmentinterpolering tillämpas på alla fragment shaderns indataattribut.
 ```quiz
 Ett fragment ligger exakt mitt på kanten mellan det röda hörnet (1, 0, 0) och det gröna hörnet (0, 1, 0). Vilken färg får fragment shadern?
 - [ ] Rött eller grönt, beroende på vilket hörn rasterizern behandlade först
-- [x] (0.5, 0.5, 0.0): hälften rött och hälften grönt
 - [ ] (1.0, 1.0, 0.0): båda färgerna adderade
+- [x] (0.5, 0.5, 0.0): hälften rött och hälften grönt
 - [ ] Det tredje hörnets färg, blått
 ---
 Vertex shaderns utdata interpoleras linjärt över triangeln. Mitt på en kant bidrar de två hörnen med 50 % var, och det tredje hörnet (som inte ligger på kanten) bidrar inte alls.
@@ -1375,9 +1375,9 @@ OpenGL kompilerar GLSL medan programmet körs, i drivrutinen: `glCompileShader` 
 :::vulkan
 ```quiz
 När kompileras det här projektets shaders?
-- [x] Innan programmet körs: `glslc` kompilerar dem till SPIR-V, som programmet läser in när det körs
-- [ ] Medan programmet körs: drivrutinen kompilerar GLSL-källtexten
 - [ ] Aldrig: GPU:n kör GLSL-källtexten direkt
+- [ ] Medan programmet körs: drivrutinen kompilerar GLSL-källtexten
+- [x] Innan programmet körs: `glslc` kompilerar dem till SPIR-V, som programmet läser in när det körs
 ---
 Vulkan tar bara emot SPIR-V, så GLSL-koden kompileras i förväg. När programmet körs översätter drivrutinen SPIR-V till GPU:ns egen kod när pipelinen skapas.
 ```
@@ -1385,9 +1385,9 @@ Vulkan tar bara emot SPIR-V, så GLSL-koden kompileras i förväg. När programm
 :::d3d12
 ```quiz
 När kompileras det här projektets shaders?
+- [ ] Aldrig: GPU:n kör HLSL-källtexten direkt
 - [ ] Innan programmet körs, av C++-bygget
 - [x] Medan programmet körs: `D3DCompileFromFile` kompilerar `shaders.hlsl` till bytekod för pipeline state-objektet
-- [ ] Aldrig: GPU:n kör HLSL-källtexten direkt
 ---
 Exemplet kompilerar HLSL medan programmet körs med biblioteket D3DCompiler; riktiga program kompilerar ofta i förväg med `fxc` eller `dxc`.
 ```
@@ -1484,8 +1484,8 @@ Hörnens ordning (winding order) avgör vilken sida av en triangel som är frams
 :::vulkan
 ```quiz
 Varför ändrar uppgiften upside-down också `rasterizer.frontFace` till `VK_FRONT_FACE_COUNTER_CLOCKWISE`?
-- [x] Att vända y kastar om hörnens ordning på skärmen, så med back-face culling skulle triangeln annars tas bort
 - [ ] Eftersom Vulkans y-axel pekar nedåt behöver varje shader som ändrar y det
+- [x] Att vända y kastar om hörnens ordning på skärmen, så med back-face culling skulle triangeln annars tas bort
 - [ ] För att färgerna ska interpoleras åt rätt håll
 ---
 Pipelinen tar bort baksidor och avgör framsidan utifrån hörnens ordning på skärmen. Vändningen gör vår medurs triangel moturs, så vi förklarar att trianglar som går moturs är framsidor.
@@ -1495,8 +1495,8 @@ Pipelinen tar bort baksidor och avgör framsidan utifrån hörnens ordning på s
 ```quiz
 Varför sätter uppgiften upside-down också `CullMode` till `D3D12_CULL_MODE_NONE`?
 - [x] Att vända y kastar om hörnens ordning på skärmen, så triangeln blir en baksida, som standardvärdet för rasterizer state tar bort
-- [ ] Eftersom pixel shadern inte kan skriva till en speglad triangel
 - [ ] För att färgerna ska interpoleras åt rätt håll
+- [ ] Eftersom pixel shadern inte kan skriva till en speglad triangel
 ---
 Standardvärdet för rasterizer state räknar trianglar som går medurs som framsidor och tar bort baksidor. Efter vändningen går vår triangel moturs på skärmen, så vi ritar båda sidorna.
 ```
@@ -1702,8 +1702,8 @@ interpolerade värdena förblir negativa en bra bit från det hörnet är ett st
 Varför är ett av triangelns hörn svart när positionen ges ut som färg?
 - [ ] Rasterizern interpolerar inte positioner, bara färger
 - [x] Dess x och y är inte positiva, och färgkomponenter under 0 kläms till 0 när de skrivs till färgbuffern
-- [ ] Vertex shadern skriver inte längre någon färg för den vertexen
 - [ ] Offseten skjuter ut hörnet utanför fönstret
+- [ ] Vertex shadern skriver inte längre någon färg för den vertexen
 ---
 Positioner från -0.5 till 0.5 blir färger från -0.5 till 0.5. Färgbuffern lagrar värden mellan 0 och 1, så en vertex med bara noll eller negativa komponenter blir svart – och det blir också området där de interpolerade värdena fortfarande är negativa.
 ```

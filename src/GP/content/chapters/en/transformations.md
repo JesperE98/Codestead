@@ -175,8 +175,8 @@ prove very useful when doing lighting calculations later on.
 
 ```quiz
 The dot product of two unit vectors is 0. What does that tell you about them?
-- [ ] They point in the same direction
 - [x] They are perpendicular to each other (at a 90° angle)
+- [ ] They point in the same direction
 - [ ] They point in opposite directions
 - [ ] One of them must be the zero vector
 ---
@@ -303,10 +303,10 @@ multiplication becomes second nature to you.
 
 ```quiz
 A is a 2×3 matrix (2 rows, 3 columns) and B is a 3×4 matrix. Which statements are true?
-- [x] A · B is defined, and the result is a 2×4 matrix
-- [x] B · A is not defined, because B has 4 columns but A has only 2 rows
-- [ ] A · B and B · A are both defined, and they are equal
 - [ ] A · B is defined, and the result is a 3×3 matrix
+- [ ] A · B and B · A are both defined, and they are equal
+- [x] B · A is not defined, because B has 4 columns but A has only 2 rows
+- [x] A · B is defined, and the result is a 2×4 matrix
 ---
 The columns of the left matrix must match the rows of the right one: A has 3 columns and B has 3 rows, so A · B works and has A's rows and B's columns (2×4). For B · A, B's 4 columns don't match A's 2 rows. And even when both orders are defined, matrix multiplication is not commutative.
 ```
@@ -425,9 +425,9 @@ input assembler fills in the missing w with 1.0. So every vertex arrives as a po
 
 ```quiz
 You multiply the translation matrix that moves by (1, 2, 3) with the vector (4, 0, 0, w). What comes out for w = 1 and for w = 0?
+- [ ] (4, 0, 0, 1) for w = 1, and (5, 2, 3, 0) for w = 0
 - [x] (5, 2, 3, 1) for w = 1, and (4, 0, 0, 0) for w = 0
 - [ ] (5, 2, 3, 1) for both values of w
-- [ ] (4, 0, 0, 1) for w = 1, and (5, 2, 3, 0) for w = 0
 ---
 The translation sits in the 4th column, which is multiplied by w. With w = 1 it is added once: a point is moved. With w = 0 it contributes nothing: a direction vector stays the same.
 ```
@@ -555,9 +555,9 @@ together as M = T · R · S: the vertices are scaled, then rotated, then transla
 
 ```quiz
 M = Trans · Scale, where Scale scales by 2 and Trans translates by (1, 2, 3). What is M · (1, 1, 1, 1)?
+- [ ] (2, 3, 4, 1)
 - [x] (3, 4, 5, 1)
 - [ ] (4, 6, 8, 1)
-- [ ] (2, 3, 4, 1)
 ---
 The matrix closest to the vector is applied first: the scale makes (2, 2, 2), then the translation gives (3, 4, 5). (4, 6, 8) is what Scale · Trans would give – translate to (2, 3, 4) first, then scale, so the translation is scaled too.
 ```
@@ -1094,8 +1094,8 @@ The next chapter fixes that with a projection matrix.
 ```quiz
 Why is the third argument of `glUniformMatrix4fv` `GL_FALSE` here?
 - [x] GLM already stores its matrices column by column, the layout OpenGL expects, so nothing has to be transposed
-- [ ] `GL_FALSE` means the matrix values are not normalized to 0..1
 - [ ] GLM stores its matrices row by row, and `GL_FALSE` tells OpenGL to swap rows and columns
+- [ ] `GL_FALSE` means the matrix values are not normalized to 0..1
 ---
 The third argument asks whether OpenGL should transpose the matrix. GLM's column-major storage is already what OpenGL expects, so `glm::value_ptr` can hand the 16 floats over as they are.
 ```
@@ -1103,9 +1103,9 @@ The third argument asks whether OpenGL should transpose the matrix. GLM's column
 :::vulkan
 ```quiz
 Why does `shader.vert` negate `gl_Position.y` after multiplying with `pc.transform`?
-- [x] The GLM matrices are built in learnopengl's coordinates with +y up, while Vulkan's clip space has +y pointing down; flipping at the end gives the same picture as learnopengl
-- [ ] Push constants arrive in the shader upside down and have to be corrected
 - [ ] The flip only corrects the texture coordinates, which Vulkan reads from the bottom up
+- [ ] Push constants arrive in the shader upside down and have to be corrected
+- [x] The GLM matrices are built in learnopengl's coordinates with +y up, while Vulkan's clip space has +y pointing down; flipping at the end gives the same picture as learnopengl
 ---
 All the math – counter-clockwise rotations, a translation to the bottom right – assumes y up. Flipping after the transformation converts the finished y-up position to Vulkan's y-down clip space. Without it the picture would be mirrored (and its triangles, now counter-clockwise on screen, would be culled).
 ```
@@ -1113,9 +1113,9 @@ All the math – counter-clockwise rotations, a translation to the bottom right 
 :::d3d12
 ```quiz
 Why is the matrix passed through `XMMatrixTranspose` before it is stored in the root constants?
+- [ ] It turns the counter-clockwise rotation into the clockwise one Direct3D expects
 - [x] `XMFLOAT4X4` stores the matrix row by row, but HLSL reads a cbuffer matrix column by column; after the transpose the shader's `transform` equals M, and `mul(position, transform)` computes v · M
 - [ ] Root constants must always be transposed, whatever their type
-- [ ] It turns the counter-clockwise rotation into the clockwise one Direct3D expects
 ---
 The transpose cancels the difference between DirectXMath's row-major storage and HLSL's default column_major packing. With the position as the first argument of `mul`, the shader multiplies a row vector by M, just like DirectXMath on the CPU.
 ```
@@ -1203,8 +1203,8 @@ bottom-right corner of the window – partly outside it.
 :::opengl vulkan
 ```quiz
 The code does `transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));` and then `transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));`. What happens to the container's vertices?
-- [x] They are rotated about the origin first (the container's own centre), then moved to the bottom right: the container spins in place in the bottom right
 - [ ] They are moved to the bottom right first, then rotated about the window's centre: the container circles around the centre
+- [x] They are rotated about the origin first (the container's own centre), then moved to the bottom right: the container spins in place in the bottom right
 - [ ] The order of the two calls doesn't matter; both orders give the same picture
 ---
 Each GLM call multiplies the new matrix on the right, so `transform` is T · R. The matrix nearest the vertex, R, is applied first: read the calls from the bottom up.
@@ -1213,9 +1213,9 @@ Each GLM call multiplies the new matrix on the right, so `transform` is T · R. 
 :::d3d12
 ```quiz
 The code builds `XMMatrixRotationZ(time) * XMMatrixTranslation(0.5f, -0.5f, 0.0f)`. What happens to the container's vertices?
-- [x] They are rotated about the origin first (the container's own centre), then moved to the bottom right: the container spins in place in the bottom right
-- [ ] They are moved to the bottom right first, then rotated about the window's centre: the container circles around the centre
 - [ ] The order of the two matrices doesn't matter; both orders give the same picture
+- [ ] They are moved to the bottom right first, then rotated about the window's centre: the container circles around the centre
+- [x] They are rotated about the origin first (the container's own centre), then moved to the bottom right: the container spins in place in the bottom right
 ---
 DirectXMath uses row vectors: v · R · T applies R first, then T – a DirectXMath product reads from left to right.
 ```
@@ -1372,8 +1372,8 @@ container comes back upside down.
 
 ```quiz
 The second container is scaled by `sin(time)`, which is negative half of the time. What do you see while it is negative?
-- [x] The container upside down – turned by 180° – because scaling both x and y by a negative factor is a half turn
 - [ ] The container mirrored from left to right
+- [x] The container upside down – turned by 180° – because scaling both x and y by a negative factor is a half turn
 - [ ] Nothing: negative scale factors are clamped to zero
 ---
 (−s·x, −s·y) is the point (x, y) scaled by s and turned by 180°. A mirror image would need an odd number of negated axes, for example only x. Since the picture is not mirrored, its triangles keep their winding order – so even with back-face culling nothing disappears.

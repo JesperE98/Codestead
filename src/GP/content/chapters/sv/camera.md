@@ -143,8 +143,8 @@ För vår kamera i (0, 0, 3) som tittar mot origo blir resultaten enkla: riktnin
 ```quiz
 Kamerans riktningsvektor räknas ut som `normalize(cameraPos - cameraTarget)`. Åt vilket håll pekar den?
 - [ ] Från kameran mot målet – åt det håll kameran tittar
-- [x] Från målet mot kameran – motsatt det håll kameran tittar, längs vyrymdens positiva z-axel
 - [ ] Längs världens uppåtaxel, vinkelrätt mot siktlinjen
+- [x] Från målet mot kameran – motsatt det håll kameran tittar, längs vyrymdens positiva z-axel
 ---
 Kameran tittar längs sin egen negativa z-axel, så vyrymdens positiva z-axel pekar bakåt, ut ur skärmen. Att subtrahera målet från positionen ger precis den axeln – därför är namnet *riktning* lite missvisande.
 ```
@@ -236,9 +236,9 @@ förflyttning med -cameraPos = (0, 0, -3): exakt den matris du hade innan.
 
 ```quiz
 Efter uppgiften **look-at** är bilden identisk med den tidigare. Varför är en look-at-matris från (0, 0, 3) mot origo, med (0, 1, 0) som uppåt, lika med en förflyttning med (0, 0, -3)?
-- [x] Kamerans höger-, uppåt- och riktningsvektorer är världens x-, y- och z-axel, så rotationsdelen är enhetsmatrisen och bara förflyttningen med -cameraPos återstår
 - [ ] Look-at-funktionen ignorerar sitt mål när målet är origo
 - [ ] De två matriserna är olika, men skillnaden är för liten för att synas i ett fönster på 800×600
+- [x] Kamerans höger-, uppåt- och riktningsvektorer är världens x-, y- och z-axel, så rotationsdelen är enhetsmatrisen och bara förflyttningen med -cameraPos återstår
 ---
 LookAt-matrisen är en rotation (kamerans axlar som rader) gånger en förflyttning med den negerade positionen. När kamerans axlar är lika med världens axlar gör rotationen ingenting, så matriserna är exakt lika – inte bara snarlika.
 ```
@@ -668,8 +668,8 @@ Du har säkert undrat vid det här laget: hur sätter och ändrar vi yaw och pit
 
 ```quiz
 Med yaw = 0° och pitch = 0° ger formeln riktningen (cos 0 · cos 0, sin 0, sin 0 · cos 0). Vart skulle kameran titta, och varför börjar koden med yaw = -90°?
-- [x] Längs +x, åt höger; yaw = -90° ger (0, 0, -1), riktningen kameran tittade åt innan
 - [ ] Längs -z; yaw = -90° vänder kameran upp och ned för att passa fönstrets y-axel
+- [x] Längs +x, åt höger; yaw = -90° ger (0, 0, -1), riktningen kameran tittade åt innan
 - [ ] Rakt upp längs +y; -90° lutar ned den till horisonten
 ---
 cos 0 = 1 och sin 0 = 0, så riktningen är (1, 0, 0). Med yaw = -90° är cos(-90°) = 0 och sin(-90°) = -1: riktningen är (0, 0, -1), längs den negativa z-axeln, så scenen ser likadan ut som innan muskoden lades till.
@@ -1059,9 +1059,9 @@ när du flyttar den uppåt tittar du uppåt – men aldrig längre än ±89° �
 :::opengl vulkan
 ```quiz
 Vad gör `glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED)` för muslooken?
-- [x] Den döljer markören och håller den i fönstret; GLFW rapporterar en virtuell, obegränsad markörposition, så kameran kan fortsätta vrida sig utan att markören stannar vid fönstrets kant
 - [ ] Den stänger av callbacken för markörpositionen tills användaren klickar i fönstret
 - [ ] Den spikar fast markören i fönstrets mitt, så att `mouse_callback` alltid får 400 och 300
+- [x] Den döljer markören och håller den i fönstret; GLFW rapporterar en virtuell, obegränsad markörposition, så kameran kan fortsätta vrida sig utan att markören stannar vid fönstrets kant
 ---
 Positionerna som skickas till `mouse_callback` fortsätter att ändras – det är så callbacken räknar ut sina förflyttningar – men de begränsas inte längre av fönstret. Utan fångad markör skulle markören stanna vid skärmkanten, och kameran med den.
 ```
@@ -1069,9 +1069,9 @@ Positionerna som skickas till `mouse_callback` fortsätter att ändras – det �
 :::d3d12
 ```quiz
 Hanteraren för `WM_MOUSEMOVE` lägger tillbaka markören i fönstrets mitt med `SetCursorPos` och sätter innan dess `lastX` och `lastY` till mitten. Varför flyttas `lastX` och `lastY` också?
+- [ ] Det sätter `firstMouse` till `true` igen, så att nästa rörelse börjar om
 - [x] `SetCursorPos` orsakar ett nytt `WM_MOUSEMOVE` i mitten; med `lastX`/`lastY` redan där blir dess förflyttning 0, så hoppet tillbaka vrider inte kameran
 - [ ] `SetCursorPos` flyttar bara markören till positionen som är lagrad i `lastX` och `lastY`
-- [ ] Det sätter `firstMouse` till `true` igen, så att nästa rörelse börjar om
 ---
 Utan det skulle varje verklig rörelse följas av en lika stor rörelse tillbaka till mitten, och kameran skulle vrida sig tillbaka dit den var.
 ```
@@ -1205,9 +1205,9 @@ mest tillbaka till 45°. Och där har du det: ett enkelt kamerasystem som låter
 
 ```quiz
 Tre hack uppåt med scrollhjulet ändrar `fov` från 45 till 42. Vad händer med bilden?
+- [ ] Ingenting, förrän programmet startas om och projektionsmatrisen skapas på nytt
 - [x] Lådorna ser lite större ut: ett mindre synfält projicerar en mindre del av scenen på samma fönster
 - [ ] Lådorna ser mindre ut, eftersom ett mindre synfält flyttar kameran bakåt
-- [ ] Ingenting, förrän programmet startas om och projektionsmatrisen skapas på nytt
 ---
 Kameran flyttar sig inte – bara projektionen ändras. En smalare vyvolym sträcks ut över samma normaliserade enhetskoordinater, så allt i den ritas större. Eftersom projektionsmatrisen byggs om från `fov` varje bildruta syns ändringen direkt.
 ```

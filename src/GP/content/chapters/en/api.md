@@ -30,8 +30,8 @@ reference.
 
 ```quiz
 Strictly speaking, what is OpenGL?
-- [ ] A library written by the Khronos Group that you install next to your program
 - [x] A specification: it says what each function must do, and graphics card manufacturers implement it in their drivers
+- [ ] A library written by the Khronos Group that you install next to your program
 - [ ] A part of the operating system that works the same on every graphics card
 ---
 OpenGL itself is only a specification. The code that runs when you call `glDrawArrays` is the driver's implementation, which is why bugs in OpenGL are usually fixed by updating the driver.
@@ -91,9 +91,9 @@ in this course OpenGL 3.3 is enough; where an extension is needed, the chapter s
 
 ```quiz
 What is an OpenGL extension?
+- [ ] A newer OpenGL version that every graphics card supports
 - [x] Functionality a driver offers beyond the core specification, which your program has to check for before using it
 - [ ] A file type for OpenGL shaders
-- [ ] A newer OpenGL version that every graphics card supports
 ---
 Extensions let manufacturers ship new features before they are part of the specification. Since not every driver has them, you check for an extension before you use it; popular extensions often become part of a later OpenGL version.
 ```
@@ -123,9 +123,9 @@ much of OpenGL's design will make sense.
 
 ```quiz
 In the render loop, `glClearColor(0.2f, 0.3f, 0.3f, 1.0f);` is followed by `glClear(GL_COLOR_BUFFER_BIT);`. Which statement is right?
-- [ ] `glClearColor` fills the window, and `glClear` makes the result visible
-- [x] `glClearColor` only changes the state (the clear colour); `glClear` uses that state and fills the window with it
 - [ ] Both calls fill the window, so one of them could be removed
+- [x] `glClearColor` only changes the state (the clear colour); `glClear` uses that state and fills the window with it
+- [ ] `glClearColor` fills the window, and `glClear` makes the result visible
 ---
 `glClearColor` is a state-changing function and `glClear` a state-using function. The colour stays set in the context until you change it again.
 ```
@@ -207,9 +207,9 @@ And graphics and compute work go through the same API.
 
 ```quiz
 Why was Vulkan designed as an explicit API?
+- [ ] Because it only has to run on Windows
 - [ ] To make the first triangle shorter to write than in OpenGL
 - [x] So that the driver no longer has to guess the programmer's intent: you state exactly what you want, which reduces driver overhead and allows recording commands on several threads
-- [ ] Because it only has to run on Windows
 ---
 Older APIs left the driver to work out what you meant, which cost performance and caused differences between vendors. Vulkan makes you spell it out – more code, but predictable behaviour.
 ```
@@ -301,8 +301,8 @@ can live in, allocates a `VkDeviceMemory` itself and binds the two together.
 
 ```quiz
 What is the difference between a `VkPhysicalDevice` and a `VkDevice`?
-- [ ] They are two names for the same object
 - [x] The physical device is a graphics card you can choose; the logical device is your connection to it, with the features and queues you asked for
+- [ ] They are two names for the same object
 - [ ] The physical device is for drawing, the logical device for presenting to the window
 ---
 You pick a `VkPhysicalDevice` with `pickPhysicalDevice()` and then create a `VkDevice` for it in `createLogicalDevice()`. Almost every other object is created from the logical device.
@@ -319,9 +319,9 @@ recorded once and submitted many times.
 
 ```quiz
 How does a draw command reach the GPU in Vulkan?
+- [ ] The driver collects all calls and sends them to the GPU on its own
 - [ ] `vkCmdDraw` draws the triangle immediately
 - [x] It is recorded into a command buffer, which is submitted to a queue with `vkQueueSubmit` and executed asynchronously
-- [ ] The driver collects all calls and sends them to the GPU on its own
 ---
 The `vkCmd…` functions only record. Nothing happens on the GPU until the command buffer is submitted to a queue.
 ```
@@ -352,8 +352,8 @@ program that works on one GPU and not on another. That is why the next tool is s
 ```quiz
 What does the fence `inFlightFence` do in `drawFrame()`?
 - [ ] It makes the GPU wait until the swap chain image is available
-- [x] It makes the CPU wait until the GPU has finished the previous frame, so the command buffer is not re-recorded while it is still in use
 - [ ] It limits the frame rate to the refresh rate of the screen
+- [x] It makes the CPU wait until the GPU has finished the previous frame, so the command buffer is not re-recorded while it is still in use
 ---
 Fences are for the CPU waiting on the GPU. Ordering between operations on the GPU – acquiring, rendering, presenting – is done with semaphores.
 ```
@@ -395,9 +395,9 @@ validation errors – treat every one as a bug.
 
 ```quiz
 You make a mistake in a Vulkan call, and the validation layers are not enabled. What happens?
+- [ ] The driver corrects the mistake automatically
 - [ ] Vulkan always reports the error with a clear message
 - [x] Possibly nothing visible: the behaviour is undefined, so the program may crash, draw wrongly or happen to work on your GPU
-- [ ] The driver corrects the mistake automatically
 ---
 Vulkan itself checks very little to keep the driver fast. The validation layers do the checking during development and print a message for every misuse they find.
 ```
@@ -487,8 +487,8 @@ inline void ThrowIfFailed(HRESULT hr)
 
 ```quiz
 What does a `ComPtr<ID3D12Device>` do for you?
-- [ ] It waits until the GPU has finished with the device before it is deleted
 - [x] It calls `Release` on the COM object automatically when the `ComPtr` goes away, so you don't leak references
+- [ ] It waits until the GPU has finished with the device before it is deleted
 - [ ] It creates the device when it is declared
 ---
 `ComPtr` handles COM reference counting. It knows nothing about the GPU, which is why the program waits for the GPU (in `OnDestroy()`) before its objects are released.
@@ -630,9 +630,9 @@ Later chapters keep it this way for simplicity, as Microsoft's HelloWorld sample
 
 ```quiz
 Why does `WaitForPreviousFrame()` wait on the fence before the next frame is recorded?
+- [ ] Because `ExecuteCommandLists` only returns after the GPU has finished
 - [ ] To limit the frame rate to the refresh rate of the screen
 - [x] So that the command allocator and the back buffer are not reused while the GPU is still working on the previous frame
-- [ ] Because `ExecuteCommandLists` only returns after the GPU has finished
 ---
 `ExecuteCommandLists` returns at once; the GPU works on its own. The fence tells the CPU when the GPU has reached the point where the queue signalled it.
 ```
@@ -664,8 +664,8 @@ Windows "Graphics Tools" optional feature. The project enables it in debug build
 ```quiz
 When must the debug layer be enabled?
 - [x] Before the device is created: enabling it afterwards invalidates the device
-- [ ] At any time, for example when an error has occurred
 - [ ] Only in release builds
+- [ ] At any time, for example when an error has occurred
 ---
 `EnableDebugLayer()` has to be called before `D3D12CreateDevice`. The project does it at the start of `LoadPipeline()`, and only in debug builds.
 ```

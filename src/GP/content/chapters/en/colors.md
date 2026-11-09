@@ -316,9 +316,9 @@ and with the old values (-90°, 0°) the camera would jump back to looking down 
 
 ```quiz
 Why does the course start the camera at (-3, 0, 3) instead of learnopengl's (0, 0, 3)?
+- [ ] Because the lighting calculations only work when the camera is not on the z-axis
 - [ ] Because the lamp would be hidden behind the cube from (0, 0, 3)
 - [x] Because the lamp at (1.2, 1.0, 2.0) is too far to the side of a camera at (0, 0, 3) – outside its field of view – and from the front-left both a face towards the light and a face away from it are visible
-- [ ] Because the lighting calculations only work when the camera is not on the z-axis
 ---
 Seen from (0, 0, 3), the lamp is 1 unit ahead but 1.2 units to the right: about 50° off the line of sight, far outside a 45° field of view. Nothing about the lighting itself depends on where the camera is – this is only about what you get to see.
 ```
@@ -489,9 +489,9 @@ And `OnUpdate` sets the colours – our coral object and a white light – befor
 :::opengl
 ```quiz
 Why are the two `setVec3` calls placed after `lightingShader.use()`?
-- [x] `glUniform*` functions set the uniform in the program that is currently in use, so the lighting program must be active first
 - [ ] `use()` clears all uniforms, so anything set before it would be lost
 - [ ] Uniforms of type `vec3` can only be set while a VAO is bound, and `use()` binds one
+- [x] `glUniform*` functions set the uniform in the program that is currently in use, so the lighting program must be active first
 ---
 A uniform belongs to a program object, and `glUniform3f` writes to the program made current with `glUseProgram`. Set before `use()`, the values would go to whatever program was active then (from the second frame on: the lamp's, which was used last).
 ```
@@ -499,8 +499,8 @@ A uniform belongs to a program object, and `glUniform3f` writes to the program m
 :::vulkan
 ```quiz
 Why does `UniformBufferObject` have a `float pad1;` between `objectColor` and `lightColor`?
-- [ ] Vulkan requires every member of a uniform buffer to be 16 bytes long
 - [x] In the std140 layout a `vec3` starts at a multiple of 16 bytes, so the shader reads `lightColor` at offset 144; without the padding float the C++ struct would put it at 140
+- [ ] Vulkan requires every member of a uniform buffer to be 16 bytes long
 - [ ] The padding stores the alpha value of `objectColor`
 ---
 `objectColor` starts at 128 and ends at 140. The shader expects the next `vec3` at the next multiple of 16, byte 144, while a `glm::vec3` only needs 4-byte alignment. The padding float makes both sides agree.
@@ -527,9 +527,9 @@ gets the same colour. That is what the next chapter is about.
 
 ```quiz
 After the task **object-color** both visible faces of the cube have exactly the same coral colour. Why?
-- [ ] Because the camera looks at both faces from the same angle
 - [ ] Because a white light can't produce shading – a coloured light would
 - [x] Because the colour is just lightColor × objectColor: the shader doesn't know where the light is or which way a face points, so every fragment gets the same result
+- [ ] Because the camera looks at both faces from the same angle
 ---
 Real shading needs the light's position and the direction of the surface (its normal). Both come in the next chapter, *Basic Lighting*.
 ```
@@ -640,8 +640,8 @@ source actually is we render a cube at the same location of the light source.
 
 ```quiz
 Why does the lamp get its own shaders instead of being drawn with the cube's lighting shaders?
-- [ ] Because a single shader can only draw one object per frame
 - [x] So that the lamp keeps a constant bright colour: the lighting calculations we add to the cube's shaders in the next chapters must not change the lamp
+- [ ] Because a single shader can only draw one object per frame
 - [ ] Because the lamp has different vertex data than the cube
 ---
 The lamp uses exactly the same 36 vertices as the cube. What differs is what its fragments should look like: always white, whatever the lighting shaders do.
@@ -769,9 +769,9 @@ matrix change.
 :::opengl
 ```quiz
 The lamp uses the same VBO as the cube. Why does it still get its own VAO, `lightCubeVAO`?
-- [ ] Because a VBO can only be referenced by one VAO
 - [x] Because the cube's vertex data and attribute pointers will change in the coming chapters, and the lamp's attribute setup (positions only) should not be affected
 - [ ] Because a VAO stores the shader program, and the lamp has its own program
+- [ ] Because a VBO can only be referenced by one VAO
 ---
 A VAO records the attribute setup – which buffer, which attributes, which strides. Several VAOs can point into the same VBO. Keeping a separate VAO for the lamp means later changes to the cube's attributes leave the lamp alone.
 ```
@@ -779,9 +779,9 @@ A VAO records the attribute setup – which buffer, which attributes, which stri
 :::vulkan
 ```quiz
 Before drawing the lamp, `recordCommandBuffer()` binds `lightCubePipeline` but does not bind the descriptor set or the vertex buffer again. Why does the lamp still get the view and projection matrices?
-- [ ] Because the lamp's vertex shader has the matrices compiled in
 - [ ] Because `vkCmdBindPipeline` copies all bindings of the previous pipeline into the new one
 - [x] Because both pipelines use the same pipeline layout, so the bound descriptor set stays valid, and vertex buffer bindings are not part of the pipeline at all
+- [ ] Because the lamp's vertex shader has the matrices compiled in
 ---
 Descriptor sets stay bound across pipeline changes as long as the pipeline layouts are compatible – here they are identical. Vertex buffers, like dynamic viewport and scissor values, are command buffer state.
 ```
@@ -789,9 +789,9 @@ Descriptor sets stay bound across pipeline changes as long as the pipeline layou
 :::d3d12
 ```quiz
 Before drawing the lamp, `PopulateCommandList` calls `SetPipelineState` but doesn't set the descriptor table or the vertex buffer again. Why does the lamp still get the view and projection matrices?
-- [ ] Because the lamp's vertex shader has the matrices compiled in
 - [ ] Because `SetPipelineState` copies the root arguments into the new pipeline state object
 - [x] Because the root signature stays the same, so the root arguments set on the command list stay in place, and the vertex buffer is command list state, not part of the pipeline state
+- [ ] Because the lamp's vertex shader has the matrices compiled in
 ---
 Root arguments belong to the command list and are kept as long as the root signature doesn't change. The pipeline state object only holds shaders and fixed-function state.
 ```

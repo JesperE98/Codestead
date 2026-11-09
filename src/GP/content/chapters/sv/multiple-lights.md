@@ -391,8 +391,8 @@ vänster – tydligare. Det är det riktade ljuset från *Light casters*, bara s
 ```quiz
 learnopengl definierar `CalcDirLight` nedanför `main`, men `main` anropar den. Varför kompilerar shadern ändå?
 - [ ] GLSL kompilerar alla funktioner först och löser anropen efteråt, så ordningen spelar aldrig någon roll
-- [x] Prototypen `vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);` ovanför `main` deklarerar funktionen innan den anropas
 - [ ] Funktioner vars namn börjar med `Calc` behandlas som inbyggda funktioner
+- [x] Prototypen `vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);` ovanför `main` deklarerar funktionen innan den anropas
 ---
 Precis som C kräver GLSL att en funktion är deklarerad före sitt första anrop. Prototypen anger namn, returtyp och parametrar; kroppen kan sedan komma var som helst längre ner.
 ```
@@ -410,9 +410,9 @@ Precis som C kräver GLSL att en funktion är deklarerad före sitt första anro
 :::d3d12
 ```quiz
 Varför har HLSL-funktionen `CalcDirLight` en fjärde parameter, `float2 texCoord`, som learnopengls GLSL-version inte har?
-- [ ] HLSL-funktioner måste ha minst fyra parametrar
-- [x] Texturkoordinaterna ingår i `PSMain`:s parameter `input` och är inte globala, så en funktion ser dem bara om de skickas in
 - [ ] `Sample` accepterar bara texturkoordinater som kommer in som funktionsparameter
+- [x] Texturkoordinaterna ingår i `PSMain`:s parameter `input` och är inte globala, så en funktion ser dem bara om de skickas in
+- [ ] HLSL-funktioner måste ha minst fyra parametrar
 ---
 I GLSL är `TexCoords` en global indatavariabel som alla funktioner kan läsa. I HLSL når de interpolerade värdena shadern som parameter till ingångspunkten, så `PSMain` skickar vidare `input.texCoord`. Cbuffern, texturerna och samplern är globala och behöver ingen parameter.
 ```
@@ -609,8 +609,8 @@ punktljusarrayen och anropar `CalcPointLight` för varje punktljus.
 ```quiz
 Vart och ett av de fyra punktljusen har en ambient-styrka på 0.05, och `CalcPointLight` dämpar även ambient-termen. Varför dämpa den här?
 - [ ] Det omgivande ljuset får inte överstiga 0.05 totalt
-- [x] Med flera ljus lägger varje ljus till sin egen ambient-term; utan dämpning skulle ambient-termerna från alla ljus – även avlägsna – läggas på varandra överallt och bleka ut scenen
 - [ ] Dämpningen gör ambient-termen ljusare nära ljuset, vilket behövs för specular-högdagrarna
+- [x] Med flera ljus lägger varje ljus till sin egen ambient-term; utan dämpning skulle ambient-termerna från alla ljus – även avlägsna – läggas på varandra överallt och bleka ut scenen
 ---
 Det här är anmärkningen från *Light casters*: ett enda ljus odämpade ambient är ofarligt, men här adderas fem ljus ambient-termer i varje fragment. Dämpad spelar ett punktljus ambient bara roll nära just det ljuset.
 ```
@@ -899,9 +899,9 @@ i fönstret är upplyst nu, av punktljuset i (-4.0, 2.0, -12.0) nära den.
 :::opengl
 ```quiz
 Hur sätter du den linjära termen för det *tredje* punktljuset från `main.cpp`?
+- [ ] `lightingShader.setFloat("pointLights[3].linear", 0.09f);`
 - [ ] `lightingShader.setFloat("pointLights.linear[2]", 0.09f);`
 - [x] `lightingShader.setFloat("pointLights[2].linear", 0.09f);`
-- [ ] `lightingShader.setFloat("pointLights[3].linear", 0.09f);`
 ---
 Varje medlem i varje arrayelement är en egen uniform, med ett namn som ett C-uttryck: array, index (som börjar på 0, så det tredje ljuset är `[2]`), sedan medlemmen.
 ```
@@ -910,8 +910,8 @@ Varje medlem i varje arrayelement är en egen uniform, med ett namn som ett C-ut
 ```quiz
 Shaderns `PointLight` slutar på byte 76. Var börjar `pointLights[1]`, räknat från `pointLights[0]`?
 - [ ] 76 byte senare – direkt efter den sista medlemmen
-- [x] 80 byte senare – i std140 är array stride structens storlek avrundad uppåt till en multipel av 16
 - [ ] 128 byte senare – std140 avrundar arrayelement uppåt till en tvåpotens
+- [x] 80 byte senare – i std140 är array stride structens storlek avrundad uppåt till en multipel av 16
 ---
 Därför slutar C++-structen `PointLight` med `pad5`: med den är `sizeof(PointLight)` 80, samma som shaderns stride, så `ubo.pointLights[1]` hamnar där shadern läser `pointLights[1]`.
 ```
@@ -919,9 +919,9 @@ Därför slutar C++-structen `PointLight` med `pad5`: med den är `sizeof(PointL
 :::d3d12
 ```quiz
 HLSL:s `PointLight` slutar på byte 76. Var börjar `pointLights[1]`, räknat från `pointLights[0]`?
-- [ ] 76 byte senare – HLSL packar arrayelement tätt
-- [x] 80 byte senare – varje arrayelement börjar en ny rad på 16 byte
 - [ ] 96 byte senare – en struct i en cbuffer tar alltid sex rader
+- [x] 80 byte senare – varje arrayelement börjar en ny rad på 16 byte
+- [ ] 76 byte senare – HLSL packar arrayelement tätt
 ---
 HLSL packar inte arrayer: varje element börjar på en radgräns. Därför slutar C++-structen `PointLight` med `padding3`: med den är `sizeof(PointLight)` 80, så C++-arrayen har HLSL:s stride.
 ```
@@ -1206,9 +1206,9 @@ Efter uppgiften **spot-light** ser hörnen på behållare 0 och alla andra behå
 
 ```quiz
 Mitt på behållare 0 ger de sex ljusen tillsammans en färg vars komponenter kan bli större än 1.0. Vad händer med ett sådant värde?
-- [ ] Hela färgen delas med sin största komponent, så att nyansen förblir densamma
-- [ ] Värdet slår runt och blir mörkt igen
 - [x] Det begränsas till 1.0 när det skrivs till fönstrets bild, som lagrar normaliserade 8-bitarsvärden – starkt upplysta delar mättas mot vitt
+- [ ] Värdet slår runt och blir mörkt igen
+- [ ] Hela färgen delas med sin största komponent, så att nyansen förblir densamma
 ---
 Fönstrets bild lagrar varje komponent som 0–255, alltså 0.0–1.0. Högre resultat begränsas helt enkelt, och därför blir överkanten av behållare 0:s stålram nästan vit (255 i den blå kanalen). Att hantera ljusstyrka över 1.0 på rätt sätt är ämnet för HDR, mycket senare i learnopengl.
 ```
@@ -1290,9 +1290,9 @@ musen, så dyker de fyra lamporna upp där ljuset kommer ifrån.
 
 ```quiz
 Efter uppgiften **lamps** ser du bara en smal vit strimma vid högra kanten. Var är de andra lamporna?
+- [ ] De ritas inte, eftersom bara den första lampans modellmatris skickas
 - [ ] De ritas svarta, eftersom lampans shader inte har något ljus
 - [x] Med kameran i (0, 0, 3) ligger en nedanför fönstret, och två ligger bakom behållare 9 och 0, så djuptestet döljer dem
-- [ ] De ritas inte, eftersom bara den första lampans modellmatris skickas
 ---
 Alla fyra lamporna ritas varje bildruta. Kameran står bara inte så att den ser dem: lampa 2 är utanför vyn, lamporna 3 och 4 klarar inte djuptestet bakom närmare behållare, och lampa 1 ligger mest bredvid vyn.
 ```

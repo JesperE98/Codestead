@@ -100,9 +100,9 @@ position, texturkoordinat och normal.
 
 ```quiz
 Ett hörn av en yta i `.obj`-filen skrivs `563/563/562`. Varför kan GPU:n inte använda talen direkt som sin index buffer?
-- [ ] För att OBJ-index är flyttal
 - [x] Det är tre separata index – in i positionerna, texturkoordinaterna och normalerna – medan en index buffer har ett index per vertex som väljer alla dess attribut tillsammans
 - [ ] För att GPU:n bara kan rita fyrhörningar, och OBJ-ytor är trianglar
+- [ ] För att OBJ-index är flyttal
 ---
 Filen lagrar varje lista utan upprepningar, och varje hörn väljer ur varje lista för sig. GPU:ns vertexhämtning läser en vertex – position, normal och texturkoordinater sida vid sida – per index. Så inläsaren gör varje olik trippel till en vertex (OBJ-index börjar dessutom på 1, GPU:ns på 0).
 ```
@@ -144,9 +144,9 @@ indexen och dess materialegenskaper. Resultatet är en samling meshdata som vi v
 
 ```quiz
 Var lagras en meshs vertexdata egentligen i Assimps struktur?
-- [ ] I noden: varje `aiNode` har sina egna vertexar
 - [x] I `aiMesh`-objekten i scenens array `mMeshes`; en nod har bara index in i den arrayen
 - [ ] I materialet, bredvid texturerna
+- [ ] I noden: varje `aiNode` har sina egna vertexar
 ---
 Scenen äger alla meshar och material. Noderna organiserar dem bara – vilka meshar som hör ihop och hur delarna förhåller sig till varandra (förälder/barn) – genom att lagra index in i `scene->mMeshes`. Inläsaren går alltså igenom noderna och slår upp varje mesh i scenen.
 ```
@@ -165,9 +165,9 @@ skapar Assimp en rotnod med en barnnod per objekt, och varje barn hänvisar till
 
 ```quiz
 Varför består `planet.obj` av två meshar, `planet` och `rings`, och inte en?
-- [ ] För att en mesh får ha högst 1000 trianglar
-- [x] En mesh har exakt ett material, och planeten och ringen har olika material (olika diffuse och specular maps)
 - [ ] För att Assimp bara kan läsa in objekt som är sfärer
+- [x] En mesh har exakt ett material, och planeten och ringen har olika material (olika diffuse och specular maps)
+- [ ] För att en mesh får ha högst 1000 trianglar
 ---
 En mesh är den minsta enhet vi ritar med en uppsättning texturer. Allt som behöver andra texturer – här ringen med `rings.png` och `rings_specular.png` – blir en egen mesh, och modellen är samlingen av båda.
 ```
@@ -265,9 +265,9 @@ program som arbetar vänsterhänt. Vårt DirectX 12-program har använt högerh�
 :::opengl
 ```quiz
 Ditt OpenGL-program anropar nu `Assimp::Importer::ReadFile`. Vad behöver bygget utöver det i de tidigare kapitlen?
-- [ ] Ingenting: Assimp är en del av OpenGL
-- [x] Assimps headerfiler (`<assimp/Importer.hpp>`, `<assimp/scene.h>`, `<assimp/postprocess.h>`) och dess bibliotek vid länkningen – `-lassimp` på Linux
 - [ ] Bara `#define ASSIMP_IMPLEMENTATION` i en källfil, som för stb_image
+- [x] Assimps headerfiler (`<assimp/Importer.hpp>`, `<assimp/scene.h>`, `<assimp/postprocess.h>`) och dess bibliotek vid länkningen – `-lassimp` på Linux
+- [ ] Ingenting: Assimp är en del av OpenGL
 ---
 Assimp är ett kompilerat bibliotek, inte en enda header: headerfilerna deklarerar dess klasser och funktioner, och länkaren behöver biblioteket som innehåller dem. Därför får bygget `-lassimp` (eller Assimps `.lib` och DLL på Windows).
 ```
@@ -275,9 +275,9 @@ Assimp är ett kompilerat bibliotek, inte en enda header: headerfilerna deklarer
 :::vulkan
 ```quiz
 Hur kommer tinyobjloaders kod med i Vulkan-programmets bygge?
-- [ ] Programmet länkas med `-ltinyobjloader`
 - [x] `#define TINYOBJLOADER_IMPLEMENTATION` före `#include <tiny_obj_loader.h>` i exakt en källfil – då innehåller headern bibliotekets kod
 - [ ] Vulkan läser `.obj`-filer själv; tinyobjloader behövs bara för `.mtl`-filen
+- [ ] Programmet länkas med `-ltinyobjloader`
 ---
 tinyobjloader är ett bibliotek i en enda header, som `stb_image.h`: normalt deklarerar headern bara, och i den enda filen med definitionen kompilerar den även implementationen. Det finns inget att länka.
 ```
@@ -285,9 +285,9 @@ tinyobjloader är ett bibliotek i en enda header, som `stb_image.h`: normalt dek
 :::d3d12
 ```quiz
 DirectX 12-programmet anropar `Assimp::Importer::ReadFile`. Vad behöver projektet för det?
-- [ ] Ingenting: Assimp är en del av Windows SDK, som `d3d12.lib`
 - [x] Assimps include-mapp och dess bibliotek vid länkningen (och dess DLL bredvid `.exe`-filen) – till exempel installerat med `vcpkg install assimp`
 - [ ] Bara `#define ASSIMP_IMPLEMENTATION` i en källfil, som för stb_image
+- [ ] Ingenting: Assimp är en del av Windows SDK, som `d3d12.lib`
 ---
 Assimp är ett kompilerat bibliotek, inte en enda header: headerfilerna deklarerar dess klasser och funktioner, länkaren behöver dess `.lib`, och programmet läser in dess DLL när det startar. vcpkg:s integration ställer in include-mappen och biblioteket åt dig.
 ```
@@ -343,9 +343,9 @@ kapitlet *Model*.
 
 ```quiz
 Hur kommer programmet i de följande kapitlen att rita den inlästa planeten?
-- [ ] Som ett enda föremål med en textur, eftersom en modell är en enda form
-- [x] Genom att rita var och en av dess meshar – planeten och ringen – med meshens egna vertexar, index och texturer
 - [ ] Genom att be modellinläsaren rita den
+- [x] Genom att rita var och en av dess meshar – planeten och ringen – med meshens egna vertexar, index och texturer
+- [ ] Som ett enda föremål med en textur, eftersom en modell är en enda form
 ---
 En modellinläsare läser bara data; att rita är vårt jobb. En modell är en samling meshar, så att rita modellen betyder att rita varje mesh med texturerna från dess eget material.
 ```

@@ -174,8 +174,8 @@ ljusberäkningar längre fram.
 
 ```quiz
 Skalärprodukten av två enhetsvektorer är 0. Vad säger det om dem?
-- [ ] De pekar åt samma håll
 - [x] De är vinkelräta mot varandra (vinkeln är 90°)
+- [ ] De pekar åt samma håll
 - [ ] De pekar åt motsatta håll
 - [ ] En av dem måste vara nollvektorn
 ---
@@ -300,10 +300,10 @@ för hand och kom tillbaka hit när det blir svårt. Med tiden blir matrismultip
 
 ```quiz
 A är en 2×3-matris (2 rader, 3 kolumner) och B en 3×4-matris. Vilka påståenden stämmer?
-- [x] A · B är definierad, och resultatet är en 2×4-matris
-- [x] B · A är inte definierad, eftersom B har 4 kolumner men A bara 2 rader
-- [ ] A · B och B · A är båda definierade, och de är lika
 - [ ] A · B är definierad, och resultatet är en 3×3-matris
+- [ ] A · B och B · A är båda definierade, och de är lika
+- [x] B · A är inte definierad, eftersom B har 4 kolumner men A bara 2 rader
+- [x] A · B är definierad, och resultatet är en 2×4-matris
 ---
 Den vänstra matrisens kolumner måste stämma med den högras rader: A har 3 kolumner och B har 3 rader, så A · B fungerar och har A:s rader och B:s kolumner (2×4). För B · A stämmer inte B:s 4 kolumner med A:s 2 rader. Och även när båda ordningarna är definierade är matrismultiplikation inte kommutativ.
 ```
@@ -421,9 +421,9 @@ att flytta.
 
 ```quiz
 Du multiplicerar translationsmatrisen som flyttar med (1, 2, 3) med vektorn (4, 0, 0, w). Vad blir resultatet för w = 1 och för w = 0?
+- [ ] (4, 0, 0, 1) för w = 1, och (5, 2, 3, 0) för w = 0
 - [x] (5, 2, 3, 1) för w = 1, och (4, 0, 0, 0) för w = 0
 - [ ] (5, 2, 3, 1) för båda värdena av w
-- [ ] (4, 0, 0, 1) för w = 1, och (5, 2, 3, 0) för w = 0
 ---
 Translationen ligger i den 4:e kolumnen, som multipliceras med w. Med w = 1 adderas den en gång: en punkt flyttas. Med w = 0 bidrar den inte alls: en riktningsvektor förblir densamma.
 ```
@@ -551,9 +551,9 @@ samman som M = T · R · S: vertices skalas, roteras och translateras sedan.
 
 ```quiz
 M = Trans · Scale, där Scale skalar med 2 och Trans translaterar med (1, 2, 3). Vad är M · (1, 1, 1, 1)?
+- [ ] (2, 3, 4, 1)
 - [x] (3, 4, 5, 1)
 - [ ] (4, 6, 8, 1)
-- [ ] (2, 3, 4, 1)
 ---
 Matrisen närmast vektorn tillämpas först: skalningen ger (2, 2, 2), sedan ger translationen (3, 4, 5). (4, 6, 8) är vad Scale · Trans skulle ge – först translation till (2, 3, 4), sedan skalning, så att translationen också skalas.
 ```
@@ -1088,8 +1088,8 @@ lådan i halv storlek 200 pixlar bred och 150 hög; efter den sträcker sig bild
 ```quiz
 Varför är det tredje argumentet till `glUniformMatrix4fv` `GL_FALSE` här?
 - [x] GLM lagrar redan sina matriser kolumn för kolumn, den layout OpenGL förväntar sig, så inget behöver transponeras
-- [ ] `GL_FALSE` betyder att matrisvärdena inte normaliseras till 0..1
 - [ ] GLM lagrar sina matriser rad för rad, och `GL_FALSE` säger åt OpenGL att byta plats på rader och kolumner
+- [ ] `GL_FALSE` betyder att matrisvärdena inte normaliseras till 0..1
 ---
 Det tredje argumentet frågar om OpenGL ska transponera matrisen. GLM:s column-major-lagring är redan det OpenGL förväntar sig, så `glm::value_ptr` kan lämna över de 16 floats som de är.
 ```
@@ -1097,9 +1097,9 @@ Det tredje argumentet frågar om OpenGL ska transponera matrisen. GLM:s column-m
 :::vulkan
 ```quiz
 Varför negerar `shader.vert` `gl_Position.y` efter multiplikationen med `pc.transform`?
-- [x] GLM-matriserna byggs i learnopengls koordinater med +y uppåt, medan +y pekar nedåt i Vulkans clip space; att vända på slutet ger samma bild som i learnopengl
-- [ ] Push constants kommer fram upp och ner i shadern och måste rättas till
 - [ ] Vändningen rättar bara till texturkoordinaterna, som Vulkan läser nerifrån och upp
+- [ ] Push constants kommer fram upp och ner i shadern och måste rättas till
+- [x] GLM-matriserna byggs i learnopengls koordinater med +y uppåt, medan +y pekar nedåt i Vulkans clip space; att vända på slutet ger samma bild som i learnopengl
 ---
 All matematik – rotationer moturs, en translation nedåt till höger – förutsätter y uppåt. Att vända efter transformationen gör om den färdiga positionen med y uppåt till Vulkans clip space med y nedåt. Utan vändningen skulle bilden vara spegelvänd (och dess trianglar, nu moturs på skärmen, skulle cullas bort).
 ```
@@ -1107,9 +1107,9 @@ All matematik – rotationer moturs, en translation nedåt till höger – föru
 :::d3d12
 ```quiz
 Varför skickas matrisen genom `XMMatrixTranspose` innan den lagras i root constants?
+- [ ] Den gör om rotationen moturs till den rotation medurs som Direct3D förväntar sig
 - [x] `XMFLOAT4X4` lagrar matrisen rad för rad, men HLSL läser en matris i en cbuffer kolumn för kolumn; efter transponeringen är shaderns `transform` lika med M, och `mul(position, transform)` räknar ut v · M
 - [ ] Root constants måste alltid transponeras, oavsett typ
-- [ ] Den gör om rotationen moturs till den rotation medurs som Direct3D förväntar sig
 ---
 Transponeringen tar ut skillnaden mellan DirectXMaths radvisa lagring och HLSL:s kolumnvisa standardpackning (column_major). Med positionen som första argument till `mul` multiplicerar shadern en radvektor med M, precis som DirectXMath på CPU:n.
 ```
@@ -1197,8 +1197,8 @@ hörn – delvis utanför fönstret.
 :::opengl vulkan
 ```quiz
 Koden gör `transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));` och sedan `transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));`. Vad händer med lådans vertices?
-- [x] De roteras först kring origo (lådans egen mitt) och flyttas sedan nedåt till höger: lådan snurrar på stället nere till höger
 - [ ] De flyttas först nedåt till höger och roteras sedan kring fönstrets mitt: lådan cirklar runt mitten
+- [x] De roteras först kring origo (lådans egen mitt) och flyttas sedan nedåt till höger: lådan snurrar på stället nere till höger
 - [ ] Ordningen mellan de två anropen spelar ingen roll; båda ordningarna ger samma bild
 ---
 Varje GLM-anrop multiplicerar den nya matrisen från höger, så `transform` är T · R. Matrisen närmast vertexen, R, tillämpas först: läs anropen nerifrån och upp.
@@ -1207,9 +1207,9 @@ Varje GLM-anrop multiplicerar den nya matrisen från höger, så `transform` är
 :::d3d12
 ```quiz
 Koden bygger `XMMatrixRotationZ(time) * XMMatrixTranslation(0.5f, -0.5f, 0.0f)`. Vad händer med lådans vertices?
-- [x] De roteras först kring origo (lådans egen mitt) och flyttas sedan nedåt till höger: lådan snurrar på stället nere till höger
-- [ ] De flyttas först nedåt till höger och roteras sedan kring fönstrets mitt: lådan cirklar runt mitten
 - [ ] Ordningen mellan de två matriserna spelar ingen roll; båda ordningarna ger samma bild
+- [ ] De flyttas först nedåt till höger och roteras sedan kring fönstrets mitt: lådan cirklar runt mitten
+- [x] De roteras först kring origo (lådans egen mitt) och flyttas sedan nedåt till höger: lådan snurrar på stället nere till höger
 ---
 DirectXMath använder radvektorer: v · R · T tillämpar först R, sedan T – en DirectXMath-produkt läses från vänster till höger.
 ```
@@ -1365,8 +1365,8 @@ kommer lådan tillbaka upp och ner.
 
 ```quiz
 Den andra lådan skalas med `sin(time)`, som är negativt halva tiden. Vad ser du medan det är negativt?
-- [x] Lådan upp och ner – vriden 180° – eftersom en skalning av både x och y med en negativ faktor är ett halvt varv
 - [ ] Lådan spegelvänd från vänster till höger
+- [x] Lådan upp och ner – vriden 180° – eftersom en skalning av både x och y med en negativ faktor är ett halvt varv
 - [ ] Ingenting: negativa skalfaktorer begränsas till noll
 ---
 (−s·x, −s·y) är punkten (x, y) skalad med s och vriden 180°. En spegelbild skulle kräva ett udda antal negerade axlar, till exempel bara x. Eftersom bilden inte speglas behåller trianglarna sin varvordning – så även med back-face culling försvinner ingenting.
