@@ -34,8 +34,10 @@ public sealed record StbImage(string File, Image? Image, int Offset, string? Var
             var fnHere = src.FunctionAt(call.Offset);
             var local = flips.LastOrDefault(f => f.Fn == fnHere && f.Offset < call.Offset);
             bool flip = local.Fn is not null ? local.On : flips.Any(f => f.On);
+            // A path indexed by a variable (faces[i] in learnopengl's loadCubemap) is only known while the loop runs.
+            bool indexed = Regex.IsMatch(call.Arg(0), @"\[\s*[A-Za-z_]");
             var literal = CppSource.StringArg(call.Arg(0))
-                ?? src.Evaluate(System.Text.RegularExpressions.Regex.Replace(call.Arg(0).Trim(), @"\.c_str\(\)$", ""))?.Text;
+                ?? (indexed ? null : src.Evaluate(System.Text.RegularExpressions.Regex.Replace(call.Arg(0).Trim(), @"\.c_str\(\)$", ""))?.Text);
             var file = literal ?? "";
             int wanted = src.Int(call.Arg(4).Replace("STBI_rgb_alpha", "4").Replace("STBI_rgb", "3").Replace("STBI_default", "0")) ?? 0;
             if (literal is null)

@@ -71,8 +71,8 @@ By default, triangles defined with counter-clockwise vertices are processed as f
 :::
 :::vulkan
 Vulkan has no default here: you choose which winding is the front with the rasterizer's `frontFace`
-(`VK_FRONT_FACE_COUNTER_CLOCKWISE` or `VK_FRONT_FACE_CLOCKWISE`). Our pipeline still has vulkan-tutorial's
-`VK_FRONT_FACE_CLOCKWISE` from the *Hello Triangle* chapter.
+(`VK_FRONT_FACE_COUNTER_CLOCKWISE` or `VK_FRONT_FACE_CLOCKWISE`). Our pipeline still has
+`VK_FRONT_FACE_CLOCKWISE`, vulkan-tutorial's choice for its triangle.
 :::
 :::d3d12
 Direct3D's default is the opposite of OpenGL's: with `FrontCounterClockwise = FALSE` (what

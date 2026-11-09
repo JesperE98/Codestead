@@ -69,8 +69,8 @@ Som standard behandlas trianglar med moturs vertexar som framsidor.
 :::
 :::vulkan
 Vulkan har inget standardvärde här: du väljer vilken ordning som är framsidan med rasterizerns `frontFace`
-(`VK_FRONT_FACE_COUNTER_CLOCKWISE` eller `VK_FRONT_FACE_CLOCKWISE`). Vår pipeline har fortfarande vulkan-tutorials
-`VK_FRONT_FACE_CLOCKWISE` från kapitlet *Hello Triangle*.
+(`VK_FRONT_FACE_COUNTER_CLOCKWISE` eller `VK_FRONT_FACE_CLOCKWISE`). Vår pipeline har fortfarande
+`VK_FRONT_FACE_CLOCKWISE`, vulkan-tutorials val för sin triangel.
 :::
 :::d3d12
 Direct3D:s standard är den motsatta mot OpenGL:s: med `FrontCounterClockwise = FALSE` (som

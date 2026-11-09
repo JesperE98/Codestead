@@ -1,0 +1,53 @@
+{
+  "title": "Stenciltestning",
+  "tasks": {
+    "stencil-buffer": {
+      "text": {
+        "opengl": "Slå på stenciltestet, sätt `glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE)` och töm stencilbuffern varje bildruta tillsammans med färg- och djupbuffern.",
+        "vulkan": "Ge djup-imagen en stencildel och slå på stenciltestet: S8-format i `findDepthFormat()`, djup- och stencilaspekt i viewn, `stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR`, och i `createPipeline()` stenciltillståndet KEEP, KEEP, REPLACE, ALWAYS, maskerna `0xFF`, referens 1 för `front` och `back`.",
+        "d3d12": "Ge djupbuffern en stencildel (`DXGI_FORMAT_D24_UNORM_S8_UINT` i viewn, clear-värdet, texturen och `DSVFormat`), slå på stenciltestet i PSO:n med KEEP, KEEP, REPLACE för båda sidorna, och töm även stencilbuffern."
+      },
+      "hint": {
+        "opengl": "`glEnable(GL_STENCIL_TEST);` och `glStencilOp(sfail, dpfail, dppass)` efter `glDepthFunc`; i loopen `glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);`. Inget synligt ändras.",
+        "vulkan": "Kandidaterna `{VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT}`, `VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT`, `stencilTestEnable = VK_TRUE`, `front.failOp`/`depthFailOp`/`passOp`/`compareOp`/`compareMask`/`writeMask`/`reference`, sedan `depthStencil.back = depthStencil.front;`. Inget synligt ändras.",
+        "d3d12": "`StencilEnable = TRUE`, `FrontFace.StencilFailOp`/`StencilDepthFailOp` = `D3D12_STENCIL_OP_KEEP`, `StencilPassOp = D3D12_STENCIL_OP_REPLACE`, `BackFace = FrontFace`; töm med `D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL` (stencil 0 är det fjärde argumentet). Inget synligt ändras."
+      }
+    },
+    "single-color": {
+      "text": {
+        "opengl": "Skriv konturens shader: `stencil_single_color.fs` ger ut `vec4(0.04, 0.28, 0.26, 1.0)`; bygg `shaderSingleColor` av `stencil_testing.vs` och `stencil_single_color.fs`, och ge den vy- och projektionsmatriserna varje bildruta.",
+        "vulkan": "Skriv konturens fragment shader `shaders/stencil_single_color.frag`: `outColor = vec4(0.04, 0.28, 0.26, 1.0);`.",
+        "d3d12": "Låt `PSMain` i `stencil_single_color.hlsl` returnera `float4(0.04f, 0.28f, 0.26f, 1.0f)`, och skapa en andra PSO, `m_singleColorPipelineState`, med den filens shadrar."
+      },
+      "hint": {
+        "opengl": "`Shader shaderSingleColor(\"stencil_testing.vs\", \"stencil_single_color.fs\");`. I loopen: `shaderSingleColor.use();` före dess två `setMat4`-anrop – ett program måste vara i bruk för att dess uniforms ska kunna sättas.",
+        "vulkan": "learnopengls `stencil_single_color.fs`: en färg, ingen textur. Ingen pipeline använder den än, så inget ändras.",
+        "d3d12": "Kompilera `VSMain`/`PSMain` i `stencil_single_color.hlsl` till `singleColorVertexShader`/`singleColorPixelShader`, sätt `psoDesc.VS`/`PS` och anropa `CreateGraphicsPipelineState` igen. Behåll TODO-raden före den till den sista uppgiften."
+      }
+    },
+    "write-stencil": {
+      "text": {
+        "opengl": "Fyll stencilbuffern: golvet får inte skriva till den (`glStencilMask(0x00)`), kuberna skriver 1 överallt där de ritas (`glStencilFunc(GL_ALWAYS, 1, 0xFF)` och `glStencilMask(0xFF)`).",
+        "vulkan": "Ge `createPipeline()` parametrarna `VkCompareOp stencilCompareOp, uint32_t stencilWriteMask`; skapa `floorPipeline` med `(VK_COMPARE_OP_ALWAYS, 0x00)` och `graphicsPipeline` med `(VK_COMPARE_OP_ALWAYS, 0xFF)`, och bind `floorPipeline` för golvet och `graphicsPipeline` före kuberna.",
+        "d3d12": "Rita golvet med en PSO som inte skriver någon stencil (`m_floorPipelineState`, `StencilWriteMask = 0x00`) och kuberna med `m_pipelineState` (`StencilFunc` ALWAYS, skrivmask `0xFF`) efter `OMSetStencilRef(1)`."
+      },
+      "hint": {
+        "opengl": "Masken AND:as med värdet som skrivs: 0x00 skriver inget, 0xFF skriver det som det är. Med `GL_ALWAYS` och `GL_REPLACE` lagrar varje kubfragment 1. Inget synligt ändras.",
+        "vulkan": "Tilldela parametrarna till `depthStencil.front.compareOp` och `.writeMask`; förstör båda pipelinerna i `cleanup()`. Golvets `vkCmdBindPipeline` ersätter den i början av render passet. Inget synligt ändras.",
+        "d3d12": "Före `m_pipelineState`: `StencilWriteMask = 0x00` och skapa `m_floorPipelineState`; sedan `StencilWriteMask = 0xFF`, `FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS`, `BackFace = FrontFace`. I `PopulateCommandList`: `SetPipelineState` före varje del."
+      }
+    },
+    "outline": {
+      "text": {
+        "opengl": "Andra omgången: rita båda kuberna igen skalade med 1.1 med `shaderSingleColor`, bara där stencilvärdet inte är 1 (`glStencilFunc(GL_NOTEQUAL, 1, 0xFF)`), med `glStencilMask(0x00)` och djuptestet avslaget. Återställ sedan: mask `0xFF`, `glStencilFunc(GL_ALWAYS, 0, 0xFF)`, djuptest på.",
+        "vulkan": "Lägg till en parameter `VkBool32 depthTestEnable` (för `depthTestEnable` och `depthWriteEnable`), skapa `outlinePipeline` av `stencil_testing.vert` + `stencil_single_color.frag` med `(VK_FALSE, VK_COMPARE_OP_NOT_EQUAL, 0x00)`, och rita efter kuberna båda igen med den, skalade med `1.1f`.",
+        "d3d12": "Ge konturens PSO tillståndet \"bara där stencilvärdet inte är 1, inga stencilskrivningar, inget djuptest\", och rita efter kuberna båda igen med den, skalade med 1.1."
+      },
+      "hint": {
+        "opengl": "`float scale = 1.1f;` och `model = glm::scale(model, glm::vec3(scale, scale, scale));` efter translationen. Bara en ring runt varje kub klarar NOTEQUAL; `glDisable(GL_DEPTH_TEST)` hindrar golvet från att dölja den.",
+        "vulkan": "De andra två pipelinerna får `VK_TRUE`; förstör `outlinePipeline` i `cleanup()`. `model = glm::scale(model, glm::vec3(scale, scale, scale))` efter translate. Inget att återställa efteråt: varje pipeline bär sitt eget tillstånd.",
+        "d3d12": "Före `m_singleColorPipelineState`: `FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_NOT_EQUAL`, `BackFace = FrontFace`, `StencilWriteMask = 0x00`, `DepthEnable = FALSE`. Sedan `SetPipelineState(m_singleColorPipelineState.Get())` och `model = XMMatrixScaling(scale, scale, scale) * XMMatrixTranslation(…)` per kub."
+      }
+    }
+  }
+}

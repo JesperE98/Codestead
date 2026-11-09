@@ -74,7 +74,7 @@ struct SwapChainSupportDetails {
 
 struct Vertex {
     glm::vec3 pos;
-    glm::vec2 texCoord;
+    glm::vec3 normal;
 
     static VkVertexInputBindingDescription getBindingDescription() {
         VkVertexInputBindingDescription bindingDescription{};
@@ -95,67 +95,66 @@ struct Vertex {
 
         attributeDescriptions[1].binding = 0;
         attributeDescriptions[1].location = 1;
-        attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(Vertex, texCoord);
+        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, normal);
 
         return attributeDescriptions;
     }
 };
 
 // All the vertices of the scene in one vertex buffer; each draw picks its part with firstVertex (vkCmdDraw).
-// The cube (vertices 0..35): learnopengl's 36 vertices with position and texture coordinates (v flipped, 1 - v, so
-// the images are upright: stb_image's first row, v = 0, is the top of the image).
+// The cube (vertices 0..35): learnopengl's 36 vertices with position and normal (the direction the face points to).
 const std::vector<Vertex> vertices = {
     // back (z = -0.5)
-    {{-0.5f, -0.5f, -0.5f}, {0.0f, 1.0f}},
-    {{ 0.5f, -0.5f, -0.5f}, {1.0f, 1.0f}},
-    {{ 0.5f,  0.5f, -0.5f}, {1.0f, 0.0f}},
-    {{ 0.5f,  0.5f, -0.5f}, {1.0f, 0.0f}},
-    {{-0.5f,  0.5f, -0.5f}, {0.0f, 0.0f}},
-    {{-0.5f, -0.5f, -0.5f}, {0.0f, 1.0f}},
+    {{-0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}},
+    {{-0.5f,  0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}},
+    {{-0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}},
 
     // front (z = +0.5)
-    {{-0.5f, -0.5f,  0.5f}, {0.0f, 1.0f}},
-    {{ 0.5f, -0.5f,  0.5f}, {1.0f, 1.0f}},
-    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 0.0f}},
-    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 0.0f}},
-    {{-0.5f,  0.5f,  0.5f}, {0.0f, 0.0f}},
-    {{-0.5f, -0.5f,  0.5f}, {0.0f, 1.0f}},
+    {{-0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}},
+    {{-0.5f,  0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}},
+    {{-0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}},
 
     // left (x = -0.5)
-    {{-0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
-    {{-0.5f,  0.5f, -0.5f}, {1.0f, 0.0f}},
-    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
-    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
-    {{-0.5f, -0.5f,  0.5f}, {0.0f, 1.0f}},
-    {{-0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{-0.5f,  0.5f,  0.5f}, {-1.0f,  0.0f,  0.0f}},
+    {{-0.5f,  0.5f, -0.5f}, {-1.0f,  0.0f,  0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {-1.0f,  0.0f,  0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {-1.0f,  0.0f,  0.0f}},
+    {{-0.5f, -0.5f,  0.5f}, {-1.0f,  0.0f,  0.0f}},
+    {{-0.5f,  0.5f,  0.5f}, {-1.0f,  0.0f,  0.0f}},
 
     // right (x = +0.5)
-    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
-    {{ 0.5f,  0.5f, -0.5f}, {1.0f, 0.0f}},
-    {{ 0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
-    {{ 0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
-    {{ 0.5f, -0.5f,  0.5f}, {0.0f, 1.0f}},
-    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f,  0.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, { 1.0f,  0.0f,  0.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, { 1.0f,  0.0f,  0.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, { 1.0f,  0.0f,  0.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, { 1.0f,  0.0f,  0.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f,  0.0f}},
 
     // bottom (y = -0.5)
-    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
-    {{ 0.5f, -0.5f, -0.5f}, {1.0f, 0.0f}},
-    {{ 0.5f, -0.5f,  0.5f}, {1.0f, 1.0f}},
-    {{ 0.5f, -0.5f,  0.5f}, {1.0f, 1.0f}},
-    {{-0.5f, -0.5f,  0.5f}, {0.0f, 1.0f}},
-    {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, { 0.0f, -1.0f,  0.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, { 0.0f, -1.0f,  0.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, { 0.0f, -1.0f,  0.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, { 0.0f, -1.0f,  0.0f}},
+    {{-0.5f, -0.5f,  0.5f}, { 0.0f, -1.0f,  0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, { 0.0f, -1.0f,  0.0f}},
 
     // top (y = +0.5)
-    {{-0.5f,  0.5f, -0.5f}, {0.0f, 0.0f}},
-    {{ 0.5f,  0.5f, -0.5f}, {1.0f, 0.0f}},
-    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
-    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 1.0f}},
-    {{-0.5f,  0.5f,  0.5f}, {0.0f, 1.0f}},
-    {{-0.5f,  0.5f, -0.5f}, {0.0f, 0.0f}},
+    {{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}},
+    {{-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}},
+    {{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}},
 
     // skybox: vertices 36..71, learnopengl's skyboxVertices - a cube from -1 to 1 around the origin, positions only
-    // (the texture coordinates stay 0: the skybox's shader does not read them)
+    // (the normals stay 0: the skybox's shader does not read them)
     {{-1.0f,  1.0f, -1.0f}},
     {{-1.0f, -1.0f, -1.0f}},
     {{ 1.0f, -1.0f, -1.0f}},
@@ -273,6 +272,7 @@ struct PushConstants {
 struct UniformBufferObject {
     glm::mat4 view;
     glm::mat4 proj;
+    glm::vec3 cameraPos; // the fragment shader needs it for the view direction
 };
 
 class HelloTriangleApplication {
@@ -316,11 +316,7 @@ private:
     VkDeviceMemory depthImageMemory;
     VkImageView depthImageView;
 
-    VkImage cubeTextureImage;
-    VkDeviceMemory cubeTextureImageMemory;
-    VkImageView cubeTextureImageView;
 
-    VkSampler textureSampler;
 
     // the sky: one cube map image (6 array layers), its cube view and its sampler
     VkImage cubemapImage;
@@ -336,8 +332,7 @@ private:
     void* uniformBufferMapped;
 
     VkDescriptorPool descriptorPool;
-    VkDescriptorSet cubeDescriptorSet; // the uniform buffer and the marble texture
-    VkDescriptorSet skyboxDescriptorSet; // the uniform buffer and the cube map
+    VkDescriptorSet skyboxDescriptorSet; // the uniform buffer and the cube map: for the skybox and the cubes
 
     VkCommandBuffer commandBuffer;
 
@@ -370,13 +365,14 @@ private:
         createRenderPass();
         createDescriptorSetLayout();
         createPipelineLayout();
-        createPipeline("shaders/cubemaps.vert.spv", "shaders/cubemaps.frag.spv", VK_TRUE, VK_COMPARE_OP_LESS, graphicsPipeline);
-        // the skybox does not write to the depth buffer: everything drawn after it is drawn in front of it
-        createPipeline("shaders/skybox.vert.spv", "shaders/skybox.frag.spv", VK_FALSE, VK_COMPARE_OP_LESS_OR_EQUAL, skyboxPipeline);
+        createPipeline("shaders/cubemaps.vert.spv", "shaders/cubemaps.frag.spv", 2, VK_TRUE, VK_COMPARE_OP_LESS, graphicsPipeline); // position and normal
+        // the skybox only needs the position, and it does not write to the depth buffer: everything drawn after it is
+        // drawn in front of it
+        createPipeline("shaders/skybox.vert.spv", "shaders/skybox.frag.spv", 1, VK_FALSE, VK_COMPARE_OP_LESS_OR_EQUAL, skyboxPipeline);
         createDepthResources();
         createFramebuffers();
         createCommandPool();
-        loadTexture("textures/marble.png", cubeTextureImage, cubeTextureImageMemory, cubeTextureImageView);
+
         std::vector<std::string> faces = {
             "textures/skybox/right.png",
             "textures/skybox/left.png",
@@ -386,12 +382,12 @@ private:
             "textures/skybox/back.png"
         };
         loadCubemap(faces, cubemapImage, cubemapImageMemory, cubemapImageView);
-        createTextureSampler(VK_SAMPLER_ADDRESS_MODE_REPEAT, textureSampler);
+
         createTextureSampler(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, cubemapSampler); // no seams where two faces meet
         createVertexBuffer();
         createUniformBuffers();
         createDescriptorPool();
-        createDescriptorSet(cubeTextureImageView, textureSampler, cubeDescriptorSet);
+
         createDescriptorSet(cubemapImageView, cubemapSampler, skyboxDescriptorSet);
         createCommandBuffer();
         createSyncObjects();
@@ -447,16 +443,14 @@ private:
 
         vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 
-        vkDestroySampler(device, textureSampler, nullptr);
+
         vkDestroySampler(device, cubemapSampler, nullptr);
 
         vkDestroyImageView(device, cubemapImageView, nullptr);
         vkDestroyImage(device, cubemapImage, nullptr);
         vkFreeMemory(device, cubemapImageMemory, nullptr);
 
-        vkDestroyImageView(device, cubeTextureImageView, nullptr);
-        vkDestroyImage(device, cubeTextureImage, nullptr);
-        vkFreeMemory(device, cubeTextureImageMemory, nullptr);
+
 
         vkDestroyCommandPool(device, commandPool, nullptr);
 
@@ -753,7 +747,7 @@ private:
         uboLayoutBinding.descriptorCount = 1;
         uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uboLayoutBinding.pImmutableSamplers = nullptr;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; // cameraPos for the fragment shader
 
         VkDescriptorSetLayoutBinding samplerLayoutBinding{};
         samplerLayoutBinding.binding = 1;
@@ -793,7 +787,7 @@ private:
 
     // One graphics pipeline from a vertex and a fragment shader, with the pipeline layout (descriptor set + push
     // constants) and the fixed functions below.
-    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkBool32 depthWriteEnable, VkCompareOp depthCompareOp, VkPipeline& pipeline) {
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, uint32_t attributeCount, VkBool32 depthWriteEnable, VkCompareOp depthCompareOp, VkPipeline& pipeline) {
         auto vertShaderCode = readFile(vertShaderFile);
         auto fragShaderCode = readFile(fragShaderFile);
 
@@ -821,7 +815,7 @@ private:
         auto attributeDescriptions = Vertex::getAttributeDescriptions();
 
         vertexInputInfo.vertexBindingDescriptionCount = 1;
-        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        vertexInputInfo.vertexAttributeDescriptionCount = attributeCount; // the first attributeCount attributes of a Vertex
         vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
         vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
@@ -1334,15 +1328,15 @@ private:
         // one descriptor set per texture, each with the uniform buffer and its texture
         std::array<VkDescriptorPoolSize, 2> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = 2;
+        poolSizes[0].descriptorCount = 1;
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = 2;
+        poolSizes[1].descriptorCount = 1;
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = 2;
+        poolInfo.maxSets = 1;
 
         if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor pool!");
@@ -1527,7 +1521,7 @@ private:
         PushConstants constants{};
 
         // cubes
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &cubeDescriptorSet, 0, nullptr);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &skyboxDescriptorSet, 0, nullptr); // the cubes reflect the sky
         model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
         constants.model = model;
         vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
@@ -1582,6 +1576,7 @@ private:
         ubo.proj = glm::perspective(glm::radians(fov), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 100.0f);
         // GLM is made for OpenGL, where clip space y points up: flip it for Vulkan (this replaces the flip in the shader)
         ubo.proj[1][1] *= -1;
+        ubo.cameraPos = cameraPos;
 
         memcpy(uniformBufferMapped, &ubo, sizeof(ubo));
     }
