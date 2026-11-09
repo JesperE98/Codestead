@@ -22,3 +22,11 @@ For the Advanced OpenGL chapters (drawn by `make_advanced.py`):
   (+X, -X, +Y, -Y, +Z, -Z) of one sky – clouds, a sun towards -Z (in front of the default camera), mountains on the
   horizon, a red and white striped tower towards +Z (behind the camera: what mirrors facing it show) and green fields
   below the horizon – made with the cube map rule of the OpenGL specification, so they join without seams.
+
+For the Advanced Lighting chapters (drawn by `make_advanced_lighting.py`):
+- `wood.png` (256×256, RGB): warm wooden floor boards, stored as sRGB colours like a photo – the floor of the
+  Blinn-Phong, gamma correction and shadow chapters (the gamma chapter loads it once as linear and once as sRGB).
+- `brickwall.png` + `brickwall_normal.png` (256×256): red bricks and their tangent-space normal map (OpenGL
+  convention: +x right, +y up in the texture as loaded with a vertical flip, z out of the wall) – normal mapping.
+- `bricks2.png` + `bricks2_normal.png` + `bricks2_disp.png` (256×256): sandier bricks with deep mortar, their normal
+  map and their depth map (white = deep, the mortar) – parallax mapping.
