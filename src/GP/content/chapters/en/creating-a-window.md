@@ -46,6 +46,7 @@ Why does a graphics program need a library like GLFW, or the operating system's 
 ---
 OpenGL, Vulkan and Direct3D 12 only render. The window (and, for OpenGL, the context) comes from the operating system –
 directly through Win32, or through a library such as GLFW that hides the differences between operating systems.
+```
 :::opengl
 ## GLFW
 
@@ -90,6 +91,7 @@ What does CMake do with GLFW's source code?
 ---
 CMake is a *build system generator*: from `CMakeLists.txt` it writes the project files for the tool you chose. The
 compiling is done afterwards, by Visual Studio or `make`.
+```
 :::
 :::opengl
 ## Linking
@@ -173,6 +175,7 @@ Why must `glad/glad.h` be included before `GLFW/glfw3.h`?
 ---
 GLFW includes the system's OpenGL header unless one has already been included. GLAD's header defines all OpenGL
 declarations up to 3.3 itself and refuses to work if `gl.h` came first – so GLAD goes first.
+```
 :::
 :::opengl
 Next, we create the `main` function where we will instantiate the GLFW window:
@@ -213,6 +216,7 @@ You ask GLFW for an OpenGL 3.3 core profile context, but the computer's driver o
 ---
 The window hints are requirements for the context. If the driver can't satisfy them, `glfwCreateWindow` returns
 `NULL` – which is why we check its return value.
+```
 :::
 :::opengl
 Next we're required to create a window object. This window object holds all the windowing data and is required by
@@ -266,6 +270,7 @@ Why must `gladLoadGLLoader` be called after `glfwMakeContextCurrent(window)`?
 ---
 The addresses belong to the driver behind the context. `glfwGetProcAddress` only works while a context is current,
 so: create the window, make its context current, then load GLAD.
+```
 :::
 :::opengl
 ## Cleaning up
@@ -294,6 +299,7 @@ The finished program opens its window and closes it again at once. Why?
 ---
 A window only stays as long as the program runs. In the next chapter, Hello Window, you add a *render loop* that
 keeps the window open and draws into it until it is closed.
+```
 :::
 :::opengl
 ## Additional resources
@@ -429,6 +435,7 @@ Why does `initWindow` call `glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)`?
 ---
 GLFW creates an OpenGL context with every window by default. Vulkan talks to the window in its own way (through a
 surface, in the next chapter), so we switch the context off. Resizing is switched off by the *other* hint.
+```
 :::
 :::vulkan
 ## Instance
@@ -519,6 +526,7 @@ Why does `createInstance` enable the extensions returned by `glfwGetRequiredInst
 ---
 The window already exists without Vulkan. The extensions are what lets *Vulkan* present images to it later –
 `VK_KHR_surface` plus a platform-specific one such as `VK_KHR_win32_surface` or `VK_KHR_xlib_surface`.
+```
 :::
 :::vulkan
 ## Validation layers
@@ -730,6 +738,7 @@ Why is a `VkDebugUtilsMessengerCreateInfoEXT` also chained into `pNext` of `VkIn
 ---
 `debugMessenger` needs an instance to be created and must be destroyed before it. The create info in `pNext` gives
 those two calls a messenger of their own, which is cleaned up automatically.
+```
 :::
 :::vulkan
 ## Physical devices and queue families
@@ -846,6 +855,7 @@ Why does `QueueFamilyIndices` store the graphics family as `std::optional<uint32
 ---
 `std::optional` adds the missing "no value" state: `graphicsFamily.has_value()` is only true once a family with
 `VK_QUEUE_GRAPHICS_BIT` has been found.
+```
 :::
 :::vulkan
 ## Logical device and queues
@@ -938,6 +948,7 @@ Which of these objects does `cleanup()` destroy explicitly? (Choose all that app
 ---
 Everything you create is destroyed, in reverse order. The physical device and the queue are not created by you – they
 are only retrieved – and go away together with the instance and the device.
+```
 :::
 :::vulkan
 ## Additional resources
@@ -1069,6 +1080,7 @@ Why does `wWinMain` call `AdjustWindowRect` before `CreateWindowW`?
 ---
 We draw into the client area, so that is the part that must be 800×600. `AdjustWindowRect` adds the size of the
 frame that the `WS_OVERLAPPEDWINDOW` style puts around it.
+```
 :::
 :::d3d12
 ## COM objects, HRESULT and ThrowIfFailed
@@ -1112,6 +1124,7 @@ What is DXGI responsible for? (Choose all that apply.)
 ---
 DXGI handles what is shared by all Direct3D versions: adapters, outputs and swap chains. Shaders are compiled by the
 shader compiler (`d3dcompiler`), and commands are recorded into Direct3D 12 command lists.
+```
 :::
 :::d3d12
 ## The debug layer
@@ -1160,6 +1173,7 @@ Why must the debug layer be enabled before `D3D12CreateDevice` is called?
 ---
 The debug layer wraps the device when it is created. That is why the samples enable it first thing in
 `LoadPipeline`, before the factory and the device.
+```
 :::
 :::d3d12
 ## Adapters and the device
@@ -1234,6 +1248,7 @@ In `GetHardwareAdapter`, what does `D3D12CreateDevice(adapter.Get(), D3D_FEATURE
 ---
 Passing `nullptr` for the device pointer makes `D3D12CreateDevice` a check. The real device is created afterwards in
 `LoadPipeline`, on the adapter that passed.
+```
 :::
 :::d3d12
 ## The command queue
@@ -1267,6 +1282,7 @@ Why is the command queue created with `D3D12_COMMAND_LIST_TYPE_DIRECT`?
 - [ ] Because the debug layer requires it
 ---
 Compute and copy queues only take a subset of commands. To draw, we need a direct queue.
+```
 :::
 :::d3d12
 ## Additional resources

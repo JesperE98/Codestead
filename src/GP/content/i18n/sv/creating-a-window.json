@@ -1,0 +1,57 @@
+{
+  "title": "Skapa ett fönster",
+  "tasks": {
+    "glfw-init": {
+      "text": { "opengl": "Initiera GLFW med `glfwInit()` och be om en OpenGL 3.3-kontext med core-profil med `glfwWindowHint`." },
+      "hint": { "opengl": "Tre hints: `GLFW_CONTEXT_VERSION_MAJOR` 3, `GLFW_CONTEXT_VERSION_MINOR` 3 och `GLFW_OPENGL_PROFILE` = `GLFW_OPENGL_CORE_PROFILE`. macOS behöver också `GLFW_OPENGL_FORWARD_COMPAT` = `GL_TRUE` (inom `#ifdef __APPLE__`)." }
+    },
+    "create-window": {
+      "text": { "opengl": "Skapa ett 800×600-fönster med titeln \"LearnOpenGL\" med `glfwCreateWindow`, kontrollera det och gör dess kontext aktuell." },
+      "hint": { "opengl": "`glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, \"LearnOpenGL\", NULL, NULL)` returnerar `NULL` vid fel: skriv då ut `Failed to create GLFW window`, anropa `glfwTerminate()` och `return -1`. Avsluta med `glfwMakeContextCurrent(window);`." }
+    },
+    "glad": {
+      "text": { "opengl": "Ladda OpenGL:s funktionspekare med `gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)` och avbryt om det misslyckas." },
+      "hint": { "opengl": "Det måste komma efter `glfwMakeContextCurrent`: GLAD frågar den aktuella kontexten efter funktionsadresserna. Vid fel, skriv ut `Failed to initialize GLAD` och `return -1`." }
+    },
+    "terminate": {
+      "text": { "opengl": "Städa upp GLFW i slutet av `main` med `glfwTerminate()`." },
+      "hint": { "opengl": "Det förstör fönstret och frigör allt som GLFW allokerat; lägg det direkt före `return 0;`." }
+    },
+    "instance": {
+      "text": { "vulkan": "Skapa Vulkan-instansen: lägg till medlemmen `instance`, skriv `createInstance()` och `getRequiredExtensions()`, anropa `createInstance()` i `initVulkan()` och `vkDestroyInstance` i `cleanup()`." },
+      "hint": { "vulkan": "Fyll i en `VkApplicationInfo` och en `VkInstanceCreateInfo` (extensions från `glfwGetRequiredInstanceExtensions`, `enabledLayerCount = 0`); kasta `std::runtime_error(\"failed to create instance!\")` om `vkCreateInstance` inte returnerar `VK_SUCCESS`." }
+    },
+    "validation-layers": {
+      "text": { "vulkan": "Aktivera `VK_LAYER_KHRONOS_validation` i debug-byggen: lägg till `validationLayers` och `enableValidationLayers`, skriv `checkValidationLayerSupport()` och använd båda i `createInstance()`." },
+      "hint": { "vulkan": "`vkEnumerateInstanceLayerProperties` listar de tillgängliga lagren (anropa den två gånger: antal, sedan lista); jämför namnen med `strcmp`. Sätt `enabledLayerCount` och `ppEnabledLayerNames` när lagren är aktiverade." }
+    },
+    "debug-messenger": {
+      "text": { "vulkan": "Ta emot valideringsmeddelandena: lägg till debug-messengern (proxyfunktioner, `debugMessenger`, `debugCallback`, `populateDebugMessengerCreateInfo()`, `setupDebugMessenger()`), extensionen `VK_EXT_DEBUG_UTILS_EXTENSION_NAME` och `pNext`-kedjan, och förstör den i `cleanup()`." },
+      "hint": { "vulkan": "Loadern exporterar inte extension-funktionerna: hämta dem med `vkGetInstanceProcAddr`. Callbacken skriver ut `\"validation layer: \" << pCallbackData->pMessage` till `std::cerr` och returnerar `VK_FALSE`. Förstör messengern före instansen." }
+    },
+    "physical-device": {
+      "text": { "vulkan": "Välj ett grafikkort: lägg till `QueueFamilyIndices` och `physicalDevice`, skriv `pickPhysicalDevice()`, `isDeviceSuitable()` och `findQueueFamilies()`, och anropa `pickPhysicalDevice()` efter `setupDebugMessenger()`." },
+      "hint": { "vulkan": "Anropa `vkEnumeratePhysicalDevices` och `vkGetPhysicalDeviceQueueFamilyProperties` två gånger var (antal, sedan lista). En enhet passar om en köfamilj har `VK_QUEUE_GRAPHICS_BIT`; kasta \"failed to find a suitable GPU!\" om ingen gör det." }
+    },
+    "logical-device": {
+      "text": { "vulkan": "Skapa den logiska enheten med en grafikkö: lägg till `device` och `graphicsQueue`, skriv `createLogicalDevice()`, anropa den efter `pickPhysicalDevice()` och förstör enheten först i `cleanup()`." },
+      "hint": { "vulkan": "En `VkDeviceQueueCreateInfo` (prioritet `1.0f`), en `VkDeviceCreateInfo` utan extensions och med samma valideringslager som instansen, `vkCreateDevice`, sedan `vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue)`." }
+    },
+    "factory": {
+      "text": { "d3d12": "Skapa DXGI-fabriken: `ComPtr<IDXGIFactory4> factory;` och `CreateDXGIFactory2(0, IID_PPV_ARGS(&factory))`, inom `ThrowIfFailed`." },
+      "hint": { "d3d12": "DXGI känner till adaptrarna (grafikkorten) och skapar swap chains. `IID_PPV_ARGS` skickar gränssnittets ID och adressen till pekaren som ska fyllas i." }
+    },
+    "debug-layer": {
+      "text": { "d3d12": "Aktivera D3D12:s debug-lager överst i `LoadPipeline` i debug-byggen (`D3D12GetDebugInterface` + `EnableDebugLayer()`) och skapa fabriken med `DXGI_CREATE_FACTORY_DEBUG`." },
+      "hint": { "d3d12": "Lägg det mellan `#if defined(_DEBUG)` och `#endif`. Samla fabrikens flaggor i `UINT dxgiFactoryFlags = 0;` och skicka dem till `CreateDXGIFactory2` i stället för `0`." }
+    },
+    "device": {
+      "text": { "d3d12": "Fyll i `GetHardwareAdapter` (den första hårdvaruadaptern som stöder Direct3D 12) och skapa enheten i `LoadPipeline` med `D3D12CreateDevice(hardwareAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device))`." },
+      "hint": { "d3d12": "Loopa med `EnumAdapters1`, hoppa över adaptrar med `DXGI_ADAPTER_FLAG_SOFTWARE` i `desc.Flags`, testa med `D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)` och returnera adaptern med `*ppAdapter = adapter.Detach();`." }
+    },
+    "command-queue": {
+      "text": { "d3d12": "Beskriv och skapa kommandokön: en `D3D12_COMMAND_QUEUE_DESC` med `Type = D3D12_COMMAND_LIST_TYPE_DIRECT`, sedan `m_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue))`." },
+      "hint": { "d3d12": "Börja med `D3D12_COMMAND_QUEUE_DESC queueDesc = {};` och sätt `Flags = D3D12_COMMAND_QUEUE_FLAG_NONE`. En direct-kö tar alla sorters kommandon (ritning, beräkning, kopiering)." }
+    }
+  }
+}

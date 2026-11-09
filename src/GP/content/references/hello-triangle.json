@@ -1,0 +1,15 @@
+[
+  { "title": "Hello Triangle", "url": "https://learnopengl.com/Getting-started/Hello-Triangle", "publisher": "LearnOpenGL" },
+  { "title": "hello_triangle_indexed.cpp (source code)", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/1.getting_started/2.2.hello_triangle_indexed/hello_triangle_indexed.cpp", "publisher": "LearnOpenGL", "api": "opengl" },
+  { "title": "Vertex Specification", "url": "https://www.khronos.org/opengl/wiki/Vertex_Specification", "publisher": "OpenGL Wiki (Khronos)", "api": "opengl" },
+  { "title": "glVertexAttribPointer", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glVertexAttribPointer.xhtml", "publisher": "Khronos", "api": "opengl" },
+  { "title": "Graphics pipeline basics: Introduction", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Graphics_pipeline_basics/Introduction", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Shader modules", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Graphics_pipeline_basics/Shader_modules", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Fixed functions", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Graphics_pipeline_basics/Fixed_functions", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Vertex buffer creation", "url": "https://vulkan-tutorial.com/Vertex_buffers/Vertex_buffer_creation", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Index buffer", "url": "https://vulkan-tutorial.com/Vertex_buffers/Index_buffer", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Creating a basic Direct3D 12 component", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/creating-a-basic-direct3d-12-component", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Root signatures", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/root-signatures", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Managing graphics pipeline state in Direct3D 12", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/managing-graphics-pipeline-state-in-direct3d-12", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "D3D12HelloTriangle sample", "url": "https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Samples/Desktop/D3D12HelloWorld/src/HelloTriangle", "publisher": "Microsoft (GitHub)", "api": "d3d12" }
+]
