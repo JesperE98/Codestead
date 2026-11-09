@@ -21,9 +21,8 @@ The floor: learnopengl's `planeVertices` are **clockwise seen from above** (norm
 (-5,-0.5,-5) points down), so with back-face culling the floor would vanish (it is seen from above). The `cull-back`
 task swaps the 2nd and 3rd corner of both floor triangles (same texture coordinates per corner – no visible change).
 
-The CCW cube: learnopengl's cube with, in each clockwise triangle (12 of the 36 vertices: two triangles each of the
-back, right and top faces and … – every triangle checked with the cross product against the face's outward normal),
-the 2nd and 3rd corner swapped. Each corner keeps its texture coordinates, so the picture does not change; the faces
+The CCW cube: learnopengl's cube with, in each clockwise triangle (both triangles of the back, right and top faces – every
+triangle checked with the cross product against the face's outward normal) the 2nd and 3rd corner swapped. Each corner keeps its texture coordinates, so the picture does not change; the faces
 are commented (`// back face (z = -0.5)` …).
 
 Pixel positions are in the 800×600 client area from the top left, at time = 1 s (nothing moves). D3D12 cannot run here:
@@ -56,6 +55,6 @@ Start picture: c0 151,150,147, c0-top 208,204,193, c0-right 168,167,162, c0-low 
 - **Task:** learnopengl's exercise: cull the front faces instead (`D3D12_CULL_MODE_FRONT`).
 - **Hint:** Only `CullMode` changes. You now see each cube's back faces – the inside of the box – and the floor (whose front faces up) disappears.
 - **When done:** `main.cpp`: `psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_FRONT;` (`FrontCounterClockwise = TRUE`
-  stays). The cubes show their **inner faces** (the far walls, lit the same, the marble seen mirrored): c0 ≈ 198,195,186,
+  stays). The cubes show their **inner faces** (the far walls, the marble seen mirrored): c0 ≈ 198,195,186,
   c0-top ≈ 215,212,201, c0-right ≈ 216,212,201, c0-low ≈ 184,182,174 (OpenGL 198,195,186), c1 ≈ 178,176,169; the
   **floor is gone**: floor-near 26,26,26, floor-left 26,26,26, background 26,26,26.
