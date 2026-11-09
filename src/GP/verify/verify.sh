@@ -90,6 +90,7 @@ for dir in "$@"; do
       glad=$(glad_dir)
       for s in "$work"/*.vs "$work"/*.vert; do [ -f "$s" ] && { glslangValidator -S vert "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S vert "$s" | tail -n +2)"; }; done
       for s in "$work"/*.fs "$work"/*.frag; do [ -f "$s" ] && { glslangValidator -S frag "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S frag "$s" | tail -n +2)"; }; done
+      for s in "$work"/*.gs "$work"/*.geom; do [ -f "$s" ] && { glslangValidator -S geom "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S geom "$s" | tail -n +2)"; }; done
       # Model loading: learnopengl's model.h uses Assimp.
       libs=""; grep -rqs "assimp/" "$work" --include=*.cpp --include=*.h && libs="-lassimp"
       if g++ -std=c++17 -Wall -o "$work/app" "$work/main.cpp" "$glad/src/glad.c" -I"$glad/include" -I"$work" -I/usr/include/stb -lglfw -ldl $libs 2>"$work/build.log"; then
@@ -105,7 +106,7 @@ for dir in "$@"; do
       ;;
     vulkan)
       mkdir -p "$work/shaders"
-      for s in "$work"/shaders/*.vert "$work"/shaders/*.frag; do
+      for s in "$work"/shaders/*.vert "$work"/shaders/*.frag "$work"/shaders/*.geom; do
         [ -f "$s" ] || continue
         # shader.vert -> vert.spv (vulkan-tutorial's names); any other name -> name.vert.spv
         case "$(basename "$s")" in
@@ -136,6 +137,7 @@ for dir in "$@"; do
         # glslangValidator's HLSL front end needs SPIR-V output (-V) to compile at all.
         grep -q "VSMain" "$s" && { glslangValidator -V -D -e VSMain -S vert -o "$work/vs.spv" "$s" >"$work/hlsl.log" || { fail "$(basename "$s") VSMain:"; cat "$work/hlsl.log"; }; }
         grep -q "PSMain" "$s" && { glslangValidator -V -D -e PSMain -S frag -o "$work/ps.spv" "$s" >"$work/hlsl.log" || { fail "$(basename "$s") PSMain:"; cat "$work/hlsl.log"; }; }
+        grep -qE "void[[:space:]]+GSMain[[:space:]]*\(" "$s" && { glslangValidator -V -D -e GSMain -S geom -o "$work/gs.spv" "$s" >"$work/hlsl.log" || { fail "$(basename "$s") GSMain:"; cat "$work/hlsl.log"; }; }
       done
       # For MinGW, d3d12.h/d3dx12 declare the methods that return a struct (GetCPUDescriptorHandleForHeapStart,
       # GetDesc ...) with an extra out-parameter (an ABI workaround). The course code is written for MSVC, like the

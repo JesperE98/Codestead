@@ -104,6 +104,12 @@ public sealed partial class VulkanReader
     {
         layout ??= DeviceLayout();
         var (attributes, strides) = layout.Value;
+        // The pipeline's own vertex input (what vkCreateGraphicsPipelines was given), when the device model has it.
+        if (device.PipelineOf(state.Pipeline) is { Attributes.Count: > 0 } pipe)
+        {
+            attributes = pipe.Attributes.Select(a => new VkAttribute(a.Location, a.Binding, a.Offset, a.Comps, pipe.Bindings.TryGetValue(a.Binding, out var b) && b.Instance)).ToList();
+            strides = pipe.Bindings.ToDictionary(b => b.Key, b => b.Value.Stride);
+        }
         List<Dictionary<string, ShaderValue>> Read(IEnumerable<VkAttribute> attrs, int n)
         {
             var list = new List<Dictionary<string, ShaderValue>>();
@@ -147,6 +153,8 @@ public sealed partial class VulkanReader
                     scene.Ops.Add(c with { BeforeDraw = scene.Draws.Count });
                     break;
                 case CopyOp cp:
+                    if (cp.From is not null) RegisterTarget(device, cp.From);
+                    if (cp.To is not null) RegisterTarget(device, cp.To);
                     scene.Ops.Add(cp with { BeforeDraw = scene.Draws.Count });
                     break;
             }

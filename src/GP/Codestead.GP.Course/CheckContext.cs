@@ -149,6 +149,17 @@ public sealed class CheckContext
         return false;
     }
 
+    /// <summary>How many pixels of the (small) check frame satisfy a test.</summary>
+    public int CountPixels(Func<double[], bool> test)
+    {
+        if (Frame is not { } f) return 0;
+        int n = 0;
+        for (int y = 0; y < f.Height; y++)
+            for (int x = 0; x < f.Width; x++)
+                if (test(f.At(x, y))) n++;
+        return n;
+    }
+
     /// <summary>The picture changes over time: the frame at 2.3 s differs from the one at 1 s in more than a few pixels.</summary>
     public bool ChangesOverTime
     {

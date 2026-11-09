@@ -42,6 +42,9 @@ public static class GpCourse
         ("cubemaps", "advanced-opengl"),
         ("advanced-data", "advanced-opengl"),
         ("advanced-glsl", "advanced-opengl"),
+        ("geometry-shader", "advanced-opengl"),
+        ("instancing", "advanced-opengl"),
+        ("anti-aliasing", "advanced-opengl"),
     ];
 
     public static IReadOnlyList<CourseChapter> Chapters { get; } = Build();

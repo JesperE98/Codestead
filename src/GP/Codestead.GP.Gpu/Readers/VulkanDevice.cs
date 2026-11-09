@@ -33,7 +33,21 @@ internal sealed class VulkanDevice : IDeviceModel
     }
 
     public sealed record DrawState(string? Framebuffer, IReadOnlyDictionary<int, (string Buffer, long Offset)> VertexBuffers,
-        (string Buffer, long Offset, int Bytes)? IndexBuffer, IReadOnlyDictionary<int, string> Sets);
+        (string Buffer, long Offset, int Bytes)? IndexBuffer, IReadOnlyDictionary<int, string> Sets, string? Pipeline = null);
+
+    /// <summary>A vertex attribute of a pipeline: location, binding, byte offset, numbers.</summary>
+    public sealed record Attribute(int Location, int Binding, int Offset, int Comps);
+
+    /// <summary>
+    /// What vkCreateGraphicsPipelines was given: the vertex input (attributes; bindings' stride and per-instance rate)
+    /// and the rasterization sample count.
+    /// </summary>
+    public sealed record Pipeline(List<Attribute> Attributes, Dictionary<int, (int Stride, bool Instance)> Bindings, int Samples);
+
+    private readonly Dictionary<string, Pipeline> pipelines = new(StringComparer.Ordinal);
+    private string? boundPipeline;
+
+    public Pipeline? PipelineOf(string? handle) => handle is not null && pipelines.TryGetValue(handle, out var p) ? p : null;
 
     private const double AddressUnit = 1e9;
 
@@ -44,8 +58,13 @@ internal sealed class VulkanDevice : IDeviceModel
     /// <summary>Image views: the image and whether it is viewed as a cube map.</summary>
     private readonly Dictionary<string, (string Image, bool Cube)> views = new(StringComparer.Ordinal);
     private readonly Dictionary<string, SamplerState> samplers = new(StringComparer.Ordinal);
-    /// <summary>Framebuffers: their first (colour) attachment's view.</summary>
+    /// <summary>Framebuffers: their colour attachment's view (the render pass's colour attachment, else the first).</summary>
     private readonly Dictionary<string, string> framebuffers = new(StringComparer.Ordinal);
+    /// <summary>Framebuffers whose render pass resolves the (multisampled) colour attachment: the resolve attachment's view.</summary>
+    private readonly Dictionary<string, string> resolves = new(StringComparer.Ordinal);
+    /// <summary>Render passes: the first subpass's colour attachment and resolve attachment (indices into the framebuffer's attachments).</summary>
+    private readonly Dictionary<string, (int Color, int? Resolve)> renderPasses = new(StringComparer.Ordinal);
+    private string? resolveView;
     /// <summary>Descriptor sets: binding → (image view, sampler).</summary>
     private readonly Dictionary<string, Dictionary<int, (string? View, string? Sampler)>> sets = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Image?> loaded = new(StringComparer.Ordinal);
@@ -71,9 +90,13 @@ internal sealed class VulkanDevice : IDeviceModel
 
     public void Attach(CppExec exec) => this.exec = exec;
 
+    /// <summary>The window's size (the swap chain's extent).</summary>
+    public int WindowWidth { get; init; } = 800;
+    public int WindowHeight { get; init; } = 600;
+
     object IDeviceModel.Snapshot() => Snapshot();
 
-    public DrawState Snapshot() => new(framebuffer, new Dictionary<int, (string, long)>(vertexBuffers), indexBuffer, new Dictionary<int, string>(boundSets));
+    public DrawState Snapshot() => new(framebuffer, new Dictionary<int, (string, long)>(vertexBuffers), indexBuffer, new Dictionary<int, string>(boundSets), boundPipeline);
 
     private string New(string kind) => $"{kind}:{++counter}";
 
@@ -231,12 +254,24 @@ internal sealed class VulkanDevice : IDeviceModel
                 samplers[sampler] = TextureBinding.FromFields(f => info?.Fields?.GetValueOrDefault(f)?.Text, d3d: false);
                 return ShaderValue.Str("VK_SUCCESS");
             }
+            case "vkCreateRenderPass" when args.Count >= 4:
+            {
+                var info = Eval(Strip(args[1]));
+                var subpass = Items(Field(info, "pSubpasses")).FirstOrDefault();
+                int color = (int)(Number(Items(Field(subpass, "pColorAttachments")).FirstOrDefault(), "attachment") ?? 0);
+                var resolve = Number(Items(Field(subpass, "pResolveAttachments")).FirstOrDefault(), "attachment");
+                var rp = Set(args[3], "rp");
+                renderPasses[rp] = (color, resolve is null ? null : (int)resolve);
+                return ShaderValue.Str("VK_SUCCESS");
+            }
             case "vkCreateFramebuffer" when args.Count >= 4:
             {
                 var info = Eval(Strip(args[1]));
                 var attachments = Items(Field(info, "pAttachments"));
                 var fb = Set(args[3], "fb");
-                if (attachments.Length > 0 && attachments[0].Text is { } first) framebuffers[fb] = first;
+                var pass = Text(info, "renderPass") is { } rpName && renderPasses.TryGetValue(rpName, out var r) ? r : (0, null);
+                if (pass.Color < attachments.Length && attachments[pass.Color].Text is { } colorView) framebuffers[fb] = colorView;
+                if (pass.Resolve is int ri && ri < attachments.Length && attachments[ri].Text is { } resolveTo) resolves[fb] = resolveTo;
                 return ShaderValue.Str("VK_SUCCESS");
             }
             case "vkAllocateDescriptorSets" when args.Count >= 3:
@@ -260,11 +295,75 @@ internal sealed class VulkanDevice : IDeviceModel
                 return ShaderValue.Scalar(0);
             }
 
+            // ---------- the physical device and the swap chain ----------
+            case "vkGetPhysicalDeviceProperties" when args.Count >= 2:
+            {
+                // The simulated device: up to 4 samples per pixel for colour and depth attachments.
+                const string counts = "VK_SAMPLE_COUNT_1_BIT|VK_SAMPLE_COUNT_2_BIT|VK_SAMPLE_COUNT_4_BIT";
+                var limits = new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+                {
+                    ["framebufferColorSampleCounts"] = ShaderValue.Str(counts),
+                    ["framebufferDepthSampleCounts"] = ShaderValue.Str(counts),
+                    ["maxSamplerAnisotropy"] = ShaderValue.Scalar(16),
+                };
+                Set(args[1], ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["limits"] = ShaderValue.Struct(limits) }));
+                return ShaderValue.Scalar(0);
+            }
+            case "vkEnumeratePhysicalDevices" when args.Count >= 3:
+                // One GPU: the simulated one.
+                if (args[2] is Name { Id: "nullptr" or "NULL" }) Set(args[1], ShaderValue.Scalar(1));
+                else Set(args[2], ShaderValue.Array([ShaderValue.Str("gpu:1")]));
+                return ShaderValue.Str("VK_SUCCESS");
+            case "isDeviceSuitable":
+                // The simulated GPU has the queues, extensions and swap chain support the tutorial asks for.
+                return ShaderValue.Scalar(1);
+            case "chooseSwapExtent":
+                // The swap chain's images are the window's size.
+                return ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["width"] = ShaderValue.Scalar(WindowWidth), ["height"] = ShaderValue.Scalar(WindowHeight) });
+            case "glfwGetFramebufferSize" when args.Count >= 3:
+                Set(args[1], ShaderValue.Scalar(WindowWidth));
+                Set(args[2], ShaderValue.Scalar(WindowHeight));
+                return ShaderValue.Scalar(0);
+
+            case "vkCreateGraphicsPipelines" when args.Count >= 6:
+            {
+                var infos = Items(Eval(Strip(args[3])));
+                int count = (int)Math.Max(1, Num(args[2]));
+                var handles = new List<ShaderValue>();
+                foreach (var info in infos.Take(count))
+                {
+                    var handle = New("pipe");
+                    handles.Add(ShaderValue.Str(handle));
+                    var input = Field(info, "pVertexInputState");
+                    var attributes = new List<Attribute>();
+                    foreach (var a in Items(Field(input, "pVertexAttributeDescriptions")).Take((int)(Number(input, "vertexAttributeDescriptionCount") ?? int.MaxValue)))
+                    {
+                        if (a.Fields is null) continue;
+                        var format = Text(a, "format") ?? "";
+                        int comps = System.Text.RegularExpressions.Regex.Matches(format, @"[RGBA]\d+").Count;
+                        attributes.Add(new Attribute((int)(Number(a, "location") ?? 0), (int)(Number(a, "binding") ?? 0), (int)(Number(a, "offset") ?? 0), Math.Max(1, comps)));
+                    }
+                    var bindings = new Dictionary<int, (int, bool)>();
+                    foreach (var bd in Items(Field(input, "pVertexBindingDescriptions")).Take((int)(Number(input, "vertexBindingDescriptionCount") ?? int.MaxValue)))
+                        if (bd.Fields is not null)
+                            bindings[(int)(Number(bd, "binding") ?? 0)] = ((int)(Number(bd, "stride") ?? 0), (Text(bd, "inputRate") ?? "").Contains("INSTANCE", StringComparison.Ordinal));
+                    var samples = System.Text.RegularExpressions.Regex.Match(Text(Field(info, "pMultisampleState"), "rasterizationSamples") ?? "", @"(\d+)_BIT");
+                    pipelines[handle] = new Pipeline(attributes, bindings, samples.Success ? int.Parse(samples.Groups[1].Value) : 1);
+                }
+                if (handles.Count == 1) Set(args[5], handles[0]);
+                else if (handles.Count > 1) Set(args[5], ShaderValue.Array(handles.ToArray()));
+                return ShaderValue.Str("VK_SUCCESS");
+            }
+
             // ---------- recording ----------
+            case "vkCmdBindPipeline" when args.Count >= 3:
+                boundPipeline = Handle(args[2]);
+                return null;   // the frame recorder records it too
             case "vkCmdBeginRenderPass" when args.Count >= 2:
             {
                 var info = Eval(Strip(args[1]));
                 framebuffer = Text(info, "framebuffer");
+                resolveView = framebuffer is not null && resolves.TryGetValue(framebuffer, out var rv) ? rv : null;
                 var target = TargetOf(framebuffer);
                 foreach (var clear in Items(Field(info, "pClearValues")))
                 {
@@ -283,6 +382,15 @@ internal sealed class VulkanDevice : IDeviceModel
                 }
                 return ShaderValue.Scalar(0);
             }
+            case "vkCmdEndRenderPass":
+                // The subpass's resolve attachment gets the multisampled colour image, resolved (vulkan-tutorial's
+                // multisampling: into the swap chain image).
+                if (resolveView is not null)
+                {
+                    Ops.Add(new CopyOp(DrawCount(), TargetOf(framebuffer), ViewTarget(resolveView)));
+                    resolveView = null;
+                }
+                return null;
             case "vkCmdBindVertexBuffers" when args.Count >= 5:
             {
                 int first = (int)Num(args[1]), count = (int)Num(args[2]);
@@ -326,8 +434,10 @@ internal sealed class VulkanDevice : IDeviceModel
     public ImageObject? Image(string id) => ImageOf(id);
 
     /// <summary>The render target of a framebuffer: its colour image ("img:N"), null for a swap chain image (the window).</summary>
-    public string? TargetOf(string? fb) =>
-        fb is not null && framebuffers.TryGetValue(fb, out var view) && views.TryGetValue(view, out var v) && ImageOf(v.Image) is { Window: false } img ? img.TargetId : null;
+    public string? TargetOf(string? fb) => fb is not null && framebuffers.TryGetValue(fb, out var view) ? ViewTarget(view) : null;
+
+    /// <summary>The render target behind an image view: its image ("img:N"), null for a swap chain image (the window).</summary>
+    private string? ViewTarget(string view) => views.TryGetValue(view, out var v) && ImageOf(v.Image) is { Window: false } img ? img.TargetId : null;
 
     private void Write(Expr dst, Expr from, Expr? size)
     {

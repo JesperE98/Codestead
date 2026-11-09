@@ -8,6 +8,7 @@ namespace Codestead.GP.Gpu.Readers;
 public sealed partial class CppSource
 {
     private readonly HashSet<string> resolving = new(StringComparer.Ordinal);
+    private Dictionary<string, string>? defines;
 
     /// <summary>Set when an evaluated value depended on the time (the preview then animates).</summary>
     public bool UsedTime { get; private set; }
@@ -74,10 +75,12 @@ public sealed partial class CppSource
         if (!resolving.Add(name)) return null;
         try
         {
-            foreach (Match m in DefineRe.Matches(Code))
-                if (m.Groups[1].Value == name) return EvaluateOrNull(m.Groups[2].Value.Trim(), time);
+            defines ??= DefineRe.Matches(Code).GroupBy(m => m.Groups[1].Value).ToDictionary(g => g.Key, g => g.First().Groups[2].Value.Trim(), StringComparer.Ordinal);
+            if (defines.TryGetValue(name, out var defined)) return EvaluateOrNull(defined, time);
             var init = Initializer(name);
-            return init is null ? null : EvaluateOrNull(init, time);
+            if (init is not null) return EvaluateOrNull(init, time);
+            // An API constant (VK_SAMPLE_COUNT_1_BIT as a member's initializer): its name.
+            return Regex.IsMatch(name, @"^(?:D3D12|DXGI|D3D|VK)_[A-Z0-9_]+$") ? ShaderValue.Str(name) : null;
         }
         finally
         {

@@ -100,7 +100,7 @@ public static partial class TaskChecks
             ["copy-buffer"] = c => Scene(c) && c.Api switch
             {
                 "opengl" => c.Has(@"glCopyBufferSubData \("),
-                "vulkan" => c.Has(@"memcpy \( data , positions \. data \( \)"),
+                "vulkan" => c.Has(@"vkCmdCopyBuffer \(") && c.Has(@"VK_BUFFER_USAGE_TRANSFER_DST_BIT \| VK_BUFFER_USAGE_VERTEX_BUFFER_BIT"),
                 _ => c.Has("m_floorCopyBuffer"),
             },
             ["map-memory"] = c => Scene(c) && c.Has(@"vertices \. data \( \) \+ 36"),

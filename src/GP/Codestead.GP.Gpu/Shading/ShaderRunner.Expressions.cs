@@ -117,6 +117,18 @@ public sealed partial class ShaderRunner
         // C++ strings: "offsets[" + std::to_string(i) + "]".
         if (op == "+" && (a.Text is not null || b.Text is not null) && Lenient)
             return ShaderValue.Str((a.Text ?? a.ToString()) + (b.Text ?? b.ToString()));
+        // C++ API flags (VK_SAMPLE_COUNT_4_BIT, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT): a set of
+        // names, "A|B"; & keeps the names in both (none: 0), | joins them.
+        if (Lenient && op is "|" or "&" && (a.Text is not null || b.Text is not null) && (a.Text is not null || a.X == 0) && (b.Text is not null || b.X == 0))
+        {
+            var left = (a.Text ?? "").Split('|', StringSplitOptions.RemoveEmptyEntries);
+            var right = (b.Text ?? "").Split('|', StringSplitOptions.RemoveEmptyEntries);
+            var flags = op == "|" ? left.Union(right).ToArray() : left.Intersect(right).ToArray();
+            return flags.Length == 0 ? ShaderValue.Scalar(0) : ShaderValue.Str(string.Join("|", flags));
+        }
+        // C++ pointer arithmetic on an array (vertices.data() + 36): the elements from there on.
+        if (Lenient && op == "+" && a.Items is not null && b.V is { Length: 1 })
+            return ShaderValue.Array(a.Items.Skip((int)Math.Max(0, b.X)).ToArray());
         if (a.Iterator is { } ia && b.Iterator is { } ib && op is "==" or "!=")
             return ShaderValue.Scalar((ia.Position == ib.Position) == (op == "==") ? 1 : 0);
         if (a.V is null || b.V is null) throw new ShaderRuntimeException($"invalid operands to binary '{op}'", line);

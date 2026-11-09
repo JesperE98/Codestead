@@ -33,6 +33,17 @@ public sealed partial class ShaderRunner
             return ShaderValue.Scalar(0);
         }
         if (name is "sizeof") return ShaderValue.Scalar(SizeOf(c.Args.FirstOrDefault()));
+        // offsetof(Vertex, texCoord): the bytes of the fields before it (4 per number, no padding).
+        if (name is "offsetof" && c.Args is [Name structName, Name fieldName] && program.FindStruct(structName.Id) is { } offStruct)
+        {
+            int at = 0;
+            foreach (var member in offStruct.Fields)
+            {
+                if (member.Id == fieldName.Id) return ShaderValue.Scalar(at);
+                at += 4 * CountNumbers(Default(member.Type)) * Math.Max(1, member.ArraySize);
+            }
+            return ShaderValue.Scalar(0);
+        }
         if (Lenient && name == "__newarray" && c.Args is [Name elementType, var countExpr])
         {
             int newCount = (int)Math.Max(0, Math.Min(100000, Eval(countExpr).X));

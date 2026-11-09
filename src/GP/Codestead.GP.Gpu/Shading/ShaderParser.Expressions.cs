@@ -48,6 +48,8 @@ public sealed partial class ShaderParser
             var op = Next().Text;
             var operand = UnaryExpr();
             // &x and *p (C++): the value itself is what matters to the simulator.
+            // C++: &a[0] points at the whole array (memcpy(data, &a[0], …) copies all of it); other &x / *p are x / p.
+            if (op == "&" && operand is IndexOf { At: Number { Value: 0 } } first) return first.Target;
             return op is "+" or "&" or "*" ? operand : new Unary(op, operand, line);
         }
         // C-style casts: (float)x, (void*)0, (GLfloat)x – and HLSL's (float3x3)m, (float3)v, which convert.

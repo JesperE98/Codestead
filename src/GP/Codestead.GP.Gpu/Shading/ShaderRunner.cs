@@ -332,7 +332,8 @@ public sealed partial class ShaderRunner
         }
     }
 
-    private static bool Truthy(ShaderValue v) => v.V is { Length: > 0 } && v.V[0] != 0;
+    /// <summary>True: a non-zero number; in C++ also a handle or a set of flags (a name), but not a null handle.</summary>
+    private static bool Truthy(ShaderValue v) => v.V is { Length: > 0 } ? v.V[0] != 0 : v.Text is { Length: > 0 } t && t is not ("VK_NULL_HANDLE" or "nullptr" or "NULL");
 
     private ShaderValue Lookup(string id, int line)
     {

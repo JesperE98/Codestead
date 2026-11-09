@@ -79,6 +79,7 @@ internal sealed class FrameRecorder
 
     private int callDepth;
     private readonly Dictionary<string, List<Stmt>> bodies = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<(string Name, bool Ref)>?> headers = new(StringComparer.Ordinal);
 
     /// <summary>
     /// A call of one of the program's own functions (LoadTexture(…), LoadCubemap(…)) while the device model runs: its
@@ -88,10 +89,14 @@ internal sealed class FrameRecorder
     {
         if (name.Contains("::", StringComparison.Ordinal)) name = name[(name.LastIndexOf("::", StringComparison.Ordinal) + 2)..];
         if (device is null || callDepth > 6 || name is "main" or "wWinMain" or "WinMain" or "OnRender" or "mainLoop" or "run" or "drawFrame" || !source.Functions.ContainsKey(name)) return null;
-        var header = System.Text.RegularExpressions.Regex.Match(source.Code, @"(?<![\w.>])(?:\w+::)?" + System.Text.RegularExpressions.Regex.Escape(name) + @"\s*\(([^()]*)\)\s*(?:const\s*)?\{");
-        if (!header.Success) return null;
-        var parameters = CppSource.SplitArgs(header.Groups[1].Value).Where(p => p.Trim() is not ("" or "void"))
-            .Select(p => (Name: System.Text.RegularExpressions.Regex.Match(p, @"(\w+)\s*(?:\[\s*\])?\s*(?:=[^,]*)?$").Groups[1].Value, Ref: p.Contains('&') && !p.Contains("&&"))).ToList();
+        if (!headers.TryGetValue(name, out var parameters))
+        {
+            var header = System.Text.RegularExpressions.Regex.Match(source.Code, @"(?<![\w.>])(?:\w+::)?" + System.Text.RegularExpressions.Regex.Escape(name) + @"\s*\(([^()]*)\)\s*(?:const\s*)?\{");
+            headers[name] = parameters = !header.Success ? null : CppSource.SplitArgs(header.Groups[1].Value).Where(p => p.Trim() is not ("" or "void"))
+                .Select(p => (Name: System.Text.RegularExpressions.Regex.Match(p, @"(\w+)\s*(?:\[\s*\])?\s*(?:=[^,]*)?$").Groups[1].Value, Ref: p.Contains('&') && !p.Contains("&&"))).ToList();
+        }
+        if (parameters is null) return null;
+        if (EmulateLoadObj(name, parameters, args) is { } emulated) return emulated;
         if (!bodies.TryGetValue(name, out var body))
             bodies[name] = body = ShaderParser.ParseStatementsLenient(CppSource.Prepare("{" + source.FunctionBody(name) + "}"));
         var values = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
@@ -110,6 +115,72 @@ internal sealed class FrameRecorder
         {
             callDepth--;
         }
+    }
+
+    /// <summary>The project, for the model files a loadModel reads.</summary>
+    public GpuProject? Project { get; init; }
+
+    /// <summary>
+    /// vulkan-tutorial's loadModel (tinyobj::LoadObj and the loop over the shapes' indices): instead of running the loop,
+    /// the vectors it fills get the model's vertices – as the program's Vertex structs, position, normal, texCoord with v
+    /// flipped (1 - v), colour white, the material index – and its indices. The vectors are the ones the body
+    /// push_backs into: the program's members (vertices, indices) or reference parameters (loadModel(path, v, i)).
+    /// </summary>
+    private ShaderValue? EmulateLoadObj(string name, List<(string Name, bool Ref)> parameters, IReadOnlyList<Expr> args)
+    {
+        if (Project is null || source.FunctionBody(name) is not { } body || !body.Contains("LoadObj", StringComparison.Ordinal)) return null;
+        var call = System.Text.RegularExpressions.Regex.Match(body, @"\bLoadObj\s*\(");
+        if (!call.Success) return null;
+        int close = CppSource.MatchBracket(body, call.Index + call.Length - 1);
+        if (close < 0) return null;
+        var loadArgs = CppSource.SplitArgs(body[(call.Index + call.Length)..close]);
+        if (loadArgs.Count < 6) return null;
+        var pathText = System.Text.RegularExpressions.Regex.Replace(loadArgs[5].Trim(), @"\s*\.\s*c_str\s*\(\s*\)$", "");
+        int pathParam = parameters.FindIndex(p => p.Name == pathText);
+        var pathValue = pathParam >= 0 && pathParam < args.Count ? Value(args[pathParam])
+            : CppSource.StringArg(pathText) is { } literal ? ShaderValue.Str(literal)
+            : Value(new Name(pathText, 0)) ?? source.Evaluate(pathText, exec.Runner.Time);
+        var path = pathValue?.Text ?? Models.ModelFiles.Path(source);
+        var model = path is null ? null : Models.ObjModel.Load(Project, path);
+        if (model is null) return null;
+
+        var pushes = System.Text.RegularExpressions.Regex.Matches(body, @"(\w+)\s*\.\s*(?:push_back|emplace_back)\s*\(\s*([^;]*)\)\s*;").Select(m => (Target: m.Groups[1].Value, Arg: m.Groups[2].Value.Trim())).ToList();
+        var vertexVector = pushes.FirstOrDefault(p => p.Arg == "vertex").Target ?? "vertices";
+        var indexVector = pushes.Where(p => p.Target != vertexVector).Select(p => p.Target).OrderByDescending(t => t.Contains("ind", StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? "indices";
+        // The vertex type: std::vector<Vertex> – of the parameter or of the member.
+        var header = System.Text.RegularExpressions.Regex.Match(source.Code, @"(?<![\w.>])" + System.Text.RegularExpressions.Regex.Escape(name) + @"\s*\(([^()]*)\)");
+        var vertexParamText = header.Success ? CppSource.SplitArgs(header.Groups[1].Value).FirstOrDefault(p => System.Text.RegularExpressions.Regex.IsMatch(p, @"\b" + vertexVector + @"\s*$")) : null;
+        var vectorType = vertexParamText ?? source.DeclaredType(vertexVector) ?? "";
+        var structName = System.Text.RegularExpressions.Regex.Match(vectorType, @"<\s*(\w+)\s*>").Groups[1].Value;
+        if (StructLayout.Fields(source, structName) is not { } fields) return null;
+
+        var vertices = new List<ShaderValue>();
+        var indices = new List<ShaderValue>();
+        foreach (var mesh in model.Meshes)
+        {
+            int baseVertex = vertices.Count;
+            for (int i = 0; i < mesh.Positions.Count; i++)
+            {
+                var v = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+                foreach (var (_, field, _) in fields)
+                    v[field] = field.Contains("material", StringComparison.OrdinalIgnoreCase) || field.Contains("index", StringComparison.OrdinalIgnoreCase) ? ShaderValue.Scalar(mesh.Material?.Index ?? -1)
+                        : field.Contains("pos", StringComparison.OrdinalIgnoreCase) ? ShaderValue.Vec(mesh.Positions[i])
+                        : field.Contains("tex", StringComparison.OrdinalIgnoreCase) || field.Contains("uv", StringComparison.OrdinalIgnoreCase) ? ShaderValue.Vec(mesh.TexCoords[i][0], 1 - mesh.TexCoords[i][1])
+                        : field.Contains("normal", StringComparison.OrdinalIgnoreCase) ? ShaderValue.Vec(mesh.Normals[i])
+                        : ShaderValue.Vec(1, 1, 1);
+                vertices.Add(ShaderValue.Struct(v));
+            }
+            indices.AddRange(mesh.Indices.Select(x => ShaderValue.Scalar(x + baseVertex)));
+        }
+        void Fill(string vector, ShaderValue value)
+        {
+            int k = parameters.FindIndex(p => p.Name == vector);
+            if (k >= 0 && k < args.Count) exec.Runner.Assign(args[k], value);
+            else exec.Runner.Globals[vector] = value;
+        }
+        Fill(vertexVector, ShaderValue.Array(vertices.ToArray()));
+        Fill(indexVector, ShaderValue.Array(indices.ToArray()));
+        return ShaderValue.Scalar(0);
     }
 
     private ShaderValue? Hook(string name, IReadOnlyList<Expr> args)

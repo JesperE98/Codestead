@@ -217,6 +217,17 @@ public sealed partial class CppSource
     /// </summary>
     public string? Initializer(string name)
     {
+        // The source does not change: each name is looked up once (the C++ runner asks for the same names often).
+        if (initializers.TryGetValue(name, out var cached)) return cached;
+        return initializers[name] = FindInitializer(name);
+    }
+
+    private readonly Dictionary<string, string?> initializers = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, string?> declaredTypes = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<(string Target, string Field, string Value, int Offset)>> fieldAssignments = new(StringComparer.Ordinal);
+
+    private string? FindInitializer(string name)
+    {
         var re = new Regex(@"(?<![\w.>])" + Regex.Escape(name) + @"\s*(?:\[[^\]]*\]\s*)*(?<eq>=\s*)?(?<brace>\{)?(?<paren>\()?", RegexOptions.CultureInvariant);
         string? found = null, foundBraces = null;
         foreach (Match m in re.Matches(Code))
@@ -287,6 +298,57 @@ public sealed partial class CppSource
     /// <summary>The declared type of a variable (the word before it: "std::vector&lt;Vertex&gt;" gives "std::vector&lt;Vertex&gt;").</summary>
     public string? DeclaredType(string name)
     {
+        if (declaredTypes.TryGetValue(name, out var cached)) return cached;
+        return declaredTypes[name] = FindDeclaredType(name);
+    }
+
+    private string? FindDeclaredType(string name)
+    {
+        // "Type name" / "Type* name" / "std::vector<T> name" followed by = ; { ( [ , ): the first declaration in the
+        // file. Found from the name backwards (a regex trying a type at every identifier is slow on a long program).
+        foreach (Match m in Regex.Matches(Code, Regex.Escape(name) + @"\s*(?:\[[^\]]*\]\s*)*[=;{(\[,)]", RegexOptions.CultureInvariant))
+        {
+            int j = m.Index - 1;
+            // At least one whitespace right before the name, after an optional * or &.
+            if (j < 0 || !char.IsWhiteSpace(Code[j])) continue;
+            while (j >= 0 && char.IsWhiteSpace(Code[j])) j--;
+            if (j >= 0 && Code[j] is '*' or '&')
+            {
+                j--;
+                while (j >= 0 && char.IsWhiteSpace(Code[j])) j--;
+            }
+            if (j < 0) continue;
+            int typeEnd = j + 1;
+            if (Code[j] == '>')
+            {
+                // A template's arguments: back to the matching '<' (no ; = ( ) { } inside).
+                int depth = 0;
+                for (; j >= 0; j--)
+                {
+                    char ch = Code[j];
+                    if (ch is ';' or '=' or '(' or ')' or '{' or '}') { j = -1; break; }
+                    if (ch == '>') depth++;
+                    else if (ch == '<' && --depth == 0) break;
+                }
+                if (j < 0) continue;
+                j--;
+                while (j >= 0 && char.IsWhiteSpace(Code[j])) j--;
+            }
+            int identEnd = j + 1;
+            while (j >= 0 && (char.IsLetterOrDigit(Code[j]) || Code[j] is '_' or ':')) j--;
+            int start = j + 1;
+            while (start < identEnd && !(char.IsLetter(Code[start]) || Code[start] == '_')) start++;
+            if (start >= identEnd) continue;
+            var type = Code[start..typeEnd];
+            if (type is "return" or "else" or "case" or "new" or "delete") continue;
+            return Regex.Replace(type, @"\s+", "");
+        }
+        return null;
+    }
+
+    /// <summary>The first declaration's type, the slow way (kept to check the fast one).</summary>
+    internal string? DeclaredTypeByRegex(string name)
+    {
         var m = Regex.Match(Code, @"(?<type>[A-Za-z_][\w:]*(?:\s*<[^;=(){}]*>)?)\s*[*&]?\s+" + Regex.Escape(name) + @"\s*(?:\[[^\]]*\]\s*)*[=;{(\[,)]", RegexOptions.CultureInvariant);
         while (m.Success && m.Groups["type"].Value is "return" or "else" or "case" or "new" or "delete")
             m = m.NextMatch();
@@ -295,6 +357,12 @@ public sealed partial class CppSource
 
     /// <summary>Assignments "target.field = value;" (also through -> and with a swizzle-like .x after the field).</summary>
     public IEnumerable<(string Target, string Field, string Value, int Offset)> FieldAssignments(string field)
+    {
+        if (!fieldAssignments.TryGetValue(field, out var list)) fieldAssignments[field] = list = FindFieldAssignments(field).ToList();
+        return list;
+    }
+
+    private IEnumerable<(string Target, string Field, string Value, int Offset)> FindFieldAssignments(string field)
     {
         var re = new Regex(@"(?<target>[A-Za-z_][\w\[\]]*(?:(?:\.|->)[A-Za-z_]\w*)*)\s*(?:\.|->)\s*" + Regex.Escape(field) + @"\s*=(?!=)\s*", RegexOptions.CultureInvariant);
         foreach (Match m in re.Matches(Code))

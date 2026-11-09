@@ -31,6 +31,9 @@ public sealed partial class VulkanReader
                 var vs = ShaderFor(files.FirstOrDefault(f => f.Contains("vert", StringComparison.Ordinal)), ".vert");
                 var fs = ShaderFor(files.FirstOrDefault(f => f.Contains("frag", StringComparison.Ordinal)), ".frag");
                 if (vs is null || fs is null) continue;
+                // A geometry stage: a .geom file named for this pipeline (createPipeline(…, "shaders/x.geom.spv", …)).
+                var gsFile = files.FirstOrDefault(f => f.Contains(".geom", StringComparison.Ordinal));
+                var gs = gsFile is null ? null : ShaderFor(gsFile, ".geom", exact: true);
                 string Field(string f, string fallback) =>
                     src.FieldAssignments(f).Where(a => a.Offset >= range.Start && a.Offset < create.Offset).Select(a => Sub(a.Value)).LastOrDefault() ?? fallback;
                 var cull = Field("cullMode", "VK_CULL_MODE_NONE");
@@ -41,7 +44,7 @@ public sealed partial class VulkanReader
                     Field("polygonMode", "FILL").Contains("LINE", StringComparison.Ordinal),
                     Regex.IsMatch(Field("depthTestEnable", "VK_FALSE"), "TRUE"),
                     GlReader.TopologyOf(Field("topology", "TRIANGLE_LIST")),
-                    PipelineState.Vulkan(f => Field(f, null!), f => src.Int(Field(f, "")) is int v ? v : null));
+                    PipelineState.Vulkan(f => Field(f, null!), f => src.Int(Field(f, "")) is int v ? v : null), gs);
             }
         }
         return result;
@@ -56,12 +59,12 @@ public sealed partial class VulkanReader
     }
 
     /// <summary>The project's shader behind a SPIR-V path: "shaders/lighting.vert.spv" → shaders/lighting.vert; "shaders/vert.spv" → the .vert file.</summary>
-    private ShaderProgram? ShaderFor(string? spv, string extension)
+    private ShaderProgram? ShaderFor(string? spv, string extension, bool exact = false)
     {
         if (spv is null) return null;
         var source = spv.EndsWith(".spv", StringComparison.Ordinal) ? spv[..^4] : spv;
         var text = source.EndsWith(extension, StringComparison.Ordinal) ? project.Find(source) : null;
-        text ??= project.Files.FirstOrDefault(kv => kv.Key.EndsWith(extension, StringComparison.Ordinal)).Value;
+        if (!exact) text ??= project.Files.FirstOrDefault(kv => kv.Key.EndsWith(extension, StringComparison.Ordinal)).Value;
         if (text is null) return null;
         try
         {

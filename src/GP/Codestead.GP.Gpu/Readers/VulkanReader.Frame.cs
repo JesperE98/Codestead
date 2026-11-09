@@ -18,7 +18,8 @@ public sealed partial class VulkanReader
             scene.Notes.Add(SimNote.Info("vkNoRenderPassBegin"));
             return;
         }
-        var loadOp = src.LastFieldValue("loadOp");
+        // The colour attachment's loadOp (not a resolve or depth attachment's: they are DONT_CARE / their own).
+        var loadOp = src.FieldAssignments("loadOp").Where(a => !Regex.IsMatch(a.Target, "(?i)resolve|depth")).Select(a => a.Value).LastOrDefault() ?? src.LastFieldValue("loadOp");
         var clearVar = Regex.Match(src.Code, @"\bVkClearValue\s+(\w+)");
         // std::array<VkClearValue, 2> clearValues{}; clearValues[0].color = {{0.2f, 0.3f, 0.3f, 1.0f}};
         var colorField = Regex.Match(src.Code, @"(\w+)\s*\[\s*0\s*\]\s*\.\s*color\s*=\s*(\{[^;]*\})\s*;");
@@ -58,10 +59,11 @@ public sealed partial class VulkanReader
         var fs = Shader(".frag", "frag");
         // One pipeline: its own shaders (by the file names it was created with), not just the first in the project.
         var created = Pipelines();
-        if (created.Count == 1)
+        var only = created.Count == 1 ? created.Values.First() : null;
+        if (only is not null)
         {
-            vs = created.Values.First().Vs;
-            fs = created.Values.First().Fs;
+            vs = only.Vs;
+            fs = only.Fs;
         }
         if (vs is null || fs is null) return;
 
@@ -114,13 +116,13 @@ public sealed partial class VulkanReader
 
         // Run the frame: the uniform buffer update and the recorded commands (each draw with its push constants).
         var blocks = AllShaderBlocks([".vert", ".frag", ".geom"], vs, fs);
-        var device = new VulkanDevice(project, src);
-        var recorder = new FrameRecorder(src, time, scene, blocks, transposeMatrices: false, device);
+        var device = new VulkanDevice(project, src) { WindowWidth = scene.Width, WindowHeight = scene.Height };
+        var recorder = new FrameRecorder(src, time, scene, blocks, transposeMatrices: false, device) { Project = project };
         recorder.Setup();
         foreach (var fn in UpdateFunctions(blocks)) recorder.Run(fn);
         if (src.FunctionAt(call.Offset) is { } recordFn) recorder.Run(recordFn);
         var buffer = recorder.BufferContents();
-        bool deviceVertices = inputs.Count > 0 && modelIndices is null && recorder.Draws.Any(d => d.State is VulkanDevice.DrawState { VertexBuffers.Count: > 0 } st
+        bool deviceVertices = inputs.Count > 0 && recorder.Draws.Any(d => d.State is VulkanDevice.DrawState { VertexBuffers.Count: > 0 } st
             && device.Read(st.VertexBuffers.Values.First().Buffer, st.VertexBuffers.Values.First().Offset, 1) is not null);
         if (!staticVertices && !deviceVertices) return;
         if (deviceVertices && !staticVertices) scene.Notes.RemoveRange(notesBefore, notesAfterVertices - notesBefore);
@@ -135,6 +137,8 @@ public sealed partial class VulkanReader
                 if (opsByDraw.TryGetValue(di, out var ops)) AddDeviceOps(ops, device);
                 // With several pipelines, the draw uses the one bound before it.
                 var pl = d.Pipeline is not null && pipelines.Count > 1 && pipelines.TryGetValue(d.Pipeline, out var p) ? p : null;
+                // One pipeline: its own state (a helper's parameters: createPipeline(…, VK_PRIMITIVE_TOPOLOGY_POINT_LIST, …)).
+                var one = pl is null ? only : null;
                 var dvs = pl?.Vs ?? vs;
                 var dfs = pl?.Fs ?? fs;
                 var dVertices = vertices;
@@ -163,6 +167,7 @@ public sealed partial class VulkanReader
                 {
                     VertexShader = dvs,
                     FragmentShader = dfs,
+                    GeometryShader = pl is not null ? pl.Gs : only?.Gs,
                     MatchByLocation = true,
                     Vertices = dVertices,
                     Indices = dIndices,
@@ -172,22 +177,22 @@ public sealed partial class VulkanReader
                     First = d.Indexed ? 0 : d.First,
                     Count = d.Count,
                     Instances = Math.Max(1, d.Instances),
-                    Topology = pl?.Topology ?? topology,
+                    Topology = pl?.Topology ?? one?.Topology ?? topology,
                     Uniforms = _ => values,
-                    Cull = pl?.Cull ?? cullMode,
-                    FrontCcw = pl?.FrontCcw ?? frontCcw,
-                    Wireframe = pl?.Wireframe ?? wireframe,
-                    DepthTest = pl?.DepthTest ?? depthTest,
-                    DepthFunc = (pl?.State ?? pipeState).DepthFunc,
-                    DepthWrite = (pl?.State ?? pipeState).DepthWrite,
-                    Stencil = (pl?.State ?? pipeState).Stencil is { } st ? st with { Ref = d.StencilRef ?? st.Ref } : null,
-                    Blend = (pl?.State ?? pipeState).Blend,
+                    Cull = pl?.Cull ?? one?.Cull ?? cullMode,
+                    FrontCcw = pl?.FrontCcw ?? one?.FrontCcw ?? frontCcw,
+                    Wireframe = pl?.Wireframe ?? one?.Wireframe ?? wireframe,
+                    DepthTest = pl?.DepthTest ?? one?.DepthTest ?? depthTest,
+                    DepthFunc = (pl?.State ?? one?.State ?? pipeState).DepthFunc,
+                    DepthWrite = (pl?.State ?? one?.State ?? pipeState).DepthWrite,
+                    Stencil = (pl?.State ?? one?.State ?? pipeState).Stencil is { } st ? st with { Ref = d.StencilRef ?? st.Ref } : null,
+                    Blend = (pl?.State ?? one?.State ?? pipeState).Blend,
                     Textures = deviceTextures ?? PerDrawTextures(dvs, dfs, d.Bound) ?? (pl is null ? textures : Textures(dvs, dfs) ?? textures),
                 });
             }
             if (opsByDraw.TryGetValue(recorder.Draws.Count, out var lastOps)) AddDeviceOps(lastOps, device);
             if (recorder.Draws.Any(d => d.State is VulkanDevice.DrawState { Sets.Count: > 0 } s && device.HasSet(s.Sets.GetValueOrDefault(0) ?? "")))
-                scene.Notes.RemoveAll(n => n.Key == "tooFewTextures");
+                scene.Notes.RemoveAll(n => n.Key is "tooFewTextures" or "vkNoImageCopy");
             if (recorder.Runner.UsedTime) scene.Animated = true;
             return;
         }
