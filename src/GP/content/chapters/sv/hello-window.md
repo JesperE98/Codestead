@@ -41,7 +41,7 @@ Fönstret öppnas och förblir öppet, men ingenting presenteras någonsin i det
 du renderar den första framen.
 :::
 
-Som tidigare markerar `// TODO:`-kommentarerna i projektet var din kod ska in, och **Build & run** (Ctrl+Enter)
+Som tidigare markerar `// TODO:`-kommentarerna i projektet var din kod ska in, och **Bygg & kör** (Ctrl+Enter)
 kompilerar programmet och kör det i den inbyggda simulatorn.
 
 ## Ready your engines

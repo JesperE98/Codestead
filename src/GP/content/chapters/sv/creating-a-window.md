@@ -34,7 +34,7 @@ exemplet D3D12HelloWindow.
 :::
 
 Projektet till höger innehåller redan programmets skelett. `// TODO:`-kommentarerna visar var din kod ska stå, och
-**Build & run** (Ctrl+Enter) kompilerar projektet och kör det i den inbyggda simulatorn. Vill du också köra programmet
+**Bygg & kör** (Ctrl+Enter) kompilerar projektet och kör det i den inbyggda simulatorn. Vill du också köra programmet
 på din egen dator finns det för varje API ett kort avsnitt *bygga själv* här nedan.
 
 ```quiz
@@ -203,7 +203,7 @@ vi inte längre behöver. På macOS måste du också be om en *forward-compatibl
 det är vad raderna i `#ifdef __APPLE__` är till för.
 
 Gör nu den första uppgiften: ersätt den första `// TODO:`-kommentaren i `main` med anropet `glfwInit()` och
-fönsterhinten. Build & run: ingenting syns ännu, men programmet ska byggas och avslutas normalt.
+fönsterhinten. Bygg & kör: ingenting syns ännu, men programmet ska byggas och avslutas normalt.
 
 ```quiz
 Du ber GLFW om en OpenGL 3.3-kontext med core-profil, men datorns drivrutin stöder bara OpenGL 2.1. Vad händer?
@@ -513,7 +513,7 @@ vkDestroyInstance(instance, nullptr);
 ```
 
 Gör nu den första uppgiften: lägg till medlemmen `instance`, skriv `createInstance()` och `getRequiredExtensions()`,
-anropa `createInstance()` i `initVulkan` och förstör instansen i `cleanup`. Build & run: fönstret ser likadant ut, men
+anropa `createInstance()` i `initVulkan` och förstör instansen i `cleanup`. Bygg & kör: fönstret ser likadant ut, men
 nu finns det en instans bakom det.
 
 ```quiz
@@ -605,7 +605,7 @@ if (enableValidationLayers) {
 }
 ```
 
-Gör nu den andra uppgiften. Build & run: om lagret saknades skulle programmet stanna med "validation layers requested,
+Gör nu den andra uppgiften. Bygg & kör: om lagret saknades skulle programmet stanna med "validation layers requested,
 but not available!".
 
 ### Callback för meddelanden
@@ -721,7 +721,7 @@ if (enableValidationLayers) {
 
 Gör nu den tredje uppgiften – den berör flera ställen, så följ TODO-kommentarerna: de två proxyfunktionerna, medlemmen
 `debugMessenger`, `debugCallback`, `populateDebugMessengerCreateInfo()` och `setupDebugMessenger()`, extensionen,
-`pNext`-kedjan, anropet i `initVulkan` och förstöringen i `cleanup`. Build & run: utdata visar nu rader som börjar med
+`pNext`-kedjan, anropet i `initVulkan` och förstöringen i `cleanup`. Bygg & kör: utdata visar nu rader som börjar med
 `validation layer:`. Eftersom vi också bad om verbose-meddelanden är det mest ofarlig information från loadern. Ett
 korrekt program visar inga meddelanden med `Validation Error` eller `Validation Warning` i – håll utkik efter dem från
 och med nu.
@@ -839,7 +839,7 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
 ```
 
 Gör den fjärde uppgiften: lägg till structen, medlemmen, de tre funktionerna, och anropa `pickPhysicalDevice()` efter
-`setupDebugMessenger()`. Build & run – fönstret är oförändrat, och om ingen Vulkan-enhet passar stannar programmet med
+`setupDebugMessenger()`. Bygg & kör – fönstret är oförändrat, och om ingen Vulkan-enhet passar stannar programmet med
 "failed to find a suitable GPU!".
 
 ```quiz
@@ -929,7 +929,7 @@ och var det ska sparas. Köer städas bort automatiskt när enheten förstörs. 
 vkDestroyDevice(device, nullptr);
 ```
 
-Gör den sista uppgiften. Build & run: fönstret öppnas som förut, det kommer inga valideringsfel, och programmet
+Gör den sista uppgiften. Bygg & kör: fönstret öppnas som förut, det kommer inga valideringsfel, och programmet
 avslutas snyggt när du stänger fönstret. Med den logiska enheten och köns handtag kan vi faktiskt börja använda
 grafikkortet – i nästa kapitel kopplar vi det till fönstret och visar den första bilden.
 
@@ -1107,7 +1107,7 @@ ThrowIfFailed(CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)));
 `IDXGIFactory4` är den fabriksversion som D3D12-exemplen använder; första parametern till `CreateDXGIFactory2` håller
 flaggor för skapandet (inga än så länge – det ändras i nästa steg).
 
-Gör nu den första uppgiften: skapa fabriken där kommentaren `// TODO: create the DXGI factory` står. Build & run:
+Gör nu den första uppgiften: skapa fabriken där kommentaren `// TODO: create the DXGI factory` står. Bygg & kör:
 fönstret ser likadant ut.
 
 ```quiz
@@ -1266,7 +1266,7 @@ Det finns kötyper för beräkningsarbete (`D3D12_COMMAND_LIST_TYPE_COMPUTE`) oc
 (`D3D12_COMMAND_LIST_TYPE_COPY`); en **direct**-kö tar emot alla sorters kommandon – ritning, beräkning och kopiering –
 vilket är vad vi behöver. Det är samma idé som Vulkans köfamiljer.
 
-Gör den sista uppgiften: skapa kommandokön i slutet av `LoadPipeline`. Build & run: fönstret öppnas som förut och
+Gör den sista uppgiften: skapa kommandokön i slutet av `LoadPipeline`. Bygg & kör: fönstret öppnas som förut och
 stängs snyggt. Inget i `OnDestroy` behöver släppas för hand – `ComPtr`-medlemmarna släpper kön och enheten. I nästa
 kapitel får kön en swap chain, och du fyller fönstret med en färg.
 

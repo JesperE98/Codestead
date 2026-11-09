@@ -1580,6 +1580,7 @@ Direct3D call them **index buffers**). To explain how they work, an example: sup
 instead of a triangle. You can draw a rectangle with two triangles (the GPU prefers to work with triangles). That
 would take the following set of vertices:
 
+:::opengl d3d12
 ```cpp
 float vertices[] = {
     // first triangle
@@ -1592,6 +1593,21 @@ float vertices[] = {
     -0.5f,  0.5f, 0.0f   // top left
 };
 ```
+:::
+:::vulkan
+```cpp
+const std::vector<Vertex> vertices = {
+    // first triangle
+    {{-0.5f, -0.5f, 0.0f}},  // top left
+    {{0.5f, -0.5f, 0.0f}},   // top right
+    {{0.5f, 0.5f, 0.0f}},    // bottom right
+    // second triangle
+    {{0.5f, 0.5f, 0.0f}},    // bottom right
+    {{-0.5f, 0.5f, 0.0f}},   // bottom left
+    {{-0.5f, -0.5f, 0.0f}}   // top left
+};
+```
+:::
 
 As you can see, some vertices overlap: bottom right and top left are specified twice. That is an overhead of 50%,
 since the same rectangle could also be specified with only 4 vertices instead of 6. It only gets worse with more

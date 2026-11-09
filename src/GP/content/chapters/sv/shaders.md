@@ -32,7 +32,7 @@ fragment shadern).
 
 Alla uppgifter i det här kapitlet ändrar ett program som redan fungerar, så den här gången finns det inga
 `// TODO:`-kommentarer: varje uppgift talar om vilka rader du ska ändra. Tryck efter varje uppgift på
-**Build & run** (Ctrl+Enter) för att se resultatet i den inbyggda simulatorn.
+**Bygg & kör** (Ctrl+Enter) för att se resultatet i den inbyggda simulatorn.
 
 ## {{shaderLanguage}}
 
@@ -1085,7 +1085,7 @@ GLSL-kompilator i Vulkan-drivrutinen och inget "shaderprogram"-objekt att länka
 annorlunda:
 
 1. **Innan programmet körs** kompileras GLSL-filerna till SPIR-V av `glslc`, kompilatorn från Googles
-   shaderc-projekt som följer med Vulkan SDK. När du trycker på **Build & run** gör bygget precis det som
+   shaderc-projekt som följer med Vulkan SDK. När du trycker på **Bygg & kör** gör bygget precis det som
    vulkan-tutorials `compile`-skript gör:
 
    ```text
