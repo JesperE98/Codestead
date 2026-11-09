@@ -80,7 +80,14 @@ public sealed partial class ShaderRunner
         }
 
         int m = MatrixSize(name);
-        if (m > 0) return MatrixConstructor(m, c.Args.Select(Eval).ToList(), c.Line);
+        if (m > 0)
+        {
+            var made = MatrixConstructor(m, c.Args.Select(Eval).ToList(), c.Line);
+            // HLSL's float4x4(…) and DirectXMath's XMFLOAT4X4(…) take the matrix row by row, GLSL's mat4(…) column by
+            // column (one matrix argument is a cast either way).
+            bool rows = name is "float4x4" or "float3x3" or "float2x2" or "XMFLOAT4X4" or "XMFLOAT3X3" or "XMMATRIX";
+            return rows && c.Args.Count > 1 ? Transpose(made) : made;
+        }
         int n = ComponentCount(name);
         if (n > 0) return VectorConstructor(name, n, c.Args.Select(Eval).ToList(), c.Line);
 

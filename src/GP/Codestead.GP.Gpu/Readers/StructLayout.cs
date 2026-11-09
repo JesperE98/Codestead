@@ -54,8 +54,8 @@ internal static class StructLayout
         "vec2" or "XMFLOAT2" or "float2" or "ivec2" or "uvec2" => 2,
         "vec3" or "XMFLOAT3" or "float3" or "ivec3" or "uvec3" => 3,
         "vec4" or "XMFLOAT4" or "float4" or "ivec4" or "uvec4" => 4,
-        "mat4" or "XMFLOAT4X4" or "XMMATRIX" => 16,
-        "mat3" or "XMFLOAT3X3" => 9,
+        "mat4" or "XMFLOAT4X4" or "XMMATRIX" or "float4x4" => 16,
+        "mat3" or "XMFLOAT3X3" or "float3x3" => 9,
         _ => 1,
     };
 }

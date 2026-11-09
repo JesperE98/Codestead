@@ -43,6 +43,7 @@ public sealed partial class D3D12Reader
         if (vsInfo is null || psInfo is null) return;
         var (vs, vsEntry) = vsInfo.Value;
         var (ps, psEntry) = psInfo.Value;
+        var gsInfo = UsesGeometry(int.MaxValue) ? Compile("gs_") : null;
 
         var vertices = new List<Dictionary<string, ShaderValue>>();
         var entry = vs.FindFunction(vsEntry);
@@ -55,6 +56,7 @@ public sealed partial class D3D12Reader
 
         int[]? indices = null;
         int first = 0, count, instances;
+        bool missingIndices = false;
         if (modelOnly)
         {
             count = 0;
@@ -62,15 +64,13 @@ public sealed partial class D3D12Reader
         }
         else if (call == drawIndexed)
         {
-            if (!Has("IASetIndexBuffer") || IndexData() is not { } data)
-            {
-                scene.Notes.Add(SimNote.Error("dxNoIndexBuffer"));
-                return;
-            }
+            // Without an index array copied into a buffer here, the device model may still find the indices (a
+            // mesh's index buffer view): only an error if it does not.
+            missingIndices = !Has("IASetIndexBuffer") || IndexData() is null;
             count = src.Int(call.Arg(0)) ?? 0;
             instances = src.Int(call.Arg(1)) ?? 1;
             int start = src.Int(call.Arg(2)) ?? 0;
-            indices = data.Skip(start).Take(count).Select(d => (int)d).ToArray();
+            indices = (IndexData() ?? []).Skip(start).Take(count).Select(d => (int)d).ToArray();
         }
         else
         {
@@ -105,6 +105,11 @@ public sealed partial class D3D12Reader
         if (src.FunctionAt(call.Offset) is { } recordFn) recorder.Run(recordFn);
         var buffer = recorder.BufferContents();
         bool deviceVertices = needsInput && !modelOnly && recorder.Draws.Any(d => d.State is D3D12Device.DrawState { VertexBuffers.Count: > 0 } st && device.Read(st.VertexBuffers.Values.First().Address, 0, 1) is not null);
+        if (missingIndices && !(deviceVertices && recorder.Draws.Any(d => d.Indexed && d.State is D3D12Device.DrawState { IndexBuffer: not null })))
+        {
+            scene.Notes.Add(SimNote.Error("dxNoIndexBuffer"));
+            return;
+        }
         if (!staticVertices && !deviceVertices) return;
         if (deviceVertices) scene.Notes.RemoveRange(notesBefore, scene.Notes.Count - notesBefore);
         var indexData = drawIndexed is not null && !deviceVertices ? IndexData() : null;
@@ -126,12 +131,15 @@ public sealed partial class D3D12Reader
                     var mValues = new Dictionary<string, ShaderValue>(fallback(time), StringComparer.Ordinal);
                     foreach (var (k, v) in buffer) mValues[k] = v;
                     foreach (var (k, v) in d.Constants) mValues[k] = v;
-                    ModelDraws(pl?.Vs ?? vs, pl?.Fs ?? ps, pl?.VsEntry ?? vsEntry, pl?.FsEntry ?? psEntry, mValues, pl?.Cull ?? cullMode, pl?.FrontCcw ?? frontCcw, pl?.DepthTest ?? depth);
+                    RootCbvValues(device, d, blocks, mValues);
+                    ModelDraws(pl?.Vs ?? vs, pl?.Fs ?? ps, pl?.VsEntry ?? vsEntry, pl?.FsEntry ?? psEntry, mValues, pl?.Cull ?? cullMode, pl?.FrontCcw ?? frontCcw, pl?.DepthTest ?? depth,
+                        pl is not null ? pl.Gs : gsInfo?.Program, pl is not null ? pl.GsEntry : gsInfo?.Entry ?? "main", d);
                     continue;
                 }
                 var values = new Dictionary<string, ShaderValue>(fallback(time), StringComparer.Ordinal);
                 foreach (var (k, v) in buffer) values[k] = v;
                 foreach (var (k, v) in d.Constants) values[k] = v;
+                RootCbvValues(device, d, blocks, values);
                 var dvs = pl?.Vs ?? vs;
                 var dps = pl?.Fs ?? ps;
                 var dVertices = vertices;
@@ -151,6 +159,8 @@ public sealed partial class D3D12Reader
                 scene.Draws.Add(new DrawCall
                 {
                     Target = target,
+                    GeometryShader = pl is not null ? pl.Gs : gsInfo?.Program,
+                    GeometryEntry = pl is not null ? pl.GsEntry : gsInfo?.Entry ?? "main",
                     InstanceVertices = perInstance,
                     InstanceDivisor = stepRate,
                     CubeTextures = deviceCubes,
@@ -433,9 +443,12 @@ public sealed partial class D3D12Reader
     /// semantics (POSITION, NORMAL, TEXCOORD – v flipped with aiProcess_FlipUVs), and the mesh's diffuse / specular maps
     /// as the shader's first and second Texture2D.
     /// </summary>
-    private void ModelDraws(ShaderProgram vs, ShaderProgram ps, string vsEntry, string psEntry, Dictionary<string, ShaderValue> values, CullMode cull, bool frontCcw, bool depth)
+    private void ModelDraws(ShaderProgram vs, ShaderProgram ps, string vsEntry, string psEntry, Dictionary<string, ShaderValue> values, CullMode cull, bool frontCcw, bool depth,
+        ShaderProgram? gs = null, string gsEntry = "main", FrameRecorder.RecordedDraw? recorded = null)
     {
-        var path = Models.ModelFiles.Path(src);
+        // The model of the draw: the .obj its Load call names (m_rock.Load("models/rock.obj", …)), else the first one.
+        var path = recorded?.ModelName is { } modelName && Regex.Match(src.Code, Regex.Escape(modelName) + @"\s*(?:\.|->)\s*Load\s*\(\s*""([^""]+\.obj)""") is { Success: true } lm
+            ? lm.Groups[1].Value : Models.ModelFiles.Path(src);
         var model = path is null ? null : Models.ObjModel.Load(project, path);
         if (model is null)
         {
@@ -460,6 +473,8 @@ public sealed partial class D3D12Reader
                 FragmentShader = ps,
                 VertexEntry = vsEntry,
                 FragmentEntry = psEntry,
+                GeometryShader = gs,
+                GeometryEntry = gsEntry,
                 Hlsl = true,
                 Vertices = vertices,
                 Indices = mesh.Indices.ToArray(),
@@ -616,5 +631,22 @@ public sealed partial class D3D12Reader
                 if (src.Evaluate(expr, t) is { } v) d[field] = v;
             return d;
         };
+    }
+
+    /// <summary>
+    /// The cbuffers bound as root constant buffer views (SetGraphicsRootConstantBufferView(i, address)): root parameter i
+    /// is rootParameters[i].InitAsConstantBufferView(register), its values read from the buffer's memory.
+    /// </summary>
+    private void RootCbvValues(D3D12Device device, FrameRecorder.RecordedDraw d, List<ShaderAst.Global> blocks, Dictionary<string, ShaderValue> values)
+    {
+        if (d.State is not D3D12Device.DrawState { RootCbvs: { Count: > 0 } cbvs }) return;
+        foreach (var (param, address) in cbvs)
+        {
+            var m = Regex.Matches(src.Code, @"(\w+)\s*\[\s*" + param + @"\s*\]\s*\.\s*InitAsConstantBufferView\s*\(\s*(\d+)").LastOrDefault();
+            int register = m is null ? param : int.Parse(m.Groups[2].Value);
+            if (blocks.FirstOrDefault(b => b.Binding == register && b.Block is not null) is not { } block) continue;
+            if (device.CbufferAt(address, block.Block!, StructLayout.FloatsOf) is { } read)
+                foreach (var (k, v) in read) values[k] = v;
+        }
     }
 }

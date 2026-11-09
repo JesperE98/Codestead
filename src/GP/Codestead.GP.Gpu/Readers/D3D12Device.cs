@@ -30,7 +30,7 @@ internal sealed class D3D12Device : IDeviceModel
 
     /// <summary>What is set on the command list when a draw is recorded.</summary>
     public sealed record DrawState(long? RenderTarget, IReadOnlyDictionary<int, (long Address, int Stride)> VertexBuffers,
-        (long Address, int Bytes)? IndexBuffer, IReadOnlyDictionary<int, long> Tables);
+        (long Address, int Bytes)? IndexBuffer, IReadOnlyDictionary<int, long> Tables, IReadOnlyDictionary<int, long>? RootCbvs = null);
 
     private const double AddressUnit = 1e9;
     private const double HeapUnit = 1e6;
@@ -52,6 +52,7 @@ internal sealed class D3D12Device : IDeviceModel
     private readonly Dictionary<int, (long, int)> vertexBuffers = new();
     private (long, int)? indexBuffer;
     private readonly Dictionary<int, long> tables = new();
+    private readonly Dictionary<int, long> rootCbvs = new();
 
     /// <summary>Clears and copies recorded so far: (draw count then, the op, with targets as resource ids "res:N").</summary>
     public List<FrameOp> Ops { get; } = new();
@@ -73,7 +74,7 @@ internal sealed class D3D12Device : IDeviceModel
 
     List<FrameOp> IDeviceModel.Ops => Ops;
 
-    public DrawState Snapshot() => new(renderTarget, new Dictionary<int, (long, int)>(vertexBuffers), indexBuffer, new Dictionary<int, long>(tables));
+    public DrawState Snapshot() => new(renderTarget, new Dictionary<int, (long, int)>(vertexBuffers), indexBuffer, new Dictionary<int, long>(tables), new Dictionary<int, long>(rootCbvs));
 
     private ShaderValue? Eval(Expr e)
     {
@@ -292,6 +293,12 @@ internal sealed class D3D12Device : IDeviceModel
                     indexBuffer = ((long)(f.GetValueOrDefault("BufferLocation")?.X ?? 0), (f.GetValueOrDefault("Format")?.Text ?? "").Contains("R16", StringComparison.Ordinal) ? 2 : 4);
                 return ShaderValue.Scalar(0);
             }
+            case ".SetGraphicsRootConstantBufferView" when args.Count >= 3:
+                rootCbvs[(int)Num(args[1])] = (long)Num(args[2]);
+                return ShaderValue.Scalar(0);
+            case ".Load" when args.Count >= 6 && Eval(args[1])?.Text is { } objPath && objPath.EndsWith(".obj", StringComparison.OrdinalIgnoreCase):
+                LoadModel(args[0], objPath, args[4], (int)Num(args[5]));
+                return ShaderValue.Scalar(0);
             case ".SetGraphicsRootDescriptorTable" when args.Count >= 3:
                 tables[(int)Num(args[1])] = (long)Num(args[2]);
                 return null;   // the frame recorder records it too
@@ -303,6 +310,94 @@ internal sealed class D3D12Device : IDeviceModel
             }
         }
         return null;
+    }
+
+    /// <summary>
+    /// The course's Model::Load(path, device, commandList, heap, firstDescriptor) – learnopengl's Model ported: per mesh a
+    /// vertex buffer (position, normal, texture coordinates: 32 bytes a vertex), a 32-bit index buffer and two SRVs (the
+    /// diffuse and specular maps) at firstDescriptor + 2 × mesh; model.meshes[i].vertexBufferView / indexBufferView /
+    /// srvHandle / indices then hold them, for code that draws the meshes itself (the asteroid field).
+    /// </summary>
+    private void LoadModel(Expr target, string path, Expr heapExpr, int firstDescriptor)
+    {
+        if (Models.ObjModel.Load(project, path) is not { } model) return;
+        bool flipUv = Models.ModelFiles.FlipUVs(src, project);
+        var heap = HeapName(heapExpr);
+        if (!heaps.TryGetValue(heap, out var heapStart)) heaps[heap] = heapStart = (heaps.Count + 1) * HeapUnit;
+        var meshes = new List<ShaderValue>();
+        for (int m = 0; m < model.Meshes.Count; m++)
+        {
+            var mesh = model.Meshes[m];
+            var vb = new Resource { Id = resources.Count + 1, Buffer = true };
+            resources.Add(vb);
+            for (int v = 0; v < mesh.Positions.Count; v++)
+            {
+                double[] values = [.. mesh.Positions[v], .. mesh.Normals[v], mesh.TexCoords[v][0], flipUv ? 1 - mesh.TexCoords[v][1] : mesh.TexCoords[v][1]];
+                for (int k = 0; k < 8; k++) vb.Memory[v * 32L + k * 4] = values[k];
+            }
+            var ib = new Resource { Id = resources.Count + 1, Buffer = true };
+            resources.Add(ib);
+            for (int k = 0; k < mesh.Indices.Count; k++) ib.Memory[k * 4L] = mesh.Indices[k];
+            long slot = (long)heapStart + firstDescriptor + 2 * m;
+            foreach (var (file, offset) in new[] { (mesh.Material?.DiffuseMap, 0), (mesh.Material?.SpecularMap, 1) })
+            {
+                var tex = new Resource { Id = resources.Count + 1, Width = 1, Height = 1 };
+                resources.Add(tex);
+                tex.Images.Add(Models.ModelFiles.Texture(project, path, file, false)?.Image);
+                Srvs[slot + offset] = (tex.Id, false);
+            }
+            meshes.Add(ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+            {
+                ["vertexBufferView"] = Desc(("BufferLocation", ShaderValue.Scalar(vb.Id * AddressUnit)), ("StrideInBytes", ShaderValue.Scalar(32)), ("SizeInBytes", ShaderValue.Scalar(mesh.Positions.Count * 32))),
+                ["indexBufferView"] = Desc(("BufferLocation", ShaderValue.Scalar(ib.Id * AddressUnit)), ("Format", ShaderValue.Str("DXGI_FORMAT_R32_UINT")), ("SizeInBytes", ShaderValue.Scalar(mesh.Indices.Count * 4))),
+                ["srvHandle"] = ShaderValue.Scalar(slot),
+                ["indices"] = ShaderValue.Array(mesh.Indices.Select(_ => ShaderValue.Scalar(0)).ToArray()),
+            }));
+        }
+        exec!.Runner.Assign(target, ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["meshes"] = ShaderValue.Array(meshes.ToArray()) }));
+    }
+
+    /// <summary>
+    /// The values of a cbuffer bound as a root constant buffer view, read from the buffer's memory with HLSL's packing:
+    /// 16-byte rows, a vector never crosses a row, every array element starts a new row; matrices are read as stored
+    /// (the program stores them transposed for column_major HLSL).
+    /// </summary>
+    /// <summary>A cbuffer matrix: HLSL packs it column by column (column_major), the runner's own order.</summary>
+    private static ShaderValue Matrix(double[] v) => ShaderValue.Matrix(v.Length == 16 ? 4 : 3, v);
+
+    public Dictionary<string, ShaderValue>? CbufferAt(long address, IReadOnlyList<Field> fields, Func<string, int> components)
+    {
+        if (address < AddressUnit || ResourceAt((int)(address / AddressUnit)) is not { } res) return null;
+        long baseOffset = address - res.Id * (long)AddressUnit;
+        double Get(long at) => res.Memory.TryGetValue(baseOffset + at, out var x) ? x : 0;
+        var values = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+        long offset = 0;
+        foreach (var f in fields)
+        {
+            int n = components(f.Type);
+            bool matrix = n == 16 || n == 9;
+            if (f.ArraySize > 0)
+            {
+                offset = (offset + 15) / 16 * 16;
+                var items = new List<ShaderValue>();
+                for (int i = 0; i < f.ArraySize; i++)
+                {
+                    var v = new double[n];
+                    for (int k = 0; k < n; k++) v[k] = Get(offset + k * 4);
+                    items.Add(matrix ? Matrix(v) : ShaderValue.Vec(v));
+                    offset += Math.Max(16, (n * 4 + 15) / 16 * 16);
+                }
+                values[f.Id] = ShaderValue.Array(items.ToArray());
+                continue;
+            }
+            int bytes = n * 4;
+            if (matrix || offset / 16 != (offset + bytes - 1) / 16) offset = (offset + 15) / 16 * 16;
+            var value = new double[n];
+            for (int k = 0; k < n; k++) value[k] = Get(offset + k * 4);
+            values[f.Id] = matrix ? Matrix(value) : ShaderValue.Vec(value);
+            offset += bytes;
+        }
+        return values;
     }
 
     /// <summary>The names in a flags expression (D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL).</summary>
@@ -334,7 +429,7 @@ internal sealed class D3D12Device : IDeviceModel
         var value = Eval(Strip(from));
         if (value is null) return;
         var numbers = new List<double>();
-        CppExec.Flatten(value, numbers);
+        CppExec.Flatten(value, numbers, rowMajor: true);
         int bytes = 4;
         if (Strip(from) is Name n && src.DeclaredType(n.Id) is { } type && System.Text.RegularExpressions.Regex.IsMatch(type, @"16|WORD|short", System.Text.RegularExpressions.RegexOptions.IgnoreCase)) bytes = 2;
         long limit = size is null ? long.MaxValue : (long)Num(size);

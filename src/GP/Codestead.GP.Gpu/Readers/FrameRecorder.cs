@@ -15,7 +15,7 @@ internal sealed class FrameRecorder
     /// <param name="Bound">What was bound before the draw: descriptor sets (vkCmdBindDescriptorSets) and descriptor tables
     /// (SetGraphicsRootDescriptorTable) as their argument text, by set number / root parameter.</param>
     public sealed record RecordedDraw(bool Indexed, int Count, int Instances, int First, Dictionary<string, ShaderValue> Constants, string? Pipeline, bool Model = false,
-        int? StencilRef = null, IReadOnlyDictionary<int, string>? Bound = null, object? State = null);
+        int? StencilRef = null, IReadOnlyDictionary<int, string>? Bound = null, object? State = null, string? ModelName = null);
 
     /// <summary>The pipeline / pipeline state object bound now (vkCmdBindPipeline, SetPipelineState, Reset(…, pso)).</summary>
     private string? pipeline;
@@ -154,7 +154,7 @@ internal sealed class FrameRecorder
                 Draws.Add(new RecordedDraw(true, Int(args[1]), Int(args[2]), Int(args[3]), new(constants), pipeline, StencilRef: stencilRef, Bound: new Dictionary<int, string>(bound), State: device?.Snapshot()));
                 return ShaderValue.Scalar(0);
             case ".Draw" when args.Count >= 1 && NameOf(args[0]) is { } target && (source.DeclaredType(target) ?? "").Contains("Model", StringComparison.Ordinal):
-                Draws.Add(new RecordedDraw(true, 0, 1, 0, new(constants), pipeline, Model: true, StencilRef: stencilRef, Bound: new Dictionary<int, string>(bound), State: device?.Snapshot()));
+                Draws.Add(new RecordedDraw(true, 0, 1, 0, new(constants), pipeline, Model: true, StencilRef: stencilRef, Bound: new Dictionary<int, string>(bound), State: device?.Snapshot(), ModelName: target));
                 return ShaderValue.Scalar(0);
             case ".DrawInstanced" when args.Count >= 5:
                 Draws.Add(new RecordedDraw(false, Int(args[1]), Int(args[2]), Int(args[3]), new(constants), pipeline, StencilRef: stencilRef, Bound: new Dictionary<int, string>(bound), State: device?.Snapshot()));

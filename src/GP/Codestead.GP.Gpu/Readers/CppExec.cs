@@ -27,7 +27,7 @@ public sealed class CppExec
             program.Structs.Add(new Struct(m.Groups[1].Value, fields.Select(f =>
             {
                 int per = StructLayout.FloatsOf(f.Type);
-                return new Field(f.Type, f.Name, null, per == 1 && f.Floats > 1 ? f.Floats : 0);
+                return new Field(f.Type, f.Name, null, f.Floats > per ? f.Floats / per : 0);
             }).ToList()));
         }
         Runner = new ShaderRunner(program)
@@ -140,10 +140,17 @@ public sealed class CppExec
         return list;
     }
 
-    public static void Flatten(ShaderValue v, List<double> into)
+    /// <summary>
+    /// The numbers of a value in memory order. rowMajor: matrices row by row, as DirectXMath stores XMFLOAT4X4 /
+    /// XMMATRIX (GLM stores them column by column, the runner's own order).
+    /// </summary>
+    public static void Flatten(ShaderValue v, List<double> into, bool rowMajor = false)
     {
-        if (v.V is not null) into.AddRange(v.V);
-        else if (v.Items is not null) foreach (var i in v.Items) Flatten(i, into);
-        else if (v.Fields is not null) foreach (var f in v.Fields.Values) Flatten(f, into);
+        if (v.V is not null && rowMajor && v.IsMatrix)
+            for (int r = 0; r < v.Cols; r++)
+                for (int c = 0; c < v.Cols; c++) into.Add(v.V[c * v.Cols + r]);
+        else if (v.V is not null) into.AddRange(v.V);
+        else if (v.Items is not null) foreach (var i in v.Items) Flatten(i, into, rowMajor);
+        else if (v.Fields is not null) foreach (var f in v.Fields.Values) Flatten(f, into, rowMajor);
     }
 }

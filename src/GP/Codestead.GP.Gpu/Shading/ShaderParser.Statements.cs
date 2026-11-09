@@ -197,6 +197,7 @@ public sealed partial class ShaderParser
                 vectorOf = true;
             }
             var list = new List<Stmt>();
+            Expr? vectorSize = null;
             do
             {
                 while (lenient && (Peek.Is("*") || Peek.Is("&") || Peek.Is("**"))) Next();
@@ -205,9 +206,11 @@ public sealed partial class ShaderParser
                 Expr? value = null;
                 if (Accept("=")) value = Initializer();
                 else if (Peek.Is("{")) value = Initializer(); // C++: Type name{ … }
+                else if (vectorOf && Peek.Is("(")) vectorSize = CallArgs().FirstOrDefault(); // std::vector<T> name(n): n default Ts
                 else if (Peek.Is("(")) value = new Call(type, CallArgs(), line); // C++: Type name(args)
                 // An empty std::vector<T>: an array with no elements yet (push_back adds them).
-                var declSize = sizeExpr ?? (vectorOf && value is null ? new Number(0, line) : null);
+                var declSize = sizeExpr ?? vectorSize ?? (vectorOf && value is null ? new Number(0, line) : null);
+                vectorSize = null;
                 list.Add(new Declare(type, id, value, line, size != 0 || declSize is not null || vectorOf && value is InitList, Math.Max(0, size), declSize));
             } while (Accept(","));
             return list;

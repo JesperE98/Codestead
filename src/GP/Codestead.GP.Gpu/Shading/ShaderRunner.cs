@@ -107,7 +107,11 @@ public sealed partial class ShaderRunner
     /// <summary>Assigns to a variable, member or element (for hooks that write through an out-parameter).</summary>
     public void Assign(Expr target, ShaderValue value) => Store(target, value);
 
-    private const int MaxSteps = 20000;
+    /// <summary>
+    /// Statements per run: a shader's are few; the C++ program's setup (Lenient) may loop over hundreds of objects
+    /// (learnopengl's 500 asteroids).
+    /// </summary>
+    private int MaxSteps => Lenient ? 400000 : 20000;
 
     private GlibcRandom? random;
 

@@ -22,6 +22,10 @@ public sealed partial class D3D12Reader
         return reset.Value is not null && reset.Offset > assign.Offset ? null : assign.Value;
     }
 
+    /// <summary>Does the pipeline state description created at an offset have a geometry shader (its GS field set to bytecode)?</summary>
+    private bool UsesGeometry(int before) =>
+        src.FieldValueBefore("GS", before) is { } gsField && !Regex.IsMatch(gsField, @"^\{\s*\}$|^D3D12_SHADER_BYTECODE\s*\{\s*\}$|nullptr");
+
     private Dictionary<string, PipelineInfo> Pipelines()
     {
         var result = new Dictionary<string, PipelineInfo>(StringComparer.Ordinal);
@@ -47,6 +51,8 @@ public sealed partial class D3D12Reader
             }
             var vs = Stage("vs_");
             var ps = Stage("ps_");
+            // A geometry shader when the description sets one (psoDesc.GS = CD3DX12_SHADER_BYTECODE(geometryShader.Get())).
+            var gs = UsesGeometry(create.Offset) ? Stage("gs_") : null;
             if (vs is null || ps is null) continue;
             string Field(string f, string fallback) => src.FieldValueBefore(f, create.Offset) ?? fallback;
             var cull = Field("CullMode", "D3D12_CULL_MODE_BACK");
@@ -56,7 +62,8 @@ public sealed partial class D3D12Reader
                 Field("FillMode", "SOLID").Contains("WIREFRAME", StringComparison.Ordinal),
                 DepthEnabled(create.Offset),
                 Topology.Triangles,
-                PipelineState.D3D12(f => StateField(f, create.Offset), f => StateField(f, create.Offset) is { } v ? src.Int(v) : null));
+                PipelineState.D3D12(f => StateField(f, create.Offset), f => StateField(f, create.Offset) is { } v ? src.Int(v) : null),
+                gs?.Program, gs?.Entry ?? "main");
         }
         return result;
     }
