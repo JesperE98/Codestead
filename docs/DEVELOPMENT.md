@@ -241,7 +241,67 @@ Allt som inte handlar om Linux finns i `src/Shared/` och används av Codestead L
 
 Hubben behöver ingen ändring: den läser verktygets `profile.json` och katalogen.
 
-## Skriva ett nytt kapitel
+## Codestead GP (grafikprogrammering)
+
+Codestead GP (`src/GP/`, grenen `GraphicsProgramming`) är byggt som ett nytt verktyg enligt avsnittet ovan. Eleven
+väljer **grafik-API** högst upp – OpenGL 3.3, Vulkan eller DirectX 12 – och det är verktygets *variant*: varje kapitel,
+uppgift och projekt följer valet. Kursen följer learnopengl.com kapitel för kapitel; OpenGL-koden härmar
+learnopengl.com, Vulkan-koden vulkan-tutorial.com och DirectX 12-koden Microsofts D3D12HelloWorld-exempel.
+
+```text
+src/GP/
+├── Codestead.GP/          Appen: GpTool (kursen i lärfönstret), Workbench/ProjectView (editor, flikar, Bygg & kör,
+│                          utdata och förhandsvisning), NoSandbox (lektionerna har bara quiz-frågor)
+├── Codestead.GP.Course/   Kursen: GpCourse (delar och kapitel i ordning, startprojekt, uppgifter), Edits
+│                          (edits.txt), CourseText (texter per språk och API), Checks/ (uppgifternas kontroller),
+│                          Game/ (utmärkelser), UI-texter i i18n/ui/<språk>.json
+├── Codestead.GP.Gpu/      Den simulerade GPU:n (utan UI):
+│   ├── Build/             Kompileringssteget: klamrar, okända API-namn med "did you mean" (symbols/*.txt från de
+│   │                      riktiga headerfilerna), shaders som inte går att tolka
+│   ├── Shading/           En tolk för den del av GLSL och HLSL som kursen använder (lexer, parser, körning)
+│   ├── Readers/           Läser vad programmet gör: GlReader följer main() anrop för anrop som en drivrutin,
+│   │                      VulkanReader och D3D12Reader läser programmen så som tutorials skriver dem
+│   ├── Scene/             Resultatet: fönster, renderingsloop, rensningsfärg, ritanrop, meddelanden (SimNote)
+│   └── Raster/            Mjukvaru-rasterisering med perspektivkorrekt interpolering, culling och djuptest
+├── content/
+│   ├── chapters/<språk>/  Kapiteltexterna (markdown); engelska är källan, svenska krävs, andra språk faller
+│   │                      tillbaka på engelska
+│   ├── i18n/<språk>/      Titel och uppgiftstexter per kapitel (en sträng, eller en per API)
+│   ├── references/        Källor per kapitel (fältet "api" för en källa som bara gäller ett API)
+│   └── projects/<api>/<kapitel>/  start/ (projektet eleven börjar med), solution/, edits.txt, tasks.md
+└── verify/                verify.sh och apply_edits.py (se nedan)
+```
+
+**Ett kapitel** består av texten (alla API:er i samma fil), uppgiftstexterna och ett projekt per API:
+
+- I texten skrivs det som bara gäller ett API i block: `:::opengl` … `:::`, `:::vulkan` …, `:::d3d12` … eller flera
+  på en gång (`:::vulkan d3d12`). Platshållare: `{{api}}`, `{{apiFull}}`, `{{shaderLanguage}}`. Använd bara
+  ` ```quiz `-frågor. **Varje API ska få lika många frågor i samma ordning** (fönstret räknar frågorna i texten för
+  det valda API:t); en API-specifik fråga skrivs därför som en fråga i vart och ett av de tre blocken.
+  `ContentTests` kontrollerar det, och att svenskan har samma frågor.
+- `edits.txt` är uppgifterna för ett API, i ordning: varje uppgift är en eller flera kodändringar (`find` → `replace`)
+  från `start/`. När eleven klickar på lösningen läggs ändringen in i projektet. Alla ändringar efter varandra ska ge
+  exakt `solution/` (`apply_edits.py` och `TaskTests` kontrollerar det).
+- Kontrollerna finns i `Codestead.GP.Course/Checks/TaskChecks.<Kapitel>.cs`, per uppgifts-id. Kontrollera helst
+  **resultatet** (pixlar i den simulerade bilden, rensningsfärgen) så att samma kontroll gäller alla API:er; annars
+  koden (`c.Has(...)`, mellanslag i mönstret matchar valfritt blanksteg). Betyder samma id olika saker i olika API:er,
+  använd `PerApi(opengl: …, vulkan: …, d3d12: …)`. `TaskTests` kräver att varje uppgift löses av sin lösning och
+  **inte** redan är löst före.
+- Lägg till kapitlet i `GpCourse.LessonList` (ordningen där är kursens ordning) och dess kontroller i `TaskChecks.cs`.
+
+**Koden ska vara korrekt.** `src/GP/verify/verify.sh <mappar>` kompilerar projekten med de riktiga verktygen:
+OpenGL och Vulkan med g++ (GLAD genereras med `pip install glad`), DirectX 12 med MinGW-w64 mot Microsofts
+DirectX-Headers och DirectXMath, shaders med glslangValidator. OpenGL- och Vulkan-programmen **körs** dessutom under
+Xvfb med Mesa (llvmpipe/lavapipe) och Khronos valideringslager – ett enda valideringsfel underkänner – och en
+skärmbild sparas. Skriptets kommentar listar paketen som behövs (Ubuntu 24.04). Kör det på `start/` och `solution/`
+för varje kapitel du ändrar, och `apply_edits.py` på kapitlet.
+
+**Simulatorn är inte en riktig GPU.** Den förstår kursens kod och de vanliga misstagen (glömd `glClear`, avstängt
+vertexattribut, ingen pipeline bunden, saknade barriärer …) och säger till med meddelanden som `sim.<nyckel>` i
+UI-texterna. Kod utanför det den förstår ger en förhandsvisning som kan skilja sig från en riktig körning. Nya kapitel
+(texturer, transformationer, 3D) kräver att läsarna och tolken lär sig mer, t.ex. texturer och glm/DirectXMath-matriser.
+
+## Skriva ett nytt kapitel (Codestead Linux)
 
 1. Skriv `src/Linux/content/chapters/en/mitt-kapitel.md` (engelska är källspråket) och
    `src/Linux/content/i18n/en/mitt-kapitel.json`, och motsvarande filer för de andra tio språken.
