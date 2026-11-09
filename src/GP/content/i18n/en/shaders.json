@@ -1,0 +1,77 @@
+{
+  "title": "Shaders",
+  "tasks": {
+    "in-out": {
+      "text": {
+        "opengl": "Send a colour from the vertex shader to the fragment shader: declare `out vec4 vertexColor;` in `shader.vs` and set it to `vec4(0.5, 0.0, 0.0, 1.0)`; declare `in vec4 vertexColor;` in `shader.fs` and write it to `FragColor`.",
+        "vulkan": "Pass a colour from the vertex shader to the fragment shader: declare `layout(location = 0) out vec4 vertexColor;` in `shader.vert` and set it to `vec4(0.5, 0.0, 0.0, 1.0)`; declare `layout(location = 0) in vec4 vertexColor;` in `shader.frag` and write it to `outColor`.",
+        "d3d12": "Pass a colour from the vertex shader to the pixel shader: add `float4 color : COLOR;` to `PSInput`, set `result.color = float4(0.5f, 0.0f, 0.0f, 1.0f);` in `VSMain` and `return input.color;` in `PSMain`."
+      },
+      "hint": {
+        "opengl": "An `out` of the vertex shader connects to an `in` of the fragment shader with the same name and type.",
+        "vulkan": "An output and an input are matched by `location` (and type), not by name.",
+        "d3d12": "What the vertex shader writes into `PSInput` arrives, interpolated, in the pixel shader's `input` – matched by the semantic `COLOR`."
+      }
+    },
+    "uniform": {
+      "text": {
+        "opengl": "Set the colour from C++ with a uniform: `uniform vec4 ourColor;` in `shader.fs` (`FragColor = ourColor;`), and every frame after `ourShader.use();` call `glUniform4f(glGetUniformLocation(ourShader.ID, \"ourColor\"), 0.0f, greenValue, 0.0f, 1.0f)` with `greenValue = sin(glfwGetTime()) / 2 + 0.5`.",
+        "vulkan": "Set the colour from the CPU with a push constant: a `layout(push_constant)` block with `vec4 color` in `shader.frag` (remove `vertexColor` from both shaders), a `PushConstants` struct, a `VkPushConstantRange` for the fragment stage in the pipeline layout, and `vkCmdPushConstants` with `(0, greenValue, 0, 1)` before the draw in `recordCommandBuffer()`.",
+        "d3d12": "Set the colour from the CPU with root constants: `cbuffer ColorConstants : register(b0) { float4 color; };` and `return color;` in `shaders.hlsl`, a `ColorConstants` struct, `rootParameters[0].InitAsConstants(sizeof(ColorConstants) / 4, 0)` in the root signature, and `SetGraphicsRoot32BitConstants` with `(0, greenValue, 0, 1)` in `PopulateCommandList()`."
+      },
+      "hint": {
+        "opengl": "Set the uniform after `ourShader.use()`: `glUniform*` changes the active program. `sin` needs `#include <cmath>`.",
+        "vulkan": "The range in the pipeline layout must cover what the shaders use, with `VK_SHADER_STAGE_FRAGMENT_BIT`. Compute the time with `std::chrono` and include `<chrono>` and `<cmath>`.",
+        "d3d12": "The shader sees root constants as a constant buffer at register `b0`. Set them after `SetGraphicsRootSignature`, every frame. Include `<chrono>` and `<cmath>`."
+      }
+    },
+    "vertex-colors": {
+      "text": {
+        "opengl": "Give every vertex its own colour as a second vertex attribute (location 1): colours in `vertices` (bottom right red, bottom left green, top blue), a second `glVertexAttribPointer`, `aColor` → `ourColor` in the shaders. Remove the uniform code and `#include <cmath>`.",
+        "vulkan": "Give every vertex its own colour: add `glm::vec3 color;` to `Vertex`, a second attribute description (location 1, `offsetof(Vertex, color)`), the colours in `vertices` (top red, bottom right green, bottom left blue), and pass `inColor` on as `fragColor` in the shaders.",
+        "d3d12": "Give every vertex its own colour: add `XMFLOAT3 color;` to `Vertex`, a second input element `\"COLOR\"` at offset 12, the colours in `vertices` (top blue, bottom right red, bottom left green); `VSMain` takes `float4 color : COLOR` and passes it on, `PSMain` returns `input.color`, and the `cbuffer` goes."
+      },
+      "hint": {
+        "opengl": "Each vertex is now 6 floats: stride `6 * sizeof(float)` for both attributes, colour offset `(void*)(3 * sizeof(float))`. Don't forget `glEnableVertexAttribArray(1)`.",
+        "vulkan": "`getAttributeDescriptions()` now returns `std::array<VkVertexInputAttributeDescription, 2>`; the colour's format is `VK_FORMAT_R32G32B32_SFLOAT`. The fragment shader writes `vec4(fragColor, 1.0)`.",
+        "d3d12": "The colour starts 12 bytes into each vertex, after the 3 floats of the position; the stride `sizeof(Vertex)` becomes 24 by itself."
+      }
+    },
+    "upside-down": {
+      "text": {
+        "opengl": "Exercise 1: turn the triangle upside down in the vertex shader.",
+        "vulkan": "Exercise 1: turn the triangle upside down in the vertex shader, and set `rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;` so the mirrored triangle isn't culled.",
+        "d3d12": "Exercise 1: turn the triangle upside down in the vertex shader, and set `psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;` so the mirrored triangle isn't culled."
+      },
+      "hint": {
+        "opengl": "Negate the y coordinate: `gl_Position = vec4(aPos.x, -aPos.y, aPos.z, 1.0);`.",
+        "vulkan": "`gl_Position = vec4(inPosition.x, -inPosition.y, inPosition.z, 1.0);` – the flip reverses the winding order, and back faces are culled.",
+        "d3d12": "`result.position = float4(position.x, -position.y, position.z, 1.0f);` – the flip makes the triangle counter-clockwise, a back face."
+      }
+    },
+    "offset": {
+      "text": {
+        "opengl": "Exercise 2: move the triangle to the right with a uniform `float xOffset` set to `0.5` from C++ with `ourShader.setFloat`.",
+        "vulkan": "Exercise 2: move the triangle to the right with a push constant `xOffset = 0.5` read by the vertex shader, instead of the colour (remove the time code).",
+        "d3d12": "Exercise 2: move the triangle to the right with a root constant `xOffset = 0.5` (`cbuffer OffsetConstants`) read by the vertex shader, instead of the colour (remove the time code)."
+      },
+      "hint": {
+        "opengl": "In `shader.vs`: `uniform float xOffset;` and add it to x. After `ourShader.use();`: `float offset = 0.5f; ourShader.setFloat(\"xOffset\", offset);`.",
+        "vulkan": "`PushConstants` becomes `{ float xOffset; }`; the range and `vkCmdPushConstants` now use `VK_SHADER_STAGE_VERTEX_BIT`.",
+        "d3d12": "Reuse root parameter 0: `OffsetConstants { float xOffset; }` is one 32-bit value. Add `xOffset` to `position.x`."
+      }
+    },
+    "position-color": {
+      "text": {
+        "opengl": "Exercise 3: output the vertex position as the colour – `out vec3 ourPosition;` with `ourPosition = aPos;` in `shader.vs`, and `FragColor = vec4(ourPosition, 1.0);` in `shader.fs`.",
+        "vulkan": "Exercise 3: colour the triangle with its position: write `fragColor = inPosition;` in `shader.vert` instead of `inColor`.",
+        "d3d12": "Exercise 3: output the vertex position as the colour: `result.color = position;` in `VSMain`."
+      },
+      "hint": {
+        "opengl": "Comment out the `ourColor` lines instead of deleting them; the `in` must have the same name as the `out`. Negative values become 0 (black).",
+        "vulkan": "Colours below 0 are clamped to 0 – which explains the black corner.",
+        "d3d12": "x becomes red, y green, z blue. Negative values are clamped to 0 when the colour is written – which is why one corner is black."
+      }
+    }
+  }
+}

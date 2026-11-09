@@ -1,0 +1,57 @@
+{
+  "title": "Creating a window",
+  "tasks": {
+    "glfw-init": {
+      "text": { "opengl": "Initialize GLFW with `glfwInit()` and ask for an OpenGL 3.3 core profile context with `glfwWindowHint`." },
+      "hint": { "opengl": "Three hints: `GLFW_CONTEXT_VERSION_MAJOR` 3, `GLFW_CONTEXT_VERSION_MINOR` 3 and `GLFW_OPENGL_PROFILE` = `GLFW_OPENGL_CORE_PROFILE`. macOS also needs `GLFW_OPENGL_FORWARD_COMPAT` = `GL_TRUE` (inside `#ifdef __APPLE__`)." }
+    },
+    "create-window": {
+      "text": { "opengl": "Create an 800×600 window titled \"LearnOpenGL\" with `glfwCreateWindow`, check it, and make its context current." },
+      "hint": { "opengl": "`glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, \"LearnOpenGL\", NULL, NULL)` returns `NULL` on failure: then print `Failed to create GLFW window`, call `glfwTerminate()` and `return -1`. Finish with `glfwMakeContextCurrent(window);`." }
+    },
+    "glad": {
+      "text": { "opengl": "Load the OpenGL function pointers with `gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)` and stop if it fails." },
+      "hint": { "opengl": "It must come after `glfwMakeContextCurrent`: GLAD asks the current context for the function addresses. On failure print `Failed to initialize GLAD` and `return -1`." }
+    },
+    "terminate": {
+      "text": { "opengl": "Clean up GLFW at the end of `main` with `glfwTerminate()`." },
+      "hint": { "opengl": "It destroys the window and frees everything GLFW allocated; put it right before `return 0;`." }
+    },
+    "instance": {
+      "text": { "vulkan": "Create the Vulkan instance: add the `instance` member, write `createInstance()` and `getRequiredExtensions()`, call `createInstance()` in `initVulkan()` and `vkDestroyInstance` in `cleanup()`." },
+      "hint": { "vulkan": "Fill a `VkApplicationInfo` and a `VkInstanceCreateInfo` (extensions from `glfwGetRequiredInstanceExtensions`, `enabledLayerCount = 0`); throw `std::runtime_error(\"failed to create instance!\")` if `vkCreateInstance` doesn't return `VK_SUCCESS`." }
+    },
+    "validation-layers": {
+      "text": { "vulkan": "Enable `VK_LAYER_KHRONOS_validation` in debug builds: add `validationLayers` and `enableValidationLayers`, write `checkValidationLayerSupport()`, and use both in `createInstance()`." },
+      "hint": { "vulkan": "`vkEnumerateInstanceLayerProperties` lists the available layers (call it twice: count, then list); compare names with `strcmp`. Set `enabledLayerCount` and `ppEnabledLayerNames` when the layers are enabled." }
+    },
+    "debug-messenger": {
+      "text": { "vulkan": "Receive the validation messages: add the debug messenger (proxy functions, `debugMessenger`, `debugCallback`, `populateDebugMessengerCreateInfo()`, `setupDebugMessenger()`), the `VK_EXT_DEBUG_UTILS_EXTENSION_NAME` extension and the `pNext` chain, and destroy it in `cleanup()`." },
+      "hint": { "vulkan": "The extension functions aren't exported by the loader: get them with `vkGetInstanceProcAddr`. The callback prints `\"validation layer: \" << pCallbackData->pMessage` to `std::cerr` and returns `VK_FALSE`. Destroy the messenger before the instance." }
+    },
+    "physical-device": {
+      "text": { "vulkan": "Pick a graphics card: add `QueueFamilyIndices` and `physicalDevice`, write `pickPhysicalDevice()`, `isDeviceSuitable()` and `findQueueFamilies()`, and call `pickPhysicalDevice()` after `setupDebugMessenger()`." },
+      "hint": { "vulkan": "Call `vkEnumeratePhysicalDevices` and `vkGetPhysicalDeviceQueueFamilyProperties` twice each (count, then list). A device is suitable if a queue family has `VK_QUEUE_GRAPHICS_BIT`; throw \"failed to find a suitable GPU!\" if none is." }
+    },
+    "logical-device": {
+      "text": { "vulkan": "Create the logical device with one graphics queue: add `device` and `graphicsQueue`, write `createLogicalDevice()`, call it after `pickPhysicalDevice()` and destroy the device first in `cleanup()`." },
+      "hint": { "vulkan": "One `VkDeviceQueueCreateInfo` (priority `1.0f`), a `VkDeviceCreateInfo` with no extensions and the same validation layers as the instance, `vkCreateDevice`, then `vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue)`." }
+    },
+    "factory": {
+      "text": { "d3d12": "Create the DXGI factory: `ComPtr<IDXGIFactory4> factory;` and `CreateDXGIFactory2(0, IID_PPV_ARGS(&factory))`, wrapped in `ThrowIfFailed`." },
+      "hint": { "d3d12": "DXGI knows the adapters (graphics cards) and creates swap chains. `IID_PPV_ARGS` passes the interface ID and the address of the pointer to fill in." }
+    },
+    "debug-layer": {
+      "text": { "d3d12": "In debug builds, enable the D3D12 debug layer at the top of `LoadPipeline` (`D3D12GetDebugInterface` + `EnableDebugLayer()`) and create the factory with `DXGI_CREATE_FACTORY_DEBUG`." },
+      "hint": { "d3d12": "Put it between `#if defined(_DEBUG)` and `#endif`. Collect the factory flags in `UINT dxgiFactoryFlags = 0;` and pass them to `CreateDXGIFactory2` instead of `0`." }
+    },
+    "device": {
+      "text": { "d3d12": "Fill in `GetHardwareAdapter` (the first hardware adapter that supports Direct3D 12) and create the device in `LoadPipeline` with `D3D12CreateDevice(hardwareAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device))`." },
+      "hint": { "d3d12": "Loop with `EnumAdapters1`, skip adapters with `DXGI_ADAPTER_FLAG_SOFTWARE` in `desc.Flags`, test with `D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)` and return the adapter with `*ppAdapter = adapter.Detach();`." }
+    },
+    "command-queue": {
+      "text": { "d3d12": "Describe and create the command queue: a `D3D12_COMMAND_QUEUE_DESC` with `Type = D3D12_COMMAND_LIST_TYPE_DIRECT`, then `m_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue))`." },
+      "hint": { "d3d12": "Start with `D3D12_COMMAND_QUEUE_DESC queueDesc = {};` and set `Flags = D3D12_COMMAND_QUEUE_FLAG_NONE`. A direct queue takes every kind of command (drawing, compute, copies)." }
+    }
+  }
+}

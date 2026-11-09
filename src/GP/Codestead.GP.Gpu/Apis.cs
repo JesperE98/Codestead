@@ -10,7 +10,7 @@ public static class Apis
     public static IReadOnlyList<ApiInfo> All { get; } = new List<ApiInfo>
     {
         new(OpenGL, "OpenGL", "OpenGL 3.3", "GLSL"),
-        new(Vulkan, "Vulkan", "Vulkan 1.3", "GLSL"),
+        new(Vulkan, "Vulkan", "Vulkan", "GLSL"),
         new(D3D12, "DirectX 12", "Direct3D 12", "HLSL"),
     };
 

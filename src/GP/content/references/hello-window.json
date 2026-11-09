@@ -1,0 +1,16 @@
+[
+  { "title": "Hello Window", "url": "https://learnopengl.com/Getting-started/Hello-Window", "publisher": "LearnOpenGL", "api": "opengl" },
+  { "title": "Input guide", "url": "https://www.glfw.org/docs/latest/input_guide.html", "publisher": "GLFW", "api": "opengl" },
+  { "title": "glViewport", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glViewport.xhtml", "publisher": "Khronos", "api": "opengl" },
+  { "title": "glClear", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glClear.xhtml", "publisher": "Khronos", "api": "opengl" },
+  { "title": "Window surface", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Presentation/Window_surface", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Swap chain", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Presentation/Swap_chain", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Render passes", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Graphics_pipeline_basics/Render_passes", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Command buffers", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Drawing/Command_buffers", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Rendering and presentation", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Drawing/Rendering_and_presentation", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "D3D12HelloWindow sample", "url": "https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Samples/Desktop/D3D12HelloWorld/src/HelloWindow", "publisher": "Microsoft", "api": "d3d12" },
+  { "title": "Creating a basic Direct3D 12 component", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/creating-a-basic-direct3d-12-component", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Swap chains", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/swap-chains", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Using resource barriers to synchronize resource states in Direct3D 12", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/using-resource-barriers-to-synchronize-resource-states-in-direct3d-12", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Multi-engine synchronization", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/user-mode-heap-synchronization", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

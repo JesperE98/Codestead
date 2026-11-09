@@ -1,0 +1,86 @@
+[
+  {
+    "title": "Creating a window",
+    "url": "https://learnopengl.com/Getting-started/Creating-a-window",
+    "publisher": "LearnOpenGL",
+    "api": "opengl"
+  },
+  {
+    "title": "Hello Window",
+    "url": "https://learnopengl.com/Getting-started/Hello-Window",
+    "publisher": "LearnOpenGL",
+    "api": "opengl"
+  },
+  {
+    "title": "Window guide",
+    "url": "https://www.glfw.org/docs/latest/window_guide.html",
+    "publisher": "GLFW",
+    "api": "opengl"
+  },
+  {
+    "title": "Context guide",
+    "url": "https://www.glfw.org/docs/latest/context_guide.html",
+    "publisher": "GLFW",
+    "api": "opengl"
+  },
+  {
+    "title": "Development environment",
+    "url": "https://vulkan-tutorial.com/Development_environment",
+    "publisher": "Vulkan Tutorial",
+    "api": "vulkan"
+  },
+  {
+    "title": "Instance",
+    "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Instance",
+    "publisher": "Vulkan Tutorial",
+    "api": "vulkan"
+  },
+  {
+    "title": "Validation layers",
+    "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Validation_layers",
+    "publisher": "Vulkan Tutorial",
+    "api": "vulkan"
+  },
+  {
+    "title": "Physical devices and queue families",
+    "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Physical_devices_and_queue_families",
+    "publisher": "Vulkan Tutorial",
+    "api": "vulkan"
+  },
+  {
+    "title": "Logical device and queues",
+    "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Logical_device_and_queues",
+    "publisher": "Vulkan Tutorial",
+    "api": "vulkan"
+  },
+  {
+    "title": "Creating a basic Direct3D 12 component",
+    "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/creating-a-basic-direct3d-12-component",
+    "publisher": "Microsoft Learn",
+    "api": "d3d12"
+  },
+  {
+    "title": "Direct3D 12 programming environment setup",
+    "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/directx-12-programming-environment-set-up",
+    "publisher": "Microsoft Learn",
+    "api": "d3d12"
+  },
+  {
+    "title": "D3D12CreateDevice function",
+    "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-d3d12createdevice",
+    "publisher": "Microsoft Learn",
+    "api": "d3d12"
+  },
+  {
+    "title": "Hardware feature levels",
+    "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/hardware-feature-levels",
+    "publisher": "Microsoft Learn",
+    "api": "d3d12"
+  },
+  {
+    "title": "D3D12HelloWorld samples",
+    "url": "https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Samples/Desktop/D3D12HelloWorld",
+    "publisher": "GitHub – Microsoft",
+    "api": "d3d12"
+  }
+]
