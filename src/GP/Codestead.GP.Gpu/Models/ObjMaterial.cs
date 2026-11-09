@@ -4,6 +4,8 @@ namespace Codestead.GP.Gpu.Models;
 public sealed class ObjMaterial
 {
     public string Name { get; init; } = "";
+    /// <summary>The material's place in the MTL file (tinyobjloader's material_ids).</summary>
+    public int Index { get; init; }
     public double[] Diffuse { get; set; } = [1, 1, 1];
     public double[] Specular { get; set; } = [0, 0, 0];
     public double Shininess { get; set; } = 32;

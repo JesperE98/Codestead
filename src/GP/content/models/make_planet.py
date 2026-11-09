@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Draws the course's model for the Model Loading chapters: a small planet with a ring (our own work, so it can ship
-with the app). Writes planet.obj, planet.mtl and the textures planet_diffuse.png, planet_specular.png, rings.png.
+with the app). Writes planet.obj, planet.mtl and the textures planet_diffuse.png, planet_specular.png, rings.png,
+rings_specular.png.
 
     python3 make_planet.py      (needs Pillow and NumPy)
 """
@@ -48,6 +49,7 @@ for x in range(256):
     band = 0.6 + 0.4 * math.sin(t * 40) * math.sin(t * 7 + 1)
     rings[:, x] = (int(210 * band), int(180 * band), int(140 * band))
 Image.fromarray(rings).save("rings.png", optimize=True)
+Image.fromarray(np.full((16, 256, 3), 30, np.uint8)).save("rings_specular.png", optimize=True)   # dull dust
 
 # The model: a UV sphere (radius 1) and a flat ring (radius 1.4–2.0), each with its own material.
 lines = ["# A small planet with a ring - drawn for Codestead GP (see make_planet.py).", "mtllib planet.mtl", "o planet"]
@@ -103,5 +105,6 @@ Kd 1.0 1.0 1.0
 Ks 0.1 0.1 0.1
 Ns 8.0
 map_Kd rings.png
+map_Ks rings_specular.png
 """)
 print(len(verts), "sphere vertices,", len(faces), "sphere triangles,", 2 * RSEG, "ring triangles")

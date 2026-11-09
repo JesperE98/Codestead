@@ -92,7 +92,7 @@ public sealed class ObjModel
             double[] Rgb() => parts.Skip(1).Take(3).Select(p => double.Parse(p, CultureInfo.InvariantCulture)).ToArray();
             switch (parts[0])
             {
-                case "newmtl": model.Materials[parts[1]] = m = new ObjMaterial { Name = parts[1] }; break;
+                case "newmtl": model.Materials[parts[1]] = m = new ObjMaterial { Name = parts[1], Index = model.Materials.Count }; break;
                 case "Kd" when m is not null: m.Diffuse = Rgb(); break;
                 case "Ks" when m is not null: m.Specular = Rgb(); break;
                 case "Ns" when m is not null: m.Shininess = double.Parse(parts[1], CultureInfo.InvariantCulture); break;

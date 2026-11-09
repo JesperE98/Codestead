@@ -12,7 +12,8 @@
 #           checked with glslangValidator's HLSL front end. It cannot run without Windows.
 #
 # Needs (Ubuntu 24.04): g++ libglfw3-dev libvulkan-dev glslang-tools g++-mingw-w64-x86-64 xvfb x11-apps
-#   imagemagick mesa-vulkan-drivers vulkan-validationlayers libgl1-mesa-dri, and `pip install glad` (GLAD 1).
+#   imagemagick mesa-vulkan-drivers vulkan-validationlayers libgl1-mesa-dri libstb-dev libassimp-dev
+#   libtinyobjloader-dev, and `pip install glad` (GLAD 1).
 # Screenshots go to $VERIFY_OUT (default /tmp/codestead-gp-verify) as <api>-<chapter>-<folder>.png.
 set -uo pipefail
 
@@ -89,7 +90,9 @@ for dir in "$@"; do
       glad=$(glad_dir)
       for s in "$work"/*.vs "$work"/*.vert; do [ -f "$s" ] && { glslangValidator -S vert "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S vert "$s" | tail -n +2)"; }; done
       for s in "$work"/*.fs "$work"/*.frag; do [ -f "$s" ] && { glslangValidator -S frag "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S frag "$s" | tail -n +2)"; }; done
-      if g++ -std=c++17 -Wall -o "$work/app" "$work/main.cpp" "$glad/src/glad.c" -I"$glad/include" -I"$work" -I/usr/include/stb -lglfw -ldl 2>"$work/build.log"; then
+      # Model loading: learnopengl's model.h uses Assimp.
+      libs=""; grep -rqs "assimp/" "$work" --include=*.cpp --include=*.h && libs="-lassimp"
+      if g++ -std=c++17 -Wall -o "$work/app" "$work/main.cpp" "$glad/src/glad.c" -I"$glad/include" -I"$work" -I/usr/include/stb -lglfw -ldl $libs 2>"$work/build.log"; then
         echo "  compiled"
         if [ -z "${VERIFY_NO_RUN:-}" ]; then
           start_x; (cd "$work" && run_and_shoot ./app "$name" "$work/run.log")
@@ -142,7 +145,9 @@ for dir in "$@"; do
       for h in "$dxh"/*.h "$dxh"/*.inl; do
         sed 's@#if defined(_MSC_VER) || !defined(_WIN32)@#if 1 // MSVC declarations (verify.sh)@' "$h" >"$work/dxh/$(basename "$h")"
       done
-      if x86_64-w64-mingw32-g++ -std=c++17 -Wall -fsyntax-only -municode -I"$work/dxh" -I"$work" -I/usr/include/stb "$work/main.cpp" 2>"$work/build.log"; then
+      # Model loading uses Assimp: its headers only (a copy, so MinGW does not see the rest of /usr/include).
+      mkdir -p "$work/assimp-include"; cp -r /usr/include/assimp "$work/assimp-include/"
+      if x86_64-w64-mingw32-g++ -std=c++17 -Wall -fsyntax-only -municode -I"$work/dxh" -I"$work" -I/usr/include/stb -I"$work/assimp-include" "$work/main.cpp" 2>"$work/build.log"; then
         echo "  compiled (syntax and types; DirectX 12 cannot run here)"
       else
         fail "compile error:"; grep -v "^In file included" "$work/build.log" | head -30

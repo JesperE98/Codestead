@@ -324,7 +324,8 @@ public sealed partial class VulkanReader
 
     /// <summary>
     /// vulkan-tutorial's loadModel: tinyobj::LoadObj fills vertices and indices – positions, texCoord with v flipped
-    /// (1 - v), colour white, and a normal when the Vertex struct has one – for every mesh of the file.
+    /// (1 - v), colour white, a normal when the Vertex struct has one, and a material index (shapes' material_ids) in a
+    /// field named like materialIndex / texIndex – for every mesh of the file.
     /// </summary>
     private bool ModelVertices(List<(string Type, string Name, int Floats)> fields, List<Dictionary<string, ShaderValue>> into)
     {
@@ -349,7 +350,8 @@ public sealed partial class VulkanReader
                 for (int f = 0; f < fields.Count; f++)
                 {
                     var name = fields[f].Name;
-                    var value = name.Contains("pos", StringComparison.OrdinalIgnoreCase) ? ShaderValue.Vec(mesh.Positions[i])
+                    var value = name.Contains("material", StringComparison.OrdinalIgnoreCase) || name.Contains("index", StringComparison.OrdinalIgnoreCase) ? ShaderValue.Scalar(mesh.Material?.Index ?? -1)
+                        : name.Contains("pos", StringComparison.OrdinalIgnoreCase) ? ShaderValue.Vec(mesh.Positions[i])
                         : name.Contains("tex", StringComparison.OrdinalIgnoreCase) || name.Contains("uv", StringComparison.OrdinalIgnoreCase) ? ShaderValue.Vec(mesh.TexCoords[i][0], 1 - mesh.TexCoords[i][1])
                         : name.Contains("normal", StringComparison.OrdinalIgnoreCase) ? ShaderValue.Vec(mesh.Normals[i])
                         : ShaderValue.Vec(1, 1, 1);

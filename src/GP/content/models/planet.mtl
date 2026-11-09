@@ -13,3 +13,4 @@ Kd 1.0 1.0 1.0
 Ks 0.1 0.1 0.1
 Ns 8.0
 map_Kd rings.png
+map_Ks rings_specular.png
