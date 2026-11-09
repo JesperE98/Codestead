@@ -1,0 +1,77 @@
+{
+  "title": "Shaders",
+  "tasks": {
+    "in-out": {
+      "text": {
+        "opengl": "Skicka en färg från vertex shadern till fragment shadern: deklarera `out vec4 vertexColor;` i `shader.vs` och sätt den till `vec4(0.5, 0.0, 0.0, 1.0)`; deklarera `in vec4 vertexColor;` i `shader.fs` och skriv den till `FragColor`.",
+        "vulkan": "Skicka en färg från vertex shadern till fragment shadern: deklarera `layout(location = 0) out vec4 vertexColor;` i `shader.vert` och sätt den till `vec4(0.5, 0.0, 0.0, 1.0)`; deklarera `layout(location = 0) in vec4 vertexColor;` i `shader.frag` och skriv den till `outColor`.",
+        "d3d12": "Skicka en färg från vertex shadern till pixel shadern: lägg till `float4 color : COLOR;` i `PSInput`, sätt `result.color = float4(0.5f, 0.0f, 0.0f, 1.0f);` i `VSMain` och skriv `return input.color;` i `PSMain`."
+      },
+      "hint": {
+        "opengl": "En `out` i vertex shadern kopplas till en `in` i fragment shadern med samma namn och typ.",
+        "vulkan": "En utdata och en indata matchas genom `location` (och typ), inte genom namn.",
+        "d3d12": "Det vertex shadern skriver i `PSInput` kommer fram, interpolerat, i pixel shaderns `input` – matchat genom semantiken `COLOR`."
+      }
+    },
+    "uniform": {
+      "text": {
+        "opengl": "Sätt färgen från C++ med en uniform: `uniform vec4 ourColor;` i `shader.fs` (`FragColor = ourColor;`), och anropa varje bildruta efter `ourShader.use();` `glUniform4f(glGetUniformLocation(ourShader.ID, \"ourColor\"), 0.0f, greenValue, 0.0f, 1.0f)` med `greenValue = sin(glfwGetTime()) / 2 + 0.5`.",
+        "vulkan": "Sätt färgen från CPU:n med en push constant: ett `layout(push_constant)`-block med `vec4 color` i `shader.frag` (ta bort `vertexColor` ur båda shaderna), en struct `PushConstants`, en `VkPushConstantRange` för fragmentsteget i pipeline layouten, och `vkCmdPushConstants` med `(0, greenValue, 0, 1)` före ritanropet i `recordCommandBuffer()`.",
+        "d3d12": "Sätt färgen från CPU:n med root constants: `cbuffer ColorConstants : register(b0) { float4 color; };` och `return color;` i `shaders.hlsl`, en struct `ColorConstants`, `rootParameters[0].InitAsConstants(sizeof(ColorConstants) / 4, 0)` i root signaturen, och `SetGraphicsRoot32BitConstants` med `(0, greenValue, 0, 1)` i `PopulateCommandList()`."
+      },
+      "hint": {
+        "opengl": "Sätt uniformen efter `ourShader.use()`: `glUniform*` ändrar det aktiva programmet. `sin` kräver `#include <cmath>`.",
+        "vulkan": "Intervallet i pipeline layouten måste täcka det shaderna använder, med `VK_SHADER_STAGE_FRAGMENT_BIT`. Räkna ut tiden med `std::chrono` och inkludera `<chrono>` och `<cmath>`.",
+        "d3d12": "Shadern ser root constants som en constant buffer på register `b0`. Sätt dem efter `SetGraphicsRootSignature`, varje bildruta. Inkludera `<chrono>` och `<cmath>`."
+      }
+    },
+    "vertex-colors": {
+      "text": {
+        "opengl": "Ge varje vertex en egen färg som ett andra vertexattribut (location 1): färger i `vertices` (nere till höger röd, nere till vänster grön, överst blå), ett andra `glVertexAttribPointer`, `aColor` → `ourColor` i shaderna. Ta bort uniform-koden och `#include <cmath>`.",
+        "vulkan": "Ge varje vertex en egen färg: lägg till `glm::vec3 color;` i `Vertex`, en andra attributbeskrivning (location 1, `offsetof(Vertex, color)`), färgerna i `vertices` (överst röd, nere till höger grön, nere till vänster blå), och skicka vidare `inColor` som `fragColor` i shaderna.",
+        "d3d12": "Ge varje vertex en egen färg: lägg till `XMFLOAT3 color;` i `Vertex`, ett andra input element `\"COLOR\"` på offset 12, färgerna i `vertices` (överst blå, nere till höger röd, nere till vänster grön); `VSMain` tar `float4 color : COLOR` och skickar den vidare, `PSMain` returnerar `input.color`, och `cbuffer` försvinner."
+      },
+      "hint": {
+        "opengl": "Varje vertex är nu 6 floats: stride `6 * sizeof(float)` för båda attributen, färgens offset `(void*)(3 * sizeof(float))`. Glöm inte `glEnableVertexAttribArray(1)`.",
+        "vulkan": "`getAttributeDescriptions()` returnerar nu `std::array<VkVertexInputAttributeDescription, 2>`; färgens format är `VK_FORMAT_R32G32B32_SFLOAT`. Fragment shadern skriver `vec4(fragColor, 1.0)`.",
+        "d3d12": "Färgen börjar 12 byte in i varje vertex, efter positionens 3 floats; stride `sizeof(Vertex)` blir 24 av sig själv."
+      }
+    },
+    "upside-down": {
+      "text": {
+        "opengl": "Övning 1: vänd triangeln upp och ner i vertex shadern.",
+        "vulkan": "Övning 1: vänd triangeln upp och ner i vertex shadern, och sätt `rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;` så att den speglade triangeln inte tas bort.",
+        "d3d12": "Övning 1: vänd triangeln upp och ner i vertex shadern, och sätt `psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;` så att den speglade triangeln inte tas bort."
+      },
+      "hint": {
+        "opengl": "Negera y-koordinaten: `gl_Position = vec4(aPos.x, -aPos.y, aPos.z, 1.0);`.",
+        "vulkan": "`gl_Position = vec4(inPosition.x, -inPosition.y, inPosition.z, 1.0);` – vändningen kastar om hörnens ordning, och baksidor tas bort.",
+        "d3d12": "`result.position = float4(position.x, -position.y, position.z, 1.0f);` – vändningen gör triangeln moturs, en baksida."
+      }
+    },
+    "offset": {
+      "text": {
+        "opengl": "Övning 2: flytta triangeln åt höger med en uniform `float xOffset` som sätts till `0.5` från C++ med `ourShader.setFloat`.",
+        "vulkan": "Övning 2: flytta triangeln åt höger med en push constant `xOffset = 0.5` som vertex shadern läser, i stället för färgen (ta bort tidskoden).",
+        "d3d12": "Övning 2: flytta triangeln åt höger med en root constant `xOffset = 0.5` (`cbuffer OffsetConstants`) som vertex shadern läser, i stället för färgen (ta bort tidskoden)."
+      },
+      "hint": {
+        "opengl": "I `shader.vs`: `uniform float xOffset;` och lägg till den till x. Efter `ourShader.use();`: `float offset = 0.5f; ourShader.setFloat(\"xOffset\", offset);`.",
+        "vulkan": "`PushConstants` blir `{ float xOffset; }`; intervallet och `vkCmdPushConstants` använder nu `VK_SHADER_STAGE_VERTEX_BIT`.",
+        "d3d12": "Återanvänd root parameter 0: `OffsetConstants { float xOffset; }` är ett 32-bitarsvärde. Lägg till `xOffset` till `position.x`."
+      }
+    },
+    "position-color": {
+      "text": {
+        "opengl": "Övning 3: ge ut vertexpositionen som färg – `out vec3 ourPosition;` med `ourPosition = aPos;` i `shader.vs`, och `FragColor = vec4(ourPosition, 1.0);` i `shader.fs`.",
+        "vulkan": "Övning 3: färga triangeln med dess position: skriv `fragColor = inPosition;` i `shader.vert` i stället för `inColor`.",
+        "d3d12": "Övning 3: ge ut vertexpositionen som färg: `result.color = position;` i `VSMain`."
+      },
+      "hint": {
+        "opengl": "Kommentera bort `ourColor`-raderna i stället för att radera dem; `in` måste ha samma namn som `out`. Negativa värden blir 0 (svart).",
+        "vulkan": "Färger under 0 kläms till 0 – det förklarar det svarta hörnet.",
+        "d3d12": "x blir rött, y grönt, z blått. Negativa värden kläms till 0 när färgen skrivs – därför är ett hörn svart."
+      }
+    }
+  }
+}

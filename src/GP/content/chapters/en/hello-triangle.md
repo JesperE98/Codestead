@@ -437,7 +437,7 @@ void main() {
 }
 ```
 
-`#version 450` is the GLSL version (from OpenGL 4.5), which the Vulkan GLSL compilers expect. The input
+`#version 450` is the GLSL version (that of OpenGL 4.5), the one vulkan-tutorial uses. The input
 `inPosition` is a vertex attribute: a `vec3`, one value per vertex, read from the vertex buffer. In Vulkan every
 input and output must have an explicit `location` – there is no way to look up variable names at run time like in
 OpenGL. The `location = 0` is how the attribute description you'll write in *Linking vertex attributes* finds this
@@ -547,7 +547,7 @@ glslc shaders/shader.frag -o shaders/frag.spv
 The advantage is that the driver doesn't need a full GLSL compiler of its own (each vendor's compiler used to accept
 slightly different GLSL), and syntax errors show up at build time, not when the program runs. In this project,
 **Build & run** compiles both shader files to `shaders/vert.spv` and `shaders/frag.spv` for you before it builds
-`main.cpp`; a mistake in a shader shows up in the output like any other compile error.
+`main.cpp`; a mistake in a shader is reported in the output like any other compile error.
 
 At run time, the program loads the bytecode with a small helper, `readFile`:
 
@@ -1310,7 +1310,7 @@ Now do the fourth task: describe all the fixed-function stages in `createGraphic
 pipeline layout (add the member) and destroy it in `cleanup()`. Build & run: still teal (and a few warnings about
 unused variables, which disappear in the next task).
 
-### The graphics pipeline
+### Creating the pipeline
 
 Now all the pieces can be combined into the pipeline: the shader stages, the fixed-function states, the pipeline
 layout and the render pass:
@@ -1863,7 +1863,7 @@ rasterizer.polygonMode = VK_POLYGON_MODE_LINE;
 
 Any mode other than `VK_POLYGON_MODE_FILL` requires the `fillModeNonSolid` GPU feature, which you must enable when
 you create the logical device: in `createLogicalDevice()`, set `deviceFeatures.fillModeNonSolid = VK_TRUE;` before
-`vkCreateDevice` (and check in `isDeviceSuitable` that the physical device supports it). Without the feature, the
+`vkCreateDevice` (a real program would also check that the GPU supports the feature). Without the feature, the
 validation layers report an error. This is not part of the tasks; if you try it, change both lines back afterwards.
 And since the polygon mode is baked into the pipeline, switching between wireframe and fill at run time means having
 two pipelines.

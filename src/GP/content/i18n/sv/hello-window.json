@@ -1,0 +1,155 @@
+{
+  "title": "Hello Window",
+  "tasks": {
+    "render-loop": {
+      "text": {
+        "opengl": "Lägg till render loopen: `while (!glfwWindowShouldClose(window))` som anropar `glfwSwapBuffers(window)` och `glfwPollEvents()` varje frame."
+      },
+      "hint": {
+        "opengl": "Utan en loop tar `main` slut direkt. `glfwPollEvents` behandlar fönstrets händelser (även stängknappen), `glfwSwapBuffers` visar den färdiga framen."
+      }
+    },
+    "viewport": {
+      "text": {
+        "opengl": "Låt viewporten följa fönstrets storlek: skriv `framebuffer_size_callback` (den anropar `glViewport(0, 0, width, height)`), deklarera den överst och registrera den med `glfwSetFramebufferSizeCallback`."
+      },
+      "hint": {
+        "opengl": "Signaturen är `void framebuffer_size_callback(GLFWwindow* window, int width, int height)`. Registrera den direkt efter `glfwMakeContextCurrent(window);`."
+      }
+    },
+    "input": {
+      "text": {
+        "opengl": "Stäng fönstret med Escape: skriv `processInput` (`glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS` → `glfwSetWindowShouldClose(window, true)`), deklarera den och anropa den i början av varje frame.",
+        "d3d12": "Stäng fönstret med Escape: hantera `WM_KEYDOWN` i `WindowProc` och anropa `DestroyWindow(hWnd)` när `wParam == VK_ESCAPE`."
+      },
+      "hint": {
+        "opengl": "Anropa `processInput(window);` som det första i render loopen (den ersätter TODO-kommentaren för input).",
+        "d3d12": "Lägg till ett `case WM_KEYDOWN:` som returnerar 0. När fönstret förstörs skickas `WM_DESTROY`, som postar `WM_QUIT`: loopen slutar och `OnDestroy` väntar på GPU:n."
+      }
+    },
+    "clear": {
+      "text": {
+        "opengl": "Rensa skärmen varje frame: `glClearColor(0.2f, 0.3f, 0.3f, 1.0f);` och sedan `glClear(GL_COLOR_BUFFER_BIT);`.",
+        "d3d12": "Fyll i `PopulateCommandList`: nollställ allocatorn och listen, för back buffern `PRESENT` → `RENDER_TARGET`, rensa dess RTV med `{ 0.2f, 0.3f, 0.3f, 1.0f }`, för den tillbaka till `PRESENT` och `Close()`-a listen."
+      },
+      "hint": {
+        "opengl": "`glClearColor` sätter bara färgen (tillstånd); det är `glClear` som rensar. Lägg båda i loopens renderingsdel, före `glfwSwapBuffers`.",
+        "d3d12": "Spara varje barriär i en lokal `CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(...)` och skicka `&barrier`. RTV:n är `CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize)`."
+      }
+    },
+    "surface": {
+      "text": {
+        "vulkan": "Skapa window surface: lägg till `VkSurfaceKHR surface;`, fyll i `createSurface()` med `glfwCreateWindowSurface` och förstör den med `vkDestroySurfaceKHR` i `cleanup()` (efter debug messengern, före instansen)."
+      },
+      "hint": {
+        "vulkan": "`glfwCreateWindowSurface(instance, window, nullptr, &surface)`; kasta `\"failed to create window surface!\"` om den inte returnerar `VK_SUCCESS`."
+      }
+    },
+    "present-queue": {
+      "text": {
+        "vulkan": "Hitta en köfamilj som kan presentera: lägg till `presentFamily` i `QueueFamilyIndices` (och `isComplete()`), kontrollera `vkGetPhysicalDeviceSurfaceSupportKHR` i `findQueueFamilies()`, skapa en kö per unik familj i `createLogicalDevice()` och hämta `presentQueue`."
+      },
+      "hint": {
+        "vulkan": "Grafik- och presentationsfamiljen är ofta samma index – en `std::set<uint32_t> uniqueQueueFamilies` hindrar att kön skapas två gånger."
+      }
+    },
+    "swap-chain-support": {
+      "text": {
+        "vulkan": "Kontrollera stödet för swap chain: lägg till `deviceExtensions`, `SwapChainSupportDetails`, `checkDeviceExtensionSupport()` och `querySwapChainSupport()`; låt `isDeviceSuitable()` kräva dem och aktivera tillägget i `createLogicalDevice()`."
+      },
+      "hint": {
+        "vulkan": "`vkGetPhysicalDeviceSurfaceCapabilitiesKHR`, `vkGetPhysicalDeviceSurfaceFormatsKHR`, `vkGetPhysicalDeviceSurfacePresentModesKHR` – de två sista med två anrop: först antalet, sedan datan."
+      }
+    },
+    "swap-chain": {
+      "text": {
+        "vulkan": "Skapa swap chainen: lägg till dess medlemmar, skriv `chooseSwapSurfaceFormat()` (`B8G8R8A8_UNORM`), `chooseSwapPresentMode()` (MAILBOX, annars FIFO) och `chooseSwapExtent()`, fyll i `createSwapChain()`, hämta bilderna och förstör den i `cleanup()`.",
+        "d3d12": "Skapa swap chainen i slutet av `LoadPipeline` (`DXGI_SWAP_CHAIN_DESC1`: `BufferCount = FrameCount`, `DXGI_FORMAT_R8G8B8A8_UNORM`, `DXGI_SWAP_EFFECT_FLIP_DISCARD`) med `CreateSwapChainForHwnd`, stäng av Alt+Enter med `MakeWindowAssociation`, hämta `IDXGISwapChain3` och spara `m_frameIndex`."
+      },
+      "hint": {
+        "vulkan": "Begär `minImageCount + 1` bilder, använd `VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT` och `VK_SHARING_MODE_CONCURRENT` bara om de två familjerna skiljer sig åt. Sedan `vkCreateSwapchainKHR` och `vkGetSwapchainImagesKHR` två gånger.",
+        "d3d12": "Skicka `m_commandQueue.Get()` (inte devicen) till `CreateSwapChainForHwnd`. `swapChain.As(&m_swapChain)` ger det nyare gränssnittet; `m_swapChain->GetCurrentBackBufferIndex()` returnerar back bufferns index."
+      }
+    },
+    "image-views": {
+      "text": {
+        "vulkan": "Skapa en `VkImageView` per bild i swap chainen i `createImageViews()` (2D, swap chainens format, identitets-swizzle, färgaspekt, 1 mipnivå, 1 lager); lägg till `swapChainImageViews` och förstör dem i `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Ändra storleken på `swapChainImageViews` till `swapChainImages.size()` och loopa över bilderna."
+      }
+    },
+    "render-pass": {
+      "text": {
+        "vulkan": "Skapa render passen i `createRenderPass()`: ett färg-attachment (`loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR`, `storeOp = STORE`, `UNDEFINED` → `PRESENT_SRC_KHR`), en subpass och beroendet på `VK_SUBPASS_EXTERNAL`; lägg till `renderPass` och förstör den i `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Attachment-referensen använder `VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL`; beroendets båda stegmasker är `VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT`."
+      }
+    },
+    "framebuffers": {
+      "text": {
+        "vulkan": "Skapa en framebuffer per image view i `createFramebuffers()` (render passen, ett attachment, swap chainens extent, 1 lager); lägg till `swapChainFramebuffers` och förstör dem i `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Precis som med image views: ändra storlek, loopa, `vkCreateFramebuffer`."
+      }
+    },
+    "command-buffer": {
+      "text": {
+        "vulkan": "Skapa command poolen (`VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT`, grafikfamiljen) i `createCommandPool()` och allokera en primär command buffer i `createCommandBuffer()`; förstör poolen i `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Command buffers frigörs tillsammans med sin pool, så bara `vkDestroyCommandPool` behövs i `cleanup()`."
+      }
+    },
+    "record-commands": {
+      "text": {
+        "vulkan": "Skriv `recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)`: börja command buffern, starta render passen på `swapChainFramebuffers[imageIndex]` med rensningsvärdet `{{{0.2f, 0.3f, 0.3f, 1.0f}}}`, avsluta render passen och command buffern."
+      },
+      "hint": {
+        "vulkan": "Rensningen sker tack vare render passens `loadOp = CLEAR`; färgen kommer från `renderPassInfo.pClearValues`. Ingenting anropar funktionen än."
+      }
+    },
+    "draw-frame": {
+      "text": {
+        "vulkan": "Skapa semaforerna och fencen i `createSyncObjects()` och fyll i `drawFrame()`: vänta på och nollställ fencen, hämta en bild, spela in command buffern, skicka den och presentera bilden; förstör synkroniseringsobjekten i `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Skapa fencen signalerad och en post i `renderFinishedSemaphores` per bild i swap chainen. Ordning: `vkWaitForFences`, `vkResetFences`, `vkAcquireNextImageKHR`, `vkResetCommandBuffer`, `recordCommandBuffer`, `vkQueueSubmit`, `vkQueuePresentKHR`."
+      }
+    },
+    "render-targets": {
+      "text": {
+        "d3d12": "Skapa en RTV-descriptor heap med `FrameCount` descriptors, spara `m_rtvDescriptorSize` och skapa en render target view för varje back buffer (`GetBuffer`, `CreateRenderTargetView`, `rtvHandle.Offset(1, m_rtvDescriptorSize)`)."
+      },
+      "hint": {
+        "d3d12": "Descriptors ligger bredvid varandra i heapen, `m_rtvDescriptorSize` byte isär – fråga devicen med `GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV)`."
+      }
+    },
+    "command-list": {
+      "text": {
+        "d3d12": "Skapa command allocatorn i slutet av `LoadPipeline` (`CreateCommandAllocator`) och, i `LoadAssets`, command listen (`CreateCommandList`, med null som pipeline state) – och `Close()`-a den sedan."
+      },
+      "hint": {
+        "d3d12": "Båda använder `D3D12_COMMAND_LIST_TYPE_DIRECT`. En ny command list är öppen för inspelning; render loopen förväntar sig att den är stängd."
+      }
+    },
+    "fence": {
+      "text": {
+        "d3d12": "Skapa fencen (`m_fenceValue = 1`) och fence-eventet i `LoadAssets`, fyll i `WaitForPreviousFrame` (signalera, vänta med `SetEventOnCompletion` + `WaitForSingleObject`, uppdatera `m_frameIndex`) och `OnDestroy`."
+      },
+      "hint": {
+        "d3d12": "`m_commandQueue->Signal(m_fence.Get(), fence)`, sedan `m_fenceValue++`; vänta bara om `m_fence->GetCompletedValue() < fence`. `OnDestroy` väntar och anropar sedan `CloseHandle(m_fenceEvent)`."
+      }
+    },
+    "render": {
+      "text": {
+        "d3d12": "Fyll i `OnRender` (`PopulateCommandList()`, `ExecuteCommandLists`, `m_swapChain->Present(1, 0)`, `WaitForPreviousFrame()`) och anropa `app.OnUpdate(); app.OnRender();` från huvudloopen när `PeekMessage` inte hittar något meddelande."
+      },
+      "hint": {
+        "d3d12": "Lägg till en `else`-gren till `if (PeekMessage(...))`. `Present(1, 0)` väntar på nästa vertical blank (vsync)."
+      }
+    }
+  }
+}
