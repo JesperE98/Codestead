@@ -268,5 +268,22 @@
   "ach.typo.title": "もしかして…？",
   "ach.typo.desc": "API 名のスペルミスでビルドが止まりました。",
   "ach.magenta.title": "デバッグピンク",
-  "ach.magenta.desc": "画面を純粋なマゼンタでクリアしました – どこでも「テクスチャがない」ことを示す色です。"
+  "ach.magenta.desc": "画面を純粋なマゼンタでクリアしました – どこでも「テクスチャがない」ことを示す色です。",
+  "sim.textureFileMissing": "画像 {file} がプロジェクトにないため、stbi_load は何も返しません。",
+  "sim.textureNotPng": "画像 {file} を読み込めませんでした（シミュレーターは PNG ファイルを読み込みます）。",
+  "sim.noTextureBound": "glTexImage2D（{line} 行目）が、テクスチャがバインドされていない状態で呼ばれています（glBindTexture）。",
+  "sim.textureFormatMismatch": "{file} のチャンネル数は {channels} ですが、glTexImage2D はそれを {format} として読み込みます：色がめちゃくちゃになります。",
+  "sim.textureIncomplete": "{name} のテクスチャが不完全です：縮小フィルター {filter} はミップマップを使いますが、ミップマップが作成されていません（glGenerateMipmap）。黒として読まれます。",
+  "sim.noTextureOnUnit": "シェーダーは {name} をサンプリングしますが、テクスチャユニット {unit} にテクスチャがバインドされていません。黒として読まれます。",
+  "sim.tooFewTextures": "シェーダーは {count} 個のテクスチャを読みますが、プログラムは {loaded} 枚の画像しか読み込んでいません。",
+  "sim.vkNoDescriptorSetLayout": "シェーダーは {name} をサンプリングしますが、ディスクリプタセットレイアウトがありません（vkCreateDescriptorSetLayout）。何も正しく描画されません。",
+  "sim.vkNoDescriptorWrite": "ディスクリプタセットが一度も書き込まれていない（vkUpdateDescriptorSets）ため、シェーダーが読むテクスチャがありません。バリデーションレイヤーのエラーです。",
+  "sim.vkNoDescriptorBind": "描画の前にディスクリプタセットが一度もバインドされていません（vkCmdBindDescriptorSets）。バリデーションレイヤーのエラーです。",
+  "sim.vkNoSampler": "テクスチャ {name} 用のサンプラー（vkCreateSampler）がありません。",
+  "sim.vkNoImageCopy": "ピクセルがテクスチャイメージに一度もコピーされていません（vkCmdCopyBufferToImage）。",
+  "sim.vkNoLayoutTransition": "テクスチャイメージが正しいレイアウトに一度も遷移していません（vkCmdPipelineBarrier）。バリデーションレイヤーのエラーです。",
+  "sim.dxNoSrv": "シェーダーは {name} をサンプリングしますが、シェーダーリソースビューがありません（CreateShaderResourceView）。",
+  "sim.dxNoDescriptorHeaps": "ディスクリプタヒープがコマンドリストに一度も設定されていません（SetDescriptorHeaps）。デバッグレイヤーがエラーを報告します。",
+  "sim.dxNoDescriptorTable": "テクスチャのディスクリプタテーブルが一度も設定されていません（SetGraphicsRootDescriptorTable）。デバッグレイヤーがエラーを報告します。",
+  "sim.dxNoTextureUpload": "ピクセルがテクスチャに一度もコピーされていません（UpdateSubresources または CopyTextureRegion）。"
 }

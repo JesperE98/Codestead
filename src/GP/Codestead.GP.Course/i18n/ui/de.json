@@ -268,5 +268,22 @@
   "ach.typo.title": "Meintest du …?",
   "ach.typo.desc": "Der Build blieb an einem falsch geschriebenen API-Namen hängen.",
   "ach.magenta.title": "Debug-Pink",
-  "ach.magenta.desc": "Du hast den Bildschirm mit reinem Magenta gelöscht – der Farbe, die überall für fehlende Texturen steht."
+  "ach.magenta.desc": "Du hast den Bildschirm mit reinem Magenta gelöscht – der Farbe, die überall für fehlende Texturen steht.",
+  "sim.textureFileMissing": "Das Bild {file} ist nicht im Projekt, also liefert stbi_load nichts.",
+  "sim.textureNotPng": "Das Bild {file} konnte nicht gelesen werden (der Simulator liest PNG-Dateien).",
+  "sim.noTextureBound": "glTexImage2D (Zeile {line}) wird aufgerufen, ohne dass eine Textur gebunden ist (glBindTexture).",
+  "sim.textureFormatMismatch": "{file} hat {channels} Kanäle, aber glTexImage2D liest es als {format}: Die Farben geraten durcheinander.",
+  "sim.textureIncomplete": "Die Textur für {name} ist unvollständig: Ihr Verkleinerungsfilter {filter} verwendet Mipmaps, aber es wurden keine erzeugt (glGenerateMipmap). Sie wird als Schwarz gelesen.",
+  "sim.noTextureOnUnit": "Der Shader sampelt {name}, aber an Textureinheit {unit} ist keine Textur gebunden. Sie wird als Schwarz gelesen.",
+  "sim.tooFewTextures": "Die Shader lesen {count} Texturen, aber das Programm lädt nur {loaded} Bild(er).",
+  "sim.vkNoDescriptorSetLayout": "Der Shader sampelt {name}, aber es gibt kein Descriptor Set Layout (vkCreateDescriptorSetLayout). Nichts wird richtig gezeichnet.",
+  "sim.vkNoDescriptorWrite": "Das Descriptor Set wird nie befüllt (vkUpdateDescriptorSets), also hat der Shader keine Textur zum Lesen. Fehler im Validation Layer.",
+  "sim.vkNoDescriptorBind": "Das Descriptor Set wird vor dem Zeichnen nie gebunden (vkCmdBindDescriptorSets). Fehler im Validation Layer.",
+  "sim.vkNoSampler": "Es gibt keinen Sampler (vkCreateSampler) für die Textur {name}.",
+  "sim.vkNoImageCopy": "Die Pixel werden nie in das Texturbild kopiert (vkCmdCopyBufferToImage).",
+  "sim.vkNoLayoutTransition": "Das Texturbild wird nie in die richtigen Layouts überführt (vkCmdPipelineBarrier). Fehler im Validation Layer.",
+  "sim.dxNoSrv": "Der Shader sampelt {name}, aber es gibt keine Shader Resource View (CreateShaderResourceView).",
+  "sim.dxNoDescriptorHeaps": "Der Descriptor Heap wird nie auf der Command List gesetzt (SetDescriptorHeaps). Der Debug Layer meldet einen Fehler.",
+  "sim.dxNoDescriptorTable": "Die Descriptor Table der Textur wird nie gesetzt (SetGraphicsRootDescriptorTable). Der Debug Layer meldet einen Fehler.",
+  "sim.dxNoTextureUpload": "Die Pixel werden nie in die Textur kopiert (UpdateSubresources oder CopyTextureRegion)."
 }

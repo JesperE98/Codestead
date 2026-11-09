@@ -268,5 +268,22 @@
   "ach.typo.title": "Vouliez-vous dire … ?",
   "ach.typo.desc": "La compilation s’est arrêtée sur un nom d’API mal orthographié.",
   "ach.magenta.title": "Rose débogage",
-  "ach.magenta.desc": "Vous avez effacé l’écran en magenta pur – la couleur des textures manquantes partout."
+  "ach.magenta.desc": "Vous avez effacé l’écran en magenta pur – la couleur des textures manquantes partout.",
+  "sim.textureFileMissing": "L’image {file} n’est pas dans le projet, stbi_load ne renvoie donc rien.",
+  "sim.textureNotPng": "L’image {file} n’a pas pu être lue (le simulateur lit les fichiers PNG).",
+  "sim.noTextureBound": "glTexImage2D (ligne {line}) est appelée sans aucune texture liée (glBindTexture).",
+  "sim.textureFormatMismatch": "{file} a {channels} canaux, mais glTexImage2D la lit comme {format} : les couleurs sortent brouillées.",
+  "sim.textureIncomplete": "La texture de {name} est incomplète : son filtre de minification {filter} utilise des mipmaps, mais aucune n’a été créée (glGenerateMipmap). Elle est lue comme du noir.",
+  "sim.noTextureOnUnit": "Le shader échantillonne {name}, mais aucune texture n’est liée à l’unité de texture {unit}. Elle est lue comme du noir.",
+  "sim.tooFewTextures": "Les shaders lisent {count} textures, mais le programme ne charge que {loaded} image(s).",
+  "sim.vkNoDescriptorSetLayout": "Le shader échantillonne {name}, mais il n’y a pas de descriptor set layout (vkCreateDescriptorSetLayout). Rien n’est dessiné correctement.",
+  "sim.vkNoDescriptorWrite": "Le descriptor set n’est jamais rempli (vkUpdateDescriptorSets), le shader n’a donc aucune texture à lire. Erreur de la couche de validation.",
+  "sim.vkNoDescriptorBind": "Le descriptor set n’est jamais lié (vkCmdBindDescriptorSets) avant le dessin. Erreur de la couche de validation.",
+  "sim.vkNoSampler": "Il n’y a pas de sampler (vkCreateSampler) pour la texture {name}.",
+  "sim.vkNoImageCopy": "Les pixels ne sont jamais copiés dans l’image de la texture (vkCmdCopyBufferToImage).",
+  "sim.vkNoLayoutTransition": "L’image de la texture ne passe jamais dans les bons layouts (vkCmdPipelineBarrier). Erreur de la couche de validation.",
+  "sim.dxNoSrv": "Le shader échantillonne {name}, mais il n’y a pas de shader resource view (CreateShaderResourceView).",
+  "sim.dxNoDescriptorHeaps": "Le descriptor heap n’est jamais défini sur la command list (SetDescriptorHeaps). La couche de débogage signale une erreur.",
+  "sim.dxNoDescriptorTable": "La descriptor table de la texture n’est jamais définie (SetGraphicsRootDescriptorTable). La couche de débogage signale une erreur.",
+  "sim.dxNoTextureUpload": "Les pixels ne sont jamais copiés dans la texture (UpdateSubresources ou CopyTextureRegion)."
 }

@@ -268,5 +268,22 @@
   "ach.typo.title": "你是不是想写…？",
   "ach.typo.desc": "构建因为 API 名称拼错而停止了。",
   "ach.magenta.title": "调试粉",
-  "ach.magenta.desc": "你把屏幕清除成了纯洋红色——到处都代表缺失纹理的那种颜色。"
+  "ach.magenta.desc": "你把屏幕清除成了纯洋红色——到处都代表缺失纹理的那种颜色。",
+  "sim.textureFileMissing": "图像 {file} 不在项目中，因此 stbi_load 什么也读不到。",
+  "sim.textureNotPng": "无法读取图像 {file}（模拟器读取的是 PNG 文件）。",
+  "sim.noTextureBound": "调用 glTexImage2D（第 {line} 行）时没有绑定任何纹理（glBindTexture）。",
+  "sim.textureFormatMismatch": "{file} 有 {channels} 个通道，但 glTexImage2D 把它当作 {format} 读取：颜色会变得错乱。",
+  "sim.textureIncomplete": "{name} 的纹理不完整：它的缩小过滤器 {filter} 使用了 mipmap，但从未生成过 mipmap（glGenerateMipmap）。读出来是黑色。",
+  "sim.noTextureOnUnit": "着色器对 {name} 进行采样，但纹理单元 {unit} 上没有绑定任何纹理。读出来是黑色。",
+  "sim.tooFewTextures": "着色器读取了 {count} 个纹理，但程序只加载了 {loaded} 张图像。",
+  "sim.vkNoDescriptorSetLayout": "着色器对 {name} 进行采样，但没有描述符集布局（vkCreateDescriptorSetLayout）。什么都无法正确绘制。",
+  "sim.vkNoDescriptorWrite": "描述符集从未被填充（vkUpdateDescriptorSets），因此着色器没有可读取的纹理。验证层报错。",
+  "sim.vkNoDescriptorBind": "绘制之前从未绑定描述符集（vkCmdBindDescriptorSets）。验证层报错。",
+  "sim.vkNoSampler": "纹理 {name} 没有采样器（vkCreateSampler）。",
+  "sim.vkNoImageCopy": "像素从未被复制到纹理图像中（vkCmdCopyBufferToImage）。",
+  "sim.vkNoLayoutTransition": "纹理图像从未被转换到正确的布局（vkCmdPipelineBarrier）。验证层报错。",
+  "sim.dxNoSrv": "着色器对 {name} 进行采样，但没有着色器资源视图（CreateShaderResourceView）。",
+  "sim.dxNoDescriptorHeaps": "从未在命令列表上设置描述符堆（SetDescriptorHeaps）。调试层报告了一个错误。",
+  "sim.dxNoDescriptorTable": "从未设置纹理的描述符表（SetGraphicsRootDescriptorTable）。调试层报告了一个错误。",
+  "sim.dxNoTextureUpload": "像素从未被复制到纹理中（UpdateSubresources 或 CopyTextureRegion）。"
 }

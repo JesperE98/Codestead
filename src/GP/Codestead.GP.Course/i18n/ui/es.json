@@ -268,5 +268,22 @@
   "ach.typo.title": "¿Quisiste decir …?",
   "ach.typo.desc": "La compilación se detuvo en un nombre de la API mal escrito.",
   "ach.magenta.title": "Rosa de depuración",
-  "ach.magenta.desc": "Limpiaste la pantalla con magenta puro – el color de las texturas que faltan en todas partes."
+  "ach.magenta.desc": "Limpiaste la pantalla con magenta puro – el color de las texturas que faltan en todas partes.",
+  "sim.textureFileMissing": "La imagen {file} no está en el proyecto, así que stbi_load no devuelve nada.",
+  "sim.textureNotPng": "No se pudo leer la imagen {file} (el simulador lee archivos PNG).",
+  "sim.noTextureBound": "glTexImage2D (línea {line}) se llama sin ninguna textura enlazada (glBindTexture).",
+  "sim.textureFormatMismatch": "{file} tiene {channels} canales, pero glTexImage2D la lee como {format}: los colores salen revueltos.",
+  "sim.textureIncomplete": "La textura de {name} está incompleta: su filtro de minificación {filter} usa mipmaps, pero no se ha creado ninguno (glGenerateMipmap). Se lee como negro.",
+  "sim.noTextureOnUnit": "El shader muestrea {name}, pero no hay ninguna textura enlazada a la unidad de textura {unit}. Se lee como negro.",
+  "sim.tooFewTextures": "Los shaders leen {count} texturas, pero el programa solo carga {loaded} imagen(es).",
+  "sim.vkNoDescriptorSetLayout": "El shader muestrea {name}, pero no hay ningún descriptor set layout (vkCreateDescriptorSetLayout). No se dibuja nada correctamente.",
+  "sim.vkNoDescriptorWrite": "El descriptor set nunca se rellena (vkUpdateDescriptorSets), así que el shader no tiene ninguna textura que leer. Error de la capa de validación.",
+  "sim.vkNoDescriptorBind": "El descriptor set nunca se enlaza (vkCmdBindDescriptorSets) antes de dibujar. Error de la capa de validación.",
+  "sim.vkNoSampler": "No hay ningún sampler (vkCreateSampler) para la textura {name}.",
+  "sim.vkNoImageCopy": "Los píxeles nunca se copian a la imagen de la textura (vkCmdCopyBufferToImage).",
+  "sim.vkNoLayoutTransition": "La imagen de la textura nunca pasa a los layouts correctos (vkCmdPipelineBarrier). Error de la capa de validación.",
+  "sim.dxNoSrv": "El shader muestrea {name}, pero no hay ninguna shader resource view (CreateShaderResourceView).",
+  "sim.dxNoDescriptorHeaps": "El descriptor heap nunca se establece en la command list (SetDescriptorHeaps). La capa de depuración informa de un error.",
+  "sim.dxNoDescriptorTable": "La descriptor table de la textura nunca se establece (SetGraphicsRootDescriptorTable). La capa de depuración informa de un error.",
+  "sim.dxNoTextureUpload": "Los píxeles nunca se copian a la textura (UpdateSubresources o CopyTextureRegion)."
 }
