@@ -1,0 +1,14 @@
+[
+  { "title": "Cubemaps", "url": "https://learnopengl.com/Advanced-OpenGL/Cubemaps", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: cubemaps_skybox.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/4.advanced_opengl/6.1.cubemaps_skybox/cubemaps_skybox.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "LearnOpenGL source code: cubemaps_environment_mapping.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/4.advanced_opengl/6.2.cubemaps_environment_mapping/cubemaps_environment_mapping.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "reflect (GLSL)", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/reflect.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "refract (GLSL)", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/refract.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "reflect (GLSL)", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/reflect.xhtml", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Texture mapping: Images", "url": "https://vulkan-tutorial.com/Texture_mapping/Images", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "VkImageCreateFlagBits", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkImageCreateFlagBits.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "VkImageViewType", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkImageViewType.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "D3D12_TEXCUBE_SRV structure", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_texcube_srv", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "TextureCube object (HLSL)", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/texturecube", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "reflect (HLSL)", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-reflect", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

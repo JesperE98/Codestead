@@ -1,0 +1,65 @@
+{
+  "title": "Framebuffers",
+  "tasks": {
+    "offscreen-target": {
+      "text": {
+        "opengl": "Draw the scene into a framebuffer of your own: create `framebuffer` with a colour texture `textureColorbuffer` (`SCR_WIDTH` × `SCR_HEIGHT`, `GL_RGB`) and a `GL_DEPTH24_STENCIL8` renderbuffer `rbo`, check that it is complete, bind it before the clear, and after the scene bind `0` again, disable the depth test and clear the window to white.",
+        "vulkan": "Draw the scene into an offscreen target: add `createOffscreenRenderPass()` (colour `VK_FORMAT_R8G8B8A8_UNORM` ending in `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`, a depth attachment, two subpass dependencies) and `createOffscreenFramebuffer()`, create the scene's pipeline for `offscreenRenderPass`, and in `recordCommandBuffer()` record the scene in the offscreen pass, then the window's pass cleared to white.",
+        "d3d12": "Draw the scene into an off-screen render target: create `m_offscreenTarget` (a window-sized `R8G8B8A8_UNORM` texture with `ALLOW_RENDER_TARGET`) with an RTV in RTV slot `FrameCount` and an SRV in heap slot 3, draw the scene into it between two barriers, then bind the back buffer without a depth buffer and clear it to white."
+      },
+      "hint": {
+        "opengl": "`glTexImage2D(..., NULL)` only allocates; `glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0)`, `glRenderbufferStorage` + `glFramebufferRenderbuffer(..., GL_DEPTH_STENCIL_ATTACHMENT, ...)`, then `glCheckFramebufferStatus(GL_FRAMEBUFFER)`. The quad pass disables the depth test, so `glEnable(GL_DEPTH_TEST)` goes into the loop after binding the framebuffer. Delete the three objects at the end.",
+        "vulkan": "`createPipeline` gets a `VkRenderPass pipelineRenderPass` parameter (a pipeline is made for one render pass). The image needs `VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT`; the depth image is a plain depth attachment. The second dependency makes the next fragment shaders wait for the scene's colour writes. Destroy the new objects in `cleanup()`.",
+        "d3d12": "`rtvHeapDesc.NumDescriptors = FrameCount + 1;`, `cbvSrvHeapDesc.NumDescriptors = 4;`. The texture starts in `PIXEL_SHADER_RESOURCE`: barrier to `RENDER_TARGET` before the scene, back afterwards. `OMSetRenderTargets(1, &offscreenRtvHandle, FALSE, &dsvHandle)` for the scene, `OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr)` for the window."
+      }
+    },
+    "screen-quad": {
+      "text": {
+        "opengl": "Show the texture: add `quadVertices` (6 vertices: 2D position in NDC + texture coordinates) with `quadVAO`/`quadVBO`, the shader `screenShader` (`framebuffers_screen.vs` / `.fs`, `screenTexture` = unit 0), finish `framebuffers_screen.fs`, and after the white clear draw the quad with `textureColorbuffer`.",
+        "vulkan": "Show the offscreen image: add the screen quad as vertices 42..47, a `screenPipeline` from `framebuffers_screen.vert/.frag` for `renderPass` with the depth test off (new `VkBool32 depthTestEnable` parameter), `screenDescriptorSet` with `offscreenImageView` (pool: 3 sets), draw it in the window's pass, and finish `framebuffers_screen.frag`.",
+        "d3d12": "Show the texture: add the screen quad as vertices 42–47 (v flipped), `m_screenPipelineState` from `framebuffers_screen.hlsl` with `DepthEnable = FALSE` and `DSVFormat = DXGI_FORMAT_UNKNOWN`, draw it in the window's pass with heap slot 3, and return the texture's colour in `PSMain`."
+      },
+      "hint": {
+        "opengl": "Two attributes of 2 floats, stride `4 * sizeof(float)`. Fragment shader: `vec3 col = texture(screenTexture, TexCoords).rgb; FragColor = vec4(col, 1.0);`. In the loop: `screenShader.use(); glBindVertexArray(quadVAO); glBindTexture(GL_TEXTURE_2D, textureColorbuffer); glDrawArrays(GL_TRIANGLES, 0, 6);`.",
+        "vulkan": "learnopengl's texture coordinates work unchanged: the window's y and the image's v both point down in Vulkan. Fragment shader: `outColor = vec4(texture(screenTexture, fragTexCoord).rgb, 1.0);`. Bind `screenPipeline` and `screenDescriptorSet`, then `vkCmdDraw(commandBuffer, 6, 1, 42, 0)`; viewport, scissor and vertex buffer still apply.",
+        "d3d12": "v = 0 is the texture's top row, the top of the scene. `CD3DX12_GPU_DESCRIPTOR_HANDLE screenTexture(heapStart, 3, m_cbvSrvDescriptorSize)`, `SetPipelineState(m_screenPipelineState.Get())`, `SetGraphicsRootDescriptorTable(2, screenTexture)`, `DrawInstanced(6, 1, 42, 0)`. HLSL: `float3 col = screenTexture.Sample(wrapSampler, input.texCoord).rgb; return float4(col, 1.0f);`."
+      }
+    },
+    "inversion": {
+      "text": "Post-processing: invert the colours in the screen shader – every channel becomes `1.0` minus itself, alpha stays `1.0`.",
+      "hint": {
+        "opengl": "`FragColor = vec4(vec3(1.0 - texture(screenTexture, TexCoords)), 1.0);`",
+        "vulkan": "`outColor = vec4(vec3(1.0 - texture(screenTexture, fragTexCoord)), 1.0);`",
+        "d3d12": "`return float4(1.0f - screenTexture.Sample(wrapSampler, input.texCoord).rgb, 1.0f);`"
+      }
+    },
+    "grayscale": {
+      "text": "Replace the inversion with a weighted grayscale: `0.2126 * r + 0.7152 * g + 0.0722 * b` in all three channels.",
+      "hint": {
+        "opengl": "`FragColor = texture(screenTexture, TexCoords); float average = 0.2126 * FragColor.r + 0.7152 * FragColor.g + 0.0722 * FragColor.b; FragColor = vec4(average, average, average, 1.0);`",
+        "vulkan": "`outColor = texture(screenTexture, fragTexCoord); float average = 0.2126 * outColor.r + 0.7152 * outColor.g + 0.0722 * outColor.b; outColor = vec4(average, average, average, 1.0);`",
+        "d3d12": "`float4 color = screenTexture.Sample(wrapSampler, input.texCoord); float average = 0.2126f * color.r + 0.7152f * color.g + 0.0722f * color.b; return float4(average, average, average, 1.0f);`"
+      }
+    },
+    "sharpen": {
+      "text": "Replace the grayscale with a 3×3 kernel: sample the nine texels around the fragment (`offset = 1.0 / 300.0`) and add them up weighted with the sharpen kernel (`-1` around, `9` in the middle).",
+      "hint": {
+        "opengl": "`const float offset = 1.0 / 300.0;` before `main`; in `main` `vec2 offsets[9] = vec2[](...)` (top-left `vec2(-offset, offset)` … bottom-right), `float kernel[9] = float[](...)`, a loop filling `vec3 sampleTex[9]`, a loop summing `sampleTex[i] * kernel[i]`, then `FragColor = vec4(col, 1.0);`.",
+        "vulkan": "`const float offset = 1.0 / 300.0;` before `main`. In a Vulkan image v points down, so the top row of `offsets` is `vec2(-offset, -offset)`, `vec2(0.0, -offset)`, `vec2(offset, -offset)`. Sum `sampleTex[i] * kernel[i]` into `col`, then `outColor = vec4(col, 1.0);`.",
+        "d3d12": "`static const float offset = 1.0f / 300.0f;` before `PSMain`. HLSL arrays are initialised with `{ … }`; v grows downwards, so the top row of `offsets` has `-offset` in y. Sum `sampleTex[k] * kernel[k]` into `col`, then `return float4(col, 1.0f);`."
+      }
+    },
+    "blur": {
+      "text": "Change the kernel to a blur: `1, 2, 1 / 2, 4, 2 / 1, 2, 1`, each divided by 16.",
+      "hint": {
+        "opengl": "Only `kernel` changes: `1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0, 2.0 / 16.0, 4.0 / 16.0, …` – the weights add up to 1, so the brightness stays.",
+        "vulkan": "Only `kernel` changes: `1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0, 2.0 / 16.0, 4.0 / 16.0, …` – the weights add up to 1, so the brightness stays.",
+        "d3d12": "Only `kernel` changes: `1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f, 2.0f / 16.0f, 4.0f / 16.0f, …` – the weights add up to 1, so the brightness stays."
+      }
+    },
+    "edge-detection": {
+      "text": "Change the kernel to edge detection: `1` around, `-8` in the middle.",
+      "hint": "The weights add up to 0: wherever all nine samples are equal the result is black, and only edges stay bright."
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "title": "Cubemaps",
+  "tasks": {
+    "load-cubemap": {
+      "text": {
+        "opengl": "Load the sky into one cube map: write `loadCubemap(std::vector<std::string> faces)` (one `glTexImage2D` per face with `GL_TEXTURE_CUBE_MAP_POSITIVE_X + i`, linear filtering, `GL_CLAMP_TO_EDGE` on S, T and R) and call it with right, left, top, bottom, front, back from `skybox/`.",
+        "vulkan": "Load the sky into one cube map: write `loadCubemap(faces, image, imageMemory, imageView)` (six RGBA images in one staging buffer, an image with `arrayLayers = 6` and `VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT`, face i copied to layer i, a `VK_IMAGE_VIEW_TYPE_CUBE` view), call it with right, left, top, bottom, front, back, and create `cubemapSampler` with `CLAMP_TO_EDGE`.",
+        "d3d12": "Load the sky into one cube map: write `LoadCubemap(faces, texture, uploadHeap, descriptorIndex)` (`DepthOrArraySize = 6`, six subresources in one `UpdateSubresources`, an SRV with `D3D12_SRV_DIMENSION_TEXTURECUBE`), load right, left, top, bottom, front, back into `m_skyboxTexture` (heap slot 2), and add a clamping static sampler `s1`."
+      },
+      "hint": {
+        "opengl": "The face targets are consecutive numbers: +X, -X, +Y, -Y, +Z, -Z. Call `stbi_set_flip_vertically_on_load(false)` first – `loadTexture` switched flipping on, and cube map faces are not flipped. `#include <string>` and `<vector>`; delete the texture at the end.",
+        "vulkan": "Array layer i is OpenGL's `GL_TEXTURE_CUBE_MAP_POSITIVE_X + i`. The barriers cover all six layers (`layerCount = 6`); each copy region has `bufferOffset = faceSize * i` and `baseArrayLayer = i`. No flip: the images are loaded as they are. Destroy the new objects in `cleanup()`.",
+        "d3d12": "Like `LoadTexture`, but six `stbi_load` calls (4 channels, no flip), `GetRequiredIntermediateSize(texture.Get(), 0, 6)` and `D3D12_SUBRESOURCE_DATA faceData[6]`. The heap needs 3 descriptors. Sampler: `samplers[2]`, `samplers[1] = samplers[0];` with CLAMP in U, V, W and `ShaderRegister = 1`."
+      }
+    },
+    "skybox": {
+      "text": {
+        "opengl": "Draw the sky: add `skyboxVertices` (36 positions from -1 to 1) with `skyboxVAO`, `skyboxShader` (`skybox.vs` / `.fs`, `skybox` = unit 0), finish both shaders, and draw the skybox first with `glDepthMask(GL_FALSE)` and the view matrix without its translation.",
+        "vulkan": "Draw the sky: append the skybox's 36 positions as vertices 36..71, create `skyboxPipeline` without depth writes (`createPipeline` gets `attributeCount`, `depthWriteEnable` and `depthCompareOp`), `skyboxDescriptorSet` with the cube map (pool: 2 sets), finish both skybox shaders, and draw the skybox first.",
+        "d3d12": "Draw the sky: append the skybox's 36 positions as vertices 36–71, write `skybox.hlsl` (`VSMain` without the view's translation, `PSMain` sampling the `TextureCube`), create `m_skyboxPipelineState` with `DEPTH_WRITE_MASK_ZERO`, and draw the skybox first."
+      },
+      "hint": {
+        "opengl": "`skybox.vs`: `TexCoords = aPos; gl_Position = projection * view * vec4(aPos, 1.0);`. `skybox.fs`: `FragColor = texture(skybox, TexCoords);`. In the loop: `skyboxShader.setMat4(\"view\", glm::mat4(glm::mat3(view)));`, bind `skyboxVAO` and `GL_TEXTURE_CUBE_MAP` `cubemapTexture`, draw 36 vertices, then `glDepthMask(GL_TRUE);`.",
+        "vulkan": "`skybox.vert`: `fragTexCoord = inPosition;` and `gl_Position = ubo.proj * mat4(mat3(ubo.view)) * vec4(inPosition, 1.0);`. `skybox.frag`: `outColor = texture(skybox, fragTexCoord);`. Pipelines: `2, VK_TRUE, VK_COMPARE_OP_LESS` for the cubes, `1, VK_FALSE, VK_COMPARE_OP_LESS` for the skybox. Draw: `vkCmdDraw(commandBuffer, 36, 1, 36, 0)`.",
+        "d3d12": "`result.texCoords = position;`, `float3 viewPosition = mul(position, (float3x3)view);`, `result.position = mul(float4(viewPosition, 1.0f), projection);`. Draw: `SetPipelineState(m_skyboxPipelineState.Get())`, `SetGraphicsRootDescriptorTable(2, skyboxTexture)` (slot 2), `DrawInstanced(36, 1, 36, 0)`, then `SetPipelineState(m_pipelineState.Get())` for the cubes."
+      }
+    },
+    "skybox-last": {
+      "text": {
+        "opengl": "Optimise: draw the skybox last, at the largest depth (`gl_Position = pos.xyww`), with `glDepthFunc(GL_LEQUAL)` – then the sky is only drawn where nothing else is.",
+        "vulkan": "Optimise: draw the skybox last, at the largest depth (`gl_Position = pos.xyww` in `skybox.vert`), with `VK_COMPARE_OP_LESS_OR_EQUAL` in its pipeline.",
+        "d3d12": "Optimise: draw the skybox last, at the largest depth (`result.position = pos.xyww`), with `D3D12_COMPARISON_FUNC_LESS_EQUAL` in its PSO."
+      },
+      "hint": {
+        "opengl": "`vec4 pos = projection * view * vec4(aPos, 1.0); gl_Position = pos.xyww;` – z / w = 1.0. Move the skybox block after the cubes, replace `glDepthMask(GL_FALSE)` with `glDepthFunc(GL_LEQUAL)` and set `glDepthFunc(GL_LESS)` back afterwards.",
+        "vulkan": "`vec4 pos = ubo.proj * view * vec4(inPosition, 1.0); gl_Position = pos.xyww;`. Depth 1.0 equals the cleared depth, so LESS would fail. Move the skybox's three commands after the cubes' draws.",
+        "d3d12": "`float4 pos = mul(float4(viewPosition, 1.0f), projection); result.position = pos.xyww;`. The `DepthWriteMask` line becomes `psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;`. Move the skybox's draw after the cubes; the extra `SetPipelineState(m_pipelineState.Get())` goes."
+      }
+    },
+    "reflection": {
+      "text": {
+        "opengl": "Make the cubes mirrors: give the cube vertices normals instead of texture coordinates, pass `Normal` and the world `Position` from `cubemaps.vs`, and in `cubemaps.fs` sample the cube map with `reflect(I, normalize(Normal))`, using a `cameraPos` uniform.",
+        "vulkan": "Make the cubes mirrors: `Vertex` gets `glm::vec3 normal`, the cube gets learnopengl's normals, the uniform buffer gets `cameraPos` (visible to the fragment stage), the cubes bind `skyboxDescriptorSet` (the marble goes), and `cubemaps.frag` samples the cube map with `reflect(I, normalize(fragNormal))`.",
+        "d3d12": "Make the cubes mirrors: `Vertex` gets `XMFLOAT3 normal` (input element `NORMAL`), `ModelConstants` a `normalMatrix`, `SceneConstantBuffer` `cameraPos` and padding (root parameter 1 visible to all stages), the cubes use the cube map (heap slot 1, the marble goes), and `cubemaps.hlsl` samples it with `reflect(I, normalize(input.normal))`."
+      },
+      "hint": {
+        "opengl": "`Normal = mat3(transpose(inverse(model))) * aNormal; Position = vec3(model * vec4(aPos, 1.0));`, `vec3 I = normalize(Position - cameraPos);`. Attribute 1 is 3 floats, stride `6 * sizeof(float)`. `shader.setInt(\"skybox\", 0)`, `shader.setVec3(\"cameraPos\", cameraPos)`, and bind `GL_TEXTURE_CUBE_MAP` `cubemapTexture` for the cubes.",
+        "vulkan": "Attribute 1: `VK_FORMAT_R32G32B32_SFLOAT`, `offsetof(Vertex, normal)`. `cameraPos` follows `proj` at offset 128, so no padding is needed; set it in `updateUniformBuffer()`. `uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT`. Pool: 1 set.",
+        "d3d12": "`normalMatrix = XMMatrixTranspose(XMMatrixInverse(nullptr, model))`, stored transposed like `model`; HLSL: `mul(float4(normal, 0.0f), normalMatrix).xyz`. `XMStoreFloat3(&constantBufferData.cameraPos, cameraPos);`. `cbvSrvHeapDesc.NumDescriptors = 2;` and `LoadCubemap(..., 1)`."
+      }
+    },
+    "refraction": {
+      "text": "Make the cubes glass: refract the view direction with the ratio `1.00 / 1.52` (air to glass) instead of reflecting it.",
+      "hint": {
+        "opengl": "`float ratio = 1.00 / 1.52; vec3 R = refract(I, normalize(Normal), ratio);` instead of `reflect`.",
+        "vulkan": "`float ratio = 1.00 / 1.52; vec3 R = refract(I, normalize(fragNormal), ratio);` instead of `reflect`.",
+        "d3d12": "`float ratio = 1.00f / 1.52f; float3 R = refract(I, normalize(input.normal), ratio);` instead of `reflect`."
+      }
+    }
+  }
+}

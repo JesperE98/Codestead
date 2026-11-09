@@ -1,0 +1,14 @@
+[
+  { "title": "Framebuffers", "url": "https://learnopengl.com/Advanced-OpenGL/Framebuffers", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: framebuffers.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/4.advanced_opengl/5.1.framebuffers/framebuffers.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "glFramebufferTexture", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glFramebufferTexture.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "glFramebufferRenderbuffer", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glFramebufferRenderbuffer.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "glCheckFramebufferStatus", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCheckFramebufferStatus.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Graphics pipeline basics: Render passes", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Graphics_pipeline_basics/Render_passes", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Drawing: Framebuffers", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Drawing/Framebuffers", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "VkSubpassDependency", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkSubpassDependency.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "VkFramebufferCreateInfo", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkFramebufferCreateInfo.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Using resource barriers to synchronize resource states in Direct3D 12", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/using-resource-barriers-to-synchronize-resource-states-in-direct3d-12", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "ID3D12Device::CreateRenderTargetView method", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createrendertargetview", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "ID3D12GraphicsCommandList::OMSetRenderTargets method", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetrendertargets", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

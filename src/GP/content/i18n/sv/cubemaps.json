@@ -1,0 +1,61 @@
+{
+  "title": "Cubemaps",
+  "tasks": {
+    "load-cubemap": {
+      "text": {
+        "opengl": "Läs in himlen i en cube map: skriv `loadCubemap(std::vector<std::string> faces)` (ett `glTexImage2D` per sida med `GL_TEXTURE_CUBE_MAP_POSITIVE_X + i`, linjär filtrering, `GL_CLAMP_TO_EDGE` på S, T och R) och anropa den med right, left, top, bottom, front, back från `skybox/`.",
+        "vulkan": "Läs in himlen i en cube map: skriv `loadCubemap(faces, image, imageMemory, imageView)` (sex RGBA-bilder i en staging buffer, en image med `arrayLayers = 6` och `VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT`, sida i kopierad till lager i, en `VK_IMAGE_VIEW_TYPE_CUBE`-view), anropa den med right, left, top, bottom, front, back, och skapa `cubemapSampler` med `CLAMP_TO_EDGE`.",
+        "d3d12": "Läs in himlen i en cube map: skriv `LoadCubemap(faces, texture, uploadHeap, descriptorIndex)` (`DepthOrArraySize = 6`, sex subresurser i ett `UpdateSubresources`, en SRV med `D3D12_SRV_DIMENSION_TEXTURECUBE`), läs in right, left, top, bottom, front, back i `m_skyboxTexture` (heap-plats 2), och lägg till en clampande statisk sampler `s1`."
+      },
+      "hint": {
+        "opengl": "Sidornas mål är på varandra följande tal: +X, -X, +Y, -Y, +Z, -Z. Anropa `stbi_set_flip_vertically_on_load(false)` först – `loadTexture` slog på vändningen, och cube map-sidor vänds inte. `#include <string>` och `<vector>`; ta bort texturen i slutet.",
+        "vulkan": "Array layer i är OpenGL:s `GL_TEXTURE_CUBE_MAP_POSITIVE_X + i`. Barriärerna täcker alla sex lagren (`layerCount = 6`); varje kopieringsregion har `bufferOffset = faceSize * i` och `baseArrayLayer = i`. Ingen vändning: bilderna läses in som de är. Förstör de nya objekten i `cleanup()`.",
+        "d3d12": "Som `LoadTexture`, men sex `stbi_load`-anrop (4 kanaler, ingen vändning), `GetRequiredIntermediateSize(texture.Get(), 0, 6)` och `D3D12_SUBRESOURCE_DATA faceData[6]`. Heapen behöver 3 descriptorer. Sampler: `samplers[2]`, `samplers[1] = samplers[0];` med CLAMP i U, V, W och `ShaderRegister = 1`."
+      }
+    },
+    "skybox": {
+      "text": {
+        "opengl": "Rita himlen: lägg till `skyboxVertices` (36 positioner från -1 till 1) med `skyboxVAO`, `skyboxShader` (`skybox.vs` / `.fs`, `skybox` = enhet 0), gör klart båda shadrarna, och rita skyboxen först med `glDepthMask(GL_FALSE)` och view-matrisen utan dess translation.",
+        "vulkan": "Rita himlen: lägg till skyboxens 36 positioner som vertex 36..71, skapa `skyboxPipeline` utan djupskrivning (`createPipeline` får `attributeCount`, `depthWriteEnable` och `depthCompareOp`), `skyboxDescriptorSet` med cube mapen (poolen: 2 set), gör klart båda skyboxshadrarna, och rita skyboxen först.",
+        "d3d12": "Rita himlen: lägg till skyboxens 36 positioner som vertex 36–71, skriv `skybox.hlsl` (`VSMain` utan viewns translation, `PSMain` som samplar `TextureCube`), skapa `m_skyboxPipelineState` med `DEPTH_WRITE_MASK_ZERO`, och rita skyboxen först."
+      },
+      "hint": {
+        "opengl": "`skybox.vs`: `TexCoords = aPos; gl_Position = projection * view * vec4(aPos, 1.0);`. `skybox.fs`: `FragColor = texture(skybox, TexCoords);`. I loopen: `skyboxShader.setMat4(\"view\", glm::mat4(glm::mat3(view)));`, bind `skyboxVAO` och `GL_TEXTURE_CUBE_MAP` `cubemapTexture`, rita 36 vertexar, sedan `glDepthMask(GL_TRUE);`.",
+        "vulkan": "`skybox.vert`: `fragTexCoord = inPosition;` och `gl_Position = ubo.proj * mat4(mat3(ubo.view)) * vec4(inPosition, 1.0);`. `skybox.frag`: `outColor = texture(skybox, fragTexCoord);`. Pipelines: `2, VK_TRUE, VK_COMPARE_OP_LESS` för kuberna, `1, VK_FALSE, VK_COMPARE_OP_LESS` för skyboxen. Ritanrop: `vkCmdDraw(commandBuffer, 36, 1, 36, 0)`.",
+        "d3d12": "`result.texCoords = position;`, `float3 viewPosition = mul(position, (float3x3)view);`, `result.position = mul(float4(viewPosition, 1.0f), projection);`. Ritanrop: `SetPipelineState(m_skyboxPipelineState.Get())`, `SetGraphicsRootDescriptorTable(2, skyboxTexture)` (plats 2), `DrawInstanced(36, 1, 36, 0)`, sedan `SetPipelineState(m_pipelineState.Get())` för kuberna."
+      }
+    },
+    "skybox-last": {
+      "text": {
+        "opengl": "Optimera: rita skyboxen sist, på det största djupet (`gl_Position = pos.xyww`), med `glDepthFunc(GL_LEQUAL)` – då ritas himlen bara där inget annat finns.",
+        "vulkan": "Optimera: rita skyboxen sist, på det största djupet (`gl_Position = pos.xyww` i `skybox.vert`), med `VK_COMPARE_OP_LESS_OR_EQUAL` i dess pipeline.",
+        "d3d12": "Optimera: rita skyboxen sist, på det största djupet (`result.position = pos.xyww`), med `D3D12_COMPARISON_FUNC_LESS_EQUAL` i dess PSO."
+      },
+      "hint": {
+        "opengl": "`vec4 pos = projection * view * vec4(aPos, 1.0); gl_Position = pos.xyww;` – z / w = 1.0. Flytta skyboxblocket efter kuberna, ersätt `glDepthMask(GL_FALSE)` med `glDepthFunc(GL_LEQUAL)` och sätt tillbaka `glDepthFunc(GL_LESS)` efteråt.",
+        "vulkan": "`vec4 pos = ubo.proj * view * vec4(inPosition, 1.0); gl_Position = pos.xyww;`. Djupet 1.0 är lika med det rensade djupet, så LESS skulle misslyckas. Flytta skyboxens tre kommandon efter kubernas ritanrop.",
+        "d3d12": "`float4 pos = mul(float4(viewPosition, 1.0f), projection); result.position = pos.xyww;`. Raden med `DepthWriteMask` blir `psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;`. Flytta skyboxens ritanrop efter kuberna; det extra `SetPipelineState(m_pipelineState.Get())` försvinner."
+      }
+    },
+    "reflection": {
+      "text": {
+        "opengl": "Gör kuberna till speglar: ge kubens vertexar normaler i stället för texturkoordinater, skicka `Normal` och världspositionen `Position` från `cubemaps.vs`, och sampla i `cubemaps.fs` cube mapen med `reflect(I, normalize(Normal))`, med en uniform `cameraPos`.",
+        "vulkan": "Gör kuberna till speglar: `Vertex` får `glm::vec3 normal`, kuben får learnopengls normaler, uniform buffern får `cameraPos` (synlig för fragmentsteget), kuberna binder `skyboxDescriptorSet` (marmorn försvinner), och `cubemaps.frag` samplar cube mapen med `reflect(I, normalize(fragNormal))`.",
+        "d3d12": "Gör kuberna till speglar: `Vertex` får `XMFLOAT3 normal` (input-elementet `NORMAL`), `ModelConstants` en `normalMatrix`, `SceneConstantBuffer` `cameraPos` och utfyllnad (root-parameter 1 synlig för alla steg), kuberna använder cube mapen (heap-plats 1, marmorn försvinner), och `cubemaps.hlsl` samplar den med `reflect(I, normalize(input.normal))`."
+      },
+      "hint": {
+        "opengl": "`Normal = mat3(transpose(inverse(model))) * aNormal; Position = vec3(model * vec4(aPos, 1.0));`, `vec3 I = normalize(Position - cameraPos);`. Attribut 1 är 3 floats, stride `6 * sizeof(float)`. `shader.setInt(\"skybox\", 0)`, `shader.setVec3(\"cameraPos\", cameraPos)`, och bind `GL_TEXTURE_CUBE_MAP` `cubemapTexture` för kuberna.",
+        "vulkan": "Attribut 1: `VK_FORMAT_R32G32B32_SFLOAT`, `offsetof(Vertex, normal)`. `cameraPos` kommer efter `proj` på offset 128, så ingen utfyllnad behövs; sätt den i `updateUniformBuffer()`. `uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT`. Poolen: 1 set.",
+        "d3d12": "`normalMatrix = XMMatrixTranspose(XMMatrixInverse(nullptr, model))`, sparad transponerad som `model`; HLSL: `mul(float4(normal, 0.0f), normalMatrix).xyz`. `XMStoreFloat3(&constantBufferData.cameraPos, cameraPos);`. `cbvSrvHeapDesc.NumDescriptors = 2;` och `LoadCubemap(..., 1)`."
+      }
+    },
+    "refraction": {
+      "text": "Gör kuberna till glas: bryt blickriktningen med förhållandet `1.00 / 1.52` (luft till glas) i stället för att spegla den.",
+      "hint": {
+        "opengl": "`float ratio = 1.00 / 1.52; vec3 R = refract(I, normalize(Normal), ratio);` i stället för `reflect`.",
+        "vulkan": "`float ratio = 1.00 / 1.52; vec3 R = refract(I, normalize(fragNormal), ratio);` i stället för `reflect`.",
+        "d3d12": "`float ratio = 1.00f / 1.52f; float3 R = refract(I, normalize(input.normal), ratio);` i stället för `reflect`."
+      }
+    }
+  }
+}
