@@ -75,8 +75,8 @@ services अपने-अपने users के रूप में, जित�
 grep www-data /etc/passwd
 ```
 
-Text processing वाले chapter के `awk` से आप UID 1000 या उससे ज़्यादा वाले सबकी
-list बना सकते हैं – यानी सामान्य users:
+`awk` से, जिसके बारे में आप text processing वाले chapter में विस्तार से सीखेंगे, आप
+UID 1000 या उससे ज़्यादा वाले सबकी list बना सकते हैं – यानी सामान्य users:
 
 ```sh
 awk -F: '$3 >= 1000 {print $1}' /etc/passwd

@@ -19,6 +19,10 @@
     },
     "sort": {
       "text": "Zeige die Früchte in `~/{{documents}}/{{fruits}}` in alphabetischer Reihenfolge an."
+    },
+    "cut": {
+      "text": "Zeige nur die Fächer – Feld 2 – in `~/{{documents}}/{{grades}}` mit `cut`.",
+      "hint": "Die Felder sind durch Kommas getrennt: `-d,` wählt das Trennzeichen und `-f2` das Feld."
     }
   }
 }

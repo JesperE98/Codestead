@@ -122,6 +122,52 @@ How many files and directories are there in `/etc`? Count them with a pipe:
 ls /etc | wc -l
 ```
 
+## Translating characters – `tr`
+
+`tr` (*translate*) replaces every character in the first set with the
+character in the same position in the second. `a-z` means all the letters
+from a to z:
+
+```sh
+echo "hello from café" | tr a-z A-Z
+```
+
+```text
+HELLO FROM CAFé
+```
+
+Did you spot the é? `tr` works on individual *bytes*, and letters such as é,
+ñ and ü aren't part of `a-z`.
+
+`tr` **only** reads from stdin, never from files. If you want to use a file,
+feed it in with `<` or a pipe:
+
+```sh
+tr a-z A-Z < ~/{{documents}}/{{fruits}}
+```
+
+With `-d` (*delete*) you remove characters, and with `-s` (*squeeze*) you
+squeeze several identical characters in a row into one:
+
+```sh
+echo "070-123 45 67" | tr -d ' -'
+echo "too     many      spaces" | tr -s ' '
+```
+
+```predict
+$ echo "hello world" | tr -d o
+hell wrld
+---
+`-d` deletes every `o`, wherever it is.
+```
+
+Instead of ranges you can write *classes*, e.g. `[:upper:]` (uppercase),
+`[:lower:]` (lowercase), `[:digit:]` (digits) and `[:space:]` (whitespace):
+
+```sh
+echo "Room 101, floor 3" | tr -d '[:digit:]'
+```
+
 ## From input to arguments – `xargs`
 
 Some commands don't read from a pipe at all – they want names as

@@ -81,7 +81,7 @@ Dein Home-Verzeichnis liegt auf diesem Rechner nicht auf einem eigenen
 Dateisystem. Was gibt das hier aus?
 
 ```predict
-$ df -h ~ | awk 'NR > 1 {print $6}'
+$ df -h ~ | tail -n 1 | tr -s ' ' | cut -d' ' -f6
 /
 ---
 Mit einem Pfad zeigt `df` nur das Dateisystem, auf dem er liegt. Die sechste

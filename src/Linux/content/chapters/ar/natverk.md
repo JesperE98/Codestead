@@ -99,7 +99,7 @@ default via 192.168.1.1 dev enp0s3 proto dhcp src 192.168.1.42 metric 100
 ```
 
 ```predict
-$ ip route | grep default | awk '{print $3}'
+$ ip route | grep default | cut -d' ' -f3
 192.168.1.1
 ---
 الكلمة الثالثة في سطر `default` هي عنوان البوابة.

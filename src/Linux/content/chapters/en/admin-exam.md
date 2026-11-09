@@ -79,7 +79,7 @@ Your home directory is not on a file system of its own on this computer.
 What does this print?
 
 ```predict
-$ df -h ~ | awk 'NR > 1 {print $6}'
+$ df -h ~ | tail -n 1 | tr -s ' ' | cut -d' ' -f6
 /
 ---
 Given a path, `df` shows only the file system it is on. The sixth column is

@@ -123,6 +123,53 @@ Quantos arquivos e diretórios existem em `/etc`? Conte-os com um pipe:
 ls /etc | wc -l
 ```
 
+## Traduzindo caracteres – `tr`
+
+O `tr` (*translate*) substitui cada caractere do primeiro conjunto pelo
+caractere na mesma posição do segundo. `a-z` significa todas as letras de a
+até z:
+
+```sh
+echo "hello from café" | tr a-z A-Z
+```
+
+```text
+HELLO FROM CAFé
+```
+
+Percebeu o é? O `tr` trabalha com *bytes* individuais, e letras como é, ç e ã
+não fazem parte de `a-z`.
+
+O `tr` lê **apenas** do stdin, nunca de arquivos. Se quiser usar um arquivo,
+alimente-o com `<` ou com um pipe:
+
+```sh
+tr a-z A-Z < ~/{{documents}}/{{fruits}}
+```
+
+Com `-d` (*delete*) você remove caracteres, e com `-s` (*squeeze*) você
+comprime vários caracteres iguais seguidos em um só:
+
+```sh
+echo "070-123 45 67" | tr -d ' -'
+echo "espaços     demais     aqui" | tr -s ' '
+```
+
+```predict
+$ echo "hello world" | tr -d o
+hell wrld
+---
+O `-d` apaga cada `o`, onde quer que ele esteja.
+```
+
+Em vez de intervalos, você pode escrever *classes*, por exemplo `[:upper:]`
+(maiúsculas), `[:lower:]` (minúsculas), `[:digit:]` (dígitos) e `[:space:]`
+(espaços em branco):
+
+```sh
+echo "Sala 101, andar 3" | tr -d '[:digit:]'
+```
+
 ## Da entrada para argumentos – `xargs`
 
 Alguns comandos nem leem de um pipe – eles querem nomes como **argumentos**:

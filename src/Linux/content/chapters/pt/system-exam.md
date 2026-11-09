@@ -39,7 +39,7 @@ Dono: 4 + 2 + 1 = 7. Grupo: 4 + 1 = 5. Outros: 0.
 $ touch ferramenta.sh
 $ chmod 755 ferramenta.sh
 $ chmod go-x ferramenta.sh
-$ ls -l ferramenta.sh | awk '{print $1}'
+$ ls -l ferramenta.sh | cut -d' ' -f1
 -rwxr--r--
 ```
 

@@ -39,7 +39,7 @@ Besitzer: 4 + 2 + 1 = 7. Gruppe: 4 + 1 = 5. Andere: 0.
 $ touch werkzeug.sh
 $ chmod 755 werkzeug.sh
 $ chmod go-x werkzeug.sh
-$ ls -l werkzeug.sh | awk '{print $1}'
+$ ls -l werkzeug.sh | cut -d' ' -f1
 -rwxr--r--
 ```
 

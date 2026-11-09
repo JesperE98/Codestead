@@ -110,6 +110,13 @@ public sealed partial class LinuxTool : LearningTool
 
     public override string CurrentVariant(string chapterId) => DistroOf(ChapterOf(chapterId)).Id;
 
+    /// <summary>The tr tasks left "Text processing" when it moved from the basics to scripts (0.6.1).</summary>
+    public override IReadOnlyDictionary<string, string> MovedTasks { get; } = new Dictionary<string, string>
+    {
+        ["textbearbetning/tr-upper"] = "pipes/tr-upper",
+        ["textbearbetning/tr-path"] = "miljo/tr-path",
+    };
+
     public override string? NormalizeVariant(string? chosen) => DistrosLib.GetDistro(chosen ?? ChaptersLib.DefaultDistro).Id;
 
     public override void VariantChosen(string variantId)

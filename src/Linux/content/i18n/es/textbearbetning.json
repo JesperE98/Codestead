@@ -1,5 +1,5 @@
 {
-  "title": "Procesar texto con sed, tr y awk",
+  "title": "Procesar texto con sed y awk",
   "tasks": {
     "sed-s": {
       "text": "Muestra `~/{{documents}}/server.log` con la palabra `ERROR` sustituida por `{{errorWord}}` en cada línea, usando `sed`.",
@@ -8,14 +8,6 @@
     "sed-d": {
       "text": "Muestra server.log **sin** las líneas que contienen `INFO`, usando `sed`.",
       "hint": "La dirección `/INFO/` selecciona las líneas y el comando `d` las elimina: `sed '/INFO/d' archivo`"
-    },
-    "tr-upper": {
-      "text": "Imprime todos los nombres de usuario de `/etc/passwd` en **mayúsculas**: extrae el campo 1 con `cut` y pásalo a `tr`.",
-      "hint": "`cut -d: -f1 /etc/passwd` te da los nombres de usuario. Añade `| tr a-z A-Z`."
-    },
-    "tr-path": {
-      "text": "Muestra los directorios de `$PATH` en **líneas separadas** sustituyendo `:` por un salto de línea con `tr`.",
-      "hint": "Un salto de línea se escribe `\\n`: `echo $PATH | tr ':' '\\n'`"
     },
     "awk-print": {
       "text": "Imprime el nombre de usuario y la shell (campos 1 y 7) de `/etc/passwd` con `awk`.",

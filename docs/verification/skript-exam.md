@@ -22,3 +22,5 @@ Källtext: `src/Linux/content/chapters/en/skript-exam.md`. Predict-svaren kontro
 | Ett here-dokument slutar vid raden med slutordet (`SLUT`) | | ogranskad | |
 | `for i in $(seq 1 3)` går igenom 1, 2 och 3 | | ogranskad | |
 | Provet kräver 80 % (enligt docs/DEVELOPMENT.md) | | ogranskad | |
+| Predict: `echo "x y z" \| awk '{print NF}'` prints `3` |  | ogranskad |  |
+| Quiz: an awk program is written in single quotes so the shell does not replace `$3` before awk starts |  | ogranskad |  |

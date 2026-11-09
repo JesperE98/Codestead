@@ -19,6 +19,10 @@
     },
     "sort": {
       "text": "`~/{{documents}}/{{fruits}}` के फलों को alphabetical order में दिखाइए।"
+    },
+    "cut": {
+      "text": "`cut` से `~/{{documents}}/{{grades}}` में सिर्फ़ विषय – फ़ील्ड 2 – दिखाइए।",
+      "hint": "फ़ील्ड commas से अलग हैं: `-d,` विभाजक चुनता है और `-f2` फ़ील्ड।"
     }
   }
 }

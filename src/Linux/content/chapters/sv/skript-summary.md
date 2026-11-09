@@ -2,6 +2,10 @@
 
 I den här delen har du gjort om kommandon till egna program.
 
+## Textbearbetning med sed och awk
+
+`sed` redigerar rader: `s/gammalt/nytt/` byter ut (`g` för alla träffar), adresser väljer rader, `d` tar bort och `-n` med `p` skriver bara ut det du ber om. `sed -i` ändrar själva filen. `awk` arbetar med kolumner: `-F` väljer avgränsare, `$1` … `$NF` är fälten, ett mönster före `{ }` väljer rader och `END { }` körs efter sista raden.
+
 ## Shell-skript
 
 Ett skript är en textfil med kommandon som börjar med shebang-raden
@@ -36,6 +40,8 @@ utdata till en fil. `journalctl -u cron` visar varje körning, och
 
 | Syntax | Gör |
 |---|---|
+| `sed`: `s/…/…/g`, `d`, `p`, `q`, `-n`, `-i`, `-E`, `-e` | Redigerar en ström av rader |
+| `awk`: `-F` avgränsare, `$1`, `$NF`, `NF`, `NR`, `BEGIN`, `END` | Arbetar med kolumner |
 | `#!/bin/bash` | Shebang-raden: vilket program som kör skriptet |
 | `cat > fil << '{{heredocEnd}}'` | Skriv rader till en fil fram till raden `{{heredocEnd}}` |
 | `namn=värde` · `"$namn"` · `"${namn}"` | Skapa · använd en variabel |

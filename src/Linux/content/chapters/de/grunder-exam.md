@@ -113,18 +113,3 @@ b
 ---
 `-d,` macht das Komma zum Trennzeichen, und `-f2` behält Feld 2.
 ```
-
-```predict
-$ echo "x y z" | awk '{print NF}'
-3
----
-`NF` ist die Anzahl der Felder in der Zeile. Felder werden durch Leerzeichen
-getrennt.
-```
-
-```quiz
-Warum sollte ein awk-Programm wie `'{print $3}'` in **einfachen** Anführungszeichen stehen?
-- [ ] awk kann keine doppelten Anführungszeichen lesen
-- [x] Sonst hält die Shell `$3` für eine Shell-Variable und ersetzt sie, bevor awk startet
-- [ ] Einfache Anführungszeichen lassen awk schneller laufen
-```

@@ -62,7 +62,7 @@ getent passwd {{user}}
 grep www-data /etc/passwd
 ```
 
-用文本处理那一章中学过的 `awk`，可以列出 UID 为 1000 及以上的所有用户——也就是普通用户：
+用 `awk`（后面关于文本处理的那一章会详细介绍），可以列出 UID 为 1000 及以上的所有用户——也就是普通用户：
 
 ```sh
 awk -F: '$3 >= 1000 {print $1}' /etc/passwd

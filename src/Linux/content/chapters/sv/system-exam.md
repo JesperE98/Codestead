@@ -38,7 +38,7 @@ Vilket tal ger rättigheterna `rwxr-x---`?
 $ touch verktyg.sh
 $ chmod 755 verktyg.sh
 $ chmod go-x verktyg.sh
-$ ls -l verktyg.sh | awk '{print $1}'
+$ ls -l verktyg.sh | cut -d' ' -f1
 -rwxr--r--
 ```
 

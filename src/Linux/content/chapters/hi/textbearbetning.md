@@ -1,80 +1,18 @@
-# sed, tr और awk से text processing
+# sed और awk से text processing
 
-`grep` से आप lines *ढूँढ* सकते हैं। लेकिन अक्सर आप उससे ज़्यादा करना चाहते हैं:
-कोई शब्द बदलना, कुछ lines delete करना, कोई column निकालना या कुछ numbers जोड़ना।
-तब काम आते हैं तीन classic tools:
+text के लिए कुछ tools आप पहले से जानते हैं: `grep` lines ढूँढता है, `cut` कोई
+field निकालता है और `tr` अकेले characters बदलता है। यह अध्याय दो और ताक़तवर
+tools के बारे में है – जब आप शब्द बदलना, lines delete करना या numbers जोड़ना
+चाहते हैं:
 
 | Tool | किस पर काम करता है | आम काम |
 |---|---|---|
-| `tr` | अकेले **characters** | uppercase में बदलना, `:` को newlines में बदलना |
 | `sed` | **lines** | कोई शब्द बदलना, lines delete करना |
 | `awk` | **columns** (fields) | columns निकालना, जोड़ना, गिनना |
 
-तीनों *filters* हैं: वे text पढ़ते हैं, उसके साथ कुछ करते हैं और नतीजा stdout पर
+दोनों *filters* हैं: वे text पढ़ते हैं, उसके साथ कुछ करते हैं और नतीजा stdout पर
 लिखते हैं। इसीलिए ये pipes के लिए बिल्कुल सही हैं। और original file **नहीं** बदलती
 (एक अपवाद के साथ, `sed -i`, जिस पर हम आगे आएँगे)।
-
-`{{documents}}` में अभ्यास के लिए एक तीसरी फ़ाइल है, छात्रों के अंकों वाली एक CSV फ़ाइल:
-
-```sh
-cat ~/{{documents}}/{{grades}}
-```
-
-CSV का मतलब है *comma-separated values* – columns commas से अलग होते हैं, और पहली
-line एक header है।
-
-## Characters बदलना – `tr`
-
-`tr` (*translate*) पहले set के हर character को दूसरे set में उसी जगह वाले character
-से बदल देता है। `a-z` का मतलब है a से z तक के सारे letters:
-
-```sh
-echo "hello from café" | tr a-z A-Z
-```
-
-```text
-HELLO FROM CAFé
-```
-
-é पर ध्यान गया? `tr` अलग-अलग *bytes* पर काम करता है, और é जैसे letters `a-z` का
-हिस्सा नहीं हैं। यह जानना अच्छा है – GNU `awk` (आगे) इसे
-बेहतर संभालता है।
-
-`tr` **सिर्फ़** stdin से पढ़ता है, files से कभी नहीं। अगर आप कोई file इस्तेमाल करना
-चाहते हैं, तो उसे `<` या pipe से अंदर भेजिए:
-
-```sh
-tr a-z A-Z < ~/{{documents}}/{{fruits}}
-```
-
-एक classic trick है colons को newlines (`\n`) में बदलना, ताकि `PATH` की हर directory
-अपनी अलग line पर आ जाए:
-
-```sh
-echo $PATH | tr ':' '\n'
-```
-
-`-d` (*delete*) से आप characters हटाते हैं, और `-s` (*squeeze*) से लगातार आए कई एक
-जैसे characters को दबाकर एक कर देते हैं:
-
-```sh
-echo "070-123 45 67" | tr -d ' -'
-echo "too     many      spaces" | tr -s ' '
-```
-
-```predict
-$ echo "hello world" | tr -d o
-hell wrld
----
-`-d` हर `o` को हटा देता है, चाहे वह कहीं भी हो।
-```
-
-Ranges की जगह आप *classes* भी लिख सकते हैं, जैसे `[:upper:]` (uppercase),
-`[:lower:]` (lowercase), `[:digit:]` (अंक) और `[:space:]` (whitespace):
-
-```sh
-echo "Room 101, floor 3" | tr -d '[:digit:]'
-```
 
 ## Stream editor – `sed`
 
@@ -215,20 +153,6 @@ cat ~/fruits-copy.txt
 `/etc` की configuration files root की होती हैं, इसलिए वहाँ आपको `sudo sed -i ...`
 चाहिए। Text editor खोले बिना किसी script से setting बदलने का यह एक आम तरीक़ा है।
 
-## फ़ील्ड काटकर निकालना – `cut`
-
-जब कोई फ़ाइल फ़ील्डों से बनी हो जिनके बीच एक विभाजक (separator) हो, तो `cut`
-एक फ़ील्ड चुनकर निकाल सकता है। `-d` विभाजक (*delimiter*) चुनता है और `-f` बताता
-है कि कौन-सा फ़ील्ड रखना है। ये रहे CSV फ़ाइल के विषय – फ़ील्ड 2:
-
-```sh
-cut -d, -f2 ~/{{documents}}/{{grades}}
-```
-
-`/etc/passwd` में फ़ील्ड कोलन से अलग होते हैं और फ़ील्ड 1 यूज़रनेम है, इसलिए
-`cut -d: -f1 /etc/passwd` सभी यूज़र्स की सूची दिखाता है। दूसरे फ़िल्टरों की तरह
-`cut` भी पाइप में फ़िट बैठता है – जैसे `tr` से पहले।
-
 ## Columns – `awk`
 
 `awk` असल में एक पूरी छोटी programming language है, लेकिन ज़्यादातर इसे एक ही काम के
@@ -276,7 +200,7 @@ awk -F: '{print $1, $7}' /etc/passwd
 awk -F: '{print $1 " uses " $7}' /etc/passwd
 ```
 
-पिछले भाग के `cut -d: -f1` से तुलना कीजिए। फ़र्क़ यह है कि awk fields का order बदल
+text पढ़ने और खोजने वाले अध्याय के `cut -d: -f1` से तुलना कीजिए। फ़र्क़ यह है कि awk fields का order बदल
 सकता है, text मिला सकता है और लगातार कई spaces को भी संभाल लेता है।
 
 ```predict
@@ -361,7 +285,7 @@ echo "hello from café" | awk '{print toupper($0)}'
 आपको कोई फ़र्क़ नहीं दिखेगा – लेकिन mawk `toupper()` से é जैसे अक्षरों को नहीं बदलता।
 **GNU awk** (`gawk` पैकेज) `tr` के उलट उन्हें बदल देता है। डिस्ट्रीब्यूशन इसमें
 अलग होते हैं कि वे कौन-सा awk इस्तेमाल करते हैं और सॉफ़्टवेयर कैसे इंस्टॉल किया
-जाता है – यह डिस्ट्रीब्यूशन वाले अध्याय में आएगा।
+जाता है – यह आप डिस्ट्रीब्यूशन वाले भाग में देख चुके हैं।
 
 Simulator awk language का सिर्फ़ एक हिस्सा जानता है – जो यहाँ बताया गया है और थोड़ा
 और (`if`, loops और arrays)। `man awk` देखिए।

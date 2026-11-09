@@ -69,6 +69,7 @@ public partial class LearningWindow : Window
         state = saved ?? new LearningState();
         if (!Languages.IsOffered(state.Lang)) state.Lang = Languages.Default;
         state.Variant = tool.NormalizeVariant(state.Variant);
+        if (state.MoveTasks(tool.MovedTasks)) storage.Save("state", state);
         if (state.Chapter is null || tool.Chapters.All(c => c.Id != state.Chapter)) state.Chapter = tool.Chapters[0].Id;
         tool.ChapterShown(Chapter.Id);
 

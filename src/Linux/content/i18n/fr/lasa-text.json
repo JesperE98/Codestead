@@ -19,6 +19,10 @@
     },
     "sort": {
       "text": "Affichez les fruits de `~/{{documents}}/{{fruits}}` par ordre alphabétique."
+    },
+    "cut": {
+      "text": "Affichez seulement les matières – le champ 2 – de `~/{{documents}}/{{grades}}` avec `cut`.",
+      "hint": "Les champs sont séparés par des virgules : `-d,` choisit le séparateur et `-f2` le champ."
     }
   }
 }

@@ -29,7 +29,7 @@ O `cat` imprime um arquivo e o `less` permite percorrê-lo. O `head` e o
 acompanha um arquivo). O `wc` conta linhas, palavras e bytes. O `grep` mostra
 as linhas que correspondem a um padrão, o `sort` ordena linhas e o `uniq`
 remove linhas repetidas que estão uma ao lado da outra. O `man` mostra o
-manual de um comando.
+manual de um comando. O `cut` recorta um campo (`-d` define o separador, `-f` o campo).
 
 ## Redirecionamento e pipes
 
@@ -39,17 +39,7 @@ arquivo e o `2>` redireciona as mensagens de erro – por exemplo, para
 `/dev/null`. Um pipe `|` envia a saída de um comando para o próximo, e o `tee`
 salva uma cópia no caminho. O `xargs` transforma as palavras da sua entrada
 em argumentos para um comando. `;`, `&&` e `||` executam vários comandos em
-uma linha.
-
-## Processamento de texto com sed, tr e awk
-
-O `tr` substitui, apaga (`-d`) ou comprime (`-s`) caracteres individuais e só
-lê da stdin. O `sed` edita linhas: `s/velho/novo/` substitui (`g` para todas
-as ocorrências), endereços escolhem linhas, `d` apaga e `-n` com `p` imprime
-só o que você pedir. O `sed -i` altera o próprio arquivo. O `cut` recorta um
-campo, e o `awk` trabalha com colunas: `-F` define o separador, `$1` … `$NF`
-são os campos, um padrão antes das `{ }` escolhe linhas, e o `END { }` é
-executado depois da última linha.
+uma linha. O `tr` substitui, apaga (`-d`) ou comprime (`-s`) caracteres individuais e só lê da stdin.
 
 ## Comandos e opções
 
@@ -75,9 +65,7 @@ executado depois da última linha.
 | `tee` | Passa a entrada adiante e salva uma cópia | |
 | `xargs` | Transforma a entrada em argumentos para um comando | `-n 1` um de cada vez, `-I {}` um por linha |
 | `tr` | Traduz caracteres | `-d` apaga, `-s` comprime |
-| `sed` | Edita um fluxo de linhas | `s/…/…/g`, `d`, `p`, `q`, `-n`, `-i`, `-E`, `-e` |
 | `cut` | Recorta campos | `-d` separador, `-f` campo |
-| `awk` | Trabalha com colunas | `-F` separador, `$1`, `$NF`, `NF`, `NR`, `BEGIN`, `END` |
 
 | Sintaxe | Significa |
 |---|---|

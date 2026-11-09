@@ -1,5 +1,5 @@
 {
-  "title": "sed、tr、awk によるテキスト処理",
+  "title": "sed と awk によるテキスト処理",
   "tasks": {
     "sed-s": {
       "text": "`sed` を使って、各行の `ERROR` という単語を `{{errorWord}}` に置き換えた `~/{{documents}}/server.log` を表示してください。",
@@ -8,14 +8,6 @@
     "sed-d": {
       "text": "`sed` を使って、`INFO` を含む行をすべて **除いた** server.log を表示してください。",
       "hint": "アドレス `/INFO/` で行を選び、`d` コマンドで削除します: `sed '/INFO/d' file`"
-    },
-    "tr-upper": {
-      "text": "`/etc/passwd` のすべてのユーザー名を **大文字** で表示してください。`cut` で 1 番目のフィールドを取り出し、`tr` に渡します。",
-      "hint": "`cut -d: -f1 /etc/passwd` でユーザー名が得られます。`| tr a-z A-Z` を付け加えましょう。"
-    },
-    "tr-path": {
-      "text": "`tr` を使って `:` を改行に置き換え、`$PATH` のディレクトリを **1 行ずつ** 表示してください。",
-      "hint": "改行は `\\n` と書きます: `echo $PATH | tr ':' '\\n'`"
     },
     "awk-print": {
       "text": "`awk` を使って、`/etc/passwd` からユーザー名とシェル（1 番目と 7 番目のフィールド）を表示してください。",

@@ -1,83 +1,18 @@
-# Procesar texto con sed, tr y awk
+# Procesar texto con sed y awk
 
-Con `grep` puedes *encontrar* líneas. Pero a menudo quieres hacer algo más:
-sustituir una palabra, eliminar ciertas líneas, extraer una columna o sumar
-unos números. Para eso se usan tres herramientas clásicas:
+Ya conoces algunas herramientas para texto: `grep` encuentra líneas, `cut`
+extrae un campo y `tr` cambia caracteres sueltos. Este capítulo trata de dos
+herramientas más potentes, para cuando quieres sustituir palabras, eliminar
+líneas o sumar números:
 
 | Herramienta | Trabaja con | Uso típico |
 |---|---|---|
-| `tr` | **caracteres** sueltos | pasar a mayúsculas, convertir `:` en saltos de línea |
 | `sed` | **líneas** | sustituir una palabra, eliminar líneas |
 | `awk` | **columnas** (campos) | extraer columnas, sumar, contar |
 
-Las tres son *filtros*: leen texto, hacen algo con él y escriben el resultado
+Las dos son *filtros*: leen texto, hacen algo con él y escriben el resultado
 en stdout. Por eso encajan perfectamente en las pipes. Y el archivo original
 **no** se modifica (con una excepción, `sed -i`, que veremos más adelante).
-
-En `{{documents}}` hay un tercer archivo de práctica, un archivo CSV con las
-puntuaciones de los alumnos:
-
-```sh
-cat ~/{{documents}}/{{grades}}
-```
-
-CSV significa *comma-separated values* (valores separados por comas): las
-columnas están separadas por comas y la primera línea es una cabecera.
-
-## Traducir caracteres – `tr`
-
-`tr` (*translate*) sustituye cada carácter del primer conjunto por el carácter
-que ocupa la misma posición en el segundo. `a-z` significa todas las letras de
-la a a la z:
-
-```sh
-echo "hello from café" | tr a-z A-Z
-```
-
-```text
-HELLO FROM CAFé
-```
-
-¿Te has fijado en la é? `tr` trabaja con *bytes* individuales, y letras como
-la á, la é o la ñ no forman parte de `a-z`. Conviene saberlo:
-GNU `awk` (más abajo) lo maneja mejor.
-
-`tr` lee **solo** de stdin, nunca de archivos. Si quieres usar un archivo,
-pásaselo con `<` o con una pipe:
-
-```sh
-tr a-z A-Z < ~/{{documents}}/{{fruits}}
-```
-
-Un truco clásico es convertir los dos puntos en saltos de línea (`\n`), de
-modo que cada directorio de `PATH` quede en su propia línea:
-
-```sh
-echo $PATH | tr ':' '\n'
-```
-
-Con `-d` (*delete*) eliminas caracteres, y con `-s` (*squeeze*) reduces a uno
-solo varios caracteres idénticos seguidos:
-
-```sh
-echo "070-123 45 67" | tr -d ' -'
-echo "demasiados     espacios      seguidos" | tr -s ' '
-```
-
-```predict
-$ echo "hello world" | tr -d o
-hell wrld
----
-`-d` elimina cada `o`, esté donde esté.
-```
-
-En lugar de rangos puedes escribir *clases*, p. ej. `[:upper:]` (mayúsculas),
-`[:lower:]` (minúsculas), `[:digit:]` (dígitos) y `[:space:]` (espacios en
-blanco):
-
-```sh
-echo "Aula 101, planta 3" | tr -d '[:digit:]'
-```
 
 ## El editor de flujo – `sed`
 
@@ -224,20 +159,6 @@ Los archivos de configuración de `/etc` pertenecen a root, así que allí
 necesitas `sudo sed -i ...`. Es una forma habitual de cambiar una opción desde
 un script sin abrir un editor de texto.
 
-## Recortar campos – `cut`
-
-Cuando un archivo está formado por campos con un separador entre ellos, `cut`
-puede extraer un campo. `-d` elige el separador (*delimiter*) y `-f` qué
-campo conservar. Aquí están las asignaturas –el campo 2– del archivo CSV:
-
-```sh
-cut -d, -f2 ~/{{documents}}/{{grades}}
-```
-
-En `/etc/passwd`, los campos están separados por dos puntos y el campo 1 es el
-nombre de usuario, así que `cut -d: -f1 /etc/passwd` lista todos los usuarios.
-Como los demás filtros, `cut` encaja en una pipe, por ejemplo delante de `tr`.
-
 ## Columnas – `awk`
 
 `awk` es en realidad todo un pequeño lenguaje de programación, pero casi
@@ -285,7 +206,7 @@ campos se pegan entre sí, y entonces puedes intercalar tu propio texto:
 awk -F: '{print $1 " usa " $7}' /etc/passwd
 ```
 
-Compáralo con `cut -d: -f1` de la sección anterior. La diferencia es que awk
+Compáralo con `cut -d: -f1` del capítulo sobre leer y buscar texto. La diferencia es que awk
 puede reordenar los campos, intercalar texto y manejar varios espacios seguidos.
 
 ```predict
@@ -374,8 +295,7 @@ terminal, `awk` es por defecto **mawk**, una variante pequeña y rápida. Con
 programas sencillos como estos no notarás ninguna diferencia, pero mawk no
 convierte la á ni otras letras con tilde con `toupper()`. **GNU awk** (el paquete `gawk`)
 sí lo hace, a diferencia de `tr`. Las distribuciones se diferencian en qué awk
-usan y en cómo se instala el software: eso lo verás en el capítulo sobre
-distribuciones.
+usan y en cómo se instala el software: eso ya lo viste en la parte sobre distribuciones.
 
 El simulador solo conoce una parte del lenguaje awk: lo que se explica aquí y
 un poco más (`if`, bucles y arrays). Consulta `man awk`.

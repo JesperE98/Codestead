@@ -61,6 +61,14 @@ public static partial class ChaptersLib
                 },
                 new()
                 {
+                    Id = "tr-upper",
+                    Text = "Skriv ut alla användarnamn i `/etc/passwd` med **versaler**: plocka ut fält 1 med `cut` och skicka vidare till `tr`.",
+                    Hint = "`cut -d: -f1 /etc/passwd` ger användarnamnen. Lägg till `| tr a-z A-Z`.",
+                    Solution = Cmds("cut -d: -f1 /etc/passwd | tr a-z A-Z"),
+                    Check = c => Ran(c, Re(@"\|\s*tr\b")) && OutLines(c).Contains("ROOT") && OutLines(c).Contains(W(c).User.ToUpperInvariant()),
+                },
+                new()
+                {
                     Id = "xargs",
                     Text = "Räkna raderna i varje fil i `~/{{documents}}`: hitta filerna med `find -type f` och ge dem till `wc -l` med `xargs`.",
                     Hint = "`find ~/{{documents}} -type f | xargs wc -l` – `wc` läser inte filnamn från en pipe, men `xargs` gör dem till argument.",

@@ -30,3 +30,9 @@ förväntade utskrifter (predict) och try-kommandon är kontrollerade mot simula
 | Checkpoint (quiz): with `ls /finnsinte > fel.txt` the error goes to the screen and `fel.txt` stays empty |  | ogranskad |  |
 | Checkpoint (try): `ls /etc \| wc -l` works in a fresh shell |  | ogranskad |  |
 | Checkpoint (predict): `mkdir dokument 2> /dev/null && echo created \|\| echo failed` prints `failed` (dokument exists) |  | ogranskad |  |
+| `tr` replaces each character in the first set with the character at the same position in the second; `a-z` is a range |  | ogranskad |  |
+| `tr` works on single bytes; letters such as é, å, ä, ö are not in `a-z` |  | ogranskad |  |
+| `tr` only reads stdin, never files |  | ogranskad |  |
+| `tr -d` deletes characters; `tr -s` squeezes repeated characters into one |  | ogranskad |  |
+| Character classes `[:upper:]`, `[:lower:]`, `[:digit:]`, `[:space:]` |  | ogranskad |  |
+| Checkpoint (predict): `echo "hello world" \| tr -d o` prints `hell wrld` |  | ogranskad |  |

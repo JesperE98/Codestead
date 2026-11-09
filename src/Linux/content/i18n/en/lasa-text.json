@@ -19,6 +19,10 @@
     },
     "sort": {
       "text": "Show the fruits in `~/{{documents}}/{{fruits}}` in alphabetical order."
+    },
+    "cut": {
+      "text": "Show only the subjects – field 2 – in `~/{{documents}}/{{grades}}` with `cut`.",
+      "hint": "The fields are separated by commas: `-d,` chooses the separator and `-f2` the field."
     }
   }
 }

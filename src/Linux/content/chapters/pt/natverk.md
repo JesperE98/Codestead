@@ -105,7 +105,7 @@ até o gateway.
 ```
 
 ```predict
-$ ip route | grep default | awk '{print $3}'
+$ ip route | grep default | cut -d' ' -f3
 192.168.1.1
 ---
 A terceira palavra na linha `default` é o endereço do gateway.

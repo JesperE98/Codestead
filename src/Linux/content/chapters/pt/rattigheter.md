@@ -79,7 +79,7 @@ chmod go-w arquivo.txt
 $ touch plano.txt
 $ chmod 600 plano.txt
 $ chmod g+r plano.txt
-$ ls -l plano.txt | awk '{print $1}'
+$ ls -l plano.txt | cut -d' ' -f1
 -rw-r-----
 ```
 

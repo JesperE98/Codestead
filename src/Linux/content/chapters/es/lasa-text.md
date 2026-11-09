@@ -117,6 +117,29 @@ sort {{documents}}/{{fruits}}
 - [ ] `sort` elimina los duplicados y `uniq` los vuelve a poner
 ```
 
+## Recortar campos – `cut`
+
+En `{{documents}}` hay un tercer archivo de práctica, un archivo CSV con las
+puntuaciones de los alumnos:
+
+```sh
+cat ~/{{documents}}/{{grades}}
+```
+
+CSV significa *comma-separated values* (valores separados por comas): las
+columnas están separadas por comas y la primera línea es una cabecera.
+
+Cuando un archivo está formado por campos con un separador entre ellos, `cut`
+puede extraer un campo. `-d` elige el separador (*delimiter*) y `-f` qué
+campo conservar. Aquí están las asignaturas –el campo 2– del archivo CSV:
+
+```sh
+cut -d, -f2 ~/{{documents}}/{{grades}}
+```
+
+En `/etc/passwd`, los campos están separados por dos puntos y el campo 1 es el
+nombre de usuario, así que `cut -d: -f1 /etc/passwd` lista todos los usuarios.
+
 ## El manual – `man`
 
 ¿Has olvidado qué hace una opción? Cada comando tiene su página del manual:

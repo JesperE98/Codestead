@@ -21,6 +21,14 @@ public static partial class ChaptersLib
                 },
                 new()
                 {
+                    Id = "tr-path",
+                    Text = "Visa katalogerna i `$PATH` på **varsin rad** genom att byta `:` mot radbrytning med `tr`.",
+                    Hint = "Radbrytning skrivs `\\n`: `echo $PATH | tr ':' '\\n'`",
+                    Solution = Cmds("echo $PATH | tr ':' '\\n'"),
+                    Check = c => Ran(c, Re(@"\btr\b")) && OutLines(c).Count >= 2 && OutLines(c).Contains("/usr/bin"),
+                },
+                new()
+                {
                     Id = "export",
                     Text = "Skapa miljövariabeln `{{favVar}}` med värdet `linux`.",
                     Hint = "Inga mellanslag runt likhetstecknet: `export NAMN=värde`.",

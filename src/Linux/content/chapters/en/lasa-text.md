@@ -116,6 +116,29 @@ Why is `uniq` almost always used after `sort`?
 - [ ] `sort` removes duplicates and `uniq` puts them back
 ```
 
+## Cutting out fields – `cut`
+
+In `{{documents}}` there's a third practice file, `{{grades}}`, a CSV file with
+the students' scores:
+
+```sh
+cat ~/{{documents}}/{{grades}}
+```
+
+CSV stands for *comma-separated values* – the columns are separated by
+commas, and the first line is a header.
+
+When a file is made up of fields with a separator between them, `cut` can
+pick out one field. `-d` chooses the separator (*delimiter*) and `-f` which
+field to keep. Here are the subjects – field 2 – from the CSV file:
+
+```sh
+cut -d, -f2 ~/{{documents}}/{{grades}}
+```
+
+In `/etc/passwd`, the fields are separated by colons and field 1 is the user
+name, so `cut -d: -f1 /etc/passwd` lists all the users.
+
 ## The manual – `man`
 
 Forgotten what an option does? Every command has a manual page:

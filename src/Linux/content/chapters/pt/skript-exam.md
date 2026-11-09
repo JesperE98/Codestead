@@ -1,6 +1,20 @@
 # Prova: Scripts e automação
 
-Responda às perguntas sobre scripts de shell – você precisa de 80 % para ser aprovado.
+Responda às perguntas sobre processamento de texto e scripts de shell – você precisa de 80 % para ser aprovado.
+
+```predict
+$ echo "x y z" | awk '{print NF}'
+3
+---
+`NF` é o número de campos na linha. Os campos são separados por espaços.
+```
+
+```quiz
+Por que um programa awk como `'{print $3}'` deve ser escrito entre aspas **simples**?
+- [ ] O awk não consegue ler aspas duplas
+- [x] Senão o shell acha que `$3` é uma variável do shell e a substitui antes de o awk iniciar
+- [ ] Aspas simples fazem o awk rodar mais rápido
+```
 
 ```quiz
 O que a primeira linha `#!/bin/bash` de um script faz?

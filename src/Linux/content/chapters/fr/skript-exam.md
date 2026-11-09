@@ -1,6 +1,21 @@
 # Examen : Scripts et automatisation
 
-Répondez aux questions sur les scripts shell – il faut 80 % pour réussir.
+Répondez aux questions sur le traitement de texte et les scripts shell – il faut 80 % pour réussir.
+
+```predict
+$ echo "x y z" | awk '{print NF}'
+3
+---
+`NF` est le nombre de champs sur la ligne. Les champs sont séparés par des
+espaces.
+```
+
+```quiz
+Pourquoi un programme awk comme `'{print $3}'` doit-il être écrit entre guillemets **simples** ?
+- [ ] awk ne sait pas lire les guillemets doubles
+- [x] Sinon le shell croit que `$3` est une variable du shell et la remplace avant le démarrage d'awk
+- [ ] Les guillemets simples rendent awk plus rapide
+```
 
 ```quiz
 Que fait la première ligne `#!/bin/bash` d'un script ?

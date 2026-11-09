@@ -27,3 +27,4 @@ Källtext: `src/Linux/content/chapters/en/miljo.md` (inklusive kontrollfrågorna
 | Variabler och alias försvinner när terminalen stängs | | ogranskad | |
 | bash läser `~/.bashrc` varje gång en ny terminal öppnas | | ogranskad | |
 | `source ~/.bashrc` läser in filen direkt | | ogranskad | |
+| `echo $PATH \| tr ':' '\n'` shows each directory in `PATH` on a line of its own | | ogranskad | |

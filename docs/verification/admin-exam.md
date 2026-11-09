@@ -14,7 +14,7 @@ Status: **ogranskad**
 | Att ändra en tjänst kräver root (*Interactive authentication required*) |  | ogranskad |  |
 | UUID i fstab eftersom enhetsnamn kan ändras |  | ogranskad |  |
 | `du` hittar vad som tar plats, `df` visar hur fullt filsystemet är |  | ogranskad |  |
-| `df -h ~ \| awk 'NR > 1 {print $6}'` ger `/` i simulatorn |  | ogranskad |  |
+| `df -h ~ \| tail -n 1 \| tr -s ' ' \| cut -d' ' -f6` ger `/` i simulatorn |  | ogranskad |  |
 | Testa fstab-ändringar med `sudo mount -a` före omstart |  | ogranskad |  |
 | Kontroller före `mkfs` |  | ogranskad |  |
 | Hasharna ligger i `/etc/shadow` eftersom `/etc/passwd` måste vara läsbar för alla |  | ogranskad |  |

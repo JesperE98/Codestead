@@ -1,5 +1,5 @@
 {
-  "title": "Textverarbeitung mit sed, tr und awk",
+  "title": "Textverarbeitung mit sed und awk",
   "tasks": {
     "sed-s": {
       "text": "Zeige `~/{{documents}}/server.log` mit `sed` so an, dass in jeder Zeile das Wort `ERROR` durch `{{errorWord}}` ersetzt ist.",
@@ -8,14 +8,6 @@
     "sed-d": {
       "text": "Zeige server.log mit `sed` an, aber **ohne** alle Zeilen, die `INFO` enthalten.",
       "hint": "Die Adresse `/INFO/` wählt die Zeilen aus und der Befehl `d` löscht sie: `sed '/INFO/d' datei`"
-    },
-    "tr-upper": {
-      "text": "Gib alle Benutzernamen aus `/etc/passwd` in **Großbuchstaben** aus: Zieh Feld 1 mit `cut` heraus und reich es an `tr` weiter.",
-      "hint": "`cut -d: -f1 /etc/passwd` liefert dir die Benutzernamen. Häng `| tr a-z A-Z` an."
-    },
-    "tr-path": {
-      "text": "Zeige die Verzeichnisse in `$PATH` in **eigenen Zeilen** an, indem du mit `tr` jeden `:` durch einen Zeilenumbruch ersetzt.",
-      "hint": "Ein Zeilenumbruch wird `\\n` geschrieben: `echo $PATH | tr ':' '\\n'`"
     },
     "awk-print": {
       "text": "Gib mit `awk` Benutzername und Shell (Felder 1 und 7) aus `/etc/passwd` aus.",

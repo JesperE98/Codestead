@@ -65,6 +65,13 @@ står i variabeln `PATH`, i tur och ordning:
 echo $PATH
 ```
 
+Ett klassiskt knep är att byta kolon mot radbrytning (`\n`), så att varje
+katalog i `PATH` hamnar på en egen rad:
+
+```sh
+echo $PATH | tr ':' '\n'
+```
+
 `which` visar var ett program hittades. Vissa kommandon, som `cd`, är inga
 filer utan *inbyggda* i skalet – `type` berättar vad ett namn är:
 

@@ -111,17 +111,3 @@ b
 ---
 `-d,` hace que la coma sea el separador, y `-f2` se queda con el campo 2.
 ```
-
-```predict
-$ echo "x y z" | awk '{print NF}'
-3
----
-`NF` es el número de campos de la línea. Los campos se separan por espacios.
-```
-
-```quiz
-¿Por qué un programa de awk como `'{print $3}'` debe escribirse entre comillas **simples**?
-- [ ] awk no sabe leer comillas dobles
-- [x] Si no, la shell cree que `$3` es una variable de la shell y la sustituye antes de que arranque awk
-- [ ] Las comillas simples hacen que awk vaya más rápido
-```

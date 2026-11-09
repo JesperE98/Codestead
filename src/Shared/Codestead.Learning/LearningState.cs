@@ -27,4 +27,52 @@ public sealed class LearningState
     public OrderedDictionary<string, int> Exams { get; set; } = new(StringComparer.Ordinal);
     /// <summary>XP, achievements, streak and counters (see GameRules).</summary>
     public GameState Game { get; set; } = new();
+
+    /// <summary>
+    /// Moves saved task progress to new keys after tasks moved to another chapter (old key → new key). A key counted
+    /// per variant group ("chapter/task@family") follows its task. Returns whether anything changed.
+    /// </summary>
+    public bool MoveTasks(IReadOnlyDictionary<string, string> moved)
+    {
+        bool changed = false;
+        foreach (var (from, to) in moved)
+        {
+            changed |= Rename(Progress, from, to);
+            changed |= Rename(Attempts, from, to);
+            changed |= Rename(HintSeen, from, to);
+            changed |= Rename(Game.Unaided, from, to);
+            changed |= Rename(Game.SolutionSeen, from, to);
+        }
+        return changed;
+    }
+
+    private static string? NewKey(string key, string from, string to) =>
+        key == from ? to : key.StartsWith(from + "@", StringComparison.Ordinal) ? to + key[from.Length..] : null;
+
+    private static bool Rename<T>(OrderedDictionary<string, T> dict, string from, string to)
+    {
+        bool changed = false;
+        foreach (var key in dict.Keys.ToList())
+        {
+            if (NewKey(key, from, to) is not { } target) continue;
+            var value = dict[key];
+            dict.Remove(key);
+            dict.TryAdd(target, value);
+            changed = true;
+        }
+        return changed;
+    }
+
+    private static bool Rename(List<string> list, string from, string to)
+    {
+        bool changed = false;
+        for (int i = list.Count - 1; i >= 0; i--)
+        {
+            if (NewKey(list[i], from, to) is not { } target) continue;
+            list.RemoveAt(i);
+            if (!list.Contains(target)) list.Add(target);
+            changed = true;
+        }
+        return changed;
+    }
 }

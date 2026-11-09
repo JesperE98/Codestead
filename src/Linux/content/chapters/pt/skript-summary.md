@@ -2,6 +2,10 @@
 
 Nesta parte você transformou comandos em programas seus.
 
+## Processamento de texto com sed e awk
+
+O `sed` edita linhas: `s/velho/novo/` substitui (`g` para todas as ocorrências), endereços escolhem linhas, `d` apaga e `-n` com `p` imprime só o que você pedir. O `sed -i` altera o próprio arquivo. O `awk` trabalha com colunas: `-F` define o separador, `$1` … `$NF` são os campos, um padrão antes das `{ }` escolhe linhas, e o `END { }` é executado depois da última linha.
+
 ## Scripts de shell
 
 Um script é um arquivo de texto com comandos que começa com o shebang
@@ -38,6 +42,8 @@ para um arquivo. O `journalctl -u cron` mostra cada execução, e o
 
 | Sintaxe | O que faz |
 |---|---|
+| `sed`: `s/…/…/g`, `d`, `p`, `q`, `-n`, `-i`, `-E`, `-e` | Edita um fluxo de linhas |
+| `awk`: `-F` separador, `$1`, `$NF`, `NF`, `NR`, `BEGIN`, `END` | Trabalha com colunas |
 | `#!/bin/bash` | O shebang: qual programa executa o script |
 | `cat > arquivo << '{{heredocEnd}}'` | Escreve linhas em um arquivo até a linha `{{heredocEnd}}` |
 | `name=value` · `"$name"` · `"${name}"` | Cria · usa uma variável |
