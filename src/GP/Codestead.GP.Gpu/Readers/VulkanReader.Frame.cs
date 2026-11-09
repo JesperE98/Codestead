@@ -112,6 +112,7 @@ public sealed partial class VulkanReader
         bool frontCcw = !front.Contains("_CLOCKWISE", StringComparison.Ordinal) || front.Contains("COUNTER_CLOCKWISE", StringComparison.Ordinal);
         var topology = GlReader.TopologyOf(src.LastFieldValue("topology") ?? "TRIANGLE_LIST");
         bool depthTest = Regex.IsMatch(src.Code, @"depthTestEnable\s*=\s*VK_TRUE");
+        var pipeState = PipelineState.Vulkan(src.LastFieldValue, f => src.LastFieldValue(f) is { } v ? src.Int(v) : null);
 
         // Run the frame: the uniform buffer update and the recorded commands (each draw with its push constants).
         var blocks = vs.Globals.Concat(fs.Globals).Where(g => g.Block is not null).ToList();
@@ -154,6 +155,10 @@ public sealed partial class VulkanReader
                     FrontCcw = pl?.FrontCcw ?? frontCcw,
                     Wireframe = pl?.Wireframe ?? wireframe,
                     DepthTest = pl?.DepthTest ?? depthTest,
+                    DepthFunc = (pl?.State ?? pipeState).DepthFunc,
+                    DepthWrite = (pl?.State ?? pipeState).DepthWrite,
+                    Stencil = (pl?.State ?? pipeState).Stencil is { } st ? st with { Ref = d.StencilRef ?? st.Ref } : null,
+                    Blend = (pl?.State ?? pipeState).Blend,
                     Textures = pl is null ? textures : Textures(dvs, dfs) ?? textures,
                 });
             }
@@ -176,6 +181,10 @@ public sealed partial class VulkanReader
             FrontCcw = frontCcw,
             Wireframe = wireframe,
             DepthTest = depthTest,
+            DepthFunc = pipeState.DepthFunc,
+            DepthWrite = pipeState.DepthWrite,
+            Stencil = pipeState.Stencil,
+            Blend = pipeState.Blend,
             Textures = textures,
         });
         foreach (var d in scene.Draws) d.Uniforms(1.0);

@@ -55,6 +55,8 @@ public static class BuildChecker
         if (api == Apis.D3D12)
         {
             var methods = ApiSymbols.For("d3d12-methods");
+            // A program that loads models with Assimp (aiMesh, aiMaterial …) calls its methods after -> too.
+            if (src.Code.Contains("assimp/", StringComparison.Ordinal)) methods = [.. methods, .. ApiSymbols.For("assimp-methods")];
             var reported = new HashSet<string>(StringComparer.Ordinal);
             foreach (Match m in ArrowCall.Matches(src.Code))
             {

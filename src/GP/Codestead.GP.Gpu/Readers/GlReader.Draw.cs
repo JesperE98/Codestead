@@ -99,7 +99,8 @@ public sealed partial class GlReader
     {
         var uniforms = program.Uniforms.ToList();
         var blocks = BlockUniforms(program);
-        var (samplers, cubes) = Samplers(program);
+        // A model brings its own textures (its materials): the texture units are not read then.
+        var (samplers, cubes) = textures is null ? Samplers(program) : (null, null);
         return new DrawCall
         {
             VertexShader = program.Vertex!,

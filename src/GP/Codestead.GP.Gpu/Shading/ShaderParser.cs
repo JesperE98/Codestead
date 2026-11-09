@@ -200,6 +200,12 @@ public sealed partial class ShaderParser
                 else if (t.Is(">")) depth--;
             } while (depth > 0 && Peek.Kind != ShaderTokenKind.End);
         }
+        // A nested C++ type: std::map<float, glm::vec3>::reverse_iterator.
+        while (Peek.Is("::") && PeekAt(1).Kind == ShaderTokenKind.Identifier)
+        {
+            Next();
+            type += "::" + Next().Text;
+        }
         return type;
     }
 

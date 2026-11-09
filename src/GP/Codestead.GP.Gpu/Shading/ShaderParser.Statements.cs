@@ -116,9 +116,12 @@ public sealed partial class ShaderParser
                 else if (PeekAt(j).Is(">")) depth--;
                 j++;
             } while (depth > 0 && PeekAt(j).Kind != ShaderTokenKind.End);
+            while (PeekAt(j).Is("::") && PeekAt(j + 1).Kind == ShaderTokenKind.Identifier) j += 2;
             return PeekAt(j).Kind == ShaderTokenKind.Identifier;
         }
-        return PeekAt(i + 1).Kind == ShaderTokenKind.Identifier;
+        int k = i + 1;
+        while (PeekAt(k).Is("::") && PeekAt(k + 1).Kind == ShaderTokenKind.Identifier) k += 2;
+        return PeekAt(k).Kind == ShaderTokenKind.Identifier;
     }
 
     /// <summary>A declaration, an assignment or an expression – without the ';'.</summary>

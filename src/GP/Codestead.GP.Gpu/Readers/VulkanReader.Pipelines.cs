@@ -40,7 +40,8 @@ public sealed partial class VulkanReader
                     !front.Contains("_CLOCKWISE", StringComparison.Ordinal) || front.Contains("COUNTER_CLOCKWISE", StringComparison.Ordinal),
                     Field("polygonMode", "FILL").Contains("LINE", StringComparison.Ordinal),
                     Regex.IsMatch(Field("depthTestEnable", "VK_FALSE"), "TRUE"),
-                    GlReader.TopologyOf(Field("topology", "TRIANGLE_LIST")));
+                    GlReader.TopologyOf(Field("topology", "TRIANGLE_LIST")),
+                    PipelineState.Vulkan(f => Field(f, null!), f => src.Int(Field(f, "")) is int v ? v : null));
             }
         }
         return result;

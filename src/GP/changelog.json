@@ -5,37 +5,37 @@
     "changes": {
       "en": [
         "The first version of **Codestead GP**: learn graphics programming with **OpenGL**, **Vulkan** or **DirectX 12** – choose the API at the top, and every chapter, task and code example follows it.",
-        "The course follows learnopengl.com section by section. This version has the introduction and Getting started up to Shaders: the API, creating a window, Hello Window, Hello Triangle and Shaders.",
+        "The course follows learnopengl.com section by section. This version has the introduction, all of Getting started (from creating a window to Textures, Transformations, Coordinate Systems and Camera), Lighting (Colors to Multiple lights) and Model Loading (Assimp, Mesh, Model – with a planet model drawn for the course), each part ending with a review and an exam.",
         "Write the code in the built-in editor and press **Build & run**: a simulated GPU compiles it, runs your shaders and shows the window your program would open."
       ],
       "sv": [
         "Första versionen av **Codestead GP**: lär dig grafikprogrammering med **OpenGL**, **Vulkan** eller **DirectX 12** – välj API högst upp, så följer varje kapitel, uppgift och kodexempel med.",
-        "Kursen följer learnopengl.com avsnitt för avsnitt. Den här versionen har introduktionen och Getting started fram till Shaders: API:t, skapa ett fönster, Hello Window, Hello Triangle och Shaders.",
+        "Kursen följer learnopengl.com avsnitt för avsnitt. Den här versionen har introduktionen, hela Getting started (från att skapa ett fönster till Textures, Transformations, Coordinate Systems och Camera), Ljussättning (Färger till Flera ljuskällor) och Modellinläsning (Assimp, Mesh, Model – med en planetmodell ritad för kursen), där varje del avslutas med en sammanfattning och ett prov.",
         "Skriv koden i den inbyggda editorn och tryck **Bygg & kör**: en simulerad GPU kompilerar den, kör dina shaders och visar fönstret som ditt program skulle öppna."
       ],
       "es": [
         "La primera versión de **Codestead GP**: aprende programación gráfica con **OpenGL**, **Vulkan** o **DirectX 12**; elige la API arriba y cada capítulo, tarea y ejemplo de código la sigue.",
-        "El curso sigue learnopengl.com sección por sección. Esta versión incluye la introducción y Getting started hasta Shaders: la API, crear una ventana, Hello Window, Hello Triangle y Shaders.",
+        "El curso sigue learnopengl.com sección por sección. Esta versión incluye la introducción, todo Getting started (desde crear una ventana hasta Texturas, Transformaciones, Sistemas de coordenadas y Cámara), Iluminación (de Colores a Múltiples luces) y Carga de modelos (Assimp, Mesh, Model, con un modelo de planeta creado para el curso); cada parte termina con un repaso y un examen.",
         "Escribe el código en el editor integrado y pulsa **Compilar y ejecutar**: una GPU simulada lo compila, ejecuta tus shaders y muestra la ventana que abriría tu programa."
       ],
       "de": [
         "Die erste Version von **Codestead GP**: Lerne Grafikprogrammierung mit **OpenGL**, **Vulkan** oder **DirectX 12** – wähle die API oben, und jedes Kapitel, jede Aufgabe und jedes Codebeispiel folgt ihr.",
-        "Der Kurs folgt learnopengl.com Abschnitt für Abschnitt. Diese Version enthält die Einführung und Getting started bis Shaders: die API, ein Fenster erstellen, Hello Window, Hello Triangle und Shaders.",
+        "Der Kurs folgt learnopengl.com Abschnitt für Abschnitt. Diese Version enthält die Einführung, ganz Getting started (vom Fenster bis zu Texturen, Transformationen, Koordinatensystemen und Kamera), Beleuchtung (von Farben bis Mehrere Lichter) und Modelle laden (Assimp, Mesh, Model – mit einem eigens gezeichneten Planetenmodell); jeder Teil endet mit einer Zusammenfassung und einer Prüfung.",
         "Schreibe den Code im eingebauten Editor und drücke **Erstellen & ausführen**: Eine simulierte GPU kompiliert ihn, führt deine Shader aus und zeigt das Fenster, das dein Programm öffnen würde."
       ],
       "fr": [
         "La première version de **Codestead GP** : apprenez la programmation graphique avec **OpenGL**, **Vulkan** ou **DirectX 12** – choisissez l'API en haut, et chaque chapitre, tâche et exemple de code la suit.",
-        "Le cours suit learnopengl.com section par section. Cette version contient l'introduction et Getting started jusqu'à Shaders : l'API, créer une fenêtre, Hello Window, Hello Triangle et Shaders.",
+        "Le cours suit learnopengl.com section par section. Cette version contient l'introduction, tout Getting started (de la création d'une fenêtre aux Textures, Transformations, Systèmes de coordonnées et Caméra), Éclairage (des Couleurs aux Lumières multiples) et Chargement de modèles (Assimp, Mesh, Model – avec un modèle de planète dessiné pour le cours) ; chaque partie se termine par une révision et un examen.",
         "Écrivez le code dans l'éditeur intégré et appuyez sur **Compiler et exécuter** : un GPU simulé le compile, exécute vos shaders et affiche la fenêtre que votre programme ouvrirait."
       ],
       "zh": [
         "**Codestead GP** 首个版本：使用 **OpenGL**、**Vulkan** 或 **DirectX 12** 学习图形编程——在顶部选择 API，每一章、每个任务和代码示例都会随之切换。",
-        "课程逐节对应 learnopengl.com。此版本包含引言以及“入门”到“着色器”为止：API、创建窗口、Hello Window、Hello Triangle 和着色器。",
+        "课程逐节对应 learnopengl.com。此版本包含引言、完整的“入门”（从创建窗口到纹理、变换、坐标系统和摄像机）、“光照”（从颜色到多光源）以及“模型加载”（Assimp、网格、模型——附带为本课程绘制的行星模型），每个部分都以复习和考试结束。",
         "在内置编辑器中编写代码并点击 **构建并运行**：模拟 GPU 会编译代码、运行你的着色器，并显示程序将打开的窗口。"
       ],
       "ja": [
         "**Codestead GP** の最初のバージョン：**OpenGL**、**Vulkan**、**DirectX 12** でグラフィックスプログラミングを学べます。上部で API を選ぶと、すべての章・課題・コード例がそれに合わせて変わります。",
-        "コースは learnopengl.com を節ごとに追います。このバージョンには導入と「はじめに」のシェーダーまで（API、ウィンドウの作成、Hello Window、Hello Triangle、シェーダー）が含まれます。",
+        "コースは learnopengl.com を節ごとに追います。このバージョンには導入、「はじめに」全体（ウィンドウの作成からテクスチャ、変換、座標系、カメラまで）、「ライティング」（色から複数のライトまで）、「モデルの読み込み」（Assimp、メッシュ、モデル — コースのために描いた惑星モデル付き）が含まれ、各パートは復習と試験で締めくくられます。",
         "内蔵エディタでコードを書き **ビルドして実行** を押すと、シミュレートされた GPU がコンパイルし、シェーダーを実行して、プログラムが開くウィンドウを表示します。"
       ]
     }

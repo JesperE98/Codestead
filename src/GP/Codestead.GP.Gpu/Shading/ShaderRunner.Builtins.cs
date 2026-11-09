@@ -202,8 +202,10 @@ public sealed partial class ShaderRunner
             case "size" or "length" or "Length" or "count":
             {
                 var target = Eval(c.Args[0]);
-                return ShaderValue.Scalar(target.Items?.Length ?? target.V?.Length ?? 0);
+                return ShaderValue.Scalar(target.Map?.Count ?? target.Items?.Length ?? target.V?.Length ?? 0);
             }
+            case "begin" or "end" or "rbegin" or "rend" when Eval(c.Args[0]).Map is { } map:
+                return new ShaderValue { Iterator = new MapIterator(map, method.EndsWith("end", StringComparison.Ordinal) && !method.EndsWith("begin", StringComparison.Ordinal) ? map.Count : 0, method.StartsWith('r')) };
             case "data" or "c_str":
                 return Eval(c.Args[0]);
             default:

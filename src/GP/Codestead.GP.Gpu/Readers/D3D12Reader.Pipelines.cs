@@ -8,6 +8,20 @@ namespace Codestead.GP.Gpu.Readers;
 // vertex and pixel shaders compiled last before it and the rasterizer / depth fields set before it.
 public sealed partial class D3D12Reader
 {
+    /// <summary>
+    /// A depth/stencil or blend field set before an offset – unless the whole state was reset to its defaults after it
+    /// (psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT), psoDesc.BlendState = CD3DX12_BLEND_DESC(…)).
+    /// </summary>
+    private string? StateField(string field, int before)
+    {
+        var assign = src.FieldAssignments(field).Where(a => a.Offset < before).LastOrDefault();
+        if (assign.Value is null) return null;
+        var group = field is "BlendEnable" or "SrcBlend" or "DestBlend" or "BlendOp" or "SrcBlendAlpha" or "DestBlendAlpha" or "BlendOpAlpha" or "RenderTargetWriteMask"
+            ? "BlendState" : "DepthStencilState";
+        var reset = src.FieldAssignments(group).Where(a => a.Offset < before).LastOrDefault();
+        return reset.Value is not null && reset.Offset > assign.Offset ? null : assign.Value;
+    }
+
     private Dictionary<string, PipelineInfo> Pipelines()
     {
         var result = new Dictionary<string, PipelineInfo>(StringComparer.Ordinal);
@@ -41,7 +55,8 @@ public sealed partial class D3D12Reader
                 (src.Int(Field("FrontCounterClockwise", "FALSE")) ?? 0) != 0,
                 Field("FillMode", "SOLID").Contains("WIREFRAME", StringComparison.Ordinal),
                 DepthEnabled(create.Offset),
-                Topology.Triangles);
+                Topology.Triangles,
+                PipelineState.D3D12(f => StateField(f, create.Offset), f => StateField(f, create.Offset) is { } v ? src.Int(v) : null));
         }
         return result;
     }

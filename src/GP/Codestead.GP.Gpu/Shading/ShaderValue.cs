@@ -14,6 +14,10 @@ public sealed class ShaderValue
     public ShaderValue[]? Items { get; init; }
     public Dictionary<string, ShaderValue>? Fields { get; init; }
     public string? Text { get; init; }
+    /// <summary>A C++ std::map with number keys (learnopengl sorts its windows by distance with one).</summary>
+    public SortedDictionary<double, ShaderValue>? Map { get; init; }
+    /// <summary>An iterator into a std::map: begin()/rbegin() …, ++it, it->first / it->second.</summary>
+    public MapIterator? Iterator { get; init; }
 
     public static ShaderValue Scalar(double x) => new() { V = [x] };
 
@@ -54,6 +58,8 @@ public sealed class ShaderValue
         Items = Items?.Select(i => i.Clone()).ToArray(),
         Fields = Fields?.ToDictionary(kv => kv.Key, kv => kv.Value.Clone()),
         Text = Text,
+        Map = Map is null ? null : new SortedDictionary<double, ShaderValue>(Map),
+        Iterator = Iterator,
     };
 
     public override string ToString() =>

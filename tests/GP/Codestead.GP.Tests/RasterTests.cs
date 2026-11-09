@@ -268,4 +268,30 @@ public class RasterTests
         var frame = Render(Draw(Quad(-1, -1, 1, 1), fs, init: o => o.Cubes = (n, x, y, z) => n == "skybox" ? cube.Sample(x, y, z) : null));
         AssertColor([1, 0, 1], frame.At(50, 50));
     }
+
+    [Fact(DisplayName = "C++: std::map sorterar fönstren och reverse_iterator går bakifrån")]
+    public void MapReverseIterator()
+    {
+        var runner = new ShaderRunner(new ShaderProgram()) { Lenient = true };
+        runner.RunStatements(ShaderParser.ParseStatementsLenient("""
+            {
+                std::vector<glm::vec3> windows = { glm::vec3(0.0f, 0.0f, 0.7f), glm::vec3(0.0f, 0.0f, -2.3f), glm::vec3(1.5f, 0.0f, 0.51f) };
+                glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+                std::map<float, glm::vec3> sorted;
+                for (unsigned int i = 0; i < windows.size(); i++)
+                {
+                    float distance = glm::length(cameraPos - windows[i]);
+                    sorted[distance] = windows[i];
+                }
+                float order = 0.0f;
+                for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+                {
+                    order = order * 10.0f + it->second.z;
+                }
+                result = order;
+            }
+            """));
+        // Farthest first: z = -2.3, then 0.51, then 0.7.
+        Assert.Equal(((-2.3 * 10) + 0.51) * 10 + 0.7, runner.Globals["result"].X, 6);
+    }
 }

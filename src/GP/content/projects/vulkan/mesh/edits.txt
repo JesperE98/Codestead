@@ -1,0 +1,224 @@
+=== task: vertex
+--- file: main.cpp
+--- find:
+// One vertex of a mesh. For now it only has a position.
+struct Vertex {
+    // TODO: the vertex's data: its position, normal, texture coordinates and the index of its material
+    glm::vec3 pos;
+--- replace:
+// One vertex of a mesh: everything a vertex of a model has.
+struct Vertex {
+    glm::vec3 pos;
+    glm::vec3 normal;
+    glm::vec2 texCoord;
+    uint32_t materialIndex; // which of the model's materials the vertex's triangle has (0, 1, ...)
+--- file: main.cpp
+--- find:
+    static std::array<VkVertexInputAttributeDescription, 1> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 1> attributeDescriptions{};
+--- replace:
+    static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};
+--- file: main.cpp
+--- find:
+        // TODO: the attributes of the normal (location 1), the texture coordinates (location 2) and the material index (location 3)
+--- replace:
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, normal);
+
+        attributeDescriptions[2].binding = 0;
+        attributeDescriptions[2].location = 2;
+        attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+
+        // an integer: one 32-bit unsigned int (a uint in the shader)
+        attributeDescriptions[3].binding = 0;
+        attributeDescriptions[3].location = 3;
+        attributeDescriptions[3].format = VK_FORMAT_R32_UINT;
+        attributeDescriptions[3].offset = offsetof(Vertex, materialIndex);
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/model_loading.vert.spv", "shaders/model_loading.frag.spv", 1, modelPipeline); // the position
+--- replace:
+        createPipeline("shaders/model_loading.vert.spv", "shaders/model_loading.frag.spv", 4, modelPipeline); // all four attributes of a Vertex
+--- file: shaders/model_loading.vert
+--- find:
+layout(location = 0) in vec3 inPosition;
+// TODO: the other attributes of a Vertex: the normal (location 1), the texture coordinates (location 2) and the material index (location 3)
+
+// TODO: an output for the texture coordinates (location 2)
+
+void main() {
+    // TODO: pass the texture coordinates on to the fragment shader
+--- replace:
+layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec3 inNormal;
+layout(location = 2) in vec2 inTexCoord;
+layout(location = 3) in uint inMaterialIndex;
+
+layout(location = 2) out vec2 fragTexCoord;
+
+void main() {
+    fragTexCoord = inTexCoord;
+--- file: shaders/model_loading.frag
+--- find:
+// TODO: the texture coordinates from the vertex shader (location 2)
+--- replace:
+layout(location = 2) in vec2 fragTexCoord;
+--- file: shaders/model_loading.frag
+--- find:
+    outColor = vec4(1.0); // white
+--- replace:
+    // no textures yet: show the texture coordinates as a colour (red = u, green = v)
+    outColor = vec4(fragTexCoord, 0.0, 1.0);
+
+=== task: vertex-equality
+--- file: main.cpp
+--- find:
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+--- replace:
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+// glm's hash functions (gtx/hash.hpp) are an "experimental" extension
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
+--- file: main.cpp
+--- find:
+    // TODO: operator== (two vertices are the same when all their members are)
+};
+
+// TODO: std::hash<Vertex>, so that a Vertex can be the key of an std::unordered_map
+--- replace:
+    bool operator==(const Vertex& other) const {
+        return pos == other.pos && normal == other.normal && texCoord == other.texCoord && materialIndex == other.materialIndex;
+    }
+};
+
+// A hash function for Vertex, so that it can be the key of an std::unordered_map: it combines the hashes of the members.
+namespace std {
+    template<> struct hash<Vertex> {
+        size_t operator()(Vertex const& vertex) const {
+            return ((((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.texCoord) << 1)) >> 1) ^ (hash<uint32_t>()(vertex.materialIndex) << 1);
+        }
+    };
+}
+
+=== task: mesh-data
+--- file: main.cpp
+--- find:
+    // TODO: the mesh's data: its vertices (std::vector<Vertex> vertices) and the indices of its triangles (std::vector<uint32_t> indices)
+--- replace:
+    // The mesh's data: its vertices and, three per triangle, the indices of the triangles' vertices.
+    // A test mesh for now, a square (the next chapter loads a model instead).
+    std::vector<Vertex> vertices = {
+        {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, 0}, // bottom left
+        {{ 1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}, 0}, // bottom right
+        {{ 1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, 0}, // top right
+        {{-1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, 0}  // top left
+    };
+    std::vector<uint32_t> indices = {
+        0, 1, 2, 2, 3, 0
+    };
+
+=== task: vertex-buffer
+--- file: main.cpp
+--- find:
+    void createVertexBuffer() {
+        // TODO: a device local vertex buffer with the vertices, filled through a staging buffer
+    }
+--- replace:
+    void createVertexBuffer() {
+        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+
+        // a staging buffer the CPU can write to
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+            memcpy(data, vertices.data(), (size_t) bufferSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        // the vertex buffer in the GPU's own (device local) memory, filled with a copy of the staging buffer
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
+
+        copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
+--- file: main.cpp
+--- find:
+    // TODO: copyBuffer(srcBuffer, dstBuffer, size): copy one buffer into another with a one-time command buffer
+--- replace:
+    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+        VkBufferCopy copyRegion{};
+        copyRegion.size = size;
+        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+        endSingleTimeCommands(commandBuffer);
+    }
+--- file: main.cpp
+--- find:
+        // TODO: destroy the vertex buffer and free its memory
+--- replace:
+        vkDestroyBuffer(device, vertexBuffer, nullptr);
+        vkFreeMemory(device, vertexBufferMemory, nullptr);
+
+=== task: index-buffer
+--- file: main.cpp
+--- find:
+    void createIndexBuffer() {
+        // TODO: a device local index buffer with the indices, filled through a staging buffer
+    }
+--- replace:
+    void createIndexBuffer() {
+        VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+            memcpy(data, indices.data(), (size_t) bufferSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
+
+        copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
+--- file: main.cpp
+--- find:
+        // TODO: destroy the index buffer and free its memory
+--- replace:
+        vkDestroyBuffer(device, indexBuffer, nullptr);
+        vkFreeMemory(device, indexBufferMemory, nullptr);
+
+=== task: draw
+--- file: main.cpp
+--- find:
+        // TODO: bind the mesh's vertex buffer and its index buffer
+--- replace:
+        VkBuffer vertexBuffers[] = {vertexBuffer};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+        // the indices are uint32_t: a model can have more than 65536 vertices
+        vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+--- file: main.cpp
+--- find:
+        // TODO: draw the mesh: all its indices with vkCmdDrawIndexed
+--- replace:
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);

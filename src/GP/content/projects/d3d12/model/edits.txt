@@ -1,0 +1,368 @@
+=== task: load-model
+--- file: main.cpp
+--- find:
+        // TODO: read the file with Assimp (importer.ReadFile), check for errors, keep the file's directory and process the root node
+--- replace:
+        // read file via ASSIMP
+        Assimp::Importer importer;
+        const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+        // check for errors
+        if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
+        {
+            throw std::runtime_error(std::string("ERROR::ASSIMP:: ") + importer.GetErrorString());
+        }
+        // retrieve the directory path of the filepath
+        directory = path.substr(0, path.find_last_of('/'));
+
+        // process ASSIMP's root node recursively
+        processNode(scene->mRootNode, scene);
+
+=== task: process-node
+--- file: main.cpp
+--- find:
+        // TODO: process each mesh located at the node (processMesh), then the node's children (processNode)
+--- replace:
+        // process each mesh located at the current node
+        for (UINT i = 0; i < node->mNumMeshes; i++)
+        {
+            // the node object only contains indices to index the actual objects in the scene.
+            // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
+            aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+            meshes.push_back(processMesh(mesh, scene));
+        }
+        // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
+        for (UINT i = 0; i < node->mNumChildren; i++)
+        {
+            processNode(node->mChildren[i], scene);
+        }
+
+=== task: process-mesh
+--- file: main.cpp
+--- find:
+        // TODO: walk through each of the mesh's vertices (position, normal, texture coordinates) and faces (indices)
+--- replace:
+        // walk through each of the mesh's vertices
+        for (UINT i = 0; i < mesh->mNumVertices; i++)
+        {
+            Vertex vertex;
+            // positions
+            vertex.position = XMFLOAT3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+            // normals
+            if (mesh->HasNormals())
+                vertex.normal = XMFLOAT3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+            else
+                vertex.normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+            // texture coordinates
+            if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
+            {
+                // a vertex can contain up to 8 different texture coordinates. We thus make the assumption that we won't
+                // use models where a vertex can have multiple texture coordinates so we always take the first set (0).
+                vertex.texCoord = XMFLOAT2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+            }
+            else
+                vertex.texCoord = XMFLOAT2(0.0f, 0.0f);
+
+            vertices.push_back(vertex);
+        }
+        // now walk through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
+        for (UINT i = 0; i < mesh->mNumFaces; i++)
+        {
+            aiFace face = mesh->mFaces[i];
+            // retrieve all indices of the face and store them in the indices vector
+            for (UINT j = 0; j < face.mNumIndices; j++)
+                indices.push_back(face.mIndices[j]);
+        }
+
+=== task: material-textures
+--- file: main.cpp
+--- find:
+        // TODO: process the material: its diffuse and specular maps (loadMaterialTextures)
+--- replace:
+        // process materials
+        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+        // we assume a convention for the textures in the shaders: the first diffuse texture
+        // is texture_diffuse1 (register t0), the first specular texture texture_specular1 (t1).
+
+        // 1. diffuse maps
+        std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+        textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+        // 2. specular maps
+        std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+        textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+--- file: main.cpp
+--- find:
+        // TODO: load each texture of this type the material names (TextureFromFile), unless it is in textures_loaded already
+--- replace:
+        for (UINT i = 0; i < mat->GetTextureCount(type); i++)
+        {
+            aiString str;
+            mat->GetTexture(type, i, &str);
+            // check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
+            bool skip = false;
+            for (UINT j = 0; j < textures_loaded.size(); j++)
+            {
+                if (std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0)
+                {
+                    textures.push_back(textures_loaded[j]);
+                    skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
+                    break;
+                }
+            }
+            if (!skip)
+            {   // if texture hasn't been loaded already, load it
+                Texture texture;
+                ComPtr<ID3D12Resource> uploadHeap;
+                texture.resource = TextureFromFile(str.C_Str(), directory, m_device, m_commandList, uploadHeap);
+                texture.type = typeName;
+                texture.path = str.C_Str();
+                textures.push_back(texture);
+                textures_loaded.push_back(texture);  // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
+                uploadHeaps.push_back(uploadHeap);
+            }
+        }
+
+=== task: draw-model
+--- file: main.cpp
+--- find:
+    // TODO: the model (a member Model m_model)
+--- replace:
+    Model m_model;    // the model: its meshes and their textures
+--- file: main.cpp
+--- find:
+    // TODO: load the model (m_model.Load): its meshes, and its textures, whose copies go into this command list
+--- replace:
+    // Load the model: its meshes (vertex and index buffers) and its textures, whose copies
+    // are recorded in this command list. The meshes' texture views go into the CBV/SRV heap
+    // from slot 1 on (slot 0 is the CBV).
+    m_model.Load("models/planet.obj", m_device.Get(), m_commandList.Get(), m_cbvSrvHeap.Get(), 1);
+--- file: main.cpp
+--- find:
+        // TODO: the textures have been copied: free the model's upload buffers (m_model.uploadHeaps)
+--- replace:
+        // The textures have been copied: their upload buffers can go.
+        m_model.uploadHeaps.clear();
+--- file: main.cpp
+--- find:
+    // TODO: draw the model (m_model.Draw)
+--- replace:
+    // render the loaded model: each mesh binds its textures and draws itself
+    m_model.Draw(m_commandList.Get());
+
+=== task: lighting
+--- file: model_loading.hlsl
+--- find:
+    float4x4 model;
+};
+--- replace:
+    float4x4 model;
+    float4x4 normalMatrix;    // transpose(inverse(model)), computed in main.cpp
+};
+--- file: model_loading.hlsl
+--- find:
+// The constant buffer at register b1 (the CBV in root parameter 1's table): the
+// view and projection matrices, the same for every draw of a frame.
+cbuffer SceneConstantBuffer : register(b1)
+{
+    float4x4 view;
+    float4x4 projection;
+};
+--- replace:
+// The rest of the material: its textures are below.
+struct Material
+{
+    float shininess;
+};
+
+// The light: where it is and how strong its ambient, diffuse and specular parts are.
+struct Light
+{
+    float3 position;
+    float3 ambient;
+    float3 diffuse;
+    float3 specular;
+};
+
+// The constant buffer at register b1 (the CBV in root parameter 1's table): the
+// values that are the same for every draw of a frame.
+cbuffer SceneConstantBuffer : register(b1)
+{
+    float4x4 view;
+    float4x4 projection;
+    float3 viewPos;
+    Material material;
+    Light light;
+};
+--- file: model_loading.hlsl
+--- find:
+Texture2D texture_diffuse1 : register(t0);
+--- replace:
+Texture2D texture_diffuse1 : register(t0);
+Texture2D texture_specular1 : register(t1);    // the specular map: t1
+--- file: model_loading.hlsl
+--- find:
+    float4 position : SV_POSITION;
+    float2 texCoords : TEXCOORD;
+--- replace:
+    float4 position : SV_POSITION;
+    float3 fragPos : POSITION;    // the position in world space
+    float3 normal : NORMAL;
+    float2 texCoords : TEXCOORD;
+--- file: model_loading.hlsl
+--- find:
+// The vertex shader: runs once per vertex. The normal is not used yet.
+PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL, float2 texCoords : TEXCOORD)
+{
+    PSInput result;
+
+    result.texCoords = texCoords;
+    result.position = mul(mul(mul(position, model), view), projection);
+--- replace:
+// The vertex shader: runs once per vertex.
+PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL, float2 texCoords : TEXCOORD)
+{
+    PSInput result;
+
+    // The position in world space (only the model matrix applied), for the lighting.
+    float4 worldPos = mul(position, model);
+    result.fragPos = worldPos.xyz;
+    // The normal is a direction: w = 0, so the matrix's translation does not apply.
+    result.normal = mul(float4(normal, 0.0f), normalMatrix).xyz;
+    result.texCoords = texCoords;
+    result.position = mul(mul(worldPos, view), projection);
+--- file: model_loading.hlsl
+--- find:
+// The pixel shader: the colour is the diffuse texture, no lighting.
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    return texture_diffuse1.Sample(wrapSampler, input.texCoords);
+}
+--- replace:
+// The pixel shader: Phong lighting with the diffuse and the specular map.
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    float3 diffuseColor = texture_diffuse1.Sample(wrapSampler, input.texCoords).rgb;
+
+    // ambient
+    float3 ambient = light.ambient * diffuseColor;
+
+    // diffuse
+    float3 norm = normalize(input.normal);
+    float3 lightDir = normalize(light.position - input.fragPos);
+    float diff = max(dot(norm, lightDir), 0.0f);
+    float3 diffuse = light.diffuse * diff * diffuseColor;
+
+    // specular
+    float3 viewDir = normalize(viewPos - input.fragPos);
+    float3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0f), material.shininess);
+    float3 specular = light.specular * spec * texture_specular1.Sample(wrapSampler, input.texCoords).rgb;
+
+    float3 result = ambient + diffuse + specular;
+    return float4(result, 1.0f);
+}
+--- file: main.cpp
+--- find:
+// Zoom: the field of view, in degrees.
+float fov   =  45.0f;
+--- replace:
+// Zoom: the field of view, in degrees.
+float fov   =  45.0f;
+
+// lighting
+XMFLOAT3 lightPos = XMFLOAT3(1.2f, 1.0f, 2.0f);
+--- file: main.cpp
+--- find:
+    // The root constants: what the vertex shader sees as cbuffer ModelConstants.
+    // A 4x4 matrix is 16 floats: 16 32-bit root constants.
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+    };
+
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer.
+    struct SceneConstantBuffer
+    {
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+    };
+--- replace:
+    // The root constants: what the vertex shader sees as cbuffer ModelConstants.
+    // Two 4x4 matrices are 32 floats: 32 32-bit root constants.
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+        XMFLOAT4X4 normalMatrix;
+    };
+
+    // The material: what the shaders see as struct Material. Laid out as HLSL does: the
+    // next member (a struct) starts a new 16-byte row, so the row is padded to 16 bytes.
+    struct Material
+    {
+        float shininess;
+        float padding0[3];
+    };
+
+    // The light: what the shaders see as struct Light.
+    struct Light
+    {
+        XMFLOAT3 position;
+        float padding0;
+        XMFLOAT3 ambient;
+        float padding1;
+        XMFLOAT3 diffuse;
+        float padding2;
+        XMFLOAT3 specular;
+        float padding3;
+    };
+
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer.
+    // HLSL packs a cbuffer in rows of 16 bytes and never lets a float3 cross from one row
+    // into the next: a float3 followed by another float3 needs a float of padding here.
+    struct SceneConstantBuffer
+    {
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+        XMFLOAT3 viewPos;
+        float padding0;
+        Material material;
+        Light light;
+    };
+--- file: main.cpp
+--- find:
+        // Root parameter 0: root constants for register b0 (the model matrix).
+        // Only the vertex shader reads them.
+        // Root parameter 1: a descriptor table with the constant buffer view (b1: view
+        // and projection), for the vertex and the pixel shader.
+--- replace:
+        // Root parameter 0: root constants for register b0 (the model and normal matrices).
+        // Only the vertex shader reads them.
+        // Root parameter 1: a descriptor table with the constant buffer view (b1: view,
+        // projection and the lighting values), for the vertex and the pixel shader.
+--- file: main.cpp
+--- find:
+    XMStoreFloat4x4(&constantBufferData.projection, XMMatrixTranspose(projection));
+--- replace:
+    XMStoreFloat4x4(&constantBufferData.projection, XMMatrixTranspose(projection));
+
+    constantBufferData.light.position = lightPos;
+    XMStoreFloat3(&constantBufferData.viewPos, cameraPos);    // the camera's position
+
+    // light properties
+    constantBufferData.light.ambient = XMFLOAT3(0.2f, 0.2f, 0.2f);
+    constantBufferData.light.diffuse = XMFLOAT3(0.5f, 0.5f, 0.5f);
+    constantBufferData.light.specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+
+    // material properties
+    constantBufferData.material.shininess = 32.0f;
+--- file: main.cpp
+--- find:
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+--- replace:
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+
+    // The normal matrix: the transpose of the inverse of the model matrix. It keeps the
+    // normals perpendicular to the surface even when the model matrix scales unevenly.
+    XMMATRIX normalMatrix = XMMatrixTranspose(XMMatrixInverse(nullptr, model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixTranspose(normalMatrix));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);

@@ -100,6 +100,7 @@ public sealed partial class ShaderRunner
     /// <summary>A zero value of a type (struct types get their fields).</summary>
     public ShaderValue Default(string type, int arraySize = 0)
     {
+        if (type is "map") return new ShaderValue { Map = new SortedDictionary<double, ShaderValue>() };
         if (arraySize > 0) return ShaderValue.Array(Enumerable.Range(0, arraySize).Select(_ => Default(type)).ToArray());
         if (program.FindStruct(type) is { } s)
             return ShaderValue.Struct(s.Fields.ToDictionary(f => f.Id, f => Default(f.Type, f.ArraySize)));
@@ -289,6 +290,11 @@ public sealed partial class ShaderRunner
             case IndexOf ix:
             {
                 var owner = Eval(ix.Target);
+                if (owner.Map is not null)
+                {
+                    owner.Map[Eval(ix.At).X] = value.Clone();
+                    return;
+                }
                 int at = (int)Math.Floor(Eval(ix.At).X);
                 if (owner.Items is not null && at >= 0 && at < owner.Items.Length) owner.Items[at] = value;
                 else if (owner.V is not null && at >= 0 && at < owner.V.Length && owner.Cols == 0) owner.V[at] = value.X;

@@ -17,6 +17,11 @@ public sealed partial class ShaderRunner
             case Member m:
             {
                 var owner = Eval(m.Target);
+                if (owner.Iterator is { } iter && m.Field is "first" or "second")
+                {
+                    var cur = iter.Current ?? throw new ShaderRuntimeException("the iterator is at the end of the map", m.Line);
+                    return m.Field == "first" ? ShaderValue.Scalar(cur.Key) : cur.Value;
+                }
                 if (owner.Fields is not null)
                     return owner.Fields.TryGetValue(m.Field, out var f) ? f : throw new ShaderRuntimeException($"no member named '{m.Field}'", m.Line);
                 if (owner.V is not null && !owner.IsMatrix && Swizzle(m.Field) is { } idx)
@@ -30,6 +35,8 @@ public sealed partial class ShaderRunner
             case IndexOf ix:
             {
                 var owner = Eval(ix.Target);
+                if (owner.Map is not null)
+                    return owner.Map.TryGetValue(Eval(ix.At).X, out var mv) ? mv : ShaderValue.Scalar(0);
                 int at = (int)Math.Floor(Eval(ix.At).X);
                 if (owner.Items is not null)
                     return at >= 0 && at < owner.Items.Length ? owner.Items[at] : throw new ShaderRuntimeException($"array index {at} is out of range", ix.Line);
@@ -44,6 +51,12 @@ public sealed partial class ShaderRunner
                 if (u.Op is "post++" or "post--" or "++" or "--")
                 {
                     var old = Eval(u.Operand);
+                    if (old.Iterator is { } it)
+                    {
+                        var moved = new ShaderValue { Iterator = it with { Position = it.Position + (u.Op.EndsWith("++", StringComparison.Ordinal) ? 1 : -1) } };
+                        Store(u.Operand, moved);
+                        return u.Op.StartsWith("post", StringComparison.Ordinal) ? old : moved;
+                    }
                     var changed = BinaryOp(u.Op.EndsWith("++", StringComparison.Ordinal) ? "+" : "-", old, ShaderValue.Scalar(1), u.Line);
                     Store(u.Operand, changed);
                     return u.Op.StartsWith("post", StringComparison.Ordinal) ? old : changed;
@@ -99,6 +112,8 @@ public sealed partial class ShaderRunner
 
     private ShaderValue BinaryOp(string op, ShaderValue a, ShaderValue b, int line)
     {
+        if (a.Iterator is { } ia && b.Iterator is { } ib && op is "==" or "!=")
+            return ShaderValue.Scalar((ia.Position == ib.Position) == (op == "==") ? 1 : 0);
         if (a.V is null || b.V is null) throw new ShaderRuntimeException($"invalid operands to binary '{op}'", line);
         if (op == "*" && (a.IsMatrix || b.IsMatrix)) return MatrixMultiply(a, b, line);
         if (op is "==" or "!=" or "<" or ">" or "<=" or ">=")

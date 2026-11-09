@@ -10,10 +10,19 @@ public sealed partial class D3D12Reader
 {
     private void Draw()
     {
-        var draw = src.Calls(".DrawInstanced").FirstOrDefault();
-        var drawIndexed = src.Calls(".DrawIndexedInstanced").FirstOrDefault();
-        var call = drawIndexed ?? draw;
+        // The draws the command list records (PopulateCommandList) come first: a Mesh::Draw elsewhere is called from there.
+        bool Recorded(CppCall c) => src.FunctionAt(c.Offset) == "PopulateCommandList";
+        var draws = src.Calls(".DrawInstanced").ToList();
+        var indexedDraws = src.Calls(".DrawIndexedInstanced").ToList();
+        // A Model (learnopengl's Model class ported): m_model.Draw(m_commandList.Get()) draws its meshes.
+        var modelDraw = src.Calls(".Draw").FirstOrDefault(c => Recorded(c) && c.Target is { } t && (src.DeclaredType(t) ?? "").Contains("Model", StringComparison.Ordinal));
+        // With a PopulateCommandList, only what it records is drawn (a Mesh::Draw nobody calls yet draws nothing).
+        bool recordsHere = src.Functions.ContainsKey("PopulateCommandList");
+        var draw = draws.FirstOrDefault(Recorded) ?? (modelDraw is null && !recordsHere ? draws.FirstOrDefault() : null);
+        var drawIndexed = indexedDraws.FirstOrDefault(Recorded) ?? (modelDraw is null && !recordsHere ? indexedDraws.FirstOrDefault() : null);
+        var call = drawIndexed ?? draw ?? modelDraw;
         if (call is null) return;
+        bool modelOnly = call == modelDraw;
         if (!Has("CreateGraphicsPipelineState"))
         {
             scene.Notes.Add(SimNote.Error("dxNoPso", ("call", call.Name)));
@@ -39,11 +48,16 @@ public sealed partial class D3D12Reader
         var entry = vs.FindFunction(vsEntry);
         bool needsInput = entry is not null && entry.Params.Any(p => p.Semantic is not null && !p.Semantic.StartsWith("SV_", StringComparison.OrdinalIgnoreCase)
             || vs.FindStruct(p.Type) is not null);
-        if (needsInput && !VertexData(vertices)) return;
+        if (needsInput && !modelOnly && !VertexData(vertices)) return;
 
         int[]? indices = null;
         int first = 0, count, instances;
-        if (call == drawIndexed)
+        if (modelOnly)
+        {
+            count = 0;
+            instances = 1;
+        }
+        else if (call == drawIndexed)
         {
             if (!Has("IASetIndexBuffer") || IndexData() is not { } data)
             {
@@ -73,8 +87,9 @@ public sealed partial class D3D12Reader
         var fill = src.LastFieldValue("FillMode") ?? "D3D12_FILL_MODE_SOLID";
         var frontCcw = src.LastFieldValue("FrontCounterClockwise") is { } f && (src.Int(f) ?? 0) != 0;
         bool depth = DepthEnabled(int.MaxValue);
+        var state = PipelineState.D3D12(f => StateField(f, int.MaxValue), f => StateField(f, int.MaxValue) is { } v ? src.Int(v) : null);
 
-        var textures = Textures(vs, ps);
+        var textures = modelOnly ? null : Textures(vs, ps);
         var cullMode = cull.Contains("NONE", StringComparison.Ordinal) ? CullMode.None : cull.Contains("FRONT", StringComparison.Ordinal) ? CullMode.Front : CullMode.Back;
         var topo = GlReader.TopologyOf(topology);
 
@@ -122,6 +137,10 @@ public sealed partial class D3D12Reader
                     FrontCcw = pl?.FrontCcw ?? frontCcw,
                     Wireframe = pl?.Wireframe ?? fill.Contains("WIREFRAME", StringComparison.Ordinal),
                     DepthTest = pl?.DepthTest ?? depth,
+                    DepthFunc = (pl?.State ?? state).DepthFunc,
+                    DepthWrite = (pl?.State ?? state).DepthWrite,
+                    Stencil = (pl?.State ?? state).Stencil is { } st ? st with { Ref = d.StencilRef ?? st.Ref } : null,
+                    Blend = (pl?.State ?? state).Blend,
                     Textures = pl is null ? textures : Textures(pl.Vs, pl.Fs) ?? textures,
                 });
             }
@@ -174,7 +193,8 @@ public sealed partial class D3D12Reader
         }
         if (!Has("UpdateSubresources") && !Has("CopyTextureRegion")) scene.Notes.Add(SimNote.Error("dxNoTextureUpload"));
         var images = StbImage.InLoadOrder(src, project, scene);
-        if (images.Count < names.Count) scene.Notes.Add(SimNote.Warning("tooFewTextures", ("count", names.Count.ToString()), ("loaded", images.Count.ToString())));
+        // A Model's textures come from its .mtl file, not from stbi_load calls with a file name.
+        if (images.Count < names.Count && !src.Code.Contains("aiProcess_", StringComparison.Ordinal)) scene.Notes.Add(SimNote.Warning("tooFewTextures", ("count", names.Count.ToString()), ("loaded", images.Count.ToString())));
         // Static samplers: each description (sampler, samplers[0], samplers[1] …) by its ShaderRegister; the HLSL
         // Sample(…) call names the sampler, whose register picks the description.
         var byRegister = new Dictionary<int, Codestead.GP.Gpu.Textures.SamplerState>();

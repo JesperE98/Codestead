@@ -22,6 +22,7 @@ public static class GpAchievements
         PartDone("start", "🚪"),
         PartDone("getting-started", "🔺"),
         PartDone("lighting", "💡"),
+        PartDone("model-loading", "🪐"),
         Count("all-apis", "🌐", AchievementCategory.Learning, ApisUsed, 3),
         Checkpoints(25, "🤔"),
         // The workbench
