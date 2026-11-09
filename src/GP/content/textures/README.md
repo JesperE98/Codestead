@@ -9,3 +9,6 @@ assets), so they can be shipped with the app:
 
 learnopengl.com uses `container.jpg` and `awesomeface.png`; ours play the same roles. Each chapter's projects carry
 copies next to their code (`projects/<api>/<chapter>/start/`), as a real project would.
+- `container2.png` (256×256, RGB): wooden planks in a steel frame with rivets – the diffuse map of the lighting chapters.
+- `container2_specular.png`: its specular map – the steel bright, the wood almost black.
+- `matrix.png`: an emission map of glowing green glyphs on black (the "Lighting maps" exercise).

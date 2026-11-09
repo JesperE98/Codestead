@@ -22,6 +22,9 @@ public static class GpCourse
         ("hello-triangle", "getting-started"),
         ("shaders", "getting-started"),
         ("textures", "getting-started"),
+        ("transformations", "getting-started"),
+        ("coordinate-systems", "getting-started"),
+        ("camera", "getting-started"),
     ];
 
     public static IReadOnlyList<CourseChapter> Chapters { get; } = Build();

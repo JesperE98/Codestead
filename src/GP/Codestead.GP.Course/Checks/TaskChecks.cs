@@ -19,6 +19,9 @@ public static partial class TaskChecks
         Add("hello-triangle", HelloTriangle);
         Add("shaders", Shaders);
         Add("textures", Textures);
+        Add("transformations", Transformations);
+        Add("coordinate-systems", CoordinateSystems);
+        Add("camera", Camera);
         return d;
     });
 
