@@ -72,7 +72,7 @@ public sealed partial class D3D12Reader
         var cull = src.LastFieldValue("CullMode") ?? "D3D12_CULL_MODE_BACK";
         var fill = src.LastFieldValue("FillMode") ?? "D3D12_FILL_MODE_SOLID";
         var frontCcw = src.LastFieldValue("FrontCounterClockwise") is { } f && (src.Int(f) ?? 0) != 0;
-        bool depth = src.LastFieldValue("DepthEnable") is { } de && (src.Int(de) ?? 0) != 0;
+        bool depth = DepthEnabled(int.MaxValue);
 
         var textures = Textures(vs, ps);
         var cullMode = cull.Contains("NONE", StringComparison.Ordinal) ? CullMode.None : cull.Contains("FRONT", StringComparison.Ordinal) ? CullMode.Front : CullMode.Back;
@@ -181,6 +181,18 @@ public sealed partial class D3D12Reader
         var fallback = byRegister.GetValueOrDefault(0) ?? byRegister.Values.FirstOrDefault() ?? Codestead.GP.Gpu.Textures.SamplerState.Default;
         return TextureBinding.Bind(names, images, (_, sampler) =>
             sampler is not null && samplerRegister.TryGetValue(sampler, out var r) && byRegister.TryGetValue(r, out var state) ? state : fallback);
+    }
+
+    /// <summary>
+    /// Is the depth test on in the PSO description set before an offset? CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT) turns it
+    /// on; a later DepthEnable = FALSE / TRUE decides.
+    /// </summary>
+    private bool DepthEnabled(int before)
+    {
+        var field = src.FieldAssignments("DepthEnable").Where(a => a.Offset < before).LastOrDefault();
+        var desc = src.FieldAssignments("DepthStencilState").Where(a => a.Offset < before && a.Value.Contains("D3D12_DEFAULT", StringComparison.Ordinal)).LastOrDefault();
+        if (desc.Value is not null && (field.Value is null || desc.Offset > field.Offset)) return true;
+        return field.Value is not null && (src.Int(field.Value) ?? 0) != 0;
     }
 
     /// <summary>The shader compiled for a target ("vs_5_0", "ps_5_0"): D3DCompileFromFile(L"shaders.hlsl", …, "VSMain", "vs_5_0", …).</summary>

@@ -40,7 +40,7 @@ public sealed partial class D3D12Reader
                 cull.Contains("NONE", StringComparison.Ordinal) ? CullMode.None : cull.Contains("FRONT", StringComparison.Ordinal) ? CullMode.Front : CullMode.Back,
                 (src.Int(Field("FrontCounterClockwise", "FALSE")) ?? 0) != 0,
                 Field("FillMode", "SOLID").Contains("WIREFRAME", StringComparison.Ordinal),
-                (src.Int(Field("DepthEnable", "FALSE")) ?? 0) != 0,
+                DepthEnabled(create.Offset),
                 Topology.Triangles);
         }
         return result;

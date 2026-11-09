@@ -21,8 +21,12 @@ public static partial class TaskChecks
         // Vulkan: the uniform buffer for view and projection, its descriptor, the depth image.
         ["uniform-buffer"] = c => c.Built && c.Has("VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT") && c.Has(@"vkMapMemory \(") && c.Has(@"updateUniformBuffer \("),
         ["uniform-descriptor"] = c => c.Built && c.Has("VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER") && c.Has(@"pBufferInfo = &"),
+        // DirectX 12: the constant buffer view for view and projection.
+        ["constant-buffer"] = c => c.Built && c.Has(@"CreateConstantBufferView \(") && c.Has("SceneConstantBuffer"),
+        ["view-projection"] = c => c.Built && c.Has(@"(?i)PerspectiveFov") && c.Has(@"memcpy \("),
         ["depth-image"] = c => c.Built && c.Has(@"createDepthResources \( \) ;") && c.Has("VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT"),
-        ["plane"] = c => c.DrawnAt(0.5, 0.5) && c.IsClear(0.1, 0.5) && c.Has(@"(?i)perspective"),
+        // Tilted back 55°: its near (bottom) edge reaches y 0.63, its far (top) edge only y 0.4 – (0.5, 0.33) is empty.
+        ["plane"] = c => c.DrawnAt(0.5, 0.5) && c.IsClear(0.5, 0.33) && c.IsClear(0.1, 0.5) && c.Has(@"(?i)perspective"),
         ["cube"] = c => c.Drew && c.Scene!.Draws.Any(d => d.Count == 36),
         ["spin"] = c => c.Drew && c.Scene!.Animated && c.Scene.Draws.Any(d => d.Count == 36),
         ["depth-test"] = c => c.Drew && c.Scene!.Draws.Any(d => d.DepthTest),

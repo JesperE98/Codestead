@@ -1,0 +1,100 @@
+=== task: object-color
+--- file: shaders/colors.frag
+--- find:
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    // TODO: the colour of the object as we see it: the light's colour times the object's colour
+    outColor = vec4(1.0, 1.0, 1.0, 1.0);
+}
+--- replace:
+layout(binding = 2) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    vec3 objectColor;
+    vec3 lightColor;
+} ubo;
+
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = vec4(ubo.lightColor * ubo.objectColor, 1.0);
+}
+--- file: main.cpp
+--- find:
+struct UniformBufferObject {
+    glm::mat4 view;
+    glm::mat4 proj;
+};
+--- replace:
+// In a uniform block (std140 layout) a vec3 starts at a multiple of 16 bytes, like a vec4: a float after each
+// vec3 fills the 4 bytes up to the next one, so the C++ struct has the same offsets as the shader's block.
+struct UniformBufferObject {
+    glm::mat4 view;
+    glm::mat4 proj;
+    glm::vec3 objectColor;
+    float pad1;
+    glm::vec3 lightColor;
+    float pad2;
+};
+--- file: main.cpp
+--- find:
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+--- replace:
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; // the fragment shader reads the colours
+--- file: main.cpp
+--- find:
+        ubo.proj[1][1] *= -1;
+
+--- replace:
+        ubo.proj[1][1] *= -1;
+
+        ubo.objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
+        ubo.lightColor  = glm::vec3(1.0f, 1.0f, 1.0f);
+
+=== task: lamp-shader
+--- file: shaders/light_cube.frag
+--- find:
+    // TODO: the lamp is always bright white
+--- replace:
+    outColor = vec4(1.0); // set all 4 vector values to 1.0
+--- file: main.cpp
+--- find:
+    VkPipeline lightingPipeline;
+--- replace:
+    VkPipeline lightingPipeline;
+    VkPipeline lightCubePipeline;
+--- file: main.cpp
+--- find:
+        // TODO: create the lamp's pipeline (lightCubePipeline) from shaders/light_cube.vert and shaders/light_cube.frag
+--- replace:
+        createPipeline("shaders/light_cube.vert.spv", "shaders/light_cube.frag.spv", 1, lightCubePipeline); // the lamp only needs the position
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, lightingPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, lightingPipeline, nullptr);
+        vkDestroyPipeline(device, lightCubePipeline, nullptr);
+
+=== task: lamp
+--- file: main.cpp
+--- find:
+float lastFrame = 0.0f;
+--- replace:
+float lastFrame = 0.0f;
+
+// lighting
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+--- file: main.cpp
+--- find:
+        // TODO: also draw the lamp object: a small cube (scale 0.2) at lightPos, with lightCubePipeline
+--- replace:
+        // also draw the lamp object
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightCubePipeline);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
