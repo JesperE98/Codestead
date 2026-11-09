@@ -1,0 +1,82 @@
+=== task: stencil-buffer
+--- file: main.cpp
+--- find:
+    // TODO: enable the stencil test, and replace the stored stencil value with the reference value when a fragment passes both the stencil and the depth test (glStencilOp)
+--- replace:
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE); // stencil fails: keep, depth fails: keep, both pass: replace with the reference value
+--- file: main.cpp
+--- find:
+        // TODO: also clear the stencil buffer
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+--- replace:
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // don't forget to clear the stencil buffer!
+
+=== task: single-color
+--- file: stencil_single_color.fs
+--- find:
+    // TODO: every fragment of the outline gets the same colour: vec4(0.04, 0.28, 0.26, 1.0)
+--- replace:
+    FragColor = vec4(0.04, 0.28, 0.26, 1.0);
+--- file: main.cpp
+--- find:
+    // TODO: a second shader program for the outlines (shaderSingleColor): stencil_testing.vs with stencil_single_color.fs
+--- replace:
+    Shader shaderSingleColor("stencil_testing.vs", "stencil_single_color.fs");
+--- file: main.cpp
+--- find:
+        // TODO: give the outline shader (shaderSingleColor) the same view and projection matrices
+--- replace:
+        shaderSingleColor.use();
+        shaderSingleColor.setMat4("view", view);
+        shaderSingleColor.setMat4("projection", projection);
+
+=== task: write-stencil
+--- file: main.cpp
+--- find:
+        // TODO: the floor must not write to the stencil buffer (stencil mask 0x00)
+--- replace:
+        // draw floor as normal, but don't write the floor to the stencil buffer, we only care about the containers. We set its mask to 0x00 to not write to the stencil buffer.
+        glStencilMask(0x00);
+--- file: main.cpp
+--- find:
+        // TODO: 1st pass: the cubes as normal, every fragment they draw writes 1 to the stencil buffer
+--- replace:
+        // 1st. render pass, draw objects as normal, writing to the stencil buffer
+        // --------------------------------------------------------------------
+        glStencilFunc(GL_ALWAYS, 1, 0xFF); // all fragments pass the stencil test and write the reference value 1
+        glStencilMask(0xFF);
+
+=== task: outline
+--- file: main.cpp
+--- find:
+        // TODO: 2nd pass: the cubes again, scaled by 1.1, in one colour, only where the stencil value is not 1 and without the depth test - then restore the state
+        glBindVertexArray(0);
+--- replace:
+        // 2nd. render pass: now draw slightly scaled versions of the objects, this time disabling stencil writing.
+        // Because the stencil buffer is now filled with several 1s. The parts of the buffer that are 1 are not drawn, thus only drawing
+        // the objects' size differences, making it look like borders.
+        // -----------------------------------------------------------------------------------------------------------------------------
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glDisable(GL_DEPTH_TEST);
+        shaderSingleColor.use();
+        float scale = 1.1f;
+        // cubes
+        glBindVertexArray(cubeVAO);
+        glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        shaderSingleColor.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        shaderSingleColor.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        // restore the state for the next frame: stencil writes on (glClear obeys the stencil mask too), test always passes, depth test on
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 0, 0xFF);
+        glEnable(GL_DEPTH_TEST);

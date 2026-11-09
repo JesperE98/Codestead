@@ -1,0 +1,48 @@
+=== task: depth-always
+--- file: main.cpp
+--- find:
+    // TODO: choose the depth function with glDepthFunc - until then OpenGL's default, GL_LESS, is used
+--- replace:
+    glDepthFunc(GL_ALWAYS); // always pass the depth test (same effect as glDisable(GL_DEPTH_TEST))
+
+=== task: depth-less
+--- file: main.cpp
+--- find:
+    glDepthFunc(GL_ALWAYS); // always pass the depth test (same effect as glDisable(GL_DEPTH_TEST))
+--- replace:
+    glDepthFunc(GL_LESS); // pass when the fragment is closer than the stored depth (OpenGL's default)
+
+=== task: visualize-depth
+--- file: depth_testing.fs
+--- find:
+    FragColor = texture(texture1, TexCoords);
+--- replace:
+    // FragColor = texture(texture1, TexCoords);
+    FragColor = vec4(vec3(gl_FragCoord.z), 1.0); // the fragment's depth value: 0.0 at the near plane, 1.0 at the far plane
+
+=== task: linear-depth
+--- file: depth_testing.fs
+--- find:
+uniform sampler2D texture1;
+
+void main()
+{
+--- replace:
+uniform sampler2D texture1;
+
+float near = 0.1;
+float far = 100.0;
+float LinearizeDepth(float depth)
+{
+    float z = depth * 2.0 - 1.0; // back to NDC (OpenGL maps NDC z -1..1 to depth 0..1)
+    return (2.0 * near * far) / (far + near - z * (far - near));
+}
+
+void main()
+{
+--- file: depth_testing.fs
+--- find:
+    FragColor = vec4(vec3(gl_FragCoord.z), 1.0); // the fragment's depth value: 0.0 at the near plane, 1.0 at the far plane
+--- replace:
+    float depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far to get depth in range [0,1] for visualization purposes
+    FragColor = vec4(vec3(depth), 1.0);

@@ -210,8 +210,9 @@ public sealed partial class GlReader
             {
                 if (BoundTexture is not { } tex) return;
                 var param = A(1);
-                if (param.Contains("WRAP_S", StringComparison.Ordinal)) tex.WrapS = StbImage.WrapOf(A(2));
-                else if (param.Contains("WRAP_T", StringComparison.Ordinal)) tex.WrapT = StbImage.WrapOf(A(2));
+                var value = Choose(A(2), tex);
+                if (param.Contains("WRAP_S", StringComparison.Ordinal)) tex.WrapS = StbImage.WrapOf(value);
+                else if (param.Contains("WRAP_T", StringComparison.Ordinal)) tex.WrapT = StbImage.WrapOf(value);
                 else if (param.Contains("MIN_FILTER", StringComparison.Ordinal)) tex.MinFilter = A(2).Trim();
                 else if (param.Contains("MAG_FILTER", StringComparison.Ordinal)) tex.MagFilter = A(2).Trim();
                 else if (param.Contains("BORDER_COLOR", StringComparison.Ordinal)) tex.Border = Numbers(DataName(A(2)))?.Take(4).ToArray();
@@ -231,6 +232,20 @@ public sealed partial class GlReader
                 return;
         }
         if (name.StartsWith("glUniform", StringComparison.Ordinal)) Uniform(name, a, line);
+    }
+
+    /// <summary>
+    /// A parameter written as a choice by the texture's format: learnopengl's
+    /// <c>format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT</c> (the format follows the loaded image's channels).
+    /// </summary>
+    private static string Choose(string value, GlState.TextureObject tex)
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(value, @"^\s*\(?\s*\w+\s*(==|!=)\s*(GL_RGBA|GL_RGB|GL_RED)\s*\)?\s*\?\s*(\w+)\s*:\s*(\w+)\s*$");
+        if (!m.Success) return value;
+        int channels = tex.Image?.Channels ?? tex.Components;
+        int wanted = m.Groups[2].Value switch { "GL_RGBA" => 4, "GL_RGB" => 3, _ => 1 };
+        bool yes = (channels == wanted) == (m.Groups[1].Value == "==");
+        return yes ? m.Groups[3].Value : m.Groups[4].Value;
     }
 
     private GlState.TextureObject? BoundTexture =>
@@ -278,7 +293,8 @@ public sealed partial class GlReader
         }
         if (image is null) return;
         int components = Components(a[6]);
-        tex.Components = components == 4 ? 4 : 3;
+        // A format in a variable (learnopengl's loadTexture: GL_RED / GL_RGB / GL_RGBA by nrComponents) fits the image.
+        tex.Components = components == 4 || (components == 0 && image.Channels == 4) ? 4 : 3;
         var uploaded = image.Channels == components || components == 0 ? image : Reinterpret(image, image.Channels, components);
         if (face >= 0)
         {
