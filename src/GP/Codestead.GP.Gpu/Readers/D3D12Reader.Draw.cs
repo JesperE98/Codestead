@@ -85,20 +85,23 @@ public sealed partial class D3D12Reader
         if (src.FunctionAt(call.Offset) is { } recordFn) recorder.Run(recordFn);
         var buffer = recorder.BufferContents();
         var indexData = drawIndexed is not null ? IndexData() : null;
+        var pipelines = recorder.Draws.Any(d => d.Pipeline is not null) ? Pipelines() : new();
         if (recorder.Draws.Count > 0)
         {
             var fallback = Constants(vs, ps);
             foreach (var d in recorder.Draws)
             {
+                // With several pipeline state objects, the draw uses the one set before it.
+                var pl = d.Pipeline is not null && pipelines.Count > 1 && pipelines.TryGetValue(d.Pipeline, out var p) ? p : null;
                 var values = new Dictionary<string, ShaderValue>(fallback(time), StringComparer.Ordinal);
                 foreach (var (k, v) in buffer) values[k] = v;
                 foreach (var (k, v) in d.Constants) values[k] = v;
                 scene.Draws.Add(new DrawCall
                 {
-                    VertexShader = vs,
-                    FragmentShader = ps,
-                    VertexEntry = vsEntry,
-                    FragmentEntry = psEntry,
+                    VertexShader = pl?.Vs ?? vs,
+                    FragmentShader = pl?.Fs ?? ps,
+                    VertexEntry = pl?.VsEntry ?? vsEntry,
+                    FragmentEntry = pl?.FsEntry ?? psEntry,
                     Hlsl = true,
                     Vertices = vertices,
                     Indices = d.Indexed ? indexData?.Skip(d.First).Take(d.Count).Select(x => (int)x).ToArray() : null,
@@ -107,11 +110,11 @@ public sealed partial class D3D12Reader
                     Instances = Math.Max(1, d.Instances),
                     Topology = topo,
                     Uniforms = _ => values,
-                    Cull = cullMode,
-                    FrontCcw = frontCcw,
-                    Wireframe = fill.Contains("WIREFRAME", StringComparison.Ordinal),
-                    DepthTest = depth,
-                    Textures = textures,
+                    Cull = pl?.Cull ?? cullMode,
+                    FrontCcw = pl?.FrontCcw ?? frontCcw,
+                    Wireframe = pl?.Wireframe ?? fill.Contains("WIREFRAME", StringComparison.Ordinal),
+                    DepthTest = pl?.DepthTest ?? depth,
+                    Textures = pl is null ? textures : Textures(pl.Vs, pl.Fs) ?? textures,
                 });
             }
             if (recorder.Runner.UsedTime || src.UsedTime) scene.Animated = true;

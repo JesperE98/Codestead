@@ -35,7 +35,9 @@ public static class Simulator
                 foreach (var f in project.Files.Keys.Where(k => k.EndsWith(".vert", StringComparison.Ordinal) || k.EndsWith(".frag", StringComparison.Ordinal)))
                 {
                     var dir = Path.GetDirectoryName(f)?.Replace('\\', '/') ?? "";
-                    var spv = (dir.Length > 0 ? dir + "/" : "") + (f.EndsWith(".vert", StringComparison.Ordinal) ? "vert" : "frag") + ".spv";
+                    // shader.vert → vert.spv (vulkan-tutorial's names); any other name → lighting.vert.spv.
+                    var file = Path.GetFileName(f);
+                    var spv = (dir.Length > 0 ? dir + "/" : "") + (file is "shader.vert" or "shader.frag" ? (f.EndsWith(".vert", StringComparison.Ordinal) ? "vert" : "frag") + ".spv" : file + ".spv");
                     list.Add($"$ glslc {f} -o {spv}");
                 }
                 list.Add("$ g++ -std=c++17 main.cpp -o app -lglfw -lvulkan");

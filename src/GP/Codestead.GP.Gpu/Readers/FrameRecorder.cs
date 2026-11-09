@@ -10,7 +10,19 @@ namespace Codestead.GP.Gpu.Readers;
 /// </summary>
 internal sealed class FrameRecorder
 {
-    public sealed record RecordedDraw(bool Indexed, int Count, int Instances, int First, Dictionary<string, ShaderValue> Constants);
+    public sealed record RecordedDraw(bool Indexed, int Count, int Instances, int First, Dictionary<string, ShaderValue> Constants, string? Pipeline);
+
+    /// <summary>The pipeline / pipeline state object bound now (vkCmdBindPipeline, SetPipelineState, Reset(…, pso)).</summary>
+    private string? pipeline;
+
+    /// <summary>The variable an argument names: graphicsPipeline, m_lightPSO.Get(), &amp;x.</summary>
+    private static string? NameOf(Expr e) => e switch
+    {
+        Name n => n.Id,
+        Member m => m.Field,
+        Call { Function: ".Get", Args: [var target] } => NameOf(target),
+        _ => null,
+    };
 
     private readonly CppExec exec;
     private readonly IReadOnlyList<Global> blocks;
@@ -36,6 +48,15 @@ internal sealed class FrameRecorder
     {
         switch (name)
         {
+            case "vkCmdBindPipeline" when args.Count >= 3:
+                pipeline = NameOf(args[2]);
+                return ShaderValue.Scalar(0);
+            case ".SetPipelineState" when args.Count >= 2:
+                pipeline = NameOf(args[1]);
+                return ShaderValue.Scalar(0);
+            case ".Reset" when args.Count >= 3:
+                pipeline = NameOf(args[2]) ?? pipeline;
+                return ShaderValue.Scalar(0);
             case "vkCmdPushConstants" when args.Count >= 6:
                 Set(Value(args[5]));
                 return ShaderValue.Scalar(0);
@@ -46,16 +67,16 @@ internal sealed class FrameRecorder
                 Set(Value(args[2]));
                 return ShaderValue.Scalar(0);
             case "vkCmdDraw" when args.Count >= 5:
-                Draws.Add(new RecordedDraw(false, Int(args[1]), Int(args[2]), Int(args[3]), new(constants)));
+                Draws.Add(new RecordedDraw(false, Int(args[1]), Int(args[2]), Int(args[3]), new(constants), pipeline));
                 return ShaderValue.Scalar(0);
             case "vkCmdDrawIndexed" when args.Count >= 6:
-                Draws.Add(new RecordedDraw(true, Int(args[1]), Int(args[2]), Int(args[3]), new(constants)));
+                Draws.Add(new RecordedDraw(true, Int(args[1]), Int(args[2]), Int(args[3]), new(constants), pipeline));
                 return ShaderValue.Scalar(0);
             case ".DrawInstanced" when args.Count >= 5:
-                Draws.Add(new RecordedDraw(false, Int(args[1]), Int(args[2]), Int(args[3]), new(constants)));
+                Draws.Add(new RecordedDraw(false, Int(args[1]), Int(args[2]), Int(args[3]), new(constants), pipeline));
                 return ShaderValue.Scalar(0);
             case ".DrawIndexedInstanced" when args.Count >= 6:
-                Draws.Add(new RecordedDraw(true, Int(args[1]), Int(args[2]), Int(args[3]), new(constants)));
+                Draws.Add(new RecordedDraw(true, Int(args[1]), Int(args[2]), Int(args[3]), new(constants), pipeline));
                 return ShaderValue.Scalar(0);
         }
         // Other API calls do nothing here (their arguments name API objects the runner does not have).

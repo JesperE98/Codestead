@@ -111,29 +111,41 @@ public sealed partial class VulkanReader
         if (src.FunctionAt(call.Offset) is { } recordFn) recorder.Run(recordFn);
         var buffer = recorder.BufferContents();
         var indexData = drawIndexed is not null ? src.Numbers("indices") : null;
+        var pipelines = recorder.Draws.Any(d => d.Pipeline is not null) ? Pipelines() : new();
         if (recorder.Draws.Count > 0)
         {
             foreach (var d in recorder.Draws)
             {
+                // With several pipelines, the draw uses the one bound before it.
+                var pl = d.Pipeline is not null && pipelines.Count > 1 && pipelines.TryGetValue(d.Pipeline, out var p) ? p : null;
+                var dvs = pl?.Vs ?? vs;
+                var dfs = pl?.Fs ?? fs;
+                var dVertices = vertices;
+                if (pl is not null)
+                {
+                    var dInputs = dvs.Globals.Where(g => g.Storage == "in").ToList();
+                    dVertices = new List<Dictionary<string, ShaderValue>>();
+                    if (dInputs.Count > 0 && !VertexData(dInputs, dVertices)) continue;
+                }
                 var values = new Dictionary<string, ShaderValue>(buffer, StringComparer.Ordinal);
                 foreach (var (k, v) in d.Constants) values[k] = v;
                 scene.Draws.Add(new DrawCall
                 {
-                    VertexShader = vs,
-                    FragmentShader = fs,
+                    VertexShader = dvs,
+                    FragmentShader = dfs,
                     MatchByLocation = true,
-                    Vertices = vertices,
+                    Vertices = dVertices,
                     Indices = d.Indexed ? indexData?.Skip(d.First).Take(d.Count).Select(x => (int)x).ToArray() : null,
                     First = d.Indexed ? 0 : d.First,
                     Count = d.Count,
                     Instances = Math.Max(1, d.Instances),
-                    Topology = topology,
+                    Topology = pl?.Topology ?? topology,
                     Uniforms = _ => values,
-                    Cull = cullMode,
-                    FrontCcw = frontCcw,
-                    Wireframe = wireframe,
-                    DepthTest = depthTest,
-                    Textures = textures,
+                    Cull = pl?.Cull ?? cullMode,
+                    FrontCcw = pl?.FrontCcw ?? frontCcw,
+                    Wireframe = pl?.Wireframe ?? wireframe,
+                    DepthTest = pl?.DepthTest ?? depthTest,
+                    Textures = pl is null ? textures : Textures(dvs, dfs) ?? textures,
                 });
             }
             if (recorder.Runner.UsedTime) scene.Animated = true;

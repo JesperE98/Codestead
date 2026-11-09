@@ -104,7 +104,11 @@ for dir in "$@"; do
       mkdir -p "$work/shaders"
       for s in "$work"/shaders/*.vert "$work"/shaders/*.frag; do
         [ -f "$s" ] || continue
-        out="$work/shaders/$( [ "${s##*.}" = vert ] && echo vert || echo frag ).spv"
+        # shader.vert -> vert.spv (vulkan-tutorial's names); any other name -> name.vert.spv
+        case "$(basename "$s")" in
+          shader.vert|shader.frag) out="$work/shaders/$( [ "${s##*.}" = vert ] && echo vert || echo frag ).spv" ;;
+          *) out="$s.spv" ;;
+        esac
         glslangValidator -V "$s" -o "$out" >"$work/glslang.log" || { fail "$(basename "$s"):"; cat "$work/glslang.log"; }
       done
       if g++ -std=c++17 -Wall -I/usr/include/stb -o "$work/app" "$work/main.cpp" -lglfw -lvulkan 2>"$work/build.log"; then
