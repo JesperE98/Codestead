@@ -165,7 +165,11 @@ public sealed partial class GlReader
         {
             // learnopengl.com's Model class: Model ourModel("planet.obj"); loads the file with Assimp.
             var path = modelDecl.Groups["path"].Value;
-            if (Models.ObjModel.Load(project, path) is { } model) models[modelDecl.Groups["name"].Value] = (model, path);
+            if (Models.ObjModel.Load(project, path) is { } model)
+            {
+                models[modelDecl.Groups["name"].Value] = (model, path);
+                ModelObjects(modelDecl.Groups["name"].Value, model, path);
+            }
             else scene.Notes.Add(SimNote.Error("modelFileMissing", ("file", path)));
             return;
         }

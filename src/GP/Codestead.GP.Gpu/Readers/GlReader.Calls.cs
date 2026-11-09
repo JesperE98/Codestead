@@ -114,7 +114,7 @@ public sealed partial class GlReader
                 }
                 return;
             case "glBindVertexArray":
-                gl.CurrentVertexArray = Obj(A(0)) is "0" ? null : Obj(A(0));
+                gl.CurrentVertexArray = Obj(A(0)) is "0" ? null : ObjOf(A(0), gl.VertexArrays.ContainsKey);
                 return;
             case "glBindBuffer":
             {
@@ -202,7 +202,7 @@ public sealed partial class GlReader
                 if (Obj(A(1)) is "0") gl.Units.Remove(gl.ActiveUnit);
                 else
                 {
-                    gl.Units[gl.ActiveUnit] = Obj(A(1));
+                    gl.Units[gl.ActiveUnit] = ObjOf(A(1), gl.TextureObjects.ContainsKey);
                     if (A(0).Contains("GL_TEXTURE_CUBE_MAP", StringComparison.Ordinal) && BoundTexture is { } cube) cube.IsCube = true;
                 }
                 return;
@@ -246,6 +246,72 @@ public sealed partial class GlReader
         int wanted = m.Groups[2].Value switch { "GL_RGBA" => 4, "GL_RGB" => 3, _ => 1 };
         bool yes = (channels == wanted) == (m.Groups[1].Value == "==");
         return yes ? m.Groups[3].Value : m.Groups[4].Value;
+    }
+
+    /// <summary>
+    /// The OpenGL object an argument names: the variable itself, or the object a variable or expression holds
+    /// (unsigned int VAO = rock.meshes[i].VAO; glBindVertexArray(VAO)).
+    /// </summary>
+    private string ObjOf(string arg, Func<string, bool> known)
+    {
+        var name = Obj(arg);
+        if (known(name)) return name;
+        return Eval(arg.Trim())?.Text is { } held && known(held) ? held : name;
+    }
+
+    /// <summary>
+    /// learnopengl's Model as the program sees it: model.meshes[i].VAO, .indices.size() and model.textures_loaded[i].id
+    /// name objects with the mesh's vertex data (location 0 position, 1 normal, 2 texture coordinates) and textures –
+    /// what the asteroid field binds to add its per-instance matrices.
+    /// </summary>
+    private void ModelObjects(string name, Models.ObjModel model, string path)
+    {
+        bool flipUv = Models.ModelFiles.FlipUVs(src, project);
+        bool flipImages = System.Text.RegularExpressions.Regex.IsMatch(src.Code, @"stbi_set_flip_vertically_on_load\s*\(\s*(?:true|1)\s*\)");
+        var meshes = new List<ShaderValue>();
+        var textures = new List<ShaderValue>();
+        var loaded = new Dictionary<string, string>(StringComparer.Ordinal);
+        for (int i = 0; i < model.Meshes.Count; i++)
+        {
+            var mesh = model.Meshes[i];
+            var vao = $"{name}.meshes[{i}].VAO";
+            var vbo = $"{name}.meshes[{i}].VBO";
+            var ebo = $"{name}.meshes[{i}].EBO";
+            var data = new List<double>();
+            for (int v = 0; v < mesh.Positions.Count; v++)
+            {
+                data.AddRange(mesh.Positions[v]);
+                data.AddRange(mesh.Normals[v]);
+                data.Add(mesh.TexCoords[v][0]);
+                data.Add(flipUv ? 1 - mesh.TexCoords[v][1] : mesh.TexCoords[v][1]);
+            }
+            gl.Buffers[vbo] = data;
+            gl.Buffers[ebo] = mesh.Indices.Select(x => (double)x).ToList();
+            var array = new GlState.VertexArray { ElementBuffer = ebo };
+            array.Attributes[0] = new GlState.Attribute { Buffer = vbo, Size = 3, StrideBytes = 32, OffsetBytes = 0, Enabled = true };
+            array.Attributes[1] = new GlState.Attribute { Buffer = vbo, Size = 3, StrideBytes = 32, OffsetBytes = 12, Enabled = true };
+            array.Attributes[2] = new GlState.Attribute { Buffer = vbo, Size = 2, StrideBytes = 32, OffsetBytes = 24, Enabled = true };
+            gl.VertexArrays[vao] = array;
+            meshes.Add(ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+            {
+                ["VAO"] = ShaderValue.Str(vao),
+                ["indices"] = ShaderValue.Array(mesh.Indices.Select(_ => ShaderValue.Scalar(0)).ToArray()),
+            }));
+            foreach (var file in new[] { mesh.Material?.DiffuseMap, mesh.Material?.SpecularMap, mesh.Material?.NormalMap })
+            {
+                if (file is null || loaded.ContainsKey(file)) continue;
+                var texName = $"{name}.textures_loaded[{textures.Count}].id";
+                var tex = Models.ModelFiles.Texture(project, path, file, flipImages);
+                gl.TextureObjects[texName] = new GlState.TextureObject { Image = tex?.Image, Components = tex?.Components ?? 4, MinFilter = "GL_LINEAR_MIPMAP_LINEAR", Mipmaps = true };
+                loaded[file] = texName;
+                textures.Add(ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["id"] = ShaderValue.Str(texName) }));
+            }
+        }
+        env.Runner.Globals[name] = ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+        {
+            ["meshes"] = ShaderValue.Array(meshes.ToArray()),
+            ["textures_loaded"] = ShaderValue.Array(textures.ToArray()),
+        });
     }
 
     private GlState.TextureObject? BoundTexture =>

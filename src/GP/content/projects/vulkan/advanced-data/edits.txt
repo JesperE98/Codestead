@@ -1,0 +1,313 @@
+=== task: map-memory
+--- file: main.cpp
+--- find:
+        // TODO: copy the vertices part by part: map the cube's range of the memory, copy, unmap - then the floor's range
+        void* data;
+        vkMapMemory(device, vertexBufferMemory, 0, bufferInfo.size, 0, &data);
+            memcpy(data, vertices.data(), (size_t) bufferInfo.size);
+        vkUnmapMemory(device, vertexBufferMemory);
+--- replace:
+        // part by part: vkMapMemory maps only the bytes from offset to offset + size (glBufferSubData / glMapBuffer in
+        // OpenGL); the pointer it returns points at the first of them
+        VkDeviceSize cubeSize = sizeof(Vertex) * 36;  // vertices 0..35
+        VkDeviceSize floorSize = sizeof(Vertex) * 6;  // vertices 36..41, right after the cube's
+        void* data;
+        vkMapMemory(device, vertexBufferMemory, 0, cubeSize, 0, &data);
+            memcpy(data, vertices.data(), (size_t) cubeSize);
+        vkUnmapMemory(device, vertexBufferMemory);
+
+        vkMapMemory(device, vertexBufferMemory, cubeSize, floorSize, 0, &data);
+            memcpy(data, vertices.data() + 36, (size_t) floorSize);
+        vkUnmapMemory(device, vertexBufferMemory);
+
+=== task: update-buffer
+--- file: main.cpp
+--- find:
+    VkDeviceMemory uniformBufferMemory;
+    void* uniformBufferMapped;
+--- replace:
+    VkDeviceMemory uniformBufferMemory;
+--- file: main.cpp
+--- find:
+        createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffer, uniformBufferMemory);
+
+        // "persistent mapping": the memory stays mapped while the program runs, we write to it every frame
+        vkMapMemory(device, uniformBufferMemory, 0, bufferSize, 0, &uniformBufferMapped);
+--- replace:
+        // written on the GPU by vkCmdUpdateBuffer: a transfer destination, and the CPU never maps it, so it can live in
+        // device-local memory
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, uniformBuffer, uniformBufferMemory);
+--- file: main.cpp
+--- find:
+        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+            throw std::runtime_error("failed to begin recording command buffer!");
+        }
+--- replace:
+        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+            throw std::runtime_error("failed to begin recording command buffer!");
+        }
+
+        updateUniformBuffer(commandBuffer); // before the render pass: vkCmdUpdateBuffer is not allowed inside one
+--- file: main.cpp
+--- find:
+    // TODO: write the uniform buffer from the command buffer with vkCmdUpdateBuffer (before the render pass) instead of through mapped memory
+    void updateUniformBuffer() {
+--- replace:
+    // The frame's view and projection, written into the uniform buffer by a command: vkCmdUpdateBuffer copies the
+    // data into the command buffer now, and the GPU writes it into the buffer when it runs the commands. Good for
+    // small data (at most 65536 bytes) that changes every frame.
+    void updateUniformBuffer(VkCommandBuffer commandBuffer) {
+--- file: main.cpp
+--- find:
+        memcpy(uniformBufferMapped, &ubo, sizeof(ubo));
+    }
+--- replace:
+        vkCmdUpdateBuffer(commandBuffer, uniformBuffer, 0, sizeof(ubo), &ubo);
+
+        // a barrier: the vertex shaders read the uniform buffer only after the write has finished
+        VkBufferMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_UNIFORM_READ_BIT;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.buffer = uniformBuffer;
+        barrier.offset = 0;
+        barrier.size = sizeof(ubo);
+
+        vkCmdPipelineBarrier(
+            commandBuffer,
+            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+            0,
+            0, nullptr,
+            1, &barrier,
+            0, nullptr
+        );
+    }
+--- file: main.cpp
+--- find:
+        updateUniformBuffer();
+
+        vkResetCommandBuffer(commandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
+--- replace:
+        vkResetCommandBuffer(commandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
+
+=== task: batched-attributes
+--- file: main.cpp
+--- find:
+// TODO: batched attributes: all positions first, then all texture coordinates (111222 instead of 123123), read through two bindings
+struct Vertex {
+    glm::vec3 pos;
+    glm::vec2 texCoord;
+
+    static VkVertexInputBindingDescription getBindingDescription() {
+        VkVertexInputBindingDescription bindingDescription{};
+        bindingDescription.binding = 0;
+        bindingDescription.stride = sizeof(Vertex);
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        return bindingDescription;
+    }
+--- replace:
+struct Vertex {
+    glm::vec3 pos;
+    glm::vec2 texCoord;
+
+    // The vertex buffer holds the data batched (see createVertexBuffer): all the positions, then all the texture
+    // coordinates (111222 instead of 123123). Two bindings read it: binding 0 the positions block (12 bytes per vertex),
+    // binding 1 the texture coordinates block (8 bytes per vertex); vkCmdBindVertexBuffers gives each its offset.
+    static std::array<VkVertexInputBindingDescription, 2> getBindingDescriptions() {
+        std::array<VkVertexInputBindingDescription, 2> bindingDescriptions{};
+
+        bindingDescriptions[0].binding = 0;
+        bindingDescriptions[0].stride = sizeof(glm::vec3);
+        bindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        bindingDescriptions[1].binding = 1;
+        bindingDescriptions[1].stride = sizeof(glm::vec2);
+        bindingDescriptions[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        return bindingDescriptions;
+    }
+--- file: main.cpp
+--- find:
+        attributeDescriptions[0].binding = 0;
+        attributeDescriptions[0].location = 0;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, texCoord);
+--- replace:
+        attributeDescriptions[0].binding = 0; // the positions block
+        attributeDescriptions[0].location = 0;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[0].offset = 0;  // a vertex's 12 bytes hold nothing but its position
+
+        attributeDescriptions[1].binding = 1; // the texture coordinates block
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[1].offset = 0;
+--- file: main.cpp
+--- find:
+        auto bindingDescription = Vertex::getBindingDescription();
+        auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+--- replace:
+        auto bindingDescriptions = Vertex::getBindingDescriptions();
+        auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
+        vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
+--- file: main.cpp
+--- find:
+    void createVertexBuffer() {
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = sizeof(vertices[0]) * vertices.size();
+--- replace:
+    void createVertexBuffer() {
+        // batched: the positions of all the vertices first, then all their texture coordinates
+        std::vector<glm::vec3> positions;
+        std::vector<glm::vec2> texCoords;
+        for (const Vertex& vertex : vertices) {
+            positions.push_back(vertex.pos);
+            texCoords.push_back(vertex.texCoord);
+        }
+        VkDeviceSize positionsSize = sizeof(positions[0]) * positions.size();
+        VkDeviceSize texCoordsSize = sizeof(texCoords[0]) * texCoords.size();
+
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = positionsSize + texCoordsSize;
+--- file: main.cpp
+--- find:
+        // part by part: vkMapMemory maps only the bytes from offset to offset + size (glBufferSubData / glMapBuffer in
+        // OpenGL); the pointer it returns points at the first of them
+        VkDeviceSize cubeSize = sizeof(Vertex) * 36;  // vertices 0..35
+        VkDeviceSize floorSize = sizeof(Vertex) * 6;  // vertices 36..41, right after the cube's
+        void* data;
+        vkMapMemory(device, vertexBufferMemory, 0, cubeSize, 0, &data);
+            memcpy(data, vertices.data(), (size_t) cubeSize);
+        vkUnmapMemory(device, vertexBufferMemory);
+
+        vkMapMemory(device, vertexBufferMemory, cubeSize, floorSize, 0, &data);
+            memcpy(data, vertices.data() + 36, (size_t) floorSize);
+        vkUnmapMemory(device, vertexBufferMemory);
+--- replace:
+        // part by part: vkMapMemory maps only the bytes from offset to offset + size (glBufferSubData / glMapBuffer in
+        // OpenGL); the pointer it returns points at the first of them. The positions block, then the texture
+        // coordinates block right after it.
+        void* data;
+        vkMapMemory(device, vertexBufferMemory, 0, positionsSize, 0, &data);
+            memcpy(data, positions.data(), (size_t) positionsSize);
+        vkUnmapMemory(device, vertexBufferMemory);
+
+        vkMapMemory(device, vertexBufferMemory, positionsSize, texCoordsSize, 0, &data);
+            memcpy(data, texCoords.data(), (size_t) texCoordsSize);
+        vkUnmapMemory(device, vertexBufferMemory);
+--- file: main.cpp
+--- find:
+        VkBuffer vertexBuffers[] = {vertexBuffer};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+--- replace:
+        // the same buffer for both bindings: binding 0 reads from its start (the positions), binding 1 from the
+        // texture coordinates block after the positions
+        VkBuffer vertexBuffers[] = {vertexBuffer, vertexBuffer};
+        VkDeviceSize offsets[] = {0, sizeof(glm::vec3) * vertices.size()};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 2, vertexBuffers, offsets);
+
+=== task: copy-buffer
+--- file: main.cpp
+--- find:
+    // TODO: a device-local vertex buffer, filled from a staging buffer with vkCmdCopyBuffer (a copyBuffer helper)
+    void createVertexBuffer() {
+--- replace:
+    void createVertexBuffer() {
+--- file: main.cpp
+--- find:
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = positionsSize + texCoordsSize;
+        bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if (vkCreateBuffer(device, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create vertex buffer!");
+        }
+
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(device, vertexBuffer, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        if (vkAllocateMemory(device, &allocInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate vertex buffer memory!");
+        }
+
+        vkBindBufferMemory(device, vertexBuffer, vertexBufferMemory, 0);
+
+        // part by part: vkMapMemory maps only the bytes from offset to offset + size (glBufferSubData / glMapBuffer in
+        // OpenGL); the pointer it returns points at the first of them. The positions block, then the texture
+        // coordinates block right after it.
+        void* data;
+        vkMapMemory(device, vertexBufferMemory, 0, positionsSize, 0, &data);
+            memcpy(data, positions.data(), (size_t) positionsSize);
+        vkUnmapMemory(device, vertexBufferMemory);
+
+        vkMapMemory(device, vertexBufferMemory, positionsSize, texCoordsSize, 0, &data);
+            memcpy(data, texCoords.data(), (size_t) texCoordsSize);
+        vkUnmapMemory(device, vertexBufferMemory);
+    }
+--- replace:
+        VkDeviceSize bufferSize = positionsSize + texCoordsSize;
+
+        // the staging buffer: memory the CPU can write (a transfer source)
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        // part by part: vkMapMemory maps only the bytes from offset to offset + size (glBufferSubData / glMapBuffer in
+        // OpenGL); the pointer it returns points at the first of them. The positions block, then the texture
+        // coordinates block right after it.
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, positionsSize, 0, &data);
+            memcpy(data, positions.data(), (size_t) positionsSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        vkMapMemory(device, stagingBufferMemory, positionsSize, texCoordsSize, 0, &data);
+            memcpy(data, texCoords.data(), (size_t) texCoordsSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        // the vertex buffer: device-local memory, the fastest for the GPU to read (a transfer destination)
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
+
+        // the GPU copies the data from one buffer to the other (glCopyBufferSubData in OpenGL)
+        copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
+
+    // Copies size bytes from the start of one buffer to the start of another, with a one-time command buffer.
+    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+        VkBufferCopy copyRegion{};
+        copyRegion.srcOffset = 0;
+        copyRegion.dstOffset = 0;
+        copyRegion.size = size;
+        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+        endSingleTimeCommands(commandBuffer);
+    }

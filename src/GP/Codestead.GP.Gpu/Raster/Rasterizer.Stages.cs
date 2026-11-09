@@ -151,6 +151,19 @@ public static partial class Rasterizer
             {
                 var g = vsInputs[i];
                 int loc = g.Location ?? i;
+                if (g.Type is "mat4" or "mat3" or "mat2")
+                {
+                    // A matrix attribute takes one location per column (learnopengl's instanced aInstanceMatrix).
+                    int n = g.Type[3] - '0';
+                    var cols = new double[n * n];
+                    for (int c = 0; c < n; c++)
+                    {
+                        var col = (data.TryGetValue((loc + c).ToString(), out var cv) ? cv : null)?.Padded(n) ?? new double[n];
+                        for (int r = 0; r < n; r++) cols[c * n + r] = col[r];
+                    }
+                    vs.Globals[g.Id] = ShaderValue.Matrix(n, cols);
+                    continue;
+                }
                 vs.Globals[g.Id] = Sized(g.Type, data.TryGetValue(loc.ToString(), out var v) ? v : null);
             }
             vs.Globals["gl_VertexID"] = vs.Globals["gl_VertexIndex"] = ShaderValue.Scalar(index);
