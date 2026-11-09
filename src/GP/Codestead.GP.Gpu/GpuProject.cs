@@ -5,6 +5,9 @@ public sealed class GpuProject
 {
     public OrderedDictionary<string, string> Files { get; set; } = new(StringComparer.Ordinal);
 
+    /// <summary>Binary files the code loads (images), by path. They are shown but not edited.</summary>
+    public OrderedDictionary<string, byte[]> Assets { get; set; } = new(StringComparer.Ordinal);
+
     public GpuProject()
     {
     }
@@ -14,7 +17,21 @@ public sealed class GpuProject
         foreach (var (k, v) in files) Files[k] = v.Replace("\r\n", "\n");
     }
 
-    public GpuProject Clone() => new(Files);
+    public GpuProject Clone()
+    {
+        var copy = new GpuProject(Files);
+        foreach (var (k, v) in Assets) copy.Assets[k] = v;
+        return copy;
+    }
+
+    /// <summary>An asset by its path or by its name alone, or null.</summary>
+    public byte[]? FindAsset(string name)
+    {
+        name = name.Replace('\\', '/').TrimStart('.', '/');
+        if (Assets.TryGetValue(name, out var data)) return data;
+        var file = Path.GetFileName(name);
+        return Assets.FirstOrDefault(kv => Path.GetFileName(kv.Key) == file).Value;
+    }
 
     /// <summary>A file by its path, or by its name alone ("shader.vs" finds "shaders/shader.vs").</summary>
     public string? Find(string name)

@@ -11,8 +11,22 @@ public sealed partial class ShaderRunner
         var name = c.Function;
         if (name == "string") return ShaderValue.Str(((Name)c.Args[0]).Id);
         if (c.ArrayConstructor) return ShaderValue.Array(c.Args.Select(a => Coerce(name, Eval(a))).ToArray());
-        if (name.StartsWith('.')) return Method(name[1..], c);
-        if (name is "glfwGetTime") return ShaderValue.Scalar(Time);
+        if (name.StartsWith('.'))
+        {
+            if (Lenient && Hook?.Invoke(name, c.Args) is { } methodHooked) return methodHooked;
+            return Method(name[1..], c);
+        }
+        if (name is "glfwGetTime")
+        {
+            UsedTime = true;
+            return ShaderValue.Scalar(Time);
+        }
+        // DirectXMath stores into its first argument: XMStoreFloat4x4(&constants.transform, m).
+        if (name.StartsWith("XMStoreFloat", StringComparison.Ordinal) && c.Args.Count == 2)
+        {
+            Store(c.Args[0], Eval(c.Args[1]));
+            return ShaderValue.Scalar(0);
+        }
         if (name is "sizeof") return ShaderValue.Scalar(SizeOf(c.Args.FirstOrDefault()));
 
         // The shader's own functions and structs.
@@ -35,7 +49,10 @@ public sealed partial class ShaderRunner
         int n = ComponentCount(name);
         if (n > 0) return VectorConstructor(name, n, c.Args.Select(Eval).ToList(), c.Line);
 
+        // C++ mode: the API calls go to the hook before their arguments are evaluated (they name API objects).
+        if (Lenient && Hook?.Invoke(name, c.Args) is { } hooked) return hooked;
         var a = c.Args.Select(Eval).ToList();
+        if (MatrixFunction(name, a, c.Line) is { } matrix) return matrix;
         ShaderValue Map(Func<double, double> fn) => Need(1) ? new ShaderValue { V = a[0].V!.Select(fn).ToArray() } : throw Arity();
         ShaderValue Zip(Func<double, double, double> fn) => Need(2) ? Componentwise(a[0], a[1], fn, c.Line) : throw Arity();
         bool Need(int count) => a.Count == count && a.All(x => x.V is not null);
@@ -108,14 +125,8 @@ public sealed partial class ShaderRunner
                 return ShaderValue.Vec(a[0].V!.Zip(a[1].V!, (i, nn) => i - 2 * d * nn).ToArray());
             }
             case "transpose":
-            {
                 if (a.Count != 1 || !a[0].IsMatrix) throw Arity();
-                int k = a[0].Cols;
-                var r = new double[k * k];
-                for (int col = 0; col < k; col++)
-                    for (int row = 0; row < k; row++) r[col * k + row] = a[0].V![row * k + col];
-                return ShaderValue.Matrix(k, r);
-            }
+                return Transpose(a[0]);
             case "mul":
                 // HLSL: mul(vector, matrix) treats the vector as a row; mul(matrix, vector) as a column.
                 if (a.Count != 2) throw Arity();
@@ -124,6 +135,7 @@ public sealed partial class ShaderRunner
                 if (a.Count < 2) throw Arity();
                 return SampleTexture(c.Args[0], a[1]);
             default:
+                if (Lenient) return ShaderValue.Scalar(0);
                 throw new ShaderRuntimeException($"'{name}' was not declared in this scope", c.Line);
         }
     }
@@ -169,6 +181,7 @@ public sealed partial class ShaderRunner
             case "data" or "c_str":
                 return Eval(c.Args[0]);
             default:
+                if (Lenient) return ShaderValue.Scalar(0);
                 throw new ShaderRuntimeException($"no member function '{method}'", c.Line);
         }
     }

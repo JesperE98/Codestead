@@ -98,6 +98,47 @@ public sealed partial class VulkanReader
             scene.Notes.Add(SimNote.Error("vkFillModeNonSolid"));
 
         var uniforms = PushConstants(vs, fs);
+        var textures = Textures(vs, fs);
+        var cullMode = cull.Contains("FRONT_AND_BACK", StringComparison.Ordinal) ? CullMode.FrontAndBack : cull.Contains("BACK", StringComparison.Ordinal) ? CullMode.Back : cull.Contains("FRONT", StringComparison.Ordinal) ? CullMode.Front : CullMode.None;
+        bool frontCcw = !front.Contains("_CLOCKWISE", StringComparison.Ordinal) || front.Contains("COUNTER_CLOCKWISE", StringComparison.Ordinal);
+        var topology = GlReader.TopologyOf(src.LastFieldValue("topology") ?? "TRIANGLE_LIST");
+        bool depthTest = Regex.IsMatch(src.Code, @"depthTestEnable\s*=\s*VK_TRUE");
+
+        // Run the frame: the uniform buffer update and the recorded commands (each draw with its push constants).
+        var blocks = vs.Globals.Concat(fs.Globals).Where(g => g.Block is not null).ToList();
+        var recorder = new FrameRecorder(src, time, scene, blocks, transposeMatrices: false);
+        foreach (var fn in UpdateFunctions(blocks)) recorder.Run(fn);
+        if (src.FunctionAt(call.Offset) is { } recordFn) recorder.Run(recordFn);
+        var buffer = recorder.BufferContents();
+        var indexData = drawIndexed is not null ? src.Numbers("indices") : null;
+        if (recorder.Draws.Count > 0)
+        {
+            foreach (var d in recorder.Draws)
+            {
+                var values = new Dictionary<string, ShaderValue>(buffer, StringComparer.Ordinal);
+                foreach (var (k, v) in d.Constants) values[k] = v;
+                scene.Draws.Add(new DrawCall
+                {
+                    VertexShader = vs,
+                    FragmentShader = fs,
+                    MatchByLocation = true,
+                    Vertices = vertices,
+                    Indices = d.Indexed ? indexData?.Skip(d.First).Take(d.Count).Select(x => (int)x).ToArray() : null,
+                    First = d.Indexed ? 0 : d.First,
+                    Count = d.Count,
+                    Instances = Math.Max(1, d.Instances),
+                    Topology = topology,
+                    Uniforms = _ => values,
+                    Cull = cullMode,
+                    FrontCcw = frontCcw,
+                    Wireframe = wireframe,
+                    DepthTest = depthTest,
+                    Textures = textures,
+                });
+            }
+            if (recorder.Runner.UsedTime) scene.Animated = true;
+            return;
+        }
         scene.Draws.Add(new DrawCall
         {
             VertexShader = vs,
@@ -108,16 +149,53 @@ public sealed partial class VulkanReader
             First = first,
             Count = indices?.Length ?? count,
             Instances = Math.Max(1, instances),
-            Topology = GlReader.TopologyOf(src.LastFieldValue("topology") ?? "TRIANGLE_LIST"),
+            Topology = topology,
             Uniforms = uniforms,
-            Cull = cull.Contains("FRONT_AND_BACK", StringComparison.Ordinal) ? CullMode.FrontAndBack : cull.Contains("BACK", StringComparison.Ordinal) ? CullMode.Back : cull.Contains("FRONT", StringComparison.Ordinal) ? CullMode.Front : CullMode.None,
-            FrontCcw = !front.Contains("_CLOCKWISE", StringComparison.Ordinal) || front.Contains("COUNTER_CLOCKWISE", StringComparison.Ordinal),
+            Cull = cullMode,
+            FrontCcw = frontCcw,
             Wireframe = wireframe,
-            DepthTest = Regex.IsMatch(src.Code, @"depthTestEnable\s*=\s*VK_TRUE"),
+            DepthTest = depthTest,
+            Textures = textures,
         });
         foreach (var d in scene.Draws) d.Uniforms(1.0);
         if (src.UsedTime) scene.Animated = true;
     }
+
+    /// <summary>
+    /// Textures: each sampler2D (by binding) reads the next image loaded with stbi_load. It takes the whole chain of the
+    /// tutorial: a texture image filled from a staging buffer, an image view, a sampler and a descriptor set bound when
+    /// drawing; without one of them the shader reads nothing (black) and the validation layer complains.
+    /// </summary>
+    private Func<string, double, double, double[]>? Textures(ShaderProgram vs, ShaderProgram fs)
+    {
+        var names = TextureBinding.ShaderTextures(vs, fs);
+        if (names.Count == 0) return null;
+        var missing = new (string Call, string Key)[]
+        {
+            ("vkCreateDescriptorSetLayout", "vkNoDescriptorSetLayout"),
+            ("vkUpdateDescriptorSets", "vkNoDescriptorWrite"),
+            ("vkCmdBindDescriptorSets", "vkNoDescriptorBind"),
+            ("vkCreateSampler", "vkNoSampler"),
+            ("vkCmdCopyBufferToImage", "vkNoImageCopy"),
+        }.FirstOrDefault(m => !src.HasCall(m.Call));
+        if (missing.Call is not null)
+        {
+            scene.Notes.Add(SimNote.Error(missing.Key, ("name", names[0])));
+            return (_, _, _) => [0, 0, 0, 1];
+        }
+        if (!src.HasCall("vkCmdPipelineBarrier")) scene.Notes.Add(SimNote.Error("vkNoLayoutTransition"));
+        var images = StbImage.All(src, project, scene);
+        if (images.Count < names.Count) scene.Notes.Add(SimNote.Warning("tooFewTextures", ("count", names.Count.ToString()), ("loaded", images.Count.ToString())));
+        var sampler = new Codestead.GP.Gpu.Textures.SamplerState(
+            StbImage.WrapOf(src.LastFieldValue("addressModeU")), StbImage.WrapOf(src.LastFieldValue("addressModeV")),
+            !(src.LastFieldValue("magFilter") ?? "LINEAR").Contains("NEAREST", StringComparison.Ordinal),
+            (src.LastFieldValue("borderColor") ?? "").Contains("WHITE", StringComparison.Ordinal) ? [1, 1, 1, 1] : (src.LastFieldValue("borderColor") ?? "").Contains("OPAQUE_BLACK", StringComparison.Ordinal) ? [0, 0, 0, 1] : null);
+        return TextureBinding.Bind(names, images, sampler);
+    }
+
+    /// <summary>The functions that fill a uniform buffer struct (updateUniformBuffer): they declare a variable of a block's type.</summary>
+    private IEnumerable<string> UpdateFunctions(List<ShaderAst.Global> blocks) =>
+        blocks.Where(b => !b.PushConstant).SelectMany(b => src.Functions.Keys.Where(f => src.FunctionBody(f) is { } body && Regex.IsMatch(body, @"\b" + Regex.Escape(b.Type) + @"\s+\w+\s*[{=;]"))).Distinct();
 
     /// <summary>The shader loaded from "shaders/vert.spv" is the one built from the project's .vert file.</summary>
     private ShaderProgram? Shader(string extension, string spvHint)

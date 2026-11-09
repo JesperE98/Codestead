@@ -13,6 +13,8 @@ public static partial class Rasterizer
     /// <summary>Renders one frame of a scene at a width in pixels (the height follows the window's aspect ratio).</summary>
     public static Frame Render(Scene.Scene scene, int width, double time = 1.0)
     {
+        // A program that reads the clock is read again at that time (its uniforms, transforms … change).
+        if (scene.Animated && scene.AtTime is { } at && time != 1.0) scene = at(time);
         int height = Math.Max(1, (int)Math.Round(width * (double)scene.Height / Math.Max(1, scene.Width)));
         var pixels = new byte[width * height * 4];
         var depth = new double[width * height];

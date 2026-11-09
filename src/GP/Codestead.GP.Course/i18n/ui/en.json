@@ -268,5 +268,22 @@
   "ach.typo.title": "Did you mean …?",
   "ach.typo.desc": "The build stopped at a misspelt API name.",
   "ach.magenta.title": "Debug pink",
-  "ach.magenta.desc": "You cleared the screen to pure magenta – the colour of missing textures everywhere."
+  "ach.magenta.desc": "You cleared the screen to pure magenta – the colour of missing textures everywhere.",
+  "sim.textureFileMissing": "The image {file} is not in the project, so stbi_load returns nothing.",
+  "sim.textureNotPng": "The image {file} could not be read (the simulator reads PNG files).",
+  "sim.noTextureBound": "glTexImage2D (line {line}) is called with no texture bound (glBindTexture).",
+  "sim.textureFormatMismatch": "{file} has {channels} channels, but glTexImage2D reads it as {format}: the colours come out scrambled.",
+  "sim.textureIncomplete": "The texture for {name} is incomplete: its minifying filter {filter} uses mipmaps, but none were made (glGenerateMipmap). It reads black.",
+  "sim.noTextureOnUnit": "The shader samples {name}, but no texture is bound to texture unit {unit}. It reads black.",
+  "sim.tooFewTextures": "The shaders read {count} textures, but the program loads only {loaded} image(s).",
+  "sim.vkNoDescriptorSetLayout": "The shader samples {name}, but there is no descriptor set layout (vkCreateDescriptorSetLayout). Nothing is drawn correctly.",
+  "sim.vkNoDescriptorWrite": "The descriptor set is never filled (vkUpdateDescriptorSets), so the shader has no texture to read. Validation layer error.",
+  "sim.vkNoDescriptorBind": "The descriptor set is never bound (vkCmdBindDescriptorSets) before drawing. Validation layer error.",
+  "sim.vkNoSampler": "There is no sampler (vkCreateSampler) for the texture {name}.",
+  "sim.vkNoImageCopy": "The pixels are never copied into the texture image (vkCmdCopyBufferToImage).",
+  "sim.vkNoLayoutTransition": "The texture image is never moved to the right layouts (vkCmdPipelineBarrier). Validation layer error.",
+  "sim.dxNoSrv": "The shader samples {name}, but there is no shader resource view (CreateShaderResourceView).",
+  "sim.dxNoDescriptorHeaps": "The descriptor heap is never set on the command list (SetDescriptorHeaps). The debug layer reports an error.",
+  "sim.dxNoDescriptorTable": "The texture's descriptor table is never set (SetGraphicsRootDescriptorTable). The debug layer reports an error.",
+  "sim.dxNoTextureUpload": "The pixels are never copied into the texture (UpdateSubresources or CopyTextureRegion)."
 }

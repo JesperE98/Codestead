@@ -16,6 +16,18 @@ public sealed partial class ShaderParser
 
     private ShaderParser(List<ShaderToken> tokens) => this.tokens = tokens;
 
+    /// <summary>C++ mode: a statement that does not parse is skipped (up to its ';' or block) instead of failing.</summary>
+    private bool lenient;
+
+    /// <summary>Parses C++ statements (a function body without its braces), skipping what the subset does not cover.</summary>
+    public static List<Stmt> ParseStatementsLenient(string source)
+    {
+        var p = new ShaderParser(ShaderLexer.Tokenize(source)) { lenient = true };
+        var list = new List<Stmt>();
+        while (p.Peek.Kind != ShaderTokenKind.End) list.AddRange(p.StatementOrSkip());
+        return list;
+    }
+
     /// <summary>Parses a whole shader.</summary>
     public static ShaderProgram ParseProgram(string source)
     {
@@ -61,6 +73,7 @@ public sealed partial class ShaderParser
     {
         "in", "out", "inout", "uniform", "const", "static", "flat", "smooth", "noperspective", "centroid", "highp", "mediump", "lowp",
         "linear", "nointerpolation", "readonly", "writeonly", "buffer", "shared", "groupshared", "precise", "invariant", "row_major", "column_major",
+        "unsigned", "signed", "constexpr", "volatile", "inline",
     };
 
     private ShaderProgram Program()
@@ -88,10 +101,10 @@ public sealed partial class ShaderParser
             {
                 int line = Next().Line;
                 var name = Identifier();
-                SkipRegister();
+                var register = SkipRegister();
                 var fields = Fields();
                 Accept(";");
-                program.Globals.Add(new Global("uniform", name, "", null, false, fields, null, 0, line));
+                program.Globals.Add(new Global("uniform", name, "", null, false, fields, null, 0, line, register));
                 continue;
             }
             Global(program);
@@ -111,15 +124,20 @@ public sealed partial class ShaderParser
         } while (depth > 0);
     }
 
-    /// <summary>": register(b0)" or ": register(b0, space1)" after an HLSL resource.</summary>
-    private void SkipRegister()
+    /// <summary>": register(b0)" or ": register(b0, space1)" after an HLSL resource: the register's number, or null.</summary>
+    private int? SkipRegister()
     {
-        if (Peek.Is(":") && PeekAt(1).Is("register"))
+        if (!(Peek.Is(":") && PeekAt(1).Is("register"))) return null;
+        Next();
+        Next();
+        int? number = null;
+        if (Peek.Is("(") && PeekAt(1).Kind == ShaderTokenKind.Identifier)
         {
-            Next();
-            Next();
-            SkipBalanced("(", ")");
+            var m = System.Text.RegularExpressions.Regex.Match(PeekAt(1).Text, @"^[a-zA-Z](\d+)$");
+            if (m.Success) number = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
         }
+        SkipBalanced("(", ")");
+        return number;
     }
 
     private Struct StructDecl()
@@ -189,7 +207,7 @@ public sealed partial class ShaderParser
     private void Global(ShaderProgram program)
     {
         int line = Peek.Line;
-        int? location = null;
+        int? location = null, binding = null;
         bool pushConstant = false;
         if (Accept("layout"))
         {
@@ -199,10 +217,15 @@ public sealed partial class ShaderParser
                 var key = Next();
                 if (key.Kind == ShaderTokenKind.End) throw new ShaderSyntaxException("expected ')' at end of input", key.Line);
                 if (key.Is("push_constant")) pushConstant = true;
-                if (key.Is("location") && Accept("="))
+                if ((key.Is("location") || key.Is("binding")) && Accept("="))
                 {
                     var v = Next();
-                    if (v.Kind == ShaderTokenKind.Number) location = (int)double.Parse(v.Text, CultureInfo.InvariantCulture);
+                    if (v.Kind == ShaderTokenKind.Number)
+                    {
+                        var n = (int)double.Parse(v.Text, CultureInfo.InvariantCulture);
+                        if (key.Is("location")) location = n;
+                        else binding = n;
+                    }
                 }
             }
         }
@@ -224,7 +247,7 @@ public sealed partial class ShaderParser
             if (Peek.Kind == ShaderTokenKind.Identifier) instance = Identifier();
             ArraySuffix();
             Expect(";");
-            program.Globals.Add(new Global(storage == "" ? "uniform" : storage, type, instance, location, pushConstant, fields, null, 0, line));
+            program.Globals.Add(new Global(storage == "" ? "uniform" : storage, type, instance, location, pushConstant, fields, null, 0, line, binding));
             return;
         }
         var id = Identifier();
@@ -237,12 +260,13 @@ public sealed partial class ShaderParser
         {
             int size = ArraySuffix();
             string? semantic = null;
-            if (Peek.Is(":") && PeekAt(1).Is("register")) SkipRegister();
+            int? register = null;
+            if (Peek.Is(":") && PeekAt(1).Is("register")) register = SkipRegister();
             else if (Accept(":")) semantic = Identifier();
             Expr? value = Accept("=") ? Initializer() : null;
             // HLSL resources (Texture2D, SamplerState …) and plain HLSL globals are uniforms.
             var st = storage == "" && (type.StartsWith("Texture", StringComparison.Ordinal) || type.StartsWith("Sampler", StringComparison.Ordinal) || type.StartsWith("RWTexture", StringComparison.Ordinal)) ? "uniform" : storage;
-            program.Globals.Add(new Global(st, type, id, location, pushConstant, null, value, size, line));
+            program.Globals.Add(new Global(st, type, id, location, pushConstant, null, value, size, line, register ?? binding));
             _ = semantic;
             if (!Accept(",")) break;
             id = Identifier();

@@ -12,9 +12,41 @@ public sealed partial class ShaderParser
         while (!Accept("}"))
         {
             if (Peek.Kind == ShaderTokenKind.End) throw new ShaderSyntaxException("expected '}' at end of input", Peek.Line);
-            list.AddRange(Statement());
+            list.AddRange(lenient ? StatementOrSkip() : Statement());
         }
         return list;
+    }
+
+    /// <summary>A statement, or – in C++ mode, when it does not parse – nothing, after skipping to its end.</summary>
+    private List<Stmt> StatementOrSkip()
+    {
+        int start = pos;
+        try
+        {
+            return Statement();
+        }
+        catch (ShaderSyntaxException)
+        {
+            pos = start;
+            int depth = 0;
+            while (Peek.Kind != ShaderTokenKind.End)
+            {
+                var t = Next();
+                if (t.Is("(") || t.Is("{") || t.Is("[")) depth++;
+                else if (t.Is(")") || t.Is("]")) depth--;
+                else if (t.Is("}"))
+                {
+                    if (--depth <= 0) break;
+                }
+                else if (t.Is(";") && depth <= 0) break;
+                if (depth < 0)
+                {
+                    pos--;
+                    break;
+                }
+            }
+            return [];
+        }
     }
 
     private List<Stmt> BodyOrStatement() => Peek.Is("{") ? Block() : Statement();

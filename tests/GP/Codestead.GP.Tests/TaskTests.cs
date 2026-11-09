@@ -50,6 +50,11 @@ public class TaskTests
         foreach (var file in Directory.GetFiles(solutionDir, "*", SearchOption.AllDirectories))
         {
             var name = Path.GetRelativePath(solutionDir, file).Replace('\\', '/');
+            if (GpCourse.IsAsset(name))
+            {
+                Assert.True(project.Assets.TryGetValue(name, out var bytes) && bytes.SequenceEqual(File.ReadAllBytes(file)), $"{api}/{chapter}: the image {name} differs from start/");
+                continue;
+            }
             Assert.True(project.Files.TryGetValue(name, out var text), $"{api}/{chapter}: {name} is missing");
             Assert.Equal(File.ReadAllText(file).Replace("\r\n", "\n"), text);
         }

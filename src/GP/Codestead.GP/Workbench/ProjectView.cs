@@ -38,6 +38,8 @@ public sealed partial class ProjectView : Border
         Padding = new Thickness(12, 8),
         CornerRadius = new CornerRadius(0),
     };
+    private readonly Avalonia.Controls.Image assetImage = new() { Stretch = Stretch.Uniform, MaxWidth = 512, MaxHeight = 512, Margin = new Thickness(16) };
+    private readonly Border assetView = new() { Background = Dark, IsVisible = false };
     private readonly TextBlock status = new() { Foreground = Dim, FontSize = 12, VerticalAlignment = VerticalAlignment.Center };
     private readonly Button build = new() { Padding = new Thickness(12, 3), FontSize = 12.5, VerticalAlignment = VerticalAlignment.Center };
     private readonly Button reset = new() { Padding = new Thickness(8, 2), FontSize = 12.5, Foreground = new SolidColorBrush(Color.Parse("#c9d1d9")), VerticalAlignment = VerticalAlignment.Center };
@@ -109,7 +111,11 @@ public sealed partial class ProjectView : Border
         editorDock.Children.Add(top);
         DockPanel.SetDock(statusBar, Dock.Bottom);
         editorDock.Children.Add(statusBar);
-        editorDock.Children.Add(editor);
+        assetView.Child = assetImage;
+        var content = new Grid();
+        content.Children.Add(editor);
+        content.Children.Add(assetView);
+        editorDock.Children.Add(content);
 
         var root = new Grid { RowDefinitions = new RowDefinitions("*,4,190") };
         root.Children.Add(editorDock);
@@ -164,7 +170,7 @@ public sealed partial class ProjectView : Border
     private void RebuildTabs()
     {
         tabs.Children.Clear();
-        foreach (var name in project.Files.Keys)
+        foreach (var name in project.Files.Keys.Concat(project.Assets.Keys))
         {
             var tab = new Button
             {
@@ -192,6 +198,23 @@ public sealed partial class ProjectView : Border
 
     private void LoadFile()
     {
+        bool asset = project.Assets.TryGetValue(file, out var bytes);
+        editor.IsVisible = !asset;
+        assetView.IsVisible = asset;
+        if (asset)
+        {
+            try
+            {
+                using var stream = new MemoryStream(bytes!);
+                assetImage.Source = new Avalonia.Media.Imaging.Bitmap(stream);
+            }
+            catch (Exception e) when (e is not OutOfMemoryException)
+            {
+                assetImage.Source = null;
+            }
+            status.Text = file;
+            return;
+        }
         loading = true;
         editor.Text = project.Files.TryGetValue(file, out var text) ? text : "";
         editor.CaretIndex = 0;
@@ -294,6 +317,7 @@ public sealed partial class ProjectView : Border
 
     private void UpdateStatus()
     {
+        if (project.Assets.ContainsKey(file)) return;
         var text = editor.Text ?? "";
         int caret = Math.Min(editor.CaretIndex, text.Length);
         int line = 1, col = 1;

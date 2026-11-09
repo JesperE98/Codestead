@@ -21,6 +21,7 @@ public static class GpCourse
         ("hello-window", "getting-started"),
         ("hello-triangle", "getting-started"),
         ("shaders", "getting-started"),
+        ("textures", "getting-started"),
     ];
 
     public static IReadOnlyList<CourseChapter> Chapters { get; } = Build();
@@ -71,10 +72,16 @@ public static class GpCourse
             var prefix = $"projects/{api}/{chapters[i].Id}/start/";
             var files = Resources.List(prefix).ToList();
             if (files.Count == 0) continue;
-            return new GpuProject(Order(files.Select(f => new KeyValuePair<string, string>(f[prefix.Length..], Resources.Read(f) ?? ""))));
+            var text = files.Where(f => !IsAsset(f)).ToList();
+            var project = new GpuProject(Order(text.Select(f => new KeyValuePair<string, string>(f[prefix.Length..], Resources.Read(f) ?? ""))));
+            foreach (var f in files.Where(IsAsset)) project.Assets[f[prefix.Length..]] = Resources.ReadBytes(f) ?? [];
+            return project;
         }
         return new GpuProject(new Dictionary<string, string> { ["main.cpp"] = "" });
     }
+
+    /// <summary>Binary files of a project (images), loaded as assets rather than code.</summary>
+    public static bool IsAsset(string path) => path.EndsWith(".png", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>main.cpp first, then headers, then shaders – the order of the editor's tabs.</summary>
     private static IEnumerable<KeyValuePair<string, string>> Order(IEnumerable<KeyValuePair<string, string>> files) =>

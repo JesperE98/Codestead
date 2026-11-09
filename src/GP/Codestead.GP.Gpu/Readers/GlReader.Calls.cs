@@ -16,9 +16,9 @@ public sealed partial class GlReader
                 return;
             case "glfwCreateWindow":
                 windowCreated = glfwInit;
-                scene.Width = src.Int(A(0)) ?? 800;
-                scene.Height = src.Int(A(1)) ?? 600;
-                scene.WindowTitle = CppSource.StringArg(A(2)) ?? src.Evaluate(A(2))?.Text ?? "";
+                scene.Width = Int(A(0)) ?? 800;
+                scene.Height = Int(A(1)) ?? 600;
+                scene.WindowTitle = CppSource.StringArg(A(2)) ?? Eval(A(2))?.Text ?? "";
                 return;
             case "gladLoadGLLoader" or "gladLoadGL":
                 gladLoaded = true;
@@ -38,7 +38,7 @@ public sealed partial class GlReader
         {
             case "glClearColor":
             {
-                var v = a.Select(x => src.Evaluate(x)?.X ?? 0).ToArray();
+                var v = a.Select(x => Eval(x)?.X ?? 0).ToArray();
                 if (v.Length == 4)
                 {
                     gl.ClearColor = v;
@@ -58,7 +58,7 @@ public sealed partial class GlReader
                 return;
             case "glShaderSource":
                 if (gl.ShaderObjects.TryGetValue(Obj(A(0)), out var so))
-                    so.Source = src.Evaluate(Obj(A(2)))?.Text;
+                    so.Source = Eval(Obj(A(2)))?.Text;
                 return;
             case "glCompileShader":
                 if (gl.ShaderObjects.TryGetValue(Obj(A(0)), out var cs)) cs.Compiled = true;
@@ -100,7 +100,7 @@ public sealed partial class GlReader
                     scene.Notes.Add(SimNote.Warning("noBufferBound", ("line", line.ToString())));
                     return;
                 }
-                gl.Buffers[target] = src.Numbers(DataName(A(2)));
+                gl.Buffers[target] = Numbers(DataName(A(2)));
                 return;
             }
             case "glVertexAttribPointer":
@@ -110,18 +110,18 @@ public sealed partial class GlReader
                     scene.Notes.Add(SimNote.Error("noVaoBound", ("call", name), ("line", line.ToString())));
                     return;
                 }
-                int loc = src.Int(A(0)) ?? 0;
+                int loc = Int(A(0)) ?? 0;
                 if (!vao.Attributes.TryGetValue(loc, out var attr)) vao.Attributes[loc] = attr = new GlState.Attribute();
                 attr.Buffer = gl.ArrayBuffer;
-                attr.Size = src.Int(A(1)) ?? 4;
-                attr.StrideBytes = src.Int(A(4)) ?? 0;
-                attr.OffsetBytes = src.Int(A(5)) ?? 0;
+                attr.Size = Int(A(1)) ?? 4;
+                attr.StrideBytes = Int(A(4)) ?? 0;
+                attr.OffsetBytes = Int(A(5)) ?? 0;
                 return;
             }
             case "glEnableVertexAttribArray" or "glDisableVertexAttribArray":
             {
                 if (Vao is not { } vao) return;
-                int loc = src.Int(A(0)) ?? 0;
+                int loc = Int(A(0)) ?? 0;
                 if (!vao.Attributes.TryGetValue(loc, out var attr)) vao.Attributes[loc] = attr = new GlState.Attribute();
                 attr.Enabled = name == "glEnableVertexAttribArray";
                 return;
@@ -145,14 +145,98 @@ public sealed partial class GlReader
             case "glFrontFace":
                 gl.FrontCcw = !A(0).Contains("GL_CW", StringComparison.Ordinal) || A(0).Contains("GL_CCW", StringComparison.Ordinal);
                 return;
+            case "glGenTextures":
+                foreach (var n in Names(A(0), A(1))) gl.TextureObjects[n] = new GlState.TextureObject();
+                return;
+            case "glActiveTexture":
+            {
+                var m = System.Text.RegularExpressions.Regex.Match(A(0), @"GL_TEXTURE(\d+)(?:\s*\+\s*(\d+))?");
+                gl.ActiveUnit = m.Success ? int.Parse(m.Groups[1].Value) + (m.Groups[2].Success ? int.Parse(m.Groups[2].Value) : 0) : 0;
+                return;
+            }
+            case "glBindTexture":
+                if (Obj(A(1)) is "0") gl.Units.Remove(gl.ActiveUnit);
+                else gl.Units[gl.ActiveUnit] = Obj(A(1));
+                return;
+            case "glTexParameteri" or "glTexParameterf" or "glTexParameterfv" or "glTexParameteriv":
+            {
+                if (BoundTexture is not { } tex) return;
+                var param = A(1);
+                if (param.Contains("WRAP_S", StringComparison.Ordinal)) tex.WrapS = StbImage.WrapOf(A(2));
+                else if (param.Contains("WRAP_T", StringComparison.Ordinal)) tex.WrapT = StbImage.WrapOf(A(2));
+                else if (param.Contains("MIN_FILTER", StringComparison.Ordinal)) tex.MinFilter = A(2).Trim();
+                else if (param.Contains("MAG_FILTER", StringComparison.Ordinal)) tex.MagFilter = A(2).Trim();
+                else if (param.Contains("BORDER_COLOR", StringComparison.Ordinal)) tex.Border = Numbers(DataName(A(2)))?.Take(4).ToArray();
+                return;
+            }
+            case "glTexImage2D":
+                TexImage(a, line);
+                return;
+            case "glGenerateMipmap":
+                if (BoundTexture is { } mt) mt.Mipmaps = mt.Image is not null;
+                return;
             case "glDrawArrays":
-                Draw(A(0), null, src.Int(A(1)) ?? 0, src.Int(A(2)) ?? 0, name, line);
+                Draw(A(0), null, Int(A(1)) ?? 0, Int(A(2)) ?? 0, name, line);
                 return;
             case "glDrawElements":
-                Draw(A(0), A(2), src.Int(A(3)) ?? 0, src.Int(A(1)) ?? 0, name, line);
+                Draw(A(0), A(2), Int(A(3)) ?? 0, Int(A(1)) ?? 0, name, line);
                 return;
         }
         if (name.StartsWith("glUniform", StringComparison.Ordinal)) Uniform(name, a, line);
+    }
+
+    private GlState.TextureObject? BoundTexture =>
+        gl.Units.TryGetValue(gl.ActiveUnit, out var name) && gl.TextureObjects.TryGetValue(name, out var t) ? t : null;
+
+    /// <summary>
+    /// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data): the image stb_image loaded
+    /// into <c>data</c>. A format with another number of channels than the data reads the bytes wrongly, as on a real GPU.
+    /// </summary>
+    private void TexImage(IReadOnlyList<string> a, int line)
+    {
+        if (BoundTexture is not { } tex || a.Count < 9)
+        {
+            scene.Notes.Add(SimNote.Warning("noTextureBound", ("line", line.ToString())));
+            return;
+        }
+        var data = DataName(a[8]);
+        var loaded = images.LastOrDefault(i => i.Variable == data && i.Offset < statementOffset);
+        var image = loaded?.Image;
+        if (image is null) return;
+        int components = Components(a[6]);
+        tex.Components = components == 4 ? 4 : 3;
+        tex.Image = image.Channels == components || components == 0 ? image : Reinterpret(image, image.Channels, components);
+        if (image.Channels != components && components != 0)
+            scene.Notes.Add(SimNote.Warning("textureFormatMismatch", ("file", loaded!.File), ("channels", image.Channels.ToString()), ("format", a[6].Trim())));
+        tex.Mipmaps = false;
+    }
+
+    private static int Components(string format) => format.Trim() switch
+    {
+        "GL_RGBA" or "GL_BGRA" => 4,
+        "GL_RGB" or "GL_BGR" => 3,
+        "GL_RG" => 2,
+        "GL_RED" => 1,
+        _ => 0,
+    };
+
+    /// <summary>The bytes of an image with <paramref name="actual"/> channels read as if it had <paramref name="assumed"/>.</summary>
+    private static Textures.Image Reinterpret(Textures.Image image, int actual, int assumed)
+    {
+        int n = image.Width * image.Height;
+        var packed = new byte[n * actual];
+        for (int i = 0; i < n; i++)
+            for (int k = 0; k < actual; k++) packed[i * actual + k] = image.Rgba[i * 4 + Math.Min(k, 3)];
+        var rgba = new byte[n * 4];
+        for (int i = 0; i < n; i++)
+        {
+            for (int k = 0; k < 4; k++)
+            {
+                int at = i * assumed + Math.Min(k, assumed - 1);
+                rgba[i * 4 + k] = k < assumed ? (at < packed.Length ? packed[at] : (byte)0) : (k == 3 ? (byte)255 : rgba[i * 4]);
+            }
+        }
+        return image with { Rgba = rgba, Channels = assumed };
     }
 
     private GlState.VertexArray? Vao => gl.CurrentVertexArray is { } v && gl.VertexArrays.TryGetValue(v, out var vao) ? vao : null;
@@ -160,7 +244,7 @@ public sealed partial class GlReader
     /// <summary>glGenBuffers(1, &amp;VBO) → VBO; glGenBuffers(2, VBOs) → VBOs[0], VBOs[1].</summary>
     private IEnumerable<string> Names(string count, string target)
     {
-        int n = src.Int(count) ?? 1;
+        int n = Int(count) ?? 1;
         var t = Obj(target);
         if (n == 1 && !target.Trim().StartsWith('&') && !t.Contains('[')) return [t + "[0]", t];
         return n == 1 ? [t] : Enumerable.Range(0, n).Select(i => $"{t}[{i}]");
@@ -186,20 +270,19 @@ public sealed partial class GlReader
         {
             var expr = values.Count >= 3 ? values[2] : "";
             expr = System.Text.RegularExpressions.Regex.Replace(expr, @"^(?:glm::)?value_ptr\s*\((.*)\)$", "$1");
-            program.Uniforms[uniform] = t => src.Evaluate(expr, t);
+            var matrix = Eval(expr);
+            program.Uniforms[uniform] = _ => matrix;
             return;
         }
         if (name.EndsWith('v') && values.Count >= 2)
         {
-            var expr = DataName(values[1]);
-            program.Uniforms[uniform] = t => src.Evaluate(expr, t);
+            var vector = Eval(DataName(values[1]));
+            program.Uniforms[uniform] = _ => vector;
             return;
         }
-        program.Uniforms[uniform] = t =>
-        {
-            var nums = values.Select(v => src.Evaluate(v, t)?.X ?? 0).ToArray();
-            return ShaderValue.Vec(nums);
-        };
+        // Evaluated now: a uniform set inside a loop has the loop's value for the draw that follows.
+        var nums = ShaderValue.Vec(values.Select(v => Eval(v)?.X ?? 0).ToArray());
+        program.Uniforms[uniform] = _ => nums;
     }
 
     private void Link(GlState.ProgramObject program, int line)
@@ -288,8 +371,7 @@ public sealed partial class GlReader
             return;
         }
         var values = a.Skip(1).ToList();
-        program.Uniforms[uniform] = values.Count == 1
-            ? t => src.Evaluate(values[0], t)
-            : t => ShaderValue.Vec(values.Select(v => src.Evaluate(v, t)?.X ?? 0).ToArray());
+        var value = values.Count == 1 ? Eval(values[0]) : ShaderValue.Vec(values.Select(v => Eval(v)?.X ?? 0).ToArray());
+        program.Uniforms[uniform] = _ => value;
     }
 }

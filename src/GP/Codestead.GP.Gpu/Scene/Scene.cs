@@ -26,6 +26,9 @@ public sealed class Scene
     /// <summary>Something the simulator does not understand: the preview may not match a real run.</summary>
     public bool Approximate { get; set; }
 
+    /// <summary>The same program read again at another time (the preview animates with it).</summary>
+    public Func<double, Scene>? AtTime { get; set; }
+
     /// <summary>The frame can be shown: a window that stays open and presents.</summary>
     public bool ShowsFrames => WindowCreated && RenderLoop && Presents;
 }

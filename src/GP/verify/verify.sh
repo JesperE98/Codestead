@@ -89,7 +89,7 @@ for dir in "$@"; do
       glad=$(glad_dir)
       for s in "$work"/*.vs "$work"/*.vert; do [ -f "$s" ] && { glslangValidator -S vert "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S vert "$s" | tail -n +2)"; }; done
       for s in "$work"/*.fs "$work"/*.frag; do [ -f "$s" ] && { glslangValidator -S frag "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S frag "$s" | tail -n +2)"; }; done
-      if g++ -std=c++17 -Wall -o "$work/app" "$work/main.cpp" "$glad/src/glad.c" -I"$glad/include" -I"$work" -lglfw -ldl 2>"$work/build.log"; then
+      if g++ -std=c++17 -Wall -o "$work/app" "$work/main.cpp" "$glad/src/glad.c" -I"$glad/include" -I"$work" -I/usr/include/stb -lglfw -ldl 2>"$work/build.log"; then
         echo "  compiled"
         if [ -z "${VERIFY_NO_RUN:-}" ]; then
           start_x; (cd "$work" && run_and_shoot ./app "$name" "$work/run.log")
@@ -107,7 +107,7 @@ for dir in "$@"; do
         out="$work/shaders/$( [ "${s##*.}" = vert ] && echo vert || echo frag ).spv"
         glslangValidator -V "$s" -o "$out" >"$work/glslang.log" || { fail "$(basename "$s"):"; cat "$work/glslang.log"; }
       done
-      if g++ -std=c++17 -Wall -o "$work/app" "$work/main.cpp" -lglfw -lvulkan 2>"$work/build.log"; then
+      if g++ -std=c++17 -Wall -I/usr/include/stb -o "$work/app" "$work/main.cpp" -lglfw -lvulkan 2>"$work/build.log"; then
         echo "  compiled"
         if [ -z "${VERIFY_NO_RUN:-}" ]; then
           start_x; (cd "$work" && VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json run_and_shoot ./app "$name" "$work/run.log")
@@ -138,7 +138,7 @@ for dir in "$@"; do
       for h in "$dxh"/*.h "$dxh"/*.inl; do
         sed 's@#if defined(_MSC_VER) || !defined(_WIN32)@#if 1 // MSVC declarations (verify.sh)@' "$h" >"$work/dxh/$(basename "$h")"
       done
-      if x86_64-w64-mingw32-g++ -std=c++17 -Wall -fsyntax-only -municode -I"$work/dxh" -I"$work" "$work/main.cpp" 2>"$work/build.log"; then
+      if x86_64-w64-mingw32-g++ -std=c++17 -Wall -fsyntax-only -municode -I"$work/dxh" -I"$work" -I/usr/include/stb "$work/main.cpp" 2>"$work/build.log"; then
         echo "  compiled (syntax and types; DirectX 12 cannot run here)"
       else
         fail "compile error:"; grep -v "^In file included" "$work/build.log" | head -30

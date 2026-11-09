@@ -15,3 +15,4 @@ artifacts/
 # CATALOG_SIGNING_KEY secret and a password manager, see docs/DEVELOPMENT.md).
 *.pem
 !build/catalog-signing.pub.pem
+__pycache__/

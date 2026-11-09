@@ -25,6 +25,46 @@ public sealed partial class ShaderRunner
     /// <summary>The value of glfwGetTime() and friends, in seconds.</summary>
     public double Time { get; set; } = 1.0;
 
+    /// <summary>Set when the clock was read (the result changes over time).</summary>
+    public bool UsedTime { get; set; }
+
+    /// <summary>
+    /// C++ mode: a statement that fails is skipped, and a call the runner does not know goes to <see cref="Hook"/>
+    /// (the API calls) and otherwise gives 0.
+    /// </summary>
+    public bool Lenient { get; set; }
+
+    /// <summary>Calls the runner does not know (C++ mode): name (".Method" for methods; args[0] is then the object), arguments.</summary>
+    public Func<string, IReadOnlyList<Expr>, ShaderValue?>? Hook { get; set; }
+
+    /// <summary>Evaluates an argument inside a hook (does not restart the step count).</summary>
+    public ShaderValue EvalArg(Expr e) => Eval(e);
+
+    /// <summary>Runs C++ statements at the top level: what they declare becomes a global.</summary>
+    public void RunStatements(IReadOnlyList<Stmt> body)
+    {
+        steps = 0;
+        scopes.Add(Globals);
+        try
+        {
+            foreach (var s in body)
+            {
+                try
+                {
+                    var flow = Exec(s);
+                    if (flow.Returned) return;
+                }
+                catch (ShaderRuntimeException) when (Lenient)
+                {
+                }
+            }
+        }
+        finally
+        {
+            scopes.RemoveAt(scopes.Count - 1);
+        }
+    }
+
     private const int MaxSteps = 20000;
 
     public ShaderRunner(ShaderProgram program)
@@ -106,7 +146,15 @@ public sealed partial class ShaderRunner
             foreach (var s in body)
             {
                 if (++steps > MaxSteps) throw new ShaderRuntimeException("the shader runs too long for the simulator", s.Line);
-                var flow = Exec(s);
+                Flow flow;
+                try
+                {
+                    flow = Exec(s);
+                }
+                catch (ShaderRuntimeException) when (Lenient)
+                {
+                    continue;
+                }
                 if (flow.Returned || flow.Discarded) return flow;
             }
             return default;
@@ -122,8 +170,12 @@ public sealed partial class ShaderRunner
         switch (s)
         {
             case Declare d:
-                scopes[^1][d.Id] = d.Value is null ? Default(d.Type) : Coerce(d.Type, Eval(d.Value)).Clone();
+            {
+                // C++: Type name{} / Type name = {} is a zero-initialised struct.
+                if (d.Value is InitList { Items.Count: 0 }) scopes[^1][d.Id] = Default(d.Type);
+                else scopes[^1][d.Id] = d.Value is null ? Default(d.Type) : Coerce(d.Type, Eval(d.Value)).Clone();
                 return default;
+            }
             case Assign a:
             {
                 var value = Eval(a.Value);
@@ -216,6 +268,14 @@ public sealed partial class ShaderRunner
                     return;
                 }
                 throw new ShaderRuntimeException($"cannot assign to '.{m.Field}'", m.Line);
+            }
+            case IndexOf { Target: IndexOf inner } ix2 when Eval(inner.Target) is { IsMatrix: true } mat:
+            {
+                // m[col][row] = x (proj[1][1] *= -1 in vulkan-tutorial).
+                int col = (int)Math.Floor(Eval(inner.At).X), row = (int)Math.Floor(Eval(ix2.At).X);
+                if (col < 0 || col >= mat.Cols || row < 0 || row >= mat.Cols) throw new ShaderRuntimeException("matrix index out of range", ix2.Line);
+                mat.V![col * mat.Cols + row] = value.X;
+                return;
             }
             case IndexOf ix:
             {

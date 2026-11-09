@@ -62,5 +62,8 @@ public static class ShaderAst
     /// A uniform or cbuffer block has <see cref="Block"/> fields; <see cref="Id"/> is then the instance name
     /// (or empty: the fields are globals).
     /// </summary>
-    public sealed record Global(string Storage, string Type, string Id, int? Location, bool PushConstant, IReadOnlyList<Field>? Block, Expr? Value, int ArraySize, int Line);
+    /// <summary>
+    /// <see cref="Binding"/>: GLSL layout(binding = n), or the number of an HLSL register (t0 → 0, s1 → 1, b0 → 0).
+    /// </summary>
+    public sealed record Global(string Storage, string Type, string Id, int? Location, bool PushConstant, IReadOnlyList<Field>? Block, Expr? Value, int ArraySize, int Line, int? Binding = null);
 }

@@ -74,6 +74,49 @@ public sealed partial class D3D12Reader
         var frontCcw = src.LastFieldValue("FrontCounterClockwise") is { } f && (src.Int(f) ?? 0) != 0;
         bool depth = src.LastFieldValue("DepthEnable") is { } de && (src.Int(de) ?? 0) != 0;
 
+        var textures = Textures(vs, ps);
+        var cullMode = cull.Contains("NONE", StringComparison.Ordinal) ? CullMode.None : cull.Contains("FRONT", StringComparison.Ordinal) ? CullMode.Front : CullMode.Back;
+        var topo = GlReader.TopologyOf(topology);
+
+        // Run the frame: OnUpdate and the recorded command list (each draw with the root constants set before it).
+        var blocks = vs.Globals.Concat(ps.Globals).Where(g => g.Block is not null).ToList();
+        var recorder = new FrameRecorder(src, time, scene, blocks, transposeMatrices: true);
+        foreach (var fn in new[] { "OnUpdate" }.Where(src.Functions.ContainsKey)) recorder.Run(fn);
+        if (src.FunctionAt(call.Offset) is { } recordFn) recorder.Run(recordFn);
+        var buffer = recorder.BufferContents();
+        var indexData = drawIndexed is not null ? IndexData() : null;
+        if (recorder.Draws.Count > 0)
+        {
+            var fallback = Constants(vs, ps);
+            foreach (var d in recorder.Draws)
+            {
+                var values = new Dictionary<string, ShaderValue>(fallback(time), StringComparer.Ordinal);
+                foreach (var (k, v) in buffer) values[k] = v;
+                foreach (var (k, v) in d.Constants) values[k] = v;
+                scene.Draws.Add(new DrawCall
+                {
+                    VertexShader = vs,
+                    FragmentShader = ps,
+                    VertexEntry = vsEntry,
+                    FragmentEntry = psEntry,
+                    Hlsl = true,
+                    Vertices = vertices,
+                    Indices = d.Indexed ? indexData?.Skip(d.First).Take(d.Count).Select(x => (int)x).ToArray() : null,
+                    First = d.Indexed ? 0 : d.First,
+                    Count = d.Count,
+                    Instances = Math.Max(1, d.Instances),
+                    Topology = topo,
+                    Uniforms = _ => values,
+                    Cull = cullMode,
+                    FrontCcw = frontCcw,
+                    Wireframe = fill.Contains("WIREFRAME", StringComparison.Ordinal),
+                    DepthTest = depth,
+                    Textures = textures,
+                });
+            }
+            if (recorder.Runner.UsedTime || src.UsedTime) scene.Animated = true;
+            return;
+        }
         scene.Draws.Add(new DrawCall
         {
             VertexShader = vs,
@@ -86,15 +129,47 @@ public sealed partial class D3D12Reader
             First = first,
             Count = indices?.Length ?? count,
             Instances = Math.Max(1, instances),
-            Topology = GlReader.TopologyOf(topology),
+            Topology = topo,
             Uniforms = Constants(vs, ps),
-            Cull = cull.Contains("NONE", StringComparison.Ordinal) ? CullMode.None : cull.Contains("FRONT", StringComparison.Ordinal) ? CullMode.Front : CullMode.Back,
+            Cull = cullMode,
             FrontCcw = frontCcw,
             Wireframe = fill.Contains("WIREFRAME", StringComparison.Ordinal),
             DepthTest = depth,
+            Textures = textures,
         });
         foreach (var d in scene.Draws) d.Uniforms(1.0);
         if (src.UsedTime) scene.Animated = true;
+    }
+
+    /// <summary>
+    /// Textures: each Texture2D (by register t0, t1 …) reads the next image loaded with stbi_load. It needs the chain of
+    /// D3D12HelloTexture: a texture resource filled from an upload buffer, a shader resource view in a shader-visible
+    /// heap, SetDescriptorHeaps and a descriptor table – and a sampler (static samplers in the root signature).
+    /// </summary>
+    private Func<string, double, double, double[]>? Textures(ShaderProgram vs, ShaderProgram ps)
+    {
+        var names = TextureBinding.ShaderTextures(vs, ps);
+        if (names.Count == 0) return null;
+        var missing = new (string Call, string Key)[]
+        {
+            ("CreateShaderResourceView", "dxNoSrv"),
+            ("SetDescriptorHeaps", "dxNoDescriptorHeaps"),
+            ("SetGraphicsRootDescriptorTable", "dxNoDescriptorTable"),
+        }.FirstOrDefault(m => !Has(m.Call));
+        if (missing.Call is not null)
+        {
+            scene.Notes.Add(SimNote.Error(missing.Key, ("name", names[0])));
+            return (_, _, _) => [0, 0, 0, 1];
+        }
+        if (!Has("UpdateSubresources") && !Has("CopyTextureRegion")) scene.Notes.Add(SimNote.Error("dxNoTextureUpload"));
+        var images = StbImage.All(src, project, scene);
+        if (images.Count < names.Count) scene.Notes.Add(SimNote.Warning("tooFewTextures", ("count", names.Count.ToString()), ("loaded", images.Count.ToString())));
+        var filter = src.LastFieldValue("Filter") ?? "D3D12_FILTER_MIN_MAG_MIP_LINEAR";
+        var sampler = new Codestead.GP.Gpu.Textures.SamplerState(
+            StbImage.WrapOf(src.LastFieldValue("AddressU")), StbImage.WrapOf(src.LastFieldValue("AddressV")),
+            !System.Text.RegularExpressions.Regex.IsMatch(filter, @"MAG_POINT|MIN_MAG_MIP_POINT|MIN_MAG_POINT"),
+            (src.LastFieldValue("BorderColor") ?? "").Contains("WHITE", StringComparison.Ordinal) ? [1, 1, 1, 1] : (src.LastFieldValue("BorderColor") ?? "").Contains("OPAQUE_BLACK", StringComparison.Ordinal) ? [0, 0, 0, 1] : null);
+        return TextureBinding.Bind(names, images, sampler);
     }
 
     /// <summary>The shader compiled for a target ("vs_5_0", "ps_5_0"): D3DCompileFromFile(L"shaders.hlsl", …, "VSMain", "vs_5_0", …).</summary>

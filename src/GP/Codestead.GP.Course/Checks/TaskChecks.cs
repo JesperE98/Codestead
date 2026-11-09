@@ -18,6 +18,7 @@ public static partial class TaskChecks
         Add("hello-window", HelloWindow);
         Add("hello-triangle", HelloTriangle);
         Add("shaders", Shaders);
+        Add("textures", Textures);
         return d;
     });
 

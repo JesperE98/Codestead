@@ -16,14 +16,17 @@ public sealed partial class VulkanReader
     private readonly CppSource src;
     private readonly Scene.Scene scene = new() { Api = Apis.Vulkan };
 
-    private VulkanReader(GpuProject project)
+    private readonly double time;
+
+    private VulkanReader(GpuProject project, double time)
     {
+        this.time = time;
         this.project = project;
         var main = project.MainFile;
         src = new CppSource(main, project.Files.TryGetValue(main, out var t) ? t : "");
     }
 
-    public static Scene.Scene Read(GpuProject project) => new VulkanReader(project).Run();
+    public static Scene.Scene Read(GpuProject project, double time = 1.0) => new VulkanReader(project, time).Run();
 
     /// <summary>Is a function called (somewhere in the program)? The tutorial calls its create* functions from initVulkan.</summary>
     private bool Called(string fn) => src.HasCall(fn);

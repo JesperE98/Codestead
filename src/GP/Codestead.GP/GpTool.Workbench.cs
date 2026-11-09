@@ -127,7 +127,10 @@ public sealed partial class GpTool
         }
         projectKey = key;
         projectChapter = chapterId;
-        project = Load(key) ?? GpCourse.StartProject(chapterId, Api);
+        var start = GpCourse.StartProject(chapterId, Api);
+        project = Load(key) ?? start;
+        // Saved projects keep only the code: the images come from the chapter.
+        foreach (var (name, bytes) in start.Assets) project.Assets[name] = bytes;
         last = null;
         view.Open(project, Apis.Get(Api));
     }

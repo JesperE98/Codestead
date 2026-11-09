@@ -16,14 +16,17 @@ public sealed partial class D3D12Reader
     private readonly CppSource src;
     private readonly Scene.Scene scene = new() { Api = Apis.D3D12 };
 
-    private D3D12Reader(GpuProject project)
+    private readonly double time;
+
+    private D3D12Reader(GpuProject project, double time)
     {
+        this.time = time;
         this.project = project;
         var main = project.MainFile;
         src = new CppSource(main, project.Files.TryGetValue(main, out var t) ? t : "");
     }
 
-    public static Scene.Scene Read(GpuProject project) => new D3D12Reader(project).Run();
+    public static Scene.Scene Read(GpuProject project, double time = 1.0) => new D3D12Reader(project, time).Run();
 
     private bool Has(string call) => src.HasCall(call) || src.HasCall("." + call);
 

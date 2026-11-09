@@ -4,8 +4,10 @@ namespace Codestead.GP.Gpu.Readers;
 
 /// <summary>
 /// Walks a function body statement by statement, in order. The render loop (a while loop whose condition asks
-/// whether the window should close, or a message loop that runs until WM_QUIT) is marked; the bodies of if, for,
-/// switch and other loops are skipped, but their conditions are kept (if (!gladLoadGLLoader(…)) still loads GLAD).
+/// whether the window should close, or a message loop that runs until WM_QUIT) is marked. The body of an if runs
+/// unless it is an error branch (it returns or throws); a for loop comes with its body (the reader runs it);
+/// else branches, switch and other loops are skipped, but conditions are kept (if (!gladLoadGLLoader(…)) still
+/// loads GLAD).
 /// </summary>
 public static class CppStatements
 {
@@ -78,7 +80,16 @@ public static class CppStatements
                         bodyEnd++;
                     }
                 }
-                if (word == "while" && IsRenderLoop(condition))
+                // The body of an if runs unless it is an error branch (it returns or throws): if (data) { glTexImage2D(…); }
+                if (word == "if" && !System.Text.RegularExpressions.Regex.IsMatch(code[bodyStart..bodyEnd], @"\b(?:return|throw|exit)\b"))
+                    Walk(code, bodyStart, bodyEnd, into);
+                else if (word == "for")
+                {
+                    var body = new List<CppStatement>();
+                    Walk(code, bodyStart, bodyEnd, body);
+                    into.Add(new CppStatement(condition, i, "for", body));
+                }
+                else if (word == "while" && IsRenderLoop(condition))
                 {
                     into.Add(new CppStatement("", i, "loop-start"));
                     Walk(code, bodyStart, bodyEnd, into);

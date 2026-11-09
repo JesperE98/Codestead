@@ -1,4 +1,5 @@
 using Codestead.GP.Gpu.Shading;
+using Codestead.GP.Gpu.Textures;
 
 namespace Codestead.GP.Gpu.Readers;
 
@@ -38,6 +39,26 @@ internal sealed class GlState
         public Dictionary<int, Attribute> Attributes = new();
         public string? ElementBuffer;
     }
+
+    public sealed class TextureObject
+    {
+        public Image? Image;
+        public int Components = 4;
+        public Wrap WrapS = Wrap.Repeat;
+        public Wrap WrapT = Wrap.Repeat;
+        /// <summary>OpenGL's default minification filter uses mipmaps: without glGenerateMipmap the texture is incomplete.</summary>
+        public string MinFilter = "GL_NEAREST_MIPMAP_LINEAR";
+        public string MagFilter = "GL_LINEAR";
+        public bool Mipmaps;
+        public double[]? Border;
+
+        public bool Complete => Image is not null && (Mipmaps || !MinFilter.Contains("MIPMAP", StringComparison.Ordinal));
+    }
+
+    public Dictionary<string, TextureObject> TextureObjects { get; } = new(StringComparer.Ordinal);
+    /// <summary>Texture unit → the texture bound to it.</summary>
+    public Dictionary<int, string> Units { get; } = new();
+    public int ActiveUnit;
 
     public Dictionary<string, ShaderObject> ShaderObjects { get; } = new(StringComparer.Ordinal);
     public Dictionary<string, ProgramObject> Programs { get; } = new(StringComparer.Ordinal);

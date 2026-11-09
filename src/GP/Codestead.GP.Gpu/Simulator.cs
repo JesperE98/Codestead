@@ -11,14 +11,19 @@ public static class Simulator
         var commands = Commands(project, api);
         var diagnostics = BuildChecker.Check(project, api);
         if (diagnostics.Any(d => d.IsError)) return new BuildResult(api, commands, diagnostics, null);
-        var scene = api switch
-        {
-            Apis.Vulkan => VulkanReader.Read(project),
-            Apis.D3D12 => D3D12Reader.Read(project),
-            _ => GlReader.Read(project),
-        };
+        var scene = Read(project, api, 1.0);
+        var copy = project.Clone();
+        scene.AtTime = t => Read(copy, api, t);
         return new BuildResult(api, commands, diagnostics, scene);
     }
+
+    /// <summary>What the program does when its clock reads <paramref name="time"/> seconds.</summary>
+    public static Scene.Scene Read(GpuProject project, string api, double time) => api switch
+    {
+        Apis.Vulkan => VulkanReader.Read(project, time),
+        Apis.D3D12 => D3D12Reader.Read(project, time),
+        _ => GlReader.Read(project, time),
+    };
 
     /// <summary>The commands a real build would run (shown in the output, as in a terminal).</summary>
     private static List<string> Commands(GpuProject project, string api)

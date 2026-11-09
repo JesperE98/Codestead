@@ -55,7 +55,11 @@ def read_dir(d):
     for root, _, names in os.walk(d):
         for n in names:
             p = os.path.join(root, n)
-            files[os.path.relpath(p, d).replace(os.sep, "/")] = open(p, encoding="utf-8").read().replace("\r\n", "\n")
+            key = os.path.relpath(p, d).replace(os.sep, "/")
+            if n.lower().endswith((".png", ".jpg")):
+                files[key] = open(p, "rb").read()  # images: compared as bytes, never edited
+            else:
+                files[key] = open(p, encoding="utf-8").read().replace("\r\n", "\n")
     return files
 
 if __name__ == "__main__":
@@ -70,6 +74,8 @@ if __name__ == "__main__":
             ok = False
             print(f"DIFFERS: {f}")
             import difflib
+            if isinstance(start.get(f), bytes) or isinstance(solution.get(f), bytes):
+                continue
             for line in list(difflib.unified_diff((solution.get(f) or "").split("\n"), (start.get(f) or "").split("\n"), "solution/" + f, "start+edits/" + f, lineterm=""))[:40]:
                 print("  " + line)
     print(f"{chapter}: {len(tasks)} tasks, " + ("start + edits == solution" if ok else "MISMATCH"))

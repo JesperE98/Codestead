@@ -268,5 +268,22 @@
   "ach.typo.title": "Menade du …?",
   "ach.typo.desc": "Bygget stannade vid ett felstavat API-namn.",
   "ach.magenta.title": "Felsökningsrosa",
-  "ach.magenta.desc": "Du rensade skärmen till ren magenta – färgen på saknade texturer överallt."
+  "ach.magenta.desc": "Du rensade skärmen till ren magenta – färgen på saknade texturer överallt.",
+  "sim.textureFileMissing": "Bilden {file} finns inte i projektet, så stbi_load ger ingenting.",
+  "sim.textureNotPng": "Bilden {file} gick inte att läsa (simulatorn läser PNG-filer).",
+  "sim.noTextureBound": "glTexImage2D (rad {line}) anropas utan bunden textur (glBindTexture).",
+  "sim.textureFormatMismatch": "{file} har {channels} kanaler, men glTexImage2D läser den som {format}: färgerna blir huller om buller.",
+  "sim.textureIncomplete": "Texturen för {name} är ofullständig: dess förminskningsfilter {filter} använder mipmaps, men inga har skapats (glGenerateMipmap). Den läses som svart.",
+  "sim.noTextureOnUnit": "Shadern samplar {name}, men ingen textur är bunden till texturenhet {unit}. Den läses som svart.",
+  "sim.tooFewTextures": "Shaderna läser {count} texturer, men programmet laddar bara {loaded} bild(er).",
+  "sim.vkNoDescriptorSetLayout": "Shadern samplar {name}, men det finns ingen descriptor set layout (vkCreateDescriptorSetLayout). Inget ritas rätt.",
+  "sim.vkNoDescriptorWrite": "Descriptor setet fylls aldrig (vkUpdateDescriptorSets), så shadern har ingen textur att läsa. Fel i valideringslagret.",
+  "sim.vkNoDescriptorBind": "Descriptor setet binds aldrig (vkCmdBindDescriptorSets) före ritningen. Fel i valideringslagret.",
+  "sim.vkNoSampler": "Det finns ingen sampler (vkCreateSampler) för texturen {name}.",
+  "sim.vkNoImageCopy": "Pixlarna kopieras aldrig in i texturbilden (vkCmdCopyBufferToImage).",
+  "sim.vkNoLayoutTransition": "Texturbilden flyttas aldrig till rätt layouter (vkCmdPipelineBarrier). Fel i valideringslagret.",
+  "sim.dxNoSrv": "Shadern samplar {name}, men det finns ingen shader resource view (CreateShaderResourceView).",
+  "sim.dxNoDescriptorHeaps": "Descriptor heapen sätts aldrig på command listan (SetDescriptorHeaps). Debuglagret rapporterar ett fel.",
+  "sim.dxNoDescriptorTable": "Texturens descriptor table sätts aldrig (SetGraphicsRootDescriptorTable). Debuglagret rapporterar ett fel.",
+  "sim.dxNoTextureUpload": "Pixlarna kopieras aldrig in i texturen (UpdateSubresources eller CopyTextureRegion)."
 }
