@@ -18,7 +18,23 @@ public static partial class TaskChecks
         ["load-image"] = c => c.Built && c.Has(@"stbi_load \( ""(?:textures/)?container\.png""") && c.Has("stbi_image_free"),
         // OpenGL
         ["create-texture"] = c => c.Built && c.Has(@"glGenTextures \( 1 , & texture1 \)") && c.Has("GL_TEXTURE_WRAP_S") && c.Has("GL_TEXTURE_MIN_FILTER"),
-        ["upload"] = c => c.Built && c.Has(@"glTexImage2D \( GL_TEXTURE_2D") && c.Has("glGenerateMipmap"),
+        ["upload"] = PerApi(
+            opengl: c => c.Built && c.Has(@"glTexImage2D \( GL_TEXTURE_2D") && c.Has("glGenerateMipmap"),
+            d3d12: c => c.Built && c.Has(@"GetRequiredIntermediateSize \(") && c.Has(@"UpdateSubresources \(") && c.Has("D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE")),
+        // DirectX 12
+        ["texture"] = c => c.Built && c.Has(@"CD3DX12_RESOURCE_DESC :: Tex2D \(|D3D12_RESOURCE_DIMENSION_TEXTURE2D") && c.Has("m_texture1"),
+        ["srv"] = c => c.Built && c.Has(@"CreateShaderResourceView \(") && c.Has("D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE"),
+        ["root-signature"] = c => c.Built && c.Has("D3D12_DESCRIPTOR_RANGE_TYPE_SRV") && c.Has("D3D12_STATIC_SAMPLER_DESC") && c.Has(@"SetGraphicsRootDescriptorTable \("),
+        ["second-texture"] = c => c.Built && c.Has(@"stbi_load \( ""awesomeface\.png""") && c.Has("m_texture2"),
+        ["mix-keys"] = c => c.Built && c.Has("VK_UP") && c.Has("VK_DOWN"),
+        // Vulkan
+        ["staging-buffer"] = c => c.Built && c.Has("VK_BUFFER_USAGE_TRANSFER_SRC_BIT") && c.Has(@"memcpy \( data , pixels"),
+        ["texture-image"] = c => c.Built && c.Has(@"vkCreateImage \(") && c.Has("VK_IMAGE_USAGE_SAMPLED_BIT"),
+        ["layout-transitions"] = c => c.Built && c.Has("vkCmdPipelineBarrier") && c.Has("vkCmdCopyBufferToImage") && c.Has("VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL"),
+        ["image-view"] = c => c.Built && c.Has(@"textureImageView = createImageView \("),
+        ["sampler"] = c => c.Built && c.Has(@"vkCreateSampler \(") && c.Has(@"vkDestroySampler \("),
+        ["descriptor-layout"] = c => c.Built && c.Has("VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER") && c.Has(@"vkCreateDescriptorSetLayout \(") && c.Has(@"setLayoutCount = 1"),
+        ["descriptor-set"] = c => c.Built && c.Has(@"vkCreateDescriptorPool \(") && c.Has(@"vkAllocateDescriptorSets \(") && c.Has(@"vkUpdateDescriptorSets \(") && c.Has(@"vkCmdBindDescriptorSets \("),
         // Every API
         ["texture-coords"] = c => c.Built && c.HasInShaders(@"(?i)(in vec2 \w*tex\w*|: ?TEXCOORD)"),
         ["sample"] = Crate,
@@ -32,6 +48,6 @@ public static partial class TaskChecks
         ["repeat"] = c => Reddish(c, 0.569, 0.395) && c.DrawnAt(0.2875, 0.5417),
         // Half crate, half face: the face is bright, the rest half as bright.
         ["mix-value"] = c => c.Pixel(0.375, 0.3) is { } face && face[1] > 0.45 && c.Pixel(0.744, 0.258) is { } dark && dark[0] < 0.28
-            && c.HasInShaders(@"mix \([^;]*, [A-Za-z_][\w.]* \)"),
+            && c.HasInShaders(@"(?:mix|lerp) \([^;]*, [A-Za-z_][\w.]* \)"),
     };
 }

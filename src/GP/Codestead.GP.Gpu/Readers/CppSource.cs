@@ -294,6 +294,10 @@ public sealed partial class CppSource
         }
     }
 
+    /// <summary>The value last assigned to ".field" before an offset (optionally on a given target, e.g. "samplers[1]").</summary>
+    public string? FieldValueBefore(string field, int offset, string? target = null) =>
+        FieldAssignments(field).Where(a => a.Offset < offset && (target is null || a.Target == target)).Select(a => a.Value).LastOrDefault();
+
     /// <summary>The value assigned to any ".field" (the last one in the file), e.g. "rasterizer.cullMode = VK_CULL_MODE_NONE".</summary>
     public string? LastFieldValue(string field) => FieldAssignments(field).Select(a => a.Value).LastOrDefault();
 

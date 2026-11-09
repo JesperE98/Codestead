@@ -205,7 +205,7 @@ void D3D12App::LoadPipeline()
         // Describe and create a shader resource view (SRV) heap for the texture.
         // Shader visible: the shaders can read the descriptors in it.
         D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-        srvHeapDesc.NumDescriptors = 2;
+        srvHeapDesc.NumDescriptors = 2;    // one SRV per texture
         srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
@@ -639,11 +639,13 @@ void D3D12App::PopulateCommandList()
 
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+
     // The SRV heap the descriptor table points into, and root parameter 0: the
     // table, starting at the heap's first descriptor.
     ID3D12DescriptorHeap* ppHeaps[] = { m_srvHeap.Get() };
     m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
     m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
+
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 

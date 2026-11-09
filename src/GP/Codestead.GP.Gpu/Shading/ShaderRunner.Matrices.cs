@@ -127,6 +127,25 @@ public sealed partial class ShaderRunner
                 double h = 1 / Math.Tan(S(0) / 2), w = h / S(1), range = S(3) / (S(3) - S(2));
                 return Rows([[w, 0, 0, 0], [0, h, 0, 0], [0, 0, range, 1], [0, 0, -range * S(2), 0]]);
             }
+            case "XMMatrixPerspectiveFovRH" when a.Count == 4:
+            {
+                double h = 1 / Math.Tan(S(0) / 2), w = h / S(1), range = S(3) / (S(2) - S(3));
+                return Rows([[w, 0, 0, 0], [0, h, 0, 0], [0, 0, range, -1], [0, 0, range * S(2), 0]]);
+            }
+            case "XMMatrixOrthographicRH" when a.Count == 4:
+            {
+                double range = 1 / (S(2) - S(3));
+                return Rows([[2 / S(0), 0, 0, 0], [0, 2 / S(1), 0, 0], [0, 0, range, 0], [0, 0, range * S(2), 1]]);
+            }
+            case "XMMatrixLookAtRH" when a.Count == 3:
+            {
+                // LookAtRH(eye, focus, up) = LookToLH(eye, eye - focus, up).
+                var eye = V3(a[0]);
+                var r2 = Normalize3([eye[0] - a[1].Padded(3)[0], eye[1] - a[1].Padded(3)[1], eye[2] - a[1].Padded(3)[2]]);
+                var r0 = Normalize3(Cross(V3(a[2]), r2));
+                var r1 = Cross(r2, r0);
+                return Rows([[r0[0], r1[0], r2[0], 0], [r0[1], r1[1], r2[1], 0], [r0[2], r1[2], r2[2], 0], [-Dot3(r0, eye), -Dot3(r1, eye), -Dot3(r2, eye), 1]]);
+            }
             case "XMMatrixOrthographicLH" when a.Count == 4:
             {
                 double range = 1 / (S(3) - S(2));
@@ -146,6 +165,17 @@ public sealed partial class ShaderRunner
                 return Transpose(a[0]);
             case "XMMatrixInverse" when a.Count == 2:
                 return Inverse(a[1], line);
+            case "XMVectorAdd" when a.Count == 2:
+                return ShaderValue.Vec(a[0].Padded(4).Zip(a[1].Padded(4), (x, y) => x + y).ToArray());
+            case "XMVectorSubtract" when a.Count == 2:
+                return ShaderValue.Vec(a[0].Padded(4).Zip(a[1].Padded(4), (x, y) => x - y).ToArray());
+            case "XMVectorScale" when a.Count == 2:
+                return ShaderValue.Vec(a[0].Padded(4).Select(x => x * S(1)).ToArray());
+            case "XMVector3Cross" when a.Count == 2:
+            {
+                var c = Cross(V3(a[0]), V3(a[1]));
+                return ShaderValue.Vec(c[0], c[1], c[2], 0);
+            }
             case "XMVectorSet" when a.Count == 4:
                 return ShaderValue.Vec(S(0), S(1), S(2), S(3));
             case "XMLoadFloat3" or "XMLoadFloat4" or "XMLoadFloat4x4" or "XMLoadFloat3x3" when a.Count == 1:

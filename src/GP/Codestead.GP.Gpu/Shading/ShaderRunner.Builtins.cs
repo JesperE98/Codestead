@@ -172,7 +172,8 @@ public sealed partial class ShaderRunner
         switch (method)
         {
             case "Sample" or "SampleLevel" when c.Args.Count >= 3:
-                return SampleTexture(c.Args[0], Eval(c.Args[2]));
+                // HLSL names the sampler: the texture is looked up as "texture|sampler".
+                return SampleTexture(c.Args[0], Eval(c.Args[2]), PathOf(c.Args[1]));
             case "size" or "length" or "Length" or "count":
             {
                 var target = Eval(c.Args[0]);
@@ -186,18 +187,21 @@ public sealed partial class ShaderRunner
         }
     }
 
-    private ShaderValue SampleTexture(Expr texture, ShaderValue uv)
+    private ShaderValue SampleTexture(Expr texture, ShaderValue uv, string? sampler = null)
     {
-        var id = texture switch
-        {
-            Name n => n.Id,
-            Member m => m.Field,
-            IndexOf { Target: Name n } => n.Id,
-            _ => "",
-        };
+        var id = sampler is null ? PathOf(texture) : PathOf(texture) + "|" + sampler;
         var rgba = Sample?.Invoke(id, uv.Padded(2)[0], uv.Padded(2)[1]) ?? [1, 0, 1, 1];
         return ShaderValue.Vec(rgba);
     }
+
+    /// <summary>The uniform name of a texture expression: texture1, material.diffuse, shadowMaps[2].</summary>
+    private string PathOf(Expr e) => e switch
+    {
+        Name n => n.Id,
+        Member m => PathOf(m.Target) + "." + m.Field,
+        IndexOf { Target: var t } ix => PathOf(t) + "[" + (int)Math.Floor(Eval(ix.At).X) + "]",
+        _ => "",
+    };
 
     private static ShaderValue Componentwise(ShaderValue a, ShaderValue b, Func<double, double, double> fn, int line)
     {

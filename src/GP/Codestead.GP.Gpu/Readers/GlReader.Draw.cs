@@ -104,7 +104,7 @@ public sealed partial class GlReader
     /// </summary>
     private Func<string, double, double, double[]>? Samplers(GlState.ProgramObject program)
     {
-        var samplers = program.Vertex!.Globals.Concat(program.Fragment!.Globals).Where(g => g.Type.StartsWith("sampler", StringComparison.Ordinal)).Select(g => g.Id).Distinct().ToList();
+        var samplers = SamplerNames(program.Vertex!).Concat(SamplerNames(program.Fragment!)).Distinct().ToList();
         if (samplers.Count == 0) return null;
         var bound = new Dictionary<string, Textures.Texture?>(StringComparer.Ordinal);
         foreach (var name in samplers)
@@ -120,6 +120,20 @@ public sealed partial class GlReader
             bound[name] = texture;
         }
         return (name, u, v) => bound.TryGetValue(name, out var t) && t is not null ? t.Sample(u, v) : [0, 0, 0, 1];
+    }
+
+    /// <summary>The sampler uniforms of a shader, with struct fields ("material.diffuse") and array elements ("maps[1]").</summary>
+    private static IEnumerable<string> SamplerNames(ShaderProgram shader)
+    {
+        IEnumerable<string> Of(string type, string path, int arraySize)
+        {
+            var paths = arraySize > 0 ? Enumerable.Range(0, arraySize).Select(i => $"{path}[{i}]") : [path];
+            if (type.StartsWith("sampler", StringComparison.Ordinal)) return paths;
+            if (shader.FindStruct(type) is { } st)
+                return paths.SelectMany(p => st.Fields.SelectMany(f => Of(f.Type, p + "." + f.Id, f.ArraySize)));
+            return [];
+        }
+        return shader.Globals.Where(g => g.Storage == "uniform" && g.Block is null).SelectMany(g => Of(g.Type, g.Id, g.ArraySize));
     }
 
     internal static Topology TopologyOf(string mode) => mode switch

@@ -164,12 +164,20 @@ public sealed partial class D3D12Reader
         if (!Has("UpdateSubresources") && !Has("CopyTextureRegion")) scene.Notes.Add(SimNote.Error("dxNoTextureUpload"));
         var images = StbImage.All(src, project, scene);
         if (images.Count < names.Count) scene.Notes.Add(SimNote.Warning("tooFewTextures", ("count", names.Count.ToString()), ("loaded", images.Count.ToString())));
-        var filter = src.LastFieldValue("Filter") ?? "D3D12_FILTER_MIN_MAG_MIP_LINEAR";
-        var sampler = new Codestead.GP.Gpu.Textures.SamplerState(
-            StbImage.WrapOf(src.LastFieldValue("AddressU")), StbImage.WrapOf(src.LastFieldValue("AddressV")),
-            !System.Text.RegularExpressions.Regex.IsMatch(filter, @"MAG_POINT|MIN_MAG_MIP_POINT|MIN_MAG_POINT"),
-            (src.LastFieldValue("BorderColor") ?? "").Contains("WHITE", StringComparison.Ordinal) ? [1, 1, 1, 1] : (src.LastFieldValue("BorderColor") ?? "").Contains("OPAQUE_BLACK", StringComparison.Ordinal) ? [0, 0, 0, 1] : null);
-        return TextureBinding.Bind(names, images, sampler);
+        // Static samplers: each description (sampler, samplers[0], samplers[1] …) by its ShaderRegister; the HLSL
+        // Sample(…) call names the sampler, whose register picks the description.
+        var byRegister = new Dictionary<int, Codestead.GP.Gpu.Textures.SamplerState>();
+        var targets = src.FieldAssignments("Filter").Select(a => a.Target).Concat(src.FieldAssignments("AddressU").Select(a => a.Target)).Distinct().ToList();
+        for (int i = 0; i < targets.Count; i++)
+        {
+            var t = targets[i];
+            var reg = src.FieldAssignments("ShaderRegister").Where(a => a.Target == t).Select(a => src.Int(a.Value)).LastOrDefault() ?? (Regex.Match(t, @"\[(\d+)\]") is { Success: true } m ? int.Parse(m.Groups[1].Value) : i);
+            byRegister[reg] = TextureBinding.FromFields(f => src.FieldAssignments(f).Where(a => a.Target == t).Select(a => a.Value).LastOrDefault(), d3d: true);
+        }
+        var samplerRegister = vs.Globals.Concat(ps.Globals).Where(g => g.Type.StartsWith("SamplerState", StringComparison.Ordinal)).GroupBy(g => g.Id).ToDictionary(g => g.Key, g => g.First().Binding ?? 0);
+        var fallback = byRegister.GetValueOrDefault(0) ?? byRegister.Values.FirstOrDefault() ?? Codestead.GP.Gpu.Textures.SamplerState.Default;
+        return TextureBinding.Bind(names, images, (_, sampler) =>
+            sampler is not null && samplerRegister.TryGetValue(sampler, out var r) && byRegister.TryGetValue(r, out var state) ? state : fallback);
     }
 
     /// <summary>The shader compiled for a target ("vs_5_0", "ps_5_0"): D3DCompileFromFile(L"shaders.hlsl", …, "VSMain", "vs_5_0", …).</summary>

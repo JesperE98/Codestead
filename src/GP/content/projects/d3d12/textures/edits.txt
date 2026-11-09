@@ -225,12 +225,16 @@
 --- file: main.cpp
 --- find:
     // TODO: set the SRV heap (SetDescriptorHeaps) and the descriptor table (SetGraphicsRootDescriptorTable)
+    m_commandList->RSSetViewports(1, &m_viewport);
 --- replace:
+
     // The SRV heap the descriptor table points into, and root parameter 0: the
     // table, starting at the heap's first descriptor.
     ID3D12DescriptorHeap* ppHeaps[] = { m_srvHeap.Get() };
     m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
     m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
+
+    m_commandList->RSSetViewports(1, &m_viewport);
 
 === task: texture-coords
 --- file: main.cpp
@@ -333,7 +337,7 @@ SamplerState wrapSampler : register(s0);
 --- find:
         srvHeapDesc.NumDescriptors = 1;
 --- replace:
-        srvHeapDesc.NumDescriptors = 2;
+        srvHeapDesc.NumDescriptors = 2;    // one SRV per texture
 --- file: main.cpp
 --- find:
         m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);

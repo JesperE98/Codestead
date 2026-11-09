@@ -186,11 +186,26 @@ public sealed partial class VulkanReader
         if (!src.HasCall("vkCmdPipelineBarrier")) scene.Notes.Add(SimNote.Error("vkNoLayoutTransition"));
         var images = StbImage.All(src, project, scene);
         if (images.Count < names.Count) scene.Notes.Add(SimNote.Warning("tooFewTextures", ("count", names.Count.ToString()), ("loaded", images.Count.ToString())));
-        var sampler = new Codestead.GP.Gpu.Textures.SamplerState(
-            StbImage.WrapOf(src.LastFieldValue("addressModeU")), StbImage.WrapOf(src.LastFieldValue("addressModeV")),
-            !(src.LastFieldValue("magFilter") ?? "LINEAR").Contains("NEAREST", StringComparison.Ordinal),
-            (src.LastFieldValue("borderColor") ?? "").Contains("WHITE", StringComparison.Ordinal) ? [1, 1, 1, 1] : (src.LastFieldValue("borderColor") ?? "").Contains("OPAQUE_BLACK", StringComparison.Ordinal) ? [0, 0, 0, 1] : null);
-        return TextureBinding.Bind(names, images, sampler);
+        // Each vkCreateSampler(…, &name) takes the sampler fields set before it; each binding gets the sampler of the
+        // image info its descriptor write points to (info.sampler = name; descriptorWrites[i].pImageInfo = &info).
+        var samplers = new Dictionary<string, Codestead.GP.Gpu.Textures.SamplerState>(StringComparer.Ordinal);
+        foreach (var create in src.Calls("vkCreateSampler"))
+        {
+            var name = create.Arg(3).Trim().TrimStart('&').Trim();
+            samplers[name] = TextureBinding.FromFields(f => src.FieldValueBefore(f, create.Offset), d3d: false);
+        }
+        var infoSampler = Regex.Matches(src.Code, @"(\w+)\s*\.\s*sampler\s*=\s*(\w+)").GroupBy(m => m.Groups[1].Value).ToDictionary(g => g.Key, g => g.Last().Groups[2].Value);
+        var writeInfo = Regex.Matches(src.Code, @"descriptorWrites\s*\[\s*(\d+)\s*\]\s*\.\s*pImageInfo\s*=\s*&\s*(\w+)").GroupBy(m => m.Groups[1].Value).ToDictionary(g => g.Key, g => g.Last().Groups[2].Value);
+        var writeBinding = Regex.Matches(src.Code, @"descriptorWrites\s*\[\s*(\d+)\s*\]\s*\.\s*dstBinding\s*=\s*(\d+)").GroupBy(m => m.Groups[1].Value).ToDictionary(g => g.Key, g => int.Parse(g.Last().Groups[2].Value));
+        var bindingOf = vs.Globals.Concat(fs.Globals).Where(g => names.Contains(g.Id)).GroupBy(g => g.Id).ToDictionary(g => g.Key, g => g.First().Binding ?? 0);
+        var fallback = samplers.Values.FirstOrDefault() ?? Codestead.GP.Gpu.Textures.SamplerState.Default;
+        return TextureBinding.Bind(names, images, (texture, _) =>
+        {
+            var write = writeBinding.FirstOrDefault(w => w.Value == bindingOf.GetValueOrDefault(texture)).Key;
+            if (write is not null && writeInfo.TryGetValue(write, out var info) && infoSampler.TryGetValue(info, out var samplerName) && samplers.TryGetValue(samplerName, out var state))
+                return state;
+            return fallback;
+        });
     }
 
     /// <summary>The functions that fill a uniform buffer struct (updateUniformBuffer): they declare a variable of a block's type.</summary>
@@ -236,7 +251,7 @@ public sealed partial class VulkanReader
         }
         // location → field, from attributeDescriptions[i].location = L; attributeDescriptions[i].offset = offsetof(Vertex, field);
         var locationOf = new Dictionary<string, int>();
-        var locs = Regex.Matches(src.Code, @"attributeDescriptions\s*\[\s*(\d+)\s*\]\s*\.\s*location\s*=\s*(\d+)").ToDictionary(m => m.Groups[1].Value, m => int.Parse(m.Groups[2].Value));
+        var locs = Regex.Matches(src.Code, @"attributeDescriptions\s*\[\s*(\d+)\s*\]\s*\.\s*location\s*=\s*(\d+)").GroupBy(m => m.Groups[1].Value).ToDictionary(g => g.Key, g => int.Parse(g.Last().Groups[2].Value));
         foreach (Match m in Regex.Matches(src.Code, @"attributeDescriptions\s*\[\s*(\d+)\s*\]\s*\.\s*offset\s*=\s*offsetof\s*\(\s*\w+\s*,\s*(\w+)\s*\)"))
             if (locs.TryGetValue(m.Groups[1].Value, out var loc)) locationOf[m.Groups[2].Value] = loc;
         var arraySize = Regex.Match(src.Code, @"std::array\s*<\s*VkVertexInputAttributeDescription\s*,\s*(\d+)\s*>");

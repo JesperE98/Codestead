@@ -47,21 +47,52 @@ public static partial class Rasterizer
             }
         }
 
-        /// <summary>Sets a uniform: a global, "instance.field" of a block, or a field of a block found by its name.</summary>
+        /// <summary>
+        /// Sets a uniform by its name as the program uses it: a global ("transform"), a field of a struct or block
+        /// ("material.shininess", "ubo.view"), an array element ("pointLights[0].position"), or a field of a block found
+        /// by the field's name alone (push constants and cbuffers).
+        /// </summary>
         private static void SetUniform(ShaderRunner runner, string key, ShaderValue value)
         {
-            var dot = key.IndexOf('.');
-            if (dot > 0 && runner.Globals.TryGetValue(key[..dot], out var block) && block.Fields is not null)
+            var parts = System.Text.RegularExpressions.Regex.Matches(key, @"(\w+)|\[(\d+)\]").Select(m => m.Groups[1].Success ? m.Groups[1].Value : "#" + m.Groups[2].Value).ToList();
+            if (parts.Count == 0) return;
+            if (runner.Globals.TryGetValue(parts[0], out var root))
             {
-                Assign(block.Fields, key[(dot + 1)..], value);
+                if (parts.Count == 1)
+                {
+                    Assign(runner.Globals, parts[0], value);
+                    return;
+                }
+                var owner = root;
+                for (int i = 1; i < parts.Count; i++)
+                {
+                    bool last = i == parts.Count - 1;
+                    if (parts[i].StartsWith('#'))
+                    {
+                        int at = int.Parse(parts[i][1..]);
+                        if (owner.Items is null || at >= owner.Items.Length) return;
+                        if (last)
+                        {
+                            owner.Items[at] = value;
+                            return;
+                        }
+                        owner = owner.Items[at];
+                    }
+                    else
+                    {
+                        if (owner.Fields is null) return;
+                        if (last)
+                        {
+                            Assign(owner.Fields, parts[i], value);
+                            return;
+                        }
+                        if (!owner.Fields.TryGetValue(parts[i], out var next)) return;
+                        owner = next;
+                    }
+                }
                 return;
             }
-            var name = dot > 0 ? key[(dot + 1)..] : key;
-            if (runner.Globals.ContainsKey(name))
-            {
-                Assign(runner.Globals, name, value);
-                return;
-            }
+            var name = parts[^1];
             foreach (var g in runner.Globals.Values)
                 if (g.Fields is not null && g.Fields.ContainsKey(name))
                 {
