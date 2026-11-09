@@ -1,0 +1,77 @@
+{
+  "title": "Basic Lighting",
+  "tasks": {
+    "ambient": {
+      "text": {
+        "opengl": "Replace the flat colour by ambient lighting: in `basic_lighting.fs` compute `ambient = 0.1 * lightColor` (`ambientStrength`) and output `ambient * objectColor`.",
+        "vulkan": "Replace the flat colour by ambient lighting: in `shaders/basic_lighting.frag` compute `ambient = 0.1 * ubo.lightColor` (`ambientStrength`) and output `ambient * ubo.objectColor`.",
+        "d3d12": "Replace the flat colour by ambient lighting: in `PSMain` of `basic_lighting.hlsl` compute `ambient = 0.1f * lightColor` (`ambientStrength`) and return `ambient * objectColor`."
+      },
+      "hint": {
+        "opengl": "`float ambientStrength = 0.1; vec3 ambient = ambientStrength * lightColor; vec3 result = ambient * objectColor; FragColor = vec4(result, 1.0);`",
+        "vulkan": "`float ambientStrength = 0.1; vec3 ambient = ambientStrength * ubo.lightColor; vec3 result = ambient * ubo.objectColor; outColor = vec4(result, 1.0);`",
+        "d3d12": "`float ambientStrength = 0.1f; float3 ambient = ambientStrength * lightColor; float3 result = ambient * objectColor; return float4(result, 1.0f);`"
+      }
+    },
+    "normals": {
+      "text": {
+        "opengl": "Feed the normals to the shaders: enable vertex attribute 1 (3 floats after the position) in the cube's VAO, give `basic_lighting.vs` an input `aNormal` and outputs `FragPos` (world-space position) and `Normal`, and give `basic_lighting.fs` the matching inputs.",
+        "vulkan": "Feed the normals to the shaders: a second attribute description (location 1, `offsetof(Vertex, normal)`), 2 attributes for the cube's pipeline, an input `inNormal` and outputs `fragPos` (world-space position) and `fragNormal` in `basic_lighting.vert`, and the matching inputs in `basic_lighting.frag`.",
+        "d3d12": "Feed the normals to the shaders: a `NORMAL` element in the input layout (3 floats at byte offset 12), a second `VSMain` input `float3 normal : NORMAL`, and `fragPos` (world-space position) and `normal` in `PSInput`."
+      },
+      "hint": {
+        "opengl": "`glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); glEnableVertexAttribArray(1);` – in the shader: `FragPos = vec3(model * vec4(aPos, 1.0)); Normal = aNormal; gl_Position = projection * view * vec4(FragPos, 1.0);`",
+        "vulkan": "`getAttributeDescriptions()` returns a `std::array<…, 2>`; `createPipeline(…basic_lighting…, 2, lightingPipeline)` – the lamp keeps 1. In the shader: `fragPos = vec3(pc.model * vec4(inPosition, 1.0)); fragNormal = inNormal; gl_Position = ubo.proj * ubo.view * vec4(fragPos, 1.0);`",
+        "d3d12": "`{ \"NORMAL\", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }`. `PSInput`: `float3 fragPos : POSITION; float3 normal : NORMAL;`. `VSMain`: `float4 worldPos = mul(position, model); result.fragPos = worldPos.xyz; result.normal = normal; result.position = mul(mul(worldPos, view), projection);`"
+      }
+    },
+    "diffuse": {
+      "text": {
+        "opengl": "Add diffuse lighting: `uniform vec3 lightPos;`, the light direction `normalize(lightPos - FragPos)`, `diff = max(dot(norm, lightDir), 0.0)` and `result = (ambient + diffuse) * objectColor`; pass `lightPos` from `main.cpp`.",
+        "vulkan": "Add diffuse lighting: `vec3 lightPos` in the uniform block (C++: `glm::vec3 lightPos; float pad3;`, `ubo.lightPos = lightPos;`), the light direction `normalize(ubo.lightPos - fragPos)`, `diff = max(dot(norm, lightDir), 0.0)` and `result = (ambient + diffuse) * ubo.objectColor`.",
+        "d3d12": "Add diffuse lighting: `float3 lightPos;` in the cbuffer (C++: `XMFLOAT3 lightPos; float padding2;`, `constantBufferData.lightPos = lightPos;` in `OnUpdate`), the light direction `normalize(lightPos - input.fragPos)`, `diff = max(dot(norm, lightDir), 0.0f)` and `result = (ambient + diffuse) * objectColor`."
+      },
+      "hint": {
+        "opengl": "Normalize the interpolated normal first: `vec3 norm = normalize(Normal);`. `vec3 diffuse = diff * lightColor;`. In the loop: `lightingShader.setVec3(\"lightPos\", lightPos);`",
+        "vulkan": "Normalize the interpolated normal first: `vec3 norm = normalize(fragNormal);`. `vec3 diffuse = diff * ubo.lightColor;`. `max(…, 0.0)` keeps faces turned away from the light from going negative.",
+        "d3d12": "Normalize the interpolated normal first: `float3 norm = normalize(input.normal);`. `float3 diffuse = diff * lightColor;`. HLSL starts the new `float3` in a new 16-byte row, hence the padding."
+      }
+    },
+    "normal-matrix": {
+      "text": {
+        "opengl": "Transform the normals with the normal matrix in `basic_lighting.vs`: `Normal = mat3(transpose(inverse(model))) * aNormal;`",
+        "vulkan": "Transform the normals with the normal matrix in `basic_lighting.vert`: `fragNormal = mat3(transpose(inverse(pc.model))) * inNormal;`",
+        "d3d12": "Transform the normals with the normal matrix: add `normalMatrix` to `ModelConstants` (C++ `XMFLOAT4X4`, HLSL `float4x4`), compute `XMMatrixTranspose(XMMatrixInverse(nullptr, model))` for the cube in `PopulateCommandList` and store it transposed, and use `result.normal = mul(float4(normal, 0.0f), normalMatrix).xyz;` in `VSMain`."
+      },
+      "hint": {
+        "opengl": "The transpose of the inverse keeps normals perpendicular to the surface under non-uniform scaling; `mat3` drops the translation. The cube's model matrix is the identity, so nothing visible changes.",
+        "vulkan": "The transpose of the inverse keeps normals perpendicular to the surface under non-uniform scaling; `mat3` drops the translation. The cube's model matrix is the identity, so nothing visible changes.",
+        "d3d12": "HLSL has no `inverse()`, so the CPU computes it once per draw. `sizeof(ModelConstants) / 4` becomes 32 by itself. `XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixTranspose(normalMatrix));` – w = 0 ignores the translation."
+      }
+    },
+    "specular": {
+      "text": {
+        "opengl": "Add specular lighting: `uniform vec3 viewPos;`, `specularStrength = 0.5`, `viewDir`, `reflectDir = reflect(-lightDir, norm)`, `spec = pow(max(dot(viewDir, reflectDir), 0.0), 32)` and `result = (ambient + diffuse + specular) * objectColor`; pass `cameraPos` as `viewPos`.",
+        "vulkan": "Add specular lighting: `vec3 viewPos` in the uniform block (C++: `glm::vec3 viewPos; float pad4;`, `ubo.viewPos = cameraPos;`), `specularStrength = 0.5`, `viewDir`, `reflectDir = reflect(-lightDir, norm)`, `spec = pow(max(dot(viewDir, reflectDir), 0.0), 32)` and `result = (ambient + diffuse + specular) * ubo.objectColor`.",
+        "d3d12": "Add specular lighting: `float3 viewPos;` in the cbuffer (C++: `XMFLOAT3 viewPos; float padding3;`, set from `cameraPos` in `OnUpdate`), `specularStrength = 0.5f`, `viewDir`, `reflectDir = reflect(-lightDir, norm)`, `spec = pow(max(dot(viewDir, reflectDir), 0.0f), 32)` and `result = (ambient + diffuse + specular) * objectColor`."
+      },
+      "hint": {
+        "opengl": "`vec3 viewDir = normalize(viewPos - FragPos);` – `reflect` expects the vector from the light to the fragment, hence `-lightDir`. `vec3 specular = specularStrength * spec * lightColor;`. In the loop: `lightingShader.setVec3(\"viewPos\", cameraPos);`",
+        "vulkan": "`vec3 viewDir = normalize(ubo.viewPos - fragPos);` – `reflect` expects the vector from the light to the fragment, hence `-lightDir`. `vec3 specular = specularStrength * spec * ubo.lightColor;`",
+        "d3d12": "`float3 viewDir = normalize(viewPos - input.fragPos);` – `reflect` expects the vector from the light to the fragment, hence `-lightDir`. `cameraPos` is an `XMVECTOR`: `XMStoreFloat3(&constantBufferData.viewPos, cameraPos);`"
+      }
+    },
+    "moving-light": {
+      "text": {
+        "opengl": "Exercise: move the light over time – at the start of each frame's rendering, before `lightingShader.use();`, set `lightPos.x = 1.0 + sin(time) * 2.0` and `lightPos.y = sin(time / 2.0) * 1.0` with `glfwGetTime()`.",
+        "vulkan": "Exercise: move the light over time – at the start of `updateUniformBuffer()` set `lightPos.x = 1.0 + std::sin(time) * 2.0` and `lightPos.y = std::sin(time / 2.0) * 1.0` with `glfwGetTime()`.",
+        "d3d12": "Exercise: move the light over time – in `OnUpdate`, right after the deltaTime lines, take the seconds since the first frame (`static auto startTime`, `std::chrono`) and set `lightPos.x = 1.0f + std::sin(time) * 2.0f` and `lightPos.y = std::sin(time / 2.0f) * 1.0f`."
+      },
+      "hint": {
+        "opengl": "Do it before `lightPos` is used (the lighting uniform and the lamp's model matrix): `lightPos.x = static_cast<float>(1.0 + sin(glfwGetTime()) * 2.0);`",
+        "vulkan": "`lightPos.x = static_cast<float>(1.0 + std::sin(glfwGetTime()) * 2.0);` – `updateUniformBuffer()` runs before `recordCommandBuffer()`, so the lamp is drawn where the light is.",
+        "d3d12": "`float time = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - startTime).count();` – `OnUpdate` runs before `PopulateCommandList`, so the lamp is drawn where the light is."
+      }
+    }
+  }
+}

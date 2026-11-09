@@ -1,0 +1,41 @@
+{
+  "title": "Färger",
+  "tasks": {
+    "object-color": {
+      "text": {
+        "opengl": "Färglägg kuben: deklarera `uniform vec3 objectColor;` och `uniform vec3 lightColor;` i `colors.fs` och skriv ut `vec4(lightColor * objectColor, 1.0)`; sätt `objectColor` till korall (1.0, 0.5, 0.31) och `lightColor` till vitt (1.0, 1.0, 1.0) i renderloopen.",
+        "vulkan": "Färglägg kuben: lägg till `vec3 objectColor;` och `vec3 lightColor;` i ett uniform-block (binding 2) i `shaders/colors.frag` och skriv ut `vec4(ubo.lightColor * ubo.objectColor, 1.0)`; lägg till båda (var och en följd av en utfyllnads-`float`) i `UniformBufferObject`, gör binding 2 synlig även för fragment-steget och sätt korall (1.0, 0.5, 0.31) och vitt (1.0, 1.0, 1.0) i `updateUniformBuffer()`.",
+        "d3d12": "Färglägg kuben: lägg till `float3 objectColor;` och `float3 lightColor;` i `SceneConstantBuffer` i `colors.hlsl` och returnera `float4(lightColor * objectColor, 1.0f)` från `PSMain`; lägg till båda (var och en följd av en utfyllnads-`float`) i C++-structen, gör root parameter 1 synlig för alla shaders och sätt korall (1.0, 0.5, 0.31) och vitt (1.0, 1.0, 1.0) i `OnUpdate`."
+      },
+      "hint": {
+        "opengl": "Färgen vi ser är ljusets färg gånger objektets färg, komponent för komponent. Efter `lightingShader.use();`: `lightingShader.setVec3(\"objectColor\", 1.0f, 0.5f, 0.31f);` och `lightingShader.setVec3(\"lightColor\", 1.0f, 1.0f, 1.0f);`.",
+        "vulkan": "std140: en `vec3` börjar på en multipel av 16 byte, alltså `glm::vec3 objectColor; float pad1; glm::vec3 lightColor; float pad2;`. `uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;`. Vertex shaderna kan fortsätta att bara deklarera matriserna.",
+        "d3d12": "En `float3` får inte sträcka sig över en rad på 16 byte, alltså `XMFLOAT3 objectColor; float padding0; XMFLOAT3 lightColor; float padding1;`. `D3D12_SHADER_VISIBILITY_ALL` för root parameter 1. I `OnUpdate`: `constantBufferData.objectColor = XMFLOAT3(1.0f, 0.5f, 0.31f);`."
+      }
+    },
+    "lamp-shader": {
+      "text": {
+        "opengl": "Ge lampan ett eget shaderprogram: `light_cube.fs` skriver alltid ut vitt (`vec4(1.0)`), och `main.cpp` bygger `Shader lightCubeShader(\"light_cube.vs\", \"light_cube.fs\");` bredvid `lightingShader`.",
+        "vulkan": "Ge lampan en egen pipeline: `shaders/light_cube.frag` skriver ut `vec4(1.0)`; lägg till en medlem `VkPipeline lightCubePipeline;`, skapa den i `initVulkan()` med `createPipeline(\"shaders/light_cube.vert.spv\", \"shaders/light_cube.frag.spv\", 1, lightCubePipeline);` och förstör den i `cleanup()`.",
+        "d3d12": "Ge lampan ett eget pipeline state: `PSMain` i `light_cube.hlsl` returnerar `float4(1.0f, 1.0f, 1.0f, 1.0f)`; kompilera `light_cube.hlsl`:s `VSMain` och `PSMain` i `LoadAssets` och skapa `m_lightCubePipelineState` (en ny medlem) från samma `psoDesc` med de här shaderna."
+      },
+      "hint": {
+        "opengl": "Lampan måste förbli vit vad vi än gör med belysningsshadern senare, så den får ett eget program. `light_cube.vs` är redan samma som `colors.vs`. Inget ritas med det än.",
+        "vulkan": "Lampan måste förbli vit vilka färger som än ligger i uniform buffern. Samma pipeline layout och fixed functions – bara shaderna skiljer sig. `vkDestroyPipeline(device, lightCubePipeline, nullptr);`",
+        "d3d12": "`D3DCompileFromFile(L\"light_cube.hlsl\", nullptr, nullptr, \"VSMain\", \"vs_5_0\", compileFlags, 0, &lightCubeVertexShader, nullptr)` (och `\"PSMain\"`, `\"ps_5_0\"`), `psoDesc.VS`/`psoDesc.PS` med `CD3DX12_SHADER_BYTECODE`, sedan `CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_lightCubePipelineState))`."
+      }
+    },
+    "lamp": {
+      "text": {
+        "opengl": "Rita lampan: en global `glm::vec3 lightPos(1.2f, 1.0f, 2.0f);`, ett andra VAO `lightCubeVAO` på samma VBO (bara positionsattributet), och rita den efter kuben med `lightCubeShader` – model = flytta till `lightPos`, skala sedan med 0.2. Ta bort VAO:t i slutet.",
+        "vulkan": "Rita lampan: en global `glm::vec3 lightPos(1.2f, 1.0f, 2.0f);`, och i `recordCommandBuffer()` efter kuben: bind `lightCubePipeline`, skicka `model` = flytta till `lightPos`, skala sedan med 0.2, och rita de 36 hörnen igen.",
+        "d3d12": "Rita lampan: en global `XMFLOAT3 lightPos = XMFLOAT3(1.2f, 1.0f, 2.0f);`, och i `PopulateCommandList` efter kuben: byt till `m_lightCubePipelineState`, sätt modellmatrisen `XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(lightPos.x, lightPos.y, lightPos.z)` och rita de 36 hörnen igen."
+      },
+      "hint": {
+        "opengl": "`lightCubeShader.use();`, sätt dess `projection` och `view`, `model = glm::translate(glm::mat4(1.0f), lightPos); model = glm::scale(model, glm::vec3(0.2f));`, sedan `glBindVertexArray(lightCubeVAO); glDrawArrays(GL_TRIANGLES, 0, 36);`.",
+        "vulkan": "`vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightCubePipeline);` – descriptor setet, vertex buffern, viewporten och scissor ligger kvar; bara pipelinen och push constant (`constants.model = model; vkCmdPushConstants(…)`) ändras.",
+        "d3d12": "`m_commandList->SetPipelineState(m_lightCubePipelineState.Get());`, lagra modellmatrisen transponerad i `modelConstants.model`, `SetGraphicsRoot32BitConstants(0, …)`, `DrawInstanced(36, 1, 0, 0)`. Samma root signatur, så CBV-tabellen och vertex buffern ligger kvar."
+      }
+    }
+  }
+}

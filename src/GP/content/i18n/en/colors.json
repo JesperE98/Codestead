@@ -1,0 +1,41 @@
+{
+  "title": "Colors",
+  "tasks": {
+    "object-color": {
+      "text": {
+        "opengl": "Colour the cube: in `colors.fs` declare `uniform vec3 objectColor;` and `uniform vec3 lightColor;` and output `vec4(lightColor * objectColor, 1.0)`; in the render loop set `objectColor` to coral (1.0, 0.5, 0.31) and `lightColor` to white (1.0, 1.0, 1.0).",
+        "vulkan": "Colour the cube: add `vec3 objectColor;` and `vec3 lightColor;` to a uniform block (binding 2) in `shaders/colors.frag` and output `vec4(ubo.lightColor * ubo.objectColor, 1.0)`; add both (each followed by a padding `float`) to `UniformBufferObject`, make binding 2 visible to the fragment stage too, and set coral (1.0, 0.5, 0.31) and white (1.0, 1.0, 1.0) in `updateUniformBuffer()`.",
+        "d3d12": "Colour the cube: add `float3 objectColor;` and `float3 lightColor;` to `SceneConstantBuffer` in `colors.hlsl` and return `float4(lightColor * objectColor, 1.0f)` from `PSMain`; add both (each followed by a padding `float`) to the C++ struct, make root parameter 1 visible to all shaders, and set coral (1.0, 0.5, 0.31) and white (1.0, 1.0, 1.0) in `OnUpdate`."
+      },
+      "hint": {
+        "opengl": "The colour we see is the light's colour times the object's colour, component by component. After `lightingShader.use();`: `lightingShader.setVec3(\"objectColor\", 1.0f, 0.5f, 0.31f);` and `lightingShader.setVec3(\"lightColor\", 1.0f, 1.0f, 1.0f);`.",
+        "vulkan": "std140: a `vec3` starts at a multiple of 16 bytes, so `glm::vec3 objectColor; float pad1; glm::vec3 lightColor; float pad2;`. `uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;`. The vertex shaders may keep declaring only the matrices.",
+        "d3d12": "A `float3` can't straddle a 16-byte row, so `XMFLOAT3 objectColor; float padding0; XMFLOAT3 lightColor; float padding1;`. `D3D12_SHADER_VISIBILITY_ALL` for root parameter 1. In `OnUpdate`: `constantBufferData.objectColor = XMFLOAT3(1.0f, 0.5f, 0.31f);`."
+      }
+    },
+    "lamp-shader": {
+      "text": {
+        "opengl": "Give the lamp its own shader program: `light_cube.fs` always outputs white (`vec4(1.0)`), and `main.cpp` builds `Shader lightCubeShader(\"light_cube.vs\", \"light_cube.fs\");` next to `lightingShader`.",
+        "vulkan": "Give the lamp its own pipeline: `shaders/light_cube.frag` outputs `vec4(1.0)`; add a member `VkPipeline lightCubePipeline;`, create it in `initVulkan()` with `createPipeline(\"shaders/light_cube.vert.spv\", \"shaders/light_cube.frag.spv\", 1, lightCubePipeline);` and destroy it in `cleanup()`.",
+        "d3d12": "Give the lamp its own pipeline state: `PSMain` in `light_cube.hlsl` returns `float4(1.0f, 1.0f, 1.0f, 1.0f)`; in `LoadAssets` compile `light_cube.hlsl`'s `VSMain` and `PSMain` and create `m_lightCubePipelineState` (a new member) from the same `psoDesc` with these shaders."
+      },
+      "hint": {
+        "opengl": "The lamp must stay white whatever we do to the lighting shader later, so it gets a separate program. `light_cube.vs` is already the same as `colors.vs`. Nothing is drawn with it yet.",
+        "vulkan": "The lamp must stay white whatever the colours in the uniform buffer are. Same pipeline layout and fixed functions – only the shaders differ. `vkDestroyPipeline(device, lightCubePipeline, nullptr);`",
+        "d3d12": "`D3DCompileFromFile(L\"light_cube.hlsl\", nullptr, nullptr, \"VSMain\", \"vs_5_0\", compileFlags, 0, &lightCubeVertexShader, nullptr)` (and `\"PSMain\"`, `\"ps_5_0\"`), `psoDesc.VS`/`psoDesc.PS` with `CD3DX12_SHADER_BYTECODE`, then `CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_lightCubePipelineState))`."
+      }
+    },
+    "lamp": {
+      "text": {
+        "opengl": "Draw the lamp: a global `glm::vec3 lightPos(1.2f, 1.0f, 2.0f);`, a second VAO `lightCubeVAO` on the same VBO (position attribute only), and after the cube draw it with `lightCubeShader` – model = translate to `lightPos`, then scale by 0.2. Delete the VAO at the end.",
+        "vulkan": "Draw the lamp: a global `glm::vec3 lightPos(1.2f, 1.0f, 2.0f);`, and in `recordCommandBuffer()` after the cube bind `lightCubePipeline`, push `model` = translate to `lightPos`, then scale by 0.2, and draw the 36 vertices again.",
+        "d3d12": "Draw the lamp: a global `XMFLOAT3 lightPos = XMFLOAT3(1.2f, 1.0f, 2.0f);`, and in `PopulateCommandList` after the cube switch to `m_lightCubePipelineState`, set the model matrix `XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(lightPos.x, lightPos.y, lightPos.z)` and draw the 36 vertices again."
+      },
+      "hint": {
+        "opengl": "`lightCubeShader.use();`, set its `projection` and `view`, `model = glm::translate(glm::mat4(1.0f), lightPos); model = glm::scale(model, glm::vec3(0.2f));`, then `glBindVertexArray(lightCubeVAO); glDrawArrays(GL_TRIANGLES, 0, 36);`.",
+        "vulkan": "`vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightCubePipeline);` – the descriptor set, vertex buffer, viewport and scissor stay bound; only the pipeline and the push constant (`constants.model = model; vkCmdPushConstants(…)`) change.",
+        "d3d12": "`m_commandList->SetPipelineState(m_lightCubePipelineState.Get());`, store the model transposed in `modelConstants.model`, `SetGraphicsRoot32BitConstants(0, …)`, `DrawInstanced(36, 1, 0, 0)`. Same root signature, so the CBV table and the vertex buffer stay bound."
+      }
+    }
+  }
+}

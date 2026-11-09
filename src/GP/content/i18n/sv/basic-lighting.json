@@ -1,0 +1,77 @@
+{
+  "title": "Grundläggande ljussättning",
+  "tasks": {
+    "ambient": {
+      "text": {
+        "opengl": "Ersätt den platta färgen med ambient ljus: räkna ut `ambient = 0.1 * lightColor` (`ambientStrength`) i `basic_lighting.fs` och skriv ut `ambient * objectColor`.",
+        "vulkan": "Ersätt den platta färgen med ambient ljus: räkna ut `ambient = 0.1 * ubo.lightColor` (`ambientStrength`) i `shaders/basic_lighting.frag` och skriv ut `ambient * ubo.objectColor`.",
+        "d3d12": "Ersätt den platta färgen med ambient ljus: räkna ut `ambient = 0.1f * lightColor` (`ambientStrength`) i `PSMain` i `basic_lighting.hlsl` och returnera `ambient * objectColor`."
+      },
+      "hint": {
+        "opengl": "`float ambientStrength = 0.1; vec3 ambient = ambientStrength * lightColor; vec3 result = ambient * objectColor; FragColor = vec4(result, 1.0);`",
+        "vulkan": "`float ambientStrength = 0.1; vec3 ambient = ambientStrength * ubo.lightColor; vec3 result = ambient * ubo.objectColor; outColor = vec4(result, 1.0);`",
+        "d3d12": "`float ambientStrength = 0.1f; float3 ambient = ambientStrength * lightColor; float3 result = ambient * objectColor; return float4(result, 1.0f);`"
+      }
+    },
+    "normals": {
+      "text": {
+        "opengl": "Skicka normalerna till shaderna: aktivera hörnattribut 1 (3 floats efter positionen) i kubens VAO, ge `basic_lighting.vs` indata `aNormal` och utdata `FragPos` (positionen i world space) och `Normal`, och ge `basic_lighting.fs` motsvarande indata.",
+        "vulkan": "Skicka normalerna till shaderna: en andra attributbeskrivning (location 1, `offsetof(Vertex, normal)`), 2 attribut för kubens pipeline, indata `inNormal` och utdata `fragPos` (positionen i world space) och `fragNormal` i `basic_lighting.vert`, och motsvarande indata i `basic_lighting.frag`.",
+        "d3d12": "Skicka normalerna till shaderna: ett `NORMAL`-element i input layouten (3 floats på byteoffset 12), en andra indata till `VSMain`, `float3 normal : NORMAL`, och `fragPos` (positionen i world space) och `normal` i `PSInput`."
+      },
+      "hint": {
+        "opengl": "`glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); glEnableVertexAttribArray(1);` – i shadern: `FragPos = vec3(model * vec4(aPos, 1.0)); Normal = aNormal; gl_Position = projection * view * vec4(FragPos, 1.0);`",
+        "vulkan": "`getAttributeDescriptions()` returnerar en `std::array<…, 2>`; `createPipeline(…basic_lighting…, 2, lightingPipeline)` – lampan behåller 1. I shadern: `fragPos = vec3(pc.model * vec4(inPosition, 1.0)); fragNormal = inNormal; gl_Position = ubo.proj * ubo.view * vec4(fragPos, 1.0);`",
+        "d3d12": "`{ \"NORMAL\", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }`. `PSInput`: `float3 fragPos : POSITION; float3 normal : NORMAL;`. `VSMain`: `float4 worldPos = mul(position, model); result.fragPos = worldPos.xyz; result.normal = normal; result.position = mul(mul(worldPos, view), projection);`"
+      }
+    },
+    "diffuse": {
+      "text": {
+        "opengl": "Lägg till diffust ljus: `uniform vec3 lightPos;`, ljusriktningen `normalize(lightPos - FragPos)`, `diff = max(dot(norm, lightDir), 0.0)` och `result = (ambient + diffuse) * objectColor`; skicka `lightPos` från `main.cpp`.",
+        "vulkan": "Lägg till diffust ljus: `vec3 lightPos` i uniform-blocket (C++: `glm::vec3 lightPos; float pad3;`, `ubo.lightPos = lightPos;`), ljusriktningen `normalize(ubo.lightPos - fragPos)`, `diff = max(dot(norm, lightDir), 0.0)` och `result = (ambient + diffuse) * ubo.objectColor`.",
+        "d3d12": "Lägg till diffust ljus: `float3 lightPos;` i cbuffern (C++: `XMFLOAT3 lightPos; float padding2;`, `constantBufferData.lightPos = lightPos;` i `OnUpdate`), ljusriktningen `normalize(lightPos - input.fragPos)`, `diff = max(dot(norm, lightDir), 0.0f)` och `result = (ambient + diffuse) * objectColor`."
+      },
+      "hint": {
+        "opengl": "Normalisera den interpolerade normalen först: `vec3 norm = normalize(Normal);`. `vec3 diffuse = diff * lightColor;`. I loopen: `lightingShader.setVec3(\"lightPos\", lightPos);`",
+        "vulkan": "Normalisera den interpolerade normalen först: `vec3 norm = normalize(fragNormal);`. `vec3 diffuse = diff * ubo.lightColor;`. `max(…, 0.0)` hindrar sidor som är vända bort från ljuset från att bli negativa.",
+        "d3d12": "Normalisera den interpolerade normalen först: `float3 norm = normalize(input.normal);`. `float3 diffuse = diff * lightColor;`. HLSL börjar den nya `float3` på en ny rad om 16 byte, därav utfyllnaden."
+      }
+    },
+    "normal-matrix": {
+      "text": {
+        "opengl": "Omvandla normalerna med normalmatrisen i `basic_lighting.vs`: `Normal = mat3(transpose(inverse(model))) * aNormal;`",
+        "vulkan": "Omvandla normalerna med normalmatrisen i `basic_lighting.vert`: `fragNormal = mat3(transpose(inverse(pc.model))) * inNormal;`",
+        "d3d12": "Omvandla normalerna med normalmatrisen: lägg till `normalMatrix` i `ModelConstants` (C++ `XMFLOAT4X4`, HLSL `float4x4`), räkna ut `XMMatrixTranspose(XMMatrixInverse(nullptr, model))` för kuben i `PopulateCommandList` och lagra den transponerad, och använd `result.normal = mul(float4(normal, 0.0f), normalMatrix).xyz;` i `VSMain`."
+      },
+      "hint": {
+        "opengl": "Transponatet av inversen håller normalerna vinkelräta mot ytan vid olikformig skalning; `mat3` tar bort förflyttningen. Kubens modellmatris är enhetsmatrisen, så inget synligt ändras.",
+        "vulkan": "Transponatet av inversen håller normalerna vinkelräta mot ytan vid olikformig skalning; `mat3` tar bort förflyttningen. Kubens modellmatris är enhetsmatrisen, så inget synligt ändras.",
+        "d3d12": "HLSL har ingen `inverse()`, så CPU:n räknar ut den en gång per ritanrop. `sizeof(ModelConstants) / 4` blir 32 av sig självt. `XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixTranspose(normalMatrix));` – w = 0 gör att förflyttningen ignoreras."
+      }
+    },
+    "specular": {
+      "text": {
+        "opengl": "Lägg till spekulärt ljus: `uniform vec3 viewPos;`, `specularStrength = 0.5`, `viewDir`, `reflectDir = reflect(-lightDir, norm)`, `spec = pow(max(dot(viewDir, reflectDir), 0.0), 32)` och `result = (ambient + diffuse + specular) * objectColor`; skicka `cameraPos` som `viewPos`.",
+        "vulkan": "Lägg till spekulärt ljus: `vec3 viewPos` i uniform-blocket (C++: `glm::vec3 viewPos; float pad4;`, `ubo.viewPos = cameraPos;`), `specularStrength = 0.5`, `viewDir`, `reflectDir = reflect(-lightDir, norm)`, `spec = pow(max(dot(viewDir, reflectDir), 0.0), 32)` och `result = (ambient + diffuse + specular) * ubo.objectColor`.",
+        "d3d12": "Lägg till spekulärt ljus: `float3 viewPos;` i cbuffern (C++: `XMFLOAT3 viewPos; float padding3;`, satt från `cameraPos` i `OnUpdate`), `specularStrength = 0.5f`, `viewDir`, `reflectDir = reflect(-lightDir, norm)`, `spec = pow(max(dot(viewDir, reflectDir), 0.0f), 32)` och `result = (ambient + diffuse + specular) * objectColor`."
+      },
+      "hint": {
+        "opengl": "`vec3 viewDir = normalize(viewPos - FragPos);` – `reflect` vill ha vektorn från ljuset till fragmentet, därav `-lightDir`. `vec3 specular = specularStrength * spec * lightColor;`. I loopen: `lightingShader.setVec3(\"viewPos\", cameraPos);`",
+        "vulkan": "`vec3 viewDir = normalize(ubo.viewPos - fragPos);` – `reflect` vill ha vektorn från ljuset till fragmentet, därav `-lightDir`. `vec3 specular = specularStrength * spec * ubo.lightColor;`",
+        "d3d12": "`float3 viewDir = normalize(viewPos - input.fragPos);` – `reflect` vill ha vektorn från ljuset till fragmentet, därav `-lightDir`. `cameraPos` är en `XMVECTOR`: `XMStoreFloat3(&constantBufferData.viewPos, cameraPos);`"
+      }
+    },
+    "moving-light": {
+      "text": {
+        "opengl": "Övning: flytta ljuset över tid – i början av varje bildrutas ritande, före `lightingShader.use();`, sätt `lightPos.x = 1.0 + sin(time) * 2.0` och `lightPos.y = sin(time / 2.0) * 1.0` med `glfwGetTime()`.",
+        "vulkan": "Övning: flytta ljuset över tid – i början av `updateUniformBuffer()`, sätt `lightPos.x = 1.0 + std::sin(time) * 2.0` och `lightPos.y = std::sin(time / 2.0) * 1.0` med `glfwGetTime()`.",
+        "d3d12": "Övning: flytta ljuset över tid – i `OnUpdate`, direkt efter raderna för deltaTime, ta sekunderna sedan första bildrutan (`static auto startTime`, `std::chrono`) och sätt `lightPos.x = 1.0f + std::sin(time) * 2.0f` och `lightPos.y = std::sin(time / 2.0f) * 1.0f`."
+      },
+      "hint": {
+        "opengl": "Gör det innan `lightPos` används (belysningsuniformen och lampans modellmatris): `lightPos.x = static_cast<float>(1.0 + sin(glfwGetTime()) * 2.0);`",
+        "vulkan": "`lightPos.x = static_cast<float>(1.0 + std::sin(glfwGetTime()) * 2.0);` – `updateUniformBuffer()` körs före `recordCommandBuffer()`, så lampan ritas där ljuset är.",
+        "d3d12": "`float time = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - startTime).count();` – `OnUpdate` körs före `PopulateCommandList`, så lampan ritas där ljuset är."
+      }
+    }
+  }
+}
