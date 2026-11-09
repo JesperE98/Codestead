@@ -107,7 +107,6 @@ private:
     // App resources.
     ComPtr<ID3D12Resource> m_vertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
-
     ComPtr<ID3D12Resource> m_texture1;
     ComPtr<ID3D12Resource> m_texture2;
     ComPtr<ID3D12Resource> m_constantBuffer;
@@ -428,8 +427,6 @@ void D3D12App::LoadAssets()
         m_vertexBufferView.SizeInBytes = vertexBufferSize;
     }
 
-
-
     // Note: ComPtr's are CPU objects, but an upload heap needs to stay in scope until
     // the command list that copies from it has finished executing on the GPU.
     // We will flush the GPU at the end of this method to ensure it is not
@@ -745,7 +742,6 @@ void D3D12App::PopulateCommandList()
     m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-
 
     // The time in seconds since the first frame.
     static auto startTime = std::chrono::high_resolution_clock::now();

@@ -148,10 +148,11 @@ cbuffer SceneConstantBuffer : register(b1)
 === task: cube
 --- file: main.cpp
 --- find:
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
     ComPtr<ID3D12Resource> m_indexBuffer;
     D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};
 --- replace:
-
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
 --- file: main.cpp
 --- find:
         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
@@ -221,6 +222,9 @@ cbuffer SceneConstantBuffer : register(b1)
         };
 --- file: main.cpp
 --- find:
+        m_vertexBufferView.SizeInBytes = vertexBufferSize;
+    }
+
     // Create the index buffer.
     {
         // The rectangle's two triangles, as indices into the vertex buffer. Both are
@@ -258,12 +262,14 @@ cbuffer SceneConstantBuffer : register(b1)
         m_indexBufferView.SizeInBytes = indexBufferSize;
     }
 --- replace:
-
+        m_vertexBufferView.SizeInBytes = vertexBufferSize;
+    }
 --- file: main.cpp
 --- find:
+    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     m_commandList->IASetIndexBuffer(&m_indexBufferView);
 --- replace:
-
+    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 --- file: main.cpp
 --- find:
     m_commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
