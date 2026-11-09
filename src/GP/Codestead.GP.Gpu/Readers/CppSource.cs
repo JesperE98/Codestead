@@ -218,7 +218,7 @@ public sealed partial class CppSource
     public string? Initializer(string name)
     {
         var re = new Regex(@"(?<![\w.>])" + Regex.Escape(name) + @"\s*(?:\[[^\]]*\]\s*)*(?<eq>=\s*)?(?<brace>\{)?", RegexOptions.CultureInvariant);
-        string? found = null;
+        string? found = null, foundBraces = null;
         foreach (Match m in re.Matches(Code))
         {
             // Must be a declaration: preceded by a type (an identifier, '>', '*' or '&' and whitespace).
@@ -234,7 +234,7 @@ public sealed partial class CppSource
             {
                 int open = m.Index + m.Length - 1;
                 int close = MatchBracket(Code, open);
-                if (close > 0) found = Code[open..(close + 1)];
+                if (close > 0) foundBraces = Code[open..(close + 1)];
             }
             else if (m.Groups["eq"].Success)
             {
@@ -242,7 +242,9 @@ public sealed partial class CppSource
                 found = Code[(m.Index + m.Length)..end].Trim();
             }
         }
-        return found;
+        // Data (vertices, indices, a clear value) is written with braces; a local of the same name
+        // (QueueFamilyIndices indices = findQueueFamilies(…)) should not hide it.
+        return foundBraces ?? found;
     }
 
     /// <summary>The offset of the ';' that ends the statement starting at <paramref name="from"/> (nested brackets skipped).</summary>

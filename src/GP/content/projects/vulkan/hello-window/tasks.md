@@ -16,8 +16,9 @@ Deviations from vulkan-tutorial `15_hello_triangle.cpp` (deliberate):
   exactly as written, like OpenGL's default framebuffer and the DirectX 12 samples (with SRGB the clear colour
   would show as RGB (124, 149, 149)).
 - One "render finished" semaphore per swap chain image (`std::vector<VkSemaphore> renderFinishedSemaphores`,
-  indexed with `imageIndex`): reusing a single one is reported by current validation layers (the presentation
-  engine can still be waiting on it after the frame's fence has signalled).
+  indexed with `imageIndex`): the presentation engine can still be waiting on it after the frame's fence has
+  signalled, and newer validation layers (1.4.3xx) report the tutorial's single semaphore as an error. The local
+  layer (1.3.275) is silent either way.
 
 ## surface
 - **Task:** Create the window surface: add `VkSurfaceKHR surface;`, fill `createSurface()` with
