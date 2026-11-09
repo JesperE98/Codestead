@@ -88,7 +88,7 @@ public partial class LearningWindow
         lessonPanel.Children.Add(markdown);
         lessonScroll.Content = lessonPanel;
 
-        // Workbench: tasks above, the tool's workbench (Codestead Linux: the terminal) below
+        // Workbench: tasks (or the "read first" card) above, the tool's workbench (Codestead Linux: the terminal) below
         tasksCard.Child = new ScrollViewer { Content = taskPanel };
         tasksCard.Classes.Add("card");
         gateCard.Classes.Add("card");
@@ -98,7 +98,6 @@ public partial class LearningWindow
         workbench.Children.Add(tasksCard);
         Grid.SetRow(workbenchFrame, 2);
         workbench.Children.Add(workbenchFrame);
-        Grid.SetRowSpan(gateCard, 3);
         workbench.Children.Add(gateCard);
 
         body.Children.Add(sidebar);
@@ -171,18 +170,25 @@ public partial class LearningWindow
     }
 
     /// <summary>
-    /// Shows the tasks and the workbench for an unlocked lesson, a "read first" card for a locked one,
-    /// and nothing for summaries and exams (they use the whole width).
+    /// A lesson always shows the workbench (Codestead Linux: the terminal), so its "try it" questions can be
+    /// answered there. Above it are the tasks once the lesson is unlocked, or a "read first" card until then.
+    /// An open exam shows only the workbench (it has "try it" questions too); summaries and locked exams
+    /// use the whole width.
     /// </summary>
     private void RenderWorkbench()
     {
         var chapter = Chapter;
         bool lesson = chapter.Kind == ChapterKinds.Lesson;
+        bool exam = chapter.Kind == ChapterKinds.Exam && IsExamOpen(chapter);
+        bool shown = lesson || exam;
         if (body.ColumnDefinitions[3].Width.Value > 0) workbenchWidth = body.ColumnDefinitions[3].Width;
-        body.ColumnDefinitions[3].Width = lesson ? workbenchWidth : new GridLength(0);
-        splitter.IsVisible = lesson;
+        body.ColumnDefinitions[3].Width = shown ? workbenchWidth : new GridLength(0);
+        splitter.IsVisible = shown;
+        workbenchFrame.IsVisible = shown;
+        Grid.SetRow(workbenchFrame, lesson ? 2 : 0);
+        Grid.SetRowSpan(workbenchFrame, lesson ? 1 : 3);
         bool unlocked = lesson && IsUnlocked(chapter);
-        tasksCard.IsVisible = workbenchFrame.IsVisible = unlocked;
+        tasksCard.IsVisible = unlocked;
         gateCard.IsVisible = lesson && !unlocked;
         if (!gateCard.IsVisible) return;
 

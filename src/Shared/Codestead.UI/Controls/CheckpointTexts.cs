@@ -13,5 +13,4 @@ public sealed record CheckpointTexts(
     string AnswerPlaceholder,
     string Question,
     string ShowAnswer = "Show the answer",
-    string AlmostPath = "Almost! Look at how the paths are written: ls shows each name the way you gave it, with the directory in front.",
-    string TryPredict = "Try it in a terminal");
+    string AlmostPath = "Almost! Look at how the paths are written: ls shows each name the way you gave it, with the directory in front.");

@@ -249,7 +249,8 @@ Hubben behöver ingen ändring: den läser verktygets `profile.json` och katalog
    - Text som bara gäller en familj läggs i `:::debian` / `:::arch` / `:::redhat` … `:::`.
    - Platshållare: `{{distro}}`, `{{hostname}}`, `{{family}}`, `{{pm}}`, `{{adminGroup}}`, och elevens
      dator på elevens språk (se nedan), t.ex. `~/{{documents}}/{{fruits}}` eller `/home/{{user}}`.
-   - **Kontrollfrågor** i texten låser upp terminalen och uppgifterna. Tre sorter:
+   - **Kontrollfrågor** i texten låser upp uppgifterna. Terminalen syns alltid bredvid lektionen, men
+     uppgifterna kontrolleras inte förrän alla kontrollfrågor är besvarade. Tre sorter:
 
      ````markdown
      ```quiz
@@ -271,10 +272,11 @@ Hubben behöver ingen ändring: den läser verktygets `profile.json` och katalog
      ````
 
      `quiz` med flera `[x]` kräver alla rätta svar. `predict` visar kommandot efter `$ ` och väntar sig
-     resten som svar (testerna kör kommandot i simulatorn och kontrollerar svaret). I lektioner har
-     den en knapp "Prova i en terminal" som öppnar en egen miniterminal (en ny sandlåda), så att frågan
-     går att lösa utan huvudterminalen; i prov finns ingen sådan knapp. `try` ger en
-     miniterminal; första raden är det kommando som visas, och alla rader godtas.
+     resten som svar (testerna kör kommandot i simulatorn och kontrollerar svaret). Det finns inga
+     miniterminaler: en `try`-fråga löses när eleven kör kommandot i den stora terminalen (ett klick på
+     kommandot lägger in det där). Första raden är det kommando som visas, och alla rader godtas – liksom
+     ett kommando med samma utskrift som första raden ger på en ny dator (`ISandbox.OutputOf`). Prov
+     visar också terminalen, eftersom de har `try`-frågor.
      Ett kapitel utan kontrollfrågor låses upp med knappen "Jag har läst kapitlet".
    - **Källor**: `src/Linux/content/references/mitt-kapitel.json` med
      `[{ "title": ..., "url": "https://...", "publisher": ... }]`. Bara officiella webbplatser
