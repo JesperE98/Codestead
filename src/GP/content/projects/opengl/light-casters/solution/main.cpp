@@ -21,14 +21,14 @@ unsigned int loadTexture(const char *path);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-// camera: look at the cube's lit front and the lamp from the left
-glm::vec3 cameraPos   = glm::vec3(-3.0f, 0.0f,  3.0f);
-glm::vec3 cameraFront = glm::normalize(glm::vec3(3.5f, 0.4f, -2.2f));
+// camera: back at (0, 0, 3) looking down -z, so all ten containers are in view
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
 bool firstMouse = true;
-float yaw   = -32.2f; // yaw and pitch (in degrees) of cameraFront, so the first mouse movement does not make the camera jump
-float pitch =   5.5f;
+float yaw   = -90.0f; // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
+float pitch =  0.0f;
 float lastX =  800.0f / 2.0f;
 float lastY =  600.0f / 2.0f;
 float fov   =  45.0f;
