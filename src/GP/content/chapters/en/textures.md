@@ -83,7 +83,7 @@ bottom-right corner (1, 1) and its top corner (0.5, 0.0): the top of the image, 
 We only have to pass texture coordinates for the corners to the vertex shader, which then passes them on to the
 fragment shader that neatly interpolates all the texture coordinates for each fragment.
 
-Texture sampling has a loose interpretation and can be done in many different ways. It is thus our job to tell the
+Texture sampling has a loose interpretation and can be done in many different ways. It is thus our job to tell
 {{api}} how it should sample its textures.
 
 ## Texture Wrapping
@@ -184,14 +184,14 @@ With repeat addressing only the fractional part of a coordinate counts, so 0..1 
 
 ## Texture Filtering
 
-Texture coordinates do not depend on resolution but can be any floating point value, thus the {{api}} has to figure
+Texture coordinates do not depend on resolution but can be any floating point value, thus the GPU has to figure
 out which texture pixel (also known as a *texel*) to map the texture coordinate to. This becomes especially
 important if you have a very large object and a low resolution texture. You probably guessed by now that there are
 options for this *texture filtering* as well. There are several options available but for now we'll discuss the
 most important options:
 
 - **Nearest neighbor filtering** (also called point filtering) selects the texel whose center is closest to the
-  texture coordinate. It is the default texture filtering method of OpenGL.
+  texture coordinate.
 - **(Bi)linear filtering** takes an interpolated value from the texture coordinate's neighboring texels,
   approximating a color between the texels. The smaller the distance from the texture coordinate to a texel's
   center, the more that texel's color contributes to the sampled color.
@@ -408,8 +408,8 @@ In `createTextureImage()`:
 
 The `STBI_rgb_alpha` value forces the image to be loaded with an alpha channel, even if it doesn't have one, which
 is nice for consistency: `container.png` has no alpha, but every pixel comes back as 4 bytes. The texture format we
-are going to use, `VK_FORMAT_R8G8B8A8_UNORM`, has four channels too – 3-channel formats are poorly supported by GPUs
-for sampled images.
+are going to use, `VK_FORMAT_R8G8B8A8_UNORM`, has four channels too – many GPUs don't support 3-channel formats for
+sampled images.
 
 Note that there is **no vertical flip**. Image files – and therefore `stb_image.h` – put the top row of the image
 first, and in Vulkan the first row in memory is the row at v = 0, which is the **top** of the texture. The image
@@ -1709,8 +1709,7 @@ You probably wondered why the `sampler2D` variable is a uniform if we didn't eve
 `glUniform`. Using `glUniform1i` we can actually assign a *location* value to the texture sampler so we can set
 multiple textures at once in a fragment shader. This location of a texture is more commonly known as a *texture
 unit*. The default texture unit for a texture is `0` which is the default active texture unit so we didn't need to
-assign a location in the previous section; note that not all graphics drivers assign a default texture unit so the
-previous section may not have rendered for you.
+assign a location in the previous section.
 
 The main purpose of texture units is to allow us to use more than 1 texture in our shaders. By assigning texture
 units to the samplers, we can bind to multiple textures at once as long as we activate the corresponding texture
@@ -1885,8 +1884,8 @@ It needs its own upload heap, declared next to the first so it also lives until 
 ```
 
 The SRV heap gets room for two descriptors (`srvHeapDesc.NumDescriptors = 2;`), and the face's SRV goes into the
-**second** slot. Descriptors in a heap are not one byte apart, and their size depends on the GPU, so we ask the
-device for it in `LoadPipeline()` and keep it in a new member `UINT m_srvDescriptorSize`:
+**second** slot. Descriptors sit next to each other in a heap, but the size of one descriptor depends on the GPU,
+so we ask the device for it in `LoadPipeline()` and keep it in a new member `UINT m_srvDescriptorSize`:
 
 ```cpp
         m_srvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -2105,19 +2104,19 @@ the rest of the rectangle.
 
 This exercise is not a task. If you want to try it, do so after you have finished the last task, and change the
 values back afterwards. Give the rectangle texture coordinates that cover only a small part in the middle of the
-image, for example 0.45 to 0.55 on both axes instead of 0 to 2. Then about 26 texels are stretched over the whole
-rectangle, and with nearest filtering each of them becomes a clearly visible block:
+image, for example 0.45 to 0.55 on both axes instead of 0 to 2. Then only about 26 × 26 texels are stretched over
+the whole rectangle, and with nearest filtering each of them becomes a clearly visible block.
 
 :::opengl
-set `GL_TEXTURE_MAG_FILTER` to `GL_NEAREST` for the textures (the minification filter doesn't matter here: the
+For nearest filtering, set `GL_TEXTURE_MAG_FILTER` to `GL_NEAREST` for the textures (the minification filter doesn't matter here: the
 texture is magnified). With `GL_LINEAR` the same blocks blur smoothly into each other.
 :::
 :::vulkan
-set `samplerInfo.magFilter = VK_FILTER_NEAREST;` (the minification filter doesn't matter here: the texture is
+For nearest filtering, set `samplerInfo.magFilter = VK_FILTER_NEAREST;` (the minification filter doesn't matter here: the texture is
 magnified). With `VK_FILTER_LINEAR` the same blocks blur smoothly into each other.
 :::
 :::d3d12
-set the static samplers' `Filter` to `D3D12_FILTER_MIN_MAG_MIP_POINT`. With `D3D12_FILTER_MIN_MAG_MIP_LINEAR` the
+For nearest filtering, set the static samplers' `Filter` to `D3D12_FILTER_MIN_MAG_MIP_POINT`. With `D3D12_FILTER_MIN_MAG_MIP_LINEAR` the
 same blocks blur smoothly into each other.
 :::
 
@@ -2312,8 +2311,8 @@ void D3D12App::OnKeyDown(UINT8 key)
 }
 ```
 
-Unlike GLFW's `glfwGetKey`, which we can ask every frame, Windows sends a message per key press – and repeats it
-while the key is held – so each message moves the value a whole step of 0.1.
+The OpenGL and Vulkan versions ask GLFW every frame whether a key is down; Windows instead sends a message per key
+press – and repeats it while the key is held – so each message moves the value a whole step of 0.1.
 
 Now do the task **mix-keys**.
 :::

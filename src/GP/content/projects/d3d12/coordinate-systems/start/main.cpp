@@ -1,5 +1,6 @@
 // A Direct3D 12 program in one file, modelled on Microsoft's D3D12HelloWorld samples
-// (D3D12HelloWindow, D3D12HelloTriangle, D3D12HelloTexture).
+// (D3D12HelloWindow, D3D12HelloTriangle, D3D12HelloTexture, D3D12HelloConstBuffers)
+// and the depth buffer of the D3D12Bundles sample.
 
 #include <windows.h>
 #include <d3d12.h>
@@ -65,11 +66,11 @@ private:
         XMFLOAT2 texCoord;
     };
 
-    // The root constants: what the vertex shader sees as cbuffer TransformConstants.
+    // The root constants: what the vertex shader sees as cbuffer ModelConstants.
     // A 4x4 matrix is 16 floats: 16 32-bit root constants.
-    struct TransformConstants
+    struct ModelConstants
     {
-        XMFLOAT4X4 transform;
+        XMFLOAT4X4 model;
     };
 
     UINT m_width;
@@ -86,11 +87,11 @@ private:
     ComPtr<ID3D12CommandQueue> m_commandQueue;
     ComPtr<ID3D12RootSignature> m_rootSignature;
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
-    ComPtr<ID3D12DescriptorHeap> m_srvHeap;
+    ComPtr<ID3D12DescriptorHeap> m_cbvSrvHeap;
     ComPtr<ID3D12PipelineState> m_pipelineState;
     ComPtr<ID3D12GraphicsCommandList> m_commandList;
     UINT m_rtvDescriptorSize = 0;
-    UINT m_srvDescriptorSize = 0;
+    UINT m_cbvSrvDescriptorSize = 0;
 
     // App resources.
     ComPtr<ID3D12Resource> m_vertexBuffer;
@@ -202,16 +203,16 @@ void D3D12App::LoadPipeline()
         rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
 
-        // Describe and create a shader resource view (SRV) heap for the texture.
-        // Shader visible: the shaders can read the descriptors in it.
-        D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-        srvHeapDesc.NumDescriptors = 2;    // one SRV per texture
-        srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
+        // Describe and create a shader resource view (SRV) and constant buffer view
+        // (CBV) heap. Shader visible: the shaders can read the descriptors in it.
+        D3D12_DESCRIPTOR_HEAP_DESC cbvSrvHeapDesc = {};
+        cbvSrvHeapDesc.NumDescriptors = 2;    // one SRV per texture
+        cbvSrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        cbvSrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        ThrowIfFailed(m_device->CreateDescriptorHeap(&cbvSrvHeapDesc, IID_PPV_ARGS(&m_cbvSrvHeap)));
 
         m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-        m_srvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        m_cbvSrvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     }
 
     // Create frame resources.
@@ -240,11 +241,13 @@ void D3D12App::LoadAssets()
         CD3DX12_DESCRIPTOR_RANGE ranges[1];
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
 
-        // Root parameter 1: root constants for register b0 (the transformation
-        // matrix). Only the vertex shader reads them.
+        // Root parameter 1: root constants for register b0 (the model matrix).
+        // Only the vertex shader reads them.
         CD3DX12_ROOT_PARAMETER rootParameters[2];
         rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-        rootParameters[1].InitAsConstants(sizeof(TransformConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+        rootParameters[1].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+
+        // TODO: root parameter 2: a descriptor table with the constant buffer view (register b1)
 
         // A static sampler is part of the root signature itself (no descriptor needed).
         // Sampler s0: linear filtering; texture coordinates outside 0..1 wrap around.
@@ -470,13 +473,13 @@ void D3D12App::LoadAssets()
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_texture1.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
         m_commandList->ResourceBarrier(1, &barrier);
 
-        // Describe and create a SRV for the texture, in the first slot of the SRV heap.
+        // Describe and create a SRV for the texture, in the first slot of the CBV/SRV heap.
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         srvDesc.Format = textureDesc.Format;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = 1;
-        m_device->CreateShaderResourceView(m_texture1.Get(), &srvDesc, m_srvHeap->GetCPUDescriptorHandleForHeapStart());
+        m_device->CreateShaderResourceView(m_texture1.Get(), &srvDesc, m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart());
 
         // Free the image memory.
         stbi_image_free(data);
@@ -533,18 +536,22 @@ void D3D12App::LoadAssets()
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_texture2.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
         m_commandList->ResourceBarrier(1, &barrier);
 
-        // The SRV goes into the second slot of the SRV heap (descriptor 1), right after
+        // The SRV goes into the second slot of the heap (descriptor 1), right after
         // the container's: the descriptor table's t0 and t1.
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         srvDesc.Format = textureDesc.Format;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = 1;
-        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_srvDescriptorSize);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
         m_device->CreateShaderResourceView(m_texture2.Get(), &srvDesc, srvHandle);
 
         stbi_image_free(data);
     }
+
+    // TODO: create the constant buffer and its view (CBV) in the heap's third slot
+
+    // TODO: create the depth buffer and its depth stencil view (DSV)
 
     // Close the command list and execute it to begin the initial GPU setup.
     ThrowIfFailed(m_commandList->Close());
@@ -573,6 +580,7 @@ void D3D12App::LoadAssets()
 // Update frame-based values.
 void D3D12App::OnUpdate()
 {
+    // TODO: create the view and projection matrices and copy them into the constant buffer
 }
 
 // Render the scene.
@@ -615,11 +623,13 @@ void D3D12App::PopulateCommandList()
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
 
-    // The SRV heap the descriptor table points into, and root parameter 0: the
-    // table, starting at the heap's first descriptor.
-    ID3D12DescriptorHeap* ppHeaps[] = { m_srvHeap.Get() };
+    // The CBV/SRV heap the descriptor tables point into, and root parameter 0: the
+    // textures' table, starting at the heap's first descriptor.
+    ID3D12DescriptorHeap* ppHeaps[] = { m_cbvSrvHeap.Get() };
     m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-    m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
+    m_commandList->SetGraphicsRootDescriptorTable(0, m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart());
+
+    // TODO: root parameter 2: the descriptor table with the constant buffer view
 
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
@@ -638,33 +648,15 @@ void D3D12App::PopulateCommandList()
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     m_commandList->IASetIndexBuffer(&m_indexBufferView);
 
-    // The time in seconds since the first frame.
-    static auto startTime = std::chrono::high_resolution_clock::now();
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+    // The model matrix: none yet - the identity matrix leaves the rectangle as it is.
+    XMMATRIX model = XMMatrixIdentity();
 
-    // Create the transformation, with the order switched: first move to the bottom
-    // right, then rotate about the origin by the time - the container now circles
-    // the centre of the window. (DirectXMath applies the matrices from left to right.)
-    XMMATRIX transform = XMMatrixTranslation(0.5f, -0.5f, 0.0f) * XMMatrixRotationZ(time);
-
-    // Root parameter 1: the matrix for the vertex shader. It is stored transposed,
+    // Root parameter 1: the model matrix for the vertex shader. It is stored transposed,
     // because HLSL reads a matrix from memory column by column (column_major).
-    TransformConstants transformConstants = {};
-    XMStoreFloat4x4(&transformConstants.transform, XMMatrixTranspose(transform));
-    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(TransformConstants) / 4, &transformConstants, 0);
+    ModelConstants modelConstants = {};
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(ModelConstants) / 4, &modelConstants, 0);
 
-    m_commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
-
-    // Second transformation: scale by sin(time) (between -1 and 1), then move to
-    // the top left.
-    float scaleAmount = std::sin(time);
-    transform = XMMatrixScaling(scaleAmount, scaleAmount, scaleAmount) * XMMatrixTranslation(-0.5f, 0.5f, 0.0f);
-    XMStoreFloat4x4(&transformConstants.transform, XMMatrixTranspose(transform));
-    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(TransformConstants) / 4, &transformConstants, 0);
-
-    // Draw the container again, now with the new root constants. Root constants are
-    // recorded with each draw, so the first draw keeps its own matrix.
     m_commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
     // Indicate that the back buffer will now be used to present.

@@ -1,4 +1,4 @@
-// The shaders of the rectangle. main.cpp compiles them at run time with D3DCompileFromFile.
+// The shaders. main.cpp compiles them at run time with D3DCompileFromFile.
 
 // The textures: registers t0 and t1, in the descriptor table of root parameter 0.
 Texture2D texture1 : register(t0);    // the container
@@ -8,9 +8,9 @@ SamplerState wrapSampler : register(s0);
 
 // Root constants set from main.cpp with SetGraphicsRoot32BitConstants: the vertex
 // shader sees them as a constant buffer at register b0.
-cbuffer TransformConstants : register(b0)
+cbuffer ModelConstants : register(b0)
 {
-    float4x4 transform;
+    float4x4 model;
 };
 
 // What the vertex shader hands on to the rasterizer and the pixel shader.
@@ -26,9 +26,9 @@ PSInput VSMain(float4 position : POSITION, float2 texCoord : TEXCOORD)
     PSInput result;
 
     // The vertex buffer holds 3 floats (x, y, z) per vertex; w is filled in with 1.0.
-    // The position is a row vector: mul(position, transform) applies the matrix
+    // The position is a row vector: mul(position, model) applies the matrix
     // the same way as DirectXMath's v * M.
-    result.position = mul(position, transform);
+    result.position = mul(position, model);
     result.texCoord = texCoord;
 
     return result;
