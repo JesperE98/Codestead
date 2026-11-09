@@ -1,0 +1,53 @@
+{
+  "title": "Ljuskartor",
+  "tasks": {
+    "texcoords": {
+      "text": {
+        "opengl": "Skicka texturkoordinaterna vidare: vertexattribut 2 (2 floats efter normalen), `aTexCoords` in → `TexCoords` ut i `lighting_maps.vs`, och `in vec2 TexCoords;` i `lighting_maps.fs`.",
+        "vulkan": "Skicka texturkoordinaterna vidare: ett tredje attribut i `getAttributeDescriptions()` (location 2, `VK_FORMAT_R32G32_SFLOAT`, `offsetof(Vertex, texCoord)`), 3 attribut för kubens pipeline, `inTexCoord` → `fragTexCoord` (location 2) i vertex shadern och `fragTexCoord` i fragment shadern.",
+        "d3d12": "Skicka texturkoordinaterna vidare: ett `TEXCOORD`-element i input layouten (2 floats på byte 24), en tredje indata `float2 texCoord : TEXCOORD` till `VSMain`, `float2 texCoord : TEXCOORD;` i `PSInput`, och `result.texCoord = texCoord;`."
+      },
+      "hint": {
+        "opengl": "`glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));` och `glEnableVertexAttribArray(2);`. Bilden ändras inte än.",
+        "vulkan": "Båda arrayerna i `getAttributeDescriptions()` blir `std::array<…, 3>`. Precis som normalen går koordinaterna från vertex buffern genom vertex shadern till fragment shadern. Bilden ändras inte än.",
+        "d3d12": "`{ \"TEXCOORD\", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }` – 3 + 3 floats kommer före. Bilden ändras inte än."
+      }
+    },
+    "diffuse-map": {
+      "text": {
+        "opengl": "Gör den diffusa färgen till en textur: `sampler2D diffuse;` ersätter `vec3 ambient; vec3 diffuse;` i `Material`, ambient och diffuse läser den; ladda `container2.png` med `loadTexture`, sätt `material.diffuse` till enhet 0, bind texturen på enhet 0 före ritningen och använd shininess 64.",
+        "vulkan": "Gör den diffusa färgen till en textur: `createDiffuseMap()` laddar `textures/container2.png` till `diffuseMapImage`/`…Memory`/`…ImageView`; en combined image sampler på binding 0 (layout, pool, skrivning); `layout(binding = 0) uniform sampler2D diffuseMap;` för ambient och diffuse; `Material` behåller `specular` (0.5) och `shininess` (64).",
+        "d3d12": "Gör den diffusa färgen till en textur: `Texture2D diffuseMap : register(t0);` och `SamplerState wrapSampler : register(s0);` för ambient och diffuse; `Material` behåller `specular` och `shininess` (64); ladda `container2.png` till heap-plats 1 (2 descriptors), lägg till root parameter 2 (1 SRV på t0) och den statiska samplern, och sätt tabellen i `PopulateCommandList`."
+      },
+      "hint": {
+        "opengl": "`vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;`. Efter laddningen: `lightingShader.use(); lightingShader.setInt(\"material.diffuse\", 0);`. I loopen: `glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, diffuseMap);`. Ta bort texturen i slutet.",
+        "vulkan": "Anropa `createDiffuseMap()` vid TODO:n i `initVulkan()` och förstör vyn, imagen och minnet i `cleanup()`. Skrivningen: `dstBinding = 0`, `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`, `pImageInfo = &diffuseMapInfo` (vyn, `textureSampler`, `SHADER_READ_ONLY_OPTIMAL`).",
+        "d3d12": "`ComPtr<ID3D12Resource> diffuseMapUploadHeap; LoadTexture(\"container2.png\", m_diffuseMap, diffuseMapUploadHeap, 1);` – `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);`, `rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);`, och handtaget till plats 1 för `SetGraphicsRootDescriptorTable(2, …)`."
+      }
+    },
+    "specular-map": {
+      "text": {
+        "opengl": "Gör den spekulära styrkan till en textur: `sampler2D specular;` i `Material`, `specular = light.specular * spec * texture(material.specular, TexCoords).rgb`; ladda `container2_specular.png` som `specularMap`, sätt `material.specular` till enhet 1 och bind den på enhet 1.",
+        "vulkan": "Gör den spekulära styrkan till en textur: `createSpecularMap()` med `textures/container2_specular.png`, binding 1 (layout, poolantal 2, skrivning); `layout(binding = 1) uniform sampler2D specularMap;` i den spekulära termen; `Material` behåller bara `shininess` (C++: plus `pad1`…`pad3`).",
+        "d3d12": "Gör den spekulära styrkan till en textur: `Texture2D specularMap : register(t1);` i den spekulära termen, `Material` behåller bara `shininess` (C++: `float padding0[3];` efter den); ladda `container2_specular.png` till heap-plats 2 (3 descriptors) och låt SRV-rangen omfatta 2 descriptors."
+      },
+      "hint": {
+        "opengl": "Ta bort raden `setVec3(\"material.specular\", …)` – det är en sampler nu: `lightingShader.setInt(\"material.specular\", 1);`. I loopen: `glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, specularMap);`.",
+        "vulkan": "Kopiera diffuse mapens steg med `specular…`-namn och binding 1; arrayen med bindings växer till 3. Ta bort `ubo.material.specular` från `updateUniformBuffer()`. Stål glänser, trä knappt.",
+        "d3d12": "`ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);` – tabellen börjar redan på plats 1, så den täcker nu plats 1 och 2. Ta bort `material.specular` från `OnUpdate`."
+      }
+    },
+    "emission": {
+      "text": {
+        "opengl": "Lägg till en emission map: `sampler2D emission;` i `Material`, `emission = texture(material.emission, TexCoords).rgb` adderad till resultatet; ladda `matrix.png` som `emissionMap` på texturenhet 2.",
+        "vulkan": "Lägg till en emission map: `createEmissionMap()` med `textures/matrix.png`, binding 3 (binding 2 är uniform buffern; poolantal 3, skrivning); `layout(binding = 3) uniform sampler2D emissionMap;` och `emission` adderad till resultatet.",
+        "d3d12": "Lägg till en emission map: `Texture2D emissionMap : register(t2);` och `emission = emissionMap.Sample(wrapSampler, input.texCoord).rgb` adderad till resultatet; ladda `matrix.png` till heap-plats 3 (`m_emissionMap`, 4 descriptors) och låt SRV-rangen omfatta 3 descriptors."
+      },
+      "hint": {
+        "opengl": "Utsänt ljus beror inte på någon ljuskälla: `vec3 result = ambient + diffuse + specular + emission;`. `lightingShader.setInt(\"material.emission\", 2);` och bind den efter `glActiveTexture(GL_TEXTURE2)`.",
+        "vulkan": "Utsänt ljus beror inte på någon ljuskälla: `vec3 result = ambient + diffuse + specular + emission;`. Arrayen med bindings: `{diffuseMapLayoutBinding, specularMapLayoutBinding, uboLayoutBinding, emissionMapLayoutBinding}`.",
+        "d3d12": "Utsänt ljus beror inte på någon ljuskälla: `float3 result = ambient + diffuse + specular + emission;`. `LoadTexture(\"matrix.png\", m_emissionMap, emissionMapUploadHeap, 3);`"
+      }
+    }
+  }
+}

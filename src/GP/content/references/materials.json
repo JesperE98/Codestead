@@ -1,0 +1,12 @@
+[
+  { "title": "Materials", "url": "https://learnopengl.com/Lighting/Materials", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: materials.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/2.lighting/3.1.materials/materials.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "LearnOpenGL source code: materials_exercise1.cpp (cyan plastic)", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/2.lighting/3.2.materials_exercise1/materials_exercise1.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "glUniform", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glUniform.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Descriptor pool and sets (alignment requirements)", "url": "https://vulkan-tutorial.com/Uniform_buffers/Descriptor_pool_and_sets", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Shader memory layout", "url": "https://docs.vulkan.org/guide/latest/shader_memory_layout.html", "publisher": "Khronos Group (Vulkan Guide)", "api": "vulkan" },
+  { "title": "LearnOpenGL source code: materials.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/2.lighting/3.1.materials/materials.cpp", "publisher": "Joey de Vries (GitHub)", "api": "vulkan" },
+  { "title": "Packing rules for constant variables", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-packing-rules", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "D3D12HelloConstBuffers sample", "url": "https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Samples/Desktop/D3D12HelloWorld/src/HelloConstBuffers", "publisher": "Microsoft (GitHub)", "api": "d3d12" },
+  { "title": "XMLoadFloat3 function", "url": "https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmloadfloat3", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

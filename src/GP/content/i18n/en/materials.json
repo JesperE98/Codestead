@@ -1,0 +1,41 @@
+{
+  "title": "Materials",
+  "tasks": {
+    "material": {
+      "text": {
+        "opengl": "Describe the surface with a material: a `Material` struct (`vec3 ambient, diffuse, specular; float shininess;`) and `uniform Material material;` in `materials.fs` instead of `objectColor`; use its fields instead of `objectColor`, the 0.1/0.5 strengths and the 32, and set the coral material from `main.cpp`.",
+        "vulkan": "Describe the surface with a material: a `Material` struct in `materials.frag`, `Material material;` as the block's last member instead of `objectColor`, its fields in the lighting instead of `objectColor`, the 0.1/0.5 strengths and the 32; in C++ the same struct (`pad1`, `pad2` after `ambient` and `diffuse`) in `UniformBufferObject` and the coral material set in `updateUniformBuffer()`.",
+        "d3d12": "Describe the surface with a material: a `Material` struct in `materials.hlsl`, `Material material;` after `viewPos` in the cbuffer instead of `objectColor`, its fields in `PSMain` instead of `objectColor`, the 0.1/0.5 strengths and the 32; in `main.cpp` the matching C++ struct in `SceneConstantBuffer` and the coral material set in `OnUpdate`."
+      },
+      "hint": {
+        "opengl": "`ambient = lightColor * material.ambient`, `diffuse = lightColor * (diff * material.diffuse)`, `specular = lightColor * (spec * material.specular)`, `result = ambient + diffuse + specular`. Set fields by full name: `lightingShader.setVec3(\"material.ambient\", 1.0f, 0.5f, 0.31f);` … specular (0.5, 0.5, 0.5), shininess 32.",
+        "vulkan": "`ambient = ubo.lightColor * ubo.material.ambient` and so on. C++: `glm::vec3 ambient; float pad1; glm::vec3 diffuse; float pad2; glm::vec3 specular; float shininess;` – `shininess` fills the 4 bytes after `specular`. The cube turns far too bright: the next task fixes that.",
+        "d3d12": "`ambient = lightColor * material.ambient` and so on. C++: `XMFLOAT3 ambient; float padding0; XMFLOAT3 diffuse; float padding1; XMFLOAT3 specular; float shininess;` – `shininess` fills the row of `specular`. The cube turns far too bright: the next task fixes that."
+      }
+    },
+    "light": {
+      "text": {
+        "opengl": "Give the light its own intensities: a `Light` struct (`vec3 position; vec3 ambient, diffuse, specular;`) and `uniform Light light;` replace `lightPos` and `lightColor`; set `light.position` = `lightPos`, `light.ambient` (0.2, 0.2, 0.2), `light.diffuse` (0.5, 0.5, 0.5) and `light.specular` (1.0, 1.0, 1.0).",
+        "vulkan": "Give the light its own intensities: a `Light` struct (`vec3 position; vec3 ambient, diffuse, specular;`) as the block's last member, replacing `lightColor` and `lightPos`; in C++ the same struct (a padding float after each `glm::vec3`), `UniformBufferObject { view; proj; viewPos; pad1; material; light; }`, and `ubo.light.position = lightPos`, ambient 0.2, diffuse 0.5, specular 1.0.",
+        "d3d12": "Give the light its own intensities: a `Light` struct (`float3 position; float3 ambient, diffuse, specular;`) and `Light light;` after `material` replace `lightColor` and `lightPos` in the cbuffer; the C++ `Light` with a `float` of padding after each `XMFLOAT3`; in `OnUpdate` `light.position` = `lightPos`, ambient (0.2, 0.2, 0.2), diffuse (0.5, 0.5, 0.5), specular (1.0, 1.0, 1.0)."
+      },
+      "hint": {
+        "opengl": "`ambient = light.ambient * material.ambient`, `lightDir = normalize(light.position - FragPos)`, `diffuse = light.diffuse * (diff * material.diffuse)`, `specular = light.specular * (spec * material.specular)`.",
+        "vulkan": "`ubo.light.ambient * ubo.material.ambient`, `normalize(ubo.light.position - fragPos)`, `ubo.light.diffuse * (…)`, `ubo.light.specular * (…)`. `viewPos` needs `pad1` because the next member, a struct, starts at a multiple of 16 bytes.",
+        "d3d12": "`light.ambient * material.ambient`, `normalize(light.position - input.fragPos)`, `light.diffuse * (…)`, `light.specular * (…)`. C++: `SceneConstantBuffer { view; projection; XMFLOAT3 viewPos; float padding0; Material material; Light light; }` – 256 bytes."
+      }
+    },
+    "light-color": {
+      "text": {
+        "opengl": "Let the light's colour change over time: `lightColor = (sin(t * 2.0), sin(t * 0.7), sin(t * 1.3))` with `glfwGetTime()`, `diffuseColor = lightColor * 0.5`, `ambientColor = diffuseColor * 0.2`, set as `light.diffuse` and `light.ambient`.",
+        "vulkan": "Let the light's colour change over time in `updateUniformBuffer()`: `lightColor = (sin(t * 2.0), sin(t * 0.7), sin(t * 1.3))` with `glfwGetTime()` and `std::sin`, `diffuseColor = lightColor * 0.5`, `ambientColor = diffuseColor * 0.2`, stored in `ubo.light.diffuse` and `ubo.light.ambient`.",
+        "d3d12": "Let the light's colour change over time in `OnUpdate`: the time since the first frame (`static auto startTime`, `std::chrono`), `lightColor = (sin(t * 2), sin(t * 0.7), sin(t * 1.3))`, `diffuseColor = lightColor * 0.5`, `ambientColor = diffuseColor * 0.2`, stored in `light.diffuse` and `light.ambient`."
+      },
+      "hint": {
+        "opengl": "`glm::vec3 lightColor; lightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));` … then `lightingShader.setVec3(\"light.ambient\", ambientColor);` and the same for `light.diffuse`. The specular part stays white.",
+        "vulkan": "`lightColor.x = static_cast<float>(std::sin(glfwGetTime() * 2.0));` … `glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);` – the specular part stays white.",
+        "d3d12": "`XMVECTOR diffuseColor = XMLoadFloat3(&lightColor) * 0.5f;`, `XMVECTOR ambientColor = diffuseColor * 0.2f;`, then `XMStoreFloat3(&constantBufferData.light.ambient, ambientColor);` (and `diffuse`). The specular part stays white."
+      }
+    }
+  }
+}
