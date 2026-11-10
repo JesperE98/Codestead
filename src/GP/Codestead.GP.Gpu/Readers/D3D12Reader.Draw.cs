@@ -102,7 +102,7 @@ public sealed partial class D3D12Reader
 
         var textures = modelOnly ? null : Textures(vs, ps);
         var cullMode = cull.Contains("NONE", StringComparison.Ordinal) ? CullMode.None : cull.Contains("FRONT", StringComparison.Ordinal) ? CullMode.Front : CullMode.Back;
-        var topo = GlReader.TopologyOf(topology);
+        var topo = TopologyOf(topology);
 
         // Run the frame: OnUpdate and the recorded command list (each draw with the root constants set before it).
         var blocks = VulkanReader.AllShaderBlocks(project, [".hlsl"], vs, ps);
@@ -125,7 +125,9 @@ public sealed partial class D3D12Reader
         var indexData = drawIndexed is not null && !deviceVertices ? IndexData() : null;
         var layouts = deviceVertices ? InputLayouts() : [];
         // Render targets the frame draws into, clears and resolves (the device model's ops, by recorded draw).
-        var opsByDraw = device.Ops.GroupBy(o => o.BeforeDraw).ToDictionary(g => g.Key, g => g.ToList());
+        // The ops recorded during the setup (the first SetupOps) belong to the setup draws; the others to the frame.
+        var opsByDraw = device.Ops.Skip(recorder.SetupOps).GroupBy(o => o.BeforeDraw).ToDictionary(g => g.Key, g => g.ToList());
+        var setupOpsByDraw = device.Ops.Take(recorder.SetupOps).GroupBy(o => o.BeforeDraw).ToDictionary(g => g.Key, g => g.ToList());
         var pipelines = recorder.Draws.Any(d => d.Pipeline is not null) ? Pipelines() : new();
         if (recorder.Draws.Count > 0)
         {
@@ -133,6 +135,13 @@ public sealed partial class D3D12Reader
             for (int di = 0; di < recorder.Draws.Count; di++)
             {
                 var d = recorder.Draws[di];
+                if (setupOpsByDraw.TryGetValue(di, out var setupOps)) AddOps(setupOps, device);
+                if (di == recorder.SetupDraws && di > 0)
+                {
+                    // The setup's draws and ops end here (the ops after its last draw came just above).
+                    foreach (var (_, late) in setupOpsByDraw.Where(o => o.Key > di).OrderBy(o => o.Key)) AddOps(late, device);
+                    (scene.SetupDraws, scene.SetupOps) = (scene.Draws.Count, scene.Ops.Count);
+                }
                 if (opsByDraw.TryGetValue(di, out var ops)) AddOps(ops, device);
                 // With several pipeline state objects, the draw uses the one set before it.
                 var pl = d.Pipeline is not null && pipelines.Count > 1 && pipelines.TryGetValue(d.Pipeline, out var p) ? p : null;
@@ -143,7 +152,7 @@ public sealed partial class D3D12Reader
                     foreach (var (k, v) in d.Constants) mValues[k] = v;
                     RootCbvValues(device, d, blocks, mValues);
                     // The model's meshes go where the command list draws now (an off-screen G-buffer too).
-                    var modelTarget = (d.State as D3D12Device.DrawState)?.RenderTarget is { } mrt ? device.TargetOf(mrt) : null;
+                    var modelTarget = (d.State as D3D12Device.DrawState)?.Target;
                     if (modelTarget is not null) RegisterTarget(device, modelTarget);
                     ModelDraws(pl?.Vs ?? vs, pl?.Fs ?? ps, pl?.VsEntry ?? vsEntry, pl?.FsEntry ?? psEntry, mValues, pl?.Cull ?? cullMode, pl?.FrontCcw ?? frontCcw, pl?.DepthTest ?? depth,
                         pl is not null ? pl.Gs : gsInfo?.Program, pl is not null ? pl.GsEntry : gsInfo?.Entry ?? "main", d, modelTarget);
@@ -169,7 +178,7 @@ public sealed partial class D3D12Reader
                 deviceTextureSizes = null;
                 var (deviceTextures, deviceCubes) = d.State is D3D12Device.DrawState { Tables.Count: > 0 } ts ? DeviceTextures(device, ts, dvs, dps) : (null, null);
                 var textureSizes = deviceTextures is null ? null : deviceTextureSizes;
-                var target = (d.State as D3D12Device.DrawState)?.RenderTarget is { } rt ? device.TargetOf(rt) : null;
+                var target = (d.State as D3D12Device.DrawState)?.Target;
                 if (target is not null) RegisterTarget(device, target);
                 scene.Draws.Add(new DrawCall
                 {
@@ -179,6 +188,7 @@ public sealed partial class D3D12Reader
                     InstanceVertices = perInstance,
                     InstanceDivisor = stepRate,
                     CubeTextures = deviceCubes,
+                    CubeTexturesLod = deviceCubes is null ? null : deviceCubeLod,
                     TextureSizes = textureSizes,
                     VertexShader = dvs,
                     FragmentShader = dps,
@@ -190,7 +200,7 @@ public sealed partial class D3D12Reader
                     First = d.Indexed ? 0 : d.First,
                     Count = d.Count,
                     Instances = Math.Max(1, d.Instances),
-                    Topology = topo,
+                    Topology = (d.State as D3D12Device.DrawState)?.Topology is { } drawTopology ? TopologyOf(drawTopology) : topo,
                     Uniforms = _ => values,
                     Cull = pl?.Cull ?? cullMode,
                     FrontCcw = pl?.FrontCcw ?? frontCcw,
@@ -202,6 +212,12 @@ public sealed partial class D3D12Reader
                     Blend = (pl?.State ?? state).Blend,
                     Textures = deviceTextures ?? PerDrawTextures(pl?.Vs ?? vs, pl?.Fs ?? ps, d.Bound) ?? (pl is null ? textures : Textures(pl.Vs, pl.Fs) ?? textures),
                 });
+            }
+            if (recorder.SetupDraws > 0 && recorder.SetupDraws >= recorder.Draws.Count)
+            {
+                // Nothing but the setup was drawn: its last ops, and the frame's ops after them.
+                if (setupOpsByDraw.TryGetValue(recorder.Draws.Count, out var tail)) AddOps(tail, device);
+                (scene.SetupDraws, scene.SetupOps) = (scene.Draws.Count, scene.Ops.Count);
             }
             if (opsByDraw.TryGetValue(recorder.Draws.Count, out var lastOps)) AddOps(lastOps, device);
             // Textures found through the device model's descriptors: the load-order count does not apply.
@@ -293,6 +309,14 @@ public sealed partial class D3D12Reader
         return null;
     }
 
+    /// <summary>D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP, …_LINESTRIP, …_TRIANGLELIST, …_POINTLIST (no underscore before STRIP).</summary>
+    private static Topology TopologyOf(string name) => name switch
+    {
+        _ when name.Contains("TRIANGLESTRIP", StringComparison.Ordinal) => Topology.TriangleStrip,
+        _ when name.Contains("LINESTRIP", StringComparison.Ordinal) => Topology.LineStrip,
+        _ => GlReader.TopologyOf(name),
+    };
+
     private DrawTextures? drawTextures;
 
     /// <summary>Clears and resolves of the device model, in the scene's draw numbering (a Model draw adds several draws).</summary>
@@ -321,10 +345,15 @@ public sealed partial class D3D12Reader
     /// <summary>An off-screen render target of the device model ("res:N") in the scene, with its size and format.</summary>
     private void RegisterTarget(D3D12Device device, string id)
     {
-        if (scene.Targets.ContainsKey(id) || !int.TryParse(id[4..], out var n) || device.ResourceAt(n) is not { } r) return;
-        // A texture array drawn into slice by slice (a point shadow's cube map: SV_RenderTargetArrayIndex) has layers.
-        var shape = device.ShapeOf(id);
-        scene.Targets[id] = new RenderTarget(id, r.Width, r.Height, shape?.Colors ?? 1, shape?.Depth ?? true, shape?.Depth ?? true, Math.Max(1, r.Samples), r.Float, Math.Max(1, r.ArraySize));
+        // "res:N~2@3": mip level 2 of resource N (half the size per level), array slice / cube face 3. The target is
+        // registered per level; its slices are found through it.
+        var levelId = id.Contains('@') ? id[..id.IndexOf('@')] : id;
+        if (scene.Targets.ContainsKey(levelId) || device.TargetResource(id) is not var (r, level)) return;
+        // A texture array drawn into slice by slice in one pass (a point shadow's cube map: SV_RenderTargetArrayIndex)
+        // has layers; drawn into through a view per slice (a cube map's faces one by one), each slice is its own target.
+        var shape = device.ShapeOf(id) ?? device.ShapeOf(levelId);
+        scene.Targets[levelId] = new RenderTarget(levelId, Math.Max(1, r.Width >> level), Math.Max(1, r.Height >> level), shape?.Colors ?? 1, shape?.Depth ?? true, shape?.Depth ?? true,
+            Math.Max(1, r.Samples), r.Float, r.PerSlice ? 1 : Math.Max(1, r.ArraySize));
     }
 
     /// <summary>Every input layout of the program: (semantic, input slot, byte offset, floats, per instance, step rate).</summary>
@@ -428,6 +457,7 @@ public sealed partial class D3D12Reader
             return (flat[id], cubes[id]);
         }
         deviceTextureSizes = id => Lookup(id).Item1 is { } t ? (t.Image.Width, t.Image.Height) : null;
+        deviceCubeLod = (id, x, y, z, lod) => Lookup(id).Item2 is { } c ? c.Sample(x, y, z, lod) : null;
         return ((id, u, v) => Lookup(id).Item1 is { } t ? t.Sample(u, v) : [0, 0, 0, 1],
             (id, x, y, z) => Lookup(id).Item2 is { } c ? c.Sample(x, y, z) : null);
     }
@@ -462,6 +492,8 @@ public sealed partial class D3D12Reader
 
     /// <summary>The texture sizes of the last DeviceTextures call (GetDimensions, textureSize).</summary>
     private Func<string, (int Width, int Height)?>? deviceTextureSizes;
+    /// <summary>The cube maps of the last DeviceTextures call read at a mip level (SampleLevel).</summary>
+    private Func<string, double, double, double, double, double[]?>? deviceCubeLod;
 
     /// <summary>
     /// Static samplers: each description (sampler, samplers[0], samplers[1] …) by its ShaderRegister – a description

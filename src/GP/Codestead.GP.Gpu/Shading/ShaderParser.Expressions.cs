@@ -24,6 +24,8 @@ public sealed partial class ShaderParser
         new[] { "&" },
         new[] { "==", "!=" },
         new[] { "<", ">", "<=", ">=" },
+        // << and >> (two tokens each: ">>" also closes templates), handled in Binary.
+        new[] { "<<", ">>" },
         new[] { "+", "-" },
         new[] { "*", "/", "%" },
     };
@@ -32,7 +34,19 @@ public sealed partial class ShaderParser
     {
         if (level == Levels.Length) return UnaryExpr();
         var left = Binary(level + 1);
-        while (Peek.Kind == ShaderTokenKind.Symbol && Levels[level].Contains(Peek.Text))
+        if (Levels[level][0] == "<<")
+        {
+            while (Peek.Kind == ShaderTokenKind.Symbol && Peek.Text is "<" or ">" && PeekAt(1).Kind == ShaderTokenKind.Symbol && PeekAt(1).Text == Peek.Text)
+            {
+                var first = Next();
+                Next();
+                left = new ShaderAst.Binary(first.Text + first.Text, left, Binary(level + 1), first.Line);
+            }
+            return left;
+        }
+        // a < b, but not the first half of a shift.
+        while (Peek.Kind == ShaderTokenKind.Symbol && Levels[level].Contains(Peek.Text)
+            && !(Peek.Text is "<" or ">" && PeekAt(1).Kind == ShaderTokenKind.Symbol && PeekAt(1).Text == Peek.Text))
         {
             var op = Next();
             left = new ShaderAst.Binary(op.Text, left, Binary(level + 1), op.Line);
@@ -61,12 +75,17 @@ public sealed partial class ShaderParser
             Accept("*");
             Expect(")");
             var operand = UnaryExpr();
+            if (ScalarCast(type) is { } scalar) return new Call(scalar, [operand], line);
             return ShaderRunner.MatrixSize(type) > 0 || ShaderRunner.ComponentCount(type) > 1 ? new Call(type, [operand], line) : operand;
         }
         return Postfix(Primary());
     }
 
     private static bool IsCastType(string t) => t is "float" or "double" or "int" or "uint" or "unsigned" or "void" or "GLfloat" or "GLint" or "GLuint" or "GLsizei" or "uint32_t" or "int32_t" or "size_t" or "UINT" or "FLOAT" or "half" or "char";
+
+    /// <summary>The conversion a cast to a number type makes: (float)i is float(i), (int)x is int(x), which cuts the fraction off.</summary>
+    private static string? ScalarCast(string type) => type is "float" or "double" or "GLfloat" or "FLOAT" or "half" ? "float"
+        : ShaderValue.IsIntType(type) ? "int" : null;
 
     private Expr Postfix(Expr e)
     {
@@ -118,7 +137,7 @@ public sealed partial class ShaderParser
         {
             case ShaderTokenKind.Number:
                 Next();
-                return new Number(double.Parse(t.Text, CultureInfo.InvariantCulture), t.Line);
+                return new Number(double.Parse(t.Text, CultureInfo.InvariantCulture), t.Line, t.Text.All(char.IsDigit));
             case ShaderTokenKind.String:
                 Next();
                 // Adjacent string literals are joined, as in C++.
@@ -131,11 +150,15 @@ public sealed partial class ShaderParser
                 // static_cast<float>(x) and friends.
                 if (t.Text is "static_cast" or "reinterpret_cast" or "const_cast" && Peek.Is("<"))
                 {
-                    while (!Accept(">")) Next();
+                    var castType = new List<string>();
+                    Expect("<");
+                    while (!Accept(">")) castType.Add(Next().Text);
                     Expect("(");
                     var inner = Expression();
                     Expect(")");
-                    return inner;
+                    castType.RemoveAll(w => w is "const" or "unsigned" or "signed");
+                    var to = castType.Count == 0 ? "int" : castType.Count == 1 ? castType[0] : "";
+                    return t.Text == "static_cast" && ScalarCast(to) is { } scalar ? new Call(scalar, [inner], t.Line) : inner;
                 }
                 if (t.Text is "true" or "false") return new Number(t.Text == "true" ? 1 : 0, t.Line);
                 // C++: new glm::mat4[amount] – an array of zeroed values.

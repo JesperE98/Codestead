@@ -11,7 +11,8 @@ public sealed partial class ShaderRunner
         switch (e)
         {
             case Number n:
-                return ShaderValue.Scalar(n.Value);
+                // A number's value is never changed in place: one value per literal serves every evaluation.
+                return n.Cached ??= n.Integer ? ShaderValue.Integer(n.Value) : ShaderValue.Scalar(n.Value);
             case Name n:
                 return Lookup(n.Id, n.Line);
             case Member m:
@@ -28,8 +29,14 @@ public sealed partial class ShaderRunner
                 if (Lenient && m.Field == "ptr" && owner.V is { Length: 1 }) return owner;
                 if (owner.V is not null && !owner.IsMatrix && Swizzle(m.Field) is { } idx)
                 {
-                    if (idx.Any(i => i >= owner.V.Length)) throw new ShaderRuntimeException($"vector has no component '.{m.Field}'", m.Line);
-                    return idx.Length == 1 ? ShaderValue.Scalar(owner.V[idx[0]]) : ShaderValue.Vec(idx.Select(i => owner.V[i]).ToArray());
+                    var from = owner.V;
+                    var picked = new double[idx.Length];
+                    for (int k = 0; k < idx.Length; k++)
+                    {
+                        if (idx[k] >= from.Length) throw new ShaderRuntimeException($"vector has no component '.{m.Field}'", m.Line);
+                        picked[k] = from[idx[k]];
+                    }
+                    return ShaderValue.Vec(picked);
                 }
                 // .size() / .length() on arrays.
                 throw new ShaderRuntimeException($"no member named '{m.Field}'", m.Line);
@@ -59,7 +66,7 @@ public sealed partial class ShaderRunner
                         Store(u.Operand, moved);
                         return u.Op.StartsWith("post", StringComparison.Ordinal) ? old : moved;
                     }
-                    var changed = BinaryOp(u.Op.EndsWith("++", StringComparison.Ordinal) ? "+" : "-", old, ShaderValue.Scalar(1), u.Line);
+                    var changed = BinaryOp(u.Op.EndsWith("++", StringComparison.Ordinal) ? "+" : "-", old, old.Int ? ShaderValue.Integer(1) : ShaderValue.Scalar(1), u.Line);
                     Store(u.Operand, changed);
                     return u.Op.StartsWith("post", StringComparison.Ordinal) ? old : changed;
                 }
@@ -67,7 +74,8 @@ public sealed partial class ShaderRunner
                 if (v.V is null) throw new ShaderRuntimeException($"invalid operand to '{u.Op}'", u.Line);
                 return u.Op switch
                 {
-                    "-" => new ShaderValue { V = v.V.Select(x => -x).ToArray(), Cols = v.Cols },
+                    "-" => Negated(v),
+                    "~" => ShaderValue.Integer((uint)~(long)v.X),
                     "!" => ShaderValue.Scalar(v.X == 0 ? 1 : 0),
                     _ => v,
                 };
@@ -85,7 +93,8 @@ public sealed partial class ShaderRunner
                 var items = list.Items.Select(Eval).ToList();
                 // { 1, 2, 3 } of scalars is a vector; anything else an array.
                 if (items.All(i => i.V is { Length: 1 }) && items.Count <= 4) return ShaderValue.Vec(items.Select(i => i.X).ToArray());
-                return ShaderValue.Array(items.ToArray());
+                // The elements' type is the array's, which the list does not know: plain numbers.
+                return ShaderValue.Array(items.Select(i => i.Int ? ShaderValue.Scalar(i.X) : i).ToArray());
             }
             case Call c:
                 return CallExpr(c);
@@ -94,8 +103,22 @@ public sealed partial class ShaderRunner
         }
     }
 
+    // Comparisons give 1 or 0; like a literal, the value is never changed in place.
+    private static readonly ShaderValue True = ShaderValue.Scalar(1), False = ShaderValue.Scalar(0);
+
+    private static ShaderValue Negated(ShaderValue v)
+    {
+        var r = new double[v.V!.Length];
+        for (int i = 0; i < r.Length; i++) r[i] = -v.V[i];
+        return new ShaderValue { V = r, Cols = v.Cols, Int = v.Int };
+    }
+
     /// <summary>The component indices of a swizzle (.xyz, .rgba, .stpq), or null.</summary>
-    internal static int[]? Swizzle(string s)
+    internal static int[]? Swizzle(string s) => s.Length is 0 or > 4 ? null : swizzles.GetOrAdd(s, FindSwizzle);
+
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, int[]?> swizzles = new(StringComparer.Ordinal);
+
+    private static int[]? FindSwizzle(string s)
     {
         if (s.Length is 0 or > 4) return null;
         var r = new int[s.Length];
@@ -114,6 +137,28 @@ public sealed partial class ShaderRunner
 
     private ShaderValue BinaryOp(string op, ShaderValue a, ShaderValue b, int line)
     {
+        // Numbers and vectors with + - * / and comparisons of two floats: what shaders do most.
+        if (a.V is { } av && b.V is { } bv && a.Cols == 0 && b.Cols == 0 && !(a.Int && b.Int) && (av.Length == bv.Length || av.Length == 1 || bv.Length == 1) && av.Length > 0 && bv.Length > 0)
+        {
+            if (op.Length == 1)
+            {
+                char o = op[0];
+                if (o is '+' or '-' or '*' or '/')
+                {
+                    int count = Math.Max(av.Length, bv.Length);
+                    var r = new double[count];
+                    for (int i = 0; i < count; i++)
+                    {
+                        double x = av[av.Length == 1 ? 0 : i], y = bv[bv.Length == 1 ? 0 : i];
+                        r[i] = o switch { '+' => x + y, '-' => x - y, '*' => x * y, _ => y == 0 ? 0 : x / y };
+                    }
+                    return new ShaderValue { V = r };
+                }
+                if (o is '<' or '>') return (o == '<' ? av[0] < bv[0] : av[0] > bv[0]) ? True : False;
+            }
+            else if (op is "<=") return av[0] <= bv[0] ? True : False;
+            else if (op is ">=") return av[0] >= bv[0] ? True : False;
+        }
         // C++ strings: "offsets[" + std::to_string(i) + "]".
         if (op == "+" && (a.Text is not null || b.Text is not null) && Lenient)
             return ShaderValue.Str((a.Text ?? a.ToString()) + (b.Text ?? b.ToString()));
@@ -156,6 +201,26 @@ public sealed partial class ShaderRunner
         int n = Math.Max(a.V.Length, b.V.Length);
         if (a.V.Length != 1 && b.V.Length != 1 && a.V.Length != b.V.Length)
             throw new ShaderRuntimeException($"cannot combine a {Describe(a)} and a {Describe(b)} with '{op}'", line);
+        // Two integers: the result is an integer, and a division drops the fraction (7 / 2 is 3).
+        if (n == 1 && a.Int && b.Int)
+        {
+            double x = a.V[0], y = b.V[0];
+            return ShaderValue.Integer(op switch
+            {
+                "+" => x + y,
+                "-" => x - y,
+                "*" => x * y,
+                "/" => y == 0 ? 0 : Math.Truncate(x / y),
+                "%" => y == 0 ? 0 : x % y,
+                "&" => (long)x & (long)y,
+                "|" => (long)x | (long)y,
+                "^" => (long)x ^ (long)y,
+                // 32 bits, as uint has (the bits shifted out are gone).
+                "<<" => (uint)((long)x << (int)y),
+                ">>" => (long)x >> (int)y,
+                _ => throw new ShaderRuntimeException($"unsupported operator '{op}'", line),
+            });
+        }
         var r2 = new double[n];
         for (int i = 0; i < n; i++)
         {
@@ -170,6 +235,8 @@ public sealed partial class ShaderRunner
                 "&" => (long)x & (long)y,
                 "|" => (long)x | (long)y,
                 "^" => (long)x ^ (long)y,
+                "<<" => (uint)((long)x << (int)y),
+                ">>" => (long)x >> (int)y,
                 _ => throw new ShaderRuntimeException($"unsupported operator '{op}'", line),
             };
         }
@@ -217,13 +284,18 @@ public sealed partial class ShaderRunner
     }
 
     /// <summary>Number of components of a scalar or vector type (0 = not one).</summary>
-    internal static int ComponentCount(string type)
+    internal static int ComponentCount(string type) => componentCounts.GetOrAdd(type, FindComponentCount);
+
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, int> componentCounts = new(StringComparer.Ordinal);
+
+    private static int FindComponentCount(string type)
     {
         switch (type)
         {
             case "float" or "double" or "int" or "uint" or "bool" or "half" or "min16float" or "FLOAT" or "UINT" or "INT" or "GLfloat" or "GLint" or "GLuint" or "unsigned" or "uint32_t" or "int32_t" or "uint16_t" or "size_t" or "auto" or "dword" or "DWORD":
                 return 1;
         }
+        if (ShaderValue.IsIntType(type)) return 1;
         foreach (var prefix in new[] { "vec", "ivec", "uvec", "bvec", "dvec", "float", "int", "uint", "half", "bool", "double", "XMFLOAT", "XMINT", "XMUINT", "min16float" })
             if (type.StartsWith(prefix, StringComparison.Ordinal) && type.Length == prefix.Length + 1 && type[^1] is >= '2' and <= '4')
                 return type[^1] - '0';
@@ -243,6 +315,9 @@ public sealed partial class ShaderRunner
     private ShaderValue Coerce(string type, ShaderValue v)
     {
         int n = ComponentCount(type);
+        // A number keeps its variable's type: int x = 2.7 is 2, float x = 2 divides as a float.
+        if (n == 1 && v.V is { Length: 1 } && !v.IsMatrix && type != "auto")
+            return ShaderValue.IsIntType(type) ? (v.Int ? v : ShaderValue.Integer(Math.Truncate(v.X))) : v.Int ? ShaderValue.Scalar(v.X) : v;
         if (n == 0 || v.V is null || v.IsMatrix || v.V.Length == n) return v;
         if (v.V.Length == 1) return ShaderValue.Vec(Enumerable.Repeat(v.V[0], n).ToArray());
         if (v.V.Length > n) return ShaderValue.Vec(v.V.Take(n).ToArray());

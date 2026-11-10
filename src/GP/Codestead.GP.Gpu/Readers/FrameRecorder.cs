@@ -39,6 +39,10 @@ internal sealed class FrameRecorder
 
     public List<RecordedDraw> Draws { get; } = new();
 
+    /// <summary>The draws and device ops recorded while the program set itself up (see <see cref="Setup"/>).</summary>
+    public int SetupDraws { get; private set; }
+    public int SetupOps { get; private set; }
+
     public ShaderRunner Runner => exec.Runner;
 
     /// <param name="blocks">The shaders' uniform blocks / cbuffers (their fields are the names constants are set under).</param>
@@ -63,7 +67,9 @@ internal sealed class FrameRecorder
 
     /// <summary>
     /// Runs the program's setup (the D3D12 samples' OnInit, or LoadPipeline and LoadAssets) so the device model sees the
-    /// resources, views and data it creates. Draws recorded there (none, normally) are dropped.
+    /// resources, views and data it creates. What it draws into off-screen targets there stays for every frame (an
+    /// environment captured into a cube map once): those draws are kept as the first <see cref="SetupDraws"/> of
+    /// <see cref="Draws"/>, with the device's ops so far. Draws into the window before the first frame are dropped.
     /// </summary>
     public void Setup()
     {
@@ -71,8 +77,16 @@ internal sealed class FrameRecorder
         else if (source.Functions.ContainsKey("initVulkan")) exec.RunFunction("initVulkan");
         else
             foreach (var fn in new[] { "LoadPipeline", "LoadAssets" }.Where(source.Functions.ContainsKey)) exec.RunFunction(fn);
-        Draws.Clear();
-        device?.Ops.Clear();
+        if (device is not null && Draws.Count > 0 && Draws.All(d => device.Offscreen(d.State)))
+        {
+            SetupDraws = Draws.Count;
+            SetupOps = device.Ops.Count;
+        }
+        else
+        {
+            Draws.Clear();
+            device?.Ops.Clear();
+        }
         // The window's size is the simulated window's (the swap chain helpers may have left something else).
         foreach (var name in new[] { "swapChainExtent", "m_width", "m_height", "m_aspectRatio" }) exec.Runner.Globals.Remove(name);
     }
@@ -238,7 +252,7 @@ internal sealed class FrameRecorder
         if (CallProgramFunction(name, args) is { } returned) return returned;
         // Other API calls do nothing here (their arguments name API objects the runner does not have).
         return name.StartsWith("vk", StringComparison.Ordinal) || name.StartsWith("glfw", StringComparison.Ordinal) && name != "glfwGetTime"
-            || (name.StartsWith('.') && name is not (".size" or ".data" or ".c_str" or ".length" or ".begin" or ".end" or ".rbegin" or ".rend" or ".push_back" or ".emplace_back" or ".resize")) || name is "memcpy" or "ThrowIfFailed" or "WaitForPreviousFrame"
+            || (name.StartsWith('.') && name is not (".size" or ".data" or ".c_str" or ".length" or ".begin" or ".end" or ".rbegin" or ".rend" or ".push_back" or ".emplace_back" or ".resize" or ".Get" or ".get")) || name is "memcpy" or "ThrowIfFailed" or "WaitForPreviousFrame"
             ? ShaderValue.Scalar(0) : null;
     }
 

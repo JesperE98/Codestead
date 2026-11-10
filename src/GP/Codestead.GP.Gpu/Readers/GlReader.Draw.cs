@@ -88,7 +88,8 @@ public sealed partial class GlReader
         }
 
         var draw = MakeDraw(program, vertices, indices, indices is null ? first : 0, indices?.Length ?? count, TopologyOf(mode), instances, perInstance, divisor);
-        if (inLoop) scene.Draws.Add(draw);
+        // Before the render loop, what is drawn into a framebuffer object stays for every frame (a capture pass).
+        if (inLoop || draw.Target is not null) scene.Draws.Add(draw);
         else setupDraws.Add(draw);
     }
 
@@ -102,6 +103,7 @@ public sealed partial class GlReader
         // A model brings its own textures (its materials): the texture units are not read then.
         var (samplers, cubes) = textures is null ? Samplers(program) : (null, null);
         var sizes = textures is null ? samplerSizes : null;
+        var cubesLod = textures is null ? samplerCubeLod : null;
         return new DrawCall
         {
             VertexShader = program.Vertex!,
@@ -136,6 +138,7 @@ public sealed partial class GlReader
             Target = DrawTarget(),
             Textures = textures ?? samplers,
             CubeTextures = cubes,
+            CubeTexturesLod = cubesLod,
             TextureSizes = sizes,
         };
     }
@@ -146,10 +149,15 @@ public sealed partial class GlReader
     /// </summary>
     /// <summary>The texture sizes of the samplers the last Samplers call bound.</summary>
     private Func<string, (int Width, int Height)?>? samplerSizes;
+    /// <summary>The cube maps of the last Samplers call read at a mip level (textureLod).</summary>
+    private Func<string, double, double, double, double, double[]?>? samplerCubeLod;
 
     private (Func<string, double, double, double[]>?, Func<string, double, double, double, double[]?>?) Samplers(GlState.ProgramObject program)
     {
         samplerSizes = null;
+        samplerCubeLod = null;
+        var cubeSamplers = new[] { program.Vertex!, program.Fragment! }.Concat(program.Geometry is { } pg ? [pg] : [])
+            .SelectMany(s => s.Globals).Where(u => u.Storage == "uniform" && u.Type.StartsWith("samplerCube", StringComparison.Ordinal)).Select(u => u.Id).ToHashSet(StringComparer.Ordinal);
         var samplers = SamplerNames(program.Vertex!).Concat(SamplerNames(program.Fragment!))
             .Concat(program.Geometry is { } g ? SamplerNames(g) : []).Distinct().ToList();
         if (samplers.Count == 0) return (null, null);
@@ -159,7 +167,9 @@ public sealed partial class GlReader
         {
             int unit = program.Uniforms.TryGetValue(name, out var f) && f(1.0) is { } v ? (int)v.X : 0;
             Textures.Texture? texture = null;
-            if (gl.Units.TryGetValue(unit, out var texName) && gl.TextureObjects.TryGetValue(texName, out var t) && (t.Image is not null || t.IsCube || t.Framebuffer is not null))
+            // The unit's binding of the sampler's kind (a cube map and a 2D texture can be bound to one unit).
+            var ofKind = cubeSamplers.Contains(name) ? gl.UnitsCube : gl.Units2D;
+            if ((ofKind.TryGetValue(unit, out var texName) || gl.Units.TryGetValue(unit, out texName)) && gl.TextureObjects.TryGetValue(texName, out var t) && (t.Image is not null || t.IsCube || t.Framebuffer is not null))
             {
                 var sampler = new Textures.SamplerState(t.WrapS, t.WrapT, !t.MagFilter.Contains("NEAREST", StringComparison.Ordinal), t.Border);
                 if (!t.Complete) scene.Notes.Add(SimNote.Warning("textureIncomplete", ("name", name), ("filter", t.MinFilter)));
@@ -167,8 +177,14 @@ public sealed partial class GlReader
                 {
                     // A cube map a layered framebuffer draws into (point shadows): face i is layer i.
                     var (attachment, depth) = (t.Attachment, t.IsDepth);
-                    cubes[name] = new Textures.CubeTexture(Enumerable.Range(0, 6).Select(face =>
-                        (Textures.Texture?)new Textures.Texture(() => Raster.Rasterizer.TargetImage(face == 0 ? cubeFbo : cubeFbo + "@" + face, attachment, depth), sampler) { Components = 4 }).ToList());
+                    List<Textures.Texture?> Level(string target) => Enumerable.Range(0, 6).Select(face =>
+                        (Textures.Texture?)new Textures.Texture(() => Raster.Rasterizer.TargetImage(face == 0 ? target : target + "@" + face, attachment, depth), sampler) { Components = 4 }).ToList();
+                    // Mip levels (drawn one by one or made by glGenerateMipmap) are read when the filter uses them.
+                    bool mipmapped = t.TargetLevels > 1 && t.MinFilter.Contains("MIPMAP", StringComparison.Ordinal) && cubeFbo.StartsWith("tex:", StringComparison.Ordinal);
+                    cubes[name] = new Textures.CubeTexture(Level(cubeFbo))
+                    {
+                        Mips = mipmapped ? Enumerable.Range(1, t.TargetLevels - 1).Select(level => (IReadOnlyList<Textures.Texture?>)Level($"{cubeFbo}~{level}")).ToList() : null,
+                    };
                     continue;
                 }
                 else if (t.IsCube)
@@ -188,6 +204,7 @@ public sealed partial class GlReader
             bound[name] = texture;
         }
         samplerSizes = name => bound.TryGetValue(name, out var t) && t is not null ? (t.Image.Width, t.Image.Height) : null;
+        samplerCubeLod = cubes.Count == 0 ? null : (name, x, y, z, lod) => cubes.TryGetValue(name, out var c) ? c.Sample(x, y, z, lod) : null;
         return ((name, u, v) => bound.TryGetValue(name, out var t) && t is not null ? t.Sample(u, v) : [0, 0, 0, 1],
             cubes.Count == 0 ? null : (name, x, y, z) => cubes.TryGetValue(name, out var c) ? c.Sample(x, y, z) : null);
     }

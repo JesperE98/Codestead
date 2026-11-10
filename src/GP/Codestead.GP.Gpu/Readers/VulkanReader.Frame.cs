@@ -134,7 +134,9 @@ public sealed partial class VulkanReader
         if (!staticVertices && !deviceVertices) return;
         // The device model reads the bound buffers: what the static reading of `vertices` said does not apply.
         if (deviceVertices) scene.Notes.RemoveRange(notesBefore, notesAfterVertices - notesBefore);
-        var opsByDraw = device.Ops.GroupBy(o => o.BeforeDraw).ToDictionary(g => g.Key, g => g.ToList());
+        // The ops recorded during the setup (the first SetupOps) belong to the setup draws; the others to the frame.
+        var opsByDraw = device.Ops.Skip(recorder.SetupOps).GroupBy(o => o.BeforeDraw).ToDictionary(g => g.Key, g => g.ToList());
+        var setupOpsByDraw = device.Ops.Take(recorder.SetupOps).GroupBy(o => o.BeforeDraw).ToDictionary(g => g.Key, g => g.ToList());
         var indexData = drawIndexed is not null ? modelIndices ?? src.Numbers("indices") : null;
         var pipelines = recorder.Draws.Any(d => d.Pipeline is not null) ? Pipelines() : new();
         if (recorder.Draws.Count > 0)
@@ -142,6 +144,13 @@ public sealed partial class VulkanReader
             for (int di = 0; di < recorder.Draws.Count; di++)
             {
                 var d = recorder.Draws[di];
+                if (setupOpsByDraw.TryGetValue(di, out var setupOps)) AddDeviceOps(setupOps, device);
+                if (di == recorder.SetupDraws && di > 0)
+                {
+                    // The setup's draws and ops end here (the ops after its last draw came just above).
+                    foreach (var (_, late) in setupOpsByDraw.Where(o => o.Key > di).OrderBy(o => o.Key)) AddDeviceOps(late, device);
+                    (scene.SetupDraws, scene.SetupOps) = (scene.Draws.Count, scene.Ops.Count);
+                }
                 if (opsByDraw.TryGetValue(di, out var ops)) AddDeviceOps(ops, device);
                 // With several pipelines, the draw uses the one bound before it.
                 var pl = d.Pipeline is not null && pipelines.Count > 1 && pipelines.TryGetValue(d.Pipeline, out var p) ? p : null;
@@ -184,6 +193,7 @@ public sealed partial class VulkanReader
                     InstanceVertices = perInstance,
                     Target = target,
                     CubeTextures = deviceCubes,
+                    CubeTexturesLod = deviceTextures is null ? null : deviceCubeLod,
                     TextureSizes = textureSizes,
                     First = d.Indexed ? 0 : d.First,
                     Count = d.Count,
@@ -200,6 +210,12 @@ public sealed partial class VulkanReader
                     Blend = (pl?.State ?? one?.State ?? pipeState).Blend,
                     Textures = deviceTextures ?? PerDrawTextures(dvs, dfs, d.Bound) ?? (pl is null ? textures : Textures(dvs, dfs) ?? textures),
                 });
+            }
+            if (recorder.SetupDraws > 0 && recorder.SetupDraws >= recorder.Draws.Count)
+            {
+                // Nothing but the setup was drawn: its last ops, and the frame's ops after them.
+                if (setupOpsByDraw.TryGetValue(recorder.Draws.Count, out var tail)) AddDeviceOps(tail, device);
+                (scene.SetupDraws, scene.SetupOps) = (scene.Draws.Count, scene.Ops.Count);
             }
             if (opsByDraw.TryGetValue(recorder.Draws.Count, out var lastOps)) AddDeviceOps(lastOps, device);
             if (recorder.Draws.Any(d => d.State is VulkanDevice.DrawState { Sets.Count: > 0 } s && device.HasSet(s.Sets.GetValueOrDefault(0) ?? "")))

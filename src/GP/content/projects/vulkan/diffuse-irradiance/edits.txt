@@ -1,0 +1,713 @@
+=== task: environment-map
+--- file: main.cpp
+--- find:
+    float roughness;
+};
+--- replace:
+    float roughness;
+};
+
+// The push constants of the capture passes (the block in cubemap.vert): one face of a cube map is drawn with the
+// capture's projection times the view towards that face. They use the same push constant range as PushConstants.
+struct CapturePushConstants {
+    glm::mat4 projectionView;
+};
+--- file: main.cpp
+--- find:
+    // TODO: the capture's render pass, the pipelines of the conversion and the background (learnopengl's equirectangularToCubemapShader and backgroundShader)
+--- replace:
+    VkRenderPass captureRenderPass; // draws into one face of a floating point cube map (learnopengl's captureFBO)
+    VkPipeline equirectangularToCubemapPipeline; // learnopengl's equirectangularToCubemapShader
+    VkPipeline backgroundPipeline; // learnopengl's backgroundShader
+--- file: main.cpp
+--- find:
+    // TODO: the HDR image, the environment cube map and their sampler
+--- replace:
+    // the equirectangular HDR image (learnopengl's hdrTexture)
+    VkImage hdrImage;
+    VkDeviceMemory hdrImageMemory;
+    VkImageView hdrImageView;
+
+    // the environment cube map it is converted to (learnopengl's envCubemap)
+    VkImage envCubemapImage;
+    VkDeviceMemory envCubemapImageMemory;
+    VkImageView envCubemapImageView;
+
+    VkSampler clampSampler; // linear filtering, clamp to edge: for the HDR image and the cube maps
+--- file: main.cpp
+--- find:
+    VkDescriptorPool descriptorPool;
+--- replace:
+    VkDescriptorPool descriptorPool;
+    VkDescriptorSet hdrDescriptorSet; // the uniform buffer and the equirectangular HDR image
+    VkDescriptorSet envDescriptorSet; // the uniform buffer and the environment cube map
+--- file: main.cpp
+--- find:
+        createRenderPass();
+--- replace:
+        createRenderPass();
+        // the capture's render pass: one face of a 16-bit float cube map (learnopengl: a GL_RGB16F face attached to captureFBO)
+        createCaptureRenderPass(VK_FORMAT_R16G16B16A16_SFLOAT, captureRenderPass);
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/pbr.vert.spv", "shaders/pbr.frag.spv", pbrPipeline);
+        // TODO: the pipelines that convert the equirectangular map to a cube map (equirectangularToCubemapPipeline) and draw the background (backgroundPipeline)
+--- replace:
+        // a pipeline is made for one render pass and one kind of primitive: the spheres are a triangle strip in the window's pass
+        createPipeline("shaders/pbr.vert.spv", "shaders/pbr.frag.spv", renderPass, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP, pbrPipeline);
+        // the cube is a triangle list: drawn into a face of a cube map (the conversion) and into the window (the background)
+        createPipeline("shaders/cubemap.vert.spv", "shaders/equirectangular_to_cubemap.frag.spv", captureRenderPass, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, equirectangularToCubemapPipeline);
+        createPipeline("shaders/background.vert.spv", "shaders/background.frag.spv", renderPass, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, backgroundPipeline);
+--- file: main.cpp
+--- find:
+        // TODO: pbr: load the HDR environment map (textures/environment.hdr) and create the cube map it is converted to (envCubemap, 128 x 128)
+--- replace:
+        // pbr: load the HDR environment map
+        loadHdrTexture("textures/environment.hdr", hdrImage, hdrImageMemory, hdrImageView);
+        createTextureSampler(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FALSE, clampSampler);
+        // pbr: setup cubemap to render to
+        createCubemap(128, 1, envCubemapImage, envCubemapImageMemory, envCubemapImageView);
+--- file: main.cpp
+--- find:
+        // TODO: pbr: convert the HDR equirectangular environment map to the cube map
+--- replace:
+        createTextureDescriptorSet(hdrImageView, clampSampler, hdrDescriptorSet);
+        createTextureDescriptorSet(envCubemapImageView, clampSampler, envDescriptorSet);
+        // pbr: convert HDR equirectangular environment map to cubemap equivalent
+        renderToCubemap(equirectangularToCubemapPipeline, hdrDescriptorSet, envCubemapImage, 128);
+--- file: main.cpp
+--- find:
+        // TODO: destroy the sampler, the HDR image and the cube maps
+--- replace:
+        vkDestroySampler(device, clampSampler, nullptr);
+
+        vkDestroyImageView(device, hdrImageView, nullptr);
+        vkDestroyImage(device, hdrImage, nullptr);
+        vkFreeMemory(device, hdrImageMemory, nullptr);
+
+        vkDestroyImageView(device, envCubemapImageView, nullptr);
+        vkDestroyImage(device, envCubemapImage, nullptr);
+        vkFreeMemory(device, envCubemapImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, pbrPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, pbrPipeline, nullptr);
+        vkDestroyPipeline(device, equirectangularToCubemapPipeline, nullptr);
+        vkDestroyPipeline(device, backgroundPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyRenderPass(device, renderPass, nullptr);
+--- replace:
+        vkDestroyRenderPass(device, renderPass, nullptr);
+        vkDestroyRenderPass(device, captureRenderPass, nullptr);
+--- file: main.cpp
+--- find:
+    void createDescriptorSetLayout() {
+--- replace:
+    // The render pass of a capture: one colour attachment - a face of a cube map (or any image of this format) -, no
+    // depth: the cube is looked at from the inside, nothing can hide anything. The cube covers every pixel, so the
+    // attachment need not be cleared; at the end it is left ready to be sampled.
+    void createCaptureRenderPass(VkFormat format, VkRenderPass& captureRenderPass) {
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = format;
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE; // every pixel is written: no need to clear
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+
+        VkAttachmentReference colorAttachmentRef{};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: wait for whatever read the image before (it is written now)
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[0].srcAccessMask = 0;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        // after the pass: the fragment shaders that sample the image wait until it has been written
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = &colorAttachment;
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &captureRenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create capture render pass!");
+        }
+    }
+
+    void createDescriptorSetLayout() {
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorSetLayoutBinding, 1> bindings = {uboLayoutBinding};
+--- replace:
+        // then one image at binding 1: the HDR image, or a cube map
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings{};
+        bindings[0] = uboLayoutBinding;
+        for (uint32_t i = 1; i < bindings.size(); i++) {
+            bindings[i].binding = i;
+            bindings[i].descriptorCount = 1;
+            bindings[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            bindings[i].pImmutableSamplers = nullptr;
+            bindings[i].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        }
+--- file: main.cpp
+--- find:
+        pushConstantRange.size = sizeof(PushConstants);
+--- replace:
+        pushConstantRange.size = std::max(sizeof(PushConstants), sizeof(CapturePushConstants)); // one range for both structs
+--- file: main.cpp
+--- find:
+    // One graphics pipeline from a vertex and a fragment shader, with the pipeline layout (descriptor set + push
+    // constants) and the fixed functions below.
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkPipeline& pipeline) {
+--- replace:
+    // One graphics pipeline from a vertex and a fragment shader, with the pipeline layout (descriptor set + push
+    // constants) and the fixed functions below, for one render pass (a pipeline can only be used in the render pass it
+    // was made for, or one with the same attachment formats) and one kind of primitive (a triangle strip or list).
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, VkPrimitiveTopology topology, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; // the sphere is one long strip (learnopengl: GL_TRIANGLE_STRIP)
+--- replace:
+        inputAssembly.topology = topology; // the sphere is one long strip (learnopengl: GL_TRIANGLE_STRIP), the cube a list of triangles
+--- file: main.cpp
+--- find:
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS; // keep the fragment if it is nearer than the stored depth
+--- replace:
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL; // set depth function to less than AND equal for skybox depth trick.
+--- file: main.cpp
+--- find:
+        pipelineInfo.renderPass = renderPass;
+--- replace:
+        pipelineInfo.renderPass = pipelineRenderPass;
+--- file: main.cpp
+--- find:
+    // TODO: loadHdrTexture(path, image, imageMemory, imageView), createCubemap(size, mipLevels, image, imageMemory, imageView)
+--- replace:
+    // pbr: load the HDR environment map. stbi_loadf returns floats - here four per pixel (RGBA), the image format
+    // VK_FORMAT_R32G32B32A32_SFLOAT (learnopengl: GL_RGB16F from GL_FLOAT data).
+    void loadHdrTexture(const char* path, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView) {
+        stbi_set_flip_vertically_on_load(true);
+        int width, height, nrComponents;
+        float* data = stbi_loadf(path, &width, &height, &nrComponents, STBI_rgb_alpha);
+
+        if (!data) {
+            throw std::runtime_error("failed to load HDR image!");
+        }
+
+        // linear filtering of 32-bit float images is optional in Vulkan (desktop GPUs have it): check before relying on it
+        VkFormat format = findSupportedFormat(
+            {VK_FORMAT_R32G32B32A32_SFLOAT},
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT
+        );
+
+        VkDeviceSize imageSize = width * height * 4 * sizeof(float);
+        createTextureImage(data, imageSize, width, height, 1, format, image, imageMemory);
+        stbi_image_free(data);
+
+        imageView = createImageView(image, format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+    }
+
+    // pbr: setup cubemap to render to. A 16-bit float cube map (learnopengl: six glTexImage2D(
+    // GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, size, size, ...)): one image with six array layers - the faces
+    // +X, -X, +Y, -Y, +Z, -Z -, drawn into one face at a time (colour attachment) and sampled with a direction afterwards,
+    // and the cube view of its six layers.
+    void createCubemap(uint32_t size, uint32_t mipLevels, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView) {
+        VkImageCreateInfo imageInfo{};
+        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT; // its six layers can be viewed as a cube map
+        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.extent.width = size;
+        imageInfo.extent.height = size;
+        imageInfo.extent.depth = 1;
+        imageInfo.mipLevels = mipLevels;
+        imageInfo.arrayLayers = 6; // one layer per face
+        imageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if (vkCreateImage(device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create cube map image!");
+        }
+
+        VkMemoryRequirements memRequirements;
+        vkGetImageMemoryRequirements(device, image, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        if (vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate cube map image memory!");
+        }
+
+        vkBindImageMemory(device, image, imageMemory, 0);
+
+        // all six layers as a cube map (sampled with a direction: samplerCube)
+        VkImageViewCreateInfo viewInfo{};
+        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image = image;
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+        viewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        viewInfo.subresourceRange.baseMipLevel = 0;
+        viewInfo.subresourceRange.levelCount = mipLevels;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount = 6;
+
+        if (vkCreateImageView(device, &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create cube map image view!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        // one descriptor set with one uniform buffer
+        std::array<VkDescriptorPoolSize, 1> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+--- replace:
+        // three descriptor sets (the spheres', the HDR image's, the environment cube map's): each takes what the layout
+        // has - one uniform buffer and one image -, even when the image stays empty
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 3;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 3;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 1;
+--- replace:
+        poolInfo.maxSets = 3;
+--- file: main.cpp
+--- find:
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+--- replace:
+    // A descriptor set with the uniform buffer (binding 0) and one image (binding 1): the HDR image or a cube map.
+    // Binding it before a draw (vkCmdBindDescriptorSets) is Vulkan's glBindTexture.
+    void createTextureDescriptorSet(VkImageView imageView, VkSampler sampler, VkDescriptorSet& descriptorSet) {
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &descriptorSetLayout;
+
+        if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = imageView;
+        imageInfo.sampler = sampler;
+
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &imageInfo;
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+--- file: main.cpp
+--- find:
+        // TODO: render the environment map as the background (render it last to prevent overdraw)
+--- replace:
+        // render skybox (render as last to prevent overdraw)
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, backgroundPipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &envDescriptorSet, 0, nullptr);
+        renderCube(commandBuffer);
+--- file: main.cpp
+--- find:
+    void createSyncObjects() {
+--- replace:
+    // learnopengl's capture loop: the cube drawn six times with one of the capture pipelines, each time into another
+    // face of a cube map (size x size pixels), seen from the centre of the cube towards that face. descriptorSet holds
+    // the image the pipeline's fragment shader reads. Recorded into a one-time command buffer and run at once.
+    void renderToCubemap(VkPipeline pipeline, VkDescriptorSet descriptorSet, VkImage cubemapImage, uint32_t size) {
+        // pbr: set up projection and view matrices for capturing data onto the 6 cubemap face directions (no y flip: see
+        // the note on the cube map faces)
+        glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+        glm::mat4 captureViews[] = {
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
+        };
+
+        // a view of each face alone (one layer as a 2D image) and a framebuffer with it as the colour attachment -
+        // learnopengl: glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, ...)
+        std::array<VkImageView, 6> faceViews{};
+        std::array<VkFramebuffer, 6> framebuffers{};
+        for (uint32_t i = 0; i < 6; ++i) {
+            VkImageViewCreateInfo viewInfo{};
+            viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            viewInfo.image = cubemapImage;
+            viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            viewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            viewInfo.subresourceRange.baseMipLevel = 0;
+            viewInfo.subresourceRange.levelCount = 1;
+            viewInfo.subresourceRange.baseArrayLayer = i; // face i
+            viewInfo.subresourceRange.layerCount = 1;
+
+            if (vkCreateImageView(device, &viewInfo, nullptr, &faceViews[i]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create cube map face view!");
+            }
+
+            VkFramebufferCreateInfo framebufferInfo{};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = captureRenderPass;
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = &faceViews[i];
+            framebufferInfo.width = size;
+            framebufferInfo.height = size;
+            framebufferInfo.layers = 1;
+
+            if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &framebuffers[i]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create capture framebuffer!");
+            }
+        }
+
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+        // don't forget to configure the viewport to the capture dimensions.
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(size);
+        viewport.height = static_cast<float>(size);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = {size, size};
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        for (uint32_t i = 0; i < 6; ++i) {
+            VkRenderPassBeginInfo renderPassInfo{};
+            renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            renderPassInfo.renderPass = captureRenderPass;
+            renderPassInfo.framebuffer = framebuffers[i];
+            renderPassInfo.renderArea.offset = {0, 0};
+            renderPassInfo.renderArea.extent = {size, size};
+            renderPassInfo.clearValueCount = 0; // loadOp DONT_CARE: nothing to clear
+
+            vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+
+            CapturePushConstants constants{};
+            constants.projectionView = captureProjection * captureViews[i];
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(CapturePushConstants), &constants);
+
+            renderCube(commandBuffer);
+
+            vkCmdEndRenderPass(commandBuffer); // face i is now in VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+        }
+
+        endSingleTimeCommands(commandBuffer); // submits the command buffer and waits until it has run
+
+        // the faces' views and framebuffers were only needed for these passes
+        for (uint32_t i = 0; i < 6; ++i) {
+            vkDestroyFramebuffer(device, framebuffers[i], nullptr);
+            vkDestroyImageView(device, faceViews[i], nullptr);
+        }
+    }
+
+    void createSyncObjects() {
+--- file: shaders/background.frag
+--- find:
+    // TODO: sample the environment map in the direction fragWorldPos, tone map and gamma correct the colour
+    outColor = vec4(0.0, 0.0, 0.0, 1.0);
+--- replace:
+    vec3 envColor = textureLod(environmentMap, fragWorldPos, 0.0).rgb;
+
+    // HDR tonemap and gamma correct
+    envColor = envColor / (envColor + vec3(1.0));
+    envColor = pow(envColor, vec3(1.0 / 2.2));
+
+    outColor = vec4(envColor, 1.0);
+--- file: shaders/background.vert
+--- find:
+    // TODO: keep only the view matrix's rotation and give the cube the largest depth (z = w, so the depth is 1.0)
+    gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+--- replace:
+    mat4 rotView = mat4(mat3(ubo.view));
+    vec4 clipPos = ubo.proj * rotView * vec4(fragWorldPos, 1.0);
+
+    gl_Position = clipPos.xyww;
+--- file: shaders/equirectangular_to_cubemap.frag
+--- find:
+// TODO: SampleSphericalMap(v): the texture coordinates in the equirectangular map for the direction v
+
+void main() {
+    // TODO: the colour of the equirectangular map in this fragment's direction, normalize(fragWorldPos)
+    outColor = vec4(0.0, 0.0, 0.0, 1.0);
+}
+--- replace:
+const vec2 invAtan = vec2(0.1591, 0.3183);
+vec2 SampleSphericalMap(vec3 v) {
+    vec2 uv = vec2(atan(v.z, v.x), asin(v.y));
+    uv *= invAtan;
+    uv += 0.5;
+    return uv;
+}
+
+void main() {
+    vec2 uv = SampleSphericalMap(normalize(fragWorldPos));
+    vec3 color = texture(equirectangularMap, uv).rgb;
+
+    outColor = vec4(color, 1.0);
+}
+
+=== task: irradiance-map
+--- file: main.cpp
+--- find:
+    // TODO: the pipeline of the convolution (learnopengl's irradianceShader)
+--- replace:
+    VkPipeline irradiancePipeline; // learnopengl's irradianceShader
+--- file: main.cpp
+--- find:
+    VkImageView envCubemapImageView;
+--- replace:
+    VkImageView envCubemapImageView;
+
+    // the irradiance cube map (learnopengl's irradianceMap)
+    VkImage irradianceImage;
+    VkDeviceMemory irradianceImageMemory;
+    VkImageView irradianceImageView;
+--- file: main.cpp
+--- find:
+    VkDescriptorSet envDescriptorSet; // the uniform buffer and the environment cube map
+--- replace:
+    VkDescriptorSet envDescriptorSet; // the uniform buffer and the environment cube map
+    VkDescriptorSet irradianceDescriptorSet; // the uniform buffer and the irradiance cube map
+--- file: main.cpp
+--- find:
+        // TODO: the pipeline that convolutes the environment map (irradiancePipeline)
+--- replace:
+        createPipeline("shaders/cubemap.vert.spv", "shaders/irradiance_convolution.frag.spv", captureRenderPass, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, irradiancePipeline);
+--- file: main.cpp
+--- find:
+        // TODO: pbr: create the irradiance cube map (irradiance, 32 x 32)
+--- replace:
+        // pbr: create an irradiance cubemap
+        createCubemap(32, 1, irradianceImage, irradianceImageMemory, irradianceImageView);
+--- file: main.cpp
+--- find:
+        createTextureDescriptorSet(envCubemapImageView, clampSampler, envDescriptorSet);
+--- replace:
+        createTextureDescriptorSet(envCubemapImageView, clampSampler, envDescriptorSet);
+        createTextureDescriptorSet(irradianceImageView, clampSampler, irradianceDescriptorSet);
+--- file: main.cpp
+--- find:
+        // TODO: pbr: convolute the environment cube map into the irradiance cube map
+--- replace:
+        // pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
+        renderToCubemap(irradiancePipeline, envDescriptorSet, irradianceImage, 32);
+--- file: main.cpp
+--- find:
+        vkFreeMemory(device, envCubemapImageMemory, nullptr);
+--- replace:
+        vkFreeMemory(device, envCubemapImageMemory, nullptr);
+
+        vkDestroyImageView(device, irradianceImageView, nullptr);
+        vkDestroyImage(device, irradianceImage, nullptr);
+        vkFreeMemory(device, irradianceImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, backgroundPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, backgroundPipeline, nullptr);
+        vkDestroyPipeline(device, irradiancePipeline, nullptr);
+--- file: main.cpp
+--- find:
+        // three descriptor sets (the spheres', the HDR image's, the environment cube map's): each takes what the layout
+        // has - one uniform buffer and one image -, even when the image stays empty
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 3;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 3;
+--- replace:
+        // four descriptor sets (the spheres', the HDR image's, the environment cube map's, the irradiance map's): each
+        // takes what the layout has - one uniform buffer and one image -, even when the image stays empty
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 4;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 4;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 3;
+--- replace:
+        poolInfo.maxSets = 4;
+--- file: main.cpp
+--- find:
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &envDescriptorSet, 0, nullptr);
+--- replace:
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &irradianceDescriptorSet, 0, nullptr); // display irradiance map
+--- file: shaders/irradiance_convolution.frag
+--- find:
+    // TODO: add up the environment's radiance over the hemisphere around N (sampleDelta 0.1), weighted by cos(theta) * sin(theta)
+--- replace:
+    // tangent space calculation from origin point
+    vec3 up    = vec3(0.0, 1.0, 0.0);
+    vec3 right = normalize(cross(up, N));
+    up         = normalize(cross(N, right));
+
+    float sampleDelta = 0.1;
+    float nrSamples = 0.0;
+    for (float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta) {
+        for (float theta = 0.0; theta < 0.5 * PI; theta += sampleDelta) {
+            // spherical to cartesian (in tangent space)
+            vec3 tangentSample = vec3(sin(theta) * cos(phi),  sin(theta) * sin(phi), cos(theta));
+            // tangent space to world
+            vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * N;
+
+            irradiance += texture(environmentMap, sampleVec).rgb * cos(theta) * sin(theta);
+            nrSamples++;
+        }
+    }
+    irradiance = PI * irradiance * (1.0 / float(nrSamples));
+
+=== task: ambient
+--- file: main.cpp
+--- find:
+    VkDescriptorSet descriptorSet; // the spheres': the uniform buffer
+--- replace:
+    VkDescriptorSet descriptorSet; // the spheres': the uniform buffer and the irradiance map
+--- file: main.cpp
+--- find:
+    // The spheres' descriptor set: the uniform buffer (binding 0).
+--- replace:
+    // The spheres' descriptor set: the uniform buffer (binding 0) and the irradiance map (binding 1 - learnopengl's
+    // texture unit 0, irradianceMap).
+--- file: main.cpp
+--- find:
+        std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+--- replace:
+        VkDescriptorImageInfo irradianceInfo{};
+        irradianceInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        irradianceInfo.imageView = irradianceImageView;
+        irradianceInfo.sampler = clampSampler;
+
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &irradianceInfo;
+--- file: main.cpp
+--- find:
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline);
+--- replace:
+        // render scene, supplying the convoluted irradiance map to the final shader.
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline);
+--- file: main.cpp
+--- find:
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &irradianceDescriptorSet, 0, nullptr); // display irradiance map
+--- replace:
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &envDescriptorSet, 0, nullptr);
+        //vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &irradianceDescriptorSet, 0, nullptr); // display irradiance map
+--- file: shaders/pbr.frag
+--- find:
+} pc;
+--- replace:
+} pc;
+
+// IBL
+layout(binding = 1) uniform samplerCube irradianceMap;
+--- file: shaders/pbr.frag
+--- find:
+void main() {
+--- replace:
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+// ----------------------------------------------------------------------------
+void main() {
+--- file: shaders/pbr.frag
+--- find:
+    // ambient lighting (note that the next IBL tutorial will replace
+    // this ambient lighting with environment lighting).
+    vec3 ambient = vec3(0.03) * albedo * ao;
+--- replace:
+    // ambient lighting (we now use IBL as the ambient term)
+    vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+    vec3 kD = 1.0 - kS;
+    kD *= 1.0 - metallic;
+    vec3 irradiance = texture(irradianceMap, N).rgb;
+    vec3 diffuse    = irradiance * albedo;
+    vec3 ambient    = (kD * diffuse) * ao;

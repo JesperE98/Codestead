@@ -68,6 +68,11 @@ internal sealed class GlState
         public int Samples = 1;
         public string? Framebuffer;
         public int Attachment;
+        /// <summary>
+        /// Mip levels drawn into one by one (a pre-filtered environment map) or made from level 0 after drawing
+        /// (glGenerateMipmap on a captured cube map): the render targets "tex:name~level" hold them.
+        /// </summary>
+        public int TargetLevels = 1;
 
         public bool Complete => (Image is not null || IsCube || Framebuffer is not null) && (Mipmaps || !MinFilter.Contains("MIPMAP", StringComparison.Ordinal));
     }
@@ -81,6 +86,13 @@ internal sealed class GlState
         public int Width, Height;
         /// <summary>Layers: a whole cube map attached with glFramebufferTexture is drawn into face by face (gl_Layer).</summary>
         public int Layers = 1;
+        /// <summary>
+        /// The colour attachment changes between draws (glFramebufferTexture2D with a cube map's face or a mip level:
+        /// learnopengl's captureFBO): each draw goes to the texture, face and level attached then.
+        /// </summary>
+        public bool PerTexture;
+        public string? TargetTexture;
+        public int TargetFace = -1, TargetLevel;
     }
 
     public sealed class Renderbuffer
@@ -107,6 +119,12 @@ internal sealed class GlState
     public Dictionary<string, TextureObject> TextureObjects { get; } = new(StringComparer.Ordinal);
     /// <summary>Texture unit → the texture bound to it.</summary>
     public Dictionary<int, string> Units { get; } = new();
+    /// <summary>
+    /// A unit has a binding per kind of texture: the 2D texture and the cube map bound to it (a sampler2D reads the
+    /// first, a samplerCube the second) – <see cref="Units"/> is the one bound last.
+    /// </summary>
+    public Dictionary<int, string> Units2D { get; } = new();
+    public Dictionary<int, string> UnitsCube { get; } = new();
     public int ActiveUnit;
 
     public Dictionary<string, ShaderObject> ShaderObjects { get; } = new(StringComparer.Ordinal);

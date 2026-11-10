@@ -115,11 +115,48 @@ internal sealed class Framebuffer
         return new Image(Width, Height, 4, bytes, floats);
     }
 
+    /// <summary>
+    /// A smaller copy of another framebuffer's colour: each pixel the average of the pixels it covers there (a mip
+    /// level made from the level above).
+    /// </summary>
+    private void AverageFrom(Framebuffer other)
+    {
+        for (int a = 0; a < Colors.Length; a++)
+            for (int y = 0; y < Height; y++)
+            {
+                int y0 = y * other.Height / Height, y1 = Math.Max(y0 + 1, (y + 1) * other.Height / Height);
+                for (int x = 0; x < Width; x++)
+                {
+                    int x0 = x * other.Width / Width, x1 = Math.Max(x0 + 1, (x + 1) * other.Width / Width);
+                    var sum = new double[4];
+                    int count = 0;
+                    for (int sy = y0; sy < y1 && sy < other.Height; sy++)
+                        for (int sx = x0; sx < x1 && sx < other.Width; sx++)
+                        {
+                            var c = other.Resolved(sx, sy, a);
+                            for (int k = 0; k < 4; k++) sum[k] += c[k];
+                            count++;
+                        }
+                    for (int s = 0; s < Samples; s++)
+                        for (int k = 0; k < 4; k++)
+                        {
+                            double v = count == 0 ? 0 : sum[k] / count;
+                            Colors[a][((y * Width + x) * Samples + s) * 4 + k] = Float ? v : Math.Clamp(v, 0, 1);
+                        }
+                }
+            }
+    }
+
     private static double[] ToDoubles(byte[] bytes) => bytes.Select(b => b / 255.0).ToArray();
 
     /// <summary>Copies (and resolves or scales) another framebuffer's colour into this one, like glBlitFramebuffer.</summary>
-    public void CopyFrom(Framebuffer other, bool color = true, bool depth = false)
+    public void CopyFrom(Framebuffer other, bool color = true, bool depth = false, bool average = false)
     {
+        if (average && color)
+        {
+            AverageFrom(other);
+            color = false;
+        }
         if (depth)
             for (int y = 0; y < Height; y++)
                 for (int x = 0; x < Width; x++)

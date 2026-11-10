@@ -52,11 +52,11 @@ public static partial class Rasterizer
             this.height = height;
             this.scale = scale;
             this.yDown = yDown;
-            vs = new ShaderRunner(draw.VertexShader) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, TextureSize = textures.Size };
-            fs = new ShaderRunner(draw.FragmentShader) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, TextureSize = textures.Size };
+            vs = new ShaderRunner(draw.VertexShader) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, SampleCubeLod = textures.SampleCubeLod, TextureSize = textures.Size };
+            fs = new ShaderRunner(draw.FragmentShader) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, SampleCubeLod = textures.SampleCubeLod, TextureSize = textures.Size };
             if (draw.GeometryShader is { } geometry)
             {
-                gs = new ShaderRunner(geometry) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, TextureSize = textures.Size };
+                gs = new ShaderRunner(geometry) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, SampleCubeLod = textures.SampleCubeLod, TextureSize = textures.Size };
                 gsInputs = geometry.Globals.Where(g => g.Storage == "in").ToList();
                 gsOutputs = geometry.Globals.Where(g => g.Storage == "out").ToList();
             }
@@ -113,7 +113,7 @@ public static partial class Rasterizer
                         if (owner.Items is null || at >= owner.Items.Length) return;
                         if (last)
                         {
-                            owner.Items[at] = value;
+                            owner.Items[at] = value.Int && !owner.Items[at].Int ? ShaderValue.Scalar(value.X) : value;
                             return;
                         }
                         owner = owner.Items[at];
@@ -145,6 +145,9 @@ public static partial class Rasterizer
         {
             if (into.TryGetValue(name, out var old) && old.V is not null && value.V is not null && !old.IsMatrix && !value.IsMatrix && old.V.Length != value.V.Length)
                 value = ShaderValue.Vec(value.Padded(old.V.Length));
+            // A number takes the uniform's type (setFloat("x", 1) is a float in the shader, an int uniform an integer).
+            if (old is { V.Length: 1 } && value.V is { Length: 1 } && old.Int != value.Int)
+                value = old.Int ? ShaderValue.Integer(Math.Truncate(value.X)) : ShaderValue.Scalar(value.X);
             into[name] = value;
         }
 
@@ -189,8 +192,8 @@ public static partial class Rasterizer
                 }
                 vs.Globals[g.Id] = Sized(g.Type, data.TryGetValue(loc.ToString(), out var v) ? v : null);
             }
-            vs.Globals["gl_VertexID"] = vs.Globals["gl_VertexIndex"] = ShaderValue.Scalar(index);
-            vs.Globals["gl_InstanceID"] = vs.Globals["gl_InstanceIndex"] = ShaderValue.Scalar(instance);
+            vs.Globals["gl_VertexID"] = vs.Globals["gl_VertexIndex"] = ShaderValue.Integer(index);
+            vs.Globals["gl_InstanceID"] = vs.Globals["gl_InstanceIndex"] = ShaderValue.Integer(instance);
             vs.Globals["gl_Position"] = ShaderValue.Vec(0, 0, 0, 1);
             vs.Globals["gl_PointSize"] = ShaderValue.Scalar(double.NaN);
             vs.Call("main", []);

@@ -88,7 +88,14 @@ public static class ShaderLexer
                 }
                 var text = source[start..i];
                 // Suffixes: 0.5f, 1u, 2.0lf, 10ull …
-                while (i < source.Length && (source[i] is 'f' or 'F' or 'u' or 'U' or 'l' or 'L' or 'h' or 'H')) i++;
+                bool floatSuffix = false;
+                while (i < source.Length && (source[i] is 'f' or 'F' or 'u' or 'U' or 'l' or 'L' or 'h' or 'H'))
+                {
+                    floatSuffix |= source[i] is 'f' or 'F' or 'h' or 'H';
+                    i++;
+                }
+                // 1f is a float: written with a fraction, so the parser does not take it for an integer.
+                if (floatSuffix && text.All(char.IsDigit)) text += ".0";
                 tokens.Add(new ShaderToken(ShaderTokenKind.Number, text, line));
                 continue;
             }

@@ -1,0 +1,939 @@
+=== task: prefilter-map
+--- file: main.cpp
+--- find:
+    static const UINT FrameCount = 2;
+--- replace:
+    static const UINT FrameCount = 2;
+    static const UINT EnvMipLevels = 8;    // the environment cube map's mip levels: 128, 64, 32, 16, 8, 4, 2, 1
+--- file: main.cpp
+--- find:
+    // CaptureConstants in cubemap.hlsl - the view and projection matrices of one cube face,
+    // 32 values (fewer than ModelConstants: they fit into root parameter 0).
+    struct CaptureConstants
+    {
+        XMFLOAT4X4 captureView;
+        XMFLOAT4X4 captureProjection;
+    };
+--- replace:
+    // CaptureConstants in cubemap.hlsl - the view and projection matrices of one cube face -
+    // and, after them, the roughness the pre-filter pass's pixel shader reads (prefilter.hlsl):
+    // 33 values (fewer than ModelConstants: they fit into root parameter 0).
+    struct CaptureConstants
+    {
+        XMFLOAT4X4 captureView;
+        XMFLOAT4X4 captureProjection;
+        float roughness;
+    };
+--- file: main.cpp
+--- find:
+    // TODO: the pipeline states that generate the environment cube map's mip levels (m_downsamplePipelineState) and pre-filter it (m_prefilterPipelineState)
+--- replace:
+    ComPtr<ID3D12PipelineState> m_downsamplePipelineState;                  // makes a mip level of the environment cube map from the one above
+    ComPtr<ID3D12PipelineState> m_prefilterPipelineState;                   // pre-filters the environment map for one roughness
+--- file: main.cpp
+--- find:
+    // TODO: the pre-filter cube map (m_prefilterMap)
+--- replace:
+    ComPtr<ID3D12Resource> m_prefilterMap;     // the pre-filter cube map: the environment as rougher and rougher surfaces reflect it, one roughness per mip level
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 4;    // one CBV + the SRVs of the HDR texture, the environment cube map and the irradiance map
+--- replace:
+        // One CBV (slot 0) + the SRVs of the HDR texture (1), the environment cube map (2),
+        // the irradiance map (3), the pre-filter map (4) and the BRDF lookup texture (5), and
+        // one SRV for each of the environment cube map's mip levels but the last (6 to 12).
+        cbvSrvHeapDesc.NumDescriptors = 13;
+--- file: main.cpp
+--- find:
+        // TODO: the pipeline states that generate the environment cube map's mip levels (cubemap.hlsl, downsample.hlsl) and pre-filter it (cubemap.hlsl, prefilter.hlsl)
+--- replace:
+        // The pipeline state that generates the environment cube map's mip levels: the same
+        // description with the pixel shader of downsample.hlsl.
+        ComPtr<ID3DBlob> downsamplePixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"downsample.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &downsamplePixelShader, nullptr));
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(downsamplePixelShader.Get());
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_downsamplePipelineState)));
+
+        // The pipeline state that pre-filters the environment map (learnopengl: Shader
+        // prefilterShader("cubemap.vs", "prefilter.fs")): the pixel shader of prefilter.hlsl.
+        ComPtr<ID3DBlob> prefilterPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"prefilter.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &prefilterPixelShader, nullptr));
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(prefilterPixelShader.Get());
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_prefilterPipelineState)));
+--- file: main.cpp
+--- find:
+        // 128 x 128 each (learnopengl: 512 x 512), floating-point, one mip level, and it can
+        // be a render target. It starts in the RENDER_TARGET state: it is drawn into first.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, 128, 128, 6, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+--- replace:
+        // 128 x 128 each (learnopengl: 512 x 512), floating-point, with all its mip levels
+        // down to 1 x 1 (the pre-filter pass reads them: combatting visible dots artifact),
+        // and it can be a render target. It starts in the RENDER_TARGET state: it is drawn
+        // into first.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, 128, 128, 6, EnvMipLevels, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+--- file: main.cpp
+--- find:
+        // A cube map shader resource view, to read it with a direction (TextureCube): slot 2
+        // of the CBV/SRV heap.
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+        srvDesc.TextureCube.MostDetailedMip = 0;
+        srvDesc.TextureCube.MipLevels = 1;
+--- replace:
+        // A cube map shader resource view, to read it with a direction (TextureCube): slot 2
+        // of the CBV/SRV heap. It shows all the mip levels; the sampler filters between them
+        // (MIN_MAG_MIP_LINEAR - learnopengl: GL_LINEAR_MIPMAP_LINEAR).
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+        srvDesc.TextureCube.MostDetailedMip = 0;
+        srvDesc.TextureCube.MipLevels = EnvMipLevels;
+--- file: main.cpp
+--- find:
+        // The cube map is complete: from now on shaders read it.
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_envCubemap.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        m_commandList->ResourceBarrier(1, &barrier);
+    }
+--- replace:
+        // The first mip level is complete: from now on shaders read it. Only this level's
+        // six subresources (one per face) change their state: the smaller levels are still
+        // to be drawn.
+        CD3DX12_RESOURCE_BARRIER barriers[6];
+        for (UINT i = 0; i < 6; ++i)
+        {
+            barriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(m_envCubemap.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12CalcSubresource(0, i, 0, EnvMipLevels, 6));
+        }
+        m_commandList->ResourceBarrier(6, barriers);
+    }
+
+    // then generate mipmaps from first mip face (combatting visible dots artifact)
+    // ----------------------------------------------------------------------------
+    // learnopengl: glGenerateMipmap(GL_TEXTURE_CUBE_MAP). Direct3D 12 has no such call: here
+    // every level is drawn from the level above it, with the same six views. A pixel of the
+    // smaller face lies exactly between 2 x 2 texels of the larger one, and the linear filter
+    // returns their average.
+    {
+        m_commandList->SetPipelineState(m_downsamplePipelineState.Get());
+
+        CaptureConstants captureConstants = {};
+        XMStoreFloat4x4(&captureConstants.captureProjection, XMMatrixTranspose(captureProjection));
+        for (UINT mip = 1; mip < EnvMipLevels; ++mip)
+        {
+            // The texture the pass reads (root parameter 2): a view of the level above only
+            // (MostDetailedMip = mip - 1, one level), in heap slot 6 + (mip - 1). A level cannot
+            // be read while it is drawn into: this view leaves the level that is drawn into out.
+            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            srvDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+            srvDesc.TextureCube.MostDetailedMip = mip - 1;
+            srvDesc.TextureCube.MipLevels = 1;
+            CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 6 + (mip - 1), m_cbvSrvDescriptorSize);
+            m_device->CreateShaderResourceView(m_envCubemap.Get(), &srvDesc, srvHandle);
+            CD3DX12_GPU_DESCRIPTOR_HANDLE previousMip(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 6 + (mip - 1), m_cbvSrvDescriptorSize);
+            m_commandList->SetGraphicsRootDescriptorTable(2, previousMip);
+
+            unsigned int mipSize = 128 >> mip;    // 64, 32, 16, 8, 4, 2, 1
+            CD3DX12_VIEWPORT viewport(0.0f, 0.0f, static_cast<float>(mipSize), static_cast<float>(mipSize));
+            CD3DX12_RECT scissorRect(0, 0, static_cast<LONG>(mipSize), static_cast<LONG>(mipSize));
+            m_commandList->RSSetViewports(1, &viewport);
+            m_commandList->RSSetScissorRects(1, &scissorRect);
+
+            for (unsigned int i = 0; i < 6; ++i)
+            {
+                XMStoreFloat4x4(&captureConstants.captureView, XMMatrixTranspose(captureViews[i]));
+                m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(CaptureConstants) / 4, &captureConstants, 0);
+                SetCaptureTarget(m_envCubemap.Get(), i, mip);
+
+                RenderCube();
+            }
+
+            // This level is complete too: the next one, and later the shaders, read it.
+            CD3DX12_RESOURCE_BARRIER barriers[6];
+            for (UINT i = 0; i < 6; ++i)
+            {
+                barriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(m_envCubemap.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12CalcSubresource(mip, i, 0, EnvMipLevels, 6));
+            }
+            m_commandList->ResourceBarrier(6, barriers);
+        }
+    }
+--- file: main.cpp
+--- find:
+    // TODO: pbr: create the pre-filter cube map (m_prefilterMap, 64 x 64 with 5 mip levels) and render a rougher reflection into each mip level
+--- replace:
+    // pbr: create a pre-filter cubemap
+    // --------------------------------
+    {
+        // 64 x 64 per face (learnopengl: 128 x 128) with 5 mip levels: 64, 32, 16, 8 and 4.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, 64, 64, 6, 5, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_RENDER_TARGET,
+            nullptr,
+            IID_PPV_ARGS(&m_prefilterMap)));
+
+        // Its cube map shader resource view with all 5 levels: slot 4 of the CBV/SRV heap.
+        // The sampler filters between the levels too (be sure the filter is mip_linear).
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+        srvDesc.TextureCube.MostDetailedMip = 0;
+        srvDesc.TextureCube.MipLevels = 5;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 4, m_cbvSrvDescriptorSize);
+        m_device->CreateShaderResourceView(m_prefilterMap.Get(), &srvDesc, srvHandle);
+    }
+
+    // pbr: run a quasi monte-carlo simulation on the environment lighting to create a prefilter (cube)map.
+    // ----------------------------------------------------------------------------------------------------
+    {
+        m_commandList->SetPipelineState(m_prefilterPipelineState.Get());
+        // The texture the pass reads (root parameter 2): the environment cube map with all
+        // its mip levels, heap slot 2.
+        CD3DX12_GPU_DESCRIPTOR_HANDLE envCubemap(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
+        m_commandList->SetGraphicsRootDescriptorTable(2, envCubemap);
+
+        CaptureConstants captureConstants = {};
+        XMStoreFloat4x4(&captureConstants.captureProjection, XMMatrixTranspose(captureProjection));
+        unsigned int maxMipLevels = 5;
+        for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
+        {
+            // resize the viewport according to mip-level size.
+            unsigned int mipWidth  = static_cast<unsigned int>(64 * std::pow(0.5, mip));
+            unsigned int mipHeight = static_cast<unsigned int>(64 * std::pow(0.5, mip));
+            CD3DX12_VIEWPORT viewport(0.0f, 0.0f, static_cast<float>(mipWidth), static_cast<float>(mipHeight));
+            CD3DX12_RECT scissorRect(0, 0, static_cast<LONG>(mipWidth), static_cast<LONG>(mipHeight));
+            m_commandList->RSSetViewports(1, &viewport);
+            m_commandList->RSSetScissorRects(1, &scissorRect);
+
+            float roughness = (float)mip / (float)(maxMipLevels - 1);
+            captureConstants.roughness = roughness;
+            for (unsigned int i = 0; i < 6; ++i)
+            {
+                XMStoreFloat4x4(&captureConstants.captureView, XMMatrixTranspose(captureViews[i]));
+                m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(CaptureConstants) / 4, &captureConstants, 0);
+                // The render target: face i of mip level mip.
+                SetCaptureTarget(m_prefilterMap.Get(), i, mip);
+
+                RenderCube();
+            }
+        }
+
+        // The pre-filter map is complete, all its levels: from now on shaders read it.
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_prefilterMap.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        m_commandList->ResourceBarrier(1, &barrier);
+    }
+--- file: main.cpp
+--- find:
+    // render skybox (render as last to prevent overdraw): the background's pipeline state,
+    // and the environment cube map (heap slot 2) as the texture of root parameter 2
+    m_commandList->SetPipelineState(m_backgroundPipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE envCubemap(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, envCubemap);
+    RenderCube();
+--- replace:
+    // render skybox (render as last to prevent overdraw): the background's pipeline state,
+    // and for now the pre-filter map (heap slot 4) as the texture of root parameter 2
+    m_commandList->SetPipelineState(m_backgroundPipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE prefilterMap(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 4, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, prefilterMap); // display prefilter map
+    RenderCube();
+--- file: background.hlsl
+--- find:
+    float3 envColor = environmentMap.SampleLevel(clampSampler, input.worldPos, 0.0f).rgb;
+--- replace:
+    float3 envColor = environmentMap.SampleLevel(clampSampler, input.worldPos, 1.2f).rgb; // a blurry mip level of the pre-filter map
+--- file: downsample.hlsl
+--- find:
+    // TODO: the colour of the level above in this pixel's direction (the linear filter averages its 2 x 2 texels)
+    return float4(0.0f, 0.0f, 0.0f, 1.0f);
+--- replace:
+    // The view shows a single mip level - the level above. In this pixel's direction the
+    // linear filter averages its 2 x 2 texels.
+    float3 color = environmentMap.Sample(clampSampler, input.worldPos).rgb;
+
+    return float4(color, 1.0f);
+--- file: prefilter.hlsl
+--- find:
+// TODO: ImportanceSampleGGX(Xi, N, roughness): a halfway vector around N, distributed like the GGX lobe of this roughness
+--- replace:
+float3 ImportanceSampleGGX(float2 Xi, float3 N, float roughness)
+{
+    float a = roughness * roughness;
+
+    float phi = 2.0f * PI * Xi.x;
+    float cosTheta = sqrt((1.0f - Xi.y) / (1.0f + (a * a - 1.0f) * Xi.y));
+    float sinTheta = sqrt(1.0f - cosTheta * cosTheta);
+
+    // from spherical coordinates to cartesian coordinates - halfway vector
+    float3 H;
+    H.x = cos(phi) * sinTheta;
+    H.y = sin(phi) * sinTheta;
+    H.z = cosTheta;
+
+    // from tangent-space H vector to world-space sample vector
+    float3 up        = abs(N.z) < 0.999f ? float3(0.0f, 0.0f, 1.0f) : float3(1.0f, 0.0f, 0.0f);
+    float3 tangent   = normalize(cross(up, N));
+    float3 bitangent = cross(N, tangent);
+
+    float3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
+    return normalize(sampleVec);
+}
+--- file: prefilter.hlsl
+--- find:
+    // TODO: the average of the environment's light from SAMPLE_COUNT (128) importance-sampled directions, weighted by NdotL
+    float3 prefilteredColor = float3(0.0f, 0.0f, 0.0f);
+--- replace:
+    const uint SAMPLE_COUNT = 128u;
+    float3 prefilteredColor = float3(0.0f, 0.0f, 0.0f);
+    float totalWeight = 0.0f;
+
+    for (uint i = 0u; i < SAMPLE_COUNT; ++i)
+    {
+        // generates a sample vector that's biased towards the preferred alignment direction (importance sampling).
+        float2 Xi = Hammersley(i, SAMPLE_COUNT);
+        float3 H = ImportanceSampleGGX(Xi, N, roughness);
+        float3 L = normalize(2.0f * dot(V, H) * H - V);
+
+        float NdotL = max(dot(N, L), 0.0f);
+        if (NdotL > 0.0f)
+        {
+            // sample from the environment's mip level based on roughness/pdf
+            float D     = DistributionGGX(N, H, roughness);
+            float NdotH = max(dot(N, H), 0.0f);
+            float HdotV = max(dot(H, V), 0.0f);
+            float pdf = D * NdotH / (4.0f * HdotV) + 0.0001f;
+
+            float resolution = 128.0f; // resolution of source cubemap (per face)
+            float saTexel  = 4.0f * PI / (6.0f * resolution * resolution);
+            float saSample = 1.0f / (float(SAMPLE_COUNT) * pdf + 0.0001f);
+
+            float mipLevel = roughness == 0.0f ? 0.0f : 0.5f * log2(saSample / saTexel);
+
+            prefilteredColor += environmentMap.SampleLevel(clampSampler, L, mipLevel).rgb * NdotL;
+            totalWeight      += NdotL;
+        }
+    }
+
+    prefilteredColor = prefilteredColor / totalWeight;
+=== task: brdf-lut
+--- file: main.cpp
+--- find:
+    // TODO: the pipeline states that integrate the BRDF (m_brdfPipelineState) and show a texture on the screen quad (m_debugQuadPipelineState)
+--- replace:
+    ComPtr<ID3D12PipelineState> m_brdfPipelineState;                        // integrates the BRDF into the lookup texture
+    ComPtr<ID3D12PipelineState> m_debugQuadPipelineState;                   // shows a texture on the screen quad
+--- file: main.cpp
+--- find:
+    // TODO: the BRDF lookup texture (m_brdfLUTTexture)
+--- replace:
+    ComPtr<ID3D12Resource> m_brdfLUTTexture;   // the BRDF lookup texture: a scale and a bias for F0, by view angle and roughness
+--- file: main.cpp
+--- find:
+        // TODO: the pipeline state that integrates the BRDF (brdf.hlsl)
+--- replace:
+        // The pipeline state that integrates the BRDF (learnopengl: Shader brdfShader("brdf.vs",
+        // "brdf.fs")): the shaders of brdf.hlsl, and a render target with two channels, a
+        // half-precision float each (learnopengl: GL_RG16F).
+        ComPtr<ID3DBlob> brdfVertexShader;
+        ComPtr<ID3DBlob> brdfPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"brdf.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &brdfVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"brdf.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &brdfPixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(brdfVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(brdfPixelShader.Get());
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16_FLOAT;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_brdfPipelineState)));
+--- file: main.cpp
+--- find:
+        // TODO: the pipeline state that shows a texture on the screen quad (brdf.hlsl, debug_quad.hlsl)
+--- replace:
+        // The pipeline state that shows a texture on the screen quad (learnopengl would use
+        // Shader debugQuad("brdf.vs", "debug_quad.fs")): the vertex shader of brdf.hlsl, the
+        // pixel shader of debug_quad.hlsl, the window's back buffer, no depth test.
+        ComPtr<ID3DBlob> debugQuadPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"debug_quad.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &debugQuadPixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(brdfVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(debugQuadPixelShader.Get());
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_debugQuadPipelineState)));
+--- file: main.cpp
+--- find:
+    // TODO: pbr: generate the 2D lookup texture (m_brdfLUTTexture, 128 x 128) from the BRDF equations
+--- replace:
+    // pbr: generate a 2D LUT from the BRDF equations used.
+    // ----------------------------------------------------
+    {
+        // A 2D texture, 128 x 128 (learnopengl: 512 x 512), two channels of half-precision
+        // floats, that can be a render target.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16_FLOAT, 128, 128, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_RENDER_TARGET,
+            nullptr,
+            IID_PPV_ARGS(&m_brdfLUTTexture)));
+
+        // Its shader resource view: slot 5 of the CBV/SRV heap, right after the pre-filter
+        // map's. It is read with the clamping sampler s0 (be sure to set wrapping mode to
+        // GL_CLAMP_TO_EDGE, learnopengl says).
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_R16G16_FLOAT;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 5, m_cbvSrvDescriptorSize);
+        m_device->CreateShaderResourceView(m_brdfLUTTexture.Get(), &srvDesc, srvHandle);
+
+        // then render screen-space quad with BRDF shader: the lookup texture is the render
+        // target, through the capture passes' descriptor of the RTV heap.
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_rtvDescriptorSize);
+        m_device->CreateRenderTargetView(m_brdfLUTTexture.Get(), nullptr, rtvHandle);
+        m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+
+        CD3DX12_VIEWPORT viewport(0.0f, 0.0f, 128.0f, 128.0f);
+        CD3DX12_RECT scissorRect(0, 0, 128, 128);
+        m_commandList->RSSetViewports(1, &viewport);
+        m_commandList->RSSetScissorRects(1, &scissorRect);
+
+        m_commandList->SetPipelineState(m_brdfPipelineState.Get());
+        RenderQuad();
+
+        // The lookup texture is complete: from now on shaders read it.
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_brdfLUTTexture.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        m_commandList->ResourceBarrier(1, &barrier);
+    }
+--- file: main.cpp
+--- find:
+    m_commandList->SetGraphicsRootDescriptorTable(2, prefilterMap); // display prefilter map
+    RenderCube();
+--- replace:
+    m_commandList->SetGraphicsRootDescriptorTable(2, prefilterMap); // display prefilter map
+    RenderCube();
+
+    // render BRDF map to screen: the screen quad's pipeline state, and the lookup texture
+    // (heap slot 5) as the texture of root parameter 2
+    m_commandList->SetPipelineState(m_debugQuadPipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE brdfLUTTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 5, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, brdfLUTTexture);
+    RenderQuad();
+--- file: brdf.hlsl
+--- find:
+// TODO: ImportanceSampleGGX(Xi, N, roughness), the same as in prefilter.hlsl
+// ----------------------------------------------------------------------------
+// TODO: GeometrySchlickGGX(NdotV, roughness) with the k of image based lighting, and GeometrySmith(N, V, L, roughness)
+// ----------------------------------------------------------------------------
+// TODO: IntegrateBRDF(NdotV, roughness): the scale and the bias of F0 for this view angle and roughness
+--- replace:
+float3 ImportanceSampleGGX(float2 Xi, float3 N, float roughness)
+{
+    float a = roughness * roughness;
+
+    float phi = 2.0f * PI * Xi.x;
+    float cosTheta = sqrt((1.0f - Xi.y) / (1.0f + (a * a - 1.0f) * Xi.y));
+    float sinTheta = sqrt(1.0f - cosTheta * cosTheta);
+
+    // from spherical coordinates to cartesian coordinates - halfway vector
+    float3 H;
+    H.x = cos(phi) * sinTheta;
+    H.y = sin(phi) * sinTheta;
+    H.z = cosTheta;
+
+    // from tangent-space H vector to world-space sample vector
+    float3 up        = abs(N.z) < 0.999f ? float3(0.0f, 0.0f, 1.0f) : float3(1.0f, 0.0f, 0.0f);
+    float3 tangent   = normalize(cross(up, N));
+    float3 bitangent = cross(N, tangent);
+
+    float3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
+    return normalize(sampleVec);
+}
+// ----------------------------------------------------------------------------
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    // note that we use a different k for IBL
+    float a = roughness;
+    float k = (a * a) / 2.0f;
+
+    float nom   = NdotV;
+    float denom = NdotV * (1.0f - k) + k;
+
+    return nom / denom;
+}
+// ----------------------------------------------------------------------------
+float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0f);
+    float NdotL = max(dot(N, L), 0.0f);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+
+    return ggx1 * ggx2;
+}
+// ----------------------------------------------------------------------------
+float2 IntegrateBRDF(float NdotV, float roughness)
+{
+    float3 V;
+    V.x = sqrt(1.0f - NdotV * NdotV);
+    V.y = 0.0f;
+    V.z = NdotV;
+
+    float A = 0.0f;
+    float B = 0.0f;
+
+    float3 N = float3(0.0f, 0.0f, 1.0f);
+
+    const uint SAMPLE_COUNT = 128u;
+    for (uint i = 0u; i < SAMPLE_COUNT; ++i)
+    {
+        // generates a sample vector that's biased towards the
+        // preferred alignment direction (importance sampling).
+        float2 Xi = Hammersley(i, SAMPLE_COUNT);
+        float3 H = ImportanceSampleGGX(Xi, N, roughness);
+        float3 L = normalize(2.0f * dot(V, H) * H - V);
+
+        float NdotL = max(L.z, 0.0f);
+        float NdotH = max(H.z, 0.0f);
+        float VdotH = max(dot(V, H), 0.0f);
+
+        if (NdotL > 0.0f)
+        {
+            float G = GeometrySmith(N, V, L, roughness);
+            float G_Vis = (G * VdotH) / (NdotH * NdotV);
+            float Fc = pow(1.0f - VdotH, 5.0f);
+
+            A += (1.0f - Fc) * G_Vis;
+            B += Fc * G_Vis;
+        }
+    }
+    A /= float(SAMPLE_COUNT);
+    B /= float(SAMPLE_COUNT);
+    return float2(A, B);
+}
+--- file: brdf.hlsl
+--- find:
+    // TODO: the integrated BRDF for NdotV = input.texCoords.x and roughness = input.texCoords.y
+    return float2(0.0f, 0.0f);
+--- replace:
+    float2 integratedBRDF = IntegrateBRDF(input.texCoords.x, input.texCoords.y);
+    return integratedBRDF;
+=== task: specular
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_brdfPipelineState;                        // integrates the BRDF into the lookup texture
+    ComPtr<ID3D12PipelineState> m_debugQuadPipelineState;                   // shows a texture on the screen quad
+--- replace:
+    ComPtr<ID3D12PipelineState> m_brdfPipelineState;                        // integrates the BRDF into the lookup texture
+--- file: main.cpp
+--- find:
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1, and
+        // 1 SRV at register t0 (the texture a pass reads), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+--- replace:
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1; 1 SRV
+        // at register t0 (the texture a pass reads; for the spheres the irradiance map), for
+        // root parameter 2; and 2 SRVs at registers t1 and t2 (the pre-filter map and the BRDF
+        // lookup texture: consecutive descriptors in the heap), for root parameter 3.
+        CD3DX12_DESCRIPTOR_RANGE ranges[3];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+        ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1);
+--- file: main.cpp
+--- find:
+        // Root parameter 2: a descriptor table with one texture's SRV (t0), for the pixel
+        // shaders.
+        CD3DX12_ROOT_PARAMETER rootParameters[3];
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+--- replace:
+        // Root parameter 2: a descriptor table with one texture's SRV (t0), for the pixel
+        // shaders.
+        // Root parameter 3: a descriptor table with the two SRVs the spheres' pixel shader
+        // reads besides the irradiance map (t1, t2).
+        CD3DX12_ROOT_PARAMETER rootParameters[4];
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+--- file: main.cpp
+--- find:
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_backgroundPipelineState)));
+
+        // The pipeline state that shows a texture on the screen quad (learnopengl would use
+        // Shader debugQuad("brdf.vs", "debug_quad.fs")): the vertex shader of brdf.hlsl, the
+        // pixel shader of debug_quad.hlsl, the window's back buffer, no depth test.
+        ComPtr<ID3DBlob> debugQuadPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"debug_quad.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &debugQuadPixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(brdfVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(debugQuadPixelShader.Get());
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_debugQuadPipelineState)));
+--- replace:
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_backgroundPipelineState)));
+--- file: main.cpp
+--- find:
+    // bind pre-computed IBL data: the irradiance map (heap slot 3) as the texture of root
+    // parameter 2 for the spheres
+    CD3DX12_GPU_DESCRIPTOR_HANDLE irradianceMap(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, irradianceMap);
+--- replace:
+    // bind pre-computed IBL data: the irradiance map (heap slot 3) as the texture of root
+    // parameter 2 for the spheres, and the pre-filter map and the BRDF lookup texture (heap
+    // slots 4 and 5) as the table of root parameter 3
+    CD3DX12_GPU_DESCRIPTOR_HANDLE irradianceMap(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, irradianceMap);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE prefilterMap(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 4, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(3, prefilterMap);
+--- file: main.cpp
+--- find:
+    // render skybox (render as last to prevent overdraw): the background's pipeline state,
+    // and for now the pre-filter map (heap slot 4) as the texture of root parameter 2
+    m_commandList->SetPipelineState(m_backgroundPipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE prefilterMap(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 4, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, prefilterMap); // display prefilter map
+    RenderCube();
+
+    // render BRDF map to screen: the screen quad's pipeline state, and the lookup texture
+    // (heap slot 5) as the texture of root parameter 2
+    m_commandList->SetPipelineState(m_debugQuadPipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE brdfLUTTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 5, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, brdfLUTTexture);
+    RenderQuad();
+--- replace:
+    // render skybox (render as last to prevent overdraw): the background's pipeline state,
+    // and the environment cube map (heap slot 2) as the texture of root parameter 2
+    m_commandList->SetPipelineState(m_backgroundPipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE envCubemap(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, envCubemap);
+    RenderCube();
+--- file: background.hlsl
+--- find:
+    float3 envColor = environmentMap.SampleLevel(clampSampler, input.worldPos, 1.2f).rgb; // a blurry mip level of the pre-filter map
+--- replace:
+    float3 envColor = environmentMap.SampleLevel(clampSampler, input.worldPos, 0.0f).rgb;
+--- file: pbr.hlsl
+--- find:
+// TODO: IBL: the pre-filter cube map (prefilterMap) and the BRDF lookup texture (brdfLUT)
+--- replace:
+// the pre-filter cube map and the BRDF lookup texture, registers t1 and t2, in the
+// descriptor table of root parameter 3
+TextureCube prefilterMap : register(t1);
+Texture2D brdfLUT : register(t2);
+--- file: pbr.hlsl
+--- find:
+    float3 V = normalize(camPos - input.worldPos);
+--- replace:
+    float3 V = normalize(camPos - input.worldPos);
+    float3 R = reflect(-V, N);
+--- file: pbr.hlsl
+--- find:
+    float3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);
+    float3 kD = 1.0f - kS;
+    kD *= 1.0f - metallic;
+    float3 irradiance = irradianceMap.Sample(clampSampler, N).rgb;
+    float3 diffuse    = irradiance * albedo;
+    float3 ambient    = (kD * diffuse) * ao;
+--- replace:
+    float3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);
+
+    float3 kS = F;
+    float3 kD = 1.0f - kS;
+    kD *= 1.0f - metallic;
+
+    float3 irradiance = irradianceMap.Sample(clampSampler, N).rgb;
+    float3 diffuse    = irradiance * albedo;
+
+    // sample both the pre-filter map and the BRDF lut and combine them together as per the Split-Sum approximation to get the IBL specular part.
+    const float MAX_REFLECTION_LOD = 4.0f;
+    float3 prefilteredColor = prefilterMap.SampleLevel(clampSampler, R, roughness * MAX_REFLECTION_LOD).rgb;
+    float2 brdf = brdfLUT.Sample(clampSampler, float2(max(dot(N, V), 0.0f), roughness)).rg;
+    float3 specular = prefilteredColor * (F * brdf.x + brdf.y);
+
+    float3 ambient = (kD * diffuse + specular) * ao;
+=== task: textured
+--- file: main.cpp
+--- find:
+// The grid of spheres: 7 rows and 7 columns, 2.5 units apart.
+int nrRows    = 7;
+int nrColumns = 7;
+float spacing = 2.5f;
+--- replace:
+// The grid of spheres: a few large spheres, so the material's details can be seen.
+int nrRows    = 3;
+int nrColumns = 3;
+float spacing = 6.0f;
+--- file: main.cpp
+--- find:
+    // The root constants: what the shaders see as cbuffer ModelConstants - the values of
+    // one draw. Two 4x4 matrices, a float3 and three floats are 38 32-bit values: 38 32-bit
+    // root constants. (albedo and metallic share a 16-byte row in HLSL, as they do here.)
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+        XMFLOAT4X4 normalMatrix;    // transpose(inverse(model)), for the normals
+        // material parameters
+        XMFLOAT3 albedo;
+        float metallic;
+        float roughness;
+        float ao;
+    };
+--- replace:
+    // The root constants: what the shaders see as cbuffer ModelConstants - the values of
+    // one draw. Two 4x4 matrices are 32 floats. (The material comes from textures now.)
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+        XMFLOAT4X4 normalMatrix;    // transpose(inverse(model)), for the normals
+    };
+--- file: main.cpp
+--- find:
+    // 33 values (fewer than ModelConstants: they fit into root parameter 0).
+--- replace:
+    // 33 values (one more than ModelConstants now: root parameter 0 has this struct's size).
+--- file: main.cpp
+--- find:
+    // TODO: the five textures of the material (m_albedoTexture ...)
+--- replace:
+    // The material's five textures.
+    ComPtr<ID3D12Resource> m_albedoTexture;
+    ComPtr<ID3D12Resource> m_normalTexture;
+    ComPtr<ID3D12Resource> m_metallicTexture;
+    ComPtr<ID3D12Resource> m_roughnessTexture;
+    ComPtr<ID3D12Resource> m_aoTexture;
+--- file: main.cpp
+--- find:
+        // one SRV for each of the environment cube map's mip levels but the last (6 to 12).
+        cbvSrvHeapDesc.NumDescriptors = 13;
+--- replace:
+        // one SRV for each of the environment cube map's mip levels but the last (6 to 12),
+        // and the SRVs of the material's 5 textures (13 to 17).
+        cbvSrvHeapDesc.NumDescriptors = 18;
+--- file: main.cpp
+--- find:
+        // lookup texture: consecutive descriptors in the heap), for root parameter 3.
+        CD3DX12_DESCRIPTOR_RANGE ranges[3];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+        ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1);
+--- replace:
+        // lookup texture: consecutive descriptors in the heap), for root parameter 3; and
+        // 5 SRVs at registers t3 to t7 (the material's textures), for root parameter 4.
+        CD3DX12_DESCRIPTOR_RANGE ranges[4];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+        ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1);
+        ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 3);
+--- file: main.cpp
+--- find:
+        // pipeline's shaders read as their own cbuffer (the spheres' model and normal matrices
+        // and material, a capture pass's view and projection matrices), for all shaders.
+--- replace:
+        // pipeline's shaders read as their own cbuffer (the spheres' model and normal matrices,
+        // a capture pass's view and projection matrices and roughness), for all shaders. As
+        // many values as the largest of them has: CaptureConstants.
+--- file: main.cpp
+--- find:
+        // reads besides the irradiance map (t1, t2).
+        CD3DX12_ROOT_PARAMETER rootParameters[4];
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+--- replace:
+        // reads besides the irradiance map (t1, t2).
+        // Root parameter 4: a descriptor table with the material's textures' SRVs (t3 to t7).
+        CD3DX12_ROOT_PARAMETER rootParameters[5];
+        rootParameters[0].InitAsConstants(sizeof(CaptureConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[4].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_PIXEL);
+--- file: main.cpp
+--- find:
+        D3D12_STATIC_SAMPLER_DESC samplers[1] = {};
+--- replace:
+        D3D12_STATIC_SAMPLER_DESC samplers[2] = {};
+--- file: main.cpp
+--- find:
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+--- replace:
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        // Sampler s1, for the material's textures: texture coordinates outside 0..1 wrap
+        // around (learnopengl: GL_REPEAT).
+        samplers[1] = samplers[0];
+        samplers[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[1].ShaderRegister = 1;
+--- file: main.cpp
+--- find:
+    // TODO: load the PBR material textures (albedo.png, normal.png, metallic.png, roughness.png, ao.png)
+--- replace:
+    // load PBR material textures: their SRVs go into the heap one after the other (slots 13
+    // to 17), so one descriptor table covers them. The upload buffers must stay alive until
+    // the command list that copies from them has executed (the end of this method waits for
+    // it). All five are loaded as they are (UNORM): the albedo's colours are converted to
+    // linear in the shader, the others are data, not colours.
+    ComPtr<ID3D12Resource> albedoUploadHeap;
+    LoadTexture("albedo.png", m_albedoTexture, albedoUploadHeap, 13);
+    ComPtr<ID3D12Resource> normalUploadHeap;
+    LoadTexture("normal.png", m_normalTexture, normalUploadHeap, 14);
+    ComPtr<ID3D12Resource> metallicUploadHeap;
+    LoadTexture("metallic.png", m_metallicTexture, metallicUploadHeap, 15);
+    ComPtr<ID3D12Resource> roughnessUploadHeap;
+    LoadTexture("roughness.png", m_roughnessTexture, roughnessUploadHeap, 16);
+    ComPtr<ID3D12Resource> aoUploadHeap;
+    LoadTexture("ao.png", m_aoTexture, aoUploadHeap, 17);
+--- file: main.cpp
+--- find:
+    CD3DX12_GPU_DESCRIPTOR_HANDLE prefilterMap(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 4, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(3, prefilterMap);
+--- replace:
+    CD3DX12_GPU_DESCRIPTOR_HANDLE prefilterMap(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 4, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(3, prefilterMap);
+    // the material's maps: the table of root parameter 4, from heap slot 13 on
+    CD3DX12_GPU_DESCRIPTOR_HANDLE materialTextures(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 13, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(4, materialTextures);
+--- file: main.cpp
+--- find:
+// The scene (learnopengl's lighting.cpp): 7 x 7 spheres, each with its model matrix, its
+// normal matrix and its material in the root constants (root parameter 0). The normal
+// matrix is the transpose of the inverse of the model matrix; stored transposed for HLSL,
+// that is the inverse itself.
+void D3D12App::RenderScene()
+{
+    ModelConstants modelConstants = {};
+    modelConstants.albedo = XMFLOAT3(0.5f, 0.0f, 0.0f);
+    modelConstants.ao = 1.0f;
+
+    // render rows*column number of spheres with varying metallic/roughness values scaled by rows and columns respectively
+    for (int row = 0; row < nrRows; ++row)
+    {
+        modelConstants.metallic = (float)row / (float)nrRows;
+        for (int col = 0; col < nrColumns; ++col)
+        {
+            // we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
+            // on direct lighting.
+            modelConstants.roughness = std::clamp((float)col / (float)nrColumns, 0.05f, 1.0f);
+
+            XMMATRIX model = XMMatrixTranslation(
+                (float)(col - (nrColumns / 2)) * spacing,
+                (float)(row - (nrRows / 2)) * spacing,
+                0.0f);
+--- replace:
+// The scene (learnopengl's ibl_specular_textured.cpp): 3 x 3 large spheres, each with its
+// model matrix and its normal matrix in the root constants (root parameter 0). With row
+// vectors the matrices apply from left to right: scale, then rotate, then translate
+// (learnopengl's translate * rotate * scale). The normal matrix is the transpose of the
+// inverse of the model matrix; stored transposed for HLSL, that is the inverse itself.
+void D3D12App::RenderScene()
+{
+    ModelConstants modelConstants = {};
+
+    // render rows*column number of spheres with material properties defined by textures (they all have the same material properties)
+    for (int row = 0; row < nrRows; ++row)
+    {
+        for (int col = 0; col < nrColumns; ++col)
+        {
+            XMMATRIX model = XMMatrixScaling(2.4f, 2.4f, 2.4f)
+                * XMMatrixRotationY(XMConvertToRadians(90.0f)) // turn the middle of the textures towards the camera
+                * XMMatrixTranslation(
+                    (float)(col - (nrColumns / 2)) * spacing,
+                    (float)(row - (nrRows / 2)) * spacing,
+                    0.0f);
+--- file: pbr.hlsl
+--- find:
+// TODO: the material's textures (albedoMap, normalMap, metallicMap, roughnessMap, aoMap) and their sampler
+--- replace:
+// material parameters: the five textures, registers t3 to t7, in the descriptor table of
+// root parameter 4
+Texture2D albedoMap : register(t3);
+Texture2D normalMap : register(t4);
+Texture2D metallicMap : register(t5);
+Texture2D roughnessMap : register(t6);
+Texture2D aoMap : register(t7);
+// Their sampler: register s1, the root signature's second static sampler (linear, WRAP).
+SamplerState wrapSampler : register(s1);
+--- file: pbr.hlsl
+--- find:
+    float4x4 normalMatrix;    // transpose(inverse(model)), computed in main.cpp
+    // material parameters
+    float3 albedo;
+    float metallic;
+    float roughness;
+    float ao;
+};
+--- replace:
+    float4x4 normalMatrix;    // transpose(inverse(model)), computed in main.cpp
+};
+--- file: pbr.hlsl
+--- find:
+    float3 normal : NORMAL;
+};
+--- replace:
+    float3 normal : NORMAL;
+    float3 tangent : TANGENT;
+};
+--- file: pbr.hlsl
+--- find:
+PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL, float2 texCoords : TEXCOORD)
+--- replace:
+PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL, float2 texCoords : TEXCOORD, float3 tangent : TANGENT)
+--- file: pbr.hlsl
+--- find:
+    result.normal = mul(float4(normal, 0.0f), normalMatrix).xyz;
+--- replace:
+    result.normal = mul(float4(normal, 0.0f), normalMatrix).xyz;
+    // The tangent lies in the surface: it turns with the model matrix.
+    result.tangent = mul(float4(tangent, 0.0f), model).xyz;
+--- file: pbr.hlsl
+--- find:
+// ----------------------------------------------------------------------------
+float DistributionGGX(float3 N, float3 H, float roughness)
+--- replace:
+// ----------------------------------------------------------------------------
+// The normal map's normal (tangent space) taken to world space with a TBN matrix
+// built from the sphere's normal and tangent, as in the Normal Mapping chapter.
+float3 getNormalFromMap(PSInput input)
+{
+    float3 tangentNormal = normalMap.Sample(wrapSampler, input.texCoords).xyz * 2.0f - 1.0f;
+
+    float3 N = normalize(input.normal);
+    float3 T = normalize(input.tangent);
+    T = normalize(T - dot(T, N) * N); // Gram-Schmidt: make T perpendicular to N again
+    // B points the way the image's rows go up on the sphere: the normal map's green axis
+    float3 B = cross(N, T);
+    // T, B and N as the rows: with the vector on the left, mul gives x * T + y * B + z * N
+    // (learnopengl: mat3(T, B, N) * tangentNormal)
+    float3x3 TBN = float3x3(T, B, N);
+
+    return normalize(mul(tangentNormal, TBN));
+}
+// ----------------------------------------------------------------------------
+float DistributionGGX(float3 N, float3 H, float roughness)
+--- file: pbr.hlsl
+--- find:
+    float3 N = normalize(input.normal);
+    float3 V = normalize(camPos - input.worldPos);
+--- replace:
+    // material properties
+    float3 albedo   = pow(albedoMap.Sample(wrapSampler, input.texCoords).rgb, 2.2f);
+    float metallic  = metallicMap.Sample(wrapSampler, input.texCoords).r;
+    float roughness = roughnessMap.Sample(wrapSampler, input.texCoords).r;
+    float ao        = aoMap.Sample(wrapSampler, input.texCoords).r;
+
+    // input lighting data
+    float3 N = getNormalFromMap(input);
+    float3 V = normalize(camPos - input.worldPos);

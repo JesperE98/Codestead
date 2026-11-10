@@ -59,6 +59,7 @@ public static partial class Rasterizer
     public static Frame Render(Scene.Scene scene, int width, double time = 1.0)
     {
         // A program that reads the clock is read again at that time (its uniforms, transforms … change).
+        var original = scene;
         if (scene.Animated && scene.AtTime is { } at && time != 1.0) scene = at(time);
         int height = Math.Max(1, (int)Math.Round(width * (double)scene.Height / Math.Max(1, scene.Width)));
         double scale = scene.Width / (double)width;
@@ -69,6 +70,17 @@ public static partial class Rasterizer
         var window = new Framebuffer(width, height, scene.Samples);
         window.Clear(scene.ClearColor ?? [0, 0, 0, 1], 1.0, 0);
         var targets = new Dictionary<string, Framebuffer>(StringComparer.Ordinal);
+        var setupTargets = SetupTargets(scene);
+        // What the program draws once before its render loop (an environment captured into a cube map, a look-up
+        // table) is drawn for the first frame and kept for the next ones, as the program keeps it.
+        var setupOwner = original;
+        var setup = setupOwner.SetupCache as SetupResult;
+        bool setupDone = scene.SetupDraws > 0 && setup is not null && (setup.Width == 0 || setup.Width == width) && setup.Draws == scene.SetupDraws;
+        if (setupDone)
+        {
+            foreach (var (id, kept) in setup!.Targets) targets[id] = kept;
+            errors.AddRange(setup.Errors);
+        }
         Framebuffer Fb(string? id)
         {
             if (id is null) return window;
@@ -77,23 +89,38 @@ public static partial class Rasterizer
                 // A layer of a layered target ("id@3": a cube map's face) has the target's size and format.
                 var baseId = id.Contains('@') ? id[..id.IndexOf('@')] : id;
                 var t = scene.Targets.GetValueOrDefault(baseId) ?? new RenderTarget(id);
-                int w = t.Width > 0 ? Math.Max(1, (int)Math.Round(t.Width / scale)) : width;
-                int h = t.Height > 0 ? Math.Max(1, (int)Math.Round(t.Height / scale)) : height;
+                // What is drawn once before the render loop has the same size at every preview size (so it can be kept
+                // between frames, and a cube map's mip levels halve exactly): its own size – or a quarter of it when
+                // its shader loops over many samples per pixel (a convolution, a pre-filter), which the simulator's
+                // CPU could not afford at full size. The frame's own targets follow the preview's scale.
+                int w, h;
+                if (setupTargets.TryGetValue(Family(id), out bool heavy))
+                {
+                    w = t.Width > 0 ? Math.Max(1, t.Width / (heavy ? HeavySetupDivisor : 1)) : width;
+                    h = t.Height > 0 ? Math.Max(1, t.Height / (heavy ? HeavySetupDivisor : 1)) : height;
+                }
+                else
+                {
+                    w = t.Width > 0 ? Math.Max(1, (int)Math.Round(t.Width / scale)) : width;
+                    h = t.Height > 0 ? Math.Max(1, (int)Math.Round(t.Height / scale)) : height;
+                }
                 targets[id] = fb = new Framebuffer(w, h, t.Samples, t.Float, t.ColorAttachments) { HasDepth = t.Depth };
             }
             return fb;
         }
         // The size in the program's own pixels (gl_FragCoord) of a target.
-        double LogicalWidth(string? id) => id is not null && scene.Targets.GetValueOrDefault(id) is { Width: > 0 } t ? t.Width : scene.Width;
+        double LogicalWidth(string? id) => id is not null && scene.Targets.GetValueOrDefault(id.Contains('@') ? id[..id.IndexOf('@')] : id) is { Width: > 0 } t ? t.Width : scene.Width;
 
         var previous = current;
         var context = new RenderContext(id => Fb(id), zMinusOneToOne);
         current = context;
         try
         {
-            void Ops(Func<int, bool> when)
+            // The ops of the setup draws are the first SetupOps of the list; the frame's own follow.
+            void Ops(Func<int, bool> when, bool ofSetup = false)
             {
-                foreach (var op in scene.Ops.Where(o => when(o.BeforeDraw)))
+                int setupOps = Math.Min(scene.SetupOps, scene.Ops.Count);
+                foreach (var op in (ofSetup ? scene.Ops.Take(setupOps) : scene.Ops.Skip(setupOps)).Where(o => when(o.BeforeDraw)))
                 {
                     switch (op)
                     {
@@ -105,18 +132,30 @@ public static partial class Rasterizer
                             context.Changed(c.Target);
                             break;
                         case CopyOp c:
-                            Fb(c.To).CopyFrom(Fb(c.From), c.Color, c.Depth);
+                            Fb(c.To).CopyFrom(Fb(c.From), c.Color, c.Depth, c.Average);
                             context.Changed(c.To);
                             break;
                     }
                 }
             }
-            for (int i = 0; i < scene.Draws.Count; i++)
+            int setupDraws = Math.Min(scene.SetupDraws, scene.Draws.Count);
+            for (int i = setupDone ? setupDraws : 0; i < scene.Draws.Count; i++)
             {
                 int at2 = i;
-                Ops(b => b == at2);
+                if (i < setupDraws) Ops(b => b == at2, true);
+                else
+                {
+                    if (i == setupDraws && setupDraws > 0 && !setupDone)
+                    {
+                        // The setup is over: its last ops (mip levels made after the last capture), then it is kept.
+                        Ops(b => b >= setupDraws, true);
+                        KeepSetup(setupOwner, scene, width, targets, errors);
+                    }
+                    Ops(b => b == at2);
+                }
                 var draw = scene.Draws[i];
                 var fb = Fb(draw.Target);
+                var simTimer = SimTime ? System.Diagnostics.Stopwatch.StartNew() : null;
                 try
                 {
                     var target = draw.Target;
@@ -128,6 +167,7 @@ public static partial class Rasterizer
                     errors.Add(e.Line > 0 ? $"line {e.Line}: {e.Message}" : e.Message);
                 }
                 context.Changed(draw.Target);
+                if (simTimer is not null) Console.Error.WriteLine($"SIMTIME draw {i} target={draw.Target ?? "window"} {fb.Width}x{fb.Height} {simTimer.ElapsedMilliseconds} ms");
             }
             int count = scene.Draws.Count;
             Ops(b => b >= count);
@@ -152,6 +192,64 @@ public static partial class Rasterizer
         return new Frame(width, height, pixels, errors);
     }
 
+    private static readonly bool SimTime = Environment.GetEnvironmentVariable("SIMTIME") == "1";
+
+    /// <summary>A setup target whose shader loops is drawn at 1 / this of its size.</summary>
+    private const int HeavySetupDivisor = 4;
+
+    /// <summary>A target's family: the texture behind "name~mip@face" (its mip levels and cube faces).</summary>
+    private static string Family(string id)
+    {
+        int i = id.IndexOfAny(['~', '@']);
+        return i < 0 ? id : id[..i];
+    }
+
+    /// <summary>
+    /// The targets the setup draws fill, by family: true when one of their fragment shaders loops (many samples per
+    /// pixel).
+    /// </summary>
+    private static Dictionary<string, bool> SetupTargets(Scene.Scene scene)
+    {
+        var result = new Dictionary<string, bool>(StringComparer.Ordinal);
+        foreach (var draw in scene.Draws.Take(scene.SetupDraws))
+        {
+            if (draw.Target is not { } target) continue;
+            var family = Family(target);
+            result[family] = result.GetValueOrDefault(family) || HasLoop(draw.FragmentShader);
+        }
+        return result;
+    }
+
+    private static bool HasLoop(ShaderProgram shader)
+    {
+        static bool In(IEnumerable<ShaderAst.Stmt> body) => body.Any(s => s switch
+        {
+            ShaderAst.For or ShaderAst.ForEach => true,
+            ShaderAst.If i => In(i.Then) || (i.Else is not null && In(i.Else)),
+            _ => false,
+        });
+        return shader.Functions.Any(f => In(f.Body));
+    }
+
+    /// <summary>The targets the setup draws filled, at a preview width.</summary>
+    private sealed record SetupResult(int Width, int Draws, Dictionary<string, Framebuffer> Targets, List<string> Errors);
+
+    /// <summary>
+    /// Keeps what the setup draws left in their targets for the next frames – unless the frame itself draws into one of
+    /// them (then every frame starts from scratch).
+    /// </summary>
+    private static void KeepSetup(Scene.Scene owner, Scene.Scene scene, int width, Dictionary<string, Framebuffer> targets, List<string> errors)
+    {
+        static string Base(string id) => id.Contains('@') ? id[..id.IndexOf('@')] : id;
+        var later = scene.Draws.Skip(scene.SetupDraws).Select(d => d.Target)
+            .Concat(scene.Ops.Skip(scene.SetupOps).SelectMany(o => o switch { ClearOp c => new[] { c.Target }, CopyOp c => [c.To], _ => [] }))
+            .Where(t => t is not null).Select(t => Base(t!)).ToHashSet(StringComparer.Ordinal);
+        if (targets.Keys.Any(id => later.Contains(Base(id)))) return;
+        // Targets with a size of their own are the same at every preview width.
+        bool anyWidth = targets.Keys.All(id => scene.Targets.GetValueOrDefault(Base(id)) is { Width: > 0, Height: > 0 });
+        owner.SetupCache = new SetupResult(anyWidth ? 0 : width, scene.SetupDraws, new Dictionary<string, Framebuffer>(targets, StringComparer.Ordinal), errors.ToList());
+    }
+
     private static byte ToByte(double v) => (byte)Math.Round(Math.Clamp(double.IsNaN(v) ? 0 : v, 0, 1) * 255);
 
     private static void DrawOne(DrawCall draw, double time, Framebuffer fb, double scale, bool yDown, bool zMinusOneToOne, Func<int, Framebuffer>? layers = null)
@@ -163,7 +261,7 @@ public static partial class Rasterizer
         // The vertex and geometry stages run here, in order; the fragments of the primitives they make are shaded in
         // batches on every core (Rasterizer.Parallel.cs).
         TextureReads? shared = null;
-        var fragments = new FragmentBatch(stages, baseFb.Height, () => new Stages(draw, uniforms, shared ??= textures.Shared(), time, baseFb.Height, scale, yDown));
+        var fragments = new FragmentBatch(stages, baseFb.Height, () => new Stages(draw, uniforms, shared ??= textures.Shared(), time, baseFb.Height, scale, yDown)) { Heavy = HasLoop(draw.FragmentShader) };
         try
         {
             for (int instance = 0; instance < Math.Max(1, draw.Instances); instance++)

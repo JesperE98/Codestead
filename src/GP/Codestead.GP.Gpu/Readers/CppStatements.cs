@@ -13,6 +13,9 @@ public static class CppStatements
 {
     private static readonly Regex Keyword = new(@"^(if|while|for|switch|do|else|try|catch)\b", RegexOptions.CultureInvariant);
 
+    /// <summary>name, !name, name == 0, name != nullptr …: a condition on one variable.</summary>
+    private static readonly Regex SimpleCondition = new(@"^\s*!?\s*[A-Za-z_]\w*\s*(?:[!=]=\s*(?:0|true|false|NULL|nullptr)\s*)?$", RegexOptions.CultureInvariant);
+
     public static List<CppStatement> Walk(CppSource src, string function)
     {
         var list = new List<CppStatement>();
@@ -88,7 +91,51 @@ public static class CppStatements
                 }
                 // The body of an if runs unless it is an error branch (it returns or throws): if (data) { glTexImage2D(…); }
                 if (word == "if" && !System.Text.RegularExpressions.Regex.IsMatch(code[bodyStart..bodyEnd], @"\b(?:return|throw|exit)\b"))
-                    Walk(code, bodyStart, bodyEnd, into);
+                {
+                    // A condition the reader may be able to decide (if (cubeVAO == 0), if (!oddRow)) comes with both
+                    // branches; any other if is its body.
+                    var then = new List<CppStatement>();
+                    Walk(code, bodyStart, bodyEnd, then);
+                    if (SimpleCondition.IsMatch(condition) && !then.Any(s => s.Kind is "loop-start"))
+                    {
+                        List<CppStatement>? otherwise = null;
+                        int e = bodyEnd + 1;
+                        while (e < end && char.IsWhiteSpace(code[e])) e++;
+                        if (e + 4 <= end && Regex.IsMatch(code[e..Math.Min(end, e + 5)], @"^else\b"))
+                        {
+                            int es = e + 4;
+                            while (es < end && char.IsWhiteSpace(code[es])) es++;
+                            if (!Regex.IsMatch(code[es..Math.Min(end, es + 3)], @"^if\b"))
+                            {
+                                int ee;
+                                if (es < end && code[es] == '{')
+                                {
+                                    ee = CppSource.MatchBracket(code, es);
+                                    if (ee < 0) return;
+                                    es++;
+                                }
+                                else
+                                {
+                                    ee = es;
+                                    int depth = 0;
+                                    while (ee < end && !(code[ee] == ';' && depth == 0))
+                                    {
+                                        if (code[ee] is '(' or '{') depth++;
+                                        else if (code[ee] is ')' or '}') depth--;
+                                        ee++;
+                                    }
+                                }
+                                otherwise = new List<CppStatement>();
+                                Walk(code, es, ee, otherwise);
+                                bodyEnd = ee;
+                            }
+                        }
+                        // The condition itself was added above as a statement: replaced by the if.
+                        into.RemoveAt(into.Count - 1);
+                        into.Add(new CppStatement(condition, i, "if", then, otherwise));
+                    }
+                    else into.AddRange(then);
+                }
                 else if (word == "for")
                 {
                     var body = new List<CppStatement>();

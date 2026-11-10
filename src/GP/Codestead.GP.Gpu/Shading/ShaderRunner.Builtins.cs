@@ -11,6 +11,8 @@ public sealed partial class ShaderRunner
         var name = c.Function;
         if (name == "string") return ShaderValue.Str(((Name)c.Args[0]).Id);
         if (c.ArrayConstructor) return ShaderValue.Array(c.Args.Select(a => Coerce(name, Eval(a))).ToArray());
+        // A shader's maths and constructors, the calls a fragment makes most: straight to the result.
+        if (!Lenient && FastCall(c, name) is { } fast) return fast;
         // C++: std::fmaxf, std::sqrt … are the maths functions themselves.
         if (Lenient && name.StartsWith("std::", StringComparison.Ordinal) && name.Length > 5) name = name[5..];
         if (name.StartsWith('.'))
@@ -78,12 +80,7 @@ public sealed partial class ShaderRunner
         }
 
         // The shader's own functions and structs.
-        if (program.FindFunction(name) is { } f)
-        {
-            var args = c.Args.Select(Eval).ToList();
-            var r = Invoke(f, args);
-            return r ?? ShaderValue.Scalar(0);
-        }
+        if (program.FindFunction(name) is { } f) return CallFunction(f, c);
         if (program.FindStruct(name) is { } st)
         {
             var args = c.Args.Select(Eval).ToList();
@@ -102,6 +99,8 @@ public sealed partial class ShaderRunner
             return rows && c.Args.Count > 1 ? Transpose(made) : made;
         }
         int n = ComponentCount(name);
+        // int(x), uint(x): the whole part, as an integer.
+        if (n == 1 && ShaderValue.IsIntType(name) && c.Args.Count == 1 && Eval(c.Args[0]) is { V: { Length: > 0 } } whole) return ShaderValue.Integer(Math.Truncate(whole.X));
         if (n > 0) return VectorConstructor(name, n, c.Args.Select(Eval).ToList(), c.Line);
 
         // C++ mode: the API calls go to the hook before their arguments are evaluated (they name API objects).
@@ -198,9 +197,13 @@ public sealed partial class ShaderRunner
                 // HLSL: mul(vector, matrix) treats the vector as a row; mul(matrix, vector) as a column.
                 if (a.Count != 2) throw Arity();
                 return MatrixMultiply(a[0], a[1], c.Line);
-            case "texture" or "texture2D" or "textureCube" or "textureLod":
+            case "texture" or "texture2D" or "textureCube":
                 if (a.Count < 2) throw Arity();
                 return SampleTexture(c.Args[0], a[1]);
+            case "textureLod":
+                // textureLod(sampler, coordinates, lod): the mip level is given (a cube map's pre-filtered levels).
+                if (a.Count < 2) throw Arity();
+                return SampleTexture(c.Args[0], a[1], null, a.Count >= 3 ? a[2].X : null);
             case "texelFetch":
             {
                 // texelFetch(sampler, ivec2 texel, lod): the texel's centre.
@@ -261,8 +264,8 @@ public sealed partial class ShaderRunner
                 Emit("RestartStrip", null);
                 return ShaderValue.Scalar(0);
             case "Sample" or "SampleLevel" when c.Args.Count >= 3:
-                // HLSL names the sampler: the texture is looked up as "texture|sampler".
-                return SampleTexture(c.Args[0], Eval(c.Args[2]), PathOf(c.Args[1]));
+                // HLSL names the sampler: the texture is looked up as "texture|sampler". SampleLevel gives the mip level.
+                return SampleTexture(c.Args[0], Eval(c.Args[2]), PathOf(c.Args[1]), method == "SampleLevel" && c.Args.Count >= 4 ? Eval(c.Args[3]).X : null);
             case "size" or "length" or "Length" or "count":
             {
                 var target = Eval(c.Args[0]);
@@ -272,6 +275,16 @@ public sealed partial class ShaderRunner
                 return new ShaderValue { Iterator = new MapIterator(map, method.EndsWith("end", StringComparison.Ordinal) && !method.EndsWith("begin", StringComparison.Ordinal) ? map.Count : 0, method.StartsWith('r')) };
             case "data" or "c_str":
                 return Eval(c.Args[0]);
+            case "Get" or "get" when Lenient && c.Args.Count == 1:
+                // ComPtr<T>::Get(), unique_ptr<T>::get(): the pointer itself (a resource passed to a helper).
+                try
+                {
+                    return Eval(c.Args[0]);
+                }
+                catch (ShaderRuntimeException)
+                {
+                    return ShaderValue.Scalar(0);
+                }
             case "push_back" or "emplace_back" when Lenient && c.Args.Count >= 2:
             {
                 // vector.push_back(x): the variable holds a new, longer array.
@@ -302,9 +315,150 @@ public sealed partial class ShaderRunner
         }
     }
 
-    private ShaderValue SampleTexture(Expr texture, ShaderValue uv, string? sampler = null)
+    private ShaderValue CallFunction(Function f, Call c)
+    {
+        var args = new ShaderValue[c.Args.Count];
+        for (int i = 0; i < args.Length; i++) args[i] = Eval(c.Args[i]);
+        return Invoke(f, args) ?? ShaderValue.Scalar(0);
+    }
+
+    private static readonly Func<double, double>[] UnaryMath =
+    [
+        Math.Sin, Math.Cos, Math.Tan, Math.Asin, Math.Acos, Math.Atan, x => x * Math.PI / 180, x => x * 180 / Math.PI, Math.Exp, x => Math.Pow(2, x),
+        Math.Log, Math.Log2, Math.Sqrt, x => 1 / Math.Sqrt(x), Math.Abs, x => Math.Sign(x), Math.Floor, Math.Ceiling, Math.Round, Math.Truncate,
+        x => x - Math.Floor(x), x => Math.Clamp(x, 0, 1),
+    ];
+
+    private static readonly Func<double, double, double>[] BinaryMath =
+    [
+        Math.Pow, (x, y) => x - y * Math.Floor(x / y), (x, y) => x % y, Math.Min, Math.Max, (edge, x) => x < edge ? 0 : 1, Math.Atan2,
+    ];
+
+    /// <summary>The built-in functions with a fast path: 0–99 one argument, 100–199 two, 200 and up their own code.</summary>
+    private static readonly Dictionary<string, int> FastCalls = new(StringComparer.Ordinal)
+    {
+        ["sin"] = 0, ["cos"] = 1, ["tan"] = 2, ["asin"] = 3, ["acos"] = 4, ["atan"] = 5, ["radians"] = 6, ["degrees"] = 7, ["exp"] = 8, ["exp2"] = 9,
+        ["log"] = 10, ["log2"] = 11, ["sqrt"] = 12, ["inversesqrt"] = 13, ["rsqrt"] = 13, ["abs"] = 14, ["fabs"] = 14, ["sign"] = 15, ["floor"] = 16, ["ceil"] = 17,
+        ["round"] = 18, ["trunc"] = 19, ["fract"] = 20, ["frac"] = 20, ["saturate"] = 21,
+        ["pow"] = 100, ["mod"] = 101, ["fmod"] = 102, ["min"] = 103, ["max"] = 104, ["step"] = 105, ["atan2"] = 106,
+        ["clamp"] = 200, ["mix"] = 201, ["lerp"] = 201, ["length"] = 202, ["dot"] = 203, ["normalize"] = 204, ["cross"] = 205, ["reflect"] = 206,
+        ["texture"] = 300, ["texture2D"] = 300, ["textureCube"] = 300, ["textureLod"] = 301,
+    };
+
+    /// <summary>
+    /// A call of a built-in maths function, a vector constructor or one of the shader's own functions, without the
+    /// lists and checks of the general path; null when the call is something else (the general path takes it).
+    /// The results are the general path's.
+    /// </summary>
+    private ShaderValue? FastCall(Call c, string name)
+    {
+        if (c.ArrayConstructor || name.Length == 0 || name[0] == '.') return null;
+        if (program.FindFunction(name) is { } own) return CallFunction(own, c);
+        var args = c.Args;
+        if (!FastCalls.TryGetValue(name, out int op))
+        {
+            // vec3(…), float4(…), float(x): the components in order (one number fills the vector).
+            int n = ComponentCount(name);
+            if (n == 0 || args.Count == 0 || program.FindStruct(name) is not null || MatrixSize(name) > 0 || (n == 1 && ShaderValue.IsIntType(name))) return null;
+            if (args.Count == 1)
+            {
+                var only = Eval(args[0]);
+                if (only.V is not { } v) throw new ShaderRuntimeException($"cannot build a {name} from this value", c.Line);
+                var made = new double[n];
+                if (v.Length == 1) Array.Fill(made, v[0]);
+                else if (v.Length < n) throw new ShaderRuntimeException($"too few components to construct '{name}'", c.Line);
+                else Array.Copy(v, made, n);
+                return ShaderValue.Vec(made);
+            }
+            var parts = new double[n];
+            int count = 0;
+            for (int i = 0; i < args.Count; i++)
+            {
+                if (Eval(args[i]).V is not { } v) throw new ShaderRuntimeException($"cannot build a {name} from this value", c.Line);
+                for (int k = 0; k < v.Length; k++, count++)
+                    if (count < n) parts[count] = v[k];
+            }
+            if (count == 1) Array.Fill(parts, parts[0]);
+            else if (count < n) throw new ShaderRuntimeException($"too few components to construct '{name}'", c.Line);
+            return ShaderValue.Vec(parts);
+        }
+        if (program.FindStruct(name) is not null) return null;
+        ShaderRuntimeException Arity() => new($"wrong arguments to '{name}'", c.Line);
+        if (op < 100)
+        {
+            if (args.Count == 2 && op == 5) op = 106;
+            else
+            {
+                if (args.Count != 1) return null;
+                if (Eval(args[0]).V is not { } v) throw Arity();
+                var fn = UnaryMath[op];
+                var r = new double[v.Length];
+                for (int i = 0; i < r.Length; i++) r[i] = fn(v[i]);
+                return new ShaderValue { V = r };
+            }
+        }
+        if (op < 200)
+        {
+            if (args.Count != 2) return null;
+            var a = Eval(args[0]);
+            var b = Eval(args[1]);
+            if (a.V is null || b.V is null) throw Arity();
+            return Componentwise(a, b, BinaryMath[op - 100], c.Line);
+        }
+        switch (op)
+        {
+            case 300 or 301:
+            {
+                if (args.Count < 2) return null;
+                var at = Eval(args[1]);
+                return SampleTexture(args[0], at, null, op == 301 && args.Count >= 3 ? Eval(args[2]).X : null);
+            }
+            case 200 or 201:
+            {
+                if (args.Count != 3) return null;
+                ShaderValue a = Eval(args[0]), b = Eval(args[1]), t = Eval(args[2]);
+                if (op == 200) return Componentwise(Componentwise(a, b, Math.Max, c.Line), t, Math.Min, c.Line);
+                var d = Componentwise(b, a, static (x, y) => x - y, c.Line);
+                return Componentwise(a, Componentwise(d, t, static (x, y) => x * y, c.Line), static (x, y) => x + y, c.Line);
+            }
+            case 202 or 204:
+            {
+                if (args.Count != 1) return null;
+                if (Eval(args[0]).V is not { } v) throw Arity();
+                double sum = 0;
+                for (int i = 0; i < v.Length; i++) sum += v[i] * v[i];
+                double len = Math.Sqrt(sum);
+                if (op == 202) return ShaderValue.Scalar(len);
+                var r = new double[v.Length];
+                for (int i = 0; i < r.Length; i++) r[i] = len == 0 ? 0 : v[i] / len;
+                return ShaderValue.Vec(r);
+            }
+            default:
+            {
+                if (args.Count != 2) return null;
+                var a = Eval(args[0]).V;
+                var b = Eval(args[1]).V;
+                if (a is null || b is null) throw Arity();
+                if (op == 205)
+                {
+                    double[] p = [a.Length > 0 ? a[0] : 0, a.Length > 1 ? a[1] : 0, a.Length > 2 ? a[2] : 0], q = [b.Length > 0 ? b[0] : 0, b.Length > 1 ? b[1] : 0, b.Length > 2 ? b[2] : 0];
+                    return ShaderValue.Vec(p[1] * q[2] - p[2] * q[1], p[2] * q[0] - p[0] * q[2], p[0] * q[1] - p[1] * q[0]);
+                }
+                int n = Math.Min(a.Length, b.Length);
+                double d = 0;
+                for (int i = 0; i < n; i++) d += a[i] * b[i];
+                if (op == 203) return ShaderValue.Scalar(d);
+                var r = new double[n];
+                for (int i = 0; i < n; i++) r[i] = a[i] - 2 * d * b[i];
+                return ShaderValue.Vec(r);
+            }
+        }
+    }
+
+    private ShaderValue SampleTexture(Expr texture, ShaderValue uv, string? sampler = null, double? lod = null)
     {
         var id = sampler is null ? PathOf(texture) : PathOf(texture) + "|" + sampler;
+        if (uv.Size >= 3 && lod is { } level && SampleCubeLod?.Invoke(id, uv.V![0], uv.V[1], uv.V[2], level) is { } mip) return ShaderValue.Vec(mip);
         if (uv.Size >= 3 && SampleCube?.Invoke(id, uv.V![0], uv.V[1], uv.V[2]) is { } cube) return ShaderValue.Vec(cube);
         var rgba = Sample?.Invoke(id, uv.Padded(2)[0], uv.Padded(2)[1]) ?? [1, 0, 1, 1];
         return ShaderValue.Vec(rgba);

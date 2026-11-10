@@ -1,0 +1,596 @@
+=== task: prefilter-map
+--- file: main.cpp
+--- find:
+    // TODO: enable seamless cubemap sampling for lower mip levels in the pre-filter map
+--- replace:
+    // enable seamless cubemap sampling for lower mip levels in the pre-filter map.
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+--- file: main.cpp
+--- find:
+    // TODO: the shader that pre-filters the environment map (prefilterShader)
+--- replace:
+    Shader prefilterShader("cubemap.vs", "prefilter.fs");
+--- file: main.cpp
+--- find:
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+--- replace:
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // enable pre-filter mipmap sampling (combatting visible dots artifact)
+--- file: main.cpp
+--- find:
+        renderCube();
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // pbr: create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
+--- replace:
+        renderCube();
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // then let OpenGL generate mipmaps from first mip face (combatting visible dots artifact)
+    glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
+    // pbr: create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
+--- file: main.cpp
+--- find:
+    // TODO: pbr: create the pre-filter cube map (prefilterMap, 64 x 64 with 5 mip levels) and render a rougher reflection into each mip level
+--- replace:
+    // pbr: create a pre-filter cubemap, and re-scale capture FBO to pre-filter scale.
+    // --------------------------------------------------------------------------------
+    unsigned int prefilterMap;
+    glGenTextures(1, &prefilterMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
+    for (unsigned int i = 0; i < 6; ++i)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 64, 64, 0, GL_RGB, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // be sure to set minification filter to mip_linear
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // generate mipmaps for the cubemap so OpenGL automatically allocates the required memory.
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
+    // pbr: run a quasi monte-carlo simulation on the environment lighting to create a prefilter (cube)map.
+    // ----------------------------------------------------------------------------------------------------
+    prefilterShader.use();
+    prefilterShader.setInt("environmentMap", 0);
+    prefilterShader.setMat4("projection", captureProjection);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    unsigned int maxMipLevels = 5;
+    for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
+    {
+        // resize framebuffer according to mip-level size.
+        unsigned int mipWidth  = static_cast<unsigned int>(64 * std::pow(0.5, mip));
+        unsigned int mipHeight = static_cast<unsigned int>(64 * std::pow(0.5, mip));
+        glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
+        glViewport(0, 0, mipWidth, mipHeight);
+
+        float roughness = (float)mip / (float)(maxMipLevels - 1);
+        prefilterShader.setFloat("roughness", roughness);
+        for (unsigned int i = 0; i < 6; ++i)
+        {
+            prefilterShader.setMat4("view", captureViews[i]);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap, mip);
+
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            renderCube();
+        }
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+--- file: main.cpp
+--- find:
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+        renderCube();
+--- replace:
+        glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap); // display prefilter map
+        renderCube();
+--- file: main.cpp
+--- find:
+    glDeleteTextures(1, &irradianceMap);
+--- replace:
+    glDeleteTextures(1, &irradianceMap);
+    glDeleteTextures(1, &prefilterMap);
+--- file: background.fs
+--- find:
+    vec3 envColor = textureLod(environmentMap, WorldPos, 0.0).rgb;
+--- replace:
+    vec3 envColor = textureLod(environmentMap, WorldPos, 1.2).rgb; // a blurry mip level of the pre-filter map
+--- file: prefilter.fs
+--- find:
+// TODO: ImportanceSampleGGX(Xi, N, roughness): a halfway vector around N, distributed like the GGX lobe of this roughness
+--- replace:
+vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)
+{
+    float a = roughness*roughness;
+
+    float phi = 2.0 * PI * Xi.x;
+    float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a*a - 1.0) * Xi.y));
+    float sinTheta = sqrt(1.0 - cosTheta*cosTheta);
+
+    // from spherical coordinates to cartesian coordinates - halfway vector
+    vec3 H;
+    H.x = cos(phi) * sinTheta;
+    H.y = sin(phi) * sinTheta;
+    H.z = cosTheta;
+
+    // from tangent-space H vector to world-space sample vector
+    vec3 up        = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+    vec3 tangent   = normalize(cross(up, N));
+    vec3 bitangent = cross(N, tangent);
+
+    vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
+    return normalize(sampleVec);
+}
+--- file: prefilter.fs
+--- find:
+    // TODO: the average of the environment's light from SAMPLE_COUNT (128) importance-sampled directions, weighted by NdotL
+    vec3 prefilteredColor = vec3(0.0);
+--- replace:
+    const uint SAMPLE_COUNT = 128u;
+    vec3 prefilteredColor = vec3(0.0);
+    float totalWeight = 0.0;
+
+    for(uint i = 0u; i < SAMPLE_COUNT; ++i)
+    {
+        // generates a sample vector that's biased towards the preferred alignment direction (importance sampling).
+        vec2 Xi = Hammersley(i, SAMPLE_COUNT);
+        vec3 H = ImportanceSampleGGX(Xi, N, roughness);
+        vec3 L  = normalize(2.0 * dot(V, H) * H - V);
+
+        float NdotL = max(dot(N, L), 0.0);
+        if(NdotL > 0.0)
+        {
+            // sample from the environment's mip level based on roughness/pdf
+            float D   = DistributionGGX(N, H, roughness);
+            float NdotH = max(dot(N, H), 0.0);
+            float HdotV = max(dot(H, V), 0.0);
+            float pdf = D * NdotH / (4.0 * HdotV) + 0.0001;
+
+            float resolution = 128.0; // resolution of source cubemap (per face)
+            float saTexel  = 4.0 * PI / (6.0 * resolution * resolution);
+            float saSample = 1.0 / (float(SAMPLE_COUNT) * pdf + 0.0001);
+
+            float mipLevel = roughness == 0.0 ? 0.0 : 0.5 * log2(saSample / saTexel);
+
+            prefilteredColor += textureLod(environmentMap, L, mipLevel).rgb * NdotL;
+            totalWeight      += NdotL;
+        }
+    }
+
+    prefilteredColor = prefilteredColor / totalWeight;
+=== task: brdf-lut
+--- file: main.cpp
+--- find:
+    // TODO: the shader that integrates the BRDF (brdfShader) and the one that shows a texture on the screen quad (debugQuad)
+--- replace:
+    Shader brdfShader("brdf.vs", "brdf.fs");
+    Shader debugQuad("brdf.vs", "debug_quad.fs");
+--- file: main.cpp
+--- find:
+    backgroundShader.setInt("environmentMap", 0);
+--- replace:
+    backgroundShader.setInt("environmentMap", 0);
+
+    debugQuad.use();
+    debugQuad.setInt("image", 0);
+--- file: main.cpp
+--- find:
+    // TODO: pbr: generate the 2D lookup texture (brdfLUTTexture, 128 x 128) from the BRDF equations
+--- replace:
+    // pbr: generate a 2D LUT from the BRDF equations used.
+    // ----------------------------------------------------
+    unsigned int brdfLUTTexture;
+    glGenTextures(1, &brdfLUTTexture);
+
+    // pre-allocate enough memory for the LUT texture.
+    glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 128, 128, 0, GL_RG, GL_FLOAT, 0);
+    // be sure to set wrapping mode to GL_CLAMP_TO_EDGE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // then re-configure capture framebuffer object and render screen-space quad with BRDF shader.
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 128, 128);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfLUTTexture, 0);
+
+    glViewport(0, 0, 128, 128);
+    brdfShader.use();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    renderQuad();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+--- file: main.cpp
+--- find:
+        glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap); // display prefilter map
+        renderCube();
+--- replace:
+        glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap); // display prefilter map
+        renderCube();
+
+        // render BRDF map to screen
+        debugQuad.use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
+        renderQuad();
+--- file: main.cpp
+--- find:
+    glDeleteTextures(1, &prefilterMap);
+--- replace:
+    glDeleteTextures(1, &prefilterMap);
+    glDeleteTextures(1, &brdfLUTTexture);
+--- file: brdf.fs
+--- find:
+// TODO: ImportanceSampleGGX(Xi, N, roughness), the same as in prefilter.fs
+// ----------------------------------------------------------------------------
+// TODO: GeometrySchlickGGX(NdotV, roughness) with the k of image based lighting, and GeometrySmith(N, V, L, roughness)
+// ----------------------------------------------------------------------------
+// TODO: IntegrateBRDF(NdotV, roughness): the scale and the bias of F0 for this view angle and roughness
+// ----------------------------------------------------------------------------
+void main()
+{
+    // TODO: the integrated BRDF for NdotV = TexCoords.x and roughness = TexCoords.y
+    FragColor = vec2(0.0, 0.0);
+}
+--- replace:
+vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)
+{
+    float a = roughness*roughness;
+
+    float phi = 2.0 * PI * Xi.x;
+    float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a*a - 1.0) * Xi.y));
+    float sinTheta = sqrt(1.0 - cosTheta*cosTheta);
+
+    // from spherical coordinates to cartesian coordinates - halfway vector
+    vec3 H;
+    H.x = cos(phi) * sinTheta;
+    H.y = sin(phi) * sinTheta;
+    H.z = cosTheta;
+
+    // from tangent-space H vector to world-space sample vector
+    vec3 up        = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+    vec3 tangent   = normalize(cross(up, N));
+    vec3 bitangent = cross(N, tangent);
+
+    vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
+    return normalize(sampleVec);
+}
+// ----------------------------------------------------------------------------
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    // note that we use a different k for IBL
+    float a = roughness;
+    float k = (a * a) / 2.0;
+
+    float nom   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+
+    return nom / denom;
+}
+// ----------------------------------------------------------------------------
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+
+    return ggx1 * ggx2;
+}
+// ----------------------------------------------------------------------------
+vec2 IntegrateBRDF(float NdotV, float roughness)
+{
+    vec3 V;
+    V.x = sqrt(1.0 - NdotV*NdotV);
+    V.y = 0.0;
+    V.z = NdotV;
+
+    float A = 0.0;
+    float B = 0.0;
+
+    vec3 N = vec3(0.0, 0.0, 1.0);
+
+    const uint SAMPLE_COUNT = 128u;
+    for(uint i = 0u; i < SAMPLE_COUNT; ++i)
+    {
+        // generates a sample vector that's biased towards the
+        // preferred alignment direction (importance sampling).
+        vec2 Xi = Hammersley(i, SAMPLE_COUNT);
+        vec3 H = ImportanceSampleGGX(Xi, N, roughness);
+        vec3 L = normalize(2.0 * dot(V, H) * H - V);
+
+        float NdotL = max(L.z, 0.0);
+        float NdotH = max(H.z, 0.0);
+        float VdotH = max(dot(V, H), 0.0);
+
+        if(NdotL > 0.0)
+        {
+            float G = GeometrySmith(N, V, L, roughness);
+            float G_Vis = (G * VdotH) / (NdotH * NdotV);
+            float Fc = pow(1.0 - VdotH, 5.0);
+
+            A += (1.0 - Fc) * G_Vis;
+            B += Fc * G_Vis;
+        }
+    }
+    A /= float(SAMPLE_COUNT);
+    B /= float(SAMPLE_COUNT);
+    return vec2(A, B);
+}
+// ----------------------------------------------------------------------------
+void main()
+{
+    vec2 integratedBRDF = IntegrateBRDF(TexCoords.x, TexCoords.y);
+    FragColor = integratedBRDF;
+}
+=== task: specular
+--- file: main.cpp
+--- find:
+    Shader brdfShader("brdf.vs", "brdf.fs");
+    Shader debugQuad("brdf.vs", "debug_quad.fs");
+--- replace:
+    Shader brdfShader("brdf.vs", "brdf.fs");
+--- file: main.cpp
+--- find:
+    pbrShader.setInt("irradianceMap", 0);
+--- replace:
+    pbrShader.setInt("irradianceMap", 0);
+    pbrShader.setInt("prefilterMap", 1);
+    pbrShader.setInt("brdfLUT", 2);
+--- file: main.cpp
+--- find:
+    backgroundShader.setInt("environmentMap", 0);
+
+    debugQuad.use();
+    debugQuad.setInt("image", 0);
+--- replace:
+    backgroundShader.setInt("environmentMap", 0);
+--- file: main.cpp
+--- find:
+        glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+
+        // the lights
+--- replace:
+        glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
+
+        // the lights
+--- file: main.cpp
+--- find:
+        glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap); // display prefilter map
+        renderCube();
+
+        // render BRDF map to screen
+        debugQuad.use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
+        renderQuad();
+--- replace:
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+        renderCube();
+--- file: background.fs
+--- find:
+    vec3 envColor = textureLod(environmentMap, WorldPos, 1.2).rgb; // a blurry mip level of the pre-filter map
+--- replace:
+    vec3 envColor = textureLod(environmentMap, WorldPos, 0.0).rgb;
+--- file: pbr.fs
+--- find:
+uniform samplerCube irradianceMap;
+--- replace:
+uniform samplerCube irradianceMap;
+uniform samplerCube prefilterMap;
+uniform sampler2D brdfLUT;
+--- file: pbr.fs
+--- find:
+    vec3 V = normalize(camPos - WorldPos);
+--- replace:
+    vec3 V = normalize(camPos - WorldPos);
+    vec3 R = reflect(-V, N);
+--- file: pbr.fs
+--- find:
+    vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+    vec3 kD = 1.0 - kS;
+    kD *= 1.0 - metallic;
+    vec3 irradiance = texture(irradianceMap, N).rgb;
+    vec3 diffuse    = irradiance * albedo;
+    vec3 ambient    = (kD * diffuse) * ao;
+--- replace:
+    vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+
+    vec3 kS = F;
+    vec3 kD = 1.0 - kS;
+    kD *= 1.0 - metallic;
+
+    vec3 irradiance = texture(irradianceMap, N).rgb;
+    vec3 diffuse    = irradiance * albedo;
+
+    // sample both the pre-filter map and the BRDF lut and combine them together as per the Split-Sum approximation to get the IBL specular part.
+    const float MAX_REFLECTION_LOD = 4.0;
+    vec3 prefilteredColor = textureLod(prefilterMap, R,  roughness * MAX_REFLECTION_LOD).rgb;
+    vec2 brdf  = texture(brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
+    vec3 specular = prefilteredColor * (F * brdf.x + brdf.y);
+
+    vec3 ambient = (kD * diffuse + specular) * ao;
+=== task: textured
+--- file: main.cpp
+--- find:
+    pbrShader.setInt("brdfLUT", 2);
+    pbrShader.setVec3("albedo", 0.5f, 0.0f, 0.0f);
+    pbrShader.setFloat("ao", 1.0f);
+--- replace:
+    pbrShader.setInt("brdfLUT", 2);
+    pbrShader.setInt("albedoMap", 3);
+    pbrShader.setInt("normalMap", 4);
+    pbrShader.setInt("metallicMap", 5);
+    pbrShader.setInt("roughnessMap", 6);
+    pbrShader.setInt("aoMap", 7);
+--- file: main.cpp
+--- find:
+    int nrRows    = 7;
+    int nrColumns = 7;
+    float spacing = 2.5;
+--- replace:
+    // a few large spheres, so the material's details can be seen
+    int nrRows    = 3;
+    int nrColumns = 3;
+    float spacing = 6.0;
+
+    // load PBR material textures
+    // --------------------------
+    unsigned int albedoMap    = loadTexture("albedo.png");
+    unsigned int normalMap    = loadTexture("normal.png");
+    unsigned int metallicMap  = loadTexture("metallic.png");
+    unsigned int roughnessMap = loadTexture("roughness.png");
+    unsigned int aoMap        = loadTexture("ao.png");
+--- file: main.cpp
+--- find:
+        // render rows*column number of spheres with varying metallic/roughness values scaled by rows and columns respectively
+        glm::mat4 model = glm::mat4(1.0f);
+        for (int row = 0; row < nrRows; ++row)
+        {
+            pbrShader.setFloat("metallic", (float)row / (float)nrRows);
+            for (int col = 0; col < nrColumns; ++col)
+            {
+                // we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
+                // on direct lighting.
+                pbrShader.setFloat("roughness", glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f));
+
+                model = glm::mat4(1.0f);
+                model = glm::translate(model, glm::vec3(
+                    (float)(col - (nrColumns / 2)) * spacing,
+                    (float)(row - (nrRows / 2)) * spacing,
+                    0.0f
+                ));
+--- replace:
+        // the material's maps
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, albedoMap);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, normalMap);
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, metallicMap);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, roughnessMap);
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, aoMap);
+
+        // render rows*column number of spheres with material properties defined by textures (they all have the same material properties)
+        glm::mat4 model = glm::mat4(1.0f);
+        for (int row = 0; row < nrRows; ++row)
+        {
+            for (int col = 0; col < nrColumns; ++col)
+            {
+                model = glm::mat4(1.0f);
+                model = glm::translate(model, glm::vec3(
+                    (float)(col - (nrColumns / 2)) * spacing,
+                    (float)(row - (nrRows / 2)) * spacing,
+                    0.0f
+                ));
+                model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // turn the middle of the textures towards the camera
+                model = glm::scale(model, glm::vec3(2.4f));
+--- file: main.cpp
+--- find:
+    glDeleteTextures(1, &brdfLUTTexture);
+--- replace:
+    glDeleteTextures(1, &brdfLUTTexture);
+    glDeleteTextures(1, &albedoMap);
+    glDeleteTextures(1, &normalMap);
+    glDeleteTextures(1, &metallicMap);
+    glDeleteTextures(1, &roughnessMap);
+    glDeleteTextures(1, &aoMap);
+--- file: pbr.vs
+--- find:
+layout (location = 2) in vec2 aTexCoords;
+--- replace:
+layout (location = 2) in vec2 aTexCoords;
+layout (location = 3) in vec3 aTangent;
+--- file: pbr.vs
+--- find:
+out vec3 Normal;
+--- replace:
+out vec3 Normal;
+out vec3 Tangent;
+--- file: pbr.vs
+--- find:
+    Normal = normalMatrix * aNormal;
+--- replace:
+    Normal = normalMatrix * aNormal;
+    Tangent = mat3(model) * aTangent;
+--- file: pbr.fs
+--- find:
+in vec3 Normal;
+
+// material parameters
+uniform vec3 albedo;
+uniform float metallic;
+uniform float roughness;
+uniform float ao;
+--- replace:
+in vec3 Normal;
+in vec3 Tangent;
+
+// material parameters
+uniform sampler2D albedoMap;
+uniform sampler2D normalMap;
+uniform sampler2D metallicMap;
+uniform sampler2D roughnessMap;
+uniform sampler2D aoMap;
+--- file: pbr.fs
+--- find:
+const float PI = 3.14159265359;
+// ----------------------------------------------------------------------------
+--- replace:
+const float PI = 3.14159265359;
+// ----------------------------------------------------------------------------
+// The normal map's normal (tangent space) taken to world space with a TBN matrix
+// built from the sphere's normal and tangent, as in the Normal Mapping chapter.
+vec3 getNormalFromMap()
+{
+    vec3 tangentNormal = texture(normalMap, TexCoords).xyz * 2.0 - 1.0;
+
+    vec3 N = normalize(Normal);
+    vec3 T = normalize(Tangent);
+    T = normalize(T - dot(T, N) * N); // Gram-Schmidt: make T perpendicular to N again
+    vec3 B = cross(N, T);
+    mat3 TBN = mat3(T, B, N);
+
+    return normalize(TBN * tangentNormal);
+}
+// ----------------------------------------------------------------------------
+--- file: pbr.fs
+--- find:
+    vec3 N = normalize(Normal);
+    vec3 V = normalize(camPos - WorldPos);
+--- replace:
+    // material properties
+    vec3 albedo     = pow(texture(albedoMap, TexCoords).rgb, vec3(2.2));
+    float metallic  = texture(metallicMap, TexCoords).r;
+    float roughness = texture(roughnessMap, TexCoords).r;
+    float ao        = texture(aoMap, TexCoords).r;
+
+    // input lighting data
+    vec3 N = getNormalFromMap();
+    vec3 V = normalize(camPos - WorldPos);

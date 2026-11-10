@@ -78,7 +78,18 @@ public sealed partial class CppSource
             defines ??= DefineRe.Matches(Code).GroupBy(m => m.Groups[1].Value).ToDictionary(g => g.Key, g => g.First().Groups[2].Value.Trim(), StringComparer.Ordinal);
             if (defines.TryGetValue(name, out var defined)) return EvaluateOrNull(defined, time);
             var init = Initializer(name);
-            if (init is not null) return EvaluateOrNull(init, time);
+            if (init is not null)
+            {
+                // A number has its variable's type: float fov = 45 divides as a float, int rows = 7 as an integer.
+                var value = EvaluateOrNull(init, time);
+                if (value is { V.Length: 1, IsMatrix: false })
+                {
+                    var type = (DeclaredType(name) ?? "").Replace("const", "").Replace("static", "").Replace("constexpr", "").Replace("unsigned", "").Trim();
+                    bool isInt = type == "" ? DeclaredType(name)?.Contains("unsigned", StringComparison.Ordinal) == true : ShaderValue.IsIntType(type);
+                    if (isInt != value.Int) return isInt ? ShaderValue.Integer(Math.Truncate(value.X)) : ShaderValue.Scalar(value.X);
+                }
+                return value;
+            }
             // An API constant (VK_SAMPLE_COUNT_1_BIT as a member's initializer): its name.
             return Regex.IsMatch(name, @"^(?:D3D12|DXGI|D3D|VK)_[A-Z0-9_]+$") ? ShaderValue.Str(name) : null;
         }

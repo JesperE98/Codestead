@@ -132,18 +132,22 @@ public sealed partial class VulkanReader
     /// <summary>The textures of a draw: each sampler's binding in the bound descriptor set (set 0).</summary>
     private (Func<string, double, double, double[]>?, Func<string, double, double, double, double[]?>?) DeviceTextures(VulkanDevice device, VulkanDevice.DrawState state, ShaderProgram vs, ShaderProgram fs)
     {
+        deviceCubeLod = null;
         if (!state.Sets.TryGetValue(0, out var set) || !device.HasSet(set)) return (null, null);
         var bindings = vs.Globals.Concat(fs.Globals).Where(g => g.Type.StartsWith("sampler", StringComparison.Ordinal)).GroupBy(g => g.Id).ToDictionary(g => g.Key, g => g.First().Binding ?? 0);
         if (bindings.Count == 0) return (null, null);
         var found = bindings.ToDictionary(b => b.Key, b => device.TextureAt(set, b.Value));
         deviceTextureSizes = id => found.TryGetValue(id.Split('|')[0], out var t) && t?.Texture is { } tex ? (tex.Image.Width, tex.Image.Height) : null;
         if (found.Values.All(v => v is null)) return (null, null);
+        deviceCubeLod = (id, x, y, z, lod) => found.TryGetValue(id.Split('|')[0], out var t) && t?.Cube is { } c ? c.Sample(x, y, z, lod) : null;
         return ((id, u, v) => found.TryGetValue(id.Split('|')[0], out var t) && t?.Texture is { } tex ? tex.Sample(u, v) : [0, 0, 0, 1],
             (id, x, y, z) => found.TryGetValue(id.Split('|')[0], out var t) && t?.Cube is { } c ? c.Sample(x, y, z) : null);
     }
 
     /// <summary>The texture sizes of the last DeviceTextures call (textureSize, texelFetch).</summary>
     private Func<string, (int Width, int Height)?>? deviceTextureSizes;
+    /// <summary>The cube maps of the last DeviceTextures call read at a mip level (textureLod).</summary>
+    private Func<string, double, double, double, double, double[]?>? deviceCubeLod;
 
     /// <summary>The device model's clears in the scene's draw numbering, with their targets registered.</summary>
     private void AddDeviceOps(IEnumerable<FrameOp> ops, VulkanDevice device)
@@ -167,8 +171,15 @@ public sealed partial class VulkanReader
 
     private void RegisterTarget(VulkanDevice device, string id)
     {
-        if (scene.Targets.ContainsKey(id) || device.Image(id) is not { } img) return;
-        var shape = device.ShapeOf(id);
-        scene.Targets[id] = new RenderTarget(id, img.Width, img.Height, shape?.Colors ?? 1, shape?.Depth ?? true, shape?.Depth ?? true, Math.Max(1, img.Samples), img.Float, Math.Max(1, img.Layers));
+        // "img:N~2@3": mip level 2 of image N (half the size per level), cube face / array layer 3. The target is
+        // registered per level; its layers are found through it.
+        var levelId = id.Contains('@') ? id[..id.IndexOf('@')] : id;
+        if (scene.Targets.ContainsKey(levelId) || device.TargetImage(id) is not var (img, level)) return;
+        var shape = device.ShapeOf(id) ?? device.ShapeOf(levelId);
+        // Drawn into layer by layer through its own framebuffers (a cube map's faces): each layer is a target of its
+        // own; a layered framebuffer (gl_Layer) has them all.
+        int layers = img.PerLayer ? 1 : Math.Max(1, img.Layers);
+        scene.Targets[levelId] = new RenderTarget(levelId, Math.Max(1, img.Width >> level), Math.Max(1, img.Height >> level), shape?.Colors ?? 1, shape?.Depth ?? true, shape?.Depth ?? true,
+            Math.Max(1, img.Samples), img.Float, layers);
     }
 }

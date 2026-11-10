@@ -88,10 +88,19 @@ int main()
     Shader shader("pbr.vs", "pbr.fs");
 
     shader.use();
-    shader.setVec3("albedo", 0.5f, 0.0f, 0.0f);
-    shader.setFloat("ao", 1.0f);
+    shader.setInt("albedoMap", 0);
+    shader.setInt("normalMap", 1);
+    shader.setInt("metallicMap", 2);
+    shader.setInt("roughnessMap", 3);
+    shader.setInt("aoMap", 4);
 
-    // TODO: load the PBR material textures (albedo.png, normal.png, metallic.png, roughness.png, ao.png)
+    // load PBR material textures
+    // --------------------------
+    unsigned int albedoMap    = loadTexture("albedo.png");
+    unsigned int normalMap    = loadTexture("normal.png");
+    unsigned int metallicMap  = loadTexture("metallic.png");
+    unsigned int roughnessMap = loadTexture("roughness.png");
+    unsigned int aoMap        = loadTexture("ao.png");
 
     // lights
     // ------
@@ -107,9 +116,10 @@ int main()
         glm::vec3(300.0f, 300.0f, 300.0f),
         glm::vec3(300.0f, 300.0f, 300.0f)
     };
-    int nrRows    = 7;
-    int nrColumns = 7;
-    float spacing = 2.5;
+    // a few large spheres, so the material's details can be seen
+    int nrRows    = 3;
+    int nrColumns = 3;
+    float spacing = 6.0;
 
     // render loop
     // -----------
@@ -144,23 +154,31 @@ int main()
             shader.setVec3("lightColors[" + std::to_string(i) + "]", lightColors[i]);
         }
 
-        // render rows*column number of spheres with varying metallic/roughness values scaled by rows and columns respectively
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, albedoMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, normalMap);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, metallicMap);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, roughnessMap);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, aoMap);
+
+        // render rows*column number of spheres with material properties defined by textures (they all have the same material properties)
         glm::mat4 model = glm::mat4(1.0f);
         for (int row = 0; row < nrRows; ++row)
         {
-            shader.setFloat("metallic", (float)row / (float)nrRows);
             for (int col = 0; col < nrColumns; ++col)
             {
-                // we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
-                // on direct lighting.
-                shader.setFloat("roughness", glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f));
-
                 model = glm::mat4(1.0f);
                 model = glm::translate(model, glm::vec3(
                     (float)(col - (nrColumns / 2)) * spacing,
                     (float)(row - (nrRows / 2)) * spacing,
                     0.0f
                 ));
+                model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // turn the middle of the textures towards the camera
+                model = glm::scale(model, glm::vec3(2.4f));
                 shader.setMat4("model", model);
                 shader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
                 renderSphere();
@@ -172,6 +190,14 @@ int main()
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    // optional: de-allocate all resources once they've outlived their purpose:
+    // ------------------------------------------------------------------------
+    glDeleteTextures(1, &albedoMap);
+    glDeleteTextures(1, &normalMap);
+    glDeleteTextures(1, &metallicMap);
+    glDeleteTextures(1, &roughnessMap);
+    glDeleteTextures(1, &aoMap);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------

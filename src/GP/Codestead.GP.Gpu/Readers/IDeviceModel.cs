@@ -12,5 +12,7 @@ internal interface IDeviceModel
     /// <summary>The state set on the command list now (copied into each recorded draw).</summary>
     object Snapshot();
     List<FrameOp> Ops { get; }
+    /// <summary>A recorded draw's state says it goes to an off-screen target (not to the window).</summary>
+    bool Offscreen(object? state);
     Func<int> DrawCount { get; set; }
 }

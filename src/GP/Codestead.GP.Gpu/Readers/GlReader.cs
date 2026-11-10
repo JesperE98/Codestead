@@ -60,6 +60,8 @@ public sealed partial class GlReader
             switch (st.Kind)
             {
                 case "loop-start":
+                    // What was drawn into framebuffer objects so far is the program's setup, drawn once.
+                    if (!inLoop && scene.SetupDraws == 0) (scene.SetupDraws, scene.SetupOps) = (scene.Draws.Count, scene.Ops.Count);
                     inLoop = true;
                     scene.RenderLoop = windowCreated;
                     continue;
@@ -102,7 +104,7 @@ public sealed partial class GlReader
         try
         {
             foreach (var st in CppStatements.Walk(src, fn))
-                if (st.Kind is "stmt" or "for") Statement(st);
+                if (st.Kind is "stmt" or "for" or "if") Statement(st);
             return inlineReturn[0];
         }
         finally
@@ -149,11 +151,39 @@ public sealed partial class GlReader
         _ = parts;
     }
 
+    /// <summary>
+    /// Whether a condition on one variable holds, when the reader knows: an OpenGL object's name is not 0 once the
+    /// object exists (if (cubeVAO == 0) builds learnopengl's cube once), a bool variable has its value (if (!oddRow)).
+    /// Null: not known (a pointer from stb_image, a status code …).
+    /// </summary>
+    private bool? Decide(string condition)
+    {
+        var m = Regex.Match(condition, @"^\s*(!?)\s*([A-Za-z_]\w*)\s*(?:([!=]=)\s*(0|true|false|NULL|nullptr)\s*)?$");
+        if (!m.Success) return null;
+        var name = m.Groups[2].Value;
+        bool? value = gl.VertexArrays.ContainsKey(name) || gl.Buffers.ContainsKey(name) || gl.TextureObjects.ContainsKey(name) || gl.Framebuffers.ContainsKey(name)
+            || gl.Renderbuffers.ContainsKey(name) || gl.Programs.ContainsKey(name) ? true
+            : src.DeclaredType(name) == "bool" && env.Eval(name) is { V: { Length: 1 } v } ? v[0] != 0 : null;
+        if (value is not { } truth) return null;
+        if (m.Groups[3].Success)
+        {
+            bool compared = m.Groups[4].Value == "true";
+            truth = (truth == compared) == (m.Groups[3].Value == "==");
+        }
+        return m.Groups[1].Value == "!" ? !truth : truth;
+    }
+
     private void Statement(CppStatement st)
     {
         if (st.Kind == "for")
         {
             For(st);
+            return;
+        }
+        if (st.Kind == "if")
+        {
+            // Decided: that branch. Not decided: the body, as for any other if.
+            foreach (var inner in (Decide(st.Text) == false ? st.Else : st.Body) ?? []) Statement(inner);
             return;
         }
         var text = st.Text;

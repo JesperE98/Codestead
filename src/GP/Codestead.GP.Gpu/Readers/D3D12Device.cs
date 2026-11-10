@@ -26,11 +26,23 @@ internal sealed class D3D12Device : IDeviceModel
         /// <summary>A texture's images (one per array slice: six for a cube map).</summary>
         public readonly List<Image?> Images = new();
         public string TargetId => "res:" + Id;
+        /// <summary>
+        /// Mip levels that hold a picture: drawn into one by one through render target views of single mip slices – the
+        /// render targets "res:N~level" hold levels 1 and up.
+        /// </summary>
+        public int TargetLevels = 1;
+        /// <summary>The texture is drawn into through views of single array slices (one cube face per view).</summary>
+        public bool PerSlice;
+
+        public string LevelTarget(int level) => level > 0 ? $"{TargetId}~{level}" : TargetId;
     }
 
     /// <summary>What is set on the command list when a draw is recorded.</summary>
+    /// <param name="Target">The render target the descriptor named when the draw was recorded (a program may write
+    /// another view into the same descriptor for its next pass: one RTV slot for every face of a cube map); null for
+    /// the window.</param>
     public sealed record DrawState(long? RenderTarget, IReadOnlyDictionary<int, (long Address, int Stride)> VertexBuffers,
-        (long Address, int Bytes)? IndexBuffer, IReadOnlyDictionary<int, long> Tables, IReadOnlyDictionary<int, long>? RootCbvs = null);
+        (long Address, int Bytes)? IndexBuffer, IReadOnlyDictionary<int, long> Tables, IReadOnlyDictionary<int, long>? RootCbvs = null, string? Target = null, string? Topology = null);
 
     private const double AddressUnit = 1e9;
     private const double HeapUnit = 1e6;
@@ -55,6 +67,8 @@ internal sealed class D3D12Device : IDeviceModel
     /// <summary>The back buffer's render target view has an _SRGB format: what is drawn into the window is encoded.</summary>
     public bool WindowSrgb { get; private set; }
     public readonly Dictionary<long, int> Rtvs = new();
+    /// <summary>Render target views of one array slice (a cube map's face) and/or mip level: handle → (slice, level).</summary>
+    private readonly Dictionary<long, (int Slice, int Level)> rtvSlices = new();
     public readonly Dictionary<long, int> Dsvs = new();
     private bool flip;
     private CppExec? exec;
@@ -65,6 +79,8 @@ internal sealed class D3D12Device : IDeviceModel
     private (long, int)? indexBuffer;
     private readonly Dictionary<int, long> tables = new();
     private readonly Dictionary<int, long> rootCbvs = new();
+    /// <summary>The primitive topology set last (IASetPrimitiveTopology): a program may change it between draws.</summary>
+    private string? topology;
 
     /// <summary>Clears and copies recorded so far: (draw count then, the op, with targets as resource ids "res:N").</summary>
     public List<FrameOp> Ops { get; } = new();
@@ -86,7 +102,8 @@ internal sealed class D3D12Device : IDeviceModel
 
     List<FrameOp> IDeviceModel.Ops => Ops;
 
-    public DrawState Snapshot() => new(renderTarget, new Dictionary<int, (long, int)>(vertexBuffers), indexBuffer, new Dictionary<int, long>(tables), new Dictionary<int, long>(rootCbvs));
+    public DrawState Snapshot() => new(renderTarget, new Dictionary<int, (long, int)>(vertexBuffers), indexBuffer, new Dictionary<int, long>(tables), new Dictionary<int, long>(rootCbvs),
+        renderTarget is { } rt ? TargetOf(rt) : null, topology);
 
     private ShaderValue? Eval(Expr e)
     {
@@ -288,9 +305,26 @@ internal sealed class D3D12Device : IDeviceModel
             case ".CreateRenderTargetView" when args.Count >= 4:
                 if (ResourceOf(args[1]) is { } rt)
                 {
-                    Rtvs[(long)Num(args[3])] = rt.Id;
+                    long rtvHandle = (long)Num(args[3]);
+                    Rtvs[rtvHandle] = rt.Id;
+                    var rtvDesc = args[2] is Name { Id: "nullptr" or "NULL" } ? null : Eval(Strip(args[2]));
+                    // A view of one array slice (D3D12_RTV_DIMENSION_TEXTURE2DARRAY with ArraySize 1: a cube map's face)
+                    // and/or one mip level: draws through it go into that face and level.
+                    rtvSlices.Remove(rtvHandle);
+                    var arrayView = rtvDesc?.Fields?.GetValueOrDefault("Texture2DArray");
+                    var flatView = rtvDesc?.Fields?.GetValueOrDefault("Texture2D");
+                    bool isArrayView = rtvDesc?.Fields?.GetValueOrDefault("ViewDimension")?.Text?.Contains("TEXTURE2DARRAY", StringComparison.Ordinal) == true;
+                    int level = (int)((isArrayView ? arrayView : flatView)?.Fields?.GetValueOrDefault("MipSlice")?.X ?? 0);
+                    int slice = isArrayView ? (int)(arrayView?.Fields?.GetValueOrDefault("FirstArraySlice")?.X ?? 0) : 0;
+                    bool oneSlice = isArrayView && (arrayView?.Fields?.GetValueOrDefault("ArraySize")?.X ?? 0) == 1;
+                    if (!rt.Window && (oneSlice || level > 0))
+                    {
+                        rtvSlices[rtvHandle] = (oneSlice ? slice : 0, level);
+                        if (oneSlice) rt.PerSlice = true;
+                        rt.TargetLevels = Math.Max(rt.TargetLevels, level + 1);
+                    }
                     // A back buffer viewed as _SRGB: what is drawn into the window is encoded.
-                    var rtvFormat = args[2] is Name { Id: "nullptr" or "NULL" } ? null : Eval(Strip(args[2]))?.Fields?.GetValueOrDefault("Format")?.Text;
+                    var rtvFormat = rtvDesc?.Fields?.GetValueOrDefault("Format")?.Text;
                     if (rt.Window && rtvFormat is not null) WindowSrgb = rtvFormat.Contains("_SRGB", StringComparison.Ordinal);
                 }
                 return ShaderValue.Scalar(0);
@@ -336,6 +370,9 @@ internal sealed class D3D12Device : IDeviceModel
                 Ops.Add(new ClearOp(DrawCount(), renderTarget is { } t ? TargetOf(t) : null, null, depth ? Num(args[3]) : null, stencil ? (int)Num(args[4]) : null));
                 return ShaderValue.Scalar(0);
             }
+            case ".IASetPrimitiveTopology" when args.Count >= 2:
+                topology = Eval(args[1])?.Text ?? (args[1] is Name topologyName ? topologyName.Id : topology);
+                return ShaderValue.Scalar(0);
             case ".IASetVertexBuffers" when args.Count >= 4:
             {
                 int start = (int)Num(args[1]), count = (int)Num(args[2]);
@@ -480,9 +517,25 @@ internal sealed class D3D12Device : IDeviceModel
     };
 
     /// <summary>The render target id of an RTV handle: null for a swap chain buffer (the window).</summary>
-    public string? TargetOf(long handle) =>
-        handle < 0 ? (Dsvs.TryGetValue(-handle - 1, out var d) && ResourceAt(d) is { Window: false } dr ? dr.TargetId : null)
-        : Rtvs.TryGetValue(handle, out var id) && ResourceAt(id) is { Window: false } r ? r.TargetId : null;
+    public string? TargetOf(long handle)
+    {
+        if (handle < 0) return Dsvs.TryGetValue(-handle - 1, out var d) && ResourceAt(d) is { Window: false } dr ? dr.TargetId : null;
+        if (!Rtvs.TryGetValue(handle, out var id) || ResourceAt(id) is not { Window: false } r) return null;
+        // "res:N", "res:N~2" for mip level 2, "…@3" for array slice (cube face) 3.
+        if (!rtvSlices.TryGetValue(handle, out var view)) return r.TargetId;
+        var level = r.LevelTarget(view.Level);
+        return view.Slice > 0 ? level + "@" + view.Slice : level;
+    }
+
+    /// <summary>The resource behind a target id ("res:N~2@3"), and the mip level it names.</summary>
+    public (Resource Resource, int Level)? TargetResource(string id)
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(id, @"^res:(\d+)(?:~(\d+))?(?:@\d+)?$");
+        return m.Success && ResourceAt(int.Parse(m.Groups[1].Value)) is { } r ? (r, m.Groups[2].Success ? int.Parse(m.Groups[2].Value) : 0) : null;
+    }
+
+    /// <summary>A recorded draw goes to an off-screen target (not to the window).</summary>
+    public bool Offscreen(object? state) => state is DrawState { Target: not null };
 
     /// <summary>A resource some shader resource view reads (a depth texture that is sampled later).</summary>
     private bool SrvOf(int resource) => Srvs.Values.Any(v => v.Resource == resource);
@@ -527,10 +580,14 @@ internal sealed class D3D12Device : IDeviceModel
         if (srv.Cube && res.Images.All(i => i is null) && !res.Buffer && !res.Window)
         {
             // A cube map drawn into (point shadows): face i is slice i of the target.
-            var cubeId = res.TargetId;
             bool cubeDepth = res.Depth;
-            return (null, new CubeTexture(Enumerable.Range(0, 6).Select(face =>
-                (Texture?)new Texture(() => Raster.Rasterizer.TargetImage(face == 0 ? cubeId : cubeId + "@" + face, 0, cubeDepth), sampler) { Components = 4 }).ToList()));
+            List<Texture?> Level(string target) => Enumerable.Range(0, 6).Select(face =>
+                (Texture?)new Texture(() => Raster.Rasterizer.TargetImage(face == 0 ? target : target + "@" + face, 0, cubeDepth), sampler) { Components = 4 }).ToList();
+            // Its mip levels, when they were drawn: read by SampleLevel.
+            return (null, new CubeTexture(Level(res.TargetId))
+            {
+                Mips = res.TargetLevels > 1 ? Enumerable.Range(1, res.TargetLevels - 1).Select(level => (IReadOnlyList<Texture?>)Level(res.LevelTarget(level))).ToList() : null,
+            });
         }
         if (srv.Cube) return (null, new CubeTexture(res.Images.Select(i => i is null ? null : new Texture(i, sampler) { Components = i.Channels == 4 ? 4 : 3 }).ToList()));
         if (attachmentOf.TryGetValue(res.Id, out var att))

@@ -5,7 +5,12 @@ public static class ShaderAst
 {
     public abstract record Expr(int Line);
 
-    public sealed record Number(double Value, int Line) : Expr(Line);
+    /// <summary>A literal; <see cref="Integer"/> for one written without a fraction, exponent or float suffix (2, 16u, 0x55).</summary>
+    public sealed record Number(double Value, int Line, bool Integer = false) : Expr(Line)
+    {
+        /// <summary>The literal as a value of a running shader (made the first time it is evaluated).</summary>
+        internal ShaderValue? Cached;
+    }
 
     public sealed record Name(string Id, int Line) : Expr(Line);
 

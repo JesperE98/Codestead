@@ -1,0 +1,327 @@
+=== task: environment-map
+--- file: main.cpp
+--- find:
+    // TODO: set the depth function to GL_LEQUAL (the background is drawn at depth 1.0, the value the depth buffer is cleared to)
+--- replace:
+    glDepthFunc(GL_LEQUAL); // set depth function to less than AND equal for skybox depth trick.
+--- file: main.cpp
+--- find:
+    // TODO: the shaders that convert the equirectangular map to a cube map (equirectangularToCubemapShader) and draw the background (backgroundShader)
+--- replace:
+    Shader equirectangularToCubemapShader("cubemap.vs", "equirectangular_to_cubemap.fs");
+    Shader backgroundShader("background.vs", "background.fs");
+--- file: main.cpp
+--- find:
+    pbrShader.setFloat("ao", 1.0f);
+--- replace:
+    pbrShader.setFloat("ao", 1.0f);
+
+    backgroundShader.use();
+    backgroundShader.setInt("environmentMap", 0);
+--- file: main.cpp
+--- find:
+    // TODO: pbr: load the HDR environment map (environment.hdr) and convert it to a cube map (envCubemap)
+--- replace:
+    // pbr: setup framebuffer
+    // ----------------------
+    unsigned int captureFBO;
+    unsigned int captureRBO;
+    glGenFramebuffers(1, &captureFBO);
+    glGenRenderbuffers(1, &captureRBO);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 128, 128);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
+
+    // pbr: load the HDR environment map
+    // ---------------------------------
+    stbi_set_flip_vertically_on_load(true);
+    int width, height, nrComponents;
+    float *data = stbi_loadf("environment.hdr", &width, &height, &nrComponents, 0);
+    unsigned int hdrTexture = 0;
+    if (data)
+    {
+        glGenTextures(1, &hdrTexture);
+        glBindTexture(GL_TEXTURE_2D, hdrTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data); // note how we specify the texture's data value to be float
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Failed to load HDR image." << std::endl;
+    }
+
+    // pbr: setup cubemap to render to and attach to framebuffer
+    // ---------------------------------------------------------
+    unsigned int envCubemap;
+    glGenTextures(1, &envCubemap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+    for (unsigned int i = 0; i < 6; ++i)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // pbr: set up projection and view matrices for capturing data onto the 6 cubemap face directions
+    // ----------------------------------------------------------------------------------------------
+    glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+    glm::mat4 captureViews[] =
+    {
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
+    };
+
+    // pbr: convert HDR equirectangular environment map to cubemap equivalent
+    // ----------------------------------------------------------------------
+    equirectangularToCubemapShader.use();
+    equirectangularToCubemapShader.setInt("equirectangularMap", 0);
+    equirectangularToCubemapShader.setMat4("projection", captureProjection);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, hdrTexture);
+
+    glViewport(0, 0, 128, 128); // don't forget to configure the viewport to the capture dimensions.
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    for (unsigned int i = 0; i < 6; ++i)
+    {
+        equirectangularToCubemapShader.setMat4("view", captureViews[i]);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCubemap, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        renderCube();
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+--- file: main.cpp
+--- find:
+    // TODO: pbr: create the irradiance cube map (irradianceMap) by convoluting the environment cube map
+--- replace:
+    // TODO: pbr: create the irradiance cube map (irradianceMap) by convoluting the environment cube map
+
+    // then before rendering, configure the viewport to the original framebuffer's screen dimensions
+    int scrWidth, scrHeight;
+    glfwGetFramebufferSize(window, &scrWidth, &scrHeight);
+    glViewport(0, 0, scrWidth, scrHeight);
+--- file: main.cpp
+--- find:
+        // TODO: render the environment map as the background (render it last to prevent overdraw)
+--- replace:
+        // render skybox (render as last to prevent overdraw)
+        backgroundShader.use();
+        backgroundShader.setMat4("projection", projection);
+        backgroundShader.setMat4("view", view);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+        renderCube();
+--- file: main.cpp
+--- find:
+    // TODO: delete the textures, the renderbuffer and the framebuffer
+--- replace:
+    glDeleteTextures(1, &hdrTexture);
+    glDeleteTextures(1, &envCubemap);
+    glDeleteRenderbuffers(1, &captureRBO);
+    glDeleteFramebuffers(1, &captureFBO);
+--- file: equirectangular_to_cubemap.fs
+--- find:
+// TODO: SampleSphericalMap(v): the texture coordinates in the equirectangular map for the direction v
+
+void main()
+{
+    // TODO: the colour of the equirectangular map in this fragment's direction, normalize(WorldPos)
+    FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+}
+--- replace:
+const vec2 invAtan = vec2(0.1591, 0.3183);
+vec2 SampleSphericalMap(vec3 v)
+{
+    vec2 uv = vec2(atan(v.z, v.x), asin(v.y));
+    uv *= invAtan;
+    uv += 0.5;
+    return uv;
+}
+
+void main()
+{
+    vec2 uv = SampleSphericalMap(normalize(WorldPos));
+    vec3 color = texture(equirectangularMap, uv).rgb;
+
+    FragColor = vec4(color, 1.0);
+}
+--- file: background.vs
+--- find:
+    // TODO: keep only the view matrix's rotation and give the cube the largest depth (z = w, so the depth is 1.0)
+    gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+--- replace:
+    mat4 rotView = mat4(mat3(view));
+    vec4 clipPos = projection * rotView * vec4(WorldPos, 1.0);
+
+    gl_Position = clipPos.xyww;
+--- file: background.fs
+--- find:
+    // TODO: sample the environment map in the direction WorldPos, tone map and gamma correct the colour
+    FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+--- replace:
+    vec3 envColor = textureLod(environmentMap, WorldPos, 0.0).rgb;
+
+    // HDR tonemap and gamma correct
+    envColor = envColor / (envColor + vec3(1.0));
+    envColor = pow(envColor, vec3(1.0/2.2));
+
+    FragColor = vec4(envColor, 1.0);
+=== task: irradiance-map
+--- file: main.cpp
+--- find:
+    // TODO: the shader that convolutes the environment map (irradianceShader)
+--- replace:
+    Shader irradianceShader("cubemap.vs", "irradiance_convolution.fs");
+--- file: main.cpp
+--- find:
+    // TODO: pbr: create the irradiance cube map (irradianceMap) by convoluting the environment cube map
+--- replace:
+    // pbr: create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
+    // --------------------------------------------------------------------------------
+    unsigned int irradianceMap;
+    glGenTextures(1, &irradianceMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+    for (unsigned int i = 0; i < 6; ++i)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 32, 32, 0, GL_RGB, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
+
+    // pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
+    // -----------------------------------------------------------------------------
+    irradianceShader.use();
+    irradianceShader.setInt("environmentMap", 0);
+    irradianceShader.setMat4("projection", captureProjection);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+
+    glViewport(0, 0, 32, 32); // don't forget to configure the viewport to the capture dimensions.
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    for (unsigned int i = 0; i < 6; ++i)
+    {
+        irradianceShader.setMat4("view", captureViews[i]);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        renderCube();
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+--- file: main.cpp
+--- find:
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+        renderCube();
+--- replace:
+        glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
+        renderCube();
+--- file: main.cpp
+--- find:
+    glDeleteTextures(1, &envCubemap);
+--- replace:
+    glDeleteTextures(1, &envCubemap);
+    glDeleteTextures(1, &irradianceMap);
+--- file: irradiance_convolution.fs
+--- find:
+    // TODO: add up the environment's radiance over the hemisphere around N (sampleDelta 0.1), weighted by cos(theta) * sin(theta)
+--- replace:
+    // tangent space calculation from origin point
+    vec3 up    = vec3(0.0, 1.0, 0.0);
+    vec3 right = normalize(cross(up, N));
+    up         = normalize(cross(N, right));
+
+    float sampleDelta = 0.1;
+    float nrSamples = 0.0;
+    for(float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)
+    {
+        for(float theta = 0.0; theta < 0.5 * PI; theta += sampleDelta)
+        {
+            // spherical to cartesian (in tangent space)
+            vec3 tangentSample = vec3(sin(theta) * cos(phi),  sin(theta) * sin(phi), cos(theta));
+            // tangent space to world
+            vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * N;
+
+            irradiance += texture(environmentMap, sampleVec).rgb * cos(theta) * sin(theta);
+            nrSamples++;
+        }
+    }
+    irradiance = PI * irradiance * (1.0 / float(nrSamples));
+=== task: ambient
+--- file: main.cpp
+--- find:
+    pbrShader.use();
+    pbrShader.setVec3("albedo", 0.5f, 0.0f, 0.0f);
+--- replace:
+    pbrShader.use();
+    pbrShader.setInt("irradianceMap", 0);
+    pbrShader.setVec3("albedo", 0.5f, 0.0f, 0.0f);
+--- file: main.cpp
+--- find:
+        // the lights
+--- replace:
+        // bind pre-computed IBL data
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+
+        // the lights
+--- file: main.cpp
+--- find:
+        glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
+        renderCube();
+--- replace:
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+        renderCube();
+--- file: pbr.fs
+--- find:
+uniform float ao;
+--- replace:
+uniform float ao;
+
+// IBL
+uniform samplerCube irradianceMap;
+--- file: pbr.fs
+--- find:
+// ----------------------------------------------------------------------------
+void main()
+--- replace:
+// ----------------------------------------------------------------------------
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+// ----------------------------------------------------------------------------
+void main()
+--- file: pbr.fs
+--- find:
+    // ambient lighting (note that the next IBL tutorial will replace
+    // this ambient lighting with environment lighting).
+    vec3 ambient = vec3(0.03) * albedo * ao;
+--- replace:
+    // ambient lighting (we now use IBL as the ambient term)
+    vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+    vec3 kD = 1.0 - kS;
+    kD *= 1.0 - metallic;
+    vec3 irradiance = texture(irradianceMap, N).rgb;
+    vec3 diffuse    = irradiance * albedo;
+    vec3 ambient    = (kD * diffuse) * ao;

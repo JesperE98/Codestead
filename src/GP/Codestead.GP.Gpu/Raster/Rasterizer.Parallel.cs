@@ -16,9 +16,10 @@ public static partial class Rasterizer
     private sealed record TextureReads(
         Func<string, double, double, double[]>? Sample,
         Func<string, double, double, double, double[]?>? SampleCube,
-        Func<string, (int Width, int Height)?>? Size)
+        Func<string, (int Width, int Height)?>? Size,
+        Func<string, double, double, double, double, double[]?>? SampleCubeLod = null)
     {
-        public static TextureReads Of(DrawCall draw) => new(draw.Textures, draw.CubeTextures, draw.TextureSizes);
+        public static TextureReads Of(DrawCall draw) => new(draw.Textures, draw.CubeTextures, draw.TextureSizes, draw.CubeTexturesLod);
 
         /// <summary>
         /// The same reads for worker threads. The readers' texture lookups fill caches of their own the first time they
@@ -49,7 +50,8 @@ public static partial class Rasterizer
             return new(
                 Sample is { } sample ? (id, u, v) => Read(0, id, () => sample(id, u, v)) : null,
                 SampleCube is { } cube ? (id, x, y, z) => Read(1, id, () => cube(id, x, y, z)) : null,
-                Size is { } size ? id => Read(2, id, () => size(id)) : null);
+                Size is { } size ? id => Read(2, id, () => size(id)) : null,
+                SampleCubeLod is { } cubeLod ? (id, x, y, z, lod) => Read(1, id, () => cubeLod(id, x, y, z, lod)) : null);
         }
     }
 
@@ -101,6 +103,12 @@ public static partial class Rasterizer
         /// <summary>Below this many pixels (bounding boxes) a batch is shaded on one thread: handing it over costs more.</summary>
         private const long MinParallelPixels = 256;
 
+        /// <summary>
+        /// The fragment shader loops (hundreds of samples per pixel: a convolution into a small cube map face): even a
+        /// few pixels are worth sharing out.
+        /// </summary>
+        public bool Heavy { get; init; }
+
         /// <summary>Bands per worker: small enough that a worker slowed down by other work hands its share to the others.</summary>
         private const int BandsPerWorker = 8;
 
@@ -124,7 +132,7 @@ public static partial class Rasterizer
             if (fills.Count == 0) return;
             try
             {
-                if (Cores == 1 || height < 2 || pixels < MinParallelPixels)
+                if (Cores == 1 || height < 2 || pixels < (Heavy ? 4 : MinParallelPixels))
                     foreach (var fill in fills) fill(stages, 0, height);
                 else RunParallel();
             }

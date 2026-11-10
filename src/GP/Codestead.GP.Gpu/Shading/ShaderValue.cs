@@ -19,7 +19,19 @@ public sealed class ShaderValue
     /// <summary>An iterator into a std::map: begin()/rbegin() …, ++it, it->first / it->second.</summary>
     public MapIterator? Iterator { get; init; }
 
+    /// <summary>
+    /// A scalar of an integer type (int, uint; an integer literal): dividing two of them gives a whole number, as in
+    /// GLSL, HLSL and C++. Vectors and matrices never carry it.
+    /// </summary>
+    public bool Int { get; init; }
+
     public static ShaderValue Scalar(double x) => new() { V = [x] };
+
+    public static ShaderValue Integer(double x) => new() { V = [x], Int = true };
+
+    /// <summary>True for the names of the integer types of GLSL, HLSL and the C++ the simulator reads.</summary>
+    public static bool IsIntType(string type) => type is "int" or "uint" or "INT" or "UINT" or "GLint" or "GLuint" or "GLsizei" or "unsigned" or "uint32_t" or "int32_t"
+        or "uint16_t" or "uint64_t" or "int64_t" or "size_t" or "dword" or "DWORD" or "long" or "short" or "unsignedint" or "UINT32" or "UINT64" or "UINT16";
 
     public static ShaderValue Vec(params double[] v) => new() { V = v };
 
@@ -54,6 +66,7 @@ public sealed class ShaderValue
     public ShaderValue Clone() => new()
     {
         V = V?.ToArray(),
+        Int = Int,
         Cols = Cols,
         Items = Items?.Select(i => i.Clone()).ToArray(),
         Fields = Fields?.ToDictionary(kv => kv.Key, kv => kv.Value.Clone()),

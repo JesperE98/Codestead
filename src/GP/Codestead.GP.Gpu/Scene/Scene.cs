@@ -18,6 +18,15 @@ public sealed class Scene
     /// <summary>RGBA; null when the frame is never cleared.</summary>
     public double[]? ClearColor { get; set; }
     public List<DrawCall> Draws { get; } = new();
+    /// <summary>
+    /// The first draws of <see cref="Draws"/> that the program makes once, before its render loop, into off-screen
+    /// targets (an environment map captured into a cube map, a look-up table): the frame's own draws follow.
+    /// </summary>
+    public int SetupDraws { get; set; }
+    /// <summary>The first <see cref="Ops"/> that belong to those draws.</summary>
+    public int SetupOps { get; set; }
+    /// <summary>What the setup draws left in their targets, kept between frames (the simulator's own; see Rasterizer).</summary>
+    internal object? SetupCache { get; set; }
     /// <summary>Off-screen render targets by id (framebuffer objects …); draws name them in <see cref="DrawCall.Target"/>.</summary>
     public Dictionary<string, RenderTarget> Targets { get; } = new(StringComparer.Ordinal);
     /// <summary>Clears and copies between draws, in program order (the window's first clear is <see cref="ClearColor"/>).</summary>

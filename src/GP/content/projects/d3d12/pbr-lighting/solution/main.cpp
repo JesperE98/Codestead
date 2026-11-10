@@ -1,7 +1,8 @@
 // A Direct3D 12 program in one file, modelled on Microsoft's D3D12HelloWorld samples
-// (D3D12HelloWindow, D3D12HelloTriangle, D3D12HelloTexture, D3D12HelloConstBuffers),
-// the depth buffer of the D3D12Bundles sample and floating-point render targets: a wooden
-// floor with six boxes, lit by four very bright lights that glow (bloom).
+// (D3D12HelloWindow, D3D12HelloTriangle, D3D12HelloTexture, D3D12HelloConstBuffers)
+// and the depth buffer of the D3D12Bundles sample: a grid of 7 x 7 spheres whose material
+// goes from rough to smooth and from plastic to metal, lit by four lights - physically
+// based rendering (PBR).
 
 #include <windows.h>
 #include <windowsx.h>
@@ -17,6 +18,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <algorithm>
 #include <chrono>
 #include <climits>
 #include <cmath>
@@ -24,6 +26,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 // The libraries to link: d3d12.lib, dxgi.lib and d3dcompiler.lib (Visual Studio reads these lines).
 #if defined(_MSC_VER)
@@ -58,8 +61,9 @@ inline UINT CalculateConstantBufferByteSize(UINT byteSize)
 }
 
 // The camera: where it is, the direction it looks in, and which way is up. Globals,
-// so that OnUpdate and the window's message handler can both use them.
-XMVECTOR cameraPos   = XMVectorSet(0.0f, 0.0f,  5.0f, 0.0f);
+// so that OnUpdate and the window's message handler can both use them. At (0, 0, 22)
+// looking down -z: far enough back to see the whole grid of spheres.
+XMVECTOR cameraPos   = XMVectorSet(0.0f, 0.0f, 22.0f, 0.0f);
 XMVECTOR cameraFront = XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f);
 XMVECTOR cameraUp    = XMVectorSet(0.0f, 1.0f,  0.0f, 0.0f);
 
@@ -76,27 +80,29 @@ float lastY =  600.0f / 2.0f;
 // Zoom: the field of view, in degrees.
 float fov   =  45.0f;
 
-// lighting info: the four lights' positions and colours (learnopengl's values) - white, red,
-// blue and green, 5 to 15 times brighter than a colour target with values from 0.0 to 1.0
-// can hold.
-XMFLOAT3 lightPositions[] =
+// lights: four white point lights in front of the grid's corners. Their colour is a
+// radiance far above 1.0 (300): light falls off with the square of the distance. XMFLOAT4,
+// because every element of an HLSL array in a constant buffer takes a full 16-byte row
+// (the fourth value is not used).
+XMFLOAT4 lightPositions[] =
 {
-    XMFLOAT3( 0.0f, 0.5f,  1.5f),
-    XMFLOAT3(-4.0f, 0.5f, -3.0f),
-    XMFLOAT3( 3.0f, 0.5f,  1.0f),
-    XMFLOAT3(-0.8f, 2.4f, -1.0f)
+    XMFLOAT4(-10.0f,  10.0f, 10.0f, 1.0f),
+    XMFLOAT4( 10.0f,  10.0f, 10.0f, 1.0f),
+    XMFLOAT4(-10.0f, -10.0f, 10.0f, 1.0f),
+    XMFLOAT4( 10.0f, -10.0f, 10.0f, 1.0f)
 };
-XMFLOAT3 lightColors[] =
+XMFLOAT4 lightColors[] =
 {
-    XMFLOAT3( 5.0f, 5.0f,  5.0f),
-    XMFLOAT3(10.0f, 0.0f,  0.0f),
-    XMFLOAT3( 0.0f, 0.0f, 15.0f),
-    XMFLOAT3( 0.0f, 5.0f,  0.0f)
+    XMFLOAT4(300.0f, 300.0f, 300.0f, 1.0f),
+    XMFLOAT4(300.0f, 300.0f, 300.0f, 1.0f),
+    XMFLOAT4(300.0f, 300.0f, 300.0f, 1.0f),
+    XMFLOAT4(300.0f, 300.0f, 300.0f, 1.0f)
 };
 
-// The exposure of the tone mapping: higher shows more of the dark parts, lower more of the
-// bright ones (learnopengl changes it with the Q and E keys).
-float exposure = 1.0f;
+// The grid of spheres: a few large spheres, so the material's details can be seen.
+int nrRows    = 3;
+int nrColumns = 3;
+float spacing = 6.0f;
 
 class D3D12App
 {
@@ -116,49 +122,28 @@ private:
         XMFLOAT3 position;
         XMFLOAT3 normal;
         XMFLOAT2 texCoord;
+        XMFLOAT3 tangent;    // the direction in which the texture's u grows, on the surface
     };
 
-    // The root constants: what the scene's shaders see as cbuffer ModelConstants. Two 4x4
-    // matrices and a float3 are 35 32-bit values: 35 32-bit root constants.
+    // The root constants: what the shaders see as cbuffer ModelConstants - the values of
+    // one draw. Two 4x4 matrices are 32 floats: 32 32-bit root constants. (The material
+    // comes from textures now.)
     struct ModelConstants
     {
         XMFLOAT4X4 model;
         XMFLOAT4X4 normalMatrix;    // transpose(inverse(model)), for the normals
-        XMFLOAT3 lightColor;        // the colour of a light cube (light_box.hlsl)
-    };
-
-    // The same root constants as the blur's pixel shader sees them: cbuffer BlurConstants.
-    struct BlurConstants
-    {
-        BOOL horizontal;    // TRUE: blur along x, FALSE: along y
-    };
-
-    // The same root constants as the final screen quad's pixel shader sees them: cbuffer
-    // HdrConstants, one float.
-    struct HdrConstants
-    {
-        float exposure;
-    };
-
-    // A light of the constant buffer (learnopengl's struct Light). Every element of an array
-    // starts a new 16-byte row, and a float3 never crosses a row: so Color starts the second
-    // row, and each float3 is followed by a float of padding.
-    struct Light
-    {
-        XMFLOAT3 Position;
-        float padding0;
-        XMFLOAT3 Color;
-        float padding1;
     };
 
     // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer, laid out as
-    // HLSL packs it.
+    // HLSL packs it - the values that are the same for every draw of a frame.
     struct SceneConstantBuffer
     {
         XMFLOAT4X4 view;
         XMFLOAT4X4 projection;
-        Light lights[4];
-        XMFLOAT3 viewPos;
+        // lights
+        XMFLOAT4 lightPositions[4];
+        XMFLOAT4 lightColors[4];
+        XMFLOAT3 camPos;
         float padding0;
     };
 
@@ -179,22 +164,24 @@ private:
     ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
     ComPtr<ID3D12DescriptorHeap> m_cbvSrvHeap;
     ComPtr<ID3D12PipelineState> m_pipelineState;
-    ComPtr<ID3D12PipelineState> m_lightBoxPipelineState;      // the light cubes' (learnopengl's shaderLight)
-    ComPtr<ID3D12PipelineState> m_blurPipelineState;          // the Gaussian blur's (learnopengl's shaderBlur)
-    ComPtr<ID3D12PipelineState> m_bloomFinalPipelineState;    // the final screen quad's (learnopengl's shaderBloomFinal)
     ComPtr<ID3D12GraphicsCommandList> m_commandList;
     UINT m_rtvDescriptorSize = 0;
     UINT m_cbvSrvDescriptorSize = 0;
 
     // App resources.
-    ComPtr<ID3D12Resource> m_vertexBuffer;
-    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
-    ComPtr<ID3D12Resource> m_woodTexture;
-    ComPtr<ID3D12Resource> m_containerTexture;
+    ComPtr<ID3D12Resource> m_sphereVertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW m_sphereVertexBufferView = {};
+    ComPtr<ID3D12Resource> m_sphereIndexBuffer;
+    D3D12_INDEX_BUFFER_VIEW m_sphereIndexBufferView = {};
+    UINT m_indexCount = 0;    // how many indices the sphere's triangle strip has
+    // The material's five textures.
+    ComPtr<ID3D12Resource> m_albedoTexture;
+    ComPtr<ID3D12Resource> m_normalTexture;
+    ComPtr<ID3D12Resource> m_metallicTexture;
+    ComPtr<ID3D12Resource> m_roughnessTexture;
+    ComPtr<ID3D12Resource> m_aoTexture;
     ComPtr<ID3D12Resource> m_constantBuffer;
     ComPtr<ID3D12Resource> m_depthStencil;
-    ComPtr<ID3D12Resource> m_colorBuffers[2];            // the scene and its bright parts, floating-point
-    ComPtr<ID3D12Resource> m_pingpongColorbuffers[2];    // the blur's two floating-point targets
     UINT8* m_pCbvDataBegin = nullptr;    // where the constant buffer is mapped (CPU address)
 
     // Synchronization objects.
@@ -207,6 +194,7 @@ private:
     void LoadAssets();
     void PopulateCommandList();
     void RenderScene();
+    void RenderSphere();
     void WaitForPreviousFrame();
     void GetHardwareAdapter(IDXGIFactory1* pFactory, IDXGIAdapter1** ppAdapter);
     void LoadTexture(const char* path, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex);
@@ -296,7 +284,7 @@ void D3D12App::LoadPipeline()
     {
         // Describe and create a render target view (RTV) descriptor heap.
         D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-        rtvHeapDesc.NumDescriptors = FrameCount + 4;    // the swap chain's buffers + the 2 colour buffers + the 2 ping-pong buffers
+        rtvHeapDesc.NumDescriptors = FrameCount;
         rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
@@ -311,7 +299,7 @@ void D3D12App::LoadPipeline()
         // Describe and create a shader resource view (SRV) and constant buffer view
         // (CBV) heap. Shader visible: the shaders can read the descriptors in it.
         D3D12_DESCRIPTOR_HEAP_DESC cbvSrvHeapDesc = {};
-        cbvSrvHeapDesc.NumDescriptors = 7;    // one CBV + the 2 textures' SRVs + the 2 colour buffers' SRVs + the 2 ping-pong buffers' SRVs
+        cbvSrvHeapDesc.NumDescriptors = 6;    // one CBV + the material's 5 textures' SRVs
         cbvSrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         cbvSrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&cbvSrvHeapDesc, IID_PPV_ARGS(&m_cbvSrvHeap)));
@@ -341,32 +329,28 @@ void D3D12App::LoadAssets()
 {
     // Create the root signature: what the shaders read besides the vertices.
     {
-        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1; 1 SRV at
-        // register t0 (the texture of the draw), for root parameter 2; and 1 SRV at register
-        // t1 (the final screen quad's second texture: the blurred bright parts), for root
-        // parameter 3.
-        CD3DX12_DESCRIPTOR_RANGE ranges[3];
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1, and
+        // 5 SRVs at registers t0 to t4 (the material's textures: consecutive descriptors in
+        // the heap), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
-        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-        ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0);
 
-        // Root parameter 0: root constants for register b0 - the values of a draw, which each
-        // pipeline's shaders read as their own cbuffer (the scene's model and normal matrices
-        // and the light cube's colour, a screen quad's settings) - for all shaders.
+        // Root parameter 0: root constants for register b0 - the values of a draw (the model
+        // and normal matrices), for all shaders.
         // Root parameter 1: a descriptor table with the constant buffer view (b1: the camera's
         // matrices and position and the lights), for all shaders.
-        // Root parameters 2 and 3: a descriptor table each with one texture's SRV (t0, t1),
-        // for the pixel shaders.
-        CD3DX12_ROOT_PARAMETER rootParameters[4];
+        // Root parameter 2: a descriptor table with the material's textures' SRVs, for the
+        // pixel shader.
+        CD3DX12_ROOT_PARAMETER rootParameters[3];
         rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
         rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
         rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
-        rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
 
         // A static sampler is part of the root signature itself (no descriptor needed).
-        // Sampler s0, for the wood and the container: linear filtering; texture coordinates
+        // Sampler s0, for the material's textures: linear filtering; texture coordinates
         // outside 0..1 wrap around (learnopengl: GL_REPEAT).
-        D3D12_STATIC_SAMPLER_DESC samplers[2] = {};
+        D3D12_STATIC_SAMPLER_DESC samplers[1] = {};
         samplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
         samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
         samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -381,15 +365,6 @@ void D3D12App::LoadAssets()
         samplers[0].RegisterSpace = 0;
         samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-        // Sampler s1, for the floating-point colour buffers: clamped to the edge (learnopengl:
-        // GL_CLAMP_TO_EDGE) - "we clamp to the edge as the blur filter would otherwise sample
-        // repeated texture values!"
-        samplers[1] = samplers[0];
-        samplers[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-        samplers[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-        samplers[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-        samplers[1].ShaderRegister = 1;
-
         CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
         rootSignatureDesc.Init(_countof(rootParameters), rootParameters, _countof(samplers), samplers, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
@@ -399,7 +374,7 @@ void D3D12App::LoadAssets()
         ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
     }
 
-    // Create the pipeline states, which includes compiling and loading shaders.
+    // Create the pipeline state, which includes compiling and loading shaders.
     {
         ComPtr<ID3DBlob> vertexShader;
         ComPtr<ID3DBlob> pixelShader;
@@ -411,16 +386,18 @@ void D3D12App::LoadAssets()
         UINT compileFlags = 0;
 #endif
 
-        // Compile the vertex shader (VSMain) and the pixel shader (PSMain) in bloom.hlsl.
-        ThrowIfFailed(D3DCompileFromFile(L"bloom.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
-        ThrowIfFailed(D3DCompileFromFile(L"bloom.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+        // Compile the vertex shader (VSMain) and the pixel shader (PSMain) in pbr.hlsl.
+        ThrowIfFailed(D3DCompileFromFile(L"pbr.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"pbr.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
 
-        // Define the vertex input layout: position, normal and texture coordinates (8 floats).
+        // Define the vertex input layout: position, normal, texture coordinates and tangent
+        // (11 floats).
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
         {
             { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
             { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
         };
 
         // Describe and create the graphics pipeline state object (PSO).
@@ -434,160 +411,144 @@ void D3D12App::LoadAssets()
         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
         psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);    // depth test (LESS) and depth writes on
         psoDesc.SampleMask = UINT_MAX;
+        // Triangle lists and triangle strips both are of the topology type TRIANGLE: which
+        // of the two a draw uses is set on the command list (IASetPrimitiveTopology).
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        // Two render targets (learnopengl: glDrawBuffers with two colour attachments): the
-        // pixel shader writes SV_Target0 into the first, SV_Target1 into the second. Both are
-        // floating-point colour buffers: 16 bits per channel, a half-precision float each.
-        psoDesc.NumRenderTargets = 2;
-        psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
-        psoDesc.RTVFormats[1] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+        psoDesc.NumRenderTargets = 1;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
         psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
         psoDesc.SampleDesc.Count = 1;
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
-
-        // The light cubes' pipeline state: the same vertex shader, the pixel shader of
-        // light_box.hlsl (learnopengl: Shader shaderLight("7.bloom.vs", "7.light_box.fs")).
-        ComPtr<ID3DBlob> lightBoxPixelShader;
-        ThrowIfFailed(D3DCompileFromFile(L"light_box.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &lightBoxPixelShader, nullptr));
-        psoDesc.PS = CD3DX12_SHADER_BYTECODE(lightBoxPixelShader.Get());
-        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_lightBoxPipelineState)));
-
-        // The blur's pipeline state: the shaders of blur.hlsl, one floating-point render target
-        // (a ping-pong buffer), and no depth buffer and so no depth test.
-        ComPtr<ID3DBlob> blurVertexShader;
-        ComPtr<ID3DBlob> blurPixelShader;
-        ThrowIfFailed(D3DCompileFromFile(L"blur.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &blurVertexShader, nullptr));
-        ThrowIfFailed(D3DCompileFromFile(L"blur.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &blurPixelShader, nullptr));
-        psoDesc.VS = CD3DX12_SHADER_BYTECODE(blurVertexShader.Get());
-        psoDesc.PS = CD3DX12_SHADER_BYTECODE(blurPixelShader.Get());
-        psoDesc.NumRenderTargets = 1;
-        psoDesc.RTVFormats[1] = DXGI_FORMAT_UNKNOWN;
-        psoDesc.DepthStencilState.DepthEnable = FALSE;
-        psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
-        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_blurPipelineState)));
-
-        // The final screen quad's pipeline state (learnopengl's shaderBloomFinal): the shaders
-        // of bloom_final.hlsl, the window's back buffer (8 bits per channel) as the render
-        // target, no depth test.
-        ComPtr<ID3DBlob> bloomFinalVertexShader;
-        ComPtr<ID3DBlob> bloomFinalPixelShader;
-        ThrowIfFailed(D3DCompileFromFile(L"bloom_final.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &bloomFinalVertexShader, nullptr));
-        ThrowIfFailed(D3DCompileFromFile(L"bloom_final.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &bloomFinalPixelShader, nullptr));
-        psoDesc.VS = CD3DX12_SHADER_BYTECODE(bloomFinalVertexShader.Get());
-        psoDesc.PS = CD3DX12_SHADER_BYTECODE(bloomFinalPixelShader.Get());
-        psoDesc.NumRenderTargets = 1;
-        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-        psoDesc.RTVFormats[1] = DXGI_FORMAT_UNKNOWN;
-        psoDesc.DepthStencilState.DepthEnable = FALSE;
-        psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
-        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_bloomFinalPipelineState)));
     }
+
     // Create the command list.
     ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)));
 
     // Command lists are created in the recording state. This one stays open until the
     // end of LoadAssets, where it is closed and executed once.
-    // Create the vertex buffer.
+
+    // Create the sphere's vertex buffer and index buffer (learnopengl's renderSphere): a
+    // sphere of radius 1 as one long triangle strip.
     {
-        // One vertex buffer for both objects: the cube (36 vertices) and the screen quad (6).
-        // A draw picks its object with the first vertex it starts from. The texture
-        // coordinates are learnopengl.com's with v flipped (1 - v): Direct3D's v = 0 is the
-        // image's top.
-        Vertex vertices[] =
+        std::vector<Vertex> vertices;
+        std::vector<UINT> indices;
+
+        // learnopengl uses 64 x 64 segments; 24 x 24 keep the course's preview fast (a real
+        // GPU handles the larger numbers easily).
+        const unsigned int X_SEGMENTS = 24;
+        const unsigned int Y_SEGMENTS = 24;
+        const float PI = 3.14159265359f;
+        for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
         {
-            // the cube: vertices 0 to 35 - learnopengl's renderCube, from -1 to 1 (2 units).
-            // positions                 normals                  texcoords
-            // back face
-            { { -1.0f, -1.0f, -1.0f }, {  0.0f,  0.0f, -1.0f }, {  0.0f,  1.0f } },
-            { {  1.0f,  1.0f, -1.0f }, {  0.0f,  0.0f, -1.0f }, {  1.0f,  0.0f } },
-            { {  1.0f, -1.0f, -1.0f }, {  0.0f,  0.0f, -1.0f }, {  1.0f,  1.0f } },
-            { {  1.0f,  1.0f, -1.0f }, {  0.0f,  0.0f, -1.0f }, {  1.0f,  0.0f } },
-            { { -1.0f, -1.0f, -1.0f }, {  0.0f,  0.0f, -1.0f }, {  0.0f,  1.0f } },
-            { { -1.0f,  1.0f, -1.0f }, {  0.0f,  0.0f, -1.0f }, {  0.0f,  0.0f } },
-            // front face
-            { { -1.0f, -1.0f,  1.0f }, {  0.0f,  0.0f,  1.0f }, {  0.0f,  1.0f } },
-            { {  1.0f, -1.0f,  1.0f }, {  0.0f,  0.0f,  1.0f }, {  1.0f,  1.0f } },
-            { {  1.0f,  1.0f,  1.0f }, {  0.0f,  0.0f,  1.0f }, {  1.0f,  0.0f } },
-            { {  1.0f,  1.0f,  1.0f }, {  0.0f,  0.0f,  1.0f }, {  1.0f,  0.0f } },
-            { { -1.0f,  1.0f,  1.0f }, {  0.0f,  0.0f,  1.0f }, {  0.0f,  0.0f } },
-            { { -1.0f, -1.0f,  1.0f }, {  0.0f,  0.0f,  1.0f }, {  0.0f,  1.0f } },
-            // left face
-            { { -1.0f,  1.0f,  1.0f }, { -1.0f,  0.0f,  0.0f }, {  1.0f,  1.0f } },
-            { { -1.0f,  1.0f, -1.0f }, { -1.0f,  0.0f,  0.0f }, {  1.0f,  0.0f } },
-            { { -1.0f, -1.0f, -1.0f }, { -1.0f,  0.0f,  0.0f }, {  0.0f,  0.0f } },
-            { { -1.0f, -1.0f, -1.0f }, { -1.0f,  0.0f,  0.0f }, {  0.0f,  0.0f } },
-            { { -1.0f, -1.0f,  1.0f }, { -1.0f,  0.0f,  0.0f }, {  0.0f,  1.0f } },
-            { { -1.0f,  1.0f,  1.0f }, { -1.0f,  0.0f,  0.0f }, {  1.0f,  1.0f } },
-            // right face
-            { {  1.0f,  1.0f,  1.0f }, {  1.0f,  0.0f,  0.0f }, {  1.0f,  1.0f } },
-            { {  1.0f, -1.0f, -1.0f }, {  1.0f,  0.0f,  0.0f }, {  0.0f,  0.0f } },
-            { {  1.0f,  1.0f, -1.0f }, {  1.0f,  0.0f,  0.0f }, {  1.0f,  0.0f } },
-            { {  1.0f, -1.0f, -1.0f }, {  1.0f,  0.0f,  0.0f }, {  0.0f,  0.0f } },
-            { {  1.0f,  1.0f,  1.0f }, {  1.0f,  0.0f,  0.0f }, {  1.0f,  1.0f } },
-            { {  1.0f, -1.0f,  1.0f }, {  1.0f,  0.0f,  0.0f }, {  0.0f,  1.0f } },
-            // bottom face
-            { { -1.0f, -1.0f, -1.0f }, {  0.0f, -1.0f,  0.0f }, {  0.0f,  0.0f } },
-            { {  1.0f, -1.0f, -1.0f }, {  0.0f, -1.0f,  0.0f }, {  1.0f,  0.0f } },
-            { {  1.0f, -1.0f,  1.0f }, {  0.0f, -1.0f,  0.0f }, {  1.0f,  1.0f } },
-            { {  1.0f, -1.0f,  1.0f }, {  0.0f, -1.0f,  0.0f }, {  1.0f,  1.0f } },
-            { { -1.0f, -1.0f,  1.0f }, {  0.0f, -1.0f,  0.0f }, {  0.0f,  1.0f } },
-            { { -1.0f, -1.0f, -1.0f }, {  0.0f, -1.0f,  0.0f }, {  0.0f,  0.0f } },
-            // top face
-            { { -1.0f,  1.0f, -1.0f }, {  0.0f,  1.0f,  0.0f }, {  0.0f,  0.0f } },
-            { {  1.0f,  1.0f,  1.0f }, {  0.0f,  1.0f,  0.0f }, {  1.0f,  1.0f } },
-            { {  1.0f,  1.0f, -1.0f }, {  0.0f,  1.0f,  0.0f }, {  1.0f,  0.0f } },
-            { {  1.0f,  1.0f,  1.0f }, {  0.0f,  1.0f,  0.0f }, {  1.0f,  1.0f } },
-            { { -1.0f,  1.0f, -1.0f }, {  0.0f,  1.0f,  0.0f }, {  0.0f,  0.0f } },
-            { { -1.0f,  1.0f,  1.0f }, {  0.0f,  1.0f,  0.0f }, {  0.0f,  1.0f } },
+            for (unsigned int y = 0; y <= Y_SEGMENTS; ++y)
+            {
+                float xSegment = (float)x / (float)X_SEGMENTS;
+                float ySegment = (float)y / (float)Y_SEGMENTS;
+                float xPos = std::cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
+                float yPos = std::cos(ySegment * PI);
+                float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
 
-            // the screen quad: vertices 36 to 41 - learnopengl's renderQuad, two triangles that
-            // fill the whole window, in normalized device coordinates, v = 0 at the top.
-            { { -1.0f,  1.0f,  0.0f }, {  0.0f,  0.0f,  1.0f }, {  0.0f,  0.0f } },
-            { { -1.0f, -1.0f,  0.0f }, {  0.0f,  0.0f,  1.0f }, {  0.0f,  1.0f } },
-            { {  1.0f, -1.0f,  0.0f }, {  0.0f,  0.0f,  1.0f }, {  1.0f,  1.0f } },
+                Vertex vertex;
+                vertex.position = XMFLOAT3(xPos, yPos, zPos);
+                vertex.normal = XMFLOAT3(xPos, yPos, zPos);
+                // learnopengl.com's uv is (xSegment, ySegment); v flipped (1 - v), because
+                // Direct3D's v = 0 is the image's top row (OpenGL's is the bottom row)
+                vertex.texCoord = XMFLOAT2(xSegment, 1.0f - ySegment);
+                // the tangent: the direction in which the texture's u grows on the surface (the position's derivative by u, normalised)
+                vertex.tangent = XMFLOAT3(-std::sin(xSegment * 2.0f * PI), 0.0f, std::cos(xSegment * 2.0f * PI));
+                vertices.push_back(vertex);
+            }
+        }
 
-            { { -1.0f,  1.0f,  0.0f }, {  0.0f,  0.0f,  1.0f }, {  0.0f,  0.0f } },
-            { {  1.0f, -1.0f,  0.0f }, {  0.0f,  0.0f,  1.0f }, {  1.0f,  1.0f } },
-            { {  1.0f,  1.0f,  0.0f }, {  0.0f,  0.0f,  1.0f }, {  1.0f,  0.0f } }
-        };
+        bool oddRow = false;
+        for (unsigned int y = 0; y < Y_SEGMENTS; ++y)
+        {
+            if (!oddRow) // even rows: y == 0, y == 2; and so on
+            {
+                for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
+                {
+                    indices.push_back(y       * (X_SEGMENTS + 1) + x);
+                    indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+                }
+            }
+            else
+            {
+                for (int x = X_SEGMENTS; x >= 0; --x)
+                {
+                    indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+                    indices.push_back(y       * (X_SEGMENTS + 1) + x);
+                }
+            }
+            oddRow = !oddRow;
+        }
+        m_indexCount = static_cast<UINT>(indices.size());
 
-        const UINT vertexBufferSize = sizeof(vertices);
+        const UINT vertexBufferSize = static_cast<UINT>(vertices.size() * sizeof(Vertex));
+        const UINT indexBufferSize = static_cast<UINT>(indices.size() * sizeof(UINT));
 
         // Note: using upload heaps to transfer static data like vert buffers is not
         // recommended. Every time the GPU needs it, the upload heap will be marshalled
         // over. Please read up on Default Heap usage. An upload heap is used here for
         // code simplicity and because there are very few verts to actually transfer.
         CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
-        CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+        CD3DX12_RESOURCE_DESC vertexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
         ThrowIfFailed(m_device->CreateCommittedResource(
             &heapProperties,
             D3D12_HEAP_FLAG_NONE,
-            &bufferDesc,
+            &vertexBufferDesc,
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
-            IID_PPV_ARGS(&m_vertexBuffer)));
+            IID_PPV_ARGS(&m_sphereVertexBuffer)));
 
         // Copy the vertex data to the vertex buffer.
         UINT8* pVertexDataBegin = nullptr;
         CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-        ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
-        memcpy(pVertexDataBegin, vertices, sizeof(vertices));
-        m_vertexBuffer->Unmap(0, nullptr);
+        ThrowIfFailed(m_sphereVertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+        memcpy(pVertexDataBegin, vertices.data(), vertexBufferSize);
+        m_sphereVertexBuffer->Unmap(0, nullptr);
 
         // Initialize the vertex buffer view.
-        m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
-        m_vertexBufferView.StrideInBytes = sizeof(Vertex);
-        m_vertexBufferView.SizeInBytes = vertexBufferSize;
+        m_sphereVertexBufferView.BufferLocation = m_sphereVertexBuffer->GetGPUVirtualAddress();
+        m_sphereVertexBufferView.StrideInBytes = sizeof(Vertex);
+        m_sphereVertexBufferView.SizeInBytes = vertexBufferSize;
+
+        // The index buffer, in the same way.
+        CD3DX12_RESOURCE_DESC indexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &indexBufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_sphereIndexBuffer)));
+
+        // Copy the index data to the index buffer.
+        UINT8* pIndexDataBegin = nullptr;
+        ThrowIfFailed(m_sphereIndexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
+        memcpy(pIndexDataBegin, indices.data(), indexBufferSize);
+        m_sphereIndexBuffer->Unmap(0, nullptr);
+
+        // Initialize the index buffer view: 32-bit indices.
+        m_sphereIndexBufferView.BufferLocation = m_sphereIndexBuffer->GetGPUVirtualAddress();
+        m_sphereIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+        m_sphereIndexBufferView.SizeInBytes = indexBufferSize;
     }
 
-    // Load the wood texture: its SRV goes into the heap after the CBV (slot 1). The upload
-    // buffer must stay alive until the command list that copies from it has executed (the
-    // end of this method waits for it).
-    ComPtr<ID3D12Resource> woodTextureUploadHeap;
-    LoadTexture("wood.png", m_woodTexture, woodTextureUploadHeap, 1);
-    // The container texture: slot 2.
-    ComPtr<ID3D12Resource> containerTextureUploadHeap;
-    LoadTexture("container2.png", m_containerTexture, containerTextureUploadHeap, 2);
+    // load PBR material textures: their SRVs go into the heap after the CBV, one after the
+    // other (slots 1 to 5), so one descriptor table covers them. The upload buffers must
+    // stay alive until the command list that copies from them has executed (the end of this
+    // method waits for it). All five are loaded as they are (UNORM): the albedo's colours
+    // are converted to linear in the shader, the others are data, not colours.
+    ComPtr<ID3D12Resource> albedoUploadHeap;
+    LoadTexture("albedo.png", m_albedoTexture, albedoUploadHeap, 1);
+    ComPtr<ID3D12Resource> normalUploadHeap;
+    LoadTexture("normal.png", m_normalTexture, normalUploadHeap, 2);
+    ComPtr<ID3D12Resource> metallicUploadHeap;
+    LoadTexture("metallic.png", m_metallicTexture, metallicUploadHeap, 3);
+    ComPtr<ID3D12Resource> roughnessUploadHeap;
+    LoadTexture("roughness.png", m_roughnessTexture, roughnessUploadHeap, 4);
+    ComPtr<ID3D12Resource> aoUploadHeap;
+    LoadTexture("ao.png", m_aoTexture, aoUploadHeap, 5);
 
     // Create the constant buffer.
     {
@@ -643,83 +604,6 @@ void D3D12App::LoadAssets()
             IID_PPV_ARGS(&m_depthStencil)));
 
         m_device->CreateDepthStencilView(m_depthStencil.Get(), &depthStencilDesc, m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
-    }
-
-    // configure (floating point) framebuffers: 2 floating point color buffers (1 for normal
-    // rendering, other for brightness threshold values) that the scene is drawn into at the
-    // same time (learnopengl: the hdrFBO's two GL_RGBA16F colour attachments). The scene uses
-    // the depth buffer above with them.
-    {
-        // Textures as big as the window with a half-precision float per channel, so they hold
-        // colours brighter than 1.0, that can be render targets (ALLOW_RENDER_TARGET). They
-        // start in the PIXEL_SHADER_RESOURCE state: every frame turns them into render targets
-        // for the scene, and back for the passes that read them.
-        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
-        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
-
-        // The colour they are usually cleared to (clearing to this colour is fastest).
-        const float optimizedClearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-        CD3DX12_CLEAR_VALUE clearValue(DXGI_FORMAT_R16G16B16A16_FLOAT, optimizedClearColor);
-
-        // Their shader resource views: a 2D texture each.
-        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-        srvDesc.Texture2D.MipLevels = 1;
-
-        for (UINT i = 0; i < 2; i++)
-        {
-            ThrowIfFailed(m_device->CreateCommittedResource(
-                &heapProperties,
-                D3D12_HEAP_FLAG_NONE,
-                &textureDesc,
-                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-                &clearValue,
-                IID_PPV_ARGS(&m_colorBuffers[i])));
-
-            // A render target view, to draw into it: in the RTV heap after the swap chain's
-            // buffers (slots FrameCount and FrameCount + 1).
-            CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount + i, m_rtvDescriptorSize);
-            m_device->CreateRenderTargetView(m_colorBuffers[i].Get(), nullptr, rtvHandle);
-
-            // A shader resource view, to read it: slots 3 and 4 of the CBV/SRV heap.
-            CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 3 + i, m_cbvSrvDescriptorSize);
-            m_device->CreateShaderResourceView(m_colorBuffers[i].Get(), &srvDesc, srvHandle);
-        }
-    }
-
-    // ping-pong-framebuffer for blurring: two more floating-point colour buffers of the same
-    // size (no depth buffer). Each blur pass reads one and draws into the other.
-    {
-        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
-        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
-        const float optimizedClearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-        CD3DX12_CLEAR_VALUE clearValue(DXGI_FORMAT_R16G16B16A16_FLOAT, optimizedClearColor);
-
-        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-        srvDesc.Texture2D.MipLevels = 1;
-
-        for (UINT i = 0; i < 2; i++)
-        {
-            ThrowIfFailed(m_device->CreateCommittedResource(
-                &heapProperties,
-                D3D12_HEAP_FLAG_NONE,
-                &textureDesc,
-                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-                &clearValue,
-                IID_PPV_ARGS(&m_pingpongColorbuffers[i])));
-
-            // Render target views in RTV heap slots FrameCount + 2 and FrameCount + 3, shader
-            // resource views in slots 5 and 6 of the CBV/SRV heap.
-            CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount + 2 + i, m_rtvDescriptorSize);
-            m_device->CreateRenderTargetView(m_pingpongColorbuffers[i].Get(), nullptr, rtvHandle);
-            CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 5 + i, m_cbvSrvDescriptorSize);
-            m_device->CreateShaderResourceView(m_pingpongColorbuffers[i].Get(), &srvDesc, srvHandle);
-        }
     }
 
     // Close the command list and execute it to begin the initial GPU setup.
@@ -779,16 +663,17 @@ void D3D12App::OnUpdate()
     XMStoreFloat4x4(&constantBufferData.view, XMMatrixTranspose(view));
     XMStoreFloat4x4(&constantBufferData.projection, XMMatrixTranspose(projection));
 
-    // set lighting uniforms: the lights (learnopengl: shader.setVec3("lights[0].Position", ...)
-    // and so on) and the camera's position.
-    for (int i = 0; i < 4; i++)
+    // The lights (learnopengl: shader.setVec3("lightPositions[0]", ...) and so on) and the
+    // camera's position.
+    for (unsigned int i = 0; i < sizeof(lightPositions) / sizeof(lightPositions[0]); ++i)
     {
-        constantBufferData.lights[i].Position = lightPositions[i];
-        constantBufferData.lights[i].Color = lightColors[i];
+        constantBufferData.lightPositions[i] = lightPositions[i];
+        constantBufferData.lightColors[i] = lightColors[i];
     }
-    XMStoreFloat3(&constantBufferData.viewPos, cameraPos);
+    XMStoreFloat3(&constantBufferData.camPos, cameraPos);
     memcpy(m_pCbvDataBegin, &constantBufferData, sizeof(constantBufferData));
 }
+
 // Render the scene.
 void D3D12App::OnRender()
 {
@@ -834,97 +719,27 @@ void D3D12App::PopulateCommandList()
     ID3D12DescriptorHeap* ppHeaps[] = { m_cbvSrvHeap.Get() };
     m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
     m_commandList->SetGraphicsRootDescriptorTable(1, m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart());
+    // Root parameter 2: the table with the material's five textures, from heap slot 1 on
+    // (learnopengl: glActiveTexture(GL_TEXTURE0 ... 4) + glBindTexture).
+    CD3DX12_GPU_DESCRIPTOR_HANDLE materialTextures(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, materialTextures);
 
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
-    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 
-    // 1. render scene into floating point framebuffer: both colour buffers (after the swap
-    // chain's buffers in the RTV heap) at once, and the depth buffer. The passes of the
-    // previous frame read the colour buffers: now they are written again.
-    CD3DX12_RESOURCE_BARRIER barriers[2] =
-    {
-        CD3DX12_RESOURCE_BARRIER::Transition(m_colorBuffers[0].Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET),
-        CD3DX12_RESOURCE_BARRIER::Transition(m_colorBuffers[1].Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET)
-    };
-    m_commandList->ResourceBarrier(2, barriers);
-
-    CD3DX12_CPU_DESCRIPTOR_HANDLE hdrRtvHandles[2] =
-    {
-        CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_rtvDescriptorSize),
-        CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount + 1, m_rtvDescriptorSize)
-    };
-    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
-    m_commandList->OMSetRenderTargets(2, hdrRtvHandles, FALSE, &dsvHandle);
-
-    const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    m_commandList->ClearRenderTargetView(hdrRtvHandles[0], clearColor, 0, nullptr);
-    m_commandList->ClearRenderTargetView(hdrRtvHandles[1], clearColor, 0, nullptr);
-    m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-    RenderScene();
-
-    // The scene and its bright parts are in the colour buffers: from now on pixel shaders read them.
-    barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(m_colorBuffers[0].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_colorBuffers[1].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    m_commandList->ResourceBarrier(2, barriers);
-
-    // 2. blur bright fragments with two-pass Gaussian Blur: 10 passes, each drawing the screen
-    // quad into one ping-pong buffer while reading the other - horizontal, vertical,
-    // horizontal ... The first pass reads the bright parts (colour buffer 1, heap slot 4).
-    bool horizontal = true, first_iteration = true;
-    unsigned int amount = 10;
-    m_commandList->SetPipelineState(m_blurPipelineState.Get());
-    for (unsigned int i = 0; i < amount; i++)
-    {
-        // The target: ping-pong buffer [horizontal] (RTV heap slot FrameCount + 2 + horizontal).
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_pingpongColorbuffers[horizontal].Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        m_commandList->ResourceBarrier(1, &barrier);
-        CD3DX12_CPU_DESCRIPTOR_HANDLE pingpongRtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount + 2 + horizontal, m_rtvDescriptorSize);
-        m_commandList->OMSetRenderTargets(1, &pingpongRtvHandle, FALSE, nullptr);
-
-        BlurConstants blurConstants = {};
-        blurConstants.horizontal = horizontal;
-        m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(BlurConstants) / 4, &blurConstants, 0);
-        // bind texture of other framebuffer (or scene if first iteration): the bright parts'
-        // SRV (heap slot 4) or ping-pong buffer [!horizontal]'s (slot 5 + !horizontal)
-        CD3DX12_GPU_DESCRIPTOR_HANDLE image(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), first_iteration ? 4 : 5 + !horizontal, m_cbvSrvDescriptorSize);
-        m_commandList->SetGraphicsRootDescriptorTable(2, image);
-        m_commandList->DrawInstanced(6, 1, 36, 0);    // the screen quad: vertices 36 to 41
-
-        // Done: the next pass reads it.
-        barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_pingpongColorbuffers[horizontal].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        m_commandList->ResourceBarrier(1, &barrier);
-
-        horizontal = !horizontal;
-        if (first_iteration)
-            first_iteration = false;
-    }
-
-    // 3. now render floating point color buffer to 2D quad and tonemap HDR colors to default
-    // framebuffer's (clamped) color range. Indicate that the back buffer will be used as a
-    // render target.
+    // Indicate that the back buffer will be used as a render target.
     CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     m_commandList->ResourceBarrier(1, &barrier);
 
-    // The back buffer, without a depth buffer: the screen quad needs no depth test.
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
-    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-    m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
-    // The final screen quad: its pipeline state, the scene (colour buffer 0, heap slot 3) as
-    // the texture of root parameter 2 and the blurred bright parts (ping-pong buffer
-    // [!horizontal]: the one the last pass drew into) as the texture of root parameter 3.
-    m_commandList->SetPipelineState(m_bloomFinalPipelineState.Get());
-    CD3DX12_GPU_DESCRIPTOR_HANDLE scene(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_cbvSrvDescriptorSize);
-    m_commandList->SetGraphicsRootDescriptorTable(2, scene);
-    CD3DX12_GPU_DESCRIPTOR_HANDLE bloomBlur(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 5 + !horizontal, m_cbvSrvDescriptorSize);
-    m_commandList->SetGraphicsRootDescriptorTable(3, bloomBlur);
-    // The exposure, as the root constants (cbuffer HdrConstants in bloom_final.hlsl).
-    HdrConstants hdrConstants = {};
-    hdrConstants.exposure = exposure;
-    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(HdrConstants) / 4, &hdrConstants, 0);
-    m_commandList->DrawInstanced(6, 1, 36, 0);
+    // Record commands.
+    const float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+    m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+    RenderScene();
 
     // Indicate that the back buffer will now be used to present.
     barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
@@ -933,73 +748,42 @@ void D3D12App::PopulateCommandList()
     ThrowIfFailed(m_commandList->Close());
 }
 
-// The scene (learnopengl's bloom.cpp): a large flat cube as the floor, six wooden boxes and
-// the four lights as small bright cubes - all with the one cube of the vertex buffer, each
-// with its model matrix and its normal matrix (root parameter 0). With row vectors the
-// matrices apply from left to right: scale, then rotate, then translate (learnopengl's
-// translate * rotate * scale). The normal matrix is the transpose of the inverse of the model
-// matrix; stored transposed for HLSL, that is the inverse itself.
+// The scene (learnopengl's lighting_textured.cpp): 3 x 3 large spheres, each with its model
+// matrix and its normal matrix in the root constants (root parameter 0). With row vectors
+// the matrices apply from left to right: scale, then rotate, then translate (learnopengl's
+// translate * rotate * scale). The normal matrix is the transpose of the inverse of the
+// model matrix; stored transposed for HLSL, that is the inverse itself.
 void D3D12App::RenderScene()
 {
-    // create one large cube that acts as the floor: the wood (heap slot 1)
-    CD3DX12_GPU_DESCRIPTOR_HANDLE woodTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
-    m_commandList->SetGraphicsRootDescriptorTable(2, woodTexture);
     ModelConstants modelConstants = {};
-    XMMATRIX model = XMMatrixScaling(12.5f, 0.5f, 12.5f) * XMMatrixTranslation(0.0f, -1.0f, 0.0f);
-    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
-    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
-    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
-    m_commandList->DrawInstanced(36, 1, 0, 0);    // the cube: vertices 0 to 35
-    // then create multiple cubes as the scenery: the container (heap slot 2)
-    CD3DX12_GPU_DESCRIPTOR_HANDLE containerTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
-    m_commandList->SetGraphicsRootDescriptorTable(2, containerTexture);
-    model = XMMatrixScaling(0.5f, 0.5f, 0.5f) * XMMatrixTranslation(0.0f, 1.5f, 0.0f);
-    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
-    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
-    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
-    m_commandList->DrawInstanced(36, 1, 0, 0);
-    model = XMMatrixScaling(0.5f, 0.5f, 0.5f) * XMMatrixTranslation(2.0f, 0.0f, 1.0f);
-    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
-    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
-    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
-    m_commandList->DrawInstanced(36, 1, 0, 0);
-    model = XMMatrixRotationAxis(XMVector3Normalize(XMVectorSet(1.0f, 0.0f, 1.0f, 0.0f)), XMConvertToRadians(60.0f))
-        * XMMatrixTranslation(-1.0f, -1.0f, 2.0f);
-    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
-    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
-    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
-    m_commandList->DrawInstanced(36, 1, 0, 0);
-    model = XMMatrixScaling(1.25f, 1.25f, 1.25f)
-        * XMMatrixRotationAxis(XMVector3Normalize(XMVectorSet(1.0f, 0.0f, 1.0f, 0.0f)), XMConvertToRadians(23.0f))
-        * XMMatrixTranslation(0.0f, 2.7f, 4.0f);
-    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
-    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
-    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
-    m_commandList->DrawInstanced(36, 1, 0, 0);
-    model = XMMatrixRotationAxis(XMVector3Normalize(XMVectorSet(1.0f, 0.0f, 1.0f, 0.0f)), XMConvertToRadians(124.0f))
-        * XMMatrixTranslation(-2.0f, 1.0f, -3.0f);
-    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
-    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
-    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
-    m_commandList->DrawInstanced(36, 1, 0, 0);
-    model = XMMatrixScaling(0.5f, 0.5f, 0.5f) * XMMatrixTranslation(-3.0f, 0.0f, 0.0f);
-    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
-    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
-    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
-    m_commandList->DrawInstanced(36, 1, 0, 0);
 
-    // finally show all the light sources as bright cubes: the light cubes' pipeline state,
-    // and each cube's colour in the root constants
-    m_commandList->SetPipelineState(m_lightBoxPipelineState.Get());
-    for (unsigned int i = 0; i < 4; i++)
+    // render rows*column number of spheres with material properties defined by textures (they all have the same material properties)
+    for (int row = 0; row < nrRows; ++row)
     {
-        model = XMMatrixScaling(0.25f, 0.25f, 0.25f) * XMMatrixTranslation(lightPositions[i].x, lightPositions[i].y, lightPositions[i].z);
-        XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
-        XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
-        modelConstants.lightColor = lightColors[i];
-        m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
-        m_commandList->DrawInstanced(36, 1, 0, 0);
+        for (int col = 0; col < nrColumns; ++col)
+        {
+            XMMATRIX model = XMMatrixScaling(2.4f, 2.4f, 2.4f)
+                * XMMatrixRotationY(XMConvertToRadians(90.0f)) // turn the middle of the textures towards the camera
+                * XMMatrixTranslation(
+                    (float)(col - (nrColumns / 2)) * spacing,
+                    (float)(row - (nrRows / 2)) * spacing,
+                    0.0f);
+            XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+            XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+            m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+            RenderSphere();
+        }
     }
+}
+
+// Draws the sphere (learnopengl's renderSphere): its vertices and indices, as one triangle
+// strip - every index after the first two makes a triangle with the two before it.
+void D3D12App::RenderSphere()
+{
+    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+    m_commandList->IASetVertexBuffers(0, 1, &m_sphereVertexBufferView);
+    m_commandList->IASetIndexBuffer(&m_sphereIndexBufferView);
+    m_commandList->DrawIndexedInstanced(m_indexCount, 1, 0, 0, 0);
 }
 
 void D3D12App::WaitForPreviousFrame()
@@ -1060,7 +844,7 @@ void D3D12App::GetHardwareAdapter(IDXGIFactory1* pFactory, IDXGIAdapter1** ppAda
 // uploadHeap, so that must stay alive until the command list has executed.
 void D3D12App::LoadTexture(const char* path, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex)
 {
-    // Load the image as RGBA (4 channels), the layout of DXGI_FORMAT_R8G8B8A8_UNORM_SRGB.
+    // Load the image as RGBA (4 channels), the layout of DXGI_FORMAT_R8G8B8A8_UNORM.
     // No vertical flip: in Direct3D, texture coordinate v = 0 is the image's top row.
     int width, height, nrChannels;
     unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 4);
@@ -1073,10 +857,7 @@ void D3D12App::LoadTexture(const char* path, ComPtr<ID3D12Resource>& texture, Co
     // It starts in the COPY_DEST state: the pixels are copied into it next.
     D3D12_RESOURCE_DESC textureDesc = {};
     textureDesc.MipLevels = 1;
-    // The image's colours are sRGB-encoded (gamma-corrected), like any photo or painted
-    // image: an _SRGB format makes sampling decode them to linear colours (learnopengl:
-    // loadTexture(..., true) - GL_SRGB).
-    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     textureDesc.Width = static_cast<UINT64>(width);
     textureDesc.Height = static_cast<UINT>(height);
     textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;

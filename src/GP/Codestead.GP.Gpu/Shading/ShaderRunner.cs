@@ -13,6 +13,20 @@ public sealed partial class ShaderRunner
     private readonly List<Dictionary<string, ShaderValue>> scopes = new();
     private int steps;
 
+    // A block's variables live in a dictionary; a loop body runs thousands of times per pixel, so the dictionaries
+    // are used again instead of made anew.
+    private readonly Stack<Dictionary<string, ShaderValue>> freeScopes = new();
+
+    private Dictionary<string, ShaderValue> RentScope() => freeScopes.Count > 0 ? freeScopes.Pop() : new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+
+    private void PopScope()
+    {
+        var scope = scopes[^1];
+        scopes.RemoveAt(scopes.Count - 1);
+        scope.Clear();
+        if (freeScopes.Count < 64) freeScopes.Push(scope);
+    }
+
     /// <summary>The shader's globals: inputs, outputs, uniforms and constants (and gl_Position …).</summary>
     public Dictionary<string, ShaderValue> Globals { get; } = new(StringComparer.Ordinal);
 
@@ -24,6 +38,9 @@ public sealed partial class ShaderRunner
 
     /// <summary>Reads a cube map: (name, direction) → RGBA, or null when the name is not a cube map.</summary>
     public Func<string, double, double, double, double[]?>? SampleCube { get; set; }
+
+    /// <summary>Reads a cube map at a mip level (textureLod, SampleLevel): (name, direction, lod) → RGBA, or null.</summary>
+    public Func<string, double, double, double, double, double[]?>? SampleCubeLod { get; set; }
 
     /// <summary>Texture sizes for textureSize(): name → (width, height).</summary>
     public Func<string, (int Width, int Height)?>? TextureSize { get; set; }
@@ -108,10 +125,10 @@ public sealed partial class ShaderRunner
     public void Assign(Expr target, ShaderValue value) => Store(target, value);
 
     /// <summary>
-    /// Statements per run: a shader's are few; the C++ program's setup (Lenient) may loop over hundreds of objects
-    /// (learnopengl's 500 asteroids).
+    /// Steps per run: the C++ program's setup may loop over hundreds of objects (learnopengl's 500 asteroids), and a
+    /// shader that integrates over a hemisphere takes a thousand samples per pixel (an irradiance convolution).
     /// </summary>
-    private int MaxSteps => Lenient ? 400000 : 20000;
+    private const int MaxSteps = 400000;
 
     private GlibcRandom? random;
 
@@ -183,6 +200,7 @@ public sealed partial class ShaderRunner
             return ShaderValue.Struct(s.Fields.ToDictionary(f => f.Id, f => Default(f.Type, f.ArraySize)));
         int n = ComponentCount(type);
         if (MatrixSize(type) is int m and > 0) return ShaderValue.Identity(m);
+        if (n == 1 && ShaderValue.IsIntType(type)) return ShaderValue.Integer(0);
         return n > 0 ? ShaderValue.Vec(new double[n]) : ShaderValue.Str(type);
     }
 
@@ -202,18 +220,18 @@ public sealed partial class ShaderRunner
 
     private ShaderValue? Invoke(Function f, IReadOnlyList<ShaderValue> args)
     {
-        var scope = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+        var scope = RentScope();
         for (int i = 0; i < f.Params.Count; i++)
             scope[f.Params[i].Id] = i < args.Count ? Coerce(f.Params[i].Type, args[i]).Clone() : Default(f.Params[i].Type);
         scopes.Add(scope);
         try
         {
             var r = Run(f.Body);
-            return r.Returned ? r.Value : null;
+            return r.Returned ? (r.Value is null ? null : Coerce(f.ReturnType, r.Value)) : null;
         }
         finally
         {
-            scopes.RemoveAt(scopes.Count - 1);
+            PopScope();
         }
     }
 
@@ -227,11 +245,12 @@ public sealed partial class ShaderRunner
 
     private Flow Run(IReadOnlyList<Stmt> body)
     {
-        scopes.Add(new Dictionary<string, ShaderValue>(StringComparer.Ordinal));
+        scopes.Add(RentScope());
         try
         {
-            foreach (var s in body)
+            for (int index = 0; index < body.Count; index++)
             {
+                var s = body[index];
                 if (++steps > MaxSteps) throw new ShaderRuntimeException("the shader runs too long for the simulator", s.Line);
                 Flow flow;
                 try
@@ -248,7 +267,7 @@ public sealed partial class ShaderRunner
         }
         finally
         {
-            scopes.RemoveAt(scopes.Count - 1);
+            PopScope();
         }
     }
 
@@ -286,7 +305,7 @@ public sealed partial class ShaderRunner
                 return Truthy(Eval(i.Condition)) ? Run(i.Then) : i.Else is not null ? Run(i.Else) : default;
             case For f:
             {
-                scopes.Add(new Dictionary<string, ShaderValue>(StringComparer.Ordinal));
+                scopes.Add(RentScope());
                 try
                 {
                     if (f.Init is not null) Exec(f.Init);
@@ -301,7 +320,7 @@ public sealed partial class ShaderRunner
                 }
                 finally
                 {
-                    scopes.RemoveAt(scopes.Count - 1);
+                    PopScope();
                 }
             }
             case ExprStmt e:
@@ -311,7 +330,7 @@ public sealed partial class ShaderRunner
             {
                 var container = Eval(fe.Container);
                 var items = container.Items ?? container.Map?.Values.ToArray() ?? (container.V?.Select(ShaderValue.Scalar).ToArray()) ?? [];
-                scopes.Add(new Dictionary<string, ShaderValue>(StringComparer.Ordinal));
+                scopes.Add(RentScope());
                 try
                 {
                     foreach (var item in items.Take(4096))
@@ -324,7 +343,7 @@ public sealed partial class ShaderRunner
                 }
                 finally
                 {
-                    scopes.RemoveAt(scopes.Count - 1);
+                    PopScope();
                 }
             }
             default:
@@ -388,6 +407,12 @@ public sealed partial class ShaderRunner
                 if (owner.V is not null && Swizzle(m.Field) is { } idx)
                 {
                     var src = value.V ?? [0];
+                    // A number (f.x = …) gets a new value: numbers are shared (a literal's value serves every use).
+                    if (owner.V.Length == 1 && !owner.IsMatrix && idx is [0])
+                    {
+                        Store(m.Target, owner.Int ? ShaderValue.Integer(Math.Truncate(src[0])) : ShaderValue.Scalar(src[0]));
+                        return;
+                    }
                     for (int k = 0; k < idx.Length; k++)
                         if (idx[k] < owner.V.Length) owner.V[idx[k]] = src[Math.Min(k, src.Length - 1)];
                     return;
@@ -429,7 +454,7 @@ public sealed partial class ShaderRunner
                     return;
                 }
                 int at = (int)Math.Floor(atValue.X);
-                if (owner.Items is not null && at >= 0 && at < owner.Items.Length) owner.Items[at] = value;
+                if (owner.Items is not null && at >= 0 && at < owner.Items.Length) owner.Items[at] = value.Int && !owner.Items[at].Int ? ShaderValue.Scalar(value.X) : value;
                 else if (owner.V is not null && at >= 0 && at < owner.V.Length && owner.Cols == 0) owner.V[at] = value.X;
                 else if (owner.IsMatrix && at >= 0 && at < owner.Cols)
                     for (int r = 0; r < owner.Cols; r++) owner.V![at * owner.Cols + r] = value.Padded(owner.Cols)[r];
@@ -444,6 +469,8 @@ public sealed partial class ShaderRunner
     /// <summary>A value stored into a variable keeps the variable's number of components (vec3 v = vec4(…) is not allowed, but float → vecN broadcasts).</summary>
     private static ShaderValue Like(ShaderValue old, ShaderValue value)
     {
+        // A float variable given an integer holds a float (x = 1; x / 2 is 0.5).
+        if (value.Int && old.V is { Length: 1 } && !old.Int) return ShaderValue.Scalar(value.X);
         if (old.V is null || value.V is null || old.IsMatrix || value.IsMatrix || old.V.Length == value.V.Length) return value;
         if (value.V.Length == 1) return ShaderValue.Vec(Enumerable.Repeat(value.V[0], old.V.Length).ToArray());
         return ShaderValue.Vec(value.Padded(old.V.Length));

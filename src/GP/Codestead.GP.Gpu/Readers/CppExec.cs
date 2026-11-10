@@ -65,7 +65,11 @@ public sealed class CppExec
         if (helper is not { } h) return null;
         var values = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
         for (int i = 0; i < h.Params.Count && i < args.Count; i++)
-            values[h.Params[i].Name] = Runner.EvalArg(args[i]).Clone();
+        {
+            // The parameters' types are not read: numbers come in as plain numbers.
+            var arg = Runner.EvalArg(args[i]);
+            values[h.Params[i].Name] = arg.Int ? ShaderValue.Scalar(arg.X) : arg.Clone();
+        }
         helperDepth++;
         try
         {
@@ -163,7 +167,16 @@ public sealed class CppExec
     }
 
     /// <summary>Runs C++ statements (text).</summary>
-    public void Run(string code) => Runner.RunStatements(ShaderParser.ParseStatementsLenient(CppSource.Prepare(code)));
+    public void Run(string code)
+    {
+        // A statement in a loop runs many times (a sphere's vertices, a grid of objects): parsed once.
+        if (!parsedStatements.TryGetValue(code, out var statements))
+            parsedStatements[code] = statements = ShaderParser.ParseStatementsLenient(CppSource.Prepare(code));
+        Runner.RunStatements(statements);
+    }
+
+    private readonly Dictionary<string, List<Stmt>> parsedStatements = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, Expr?> parsedExpressions = new(StringComparer.Ordinal);
 
     /// <summary>Runs a function's body (by name), if the file defines it.</summary>
     public bool RunFunction(string name)
@@ -177,13 +190,22 @@ public sealed class CppExec
     public ShaderValue? Eval(string expr)
     {
         if (string.IsNullOrWhiteSpace(expr)) return null;
+        if (!parsedExpressions.TryGetValue(expr, out var parsed))
+        {
+            try
+            {
+                parsed = ShaderParser.ParseExpression(CppSource.Prepare(expr));
+            }
+            catch (ShaderSyntaxException)
+            {
+                parsed = null;
+            }
+            parsedExpressions[expr] = parsed;
+        }
+        if (parsed is null) return null;
         try
         {
-            return Runner.Evaluate(ShaderParser.ParseExpression(CppSource.Prepare(expr)));
-        }
-        catch (ShaderSyntaxException)
-        {
-            return null;
+            return Runner.Evaluate(parsed);
         }
         catch (ShaderRuntimeException)
         {

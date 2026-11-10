@@ -1,0 +1,994 @@
+=== task: prefilter-map
+--- file: main.cpp
+--- find:
+    glm::mat4 projectionView;
+--- replace:
+    glm::mat4 projectionView;
+    float roughness; // prefilter.frag: the roughness the mip level is filtered for
+--- file: main.cpp
+--- find:
+    // TODO: the pipeline that pre-filters the environment map (learnopengl's prefilterShader)
+--- replace:
+    VkPipeline prefilterPipeline; // learnopengl's prefilterShader
+--- file: main.cpp
+--- find:
+    VkImageView irradianceImageView;
+--- replace:
+    VkImageView irradianceImageView;
+
+    // the pre-filtered environment map (learnopengl's prefilterMap): a cube map with 5 mip levels
+    VkImage prefilterImage;
+    VkDeviceMemory prefilterImageMemory;
+    VkImageView prefilterImageView;
+--- file: main.cpp
+--- find:
+    VkDescriptorSet irradianceDescriptorSet; // the uniform buffer and the irradiance cube map
+--- replace:
+    VkDescriptorSet irradianceDescriptorSet; // the uniform buffer and the irradiance cube map
+    VkDescriptorSet prefilterDescriptorSet; // the uniform buffer and the pre-filtered environment map
+--- file: main.cpp
+--- find:
+        // TODO: the pipeline that pre-filters the environment map (prefilterPipeline)
+--- replace:
+        createPipeline("shaders/cubemap.vert.spv", "shaders/prefilter.frag.spv", captureRenderPass, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, prefilterPipeline);
+--- file: main.cpp
+--- find:
+        // pbr: setup cubemap to render to
+        createCubemap(128, 1, envCubemapImage, envCubemapImageMemory, envCubemapImageView);
+--- replace:
+        // pbr: setup cubemap to render to, with all its mip levels (128, 64 ... 1: 8 levels) - enable pre-filter mipmap
+        // sampling (combatting visible dots artifact)
+        createCubemap(128, 8, envCubemapImage, envCubemapImageMemory, envCubemapImageView);
+--- file: main.cpp
+--- find:
+        // TODO: pbr: create the pre-filter cube map (prefilter, 64 x 64 with 5 mip levels)
+--- replace:
+        // pbr: create a pre-filter cubemap with 5 mip levels (64, 32, 16, 8, 4)
+        createCubemap(64, 5, prefilterImage, prefilterImageMemory, prefilterImageView);
+--- file: main.cpp
+--- find:
+        createTextureDescriptorSet(irradianceImageView, clampSampler, irradianceDescriptorSet);
+--- replace:
+        createTextureDescriptorSet(irradianceImageView, clampSampler, irradianceDescriptorSet);
+        createTextureDescriptorSet(prefilterImageView, clampSampler, prefilterDescriptorSet);
+--- file: main.cpp
+--- find:
+        // pbr: convert HDR equirectangular environment map to cubemap equivalent
+        renderToCubemap(equirectangularToCubemapPipeline, hdrDescriptorSet, envCubemapImage, 128);
+        // pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
+        renderToCubemap(irradiancePipeline, envDescriptorSet, irradianceImage, 32);
+        // TODO: pbr: render a rougher reflection of the environment into each mip level of the pre-filter cube map
+--- replace:
+        // pbr: convert HDR equirectangular environment map to cubemap equivalent
+        renderToCubemap(equirectangularToCubemapPipeline, hdrDescriptorSet, envCubemapImage, 0, 128, 0.0f);
+        // then generate mipmaps from first mip face (combatting visible dots artifact) - learnopengl: glGenerateMipmap(GL_TEXTURE_CUBE_MAP)
+        generateMipmaps(envCubemapImage, VK_FORMAT_R16G16B16A16_SFLOAT, 128, 128, 8, 6);
+        // pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
+        renderToCubemap(irradiancePipeline, envDescriptorSet, irradianceImage, 0, 32, 0.0f);
+        // pbr: run a quasi monte-carlo simulation on the environment lighting to create a prefilter (cube)map.
+        unsigned int maxMipLevels = 5;
+        for (unsigned int mip = 0; mip < maxMipLevels; ++mip) {
+            // the size of the mip level: each one half the one before
+            unsigned int mipWidth = static_cast<unsigned int>(64 * std::pow(0.5, mip));
+
+            float roughness = (float)mip / (float)(maxMipLevels - 1);
+            renderToCubemap(prefilterPipeline, envDescriptorSet, prefilterImage, mip, mipWidth, roughness);
+        }
+--- file: main.cpp
+--- find:
+        vkFreeMemory(device, irradianceImageMemory, nullptr);
+--- replace:
+        vkFreeMemory(device, irradianceImageMemory, nullptr);
+
+        vkDestroyImageView(device, prefilterImageView, nullptr);
+        vkDestroyImage(device, prefilterImage, nullptr);
+        vkFreeMemory(device, prefilterImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, irradiancePipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, irradiancePipeline, nullptr);
+        vkDestroyPipeline(device, prefilterPipeline, nullptr);
+        // TODO: destroy the BRDF pipeline and the screen quad's
+--- file: main.cpp
+--- find:
+        imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+--- replace:
+        // TRANSFER_SRC and TRANSFER_DST: generateMipmaps() blits one mip level into the next
+        imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+--- file: main.cpp
+--- find:
+        // four descriptor sets (the spheres', the HDR image's, the environment cube map's, the irradiance map's): each
+        // takes what the layout has - one uniform buffer and one image -, even when the image stays empty
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 4;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 4;
+--- replace:
+        // five descriptor sets (the spheres', the HDR image's, the environment cube map's, the irradiance map's, the
+        // pre-filter map's): each takes what the layout has - one uniform buffer and one image -, even when the image
+        // stays empty
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 5;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 5;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 4;
+--- replace:
+        poolInfo.maxSets = 5;
+--- file: main.cpp
+--- find:
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &envDescriptorSet, 0, nullptr);
+        //vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &irradianceDescriptorSet, 0, nullptr); // display irradiance map
+        renderCube(commandBuffer);
+--- replace:
+        //vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &envDescriptorSet, 0, nullptr);
+        //vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &irradianceDescriptorSet, 0, nullptr); // display irradiance map
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &prefilterDescriptorSet, 0, nullptr); // display prefilter map
+        renderCube(commandBuffer);
+--- file: main.cpp
+--- find:
+    // learnopengl's capture loop: the cube drawn six times with one of the capture pipelines, each time into another
+    // face of a cube map (size x size pixels), seen from the centre of the cube towards that face. descriptorSet holds
+    // the image the pipeline's fragment shader reads. Recorded into a one-time command buffer and run at once.
+    void renderToCubemap(VkPipeline pipeline, VkDescriptorSet descriptorSet, VkImage cubemapImage, uint32_t size) {
+--- replace:
+    // learnopengl's capture loop: the cube drawn six times with one of the capture pipelines, each time into another
+    // face of a cube map - into its mip level mipLevel, size x size pixels -, seen from the centre of the cube towards
+    // that face. descriptorSet holds the image the pipeline's fragment shader reads, roughness is for prefilter.frag.
+    // Recorded into a one-time command buffer and run at once.
+    void renderToCubemap(VkPipeline pipeline, VkDescriptorSet descriptorSet, VkImage cubemapImage, uint32_t mipLevel, uint32_t size, float roughness) {
+--- file: main.cpp
+--- find:
+        // a view of each face alone (one layer as a 2D image) and a framebuffer with it as the colour attachment -
+        // learnopengl: glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, ...)
+--- replace:
+        // a view of each face alone (one layer and one mip level as a 2D image) and a framebuffer with it as the colour
+        // attachment - learnopengl: glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+        // GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap, mip)
+--- file: main.cpp
+--- find:
+            viewInfo.subresourceRange.baseMipLevel = 0;
+            viewInfo.subresourceRange.levelCount = 1;
+            viewInfo.subresourceRange.baseArrayLayer = i; // face i
+--- replace:
+            viewInfo.subresourceRange.baseMipLevel = mipLevel;
+            viewInfo.subresourceRange.levelCount = 1;
+            viewInfo.subresourceRange.baseArrayLayer = i; // face i
+--- file: main.cpp
+--- find:
+            constants.projectionView = captureProjection * captureViews[i];
+--- replace:
+            constants.projectionView = captureProjection * captureViews[i];
+            constants.roughness = roughness;
+--- file: shaders/background.frag
+--- find:
+    vec3 envColor = textureLod(environmentMap, fragWorldPos, 0.0).rgb;
+--- replace:
+    vec3 envColor = textureLod(environmentMap, fragWorldPos, 1.2).rgb; // a blurry mip level of the pre-filter map
+--- file: shaders/prefilter.frag
+--- find:
+// TODO: ImportanceSampleGGX(Xi, N, roughness): a halfway vector around N, distributed like the GGX lobe of this roughness
+--- replace:
+vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness) {
+    float a = roughness*roughness;
+
+    float phi = 2.0 * PI * Xi.x;
+    float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a*a - 1.0) * Xi.y));
+    float sinTheta = sqrt(1.0 - cosTheta*cosTheta);
+
+    // from spherical coordinates to cartesian coordinates - halfway vector
+    vec3 H;
+    H.x = cos(phi) * sinTheta;
+    H.y = sin(phi) * sinTheta;
+    H.z = cosTheta;
+
+    // from tangent-space H vector to world-space sample vector
+    vec3 up        = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+    vec3 tangent   = normalize(cross(up, N));
+    vec3 bitangent = cross(N, tangent);
+
+    vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
+    return normalize(sampleVec);
+}
+--- file: shaders/prefilter.frag
+--- find:
+    // TODO: the average of the environment's light from SAMPLE_COUNT (128) importance-sampled directions, weighted by NdotL
+    vec3 prefilteredColor = vec3(0.0);
+--- replace:
+    const uint SAMPLE_COUNT = 128u;
+    vec3 prefilteredColor = vec3(0.0);
+    float totalWeight = 0.0;
+
+    for (uint i = 0u; i < SAMPLE_COUNT; ++i) {
+        // generates a sample vector that's biased towards the preferred alignment direction (importance sampling).
+        vec2 Xi = Hammersley(i, SAMPLE_COUNT);
+        vec3 H = ImportanceSampleGGX(Xi, N, roughness);
+        vec3 L  = normalize(2.0 * dot(V, H) * H - V);
+
+        float NdotL = max(dot(N, L), 0.0);
+        if (NdotL > 0.0) {
+            // sample from the environment's mip level based on roughness/pdf
+            float D   = DistributionGGX(N, H, roughness);
+            float NdotH = max(dot(N, H), 0.0);
+            float HdotV = max(dot(H, V), 0.0);
+            float pdf = D * NdotH / (4.0 * HdotV) + 0.0001;
+
+            float resolution = 128.0; // resolution of source cubemap (per face)
+            float saTexel  = 4.0 * PI / (6.0 * resolution * resolution);
+            float saSample = 1.0 / (float(SAMPLE_COUNT) * pdf + 0.0001);
+
+            float mipLevel = roughness == 0.0 ? 0.0 : 0.5 * log2(saSample / saTexel);
+
+            prefilteredColor += textureLod(environmentMap, L, mipLevel).rgb * NdotL;
+            totalWeight      += NdotL;
+        }
+    }
+
+    prefilteredColor = prefilteredColor / totalWeight;
+
+=== task: brdf-lut
+--- file: main.cpp
+--- find:
+    VkRenderPass captureRenderPass; // draws into one face of a floating point cube map (learnopengl's captureFBO)
+--- replace:
+    VkRenderPass captureRenderPass; // draws into one face of a floating point cube map (learnopengl's captureFBO)
+    VkRenderPass brdfRenderPass; // the same for the two-channel lookup texture
+--- file: main.cpp
+--- find:
+    // TODO: the pipeline that integrates the BRDF (learnopengl's brdfShader) and the one that shows a texture on the screen quad
+--- replace:
+    VkPipeline brdfPipeline; // learnopengl's brdfShader
+    VkPipeline debugQuadPipeline; // shows a texture on the screen quad
+--- file: main.cpp
+--- find:
+    VkImageView prefilterImageView;
+--- replace:
+    VkImageView prefilterImageView;
+
+    // the BRDF lookup texture (learnopengl's brdfLUTTexture)
+    VkImage brdfLUTImage;
+    VkDeviceMemory brdfLUTImageMemory;
+    VkImageView brdfLUTImageView;
+--- file: main.cpp
+--- find:
+    VkSampler clampSampler; // linear filtering, clamp to edge: for the HDR image and the cube maps
+--- replace:
+    VkSampler clampSampler; // linear filtering, clamp to edge: for the HDR image, the cube maps and the lookup texture
+--- file: main.cpp
+--- find:
+    VkDescriptorSet prefilterDescriptorSet; // the uniform buffer and the pre-filtered environment map
+--- replace:
+    VkDescriptorSet prefilterDescriptorSet; // the uniform buffer and the pre-filtered environment map
+    VkDescriptorSet brdfLUTDescriptorSet; // the uniform buffer and the BRDF lookup texture
+--- file: main.cpp
+--- find:
+        createCaptureRenderPass(VK_FORMAT_R16G16B16A16_SFLOAT, captureRenderPass);
+--- replace:
+        createCaptureRenderPass(VK_FORMAT_R16G16B16A16_SFLOAT, captureRenderPass);
+        // the lookup texture's render pass: two 16-bit float channels (learnopengl: GL_RG16F)
+        createCaptureRenderPass(VK_FORMAT_R16G16_SFLOAT, brdfRenderPass);
+--- file: main.cpp
+--- find:
+        // TODO: the pipeline that integrates the BRDF (brdfPipeline) and the one that shows a texture on the screen quad (debugQuadPipeline)
+--- replace:
+        // the screen quad (a triangle list): into the lookup texture, and - to look at that texture - into the window
+        createPipeline("shaders/brdf.vert.spv", "shaders/brdf.frag.spv", brdfRenderPass, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, brdfPipeline);
+        createPipeline("shaders/brdf.vert.spv", "shaders/debug_quad.frag.spv", renderPass, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, debugQuadPipeline);
+--- file: main.cpp
+--- find:
+        // TODO: pbr: create the 2D lookup texture (brdfLUT, 128 x 128, two 16-bit float channels)
+--- replace:
+        // pbr: the 2D LUT: an image to draw into and to sample, with two 16-bit float channels
+        createImage(128, 128, 1, VK_FORMAT_R16G16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, brdfLUTImage, brdfLUTImageMemory);
+        brdfLUTImageView = createImageView(brdfLUTImage, VK_FORMAT_R16G16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+--- file: main.cpp
+--- find:
+        createTextureDescriptorSet(prefilterImageView, clampSampler, prefilterDescriptorSet);
+--- replace:
+        createTextureDescriptorSet(prefilterImageView, clampSampler, prefilterDescriptorSet);
+        createTextureDescriptorSet(brdfLUTImageView, clampSampler, brdfLUTDescriptorSet);
+--- file: main.cpp
+--- find:
+        // TODO: pbr: render the 2D lookup texture from the BRDF equations
+--- replace:
+        // pbr: generate a 2D LUT from the BRDF equations used.
+        renderBrdfLUT();
+--- file: main.cpp
+--- find:
+        vkFreeMemory(device, prefilterImageMemory, nullptr);
+--- replace:
+        vkFreeMemory(device, prefilterImageMemory, nullptr);
+
+        vkDestroyImageView(device, brdfLUTImageView, nullptr);
+        vkDestroyImage(device, brdfLUTImage, nullptr);
+        vkFreeMemory(device, brdfLUTImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        // TODO: destroy the BRDF pipeline and the screen quad's
+--- replace:
+        vkDestroyPipeline(device, brdfPipeline, nullptr);
+        vkDestroyPipeline(device, debugQuadPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyRenderPass(device, captureRenderPass, nullptr);
+--- replace:
+        vkDestroyRenderPass(device, captureRenderPass, nullptr);
+        vkDestroyRenderPass(device, brdfRenderPass, nullptr);
+--- file: main.cpp
+--- find:
+        // five descriptor sets (the spheres', the HDR image's, the environment cube map's, the irradiance map's, the
+        // pre-filter map's): each takes what the layout has - one uniform buffer and one image -, even when the image
+        // stays empty
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 5;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 5;
+--- replace:
+        // six descriptor sets (the spheres', the HDR image's, the environment cube map's, the irradiance map's, the
+        // pre-filter map's, the lookup texture's): each takes what the layout has - one uniform buffer and one image -,
+        // even when the image stays empty
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 6;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 6;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 5;
+--- replace:
+        poolInfo.maxSets = 6;
+--- file: main.cpp
+--- find:
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &prefilterDescriptorSet, 0, nullptr); // display prefilter map
+        renderCube(commandBuffer);
+--- replace:
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &prefilterDescriptorSet, 0, nullptr); // display prefilter map
+        renderCube(commandBuffer);
+
+        // render BRDF map to screen
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, debugQuadPipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &brdfLUTDescriptorSet, 0, nullptr);
+        renderQuad(commandBuffer);
+--- file: main.cpp
+--- find:
+    // TODO: renderBrdfLUT(): draw the screen quad with brdfPipeline into the lookup texture
+--- replace:
+    // pbr: generate a 2D LUT from the BRDF equations used: the screen quad drawn with brdfPipeline into the lookup
+    // texture - once, in a one-time command buffer (learnopengl: the capture framebuffer with brdfLUTTexture attached,
+    // brdfShader, renderQuad()).
+    void renderBrdfLUT() {
+        VkFramebuffer framebuffer;
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = brdfRenderPass;
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments = &brdfLUTImageView;
+        framebufferInfo.width = 128;
+        framebufferInfo.height = 128;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &framebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create BRDF framebuffer!");
+        }
+
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = 128.0f;
+        viewport.height = 128.0f;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = {128, 128};
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = brdfRenderPass;
+        renderPassInfo.framebuffer = framebuffer;
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = {128, 128};
+        renderPassInfo.clearValueCount = 0; // loadOp DONT_CARE: the quad covers every pixel
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        // brdf.vert and brdf.frag read no uniform buffer, no image and no push constants: nothing else to bind
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, brdfPipeline);
+        renderQuad(commandBuffer);
+
+        vkCmdEndRenderPass(commandBuffer); // the lookup texture is now in VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+
+        endSingleTimeCommands(commandBuffer);
+
+        vkDestroyFramebuffer(device, framebuffer, nullptr);
+    }
+--- file: shaders/brdf.frag
+--- find:
+// TODO: ImportanceSampleGGX(Xi, N, roughness), the same as in prefilter.frag
+// ----------------------------------------------------------------------------
+// TODO: GeometrySchlickGGX(NdotV, roughness) with the k of image based lighting, and GeometrySmith(N, V, L, roughness)
+// ----------------------------------------------------------------------------
+// TODO: IntegrateBRDF(NdotV, roughness): the scale and the bias of F0 for this view angle and roughness
+// ----------------------------------------------------------------------------
+void main() {
+    // TODO: the integrated BRDF for NdotV = fragTexCoord.x and roughness = fragTexCoord.y
+    outColor = vec2(0.0, 0.0);
+}
+--- replace:
+vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness) {
+    float a = roughness*roughness;
+
+    float phi = 2.0 * PI * Xi.x;
+    float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a*a - 1.0) * Xi.y));
+    float sinTheta = sqrt(1.0 - cosTheta*cosTheta);
+
+    // from spherical coordinates to cartesian coordinates - halfway vector
+    vec3 H;
+    H.x = cos(phi) * sinTheta;
+    H.y = sin(phi) * sinTheta;
+    H.z = cosTheta;
+
+    // from tangent-space H vector to world-space sample vector
+    vec3 up        = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+    vec3 tangent   = normalize(cross(up, N));
+    vec3 bitangent = cross(N, tangent);
+
+    vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
+    return normalize(sampleVec);
+}
+// ----------------------------------------------------------------------------
+float GeometrySchlickGGX(float NdotV, float roughness) {
+    // note that we use a different k for IBL
+    float a = roughness;
+    float k = (a * a) / 2.0;
+
+    float nom   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+
+    return nom / denom;
+}
+// ----------------------------------------------------------------------------
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+
+    return ggx1 * ggx2;
+}
+// ----------------------------------------------------------------------------
+vec2 IntegrateBRDF(float NdotV, float roughness) {
+    vec3 V;
+    V.x = sqrt(1.0 - NdotV*NdotV);
+    V.y = 0.0;
+    V.z = NdotV;
+
+    float A = 0.0;
+    float B = 0.0;
+
+    vec3 N = vec3(0.0, 0.0, 1.0);
+
+    const uint SAMPLE_COUNT = 128u;
+    for (uint i = 0u; i < SAMPLE_COUNT; ++i) {
+        // generates a sample vector that's biased towards the
+        // preferred alignment direction (importance sampling).
+        vec2 Xi = Hammersley(i, SAMPLE_COUNT);
+        vec3 H = ImportanceSampleGGX(Xi, N, roughness);
+        vec3 L = normalize(2.0 * dot(V, H) * H - V);
+
+        float NdotL = max(L.z, 0.0);
+        float NdotH = max(H.z, 0.0);
+        float VdotH = max(dot(V, H), 0.0);
+
+        if (NdotL > 0.0) {
+            float G = GeometrySmith(N, V, L, roughness);
+            float G_Vis = (G * VdotH) / (NdotH * NdotV);
+            float Fc = pow(1.0 - VdotH, 5.0);
+
+            A += (1.0 - Fc) * G_Vis;
+            B += Fc * G_Vis;
+        }
+    }
+    A /= float(SAMPLE_COUNT);
+    B /= float(SAMPLE_COUNT);
+    return vec2(A, B);
+}
+// ----------------------------------------------------------------------------
+void main() {
+    vec2 integratedBRDF = IntegrateBRDF(fragTexCoord.x, fragTexCoord.y);
+    outColor = integratedBRDF;
+}
+
+=== task: specular
+--- file: main.cpp
+--- find:
+    VkPipeline brdfPipeline; // learnopengl's brdfShader
+    VkPipeline debugQuadPipeline; // shows a texture on the screen quad
+--- replace:
+    VkPipeline brdfPipeline; // learnopengl's brdfShader
+--- file: main.cpp
+--- find:
+    VkDescriptorSet prefilterDescriptorSet; // the uniform buffer and the pre-filtered environment map
+    VkDescriptorSet brdfLUTDescriptorSet; // the uniform buffer and the BRDF lookup texture
+--- replace:
+    VkDescriptorSet prefilterDescriptorSet; // the uniform buffer and the pre-filtered environment map
+--- file: main.cpp
+--- find:
+    VkDescriptorSet descriptorSet; // the spheres': the uniform buffer and the irradiance map
+--- replace:
+    VkDescriptorSet descriptorSet; // the spheres': the uniform buffer, the irradiance map, the pre-filter map and the lookup texture
+--- file: main.cpp
+--- find:
+        // the screen quad (a triangle list): into the lookup texture, and - to look at that texture - into the window
+        createPipeline("shaders/brdf.vert.spv", "shaders/brdf.frag.spv", brdfRenderPass, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, brdfPipeline);
+        createPipeline("shaders/brdf.vert.spv", "shaders/debug_quad.frag.spv", renderPass, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, debugQuadPipeline);
+--- replace:
+        // the screen quad (a triangle list) into the lookup texture
+        createPipeline("shaders/brdf.vert.spv", "shaders/brdf.frag.spv", brdfRenderPass, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, brdfPipeline);
+--- file: main.cpp
+--- find:
+        createTextureDescriptorSet(prefilterImageView, clampSampler, prefilterDescriptorSet);
+        createTextureDescriptorSet(brdfLUTImageView, clampSampler, brdfLUTDescriptorSet);
+--- replace:
+        createTextureDescriptorSet(prefilterImageView, clampSampler, prefilterDescriptorSet);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, brdfPipeline, nullptr);
+        vkDestroyPipeline(device, debugQuadPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, brdfPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        // then one image at binding 1: the HDR image, or a cube map
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings{};
+--- replace:
+        // then the images: one at binding 1 (the HDR image, or a cube map), or the spheres' three - irradianceMap,
+        // prefilterMap and brdfLUT - at bindings 1, 2 and 3
+        std::array<VkDescriptorSetLayoutBinding, 4> bindings{};
+--- file: main.cpp
+--- find:
+        // six descriptor sets (the spheres', the HDR image's, the environment cube map's, the irradiance map's, the
+        // pre-filter map's, the lookup texture's): each takes what the layout has - one uniform buffer and one image -,
+        // even when the image stays empty
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 6;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 6;
+--- replace:
+        // five descriptor sets (the spheres', the HDR image's, the environment cube map's, the irradiance map's, the
+        // pre-filter map's): each takes what the layout has - one uniform buffer and three images -, even when images
+        // stay empty
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 5;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 5 * 3;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 6;
+--- replace:
+        poolInfo.maxSets = 5;
+--- file: main.cpp
+--- find:
+    // The spheres' descriptor set: the uniform buffer (binding 0) and the irradiance map (binding 1 - learnopengl's
+    // texture unit 0, irradianceMap).
+--- replace:
+    // The spheres' descriptor set: the uniform buffer (binding 0) and the pre-computed IBL data (bindings 1, 2 and 3 -
+    // learnopengl's texture units 0, 1 and 2: irradianceMap, prefilterMap, brdfLUT).
+--- file: main.cpp
+--- find:
+        VkDescriptorImageInfo irradianceInfo{};
+        irradianceInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        irradianceInfo.imageView = irradianceImageView;
+        irradianceInfo.sampler = clampSampler;
+
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &irradianceInfo;
+--- replace:
+        // the images in the order of their bindings (1, 2, 3), all sampled with clampSampler
+        std::array<VkImageView, 3> imageViews = {irradianceImageView, prefilterImageView, brdfLUTImageView};
+        std::array<VkSampler, 3> samplers = {clampSampler, clampSampler, clampSampler};
+        std::array<VkDescriptorImageInfo, 3> imageInfos{};
+
+        std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        for (uint32_t i = 0; i < imageViews.size(); i++) {
+            imageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfos[i].imageView = imageViews[i];
+            imageInfos[i].sampler = samplers[i];
+
+            descriptorWrites[i + 1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[i + 1].dstSet = descriptorSet;
+            descriptorWrites[i + 1].dstBinding = i + 1;
+            descriptorWrites[i + 1].dstArrayElement = 0;
+            descriptorWrites[i + 1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorWrites[i + 1].descriptorCount = 1;
+            descriptorWrites[i + 1].pImageInfo = &imageInfos[i];
+        }
+--- file: main.cpp
+--- find:
+        //vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &envDescriptorSet, 0, nullptr);
+        //vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &irradianceDescriptorSet, 0, nullptr); // display irradiance map
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &prefilterDescriptorSet, 0, nullptr); // display prefilter map
+        renderCube(commandBuffer);
+
+        // render BRDF map to screen
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, debugQuadPipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &brdfLUTDescriptorSet, 0, nullptr);
+        renderQuad(commandBuffer);
+--- replace:
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &envDescriptorSet, 0, nullptr);
+        //vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &irradianceDescriptorSet, 0, nullptr); // display irradiance map
+        //vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &prefilterDescriptorSet, 0, nullptr); // display prefilter map
+        renderCube(commandBuffer);
+--- file: shaders/background.frag
+--- find:
+    vec3 envColor = textureLod(environmentMap, fragWorldPos, 1.2).rgb; // a blurry mip level of the pre-filter map
+--- replace:
+    vec3 envColor = textureLod(environmentMap, fragWorldPos, 0.0).rgb;
+--- file: shaders/pbr.frag
+--- find:
+layout(binding = 1) uniform samplerCube irradianceMap;
+--- replace:
+layout(binding = 1) uniform samplerCube irradianceMap;
+layout(binding = 2) uniform samplerCube prefilterMap;
+layout(binding = 3) uniform sampler2D brdfLUT;
+--- file: shaders/pbr.frag
+--- find:
+    vec3 V = normalize(ubo.camPos - fragWorldPos);
+--- replace:
+    vec3 V = normalize(ubo.camPos - fragWorldPos);
+    vec3 R = reflect(-V, N);
+--- file: shaders/pbr.frag
+--- find:
+    vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+    vec3 kD = 1.0 - kS;
+    kD *= 1.0 - metallic;
+    vec3 irradiance = texture(irradianceMap, N).rgb;
+    vec3 diffuse    = irradiance * albedo;
+    vec3 ambient    = (kD * diffuse) * ao;
+--- replace:
+    vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+
+    vec3 kS = F;
+    vec3 kD = 1.0 - kS;
+    kD *= 1.0 - metallic;
+
+    vec3 irradiance = texture(irradianceMap, N).rgb;
+    vec3 diffuse    = irradiance * albedo;
+
+    // sample both the pre-filter map and the BRDF lut and combine them together as per the Split-Sum approximation to get the IBL specular part.
+    const float MAX_REFLECTION_LOD = 4.0;
+    vec3 prefilteredColor = textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD).rgb;
+    vec2 brdf  = texture(brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
+    vec3 specular = prefilteredColor * (F * brdf.x + brdf.y);
+
+    vec3 ambient = (kD * diffuse + specular) * ao;
+
+=== task: textured
+--- file: main.cpp
+--- find:
+int nrRows    = 7;
+int nrColumns = 7;
+float spacing = 2.5;
+--- replace:
+// a few large spheres, so the material's details can be seen
+int nrRows    = 3;
+int nrColumns = 3;
+float spacing = 6.0;
+--- file: main.cpp
+--- find:
+// The same layout as the push constant blocks in the shaders: the values of one draw - the model matrix of a sphere
+// (vertex shader) and its material (fragment shader). Push constants are laid out like std430: the floats follow the
+// mat4 directly.
+struct PushConstants {
+    glm::mat4 model;
+    float metallic;
+    float roughness;
+};
+--- replace:
+// The same layout as the push constant block in pbr.vert: the model matrix of one draw.
+struct PushConstants {
+    glm::mat4 model;
+};
+--- file: main.cpp
+--- find:
+    glm::vec3 albedo;
+    float ao;
+    glm::vec3 camPos;
+--- replace:
+    glm::vec3 camPos;
+--- file: main.cpp
+--- find:
+    VkSampler clampSampler; // linear filtering, clamp to edge: for the HDR image, the cube maps and the lookup texture
+--- replace:
+    VkSampler clampSampler; // linear filtering, clamp to edge: for the HDR image, the cube maps and the lookup texture
+
+    // the material's five maps (learnopengl's albedo, normal, metallic, roughness and ao textures)
+    VkImage albedoImage;
+    VkDeviceMemory albedoImageMemory;
+    VkImageView albedoImageView;
+
+    VkImage normalImage;
+    VkDeviceMemory normalImageMemory;
+    VkImageView normalImageView;
+
+    VkImage metallicImage;
+    VkDeviceMemory metallicImageMemory;
+    VkImageView metallicImageView;
+
+    VkImage roughnessImage;
+    VkDeviceMemory roughnessImageMemory;
+    VkImageView roughnessImageView;
+
+    VkImage aoImage;
+    VkDeviceMemory aoImageMemory;
+    VkImageView aoImageView;
+
+    VkSampler textureSampler; // linear filtering, repeat: for the material's maps
+--- file: main.cpp
+--- find:
+    VkDescriptorSet descriptorSet; // the spheres': the uniform buffer, the irradiance map, the pre-filter map and the lookup texture
+--- replace:
+    VkDescriptorSet descriptorSet; // the spheres': the uniform buffer, the three IBL images and the material's five maps
+--- file: main.cpp
+--- find:
+        // TODO: load the PBR material textures (textures/albedo.png, normal.png, metallic.png, roughness.png, ao.png)
+--- replace:
+        // load PBR material textures: all five as they are (UNORM, "linear") - the shader converts the albedo's colours itself
+        loadTexture("textures/albedo.png", VK_FORMAT_R8G8B8A8_UNORM, albedoImage, albedoImageMemory, albedoImageView);
+        loadTexture("textures/normal.png", VK_FORMAT_R8G8B8A8_UNORM, normalImage, normalImageMemory, normalImageView);
+        loadTexture("textures/metallic.png", VK_FORMAT_R8G8B8A8_UNORM, metallicImage, metallicImageMemory, metallicImageView);
+        loadTexture("textures/roughness.png", VK_FORMAT_R8G8B8A8_UNORM, roughnessImage, roughnessImageMemory, roughnessImageView);
+        loadTexture("textures/ao.png", VK_FORMAT_R8G8B8A8_UNORM, aoImage, aoImageMemory, aoImageView);
+        // linear filtering with mipmaps, repeat, no anisotropic filtering - like learnopengl's loadTexture (VK_TRUE sharpens the
+        // maps where a surface is seen at a slant)
+        createTextureSampler(VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FALSE, textureSampler);
+--- file: main.cpp
+--- find:
+        vkFreeMemory(device, brdfLUTImageMemory, nullptr);
+--- replace:
+        vkFreeMemory(device, brdfLUTImageMemory, nullptr);
+
+        vkDestroySampler(device, textureSampler, nullptr);
+
+        vkDestroyImageView(device, albedoImageView, nullptr);
+        vkDestroyImage(device, albedoImage, nullptr);
+        vkFreeMemory(device, albedoImageMemory, nullptr);
+
+        vkDestroyImageView(device, normalImageView, nullptr);
+        vkDestroyImage(device, normalImage, nullptr);
+        vkFreeMemory(device, normalImageMemory, nullptr);
+
+        vkDestroyImageView(device, metallicImageView, nullptr);
+        vkDestroyImage(device, metallicImage, nullptr);
+        vkFreeMemory(device, metallicImageMemory, nullptr);
+
+        vkDestroyImageView(device, roughnessImageView, nullptr);
+        vkDestroyImage(device, roughnessImage, nullptr);
+        vkFreeMemory(device, roughnessImageMemory, nullptr);
+
+        vkDestroyImageView(device, aoImageView, nullptr);
+        vkDestroyImage(device, aoImage, nullptr);
+        vkFreeMemory(device, aoImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        // then the images: one at binding 1 (the HDR image, or a cube map), or the spheres' three - irradianceMap,
+        // prefilterMap and brdfLUT - at bindings 1, 2 and 3
+        std::array<VkDescriptorSetLayoutBinding, 4> bindings{};
+--- replace:
+        // then the images: one at binding 1 (the HDR image, or a cube map), or the spheres' eight - irradianceMap,
+        // prefilterMap and brdfLUT at bindings 1, 2 and 3, the material's five maps at bindings 4..8
+        std::array<VkDescriptorSetLayoutBinding, 9> bindings{};
+--- file: main.cpp
+--- find:
+        // five descriptor sets (the spheres', the HDR image's, the environment cube map's, the irradiance map's, the
+        // pre-filter map's): each takes what the layout has - one uniform buffer and three images -, even when images
+        // stay empty
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 5;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 5 * 3;
+--- replace:
+        // five descriptor sets (the spheres', the HDR image's, the environment cube map's, the irradiance map's, the
+        // pre-filter map's): each takes what the layout has - one uniform buffer and eight images -, even when images
+        // stay empty
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 5;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 5 * 8;
+--- file: main.cpp
+--- find:
+    // The spheres' descriptor set: the uniform buffer (binding 0) and the pre-computed IBL data (bindings 1, 2 and 3 -
+    // learnopengl's texture units 0, 1 and 2: irradianceMap, prefilterMap, brdfLUT).
+--- replace:
+    // The spheres' descriptor set: the uniform buffer (binding 0), the pre-computed IBL data (bindings 1, 2 and 3 -
+    // learnopengl's texture units 0, 1 and 2: irradianceMap, prefilterMap, brdfLUT) and the material's five maps
+    // (bindings 4..8 - texture units 3..7: albedoMap, normalMap, metallicMap, roughnessMap, aoMap).
+--- file: main.cpp
+--- find:
+        // the images in the order of their bindings (1, 2, 3), all sampled with clampSampler
+        std::array<VkImageView, 3> imageViews = {irradianceImageView, prefilterImageView, brdfLUTImageView};
+        std::array<VkSampler, 3> samplers = {clampSampler, clampSampler, clampSampler};
+        std::array<VkDescriptorImageInfo, 3> imageInfos{};
+
+        std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
+--- replace:
+        // the images in the order of their bindings (1..8) and the sampler of each: clamp to edge for the IBL data, repeat
+        // for the material's maps
+        std::array<VkImageView, 8> imageViews = {irradianceImageView, prefilterImageView, brdfLUTImageView, albedoImageView, normalImageView, metallicImageView, roughnessImageView, aoImageView};
+        std::array<VkSampler, 8> samplers = {clampSampler, clampSampler, clampSampler, textureSampler, textureSampler, textureSampler, textureSampler, textureSampler};
+        std::array<VkDescriptorImageInfo, 8> imageInfos{};
+
+        std::array<VkWriteDescriptorSet, 9> descriptorWrites{};
+--- file: main.cpp
+--- find:
+        // render rows*column number of spheres with varying metallic/roughness values scaled by rows and columns respectively
+        PushConstants constants{};
+        glm::mat4 model = glm::mat4(1.0f);
+        for (int row = 0; row < nrRows; ++row) {
+            constants.metallic = (float)row / (float)nrRows;
+            for (int col = 0; col < nrColumns; ++col) {
+                // we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
+                // on direct lighting.
+                constants.roughness = glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f);
+
+                model = glm::mat4(1.0f);
+                model = glm::translate(model, glm::vec3(
+                    (float)(col - (nrColumns / 2)) * spacing,
+                    (float)(row - (nrRows / 2)) * spacing,
+                    0.0f
+                ));
+--- replace:
+        // render rows*column number of spheres with material properties defined by textures (they all have the same material properties)
+        PushConstants constants{};
+        glm::mat4 model = glm::mat4(1.0f);
+        for (int row = 0; row < nrRows; ++row) {
+            for (int col = 0; col < nrColumns; ++col) {
+                model = glm::mat4(1.0f);
+                model = glm::translate(model, glm::vec3(
+                    (float)(col - (nrColumns / 2)) * spacing,
+                    (float)(row - (nrRows / 2)) * spacing,
+                    0.0f
+                ));
+                model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // turn the middle of the textures towards the camera
+                model = glm::scale(model, glm::vec3(2.4f));
+--- file: main.cpp
+--- find:
+        // the material: the same albedo and ambient occlusion for every sphere
+        ubo.albedo = glm::vec3(0.5f, 0.0f, 0.0f);
+        ubo.ao = 1.0f;
+        ubo.camPos = cameraPos;
+--- replace:
+        ubo.camPos = cameraPos;
+--- file: shaders/pbr.frag
+--- find:
+    // material parameters (the same for every sphere)
+    vec3 albedo;
+    float ao;
+    vec3 camPos;
+} ubo;
+
+// material parameters (one sphere's): they come after the model matrix
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    float metallic;
+    float roughness;
+} pc;
+
+// IBL
+layout(binding = 1) uniform samplerCube irradianceMap;
+layout(binding = 2) uniform samplerCube prefilterMap;
+layout(binding = 3) uniform sampler2D brdfLUT;
+--- replace:
+    vec3 camPos;
+} ubo;
+
+// IBL
+layout(binding = 1) uniform samplerCube irradianceMap;
+layout(binding = 2) uniform samplerCube prefilterMap;
+layout(binding = 3) uniform sampler2D brdfLUT;
+
+// material parameters
+layout(binding = 4) uniform sampler2D albedoMap;
+layout(binding = 5) uniform sampler2D normalMap;
+layout(binding = 6) uniform sampler2D metallicMap;
+layout(binding = 7) uniform sampler2D roughnessMap;
+layout(binding = 8) uniform sampler2D aoMap;
+--- file: shaders/pbr.frag
+--- find:
+layout(location = 2) in vec3 fragNormal;
+--- replace:
+layout(location = 2) in vec3 fragNormal;
+layout(location = 3) in vec3 fragTangent;
+--- file: shaders/pbr.frag
+--- find:
+const float PI = 3.14159265359;
+// ----------------------------------------------------------------------------
+--- replace:
+const float PI = 3.14159265359;
+// ----------------------------------------------------------------------------
+// The normal map's normal (tangent space) taken to world space with a TBN matrix
+// built from the sphere's normal and tangent, as in the Normal Mapping chapter.
+vec3 getNormalFromMap() {
+    vec3 tangentNormal = texture(normalMap, fragTexCoord).xyz * 2.0 - 1.0;
+
+    vec3 N = normalize(fragNormal);
+    vec3 T = normalize(fragTangent);
+    T = normalize(T - dot(T, N) * N); // Gram-Schmidt: make T perpendicular to N again
+    vec3 B = cross(N, T);
+    mat3 TBN = mat3(T, B, N);
+
+    return normalize(TBN * tangentNormal);
+}
+// ----------------------------------------------------------------------------
+--- file: shaders/pbr.frag
+--- find:
+    vec3 albedo     = ubo.albedo;
+    float metallic  = pc.metallic;
+    float roughness = pc.roughness;
+    float ao        = ubo.ao;
+
+    vec3 N = normalize(fragNormal);
+--- replace:
+    // material properties
+    vec3 albedo     = pow(texture(albedoMap, fragTexCoord).rgb, vec3(2.2));
+    float metallic  = texture(metallicMap, fragTexCoord).r;
+    float roughness = texture(roughnessMap, fragTexCoord).r;
+    float ao        = texture(aoMap, fragTexCoord).r;
+
+    // input lighting data
+    vec3 N = getNormalFromMap();
+--- file: shaders/pbr.vert
+--- find:
+layout(location = 3) in vec3 inTangent; // not used yet, but in the vertex buffer
+--- replace:
+layout(location = 3) in vec3 inTangent;
+--- file: shaders/pbr.vert
+--- find:
+layout(location = 2) out vec3 fragNormal;
+--- replace:
+layout(location = 2) out vec3 fragNormal;
+layout(location = 3) out vec3 fragTangent;
+--- file: shaders/pbr.vert
+--- find:
+    fragNormal = normalMatrix * inNormal;
+--- replace:
+    fragNormal = normalMatrix * inNormal;
+    fragTangent = mat3(pc.model) * inTangent;

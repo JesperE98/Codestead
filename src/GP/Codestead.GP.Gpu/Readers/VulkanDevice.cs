@@ -30,6 +30,15 @@ internal sealed class VulkanDevice : IDeviceModel
         public bool Cube, Depth, Float, Srgb;
         public readonly List<Image?> LayerImages = new();
         public string TargetId => "img:" + Id;
+        /// <summary>
+        /// Mip levels that hold a picture: drawn into one by one (a view of one level in a framebuffer) or made from
+        /// the level above (vkCmdBlitImage) – the render targets "img:N~level" hold levels 1 and up.
+        /// </summary>
+        public int TargetLevels = 1;
+        /// <summary>The image is drawn into through views of single layers (one cube face per framebuffer).</summary>
+        public bool PerLayer;
+
+        public string LevelTarget(int level) => level > 0 ? $"{TargetId}~{level}" : TargetId;
     }
 
     public sealed record DrawState(string? Framebuffer, IReadOnlyDictionary<int, (string Buffer, long Offset)> VertexBuffers,
@@ -56,7 +65,7 @@ internal sealed class VulkanDevice : IDeviceModel
     private readonly Dictionary<string, (int Memory, long Offset)> buffers = new(StringComparer.Ordinal);
     private readonly List<ImageObject> images = new();
     /// <summary>Image views: the image and whether it is viewed as a cube map.</summary>
-    private readonly Dictionary<string, (string Image, bool Cube)> views = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, (string Image, bool Cube, int Layer, int Level)> views = new(StringComparer.Ordinal);
     /// <summary>Image views with an sRGB format.</summary>
     private readonly HashSet<string> srgbViews = new(StringComparer.Ordinal);
 
@@ -261,11 +270,40 @@ internal sealed class VulkanDevice : IDeviceModel
                 }
                 return ShaderValue.Scalar(0);
             }
+            case "vkCmdBlitImage" when args.Count >= 7:
+            {
+                // A mip level made from the level above (vulkan-tutorial's generateMipmaps), of an image that was drawn
+                // into: each layer's smaller copy is the average of the pixels it covers.
+                if (ImageOf(Handle(args[1])) is not { Window: false } from || ImageOf(Handle(args[3])) is not { Window: false } to) return ShaderValue.Scalar(0);
+                if (to.LayerImages.Any(i => i is not null) || from.LayerImages.Any(i => i is not null)) return ShaderValue.Scalar(0);
+                foreach (var region in Items(Eval(Strip(args[6]))))
+                {
+                    var srcSub = Field(region, "srcSubresource");
+                    var dstSub = Field(region, "dstSubresource");
+                    int srcLevel = (int)(Number(srcSub, "mipLevel") ?? 0), dstLevel = (int)(Number(dstSub, "mipLevel") ?? 0);
+                    int srcLayer = (int)(Number(srcSub, "baseArrayLayer") ?? 0), dstLayer = (int)(Number(dstSub, "baseArrayLayer") ?? 0);
+                    int layers = (int)Math.Max(1, Number(dstSub, "layerCount") ?? 1);
+                    for (int l = 0; l < layers; l++)
+                    {
+                        string Layer(string level, int layer) => layer > 0 ? level + "@" + layer : level;
+                        Ops.Add(new CopyOp(DrawCount(), Layer(from.LevelTarget(srcLevel), srcLayer + l), Layer(to.LevelTarget(dstLevel), dstLayer + l), Average: true));
+                    }
+                    to.TargetLevels = Math.Max(to.TargetLevels, dstLevel + 1);
+                    if (layers > 1 || dstLayer > 0) to.PerLayer = true;
+                }
+                return ShaderValue.Scalar(0);
+            }
             case "vkCreateImageView" when args.Count >= 4:
             {
                 var info = Eval(Strip(args[1]));
                 var view = Set(args[3], "view");
-                views[view] = (Text(info, "image") ?? "", (Text(info, "viewType") ?? "").Contains("CUBE", StringComparison.Ordinal));
+                // The first array layer (a cube map's face) and mip level the view shows: a framebuffer made with it draws
+                // into that face and level.
+                var range = Field(info, "subresourceRange");
+                bool cubeView = (Text(info, "viewType") ?? "").Contains("CUBE", StringComparison.Ordinal);
+                int baseLayer = (int)(Number(range, "baseArrayLayer") ?? 0), baseLevel = (int)(Number(range, "baseMipLevel") ?? 0);
+                views[view] = (Text(info, "image") ?? "", cubeView, baseLayer, baseLevel);
+                if (!cubeView && ImageOf(Text(info, "image")) is { Layers: > 1 } layered && (Number(range, "layerCount") ?? 1) <= 1) layered.PerLayer = true;
                 if ((Text(info, "format") ?? "").Contains("_SRGB", StringComparison.Ordinal)) srgbViews.Add(view);
                 return ShaderValue.Str("VK_SUCCESS");
             }
@@ -297,7 +335,12 @@ internal sealed class VulkanDevice : IDeviceModel
                 var fb = Set(args[3], "fb");
                 framebufferInfo[fb] = (Text(info, "renderPass"), attachments.Select(a => a.Text).ToArray());
                 var pass = Text(info, "renderPass") is { } rpName && renderPasses.TryGetValue(rpName, out var r) ? r : (0, null, [0]);
-                if (pass.Color < attachments.Length && attachments[pass.Color].Text is { } colorView) framebuffers[fb] = colorView;
+                if (pass.Color < attachments.Length && attachments[pass.Color].Text is { } colorView)
+                {
+                    framebuffers[fb] = colorView;
+                    // A view of a mip level: that level is drawn into.
+                    if (views.TryGetValue(colorView, out var cv) && cv.Level > 0 && ImageOf(cv.Image) is { } leveled) leveled.TargetLevels = Math.Max(leveled.TargetLevels, cv.Level + 1);
+                }
                 if (pass.Resolve is int ri && ri < attachments.Length && attachments[ri].Text is { } resolveTo) resolves[fb] = resolveTo;
                 // The target's shape: its colour attachments (further ones are read as attachments 1, 2 … of it) and
                 // whether any attachment is a depth image (a ping-pong blur pass has none: no depth test).
@@ -519,7 +562,23 @@ internal sealed class VulkanDevice : IDeviceModel
     public string? TargetOf(string? fb) => fb is not null && framebuffers.TryGetValue(fb, out var view) ? ViewTarget(view) : null;
 
     /// <summary>The render target behind an image view: its image ("img:N"), null for a swap chain image (the window).</summary>
-    private string? ViewTarget(string view) => views.TryGetValue(view, out var v) && ImageOf(v.Image) is { Window: false } img ? img.TargetId : null;
+    private string? ViewTarget(string view)
+    {
+        if (!views.TryGetValue(view, out var v) || ImageOf(v.Image) is not { Window: false } img) return null;
+        // "img:N", "img:N~2" for mip level 2, "…@3" for array layer (cube face) 3.
+        var level = img.LevelTarget(v.Level);
+        return v.Layer > 0 && !v.Cube ? level + "@" + v.Layer : level;
+    }
+
+    /// <summary>The image behind a target id ("img:N~2@3"), and the mip level it names.</summary>
+    public (ImageObject Image, int Level)? TargetImage(string id)
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(id, @"^(img:\d+)(?:~(\d+))?(?:@\d+)?$");
+        return m.Success && ImageOf(m.Groups[1].Value) is { } img ? (img, m.Groups[2].Success ? int.Parse(m.Groups[2].Value) : 0) : null;
+    }
+
+    /// <summary>A recorded draw goes to an off-screen target (not to the window).</summary>
+    public bool Offscreen(object? state) => state is DrawState { Framebuffer: { } fb } && TargetOf(fb) is not null;
 
     private void Write(Expr dst, Expr from, Expr? size)
     {
@@ -582,10 +641,14 @@ internal sealed class VulkanDevice : IDeviceModel
         if ((view.Cube || img.Cube) && img.LayerImages.All(i => i is null) && !img.Window)
         {
             // A cube map drawn into (point shadows: a 6-layer framebuffer, gl_Layer): face i is layer i of the target.
-            var cubeId = img.TargetId;
             bool cubeDepth = img.Depth;
-            return (null, new CubeTexture(Enumerable.Range(0, 6).Select(face =>
-                (Texture?)new Texture(() => Raster.Rasterizer.TargetImage(face == 0 ? cubeId : cubeId + "@" + face, 0, cubeDepth), sampler) { Components = 4 }).ToList()));
+            List<Texture?> Level(string target) => Enumerable.Range(0, 6).Select(face =>
+                (Texture?)new Texture(() => Raster.Rasterizer.TargetImage(face == 0 ? target : target + "@" + face, 0, cubeDepth), sampler) { Components = 4 }).ToList();
+            // Its mip levels, when they were drawn or made from level 0: read by textureLod.
+            return (null, new CubeTexture(Level(img.TargetId))
+            {
+                Mips = img.TargetLevels > 1 ? Enumerable.Range(1, img.TargetLevels - 1).Select(level => (IReadOnlyList<Texture?>)Level(img.LevelTarget(level))).ToList() : null,
+            });
         }
         if (view.Cube || img.Cube)
             return (null, new CubeTexture(img.LayerImages.Select(i => i is null ? null : new Texture(i, sampler) { Components = 4 }).ToList()));

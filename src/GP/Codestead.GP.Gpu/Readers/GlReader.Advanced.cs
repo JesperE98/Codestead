@@ -108,6 +108,25 @@ public sealed partial class GlReader
                 var texArg = name == "glFramebufferTexture2D" ? A(3) : A(2);
                 if (!gl.TextureObjects.TryGetValue(Obj(texArg), out var tex)) return true;
                 var fboName = A(0).Contains("READ", StringComparison.Ordinal) ? gl.ReadFramebuffer! : gl.DrawFramebuffer!;
+                // A face of a cube map (GL_TEXTURE_CUBE_MAP_POSITIVE_X + i) or a mip level: the attachment changes from
+                // draw to draw, so each draw goes to the texture's own target for that face and level.
+                int cubeFace = -1, level = Int(A(name == "glFramebufferTexture2D" ? 4 : 3)) ?? 0;
+                if (name == "glFramebufferTexture2D" && Regex.Match(A(2), @"GL_TEXTURE_CUBE_MAP_(POSITIVE|NEGATIVE)_([XYZ])\s*(?:\+\s*(.+))?$") is { Success: true } faceOf)
+                    cubeFace = "XYZ".IndexOf(faceOf.Groups[2].Value[0]) * 2 + (faceOf.Groups[1].Value == "NEGATIVE" ? 1 : 0) + (faceOf.Groups[3].Success ? Int(faceOf.Groups[3].Value) ?? 0 : 0);
+                if (!A(1).Contains("DEPTH", StringComparison.Ordinal) && (cubeFace >= 0 || level > 0 || fb.PerTexture))
+                {
+                    fb.PerTexture = true;
+                    fb.TargetTexture = Obj(texArg);
+                    fb.TargetFace = cubeFace;
+                    fb.TargetLevel = level;
+                    fb.Colors.Clear();
+                    fb.Colors[0] = tex;
+                    (fb.Width, fb.Height) = (Math.Max(1, tex.Width >> level), Math.Max(1, tex.Height >> level));
+                    tex.Framebuffer = "tex:" + fb.TargetTexture;
+                    tex.Attachment = 0;
+                    tex.TargetLevels = Math.Max(tex.TargetLevels, level + 1);
+                    return true;
+                }
                 tex.Framebuffer = fboName;
                 fb.Samples = Math.Max(fb.Samples, tex.Samples);
                 // glFramebufferTexture (not …2D) attaches every layer: a cube map's six faces.
@@ -253,9 +272,40 @@ public sealed partial class GlReader
     private string? DrawTarget()
     {
         if (gl.DrawFramebuffer is not { } id || !gl.Framebuffers.TryGetValue(id, out var fb)) return null;
+        if (fb.PerTexture && fb.TargetTexture is { } texture && gl.TextureObjects.TryGetValue(texture, out var tex))
+        {
+            // The texture's own target: "tex:name" (level 0), "tex:name~2" (mip level 2), "…@3" for cube face 3.
+            var levelId = LevelTarget(texture, fb.TargetLevel);
+            scene.Targets[levelId] = new RenderTarget(levelId, Math.Max(1, tex.Width >> fb.TargetLevel), Math.Max(1, tex.Height >> fb.TargetLevel), 1, fb.Depth, fb.Stencil, 1, tex.Float);
+            return fb.TargetFace > 0 ? levelId + "@" + fb.TargetFace : levelId;
+        }
         int colors = fb.Colors.Count == 0 ? 0 : fb.Colors.Keys.Max() + 1;
         scene.Targets[id] = new RenderTarget(id, fb.Width, fb.Height, colors, fb.Depth, fb.Stencil, fb.Samples, fb.Colors.Values.Any(c => c.Float), fb.Layers);
         return id;
+    }
+
+    private static string LevelTarget(string texture, int level) => level > 0 ? $"tex:{texture}~{level}" : "tex:" + texture;
+
+    /// <summary>
+    /// glGenerateMipmap on a texture that was drawn into (learnopengl's environment cube map after the capture): every
+    /// smaller level is the average of the level above, made now – between the draws before and after the call.
+    /// </summary>
+    private void GenerateTargetMips(GlState.TextureObject tex)
+    {
+        if (tex.Framebuffer is not { } target || !target.StartsWith("tex:", StringComparison.Ordinal) || !scene.Targets.ContainsKey(target)) return;
+        var texture = target[4..];
+        int levels = 1 + (int)Math.Floor(Math.Log2(Math.Max(1, Math.Max(tex.Width, tex.Height))));
+        for (int level = 1; level < levels; level++)
+        {
+            var id = LevelTarget(texture, level);
+            scene.Targets[id] = new RenderTarget(id, Math.Max(1, tex.Width >> level), Math.Max(1, tex.Height >> level), 1, false, false, 1, tex.Float);
+            for (int face = 0; face < (tex.IsCube ? 6 : 1); face++)
+            {
+                string Face(string of) => face > 0 ? of + "@" + face : of;
+                scene.Ops.Add(new CopyOp(scene.Draws.Count, Face(LevelTarget(texture, level - 1)), Face(id), Average: true));
+            }
+        }
+        tex.TargetLevels = Math.Max(tex.TargetLevels, levels);
     }
 
     /// <summary>GL_COLOR_ATTACHMENT1, or GL_COLOR_ATTACHMENT0 + i in learnopengl's loop (the offset worked out now).</summary>

@@ -59,15 +59,16 @@ public sealed partial class GlReader
             }
             case "glClear":
             {
-                if (!inLoop) return;
+                // Before the render loop only a framebuffer object's clears count (a capture pass drawn once).
+                if (!inLoop && (gl.DrawFramebuffer is not { } setupFbo || !gl.Framebuffers.ContainsKey(setupFbo))) return;
                 bool color = A(0).Contains("GL_COLOR_BUFFER_BIT", StringComparison.Ordinal);
                 double? depth = A(0).Contains("GL_DEPTH_BUFFER_BIT", StringComparison.Ordinal) ? 1.0 : null;
                 int? stencil = A(0).Contains("GL_STENCIL_BUFFER_BIT", StringComparison.Ordinal) ? 0 : null;
                 if (gl.DrawFramebuffer is { } fbo)
                 {
                     // A framebuffer object: cleared between the draws of the frame.
-                    if (gl.Framebuffers.ContainsKey(fbo)) DrawTarget();
-                    scene.Ops.Add(new ClearOp(scene.Draws.Count, fbo, color ? gl.ClearColor.ToArray() : null, depth, stencil));
+                    var cleared = gl.Framebuffers.ContainsKey(fbo) ? DrawTarget() ?? fbo : fbo;
+                    scene.Ops.Add(new ClearOp(scene.Draws.Count, cleared, color ? gl.ClearColor.ToArray() : null, depth, stencil));
                     return;
                 }
                 if (scene.Draws.Count > 0 && scene.Draws.Any(d => d.Target is not null))
@@ -204,6 +205,7 @@ public sealed partial class GlReader
                 else
                 {
                     gl.Units[gl.ActiveUnit] = ObjOf(A(1), gl.TextureObjects.ContainsKey);
+                    (A(0).Contains("GL_TEXTURE_CUBE_MAP", StringComparison.Ordinal) ? gl.UnitsCube : gl.Units2D)[gl.ActiveUnit] = gl.Units[gl.ActiveUnit];
                     if (A(0).Contains("GL_TEXTURE_CUBE_MAP", StringComparison.Ordinal) && BoundTexture is { } cube) cube.IsCube = true;
                 }
                 return;
@@ -223,7 +225,11 @@ public sealed partial class GlReader
                 TexImage(a, line);
                 return;
             case "glGenerateMipmap":
-                if (BoundTexture is { } mt) mt.Mipmaps = mt.Image is not null;
+                if (BoundTexture is { } mt)
+                {
+                    mt.Mipmaps = mt.Image is not null || mt.IsCube || mt.Framebuffer is not null;
+                    GenerateTargetMips(mt);
+                }
                 return;
             case "glDrawArrays":
                 Draw(A(0), null, Int(A(1)) ?? 0, Int(A(2)) ?? 0, name, line);
