@@ -64,7 +64,7 @@ constexpr unsigned int depthMapResolution = 1024;
 
 // debug view: show one layer of the shadow maps instead of the scene
 bool showQuad = false;
-int debugLayer = 0;
+int debugLayer = 2; // the third cascade (20 to 50 units from the camera)
 
 // the ten cubes: position, rotation about normalize(1, 0, 1) in degrees, and scale
 // (learnopengl places them with a random generator: the course lists ten so the picture is always the same)
