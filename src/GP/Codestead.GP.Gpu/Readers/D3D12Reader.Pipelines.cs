@@ -37,10 +37,10 @@ public sealed partial class D3D12Reader
             (ShaderProgram Program, string Entry)? Stage(string prefix)
             {
                 // The blob the description names (psoDesc.PS = CD3DX12_SHADER_BYTECODE(depthPixelShader.Get())), else the
-                // last shader of that kind compiled before.
+                // last shader of that kind compiled before. The blob is D3DCompileFromFile's ppCode, its 8th argument.
                 var field = src.FieldValueBefore(prefix[..2].ToUpperInvariant(), create.Offset) ?? "";
                 var blob = Regex.Match(field, @"(\w+)\s*\.\s*Get\s*\(") is { Success: true } bm ? bm.Groups[1].Value : null;
-                var c = (blob is null ? null : compiles.LastOrDefault(x => x.Offset < create.Offset && Regex.IsMatch(x.Arg(8), @"\b" + Regex.Escape(blob) + @"\b")))
+                var c = (blob is null ? null : compiles.LastOrDefault(x => x.Offset < create.Offset && Regex.IsMatch(x.Arg(7), @"\b" + Regex.Escape(blob) + @"\b")))
                     ?? compiles.LastOrDefault(x => x.Offset < create.Offset && (CppSource.StringArg(x.Arg(4)) ?? "").StartsWith(prefix, StringComparison.Ordinal));
                 if (c is null) return null;
                 var text = project.Find(CppSource.StringArg(c.Arg(0)) ?? "");
