@@ -1,0 +1,57 @@
+{
+  "title": "Power-ups",
+  "tasks": {
+    "powerup-object": {
+      "text": "Lägg till power-upsen: `POWERUP_SIZE` (60, 20), `VELOCITY` (0, 150), `struct PowerUp` som ärver från GameObject (Type, Duration, Activated) och `MakePowerUp`; ge bollen `Sticky` och `PassThrough` (nollställs i Reset), spelet en vektor `PowerUps`; ladda de sex power-up-texturerna; rita varje power-up som inte är förstörd efter racketen.",
+      "hint": {
+        "opengl": "`struct PowerUp : GameObject { std::string Type; float Duration = 0.0f; bool Activated = false; };` – MakePowerUp sätter Position, Size = POWERUP_SIZE, Velocity = VELOCITY, Color, Sprite, Type, Duration. `LoadTexture(\"textures/powerup_speed.png\", true, \"powerup_speed\");` … (`powerup_pass.png` som `\"powerup_pass\"`).",
+        "vulkan": "`struct PowerUp : GameObject { std::string Type; float Duration = 0.0f; bool Activated = false; };` – MakePowerUp sätter Position, Size = POWERUP_SIZE, Velocity = VELOCITY, Color, Sprite, Type, Duration. `LoadTexture(\"textures/powerup_speed.png\", \"powerup_speed\");` … (`powerup_pass.png` som `\"powerup_pass\"`).",
+        "d3d12": "`struct PowerUp : GameObject { std::string Type; float Duration = 0.0f; bool Activated = false; };` – MakePowerUp sätter Position, Size = POWERUP_SIZE, Velocity = VELOCITY, Color, Sprite, Type, Duration. `LoadTexture(\"textures/powerup_speed.png\", true, \"powerup_speed\");` … (`powerup_pass.png` som `\"powerup_pass\"`)."
+      }
+    },
+    "try-powerups": {
+      "text": "Prova power-upsen (inget block går sönder med kursens fasta indata): lägg i Init, efter bollen, in en power-up av varje sort i `game.PowerUps` vid y = 160 och x = 40, 150, 260, 370, 480, 590, med learnopengls färger och varaktigheter.",
+      "hint": {
+        "opengl": "`game.PowerUps.push_back(MakePowerUp(\"speed\", glm::vec3(0.5f, 0.5f, 1.0f), 0.0f, glm::vec2(40.0f, 160.0f), GetTexture(\"powerup_speed\").ID));` och likadant för sticky (20 s), pass-through (10 s), pad-size-increase (0 s), confuse och chaos (15 s var).",
+        "vulkan": "`game.PowerUps.push_back(MakePowerUp(\"speed\", glm::vec3(0.5f, 0.5f, 1.0f), 0.0f, glm::vec2(40.0f, 160.0f), GetTexture(\"powerup_speed\").DescriptorSet));` och likadant för sticky (20 s), pass-through (10 s), pad-size-increase (0 s), confuse och chaos (15 s var).",
+        "d3d12": "`game.PowerUps.push_back(MakePowerUp(\"speed\", XMFLOAT3(0.5f, 0.5f, 1.0f), 0.0f, XMFLOAT2(40.0f, 160.0f), GetTexture(\"powerup_speed\").ID));` och likadant för sticky (20 s), pass-through (10 s), pad-size-increase (0 s), confuse och chaos (15 s var)."
+      }
+    },
+    "update-powerups": {
+      "text": {
+        "opengl": "Skriv `IsOtherPowerUpActive` (är en annan power-up av den här typen fortfarande aktiv?) och `UpdatePowerUps` (flytta varje power-up med dess hastighet; räkna ned en aktiv power-ups Duration och, när den är slut, avaktivera den och slå av dess effekt om ingen annan av samma typ är aktiv; ta sedan bort de power-ups som är förstörda och inte aktiva); anropa den i `Update` efter partiklarna.",
+        "vulkan": "Skriv `IsOtherPowerUpActive` (är en annan power-up av den här typen fortfarande aktiv?) och `UpdatePowerUps` (flytta varje power-up med dess hastighet; räkna ned en aktiv power-ups Duration och, när den är slut, avaktivera den och slå av dess effekt om ingen annan av samma typ är aktiv; ta sedan bort de power-ups som är förstörda och inte aktiva); anropa den i `Update` efter partiklarna.",
+        "d3d12": "Skriv `IsOtherPowerUpActive` och `UpdatePowerUps` (flytta varje power-up med dess hastighet; räkna ned en aktiv power-ups Duration och, när den är slut, avaktivera den och slå av dess effekt om ingen annan av samma typ är aktiv; ta sedan bort de power-ups som är förstörda och inte aktiva); anropa den i `Update` efter partiklarna."
+      },
+      "hint": {
+        "opengl": "`powerUp.Position += powerUp.Velocity * dt;`, `if (powerUp.Activated) { powerUp.Duration -= dt; if (powerUp.Duration <= 0.0f) { powerUp.Activated = false; … } }`. Borttagningen: `game.PowerUps.erase(std::remove_if(game.PowerUps.begin(), game.PowerUps.end(), [](const PowerUp& powerUp) { return powerUp.Destroyed && !powerUp.Activated; }), game.PowerUps.end());` (`#include <algorithm>`).",
+        "vulkan": "`powerUp.Position += powerUp.Velocity * dt;`, `if (powerUp.Activated) { powerUp.Duration -= dt; if (powerUp.Duration <= 0.0f) { powerUp.Activated = false; … } }`. Borttagningen: `game.PowerUps.erase(std::remove_if(game.PowerUps.begin(), game.PowerUps.end(), [](const PowerUp& powerUp) { return powerUp.Destroyed && !powerUp.Activated; }), game.PowerUps.end());` (`<algorithm>` är redan inkluderad).",
+        "d3d12": "`XMStoreFloat2(&powerUp.Position, XMLoadFloat2(&powerUp.Position) + XMLoadFloat2(&powerUp.Velocity) * dt);`, `if (powerUp.Activated) { powerUp.Duration -= dt; if (powerUp.Duration <= 0.0f) { powerUp.Activated = false; … } }`. Borttagningen: `game.PowerUps.erase(std::remove_if(game.PowerUps.begin(), game.PowerUps.end(), [](const PowerUp& powerUp) { return powerUp.Destroyed && !powerUp.Activated; }), game.PowerUps.end());` (`#include <algorithm>`)."
+      }
+    },
+    "activate": {
+      "text": "Skriv `ActivatePowerUp` (slå på power-upens effekt) och kontrollera i `DoCollisions`, efter blocken, varje power-up som inte är förstörd: nedanför fönstret → förstörd; fångad av racketen (AABB) → aktiverad och förstörd.",
+      "hint": {
+        "opengl": "`if (powerUp.Position.y >= game.Height) powerUp.Destroyed = true; if (CheckCollision(Player, powerUp)) { ActivatePowerUp(powerUp); powerUp.Destroyed = true; powerUp.Activated = true; }` – `CheckCollision(Player, powerUp)` är AABB-versionen (två GameObjects). Confuse bara om chaos inte är aktivt, och tvärtom.",
+        "vulkan": "`if (powerUp.Position.y >= game.Height) powerUp.Destroyed = true; if (CheckCollision(Player, powerUp)) { ActivatePowerUp(powerUp); powerUp.Destroyed = true; powerUp.Activated = true; }` – `CheckCollision(Player, powerUp)` är AABB-versionen (två GameObjects). Confuse bara om chaos inte är aktivt, och tvärtom.",
+        "d3d12": "`if (powerUp.Position.y >= game.Height) powerUp.Destroyed = true; if (CheckCollision(Player, powerUp)) { ActivatePowerUp(powerUp); powerUp.Destroyed = true; powerUp.Activated = true; }` – AABB-versionen (två GameObjects). Speed: `XMStoreFloat2(&Ball.Velocity, XMLoadFloat2(&Ball.Velocity) * 1.2f);`. Confuse bara om chaos inte är aktivt, och tvärtom."
+      }
+    },
+    "spawn-powerups": {
+      "text": "Skriv `ShouldSpawn` (sant med chansen 1 på `chance`) och `SpawnPowerUps` (varje sort med sin egen chans – 1 på 75, de negativa confuse och chaos 1 på 15 – vid blockets position); anropa den i DoCollisions när ett block förstörs.",
+      "hint": {
+        "opengl": "`unsigned int random = rand() % chance; return random == 0;` – `if (ShouldSpawn(75)) game.PowerUps.push_back(MakePowerUp(\"speed\", …, block.Position, GetTexture(\"powerup_speed\").ID));` … I DoCollisions: `if (!box.IsSolid) { box.Destroyed = true; SpawnPowerUps(game, box); } else { …shake… }`.",
+        "vulkan": "`unsigned int random = rand() % chance; return random == 0;` – `if (ShouldSpawn(75)) game.PowerUps.push_back(MakePowerUp(\"speed\", …, block.Position, GetTexture(\"powerup_speed\").DescriptorSet));` … I DoCollisions: `if (!box.IsSolid) { box.Destroyed = true; SpawnPowerUps(game, box); } else { …shake… }`.",
+        "d3d12": "`unsigned int random = rand() % chance; return random == 0;` – `if (ShouldSpawn(75)) game.PowerUps.push_back(MakePowerUp(\"speed\", …, block.Position, GetTexture(\"powerup_speed\").ID));` … I DoCollisions: `if (!box.IsSolid) { box.Destroyed = true; SpawnPowerUps(game, box); } else { …shake… }`."
+      }
+    },
+    "sticky-pass": {
+      "text": "Få power-upsen sticky och pass-through att fungera: en klibbig racket behåller bollen (`Ball.Stuck = Ball.Sticky;` efter studsen mot racketen), pass-through hoppar över studsen mot block som inte är solida; och ResetPlayer slår av alla power-up-effekter.",
+      "hint": {
+        "opengl": "Lägg kollisionshanteringen i `if (!(Ball.PassThrough && !box.IsSolid)) { … }`. ResetPlayer: `Effects.Chaos = Effects.Confuse = false; Ball.PassThrough = Ball.Sticky = false; Player.Color = glm::vec3(1.0f); Ball.Color = glm::vec3(1.0f);`",
+        "vulkan": "Lägg kollisionshanteringen i `if (!(Ball.PassThrough && !box.IsSolid)) { … }`. ResetPlayer: `Effects.Chaos = Effects.Confuse = false; Ball.PassThrough = Ball.Sticky = false; Player.Color = glm::vec3(1.0f); Ball.Color = glm::vec3(1.0f);`",
+        "d3d12": "Lägg kollisionshanteringen i `if (!(Ball.PassThrough && !box.IsSolid)) { … }`. ResetPlayer: `Effects.Chaos = Effects.Confuse = false; Ball.PassThrough = Ball.Sticky = false; Player.Color = XMFLOAT3(1.0f, 1.0f, 1.0f); Ball.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);`"
+      }
+    }
+  }
+}
