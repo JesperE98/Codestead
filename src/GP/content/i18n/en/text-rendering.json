@@ -1,0 +1,45 @@
+{
+  "title": "Text Rendering",
+  "tasks": {
+    "freetype": {
+      "text": {
+        "opengl": "Include FreeType, initialise it, load `fonts/Inter-Bold.otf` as a face, set the glyph size to 48 pixels, and free the face and the library once the glyphs are loaded.",
+        "vulkan": "Include FreeType and, in `loadFont()`, initialise it, load `fonts/Inter-Bold.otf` as a face, set the glyph size to 48 pixels, and free the face and the library at the end.",
+        "d3d12": "Include FreeType (and link `freetype.lib`) and, in `LoadGlyphs`, initialise it, load `fonts/Inter-Bold.otf` as a face, set the glyph size to 48 pixels, and free the face and the library once the glyphs are loaded."
+      },
+      "hint": {
+        "opengl": "`#include <ft2build.h>` then `#include FT_FREETYPE_H`; `FT_Init_FreeType(&ft)` and `FT_New_Face(ft, \"fonts/Inter-Bold.otf\", 0, &face)` return non-zero on failure (print and `return -1`); `FT_Set_Pixel_Sizes(face, 0, 48);`; `FT_Done_Face(face); FT_Done_FreeType(ft);`.",
+        "vulkan": "`#include <ft2build.h>` then `#include FT_FREETYPE_H`; `FT_Init_FreeType(&ft)` and `FT_New_Face(ft, \"fonts/Inter-Bold.otf\", 0, &face)` return non-zero on failure – throw a `std::runtime_error`; `FT_Set_Pixel_Sizes(face, 0, 48);`; leave the glyph TODO between it and `FT_Done_Face(face); FT_Done_FreeType(ft);`.",
+        "d3d12": "`#include <ft2build.h>` then `#include FT_FREETYPE_H`, and `#pragma comment(lib, \"freetype.lib\")`; `FT_Init_FreeType(&ft)` and `FT_New_Face(ft, \"fonts/Inter-Bold.otf\", 0, &face)` return non-zero on failure – throw a `std::runtime_error`; `FT_Set_Pixel_Sizes(face, 0, 48);`; `FT_Done_Face(face); FT_Done_FreeType(ft);`."
+      }
+    },
+    "glyphs": {
+      "text": {
+        "opengl": "Add learnopengl's `Character` struct and `Characters` map, and load the first 128 ASCII characters: render each glyph with FreeType, upload its bitmap to a `GL_RED` texture and store a `Character` for it.",
+        "vulkan": "Add the `Character` struct (with `AtlasOffset`) and the `Characters` map, and load the first 128 ASCII characters: render each glyph with FreeType, copy its bitmap into its cell of the atlas and store a `Character` for it.",
+        "d3d12": "Add `Character` (with `AtlasPos`), `Characters` and the atlas's size, load the first 128 ASCII characters into the atlas, and create the atlas texture (`DXGI_FORMAT_R8_UNORM`) with its shader resource view in heap slot 1."
+      },
+      "hint": {
+        "opengl": "`glPixelStorei(GL_UNPACK_ALIGNMENT, 1)` first. In `for (unsigned char c = 0; c < 128; c++)`: `FT_Load_Char(face, c, FT_LOAD_RENDER)`, `glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer)`, CLAMP_TO_EDGE and LINEAR, then `Characters.insert(std::pair<char, Character>(c, character));`.",
+        "vulkan": "The cell: `glm::ivec2 offset((c % 16) * ATLAS_CELL, (c / 16) * ATLAS_CELL);`; for each of the `bitmap.rows` rows `memcpy(&atlasPixels[(offset.y + row) * ATLAS_WIDTH + offset.x], &face->glyph->bitmap.buffer[row * face->glyph->bitmap.pitch], face->glyph->bitmap.width);`. `createAtlasImage()` uploads `atlasPixels` after `loadFont()`.",
+        "d3d12": "`std::vector<unsigned char> atlas(AtlasWidth * AtlasHeight, 0)`; cell `(c % 16) * AtlasCellSize, (c / 16) * AtlasCellSize`; a `memcpy` per row from `face->glyph->bitmap.buffer + row * face->glyph->bitmap.pitch`. The texture like the earlier chapters' `LoadTexture` with `DXGI_FORMAT_R8_UNORM`, `RowPitch = AtlasWidth`, `pData = atlas.data()`, the barrier to `PIXEL_SHADER_RESOURCE` and the SRV."
+      }
+    },
+    "render-text": {
+      "text": {
+        "opengl": "Configure a VAO with a dynamic VBO for one quad (6 vertices of vec4: position xy, texture coordinates zw), write learnopengl's `RenderText` and draw \"This is sample text\" at (25, 25), scale 1.0, colour (0.5, 0.8, 0.2).",
+        "vulkan": "Write `RenderText` – one quad per character, written into the vertex buffer after the quads already written this frame, and one `vkCmdDraw` for it – and draw \"This is sample text\" at (25, 25), scale 1.0, colour (0.5, 0.8, 0.2).",
+        "d3d12": "Create the vertex buffer for the glyph quads, write `RenderText` – each quad at its own place in the buffer, one `DrawInstanced` per line – and draw \"This is sample text\" at (25, 25), scale 1.0, colour (0.5, 0.8, 0.2)."
+      },
+      "hint": {
+        "opengl": "`glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW)`, attribute 0 with 4 floats. Per character: `xpos = x + ch.Bearing.x * scale`, `ypos = y - (ch.Size.y - ch.Bearing.y) * scale`, `w = ch.Size.x * scale`, `h = ch.Size.y * scale`; the 6 vertices with `glBufferSubData`, bind `ch.TextureID`, `glDrawArrays(GL_TRIANGLES, 0, 6)`, then `x += (ch.Advance >> 6) * scale`.",
+        "vulkan": "Push the colour first (`VK_SHADER_STAGE_FRAGMENT_BIT`). Per character: learnopengl's `xpos`, `ypos`, `w`, `h`; `u0 = ch.AtlasOffset.x / (float) ATLAS_WIDTH` … `v1 = (ch.AtlasOffset.y + ch.Size.y) / (float) ATLAS_HEIGHT`, (u0, v0) at the top-left corner; `memcpy((char*) vertexBufferMapped + vertexCount * sizeof(Vertex), vertices, sizeof(vertices));`, `vkCmdDraw(commandBuffer, 6, 1, vertexCount, 0);`, `vertexCount += 6;`. In `recordCommandBuffer`: `vertexCount = 0;` and the call.",
+        "d3d12": "The buffer: `MaxTextVertices * sizeof(Vertex)` bytes in an upload heap, mapped once into `m_pVertexDataBegin`, and its view. `RenderText`: `SetGraphicsRoot32BitConstants(0, …)` with the colour, `firstVertex = m_textVertexCount`, each quad with `memcpy(m_pVertexDataBegin + m_textVertexCount * sizeof(Vertex), …)` and `m_textVertexCount += 6`, then `DrawInstanced(m_textVertexCount - firstVertex, 1, firstVertex, 0)`. In `PopulateCommandList`: `IASetVertexBuffers`, `m_textVertexCount = 0;`, the call."
+      }
+    },
+    "second-line": {
+      "text": "Draw a second line: \"(C) Codestead GP\" at (540, 570), scale 0.5, colour (0.3, 0.7, 0.9).",
+      "hint": "One more `RenderText` call after the first; y = 570 is near the top of the window, because y points up in these coordinates."
+    }
+  }
+}

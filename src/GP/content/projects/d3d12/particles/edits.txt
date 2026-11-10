@@ -1,0 +1,282 @@
+=== task: particle-shader
+--- file: particle.hlsl
+--- find:
+    // TODO: a quad of scale 10 x 10 pixels whose top-left corner is at offset: pass the texture coordinates and the colour on
+    result.texCoord = float2(0.0f, 0.0f);
+    result.particleColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    result.position = float4(0.0f, 0.0f, 0.0f, 1.0f);
+--- replace:
+    float scale = 10.0f;
+    result.texCoord = texCoord;
+    result.particleColor = color;
+    result.position = mul(float4((position * scale) + offset, 0.0f, 1.0f), projection);
+--- file: particle.hlsl
+--- find:
+    // TODO: the particle texture's colour multiplied by the particle's colour
+    return float4(1.0f, 1.0f, 1.0f, 1.0f);
+--- replace:
+    return sprite.Sample(wrapSampler, input.texCoord) * input.particleColor;
+--- file: main.cpp
+--- find:
+// creates the pipeline state from the compiled vertex and pixel shader, with the states 2D
+// sprites need: alpha blending on (learnopengl's glEnable(GL_BLEND) and glBlendFunc), no
+// depth buffer, no culling
+// TODO: a parameter destBlend, the blend function's second factor (default D3D12_BLEND_INV_SRC_ALPHA; the particles add with D3D12_BLEND_ONE), passed on by loadShaderFromFile and LoadShader
+void Compile(Shader& shader, ID3DBlob* vertexShader, ID3DBlob* pixelShader)
+--- replace:
+// creates the pipeline state from the compiled vertex and pixel shader, with the states 2D
+// sprites need: alpha blending on (learnopengl's glEnable(GL_BLEND) and glBlendFunc), no
+// depth buffer, no culling. destBlend is the blend function's second factor: the default
+// INV_SRC_ALPHA mixes by alpha (GL_ONE_MINUS_SRC_ALPHA), ONE adds the colour (GL_ONE)
+void Compile(Shader& shader, ID3DBlob* vertexShader, ID3DBlob* pixelShader, D3D12_BLEND destBlend = D3D12_BLEND_INV_SRC_ALPHA)
+--- file: main.cpp
+--- find:
+    psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+--- replace:
+    psoDesc.BlendState.RenderTarget[0].DestBlend = destBlend;
+--- file: main.cpp
+--- find:
+    psoDesc.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
+--- replace:
+    psoDesc.BlendState.RenderTarget[0].DestBlendAlpha = destBlend;
+--- file: main.cpp
+--- find:
+// PSMain of an HLSL file
+Shader loadShaderFromFile(const wchar_t* shaderFile)
+--- replace:
+// PSMain of an HLSL file, blending with destBlend (see Compile)
+Shader loadShaderFromFile(const wchar_t* shaderFile, D3D12_BLEND destBlend)
+--- file: main.cpp
+--- find:
+    Compile(shader, vertexShader.Get(), pixelShader.Get());
+--- replace:
+    Compile(shader, vertexShader.Get(), pixelShader.Get(), destBlend);
+--- file: main.cpp
+--- find:
+Shader LoadShader(const wchar_t* shaderFile, std::string name)
+{
+    Shaders[name] = loadShaderFromFile(shaderFile);
+--- replace:
+Shader LoadShader(const wchar_t* shaderFile, std::string name, D3D12_BLEND destBlend = D3D12_BLEND_INV_SRC_ALPHA)
+{
+    Shaders[name] = loadShaderFromFile(shaderFile, destBlend);
+--- file: main.cpp
+--- find:
+    // TODO: load the particle shader (particle.hlsl) as "particle", blending with D3D12_BLEND_ONE
+--- replace:
+    LoadShader(L"particle.hlsl", "particle", D3D12_BLEND_ONE);
+--- file: main.cpp
+--- find:
+    // TODO: load textures/particle.png (with alpha) as "particle"
+--- replace:
+    LoadTexture("textures/particle.png", true, "particle");
+
+=== task: particle-generator
+--- file: main.cpp
+--- find:
+// TODO: struct Particle (Position, Velocity, Color, Life), struct ParticleGenerator (the particles, their amount, shader, texture, vertex buffer) and the function InitParticles
+--- replace:
+// Represents a single particle and its state
+struct Particle
+{
+    XMFLOAT2 Position = XMFLOAT2(0.0f, 0.0f), Velocity = XMFLOAT2(0.0f, 0.0f);
+    XMFLOAT4 Color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+    float    Life = 0.0f;
+};
+
+// ParticleGenerator acts as a container for rendering a large number of
+// particles by repeatedly spawning and updating particles and killing
+// them after a given amount of time.
+struct ParticleGenerator
+{
+    // state
+    std::vector<Particle>    particles;
+    unsigned int             amount = 0;
+    // render state
+    Shader                   shader;
+    unsigned int             texture = 0; // the texture's ID (its view's slot in the heap)
+    ComPtr<ID3D12Resource>   quadVertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW quadVertexBufferView = {};
+};
+
+// initializes the quad's buffer and its view and creates the particles (learnopengl's ParticleGenerator constructor calls it)
+void InitParticles(ParticleGenerator& generator)
+{
+    // set up mesh and attribute properties: the same unit quad as the sprites, in an upload heap
+    float particle_quad[] = {
+        0.0f, 1.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+
+        0.0f, 1.0f, 0.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, 1.0f,
+        1.0f, 0.0f, 1.0f, 0.0f
+    };
+    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(particle_quad));
+    ThrowIfFailed(Graphics.Device->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &bufferDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&generator.quadVertexBuffer)));
+
+    UINT8* pVertexDataBegin = nullptr;
+    CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+    ThrowIfFailed(generator.quadVertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+    memcpy(pVertexDataBegin, particle_quad, sizeof(particle_quad));
+    generator.quadVertexBuffer->Unmap(0, nullptr);
+
+    generator.quadVertexBufferView.BufferLocation = generator.quadVertexBuffer->GetGPUVirtualAddress();
+    generator.quadVertexBufferView.StrideInBytes = 4 * sizeof(float);
+    generator.quadVertexBufferView.SizeInBytes = sizeof(particle_quad);
+
+    // create generator.amount default particle instances
+    for (unsigned int i = 0; i < generator.amount; ++i)
+        generator.particles.push_back(Particle());
+}
+--- file: main.cpp
+--- find:
+// TODO: the particle generator: a global ParticleGenerator Particles
+--- replace:
+ParticleGenerator Particles;
+--- file: main.cpp
+--- find:
+    // TODO: set up the particle generator: 500 particles with the particle shader and texture
+--- replace:
+    // set up the particle generator (learnopengl's ParticleGenerator constructor): 500 particles
+    Particles.shader = GetShader("particle");
+    Particles.texture = GetTexture("particle").ID;
+    Particles.amount = 500;
+    InitParticles(Particles);
+--- file: main.cpp
+--- find:
+    Renderer = SpriteRenderer();
+--- replace:
+    Renderer = SpriteRenderer();
+    Particles = ParticleGenerator();
+
+=== task: spawn
+--- file: main.cpp
+--- find:
+#include <cstdio>
+#include <cstring>
+--- replace:
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+--- file: main.cpp
+--- find:
+// TODO: lastUsedParticle and the functions firstUnusedParticle, respawnParticle and Update (spawn new particles at an object, then age and move the living ones)
+--- replace:
+// stores the index of the last particle used (for quick access to next dead particle)
+unsigned int lastUsedParticle = 0;
+// returns the first Particle index that's currently unused e.g. Life <= 0.0f or 0 if no particle is currently inactive
+unsigned int firstUnusedParticle(ParticleGenerator& generator)
+{
+    // first search from last used particle, this will usually return almost instantly
+    for (unsigned int i = lastUsedParticle; i < generator.amount; ++i)
+    {
+        if (generator.particles[i].Life <= 0.0f)
+        {
+            lastUsedParticle = i;
+            return i;
+        }
+    }
+    // otherwise, do a linear search
+    for (unsigned int i = 0; i < lastUsedParticle; ++i)
+    {
+        if (generator.particles[i].Life <= 0.0f)
+        {
+            lastUsedParticle = i;
+            return i;
+        }
+    }
+    // all particles are taken, override the first one (note that if it repeatedly hits this case, more particles should be reserved)
+    lastUsedParticle = 0;
+    return 0;
+}
+
+// respawns particle
+void respawnParticle(Particle& particle, GameObject& object, XMFLOAT2 offset = XMFLOAT2(0.0f, 0.0f))
+{
+    float random = ((rand() % 100) - 50) / 10.0f;
+    float rColor = 0.5f + ((rand() % 100) / 100.0f);
+    XMStoreFloat2(&particle.Position, XMLoadFloat2(&object.Position) + XMVectorReplicate(random) + XMLoadFloat2(&offset));
+    particle.Color = XMFLOAT4(rColor, rColor, rColor, 1.0f);
+    particle.Life = 1.0f;
+    XMStoreFloat2(&particle.Velocity, XMLoadFloat2(&object.Velocity) * 0.1f);
+}
+
+// update all particles: spawn newParticles at the object, age and move the living ones
+void Update(ParticleGenerator& generator, float dt, GameObject& object, unsigned int newParticles, XMFLOAT2 offset = XMFLOAT2(0.0f, 0.0f))
+{
+    // add new particles
+    for (unsigned int i = 0; i < newParticles; ++i)
+    {
+        int unusedParticle = firstUnusedParticle(generator);
+        respawnParticle(generator.particles[unusedParticle], object, offset);
+    }
+    // update all particles
+    for (unsigned int i = 0; i < generator.amount; ++i)
+    {
+        Particle& p = generator.particles[i];
+        p.Life -= dt; // reduce life
+        if (p.Life > 0.0f)
+        {   // particle is alive, thus update
+            XMStoreFloat2(&p.Position, XMLoadFloat2(&p.Position) - XMLoadFloat2(&p.Velocity) * dt);
+            p.Color.w -= dt * 2.5f;
+        }
+    }
+}
+--- file: main.cpp
+--- find:
+    // TODO: update the particles: 2 new ones per frame at the ball, offset by half its radius
+--- replace:
+    // update particles
+    Update(Particles, dt, Ball, 2, XMFLOAT2(Ball.Radius / 2.0f, Ball.Radius / 2.0f));
+
+=== task: draw-particles
+--- file: main.cpp
+--- find:
+// TODO: struct ParticleConstants (the particle shaders' root constants) and the function DrawParticles: every living particle, with additive blending
+--- replace:
+// the root constants of a particle: what the particle shaders see as cbuffer ParticleConstants.
+// HLSL packs a constant buffer in rows of 16 bytes and a float4 never straddles two rows: after
+// the float2 offset, color starts in the next row - so the C++ struct pads 8 bytes before it
+struct ParticleConstants
+{
+    XMFLOAT2 offset;
+    XMFLOAT2 padding;
+    XMFLOAT4 color;
+};
+
+// render all particles
+void DrawParticles(ParticleGenerator& generator)
+{
+    // use additive blending to give it a 'glow' effect: the particle shader's pipeline state
+    // blends with SRC_ALPHA and ONE (learnopengl's glBlendFunc(GL_SRC_ALPHA, GL_ONE)); the
+    // sprites' pipeline state keeps its own blending, so nothing needs to be reset afterwards
+    Use(generator.shader);
+    for (Particle particle : generator.particles)
+    {
+        if (particle.Life > 0.0f)
+        {
+            ParticleConstants constants = {};
+            constants.offset = particle.Position;
+            constants.color = particle.Color;
+            Graphics.CommandList->SetGraphicsRoot32BitConstants(0, sizeof(ParticleConstants) / 4, &constants, 0);
+            CD3DX12_GPU_DESCRIPTOR_HANDLE textureHandle(Graphics.SrvHeap->GetGPUDescriptorHandleForHeapStart(), generator.texture, Graphics.SrvDescriptorSize);
+            Graphics.CommandList->SetGraphicsRootDescriptorTable(2, textureHandle);
+            Graphics.CommandList->IASetVertexBuffers(0, 1, &generator.quadVertexBufferView);
+            Graphics.CommandList->DrawInstanced(6, 1, 0, 0);
+        }
+    }
+}
+--- file: main.cpp
+--- find:
+        // TODO: draw the particles
+--- replace:
+        // draw particles
+        DrawParticles(Particles);

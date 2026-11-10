@@ -1,0 +1,53 @@
+{
+  "title": "Rendering Sprites",
+  "tasks": {
+    "sprite-shader": {
+      "text": {
+        "opengl": "Write the sprite shaders – `sprite.vs` passes `vertex.zw` on as `TexCoords` and transforms `vertex.xy` with `projection * model`, `sprite.fs` multiplies the texture by `spriteColor` – and in `Init` load them as `\"sprite\"` and set the sampler `image` to unit 0 and the orthographic projection.",
+        "vulkan": "Write the sprite shaders – `sprite.vert` passes `vertex.zw` on as `TexCoords` and transforms `vertex.xy` with `ubo.projection * pc.model`, `sprite.frag` multiplies the texture by `pc.spriteColor` – load them in `Init` as `\"sprite\"`, and set the orthographic projection in `updateUniformBuffer()`.",
+        "d3d12": "Write the sprite shaders – `VSMain` passes the texture coordinates on and transforms the position with `model`, then `projection`; `PSMain` multiplies the texture by `spriteColor` – load them in `Init` as `\"sprite\"`, and write the orthographic projection into the constant buffer in `OnUpdate`."
+      },
+      "hint": {
+        "opengl": "`LoadShader(\"sprite.vs\", \"sprite.fs\", nullptr, \"sprite\");`, `glm::ortho(0.0f, static_cast<float>(game.Width), static_cast<float>(game.Height), 0.0f, -1.0f, 1.0f)` (bottom = height, top = 0: y points down), then `Use(GetShader(\"sprite\"))`, `SetInteger(GetShader(\"sprite\"), \"image\", 0)`, `SetMatrix4(GetShader(\"sprite\"), \"projection\", projection)`.",
+        "vulkan": "`LoadShader(\"shaders/sprite.vert.spv\", \"shaders/sprite.frag.spv\", \"sprite\");`. Projection: `ubo.projection = glm::ortho(0.0f, static_cast<float>(Hedgerow.Width), 0.0f, static_cast<float>(Hedgerow.Height), -1.0f, 1.0f);` – bottom 0 and top = height, because Vulkan's clip space y already points down.",
+        "d3d12": "`result.position = mul(mul(float4(position, 0.0f, 1.0f), model), projection);`, `return float4(spriteColor, 1.0f) * image.Sample(wrapSampler, input.texCoord);`, `LoadShader(L\"sprite.hlsl\", \"sprite\");`. In `OnUpdate`: `XMMatrixOrthographicOffCenterRH(0.0f, static_cast<float>(Hedgerow.Width), static_cast<float>(Hedgerow.Height), 0.0f, -1.0f, 1.0f)`, `XMStoreFloat4x4(&constantBufferData.projection, XMMatrixTranspose(projection))`, `memcpy(m_pCbvDataBegin, …)`."
+      }
+    },
+    "sprite-renderer": {
+      "text": {
+        "opengl": "Add the `SpriteRenderer` struct (its shader and the quad's VAO) with `InitRenderData`, which creates learnopengl's quad (6 vertices, position xy and texture coordinates zw in one vec4 attribute), the global `SpriteRenderer Renderer`; set it up in `Init` and delete its VAO at the end of `main`.",
+        "vulkan": "Add the `SpriteRenderer` struct (the pipeline, its layout, the quad's vertex buffer and the command buffer being recorded), the member `InitRenderData`, which creates learnopengl's quad in a vertex buffer, and the global `SpriteRenderer Renderer`; set it up in `Init`, give it the command buffer in `recordCommandBuffer()` and destroy its buffer in `cleanup()`.",
+        "d3d12": "Add `SpriteRenderer` (its shader, the quad's vertex buffer and view), the root constants struct `SpriteConstants` and `InitRenderData`, which creates learnopengl's quad (6 vertices of 4 floats); a global `SpriteRenderer Renderer`, set up in `Init` and released in `OnDestroy`."
+      },
+      "hint": {
+        "opengl": "`glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0)`. In `Init` after the shader: `Renderer.shader = GetShader(\"sprite\"); InitRenderData(Renderer);`. After `ClearResources();`: `glDeleteVertexArrays(1, &Renderer.quadVAO);`.",
+        "vulkan": "In `Init`: `Renderer.pipeline = GetShader(\"sprite\"); Renderer.pipelineLayout = pipelineLayout; InitRenderData(Renderer);`. `InitRenderData`: `createBuffer(…, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, renderer.quadBuffer, renderer.quadBufferMemory)`, map, `memcpy`, unmap. `Renderer.commandBuffer = commandBuffer;` before `Render(Hedgerow);`.",
+        "d3d12": "The vertex buffer like the earlier chapters' (upload heap, `Map`, `memcpy`, `Unmap`), its view with `StrideInBytes = 4 * sizeof(float)`. In `Init`: `Renderer.shader = GetShader(\"sprite\"); InitRenderData(Renderer);`. In `OnDestroy` after `ClearResources();`: `Renderer = SpriteRenderer();`."
+      }
+    },
+    "draw-sprite": {
+      "text": {
+        "opengl": "Write `DrawSprite` – the model matrix (translate to `position`, scale to `size`; the rotation is the next task), the `model` and `spriteColor` uniforms, the texture on unit 0, the quad drawn –, load `textures/ball.png` with alpha as `\"ball\"` and draw it in `Render` at (200, 200), size (300, 400), 45°, green.",
+        "vulkan": "Write `DrawSprite` – the model matrix (translate to `position`, scale to `size`; the rotation is the next task), the matrix and colour as push constants, the texture's descriptor set, the quad drawn –, load `textures/ball.png` as `\"ball\"` and draw it in `Render` at (200, 200), size (300, 400), 45°, green.",
+        "d3d12": "Write `DrawSprite` – the model matrix (scale to `size`, move to `position`; the rotation is the next task), the root constants, the texture's descriptor table, the quad drawn –, load `textures/ball.png` with alpha as `\"ball\"` and draw it in `Render` at (200, 200), size (300, 400), 45°, green."
+      },
+      "hint": {
+        "opengl": "The order is reversed: `glm::translate(model, glm::vec3(position, 0.0f))` first in the code, `glm::scale(model, glm::vec3(size, 1.0f))` last. Then `SetMatrix4(renderer.shader, \"model\", model)`, `SetVector3f(renderer.shader, \"spriteColor\", color)`, `glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, texture);`, `glBindVertexArray(renderer.quadVAO); glDrawArrays(GL_TRIANGLES, 0, 6);`.",
+        "vulkan": "`vkCmdBindPipeline(renderer.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer.pipeline)`; translate first, scale last; `vkCmdPushConstants(renderer.commandBuffer, renderer.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants)`, `vkCmdBindDescriptorSets(…, &texture, …)`, `vkCmdBindVertexBuffers` with `renderer.quadBuffer`, `vkCmdDraw(renderer.commandBuffer, 6, 1, 0, 0)`. Draw with `GetTexture(\"ball\").DescriptorSet`.",
+        "d3d12": "DirectXMath's order is the order things happen: `XMMatrixScaling(size.x, size.y, 1.0f)` first, `* XMMatrixTranslation(position.x, position.y, 0.0f)` last; `XMStoreFloat4x4(&constants.model, XMMatrixTranspose(model))`. Then `Use(renderer.shader)`, `SetGraphicsRoot32BitConstants(0, sizeof(SpriteConstants) / 4, &constants, 0)`, `SetGraphicsRootDescriptorTable(2, textureHandle)`, `IASetVertexBuffers`, `DrawInstanced(6, 1, 0, 0)`."
+      }
+    },
+    "rotate": {
+      "text": {
+        "opengl": "Rotate the sprite by `rotate` degrees about its centre: move the origin to the quad's centre, rotate about z, move it back – between the translation and the scale.",
+        "vulkan": "Rotate the sprite by `rotate` degrees about its centre: move the origin to the quad's centre, rotate about z, move it back – between the translation and the scale.",
+        "d3d12": "Rotate the sprite by `rotate` degrees about its centre: move the quad's centre to the origin, rotate about z, move it back – between the scaling and the translation."
+      },
+      "hint": {
+        "opengl": "`glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f))`, `glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f, 0.0f, 1.0f))`, `glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f * size.y, 0.0f))`.",
+        "vulkan": "`glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f))`, `glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f, 0.0f, 1.0f))`, `glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f * size.y, 0.0f))`.",
+        "d3d12": "`model = model * XMMatrixTranslation(-0.5f * size.x, -0.5f * size.y, 0.0f);`, `model = model * XMMatrixRotationZ(XMConvertToRadians(rotate));`, `model = model * XMMatrixTranslation(0.5f * size.x, 0.5f * size.y, 0.0f);` – learnopengl's three lines in DirectXMath's order."
+      }
+    }
+  }
+}

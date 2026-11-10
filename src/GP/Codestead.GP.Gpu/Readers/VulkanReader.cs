@@ -67,7 +67,9 @@ public sealed partial class VulkanReader
             return scene;
         }
         scene.Log.Add("vkCreateInstance: VK_SUCCESS");
-        if (Reached("vkCreateDebugUtilsMessengerEXT") || src.Uses("CreateDebugUtilsMessengerEXT")) scene.Log.Add("validation layer: VK_LAYER_KHRONOS_validation enabled");
+        // The validation layer is on; a program with its own debug callback prints the layer's messages itself.
+        if ((Reached("vkCreateDebugUtilsMessengerEXT") || src.Uses("CreateDebugUtilsMessengerEXT")) && !Regex.IsMatch(src.Code, @"\.pfnUserCallback\s*=\s*&?\s*\w+\s*;"))
+            scene.Log.Add("validation layer: VK_LAYER_KHRONOS_validation enabled");
         if (!Reached("vkEnumeratePhysicalDevices")) return Done("vkNoPhysicalDevice");
         scene.Log.Add("GPU: Codestead Virtual GPU (simulated)");
         if (!Reached("vkCreateDevice")) return Done("vkNoDevice");

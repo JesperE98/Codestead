@@ -14,8 +14,9 @@
 # Needs (Ubuntu 24.04): g++ libglfw3-dev libvulkan-dev glslang-tools g++-mingw-w64-x86-64 xvfb x11-apps
 #   imagemagick mesa-vulkan-drivers vulkan-validationlayers libgl1-mesa-dri libstb-dev libassimp-dev
 #   libtinyobjloader-dev libfreetype-dev, and `pip install glad` (GLAD 1).
-# Game chapters (a key callback) run with fixedtime.c preloaded: deterministic time (frames / 60, stopped at
-# VERIFY_T seconds, default 1) and the space bar pressed at 0.5 s; VERIFY_FIXEDTIME=1 turns it on for any project.
+# Game chapters (a key callback) run with fixedtime.c preloaded: deterministic time (frames / 60) and the space bar
+# pressed at 0.5 s; the program holds frame VERIFY_T * 60 (VERIFY_T in seconds, default 1) and the screenshot shows
+# that frame. VERIFY_FIXEDTIME=1 turns it on for any project.
 # Screenshots go to $VERIFY_OUT (default /tmp/codestead-gp-verify) as <api>-<chapter>-<folder>.png.
 set -uo pipefail
 
@@ -37,7 +38,7 @@ glad_dir() {
 }
 
 # The LD_PRELOAD shim with deterministic time and input (fixedtime.c), for projects that read keys through a key
-# callback (the 2D game) or when VERIFY_FIXEDTIME is set: glfwGetTime() = frames / 60, frozen at VERIFY_T (1 s).
+# callback (the 2D game) or when VERIFY_FIXEDTIME is set: glfwGetTime() = frames / 60, frame VERIFY_T * 60 held.
 fixedtime_for() {
   local work="$1"
   if grep -qs "glfwSetKeyCallback" "$work/main.cpp" || [ -n "${VERIFY_FIXEDTIME:-}" ]; then
@@ -87,9 +88,22 @@ start_x() {
 run_and_shoot() {
   local exe="$1" name="$2" log="$3" preload="${4:-}"
   start_x
-  ( LD_PRELOAD="$preload" "$exe" >"$log" 2>&1 ) &
+  local ready=""
+  # With the fixed-time shim the program holds frame VERIFY_T * 60 and then says so (fixedtime.c): wait for that,
+  # however slow the driver is (at most VERIFY_MAXWAIT seconds), instead of a fixed time.
+  [ -n "$preload" ] && { ready="$(mktemp -u)"; }
+  ( VERIFY_READY="$ready" LD_PRELOAD="$preload" "$exe" >"$log" 2>&1 ) &
   local pid=$!
-  sleep "${VERIFY_WAIT:-3}"
+  if [ -n "$ready" ]; then
+    local waited=0
+    while [ ! -e "$ready" ] && kill -0 "$pid" 2>/dev/null && [ "$waited" -lt $(( ${VERIFY_MAXWAIT:-120} * 5 )) ]; do
+      sleep 0.2; waited=$(( waited + 1 ))
+    done
+    [ -e "$ready" ] || echo "    (frame $(awk "BEGIN { print int(${VERIFY_T:-1.0} * 60 + 0.5) }") not reached before the screenshot)"
+    sleep 0.5; rm -f "$ready"
+  else
+    sleep "${VERIFY_WAIT:-3}"
+  fi
   xwd -root -silent | convert xwd:- -crop "${VERIFY_SIZE:-800x600}+0+0" "$OUT/$name.png"
   kill "$pid" 2>/dev/null; sleep 0.3; kill -9 "$pid" 2>/dev/null
   wait "$pid" 2>/dev/null
@@ -117,7 +131,7 @@ for dir in "$@"; do
       libs=""; grep -rqs "assimp/" "$work" --include=*.cpp --include=*.h && libs="-lassimp"
       # Text rendering: FreeType.
       grep -qs "ft2build.h" "$work/main.cpp" && libs="$libs $(pkg-config --cflags --libs freetype2)"
-      shim=$(fixedtime_for "$work"); [ -n "$shim" ] && echo "  fixed time (frames / 60, stops at ${VERIFY_T:-1.0} s; space pressed at 0.5 s)"
+      shim=$(fixedtime_for "$work"); [ -n "$shim" ] && echo "  fixed time (frames / 60, space pressed at 0.5 s; shows frame $(awk "BEGIN { print int(${VERIFY_T:-1.0} * 60 + 0.5) }") = ${VERIFY_T:-1.0} s)"
       if g++ -std=c++17 -Wall -o "$work/app" "$work/main.cpp" "$glad/src/glad.c" -I"$glad/include" -I"$work" -I/usr/include/stb -lglfw -ldl $libs 2>"$work/build.log"; then
         echo "  compiled"
         if [ -z "${VERIFY_NO_RUN:-}" ]; then
@@ -141,7 +155,7 @@ for dir in "$@"; do
         glslangValidator -V "$s" -o "$out" >"$work/glslang.log" || { fail "$(basename "$s"):"; cat "$work/glslang.log"; }
       done
       libs=""; grep -qs "ft2build.h" "$work/main.cpp" && libs="$(pkg-config --cflags --libs freetype2)"
-      shim=$(fixedtime_for "$work"); [ -n "$shim" ] && echo "  fixed time (frames / 60, stops at ${VERIFY_T:-1.0} s; space pressed at 0.5 s)"
+      shim=$(fixedtime_for "$work"); [ -n "$shim" ] && echo "  fixed time (frames / 60, space pressed at 0.5 s; shows frame $(awk "BEGIN { print int(${VERIFY_T:-1.0} * 60 + 0.5) }") = ${VERIFY_T:-1.0} s)"
       if g++ -std=c++17 -Wall -I/usr/include/stb -o "$work/app" "$work/main.cpp" -lglfw -lvulkan $libs 2>"$work/build.log"; then
         echo "  compiled"
         if [ -z "${VERIFY_NO_RUN:-}" ]; then

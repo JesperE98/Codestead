@@ -26,6 +26,7 @@ public static class GpAchievements
         PartDone("advanced-opengl", "🧪"),
         PartDone("advanced-lighting", "🌗"),
         PartDone("pbr", "💎"),
+        PartDone("in-practice", "🎮"),
         Count("all-apis", "🌐", AchievementCategory.Learning, ApisUsed, 3),
         Checkpoints(25, "🤔"),
         // The workbench

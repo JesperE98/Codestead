@@ -19,8 +19,29 @@ public sealed partial class CppSource
     private static readonly Regex ChronoRe = new(@"(?:std::)?chrono::duration\s*<[^;]*?>\s*\([^;]*?\)\s*\.\s*count\s*\(\s*\)", RegexOptions.CultureInvariant);
     private static readonly Regex TickRe = new(@"\bGetTickCount(?:64)?\s*\(\s*\)", RegexOptions.CultureInvariant);
 
-    /// <summary>C++ → the shader expression language: clocks become glfwGetTime(), casts and suffixes go.</summary>
+    private static readonly Regex DurationRe = new(@"(?:std::)?chrono::duration\s*<[^;]*?>\s*\(([^;]*?)\)\s*\.\s*count\s*\(\s*\)", RegexOptions.CultureInvariant);
+    private static readonly Regex NowRe = new(@"(?:std::)?chrono::(?:high_resolution|steady|system)_clock::now\s*\(\s*\)", RegexOptions.CultureInvariant);
+
+    /// <summary>
+    /// C++ as the program runs it: a clock's now() is the time (glfwGetTime(), seconds), a duration's count() the
+    /// difference of two such times; GetTickCount the time in milliseconds.
+    /// </summary>
     internal static string Prepare(string expr)
+    {
+        if (expr.Contains("chrono", StringComparison.Ordinal))
+        {
+            expr = DurationRe.Replace(expr, "($1)");
+            expr = NowRe.Replace(expr, "glfwGetTime()");
+        }
+        expr = TickRe.Replace(expr, "(glfwGetTime() * 1000.0)");
+        return expr;
+    }
+
+    /// <summary>
+    /// For a value read without running the program (an initializer): any duration is the time since the program
+    /// started (std::chrono::duration&lt;float&gt;(now - startTime).count() → glfwGetTime()).
+    /// </summary>
+    private static string PrepareStatic(string expr)
     {
         expr = ChronoRe.Replace(expr, "glfwGetTime()");
         expr = TickRe.Replace(expr, "(glfwGetTime() * 1000.0)");
@@ -31,7 +52,7 @@ public sealed partial class CppSource
     public ShaderValue? Evaluate(string expr, double time = 1.0)
     {
         if (string.IsNullOrWhiteSpace(expr)) return null;
-        var prepared = Prepare(expr);
+        var prepared = PrepareStatic(expr);
         if (prepared.Contains("glfwGetTime", StringComparison.Ordinal)) UsedTime = true;
         try
         {
@@ -130,7 +151,7 @@ public sealed partial class CppSource
 
     private ShaderValue? EvaluateOrNull(string expr, double time)
     {
-        var prepared = Prepare(expr);
+        var prepared = PrepareStatic(expr);
         if (prepared.Contains("glfwGetTime", StringComparison.Ordinal)) UsedTime = true;
         try
         {

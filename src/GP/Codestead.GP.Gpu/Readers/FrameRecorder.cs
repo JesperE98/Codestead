@@ -105,6 +105,7 @@ internal sealed class FrameRecorder
     {
         if (name.Contains("::", StringComparison.Ordinal)) name = name[(name.LastIndexOf("::", StringComparison.Ordinal) + 2)..];
         if (device is null || callDepth > 6 || name is "main" or "wWinMain" or "WinMain" or "OnRender" or "mainLoop" or "run" or "drawFrame" || !source.Functions.ContainsKey(name)) return null;
+        name = source.ChooseOverload(name, args, exec.TryEval);
         if (!headers.TryGetValue(name, out var parameters))
             headers[name] = parameters = source.ParametersOf(name)?.Select(p => (p.Name, p.Ref, p.Default)).ToList();
         if (parameters is null) return null;
@@ -211,8 +212,23 @@ internal sealed class FrameRecorder
         return ShaderValue.Scalar(0);
     }
 
+    /// <summary>Functions of the program not run now (a game's drawFrame in a frame that is not shown).</summary>
+    public HashSet<string> Skip { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>Called when the program polls its window's events (glfwPollEvents): the frame's key presses.</summary>
+    public Action? OnPollEvents { get; set; }
+
+    /// <summary>Runs C++ statements (text) with the program's state.</summary>
+    public void RunCode(string code) => exec.Run(code);
+
     private ShaderValue? Hook(string name, IReadOnlyList<Expr> args)
     {
+        if (Skip.Contains(name)) return ShaderValue.Scalar(0);
+        if (name == "glfwPollEvents" && OnPollEvents is { } poll)
+        {
+            poll();
+            return ShaderValue.Scalar(0);
+        }
         var fromDevice = device?.Hook(name, args);
         switch (name)
         {

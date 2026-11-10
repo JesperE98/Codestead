@@ -110,6 +110,8 @@ public sealed partial class D3D12Reader
         var recorder = new FrameRecorder(src, time, scene, blocks, transposeMatrices: true, device) { Project = project };
         recorder.Setup();
         if (device.WindowSrgb) scene.WindowSrgb = true;
+        // A game: the frames before the shown one (OnUpdate with the frame's input, without drawing).
+        GameFrames.RunWin32(src, recorder, time);
         foreach (var fn in new[] { "OnUpdate" }.Where(src.Functions.ContainsKey)) recorder.Run(fn);
         // The command list is recorded in PopulateCommandList (draws may sit in a helper it calls).
         // A program that reads the debug layer's info queue after ExecuteCommandLists (learnopengl's "Debugging"): the

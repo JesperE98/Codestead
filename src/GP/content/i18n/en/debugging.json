@@ -1,0 +1,67 @@
+{
+  "title": "Debugging",
+  "tasks": {
+    "check-error": {
+      "text": { "opengl": "Add learnopengl's `glCheckError_(file, line)` function and the `glCheckError()` macro, and call `glCheckError();` after the texture is loaded and after the two uniforms are set." },
+      "hint": { "opengl": "`glGetError()` returns one recorded error flag and clears it – read it in a `while ((errorCode = glGetError()) != GL_NO_ERROR)` loop and print the error's name with `file` and `line`; `#define glCheckError() glCheckError_(__FILE__, __LINE__)`. The two calls go right after `stbi_image_free(data);` and right after `glUniform1i(…, \"tex\", 0);`." }
+    },
+    "use-program": {
+      "text": { "opengl": "Fix the error `glCheckError` reports after the uniforms: make the shader the program in use before `projection` and `tex` are set." },
+      "hint": { "opengl": "`glUniform*` changes a uniform of the program in use, and none is in use yet: call `shader.use();` between `glm::perspective(…)` and the `glUniformMatrix4fv` call." }
+    },
+    "debug-output": {
+      "text": { "opengl": "Ask GLFW for an OpenGL 4.3 debug context, write learnopengl's `glDebugOutput` callback and, after GLAD is loaded, enable debug output with it when the context is a debug context." },
+      "hint": { "opengl": "`glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4)`, minor 3, `glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true)`; then `int flags; glGetIntegerv(GL_CONTEXT_FLAGS, &flags); if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) { glEnable(GL_DEBUG_OUTPUT); glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); glDebugMessageCallback(glDebugOutput, nullptr); glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE); }`." }
+    },
+    "fix-texture": {
+      "text": {
+        "opengl": "Fix the error the debug output names: upload the image to `GL_TEXTURE_2D`, the target the texture is bound to.",
+        "d3d12": "Fix the second mistake (message #31): give the shader resource view in `LoadTexture` the texture's one mip level, `srvDesc.Texture2D.MipLevels = 1;`."
+      },
+      "hint": {
+        "opengl": "`GL_FRAMEBUFFER` is not a texture target: `glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);`.",
+        "d3d12": "The message says MipLevels (value = 0) must be between 1 and 1: `srvDesc` was zero-initialised with `= {}` and its `Texture2D.MipLevels` was never set. Put the line after `srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;`."
+      }
+    },
+    "shader-output": {
+      "text": {
+        "opengl": "Debug the shader's output: in `debugging.fs` write the texture coordinates as the colour (u as red, v as green) instead of the texture, and keep the texture line as a comment.",
+        "vulkan": "Debug the shader's output: in `shaders/debugging.frag` write the texture coordinates as the colour (u as red, v as green) instead of the texture, and keep the texture line as a comment.",
+        "d3d12": "Debug the shader's output: let `PSMain` in `debugging.hlsl` return the texture coordinates as the colour (u as red, v as green) instead of the texture, and keep the texture line as a comment."
+      },
+      "hint": {
+        "opengl": "`FragColor = vec4(TexCoords, 0.0, 1.0);` and `// FragColor = texture(tex, TexCoords);`.",
+        "vulkan": "`outColor = vec4(fragTexCoord, 0.0, 1.0);` and `// outColor = texture(texSampler, fragTexCoord);` – before the attribute fix this would have shown a black cube: (0, 0) everywhere.",
+        "d3d12": "`return float4(input.texCoord, 0.0f, 1.0f);` and `// return tex.Sample(wrapSampler, input.texCoord);` – Direct3D's v runs downwards, so the green grows towards the bottom of each face."
+      }
+    },
+    "message-severity": {
+      "text": { "vulkan": "Make `debugCallback` print only the messages of warning severity or higher, so the validation error is not lost among the verbose ones." },
+      "hint": { "vulkan": "The severities are bits ordered by importance (VERBOSE < INFO < WARNING < ERROR): put the `std::cerr` line inside `if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) { … }`." }
+    },
+    "object-names": {
+      "text": { "vulkan": "Name the shader modules and the texture image with `vkSetDebugUtilsObjectNameEXT`, so the validation layer's messages say which object they mean." },
+      "hint": { "vulkan": "A proxy `SetDebugUtilsObjectNameEXT(instance, device, &nameInfo)` that looks the function up with `vkGetInstanceProcAddr` (like `CreateDebugUtilsMessengerEXT`); a member `setObjectName(VkObjectType objectType, uint64_t objectHandle, const char* name)` that fills `VkDebugUtilsObjectNameInfoEXT`; in `createPipeline()` `setObjectName(VK_OBJECT_TYPE_SHADER_MODULE, (uint64_t) vertShaderModule, vertShaderFile.c_str());` (and the fragment module), in `loadTexture()` `setObjectName(VK_OBJECT_TYPE_IMAGE, (uint64_t) image, path);`." }
+    },
+    "fix-attribute": {
+      "text": { "vulkan": "Fix what the message says: describe the vertex shader's input at location 1 – the texture coordinates – in `Vertex::getAttributeDescriptions()`." },
+      "hint": { "vulkan": "Make the array 2 elements long (return type and variable); the second: `binding = 0`, `location = 1`, `format = VK_FORMAT_R32G32_SFLOAT` (a vec2), `offset = offsetof(Vertex, texCoord)`." }
+    },
+    "info-queue": {
+      "text": { "d3d12": "Read the debug layer's messages: get the info queue (`m_device.As(&m_infoQueue)`), write `CheckDebugMessages_(infoQueue, file, line)` and the `CheckDebugMessages()` macro, and call it after `LoadTexture` and after `ExecuteCommandLists`." },
+      "hint": { "d3d12": "Like `glCheckError_`: for each of the `GetNumStoredMessages()` messages call `GetMessage(i, nullptr, &messageLength)` for its size, `malloc` that much, `GetMessage(i, message, &messageLength)`, print `SeverityName(message->Severity)`, `message->ID`, `message->pDescription`, `file` and `line` with `OutputDebugStringA`, `free`; then `ClearStoredMessages()`. Return at once when the queue is `nullptr` (a release build)." }
+    },
+    "set-name": {
+      "text": { "d3d12": "Name the objects with `SetName`: the three heaps (`L\"RTV heap\"`, `L\"DSV heap\"`, `L\"CBV/SRV heap\"`), each render target, the root signature, the pipeline state, the vertex buffer, the texture (`L\"wood.png\"`), the constant buffer and the depth buffer." },
+      "hint": { "d3d12": "`SetName` takes a wide string; for the render targets `std::wstring name = L\"Render target \" + std::to_wstring(n); m_renderTargets[n]->SetName(name.c_str());`. The rest go at the end of `LoadAssets`. Message #708 then names the heap `'CBV/SRV heap'`." }
+    },
+    "descriptor-heaps": {
+      "text": { "d3d12": "Fix the first mistake (message #708): set the CBV/SRV heap on the command list before the two descriptor tables in `PopulateCommandList`." },
+      "hint": { "d3d12": "A descriptor table is a handle into the shader-visible heap the command list has: `ID3D12DescriptorHeap* ppHeaps[] = { m_cbvSrvHeap.Get() }; m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);` before `SetGraphicsRootDescriptorTable(1, …)`." }
+    },
+    "debug-callback": {
+      "text": { "d3d12": "Write `D3D12DebugOutput(category, severity, id, description, context)` and, in `LoadPipeline`, break on errors when a debugger is attached and register the callback with `ID3D12InfoQueue1::RegisterMessageCallback`." },
+      "hint": { "d3d12": "Print \"Debug message (id): description\", the category and the severity with `OutputDebugStringA`. Inside `if (m_infoQueue)`: `if (IsDebuggerPresent())` the two `SetBreakOnSeverity` calls (CORRUPTION, ERROR); then `ComPtr<ID3D12InfoQueue1> infoQueue1; if (SUCCEEDED(m_infoQueue.As(&infoQueue1))) infoQueue1->RegisterMessageCallback(D3D12DebugOutput, D3D12_MESSAGE_CALLBACK_FLAG_NONE, nullptr, &callbackCookie);`." }
+    }
+  }
+}

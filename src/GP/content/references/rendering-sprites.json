@@ -1,0 +1,9 @@
+[
+  { "title": "2D Game / Rendering Sprites", "url": "https://learnopengl.com/In-Practice/2D-Game/Rendering-Sprites", "publisher": "LearnOpenGL" },
+  { "title": "Transformations", "url": "https://learnopengl.com/Getting-started/Transformations", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: the 2D game", "url": "https://github.com/JoeyDeVries/LearnOpenGL/tree/master/src/7.in_practice/3.2d_game", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "Push constants (Vulkan Guide)", "url": "https://docs.vulkan.org/guide/latest/push_constants.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Vertex buffer creation", "url": "https://vulkan-tutorial.com/Vertex_buffers/Vertex_buffer_creation", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "XMMatrixOrthographicOffCenterRH", "url": "https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmmatrixorthographicoffcenterrh", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Using constants directly in the root signature", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/using-constants-directly-in-the-root-signature", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

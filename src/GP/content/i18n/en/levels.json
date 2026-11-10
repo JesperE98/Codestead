@@ -1,0 +1,41 @@
+{
+  "title": "Levels",
+  "tasks": {
+    "background": {
+      "text": "Load the game's textures – `background` (textures/background.png), `block`, `block_solid` and `paddle` – and in `Render` draw the background over the whole window instead of the ball, only while the game is active.",
+      "hint": {
+        "opengl": "`LoadTexture(\"textures/background.png\", false, \"background\");` … `block` and `block_solid` without alpha, `paddle` with. In `Render`: `if (game.State == GAME_ACTIVE) { DrawSprite(Renderer, GetTexture(\"background\").ID, glm::vec2(0.0f, 0.0f), glm::vec2(game.Width, game.Height), 0.0f); }`.",
+        "vulkan": "`LoadTexture(\"textures/background.png\", \"background\");` … (no alpha flag: every texture is RGBA). In `Render`: `if (game.State == GAME_ACTIVE) { DrawSprite(Renderer, GetTexture(\"background\").DescriptorSet, glm::vec2(0.0f, 0.0f), glm::vec2(game.Width, game.Height), 0.0f); }`.",
+        "d3d12": "`LoadTexture(\"textures/background.png\", false, \"background\");` … `block` and `block_solid` without alpha, `paddle` with. In `Render`: `if (game.State == GAME_ACTIVE) { DrawSprite(Renderer, GetTexture(\"background\").ID, XMFLOAT2(0.0f, 0.0f), XMFLOAT2(static_cast<float>(game.Width), static_cast<float>(game.Height)), 0.0f); }`."
+      }
+    },
+    "game-object": {
+      "text": {
+        "opengl": "Add learnopengl's GameObject as a struct (Position, Size, Velocity, Color, Rotation, IsSolid, Destroyed and the sprite's texture ID), `MakeGameObject` (learnopengl's constructor) and `DrawObject`, which draws the object's sprite.",
+        "vulkan": "Add learnopengl's GameObject as a struct (Position, Size, Velocity, Color, Rotation, IsSolid, Destroyed and the sprite's descriptor set), `MakeGameObject` (learnopengl's constructor) and `DrawObject`, which draws the object's sprite.",
+        "d3d12": "Add learnopengl's GameObject as a struct (Position, Size, Velocity, Color, Rotation, IsSolid, Destroyed and the sprite's texture ID), `MakeGameObject` (learnopengl's constructor) and `DrawObject`, which draws the object's sprite."
+      },
+      "hint": "Defaults: Position (0, 0), Size (1, 1), Velocity (0, 0), Color (1, 1, 1), Rotation 0, both flags false. `MakeGameObject(pos, size, sprite, color = 1, velocity = 0)` copies its arguments into a new object; `DrawObject`: `DrawSprite(renderer, obj.Sprite, obj.Position, obj.Size, obj.Rotation, obj.Color);`."
+    },
+    "load-level": {
+      "text": "Add `struct GameLevel` (its Bricks), `LoadLevel`, which reads a level file line by line into rows of tile codes, and `InitLevel`, which turns the codes into bricks: one per tile, `unit_width` × `unit_height` big, solid stones for 1, tinted blocks for 2–5.",
+      "hint": {
+        "opengl": "`std::ifstream fstream(file)`, `while (std::getline(fstream, line))`, `std::istringstream sstream(line)`, `while (sstream >> tileCode) row.push_back(tileCode);`. `unit_width = levelWidth / static_cast<float>(width)`, the same for the height; position `(unit_width * x, unit_height * y)`; 1 → `GetTexture(\"block_solid\").ID` with (0.8, 0.8, 0.7) and `IsSolid = true`; 2–5 → `GetTexture(\"block\").ID` with learnopengl's colours.",
+        "vulkan": "`std::ifstream fstream(file)`, `while (std::getline(fstream, line))`, `std::istringstream sstream(line)`, `while (sstream >> tileCode) row.push_back(tileCode);`. `unit_width = levelWidth / static_cast<float>(width)`, the same for the height; position `(unit_width * x, unit_height * y)`; 1 → `GetTexture(\"block_solid\").DescriptorSet` with (0.8, 0.8, 0.7) and `IsSolid = true`; 2–5 → `GetTexture(\"block\").DescriptorSet` with learnopengl's colours.",
+        "d3d12": "`std::ifstream fstream(file)`, `while (std::getline(fstream, line))`, `std::istringstream sstream(line)`, `while (sstream >> tileCode) row.push_back(tileCode);`. `unit_width = levelWidth / static_cast<float>(width)`, the same for the height; `XMFLOAT2 pos(unit_width * x, unit_height * y);`; 1 → `GetTexture(\"block_solid\").ID` with (0.8, 0.8, 0.7) and `IsSolid = true`; 2–5 → `GetTexture(\"block\").ID` with learnopengl's colours."
+      }
+    },
+    "draw-level": {
+      "text": "Add `DrawLevel` (every brick that is not destroyed), give `Game` its `Levels` and current `Level`, load the four level files in `Init` into the top half of the window, and draw the current level after the background.",
+      "hint": "`for (GameObject& tile : level.Bricks) if (!tile.Destroyed) DrawObject(tile, renderer);`. `GameLevel one; LoadLevel(one, \"levels/one.lvl\", game.Width, game.Height / 2);` … `game.Levels.push_back(one);` …, `game.Level = 0;` (after the textures). In `Render`: `DrawLevel(game.Levels[game.Level], Renderer);`."
+    },
+    "player": {
+      "text": "Add the paddle: `PLAYER_SIZE` (100, 20) and `PLAYER_VELOCITY` (500), a global `GameObject Player` made in `Init` at the bottom centre with the paddle texture and drawn after the level; in `ProcessInput` move it with A and D while it stays inside the window.",
+      "hint": {
+        "opengl": "`glm::vec2 playerPos = glm::vec2(game.Width / 2.0f - PLAYER_SIZE.x / 2.0f, game.Height - PLAYER_SIZE.y);`, `Player = MakeGameObject(playerPos, PLAYER_SIZE, GetTexture(\"paddle\").ID);`. `float velocity = PLAYER_VELOCITY * dt;` and `if (game.Keys[GLFW_KEY_A]) { if (Player.Position.x >= 0.0f) Player.Position.x -= velocity; }`, the same for D with `game.Width - Player.Size.x`.",
+        "vulkan": "`glm::vec2 playerPos = glm::vec2(game.Width / 2.0f - PLAYER_SIZE.x / 2.0f, game.Height - PLAYER_SIZE.y);`, `Player = MakeGameObject(playerPos, PLAYER_SIZE, GetTexture(\"paddle\").DescriptorSet);`. `float velocity = PLAYER_VELOCITY * dt;` and `if (game.Keys[GLFW_KEY_A]) { if (Player.Position.x >= 0.0f) Player.Position.x -= velocity; }`, the same for D with `game.Width - Player.Size.x`.",
+        "d3d12": "`XMFLOAT2 playerPos = XMFLOAT2(game.Width / 2.0f - PLAYER_SIZE.x / 2.0f, game.Height - PLAYER_SIZE.y);`, `Player = MakeGameObject(playerPos, PLAYER_SIZE, GetTexture(\"paddle\").ID);`. `float velocity = PLAYER_VELOCITY * dt;` and `if (game.Keys['A']) { if (Player.Position.x >= 0.0f) Player.Position.x -= velocity; }`, the same for 'D' with `game.Width - Player.Size.x`."
+      }
+    }
+  }
+}

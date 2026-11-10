@@ -278,7 +278,8 @@ public sealed partial class ShaderParser
         int line = Peek.Line;
         if (LooksLikeDeclaration())
         {
-            while (Peek.Kind == ShaderTokenKind.Identifier && Qualifiers.Contains(Peek.Text)) Next();
+            bool isStatic = false;
+            while (Peek.Kind == ShaderTokenKind.Identifier && Qualifiers.Contains(Peek.Text)) isStatic |= Next().Text == "static";
             var type = TypeName();
             // std::array<T, N>: an array of N T.
             Expr? sizeExpr = null;
@@ -312,7 +313,7 @@ public sealed partial class ShaderParser
                 // An empty std::vector<T>: an array with no elements yet (push_back adds them).
                 var declSize = sizeExpr ?? vectorSize ?? (vectorOf && value is null ? new Number(0, line) : null);
                 vectorSize = null;
-                list.Add(new Declare(type, id, value, line, size != 0 || declSize is not null || vectorOf && value is InitList, Math.Max(0, size), declSize));
+                list.Add(new Declare(type, id, value, line, size != 0 || declSize is not null || vectorOf && value is InitList, Math.Max(0, size), declSize) { Static = isStatic && lenient });
             } while (Accept(","));
             return list;
         }

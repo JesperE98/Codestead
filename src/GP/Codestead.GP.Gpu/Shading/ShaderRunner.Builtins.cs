@@ -9,11 +9,12 @@ public sealed partial class ShaderRunner
     private ShaderValue CallExpr(Call c)
     {
         var name = c.Function;
-        // string(x): a string literal's text (as a name), or C++'s std::string(expr) – the text of its value.
-        if (name == "string" && c.Args.Count == 1 && (c.Args[0] is not Name || Lenient && IsVariable(((Name)c.Args[0]).Id)))
+        // A string literal: its text (kept as a name).
+        if (name == ShaderParser.StringLiteral) return ShaderValue.Str(((Name)c.Args[0]).Id);
+        // C++'s std::string(expr): the text of its value; std::string(): empty.
+        if (name == "string" && c.Args.Count == 1)
             return Eval(c.Args[0]) is { Text: { } text } ? ShaderValue.Str(text) : ShaderValue.Str(Eval(c.Args[0]).ToString());
         if (name == "string" && c.Args.Count == 0) return ShaderValue.Str("");
-        if (name == "string") return ShaderValue.Str(((Name)c.Args[0]).Id);
         if (c.ArrayConstructor) return ShaderValue.Array(c.Args.Select(a => Coerce(name, Eval(a))).ToArray());
         // A shader's maths and constructors, the calls a fragment makes most: straight to the result.
         if (!Lenient && FastCall(c, name) is { } fast) return fast;
@@ -72,6 +73,16 @@ public sealed partial class ShaderRunner
         if (Lenient && CppLibrary(c, name) is { } library) return library;
         // std::pair<K, V>(k, v), std::make_pair(k, v): the two values.
         if (Lenient && name is "pair" or "make_pair" && c.Args.Count == 2) return ShaderValue.Array([Eval(c.Args[0]), Eval(c.Args[1])]);
+        // std::tuple<…>(a, b, c), std::make_tuple(a, b, c): the values in order; std::get<N>(t) the N-th.
+        if (Lenient && name is "tuple" or "make_tuple" or "tie") return ShaderValue.Array(c.Args.Select(a => Eval(a).Clone()).ToArray());
+        if (Lenient && name == ShaderParser.TupleGet && c.Args.Count == 2)
+        {
+            int at = (int)Eval(c.Args[0]).X;
+            var tuple = Eval(c.Args[1]);
+            if (tuple.Items is { } elements && at >= 0 && at < elements.Length) return elements[at];
+            if (tuple.V is { } numbers && at >= 0 && at < numbers.Length) return ShaderValue.Scalar(numbers[at]);
+            throw new ShaderRuntimeException($"std::get<{at}> of a value with fewer elements", c.Line);
+        }
         // _countof(array): the number of elements of a C array (MSVC's macro, used by the D3D12 samples).
         if (name is "_countof" && c.Args.Count == 1)
         {

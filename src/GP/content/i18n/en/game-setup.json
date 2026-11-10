@@ -1,0 +1,75 @@
+{
+  "title": "Setting up",
+  "tasks": {
+    "game-struct": {
+      "text": {
+        "opengl": "Add the game's state – `enum GameState` and `struct Game` (State, Keys[1024], Width, Height) –, the global `Game Hedgerow;` and the four empty game functions `Init`, `ProcessInput`, `Update`, `Render`; call `Init` before the render loop and `Render` after the clear.",
+        "vulkan": "Add the game's state – `enum GameState` and `struct Game` (State, Keys[1024], Width, Height) –, the global `Game Hedgerow;`, the empty free functions `ProcessInput`, `Update`, `Render` and the empty member `Init`; call `Init` at the end of `initVulkan()` and `Render` in `recordCommandBuffer()` inside the render pass.",
+        "d3d12": "Add the game's state – `enum GameState` and `struct Game` (State, Keys[1024], Width, Height) –, the global `Game Hedgerow;` and the four empty game functions `Init`, `ProcessInput`, `Update`, `Render`; call `Init` at the end of `LoadAssets` and `Render` after the clear in `PopulateCommandList`."
+      },
+      "hint": {
+        "opengl": "learnopengl's class Game as a struct with default values: `GameState State = GAME_ACTIVE; bool Keys[1024] = {}; unsigned int Width = SCREEN_WIDTH, Height = SCREEN_HEIGHT;`; each member function becomes a free function taking `Game& game`. `Init(Hedgerow);` after the blending setup, `Render(Hedgerow);` after `glClear(GL_COLOR_BUFFER_BIT);`.",
+        "vulkan": "Defaults `GameState State = GAME_ACTIVE; bool Keys[1024] = {}; unsigned int Width = WIDTH, Height = HEIGHT;`. `Init` lives in the class because loading resources needs the device: `Init(Hedgerow);` after `createDescriptorPool();`; `Render(Hedgerow);` after `vkCmdSetScissor`, before `vkCmdEndRenderPass`.",
+        "d3d12": "Defaults `GameState State = GAME_ACTIVE; bool Keys[1024] = {}; unsigned int Width = SCREEN_WIDTH, Height = SCREEN_HEIGHT;`. `Init(Hedgerow);` after the `Graphics.…` assignments and before `m_commandList->Close()` (the setup command list is still open); `Render(Hedgerow);` after `IASetPrimitiveTopology`."
+      }
+    },
+    "delta-time": {
+      "text": {
+        "opengl": "Measure the time each frame takes (deltaTime) at the top of the loop, before polling the events, and pass it to `ProcessInput` and `Update`, called after polling.",
+        "vulkan": "Measure the time each frame takes (deltaTime) at the top of the loop in `mainLoop()`, before polling the events, and pass it to `ProcessInput` and `Update`, called after polling and before `drawFrame()`.",
+        "d3d12": "Measure the time each frame takes (deltaTime) at the start of `OnUpdate` and pass it to `ProcessInput` and `Update`."
+      },
+      "hint": {
+        "opengl": "`float deltaTime = 0.0f; float lastFrame = 0.0f;` before the loop; in it `float currentFrame = static_cast<float>(glfwGetTime()); deltaTime = currentFrame - lastFrame; lastFrame = currentFrame;` before `glfwPollEvents();`, then `ProcessInput(Hedgerow, deltaTime); Update(Hedgerow, deltaTime);`.",
+        "vulkan": "`float deltaTime = 0.0f; float lastFrame = 0.0f;` before the `while`; in it `float currentFrame = static_cast<float>(glfwGetTime()); deltaTime = currentFrame - lastFrame; lastFrame = currentFrame;` before `glfwPollEvents();`, then `ProcessInput(Hedgerow, deltaTime); Update(Hedgerow, deltaTime);`.",
+        "d3d12": "`static auto lastFrame = std::chrono::high_resolution_clock::now(); auto currentFrame = std::chrono::high_resolution_clock::now(); float deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - lastFrame).count(); lastFrame = currentFrame;`, then `ProcessInput(Hedgerow, deltaTime); Update(Hedgerow, deltaTime);`."
+      }
+    },
+    "key-callback": {
+      "text": {
+        "opengl": "Store the keyboard state in `Hedgerow.Keys` with a GLFW key callback (Escape closes the window), and register it.",
+        "vulkan": "Store the keyboard state in `Hedgerow.Keys` with a GLFW key callback (Escape closes the window), and register it in `initWindow()`.",
+        "d3d12": "Store the keyboard state in `Hedgerow.Keys`: write `OnKeyDown(key)` / `OnKeyUp(key)` and call them from `WindowProc` for `WM_KEYDOWN` and `WM_KEYUP` (Escape still closes the window)."
+      },
+      "hint": {
+        "opengl": "`void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)`: Escape with `GLFW_PRESS` → `glfwSetWindowShouldClose(window, true)`; `if (key >= 0 && key < 1024)` `GLFW_PRESS` sets `Hedgerow.Keys[key] = true`, `GLFW_RELEASE` false. Declare it with the other callback; `glfwSetKeyCallback(window, key_callback);` after GLAD.",
+        "vulkan": "`void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)` before the class: Escape with `GLFW_PRESS` → `glfwSetWindowShouldClose(window, true)`; `if (key >= 0 && key < 1024)` `GLFW_PRESS` sets `Hedgerow.Keys[key] = true`, `GLFW_RELEASE` false. `glfwSetKeyCallback(window, key_callback);` right after `glfwCreateWindow`.",
+        "d3d12": "`Hedgerow.Keys[key] = true;` / `false;`. In `WindowProc`: `OnKeyDown(static_cast<UINT8>(wParam));` after the Escape test in `case WM_KEYDOWN:`, and a `case WM_KEYUP:` with `OnKeyUp(static_cast<UINT8>(wParam)); return 0;`. Virtual-key codes: 'A' = 65, `VK_SPACE` = 32 – GLFW's numbers."
+      }
+    },
+    "shader": {
+      "text": {
+        "opengl": "Write learnopengl's Shader as a struct with free functions: `struct Shader { unsigned int ID; }`, `Use`, `checkCompileErrors`, `Compile` (vertex, fragment and an optional geometry shader) and the setters `SetInteger`, `SetVector3f`, `SetMatrix4`.",
+        "d3d12": "Write learnopengl's Shader for Direct3D 12: `struct Shader` holding a pipeline state object, `Use` (sets it on the command list) and `Compile` (creates it from a compiled vertex and pixel shader with the states 2D sprites need)."
+      },
+      "hint": {
+        "opengl": "`Compile` is learnopengl's `Shader::Compile` with `shader.ID` instead of `this->ID`; each setter calls `Use(shader)` first when `useShader` is true, then `glUniform1i` / `glUniform3f` / `glUniformMatrix4fv(…, glm::value_ptr(matrix))` at `glGetUniformLocation(shader.ID, name)`.",
+        "d3d12": "A `D3D12_GRAPHICS_PIPELINE_STATE_DESC` like the earlier chapters' with `Graphics.RootSignature`, the input layout POSITION (R32G32_FLOAT, offset 0) and TEXCOORD (R32G32_FLOAT, offset 8), blending SRC_ALPHA / INV_SRC_ALPHA, `DepthEnable = FALSE`, `CullMode = D3D12_CULL_MODE_NONE`; then `Graphics.Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&shader.PipelineState))`. `Use`: `Graphics.CommandList->SetPipelineState(shader.PipelineState.Get())`."
+      }
+    },
+    "texture": {
+      "text": {
+        "opengl": "Write learnopengl's Texture2D as a struct with its settings (and learnopengl's defaults) and the function `Generate`, which uploads image data with those settings.",
+        "vulkan": "Write learnopengl's Texture2D for Vulkan: the struct (image, memory, view, descriptor set, width, height) and the member function `loadTextureFromFile`, which loads an image file into such a texture.",
+        "d3d12": "Write learnopengl's Texture2D for Direct3D 12: the struct (its view's heap slot as `ID`, the size, the format, the texture and its upload buffer) and `Generate`, which creates the texture, records the copy of the pixels and creates the shader resource view."
+      },
+      "hint": {
+        "opengl": "Defaults: `Internal_Format`/`Image_Format` `GL_RGB`, `Wrap_S`/`Wrap_T` `GL_REPEAT`, `Filter_Min`/`Filter_Max` `GL_LINEAR`. `Generate`: store the size, bind `texture.ID`, `glTexImage2D(GL_TEXTURE_2D, 0, texture.Internal_Format, width, height, 0, texture.Image_Format, GL_UNSIGNED_BYTE, data)`, the four `glTexParameteri`, unbind.",
+        "vulkan": "`stbi_load(file, &width, &height, &nrChannels, STBI_rgb_alpha)` (throw when it fails); `createTextureImage(data, width, height, texture.Image, texture.Memory)`, `stbi_image_free(data)`, `texture.View = createImageView(texture.Image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT)`, `createDescriptorSet(texture.View, textureSampler, texture.DescriptorSet)`.",
+        "d3d12": "Like the earlier chapters' `LoadTexture` with `Graphics.Device` and `Graphics.CommandList`: the texture in COPY_DEST, the upload heap of `GetRequiredIntermediateSize`, `UpdateSubresources` (`RowPitch = width * 4`), the barrier to PIXEL_SHADER_RESOURCE, and the SRV at `CD3DX12_CPU_DESCRIPTOR_HANDLE(Graphics.SrvHeap->GetCPUDescriptorHandleForHeapStart(), texture.ID, Graphics.SrvDescriptorSize)`. Keep the upload buffer in the struct."
+      }
+    },
+    "resource-manager": {
+      "text": {
+        "opengl": "Write learnopengl's ResourceManager as two global maps and free functions – `LoadShader` / `GetShader`, `LoadTexture` / `GetTexture`, `ClearResources` – with the helpers `loadShaderFromFile` (std::ifstream) and `loadTextureFromFile` (stb_image); call `ClearResources()` before `glfwTerminate()`.",
+        "vulkan": "Write learnopengl's ResourceManager: the global maps `Shaders` (name → pipeline) and `Textures`, the free functions `GetShader` / `GetTexture`, and the members `LoadShader`, `LoadTexture` and `ClearResources`; call `ClearResources()` in `cleanup()`.",
+        "d3d12": "Write learnopengl's ResourceManager as two global maps and free functions – `LoadShader` / `GetShader`, `LoadTexture` / `GetTexture`, `ClearResources` – with the helpers `loadShaderFromFile` (D3DCompileFromFile of VSMain and PSMain) and `loadTextureFromFile` (stb_image); call `ClearResources()` in `OnDestroy`."
+      },
+      "hint": {
+        "opengl": "`std::map<std::string, Shader> Shaders; std::map<std::string, Texture2D> Textures;`. `loadTextureFromFile`: `glGenTextures(1, &texture.ID)`, GL_RGBA formats if `alpha`, `stbi_load(file, &width, &height, &nrChannels, 0)`, `Generate`, `stbi_image_free`. `GetShader` / `GetTexture` return a reference to the stored object.",
+        "vulkan": "`LoadShader(vShaderFile, fShaderFile, name)`: `createPipeline(vShaderFile, fShaderFile, Shaders[name]);` – the \"shader\" is the pipeline. `LoadTexture(file, name)`: `Textures[name] = loadTextureFromFile(file);`. `ClearResources()`: `vkDestroyPipeline` for each pipeline, `vkDestroyImageView`, `vkDestroyImage`, `vkFreeMemory` for each texture (the descriptor sets go with the pool).",
+        "d3d12": "A texture's ID is the next free heap slot: `texture.ID = Graphics.SrvCount++;`, then `stbi_load(file, &width, &height, &nrChannels, 4)`. `D3DCompileFromFile(shaderFile, nullptr, nullptr, \"VSMain\", \"vs_5_0\", …)` and `\"PSMain\", \"ps_5_0\"`; on failure print the error blob with `OutputDebugStringA` and throw. `ClearResources()`: `Shaders.clear(); Textures.clear();`, after `WaitForPreviousFrame()` in `OnDestroy`."
+      }
+    }
+  }
+}

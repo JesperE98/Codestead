@@ -20,7 +20,7 @@ public sealed class CppExec
         this.src = src;
         this.scene = scene;
         var program = new ShaderProgram();
-        foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(src.Code, @"\bstruct\s+(\w+)\s*\{"))
+        foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(src.Code, @"\bstruct\s+(\w+)\s*(?::\s*(?:public\s+)?\w+\s*)?\{"))
         {
             var fields = StructLayout.Fields(src, m.Groups[1].Value);
             if (fields is null) continue;
@@ -83,6 +83,7 @@ public sealed class CppExec
     private ShaderValue? HelperFunction(string name, IReadOnlyList<Expr> args)
     {
         if (helperDepth > 6 || name is "main" || name.StartsWith('.') || !src.Functions.ContainsKey(name)) return null;
+        name = src.ChooseOverload(name, args, TryEval);
         if (!helpers.TryGetValue(name, out var helper))
         {
             var body = src.ExpandedBody(name) ?? "";
@@ -196,6 +197,19 @@ public sealed class CppExec
         // An API constant (DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_SRV_DIMENSION_TEXTURECUBE): its name, so descriptions keep it.
         if (System.Text.RegularExpressions.Regex.IsMatch(name, @"^(?:D3D12|DXGI|D3D|VK|GL)_[A-Z0-9_]+$")) return ShaderValue.Str(name);
         return null;
+    }
+
+    /// <summary>An argument's value now, or null (for choosing an overload).</summary>
+    public ShaderValue? TryEval(Expr e)
+    {
+        try
+        {
+            return Runner.EvalArg(e);
+        }
+        catch (ShaderRuntimeException)
+        {
+            return null;
+        }
     }
 
     /// <summary>Runs C++ statements (text).</summary>

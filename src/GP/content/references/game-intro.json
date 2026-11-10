@@ -1,0 +1,6 @@
+[
+  { "title": "2D Game / Setting up", "url": "https://learnopengl.com/In-Practice/2D-Game/Setting-up", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: the 2D game", "url": "https://github.com/JoeyDeVries/LearnOpenGL/tree/master/src/7.in_practice/3.2d_game", "publisher": "Joey de Vries (GitHub)" },
+  { "title": "Vulkan Tutorial", "url": "https://vulkan-tutorial.com/", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "D3D12HelloWorld samples", "url": "https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Samples/Desktop/D3D12HelloWorld", "publisher": "Microsoft (GitHub)", "api": "d3d12" }
+]

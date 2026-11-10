@@ -5,15 +5,21 @@ namespace Codestead.GP.Gpu.Readers;
 /// <summary>The fields of a C++ struct in order, with their number of floats (glm::vec3 → 3, XMFLOAT4 → 4, float → 1).</summary>
 internal static class StructLayout
 {
-    public static List<(string Type, string Name, int Floats)>? Fields(CppSource src, string structName)
+    /// <summary>struct Name { or struct Name : Base { (and : public Base): the base's name in group 1.</summary>
+    private static Regex Header(string structName) =>
+        new(@"\bstruct\s+" + Regex.Escape(structName) + @"\s*(?::\s*(?:public\s+)?(\w+)\s*)?\{", RegexOptions.CultureInvariant);
+
+    public static List<(string Type, string Name, int Floats)>? Fields(CppSource src, string structName, int depth = 0)
     {
-        var m = Regex.Match(src.Code, @"\bstruct\s+" + Regex.Escape(structName) + @"\s*\{", RegexOptions.CultureInvariant);
+        var m = Header(structName).Match(src.Code);
         if (!m.Success) return null;
         int open = m.Index + m.Length - 1;
         int close = CppSource.MatchBracket(src.Code, open);
         if (close < 0) return null;
         var body = src.Code[(open + 1)..close];
         var fields = new List<(string, string, int)>();
+        // A derived struct (struct BallObject : GameObject): the base's members first, as C++ lays them out.
+        if (m.Groups[1].Success && depth < 8 && Fields(src, m.Groups[1].Value, depth + 1) is { } inherited) fields.AddRange(inherited);
         foreach (var (type, name, count, _) in Members(src, body)) fields.Add((type, name, FloatsOf(type) * count));
         return fields;
     }
@@ -22,11 +28,13 @@ internal static class StructLayout
     /// The default member initialisers of a struct (unsigned int Width = SCREEN_WIDTH; GameState State = GAME_ACTIVE;):
     /// member name → the initialiser's text.
     /// </summary>
-    public static Dictionary<string, string> Defaults(CppSource src, string structName)
+    public static Dictionary<string, string> Defaults(CppSource src, string structName, int depth = 0)
     {
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
-        var m = Regex.Match(src.Code, @"\bstruct\s+" + Regex.Escape(structName) + @"\s*\{", RegexOptions.CultureInvariant);
+        var m = Header(structName).Match(src.Code);
         if (!m.Success) return result;
+        if (m.Groups[1].Success && depth < 8)
+            foreach (var (k, v) in Defaults(src, m.Groups[1].Value, depth + 1)) result[k] = v;
         int open = m.Index + m.Length - 1;
         int close = CppSource.MatchBracket(src.Code, open);
         if (close < 0) return result;
@@ -80,8 +88,9 @@ internal static class StructLayout
                 if (depth == 0) sb.Append(';');
             }
         }
-        // "static X f(...)" leftovers before a body: drop declarations with parentheses.
-        return Regex.Replace(sb.ToString(), @"[^;]*\([^;]*\)\s*(?:const\s*)?;", ";");
+        // "static X f(...)" leftovers before a body: drop function declarations (a parenthesis before any "=";
+        // a member's initialiser glm::vec2 Position = glm::vec2(0.0f) stays).
+        return Regex.Replace(sb.ToString(), @"(?<=^|;)[^;=]*\([^;]*\)\s*(?:const\s*)?;", ";");
     }
 
     public static int FloatsOf(string type) => type switch

@@ -81,6 +81,16 @@ public sealed partial class ShaderParser
             if (ScalarCast(type) is { } scalar) return new Call(scalar, [operand], line);
             return ShaderRunner.MatrixSize(type) > 0 || ShaderRunner.ComponentCount(type) > 1 ? new Call(type, [operand], line) : operand;
         }
+        // C++: a cast to a type of the program ((Direction)best_match, (GameState)1): the value itself. "(name)" then a
+        // name or a number cannot be anything else.
+        if (lenient && Peek.Is("(") && PeekAt(1).Kind == ShaderTokenKind.Identifier && PeekAt(2).Is(")")
+            && (PeekAt(3).Kind is ShaderTokenKind.Identifier or ShaderTokenKind.Number || PeekAt(3).Is("(") && char.IsUpper(PeekAt(1).Text[0])))
+        {
+            Next();
+            Next();
+            Next();
+            return UnaryExpr();
+        }
         return Postfix(Primary());
     }
 
@@ -164,7 +174,7 @@ public sealed partial class ShaderParser
                 // Adjacent string literals are joined, as in C++.
                 var text = t.Text;
                 while (Peek.Kind == ShaderTokenKind.String) text += Next().Text;
-                return new Call("string", [new Name(text, t.Line)], t.Line);
+                return new Call(StringLiteral, [new Name(text, t.Line)], t.Line);
             case ShaderTokenKind.Identifier:
             {
                 Next();
@@ -205,12 +215,17 @@ public sealed partial class ShaderParser
                 if (lenient && Peek.Is("<") && TemplateCallAhead())
                 {
                     int depth = 0;
+                    var inside = new List<ShaderToken>();
                     do
                     {
                         if (Peek.Is("<")) depth++;
                         else if (Peek.Is(">")) depth--;
-                        Next();
+                        var token = Next();
+                        if (depth > 0 && !(depth == 1 && token.Is("<"))) inside.Add(token);
                     } while (depth > 0);
+                    // std::get<1>(collision): the element of a tuple (or pair) by its index.
+                    if (t.Text == "get" && inside is [{ Kind: ShaderTokenKind.Number } index] && Peek.Is("("))
+                        return new Call(TupleGet, [new Number(double.Parse(index.Text, System.Globalization.CultureInfo.InvariantCulture), t.Line), .. CallArgs()], t.Line);
                 }
                 if (Peek.Is("(")) return new Call(t.Text, CallArgs(), t.Line);
                 // C++ brace construction: glm::vec4{1, 0, 0, 1}, XMFLOAT4{…}

@@ -11,6 +11,12 @@ namespace Codestead.GP.Gpu.Shading;
 /// </summary>
 public sealed partial class ShaderParser
 {
+    /// <summary>The function name a string literal is parsed as: "abc" → __literal(abc) (its text kept as a name).</summary>
+    public const string StringLiteral = "__literal";
+
+    /// <summary>The function name std::get&lt;N&gt;(t) is parsed as: __get(N, t).</summary>
+    public const string TupleGet = "__get";
+
     private readonly List<ShaderToken> tokens;
     private int pos;
 

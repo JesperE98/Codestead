@@ -56,9 +56,11 @@ public sealed partial class GlReader
         void Out(int index, ShaderValue value)
         {
             if (index >= args.Count) return;
+            // An out parameter: &success is the variable success.
+            var target = args[index] is Unary { Op: "&" } address ? address.Operand : args[index];
             try
             {
-                env.Runner.Assign(args[index], value);
+                env.Runner.Assign(target, value);
             }
             catch (ShaderRuntimeException)
             {

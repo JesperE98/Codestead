@@ -307,6 +307,24 @@ public sealed partial class ShaderRunner
     {
         switch (s)
         {
+            case Declare d when d.Static:
+            {
+                // A static local lives as long as the program: made once, then kept. It is made in the program's first
+                // frame (time 0): static auto startTime = now() – the clock when the program started.
+                var key = $"{d.Id}@{d.Line}";
+                if (!staticLocals.Add(key)) return default;
+                double now = Time;
+                Time = 0;
+                try
+                {
+                    Globals[d.Id] = (d.Value is null ? LenientDefault(d.Type, d.ArraySize) : Coerce(d.Type, Eval(d.Value))).Clone();
+                }
+                finally
+                {
+                    Time = now;
+                }
+                return default;
+            }
             case Declare d:
             {
                 // C++: Type name{} / Type name = {} is a zero-initialised struct.
@@ -398,6 +416,8 @@ public sealed partial class ShaderRunner
         // if (fstream): a stream is true while it is good.
         : v.Fields is { } f && f.TryGetValue(StreamOk, out var ok) ? ok.X != 0
         : v.Text is { Length: > 0 } t && t is not ("VK_NULL_HANDLE" or "nullptr" or "NULL");
+
+    private readonly HashSet<string> staticLocals = new(StringComparer.Ordinal);
 
     private bool IsVariable(string id) => scopes.Any(s => s.ContainsKey(id)) || Globals.ContainsKey(id);
 

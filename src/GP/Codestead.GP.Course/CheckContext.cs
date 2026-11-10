@@ -67,6 +67,15 @@ public sealed class CheckContext
 
     public int Count(string pattern) => Regex.Matches(Cpp, Spaces(pattern)).Count;
 
+    /// <summary>The lines the program printed (std::cout, std::cerr, OutputDebugStringA, the simulated driver's).</summary>
+    public IReadOnlyList<string> Output => Scene?.Log ?? [];
+
+    /// <summary>The number of printed lines a regular expression is found in.</summary>
+    public int PrintedCount(string pattern) => Output.Count(l => Regex.IsMatch(l, pattern));
+
+    /// <summary>A regular expression found in a printed line.</summary>
+    public bool Printed(string pattern) => PrintedCount(pattern) > 0;
+
     /// <summary>The window is cleared to a colour (±0.01).</summary>
     public bool ClearedTo(double r, double g, double b) =>
         Shows && Scene!.ClearColor is { } c && Near(c[0], r) && Near(c[1], g) && Near(c[2], b);

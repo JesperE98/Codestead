@@ -61,8 +61,21 @@ public sealed partial class GlReader
             scene.Notes.Add(SimNote.Error("noMain"));
             return scene;
         }
-        foreach (var st in CppStatements.Walk(src, "main"))
+        var statements = CppStatements.Walk(src, "main").ToList();
+        for (int index = 0; index < statements.Count; index++)
         {
+            var st = statements[index];
+            // A game (a key callback, deltaTime): the render loop runs frame by frame up to the time shown.
+            if (st.Kind == "loop-start" && !inLoop && Stepped && LoopEnd(statements, index) is int end)
+            {
+                if (scene.SetupDraws == 0) (scene.SetupDraws, scene.SetupOps) = (scene.Draws.Count, scene.Ops.Count);
+                scene.RenderLoop = windowCreated;
+                inLoop = true;
+                RunFrames(statements.GetRange(index + 1, end - index - 1));
+                inLoop = false;
+                index = end;
+                continue;
+            }
             switch (st.Kind)
             {
                 case "loop-start":
@@ -88,6 +101,9 @@ public sealed partial class GlReader
     /// <summary>Runs a function of the program with its arguments; returns the name of the variable it returns.</summary>
     private string? Inline(string fn, IReadOnlyList<string> args)
     {
+        // An overloaded function: the definition these arguments call.
+        if (src.Functions.ContainsKey(fn + "#2"))
+            fn = src.ChooseOverload(fn, args.Select(a => (ShaderAst.Expr)new ShaderAst.Name(a.Trim(), 0)).ToList(), e => Eval(((ShaderAst.Name)e).Id));
         var declared = src.ParametersOf(fn) ?? [];
         var parameters = declared.Select(p => p.Name).ToList();
         var values = args.Select(a => Eval(a)).ToList();
@@ -256,7 +272,8 @@ public sealed partial class GlReader
         var name = m.Groups[2].Value;
         bool? value = gl.VertexArrays.ContainsKey(name) || gl.Buffers.ContainsKey(name) || gl.TextureObjects.ContainsKey(name) || gl.Framebuffers.ContainsKey(name)
             || gl.Renderbuffers.ContainsKey(name) || gl.Programs.ContainsKey(name) ? true
-            : src.DeclaredType(name) == "bool" && env.Eval(name) is { V: { Length: 1 } v } ? v[0] != 0 : null;
+            : src.DeclaredType(name) is { } type && (type == "bool" || ShaderValue.IsIntType(type) || type is "float" or "double" or "GLboolean")
+                && env.Eval(name) is { V: { Length: 1 } v } ? v[0] != 0 : null;
         if (value is not { } truth) return null;
         if (m.Groups[3].Success)
         {

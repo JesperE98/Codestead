@@ -1,0 +1,169 @@
+=== task: direction
+--- file: main.cpp
+--- find:
+// TODO: enum Direction: the four directions of a collision (UP, RIGHT, DOWN, LEFT)
+--- replace:
+// Represents the four possible (collision) directions
+enum Direction {
+    UP,
+    RIGHT,
+    DOWN,
+    LEFT
+};
+--- file: main.cpp
+--- find:
+// TODO: VectorDirection: which of the four directions does a vector point to most (the largest dot product with up, right, down, left)?
+--- replace:
+// calculates which direction a vector is facing (N,E,S or W)
+Direction VectorDirection(glm::vec2 target)
+{
+    glm::vec2 compass[] = {
+        glm::vec2(0.0f, 1.0f),  // up
+        glm::vec2(1.0f, 0.0f),  // right
+        glm::vec2(0.0f, -1.0f), // down
+        glm::vec2(-1.0f, 0.0f)  // left
+    };
+    float max = 0.0f;
+    unsigned int best_match = -1;
+    for (unsigned int i = 0; i < 4; i++)
+    {
+        float dot_product = glm::dot(glm::normalize(target), compass[i]);
+        if (dot_product > max)
+        {
+            max = dot_product;
+            best_match = i;
+        }
+    }
+    return (Direction)best_match;
+}
+
+=== task: collision-tuple
+--- file: main.cpp
+--- find:
+#include <vector>
+--- replace:
+#include <vector>
+#include <tuple>
+--- file: main.cpp
+--- find:
+// TODO: typedef Collision: a std::tuple of <collision?, its direction, the difference vector from the ball's centre to the closest point>
+--- replace:
+// Defines a Collision typedef that represents collision data
+typedef std::tuple<bool, Direction, glm::vec2> Collision; // <collision?, what direction?, difference vector center - closest point>
+--- file: main.cpp
+--- find:
+bool CheckCollision(BallObject& one, GameObject& two)
+--- replace:
+Collision CheckCollision(BallObject& one, GameObject& two)
+--- file: main.cpp
+--- find:
+    return glm::length(difference) < one.Radius;
+--- replace:
+    if (glm::length(difference) < one.Radius) // not <= since in that case a collision also occurs when object one exactly touches object two, which they are at the end of each collision resolution stage.
+        return std::make_tuple(true, VectorDirection(difference), difference);
+    else
+        return std::make_tuple(false, UP, glm::vec2(0.0f, 0.0f));
+--- file: main.cpp
+--- find:
+            if (CheckCollision(Ball, box))
+--- replace:
+            Collision collision = CheckCollision(Ball, box);
+            if (std::get<0>(collision)) // if collision is true
+
+=== task: resolve
+--- file: main.cpp
+--- find:
+// destroys every brick the ball collides with, unless it is solid
+--- replace:
+// destroys every brick the ball collides with (unless it is solid) and bounces the ball off bricks and the paddle
+--- file: main.cpp
+--- find:
+                if (!box.IsSolid)
+                    box.Destroyed = true;
+                // TODO: collision resolution: reverse the velocity component of the collision's direction and move the ball out of the brick by the penetration
+--- replace:
+                // destroy block if not solid
+                if (!box.IsSolid)
+                    box.Destroyed = true;
+                // collision resolution
+                Direction dir = std::get<1>(collision);
+                glm::vec2 diff_vector = std::get<2>(collision);
+                if (dir == LEFT || dir == RIGHT) // horizontal collision
+                {
+                    Ball.Velocity.x = -Ball.Velocity.x; // reverse horizontal velocity
+                    // relocate
+                    float penetration = Ball.Radius - std::abs(diff_vector.x);
+                    if (dir == LEFT)
+                        Ball.Position.x += penetration; // move ball to right
+                    else
+                        Ball.Position.x -= penetration; // move ball to left;
+                }
+                else // vertical collision
+                {
+                    Ball.Velocity.y = -Ball.Velocity.y; // reverse vertical velocity
+                    // relocate
+                    float penetration = Ball.Radius - std::abs(diff_vector.y);
+                    if (dir == UP)
+                        Ball.Position.y -= penetration; // move ball back up
+                    else
+                        Ball.Position.y += penetration; // move ball back down
+                }
+
+=== task: paddle
+--- file: main.cpp
+--- find:
+    // TODO: the paddle: when the ball (if not stuck) hits it, bounce it up - the further from the paddle's centre, the more sideways
+--- replace:
+    // check collisions for player pad (unless stuck)
+    Collision result = CheckCollision(Ball, Player);
+    if (!Ball.Stuck && std::get<0>(result))
+    {
+        // check where it hit the board, and change velocity based on where it hit the board
+        float centerBoard = Player.Position.x + Player.Size.x / 2.0f;
+        float distance = (Ball.Position.x + Ball.Radius) - centerBoard;
+        float percentage = distance / (Player.Size.x / 2.0f);
+        // then move accordingly
+        float strength = 2.0f;
+        glm::vec2 oldVelocity = Ball.Velocity;
+        Ball.Velocity.x = INITIAL_BALL_VELOCITY.x * percentage * strength;
+        Ball.Velocity = glm::normalize(Ball.Velocity) * glm::length(oldVelocity); // keep speed consistent over both axes (multiply by length of old velocity, so total strength is not changed)
+        // fix sticky paddle: always bounce upwards
+        Ball.Velocity.y = -1.0f * std::abs(Ball.Velocity.y);
+    }
+
+=== task: lose-ball
+--- file: main.cpp
+--- find:
+// TODO: ResetLevel (reload the current level from its file) and ResetPlayer (the paddle back at the bottom centre, the ball stuck on it)
+--- replace:
+// reloads the current level (every brick back in place)
+void ResetLevel(Game& game)
+{
+    if (game.Level == 0)
+        LoadLevel(game.Levels[0], "levels/one.lvl", game.Width, game.Height / 2);
+    else if (game.Level == 1)
+        LoadLevel(game.Levels[1], "levels/two.lvl", game.Width, game.Height / 2);
+    else if (game.Level == 2)
+        LoadLevel(game.Levels[2], "levels/three.lvl", game.Width, game.Height / 2);
+    else if (game.Level == 3)
+        LoadLevel(game.Levels[3], "levels/four.lvl", game.Width, game.Height / 2);
+}
+
+// puts the paddle back at the bottom centre and the ball back on it (stuck)
+void ResetPlayer(Game& game)
+{
+    // reset player/ball stats
+    Player.Size = PLAYER_SIZE;
+    Player.Position = glm::vec2(game.Width / 2.0f - PLAYER_SIZE.x / 2.0f, game.Height - PLAYER_SIZE.y);
+    Reset(Ball, Player.Position + glm::vec2(PLAYER_SIZE.x / 2.0f - BALL_RADIUS, -(BALL_RADIUS * 2.0f)), INITIAL_BALL_VELOCITY);
+}
+--- file: main.cpp
+--- find:
+    // TODO: check the loss condition: when the ball reaches the bottom edge, reset the level and the player
+--- replace:
+    // check loss condition
+    if (Ball.Position.y >= game.Height) // did ball reach bottom edge?
+    {
+        ResetLevel(game);
+        ResetPlayer(game);
+    }

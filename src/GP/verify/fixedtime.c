@@ -5,9 +5,15 @@
  *
  *   - Time: glfwGetTime() returns frames / 60, where `frames` counts the program's glfwPollEvents() calls so far.
  *     Frame n of the render loop (n = 0, 1, 2 …) therefore sees glfwGetTime() = n / 60 and learnopengl's deltaTime
- *     is exactly 1/60 – whether the loop polls at its start (learnopengl's game) or at its end. The time stops
- *     advancing at VERIFY_T seconds (default 1.0): after that deltaTime is 0, the program keeps running and the
- *     screenshot (taken after VERIFY_WAIT seconds of real time) shows the state at VERIFY_T.
+ *     is exactly 1/60 – whether the loop polls at its start (learnopengl's game) or at its end.
+ *   - The picture of frame N = VERIFY_T * 60 (default 1.0 s = frame 60) is held: the glfwPollEvents() call of frame
+ *     N + 1 (made when glfwPollEvents has been called N + 1 times before) never returns – it sleeps until the program
+ *     is killed. So the last frame the program presented is frame N (the loop reads the time, polls, updates,
+ *     renders and swaps), and nothing runs after the frozen time (the 2D game's particles respawn every frame,
+ *     whatever deltaTime is, so letting frames with deltaTime 0 run on would change the picture). The app's
+ *     simulator shows the same frame N (it runs the loop N + 1 times).
+ *     If VERIFY_READY names a file, it is created when the program starts to sleep: verify.sh waits for it and
+ *     then takes the screenshot (slow drivers need longer than VERIFY_WAIT to reach frame N).
  *   - Input: no real key is pressed. The space bar is pressed at t = 0.5 s and released at t = 0.55 s: the
  *     glfwPollEvents() call made when glfwGetTime() reads 30/60 calls the program's key callback (the function
  *     given to glfwSetKeyCallback) with (GLFW_KEY_SPACE, scancode, GLFW_PRESS, 0) after the real events, and the
@@ -17,7 +23,9 @@
  */
 #define _GNU_SOURCE
 #include <dlfcn.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <GLFW/glfw3.h>
 
 #define PRESS_FRAME   30 /* 0.5 s  */
@@ -49,9 +57,24 @@ GLFWkeyfun glfwSetKeyCallback(GLFWwindow* window, GLFWkeyfun callback)
     return real(window, callback);
 }
 
+/* Frame N + 1: hold the picture of frame N – tell verify.sh, then sleep until the program is killed. */
+static void hold_frame(void)
+{
+    const char* ready = getenv("VERIFY_READY");
+    if (ready && *ready)
+    {
+        FILE* f = fopen(ready, "w");
+        if (f) { fprintf(f, "%ld\n", frames - 1); fclose(f); }
+    }
+    for (;;)
+        pause();
+}
+
 void glfwPollEvents(void)
 {
     void (*real)(void) = (void (*)(void))dlsym(RTLD_NEXT, "glfwPollEvents");
+    if (frames > last_frame())
+        hold_frame();
     real();
     if (key_callback && key_window && frames <= last_frame())
     {

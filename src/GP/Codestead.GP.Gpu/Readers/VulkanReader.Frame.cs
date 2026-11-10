@@ -126,8 +126,11 @@ public sealed partial class VulkanReader
         var recorder = new FrameRecorder(src, time, scene, blocks, transposeMatrices: false, device) { Project = project };
         recorder.Setup();
         if (device.WindowSrgb) scene.WindowSrgb = true;
+        // A game: the frames before the shown one (its input and update, without drawing).
+        var recordFunction = src.FunctionAt(beginOffset) ?? src.FunctionAt(call.Offset);
+        GameFrames.RunGlfw(src, recorder, time, UpdateFunctions(blocks).Append("drawFrame").Append(recordFunction ?? "drawFrame"));
         foreach (var fn in UpdateFunctions(blocks)) recorder.Run(fn);
-        if ((src.FunctionAt(beginOffset) ?? src.FunctionAt(call.Offset)) is { } recordFn) recorder.Run(recordFn);
+        if (recordFunction is { } recordFn) recorder.Run(recordFn);
         var buffer = recorder.BufferContents();
         bool deviceVertices = inputs.Count > 0 && recorder.Draws.Any(d => d.State is VulkanDevice.DrawState { VertexBuffers.Count: > 0 } st
             && device.Read(st.VertexBuffers.Values.First().Buffer, st.VertexBuffers.Values.First().Offset, 1) is not null);

@@ -195,7 +195,12 @@ public sealed partial class CppSource
                 i = open + 1;
                 continue;
             }
-            result.TryAdd(name, (open + 1, close));
+            // C++ overloads (CheckCollision(GameObject&, GameObject&) and CheckCollision(BallObject&, GameObject&)): the
+            // second is "CheckCollision#2", and so on; a call picks one by its arguments (ChooseOverload).
+            if (!result.TryAdd(name, (open + 1, close)))
+                for (int k = 2; !result.TryAdd($"{name}#{k}", (open + 1, close)); k++)
+                {
+                }
             // Member functions are inside a class: keep looking inside the class body, but skip function bodies.
             i = close + 1;
         }
@@ -275,7 +280,49 @@ public sealed partial class CppSource
     }
 
     /// <summary>A parameter of one of the program's functions: its name, whether it is a reference, its default value.</summary>
-    public sealed record Parameter(string Name, bool Ref, string? Default);
+    public sealed record Parameter(string Name, bool Ref, string? Default)
+    {
+        /// <summary>The parameter's type without const, &amp;, * and namespaces (GameObject, vec2, float).</summary>
+        public string Type { get; init; } = "";
+    }
+
+    /// <summary>A function's definitions: its name, then its overloads (name#2, name#3 …).</summary>
+    public IEnumerable<string> OverloadsOf(string name)
+    {
+        if (!Functions.ContainsKey(name)) yield break;
+        yield return name;
+        for (int k = 2; Functions.ContainsKey($"{name}#{k}"); k++) yield return $"{name}#{k}";
+    }
+
+    /// <summary>
+    /// The overload a call with these arguments runs: the number of arguments must fit, and a struct parameter takes an
+    /// argument that has the struct's members (a BallObject has GameObject's and more: the BallObject&amp; overload is the
+    /// closer one). The name itself when there is only one.
+    /// </summary>
+    public string ChooseOverload(string name, IReadOnlyList<Shading.ShaderAst.Expr> args, Func<Shading.ShaderAst.Expr, Shading.ShaderValue?> value)
+    {
+        var all = OverloadsOf(name).ToList();
+        if (all.Count < 2) return name;
+        var values = args.Select(value).ToList();
+        string best = name;
+        int bestScore = int.MinValue;
+        foreach (var candidate in all)
+        {
+            var parameters = ParametersOf(candidate) ?? [];
+            int required = parameters.Count(p => p.Default is null);
+            if (values.Count < required || values.Count > parameters.Count) continue;
+            int score = 0;
+            for (int i = 0; i < values.Count && score > int.MinValue / 2; i++)
+            {
+                var fields = StructLayout.Fields(this, parameters[i].Type);
+                if (fields is null) continue;
+                if (values[i]?.Fields is not { } given || !fields.All(f => given.ContainsKey(f.Name))) score = int.MinValue / 2;
+                else score += fields.Count;
+            }
+            if (score > bestScore) (best, bestScore) = (candidate, score);
+        }
+        return best;
+    }
 
     /// <summary>
     /// The parameters of a function's definition (the one with a body), also with default values that contain calls
@@ -300,8 +347,10 @@ public sealed partial class CppSource
                 {
                     int eq = TopLevelEquals(p);
                     var decl = eq >= 0 ? p[..eq].Trim() : p;
-                    var name = Regex.Match(decl, @"(\w+)\s*(?:\[\s*\])?$").Groups[1].Value;
-                    return new Parameter(name, decl.Contains('&') && !decl.Contains("&&"), eq >= 0 ? p[(eq + 1)..].Trim() : null);
+                    var nameMatch = Regex.Match(decl, @"(\w+)\s*(?:\[\s*\])?$");
+                    var name = nameMatch.Groups[1].Value;
+                    var type = Regex.Replace(decl[..nameMatch.Index], @"\b(?:const|struct|unsigned)\b|[&*]|\b\w+::", "").Trim();
+                    return new Parameter(name, decl.Contains('&') && !decl.Contains("&&"), eq >= 0 ? p[(eq + 1)..].Trim() : null) { Type = type };
                 }).ToList();
         }
         return parameterCache[function] = result;
@@ -341,7 +390,19 @@ public sealed partial class CppSource
     public bool CallsApi(string function)
     {
         if (callsApi.TryGetValue(function, out var known)) return known;
-        callsApi[function] = false; // a cycle (recursion) counts as no call until proven otherwise
+        // An overloaded name: any of its definitions.
+        if (!function.Contains('#') && Functions.ContainsKey(function + "#2"))
+        {
+            callsApi[function] = false;
+            return callsApi[function] = OverloadsOf(function).Skip(1).Any(CallsApi) || CallsApiOf(function);
+        }
+        return CallsApiOf(function);
+    }
+
+    private bool CallsApiOf(string function)
+    {
+        if (callsApi.TryGetValue(function + "@", out var known)) return known;
+        callsApi[function + "@"] = false; // a cycle (recursion) counts as no call until proven otherwise
         bool result = false;
         if (FunctionBody(function) is { } body)
         {
@@ -357,7 +418,7 @@ public sealed partial class CppSource
                     }
                 }
         }
-        return callsApi[function] = result;
+        return callsApi[function + "@"] = result;
     }
 
     private readonly Dictionary<string, bool> callsApi = new(StringComparer.Ordinal);

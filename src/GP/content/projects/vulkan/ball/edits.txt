@@ -1,0 +1,131 @@
+=== task: ball-object
+--- file: main.cpp
+--- find:
+// TODO: struct BallObject (a GameObject with Radius and Stuck) and the function MakeBallObject
+--- replace:
+// BallObject (learnopengl: ball_object.h)
+// ---------------------------------------
+// BallObject holds the state of the Ball object inheriting
+// relevant state data from GameObject. Contains some extra
+// functionality specific to the game's ball object that
+// were too specific for within GameObject alone.
+struct BallObject : GameObject {
+    // ball state
+    float Radius = 12.5f;
+    bool  Stuck = true;
+};
+
+// creates a ball (learnopengl's BallObject constructor): a GameObject of size 2 * radius
+BallObject MakeBallObject(glm::vec2 pos, float radius, glm::vec2 velocity, VkDescriptorSet sprite) {
+    BallObject ball;
+    ball.Position = pos;
+    ball.Size = glm::vec2(radius * 2.0f, radius * 2.0f);
+    ball.Velocity = velocity;
+    ball.Sprite = sprite;
+    ball.Radius = radius;
+    ball.Stuck = true;
+    return ball;
+}
+=== task: move-reset
+--- file: main.cpp
+--- find:
+// TODO: the functions Move (unless the ball is stuck: move it and bounce it off the left, right and top edges) and Reset (back to a position with a velocity, stuck again)
+--- replace:
+// moves the ball, keeping it constrained within the window bounds (except bottom edge)
+void Move(BallObject& ball, float dt, unsigned int window_width) {
+    // if not stuck to player board
+    if (!ball.Stuck) {
+        // move the ball
+        ball.Position += ball.Velocity * dt;
+        // then check if outside window bounds and if so, reverse velocity and restore at correct position
+        if (ball.Position.x <= 0.0f) {
+            ball.Velocity.x = -ball.Velocity.x;
+            ball.Position.x = 0.0f;
+        } else if (ball.Position.x + ball.Size.x >= window_width) {
+            ball.Velocity.x = -ball.Velocity.x;
+            ball.Position.x = window_width - ball.Size.x;
+        }
+        if (ball.Position.y <= 0.0f) {
+            ball.Velocity.y = -ball.Velocity.y;
+            ball.Position.y = 0.0f;
+        }
+    }
+}
+
+// resets the ball to initial Stuck Position (if ball is outside window bounds)
+void Reset(BallObject& ball, glm::vec2 position, glm::vec2 velocity) {
+    ball.Position = position;
+    ball.Velocity = velocity;
+    ball.Stuck = true;
+}
+=== task: draw-ball
+--- file: main.cpp
+--- find:
+const float PLAYER_VELOCITY(500.0f);
+
+--- replace:
+const float PLAYER_VELOCITY(500.0f);
+// Initial velocity of the Ball
+const glm::vec2 INITIAL_BALL_VELOCITY(100.0f, -350.0f);
+// Radius of the ball object
+const float BALL_RADIUS = 12.5f;
+
+--- file: main.cpp
+--- find:
+GameObject     Player;
+
+--- replace:
+GameObject     Player;
+BallObject     Ball;
+
+--- file: main.cpp
+--- find:
+        // TODO: place the ball on top of the paddle, in its middle (MakeBallObject)
+--- replace:
+        glm::vec2 ballPos = playerPos + glm::vec2(PLAYER_SIZE.x / 2.0f - BALL_RADIUS, -BALL_RADIUS * 2.0f);
+        Ball = MakeBallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, GetTexture("ball").DescriptorSet);
+--- file: main.cpp
+--- find:
+        // TODO: draw the ball
+--- replace:
+        // draw ball
+        DrawObject(Ball, Renderer);
+=== task: update
+--- file: main.cpp
+--- find:
+void Update(Game& game, float dt) {
+    // TODO: move the ball
+}
+--- replace:
+void Update(Game& game, float dt) {
+    // update objects
+    Move(Ball, dt, game.Width);
+}
+=== task: launch
+--- file: main.cpp
+--- find:
+            if (Player.Position.x >= 0.0f)
+                Player.Position.x -= velocity;
+        }
+--- replace:
+            if (Player.Position.x >= 0.0f) {
+                Player.Position.x -= velocity;
+                if (Ball.Stuck)
+                    Ball.Position.x -= velocity;
+            }
+        }
+--- file: main.cpp
+--- find:
+            if (Player.Position.x <= game.Width - Player.Size.x)
+                Player.Position.x += velocity;
+        }
+        // TODO: move the stuck ball with the paddle, and release it with the space bar
+--- replace:
+            if (Player.Position.x <= game.Width - Player.Size.x) {
+                Player.Position.x += velocity;
+                if (Ball.Stuck)
+                    Ball.Position.x += velocity;
+            }
+        }
+        if (game.Keys[GLFW_KEY_SPACE])
+            Ball.Stuck = false;

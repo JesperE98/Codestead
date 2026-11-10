@@ -8,6 +8,8 @@ public sealed partial class GlReader
 {
     private void Draw(string mode, string? indexType, int first, int count, string call, int line, int instances = 1)
     {
+        // A frame before the one shown (a game's earlier frames): what it draws is not kept.
+        if (discardDraws) return;
         var lineText = line.ToString();
         if (gl.CurrentProgram is not { } cur || !gl.Programs.TryGetValue(cur, out var program))
         {
