@@ -65,6 +65,9 @@ public sealed partial class ShaderRunner
             var x = Eval(c.Args[0]);
             return ShaderValue.Str(x.Text ?? (x.X == Math.Floor(x.X) && Math.Abs(x.X) < 1e15 ? ((long)x.X).ToString(System.Globalization.CultureInfo.InvariantCulture) : x.X.ToString("0.000000", System.Globalization.CultureInfo.InvariantCulture)));
         }
+        if (Lenient && CppLibrary(c, name) is { } library) return library;
+        // std::pair<K, V>(k, v), std::make_pair(k, v): the two values.
+        if (Lenient && name is "pair" or "make_pair" && c.Args.Count == 2) return ShaderValue.Array([Eval(c.Args[0]), Eval(c.Args[1])]);
         // _countof(array): the number of elements of a C array (MSVC's macro, used by the D3D12 samples).
         if (name is "_countof" && c.Args.Count == 1)
         {
@@ -273,6 +276,27 @@ public sealed partial class ShaderRunner
             }
             case "begin" or "end" or "rbegin" or "rend" when Eval(c.Args[0]).Map is { } map:
                 return new ShaderValue { Iterator = new MapIterator(map, method.EndsWith("end", StringComparison.Ordinal) && !method.EndsWith("begin", StringComparison.Ordinal) ? map.Count : 0, method.StartsWith('r')) };
+            case "begin" or "end" or "cbegin" or "cend" when Lenient && Eval(c.Args[0]).Text is { } str:
+            {
+                // A std::string's iterator: *it is the character there (learnopengl's RenderText walks the text with one).
+                var chars = new SortedDictionary<double, ShaderValue>();
+                for (int i = 0; i < str.Length; i++) chars[i] = ShaderValue.Integer(str[i]);
+                var it = new MapIterator(chars, method.EndsWith("end", StringComparison.Ordinal) ? str.Length : 0, false);
+                return new ShaderValue { Iterator = it, V = it.Current?.Value.V };
+            }
+            case "insert" or "emplace" when Lenient && Eval(c.Args[0]).Map is { } into:
+            {
+                // map.insert(std::pair<K, V>(k, v)) / map.emplace(k, v): added unless the key is there already.
+                var (key, value) = c.Args.Count >= 3 ? (Eval(c.Args[1]), Eval(c.Args[2])) : Eval(c.Args[1]) is { Items: [var k, var v] } pair ? (k, v) : (null, null);
+                if (key is not null && value is not null && !into.ContainsKey(key.X)) into[key.X] = value.Clone();
+                return ShaderValue.Scalar(0);
+            }
+            case "is_open" or "good" when Lenient && Eval(c.Args[0]) is { } openStream && IsStream(openStream):
+                return ShaderValue.Scalar(openStream.Fields![StreamOk].X);
+            case "fail" or "eof" when Lenient && Eval(c.Args[0]) is { } failStream && IsStream(failStream):
+                return ShaderValue.Scalar(failStream.Fields![StreamOk].X == 0 ? 1 : 0);
+            case "close" when Lenient:
+                return ShaderValue.Scalar(0);
             case "data" or "c_str":
                 return Eval(c.Args[0]);
             case "Get" or "get" when Lenient && c.Args.Count == 1:

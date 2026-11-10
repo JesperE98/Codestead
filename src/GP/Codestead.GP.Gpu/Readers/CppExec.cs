@@ -119,10 +119,11 @@ public sealed class CppExec
             return made;
         }
         // A std::vector member with no initializer (filled by push_back in a setup helper): empty, kept as a global.
+        // A std::map likewise (learnopengl's Characters).
         if (src.Initializer(name) is null && src.DeclaredType(name) is { } vectorType
-            && System.Text.RegularExpressions.Regex.IsMatch(vectorType, @"^(?:const)?std::vector<"))
+            && System.Text.RegularExpressions.Regex.IsMatch(vectorType, @"^(?:const)?std::(?:vector|map|unordered_map)<"))
         {
-            var empty = ShaderValue.Array([]);
+            var empty = vectorType.Contains("map<", StringComparison.Ordinal) ? Runner.Default("map") : ShaderValue.Array([]);
             Runner.Globals[name] = empty;
             return empty;
         }

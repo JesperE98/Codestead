@@ -13,5 +13,9 @@
     <EmbeddedResource Include="symbols/*.txt">
       <LogicalName>symbols/%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
+    <!-- What FreeType renders of the course's font (made by content/textures/make_practice.py). -->
+    <EmbeddedResource Include="Fonts/*.json">
+      <LogicalName>fonts/%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

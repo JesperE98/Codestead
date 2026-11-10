@@ -96,7 +96,9 @@ public static class CppStatements
                     // branches; any other if is its body.
                     var then = new List<CppStatement>();
                     Walk(code, bodyStart, bodyEnd, then);
-                    if (SimpleCondition.IsMatch(condition) && !then.Any(s => s.Kind is "loop-start"))
+                    // Every if comes with both branches (the reader decides it when it can, else runs the body); a render
+                    // loop inside one is walked as before.
+                    if (condition.Length > 0 && !then.Any(s => s.Kind is "loop-start"))
                     {
                         List<CppStatement>? otherwise = null;
                         int e = bodyEnd + 1;
@@ -136,6 +138,22 @@ public static class CppStatements
                     }
                     else into.AddRange(then);
                 }
+                else if (word == "if")
+                {
+                    // An error branch (if (FT_New_Face(…)) { …; return -1; } else { … }) is not taken: its else is.
+                    int e = bodyEnd + 1;
+                    while (e < end && char.IsWhiteSpace(code[e])) e++;
+                    if (e + 4 <= end && Regex.IsMatch(code[e..Math.Min(end, e + 5)], @"^else\b"))
+                    {
+                        int es = e + 4;
+                        while (es < end && char.IsWhiteSpace(code[es])) es++;
+                        if (es < end && code[es] == '{' && CppSource.MatchBracket(code, es) is int ee and > 0)
+                        {
+                            Walk(code, es + 1, ee, into);
+                            bodyEnd = ee;
+                        }
+                    }
+                }
                 else if (word == "for")
                 {
                     var body = new List<CppStatement>();
@@ -147,6 +165,15 @@ public static class CppStatements
                     into.Add(new CppStatement("", i, "loop-start"));
                     Walk(code, bodyStart, bodyEnd, into);
                     into.Add(new CppStatement("", bodyEnd, "loop-end"));
+                }
+                else if (word == "while" && condition.Length > 0)
+                {
+                    // Another while loop (std::getline over a file): run while its condition is known to hold. Its
+                    // condition was added as a statement above: the loop evaluates it itself.
+                    var body = new List<CppStatement>();
+                    Walk(code, bodyStart, bodyEnd, body);
+                    into.RemoveAt(into.Count - 1);
+                    into.Add(new CppStatement(condition, i, "while", body));
                 }
                 // do { … } while (…); – skip the trailing while.
                 i = bodyEnd + 1;

@@ -62,7 +62,9 @@ public sealed partial class ShaderRunner
                     var old = Eval(u.Operand);
                     if (old.Iterator is { } it)
                     {
-                        var moved = new ShaderValue { Iterator = it with { Position = it.Position + (u.Op.EndsWith("++", StringComparison.Ordinal) ? 1 : -1) } };
+                        var next = it with { Position = it.Position + (u.Op.EndsWith("++", StringComparison.Ordinal) ? 1 : -1) };
+                        // A string's iterator carries its character as its number (*it).
+                        var moved = new ShaderValue { Iterator = next, V = old.V is null ? null : next.Current?.Value.V };
                         Store(u.Operand, moved);
                         return u.Op.StartsWith("post", StringComparison.Ordinal) ? old : moved;
                     }
@@ -82,6 +84,8 @@ public sealed partial class ShaderRunner
             }
             case Binary b:
             {
+                // C++: stream >> x reads the next word into x.
+                if (Lenient && b.Op == ">>" && Eval(b.Left) is { } stream && IsStream(stream)) return StreamRead(stream, b.Right);
                 if (b.Op == "&&") return ShaderValue.Scalar(Truthy(Eval(b.Left)) && Truthy(Eval(b.Right)) ? 1 : 0);
                 if (b.Op == "||") return ShaderValue.Scalar(Truthy(Eval(b.Left)) || Truthy(Eval(b.Right)) ? 1 : 0);
                 return BinaryOp(b.Op, Eval(b.Left), Eval(b.Right), b.Line);

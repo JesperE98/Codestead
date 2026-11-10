@@ -139,6 +139,8 @@ internal sealed class GlState
     public string? CurrentVertexArray;
     public string? ArrayBuffer;
     public double[] ClearColor = [0, 0, 0, 0];
+    /// <summary>GL_UNPACK_ALIGNMENT: the rows of uploaded texture data start at multiples of it (glPixelStorei).</summary>
+    public int UnpackAlignment = 4;
     public bool ClearColorSet;
     public bool Wireframe;
     public bool CullFace;

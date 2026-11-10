@@ -131,8 +131,20 @@ internal sealed class FrameRecorder
         }
     }
 
-    /// <summary>The project, for the model files a loadModel reads.</summary>
-    public GpuProject? Project { get; init; }
+    /// <summary>The project, for the model files a loadModel reads (and the files std::ifstream and FreeType read).</summary>
+    public GpuProject? Project
+    {
+        get => project;
+        init
+        {
+            project = value;
+            if (value is null) return;
+            exec.Runner.ReadText = value.Find;
+            exec.Runner.ReadBytes = value.FindAsset;
+        }
+    }
+
+    private readonly GpuProject? project;
 
     /// <summary>
     /// vulkan-tutorial's loadModel (tinyobj::LoadObj and the loop over the shapes' indices): instead of running the loop,

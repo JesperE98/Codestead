@@ -125,6 +125,27 @@ public sealed partial class CppSource
         "FALSE" or "GL_FALSE" or "VK_FALSE" or "GLFW_FALSE" or "NULL" or "nullptr" => 0,
         // glibc's rand() range (the simulator's rand() is glibc's).
         "RAND_MAX" => 2147483647,
+        // GLFW's key codes and actions (input: no key is down unless the simulator presses one).
+        "GLFW_RELEASE" => 0,
+        "GLFW_PRESS" => 1,
+        "GLFW_REPEAT" => 2,
+        "GLFW_KEY_SPACE" => 32,
+        "GLFW_KEY_ESCAPE" => 256,
+        "GLFW_KEY_ENTER" => 257,
+        "GLFW_KEY_RIGHT" => 262,
+        "GLFW_KEY_LEFT" => 263,
+        "GLFW_KEY_DOWN" => 264,
+        "GLFW_KEY_UP" => 265,
+        "GLFW_KEY_LEFT_SHIFT" => 340,
+        "VK_SPACE" => 0x20,
+        "VK_ESCAPE" => 0x1B,
+        "VK_RETURN" => 0x0D,
+        "VK_LEFT" => 0x25,
+        "VK_UP" => 0x26,
+        "VK_RIGHT" => 0x27,
+        "VK_DOWN" => 0x28,
+        // GLFW_KEY_A … GLFW_KEY_Z, GLFW_KEY_0 … GLFW_KEY_9: the character's code.
+        _ when name.Length == 10 && name.StartsWith("GLFW_KEY_", StringComparison.Ordinal) && (char.IsAsciiLetterUpper(name[9]) || char.IsAsciiDigit(name[9])) => name[9],
         _ => null,
     };
 

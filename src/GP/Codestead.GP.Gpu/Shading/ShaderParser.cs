@@ -236,6 +236,13 @@ public sealed partial class ShaderParser
         if (Accept("]")) return -1;
         var n = Next();
         Expect("]");
+        // C++: float vertices[6][4] – an array of rows (the inner sizes come from the initializer's lists).
+        while (lenient && Peek.Is("[") && PeekAt(2).Is("]"))
+        {
+            Next();
+            Next();
+            Next();
+        }
         // A size named by a constant: const int NR_LIGHTS = 32; uniform Light lights[NR_LIGHTS];
         if (n.Kind != ShaderTokenKind.Number && constInts.TryGetValue(n.Text, out var named)) return named;
         return n.Kind == ShaderTokenKind.Number ? (int)double.Parse(n.Text, CultureInfo.InvariantCulture) : -1;

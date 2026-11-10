@@ -16,9 +16,18 @@ internal static class StructLayout
         // Drop member functions (static VkVertexInputBindingDescription getBindingDescription() { … }).
         body = RemoveBlocks(body);
         var fields = new List<(string, string, int)>();
-        foreach (Match f in Regex.Matches(body, @"(?:^|;)\s*(?<type>(?:glm::|DirectX::)?[A-Za-z_]\w*)\s+(?<names>[A-Za-z_]\w*(?:\s*\[\s*\w+\s*\])?(?:\s*,\s*[A-Za-z_]\w*)*)\s*(?=;)", RegexOptions.CultureInvariant))
+        // Types of one word (vec3, float), with a namespace (glm::vec2), unsigned int, std::string and templates
+        // (std::vector<GameObject>: the game's members).
+        foreach (Match f in Regex.Matches(body, @"(?:^|;)\s*(?:const\s+)?(?<type>(?:unsigned\s+|signed\s+)?(?:glm::|DirectX::|std::)?[A-Za-z_]\w*(?:\s*<[^;{}()]*>)?)\s+(?<names>[A-Za-z_]\w*(?:\s*\[\s*\w+\s*\])?(?:\s*,\s*[A-Za-z_]\w*)*)\s*(?=;)", RegexOptions.CultureInvariant))
         {
             var type = f.Groups["type"].Value.Replace("glm::", "").Replace("DirectX::", "");
+            // unsigned int → uint (an integer); std::vector<T> → vector, std::string → string, std::map<…> → map.
+            type = Regex.Replace(type, @"^unsigned\s+(?:int|long|short)?$", "uint");
+            type = Regex.Replace(type, @"^signed\s+(int|long|short)$", "int");
+            if (Regex.IsMatch(type, @"^(?:std::)?vector\s*<")) type = "vector";
+            else if (Regex.IsMatch(type, @"^(?:std::)?(?:map|unordered_map)\s*<")) type = "map";
+            else if (type is "std::string" or "string") type = "string";
+            else if (type.StartsWith("std::", StringComparison.Ordinal)) type = type[5..];
             if (type is "static" or "return" or "using" or "friend") continue;
             foreach (var raw in f.Groups["names"].Value.Split(','))
             {

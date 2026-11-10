@@ -19,6 +19,7 @@ public sealed partial class GlReader
     private readonly List<DrawCall> setupDraws = new();
     private readonly List<StbImage> images;
     private int statementOffset;
+    private int textureCount;
 
     private readonly CppExec env;
 
@@ -29,6 +30,9 @@ public sealed partial class GlReader
         src = new CppSource(main, project.Files.TryGetValue(main, out var t) ? t : "");
         images = StbImage.All(src, project, scene);
         env = new CppExec(src, time, null, scene);
+        // std::ifstream reads the project's files (a game's levels), FreeType its fonts.
+        env.Runner.ReadText = project.Find;
+        env.Runner.ReadBytes = project.FindAsset;
     }
 
     /// <summary>What the program does when its clock reads <paramref name="time"/> seconds.</summary>
@@ -104,7 +108,7 @@ public sealed partial class GlReader
         try
         {
             foreach (var st in CppStatements.Walk(src, fn))
-                if (st.Kind is "stmt" or "for" or "if") Statement(st);
+                if (st.Kind is "stmt" or "for" or "if" or "while") Statement(st);
             return inlineReturn[0];
         }
         finally
@@ -140,6 +144,20 @@ public sealed partial class GlReader
     {
         var parts = CppSource.SplitArgs(loop.Text.Replace(";", ","));
         var header = loop.Text.Split(';');
+        var each = Regex.Match(loop.Text, @"^\s*(?:const\s+)?[\w:<>,\s]*?[\s&*]+(\w+)\s*:\s*(.+)$");
+        if (header.Length == 1 && each.Success)
+        {
+            // for (GameObject& tile : level.Bricks): the body for each element (the element itself: a change to a
+            // member stays in the container, as with a reference).
+            var container = env.Eval(each.Groups[2].Value.Trim());
+            var items = container?.Items ?? container?.Map?.Values.ToArray() ?? container?.Text?.Select(ch => ShaderValue.Integer(ch)).ToArray() ?? [];
+            foreach (var item in items.Take(4096))
+            {
+                env.Runner.Globals[each.Groups[1].Value] = item;
+                foreach (var st in loop.Body ?? []) Statement(st);
+            }
+            return;
+        }
         if (header.Length != 3) return;
         env.Run(header[0] + ";");
         for (int n = 0; n < 1000; n++)
@@ -159,7 +177,9 @@ public sealed partial class GlReader
     private bool? Decide(string condition)
     {
         var m = Regex.Match(condition, @"^\s*(!?)\s*([A-Za-z_]\w*)\s*(?:([!=]=)\s*(0|true|false|NULL|nullptr)\s*)?$");
-        if (!m.Success) return null;
+        // Any other condition: its value when the program's own variables give one (if (!tile.Destroyed),
+        // if (nrComponents == 1)); a pointer, a handle or an API result is not known.
+        if (!m.Success) return env.Eval(condition) is { V: { Length: 1 } decided, Iterator: null } ? decided[0] != 0 : null;
         var name = m.Groups[2].Value;
         bool? value = gl.VertexArrays.ContainsKey(name) || gl.Buffers.ContainsKey(name) || gl.TextureObjects.ContainsKey(name) || gl.Framebuffers.ContainsKey(name)
             || gl.Renderbuffers.ContainsKey(name) || gl.Programs.ContainsKey(name) ? true
@@ -173,6 +193,22 @@ public sealed partial class GlReader
         return m.Groups[1].Value == "!" ? !truth : truth;
     }
 
+    /// <summary>The API calls (gl*, glfw*, Shader methods) in a piece of code, without running its C++ again.</summary>
+    private void ApiCalls(string text, int offset)
+    {
+        statementOffset = offset;
+        foreach (Match m in CallStart.Matches(text))
+        {
+            int open = m.Index + m.Length - 1;
+            int close = CppSource.MatchBracket(text, open);
+            if (close < 0) continue;
+            var args = CppSource.SplitArgs(text[(open + 1)..close]);
+            int line = src.LineAt(offset + m.Index);
+            if (m.Groups["method"].Success) ShaderMethod(m.Groups["obj"].Value, m.Groups["method"].Value, args, line);
+            else Call(m.Groups["name"].Value, args, null, line);
+        }
+    }
+
     private void Statement(CppStatement st)
     {
         if (st.Kind == "for")
@@ -182,8 +218,20 @@ public sealed partial class GlReader
         }
         if (st.Kind == "if")
         {
-            // Decided: that branch. Not decided: the body, as for any other if.
+            // The condition's API calls first (if (glCheckFramebufferStatus(…) != …)), then the branch it picks:
+            // decided, that branch; not decided, the body, as for any other if.
+            ApiCalls(st.Text, st.Offset);
             foreach (var inner in (Decide(st.Text) == false ? st.Else : st.Body) ?? []) Statement(inner);
+            return;
+        }
+        if (st.Kind == "while")
+        {
+            for (int n = 0; n < 10000; n++)
+            {
+                ApiCalls(st.Text, st.Offset);
+                if (Decide(st.Text) != true) break;
+                foreach (var inner in st.Body ?? []) Statement(inner);
+            }
             return;
         }
         var text = st.Text;

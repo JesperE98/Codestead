@@ -87,6 +87,23 @@ public sealed partial class ShaderParser
     private static string? ScalarCast(string type) => type is "float" or "double" or "GLfloat" or "FLOAT" or "half" ? "float"
         : ShaderValue.IsIntType(type) ? "int" : null;
 
+    /// <summary>&lt;types&gt;( ahead: a template's arguments (names, ::, commas, * and &amp;), then a call.</summary>
+    private bool TemplateCallAhead()
+    {
+        int depth = 0;
+        for (int i = 0; i < 24; i++)
+        {
+            var t = PeekAt(i);
+            if (t.Is("<")) depth++;
+            else if (t.Is(">"))
+            {
+                if (--depth == 0) return PeekAt(i + 1).Is("(");
+            }
+            else if (!(t.Kind == ShaderTokenKind.Identifier || t.Is("::") || t.Is(",") || t.Is("*") || t.Is("&") || t.Kind == ShaderTokenKind.Number)) return false;
+        }
+        return false;
+    }
+
     private Expr Postfix(Expr e)
     {
         while (true)
@@ -179,6 +196,17 @@ public sealed partial class ShaderParser
                     Next();
                     Next();
                     return new Call(t.Text, CallArgs(), t.Line, ArrayConstructor: true);
+                }
+                // C++: a template's arguments before a call – std::pair<char, Character>(c, ch), std::make_pair<…>(…).
+                if (lenient && Peek.Is("<") && TemplateCallAhead())
+                {
+                    int depth = 0;
+                    do
+                    {
+                        if (Peek.Is("<")) depth++;
+                        else if (Peek.Is(">")) depth--;
+                        Next();
+                    } while (depth > 0);
                 }
                 if (Peek.Is("(")) return new Call(t.Text, CallArgs(), t.Line);
                 // C++ brace construction: glm::vec4{1, 0, 0, 1}, XMFLOAT4{…}

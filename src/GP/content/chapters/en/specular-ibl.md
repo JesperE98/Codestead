@@ -738,6 +738,7 @@ learnopengl's fix for the bright dots samples the environment at a mip level cho
 ---
 Without mip levels `textureLod(environmentMap, L, mipLevel)` would read level 0 whatever `mipLevel` says, and the dots would come back.
 ```
+:::
 :::vulkan
 ```quiz
 learnopengl's fix for the bright dots samples the environment at a mip level chosen from each sample's pdf. What does the environment cube map need for that, and how does the Vulkan project give it to it?

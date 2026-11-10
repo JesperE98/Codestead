@@ -200,7 +200,10 @@ public sealed partial class ShaderRunner
     /// <summary>A zero value of a type (struct types get their fields).</summary>
     public ShaderValue Default(string type, int arraySize = 0)
     {
-        if (type is "map") return new ShaderValue { Map = new SortedDictionary<double, ShaderValue>() };
+        if (type is "map" or "unordered_map") return new ShaderValue { Map = new SortedDictionary<double, ShaderValue>() };
+        // C++: an empty std::vector, an empty std::string.
+        if (type is "vector" && arraySize == 0) return ShaderValue.Array([]);
+        if (type is "string" or "std::string" or "wstring") return ShaderValue.Str("");
         if (arraySize > 0) return ShaderValue.Array(Enumerable.Range(0, arraySize).Select(_ => Default(type)).ToArray());
         if (program.FindStruct(type) is { } s)
             return ShaderValue.Struct(s.Fields.ToDictionary(f => f.Id, f => Default(f.Type, f.ArraySize)));
@@ -292,6 +295,9 @@ public sealed partial class ShaderRunner
                 }
                 else if (d.Value is null && d.SizeExpr is not null && arraySize == 0) scopes[^1][d.Id] = ShaderValue.Array([]);
                 else if (d.Value is InitList { Items.Count: 0 } || d.Value is null && d.SizeExpr is not null) scopes[^1][d.Id] = LenientDefault(d.Type, arraySize);
+                else if (!d.IsArray && d.Value is InitList && program.FindStruct(d.Type) is { } initStruct && Eval(d.Value) is { } listed && (listed.Items is not null || listed.V is not null))
+                    // C++ aggregate initialisation: Character ch = { texture, size, bearing, advance } – the fields in order.
+                    scopes[^1][d.Id] = AsStruct(initStruct, listed).Clone();
                 else scopes[^1][d.Id] = d.Value is null ? LenientDefault(d.Type, d.ArraySize) : (d.IsArray ? StructItems(d.Type, Eval(d.Value)) : Coerce(d.Type, Eval(d.Value))).Clone();
                 return default;
             }
@@ -335,7 +341,8 @@ public sealed partial class ShaderRunner
             case ForEach fe:
             {
                 var container = Eval(fe.Container);
-                var items = container.Items ?? container.Map?.Values.ToArray() ?? (container.V?.Select(ShaderValue.Scalar).ToArray()) ?? [];
+                var items = container.Items ?? container.Map?.Values.ToArray() ?? (container.V?.Select(ShaderValue.Scalar).ToArray())
+                    ?? container.Text?.Select(ch => ShaderValue.Integer(ch)).ToArray() ?? [];
                 scopes.Add(RentScope());
                 try
                 {

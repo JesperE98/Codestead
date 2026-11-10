@@ -107,7 +107,7 @@ public sealed partial class D3D12Reader
         // Run the frame: OnUpdate and the recorded command list (each draw with the root constants set before it).
         var blocks = VulkanReader.AllShaderBlocks(project, [".hlsl"], vs, ps);
         var device = new D3D12Device(src, project);
-        var recorder = new FrameRecorder(src, time, scene, blocks, transposeMatrices: true, device);
+        var recorder = new FrameRecorder(src, time, scene, blocks, transposeMatrices: true, device) { Project = project };
         recorder.Setup();
         if (device.WindowSrgb) scene.WindowSrgb = true;
         foreach (var fn in new[] { "OnUpdate" }.Where(src.Functions.ContainsKey)) recorder.Run(fn);

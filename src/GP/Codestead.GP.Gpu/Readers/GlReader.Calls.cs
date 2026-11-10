@@ -192,7 +192,31 @@ public sealed partial class GlReader
                 gl.FrontCcw = !A(0).Contains("GL_CW", StringComparison.Ordinal) || A(0).Contains("GL_CCW", StringComparison.Ordinal);
                 return;
             case "glGenTextures":
-                foreach (var n in Names(A(0), A(1))) gl.TextureObjects[n] = new GlState.TextureObject();
+            {
+                var names = Names(A(0), A(1)).ToList();
+                foreach (var n in names) gl.TextureObjects[n] = new GlState.TextureObject();
+                // One texture: also known by a name of its own, which the variable holds – so a texture made in a loop
+                // (a glyph per character) stays itself when the variable gets the next one, and a copy of the variable
+                // (Character{ texture, … }) still names it.
+                if (names.Count <= 2 && System.Text.RegularExpressions.Regex.IsMatch(A(1).Trim(), @"^&\s*[A-Za-z_][\w.\[\]]*$"))
+                {
+                    var own = $"texture#{++textureCount}";
+                    gl.TextureObjects[own] = gl.TextureObjects[names[^1]];
+                    try
+                    {
+                        env.Runner.Assign(ShaderParser.ParseExpression(A(1).Trim().TrimStart('&').Trim()), ShaderValue.Str(own));
+                    }
+                    catch (ShaderSyntaxException)
+                    {
+                    }
+                    catch (ShaderRuntimeException)
+                    {
+                    }
+                }
+                return;
+            }
+            case "glPixelStorei":
+                if (A(0).Contains("UNPACK_ALIGNMENT", StringComparison.Ordinal)) gl.UnpackAlignment = Math.Max(1, Int(A(1)) ?? 4);
                 return;
             case "glActiveTexture":
             {
@@ -350,7 +374,7 @@ public sealed partial class GlReader
             tex.IsCube = true;
         }
         var data = DataName(a[8]);
-        if (data is "NULL" or "nullptr" or "0")
+        if (data is "NULL" or "nullptr" or "0" || Eval(data)?.Text is "nullptr" or "NULL")
         {
             // No data: the texture is drawn into (a framebuffer's colour or depth attachment).
             tex.Width = Int(a[3]) ?? 0;
@@ -358,6 +382,8 @@ public sealed partial class GlReader
             tex.Float = IsFloatFormat(a[2]);
             tex.IsDepth = a[2].Contains("DEPTH", StringComparison.Ordinal);
             tex.Components = 4;
+            // An empty image (a space's glyph: 0 × 0): a texture with nothing in it, which reads 0.
+            if (tex.Width == 0 || tex.Height == 0) tex.Image = new Textures.Image(1, 1, 4, [0, 0, 0, 0], [0, 0, 0, 0]);
             return;
         }
         var loaded = images.LastOrDefault(i => i.Variable == data && i.Offset < statementOffset);
@@ -374,12 +400,18 @@ public sealed partial class GlReader
         if (image is null && loaded is null && Numbers(data) is { Count: > 0 } values && Int(a[3]) is int w && Int(a[4]) is int h && w > 0 && h > 0)
         {
             int per = Math.Max(1, Components(a[6]));
+            // Bytes (GL_UNSIGNED_BYTE: a FreeType glyph's coverage) are 0–255; each row starts at a multiple of
+            // GL_UNPACK_ALIGNMENT (4 unless glPixelStorei says otherwise) – learnopengl sets 1 for its glyphs.
+            bool ofBytes = a[7].Contains("UNSIGNED_BYTE", StringComparison.Ordinal);
+            int rowLength = ofBytes ? (w * per + gl.UnpackAlignment - 1) / gl.UnpackAlignment * gl.UnpackAlignment : w * per;
             var floats = new double[w * h * 4];
             var bytes = new byte[w * h * 4];
             for (int i = 0; i < w * h; i++)
                 for (int k = 0; k < 4; k++)
                 {
-                    double v = k < per ? (i * per + k < values.Count ? values[i * per + k] : 0) : (k == 3 ? 1 : 0);
+                    int at = i / w * rowLength + i % w * per + k;
+                    double v = k < per ? (at < values.Count ? values[at] : 0) : (k == 3 ? 1 : 0);
+                    if (ofBytes && k < per) v /= 255.0;
                     floats[i * 4 + k] = v;
                     bytes[i * 4 + k] = (byte)Math.Round(Math.Clamp(v, 0, 1) * 255);
                 }
