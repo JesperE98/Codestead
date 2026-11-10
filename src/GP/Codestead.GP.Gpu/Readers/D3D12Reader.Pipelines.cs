@@ -43,7 +43,7 @@ public sealed partial class D3D12Reader
                 var c = (blob is null ? null : compiles.LastOrDefault(x => x.Offset < create.Offset && Regex.IsMatch(x.Arg(7), @"\b" + Regex.Escape(blob) + @"\b")))
                     ?? compiles.LastOrDefault(x => x.Offset < create.Offset && (CppSource.StringArg(x.Arg(4)) ?? "").StartsWith(prefix, StringComparison.Ordinal));
                 if (c is null) return null;
-                var text = project.Find(CppSource.StringArg(c.Arg(0)) ?? "");
+                var text = project.Find(src.StringValue(c.Arg(0), c.Offset) ?? "");
                 if (text is null) return null;
                 try
                 {

@@ -13,7 +13,7 @@ namespace Codestead.GP.Gpu.Readers;
 /// the vertex and index buffers and the descriptor set bound. Handles are strings ("buf:3", "img:2" …); mapped
 /// pointers are numbers (memory × 10⁹ + byte offset).
 /// </summary>
-internal sealed class VulkanDevice : IDeviceModel
+internal sealed partial class VulkanDevice : IDeviceModel
 {
     public sealed class Memory
     {
@@ -28,6 +28,7 @@ internal sealed class VulkanDevice : IDeviceModel
         public bool Window;
         public int Width, Height, Layers = 1, Samples = 1;
         public bool Cube, Depth, Float, Srgb;
+        public string Format = "";
         public readonly List<Image?> LayerImages = new();
         public string TargetId => "img:" + Id;
         /// <summary>
@@ -165,6 +166,7 @@ internal sealed class VulkanDevice : IDeviceModel
     {
         if (exec is null) return null;
         if (Debug) Console.Error.WriteLine($"[vk] {name}({string.Join(", ", args.Select(a => { var v = Eval(a); var t = v is null ? "?" : v.ToString(); return t.Length > 80 ? t[..80] + "…" : t; }))})");
+        if (ValidationCall(name, args) is { } answered) return answered;
         switch (name)
         {
             case "vkCreateBuffer" when args.Count >= 4:
@@ -237,6 +239,7 @@ internal sealed class VulkanDevice : IDeviceModel
                 img.Depth = format.Contains("_D16", StringComparison.Ordinal) || format.Contains("_D24", StringComparison.Ordinal) || format.Contains("_D32", StringComparison.Ordinal);
                 img.Float = format.Contains("SFLOAT", StringComparison.Ordinal) && !img.Depth;
                 img.Srgb = format.Contains("_SRGB", StringComparison.Ordinal);
+                img.Format = format;
                 Set(args[3], ShaderValue.Str(img.TargetId));
                 return ShaderValue.Str("VK_SUCCESS");
             }
@@ -266,6 +269,20 @@ internal sealed class VulkanDevice : IDeviceModel
                     for (int l = 0; l < count; l++)
                     {
                         var image = mem.Images.TryGetValue(offset + l * layerBytes, out var key) && loaded.TryGetValue(key, out var im) ? im : null;
+                        // Pixels the program made itself (a glyph atlas): the bytes in the buffer, by the image's format.
+                        if (image is null && BytesPerTexel(dst.Format) is int bpp and > 0 && dst.Width > 0 && dst.Height > 0)
+                        {
+                            long start = offset + (long)l * dst.Width * dst.Height * bpp;
+                            if (mem.Bytes.ContainsKey(start) || mem.Bytes.Keys.Any(k => k >= start && k < start + (long)dst.Width * dst.Height * bpp))
+                            {
+                                int w = dst.Width, h = dst.Height;
+                                var rgba = new byte[w * h * 4];
+                                for (int t = 0; t < w * h; t++)
+                                    for (int k = 0; k < 4; k++)
+                                        rgba[t * 4 + k] = k < bpp ? (byte)Math.Clamp(mem.Bytes.TryGetValue(start + (long)t * bpp + k, out var texelByte) ? texelByte : 0, 0, 255) : (byte)(k == 3 ? 255 : 0);
+                                image = new Image(w, h, bpp == 4 ? 4 : bpp, rgba);
+                            }
+                        }
                         while (dst.LayerImages.Count <= first + l) dst.LayerImages.Add(null);
                         dst.LayerImages[first + l] = image;
                     }
@@ -461,6 +478,7 @@ internal sealed class VulkanDevice : IDeviceModel
                     foreach (var bd in Items(Field(input, "pVertexBindingDescriptions")).Take((int)(Number(input, "vertexBindingDescriptionCount") ?? int.MaxValue)))
                         if (bd.Fields is not null)
                             bindings[(int)(Number(bd, "binding") ?? 0)] = ((int)(Number(bd, "stride") ?? 0), (Text(bd, "inputRate") ?? "").Contains("INSTANCE", StringComparison.Ordinal));
+                    CheckVertexInputs(info, attributes, handles.Count - 1);
                     var samples = System.Text.RegularExpressions.Regex.Match(Text(Field(info, "pMultisampleState"), "rasterizationSamples") ?? "", @"(\d+)_BIT");
                     pipelines[handle] = new Pipeline(attributes, bindings, samples.Success ? int.Parse(samples.Groups[1].Value) : 1);
                 }
@@ -604,11 +622,36 @@ internal sealed class VulkanDevice : IDeviceModel
         var numbers = new List<double>();
         CppExec.Flatten(value, numbers);
         // 16-bit indices (std::vector<uint16_t> indices) take 2 bytes each.
-        int bytes = Strip(from) is Name n && src.DeclaredType(n.Id) is { } type
-            && System.Text.RegularExpressions.Regex.IsMatch(type, @"uint16|int16|short", System.Text.RegularExpressions.RegexOptions.IgnoreCase) ? 2 : 4;
-        long limit = size is null ? long.MaxValue : (long)Num(size) * bytes / 4;
+        // 16-bit indices take 2 bytes each, bytes (std::vector<unsigned char>: a glyph atlas) 1.
+        int bytes = 4;
+        if (SourceName(Strip(from)) is { } n && src.DeclaredType(n) is { } type)
+        {
+            if (System.Text.RegularExpressions.Regex.IsMatch(type, @"uint16|int16|short", System.Text.RegularExpressions.RegexOptions.IgnoreCase)) bytes = 2;
+            else if (System.Text.RegularExpressions.Regex.IsMatch(type, @"char\b|uint8|int8|\bBYTE\b|stbi_uc|GLubyte", System.Text.RegularExpressions.RegexOptions.IgnoreCase)) bytes = 1;
+        }
+        long limit = size is null ? long.MaxValue : bytes == 1 ? (long)Num(size) : (long)Num(size) * bytes / 4;
         for (int i = 0; i < numbers.Count && (long)i * bytes < limit; i++) memories[m].Bytes[offset + (long)i * bytes] = numbers[i];
     }
+
+    /// <summary>The variable a memcpy source names: pixels, atlas.data(), &amp;atlas[0].</summary>
+    private static string? SourceName(Expr e) => e switch
+    {
+        Name n => n.Id,
+        Call { Function: ".data", Args: [var t] } => SourceName(t),
+        IndexOf { Target: var t } => SourceName(t),
+        Member m => m.Field,
+        _ => null,
+    };
+
+    /// <summary>Bytes per texel of an 8-bit format the program fills itself (R8 … R8G8B8A8), or 0.</summary>
+    private static int BytesPerTexel(string format) => format switch
+    {
+        _ when format.Contains("R8G8B8A8", StringComparison.Ordinal) || format.Contains("B8G8R8A8", StringComparison.Ordinal) => 4,
+        _ when format.Contains("R8G8B8_", StringComparison.Ordinal) => 3,
+        _ when format.Contains("R8G8_", StringComparison.Ordinal) => 2,
+        _ when format.Contains("R8_", StringComparison.Ordinal) => 1,
+        _ => 0,
+    };
 
     private void Copy(string? from, long fromOffset, string? to, long toOffset, long bytes)
     {

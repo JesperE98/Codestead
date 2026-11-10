@@ -7,6 +7,9 @@ namespace Codestead.GP.Gpu.Shading;
 // chapters), which the simulator answers from the glyphs FreeType makes of the course's font (Fonts/FreeTypeGlyphs).
 public sealed partial class ShaderRunner
 {
+    /// <summary>C++ mode: the zero value of a std::vector's elements, from the variable's declaration (or null).</summary>
+    public Func<Expr, ShaderValue?>? ElementDefault { get; set; }
+
     /// <summary>C++ mode: a text file of the project by its path (std::ifstream), or null when it does not exist.</summary>
     public Func<string, string?>? ReadText { get; set; }
 
@@ -57,6 +60,10 @@ public sealed partial class ShaderRunner
     {
         switch (name)
         {
+            case "OutputDebugStringA" or "OutputDebugStringW" or "OutputDebugString" when c.Args.Count == 1:
+                // Windows' debugger output (Visual Studio's Output window): the output pane, like std::cout.
+                ConsoleWrite(Eval(c.Args[0]));
+                return ShaderValue.Scalar(0);
             case "__assign" when c.Args.Count == 2:
             {
                 var assigned = Eval(c.Args[1]);
@@ -85,6 +92,24 @@ public sealed partial class ShaderRunner
                 Store(c.Args[1], ShaderValue.Str(text[pos..end].TrimEnd('\r')));
                 stream.Fields[StreamPos] = ShaderValue.Scalar(end + 1);
                 return ShaderValue.Scalar(1);
+            }
+            case "memcpy" when c.Args.Count == 3 && Pointer(c.Args[0]) is { Container.Items: { } into } dst:
+            {
+                // memcpy into an array of the program (a glyph's rows into an atlas vector): element by element – bytes,
+                // or 4-byte numbers when the size is counted with sizeof(float).
+                var (from, at) = Pointer(c.Args[1]);
+                long bytes = (long)Eval(c.Args[2]).X;
+                bool fours = ExprText(c.Args[2]).Contains("sizeof", StringComparison.Ordinal) && !ExprText(c.Args[2]).Contains("char", StringComparison.Ordinal);
+                long count = fours ? bytes / 4 : bytes;
+                for (long i = 0; i < count; i++)
+                {
+                    long s = at + i, d = dst.Offset + i;
+                    if (d < 0 || d >= into.Length) break;
+                    double? v = from?.V is { } fv ? (s < fv.Length ? fv[s] : null) : from?.Items is { } fi && s < fi.Length ? fi[s].X : null;
+                    if (v is null) break;
+                    into[d] = ShaderValue.Integer(v.Value);
+                }
+                return ShaderValue.Scalar(0);
             }
             case "FT_Init_FreeType" when c.Args.Count == 1:
                 Store(c.Args[0], ShaderValue.Str("FT_Library"));
@@ -125,6 +150,41 @@ public sealed partial class ShaderRunner
         }
         return null;
     }
+
+    /// <summary>What a C++ pointer argument points at: the array and the element (&amp;a[i], buffer + n, v.data()).</summary>
+    private (ShaderValue? Container, long Offset) Pointer(Expr e)
+    {
+        try
+        {
+            switch (e)
+            {
+                case IndexOf ix:
+                    return (Eval(ix.Target), (long)Eval(ix.At).X);
+                case ShaderAst.Binary { Op: "+" } b:
+                {
+                    var (container, offset) = Pointer(b.Left);
+                    return (container, offset + (long)Eval(b.Right).X);
+                }
+                case Call { Function: ".data", Args: [var t] }:
+                    return Pointer(t);
+                default:
+                    return (Eval(e), 0);
+            }
+        }
+        catch (ShaderRuntimeException)
+        {
+            return (null, 0);
+        }
+    }
+
+    private static string ExprText(Expr e) => e switch
+    {
+        Call call => call.Function + "(" + string.Join(",", call.Args.Select(ExprText)) + ")",
+        ShaderAst.Binary b => ExprText(b.Left) + b.Op + ExprText(b.Right),
+        Name n => n.Id,
+        Member m => ExprText(m.Target) + "." + m.Field,
+        _ => "",
+    };
 
     /// <summary>face->glyph: bitmap (width, rows, pitch, buffer), bitmap_left, bitmap_top, advance (x in 1/64 pixel).</summary>
     private static ShaderValue NewGlyph(Fonts.FreeTypeGlyphs.Glyph? g) => ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)

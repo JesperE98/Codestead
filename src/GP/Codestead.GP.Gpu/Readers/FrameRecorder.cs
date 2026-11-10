@@ -53,6 +53,8 @@ internal sealed class FrameRecorder
         this.transposeMatrices = transposeMatrices;
         source = src;
         exec = new CppExec(src, time, Hook, scene);
+        // What the program prints (std::cout, std::cerr, OutputDebugStringA): the output pane.
+        exec.Runner.Output = scene.Log.Add;
         this.device = device;
         if (device is not null)
         {
@@ -93,7 +95,7 @@ internal sealed class FrameRecorder
 
     private int callDepth;
     private readonly Dictionary<string, List<Stmt>> bodies = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, List<(string Name, bool Ref)>?> headers = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<(string Name, bool Ref, string? Default)>?> headers = new(StringComparer.Ordinal);
 
     /// <summary>
     /// A call of one of the program's own functions (LoadTexture(…), LoadCubemap(…)) while the device model runs: its
@@ -104,18 +106,18 @@ internal sealed class FrameRecorder
         if (name.Contains("::", StringComparison.Ordinal)) name = name[(name.LastIndexOf("::", StringComparison.Ordinal) + 2)..];
         if (device is null || callDepth > 6 || name is "main" or "wWinMain" or "WinMain" or "OnRender" or "mainLoop" or "run" or "drawFrame" || !source.Functions.ContainsKey(name)) return null;
         if (!headers.TryGetValue(name, out var parameters))
-        {
-            var header = System.Text.RegularExpressions.Regex.Match(source.Code, @"(?<![\w.>])(?:\w+::)?" + System.Text.RegularExpressions.Regex.Escape(name) + @"\s*\(([^()]*)\)\s*(?:const\s*)?\{");
-            headers[name] = parameters = !header.Success ? null : CppSource.SplitArgs(header.Groups[1].Value).Where(p => p.Trim() is not ("" or "void"))
-                .Select(p => (Name: System.Text.RegularExpressions.Regex.Match(p, @"(\w+)\s*(?:\[\s*\])?\s*(?:=[^,]*)?$").Groups[1].Value, Ref: p.Contains('&') && !p.Contains("&&"))).ToList();
-        }
+            headers[name] = parameters = source.ParametersOf(name)?.Select(p => (p.Name, p.Ref, p.Default)).ToList();
         if (parameters is null) return null;
         if (EmulateLoadObj(name, parameters, args) is { } emulated) return emulated;
         if (!bodies.TryGetValue(name, out var body))
-            bodies[name] = body = ShaderParser.ParseStatementsLenient(CppSource.Prepare("{" + source.FunctionBody(name) + "}"));
+            bodies[name] = body = ShaderParser.ParseStatementsLenient(CppSource.Prepare("{" + source.ExpandedBody(name) + "}"));
         var values = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
-        for (int i = 0; i < parameters.Count && i < args.Count; i++)
-            values[parameters[i].Name] = Value(args[i])?.Clone() ?? ShaderValue.Scalar(0);
+        for (int i = 0; i < parameters.Count; i++)
+        {
+            // A parameter not given takes its default value (DrawSprite(…, float rotate = 0.0f, …)).
+            if (i < args.Count) values[parameters[i].Name] = Value(args[i])?.Clone() ?? ShaderValue.Scalar(0);
+            else if (parameters[i].Default is { } fallback && exec.Eval(fallback) is { } v) values[parameters[i].Name] = v;
+        }
         callDepth++;
         try
         {
@@ -152,7 +154,7 @@ internal sealed class FrameRecorder
     /// flipped (1 - v), colour white, the material index – and its indices. The vectors are the ones the body
     /// push_backs into: the program's members (vertices, indices) or reference parameters (loadModel(path, v, i)).
     /// </summary>
-    private ShaderValue? EmulateLoadObj(string name, List<(string Name, bool Ref)> parameters, IReadOnlyList<Expr> args)
+    private ShaderValue? EmulateLoadObj(string name, List<(string Name, bool Ref, string? Default)> parameters, IReadOnlyList<Expr> args)
     {
         if (Project is null || source.FunctionBody(name) is not { } body || !body.Contains("LoadObj", StringComparison.Ordinal)) return null;
         var call = System.Text.RegularExpressions.Regex.Match(body, @"\bLoadObj\s*\(");
@@ -264,7 +266,9 @@ internal sealed class FrameRecorder
         if (CallProgramFunction(name, args) is { } returned) return returned;
         // Other API calls do nothing here (their arguments name API objects the runner does not have).
         return name.StartsWith("vk", StringComparison.Ordinal) || name.StartsWith("glfw", StringComparison.Ordinal) && name != "glfwGetTime"
-            || (name.StartsWith('.') && name is not (".size" or ".data" or ".c_str" or ".length" or ".begin" or ".end" or ".rbegin" or ".rend" or ".push_back" or ".emplace_back" or ".resize" or ".Get" or ".get")) || name is "memcpy" or "ThrowIfFailed" or "WaitForPreviousFrame"
+            // Methods of API objects (m_device->CreateCommittedResource, COM's upper-case names) do nothing here; the C++
+            // library's lower-case ones (insert, push_back, str, c_str …) are the runner's.
+            || (name.StartsWith('.') && name.Length > 1 && char.IsUpper(name[1]) && name is not ".Get") || name is "memcpy" or "ThrowIfFailed" or "WaitForPreviousFrame"
             ? ShaderValue.Scalar(0) : null;
     }
 

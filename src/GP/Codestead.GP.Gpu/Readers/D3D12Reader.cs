@@ -76,8 +76,11 @@ public sealed partial class D3D12Reader
         scene.WindowCreated = true;
         scene.WindowTitle = CppSource.StringArg(create.c.Arg(create.title)) ?? "";
         // The client area: the swap chain's size, else the window's.
-        int? w = src.LastFieldValue("Width") is { } wv ? src.Int(wv) : null;
-        int? h = src.LastFieldValue("Height") is { } hv ? src.Int(hv) : null;
+        // (The swap chain description's own Width/Height when the program sets them – a texture description's, a glyph
+        // atlas, says nothing about the window.)
+        string? Size(string field) => src.FieldAssignments(field).Where(a => Regex.IsMatch(a.Target, "(?i)swap")).Select(a => a.Value).LastOrDefault() ?? src.LastFieldValue(field);
+        int? w = Size("Width") is { } wv ? src.Int(wv) : null;
+        int? h = Size("Height") is { } hv ? src.Int(hv) : null;
         scene.Width = w ?? 800;
         scene.Height = h ?? 600;
         if (!src.HasCall("ShowWindow")) scene.Notes.Add(SimNote.Warning("dxNoShowWindow"));

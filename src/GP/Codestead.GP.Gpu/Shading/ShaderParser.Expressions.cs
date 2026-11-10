@@ -75,13 +75,17 @@ public sealed partial class ShaderParser
             Accept("*");
             Expect(")");
             var operand = UnaryExpr();
+            // (uint64_t) handle: a 64-bit integer that holds an object handle (vkSetDebugUtilsObjectNameEXT's
+            // objectHandle) – the value itself, so a handle stays the handle.
+            if (type is "uint64_t" or "int64_t" or "uintptr_t" or "intptr_t" or "UINT64" or "UINT_PTR") return operand;
             if (ScalarCast(type) is { } scalar) return new Call(scalar, [operand], line);
             return ShaderRunner.MatrixSize(type) > 0 || ShaderRunner.ComponentCount(type) > 1 ? new Call(type, [operand], line) : operand;
         }
         return Postfix(Primary());
     }
 
-    private static bool IsCastType(string t) => t is "float" or "double" or "int" or "uint" or "unsigned" or "void" or "GLfloat" or "GLint" or "GLuint" or "GLsizei" or "uint32_t" or "int32_t" or "size_t" or "UINT" or "FLOAT" or "half" or "char";
+    private static bool IsCastType(string t) => t is "float" or "double" or "int" or "uint" or "unsigned" or "void" or "GLfloat" or "GLint" or "GLuint" or "GLsizei" or "uint32_t" or "int32_t" or "size_t" or "UINT" or "FLOAT" or "half" or "char"
+        or "uint64_t" or "int64_t" or "uintptr_t" or "intptr_t" or "UINT64" or "UINT_PTR" or "uint16_t" or "uint8_t";
 
     /// <summary>The conversion a cast to a number type makes: (float)i is float(i), (int)x is int(x), which cuts the fraction off.</summary>
     private static string? ScalarCast(string type) => type is "float" or "double" or "GLfloat" or "FLOAT" or "half" ? "float"

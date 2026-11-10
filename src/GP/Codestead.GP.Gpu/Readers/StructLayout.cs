@@ -61,7 +61,7 @@ internal static class StructLayout
                 // The size: a number or a constant (Light lights[NR_LIGHTS]; with const unsigned int NR_LIGHTS = 32;).
                 int count = !nm.Groups[2].Success ? 1 : int.TryParse(nm.Groups[2].Value, out var literal) ? literal : src.Int(nm.Groups[2].Value) ?? 1;
                 var init = nm.Groups[3].Success ? nm.Groups[3].Value.Trim() : null;
-                yield return (type, nm.Groups[1].Value, count, init is null || init == "\u0001" ? null : init);
+                yield return (type, nm.Groups[1].Value, count, init == "\u0001" ? "{}" : init);
             }
         }
     }

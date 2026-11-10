@@ -205,10 +205,75 @@ public sealed partial class CppSource
     /// <summary>The body text of a function definition, or null.</summary>
     public string? FunctionBody(string name) => Functions.TryGetValue(name, out var r) ? Code[r.Start..r.End] : null;
 
+    /// <summary>A function's body with the function-like macros expanded, each line with its own __LINE__.</summary>
+    public string? ExpandedBody(string name)
+    {
+        if (!Functions.TryGetValue(name, out var r)) return null;
+        var body = Code[r.Start..r.End];
+        if (FunctionMacros.Count == 0 && !body.Contains("__LINE__", StringComparison.Ordinal) && !body.Contains("__FILE__", StringComparison.Ordinal)) return body;
+        int first = LineAt(r.Start);
+        var lines = body.Split('\n');
+        for (int i = 0; i < lines.Length; i++) lines[i] = ExpandMacros(lines[i], first + i, Path.GetFileName(FileName));
+        return string.Join('\n', lines);
+    }
+
+    private static readonly Regex FunctionMacroRe = new(@"^[ \t]*#[ \t]*define[ \t]+(\w+)\(([^)]*)\)[ \t]*(.*?)[ \t]*$", RegexOptions.Multiline | RegexOptions.CultureInvariant);
+    private Dictionary<string, (List<string> Params, string Body)>? functionMacros;
+
+    private Dictionary<string, (List<string> Params, string Body)> FunctionMacros => functionMacros ??= FunctionMacroRe.Matches(Code).GroupBy(m => m.Groups[1].Value)
+        .ToDictionary(g => g.Key, g => (g.First().Groups[2].Value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(), g.First().Groups[3].Value), StringComparer.Ordinal);
+
+    /// <summary>
+    /// Text with the program's function-like macros expanded (glCheckError() → glCheckError_(__FILE__, __LINE__)),
+    /// __FILE__ as the file's name and __LINE__ as the given line.
+    /// </summary>
+    public string ExpandMacros(string text, int line, string file)
+    {
+        for (int pass = 0; pass < 4 && FunctionMacros.Count > 0; pass++)
+        {
+            bool changed = false;
+            foreach (var (macro, (parameters, body)) in FunctionMacros)
+            {
+                var call = Regex.Match(text, @"(?<![\w.>])" + Regex.Escape(macro) + @"\s*\(");
+                if (!call.Success) continue;
+                int open = call.Index + call.Length - 1;
+                int close = MatchBracket(text, open);
+                if (close < 0) continue;
+                var args = SplitArgs(text[(open + 1)..close]).Select(x => x.Trim()).Where(x => x != "").ToList();
+                var expanded = body;
+                for (int i = 0; i < parameters.Count; i++)
+                    expanded = Regex.Replace(expanded, @"\b" + Regex.Escape(parameters[i]) + @"\b", i < args.Count ? args[i] : "");
+                text = text[..call.Index] + expanded + text[(close + 1)..];
+                changed = true;
+            }
+            if (!changed) break;
+        }
+        if (text.Contains("__", StringComparison.Ordinal))
+            text = text.Replace("__LINE__", line.ToString(System.Globalization.CultureInfo.InvariantCulture)).Replace("__FILE__", "\"" + file + "\"");
+        return text;
+    }
+
     /// <summary>The function whose body contains an offset, or null.</summary>
     public string? FunctionAt(int offset) => Functions.FirstOrDefault(kv => offset >= kv.Value.Start && offset < kv.Value.End).Key;
 
     /// <summary>Does a function call another function (directly)?</summary>
+    /// <summary>
+    /// The text a string argument stands for: its literal (L"sprite.hlsl" → sprite.hlsl), or – when it is a parameter of
+    /// the function it is in (D3DCompileFromFile(shaderFile, …) in loadShaderFromFile) – the literal the callers pass,
+    /// followed through up to four calls.
+    /// </summary>
+    public string? StringValue(string arg, int offset, int depth = 0)
+    {
+        if (StringArg(arg) is { } literal) return literal;
+        var name = Regex.Match(arg.Trim(), @"^(\w+)(?:\.c_str\(\))?$");
+        if (!name.Success || depth > 4 || FunctionAt(offset) is not { } fn || ParametersOf(fn) is not { } parameters) return Evaluate(arg)?.Text;
+        int index = parameters.ToList().FindIndex(p => p.Name == name.Groups[1].Value);
+        if (index < 0) return Evaluate(arg)?.Text;
+        foreach (var call in Calls(fn).Concat(Calls("." + fn)))
+            if (call.Arg(index) is { Length: > 0 } passed && StringValue(passed, call.Offset, depth + 1) is { } value) return value;
+        return parameters[index].Default is { } fallback ? StringArg(fallback) : null;
+    }
+
     /// <summary>A parameter of one of the program's functions: its name, whether it is a reference, its default value.</summary>
     public sealed record Parameter(string Name, bool Ref, string? Default);
 

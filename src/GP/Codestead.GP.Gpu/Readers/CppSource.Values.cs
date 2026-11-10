@@ -65,6 +65,34 @@ public sealed partial class CppSource
         else if (v.Fields is not null) foreach (var f in v.Fields.Values) Flatten(f, into);
     }
 
+    private Dictionary<string, long>? enumerators;
+    private static readonly Regex EnumRe = new(@"\benum\s+(?:class\s+|struct\s+)?(?:\w+\s*)?(?::\s*[\w\s]+)?\{([^{}]*)\}", RegexOptions.CultureInvariant);
+
+    /// <summary>The program's enum constants (enum GameState { GAME_ACTIVE, GAME_MENU, GAME_WIN }): 0, 1, 2 … or as given.</summary>
+    private Dictionary<string, long> Enumerators()
+    {
+        if (enumerators is not null) return enumerators;
+        var result = new Dictionary<string, long>(StringComparer.Ordinal);
+        foreach (Match m in EnumRe.Matches(Code))
+        {
+            long next = 0;
+            foreach (var item in SplitArgs(m.Groups[1].Value))
+            {
+                var e = Regex.Match(item.Trim(), @"^(\w+)\s*(?:=\s*(.+))?$", RegexOptions.Singleline);
+                if (!e.Success) continue;
+                if (e.Groups[2].Success)
+                {
+                    var text = e.Groups[2].Value.Trim();
+                    if (long.TryParse(text, out var literal)) next = literal;
+                    else if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && long.TryParse(text[2..], System.Globalization.NumberStyles.HexNumber, null, out var hex)) next = hex;
+                    else if (result.TryGetValue(text, out var other)) next = other;
+                }
+                result[e.Groups[1].Value] = next++;
+            }
+        }
+        return enumerators = result;
+    }
+
     private static readonly Regex DefineRe = new(@"^[ \t]*#[ \t]*define[ \t]+(\w+)[ \t]+(.+)$", RegexOptions.Multiline | RegexOptions.CultureInvariant);
 
     /// <summary>The value of a name in this file: a #define, a constant or variable with an initializer, or an API constant.</summary>
@@ -72,6 +100,7 @@ public sealed partial class CppSource
     {
         if (Extra?.Invoke(name) is { } extra) return extra;
         if (KnownConstant(name) is { } k) return ShaderValue.Scalar(k);
+        if (Enumerators().TryGetValue(name, out var enumerator)) return ShaderValue.Integer(enumerator);
         if (!resolving.Add(name)) return null;
         try
         {
@@ -125,6 +154,14 @@ public sealed partial class CppSource
         "FALSE" or "GL_FALSE" or "VK_FALSE" or "GLFW_FALSE" or "NULL" or "nullptr" => 0,
         // glibc's rand() range (the simulator's rand() is glibc's).
         "RAND_MAX" => 2147483647,
+        // VK_EXT_debug_utils' severity and type bits (vulkan-tutorial's debugCallback compares the severity).
+        "VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT" => 0x1,
+        "VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT" => 0x10,
+        "VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT" => 0x100,
+        "VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT" => 0x1000,
+        "VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT" => 0x1,
+        "VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT" => 0x2,
+        "VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT" => 0x4,
         // OpenGL's error codes and the debug output's enums (learnopengl's glCheckError_ and glDebugOutput switch on them).
         "GL_NO_ERROR" => 0,
         "GL_INVALID_ENUM" => 0x0500,

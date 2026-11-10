@@ -88,38 +88,9 @@ public sealed partial class GlReader
         return null;
     }
 
-    private static readonly Regex FunctionMacroRe = new(@"^[ \t]*#[ \t]*define[ \t]+(\w+)\(([^)]*)\)[ \t]*(.*?)[ \t]*$", RegexOptions.Multiline | RegexOptions.CultureInvariant);
-    private Dictionary<string, (List<string> Params, string Body)>? functionMacros;
-
     /// <summary>
     /// A statement with the program's function-like macros expanded (glCheckError() → glCheckError_(__FILE__,
     /// __LINE__)), __FILE__ as the main file's name and __LINE__ as the statement's line.
     /// </summary>
-    private string ExpandMacros(string text, int line)
-    {
-        functionMacros ??= FunctionMacroRe.Matches(src.Code).GroupBy(m => m.Groups[1].Value)
-            .ToDictionary(g => g.Key, g => (g.First().Groups[2].Value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(), g.First().Groups[3].Value), StringComparer.Ordinal);
-        for (int pass = 0; pass < 4 && functionMacros.Count > 0; pass++)
-        {
-            bool changed = false;
-            foreach (var (macro, (parameters, body)) in functionMacros)
-            {
-                var call = Regex.Match(text, @"(?<![\w.>])" + Regex.Escape(macro) + @"\s*\(");
-                if (!call.Success) continue;
-                int open = call.Index + call.Length - 1;
-                int close = CppSource.MatchBracket(text, open);
-                if (close < 0) continue;
-                var args = CppSource.SplitArgs(text[(open + 1)..close]).Select(x => x.Trim()).Where(x => x != "").ToList();
-                var expanded = body;
-                for (int i = 0; i < parameters.Count; i++)
-                    expanded = Regex.Replace(expanded, @"\b" + Regex.Escape(parameters[i]) + @"\b", i < args.Count ? args[i] : "");
-                text = text[..call.Index] + expanded + text[(close + 1)..];
-                changed = true;
-            }
-            if (!changed) break;
-        }
-        if (text.Contains("__", StringComparison.Ordinal))
-            text = text.Replace("__LINE__", line.ToString(System.Globalization.CultureInfo.InvariantCulture)).Replace("__FILE__", "\"" + Path.GetFileName(project.MainFile) + "\"");
-        return text;
-    }
+    private string ExpandMacros(string text, int line) => src.ExpandMacros(text, line, Path.GetFileName(project.MainFile));
 }

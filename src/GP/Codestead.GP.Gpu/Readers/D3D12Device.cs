@@ -13,7 +13,7 @@ namespace Codestead.GP.Gpu.Readers;
 /// are set. GPU addresses and CPU pointers are numbers (resource × 10⁹ + byte offset); descriptor handles are numbers
 /// too (heap × 10⁶ + index; every descriptor increment is 1).
 /// </summary>
-internal sealed class D3D12Device : IDeviceModel
+internal sealed partial class D3D12Device : IDeviceModel
 {
     public sealed class Resource
     {
@@ -21,6 +21,7 @@ internal sealed class D3D12Device : IDeviceModel
         public bool Buffer;
         public int Width, Height, ArraySize = 1, Samples = 1;
         public bool Float, Depth, Window, Srgb;
+        public string Format = "";
         /// <summary>A buffer's contents by byte offset (4-byte numbers; 2-byte for 16-bit index data).</summary>
         public readonly SortedDictionary<long, double> Memory = new();
         /// <summary>A texture's images (one per array slice: six for a cube map).</summary>
@@ -42,7 +43,8 @@ internal sealed class D3D12Device : IDeviceModel
     /// another view into the same descriptor for its next pass: one RTV slot for every face of a cube map); null for
     /// the window.</param>
     public sealed record DrawState(long? RenderTarget, IReadOnlyDictionary<int, (long Address, int Stride)> VertexBuffers,
-        (long Address, int Bytes)? IndexBuffer, IReadOnlyDictionary<int, long> Tables, IReadOnlyDictionary<int, long>? RootCbvs = null, string? Target = null, string? Topology = null);
+        (long Address, int Bytes)? IndexBuffer, IReadOnlyDictionary<int, long> Tables, IReadOnlyDictionary<int, long>? RootCbvs = null, string? Target = null, string? Topology = null,
+        bool NoHeap = false);
 
     private const double AddressUnit = 1e9;
     private const double HeapUnit = 1e6;
@@ -103,7 +105,7 @@ internal sealed class D3D12Device : IDeviceModel
     List<FrameOp> IDeviceModel.Ops => Ops;
 
     public DrawState Snapshot() => new(renderTarget, new Dictionary<int, (long, int)>(vertexBuffers), indexBuffer, new Dictionary<int, long>(tables), new Dictionary<int, long>(rootCbvs),
-        renderTarget is { } rt ? TargetOf(rt) : null, topology);
+        renderTarget is { } rt ? TargetOf(rt) : null, topology, tablesWithoutHeap);
 
     private ShaderValue? Eval(Expr e)
     {
@@ -153,6 +155,7 @@ internal sealed class D3D12Device : IDeviceModel
             r.Height = Int("Height", 1);
             r.ArraySize = Math.Max(1, Int("DepthOrArraySize", 1));
             var format = Text("Format");
+            r.Format = format;
             r.Float = format.Contains("FLOAT", StringComparison.Ordinal) && !format.StartsWith("DXGI_FORMAT_D", StringComparison.Ordinal);
             r.Srgb = format.Contains("_SRGB", StringComparison.Ordinal);
             r.Depth = format.StartsWith("DXGI_FORMAT_D", StringComparison.Ordinal) || Text("Flags").Contains("DEPTH_STENCIL", StringComparison.Ordinal);
@@ -172,6 +175,7 @@ internal sealed class D3D12Device : IDeviceModel
     {
         if (exec is null) return null;
         if (Debug && name is not "ThrowIfFailed") Console.Error.WriteLine($"[d3d12] {name}({string.Join(", ", args.Select(a => { var v = Eval(a); return v is null ? "?" : v.ToString(); }))})");
+        if (DebugLayerCall(name, args) is { } answered) return answered;
         switch (name)
         {
             case "ThrowIfFailed" when args.Count >= 1:
@@ -235,12 +239,14 @@ internal sealed class D3D12Device : IDeviceModel
                         if (numbers.Count >= w * h)
                         {
                             int per = Math.Clamp(numbers.Count / (w * h), 1, 4);
+                            // An 8-bit UNORM format: the numbers are bytes, 0–255 (a glyph atlas of unsigned chars).
+                            bool ofBytes = dst.Format.Contains("UNORM", StringComparison.Ordinal) && !dst.Format.Contains("16", StringComparison.Ordinal) && numbers.Any(v => v > 1);
                             var floats = new double[w * h * 4];
                             var bytes = new byte[w * h * 4];
                             for (int t = 0; t < w * h; t++)
                                 for (int k = 0; k < 4; k++)
                                 {
-                                    double v = k < per ? numbers[t * per + k] : (k == 3 ? 1 : 0);
+                                    double v = k < per ? numbers[t * per + k] / (ofBytes ? 255.0 : 1.0) : (k == 3 ? 1 : 0);
                                     floats[t * 4 + k] = v;
                                     bytes[t * 4 + k] = (byte)Math.Round(Math.Clamp(v, 0, 1) * 255);
                                 }
@@ -296,6 +302,7 @@ internal sealed class D3D12Device : IDeviceModel
                     var desc = args[2] is Name { Id: "nullptr" or "NULL" } ? null : Eval(Strip(args[2]));
                     bool cube = desc?.Fields?.GetValueOrDefault("ViewDimension")?.Text?.Contains("TEXTURECUBE", StringComparison.Ordinal) == true;
                     Srvs[(long)Num(args[3])] = (viewed.Id, cube);
+                    CheckSrv(desc, (long)Num(args[3]));
                     var srvFormat = desc?.Fields?.GetValueOrDefault("Format")?.Text;
                     if (srvFormat is not null ? srvFormat.Contains("_SRGB", StringComparison.Ordinal) : viewed.Srgb) srgbSrvs.Add((long)Num(args[3]));
                     else srgbSrvs.Remove((long)Num(args[3]));
@@ -401,6 +408,7 @@ internal sealed class D3D12Device : IDeviceModel
                 return ShaderValue.Scalar(0);
             case ".SetGraphicsRootDescriptorTable" when args.Count >= 3:
                 tables[(int)Num(args[1])] = (long)Num(args[2]);
+                if (!heapsSet) TableWithoutHeap((long)Num(args[2]));
                 return null;   // the frame recorder records it too
             case ".ResolveSubresource" when args.Count >= 5:
             {
@@ -577,6 +585,8 @@ internal sealed class D3D12Device : IDeviceModel
     public (Texture? Texture, CubeTexture? Cube) TextureAt(long handle, SamplerState sampler)
     {
         if (!Srvs.TryGetValue(handle, out var srv) || ResourceAt(srv.Resource) is not { } res) return (null, null);
+        // An invalid view (the debug layer's message #31): the shader reads 0.
+        if (invalidSrvs.Contains(handle)) return (new Texture(new Image(1, 1, 4, new byte[4]), sampler) { Components = 4 }, null);
         if (srv.Cube && res.Images.All(i => i is null) && !res.Buffer && !res.Window)
         {
             // A cube map drawn into (point shadows): face i is slice i of the target.

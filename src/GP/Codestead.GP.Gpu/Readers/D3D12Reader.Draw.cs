@@ -112,7 +112,10 @@ public sealed partial class D3D12Reader
         if (device.WindowSrgb) scene.WindowSrgb = true;
         foreach (var fn in new[] { "OnUpdate" }.Where(src.Functions.ContainsKey)) recorder.Run(fn);
         // The command list is recorded in PopulateCommandList (draws may sit in a helper it calls).
-        if ((src.Functions.ContainsKey("PopulateCommandList") ? "PopulateCommandList" : src.FunctionAt(call.Offset)) is { } recordFn) recorder.Run(recordFn);
+        // A program that reads the debug layer's info queue after ExecuteCommandLists (learnopengl's "Debugging"): the
+        // whole OnRender, so the check after the frame's commands runs too.
+        bool wholeRender = src.Uses("GetNumStoredMessages") && src.FunctionBody("OnRender") is { } onRender && onRender.Contains("PopulateCommandList", StringComparison.Ordinal);
+        if ((wholeRender ? "OnRender" : src.Functions.ContainsKey("PopulateCommandList") ? "PopulateCommandList" : src.FunctionAt(call.Offset)) is { } recordFn) recorder.Run(recordFn);
         var buffer = recorder.BufferContents();
         bool deviceVertices = needsInput && !modelOnly && recorder.Draws.Any(d => d.State is D3D12Device.DrawState { VertexBuffers.Count: > 0 } st && device.Read(st.VertexBuffers.Values.First().Address, 0, 1) is not null);
         if (missingIndices && !(deviceVertices && recorder.Draws.Any(d => d.Indexed && d.State is D3D12Device.DrawState { IndexBuffer: not null })))
@@ -143,6 +146,9 @@ public sealed partial class D3D12Reader
                     (scene.SetupDraws, scene.SetupOps) = (scene.Draws.Count, scene.Ops.Count);
                 }
                 if (opsByDraw.TryGetValue(di, out var ops)) AddOps(ops, device);
+                // Descriptor tables set while the command list had no descriptor heap: the draw sees no constants and
+                // no textures – nothing of it shows (the debug layer's message #708).
+                if (d.State is D3D12Device.DrawState { NoHeap: true }) continue;
                 // With several pipeline state objects, the draw uses the one set before it.
                 var pl = d.Pipeline is not null && pipelines.Count > 1 && pipelines.TryGetValue(d.Pipeline, out var p) ? p : null;
                 if (d.Model)
@@ -595,7 +601,7 @@ public sealed partial class D3D12Reader
         {
             var target = CppSource.StringArg(c.Arg(4)) ?? "";
             if (!target.StartsWith(targetPrefix, StringComparison.Ordinal)) continue;
-            var file = CppSource.StringArg(c.Arg(0)) ?? (src.Evaluate(c.Arg(0))?.Text ?? "");
+            var file = src.StringValue(c.Arg(0), c.Offset) ?? "";
             var entry = CppSource.StringArg(c.Arg(3)) ?? "main";
             var text = project.Find(file);
             if (text is null)

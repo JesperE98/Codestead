@@ -203,6 +203,8 @@ public sealed partial class ShaderRunner
     {
         if (f.Default is { } init && f.ArraySize == 0)
         {
+            // C++: D3D12_VERTEX_BUFFER_VIEW view = {}: a zeroed struct of a type the program does not declare.
+            if (Lenient && init is InitList { Items.Count: 0 }) return LenientDefault(f.Type, 0);
             try
             {
                 return Coerce(f.Type, Eval(init)).Clone();
@@ -287,7 +289,7 @@ public sealed partial class ShaderRunner
                 {
                     flow = Exec(s);
                 }
-                catch (ShaderRuntimeException) when (Lenient)
+                catch (ShaderRuntimeException ex) when (Lenient)
                 {
                     continue;
                 }
@@ -308,7 +310,7 @@ public sealed partial class ShaderRunner
             case Declare d:
             {
                 // C++: Type name{} / Type name = {} is a zero-initialised struct.
-                int arraySize = d.SizeExpr is not null ? (int)Math.Max(0, Math.Min(4096, Eval(d.SizeExpr).X)) : d.ArraySize;
+                int arraySize = d.SizeExpr is not null ? (int)Math.Max(0, Math.Min(1 << 20, Eval(d.SizeExpr).X)) : d.ArraySize;
                 if (d.SizeExpr is not null && d.Value is InitList { Items.Count: > 0 } && Eval(d.Value) is { Items: { } given } && given.Length < arraySize)
                 {
                     // std::array<VkImageView, 2> attachments = { a, b }: the elements given, the rest zero.
@@ -396,6 +398,8 @@ public sealed partial class ShaderRunner
         // if (fstream): a stream is true while it is good.
         : v.Fields is { } f && f.TryGetValue(StreamOk, out var ok) ? ok.X != 0
         : v.Text is { Length: > 0 } t && t is not ("VK_NULL_HANDLE" or "nullptr" or "NULL");
+
+    private bool IsVariable(string id) => scopes.Any(s => s.ContainsKey(id)) || Globals.ContainsKey(id);
 
     private ShaderValue Lookup(string id, int line)
     {

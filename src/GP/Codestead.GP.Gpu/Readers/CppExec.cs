@@ -30,7 +30,9 @@ public sealed class CppExec
             {
                 int per = StructLayout.FloatsOf(f.Type);
                 Expr? init = null;
-                if (defaults.TryGetValue(f.Name, out var text))
+                if (defaults.TryGetValue(f.Name, out var text) && text.Trim() is "{}" or "{ }")
+                    init = new InitList([], 0);
+                else if (defaults.TryGetValue(f.Name, out text))
                 {
                     try
                     {
@@ -53,6 +55,18 @@ public sealed class CppExec
             DepthZeroToOne = src.Code.Contains("GLM_FORCE_DEPTH_ZERO_TO_ONE", StringComparison.Ordinal),
         };
         Runner.Resolve = Resolve;
+        Runner.ElementDefault = target =>
+        {
+            var name = target switch { Name n => n.Id, Member m => m.Field, _ => null };
+            if (name is null || src.DeclaredType(name) is not { } declared) return null;
+            var element = System.Text.RegularExpressions.Regex.Match(declared, @"vector\s*<\s*(?:unsigned\s+)?([\w:]+)");
+            if (!element.Success) return null;
+            var type = element.Groups[1].Value.Replace("glm::", "").Replace("DirectX::", "").Replace("std::", "");
+            var value = Runner.Default(type);
+            // An API struct the program does not declare (VkVertexInputAttributeDescription): an empty struct whose
+            // fields the program sets (attributeDescriptions[4].location = 4).
+            return value.Text is not null && type is not ("string" or "wstring") ? ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)) : value;
+        };
     }
 
     /// <summary>The reader's answers to API queries the program's own code evaluates (null: not one of them).</summary>
@@ -71,7 +85,7 @@ public sealed class CppExec
         if (helperDepth > 6 || name is "main" || name.StartsWith('.') || !src.Functions.ContainsKey(name)) return null;
         if (!helpers.TryGetValue(name, out var helper))
         {
-            var body = src.FunctionBody(name) ?? "";
+            var body = src.ExpandedBody(name) ?? "";
             var declared = src.ParametersOf(name);
             helper = declared is null || src.CallsApi(name) ? null
                 : (declared.Select(p => (p.Name, p.Ref, p.Default)).ToList(), ShaderParser.ParseStatementsLenient(CppSource.Prepare("{" + body + "}")));
@@ -199,7 +213,7 @@ public sealed class CppExec
     /// <summary>Runs a function's body (by name), if the file defines it.</summary>
     public bool RunFunction(string name)
     {
-        if (src.FunctionBody(name) is not { } body) return false;
+        if (src.ExpandedBody(name) is not { } body) return false;
         Run(body);
         return true;
     }

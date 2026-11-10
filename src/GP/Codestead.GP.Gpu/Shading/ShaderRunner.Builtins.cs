@@ -9,6 +9,10 @@ public sealed partial class ShaderRunner
     private ShaderValue CallExpr(Call c)
     {
         var name = c.Function;
+        // string(x): a string literal's text (as a name), or C++'s std::string(expr) – the text of its value.
+        if (name == "string" && c.Args.Count == 1 && (c.Args[0] is not Name || Lenient && IsVariable(((Name)c.Args[0]).Id)))
+            return Eval(c.Args[0]) is { Text: { } text } ? ShaderValue.Str(text) : ShaderValue.Str(Eval(c.Args[0]).ToString());
+        if (name == "string" && c.Args.Count == 0) return ShaderValue.Str("");
         if (name == "string") return ShaderValue.Str(((Name)c.Args[0]).Id);
         if (c.ArrayConstructor) return ShaderValue.Array(c.Args.Select(a => Coerce(name, Eval(a))).ToArray());
         // A shader's maths and constructors, the calls a fragment makes most: straight to the result.
@@ -60,7 +64,7 @@ public sealed partial class ShaderRunner
             return ShaderValue.Scalar(0);
         }
         if (Lenient && name is "rand" && c.Args.Count == 0) return ShaderValue.Scalar((random ??= new GlibcRandom(1)).Next());
-        if (Lenient && name is "to_string" && c.Args.Count == 1)
+        if (Lenient && name is "to_string" or "to_wstring" && c.Args.Count == 1)
         {
             var x = Eval(c.Args[0]);
             return ShaderValue.Str(x.Text ?? (x.X == Math.Floor(x.X) && Math.Abs(x.X) < 1e15 ? ((long)x.X).ToString(System.Globalization.CultureInfo.InvariantCulture) : x.X.ToString("0.000000", System.Globalization.CultureInfo.InvariantCulture)));
@@ -350,10 +354,14 @@ public sealed partial class ShaderRunner
             }
             case "resize" when Lenient && c.Args.Count >= 2:
             {
+                // vector.resize(n[, value]): new elements are the value given, else the element type's zero value (an
+                // empty struct when the type is not known). Up to a 1024 × 1024 byte image.
                 var vec = Eval(c.Args[0]);
-                int n = (int)Math.Max(0, Math.Min(4096, Eval(c.Args[1]).X));
+                int n = (int)Math.Max(0, Math.Min(1 << 20, Eval(c.Args[1]).X));
                 var old = vec.Items ?? [];
-                Store(c.Args[0], ShaderValue.Array(Enumerable.Range(0, n).Select(i => i < old.Length ? old[i] : ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal))).ToArray()));
+                var fill = c.Args.Count >= 3 ? Eval(c.Args[2]) : ElementDefault?.Invoke(c.Args[0]);
+                Store(c.Args[0], ShaderValue.Array(Enumerable.Range(0, n).Select(i => i < old.Length ? old[i]
+                    : fill?.Clone() ?? ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal))).ToArray()));
                 return ShaderValue.Scalar(0);
             }
             default:

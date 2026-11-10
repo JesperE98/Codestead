@@ -55,7 +55,8 @@ public sealed class ShaderValue
 
     /// <summary>True for the names of the integer types of GLSL, HLSL and the C++ the simulator reads.</summary>
     public static bool IsIntType(string type) => type is "int" or "uint" or "INT" or "UINT" or "GLint" or "GLuint" or "GLsizei" or "unsigned" or "uint32_t" or "int32_t"
-        or "uint16_t" or "uint64_t" or "int64_t" or "size_t" or "dword" or "DWORD" or "long" or "short" or "unsignedint" or "UINT32" or "UINT64" or "UINT16";
+        or "uint16_t" or "uint64_t" or "int64_t" or "size_t" or "dword" or "DWORD" or "long" or "short" or "unsignedint" or "UINT32" or "UINT64" or "UINT16"
+        or "char" or "uchar" or "uint8_t" or "int8_t" or "BYTE" or "UINT8" or "INT8" or "stbi_uc" or "GLubyte" or "GLchar" or "GLenum" or "GLbitfield";
 
     public static ShaderValue Vec(params double[] v) => new() { V = v };
 
