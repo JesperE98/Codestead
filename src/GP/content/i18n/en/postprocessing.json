@@ -1,0 +1,53 @@
+{
+  "title": "Postprocessing",
+  "tasks": {
+    "post-shader": {
+      "text": {
+        "opengl": "Write the post-processing shader – vertex shader: chaos swirls the texture coordinates with time, confuse mirrors them, shake wobbles the position; fragment shader: chaos = edge detection, confuse = inverted colours, shake = blur, all over 9 samples at `offsets` – add `SetFloat` and load the shader as `\"postprocessing\"`.",
+        "vulkan": "Write the post-processing shaders – vertex shader: chaos swirls the texture coordinates with time, confuse mirrors them, shake wobbles the position; fragment shader: chaos = edge detection, confuse = inverted colours, shake = blur, all over 9 samples at `offsets` – and their C++ structs; give `createPipeline` and `LoadShader` the render pass and the sample count, and load the shader as `\"postprocessing\"` for the window's render pass.",
+        "d3d12": "Write the postprocessing shader in `post_processing.hlsl` – vertex shader: chaos swirls the texture coordinates with time, confuse mirrors them, shake wobbles the position; pixel shader: chaos = edge detection, confuse = inverted colours, shake = blur, all over 9 samples at `offsets` – and load it as `\"postprocessing\"`."
+      },
+      "hint": {
+        "opengl": "learnopengl's post_processing.vs / .frag. `if (chaos || shake) for (int i = 0; i < 9; i++) sample[i] = vec3(texture(scene, TexCoords.st + offsets[i]));` then `color += vec4(sample[i] * edge_kernel[i], 0.0)` (or `blur_kernel`). `LoadShader(\"post_processing.vs\", \"post_processing.fs\", nullptr, \"postprocessing\");`",
+        "vulkan": "learnopengl's post_processing.vs / .frag with `pc.` and `kernels.` (and the two sign changes for Vulkan's y, see above). `if (pc.chaos != 0 || pc.shake != 0) for (int i = 0; i < 9; i++) samples[i] = vec3(texture(scene, TexCoords.st + kernels.offsets[i].xy));`. `LoadShader(\"shaders/post_processing.vert.spv\", \"shaders/post_processing.frag.spv\", \"postprocessing\", VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, renderPass, VK_SAMPLE_COUNT_1_BIT);`",
+        "d3d12": "learnopengl's post_processing.vs / .frag in HLSL: `if (chaos || shake) for (int i = 0; i < 9; i++) samples[i] = scene.Sample(wrapSampler, input.texCoord + offsets[i]).rgb;` then `color += float4(samples[i] * edge_kernel[i], 0.0f)` (or `blur_kernel`). Chaos: `float2(texCoord.x + sin(time) * strength, texCoord.y - cos(time) * strength)` (v points down). `LoadShader(L\"post_processing.hlsl\", \"postprocessing\");`"
+      }
+    },
+    "post-processor": {
+      "text": {
+        "opengl": "Add learnopengl's PostProcessor as a struct, with `InitRenderData` (the screen quad) and `InitPostProcessor` (a multisampled framebuffer with a 4-sample renderbuffer, a second framebuffer with a texture, the quad and the shader's kernels); make the global `Effects` in Init; delete its objects at the end.",
+        "vulkan": "Add learnopengl's PostProcessor as a struct, with `InitRenderData` (the screen quad), `createPostProcessingRenderPass` (a 4-sample colour attachment resolved into the texture) and `InitPostProcessor` (the two images, the render pass, the framebuffer, the quad, the kernels' uniform buffer and the descriptor set); set up the global `Effects` in Init; destroy its objects in `cleanup()`.",
+        "d3d12": "Add learnopengl's PostProcessor as a struct, with `InitRenderData` (the screen quad) and `InitPostProcessor` (a 4× multisampled render target with its RTV, a texture to resolve it into with its SRV, the quad); make the global `Effects` in Init; release it in OnDestroy."
+      },
+      "hint": {
+        "opengl": "`glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGB, width, height);` and `glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, effects.RBO);`; for FBO: `glGenTextures(1, &effects.Texture.ID); Generate(effects.Texture, width, height, NULL);` and `glFramebufferTexture2D(…)`. `glUniform2fv(glGetUniformLocation(…, \"offsets\"), 9, (float*)offsets);`",
+        "vulkan": "`createImage(width, height, VK_SAMPLE_COUNT_4_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, …)` for the multisampled image, `COLOR_ATTACHMENT | SAMPLED` with 1 sample for the texture; `subpass.pResolveAttachments = &colorAttachmentResolveRef;`; the framebuffer with both views; `createDescriptorSet(effects.UniformBuffer, sizeof(PostProcessingUniforms), effects.Texture.View, textureSampler, effects.Texture.DescriptorSet);`.",
+        "d3d12": "`CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM, width, height, 1, 1, 4, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)` in the RENDER_TARGET state with a black clear value; an RTV heap with one descriptor and `CreateRenderTargetView(effects.MSRenderTarget.Get(), nullptr, …)`; for the texture: `effects.Texture.ID = Graphics.SrvCount++;`, `Tex2D(effects.Texture.Internal_Format, width, height, 1, 1)` in PIXEL_SHADER_RESOURCE and its SRV (like `Generate`, without the upload)."
+      }
+    },
+    "render-to-texture": {
+      "text": {
+        "opengl": "Write `BeginRender` (draw into the multisampled framebuffer, cleared black), `EndRender` (resolve it into the texture framebuffer with a blit) and `Render` (the quad with the post shader and its options); in the game's `Render` wrap the drawing in BeginRender / EndRender and then draw the quad with the time.",
+        "vulkan": "Write `BeginRender` (begin the off-screen pass, cleared black), `EndRender` (end it – the resolve – and begin the window's render pass) and `Render` (the quad with the post pipeline and its options as push constants); in the game's `Render` wrap the drawing in BeginRender / EndRender and then draw the quad with the time; make the sprite and particle pipelines for the off-screen pass with 4 samples, and let `recordCommandBuffer` leave the window's pass to EndRender.",
+        "d3d12": "Write `BeginRender` (draw into the multisampled target, cleared black), `EndRender` (resolve it into the texture, then draw into the back buffer again) and `Render` (the quad with the post shader and its options); the PSOs of what is drawn into the multisampled target need 4 samples; in the game's `Render` wrap the drawing in BeginRender / EndRender and then draw the quad with the time."
+      },
+      "hint": {
+        "opengl": "`glBindFramebuffer(GL_READ_FRAMEBUFFER, effects.MSFBO); glBindFramebuffer(GL_DRAW_FRAMEBUFFER, effects.FBO); glBlitFramebuffer(0, 0, effects.Width, effects.Height, 0, 0, effects.Width, effects.Height, GL_COLOR_BUFFER_BIT, GL_NEAREST);` then `glBindFramebuffer(GL_FRAMEBUFFER, 0);`. In Render(Game&): `BeginRender(Effects);` … `EndRender(Effects); Render(Effects, glfwGetTime());`.",
+        "vulkan": "BeginRender / EndRender: `VkRenderPassBeginInfo` with `effects.RenderPass, effects.Framebuffer` / `effects.WindowRenderPass, effects.WindowFramebuffer` and `vkCmdBeginRenderPass`; EndRender first `vkCmdEndRenderPass(effects.commandBuffer);`. In Render(Game&): `BeginRender(Effects);` … `EndRender(Effects); Render(Effects, static_cast<float>(glfwGetTime()));`. `LoadShader(…, Effects.RenderPass, VK_SAMPLE_COUNT_4_BIT);` for sprite and particle.",
+        "d3d12": "`Graphics.CommandList->ResolveSubresource(effects.Texture.Resource.Get(), 0, effects.MSRenderTarget.Get(), 0, effects.Texture.Internal_Format);` between the barriers (RENDER_TARGET ↔ RESOLVE_SOURCE, PIXEL_SHADER_RESOURCE ↔ RESOLVE_DEST), then `OMSetRenderTargets(1, &Graphics.BackBufferRtv, FALSE, nullptr);`. `Compile(…, UINT sampleCount = 1)` → `psoDesc.SampleDesc.Count = sampleCount;`. In Render(Game&): `BeginRender(Effects);` … `EndRender(Effects); Render(Effects, GetTime());`."
+      }
+    },
+    "confuse": {
+      "text": "Try the first effect: switch `Confuse` on in Init, after the postprocessor is set up.",
+      "hint": "`Effects.Confuse = true;`"
+    },
+    "chaos": {
+      "text": "Replace the confuse line with the chaos effect.",
+      "hint": "`Effects.Chaos = true;` (chaos wins over confuse in the shader anyway, but try one at a time)."
+    },
+    "shake": {
+      "text": "Remove the try-out line again; instead shake the screen when the ball hits a solid block: set `ShakeTime` to 0.05 seconds and `Effects.Shake`, and in `Update` count ShakeTime down and stop the shake when it is over.",
+      "hint": "In DoCollisions: `if (!box.IsSolid) box.Destroyed = true; else { ShakeTime = 0.05f; Effects.Shake = true; }`. In Update after the particles: `if (ShakeTime > 0.0f) { ShakeTime -= dt; if (ShakeTime <= 0.0f) Effects.Shake = false; }`. `float ShakeTime = 0.0f;` with the globals."
+    }
+  }
+}

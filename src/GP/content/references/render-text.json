@@ -1,0 +1,6 @@
+[
+  { "title": "2D Game / Render text", "url": "https://learnopengl.com/In-Practice/2D-Game/Render-text", "publisher": "LearnOpenGL" },
+  { "title": "Text Rendering", "url": "https://learnopengl.com/In-Practice/Text-Rendering", "publisher": "LearnOpenGL" },
+  { "title": "Vertex buffer creation", "url": "https://vulkan-tutorial.com/Vertex_buffers/Vertex_buffer_creation", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "ID3D12GraphicsCommandList::DrawInstanced", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawinstanced", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

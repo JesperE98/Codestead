@@ -1,0 +1,6 @@
+[
+  { "title": "2D Game / Final thoughts", "url": "https://learnopengl.com/In-Practice/2D-Game/Final-thoughts", "publisher": "LearnOpenGL" },
+  { "title": "Instancing", "url": "https://learnopengl.com/Advanced-OpenGL/Instancing", "publisher": "LearnOpenGL" },
+  { "title": "Frames in flight", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Drawing/Frames_in_flight", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "D3D12HelloFrameBuffering", "url": "https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Samples/Desktop/D3D12HelloWorld/src/HelloFrameBuffering", "publisher": "Microsoft", "api": "d3d12" }
+]
