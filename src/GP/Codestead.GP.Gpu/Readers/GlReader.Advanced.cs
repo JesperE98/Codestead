@@ -110,6 +110,8 @@ public sealed partial class GlReader
                 var fboName = A(0).Contains("READ", StringComparison.Ordinal) ? gl.ReadFramebuffer! : gl.DrawFramebuffer!;
                 tex.Framebuffer = fboName;
                 fb.Samples = Math.Max(fb.Samples, tex.Samples);
+                // glFramebufferTexture (not …2D) attaches every layer: a cube map's six faces.
+                if (name == "glFramebufferTexture" && tex.IsCube) fb.Layers = 6;
                 if (fb.Width == 0) (fb.Width, fb.Height) = (tex.Width, tex.Height);
                 if (A(1).Contains("DEPTH", StringComparison.Ordinal))
                 {
@@ -246,7 +248,7 @@ public sealed partial class GlReader
     {
         if (gl.DrawFramebuffer is not { } id || !gl.Framebuffers.TryGetValue(id, out var fb)) return null;
         int colors = fb.Colors.Count == 0 ? 0 : fb.Colors.Keys.Max() + 1;
-        scene.Targets[id] = new RenderTarget(id, fb.Width, fb.Height, colors, fb.Depth, fb.Stencil, fb.Samples, fb.Colors.Values.Any(c => c.Float));
+        scene.Targets[id] = new RenderTarget(id, fb.Width, fb.Height, colors, fb.Depth, fb.Stencil, fb.Samples, fb.Colors.Values.Any(c => c.Float), fb.Layers);
         return id;
     }
 

@@ -79,6 +79,8 @@ internal sealed class GlState
         public bool Depth, Stencil;
         public int Samples = 1;
         public int Width, Height;
+        /// <summary>Layers: a whole cube map attached with glFramebufferTexture is drawn into face by face (gl_Layer).</summary>
+        public int Layers = 1;
     }
 
     public sealed class Renderbuffer

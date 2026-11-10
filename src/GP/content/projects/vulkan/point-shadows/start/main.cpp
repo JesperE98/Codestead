@@ -1398,7 +1398,7 @@ private:
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(5.0f));
         constants.model = model;
-        constants.reverse_normals = VK_TRUE; // A small little hack to invert normals when drawing cube from the inside so lighting still works.
+        constants.reverse_normals = VK_TRUE; // learnopengl's "small little hack": normals point inwards, the inside is lit
         vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
         vkCmdDraw(commandBuffer, 36, 1, 0, 0);
         constants.reverse_normals = VK_FALSE; // and of course disable it

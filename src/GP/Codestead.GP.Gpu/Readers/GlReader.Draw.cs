@@ -163,6 +163,14 @@ public sealed partial class GlReader
             {
                 var sampler = new Textures.SamplerState(t.WrapS, t.WrapT, !t.MagFilter.Contains("NEAREST", StringComparison.Ordinal), t.Border);
                 if (!t.Complete) scene.Notes.Add(SimNote.Warning("textureIncomplete", ("name", name), ("filter", t.MinFilter)));
+                else if (t.IsCube && t.Framebuffer is { } cubeFbo)
+                {
+                    // A cube map a layered framebuffer draws into (point shadows): face i is layer i.
+                    var (attachment, depth) = (t.Attachment, t.IsDepth);
+                    cubes[name] = new Textures.CubeTexture(Enumerable.Range(0, 6).Select(face =>
+                        (Textures.Texture?)new Textures.Texture(() => Raster.Rasterizer.TargetImage(face == 0 ? cubeFbo : cubeFbo + "@" + face, attachment, depth), sampler) { Components = 4 }).ToList());
+                    continue;
+                }
                 else if (t.IsCube)
                 {
                     cubes[name] = new Textures.CubeTexture(t.Faces.Select(f => f is null ? null : new Textures.Texture(f, sampler) { Components = t.Components }).ToList());

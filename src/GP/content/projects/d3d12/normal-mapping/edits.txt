@@ -25,6 +25,7 @@
 --- file: main.cpp
 --- find:
     LoadTexture("brickwall.png", m_diffuseMap, diffuseMapUploadHeap, 1);
+    // TODO: load the normal map (m_normalMap: brickwall_normal.png, CBV/SRV heap slot 2)
 --- replace:
     LoadTexture("brickwall.png", m_diffuseMap, diffuseMapUploadHeap, 1);
     // The normal map, in slot 2. Its colours are directions, not colours: loaded as they are
@@ -87,6 +88,8 @@ Texture2D normalMap : register(t1);
 --- find:
         // normal vector
         XMFLOAT3 nm(0.0f, 0.0f, 1.0f);
+
+        // TODO: calculate the tangent and bitangent of both triangles (from their edges and texture coordinate differences)
 
         Vertex vertices[] =
         {

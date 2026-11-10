@@ -400,6 +400,8 @@ void D3D12App::LoadAssets()
         // normal vector
         XMFLOAT3 nm(0.0f, 0.0f, 1.0f);
 
+        // TODO: calculate the tangent and bitangent of both triangles (from their edges and texture coordinate differences)
+
         Vertex vertices[] =
         {
             // positions, normal, texcoords
@@ -446,6 +448,7 @@ void D3D12App::LoadAssets()
     // end of this method waits for it).
     ComPtr<ID3D12Resource> diffuseMapUploadHeap;
     LoadTexture("brickwall.png", m_diffuseMap, diffuseMapUploadHeap, 1);
+    // TODO: load the normal map (m_normalMap: brickwall_normal.png, CBV/SRV heap slot 2)
 
     // Create the constant buffer.
     {

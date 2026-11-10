@@ -82,6 +82,25 @@ public sealed partial class ShaderParser
             return [new If(cond, then, otherwise, line)];
         }
         if (lenient && Peek.Is("for") && RangeFor() is { } rangeFor) return [rangeFor];
+        // while (cond) body: a for loop without init and step (learnopengl's steep parallax mapping loops this way).
+        if (Accept("while"))
+        {
+            Expect("(");
+            var whileCond = Expression();
+            Expect(")");
+            return [new For(null, whileCond, null, BodyOrStatement(), line)];
+        }
+        // do body while (cond); : the body once, then as a while loop.
+        if (Accept("do"))
+        {
+            var body = BodyOrStatement();
+            Expect("while");
+            Expect("(");
+            var doCond = Expression();
+            Expect(")");
+            Expect(";");
+            return [new If(new Number(1, line), body, null, line), new For(null, doCond, null, body, line)];
+        }
         if (Accept("for"))
         {
             Expect("(");

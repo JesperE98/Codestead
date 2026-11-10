@@ -1,0 +1,212 @@
+=== task: parallax
+--- file: main.cpp
+--- find:
+// lighting info
+glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
+--- replace:
+// lighting info
+glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
+
+float heightScale = 0.1f; // how deep the surface goes in texture units (learnopengl changes it with the Q and E keys)
+--- file: main.cpp
+--- find:
+    glm::vec3 lightPos;
+    float pad2;
+};
+--- replace:
+    glm::vec3 lightPos;
+    float heightScale; // fills the 4 bytes after lightPos
+};
+--- file: main.cpp
+--- find:
+        ubo.lightPos = lightPos;
+--- replace:
+        ubo.lightPos = lightPos;
+        ubo.heightScale = heightScale;
+--- file: main.cpp
+--- find:
+    VkImageView normalMapImageView;
+--- replace:
+    VkImageView normalMapImageView;
+
+    VkImage heightMapImage;
+    VkDeviceMemory heightMapImageMemory;
+    VkImageView heightMapImageView;
+--- file: main.cpp
+--- find:
+    VkDescriptorSet descriptorSet; // the uniform buffer, the bricks' texture and their normal map
+--- replace:
+    VkDescriptorSet descriptorSet; // the uniform buffer, the bricks' texture, their normal map and their depth map
+--- file: main.cpp
+--- find:
+        // TODO: load the depth map (heightMap...: textures/bricks2_disp.png)
+--- replace:
+        loadTexture("textures/bricks2_disp.png", heightMapImage, heightMapImageMemory, heightMapImageView);
+--- file: main.cpp
+--- find:
+        createDescriptorSet(diffuseMapImageView, normalMapImageView, textureSampler, descriptorSet);
+--- replace:
+        createDescriptorSet(diffuseMapImageView, normalMapImageView, heightMapImageView, textureSampler, descriptorSet);
+--- file: main.cpp
+--- find:
+        vkFreeMemory(device, normalMapImageMemory, nullptr);
+--- replace:
+        vkFreeMemory(device, normalMapImageMemory, nullptr);
+
+        vkDestroyImageView(device, heightMapImageView, nullptr);
+        vkDestroyImage(device, heightMapImage, nullptr);
+        vkFreeMemory(device, heightMapImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {uboLayoutBinding, samplerLayoutBinding, normalMapLayoutBinding};
+--- replace:
+        // the depth map at binding 3
+        VkDescriptorSetLayoutBinding depthMapLayoutBinding{};
+        depthMapLayoutBinding.binding = 3;
+        depthMapLayoutBinding.descriptorCount = 1;
+        depthMapLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        depthMapLayoutBinding.pImmutableSamplers = nullptr;
+        depthMapLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 4> bindings = {uboLayoutBinding, samplerLayoutBinding, normalMapLayoutBinding, depthMapLayoutBinding};
+--- file: main.cpp
+--- find:
+        // one descriptor set: the uniform buffer, the bricks' texture and their normal map
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 2;
+--- replace:
+        // one descriptor set: the uniform buffer, the bricks' texture, their normal map and their depth map
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 3;
+--- file: main.cpp
+--- find:
+    // A descriptor set with the uniform buffer (binding 0), the colour texture (binding 1) and the normal map (binding 2),
+    // both read with the same sampler. Binding it before a draw (vkCmdBindDescriptorSets) is Vulkan's glBindTexture.
+    void createDescriptorSet(VkImageView textureImageView, VkImageView normalMapView, VkSampler sampler, VkDescriptorSet& descriptorSet) {
+--- replace:
+    // A descriptor set with the uniform buffer (binding 0), the colour texture (binding 1), the normal map (binding 2) and
+    // the depth map (binding 3), all read with the same sampler. Binding it before a draw (vkCmdBindDescriptorSets) is
+    // Vulkan's glBindTexture.
+    void createDescriptorSet(VkImageView textureImageView, VkImageView normalMapView, VkImageView depthMapView, VkSampler sampler, VkDescriptorSet& descriptorSet) {
+--- file: main.cpp
+--- find:
+        normalMapInfo.sampler = sampler;
+
+        std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+--- replace:
+        normalMapInfo.sampler = sampler;
+
+        VkDescriptorImageInfo depthMapInfo{};
+        depthMapInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        depthMapInfo.imageView = depthMapView;
+        depthMapInfo.sampler = sampler;
+
+        std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
+--- file: main.cpp
+--- find:
+        descriptorWrites[2].pImageInfo = &normalMapInfo;
+--- replace:
+        descriptorWrites[2].pImageInfo = &normalMapInfo;
+
+        descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[3].dstSet = descriptorSet;
+        descriptorWrites[3].dstBinding = 3;
+        descriptorWrites[3].dstArrayElement = 0;
+        descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[3].descriptorCount = 1;
+        descriptorWrites[3].pImageInfo = &depthMapInfo;
+--- file: shaders/parallax_mapping.frag
+--- find:
+    vec3 lightPos;
+} ubo;
+--- replace:
+    vec3 lightPos;
+    float heightScale;
+} ubo;
+--- file: shaders/parallax_mapping.frag
+--- find:
+layout(binding = 2) uniform sampler2D normalMap;
+--- replace:
+layout(binding = 2) uniform sampler2D normalMap;
+layout(binding = 3) uniform sampler2D depthMap;
+--- file: shaders/parallax_mapping.frag
+--- find:
+layout(location = 0) out vec4 outColor;
+--- replace:
+layout(location = 0) out vec4 outColor;
+
+vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir) {
+    float height = texture(depthMap, texCoords).r;
+    return texCoords - viewDir.xy / viewDir.z * (height * ubo.heightScale);
+}
+--- file: shaders/parallax_mapping.frag
+--- find:
+    // TODO: shift the texture coordinates along the view direction by the depth map's depth: texCoords = ParallaxMapping(fs_in.texCoord, viewDir)
+--- replace:
+    texCoords = ParallaxMapping(fs_in.texCoord, viewDir);
+
+=== task: discard-edges
+--- file: shaders/parallax_mapping.frag
+--- find:
+    texCoords = ParallaxMapping(fs_in.texCoord, viewDir);
+--- replace:
+    texCoords = ParallaxMapping(fs_in.texCoord, viewDir);
+    if (texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
+        discard;
+
+=== task: steep
+--- file: shaders/parallax_mapping.frag
+--- find:
+    float height = texture(depthMap, texCoords).r;
+    return texCoords - viewDir.xy / viewDir.z * (height * ubo.heightScale);
+--- replace:
+    // number of depth layers
+    const float minLayers = 8;
+    const float maxLayers = 32;
+    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));
+    // calculate the size of each layer
+    float layerDepth = 1.0 / numLayers;
+    // depth of current layer
+    float currentLayerDepth = 0.0;
+    // the amount to shift the texture coordinates per layer (from vector P)
+    vec2 P = viewDir.xy / viewDir.z * ubo.heightScale;
+    vec2 deltaTexCoords = P / numLayers;
+
+    // get initial values
+    vec2  currentTexCoords     = texCoords;
+    float currentDepthMapValue = texture(depthMap, currentTexCoords).r;
+
+    while (currentLayerDepth < currentDepthMapValue) {
+        // shift texture coordinates along direction of P
+        currentTexCoords -= deltaTexCoords;
+        // get depthmap value at current texture coordinates
+        currentDepthMapValue = texture(depthMap, currentTexCoords).r;
+        // get depth of next layer
+        currentLayerDepth += layerDepth;
+    }
+
+    return currentTexCoords;
+
+=== task: occlusion
+--- file: shaders/parallax_mapping.frag
+--- find:
+    return currentTexCoords;
+--- replace:
+    // get texture coordinates before collision (reverse operations)
+    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+
+    // get depth after and before collision for linear interpolation
+    float afterDepth  = currentDepthMapValue - currentLayerDepth;
+    float beforeDepth = texture(depthMap, prevTexCoords).r - currentLayerDepth + layerDepth;
+
+    // interpolation of texture coordinates
+    float weight = afterDepth / (afterDepth - beforeDepth);
+    vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+
+    return finalTexCoords;

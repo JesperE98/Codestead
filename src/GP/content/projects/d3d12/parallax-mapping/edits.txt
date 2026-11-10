@@ -1,0 +1,189 @@
+=== task: parallax
+--- file: main.cpp
+--- find:
+XMFLOAT3 lightPos(0.5f, 1.0f, 0.3f);
+--- replace:
+XMFLOAT3 lightPos(0.5f, 1.0f, 0.3f);
+
+// How deep the surface goes, in texture units (learnopengl changes it with the Q and E keys).
+float heightScale = 0.1f;
+--- file: main.cpp
+--- find:
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer. Laid out
+    // as HLSL packs it: a float3 never crosses a 16-byte row, so lightPos starts a new row
+    // and each float3 is followed by a float of padding.
+    struct SceneConstantBuffer
+    {
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+        XMFLOAT3 viewPos;
+        float padding0;
+--- replace:
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer. Laid out
+    // as HLSL packs it: a float3 never crosses a 16-byte row, so lightPos starts a new row;
+    // heightScale fills the rest of viewPos's row, a float of padding the rest of lightPos's.
+    struct SceneConstantBuffer
+    {
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+        XMFLOAT3 viewPos;
+        float heightScale;
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_normalMap;     // the bricks' normals
+--- replace:
+    ComPtr<ID3D12Resource> m_normalMap;     // the bricks' normals
+    ComPtr<ID3D12Resource> m_depthMap;      // how deep the surface is at each texel
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 3;    // one CBV + the diffuse map's SRV + the normal map's SRV
+--- replace:
+        cbvSrvHeapDesc.NumDescriptors = 4;    // one CBV + the SRVs of the diffuse, normal and depth maps
+--- file: main.cpp
+--- find:
+        // 2 SRVs at registers t0 and t1 (the diffuse map and the normal map: consecutive
+        // descriptors in the heap), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
+--- replace:
+        // 3 SRVs at registers t0, t1 and t2 (the diffuse, normal and depth maps: consecutive
+        // descriptors in the heap), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0);
+--- file: main.cpp
+--- find:
+    // TODO: load the depth map (m_depthMap: bricks2_disp.png, CBV/SRV heap slot 3)
+--- replace:
+    // The depth map, in slot 3: white is deep, black is the surface (a height map turned
+    // upside down). Linear (UNORM) like the normal map.
+    ComPtr<ID3D12Resource> depthMapUploadHeap;
+    LoadTexture("bricks2_disp.png", m_depthMap, depthMapUploadHeap, 3);
+--- file: main.cpp
+--- find:
+    constantBufferData.lightPos = lightPos;
+--- replace:
+    constantBufferData.lightPos = lightPos;
+    constantBufferData.heightScale = heightScale;
+--- file: main.cpp
+--- find:
+    // Root parameter 2: the textures' table, from heap slot 1 on - the diffuse map (t0), then
+    // the normal map (t1).
+--- replace:
+    // Root parameter 2: the textures' table, from heap slot 1 on - the diffuse map (t0), the
+    // normal map (t1) and the depth map (t2).
+--- file: parallax_mapping.hlsl
+--- find:
+// The textures, in the descriptor table of root parameter 2: the diffuse map (t0) and the
+// normal map (t1).
+Texture2D diffuseMap : register(t0);
+Texture2D normalMap : register(t1);
+--- replace:
+// The textures, in the descriptor table of root parameter 2: the diffuse map (t0), the
+// normal map (t1) and the depth map (t2).
+Texture2D diffuseMap : register(t0);
+Texture2D normalMap : register(t1);
+Texture2D depthMap : register(t2);
+--- file: parallax_mapping.hlsl
+--- find:
+    float3 viewPos;
+--- replace:
+    float3 viewPos;
+    float heightScale;    // how deep the surface goes, in texture units
+--- file: parallax_mapping.hlsl
+--- find:
+// The pixel shader: runs once per pixel the quad covers and returns its colour (RGBA).
+--- replace:
+// The texture coordinates where the view ray would really hit the deep surface: shifted
+// along the view direction (in tangent space) by the depth at the fragment.
+float2 ParallaxMapping(float2 texCoords, float3 viewDir)
+{
+    float height = depthMap.Sample(wrapSampler, texCoords).r;
+    return texCoords - viewDir.xy / viewDir.z * (height * heightScale);
+}
+
+// The pixel shader: runs once per pixel the quad covers and returns its colour (RGBA).
+--- file: parallax_mapping.hlsl
+--- find:
+    // TODO: shift the texture coordinates along the view direction by the depth map's depth: texCoords = ParallaxMapping(input.texCoords, viewDir)
+--- replace:
+    texCoords = ParallaxMapping(input.texCoords, viewDir);
+=== task: discard-edges
+--- file: parallax_mapping.hlsl
+--- find:
+    texCoords = ParallaxMapping(input.texCoords, viewDir);
+--- replace:
+    texCoords = ParallaxMapping(input.texCoords, viewDir);
+    if (texCoords.x > 1.0f || texCoords.y > 1.0f || texCoords.x < 0.0f || texCoords.y < 0.0f)
+        discard;
+=== task: steep
+--- file: parallax_mapping.hlsl
+--- find:
+// The texture coordinates where the view ray would really hit the deep surface: shifted
+// along the view direction (in tangent space) by the depth at the fragment.
+float2 ParallaxMapping(float2 texCoords, float3 viewDir)
+{
+    float height = depthMap.Sample(wrapSampler, texCoords).r;
+    return texCoords - viewDir.xy / viewDir.z * (height * heightScale);
+}
+--- replace:
+// The texture coordinates where the view ray really hits the deep surface (steep parallax
+// mapping): step along the ray, layer by layer, until it is below the depth map's surface.
+float2 ParallaxMapping(float2 texCoords, float3 viewDir)
+{
+    // number of depth layers: more when the view is flat to the surface
+    const float minLayers = 8.0f;
+    const float maxLayers = 32.0f;
+    float numLayers = lerp(maxLayers, minLayers, abs(dot(float3(0.0f, 0.0f, 1.0f), viewDir)));
+    // calculate the size of each layer
+    float layerDepth = 1.0f / numLayers;
+    // depth of current layer
+    float currentLayerDepth = 0.0f;
+    // the amount to shift the texture coordinates per layer (from vector P)
+    float2 P = viewDir.xy / viewDir.z * heightScale;
+    float2 deltaTexCoords = P / numLayers;
+
+    // get initial values. SampleLevel(..., 0): mip level 0 - inside a loop whose number of
+    // steps differs from pixel to pixel the hardware cannot work out the mip level (Sample
+    // needs it from the neighbouring pixels), and the compiler refuses Sample there.
+    float2 currentTexCoords = texCoords;
+    float currentDepthMapValue = depthMap.SampleLevel(wrapSampler, currentTexCoords, 0).r;
+
+    while (currentLayerDepth < currentDepthMapValue)
+    {
+        // shift texture coordinates along direction of P
+        currentTexCoords -= deltaTexCoords;
+        // get depthmap value at current texture coordinates
+        currentDepthMapValue = depthMap.SampleLevel(wrapSampler, currentTexCoords, 0).r;
+        // get depth of next layer
+        currentLayerDepth += layerDepth;
+    }
+
+    return currentTexCoords;
+}
+=== task: occlusion
+--- file: parallax_mapping.hlsl
+--- find:
+// The texture coordinates where the view ray really hits the deep surface (steep parallax
+// mapping): step along the ray, layer by layer, until it is below the depth map's surface.
+--- replace:
+// The texture coordinates where the view ray really hits the deep surface (parallax
+// occlusion mapping): step along the ray, layer by layer, until it is below the depth map's
+// surface, then interpolate between the last two layers.
+--- file: parallax_mapping.hlsl
+--- find:
+    return currentTexCoords;
+--- replace:
+    // get texture coordinates before collision (reverse operations)
+    float2 prevTexCoords = currentTexCoords + deltaTexCoords;
+
+    // get depth after and before collision for linear interpolation
+    float afterDepth = currentDepthMapValue - currentLayerDepth;
+    float beforeDepth = depthMap.SampleLevel(wrapSampler, prevTexCoords, 0).r - currentLayerDepth + layerDepth;
+
+    // interpolation of texture coordinates
+    float weight = afterDepth / (afterDepth - beforeDepth);
+    float2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0f - weight);
+
+    return finalTexCoords;
