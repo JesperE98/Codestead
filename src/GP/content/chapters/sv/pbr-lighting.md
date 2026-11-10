@@ -714,10 +714,24 @@ lagrar vi som kD. Eftersom metalliska ytor inte bryter ljus och därför saknar 
 egenskapen genom att nollställa kD om ytan är metallisk. Det ger oss de sista data vi behöver för att räkna ut varje ljus
 utgående reflektansvärde:
 
+:::opengl
 ```glsl
         // add to outgoing radiance Lo
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
 ```
+:::
+:::vulkan
+```glsl
+        // add to outgoing radiance Lo
+        Lo += (kD * albedo / PI + specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+```
+:::
+:::d3d12
+```hlsl
+        // add to outgoing radiance Lo
+        Lo += (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+```
+:::
 
 Det resulterande värdet Lo, den utgående radiansen, är i praktiken resultatet av reflektansekvationens integral ∫ över
 Ω. Vi behöver egentligen inte försöka lösa integralen för alla möjliga inkommande ljusriktningar, eftersom vi vet exakt
@@ -727,10 +741,20 @@ ljusriktningarna, det vill säga över antalet ljus i scenen.
 Det som återstår är att lägga till en (improviserad) ambient term till den direkta belysningens resultat Lo, så har vi
 fragmentets slutliga belysta färg – projektet har den redan efter loopen:
 
+:::opengl vulkan
 ```glsl
     vec3 ambient = vec3(0.03) * albedo * ao;
-    vec3 color   = ambient + Lo;
+
+    vec3 color = ambient + Lo;
 ```
+:::
+:::d3d12
+```hlsl
+    float3 ambient = float3(0.03f, 0.03f, 0.03f) * albedo * ao;
+
+    float3 color = ambient + Lo;
+```
+:::
 
 Gör nu uppgiften **fresnel**. Tryck på **Build & run**: **nu skiljer sig raderna åt**. Den nedersta raden (icke-metall)
 behåller sin röda diffusa färg med små vitaktiga högdagrar – ett dielektrikums reflektion är inte färgad. Uppåt (metall)
@@ -757,10 +781,16 @@ Därför kan Lo snabbt bli riktigt stort, och då kläms det mellan 0.0 och 1.0 
 (LDR). Det löser vi genom att tonmappa (eller exponeringsmappa) Lo från högt dynamiskt omfång (HDR) till LDR på rätt sätt
 före gammakorrigeringen:
 
-:::opengl vulkan
+:::opengl
 ```glsl
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));
+```
+:::
+:::vulkan
+```glsl
+    color = color / (color + vec3(1.0));
+    color = pow(color, vec3(1.0 / 2.2));
 ```
 :::
 :::d3d12

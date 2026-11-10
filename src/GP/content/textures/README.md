@@ -38,3 +38,15 @@ For the PBR chapters (drawn by `make_pbr.py`):
 - `hdr/environment.hdr` (512×256, Radiance RGBE): an equirectangular HDR environment for image based lighting – a blue
   sky with clouds and a bright, hazy sun (radiance about 60, some 8° wide), hills on the horizon, a dark ground and three coloured
   lamps. `hdr/environment_preview.png` is a tone-mapped look at it (not used by the course).
+
+For the In Practice chapters (drawn by `make_practice.py`):
+- `game/`: the sprites of the course's 2D game, **Hedgerow** (a ball, a paddle and a wall of blocks – the genre of
+  learnopengl's game, with our own art and levels): `background.png` (800×600, a garden at dusk), `ball.png` (128²,
+  RGBA, a glowing seed pod), `paddle.png` (512×128, RGBA, a wooden plank with brass ends), `block.png` (128², a light
+  leafy tile the game tints), `block_solid.png` (128², stone with rivets), `particle.png` (64², RGBA, a soft spark) and
+  six power-up badges `powerup_speed|sticky|pass|increase|confuse|chaos.png` (512×128, RGBA, tinted by the game);
+  `game/levels/one.lvl … four.lvl` – four levels of our own in learnopengl's format (0 = empty, 1 = solid, 2–5 =
+  colours).
+- `../fonts/Inter-Bold.otf` + `OFL.txt`: Inter Bold (SIL Open Font License 1.1) reduced to printable ASCII, the font
+  of the text chapters. The same script writes `Codestead.GP.Gpu/Fonts/inter-bold.glyphs.json`: the glyphs FreeType
+  makes of it at 24 and 48 pixels, which the simulator uses in FreeType's place.

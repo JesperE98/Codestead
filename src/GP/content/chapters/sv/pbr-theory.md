@@ -1,6 +1,6 @@
 # PBR-teori
 
-Det här kapitlet inleder kursens sista del: *PBR*, fysikaliskt baserad rendering. I delarna *Belysning* och *Avancerad
+Det här kapitlet inleder kursens sista del: *PBR*, fysikaliskt baserad rendering. I delarna *Ljussättning* och *Avancerad
 belysning* belyste du scener med Phong- och Blinn-Phong-modellerna: en ambient, en diffus och en spekulär term vars
 styrkor du valde tills bilden såg rätt ut. PBR ersätter de handjusterade termerna med en belysningsmodell som bygger på
 hur ljus faktiskt beter sig – mer eller mindre – så att en och samma uppsättning materialparametrar ser rätt ut under
@@ -181,7 +181,7 @@ strålningsflödet Φ:
 
 Radians är ett radiometriskt mått på mängden ljus i en area, skalad med ljusets *infallsvinkel* θ mot ytans normal som
 cos θ: ljuset är svagare ju mindre det strålar rakt mot ytan, och starkast när det faller vinkelrätt mot den. Det
-liknar hur vi uppfattade diffus belysning i kapitlet *Grundläggande belysning*, eftersom cos θ motsvarar skalärprodukten
+liknar hur vi uppfattade diffus belysning i kapitlet *Grundläggande ljussättning*, eftersom cos θ motsvarar skalärprodukten
 mellan ljusets riktningsvektor och ytans normal:
 
 ```glsl
@@ -255,7 +255,7 @@ Radiansen från ett punktljus når en yta i 60° vinkel mot ytans normal. Med vi
 - [ ] sin 60° ≈ 0.87, eftersom vinkeln mäts från ytan
 - [ ] 60 / 90 ≈ 0.67, ett linjärt avtagande mellan rakt infallande och strykande ljus
 ---
-Skalärprodukten av normalen och (enhets)riktningen mot ljuset är cosinus för vinkeln mellan dem – samma faktor som den diffusa termen i kapitlet Grundläggande belysning. Vid 90° är den 0: strykande ljus bidrar inte alls.
+Skalärprodukten av normalen och (enhets)riktningen mot ljuset är cosinus för vinkeln mellan dem – samma faktor som den diffusa termen i kapitlet Grundläggande ljussättning. Vid 90° är den 0: strykande ljus bidrar inte alls.
 ```
 
 ## BRDF

@@ -724,10 +724,24 @@ gets refracted which we store as kD. Furthermore, because metallic surfaces don'
 diffuse reflections we enforce this property by nullifying kD if the surface is metallic. This gives us the final data
 we need to calculate each light's outgoing reflectance value:
 
+:::opengl
 ```glsl
         // add to outgoing radiance Lo
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
 ```
+:::
+:::vulkan
+```glsl
+        // add to outgoing radiance Lo
+        Lo += (kD * albedo / PI + specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+```
+:::
+:::d3d12
+```hlsl
+        // add to outgoing radiance Lo
+        Lo += (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+```
+:::
 
 The resulting Lo value, or the outgoing radiance, is effectively the result of the reflectance equation's integral ∫
 over Ω. We don't really have to try and solve the integral for all possible incoming light directions as we know
@@ -737,10 +751,20 @@ these incoming light directions, e.g. the number of lights in the scene.
 What's left is to add an (improvised) ambient term to the direct lighting result Lo and we have the final lit colour of
 the fragment – the project already has it after the loop:
 
+:::opengl vulkan
 ```glsl
     vec3 ambient = vec3(0.03) * albedo * ao;
-    vec3 color   = ambient + Lo;
+
+    vec3 color = ambient + Lo;
 ```
+:::
+:::d3d12
+```hlsl
+    float3 ambient = float3(0.03f, 0.03f, 0.03f) * albedo * ao;
+
+    float3 color = ambient + Lo;
+```
+:::
 
 Now do the task **fresnel**. Press **Build & run**: **the rows differ now**. The bottom row (non-metal) keeps its red
 diffuse colour with small white-ish highlights – a dielectric's reflection is not tinted. Towards the top (metal) the
@@ -767,10 +791,16 @@ spectrum of values. As a result, Lo can rapidly grow really high which then gets
 default low dynamic range (LDR) output. We fix this by taking Lo and tone or exposure map the high dynamic range (HDR)
 value correctly to LDR before gamma correction:
 
-:::opengl vulkan
+:::opengl
 ```glsl
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));
+```
+:::
+:::vulkan
+```glsl
+    color = color / (color + vec3(1.0));
+    color = pow(color, vec3(1.0 / 2.2));
 ```
 :::
 :::d3d12
