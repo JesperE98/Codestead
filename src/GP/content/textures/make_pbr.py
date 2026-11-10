@@ -117,11 +117,12 @@ clouds = value_noise(W, H, 6, octaves=4, seed=52)
 cloud = np.clip((clouds - 0.55) * 4, 0, 1) * np.clip(dy * 4, 0, 1)
 env = env * (1 - cloud[..., None]) + np.array([1.6, 1.6, 1.7]) * cloud[..., None]
 
-# The sun: a small disc of very high radiance with a glow, up to the right of the centre.
+# The sun through haze: a disc about 8 degrees wide of high radiance (60) with a glow, up to the right of the centre
+# (wide enough that a convolution with a modest number of samples does not miss it).
 sun_dir = np.array([math.cos(0.75) * math.cos(0.9), math.sin(0.75), math.cos(0.75) * math.sin(0.9)])
 cos_sun = dx * sun_dir[0] + dy * sun_dir[1] + dz * sun_dir[2]
 env += np.array([1.0, 0.9, 0.7]) * (np.clip(cos_sun, 0, 1) ** 64 * 6)[..., None]
-env += np.array([1.0, 0.95, 0.85]) * (np.clip((cos_sun - 0.9985) / 0.0015, 0, 1) * 400)[..., None]
+env += np.array([1.0, 0.95, 0.85]) * (np.clip((cos_sun - 0.990) / 0.004, 0, 1) * 60)[..., None]
 
 # Three lamps on the ground side (warm, cool, magenta): coloured highlights in reflections.
 for lamp_phi, lamp_theta, colour in ((-2.2, -0.25, (40, 22, 8)), (2.6, -0.2, (8, 20, 40)), (-0.6, -0.5, (30, 6, 24))):

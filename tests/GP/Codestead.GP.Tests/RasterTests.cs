@@ -296,7 +296,7 @@ public class RasterTests
         Assert.Equal((512, 256, 3), (image.Width, image.Height, image.Channels));
         Assert.NotNull(image.Floats);
         // The sun is far brighter than white; the zenith is a moderate blue.
-        Assert.True(image.Floats!.Max() > 100);
+        Assert.True(image.Floats!.Max() > 40);
         var zenith = new Texture(image, SamplerState.Default).Sample(0.1, 0.02);
         Assert.True(zenith[2] > zenith[0] && zenith[2] > 0.5 && zenith[2] < 3);
     }
