@@ -193,9 +193,9 @@ const std::vector<glm::vec3> lightColors = {
 // tone mapping: the exposure (learnopengl changes it with the Q and E keys)
 float exposure = 1.0f;
 
-// the physically based bloom: the upsample filter's radius (in texture coordinates) and how much of the bloom texture is
-// mixed into the scene
+// the physically based bloom: the upsample filter's radius (in texture coordinates)
 float bloomFilterRadius = 0.005f;
+// and how much of the bloom texture is mixed into the scene
 float bloomStrength = 0.04f;
 
 // camera: learnopengl's bloom demo, at (0, 0, 5) looking down -z
@@ -301,7 +301,7 @@ struct BloomMip {
     VkDescriptorSet descriptorSet; // the uniform buffer and this level's image (binding 1)
 };
 
-// The render passes that draw into a level (learnopengl's FBO) and the mip chain.
+// The render pass(es) that draw into a level (learnopengl's FBO) and the mip chain.
 struct BloomFBO {
     VkRenderPass renderPass = VK_NULL_HANDLE;         // writes a whole level (the downsample)
     VkRenderPass upsampleRenderPass = VK_NULL_HANDLE; // adds to a level: its old contents are loaded (the upsample)
@@ -993,7 +993,7 @@ private:
         }
     }
 
-    // learnopengl's bloomFBO::Init: the render passes that draw into a level, and the mip chain - mipChainLength images,
+    // learnopengl's bloomFBO::Init: the render pass(es) that draw into a level, and the mip chain - mipChainLength images,
     // each half the size of the one before (starting at half the window), with their views and framebuffers. (The
     // other Vulkan way: one image with mipChainLength mip levels and a view per level - the course follows
     // learnopengl's separate textures.)
