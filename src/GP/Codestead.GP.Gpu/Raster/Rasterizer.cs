@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Codestead.GP.Gpu.Scene;
 using Codestead.GP.Gpu.Shading;
 using Codestead.GP.Gpu.Textures;
@@ -12,30 +13,39 @@ namespace Codestead.GP.Gpu.Raster;
 /// </summary>
 public static partial class Rasterizer
 {
-    /// <summary>The targets of the frame being rendered on this thread (render-target textures read them).</summary>
+    /// <summary>
+    /// The targets of the frame being rendered on this thread (render-target textures read them); the workers that
+    /// shade a draw's fragments get the context of the thread that renders the frame.
+    /// </summary>
     [ThreadStatic] private static RenderContext? current;
 
     private sealed class RenderContext(Func<string, Framebuffer> target, bool bottomUp)
     {
-        private readonly Dictionary<(string, int, bool), Image> images = new();
+        // Read by the fragment workers side by side; an image is made once, by the first thread that needs it.
+        private readonly ConcurrentDictionary<(string, int, bool), Image> images = new();
         public Func<string, Framebuffer> Target { get; } = target;
         public bool BottomUp { get; } = bottomUp;
 
         public Image Image(string id, int attachment, bool depth)
         {
-            if (!images.TryGetValue((id, attachment, depth), out var image))
+            if (images.TryGetValue((id, attachment, depth), out var image)) return image;
+            lock (images)
             {
-                var fb = Target(id);
-                images[(id, attachment, depth)] = image = depth ? fb.DepthImage(BottomUp) : fb.ColorImage(BottomUp, attachment);
+                if (!images.TryGetValue((id, attachment, depth), out image))
+                {
+                    var fb = Target(id);
+                    images[(id, attachment, depth)] = image = depth ? fb.DepthImage(BottomUp) : fb.ColorImage(BottomUp, attachment);
+                }
+                return image;
             }
-            return image;
         }
 
+        /// <summary>A target was drawn into, cleared or copied to (between draws): its images are made again.</summary>
         public void Changed(string? id)
         {
             if (id is null) return;
             // A layered target's layers ("id@1" … "id@5") change with it.
-            foreach (var key in images.Keys.Where(k => k.Item1 == id || k.Item1.StartsWith(id + "@", StringComparison.Ordinal)).ToList()) images.Remove(key);
+            foreach (var key in images.Keys.Where(k => k.Item1 == id || k.Item1.StartsWith(id + "@", StringComparison.Ordinal)).ToList()) images.TryRemove(key, out _);
         }
     }
 
@@ -147,41 +157,58 @@ public static partial class Rasterizer
     private static void DrawOne(DrawCall draw, double time, Framebuffer fb, double scale, bool yDown, bool zMinusOneToOne, Func<int, Framebuffer>? layers = null)
     {
         var baseFb = fb;
-        var stages = new Stages(draw, time, fb.Height, scale, yDown);
-        for (int instance = 0; instance < Math.Max(1, draw.Instances); instance++)
+        var uniforms = draw.Uniforms(time);
+        var textures = TextureReads.Of(draw);
+        var stages = new Stages(draw, uniforms, textures, time, baseFb.Height, scale, yDown);
+        // The vertex and geometry stages run here, in order; the fragments of the primitives they make are shaded in
+        // batches on every core (Rasterizer.Parallel.cs).
+        TextureReads? shared = null;
+        var fragments = new FragmentBatch(stages, () => new Stages(draw, uniforms, shared ??= textures.Shared(), time, baseFb.Height, scale, yDown));
+        try
         {
-            var order = draw.Indices ?? Enumerable.Range(draw.First, Math.Max(0, draw.Count)).ToArray();
-            var cache = new Dictionary<int, ShadedVertex>();
-            ShadedVertex Vertex(int index)
+            for (int instance = 0; instance < Math.Max(1, draw.Instances); instance++)
             {
-                if (!cache.TryGetValue(index, out var v)) cache[index] = v = stages.Vertex(index, instance);
-                return v;
-            }
-            foreach (var primitive in Primitives(order, draw.Topology))
-            {
-                var input = primitive.Select(Vertex).ToArray();
-                var output = stages.HasGeometry ? stages.Geometry(input) : [(KindOf(draw.Topology), input)];
-                foreach (var (kind, v) in output)
+                var order = draw.Indices ?? Enumerable.Range(draw.First, Math.Max(0, draw.Count)).ToArray();
+                var cache = new Dictionary<int, ShadedVertex>();
+                ShadedVertex Vertex(int index)
                 {
-                    // A geometry shader may send the primitive to a layer of a layered target (gl_Layer).
-                    fb = v[0].Layer != 0 && layers is not null ? layers(v[0].Layer) : baseFb;
-                    switch (kind)
+                    if (!cache.TryGetValue(index, out var v)) cache[index] = v = stages.Vertex(index, instance);
+                    return v;
+                }
+                foreach (var primitive in Primitives(order, draw.Topology))
+                {
+                    var input = primitive.Select(Vertex).ToArray();
+                    var output = stages.HasGeometry ? stages.Geometry(input) : [(KindOf(draw.Topology), input)];
+                    foreach (var (kind, v) in output)
                     {
-                        case Topology.Points:
-                            Point(v[0], draw, stages, fb, scale, yDown, zMinusOneToOne);
-                            break;
-                        case Topology.Lines:
-                            foreach (var (p, q) in ClipNearLine(v[0], v[1], zMinusOneToOne))
-                                Line(p, q, draw, stages, fb, yDown, zMinusOneToOne);
-                            break;
-                        default:
-                            foreach (var (p, q, r) in ClipNear(v[0], v[1], v[2], zMinusOneToOne))
-                                Triangle(p, q, r, draw, stages, fb, yDown, zMinusOneToOne);
-                            break;
+                        // A geometry shader may send the primitive to a layer of a layered target (gl_Layer).
+                        fb = v[0].Layer != 0 && layers is not null ? layers(v[0].Layer) : baseFb;
+                        long pixels;
+                        switch (kind)
+                        {
+                            case Topology.Points:
+                                fragments.Add(Point(v[0], draw, fb, scale, yDown, zMinusOneToOne, out pixels), pixels);
+                                break;
+                            case Topology.Lines:
+                                foreach (var (p, q) in ClipNearLine(v[0], v[1], zMinusOneToOne))
+                                    fragments.Add(Line(p, q, draw, fb, yDown, zMinusOneToOne, out pixels), pixels);
+                                break;
+                            default:
+                                foreach (var (p, q, r) in ClipNear(v[0], v[1], v[2], zMinusOneToOne))
+                                    fragments.Add(Triangle(p, q, r, draw, fb, yDown, zMinusOneToOne, out pixels), pixels);
+                                break;
+                        }
                     }
                 }
             }
         }
+        catch
+        {
+            // An error in the vertex or geometry stage comes after the fragments of the primitives before it.
+            fragments.Run();
+            throw;
+        }
+        fragments.Run();
     }
 
     /// <summary>The kind of primitive a topology makes: points, lines or triangles.</summary>

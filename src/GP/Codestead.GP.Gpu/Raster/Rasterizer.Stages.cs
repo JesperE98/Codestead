@@ -34,21 +34,30 @@ public static partial class Rasterizer
         /// <summary>The depth the last fragment wrote (0–1), when <see cref="WritesDepth"/>.</summary>
         public double? FragDepth { get; private set; }
 
-        public Stages(DrawCall draw, double time, int height, double scale, bool yDown)
+        /// <summary>
+        /// The place of the fragment being shaded in its primitive's own order (pixel index or step along a line): of
+        /// the errors several threads hit in one primitive, the first in that order is reported.
+        /// </summary>
+        public long Position { get; set; }
+
+        /// <summary>
+        /// The stages of a draw with its uniforms (draw.Uniforms(time), worked out once per draw) and the textures it
+        /// samples (the draw's own, or guarded ones for worker threads: <see cref="TextureReads.Shared"/>).
+        /// </summary>
+        public Stages(DrawCall draw, Dictionary<string, ShaderValue> uniforms, TextureReads textures, double time, int height, double scale, bool yDown)
         {
             this.draw = draw;
             this.height = height;
             this.scale = scale;
             this.yDown = yDown;
-            vs = new ShaderRunner(draw.VertexShader) { Time = time, Sample = draw.Textures, SampleCube = draw.CubeTextures, TextureSize = draw.TextureSizes };
-            fs = new ShaderRunner(draw.FragmentShader) { Time = time, Sample = draw.Textures, SampleCube = draw.CubeTextures, TextureSize = draw.TextureSizes };
+            vs = new ShaderRunner(draw.VertexShader) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, TextureSize = textures.Size };
+            fs = new ShaderRunner(draw.FragmentShader) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, TextureSize = textures.Size };
             if (draw.GeometryShader is { } geometry)
             {
-                gs = new ShaderRunner(geometry) { Time = time, Sample = draw.Textures, SampleCube = draw.CubeTextures, TextureSize = draw.TextureSizes };
+                gs = new ShaderRunner(geometry) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, TextureSize = textures.Size };
                 gsInputs = geometry.Globals.Where(g => g.Storage == "in").ToList();
                 gsOutputs = geometry.Globals.Where(g => g.Storage == "out").ToList();
             }
-            var uniforms = draw.Uniforms(time);
             foreach (var (k, v) in uniforms)
             {
                 SetUniform(vs, k, v);

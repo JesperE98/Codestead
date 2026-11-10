@@ -7,6 +7,15 @@ namespace Codestead.GP.Gpu.Raster;
 // Direct3D define them.
 public static partial class Rasterizer
 {
+    /// <summary>
+    /// The fragments of a set-up primitive in the rows <paramref name="row0"/>, row0 + step, … of its framebuffer (a
+    /// worker's share; 0 and 1 for all rows), shaded with <paramref name="stages"/> (that worker's).
+    /// </summary>
+    private delegate void Fill(Stages stages, int row0, int step);
+
+    /// <summary>The first row from <paramref name="from"/> on in a worker's share (rows row0, row0 + step, …).</summary>
+    private static int FirstRow(int from, int row0, int step) => from + ((row0 - from % step) % step + step) % step;
+
     private static (double[] X, double[] Y, double[] Z, double[] InvW) ToScreen(ShadedVertex[] vs, Framebuffer fb, bool yDown, bool zMinusOneToOne)
     {
         int n = vs.Length;
@@ -26,21 +35,25 @@ public static partial class Rasterizer
         return (sx, sy, sz, invW);
     }
 
-    private static void Triangle(ShadedVertex v0, ShadedVertex v1, ShadedVertex v2, DrawCall draw, Stages stages, Framebuffer fb, bool yDown, bool zMinusOneToOne)
+    /// <summary>Sets up a triangle (null: culled or off screen) and the size of its bounding box in pixels.</summary>
+    private static Fill? Triangle(ShadedVertex v0, ShadedVertex v1, ShadedVertex v2, DrawCall draw, Framebuffer fb, bool yDown, bool zMinusOneToOne, out long pixels)
     {
+        pixels = 0;
         var vs = new[] { v0, v1, v2 };
-        if (vs.Any(v => v.Clip[3] <= 1e-9)) return;
+        if (vs.Any(v => v.Clip[3] <= 1e-9)) return null;
         var (sx, sy, sz, invW) = ToScreen(vs, fb, yDown, zMinusOneToOne);
         // Signed area on screen (y down): negative means counter-clockwise as you look at the screen.
         double area = (sx[1] - sx[0]) * (sy[2] - sy[0]) - (sx[2] - sx[0]) * (sy[1] - sy[0]);
-        if (Math.Abs(area) < 1e-12) return;
+        if (Math.Abs(area) < 1e-12) return null;
         bool ccw = area < 0;
         bool front = draw.FrontCcw ? ccw : !ccw;
-        if (draw.Cull == CullMode.FrontAndBack || (draw.Cull == CullMode.Back && !front) || (draw.Cull == CullMode.Front && front)) return;
+        if (draw.Cull == CullMode.FrontAndBack || (draw.Cull == CullMode.Back && !front) || (draw.Cull == CullMode.Front && front)) return null;
 
         int width = fb.Width, height = fb.Height;
         int minX = Math.Max(0, (int)Math.Floor(sx.Min())), maxX = Math.Min(width - 1, (int)Math.Ceiling(sx.Max()));
         int minY = Math.Max(0, (int)Math.Floor(sy.Min())), maxY = Math.Min(height - 1, (int)Math.Ceiling(sy.Max()));
+        if (minX > maxX || minY > maxY) return null;
+        pixels = (long)(maxX - minX + 1) * (maxY - minY + 1);
         double[] edgeLen =
         [
             Math.Sqrt(Sq(sx[2] - sx[1]) + Sq(sy[2] - sy[1])),
@@ -53,93 +66,118 @@ public static partial class Rasterizer
             double w1 = ((sx[0] - sx[2]) * (y - sy[2]) - (sy[0] - sy[2]) * (x - sx[2])) / area;
             return (w0, w1, 1 - w0 - w1);
         }
-        var zs = new double[fb.Samples];
-        for (int py = minY; py <= maxY; py++)
+        return (stages, row0, step) =>
         {
-            for (int px = minX; px <= maxX; px++)
+            var zs = new double[fb.Samples];
+            for (int py = FirstRow(minY, row0, step); py <= maxY; py += step)
             {
-                int mask = 0;
-                for (int s = 0; s < fb.Samples; s++)
+                for (int px = minX; px <= maxX; px++)
                 {
-                    var (w0, w1, w2) = Weights(px + fb.Pattern[s].X, py + fb.Pattern[s].Y);
-                    if (w0 < -1e-9 || w1 < -1e-9 || w2 < -1e-9) continue;
-                    mask |= 1 << s;
-                    zs[s] = w0 * sz[0] + w1 * sz[1] + w2 * sz[2];
+                    int mask = 0;
+                    for (int s = 0; s < fb.Samples; s++)
+                    {
+                        var (w0, w1, w2) = Weights(px + fb.Pattern[s].X, py + fb.Pattern[s].Y);
+                        if (w0 < -1e-9 || w1 < -1e-9 || w2 < -1e-9) continue;
+                        mask |= 1 << s;
+                        zs[s] = w0 * sz[0] + w1 * sz[1] + w2 * sz[2];
+                    }
+                    if (mask == 0) continue;
+                    double x = px + 0.5, y = py + 0.5;
+                    var (c0, c1, c2) = Weights(x, y);
+                    if (draw.Wireframe)
+                    {
+                        double d0 = Math.Abs(c0 * area) / edgeLen[0], d1 = Math.Abs(c1 * area) / edgeLen[1], d2 = Math.Abs(c2 * area) / edgeLen[2];
+                        if (Math.Min(d0, Math.Min(d1, d2)) > 0.8) continue;
+                    }
+                    double z = c0 * sz[0] + c1 * sz[1] + c2 * sz[2];
+                    // Perspective-correct weights.
+                    double p0 = c0 * invW[0], p1 = c1 * invW[1], p2 = c2 * invW[2];
+                    double sum = p0 + p1 + p2;
+                    p0 /= sum;
+                    p1 /= sum;
+                    p2 /= sum;
+                    stages.Position = py * width + px;
+                    WriteFragment(fb, py * width + px, mask, zs, draw, stages, () => stages.Fragment(vs, p0, p1, p2, x, y, z, sum, front));
                 }
-                if (mask == 0) continue;
-                double x = px + 0.5, y = py + 0.5;
-                var (c0, c1, c2) = Weights(x, y);
-                if (draw.Wireframe)
-                {
-                    double d0 = Math.Abs(c0 * area) / edgeLen[0], d1 = Math.Abs(c1 * area) / edgeLen[1], d2 = Math.Abs(c2 * area) / edgeLen[2];
-                    if (Math.Min(d0, Math.Min(d1, d2)) > 0.8) continue;
-                }
-                double z = c0 * sz[0] + c1 * sz[1] + c2 * sz[2];
-                // Perspective-correct weights.
-                double p0 = c0 * invW[0], p1 = c1 * invW[1], p2 = c2 * invW[2];
-                double sum = p0 + p1 + p2;
-                p0 /= sum;
-                p1 /= sum;
-                p2 /= sum;
-                WriteFragment(fb, py * width + px, mask, zs, draw, stages, () => stages.Fragment(vs, p0, p1, p2, x, y, z, sum, front));
             }
-        }
+        };
     }
 
-    /// <summary>A line one pixel wide (glLineWidth beyond 1 is not part of the core profile).</summary>
-    private static void Line(ShadedVertex a, ShadedVertex b, DrawCall draw, Stages stages, Framebuffer fb, bool yDown, bool zMinusOneToOne)
+    /// <summary>
+    /// Sets up a line one pixel wide (glLineWidth beyond 1 is not part of the core profile) and the number of steps
+    /// along it.
+    /// </summary>
+    private static Fill? Line(ShadedVertex a, ShadedVertex b, DrawCall draw, Framebuffer fb, bool yDown, bool zMinusOneToOne, out long pixels)
     {
+        pixels = 0;
         var vs = new[] { a, b, b };
-        if (a.Clip[3] <= 1e-9 || b.Clip[3] <= 1e-9) return;
+        if (a.Clip[3] <= 1e-9 || b.Clip[3] <= 1e-9) return null;
         var (sx, sy, sz, invW) = ToScreen([a, b], fb, yDown, zMinusOneToOne);
         double dx = sx[1] - sx[0], dy = sy[1] - sy[0];
         int steps = Math.Max(1, (int)Math.Ceiling(Math.Max(Math.Abs(dx), Math.Abs(dy))));
         int full = (1 << fb.Samples) - 1;
-        var zs = new double[fb.Samples];
-        int last = -1;
-        for (int i = 0; i < steps; i++)
+        pixels = steps;
+        return (stages, row0, step) =>
         {
-            double t = (i + 0.5) / steps;
-            double x = sx[0] + dx * t, y = sy[0] + dy * t;
-            int px = (int)Math.Floor(x), py = (int)Math.Floor(y);
-            if (px < 0 || py < 0 || px >= fb.Width || py >= fb.Height) continue;
-            int index = py * fb.Width + px;
-            if (index == last) continue;
-            last = index;
-            double z = sz[0] + (sz[1] - sz[0]) * t;
-            Array.Fill(zs, z);
-            double q0 = (1 - t) * invW[0], q1 = t * invW[1], sum = q0 + q1;
-            double p0 = q0 / sum, p1 = q1 / sum;
-            WriteFragment(fb, index, full, zs, draw, stages, () => stages.Fragment(vs, p0, p1, 0, px + 0.5, py + 0.5, z, sum, true));
-        }
+            var zs = new double[fb.Samples];
+            int last = -1;
+            // Every worker walks the whole line and shades the pixels in its rows.
+            for (int i = 0; i < steps; i++)
+            {
+                double t = (i + 0.5) / steps;
+                double x = sx[0] + dx * t, y = sy[0] + dy * t;
+                int px = (int)Math.Floor(x), py = (int)Math.Floor(y);
+                if (px < 0 || py < 0 || px >= fb.Width || py >= fb.Height) continue;
+                int index = py * fb.Width + px;
+                if (index == last) continue;
+                last = index;
+                if (py % step != row0) continue;
+                double z = sz[0] + (sz[1] - sz[0]) * t;
+                Array.Fill(zs, z);
+                double q0 = (1 - t) * invW[0], q1 = t * invW[1], sum = q0 + q1;
+                double p0 = q0 / sum, p1 = q1 / sum;
+                stages.Position = i;
+                WriteFragment(fb, index, full, zs, draw, stages, () => stages.Fragment(vs, p0, p1, 0, px + 0.5, py + 0.5, z, sum, true));
+            }
+        };
     }
 
-    /// <summary>A point: a square of gl_PointSize (or glPointSize) pixels around the vertex.</summary>
-    private static void Point(ShadedVertex v, DrawCall draw, Stages stages, Framebuffer fb, double scale, bool yDown, bool zMinusOneToOne)
+    /// <summary>
+    /// Sets up a point: a square of gl_PointSize (or glPointSize) pixels around the vertex (null: clipped or off
+    /// screen), and the size of the square in pixels.
+    /// </summary>
+    private static Fill? Point(ShadedVertex v, DrawCall draw, Framebuffer fb, double scale, bool yDown, bool zMinusOneToOne, out long pixels)
     {
-        if (v.Clip[3] <= 1e-9 || NearDistance(v, zMinusOneToOne) < 0) return;
+        pixels = 0;
+        if (v.Clip[3] <= 1e-9 || NearDistance(v, zMinusOneToOne) < 0) return null;
         var (sx, sy, sz, invW) = ToScreen([v], fb, yDown, zMinusOneToOne);
         double size = (draw.ProgramPointSize && v.PointSize is { } ps ? ps : draw.PointSize) / scale;
         size = Math.Max(size, 1 / scale);
         double half = size / 2;
         var vs = new[] { v, v, v };
-        var zs = new double[fb.Samples];
-        Array.Fill(zs, sz[0]);
         int minX = Math.Max(0, (int)Math.Floor(sx[0] - half)), maxX = Math.Min(fb.Width - 1, (int)Math.Ceiling(sx[0] + half));
         int minY = Math.Max(0, (int)Math.Floor(sy[0] - half)), maxY = Math.Min(fb.Height - 1, (int)Math.Ceiling(sy[0] + half));
-        for (int py = minY; py <= maxY; py++)
-            for (int px = minX; px <= maxX; px++)
-            {
-                int mask = 0;
-                for (int s = 0; s < fb.Samples; s++)
+        if (minX > maxX || minY > maxY) return null;
+        pixels = (long)(maxX - minX + 1) * (maxY - minY + 1);
+        return (stages, row0, step) =>
+        {
+            var zs = new double[fb.Samples];
+            Array.Fill(zs, sz[0]);
+            for (int py = FirstRow(minY, row0, step); py <= maxY; py += step)
+                for (int px = minX; px <= maxX; px++)
                 {
-                    double x = px + fb.Pattern[s].X, y = py + fb.Pattern[s].Y;
-                    if (x >= sx[0] - half && x < sx[0] + half && y >= sy[0] - half && y < sy[0] + half) mask |= 1 << s;
+                    int mask = 0;
+                    for (int s = 0; s < fb.Samples; s++)
+                    {
+                        double x = px + fb.Pattern[s].X, y = py + fb.Pattern[s].Y;
+                        if (x >= sx[0] - half && x < sx[0] + half && y >= sy[0] - half && y < sy[0] + half) mask |= 1 << s;
+                    }
+                    if (mask == 0) continue;
+                    int cx = px, cy = py;
+                    stages.Position = py * fb.Width + px;
+                    WriteFragment(fb, py * fb.Width + px, mask, zs, draw, stages, () => stages.Fragment(vs, 1, 0, 0, cx + 0.5, cy + 0.5, sz[0], invW[0], true));
                 }
-                if (mask == 0) continue;
-                int cx = px, cy = py;
-                WriteFragment(fb, py * fb.Width + px, mask, zs, draw, stages, () => stages.Fragment(vs, 1, 0, 0, cx + 0.5, cy + 0.5, sz[0], invW[0], true));
-            }
+        };
     }
 
     /// <summary>
