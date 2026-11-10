@@ -30,7 +30,7 @@
     <!-- What changed in each version, shown after an update ("What's new"). -->
     <EmbeddedResource Include="../changelog.json" LogicalName="changelog.json" />
   </ItemGroup>
-  <!-- Expose the product name from build/Codestead.props to the code. -->
+  <!-- Expose the product name from src/GP/Directory.Build.props to the code. -->
   <ItemGroup>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>ProductName</_Parameter1>

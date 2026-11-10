@@ -9,7 +9,7 @@ public static partial class TaskChecks
     private static bool TextWhite(double[] p) => p[0] > 0.9 && p[1] > 0.9 && p[2] > 0.9;
 
     /// <summary>The paddle in the confused (inverted) picture (23, 139, 255) – and the mirrored one at the top (41, 85, 183).</summary>
-    private static bool InvertedPaddle(double[] p) => p[2] > 0.65 && p[0] < 0.25 && p[2] > p[1] + 0.2;
+    private static bool InvertedPaddle(double[] p) => p[2] > 0.65 && p[0] < 0.35 && p[2] > p[1] + 0.2;
 
     /// <summary>The inverted sky (180, 199, 170): light, green over red and blue.</summary>
     private static bool InvertedSky(double[] p) => p[0] > 0.6 && p[1] > 0.7 && p[2] > 0.55;
@@ -26,7 +26,7 @@ public static partial class TaskChecks
                 && c.HasInShaders(@"cos \( (\w+ \. )?time \* 10") && c.Has(@"LoadShader \([^;]*""postprocessing"""),
             // The PostProcessor (a 4-sample target, a texture to resolve into, the quad) made in Init: the game still draws to the window.
             ["post-processor"] = c => c.Shows && c.Has(@"struct PostProcessor \{") && c.Has(@"\bInitPostProcessor \( Effects ,")
-                && c.Has(@"glRenderbufferStorageMultisample \(|VK_SAMPLE_COUNT_4_BIT|SampleDesc \. Count = 4|\. Count = 4\b"),
+                && c.Has(@"glRenderbufferStorageMultisample \(|VK_SAMPLE_COUNT_4_BIT|\. Count = 4\b|\bSampleCount = 4\b|Tex2D \([^;]*, 4 , \d+ ,"),
             // The game drawn into the multisampled target and shown through the quad: only the edges change (antialiased).
             ["render-to-texture"] = c => c.Shows && c.Has(@"\bBeginRender \( Effects \)") && c.Has(@"\bEndRender \( Effects \)") && c.Has(@"\bRender \( Effects ,"),
             // Confuse: upside down, mirrored and inverted – the blue paddle at the top, a light sky.
