@@ -50,6 +50,53 @@ public sealed partial class VulkanReader
         return result;
     }
 
+    private readonly Dictionary<string, PipelineInfo?> runtimePipelines = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// A pipeline as the device saw it made (its stages' files, its create-info): for programs that keep pipelines where
+    /// the reader cannot follow them by name (std::map&lt;std::string, VkPipeline&gt; Shaders).
+    /// </summary>
+    private PipelineInfo? RuntimePipeline(VulkanDevice device, string handle)
+    {
+        if (runtimePipelines.TryGetValue(handle, out var known)) return known;
+        PipelineInfo? result = null;
+        if (device.CreatedPipelines.TryGetValue(handle, out var made))
+        {
+            var vs = ShaderFor(made.Files.FirstOrDefault(f => f.Contains(".vert", StringComparison.Ordinal)), ".vert", exact: true);
+            var fs = ShaderFor(made.Files.FirstOrDefault(f => f.Contains(".frag", StringComparison.Ordinal)), ".frag", exact: true);
+            var gsFile = made.Files.FirstOrDefault(f => f.Contains(".geom", StringComparison.Ordinal));
+            var gs = gsFile is null ? null : ShaderFor(gsFile, ".geom", exact: true);
+            string? Field(string name) => Find(made.Info, name, 0) is { } v ? v.Text ?? (v.V is { Length: > 0 } n ? n[0].ToString(System.Globalization.CultureInfo.InvariantCulture) : null) : null;
+            if (vs is not null && fs is not null)
+            {
+                var cull = Field("cullMode") ?? "VK_CULL_MODE_NONE";
+                var front = Field("frontFace") ?? "VK_FRONT_FACE_COUNTER_CLOCKWISE";
+                result = new PipelineInfo(handle, vs, fs, "main", "main",
+                    cull.Contains("FRONT_AND_BACK", StringComparison.Ordinal) ? CullMode.FrontAndBack : cull.Contains("BACK", StringComparison.Ordinal) ? CullMode.Back : cull.Contains("FRONT", StringComparison.Ordinal) ? CullMode.Front : CullMode.None,
+                    !front.Contains("_CLOCKWISE", StringComparison.Ordinal) || front.Contains("COUNTER_CLOCKWISE", StringComparison.Ordinal),
+                    (Field("polygonMode") ?? "FILL").Contains("LINE", StringComparison.Ordinal),
+                    Field("depthTestEnable") is { } depth && (depth.Contains("TRUE", StringComparison.Ordinal) || depth == "1"),
+                    GlReader.TopologyOf(Field("topology") ?? "TRIANGLE_LIST"),
+                    PipelineState.Vulkan(f => Field(f)!, f => Field(f) is { } v ? src.Int(v) : null), gs);
+            }
+        }
+        return runtimePipelines[handle] = result;
+    }
+
+    /// <summary>A field of a create-info by its name, anywhere in it (pColorBlendState → pAttachments → dstColorBlendFactor).</summary>
+    private static ShaderValue? Find(ShaderValue? v, string name, int depth)
+    {
+        if (v is null || depth > 6) return null;
+        if (v.Fields is { } f)
+        {
+            if (f.TryGetValue(name, out var direct)) return direct;
+            foreach (var child in f.Values)
+                if (Find(child, name, depth + 1) is { } found) return found;
+        }
+        if (v.Items is { Length: > 0 } items) return Find(items[0], name, depth + 1);
+        return null;
+    }
+
     /// <summary>The parameter names of a function definition.</summary>
     private List<string> Parameters(string fn)
     {

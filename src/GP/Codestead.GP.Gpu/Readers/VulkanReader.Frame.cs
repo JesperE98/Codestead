@@ -157,6 +157,9 @@ public sealed partial class VulkanReader
                 if (opsByDraw.TryGetValue(di, out var ops)) AddDeviceOps(ops, device);
                 // With several pipelines, the draw uses the one bound before it.
                 var pl = d.Pipeline is not null && pipelines.Count > 1 && pipelines.TryGetValue(d.Pipeline, out var p) ? p : null;
+                // Pipelines the reading of the code cannot follow (kept in a map): the one the device saw bound.
+                if (pl is null && (created.Count == 0 || device.CreatedPipelines.Count > created.Count) && d.State is VulkanDevice.DrawState { Pipeline: { } bound })
+                    pl = RuntimePipeline(device, bound);
                 // One pipeline: its own state (a helper's parameters: createPipeline(…, VK_PRIMITIVE_TOPOLOGY_POINT_LIST, …)).
                 var one = pl is null ? only : null;
                 var dvs = pl?.Vs ?? vs;
