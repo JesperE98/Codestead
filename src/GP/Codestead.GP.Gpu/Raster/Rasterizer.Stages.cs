@@ -57,6 +57,7 @@ public static partial class Rasterizer
             }
             WritesDepth = draw.Hlsl
                 ? draw.FragmentShader.Structs.Any(st => st.Fields.Any(f => string.Equals(f.Semantic, "SV_Depth", StringComparison.OrdinalIgnoreCase)))
+                    || string.Equals(draw.FragmentShader.FindFunction(draw.FragmentEntry)?.Semantic, "SV_Depth", StringComparison.OrdinalIgnoreCase)
                 : draw.FragmentShader.Names.Contains("gl_FragDepth");
             vsInputs = draw.VertexShader.Globals.Where(g => g.Storage == "in").ToList();
             vsOutputs = draw.VertexShader.Globals.Where(g => g.Storage == "out").ToList();
@@ -353,6 +354,12 @@ public static partial class Rasterizer
             {
                 ResetDiscard();
                 return null;
+            }
+            // float PSMain(…) : SV_Depth – the value is the depth, no colour.
+            if (string.Equals(f.Semantic, "SV_Depth", StringComparison.OrdinalIgnoreCase))
+            {
+                FragDepth = result?.X ?? fragCoord.V![2];
+                return [];
             }
             result ??= ShaderValue.Vec(0, 0, 0, 1);
             if (WritesDepth)

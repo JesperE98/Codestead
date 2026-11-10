@@ -11,7 +11,15 @@ public sealed partial class D3D12Reader
     private void Draw()
     {
         // The draws the command list records (PopulateCommandList) come first: a Mesh::Draw elsewhere is called from there.
-        bool Recorded(CppCall c) => src.FunctionAt(c.Offset) == "PopulateCommandList";
+        // Recorded: in PopulateCommandList or a helper it calls (learnopengl's renderScene as RenderScene()).
+        var recording = new HashSet<string>(StringComparer.Ordinal) { "PopulateCommandList" };
+        for (var queue = new Queue<string>(recording); queue.Count > 0;)
+        {
+            var fn = queue.Dequeue();
+            foreach (var other in src.Functions.Keys)
+                if (!recording.Contains(other) && src.Calls(fn, other) && recording.Add(other)) queue.Enqueue(other);
+        }
+        bool Recorded(CppCall c) => src.FunctionAt(c.Offset) is { } at && recording.Contains(at);
         var draws = src.Calls(".DrawInstanced").ToList();
         var indexedDraws = src.Calls(".DrawIndexedInstanced").ToList();
         // A Model (learnopengl's Model class ported): m_model.Draw(m_commandList.Get()) draws its meshes.
@@ -311,7 +319,8 @@ public sealed partial class D3D12Reader
     private void RegisterTarget(D3D12Device device, string id)
     {
         if (scene.Targets.ContainsKey(id) || !int.TryParse(id[4..], out var n) || device.ResourceAt(n) is not { } r) return;
-        scene.Targets[id] = new RenderTarget(id, r.Width, r.Height, 1, true, true, Math.Max(1, r.Samples), r.Float);
+        // A texture array drawn into slice by slice (a point shadow's cube map: SV_RenderTargetArrayIndex) has layers.
+        scene.Targets[id] = new RenderTarget(id, r.Width, r.Height, 1, true, true, Math.Max(1, r.Samples), r.Float, Math.Max(1, r.ArraySize));
     }
 
     /// <summary>Every input layout of the program: (semantic, input slot, byte offset, floats, per instance, step rate).</summary>

@@ -481,6 +481,14 @@ internal sealed class D3D12Device : IDeviceModel
     public (Texture? Texture, CubeTexture? Cube) TextureAt(long handle, SamplerState sampler)
     {
         if (!Srvs.TryGetValue(handle, out var srv) || ResourceAt(srv.Resource) is not { } res) return (null, null);
+        if (srv.Cube && res.Images.All(i => i is null) && !res.Buffer && !res.Window)
+        {
+            // A cube map drawn into (point shadows): face i is slice i of the target.
+            var cubeId = res.TargetId;
+            bool cubeDepth = res.Depth;
+            return (null, new CubeTexture(Enumerable.Range(0, 6).Select(face =>
+                (Texture?)new Texture(() => Raster.Rasterizer.TargetImage(face == 0 ? cubeId : cubeId + "@" + face, 0, cubeDepth), sampler) { Components = 4 }).ToList()));
+        }
         if (srv.Cube) return (null, new CubeTexture(res.Images.Select(i => i is null ? null : new Texture(i, sampler) { Components = i.Channels == 4 ? 4 : 3 }).ToList()));
         if (res.Images.FirstOrDefault() is { } image) return (new Texture(image, sampler) { Components = image.Channels == 4 ? 4 : 3, Srgb = srgbSrvs.Contains(handle) }, null);
         if (res.Images.Count == 0 && !res.Buffer)
