@@ -1,0 +1,65 @@
+{
+  "title": "Shadow Mapping",
+  "tasks": {
+    "depth-map": {
+      "text": {
+        "opengl": "Create the depth map – a 1024 × 1024 `GL_DEPTH_COMPONENT` texture as the only attachment of a framebuffer, no colour buffer – render the scene into it every frame from the light with `simpleDepthShader`, and show it on a quad over the window with `debugDepthQuad`.",
+        "vulkan": "Create the depth map – a 1024 × 1024 depth image that can be drawn into and sampled, a render pass with only a depth attachment, a framebuffer, a sampler and a depth-only pipeline – record a depth pass from the light before the window's pass, and show the depth map on the debug quad.",
+        "d3d12": "Create the shadow map – a 1024 × 1024 `R32_TYPELESS` texture with a `D32_FLOAT` DSV and an `R32_FLOAT` SRV – and a depth-only pipeline state; draw the scene into it from the light every frame (pass 1), then show it on the debug quad."
+      },
+      "hint": {
+        "opengl": "`glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL)`, `GL_NEAREST`, `GL_REPEAT`; attach to `GL_DEPTH_ATTACHMENT`, `glDrawBuffer(GL_NONE); glReadBuffer(GL_NONE);`. Light: `glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane) * glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0))`. Pass 1 with `glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT)`. Depth VS: `gl_Position = lightSpaceMatrix * model * vec4(aPos, 1.0);`; debug FS: `FragColor = vec4(vec3(texture(depthMap, TexCoords).r), 1.0);`.",
+        "vulkan": "Render pass: one attachment of `findDepthMapFormat()`, CLEAR / **STORE**, `finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL`, `colorAttachmentCount = 0`, two dependencies. Image usage `DEPTH_STENCIL_ATTACHMENT | SAMPLED`. `createPipeline(…, attributeCount, pipelineRenderPass, colorAttachmentCount, …)`. `ubo.lightSpaceMatrix` from `glm::ortho` × `glm::lookAt`, no y flip. Descriptor binding 2 = the depth map. Debug quad: `vkCmdDraw(commandBuffer, 6, 1, 42, 0)`.",
+        "d3d12": "`Tex2D(DXGI_FORMAT_R32_TYPELESS, SHADOW_WIDTH, SHADOW_HEIGHT, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)`, state `DEPTH_WRITE`; DSV in DSV slot 1, SRV in CBV/SRV slot 2, SRV range of 2, sampler s1 with point filtering. Depth PSO: `PS = CD3DX12_SHADER_BYTECODE(nullptr, 0)`, `NumRenderTargets = 0`. `XMMatrixOrthographicRH(20.0f, 20.0f, near_plane, far_plane)`, `lightView * lightProjection`. Pass 1: `OMSetRenderTargets(0, nullptr, FALSE, &shadowDsvHandle)`, then the barrier `DEPTH_WRITE` → `PIXEL_SHADER_RESOURCE` (and back at the end)."
+      }
+    },
+    "shadows": {
+      "text": {
+        "opengl": "Draw the scene with shadows: pass `FragPosLightSpace` from the vertex shader, give the fragment shader the depth map (`shadowMap`, unit 1) and a `ShadowCalculation` that compares the fragment's depth with the depth map's; stop drawing the debug quad.",
+        "vulkan": "Draw the scene with shadows: draw it again in the window's pass with `graphicsPipeline`, pass `fragPosLightSpace` from the vertex shader, and give the fragment shader the depth map (`shadowMap`, binding 2) and a `ShadowCalculation` that compares the fragment's depth with the depth map's.",
+        "d3d12": "Draw the scene with shadows: pass `fragPosLightSpace` from `VSMain`, read the shadow map (t1, sampler s1) in `PSMain` with a `ShadowCalculation` that compares the fragment's depth with the shadow map's, and stop drawing the debug quad."
+      },
+      "hint": {
+        "opengl": "`vs_out.FragPosLightSpace = lightSpaceMatrix * vec4(vs_out.FragPos, 1.0);`. `projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w; projCoords = projCoords * 0.5 + 0.5;` (x, y and z), `shadow = currentDepth > closestDepth ? 1.0 : 0.0`. In main: `shader.setInt(\"shadowMap\", 1);`, `setMat4(\"lightSpaceMatrix\", …)`, the depth map on `GL_TEXTURE1`, `//renderQuad();`.",
+        "vulkan": "Add `mat4 lightSpaceMatrix;` to the vertex shader's block and `vec4 fragPosLightSpace;` to both `VS_OUT` blocks. `projCoords.xy = projCoords.xy * 0.5 + 0.5;` – only x and y, z is 0..1 already, and no y flip (the light's matrix has none). Comment out the debug quad's two calls.",
+        "d3d12": "`float4 fragPosLightSpace : TEXCOORD1;`, `result.fragPosLightSpace = mul(worldPos, lightSpaceMatrix);`. `float2 shadowUV = float2(projCoords.x * 0.5f + 0.5f, -projCoords.y * 0.5f + 0.5f);` – y flipped, z is 0..1 already. Comment out the debug quad's two lines."
+      }
+    },
+    "bias": {
+      "text": {
+        "opengl": "Remove the shadow acne with a slope-dependent bias, `max(0.05 * (1.0 - dot(normal, lightDir)), 0.005)`, subtracted from the fragment's depth before the comparison.",
+        "vulkan": "Remove the shadow acne with a slope-dependent bias, `max(0.05 * (1.0 - dot(normal, lightDir)), 0.005)`, subtracted from the fragment's depth before the comparison.",
+        "d3d12": "Remove the shadow acne with a slope-dependent bias, `max(0.05f * (1.0f - dot(normal, lightDir)), 0.005f)`, subtracted from the fragment's depth before the comparison; `ShadowCalculation` gets the normal and the light direction as parameters."
+      },
+      "hint": {
+        "opengl": "`vec3 normal = normalize(fs_in.Normal); vec3 lightDir = normalize(lightPos - fs_in.FragPos);` then the bias and `shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;`.",
+        "vulkan": "`vec3 normal = normalize(fs_in.normal); vec3 lightDir = normalize(ubo.lightPos - fs_in.fragPos);` then the bias and `shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;`.",
+        "d3d12": "`float ShadowCalculation(float4 fragPosLightSpace, float3 normal, float3 lightDir)`, called with `(input.fragPosLightSpace, normal, lightDir)`; `shadow = currentDepth - bias > closestDepth ? 1.0f : 0.0f;`."
+      }
+    },
+    "over-sampling": {
+      "text": {
+        "opengl": "Stop over sampling: clamp the depth map to a white border (depth 1.0) instead of repeating it, and treat fragments beyond the light's far plane (`projCoords.z > 1.0`) as lit.",
+        "vulkan": "Stop over sampling: give the depth map's sampler `VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER` with an opaque white border (depth 1.0), and treat fragments beyond the light's far plane (`projCoords.z > 1.0`) as lit.",
+        "d3d12": "Stop over sampling: give sampler s1 `D3D12_TEXTURE_ADDRESS_MODE_BORDER` with an opaque white border (depth 1.0), and treat fragments beyond the light's far plane (`projCoords.z > 1.0f`) as lit."
+      },
+      "hint": {
+        "opengl": "`GL_CLAMP_TO_BORDER` for `GL_TEXTURE_WRAP_S` and `_T`, `float borderColor[] = { 1.0, 1.0, 1.0, 1.0 }; glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);`; before `return`: `if(projCoords.z > 1.0) shadow = 0.0;`. From the default camera almost nothing changes.",
+        "vulkan": "`addressModeU/V/W = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER`, `borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE`; before `return`: `if (projCoords.z > 1.0) shadow = 0.0;`. From the default camera almost nothing changes.",
+        "d3d12": "`samplers[1].AddressU/V/W = D3D12_TEXTURE_ADDRESS_MODE_BORDER`, `samplers[1].BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;`; before `return`: `if (projCoords.z > 1.0f) shadow = 0.0f;`. From the default camera almost nothing changes."
+      }
+    },
+    "pcf": {
+      "text": {
+        "opengl": "Soften the shadow's edges with PCF: average the comparison over the 3 × 3 depth map texels around the position (`textureSize` gives the texel size).",
+        "vulkan": "Soften the shadow's edges with PCF: average the comparison over the 3 × 3 depth map texels around the position (`textureSize` gives the texel size).",
+        "d3d12": "Soften the shadow's edges with PCF: average the comparison over the 3 × 3 shadow map texels around the position (`GetDimensions` gives the shadow map's size)."
+      },
+      "hint": {
+        "opengl": "`float shadow = 0.0; vec2 texelSize = 1.0 / textureSize(shadowMap, 0);`, two loops from -1 to 1 with `float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;`, then `shadow /= 9.0;`.",
+        "vulkan": "`float shadow = 0.0; vec2 texelSize = 1.0 / textureSize(shadowMap, 0);`, two loops from -1 to 1 with `float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;`, then `shadow /= 9.0;`.",
+        "d3d12": "`uint width, height; shadowMap.GetDimensions(width, height); float2 texelSize = 1.0f / float2(width, height);`, two loops from -1 to 1 with `shadowMap.Sample(shadowSampler, shadowUV + float2(x, y) * texelSize).r`, then `shadow /= 9.0f;` – `closestDepth` is no longer needed."
+      }
+    }
+  }
+}

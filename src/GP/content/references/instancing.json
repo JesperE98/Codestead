@@ -1,0 +1,12 @@
+[
+  { "title": "Instancing", "url": "https://learnopengl.com/Advanced-OpenGL/Instancing", "publisher": "LearnOpenGL" },
+  { "title": "asteroids_instanced.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/4.advanced_opengl/10.3.asteroids_instanced/asteroids_instanced.cpp", "publisher": "LearnOpenGL", "api": "opengl" },
+  { "title": "glDrawArraysInstanced", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDrawArraysInstanced.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "glVertexAttribDivisor", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glVertexAttribDivisor.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Vertex input description", "url": "https://vulkan-tutorial.com/Vertex_buffers/Vertex_input_description", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Fixed-Function Vertex Processing (Vulkan specification)", "url": "https://docs.vulkan.org/spec/latest/chapters/fxvertex.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Shader memory layout", "url": "https://docs.vulkan.org/guide/latest/shader_memory_layout.html", "publisher": "Vulkan Guide", "api": "vulkan" },
+  { "title": "D3D12_INPUT_ELEMENT_DESC structure", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_input_element_desc", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "ID3D12GraphicsCommandList::DrawIndexedInstanced", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawindexedinstanced", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Packing rules for constant variables", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-packing-rules", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

@@ -1,0 +1,57 @@
+{
+  "title": "Anti-aliasing",
+  "tasks": {
+    "sample-count": {
+      "text": {
+        "vulkan": "Ta reda på antalet samples: en medlem `msaaSamples`, satt i `pickPhysicalDevice()` av `getMaxUsableSampleCount()` (4 om färg- och djupattachments stöder det, annars 2, annars 1), och en parameter `VkSampleCountFlagBits numSamples` till `createImage()`."
+      },
+      "hint": {
+        "vulkan": "`VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;` sedan `if (counts & VK_SAMPLE_COUNT_4_BIT) { return VK_SAMPLE_COUNT_4_BIT; }` … `imageInfo.samples = numSamples;`; djupbilden skickar `VK_SAMPLE_COUNT_1_BIT` tills vidare."
+      }
+    },
+    "msaa": {
+      "text": {
+        "opengl": "Slå på MSAA för fönstret: `glfwWindowHint(GLFW_SAMPLES, 4);` innan fönstret skapas, och `glEnable(GL_MULTISAMPLE);`.",
+        "vulkan": "Slå på multisampling: en multisamplad färgbild (`createColorResources()`), djupbilden med `msaaSamples`, ett render pass vars tredje attachment – swap chainens bild – är subpassets resolve attachment, tre framebuffer-vyer och `rasterizationSamples = msaaSamples`.",
+        "d3d12": "Slå på 4x MSAA: rita i ett multisamplat render target (`SampleCount = 4`) med en multisamplad djupbuffer och `psoDesc.SampleDesc.Count = SampleCount`, och resolva det sedan in i back buffern med `ResolveSubresource`."
+      },
+      "hint": {
+        "opengl": "Hinten hamnar bredvid de andra anropen till `glfwWindowHint`; `glEnable(GL_MULTISAMPLE)` efter `glEnable(GL_DEPTH_TEST)` (påslaget som standard i de flesta drivrutiner, men inte alla).",
+        "vulkan": "Färgbildens användning `VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT`; `colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL`; `colorAttachmentResolve` (1 sample, DONT_CARE / STORE, `PRESENT_SRC_KHR`), `colorAttachmentResolveRef.attachment = 2`, `subpass.pResolveAttachments`; vyerna `{colorImageView, depthImageView, swapChainImageViews[i]}`; `srcAccessMask` med `VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT`.",
+        "d3d12": "`CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, …)`; `Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM, m_width, m_height, 1, 1, SampleCount, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)`, dess RTV på plats `FrameCount` (`NumDescriptors = FrameCount + 1`); djup: `SampleCount` och `D3D12_DSV_DIMENSION_TEXTURE2DMS`. Barriers till `RESOLVE_SOURCE` / `RESOLVE_DEST` runt `ResolveSubresource` och tillbaka."
+      }
+    },
+    "offscreen-msaa": {
+      "text": {
+        "opengl": "Multisampla i en egen framebuffer: en färgtextur med 4 samples (`glTexImage2DMultisample`) och en djup/stencil-renderbuffer med 4 samples; rita scenen i den och resolva den sedan in i fönstret med `glBlitFramebuffer`. Ta bort hinten `GLFW_SAMPLES`."
+      },
+      "hint": {
+        "opengl": "`glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, SCR_WIDTH, SCR_HEIGHT, GL_TRUE)`, fäst med `GL_TEXTURE_2D_MULTISAMPLE`; `glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, …)`. Efter ritningen: `GL_READ_FRAMEBUFFER` = `framebuffer`, `GL_DRAW_FRAMEBUFFER` = 0, `glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST)`."
+      }
+    },
+    "resolve": {
+      "text": {
+        "opengl": "Resolva in i en textur i stället för fönstret: en `intermediateFBO` med en vanlig färgtextur `screenTexture`, blitta in i den, och rita sedan en skärmfyrhörning (`aa_post.vs/.fs`) med den texturen i fönstret, med djuptestet avstängt.",
+        "vulkan": "Resolva in i en egen bild: `createOffscreenRenderPass()` resolvar in i `offscreenImage` (som slutar i `SHADER_READ_ONLY_OPTIMAL`), `createRenderPass()` blir fönstrets pass med ett sample, och en skärmfyrhörning (`aa_post`, vertices 36..41) samplar bilden via `screenDescriptorSet`.",
+        "d3d12": "Resolva in i en textur i stället för back buffern: `m_screenTexture` (ett sample, en SRV på heap-plats 1), resolvad varje bildruta och sedan ritad i back buffern av en skärmfyrhörning (`aa_post.hlsl`) med en egen pipeline state utan djuptest."
+      },
+      "hint": {
+        "opengl": "`glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL)` med LINEAR-filter på `GL_COLOR_ATTACHMENT0`. Blitta med `GL_DRAW_FRAMEBUFFER` = `intermediateFBO`; bind sedan 0, rensa, `glDisable(GL_DEPTH_TEST)`, rita `quadVAO` med `screenTexture`.",
+        "vulkan": "`createPipeline()` får render passet, antalet samples och djuptestet som parametrar. Beroenden i passet utanför skärmen: före (förra fyrhörningen har läst) och efter (`COLOR_ATTACHMENT_OUTPUT` → `FRAGMENT_SHADER`). Pool: 2 set. Spela in `// 1.` passet utanför skärmen med kuben, `// 2.` fönstrets pass med `screenPipeline`, `screenDescriptorSet`, `vkCmdDraw(commandBuffer, 6, 1, 36, 0)`.",
+        "d3d12": "Root-parameter 2: en tabell med 1 SRV på t0 (pixel shader) och en statisk sampler. Fyrhörningens PSO: `DepthEnable = FALSE`, `DSVFormat = DXGI_FORMAT_UNKNOWN`, `SampleDesc.Count = 1`. Resolva med `m_screenTexture` `PIXEL_SHADER_RESOURCE` → `RESOLVE_DEST` och tillbaka; sedan back bufferns pass: `OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr)`, `SetGraphicsRootDescriptorTable(2, …plats 1…)`, `DrawInstanced(6, 1, 0, 0)`."
+      }
+    },
+    "post-process": {
+      "text": {
+        "opengl": "Post-processa den kantutjämnade bilden: visa den i grått i `aa_post.fs` (viktad gråskala 0.2126 / 0.7152 / 0.0722).",
+        "vulkan": "Post-processa den kantutjämnade bilden: visa den i grått i `aa_post.frag` (viktad gråskala 0.2126 / 0.7152 / 0.0722).",
+        "d3d12": "Post-processa den kantutjämnade bilden: visa den i grått i `aa_post.hlsl` (viktad gråskala 0.2126 / 0.7152 / 0.0722)."
+      },
+      "hint": {
+        "opengl": "`float grayscale = 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b;` sedan `FragColor = vec4(vec3(grayscale), 1.0);`.",
+        "vulkan": "`float grayscale = 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b;` sedan `outColor = vec4(vec3(grayscale), 1.0);`.",
+        "d3d12": "`float grayscale = 0.2126f * col.r + 0.7152f * col.g + 0.0722f * col.b;` sedan `return float4(grayscale, grayscale, grayscale, 1.0f);`."
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+[
+  {
+    "version": "0.1.0",
+    "date": "2026-11-09",
+    "changes": {
+      "en": [
+        "The first version of **Codestead GP**: learn graphics programming with **OpenGL**, **Vulkan** or **DirectX 12** – choose the API at the top, and every chapter, task and code example follows it.",
+        "The course follows learnopengl.com section by section. This version has the introduction, all of Getting started (from creating a window to Textures, Transformations, Coordinate Systems and Camera), Lighting (Colors to Multiple lights), Model Loading (Assimp, Mesh, Model – with a planet model drawn for the course), Advanced OpenGL (Depth testing to Anti Aliasing) and Advanced Lighting (Blinn-Phong, Gamma Correction, shadows, Normal and Parallax Mapping, HDR, Bloom, Deferred Shading and SSAO) and PBR (the theory, lighting, diffuse irradiance and specular image based lighting), each part ending with a review and an exam.",
+        "Write the code in the built-in editor and press **Build & run**: a simulated GPU compiles it, runs your shaders and shows the window your program would open."
+      ],
+      "sv": [
+        "Första versionen av **Codestead GP**: lär dig grafikprogrammering med **OpenGL**, **Vulkan** eller **DirectX 12** – välj API högst upp, så följer varje kapitel, uppgift och kodexempel med.",
+        "Kursen följer learnopengl.com avsnitt för avsnitt. Den här versionen har introduktionen, hela Getting started (från att skapa ett fönster till Textures, Transformations, Coordinate Systems och Camera), Ljussättning (Färger till Flera ljuskällor), Modellinläsning (Assimp, Mesh, Model – med en planetmodell ritad för kursen), Avancerad OpenGL (Djuptestning till Anti Aliasing) och Avancerad belysning (Blinn-Phong, gammakorrigering, skuggor, normal mapping och parallax mapping, HDR, bloom, deferred shading och SSAO) och PBR (teorin, belysning, diffus irradians och spekulär bildbaserad belysning), där varje del avslutas med en sammanfattning och ett prov.",
+        "Skriv koden i den inbyggda editorn och tryck **Bygg & kör**: en simulerad GPU kompilerar den, kör dina shaders och visar fönstret som ditt program skulle öppna."
+      ],
+      "es": [
+        "La primera versión de **Codestead GP**: aprende programación gráfica con **OpenGL**, **Vulkan** o **DirectX 12**; elige la API arriba y cada capítulo, tarea y ejemplo de código la sigue.",
+        "El curso sigue learnopengl.com sección por sección. Esta versión incluye la introducción, todo Getting started (desde crear una ventana hasta Texturas, Transformaciones, Sistemas de coordenadas y Cámara), Iluminación (de Colores a Múltiples luces), Carga de modelos (Assimp, Mesh, Model, con un modelo de planeta creado para el curso), OpenGL avanzado (de la prueba de profundidad al antialiasing) e Iluminación avanzada (Blinn-Phong, corrección gamma, sombras, normal mapping y parallax mapping, HDR, bloom, deferred shading y SSAO) y PBR (la teoría, la iluminación, la irradiancia difusa y la iluminación basada en imágenes especular); cada parte termina con un repaso y un examen.",
+        "Escribe el código en el editor integrado y pulsa **Compilar y ejecutar**: una GPU simulada lo compila, ejecuta tus shaders y muestra la ventana que abriría tu programa."
+      ],
+      "de": [
+        "Die erste Version von **Codestead GP**: Lerne Grafikprogrammierung mit **OpenGL**, **Vulkan** oder **DirectX 12** – wähle die API oben, und jedes Kapitel, jede Aufgabe und jedes Codebeispiel folgt ihr.",
+        "Der Kurs folgt learnopengl.com Abschnitt für Abschnitt. Diese Version enthält die Einführung, ganz Getting started (vom Fenster bis zu Texturen, Transformationen, Koordinatensystemen und Kamera), Beleuchtung (von Farben bis Mehrere Lichter), Modelle laden (Assimp, Mesh, Model – mit einem eigens gezeichneten Planetenmodell), Fortgeschrittenes OpenGL (vom Tiefentest bis Anti-Aliasing) und Fortgeschrittene Beleuchtung (Blinn-Phong, Gammakorrektur, Schatten, Normal Mapping und Parallax Mapping, HDR, Bloom, Deferred Shading und SSAO) und PBR (die Theorie, Beleuchtung, diffuse Irradianz und spiegelnde bildbasierte Beleuchtung); jeder Teil endet mit einer Zusammenfassung und einer Prüfung.",
+        "Schreibe den Code im eingebauten Editor und drücke **Erstellen & ausführen**: Eine simulierte GPU kompiliert ihn, führt deine Shader aus und zeigt das Fenster, das dein Programm öffnen würde."
+      ],
+      "fr": [
+        "La première version de **Codestead GP** : apprenez la programmation graphique avec **OpenGL**, **Vulkan** ou **DirectX 12** – choisissez l'API en haut, et chaque chapitre, tâche et exemple de code la suit.",
+        "Le cours suit learnopengl.com section par section. Cette version contient l'introduction, tout Getting started (de la création d'une fenêtre aux Textures, Transformations, Systèmes de coordonnées et Caméra), Éclairage (des Couleurs aux Lumières multiples), Chargement de modèles (Assimp, Mesh, Model – avec un modèle de planète dessiné pour le cours), OpenGL avancé (du test de profondeur à l'anticrénelage) et Éclairage avancé (Blinn-Phong, correction gamma, ombres, normal mapping et parallax mapping, HDR, bloom, deferred shading et SSAO) et PBR (la théorie, l’éclairage, l’irradiance diffuse et l’éclairage spéculaire basé sur l’image) ; chaque partie se termine par une révision et un examen.",
+        "Écrivez le code dans l'éditeur intégré et appuyez sur **Compiler et exécuter** : un GPU simulé le compile, exécute vos shaders et affiche la fenêtre que votre programme ouvrirait."
+      ],
+      "zh": [
+        "**Codestead GP** 首个版本：使用 **OpenGL**、**Vulkan** 或 **DirectX 12** 学习图形编程——在顶部选择 API，每一章、每个任务和代码示例都会随之切换。",
+        "课程逐节对应 learnopengl.com。此版本包含引言、完整的“入门”（从创建窗口到纹理、变换、坐标系统和摄像机）、“光照”（从颜色到多光源）、“模型加载”（Assimp、网格、模型——附带为本课程绘制的行星模型）、“高级 OpenGL”（从深度测试到抗锯齿）、“高级光照”（Blinn-Phong、Gamma 校正、阴影、法线贴图与视差贴图、HDR、泛光、延迟着色和 SSAO）以及“PBR”（理论、光照、漫反射辐照度和镜面反射基于图像的光照），每个部分都以复习和考试结束。",
+        "在内置编辑器中编写代码并点击 **构建并运行**：模拟 GPU 会编译代码、运行你的着色器，并显示程序将打开的窗口。"
+      ],
+      "ja": [
+        "**Codestead GP** の最初のバージョン：**OpenGL**、**Vulkan**、**DirectX 12** でグラフィックスプログラミングを学べます。上部で API を選ぶと、すべての章・課題・コード例がそれに合わせて変わります。",
+        "コースは learnopengl.com を節ごとに追います。このバージョンには導入、「はじめに」全体（ウィンドウの作成からテクスチャ、変換、座標系、カメラまで）、「ライティング」（色から複数のライトまで）、「モデルの読み込み」（Assimp、メッシュ、モデル — コースのために描いた惑星モデル付き）、「高度な OpenGL」（深度テストからアンチエイリアシングまで）、「高度なライティング」（Blinn-Phong、ガンマ補正、シャドウ、法線マッピングと視差マッピング、HDR、ブルーム、ディファードシェーディング、SSAO）、「PBR」（理論、ライティング、拡散放射照度、鏡面反射のイメージベースドライティング）が含まれ、各パートは復習と試験で締めくくられます。",
+        "内蔵エディタでコードを書き **ビルドして実行** を押すと、シミュレートされた GPU がコンパイルし、シェーダーを実行して、プログラムが開くウィンドウを表示します。"
+      ]
+    }
+  }
+]

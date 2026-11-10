@@ -1,0 +1,10 @@
+[
+  { "title": "Geometry Shader", "url": "https://learnopengl.com/Advanced-OpenGL/Geometry-Shader", "publisher": "LearnOpenGL" },
+  { "title": "geometry_shader_houses.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/4.advanced_opengl/9.1.geometry_shader_houses/geometry_shader_houses.cpp", "publisher": "LearnOpenGL", "api": "opengl" },
+  { "title": "Geometry Shader (OpenGL wiki)", "url": "https://www.khronos.org/opengl/wiki/Geometry_Shader", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Geometry Shading (Vulkan specification)", "url": "https://docs.vulkan.org/spec/latest/chapters/geometry.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "GL_KHR_vulkan_glsl", "url": "https://github.com/KhronosGroup/GLSL/blob/main/extensions/khr/GL_KHR_vulkan_glsl.txt", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Geometry-Shader Object", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-geometry-shader", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Stream-Output Object", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-so-type", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Geometry Shader Stage", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d11/geometry-shader-stage", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

@@ -1,0 +1,53 @@
+{
+  "title": "Advanced GLSL",
+  "tasks": {
+    "frag-coord": {
+      "text": {
+        "opengl": "In `advanced_glsl.fs` colour every fragment by its window position: red where `gl_FragCoord.x < 400`, green elsewhere.",
+        "vulkan": "In `advanced_glsl.frag` colour every fragment by its window position: red where `gl_FragCoord.x < 400`, green elsewhere.",
+        "d3d12": "In `PSMain` (`advanced_glsl.hlsl`) colour every pixel by its window position: red where `input.position.x < 400.0f`, green elsewhere."
+      },
+      "hint": {
+        "opengl": "`gl_FragCoord` holds the window coordinates in pixels, origin at the bottom-left. `FragColor = vec4(1.0, 0.0, 0.0, 1.0);` for red, `vec4(0.0, 1.0, 0.0, 1.0)` for green.",
+        "vulkan": "`gl_FragCoord` holds the window coordinates in pixels; in Vulkan the origin is the top-left (x is the same as in OpenGL). `outColor = vec4(1.0, 0.0, 0.0, 1.0);` for red.",
+        "d3d12": "In the pixel shader `SV_POSITION` is the pixel's window position in pixels, origin at the top-left. `return float4(1.0f, 0.0f, 0.0f, 1.0f);` for red."
+      }
+    },
+    "front-facing": {
+      "text": {
+        "opengl": "Texture front faces with marble (`frontTexture`, unit 0) and back faces with metal (`backTexture`, unit 1) by `gl_FrontFacing`, and cull the front faces: `glEnable(GL_CULL_FACE); glCullFace(GL_FRONT);`.",
+        "vulkan": "Texture front faces with marble and back faces with metal by `gl_FrontFacing` (a second texture at binding 2), with `frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE` and `cullMode = VK_CULL_MODE_FRONT_BIT`.",
+        "d3d12": "Cull the front faces (`CullMode = D3D12_CULL_MODE_FRONT`) and texture by `SV_IsFrontFace`: front faces marble (`frontTexture`, t0), back faces metal (`backTexture`, t1)."
+      },
+      "hint": {
+        "opengl": "`if(gl_FrontFacing) FragColor = texture(frontTexture, TexCoords); else FragColor = texture(backTexture, TexCoords);` – `setInt` 0 and 1, and bind `cubeTexture` to `GL_TEXTURE0`, `floorTexture` to `GL_TEXTURE1` before the cubes.",
+        "vulkan": "Descriptor set layout: a combined image sampler at binding 2; `createDescriptorSet` gets a second image view and `descriptorWrites[2]`; pool: 4 image descriptors. Cubes: marble + metal, floor: metal + metal.",
+        "d3d12": "`PSMain(PSInput input, bool isFrontFace : SV_IsFrontFace)`. `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0)`; one handle `faceTextures` at heap slot 1 gives t0 = marble, t1 = metal – set it once before the cubes."
+      }
+    },
+    "interface-block": {
+      "text": {
+        "opengl": "Group the vertex shader's output in an interface block: `out VS_OUT { vec2 TexCoords; } vs_out;` in `advanced_glsl.vs` and `in VS_OUT { vec2 TexCoords; } fs_in;` in `advanced_glsl.fs`.",
+        "vulkan": "Pass the texture coordinates in an interface block: `layout(location = 0) out VS_OUT { vec2 texCoord; } vs_out;` in the vertex shader and `layout(location = 0) in VS_OUT { vec2 texCoord; } fs_in;` in the fragment shader.",
+        "d3d12": "Make the struct between the stages learnopengl's interface block: rename `PSInput` to `VS_OUT`, the vertex shader's variable to `vs_out` and the pixel shader's parameter to `fs_in`."
+      },
+      "hint": {
+        "opengl": "The block name `VS_OUT` must match in both shaders; the instance names may differ. Write `vs_out.TexCoords = aTexCoords;` and read `fs_in.TexCoords`.",
+        "vulkan": "Vulkan matches the stages' outputs and inputs by `location`, so the block gets one. Write `vs_out.texCoord = inTexCoord;` and read `fs_in.texCoord`.",
+        "d3d12": "HLSL matches the stages by semantics (`SV_POSITION`, `TEXCOORD`), not by names. `VS_OUT VSMain(…)` with `VS_OUT vs_out; … return vs_out;`, `PSMain(VS_OUT fs_in, bool isFrontFace : SV_IsFrontFace)`."
+      }
+    },
+    "uniform-buffer": {
+      "text": {
+        "opengl": "Build learnopengl's uniform buffer demo: four cubes, each with its own program (`uniform_buffer.vs` + `red.fs` …), sharing projection and view through the std140 uniform block `Matrices` at binding point 0.",
+        "vulkan": "Build learnopengl's uniform buffer demo: declare the uniform block in `uniform_buffer.vert`, create four pipelines (`redPipeline` …) and draw four cubes that share the uniform buffer through one descriptor set.",
+        "d3d12": "Build learnopengl's uniform buffer demo: four pipeline states (`m_redPipelineState` …) with `uniform_buffer.hlsl`'s vertex shader and a colour pixel shader each, drawing four cubes that share the constant buffer."
+      },
+      "hint": {
+        "opengl": "`layout (std140) uniform Matrices { mat4 projection; mat4 view; };`, `glUniformBlockBinding(shaderX.ID, glGetUniformBlockIndex(shaderX.ID, \"Matrices\"), 0)` for each program, `glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2 * sizeof(glm::mat4))`. Projection at offset 0 once, view at 64 every frame.",
+        "vulkan": "`layout(binding = 0) uniform UniformBufferObject { mat4 view; mat4 proj; } ubo;`. `createPipeline` gets an `attributeCount` (1); culling off; bind `cubeDescriptorSet` once, then per cube `vkCmdBindPipeline`, push the model matrix, draw 36.",
+        "d3d12": "Compile `uniform_buffer.hlsl`'s `VSMain` once; per colour compile `PSMain`, set `psoDesc.PS`, `CreateGraphicsPipelineState`. Set `CullMode = D3D12_CULL_MODE_NONE` first. Per cube: `SetPipelineState`, the model matrix, `DrawInstanced(36, 1, 0, 0)`."
+      }
+    }
+  }
+}

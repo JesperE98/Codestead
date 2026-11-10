@@ -1,0 +1,14 @@
+[
+  { "title": "Debugging", "url": "https://learnopengl.com/In-Practice/Debugging", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: debugging.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/7.in_practice/1.debugging/debugging.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "glGetError", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetError.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "glDebugMessageCallback", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDebugMessageCallback.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "KHR_debug", "url": "https://registry.khronos.org/OpenGL/extensions/KHR/KHR_debug.txt", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Validation layers", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Validation_layers", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Debugging (Vulkan specification)", "url": "https://docs.vulkan.org/spec/latest/chapters/debugging.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Vulkan-ValidationLayers", "url": "https://github.com/KhronosGroup/Vulkan-ValidationLayers", "publisher": "Khronos Group (GitHub)", "api": "vulkan" },
+  { "title": "Understanding the D3D12 debug layer", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/understanding-the-d3d12-debug-layer", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "GPU-based validation and the Direct3D 12 debug layer", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/using-d3d12-debug-layer-gpu-based-validation", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "ID3D12InfoQueue::GetMessage", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12sdklayers/nf-d3d12sdklayers-id3d12infoqueue-getmessage", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "ID3D12Object::SetName", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12object-setname", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

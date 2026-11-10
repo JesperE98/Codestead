@@ -1,0 +1,41 @@
+{
+  "title": "Material",
+  "tasks": {
+    "material": {
+      "text": {
+        "opengl": "Beskriv ytan med ett material: en struct `Material` (`vec3 ambient, diffuse, specular; float shininess;`) och `uniform Material material;` i `materials.fs` i stället för `objectColor`; använd dess fält i stället för `objectColor`, styrkorna 0.1/0.5 och 32:an, och sätt det korallfärgade materialet från `main.cpp`.",
+        "vulkan": "Beskriv ytan med ett material: en struct `Material` i `materials.frag`, `Material material;` som blockets sista medlem i stället för `objectColor`, dess fält i belysningen i stället för `objectColor`, styrkorna 0.1/0.5 och 32:an; i C++ samma struct (`pad1`, `pad2` efter `ambient` och `diffuse`) i `UniformBufferObject` och det korallfärgade materialet satt i `updateUniformBuffer()`.",
+        "d3d12": "Beskriv ytan med ett material: en struct `Material` i `materials.hlsl`, `Material material;` efter `viewPos` i cbuffern i stället för `objectColor`, dess fält i `PSMain` i stället för `objectColor`, styrkorna 0.1/0.5 och 32:an; i `main.cpp` motsvarande C++-struct i `SceneConstantBuffer` och det korallfärgade materialet satt i `OnUpdate`."
+      },
+      "hint": {
+        "opengl": "`ambient = lightColor * material.ambient`, `diffuse = lightColor * (diff * material.diffuse)`, `specular = lightColor * (spec * material.specular)`, `result = ambient + diffuse + specular`. Sätt fälten med fullständigt namn: `lightingShader.setVec3(\"material.ambient\", 1.0f, 0.5f, 0.31f);` … specular (0.5, 0.5, 0.5), shininess 32.",
+        "vulkan": "`ambient = ubo.lightColor * ubo.material.ambient` och så vidare. C++: `glm::vec3 ambient; float pad1; glm::vec3 diffuse; float pad2; glm::vec3 specular; float shininess;` – `shininess` fyller de 4 byten efter `specular`. Kuben blir alldeles för ljus: nästa uppgift rättar det.",
+        "d3d12": "`ambient = lightColor * material.ambient` och så vidare. C++: `XMFLOAT3 ambient; float padding0; XMFLOAT3 diffuse; float padding1; XMFLOAT3 specular; float shininess;` – `shininess` fyller raden för `specular`. Kuben blir alldeles för ljus: nästa uppgift rättar det."
+      }
+    },
+    "light": {
+      "text": {
+        "opengl": "Ge ljuset egna intensiteter: en struct `Light` (`vec3 position; vec3 ambient, diffuse, specular;`) och `uniform Light light;` ersätter `lightPos` och `lightColor`; sätt `light.position` = `lightPos`, `light.ambient` (0.2, 0.2, 0.2), `light.diffuse` (0.5, 0.5, 0.5) och `light.specular` (1.0, 1.0, 1.0).",
+        "vulkan": "Ge ljuset egna intensiteter: en struct `Light` (`vec3 position; vec3 ambient, diffuse, specular;`) som blockets sista medlem, i stället för `lightColor` och `lightPos`; i C++ samma struct (en utfyllnads-float efter varje `glm::vec3`), `UniformBufferObject { view; proj; viewPos; pad1; material; light; }`, och `ubo.light.position = lightPos`, ambient 0.2, diffuse 0.5, specular 1.0.",
+        "d3d12": "Ge ljuset egna intensiteter: en struct `Light` (`float3 position; float3 ambient, diffuse, specular;`) och `Light light;` efter `material` ersätter `lightColor` och `lightPos` i cbuffern; C++-structen `Light` med en `float` utfyllnad efter varje `XMFLOAT3`; i `OnUpdate` `light.position` = `lightPos`, ambient (0.2, 0.2, 0.2), diffuse (0.5, 0.5, 0.5), specular (1.0, 1.0, 1.0)."
+      },
+      "hint": {
+        "opengl": "`ambient = light.ambient * material.ambient`, `lightDir = normalize(light.position - FragPos)`, `diffuse = light.diffuse * (diff * material.diffuse)`, `specular = light.specular * (spec * material.specular)`.",
+        "vulkan": "`ubo.light.ambient * ubo.material.ambient`, `normalize(ubo.light.position - fragPos)`, `ubo.light.diffuse * (…)`, `ubo.light.specular * (…)`. `viewPos` behöver `pad1` eftersom nästa medlem, en struct, börjar på en multipel av 16 byte.",
+        "d3d12": "`light.ambient * material.ambient`, `normalize(light.position - input.fragPos)`, `light.diffuse * (…)`, `light.specular * (…)`. C++: `SceneConstantBuffer { view; projection; XMFLOAT3 viewPos; float padding0; Material material; Light light; }` – 256 byte."
+      }
+    },
+    "light-color": {
+      "text": {
+        "opengl": "Låt ljusets färg ändras över tid: `lightColor = (sin(t * 2.0), sin(t * 0.7), sin(t * 1.3))` med `glfwGetTime()`, `diffuseColor = lightColor * 0.5`, `ambientColor = diffuseColor * 0.2`, satta som `light.diffuse` och `light.ambient`.",
+        "vulkan": "Låt ljusets färg ändras över tid i `updateUniformBuffer()`: `lightColor = (sin(t * 2.0), sin(t * 0.7), sin(t * 1.3))` med `glfwGetTime()` och `std::sin`, `diffuseColor = lightColor * 0.5`, `ambientColor = diffuseColor * 0.2`, lagrade i `ubo.light.diffuse` och `ubo.light.ambient`.",
+        "d3d12": "Låt ljusets färg ändras över tid i `OnUpdate`: tiden sedan första bildrutan (`static auto startTime`, `std::chrono`), `lightColor = (sin(t * 2), sin(t * 0.7), sin(t * 1.3))`, `diffuseColor = lightColor * 0.5`, `ambientColor = diffuseColor * 0.2`, lagrade i `light.diffuse` och `light.ambient`."
+      },
+      "hint": {
+        "opengl": "`glm::vec3 lightColor; lightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));` … sedan `lightingShader.setVec3(\"light.ambient\", ambientColor);` och samma för `light.diffuse`. Den spekulära delen förblir vit.",
+        "vulkan": "`lightColor.x = static_cast<float>(std::sin(glfwGetTime() * 2.0));` … `glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);` – den spekulära delen förblir vit.",
+        "d3d12": "`XMVECTOR diffuseColor = XMLoadFloat3(&lightColor) * 0.5f;`, `XMVECTOR ambientColor = diffuseColor * 0.2f;`, sedan `XMStoreFloat3(&constantBufferData.light.ambient, ambientColor);` (och `diffuse`). Den spekulära delen förblir vit."
+      }
+    }
+  }
+}

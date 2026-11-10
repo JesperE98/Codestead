@@ -1,0 +1,53 @@
+{
+  "title": "Flera ljuskällor",
+  "tasks": {
+    "dir-light": {
+      "text": {
+        "opengl": "Lägg till det riktade ljuset: en struct `DirLight`, `uniform DirLight dirLight;`, `vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)` (prototyp före `main`, kropp efter) och fas 1 `vec3 result = CalcDirLight(dirLight, norm, viewDir);`; sätt riktning (-0.2, -1.0, -0.3), ambient 0.05, diffuse 0.4, specular 0.5.",
+        "vulkan": "Lägg till det riktade ljuset: en struct `DirLight`, `DirLight dirLight;` i slutet av uniform-blocket, `CalcDirLight` (prototyp före `main`, kropp efter) och fas 1 `vec3 result = CalcDirLight(ubo.dirLight, norm, viewDir);`; i C++ `struct DirLight` med utfyllnadsfloats i slutet av `UniformBufferObject`, riktning (-0.2, -1.0, -0.3), ambient 0.05, diffuse 0.4, specular 0.5.",
+        "d3d12": "Lägg till det riktade ljuset: en struct `DirLight` i HLSL och C++, `DirLight dirLight;` i slutet av cbuffern och av `SceneConstantBuffer`, `float3 CalcDirLight(DirLight light, float3 normal, float3 viewDir, float2 texCoord)` före `PSMain` och fas 1; i `OnUpdate` riktning (-0.2, -1.0, -0.3), ambient 0.05, diffuse 0.4, specular 0.5."
+      },
+      "hint": {
+        "opengl": "Funktionen gör det som det riktade ljuset i Light casters gjorde och returnerar `ambient + diffuse + specular`. `lightingShader.setVec3(\"dirLight.direction\", -0.2f, -1.0f, -0.3f);` …",
+        "vulkan": "Funktionen gör det som det riktade ljuset i Light casters gjorde och returnerar summan av de tre termerna. C++: en utfyllnadsfloat efter varje `glm::vec3` – 64 byte.",
+        "d3d12": "Funktionen gör det som det riktade ljuset i Light casters gjorde och samplar med `texCoord`. C++: `XMFLOAT3 direction; float padding0; XMFLOAT3 ambient; float padding1; …` – 64 byte."
+      }
+    },
+    "point-lights": {
+      "text": {
+        "opengl": "Lägg till fyra punktljus: en struct `PointLight`, `#define NR_POINT_LIGHTS 4`, `uniform PointLight pointLights[NR_POINT_LIGHTS];`, `CalcPointLight` med dämpning och en loop i fas 2; i `main.cpp` learnopengls `pointLightPositions` och, för varje ljus, position, ambient 0.05, diffuse 0.8, specular 1.0, constant 1.0, linear 0.09, quadratic 0.032.",
+        "vulkan": "Lägg till fyra punktljus: en struct `PointLight`, `#define NR_POINT_LIGHTS 4`, `PointLight pointLights[NR_POINT_LIGHTS];` i blocket, `CalcPointLight` och en loop i fas 2; i C++ den globala `pointLightPositions`, `struct PointLight` (80 byte), `PointLight pointLights[4];` och en loop som sätter position, ambient 0.05, diffuse 0.8, specular 1.0, constant 1.0, linear 0.09, quadratic 0.032.",
+        "d3d12": "Lägg till fyra punktljus: en struct `PointLight` (`constantTerm`, `linearTerm`, `quadraticTerm`), `#define NR_POINT_LIGHTS 4`, `PointLight pointLights[NR_POINT_LIGHTS];` i cbuffern, `CalcPointLight` och en loop i fas 2; i `main.cpp` C++-structen `PointLight`, `PointLight pointLights[4];`, en global `pointLightPositions` och varje ljus position, ambient 0.05, diffuse 0.8, specular 1.0, termerna 1.0, 0.09 och 0.032."
+      },
+      "hint": {
+        "opengl": "Arrayelement och deras medlemmar sätts med namn: `lightingShader.setVec3(\"pointLights[0].position\", pointLightPositions[0]);`. Positioner: (0.7, 0.2, 2.0), (2.3, -3.3, -4.0), (-4.0, 2.0, -12.0), (0.0, 0.0, -3.0).",
+        "vulkan": "C++-arrayen behöver shaderns stride: `float pad1; float pad2;` efter `quadratic` och en utfyllnadsfloat efter varje färg gör `sizeof(PointLight)` till 80, std140:s stride.",
+        "d3d12": "`constantBufferData.pointLights[0].position = pointLightPositions[0];` – C++-layout som punktljuset i Light casters: `XMFLOAT3 position; float constantTerm; float linearTerm; float quadraticTerm; float padding0[2];` sedan färgerna (80 byte)."
+      }
+    },
+    "spot-light": {
+      "text": {
+        "opengl": "Lägg till ficklampan: en struct `SpotLight`, `uniform SpotLight spotLight;`, `CalcSpotLight` (dämpning × intensitet för mjuka kanter) och fas 3; sätt position `cameraPos`, riktning `cameraFront`, ambient 0, diffuse 1, specular 1, constant 1, linear 0.09, quadratic 0.032, cutOff cos(12.5°), outerCutOff cos(15°).",
+        "vulkan": "Lägg till ficklampan: en struct `SpotLight`, `SpotLight spotLight;` i blocket, `CalcSpotLight` (dämpning × intensitet för mjuka kanter) och fas 3; i C++ `struct SpotLight` (96 byte) och position `cameraPos`, riktning `cameraFront`, ambient 0, diffuse 1, specular 1, constant 1, linear 0.09, quadratic 0.032, cutOff cos(12.5°), outerCutOff cos(15°).",
+        "d3d12": "Lägg till ficklampan: en struct `SpotLight` i HLSL och C++, `SpotLight spotLight;` i cbuffern, `CalcSpotLight` (dämpning × intensitet för mjuka kanter) och fas 3; i `OnUpdate` position `cameraPos`, riktning `cameraFront`, ambient 0, diffuse 1, specular 1, termerna 1, 0.09, 0.032, cutOff cos(12.5°), outerCutOff cos(15°)."
+      },
+      "hint": {
+        "opengl": "Det är den mjuka strålkastaren från Light casters som en funktion: `intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0)`, och alla tre termerna multipliceras med `attenuation * intensity`.",
+        "vulkan": "Det är den mjuka strålkastaren från Light casters som en funktion. C++: `pad1` efter `position`; med termerna direkt efter gränsvärdena börjar `ambient` på 48 utan mer utfyllnad.",
+        "d3d12": "`XMStoreFloat3(&constantBufferData.spotLight.position, cameraPos);`, `std::cos(XMConvertToRadians(12.5f))`. C++-layout som det slutliga ljuset i Light casters: `position, padding0, direction, cutOff, outerCutOff, constantTerm, linearTerm, quadraticTerm, ambient, …`."
+      }
+    },
+    "lamps": {
+      "text": {
+        "opengl": "Rita en lampa vid varje punktljus: efter behållarna, använd `lightCubeShader` med projektion och vy, bind `lightCubeVAO` och gå i en loop igenom de fyra `pointLightPositions` och rita en kub skalad med 0.2 vid var och en.",
+        "vulkan": "Rita en lampa vid varje punktljus: bind `lightCubePipeline` i `recordCommandBuffer()` efter behållarna och skicka, i en loop över de fyra `pointLightPositions`, en modellmatris (förflytta, skala sedan med 0.2) och rita de 36 hörnen.",
+        "d3d12": "Rita en lampa vid varje punktljus: byt till `m_lightCubePipelineState` efter behållarnas loop och sätt, i en loop över de fyra `pointLightPositions`, en modellmatris (skala med 0.2, förflytta sedan) som root constants och rita 36 hörn."
+      },
+      "hint": {
+        "opengl": "`model = glm::mat4(1.0f); model = glm::translate(model, pointLightPositions[i]); model = glm::scale(model, glm::vec3(0.2f));` sedan `lightCubeShader.setMat4(\"model\", model); glDrawArrays(GL_TRIANGLES, 0, 36);`",
+        "vulkan": "Ett `vkCmdBindPipeline` före loopen; i loopen ändras bara modellmatrisen: `constants.model = model; vkCmdPushConstants(…);` sedan `vkCmdDraw`.",
+        "d3d12": "`XMMATRIX model = XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z);` – lagra den transponerad i `modelConstants.model`, sedan `SetGraphicsRoot32BitConstants(0, …)` och `DrawInstanced(36, 1, 0, 0)`."
+      }
+    }
+  }
+}

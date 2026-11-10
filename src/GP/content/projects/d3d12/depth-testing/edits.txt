@@ -1,0 +1,50 @@
+=== task: depth-always
+--- file: main.cpp
+--- find:
+        psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+--- replace:
+        psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;    // always pass the depth test: the last draw wins
+
+=== task: depth-less
+--- file: main.cpp
+--- find:
+        psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;    // always pass the depth test: the last draw wins
+--- replace:
+        psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+
+=== task: visualize-depth
+--- file: depth_testing.hlsl
+--- find:
+    return texture1.Sample(wrapSampler, input.texCoord);
+--- replace:
+    // In the pixel shader, SV_POSITION is the pixel's position in the window (x, y)
+    // and its depth (z: 0 at the near plane, 1 at the far plane), like GLSL's gl_FragCoord.
+    return float4(input.position.zzz, 1.0f);
+
+=== task: linear-depth
+--- file: depth_testing.hlsl
+--- find:
+// The pixel shader: runs once per pixel a triangle covers and returns its colour (RGBA).
+--- replace:
+// The projection's near and far planes (static const: constants of the shader itself,
+// not values in a constant buffer).
+static const float near = 0.1f;
+static const float far = 100.0f;
+
+// Turns a depth value (0..1, not linear) back into the distance from the camera. Direct3D's
+// depth is 0..1 already (OpenGL's NDC z is -1..1, so learnopengl first does z * 2.0 - 1.0).
+float LinearizeDepth(float depth)
+{
+    return (near * far) / (far - depth * (far - near));
+}
+
+// The pixel shader: runs once per pixel a triangle covers and returns its colour (RGBA).
+--- file: depth_testing.hlsl
+--- find:
+    // In the pixel shader, SV_POSITION is the pixel's position in the window (x, y)
+    // and its depth (z: 0 at the near plane, 1 at the far plane), like GLSL's gl_FragCoord.
+    return float4(input.position.zzz, 1.0f);
+--- replace:
+    // divide by far to get depth in range [0,1] for visualization purposes
+    float depth = LinearizeDepth(input.position.z) / far;
+    return float4(depth, depth, depth, 1.0f);

@@ -1,0 +1,264 @@
+=== task: kernel
+--- file: main.cpp
+--- find:
+    // TODO: the SSAO shader (shaderSSAO: ssao.vs, ssao.fs)
+--- replace:
+    Shader shaderSSAO("ssao.vs", "ssao.fs");
+--- file: main.cpp
+--- find:
+    // TODO: a framebuffer for the SSAO pass (ssaoFBO) with one 800 x 600 GL_RED colour texture (ssaoColorBuffer, GL_NEAREST)
+--- replace:
+    // also create framebuffer to hold SSAO processing stage
+    // -----------------------------------------------------
+    unsigned int ssaoFBO;
+    glGenFramebuffers(1, &ssaoFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
+    unsigned int ssaoColorBuffer;
+    // SSAO color buffer
+    glGenTextures(1, &ssaoColorBuffer);
+    glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SCR_WIDTH, SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBuffer, 0);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "SSAO Framebuffer not complete!" << std::endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+--- file: main.cpp
+--- find:
+    // TODO: generate the sample kernel (32 random samples in a hemisphere, srand(42)) and the 4 x 4 noise texture (random rotations around z)
+--- replace:
+    // generate sample kernel
+    // ----------------------
+    // (learnopengl draws its random floats with std::uniform_real_distribution and std::default_random_engine;
+    //  here rand() / (float)RAND_MAX between 0.0 and 1.0 with a fixed seed: the same kernel every run.
+    //  One random number per statement, so they are drawn in a fixed order.)
+    srand(42);
+    std::vector<glm::vec3> ssaoKernel;
+    for (unsigned int i = 0; i < 32; ++i) // 32 samples (learnopengl uses 64)
+    {
+        float x = rand() / (float)RAND_MAX * 2.0f - 1.0f;
+        float y = rand() / (float)RAND_MAX * 2.0f - 1.0f;
+        float z = rand() / (float)RAND_MAX; // a hemisphere: z only positive (along the normal)
+        glm::vec3 sample(x, y, z);
+        sample = glm::normalize(sample);
+        sample *= rand() / (float)RAND_MAX;
+        float scale = float(i) / 32.0f;
+
+        // scale samples s.t. they're more aligned to center of kernel
+        scale = ourLerp(0.1f, 1.0f, scale * scale);
+        sample *= scale;
+        ssaoKernel.push_back(sample);
+    }
+
+    // generate noise texture
+    // ----------------------
+    std::vector<glm::vec3> ssaoNoise;
+    for (unsigned int i = 0; i < 16; i++)
+    {
+        float x = rand() / (float)RAND_MAX * 2.0f - 1.0f;
+        float y = rand() / (float)RAND_MAX * 2.0f - 1.0f;
+        glm::vec3 noise(x, y, 0.0f); // rotate around z-axis (in tangent space)
+        ssaoNoise.push_back(noise);
+    }
+    unsigned int noiseTexture; glGenTextures(1, &noiseTexture);
+    glBindTexture(GL_TEXTURE_2D, noiseTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssaoNoise[0]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+--- file: main.cpp
+--- find:
+    shaderLightingPass.setInt("gAlbedo", 2);
+--- replace:
+    shaderLightingPass.setInt("gAlbedo", 2);
+    shaderLightingPass.setInt("ssao", 3);
+    shaderSSAO.use();
+    shaderSSAO.setInt("gPosition", 0);
+    shaderSSAO.setInt("gNormal", 1);
+    shaderSSAO.setInt("texNoise", 2);
+--- file: main.cpp
+--- find:
+        // TODO: 2. generate the SSAO texture (render the screen quad into ssaoFBO with shaderSSAO)
+--- replace:
+        // 2. generate SSAO texture
+        // ------------------------
+        glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
+        glClear(GL_COLOR_BUFFER_BIT);
+        shaderSSAO.use();
+        // Send kernel + rotation
+        for (unsigned int i = 0; i < 32; ++i)
+            shaderSSAO.setVec3("samples[" + std::to_string(i) + "]", ssaoKernel[i]);
+        shaderSSAO.setMat4("projection", projection);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, gPosition);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, gNormal);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, noiseTexture);
+        renderQuad();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+--- file: main.cpp
+--- find:
+        glBindTexture(GL_TEXTURE_2D, gAlbedo);
+        renderQuad();
+--- replace:
+        glBindTexture(GL_TEXTURE_2D, gAlbedo);
+        glActiveTexture(GL_TEXTURE3); // add extra SSAO texture to lighting pass
+        glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer); // for now: the SSAO texture as it comes out of the SSAO pass
+        renderQuad();
+--- file: main.cpp
+--- find:
+    glDeleteFramebuffers(1, &gBuffer);
+--- replace:
+    glDeleteFramebuffers(1, &gBuffer);
+    glDeleteTextures(1, &ssaoColorBuffer);
+    glDeleteFramebuffers(1, &ssaoFBO);
+    glDeleteTextures(1, &noiseTexture);
+--- file: ssao.fs
+--- find:
+    // TODO: the occlusion factor: a TBN matrix from the normal and the random vector, then for every kernel sample its view-space position,
+    //       projected to the screen to look up the depth stored there; count the samples behind that surface (with the range check)
+--- replace:
+    // get input for SSAO algorithm
+    vec3 fragPos = texture(gPosition, TexCoords).xyz;
+    vec3 normal = normalize(texture(gNormal, TexCoords).rgb);
+    vec3 randomVec = normalize(texture(texNoise, TexCoords * noiseScale).xyz);
+    // create TBN change-of-basis matrix: from tangent-space to view-space
+    vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
+    vec3 bitangent = cross(normal, tangent);
+    mat3 TBN = mat3(tangent, bitangent, normal);
+    // iterate over the sample kernel and calculate occlusion factor
+    float occlusion = 0.0;
+    for(int i = 0; i < kernelSize; ++i)
+    {
+        // get sample position
+        vec3 samplePos = TBN * samples[i]; // from tangent to view-space
+        samplePos = fragPos + samplePos * radius;
+
+        // project sample position (to sample texture) (to get position on screen/texture)
+        vec4 offset = vec4(samplePos, 1.0);
+        offset = projection * offset; // from view to clip-space
+        offset.xyz /= offset.w; // perspective divide
+        offset.xyz = offset.xyz * 0.5 + 0.5; // transform to range 0.0 - 1.0
+
+        // get sample depth
+        float sampleDepth = texture(gPosition, offset.xy).z; // get depth value of kernel sample
+
+        // range check & accumulate
+        float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
+        occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
+    }
+    occlusion = 1.0 - (occlusion / kernelSize);
+
+    FragColor = occlusion;
+--- file: ssao_lighting.fs
+--- find:
+uniform sampler2D gAlbedo;
+--- replace:
+uniform sampler2D gAlbedo;
+uniform sampler2D ssao;
+--- file: ssao_lighting.fs
+--- find:
+    FragColor = vec4(lighting, 1.0);
+--- replace:
+    FragColor = vec4(lighting, 1.0);
+    FragColor = vec4(vec3(texture(ssao, TexCoords).r), 1.0); // for now: show the SSAO texture
+=== task: blur
+--- file: main.cpp
+--- find:
+    // TODO: the SSAO blur shader (shaderSSAOBlur: ssao.vs, ssao_blur.fs)
+--- replace:
+    Shader shaderSSAOBlur("ssao.vs", "ssao_blur.fs");
+--- file: main.cpp
+--- find:
+        std::cout << "SSAO Framebuffer not complete!" << std::endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // TODO: a framebuffer for the blurred SSAO (ssaoBlurFBO) with one GL_RED colour texture (ssaoColorBufferBlur)
+--- replace:
+        std::cout << "SSAO Framebuffer not complete!" << std::endl;
+    // and blur stage
+    unsigned int ssaoBlurFBO;
+    glGenFramebuffers(1, &ssaoBlurFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
+    unsigned int ssaoColorBufferBlur;
+    glGenTextures(1, &ssaoColorBufferBlur);
+    glBindTexture(GL_TEXTURE_2D, ssaoColorBufferBlur);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SCR_WIDTH, SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBufferBlur, 0);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "SSAO Blur Framebuffer not complete!" << std::endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+--- file: main.cpp
+--- find:
+    shaderSSAO.setInt("texNoise", 2);
+--- replace:
+    shaderSSAO.setInt("texNoise", 2);
+    shaderSSAOBlur.use();
+    shaderSSAOBlur.setInt("ssaoInput", 0);
+--- file: main.cpp
+--- find:
+        // TODO: 3. blur the SSAO texture to remove the noise (render the screen quad into ssaoBlurFBO with shaderSSAOBlur)
+--- replace:
+        // 3. blur SSAO texture to remove noise
+        // ------------------------------------
+        glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
+        glClear(GL_COLOR_BUFFER_BIT);
+        shaderSSAOBlur.use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
+        renderQuad();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+--- file: main.cpp
+--- find:
+        glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer); // for now: the SSAO texture as it comes out of the SSAO pass
+--- replace:
+        glBindTexture(GL_TEXTURE_2D, ssaoColorBufferBlur);
+--- file: main.cpp
+--- find:
+    glDeleteFramebuffers(1, &ssaoFBO);
+--- replace:
+    glDeleteFramebuffers(1, &ssaoFBO);
+    glDeleteTextures(1, &ssaoColorBufferBlur);
+    glDeleteFramebuffers(1, &ssaoBlurFBO);
+--- file: ssao_blur.fs
+--- find:
+    // TODO: the average of the 4 x 4 texels around TexCoords (offsets -2, -1, 0, 1 texels in x and y)
+--- replace:
+    vec2 texelSize = 1.0 / vec2(textureSize(ssaoInput, 0));
+    float result = 0.0;
+    for (int x = -2; x < 2; ++x)
+    {
+        for (int y = -2; y < 2; ++y)
+        {
+            vec2 offset = vec2(float(x), float(y)) * texelSize;
+            result += texture(ssaoInput, TexCoords + offset).r;
+        }
+    }
+    FragColor = result / (4.0 * 4.0);
+=== task: apply
+--- file: main.cpp
+--- find:
+        // 4. lighting pass: traditional deferred Blinn-Phong lighting (screen-space ambient occlusion to come)
+--- replace:
+        // 4. lighting pass: traditional deferred Blinn-Phong lighting with added screen-space ambient occlusion
+--- file: ssao_lighting.fs
+--- find:
+    vec3 Diffuse = texture(gAlbedo, TexCoords).rgb;
+--- replace:
+    vec3 Diffuse = texture(gAlbedo, TexCoords).rgb;
+    float AmbientOcclusion = texture(ssao, TexCoords).r;
+--- file: ssao_lighting.fs
+--- find:
+    vec3 ambient = vec3(0.3 * Diffuse);
+--- replace:
+    vec3 ambient = vec3(0.3 * Diffuse * AmbientOcclusion);
+--- file: ssao_lighting.fs
+--- find:
+    FragColor = vec4(lighting, 1.0);
+    FragColor = vec4(vec3(texture(ssao, TexCoords).r), 1.0); // for now: show the SSAO texture
+--- replace:
+    FragColor = vec4(lighting, 1.0);

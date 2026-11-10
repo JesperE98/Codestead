@@ -1,0 +1,14 @@
+[
+  { "title": "Coordinate Systems", "url": "https://learnopengl.com/Getting-started/Coordinate-Systems", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: coordinate_systems_multiple.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/1.getting_started/6.3.coordinate_systems_multiple/coordinate_systems_multiple.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "glUniform", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glUniform.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "glDepthFunc", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDepthFunc.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Uniform buffers: Descriptor layout and buffer", "url": "https://vulkan-tutorial.com/Uniform_buffers/Descriptor_layout_and_buffer", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Uniform buffers: Descriptor pool and sets", "url": "https://vulkan-tutorial.com/Uniform_buffers/Descriptor_pool_and_sets", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Depth buffering", "url": "https://vulkan-tutorial.com/Depth_buffering", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "VkPipelineDepthStencilStateCreateInfo", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkPipelineDepthStencilStateCreateInfo.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "D3D12HelloConstBuffers sample", "url": "https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Samples/Desktop/D3D12HelloWorld/src/HelloConstBuffers", "publisher": "Microsoft (GitHub)", "api": "d3d12" },
+  { "title": "XMMatrixPerspectiveFovRH function", "url": "https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmmatrixperspectivefovrh", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Creating descriptors", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/creating-descriptors", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "ID3D12GraphicsCommandList::ClearDepthStencilView method", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-cleardepthstencilview", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

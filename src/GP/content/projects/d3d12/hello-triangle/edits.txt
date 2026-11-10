@@ -1,0 +1,243 @@
+=== task: vertex-shader
+--- file: shaders.hlsl
+--- find:
+// TODO: the vertex shader: a struct PSInput with an SV_POSITION, and a function that hands the POSITION on
+--- replace:
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+struct PSInput
+{
+    float4 position : SV_POSITION;
+};
+
+// The vertex shader: runs once per vertex.
+PSInput VSMain(float4 position : POSITION)
+{
+    PSInput result;
+
+    // The vertex buffer holds 3 floats (x, y, z) per vertex; w is filled in with 1.0.
+    result.position = position;
+
+    return result;
+}
+
+=== task: pixel-shader
+--- file: shaders.hlsl
+--- find:
+// TODO: the pixel shader: a function that returns orange (SV_TARGET)
+--- replace:
+// The pixel shader: runs once per pixel the triangle covers and returns its colour (RGBA).
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    return float4(1.0f, 0.5f, 0.2f, 1.0f);
+}
+
+=== task: root-signature
+--- file: main.cpp
+--- find:
+    // TODO: create an empty root signature (D3D12SerializeRootSignature, CreateRootSignature)
+--- replace:
+    // Create an empty root signature.
+    {
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+        ComPtr<ID3DBlob> signature;
+        ComPtr<ID3DBlob> error;
+        ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
+        ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
+    }
+
+=== task: pipeline
+--- file: main.cpp
+--- find:
+    // TODO: compile the shaders and create the pipeline state object (D3DCompileFromFile, CreateGraphicsPipelineState)
+--- replace:
+    // Create the pipeline state, which includes compiling and loading shaders.
+    {
+        ComPtr<ID3DBlob> vertexShader;
+        ComPtr<ID3DBlob> pixelShader;
+
+#if defined(_DEBUG)
+        // Enable better shader debugging with the graphics debugging tools.
+        UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#else
+        UINT compileFlags = 0;
+#endif
+
+        // Compile the vertex shader (VSMain) and the pixel shader (PSMain) in shaders.hlsl.
+        ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+
+        // Define the vertex input layout.
+        D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
+        {
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+        };
+
+        // Describe and create the graphics pipeline state object (PSO).
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+        psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
+        psoDesc.pRootSignature = m_rootSignature.Get();
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
+        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        psoDesc.DepthStencilState.StencilEnable = FALSE;
+        psoDesc.SampleMask = UINT_MAX;
+        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        psoDesc.NumRenderTargets = 1;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.SampleDesc.Count = 1;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+    }
+--- file: main.cpp
+--- find:
+    ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_commandList)));
+--- replace:
+    ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)));
+
+=== task: vertex-buffer
+--- file: main.cpp
+--- find:
+    // TODO: create the vertex buffer with the triangle's three vertices (CreateCommittedResource, Map, memcpy)
+--- replace:
+    // Create the vertex buffer.
+    {
+        // Define the geometry for a triangle: top, bottom right, bottom left.
+        // That is clockwise on screen: a front face, which the default rasterizer state draws.
+        Vertex vertices[] =
+        {
+            { { 0.0f, 0.5f, 0.0f } },
+            { { 0.5f, -0.5f, 0.0f } },
+            { { -0.5f, -0.5f, 0.0f } }
+        };
+
+        const UINT vertexBufferSize = sizeof(vertices);
+
+        // Note: using upload heaps to transfer static data like vert buffers is not
+        // recommended. Every time the GPU needs it, the upload heap will be marshalled
+        // over. Please read up on Default Heap usage. An upload heap is used here for
+        // code simplicity and because there are very few verts to actually transfer.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_vertexBuffer)));
+
+        // Copy the vertex data to the vertex buffer.
+        UINT8* pVertexDataBegin = nullptr;
+        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+        ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+        memcpy(pVertexDataBegin, vertices, sizeof(vertices));
+        m_vertexBuffer->Unmap(0, nullptr);
+
+        // Initialize the vertex buffer view.
+        m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+        m_vertexBufferView.StrideInBytes = sizeof(Vertex);
+        m_vertexBufferView.SizeInBytes = vertexBufferSize;
+    }
+
+=== task: draw
+--- file: main.cpp
+--- find:
+    // TODO: set the root signature, the viewport and the scissor rectangle
+--- replace:
+    // Set necessary state.
+    m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    m_commandList->RSSetViewports(1, &m_viewport);
+    m_commandList->RSSetScissorRects(1, &m_scissorRect);
+--- file: main.cpp
+--- find:
+    // TODO: bind the back buffer as the render target (OMSetRenderTargets)
+--- replace:
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+--- file: main.cpp
+--- find:
+    // TODO: draw the triangle (IASetPrimitiveTopology, IASetVertexBuffers, DrawInstanced)
+--- replace:
+    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+    m_commandList->DrawInstanced(3, 1, 0, 0);
+
+=== task: rectangle-vertices
+--- file: main.cpp
+--- find:
+        // Define the geometry for a triangle: top, bottom right, bottom left.
+        // That is clockwise on screen: a front face, which the default rasterizer state draws.
+        Vertex vertices[] =
+        {
+            { { 0.0f, 0.5f, 0.0f } },
+            { { 0.5f, -0.5f, 0.0f } },
+            { { -0.5f, -0.5f, 0.0f } }
+        };
+--- replace:
+        // Define the four corners of a rectangle.
+        Vertex vertices[] =
+        {
+            { { 0.5f, 0.5f, 0.0f } },     // top right
+            { { 0.5f, -0.5f, 0.0f } },    // bottom right
+            { { -0.5f, -0.5f, 0.0f } },   // bottom left
+            { { -0.5f, 0.5f, 0.0f } }     // top left
+        };
+
+=== task: index-buffer
+--- file: main.cpp
+--- find:
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+--- replace:
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+    ComPtr<ID3D12Resource> m_indexBuffer;
+    D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};
+--- file: main.cpp
+--- find:
+    // Create synchronization objects.
+--- replace:
+    // Create the index buffer.
+    {
+        // The rectangle's two triangles, as indices into the vertex buffer. Both are
+        // clockwise on screen (front faces): top right, bottom right, top left and
+        // bottom right, bottom left, top left.
+        UINT indices[] =
+        {
+            0, 1, 3,   // first triangle
+            1, 2, 3    // second triangle
+        };
+
+        const UINT indexBufferSize = sizeof(indices);
+
+        // An upload heap again, like the vertex buffer.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_indexBuffer)));
+
+        // Copy the indices to the index buffer.
+        UINT8* pIndexDataBegin = nullptr;
+        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+        ThrowIfFailed(m_indexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
+        memcpy(pIndexDataBegin, indices, sizeof(indices));
+        m_indexBuffer->Unmap(0, nullptr);
+
+        // Initialize the index buffer view: 32-bit indices (UINT).
+        m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
+        m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+        m_indexBufferView.SizeInBytes = indexBufferSize;
+    }
+
+    // Create synchronization objects.
+--- file: main.cpp
+--- find:
+    m_commandList->DrawInstanced(3, 1, 0, 0);
+--- replace:
+    m_commandList->IASetIndexBuffer(&m_indexBufferView);
+    m_commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);

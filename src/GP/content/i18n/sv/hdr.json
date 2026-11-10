@@ -1,0 +1,37 @@
+{
+  "title": "HDR",
+  "tasks": {
+    "float-buffer": {
+      "text": {
+        "opengl": "Rendera tunneln i en framebuffer vars färgbuffer är en flyttalstextur (`GL_RGBA16F`, värden över 1.0 behålls), och rita sedan den texturen på fönstret på en skärmfyrhörning med `hdr.fs`, som bara gammakorrigerar. Flytta gammakorrigeringen från `lighting.fs` till `hdr.fs`.",
+        "vulkan": "Rendera tunneln i en flyttalsbild (`VK_FORMAT_R16G16B16A16_SFLOAT`, värden över 1.0 behålls) med egen render pass, djupbild och framebuffer, och rita sedan den bilden på fönstret på en skärmfyrhörning med `hdr.frag`, som bara gammakorrigerar. Flytta gammakorrigeringen från `lighting.frag` till `hdr.frag`.",
+        "d3d12": "Rendera tunneln i en flyttalsfärgbuffer (`DXGI_FORMAT_R16G16B16A16_FLOAT`, värden över 1.0 behålls) i stället för back buffern, och rita sedan den buffern på fönstret på en skärmfyrhörning vars pixel shader (`hdr.hlsl`) bara gammakorrigerar. Flytta gammakorrigeringen från `lighting.hlsl` till `hdr.hlsl`."
+      },
+      "hint": {
+        "opengl": "`glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);` för `colorBuffer`, en renderbuffer med `GL_DEPTH_COMPONENT`, båda inkopplade i `hdrFBO`. I loopen: bind `hdrFBO` och rensa före tunneln; efter den bind 0, rensa, `hdrShader.use()`, bind `colorBuffer` till enhet 0, `renderQuad()`. `lighting.fs`: `FragColor = vec4(ambient + lighting, 1.0);`. `hdr.fs`: `vec3 hdrColor = texture(hdrBuffer, TexCoords).rgb; vec3 result = pow(hdrColor, vec3(1.0 / gamma));`.",
+        "vulkan": "Fyrhörningen: learnopengls `quadVertices` som 6 vertex (36..41), texturkoordinaterna oförändrade. `createHdrRenderPass()`: som `createRenderPass()`, färgformat `VK_FORMAT_R16G16B16A16_SFLOAT`, storeOp STORE, `finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`, två subpass dependencies. `createHdrFramebuffer()`: färgbilden med `VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT`, en djupbild, `vkCreateFramebuffer`. Scenens pipeline med `hdrRenderPass`, `hdrPipeline` med `renderPass`; `createDescriptorSet(hdrColorImageView, textureSampler, hdrDescriptorSet)` (poolen: 2 set). Spela in pass 1 (`hdrRenderPass`) runt tunneln, sedan pass 2 med `hdrPipeline` och `vkCmdDraw(commandBuffer, 6, 1, 36, 0)`.",
+        "d3d12": "`Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)`, skapad i `PIXEL_SHADER_RESOURCE` med en `CD3DX12_CLEAR_VALUE`; RTV på plats `FrameCount` (heap `FrameCount + 1`), SRV på plats 2 (heap 3). Scenens PSO: `RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT`; `m_hdrPipelineState`: `hdr.hlsl`, `R8G8B8A8_UNORM`, `DepthEnable = FALSE`, `DSVFormat = DXGI_FORMAT_UNKNOWN`. Barriärer PIXEL_SHADER_RESOURCE ↔ RENDER_TARGET runt pass 1; pass 2: back buffern utan DSV, tabell 2 = plats 2, `DrawInstanced(6, 1, 36, 0)`."
+      }
+    },
+    "reinhard": {
+      "text": "Tone mappa HDR-färgen med Reinhard före gammakorrigeringen: `hdrColor / (hdrColor + 1.0)` avbildar 0..∞ på 0..1.",
+      "hint": {
+        "opengl": "I `hdr.fs`: `vec3 result = hdrColor / (hdrColor + vec3(1.0));` sedan `result = pow(result, vec3(1.0 / gamma));`.",
+        "vulkan": "I `hdr.frag`: `vec3 result = hdrColor / (hdrColor + vec3(1.0));` sedan `result = pow(result, vec3(1.0 / gamma));`.",
+        "d3d12": "I `hdr.hlsl`: `float3 result = hdrColor / (hdrColor + float3(1.0f, 1.0f, 1.0f));` sedan `result = pow(result, 1.0f / gamma);`."
+      }
+    },
+    "exposure": {
+      "text": {
+        "opengl": "Ersätt Reinhard med learnopengls exponerings-tone mapping `1.0 - exp(-hdrColor * exposure)`, med en uniform `exposure` som sätts till 1.0 från `main.cpp` (behåll Reinhard-raden som kommentar).",
+        "vulkan": "Ersätt Reinhard med learnopengls exponerings-tone mapping `1.0 - exp(-hdrColor * exposure)`, med en `exposure` på 1.0 som skickas via uniformbuffern (behåll Reinhard-raden som kommentar).",
+        "d3d12": "Ersätt Reinhard med learnopengls exponerings-tone mapping `1.0 - exp(-hdrColor * exposure)`, med en `exposure` på 1.0 som skickas som root constant (behåll Reinhard-raden som kommentar)."
+      },
+      "hint": {
+        "opengl": "`main.cpp`: en global `float exposure = 1.0f;` och `hdrShader.setFloat(\"exposure\", exposure);` före `renderQuad()`. `hdr.fs`: `uniform float exposure;` och `vec3 result = vec3(1.0) - exp(-hdrColor * exposure);`.",
+        "vulkan": "En global `float exposure = 1.0f;`; `float exposure;` på `pad1`:s plats i `UniformBufferObject`; `ubo.exposure = exposure;`. `hdr.frag`: uniformblocket på binding 0 med samma medlemmar fram till `float exposure;`, och `vec3 result = vec3(1.0) - exp(-hdrColor * ubo.exposure);`.",
+        "d3d12": "En global `float exposure = 1.0f;`, `struct HdrConstants { float exposure; };`, root-parameter 0 med `D3D12_SHADER_VISIBILITY_ALL`, och före fyrhörningens draw `SetGraphicsRoot32BitConstants(0, sizeof(HdrConstants) / 4, &hdrConstants, 0)`. `hdr.hlsl`: `cbuffer HdrConstants : register(b0) { float exposure; };` och `float3 result = float3(1.0f, 1.0f, 1.0f) - exp(-hdrColor * exposure);`."
+      }
+    }
+  }
+}

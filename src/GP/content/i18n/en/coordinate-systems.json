@@ -1,0 +1,117 @@
+{
+  "title": "Coordinate Systems",
+  "tasks": {
+    "uniform-buffer": {
+      "text": {
+        "vulkan": "Create the uniform buffer: `struct UniformBufferObject { glm::mat4 view; glm::mat4 proj; };`, the members `uniformBuffer`, `uniformBufferMemory` and `void* uniformBufferMapped`; in `createUniformBuffers()` create it with `createBuffer(sizeof(UniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, HOST_VISIBLE | HOST_COHERENT, …)` and keep it mapped with `vkMapMemory(…, &uniformBufferMapped)`; destroy the buffer and free its memory in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Map it once and keep the pointer (\"persistent mapping\") – cheaper than mapping every frame. Freeing the memory unmaps it. The picture doesn't change yet."
+      }
+    },
+    "uniform-descriptor": {
+      "text": {
+        "vulkan": "Make the buffer visible to the vertex shader: a `VkDescriptorSetLayoutBinding uboLayoutBinding` (binding 2, 1 descriptor, `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER`, `VK_SHADER_STAGE_VERTEX_BIT`) as the third of `bindings`; a second pool size for one uniform buffer; and in `createDescriptorSets()` a `VkDescriptorBufferInfo bufferInfo` and a third write `descriptorWrites[2]` (binding 2, `pBufferInfo = &bufferInfo`)."
+      },
+      "hint": {
+        "vulkan": "`bufferInfo.range = sizeof(UniformBufferObject)`. The arrays grow: `std::array<…, 3>` for the bindings and writes, `std::array<VkDescriptorPoolSize, 2>` for the pool. The set is already bound in `recordCommandBuffer()`."
+      }
+    },
+    "constant-buffer": {
+      "text": {
+        "d3d12": "Create the constant buffer: `struct SceneConstantBuffer { XMFLOAT4X4 view; XMFLOAT4X4 projection; float padding[32]; };` with a `static_assert` on 256-byte size, members `m_constantBuffer` and `UINT8* m_pCbvDataBegin`, 3 descriptors in the CBV/SRV heap, and at the end of `LoadAssets()` an upload-heap buffer, its CBV in the heap's third slot (offset 2) and a `Map` that is never undone."
+      },
+      "hint": {
+        "d3d12": "A CBV must cover a multiple of 256 bytes: two matrices are 128, the padding makes 256. `CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);` – slots 0 and 1 are the textures."
+      }
+    },
+    "view-projection": {
+      "text": {
+        "d3d12": "Use the constant buffer: a CBV range `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1)` and root parameter 2 as a descriptor table for the vertex shader; in `OnUpdate()` the view (`XMMatrixTranslation(0.0f, 0.0f, -3.0f)`) and projection (`XMMatrixPerspectiveFovRH`, 45°, `m_width / m_height`, 0.1, 100) stored transposed and `memcpy`'d to `m_pCbvDataBegin`; `SetGraphicsRootDescriptorTable(2, …)` with slot 2; in the shader `cbuffer SceneConstantBuffer : register(b1)` and `mul(mul(mul(position, model), view), projection)`."
+      },
+      "hint": {
+        "d3d12": "`b0` is the root constants, so the CBV is `b1`. Use `CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize)`. The crate gets smaller and square: the aspect ratio undoes the window's 4:3 stretch."
+      }
+    },
+    "plane": {
+      "text": {
+        "opengl": "Add `uniform mat4 model;`, `view` and `projection` to the vertex shader and compute `gl_Position = projection * view * model * vec4(aPos, 1.0);`; in the render loop create the three matrices (model: rotate -55° about x, view: translate by (0, 0, -3), projection: `glm::perspective`, 45°, 800/600, 0.1, 100) and pass them with `ourShader.setMat4`.",
+        "vulkan": "Look at the rectangle as a tilted floor: `#define GLM_FORCE_DEPTH_ZERO_TO_ONE` before `#include <glm/glm.hpp>`; in `updateUniformBuffer()` fill a `UniformBufferObject` (view: translate by (0, 0, -3), proj: `glm::perspective`, 45°, extent aspect, 0.1, 100, then `ubo.proj[1][1] *= -1;`) and `memcpy` it to `uniformBufferMapped`; push the model matrix (rotate -55° about x) before the draw; in `shader.vert` declare the uniform block (binding 2) and the push constant block and compute `gl_Position = ubo.proj * ubo.view * pc.model * vec4(inPosition, 1.0);` without the y flip.",
+        "d3d12": "Tilt the rectangle back like a floor: `XMMATRIX model = XMMatrixRotationX(XMConvertToRadians(-55.0f));`."
+      },
+      "hint": {
+        "opengl": "Read the multiplication from right to left: model first, projection last. Initialise each matrix with `glm::mat4(1.0f)`. Moving the camera back is the same as moving the scene forward (-z).",
+        "vulkan": "`proj[1][1] *= -1` flips y in the projection, so the shader's `gl_Position.y = -gl_Position.y;` must go – with both flips the plane is upside down and culled. Without the define the near half of the depth range would be clipped.",
+        "d3d12": "Rotating about x by -55° moves the top edge away from the camera and the bottom edge towards it; the perspective makes the far edge shorter."
+      }
+    },
+    "cube": {
+      "text": {
+        "opengl": "Replace the rectangle with learnopengl's cube: 36 vertices (position + texture coordinates), remove the element buffer (`indices`, `EBO`) and draw with `glDrawArrays(GL_TRIANGLES, 0, 36)`.",
+        "vulkan": "Replace the rectangle with learnopengl's cube: 36 vertices (texture coordinates with v flipped), remove the index buffer (`indices`, its members, `createIndexBuffer()` and its call, its cleanup, `vkCmdBindIndexBuffer`), draw with `vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);` and set `rasterizer.cullMode = VK_CULL_MODE_NONE;`.",
+        "d3d12": "Replace the rectangle with learnopengl's cube: 36 vertices (texture coordinates with v flipped to `1 - v`), remove the index buffer (its block, `m_indexBuffer`, `m_indexBufferView`, `IASetIndexBuffer`), draw with `m_commandList->DrawInstanced(36, 1, 0, 0);` and set `psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;`."
+      },
+      "hint": {
+        "opengl": "Copy the vertices from the chapter. The layout (5 floats per vertex) and the attribute pointers stay. Remove `glGenBuffers(1, &EBO)`, the `GL_ELEMENT_ARRAY_BUFFER` binding and upload, and `glDeleteBuffers(1, &EBO)`.",
+        "vulkan": "Every face has its own 6 vertices, so an index buffer would save little. The cube's triangles aren't all wound the same way – with back-face culling some faces would vanish.",
+        "d3d12": "No indices this time, like learnopengl's `glDrawArrays`. The cube mixes clockwise and counter-clockwise triangles, and Direct3D culls back faces by default – so culling goes off."
+      }
+    },
+    "spin": {
+      "text": {
+        "opengl": "Let the cube rotate with time: `model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));` instead of the -55° rotation.",
+        "vulkan": "Let the cube rotate with time: `model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));` instead of the -55° rotation.",
+        "d3d12": "Let the cube rotate with time: compute `time` with `std::chrono` (a `static` `startTime`) and use `XMMATRIX model = XMMatrixRotationAxis(XMVectorSet(0.5f, 1.0f, 0.0f, 0.0f), time);`."
+      },
+      "hint": {
+        "opengl": "`glm::rotate` normalises the axis for you. Without depth testing the cube looks wrong – some back faces are drawn over front ones. That's the next task.",
+        "vulkan": "`glm::rotate` normalises the axis for you. Without depth testing the cube looks wrong – some back faces are drawn over front ones.",
+        "d3d12": "`XMMatrixRotationAxis` normalises the axis itself; the angle is in radians (one turn in about 6.3 s). Without depth testing the cube still looks wrong."
+      }
+    },
+    "depth-image": {
+      "text": {
+        "vulkan": "Create the depth buffer: members `depthImage`, `depthImageMemory`, `depthImageView`; `findSupportedFormat()` and `findDepthFormat()`; in `createDepthResources()` a `VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT` image of the swap chain's size in device-local memory and its view with `VK_IMAGE_ASPECT_DEPTH_BIT` – give `createImageView()` a third parameter `VkImageAspectFlags aspectFlags` (the other views pass `VK_IMAGE_ASPECT_COLOR_BIT`); destroy all three in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Candidates: `VK_FORMAT_D32_SFLOAT`, `VK_FORMAT_D32_SFLOAT_S8_UINT`, `VK_FORMAT_D24_UNORM_S8_UINT` with `VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT`, optimal tiling. One depth image is enough: one frame at a time. The picture doesn't change yet."
+      }
+    },
+    "depth-test": {
+      "text": {
+        "opengl": "Enable depth testing with `glEnable(GL_DEPTH_TEST);` (once, after GLAD is loaded) and clear the depth buffer every frame: `glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);`.",
+        "vulkan": "Use the depth image: a `depthAttachment` in `createRenderPass()` (loadOp `CLEAR`, storeOp `DONT_CARE`, `UNDEFINED` → `DEPTH_STENCIL_ATTACHMENT_OPTIMAL`), `depthAttachmentRef` (attachment 1) as `subpass.pDepthStencilAttachment`, the extended dependency, both attachments in the render pass and in each framebuffer; a `VkPipelineDepthStencilStateCreateInfo` (test and write on, `VK_COMPARE_OP_LESS`) in the pipeline; and two clear values (the colour, then `depthStencil = {1.0f, 0}`).",
+        "d3d12": "Add a depth buffer: a DSV heap (1 descriptor) in `LoadPipeline()`; in `LoadAssets()` a `DXGI_FORMAT_D32_FLOAT` texture of the window's size (default heap, `ALLOW_DEPTH_STENCIL`, `DEPTH_WRITE`, clear value 1.0) and its DSV; in the PSO `CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT)` and `DSVFormat = DXGI_FORMAT_D32_FLOAT`; in `PopulateCommandList()` `OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle)` and `ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr)`."
+      },
+      "hint": {
+        "opengl": "Without clearing, the depth values of the last frame would hide this frame's fragments.",
+        "vulkan": "The clear values are in attachment order. Depth 1.0 is the far plane, so the first fragment always passes and then only nearer ones (LESS). The dependency adds the early/late fragment test stages and `VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT`.",
+        "d3d12": "Replace the PSO's `DepthEnable = FALSE` / `StencilEnable = FALSE` lines with the default state (test on, `LESS`). Clear to 1.0, the far plane, every frame. The PSO must know the DSV's format."
+      }
+    },
+    "ten-cubes": {
+      "text": {
+        "opengl": "Draw ten cubes: add learnopengl's `glm::vec3 cubePositions[]` and, in the loop, for every `i` build a model matrix – translate to `cubePositions[i]`, rotate by `20.0f * i` degrees about (1.0, 0.3, 0.5) – set it and call `glDrawArrays`. View and projection are set once per frame, before the loop.",
+        "vulkan": "Draw ten cubes: a global `const std::vector<glm::vec3> cubePositions` with learnopengl's ten positions, and in `recordCommandBuffer()` a loop `for (unsigned int i = 0; i < 10; i++)` that translates to `cubePositions[i]`, rotates by `glm::radians(20.0f * i)` about (1.0, 0.3, 0.5), pushes the matrix and calls `vkCmdDraw`.",
+        "d3d12": "Draw ten cubes: a local `XMFLOAT3 cubePositions[]` with learnopengl's ten positions and a loop `for (UINT i = 0; i < 10; i++)` with `XMMatrixRotationAxis(XMVectorSet(1.0f, 0.3f, 0.5f, 0.0f), XMConvertToRadians(20.0f * i)) * XMMatrixTranslation(…)` as the model matrix, set as root constants before each `DrawInstanced(36, 1, 0, 0)`; the time lines go."
+      },
+      "hint": {
+        "opengl": "`glm::mat4 model = glm::mat4(1.0f); model = glm::translate(model, cubePositions[i]); float angle = 20.0f * i; model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f)); ourShader.setMat4(\"model\", model);`",
+        "vulkan": "Each `vkCmdPushConstants` changes the model matrix for the draws after it; view and projection stay in the uniform buffer.",
+        "d3d12": "With row vectors, rotation * translation rotates first and then moves – learnopengl's `translate` then `rotate` in GLM. Root constants are recorded with each draw, so every cube keeps its own."
+      }
+    },
+    "rotate-every-third": {
+      "text": {
+        "opengl": "Exercise 3: make every 3rd cube (including the first) rotate over time – after `float angle = 20.0f * i;` add `if (i % 3 == 0) angle = (float)glfwGetTime() * 25.0f;`.",
+        "vulkan": "Exercise 3: make every 3rd cube (including the first) rotate over time – after `float angle = 20.0f * i;` add `if (i % 3 == 0) { angle = (float)glfwGetTime() * 25.0f; }`.",
+        "d3d12": "Exercise 3: make every 3rd cube (including the first) rotate over time – bring back the `time` lines before the cube positions, and after `float angle = 20.0f * i;` add `if (i % 3 == 0) angle = time * 25.0f;`."
+      },
+      "hint": {
+        "opengl": "Cubes 0, 3, 6 and 9 now turn 25° per second; the others keep their fixed angle.",
+        "vulkan": "Cubes 0, 3, 6 and 9 now turn 25° per second; the others keep their fixed angle.",
+        "d3d12": "Cubes 0, 3, 6 and 9 now turn 25° per second. The angle stays in degrees – `XMConvertToRadians(angle)` converts it."
+      }
+    }
+  }
+}

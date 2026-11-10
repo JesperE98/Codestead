@@ -1,0 +1,430 @@
+=== task: map-buffer
+--- file: main.cpp
+--- find:
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+--- replace:
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+    ComPtr<ID3D12Resource> m_floorVertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW m_floorVertexBufferView = {};
+--- file: main.cpp
+--- find:
+        // One vertex buffer for all the objects of the scene: the cube (36 vertices: 6 faces
+        // of 2 triangles) and then the floor (6 vertices). A draw picks its object with the
+        // first vertex it starts from. The texture coordinates are learnopengl.com's with v
+        // flipped (1 - v; the floor's 2 - v): Direct3D's v = 0 is the image's top.
+--- replace:
+        // The cube's vertex buffer (36 vertices: 6 faces of 2 triangles). The texture
+        // coordinates are learnopengl.com's with v flipped (1 - v): Direct3D's v = 0 is the
+        // image's top.
+--- file: main.cpp
+--- find:
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } },
+
+            // the floor: vertices 36 to 41 - two triangles at y = -0.5. Texture coordinates
+            // up to 2 (with the sampler's WRAP mode): the floor texture repeats twice.
+            { {  5.0f, -0.5f,  5.0f }, { 2.0f, 2.0f } },
+            { { -5.0f, -0.5f,  5.0f }, { 0.0f, 2.0f } },
+            { { -5.0f, -0.5f, -5.0f }, { 0.0f, 0.0f } },
+
+            { {  5.0f, -0.5f,  5.0f }, { 2.0f, 2.0f } },
+            { { -5.0f, -0.5f, -5.0f }, { 0.0f, 0.0f } },
+            { {  5.0f, -0.5f, -5.0f }, { 2.0f, 0.0f } }
+--- replace:
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } }
+--- file: main.cpp
+--- find:
+    // TODO: give the floor its own vertex buffer (m_floorVertexBuffer): an upload heap filled through a pointer from Map, memcpy and Unmap
+--- replace:
+    // Create the floor's vertex buffer: a buffer of its own (learnopengl's planeVBO).
+    {
+        Vertex planeVertices[] =
+        {
+            // two triangles at y = -0.5. Texture coordinates up to 2 (with the sampler's WRAP
+            // mode): the floor texture repeats twice. v flipped: 2 - v.
+            { {  5.0f, -0.5f,  5.0f }, { 2.0f, 2.0f } },
+            { { -5.0f, -0.5f,  5.0f }, { 0.0f, 2.0f } },
+            { { -5.0f, -0.5f, -5.0f }, { 0.0f, 0.0f } },
+            { {  5.0f, -0.5f,  5.0f }, { 2.0f, 2.0f } },
+            { { -5.0f, -0.5f, -5.0f }, { 0.0f, 0.0f } },
+            { {  5.0f, -0.5f, -5.0f }, { 2.0f, 0.0f } }
+        };
+
+        const UINT planeVertexBufferSize = sizeof(planeVertices);
+
+        // An upload heap: memory the CPU can write and the GPU can read.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(planeVertexBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_floorVertexBuffer)));
+
+        // Map gives a CPU pointer to the buffer's memory (learnopengl: glMapBuffer). The read
+        // range (0, 0) says that the CPU reads nothing from it.
+        UINT8* pPlaneDataBegin = nullptr;
+        CD3DX12_RANGE readRange(0, 0);
+        ThrowIfFailed(m_floorVertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pPlaneDataBegin)));
+        // Write through the pointer: copy the vertices in.
+        memcpy(pPlaneDataBegin, planeVertices, sizeof(planeVertices));
+        // Done: Unmap (learnopengl: glUnmapBuffer); the pointer is no longer valid. The written
+        // range tells the driver which bytes the CPU changed: all of them.
+        CD3DX12_RANGE writtenRange(0, sizeof(planeVertices));
+        m_floorVertexBuffer->Unmap(0, &writtenRange);
+
+        // TODO: copy the floor's vertices into a second buffer (m_floorCopyBuffer, in a default heap) with CopyBufferRegion and draw from the copy
+
+        // Initialize the vertex buffer view.
+        m_floorVertexBufferView.BufferLocation = m_floorVertexBuffer->GetGPUVirtualAddress();
+        m_floorVertexBufferView.StrideInBytes = sizeof(Vertex);
+        m_floorVertexBufferView.SizeInBytes = planeVertexBufferSize;
+    }
+--- file: main.cpp
+--- find:
+    // floor: the metal texture, no model transformation, 6 vertices from vertex 36 on
+    m_commandList->SetGraphicsRootDescriptorTable(2, floorTexture);
+--- replace:
+    // floor: its own vertex buffer, the metal texture, no model transformation, its 6 vertices
+    m_commandList->IASetVertexBuffers(0, 1, &m_floorVertexBufferView);
+    m_commandList->SetGraphicsRootDescriptorTable(2, floorTexture);
+--- file: main.cpp
+--- find:
+    m_commandList->DrawInstanced(6, 1, 36, 0);
+--- replace:
+    m_commandList->DrawInstanced(6, 1, 0, 0);
+
+=== task: batched-attributes
+--- file: main.cpp
+--- find:
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+--- replace:
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferViews[2] = {};    // input slot 0: positions, slot 1: texture coordinates
+--- file: main.cpp
+--- find:
+    D3D12_VERTEX_BUFFER_VIEW m_floorVertexBufferView = {};
+--- replace:
+    D3D12_VERTEX_BUFFER_VIEW m_floorVertexBufferViews[2] = {};
+--- file: main.cpp
+--- find:
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+--- replace:
+            // the positions from input slot 0, the texture coordinates from input slot 1 (the
+            // fourth value): each slot has a vertex buffer view of its own
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+--- file: main.cpp
+--- find:
+        // The cube's vertex buffer (36 vertices: 6 faces of 2 triangles). The texture
+        // coordinates are learnopengl.com's with v flipped (1 - v): Direct3D's v = 0 is the
+        // image's top.
+        // TODO: store the cube's data batched: all positions first, then all texture coordinates (111222 instead of 123123)
+        Vertex vertices[] =
+        {
+            // the cube: vertices 0 to 35
+            // positions               texture coords
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f } },
+
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f } },
+            { { -0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+
+            { { -0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { { -0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { { -0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { { -0.5f,  0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } }
+        };
+
+        const UINT vertexBufferSize = sizeof(vertices);
+--- replace:
+        // The cube's vertex buffer (36 vertices: 6 faces of 2 triangles), batched: first all
+        // the positions, then all the texture coordinates (111222 instead of 123123). The
+        // texture coordinates are learnopengl.com's with v flipped (1 - v): Direct3D's v = 0
+        // is the image's top.
+        XMFLOAT3 cubePositions[] =
+        {
+            { -0.5f, -0.5f, -0.5f },
+            {  0.5f, -0.5f, -0.5f },
+            {  0.5f,  0.5f, -0.5f },
+            {  0.5f,  0.5f, -0.5f },
+            { -0.5f,  0.5f, -0.5f },
+            { -0.5f, -0.5f, -0.5f },
+
+            { -0.5f, -0.5f,  0.5f },
+            {  0.5f, -0.5f,  0.5f },
+            {  0.5f,  0.5f,  0.5f },
+            {  0.5f,  0.5f,  0.5f },
+            { -0.5f,  0.5f,  0.5f },
+            { -0.5f, -0.5f,  0.5f },
+
+            { -0.5f,  0.5f,  0.5f },
+            { -0.5f,  0.5f, -0.5f },
+            { -0.5f, -0.5f, -0.5f },
+            { -0.5f, -0.5f, -0.5f },
+            { -0.5f, -0.5f,  0.5f },
+            { -0.5f,  0.5f,  0.5f },
+
+            {  0.5f,  0.5f,  0.5f },
+            {  0.5f,  0.5f, -0.5f },
+            {  0.5f, -0.5f, -0.5f },
+            {  0.5f, -0.5f, -0.5f },
+            {  0.5f, -0.5f,  0.5f },
+            {  0.5f,  0.5f,  0.5f },
+
+            { -0.5f, -0.5f, -0.5f },
+            {  0.5f, -0.5f, -0.5f },
+            {  0.5f, -0.5f,  0.5f },
+            {  0.5f, -0.5f,  0.5f },
+            { -0.5f, -0.5f,  0.5f },
+            { -0.5f, -0.5f, -0.5f },
+
+            { -0.5f,  0.5f, -0.5f },
+            {  0.5f,  0.5f, -0.5f },
+            {  0.5f,  0.5f,  0.5f },
+            {  0.5f,  0.5f,  0.5f },
+            { -0.5f,  0.5f,  0.5f },
+            { -0.5f,  0.5f, -0.5f }
+        };
+        XMFLOAT2 cubeTexCoords[] =
+        {
+            { 0.0f, 1.0f },
+            { 1.0f, 1.0f },
+            { 1.0f, 0.0f },
+            { 1.0f, 0.0f },
+            { 0.0f, 0.0f },
+            { 0.0f, 1.0f },
+
+            { 0.0f, 1.0f },
+            { 1.0f, 1.0f },
+            { 1.0f, 0.0f },
+            { 1.0f, 0.0f },
+            { 0.0f, 0.0f },
+            { 0.0f, 1.0f },
+
+            { 1.0f, 1.0f },
+            { 1.0f, 0.0f },
+            { 0.0f, 0.0f },
+            { 0.0f, 0.0f },
+            { 0.0f, 1.0f },
+            { 1.0f, 1.0f },
+
+            { 1.0f, 1.0f },
+            { 1.0f, 0.0f },
+            { 0.0f, 0.0f },
+            { 0.0f, 0.0f },
+            { 0.0f, 1.0f },
+            { 1.0f, 1.0f },
+
+            { 0.0f, 0.0f },
+            { 1.0f, 0.0f },
+            { 1.0f, 1.0f },
+            { 1.0f, 1.0f },
+            { 0.0f, 1.0f },
+            { 0.0f, 0.0f },
+
+            { 0.0f, 0.0f },
+            { 1.0f, 0.0f },
+            { 1.0f, 1.0f },
+            { 1.0f, 1.0f },
+            { 0.0f, 1.0f },
+            { 0.0f, 0.0f }
+        };
+
+        const UINT vertexBufferSize = sizeof(cubePositions) + sizeof(cubeTexCoords);
+--- file: main.cpp
+--- find:
+        memcpy(pVertexDataBegin, vertices, sizeof(vertices));
+        m_vertexBuffer->Unmap(0, nullptr);
+
+        // Initialize the vertex buffer view.
+        m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+        m_vertexBufferView.StrideInBytes = sizeof(Vertex);
+        m_vertexBufferView.SizeInBytes = vertexBufferSize;
+--- replace:
+        // The two blocks one after the other: the positions at the start, the texture
+        // coordinates right after them (learnopengl: two glBufferSubData calls).
+        memcpy(pVertexDataBegin, cubePositions, sizeof(cubePositions));
+        memcpy(pVertexDataBegin + sizeof(cubePositions), cubeTexCoords, sizeof(cubeTexCoords));
+        m_vertexBuffer->Unmap(0, nullptr);
+
+        // Two vertex buffer views into the one buffer, one per input slot: slot 0 sees the
+        // positions (12 bytes apart), slot 1 the texture coordinates (8 bytes apart), from
+        // the byte where their block starts.
+        m_vertexBufferViews[0].BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+        m_vertexBufferViews[0].StrideInBytes = sizeof(XMFLOAT3);
+        m_vertexBufferViews[0].SizeInBytes = sizeof(cubePositions);
+        m_vertexBufferViews[1].BufferLocation = m_vertexBuffer->GetGPUVirtualAddress() + sizeof(cubePositions);
+        m_vertexBufferViews[1].StrideInBytes = sizeof(XMFLOAT2);
+        m_vertexBufferViews[1].SizeInBytes = sizeof(cubeTexCoords);
+--- file: main.cpp
+--- find:
+        // Initialize the vertex buffer view.
+        m_floorVertexBufferView.BufferLocation = m_floorVertexBuffer->GetGPUVirtualAddress();
+        m_floorVertexBufferView.StrideInBytes = sizeof(Vertex);
+        m_floorVertexBufferView.SizeInBytes = planeVertexBufferSize;
+--- replace:
+        // The floor's vertices stay interleaved (position, texture coordinates, position ...),
+        // but the input layout now reads the two from slots 0 and 1: two views into the same
+        // buffer, both sizeof(Vertex) apart, the second one starting at the first texture
+        // coordinates (after the first position).
+        m_floorVertexBufferViews[0].BufferLocation = m_floorVertexBuffer->GetGPUVirtualAddress();
+        m_floorVertexBufferViews[0].StrideInBytes = sizeof(Vertex);
+        m_floorVertexBufferViews[0].SizeInBytes = planeVertexBufferSize;
+        m_floorVertexBufferViews[1].BufferLocation = m_floorVertexBuffer->GetGPUVirtualAddress() + sizeof(XMFLOAT3);
+        m_floorVertexBufferViews[1].StrideInBytes = sizeof(Vertex);
+        m_floorVertexBufferViews[1].SizeInBytes = planeVertexBufferSize - sizeof(XMFLOAT3);
+--- file: main.cpp
+--- find:
+    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+--- replace:
+    m_commandList->IASetVertexBuffers(0, 2, m_vertexBufferViews);    // slots 0 and 1
+--- file: main.cpp
+--- find:
+    m_commandList->IASetVertexBuffers(0, 1, &m_floorVertexBufferView);
+--- replace:
+    m_commandList->IASetVertexBuffers(0, 2, m_floorVertexBufferViews);
+
+=== task: copy-buffer
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_floorVertexBuffer;
+--- replace:
+    ComPtr<ID3D12Resource> m_floorVertexBuffer;
+    ComPtr<ID3D12Resource> m_floorCopyBuffer;
+--- file: main.cpp
+--- find:
+        // TODO: copy the floor's vertices into a second buffer (m_floorCopyBuffer, in a default heap) with CopyBufferRegion and draw from the copy
+--- replace:
+        // Copy the vertices into a second buffer, GPU to GPU (learnopengl: glCopyBufferSubData),
+        // in a default heap: memory only the GPU uses. A buffer is created in the COMMON
+        // state; the copy promotes it to COPY_DEST by itself.
+        CD3DX12_HEAP_PROPERTIES defaultHeapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &defaultHeapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_COMMON,
+            nullptr,
+            IID_PPV_ARGS(&m_floorCopyBuffer)));
+
+        // Recorded in the command list (it runs when the list is executed, at the end of
+        // LoadAssets): the destination and its offset, the source and its offset, the bytes.
+        m_commandList->CopyBufferRegion(m_floorCopyBuffer.Get(), 0, m_floorVertexBuffer.Get(), 0, planeVertexBufferSize);
+
+        // After the copy the input assembler reads the buffer: a transition to the vertex buffer state.
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_floorCopyBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        m_commandList->ResourceBarrier(1, &barrier);
+--- file: main.cpp
+--- find:
+        // coordinates (after the first position).
+        m_floorVertexBufferViews[0].BufferLocation = m_floorVertexBuffer->GetGPUVirtualAddress();
+--- replace:
+        // coordinates (after the first position). They point into the copy.
+        m_floorVertexBufferViews[0].BufferLocation = m_floorCopyBuffer->GetGPUVirtualAddress();
+--- file: main.cpp
+--- find:
+        m_floorVertexBufferViews[1].BufferLocation = m_floorVertexBuffer->GetGPUVirtualAddress() + sizeof(XMFLOAT3);
+--- replace:
+        m_floorVertexBufferViews[1].BufferLocation = m_floorCopyBuffer->GetGPUVirtualAddress() + sizeof(XMFLOAT3);
+
+=== task: default-heap
+--- file: main.cpp
+--- find:
+    // TODO: put the cube's vertex buffer in a default heap (memory only the GPU uses), filled from an upload buffer with CopyBufferRegion
+--- replace:
+    // The upload buffer the cube's vertices are copied from: it must stay alive until the
+    // command list that copies from it has executed (the end of this method waits for it).
+    ComPtr<ID3D12Resource> vertexBufferUploadHeap;
+--- file: main.cpp
+--- find:
+        // Note: using upload heaps to transfer static data like vert buffers is not
+        // recommended. Every time the GPU needs it, the upload heap will be marshalled
+        // over. Please read up on Default Heap usage. An upload heap is used here for
+        // code simplicity and because there are very few verts to actually transfer.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_vertexBuffer)));
+
+        // Copy the vertex data to the vertex buffer.
+        UINT8* pVertexDataBegin = nullptr;
+        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+        ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+--- replace:
+        // The vertex buffer in a default heap: memory only the GPU uses, the fastest for data
+        // it reads in every frame. The CPU cannot write it, so the vertices go into an upload
+        // buffer first and the GPU copies them over.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_COMMON,
+            nullptr,
+            IID_PPV_ARGS(&m_vertexBuffer)));
+
+        CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &uploadHeapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&vertexBufferUploadHeap)));
+
+        // Copy the vertex data to the upload buffer.
+        UINT8* pVertexDataBegin = nullptr;
+        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+        ThrowIfFailed(vertexBufferUploadHeap->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+--- file: main.cpp
+--- find:
+        memcpy(pVertexDataBegin + sizeof(cubePositions), cubeTexCoords, sizeof(cubeTexCoords));
+        m_vertexBuffer->Unmap(0, nullptr);
+--- replace:
+        memcpy(pVertexDataBegin + sizeof(cubePositions), cubeTexCoords, sizeof(cubeTexCoords));
+        vertexBufferUploadHeap->Unmap(0, nullptr);
+
+        // Schedule the copy into the vertex buffer (the COMMON state is promoted to COPY_DEST
+        // by the copy), then make it a vertex buffer.
+        m_commandList->CopyBufferRegion(m_vertexBuffer.Get(), 0, vertexBufferUploadHeap.Get(), 0, vertexBufferSize);
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        m_commandList->ResourceBarrier(1, &barrier);

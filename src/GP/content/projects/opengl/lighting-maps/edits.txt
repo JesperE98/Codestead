@@ -1,0 +1,177 @@
+=== task: texcoords
+--- file: main.cpp
+--- find:
+    // TODO: texture coord attribute (location 2): the 2 floats after the normal
+--- replace:
+    // texture coord attribute
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+--- file: lighting_maps.vs
+--- find:
+layout (location = 1) in vec3 aNormal;
+
+out vec3 FragPos;
+out vec3 Normal;
+--- replace:
+layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 aTexCoords;
+
+out vec3 FragPos;
+out vec3 Normal;
+out vec2 TexCoords;
+--- file: lighting_maps.vs
+--- find:
+    Normal = mat3(transpose(inverse(model))) * aNormal;
+--- replace:
+    Normal = mat3(transpose(inverse(model))) * aNormal;
+    TexCoords = aTexCoords;
+--- file: lighting_maps.fs
+--- find:
+in vec3 FragPos;
+--- replace:
+in vec3 FragPos;
+in vec2 TexCoords;
+
+=== task: diffuse-map
+--- file: lighting_maps.fs
+--- find:
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+--- replace:
+struct Material {
+    sampler2D diffuse;
+    vec3 specular;
+--- file: lighting_maps.fs
+--- find:
+    vec3 ambient = light.ambient * material.ambient;
+--- replace:
+    vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
+--- file: lighting_maps.fs
+--- find:
+    vec3 diffuse = light.diffuse * (diff * material.diffuse);
+--- replace:
+    vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;
+--- file: main.cpp
+--- find:
+    // TODO: load the textures (loadTexture) and tell the shader which texture unit each sampler uses
+--- replace:
+    // load textures (we now use a utility function to keep the code more organized)
+    // -----------------------------------------------------------------------------
+    unsigned int diffuseMap = loadTexture("container2.png");
+
+    // shader configuration
+    // --------------------
+    lightingShader.use();
+    lightingShader.setInt("material.diffuse", 0);
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+        lightingShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+        lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
+        lightingShader.setFloat("material.shininess", 32.0f);
+--- replace:
+        lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+        lightingShader.setFloat("material.shininess", 64.0f);
+--- file: main.cpp
+--- find:
+        // TODO: bind the lighting maps to their texture units
+--- replace:
+        // bind diffuse map
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+--- file: main.cpp
+--- find:
+    glDeleteBuffers(1, &VBO);
+--- replace:
+    glDeleteBuffers(1, &VBO);
+    glDeleteTextures(1, &diffuseMap);
+
+=== task: specular-map
+--- file: lighting_maps.fs
+--- find:
+    sampler2D diffuse;
+    vec3 specular;
+--- replace:
+    sampler2D diffuse;
+    sampler2D specular;
+--- file: lighting_maps.fs
+--- find:
+    vec3 specular = light.specular * (spec * material.specular);
+--- replace:
+    vec3 specular = light.specular * spec * texture(material.specular, TexCoords).rgb;
+--- file: main.cpp
+--- find:
+    unsigned int diffuseMap = loadTexture("container2.png");
+--- replace:
+    unsigned int diffuseMap = loadTexture("container2.png");
+    unsigned int specularMap = loadTexture("container2_specular.png");
+--- file: main.cpp
+--- find:
+    lightingShader.setInt("material.diffuse", 0);
+--- replace:
+    lightingShader.setInt("material.diffuse", 0);
+    lightingShader.setInt("material.specular", 1);
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+        lightingShader.setFloat("material.shininess", 64.0f);
+--- replace:
+        lightingShader.setFloat("material.shininess", 64.0f);
+--- file: main.cpp
+--- find:
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+--- replace:
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        // bind specular map
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
+--- file: main.cpp
+--- find:
+    glDeleteTextures(1, &diffuseMap);
+--- replace:
+    glDeleteTextures(1, &diffuseMap);
+    glDeleteTextures(1, &specularMap);
+
+=== task: emission
+--- file: lighting_maps.fs
+--- find:
+    sampler2D specular;
+--- replace:
+    sampler2D specular;
+    sampler2D emission;
+--- file: lighting_maps.fs
+--- find:
+    vec3 result = ambient + diffuse + specular;
+--- replace:
+    // emission
+    vec3 emission = texture(material.emission, TexCoords).rgb;
+
+    vec3 result = ambient + diffuse + specular + emission;
+--- file: main.cpp
+--- find:
+    unsigned int specularMap = loadTexture("container2_specular.png");
+--- replace:
+    unsigned int specularMap = loadTexture("container2_specular.png");
+    unsigned int emissionMap = loadTexture("matrix.png");
+--- file: main.cpp
+--- find:
+    lightingShader.setInt("material.specular", 1);
+--- replace:
+    lightingShader.setInt("material.specular", 1);
+    lightingShader.setInt("material.emission", 2);
+--- file: main.cpp
+--- find:
+        glBindTexture(GL_TEXTURE_2D, specularMap);
+--- replace:
+        glBindTexture(GL_TEXTURE_2D, specularMap);
+        // bind emission map
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, emissionMap);
+--- file: main.cpp
+--- find:
+    glDeleteTextures(1, &specularMap);
+--- replace:
+    glDeleteTextures(1, &specularMap);
+    glDeleteTextures(1, &emissionMap);

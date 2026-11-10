@@ -1,0 +1,207 @@
+{
+  "title": "Textures",
+  "tasks": {
+    "load-image": {
+      "text": {
+        "opengl": "Include stb_image (`#define STB_IMAGE_IMPLEMENTATION` before `#include <stb_image.h>`) and load `container.png` with `stbi_load`, flipped vertically with `stbi_set_flip_vertically_on_load(true)`; print `Failed to load texture` if it fails and free the data with `stbi_image_free`.",
+        "vulkan": "Include stb_image (`#define STB_IMAGE_IMPLEMENTATION` before `#include <stb_image.h>`); in `createTextureImage()` load `textures/container.png` with `stbi_load(…, STBI_rgb_alpha)`, throw `std::runtime_error(\"failed to load texture image!\")` if it returns `nullptr`, and free the pixels with `stbi_image_free(pixels)`.",
+        "d3d12": "Include stb_image (`#define STB_IMAGE_IMPLEMENTATION` before `#include <stb_image.h>`) and, after the index buffer, add a block `// Create the first texture: the container.` that loads `container.png` with `stbi_load(…, 4)`, throws `std::runtime_error` if it fails and frees the pixels with `stbi_image_free`."
+      },
+      "hint": {
+        "opengl": "`int width, height, nrChannels;` – `stbi_load` fills them. The last argument `0` keeps the file's channels. Leave the inside of `if (data)` for the next tasks.",
+        "vulkan": "`STBI_rgb_alpha` returns 4 bytes per pixel even for an RGB file – the format we'll use has 4 channels. No flip: in Vulkan v = 0 is the image's top row.",
+        "d3d12": "`int width, height, nrChannels;` – `stbi_load` fills them. 4 channels match `DXGI_FORMAT_R8G8B8A8_UNORM`. No flip: in Direct3D v = 0 is the image's top row."
+      }
+    },
+    "texture": {
+      "text": {
+        "d3d12": "Create the texture `m_texture1`: a `D3D12_RESOURCE_DESC` for a 2D texture (`DXGI_FORMAT_R8G8B8A8_UNORM`, `width` × `height`, 1 mip level, 1 array slice, 1 sample) and `CreateCommittedResource` in a `D3D12_HEAP_TYPE_DEFAULT` heap in state `D3D12_RESOURCE_STATE_COPY_DEST`."
+      },
+      "hint": {
+        "d3d12": "A default heap is GPU memory the CPU can't write – the pixels arrive by a copy in the next task, so the texture starts as a copy destination. Use a local `CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);`, never the address of a temporary."
+      }
+    },
+    "create-texture": {
+      "text": {
+        "opengl": "Create a texture object `texture1` with `glGenTextures`, bind it to `GL_TEXTURE_2D` and set its wrapping (`GL_REPEAT` on S and T) and filtering (`GL_LINEAR_MIPMAP_LINEAR` for minifying, `GL_LINEAR` for magnifying); delete it at the end with `glDeleteTextures`."
+      },
+      "hint": {
+        "opengl": "`glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);` – the parameters apply to the texture bound to `GL_TEXTURE_2D`. The magnification filter can't use mipmaps."
+      }
+    },
+    "upload": {
+      "text": {
+        "opengl": "Inside `if (data)`, create the texture image with `glTexImage2D` (`GL_RGB`, `GL_UNSIGNED_BYTE`) and generate its mipmaps with `glGenerateMipmap`.",
+        "d3d12": "Upload the pixels through an upload heap: `textureUploadHeap1` (declared before the block) sized with `GetRequiredIntermediateSize`, a `D3D12_SUBRESOURCE_DATA`, `UpdateSubresources` and a barrier `COPY_DEST → PIXEL_SHADER_RESOURCE`; keep the command list open, and at the end of `LoadAssets()` close it, execute it and call `WaitForPreviousFrame()`."
+      },
+      "hint": {
+        "opengl": "`glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);` – mip level 0, internal format, size, border 0, then the format and type of the source data. Upload before `stbi_image_free`.",
+        "d3d12": "`RowPitch = width * 4`, `SlicePitch = RowPitch * height`. Remove the early `m_commandList->Close()`. The upload heap must live until the GPU has copied from it – hence the wait after the fence and event are created."
+      }
+    },
+    "staging-buffer": {
+      "text": {
+        "vulkan": "Write the helper `createBuffer()` and, in `createTextureImage()`, copy the pixels into a `stagingBuffer` (`imageSize = texWidth * texHeight * 4`, `TRANSFER_SRC`, `HOST_VISIBLE | HOST_COHERENT`) with `vkMapMemory`/`memcpy`/`vkUnmapMemory`; destroy the buffer and free its memory at the end of the function."
+      },
+      "hint": {
+        "vulkan": "`createBuffer` is `createVertexBuffer`'s steps with parameters: create, `vkGetBufferMemoryRequirements`, `findMemoryType`, allocate, bind. Copy before `stbi_image_free`."
+      }
+    },
+    "texture-image": {
+      "text": {
+        "vulkan": "Add `textureImage`/`textureImageMemory`, write the helper `createImage()` (2D, 1 mip level, 1 layer, `UNDEFINED`, 1 sample) and call it with `VK_FORMAT_R8G8B8A8_UNORM`, `VK_IMAGE_TILING_OPTIMAL`, `TRANSFER_DST | SAMPLED` and `DEVICE_LOCAL`; destroy the image and free its memory in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Like a buffer: `vkCreateImage`, `vkGetImageMemoryRequirements`, `findMemoryType`, `vkAllocateMemory`, `vkBindImageMemory`. UNORM, not SRGB: our swap chain is UNORM."
+      }
+    },
+    "layout-transitions": {
+      "text": {
+        "vulkan": "Write `beginSingleTimeCommands()`/`endSingleTimeCommands()`, `transitionImageLayout()` (an image memory barrier for `UNDEFINED → TRANSFER_DST_OPTIMAL` and `TRANSFER_DST_OPTIMAL → SHADER_READ_ONLY_OPTIMAL`) and `copyBufferToImage()`; in `createTextureImage()` transition, copy, transition."
+      },
+      "hint": {
+        "vulkan": "Each transition sets the access masks and stages: 0/`TOP_OF_PIPE` → `TRANSFER_WRITE`/`TRANSFER`, then `TRANSFER_WRITE`/`TRANSFER` → `SHADER_READ`/`FRAGMENT_SHADER`. Throw `std::invalid_argument` for any other pair."
+      }
+    },
+    "image-view": {
+      "text": {
+        "vulkan": "Write the helper `createImageView(image, format)`, use it in `createImageViews()` for the swap chain images, create `textureImageView` in `createTextureImageView()`, and destroy the view in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "2D view, `VK_IMAGE_ASPECT_COLOR_BIT`, 1 mip level, 1 layer. Shaders never read a `VkImage` directly, always through a view."
+      }
+    },
+    "sampler": {
+      "text": {
+        "vulkan": "Create `textureSampler` in `createTextureSampler()` (linear filters, `REPEAT` on U/V/W, anisotropy with `maxSamplerAnisotropy`, opaque black border, normalized coordinates, compare off, linear mipmap mode); enable `samplerAnisotropy` in `createLogicalDevice()`, require it in `isDeviceSuitable()`, and destroy the sampler in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Read the limit with `vkGetPhysicalDeviceProperties(physicalDevice, &properties)`. Using anisotropy without enabling the device feature is a validation error."
+      }
+    },
+    "descriptor-layout": {
+      "text": {
+        "vulkan": "In `createDescriptorSetLayout()` describe binding 0 as one `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER` for the fragment stage and create `descriptorSetLayout`; give the pipeline layout `setLayoutCount = 1` and `pSetLayouts = &descriptorSetLayout`; destroy the layout in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Put the binding in a `std::array<VkDescriptorSetLayoutBinding, 1>`. The layout is part of the pipeline layout, so it is created before the pipeline."
+      }
+    },
+    "descriptor-set": {
+      "text": {
+        "vulkan": "Create `descriptorPool` (1 combined image sampler, `maxSets = 1`), allocate `descriptorSet`, point binding 0 at `textureImageView` and `textureSampler` with `vkUpdateDescriptorSets`, bind the set with `vkCmdBindDescriptorSets` after `vkCmdBindIndexBuffer`, and destroy the pool in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "The `VkDescriptorImageInfo` needs `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`. One set is enough: we render one frame at a time. Destroying the pool frees the set."
+      }
+    },
+    "srv": {
+      "text": {
+        "d3d12": "Create a shader-visible SRV heap `m_srvHeap` in `LoadPipeline()` (`CBV_SRV_UAV`, 1 descriptor) and, after the barrier, a shader resource view of `m_texture1` in its first slot with `CreateShaderResourceView`."
+      },
+      "hint": {
+        "d3d12": "`srvDesc`: `Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING`, `Format = textureDesc.Format`, `ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D`, `Texture2D.MipLevels = 1`; the slot is `m_srvHeap->GetCPUDescriptorHandleForHeapStart()`."
+      }
+    },
+    "root-signature": {
+      "text": {
+        "d3d12": "Give the root signature a descriptor table (1 SRV at `t0`, pixel shader) and a static sampler `s0` (`D3D12_FILTER_MIN_MAG_MIP_LINEAR`, `WRAP` on U/V/W); in `PopulateCommandList()` call `SetDescriptorHeaps` with `m_srvHeap` and `SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart())`."
+      },
+      "hint": {
+        "d3d12": "`ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0)`, `rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL)`, and pass the samplers to `rootSignatureDesc.Init`. Set the heap and table every frame, after `SetGraphicsRootSignature`."
+      }
+    },
+    "texture-coords": {
+      "text": {
+        "opengl": "Give every vertex texture coordinates – top right (1, 1), bottom right (1, 0), bottom left (0, 0), top left (0, 1) – as vertex attribute 2, and pass them from the vertex shader to the fragment shader as `TexCoord`.",
+        "vulkan": "Add `glm::vec2 texCoord` to `Vertex` with a third attribute description (location 2, `VK_FORMAT_R32G32_SFLOAT`), coordinates top left (0, 0), top right (1, 0), bottom right (1, 1), bottom left (0, 1); pass them on as `fragTexCoord` and show them with `outColor = vec4(fragTexCoord, 0.0, 1.0);`.",
+        "d3d12": "Add `XMFLOAT2 texCoord` to `Vertex` with a `TEXCOORD` input element (`R32G32_FLOAT`, offset 24), coordinates top right (1, 0), bottom right (1, 1), bottom left (0, 1), top left (0, 0); pass them through `PSInput` as `texCoord` in `shaders.hlsl`."
+      },
+      "hint": {
+        "opengl": "Each vertex is now 8 floats: stride `8 * sizeof(float)` for all three attributes; the texture coordinates start at `(void*)(6 * sizeof(float))`. In `shader.vs`: `layout (location = 2) in vec2 aTexCoord;`, `out vec2 TexCoord;`.",
+        "vulkan": "`getAttributeDescriptions()` now returns an array of 3. In Vulkan (0, 0) is the image's top left and y points down, so the top left vertex gets (0, 0) – no flipping.",
+        "d3d12": "Direct3D's texture coordinates start at the image's top left, so the top left vertex gets (0, 0). The stride `sizeof(Vertex)` grows to 32 by itself."
+      }
+    },
+    "sample": {
+      "text": {
+        "opengl": "Sample the texture in the fragment shader – `in vec2 TexCoord;`, `uniform sampler2D texture1;`, `FragColor = texture(texture1, TexCoord);` – and bind the texture in the render loop before drawing.",
+        "vulkan": "Sample the texture in `shader.frag`: declare `layout(binding = 0) uniform sampler2D texSampler;` and write `outColor = texture(texSampler, fragTexCoord);`.",
+        "d3d12": "Sample the texture: declare `Texture2D texture1 : register(t0);` and `SamplerState wrapSampler : register(s0);` in `shaders.hlsl` and return `texture1.Sample(wrapSampler, input.texCoord);` in `PSMain`."
+      },
+      "hint": {
+        "opengl": "`glBindTexture(GL_TEXTURE_2D, texture1);` before `ourShader.use()`. A sampler that is never set uses texture unit 0 – the unit `glBindTexture` binds to by default.",
+        "vulkan": "A `sampler2D` at binding 0 is the combined image sampler of the descriptor set.",
+        "d3d12": "The registers connect the shader to the root signature: `t0` is the first SRV of the descriptor table, `s0` the static sampler."
+      }
+    },
+    "tint": {
+      "text": {
+        "opengl": "Multiply the texture color by the vertex color: `FragColor = texture(texture1, TexCoord) * vec4(ourColor, 1.0);`.",
+        "vulkan": "Multiply the texture color by the vertex color: `outColor = texture(texSampler, fragTexCoord) * vec4(fragColor, 1.0);`.",
+        "d3d12": "Multiply the texture color by the vertex color: `return texture1.Sample(wrapSampler, input.texCoord) * input.color;`."
+      },
+      "hint": "Colors multiply per channel: a red vertex keeps only the crate's red, a yellow one its red and green."
+    },
+    "second-texture": {
+      "text": {
+        "d3d12": "Load `awesomeface.png` into `m_texture2` in a second block (same steps, its own `textureUploadHeap2`) and create its SRV in the heap's second slot; the SRV heap gets 2 descriptors, the range 2 SRVs (`t0`, `t1`), and `LoadPipeline()` stores `m_srvDescriptorSize`."
+      },
+      "hint": {
+        "d3d12": "`CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_srvDescriptorSize);` – the size comes from `GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)`. Load the container first, then the face."
+      }
+    },
+    "texture-units": {
+      "text": {
+        "opengl": "Add a second texture `texture2` from `awesomeface.png` (`GL_RGBA`, same parameters), set the samplers to units 0 and 1 with `ourShader.setInt`, bind both textures with `glActiveTexture`, and mix them in the fragment shader: `mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.2)` – no tint any more.",
+        "vulkan": "Add the face as a second texture at binding 1: `createFaceTextureImage()` (like `createTextureImage()` for `textures/awesomeface.png`), `faceTextureImageView`, a second layout binding, pool size 2 and a second descriptor write; in `shader.frag` add `faceSampler` at binding 1 and write `outColor = mix(texture(texSampler, fragTexCoord), texture(faceSampler, fragTexCoord), 0.2);`.",
+        "d3d12": "In `shaders.hlsl` declare `Texture2D texture2 : register(t1);` and return `lerp(texture1.Sample(wrapSampler, input.texCoord), texture2.Sample(wrapSampler, input.texCoord), 0.2f);` – the tint goes."
+      },
+      "hint": {
+        "opengl": "Set the sampler uniforms once, after `ourShader.use()`. In the loop: `glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, texture1); glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, texture2);`. Delete `texture2` at the end.",
+        "vulkan": "The bindings of the descriptor set are Vulkan's \"texture units\". One sampler can read both images, so the face's image info also uses `textureSampler`. Destroy the face's view, image and memory in `cleanup()`.",
+        "d3d12": "HLSL's `lerp(a, b, t)` is GLSL's `mix`: 80% container, 20% face. Each texture is reached by its register."
+      }
+    },
+    "flip-face": {
+      "text": {
+        "opengl": "Exercise 1: make only the face look the other way – sample `texture2` at `vec2(1.0 - TexCoord.x, TexCoord.y)`.",
+        "vulkan": "Exercise 1: make only the face look the other way – sample `faceSampler` at `vec2(1.0 - fragTexCoord.x, fragTexCoord.y)`.",
+        "d3d12": "Exercise 1: make only the face look the other way – sample `texture2` at `float2(1.0f - input.texCoord.x, input.texCoord.y)`."
+      },
+      "hint": "u = 1 − u mirrors left and right. The container keeps its own coordinates, so only the face changes."
+    },
+    "repeat": {
+      "text": {
+        "opengl": "Exercise 2: use texture coordinates from 0.0 to 2.0 so the face repeats 2×2, and set the container's wrapping to `GL_CLAMP_TO_EDGE` (the face keeps `GL_REPEAT`).",
+        "vulkan": "Exercise 2: use texture coordinates from 0.0 to 2.0, and give the container its own `clampSampler` (the same `samplerInfo` with `VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE`) via `imageInfo.sampler`; destroy it in `cleanup()`.",
+        "d3d12": "Exercise 2: use texture coordinates from 0.0 to 2.0, and add a second static sampler `s1` (a copy of `s0` with `D3D12_TEXTURE_ADDRESS_MODE_CLAMP`) that the shader uses as `clampSampler` for `texture1`."
+      },
+      "hint": {
+        "opengl": "Replace every `1.0f` texture coordinate with `2.0f`. Change only the two `GL_TEXTURE_WRAP_*` calls after `glBindTexture(GL_TEXTURE_2D, texture1)`.",
+        "vulkan": "In Vulkan the address mode belongs to the sampler, so the container needs a sampler of its own; the face keeps the repeating `textureSampler`.",
+        "d3d12": "`samplers[2]`, `samplers[1] = samplers[0];`, then the clamp modes and `ShaderRegister = 1`. In the shader: `SamplerState clampSampler : register(s1);`."
+      }
+    },
+    "mix-value": {
+      "text": {
+        "opengl": "Exercise 4: replace the fixed 0.2 with a `uniform float mixValue` set from C++ every frame (global `float mixValue = 0.5f;`), and let Up/Down change it by 0.001 per frame, kept between 0.0 and 1.0.",
+        "vulkan": "Exercise 4: make the mix amount a push constant – `struct PushConstants { float mixValue; };`, member `mixValue = 0.5f`, a fragment-stage push constant range, `vkCmdPushConstants` after binding the descriptor set – and let Up/Down change it by 0.001 per frame in a `processInput()`.",
+        "d3d12": "Exercise 4: make the mix amount a root constant – `struct MixConstants { float mixValue; };`, member `m_mixValue = 0.5f`, root parameter 1 `InitAsConstants(sizeof(MixConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL)`, `SetGraphicsRoot32BitConstants(1, …)` every frame – read as `cbuffer MixConstants : register(b0)`."
+      },
+      "hint": {
+        "opengl": "In `processInput`: `if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)` add `0.001f` and clamp to `1.0f`; `GLFW_KEY_DOWN` subtracts and clamps to `0.0f`. Set the uniform after `ourShader.use()`.",
+        "vulkan": "In `shader.frag`: `layout(push_constant) uniform PushConstants { float mixValue; } pc;` and `mix(…, pc.mixValue)`. Call `processInput()` in `mainLoop()` after `glfwPollEvents()`.",
+        "d3d12": "The descriptor table stays root parameter 0. One float is one 32-bit root constant. Set it after `RSSetScissorRects`."
+      }
+    },
+    "mix-keys": {
+      "text": {
+        "d3d12": "Let Up/Down change the mix value by 0.1: a public `OnKeyDown(UINT8 key)` with clamps, `SetWindowLongPtr(hwnd, GWLP_USERDATA, …)` in `wWinMain`, and in `WindowProc` `GetWindowLongPtr` and `pApp->OnKeyDown(static_cast<UINT8>(wParam))` for every key except Escape."
+      },
+      "hint": {
+        "d3d12": "Like the samples' `Win32Application`, which keeps the app's pointer in the window's user data. `WM_KEYDOWN` repeats while a key is held; check `pApp != nullptr`."
+      }
+    }
+  }
+}

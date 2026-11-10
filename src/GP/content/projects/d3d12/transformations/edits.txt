@@ -1,0 +1,123 @@
+=== task: transform-uniform
+--- file: main.cpp
+--- find:
+        XMFLOAT2 texCoord;
+    };
+--- replace:
+        XMFLOAT2 texCoord;
+    };
+
+    // The root constants: what the vertex shader sees as cbuffer TransformConstants.
+    // A 4x4 matrix is 16 floats: 16 32-bit root constants.
+    struct TransformConstants
+    {
+        XMFLOAT4X4 transform;
+    };
+--- file: main.cpp
+--- find:
+        CD3DX12_ROOT_PARAMETER rootParameters[1];
+        rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+
+        // TODO: root parameter 1: root constants for the transformation matrix (register b0)
+--- replace:
+        // Root parameter 1: root constants for register b0 (the transformation
+        // matrix). Only the vertex shader reads them.
+        CD3DX12_ROOT_PARAMETER rootParameters[2];
+        rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[1].InitAsConstants(sizeof(TransformConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+--- file: main.cpp
+--- find:
+    // TODO: create the transformation matrix and pass it to the vertex shader (root parameter 1)
+--- replace:
+    // Create the transformation: scale to half the size, then rotate by 90 degrees
+    // about the z axis. DirectXMath multiplies a row vector by the matrices (v * M),
+    // so they apply from left to right: first the scaling, then the rotation.
+    XMMATRIX transform = XMMatrixScaling(0.5f, 0.5f, 0.5f) * XMMatrixRotationZ(XMConvertToRadians(90.0f));
+
+    // Root parameter 1: the matrix for the vertex shader. It is stored transposed,
+    // because HLSL reads a matrix from memory column by column (column_major).
+    TransformConstants transformConstants = {};
+    XMStoreFloat4x4(&transformConstants.transform, XMMatrixTranspose(transform));
+    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(TransformConstants) / 4, &transformConstants, 0);
+--- file: shaders.hlsl
+--- find:
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+--- replace:
+// Root constants set from main.cpp with SetGraphicsRoot32BitConstants: the vertex
+// shader sees them as a constant buffer at register b0.
+cbuffer TransformConstants : register(b0)
+{
+    float4x4 transform;
+};
+
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+--- file: shaders.hlsl
+--- find:
+    result.position = position;
+--- replace:
+    // The position is a row vector: mul(position, transform) applies the matrix
+    // the same way as DirectXMath's v * M.
+    result.position = mul(position, transform);
+
+=== task: translate-rotate
+--- file: main.cpp
+--- find:
+#include <climits>
+--- replace:
+#include <chrono>
+#include <climits>
+--- file: main.cpp
+--- find:
+    // Create the transformation: scale to half the size, then rotate by 90 degrees
+    // about the z axis. DirectXMath multiplies a row vector by the matrices (v * M),
+    // so they apply from left to right: first the scaling, then the rotation.
+    XMMATRIX transform = XMMatrixScaling(0.5f, 0.5f, 0.5f) * XMMatrixRotationZ(XMConvertToRadians(90.0f));
+--- replace:
+    // The time in seconds since the first frame.
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+    // Create the transformation: rotate about the z axis by the time (in radians),
+    // then move to the bottom right. DirectXMath multiplies a row vector by the
+    // matrices (v * M), so they apply from left to right.
+    XMMATRIX transform = XMMatrixRotationZ(time) * XMMatrixTranslation(0.5f, -0.5f, 0.0f);
+
+=== task: rotate-first
+--- file: main.cpp
+--- find:
+    // Create the transformation: rotate about the z axis by the time (in radians),
+    // then move to the bottom right. DirectXMath multiplies a row vector by the
+    // matrices (v * M), so they apply from left to right.
+    XMMATRIX transform = XMMatrixRotationZ(time) * XMMatrixTranslation(0.5f, -0.5f, 0.0f);
+--- replace:
+    // Create the transformation, with the order switched: first move to the bottom
+    // right, then rotate about the origin by the time - the container now circles
+    // the centre of the window. (DirectXMath applies the matrices from left to right.)
+    XMMATRIX transform = XMMatrixTranslation(0.5f, -0.5f, 0.0f) * XMMatrixRotationZ(time);
+
+=== task: second-container
+--- file: main.cpp
+--- find:
+#include <climits>
+--- replace:
+#include <climits>
+#include <cmath>
+--- file: main.cpp
+--- find:
+    m_commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+
+--- replace:
+    m_commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+
+    // Second transformation: scale by sin(time) (between -1 and 1), then move to
+    // the top left.
+    float scaleAmount = std::sin(time);
+    transform = XMMatrixScaling(scaleAmount, scaleAmount, scaleAmount) * XMMatrixTranslation(-0.5f, 0.5f, 0.0f);
+    XMStoreFloat4x4(&transformConstants.transform, XMMatrixTranspose(transform));
+    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(TransformConstants) / 4, &transformConstants, 0);
+
+    // Draw the container again, now with the new root constants. Root constants are
+    // recorded with each draw, so the first draw keeps its own matrix.
+    m_commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+

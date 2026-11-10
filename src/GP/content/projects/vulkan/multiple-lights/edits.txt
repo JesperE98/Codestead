@@ -1,0 +1,401 @@
+=== task: dir-light
+--- file: shaders/multiple_lights.frag
+--- find:
+struct Material {
+    float shininess;
+};
+--- replace:
+struct Material {
+    float shininess;
+};
+
+struct DirLight {
+    vec3 direction;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+--- file: shaders/multiple_lights.frag
+--- find:
+    Material material;
+} ubo;
+--- replace:
+    Material material;
+    DirLight dirLight;
+} ubo;
+--- file: shaders/multiple_lights.frag
+--- find:
+layout(location = 0) out vec4 outColor;
+
+void main() {
+--- replace:
+layout(location = 0) out vec4 outColor;
+
+// function prototypes
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
+
+void main() {
+--- file: shaders/multiple_lights.frag
+--- find:
+    vec3 result = vec3(0.0);
+    // TODO: phase 1: directional lighting
+--- replace:
+    // phase 1: directional lighting
+    vec3 result = CalcDirLight(ubo.dirLight, norm, viewDir);
+--- file: shaders/multiple_lights.frag
+--- find:
+    outColor = vec4(result, 1.0);
+}
+--- replace:
+    outColor = vec4(result, 1.0);
+}
+
+// calculates the color when using a directional light.
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir) {
+    vec3 lightDir = normalize(-light.direction);
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), ubo.material.shininess);
+    // combine results
+    vec3 ambient = light.ambient * vec3(texture(diffuseMap, fragTexCoord));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(diffuseMap, fragTexCoord));
+    vec3 specular = light.specular * spec * vec3(texture(specularMap, fragTexCoord));
+    return (ambient + diffuse + specular);
+}
+--- file: main.cpp
+--- find:
+    float pad3;
+};
+
+// The same layout as the uniform block in the shaders: the values that stay the same for every draw of a frame.
+--- replace:
+    float pad3;
+};
+
+// The lights: the same layout as the structs in the fragment shader (a padding float where a vec3 has no float after it).
+struct DirLight {
+    glm::vec3 direction;
+    float pad1;
+
+    glm::vec3 ambient;
+    float pad2;
+    glm::vec3 diffuse;
+    float pad3;
+    glm::vec3 specular;
+    float pad4;
+};
+
+// The same layout as the uniform block in the shaders: the values that stay the same for every draw of a frame.
+--- file: main.cpp
+--- find:
+    Material material;
+};
+--- replace:
+    Material material;
+    DirLight dirLight;
+};
+--- file: main.cpp
+--- find:
+        // TODO: directional light
+--- replace:
+        // directional light
+        ubo.dirLight.direction = glm::vec3(-0.2f, -1.0f, -0.3f);
+        ubo.dirLight.ambient   = glm::vec3(0.05f, 0.05f, 0.05f);
+        ubo.dirLight.diffuse   = glm::vec3(0.4f, 0.4f, 0.4f);
+        ubo.dirLight.specular  = glm::vec3(0.5f, 0.5f, 0.5f);
+
+=== task: point-lights
+--- file: shaders/multiple_lights.frag
+--- find:
+    vec3 specular;
+};
+
+layout(binding = 2) uniform UniformBufferObject {
+--- replace:
+    vec3 specular;
+};
+
+struct PointLight {
+    vec3 position;
+
+    float constant;
+    float linear;
+    float quadratic;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+#define NR_POINT_LIGHTS 4
+
+layout(binding = 2) uniform UniformBufferObject {
+--- file: shaders/multiple_lights.frag
+--- find:
+    DirLight dirLight;
+} ubo;
+--- replace:
+    DirLight dirLight;
+    PointLight pointLights[NR_POINT_LIGHTS];
+} ubo;
+--- file: shaders/multiple_lights.frag
+--- find:
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
+--- replace:
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+--- file: shaders/multiple_lights.frag
+--- find:
+    // TODO: phase 2: point lights
+--- replace:
+    // phase 2: point lights
+    for (int i = 0; i < NR_POINT_LIGHTS; i++)
+        result += CalcPointLight(ubo.pointLights[i], norm, fragPos, viewDir);
+--- file: shaders/multiple_lights.frag
+--- find:
+    return (ambient + diffuse + specular);
+}
+--- replace:
+    return (ambient + diffuse + specular);
+}
+
+// calculates the color when using a point light.
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
+    vec3 lightDir = normalize(light.position - fragPos);
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), ubo.material.shininess);
+    // attenuation
+    float distance = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+    // combine results
+    vec3 ambient = light.ambient * vec3(texture(diffuseMap, fragTexCoord));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(diffuseMap, fragTexCoord));
+    vec3 specular = light.specular * spec * vec3(texture(specularMap, fragTexCoord));
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
+    return (ambient + diffuse + specular);
+}
+--- file: main.cpp
+--- find:
+    glm::vec3(-1.3f,  1.0f, -1.5f)
+};
+--- replace:
+    glm::vec3(-1.3f,  1.0f, -1.5f)
+};
+
+// positions of the point lights
+const std::vector<glm::vec3> pointLightPositions = {
+    glm::vec3( 0.7f,  0.2f,  2.0f),
+    glm::vec3( 2.3f, -3.3f, -4.0f),
+    glm::vec3(-4.0f,  2.0f, -12.0f),
+    glm::vec3( 0.0f,  0.0f, -3.0f)
+};
+--- file: main.cpp
+--- find:
+    float pad4;
+};
+
+// The same layout as the uniform block in the shaders: the values that stay the same for every draw of a frame.
+--- replace:
+    float pad4;
+};
+
+struct PointLight {
+    glm::vec3 position;
+
+    float constant; // fills the 4 bytes after position
+    float linear;
+    float quadratic;
+    float pad1; // ambient (a vec3) starts at the next multiple of 16 bytes
+    float pad2;
+
+    glm::vec3 ambient;
+    float pad3;
+    glm::vec3 diffuse;
+    float pad4;
+    glm::vec3 specular;
+    float pad5;
+};
+
+// The same layout as the uniform block in the shaders: the values that stay the same for every draw of a frame.
+--- file: main.cpp
+--- find:
+    DirLight dirLight;
+};
+--- replace:
+    DirLight dirLight;
+    PointLight pointLights[4]; // NR_POINT_LIGHTS in the shader; an array of structs has the same stride (80 bytes) in both
+};
+--- file: main.cpp
+--- find:
+        // TODO: point lights 1 to 4
+--- replace:
+        // point lights 1 to 4
+        for (int i = 0; i < 4; i++) {
+            ubo.pointLights[i].position  = pointLightPositions[i];
+            ubo.pointLights[i].ambient   = glm::vec3(0.05f, 0.05f, 0.05f);
+            ubo.pointLights[i].diffuse   = glm::vec3(0.8f, 0.8f, 0.8f);
+            ubo.pointLights[i].specular  = glm::vec3(1.0f, 1.0f, 1.0f);
+            ubo.pointLights[i].constant  = 1.0f;
+            ubo.pointLights[i].linear    = 0.09f;
+            ubo.pointLights[i].quadratic = 0.032f;
+        }
+
+=== task: spot-light
+--- file: shaders/multiple_lights.frag
+--- find:
+};
+
+#define NR_POINT_LIGHTS 4
+--- replace:
+};
+
+struct SpotLight {
+    vec3 position;
+    vec3 direction;
+    float cutOff;
+    float outerCutOff;
+
+    float constant;
+    float linear;
+    float quadratic;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+#define NR_POINT_LIGHTS 4
+--- file: shaders/multiple_lights.frag
+--- find:
+    PointLight pointLights[NR_POINT_LIGHTS];
+} ubo;
+--- replace:
+    PointLight pointLights[NR_POINT_LIGHTS];
+    SpotLight spotLight;
+} ubo;
+--- file: shaders/multiple_lights.frag
+--- find:
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+--- replace:
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+--- file: shaders/multiple_lights.frag
+--- find:
+    // TODO: phase 3: spot light
+--- replace:
+    // phase 3: spot light
+    result += CalcSpotLight(ubo.spotLight, norm, fragPos, viewDir);
+--- file: shaders/multiple_lights.frag
+--- find:
+    specular *= attenuation;
+    return (ambient + diffuse + specular);
+}
+--- replace:
+    specular *= attenuation;
+    return (ambient + diffuse + specular);
+}
+
+// calculates the color when using a spot light.
+vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
+    vec3 lightDir = normalize(light.position - fragPos);
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), ubo.material.shininess);
+    // attenuation
+    float distance = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+    // spotlight intensity
+    float theta = dot(lightDir, normalize(-light.direction));
+    float epsilon = light.cutOff - light.outerCutOff;
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+    // combine results
+    vec3 ambient = light.ambient * vec3(texture(diffuseMap, fragTexCoord));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(diffuseMap, fragTexCoord));
+    vec3 specular = light.specular * spec * vec3(texture(specularMap, fragTexCoord));
+    ambient *= attenuation * intensity;
+    diffuse *= attenuation * intensity;
+    specular *= attenuation * intensity;
+    return (ambient + diffuse + specular);
+}
+--- file: main.cpp
+--- find:
+    float pad5;
+};
+
+// The same layout as the uniform block in the shaders: the values that stay the same for every draw of a frame.
+--- replace:
+    float pad5;
+};
+
+struct SpotLight {
+    glm::vec3 position;
+    float pad1;
+    glm::vec3 direction;
+    float cutOff; // fills the 4 bytes after direction
+    float outerCutOff;
+
+    float constant;
+    float linear;
+    float quadratic;
+
+    glm::vec3 ambient; // at 48 bytes: a multiple of 16
+    float pad2;
+    glm::vec3 diffuse;
+    float pad3;
+    glm::vec3 specular;
+    float pad4;
+};
+
+// The same layout as the uniform block in the shaders: the values that stay the same for every draw of a frame.
+--- file: main.cpp
+--- find:
+    PointLight pointLights[4]; // NR_POINT_LIGHTS in the shader; an array of structs has the same stride (80 bytes) in both
+};
+--- replace:
+    PointLight pointLights[4]; // NR_POINT_LIGHTS in the shader; an array of structs has the same stride (80 bytes) in both
+    SpotLight spotLight;
+};
+--- file: main.cpp
+--- find:
+        // TODO: spot light (the flashlight)
+--- replace:
+        // spotLight
+        ubo.spotLight.position    = cameraPos;
+        ubo.spotLight.direction   = cameraFront;
+        ubo.spotLight.ambient     = glm::vec3(0.0f, 0.0f, 0.0f);
+        ubo.spotLight.diffuse     = glm::vec3(1.0f, 1.0f, 1.0f);
+        ubo.spotLight.specular    = glm::vec3(1.0f, 1.0f, 1.0f);
+        ubo.spotLight.constant    = 1.0f;
+        ubo.spotLight.linear      = 0.09f;
+        ubo.spotLight.quadratic   = 0.032f;
+        ubo.spotLight.cutOff      = glm::cos(glm::radians(12.5f));
+        ubo.spotLight.outerCutOff = glm::cos(glm::radians(15.0f));
+
+=== task: lamps
+--- file: main.cpp
+--- find:
+        // TODO: also draw the lamp objects: a small white cube at each point light's position
+--- replace:
+        // also draw the lamp objects
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightCubePipeline);
+
+        // we now draw as many light bulbs as we have point lights.
+        for (unsigned int i = 0; i < 4; i++) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, pointLightPositions[i]);
+            model = glm::scale(model, glm::vec3(0.2f)); // make it a smaller cube
+            constants.model = model;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+            vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+        }

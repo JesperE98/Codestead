@@ -1,0 +1,49 @@
+{
+  "title": "Transformations",
+  "tasks": {
+    "transform-uniform": {
+      "text": {
+        "opengl": "Include the GLM headers (`glm.hpp`, `gtc/matrix_transform.hpp`, `gtc/type_ptr.hpp`), declare `uniform mat4 transform;` in `shader.vs` and use `gl_Position = transform * vec4(aPos, 1.0);`; in the render loop build `transform` – `glm::rotate` by `glm::radians(90.0f)` about z, then `glm::scale` by 0.5 – and set it with `glUniformMatrix4fv`.",
+        "vulkan": "Include `<glm/gtc/matrix_transform.hpp>`, add `struct PushConstants { glm::mat4 transform; };`, a vertex-stage `VkPushConstantRange` in the pipeline layout, and in `recordCommandBuffer()` build `transform` (`glm::rotate` by `glm::radians(90.0f)` about z, then `glm::scale` by 0.5) and push it with `vkCmdPushConstants`; in `shader.vert` declare the push constant block and write `gl_Position = pc.transform * vec4(inPosition, 1.0);`.",
+        "d3d12": "Add `struct TransformConstants { XMFLOAT4X4 transform; };` and root parameter 1 with `InitAsConstants(sizeof(TransformConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX)`; in `PopulateCommandList()` build `XMMatrixScaling(0.5f, 0.5f, 0.5f) * XMMatrixRotationZ(XMConvertToRadians(90.0f))`, store it with `XMStoreFloat4x4(…, XMMatrixTranspose(transform))` and set it with `SetGraphicsRoot32BitConstants(1, …)`; in `shaders.hlsl` declare `cbuffer TransformConstants : register(b0)` and write `result.position = mul(position, transform);`."
+      },
+      "hint": {
+        "opengl": "Start from the identity, `glm::mat4(1.0f)`. Get the location with `glGetUniformLocation(ourShader.ID, \"transform\")` and set it after `ourShader.use()`: `glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));`. Read the GLM calls from the bottom up: scale first, then rotate.",
+        "vulkan": "The range: `stageFlags = VK_SHADER_STAGE_VERTEX_BIT`, `offset = 0`, `size = sizeof(PushConstants)`, then `pushConstantRangeCount = 1` and `pPushConstantRanges = &pushConstantRange`. Push between `vkCmdBindDescriptorSets` and `vkCmdDrawIndexed`. Keep the y flip line in the shader.",
+        "d3d12": "A 4×4 float matrix is 16 root constants. DirectXMath reads left to right: scale first, then rotate. The transpose is needed because HLSL reads cbuffer matrices column by column; with the position on the left, `mul` computes v · M."
+      }
+    },
+    "translate-rotate": {
+      "text": {
+        "opengl": "Replace the rotate and scale lines with `glm::translate` by `(0.5f, -0.5f, 0.0f)` followed by `glm::rotate` by `(float)glfwGetTime()` about the z axis.",
+        "vulkan": "Replace the rotate and scale lines with `glm::translate` by `(0.5f, -0.5f, 0.0f)` followed by `glm::rotate` by `(float)glfwGetTime()` about the z axis.",
+        "d3d12": "Measure the time since the first frame with `std::chrono` (`#include <chrono>`, a `static` `startTime`) and build `XMMATRIX transform = XMMatrixRotationZ(time) * XMMatrixTranslation(0.5f, -0.5f, 0.0f);`."
+      },
+      "hint": {
+        "opengl": "The last call is applied first: the container is rotated about its own centre, then moved to the bottom right. The angle is in radians – one turn every 2π ≈ 6.3 s.",
+        "vulkan": "The last call is applied first: the container is rotated about its own centre, then moved to the bottom right. The angle is in radians – one turn every 2π ≈ 6.3 s.",
+        "d3d12": "`float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();`. A DirectXMath product reads in the order the steps happen: rotate, then move."
+      }
+    },
+    "rotate-first": {
+      "text": {
+        "opengl": "Exercise 1: swap the two calls – `glm::rotate` first, then `glm::translate` – and watch what happens.",
+        "vulkan": "Exercise 1: swap the two calls – `glm::rotate` first, then `glm::translate` – and watch what happens.",
+        "d3d12": "Exercise 1: swap the order – `XMMATRIX transform = XMMatrixTranslation(0.5f, -0.5f, 0.0f) * XMMatrixRotationZ(time);` – and watch what happens."
+      },
+      "hint": "Now the container is moved first and then rotated about the origin – the window's centre – so it circles around it instead of spinning in place."
+    },
+    "second-container": {
+      "text": {
+        "opengl": "Exercise 2: after the first `glDrawElements`, reset `transform` to the identity, translate by `(-0.5f, 0.5f, 0.0f)`, scale by `sin(glfwGetTime())`, set the uniform again and call `glDrawElements` a second time.",
+        "vulkan": "Exercise 2: after the first `vkCmdDrawIndexed`, reset `transform` to the identity, translate by `(-0.5f, 0.5f, 0.0f)`, scale by `std::sin(glfwGetTime())` (`#include <cmath>`), push it with a second `vkCmdPushConstants` and record a second `vkCmdDrawIndexed`.",
+        "d3d12": "Exercise 2: after the first `DrawIndexedInstanced`, build `XMMatrixScaling(scaleAmount, scaleAmount, scaleAmount) * XMMatrixTranslation(-0.5f, 0.5f, 0.0f)` with `scaleAmount = std::sin(time)` (`#include <cmath>`), store it transposed, call `SetGraphicsRoot32BitConstants` again and draw again."
+      },
+      "hint": {
+        "opengl": "`float scaleAmount = static_cast<float>(sin(glfwGetTime()));`. A uniform keeps its value until you set it again, so upload the new matrix before the second draw.",
+        "vulkan": "`constants.transform = transform;` before pushing. Each draw uses the push constants recorded before it. A negative scale turns the container upside down, it doesn't mirror it.",
+        "d3d12": "Root constants are recorded with each draw, so the first draw keeps its matrix. A negative scale turns the container by 180°, it doesn't mirror it."
+      }
+    }
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "title": "Hello Window",
+  "tasks": {
+    "render-loop": {
+      "text": {
+        "opengl": "Add the render loop: `while (!glfwWindowShouldClose(window))` that calls `glfwSwapBuffers(window)` and `glfwPollEvents()` every frame."
+      },
+      "hint": {
+        "opengl": "Without a loop `main` ends straight away. `glfwPollEvents` processes the window's events (including the close button), `glfwSwapBuffers` shows the finished frame."
+      }
+    },
+    "viewport": {
+      "text": {
+        "opengl": "Make the viewport follow the window size: write `framebuffer_size_callback` (it calls `glViewport(0, 0, width, height)`), declare it at the top and register it with `glfwSetFramebufferSizeCallback`."
+      },
+      "hint": {
+        "opengl": "The signature is `void framebuffer_size_callback(GLFWwindow* window, int width, int height)`. Register it right after `glfwMakeContextCurrent(window);`."
+      }
+    },
+    "input": {
+      "text": {
+        "opengl": "Close the window with Escape: write `processInput` (`glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS` → `glfwSetWindowShouldClose(window, true)`), declare it, and call it at the start of every frame.",
+        "d3d12": "Close the window with Escape: in `WindowProc`, handle `WM_KEYDOWN` and call `DestroyWindow(hWnd)` when `wParam == VK_ESCAPE`."
+      },
+      "hint": {
+        "opengl": "Call `processInput(window);` as the first thing inside the render loop (it replaces the input TODO).",
+        "d3d12": "Add a `case WM_KEYDOWN:` that returns 0. Destroying the window sends `WM_DESTROY`, which posts `WM_QUIT`: the loop ends and `OnDestroy` waits for the GPU."
+      }
+    },
+    "clear": {
+      "text": {
+        "opengl": "Clear the screen every frame: `glClearColor(0.2f, 0.3f, 0.3f, 1.0f);` then `glClear(GL_COLOR_BUFFER_BIT);`.",
+        "d3d12": "Fill in `PopulateCommandList`: reset the allocator and the list, transition the back buffer `PRESENT` → `RENDER_TARGET`, clear its RTV with `{ 0.2f, 0.3f, 0.3f, 1.0f }`, transition it back to `PRESENT` and `Close()` the list."
+      },
+      "hint": {
+        "opengl": "`glClearColor` only sets the colour (state); `glClear` does the clearing. Put both in the render section of the loop, before `glfwSwapBuffers`.",
+        "d3d12": "Store each barrier in a local `CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(...)` and pass `&barrier`. The RTV is `CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize)`."
+      }
+    },
+    "surface": {
+      "text": {
+        "vulkan": "Create the window surface: add `VkSurfaceKHR surface;`, fill in `createSurface()` with `glfwCreateWindowSurface`, and destroy it with `vkDestroySurfaceKHR` in `cleanup()` (after the debug messenger, before the instance)."
+      },
+      "hint": {
+        "vulkan": "`glfwCreateWindowSurface(instance, window, nullptr, &surface)`; throw `\"failed to create window surface!\"` if it doesn't return `VK_SUCCESS`."
+      }
+    },
+    "present-queue": {
+      "text": {
+        "vulkan": "Find a queue family that can present: add `presentFamily` to `QueueFamilyIndices` (and `isComplete()`), check `vkGetPhysicalDeviceSurfaceSupportKHR` in `findQueueFamilies()`, create one queue per unique family in `createLogicalDevice()` and get `presentQueue`."
+      },
+      "hint": {
+        "vulkan": "The graphics and the present family are often the same index – a `std::set<uint32_t> uniqueQueueFamilies` avoids creating the queue twice."
+      }
+    },
+    "swap-chain-support": {
+      "text": {
+        "vulkan": "Check swap chain support: add `deviceExtensions`, `SwapChainSupportDetails`, `checkDeviceExtensionSupport()` and `querySwapChainSupport()`; make `isDeviceSuitable()` require them and enable the extension in `createLogicalDevice()`."
+      },
+      "hint": {
+        "vulkan": "`vkGetPhysicalDeviceSurfaceCapabilitiesKHR`, `vkGetPhysicalDeviceSurfaceFormatsKHR`, `vkGetPhysicalDeviceSurfacePresentModesKHR` – the last two with two calls: count first, then the data."
+      }
+    },
+    "swap-chain": {
+      "text": {
+        "vulkan": "Create the swap chain: add its members, write `chooseSwapSurfaceFormat()` (`B8G8R8A8_UNORM`), `chooseSwapPresentMode()` (MAILBOX, else FIFO) and `chooseSwapExtent()`, fill in `createSwapChain()`, get the images, and destroy it in `cleanup()`.",
+        "d3d12": "At the end of `LoadPipeline`, create the swap chain (`DXGI_SWAP_CHAIN_DESC1`: `BufferCount = FrameCount`, `DXGI_FORMAT_R8G8B8A8_UNORM`, `DXGI_SWAP_EFFECT_FLIP_DISCARD`) with `CreateSwapChainForHwnd`, turn off Alt+Enter with `MakeWindowAssociation`, get `IDXGISwapChain3` and store `m_frameIndex`."
+      },
+      "hint": {
+        "vulkan": "Ask for `minImageCount + 1` images, use `VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT`, and `VK_SHARING_MODE_CONCURRENT` only if the two families differ. Then `vkCreateSwapchainKHR` and `vkGetSwapchainImagesKHR` twice.",
+        "d3d12": "Pass `m_commandQueue.Get()` (not the device) to `CreateSwapChainForHwnd`. `swapChain.As(&m_swapChain)` gives the newer interface; `m_swapChain->GetCurrentBackBufferIndex()` returns the back buffer index."
+      }
+    },
+    "image-views": {
+      "text": {
+        "vulkan": "Create one `VkImageView` per swap chain image in `createImageViews()` (2D, the swap chain format, identity swizzle, colour aspect, 1 mip level, 1 layer); add `swapChainImageViews` and destroy them in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Resize `swapChainImageViews` to `swapChainImages.size()` and loop over the images."
+      }
+    },
+    "render-pass": {
+      "text": {
+        "vulkan": "Create the render pass in `createRenderPass()`: one colour attachment (`loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR`, `storeOp = STORE`, `UNDEFINED` → `PRESENT_SRC_KHR`), one subpass and the dependency on `VK_SUBPASS_EXTERNAL`; add `renderPass` and destroy it in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "The attachment reference uses `VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL`; both stage masks of the dependency are `VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT`."
+      }
+    },
+    "framebuffers": {
+      "text": {
+        "vulkan": "Create a framebuffer per image view in `createFramebuffers()` (the render pass, one attachment, the swap chain extent, 1 layer); add `swapChainFramebuffers` and destroy them in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Just like the image views: resize, loop, `vkCreateFramebuffer`."
+      }
+    },
+    "command-buffer": {
+      "text": {
+        "vulkan": "Create the command pool (`VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT`, graphics family) in `createCommandPool()` and allocate one primary command buffer in `createCommandBuffer()`; destroy the pool in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Command buffers are freed together with their pool, so only `vkDestroyCommandPool` goes in `cleanup()`."
+      }
+    },
+    "record-commands": {
+      "text": {
+        "vulkan": "Write `recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)`: begin the command buffer, begin the render pass on `swapChainFramebuffers[imageIndex]` with the clear value `{{{0.2f, 0.3f, 0.3f, 1.0f}}}`, end the render pass and the command buffer."
+      },
+      "hint": {
+        "vulkan": "The clear happens because of the render pass's `loadOp = CLEAR`; the colour comes from `renderPassInfo.pClearValues`. Nothing calls the function yet."
+      }
+    },
+    "draw-frame": {
+      "text": {
+        "vulkan": "Create the semaphores and the fence in `createSyncObjects()` and fill in `drawFrame()`: wait for and reset the fence, acquire an image, record the command buffer, submit it and present the image; destroy the sync objects in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Create the fence signalled, and one `renderFinishedSemaphores` entry per swap chain image. Order: `vkWaitForFences`, `vkResetFences`, `vkAcquireNextImageKHR`, `vkResetCommandBuffer`, `recordCommandBuffer`, `vkQueueSubmit`, `vkQueuePresentKHR`."
+      }
+    },
+    "render-targets": {
+      "text": {
+        "d3d12": "Create an RTV descriptor heap with `FrameCount` descriptors, store `m_rtvDescriptorSize`, and create a render target view for each back buffer (`GetBuffer`, `CreateRenderTargetView`, `rtvHandle.Offset(1, m_rtvDescriptorSize)`)."
+      },
+      "hint": {
+        "d3d12": "Descriptors sit next to each other in the heap, `m_rtvDescriptorSize` bytes apart – ask the device with `GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV)`."
+      }
+    },
+    "command-list": {
+      "text": {
+        "d3d12": "Create the command allocator at the end of `LoadPipeline` (`CreateCommandAllocator`) and, in `LoadAssets`, the command list (`CreateCommandList`, with a null pipeline state) – then `Close()` it."
+      },
+      "hint": {
+        "d3d12": "Both use `D3D12_COMMAND_LIST_TYPE_DIRECT`. A new command list is open for recording; the render loop expects it closed."
+      }
+    },
+    "fence": {
+      "text": {
+        "d3d12": "Create the fence (`m_fenceValue = 1`) and the fence event in `LoadAssets`, fill in `WaitForPreviousFrame` (signal, wait with `SetEventOnCompletion` + `WaitForSingleObject`, update `m_frameIndex`) and `OnDestroy`."
+      },
+      "hint": {
+        "d3d12": "`m_commandQueue->Signal(m_fence.Get(), fence)`, then `m_fenceValue++`; only wait if `m_fence->GetCompletedValue() < fence`. `OnDestroy` waits, then calls `CloseHandle(m_fenceEvent)`."
+      }
+    },
+    "render": {
+      "text": {
+        "d3d12": "Fill in `OnRender` (`PopulateCommandList()`, `ExecuteCommandLists`, `m_swapChain->Present(1, 0)`, `WaitForPreviousFrame()`) and call `app.OnUpdate(); app.OnRender();` from the main loop when `PeekMessage` finds no message."
+      },
+      "hint": {
+        "d3d12": "Add an `else` branch to the `if (PeekMessage(...))`. `Present(1, 0)` waits for the next vertical blank (vsync)."
+      }
+    }
+  }
+}

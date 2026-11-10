@@ -1,0 +1,643 @@
+=== task: load-image
+--- file: main.cpp
+--- find:
+#include "d3dx12.h"
+--- replace:
+#include "d3dx12.h"
+
+// stb_image loads image files (PNG, JPEG ...). STB_IMAGE_IMPLEMENTATION makes this file
+// compile the library's code as well (do that in exactly one .cpp file).
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+--- file: main.cpp
+--- find:
+    // TODO: load the container image (stb_image) and create a texture from it
+--- replace:
+    // Create the first texture: the container.
+    {
+        // Load the image. The last argument asks stb_image for 4 channels (RGBA), the
+        // layout of DXGI_FORMAT_R8G8B8A8_UNORM, although container.png has no alpha.
+        // No vertical flip: in Direct3D, texture coordinate v = 0 is the image's top row.
+        int width, height, nrChannels;
+        unsigned char* data = stbi_load("container.png", &width, &height, &nrChannels, 4);
+        if (data == nullptr)
+        {
+            throw std::runtime_error("Failed to load texture container.png");
+        }
+
+        // Free the image memory.
+        stbi_image_free(data);
+    }
+
+=== task: texture
+--- file: main.cpp
+--- find:
+    D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};
+--- replace:
+    D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};
+    ComPtr<ID3D12Resource> m_texture1;
+--- file: main.cpp
+--- find:
+            throw std::runtime_error("Failed to load texture container.png");
+        }
+--- replace:
+            throw std::runtime_error("Failed to load texture container.png");
+        }
+
+        // Describe and create a Texture2D in a default heap (memory only the GPU uses).
+        // It starts in the COPY_DEST state: the pixels are copied into it next.
+        D3D12_RESOURCE_DESC textureDesc = {};
+        textureDesc.MipLevels = 1;
+        textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        textureDesc.Width = static_cast<UINT64>(width);
+        textureDesc.Height = static_cast<UINT>(height);
+        textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+        textureDesc.DepthOrArraySize = 1;
+        textureDesc.SampleDesc.Count = 1;
+        textureDesc.SampleDesc.Quality = 0;
+        textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&m_texture1)));
+
+=== task: upload
+--- file: main.cpp
+--- find:
+    // Command lists are created in the recording state, but there is nothing
+    // to record yet. The main loop expects it to be closed, so close it now.
+    ThrowIfFailed(m_commandList->Close());
+--- replace:
+    // Command lists are created in the recording state. This one stays open: the
+    // texture upload below is recorded into it, and it is executed at the end.
+--- file: main.cpp
+--- find:
+    // Create the first texture: the container.
+--- replace:
+    // Note: ComPtr's are CPU objects, but an upload heap needs to stay in scope until
+    // the command list that copies from it has finished executing on the GPU.
+    // We will flush the GPU at the end of this method to ensure it is not
+    // prematurely destroyed.
+    ComPtr<ID3D12Resource> textureUploadHeap1;
+
+    // Create the first texture: the container.
+--- file: main.cpp
+--- find:
+            IID_PPV_ARGS(&m_texture1)));
+--- replace:
+            IID_PPV_ARGS(&m_texture1)));
+
+        // The upload heap: a buffer in memory the CPU can write, big enough for the
+        // texture's rows as the GPU lays them out (GetRequiredIntermediateSize).
+        const UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_texture1.Get(), 0, 1);
+
+        // Create the GPU upload buffer.
+        CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RESOURCE_DESC uploadBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &uploadHeapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &uploadBufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&textureUploadHeap1)));
+
+        // Copy data to the intermediate upload heap and then schedule a copy
+        // from the upload heap to the Texture2D. UpdateSubresources copies the pixels
+        // into the upload heap right away (on the CPU), so the image can be freed after
+        // it; the GPU copies them into the texture when the command list executes.
+        D3D12_SUBRESOURCE_DATA textureData = {};
+        textureData.pData = data;
+        textureData.RowPitch = width * 4;                          // bytes per row: 4 per pixel
+        textureData.SlicePitch = textureData.RowPitch * height;    // bytes in the whole image
+
+        UpdateSubresources(m_commandList.Get(), m_texture1.Get(), textureUploadHeap1.Get(), 0, 0, 1, &textureData);
+
+        // After the copy, the texture is read by the pixel shader.
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_texture1.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        m_commandList->ResourceBarrier(1, &barrier);
+--- file: main.cpp
+--- find:
+    // Create synchronization objects.
+    {
+--- replace:
+    // Close the command list and execute it to begin the initial GPU setup.
+    ThrowIfFailed(m_commandList->Close());
+    ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+    m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+    // Create synchronization objects and wait until assets have been uploaded to the GPU.
+    {
+--- file: main.cpp
+--- find:
+            ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
+        }
+    }
+--- replace:
+            ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
+        }
+
+        // Wait for the command list to execute; we are reusing the same command
+        // list in our main loop but for now, we just want to wait for setup to
+        // complete before continuing. Only then may the upload heap go away.
+        WaitForPreviousFrame();
+    }
+
+=== task: srv
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
+--- replace:
+    ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
+    ComPtr<ID3D12DescriptorHeap> m_srvHeap;
+--- file: main.cpp
+--- find:
+        // TODO: create a shader resource view (SRV) heap for the texture (shader visible)
+--- replace:
+        // Describe and create a shader resource view (SRV) heap for the texture.
+        // Shader visible: the shaders can read the descriptors in it.
+        D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+        srvHeapDesc.NumDescriptors = 1;
+        srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
+--- file: main.cpp
+--- find:
+        m_commandList->ResourceBarrier(1, &barrier);
+
+        // Free the image memory.
+--- replace:
+        m_commandList->ResourceBarrier(1, &barrier);
+
+        // Describe and create a SRV for the texture, in the first slot of the SRV heap.
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = textureDesc.Format;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        m_device->CreateShaderResourceView(m_texture1.Get(), &srvDesc, m_srvHeap->GetCPUDescriptorHandleForHeapStart());
+
+        // Free the image memory.
+
+=== task: root-signature
+--- file: main.cpp
+--- find:
+    // Create an empty root signature.
+    {
+        // TODO: a descriptor table for the texture (t0) and a static sampler (s0) for the pixel shader
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+--- replace:
+    // Create the root signature: what the shaders read besides the vertices.
+    {
+        // Root parameter 0: a descriptor table with one range of SRVs - 1 SRV,
+        // starting at register t0. Only the pixel shader reads it.
+        CD3DX12_DESCRIPTOR_RANGE ranges[1];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+
+        CD3DX12_ROOT_PARAMETER rootParameters[1];
+        rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+
+        // A static sampler is part of the root signature itself (no descriptor needed).
+        // Sampler s0: linear filtering; texture coordinates outside 0..1 wrap around.
+        D3D12_STATIC_SAMPLER_DESC samplers[1] = {};
+        samplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+        samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[0].MipLODBias = 0;
+        samplers[0].MaxAnisotropy = 0;
+        samplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+        samplers[0].BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+        samplers[0].MinLOD = 0.0f;
+        samplers[0].MaxLOD = D3D12_FLOAT32_MAX;
+        samplers[0].ShaderRegister = 0;
+        samplers[0].RegisterSpace = 0;
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init(_countof(rootParameters), rootParameters, _countof(samplers), samplers, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+--- file: main.cpp
+--- find:
+    // TODO: set the SRV heap (SetDescriptorHeaps) and the descriptor table (SetGraphicsRootDescriptorTable)
+    m_commandList->RSSetViewports(1, &m_viewport);
+--- replace:
+
+    // The SRV heap the descriptor table points into, and root parameter 0: the
+    // table, starting at the heap's first descriptor.
+    ID3D12DescriptorHeap* ppHeaps[] = { m_srvHeap.Get() };
+    m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+    m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
+
+    m_commandList->RSSetViewports(1, &m_viewport);
+
+=== task: texture-coords
+--- file: main.cpp
+--- find:
+        XMFLOAT3 color;
+    };
+--- replace:
+        XMFLOAT3 color;
+        XMFLOAT2 texCoord;
+    };
+--- file: main.cpp
+--- find:
+            { "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+--- replace:
+            { "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+--- file: main.cpp
+--- find:
+        // Define the four corners of a rectangle, each with its own colour.
+        Vertex vertices[] =
+        {
+            // position               color
+            { { 0.5f, 0.5f, 0.0f },   { 1.0f, 0.0f, 0.0f } },    // top right: red
+            { { 0.5f, -0.5f, 0.0f },  { 0.0f, 1.0f, 0.0f } },    // bottom right: green
+            { { -0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f } },    // bottom left: blue
+            { { -0.5f, 0.5f, 0.0f },  { 1.0f, 1.0f, 0.0f } }     // top left: yellow
+        };
+--- replace:
+        // Define the four corners of a rectangle, each with its own colour and texture
+        // coordinates. Direct3D's texture coordinates start at the image's top left
+        // corner (0, 0); (1, 1) is its bottom right corner.
+        Vertex vertices[] =
+        {
+            // position               color                  texture coords
+            { { 0.5f, 0.5f, 0.0f },   { 1.0f, 0.0f, 0.0f },  { 1.0f, 0.0f } },    // top right: red
+            { { 0.5f, -0.5f, 0.0f },  { 0.0f, 1.0f, 0.0f },  { 1.0f, 1.0f } },    // bottom right: green
+            { { -0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f },  { 0.0f, 1.0f } },    // bottom left: blue
+            { { -0.5f, 0.5f, 0.0f },  { 1.0f, 1.0f, 0.0f },  { 0.0f, 0.0f } }     // top left: yellow
+        };
+--- file: shaders.hlsl
+--- find:
+    float4 color : COLOR;            // out of the vertex shader, into the pixel shader
+--- replace:
+    float4 color : COLOR;            // out of the vertex shader, into the pixel shader
+    float2 texCoord : TEXCOORD;      // the texture coordinates, interpolated like the colour
+--- file: shaders.hlsl
+--- find:
+PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
+--- replace:
+PSInput VSMain(float4 position : POSITION, float4 color : COLOR, float2 texCoord : TEXCOORD)
+--- file: shaders.hlsl
+--- find:
+    result.color = color;
+--- replace:
+    result.color = color;
+    result.texCoord = texCoord;
+
+=== task: sample
+--- file: shaders.hlsl
+--- find:
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+--- replace:
+// The texture: register t0, in the descriptor table of root parameter 0.
+Texture2D texture1 : register(t0);
+// The sampler: register s0, the static sampler of the root signature.
+SamplerState wrapSampler : register(s0);
+
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+--- file: shaders.hlsl
+--- find:
+    // The colour from the vertex shader, interpolated across the rectangle.
+    return input.color;
+--- replace:
+    // The texture's colour at the texture coordinates.
+    return texture1.Sample(wrapSampler, input.texCoord);
+
+=== task: tint
+--- file: shaders.hlsl
+--- find:
+    // The texture's colour at the texture coordinates.
+    return texture1.Sample(wrapSampler, input.texCoord);
+--- replace:
+    // The texture's colour at the texture coordinates, tinted with the vertex colour.
+    return texture1.Sample(wrapSampler, input.texCoord) * input.color;
+
+=== task: second-texture
+--- file: main.cpp
+--- find:
+    UINT m_rtvDescriptorSize = 0;
+--- replace:
+    UINT m_rtvDescriptorSize = 0;
+    UINT m_srvDescriptorSize = 0;
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_texture1;
+--- replace:
+    ComPtr<ID3D12Resource> m_texture1;
+    ComPtr<ID3D12Resource> m_texture2;
+--- file: main.cpp
+--- find:
+        srvHeapDesc.NumDescriptors = 1;
+--- replace:
+        srvHeapDesc.NumDescriptors = 2;    // one SRV per texture
+--- file: main.cpp
+--- find:
+        m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+--- replace:
+        m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        m_srvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+--- file: main.cpp
+--- find:
+        // Root parameter 0: a descriptor table with one range of SRVs - 1 SRV,
+        // starting at register t0. Only the pixel shader reads it.
+        CD3DX12_DESCRIPTOR_RANGE ranges[1];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+--- replace:
+        // Root parameter 0: a descriptor table with one range of SRVs - 2 SRVs,
+        // starting at register t0 (t0 and t1). Only the pixel shader reads it.
+        CD3DX12_DESCRIPTOR_RANGE ranges[1];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> textureUploadHeap1;
+--- replace:
+    ComPtr<ID3D12Resource> textureUploadHeap1;
+    ComPtr<ID3D12Resource> textureUploadHeap2;
+--- file: main.cpp
+--- find:
+        // Free the image memory.
+        stbi_image_free(data);
+    }
+--- replace:
+        // Free the image memory.
+        stbi_image_free(data);
+    }
+
+    // Create the second texture: the face. The same steps as for the container.
+    {
+        int width, height, nrChannels;
+        unsigned char* data = stbi_load("awesomeface.png", &width, &height, &nrChannels, 4);
+        if (data == nullptr)
+        {
+            throw std::runtime_error("Failed to load texture awesomeface.png");
+        }
+
+        D3D12_RESOURCE_DESC textureDesc = {};
+        textureDesc.MipLevels = 1;
+        textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        textureDesc.Width = static_cast<UINT64>(width);
+        textureDesc.Height = static_cast<UINT>(height);
+        textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+        textureDesc.DepthOrArraySize = 1;
+        textureDesc.SampleDesc.Count = 1;
+        textureDesc.SampleDesc.Quality = 0;
+        textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&m_texture2)));
+
+        const UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_texture2.Get(), 0, 1);
+
+        CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RESOURCE_DESC uploadBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &uploadHeapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &uploadBufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&textureUploadHeap2)));
+
+        D3D12_SUBRESOURCE_DATA textureData = {};
+        textureData.pData = data;
+        textureData.RowPitch = width * 4;
+        textureData.SlicePitch = textureData.RowPitch * height;
+
+        UpdateSubresources(m_commandList.Get(), m_texture2.Get(), textureUploadHeap2.Get(), 0, 0, 1, &textureData);
+
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_texture2.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        m_commandList->ResourceBarrier(1, &barrier);
+
+        // The SRV goes into the second slot of the SRV heap (descriptor 1), right after
+        // the container's: the descriptor table's t0 and t1.
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = textureDesc.Format;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_srvDescriptorSize);
+        m_device->CreateShaderResourceView(m_texture2.Get(), &srvDesc, srvHandle);
+
+        stbi_image_free(data);
+    }
+
+=== task: texture-units
+--- file: shaders.hlsl
+--- find:
+// The texture: register t0, in the descriptor table of root parameter 0.
+Texture2D texture1 : register(t0);
+--- replace:
+// The textures: registers t0 and t1, in the descriptor table of root parameter 0.
+Texture2D texture1 : register(t0);    // the container
+Texture2D texture2 : register(t1);    // the face
+--- file: shaders.hlsl
+--- find:
+    // The texture's colour at the texture coordinates, tinted with the vertex colour.
+    return texture1.Sample(wrapSampler, input.texCoord) * input.color;
+--- replace:
+    // Linearly interpolate between both textures (80% container, 20% face).
+    return lerp(texture1.Sample(wrapSampler, input.texCoord), texture2.Sample(wrapSampler, input.texCoord), 0.2f);
+
+=== task: flip-face
+--- file: shaders.hlsl
+--- find:
+    return lerp(texture1.Sample(wrapSampler, input.texCoord), texture2.Sample(wrapSampler, input.texCoord), 0.2f);
+--- replace:
+    // The face is mirrored horizontally: u becomes 1 - u.
+    return lerp(texture1.Sample(wrapSampler, input.texCoord), texture2.Sample(wrapSampler, float2(1.0f - input.texCoord.x, input.texCoord.y)), 0.2f);
+
+=== task: repeat
+--- file: main.cpp
+--- find:
+            { { 0.5f, 0.5f, 0.0f },   { 1.0f, 0.0f, 0.0f },  { 1.0f, 0.0f } },    // top right: red
+            { { 0.5f, -0.5f, 0.0f },  { 0.0f, 1.0f, 0.0f },  { 1.0f, 1.0f } },    // bottom right: green
+            { { -0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f },  { 0.0f, 1.0f } },    // bottom left: blue
+            { { -0.5f, 0.5f, 0.0f },  { 1.0f, 1.0f, 0.0f },  { 0.0f, 0.0f } }     // top left: yellow
+--- replace:
+            { { 0.5f, 0.5f, 0.0f },   { 1.0f, 0.0f, 0.0f },  { 2.0f, 0.0f } },    // top right: red
+            { { 0.5f, -0.5f, 0.0f },  { 0.0f, 1.0f, 0.0f },  { 2.0f, 2.0f } },    // bottom right: green
+            { { -0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f },  { 0.0f, 2.0f } },    // bottom left: blue
+            { { -0.5f, 0.5f, 0.0f },  { 1.0f, 1.0f, 0.0f },  { 0.0f, 0.0f } }     // top left: yellow
+--- file: main.cpp
+--- find:
+        D3D12_STATIC_SAMPLER_DESC samplers[1] = {};
+--- replace:
+        D3D12_STATIC_SAMPLER_DESC samplers[2] = {};
+--- file: main.cpp
+--- find:
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+--- replace:
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        // Sampler s1: the same, but coordinates outside 0..1 are clamped to the edge.
+        samplers[1] = samplers[0];
+        samplers[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[1].ShaderRegister = 1;
+--- file: shaders.hlsl
+--- find:
+// The sampler: register s0, the static sampler of the root signature.
+SamplerState wrapSampler : register(s0);
+--- replace:
+// The samplers: registers s0 and s1, the static samplers of the root signature.
+SamplerState wrapSampler : register(s0);     // repeats the texture outside 0..1
+SamplerState clampSampler : register(s1);    // stretches its edge pixels outside 0..1
+--- file: shaders.hlsl
+--- find:
+    return lerp(texture1.Sample(wrapSampler, input.texCoord), texture2.Sample(wrapSampler, float2(1.0f - input.texCoord.x, input.texCoord.y)), 0.2f);
+--- replace:
+    return lerp(texture1.Sample(clampSampler, input.texCoord), texture2.Sample(wrapSampler, float2(1.0f - input.texCoord.x, input.texCoord.y)), 0.2f);
+
+=== task: mix-value
+--- file: main.cpp
+--- find:
+        XMFLOAT2 texCoord;
+    };
+--- replace:
+        XMFLOAT2 texCoord;
+    };
+
+    // The root constants: what the pixel shader sees as cbuffer MixConstants.
+    struct MixConstants
+    {
+        float mixValue;
+    };
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_texture2;
+--- replace:
+    ComPtr<ID3D12Resource> m_texture2;
+    float m_mixValue = 0.5f;    // how much of the face shows: 0 = none, 1 = only the face
+--- file: main.cpp
+--- find:
+        CD3DX12_ROOT_PARAMETER rootParameters[1];
+        rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+--- replace:
+        // Root parameter 1: root constants for register b0 (the mix value), also
+        // only for the pixel shader.
+        CD3DX12_ROOT_PARAMETER rootParameters[2];
+        rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[1].InitAsConstants(sizeof(MixConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+--- file: main.cpp
+--- find:
+    m_commandList->RSSetScissorRects(1, &m_scissorRect);
+--- replace:
+    m_commandList->RSSetScissorRects(1, &m_scissorRect);
+
+    // Root parameter 1: the mix value for the pixel shader.
+    MixConstants mixConstants = {};
+    mixConstants.mixValue = m_mixValue;
+    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(MixConstants) / 4, &mixConstants, 0);
+--- file: shaders.hlsl
+--- find:
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+--- replace:
+// Root constants set from main.cpp with SetGraphicsRoot32BitConstants: the pixel
+// shader sees them as a constant buffer at register b0.
+cbuffer MixConstants : register(b0)
+{
+    float mixValue;    // how much of the face shows
+};
+
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+--- file: shaders.hlsl
+--- find:
+    // Linearly interpolate between both textures (80% container, 20% face).
+--- replace:
+    // Linearly interpolate between both textures by mixValue (0.5: half and half).
+--- file: shaders.hlsl
+--- find:
+    return lerp(texture1.Sample(clampSampler, input.texCoord), texture2.Sample(wrapSampler, float2(1.0f - input.texCoord.x, input.texCoord.y)), 0.2f);
+--- replace:
+    return lerp(texture1.Sample(clampSampler, input.texCoord), texture2.Sample(wrapSampler, float2(1.0f - input.texCoord.x, input.texCoord.y)), mixValue);
+
+=== task: mix-keys
+--- file: main.cpp
+--- find:
+    void OnDestroy();
+--- replace:
+    void OnDestroy();
+    void OnKeyDown(UINT8 key);
+--- file: main.cpp
+--- find:
+// Update frame-based values.
+void D3D12App::OnUpdate()
+{
+}
+--- replace:
+// Update frame-based values.
+void D3D12App::OnUpdate()
+{
+}
+
+// Up and Down change the mix value, in steps of 0.1 (holding a key repeats it).
+void D3D12App::OnKeyDown(UINT8 key)
+{
+    if (key == VK_UP)
+    {
+        m_mixValue += 0.1f;
+        if (m_mixValue >= 1.0f)
+            m_mixValue = 1.0f;
+    }
+    if (key == VK_DOWN)
+    {
+        m_mixValue -= 0.1f;
+        if (m_mixValue <= 0.0f)
+            m_mixValue = 0.0f;
+    }
+}
+--- file: main.cpp
+--- find:
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+    case WM_KEYDOWN:
+        // Escape closes the window.
+        if (wParam == VK_ESCAPE)
+        {
+            DestroyWindow(hWnd);
+        }
+        return 0;
+--- replace:
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    // The app that wWinMain stored in the window (nullptr until then).
+    D3D12App* pApp = reinterpret_cast<D3D12App*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+
+    switch (message)
+    {
+    case WM_KEYDOWN:
+        // Escape closes the window; the app gets the other keys.
+        if (wParam == VK_ESCAPE)
+        {
+            DestroyWindow(hWnd);
+        }
+        else if (pApp != nullptr)
+        {
+            pApp->OnKeyDown(static_cast<UINT8>(wParam));
+        }
+        return 0;
+--- file: main.cpp
+--- find:
+    D3D12App app(width, height);
+--- replace:
+    D3D12App app(width, height);
+
+    // Store a pointer to the app in the window, so WindowProc can pass it the keys.
+    SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&app));

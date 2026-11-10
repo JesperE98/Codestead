@@ -1,0 +1,157 @@
+{
+  "title": "Hello Triangle",
+  "tasks": {
+    "vertex-buffer": {
+      "text": {
+        "opengl": "Put the triangle's three vertices in `float vertices[]`, copy them into a vertex buffer object (`glGenBuffers`, `glBindBuffer(GL_ARRAY_BUFFER, VBO)`, `glBufferData`) and delete it at the end with `glDeleteBuffers`.",
+        "vulkan": "Create the vertex buffer: add `vertexBuffer` and `vertexBufferMemory`, write `createVertexBuffer()` (host-visible, coherent memory; map, `memcpy`, unmap) and `findMemoryType()`, call it after `createCommandPool()` and destroy both in `cleanup()`.",
+        "d3d12": "Create the vertex buffer: the three vertices (top, bottom right, bottom left) in a committed resource in an upload heap, copied with `Map`/`memcpy`/`Unmap`, and fill in `m_vertexBufferView`."
+      },
+      "hint": {
+        "opengl": "Left (-0.5, -0.5, 0.0), right (0.5, -0.5, 0.0), top (0.0, 0.5, 0.0). Use `GL_STATIC_DRAW`: the data is set once and drawn many times.",
+        "vulkan": "`vkGetBufferMemoryRequirements` tells which memory types fit the buffer; `findMemoryType` picks one of them that also has `HOST_VISIBLE | HOST_COHERENT`.",
+        "d3d12": "Keep `CD3DX12_HEAP_PROPERTIES` and `CD3DX12_RESOURCE_DESC::Buffer(...)` in local variables and pass their addresses. Start state: `D3D12_RESOURCE_STATE_GENERIC_READ`; stride `sizeof(Vertex)`."
+      }
+    },
+    "vertex-shader": {
+      "text": {
+        "opengl": "Write `vertexShaderSource` (GLSL 330 core, `layout (location = 0) in vec3 aPos`, `gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0)`), then create and compile the vertex shader and check for compile errors.",
+        "d3d12": "In `shaders.hlsl`, write `struct PSInput { float4 position : SV_POSITION; };` and `PSInput VSMain(float4 position : POSITION)`, which copies the position into the result."
+      },
+      "hint": {
+        "opengl": "`glCreateShader(GL_VERTEX_SHADER)`, `glShaderSource`, `glCompileShader`; check with `glGetShaderiv(..., GL_COMPILE_STATUS, &success)` and print `glGetShaderInfoLog` on failure.",
+        "d3d12": "`POSITION` matches the input layout's semantic name; `SV_POSITION` is the clip-space position the rasterizer needs. The missing `w` becomes 1.0."
+      }
+    },
+    "fragment-shader": {
+      "text": {
+        "opengl": "Write `fragmentShaderSource` (output `out vec4 FragColor`, orange `vec4(1.0f, 0.5f, 0.2f, 1.0f)`), then create and compile the fragment shader with the same error check."
+      },
+      "hint": {
+        "opengl": "Same steps as the vertex shader, with `GL_FRAGMENT_SHADER`; reuse `success` and `infoLog`."
+      }
+    },
+    "shader-program": {
+      "text": {
+        "opengl": "Link both shaders into `shaderProgram` (`glCreateProgram`, two `glAttachShader`, `glLinkProgram`), check for link errors, delete the two shaders, and delete the program at the end with `glDeleteProgram`."
+      },
+      "hint": {
+        "opengl": "Check with `glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success)` and `glGetProgramInfoLog`. Once linked, the shader objects can go: `glDeleteShader`."
+      }
+    },
+    "vertex-attributes": {
+      "text": {
+        "opengl": "Create a VAO and bind it before the VBO, describe the data with `glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0)` and `glEnableVertexAttribArray(0)`, and delete the VAO at the end."
+      },
+      "hint": {
+        "opengl": "`unsigned int VBO, VAO;`, `glGenVertexArrays(1, &VAO)` and `glBindVertexArray(VAO)` before `glBindBuffer`. Afterwards you may unbind the VBO and the VAO."
+      }
+    },
+    "draw": {
+      "text": {
+        "opengl": "Draw the triangle in the render loop: `glUseProgram(shaderProgram)`, `glBindVertexArray(VAO)`, `glDrawArrays(GL_TRIANGLES, 0, 3)`.",
+        "vulkan": "In `recordCommandBuffer()`, inside the render pass: `vkCmdBindPipeline`, set the viewport and the scissor, bind `vertexBuffer` with `vkCmdBindVertexBuffers` and call `vkCmdDraw`.",
+        "d3d12": "In `PopulateCommandList`: set the root signature, viewport and scissor rectangle, bind the back buffer with `OMSetRenderTargets`, and after the clear draw with `IASetPrimitiveTopology`, `IASetVertexBuffers` and `DrawInstanced(3, 1, 0, 0)`."
+      },
+      "hint": {
+        "opengl": "Draw after `glClear` and before `glfwSwapBuffers`.",
+        "vulkan": "Viewport and scissor are dynamic state, so they must be set in the command buffer: the whole `swapChainExtent`, depth 0 to 1. `vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0)`.",
+        "d3d12": "Clearing needs only the RTV handle, drawing needs the render target bound. The pipeline state is already set by `m_commandList->Reset(..., m_pipelineState.Get())`."
+      }
+    },
+    "element-buffer": {
+      "text": {
+        "opengl": "Prepare a rectangle: replace the vertices with the four corners, add `unsigned int indices[] = { 0, 1, 3, 1, 2, 3 };`, put them in an element buffer object bound while the VAO is bound, and delete the EBO at the end."
+      },
+      "hint": {
+        "opengl": "Top right (0.5, 0.5), bottom right (0.5, -0.5), bottom left (-0.5, -0.5), top left (-0.5, 0.5), z = 0. `glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO)` + `glBufferData` after the VBO's data – and don't unbind the EBO while the VAO is bound."
+      }
+    },
+    "rectangle": {
+      "text": {
+        "opengl": "Draw the rectangle from the indices: replace `glDrawArrays` with `glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0)`.",
+        "vulkan": "Draw a rectangle: change `vertices` to the four corners, bind the index buffer with `vkCmdBindIndexBuffer` (`VK_INDEX_TYPE_UINT16`) and replace `vkCmdDraw` with `vkCmdDrawIndexed`."
+      },
+      "hint": {
+        "opengl": "6 indices = 2 triangles; the last argument is the offset into the bound EBO. Uncomment `glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)` to see the triangles in wireframe.",
+        "vulkan": "Corners (y points down): (-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), (-0.5, 0.5), z = 0. `vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0)`."
+      }
+    },
+    "shaders": {
+      "text": {
+        "vulkan": "Write the two shaders: `shader.vert` reads `layout(location = 0) in vec3 inPosition;` and writes `gl_Position = vec4(inPosition, 1.0);`, `shader.frag` declares `layout(location = 0) out vec4 outColor;` and writes `outColor = vec4(1.0, 0.5, 0.2, 1.0);`."
+      },
+      "hint": {
+        "vulkan": "Vulkan shaders need explicit `location`s; `#version 450` is already there. Build & run compiles them to `vert.spv` and `frag.spv`."
+      }
+    },
+    "shader-modules": {
+      "text": {
+        "vulkan": "Write `readFile()` and `createShaderModule()`; in `createGraphicsPipeline()` load `shaders/vert.spv` and `shaders/frag.spv`, create the two shader modules and shader stages (`shaderStages`), and destroy the modules at the end of the function."
+      },
+      "hint": {
+        "vulkan": "Open the file with `std::ios::ate | std::ios::binary` so `tellg()` gives its size. Each stage: `VK_SHADER_STAGE_VERTEX_BIT` or `VK_SHADER_STAGE_FRAGMENT_BIT`, the module, `pName = \"main\"`."
+      }
+    },
+    "vertex-input": {
+      "text": {
+        "vulkan": "Describe the vertex data: `struct Vertex { glm::vec3 pos; }` with `getBindingDescription()` and `getAttributeDescriptions()`, and the triangle `{{0.0f, -0.5f, 0.0f}}, {{0.5f, 0.5f, 0.0f}}, {{-0.5f, 0.5f, 0.0f}}`."
+      },
+      "hint": {
+        "vulkan": "Binding 0, stride `sizeof(Vertex)`, `VK_VERTEX_INPUT_RATE_VERTEX`; attribute location 0, `VK_FORMAT_R32G32B32_SFLOAT`, `offsetof(Vertex, pos)`. y points down: (0, -0.5) is the top corner."
+      }
+    },
+    "fixed-functions": {
+      "text": {
+        "vulkan": "Describe the fixed-function stages in `createGraphicsPipeline()` (vertex input, input assembly, viewport state, rasterizer with back-face culling and clockwise front faces, multisampling, colour blending, dynamic viewport and scissor) and create the empty `pipelineLayout`; destroy it in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Viewport and scissor are dynamic: the viewport state only gets `viewportCount = 1` and `scissorCount = 1`. `rasterizer.cullMode = VK_CULL_MODE_BACK_BIT`, `rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE`."
+      }
+    },
+    "pipeline": {
+      "text": {
+        "vulkan": "Create the graphics pipeline: fill a `VkGraphicsPipelineCreateInfo` (2 stages, all the states, the layout, `renderPass`, subpass 0), call `vkCreateGraphicsPipelines` into `graphicsPipeline`, and destroy it in `cleanup()` before the layout.",
+        "d3d12": "Compile the shaders with `D3DCompileFromFile` (`VSMain`/`vs_5_0`, `PSMain`/`ps_5_0`), define the `POSITION` input layout, create the PSO with `CreateGraphicsPipelineState`, and pass `m_pipelineState.Get()` to `CreateCommandList`."
+      },
+      "hint": {
+        "vulkan": "The shader modules can be destroyed right after the pipeline is created, so the call goes before the \"destroy the shader modules\" TODO.",
+        "d3d12": "`CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT)`, `CD3DX12_BLEND_DESC(D3D12_DEFAULT)`, no depth/stencil, `SampleMask = UINT_MAX`, `D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE`, one render target `DXGI_FORMAT_R8G8B8A8_UNORM`, `SampleDesc.Count = 1`."
+      }
+    },
+    "index-buffer": {
+      "text": {
+        "vulkan": "Create an index buffer: add `const std::vector<uint16_t> indices = { 0, 1, 2, 2, 3, 0 };`, the members `indexBuffer` and `indexBufferMemory`, and `createIndexBuffer()`; call it after `createVertexBuffer()` and destroy it in `cleanup()`.",
+        "d3d12": "Draw the whole rectangle with an index buffer: `UINT indices[] = { 0, 1, 3, 1, 2, 3 };` in an upload-heap buffer with an index buffer view (`DXGI_FORMAT_R32_UINT`), then `IASetIndexBuffer` and `DrawIndexedInstanced(6, 1, 0, 0, 0)` instead of `DrawInstanced`."
+      },
+      "hint": {
+        "vulkan": "Like `createVertexBuffer()` with `VK_BUFFER_USAGE_INDEX_BUFFER_BIT` and `sizeof(indices[0]) * indices.size()` bytes.",
+        "d3d12": "Add the members `ComPtr<ID3D12Resource> m_indexBuffer;` and `D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};`. Both triangles are clockwise on screen, so neither is culled."
+      }
+    },
+    "pixel-shader": {
+      "text": {
+        "d3d12": "Write the pixel shader `float4 PSMain(PSInput input) : SV_TARGET` that returns orange, `float4(1.0f, 0.5f, 0.2f, 1.0f)`."
+      },
+      "hint": {
+        "d3d12": "`SV_TARGET` means: this value goes to the render target (the back buffer)."
+      }
+    },
+    "root-signature": {
+      "text": {
+        "d3d12": "Create an empty root signature with `D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT`: `CD3DX12_ROOT_SIGNATURE_DESC::Init`, `D3D12SerializeRootSignature` and `CreateRootSignature` into `m_rootSignature`."
+      },
+      "hint": {
+        "d3d12": "`rootSignatureDesc.Init(0, nullptr, 0, nullptr, flag)`; serialize with `D3D_ROOT_SIGNATURE_VERSION_1`, then create it from the blob's `GetBufferPointer()` and `GetBufferSize()`."
+      }
+    },
+    "rectangle-vertices": {
+      "text": {
+        "d3d12": "Replace the three vertices with the four corners of a rectangle: top right `{ 0.5f, 0.5f, 0.0f }`, bottom right `{ 0.5f, -0.5f, 0.0f }`, bottom left `{ -0.5f, -0.5f, 0.0f }`, top left `{ -0.5f, 0.5f, 0.0f }`."
+      },
+      "hint": {
+        "d3d12": "`DrawInstanced(3, ...)` still draws only the first three vertices – the lower-right half of the rectangle."
+      }
+    }
+  }
+}

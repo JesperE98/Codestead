@@ -1,0 +1,97 @@
+=== task: transform-uniform
+--- file: main.cpp
+--- find:
+#include <glm/glm.hpp>
+--- replace:
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+--- file: main.cpp
+--- find:
+// TODO: struct PushConstants with the transform matrix (glm::mat4 transform)
+--- replace:
+// The same layout as the push constant block in the vertex shader (a mat4 is 64 bytes).
+struct PushConstants {
+    glm::mat4 transform;
+};
+--- file: main.cpp
+--- find:
+        // TODO: a push constant range for the transform matrix (vertex stage), used by pipelineLayoutInfo below
+--- replace:
+        VkPushConstantRange pushConstantRange{};
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = sizeof(PushConstants);
+--- file: main.cpp
+--- find:
+        pipelineLayoutInfo.pushConstantRangeCount = 0;
+--- replace:
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+--- file: main.cpp
+--- find:
+        // TODO: create the transformation matrix and push it to the vertex shader (vkCmdPushConstants)
+--- replace:
+        // create transformations
+        glm::mat4 transform = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        transform = glm::rotate(transform, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 0.5f));
+
+        // push the matrix to the vertex shader: it is used by the draws recorded after this
+        PushConstants constants{};
+        constants.transform = transform;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+--- file: shaders/shader.vert
+--- find:
+// TODO: the push constant block with the transform matrix
+--- replace:
+layout(push_constant) uniform PushConstants {
+    mat4 transform;
+} pc;
+--- file: shaders/shader.vert
+--- find:
+    gl_Position = vec4(inPosition, 1.0);
+--- replace:
+    gl_Position = pc.transform * vec4(inPosition, 1.0);
+
+=== task: translate-rotate
+--- file: main.cpp
+--- find:
+        transform = glm::rotate(transform, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 0.5f));
+--- replace:
+        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
+=== task: rotate-first
+--- file: main.cpp
+--- find:
+        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+--- replace:
+        // switched the order: the container is now translated first and then rotated around the origin (it orbits the centre)
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+
+=== task: second-container
+--- file: main.cpp
+--- find:
+#include <cstdlib>
+--- replace:
+#include <cstdlib>
+#include <cmath>
+--- file: main.cpp
+--- find:
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+--- replace:
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
+        // second transformation
+        transform = glm::mat4(1.0f); // reset it to identity matrix
+        transform = glm::translate(transform, glm::vec3(-0.5f, 0.5f, 0.0f));
+        float scaleAmount = static_cast<float>(std::sin(glfwGetTime()));
+        transform = glm::scale(transform, glm::vec3(scaleAmount, scaleAmount, scaleAmount));
+        constants.transform = transform;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+        // now with the push constants replaced with the new transformation, draw it again
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);

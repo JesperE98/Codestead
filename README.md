@@ -4,7 +4,7 @@
 
 <p align="center">
   <b>Learn by doing.</b> Desktop apps that teach programming topics chapter by chapter, with tasks you solve
-  in a safe, built-in environment. The first one is <b>Codestead Linux</b>.
+  in a safe, built-in environment: <b>Codestead Linux</b> and <b>Codestead GP</b> (graphics programming).
 </p>
 
 <p align="center">
@@ -39,9 +39,10 @@ Codestead is a family of learning tools, plus a small launcher called the **Code
 | App | What it does |
 |---|---|
 | **Codestead Linux** | Learn the Linux shell in a simulated terminal: 25 chapters, 192 tasks, checkpoints and exams. |
+| **Codestead GP** | Learn graphics programming with OpenGL, Vulkan or DirectX 12, following learnopengl.com, with a simulated GPU. *In development on the `GraphicsProgramming` branch.* |
 | **Codestead hub** | Installs, starts and updates the tools, and shows your level and achievements in each. |
 
-More tools (such as Python and C++) are planned. They will share the same learning window, game and hub.
+More tools (such as C++) are planned. They will share the same learning window, game and hub.
 
 ## Download
 
@@ -76,6 +77,19 @@ Windows Server 2022/2025, Ubuntu 22.04 and 24.04, Fedora, Arch Linux and CachyOS
   streak and a short celebration when you finish a chapter.
 - Your progress is saved automatically. Light and dark theme.
 
+**Codestead GP** (in development)
+
+- **Choose your graphics API** at the top – OpenGL 3.3, Vulkan or DirectX 12 – and every chapter, task and code
+  example follows it. Each API has its own projects and progress.
+- **The same chapters as learnopengl.com**, section by section. The OpenGL code follows learnopengl.com, the Vulkan
+  code vulkan-tutorial.com and the DirectX 12 code Microsoft's D3D12 samples. So far: the introduction and Getting
+  started up to Shaders.
+- **A project editor with Build & run**: a simulated GPU compiles the code (misspelt API names get "did you mean"),
+  runs the shaders and shows the window the program would open, with the messages a driver or validation layer
+  would give.
+- Every course project is compiled with the real compilers and headers, and the OpenGL and Vulkan ones are run on
+  Mesa with the Khronos validation layer (`src/GP/verify`).
+
 **Codestead hub**
 
 - Install, open, update and roll back tools; see what changed in each version.
@@ -104,6 +118,11 @@ src/
 │             Codestead.Shell        the simulated terminal (bash, zsh, fish, apt, pacman, dnf, git …)
 │             Codestead.Terminal     the terminal control and the lesson sandbox
 │             content/               chapter texts and translations
+├── GP/       Codestead.GP           the app (GpTool: the course and the project editor in the shared window)
+│             Codestead.GP.Course    the course: chapters, tasks and checks, texts, the game
+│             Codestead.GP.Gpu       the simulated GPU: compile step, GLSL/HLSL interpreter, rasteriser
+│             content/               chapter texts, translations and each chapter's projects per API
+│             verify/                checks the course code with real compilers and drivers
 └── Hub/      Codestead.Hub, Codestead.Hub.Core
 tests/        the same layout as src/
 build/        names, versions, icons, languages.json
@@ -119,6 +138,10 @@ You need the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```bash
 dotnet run --project src/Linux/Codestead.Linux
+```
+
+```bash
+dotnet run --project src/GP/Codestead.GP
 ```
 
 ```bash

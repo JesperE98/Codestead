@@ -1,0 +1,263 @@
+=== task: in-out
+--- file: shaders/shader.vert
+--- find:
+layout(location = 0) in vec3 inPosition;
+
+void main() {
+    gl_Position = vec4(inPosition, 1.0);
+}
+--- replace:
+layout(location = 0) in vec3 inPosition;
+
+layout(location = 0) out vec4 vertexColor; // the color we pass on to the fragment shader
+
+void main() {
+    gl_Position = vec4(inPosition, 1.0);
+    vertexColor = vec4(0.5, 0.0, 0.0, 1.0); // dark red
+}
+--- file: shaders/shader.frag
+--- find:
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = vec4(1.0, 0.5, 0.2, 1.0);
+}
+--- replace:
+layout(location = 0) in vec4 vertexColor; // from the vertex shader (same location, same type)
+
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = vertexColor;
+}
+
+=== task: uniform
+--- file: shaders/shader.vert
+--- find:
+layout(location = 0) in vec3 inPosition;
+
+layout(location = 0) out vec4 vertexColor; // the color we pass on to the fragment shader
+
+void main() {
+    gl_Position = vec4(inPosition, 1.0);
+    vertexColor = vec4(0.5, 0.0, 0.0, 1.0); // dark red
+}
+--- replace:
+layout(location = 0) in vec3 inPosition;
+
+void main() {
+    gl_Position = vec4(inPosition, 1.0);
+}
+--- file: shaders/shader.frag
+--- find:
+layout(location = 0) in vec4 vertexColor; // from the vertex shader (same location, same type)
+
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = vertexColor;
+}
+--- replace:
+// Push constants: a few bytes the application sets from the CPU while recording the commands.
+layout(push_constant) uniform PushConstants {
+    vec4 color;
+} pc;
+
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = pc.color;
+}
+--- file: main.cpp
+--- find:
+#include <glm/glm.hpp>
+--- replace:
+#include <glm/glm.hpp>
+
+#include <chrono>
+#include <cmath>
+--- file: main.cpp
+--- find:
+class HelloTriangleApplication {
+--- replace:
+// The same layout as the push constant block in the shader.
+struct PushConstants {
+    glm::vec4 color;
+};
+
+class HelloTriangleApplication {
+--- file: main.cpp
+--- find:
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        pipelineLayoutInfo.setLayoutCount = 0;
+        pipelineLayoutInfo.pushConstantRangeCount = 0;
+--- replace:
+        VkPushConstantRange pushConstantRange{};
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = sizeof(PushConstants);
+
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        pipelineLayoutInfo.setLayoutCount = 0;
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+--- file: main.cpp
+--- find:
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+--- replace:
+        static auto startTime = std::chrono::high_resolution_clock::now();
+
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+        float greenValue = std::sin(time) / 2.0f + 0.5f;
+
+        PushConstants constants{};
+        constants.color = glm::vec4(0.0f, greenValue, 0.0f, 1.0f);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+
+=== task: vertex-colors
+--- file: main.cpp
+--- find:
+    glm::vec3 pos;
+--- replace:
+    glm::vec3 pos;
+    glm::vec3 color;
+--- file: main.cpp
+--- find:
+    static std::array<VkVertexInputAttributeDescription, 1> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 1> attributeDescriptions{};
+--- replace:
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+--- file: main.cpp
+--- find:
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+--- replace:
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, color);
+--- file: main.cpp
+--- find:
+    {{0.0f, -0.5f, 0.0f}},
+    {{0.5f, 0.5f, 0.0f}},
+    {{-0.5f, 0.5f, 0.0f}}
+--- replace:
+    {{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+    {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
+--- file: shaders/shader.vert
+--- find:
+layout(location = 0) in vec3 inPosition;
+
+void main() {
+    gl_Position = vec4(inPosition, 1.0);
+}
+--- replace:
+layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec3 inColor;
+
+layout(location = 0) out vec3 fragColor;
+
+void main() {
+    gl_Position = vec4(inPosition, 1.0);
+    fragColor = inColor;
+}
+--- file: shaders/shader.frag
+--- find:
+// Push constants: a few bytes the application sets from the CPU while recording the commands.
+layout(push_constant) uniform PushConstants {
+    vec4 color;
+} pc;
+
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = pc.color;
+}
+--- replace:
+layout(location = 0) in vec3 fragColor;
+
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = vec4(fragColor, 1.0);
+}
+
+=== task: upside-down
+--- file: shaders/shader.vert
+--- find:
+    gl_Position = vec4(inPosition, 1.0);
+--- replace:
+    gl_Position = vec4(inPosition.x, -inPosition.y, inPosition.z, 1.0);
+--- file: main.cpp
+--- find:
+        rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+--- replace:
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // the flip in the vertex shader mirrors the winding order
+
+=== task: offset
+--- file: shaders/shader.vert
+--- find:
+layout(location = 0) in vec3 inPosition;
+--- replace:
+layout(push_constant) uniform PushConstants {
+    float xOffset;
+} pc;
+
+layout(location = 0) in vec3 inPosition;
+--- file: shaders/shader.vert
+--- find:
+    gl_Position = vec4(inPosition.x, -inPosition.y, inPosition.z, 1.0);
+--- replace:
+    gl_Position = vec4(inPosition.x + pc.xOffset, -inPosition.y, inPosition.z, 1.0);
+--- file: main.cpp
+--- find:
+#include <glm/glm.hpp>
+
+#include <chrono>
+#include <cmath>
+--- replace:
+#include <glm/glm.hpp>
+--- file: main.cpp
+--- find:
+struct PushConstants {
+    glm::vec4 color;
+};
+--- replace:
+struct PushConstants {
+    float xOffset;
+};
+--- file: main.cpp
+--- find:
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+--- replace:
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+--- file: main.cpp
+--- find:
+        static auto startTime = std::chrono::high_resolution_clock::now();
+
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+        float greenValue = std::sin(time) / 2.0f + 0.5f;
+
+        PushConstants constants{};
+        constants.color = glm::vec4(0.0f, greenValue, 0.0f, 1.0f);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+--- replace:
+        PushConstants constants{};
+        constants.xOffset = 0.5f;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+=== task: position-color
+--- file: shaders/shader.vert
+--- find:
+    fragColor = inColor;
+--- replace:
+    fragColor = inPosition; // the position as the color (negative values become 0)

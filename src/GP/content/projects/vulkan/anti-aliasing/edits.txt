@@ -1,0 +1,713 @@
+=== task: sample-count
+--- file: main.cpp
+--- find:
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+--- replace:
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT; // samples per pixel
+--- file: main.cpp
+--- find:
+                // TODO: remember how many samples per pixel the colour and depth images can have (getMaxUsableSampleCount)
+--- replace:
+                msaaSamples = getMaxUsableSampleCount();
+--- file: main.cpp
+--- find:
+    VkImageView createImageView(
+--- replace:
+    // The number of samples per pixel to use: 4 like learnopengl, if the device has them for colour and depth images
+    // (vulkan-tutorial takes the most the device offers, up to 64).
+    VkSampleCountFlagBits getMaxUsableSampleCount() {
+        VkPhysicalDeviceProperties physicalDeviceProperties;
+        vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
+
+        VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
+        if (counts & VK_SAMPLE_COUNT_4_BIT) { return VK_SAMPLE_COUNT_4_BIT; }
+        if (counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
+
+        return VK_SAMPLE_COUNT_1_BIT;
+    }
+
+    VkImageView createImageView(
+--- file: main.cpp
+--- find:
+    void createImage(uint32_t width, uint32_t height, VkFormat format,
+--- replace:
+    void createImage(uint32_t width, uint32_t height, VkSampleCountFlagBits numSamples, VkFormat format,
+--- file: main.cpp
+--- find:
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+--- replace:
+        imageInfo.samples = numSamples;
+--- file: main.cpp
+--- find:
+        createImage(swapChainExtent.width, swapChainExtent.height, depthFormat,
+--- replace:
+        createImage(swapChainExtent.width, swapChainExtent.height, VK_SAMPLE_COUNT_1_BIT, depthFormat,
+
+=== task: msaa
+--- file: main.cpp
+--- find:
+    VkImage depthImage;
+--- replace:
+    // the multisampled colour image the scene is drawn into (the swap chain's images have one sample per pixel)
+    VkImage colorImage;
+    VkDeviceMemory colorImageMemory;
+    VkImageView colorImageView;
+
+    VkImage depthImage;
+--- file: main.cpp
+--- find:
+        createDepthResources();
+        createFramebuffers();
+--- replace:
+        createColorResources();
+        createDepthResources();
+        createFramebuffers();
+--- file: main.cpp
+--- find:
+        vkDestroyImageView(device, depthImageView, nullptr);
+--- replace:
+        vkDestroyImageView(device, colorImageView, nullptr);
+        vkDestroyImage(device, colorImage, nullptr);
+        vkFreeMemory(device, colorImageMemory, nullptr);
+
+        vkDestroyImageView(device, depthImageView, nullptr);
+--- file: main.cpp
+--- find:
+        // TODO: multisampling - the colour attachment becomes a multisampled image of our own, the depth attachment gets
+        // the same samples, and a third attachment, the swap chain image, receives the resolved picture
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = swapChainImageFormat;
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+--- replace:
+        // the multisampled colour image: msaaSamples per pixel; it stays a colour attachment (it cannot be presented)
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = swapChainImageFormat;
+        colorAttachment.samples = msaaSamples;
+--- file: main.cpp
+--- find:
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+--- replace:
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+--- file: main.cpp
+--- find:
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+--- replace:
+        depthAttachment.samples = msaaSamples; // the depth test is done for every sample
+--- file: main.cpp
+--- find:
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+--- replace:
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        // the swap chain image: at the end of the subpass each pixel's samples are averaged ("resolved") into it
+        VkAttachmentDescription colorAttachmentResolve{};
+        colorAttachmentResolve.format = swapChainImageFormat;
+        colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+--- file: main.cpp
+--- find:
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+--- replace:
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference colorAttachmentResolveRef{};
+        colorAttachmentResolveRef.attachment = 2;
+        colorAttachmentResolveRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+--- file: main.cpp
+--- find:
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+--- replace:
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+        subpass.pResolveAttachments = &colorAttachmentResolveRef;
+--- file: main.cpp
+--- find:
+        std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+        VkRenderPassCreateInfo renderPassInfo{};
+--- replace:
+        std::array<VkAttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorAttachmentResolve};
+        VkRenderPassCreateInfo renderPassInfo{};
+--- file: main.cpp
+--- find:
+            std::array<VkImageView, 2> attachments = {
+                swapChainImageViews[i],
+                depthImageView
+            };
+--- replace:
+            std::array<VkImageView, 3> attachments = {
+                colorImageView,
+                depthImageView,
+                swapChainImageViews[i]
+            };
+--- file: main.cpp
+--- find:
+        dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+--- replace:
+        dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; // the colour image is reused every frame too
+--- file: main.cpp
+--- find:
+        multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+--- replace:
+        multisampling.rasterizationSamples = msaaSamples; // must match the render pass's attachments
+--- file: main.cpp
+--- find:
+    void createDepthResources() {
+--- replace:
+    // The multisampled colour image (and its view) the size of the window. It only lives during the render pass
+    // (transient): only the resolved picture is kept.
+    void createColorResources() {
+        VkFormat colorFormat = swapChainImageFormat;
+
+        createImage(swapChainExtent.width, swapChainExtent.height, msaaSamples, colorFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
+        colorImageView = createImageView(colorImage, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+    }
+
+    void createDepthResources() {
+--- file: main.cpp
+--- find:
+        createImage(swapChainExtent.width, swapChainExtent.height, VK_SAMPLE_COUNT_1_BIT, depthFormat,
+--- replace:
+        createImage(swapChainExtent.width, swapChainExtent.height, msaaSamples, depthFormat,
+
+=== task: resolve
+--- file: main.cpp
+--- find:
+    {{-0.5f,  0.5f,  0.5f}, {0.0f, 1.0f}}
+};
+--- replace:
+    {{-0.5f,  0.5f,  0.5f}, {0.0f, 1.0f}},
+
+    // screen quad: vertices 36..41, learnopengl's quadVertices (positions already in normalized device coordinates,
+    // z = 0) with its texture coordinates unchanged: in Vulkan both the y of the window and the v of an image point
+    // down, so the two flips cancel and the picture shows upright
+    {{-1.0f,  1.0f,  0.0f}, {0.0f, 1.0f}},
+    {{-1.0f, -1.0f,  0.0f}, {0.0f, 0.0f}},
+    {{ 1.0f, -1.0f,  0.0f}, {1.0f, 0.0f}},
+
+    {{-1.0f,  1.0f,  0.0f}, {0.0f, 1.0f}},
+    {{ 1.0f, -1.0f,  0.0f}, {1.0f, 0.0f}},
+    {{ 1.0f,  1.0f,  0.0f}, {1.0f, 1.0f}}
+};
+--- file: main.cpp
+--- find:
+    VkRenderPass renderPass;
+--- replace:
+    VkRenderPass renderPass;          // the window's: the screen quad
+    VkRenderPass offscreenRenderPass; // the scene's: multisampled, resolved into offscreenImage
+--- file: main.cpp
+--- find:
+    VkPipeline graphicsPipeline;
+--- replace:
+    VkPipeline graphicsPipeline;
+    VkPipeline screenPipeline; // the screen quad
+--- file: main.cpp
+--- find:
+    VkImageView depthImageView;
+--- replace:
+    VkImageView depthImageView;
+
+    // the resolved picture (learnopengl's intermediate framebuffer's screenTexture): an image with one sample per pixel
+    // that the multisampled image is resolved into at the end of the scene's pass, then read by the screen quad
+    VkImage offscreenImage;
+    VkDeviceMemory offscreenImageMemory;
+    VkImageView offscreenImageView;
+    VkFramebuffer offscreenFramebuffer; // the multisampled colour image, the depth image and offscreenImage
+
+    VkSampler textureSampler;
+--- file: main.cpp
+--- find:
+    VkDescriptorSet descriptorSet; // the uniform buffer
+--- replace:
+    VkDescriptorSet descriptorSet; // the uniform buffer
+    VkDescriptorSet screenDescriptorSet; // offscreenImage (binding 1), for the screen quad
+--- file: main.cpp
+--- find:
+        createRenderPass();
+        createDescriptorSetLayout();
+--- replace:
+        createRenderPass();
+        createOffscreenRenderPass();
+        createDescriptorSetLayout();
+--- file: main.cpp
+--- find:
+        // the cube's shaders only read the position (1 attribute of a Vertex)
+        createPipeline("shaders/anti_aliasing.vert.spv", "shaders/anti_aliasing.frag.spv", 1, graphicsPipeline);
+--- replace:
+        // the cube's shaders only read the position (1 attribute of a Vertex); its pipeline is made for the offscreen,
+        // multisampled render pass; the screen quad's (position and texture coordinate) for the window's: one sample, no depth test
+        createPipeline("shaders/anti_aliasing.vert.spv", "shaders/anti_aliasing.frag.spv", 1, offscreenRenderPass, msaaSamples, VK_TRUE, graphicsPipeline);
+        createPipeline("shaders/aa_post.vert.spv", "shaders/aa_post.frag.spv", 2, renderPass, VK_SAMPLE_COUNT_1_BIT, VK_FALSE, screenPipeline);
+--- file: main.cpp
+--- find:
+        createFramebuffers();
+        createCommandPool();
+--- replace:
+        createFramebuffers();
+        createOffscreenFramebuffer();
+        createCommandPool();
+        createTextureSampler();
+--- file: main.cpp
+--- find:
+        createDescriptorSets();
+--- replace:
+        createDescriptorSets();
+        createScreenDescriptorSet();
+--- file: main.cpp
+--- find:
+        vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+--- replace:
+        vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+
+        vkDestroySampler(device, textureSampler, nullptr);
+
+        vkDestroyFramebuffer(device, offscreenFramebuffer, nullptr);
+        vkDestroyImageView(device, offscreenImageView, nullptr);
+        vkDestroyImage(device, offscreenImage, nullptr);
+        vkFreeMemory(device, offscreenImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+        vkDestroyPipeline(device, screenPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyRenderPass(device, renderPass, nullptr);
+--- replace:
+        vkDestroyRenderPass(device, renderPass, nullptr);
+        vkDestroyRenderPass(device, offscreenRenderPass, nullptr);
+--- file: main.cpp
+--- find:
+    void createRenderPass() {
+        // the multisampled colour image: msaaSamples per pixel; it stays a colour attachment (it cannot be presented)
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = swapChainImageFormat;
+        colorAttachment.samples = msaaSamples;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthFormat();
+        depthAttachment.samples = msaaSamples; // the depth test is done for every sample
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        // the swap chain image: at the end of the subpass each pixel's samples are averaged ("resolved") into it
+        VkAttachmentDescription colorAttachmentResolve{};
+        colorAttachmentResolve.format = swapChainImageFormat;
+        colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        VkAttachmentReference colorAttachmentRef{};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 1;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference colorAttachmentResolveRef{};
+        colorAttachmentResolveRef.attachment = 2;
+        colorAttachmentResolveRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+        subpass.pResolveAttachments = &colorAttachmentResolveRef;
+
+        VkSubpassDependency dependency{};
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass = 0;
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; // the colour image is reused every frame too
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+        std::array<VkAttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorAttachmentResolve};
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderPassInfo.pAttachments = attachments.data();
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = 1;
+        renderPassInfo.pDependencies = &dependency;
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create render pass!");
+        }
+    }
+--- replace:
+    // The window's render pass: the swap chain image only - the screen quad needs no depth and no multisampling.
+    void createRenderPass() {
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = swapChainImageFormat;
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        VkAttachmentReference colorAttachmentRef{};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+
+        VkSubpassDependency dependency{};
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass = 0;
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.srcAccessMask = 0;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = &colorAttachment;
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = 1;
+        renderPassInfo.pDependencies = &dependency;
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create render pass!");
+        }
+    }
+
+    // The render pass the scene is drawn with (vulkan-tutorial's multisampled render pass): the samples are resolved
+    // into offscreenImage, an image of our own that is left ready to be read by a shader (not presented).
+    void createOffscreenRenderPass() {
+        // the multisampled colour image: msaaSamples per pixel; it stays a colour attachment (it cannot be presented)
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = swapChainImageFormat;
+        colorAttachment.samples = msaaSamples;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthFormat();
+        depthAttachment.samples = msaaSamples; // the depth test is done for every sample
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        // offscreenImage: at the end of the subpass each pixel's samples are averaged ("resolved") into it
+        VkAttachmentDescription colorAttachmentResolve{};
+        colorAttachmentResolve.format = swapChainImageFormat;
+        colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+
+        VkAttachmentReference colorAttachmentRef{};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 1;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference colorAttachmentResolveRef{};
+        colorAttachmentResolveRef.attachment = 2;
+        colorAttachmentResolveRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+        subpass.pResolveAttachments = &colorAttachmentResolveRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: wait until the last frame's screen quad has read offscreenImage and its writes are done
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        // after the pass: the fragment shaders that sample offscreenImage wait until the resolve has written it
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        std::array<VkAttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorAttachmentResolve};
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderPassInfo.pAttachments = attachments.data();
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &offscreenRenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create offscreen render pass!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorSetLayoutBinding, 1> bindings = {uboLayoutBinding};
+--- replace:
+        // the screen quad's texture: the resolved picture
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorCount = 1;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
+--- file: main.cpp
+--- find:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, uint32_t attributeCount, VkPipeline& pipeline) {
+--- replace:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, uint32_t attributeCount, VkRenderPass pipelineRenderPass, VkSampleCountFlagBits rasterizationSamples, VkBool32 depthTestEnable, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        multisampling.rasterizationSamples = msaaSamples; // must match the render pass's attachments
+--- replace:
+        multisampling.rasterizationSamples = rasterizationSamples; // must match the render pass's attachments
+--- file: main.cpp
+--- find:
+        depthStencil.depthTestEnable = VK_TRUE;
+        depthStencil.depthWriteEnable = VK_TRUE;
+--- replace:
+        depthStencil.depthTestEnable = depthTestEnable;
+        depthStencil.depthWriteEnable = depthTestEnable;
+--- file: main.cpp
+--- find:
+        pipelineInfo.renderPass = renderPass;
+--- replace:
+        pipelineInfo.renderPass = pipelineRenderPass;
+--- file: main.cpp
+--- find:
+            std::array<VkImageView, 3> attachments = {
+                colorImageView,
+                depthImageView,
+                swapChainImageViews[i]
+            };
+--- replace:
+            std::array<VkImageView, 1> attachments = {
+                swapChainImageViews[i]
+            };
+--- file: main.cpp
+--- find:
+    void createCommandPool() {
+--- replace:
+    // The resolved image the size of the window (a colour attachment the samples are resolved into, and sampled by
+    // the screen quad) and the framebuffer of the offscreen pass: the multisampled colour image, the depth image and it.
+    void createOffscreenFramebuffer() {
+        createImage(swapChainExtent.width, swapChainExtent.height, VK_SAMPLE_COUNT_1_BIT, swapChainImageFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, offscreenImage, offscreenImageMemory);
+        offscreenImageView = createImageView(offscreenImage, swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+
+        std::array<VkImageView, 3> attachments = {
+            colorImageView,
+            depthImageView,
+            offscreenImageView
+        };
+
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = offscreenRenderPass;
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        framebufferInfo.pAttachments = attachments.data();
+        framebufferInfo.width = swapChainExtent.width;
+        framebufferInfo.height = swapChainExtent.height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &offscreenFramebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create offscreen framebuffer!");
+        }
+    }
+
+    // the sampler the screen quad reads the resolved picture with (one texel per pixel)
+    void createTextureSampler() {
+        VkSamplerCreateInfo samplerInfo{};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.anisotropyEnable = VK_FALSE;
+        samplerInfo.maxAnisotropy = 1.0f;
+        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create texture sampler!");
+        }
+    }
+
+    void createCommandPool() {
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorPoolSize, 1> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+--- replace:
+        // two sets (the cube's and the screen quad's), each with every binding of the layout: a uniform buffer and a texture
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 2;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 2;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 1;
+--- replace:
+        poolInfo.maxSets = 2; // the cube's set and the screen quad's
+--- file: main.cpp
+--- find:
+    void createBuffer(
+--- replace:
+    // The screen quad's descriptor set: the resolved picture at binding 1 (it reads nothing from the uniform buffer).
+    void createScreenDescriptorSet() {
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &descriptorSetLayout;
+
+        if (vkAllocateDescriptorSets(device, &allocInfo, &screenDescriptorSet) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = offscreenImageView;
+        imageInfo.sampler = textureSampler;
+
+        VkWriteDescriptorSet descriptorWrite{};
+        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrite.dstSet = screenDescriptorSet;
+        descriptorWrite.dstBinding = 1;
+        descriptorWrite.dstArrayElement = 0;
+        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrite.descriptorCount = 1;
+        descriptorWrite.pImageInfo = &imageInfo;
+
+        vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+    }
+
+    void createBuffer(
+--- file: main.cpp
+--- find:
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = swapChainExtent;
+
+        // one clear value per attachment: the colour, and the depth 1.0 (the far plane)
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};
+        clearValues[1].depthStencil = {1.0f, 0};
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+--- replace:
+        // 1. draw scene as normal in the multisampled image; at the end of the pass it is resolved into offscreenImage
+        VkRenderPassBeginInfo offscreenPassInfo{};
+        offscreenPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        offscreenPassInfo.renderPass = offscreenRenderPass;
+        offscreenPassInfo.framebuffer = offscreenFramebuffer;
+        offscreenPassInfo.renderArea.offset = {0, 0};
+        offscreenPassInfo.renderArea.extent = swapChainExtent;
+
+        // one clear value per attachment: the colour, and the depth 1.0 (the far plane); the resolve target is not cleared
+        std::array<VkClearValue, 2> offscreenClearValues{};
+        offscreenClearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};
+        offscreenClearValues[1].depthStencil = {1.0f, 0};
+
+        offscreenPassInfo.clearValueCount = static_cast<uint32_t>(offscreenClearValues.size());
+        offscreenPassInfo.pClearValues = offscreenClearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &offscreenPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+--- file: main.cpp
+--- find:
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+
+        vkCmdEndRenderPass(commandBuffer);
+--- replace:
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+
+        vkCmdEndRenderPass(commandBuffer); // offscreenImage now holds the anti-aliased picture, ready to be sampled
+
+        // 2. the window: a screen-filling quad with the resolved picture as its texture
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = swapChainExtent;
+
+        // white (not really necessary, the quad covers the whole window)
+        VkClearValue clearColor = {{{1.0f, 1.0f, 1.0f, 1.0f}}};
+        renderPassInfo.clearValueCount = 1;
+        renderPassInfo.pClearValues = &clearColor;
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        // (the viewport, scissor and vertex buffer set above still apply)
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, screenPipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &screenDescriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // the screen quad's 6 vertices start at vertex 36
+
+        vkCmdEndRenderPass(commandBuffer);
+
+=== task: post-process
+--- file: shaders/aa_post.frag
+--- find:
+    // TODO: post-process the anti-aliased picture: learnopengl's weighted grayscale (0.2126 r + 0.7152 g + 0.0722 b)
+    outColor = vec4(col, 1.0);
+--- replace:
+    float grayscale = 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b;
+    outColor = vec4(vec3(grayscale), 1.0);

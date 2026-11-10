@@ -1,0 +1,8 @@
+[
+  { "title": "PBR / Theory", "url": "https://learnopengl.com/PBR/Theory", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: 6.pbr", "url": "https://github.com/JoeyDeVries/LearnOpenGL/tree/master/src/6.pbr", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "Push constants (Vulkan Guide)", "url": "https://docs.vulkan.org/guide/latest/push_constants.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Shader memory layout (Vulkan Guide)", "url": "https://docs.vulkan.org/guide/latest/shader_memory_layout.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Using constants directly in the root signature", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/using-constants-directly-in-the-root-signature", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Packing rules for constant variables", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-packing-rules", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

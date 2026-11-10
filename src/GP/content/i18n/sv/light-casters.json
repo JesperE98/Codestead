@@ -1,0 +1,53 @@
+{
+  "title": "Ljuskällor",
+  "tasks": {
+    "directional": {
+      "text": {
+        "opengl": "Gör ljuset riktat: ersätt `position` med `vec3 direction;` i `light_casters.fs` och använd `lightDir = normalize(-light.direction)`; sätt `light.direction` till (-0.2, -1.0, -0.3) i stället för positionen, shininess 32, och kommentera bort ritningen av lampan.",
+        "vulkan": "Gör ljuset riktat: shaderns `Light` får `vec3 direction;` i stället för `position` och `lightDir = normalize(-ubo.light.direction)`; C++-structen `Light` får `glm::vec3 direction;` på samma plats; sätt `ubo.light.direction` till (-0.2, -1.0, -0.3), shininess 32, och kommentera bort lampans ritanrop i `recordCommandBuffer()`.",
+        "d3d12": "Gör ljuset riktat: HLSL- och C++-structen `Light` får `direction` i stället för `position` (behåll `position` som kommentar) och `lightDir = normalize(-light.direction)`; sätt i `OnUpdate` `light.direction` till (-0.2, -1.0, -0.3), shininess 32, och kommentera bort lampans fem rader i `PopulateCommandList`."
+      },
+      "hint": {
+        "opengl": "Riktningen pekar från ljuset in i scenen; belysningsmatematiken vill ha riktningen mot ljuset, därav minustecknet. `lightingShader.setVec3(\"light.direction\", -0.2f, -1.0f, -0.3f);`",
+        "vulkan": "Riktningen pekar från ljuset in i scenen, därav minustecknet i shadern. I C++ ändras bara medlemmens namn: `glm::vec3 direction; float pad1;` behåller offset 0.",
+        "d3d12": "`constantBufferData.light.direction = XMFLOAT3(-0.2f, -1.0f, -0.3f);` – C++-structen behåller sin layout: `XMFLOAT3 direction; float padding0;` på positionens plats."
+      }
+    },
+    "point-light": {
+      "text": {
+        "opengl": "Tillbaka till ett punktljus med dämpning: `Light` får `position` igen plus `float constant; float linear; float quadratic;`, shadern multiplicerar ambient, diffuse och specular med `1.0 / (constant + linear * d + quadratic * d²)`; sätt 1.0, 0.09 och 0.032, positionen till `lightPos`, och rita lampan igen.",
+        "vulkan": "Tillbaka till ett punktljus med dämpning: `Light` får `position` igen och `float constant; float linear; float quadratic;` efter `specular` (C++: sedan `pad4`, `pad5`); multiplicera ambient, diffuse och specular med dämpningen; sätt `ubo.light.position = lightPos`, 1.0, 0.09 och 0.032, och rita lampan igen.",
+        "d3d12": "Tillbaka till ett punktljus med dämpning: `Light` får `position` igen, direkt efter den `float constantTerm, linearTerm, quadraticTerm;`, sedan färgerna; multiplicera ambient, diffuse och specular med `1.0f / (constantTerm + linearTerm * dist + quadraticTerm * dist²)`; sätt 1.0, 0.09 och 0.032, positionen till `lightPos`, och rita lampan igen."
+      },
+      "hint": {
+        "opengl": "`float distance = length(light.position - FragPos);`, `float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));` – sedan `lightingShader.setFloat(\"light.constant\", 1.0f);` …",
+        "vulkan": "I std140 fyller `constant` de 4 byte som är kvar efter `specular`, `linear` och `quadratic` följer, och structen avrundas uppåt till 80 byte – därav `pad4` och `pad5` i slutet.",
+        "d3d12": "`linear` är ett nyckelord i HLSL, `distance` en HLSL-funktion (kalla den lokala variabeln `dist`). C++: `XMFLOAT3 position; float constantTerm; float linearTerm; float quadraticTerm; float padding0[2];` – `ambient` börjar på byte 32."
+      }
+    },
+    "spotlight": {
+      "text": {
+        "opengl": "Gör ljuset till en ficklampa: `Light` får `vec3 direction;` och `float cutOff;`; lys bara upp fragmentet om `theta = dot(lightDir, normalize(-light.direction))` är större än `light.cutOff`, annars bara ambient; sätt position `cameraPos`, riktning `cameraFront`, cutOff `cos(12.5°)`, ambient 0.1, diffuse 0.8, och kommentera bort lampan igen.",
+        "vulkan": "Gör ljuset till en ficklampa: `Light` får `vec3 direction; float cutOff;` efter `position` (C++: efter `pad1`); lys bara upp fragmentet om `theta > ubo.light.cutOff`, annars bara ambient; sätt position `cameraPos`, riktning `cameraFront`, cutOff `glm::cos(glm::radians(12.5f))`, ambient 0.1, diffuse 0.8, och kommentera bort lampan igen.",
+        "d3d12": "Gör ljuset till en ficklampa: `Light` får `float3 direction; float cutOff;` efter `position`; sampla texturerna före `if`, lys bara upp fragmentet om `theta > light.cutOff`, annars bara ambient; sätt i `OnUpdate` position `cameraPos`, riktning `cameraFront`, cutOff `cos(12.5°)`, ambient 0.1, diffuse 0.8, och kommentera bort lampan igen."
+      },
+      "hint": {
+        "opengl": "Jämför cosinusvärden, inte vinklar: `lightingShader.setFloat(\"light.cutOff\", glm::cos(glm::radians(12.5f)));` – större cosinus betyder mindre vinkel, därav `>`. Dämpa inte ambient-termen inne i konen.",
+        "vulkan": "`cutOff` är cosinus för konens halva öppningsvinkel; ett fragment är innanför när dess cosinus är större. I C++ fyller `cutOff` de 4 byte som är kvar efter `direction`. Dämpa inte ambient-termen inne i konen.",
+        "d3d12": "`XMStoreFloat3(&constantBufferData.light.position, cameraPos);` och `constantBufferData.light.cutOff = std::cos(XMConvertToRadians(12.5f));`. C++-layout: `position, padding0, direction, cutOff, constantTerm, linearTerm, quadraticTerm, padding1, ambient, …`."
+      }
+    },
+    "soft-edges": {
+      "text": {
+        "opengl": "Gör strålkastarens kant mjuk: lägg till `float outerCutOff;` (cos 17.5°), ersätt `if`/`else` med `intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0)` på diffuse och specular, och dämpa alla tre termerna.",
+        "vulkan": "Gör strålkastarens kant mjuk: lägg till `float outerCutOff;` efter `cutOff` (C++: sedan `pad6`, `pad7`, `pad8`), sätt den till `glm::cos(glm::radians(17.5f))`, ersätt `if`/`else` med den begränsade `intensity` på diffuse och specular, och dämpa alla tre termerna.",
+        "d3d12": "Gör strålkastarens kant mjuk: lägg till `float outerCutOff;` efter `cutOff` (den tar `padding1`:s plats i C++), sätt den till `std::cos(XMConvertToRadians(17.5f))`, ersätt `if`/`else` med den begränsade `intensity` på diffuse och specular, och dämpa alla tre termerna."
+      },
+      "hint": {
+        "opengl": "`float epsilon = (light.cutOff - light.outerCutOff);` – inne i den inre konen är intensiteten 1, utanför den yttre 0. `lightingShader.setFloat(\"light.outerCutOff\", glm::cos(glm::radians(17.5f)));`",
+        "vulkan": "`float epsilon = (ubo.light.cutOff - ubo.light.outerCutOff);` – `outerCutOff` ligger på 32, och `ambient` (en vec3) måste börja på 48, därav de tre utfyllnadsfloatarna.",
+        "d3d12": "`float epsilon = (light.cutOff - light.outerCutOff);` och `clamp(…, 0.0f, 1.0f)`. Utan förgreningen kan texturerna samplas där de används igen."
+      }
+    }
+  }
+}

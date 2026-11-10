@@ -1,0 +1,229 @@
+=== task: depth-cubemap
+--- file: main.cpp
+--- find:
+    // TODO: the depth shader (simpleDepthShader: point_shadows_depth.vs, point_shadows_depth.fs and the geometry shader point_shadows_depth.gs)
+--- replace:
+    Shader simpleDepthShader("point_shadows_depth.vs", "point_shadows_depth.fs", "point_shadows_depth.gs");
+--- file: main.cpp
+--- find:
+    // TODO: configure the depth map FBO: a depth cube map (six 1024 x 1024 GL_DEPTH_COMPONENT faces) attached as a whole (layered) as the framebuffer's only attachment
+--- replace:
+    // configure depth map FBO
+    // -----------------------
+    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    unsigned int depthMapFBO;
+    glGenFramebuffers(1, &depthMapFBO);
+    // create depth cubemap texture
+    unsigned int depthCubemap;
+    glGenTextures(1, &depthCubemap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+    for (unsigned int i = 0; i < 6; ++i)
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    // attach depth texture as FBO's depth buffer: all six faces at once (a layered attachment)
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
+    glDrawBuffer(GL_NONE); // no colour buffer
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+--- file: main.cpp
+--- find:
+    shader.setInt("diffuseTexture", 0);
+--- replace:
+    shader.setInt("diffuseTexture", 0);
+    shader.setInt("depthMap", 1);
+--- file: main.cpp
+--- find:
+        // TODO: 0. the six view-projection matrices of the light (one per cube map face) and 1. render the scene into the depth cube map
+--- replace:
+        // 0. create depth cubemap transformation matrices
+        // -----------------------------------------------
+        float near_plane = 1.0f;
+        float far_plane  = 25.0f;
+        glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, near_plane, far_plane);
+        std::vector<glm::mat4> shadowTransforms;
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+
+        // 1. render scene to depth cubemap
+        // --------------------------------
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+            glClear(GL_DEPTH_BUFFER_BIT);
+            simpleDepthShader.use();
+            for (unsigned int i = 0; i < 6; ++i)
+                simpleDepthShader.setMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
+            simpleDepthShader.setFloat("far_plane", far_plane);
+            simpleDepthShader.setVec3("lightPos", lightPos);
+            renderScene(simpleDepthShader);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+--- file: main.cpp
+--- find:
+        shader.setVec3("viewPos", cameraPos);
+--- replace:
+        shader.setVec3("viewPos", cameraPos);
+        shader.setFloat("far_plane", far_plane);
+--- file: main.cpp
+--- find:
+        glBindTexture(GL_TEXTURE_2D, woodTexture);
+        renderScene(shader);
+--- replace:
+        glBindTexture(GL_TEXTURE_2D, woodTexture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+        renderScene(shader);
+--- file: main.cpp
+--- find:
+    glDeleteTextures(1, &woodTexture);
+--- replace:
+    glDeleteTextures(1, &woodTexture);
+    glDeleteTextures(1, &depthCubemap);
+    glDeleteFramebuffers(1, &depthMapFBO);
+--- file: point_shadows_depth.vs
+--- find:
+    // TODO: the world position (model * aPos): the geometry shader projects it once per cube map face
+--- replace:
+    gl_Position = model * vec4(aPos, 1.0); // world space: the geometry shader projects it once per cube map face
+--- file: point_shadows_depth.gs
+--- find:
+    // TODO: emit the triangle six times, once per cube map face: gl_Layer = face, FragPos = the world position, gl_Position = shadowMatrices[face] * FragPos
+--- replace:
+    for(int face = 0; face < 6; ++face)
+    {
+        gl_Layer = face; // built-in variable that specifies to which face we render.
+        for(int i = 0; i < 3; ++i) // for each triangle's vertices
+        {
+            FragPos = gl_in[i].gl_Position;
+            gl_Position = shadowMatrices[face] * FragPos;
+            EmitVertex();
+        }
+        EndPrimitive();
+    }
+--- file: point_shadows_depth.fs
+--- find:
+    // TODO: write the distance to the light, divided by far_plane, as the depth (gl_FragDepth)
+--- replace:
+    float lightDistance = length(FragPos.xyz - lightPos);
+
+    // map to [0;1] range by dividing by far_plane
+    lightDistance = lightDistance / far_plane;
+
+    // write this as modified depth
+    gl_FragDepth = lightDistance;
+--- file: point_shadows.fs
+--- find:
+uniform sampler2D diffuseTexture;
+--- replace:
+uniform sampler2D diffuseTexture;
+uniform samplerCube depthMap;
+--- file: point_shadows.fs
+--- find:
+uniform vec3 viewPos;
+--- replace:
+uniform vec3 viewPos;
+
+uniform float far_plane;
+--- file: point_shadows.fs
+--- find:
+    FragColor = vec4(lighting, 1.0);
+--- replace:
+    // FragColor = vec4(lighting, 1.0);
+    // display the depth cube map as debug: the closest depth stored in this fragment's direction (0..1 = 0..far_plane)
+    vec3 fragToLight = fs_in.FragPos - lightPos;
+    float closestDepth = texture(depthMap, fragToLight).r;
+    FragColor = vec4(vec3(closestDepth), 1.0);
+
+=== task: shadows
+--- file: point_shadows.fs
+--- find:
+uniform float far_plane;
+--- replace:
+uniform float far_plane;
+
+float ShadowCalculation(vec3 fragPos)
+{
+    // get vector between fragment position and light position
+    vec3 fragToLight = fragPos - lightPos;
+    // use the fragment to light vector to sample from the depth map
+    float closestDepth = texture(depthMap, fragToLight).r;
+    // it is currently in linear range between [0,1], let's re-transform it back to original depth value
+    closestDepth *= far_plane;
+    // now get current linear depth as the length between the fragment and light position
+    float currentDepth = length(fragToLight);
+    // test for shadows
+    float bias = 0.05; // we use a much larger bias since depth is now in [near_plane, far_plane] range
+    float shadow = currentDepth -  bias > closestDepth ? 1.0 : 0.0;
+    // display closestDepth as debug (to visualize depth cubemap)
+    // FragColor = vec4(vec3(closestDepth / far_plane), 1.0);
+
+    return shadow;
+}
+--- file: point_shadows.fs
+--- find:
+    float shadow = 0.0; // TODO: ShadowCalculation(fs_in.FragPos): 1.0 where the depth cube map holds something closer to the light
+--- replace:
+    float shadow = ShadowCalculation(fs_in.FragPos);
+--- file: point_shadows.fs
+--- find:
+    // FragColor = vec4(lighting, 1.0);
+    // display the depth cube map as debug: the closest depth stored in this fragment's direction (0..1 = 0..far_plane)
+    vec3 fragToLight = fs_in.FragPos - lightPos;
+    float closestDepth = texture(depthMap, fragToLight).r;
+    FragColor = vec4(vec3(closestDepth), 1.0);
+--- replace:
+    FragColor = vec4(lighting, 1.0);
+
+=== task: pcf
+--- file: point_shadows.fs
+--- find:
+uniform float far_plane;
+--- replace:
+uniform float far_plane;
+
+// array of offset direction for sampling
+vec3 gridSamplingDisk[20] = vec3[]
+(
+   vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1),
+   vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+   vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
+   vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
+   vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
+);
+--- file: point_shadows.fs
+--- find:
+    // use the fragment to light vector to sample from the depth map
+    float closestDepth = texture(depthMap, fragToLight).r;
+    // it is currently in linear range between [0,1], let's re-transform it back to original depth value
+    closestDepth *= far_plane;
+    // now get current linear depth as the length between the fragment and light position
+    float currentDepth = length(fragToLight);
+    // test for shadows
+    float bias = 0.05; // we use a much larger bias since depth is now in [near_plane, far_plane] range
+    float shadow = currentDepth -  bias > closestDepth ? 1.0 : 0.0;
+    // display closestDepth as debug (to visualize depth cubemap)
+    // FragColor = vec4(vec3(closestDepth / far_plane), 1.0);
+--- replace:
+    // now get current linear depth as the length between the fragment and light position
+    float currentDepth = length(fragToLight);
+    // PCF: 20 samples around the direction, in a disk that grows with the distance to the viewer
+    float shadow = 0.0;
+    float bias = 0.15;
+    int samples = 20;
+    float viewDistance = length(viewPos - fragPos);
+    float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0;
+    for(int i = 0; i < samples; ++i)
+    {
+        float closestDepth = texture(depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
+        closestDepth *= far_plane;   // undo mapping [0;1]
+        if(currentDepth - bias > closestDepth)
+            shadow += 1.0;
+    }
+    shadow /= float(samples);

@@ -1,0 +1,73 @@
+{
+  "title": "Mesh",
+  "tasks": {
+    "vertex-struct": {
+      "text": { "opengl": "In `mesh.h`, define `struct Vertex` with `glm::vec3 Position`, `glm::vec3 Normal` and `glm::vec2 TexCoords`, and `struct Texture` with `unsigned int id`, `std::string type` and `std::string path`." },
+      "hint": { "opengl": "The fields of a struct lie one after the other in memory, so an array of `Vertex` is exactly the interleaved buffer OpenGL needs (8 floats per vertex). `type` will be `\"texture_diffuse\"` or `\"texture_specular\"`." }
+    },
+    "mesh-data": {
+      "text": {
+        "opengl": "Give `Mesh` its data – `std::vector<Vertex> vertices`, `std::vector<unsigned int> indices`, `std::vector<Texture> textures` and `unsigned int VAO` – and a constructor that takes the three vectors, stores them and calls `setupMesh()`.",
+        "vulkan": "Add the mesh's data as members: `std::vector<Vertex> vertices` – for now a test square of 4 vertices at (±1, ±1, 0), normal (0, 0, 1), texture coordinates (0, 1) bottom left … (0, 0) top left, material 0 – and `std::vector<uint32_t> indices = { 0, 1, 2, 2, 3, 0 }`."
+      },
+      "hint": {
+        "opengl": "`Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures)` – the parameters have the same names as the members, so store them with `this->vertices = vertices;` and so on.",
+        "vulkan": "Not `const` this time: the next chapter fills these vectors from a file. And not empty: Vulkan cannot create a buffer of size 0."
+      }
+    },
+    "setup-mesh": {
+      "text": {
+        "opengl": "Fill `setupMesh()`: create the VAO, VBO and EBO (`unsigned int VBO, EBO;` as private members), upload the vertices and indices, and set the three vertex attribute pointers with a stride of `sizeof(Vertex)` and offsets from `offsetof`.",
+        "d3d12": "In `SetupMesh`, create the vertex buffer and the index buffer in upload heaps, copy `vertices` and `indices` into them, and fill `m_vertexBufferView` and `m_indexBufferView`."
+      },
+      "hint": {
+        "opengl": "`glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);` – the same for `GL_ELEMENT_ARRAY_BUFFER` with `indices`. The normal starts at `(void*)offsetof(Vertex, Normal)`, the texture coordinates at `(void*)offsetof(Vertex, TexCoords)`.",
+        "d3d12": "The sizes are `vertices.size() * sizeof(Vertex)` and `indices.size() * sizeof(UINT)`; copy with `memcpy(p, vertices.data(), size)` between `Map` and `Unmap`. The index buffer view's format is `DXGI_FORMAT_R32_UINT`."
+      }
+    },
+    "draw-mesh": {
+      "text": {
+        "opengl": "Fill `Draw(Shader &shader)`: bind every texture to its own texture unit, point the sampler named after it (`texture_diffuse1`, `texture_diffuse2`, …, `texture_specular1`, …) at that unit, then draw the mesh's triangles with `glDrawElements`.",
+        "d3d12": "Fill `Mesh::Draw`: set root parameter 2 to the mesh's textures (`m_srvHandle`), bind the vertex and index buffers and draw all `indices`."
+      },
+      "hint": {
+        "opengl": "Count diffuse, specular and normal textures separately (`diffuseNr`, `specularNr`, `normalNr`, starting at 1); for texture `i`: `glActiveTexture(GL_TEXTURE0 + i)`, `glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i)`, `glBindTexture(GL_TEXTURE_2D, textures[i].id)`. Then `glBindVertexArray(VAO)` and `glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0)`.",
+        "d3d12": "`commandList->SetGraphicsRootDescriptorTable(2, m_srvHandle);`, `IASetVertexBuffers(0, 1, &m_vertexBufferView)`, `IASetIndexBuffer(&m_indexBufferView)`, `DrawIndexedInstanced(static_cast<UINT>(indices.size()), 1, 0, 0, 0)`. Nothing is drawn yet: no `Mesh` exists until the Model chapter."
+      }
+    },
+    "vertex": {
+      "text": {
+        "vulkan": "Give `Vertex` everything a model's vertex has: `glm::vec3 pos; glm::vec3 normal; glm::vec2 texCoord; uint32_t materialIndex;`, four attribute descriptions (locations 0–3, the material index as `VK_FORMAT_R32_UINT`) and attribute count 4 for `createPipeline`; in the shaders, the inputs at locations 1–3, `fragTexCoord` passed on, and `outColor = vec4(fragTexCoord, 0.0, 1.0);`.",
+        "d3d12": "Define the data of a mesh: `struct Vertex` with `XMFLOAT3 position`, `XMFLOAT3 normal`, `XMFLOAT2 texCoord`, and `struct Texture` with `ComPtr<ID3D12Resource> resource`, `std::string type`, `std::string path`."
+      },
+      "hint": {
+        "vulkan": "Like the cube's attributes, with `offsetof(Vertex, …)`; an integer attribute has an integer format (`R32_UINT`) and the shader type `uint`: `layout(location = 3) in uint inMaterialIndex;`.",
+        "d3d12": "The fields of `Vertex` in that order are exactly the input layout: 12 + 12 + 8 bytes, POSITION at 0, NORMAL at 12, TEXCOORD at 24."
+      }
+    },
+    "vertex-equality": {
+      "text": { "vulkan": "Make vertices comparable and hashable: `bool operator==(const Vertex& other) const` comparing all four members, and `template<> struct hash<Vertex>` in `namespace std` combining the members' hashes; enable glm's hashes with `#define GLM_ENABLE_EXPERIMENTAL` before `<glm/glm.hpp>` and `#include <glm/gtx/hash.hpp>`." },
+      "hint": { "vulkan": "Two equal vertices must give the same hash; an `std::unordered_map<Vertex, uint32_t>` needs both. vulkan-tutorial's shifts and xors, with `hash<uint32_t>()(vertex.materialIndex) << 1` at the end." }
+    },
+    "vertex-buffer": {
+      "text": { "vulkan": "Fill `createVertexBuffer()`: a host-visible staging buffer (`TRANSFER_SRC`), `memcpy` the vertices into it, a `DEVICE_LOCAL` vertex buffer (`TRANSFER_DST | VERTEX_BUFFER`), `copyBuffer(stagingBuffer, vertexBuffer, bufferSize)`, then destroy the staging buffer; write `copyBuffer` and destroy the vertex buffer in `cleanup()`." },
+      "hint": { "vulkan": "`createBuffer` makes both buffers; `copyBuffer` records `vkCmdCopyBuffer` between `beginSingleTimeCommands()` and `endSingleTimeCommands(commandBuffer)`." }
+    },
+    "index-buffer": {
+      "text": { "vulkan": "Do the same for the indices in `createIndexBuffer()` (`VK_BUFFER_USAGE_INDEX_BUFFER_BIT`, size `sizeof(indices[0]) * indices.size()`), and destroy the index buffer in `cleanup()`." },
+      "hint": { "vulkan": "Only the data and the usage flag differ from the vertex buffer." }
+    },
+    "draw": {
+      "text": { "vulkan": "In `recordCommandBuffer()`, bind the vertex buffer and the index buffer (`VK_INDEX_TYPE_UINT32`), and after the push constant draw all indices with `vkCmdDrawIndexed`." },
+      "hint": { "vulkan": "`vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);` and `vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);` – the test square appears in texture-coordinate colours." }
+    },
+    "mesh-class": {
+      "text": { "d3d12": "Add `class Mesh`: public `vertices`, `indices` (`UINT`) and `textures`; a constructor that also takes the device and the mesh's CPU and GPU heap handles, stores everything (the GPU handle in `m_srvHandle`) and calls `SetupMesh(device, srvCpuHandle)`; `Draw(ID3D12GraphicsCommandList*)`; private buffers, views and `SetupMesh` (bodies stay TODOs)." },
+      "hint": { "d3d12": "As learnopengl: `this->vertices = vertices;` etc., then set up the buffers. The CPU handle is where the mesh writes its texture views; the GPU handle is what `Draw` gives the command list." }
+    },
+    "mesh-textures": {
+      "text": { "d3d12": "In `SetupMesh`, create the mesh's two shader resource views at `srvHandle`: slot 0 the first `\"texture_diffuse\"`, slot 1 the first `\"texture_specular\"` (a null view if there is none)." },
+      "hint": { "d3d12": "Loop over `const char* slotTypes[] = { \"texture_diffuse\", \"texture_specular\" };`, find the texture with that `type`, `device->CreateShaderResourceView(resource, &srvDesc, srvHandle);` (R8G8B8A8_UNORM, TEXTURE2D, 1 mip level), then `srvHandle.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));`." }
+    }
+  }
+}

@@ -1,0 +1,237 @@
+=== task: grass
+--- file: main.cpp
+--- find:
+            { {  5.0f, -0.5f, -5.0f }, { 2.0f, 0.0f } }
+            // TODO: the transparent quad (vertices 42 to 47): 1 x 1, upright, its left edge at x = 0 and its bottom at y = -0.5
+--- replace:
+            { {  5.0f, -0.5f, -5.0f }, { 2.0f, 0.0f } },
+
+            // the transparent quad: vertices 42 to 47 - 1 x 1, upright (in the plane z = 0),
+            // its left edge at x = 0 and its bottom at y = -0.5. v = 0 is the image's top row.
+            { {  0.0f,  0.5f,  0.0f }, { 0.0f, 0.0f } },
+            { {  0.0f, -0.5f,  0.0f }, { 0.0f, 1.0f } },
+            { {  1.0f, -0.5f,  0.0f }, { 1.0f, 1.0f } },
+
+            { {  0.0f,  0.5f,  0.0f }, { 0.0f, 0.0f } },
+            { {  1.0f, -0.5f,  0.0f }, { 1.0f, 1.0f } },
+            { {  1.0f,  0.5f,  0.0f }, { 1.0f, 0.0f } }
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 3;    // one CBV + one SRV per texture
+--- replace:
+        cbvSrvHeapDesc.NumDescriptors = 4;    // one CBV + one SRV per texture
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_floorTexture;
+--- replace:
+    ComPtr<ID3D12Resource> m_floorTexture;
+    ComPtr<ID3D12Resource> m_transparentTexture;
+--- file: main.cpp
+--- find:
+    // TODO: load grass.png (m_transparentTexture) into slot 3
+--- replace:
+    ComPtr<ID3D12Resource> transparentTextureUploadHeap;
+    LoadTexture("grass.png", m_transparentTexture, transparentTextureUploadHeap, 3);
+--- file: main.cpp
+--- find:
+    // TODO: the GPU handle of the transparent texture's SRV (slot 3)
+--- replace:
+    CD3DX12_GPU_DESCRIPTOR_HANDLE transparentTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_cbvSrvDescriptorSize);
+--- file: main.cpp
+--- find:
+    // TODO: draw the transparent quad (vertices 42 to 47) with its texture at every vegetation position
+--- replace:
+    // vegetation: the transparent texture, the quad's 6 vertices from vertex 42 on, at
+    // each position
+    XMFLOAT3 vegetation[] =
+    {
+        XMFLOAT3(-1.5f, 0.0f, -0.48f),
+        XMFLOAT3( 1.5f, 0.0f,  0.51f),
+        XMFLOAT3( 0.0f, 0.0f,  0.7f),
+        XMFLOAT3(-0.3f, 0.0f, -2.3f),
+        XMFLOAT3( 0.5f, 0.0f, -0.6f)
+    };
+    m_commandList->SetGraphicsRootDescriptorTable(2, transparentTexture);
+    for (UINT i = 0; i < _countof(vegetation); i++)
+    {
+        model = XMMatrixTranslation(vegetation[i].x, vegetation[i].y, vegetation[i].z);
+        XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+        m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+        m_commandList->DrawInstanced(6, 1, 42, 0);
+    }
+
+=== task: discard
+--- file: blending.hlsl
+--- find:
+SamplerState wrapSampler : register(s0);
+--- replace:
+SamplerState wrapSampler : register(s0);
+// The second static sampler: register s1, CLAMP (for the transparent textures).
+SamplerState clampSampler : register(s1);
+--- file: blending.hlsl
+--- find:
+    return texture1.Sample(wrapSampler, input.texCoord);
+}
+--- replace:
+    return texture1.Sample(wrapSampler, input.texCoord);
+}
+
+// The pixel shader of the transparent objects: it samples with clampSampler and discards
+// the pixels that are (almost) fully transparent - nothing is written for them.
+float4 PSTransparent(PSInput input) : SV_TARGET
+{
+    float4 texColor = texture1.Sample(clampSampler, input.texCoord);
+    if (texColor.a < 0.1f)
+        discard;
+    return texColor;
+}
+--- file: main.cpp
+--- find:
+        D3D12_STATIC_SAMPLER_DESC samplers[1] = {};
+--- replace:
+        D3D12_STATIC_SAMPLER_DESC samplers[2] = {};
+--- file: main.cpp
+--- find:
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+--- replace:
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        // Sampler s1: the same, but texture coordinates outside 0..1 are clamped to the edge.
+        // For the transparent textures: with WRAP, filtering at the quad's top edge would mix
+        // in the texels of the image's bottom row (a semi-transparent border).
+        samplers[1] = samplers[0];
+        samplers[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[1].ShaderRegister = 1;
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+--- replace:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+    ComPtr<ID3D12PipelineState> m_transparentPipelineState;
+--- file: main.cpp
+--- find:
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+--- replace:
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+
+        // The transparent objects: the same description with the pixel shader PSTransparent.
+        ComPtr<ID3DBlob> transparentPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"blending.hlsl", nullptr, nullptr, "PSTransparent", "ps_5_0", compileFlags, 0, &transparentPixelShader, nullptr));
+
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(transparentPixelShader.Get());
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_transparentPipelineState)));
+--- file: main.cpp
+--- find:
+    m_commandList->SetGraphicsRootDescriptorTable(2, transparentTexture);
+--- replace:
+    m_commandList->SetPipelineState(m_transparentPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(2, transparentTexture);
+
+=== task: blend
+--- file: main.cpp
+--- find:
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(transparentPixelShader.Get());
+--- replace:
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(transparentPixelShader.Get());
+        // Blending: result = source colour * source alpha + destination colour * (1 - source
+        // alpha) - the pixel's colour mixed with the colour already in the render target.
+        // (OpenGL's glBlendFunc sets the factors of the colour and of the alpha channel.)
+        psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
+        psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+        psoDesc.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+--- file: main.cpp
+--- find:
+    LoadTexture("grass.png", m_transparentTexture, transparentTextureUploadHeap, 3);
+--- replace:
+    LoadTexture("window.png", m_transparentTexture, transparentTextureUploadHeap, 3);
+--- file: main.cpp
+--- find:
+    // vegetation: the transparent texture, the quad's 6 vertices from vertex 42 on, at
+    // each position
+    XMFLOAT3 vegetation[] =
+    {
+        XMFLOAT3(-1.5f, 0.0f, -0.48f),
+        XMFLOAT3( 1.5f, 0.0f,  0.51f),
+        XMFLOAT3( 0.0f, 0.0f,  0.7f),
+        XMFLOAT3(-0.3f, 0.0f, -2.3f),
+        XMFLOAT3( 0.5f, 0.0f, -0.6f)
+    };
+    m_commandList->SetPipelineState(m_transparentPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(2, transparentTexture);
+    for (UINT i = 0; i < _countof(vegetation); i++)
+    {
+        model = XMMatrixTranslation(vegetation[i].x, vegetation[i].y, vegetation[i].z);
+--- replace:
+    // windows: the transparent texture, the quad's 6 vertices from vertex 42 on, at each
+    // position
+    XMFLOAT3 windows[] =
+    {
+        XMFLOAT3(-1.5f, 0.0f, -0.48f),
+        XMFLOAT3( 1.5f, 0.0f,  0.51f),
+        XMFLOAT3( 0.0f, 0.0f,  0.7f),
+        XMFLOAT3(-0.3f, 0.0f, -2.3f),
+        XMFLOAT3( 0.5f, 0.0f, -0.6f)
+    };
+    m_commandList->SetPipelineState(m_transparentPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(2, transparentTexture);
+    for (UINT i = 0; i < _countof(windows); i++)
+    {
+        model = XMMatrixTranslation(windows[i].x, windows[i].y, windows[i].z);
+
+=== task: sort
+--- file: main.cpp
+--- find:
+#include <chrono>
+--- replace:
+#include <chrono>
+#include <map>
+--- file: main.cpp
+--- find:
+    // windows: the transparent texture, the quad's 6 vertices from vertex 42 on, at each
+    // position
+    XMFLOAT3 windows[] =
+    {
+        XMFLOAT3(-1.5f, 0.0f, -0.48f),
+        XMFLOAT3( 1.5f, 0.0f,  0.51f),
+        XMFLOAT3( 0.0f, 0.0f,  0.7f),
+        XMFLOAT3(-0.3f, 0.0f, -2.3f),
+        XMFLOAT3( 0.5f, 0.0f, -0.6f)
+    };
+    m_commandList->SetPipelineState(m_transparentPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(2, transparentTexture);
+    for (UINT i = 0; i < _countof(windows); i++)
+    {
+        model = XMMatrixTranslation(windows[i].x, windows[i].y, windows[i].z);
+--- replace:
+    // windows: the transparent texture, the quad's 6 vertices from vertex 42 on, at each
+    // position
+    XMFLOAT3 windows[] =
+    {
+        XMFLOAT3(-1.5f, 0.0f, -0.48f),
+        XMFLOAT3( 1.5f, 0.0f,  0.51f),
+        XMFLOAT3( 0.0f, 0.0f,  0.7f),
+        XMFLOAT3(-0.3f, 0.0f, -2.3f),
+        XMFLOAT3( 0.5f, 0.0f, -0.6f)
+    };
+
+    // sort the transparent windows before rendering: a std::map keeps its keys (the
+    // distances to the camera) in order
+    std::map<float, XMFLOAT3> sorted;
+    for (UINT i = 0; i < _countof(windows); i++)
+    {
+        float distance = XMVectorGetX(XMVector3Length(cameraPos - XMLoadFloat3(&windows[i])));
+        sorted[distance] = windows[i];
+    }
+
+    // windows (from furthest to nearest)
+    m_commandList->SetPipelineState(m_transparentPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(2, transparentTexture);
+    for (std::map<float, XMFLOAT3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+    {
+        model = XMMatrixTranslation(it->second.x, it->second.y, it->second.z);

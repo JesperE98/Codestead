@@ -1,0 +1,83 @@
+=== task: object-color
+--- file: colors.fs
+--- find:
+out vec4 FragColor;
+
+void main()
+{
+    // TODO: the colour of the object as we see it: the light's colour times the object's colour
+    FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+}
+--- replace:
+out vec4 FragColor;
+
+uniform vec3 objectColor;
+uniform vec3 lightColor;
+
+void main()
+{
+    FragColor = vec4(lightColor * objectColor, 1.0);
+}
+--- file: main.cpp
+--- find:
+        // TODO: set the object's colour (objectColor) and the light's colour (lightColor)
+--- replace:
+        lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+        lightingShader.setVec3("lightColor",  1.0f, 1.0f, 1.0f);
+
+=== task: lamp-shader
+--- file: light_cube.fs
+--- find:
+    // TODO: the lamp is always bright white
+--- replace:
+    FragColor = vec4(1.0); // set all 4 vector values to 1.0
+--- file: main.cpp
+--- find:
+    // TODO: build the lamp's shader program (lightCubeShader) from light_cube.vs and light_cube.fs
+--- replace:
+    Shader lightCubeShader("light_cube.vs", "light_cube.fs");
+
+=== task: lamp
+--- file: main.cpp
+--- find:
+float lastFrame = 0.0f;
+--- replace:
+float lastFrame = 0.0f;
+
+// lighting
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+--- file: main.cpp
+--- find:
+    // TODO: second, configure the lamp's VAO (lightCubeVAO): the same VBO, only the position attribute
+--- replace:
+    // second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
+    unsigned int lightCubeVAO;
+    glGenVertexArrays(1, &lightCubeVAO);
+    glBindVertexArray(lightCubeVAO);
+
+    // we only need to bind to the VBO (to link it with glVertexAttribPointer), no need to fill it; the VBO's data already contains all we need (it's already bound, but we do it again for educational purposes)
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+--- file: main.cpp
+--- find:
+        // TODO: also draw the lamp object: a small cube (scale 0.2) at lightPos, with lightCubeShader
+--- replace:
+        // also draw the lamp object
+        lightCubeShader.use();
+        lightCubeShader.setMat4("projection", projection);
+        lightCubeShader.setMat4("view", view);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        lightCubeShader.setMat4("model", model);
+
+        glBindVertexArray(lightCubeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+--- file: main.cpp
+--- find:
+    glDeleteVertexArrays(1, &cubeVAO);
+--- replace:
+    glDeleteVertexArrays(1, &cubeVAO);
+    glDeleteVertexArrays(1, &lightCubeVAO);

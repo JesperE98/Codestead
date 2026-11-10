@@ -1,0 +1,466 @@
+=== task: directional
+--- file: light_casters.hlsl
+--- find:
+// The light: where it is and how strong its ambient, diffuse and specular parts are.
+struct Light
+{
+    float3 position;
+    float3 ambient;
+    float3 diffuse;
+    float3 specular;
+};
+--- replace:
+// A directional light: the direction its rays go and how strong its ambient, diffuse
+// and specular parts are.
+struct Light
+{
+    // float3 position; // no longer necessary when using directional lights.
+    float3 direction;
+    float3 ambient;
+    float3 diffuse;
+    float3 specular;
+};
+--- file: light_casters.hlsl
+--- find:
+    float3 lightDir = normalize(light.position - input.fragPos);
+--- replace:
+    float3 lightDir = normalize(-light.direction);
+--- file: main.cpp
+--- find:
+    struct Light
+    {
+        XMFLOAT3 position;
+        float padding0;
+--- replace:
+    struct Light
+    {
+        // XMFLOAT3 position; // no longer necessary when using directional lights.
+        XMFLOAT3 direction;
+        float padding0;
+--- file: main.cpp
+--- find:
+    constantBufferData.light.position = lightPos;
+--- replace:
+    constantBufferData.light.direction = XMFLOAT3(-0.2f, -1.0f, -0.3f);
+--- file: main.cpp
+--- find:
+    constantBufferData.material.shininess = 64.0f;
+--- replace:
+    constantBufferData.material.shininess = 32.0f;
+--- file: main.cpp
+--- find:
+    // Also draw the lamp object: the same cube, with the lamp's pipeline state (its own
+    // shaders), made smaller (scale 0.2) and moved to lightPos.
+    m_commandList->SetPipelineState(m_lightCubePipelineState.Get());
+    XMMATRIX model = XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(lightPos.x, lightPos.y, lightPos.z);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+--- replace:
+    // A lamp object is weird when we only have a directional light, don't render the light object.
+    // m_commandList->SetPipelineState(m_lightCubePipelineState.Get());
+    // XMMATRIX model = XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(lightPos.x, lightPos.y, lightPos.z);
+    // XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    // m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    // m_commandList->DrawInstanced(36, 1, 0, 0);
+
+=== task: point-light
+--- file: light_casters.hlsl
+--- find:
+// A directional light: the direction its rays go and how strong its ambient, diffuse
+// and specular parts are.
+struct Light
+{
+    // float3 position; // no longer necessary when using directional lights.
+    float3 direction;
+    float3 ambient;
+    float3 diffuse;
+    float3 specular;
+};
+--- replace:
+// A point light: its position, how its light fades with the distance (attenuation), and
+// how strong its ambient, diffuse and specular parts are. (linear is a word of HLSL:
+// the three terms are called constantTerm, linearTerm and quadraticTerm.)
+struct Light
+{
+    float3 position;
+    float constantTerm;
+    float linearTerm;
+    float quadraticTerm;
+
+    float3 ambient;
+    float3 diffuse;
+    float3 specular;
+};
+--- file: light_casters.hlsl
+--- find:
+    float3 lightDir = normalize(-light.direction);
+--- replace:
+    float3 lightDir = normalize(light.position - input.fragPos);
+--- file: light_casters.hlsl
+--- find:
+    float3 result = ambient + diffuse + specular;
+--- replace:
+    // attenuation (dist: distance is the name of an HLSL function)
+    float dist = length(light.position - input.fragPos);
+    float attenuation = 1.0f / (light.constantTerm + light.linearTerm * dist + light.quadraticTerm * (dist * dist));
+
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
+
+    float3 result = ambient + diffuse + specular;
+--- file: main.cpp
+--- find:
+    struct Light
+    {
+        // XMFLOAT3 position; // no longer necessary when using directional lights.
+        XMFLOAT3 direction;
+        float padding0;
+        XMFLOAT3 ambient;
+        float padding1;
+        XMFLOAT3 diffuse;
+        float padding2;
+        XMFLOAT3 specular;
+        float padding3;
+    };
+--- replace:
+    struct Light
+    {
+        XMFLOAT3 position;
+        float constantTerm;    // fills the row of position
+        float linearTerm;
+        float quadraticTerm;
+        float padding0[2];     // ambient would cross into the next row: HLSL starts it there
+        XMFLOAT3 ambient;
+        float padding1;
+        XMFLOAT3 diffuse;
+        float padding2;
+        XMFLOAT3 specular;
+        float padding3;
+    };
+--- file: main.cpp
+--- find:
+    constantBufferData.light.direction = XMFLOAT3(-0.2f, -1.0f, -0.3f);
+--- replace:
+    constantBufferData.light.position = lightPos;
+--- file: main.cpp
+--- find:
+    constantBufferData.light.specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+--- replace:
+    constantBufferData.light.specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+    constantBufferData.light.constantTerm = 1.0f;
+    constantBufferData.light.linearTerm = 0.09f;
+    constantBufferData.light.quadraticTerm = 0.032f;
+--- file: main.cpp
+--- find:
+    // A lamp object is weird when we only have a directional light, don't render the light object.
+    // m_commandList->SetPipelineState(m_lightCubePipelineState.Get());
+    // XMMATRIX model = XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(lightPos.x, lightPos.y, lightPos.z);
+    // XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    // m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    // m_commandList->DrawInstanced(36, 1, 0, 0);
+--- replace:
+    // Also draw the lamp object: the same cube, with the lamp's pipeline state (its own
+    // shaders), made smaller (scale 0.2) and moved to lightPos.
+    m_commandList->SetPipelineState(m_lightCubePipelineState.Get());
+    XMMATRIX model = XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(lightPos.x, lightPos.y, lightPos.z);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+
+=== task: spotlight
+--- file: light_casters.hlsl
+--- find:
+// A point light: its position, how its light fades with the distance (attenuation), and
+// how strong its ambient, diffuse and specular parts are. (linear is a word of HLSL:
+// the three terms are called constantTerm, linearTerm and quadraticTerm.)
+struct Light
+{
+    float3 position;
+    float constantTerm;
+--- replace:
+// A spotlight: a point light that shines only into a cone around its direction. cutOff
+// is the cosine of the cone's half angle. (linear is a word of HLSL: the three
+// attenuation terms are called constantTerm, linearTerm and quadraticTerm.)
+struct Light
+{
+    float3 position;
+    float3 direction;
+    float cutOff;
+
+    float constantTerm;
+--- file: light_casters.hlsl
+--- find:
+    // ambient
+    float3 ambient = light.ambient * diffuseMap.Sample(wrapSampler, input.texCoord).rgb;
+
+    // diffuse
+    float3 norm = normalize(input.normal);
+    float3 lightDir = normalize(light.position - input.fragPos);
+    float diff = max(dot(norm, lightDir), 0.0f);
+    float3 diffuse = light.diffuse * diff * diffuseMap.Sample(wrapSampler, input.texCoord).rgb;
+
+    // specular
+    float3 viewDir = normalize(viewPos - input.fragPos);
+    float3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0f), material.shininess);
+    float3 specular = light.specular * spec * specularMap.Sample(wrapSampler, input.texCoord).rgb;
+
+    // attenuation (dist: distance is the name of an HLSL function)
+    float dist = length(light.position - input.fragPos);
+    float attenuation = 1.0f / (light.constantTerm + light.linearTerm * dist + light.quadraticTerm * (dist * dist));
+
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
+
+    float3 result = ambient + diffuse + specular;
+    return float4(result, 1.0f);
+--- replace:
+    float3 lightDir = normalize(light.position - input.fragPos);
+
+    // The material's colours here. Sampled before the if: Sample() picks the texture's
+    // level of detail from the neighbouring pixels, which may take the other branch.
+    float3 diffuseColor = diffuseMap.Sample(wrapSampler, input.texCoord).rgb;
+    float3 specularColor = specularMap.Sample(wrapSampler, input.texCoord).rgb;
+
+    // check if lighting is inside the spotlight cone
+    float theta = dot(lightDir, normalize(-light.direction));
+
+    if (theta > light.cutOff) // remember that we're working with angles as cosines instead of degrees so a '>' is used.
+    {
+        // ambient
+        float3 ambient = light.ambient * diffuseColor;
+
+        // diffuse
+        float3 norm = normalize(input.normal);
+        float diff = max(dot(norm, lightDir), 0.0f);
+        float3 diffuse = light.diffuse * diff * diffuseColor;
+
+        // specular
+        float3 viewDir = normalize(viewPos - input.fragPos);
+        float3 reflectDir = reflect(-lightDir, norm);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0f), material.shininess);
+        float3 specular = light.specular * spec * specularColor;
+
+        // attenuation (dist: distance is the name of an HLSL function)
+        float dist = length(light.position - input.fragPos);
+        float attenuation = 1.0f / (light.constantTerm + light.linearTerm * dist + light.quadraticTerm * (dist * dist));
+
+        // ambient *= attenuation; // remove attenuation from ambient, as otherwise at large distances the light would be darker inside than outside the spotlight due the ambient term in the else branch
+        diffuse *= attenuation;
+        specular *= attenuation;
+
+        float3 result = ambient + diffuse + specular;
+        return float4(result, 1.0f);
+    }
+    else
+    {
+        // else, use ambient light so scene isn't completely dark outside the spotlight.
+        return float4(light.ambient * diffuseColor, 1.0f);
+    }
+--- file: main.cpp
+--- find:
+    struct Light
+    {
+        XMFLOAT3 position;
+        float constantTerm;    // fills the row of position
+        float linearTerm;
+        float quadraticTerm;
+        float padding0[2];     // ambient would cross into the next row: HLSL starts it there
+        XMFLOAT3 ambient;
+        float padding1;
+        XMFLOAT3 diffuse;
+        float padding2;
+        XMFLOAT3 specular;
+        float padding3;
+    };
+--- replace:
+    struct Light
+    {
+        XMFLOAT3 position;
+        float padding0;
+        XMFLOAT3 direction;
+        float cutOff;          // fills the row of direction
+        float constantTerm;
+        float linearTerm;
+        float quadraticTerm;
+        float padding1;
+        XMFLOAT3 ambient;
+        float padding2;
+        XMFLOAT3 diffuse;
+        float padding3;
+        XMFLOAT3 specular;
+        float padding4;
+    };
+--- file: main.cpp
+--- find:
+    constantBufferData.light.position = lightPos;
+    XMStoreFloat3(&constantBufferData.viewPos, cameraPos);    // the camera's position
+
+    // light properties
+    constantBufferData.light.ambient = XMFLOAT3(0.2f, 0.2f, 0.2f);
+    constantBufferData.light.diffuse = XMFLOAT3(0.5f, 0.5f, 0.5f); // darken diffuse light a bit
+--- replace:
+    // The spotlight is a flashlight: at the camera, pointing where the camera looks.
+    XMStoreFloat3(&constantBufferData.light.position, cameraPos);
+    XMStoreFloat3(&constantBufferData.light.direction, cameraFront);
+    constantBufferData.light.cutOff = std::cos(XMConvertToRadians(12.5f));
+    XMStoreFloat3(&constantBufferData.viewPos, cameraPos);    // the camera's position
+
+    // light properties
+    constantBufferData.light.ambient = XMFLOAT3(0.1f, 0.1f, 0.1f);
+    // we configure the diffuse intensity slightly higher; the right lighting conditions differ with each lighting method and environment.
+    // each environment and lighting type requires some tweaking to get the best out of your environment.
+    constantBufferData.light.diffuse = XMFLOAT3(0.8f, 0.8f, 0.8f);
+--- file: main.cpp
+--- find:
+    // Also draw the lamp object: the same cube, with the lamp's pipeline state (its own
+    // shaders), made smaller (scale 0.2) and moved to lightPos.
+    m_commandList->SetPipelineState(m_lightCubePipelineState.Get());
+    XMMATRIX model = XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(lightPos.x, lightPos.y, lightPos.z);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+--- replace:
+    // The light is the flashlight now: no lamp object.
+    // m_commandList->SetPipelineState(m_lightCubePipelineState.Get());
+    // XMMATRIX model = XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(lightPos.x, lightPos.y, lightPos.z);
+    // XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    // m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    // m_commandList->DrawInstanced(36, 1, 0, 0);
+
+=== task: soft-edges
+--- file: light_casters.hlsl
+--- find:
+// A spotlight: a point light that shines only into a cone around its direction. cutOff
+// is the cosine of the cone's half angle. (linear is a word of HLSL: the three
+// attenuation terms are called constantTerm, linearTerm and quadraticTerm.)
+struct Light
+{
+    float3 position;
+    float3 direction;
+    float cutOff;
+
+--- replace:
+// A spotlight: a point light that shines only into a cone around its direction. cutOff
+// and outerCutOff are the cosines of the half angles of the inner cone (full light) and
+// the outer cone (no light); in between the light fades. (linear is a word of HLSL: the
+// three attenuation terms are called constantTerm, linearTerm and quadraticTerm.)
+struct Light
+{
+    float3 position;
+    float3 direction;
+    float cutOff;
+    float outerCutOff;
+
+--- file: light_casters.hlsl
+--- find:
+    float3 lightDir = normalize(light.position - input.fragPos);
+
+    // The material's colours here. Sampled before the if: Sample() picks the texture's
+    // level of detail from the neighbouring pixels, which may take the other branch.
+    float3 diffuseColor = diffuseMap.Sample(wrapSampler, input.texCoord).rgb;
+    float3 specularColor = specularMap.Sample(wrapSampler, input.texCoord).rgb;
+
+    // check if lighting is inside the spotlight cone
+    float theta = dot(lightDir, normalize(-light.direction));
+
+    if (theta > light.cutOff) // remember that we're working with angles as cosines instead of degrees so a '>' is used.
+    {
+        // ambient
+        float3 ambient = light.ambient * diffuseColor;
+
+        // diffuse
+        float3 norm = normalize(input.normal);
+        float diff = max(dot(norm, lightDir), 0.0f);
+        float3 diffuse = light.diffuse * diff * diffuseColor;
+
+        // specular
+        float3 viewDir = normalize(viewPos - input.fragPos);
+        float3 reflectDir = reflect(-lightDir, norm);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0f), material.shininess);
+        float3 specular = light.specular * spec * specularColor;
+
+        // attenuation (dist: distance is the name of an HLSL function)
+        float dist = length(light.position - input.fragPos);
+        float attenuation = 1.0f / (light.constantTerm + light.linearTerm * dist + light.quadraticTerm * (dist * dist));
+
+        // ambient *= attenuation; // remove attenuation from ambient, as otherwise at large distances the light would be darker inside than outside the spotlight due the ambient term in the else branch
+        diffuse *= attenuation;
+        specular *= attenuation;
+
+        float3 result = ambient + diffuse + specular;
+        return float4(result, 1.0f);
+    }
+    else
+    {
+        // else, use ambient light so scene isn't completely dark outside the spotlight.
+        return float4(light.ambient * diffuseColor, 1.0f);
+    }
+--- replace:
+    // ambient
+    float3 ambient = light.ambient * diffuseMap.Sample(wrapSampler, input.texCoord).rgb;
+
+    // diffuse
+    float3 norm = normalize(input.normal);
+    float3 lightDir = normalize(light.position - input.fragPos);
+    float diff = max(dot(norm, lightDir), 0.0f);
+    float3 diffuse = light.diffuse * diff * diffuseMap.Sample(wrapSampler, input.texCoord).rgb;
+
+    // specular
+    float3 viewDir = normalize(viewPos - input.fragPos);
+    float3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0f), material.shininess);
+    float3 specular = light.specular * spec * specularMap.Sample(wrapSampler, input.texCoord).rgb;
+
+    // spotlight (soft edges)
+    float theta = dot(lightDir, normalize(-light.direction));
+    float epsilon = (light.cutOff - light.outerCutOff);
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0f, 1.0f);
+    diffuse *= intensity;
+    specular *= intensity;
+
+    // attenuation (dist: distance is the name of an HLSL function)
+    float dist = length(light.position - input.fragPos);
+    float attenuation = 1.0f / (light.constantTerm + light.linearTerm * dist + light.quadraticTerm * (dist * dist));
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
+
+    float3 result = ambient + diffuse + specular;
+    return float4(result, 1.0f);
+--- file: main.cpp
+--- find:
+        float cutOff;          // fills the row of direction
+        float constantTerm;
+        float linearTerm;
+        float quadraticTerm;
+        float padding1;
+        XMFLOAT3 ambient;
+        float padding2;
+        XMFLOAT3 diffuse;
+        float padding3;
+        XMFLOAT3 specular;
+        float padding4;
+    };
+--- replace:
+        float cutOff;          // fills the row of direction
+        float outerCutOff;     // outerCutOff and the three terms fill the next row
+        float constantTerm;
+        float linearTerm;
+        float quadraticTerm;
+        XMFLOAT3 ambient;
+        float padding1;
+        XMFLOAT3 diffuse;
+        float padding2;
+        XMFLOAT3 specular;
+        float padding3;
+    };
+--- file: main.cpp
+--- find:
+    constantBufferData.light.cutOff = std::cos(XMConvertToRadians(12.5f));
+--- replace:
+    constantBufferData.light.cutOff = std::cos(XMConvertToRadians(12.5f));
+    constantBufferData.light.outerCutOff = std::cos(XMConvertToRadians(17.5f));

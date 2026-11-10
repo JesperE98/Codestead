@@ -1,0 +1,175 @@
+=== task: grass
+--- file: main.cpp
+--- find:
+#include <iostream>
+--- replace:
+#include <iostream>
+#include <vector>
+--- file: main.cpp
+--- find:
+    // TODO: the vertices of a transparent quad (transparentVertices): 1 x 1, upright, its left edge at x = 0 and its bottom at y = -0.5
+--- replace:
+    float transparentVertices[] = {
+        // positions         // texture Coords (the image is flipped on load, so v = 1.0 is its top row)
+        0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+        0.0f, -0.5f,  0.0f,  0.0f,  0.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
+
+        0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
+        1.0f,  0.5f,  0.0f,  1.0f,  1.0f
+    };
+--- file: main.cpp
+--- find:
+    // TODO: the transparent quad's VAO (transparentVAO, transparentVBO): position and texture coordinates like the others
+--- replace:
+    // transparent VAO
+    unsigned int transparentVAO, transparentVBO;
+    glGenVertexArrays(1, &transparentVAO);
+    glGenBuffers(1, &transparentVBO);
+    glBindVertexArray(transparentVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, transparentVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), transparentVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
+--- file: main.cpp
+--- find:
+    // TODO: load grass.png (transparentTexture) and list the vegetation's positions
+--- replace:
+    unsigned int transparentTexture = loadTexture("grass.png");
+
+    // transparent vegetation locations
+    // --------------------------------
+    std::vector<glm::vec3> vegetation
+    {
+        glm::vec3(-1.5f, 0.0f, -0.48f),
+        glm::vec3( 1.5f, 0.0f, 0.51f),
+        glm::vec3( 0.0f, 0.0f, 0.7f),
+        glm::vec3(-0.3f, 0.0f, -2.3f),
+        glm::vec3( 0.5f, 0.0f, -0.6f)
+    };
+--- file: main.cpp
+--- find:
+        // TODO: draw the transparent quad with transparentTexture at every vegetation position
+--- replace:
+        // vegetation
+        glBindVertexArray(transparentVAO);
+        glBindTexture(GL_TEXTURE_2D, transparentTexture);
+        for (unsigned int i = 0; i < vegetation.size(); i++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, vegetation[i]);
+            shader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+--- file: main.cpp
+--- find:
+    glDeleteBuffers(1, &planeVBO);
+--- replace:
+    glDeleteVertexArrays(1, &transparentVAO);
+    glDeleteBuffers(1, &planeVBO);
+    glDeleteBuffers(1, &transparentVBO);
+--- file: main.cpp
+--- find:
+    glDeleteTextures(1, &floorTexture);
+--- replace:
+    glDeleteTextures(1, &floorTexture);
+    glDeleteTextures(1, &transparentTexture);
+
+=== task: discard
+--- file: blending.fs
+--- find:
+    FragColor = texture(texture1, TexCoords);
+--- replace:
+    vec4 texColor = texture(texture1, TexCoords);
+    if(texColor.a < 0.1)
+        discard;
+    FragColor = texColor;
+--- file: main.cpp
+--- find:
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+--- replace:
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT); // for this tutorial: use GL_CLAMP_TO_EDGE to prevent semi-transparent borders. Due to interpolation it takes texels from next repeat
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+
+=== task: blend
+--- file: main.cpp
+--- find:
+    glDepthFunc(GL_LESS); // pass when the fragment is closer than the stored depth (OpenGL's default)
+--- replace:
+    glDepthFunc(GL_LESS); // pass when the fragment is closer than the stored depth (OpenGL's default)
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // result = src * src.alpha + dst * (1 - src.alpha)
+--- file: main.cpp
+--- find:
+    unsigned int transparentTexture = loadTexture("grass.png");
+
+    // transparent vegetation locations
+    // --------------------------------
+    std::vector<glm::vec3> vegetation
+--- replace:
+    unsigned int transparentTexture = loadTexture("window.png");
+
+    // transparent window locations
+    // --------------------------------
+    std::vector<glm::vec3> windows
+--- file: main.cpp
+--- find:
+        // vegetation
+        glBindVertexArray(transparentVAO);
+        glBindTexture(GL_TEXTURE_2D, transparentTexture);
+        for (unsigned int i = 0; i < vegetation.size(); i++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, vegetation[i]);
+--- replace:
+        // windows
+        glBindVertexArray(transparentVAO);
+        glBindTexture(GL_TEXTURE_2D, transparentTexture);
+        for (unsigned int i = 0; i < windows.size(); i++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, windows[i]);
+
+=== task: sort
+--- file: main.cpp
+--- find:
+#include <vector>
+--- replace:
+#include <vector>
+#include <map>
+--- file: main.cpp
+--- find:
+        processInput(window);
+--- replace:
+        processInput(window);
+
+        // sort the transparent windows before rendering
+        // ---------------------------------------------
+        std::map<float, glm::vec3> sorted;
+        for (unsigned int i = 0; i < windows.size(); i++)
+        {
+            float distance = glm::length(cameraPos - windows[i]);
+            sorted[distance] = windows[i];
+        }
+--- file: main.cpp
+--- find:
+        // windows
+        glBindVertexArray(transparentVAO);
+        glBindTexture(GL_TEXTURE_2D, transparentTexture);
+        for (unsigned int i = 0; i < windows.size(); i++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, windows[i]);
+--- replace:
+        // windows (from furthest to nearest)
+        glBindVertexArray(transparentVAO);
+        glBindTexture(GL_TEXTURE_2D, transparentTexture);
+        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, it->second);

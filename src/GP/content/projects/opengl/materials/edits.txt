@@ -1,0 +1,142 @@
+=== task: material
+--- file: materials.fs
+--- find:
+out vec4 FragColor;
+
+in vec3 Normal;
+--- replace:
+out vec4 FragColor;
+
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+};
+
+in vec3 Normal;
+--- file: materials.fs
+--- find:
+uniform vec3 objectColor;
+uniform vec3 lightColor;
+--- replace:
+uniform vec3 lightColor;
+uniform Material material;
+--- file: materials.fs
+--- find:
+    float ambientStrength = 0.1;
+    vec3 ambient = ambientStrength * lightColor;
+--- replace:
+    vec3 ambient = lightColor * material.ambient;
+--- file: materials.fs
+--- find:
+    vec3 diffuse = diff * lightColor;
+--- replace:
+    vec3 diffuse = lightColor * (diff * material.diffuse);
+--- file: materials.fs
+--- find:
+    float specularStrength = 0.5;
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    vec3 specular = specularStrength * spec * lightColor;
+
+    vec3 result = (ambient + diffuse + specular) * objectColor;
+--- replace:
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    vec3 specular = lightColor * (spec * material.specular);
+
+    vec3 result = ambient + diffuse + specular;
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+        lightingShader.setVec3("lightColor",  1.0f, 1.0f, 1.0f);
+        lightingShader.setVec3("lightPos", lightPos);
+        lightingShader.setVec3("viewPos", cameraPos);
+--- replace:
+        lightingShader.setVec3("lightColor",  1.0f, 1.0f, 1.0f);
+        lightingShader.setVec3("lightPos", lightPos);
+        lightingShader.setVec3("viewPos", cameraPos);
+
+        // material properties
+        lightingShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+        lightingShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+        lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
+        lightingShader.setFloat("material.shininess", 32.0f);
+
+=== task: light
+--- file: materials.fs
+--- find:
+    float shininess;
+};
+--- replace:
+    float shininess;
+};
+
+struct Light {
+    vec3 position;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+--- file: materials.fs
+--- find:
+uniform vec3 lightPos;
+uniform vec3 viewPos;
+uniform vec3 lightColor;
+uniform Material material;
+--- replace:
+uniform vec3 viewPos;
+uniform Material material;
+uniform Light light;
+--- file: materials.fs
+--- find:
+    vec3 ambient = lightColor * material.ambient;
+--- replace:
+    vec3 ambient = light.ambient * material.ambient;
+--- file: materials.fs
+--- find:
+    vec3 lightDir = normalize(lightPos - FragPos);
+--- replace:
+    vec3 lightDir = normalize(light.position - FragPos);
+--- file: materials.fs
+--- find:
+    vec3 diffuse = lightColor * (diff * material.diffuse);
+--- replace:
+    vec3 diffuse = light.diffuse * (diff * material.diffuse);
+--- file: materials.fs
+--- find:
+    vec3 specular = lightColor * (spec * material.specular);
+--- replace:
+    vec3 specular = light.specular * (spec * material.specular);
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("lightColor",  1.0f, 1.0f, 1.0f);
+        lightingShader.setVec3("lightPos", lightPos);
+        lightingShader.setVec3("viewPos", cameraPos);
+--- replace:
+        lightingShader.setVec3("light.position", lightPos);
+        lightingShader.setVec3("viewPos", cameraPos);
+
+        // light properties
+        lightingShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+        lightingShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f); // darken diffuse light a bit
+        lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+=== task: light-color
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+        lightingShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f); // darken diffuse light a bit
+--- replace:
+        glm::vec3 lightColor;
+        lightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
+        lightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
+        lightColor.z = static_cast<float>(sin(glfwGetTime() * 1.3));
+        glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); // decrease the influence
+        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
+        lightingShader.setVec3("light.ambient", ambientColor);
+        lightingShader.setVec3("light.diffuse", diffuseColor);

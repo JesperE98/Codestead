@@ -1,0 +1,423 @@
+=== task: texcoords
+--- file: main.cpp
+--- find:
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+--- replace:
+    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+--- file: main.cpp
+--- find:
+        // TODO: the texture coordinate attribute (location 2): the 2 floats after the normal
+--- replace:
+        attributeDescriptions[2].binding = 0;
+        attributeDescriptions[2].location = 2;
+        attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/lighting_maps.vert.spv", "shaders/lighting_maps.frag.spv", 2, lightingPipeline); // position and normal
+--- replace:
+        createPipeline("shaders/lighting_maps.vert.spv", "shaders/lighting_maps.frag.spv", 3, lightingPipeline); // position, normal and texture coordinates
+--- file: shaders/lighting_maps.vert
+--- find:
+layout(location = 1) in vec3 inNormal;
+
+layout(location = 0) out vec3 fragPos;
+layout(location = 1) out vec3 fragNormal;
+--- replace:
+layout(location = 1) in vec3 inNormal;
+layout(location = 2) in vec2 inTexCoord;
+
+layout(location = 0) out vec3 fragPos;
+layout(location = 1) out vec3 fragNormal;
+layout(location = 2) out vec2 fragTexCoord;
+--- file: shaders/lighting_maps.vert
+--- find:
+    fragNormal = mat3(transpose(inverse(pc.model))) * inNormal;
+--- replace:
+    fragNormal = mat3(transpose(inverse(pc.model))) * inNormal;
+    fragTexCoord = inTexCoord;
+--- file: shaders/lighting_maps.frag
+--- find:
+layout(location = 1) in vec3 fragNormal;
+--- replace:
+layout(location = 1) in vec3 fragNormal;
+layout(location = 2) in vec2 fragTexCoord;
+
+=== task: diffuse-map
+--- file: shaders/lighting_maps.frag
+--- find:
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+--- replace:
+// The lighting maps are textures; a uniform block cannot hold a sampler, so they have bindings of their own.
+layout(binding = 0) uniform sampler2D diffuseMap;
+
+struct Material {
+    vec3 specular;
+--- file: shaders/lighting_maps.frag
+--- find:
+    vec3 ambient = ubo.light.ambient * ubo.material.ambient;
+--- replace:
+    vec3 ambient = ubo.light.ambient * texture(diffuseMap, fragTexCoord).rgb;
+--- file: shaders/lighting_maps.frag
+--- find:
+    vec3 diffuse = ubo.light.diffuse * (diff * ubo.material.diffuse);
+--- replace:
+    vec3 diffuse = ubo.light.diffuse * diff * texture(diffuseMap, fragTexCoord).rgb;
+--- file: main.cpp
+--- find:
+struct Material {
+    glm::vec3 ambient;
+    float pad1;
+    glm::vec3 diffuse;
+    float pad2;
+    glm::vec3 specular;
+--- replace:
+struct Material {
+    glm::vec3 specular;
+--- file: main.cpp
+--- find:
+        ubo.material.ambient   = glm::vec3(1.0f, 0.5f, 0.31f);
+        ubo.material.diffuse   = glm::vec3(1.0f, 0.5f, 0.31f);
+        ubo.material.specular  = glm::vec3(0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
+        ubo.material.shininess = 32.0f;
+--- replace:
+        ubo.material.specular  = glm::vec3(0.5f, 0.5f, 0.5f);
+        ubo.material.shininess = 64.0f;
+--- file: main.cpp
+--- find:
+    VkSampler textureSampler;
+--- replace:
+    VkImage diffuseMapImage;
+    VkDeviceMemory diffuseMapImageMemory;
+    VkImageView diffuseMapImageView;
+
+    VkSampler textureSampler;
+--- file: main.cpp
+--- find:
+        // TODO: load the lighting maps (an image and an image view for each)
+--- replace:
+        createDiffuseMap();
+--- file: main.cpp
+--- find:
+        vkDestroySampler(device, textureSampler, nullptr);
+--- replace:
+        vkDestroySampler(device, textureSampler, nullptr);
+
+        vkDestroyImageView(device, diffuseMapImageView, nullptr);
+        vkDestroyImage(device, diffuseMapImage, nullptr);
+        vkFreeMemory(device, diffuseMapImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+    // A texture image (device local, ready for sampling) with the pixels of an image loaded by stb_image as RGBA,
+--- replace:
+    // the diffuse map: the colour of the surface (for the ambient and the diffuse light)
+    void createDiffuseMap() {
+        int texWidth, texHeight, texChannels;
+        stbi_uc* pixels = stbi_load("textures/container2.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+
+        if (!pixels) {
+            throw std::runtime_error("failed to load texture image!");
+        }
+
+        createTextureImage(pixels, texWidth, texHeight, diffuseMapImage, diffuseMapImageMemory);
+        stbi_image_free(pixels);
+
+        diffuseMapImageView = createImageView(diffuseMapImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+    }
+
+    // A texture image (device local, ready for sampling) with the pixels of an image loaded by stb_image as RGBA,
+--- file: main.cpp
+--- find:
+        // The uniform buffer keeps binding 2; the lighting maps take the bindings 0, 1 and 3.
+--- replace:
+        // The uniform buffer keeps binding 2; the lighting maps take the bindings 0, 1 and 3.
+        VkDescriptorSetLayoutBinding diffuseMapLayoutBinding{};
+        diffuseMapLayoutBinding.binding = 0;
+        diffuseMapLayoutBinding.descriptorCount = 1;
+        diffuseMapLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        diffuseMapLayoutBinding.pImmutableSamplers = nullptr;
+        diffuseMapLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorSetLayoutBinding, 1> bindings = {uboLayoutBinding};
+--- replace:
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {diffuseMapLayoutBinding, uboLayoutBinding};
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorPoolSize, 1> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1; // the set has one uniform buffer
+--- replace:
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1; // the set has one uniform buffer
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 1; // and a combined image sampler for each lighting map
+--- file: main.cpp
+--- find:
+        std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+--- replace:
+        VkDescriptorImageInfo diffuseMapInfo{};
+        diffuseMapInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        diffuseMapInfo.imageView = diffuseMapImageView;
+        diffuseMapInfo.sampler = textureSampler;
+
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+--- file: main.cpp
+--- find:
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+--- replace:
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 0;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &diffuseMapInfo;
+
+=== task: specular-map
+--- file: shaders/lighting_maps.frag
+--- find:
+layout(binding = 0) uniform sampler2D diffuseMap;
+
+struct Material {
+    vec3 specular;
+    float shininess;
+};
+--- replace:
+layout(binding = 0) uniform sampler2D diffuseMap;
+layout(binding = 1) uniform sampler2D specularMap;
+
+struct Material {
+    float shininess;
+};
+--- file: shaders/lighting_maps.frag
+--- find:
+    vec3 specular = ubo.light.specular * (spec * ubo.material.specular);
+--- replace:
+    vec3 specular = ubo.light.specular * spec * texture(specularMap, fragTexCoord).rgb;
+--- file: main.cpp
+--- find:
+struct Material {
+    glm::vec3 specular;
+    float shininess; // fills the 4 bytes after specular
+};
+--- replace:
+struct Material {
+    float shininess;
+    float pad1; // a struct in a uniform block takes a multiple of 16 bytes
+    float pad2;
+    float pad3;
+};
+--- file: main.cpp
+--- find:
+        ubo.material.specular  = glm::vec3(0.5f, 0.5f, 0.5f);
+        ubo.material.shininess = 64.0f;
+--- replace:
+        ubo.material.shininess = 64.0f;
+--- file: main.cpp
+--- find:
+    VkImageView diffuseMapImageView;
+--- replace:
+    VkImageView diffuseMapImageView;
+
+    VkImage specularMapImage;
+    VkDeviceMemory specularMapImageMemory;
+    VkImageView specularMapImageView;
+--- file: main.cpp
+--- find:
+        createDiffuseMap();
+--- replace:
+        createDiffuseMap();
+        createSpecularMap();
+--- file: main.cpp
+--- find:
+        vkFreeMemory(device, diffuseMapImageMemory, nullptr);
+--- replace:
+        vkFreeMemory(device, diffuseMapImageMemory, nullptr);
+
+        vkDestroyImageView(device, specularMapImageView, nullptr);
+        vkDestroyImage(device, specularMapImage, nullptr);
+        vkFreeMemory(device, specularMapImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+    // A texture image (device local, ready for sampling) with the pixels of an image loaded by stb_image as RGBA,
+--- replace:
+    // the specular map: how strong the specular highlight is on each part of the surface (the steel shines, the wood does not)
+    void createSpecularMap() {
+        int texWidth, texHeight, texChannels;
+        stbi_uc* pixels = stbi_load("textures/container2_specular.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+
+        if (!pixels) {
+            throw std::runtime_error("failed to load texture image!");
+        }
+
+        createTextureImage(pixels, texWidth, texHeight, specularMapImage, specularMapImageMemory);
+        stbi_image_free(pixels);
+
+        specularMapImageView = createImageView(specularMapImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+    }
+
+    // A texture image (device local, ready for sampling) with the pixels of an image loaded by stb_image as RGBA,
+--- file: main.cpp
+--- find:
+        diffuseMapLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+--- replace:
+        diffuseMapLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutBinding specularMapLayoutBinding{};
+        specularMapLayoutBinding.binding = 1;
+        specularMapLayoutBinding.descriptorCount = 1;
+        specularMapLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        specularMapLayoutBinding.pImmutableSamplers = nullptr;
+        specularMapLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {diffuseMapLayoutBinding, uboLayoutBinding};
+--- replace:
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {diffuseMapLayoutBinding, specularMapLayoutBinding, uboLayoutBinding};
+--- file: main.cpp
+--- find:
+        poolSizes[1].descriptorCount = 1; // and a combined image sampler for each lighting map
+--- replace:
+        poolSizes[1].descriptorCount = 2; // and a combined image sampler for each lighting map
+--- file: main.cpp
+--- find:
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+--- replace:
+        VkDescriptorImageInfo specularMapInfo{};
+        specularMapInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        specularMapInfo.imageView = specularMapImageView;
+        specularMapInfo.sampler = textureSampler;
+
+        std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+--- file: main.cpp
+--- find:
+        descriptorWrites[1].pImageInfo = &diffuseMapInfo;
+--- replace:
+        descriptorWrites[1].pImageInfo = &diffuseMapInfo;
+
+        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[2].dstSet = descriptorSet;
+        descriptorWrites[2].dstBinding = 1;
+        descriptorWrites[2].dstArrayElement = 0;
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[2].descriptorCount = 1;
+        descriptorWrites[2].pImageInfo = &specularMapInfo;
+
+=== task: emission
+--- file: shaders/lighting_maps.frag
+--- find:
+layout(binding = 1) uniform sampler2D specularMap;
+--- replace:
+layout(binding = 1) uniform sampler2D specularMap;
+layout(binding = 3) uniform sampler2D emissionMap; // binding 2 is the uniform buffer
+--- file: shaders/lighting_maps.frag
+--- find:
+    vec3 result = ambient + diffuse + specular;
+--- replace:
+    // emission
+    vec3 emission = texture(emissionMap, fragTexCoord).rgb;
+
+    vec3 result = ambient + diffuse + specular + emission;
+--- file: main.cpp
+--- find:
+    VkImageView specularMapImageView;
+--- replace:
+    VkImageView specularMapImageView;
+
+    VkImage emissionMapImage;
+    VkDeviceMemory emissionMapImageMemory;
+    VkImageView emissionMapImageView;
+--- file: main.cpp
+--- find:
+        createSpecularMap();
+--- replace:
+        createSpecularMap();
+        createEmissionMap();
+--- file: main.cpp
+--- find:
+        vkFreeMemory(device, specularMapImageMemory, nullptr);
+--- replace:
+        vkFreeMemory(device, specularMapImageMemory, nullptr);
+
+        vkDestroyImageView(device, emissionMapImageView, nullptr);
+        vkDestroyImage(device, emissionMapImage, nullptr);
+        vkFreeMemory(device, emissionMapImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+    // A texture image (device local, ready for sampling) with the pixels of an image loaded by stb_image as RGBA,
+--- replace:
+    // the emission map: light the surface gives off itself, whatever the lights do
+    void createEmissionMap() {
+        int texWidth, texHeight, texChannels;
+        stbi_uc* pixels = stbi_load("textures/matrix.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+
+        if (!pixels) {
+            throw std::runtime_error("failed to load texture image!");
+        }
+
+        createTextureImage(pixels, texWidth, texHeight, emissionMapImage, emissionMapImageMemory);
+        stbi_image_free(pixels);
+
+        emissionMapImageView = createImageView(emissionMapImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+    }
+
+    // A texture image (device local, ready for sampling) with the pixels of an image loaded by stb_image as RGBA,
+--- file: main.cpp
+--- find:
+        specularMapLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+--- replace:
+        specularMapLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutBinding emissionMapLayoutBinding{};
+        emissionMapLayoutBinding.binding = 3;
+        emissionMapLayoutBinding.descriptorCount = 1;
+        emissionMapLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        emissionMapLayoutBinding.pImmutableSamplers = nullptr;
+        emissionMapLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {diffuseMapLayoutBinding, specularMapLayoutBinding, uboLayoutBinding};
+--- replace:
+        std::array<VkDescriptorSetLayoutBinding, 4> bindings = {diffuseMapLayoutBinding, specularMapLayoutBinding, uboLayoutBinding, emissionMapLayoutBinding};
+--- file: main.cpp
+--- find:
+        poolSizes[1].descriptorCount = 2; // and a combined image sampler for each lighting map
+--- replace:
+        poolSizes[1].descriptorCount = 3; // and a combined image sampler for each lighting map
+--- file: main.cpp
+--- find:
+        std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+--- replace:
+        VkDescriptorImageInfo emissionMapInfo{};
+        emissionMapInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        emissionMapInfo.imageView = emissionMapImageView;
+        emissionMapInfo.sampler = textureSampler;
+
+        std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
+--- file: main.cpp
+--- find:
+        descriptorWrites[2].pImageInfo = &specularMapInfo;
+--- replace:
+        descriptorWrites[2].pImageInfo = &specularMapInfo;
+
+        descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[3].dstSet = descriptorSet;
+        descriptorWrites[3].dstBinding = 3;
+        descriptorWrites[3].dstArrayElement = 0;
+        descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[3].descriptorCount = 1;
+        descriptorWrites[3].pImageInfo = &emissionMapInfo;

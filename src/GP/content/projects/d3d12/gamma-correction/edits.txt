@@ -1,0 +1,25 @@
+=== task: gamma-shader
+--- file: gamma_correction.hlsl
+--- find:
+    // TODO: gamma correction: raise the colour to the power 1 / 2.2
+--- replace:
+    // Gamma correction: the monitor shows a value v as about v to the power 2.2, so the
+    // linear colour is raised to the power 1 / 2.2 first.
+    float gamma = 2.2f;
+    color = pow(color, float3(1.0f / gamma, 1.0f / gamma, 1.0f / gamma));
+
+=== task: srgb-texture
+--- file: main.cpp
+--- find:
+    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+--- replace:
+    // The image's colours are sRGB-encoded (gamma-corrected), like any photo or painted
+    // image: an _SRGB format makes sampling decode them to linear colours.
+    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+
+=== task: quadratic
+--- file: gamma_correction.hlsl
+--- find:
+    float attenuation = 1.0f / lightDistance;    // linear
+--- replace:
+    float attenuation = 1.0f / (lightDistance * lightDistance);    // quadratic: physically right, in linear space

@@ -1,0 +1,55 @@
+{
+  "title": "Advanced Data",
+  "tasks": {
+    "buffer-sub-data": {
+      "text": { "opengl": "Fill the cube's buffer in two steps: reserve the memory with `glBufferData(…, NULL, …)`, then copy `cubeVertices` in from byte 0 with `glBufferSubData`." },
+      "hint": { "opengl": "`glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), NULL, GL_STATIC_DRAW);` then `glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(cubeVertices), &cubeVertices);` – target, offset in bytes, size, data." }
+    },
+    "map-buffer": {
+      "text": {
+        "opengl": "Fill the floor's buffer through a pointer: reserve it with `glBufferData(…, NULL, …)`, get a pointer with `glMapBuffer`, `memcpy` the vertices into it and call `glUnmapBuffer`.",
+        "d3d12": "Give the floor its own upload-heap vertex buffer `m_floorVertexBuffer`, filled through the pointer from `Map`, `memcpy` and `Unmap`, and draw the floor from it."
+      },
+      "hint": {
+        "opengl": "`void *ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY); memcpy(ptr, planeVertices, sizeof(planeVertices)); glUnmapBuffer(GL_ARRAY_BUFFER);` – `memcpy` needs `#include <cstring>`. Don't use the pointer after unmapping.",
+        "d3d12": "Move the 6 floor vertices into `Vertex planeVertices[]`. `Map(0, &readRange, …)` with `readRange(0, 0)`, `Unmap(0, &writtenRange)` with `writtenRange(0, sizeof(planeVertices))`. Bind `m_floorVertexBufferView` before the floor's draw: `DrawInstanced(6, 1, 0, 0)`."
+      }
+    },
+    "map-memory": {
+      "text": { "vulkan": "In `createVertexBuffer()` copy the vertices part by part: map only the cube's range (offset 0, `sizeof(Vertex) * 36`), copy and unmap, then the floor's range (offset `cubeSize`, `sizeof(Vertex) * 6`)." },
+      "hint": { "vulkan": "`vkMapMemory(device, vertexBufferMemory, offset, size, 0, &data)` maps only that range and points at its first byte. Copy `vertices.data() + 36` for the floor. Unmap before mapping the next range." }
+    },
+    "update-buffer": {
+      "text": { "vulkan": "Write the uniform buffer with `vkCmdUpdateBuffer`: create it as a device-local transfer destination (no mapping), record the update and a buffer barrier in `updateUniformBuffer(commandBuffer)`, and call it before the render pass." },
+      "hint": { "vulkan": "`VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT` in `VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT`. Barrier: `TRANSFER_WRITE` → `UNIFORM_READ`, stage `TRANSFER` → `VERTEX_SHADER`. Call it right after `vkBeginCommandBuffer`; remove the call in `drawFrame()`." }
+    },
+    "batched-attributes": {
+      "text": {
+        "opengl": "Store the cube's data batched: `cubePositions` and `cubeTexCoords` instead of `cubeVertices`, two `glBufferSubData` calls one after the other, and attribute pointers to the two blocks.",
+        "vulkan": "Store the vertices batched – all positions, then all texture coordinates – and read them through two vertex input bindings, binding the same buffer twice with two offsets.",
+        "d3d12": "Store the cube's data batched – `XMFLOAT3 cubePositions[]`, then `XMFLOAT2 cubeTexCoords[]` – and read them from two input slots with a vertex buffer view each (the floor too)."
+      },
+      "hint": {
+        "opengl": "Reserve `sizeof(cubePositions) + sizeof(cubeTexCoords)` bytes. Positions: stride `3 * sizeof(float)`, offset 0; texture coordinates: stride `2 * sizeof(float)`, offset `sizeof(cubePositions)`.",
+        "vulkan": "`getBindingDescriptions()`: binding 0 stride `sizeof(glm::vec3)`, binding 1 stride `sizeof(glm::vec2)`; attribute 1 reads binding 1, both offsets 0. `offsets[] = {0, sizeof(glm::vec3) * vertices.size()}`, `vkCmdBindVertexBuffers(commandBuffer, 0, 2, …)`.",
+        "d3d12": "`TEXCOORD` from input slot 1 at offset 0. View 0: start, stride 12; view 1: start + `sizeof(cubePositions)`, stride 8. The floor stays interleaved: two views, both stride `sizeof(Vertex)`, the second `sizeof(XMFLOAT3)` bytes in."
+      }
+    },
+    "copy-buffer": {
+      "text": {
+        "opengl": "Copy the floor's vertices into a new buffer `planeCopyVBO` with `glCopyBufferSubData` (`GL_COPY_READ_BUFFER` → `GL_COPY_WRITE_BUFFER`) and let the floor's VAO read from the copy.",
+        "vulkan": "Put the vertex buffer in device-local memory: write the two blocks into a staging buffer and copy them over with vulkan-tutorial's `copyBuffer` (`vkCmdCopyBuffer`).",
+        "d3d12": "Copy the floor's vertices into `m_floorCopyBuffer`, a default-heap buffer, with `CopyBufferRegion` plus a barrier, and draw the floor from the copy."
+      },
+      "hint": {
+        "opengl": "Reserve the copy with `glBufferData(GL_COPY_WRITE_BUFFER, sizeof(planeVertices), NULL, GL_STATIC_DRAW)`, then `glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(planeVertices))`. Bind `planeCopyVBO` to `GL_ARRAY_BUFFER` before the attribute pointers; delete it at the end.",
+        "vulkan": "Staging buffer: `TRANSFER_SRC`, host-visible and coherent. Vertex buffer: `TRANSFER_DST | VERTEX_BUFFER`, `DEVICE_LOCAL`. `copyBuffer` records `vkCmdCopyBuffer` in a one-time command buffer; destroy the staging buffer afterwards.",
+        "d3d12": "Create it in `D3D12_RESOURCE_STATE_COMMON` (the copy promotes it to COPY_DEST). `CopyBufferRegion(m_floorCopyBuffer.Get(), 0, m_floorVertexBuffer.Get(), 0, planeVertexBufferSize)`, then a barrier COPY_DEST → VERTEX_AND_CONSTANT_BUFFER. Point both floor views into the copy."
+      }
+    },
+    "default-heap": {
+      "text": { "d3d12": "Put the cube's vertex buffer in a default heap: fill an upload buffer `vertexBufferUploadHeap` with the two blocks and copy it into `m_vertexBuffer` with `CopyBufferRegion`." },
+      "hint": { "d3d12": "`m_vertexBuffer`: `D3D12_HEAP_TYPE_DEFAULT`, `D3D12_RESOURCE_STATE_COMMON`. Declare `vertexBufferUploadHeap` before the vertex buffer block so it lives until the command list has executed. Then the barrier COPY_DEST → VERTEX_AND_CONSTANT_BUFFER." }
+    }
+  }
+}

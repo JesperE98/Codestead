@@ -1,0 +1,10 @@
+[
+  { "title": "Face culling", "url": "https://learnopengl.com/Advanced-OpenGL/Face-culling", "publisher": "LearnOpenGL" },
+  { "title": "glCullFace", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCullFace.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "glFrontFace", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glFrontFace.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Uniform buffers: Descriptor pool and sets (the frontFace change)", "url": "https://vulkan-tutorial.com/Uniform_buffers/Descriptor_pool_and_sets", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "VkPipelineRasterizationStateCreateInfo", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkPipelineRasterizationStateCreateInfo.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "VkFrontFace", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkFrontFace.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "D3D12_RASTERIZER_DESC structure", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_rasterizer_desc", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "D3D12_CULL_MODE enumeration", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_cull_mode", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

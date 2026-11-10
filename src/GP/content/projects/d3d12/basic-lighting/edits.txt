@@ -1,0 +1,213 @@
+=== task: ambient
+--- file: basic_lighting.hlsl
+--- find:
+    return float4(lightColor * objectColor, 1.0f);
+--- replace:
+    // ambient
+    float ambientStrength = 0.1f;
+    float3 ambient = ambientStrength * lightColor;
+
+    float3 result = ambient * objectColor;
+    return float4(result, 1.0f);
+
+=== task: normals
+--- file: main.cpp
+--- find:
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+            // TODO: the normal (NORMAL, 3 floats after the position)
+--- replace:
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+--- file: basic_lighting.hlsl
+--- find:
+struct PSInput
+{
+    float4 position : SV_POSITION;
+};
+--- replace:
+struct PSInput
+{
+    float4 position : SV_POSITION;
+    float3 fragPos : POSITION;    // the position in world space
+    float3 normal : NORMAL;
+};
+--- file: basic_lighting.hlsl
+--- find:
+PSInput VSMain(float4 position : POSITION)
+{
+    PSInput result;
+
+    // The position is a row vector, multiplied by the matrices from left to right:
+    // model, then view, then projection (GLSL: projection * view * model * position).
+    result.position = mul(mul(mul(position, model), view), projection);
+--- replace:
+PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL)
+{
+    PSInput result;
+
+    // The position in world space (only the model matrix applied), for the lighting.
+    float4 worldPos = mul(position, model);
+    result.fragPos = worldPos.xyz;
+    result.normal = normal;
+
+    // Then view and projection, as before.
+    result.position = mul(mul(worldPos, view), projection);
+
+=== task: diffuse
+--- file: basic_lighting.hlsl
+--- find:
+    float3 objectColor;
+    float3 lightColor;
+};
+--- replace:
+    float3 objectColor;
+    float3 lightColor;
+    float3 lightPos;
+};
+--- file: basic_lighting.hlsl
+--- find:
+    float3 ambient = ambientStrength * lightColor;
+
+    float3 result = ambient * objectColor;
+--- replace:
+    float3 ambient = ambientStrength * lightColor;
+
+    // diffuse
+    float3 norm = normalize(input.normal);
+    float3 lightDir = normalize(lightPos - input.fragPos);
+    float diff = max(dot(norm, lightDir), 0.0f);
+    float3 diffuse = diff * lightColor;
+
+    float3 result = (ambient + diffuse) * objectColor;
+--- file: main.cpp
+--- find:
+        XMFLOAT3 lightColor;
+        float padding1;
+    };
+--- replace:
+        XMFLOAT3 lightColor;
+        float padding1;
+        XMFLOAT3 lightPos;
+        float padding2;
+    };
+--- file: main.cpp
+--- find:
+    constantBufferData.lightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
+--- replace:
+    constantBufferData.lightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
+    constantBufferData.lightPos = lightPos;
+
+=== task: normal-matrix
+--- file: main.cpp
+--- find:
+        // Root parameter 0: root constants for register b0 (the model matrix).
+--- replace:
+        // Root parameter 0: root constants for register b0 (the model and normal matrices).
+--- file: basic_lighting.hlsl
+--- find:
+cbuffer ModelConstants : register(b0)
+{
+    float4x4 model;
+};
+--- replace:
+cbuffer ModelConstants : register(b0)
+{
+    float4x4 model;
+    float4x4 normalMatrix;    // transpose(inverse(model)), computed in main.cpp
+};
+--- file: basic_lighting.hlsl
+--- find:
+    result.normal = normal;
+--- replace:
+    // The normal is a direction: w = 0, so the matrix's translation does not apply.
+    result.normal = mul(float4(normal, 0.0f), normalMatrix).xyz;
+--- file: main.cpp
+--- find:
+    // The root constants: what the vertex shader sees as cbuffer ModelConstants.
+    // A 4x4 matrix is 16 floats: 16 32-bit root constants.
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+    };
+--- replace:
+    // The root constants: what the vertex shader sees as cbuffer ModelConstants.
+    // Two 4x4 matrices are 32 floats: 32 32-bit root constants.
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+        XMFLOAT4X4 normalMatrix;
+    };
+--- file: main.cpp
+--- find:
+    XMMATRIX model = XMMatrixIdentity();
+    ModelConstants modelConstants = {};
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+--- replace:
+    XMMATRIX model = XMMatrixIdentity();
+    ModelConstants modelConstants = {};
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+
+    // The normal matrix: the transpose of the inverse of the model matrix. It keeps the
+    // normals perpendicular to the faces even when the model matrix scales unevenly.
+    XMMATRIX normalMatrix = XMMatrixTranspose(XMMatrixInverse(nullptr, model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixTranspose(normalMatrix));
+
+=== task: specular
+--- file: basic_lighting.hlsl
+--- find:
+    float3 lightColor;
+    float3 lightPos;
+};
+--- replace:
+    float3 lightColor;
+    float3 lightPos;
+    float3 viewPos;
+};
+--- file: basic_lighting.hlsl
+--- find:
+    float3 diffuse = diff * lightColor;
+
+    float3 result = (ambient + diffuse) * objectColor;
+--- replace:
+    float3 diffuse = diff * lightColor;
+
+    // specular
+    float specularStrength = 0.5f;
+    float3 viewDir = normalize(viewPos - input.fragPos);
+    float3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0f), 32);
+    float3 specular = specularStrength * spec * lightColor;
+
+    float3 result = (ambient + diffuse + specular) * objectColor;
+--- file: main.cpp
+--- find:
+        XMFLOAT3 lightPos;
+        float padding2;
+    };
+--- replace:
+        XMFLOAT3 lightPos;
+        float padding2;
+        XMFLOAT3 viewPos;
+        float padding3;
+    };
+--- file: main.cpp
+--- find:
+    constantBufferData.lightPos = lightPos;
+--- replace:
+    constantBufferData.lightPos = lightPos;
+    XMStoreFloat3(&constantBufferData.viewPos, cameraPos);    // the camera's position
+
+=== task: moving-light
+--- file: main.cpp
+--- find:
+    lastFrame = currentFrame;
+
+--- replace:
+    lastFrame = currentFrame;
+
+    // Move the light over time: the time in seconds since the first frame.
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - startTime).count();
+    lightPos.x = 1.0f + std::sin(time) * 2.0f;
+    lightPos.y = std::sin(time / 2.0f) * 1.0f;
+

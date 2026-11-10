@@ -1,0 +1,238 @@
+=== task: particle-shader
+--- file: particle.vs
+--- find:
+    // TODO: a quad of scale 10 x 10 pixels whose top-left corner is at offset: pass the texture coordinates and the colour on
+    gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+--- replace:
+    float scale = 10.0;
+    TexCoords = vertex.zw;
+    ParticleColor = color;
+    gl_Position = projection * vec4((vertex.xy * scale) + offset, 0.0, 1.0);
+--- file: particle.fs
+--- find:
+    // TODO: the particle texture's colour multiplied by the particle's colour
+    color = vec4(1.0);
+--- replace:
+    color = (texture(sprite, TexCoords) * ParticleColor);
+--- file: main.cpp
+--- find:
+// TODO: SetVector2f and SetVector4f (glUniform2f / glUniform4f), like SetVector3f
+--- replace:
+void SetVector2f(Shader& shader, const char* name, const glm::vec2& value, bool useShader = false)
+{
+    if (useShader)
+        Use(shader);
+    glUniform2f(glGetUniformLocation(shader.ID, name), value.x, value.y);
+}
+
+void SetVector4f(Shader& shader, const char* name, const glm::vec4& value, bool useShader = false)
+{
+    if (useShader)
+        Use(shader);
+    glUniform4f(glGetUniformLocation(shader.ID, name), value.x, value.y, value.z, value.w);
+}
+--- file: main.cpp
+--- find:
+    // TODO: load the particle shader (particle.vs, particle.fs) as "particle"
+--- replace:
+    LoadShader("particle.vs", "particle.fs", nullptr, "particle");
+--- file: main.cpp
+--- find:
+    // TODO: configure the particle shader: the sampler sprite on unit 0 and the same projection
+--- replace:
+    Use(GetShader("particle"));
+    SetInteger(GetShader("particle"), "sprite", 0);
+    SetMatrix4(GetShader("particle"), "projection", projection);
+--- file: main.cpp
+--- find:
+    // TODO: load textures/particle.png (with alpha) as "particle"
+--- replace:
+    LoadTexture("textures/particle.png", true, "particle");
+
+=== task: particle-generator
+--- file: main.cpp
+--- find:
+// TODO: struct Particle (Position, Velocity, Color, Life), struct ParticleGenerator (the particles, their amount, shader, texture, VAO) and the function InitParticles
+--- replace:
+// Represents a single particle and its state
+struct Particle
+{
+    glm::vec2 Position = glm::vec2(0.0f), Velocity = glm::vec2(0.0f);
+    glm::vec4 Color = glm::vec4(1.0f);
+    float     Life = 0.0f;
+};
+
+// ParticleGenerator acts as a container for rendering a large number of
+// particles by repeatedly spawning and updating particles and killing
+// them after a given amount of time.
+struct ParticleGenerator
+{
+    // state
+    std::vector<Particle> particles;
+    unsigned int          amount = 0;
+    // render state
+    Shader                shader;
+    unsigned int          texture = 0; // the texture's ID
+    unsigned int          VAO = 0;
+};
+
+// initializes the buffer and vertex attributes and creates the particles (learnopengl's ParticleGenerator constructor calls it)
+void InitParticles(ParticleGenerator& generator)
+{
+    // set up mesh and attribute properties
+    unsigned int VBO;
+    float particle_quad[] = {
+        0.0f, 1.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+
+        0.0f, 1.0f, 0.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, 1.0f,
+        1.0f, 0.0f, 1.0f, 0.0f
+    };
+    glGenVertexArrays(1, &generator.VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(generator.VAO);
+    // fill mesh buffer
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(particle_quad), particle_quad, GL_STATIC_DRAW);
+    // set mesh attributes
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glBindVertexArray(0);
+
+    // create generator.amount default particle instances
+    for (unsigned int i = 0; i < generator.amount; ++i)
+        generator.particles.push_back(Particle());
+}
+--- file: main.cpp
+--- find:
+// TODO: the particle generator: a global ParticleGenerator Particles
+--- replace:
+ParticleGenerator Particles;
+--- file: main.cpp
+--- find:
+    // TODO: set up the particle generator: 500 particles with the particle shader and texture
+--- replace:
+    // set up the particle generator (learnopengl's ParticleGenerator constructor): 500 particles
+    Particles.shader = GetShader("particle");
+    Particles.texture = GetTexture("particle").ID;
+    Particles.amount = 500;
+    InitParticles(Particles);
+--- file: main.cpp
+--- find:
+    glDeleteVertexArrays(1, &Renderer.quadVAO);
+--- replace:
+    glDeleteVertexArrays(1, &Renderer.quadVAO);
+    glDeleteVertexArrays(1, &Particles.VAO);
+
+=== task: spawn
+--- file: main.cpp
+--- find:
+#include <tuple>
+--- replace:
+#include <tuple>
+#include <cstdlib>
+--- file: main.cpp
+--- find:
+// TODO: lastUsedParticle and the functions firstUnusedParticle, respawnParticle and Update (spawn new particles at an object, then age and move the living ones)
+--- replace:
+// stores the index of the last particle used (for quick access to next dead particle)
+unsigned int lastUsedParticle = 0;
+// returns the first Particle index that's currently unused e.g. Life <= 0.0f or 0 if no particle is currently inactive
+unsigned int firstUnusedParticle(ParticleGenerator& generator)
+{
+    // first search from last used particle, this will usually return almost instantly
+    for (unsigned int i = lastUsedParticle; i < generator.amount; ++i)
+    {
+        if (generator.particles[i].Life <= 0.0f)
+        {
+            lastUsedParticle = i;
+            return i;
+        }
+    }
+    // otherwise, do a linear search
+    for (unsigned int i = 0; i < lastUsedParticle; ++i)
+    {
+        if (generator.particles[i].Life <= 0.0f)
+        {
+            lastUsedParticle = i;
+            return i;
+        }
+    }
+    // all particles are taken, override the first one (note that if it repeatedly hits this case, more particles should be reserved)
+    lastUsedParticle = 0;
+    return 0;
+}
+
+// respawns particle
+void respawnParticle(Particle& particle, GameObject& object, glm::vec2 offset = glm::vec2(0.0f, 0.0f))
+{
+    float random = ((rand() % 100) - 50) / 10.0f;
+    float rColor = 0.5f + ((rand() % 100) / 100.0f);
+    particle.Position = object.Position + random + offset;
+    particle.Color = glm::vec4(rColor, rColor, rColor, 1.0f);
+    particle.Life = 1.0f;
+    particle.Velocity = object.Velocity * 0.1f;
+}
+
+// update all particles: spawn newParticles at the object, age and move the living ones
+void Update(ParticleGenerator& generator, float dt, GameObject& object, unsigned int newParticles, glm::vec2 offset = glm::vec2(0.0f, 0.0f))
+{
+    // add new particles
+    for (unsigned int i = 0; i < newParticles; ++i)
+    {
+        int unusedParticle = firstUnusedParticle(generator);
+        respawnParticle(generator.particles[unusedParticle], object, offset);
+    }
+    // update all particles
+    for (unsigned int i = 0; i < generator.amount; ++i)
+    {
+        Particle& p = generator.particles[i];
+        p.Life -= dt; // reduce life
+        if (p.Life > 0.0f)
+        {   // particle is alive, thus update
+            p.Position -= p.Velocity * dt;
+            p.Color.a -= dt * 2.5f;
+        }
+    }
+}
+--- file: main.cpp
+--- find:
+    // TODO: update the particles: 2 new ones per frame at the ball, offset by half its radius
+--- replace:
+    // update particles
+    Update(Particles, dt, Ball, 2, glm::vec2(Ball.Radius / 2.0f));
+
+=== task: draw-particles
+--- file: main.cpp
+--- find:
+// TODO: the function DrawParticles: every living particle, with additive blending
+--- replace:
+// render all particles
+void DrawParticles(ParticleGenerator& generator)
+{
+    // use additive blending to give it a 'glow' effect
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    Use(generator.shader);
+    for (Particle particle : generator.particles)
+    {
+        if (particle.Life > 0.0f)
+        {
+            SetVector2f(generator.shader, "offset", particle.Position);
+            SetVector4f(generator.shader, "color", particle.Color);
+            glBindTexture(GL_TEXTURE_2D, generator.texture);
+            glBindVertexArray(generator.VAO);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            glBindVertexArray(0);
+        }
+    }
+    // don't forget to reset to default blending mode
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+--- file: main.cpp
+--- find:
+        // TODO: draw the particles
+--- replace:
+        // draw particles
+        DrawParticles(Particles);

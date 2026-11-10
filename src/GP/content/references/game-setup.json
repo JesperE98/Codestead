@@ -1,0 +1,10 @@
+[
+  { "title": "2D Game / Setting up", "url": "https://learnopengl.com/In-Practice/2D-Game/Setting-up", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: the 2D game", "url": "https://github.com/JoeyDeVries/LearnOpenGL/tree/master/src/7.in_practice/3.2d_game", "publisher": "Joey de Vries (GitHub)" },
+  { "title": "std::map", "url": "https://en.cppreference.com/w/cpp/container/map", "publisher": "cppreference.com" },
+  { "title": "GLFW input guide", "url": "https://www.glfw.org/docs/latest/input_guide.html", "publisher": "GLFW", "api": "opengl" },
+  { "title": "GLFW input guide", "url": "https://www.glfw.org/docs/latest/input_guide.html", "publisher": "GLFW", "api": "vulkan" },
+  { "title": "Graphics pipeline basics: Introduction", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Graphics_pipeline_basics/Introduction", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Virtual-key codes", "url": "https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Managing graphics pipeline state in Direct3D 12", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/managing-graphics-pipeline-state-in-direct3d-12", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

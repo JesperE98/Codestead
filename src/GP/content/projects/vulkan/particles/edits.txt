@@ -1,0 +1,251 @@
+=== task: particle-shader
+--- file: shaders/particle.vert
+--- find:
+    // TODO: pass vertex.zw on as TexCoords and pc.color as ParticleColor; the position: vertex.xy scaled by 10, moved by pc.offset, then the projection
+--- replace:
+    float scale = 10.0f;
+    TexCoords = vertex.zw;
+    ParticleColor = pc.color;
+    gl_Position = ubo.projection * vec4((vertex.xy * scale) + pc.offset, 0.0, 1.0);
+--- file: shaders/particle.frag
+--- find:
+    // TODO: the colour: the texture's colour times ParticleColor
+--- replace:
+    color = (texture(sprite, TexCoords) * ParticleColor);
+--- file: main.cpp
+--- find:
+// TODO: struct ParticleConstants, the C++ side of the particle shader's push constant block (offset, color)
+--- replace:
+// The same layout as the push constant block in the particle shaders: one particle's position and colour. In a push
+// constant block a vec4 starts at a multiple of 16 bytes, so `color` is aligned to 16 (after 8 bytes of offset).
+struct ParticleConstants {
+    glm::vec2 offset;
+    alignas(16) glm::vec4 color;
+};
+--- file: main.cpp
+--- find:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkPipeline& pipeline) {
+--- replace:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkBlendFactor dstColorBlendFactor, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        // alpha blending: colour = src.rgb * src.a + dst.rgb * (1 - src.a)
+        colorBlendAttachment.blendEnable = VK_TRUE;
+        colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+--- replace:
+        // blending: colour = src.rgb * src.a + dst.rgb * (1 - src.a) for the sprites (alpha blending),
+        // src.rgb * src.a + dst.rgb for the particles (additive blending)
+        colorBlendAttachment.blendEnable = VK_TRUE;
+        colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        colorBlendAttachment.dstColorBlendFactor = dstColorBlendFactor;
+--- file: main.cpp
+--- find:
+    VkPipeline LoadShader(const char* vShaderFile, const char* fShaderFile, std::string name) {
+        createPipeline(vShaderFile, fShaderFile, Shaders[name]);
+--- replace:
+    // (learnopengl sets the blend function with glBlendFunc before drawing; in Vulkan it is part of the pipeline: the
+    // colour is src.rgb * src.a + dst.rgb * dstColorBlendFactor)
+    VkPipeline LoadShader(const char* vShaderFile, const char* fShaderFile, std::string name, VkBlendFactor dstColorBlendFactor) {
+        createPipeline(vShaderFile, fShaderFile, dstColorBlendFactor, Shaders[name]);
+--- file: main.cpp
+--- find:
+        LoadShader("shaders/sprite.vert.spv", "shaders/sprite.frag.spv", "sprite");
+        // TODO: load the particle shader (shaders/particle.vert.spv, shaders/particle.frag.spv) as "particle", with additive blending
+--- replace:
+        LoadShader("shaders/sprite.vert.spv", "shaders/sprite.frag.spv", "sprite", VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
+        LoadShader("shaders/particle.vert.spv", "shaders/particle.frag.spv", "particle", VK_BLEND_FACTOR_ONE); // additive blending
+--- file: main.cpp
+--- find:
+        LoadTexture("textures/paddle.png", "paddle");
+        // TODO: load textures/particle.png as "particle"
+--- replace:
+        LoadTexture("textures/paddle.png", "paddle");
+        LoadTexture("textures/particle.png", "particle");
+=== task: particle-generator
+--- file: main.cpp
+--- find:
+// TODO: struct Particle (Position, Velocity, Color, Life) and struct ParticleGenerator (the particles, their amount and the render state)
+--- replace:
+// ParticleGenerator (learnopengl: particle_generator.h)
+// -----------------------------------------------------
+// Represents a single particle and its state
+struct Particle {
+    glm::vec2 Position = glm::vec2(0.0f), Velocity = glm::vec2(0.0f);
+    glm::vec4 Color = glm::vec4(1.0f);
+    float     Life = 0.0f;
+};
+
+// ParticleGenerator acts as a container for rendering a large number of
+// particles by repeatedly spawning and updating particles and killing
+// them after a given amount of time.
+struct ParticleGenerator {
+    // state
+    std::vector<Particle> particles;
+    unsigned int          amount = 0;
+    // render state
+    VkPipeline       shader = VK_NULL_HANDLE;  // the particle pipeline (additive blending)
+    VkDescriptorSet  texture = VK_NULL_HANDLE; // the particle texture's descriptor set
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+    VkBuffer         quadBuffer = VK_NULL_HANDLE; // learnopengl's VAO: the particle quad
+    VkDeviceMemory   quadBufferMemory = VK_NULL_HANDLE;
+    VkCommandBuffer  commandBuffer = VK_NULL_HANDLE; // the command buffer being recorded this frame
+};
+--- file: main.cpp
+--- find:
+    // TODO: InitParticles: the particle quad's buffer and amount dead particles
+--- replace:
+    // ParticleGenerator: initializes the particle quad's buffer and amount dead particles (learnopengl's init(), called
+    // by its constructor)
+    void InitParticles(ParticleGenerator& generator) {
+        generator.pipelineLayout = pipelineLayout;
+        // set up mesh and attribute properties
+        const std::vector<Vertex> particle_quad = {
+            {{0.0f, 1.0f, 0.0f, 1.0f}},
+            {{1.0f, 0.0f, 1.0f, 0.0f}},
+            {{0.0f, 0.0f, 0.0f, 0.0f}},
+
+            {{0.0f, 1.0f, 0.0f, 1.0f}},
+            {{1.0f, 1.0f, 1.0f, 1.0f}},
+            {{1.0f, 0.0f, 1.0f, 0.0f}}
+        };
+        VkDeviceSize bufferSize = sizeof(particle_quad[0]) * particle_quad.size();
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, generator.quadBuffer, generator.quadBufferMemory);
+
+        void* data;
+        vkMapMemory(device, generator.quadBufferMemory, 0, bufferSize, 0, &data);
+            memcpy(data, particle_quad.data(), (size_t) bufferSize);
+        vkUnmapMemory(device, generator.quadBufferMemory);
+
+        // create amount default particle instances
+        for (unsigned int i = 0; i < generator.amount; ++i)
+            generator.particles.push_back(Particle());
+    }
+--- file: main.cpp
+--- find:
+BallObject     Ball;
+
+--- replace:
+BallObject     Ball;
+ParticleGenerator Particles;
+
+--- file: main.cpp
+--- find:
+        LoadTexture("textures/particle.png", "particle");
+        // TODO: set up the particle generator: 500 particles with the particle shader and texture
+--- replace:
+        LoadTexture("textures/particle.png", "particle");
+        // set up the particle generator (learnopengl's ParticleGenerator constructor)
+        Particles.shader = GetShader("particle");
+        Particles.texture = GetTexture("particle").DescriptorSet;
+        Particles.amount = 500;
+        InitParticles(Particles);
+--- file: main.cpp
+--- find:
+        vkFreeMemory(device, Renderer.quadBufferMemory, nullptr);
+
+--- replace:
+        vkFreeMemory(device, Renderer.quadBufferMemory, nullptr);
+        vkDestroyBuffer(device, Particles.quadBuffer, nullptr);
+        vkFreeMemory(device, Particles.quadBufferMemory, nullptr);
+
+=== task: spawn
+--- file: main.cpp
+--- find:
+// TODO: firstUnusedParticle, respawnParticle and Update(ParticleGenerator& generator, ...): spawn new particles at the object, age, move and fade the living ones
+--- replace:
+// stores the index of the last particle used (for quick access to next dead particle)
+unsigned int lastUsedParticle = 0;
+// returns the first Particle index that's currently unused e.g. Life <= 0.0f or 0 if no particle is currently inactive
+unsigned int firstUnusedParticle(ParticleGenerator& generator) {
+    // first search from last used particle, this will usually return almost instantly
+    for (unsigned int i = lastUsedParticle; i < generator.amount; ++i) {
+        if (generator.particles[i].Life <= 0.0f) {
+            lastUsedParticle = i;
+            return i;
+        }
+    }
+    // otherwise, do a linear search
+    for (unsigned int i = 0; i < lastUsedParticle; ++i) {
+        if (generator.particles[i].Life <= 0.0f) {
+            lastUsedParticle = i;
+            return i;
+        }
+    }
+    // all particles are taken, override the first one (note that if it repeatedly hits this case, more particles should be reserved)
+    lastUsedParticle = 0;
+    return 0;
+}
+
+// respawns particle
+void respawnParticle(Particle& particle, GameObject& object, glm::vec2 offset = glm::vec2(0.0f, 0.0f)) {
+    float random = ((rand() % 100) - 50) / 10.0f;
+    float rColor = 0.5f + ((rand() % 100) / 100.0f);
+    particle.Position = object.Position + random + offset;
+    particle.Color = glm::vec4(rColor, rColor, rColor, 1.0f);
+    particle.Life = 1.0f;
+    particle.Velocity = object.Velocity * 0.1f;
+}
+
+// update all particles
+void Update(ParticleGenerator& generator, float dt, GameObject& object, unsigned int newParticles, glm::vec2 offset = glm::vec2(0.0f, 0.0f)) {
+    // add new particles
+    for (unsigned int i = 0; i < newParticles; ++i) {
+        int unusedParticle = firstUnusedParticle(generator);
+        respawnParticle(generator.particles[unusedParticle], object, offset);
+    }
+    // update all particles
+    for (unsigned int i = 0; i < generator.amount; ++i) {
+        Particle& p = generator.particles[i];
+        p.Life -= dt; // reduce life
+        if (p.Life > 0.0f) { // particle is alive, thus update
+            p.Position -= p.Velocity * dt;
+            p.Color.a -= dt * 2.5f;
+        }
+    }
+}
+--- file: main.cpp
+--- find:
+    // TODO: update the particles (2 new ones per frame at the ball, offset by half its radius)
+--- replace:
+    // update particles
+    Update(Particles, dt, Ball, 2, glm::vec2(Ball.Radius / 2.0f));
+=== task: draw-particles
+--- file: main.cpp
+--- find:
+// TODO: DrawParticles(ParticleGenerator& generator): one draw per living particle with the particle pipeline
+--- replace:
+// render all particles
+void DrawParticles(ParticleGenerator& generator) {
+    // use additive blending to give it a 'glow' effect: the particle pipeline adds (VK_BLEND_FACTOR_ONE)
+    vkCmdBindPipeline(generator.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, generator.shader);
+    for (Particle particle : generator.particles) {
+        if (particle.Life > 0.0f) {
+            ParticleConstants constants{};
+            constants.offset = particle.Position;
+            constants.color = particle.Color;
+            vkCmdPushConstants(generator.commandBuffer, generator.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ParticleConstants), &constants);
+            vkCmdBindDescriptorSets(generator.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, generator.pipelineLayout, 0, 1, &generator.texture, 0, nullptr);
+            VkBuffer vertexBuffers[] = {generator.quadBuffer};
+            VkDeviceSize offsets[] = {0};
+            vkCmdBindVertexBuffers(generator.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdDraw(generator.commandBuffer, 6, 1, 0, 0);
+        }
+    }
+    // (no reset of the blending needed: every sprite draw binds the sprite pipeline again)
+}
+--- file: main.cpp
+--- find:
+        // TODO: draw the particles
+--- replace:
+        // draw particles
+        DrawParticles(Particles);
+--- file: main.cpp
+--- find:
+        Renderer.commandBuffer = commandBuffer;
+
+--- replace:
+        Renderer.commandBuffer = commandBuffer;
+        Particles.commandBuffer = commandBuffer;
+

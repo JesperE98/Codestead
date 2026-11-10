@@ -1,0 +1,41 @@
+{
+  "title": "Gammakorrigering",
+  "tasks": {
+    "gamma-shader": {
+      "text": {
+        "opengl": "Gammakorrigera utdatan: upphöj färgen till 1.0 / 2.2 i slutet av `gamma_correction.fs` innan den skrivs.",
+        "vulkan": "Gammakorrigera utdatan: upphöj färgen till 1.0 / 2.2 i slutet av `gamma_correction.frag` innan den skrivs.",
+        "d3d12": "Gammakorrigera utdatan: upphöj färgen till 1.0 / 2.2 i slutet av `PSMain` innan den returneras."
+      },
+      "hint": {
+        "opengl": "`color = pow(color, vec3(1.0/2.2));` precis före `FragColor = vec4(color, 1.0);`. Bildskärmen mörkar det den får (≈ potensen 2.2); den inversa potensen tar ut det.",
+        "vulkan": "`color = pow(color, vec3(1.0 / 2.2));` precis före `outColor = vec4(color, 1.0);`. Bildskärmen mörkar det den får (≈ potensen 2.2); den inversa potensen tar ut det.",
+        "d3d12": "`float gamma = 2.2f;` och `color = pow(color, float3(1.0f / gamma, 1.0f / gamma, 1.0f / gamma));` precis före `return float4(color, 1.0f);`."
+      }
+    },
+    "srgb-texture": {
+      "text": {
+        "opengl": "Ladda träet som en sRGB-textur: ge `loadTexture` en parameter `bool gammaCorrection` som väljer det interna formatet `GL_SRGB` (`GL_SRGB_ALPHA` för 4 kanaler), och ladda `wood.png` med `true`.",
+        "vulkan": "Ladda träet som en sRGB-textur: anropa `loadTexture(\"textures/wood.png\", VK_FORMAT_R8G8B8A8_SRGB, …)` i `initVulkan()` i stället för `VK_FORMAT_R8G8B8A8_UNORM`.",
+        "d3d12": "Skapa träet som en sRGB-textur: använd formatet `DXGI_FORMAT_R8G8B8A8_UNORM_SRGB` i `LoadTexture`."
+      },
+      "hint": {
+        "opengl": "`GLenum internalFormat` och `GLenum dataFormat`: för 3 komponenter `internalFormat = gammaCorrection ? GL_SRGB : GL_RGB; dataFormat = GL_RGB;`, för 4 `GL_SRGB_ALPHA` / `GL_RGBA`, för 1 båda `GL_RED`; sedan `glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);`. Ändra prototypen också.",
+        "vulkan": "Formatet används för bilden, dess layoutövergångar och dess vy. Ett `_SRGB`-format avkodar varje texel från sRGB till linjärt när shadern samplar den. Bara färgtexturer är sRGB.",
+        "d3d12": "`textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;` – byten som laddas upp är desamma, och SRV:n tar texturens format, så samplingen avkodar sRGB till linjärt."
+      }
+    },
+    "quadratic": {
+      "text": {
+        "opengl": "Använd den fysikaliskt korrekta dämpningen `1.0 / (distance * distance)` i `BlinnPhong()`, nu när belysningen sker i linjärt rum.",
+        "vulkan": "Använd den fysikaliskt korrekta dämpningen `1.0 / (distance * distance)` i `BlinnPhong()`, nu när belysningen sker i linjärt rum.",
+        "d3d12": "Använd den fysikaliskt korrekta dämpningen `1.0f / (lightDistance * lightDistance)` i `BlinnPhong()`, nu när belysningen sker i linjärt rum."
+      },
+      "hint": {
+        "opengl": "`float attenuation = 1.0 / (distance * distance);` – utan gammakorrigering fick bildskärmen `1/d²` att se ut som `1/d^4.4`, därför användes `1/d`.",
+        "vulkan": "`float attenuation = 1.0 / (distance * distance);` – utan gammakorrigering fick bildskärmen `1/d²` att se ut som `1/d^4.4`, därför användes `1/d`.",
+        "d3d12": "`float attenuation = 1.0f / (lightDistance * lightDistance);` – utan gammakorrigering fick bildskärmen `1/d²` att se ut som `1/d^4.4`, därför användes `1/d`."
+      }
+    }
+  }
+}

@@ -1,0 +1,86 @@
+=== task: message-severity
+--- file: main.cpp
+--- find:
+        // TODO: print only the messages of warning severity or higher
+        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+--- replace:
+        // only the messages that are important enough to show: warnings and errors, not the layer's
+        // informational and verbose ones (the severities are ordered, so >= works)
+        if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+            std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        }
+=== task: object-names
+--- file: main.cpp
+--- find:
+struct QueueFamilyIndices {
+--- replace:
+// vkSetDebugUtilsObjectNameEXT is a function of the VK_EXT_debug_utils extension too: look it up like the messenger's.
+VkResult SetDebugUtilsObjectNameEXT(VkInstance instance, VkDevice device, const VkDebugUtilsObjectNameInfoEXT* pNameInfo) {
+    auto func = (PFN_vkSetDebugUtilsObjectNameEXT) vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
+    if (func != nullptr) {
+        return func(device, pNameInfo);
+    } else {
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
+
+struct QueueFamilyIndices {
+--- file: main.cpp
+--- find:
+    // TODO: setObjectName: give a Vulkan object a name for the validation layer's messages
+--- replace:
+    // Gives a Vulkan object a name (any text) that the validation layer prints with the object's handle.
+    void setObjectName(VkObjectType objectType, uint64_t objectHandle, const char* name) {
+        if (!enableValidationLayers) return;
+
+        VkDebugUtilsObjectNameInfoEXT nameInfo{};
+        nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+        nameInfo.objectType = objectType;
+        nameInfo.objectHandle = objectHandle;
+        nameInfo.pObjectName = name;
+
+        SetDebugUtilsObjectNameEXT(instance, device, &nameInfo);
+    }
+--- file: main.cpp
+--- find:
+        // TODO: name the two shader modules after their files
+--- replace:
+        // name them after their files: the validation layer's messages about them now say which shader they mean
+        setObjectName(VK_OBJECT_TYPE_SHADER_MODULE, (uint64_t) vertShaderModule, vertShaderFile.c_str());
+        setObjectName(VK_OBJECT_TYPE_SHADER_MODULE, (uint64_t) fragShaderModule, fragShaderFile.c_str());
+--- file: main.cpp
+--- find:
+        // TODO: name the image after its file
+--- replace:
+        setObjectName(VK_OBJECT_TYPE_IMAGE, (uint64_t) image, path);
+=== task: fix-attribute
+--- file: main.cpp
+--- find:
+    static std::array<VkVertexInputAttributeDescription, 1> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 1> attributeDescriptions{};
+
+        attributeDescriptions[0].binding = 0;
+        attributeDescriptions[0].location = 0;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+--- replace:
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+
+        attributeDescriptions[0].binding = 0;
+        attributeDescriptions[0].location = 0;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, texCoord);
+=== task: shader-output
+--- file: shaders/debugging.frag
+--- find:
+    outColor = texture(texSampler, fragTexCoord);
+--- replace:
+    // debugging shader output: show the texture coordinates as a colour (u = red, v = green)
+    outColor = vec4(fragTexCoord, 0.0, 1.0);
+    // outColor = texture(texSampler, fragTexCoord);

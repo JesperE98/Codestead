@@ -1,0 +1,207 @@
+{
+  "title": "Texturer",
+  "tasks": {
+    "load-image": {
+      "text": {
+        "opengl": "Inkludera stb_image (`#define STB_IMAGE_IMPLEMENTATION` före `#include <stb_image.h>`) och läs in `container.png` med `stbi_load`, vertikalt vänd med `stbi_set_flip_vertically_on_load(true)`; skriv ut `Failed to load texture` om det misslyckas och frigör datan med `stbi_image_free`.",
+        "vulkan": "Inkludera stb_image (`#define STB_IMAGE_IMPLEMENTATION` före `#include <stb_image.h>`); läs i `createTextureImage()` in `textures/container.png` med `stbi_load(…, STBI_rgb_alpha)`, kasta `std::runtime_error(\"failed to load texture image!\")` om den returnerar `nullptr`, och frigör pixlarna med `stbi_image_free(pixels)`.",
+        "d3d12": "Inkludera stb_image (`#define STB_IMAGE_IMPLEMENTATION` före `#include <stb_image.h>`) och lägg efter indexbufferten till ett block `// Create the first texture: the container.` som läser in `container.png` med `stbi_load(…, 4)`, kastar `std::runtime_error` om det misslyckas och frigör pixlarna med `stbi_image_free`."
+      },
+      "hint": {
+        "opengl": "`int width, height, nrChannels;` – `stbi_load` fyller i dem. Sista argumentet `0` behåller filens kanaler. Lämna insidan av `if (data)` till nästa uppgifter.",
+        "vulkan": "`STBI_rgb_alpha` ger 4 bytes per pixel även för en RGB-fil – formatet vi ska använda har 4 kanaler. Ingen vändning: i Vulkan är v = 0 bildens översta rad.",
+        "d3d12": "`int width, height, nrChannels;` – `stbi_load` fyller i dem. 4 kanaler motsvarar `DXGI_FORMAT_R8G8B8A8_UNORM`. Ingen vändning: i Direct3D är v = 0 bildens översta rad."
+      }
+    },
+    "texture": {
+      "text": {
+        "d3d12": "Skapa texturen `m_texture1`: en `D3D12_RESOURCE_DESC` för en 2D-textur (`DXGI_FORMAT_R8G8B8A8_UNORM`, `width` × `height`, 1 mipnivå, 1 array-skiva, 1 sample) och `CreateCommittedResource` i en `D3D12_HEAP_TYPE_DEFAULT`-heap i tillståndet `D3D12_RESOURCE_STATE_COPY_DEST`."
+      },
+      "hint": {
+        "d3d12": "En default heap är GPU-minne som CPU:n inte kan skriva till – pixlarna kommer dit genom en kopiering i nästa uppgift, så texturen börjar som kopieringsmål. Använd en lokal `CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);`, aldrig adressen till ett temporärt objekt."
+      }
+    },
+    "create-texture": {
+      "text": {
+        "opengl": "Skapa ett texturobjekt `texture1` med `glGenTextures`, bind det till `GL_TEXTURE_2D` och ställ in dess wrapping (`GL_REPEAT` för S och T) och filtrering (`GL_LINEAR_MIPMAP_LINEAR` vid förminskning, `GL_LINEAR` vid förstoring); ta bort det i slutet med `glDeleteTextures`."
+      },
+      "hint": {
+        "opengl": "`glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);` – parametrarna gäller texturen som är bunden till `GL_TEXTURE_2D`. Förstoringsfiltret kan inte använda mipmaps."
+      }
+    },
+    "upload": {
+      "text": {
+        "opengl": "Skapa texturbilden inuti `if (data)` med `glTexImage2D` (`GL_RGB`, `GL_UNSIGNED_BYTE`) och generera dess mipmaps med `glGenerateMipmap`.",
+        "d3d12": "Ladda upp pixlarna via en upload heap: `textureUploadHeap1` (deklarerad före blocket) med storleken från `GetRequiredIntermediateSize`, en `D3D12_SUBRESOURCE_DATA`, `UpdateSubresources` och en barrier `COPY_DEST → PIXEL_SHADER_RESOURCE`; låt command listen stå öppen, och stäng den, kör den och anropa `WaitForPreviousFrame()` i slutet av `LoadAssets()`."
+      },
+      "hint": {
+        "opengl": "`glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);` – mipnivå 0, internt format, storlek, kant 0, sedan källdatans format och typ. Ladda upp före `stbi_image_free`.",
+        "d3d12": "`RowPitch = width * 4`, `SlicePitch = RowPitch * height`. Ta bort den tidiga `m_commandList->Close()`. Upload heapen måste leva tills GPU:n har kopierat från den – därför väntan efter att fencen och eventet skapats."
+      }
+    },
+    "staging-buffer": {
+      "text": {
+        "vulkan": "Skriv hjälpfunktionen `createBuffer()` och kopiera i `createTextureImage()` pixlarna till en `stagingBuffer` (`imageSize = texWidth * texHeight * 4`, `TRANSFER_SRC`, `HOST_VISIBLE | HOST_COHERENT`) med `vkMapMemory`/`memcpy`/`vkUnmapMemory`; förstör bufferten och frigör dess minne i slutet av funktionen."
+      },
+      "hint": {
+        "vulkan": "`createBuffer` är stegen i `createVertexBuffer` med parametrar: skapa, `vkGetBufferMemoryRequirements`, `findMemoryType`, allokera, bind. Kopiera före `stbi_image_free`."
+      }
+    },
+    "texture-image": {
+      "text": {
+        "vulkan": "Lägg till `textureImage`/`textureImageMemory`, skriv hjälpfunktionen `createImage()` (2D, 1 mipnivå, 1 lager, `UNDEFINED`, 1 sample) och anropa den med `VK_FORMAT_R8G8B8A8_UNORM`, `VK_IMAGE_TILING_OPTIMAL`, `TRANSFER_DST | SAMPLED` och `DEVICE_LOCAL`; förstör imagen och frigör dess minne i `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Som en buffert: `vkCreateImage`, `vkGetImageMemoryRequirements`, `findMemoryType`, `vkAllocateMemory`, `vkBindImageMemory`. UNORM, inte SRGB: vår swap chain är UNORM."
+      }
+    },
+    "layout-transitions": {
+      "text": {
+        "vulkan": "Skriv `beginSingleTimeCommands()`/`endSingleTimeCommands()`, `transitionImageLayout()` (en image memory barrier för `UNDEFINED → TRANSFER_DST_OPTIMAL` och `TRANSFER_DST_OPTIMAL → SHADER_READ_ONLY_OPTIMAL`) och `copyBufferToImage()`; byt layout, kopiera och byt layout i `createTextureImage()`."
+      },
+      "hint": {
+        "vulkan": "Varje övergång sätter access-masker och steg: 0/`TOP_OF_PIPE` → `TRANSFER_WRITE`/`TRANSFER`, sedan `TRANSFER_WRITE`/`TRANSFER` → `SHADER_READ`/`FRAGMENT_SHADER`. Kasta `std::invalid_argument` för alla andra par."
+      }
+    },
+    "image-view": {
+      "text": {
+        "vulkan": "Skriv hjälpfunktionen `createImageView(image, format)`, använd den i `createImageViews()` för swap chainens images, skapa `textureImageView` i `createTextureImageView()` och förstör viewn i `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "2D-view, `VK_IMAGE_ASPECT_COLOR_BIT`, 1 mipnivå, 1 lager. Shaders läser aldrig en `VkImage` direkt, alltid via en view."
+      }
+    },
+    "sampler": {
+      "text": {
+        "vulkan": "Skapa `textureSampler` i `createTextureSampler()` (linjära filter, `REPEAT` för U/V/W, anisotropi med `maxSamplerAnisotropy`, opak svart kantfärg, normaliserade koordinater, ingen jämförelse, linjärt mipmap-läge); slå på `samplerAnisotropy` i `createLogicalDevice()`, kräv den i `isDeviceSuitable()` och förstör samplern i `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Läs gränsen med `vkGetPhysicalDeviceProperties(physicalDevice, &properties)`. Att använda anisotropi utan att slå på device featuren är ett valideringsfel."
+      }
+    },
+    "descriptor-layout": {
+      "text": {
+        "vulkan": "Beskriv i `createDescriptorSetLayout()` bindning 0 som en `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER` för fragmentsteget och skapa `descriptorSetLayout`; ge pipeline layouten `setLayoutCount = 1` och `pSetLayouts = &descriptorSetLayout`; förstör layouten i `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Lägg bindningen i en `std::array<VkDescriptorSetLayoutBinding, 1>`. Layouten är en del av pipeline layouten, så den skapas före pipelinen."
+      }
+    },
+    "descriptor-set": {
+      "text": {
+        "vulkan": "Skapa `descriptorPool` (1 combined image sampler, `maxSets = 1`), allokera `descriptorSet`, peka bindning 0 på `textureImageView` och `textureSampler` med `vkUpdateDescriptorSets`, bind setet med `vkCmdBindDescriptorSets` efter `vkCmdBindIndexBuffer`, och förstör poolen i `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "`VkDescriptorImageInfo` behöver `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`. Ett set räcker: vi renderar en bildruta i taget. När poolen förstörs frigörs setet."
+      }
+    },
+    "srv": {
+      "text": {
+        "d3d12": "Skapa en shader-synlig SRV-heap `m_srvHeap` i `LoadPipeline()` (`CBV_SRV_UAV`, 1 descriptor) och, efter barriären, en shader resource view av `m_texture1` i dess första plats med `CreateShaderResourceView`."
+      },
+      "hint": {
+        "d3d12": "`srvDesc`: `Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING`, `Format = textureDesc.Format`, `ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D`, `Texture2D.MipLevels = 1`; platsen är `m_srvHeap->GetCPUDescriptorHandleForHeapStart()`."
+      }
+    },
+    "root-signature": {
+      "text": {
+        "d3d12": "Ge root signaturen en descriptor table (1 SRV på `t0`, pixel shader) och en static sampler `s0` (`D3D12_FILTER_MIN_MAG_MIP_LINEAR`, `WRAP` för U/V/W); anropa i `PopulateCommandList()` `SetDescriptorHeaps` med `m_srvHeap` och `SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart())`."
+      },
+      "hint": {
+        "d3d12": "`ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0)`, `rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL)`, och skicka samplerna till `rootSignatureDesc.Init`. Sätt heapen och tabellen varje bildruta, efter `SetGraphicsRootSignature`."
+      }
+    },
+    "texture-coords": {
+      "text": {
+        "opengl": "Ge varje vertex texturkoordinater – uppe till höger (1, 1), nere till höger (1, 0), nere till vänster (0, 0), uppe till vänster (0, 1) – som vertexattribut 2, och skicka dem från vertex shadern till fragment shadern som `TexCoord`.",
+        "vulkan": "Lägg till `glm::vec2 texCoord` i `Vertex` med en tredje attributbeskrivning (location 2, `VK_FORMAT_R32G32_SFLOAT`), koordinaterna uppe till vänster (0, 0), uppe till höger (1, 0), nere till höger (1, 1), nere till vänster (0, 1); skicka dem vidare som `fragTexCoord` och visa dem med `outColor = vec4(fragTexCoord, 0.0, 1.0);`.",
+        "d3d12": "Lägg till `XMFLOAT2 texCoord` i `Vertex` med ett `TEXCOORD`-inputelement (`R32G32_FLOAT`, offset 24), koordinaterna uppe till höger (1, 0), nere till höger (1, 1), nere till vänster (0, 1), uppe till vänster (0, 0); skicka dem genom `PSInput` som `texCoord` i `shaders.hlsl`."
+      },
+      "hint": {
+        "opengl": "Varje vertex är nu 8 floats: stride `8 * sizeof(float)` för alla tre attributen; texturkoordinaterna börjar på `(void*)(6 * sizeof(float))`. I `shader.vs`: `layout (location = 2) in vec2 aTexCoord;`, `out vec2 TexCoord;`.",
+        "vulkan": "`getAttributeDescriptions()` returnerar nu en array med 3. I Vulkan är (0, 0) bildens övre vänstra hörn och y pekar nedåt, så den övre vänstra vertexen får (0, 0) – ingen vändning.",
+        "d3d12": "Direct3D:s texturkoordinater börjar i bildens övre vänstra hörn, så den övre vänstra vertexen får (0, 0). Stride `sizeof(Vertex)` växer av sig själv till 32."
+      }
+    },
+    "sample": {
+      "text": {
+        "opengl": "Sampla texturen i fragment shadern – `in vec2 TexCoord;`, `uniform sampler2D texture1;`, `FragColor = texture(texture1, TexCoord);` – och bind texturen i renderingsloopen före ritningen.",
+        "vulkan": "Sampla texturen i `shader.frag`: deklarera `layout(binding = 0) uniform sampler2D texSampler;` och skriv `outColor = texture(texSampler, fragTexCoord);`.",
+        "d3d12": "Sampla texturen: deklarera `Texture2D texture1 : register(t0);` och `SamplerState wrapSampler : register(s0);` i `shaders.hlsl` och returnera `texture1.Sample(wrapSampler, input.texCoord);` i `PSMain`."
+      },
+      "hint": {
+        "opengl": "`glBindTexture(GL_TEXTURE_2D, texture1);` före `ourShader.use()`. En sampler som aldrig sätts använder texturenhet 0 – den enhet som `glBindTexture` binder till som standard.",
+        "vulkan": "En `sampler2D` på bindning 0 är descriptor setets combined image sampler.",
+        "d3d12": "Registren kopplar shadern till root signaturen: `t0` är descriptor tablens första SRV, `s0` är static samplern."
+      }
+    },
+    "tint": {
+      "text": {
+        "opengl": "Multiplicera texturfärgen med vertexfärgen: `FragColor = texture(texture1, TexCoord) * vec4(ourColor, 1.0);`.",
+        "vulkan": "Multiplicera texturfärgen med vertexfärgen: `outColor = texture(texSampler, fragTexCoord) * vec4(fragColor, 1.0);`.",
+        "d3d12": "Multiplicera texturfärgen med vertexfärgen: `return texture1.Sample(wrapSampler, input.texCoord) * input.color;`."
+      },
+      "hint": "Färger multipliceras kanal för kanal: en röd vertex behåller bara lådans röda, en gul dess röda och gröna."
+    },
+    "second-texture": {
+      "text": {
+        "d3d12": "Läs in `awesomeface.png` till `m_texture2` i ett andra block (samma steg, en egen `textureUploadHeap2`) och skapa dess SRV i heapens andra plats; SRV-heapen får 2 descriptors, intervallet 2 SRV:er (`t0`, `t1`), och `LoadPipeline()` sparar `m_srvDescriptorSize`."
+      },
+      "hint": {
+        "d3d12": "`CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_srvDescriptorSize);` – storleken kommer från `GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)`. Läs in lådan först, sedan ansiktet."
+      }
+    },
+    "texture-units": {
+      "text": {
+        "opengl": "Lägg till en andra textur `texture2` från `awesomeface.png` (`GL_RGBA`, samma parametrar), sätt samplerna till enhet 0 och 1 med `ourShader.setInt`, bind båda texturerna med `glActiveTexture` och blanda dem i fragment shadern: `mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.2)` – utan ton.",
+        "vulkan": "Lägg till ansiktet som andra textur på bindning 1: `createFaceTextureImage()` (som `createTextureImage()` för `textures/awesomeface.png`), `faceTextureImageView`, en andra layoutbindning, poolstorlek 2 och en andra descriptor-skrivning; lägg i `shader.frag` till `faceSampler` på bindning 1 och skriv `outColor = mix(texture(texSampler, fragTexCoord), texture(faceSampler, fragTexCoord), 0.2);`.",
+        "d3d12": "Deklarera `Texture2D texture2 : register(t1);` i `shaders.hlsl` och returnera `lerp(texture1.Sample(wrapSampler, input.texCoord), texture2.Sample(wrapSampler, input.texCoord), 0.2f);` – tonen försvinner."
+      },
+      "hint": {
+        "opengl": "Sätt sampler-uniformerna en gång, efter `ourShader.use()`. I loopen: `glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, texture1); glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, texture2);`. Ta bort `texture2` i slutet.",
+        "vulkan": "Descriptor setets bindningar är Vulkans \"texturenheter\". En sampler kan läsa båda imagesen, så ansiktets image info använder också `textureSampler`. Förstör ansiktets view, image och minne i `cleanup()`.",
+        "d3d12": "HLSL:s `lerp(a, b, t)` är GLSL:s `mix`: 80 % låda, 20 % ansikte. Varje textur nås via sitt register."
+      }
+    },
+    "flip-face": {
+      "text": {
+        "opengl": "Övning 1: få bara ansiktet att titta åt andra hållet – sampla `texture2` på `vec2(1.0 - TexCoord.x, TexCoord.y)`.",
+        "vulkan": "Övning 1: få bara ansiktet att titta åt andra hållet – sampla `faceSampler` på `vec2(1.0 - fragTexCoord.x, fragTexCoord.y)`.",
+        "d3d12": "Övning 1: få bara ansiktet att titta åt andra hållet – sampla `texture2` på `float2(1.0f - input.texCoord.x, input.texCoord.y)`."
+      },
+      "hint": "u = 1 − u speglar vänster och höger. Lådan behåller sina egna koordinater, så bara ansiktet ändras."
+    },
+    "repeat": {
+      "text": {
+        "opengl": "Övning 2: använd texturkoordinater från 0.0 till 2.0 så att ansiktet upprepas 2×2, och sätt lådans wrapping till `GL_CLAMP_TO_EDGE` (ansiktet behåller `GL_REPEAT`).",
+        "vulkan": "Övning 2: använd texturkoordinater från 0.0 till 2.0, och ge lådan en egen `clampSampler` (samma `samplerInfo` med `VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE`) via `imageInfo.sampler`; förstör den i `cleanup()`.",
+        "d3d12": "Övning 2: använd texturkoordinater från 0.0 till 2.0, och lägg till en andra static sampler `s1` (en kopia av `s0` med `D3D12_TEXTURE_ADDRESS_MODE_CLAMP`) som shadern använder som `clampSampler` för `texture1`."
+      },
+      "hint": {
+        "opengl": "Byt varje texturkoordinat `1.0f` mot `2.0f`. Ändra bara de två `GL_TEXTURE_WRAP_*`-anropen efter `glBindTexture(GL_TEXTURE_2D, texture1)`.",
+        "vulkan": "I Vulkan hör address mode till samplern, så lådan behöver en egen sampler; ansiktet behåller den upprepande `textureSampler`.",
+        "d3d12": "`samplers[2]`, `samplers[1] = samplers[0];`, sedan clamp-lägena och `ShaderRegister = 1`. I shadern: `SamplerState clampSampler : register(s1);`."
+      }
+    },
+    "mix-value": {
+      "text": {
+        "opengl": "Övning 4: ersätt det fasta 0.2 med en `uniform float mixValue` som sätts från C++ varje bildruta (global `float mixValue = 0.5f;`), och låt upp-/nedpil ändra den med 0.001 per bildruta, inom 0.0 till 1.0.",
+        "vulkan": "Övning 4: gör blandningsvärdet till en push constant – `struct PushConstants { float mixValue; };`, medlemmen `mixValue = 0.5f`, ett push constant range för fragmentsteget, `vkCmdPushConstants` efter att descriptor setet bundits – och låt upp-/nedpil ändra det med 0.001 per bildruta i en `processInput()`.",
+        "d3d12": "Övning 4: gör blandningsvärdet till en root constant – `struct MixConstants { float mixValue; };`, medlemmen `m_mixValue = 0.5f`, root parameter 1 `InitAsConstants(sizeof(MixConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL)`, `SetGraphicsRoot32BitConstants(1, …)` varje bildruta – som läses som `cbuffer MixConstants : register(b0)`."
+      },
+      "hint": {
+        "opengl": "I `processInput`: `if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)` lägg till `0.001f` och begränsa till `1.0f`; `GLFW_KEY_DOWN` drar ifrån och begränsar till `0.0f`. Sätt uniformen efter `ourShader.use()`.",
+        "vulkan": "I `shader.frag`: `layout(push_constant) uniform PushConstants { float mixValue; } pc;` och `mix(…, pc.mixValue)`. Anropa `processInput()` i `mainLoop()` efter `glfwPollEvents()`.",
+        "d3d12": "Descriptor table förblir root parameter 0. En float är en 32-bitars root constant. Sätt den efter `RSSetScissorRects`."
+      }
+    },
+    "mix-keys": {
+      "text": {
+        "d3d12": "Låt upp-/nedpil ändra blandningsvärdet med 0.1: en publik `OnKeyDown(UINT8 key)` med begränsningar, `SetWindowLongPtr(hwnd, GWLP_USERDATA, …)` i `wWinMain`, och i `WindowProc` `GetWindowLongPtr` och `pApp->OnKeyDown(static_cast<UINT8>(wParam))` för alla tangenter utom Escape."
+      },
+      "hint": {
+        "d3d12": "Som exemplens `Win32Application`, som sparar appens pekare i fönstrets user data. `WM_KEYDOWN` upprepas medan en tangent hålls nere; kontrollera `pApp != nullptr`."
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "title": "Djuptestning",
+  "tasks": {
+    "depth-always": {
+      "text": {
+        "opengl": "Låt varje fragment klara djuptestet: sätt djupfunktionen till `GL_ALWAYS` med `glDepthFunc` (vid TODO:n efter `glEnable(GL_DEPTH_TEST);`).",
+        "vulkan": "Låt varje fragment klara djuptestet: sätt `depthStencil.depthCompareOp = VK_COMPARE_OP_ALWAYS;` i `createPipeline()`.",
+        "d3d12": "Låt varje pixel klara djuptestet: sätt PSO:ns `DepthStencilState.DepthFunc` till `D3D12_COMPARISON_FUNC_ALWAYS`."
+      },
+      "hint": {
+        "opengl": "`glDepthFunc(GL_ALWAYS);` – med ALWAYS vinner det som ritas sist, som om djuptestet vore avslaget. Golvet ritas sist, så det täcker kubernas nedre delar.",
+        "vulkan": "Djupfunktionen är en del av pipelinen (OpenGL:s `glDepthFunc`). Med ALWAYS vinner det fragment som ritas sist – golvet, som ritas sist, täcker kubernas nedre delar.",
+        "d3d12": "Det är raden `psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;` i `LoadAssets` – djuptillståndet hör till PSO:n. Med ALWAYS vinner det som ritas sist."
+      }
+    },
+    "depth-less": {
+      "text": {
+        "opengl": "Sätt tillbaka djupfunktionen till `GL_LESS`: ett fragment går igenom när det ligger närmare än djupet som lagrats i djupbuffern.",
+        "vulkan": "Sätt tillbaka djupfunktionen till `VK_COMPARE_OP_LESS`: ett fragment går igenom när det ligger närmare än djupet som lagrats i djupbuffern.",
+        "d3d12": "Sätt tillbaka djupfunktionen till `D3D12_COMPARISON_FUNC_LESS`: en pixel går igenom när den ligger närmare än djupet som lagrats i djupbuffern."
+      },
+      "hint": {
+        "opengl": "`glDepthFunc(GL_LESS);` – OpenGL:s standard. Startbilden kommer tillbaka.",
+        "vulkan": "`depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;` – OpenGL:s standard `GL_LESS`. Startbilden kommer tillbaka.",
+        "d3d12": "`psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;` – standardvärdet. Startbilden kommer tillbaka."
+      }
+    },
+    "visualize-depth": {
+      "text": {
+        "opengl": "Visa djupbuffern: ge i `depth_testing.fs` ut fragmentets djup `gl_FragCoord.z` som ett grått värde i stället för texturen.",
+        "vulkan": "Visa djupbuffern: ge i `shaders/depth_testing.frag` ut fragmentets djup som grått: `outColor = vec4(vec3(gl_FragCoord.z), 1.0);`.",
+        "d3d12": "Visa djupbuffern: låt `PSMain` i `depth_testing.hlsl` returnera pixelns djup som grått: `return float4(input.position.zzz, 1.0f);`."
+      },
+      "hint": {
+        "opengl": "`FragColor = vec4(vec3(gl_FragCoord.z), 1.0);` – behåll texturraden som kommentar. Nästan allt blir vitt: djupet är långt ifrån linjärt.",
+        "vulkan": "`gl_FragCoord.z` är värdet som djuptestet jämför: 0.0 vid near-planet, 1.0 vid far-planet, och långt ifrån linjärt – nästan allt blir vitt.",
+        "d3d12": "I pixel shadern är `SV_POSITION.z` pixelns djup (GLSL:s `gl_FragCoord.z`): 0 vid near-planet, 1 vid far-planet. Nästan allt blir vitt."
+      }
+    },
+    "linear-depth": {
+      "text": {
+        "opengl": "Gör djupet linjärt: lägg till learnopengls `LinearizeDepth` (`near` 0.1, `far` 100.0) i `depth_testing.fs` och ge ut `LinearizeDepth(gl_FragCoord.z) / far` som grått.",
+        "vulkan": "Gör djupet linjärt: lägg till `near` 0.1, `far` 100.0 och `LinearizeDepth(depth) = (near * far) / (far - depth * (far - near))`, och ge ut `LinearizeDepth(gl_FragCoord.z) / far` som grått.",
+        "d3d12": "Gör djupet linjärt: lägg till `static const float near = 0.1f;`, `far = 100.0f` och `LinearizeDepth(depth) = (near * far) / (far - depth * (far - near))`, och returnera `LinearizeDepth(input.position.z) / far` som grått."
+      },
+      "hint": {
+        "opengl": "Först tillbaka till NDC: `float z = depth * 2.0 - 1.0;`, sedan `return (2.0 * near * far) / (far + near - z * (far - near));`. Division med `far` ger 0..1.",
+        "vulkan": "Vulkans djup är redan NDC-z (0..1), så det blir inget `depth * 2.0 - 1.0` som i learnopengl – det skulle ge för stora avstånd. Division med `far` ger 0..1.",
+        "d3d12": "Direct3D:s djup är redan NDC-z (0..1), så det blir inget `depth * 2.0 - 1.0` som i learnopengl. Utan `static` vore en global ett constant buffer-värde som sätts från CPU:n."
+      }
+    }
+  }
+}

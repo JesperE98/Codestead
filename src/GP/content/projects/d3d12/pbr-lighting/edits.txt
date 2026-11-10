@@ -1,0 +1,421 @@
+=== task: lambert
+--- file: pbr.hlsl
+--- find:
+    // TODO: for each of the 4 lights add its outgoing radiance to Lo
+--- replace:
+    for (int i = 0; i < 4; ++i)
+    {
+        // calculate per-light radiance
+        float3 L = normalize(lightPositions[i].xyz - input.worldPos);
+        float distance = length(lightPositions[i].xyz - input.worldPos);
+        float attenuation = 1.0f / (distance * distance);
+        float3 radiance = lightColors[i].rgb * attenuation;
+
+        // scale light by NdotL
+        float NdotL = max(dot(N, L), 0.0f);
+
+        // add to outgoing radiance Lo
+        Lo += (albedo / PI) * radiance * NdotL; // only the diffuse (Lambert) term for now
+    }
+=== task: ndf
+--- file: pbr.hlsl
+--- find:
+// TODO: DistributionGGX(N, H, roughness): the normal distribution function (Trowbridge-Reitz GGX)
+--- replace:
+float DistributionGGX(float3 N, float3 H, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = max(dot(N, H), 0.0f);
+    float NdotH2 = NdotH * NdotH;
+
+    float nom   = a2;
+    float denom = (NdotH2 * (a2 - 1.0f) + 1.0f);
+    denom = PI * denom * denom;
+
+    return nom / denom;
+}
+--- file: pbr.hlsl
+--- find:
+        float3 L = normalize(lightPositions[i].xyz - input.worldPos);
+--- replace:
+        float3 L = normalize(lightPositions[i].xyz - input.worldPos);
+        float3 H = normalize(V + L);
+--- file: pbr.hlsl
+--- find:
+        // scale light by NdotL
+--- replace:
+        // Cook-Torrance BRDF: only the normal distribution function for now
+        float NDF = DistributionGGX(N, H, roughness);
+        float3 specular = float3(NDF, NDF, NDF);
+
+        // scale light by NdotL
+--- file: pbr.hlsl
+--- find:
+        Lo += (albedo / PI) * radiance * NdotL; // only the diffuse (Lambert) term for now
+--- replace:
+        Lo += (albedo / PI + specular) * radiance * NdotL;
+=== task: geometry
+--- file: pbr.hlsl
+--- find:
+// TODO: GeometrySchlickGGX(NdotV, roughness) and GeometrySmith(N, V, L, roughness): the geometry function
+--- replace:
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float r = (roughness + 1.0f);
+    float k = (r * r) / 8.0f;
+
+    float nom   = NdotV;
+    float denom = NdotV * (1.0f - k) + k;
+
+    return nom / denom;
+}
+// ----------------------------------------------------------------------------
+float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0f);
+    float NdotL = max(dot(N, L), 0.0f);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+
+    return ggx1 * ggx2;
+}
+--- file: pbr.hlsl
+--- find:
+        // Cook-Torrance BRDF: only the normal distribution function for now
+        float NDF = DistributionGGX(N, H, roughness);
+        float3 specular = float3(NDF, NDF, NDF);
+--- replace:
+        // Cook-Torrance BRDF: no Fresnel term yet
+        float NDF = DistributionGGX(N, H, roughness);
+        float G   = GeometrySmith(N, V, L, roughness);
+
+        float numerator   = NDF * G;
+        float denominator = 4.0f * max(dot(N, V), 0.0f) * max(dot(N, L), 0.0f) + 0.0001f; // + 0.0001 to prevent divide by zero
+        float3 specular = numerator / denominator;
+=== task: fresnel
+--- file: pbr.hlsl
+--- find:
+// TODO: fresnelSchlick(cosTheta, F0): the Fresnel equation
+--- replace:
+float3 fresnelSchlick(float cosTheta, float3 F0)
+{
+    return F0 + (1.0f - F0) * pow(clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);
+}
+--- file: pbr.hlsl
+--- find:
+    float3 V = normalize(camPos - input.worldPos);
+--- replace:
+    float3 V = normalize(camPos - input.worldPos);
+
+    // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0
+    // of 0.04 and if it's a metal, use the albedo color as F0 (metallic workflow)
+    float3 F0 = float3(0.04f, 0.04f, 0.04f);
+    F0 = lerp(F0, albedo, metallic);
+--- file: pbr.hlsl
+--- find:
+        // Cook-Torrance BRDF: no Fresnel term yet
+        float NDF = DistributionGGX(N, H, roughness);
+        float G   = GeometrySmith(N, V, L, roughness);
+
+        float numerator   = NDF * G;
+--- replace:
+        // Cook-Torrance BRDF
+        float NDF = DistributionGGX(N, H, roughness);
+        float G   = GeometrySmith(N, V, L, roughness);
+        float3 F  = fresnelSchlick(clamp(dot(H, V), 0.0f, 1.0f), F0);
+
+        float3 numerator  = NDF * G * F;
+--- file: pbr.hlsl
+--- find:
+        float3 specular = numerator / denominator;
+--- replace:
+        float3 specular = numerator / denominator;
+
+        // kS is equal to Fresnel
+        float3 kS = F;
+        // for energy conservation, the diffuse and specular light can't
+        // be above 1.0 (unless the surface emits light); to preserve this
+        // relationship the diffuse component (kD) should equal 1.0 - kS.
+        float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
+        // multiply kD by the inverse metalness such that only non-metals
+        // have diffuse lighting, or a linear blend if partly metal (pure metals
+        // have no diffuse light).
+        kD *= 1.0f - metallic;
+--- file: pbr.hlsl
+--- find:
+        Lo += (albedo / PI + specular) * radiance * NdotL;
+--- replace:
+        Lo += (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+=== task: tone-map
+--- file: pbr.hlsl
+--- find:
+    // TODO: HDR tonemapping and gamma correction
+--- replace:
+    // HDR tonemapping
+    color = color / (color + float3(1.0f, 1.0f, 1.0f));
+    // gamma correct
+    color = pow(color, 1.0f / 2.2f);
+=== task: textured
+--- file: main.cpp
+--- find:
+// The grid of spheres: 7 rows and 7 columns, 2.5 units apart.
+int nrRows    = 7;
+int nrColumns = 7;
+float spacing = 2.5f;
+--- replace:
+// The grid of spheres: a few large spheres, so the material's details can be seen.
+int nrRows    = 3;
+int nrColumns = 3;
+float spacing = 6.0f;
+--- file: main.cpp
+--- find:
+    // The root constants: what the shaders see as cbuffer ModelConstants - the values of
+    // one draw. Two 4x4 matrices, a float3 and three floats are 38 32-bit values: 38 32-bit
+    // root constants. (albedo and metallic share a 16-byte row in HLSL, as they do here.)
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+        XMFLOAT4X4 normalMatrix;    // transpose(inverse(model)), for the normals
+        // material parameters
+        XMFLOAT3 albedo;
+        float metallic;
+        float roughness;
+        float ao;
+    };
+--- replace:
+    // The root constants: what the shaders see as cbuffer ModelConstants - the values of
+    // one draw. Two 4x4 matrices are 32 floats: 32 32-bit root constants. (The material
+    // comes from textures now.)
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+        XMFLOAT4X4 normalMatrix;    // transpose(inverse(model)), for the normals
+    };
+--- file: main.cpp
+--- find:
+    // TODO: the five textures of the material (m_albedoTexture ...)
+--- replace:
+    // The material's five textures.
+    ComPtr<ID3D12Resource> m_albedoTexture;
+    ComPtr<ID3D12Resource> m_normalTexture;
+    ComPtr<ID3D12Resource> m_metallicTexture;
+    ComPtr<ID3D12Resource> m_roughnessTexture;
+    ComPtr<ID3D12Resource> m_aoTexture;
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 1;    // one CBV
+--- replace:
+        cbvSrvHeapDesc.NumDescriptors = 6;    // one CBV + the material's 5 textures' SRVs
+--- file: main.cpp
+--- find:
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1.
+        CD3DX12_DESCRIPTOR_RANGE ranges[1];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+--- replace:
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1, and
+        // 5 SRVs at registers t0 to t4 (the material's textures: consecutive descriptors in
+        // the heap), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0);
+--- file: main.cpp
+--- find:
+        // and normal matrices and the material), for all shaders.
+        // Root parameter 1: a descriptor table with the constant buffer view (b1: the camera's
+        // matrices and position and the lights), for all shaders.
+        CD3DX12_ROOT_PARAMETER rootParameters[2];
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+
+        // TODO: a static sampler for the material's textures (s0: linear, WRAP)
+
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+--- replace:
+        // and normal matrices), for all shaders.
+        // Root parameter 1: a descriptor table with the constant buffer view (b1: the camera's
+        // matrices and position and the lights), for all shaders.
+        // Root parameter 2: a descriptor table with the material's textures' SRVs, for the
+        // pixel shader.
+        CD3DX12_ROOT_PARAMETER rootParameters[3];
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+
+        // A static sampler is part of the root signature itself (no descriptor needed).
+        // Sampler s0, for the material's textures: linear filtering; texture coordinates
+        // outside 0..1 wrap around (learnopengl: GL_REPEAT).
+        D3D12_STATIC_SAMPLER_DESC samplers[1] = {};
+        samplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+        samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[0].MipLODBias = 0;
+        samplers[0].MaxAnisotropy = 0;
+        samplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+        samplers[0].BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+        samplers[0].MinLOD = 0.0f;
+        samplers[0].MaxLOD = D3D12_FLOAT32_MAX;
+        samplers[0].ShaderRegister = 0;
+        samplers[0].RegisterSpace = 0;
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init(_countof(rootParameters), rootParameters, _countof(samplers), samplers, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+--- file: main.cpp
+--- find:
+    // TODO: load the PBR material textures (albedo.png, normal.png, metallic.png, roughness.png, ao.png)
+--- replace:
+    // load PBR material textures: their SRVs go into the heap after the CBV, one after the
+    // other (slots 1 to 5), so one descriptor table covers them. The upload buffers must
+    // stay alive until the command list that copies from them has executed (the end of this
+    // method waits for it). All five are loaded as they are (UNORM): the albedo's colours
+    // are converted to linear in the shader, the others are data, not colours.
+    ComPtr<ID3D12Resource> albedoUploadHeap;
+    LoadTexture("albedo.png", m_albedoTexture, albedoUploadHeap, 1);
+    ComPtr<ID3D12Resource> normalUploadHeap;
+    LoadTexture("normal.png", m_normalTexture, normalUploadHeap, 2);
+    ComPtr<ID3D12Resource> metallicUploadHeap;
+    LoadTexture("metallic.png", m_metallicTexture, metallicUploadHeap, 3);
+    ComPtr<ID3D12Resource> roughnessUploadHeap;
+    LoadTexture("roughness.png", m_roughnessTexture, roughnessUploadHeap, 4);
+    ComPtr<ID3D12Resource> aoUploadHeap;
+    LoadTexture("ao.png", m_aoTexture, aoUploadHeap, 5);
+--- file: main.cpp
+--- find:
+    // TODO: root parameter 2 - the table with the material's five textures
+--- replace:
+    // Root parameter 2: the table with the material's five textures, from heap slot 1 on
+    // (learnopengl: glActiveTexture(GL_TEXTURE0 ... 4) + glBindTexture).
+    CD3DX12_GPU_DESCRIPTOR_HANDLE materialTextures(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, materialTextures);
+--- file: main.cpp
+--- find:
+// The scene (learnopengl's lighting.cpp): 7 x 7 spheres, each with its model matrix, its
+// normal matrix and its material in the root constants (root parameter 0). The normal
+// matrix is the transpose of the inverse of the model matrix; stored transposed for HLSL,
+// that is the inverse itself.
+void D3D12App::RenderScene()
+{
+    ModelConstants modelConstants = {};
+    modelConstants.albedo = XMFLOAT3(0.5f, 0.0f, 0.0f);
+    modelConstants.ao = 1.0f;
+
+    // render rows*column number of spheres with varying metallic/roughness values scaled by rows and columns respectively
+    for (int row = 0; row < nrRows; ++row)
+    {
+        modelConstants.metallic = (float)row / (float)nrRows;
+        for (int col = 0; col < nrColumns; ++col)
+        {
+            // we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
+            // on direct lighting.
+            modelConstants.roughness = std::clamp((float)col / (float)nrColumns, 0.05f, 1.0f);
+
+            XMMATRIX model = XMMatrixTranslation(
+                (float)(col - (nrColumns / 2)) * spacing,
+                (float)(row - (nrRows / 2)) * spacing,
+                0.0f);
+--- replace:
+// The scene (learnopengl's lighting_textured.cpp): 3 x 3 large spheres, each with its model
+// matrix and its normal matrix in the root constants (root parameter 0). With row vectors
+// the matrices apply from left to right: scale, then rotate, then translate (learnopengl's
+// translate * rotate * scale). The normal matrix is the transpose of the inverse of the
+// model matrix; stored transposed for HLSL, that is the inverse itself.
+void D3D12App::RenderScene()
+{
+    ModelConstants modelConstants = {};
+
+    // render rows*column number of spheres with material properties defined by textures (they all have the same material properties)
+    for (int row = 0; row < nrRows; ++row)
+    {
+        for (int col = 0; col < nrColumns; ++col)
+        {
+            XMMATRIX model = XMMatrixScaling(2.4f, 2.4f, 2.4f)
+                * XMMatrixRotationY(XMConvertToRadians(90.0f)) // turn the middle of the textures towards the camera
+                * XMMatrixTranslation(
+                    (float)(col - (nrColumns / 2)) * spacing,
+                    (float)(row - (nrRows / 2)) * spacing,
+                    0.0f);
+--- file: pbr.hlsl
+--- find:
+// TODO: the material's textures (albedoMap, normalMap, metallicMap, roughnessMap, aoMap) and their sampler
+--- replace:
+// material parameters: the five textures, registers t0 to t4, in the descriptor table of
+// root parameter 2
+Texture2D albedoMap : register(t0);
+Texture2D normalMap : register(t1);
+Texture2D metallicMap : register(t2);
+Texture2D roughnessMap : register(t3);
+Texture2D aoMap : register(t4);
+// The sampler: register s0, the static sampler of the root signature (linear, WRAP).
+SamplerState wrapSampler : register(s0);
+--- file: pbr.hlsl
+--- find:
+    float4x4 normalMatrix;    // transpose(inverse(model)), computed in main.cpp
+    // material parameters
+    float3 albedo;
+    float metallic;
+    float roughness;
+    float ao;
+};
+--- replace:
+    float4x4 normalMatrix;    // transpose(inverse(model)), computed in main.cpp
+};
+--- file: pbr.hlsl
+--- find:
+    float3 normal : NORMAL;
+};
+--- replace:
+    float3 normal : NORMAL;
+    float3 tangent : TANGENT;
+};
+--- file: pbr.hlsl
+--- find:
+PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL, float2 texCoords : TEXCOORD)
+--- replace:
+PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL, float2 texCoords : TEXCOORD, float3 tangent : TANGENT)
+--- file: pbr.hlsl
+--- find:
+    result.normal = mul(float4(normal, 0.0f), normalMatrix).xyz;
+--- replace:
+    result.normal = mul(float4(normal, 0.0f), normalMatrix).xyz;
+    // The tangent lies in the surface: it turns with the model matrix.
+    result.tangent = mul(float4(tangent, 0.0f), model).xyz;
+--- file: pbr.hlsl
+--- find:
+// ----------------------------------------------------------------------------
+float DistributionGGX(float3 N, float3 H, float roughness)
+--- replace:
+// ----------------------------------------------------------------------------
+// The normal map's normal (tangent space) taken to world space with a TBN matrix
+// built from the sphere's normal and tangent, as in the Normal Mapping chapter.
+float3 getNormalFromMap(PSInput input)
+{
+    float3 tangentNormal = normalMap.Sample(wrapSampler, input.texCoords).xyz * 2.0f - 1.0f;
+
+    float3 N = normalize(input.normal);
+    float3 T = normalize(input.tangent);
+    T = normalize(T - dot(T, N) * N); // Gram-Schmidt: make T perpendicular to N again
+    // B points the way the image's rows go up on the sphere: the normal map's green axis
+    float3 B = cross(N, T);
+    // T, B and N as the rows: with the vector on the left, mul gives x * T + y * B + z * N
+    // (learnopengl: mat3(T, B, N) * tangentNormal)
+    float3x3 TBN = float3x3(T, B, N);
+
+    return normalize(mul(tangentNormal, TBN));
+}
+// ----------------------------------------------------------------------------
+float DistributionGGX(float3 N, float3 H, float roughness)
+--- file: pbr.hlsl
+--- find:
+    float3 N = normalize(input.normal);
+    float3 V = normalize(camPos - input.worldPos);
+--- replace:
+    float3 albedo   = pow(albedoMap.Sample(wrapSampler, input.texCoords).rgb, 2.2f);
+    float metallic  = metallicMap.Sample(wrapSampler, input.texCoords).r;
+    float roughness = roughnessMap.Sample(wrapSampler, input.texCoords).r;
+    float ao        = aoMap.Sample(wrapSampler, input.texCoords).r;
+
+    float3 N = getNormalFromMap(input);
+    float3 V = normalize(camPos - input.worldPos);

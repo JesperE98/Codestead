@@ -1,0 +1,189 @@
+=== task: in-out
+--- file: shader.vs
+--- find:
+layout (location = 0) in vec3 aPos;
+
+void main()
+--- replace:
+layout (location = 0) in vec3 aPos;
+
+out vec4 vertexColor; // specify a color output to the fragment shader
+
+void main()
+--- file: shader.vs
+--- find:
+    gl_Position = vec4(aPos, 1.0);
+--- replace:
+    gl_Position = vec4(aPos, 1.0); // see how we directly give a vec3 to vec4's constructor
+    vertexColor = vec4(0.5, 0.0, 0.0, 1.0); // set the output variable to a dark-red color
+--- file: shader.fs
+--- find:
+out vec4 FragColor;
+
+void main()
+{
+    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+}
+--- replace:
+out vec4 FragColor;
+
+in vec4 vertexColor; // the input variable from the vertex shader (same name and same type)
+
+void main()
+{
+    FragColor = vertexColor;
+}
+
+=== task: uniform
+--- file: shader.fs
+--- find:
+in vec4 vertexColor; // the input variable from the vertex shader (same name and same type)
+--- replace:
+uniform vec4 ourColor; // we set this variable in the OpenGL code.
+--- file: shader.fs
+--- find:
+    FragColor = vertexColor;
+--- replace:
+    FragColor = ourColor;
+--- file: main.cpp
+--- find:
+#include <iostream>
+--- replace:
+#include <iostream>
+#include <cmath>
+--- file: main.cpp
+--- find:
+        ourShader.use();
+        glBindVertexArray(VAO);
+--- replace:
+        ourShader.use();
+
+        // update the uniform color (the shader must be active before glUniform calls)
+        double timeValue = glfwGetTime();
+        float greenValue = static_cast<float>(sin(timeValue) / 2.0 + 0.5);
+        int vertexColorLocation = glGetUniformLocation(ourShader.ID, "ourColor");
+        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
+        glBindVertexArray(VAO);
+
+=== task: vertex-colors
+--- file: main.cpp
+--- find:
+         0.5f, -0.5f, 0.0f,  // bottom right
+        -0.5f, -0.5f, 0.0f,  // bottom left
+         0.0f,  0.5f, 0.0f   // top
+--- replace:
+        // positions         // colors
+         0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // bottom right
+        -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  // bottom left
+         0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // top
+--- file: main.cpp
+--- find:
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+--- replace:
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+--- file: main.cpp
+--- find:
+        ourShader.use();
+
+        // update the uniform color (the shader must be active before glUniform calls)
+        double timeValue = glfwGetTime();
+        float greenValue = static_cast<float>(sin(timeValue) / 2.0 + 0.5);
+        int vertexColorLocation = glGetUniformLocation(ourShader.ID, "ourColor");
+        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
+        glBindVertexArray(VAO);
+--- replace:
+        ourShader.use();
+        glBindVertexArray(VAO);
+--- file: main.cpp
+--- find:
+#include <iostream>
+#include <cmath>
+--- replace:
+#include <iostream>
+--- file: shader.vs
+--- find:
+layout (location = 0) in vec3 aPos;
+
+out vec4 vertexColor; // specify a color output to the fragment shader
+--- replace:
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aColor;
+
+out vec3 ourColor;
+--- file: shader.vs
+--- find:
+    gl_Position = vec4(aPos, 1.0); // see how we directly give a vec3 to vec4's constructor
+    vertexColor = vec4(0.5, 0.0, 0.0, 1.0); // set the output variable to a dark-red color
+--- replace:
+    gl_Position = vec4(aPos, 1.0);
+    ourColor = aColor;
+--- file: shader.fs
+--- find:
+uniform vec4 ourColor; // we set this variable in the OpenGL code.
+--- replace:
+in vec3 ourColor;
+--- file: shader.fs
+--- find:
+    FragColor = ourColor;
+--- replace:
+    FragColor = vec4(ourColor, 1.0f);
+
+=== task: upside-down
+--- file: shader.vs
+--- find:
+    gl_Position = vec4(aPos, 1.0);
+--- replace:
+    gl_Position = vec4(aPos.x, -aPos.y, aPos.z, 1.0); // just add a - to the y position
+
+=== task: offset
+--- file: shader.vs
+--- find:
+out vec3 ourColor;
+--- replace:
+out vec3 ourColor;
+
+uniform float xOffset;
+--- file: shader.vs
+--- find:
+    gl_Position = vec4(aPos.x, -aPos.y, aPos.z, 1.0); // just add a - to the y position
+--- replace:
+    gl_Position = vec4(aPos.x + xOffset, -aPos.y, aPos.z, 1.0); // still upside down, and moved to the right by xOffset
+--- file: main.cpp
+--- find:
+        ourShader.use();
+--- replace:
+        ourShader.use();
+        float offset = 0.5f;
+        ourShader.setFloat("xOffset", offset);
+
+=== task: position-color
+--- file: shader.vs
+--- find:
+out vec3 ourColor;
+--- replace:
+// out vec3 ourColor;
+out vec3 ourPosition;
+--- file: shader.vs
+--- find:
+    ourColor = aColor;
+--- replace:
+    // ourColor = aColor;
+    ourPosition = aPos;
+--- file: shader.fs
+--- find:
+in vec3 ourColor;
+--- replace:
+// in vec3 ourColor;
+in vec3 ourPosition;
+--- file: shader.fs
+--- find:
+    FragColor = vec4(ourColor, 1.0f);
+--- replace:
+    FragColor = vec4(ourPosition, 1.0); // note how the position value is linearly interpolated to get all the different colors

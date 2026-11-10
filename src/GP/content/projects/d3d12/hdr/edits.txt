@@ -1,0 +1,269 @@
+=== task: float-buffer
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+--- replace:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+    ComPtr<ID3D12PipelineState> m_hdrPipelineState;    // the screen quad's (learnopengl's hdrShader)
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_depthStencil;
+--- replace:
+    ComPtr<ID3D12Resource> m_depthStencil;
+    ComPtr<ID3D12Resource> m_colorBuffer;    // the floating-point colour buffer the scene is drawn into
+--- file: main.cpp
+--- find:
+        rtvHeapDesc.NumDescriptors = FrameCount;
+--- replace:
+        rtvHeapDesc.NumDescriptors = FrameCount + 1;    // the swap chain's buffers + the floating-point colour buffer
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 2;    // one CBV + the wood texture's SRV
+--- replace:
+        cbvSrvHeapDesc.NumDescriptors = 3;    // one CBV + the wood texture's SRV + the colour buffer's SRV
+--- file: main.cpp
+--- find:
+        psoDesc.NumRenderTargets = 1;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+        psoDesc.SampleDesc.Count = 1;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+
+        // TODO: the screen quad's pipeline state (m_hdrPipelineState): the shaders of hdr.hlsl, the back buffer's format (R8G8B8A8_UNORM), no depth buffer and no depth test
+--- replace:
+        psoDesc.NumRenderTargets = 1;
+        // The scene is drawn into the floating-point colour buffer: 16 bits per channel, a
+        // half-precision float each (values far above 1.0 fit, learnopengl's GL_RGBA16F).
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+        psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+        psoDesc.SampleDesc.Count = 1;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+
+        // The screen quad's pipeline state (learnopengl's hdrShader): the shaders of hdr.hlsl,
+        // the window's back buffer (8 bits per channel) as the render target, and no depth
+        // buffer (the window's pass has none) and so no depth test.
+        ComPtr<ID3DBlob> hdrVertexShader;
+        ComPtr<ID3DBlob> hdrPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"hdr.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &hdrVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"hdr.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &hdrPixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(hdrVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(hdrPixelShader.Get());
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_hdrPipelineState)));
+--- file: main.cpp
+--- find:
+            { { -1.0f,  1.0f,  1.0f }, {  0.0f,  1.0f,  0.0f }, {  0.0f,  1.0f } }
+
+            // TODO: the screen quad (vertices 36 to 41): two triangles that fill the whole window, in normalized device coordinates, v = 0 at the top
+--- replace:
+            { { -1.0f,  1.0f,  1.0f }, {  0.0f,  1.0f,  0.0f }, {  0.0f,  1.0f } },
+
+            // the screen quad: vertices 36 to 41 - learnopengl's renderQuad, two triangles that
+            // fill the whole window, in normalized device coordinates, v = 0 at the top.
+            { { -1.0f,  1.0f,  0.0f }, {  0.0f,  0.0f,  1.0f }, {  0.0f,  0.0f } },
+            { { -1.0f, -1.0f,  0.0f }, {  0.0f,  0.0f,  1.0f }, {  0.0f,  1.0f } },
+            { {  1.0f, -1.0f,  0.0f }, {  0.0f,  0.0f,  1.0f }, {  1.0f,  1.0f } },
+
+            { { -1.0f,  1.0f,  0.0f }, {  0.0f,  0.0f,  1.0f }, {  0.0f,  0.0f } },
+            { {  1.0f, -1.0f,  0.0f }, {  0.0f,  0.0f,  1.0f }, {  1.0f,  1.0f } },
+            { {  1.0f,  1.0f,  0.0f }, {  0.0f,  0.0f,  1.0f }, {  1.0f,  0.0f } }
+--- file: main.cpp
+--- find:
+    // TODO: configure floating point framebuffer: a colour buffer as big as the window (m_colorBuffer: R16G16B16A16_FLOAT, a render target, starting as a PIXEL_SHADER_RESOURCE) with a render target view (RTV heap slot FrameCount) and a shader resource view (CBV/SRV heap slot 2)
+--- replace:
+    // configure floating point framebuffer: the colour buffer the scene is drawn into
+    // (learnopengl: the hdrFBO's GL_RGBA16F colour texture), which the screen quad then reads.
+    // The scene uses the depth buffer above with it.
+    {
+        // A texture as big as the window with a half-precision float per channel, so it holds
+        // colours brighter than 1.0, that can be a render target (ALLOW_RENDER_TARGET). It
+        // starts in the PIXEL_SHADER_RESOURCE state: every frame turns it into a render target
+        // for the scene, and back for the screen quad.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+
+        // The colour it is usually cleared to (clearing to this colour is fastest).
+        const float optimizedClearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+        CD3DX12_CLEAR_VALUE clearValue(DXGI_FORMAT_R16G16B16A16_FLOAT, optimizedClearColor);
+
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+            &clearValue,
+            IID_PPV_ARGS(&m_colorBuffer)));
+
+        // A render target view, to draw into it: in the RTV heap after the swap chain's buffers.
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_rtvDescriptorSize);
+        m_device->CreateRenderTargetView(m_colorBuffer.Get(), nullptr, rtvHandle);
+
+        // A shader resource view, to read it in the screen quad's pixel shader: slot 2 of the
+        // CBV/SRV heap.
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
+        m_device->CreateShaderResourceView(m_colorBuffer.Get(), &srvDesc, srvHandle);
+    }
+--- file: main.cpp
+--- find:
+    // Indicate that the back buffer will be used as a render target.
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    // TODO: 1. render scene into floating point framebuffer: the colour buffer (RTV heap slot FrameCount, after a barrier PIXEL_SHADER_RESOURCE -> RENDER_TARGET) instead of the back buffer
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+
+    const float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+    m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+--- replace:
+    // 1. render scene into floating point framebuffer: the colour buffer (after the swap
+    // chain's buffers in the RTV heap) and the depth buffer. The screen quad of the previous
+    // frame read the colour buffer: now it is written again.
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_colorBuffer.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE hdrRtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_rtvDescriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+    m_commandList->OMSetRenderTargets(1, &hdrRtvHandle, FALSE, &dsvHandle);
+
+    const float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+    m_commandList->ClearRenderTargetView(hdrRtvHandle, clearColor, 0, nullptr);
+--- file: main.cpp
+--- find:
+    // TODO: 2. now render floating point color buffer to 2D quad: a barrier RENDER_TARGET -> PIXEL_SHADER_RESOURCE for the colour buffer, the back buffer (without the depth buffer) as the render target, then m_hdrPipelineState, the colour buffer's SRV (heap slot 2) and the screen quad (vertices 36 to 41)
+
+    // Indicate that the back buffer will now be used to present.
+--- replace:
+    // The scene is in the colour buffer: from now on the pixel shader reads it.
+    barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_colorBuffer.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    // 2. now render floating point color buffer to 2D quad and tonemap HDR colors to default
+    // framebuffer's (clamped) color range. Indicate that the back buffer will be used as a
+    // render target.
+    barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    // The back buffer, without a depth buffer: the screen quad needs no depth test.
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+    m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+
+    // The screen quad: its pipeline state, the colour buffer (heap slot 2) as the texture of
+    // root parameter 2, and its 6 vertices from vertex 36 on.
+    m_commandList->SetPipelineState(m_hdrPipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE hdrBuffer(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, hdrBuffer);
+    m_commandList->DrawInstanced(6, 1, 36, 0);
+
+    // Indicate that the back buffer will now be used to present.
+--- file: lighting.hlsl
+--- find:
+    // The colour as it is, gamma-corrected for the window: everything above 1.0 is cut off
+    // at 1.0 (white) when it is written into the 8-bit back buffer.
+    const float gamma = 2.2f;
+    float3 result = pow(ambient + lighting, 1.0f / gamma);
+    return float4(result, 1.0f);
+--- replace:
+    // The colour as it is: linear, and far above 1.0 near the bright light. The screen quad
+    // tone-maps and gamma-corrects it.
+    return float4(ambient + lighting, 1.0f);
+
+--- file: hdr.hlsl
+--- find:
+    // TODO: read the HDR colour from hdrBuffer at texCoord and return it gamma-corrected (no tone mapping yet)
+    return float4(0.0f, 0.0f, 0.0f, 1.0f);
+--- replace:
+    const float gamma = 2.2f;
+    float3 hdrColor = hdrBuffer.Sample(wrapSampler, input.texCoord).rgb;
+    float3 result = pow(hdrColor, 1.0f / gamma);
+    return float4(result, 1.0f);
+
+=== task: reinhard
+--- file: hdr.hlsl
+--- find:
+    float3 result = pow(hdrColor, 1.0f / gamma);
+--- replace:
+    // reinhard
+    float3 result = hdrColor / (hdrColor + float3(1.0f, 1.0f, 1.0f));
+    // also gamma correct while we're at it
+    result = pow(result, 1.0f / gamma);
+
+=== task: exposure
+--- file: main.cpp
+--- find:
+class D3D12App
+{
+public:
+--- replace:
+// The exposure of the tone mapping: higher shows more of the dark parts, lower more of the
+// bright ones (learnopengl changes it with the Q and E keys).
+float exposure = 1.0f;
+
+class D3D12App
+{
+public:
+--- file: main.cpp
+--- find:
+        BOOL inverseNormals;        // TRUE: the normals point the other way (learnopengl's inverse_normals)
+    };
+--- replace:
+        BOOL inverseNormals;        // TRUE: the normals point the other way (learnopengl's inverse_normals)
+    };
+
+    // The same root constants as the screen quad's pixel shader sees them: cbuffer
+    // HdrConstants, one float.
+    struct HdrConstants
+    {
+        float exposure;
+    };
+--- file: main.cpp
+--- find:
+        // Root parameter 0: root constants for register b0 (the model and normal matrices of
+        // the draw, and inverseNormals), for the vertex shaders.
+--- replace:
+        // Root parameter 0: root constants for register b0 - for the scene's vertex shader
+        // the model and normal matrices of the draw and inverseNormals, for the screen quad's
+        // pixel shader the exposure - so all shaders can see them.
+--- file: main.cpp
+--- find:
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+--- replace:
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+--- file: main.cpp
+--- find:
+    m_commandList->SetGraphicsRootDescriptorTable(2, hdrBuffer);
+--- replace:
+    m_commandList->SetGraphicsRootDescriptorTable(2, hdrBuffer);
+    // The exposure, as the root constants (cbuffer HdrConstants in hdr.hlsl).
+    HdrConstants hdrConstants = {};
+    hdrConstants.exposure = exposure;
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(HdrConstants) / 4, &hdrConstants, 0);
+--- file: hdr.hlsl
+--- find:
+SamplerState wrapSampler : register(s0);
+--- replace:
+SamplerState wrapSampler : register(s0);
+
+// Root constants set from main.cpp with SetGraphicsRoot32BitConstants (root parameter 0).
+cbuffer HdrConstants : register(b0)
+{
+    float exposure;
+};
+--- file: hdr.hlsl
+--- find:
+    // reinhard
+    float3 result = hdrColor / (hdrColor + float3(1.0f, 1.0f, 1.0f));
+--- replace:
+    // reinhard
+    // float3 result = hdrColor / (hdrColor + float3(1.0f, 1.0f, 1.0f));
+    // exposure
+    float3 result = float3(1.0f, 1.0f, 1.0f) - exp(-hdrColor * exposure);

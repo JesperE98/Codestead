@@ -1,0 +1,12 @@
+[
+  { "title": "Blending", "url": "https://learnopengl.com/Advanced-OpenGL/Blending", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: blending_sorted.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/4.advanced_opengl/3.2.blending_sort/blending_sorted.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "glBlendFunc", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBlendFunc.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "glBlendEquation", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBlendEquation.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Graphics pipeline basics: Fixed functions (Color blending)", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Graphics_pipeline_basics/Fixed_functions", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "VkPipelineColorBlendAttachmentState", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkPipelineColorBlendAttachmentState.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "VkBlendFactor", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkBlendFactor.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "D3D12_RENDER_TARGET_BLEND_DESC structure", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_render_target_blend_desc", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "D3D12_BLEND enumeration", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_blend", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "D3D12_STATIC_SAMPLER_DESC structure", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_static_sampler_desc", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

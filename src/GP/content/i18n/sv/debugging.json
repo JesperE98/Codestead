@@ -1,0 +1,67 @@
+{
+  "title": "Felsökning",
+  "tasks": {
+    "check-error": {
+      "text": { "opengl": "Lägg till learnopengls funktion `glCheckError_(file, line)` och makrot `glCheckError()`, och anropa `glCheckError();` efter att texturen har laddats och efter att de två uniformerna har satts." },
+      "hint": { "opengl": "`glGetError()` returnerar en registrerad felflagga och nollställer den – läs den i en loop `while ((errorCode = glGetError()) != GL_NO_ERROR)` och skriv ut felets namn med `file` och `line`; `#define glCheckError() glCheckError_(__FILE__, __LINE__)`. De två anropen ska stå direkt efter `stbi_image_free(data);` och direkt efter `glUniform1i(…, \"tex\", 0);`." }
+    },
+    "use-program": {
+      "text": { "opengl": "Rätta felet som `glCheckError` rapporterar efter uniformerna: gör shadern till programmet som används innan `projection` och `tex` sätts." },
+      "hint": { "opengl": "`glUniform*` ändrar en uniform i programmet som används, och inget används ännu: anropa `shader.use();` mellan `glm::perspective(…)` och anropet av `glUniformMatrix4fv`." }
+    },
+    "debug-output": {
+      "text": { "opengl": "Be GLFW om en OpenGL 4.3-debugkontext, skriv learnopengls callback `glDebugOutput` och slå, efter att GLAD har laddats, på debug output med den när kontexten är en debugkontext." },
+      "hint": { "opengl": "`glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4)`, minor 3, `glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true)`; sedan `int flags; glGetIntegerv(GL_CONTEXT_FLAGS, &flags); if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) { glEnable(GL_DEBUG_OUTPUT); glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); glDebugMessageCallback(glDebugOutput, nullptr); glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE); }`." }
+    },
+    "fix-texture": {
+      "text": {
+        "opengl": "Rätta felet som debugutskriften nämner: ladda upp bilden till `GL_TEXTURE_2D`, målet som texturen är bunden till.",
+        "d3d12": "Rätta det andra felet (meddelande #31): ge shader resource viewn i `LoadTexture` texturens enda mipnivå, `srvDesc.Texture2D.MipLevels = 1;`."
+      },
+      "hint": {
+        "opengl": "`GL_FRAMEBUFFER` är inget texturmål: `glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);`.",
+        "d3d12": "Meddelandet säger att MipLevels (value = 0) måste ligga mellan 1 och 1: `srvDesc` nollställdes med `= {}` och dess `Texture2D.MipLevels` sattes aldrig. Lägg raden efter `srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;`."
+      }
+    },
+    "shader-output": {
+      "text": {
+        "opengl": "Felsök shaderns utdata: skriv i `debugging.fs` texturkoordinaterna som färg (u som rött, v som grönt) i stället för texturen, och behåll texturraden som en kommentar.",
+        "vulkan": "Felsök shaderns utdata: skriv i `shaders/debugging.frag` texturkoordinaterna som färg (u som rött, v som grönt) i stället för texturen, och behåll texturraden som en kommentar.",
+        "d3d12": "Felsök shaderns utdata: låt `PSMain` i `debugging.hlsl` returnera texturkoordinaterna som färg (u som rött, v som grönt) i stället för texturen, och behåll texturraden som en kommentar."
+      },
+      "hint": {
+        "opengl": "`FragColor = vec4(TexCoords, 0.0, 1.0);` och `// FragColor = texture(tex, TexCoords);`.",
+        "vulkan": "`outColor = vec4(fragTexCoord, 0.0, 1.0);` och `// outColor = texture(texSampler, fragTexCoord);` – före attributrättningen hade det visat en svart kub: (0, 0) överallt.",
+        "d3d12": "`return float4(input.texCoord, 0.0f, 1.0f);` och `// return tex.Sample(wrapSampler, input.texCoord);` – Direct3D:s v går nedåt, så det gröna växer mot varje sidas underkant."
+      }
+    },
+    "message-severity": {
+      "text": { "vulkan": "Låt `debugCallback` skriva ut bara meddelanden med allvarlighetsgraden varning eller högre, så att valideringsfelet inte försvinner bland de pratiga meddelandena." },
+      "hint": { "vulkan": "Allvarlighetsgraderna är bitar i ordning efter vikt (VERBOSE < INFO < WARNING < ERROR): lägg raden med `std::cerr` inuti `if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) { … }`." }
+    },
+    "object-names": {
+      "text": { "vulkan": "Namnge shader modules och texturbilden med `vkSetDebugUtilsObjectNameEXT`, så att valideringslagrets meddelanden säger vilket objekt de menar." },
+      "hint": { "vulkan": "En proxy `SetDebugUtilsObjectNameEXT(instance, device, &nameInfo)` som slår upp funktionen med `vkGetInstanceProcAddr` (som `CreateDebugUtilsMessengerEXT`); en medlem `setObjectName(VkObjectType objectType, uint64_t objectHandle, const char* name)` som fyller i `VkDebugUtilsObjectNameInfoEXT`; i `createPipeline()` `setObjectName(VK_OBJECT_TYPE_SHADER_MODULE, (uint64_t) vertShaderModule, vertShaderFile.c_str());` (och fragment-modulen), i `loadTexture()` `setObjectName(VK_OBJECT_TYPE_IMAGE, (uint64_t) image, path);`." }
+    },
+    "fix-attribute": {
+      "text": { "vulkan": "Rätta det meddelandet säger: beskriv vertex shaderns indata på location 1 – texturkoordinaterna – i `Vertex::getAttributeDescriptions()`." },
+      "hint": { "vulkan": "Gör arrayen 2 element lång (returtyp och variabel); det andra: `binding = 0`, `location = 1`, `format = VK_FORMAT_R32G32_SFLOAT` (en vec2), `offset = offsetof(Vertex, texCoord)`." }
+    },
+    "info-queue": {
+      "text": { "d3d12": "Läs debuglagrets meddelanden: hämta info queue (`m_device.As(&m_infoQueue)`), skriv `CheckDebugMessages_(infoQueue, file, line)` och makrot `CheckDebugMessages()`, och anropa det efter `LoadTexture` och efter `ExecuteCommandLists`." },
+      "hint": { "d3d12": "Som `glCheckError_`: anropa för vart och ett av de `GetNumStoredMessages()` meddelandena `GetMessage(i, nullptr, &messageLength)` för storleken, `malloc` så mycket, `GetMessage(i, message, &messageLength)`, skriv ut `SeverityName(message->Severity)`, `message->ID`, `message->pDescription`, `file` och `line` med `OutputDebugStringA`, `free`; sedan `ClearStoredMessages()`. Returnera direkt när kön är `nullptr` (en release-build)." }
+    },
+    "set-name": {
+      "text": { "d3d12": "Namnge objekten med `SetName`: de tre heaparna (`L\"RTV heap\"`, `L\"DSV heap\"`, `L\"CBV/SRV heap\"`), varje render target, root signaturen, pipeline staten, vertex buffern, texturen (`L\"wood.png\"`), constant buffern och djupbuffern." },
+      "hint": { "d3d12": "`SetName` tar en bred sträng; för render targets `std::wstring name = L\"Render target \" + std::to_wstring(n); m_renderTargets[n]->SetName(name.c_str());`. Resten står i slutet av `LoadAssets`. Meddelande #708 kallar sedan heapen `'CBV/SRV heap'`." }
+    },
+    "descriptor-heaps": {
+      "text": { "d3d12": "Rätta det första felet (meddelande #708): sätt CBV/SRV-heapen på command listen före de två descriptor-tabellerna i `PopulateCommandList`." },
+      "hint": { "d3d12": "En descriptor-tabell är ett handtag in i den shader-synliga heap som command listen har: `ID3D12DescriptorHeap* ppHeaps[] = { m_cbvSrvHeap.Get() }; m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);` före `SetGraphicsRootDescriptorTable(1, …)`." }
+    },
+    "debug-callback": {
+      "text": { "d3d12": "Skriv `D3D12DebugOutput(category, severity, id, description, context)` och, i `LoadPipeline`, bryt vid fel när en debugger är ansluten och registrera callbacken med `ID3D12InfoQueue1::RegisterMessageCallback`." },
+      "hint": { "d3d12": "Skriv ut \"Debug message (id): description\", kategorin och allvarlighetsgraden med `OutputDebugStringA`. Inuti `if (m_infoQueue)`: `if (IsDebuggerPresent())` de två anropen av `SetBreakOnSeverity` (CORRUPTION, ERROR); sedan `ComPtr<ID3D12InfoQueue1> infoQueue1; if (SUCCEEDED(m_infoQueue.As(&infoQueue1))) infoQueue1->RegisterMessageCallback(D3D12DebugOutput, D3D12_MESSAGE_CALLBACK_FLAG_NONE, nullptr, &callbackCookie);`." }
+    }
+  }
+}

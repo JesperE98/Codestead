@@ -1,0 +1,196 @@
+=== task: look-at
+--- file: main.cpp
+--- find:
+        // note that we're translating the scene in the reverse direction of where we want to move
+        ubo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
+--- replace:
+        // camera/view transformation: a camera at (0, 0, 3) looking at the origin, with +y as up
+        ubo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+=== task: circle
+--- file: main.cpp
+--- find:
+        // camera/view transformation: a camera at (0, 0, 3) looking at the origin, with +y as up
+        ubo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+--- replace:
+        // camera/view transformation: the camera circles the scene, always looking at the origin
+        float radius = 10.0f;
+        float camX = static_cast<float>(std::sin(glfwGetTime()) * radius);
+        float camZ = static_cast<float>(std::cos(glfwGetTime()) * radius);
+        ubo.view = glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+=== task: free-camera
+--- file: main.cpp
+--- find:
+// The same layout as the push constant block in the vertex shader: the model matrix of one draw.
+--- replace:
+// camera
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+
+// The same layout as the push constant block in the vertex shader: the model matrix of one draw.
+--- file: main.cpp
+--- find:
+        // camera/view transformation: the camera circles the scene, always looking at the origin
+        float radius = 10.0f;
+        float camX = static_cast<float>(std::sin(glfwGetTime()) * radius);
+        float camZ = static_cast<float>(std::cos(glfwGetTime()) * radius);
+        ubo.view = glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+--- replace:
+        // camera/view transformation: look from cameraPos in the direction of cameraFront
+        ubo.view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
+=== task: wasd
+--- file: main.cpp
+--- find:
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+--- replace:
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+
+// timing
+float deltaTime = 0.0f; // time between current frame and last frame
+float lastFrame = 0.0f;
+--- file: main.cpp
+--- find:
+        while (!glfwWindowShouldClose(window)) {
+            glfwPollEvents();
+            drawFrame();
+        }
+
+        vkDeviceWaitIdle(device);
+    }
+--- replace:
+        while (!glfwWindowShouldClose(window)) {
+            // per-frame time logic
+            float currentFrame = static_cast<float>(glfwGetTime());
+            deltaTime = currentFrame - lastFrame;
+            lastFrame = currentFrame;
+
+            glfwPollEvents();
+            processInput();
+            drawFrame();
+        }
+
+        vkDeviceWaitIdle(device);
+    }
+
+    void processInput() {
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+        }
+
+        float cameraSpeed = 2.5f * deltaTime; // units per second, the same speed at any frame rate
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            cameraPos += cameraSpeed * cameraFront;
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            cameraPos -= cameraSpeed * cameraFront;
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        }
+    }
+
+=== task: mouse-look
+--- file: main.cpp
+--- find:
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+--- replace:
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+
+bool firstMouse = true;
+float yaw   = -90.0f; // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
+float pitch =  0.0f;
+float lastX =  WIDTH / 2.0f;
+float lastY =  HEIGHT / 2.0f;
+--- file: main.cpp
+--- find:
+// The same layout as the push constant block in the vertex shader: the model matrix of one draw.
+--- replace:
+// glfw: whenever the mouse moves, this callback is called
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
+    if (firstMouse) {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // reversed since window y-coordinates go from top to bottom
+    lastX = xpos;
+    lastY = ypos;
+
+    float sensitivity = 0.1f; // change this value to your liking
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw += xoffset;
+    pitch += yoffset;
+
+    // make sure that when pitch is out of bounds, screen doesn't get flipped
+    if (pitch > 89.0f) {
+        pitch = 89.0f;
+    }
+    if (pitch < -89.0f) {
+        pitch = -89.0f;
+    }
+
+    glm::vec3 front;
+    front.x = std::cos(glm::radians(yaw)) * std::cos(glm::radians(pitch));
+    front.y = std::sin(glm::radians(pitch));
+    front.z = std::sin(glm::radians(yaw)) * std::cos(glm::radians(pitch));
+    cameraFront = glm::normalize(front);
+}
+
+// The same layout as the push constant block in the vertex shader: the model matrix of one draw.
+--- file: main.cpp
+--- find:
+        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+--- replace:
+        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+        glfwSetCursorPosCallback(window, mouse_callback);
+
+        // tell GLFW to capture our mouse
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+=== task: zoom
+--- file: main.cpp
+--- find:
+float lastY =  HEIGHT / 2.0f;
+--- replace:
+float lastY =  HEIGHT / 2.0f;
+float fov   =  45.0f;
+--- file: main.cpp
+--- find:
+// The same layout as the push constant block in the vertex shader: the model matrix of one draw.
+--- replace:
+// glfw: whenever the mouse scroll wheel scrolls, this callback is called
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    fov -= static_cast<float>(yoffset);
+    if (fov < 1.0f) {
+        fov = 1.0f;
+    }
+    if (fov > 45.0f) {
+        fov = 45.0f;
+    }
+}
+
+// The same layout as the push constant block in the vertex shader: the model matrix of one draw.
+--- file: main.cpp
+--- find:
+        glfwSetCursorPosCallback(window, mouse_callback);
+--- replace:
+        glfwSetCursorPosCallback(window, mouse_callback);
+        glfwSetScrollCallback(window, scroll_callback);
+--- file: main.cpp
+--- find:
+        ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 100.0f);
+--- replace:
+        ubo.proj = glm::perspective(glm::radians(fov), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 100.0f);

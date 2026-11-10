@@ -1,0 +1,73 @@
+{
+  "title": "Mesh",
+  "tasks": {
+    "vertex-struct": {
+      "text": { "opengl": "Definiera i `mesh.h` `struct Vertex` med `glm::vec3 Position`, `glm::vec3 Normal` och `glm::vec2 TexCoords`, och `struct Texture` med `unsigned int id`, `std::string type` och `std::string path`." },
+      "hint": { "opengl": "En structs fält ligger efter varandra i minnet, så en array av `Vertex` är exakt den sammanflätade buffer som OpenGL behöver (8 floats per vertex). `type` blir `\"texture_diffuse\"` eller `\"texture_specular\"`." }
+    },
+    "mesh-data": {
+      "text": {
+        "opengl": "Ge `Mesh` sin data – `std::vector<Vertex> vertices`, `std::vector<unsigned int> indices`, `std::vector<Texture> textures` och `unsigned int VAO` – och en konstruktor som tar emot de tre vektorerna, sparar dem och anropar `setupMesh()`.",
+        "vulkan": "Lägg till meshens data som medlemmar: `std::vector<Vertex> vertices` – tills vidare en testkvadrat med 4 vertexar i (±1, ±1, 0), normal (0, 0, 1), texturkoordinater (0, 1) nere till vänster … (0, 0) uppe till vänster, material 0 – och `std::vector<uint32_t> indices = { 0, 1, 2, 2, 3, 0 }`."
+      },
+      "hint": {
+        "opengl": "`Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures)` – parametrarna har samma namn som medlemmarna, så spara dem med `this->vertices = vertices;` och så vidare.",
+        "vulkan": "Inte `const` den här gången: nästa kapitel fyller vektorerna från en fil. Och inte tomma: Vulkan kan inte skapa en buffer med storleken 0."
+      }
+    },
+    "setup-mesh": {
+      "text": {
+        "opengl": "Fyll i `setupMesh()`: skapa VAO, VBO och EBO (`unsigned int VBO, EBO;` som privata medlemmar), ladda upp vertexarna och indexen, och sätt de tre vertex attribute pointers med stride `sizeof(Vertex)` och offset från `offsetof`.",
+        "d3d12": "Skapa i `SetupMesh` vertex buffern och index buffern i upload heaps, kopiera in `vertices` och `indices`, och fyll i `m_vertexBufferView` och `m_indexBufferView`."
+      },
+      "hint": {
+        "opengl": "`glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);` – samma sak för `GL_ELEMENT_ARRAY_BUFFER` med `indices`. Normalen börjar på `(void*)offsetof(Vertex, Normal)`, texturkoordinaterna på `(void*)offsetof(Vertex, TexCoords)`.",
+        "d3d12": "Storlekarna är `vertices.size() * sizeof(Vertex)` och `indices.size() * sizeof(UINT)`; kopiera med `memcpy(p, vertices.data(), size)` mellan `Map` och `Unmap`. Index buffer-vyns format är `DXGI_FORMAT_R32_UINT`."
+      }
+    },
+    "draw-mesh": {
+      "text": {
+        "opengl": "Fyll i `Draw(Shader &shader)`: bind varje textur till en egen texturenhet, peka samplern med dess namn (`texture_diffuse1`, `texture_diffuse2`, …, `texture_specular1`, …) på den enheten, och rita sedan meshens trianglar med `glDrawElements`.",
+        "d3d12": "Fyll i `Mesh::Draw`: sätt root parameter 2 till meshens texturer (`m_srvHandle`), bind vertex buffern och index buffern och rita alla `indices`."
+      },
+      "hint": {
+        "opengl": "Räkna diffuse-, specular- och normal-texturer var för sig (`diffuseNr`, `specularNr`, `normalNr`, från 1); för textur `i`: `glActiveTexture(GL_TEXTURE0 + i)`, `glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i)`, `glBindTexture(GL_TEXTURE_2D, textures[i].id)`. Sedan `glBindVertexArray(VAO)` och `glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0)`.",
+        "d3d12": "`commandList->SetGraphicsRootDescriptorTable(2, m_srvHandle);`, `IASetVertexBuffers(0, 1, &m_vertexBufferView)`, `IASetIndexBuffer(&m_indexBufferView)`, `DrawIndexedInstanced(static_cast<UINT>(indices.size()), 1, 0, 0, 0)`. Inget ritas än: ingen `Mesh` finns förrän i kapitlet Model."
+      }
+    },
+    "vertex": {
+      "text": {
+        "vulkan": "Ge `Vertex` allt som en modells vertex har: `glm::vec3 pos; glm::vec3 normal; glm::vec2 texCoord; uint32_t materialIndex;`, fyra attributbeskrivningar (location 0–3, materialindexet som `VK_FORMAT_R32_UINT`) och attributantalet 4 till `createPipeline`; i shadrarna indata på location 1–3, `fragTexCoord` vidareskickad och `outColor = vec4(fragTexCoord, 0.0, 1.0);`.",
+        "d3d12": "Definiera en meshs data: `struct Vertex` med `XMFLOAT3 position`, `XMFLOAT3 normal`, `XMFLOAT2 texCoord`, och `struct Texture` med `ComPtr<ID3D12Resource> resource`, `std::string type`, `std::string path`."
+      },
+      "hint": {
+        "vulkan": "Som kubens attribut, med `offsetof(Vertex, …)`; ett heltalsattribut har ett heltalsformat (`R32_UINT`) och shadertypen `uint`: `layout(location = 3) in uint inMaterialIndex;`.",
+        "d3d12": "Fälten i `Vertex` i den ordningen är exakt input layouten: 12 + 12 + 8 byte, POSITION på 0, NORMAL på 12, TEXCOORD på 24."
+      }
+    },
+    "vertex-equality": {
+      "text": { "vulkan": "Gör vertexar jämförbara och hashbara: `bool operator==(const Vertex& other) const` som jämför alla fyra medlemmarna, och `template<> struct hash<Vertex>` i `namespace std` som kombinerar medlemmarnas hashvärden; slå på glm:s hashfunktioner med `#define GLM_ENABLE_EXPERIMENTAL` före `<glm/glm.hpp>` och `#include <glm/gtx/hash.hpp>`." },
+      "hint": { "vulkan": "Två lika vertexar måste ge samma hashvärde; en `std::unordered_map<Vertex, uint32_t>` behöver båda. vulkan-tutorials skiftningar och xor, med `hash<uint32_t>()(vertex.materialIndex) << 1` sist." }
+    },
+    "vertex-buffer": {
+      "text": { "vulkan": "Fyll i `createVertexBuffer()`: en host-visible staging buffer (`TRANSFER_SRC`), `memcpy` av vertexarna in i den, en `DEVICE_LOCAL` vertex buffer (`TRANSFER_DST | VERTEX_BUFFER`), `copyBuffer(stagingBuffer, vertexBuffer, bufferSize)`, och förstör sedan staging buffern; skriv `copyBuffer` och förstör vertex buffern i `cleanup()`." },
+      "hint": { "vulkan": "`createBuffer` skapar båda buffrarna; `copyBuffer` spelar in `vkCmdCopyBuffer` mellan `beginSingleTimeCommands()` och `endSingleTimeCommands(commandBuffer)`." }
+    },
+    "index-buffer": {
+      "text": { "vulkan": "Gör likadant för indexen i `createIndexBuffer()` (`VK_BUFFER_USAGE_INDEX_BUFFER_BIT`, storlek `sizeof(indices[0]) * indices.size()`), och förstör index buffern i `cleanup()`." },
+      "hint": { "vulkan": "Bara datan och användningsflaggan skiljer sig från vertex buffern." }
+    },
+    "draw": {
+      "text": { "vulkan": "Bind i `recordCommandBuffer()` vertex buffern och index buffern (`VK_INDEX_TYPE_UINT32`), och rita efter push constanten alla index med `vkCmdDrawIndexed`." },
+      "hint": { "vulkan": "`vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);` och `vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);` – testkvadraten syns i texturkoordinatfärger." }
+    },
+    "mesh-class": {
+      "text": { "d3d12": "Lägg till `class Mesh`: publika `vertices`, `indices` (`UINT`) och `textures`; en konstruktor som också tar emot devicen och meshens CPU- och GPU-handtag i heapen, sparar allt (GPU-handtaget i `m_srvHandle`) och anropar `SetupMesh(device, srvCpuHandle)`; `Draw(ID3D12GraphicsCommandList*)`; privata buffrar, vyer och `SetupMesh` (kropparna förblir TODO:er)." },
+      "hint": { "d3d12": "Som learnopengl: `this->vertices = vertices;` osv., och sätt sedan upp buffrarna. CPU-handtaget är där meshen skriver sina texturvyer; GPU-handtaget är det som `Draw` ger command listen." }
+    },
+    "mesh-textures": {
+      "text": { "d3d12": "Skapa i `SetupMesh` meshens två shader resource views vid `srvHandle`: plats 0 den första `\"texture_diffuse\"`, plats 1 den första `\"texture_specular\"` (en null-vy om det inte finns någon)." },
+      "hint": { "d3d12": "Loopa över `const char* slotTypes[] = { \"texture_diffuse\", \"texture_specular\" };`, hitta texturen med den `type`, `device->CreateShaderResourceView(resource, &srvDesc, srvHandle);` (R8G8B8A8_UNORM, TEXTURE2D, 1 mipnivå), och sedan `srvHandle.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));`." }
+    }
+  }
+}

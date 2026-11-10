@@ -1,0 +1,170 @@
+=== task: info-queue
+--- file: main.cpp
+--- find:
+// TODO: CheckDebugMessages_(infoQueue, file, line): print the messages the debug layer has stored in the info queue (severity, ID, description, the file and the line), then empty it; and the CheckDebugMessages() macro
+--- replace:
+// Prints the messages the debug layer has stored in the info queue since the last call,
+// each with its severity, its ID, the file and the line of the check, and empties the
+// queue: the Direct3D 12 version of learnopengl's glCheckError_.
+void CheckDebugMessages_(ID3D12InfoQueue* infoQueue, const char* file, int line)
+{
+    if (infoQueue == nullptr)
+        return;    // no debug layer (a release build): no messages
+
+    UINT64 count = infoQueue->GetNumStoredMessages();
+    for (UINT64 i = 0; i < count; i++)
+    {
+        // first ask how big the message is, then get it into memory of that size
+        SIZE_T messageLength = 0;
+        infoQueue->GetMessage(i, nullptr, &messageLength);
+        D3D12_MESSAGE* message = static_cast<D3D12_MESSAGE*>(malloc(messageLength));
+        infoQueue->GetMessage(i, message, &messageLength);
+
+        std::string text = std::string(SeverityName(message->Severity)) + " #" + std::to_string(message->ID) + ": "
+            + message->pDescription + " | " + file + " (" + std::to_string(line) + ")\n";
+        OutputDebugStringA(text.c_str());    // the debugger's Output window
+
+        free(message);
+    }
+    infoQueue->ClearStoredMessages();
+}
+#define CheckDebugMessages() CheckDebugMessages_(m_infoQueue.Get(), __FILE__, __LINE__)
+--- file: main.cpp
+--- find:
+    // TODO: get the debug layer's info queue from the device (m_device.As(&m_infoQueue))
+--- replace:
+    // The info queue: where the debug layer keeps its messages. Only there when the debug
+    // layer is (otherwise As fails and m_infoQueue stays empty).
+    m_device.As(&m_infoQueue);
+--- file: main.cpp
+--- find:
+    LoadTexture("wood.png", m_texture, textureUploadHeap, 1);
+    // TODO: print the debug layer's messages here (CheckDebugMessages())
+--- replace:
+    LoadTexture("wood.png", m_texture, textureUploadHeap, 1);
+    CheckDebugMessages();
+--- file: main.cpp
+--- find:
+    m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+    // TODO: print the debug layer's messages here (CheckDebugMessages())
+
+    // Present the frame.
+--- replace:
+    m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+    CheckDebugMessages();
+
+    // Present the frame.
+
+=== task: set-name
+--- file: main.cpp
+--- find:
+        // TODO: name the heaps for the debug layer's messages (SetName)
+--- replace:
+        // Names for the debug layer's messages (and for graphics debuggers like PIX).
+        m_rtvHeap->SetName(L"RTV heap");
+        m_dsvHeap->SetName(L"DSV heap");
+        m_cbvSrvHeap->SetName(L"CBV/SRV heap");
+--- file: main.cpp
+--- find:
+            // TODO: name the render target (SetName)
+--- replace:
+            std::wstring name = L"Render target " + std::to_wstring(n);
+            m_renderTargets[n]->SetName(name.c_str());
+--- file: main.cpp
+--- find:
+    // TODO: name the root signature, the pipeline state, the buffers, the texture and the depth buffer (SetName)
+--- replace:
+    // Names for the debug layer's messages (and for graphics debuggers like PIX).
+    m_rootSignature->SetName(L"Root signature");
+    m_pipelineState->SetName(L"Cube pipeline state");
+    m_vertexBuffer->SetName(L"Cube vertex buffer");
+    m_texture->SetName(L"wood.png");
+    m_constantBuffer->SetName(L"Scene constant buffer");
+    m_depthStencil->SetName(L"Depth buffer");
+
+=== task: descriptor-heaps
+--- file: main.cpp
+--- find:
+    m_commandList->SetGraphicsRootDescriptorTable(1,
+--- replace:
+    ID3D12DescriptorHeap* ppHeaps[] = { m_cbvSrvHeap.Get() };
+    m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+    m_commandList->SetGraphicsRootDescriptorTable(1,
+
+=== task: debug-callback
+--- file: main.cpp
+--- find:
+// TODO: D3D12DebugOutput(category, severity, id, description, context): the function the debug layer calls with each message (print its ID, description, category and severity)
+--- replace:
+// The function the debug layer calls with each message, right when the call that causes it
+// is made (ID3D12InfoQueue1::RegisterMessageCallback): the Direct3D 12 version of
+// learnopengl's glDebugOutput.
+void CALLBACK D3D12DebugOutput(D3D12_MESSAGE_CATEGORY category,
+                               D3D12_MESSAGE_SEVERITY severity,
+                               D3D12_MESSAGE_ID id,
+                               LPCSTR description,
+                               void* context)
+{
+    std::string text = "---------------\nDebug message (" + std::to_string(id) + "): " + description + "\n";
+
+    text += "Category: ";
+    switch (category)
+    {
+        case D3D12_MESSAGE_CATEGORY_APPLICATION_DEFINED:   text += "Application defined"; break;
+        case D3D12_MESSAGE_CATEGORY_MISCELLANEOUS:         text += "Miscellaneous"; break;
+        case D3D12_MESSAGE_CATEGORY_INITIALIZATION:        text += "Initialization"; break;
+        case D3D12_MESSAGE_CATEGORY_CLEANUP:               text += "Cleanup"; break;
+        case D3D12_MESSAGE_CATEGORY_COMPILATION:           text += "Compilation"; break;
+        case D3D12_MESSAGE_CATEGORY_STATE_CREATION:        text += "State creation"; break;
+        case D3D12_MESSAGE_CATEGORY_STATE_SETTING:         text += "State setting"; break;
+        case D3D12_MESSAGE_CATEGORY_STATE_GETTING:         text += "State getting"; break;
+        case D3D12_MESSAGE_CATEGORY_RESOURCE_MANIPULATION: text += "Resource manipulation"; break;
+        case D3D12_MESSAGE_CATEGORY_EXECUTION:             text += "Execution"; break;
+        case D3D12_MESSAGE_CATEGORY_SHADER:                text += "Shader"; break;
+        default:                                           text += "Other"; break;
+    }
+    text += "\nSeverity: " + std::string(SeverityName(severity)) + "\n\n";
+
+    OutputDebugStringA(text.c_str());    // the debugger's Output window
+}
+--- file: main.cpp
+--- find:
+    // TODO: with a debugger attached, break on errors (SetBreakOnSeverity); register D3D12DebugOutput with ID3D12InfoQueue1::RegisterMessageCallback
+--- replace:
+    if (m_infoQueue)
+    {
+        // With a debugger attached, stop at the call that causes an error, like at a
+        // breakpoint: the call stack then shows the line. (Without a debugger, the break
+        // would end the program.)
+        if (IsDebuggerPresent())
+        {
+            m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
+            m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
+        }
+
+        // Newer versions of Direct3D 12 (Windows 11, or the Agility SDK) call a function
+        // of ours with each message, right when it happens.
+        ComPtr<ID3D12InfoQueue1> infoQueue1;
+        if (SUCCEEDED(m_infoQueue.As(&infoQueue1)))
+        {
+            DWORD callbackCookie = 0;
+            infoQueue1->RegisterMessageCallback(D3D12DebugOutput, D3D12_MESSAGE_CALLBACK_FLAG_NONE, nullptr, &callbackCookie);
+        }
+    }
+
+=== task: fix-texture
+--- file: main.cpp
+--- find:
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+--- replace:
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+
+=== task: shader-output
+--- file: debugging.hlsl
+--- find:
+    return tex.Sample(wrapSampler, input.texCoord);
+--- replace:
+    // debugging shader output: show the texture coordinates as a colour (u = red, v = green)
+    return float4(input.texCoord, 0.0f, 1.0f);
+    // return tex.Sample(wrapSampler, input.texCoord);

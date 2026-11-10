@@ -1,0 +1,53 @@
+{
+  "title": "Multiple lights",
+  "tasks": {
+    "dir-light": {
+      "text": {
+        "opengl": "Add the directional light: a `DirLight` struct, `uniform DirLight dirLight;`, `vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)` (prototype before `main`, body after it) and phase 1 `vec3 result = CalcDirLight(dirLight, norm, viewDir);`; set direction (-0.2, -1.0, -0.3), ambient 0.05, diffuse 0.4, specular 0.5.",
+        "vulkan": "Add the directional light: a `DirLight` struct, `DirLight dirLight;` at the end of the uniform block, `CalcDirLight` (prototype before `main`, body after it) and phase 1 `vec3 result = CalcDirLight(ubo.dirLight, norm, viewDir);`; in C++ `struct DirLight` with padding floats at the end of `UniformBufferObject`, direction (-0.2, -1.0, -0.3), ambient 0.05, diffuse 0.4, specular 0.5.",
+        "d3d12": "Add the directional light: a `DirLight` struct in HLSL and C++, `DirLight dirLight;` at the end of the cbuffer and of `SceneConstantBuffer`, `float3 CalcDirLight(DirLight light, float3 normal, float3 viewDir, float2 texCoord)` before `PSMain` and phase 1; in `OnUpdate` direction (-0.2, -1.0, -0.3), ambient 0.05, diffuse 0.4, specular 0.5."
+      },
+      "hint": {
+        "opengl": "The function does what the directional light of Light casters did and returns `ambient + diffuse + specular`. `lightingShader.setVec3(\"dirLight.direction\", -0.2f, -1.0f, -0.3f);` …",
+        "vulkan": "The function does what the directional light of Light casters did and returns the sum of the three terms. C++: a padding float after each `glm::vec3` – 64 bytes.",
+        "d3d12": "The function does what the directional light of Light casters did, sampling with `texCoord`. C++: `XMFLOAT3 direction; float padding0; XMFLOAT3 ambient; float padding1; …` – 64 bytes."
+      }
+    },
+    "point-lights": {
+      "text": {
+        "opengl": "Add four point lights: a `PointLight` struct, `#define NR_POINT_LIGHTS 4`, `uniform PointLight pointLights[NR_POINT_LIGHTS];`, `CalcPointLight` with attenuation and a phase 2 loop; in `main.cpp` learnopengl's `pointLightPositions` and, for each light, position, ambient 0.05, diffuse 0.8, specular 1.0, constant 1.0, linear 0.09, quadratic 0.032.",
+        "vulkan": "Add four point lights: a `PointLight` struct, `#define NR_POINT_LIGHTS 4`, `PointLight pointLights[NR_POINT_LIGHTS];` in the block, `CalcPointLight` and a phase 2 loop; in C++ the global `pointLightPositions`, `struct PointLight` (80 bytes), `PointLight pointLights[4];` and a loop setting position, ambient 0.05, diffuse 0.8, specular 1.0, constant 1.0, linear 0.09, quadratic 0.032.",
+        "d3d12": "Add four point lights: a `PointLight` struct (`constantTerm`, `linearTerm`, `quadraticTerm`), `#define NR_POINT_LIGHTS 4`, `PointLight pointLights[NR_POINT_LIGHTS];` in the cbuffer, `CalcPointLight` and a phase 2 loop; in `main.cpp` the C++ `PointLight`, `PointLight pointLights[4];`, a global `pointLightPositions` and each light's position, ambient 0.05, diffuse 0.8, specular 1.0, terms 1.0, 0.09 and 0.032."
+      },
+      "hint": {
+        "opengl": "Array elements and their members are set by name: `lightingShader.setVec3(\"pointLights[0].position\", pointLightPositions[0]);`. Positions: (0.7, 0.2, 2.0), (2.3, -3.3, -4.0), (-4.0, 2.0, -12.0), (0.0, 0.0, -3.0).",
+        "vulkan": "The C++ array needs the shader's stride: `float pad1; float pad2;` after `quadratic` and a padding float after each colour make `sizeof(PointLight)` 80, the std140 stride.",
+        "d3d12": "`constantBufferData.pointLights[0].position = pointLightPositions[0];` – C++ layout as Light casters' point light: `XMFLOAT3 position; float constantTerm; float linearTerm; float quadraticTerm; float padding0[2];` then the colours (80 bytes)."
+      }
+    },
+    "spot-light": {
+      "text": {
+        "opengl": "Add the flashlight: a `SpotLight` struct, `uniform SpotLight spotLight;`, `CalcSpotLight` (attenuation × soft-edge intensity) and phase 3; set position `cameraPos`, direction `cameraFront`, ambient 0, diffuse 1, specular 1, constant 1, linear 0.09, quadratic 0.032, cutOff cos(12.5°), outerCutOff cos(15°).",
+        "vulkan": "Add the flashlight: a `SpotLight` struct, `SpotLight spotLight;` in the block, `CalcSpotLight` (attenuation × soft-edge intensity) and phase 3; in C++ `struct SpotLight` (96 bytes) and position `cameraPos`, direction `cameraFront`, ambient 0, diffuse 1, specular 1, constant 1, linear 0.09, quadratic 0.032, cutOff cos(12.5°), outerCutOff cos(15°).",
+        "d3d12": "Add the flashlight: a `SpotLight` struct in HLSL and C++, `SpotLight spotLight;` in the cbuffer, `CalcSpotLight` (attenuation × soft-edge intensity) and phase 3; in `OnUpdate` position `cameraPos`, direction `cameraFront`, ambient 0, diffuse 1, specular 1, terms 1, 0.09, 0.032, cutOff cos(12.5°), outerCutOff cos(15°)."
+      },
+      "hint": {
+        "opengl": "It's the soft spotlight of Light casters as a function: `intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0)`, and all three terms are multiplied by `attenuation * intensity`.",
+        "vulkan": "It's the soft spotlight of Light casters as a function. C++: `pad1` after `position`; with the terms right after the cut-offs, `ambient` starts at 48 without more padding.",
+        "d3d12": "`XMStoreFloat3(&constantBufferData.spotLight.position, cameraPos);`, `std::cos(XMConvertToRadians(12.5f))`. C++ layout as Light casters' final light: `position, padding0, direction, cutOff, outerCutOff, constantTerm, linearTerm, quadraticTerm, ambient, …`."
+      }
+    },
+    "lamps": {
+      "text": {
+        "opengl": "Draw a lamp at each point light: after the containers, use `lightCubeShader` with the projection and view, bind `lightCubeVAO`, and loop over the four `pointLightPositions`, drawing a cube scaled by 0.2 at each.",
+        "vulkan": "Draw a lamp at each point light: in `recordCommandBuffer()` after the containers bind `lightCubePipeline` and, in a loop over the four `pointLightPositions`, push a model matrix (translate, then scale by 0.2) and draw the 36 vertices.",
+        "d3d12": "Draw a lamp at each point light: after the containers' loop switch to `m_lightCubePipelineState` and, in a loop over the four `pointLightPositions`, set a model matrix (scale by 0.2, then translate) as root constants and draw 36 vertices."
+      },
+      "hint": {
+        "opengl": "`model = glm::mat4(1.0f); model = glm::translate(model, pointLightPositions[i]); model = glm::scale(model, glm::vec3(0.2f));` then `lightCubeShader.setMat4(\"model\", model); glDrawArrays(GL_TRIANGLES, 0, 36);`",
+        "vulkan": "One `vkCmdBindPipeline` before the loop; in the loop only the model matrix changes: `constants.model = model; vkCmdPushConstants(…);` then `vkCmdDraw`.",
+        "d3d12": "`XMMATRIX model = XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z);` – store it transposed in `modelConstants.model`, then `SetGraphicsRoot32BitConstants(0, …)` and `DrawInstanced(36, 1, 0, 0)`."
+      }
+    }
+  }
+}

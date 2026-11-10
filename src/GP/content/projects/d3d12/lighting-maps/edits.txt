@@ -1,0 +1,301 @@
+=== task: texcoords
+--- file: main.cpp
+--- find:
+            { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+            // TODO: the texture coordinates (TEXCOORD, 2 floats after the normal)
+--- replace:
+            { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+--- file: lighting_maps.hlsl
+--- find:
+    float3 normal : NORMAL;
+};
+--- replace:
+    float3 normal : NORMAL;
+    float2 texCoord : TEXCOORD;
+};
+--- file: lighting_maps.hlsl
+--- find:
+PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL)
+--- replace:
+PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL, float2 texCoord : TEXCOORD)
+--- file: lighting_maps.hlsl
+--- find:
+    result.normal = mul(float4(normal, 0.0f), normalMatrix).xyz;
+--- replace:
+    result.normal = mul(float4(normal, 0.0f), normalMatrix).xyz;
+    result.texCoord = texCoord;
+
+=== task: diffuse-map
+--- file: lighting_maps.hlsl
+--- find:
+// The surface of the object: the colours it reflects under ambient, diffuse and
+// specular light, and how sharp its highlight is.
+struct Material
+{
+    float3 ambient;
+    float3 diffuse;
+    float3 specular;
+    float shininess;
+};
+--- replace:
+// The material's diffuse colour is a texture: register t0, in the descriptor table of
+// root parameter 2. (Textures cannot be members of a cbuffer or its structs.)
+Texture2D diffuseMap : register(t0);
+// The sampler: register s0, the static sampler of the root signature.
+SamplerState wrapSampler : register(s0);
+
+// The rest of the material.
+struct Material
+{
+    float3 specular;
+    float shininess;
+};
+--- file: lighting_maps.hlsl
+--- find:
+    float3 ambient = light.ambient * material.ambient;
+--- replace:
+    float3 ambient = light.ambient * diffuseMap.Sample(wrapSampler, input.texCoord).rgb;
+--- file: lighting_maps.hlsl
+--- find:
+    float3 diffuse = light.diffuse * (diff * material.diffuse);
+--- replace:
+    float3 diffuse = light.diffuse * diff * diffuseMap.Sample(wrapSampler, input.texCoord).rgb;
+--- file: main.cpp
+--- find:
+    struct Material
+    {
+        XMFLOAT3 ambient;
+        float padding0;
+        XMFLOAT3 diffuse;
+        float padding1;
+        XMFLOAT3 specular;
+        float shininess;
+    };
+--- replace:
+    struct Material
+    {
+        XMFLOAT3 specular;
+        float shininess;
+    };
+--- file: main.cpp
+--- find:
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+--- replace:
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+    ComPtr<ID3D12Resource> m_diffuseMap;
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 1;    // one CBV (no textures)
+--- replace:
+        cbvSrvHeapDesc.NumDescriptors = 2;    // one CBV + one SRV per texture
+--- file: main.cpp
+--- find:
+        // A descriptor range: 1 CBV at register b1, for the table of root parameter 1.
+        CD3DX12_DESCRIPTOR_RANGE ranges[1];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+--- replace:
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1, and
+        // the SRVs of the textures from register t0 on (1 SRV: t0), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+--- file: main.cpp
+--- find:
+        CD3DX12_ROOT_PARAMETER rootParameters[2];
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+--- replace:
+        // Root parameter 2: a descriptor table with the textures' SRVs, for the pixel shader.
+        CD3DX12_ROOT_PARAMETER rootParameters[3];
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+
+        // A static sampler is part of the root signature itself (no descriptor needed).
+        // Sampler s0: linear filtering; texture coordinates outside 0..1 wrap around.
+        D3D12_STATIC_SAMPLER_DESC samplers[1] = {};
+        samplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+        samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[0].MipLODBias = 0;
+        samplers[0].MaxAnisotropy = 0;
+        samplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+        samplers[0].BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+        samplers[0].MinLOD = 0.0f;
+        samplers[0].MaxLOD = D3D12_FLOAT32_MAX;
+        samplers[0].ShaderRegister = 0;
+        samplers[0].RegisterSpace = 0;
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init(_countof(rootParameters), rootParameters, _countof(samplers), samplers, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+--- file: main.cpp
+--- find:
+    // TODO: load the textures with LoadTexture (the diffuse map: container2.png, into heap slot 1)
+--- replace:
+    // Load the textures: the SRVs go into the heap after the CBV (slot 0), in the order of
+    // their registers t0, t1 ... Their upload buffers must stay alive until the command list
+    // that copies from them has executed (the end of this method waits for it).
+    ComPtr<ID3D12Resource> diffuseMapUploadHeap;
+    LoadTexture("container2.png", m_diffuseMap, diffuseMapUploadHeap, 1);
+--- file: main.cpp
+--- find:
+    // material properties
+    constantBufferData.material.ambient = XMFLOAT3(1.0f, 0.5f, 0.31f);
+    constantBufferData.material.diffuse = XMFLOAT3(1.0f, 0.5f, 0.31f);
+    constantBufferData.material.specular = XMFLOAT3(0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
+    constantBufferData.material.shininess = 32.0f;
+--- replace:
+    // material properties
+    constantBufferData.material.specular = XMFLOAT3(0.5f, 0.5f, 0.5f);
+    constantBufferData.material.shininess = 64.0f;
+--- file: main.cpp
+--- find:
+    // TODO: root parameter 2: the textures' descriptor table, from heap slot 1
+--- replace:
+    // Root parameter 2: the textures' table, starting at the heap's second descriptor (slot 1).
+    CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
+
+=== task: specular-map
+--- file: lighting_maps.hlsl
+--- find:
+// The material's diffuse colour is a texture: register t0, in the descriptor table of
+// root parameter 2. (Textures cannot be members of a cbuffer or its structs.)
+Texture2D diffuseMap : register(t0);
+--- replace:
+// The material's diffuse colour and specular strength are textures: registers t0 and t1,
+// in the descriptor table of root parameter 2. (Textures cannot be members of a cbuffer
+// or its structs.)
+Texture2D diffuseMap : register(t0);
+Texture2D specularMap : register(t1);
+--- file: lighting_maps.hlsl
+--- find:
+struct Material
+{
+    float3 specular;
+    float shininess;
+};
+--- replace:
+struct Material
+{
+    float shininess;
+};
+--- file: lighting_maps.hlsl
+--- find:
+    float3 specular = light.specular * (spec * material.specular);
+--- replace:
+    float3 specular = light.specular * spec * specularMap.Sample(wrapSampler, input.texCoord).rgb;
+--- file: main.cpp
+--- find:
+    struct Material
+    {
+        XMFLOAT3 specular;
+        float shininess;
+    };
+--- replace:
+    struct Material
+    {
+        float shininess;
+        float padding0[3];
+    };
+--- file: main.cpp
+--- find:
+    // The material: what the shaders see as struct Material. Laid out as HLSL does:
+    // each float3 starts a new 16-byte row, shininess fills the row of specular.
+--- replace:
+    // The material: what the shaders see as struct Material. Laid out as HLSL does: the
+    // next member (a struct) starts a new 16-byte row, so the row is padded to 16 bytes.
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_diffuseMap;
+--- replace:
+    ComPtr<ID3D12Resource> m_diffuseMap;
+    ComPtr<ID3D12Resource> m_specularMap;
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 2;    // one CBV + one SRV per texture
+--- replace:
+        cbvSrvHeapDesc.NumDescriptors = 3;    // one CBV + one SRV per texture
+--- file: main.cpp
+--- find:
+        // the SRVs of the textures from register t0 on (1 SRV: t0), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+--- replace:
+        // the SRVs of the textures from register t0 on (2 SRVs: t0, t1), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
+--- file: main.cpp
+--- find:
+    LoadTexture("container2.png", m_diffuseMap, diffuseMapUploadHeap, 1);
+--- replace:
+    LoadTexture("container2.png", m_diffuseMap, diffuseMapUploadHeap, 1);
+    ComPtr<ID3D12Resource> specularMapUploadHeap;
+    LoadTexture("container2_specular.png", m_specularMap, specularMapUploadHeap, 2);
+--- file: main.cpp
+--- find:
+    constantBufferData.material.specular = XMFLOAT3(0.5f, 0.5f, 0.5f);
+    constantBufferData.material.shininess = 64.0f;
+--- replace:
+    constantBufferData.material.shininess = 64.0f;
+
+=== task: emission
+--- file: lighting_maps.hlsl
+--- find:
+// The material's diffuse colour and specular strength are textures: registers t0 and t1,
+// in the descriptor table of root parameter 2. (Textures cannot be members of a cbuffer
+// or its structs.)
+Texture2D diffuseMap : register(t0);
+Texture2D specularMap : register(t1);
+--- replace:
+// The material's diffuse colour, specular strength and emitted light are textures:
+// registers t0, t1 and t2, in the descriptor table of root parameter 2. (Textures cannot
+// be members of a cbuffer or its structs.)
+Texture2D diffuseMap : register(t0);
+Texture2D specularMap : register(t1);
+Texture2D emissionMap : register(t2);
+--- file: lighting_maps.hlsl
+--- find:
+    float3 result = ambient + diffuse + specular;
+--- replace:
+    // emission
+    float3 emission = emissionMap.Sample(wrapSampler, input.texCoord).rgb;
+
+    float3 result = ambient + diffuse + specular + emission;
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_specularMap;
+--- replace:
+    ComPtr<ID3D12Resource> m_specularMap;
+    ComPtr<ID3D12Resource> m_emissionMap;
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 3;    // one CBV + one SRV per texture
+--- replace:
+        cbvSrvHeapDesc.NumDescriptors = 4;    // one CBV + one SRV per texture
+--- file: main.cpp
+--- find:
+        // the SRVs of the textures from register t0 on (2 SRVs: t0, t1), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
+--- replace:
+        // the SRVs of the textures from register t0 on (3 SRVs: t0, t1, t2), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0);
+--- file: main.cpp
+--- find:
+    LoadTexture("container2_specular.png", m_specularMap, specularMapUploadHeap, 2);
+--- replace:
+    LoadTexture("container2_specular.png", m_specularMap, specularMapUploadHeap, 2);
+    ComPtr<ID3D12Resource> emissionMapUploadHeap;
+    LoadTexture("matrix.png", m_emissionMap, emissionMapUploadHeap, 3);

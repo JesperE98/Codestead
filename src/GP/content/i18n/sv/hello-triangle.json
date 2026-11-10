@@ -1,0 +1,157 @@
+{
+  "title": "Hello Triangle",
+  "tasks": {
+    "vertex-buffer": {
+      "text": {
+        "opengl": "Lägg triangelns tre vertexar i `float vertices[]`, kopiera dem till ett vertex buffer object (`glGenBuffers`, `glBindBuffer(GL_ARRAY_BUFFER, VBO)`, `glBufferData`) och ta bort det i slutet med `glDeleteBuffers`.",
+        "vulkan": "Skapa vertexbufferten: lägg till `vertexBuffer` och `vertexBufferMemory`, skriv `createVertexBuffer()` (host-visible, koherent minne; mappa, `memcpy`, avmappa) och `findMemoryType()`, anropa den efter `createCommandPool()` och förstör båda i `cleanup()`.",
+        "d3d12": "Skapa vertexbufferten: de tre vertexarna (överst, nere till höger, nere till vänster) i en committed resource i en upload heap, kopierade med `Map`/`memcpy`/`Unmap`, och fyll i `m_vertexBufferView`."
+      },
+      "hint": {
+        "opengl": "Vänster (-0.5, -0.5, 0.0), höger (0.5, -0.5, 0.0), överst (0.0, 0.5, 0.0). Använd `GL_STATIC_DRAW`: datan sätts en gång och ritas många gånger.",
+        "vulkan": "`vkGetBufferMemoryRequirements` talar om vilka minnestyper som passar bufferten; `findMemoryType` väljer en av dem som också har `HOST_VISIBLE | HOST_COHERENT`.",
+        "d3d12": "Ha `CD3DX12_HEAP_PROPERTIES` och `CD3DX12_RESOURCE_DESC::Buffer(...)` i lokala variabler och skicka deras adresser. Starttillstånd: `D3D12_RESOURCE_STATE_GENERIC_READ`; stride `sizeof(Vertex)`."
+      }
+    },
+    "vertex-shader": {
+      "text": {
+        "opengl": "Skriv `vertexShaderSource` (GLSL 330 core, `layout (location = 0) in vec3 aPos`, `gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0)`), skapa och kompilera sedan vertex shadern och kontrollera kompileringsfel.",
+        "d3d12": "Skriv i `shaders.hlsl` `struct PSInput { float4 position : SV_POSITION; };` och `PSInput VSMain(float4 position : POSITION)`, som kopierar positionen till resultatet."
+      },
+      "hint": {
+        "opengl": "`glCreateShader(GL_VERTEX_SHADER)`, `glShaderSource`, `glCompileShader`; kontrollera med `glGetShaderiv(..., GL_COMPILE_STATUS, &success)` och skriv ut `glGetShaderInfoLog` om det misslyckas.",
+        "d3d12": "`POSITION` motsvarar semantiknamnet i input layouten; `SV_POSITION` är positionen i clip space som rasterizern behöver. Den saknade `w` blir 1.0."
+      }
+    },
+    "fragment-shader": {
+      "text": {
+        "opengl": "Skriv `fragmentShaderSource` (utdata `out vec4 FragColor`, orange `vec4(1.0f, 0.5f, 0.2f, 1.0f)`), skapa och kompilera sedan fragment shadern med samma felkontroll."
+      },
+      "hint": {
+        "opengl": "Samma steg som för vertex shadern, med `GL_FRAGMENT_SHADER`; återanvänd `success` och `infoLog`."
+      }
+    },
+    "shader-program": {
+      "text": {
+        "opengl": "Länka båda shaderna till `shaderProgram` (`glCreateProgram`, två `glAttachShader`, `glLinkProgram`), kontrollera länkningsfel, ta bort de två shaderna och ta bort programmet i slutet med `glDeleteProgram`."
+      },
+      "hint": {
+        "opengl": "Kontrollera med `glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success)` och `glGetProgramInfoLog`. När de är länkade kan shaderobjekten tas bort: `glDeleteShader`."
+      }
+    },
+    "vertex-attributes": {
+      "text": {
+        "opengl": "Skapa en VAO och bind den före VBO:n, beskriv datan med `glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0)` och `glEnableVertexAttribArray(0)`, och ta bort VAO:n i slutet."
+      },
+      "hint": {
+        "opengl": "`unsigned int VBO, VAO;`, `glGenVertexArrays(1, &VAO)` och `glBindVertexArray(VAO)` före `glBindBuffer`. Efteråt får du avbinda VBO:n och VAO:n."
+      }
+    },
+    "draw": {
+      "text": {
+        "opengl": "Rita triangeln i render loopen: `glUseProgram(shaderProgram)`, `glBindVertexArray(VAO)`, `glDrawArrays(GL_TRIANGLES, 0, 3)`.",
+        "vulkan": "I `recordCommandBuffer()`, inuti render passen: `vkCmdBindPipeline`, sätt viewport och scissor, bind `vertexBuffer` med `vkCmdBindVertexBuffers` och anropa `vkCmdDraw`.",
+        "d3d12": "I `PopulateCommandList`: sätt root signature, viewport och scissor-rektangel, bind back buffern med `OMSetRenderTargets`, och rita efter rensningen med `IASetPrimitiveTopology`, `IASetVertexBuffers` och `DrawInstanced(3, 1, 0, 0)`."
+      },
+      "hint": {
+        "opengl": "Rita efter `glClear` och före `glfwSwapBuffers`.",
+        "vulkan": "Viewport och scissor är dynamiskt tillstånd, så de måste sättas i command buffern: hela `swapChainExtent`, djup 0 till 1. `vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0)`.",
+        "d3d12": "Att rensa kräver bara RTV-handtaget, att rita kräver att render target är bundet. Pipeline state sätts redan av `m_commandList->Reset(..., m_pipelineState.Get())`."
+      }
+    },
+    "element-buffer": {
+      "text": {
+        "opengl": "Förbered en rektangel: byt ut vertexarna mot de fyra hörnen, lägg till `unsigned int indices[] = { 0, 1, 3, 1, 2, 3 };`, lägg dem i ett element buffer object som binds medan VAO:n är bunden, och ta bort EBO:n i slutet."
+      },
+      "hint": {
+        "opengl": "Uppe till höger (0.5, 0.5), nere till höger (0.5, -0.5), nere till vänster (-0.5, -0.5), uppe till vänster (-0.5, 0.5), z = 0. `glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO)` + `glBufferData` efter VBO:ns data – och avbind inte EBO:n medan VAO:n är bunden."
+      }
+    },
+    "rectangle": {
+      "text": {
+        "opengl": "Rita rektangeln med indexen: byt ut `glDrawArrays` mot `glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0)`.",
+        "vulkan": "Rita en rektangel: ändra `vertices` till de fyra hörnen, bind indexbufferten med `vkCmdBindIndexBuffer` (`VK_INDEX_TYPE_UINT16`) och byt ut `vkCmdDraw` mot `vkCmdDrawIndexed`."
+      },
+      "hint": {
+        "opengl": "6 index = 2 trianglar; det sista argumentet är offseten i det bundna EBO:t. Ta bort kommentaren framför `glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)` för att se trianglarna i wireframe.",
+        "vulkan": "Hörn (y pekar nedåt): (-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), (-0.5, 0.5), z = 0. `vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0)`."
+      }
+    },
+    "shaders": {
+      "text": {
+        "vulkan": "Skriv de två shaderna: `shader.vert` läser `layout(location = 0) in vec3 inPosition;` och skriver `gl_Position = vec4(inPosition, 1.0);`, `shader.frag` deklarerar `layout(location = 0) out vec4 outColor;` och skriver `outColor = vec4(1.0, 0.5, 0.2, 1.0);`."
+      },
+      "hint": {
+        "vulkan": "Vulkans shaders behöver uttryckliga `location`; `#version 450` finns redan. Bygg & kör kompilerar dem till `vert.spv` och `frag.spv`."
+      }
+    },
+    "shader-modules": {
+      "text": {
+        "vulkan": "Skriv `readFile()` och `createShaderModule()`; ladda i `createGraphicsPipeline()` `shaders/vert.spv` och `shaders/frag.spv`, skapa de två shadermodulerna och shader-stegen (`shaderStages`), och förstör modulerna i slutet av funktionen."
+      },
+      "hint": {
+        "vulkan": "Öppna filen med `std::ios::ate | std::ios::binary` så att `tellg()` ger dess storlek. Varje steg: `VK_SHADER_STAGE_VERTEX_BIT` eller `VK_SHADER_STAGE_FRAGMENT_BIT`, modulen, `pName = \"main\"`."
+      }
+    },
+    "vertex-input": {
+      "text": {
+        "vulkan": "Beskriv vertexdatan: `struct Vertex { glm::vec3 pos; }` med `getBindingDescription()` och `getAttributeDescriptions()`, och triangeln `{{0.0f, -0.5f, 0.0f}}, {{0.5f, 0.5f, 0.0f}}, {{-0.5f, 0.5f, 0.0f}}`."
+      },
+      "hint": {
+        "vulkan": "Binding 0, stride `sizeof(Vertex)`, `VK_VERTEX_INPUT_RATE_VERTEX`; attribut location 0, `VK_FORMAT_R32G32B32_SFLOAT`, `offsetof(Vertex, pos)`. y pekar nedåt: (0, -0.5) är det övre hörnet."
+      }
+    },
+    "fixed-functions": {
+      "text": {
+        "vulkan": "Beskriv stegen med fasta funktioner i `createGraphicsPipeline()` (vertex input, input assembly, viewport state, rasterizer med culling av baksidor och medurs framsidor, multisampling, color blending, dynamisk viewport och scissor) och skapa den tomma `pipelineLayout`; förstör den i `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Viewport och scissor är dynamiska: viewport state får bara `viewportCount = 1` och `scissorCount = 1`. `rasterizer.cullMode = VK_CULL_MODE_BACK_BIT`, `rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE`."
+      }
+    },
+    "pipeline": {
+      "text": {
+        "vulkan": "Skapa grafikpipelinen: fyll i en `VkGraphicsPipelineCreateInfo` (2 steg, alla tillstånd, layouten, `renderPass`, subpass 0), anropa `vkCreateGraphicsPipelines` till `graphicsPipeline`, och förstör den i `cleanup()` före layouten.",
+        "d3d12": "Kompilera shaderna med `D3DCompileFromFile` (`VSMain`/`vs_5_0`, `PSMain`/`ps_5_0`), definiera input layouten med `POSITION`, skapa PSO:n med `CreateGraphicsPipelineState`, och skicka `m_pipelineState.Get()` till `CreateCommandList`."
+      },
+      "hint": {
+        "vulkan": "Shadermodulerna kan förstöras direkt efter att pipelinen skapats, så anropet hamnar före TODO-kommentaren \"destroy the shader modules\".",
+        "d3d12": "`CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT)`, `CD3DX12_BLEND_DESC(D3D12_DEFAULT)`, inget djup/stencil, `SampleMask = UINT_MAX`, `D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE`, ett render target `DXGI_FORMAT_R8G8B8A8_UNORM`, `SampleDesc.Count = 1`."
+      }
+    },
+    "index-buffer": {
+      "text": {
+        "vulkan": "Skapa en indexbuffert: lägg till `const std::vector<uint16_t> indices = { 0, 1, 2, 2, 3, 0 };`, medlemmarna `indexBuffer` och `indexBufferMemory`, och `createIndexBuffer()`; anropa den efter `createVertexBuffer()` och förstör den i `cleanup()`.",
+        "d3d12": "Rita hela rektangeln med en indexbuffert: `UINT indices[] = { 0, 1, 3, 1, 2, 3 };` i en buffert i upload heapen med en index buffer view (`DXGI_FORMAT_R32_UINT`), sedan `IASetIndexBuffer` och `DrawIndexedInstanced(6, 1, 0, 0, 0)` i stället för `DrawInstanced`."
+      },
+      "hint": {
+        "vulkan": "Som `createVertexBuffer()` med `VK_BUFFER_USAGE_INDEX_BUFFER_BIT` och `sizeof(indices[0]) * indices.size()` byte.",
+        "d3d12": "Lägg till medlemmarna `ComPtr<ID3D12Resource> m_indexBuffer;` och `D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};`. Båda trianglarna går medurs på skärmen, så ingen av dem cullas."
+      }
+    },
+    "pixel-shader": {
+      "text": {
+        "d3d12": "Skriv pixel shadern `float4 PSMain(PSInput input) : SV_TARGET` som returnerar orange, `float4(1.0f, 0.5f, 0.2f, 1.0f)`."
+      },
+      "hint": {
+        "d3d12": "`SV_TARGET` betyder: värdet går till render target (back buffern)."
+      }
+    },
+    "root-signature": {
+      "text": {
+        "d3d12": "Skapa en tom root signature med `D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT`: `CD3DX12_ROOT_SIGNATURE_DESC::Init`, `D3D12SerializeRootSignature` och `CreateRootSignature` till `m_rootSignature`."
+      },
+      "hint": {
+        "d3d12": "`rootSignatureDesc.Init(0, nullptr, 0, nullptr, flag)`; serialisera med `D3D_ROOT_SIGNATURE_VERSION_1` och skapa den sedan från blobens `GetBufferPointer()` och `GetBufferSize()`."
+      }
+    },
+    "rectangle-vertices": {
+      "text": {
+        "d3d12": "Byt ut de tre vertexarna mot en rektangels fyra hörn: uppe till höger `{ 0.5f, 0.5f, 0.0f }`, nere till höger `{ 0.5f, -0.5f, 0.0f }`, nere till vänster `{ -0.5f, -0.5f, 0.0f }`, uppe till vänster `{ -0.5f, 0.5f, 0.0f }`."
+      },
+      "hint": {
+        "d3d12": "`DrawInstanced(3, ...)` ritar fortfarande bara de tre första vertexarna – rektangelns nedre högra halva."
+      }
+    }
+  }
+}

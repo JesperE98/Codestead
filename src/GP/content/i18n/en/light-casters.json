@@ -1,0 +1,53 @@
+{
+  "title": "Light casters",
+  "tasks": {
+    "directional": {
+      "text": {
+        "opengl": "Make the light directional: in `light_casters.fs` replace `position` by `vec3 direction;` and use `lightDir = normalize(-light.direction)`; set `light.direction` to (-0.2, -1.0, -0.3) instead of the position, shininess 32, and comment out the lamp's drawing.",
+        "vulkan": "Make the light directional: the shader's `Light` gets `vec3 direction;` instead of `position` and `lightDir = normalize(-ubo.light.direction)`; the C++ `Light` gets `glm::vec3 direction;` in its place; set `ubo.light.direction` to (-0.2, -1.0, -0.3), shininess 32, and comment out the lamp's draw in `recordCommandBuffer()`.",
+        "d3d12": "Make the light directional: the HLSL and C++ `Light` get `direction` instead of `position` (keep `position` as a comment) and `lightDir = normalize(-light.direction)`; in `OnUpdate` set `light.direction` to (-0.2, -1.0, -0.3), shininess 32, and comment out the lamp's five lines in `PopulateCommandList`."
+      },
+      "hint": {
+        "opengl": "The direction points from the light into the scene; the lighting maths wants the direction towards the light, hence the minus. `lightingShader.setVec3(\"light.direction\", -0.2f, -1.0f, -0.3f);`",
+        "vulkan": "The direction points from the light into the scene, hence the minus in the shader. In C++ only the member's name changes: `glm::vec3 direction; float pad1;` keeps the offset 0.",
+        "d3d12": "`constantBufferData.light.direction = XMFLOAT3(-0.2f, -1.0f, -0.3f);` – the C++ struct keeps its layout: `XMFLOAT3 direction; float padding0;` in place of the position."
+      }
+    },
+    "point-light": {
+      "text": {
+        "opengl": "Back to a point light with attenuation: `Light` gets `position` again plus `float constant; float linear; float quadratic;`, the shader multiplies ambient, diffuse and specular by `1.0 / (constant + linear * d + quadratic * d²)`; set 1.0, 0.09 and 0.032, the position to `lightPos`, and draw the lamp again.",
+        "vulkan": "Back to a point light with attenuation: `Light` gets `position` again and `float constant; float linear; float quadratic;` after `specular` (C++: then `pad4`, `pad5`); multiply ambient, diffuse and specular by the attenuation; set `ubo.light.position = lightPos`, 1.0, 0.09 and 0.032, and draw the lamp again.",
+        "d3d12": "Back to a point light with attenuation: `Light` gets `position` again, right after it `float constantTerm, linearTerm, quadraticTerm;`, then the colours; multiply ambient, diffuse and specular by `1.0f / (constantTerm + linearTerm * dist + quadraticTerm * dist²)`; set 1.0, 0.09 and 0.032, the position to `lightPos`, and draw the lamp again."
+      },
+      "hint": {
+        "opengl": "`float distance = length(light.position - FragPos);`, `float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));` – then `lightingShader.setFloat(\"light.constant\", 1.0f);` …",
+        "vulkan": "In std140 `constant` fills the 4 bytes after `specular`, `linear` and `quadratic` follow, and the struct is rounded up to 80 bytes – hence `pad4` and `pad5` at the end.",
+        "d3d12": "`linear` is an HLSL keyword, `distance` an HLSL function (call the local `dist`). C++: `XMFLOAT3 position; float constantTerm; float linearTerm; float quadraticTerm; float padding0[2];` – `ambient` starts at byte 32."
+      }
+    },
+    "spotlight": {
+      "text": {
+        "opengl": "Make the light a flashlight: `Light` gets `vec3 direction;` and `float cutOff;`; light the fragment only if `theta = dot(lightDir, normalize(-light.direction))` is greater than `light.cutOff`, otherwise only ambient; set position `cameraPos`, direction `cameraFront`, cutOff `cos(12.5°)`, ambient 0.1, diffuse 0.8, and comment out the lamp again.",
+        "vulkan": "Make the light a flashlight: `Light` gets `vec3 direction; float cutOff;` after `position` (C++: after `pad1`); light the fragment only if `theta > ubo.light.cutOff`, otherwise only ambient; set position `cameraPos`, direction `cameraFront`, cutOff `glm::cos(glm::radians(12.5f))`, ambient 0.1, diffuse 0.8, and comment out the lamp again.",
+        "d3d12": "Make the light a flashlight: `Light` gets `float3 direction; float cutOff;` after `position`; sample the maps before the `if`, light the fragment only if `theta > light.cutOff`, otherwise only ambient; in `OnUpdate` set position `cameraPos`, direction `cameraFront`, cutOff `cos(12.5°)`, ambient 0.1, diffuse 0.8, and comment out the lamp again."
+      },
+      "hint": {
+        "opengl": "Compare cosines, not angles: `lightingShader.setFloat(\"light.cutOff\", glm::cos(glm::radians(12.5f)));` – a larger cosine means a smaller angle, hence `>`. Don't attenuate the ambient term inside the cone.",
+        "vulkan": "`cutOff` is the cosine of the cone's half angle; a fragment is inside when its cosine is larger. In C++ `cutOff` fills the 4 bytes after `direction`. Don't attenuate the ambient term inside the cone.",
+        "d3d12": "`XMStoreFloat3(&constantBufferData.light.position, cameraPos);` and `constantBufferData.light.cutOff = std::cos(XMConvertToRadians(12.5f));`. C++ layout: `position, padding0, direction, cutOff, constantTerm, linearTerm, quadraticTerm, padding1, ambient, …`."
+      }
+    },
+    "soft-edges": {
+      "text": {
+        "opengl": "Smooth the spotlight's edge: add `float outerCutOff;` (cos 17.5°), replace the `if`/`else` by `intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0)` on diffuse and specular, and attenuate all three terms.",
+        "vulkan": "Smooth the spotlight's edge: add `float outerCutOff;` after `cutOff` (C++: then `pad6`, `pad7`, `pad8`), set it to `glm::cos(glm::radians(17.5f))`, replace the `if`/`else` by the clamped `intensity` on diffuse and specular, and attenuate all three terms.",
+        "d3d12": "Smooth the spotlight's edge: add `float outerCutOff;` after `cutOff` (it takes `padding1`'s place in C++), set it to `std::cos(XMConvertToRadians(17.5f))`, replace the `if`/`else` by the clamped `intensity` on diffuse and specular, and attenuate all three terms."
+      },
+      "hint": {
+        "opengl": "`float epsilon = (light.cutOff - light.outerCutOff);` – inside the inner cone the intensity is 1, outside the outer cone 0. `lightingShader.setFloat(\"light.outerCutOff\", glm::cos(glm::radians(17.5f)));`",
+        "vulkan": "`float epsilon = (ubo.light.cutOff - ubo.light.outerCutOff);` – `outerCutOff` sits at 32, and `ambient` (a vec3) must start at 48, hence the three padding floats.",
+        "d3d12": "`float epsilon = (light.cutOff - light.outerCutOff);` and `clamp(…, 0.0f, 1.0f)`. Without the branch the maps can be sampled where they are used again."
+      }
+    }
+  }
+}

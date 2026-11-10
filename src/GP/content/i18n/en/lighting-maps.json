@@ -1,0 +1,53 @@
+{
+  "title": "Lighting maps",
+  "tasks": {
+    "texcoords": {
+      "text": {
+        "opengl": "Pass the texture coordinates on: vertex attribute 2 (2 floats after the normal), `aTexCoords` in → `TexCoords` out in `lighting_maps.vs`, and `in vec2 TexCoords;` in `lighting_maps.fs`.",
+        "vulkan": "Pass the texture coordinates on: a third attribute in `getAttributeDescriptions()` (location 2, `VK_FORMAT_R32G32_SFLOAT`, `offsetof(Vertex, texCoord)`), 3 attributes for the cube's pipeline, `inTexCoord` → `fragTexCoord` (location 2) in the vertex shader and `fragTexCoord` in the fragment shader.",
+        "d3d12": "Pass the texture coordinates on: a `TEXCOORD` element in the input layout (2 floats at byte 24), a third input `float2 texCoord : TEXCOORD` of `VSMain`, `float2 texCoord : TEXCOORD;` in `PSInput`, and `result.texCoord = texCoord;`."
+      },
+      "hint": {
+        "opengl": "`glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));` and `glEnableVertexAttribArray(2);`. Nothing changes in the picture yet.",
+        "vulkan": "Both arrays in `getAttributeDescriptions()` become `std::array<…, 3>`. Like the normal, the coordinates go from the vertex buffer through the vertex shader to the fragment shader. Nothing changes in the picture yet.",
+        "d3d12": "`{ \"TEXCOORD\", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }` – 3 + 3 floats come before it. Nothing changes in the picture yet."
+      }
+    },
+    "diffuse-map": {
+      "text": {
+        "opengl": "Make the diffuse colour a texture: `sampler2D diffuse;` replaces `vec3 ambient; vec3 diffuse;` in `Material`, ambient and diffuse sample it; load `container2.png` with `loadTexture`, set `material.diffuse` to unit 0, bind the texture on unit 0 before drawing, and use shininess 64.",
+        "vulkan": "Make the diffuse colour a texture: `createDiffuseMap()` loads `textures/container2.png` into `diffuseMapImage`/`…Memory`/`…ImageView`; a combined image sampler at binding 0 (layout, pool, write); `layout(binding = 0) uniform sampler2D diffuseMap;` for ambient and diffuse; `Material` keeps `specular` (0.5) and `shininess` (64).",
+        "d3d12": "Make the diffuse colour a texture: `Texture2D diffuseMap : register(t0);` and `SamplerState wrapSampler : register(s0);` for ambient and diffuse; `Material` keeps `specular` and `shininess` (64); load `container2.png` into heap slot 1 (2 descriptors), add root parameter 2 (1 SRV at t0) and the static sampler, and set the table in `PopulateCommandList`."
+      },
+      "hint": {
+        "opengl": "`vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;`. After loading: `lightingShader.use(); lightingShader.setInt(\"material.diffuse\", 0);`. In the loop: `glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, diffuseMap);`. Delete the texture at the end.",
+        "vulkan": "Call `createDiffuseMap()` at the TODO in `initVulkan()` and destroy the view, image and memory in `cleanup()`. The write: `dstBinding = 0`, `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`, `pImageInfo = &diffuseMapInfo` (the view, `textureSampler`, `SHADER_READ_ONLY_OPTIMAL`).",
+        "d3d12": "`ComPtr<ID3D12Resource> diffuseMapUploadHeap; LoadTexture(\"container2.png\", m_diffuseMap, diffuseMapUploadHeap, 1);` – `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);`, `rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);`, and the handle of slot 1 for `SetGraphicsRootDescriptorTable(2, …)`."
+      }
+    },
+    "specular-map": {
+      "text": {
+        "opengl": "Make the specular strength a texture: `sampler2D specular;` in `Material`, `specular = light.specular * spec * texture(material.specular, TexCoords).rgb`; load `container2_specular.png` as `specularMap`, set `material.specular` to unit 1 and bind it on unit 1.",
+        "vulkan": "Make the specular strength a texture: `createSpecularMap()` with `textures/container2_specular.png`, binding 1 (layout, pool count 2, write); `layout(binding = 1) uniform sampler2D specularMap;` in the specular term; `Material` keeps only `shininess` (C++: plus `pad1`…`pad3`).",
+        "d3d12": "Make the specular strength a texture: `Texture2D specularMap : register(t1);` in the specular term, `Material` keeps only `shininess` (C++: `float padding0[3];` after it); load `container2_specular.png` into heap slot 2 (3 descriptors) and let the SRV range cover 2 descriptors."
+      },
+      "hint": {
+        "opengl": "Remove the `setVec3(\"material.specular\", …)` line – it is a sampler now: `lightingShader.setInt(\"material.specular\", 1);`. In the loop: `glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, specularMap);`.",
+        "vulkan": "Copy the diffuse map's steps with `specular…` names and binding 1; the bindings array grows to 3. Remove `ubo.material.specular` from `updateUniformBuffer()`. Steel shines, wood hardly.",
+        "d3d12": "`ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);` – the table already starts at slot 1, so it now covers slots 1 and 2. Remove `material.specular` from `OnUpdate`."
+      }
+    },
+    "emission": {
+      "text": {
+        "opengl": "Add an emission map: `sampler2D emission;` in `Material`, `emission = texture(material.emission, TexCoords).rgb` added to the result; load `matrix.png` as `emissionMap` on texture unit 2.",
+        "vulkan": "Add an emission map: `createEmissionMap()` with `textures/matrix.png`, binding 3 (binding 2 is the uniform buffer; pool count 3, write); `layout(binding = 3) uniform sampler2D emissionMap;` and `emission` added to the result.",
+        "d3d12": "Add an emission map: `Texture2D emissionMap : register(t2);` and `emission = emissionMap.Sample(wrapSampler, input.texCoord).rgb` added to the result; load `matrix.png` into heap slot 3 (`m_emissionMap`, 4 descriptors) and let the SRV range cover 3 descriptors."
+      },
+      "hint": {
+        "opengl": "Emitted light doesn't depend on any light source: `vec3 result = ambient + diffuse + specular + emission;`. `lightingShader.setInt(\"material.emission\", 2);` and bind it after `glActiveTexture(GL_TEXTURE2)`.",
+        "vulkan": "Emitted light doesn't depend on any light source: `vec3 result = ambient + diffuse + specular + emission;`. The bindings array: `{diffuseMapLayoutBinding, specularMapLayoutBinding, uboLayoutBinding, emissionMapLayoutBinding}`.",
+        "d3d12": "Emitted light doesn't depend on any light source: `float3 result = ambient + diffuse + specular + emission;`. `LoadTexture(\"matrix.png\", m_emissionMap, emissionMapUploadHeap, 3);`"
+      }
+    }
+  }
+}

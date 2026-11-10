@@ -1,0 +1,41 @@
+{
+  "title": "SSAO",
+  "tasks": {
+    "kernel": {
+      "text": {
+        "opengl": "Generate the SSAO input on the CPU – the 32-sample kernel in a hemisphere (`srand(42)`, `rand() / (float)RAND_MAX`) and the 4 × 4 noise texture of random rotations – and add the SSAO pass: a framebuffer with one `GL_RED` texture, filled by `ssao.fs` on the screen quad. For now show the SSAO texture in the window.",
+        "vulkan": "Generate the SSAO input on the CPU – the 32-sample kernel in a hemisphere (`srand(42)`, `rand() / (float)RAND_MAX`) and the 4 × 4 noise texture of random rotations – and add the SSAO pass: a render pass with one `VK_FORMAT_R8_UNORM` colour attachment, filled by `ssao.frag` on the screen quad. For now show the SSAO image in the window.",
+        "d3d12": "Generate the SSAO input on the CPU – the 32-sample kernel in a hemisphere (`srand(42)`, `rand() / (float)RAND_MAX`) into `ssaoKernel`, and the 4 × 4 noise texture of random rotations – and add the SSAO pass: a single-channel render target (`R8_UNORM`) filled by `ssao.hlsl` on the screen quad, reading gPosition, gNormal and the noise. For now show the SSAO texture in the window."
+      },
+      "hint": {
+        "opengl": "Per sample: `x`, `y` = `rand() / (float)RAND_MAX * 2.0f - 1.0f`, `z` = `rand() / (float)RAND_MAX`; normalize, multiply by another random float, then by `ourLerp(0.1f, 1.0f, scale * scale)` with `scale = float(i) / 32.0f`. Noise: 16 × `glm::vec3(x, y, 0.0f)` into a `GL_RGBA32F` 4 × 4 texture with `GL_REPEAT` and `GL_NEAREST`. `ssao.fs`: TBN from the normal and `randomVec` (Gram-Schmidt), `samplePos = fragPos + TBN * samples[i] * radius`, project with `projection`, `* 0.5 + 0.5`, `texture(gPosition, offset.xy).z`, add `(sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck`; `FragColor = 1.0 - occlusion / kernelSize`. Lighting pass: `ssaoColorBuffer` on unit 3 and the \"for now\" line.",
+        "vulkan": "`generateSampleKernel()` (learnopengl's loop, `ssaoKernel.push_back`), then `createNoiseTexture()`: 16 × `glm::vec4(x, y, 0.0f, 0.0f)`, staging buffer, 4 × 4 `VK_FORMAT_R32G32B32A32_SFLOAT` image, transitions and copy; `noiseSampler` NEAREST + REPEAT. `createSsaoRenderPass()` (like the blur pass of the bloom chapter, `VK_FORMAT_R8_UNORM`), `createSsaoFramebuffers()`, `ssaoPipeline` with `VK_FALSE`. Bindings 4 and 5, pool 5 samplers. `glm::vec4 samples[32]` in the uniform buffer. `// 2. generate SSAO texture` between the geometry pass and the window's pass. `ssao.frag`: `ubo.samples[i].xyz`, `ubo.proj`, `offset.xy * 0.5 + 0.5`.",
+        "d3d12": "Kernel: `XMVector3Normalize(XMVectorSet(x, y, z, 0.0f))`, `*= rand() / (float)RAND_MAX`, `*= ourLerp(0.1f, 1.0f, scale * scale)`, `XMStoreFloat3` + `push_back`. Noise: 16 × `XMFLOAT4(x, y, 0.0f, 0.0f)`, a 4 × 4 `R32G32B32A32_FLOAT` texture (COPY_DEST, upload heap, `UpdateSubresources`, barrier, SRV slot 9). `ranges[3]` (SRV, t3) + `rootParameters[4]`, sampler s1 WRAP. `m_ssaoPipelineState`: `RTVFormats[0] = DXGI_FORMAT_R8_UNORM`, no depth. `XMFLOAT4 samples[32]` in the constant buffer. Frame: barrier, `OMSetRenderTargets(1, &ssaoRtvHandle, FALSE, nullptr)`, clear, table 2 = `gPositionNormal`, table 3 = slot 9, the quad, barrier back; lighting table 4 = slot 8. HLSL: `mul(samples[i].xyz, TBN)`, `-offset.y * 0.5f + 0.5f`."
+      }
+    },
+    "blur": {
+      "text": {
+        "opengl": "Blur the SSAO texture to remove the noise pattern: a second framebuffer with one `GL_RED` texture, filled by `ssao_blur.fs` (learnopengl's 4 × 4 box blur) reading the SSAO texture. Show the blurred texture.",
+        "vulkan": "Blur the SSAO image to remove the noise pattern: a second `VK_FORMAT_R8_UNORM` image and framebuffer (the same render pass), filled by `ssao_blur.frag` (learnopengl's 4 × 4 box blur) reading the SSAO image. Show the blurred image.",
+        "d3d12": "Blur the SSAO texture to remove the noise pattern: a second single-channel render target filled by `ssao_blur.hlsl` (learnopengl's 4 × 4 box blur) reading the SSAO texture. Show the blurred texture."
+      },
+      "hint": {
+        "opengl": "`ssaoBlurFBO` / `ssaoColorBufferBlur` like `ssaoFBO`. `ssao_blur.fs`: `vec2 texelSize = 1.0 / vec2(textureSize(ssaoInput, 0));` and the sum of `texture(ssaoInput, TexCoords + vec2(float(x), float(y)) * texelSize).r` for x and y from -2 to 1, divided by 16. Loop: bind `ssaoBlurFBO`, clear, `shaderSSAOBlur`, `ssaoColorBuffer` on unit 0, `renderQuad()`. The lighting pass binds `ssaoColorBufferBlur` to unit 3.",
+        "vulkan": "In `createSsaoFramebuffers()` a second image + view and `framebufferInfo.pAttachments = &ssaoBlurImageView;` for `ssaoBlurFramebuffer`. `ssaoBlurPipeline` with `ssao_blur.frag` and `ssaoRenderPass`. Binding 6 (pool 6 samplers). After the SSAO pass: `VkRenderPassBeginInfo ssaoBlurPassInfo = ssaoPassInfo;` with `ssaoBlurFramebuffer`, the pipeline, the quad. `ssao_blur.frag`: `ssaoInput` at binding 5, the sum over x, y = -2..1, divided by 16. `ssao_lighting.frag` reads binding 6.",
+        "d3d12": "`m_ssaoColorBufferBlur` like `m_ssaoColorBuffer` (RTV `FrameCount + 4`, SRV slot 10; heaps `FrameCount + 5` and `1 + 2 * MaxMeshes + 6`), `m_ssaoBlurPipelineState` from `ssao_blur.hlsl`. Frame: barrier, its RTV, clear, the PSO, table 2 = slot 8, the quad, barrier back; lighting table 4 = slot 10. `ssao_blur.hlsl`: `ssaoInput.GetDimensions(width, height); float2 texelSize = 1.0f / float2(width, height);` and the sum for x and y from -2 to 1, divided by 16."
+      }
+    },
+    "apply": {
+      "text": {
+        "opengl": "Use the blurred AO in the lighting: multiply the ambient term by it, and remove the line that showed the SSAO texture.",
+        "vulkan": "Use the blurred AO in the lighting: multiply the ambient term by it, and remove the line that showed the SSAO image.",
+        "d3d12": "Use the blurred AO in the lighting: multiply the ambient term by it, and return the lit colour again instead of the SSAO texture."
+      },
+      "hint": {
+        "opengl": "`float AmbientOcclusion = texture(ssao, TexCoords).r;` and `vec3 ambient = vec3(0.3 * Diffuse * AmbientOcclusion);` – only the ambient light is occluded; the direct light keeps its diffuse and specular.",
+        "vulkan": "`float AmbientOcclusion = texture(ssao, fragTexCoord).r;` and `vec3 ambient = vec3(0.3 * Diffuse * AmbientOcclusion);` – only the ambient light is occluded; the direct light keeps its diffuse and specular.",
+        "d3d12": "`float AmbientOcclusion = ssao.Sample(clampSampler, input.texCoord).r;` and `float3 ambient = 0.3f * Diffuse * AmbientOcclusion;`, and end `PSMain` with `return float4(lighting, 1.0f);` – only the ambient light is occluded."
+      }
+    }
+  }
+}

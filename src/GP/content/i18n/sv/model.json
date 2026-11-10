@@ -1,0 +1,100 @@
+{
+  "title": "Modell",
+  "tasks": {
+    "load-model": {
+      "text": {
+        "opengl": "Ge `Model` konstruktorn `Model(std::string const &path)` som anropar `loadModel(path)`, och skriv `loadModel`: läs filen med en `Assimp::Importer` (`aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace`), skriv ut Assimps fel och returnera om det misslyckades, spara filens katalog och bearbeta rotnoden.",
+        "vulkan": "Läs in modellen med tinyobjloader: inkludera `tiny_obj_loader.h` (med `TINYOBJLOADER_IMPLEMENTATION`), lägg till `MODEL_PATH`, byt testkvadraten mot tomma `vertices` / `indices`, och skriv `loadModel()` – anropad före `createVertexBuffer()` – som bygger en `Vertex` (position, normal, texturkoordinat med vänt v, `materialIndex`) för varje index i varje shape och lägger till varje olik vertex bara en gång.",
+        "d3d12": "Fyll i `loadModel`: läs filen med en `Assimp::Importer` (`aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace`), kasta ett undantag om det misslyckades, spara filens katalog och bearbeta rotnoden."
+      },
+      "hint": {
+        "opengl": "Det misslyckades när `!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode`; feltexten är `importer.GetErrorString()`. Katalogen är `path.substr(0, path.find_last_of('/'))`; sedan `processNode(scene->mRootNode, scene);`.",
+        "vulkan": "`tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str(), \"models/\")` – det sista argumentet är katalogen för .mtl-filen. Materialet är `shape.mesh.material_ids[i / 3]` (tre index per yta); `std::unordered_map<Vertex, uint32_t> uniqueVertices` hittar upprepade vertices.",
+        "d3d12": "Kasta `std::runtime_error(std::string(\"ERROR::ASSIMP:: \") + importer.GetErrorString())` när `!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode`. Sedan `directory = path.substr(0, path.find_last_of('/'));` och `processNode(scene->mRootNode, scene);`."
+      }
+    },
+    "process-node": {
+      "text": {
+        "opengl": "Skriv `processNode`: gör om varje mesh i noden till en `Mesh` med `processMesh` och lägg den i `meshes`, och anropa sedan `processNode` för varje barnnod.",
+        "d3d12": "Fyll i `processNode`: gör om varje mesh i noden till en `Mesh` med `processMesh` och lägg den i `meshes`, och anropa sedan `processNode` för varje barnnod."
+      },
+      "hint": "En nod har bara index: själva meshen är `scene->mMeshes[node->mMeshes[i]]` (för `i < node->mNumMeshes`); barnen är `node->mChildren[i]` (för `i < node->mNumChildren`)."
+    },
+    "process-mesh": {
+      "text": {
+        "opengl": "Kopiera i `processMesh` varje vertex i `aiMesh` till en `Vertex` (position, normalen om det finns normaler, den första uppsättningen texturkoordinater eller (0, 0)) och varje ytas index till `indices`.",
+        "d3d12": "Fyll i `processMesh` `vertices` (position, normal och texturkoordinater för var och en av meshens `mNumVertices` vertices, som `XMFLOAT3` / `XMFLOAT2`) och `indices` (varje ytas index)."
+      },
+      "hint": {
+        "opengl": "Loopa `i < mesh->mNumVertices`: `mesh->mVertices[i]`, `mesh->mNormals[i]` (om `mesh->HasNormals()`), `mesh->mTextureCoords[0][i]` (om `mesh->mTextureCoords[0]`). Loopa sedan över `mesh->mNumFaces`: `aiFace face = mesh->mFaces[i];` och lägg till `face.mIndices[j]` för `j < face.mNumIndices`.",
+        "d3d12": "`vertex.position = XMFLOAT3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);` – normalen från `mesh->mNormals[i]` om `mesh->HasNormals()`, texturkoordinaterna från `mesh->mTextureCoords[0][i]` om `mesh->mTextureCoords[0]` (annars noll). Ytor: `aiFace face = mesh->mFaces[i];` och `indices.push_back(face.mIndices[j]);`."
+      }
+    },
+    "texture-from-file": {
+      "text": {
+        "opengl": "Skriv `TextureFromFile(const char *path, const std::string &directory)` efter klassen: läs in `directory + '/' + path` med `stbi_load`, skapa en OpenGL-textur av den (format efter antalet kanaler, mipmaps, `GL_REPEAT`, `GL_LINEAR_MIPMAP_LINEAR` / `GL_LINEAR`) och returnera dess id; skriv ut ett meddelande om filen inte kan läsas in."
+      },
+      "hint": {
+        "opengl": "Det är ljuskapitlens `loadTexture` med katalogen före filnamnet – .mtl-filen namnger bilderna relativt .obj-filen. Ingen `stbi_set_flip_vertically_on_load` här: `aiProcess_FlipUVs` vänder redan v en gång."
+      }
+    },
+    "textures": {
+      "text": {
+        "vulkan": "Läs in materialens diffuse maps: konstanterna `PLANET_DIFFUSE_PATH` (`models/planet_diffuse.png`) och `RINGS_DIFFUSE_PATH` (`models/rings.png`), en `struct Texture` (bild, minne, view), medlemmarna `planetDiffuseMap` och `ringsDiffuseMap`, `createTextures()` med hjälpfunktionen `createTexture` (anropad före `createTextureSampler()`), och `destroyTexture` för båda i `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "`stbi_load(PLANET_DIFFUSE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha)`, sedan `createTexture(pixels, texWidth, texHeight, planetDiffuseMap)`: kontrollera pixlarna, `createTextureImage`, `stbi_image_free`, `createImageView`. Planetens textur först – ordningen blir bindingarnas ordning."
+      }
+    },
+    "descriptors": {
+      "text": {
+        "vulkan": "Ge texturerna descriptors: en binding för en combined image sampler (fragment-steget) kopierad till binding 1 och 2 i `createDescriptorSetLayout()`, en andra pool size (`VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER` × 2), och i `createDescriptorSets()` en image info per textur (dess view, `textureSampler`) med en write för var och en (`dstBinding = 1 + i`)."
+      },
+      "hint": {
+        "vulkan": "Binding 0 förblir uniform buffern. `std::array<VkDescriptorSetLayoutBinding, 3> bindings = {uboLayoutBinding, samplerLayoutBinding, samplerLayoutBinding};` och sedan `bindings[1].binding = 1;` och `bindings[2].binding = 2;`. Tre writes totalt."
+      }
+    },
+    "material-textures": {
+      "text": {
+        "opengl": "Läs in meshens materialtexturer: skriv `loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)` (varje fil bara en gång, med `textures_loaded`) och lägg i `processMesh` till diffuse maps (`\"texture_diffuse\"`), specular maps (`\"texture_specular\"`) och normal maps (`\"texture_normal\"`, `aiTextureType_HEIGHT`) i `textures`.",
+        "vulkan": "Färga varje fragment med dess materials diffuse map: skicka vidare materialindexet som `layout(location = 3) flat out uint fragMaterialIndex`, deklarera `planetDiffuseMap` (binding 1) och `ringsDiffuseMap` (binding 2) i fragment shadern, sampla båda och behåll den som hör till fragmentets material.",
+        "d3d12": "Läs in meshens texturer: hämta i `processMesh` dess `aiMaterial` och lägg till `loadMaterialTextures(…, aiTextureType_DIFFUSE, \"texture_diffuse\")` och `(…, aiTextureType_SPECULAR, \"texture_specular\")` i `textures`; fyll i `loadMaterialTextures` med learnopengls loop och cachen `textures_loaded`, och läs in nya filer med `TextureFromFile`."
+      },
+      "hint": {
+        "opengl": "`aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];` För varje `i < mat->GetTextureCount(type)`: `mat->GetTexture(type, i, &str);` – återanvänd en textur i `textures_loaded` vars `path` är lika med `str.C_Str()` (`std::strcmp`), annars `TextureFromFile(str.C_Str(), this->directory)` och kom ihåg den i `textures_loaded`.",
+        "vulkan": "`flat`: ett heltal kan inte interpoleras. Sampla innan du väljer: `outColor = fragMaterialIndex == 0u ? planetColor : ringsColor;` – `texture()` inuti en `if` som skiljer sig mellan närliggande fragment får fel detaljnivå.",
+        "d3d12": "En ny textur: `texture.resource = TextureFromFile(str.C_Str(), directory, m_device, m_commandList, uploadHeap);`, sätt `type` och `path`, lägg den i `textures` och `textures_loaded`, och spara `uploadHeap` i `uploadHeaps`."
+      }
+    },
+    "specular-maps": {
+      "text": {
+        "vulkan": "Läs in och bind även materialens specular maps: `PLANET_SPECULAR_PATH` (`models/planet_specular.png`) och `RINGS_SPECULAR_PATH` (`models/rings_specular.png`), medlemmarna `planetSpecularMap` och `ringsSpecularMap` (skapade i slutet av `createTextures()`, förstörda i `cleanup()`), binding 3 och 4, poolantalet 4 och fem descriptor writes."
+      },
+      "hint": {
+        "vulkan": "Ordningen på anropen till `stbi_load` är bindingarnas ordning: planetens diffuse, ringens diffuse, planetens specular, ringens specular. Arrayerna växer: 5 layout bindings, 4 views och image infos, 5 writes."
+      }
+    },
+    "draw-model": {
+      "text": {
+        "opengl": "Ge `Model` en `Draw(Shader &shader)` som ritar alla dess meshar; läs i `main.cpp` in modellen med `Model ourModel(\"models/planet.obj\");` efter shadern och rita den med `ourModel.Draw(ourShader);` direkt efter att model-matrisen har satts.",
+        "d3d12": "Använd klassen: en medlem `Model m_model;` i `D3D12App`, `m_model.Load(\"models/planet.obj\", m_device.Get(), m_commandList.Get(), m_cbvSrvHeap.Get(), 1);` i `LoadAssets`, `m_model.uploadHeaps.clear();` efter dess `WaitForPreviousFrame()`, och `m_model.Draw(m_commandList.Get());` i `PopulateCommandList` efter model-matrisen."
+      },
+      "hint": {
+        "opengl": "`for (unsigned int i = 0; i < meshes.size(); i++) meshes[i].Draw(shader);` Modellen läses in en gång, före renderingsloopen; sökvägen är relativ till programmets katalog.",
+        "d3d12": "Det sista argumentet till `Load` är den första lediga platsen i CBV/SRV-heapen: plats 0 har CBV:n. Texturernas kopiering spelas in i command listen som `LoadAssets` kör och väntar på – först efter den väntan får deras upload-buffrar försvinna."
+      }
+    },
+    "lighting": {
+      "text": {
+        "opengl": "Övning: ljussätt modellen som i *Lighting maps* – ett vitt punktljus vid `lightPos` (1.2, 1.0, 2.0) med ambient 0.2, diffuse 0.5, specular 1.0 (ingen dämpning), Phong med `texture_diffuse1` och specular mapen `texture_specular1`, shininess 32, `viewPos` = `cameraPos`; vertex shadern skickar vidare `FragPos` och normalen (med normalmatrisen).",
+        "vulkan": "Övning: ljussätt modellen som i *Lighting maps* – ett punktljus vid `lightPos` (1.2, 1.0, 2.0) med ambient 0.2, diffuse 0.5, specular 1.0, Phong med fragmentets materials diffuse och specular map, shininess 32, `viewPos` = `cameraPos`: `Material` och `Light` (utfyllda för std140) i uniform-blocket, dess stages `VERTEX | FRAGMENT`, `fragPos` och `fragNormal` från vertex shadern.",
+        "d3d12": "Övning: ljussätt modellen som i *Lighting maps* – ett punktljus vid `lightPos` (1.2, 1.0, 2.0) med ambient 0.2, diffuse 0.5, specular 1.0, Phong med diffuse mapen (`t0`) och specular mapen (`texture_specular1`, `t1`), shininess 32, `viewPos` = `cameraPos`; normalerna med normalmatrisen, beräknad på CPU:n."
+      },
+      "hint": {
+        "opengl": "Vertex shadern: `FragPos = vec3(model * vec4(aPos, 1.0)); Normal = mat3(transpose(inverse(model))) * aNormal;`. Fragment shadern: `struct Light` och ambient + diffuse + specular från *Lighting maps*. I `main.cpp`: `ourShader.setVec3(\"light.position\", lightPos);` … och `ourShader.setFloat(\"shininess\", 32.0f);`.",
+        "vulkan": "C++: `viewPos` + `pad1`, `Material { shininess; pad1; pad2; pad3; }`, `Light` med en utfyllnads-float efter varje `glm::vec3`. Shadern: specular maps på binding 3 och 4; välj `diffuseColor` och `specularColor` efter `fragMaterialIndex`, sedan ambient + diffuse + specular.",
+        "d3d12": "`ModelConstants` får `normalMatrix` (`XMMatrixTranspose(XMMatrixInverse(nullptr, model))`, lagrad transponerad); `SceneConstantBuffer` får `viewPos` + utfyllnad, `Material` (`shininess` + 3 floats) och `Light` (varje `XMFLOAT3` utfylld till 16 byte); vertex shadern ger ut `fragPos` och `normal`."
+      }
+    }
+  }
+}

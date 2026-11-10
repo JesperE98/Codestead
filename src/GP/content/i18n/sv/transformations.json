@@ -1,0 +1,49 @@
+{
+  "title": "Transformationer",
+  "tasks": {
+    "transform-uniform": {
+      "text": {
+        "opengl": "Inkludera GLM-headrarna (`glm.hpp`, `gtc/matrix_transform.hpp`, `gtc/type_ptr.hpp`), deklarera `uniform mat4 transform;` i `shader.vs` och använd `gl_Position = transform * vec4(aPos, 1.0);`; bygg `transform` i renderingsloopen – `glm::rotate` med `glm::radians(90.0f)` kring z, sedan `glm::scale` med 0.5 – och sätt den med `glUniformMatrix4fv`.",
+        "vulkan": "Inkludera `<glm/gtc/matrix_transform.hpp>`, lägg till `struct PushConstants { glm::mat4 transform; };`, ett `VkPushConstantRange` för vertex-steget i pipeline layouten, och bygg i `recordCommandBuffer()` `transform` (`glm::rotate` med `glm::radians(90.0f)` kring z, sedan `glm::scale` med 0.5) och pusha den med `vkCmdPushConstants`; deklarera push constant-blocket i `shader.vert` och skriv `gl_Position = pc.transform * vec4(inPosition, 1.0);`.",
+        "d3d12": "Lägg till `struct TransformConstants { XMFLOAT4X4 transform; };` och root-parameter 1 med `InitAsConstants(sizeof(TransformConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX)`; bygg i `PopulateCommandList()` `XMMatrixScaling(0.5f, 0.5f, 0.5f) * XMMatrixRotationZ(XMConvertToRadians(90.0f))`, lagra den med `XMStoreFloat4x4(…, XMMatrixTranspose(transform))` och sätt den med `SetGraphicsRoot32BitConstants(1, …)`; deklarera `cbuffer TransformConstants : register(b0)` i `shaders.hlsl` och skriv `result.position = mul(position, transform);`."
+      },
+      "hint": {
+        "opengl": "Börja med identitetsmatrisen, `glm::mat4(1.0f)`. Hämta location med `glGetUniformLocation(ourShader.ID, \"transform\")` och sätt den efter `ourShader.use()`: `glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));`. Läs GLM-anropen nerifrån och upp: först skalning, sedan rotation.",
+        "vulkan": "Intervallet: `stageFlags = VK_SHADER_STAGE_VERTEX_BIT`, `offset = 0`, `size = sizeof(PushConstants)`, sedan `pushConstantRangeCount = 1` och `pPushConstantRanges = &pushConstantRange`. Pusha mellan `vkCmdBindDescriptorSets` och `vkCmdDrawIndexed`. Behåll raden som vänder y i shadern.",
+        "d3d12": "En 4×4-matris av floats är 16 root constants. DirectXMath läses från vänster till höger: först skalning, sedan rotation. Transponeringen behövs eftersom HLSL läser cbuffer-matriser kolumn för kolumn; med positionen till vänster räknar `mul` ut v · M."
+      }
+    },
+    "translate-rotate": {
+      "text": {
+        "opengl": "Ersätt rotations- och skalningsraderna med `glm::translate` med `(0.5f, -0.5f, 0.0f)` följt av `glm::rotate` med `(float)glfwGetTime()` kring z-axeln.",
+        "vulkan": "Ersätt rotations- och skalningsraderna med `glm::translate` med `(0.5f, -0.5f, 0.0f)` följt av `glm::rotate` med `(float)glfwGetTime()` kring z-axeln.",
+        "d3d12": "Mät tiden sedan den första bildrutan med `std::chrono` (`#include <chrono>`, en `static` `startTime`) och bygg `XMMATRIX transform = XMMatrixRotationZ(time) * XMMatrixTranslation(0.5f, -0.5f, 0.0f);`."
+      },
+      "hint": {
+        "opengl": "Det sista anropet tillämpas först: lådan roteras kring sin egen mitt och flyttas sedan nedåt till höger. Vinkeln är i radianer – ett varv var 2π ≈ 6.3 s.",
+        "vulkan": "Det sista anropet tillämpas först: lådan roteras kring sin egen mitt och flyttas sedan nedåt till höger. Vinkeln är i radianer – ett varv var 2π ≈ 6.3 s.",
+        "d3d12": "`float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();`. En DirectXMath-produkt läses i den ordning stegen sker: rotera, sedan flytta."
+      }
+    },
+    "rotate-first": {
+      "text": {
+        "opengl": "Övning 1: byt plats på de två anropen – först `glm::rotate`, sedan `glm::translate` – och se vad som händer.",
+        "vulkan": "Övning 1: byt plats på de två anropen – först `glm::rotate`, sedan `glm::translate` – och se vad som händer.",
+        "d3d12": "Övning 1: byt ordning – `XMMATRIX transform = XMMatrixTranslation(0.5f, -0.5f, 0.0f) * XMMatrixRotationZ(time);` – och se vad som händer."
+      },
+      "hint": "Nu flyttas lådan först och roteras sedan kring origo – fönstrets mitt – så den cirklar runt mitten i stället för att snurra på stället."
+    },
+    "second-container": {
+      "text": {
+        "opengl": "Övning 2: efter det första `glDrawElements`, återställ `transform` till identitetsmatrisen, translatera med `(-0.5f, 0.5f, 0.0f)`, skala med `sin(glfwGetTime())`, sätt uniformen igen och anropa `glDrawElements` en andra gång.",
+        "vulkan": "Övning 2: efter det första `vkCmdDrawIndexed`, återställ `transform` till identitetsmatrisen, translatera med `(-0.5f, 0.5f, 0.0f)`, skala med `std::sin(glfwGetTime())` (`#include <cmath>`), pusha den med ett andra `vkCmdPushConstants` och spela in ett andra `vkCmdDrawIndexed`.",
+        "d3d12": "Övning 2: efter det första `DrawIndexedInstanced`, bygg `XMMatrixScaling(scaleAmount, scaleAmount, scaleAmount) * XMMatrixTranslation(-0.5f, 0.5f, 0.0f)` med `scaleAmount = std::sin(time)` (`#include <cmath>`), lagra den transponerad, anropa `SetGraphicsRoot32BitConstants` igen och rita igen."
+      },
+      "hint": {
+        "opengl": "`float scaleAmount = static_cast<float>(sin(glfwGetTime()));`. En uniform behåller sitt värde tills du sätter den igen, så ladda upp den nya matrisen före den andra ritningen.",
+        "vulkan": "`constants.transform = transform;` före pushen. Varje ritning använder de push constants som spelades in före den. En negativ skalning vänder lådan upp och ner, den speglar den inte.",
+        "d3d12": "Root constants spelas in med varje ritning, så den första ritningen behåller sin matris. En negativ skalning vrider lådan 180°, den speglar den inte."
+      }
+    }
+  }
+}

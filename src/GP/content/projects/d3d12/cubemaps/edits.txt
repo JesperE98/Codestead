@@ -1,0 +1,652 @@
+=== task: load-cubemap
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_cubeTexture;
+--- replace:
+    ComPtr<ID3D12Resource> m_cubeTexture;
+    ComPtr<ID3D12Resource> m_skyboxTexture;    // the cube map
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 2;    // one CBV + one SRV per texture
+--- replace:
+        cbvSrvHeapDesc.NumDescriptors = 3;    // one CBV + one SRV per texture
+--- file: main.cpp
+--- find:
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        CD3DX12_ROOT_SIGNATURE_DESC
+--- replace:
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        // Sampler s1: the same, but texture coordinates are clamped to the edge (learnopengl's
+        // GL_CLAMP_TO_EDGE for the cube map): no filtering across the seams between the faces.
+        samplers[1] = samplers[0];
+        samplers[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[1].ShaderRegister = 1;
+
+        CD3DX12_ROOT_SIGNATURE_DESC
+--- file: main.cpp
+--- find:
+        D3D12_STATIC_SAMPLER_DESC samplers[1] = {};
+--- replace:
+        D3D12_STATIC_SAMPLER_DESC samplers[2] = {};
+--- file: main.cpp
+--- find:
+    // TODO: load the six images of the sky into one cube map (m_skyboxTexture, SRV in heap slot 2) with LoadCubemap: right, left, top, bottom, front, back
+--- replace:
+    // The sky: six images, in the order of a cube map's faces (+X, -X, +Y, -Y, +Z, -Z),
+    // in one cube map texture; its SRV goes into slot 2.
+    std::vector<std::string> faces
+    {
+        "skybox/right.png",
+        "skybox/left.png",
+        "skybox/top.png",
+        "skybox/bottom.png",
+        "skybox/front.png",
+        "skybox/back.png"
+    };
+    ComPtr<ID3D12Resource> skyboxTextureUploadHeap;
+    LoadCubemap(faces, m_skyboxTexture, skyboxTextureUploadHeap, 2);
+--- file: main.cpp
+--- find:
+    // TODO: declare LoadCubemap(faces, texture, uploadHeap, descriptorIndex)
+--- replace:
+    void LoadCubemap(const std::vector<std::string>& faces, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex);
+--- file: main.cpp
+--- find:
+// TODO: LoadCubemap(faces, texture, uploadHeap, descriptorIndex): one cube map texture from six images, in the order +X, -X, +Y, -Y, +Z, -Z
+--- replace:
+// Utility function for loading a cube map from six image files, in the order +X (right),
+// -X (left), +Y (top), -Y (bottom), +Z (front), -Z (back): creates one texture with six
+// array slices (the faces) in a default heap and its shader resource view (TEXTURECUBE) in
+// slot descriptorIndex of the CBV/SRV heap, and records the copy of the pixels into it.
+// The copy reads from uploadHeap, so that must stay alive until the command list has executed.
+void D3D12App::LoadCubemap(const std::vector<std::string>& faces, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex)
+{
+    // Load the six images as RGBA. No vertical flip: a face's first row is its top
+    // (learnopengl also loads its cube map without the flip).
+    int width = 0, height = 0, nrChannels = 0;
+    unsigned char* data[6] = {};
+    for (UINT i = 0; i < 6; i++)
+    {
+        data[i] = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 4);
+        if (data[i] == nullptr)
+        {
+            throw std::runtime_error("Cubemap texture failed to load at path: " + faces[i]);
+        }
+    }
+
+    // Describe and create the texture: like a 2D texture, but with 6 array slices
+    // (DepthOrArraySize), one per face, all the same size. It starts in the COPY_DEST state.
+    D3D12_RESOURCE_DESC textureDesc = {};
+    textureDesc.MipLevels = 1;
+    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    textureDesc.Width = static_cast<UINT64>(width);
+    textureDesc.Height = static_cast<UINT>(height);
+    textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    textureDesc.DepthOrArraySize = 6;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.SampleDesc.Quality = 0;
+    textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+    ThrowIfFailed(m_device->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &textureDesc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(&texture)));
+
+    // The upload heap: big enough for all six subresources (the faces) as the GPU lays them out.
+    const UINT64 uploadBufferSize = GetRequiredIntermediateSize(texture.Get(), 0, 6);
+
+    CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+    CD3DX12_RESOURCE_DESC uploadBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+    ThrowIfFailed(m_device->CreateCommittedResource(
+        &uploadHeapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &uploadBufferDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&uploadHeap)));
+
+    // One D3D12_SUBRESOURCE_DATA per face: subresource i is array slice i, the face
+    // GL_TEXTURE_CUBE_MAP_POSITIVE_X + i in OpenGL. UpdateSubresources copies all six into
+    // the upload heap now and schedules the copy into the texture.
+    D3D12_SUBRESOURCE_DATA faceData[6] = {};
+    for (UINT i = 0; i < 6; i++)
+    {
+        faceData[i].pData = data[i];
+        faceData[i].RowPitch = width * 4;
+        faceData[i].SlicePitch = faceData[i].RowPitch * height;
+    }
+    UpdateSubresources(m_commandList.Get(), texture.Get(), uploadHeap.Get(), 0, 0, 6, faceData);
+
+    // After the copy, the texture is read by the pixel shader.
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    // Describe and create a SRV that sees the six slices as one cube (a TextureCube in HLSL).
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = textureDesc.Format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+    srvDesc.TextureCube.MostDetailedMip = 0;
+    srvDesc.TextureCube.MipLevels = 1;
+    CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), descriptorIndex, m_cbvSrvDescriptorSize);
+    m_device->CreateShaderResourceView(texture.Get(), &srvDesc, srvHandle);
+
+    // Free the image memory (UpdateSubresources has copied it into the upload heap).
+    for (UINT i = 0; i < 6; i++)
+    {
+        stbi_image_free(data[i]);
+    }
+}
+
+=== task: skybox
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+--- replace:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+    ComPtr<ID3D12PipelineState> m_skyboxPipelineState;
+--- file: main.cpp
+--- find:
+        // TODO: the skybox's pipeline state (m_skyboxPipelineState): the shaders of skybox.hlsl, no depth writes
+--- replace:
+        // The skybox's pipeline state: the same description with the shaders of skybox.hlsl,
+        // and the depth test on but no depth writes (learnopengl: glDepthMask(GL_FALSE)).
+        ComPtr<ID3DBlob> skyboxVertexShader;
+        ComPtr<ID3DBlob> skyboxPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"skybox.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &skyboxVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"skybox.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &skyboxPixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(skyboxVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(skyboxPixelShader.Get());
+        psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_skyboxPipelineState)));
+--- file: main.cpp
+--- find:
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } }
+            // TODO: the skybox (vertices 36 to 71): a cube from -1 to 1 around the origin; only the positions are used
+--- replace:
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } },
+
+            // the skybox: vertices 36 to 71 - a cube from -1 to 1 around the origin. Only the
+            // positions matter: they are the directions the skybox shader samples the cube
+            // map in. {} leaves the other attribute at zero (the skybox shader does not read it).
+            { { -1.0f,  1.0f, -1.0f }, {} },
+            { { -1.0f, -1.0f, -1.0f }, {} },
+            { {  1.0f, -1.0f, -1.0f }, {} },
+            { {  1.0f, -1.0f, -1.0f }, {} },
+            { {  1.0f,  1.0f, -1.0f }, {} },
+            { { -1.0f,  1.0f, -1.0f }, {} },
+
+            { { -1.0f, -1.0f,  1.0f }, {} },
+            { { -1.0f, -1.0f, -1.0f }, {} },
+            { { -1.0f,  1.0f, -1.0f }, {} },
+            { { -1.0f,  1.0f, -1.0f }, {} },
+            { { -1.0f,  1.0f,  1.0f }, {} },
+            { { -1.0f, -1.0f,  1.0f }, {} },
+
+            { {  1.0f, -1.0f, -1.0f }, {} },
+            { {  1.0f, -1.0f,  1.0f }, {} },
+            { {  1.0f,  1.0f,  1.0f }, {} },
+            { {  1.0f,  1.0f,  1.0f }, {} },
+            { {  1.0f,  1.0f, -1.0f }, {} },
+            { {  1.0f, -1.0f, -1.0f }, {} },
+
+            { { -1.0f, -1.0f,  1.0f }, {} },
+            { { -1.0f,  1.0f,  1.0f }, {} },
+            { {  1.0f,  1.0f,  1.0f }, {} },
+            { {  1.0f,  1.0f,  1.0f }, {} },
+            { {  1.0f, -1.0f,  1.0f }, {} },
+            { { -1.0f, -1.0f,  1.0f }, {} },
+
+            { { -1.0f,  1.0f, -1.0f }, {} },
+            { {  1.0f,  1.0f, -1.0f }, {} },
+            { {  1.0f,  1.0f,  1.0f }, {} },
+            { {  1.0f,  1.0f,  1.0f }, {} },
+            { { -1.0f,  1.0f,  1.0f }, {} },
+            { { -1.0f,  1.0f, -1.0f }, {} },
+
+            { { -1.0f, -1.0f, -1.0f }, {} },
+            { { -1.0f, -1.0f,  1.0f }, {} },
+            { {  1.0f, -1.0f, -1.0f }, {} },
+            { {  1.0f, -1.0f, -1.0f }, {} },
+            { { -1.0f, -1.0f,  1.0f }, {} },
+            { {  1.0f, -1.0f,  1.0f }, {} }
+--- file: main.cpp
+--- find:
+    CD3DX12_GPU_DESCRIPTOR_HANDLE cubeTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
+--- replace:
+    CD3DX12_GPU_DESCRIPTOR_HANDLE cubeTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE skyboxTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
+--- file: main.cpp
+--- find:
+    // TODO: draw the skybox first (m_skyboxPipelineState, the cube map, 36 vertices from vertex 36 on), without writing to the depth buffer
+--- replace:
+    // skybox: drawn first and without writing to the depth buffer, so everything else is
+    // drawn in front of it. Its own pipeline state, the cube map, 36 vertices from vertex 36 on.
+    m_commandList->SetPipelineState(m_skyboxPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(2, skyboxTexture);
+    m_commandList->DrawInstanced(36, 1, 36, 0);
+    m_commandList->SetPipelineState(m_pipelineState.Get());    // back to the scene's pipeline state
+--- file: skybox.hlsl
+--- find:
+// TODO: the skybox's shaders: VSMain (the position is the direction to sample: texCoords = position; the view matrix without its translation, then the projection) and PSMain (sample the cube map in the direction texCoords)
+--- replace:
+// The cube map: register t0, in the descriptor table of root parameter 2.
+TextureCube skybox : register(t0);
+// The sampler: register s1, the static sampler that clamps to the edge.
+SamplerState clampSampler : register(s1);
+
+// The constant buffer at register b1 (the CBV in root parameter 1's table): the
+// view and projection matrices, the same for every draw of a frame.
+cbuffer SceneConstantBuffer : register(b1)
+{
+    float4x4 view;
+    float4x4 projection;
+};
+
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+struct PSInput
+{
+    float4 position : SV_POSITION;
+    float3 texCoords : TEXCOORD;    // a direction, not a point on a 2D image
+};
+
+// The vertex shader: the skybox stays around the camera, however far it moves.
+PSInput VSMain(float3 position : POSITION)
+{
+    PSInput result;
+
+    // The direction from the centre of the cube to the vertex.
+    result.texCoords = position;
+    // (float3x3)view is the view matrix without its translation (learnopengl:
+    // mat4(mat3(view))): the camera turns, but never gets nearer to the sky.
+    float3 viewPosition = mul(position, (float3x3)view);
+    result.position = mul(float4(viewPosition, 1.0f), projection);
+
+    return result;
+}
+
+// The pixel shader: the cube map's colour in the direction texCoords.
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    return skybox.Sample(clampSampler, input.texCoords);
+}
+
+=== task: skybox-last
+--- file: main.cpp
+--- find:
+        // The skybox's pipeline state: the same description with the shaders of skybox.hlsl,
+        // and the depth test on but no depth writes (learnopengl: glDepthMask(GL_FALSE)).
+--- replace:
+        // The skybox's pipeline state: the same description with the shaders of skybox.hlsl,
+        // and the depth function LESS_EQUAL: the skybox's depth is 1.0, the value the depth
+        // buffer is cleared to, and it must pass there (learnopengl: glDepthFunc(GL_LEQUAL)).
+--- file: main.cpp
+--- find:
+        psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+--- replace:
+        psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+--- file: main.cpp
+--- find:
+    // skybox: drawn first and without writing to the depth buffer, so everything else is
+    // drawn in front of it. Its own pipeline state, the cube map, 36 vertices from vertex 36 on.
+    m_commandList->SetPipelineState(m_skyboxPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(2, skyboxTexture);
+    m_commandList->DrawInstanced(36, 1, 36, 0);
+    m_commandList->SetPipelineState(m_pipelineState.Get());    // back to the scene's pipeline state
+--- replace:
+
+--- file: main.cpp
+--- find:
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+
+    // Indicate that the back buffer will now be used to present.
+--- replace:
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+
+    // skybox: drawn last, only where nothing else has been drawn (the depth test with
+    // LESS_EQUAL against the cleared 1.0) - the pixels the cubes cover are not shaded twice.
+    m_commandList->SetPipelineState(m_skyboxPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(2, skyboxTexture);
+    m_commandList->DrawInstanced(36, 1, 36, 0);
+
+    // Indicate that the back buffer will now be used to present.
+--- file: skybox.hlsl
+--- find:
+    result.position = mul(float4(viewPosition, 1.0f), projection);
+--- replace:
+    float4 pos = mul(float4(viewPosition, 1.0f), projection);
+    // z = w: after the perspective divide the depth is 1.0, the largest depth value.
+    result.position = pos.xyww;
+
+=== task: reflection
+--- file: main.cpp
+--- find:
+        XMFLOAT3 position;
+        XMFLOAT2 texCoord;
+    };
+--- replace:
+        XMFLOAT3 position;
+        XMFLOAT3 normal;
+    };
+--- file: main.cpp
+--- find:
+        XMFLOAT4X4 model;
+    };
+--- replace:
+        XMFLOAT4X4 model;
+        XMFLOAT4X4 normalMatrix;    // transpose(inverse(model)): turns the normals into world space
+    };
+--- file: main.cpp
+--- find:
+        XMFLOAT4X4 projection;
+    };
+--- replace:
+        XMFLOAT4X4 projection;
+        XMFLOAT3 cameraPos;
+        float padding;    // the size of a constant buffer is a multiple of 16 bytes
+    };
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_cubeTexture;
+--- replace:
+
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 3;    // one CBV + one SRV per texture
+--- replace:
+        cbvSrvHeapDesc.NumDescriptors = 2;    // one CBV + the cube map's SRV
+--- file: main.cpp
+--- find:
+        // Root parameter 1: a descriptor table with the constant buffer view (b1:
+        // view and projection), for the vertex shader.
+--- replace:
+        // Root parameter 1: a descriptor table with the constant buffer view (b1:
+        // view, projection and the camera's position), for both shaders.
+--- file: main.cpp
+--- find:
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_VERTEX);
+--- replace:
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+--- file: main.cpp
+--- find:
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+--- replace:
+            { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+--- file: main.cpp
+--- find:
+        // One vertex buffer for all the objects of the scene: the cube (36 vertices: 6 faces
+        // of 2 triangles) first. A draw picks its object with the first vertex it starts
+        // from. The texture coordinates are learnopengl.com's with v flipped (1 - v):
+        // Direct3D's v = 0 is the image's top.
+--- replace:
+        // One vertex buffer for all the objects of the scene: the cube (36 vertices: 6 faces
+        // of 2 triangles) first. A draw picks its object with the first vertex it starts
+        // from. The cube's vertices have a normal: the direction its face points in.
+--- file: main.cpp
+--- find:
+            // the cube: vertices 0 to 35
+            // positions               texture coords
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f } },
+
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f } },
+            { { -0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+
+            { { -0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { { -0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { { -0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { { -0.5f,  0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } },
+--- replace:
+            // the cube: vertices 0 to 35
+            // positions               normals
+            { { -0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f } },
+            { {  0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f } },
+            { {  0.5f,  0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f } },
+            { {  0.5f,  0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f } },
+            { { -0.5f,  0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f } },
+            { { -0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f } },
+
+            { { -0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f } },
+            { {  0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f } },
+            { {  0.5f,  0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f } },
+            { {  0.5f,  0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f } },
+            { { -0.5f,  0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f } },
+            { { -0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f } },
+
+            { { -0.5f,  0.5f,  0.5f }, { -1.0f,  0.0f,  0.0f } },
+            { { -0.5f,  0.5f, -0.5f }, { -1.0f,  0.0f,  0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { -1.0f,  0.0f,  0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { -1.0f,  0.0f,  0.0f } },
+            { { -0.5f, -0.5f,  0.5f }, { -1.0f,  0.0f,  0.0f } },
+            { { -0.5f,  0.5f,  0.5f }, { -1.0f,  0.0f,  0.0f } },
+
+            { {  0.5f,  0.5f,  0.5f }, {  1.0f,  0.0f,  0.0f } },
+            { {  0.5f,  0.5f, -0.5f }, {  1.0f,  0.0f,  0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, {  1.0f,  0.0f,  0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, {  1.0f,  0.0f,  0.0f } },
+            { {  0.5f, -0.5f,  0.5f }, {  1.0f,  0.0f,  0.0f } },
+            { {  0.5f,  0.5f,  0.5f }, {  1.0f,  0.0f,  0.0f } },
+
+            { { -0.5f, -0.5f, -0.5f }, {  0.0f, -1.0f,  0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, {  0.0f, -1.0f,  0.0f } },
+            { {  0.5f, -0.5f,  0.5f }, {  0.0f, -1.0f,  0.0f } },
+            { {  0.5f, -0.5f,  0.5f }, {  0.0f, -1.0f,  0.0f } },
+            { { -0.5f, -0.5f,  0.5f }, {  0.0f, -1.0f,  0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, {  0.0f, -1.0f,  0.0f } },
+
+            { { -0.5f,  0.5f, -0.5f }, {  0.0f,  1.0f,  0.0f } },
+            { {  0.5f,  0.5f, -0.5f }, {  0.0f,  1.0f,  0.0f } },
+            { {  0.5f,  0.5f,  0.5f }, {  0.0f,  1.0f,  0.0f } },
+            { {  0.5f,  0.5f,  0.5f }, {  0.0f,  1.0f,  0.0f } },
+            { { -0.5f,  0.5f,  0.5f }, {  0.0f,  1.0f,  0.0f } },
+            { { -0.5f,  0.5f, -0.5f }, {  0.0f,  1.0f,  0.0f } },
+--- file: main.cpp
+--- find:
+    // Load the textures: their SRVs go into the heap after the CBV (slot 0): the cubes'
+    // marble in slot 1. Their upload buffers must stay alive until the command list that
+    // copies from them has executed (the end of this method waits for it).
+    ComPtr<ID3D12Resource> cubeTextureUploadHeap;
+    LoadTexture("marble.png", m_cubeTexture, cubeTextureUploadHeap, 1);
+
+    // The sky: six images, in the order of a cube map's faces (+X, -X, +Y, -Y, +Z, -Z),
+    // in one cube map texture; its SRV goes into slot 2.
+--- replace:
+    // The sky: six images, in the order of a cube map's faces (+X, -X, +Y, -Y, +Z, -Z),
+    // in one cube map texture; its SRV goes into slot 1. Its upload buffer must stay alive
+    // until the command list that copies from it has executed (the end of this method waits for it).
+--- file: main.cpp
+--- find:
+    LoadCubemap(faces, m_skyboxTexture, skyboxTextureUploadHeap, 2);
+--- replace:
+    LoadCubemap(faces, m_skyboxTexture, skyboxTextureUploadHeap, 1);
+--- file: main.cpp
+--- find:
+    XMStoreFloat4x4(&constantBufferData.projection, XMMatrixTranspose(projection));
+--- replace:
+    XMStoreFloat4x4(&constantBufferData.projection, XMMatrixTranspose(projection));
+    XMStoreFloat3(&constantBufferData.cameraPos, cameraPos);    // for the reflections
+--- file: main.cpp
+--- find:
+    CD3DX12_GPU_DESCRIPTOR_HANDLE cubeTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE skyboxTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
+--- replace:
+    CD3DX12_GPU_DESCRIPTOR_HANDLE skyboxTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
+--- file: main.cpp
+--- find:
+    // cubes: the marble texture (root parameter 2) and a model matrix each (root parameter 0)
+    ModelConstants modelConstants = {};
+    m_commandList->SetGraphicsRootDescriptorTable(2, cubeTexture);
+    XMMATRIX model = XMMatrixTranslation(-1.0f, 0.0f, -1.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    model = XMMatrixTranslation(2.0f, 0.0f, 0.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+--- replace:
+    // cubes: the cube map (root parameter 2) - the cubes reflect the sky - and a model
+    // matrix and a normal matrix each (root parameter 0)
+    ModelConstants modelConstants = {};
+    m_commandList->SetGraphicsRootDescriptorTable(2, skyboxTexture);
+    XMMATRIX model = XMMatrixTranslation(-1.0f, 0.0f, -1.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMMATRIX normalMatrix = XMMatrixTranspose(XMMatrixInverse(nullptr, model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixTranspose(normalMatrix));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    model = XMMatrixTranslation(2.0f, 0.0f, 0.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    normalMatrix = XMMatrixTranspose(XMMatrixInverse(nullptr, model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixTranspose(normalMatrix));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+--- file: cubemaps.hlsl
+--- find:
+// The shaders. main.cpp compiles them at run time with D3DCompileFromFile.
+
+// The texture of the draw: register t0, in the descriptor table of root parameter 2.
+Texture2D texture1 : register(t0);
+// The sampler: register s0, the static sampler of the root signature (WRAP).
+SamplerState wrapSampler : register(s0);
+
+// Root constants set from main.cpp with SetGraphicsRoot32BitConstants: the vertex
+// shader sees them as a constant buffer at register b0.
+cbuffer ModelConstants : register(b0)
+{
+    float4x4 model;
+};
+
+// The constant buffer at register b1 (the CBV in root parameter 1's table): the
+// view and projection matrices, the same for every draw of a frame.
+cbuffer SceneConstantBuffer : register(b1)
+{
+    float4x4 view;
+    float4x4 projection;
+};
+
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+struct PSInput
+{
+    float4 position : SV_POSITION;
+    float2 texCoord : TEXCOORD;
+};
+
+// The vertex shader: runs once per vertex.
+PSInput VSMain(float4 position : POSITION, float2 texCoord : TEXCOORD)
+{
+    PSInput result;
+
+    // model, then view, then projection (GLSL: projection * view * model * position).
+    result.position = mul(mul(mul(position, model), view), projection);
+    result.texCoord = texCoord;
+
+    return result;
+}
+--- replace:
+// The shaders of the cubes. main.cpp compiles them at run time with D3DCompileFromFile.
+
+// The cube map: register t0, in the descriptor table of root parameter 2.
+TextureCube skybox : register(t0);
+// The sampler: register s1, the static sampler that clamps to the edge.
+SamplerState clampSampler : register(s1);
+
+// Root constants set from main.cpp with SetGraphicsRoot32BitConstants: the vertex
+// shader sees them as a constant buffer at register b0.
+cbuffer ModelConstants : register(b0)
+{
+    float4x4 model;
+    float4x4 normalMatrix;    // transpose(inverse(model)), computed in main.cpp
+};
+
+// The constant buffer at register b1 (the CBV in root parameter 1's table): the values
+// that are the same for every draw of a frame.
+cbuffer SceneConstantBuffer : register(b1)
+{
+    float4x4 view;
+    float4x4 projection;
+    float3 cameraPos;
+};
+
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+struct PSInput
+{
+    float4 position : SV_POSITION;
+    float3 normal : NORMAL;
+    float3 fragPos : POSITION;    // the position in world space
+};
+
+// The vertex shader: runs once per vertex.
+PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL)
+{
+    PSInput result;
+
+    float4 worldPosition = mul(position, model);
+    result.position = mul(mul(worldPosition, view), projection);
+    result.fragPos = worldPosition.xyz;
+    result.normal = mul(float4(normal, 0.0f), normalMatrix).xyz;
+
+    return result;
+}
+--- file: cubemaps.hlsl
+--- find:
+    return texture1.Sample(wrapSampler, input.texCoord);
+--- replace:
+    // The direction from the camera to the pixel, mirrored at the surface: the cube map
+    // is sampled in the reflected direction.
+    float3 I = normalize(input.fragPos - cameraPos);
+    float3 R = reflect(I, normalize(input.normal));
+    return float4(skybox.Sample(clampSampler, R).rgb, 1.0f);
+
+=== task: refraction
+--- file: cubemaps.hlsl
+--- find:
+    // The direction from the camera to the pixel, mirrored at the surface: the cube map
+    // is sampled in the reflected direction.
+    float3 I = normalize(input.fragPos - cameraPos);
+    float3 R = reflect(I, normalize(input.normal));
+--- replace:
+    // The direction from the camera to the pixel, bent where it enters the glass: the
+    // cube map is sampled in the refracted direction.
+    float ratio = 1.00f / 1.52f;    // from air (1.00) into glass (1.52)
+    float3 I = normalize(input.fragPos - cameraPos);
+    float3 R = refract(I, normalize(input.normal), ratio);

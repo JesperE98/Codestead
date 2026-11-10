@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Codestead.GP</RootNamespace>
+    <AssemblyName>Codestead.GP</AssemblyName>
+    <AssemblyTitle>$(CodesteadGPName)</AssemblyTitle>
+    <!-- The release workflow passes the full version (-p:Version=x.y.z); local builds are x.y.0. -->
+    <Version>$(CodesteadGPVersion).0</Version>
+    <ApplicationIcon>../../../build/icons/codestead-gp.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- Release builds: no debugger attach info for users, smaller output. -->
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+    <!-- Called directly in Program.Main: vpk pack checks for it in the app's own assembly. -->
+    <PackageReference Include="Velopack" Version="1.2.161" />
+  </ItemGroup>
+  <Import Project="../../../build/Codestead.App.props" />
+  <ItemGroup>
+    <ProjectReference Include="../Codestead.GP.Gpu/Codestead.GP.Gpu.csproj" />
+    <ProjectReference Include="../Codestead.GP.Course/Codestead.GP.Course.csproj" />
+    <ProjectReference Include="../../Shared/Codestead.UI/Codestead.UI.csproj" />
+    <ProjectReference Include="../../Shared/Codestead.Learning.UI/Codestead.Learning.UI.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/**" />
+    <!-- What changed in each version, shown after an update ("What's new"). -->
+    <EmbeddedResource Include="../changelog.json" LogicalName="changelog.json" />
+  </ItemGroup>
+  <!-- Expose the product name from build/Codestead.props to the code. -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ProductName</_Parameter1>
+      <_Parameter2>$(CodesteadGPName)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ToolId</_Parameter1>
+      <_Parameter2>$(CodesteadGPId)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ReleasesRepo</_Parameter1>
+      <_Parameter2>$(CodesteadReleasesRepo)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>

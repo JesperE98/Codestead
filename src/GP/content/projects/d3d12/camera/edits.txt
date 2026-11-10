@@ -1,0 +1,276 @@
+=== task: look-at
+--- file: main.cpp
+--- find:
+    // The view matrix moves the whole scene 3 units away from the camera. The *RH
+    // functions use a right-handed system like OpenGL: the camera looks down -z.
+    XMMATRIX view = XMMatrixTranslation(0.0f, 0.0f, -3.0f);
+--- replace:
+    // The view matrix: a camera at (0, 0, 3) looking at the origin, with +y as up.
+    // The *RH functions use a right-handed system like OpenGL: +z points out of the
+    // screen, towards you.
+    XMMATRIX view = XMMatrixLookAtRH(XMVectorSet(0.0f, 0.0f, 3.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+
+=== task: circle
+--- file: main.cpp
+--- find:
+    // The view matrix: a camera at (0, 0, 3) looking at the origin, with +y as up.
+    // The *RH functions use a right-handed system like OpenGL: +z points out of the
+    // screen, towards you.
+    XMMATRIX view = XMMatrixLookAtRH(XMVectorSet(0.0f, 0.0f, 3.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+--- replace:
+    // The time in seconds since the first frame.
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+    // The view matrix: the camera circles the scene at a distance of 10 (in the
+    // xz plane), always looking at the origin, with +y as up.
+    float radius = 10.0f;
+    float camX = std::sin(time) * radius;
+    float camZ = std::cos(time) * radius;
+    XMMATRIX view = XMMatrixLookAtRH(XMVectorSet(camX, 0.0f, camZ, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+
+=== task: free-camera
+--- file: main.cpp
+--- find:
+class D3D12App
+{
+--- replace:
+// The camera: where it is, the direction it looks in, and which way is up. Globals,
+// so that OnUpdate and the window's message handler can both use them.
+XMVECTOR cameraPos   = XMVectorSet(0.0f, 0.0f,  3.0f, 0.0f);
+XMVECTOR cameraFront = XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f);
+XMVECTOR cameraUp    = XMVectorSet(0.0f, 1.0f,  0.0f, 0.0f);
+
+class D3D12App
+{
+--- file: main.cpp
+--- find:
+    // The time in seconds since the first frame.
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+    // The view matrix: the camera circles the scene at a distance of 10 (in the
+    // xz plane), always looking at the origin, with +y as up.
+    float radius = 10.0f;
+    float camX = std::sin(time) * radius;
+    float camZ = std::cos(time) * radius;
+    XMMATRIX view = XMMatrixLookAtRH(XMVectorSet(camX, 0.0f, camZ, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+--- replace:
+    // The view matrix: look from cameraPos in the direction of cameraFront.
+    XMMATRIX view = XMMatrixLookAtRH(cameraPos, cameraPos + cameraFront, cameraUp);
+
+=== task: wasd
+--- file: main.cpp
+--- find:
+XMVECTOR cameraUp    = XMVectorSet(0.0f, 1.0f,  0.0f, 0.0f);
+--- replace:
+XMVECTOR cameraUp    = XMVectorSet(0.0f, 1.0f,  0.0f, 0.0f);
+
+// Which keys are held down, by virtual-key code ('W', VK_UP ...). WindowProc keeps it up to date.
+bool keys[256] = {};
+--- file: main.cpp
+--- find:
+void D3D12App::OnUpdate()
+{
+    // The view matrix: look from cameraPos in the direction of cameraFront.
+--- replace:
+void D3D12App::OnUpdate()
+{
+    // Per-frame time logic: deltaTime is the time since the last frame, in seconds.
+    static auto lastFrame = std::chrono::high_resolution_clock::now();
+    auto currentFrame = std::chrono::high_resolution_clock::now();
+    float deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - lastFrame).count();
+    lastFrame = currentFrame;
+
+    // Move the camera with W, A, S and D: 2.5 units per second, however fast the frames are.
+    float cameraSpeed = 2.5f * deltaTime;
+    if (keys['W'])
+        cameraPos += cameraSpeed * cameraFront;
+    if (keys['S'])
+        cameraPos -= cameraSpeed * cameraFront;
+    if (keys['A'])
+        cameraPos -= XMVector3Normalize(XMVector3Cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (keys['D'])
+        cameraPos += XMVector3Normalize(XMVector3Cross(cameraFront, cameraUp)) * cameraSpeed;
+
+    // The view matrix: look from cameraPos in the direction of cameraFront.
+--- file: main.cpp
+--- find:
+    case WM_KEYDOWN:
+        // Escape closes the window.
+        if (wParam == VK_ESCAPE)
+        {
+            DestroyWindow(hWnd);
+        }
+        return 0;
+--- replace:
+    case WM_KEYDOWN:
+        // Escape closes the window; any key pressed is held down until its WM_KEYUP.
+        if (wParam == VK_ESCAPE)
+        {
+            DestroyWindow(hWnd);
+        }
+        keys[static_cast<UINT8>(wParam)] = true;
+        return 0;
+
+    case WM_KEYUP:
+        keys[static_cast<UINT8>(wParam)] = false;
+        return 0;
+
+=== task: mouse-look
+--- file: main.cpp
+--- find:
+#include <windows.h>
+--- replace:
+#include <windows.h>
+#include <windowsx.h>
+--- file: main.cpp
+--- find:
+bool keys[256] = {};
+--- replace:
+bool keys[256] = {};
+
+// Mouse look: the camera's direction as two angles, in degrees.
+bool firstMouse = true;
+float yaw   = -90.0f;    // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
+float pitch =  0.0f;
+float lastX =  800.0f / 2.0f;
+float lastY =  600.0f / 2.0f;
+--- file: main.cpp
+--- find:
+// Main message handler for the window.
+--- replace:
+// Mouse look: WindowProc calls this whenever the mouse moves, with the cursor's
+// position in the window's client area (in pixels from its top left corner).
+void OnMouseMove(float xpos, float ypos)
+{
+    // The first time, the cursor can be anywhere: start from there instead of
+    // jumping from (lastX, lastY).
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos;    // reversed since y-coordinates go from top to bottom
+    lastX = xpos;
+    lastY = ypos;
+
+    float sensitivity = 0.1f;    // change this value to your liking
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw += xoffset;
+    pitch += yoffset;
+
+    // Make sure that when pitch is out of bounds, the screen doesn't get flipped.
+    if (pitch > 89.0f)
+        pitch = 89.0f;
+    if (pitch < -89.0f)
+        pitch = -89.0f;
+
+    XMVECTOR front = XMVectorSet(
+        std::cos(XMConvertToRadians(yaw)) * std::cos(XMConvertToRadians(pitch)),
+        std::sin(XMConvertToRadians(pitch)),
+        std::sin(XMConvertToRadians(yaw)) * std::cos(XMConvertToRadians(pitch)),
+        0.0f);
+    cameraFront = XMVector3Normalize(front);
+}
+
+// Main message handler for the window.
+--- file: main.cpp
+--- find:
+    case WM_KEYUP:
+        keys[static_cast<UINT8>(wParam)] = false;
+        return 0;
+--- replace:
+    case WM_KEYUP:
+        keys[static_cast<UINT8>(wParam)] = false;
+        return 0;
+
+    case WM_MOUSEMOVE:
+        // Only while the window is the active one, so the mouse is free otherwise.
+        if (GetForegroundWindow() == hWnd)
+        {
+            int xpos = GET_X_LPARAM(lParam);
+            int ypos = GET_Y_LPARAM(lParam);
+            OnMouseMove(static_cast<float>(xpos), static_cast<float>(ypos));
+
+            // Capture the cursor: put it back in the middle of the window, so it never
+            // reaches an edge. lastX and lastY move with it, so the jump does not turn
+            // the camera (the WM_MOUSEMOVE it causes has an offset of 0).
+            RECT clientRect = {};
+            GetClientRect(hWnd, &clientRect);
+            POINT centre = { clientRect.right / 2, clientRect.bottom / 2 };
+            if (xpos != centre.x || ypos != centre.y)
+            {
+                lastX = static_cast<float>(centre.x);
+                lastY = static_cast<float>(centre.y);
+                ClientToScreen(hWnd, &centre);
+                SetCursorPos(centre.x, centre.y);
+            }
+        }
+        return 0;
+--- file: main.cpp
+--- find:
+        ShowWindow(hwnd, nCmdShow);
+--- replace:
+        ShowWindow(hwnd, nCmdShow);
+
+        // Hide the cursor over the window: the mouse turns the camera now.
+        ShowCursor(FALSE);
+
+=== task: zoom
+--- file: main.cpp
+--- find:
+float lastY =  600.0f / 2.0f;
+--- replace:
+float lastY =  600.0f / 2.0f;
+
+// Zoom: the field of view, in degrees.
+float fov   =  45.0f;
+--- file: main.cpp
+--- find:
+// Main message handler for the window.
+--- replace:
+// Zoom: WindowProc calls this when the mouse wheel turns, with the number of notches
+// (positive: turned away from you, which zooms in).
+void OnMouseWheel(float yoffset)
+{
+    fov -= yoffset;
+    if (fov < 1.0f)
+        fov = 1.0f;
+    if (fov > 45.0f)
+        fov = 45.0f;
+}
+
+// Main message handler for the window.
+--- file: main.cpp
+--- find:
+    // The projection matrix adds perspective: a 45 degree field of view, the window's
+    // aspect ratio, and the near and far planes at 0.1 and 100 units.
+    XMMATRIX projection = XMMatrixPerspectiveFovRH(XMConvertToRadians(45.0f), static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 100.0f);
+--- replace:
+    // The projection matrix adds perspective: a field of view of fov degrees (the
+    // zoom), the window's aspect ratio, and the near and far planes at 0.1 and 100 units.
+    XMMATRIX projection = XMMatrixPerspectiveFovRH(XMConvertToRadians(fov), static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 100.0f);
+--- file: main.cpp
+--- find:
+                SetCursorPos(centre.x, centre.y);
+            }
+        }
+        return 0;
+--- replace:
+                SetCursorPos(centre.x, centre.y);
+            }
+        }
+        return 0;
+
+    case WM_MOUSEWHEEL:
+        // One notch of the wheel is WHEEL_DELTA (120); a fine wheel sends less.
+        OnMouseWheel(static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA);
+        return 0;

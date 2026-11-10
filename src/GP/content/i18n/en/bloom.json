@@ -1,0 +1,41 @@
+{
+  "title": "Bloom",
+  "tasks": {
+    "bright-pass": {
+      "text": {
+        "opengl": "Give the HDR framebuffer a second floating point colour attachment and let `bloom.fs` and `light_box.fs` write two outputs: the colour as before, and – only where its brightness is above 1.0 – the same colour into the second (black elsewhere). For now show the second colour buffer in the window.",
+        "vulkan": "Give the floating point target a second colour attachment (the bright image) and let `bloom.frag` and `light_box.frag` write into it the fragments brighter than 1.0 (`dot(color, vec3(0.2126, 0.7152, 0.0722)) > 1.0`, else black). For now show the bright image on the screen quad.",
+        "d3d12": "Give the scene pass a second floating point render target and let both scene pixel shaders write two outputs: the colour as before (`SV_TARGET0`), and – only where its brightness is above 1.0 – the same colour into the second (`SV_TARGET1`, black elsewhere). For now show the second colour buffer in the window."
+      },
+      "hint": {
+        "opengl": "`unsigned int colorBuffers[2]; glGenTextures(2, colorBuffers);` and a `for` loop with the old texture setup, attached to `GL_COLOR_ATTACHMENT0 + i`. Then `unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 }; glDrawBuffers(2, attachments);`. Shaders: `layout (location = 1) out vec4 BrightColor;` and `float brightness = dot(result, vec3(0.2126, 0.7152, 0.0722)); if(brightness > 1.0) BrightColor = vec4(result, 1.0); else BrightColor = vec4(0.0, 0.0, 0.0, 1.0);`. Pass 3 binds `colorBuffers[1]`.",
+        "vulkan": "`VkAttachmentDescription brightAttachment = colorAttachment;`, two colour references (attachments 0 and 1, depth at 2), `colorAttachmentCount = 2`; the bright image like the colour image and three views in the framebuffer; three clear values. `createPipeline(…, uint32_t colorAttachmentCount, …)` with `std::array<VkPipelineColorBlendAttachmentState, 2>` and `colorBlending.attachmentCount = colorAttachmentCount` – 2 for the scene's pipelines, 1 for the final one. Shaders: `layout(location = 1) out vec4 brightColor;`. `brightDescriptorSet` (pool: 4 sets) bound for the final pass.",
+        "d3d12": "`m_colorBuffers[2]` in a `for` loop (RTVs `FrameCount + i`, SRVs `3 + i`; heaps `FrameCount + 2` and 5). Scene PSO: `NumRenderTargets = 2`, `RTVFormats[1] = DXGI_FORMAT_R16G16B16A16_FLOAT`; final PSO: `NumRenderTargets = 1`, `RTVFormats[1] = DXGI_FORMAT_UNKNOWN`. Pass 1: `barriers[2]`, `OMSetRenderTargets(2, hdrRtvHandles, FALSE, &dsvHandle)`, clear both. HLSL: `struct PSOutput { float4 FragColor : SV_TARGET0; float4 BrightColor : SV_TARGET1; };` and the brightness test with `float3(0.2126f, 0.7152f, 0.0722f)`. Final table 2: slot 4."
+      }
+    },
+    "blur": {
+      "text": {
+        "opengl": "Blur the bright texture with learnopengl's two-pass Gaussian blur: two ping-pong framebuffers (one `GL_RGBA16F` colour texture each), 10 passes alternating horizontal and vertical, each reading what the previous pass wrote (the first reads the bright texture). Show the last blurred texture in the window.",
+        "vulkan": "Blur the bright image with learnopengl's two-pass Gaussian blur: two floating point ping-pong targets and 10 render passes that draw the screen quad into one while sampling the other (the first samples the bright image), alternating horizontal and vertical. Show the blurred image on the screen quad.",
+        "d3d12": "Blur the bright texture with learnopengl's two-pass Gaussian blur: two ping-pong render targets and 10 passes of the screen quad, alternating horizontal and vertical, each reading what the previous pass wrote (the first reads the bright texture). Show the last blurred texture in the window."
+      },
+      "hint": {
+        "opengl": "`Shader shaderBlur(\"blur.vs\", \"blur.fs\");`, the `pingpongFBO[2]` / `pingpongColorbuffers[2]` loop (no depth). Loop: `bool horizontal = true, first_iteration = true; unsigned int amount = 10;`, per pass `glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]); shaderBlur.setInt(\"horizontal\", horizontal); glBindTexture(GL_TEXTURE_2D, first_iteration ? colorBuffers[1] : pingpongColorbuffers[!horizontal]); renderQuad(); horizontal = !horizontal;`. `blur.fs`: `vec2 tex_offset = 1.0 / textureSize(image, 0);`, `weight[0]` for the centre, `± tex_offset.x * i` or `± tex_offset.y * i` times `weight[i]`. Final pass: `pingpongColorbuffers[!horizontal]`.",
+        "vulkan": "`createBlurRenderPass()`: one `VK_FORMAT_R16G16B16A16_SFLOAT` attachment, loadOp `DONT_CARE`, storeOp STORE, finalLayout `SHADER_READ_ONLY_OPTIMAL`, no depth, two dependencies. `createPingpongFramebuffers()`: image, view and framebuffer for `i` = 0, 1. `blurPipeline` with `blurRenderPass` and 1 attachment; `pingpongDescriptorSets[i]` (pool: 6). `VkBool32 horizontal;` in `PushConstants`. Per pass: begin with `pingpongFramebuffers[horizontal]`, push `horizontal`, bind `first_iteration ? brightDescriptorSet : pingpongDescriptorSets[!horizontal]`, draw the quad, end. `blur.frag`: push constant block up to `bool horizontal`, learnopengl's loops.",
+        "d3d12": "`m_blurPipelineState`: `blur.hlsl`, `NumRenderTargets = 1`, `RTVFormats[1] = DXGI_FORMAT_UNKNOWN`, `DepthEnable = FALSE`, `DSVFormat = DXGI_FORMAT_UNKNOWN`. `m_pingpongColorbuffers[2]`: RTVs `FrameCount + 2 + i`, SRVs `5 + i` (heaps `FrameCount + 4` and 7). Per pass: barrier to RENDER_TARGET, `OMSetRenderTargets(1, &pingpongRtvHandle, FALSE, nullptr)`, `BlurConstants` as root constants, table 2 = `first_iteration ? 4 : 5 + !horizontal`, `DrawInstanced(6, 1, 36, 0)`, barrier back. `blur.hlsl`: `image.GetDimensions(width, height); float2 tex_offset = 1.0f / float2(width, height);`. Final table 2: `5 + !horizontal`."
+      }
+    },
+    "combine": {
+      "text": {
+        "opengl": "Add the blurred bright texture to the scene in the final pass before the tone mapping: the scene (`colorBuffers[0]`) on unit 0, the blurred texture on unit 1 (sampler `bloomBlur`), and in `bloom_final.fs` add the two colours.",
+        "vulkan": "Add the blurred bright image to the scene in the final pass before the tone mapping: a second texture `bloomBlur` at binding 2 of a new descriptor set for the final pass, and in `bloom_final.frag` add the two colours – the light cubes glow.",
+        "d3d12": "Add the blurred bright texture to the scene in the final pass before the tone mapping: the scene (colour buffer 0) at t0, the blurred texture at t1 in a descriptor table of its own, and in `bloom_final.hlsl` add the two colours."
+      },
+      "hint": {
+        "opengl": "`shaderBloomFinal.setInt(\"bloomBlur\", 1);`; pass 3: `glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, colorBuffers[0]); glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);`. `bloom_final.fs`: `uniform sampler2D bloomBlur;`, `vec3 bloomColor = texture(bloomBlur, TexCoords).rgb; hdrColor += bloomColor;` before the tone mapping.",
+        "vulkan": "Binding 2 in the layout (combined image sampler, fragment stage); `createBloomDescriptorSet(hdrColorImageView, pingpongImageViews[0], colorBufferSampler, bloomDescriptorSet)` with three descriptor writes; pool 7 uniform buffers, **14** samplers, `maxSets = 7`; the final pass binds `bloomDescriptorSet`. `bloom_final.frag`: `layout(binding = 2) uniform sampler2D bloomBlur;`, `hdrColor += texture(bloomBlur, fragTexCoord).rgb;` before the tone mapping.",
+        "d3d12": "`ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1)`, `rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL)`. Final pass: table 2 = slot 3, table 3 = slot `5 + !horizontal`. `bloom_final.hlsl`: `Texture2D bloomBlur : register(t1);`, `float3 bloomColor = bloomBlur.Sample(clampSampler, input.texCoord).rgb; hdrColor += bloomColor;` before the tone mapping."
+      }
+    }
+  }
+}

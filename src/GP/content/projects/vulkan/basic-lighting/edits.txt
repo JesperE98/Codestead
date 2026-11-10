@@ -1,0 +1,168 @@
+=== task: ambient
+--- file: shaders/basic_lighting.frag
+--- find:
+    outColor = vec4(ubo.lightColor * ubo.objectColor, 1.0);
+--- replace:
+    // ambient
+    float ambientStrength = 0.1;
+    vec3 ambient = ambientStrength * ubo.lightColor;
+
+    vec3 result = ambient * ubo.objectColor;
+    outColor = vec4(result, 1.0);
+
+=== task: normals
+--- file: main.cpp
+--- find:
+    static std::array<VkVertexInputAttributeDescription, 1> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 1> attributeDescriptions{};
+--- replace:
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+--- file: main.cpp
+--- find:
+        // TODO: the normal attribute (location 1): the 3 floats after the position
+--- replace:
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, normal);
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/basic_lighting.vert.spv", "shaders/basic_lighting.frag.spv", 1, lightingPipeline);
+--- replace:
+        createPipeline("shaders/basic_lighting.vert.spv", "shaders/basic_lighting.frag.spv", 2, lightingPipeline); // position and normal
+--- file: shaders/basic_lighting.vert
+--- find:
+layout(location = 0) in vec3 inPosition;
+
+void main() {
+    gl_Position = ubo.proj * ubo.view * pc.model * vec4(inPosition, 1.0);
+}
+--- replace:
+layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec3 inNormal;
+
+layout(location = 0) out vec3 fragPos;
+layout(location = 1) out vec3 fragNormal;
+
+void main() {
+    // the lighting is calculated in world space: the fragment's position after the model matrix
+    fragPos = vec3(pc.model * vec4(inPosition, 1.0));
+    fragNormal = inNormal;
+
+    gl_Position = ubo.proj * ubo.view * vec4(fragPos, 1.0);
+}
+--- file: shaders/basic_lighting.frag
+--- find:
+layout(location = 0) out vec4 outColor;
+--- replace:
+layout(location = 0) in vec3 fragPos;
+layout(location = 1) in vec3 fragNormal;
+
+layout(location = 0) out vec4 outColor;
+
+=== task: diffuse
+--- file: shaders/basic_lighting.frag
+--- find:
+    vec3 lightColor;
+} ubo;
+--- replace:
+    vec3 lightColor;
+    vec3 lightPos;
+} ubo;
+--- file: shaders/basic_lighting.frag
+--- find:
+    vec3 ambient = ambientStrength * ubo.lightColor;
+
+    vec3 result = ambient * ubo.objectColor;
+--- replace:
+    vec3 ambient = ambientStrength * ubo.lightColor;
+
+    // diffuse
+    vec3 norm = normalize(fragNormal);
+    vec3 lightDir = normalize(ubo.lightPos - fragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * ubo.lightColor;
+
+    vec3 result = (ambient + diffuse) * ubo.objectColor;
+--- file: main.cpp
+--- find:
+    glm::vec3 lightColor;
+    float pad2;
+};
+--- replace:
+    glm::vec3 lightColor;
+    float pad2;
+    glm::vec3 lightPos;
+    float pad3;
+};
+--- file: main.cpp
+--- find:
+        ubo.lightColor  = glm::vec3(1.0f, 1.0f, 1.0f);
+--- replace:
+        ubo.lightColor  = glm::vec3(1.0f, 1.0f, 1.0f);
+        ubo.lightPos    = lightPos;
+
+=== task: normal-matrix
+--- file: shaders/basic_lighting.vert
+--- find:
+    fragNormal = inNormal;
+--- replace:
+    // the normal matrix: rotations and scaling of the model matrix without the translation (and right for non-uniform scaling)
+    fragNormal = mat3(transpose(inverse(pc.model))) * inNormal;
+
+=== task: specular
+--- file: shaders/basic_lighting.frag
+--- find:
+    vec3 lightPos;
+} ubo;
+--- replace:
+    vec3 lightPos;
+    vec3 viewPos;
+} ubo;
+--- file: shaders/basic_lighting.frag
+--- find:
+    vec3 diffuse = diff * ubo.lightColor;
+
+    vec3 result = (ambient + diffuse) * ubo.objectColor;
+--- replace:
+    vec3 diffuse = diff * ubo.lightColor;
+
+    // specular
+    float specularStrength = 0.5;
+    vec3 viewDir = normalize(ubo.viewPos - fragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    vec3 specular = specularStrength * spec * ubo.lightColor;
+
+    vec3 result = (ambient + diffuse + specular) * ubo.objectColor;
+--- file: main.cpp
+--- find:
+    glm::vec3 lightPos;
+    float pad3;
+};
+--- replace:
+    glm::vec3 lightPos;
+    float pad3;
+    glm::vec3 viewPos;
+    float pad4;
+};
+--- file: main.cpp
+--- find:
+        ubo.lightPos    = lightPos;
+--- replace:
+        ubo.lightPos    = lightPos;
+        ubo.viewPos     = cameraPos;
+
+=== task: moving-light
+--- file: main.cpp
+--- find:
+    void updateUniformBuffer() {
+        UniformBufferObject ubo{};
+--- replace:
+    void updateUniformBuffer() {
+        // change the light's position values over time (before the light's position is used)
+        lightPos.x = static_cast<float>(1.0 + std::sin(glfwGetTime()) * 2.0);
+        lightPos.y = static_cast<float>(std::sin(glfwGetTime() / 2.0) * 1.0);
+
+        UniformBufferObject ubo{};

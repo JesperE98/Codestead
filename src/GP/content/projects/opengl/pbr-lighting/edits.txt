@@ -1,0 +1,318 @@
+=== task: lambert
+--- file: pbr.fs
+--- find:
+    // TODO: for each of the 4 lights add its outgoing radiance to Lo
+--- replace:
+    for(int i = 0; i < 4; ++i)
+    {
+        // calculate per-light radiance
+        vec3 L = normalize(lightPositions[i] - WorldPos);
+        float distance = length(lightPositions[i] - WorldPos);
+        float attenuation = 1.0 / (distance * distance);
+        vec3 radiance = lightColors[i] * attenuation;
+
+        // scale light by NdotL
+        float NdotL = max(dot(N, L), 0.0);
+
+        // add to outgoing radiance Lo
+        Lo += (albedo / PI) * radiance * NdotL; // only the diffuse (Lambert) term for now
+    }
+=== task: ndf
+--- file: pbr.fs
+--- find:
+// TODO: DistributionGGX(N, H, roughness): the normal distribution function (Trowbridge-Reitz GGX)
+--- replace:
+float DistributionGGX(vec3 N, vec3 H, float roughness)
+{
+    float a = roughness*roughness;
+    float a2 = a*a;
+    float NdotH = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH*NdotH;
+
+    float nom   = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+
+    return nom / denom;
+}
+--- file: pbr.fs
+--- find:
+        vec3 L = normalize(lightPositions[i] - WorldPos);
+--- replace:
+        vec3 L = normalize(lightPositions[i] - WorldPos);
+        vec3 H = normalize(V + L);
+--- file: pbr.fs
+--- find:
+        // scale light by NdotL
+--- replace:
+        // Cook-Torrance BRDF: only the normal distribution function for now
+        float NDF = DistributionGGX(N, H, roughness);
+        vec3 specular = vec3(NDF);
+
+        // scale light by NdotL
+--- file: pbr.fs
+--- find:
+        Lo += (albedo / PI) * radiance * NdotL; // only the diffuse (Lambert) term for now
+--- replace:
+        Lo += (albedo / PI + specular) * radiance * NdotL;
+=== task: geometry
+--- file: pbr.fs
+--- find:
+// TODO: GeometrySchlickGGX(NdotV, roughness) and GeometrySmith(N, V, L, roughness): the geometry function
+--- replace:
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float r = (roughness + 1.0);
+    float k = (r*r) / 8.0;
+
+    float nom   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+
+    return nom / denom;
+}
+// ----------------------------------------------------------------------------
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+
+    return ggx1 * ggx2;
+}
+--- file: pbr.fs
+--- find:
+        // Cook-Torrance BRDF: only the normal distribution function for now
+        float NDF = DistributionGGX(N, H, roughness);
+        vec3 specular = vec3(NDF);
+--- replace:
+        // Cook-Torrance BRDF: no Fresnel term yet
+        float NDF = DistributionGGX(N, H, roughness);
+        float G   = GeometrySmith(N, V, L, roughness);
+
+        vec3 numerator    = vec3(NDF * G);
+        float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
+        vec3 specular = numerator / denominator;
+=== task: fresnel
+--- file: pbr.fs
+--- find:
+// TODO: fresnelSchlick(cosTheta, F0): the Fresnel equation
+--- replace:
+vec3 fresnelSchlick(float cosTheta, vec3 F0)
+{
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+--- file: pbr.fs
+--- find:
+    vec3 V = normalize(camPos - WorldPos);
+--- replace:
+    vec3 V = normalize(camPos - WorldPos);
+
+    // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0
+    // of 0.04 and if it's a metal, use the albedo color as F0 (metallic workflow)
+    vec3 F0 = vec3(0.04);
+    F0 = mix(F0, albedo, metallic);
+--- file: pbr.fs
+--- find:
+        // Cook-Torrance BRDF: no Fresnel term yet
+        float NDF = DistributionGGX(N, H, roughness);
+        float G   = GeometrySmith(N, V, L, roughness);
+
+        vec3 numerator    = vec3(NDF * G);
+--- replace:
+        // Cook-Torrance BRDF
+        float NDF = DistributionGGX(N, H, roughness);
+        float G   = GeometrySmith(N, V, L, roughness);
+        vec3 F    = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);
+
+        vec3 numerator    = NDF * G * F;
+--- file: pbr.fs
+--- find:
+        vec3 specular = numerator / denominator;
+--- replace:
+        vec3 specular = numerator / denominator;
+
+        // kS is equal to Fresnel
+        vec3 kS = F;
+        // for energy conservation, the diffuse and specular light can't
+        // be above 1.0 (unless the surface emits light); to preserve this
+        // relationship the diffuse component (kD) should equal 1.0 - kS.
+        vec3 kD = vec3(1.0) - kS;
+        // multiply kD by the inverse metalness such that only non-metals
+        // have diffuse lighting, or a linear blend if partly metal (pure metals
+        // have no diffuse light).
+        kD *= 1.0 - metallic;
+--- file: pbr.fs
+--- find:
+        Lo += (albedo / PI + specular) * radiance * NdotL;
+--- replace:
+        Lo += (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+=== task: tone-map
+--- file: pbr.fs
+--- find:
+    // TODO: HDR tonemapping and gamma correction
+--- replace:
+    // HDR tonemapping
+    color = color / (color + vec3(1.0));
+    // gamma correct
+    color = pow(color, vec3(1.0/2.2));
+=== task: textured
+--- file: main.cpp
+--- find:
+    shader.setVec3("albedo", 0.5f, 0.0f, 0.0f);
+    shader.setFloat("ao", 1.0f);
+
+    // TODO: load the PBR material textures (albedo.png, normal.png, metallic.png, roughness.png, ao.png)
+--- replace:
+    shader.setInt("albedoMap", 0);
+    shader.setInt("normalMap", 1);
+    shader.setInt("metallicMap", 2);
+    shader.setInt("roughnessMap", 3);
+    shader.setInt("aoMap", 4);
+
+    // load PBR material textures
+    // --------------------------
+    unsigned int albedoMap    = loadTexture("albedo.png");
+    unsigned int normalMap    = loadTexture("normal.png");
+    unsigned int metallicMap  = loadTexture("metallic.png");
+    unsigned int roughnessMap = loadTexture("roughness.png");
+    unsigned int aoMap        = loadTexture("ao.png");
+--- file: main.cpp
+--- find:
+    int nrRows    = 7;
+    int nrColumns = 7;
+    float spacing = 2.5;
+--- replace:
+    // a few large spheres, so the material's details can be seen
+    int nrRows    = 3;
+    int nrColumns = 3;
+    float spacing = 6.0;
+--- file: main.cpp
+--- find:
+        // render rows*column number of spheres with varying metallic/roughness values scaled by rows and columns respectively
+        glm::mat4 model = glm::mat4(1.0f);
+        for (int row = 0; row < nrRows; ++row)
+        {
+            shader.setFloat("metallic", (float)row / (float)nrRows);
+            for (int col = 0; col < nrColumns; ++col)
+            {
+                // we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
+                // on direct lighting.
+                shader.setFloat("roughness", glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f));
+
+                model = glm::mat4(1.0f);
+                model = glm::translate(model, glm::vec3(
+                    (float)(col - (nrColumns / 2)) * spacing,
+                    (float)(row - (nrRows / 2)) * spacing,
+                    0.0f
+                ));
+--- replace:
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, albedoMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, normalMap);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, metallicMap);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, roughnessMap);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, aoMap);
+
+        // render rows*column number of spheres with material properties defined by textures (they all have the same material properties)
+        glm::mat4 model = glm::mat4(1.0f);
+        for (int row = 0; row < nrRows; ++row)
+        {
+            for (int col = 0; col < nrColumns; ++col)
+            {
+                model = glm::mat4(1.0f);
+                model = glm::translate(model, glm::vec3(
+                    (float)(col - (nrColumns / 2)) * spacing,
+                    (float)(row - (nrRows / 2)) * spacing,
+                    0.0f
+                ));
+                model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // turn the middle of the textures towards the camera
+                model = glm::scale(model, glm::vec3(2.4f));
+--- file: main.cpp
+--- find:
+    // glfw: terminate, clearing all previously allocated GLFW resources.
+--- replace:
+    // optional: de-allocate all resources once they've outlived their purpose:
+    // ------------------------------------------------------------------------
+    glDeleteTextures(1, &albedoMap);
+    glDeleteTextures(1, &normalMap);
+    glDeleteTextures(1, &metallicMap);
+    glDeleteTextures(1, &roughnessMap);
+    glDeleteTextures(1, &aoMap);
+
+    // glfw: terminate, clearing all previously allocated GLFW resources.
+--- file: pbr.vs
+--- find:
+layout (location = 2) in vec2 aTexCoords;
+--- replace:
+layout (location = 2) in vec2 aTexCoords;
+layout (location = 3) in vec3 aTangent;
+--- file: pbr.vs
+--- find:
+out vec3 Normal;
+--- replace:
+out vec3 Normal;
+out vec3 Tangent;
+--- file: pbr.vs
+--- find:
+    Normal = normalMatrix * aNormal;
+--- replace:
+    Normal = normalMatrix * aNormal;
+    Tangent = mat3(model) * aTangent;
+--- file: pbr.fs
+--- find:
+in vec3 Normal;
+
+// material parameters
+uniform vec3 albedo;
+uniform float metallic;
+uniform float roughness;
+uniform float ao;
+--- replace:
+in vec3 Normal;
+in vec3 Tangent;
+
+// material parameters
+uniform sampler2D albedoMap;
+uniform sampler2D normalMap;
+uniform sampler2D metallicMap;
+uniform sampler2D roughnessMap;
+uniform sampler2D aoMap;
+--- file: pbr.fs
+--- find:
+const float PI = 3.14159265359;
+// ----------------------------------------------------------------------------
+--- replace:
+const float PI = 3.14159265359;
+// ----------------------------------------------------------------------------
+// The normal map's normal (tangent space) taken to world space with a TBN matrix
+// built from the sphere's normal and tangent, as in the Normal Mapping chapter.
+vec3 getNormalFromMap()
+{
+    vec3 tangentNormal = texture(normalMap, TexCoords).xyz * 2.0 - 1.0;
+
+    vec3 N = normalize(Normal);
+    vec3 T = normalize(Tangent);
+    T = normalize(T - dot(T, N) * N); // Gram-Schmidt: make T perpendicular to N again
+    vec3 B = cross(N, T);
+    mat3 TBN = mat3(T, B, N);
+
+    return normalize(TBN * tangentNormal);
+}
+// ----------------------------------------------------------------------------
+--- file: pbr.fs
+--- find:
+    vec3 N = normalize(Normal);
+    vec3 V = normalize(camPos - WorldPos);
+--- replace:
+    vec3 albedo     = pow(texture(albedoMap, TexCoords).rgb, vec3(2.2));
+    float metallic  = texture(metallicMap, TexCoords).r;
+    float roughness = texture(roughnessMap, TexCoords).r;
+    float ao        = texture(aoMap, TexCoords).r;
+
+    vec3 N = getNormalFromMap();
+    vec3 V = normalize(camPos - WorldPos);

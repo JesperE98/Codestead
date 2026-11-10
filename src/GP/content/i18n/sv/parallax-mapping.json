@@ -1,0 +1,45 @@
+{
+  "title": "Parallax mapping",
+  "tasks": {
+    "parallax": {
+      "text": {
+        "opengl": "Ladda djupkartan (`bricks2_disp.png`, texturenhet 2, samplern `depthMap`), skicka `heightScale` (0.1) och lägg till learnopengls `ParallaxMapping`: förskjut texturkoordinaterna mot vyriktningen i tangentrymden med djupet gånger `heightScale`, och sampla normal mapen och färgen där.",
+        "vulkan": "Ladda djupkartan (`textures/bricks2_disp.png`) till binding 3 (`depthMap`), lägg `heightScale` (0.1) i uniformbuffern och lägg till learnopengls `ParallaxMapping`: förskjut texturkoordinaterna mot vyriktningen i tangentrymden med djupet gånger `heightScale`, och sampla normal mapen och färgen där.",
+        "d3d12": "Ladda djupkartan (`bricks2_disp.png`, plats 3 i CBV/SRV-heapen, register t2), lägg `heightScale` (0.1) i constant buffern och lägg till learnopengls `ParallaxMapping`: förskjut texturkoordinaterna mot vyriktningen i tangentrymden med djupet gånger `heightScale`, och sampla normal mapen och färgen där."
+      },
+      "hint": {
+        "opengl": "`unsigned int heightMap = loadTexture(\"bricks2_disp.png\");`, `shader.setInt(\"depthMap\", 2);`, `shader.setFloat(\"heightScale\", heightScale);`, `glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D, heightMap);`. Shadern: `float height = texture(depthMap, texCoords).r; return texCoords - viewDir.xy / viewDir.z * (height * heightScale);`, sedan `texCoords = ParallaxMapping(fs_in.TexCoords, viewDir);`.",
+        "vulkan": "`float heightScale;` på `pad2`:s plats (och efter `lightPos` i shaderns block), `ubo.heightScale = heightScale;`. `loadTexture(\"textures/bricks2_disp.png\", heightMapImage, heightMapImageMemory, heightMapImageView);`, layout binding 3, 3 image samplers i poolen, en fjärde descriptor write. Shadern: `layout(binding = 3) uniform sampler2D depthMap;`, `return texCoords - viewDir.xy / viewDir.z * (height * ubo.heightScale);`.",
+        "d3d12": "`float heightScale;` på `padding0`:s plats efter `viewPos` (och i cbuffern), `constantBufferData.heightScale = heightScale;`. `LoadTexture(\"bricks2_disp.png\", m_depthMap, depthMapUploadHeap, 3);`, `NumDescriptors = 4`, `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0)`. Shadern: `Texture2D depthMap : register(t2);`, `return texCoords - viewDir.xy / viewDir.z * (height * heightScale);`."
+      }
+    },
+    "discard-edges": {
+      "text": "Kasta de fragment vars förskjutna texturkoordinater hamnar utanför intervallet [0,1], så att fyrhörningens kanter följer teglens kontur i stället för att visa upprepad textur.",
+      "hint": {
+        "opengl": "Efter `ParallaxMapping`: `if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0) discard;`.",
+        "vulkan": "Efter `ParallaxMapping`: `if (texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0) discard;`.",
+        "d3d12": "Efter `ParallaxMapping`: `if (texCoords.x > 1.0f || texCoords.y > 1.0f || texCoords.x < 0.0f || texCoords.y < 0.0f) discard;`."
+      }
+    },
+    "steep": {
+      "text": {
+        "opengl": "Ersätt den enda samplingen med steep parallax mapping: gå längs vyriktningen genom djuplager (8 när man tittar rakt på ytan, upp till 32 i strykande vinklar) tills lagret ligger djupare än djupkartan, och returnera de texturkoordinaterna.",
+        "vulkan": "Ersätt den enda samplingen med steep parallax mapping: gå längs vyriktningen genom djuplager (8 när man tittar rakt på ytan, upp till 32 i strykande vinklar) tills lagret ligger djupare än djupkartan, och returnera de texturkoordinaterna.",
+        "d3d12": "Ersätt den enda samplingen med steep parallax mapping: gå längs vyriktningen genom djuplager (8 när man tittar rakt på ytan, upp till 32 i strykande vinklar) tills lagret ligger djupare än djupkartan, som läses med `SampleLevel(…, 0)`, och returnera de texturkoordinaterna."
+      },
+      "hint": {
+        "opengl": "`float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));`, `layerDepth = 1.0 / numLayers`, `vec2 P = viewDir.xy / viewDir.z * heightScale; vec2 deltaTexCoords = P / numLayers;`, sedan `while(currentLayerDepth < currentDepthMapValue) { currentTexCoords -= deltaTexCoords; currentDepthMapValue = texture(depthMap, currentTexCoords).r; currentLayerDepth += layerDepth; }`.",
+        "vulkan": "`float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));`, `layerDepth = 1.0 / numLayers`, `vec2 P = viewDir.xy / viewDir.z * ubo.heightScale; vec2 deltaTexCoords = P / numLayers;`, sedan `while (currentLayerDepth < currentDepthMapValue) { currentTexCoords -= deltaTexCoords; currentDepthMapValue = texture(depthMap, currentTexCoords).r; currentLayerDepth += layerDepth; }`.",
+        "d3d12": "`float numLayers = lerp(maxLayers, minLayers, abs(dot(float3(0.0f, 0.0f, 1.0f), viewDir)));` (`lerp` = GLSL:s `mix`), `float2 P = viewDir.xy / viewDir.z * heightScale;`, `while`-loopen med `depthMap.SampleLevel(wrapSampler, currentTexCoords, 0).r` – `Sample` vägras i en loop vars antal steg varierar."
+      }
+    },
+    "occlusion": {
+      "text": "Parallax occlusion mapping: interpolera efter loopen linjärt mellan de två sista lagren – före och efter att strålen passerat djupkartan – för att hitta var vystrålen verkligen träffar ytan.",
+      "hint": {
+        "opengl": "`vec2 prevTexCoords = currentTexCoords + deltaTexCoords; float afterDepth = currentDepthMapValue - currentLayerDepth; float beforeDepth = texture(depthMap, prevTexCoords).r - currentLayerDepth + layerDepth; float weight = afterDepth / (afterDepth - beforeDepth);`, returnera `prevTexCoords * weight + currentTexCoords * (1.0 - weight)`.",
+        "vulkan": "`vec2 prevTexCoords = currentTexCoords + deltaTexCoords; float afterDepth = currentDepthMapValue - currentLayerDepth; float beforeDepth = texture(depthMap, prevTexCoords).r - currentLayerDepth + layerDepth; float weight = afterDepth / (afterDepth - beforeDepth);`, returnera `prevTexCoords * weight + currentTexCoords * (1.0 - weight)`.",
+        "d3d12": "`float2 prevTexCoords = currentTexCoords + deltaTexCoords; float afterDepth = currentDepthMapValue - currentLayerDepth; float beforeDepth = depthMap.SampleLevel(wrapSampler, prevTexCoords, 0).r - currentLayerDepth + layerDepth; float weight = afterDepth / (afterDepth - beforeDepth);`, returnera `prevTexCoords * weight + currentTexCoords * (1.0f - weight)`."
+      }
+    }
+  }
+}

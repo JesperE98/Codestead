@@ -1,0 +1,41 @@
+{
+  "title": "Diffus irradians",
+  "tasks": {
+    "environment-map": {
+      "text": {
+        "opengl": "Ladda `environment.hdr` med `stbi_loadf` i en 2D-textur med flyttal, rendera den en gång – före renderloopen – i de sex sidorna av en cube map på 128 × 128 i `GL_RGB16F` (`envCubemap`) med `captureFBO`, den 90-gradiga capture-projektionen och de sex capture-vyerna, och rita cube mappen som bakgrund bakom sfärerna (`background.vs` / `.fs`, djupfunktion `GL_LEQUAL`).",
+        "vulkan": "Ladda `textures/environment.hdr` med `stbi_loadf` i en bild med flyttal, rendera den en gång – i `initVulkan()`, med `renderToCubemap` – i de sex lagren av en cube map på 128 × 128 i `R16G16B16A16_SFLOAT`, och rita cube mappen som bakgrund bakom sfärerna (`backgroundPipeline`, djupjämförelse mindre än eller lika med).",
+        "d3d12": "Ladda `environment.hdr` med `stbi_loadf` i en textur med flyttal (`LoadHdrTexture`), rendera den en gång – i `LoadAssets` – i de sex sidorna av en cube map på 128 × 128 i `R16G16B16A16_FLOAT` (`m_envCubemap`) med `SetCaptureTarget` och den y-vända 90-gradiga capture-projektionen, och rita cube mappen som bakgrund bakom sfärerna (`m_backgroundPipelineState`, djupfunktion `LESS_EQUAL`)."
+      },
+      "hint": {
+        "opengl": "`stbi_set_flip_vertically_on_load(true); float *data = stbi_loadf(\"environment.hdr\", &width, &height, &nrComponents, 0);` → `glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data)`. Per sida: `setMat4(\"view\", captureViews[i])`, `glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCubemap, 0)`, `glClear`, `renderCube()`; viewport 128 × 128, efteråt tillbaka till fönstrets storlek. Shadrar: `SampleSphericalMap` med `invAtan = vec2(0.1591, 0.3183)`; `mat4 rotView = mat4(mat3(view)); gl_Position = clipPos.xyww;`; `textureLod(environmentMap, WorldPos, 0.0)`, Reinhard, gamma.",
+        "vulkan": "`struct CapturePushConstants { glm::mat4 projectionView; };`, `createCaptureRenderPass(VK_FORMAT_R16G16B16A16_SFLOAT, captureRenderPass)`, `createPipeline(…, renderPass/captureRenderPass, topology, …)` med `VK_COMPARE_OP_LESS_OR_EQUAL`, `loadHdrTexture` (`STBI_rgb_alpha`, `VK_FORMAT_R32G32B32A32_SFLOAT`), `createCubemap(128, 1, …)`, bindning 1 i layouten, `createTextureDescriptorSet` för `hdrDescriptorSet` och `envDescriptorSet`, `renderToCubemap(equirectangularToCubemapPipeline, hdrDescriptorSet, envCubemapImage, 128)`; efter sfärerna binder du `backgroundPipeline` och `envDescriptorSet` och anropar `renderCube`.",
+        "d3d12": "`rtvHeapDesc.NumDescriptors = FrameCount + 1`, `cbvSrvHeapDesc.NumDescriptors = 3`, `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0)` + tabell 2 + en statisk CLAMP-sampler; konverteringens PSO (`RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT`, `DepthEnable = FALSE`, `DSVFormat = DXGI_FORMAT_UNKNOWN`) och bakgrundens PSO (`LESS_EQUAL`); `Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, 128, 128, 6, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)` med en `TEXTURECUBE`-SRV på plats 2; per sida root-konstanter, `SetCaptureTarget(m_envCubemap.Get(), i, 0)`, `RenderCube()`; sedan barriären till `PIXEL_SHADER_RESOURCE`. `SampleSphericalMap` slutar med `uv.y = 1.0f - uv.y;`."
+      }
+    },
+    "irradiance-map": {
+      "text": {
+        "opengl": "Konvolvera environment-cube mappen till en irradians-cube map på 32 × 32 (`irradianceMap`) med `irradiance_convolution.fs` – för varje riktning omgivningens cosinusviktade medelvärde över halvsfären runt den, `sampleDelta = 0.1` – och visa tills vidare irradiansmappen som bakgrund.",
+        "vulkan": "Konvolvera environment-cube mappen till en irradians-cube map på 32 × 32 med `irradiance_convolution.frag` – för varje riktning omgivningens cosinusviktade medelvärde över halvsfären runt den, `sampleDelta = 0.1` – med en andra `renderToCubemap`, och visa tills vidare irradiansmappen som bakgrund.",
+        "d3d12": "Konvolvera environment-cube mappen till en irradians-cube map på 32 × 32 (`m_irradianceMap`) med `irradiance_convolution.hlsl` – för varje riktning omgivningens cosinusviktade medelvärde över halvsfären runt den, `sampleDelta = 0.1` – i `LoadAssets`, och visa tills vidare irradiansmappen som bakgrund."
+      },
+      "hint": {
+        "opengl": "`irradianceMap` som `envCubemap` men 32 × 32; ändra storlek på `captureRBO`, `glViewport(0, 0, 32, 32)`, bind `envCubemap` och kör samma loop över de sex sidorna med `irradianceShader`. Shadern: `right = normalize(cross(up, N)); up = normalize(cross(N, right));`, looparna över `phi` (0..2π) och `theta` (0..π/2), `irradiance += texture(environmentMap, sampleVec).rgb * cos(theta) * sin(theta);`, till sist `PI * irradiance * (1.0 / float(nrSamples))`. Bakgrunden binder `irradianceMap`.",
+        "vulkan": "`createPipeline(\"shaders/cubemap.vert.spv\", \"shaders/irradiance_convolution.frag.spv\", captureRenderPass, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, irradiancePipeline)`, `createCubemap(32, 1, irradianceImage, …)`, `irradianceDescriptorSet`, `renderToCubemap(irradiancePipeline, envDescriptorSet, irradianceImage, 32)` efter konverteringen, poolen 4 set; bakgrunden binder `irradianceDescriptorSet`. Shadern: de två looparna, `texture(environmentMap, sampleVec).rgb * cos(theta) * sin(theta)`, `PI * irradiance * (1.0 / float(nrSamples))`.",
+        "d3d12": "`m_irradiancePipelineState` (konverteringens `psoDesc` med den nya `PS`), `cbvSrvHeapDesc.NumDescriptors = 4`, cube mappen 32 × 32 med sin SRV på plats 3; tabell 2 = plats 2, en viewport på 32 × 32, `SetCaptureTarget(m_irradianceMap.Get(), i, 0)`, barriären. Shadern: de två looparna med `environmentMap.SampleLevel(clampSampler, sampleVec, 0.0f)` (ingen `Sample` i en loop med varierande antal varv). Bakgrundens tabell 2 = plats 3."
+      }
+    },
+    "ambient": {
+      "text": {
+        "opengl": "Använd irradiansmappen som ambient ljus i `pbr.fs`: `ambient = kD * texture(irradianceMap, N).rgb * albedo * ao` med `kD = (1 - fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness)) * (1 - metallic)`, `irradianceMap` på texturenhet 0. Visa environment mappen som bakgrund igen.",
+        "vulkan": "Använd irradiansmappen som ambient ljus: lägg den i sfärernas descriptor set på bindning 1 och gör i `pbr.frag` `ambient = kD * texture(irradianceMap, N).rgb * albedo * ao` med `kD = (1 - fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness)) * (1 - metallic)`. Visa environment mappen som bakgrund igen.",
+        "d3d12": "Använd irradiansmappen som ambient ljus: sätt den som tabell 2 (heap-plats 3) före sfärerna och gör i `pbr.hlsl` `ambient = kD * irradianceMap.Sample(clampSampler, N).rgb * albedo * ao` med `kD = (1 - fresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness)) * (1 - metallic)`. Visa environment mappen som bakgrund igen."
+      },
+      "hint": {
+        "opengl": "`uniform samplerCube irradianceMap;`, `pbrShader.setInt(\"irradianceMap\", 0);`, i loopen `glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);`. `fresnelSchlickRoughness`: `F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0)`. Sedan `vec3 kD = 1.0 - kS; kD *= 1.0 - metallic; vec3 diffuse = irradiance * albedo; vec3 ambient = (kD * diffuse) * ao;`.",
+        "vulkan": "`layout(binding = 1) uniform samplerCube irradianceMap;`; `createDescriptorSet()` får en andra write (`dstBinding = 1`, `irradianceImageView`, `clampSampler`, `SHADER_READ_ONLY_OPTIMAL`). `fresnelSchlickRoughness`: `F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0)`. Sedan `vec3 kD = 1.0 - kS; kD *= 1.0 - metallic; vec3 diffuse = irradiance * albedo; vec3 ambient = (kD * diffuse) * ao;`. Bakgrunden binder `envDescriptorSet` igen.",
+        "d3d12": "`TextureCube irradianceMap : register(t0);`, `SamplerState clampSampler : register(s0);`; `SetGraphicsRootDescriptorTable(2, …)` på heap-plats 3 före `RenderScene()`, bakgrundens tabell 2 = plats 2 igen. `fresnelSchlickRoughness`: `float invRoughness = 1.0f - roughness; return F0 + (max(float3(invRoughness, invRoughness, invRoughness), F0) - F0) * pow(clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);`. Sedan `kD *= 1.0f - metallic; float3 ambient = (kD * irradiance * albedo) * ao;`."
+      }
+    }
+  }
+}

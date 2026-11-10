@@ -1,0 +1,619 @@
+=== task: depth-cubemap
+--- file: main.cpp
+--- find:
+// TODO: the size of each face of the depth cube map (SHADOW_WIDTH, SHADOW_HEIGHT): 1024 x 1024
+--- replace:
+const uint32_t SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024; // the size of each face of the depth cube map
+--- file: main.cpp
+--- find:
+    float pad2;
+    // TODO: far_plane (in place of pad2) and the light-space matrices of the cube map's six faces (shadowMatrices)
+};
+--- replace:
+    float far_plane; // the depth pass stores distance / far_plane
+    glm::mat4 shadowMatrices[6]; // world space -> the clip space of each face of the cube map, seen from the light
+};
+--- file: main.cpp
+--- find:
+    VkRenderPass renderPass;
+--- replace:
+    VkRenderPass renderPass;
+    VkRenderPass depthMapRenderPass; // the distances to the light are drawn into the depth cube map with this render pass
+--- file: main.cpp
+--- find:
+    VkPipeline graphicsPipeline;
+--- replace:
+    VkPipeline graphicsPipeline;
+    VkPipeline depthPipeline; // learnopengl's simpleDepthShader (with a geometry shader)
+--- file: main.cpp
+--- find:
+    VkImage woodTextureImage;
+--- replace:
+    // the depth cube map (learnopengl's depthCubemap + depthMapFBO): six depth images in one, drawn into from the light
+    // and sampled afterwards with a direction
+    VkImage depthCubemapImage;
+    VkDeviceMemory depthCubemapImageMemory;
+    VkImageView depthCubemapImageView;
+    VkFramebuffer depthMapFramebuffer;
+    VkSampler depthCubemapSampler;
+
+    VkImage woodTextureImage;
+--- file: main.cpp
+--- find:
+    VkDescriptorSet descriptorSet; // the uniform buffer and the wood texture
+--- replace:
+    VkDescriptorSet descriptorSet; // the uniform buffer, the wood texture and the depth cube map
+--- file: main.cpp
+--- find:
+        // TODO: the depth cube map's render pass (createDepthMapRenderPass): one depth attachment, no colour
+--- replace:
+        createDepthMapRenderPass();
+--- file: main.cpp
+--- find:
+        // TODO: the depth pipeline (depthPipeline): point_shadows_depth.vert / .frag with the geometry shader
+        // point_shadows_depth.geom, only the position, depthMapRenderPass, no colour attachment
+--- replace:
+        // the depth pass: only the position; the geometry shader draws each triangle into the six faces
+        createPipeline("shaders/point_shadows_depth.vert.spv", "shaders/point_shadows_depth.frag.spv", "shaders/point_shadows_depth.geom.spv", 1, depthMapRenderPass, 0, depthPipeline);
+--- file: main.cpp
+--- find:
+        // TODO: the depth cube map (createDepthCubemap): a depth image with six 1024 x 1024 layers that can be sampled as a
+        // cube map, its cube view, and a framebuffer with six layers
+--- replace:
+        createDepthCubemap();
+--- file: main.cpp
+--- find:
+        // TODO: the depth cube map's sampler (createDepthCubemapSampler)
+--- replace:
+        createDepthCubemapSampler();
+--- file: main.cpp
+--- find:
+        createDescriptorSet(woodTextureImageView, textureSampler, descriptorSet);
+--- replace:
+        createDescriptorSet(woodTextureImageView, textureSampler, depthCubemapImageView, depthCubemapSampler, descriptorSet);
+--- file: main.cpp
+--- find:
+        vkDestroySampler(device, textureSampler, nullptr);
+--- replace:
+        vkDestroySampler(device, textureSampler, nullptr);
+        vkDestroySampler(device, depthCubemapSampler, nullptr);
+--- file: main.cpp
+--- find:
+        for (auto framebuffer : swapChainFramebuffers) {
+--- replace:
+        vkDestroyFramebuffer(device, depthMapFramebuffer, nullptr);
+        vkDestroyImageView(device, depthCubemapImageView, nullptr);
+        vkDestroyImage(device, depthCubemapImage, nullptr);
+        vkFreeMemory(device, depthCubemapImageMemory, nullptr);
+
+        for (auto framebuffer : swapChainFramebuffers) {
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+        vkDestroyPipeline(device, depthPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyRenderPass(device, renderPass, nullptr);
+--- replace:
+        vkDestroyRenderPass(device, renderPass, nullptr);
+        vkDestroyRenderPass(device, depthMapRenderPass, nullptr);
+--- file: main.cpp
+--- find:
+        deviceFeatures.samplerAnisotropy = VK_TRUE;
+--- replace:
+        deviceFeatures.samplerAnisotropy = VK_TRUE;
+        deviceFeatures.geometryShader = VK_TRUE; // the depth pass's geometry shader: an optional feature, turn it on
+--- file: main.cpp
+--- find:
+        return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
+--- replace:
+        return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy && supportedFeatures.geometryShader;
+--- file: main.cpp
+--- find:
+    // TODO: createDepthMapRenderPass(): one depth attachment (loadOp CLEAR, storeOp STORE) that ends in
+    // VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, ready to be sampled; no colour attachment (as in Shadow Mapping)
+--- replace:
+    // The render pass that draws into the depth cube map: only a depth attachment (learnopengl: a framebuffer with only
+    // GL_DEPTH_ATTACHMENT, glDrawBuffer(GL_NONE)). At the end of the pass the depth image is left ready to be sampled.
+    void createDepthMapRenderPass() {
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthMapFormat();
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // keep the depths: the shaders read them afterwards
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 0;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 0; // no colour: only the depth is drawn
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: wait until the last frame's fragment shaders have read the depth map
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        // after the pass: the fragment shaders that sample the depth map wait until the depths have been written
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = &depthAttachment;
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &depthMapRenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create depth map render pass!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; // the matrices, viewPos and lightPos
+--- replace:
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; // the matrices, viewPos, lightPos, far_plane
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
+--- replace:
+        // the depth cube map at binding 2
+        VkDescriptorSetLayoutBinding depthMapLayoutBinding{};
+        depthMapLayoutBinding.binding = 2;
+        depthMapLayoutBinding.descriptorCount = 1;
+        depthMapLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        depthMapLayoutBinding.pImmutableSamplers = nullptr;
+        depthMapLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {uboLayoutBinding, samplerLayoutBinding, depthMapLayoutBinding};
+--- file: main.cpp
+--- find:
+    // TODO: createDepthCubemap(): one depth image (depth attachment + sampled) with six layers of SHADOW_WIDTH x
+    // SHADOW_HEIGHT that can be viewed as a cube map (VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT), its cube view, and a
+    // framebuffer with six layers for depthMapRenderPass
+--- replace:
+    // The depth cube map, learnopengl's depthCubemap: ONE depth image with six layers - the faces +X, -X, +Y, -Y, +Z, -Z
+    // (OpenGL's GL_TEXTURE_CUBE_MAP_POSITIVE_X + i) - of SHADOW_WIDTH x SHADOW_HEIGHT, drawn into as a depth attachment
+    // and sampled as a cube map afterwards; one cube view of its six layers, and a framebuffer with six layers (the
+    // geometry shader picks the layer, gl_Layer, each triangle goes to - learnopengl's glFramebufferTexture).
+    void createDepthCubemap() {
+        VkFormat depthMapFormat = findDepthMapFormat();
+
+        VkImageCreateInfo imageInfo{};
+        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT; // its six layers can be viewed as a cube map
+        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.extent.width = SHADOW_WIDTH;
+        imageInfo.extent.height = SHADOW_HEIGHT;
+        imageInfo.extent.depth = 1;
+        imageInfo.mipLevels = 1;
+        imageInfo.arrayLayers = 6; // one layer per face
+        imageInfo.format = depthMapFormat;
+        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if (vkCreateImage(device, &imageInfo, nullptr, &depthCubemapImage) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create depth cube map image!");
+        }
+
+        VkMemoryRequirements memRequirements;
+        vkGetImageMemoryRequirements(device, depthCubemapImage, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        if (vkAllocateMemory(device, &allocInfo, nullptr, &depthCubemapImageMemory) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate depth cube map memory!");
+        }
+
+        vkBindImageMemory(device, depthCubemapImage, depthCubemapImageMemory, 0);
+
+        // all six layers as a cube map (sampled with a direction: samplerCube)
+        VkImageViewCreateInfo viewInfo{};
+        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image = depthCubemapImage;
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+        viewInfo.format = depthMapFormat;
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+        viewInfo.subresourceRange.baseMipLevel = 0;
+        viewInfo.subresourceRange.levelCount = 1;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount = 6;
+
+        if (vkCreateImageView(device, &viewInfo, nullptr, &depthCubemapImageView) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create depth cube map image view!");
+        }
+
+        // the same view is the framebuffer's depth attachment, with all six layers (a "layered" framebuffer)
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = depthMapRenderPass;
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments = &depthCubemapImageView;
+        framebufferInfo.width = SHADOW_WIDTH;
+        framebufferInfo.height = SHADOW_HEIGHT;
+        framebufferInfo.layers = 6;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &depthMapFramebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create depth map framebuffer!");
+        }
+    }
+--- file: main.cpp
+--- find:
+    VkFormat findDepthFormat() {
+--- replace:
+    // a depth format that can be drawn into and sampled (learnopengl: GL_DEPTH_COMPONENT, GL_FLOAT)
+    VkFormat findDepthMapFormat() {
+        return findSupportedFormat(
+            {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM},
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
+        );
+    }
+
+    VkFormat findDepthFormat() {
+--- file: main.cpp
+--- find:
+    // A sampler with the wrapping mode for texture coordinates outside 0..1 (REPEAT, CLAMP_TO_EDGE ...).
+--- replace:
+    // The depth cube map's sampler: the nearest stored distance, no filtering (learnopengl: GL_NEAREST, GL_CLAMP_TO_EDGE).
+    void createDepthCubemapSampler() {
+        VkSamplerCreateInfo samplerInfo{};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.magFilter = VK_FILTER_NEAREST;
+        samplerInfo.minFilter = VK_FILTER_NEAREST;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.anisotropyEnable = VK_FALSE;
+        samplerInfo.maxAnisotropy = 1.0f;
+        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &depthCubemapSampler) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create depth cube map sampler!");
+        }
+    }
+
+    // A sampler with the wrapping mode for texture coordinates outside 0..1 (REPEAT, CLAMP_TO_EDGE ...).
+--- file: main.cpp
+--- find:
+        // one descriptor set: the uniform buffer and the wood texture
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 1;
+--- replace:
+        // one descriptor set: the uniform buffer, the wood texture and the depth cube map
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 2;
+--- file: main.cpp
+--- find:
+    void createDescriptorSet(VkImageView textureImageView, VkSampler sampler, VkDescriptorSet& descriptorSet) {
+--- replace:
+    void createDescriptorSet(VkImageView textureImageView, VkSampler sampler, VkImageView depthMapView, VkSampler depthMapSampler, VkDescriptorSet& descriptorSet) {
+--- file: main.cpp
+--- find:
+        imageInfo.sampler = sampler;
+
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+--- replace:
+        imageInfo.sampler = sampler;
+
+        VkDescriptorImageInfo depthMapInfo{};
+        depthMapInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // the depth map pass's finalLayout
+        depthMapInfo.imageView = depthMapView;
+        depthMapInfo.sampler = depthMapSampler;
+
+        std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+--- file: main.cpp
+--- find:
+        descriptorWrites[1].pImageInfo = &imageInfo;
+--- replace:
+        descriptorWrites[1].pImageInfo = &imageInfo;
+
+        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[2].dstSet = descriptorSet;
+        descriptorWrites[2].dstBinding = 2;
+        descriptorWrites[2].dstArrayElement = 0;
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[2].descriptorCount = 1;
+        descriptorWrites[2].pImageInfo = &depthMapInfo;
+--- file: main.cpp
+--- find:
+        // TODO: 1. render the scene into the depth cube map, from the light: a render pass of its own (depthMapRenderPass)
+        // with depthPipeline and a SHADOW_WIDTH x SHADOW_HEIGHT viewport, before the window's
+--- replace:
+        // 1. render scene to depth cubemap
+        VkRenderPassBeginInfo depthMapPassInfo{};
+        depthMapPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        depthMapPassInfo.renderPass = depthMapRenderPass;
+        depthMapPassInfo.framebuffer = depthMapFramebuffer;
+        depthMapPassInfo.renderArea.offset = {0, 0};
+        depthMapPassInfo.renderArea.extent = {SHADOW_WIDTH, SHADOW_HEIGHT};
+
+        // one clear value: the depth 1.0 (the far plane), in all six layers
+        VkClearValue depthMapClearValue{};
+        depthMapClearValue.depthStencil = {1.0f, 0};
+
+        depthMapPassInfo.clearValueCount = 1;
+        depthMapPassInfo.pClearValues = &depthMapClearValue;
+
+        vkCmdBeginRenderPass(commandBuffer, &depthMapPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, depthPipeline);
+
+        // the viewport and scissor of a face (learnopengl: glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT))
+        VkViewport depthMapViewport{};
+        depthMapViewport.x = 0.0f;
+        depthMapViewport.y = 0.0f;
+        depthMapViewport.width = static_cast<float>(SHADOW_WIDTH);
+        depthMapViewport.height = static_cast<float>(SHADOW_HEIGHT);
+        depthMapViewport.minDepth = 0.0f;
+        depthMapViewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &depthMapViewport);
+
+        VkRect2D depthMapScissor{};
+        depthMapScissor.offset = {0, 0};
+        depthMapScissor.extent = {SHADOW_WIDTH, SHADOW_HEIGHT};
+        vkCmdSetScissor(commandBuffer, 0, 1, &depthMapScissor);
+
+        renderScene(commandBuffer);
+
+        vkCmdEndRenderPass(commandBuffer); // the cube map is now in VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+--- file: main.cpp
+--- find:
+        // TODO: 0. the depth cube map's transformation matrices (shadowMatrices): a 90 degree perspective projection (near
+        // 1.0, far 25.0) times a view from the light along +x, -x, +y, -y, +z, -z; and far_plane
+--- replace:
+        // 0. create depth cubemap transformation matrices: a 90 degree projection covers exactly one face of the cube;
+        // the ups are those of the cube map faces' layout. No y flip: the depth pass and the lookup use the same matrices.
+        float near_plane = 1.0f;
+        float far_plane = 25.0f;
+        glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float) SHADOW_WIDTH / (float) SHADOW_HEIGHT, near_plane, far_plane);
+        ubo.shadowMatrices[0] = shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f));
+        ubo.shadowMatrices[1] = shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f));
+        ubo.shadowMatrices[2] = shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f));
+        ubo.shadowMatrices[3] = shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f));
+        ubo.shadowMatrices[4] = shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f));
+        ubo.shadowMatrices[5] = shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f));
+        ubo.far_plane = far_plane;
+--- file: shaders/point_shadows_depth.vert
+--- find:
+#version 450
+
+// TODO: the model matrix (push constant); the position in world space: model * position (the geometry shader turns it
+// into each face's clip space)
+
+layout(location = 0) in vec3 inPosition;
+
+void main() {
+}
+--- replace:
+#version 450
+
+// the model matrix: the first member of the push constants
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+} pc;
+
+layout(location = 0) in vec3 inPosition;
+
+void main() {
+    gl_Position = pc.model * vec4(inPosition, 1.0); // world space: the geometry shader projects it onto each face
+}
+--- file: shaders/point_shadows_depth.geom
+--- find:
+#version 450
+
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 18) out;
+
+// TODO: the uniform buffer up to shadowMatrices; each triangle drawn six times, once into each face of the cube map
+// (gl_Layer = face), with that face's matrix; the world position passed on to the fragment shader
+
+void main() {
+}
+--- replace:
+#version 450
+
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 18) out;
+
+// the uniform buffer up to the members the geometry shader reads, so that their offsets match the C++ struct
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    vec3 viewPos;
+    vec3 lightPos;
+    float far_plane;
+    mat4 shadowMatrices[6];
+} ubo;
+
+layout(location = 0) out vec4 fragPos; // FragPos from GS (output per emitvertex)
+
+void main() {
+    for (int face = 0; face < 6; ++face) {
+        gl_Layer = face; // built-in variable that specifies to which face we render.
+        for (int i = 0; i < 3; ++i) { // for each triangle's vertices
+            fragPos = gl_in[i].gl_Position;
+            gl_Position = ubo.shadowMatrices[face] * fragPos;
+            EmitVertex();
+        }
+        EndPrimitive();
+    }
+}
+--- file: shaders/point_shadows_depth.frag
+--- find:
+#version 450
+
+// TODO: the uniform buffer up to far_plane, the world position from the geometry shader; write the fragment's distance
+// to the light divided by far_plane (0..1) as its depth (gl_FragDepth)
+
+void main() {
+}
+--- replace:
+#version 450
+
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    vec3 viewPos;
+    vec3 lightPos;
+    float far_plane;
+} ubo;
+
+layout(location = 0) in vec4 fragPos;
+
+void main() {
+    float lightDistance = length(fragPos.xyz - ubo.lightPos);
+
+    // map to [0;1] range by dividing by far_plane
+    lightDistance = lightDistance / ubo.far_plane;
+
+    // write this as modified depth
+    gl_FragDepth = lightDistance;
+}
+--- file: shaders/point_shadows.frag
+--- find:
+    vec3 lightPos;
+} ubo;
+
+layout(binding = 1) uniform sampler2D diffuseTexture;
+--- replace:
+    vec3 lightPos;
+    float far_plane;
+} ubo;
+
+layout(binding = 1) uniform sampler2D diffuseTexture;
+layout(binding = 2) uniform samplerCube depthMap;
+--- file: shaders/point_shadows.frag
+--- find:
+    outColor = vec4(lighting, 1.0);
+}
+--- replace:
+    // outColor = vec4(lighting, 1.0);
+    // display the depth cube map as debug: the closest depth stored in this fragment's direction (0..1 = 0..far_plane)
+    vec3 fragToLight = fs_in.fragPos - ubo.lightPos;
+    float closestDepth = texture(depthMap, fragToLight).r;
+    outColor = vec4(vec3(closestDepth), 1.0);
+}
+
+=== task: shadows
+--- file: shaders/point_shadows.frag
+--- find:
+// TODO: ShadowCalculation(fragPos): 1.0 if the fragment is farther from the light than the distance stored in the depth
+// cube map in its direction, otherwise 0.0
+--- replace:
+float ShadowCalculation(vec3 fragPos) {
+    // get vector between fragment position and light position
+    vec3 fragToLight = fragPos - ubo.lightPos;
+    // use the fragment to light vector to sample from the depth map
+    float closestDepth = texture(depthMap, fragToLight).r;
+    // it is currently in linear range between [0,1], let's re-transform it back to original depth value
+    closestDepth *= ubo.far_plane;
+    // now get current linear depth as the length between the fragment and light position
+    float currentDepth = length(fragToLight);
+    // test for shadows
+    float bias = 0.05; // we use a much larger bias since depth is now in [near_plane, far_plane] range
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    // display closestDepth as debug (to visualize depth cubemap)
+    // outColor = vec4(vec3(closestDepth / ubo.far_plane), 1.0);
+
+    return shadow;
+}
+--- file: shaders/point_shadows.frag
+--- find:
+    float shadow = 0.0; // TODO: ShadowCalculation(fs_in.fragPos)
+--- replace:
+    float shadow = ShadowCalculation(fs_in.fragPos);
+--- file: shaders/point_shadows.frag
+--- find:
+    // outColor = vec4(lighting, 1.0);
+    // display the depth cube map as debug: the closest depth stored in this fragment's direction (0..1 = 0..far_plane)
+    vec3 fragToLight = fs_in.fragPos - ubo.lightPos;
+    float closestDepth = texture(depthMap, fragToLight).r;
+    outColor = vec4(vec3(closestDepth), 1.0);
+}
+--- replace:
+    outColor = vec4(lighting, 1.0);
+}
+
+=== task: pcf
+--- file: shaders/point_shadows.frag
+--- find:
+layout(location = 0) out vec4 outColor;
+
+float ShadowCalculation
+--- replace:
+layout(location = 0) out vec4 outColor;
+
+// array of offset direction for sampling
+vec3 gridSamplingDisk[20] = vec3[](
+    vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1),
+    vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+    vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
+    vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
+    vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
+);
+
+float ShadowCalculation
+--- file: shaders/point_shadows.frag
+--- find:
+    // use the fragment to light vector to sample from the depth map
+    float closestDepth = texture(depthMap, fragToLight).r;
+    // it is currently in linear range between [0,1], let's re-transform it back to original depth value
+    closestDepth *= ubo.far_plane;
+    // now get current linear depth as the length between the fragment and light position
+    float currentDepth = length(fragToLight);
+    // test for shadows
+    float bias = 0.05; // we use a much larger bias since depth is now in [near_plane, far_plane] range
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    // display closestDepth as debug (to visualize depth cubemap)
+    // outColor = vec4(vec3(closestDepth / ubo.far_plane), 1.0);
+--- replace:
+    // now get current linear depth as the length between the fragment and light position
+    float currentDepth = length(fragToLight);
+    // PCF: 20 samples around the direction, in a disk that grows with the distance to the viewer
+    float shadow = 0.0;
+    float bias = 0.15;
+    int samples = 20;
+    float viewDistance = length(ubo.viewPos - fragPos);
+    float diskRadius = (1.0 + (viewDistance / ubo.far_plane)) / 25.0;
+    for (int i = 0; i < samples; ++i) {
+        float closestDepth = texture(depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
+        closestDepth *= ubo.far_plane; // undo mapping [0;1]
+        if (currentDepth - bias > closestDepth)
+            shadow += 1.0;
+    }
+    shadow /= float(samples);

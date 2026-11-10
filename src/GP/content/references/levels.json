@@ -1,0 +1,8 @@
+[
+  { "title": "2D Game / Levels", "url": "https://learnopengl.com/In-Practice/2D-Game/Levels", "publisher": "LearnOpenGL" },
+  { "title": "std::getline", "url": "https://en.cppreference.com/w/cpp/string/basic_string/getline", "publisher": "cppreference.com" },
+  { "title": "std::basic_istringstream", "url": "https://en.cppreference.com/w/cpp/io/basic_istringstream", "publisher": "cppreference.com" },
+  { "title": "LearnOpenGL source code: the 2D game", "url": "https://github.com/JoeyDeVries/LearnOpenGL/tree/master/src/7.in_practice/3.2d_game", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "Descriptor sets (Vulkan specification)", "url": "https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Descriptor tables", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/descriptor-tables", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

@@ -1,0 +1,13 @@
+[
+  { "title": "Lighting maps", "url": "https://learnopengl.com/Lighting/Lighting-maps", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: lighting_maps_specular.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/2.lighting/4.2.lighting_maps_specular_map/lighting_maps_specular.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "LearnOpenGL source code: lighting_maps_exercise4.cpp (emission map)", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/2.lighting/4.4.lighting_maps_exercise4/lighting_maps_exercise4.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "glActiveTexture", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glActiveTexture.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Texture mapping: Combined image sampler", "url": "https://vulkan-tutorial.com/Texture_mapping/Combined_image_sampler", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "GL_KHR_vulkan_glsl (no default uniforms, no opaque types in structs)", "url": "https://github.com/KhronosGroup/GLSL/blob/main/extensions/khr/GL_KHR_vulkan_glsl.txt", "publisher": "Khronos Group (GitHub)", "api": "vulkan" },
+  { "title": "VkWriteDescriptorSet", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkWriteDescriptorSet.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Descriptor tables", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/descriptor-tables", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "D3D12HelloTexture sample", "url": "https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Samples/Desktop/D3D12HelloWorld/src/HelloTexture", "publisher": "Microsoft (GitHub)", "api": "d3d12" },
+  { "title": "Sample (DirectX HLSL Texture Object)", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-sample", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Packing rules for constant variables", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-packing-rules", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

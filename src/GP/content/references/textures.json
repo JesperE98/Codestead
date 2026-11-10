@@ -1,0 +1,17 @@
+[
+  { "title": "Textures", "url": "https://learnopengl.com/Getting-started/Textures", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: textures_combined.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/1.getting_started/4.2.textures_combined/textures_combined.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "glTexImage2D", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexImage2D.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "glTexParameter", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexParameter.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "glGenerateMipmap", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGenerateMipmap.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Texture mapping: Images", "url": "https://vulkan-tutorial.com/Texture_mapping/Images", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Texture mapping: Image view and sampler", "url": "https://vulkan-tutorial.com/Texture_mapping/Image_view_and_sampler", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Texture mapping: Combined image sampler", "url": "https://vulkan-tutorial.com/Texture_mapping/Combined_image_sampler", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Descriptor pool and sets", "url": "https://vulkan-tutorial.com/Uniform_buffers/Descriptor_pool_and_sets", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "VkSamplerCreateInfo", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkSamplerCreateInfo.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "D3D12HelloTexture sample", "url": "https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Samples/Desktop/D3D12HelloWorld/src/HelloTexture", "publisher": "Microsoft (GitHub)", "api": "d3d12" },
+  { "title": "Uploading texture data through buffers", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/upload-and-readback-of-texture-data", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "UpdateSubresources (heap-allocating) function", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/updatesubresources2", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Descriptor tables", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/descriptor-tables", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "D3D12_STATIC_SAMPLER_DESC structure", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_static_sampler_desc", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

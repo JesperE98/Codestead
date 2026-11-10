@@ -1,0 +1,65 @@
+{
+  "title": "Framebuffers",
+  "tasks": {
+    "offscreen-target": {
+      "text": {
+        "opengl": "Rita scenen i en egen framebuffer: skapa `framebuffer` med en färgtextur `textureColorbuffer` (`SCR_WIDTH` × `SCR_HEIGHT`, `GL_RGB`) och en `GL_DEPTH24_STENCIL8`-renderbuffer `rbo`, kontrollera att den är komplett, bind den före rensningen, och bind `0` igen efter scenen, stäng av djuptestet och rensa fönstret till vitt.",
+        "vulkan": "Rita scenen i ett offscreen-mål: lägg till `createOffscreenRenderPass()` (färg `VK_FORMAT_R8G8B8A8_UNORM` som slutar i `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`, en djupattachment, två subpass dependencies) och `createOffscreenFramebuffer()`, skapa scenens pipeline för `offscreenRenderPass`, och spela i `recordCommandBuffer()` in scenen i offscreen-passen och sedan fönstrets pass rensad till vitt.",
+        "d3d12": "Rita scenen i ett off-screen-render target: skapa `m_offscreenTarget` (en fönsterstor `R8G8B8A8_UNORM`-textur med `ALLOW_RENDER_TARGET`) med en RTV på RTV-plats `FrameCount` och en SRV på heap-plats 3, rita scenen i den mellan två barriärer, bind sedan back buffern utan djupbuffer och rensa den till vitt."
+      },
+      "hint": {
+        "opengl": "`glTexImage2D(..., NULL)` reserverar bara minne; `glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0)`, `glRenderbufferStorage` + `glFramebufferRenderbuffer(..., GL_DEPTH_STENCIL_ATTACHMENT, ...)`, sedan `glCheckFramebufferStatus(GL_FRAMEBUFFER)`. Quadpassen stänger av djuptestet, så `glEnable(GL_DEPTH_TEST)` hamnar i loopen efter att framebuffern binds. Ta bort de tre objekten i slutet.",
+        "vulkan": "`createPipeline` får en parameter `VkRenderPass pipelineRenderPass` (en pipeline görs för en render pass). Imagen behöver `VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT`; djup-imagen är en vanlig djupattachment. Det andra beroendet får nästa fragment shadrar att vänta på scenens färgskrivningar. Förstör de nya objekten i `cleanup()`.",
+        "d3d12": "`rtvHeapDesc.NumDescriptors = FrameCount + 1;`, `cbvSrvHeapDesc.NumDescriptors = 4;`. Texturen börjar i `PIXEL_SHADER_RESOURCE`: barriär till `RENDER_TARGET` före scenen, tillbaka efteråt. `OMSetRenderTargets(1, &offscreenRtvHandle, FALSE, &dsvHandle)` för scenen, `OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr)` för fönstret."
+      }
+    },
+    "screen-quad": {
+      "text": {
+        "opengl": "Visa texturen: lägg till `quadVertices` (6 vertexar: 2D-position i NDC + texturkoordinater) med `quadVAO`/`quadVBO`, shadern `screenShader` (`framebuffers_screen.vs` / `.fs`, `screenTexture` = enhet 0), gör klart `framebuffers_screen.fs`, och rita quaden med `textureColorbuffer` efter den vita rensningen.",
+        "vulkan": "Visa offscreen-imagen: lägg till skärmquaden som vertex 42..47, en `screenPipeline` från `framebuffers_screen.vert/.frag` för `renderPass` med djuptestet avstängt (ny parameter `VkBool32 depthTestEnable`), `screenDescriptorSet` med `offscreenImageView` (poolen: 3 set), rita den i fönstrets pass, och gör klart `framebuffers_screen.frag`.",
+        "d3d12": "Visa texturen: lägg till skärmquaden som vertex 42–47 (v vänt), `m_screenPipelineState` från `framebuffers_screen.hlsl` med `DepthEnable = FALSE` och `DSVFormat = DXGI_FORMAT_UNKNOWN`, rita den i fönstrets pass med heap-plats 3, och returnera texturens färg i `PSMain`."
+      },
+      "hint": {
+        "opengl": "Två attribut med 2 floats, stride `4 * sizeof(float)`. Fragment shader: `vec3 col = texture(screenTexture, TexCoords).rgb; FragColor = vec4(col, 1.0);`. I loopen: `screenShader.use(); glBindVertexArray(quadVAO); glBindTexture(GL_TEXTURE_2D, textureColorbuffer); glDrawArrays(GL_TRIANGLES, 0, 6);`.",
+        "vulkan": "learnopengls texturkoordinater fungerar oförändrade: fönstrets y och imagens v pekar båda nedåt i Vulkan. Fragment shader: `outColor = vec4(texture(screenTexture, fragTexCoord).rgb, 1.0);`. Bind `screenPipeline` och `screenDescriptorSet`, sedan `vkCmdDraw(commandBuffer, 6, 1, 42, 0)`; viewport, scissor och vertex buffer gäller fortfarande.",
+        "d3d12": "v = 0 är texturens översta rad, scenens överkant. `CD3DX12_GPU_DESCRIPTOR_HANDLE screenTexture(heapStart, 3, m_cbvSrvDescriptorSize)`, `SetPipelineState(m_screenPipelineState.Get())`, `SetGraphicsRootDescriptorTable(2, screenTexture)`, `DrawInstanced(6, 1, 42, 0)`. HLSL: `float3 col = screenTexture.Sample(wrapSampler, input.texCoord).rgb; return float4(col, 1.0f);`."
+      }
+    },
+    "inversion": {
+      "text": "Post-processing: invertera färgerna i skärmshadern – varje kanal blir `1.0` minus sig själv, alfa förblir `1.0`.",
+      "hint": {
+        "opengl": "`FragColor = vec4(vec3(1.0 - texture(screenTexture, TexCoords)), 1.0);`",
+        "vulkan": "`outColor = vec4(vec3(1.0 - texture(screenTexture, fragTexCoord)), 1.0);`",
+        "d3d12": "`return float4(1.0f - screenTexture.Sample(wrapSampler, input.texCoord).rgb, 1.0f);`"
+      }
+    },
+    "grayscale": {
+      "text": "Ersätt inverteringen med en viktad gråskala: `0.2126 * r + 0.7152 * g + 0.0722 * b` i alla tre kanalerna.",
+      "hint": {
+        "opengl": "`FragColor = texture(screenTexture, TexCoords); float average = 0.2126 * FragColor.r + 0.7152 * FragColor.g + 0.0722 * FragColor.b; FragColor = vec4(average, average, average, 1.0);`",
+        "vulkan": "`outColor = texture(screenTexture, fragTexCoord); float average = 0.2126 * outColor.r + 0.7152 * outColor.g + 0.0722 * outColor.b; outColor = vec4(average, average, average, 1.0);`",
+        "d3d12": "`float4 color = screenTexture.Sample(wrapSampler, input.texCoord); float average = 0.2126f * color.r + 0.7152f * color.g + 0.0722f * color.b; return float4(average, average, average, 1.0f);`"
+      }
+    },
+    "sharpen": {
+      "text": "Ersätt gråskalan med en 3×3-kernel: sampla de nio texlarna runt fragmentet (`offset = 1.0 / 300.0`) och lägg ihop dem viktade med skärpekerneln (`-1` runtom, `9` i mitten).",
+      "hint": {
+        "opengl": "`const float offset = 1.0 / 300.0;` före `main`; i `main` `vec2 offsets[9] = vec2[](...)` (uppe till vänster `vec2(-offset, offset)` … nere till höger), `float kernel[9] = float[](...)`, en loop som fyller `vec3 sampleTex[9]`, en loop som summerar `sampleTex[i] * kernel[i]`, sedan `FragColor = vec4(col, 1.0);`.",
+        "vulkan": "`const float offset = 1.0 / 300.0;` före `main`. I en Vulkan-image pekar v nedåt, så den översta raden i `offsets` är `vec2(-offset, -offset)`, `vec2(0.0, -offset)`, `vec2(offset, -offset)`. Summera `sampleTex[i] * kernel[i]` i `col`, sedan `outColor = vec4(col, 1.0);`.",
+        "d3d12": "`static const float offset = 1.0f / 300.0f;` före `PSMain`. HLSL-arrayer initieras med `{ … }`; v växer nedåt, så den översta raden i `offsets` har `-offset` i y. Summera `sampleTex[k] * kernel[k]` i `col`, sedan `return float4(col, 1.0f);`."
+      }
+    },
+    "blur": {
+      "text": "Byt kerneln mot en oskärpekernel: `1, 2, 1 / 2, 4, 2 / 1, 2, 1`, var och en delad med 16.",
+      "hint": {
+        "opengl": "Bara `kernel` ändras: `1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0, 2.0 / 16.0, 4.0 / 16.0, …` – vikterna summerar till 1, så ljusstyrkan består.",
+        "vulkan": "Bara `kernel` ändras: `1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0, 2.0 / 16.0, 4.0 / 16.0, …` – vikterna summerar till 1, så ljusstyrkan består.",
+        "d3d12": "Bara `kernel` ändras: `1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f, 2.0f / 16.0f, 4.0f / 16.0f, …` – vikterna summerar till 1, så ljusstyrkan består."
+      }
+    },
+    "edge-detection": {
+      "text": "Byt kerneln mot kantdetektering: `1` runtom, `-8` i mitten.",
+      "hint": "Vikterna summerar till 0: överallt där alla nio samples är lika blir resultatet svart, och bara kanterna förblir ljusa."
+    }
+  }
+}

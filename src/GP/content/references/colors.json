@@ -1,0 +1,10 @@
+[
+  { "title": "Colors", "url": "https://learnopengl.com/Lighting/Colors", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: colors.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/2.lighting/1.colors/colors.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "glUniform", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glUniform.xhtml", "publisher": "Khronos", "api": "opengl" },
+  { "title": "Uniform buffers: Descriptor pool and sets (alignment requirements)", "url": "https://vulkan-tutorial.com/Uniform_buffers/Descriptor_pool_and_sets", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "vkCmdBindPipeline", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/vkCmdBindPipeline.html", "publisher": "Khronos", "api": "vulkan" },
+  { "title": "Packing rules for constant variables", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-packing-rules", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Managing graphics pipeline state in Direct3D 12", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/managing-graphics-pipeline-state-in-direct3d-12", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "ID3D12GraphicsCommandList::SetPipelineState method", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setpipelinestate", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>Codestead.GP.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="4.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/GP/Codestead.GP.Gpu/Codestead.GP.Gpu.csproj" />
+    <ProjectReference Include="../../../src/GP/Codestead.GP.Course/Codestead.GP.Course.csproj" />
+    <!-- Only for the checkpoint parser (Codestead.UI.Learning), used to check the chapter texts. -->
+    <ProjectReference Include="../../../src/Shared/Codestead.UI/Codestead.UI.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

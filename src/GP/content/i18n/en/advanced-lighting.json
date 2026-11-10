@@ -1,0 +1,29 @@
+{
+  "title": "Advanced Lighting",
+  "tasks": {
+    "halfway": {
+      "text": {
+        "opengl": "Implement Blinn-Phong in the `if (blinn)` branch of `advanced_lighting.fs` – the halfway vector between the light and view directions, `spec` = its dot product with the normal (at least 0) to the power 8.0 – and switch the program to it: `bool blinn = true;`.",
+        "vulkan": "Implement Blinn-Phong in the `if (pc.blinn)` branch of `advanced_lighting.frag` – the halfway vector between the light and view directions, `spec` = its dot product with the normal (at least 0) to the power 8.0 – and switch the program to it: `bool blinn = true;`.",
+        "d3d12": "Implement Blinn-Phong in the `if (blinn)` branch of `PSMain` – the halfway vector between the light and view directions, `spec` = its dot product with the normal (at least 0) to the power 8.0 – and switch the program to it: `bool blinn = true;`."
+      },
+      "hint": {
+        "opengl": "`vec3 halfwayDir = normalize(lightDir + viewDir);` then `spec = pow(max(dot(normal, halfwayDir), 0.0), 8.0);`. The Phong `else` branch stays; `shader.setInt(\"blinn\", blinn)` sends the flag every frame.",
+        "vulkan": "`vec3 halfwayDir = normalize(lightDir + viewDir);` then `spec = pow(max(dot(normal, halfwayDir), 0.0), 8.0);`. The Phong `else` branch stays; `recordCommandBuffer()` pushes the flag as a `VkBool32`.",
+        "d3d12": "`float3 halfwayDir = normalize(lightDir + viewDir);` then `spec = pow(max(dot(normal, halfwayDir), 0.0f), 8.0f);`. The Phong `else` branch stays; `SetGraphicsRoot32BitConstant(0, blinn, 0)` sends the flag every frame."
+      }
+    },
+    "shininess": {
+      "text": {
+        "opengl": "Raise the Blinn-Phong exponent from 8.0 to 32.0, learnopengl's value.",
+        "vulkan": "Raise the Blinn-Phong exponent from 8.0 to 32.0, learnopengl's value.",
+        "d3d12": "Raise the Blinn-Phong exponent from `8.0f` to `32.0f`, learnopengl's value."
+      },
+      "hint": {
+        "opengl": "`spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);` – the angle between the normal and the halfway vector is smaller than Phong's angle, so Blinn-Phong needs 2–4 times the exponent for the same highlight size.",
+        "vulkan": "`spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);` – the angle between the normal and the halfway vector is smaller than Phong's angle, so Blinn-Phong needs 2–4 times the exponent for the same highlight size.",
+        "d3d12": "`spec = pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);` – the angle between the normal and the halfway vector is smaller than Phong's angle, so Blinn-Phong needs 2–4 times the exponent for the same highlight size."
+      }
+    }
+  }
+}

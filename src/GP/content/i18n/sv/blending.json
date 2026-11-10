@@ -1,0 +1,53 @@
+{
+  "title": "Blending",
+  "tasks": {
+    "grass": {
+      "text": {
+        "opengl": "Lägg till växtligheten: en genomskinlig quad (`transparentVertices`, 6 vertexar) med egen VAO, `grass.png` laddad som `transparentTexture`, en `std::vector<glm::vec3> vegetation` med de fem positionerna, och efter golvet ett ritanrop per position.",
+        "vulkan": "Lägg till växtligheten: lägg till den genomskinliga quaden sist i `vertices` (vertex 42..47), lägg till de globala `vegetation`-positionerna, ladda `textures/grass.png`, skapa `transparentSampler` (`CLAMP_TO_EDGE`) och `transparentDescriptorSet` (poolen: 3 set), och rita efter golvet quaden en gång per position med `vkCmdDraw(commandBuffer, 6, 1, 42, 0)`.",
+        "d3d12": "Lägg till växtligheten: den genomskinliga quaden som vertex 42–47, `grass.png` laddad till heap-plats 3 (`m_transparentTexture`, 4 descriptorer) med sitt GPU-handtag, och efter golvet ett `DrawInstanced(6, 1, 42, 0)` per position i `XMFLOAT3 vegetation[]`."
+      },
+      "hint": {
+        "opengl": "Quaden går från (0, -0.5) till (1, 0.5) vid z = 0, så `glm::translate(model, vegetation[i])` ställer dess nederkant på golvet. `#include <vector>`. Bind `transparentVAO` och `transparentTexture`, loopa sedan och anropa `glDrawArrays(GL_TRIANGLES, 0, 6)`.",
+        "vulkan": "learnopengls texturkoordinater har redan v = 0 vid överkanten, så gräset står upprätt. Bind `transparentDescriptorSet` och pusha sedan `glm::translate(glm::mat4(1.0f), vegetation[i])` före varje ritanrop. Förstör den nya samplern, viewn, imagen och minnet i `cleanup()`.",
+        "d3d12": "`CD3DX12_GPU_DESCRIPTOR_HANDLE transparentTexture(heapStart, 3, m_cbvSrvDescriptorSize)`, `SetGraphicsRootDescriptorTable(2, transparentTexture)`, och per position `XMMatrixTranslation`, root-konstanterna och ritanropet."
+      }
+    },
+    "discard": {
+      "text": {
+        "opengl": "Kasta de genomskinliga fragmenten: i `blending.fs` `discard` varje fragment vars texturalfa är under 0.1, och låt `loadTexture` använda `GL_CLAMP_TO_EDGE` för RGBA-bilder.",
+        "vulkan": "Kasta de genomskinliga fragmenten: i `shaders/blending.frag` läser du texeln till `vec4 texColor` och gör `discard` när `texColor.a < 0.1`, annars skriver du ut den.",
+        "d3d12": "Kasta de genomskinliga pixlarna: en andra statisk sampler `s1` (CLAMP), en pixel shader `PSTransparent` som läser med den och kastar alfa under 0.1, ett andra PSO `m_transparentPipelineState` med den, satt innan växtligheten ritas."
+      },
+      "hint": {
+        "opengl": "`vec4 texColor = texture(texture1, TexCoords); if(texColor.a < 0.1) discard; FragColor = texColor;`. Wrapping: `format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT` för `WRAP_S` och `WRAP_T`.",
+        "vulkan": "Ett kastat fragment skriver varken färg eller djup, så det som finns bakom quaden förblir synligt. Den clampande samplern finns redan från första uppgiften.",
+        "d3d12": "`samplers[2]`, `samplers[1] = samplers[0];` med `AddressU/V/W = D3D12_TEXTURE_ADDRESS_MODE_CLAMP` och `ShaderRegister = 1`; HLSL: `SamplerState clampSampler : register(s1);`. Kompilera `\"PSTransparent\"` (`ps_5_0`), lägg den i `psoDesc.PS` och skapa det andra PSO:t efter det första."
+      }
+    },
+    "blend": {
+      "text": {
+        "opengl": "Gör om gräset till fönster: ladda `window.png` i stället för `grass.png`, byt namn på positionerna till `windows`, och slå på blending med `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)`.",
+        "vulkan": "Gör om gräset till fönster: ladda `textures/window.png`, byt namn på `vegetation` till `windows`, och slå på alpha blending i `createPipeline()` (`blendEnable = VK_TRUE`, färgfaktorerna `SRC_ALPHA` / `ONE_MINUS_SRC_ALPHA`, alfafaktorerna `ONE` / `ZERO`, båda operationerna `ADD`).",
+        "d3d12": "Gör om gräset till fönster: slå på blending i det genomskinliga PSO:t (`SrcBlend = D3D12_BLEND_SRC_ALPHA`, `DestBlend = D3D12_BLEND_INV_SRC_ALPHA`, samma för alfa, operationerna `ADD`), ladda `window.png` i stället för `grass.png`, och kalla positionerna `windows`."
+      },
+      "hint": {
+        "opengl": "`glEnable(GL_BLEND);` bredvid djuptestet. Resultatet är `src * src.alpha + dst * (1 - src.alpha)`. `discard` kan stå kvar – ingen texel i fönstret ligger under 0.1.",
+        "vulkan": "Det här är OpenGL:s `glEnable(GL_BLEND)` + `glBlendFunc(...)`, som en del av den enda pipelinen; de ogenomskinliga föremålen (alfa 1) ändras inte. Ersätt raden `colorBlendAttachment.blendEnable = VK_FALSE;`.",
+        "d3d12": "Sätt `BlendEnable = TRUE`, `SrcBlend`, `DestBlend`, `BlendOp`, `SrcBlendAlpha`, `DestBlendAlpha` och `BlendOpAlpha` i `psoDesc.BlendState.RenderTarget[0]` efter att `psoDesc.PS` har bytts till `PSTransparent`, innan det andra PSO:t skapas."
+      }
+    },
+    "sort": {
+      "text": {
+        "opengl": "Rita fönstren från det bortersta till det närmaste: fyll varje bildruta en `std::map<float, glm::vec3> sorted` med `glm::length(cameraPos - windows[i])` som nyckel, och rita sedan med en `reverse_iterator` från `sorted.rbegin()` till `sorted.rend()`.",
+        "vulkan": "Rita fönstren från det bortersta till det närmaste: fyll i `recordCommandBuffer()` en `std::map<float, glm::vec3> sorted` med `glm::length(cameraPos - windows[i])` som nyckel, och rita sedan med en `reverse_iterator` från `sorted.rbegin()` till `sorted.rend()`.",
+        "d3d12": "Rita fönstren från det bortersta till det närmaste: fyll en `std::map<float, XMFLOAT3> sorted` med avståndet till `cameraPos` som nyckel, och rita sedan med en `reverse_iterator` från `sorted.rbegin()` till `sorted.rend()`."
+      },
+      "hint": {
+        "opengl": "`#include <map>`; sorteringen hamnar direkt efter `processInput(window);`. En map håller sina nycklar sorterade (minst först), så baklänges får du det bortersta fönstret först. Använd `it->second` som position.",
+        "vulkan": "`#include <map>`. En map håller sina nycklar sorterade (minst först), så baklänges får du det bortersta fönstret först. Använd `glm::translate(model, it->second)`.",
+        "d3d12": "`#include <map>`; `float distance = XMVectorGetX(XMVector3Length(cameraPos - XMLoadFloat3(&windows[i])));` och `XMMatrixTranslation(it->second.x, it->second.y, it->second.z)`."
+      }
+    }
+  }
+}

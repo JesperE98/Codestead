@@ -1,0 +1,286 @@
+=== task: frag-coord
+--- file: shaders/advanced_glsl.frag
+--- find:
+    outColor = texture(texSampler, fragTexCoord);
+--- replace:
+    if (gl_FragCoord.x < 400) { // gl_FragCoord: the fragment's window position in pixels (in Vulkan from the top-left)
+        outColor = vec4(1.0, 0.0, 0.0, 1.0);
+    } else {
+        outColor = vec4(0.0, 1.0, 0.0, 1.0);
+    }
+
+=== task: front-facing
+--- file: main.cpp
+--- find:
+    VkDescriptorSet cubeDescriptorSet;  // the uniform buffer and the marble texture
+    VkDescriptorSet floorDescriptorSet; // the uniform buffer and the metal texture
+--- replace:
+    VkDescriptorSet cubeDescriptorSet;  // the uniform buffer, the marble texture (front faces) and the metal texture (back faces)
+    VkDescriptorSet floorDescriptorSet; // the uniform buffer and the metal texture (both sides)
+--- file: main.cpp
+--- find:
+        // TODO: for gl_FrontFacing: front = counter-clockwise on screen (the cube's outside, see the face culling chapter), cull the FRONT faces
+        rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+--- replace:
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // the cube's outside: counter-clockwise on screen (face culling chapter)
+--- file: main.cpp
+--- find:
+        rasterizer.cullMode = VK_CULL_MODE_NONE; // nothing is culled
+--- replace:
+        rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT; // only the back faces are drawn: the insides of the cubes (and the floor, which is clockwise seen from above)
+--- file: main.cpp
+--- find:
+        // like vulkan-tutorial: the uniform buffer at binding 0, the texture at binding 1
+--- replace:
+        // like vulkan-tutorial: the uniform buffer at binding 0, the texture at binding 1 - and a second texture at binding 2
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
+--- replace:
+        VkDescriptorSetLayoutBinding backSamplerLayoutBinding{};
+        backSamplerLayoutBinding.binding = 2;
+        backSamplerLayoutBinding.descriptorCount = 1;
+        backSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        backSamplerLayoutBinding.pImmutableSamplers = nullptr;
+        backSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {uboLayoutBinding, samplerLayoutBinding, backSamplerLayoutBinding};
+--- file: main.cpp
+--- find:
+        createDescriptorSet(cubeTextureImageView, textureSampler, cubeDescriptorSet);
+        createDescriptorSet(floorTextureImageView, textureSampler, floorDescriptorSet);
+--- replace:
+        createDescriptorSet(cubeTextureImageView, floorTextureImageView, textureSampler, cubeDescriptorSet);   // front faces marble, back faces metal
+        createDescriptorSet(floorTextureImageView, floorTextureImageView, textureSampler, floorDescriptorSet); // metal on both sides
+--- file: main.cpp
+--- find:
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 2;
+--- replace:
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 4; // two textures in each set
+--- file: main.cpp
+--- find:
+    // A descriptor set with the uniform buffer (binding 0) and one texture (binding 1). Binding it before a draw
+    // (vkCmdBindDescriptorSets) is Vulkan's glBindTexture.
+    void createDescriptorSet(VkImageView textureImageView, VkSampler sampler, VkDescriptorSet& descriptorSet) {
+--- replace:
+    // A descriptor set with the uniform buffer (binding 0), the texture of the front faces (binding 1) and the texture
+    // of the back faces (binding 2). Binding it before a draw (vkCmdBindDescriptorSets) is Vulkan's glBindTexture.
+    void createDescriptorSet(VkImageView textureImageView, VkImageView backTextureImageView, VkSampler sampler, VkDescriptorSet& descriptorSet) {
+--- file: main.cpp
+--- find:
+        imageInfo.sampler = sampler;
+
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+--- replace:
+        imageInfo.sampler = sampler;
+
+        VkDescriptorImageInfo backImageInfo{};
+        backImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        backImageInfo.imageView = backTextureImageView;
+        backImageInfo.sampler = sampler;
+
+        std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+--- file: main.cpp
+--- find:
+        descriptorWrites[1].pImageInfo = &imageInfo;
+--- replace:
+        descriptorWrites[1].pImageInfo = &imageInfo;
+
+        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[2].dstSet = descriptorSet;
+        descriptorWrites[2].dstBinding = 2;
+        descriptorWrites[2].dstArrayElement = 0;
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[2].descriptorCount = 1;
+        descriptorWrites[2].pImageInfo = &backImageInfo;
+--- file: shaders/advanced_glsl.frag
+--- find:
+layout(binding = 1) uniform sampler2D texSampler;
+--- replace:
+layout(binding = 1) uniform sampler2D frontTexture;
+layout(binding = 2) uniform sampler2D backTexture;
+--- file: shaders/advanced_glsl.frag
+--- find:
+    if (gl_FragCoord.x < 400) { // gl_FragCoord: the fragment's window position in pixels (in Vulkan from the top-left)
+        outColor = vec4(1.0, 0.0, 0.0, 1.0);
+    } else {
+        outColor = vec4(0.0, 1.0, 0.0, 1.0);
+    }
+--- replace:
+    if (gl_FrontFacing) { // true for the front faces (the pipeline's frontFace: counter-clockwise on screen)
+        outColor = texture(frontTexture, fragTexCoord);
+    } else {
+        outColor = texture(backTexture, fragTexCoord);
+    }
+
+=== task: interface-block
+--- file: shaders/advanced_glsl.vert
+--- find:
+layout(location = 0) out vec2 fragTexCoord;
+--- replace:
+layout(location = 0) out VS_OUT {
+    vec2 texCoord;
+} vs_out;
+--- file: shaders/advanced_glsl.vert
+--- find:
+    fragTexCoord = inTexCoord;
+--- replace:
+    vs_out.texCoord = inTexCoord;
+--- file: shaders/advanced_glsl.frag
+--- find:
+layout(location = 0) in vec2 fragTexCoord;
+--- replace:
+layout(location = 0) in VS_OUT {
+    vec2 texCoord;
+} fs_in;
+--- file: shaders/advanced_glsl.frag
+--- find:
+        outColor = texture(frontTexture, fragTexCoord);
+    } else {
+        outColor = texture(backTexture, fragTexCoord);
+--- replace:
+        outColor = texture(frontTexture, fs_in.texCoord);
+    } else {
+        outColor = texture(backTexture, fs_in.texCoord);
+
+=== task: uniform-buffer
+--- file: shaders/uniform_buffer.vert
+--- find:
+// TODO: the uniform block shared by the four pipelines (binding 0): the same UniformBufferObject as advanced_glsl.vert
+--- replace:
+// one uniform buffer for all four pipelines (learnopengl's Matrices block): the same block, at the same binding
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+} ubo;
+--- file: shaders/uniform_buffer.vert
+--- find:
+    // TODO: gl_Position from the uniform block's matrices and the push constant's model matrix
+--- replace:
+    gl_Position = ubo.proj * ubo.view * pc.model * vec4(inPosition, 1.0);
+--- file: main.cpp
+--- find:
+    VkPipeline graphicsPipeline;
+--- replace:
+    // one pipeline per colour: the same vertex shader, each with its own fragment shader
+    VkPipeline redPipeline;
+    VkPipeline greenPipeline;
+    VkPipeline bluePipeline;
+    VkPipeline yellowPipeline;
+--- file: main.cpp
+--- find:
+    VkDescriptorSet cubeDescriptorSet;  // the uniform buffer, the marble texture (front faces) and the metal texture (back faces)
+    VkDescriptorSet floorDescriptorSet; // the uniform buffer and the metal texture (both sides)
+--- replace:
+    VkDescriptorSet cubeDescriptorSet;  // the uniform buffer, the marble texture (front faces) and the metal texture (back faces)
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/advanced_glsl.vert.spv", "shaders/advanced_glsl.frag.spv", graphicsPipeline);
+        // TODO: the uniform buffer task: four pipelines (redPipeline ...) with uniform_buffer.vert and red/green/blue/yellow.frag
+--- replace:
+        // the shaders only read the position (1 attribute of a Vertex)
+        createPipeline("shaders/uniform_buffer.vert.spv", "shaders/red.frag.spv", 1, redPipeline);
+        createPipeline("shaders/uniform_buffer.vert.spv", "shaders/green.frag.spv", 1, greenPipeline);
+        createPipeline("shaders/uniform_buffer.vert.spv", "shaders/blue.frag.spv", 1, bluePipeline);
+        createPipeline("shaders/uniform_buffer.vert.spv", "shaders/yellow.frag.spv", 1, yellowPipeline);
+--- file: main.cpp
+--- find:
+        createDescriptorSet(cubeTextureImageView, floorTextureImageView, textureSampler, cubeDescriptorSet);   // front faces marble, back faces metal
+        createDescriptorSet(floorTextureImageView, floorTextureImageView, textureSampler, floorDescriptorSet); // metal on both sides
+--- replace:
+        createDescriptorSet(cubeTextureImageView, floorTextureImageView, textureSampler, cubeDescriptorSet);   // front faces marble, back faces metal
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, redPipeline, nullptr);
+        vkDestroyPipeline(device, greenPipeline, nullptr);
+        vkDestroyPipeline(device, bluePipeline, nullptr);
+        vkDestroyPipeline(device, yellowPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT; // only the back faces are drawn: the insides of the cubes (and the floor, which is clockwise seen from above)
+--- replace:
+        rasterizer.cullMode = VK_CULL_MODE_NONE; // nothing is culled
+--- file: main.cpp
+--- find:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkPipeline& pipeline) {
+--- replace:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, uint32_t attributeCount, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+--- replace:
+        vertexInputInfo.vertexAttributeDescriptionCount = attributeCount; // the first attributeCount attributes of a Vertex
+--- file: main.cpp
+--- find:
+        poolSizes[0].descriptorCount = 2;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 4; // two textures in each set
+--- replace:
+        poolSizes[0].descriptorCount = 1;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 2; // two textures in the set
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 2;
+--- replace:
+        poolInfo.maxSets = 1;
+--- file: main.cpp
+--- find:
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+--- replace:
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+--- file: main.cpp
+--- find:
+        // cubes
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &cubeDescriptorSet, 0, nullptr);
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+        // floor
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &floorDescriptorSet, 0, nullptr);
+        constants.model = glm::mat4(1.0f);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // the floor's 6 vertices start at vertex 36
+--- replace:
+        // the set with the uniform buffer (binding 0), shared by the four pipelines (the colour shaders read no texture)
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &cubeDescriptorSet, 0, nullptr);
+
+        // RED
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, redPipeline);
+        model = glm::translate(model, glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+        // GREEN
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, greenPipeline);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.75f, 0.75f, 0.0f)); // move top-right
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+        // YELLOW
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, yellowPipeline);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-0.75f, -0.75f, 0.0f)); // move bottom-left
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+        // BLUE
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, bluePipeline);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.75f, -0.75f, 0.0f)); // move bottom-right
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);

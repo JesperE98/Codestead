@@ -1,0 +1,45 @@
+{
+  "title": "Parallax Mapping",
+  "tasks": {
+    "parallax": {
+      "text": {
+        "opengl": "Load the depth map (`bricks2_disp.png`, texture unit 2, sampler `depthMap`), pass `heightScale` (0.1), and add learnopengl's `ParallaxMapping`: shift the texture coordinates against the tangent-space view direction by the depth times `heightScale`, and sample the normal map and colour there.",
+        "vulkan": "Load the depth map (`textures/bricks2_disp.png`) into binding 3 (`depthMap`), put `heightScale` (0.1) into the uniform buffer, and add learnopengl's `ParallaxMapping`: shift the texture coordinates against the tangent-space view direction by the depth times `heightScale`, and sample the normal map and colour there.",
+        "d3d12": "Load the depth map (`bricks2_disp.png`, CBV/SRV heap slot 3, register t2), put `heightScale` (0.1) into the constant buffer, and add learnopengl's `ParallaxMapping`: shift the texture coordinates against the tangent-space view direction by the depth times `heightScale`, and sample the normal map and colour there."
+      },
+      "hint": {
+        "opengl": "`unsigned int heightMap = loadTexture(\"bricks2_disp.png\");`, `shader.setInt(\"depthMap\", 2);`, `shader.setFloat(\"heightScale\", heightScale);`, `glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D, heightMap);`. Shader: `float height = texture(depthMap, texCoords).r; return texCoords - viewDir.xy / viewDir.z * (height * heightScale);`, then `texCoords = ParallaxMapping(fs_in.TexCoords, viewDir);`.",
+        "vulkan": "`float heightScale;` in place of `pad2` (and after `lightPos` in the shader's block), `ubo.heightScale = heightScale;`. `loadTexture(\"textures/bricks2_disp.png\", heightMapImage, heightMapImageMemory, heightMapImageView);`, layout binding 3, 3 image samplers in the pool, a fourth descriptor write. Shader: `layout(binding = 3) uniform sampler2D depthMap;`, `return texCoords - viewDir.xy / viewDir.z * (height * ubo.heightScale);`.",
+        "d3d12": "`float heightScale;` in place of `padding0` after `viewPos` (and in the cbuffer), `constantBufferData.heightScale = heightScale;`. `LoadTexture(\"bricks2_disp.png\", m_depthMap, depthMapUploadHeap, 3);`, `NumDescriptors = 4`, `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0)`. Shader: `Texture2D depthMap : register(t2);`, `return texCoords - viewDir.xy / viewDir.z * (height * heightScale);`."
+      }
+    },
+    "discard-edges": {
+      "text": "Discard the fragments whose shifted texture coordinates leave the [0,1] range, so the quad's borders follow the bricks' outline instead of showing repeated texture.",
+      "hint": {
+        "opengl": "After `ParallaxMapping`: `if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0) discard;`.",
+        "vulkan": "After `ParallaxMapping`: `if (texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0) discard;`.",
+        "d3d12": "After `ParallaxMapping`: `if (texCoords.x > 1.0f || texCoords.y > 1.0f || texCoords.x < 0.0f || texCoords.y < 0.0f) discard;`."
+      }
+    },
+    "steep": {
+      "text": {
+        "opengl": "Replace the single sample with steep parallax mapping: walk along the view direction through depth layers (8 looking straight at the surface, up to 32 at grazing angles) until the layer is deeper than the depth map, and return those texture coordinates.",
+        "vulkan": "Replace the single sample with steep parallax mapping: walk along the view direction through depth layers (8 looking straight at the surface, up to 32 at grazing angles) until the layer is deeper than the depth map, and return those texture coordinates.",
+        "d3d12": "Replace the single sample with steep parallax mapping: walk along the view direction through depth layers (8 looking straight at the surface, up to 32 at grazing angles) until the layer is deeper than the depth map, reading it with `SampleLevel(…, 0)`, and return those texture coordinates."
+      },
+      "hint": {
+        "opengl": "`float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));`, `layerDepth = 1.0 / numLayers`, `vec2 P = viewDir.xy / viewDir.z * heightScale; vec2 deltaTexCoords = P / numLayers;`, then `while(currentLayerDepth < currentDepthMapValue) { currentTexCoords -= deltaTexCoords; currentDepthMapValue = texture(depthMap, currentTexCoords).r; currentLayerDepth += layerDepth; }`.",
+        "vulkan": "`float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));`, `layerDepth = 1.0 / numLayers`, `vec2 P = viewDir.xy / viewDir.z * ubo.heightScale; vec2 deltaTexCoords = P / numLayers;`, then `while (currentLayerDepth < currentDepthMapValue) { currentTexCoords -= deltaTexCoords; currentDepthMapValue = texture(depthMap, currentTexCoords).r; currentLayerDepth += layerDepth; }`.",
+        "d3d12": "`float numLayers = lerp(maxLayers, minLayers, abs(dot(float3(0.0f, 0.0f, 1.0f), viewDir)));` (`lerp` = GLSL's `mix`), `float2 P = viewDir.xy / viewDir.z * heightScale;`, the `while` loop with `depthMap.SampleLevel(wrapSampler, currentTexCoords, 0).r` – `Sample` is refused in a loop whose step count varies."
+      }
+    },
+    "occlusion": {
+      "text": "Parallax occlusion mapping: after the loop, interpolate linearly between the last two layers – before and after the ray crossed the depth map – to find where the view ray really meets the surface.",
+      "hint": {
+        "opengl": "`vec2 prevTexCoords = currentTexCoords + deltaTexCoords; float afterDepth = currentDepthMapValue - currentLayerDepth; float beforeDepth = texture(depthMap, prevTexCoords).r - currentLayerDepth + layerDepth; float weight = afterDepth / (afterDepth - beforeDepth);`, return `prevTexCoords * weight + currentTexCoords * (1.0 - weight)`.",
+        "vulkan": "`vec2 prevTexCoords = currentTexCoords + deltaTexCoords; float afterDepth = currentDepthMapValue - currentLayerDepth; float beforeDepth = texture(depthMap, prevTexCoords).r - currentLayerDepth + layerDepth; float weight = afterDepth / (afterDepth - beforeDepth);`, return `prevTexCoords * weight + currentTexCoords * (1.0 - weight)`.",
+        "d3d12": "`float2 prevTexCoords = currentTexCoords + deltaTexCoords; float afterDepth = currentDepthMapValue - currentLayerDepth; float beforeDepth = depthMap.SampleLevel(wrapSampler, prevTexCoords, 0).r - currentLayerDepth + layerDepth; float weight = afterDepth / (afterDepth - beforeDepth);`, return `prevTexCoords * weight + currentTexCoords * (1.0f - weight)`."
+      }
+    }
+  }
+}

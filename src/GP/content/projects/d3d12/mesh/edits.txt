@@ -1,0 +1,172 @@
+=== task: vertex
+--- file: main.cpp
+--- find:
+// TODO: struct Vertex (position, normal, texture coordinates) and struct Texture
+--- replace:
+// A vertex of a mesh: the layout of the vertex buffer, which the input layout describes
+// (POSITION at byte 0, NORMAL at byte 12, TEXCOORD at byte 24).
+struct Vertex
+{
+    // position
+    XMFLOAT3 position;
+    // normal
+    XMFLOAT3 normal;
+    // texCoords
+    XMFLOAT2 texCoord;
+};
+
+// A texture of a mesh: the image in GPU memory, what it is used for and the file it came from.
+struct Texture
+{
+    ComPtr<ID3D12Resource> resource;    // the texture (learnopengl's texture id)
+    std::string type;                   // "texture_diffuse" or "texture_specular"
+    std::string path;                   // the file name, as the material names it
+};
+
+=== task: mesh-class
+--- file: main.cpp
+--- find:
+// TODO: class Mesh (the mesh's data, its constructor, SetupMesh and Draw)
+--- replace:
+class Mesh
+{
+public:
+    // mesh Data
+    std::vector<Vertex>  vertices;
+    std::vector<UINT>    indices;
+    std::vector<Texture> textures;
+
+    // constructor: srvCpuHandle and srvGpuHandle are the mesh's two slots in the CBV/SRV
+    // heap (where the CPU writes its texture views, and where the GPU reads them).
+    Mesh(std::vector<Vertex> vertices, std::vector<UINT> indices, std::vector<Texture> textures,
+        ID3D12Device* device, CD3DX12_CPU_DESCRIPTOR_HANDLE srvCpuHandle, CD3DX12_GPU_DESCRIPTOR_HANDLE srvGpuHandle)
+    {
+        this->vertices = vertices;
+        this->indices = indices;
+        this->textures = textures;
+        m_srvHandle = srvGpuHandle;
+
+        // now that we have all the required data, create the buffers and the views.
+        SetupMesh(device, srvCpuHandle);
+    }
+
+    // render the mesh
+    void Draw(ID3D12GraphicsCommandList* commandList)
+    {
+        // TODO: bind the mesh's textures (root parameter 2) and draw it (its vertex and index buffers, DrawIndexedInstanced)
+    }
+
+private:
+    // render data
+    ComPtr<ID3D12Resource> m_vertexBuffer;
+    ComPtr<ID3D12Resource> m_indexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+    D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};
+    D3D12_GPU_DESCRIPTOR_HANDLE m_srvHandle = {};    // the first of the mesh's two SRVs
+
+    // initializes all the buffers and views
+    void SetupMesh(ID3D12Device* device, CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle)
+    {
+        // TODO: the vertex buffer and the index buffer, and their views
+
+        // TODO: the shader resource views of the mesh's textures (diffuse in the first slot, specular in the second)
+    }
+};
+
+=== task: setup-mesh
+--- file: main.cpp
+--- find:
+        // TODO: the vertex buffer and the index buffer, and their views
+--- replace:
+        // Upload heaps, as for the cube before: simple, and fine for a small model.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from these resources on the CPU.
+
+        // Create the vertex buffer and copy the vertices into it. A great thing about structs
+        // is that their memory layout is sequential for all its items: the vector's data is
+        // exactly the bytes the input layout describes.
+        const UINT vertexBufferSize = static_cast<UINT>(vertices.size() * sizeof(Vertex));
+        CD3DX12_RESOURCE_DESC vertexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+        ThrowIfFailed(device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &vertexBufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_vertexBuffer)));
+
+        UINT8* pVertexDataBegin = nullptr;
+        ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+        memcpy(pVertexDataBegin, vertices.data(), vertexBufferSize);
+        m_vertexBuffer->Unmap(0, nullptr);
+
+        // Initialize the vertex buffer view.
+        m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+        m_vertexBufferView.StrideInBytes = sizeof(Vertex);
+        m_vertexBufferView.SizeInBytes = vertexBufferSize;
+
+        // Create the index buffer and copy the indices into it: 32-bit unsigned integers.
+        const UINT indexBufferSize = static_cast<UINT>(indices.size() * sizeof(UINT));
+        CD3DX12_RESOURCE_DESC indexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
+        ThrowIfFailed(device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &indexBufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_indexBuffer)));
+
+        UINT8* pIndexDataBegin = nullptr;
+        ThrowIfFailed(m_indexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
+        memcpy(pIndexDataBegin, indices.data(), indexBufferSize);
+        m_indexBuffer->Unmap(0, nullptr);
+
+        // Initialize the index buffer view.
+        m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
+        m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+        m_indexBufferView.SizeInBytes = indexBufferSize;
+
+=== task: mesh-textures
+--- file: main.cpp
+--- find:
+        // TODO: the shader resource views of the mesh's textures (diffuse in the first slot, specular in the second)
+--- replace:
+        // The texture views: by the naming convention, the mesh's first diffuse texture goes
+        // into its first slot (t0, texture_diffuse1) and its first specular texture into the
+        // second (t1, texture_specular1). A slot without a texture gets a null view (the
+        // shader reads black from it).
+        const char* slotTypes[] = { "texture_diffuse", "texture_specular" };
+        for (UINT slot = 0; slot < _countof(slotTypes); slot++)
+        {
+            ID3D12Resource* resource = nullptr;
+            for (UINT i = 0; i < textures.size(); i++)
+            {
+                if (textures[i].type == slotTypes[slot])
+                {
+                    resource = textures[i].resource.Get();
+                    break;
+                }
+            }
+
+            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+            srvDesc.Texture2D.MipLevels = 1;
+            device->CreateShaderResourceView(resource, &srvDesc, srvHandle);
+            srvHandle.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+        }
+
+=== task: draw-mesh
+--- file: main.cpp
+--- find:
+        // TODO: bind the mesh's textures (root parameter 2) and draw it (its vertex and index buffers, DrawIndexedInstanced)
+--- replace:
+        // bind the mesh's textures: root parameter 2 is the descriptor table of the
+        // pixel shader's textures (t0 = texture_diffuse1, t1 = texture_specular1)
+        commandList->SetGraphicsRootDescriptorTable(2, m_srvHandle);
+
+        // draw mesh
+        commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+        commandList->IASetIndexBuffer(&m_indexBufferView);
+        commandList->DrawIndexedInstanced(static_cast<UINT>(indices.size()), 1, 0, 0, 0);

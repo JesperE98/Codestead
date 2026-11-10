@@ -1,0 +1,131 @@
+=== task: ccw-cube
+--- file: main.cpp
+--- find:
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f } },
+
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f } },
+            { { -0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+
+            { { -0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { { -0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { { -0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { { -0.5f,  0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } },
+--- replace:
+            // every triangle is counter-clockwise when you look at its face from outside the cube
+            // back face (z = -0.5)
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f } },
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } },
+
+            // front face (z = 0.5)
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f } },
+            { { -0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+
+            // left face (x = -0.5)
+            { { -0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { { -0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { { -0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+
+            // right face (x = 0.5)
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+
+            // bottom face (y = -0.5)
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
+
+            // top face (y = 0.5)
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
+            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
+            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } },
+            { { -0.5f,  0.5f,  0.5f }, { 0.0f, 1.0f } },
+
+=== task: cull-back
+--- file: main.cpp
+--- find:
+        // TODO: face culling: cull the back faces, and say which winding order is the front (FrontCounterClockwise)
+        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;    // no face culling: draw both sides of every triangle
+--- replace:
+        // Face culling: do not draw the triangles that face away from the camera (their back
+        // faces). Which side is the front: counter-clockwise on the screen, like OpenGL's
+        // default. (Direct3D's default is clockwise, but the right-handed view and projection
+        // matrices give the same screen positions as OpenGL, so the same winding rule fits.)
+        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+        psoDesc.RasterizerState.FrontCounterClockwise = TRUE;
+--- file: main.cpp
+--- find:
+            { {  5.0f, -0.5f,  5.0f }, { 2.0f, 2.0f } },
+            { { -5.0f, -0.5f,  5.0f }, { 0.0f, 2.0f } },
+            { { -5.0f, -0.5f, -5.0f }, { 0.0f, 0.0f } },
+
+            { {  5.0f, -0.5f,  5.0f }, { 2.0f, 2.0f } },
+            { { -5.0f, -0.5f, -5.0f }, { 0.0f, 0.0f } },
+            { {  5.0f, -0.5f, -5.0f }, { 2.0f, 0.0f } }
+--- replace:
+            // both triangles are counter-clockwise seen from above: the floor's front face points up
+            { {  5.0f, -0.5f,  5.0f }, { 2.0f, 2.0f } },
+            { { -5.0f, -0.5f, -5.0f }, { 0.0f, 0.0f } },
+            { { -5.0f, -0.5f,  5.0f }, { 0.0f, 2.0f } },
+
+            { {  5.0f, -0.5f,  5.0f }, { 2.0f, 2.0f } },
+            { {  5.0f, -0.5f, -5.0f }, { 2.0f, 0.0f } },
+            { { -5.0f, -0.5f, -5.0f }, { 0.0f, 0.0f } }
+
+=== task: cull-front
+--- file: main.cpp
+--- find:
+        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+--- replace:
+        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_FRONT;    // cull the front faces: now only the back faces (the cubes' insides) are drawn

@@ -1,0 +1,317 @@
+=== task: load-model
+--- file: model.h
+--- find:
+    // TODO: the constructor: load the model at path (loadModel)
+--- replace:
+    // constructor, expects a filepath to a 3D model.
+    Model(std::string const &path)
+    {
+        loadModel(path);
+    }
+--- file: model.h
+--- find:
+        // TODO: read the file with an Assimp::Importer, check for errors, remember the directory and process the root node
+--- replace:
+        // read file via ASSIMP
+        Assimp::Importer importer;
+        const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+        // check for errors
+        if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
+        {
+            std::cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << std::endl;
+            return;
+        }
+        // retrieve the directory path of the filepath
+        directory = path.substr(0, path.find_last_of('/'));
+
+        // process ASSIMP's root node recursively
+        processNode(scene->mRootNode, scene);
+
+=== task: process-node
+--- file: model.h
+--- find:
+        // TODO: turn every mesh of this node into a Mesh (processMesh), then process the children
+--- replace:
+        // process each mesh located at the current node
+        for (unsigned int i = 0; i < node->mNumMeshes; i++)
+        {
+            // the node object only contains indices to index the actual objects in the scene.
+            // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
+            aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+            meshes.push_back(processMesh(mesh, scene));
+        }
+        // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
+        for (unsigned int i = 0; i < node->mNumChildren; i++)
+        {
+            processNode(node->mChildren[i], scene);
+        }
+
+=== task: process-mesh
+--- file: model.h
+--- find:
+        // TODO: copy every vertex (position, normal, texture coordinates) and the indices of every face
+--- replace:
+        // walk through each of the mesh's vertices
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+        {
+            Vertex vertex;
+            glm::vec3 vector; // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
+            // positions
+            vector.x = mesh->mVertices[i].x;
+            vector.y = mesh->mVertices[i].y;
+            vector.z = mesh->mVertices[i].z;
+            vertex.Position = vector;
+            // normals
+            if (mesh->HasNormals())
+            {
+                vector.x = mesh->mNormals[i].x;
+                vector.y = mesh->mNormals[i].y;
+                vector.z = mesh->mNormals[i].z;
+                vertex.Normal = vector;
+            }
+            // texture coordinates
+            if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
+            {
+                glm::vec2 vec;
+                // a vertex can contain up to 8 different texture coordinates. We thus make the assumption that we won't
+                // use models where a vertex can have multiple texture coordinates so we always take the first set (0).
+                vec.x = mesh->mTextureCoords[0][i].x;
+                vec.y = mesh->mTextureCoords[0][i].y;
+                vertex.TexCoords = vec;
+            }
+            else
+                vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+
+            vertices.push_back(vertex);
+        }
+        // now walk through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
+        for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+        {
+            aiFace face = mesh->mFaces[i];
+            // retrieve all indices of the face and store them in the indices vector
+            for (unsigned int j = 0; j < face.mNumIndices; j++)
+                indices.push_back(face.mIndices[j]);
+        }
+
+=== task: texture-from-file
+--- file: model.h
+--- find:
+// TODO: TextureFromFile: load an image file from the model's directory into an OpenGL texture
+--- replace:
+unsigned int TextureFromFile(const char *path, const std::string &directory)
+{
+    std::string filename = std::string(path);
+    filename = directory + '/' + filename;
+
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format = GL_RGB;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
+}
+
+=== task: material-textures
+--- file: model.h
+--- find:
+        // TODO: process materials: load the diffuse, specular and normal maps (loadMaterialTextures)
+--- replace:
+        // process materials
+        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+        // we assume a convention for sampler names in the shaders. Each diffuse texture should be named
+        // as 'texture_diffuseN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER.
+        // Same applies to other texture as the following list summarizes:
+        // diffuse: texture_diffuseN
+        // specular: texture_specularN
+        // normal: texture_normalN
+
+        // 1. diffuse maps
+        std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+        textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+        // 2. specular maps
+        std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+        textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+        // 3. normal maps
+        std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
+        textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+--- file: model.h
+--- find:
+    // TODO: loadMaterialTextures: load the material's textures of one type (each file only once)
+--- replace:
+    // checks all material textures of a given type and loads the textures if they're not loaded yet.
+    // the required info is returned as a Texture struct.
+    std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)
+    {
+        std::vector<Texture> textures;
+        for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
+        {
+            aiString str;
+            mat->GetTexture(type, i, &str);
+            // check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
+            bool skip = false;
+            for (unsigned int j = 0; j < textures_loaded.size(); j++)
+            {
+                if (std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0)
+                {
+                    textures.push_back(textures_loaded[j]);
+                    skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
+                    break;
+                }
+            }
+            if (!skip)
+            {   // if texture hasn't been loaded already, load it
+                Texture texture;
+                texture.id = TextureFromFile(str.C_Str(), this->directory);
+                texture.type = typeName;
+                texture.path = str.C_Str();
+                textures.push_back(texture);
+                textures_loaded.push_back(texture); // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
+            }
+        }
+        return textures;
+    }
+
+=== task: draw-model
+--- file: model.h
+--- find:
+    // TODO: Draw: draw every mesh of the model
+--- replace:
+    // draws the model, and thus all its meshes
+    void Draw(Shader &shader)
+    {
+        for (unsigned int i = 0; i < meshes.size(); i++)
+            meshes[i].Draw(shader);
+    }
+--- file: main.cpp
+--- find:
+    // TODO: load the model from "models/planet.obj" (Model ourModel)
+--- replace:
+    // load models
+    // -----------
+    // (no stbi_set_flip_vertically_on_load(true) here: aiProcess_FlipUVs in model.h already turns the texture
+    // coordinates the right way up - doing both would turn the textures upside down)
+    Model ourModel("models/planet.obj");
+--- file: main.cpp
+--- find:
+        // TODO: draw the loaded model (ourModel.Draw)
+--- replace:
+        ourModel.Draw(ourShader);
+
+=== task: lighting
+--- file: main.cpp
+--- find:
+float lastFrame = 0.0f;
+--- replace:
+float lastFrame = 0.0f;
+
+// lighting
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+--- file: main.cpp
+--- find:
+        ourShader.use();
+--- replace:
+        ourShader.use();
+        ourShader.setVec3("viewPos", cameraPos);
+        ourShader.setFloat("shininess", 32.0f);
+
+        // light properties: a white point light, no attenuation
+        ourShader.setVec3("light.position", lightPos);
+        ourShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+        ourShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+        ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+--- file: model_loading.vs
+--- find:
+out vec2 TexCoords;
+--- replace:
+out vec3 FragPos;
+out vec3 Normal;
+out vec2 TexCoords;
+--- file: model_loading.vs
+--- find:
+    TexCoords = aTexCoords;
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
+--- replace:
+    FragPos = vec3(model * vec4(aPos, 1.0));
+    Normal = mat3(transpose(inverse(model))) * aNormal;
+    TexCoords = aTexCoords;
+    gl_Position = projection * view * vec4(FragPos, 1.0);
+--- file: model_loading.fs
+--- find:
+out vec4 FragColor;
+
+in vec2 TexCoords;
+
+uniform sampler2D texture_diffuse1;
+
+void main()
+{
+    FragColor = texture(texture_diffuse1, TexCoords);
+}
+--- replace:
+out vec4 FragColor;
+
+struct Light {
+    vec3 position;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+in vec3 FragPos;
+in vec3 Normal;
+in vec2 TexCoords;
+
+uniform sampler2D texture_diffuse1;
+uniform sampler2D texture_specular1;
+uniform float shininess;
+uniform vec3 viewPos;
+uniform Light light;
+
+void main()
+{
+    // ambient
+    vec3 ambient = light.ambient * texture(texture_diffuse1, TexCoords).rgb;
+
+    // diffuse
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(light.position - FragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = light.diffuse * diff * texture(texture_diffuse1, TexCoords).rgb;
+
+    // specular
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+    vec3 specular = light.specular * spec * texture(texture_specular1, TexCoords).rgb;
+
+    vec3 result = ambient + diffuse + specular;
+    FragColor = vec4(result, 1.0);
+}

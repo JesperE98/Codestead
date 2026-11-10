@@ -1,0 +1,13 @@
+[
+  { "title": "Camera", "url": "https://learnopengl.com/Getting-started/Camera", "publisher": "LearnOpenGL" },
+  { "title": "LearnOpenGL source code: camera_mouse_zoom.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/1.getting_started/7.3.camera_mouse_zoom/camera_mouse_zoom.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "LearnOpenGL source code: camera.h", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/includes/learnopengl/camera.h", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "GLFW Input guide (cursor mode, cursor position, scroll input)", "url": "https://www.glfw.org/docs/latest/input_guide.html", "publisher": "GLFW", "api": "opengl" },
+  { "title": "LearnOpenGL source code: camera.h", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/includes/learnopengl/camera.h", "publisher": "Joey de Vries (GitHub)", "api": "vulkan" },
+  { "title": "GLFW Input guide (cursor mode, cursor position, scroll input)", "url": "https://www.glfw.org/docs/latest/input_guide.html", "publisher": "GLFW", "api": "vulkan" },
+  { "title": "Uniform buffers: Descriptor set layout and buffer", "url": "https://vulkan-tutorial.com/Uniform_buffers/Descriptor_set_layout_and_buffer", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "XMMatrixLookAtRH function", "url": "https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmmatrixlookatrh", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "WM_MOUSEMOVE message", "url": "https://learn.microsoft.com/en-us/windows/win32/inputdev/wm-mousemove", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "WM_MOUSEWHEEL message", "url": "https://learn.microsoft.com/en-us/windows/win32/inputdev/wm-mousewheel", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "D3D12Bundles sample: SimpleCamera.cpp", "url": "https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/Samples/Desktop/D3D12Bundles/src/SimpleCamera.cpp", "publisher": "Microsoft (GitHub)", "api": "d3d12" }
+]

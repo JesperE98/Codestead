@@ -24,6 +24,33 @@
     ]
   },
   {
+    "key": "gp",
+    "project": "src/GP/Codestead.GP/Codestead.GP.csproj",
+    "dir": "src/GP",
+    "idProperty": "CodesteadGPId",
+    "nameProperty": "CodesteadGPName",
+    "title": "Codestead GP",
+    "summary": "Learn graphics programming with OpenGL, Vulkan or DirectX 12",
+    "versionProperty": "CodesteadGPVersion",
+    "paths": [
+      "src/GP",
+      "src/Shared",
+      "build/icons/codestead-gp.*",
+      "build/Codestead.props",
+      "build/languages.json",
+      "build/Codestead.App.props",
+      "packaging/build-linux.sh",
+      "packaging/build-windows.ps1",
+      "packaging/nfpm.yaml",
+      "packaging/linux",
+      "global.json",
+      "Directory.Build.props"
+    ],
+    "exclude": [
+      "src/GP/verify"
+    ]
+  },
+  {
     "key": "hub",
     "project": "src/Hub/Codestead.Hub/Codestead.Hub.csproj",
     "dir": "src/Hub",

@@ -1,0 +1,65 @@
+{
+  "title": "Shadow mapping",
+  "tasks": {
+    "depth-map": {
+      "text": {
+        "opengl": "Skapa djupkartan – en `GL_DEPTH_COMPONENT`-textur på 1024 × 1024 som framebufferns enda attachment, ingen färgbuffer – rendera scenen i den varje bildruta från ljuset med `simpleDepthShader`, och visa den på en fyrhörning över fönstret med `debugDepthQuad`.",
+        "vulkan": "Skapa djupkartan – en djupbild på 1024 × 1024 som går att rita i och sampla, ett render pass med bara ett djup-attachment, en framebuffer, en sampler och en pipeline för bara djup – spela in ett djuppass från ljuset före fönstrets pass, och visa djupkartan på debugfyrhörningen.",
+        "d3d12": "Skapa djupkartan – en `R32_TYPELESS`-textur på 1024 × 1024 med en `D32_FLOAT`-DSV och en `R32_FLOAT`-SRV – och en pipeline state för bara djup; rita scenen i den från ljuset varje bildruta (pass 1), och visa den sedan på debugfyrhörningen."
+      },
+      "hint": {
+        "opengl": "`glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL)`, `GL_NEAREST`, `GL_REPEAT`; koppla till `GL_DEPTH_ATTACHMENT`, `glDrawBuffer(GL_NONE); glReadBuffer(GL_NONE);`. Ljuset: `glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane) * glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0))`. Pass 1 med `glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT)`. Djupets VS: `gl_Position = lightSpaceMatrix * model * vec4(aPos, 1.0);`; debugens FS: `FragColor = vec4(vec3(texture(depthMap, TexCoords).r), 1.0);`.",
+        "vulkan": "Render pass: ett attachment i `findDepthMapFormat()`, CLEAR / **STORE**, `finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL`, `colorAttachmentCount = 0`, två dependencies. Bildens användning `DEPTH_STENCIL_ATTACHMENT | SAMPLED`. `createPipeline(…, attributeCount, pipelineRenderPass, colorAttachmentCount, …)`. `ubo.lightSpaceMatrix` från `glm::ortho` × `glm::lookAt`, ingen y-vändning. Descriptor binding 2 = djupkartan. Debugfyrhörningen: `vkCmdDraw(commandBuffer, 6, 1, 42, 0)`.",
+        "d3d12": "`Tex2D(DXGI_FORMAT_R32_TYPELESS, SHADOW_WIDTH, SHADOW_HEIGHT, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)`, tillstånd `DEPTH_WRITE`; DSV på DSV-plats 1, SRV på CBV/SRV-plats 2, SRV-intervall på 2, sampler s1 med punktfiltrering. Djupets PSO: `PS = CD3DX12_SHADER_BYTECODE(nullptr, 0)`, `NumRenderTargets = 0`. `XMMatrixOrthographicRH(20.0f, 20.0f, near_plane, far_plane)`, `lightView * lightProjection`. Pass 1: `OMSetRenderTargets(0, nullptr, FALSE, &shadowDsvHandle)`, sedan barriären `DEPTH_WRITE` → `PIXEL_SHADER_RESOURCE` (och tillbaka i slutet)."
+      }
+    },
+    "shadows": {
+      "text": {
+        "opengl": "Rita scenen med skuggor: skicka `FragPosLightSpace` från vertex shadern, ge fragment shadern djupkartan (`shadowMap`, enhet 1) och en `ShadowCalculation` som jämför fragmentets djup med djupkartans; sluta rita debugfyrhörningen.",
+        "vulkan": "Rita scenen med skuggor: rita den igen i fönstrets pass med `graphicsPipeline`, skicka `fragPosLightSpace` från vertex shadern, och ge fragment shadern djupkartan (`shadowMap`, binding 2) och en `ShadowCalculation` som jämför fragmentets djup med djupkartans.",
+        "d3d12": "Rita scenen med skuggor: skicka `fragPosLightSpace` från `VSMain`, läs djupkartan (t1, sampler s1) i `PSMain` med en `ShadowCalculation` som jämför fragmentets djup med djupkartans, och sluta rita debugfyrhörningen."
+      },
+      "hint": {
+        "opengl": "`vs_out.FragPosLightSpace = lightSpaceMatrix * vec4(vs_out.FragPos, 1.0);`. `projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w; projCoords = projCoords * 0.5 + 0.5;` (x, y och z), `shadow = currentDepth > closestDepth ? 1.0 : 0.0`. I main: `shader.setInt(\"shadowMap\", 1);`, `setMat4(\"lightSpaceMatrix\", …)`, djupkartan på `GL_TEXTURE1`, `//renderQuad();`.",
+        "vulkan": "Lägg till `mat4 lightSpaceMatrix;` i vertex shaderns block och `vec4 fragPosLightSpace;` i båda `VS_OUT`-blocken. `projCoords.xy = projCoords.xy * 0.5 + 0.5;` – bara x och y, z är redan 0..1, och ingen y-vändning (ljusets matris har ingen). Kommentera bort debugfyrhörningens två anrop.",
+        "d3d12": "`float4 fragPosLightSpace : TEXCOORD1;`, `result.fragPosLightSpace = mul(worldPos, lightSpaceMatrix);`. `float2 shadowUV = float2(projCoords.x * 0.5f + 0.5f, -projCoords.y * 0.5f + 0.5f);` – y vänt, z är redan 0..1. Kommentera bort debugfyrhörningens två rader."
+      }
+    },
+    "bias": {
+      "text": {
+        "opengl": "Ta bort shadow acne med en bias som beror på lutningen, `max(0.05 * (1.0 - dot(normal, lightDir)), 0.005)`, som dras av från fragmentets djup före jämförelsen.",
+        "vulkan": "Ta bort shadow acne med en bias som beror på lutningen, `max(0.05 * (1.0 - dot(normal, lightDir)), 0.005)`, som dras av från fragmentets djup före jämförelsen.",
+        "d3d12": "Ta bort shadow acne med en bias som beror på lutningen, `max(0.05f * (1.0f - dot(normal, lightDir)), 0.005f)`, som dras av från fragmentets djup före jämförelsen; `ShadowCalculation` får normalen och ljusriktningen som parametrar."
+      },
+      "hint": {
+        "opengl": "`vec3 normal = normalize(fs_in.Normal); vec3 lightDir = normalize(lightPos - fs_in.FragPos);` sedan biasen och `shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;`.",
+        "vulkan": "`vec3 normal = normalize(fs_in.normal); vec3 lightDir = normalize(ubo.lightPos - fs_in.fragPos);` sedan biasen och `shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;`.",
+        "d3d12": "`float ShadowCalculation(float4 fragPosLightSpace, float3 normal, float3 lightDir)`, anropad med `(input.fragPosLightSpace, normal, lightDir)`; `shadow = currentDepth - bias > closestDepth ? 1.0f : 0.0f;`."
+      }
+    },
+    "over-sampling": {
+      "text": {
+        "opengl": "Stoppa översamplingen: kläm djupkartan mot en vit kant (djup 1.0) i stället för att upprepa den, och räkna fragment bortom ljusets far-plan (`projCoords.z > 1.0`) som belysta.",
+        "vulkan": "Stoppa översamplingen: ge djupkartans sampler `VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER` med en opakt vit kant (djup 1.0), och räkna fragment bortom ljusets far-plan (`projCoords.z > 1.0`) som belysta.",
+        "d3d12": "Stoppa översamplingen: ge sampler s1 `D3D12_TEXTURE_ADDRESS_MODE_BORDER` med en opakt vit kant (djup 1.0), och räkna fragment bortom ljusets far-plan (`projCoords.z > 1.0f`) som belysta."
+      },
+      "hint": {
+        "opengl": "`GL_CLAMP_TO_BORDER` för `GL_TEXTURE_WRAP_S` och `_T`, `float borderColor[] = { 1.0, 1.0, 1.0, 1.0 }; glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);`; före `return`: `if(projCoords.z > 1.0) shadow = 0.0;`. Från standardkameran ändras nästan ingenting.",
+        "vulkan": "`addressModeU/V/W = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER`, `borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE`; före `return`: `if (projCoords.z > 1.0) shadow = 0.0;`. Från standardkameran ändras nästan ingenting.",
+        "d3d12": "`samplers[1].AddressU/V/W = D3D12_TEXTURE_ADDRESS_MODE_BORDER`, `samplers[1].BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;`; före `return`: `if (projCoords.z > 1.0f) shadow = 0.0f;`. Från standardkameran ändras nästan ingenting."
+      }
+    },
+    "pcf": {
+      "text": {
+        "opengl": "Gör skuggans kanter mjuka med PCF: ta medelvärdet av jämförelsen över de 3 × 3 texlarna i djupkartan runt positionen (`textureSize` ger texelstorleken).",
+        "vulkan": "Gör skuggans kanter mjuka med PCF: ta medelvärdet av jämförelsen över de 3 × 3 texlarna i djupkartan runt positionen (`textureSize` ger texelstorleken).",
+        "d3d12": "Gör skuggans kanter mjuka med PCF: ta medelvärdet av jämförelsen över de 3 × 3 texlarna i djupkartan runt positionen (`GetDimensions` ger djupkartans storlek)."
+      },
+      "hint": {
+        "opengl": "`float shadow = 0.0; vec2 texelSize = 1.0 / textureSize(shadowMap, 0);`, två loopar från -1 till 1 med `float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;`, sedan `shadow /= 9.0;`.",
+        "vulkan": "`float shadow = 0.0; vec2 texelSize = 1.0 / textureSize(shadowMap, 0);`, två loopar från -1 till 1 med `float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;`, sedan `shadow /= 9.0;`.",
+        "d3d12": "`uint width, height; shadowMap.GetDimensions(width, height); float2 texelSize = 1.0f / float2(width, height);`, två loopar från -1 till 1 med `shadowMap.Sample(shadowSampler, shadowUV + float2(x, y) * texelSize).r`, sedan `shadow /= 9.0f;` – `closestDepth` behövs inte längre."
+      }
+    }
+  }
+}

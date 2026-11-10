@@ -7,6 +7,8 @@
     <CodesteadBrand>Codestead</CodesteadBrand>
     <CodesteadLinuxName>$(CodesteadBrand) Linux</CodesteadLinuxName>
     <CodesteadLinuxId>codestead-linux</CodesteadLinuxId>
+    <CodesteadGPName>$(CodesteadBrand) GP</CodesteadGPName>
+    <CodesteadGPId>codestead-gp</CodesteadGPId>
     <CodesteadHubName>$(CodesteadBrand)</CodesteadHubName>
     <CodesteadHubId>codestead-hub</CodesteadHubId>
     <CodesteadPublisher>JesperE98</CodesteadPublisher>
@@ -18,6 +20,7 @@
       Local builds are x.y.0.
     -->
     <CodesteadLinuxVersion>0.6</CodesteadLinuxVersion>
+    <CodesteadGPVersion>0.1</CodesteadGPVersion>
     <CodesteadHubVersion>0.2</CodesteadHubVersion>
     <Company>$(CodesteadPublisher)</Company>
     <Product>$(CodesteadBrand)</Product>

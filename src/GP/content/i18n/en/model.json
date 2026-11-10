@@ -1,0 +1,100 @@
+{
+  "title": "Model",
+  "tasks": {
+    "load-model": {
+      "text": {
+        "opengl": "Give `Model` the constructor `Model(std::string const &path)` that calls `loadModel(path)`, and write `loadModel`: read the file with an `Assimp::Importer` (`aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace`), print Assimp's error and return if it failed, store the file's directory and process the root node.",
+        "vulkan": "Load the model with tinyobjloader: include `tiny_obj_loader.h` (with `TINYOBJLOADER_IMPLEMENTATION`), add `MODEL_PATH`, replace the test square with empty `vertices` / `indices`, and write `loadModel()` – called before `createVertexBuffer()` – that builds a `Vertex` (position, normal, texture coordinate with v flipped, `materialIndex`) for every index of every shape and adds each different vertex only once.",
+        "d3d12": "Fill `loadModel`: read the file with an `Assimp::Importer` (`aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace`), throw if it failed, keep the file's directory and process the root node."
+      },
+      "hint": {
+        "opengl": "It failed when `!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode`; the error text is `importer.GetErrorString()`. The directory is `path.substr(0, path.find_last_of('/'))`; then `processNode(scene->mRootNode, scene);`.",
+        "vulkan": "`tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str(), \"models/\")` – the last argument is the folder of the .mtl file. The material is `shape.mesh.material_ids[i / 3]` (three indices per face); `std::unordered_map<Vertex, uint32_t> uniqueVertices` finds repeated vertices.",
+        "d3d12": "Throw `std::runtime_error(std::string(\"ERROR::ASSIMP:: \") + importer.GetErrorString())` when `!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode`. Then `directory = path.substr(0, path.find_last_of('/'));` and `processNode(scene->mRootNode, scene);`."
+      }
+    },
+    "process-node": {
+      "text": {
+        "opengl": "Write `processNode`: turn every mesh of the node into a `Mesh` with `processMesh` and add it to `meshes`, then call `processNode` for every child node.",
+        "d3d12": "Fill `processNode`: turn every mesh of the node into a `Mesh` with `processMesh` and add it to `meshes`, then call `processNode` for every child node."
+      },
+      "hint": "A node only holds indices: the mesh itself is `scene->mMeshes[node->mMeshes[i]]` (for `i < node->mNumMeshes`); the children are `node->mChildren[i]` (for `i < node->mNumChildren`)."
+    },
+    "process-mesh": {
+      "text": {
+        "opengl": "In `processMesh`, copy every vertex of the `aiMesh` into a `Vertex` (position, the normal if there are normals, the first set of texture coordinates or (0, 0)) and every face's indices into `indices`.",
+        "d3d12": "In `processMesh`, fill `vertices` (position, normal and texture coordinates of each of the mesh's `mNumVertices` vertices, as `XMFLOAT3` / `XMFLOAT2`) and `indices` (the indices of each face)."
+      },
+      "hint": {
+        "opengl": "Loop `i < mesh->mNumVertices`: `mesh->mVertices[i]`, `mesh->mNormals[i]` (if `mesh->HasNormals()`), `mesh->mTextureCoords[0][i]` (if `mesh->mTextureCoords[0]`). Then loop over `mesh->mNumFaces`: `aiFace face = mesh->mFaces[i];` and push `face.mIndices[j]` for `j < face.mNumIndices`.",
+        "d3d12": "`vertex.position = XMFLOAT3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);` – the normal from `mesh->mNormals[i]` if `mesh->HasNormals()`, the texture coordinates from `mesh->mTextureCoords[0][i]` if `mesh->mTextureCoords[0]` (else zero). Faces: `aiFace face = mesh->mFaces[i];` and `indices.push_back(face.mIndices[j]);`."
+      }
+    },
+    "texture-from-file": {
+      "text": {
+        "opengl": "Write `TextureFromFile(const char *path, const std::string &directory)` after the class: load `directory + '/' + path` with `stbi_load`, create an OpenGL texture from it (format from the channel count, mipmaps, `GL_REPEAT`, `GL_LINEAR_MIPMAP_LINEAR` / `GL_LINEAR`) and return its id; print a message if the file can't be loaded."
+      },
+      "hint": {
+        "opengl": "It is the lighting chapters' `loadTexture` with the directory in front of the file name – the .mtl names the images relative to the .obj file. No `stbi_set_flip_vertically_on_load` here: `aiProcess_FlipUVs` already flips v once."
+      }
+    },
+    "textures": {
+      "text": {
+        "vulkan": "Load the materials' diffuse maps: the constants `PLANET_DIFFUSE_PATH` (`models/planet_diffuse.png`) and `RINGS_DIFFUSE_PATH` (`models/rings.png`), a `struct Texture` (image, memory, view), the members `planetDiffuseMap` and `ringsDiffuseMap`, `createTextures()` with a `createTexture` helper (called before `createTextureSampler()`), and `destroyTexture` for both in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "`stbi_load(PLANET_DIFFUSE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha)`, then `createTexture(pixels, texWidth, texHeight, planetDiffuseMap)`: check the pixels, `createTextureImage`, `stbi_image_free`, `createImageView`. The planet's texture first – the order will be the order of the bindings."
+      }
+    },
+    "descriptors": {
+      "text": {
+        "vulkan": "Give the textures descriptors: a combined image sampler binding (fragment stage) copied to bindings 1 and 2 in `createDescriptorSetLayout()`, a second pool size (`VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER` × 2), and in `createDescriptorSets()` an image info per texture (its view, `textureSampler`) with a write for each (`dstBinding = 1 + i`)."
+      },
+      "hint": {
+        "vulkan": "Binding 0 stays the uniform buffer. `std::array<VkDescriptorSetLayoutBinding, 3> bindings = {uboLayoutBinding, samplerLayoutBinding, samplerLayoutBinding};` then set `bindings[1].binding = 1;` and `bindings[2].binding = 2;`. Three writes in all."
+      }
+    },
+    "material-textures": {
+      "text": {
+        "opengl": "Load the mesh's material textures: write `loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)` (each file only once, with `textures_loaded`) and in `processMesh` add the diffuse (`\"texture_diffuse\"`), specular (`\"texture_specular\"`) and normal maps (`\"texture_normal\"`, `aiTextureType_HEIGHT`) to `textures`.",
+        "vulkan": "Colour each fragment with its material's diffuse map: pass the material index on as `layout(location = 3) flat out uint fragMaterialIndex`, declare `planetDiffuseMap` (binding 1) and `ringsDiffuseMap` (binding 2) in the fragment shader, sample both and keep the one of the fragment's material.",
+        "d3d12": "Load the mesh's textures: in `processMesh` get its `aiMaterial` and append `loadMaterialTextures(…, aiTextureType_DIFFUSE, \"texture_diffuse\")` and `(…, aiTextureType_SPECULAR, \"texture_specular\")` to `textures`; fill `loadMaterialTextures` with learnopengl's loop and the `textures_loaded` cache, loading new files with `TextureFromFile`."
+      },
+      "hint": {
+        "opengl": "`aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];` For each `i < mat->GetTextureCount(type)`: `mat->GetTexture(type, i, &str);` – reuse a texture of `textures_loaded` whose `path` equals `str.C_Str()` (`std::strcmp`), else `TextureFromFile(str.C_Str(), this->directory)` and remember it in `textures_loaded`.",
+        "vulkan": "`flat`: an integer cannot be interpolated. Sample before choosing: `outColor = fragMaterialIndex == 0u ? planetColor : ringsColor;` – `texture()` inside an `if` that differs between neighbouring fragments gets a wrong level of detail.",
+        "d3d12": "A new texture: `texture.resource = TextureFromFile(str.C_Str(), directory, m_device, m_commandList, uploadHeap);`, set `type` and `path`, push it to `textures` and `textures_loaded`, and keep `uploadHeap` in `uploadHeaps`."
+      }
+    },
+    "specular-maps": {
+      "text": {
+        "vulkan": "Load and bind the materials' specular maps too: `PLANET_SPECULAR_PATH` (`models/planet_specular.png`) and `RINGS_SPECULAR_PATH` (`models/rings_specular.png`), the members `planetSpecularMap` and `ringsSpecularMap` (created at the end of `createTextures()`, destroyed in `cleanup()`), bindings 3 and 4, a pool count of 4 and five descriptor writes."
+      },
+      "hint": {
+        "vulkan": "The order of the `stbi_load` calls is the order of the bindings: planet diffuse, rings diffuse, planet specular, rings specular. The arrays grow: 5 layout bindings, 4 views and image infos, 5 writes."
+      }
+    },
+    "draw-model": {
+      "text": {
+        "opengl": "Give `Model` a `Draw(Shader &shader)` that draws all its meshes; in `main.cpp` load the model with `Model ourModel(\"models/planet.obj\");` after the shader and draw it with `ourModel.Draw(ourShader);` right after the model matrix is set.",
+        "d3d12": "Use the class: a member `Model m_model;` in `D3D12App`, `m_model.Load(\"models/planet.obj\", m_device.Get(), m_commandList.Get(), m_cbvSrvHeap.Get(), 1);` in `LoadAssets`, `m_model.uploadHeaps.clear();` after its `WaitForPreviousFrame()`, and `m_model.Draw(m_commandList.Get());` in `PopulateCommandList` after the model matrix."
+      },
+      "hint": {
+        "opengl": "`for (unsigned int i = 0; i < meshes.size(); i++) meshes[i].Draw(shader);` The model is loaded once, before the render loop; the path is relative to the program's folder.",
+        "d3d12": "The last argument of `Load` is the first free slot of the CBV/SRV heap: slot 0 holds the CBV. The textures' copies are recorded in the command list `LoadAssets` executes and waits for – only after that wait may their upload buffers go."
+      }
+    },
+    "lighting": {
+      "text": {
+        "opengl": "Exercise: light the model like *Lighting maps* – a white point light at `lightPos` (1.2, 1.0, 2.0) with ambient 0.2, diffuse 0.5, specular 1.0 (no attenuation), Phong with `texture_diffuse1` and the specular map `texture_specular1`, shininess 32, `viewPos` = `cameraPos`; the vertex shader passes `FragPos` and the normal (with the normal matrix).",
+        "vulkan": "Exercise: light the model like *Lighting maps* – a point light at `lightPos` (1.2, 1.0, 2.0) with ambient 0.2, diffuse 0.5, specular 1.0, Phong with the diffuse and specular map of the fragment's material, shininess 32, `viewPos` = `cameraPos`: `Material` and `Light` (padded for std140) in the uniform block, its stages `VERTEX | FRAGMENT`, `fragPos` and `fragNormal` from the vertex shader.",
+        "d3d12": "Exercise: light the model like *Lighting maps* – a point light at `lightPos` (1.2, 1.0, 2.0) with ambient 0.2, diffuse 0.5, specular 1.0, Phong with the diffuse map (`t0`) and the specular map (`texture_specular1`, `t1`), shininess 32, `viewPos` = `cameraPos`; the normals with the normal matrix, computed on the CPU."
+      },
+      "hint": {
+        "opengl": "Vertex shader: `FragPos = vec3(model * vec4(aPos, 1.0)); Normal = mat3(transpose(inverse(model))) * aNormal;`. Fragment shader: `struct Light` and the ambient + diffuse + specular of *Lighting maps*. In `main.cpp`: `ourShader.setVec3(\"light.position\", lightPos);` … and `ourShader.setFloat(\"shininess\", 32.0f);`.",
+        "vulkan": "C++: `viewPos` + `pad1`, `Material { shininess; pad1; pad2; pad3; }`, `Light` with a padding float after each `glm::vec3`. Shader: specular maps at bindings 3 and 4; choose `diffuseColor` and `specularColor` by `fragMaterialIndex`, then ambient + diffuse + specular.",
+        "d3d12": "`ModelConstants` gets `normalMatrix` (`XMMatrixTranspose(XMMatrixInverse(nullptr, model))`, stored transposed); `SceneConstantBuffer` gets `viewPos` + padding, `Material` (`shininess` + 3 floats) and `Light` (each `XMFLOAT3` padded to 16 bytes); the vertex shader outputs `fragPos` and `normal`."
+      }
+    }
+  }
+}

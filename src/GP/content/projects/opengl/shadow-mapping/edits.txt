@@ -1,0 +1,243 @@
+=== task: depth-map
+--- file: main.cpp
+--- find:
+    // TODO: the depth shader (simpleDepthShader: shadow_mapping_depth.vs/.fs) and the debug quad shader (debugDepthQuad: debug_quad.vs, debug_quad_depth.fs)
+--- replace:
+    Shader simpleDepthShader("shadow_mapping_depth.vs", "shadow_mapping_depth.fs");
+    Shader debugDepthQuad("debug_quad.vs", "debug_quad_depth.fs");
+--- file: main.cpp
+--- find:
+    // TODO: configure the depth map FBO: a 1024 x 1024 depth texture (GL_DEPTH_COMPONENT) as the framebuffer's only attachment, no colour buffer
+--- replace:
+    // configure depth map FBO
+    // -----------------------
+    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    unsigned int depthMapFBO;
+    glGenFramebuffers(1, &depthMapFBO);
+    // create depth texture
+    unsigned int depthMap;
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // attach depth texture as FBO's depth buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE); // no colour buffer: tell OpenGL we draw no colour data
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+--- file: main.cpp
+--- find:
+    shader.setInt("diffuseTexture", 0);
+--- replace:
+    shader.setInt("diffuseTexture", 0);
+    debugDepthQuad.use();
+    debugDepthQuad.setInt("depthMap", 0);
+--- file: main.cpp
+--- find:
+        // TODO: 1. render the depth of the scene to the depth map (from the light's point of view), then back to the window
+--- replace:
+        // 1. render depth of scene to texture (from light's perspective)
+        // --------------------------------------------------------------
+        glm::mat4 lightProjection, lightView;
+        glm::mat4 lightSpaceMatrix;
+        float near_plane = 1.0f, far_plane = 7.5f;
+        lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane); // a directional light: parallel rays
+        lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+        lightSpaceMatrix = lightProjection * lightView;
+        // render scene from light's point of view
+        simpleDepthShader.use();
+        simpleDepthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+            glClear(GL_DEPTH_BUFFER_BIT);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, woodTexture);
+            renderScene(simpleDepthShader);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // reset viewport
+        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+--- file: main.cpp
+--- find:
+        // TODO: render the depth map to a quad for visual debugging (debugDepthQuad, renderQuad)
+--- replace:
+        // render Depth map to quad for visual debugging
+        // ---------------------------------------------
+        debugDepthQuad.use();
+        debugDepthQuad.setFloat("near_plane", near_plane);
+        debugDepthQuad.setFloat("far_plane", far_plane);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        renderQuad(); // covers the whole window
+--- file: main.cpp
+--- find:
+    glDeleteTextures(1, &woodTexture);
+--- replace:
+    glDeleteTextures(1, &woodTexture);
+    glDeleteTextures(1, &depthMap);
+    glDeleteFramebuffers(1, &depthMapFBO);
+--- file: shadow_mapping_depth.vs
+--- find:
+    // TODO: the position in the light's clip space (lightSpaceMatrix * model)
+--- replace:
+    gl_Position = lightSpaceMatrix * model * vec4(aPos, 1.0);
+--- file: debug_quad_depth.fs
+--- find:
+    // TODO: the depth map's value at TexCoords as a grey colour (the light's projection is orthographic: depth is already linear)
+--- replace:
+    float depthValue = texture(depthMap, TexCoords).r;
+    // FragColor = vec4(vec3(LinearizeDepth(depthValue) / far_plane), 1.0); // perspective
+    FragColor = vec4(vec3(depthValue), 1.0); // orthographic
+
+=== task: shadows
+--- file: shadow_mapping.vs
+--- find:
+    vec2 TexCoords;
+} vs_out;
+
+uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 model;
+--- replace:
+    vec2 TexCoords;
+    vec4 FragPosLightSpace;
+} vs_out;
+
+uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 model;
+uniform mat4 lightSpaceMatrix;
+--- file: shadow_mapping.vs
+--- find:
+    vs_out.TexCoords = aTexCoords;
+--- replace:
+    vs_out.TexCoords = aTexCoords;
+    vs_out.FragPosLightSpace = lightSpaceMatrix * vec4(vs_out.FragPos, 1.0);
+--- file: shadow_mapping.fs
+--- find:
+    vec2 TexCoords;
+} fs_in;
+
+uniform sampler2D diffuseTexture;
+--- replace:
+    vec2 TexCoords;
+    vec4 FragPosLightSpace;
+} fs_in;
+
+uniform sampler2D diffuseTexture;
+uniform sampler2D shadowMap;
+--- file: shadow_mapping.fs
+--- find:
+// TODO: float ShadowCalculation(vec4 fragPosLightSpace): 1.0 if the fragment is farther from the light than the depth map's value at its position, else 0.0
+--- replace:
+float ShadowCalculation(vec4 fragPosLightSpace)
+{
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
+
+    return shadow;
+}
+--- file: shadow_mapping.fs
+--- find:
+    float shadow = 0.0; // TODO: the shadow from ShadowCalculation(fs_in.FragPosLightSpace)
+--- replace:
+    float shadow = ShadowCalculation(fs_in.FragPosLightSpace);
+--- file: main.cpp
+--- find:
+    shader.setInt("diffuseTexture", 0);
+--- replace:
+    shader.setInt("diffuseTexture", 0);
+    shader.setInt("shadowMap", 1);
+--- file: main.cpp
+--- find:
+        shader.setVec3("lightPos", lightPos);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, woodTexture);
+--- replace:
+        shader.setVec3("lightPos", lightPos);
+        shader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, woodTexture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+--- file: main.cpp
+--- find:
+        renderQuad(); // covers the whole window
+--- replace:
+        //renderQuad(); // uncomment to see the depth map again
+
+=== task: bias
+--- file: shadow_mapping.fs
+--- find:
+    float currentDepth = projCoords.z;
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
+--- replace:
+    float currentDepth = projCoords.z;
+    // calculate bias (based on depth map resolution and slope)
+    vec3 normal = normalize(fs_in.Normal);
+    vec3 lightDir = normalize(lightPos - fs_in.FragPos);
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+
+=== task: over-sampling
+--- file: main.cpp
+--- find:
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // attach depth texture as FBO's depth buffer
+--- replace:
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = { 1.0, 1.0, 1.0, 1.0 }; // depth 1.0 outside the map: never in shadow
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+    // attach depth texture as FBO's depth buffer
+--- file: shadow_mapping.fs
+--- find:
+    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+
+    return shadow;
+--- replace:
+    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+
+    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+    if(projCoords.z > 1.0)
+        shadow = 0.0;
+
+    return shadow;
+
+=== task: pcf
+--- file: shadow_mapping.fs
+--- find:
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+--- replace:
+    // check whether current frag pos is in shadow
+    // float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+    // PCF: the average of the 3 x 3 depth map texels around the position
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
