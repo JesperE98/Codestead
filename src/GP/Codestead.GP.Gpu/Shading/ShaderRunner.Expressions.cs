@@ -126,6 +126,13 @@ public sealed partial class ShaderRunner
             var flags = op == "|" ? left.Union(right).ToArray() : left.Intersect(right).ToArray();
             return flags.Length == 0 ? ShaderValue.Scalar(0) : ShaderValue.Str(string.Join("|", flags));
         }
+        // API flag sets compared: (props.optimalTilingFeatures & features) == features.
+        if (Lenient && op is "==" or "!=" && (a.Text is not null || b.Text is not null) && (a.Text is not null || a.X == 0) && (b.Text is not null || b.X == 0))
+        {
+            var left = new HashSet<string>((a.Text ?? "").Split('|', StringSplitOptions.RemoveEmptyEntries));
+            bool same = left.SetEquals((b.Text ?? "").Split('|', StringSplitOptions.RemoveEmptyEntries));
+            return ShaderValue.Scalar(same == (op == "==") ? 1 : 0);
+        }
         // C++ pointer arithmetic on an array (vertices.data() + 36): the elements from there on.
         if (Lenient && op == "+" && a.Items is not null && b.V is { Length: 1 })
             return ShaderValue.Array(a.Items.Skip((int)Math.Max(0, b.X)).ToArray());

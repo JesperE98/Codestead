@@ -278,6 +278,14 @@ public sealed partial class ShaderRunner
                 Store(c.Args[0], ShaderValue.Array([.. vec.Items ?? [], item]));
                 return ShaderValue.Scalar(0);
             }
+            case "GetDimensions" when c.Args.Count >= 3:
+            {
+                // HLSL Texture2D::GetDimensions(out width, out height): the texture's size in texels.
+                var size = TextureSize?.Invoke(PathOf(c.Args[0])) ?? (1, 1);
+                Store(c.Args[1], ShaderValue.Scalar(size.Width));
+                Store(c.Args[2], ShaderValue.Scalar(size.Height));
+                return ShaderValue.Scalar(0);
+            }
             case "resize" when Lenient && c.Args.Count >= 2:
             {
                 var vec = Eval(c.Args[0]);

@@ -26,6 +26,7 @@ public static partial class TaskChecks
         foreach (var (chapter, checks) in ModelLoading) Add(chapter, checks);
         foreach (var (chapter, checks) in AdvancedOpenGL) Add(chapter, checks);
         foreach (var (chapter, checks) in AdvancedOpenGL3) Add(chapter, checks);
+        foreach (var (chapter, checks) in AdvancedLighting) Add(chapter, checks);
         return d;
     });
 

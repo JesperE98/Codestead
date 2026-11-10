@@ -339,6 +339,18 @@ internal sealed class VulkanDevice : IDeviceModel
             case "vkCreateSwapchainKHR" when args.Count >= 2:
                 WindowSrgb = (Text(Eval(Strip(args[1])), "imageFormat") ?? "").Contains("_SRGB", StringComparison.Ordinal);
                 return null;
+            case "vkGetPhysicalDeviceFormatProperties" when args.Count >= 3:
+            {
+                // The simulated GPU supports every format for what the tutorial asks of it.
+                const string features = "VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT|VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT|VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT|VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT|VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT|VK_FORMAT_FEATURE_TRANSFER_SRC_BIT|VK_FORMAT_FEATURE_TRANSFER_DST_BIT|VK_FORMAT_FEATURE_BLIT_SRC_BIT|VK_FORMAT_FEATURE_BLIT_DST_BIT";
+                Set(args[2], ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+                {
+                    ["linearTilingFeatures"] = ShaderValue.Str(features),
+                    ["optimalTilingFeatures"] = ShaderValue.Str(features),
+                    ["bufferFeatures"] = ShaderValue.Str("VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT"),
+                }));
+                return ShaderValue.Scalar(0);
+            }
             case "chooseSwapExtent":
                 // The swap chain's images are the window's size.
                 return ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["width"] = ShaderValue.Scalar(WindowWidth), ["height"] = ShaderValue.Scalar(WindowHeight) });

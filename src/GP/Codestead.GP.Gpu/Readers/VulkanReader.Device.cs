@@ -136,10 +136,14 @@ public sealed partial class VulkanReader
         var bindings = vs.Globals.Concat(fs.Globals).Where(g => g.Type.StartsWith("sampler", StringComparison.Ordinal)).GroupBy(g => g.Id).ToDictionary(g => g.Key, g => g.First().Binding ?? 0);
         if (bindings.Count == 0) return (null, null);
         var found = bindings.ToDictionary(b => b.Key, b => device.TextureAt(set, b.Value));
+        deviceTextureSizes = id => found.TryGetValue(id.Split('|')[0], out var t) && t?.Texture is { } tex ? (tex.Image.Width, tex.Image.Height) : null;
         if (found.Values.All(v => v is null)) return (null, null);
         return ((id, u, v) => found.TryGetValue(id.Split('|')[0], out var t) && t?.Texture is { } tex ? tex.Sample(u, v) : [0, 0, 0, 1],
             (id, x, y, z) => found.TryGetValue(id.Split('|')[0], out var t) && t?.Cube is { } c ? c.Sample(x, y, z) : null);
     }
+
+    /// <summary>The texture sizes of the last DeviceTextures call (textureSize, texelFetch).</summary>
+    private Func<string, (int Width, int Height)?>? deviceTextureSizes;
 
     /// <summary>The device model's clears in the scene's draw numbering, with their targets registered.</summary>
     private void AddDeviceOps(IEnumerable<FrameOp> ops, VulkanDevice device)

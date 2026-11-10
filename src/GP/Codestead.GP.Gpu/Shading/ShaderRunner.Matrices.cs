@@ -137,6 +137,14 @@ public sealed partial class ShaderRunner
                 double range = 1 / (S(2) - S(3));
                 return Rows([[2 / S(0), 0, 0, 0], [0, 2 / S(1), 0, 0], [0, 0, range, 0], [0, 0, range * S(2), 1]]);
             }
+            case "XMMatrixOrthographicOffCenterRH" or "XMMatrixOrthographicOffCenterLH" when a.Count == 6:
+            {
+                // (left, right, bottom, top, near, far), as DirectXMath builds it for row vectors.
+                double rw = 1 / (S(1) - S(0)), rh = 1 / (S(3) - S(2));
+                bool rhs = name.EndsWith("RH", StringComparison.Ordinal);
+                double range = rhs ? 1 / (S(4) - S(5)) : 1 / (S(5) - S(4));
+                return Rows([[2 * rw, 0, 0, 0], [0, 2 * rh, 0, 0], [0, 0, range, 0], [-(S(0) + S(1)) * rw, -(S(3) + S(2)) * rh, (rhs ? range : -range) * S(4), 1]]);
+            }
             case "XMMatrixLookAtRH" when a.Count == 3:
             {
                 // LookAtRH(eye, focus, up) = LookToLH(eye, eye - focus, up).

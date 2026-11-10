@@ -164,7 +164,9 @@ public sealed partial class VulkanReader
                     dVertices = new List<Dictionary<string, ShaderValue>>();
                     if (dInputs.Count > 0 && !VertexData(dInputs, dVertices)) continue;
                 }
+                deviceTextureSizes = null;
                 var (deviceTextures, deviceCubes) = ds is not null ? DeviceTextures(device, ds, dvs, dfs) : (null, null);
+                var textureSizes = deviceTextures is null ? null : deviceTextureSizes;
                 var target = device.TargetOf(ds?.Framebuffer);
                 if (target is not null) RegisterTarget(device, target);
                 var values = new Dictionary<string, ShaderValue>(buffer, StringComparer.Ordinal);
@@ -180,6 +182,7 @@ public sealed partial class VulkanReader
                     InstanceVertices = perInstance,
                     Target = target,
                     CubeTextures = deviceCubes,
+                    TextureSizes = textureSizes,
                     First = d.Indexed ? 0 : d.First,
                     Count = d.Count,
                     Instances = Math.Max(1, d.Instances),

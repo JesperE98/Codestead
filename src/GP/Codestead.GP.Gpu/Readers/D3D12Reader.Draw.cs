@@ -155,7 +155,9 @@ public sealed partial class D3D12Reader
                     int vertexCount = d.Indexed ? (dIndices is { Length: > 0 } ? dIndices.Max() + 1 : 0) : d.First + d.Count;
                     (dVertices, perInstance, stepRate) = DeviceVertices(device, ds, ChooseLayout(layouts, dvs, pl?.VsEntry ?? vsEntry), vertexCount, Math.Max(1, d.Instances));
                 }
+                deviceTextureSizes = null;
                 var (deviceTextures, deviceCubes) = d.State is D3D12Device.DrawState { Tables.Count: > 0 } ts ? DeviceTextures(device, ts, dvs, dps) : (null, null);
+                var textureSizes = deviceTextures is null ? null : deviceTextureSizes;
                 var target = (d.State as D3D12Device.DrawState)?.RenderTarget is { } rt ? device.TargetOf(rt) : null;
                 if (target is not null) RegisterTarget(device, target);
                 scene.Draws.Add(new DrawCall
@@ -166,6 +168,7 @@ public sealed partial class D3D12Reader
                     InstanceVertices = perInstance,
                     InstanceDivisor = stepRate,
                     CubeTextures = deviceCubes,
+                    TextureSizes = textureSizes,
                     VertexShader = dvs,
                     FragmentShader = dps,
                     VertexEntry = pl?.VsEntry ?? vsEntry,
@@ -411,9 +414,13 @@ public sealed partial class D3D12Reader
             }
             return (flat[id], cubes[id]);
         }
+        deviceTextureSizes = id => Lookup(id).Item1 is { } t ? (t.Image.Width, t.Image.Height) : null;
         return ((id, u, v) => Lookup(id).Item1 is { } t ? t.Sample(u, v) : [0, 0, 0, 1],
             (id, x, y, z) => Lookup(id).Item2 is { } c ? c.Sample(x, y, z) : null);
     }
+
+    /// <summary>The texture sizes of the last DeviceTextures call (GetDimensions, textureSize).</summary>
+    private Func<string, (int Width, int Height)?>? deviceTextureSizes;
 
     /// <summary>
     /// Static samplers: each description (sampler, samplers[0], samplers[1] …) by its ShaderRegister – a description

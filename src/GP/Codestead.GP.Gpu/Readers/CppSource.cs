@@ -235,7 +235,8 @@ public sealed partial class CppSource
             // Must be a declaration: preceded by a type (an identifier, '>', '*' or '&' and whitespace).
             int j = m.Index - 1;
             while (j >= 0 && Code[j] is ' ' or '\t' or '\n') j--;
-            if (j < 0 || !(char.IsLetterOrDigit(Code[j]) || Code[j] is '_' or '>' or '*' or '&')) continue;
+            // (or a comma: the second declarator of const uint32_t W = 1024, H = 1024;)
+            if (j < 0 || !(char.IsLetterOrDigit(Code[j]) || Code[j] is '_' or '>' or '*' or '&' or ',')) continue;
             // "return name;", "else name = …" are not declarations.
             int k = j;
             while (k >= 0 && (char.IsLetterOrDigit(Code[k]) || Code[k] == '_')) k--;

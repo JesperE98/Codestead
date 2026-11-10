@@ -272,6 +272,11 @@ internal sealed class D3D12Device : IDeviceModel
             // ---------- recording ----------
             case ".OMSetRenderTargets" when args.Count >= 3:
                 renderTarget = Num(args[1]) > 0 && Eval(Strip(args[2])) is { } rtv ? (long)(rtv.Items is { Length: > 0 } items ? items[0].X : rtv.X) : null;
+                // No render target, only a depth stencil view (a shadow map's depth pass): the draws go into the
+                // texture behind that view (written as -handle - 1).
+                if (renderTarget is null && args.Count >= 5 && args[4] is not Name { Id: "nullptr" or "NULL" } && Eval(Strip(args[4])) is { V: { Length: > 0 } dsv }
+                    && Dsvs.TryGetValue((long)dsv[0], out var depthOnly) && ResourceAt(depthOnly) is { Window: false } depthRes && SrvOf(depthRes.Id))
+                    renderTarget = -(long)dsv[0] - 1;
                 return ShaderValue.Scalar(0);
             case ".ClearRenderTargetView" when args.Count >= 3:
             {
@@ -433,7 +438,11 @@ internal sealed class D3D12Device : IDeviceModel
 
     /// <summary>The render target id of an RTV handle: null for a swap chain buffer (the window).</summary>
     public string? TargetOf(long handle) =>
-        Rtvs.TryGetValue(handle, out var id) && ResourceAt(id) is { Window: false } r ? r.TargetId : null;
+        handle < 0 ? (Dsvs.TryGetValue(-handle - 1, out var d) && ResourceAt(d) is { Window: false } dr ? dr.TargetId : null)
+        : Rtvs.TryGetValue(handle, out var id) && ResourceAt(id) is { Window: false } r ? r.TargetId : null;
+
+    /// <summary>A resource some shader resource view reads (a depth texture that is sampled later).</summary>
+    private bool SrvOf(int resource) => Srvs.Values.Any(v => v.Resource == resource);
 
     /// <summary>memcpy into a mapped buffer: the numbers of the source, 4 bytes each (2 for 16-bit index data).</summary>
     private void Write(Expr dst, Expr from, Expr? size)
