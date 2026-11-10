@@ -1,0 +1,415 @@
+=== task: float-buffer
+--- file: main.cpp
+--- find:
+    // TODO: the screen quad (vertices 36..41): learnopengl's quadVertices covering the window (x, y = -1..1, z = 0)
+--- replace:
+
+    // screen quad (vertices 36..41): learnopengl's quadVertices (positions already in normalized device coordinates,
+    // z = 0) with its texture coordinates unchanged: in Vulkan both the y of the window and the v of an image point
+    // down, so the two flips cancel and the floating point picture shows upright
+    {{-1.0f,  1.0f,  0.0f}, { 0.0f,  0.0f,  1.0f}, {0.0f, 1.0f}},
+    {{-1.0f, -1.0f,  0.0f}, { 0.0f,  0.0f,  1.0f}, {0.0f, 0.0f}},
+    {{ 1.0f, -1.0f,  0.0f}, { 0.0f,  0.0f,  1.0f}, {1.0f, 0.0f}},
+
+    {{-1.0f,  1.0f,  0.0f}, { 0.0f,  0.0f,  1.0f}, {0.0f, 1.0f}},
+    {{ 1.0f, -1.0f,  0.0f}, { 0.0f,  0.0f,  1.0f}, {1.0f, 0.0f}},
+    {{ 1.0f,  1.0f,  0.0f}, { 0.0f,  0.0f,  1.0f}, {1.0f, 1.0f}}
+--- file: main.cpp
+--- find:
+    VkRenderPass renderPass;
+--- replace:
+    VkRenderPass renderPass;
+    VkRenderPass hdrRenderPass; // the scene is drawn into the floating point colour image with this render pass
+--- file: main.cpp
+--- find:
+    VkPipeline graphicsPipeline; // learnopengl's shader (lighting)
+--- replace:
+    VkPipeline graphicsPipeline; // learnopengl's shader (lighting)
+    VkPipeline hdrPipeline; // learnopengl's hdrShader: the screen quad
+--- file: main.cpp
+--- find:
+    VkImageView depthImageView;
+--- replace:
+    VkImageView depthImageView;
+
+    // the floating point target (learnopengl's hdrFBO): a 16-bit float colour image the scene is drawn into and that is
+    // then sampled by the screen quad, and a depth image of its own
+    VkImage hdrColorImage;
+    VkDeviceMemory hdrColorImageMemory;
+    VkImageView hdrColorImageView;
+    VkImage hdrDepthImage;
+    VkDeviceMemory hdrDepthImageMemory;
+    VkImageView hdrDepthImageView;
+    VkFramebuffer hdrFramebuffer;
+--- file: main.cpp
+--- find:
+    VkDescriptorSet woodDescriptorSet; // the uniform buffer and the wood texture
+--- replace:
+    VkDescriptorSet woodDescriptorSet; // the uniform buffer and the wood texture
+    VkDescriptorSet hdrDescriptorSet; // the uniform buffer and the floating point colour image
+--- file: main.cpp
+--- find:
+        // TODO: the render pass of the floating point target (createHdrRenderPass)
+--- replace:
+        createHdrRenderPass();
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/lighting.vert.spv", "shaders/lighting.frag.spv", renderPass, graphicsPipeline);
+        // TODO: the scene's pipeline for the floating point target's render pass, and the screen quad's pipeline
+        // (hdrPipeline: hdr.vert / hdr.frag, the window's render pass)
+--- replace:
+        // a pipeline is made for one render pass: the scene's pipeline for the floating point target's
+        createPipeline("shaders/lighting.vert.spv", "shaders/lighting.frag.spv", hdrRenderPass, graphicsPipeline);
+        // the screen quad's pipeline for the window's render pass
+        createPipeline("shaders/hdr.vert.spv", "shaders/hdr.frag.spv", renderPass, hdrPipeline);
+--- file: main.cpp
+--- find:
+        // TODO: the floating point target (createHdrFramebuffer): a colour image that can be sampled, a depth image, a framebuffer
+--- replace:
+        createHdrFramebuffer();
+--- file: main.cpp
+--- find:
+        createDescriptorSet(woodTextureImageView, textureSampler, woodDescriptorSet);
+        // TODO: the screen quad's descriptor set (hdrDescriptorSet): the floating point colour image as its texture
+--- replace:
+        createDescriptorSet(woodTextureImageView, textureSampler, woodDescriptorSet);
+        createDescriptorSet(hdrColorImageView, textureSampler, hdrDescriptorSet);
+--- file: main.cpp
+--- find:
+        vkDestroyFramebuffer(device, framebuffer, nullptr);
+        }
+--- replace:
+        vkDestroyFramebuffer(device, framebuffer, nullptr);
+        }
+
+        vkDestroyFramebuffer(device, hdrFramebuffer, nullptr);
+        vkDestroyImageView(device, hdrColorImageView, nullptr);
+        vkDestroyImage(device, hdrColorImage, nullptr);
+        vkFreeMemory(device, hdrColorImageMemory, nullptr);
+        vkDestroyImageView(device, hdrDepthImageView, nullptr);
+        vkDestroyImage(device, hdrDepthImage, nullptr);
+        vkFreeMemory(device, hdrDepthImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+        vkDestroyPipeline(device, hdrPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyRenderPass(device, renderPass, nullptr);
+--- replace:
+        vkDestroyRenderPass(device, renderPass, nullptr);
+        vkDestroyRenderPass(device, hdrRenderPass, nullptr);
+--- file: main.cpp
+--- find:
+    // TODO: createHdrRenderPass(): like createRenderPass(), but the colour attachment is a floating point image
+    // (VK_FORMAT_R16G16B16A16_SFLOAT) that is kept (storeOp STORE) and ends in VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+    // ready to be sampled by the screen quad
+--- replace:
+    // The render pass that draws into the floating point target: like createRenderPass(), but the colour attachment is a
+    // floating point image of our own (learnopengl: GL_RGBA16F), and at the end of the pass it is left ready to be read
+    // by a shader (not presented).
+    void createHdrRenderPass() {
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = VK_FORMAT_R16G16B16A16_SFLOAT; // 16-bit floats: values above 1.0 are kept
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // keep the picture: the screen quad reads it
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthFormat();
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference colorAttachmentRef{};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 1;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: wait until the last frame's screen quad has read the image and its depth writes are done
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        // after the pass: the fragment shaders that sample the image wait until the scene has been written
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderPassInfo.pAttachments = attachments.data();
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &hdrRenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create hdr render pass!");
+        }
+    }
+--- file: main.cpp
+--- find:
+    // TODO: createHdrFramebuffer(): the floating point target, the size of the window (learnopengl's hdrFBO): a colour
+    // image (VK_FORMAT_R16G16B16A16_SFLOAT, colour attachment + sampled) and its view, a depth image and its view
+    // (learnopengl's depth renderbuffer), and the framebuffer that puts them together for hdrRenderPass
+--- replace:
+    // The floating point target, the size of the window (learnopengl's hdrFBO): a colour image that is drawn into (colour
+    // attachment) and read by the screen quad (sampled) - learnopengl's colorBuffer -, a depth image - learnopengl's
+    // rboDepth - and the framebuffer that puts them together for hdrRenderPass. (Every Vulkan device can render into
+    // and sample VK_FORMAT_R16G16B16A16_SFLOAT images.)
+    void createHdrFramebuffer() {
+        createImage(swapChainExtent.width, swapChainExtent.height, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, hdrColorImage, hdrColorImageMemory);
+        hdrColorImageView = createImageView(hdrColorImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
+
+        VkFormat depthFormat = findDepthFormat();
+        createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, hdrDepthImage, hdrDepthImageMemory);
+        hdrDepthImageView = createImageView(hdrDepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+        std::array<VkImageView, 2> attachments = {
+            hdrColorImageView,
+            hdrDepthImageView
+        };
+
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = hdrRenderPass;
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        framebufferInfo.pAttachments = attachments.data();
+        framebufferInfo.width = swapChainExtent.width;
+        framebufferInfo.height = swapChainExtent.height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &hdrFramebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create hdr framebuffer!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        // one descriptor set: the uniform buffer and the wood texture
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 1;
+--- replace:
+        // two descriptor sets, each with the uniform buffer and one texture: the wood, the floating point colour image
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 2;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 2;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 1;
+--- replace:
+        poolInfo.maxSets = 2;
+--- file: main.cpp
+--- find:
+        // TODO: draw the scene into the floating point target (hdrRenderPass, hdrFramebuffer) instead of the window,
+        // then the screen quad into the window
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = swapChainExtent;
+
+        // one clear value per attachment: the colour, and the depth 1.0 (the far plane)
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};
+        clearValues[1].depthStencil = {1.0f, 0};
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+--- replace:
+        // 1. render scene into floating point framebuffer
+        VkRenderPassBeginInfo hdrPassInfo{};
+        hdrPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        hdrPassInfo.renderPass = hdrRenderPass;
+        hdrPassInfo.framebuffer = hdrFramebuffer;
+        hdrPassInfo.renderArea.offset = {0, 0};
+        hdrPassInfo.renderArea.extent = swapChainExtent;
+
+        // one clear value per attachment: the colour, and the depth 1.0 (the far plane)
+        std::array<VkClearValue, 2> hdrClearValues{};
+        hdrClearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};
+        hdrClearValues[1].depthStencil = {1.0f, 0};
+
+        hdrPassInfo.clearValueCount = static_cast<uint32_t>(hdrClearValues.size());
+        hdrPassInfo.pClearValues = hdrClearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &hdrPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+--- file: main.cpp
+--- find:
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+
+        vkCmdEndRenderPass(commandBuffer);
+--- replace:
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+
+        vkCmdEndRenderPass(commandBuffer); // the colour image is now in VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+
+        // 2. now render floating point color buffer to 2D quad and tonemap HDR colors to default framebuffer's (clamped)
+        // color range
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = swapChainExtent;
+
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};
+        clearValues[1].depthStencil = {1.0f, 0};
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        // the screen quad with the floating point image as its texture (the viewport, scissor and vertex buffer set
+        // above still apply)
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &hdrDescriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // the screen quad's 6 vertices start at vertex 36
+
+        vkCmdEndRenderPass(commandBuffer);
+--- file: shaders/lighting.frag
+--- find:
+    // straight into the window, gamma-corrected: the window stores 0..1, everything brighter is cut off at 1.0 (white)
+    vec3 result = pow(ambient + lighting, vec3(1.0 / 2.2));
+    outColor = vec4(result, 1.0);
+}
+--- replace:
+    // into the floating point target: values above 1.0 are kept (the screen quad gamma-corrects)
+    outColor = vec4(ambient + lighting, 1.0);
+}
+--- file: shaders/hdr.frag
+--- find:
+void main() {
+    // TODO: read the floating point colour (hdrBuffer) and gamma-correct it: pow(color, vec3(1.0 / 2.2))
+}
+--- replace:
+void main() {
+    const float gamma = 2.2;
+    vec3 hdrColor = texture(hdrBuffer, fragTexCoord).rgb;
+    // no tone mapping yet: only gamma correction - values above 1.0 are still cut off by the window
+    vec3 result = pow(hdrColor, vec3(1.0 / gamma));
+    outColor = vec4(result, 1.0);
+}
+
+=== task: reinhard
+--- file: shaders/hdr.frag
+--- find:
+void main() {
+    const float gamma = 2.2;
+    vec3 hdrColor = texture(hdrBuffer, fragTexCoord).rgb;
+    // no tone mapping yet: only gamma correction - values above 1.0 are still cut off by the window
+    vec3 result = pow(hdrColor, vec3(1.0 / gamma));
+    outColor = vec4(result, 1.0);
+}
+--- replace:
+void main() {
+    const float gamma = 2.2;
+    vec3 hdrColor = texture(hdrBuffer, fragTexCoord).rgb;
+    // reinhard tone mapping: 0..infinity -> 0..1
+    vec3 result = hdrColor / (hdrColor + vec3(1.0));
+    // also gamma correct while we're at it
+    result = pow(result, vec3(1.0 / gamma));
+    outColor = vec4(result, 1.0);
+}
+
+=== task: exposure
+--- file: main.cpp
+--- find:
+    glm::vec3(0.0f, 0.1f, 0.0f)
+};
+--- replace:
+    glm::vec3(0.0f, 0.1f, 0.0f)
+};
+
+// tone mapping: the exposure (learnopengl changes it with the Q and E keys)
+float exposure = 1.0f;
+--- file: main.cpp
+--- find:
+    glm::vec3 viewPos;
+    float pad1;
+};
+--- replace:
+    glm::vec3 viewPos;
+    float exposure; // a float fits into the 4 bytes after a vec3
+};
+--- file: main.cpp
+--- find:
+        ubo.viewPos = cameraPos;
+--- replace:
+        ubo.viewPos = cameraPos;
+        ubo.exposure = exposure;
+--- file: shaders/hdr.frag
+--- find:
+layout(binding = 1) uniform sampler2D hdrBuffer;
+--- replace:
+// the uniform buffer up to exposure, so that its offset matches the C++ struct
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    vec4 lightPositions[4];
+    vec4 lightColors[4];
+    vec3 viewPos;
+    float exposure;
+} ubo;
+
+layout(binding = 1) uniform sampler2D hdrBuffer;
+--- file: shaders/hdr.frag
+--- find:
+void main() {
+    const float gamma = 2.2;
+    vec3 hdrColor = texture(hdrBuffer, fragTexCoord).rgb;
+    // reinhard tone mapping: 0..infinity -> 0..1
+    vec3 result = hdrColor / (hdrColor + vec3(1.0));
+    // also gamma correct while we're at it
+    result = pow(result, vec3(1.0 / gamma));
+    outColor = vec4(result, 1.0);
+}
+--- replace:
+void main() {
+    const float gamma = 2.2;
+    vec3 hdrColor = texture(hdrBuffer, fragTexCoord).rgb;
+    // reinhard
+    // vec3 result = hdrColor / (hdrColor + vec3(1.0));
+    // exposure
+    vec3 result = vec3(1.0) - exp(-hdrColor * ubo.exposure);
+    // also gamma correct while we're at it
+    result = pow(result, vec3(1.0 / gamma));
+    outColor = vec4(result, 1.0);
+}

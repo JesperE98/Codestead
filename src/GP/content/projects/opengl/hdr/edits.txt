@@ -1,0 +1,125 @@
+=== task: float-buffer
+--- file: main.cpp
+--- find:
+    // TODO: the HDR screen quad shader (hdrShader: hdr.vs, hdr.fs)
+--- replace:
+    Shader hdrShader("hdr.vs", "hdr.fs");
+--- file: main.cpp
+--- find:
+    // TODO: configure the floating point framebuffer (hdrFBO): an 800 x 600 GL_RGBA16F colour texture and a depth renderbuffer
+--- replace:
+    // configure floating point framebuffer
+    // ------------------------------------
+    unsigned int hdrFBO;
+    glGenFramebuffers(1, &hdrFBO);
+    // create floating point color buffer
+    unsigned int colorBuffer;
+    glGenTextures(1, &colorBuffer);
+    glBindTexture(GL_TEXTURE_2D, colorBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // create depth buffer (renderbuffer)
+    unsigned int rboDepth;
+    glGenRenderbuffers(1, &rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT);
+    // attach buffers
+    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffer, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "Framebuffer not complete!" << std::endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+--- file: main.cpp
+--- find:
+    shader.setInt("diffuseTexture", 0);
+--- replace:
+    shader.setInt("diffuseTexture", 0);
+    hdrShader.use();
+    hdrShader.setInt("hdrBuffer", 0);
+--- file: main.cpp
+--- find:
+        // TODO: 1. render the scene into the floating point framebuffer instead of the window (bind hdrFBO and clear it)
+--- replace:
+        // 1. render scene into floating point framebuffer
+        // -----------------------------------------------
+        glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+--- file: main.cpp
+--- find:
+        // TODO: 2. back to the window: draw the floating point colour buffer on a screen quad with hdrShader
+--- replace:
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // 2. now render floating point color buffer to 2D quad and tonemap HDR colors to default framebuffer's (clamped) color range
+        // --------------------------------------------------------------------------------------------------------------------------
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        hdrShader.use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, colorBuffer);
+        renderQuad();
+--- file: main.cpp
+--- find:
+    glDeleteTextures(1, &woodTexture);
+--- replace:
+    glDeleteTextures(1, &woodTexture);
+    glDeleteTextures(1, &colorBuffer);
+    glDeleteRenderbuffers(1, &rboDepth);
+    glDeleteFramebuffers(1, &hdrFBO);
+--- file: lighting.fs
+--- find:
+    // gamma correct the result, as the gamma-correction chapter does (the window stores 0..1: brighter colours are clipped)
+    const float gamma = 2.2;
+    FragColor = vec4(pow(ambient + lighting, vec3(1.0 / gamma)), 1.0);
+--- replace:
+    FragColor = vec4(ambient + lighting, 1.0); // linear and unclipped: the floating point buffer keeps values above 1.0
+--- file: hdr.fs
+--- find:
+    // TODO: read the HDR colour from hdrBuffer at TexCoords and write it gamma corrected (no tone mapping yet)
+--- replace:
+    const float gamma = 2.2;
+    vec3 hdrColor = texture(hdrBuffer, TexCoords).rgb;
+    // no tone mapping yet: only gamma correction (values above 1.0 are still clipped by the window)
+    vec3 result = pow(hdrColor, vec3(1.0 / gamma));
+    FragColor = vec4(result, 1.0);
+=== task: reinhard
+--- file: hdr.fs
+--- find:
+    // no tone mapping yet: only gamma correction (values above 1.0 are still clipped by the window)
+    vec3 result = pow(hdrColor, vec3(1.0 / gamma));
+--- replace:
+    // reinhard tone mapping
+    vec3 result = hdrColor / (hdrColor + vec3(1.0));
+    // also gamma correct while we're at it
+    result = pow(result, vec3(1.0 / gamma));
+=== task: exposure
+--- file: main.cpp
+--- find:
+const unsigned int SCR_HEIGHT = 600;
+--- replace:
+const unsigned int SCR_HEIGHT = 600;
+float exposure = 1.0f;
+--- file: main.cpp
+--- find:
+        glBindTexture(GL_TEXTURE_2D, colorBuffer);
+        renderQuad();
+--- replace:
+        glBindTexture(GL_TEXTURE_2D, colorBuffer);
+        hdrShader.setFloat("exposure", exposure);
+        renderQuad();
+--- file: hdr.fs
+--- find:
+uniform sampler2D hdrBuffer;
+--- replace:
+uniform sampler2D hdrBuffer;
+uniform float exposure;
+--- file: hdr.fs
+--- find:
+    // reinhard tone mapping
+    vec3 result = hdrColor / (hdrColor + vec3(1.0));
+--- replace:
+    // reinhard
+    // vec3 result = hdrColor / (hdrColor + vec3(1.0));
+    // exposure
+    vec3 result = vec3(1.0) - exp(-hdrColor * exposure);
