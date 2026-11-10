@@ -101,6 +101,7 @@ public sealed partial class GlReader
         var blocks = BlockUniforms(program);
         // A model brings its own textures (its materials): the texture units are not read then.
         var (samplers, cubes) = textures is null ? Samplers(program) : (null, null);
+        var sizes = textures is null ? samplerSizes : null;
         return new DrawCall
         {
             VertexShader = program.Vertex!,
@@ -135,6 +136,7 @@ public sealed partial class GlReader
             Target = DrawTarget(),
             Textures = textures ?? samplers,
             CubeTextures = cubes,
+            TextureSizes = sizes,
         };
     }
 
@@ -142,8 +144,12 @@ public sealed partial class GlReader
     /// The textures the shaders sample: each sampler2D uniform reads the texture unit its value names (0 unless set with
     /// glUniform1i / setInt), and the texture bound to that unit now. An incomplete texture reads black.
     /// </summary>
+    /// <summary>The texture sizes of the samplers the last Samplers call bound.</summary>
+    private Func<string, (int Width, int Height)?>? samplerSizes;
+
     private (Func<string, double, double, double[]>?, Func<string, double, double, double, double[]?>?) Samplers(GlState.ProgramObject program)
     {
+        samplerSizes = null;
         var samplers = SamplerNames(program.Vertex!).Concat(SamplerNames(program.Fragment!))
             .Concat(program.Geometry is { } g ? SamplerNames(g) : []).Distinct().ToList();
         if (samplers.Count == 0) return (null, null);
@@ -173,6 +179,7 @@ public sealed partial class GlReader
             else scene.Notes.Add(SimNote.Warning("noTextureOnUnit", ("name", name), ("unit", unit.ToString())));
             bound[name] = texture;
         }
+        samplerSizes = name => bound.TryGetValue(name, out var t) && t is not null ? (t.Image.Width, t.Image.Height) : null;
         return ((name, u, v) => bound.TryGetValue(name, out var t) && t is not null ? t.Sample(u, v) : [0, 0, 0, 1],
             cubes.Count == 0 ? null : (name, x, y, z) => cubes.TryGetValue(name, out var c) ? c.Sample(x, y, z) : null);
     }

@@ -259,8 +259,17 @@ public sealed partial class CppSource
             }
             else if (m.Groups["eq"].Success)
             {
-                int end = StatementEnd(m.Index + m.Length);
-                found = Code[(m.Index + m.Length)..end].Trim();
+                int from = m.Index + m.Length, end = StatementEnd(from);
+                // const uint32_t SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;: this declarator's value ends at a comma.
+                int depth = 0;
+                for (int q = from; q < end; q++)
+                {
+                    char ch = Code[q];
+                    if (ch is '(' or '{' or '[' or '<') depth++;
+                    else if (ch is ')' or '}' or ']' or '>') depth--;
+                    else if (ch == ',' && depth == 0) { end = q; break; }
+                }
+                found = Code[from..end].Trim();
             }
         }
         // Data (vertices, indices, a clear value) is written with braces; a local of the same name

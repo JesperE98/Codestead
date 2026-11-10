@@ -103,7 +103,8 @@ public sealed partial class D3D12Reader
         recorder.Setup();
         if (device.WindowSrgb) scene.WindowSrgb = true;
         foreach (var fn in new[] { "OnUpdate" }.Where(src.Functions.ContainsKey)) recorder.Run(fn);
-        if (src.FunctionAt(call.Offset) is { } recordFn) recorder.Run(recordFn);
+        // The command list is recorded in PopulateCommandList (draws may sit in a helper it calls).
+        if ((src.Functions.ContainsKey("PopulateCommandList") ? "PopulateCommandList" : src.FunctionAt(call.Offset)) is { } recordFn) recorder.Run(recordFn);
         var buffer = recorder.BufferContents();
         bool deviceVertices = needsInput && !modelOnly && recorder.Draws.Any(d => d.State is D3D12Device.DrawState { VertexBuffers.Count: > 0 } st && device.Read(st.VertexBuffers.Values.First().Address, 0, 1) is not null);
         if (missingIndices && !(deviceVertices && recorder.Draws.Any(d => d.Indexed && d.State is D3D12Device.DrawState { IndexBuffer: not null })))

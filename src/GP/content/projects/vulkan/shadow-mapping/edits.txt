@@ -1,0 +1,624 @@
+=== task: depth-map
+--- file: main.cpp
+--- find:
+// TODO: the size of the depth map (SHADOW_WIDTH, SHADOW_HEIGHT): 1024 x 1024
+--- replace:
+const uint32_t SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024; // the size of the depth map
+--- file: main.cpp
+--- find:
+    // TODO: the debug quad (vertices 42..47): learnopengl's quad covering the window (x, y = -1..1, z = 0), with v flipped
+--- replace:
+
+    // debug quad (vertices 42..47): covers the window (x, y = -1..1, z = 0); v flipped: the depth map has no y flip
+    // (see updateUniformBuffer), so its row 0 is the light's bottom (NDC y = -1), and Vulkan's NDC y = -1 is the top
+    {{-1.0f,  1.0f,  0.0f}, { 0.0f,  0.0f,  1.0f}, {0.0f, 0.0f}},
+    {{-1.0f, -1.0f,  0.0f}, { 0.0f,  0.0f,  1.0f}, {0.0f, 1.0f}},
+    {{ 1.0f, -1.0f,  0.0f}, { 0.0f,  0.0f,  1.0f}, {1.0f, 1.0f}},
+
+    {{-1.0f,  1.0f,  0.0f}, { 0.0f,  0.0f,  1.0f}, {0.0f, 0.0f}},
+    {{ 1.0f, -1.0f,  0.0f}, { 0.0f,  0.0f,  1.0f}, {1.0f, 1.0f}},
+    {{ 1.0f,  1.0f,  0.0f}, { 0.0f,  0.0f,  1.0f}, {1.0f, 0.0f}}
+--- file: main.cpp
+--- find:
+struct UniformBufferObject {
+    glm::mat4 view;
+    glm::mat4 proj;
+    glm::vec3 viewPos;
+--- replace:
+struct UniformBufferObject {
+    glm::mat4 view;
+    glm::mat4 proj;
+    glm::mat4 lightSpaceMatrix; // world space -> the light's clip space
+    glm::vec3 viewPos;
+--- file: main.cpp
+--- find:
+    VkRenderPass renderPass;
+--- replace:
+    VkRenderPass renderPass;
+    VkRenderPass depthMapRenderPass; // the scene's depth, seen from the light, is drawn into depthMapImage with this render pass
+--- file: main.cpp
+--- find:
+    VkPipeline graphicsPipeline;
+--- replace:
+    VkPipeline graphicsPipeline;
+    VkPipeline depthPipeline; // learnopengl's simpleDepthShader
+    VkPipeline debugPipeline; // learnopengl's debugDepthQuad
+--- file: main.cpp
+--- find:
+    VkImageView depthImageView;
+--- replace:
+    VkImageView depthImageView;
+
+    // the depth map (learnopengl's depthMap texture + depthMapFBO): a depth image the scene is drawn into from the
+    // light, sampled afterwards
+    VkImage depthMapImage;
+    VkDeviceMemory depthMapImageMemory;
+    VkImageView depthMapImageView;
+    VkFramebuffer depthMapFramebuffer;
+    VkSampler depthMapSampler;
+--- file: main.cpp
+--- find:
+    VkDescriptorSet descriptorSet; // the uniform buffer and the wood texture
+--- replace:
+    VkDescriptorSet descriptorSet; // the uniform buffer, the wood texture and the depth map
+--- file: main.cpp
+--- find:
+        // TODO: the depth map's render pass (createDepthMapRenderPass): one depth attachment, no colour
+--- replace:
+        createDepthMapRenderPass();
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/shadow_mapping.vert.spv", "shaders/shadow_mapping.frag.spv", graphicsPipeline);
+        // TODO: the depth pipeline (depthPipeline, shadow_mapping_depth.vert/.frag, depthMapRenderPass, no colour attachment)
+        // and the debug quad's pipeline (debugPipeline, debug_quad.vert / debug_quad_depth.frag, the window's render pass)
+--- replace:
+        createPipeline("shaders/shadow_mapping.vert.spv", "shaders/shadow_mapping.frag.spv", 3, renderPass, 1, graphicsPipeline);
+        // the depth pass: only the position, for the depth map's render pass, which has no colour attachment
+        createPipeline("shaders/shadow_mapping_depth.vert.spv", "shaders/shadow_mapping_depth.frag.spv", 1, depthMapRenderPass, 0, depthPipeline);
+        createPipeline("shaders/debug_quad.vert.spv", "shaders/debug_quad_depth.frag.spv", 3, renderPass, 1, debugPipeline);
+--- file: main.cpp
+--- find:
+        // TODO: the depth map (createDepthMap): a 1024 x 1024 depth image that can be sampled, its view and framebuffer
+--- replace:
+        createDepthMap();
+--- file: main.cpp
+--- find:
+        // TODO: the depth map's sampler (createDepthMapSampler)
+        createVertexBuffer();
+        createUniformBuffers();
+        createDescriptorPool();
+        createDescriptorSet(woodTextureImageView, textureSampler, descriptorSet);
+--- replace:
+        createDepthMapSampler();
+        createVertexBuffer();
+        createUniformBuffers();
+        createDescriptorPool();
+        createDescriptorSet(woodTextureImageView, textureSampler, depthMapImageView, depthMapSampler, descriptorSet);
+--- file: main.cpp
+--- find:
+        vkDestroySampler(device, textureSampler, nullptr);
+--- replace:
+        vkDestroySampler(device, textureSampler, nullptr);
+        vkDestroySampler(device, depthMapSampler, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyImageView(device, depthImageView, nullptr);
+        vkDestroyImage(device, depthImage, nullptr);
+        vkFreeMemory(device, depthImageMemory, nullptr);
+--- replace:
+        vkDestroyImageView(device, depthImageView, nullptr);
+        vkDestroyImage(device, depthImage, nullptr);
+        vkFreeMemory(device, depthImageMemory, nullptr);
+
+        vkDestroyFramebuffer(device, depthMapFramebuffer, nullptr);
+        vkDestroyImageView(device, depthMapImageView, nullptr);
+        vkDestroyImage(device, depthMapImage, nullptr);
+        vkFreeMemory(device, depthMapImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+        vkDestroyPipeline(device, depthPipeline, nullptr);
+        vkDestroyPipeline(device, debugPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyRenderPass(device, renderPass, nullptr);
+--- replace:
+        vkDestroyRenderPass(device, renderPass, nullptr);
+        vkDestroyRenderPass(device, depthMapRenderPass, nullptr);
+--- file: main.cpp
+--- find:
+    // TODO: createDepthMapRenderPass(): one depth attachment (loadOp CLEAR, storeOp STORE) that ends in
+    // VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, ready to be sampled; no colour attachment
+--- replace:
+    // The render pass that draws into the depth map: only a depth attachment (learnopengl: a framebuffer with only
+    // GL_DEPTH_ATTACHMENT, glDrawBuffer(GL_NONE)). At the end of the pass the depth image is left ready to be sampled.
+    void createDepthMapRenderPass() {
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthMapFormat();
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // keep the depths: the shaders read them afterwards
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 0;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 0; // no colour: only the depth is drawn
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: wait until the last frame's fragment shaders have read the depth map
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        // after the pass: the fragment shaders that sample the depth map wait until the depths have been written
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = &depthAttachment;
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &depthMapRenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create depth map render pass!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
+--- replace:
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        // the depth map at binding 2
+        VkDescriptorSetLayoutBinding depthMapLayoutBinding{};
+        depthMapLayoutBinding.binding = 2;
+        depthMapLayoutBinding.descriptorCount = 1;
+        depthMapLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        depthMapLayoutBinding.pImmutableSamplers = nullptr;
+        depthMapLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {uboLayoutBinding, samplerLayoutBinding, depthMapLayoutBinding};
+--- file: main.cpp
+--- find:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkPipeline& pipeline) {
+--- replace:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, uint32_t attributeCount, VkRenderPass pipelineRenderPass, uint32_t colorAttachmentCount, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+--- replace:
+        vertexInputInfo.vertexAttributeDescriptionCount = attributeCount; // the first attributeCount attributes: those the vertex shader reads
+--- file: main.cpp
+--- find:
+        colorBlending.attachmentCount = 1;
+--- replace:
+        colorBlending.attachmentCount = colorAttachmentCount; // as many as the render pass's subpass has (0 for the depth map)
+--- file: main.cpp
+--- find:
+        pipelineInfo.renderPass = renderPass;
+--- replace:
+        pipelineInfo.renderPass = pipelineRenderPass;
+--- file: main.cpp
+--- find:
+    // TODO: createDepthMap(): the depth image (depth attachment + sampled) of SHADOW_WIDTH x SHADOW_HEIGHT, its view
+    // and a framebuffer for depthMapRenderPass
+--- replace:
+    // The depth map, 1024 x 1024: a depth image that is drawn into (depth attachment) and read by a shader later
+    // (sampled) - learnopengl's depth texture -, its view, and the framebuffer for depthMapRenderPass.
+    void createDepthMap() {
+        VkFormat depthMapFormat = findDepthMapFormat();
+        createImage(SHADOW_WIDTH, SHADOW_HEIGHT, depthMapFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthMapImage, depthMapImageMemory);
+        depthMapImageView = createImageView(depthMapImage, depthMapFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = depthMapRenderPass;
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments = &depthMapImageView;
+        framebufferInfo.width = SHADOW_WIDTH;
+        framebufferInfo.height = SHADOW_HEIGHT;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &depthMapFramebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create depth map framebuffer!");
+        }
+    }
+--- file: main.cpp
+--- find:
+    VkFormat findDepthFormat() {
+--- replace:
+    // a depth format that can be drawn into and sampled (learnopengl: GL_DEPTH_COMPONENT, GL_FLOAT)
+    VkFormat findDepthMapFormat() {
+        return findSupportedFormat(
+            {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM},
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
+        );
+    }
+
+    VkFormat findDepthFormat() {
+--- file: main.cpp
+--- find:
+    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) {
+--- replace:
+    // The depth map's sampler: the nearest depth value, no filtering (learnopengl: GL_NEAREST, GL_REPEAT).
+    void createDepthMapSampler() {
+        VkSamplerCreateInfo samplerInfo{};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.magFilter = VK_FILTER_NEAREST;
+        samplerInfo.minFilter = VK_FILTER_NEAREST;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.anisotropyEnable = VK_FALSE;
+        samplerInfo.maxAnisotropy = 1.0f;
+        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &depthMapSampler) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create depth map sampler!");
+        }
+    }
+
+    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) {
+--- file: main.cpp
+--- find:
+        // one descriptor set: the uniform buffer and the wood texture
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 1;
+--- replace:
+        // one descriptor set: the uniform buffer, the wood texture and the depth map
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 2;
+--- file: main.cpp
+--- find:
+    // A descriptor set with the uniform buffer (binding 0) and one texture (binding 1). Binding it before a draw
+    // (vkCmdBindDescriptorSets) is Vulkan's glBindTexture.
+    void createDescriptorSet(VkImageView textureImageView, VkSampler sampler, VkDescriptorSet& descriptorSet) {
+--- replace:
+    // A descriptor set with the uniform buffer (binding 0), one texture (binding 1) and the depth map (binding 2).
+    // Binding it before a draw (vkCmdBindDescriptorSets) is Vulkan's glBindTexture.
+    void createDescriptorSet(VkImageView textureImageView, VkSampler sampler, VkImageView depthMapView, VkSampler depthMapSampler, VkDescriptorSet& descriptorSet) {
+--- file: main.cpp
+--- find:
+        imageInfo.sampler = sampler;
+
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+--- replace:
+        imageInfo.sampler = sampler;
+
+        VkDescriptorImageInfo depthMapInfo{};
+        depthMapInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // the depth map pass's finalLayout
+        depthMapInfo.imageView = depthMapView;
+        depthMapInfo.sampler = depthMapSampler;
+
+        std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+--- file: main.cpp
+--- find:
+        descriptorWrites[1].pImageInfo = &imageInfo;
+--- replace:
+        descriptorWrites[1].pImageInfo = &imageInfo;
+
+        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[2].dstSet = descriptorSet;
+        descriptorWrites[2].dstBinding = 2;
+        descriptorWrites[2].dstArrayElement = 0;
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[2].descriptorCount = 1;
+        descriptorWrites[2].pImageInfo = &depthMapInfo;
+--- file: main.cpp
+--- find:
+        // TODO: first render the depth of the scene into the depth map, from the light's point of view: a render pass of
+        // its own (depthMapRenderPass) with depthPipeline, before the window's
+
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+--- replace:
+        VkBuffer vertexBuffers[] = {vertexBuffer};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+        // 1. render depth of scene to texture (from light's perspective)
+        VkRenderPassBeginInfo depthMapPassInfo{};
+        depthMapPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        depthMapPassInfo.renderPass = depthMapRenderPass;
+        depthMapPassInfo.framebuffer = depthMapFramebuffer;
+        depthMapPassInfo.renderArea.offset = {0, 0};
+        depthMapPassInfo.renderArea.extent = {SHADOW_WIDTH, SHADOW_HEIGHT};
+
+        // one clear value: the depth 1.0 (the far plane)
+        VkClearValue depthMapClearValue{};
+        depthMapClearValue.depthStencil = {1.0f, 0};
+
+        depthMapPassInfo.clearValueCount = 1;
+        depthMapPassInfo.pClearValues = &depthMapClearValue;
+
+        vkCmdBeginRenderPass(commandBuffer, &depthMapPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, depthPipeline);
+
+        // the viewport and scissor of the depth map (learnopengl: glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT))
+        VkViewport depthMapViewport{};
+        depthMapViewport.x = 0.0f;
+        depthMapViewport.y = 0.0f;
+        depthMapViewport.width = static_cast<float>(SHADOW_WIDTH);
+        depthMapViewport.height = static_cast<float>(SHADOW_HEIGHT);
+        depthMapViewport.minDepth = 0.0f;
+        depthMapViewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &depthMapViewport);
+
+        VkRect2D depthMapScissor{};
+        depthMapScissor.offset = {0, 0};
+        depthMapScissor.extent = {SHADOW_WIDTH, SHADOW_HEIGHT};
+        vkCmdSetScissor(commandBuffer, 0, 1, &depthMapScissor);
+
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+        renderScene(commandBuffer);
+
+        vkCmdEndRenderPass(commandBuffer); // the depth map is now in VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+
+        // 2. the window, with the window's viewport again
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+--- file: main.cpp
+--- find:
+        VkBuffer vertexBuffers[] = {vertexBuffer};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+        // TODO: show the depth map on the debug quad (debugPipeline, vertices 42..47) instead of the scene
+
+        // render scene as normal
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+        renderScene(commandBuffer);
+--- replace:
+        // render the depth map to the debug quad for visual debugging (the vertex buffer and the descriptor set bound
+        // above still apply)
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, debugPipeline);
+        vkCmdDraw(commandBuffer, 6, 1, 42, 0); // the debug quad's 6 vertices start at vertex 42
+--- file: main.cpp
+--- find:
+        // TODO: the light-space matrix (lightSpaceMatrix): the light's orthographic projection times its view matrix
+--- replace:
+        // the light's view of the scene: an orthographic projection (parallel light rays, like the sun's) looking from
+        // lightPos at the origin. No y flip here: the depth pass and the shadow lookup use the same matrix, so their y
+        // directions agree (the flip above is only needed for a picture shown upright in the window).
+        float near_plane = 1.0f, far_plane = 7.5f;
+        glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+        glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+        ubo.lightSpaceMatrix = lightProjection * lightView;
+--- file: main.cpp
+--- find:
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+
+        VkViewport viewport{};
+--- replace:
+        VkViewport viewport{};
+--- file: shaders/shadow_mapping.frag
+--- find:
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    vec3 viewPos;
+--- replace:
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    mat4 lightSpaceMatrix;
+    vec3 viewPos;
+--- file: shaders/shadow_mapping_depth.vert
+--- find:
+// TODO: the uniform buffer's first members (view, proj, lightSpaceMatrix) and the model matrix (push constant);
+// the position seen from the light: lightSpaceMatrix * model * position
+
+layout(location = 0) in vec3 inPosition;
+
+void main() {
+}
+--- replace:
+// the vertex shader only reads the first members of the uniform buffer: the matrices
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    mat4 lightSpaceMatrix;
+} ubo;
+
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+} pc;
+
+layout(location = 0) in vec3 inPosition;
+
+void main() {
+    gl_Position = ubo.lightSpaceMatrix * pc.model * vec4(inPosition, 1.0);
+}
+--- file: shaders/debug_quad_depth.frag
+--- find:
+    // TODO: the depth map's value (its r component) at fragTexCoord as a grey colour (an orthographic projection's depth
+    // is linear already)
+    outColor = vec4(0.0, 0.0, 0.0, 1.0);
+--- replace:
+    float depthValue = texture(depthMap, fragTexCoord).r;
+    outColor = vec4(vec3(depthValue), 1.0); // orthographic: the depth is linear already
+
+=== task: shadows
+--- file: main.cpp
+--- find:
+        // render the depth map to the debug quad for visual debugging (the vertex buffer and the descriptor set bound
+        // above still apply)
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, debugPipeline);
+        vkCmdDraw(commandBuffer, 6, 1, 42, 0); // the debug quad's 6 vertices start at vertex 42
+--- replace:
+        // render scene as normal using the generated depth/shadow map (the vertex buffer and the descriptor set bound
+        // above still apply)
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+        renderScene(commandBuffer);
+
+        // render the depth map to the debug quad for visual debugging (instead of the scene):
+        // vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, debugPipeline);
+        // vkCmdDraw(commandBuffer, 6, 1, 42, 0);
+--- file: shaders/shadow_mapping.vert
+--- find:
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+} ubo;
+--- replace:
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    mat4 lightSpaceMatrix;
+} ubo;
+--- file: shaders/shadow_mapping.vert
+--- find:
+    vec2 texCoord;
+} vs_out;
+--- replace:
+    vec2 texCoord;
+    vec4 fragPosLightSpace;
+} vs_out;
+--- file: shaders/shadow_mapping.vert
+--- find:
+    vs_out.texCoord = inTexCoord;
+--- replace:
+    vs_out.texCoord = inTexCoord;
+    vs_out.fragPosLightSpace = ubo.lightSpaceMatrix * vec4(vs_out.fragPos, 1.0);
+--- file: shaders/shadow_mapping.frag
+--- find:
+layout(binding = 1) uniform sampler2D diffuseTexture;
+--- replace:
+layout(binding = 1) uniform sampler2D diffuseTexture;
+layout(binding = 2) uniform sampler2D shadowMap;
+--- file: shaders/shadow_mapping.frag
+--- find:
+    vec2 texCoord;
+} fs_in;
+--- replace:
+    vec2 texCoord;
+    vec4 fragPosLightSpace;
+} fs_in;
+--- file: shaders/shadow_mapping.frag
+--- find:
+// TODO: ShadowCalculation(fragPosLightSpace): 1.0 if the fragment is farther from the light than the depth stored in
+// the shadow map at its place, otherwise 0.0
+--- replace:
+float ShadowCalculation(vec4 fragPosLightSpace) {
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform x and y to the [0,1] range of texture coordinates; z is in [0,1] already (GLM_FORCE_DEPTH_ZERO_TO_ONE)
+    projCoords.xy = projCoords.xy * 0.5 + 0.5;
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+
+    return shadow;
+}
+--- file: shaders/shadow_mapping.frag
+--- find:
+    float shadow = 0.0; // TODO: ShadowCalculation(fs_in.fragPosLightSpace)
+--- replace:
+    float shadow = ShadowCalculation(fs_in.fragPosLightSpace);
+
+=== task: bias
+--- file: shaders/shadow_mapping.frag
+--- find:
+    float currentDepth = projCoords.z;
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+--- replace:
+    float currentDepth = projCoords.z;
+    // calculate bias (based on depth map resolution and slope)
+    vec3 normal = normalize(fs_in.normal);
+    vec3 lightDir = normalize(ubo.lightPos - fs_in.fragPos);
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+
+=== task: over-sampling
+--- file: main.cpp
+--- find:
+    // The depth map's sampler: the nearest depth value, no filtering (learnopengl: GL_NEAREST, GL_REPEAT).
+--- replace:
+    // The depth map's sampler: the nearest depth value, no filtering (learnopengl: GL_NEAREST). Outside the depth map
+    // it returns the border colour: white, depth 1.0 - the farthest depth, so nothing out there is in shadow.
+--- file: main.cpp
+--- find:
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.anisotropyEnable = VK_FALSE;
+        samplerInfo.maxAnisotropy = 1.0f;
+        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+--- replace:
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        samplerInfo.anisotropyEnable = VK_FALSE;
+        samplerInfo.maxAnisotropy = 1.0f;
+        samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+--- file: shaders/shadow_mapping.frag
+--- find:
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+
+    return shadow;
+--- replace:
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+
+    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+    if (projCoords.z > 1.0)
+        shadow = 0.0;
+
+    return shadow;
+
+=== task: pcf
+--- file: shaders/shadow_mapping.frag
+--- find:
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+--- replace:
+    // check whether current frag pos is in shadow
+    // float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    // PCF
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    for (int x = -1; x <= 1; ++x) {
+        for (int y = -1; y <= 1; ++y) {
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;

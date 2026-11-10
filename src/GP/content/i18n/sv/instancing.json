@@ -1,0 +1,61 @@
+{
+  "title": "Instancing",
+  "tasks": {
+    "offsets": {
+      "text": {
+        "opengl": "Rita 100 fyrhörningar med ett ritanrop: räkna ut rutnätet på 10x10 `translations`, sätt dem i uniform-arrayen `vec2 offsets[100]`, välj instansens förskjutning med `gl_InstanceID`, och rita med `glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100)`.",
+        "vulkan": "Rita 100 fyrhörningar med ett ritanrop: lägg rutnätet på 10x10 förskjutningar i uniform buffern som `glm::vec4 offsets[100]`, välj instansens förskjutning med `gl_InstanceIndex`, bind descriptor seten och rita med `vkCmdDraw(commandBuffer, 6, 100, 0, 0)`.",
+        "d3d12": "Rita 100 fyrhörningar med ett ritanrop: lägg rutnätet på 10x10 förskjutningar i en constant buffer (`float4 offsets[100]` på b2, en root-CBV), välj instansens förskjutning med `SV_InstanceID`, och rita med `DrawInstanced(6, 100, 0, 0)`."
+      },
+      "hint": {
+        "opengl": "Looparna `for (int y = -10; y < 10; y += 2)` / `for (int x = -10; x < 10; x += 2)`, `translation.x = (float)x / 10.0f + offset;` (samma för y), `offset = 0.1f`. `shader.setVec2(\"offsets[\" + std::to_string(i) + \"]\", translations[i]);` för i 0..99. Shader: `vec2 offset = offsets[gl_InstanceID];`.",
+        "vulkan": "std140 ger varje arrayelement 16 byte, därav `vec4`. I `updateUniformBuffer()`: `translation.y = -((float)y / 10.0f + offset);` (Vulkans y pekar nedåt), `ubo.offsets[index++] = glm::vec4(translation, 0.0f, 0.0f);`. Shader: `ubo.offsets[gl_InstanceIndex].xy`. Bind `planetDescriptorSet`.",
+        "d3d12": "HLSL ger varje arrayelement i en cbuffer ett eget 16-byte-register, därav `XMFLOAT4 offsets[100]`. `rootParameters[3].InitAsConstantBufferView(2, 0, D3D12_SHADER_VISIBILITY_VERTEX)`; en upload-buffer på `CalculateConstantBufferByteSize(sizeof(OffsetConstantBuffer))` byte, skriven en gång; `SetGraphicsRootConstantBufferView(3, m_offsetBuffer->GetGPUVirtualAddress())`."
+      }
+    },
+    "instanced-array": {
+      "text": {
+        "opengl": "Ersätt uniform-arrayen med en instansierad array: förskjutningarna i en egen buffer `instanceVBO`, lästa som attribut 2 (`aOffset`) med `glVertexAttribDivisor(2, 1)`.",
+        "vulkan": "Ersätt uniform-arrayen med en instansierad array: förskjutningarna i en vertexbuffer `instanceBuffer` (`createInstanceBuffer()`), beskriven som binding 1 med `VK_VERTEX_INPUT_RATE_INSTANCE` och läst som location 2 (`inOffset`); bind båda vertexbuffrarna.",
+        "d3d12": "Ersätt constant buffern med en instansierad array: förskjutningarna i en vertexbuffer `m_instanceBuffer` i input slot 1, lästa som `OFFSET` med `D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA` och steghastighet 1. Ta bort förskjutningarnas constant buffer och root-parameter 3."
+      },
+      "hint": {
+        "opengl": "`glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 100, &translations[0], GL_STATIC_DRAW);` Medan `quadVAO` är bunden: `glEnableVertexAttribArray(2)`, bind `instanceVBO`, `glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0)`, `glVertexAttribDivisor(2, 1)`. Shader: `layout (location = 2) in vec2 aOffset;`.",
+        "vulkan": "Binding 1: `stride = sizeof(glm::vec2)`, `inputRate = VK_VERTEX_INPUT_RATE_INSTANCE`; attribut `[2]`: binding 1, location 2, `VK_FORMAT_R32G32_SFLOAT`, offset 0. `createVertexBuffer(&translations[0], sizeof(glm::vec2) * 100, instanceBuffer, instanceBufferMemory)`; `vkCmdBindVertexBuffers(commandBuffer, 0, 2, …)` med `{quadVertexBuffer, instanceBuffer}`.",
+        "d3d12": "`{ \"OFFSET\", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }`. Buffern: `sizeof(translations)` byte, vyns stride `sizeof(XMFLOAT2)`. `IASetVertexBuffers(1, 1, &m_instanceBufferView)`. Shader: `float2 offset : OFFSET`."
+      }
+    },
+    "scale-quads": {
+      "text": {
+        "opengl": "Skala varje fyrhörning med sitt instansnummer, `aPos * (gl_InstanceID / 100.0)`, så att fyrhörningarna växer från den första instansen (nere till vänster) till den sista (uppe till höger).",
+        "vulkan": "Skala varje fyrhörning med sitt instansnummer, `inPosition * (gl_InstanceIndex / 100.0)`, så att fyrhörningarna växer från den första instansen (nere till vänster) till den sista (uppe till höger).",
+        "d3d12": "Skala varje fyrhörning med sitt instansnummer, `position * (instanceID / 100.0f)` med `uint instanceID : SV_InstanceID`, så att fyrhörningarna växer från den första instansen (nere till vänster) till den sista (uppe till höger)."
+      },
+      "hint": "Räkna ut `pos` först och lägg förskjutningen till den. Dela med ett flyttal (`100.0`): en heltalsdivision skulle ge 0 för varje instans."
+    },
+    "planet": {
+      "text": {
+        "opengl": "Byt till asteroidscenen: kameran på (0, 0, 55), projektionen med det bortre planet på 1000, och `Model planet(\"models/planet.obj\");` ritad med `planet.vs/.fs` på (0, -3, 0), skalad 4. Ta bort fyrhörningarna.",
+        "vulkan": "Byt till asteroidscenen: kameran på (0, 0, 55), projektionen med det bortre planet på 1000, pipelinen med `planet.vert/.frag` och `Vertex`-indatan, och planeten ritad på (0, -3, 0), skalad 4. Ta bort fyrhörningarna.",
+        "d3d12": "Byt till asteroidscenen: kameran på (0, 0, 55), projektionen med det bortre planet på 1000, `Model m_planet` laddad från `\"models/planet.obj\"` och ritad med `planet.hlsl` på (0, -3, 0), skalad 4. Ta bort fyrhörningarna."
+      },
+      "hint": {
+        "opengl": "`glm::perspective(glm::radians(45.0f), …, 0.1f, 1000.0f)`, `glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp)`; `model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f)); model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));`, sedan `planet.Draw(planetShader);`.",
+        "vulkan": "`ubo.proj = glm::perspective(…, 0.1f, 1000.0f); ubo.proj[1][1] *= -1;`. Bind `planetVertexBuffer`, `planetIndexBuffer` (`VK_INDEX_TYPE_UINT32`) och `planetDescriptorSet`, pusha modellmatrisen, `vkCmdDrawIndexed(…, planetIndices.size(), 1, 0, 0, 0)`.",
+        "d3d12": "`m_planet.Load(\"models/planet.obj\", m_device.Get(), m_commandList.Get(), m_cbvSrvHeap.Get(), 1);`, meshens input layout (`POSITION`, `NORMAL` på 12, `TEXCOORD` på 24), `XMMatrixPerspectiveFovRH(…, 0.1f, 1000.0f)`, `XMMatrixScaling(4.0f, 4.0f, 4.0f) * XMMatrixTranslation(0.0f, -3.0f, 0.0f)`."
+      }
+    },
+    "asteroids": {
+      "text": {
+        "opengl": "Rita 500 stenar i en ring runt planeten med en instansierad ritning per mesh i stenen: learnopengls matriser (`srand(42)`, radie 15, offset 2.5) i en buffer, lästa som attributet per instans `mat4 aInstanceMatrix` på plats 3 (platserna 3–6).",
+        "vulkan": "Rita 500 stenar i en ring runt planeten med en enda `vkCmdDrawIndexed(…, amount, …)`: learnopengls matriser (`srand(42)`, radie 15, offset 2.5) i en instansbuffer, lästa av en andra pipeline `asteroidPipeline` som en `mat4` per instans på binding 1, platserna 4–7.",
+        "d3d12": "Rita 500 stenar i en ring runt planeten med en `DrawIndexedInstanced(…, amount, …)` per mesh i stenen: learnopengls matriser (`srand(42)`, radie 15, offset 2.5) i en vertexbuffer i slot 1, lästa av `m_asteroidPipelineState` som fyra `INSTANCEMATRIX`-rader per instans."
+      },
+      "hint": {
+        "opengl": "`Model rock(\"models/rock.obj\");`, `modelMatrices = new glm::mat4[amount];`. För varje `rock.meshes[i].VAO`: attribut 3..6 med 4 floats, stride `sizeof(glm::mat4)`, offset `0`, `sizeof(glm::vec4)`, `2 * …`, `3 * …`, och `glVertexAttribDivisor(3..6, 1)`. Rita: bind `rock.textures_loaded[0].id`, `glDrawElementsInstanced(GL_TRIANGLES, …indices.size(), GL_UNSIGNED_INT, 0, amount)`.",
+        "vulkan": "`getInstancedBindingDescriptions()`: binding 1, `stride = sizeof(glm::mat4)`, `VK_VERTEX_INPUT_RATE_INSTANCE`; `getInstancedAttributeDescriptions()`: `[4]..[7]` på binding 1, platserna 4..7, `VK_FORMAT_R32G32B32A32_SFLOAT`, offset 0, 16, 32, 48. Bind `{rockVertexBuffer, instanceBuffer}`, `rockIndexBuffer`, `rockDescriptorSet`.",
+        "d3d12": "Fyra element `{ \"INSTANCEMATRIX\", 0..3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0/16/32/48, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }`; shader: `float4x4(instanceRow0, …, instanceRow3)`. Lagra matriserna otransponerade. `m_rock.Load(…, 1 + 2 * m_planet.meshes.size())`; per mesh: `srvHandle`, `vertexBufferView`, `indexBufferView`."
+      }
+    }
+  }
+}

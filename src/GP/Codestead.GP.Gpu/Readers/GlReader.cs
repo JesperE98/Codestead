@@ -87,6 +87,15 @@ public sealed partial class GlReader
         var values = args.Select(a => Eval(a)).ToList();
         for (int i = 0; i < parameters.Count && i < values.Count; i++)
             if (values[i] is { } v) env.Runner.Globals[parameters[i]] = v;
+        // A parameter that receives a Shader or Model (renderScene(simpleDepthShader) with `const Shader& shader`)
+        // names the caller's object while the function runs.
+        var aliases = new Dictionary<string, string>(StringComparer.Ordinal);
+        for (int i = 0; i < parameters.Count && i < args.Count; i++)
+        {
+            var target = ResolveAlias(Obj(args[i]));
+            if (parameters[i] != "" && parameters[i] != target && (gl.Programs.ContainsKey(target) || models.ContainsKey(target))) aliases[parameters[i]] = target;
+        }
+        aliasStack.Add(aliases);
         var saved = inlineReturn;
         inlineReturn = new string?[1];
         inlineDepth++;
@@ -100,7 +109,19 @@ public sealed partial class GlReader
         {
             inlineDepth--;
             inlineReturn = saved;
+            aliasStack.RemoveAt(aliasStack.Count - 1);
         }
+    }
+
+    /// <summary>The helpers' parameters that stand for the caller's objects, innermost call last.</summary>
+    private readonly List<Dictionary<string, string>> aliasStack = new();
+
+    /// <summary>The object a name means here: a helper's parameter is the argument it was called with.</summary>
+    private string ResolveAlias(string name)
+    {
+        for (int i = aliasStack.Count - 1; i >= 0; i--)
+            if (aliasStack[i].TryGetValue(name, out var target)) name = target;
+        return name;
     }
 
     /// <summary>A variable that now names the same OpenGL object as another (unsigned int diffuseMap = loadTexture(…)).</summary>

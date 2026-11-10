@@ -1,0 +1,406 @@
+=== task: depth-map
+--- file: main.cpp
+--- find:
+    static const UINT FrameCount = 2;
+--- replace:
+    static const UINT FrameCount = 2;
+    static const UINT SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;    // the shadow map's size in texels
+--- file: main.cpp
+--- find:
+        XMFLOAT4X4 projection;
+        XMFLOAT3 viewPos;
+--- replace:
+        XMFLOAT4X4 projection;
+        XMFLOAT4X4 lightSpaceMatrix;    // the light's view and projection
+        XMFLOAT3 viewPos;
+--- file: main.cpp
+--- find:
+    CD3DX12_RECT m_scissorRect;
+--- replace:
+    CD3DX12_RECT m_scissorRect;
+    CD3DX12_VIEWPORT m_shadowViewport;    // the depth pass draws into the whole shadow map
+    CD3DX12_RECT m_shadowScissorRect;
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+--- replace:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+    ComPtr<ID3D12PipelineState> m_depthPipelineState;        // the depth pass's (learnopengl's simpleDepthShader)
+    ComPtr<ID3D12PipelineState> m_debugQuadPipelineState;    // the debug quad's
+--- file: main.cpp
+--- find:
+    UINT m_cbvSrvDescriptorSize = 0;
+--- replace:
+    UINT m_cbvSrvDescriptorSize = 0;
+    UINT m_dsvDescriptorSize = 0;
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_depthStencil;
+--- replace:
+    ComPtr<ID3D12Resource> m_depthStencil;
+    ComPtr<ID3D12Resource> m_shadowMap;    // the depth of the scene as the light sees it
+--- file: main.cpp
+--- find:
+    m_scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height))
+{
+--- replace:
+    m_scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height)),
+    m_shadowViewport(0.0f, 0.0f, static_cast<float>(SHADOW_WIDTH), static_cast<float>(SHADOW_HEIGHT)),
+    m_shadowScissorRect(0, 0, static_cast<LONG>(SHADOW_WIDTH), static_cast<LONG>(SHADOW_HEIGHT))
+{
+--- file: main.cpp
+--- find:
+        dsvHeapDesc.NumDescriptors = 1;
+--- replace:
+        dsvHeapDesc.NumDescriptors = 2;    // the depth buffer + the shadow map
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 2;    // one CBV + the wood texture's SRV
+--- replace:
+        cbvSrvHeapDesc.NumDescriptors = 3;    // one CBV + the wood texture's SRV + the shadow map's SRV
+--- file: main.cpp
+--- find:
+        m_cbvSrvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+--- replace:
+        m_cbvSrvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        m_dsvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+--- file: main.cpp
+--- find:
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1, and
+        // 1 SRV at register t0 (the wood texture), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+--- replace:
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1, and
+        // 2 SRVs at registers t0 and t1 (the wood texture and the shadow map: consecutive
+        // descriptors in the heap), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
+--- file: main.cpp
+--- find:
+        D3D12_STATIC_SAMPLER_DESC samplers[1] = {};
+--- replace:
+        D3D12_STATIC_SAMPLER_DESC samplers[2] = {};
+--- file: main.cpp
+--- find:
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+--- replace:
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        // Sampler s1, for the shadow map: no filtering (learnopengl: GL_NEAREST) - a depth is
+        // compared with another depth, it is not a colour to blend with its neighbours.
+        samplers[1] = samplers[0];
+        samplers[1].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+        samplers[1].ShaderRegister = 1;
+--- file: main.cpp
+--- find:
+        // TODO: the depth pass's pipeline state (m_depthPipelineState: the vertex shader of shadow_mapping_depth.hlsl, no pixel shader, no render target) and the debug quad's (m_debugQuadPipelineState: debug_quad.hlsl, no depth test)
+--- replace:
+        // The depth pass's pipeline state (learnopengl's simpleDepthShader): the vertex shader
+        // of shadow_mapping_depth.hlsl and no pixel shader - there is no render target, so no
+        // colour to compute; the rasterizer writes the depth by itself (learnopengl's
+        // fragment shader is empty). The depth format is the shadow map's DSV format.
+        ComPtr<ID3DBlob> depthVertexShader;
+        ThrowIfFailed(D3DCompileFromFile(L"shadow_mapping_depth.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &depthVertexShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(depthVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(nullptr, 0);
+        psoDesc.NumRenderTargets = 0;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+        psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_depthPipelineState)));
+
+        // The debug quad's pipeline state: the shaders of debug_quad.hlsl, the window's render
+        // target again, and no depth test (the quad covers everything).
+        ComPtr<ID3DBlob> quadVertexShader;
+        ComPtr<ID3DBlob> quadPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"debug_quad.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &quadVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"debug_quad.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &quadPixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(quadVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(quadPixelShader.Get());
+        psoDesc.NumRenderTargets = 1;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_debugQuadPipelineState)));
+--- file: main.cpp
+--- find:
+        // One vertex buffer for all the objects: the floor (6 vertices) and the cube (36).
+        // A draw picks its object with the first vertex it starts from.
+--- replace:
+        // One vertex buffer for all the objects: the floor (6 vertices), the cube (36)
+        // and the debug quad (6). A draw picks its object with the first vertex it starts from.
+--- file: main.cpp
+--- find:
+            { { -1.0f,  1.0f,  1.0f }, {  0.0f,  1.0f,  0.0f }, {  0.0f,  1.0f } }
+            // TODO: the debug quad (vertices 42 to 47): two triangles that fill the whole window, in normalized device coordinates
+--- replace:
+            { { -1.0f,  1.0f,  1.0f }, {  0.0f,  1.0f,  0.0f }, {  0.0f,  1.0f } },
+
+            // the debug quad: vertices 42 to 47 - two triangles that fill the whole window, in
+            // normalized device coordinates, v = 0 at the top.
+            { { -1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } },
+            { { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } },
+            { {  1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f } },
+
+            { { -1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } },
+            { {  1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f } },
+            { {  1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }
+--- file: main.cpp
+--- find:
+    // TODO: the shadow map (m_shadowMap): a 1024 x 1024 depth texture (R32_TYPELESS) with a depth stencil view (D32_FLOAT, DSV heap slot 1) and a shader resource view (R32_FLOAT, CBV/SRV heap slot 2)
+--- replace:
+    // Create the shadow map: a depth texture the depth pass draws the scene into, from the
+    // light (learnopengl: the depth map framebuffer's GL_DEPTH_COMPONENT texture), and the
+    // camera's pass then reads.
+    {
+        // R32_TYPELESS: the same 32 bits per texel are a D32_FLOAT depth to the depth stencil
+        // view and an R32_FLOAT colour to the shader resource view. (A resource with a depth
+        // format cannot have an SRV; a typeless one can have both views.)
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC shadowDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_TYPELESS, SHADOW_WIDTH, SHADOW_HEIGHT, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+
+        // It is cleared to 1.0, the far plane, every frame.
+        D3D12_CLEAR_VALUE clearValue = {};
+        clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+        clearValue.DepthStencil.Depth = 1.0f;
+        clearValue.DepthStencil.Stencil = 0;
+
+        // It starts in the DEPTH_WRITE state: each frame the depth pass draws into it, a
+        // barrier turns it into a PIXEL_SHADER_RESOURCE for the camera's pass, and another
+        // one back at the end of the frame.
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &shadowDesc,
+            D3D12_RESOURCE_STATE_DEPTH_WRITE,
+            &clearValue,
+            IID_PPV_ARGS(&m_shadowMap)));
+
+        // A depth stencil view, to draw into it: slot 1 of the DSV heap, after the depth buffer's.
+        D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+        dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+        dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+        dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_dsvDescriptorSize);
+        m_device->CreateDepthStencilView(m_shadowMap.Get(), &dsvDesc, dsvHandle);
+
+        // A shader resource view, to read it: slot 2 of the CBV/SRV heap, right after the
+        // wood's, so that one descriptor table holds both (t0 and t1).
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
+        m_device->CreateShaderResourceView(m_shadowMap.Get(), &srvDesc, srvHandle);
+    }
+--- file: main.cpp
+--- find:
+    // TODO: the light's view and projection (lightSpaceMatrix): an orthographic projection 20 x 20 units wide from near 1.0 to far 7.5, looking from lightPos at the origin
+--- replace:
+    // The light's view and projection (learnopengl: lightSpaceMatrix = lightProjection *
+    // lightView). An orthographic projection: the light's rays are parallel, like the sun's.
+    // The box it sees is 20 x 20 units around the line from lightPos to the origin (learnopengl:
+    // glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, ...)), from 1.0 to 7.5 units in front of the light.
+    float near_plane = 1.0f, far_plane = 7.5f;
+    XMMATRIX lightProjection = XMMatrixOrthographicRH(20.0f, 20.0f, near_plane, far_plane);
+    XMMATRIX lightView = XMMatrixLookAtRH(XMLoadFloat3(&lightPos), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+    XMMATRIX lightSpaceMatrix = lightView * lightProjection;    // row vectors: the view first, then the projection
+    XMStoreFloat4x4(&constantBufferData.lightSpaceMatrix, XMMatrixTranspose(lightSpaceMatrix));
+--- file: main.cpp
+--- find:
+    // TODO: 1. render depth of scene to texture (from light's perspective): the depth pass's pipeline state, the shadow map's viewport, the shadow map as the only target (no render target), cleared, the scene's four draws, then a barrier DEPTH_WRITE -> PIXEL_SHADER_RESOURCE
+--- replace:
+    // 1. render depth of scene to texture (from light's perspective): the depth pass's
+    // pipeline state, the shadow map's size as the viewport, and the shadow map as the depth
+    // buffer with no render target (learnopengl: glDrawBuffer(GL_NONE)).
+    m_commandList->SetPipelineState(m_depthPipelineState.Get());
+    m_commandList->RSSetViewports(1, &m_shadowViewport);
+    m_commandList->RSSetScissorRects(1, &m_shadowScissorRect);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE shadowDsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_dsvDescriptorSize);
+    m_commandList->OMSetRenderTargets(0, nullptr, FALSE, &shadowDsvHandle);
+    m_commandList->ClearDepthStencilView(shadowDsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &floorConstants, 0);
+    m_commandList->DrawInstanced(6, 1, 0, 0);       // the floor: vertices 0 to 5
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &cube1Constants, 0);
+    m_commandList->DrawInstanced(36, 1, 6, 0);      // a cube: vertices 6 to 41
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &cube2Constants, 0);
+    m_commandList->DrawInstanced(36, 1, 6, 0);
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &cube3Constants, 0);
+    m_commandList->DrawInstanced(36, 1, 6, 0);
+
+    // The shadow map is done: from now on the pixel shaders read it.
+    CD3DX12_RESOURCE_BARRIER shadowBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_shadowMap.Get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    m_commandList->ResourceBarrier(1, &shadowBarrier);
+
+    // 2. render scene as normal using the generated depth/shadow map: the scene's pipeline
+    // state again, the window's viewport, render target and depth buffer.
+    m_commandList->SetPipelineState(m_pipelineState.Get());
+--- file: main.cpp
+--- find:
+    // TODO: render the depth map on the debug quad (its pipeline state, vertices 42 to 47)
+--- replace:
+    // render Depth map to quad for visual debugging: the debug quad's pipeline state and its 6
+    // vertices from vertex 42 on. It reads the shadow map (t1) through the textures' table.
+    m_commandList->SetPipelineState(m_debugQuadPipelineState.Get());
+    m_commandList->DrawInstanced(6, 1, 42, 0);
+--- file: main.cpp
+--- find:
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    ThrowIfFailed(m_commandList->Close());
+--- replace:
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    // The next frame's depth pass writes the shadow map again.
+    shadowBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_shadowMap.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+    m_commandList->ResourceBarrier(1, &shadowBarrier);
+
+    ThrowIfFailed(m_commandList->Close());
+--- file: shadow_mapping.hlsl
+--- find:
+    float4x4 projection;
+    float3 viewPos;
+--- replace:
+    float4x4 projection;
+    float4x4 lightSpaceMatrix;    // the light's view and projection
+    float3 viewPos;
+
+=== task: shadows
+--- file: shadow_mapping.hlsl
+--- find:
+// The texture, in the descriptor table of root parameter 2: the wood (t0).
+Texture2D diffuseTexture : register(t0);
+// The sampler, a static sampler of the root signature: s0 for the wood (linear, WRAP).
+SamplerState wrapSampler : register(s0);
+--- replace:
+// The textures, in the descriptor table of root parameter 2: the wood (t0) and the shadow
+// map (t1) - the depth of the scene as the light sees it.
+Texture2D diffuseTexture : register(t0);
+Texture2D shadowMap : register(t1);
+// The samplers, static samplers of the root signature: s0 for the wood (linear, WRAP),
+// s1 for the shadow map (no filtering).
+SamplerState wrapSampler : register(s0);
+SamplerState shadowSampler : register(s1);
+--- file: shadow_mapping.hlsl
+--- find:
+    float2 texCoord : TEXCOORD0;
+--- replace:
+    float2 texCoord : TEXCOORD0;
+    float4 fragPosLightSpace : TEXCOORD1;    // the position as the light's view and projection see it
+--- file: shadow_mapping.hlsl
+--- find:
+    result.texCoord = texCoord;
+--- replace:
+    result.texCoord = texCoord;
+    // The same position, as the depth pass saw it from the light.
+    result.fragPosLightSpace = mul(worldPos, lightSpaceMatrix);
+--- file: shadow_mapping.hlsl
+--- find:
+// TODO: ShadowCalculation(fragPosLightSpace): 1.0 if the fragment is farther from the light than the depth the shadow map holds at its place (in shadow), else 0.0
+--- replace:
+// 1.0 if the fragment is in shadow, 0.0 if the light reaches it.
+float ShadowCalculation(float4 fragPosLightSpace)
+{
+    // perform perspective divide
+    float3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform x and y from [-1,1] to [0,1] texture coordinates: in Direct3D v points down
+    // while y points up, so y is flipped. z needs nothing: Direct3D's depth is 0..1 already.
+    float2 shadowUV = float2(projCoords.x * 0.5f + 0.5f, -projCoords.y * 0.5f + 0.5f);
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = shadowMap.Sample(shadowSampler, shadowUV).r;
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth > closestDepth ? 1.0f : 0.0f;
+
+    return shadow;
+}
+--- file: shadow_mapping.hlsl
+--- find:
+    float shadow = 0.0f;    // TODO: 1.0 in shadow, 0.0 in the light (ShadowCalculation)
+--- replace:
+    float shadow = ShadowCalculation(input.fragPosLightSpace);
+--- file: main.cpp
+--- find:
+    // render Depth map to quad for visual debugging: the debug quad's pipeline state and its 6
+    // vertices from vertex 42 on. It reads the shadow map (t1) through the textures' table.
+    m_commandList->SetPipelineState(m_debugQuadPipelineState.Get());
+    m_commandList->DrawInstanced(6, 1, 42, 0);
+--- replace:
+    // render Depth map to quad for visual debugging (uncomment the two lines to see it again)
+    // m_commandList->SetPipelineState(m_debugQuadPipelineState.Get());
+    // m_commandList->DrawInstanced(6, 1, 42, 0);
+
+=== task: bias
+--- file: shadow_mapping.hlsl
+--- find:
+float ShadowCalculation(float4 fragPosLightSpace)
+--- replace:
+float ShadowCalculation(float4 fragPosLightSpace, float3 normal, float3 lightDir)
+--- file: shadow_mapping.hlsl
+--- find:
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth > closestDepth ? 1.0f : 0.0f;
+--- replace:
+    // calculate bias (based on depth map resolution and slope)
+    float bias = max(0.05f * (1.0f - dot(normal, lightDir)), 0.005f);
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth - bias > closestDepth ? 1.0f : 0.0f;
+--- file: shadow_mapping.hlsl
+--- find:
+    float shadow = ShadowCalculation(input.fragPosLightSpace);
+--- replace:
+    float shadow = ShadowCalculation(input.fragPosLightSpace, normal, lightDir);
+
+=== task: over-sampling
+--- file: main.cpp
+--- find:
+        samplers[1].ShaderRegister = 1;
+--- replace:
+        samplers[1].ShaderRegister = 1;
+        // Outside the shadow map, the border colour: depth 1.0 (white), the far plane, so
+        // nothing there is in shadow (learnopengl: GL_CLAMP_TO_BORDER, GL_TEXTURE_BORDER_COLOR).
+        samplers[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+        samplers[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+        samplers[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+        samplers[1].BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+--- file: shadow_mapping.hlsl
+--- find:
+    return shadow;
+--- replace:
+    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+    if (projCoords.z > 1.0f)
+        shadow = 0.0f;
+
+    return shadow;
+
+=== task: pcf
+--- file: shadow_mapping.hlsl
+--- find:
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = shadowMap.Sample(shadowSampler, shadowUV).r;
+    // get depth of current fragment from light's perspective
+--- replace:
+    // get depth of current fragment from light's perspective
+--- file: shadow_mapping.hlsl
+--- find:
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth - bias > closestDepth ? 1.0f : 0.0f;
+--- replace:
+    // PCF (percentage-closer filtering): the test for the 3 x 3 texels around the
+    // fragment's place, averaged - soft shadow edges
+    float shadow = 0.0f;
+    uint width, height;
+    shadowMap.GetDimensions(width, height);
+    float2 texelSize = 1.0f / float2(width, height);
+    for (int x = -1; x <= 1; ++x)
+    {
+        for (int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = shadowMap.Sample(shadowSampler, shadowUV + float2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0f : 0.0f;
+        }
+    }
+    shadow /= 9.0f;

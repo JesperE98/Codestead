@@ -50,6 +50,12 @@ public static class CppStatements
                 var word = m.Groups[1].Value;
                 int j = i + word.Length;
                 while (j < end && char.IsWhiteSpace(code[j])) j++;
+                // else if (…): an if like any other (its body runs unless it is an error branch).
+                if (word == "else" && Regex.IsMatch(code[j..Math.Min(end, j + 3)], @"^if\b"))
+                {
+                    i = j;
+                    continue;
+                }
                 string condition = "";
                 if (j < end && code[j] == '(')
                 {

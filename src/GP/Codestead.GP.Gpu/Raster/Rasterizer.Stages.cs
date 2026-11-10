@@ -34,11 +34,11 @@ public static partial class Rasterizer
             this.height = height;
             this.scale = scale;
             this.yDown = yDown;
-            vs = new ShaderRunner(draw.VertexShader) { Time = time, Sample = draw.Textures, SampleCube = draw.CubeTextures };
-            fs = new ShaderRunner(draw.FragmentShader) { Time = time, Sample = draw.Textures, SampleCube = draw.CubeTextures };
+            vs = new ShaderRunner(draw.VertexShader) { Time = time, Sample = draw.Textures, SampleCube = draw.CubeTextures, TextureSize = draw.TextureSizes };
+            fs = new ShaderRunner(draw.FragmentShader) { Time = time, Sample = draw.Textures, SampleCube = draw.CubeTextures, TextureSize = draw.TextureSizes };
             if (draw.GeometryShader is { } geometry)
             {
-                gs = new ShaderRunner(geometry) { Time = time, Sample = draw.Textures, SampleCube = draw.CubeTextures };
+                gs = new ShaderRunner(geometry) { Time = time, Sample = draw.Textures, SampleCube = draw.CubeTextures, TextureSize = draw.TextureSizes };
                 gsInputs = geometry.Globals.Where(g => g.Storage == "in").ToList();
                 gsOutputs = geometry.Globals.Where(g => g.Storage == "out").ToList();
             }
@@ -60,7 +60,8 @@ public static partial class Rasterizer
             {
                 if (draw.VertexShader.FindFunction("main") is null) throw new ShaderRuntimeException("the vertex shader has no main()", 0);
                 if (draw.FragmentShader.FindFunction("main") is null) throw new ShaderRuntimeException("the fragment shader has no main()", 0);
-                if (fsOutput is null) throw new ShaderRuntimeException("the fragment shader has no output (out vec4 …)", 0);
+                // A depth-only pass (a shadow map: an off-screen target, glDrawBuffer(GL_NONE)) needs no colour output.
+                if (fsOutput is null && draw.Target is null) throw new ShaderRuntimeException("the fragment shader has no output (out vec4 …)", 0);
             }
         }
 

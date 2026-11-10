@@ -37,7 +37,11 @@ public sealed partial class VulkanReader
         var drawIndexed = src.Calls("vkCmdDrawIndexed").FirstOrDefault();
         var call = drawIndexed ?? draw;
         if (call is null) return;
-        if (call.Offset < beginOffset || call.Offset > endOffset)
+        // A draw in the same function must be between the render pass's begin and end (a helper called from there,
+        // learnopengl's renderScene, is followed when the frame is recorded).
+        var passes = src.Calls(src.Uses("vkCmdBeginRendering") ? "vkCmdBeginRendering" : "vkCmdBeginRenderPass").Select(b => b.Offset)
+            .Zip(src.Calls(src.Uses("vkCmdEndRendering") ? "vkCmdEndRendering" : "vkCmdEndRenderPass").Select(e => e.Offset)).ToList();
+        if (src.FunctionAt(call.Offset) == src.FunctionAt(beginOffset) && !passes.Any(p => call.Offset > p.First && call.Offset < p.Second))
         {
             scene.Notes.Add(SimNote.Error("vkDrawOutsideRenderPass", ("call", call.Name)));
             return;
@@ -121,7 +125,7 @@ public sealed partial class VulkanReader
         recorder.Setup();
         if (device.WindowSrgb) scene.WindowSrgb = true;
         foreach (var fn in UpdateFunctions(blocks)) recorder.Run(fn);
-        if (src.FunctionAt(call.Offset) is { } recordFn) recorder.Run(recordFn);
+        if ((src.FunctionAt(beginOffset) ?? src.FunctionAt(call.Offset)) is { } recordFn) recorder.Run(recordFn);
         var buffer = recorder.BufferContents();
         bool deviceVertices = inputs.Count > 0 && recorder.Draws.Any(d => d.State is VulkanDevice.DrawState { VertexBuffers.Count: > 0 } st
             && device.Read(st.VertexBuffers.Values.First().Buffer, st.VertexBuffers.Values.First().Offset, 1) is not null);

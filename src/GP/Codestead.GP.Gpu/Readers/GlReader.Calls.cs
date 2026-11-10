@@ -440,7 +440,10 @@ public sealed partial class GlReader
         }
         if (name.EndsWith('v') && values.Count >= 2)
         {
-            var vector = Eval(DataName(values[1]));
+            // glUniform3fv(loc, 4, &lightPositions[0][0]): with a count above 1, the whole array.
+            var data = DataName(values[1]);
+            if ((Eval(values[0])?.X ?? 1) > 1) data = System.Text.RegularExpressions.Regex.Replace(data, @"(?:\s*\[\s*0\s*\])+$", "");
+            var vector = Eval(data);
             program.Uniforms[uniform] = _ => vector;
             return;
         }
@@ -529,6 +532,7 @@ public sealed partial class GlReader
 
     private void ShaderMethod(string obj, string method, IReadOnlyList<string> a, int line)
     {
+        obj = ResolveAlias(obj);
         if (method == "Draw" && models.TryGetValue(obj, out var model))
         {
             DrawModel(model.Model, model.Path, a.Count > 0 ? Obj(a[0]) : "", line);

@@ -57,4 +57,7 @@ public sealed class DrawCall
     public Func<string, double, double, double[]>? Textures { get; init; }
     /// <summary>Cube maps: (name, direction x, y, z) → RGBA, or null when the name is not a cube map.</summary>
     public Func<string, double, double, double, double[]?>? CubeTextures { get; init; }
+
+    /// <summary>The size in texels of the texture a sampler reads (textureSize, texelFetch), or null.</summary>
+    public Func<string, (int Width, int Height)?>? TextureSizes { get; init; }
 }

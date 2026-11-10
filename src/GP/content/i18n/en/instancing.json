@@ -1,0 +1,61 @@
+{
+  "title": "Instancing",
+  "tasks": {
+    "offsets": {
+      "text": {
+        "opengl": "Draw 100 quads with one draw call: compute the 10x10 grid of `translations`, set them in the uniform array `vec2 offsets[100]`, pick the instance's offset with `gl_InstanceID`, and draw with `glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100)`.",
+        "vulkan": "Draw 100 quads with one draw call: put the 10x10 grid of offsets into the uniform buffer as `glm::vec4 offsets[100]`, pick the instance's offset with `gl_InstanceIndex`, bind the descriptor set and draw with `vkCmdDraw(commandBuffer, 6, 100, 0, 0)`.",
+        "d3d12": "Draw 100 quads with one draw call: put the 10x10 grid of offsets into a constant buffer (`float4 offsets[100]` at b2, a root CBV), pick the instance's offset with `SV_InstanceID`, and draw with `DrawInstanced(6, 100, 0, 0)`."
+      },
+      "hint": {
+        "opengl": "Loops `for (int y = -10; y < 10; y += 2)` / `for (int x = -10; x < 10; x += 2)`, `translation.x = (float)x / 10.0f + offset;` (same for y), `offset = 0.1f`. `shader.setVec2(\"offsets[\" + std::to_string(i) + \"]\", translations[i]);` for i 0..99. Shader: `vec2 offset = offsets[gl_InstanceID];`.",
+        "vulkan": "std140 gives every array element 16 bytes, hence `vec4`. In `updateUniformBuffer()`: `translation.y = -((float)y / 10.0f + offset);` (Vulkan's y points down), `ubo.offsets[index++] = glm::vec4(translation, 0.0f, 0.0f);`. Shader: `ubo.offsets[gl_InstanceIndex].xy`. Bind `planetDescriptorSet`.",
+        "d3d12": "HLSL gives every cbuffer array element its own 16-byte register, hence `XMFLOAT4 offsets[100]`. `rootParameters[3].InitAsConstantBufferView(2, 0, D3D12_SHADER_VISIBILITY_VERTEX)`; an upload buffer of `CalculateConstantBufferByteSize(sizeof(OffsetConstantBuffer))` bytes, written once; `SetGraphicsRootConstantBufferView(3, m_offsetBuffer->GetGPUVirtualAddress())`."
+      }
+    },
+    "instanced-array": {
+      "text": {
+        "opengl": "Replace the uniform array with an instanced array: the translations in their own buffer `instanceVBO`, read as attribute 2 (`aOffset`) with `glVertexAttribDivisor(2, 1)`.",
+        "vulkan": "Replace the uniform array with an instanced array: the translations in a vertex buffer `instanceBuffer` (`createInstanceBuffer()`), described as binding 1 with `VK_VERTEX_INPUT_RATE_INSTANCE` and read as location 2 (`inOffset`); bind both vertex buffers.",
+        "d3d12": "Replace the constant buffer with an instanced array: the translations in a vertex buffer `m_instanceBuffer` in input slot 1, read as `OFFSET` with `D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA` and step rate 1. Remove the offsets' constant buffer and root parameter 3."
+      },
+      "hint": {
+        "opengl": "`glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 100, &translations[0], GL_STATIC_DRAW);` While `quadVAO` is bound: `glEnableVertexAttribArray(2)`, bind `instanceVBO`, `glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0)`, `glVertexAttribDivisor(2, 1)`. Shader: `layout (location = 2) in vec2 aOffset;`.",
+        "vulkan": "Binding 1: `stride = sizeof(glm::vec2)`, `inputRate = VK_VERTEX_INPUT_RATE_INSTANCE`; attribute `[2]`: binding 1, location 2, `VK_FORMAT_R32G32_SFLOAT`, offset 0. `createVertexBuffer(&translations[0], sizeof(glm::vec2) * 100, instanceBuffer, instanceBufferMemory)`; `vkCmdBindVertexBuffers(commandBuffer, 0, 2, …)` with `{quadVertexBuffer, instanceBuffer}`.",
+        "d3d12": "`{ \"OFFSET\", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }`. The buffer: `sizeof(translations)` bytes, view stride `sizeof(XMFLOAT2)`. `IASetVertexBuffers(1, 1, &m_instanceBufferView)`. Shader: `float2 offset : OFFSET`."
+      }
+    },
+    "scale-quads": {
+      "text": {
+        "opengl": "Scale each quad by its instance number, `aPos * (gl_InstanceID / 100.0)`, so the quads grow from the first instance (bottom-left) to the last (top-right).",
+        "vulkan": "Scale each quad by its instance number, `inPosition * (gl_InstanceIndex / 100.0)`, so the quads grow from the first instance (bottom-left) to the last (top-right).",
+        "d3d12": "Scale each quad by its instance number, `position * (instanceID / 100.0f)` with `uint instanceID : SV_InstanceID`, so the quads grow from the first instance (bottom-left) to the last (top-right)."
+      },
+      "hint": "Compute `pos` first and add the offset to it. Divide by a floating-point number (`100.0`): an integer division would give 0 for every instance."
+    },
+    "planet": {
+      "text": {
+        "opengl": "Switch to the asteroid scene: the camera at (0, 0, 55), the projection with the far plane at 1000, and `Model planet(\"models/planet.obj\");` drawn with `planet.vs/.fs` at (0, -3, 0), scaled 4. Remove the quads.",
+        "vulkan": "Switch to the asteroid scene: the camera at (0, 0, 55), the projection with the far plane at 1000, the pipeline with `planet.vert/.frag` and the `Vertex` input, and the planet drawn at (0, -3, 0), scaled 4. Remove the quads.",
+        "d3d12": "Switch to the asteroid scene: the camera at (0, 0, 55), the projection with the far plane at 1000, `Model m_planet` loaded from `\"models/planet.obj\"` and drawn with `planet.hlsl` at (0, -3, 0), scaled 4. Remove the quads."
+      },
+      "hint": {
+        "opengl": "`glm::perspective(glm::radians(45.0f), …, 0.1f, 1000.0f)`, `glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp)`; `model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f)); model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));`, then `planet.Draw(planetShader);`.",
+        "vulkan": "`ubo.proj = glm::perspective(…, 0.1f, 1000.0f); ubo.proj[1][1] *= -1;`. Bind `planetVertexBuffer`, `planetIndexBuffer` (`VK_INDEX_TYPE_UINT32`) and `planetDescriptorSet`, push the model matrix, `vkCmdDrawIndexed(…, planetIndices.size(), 1, 0, 0, 0)`.",
+        "d3d12": "`m_planet.Load(\"models/planet.obj\", m_device.Get(), m_commandList.Get(), m_cbvSrvHeap.Get(), 1);`, the mesh input layout (`POSITION`, `NORMAL` at 12, `TEXCOORD` at 24), `XMMatrixPerspectiveFovRH(…, 0.1f, 1000.0f)`, `XMMatrixScaling(4.0f, 4.0f, 4.0f) * XMMatrixTranslation(0.0f, -3.0f, 0.0f)`."
+      }
+    },
+    "asteroids": {
+      "text": {
+        "opengl": "Draw 500 rocks in a ring around the planet with one instanced draw per rock mesh: learnopengl's matrices (`srand(42)`, radius 15, offset 2.5) in a buffer, read as the per-instance attribute `mat4 aInstanceMatrix` at location 3 (locations 3–6).",
+        "vulkan": "Draw 500 rocks in a ring around the planet with one `vkCmdDrawIndexed(…, amount, …)`: learnopengl's matrices (`srand(42)`, radius 15, offset 2.5) in an instance buffer, read by a second pipeline `asteroidPipeline` as a per-instance `mat4` at binding 1, locations 4–7.",
+        "d3d12": "Draw 500 rocks in a ring around the planet with one `DrawIndexedInstanced(…, amount, …)` per rock mesh: learnopengl's matrices (`srand(42)`, radius 15, offset 2.5) in a vertex buffer in slot 1, read by `m_asteroidPipelineState` as four per-instance `INSTANCEMATRIX` rows."
+      },
+      "hint": {
+        "opengl": "`Model rock(\"models/rock.obj\");`, `modelMatrices = new glm::mat4[amount];`. For each `rock.meshes[i].VAO`: attributes 3..6 with 4 floats, stride `sizeof(glm::mat4)`, offsets `0`, `sizeof(glm::vec4)`, `2 * …`, `3 * …`, and `glVertexAttribDivisor(3..6, 1)`. Draw: bind `rock.textures_loaded[0].id`, `glDrawElementsInstanced(GL_TRIANGLES, …indices.size(), GL_UNSIGNED_INT, 0, amount)`.",
+        "vulkan": "`getInstancedBindingDescriptions()`: binding 1, `stride = sizeof(glm::mat4)`, `VK_VERTEX_INPUT_RATE_INSTANCE`; `getInstancedAttributeDescriptions()`: `[4]..[7]` at binding 1, locations 4..7, `VK_FORMAT_R32G32B32A32_SFLOAT`, offsets 0, 16, 32, 48. Bind `{rockVertexBuffer, instanceBuffer}`, `rockIndexBuffer`, `rockDescriptorSet`.",
+        "d3d12": "Four elements `{ \"INSTANCEMATRIX\", 0..3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0/16/32/48, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }`; shader: `float4x4(instanceRow0, …, instanceRow3)`. Store the matrices untransposed. `m_rock.Load(…, 1 + 2 * m_planet.meshes.size())`; per mesh: `srvHandle`, `vertexBufferView`, `indexBufferView`."
+      }
+    }
+  }
+}

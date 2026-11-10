@@ -1,0 +1,57 @@
+{
+  "title": "Anti Aliasing",
+  "tasks": {
+    "sample-count": {
+      "text": {
+        "vulkan": "Find the sample count: a member `msaaSamples`, set in `pickPhysicalDevice()` by `getMaxUsableSampleCount()` (4 if colour and depth attachments support it, else 2, else 1), and a `VkSampleCountFlagBits numSamples` parameter for `createImage()`."
+      },
+      "hint": {
+        "vulkan": "`VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;` then `if (counts & VK_SAMPLE_COUNT_4_BIT) { return VK_SAMPLE_COUNT_4_BIT; }` … `imageInfo.samples = numSamples;`; the depth image passes `VK_SAMPLE_COUNT_1_BIT` for now."
+      }
+    },
+    "msaa": {
+      "text": {
+        "opengl": "Turn on MSAA for the window: `glfwWindowHint(GLFW_SAMPLES, 4);` before the window is created, and `glEnable(GL_MULTISAMPLE);`.",
+        "vulkan": "Turn on multisampling: a multisampled colour image (`createColorResources()`), the depth image with `msaaSamples`, a render pass whose third attachment – the swap chain image – is the subpass's resolve attachment, three framebuffer views and `rasterizationSamples = msaaSamples`.",
+        "d3d12": "Turn on 4x MSAA: draw into a multisampled render target (`SampleCount = 4`) with a multisampled depth buffer and `psoDesc.SampleDesc.Count = SampleCount`, then resolve it into the back buffer with `ResolveSubresource`."
+      },
+      "hint": {
+        "opengl": "The hint goes next to the other `glfwWindowHint` calls; `glEnable(GL_MULTISAMPLE)` after `glEnable(GL_DEPTH_TEST)` (on by default on most drivers, but not all).",
+        "vulkan": "Colour image usage `VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT`; `colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL`; `colorAttachmentResolve` (1 sample, DONT_CARE / STORE, `PRESENT_SRC_KHR`), `colorAttachmentResolveRef.attachment = 2`, `subpass.pResolveAttachments`; views `{colorImageView, depthImageView, swapChainImageViews[i]}`; `srcAccessMask` with `VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT`.",
+        "d3d12": "`CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, …)`; `Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM, m_width, m_height, 1, 1, SampleCount, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)`, its RTV at slot `FrameCount` (`NumDescriptors = FrameCount + 1`); depth: `SampleCount` and `D3D12_DSV_DIMENSION_TEXTURE2DMS`. Barriers to `RESOLVE_SOURCE` / `RESOLVE_DEST` around `ResolveSubresource` and back."
+      }
+    },
+    "offscreen-msaa": {
+      "text": {
+        "opengl": "Multisample in your own framebuffer: a 4-sample colour texture (`glTexImage2DMultisample`) and a 4-sample depth/stencil renderbuffer; draw the scene into it, then resolve it into the window with `glBlitFramebuffer`. Remove the `GLFW_SAMPLES` hint."
+      },
+      "hint": {
+        "opengl": "`glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, SCR_WIDTH, SCR_HEIGHT, GL_TRUE)`, attached with `GL_TEXTURE_2D_MULTISAMPLE`; `glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, …)`. After drawing: `GL_READ_FRAMEBUFFER` = `framebuffer`, `GL_DRAW_FRAMEBUFFER` = 0, `glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST)`."
+      }
+    },
+    "resolve": {
+      "text": {
+        "opengl": "Resolve into a texture instead of the window: an `intermediateFBO` with a normal colour texture `screenTexture`, blit into it, then draw a screen quad (`aa_post.vs/.fs`) with that texture to the window, depth test off.",
+        "vulkan": "Resolve into an image of your own: `createOffscreenRenderPass()` resolves into `offscreenImage` (ending in `SHADER_READ_ONLY_OPTIMAL`), `createRenderPass()` becomes the window's one-sample pass, and a screen quad (`aa_post`, vertices 36..41) samples the image through `screenDescriptorSet`.",
+        "d3d12": "Resolve into a texture instead of the back buffer: `m_screenTexture` (one sample, an SRV in heap slot 1), resolved every frame, then drawn to the back buffer by a screen quad (`aa_post.hlsl`) with its own pipeline state without depth test."
+      },
+      "hint": {
+        "opengl": "`glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL)` with LINEAR filters on `GL_COLOR_ATTACHMENT0`. Blit with `GL_DRAW_FRAMEBUFFER` = `intermediateFBO`; then bind 0, clear, `glDisable(GL_DEPTH_TEST)`, draw `quadVAO` with `screenTexture`.",
+        "vulkan": "`createPipeline()` gets the render pass, the sample count and the depth test as parameters. Offscreen dependencies: before (previous quad read) and after (`COLOR_ATTACHMENT_OUTPUT` → `FRAGMENT_SHADER`). Pool: 2 sets. Record `// 1.` the offscreen pass with the cube, `// 2.` the window's pass with `screenPipeline`, `screenDescriptorSet`, `vkCmdDraw(commandBuffer, 6, 1, 36, 0)`.",
+        "d3d12": "Root parameter 2: a table with 1 SRV at t0 (pixel shader) and a static sampler. The quad's PSO: `DepthEnable = FALSE`, `DSVFormat = DXGI_FORMAT_UNKNOWN`, `SampleDesc.Count = 1`. Resolve with `m_screenTexture` `PIXEL_SHADER_RESOURCE` → `RESOLVE_DEST` and back; then the back buffer pass: `OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr)`, `SetGraphicsRootDescriptorTable(2, …slot 1…)`, `DrawInstanced(6, 1, 0, 0)`."
+      }
+    },
+    "post-process": {
+      "text": {
+        "opengl": "Post-process the anti-aliased image: show it in grey in `aa_post.fs` (weighted grayscale 0.2126 / 0.7152 / 0.0722).",
+        "vulkan": "Post-process the anti-aliased image: show it in grey in `aa_post.frag` (weighted grayscale 0.2126 / 0.7152 / 0.0722).",
+        "d3d12": "Post-process the anti-aliased image: show it in grey in `aa_post.hlsl` (weighted grayscale 0.2126 / 0.7152 / 0.0722)."
+      },
+      "hint": {
+        "opengl": "`float grayscale = 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b;` then `FragColor = vec4(vec3(grayscale), 1.0);`.",
+        "vulkan": "`float grayscale = 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b;` then `outColor = vec4(vec3(grayscale), 1.0);`.",
+        "d3d12": "`float grayscale = 0.2126f * col.r + 0.7152f * col.g + 0.0722f * col.b;` then `return float4(grayscale, grayscale, grayscale, 1.0f);`."
+      }
+    }
+  }
+}
