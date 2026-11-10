@@ -1,7 +1,7 @@
 # Audio (Hedgerow) – no tasks (OpenGL)
 
 learnopengl "2D Game / Audio" adds music and sound effects with the irrKlang library: an `ISoundEngine` made with
-`createIrrKlangDevice()`, background music started in Init with `SoundEngine->play2D("…breakout.mp3", true)` (looping),
+`createIrrKlangDevice()`, background music started in Init with `SoundEngine->play2D("…/music.mp3", true)` (looping),
 and short effects in DoCollisions – a bleep when a brick breaks or the ball hits a solid block, another when the ball
 hits the paddle, a "powerup" sound when the paddle catches a power-up – each `play2D(file, false)`; `drop()` at the end.
 

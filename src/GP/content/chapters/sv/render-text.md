@@ -504,6 +504,8 @@ void RenderText(TextRenderer& renderer, std::string text, float x, float y, floa
     std::string::const_iterator c;
     for (c = text.begin(); c != text.end(); c++) {
         Character ch = renderer.Characters[*c];
+        // the buffer holds MAX_CHARACTERS characters per frame: stop before writing past its end
+        if (renderer.vertexCount + 6 > MAX_CHARACTERS * 6) break;
 
         float xpos = x + ch.Bearing.x * scale;
         float ypos = y + (renderer.Characters['H'].Bearing.y - ch.Bearing.y) * scale;
