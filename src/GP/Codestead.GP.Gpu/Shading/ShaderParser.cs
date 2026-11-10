@@ -86,6 +86,9 @@ public sealed partial class ShaderParser
     /// <summary>The names the code uses (ShaderProgram.Names).</summary>
     private readonly HashSet<string> names = new(StringComparer.Ordinal);
 
+    /// <summary>Integer constants declared so far (const int NR_LIGHTS = 32;), for array sizes.</summary>
+    private readonly Dictionary<string, int> constInts = new(StringComparer.Ordinal);
+
     private ShaderProgram Program()
     {
         var program = new ShaderProgram();
@@ -231,6 +234,8 @@ public sealed partial class ShaderParser
         if (Accept("]")) return -1;
         var n = Next();
         Expect("]");
+        // A size named by a constant: const int NR_LIGHTS = 32; uniform Light lights[NR_LIGHTS];
+        if (n.Kind != ShaderTokenKind.Number && constInts.TryGetValue(n.Text, out var named)) return named;
         return n.Kind == ShaderTokenKind.Number ? (int)double.Parse(n.Text, CultureInfo.InvariantCulture) : -1;
     }
 
@@ -307,6 +312,7 @@ public sealed partial class ShaderParser
             // HLSL resources (Texture2D, SamplerState …) and plain HLSL globals are uniforms.
             var st = storage == "" && (type.StartsWith("Texture", StringComparison.Ordinal) || type.StartsWith("Sampler", StringComparison.Ordinal) || type.StartsWith("RWTexture", StringComparison.Ordinal)) ? "uniform" : storage;
             program.Globals.Add(new Global(st, type, id, location, pushConstant, null, value, size, line, register ?? binding));
+            if (st == "const" && value is Number constant) constInts[id] = (int)constant.Value;
             _ = semantic;
             if (!Accept(",")) break;
             id = Identifier();

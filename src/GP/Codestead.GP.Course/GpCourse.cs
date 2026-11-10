@@ -53,6 +53,8 @@ public static class GpCourse
         ("parallax-mapping", "advanced-lighting"),
         ("hdr", "advanced-lighting"),
         ("bloom", "advanced-lighting"),
+        ("deferred-shading", "advanced-lighting"),
+        ("ssao", "advanced-lighting"),
     ];
 
     public static IReadOnlyList<CourseChapter> Chapters { get; } = Build();

@@ -363,6 +363,28 @@ public sealed partial class GlReader
             if (image is null) scene.Notes.Add(SimNote.Error("textureFileMissing", ("file", path)));
             loaded = loaded with { File = path };
         }
+        // Data computed by the program (the SSAO noise: std::vector<glm::vec3> ssaoNoise, &ssaoNoise[0]): its numbers,
+        // GL_FLOAT values as they are, row by row from the bottom (OpenGL's first row is v = 0).
+        if (image is null && loaded is null && Numbers(data) is { Count: > 0 } values && Int(a[3]) is int w && Int(a[4]) is int h && w > 0 && h > 0)
+        {
+            int per = Math.Max(1, Components(a[6]));
+            var floats = new double[w * h * 4];
+            var bytes = new byte[w * h * 4];
+            for (int i = 0; i < w * h; i++)
+                for (int k = 0; k < 4; k++)
+                {
+                    double v = k < per ? (i * per + k < values.Count ? values[i * per + k] : 0) : (k == 3 ? 1 : 0);
+                    floats[i * 4 + k] = v;
+                    bytes[i * 4 + k] = (byte)Math.Round(Math.Clamp(v, 0, 1) * 255);
+                }
+            tex.Components = per == 4 ? 4 : 3;
+            tex.Float = IsFloatFormat(a[2]) || a[7].Contains("FLOAT", StringComparison.Ordinal);
+            var computed = new Textures.Image(w, h, 4, bytes, floats);
+            if (face >= 0) { if (face < 6) tex.Faces[face] = computed; }
+            else tex.Image = computed;
+            tex.Mipmaps = false;
+            return;
+        }
         if (image is null) return;
         // The internal format: GL_SRGB / GL_SRGB_ALPHA (also through a variable: learnopengl's loadTexture with gammaCorrection).
         tex.Srgb = a[2].Contains("SRGB", StringComparison.Ordinal) || (Eval(a[2])?.Text ?? "").Contains("SRGB", StringComparison.Ordinal);

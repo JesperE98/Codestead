@@ -1,0 +1,645 @@
+=== task: kernel
+--- file: main.cpp
+--- find:
+    Light light;
+    // TODO: the SSAO kernel
+--- replace:
+    Light light;
+    glm::vec4 samples[32]; // the SSAO kernel: std140 puts the elements of an array 16 bytes apart - vec4s (only xyz is used)
+--- file: main.cpp
+--- find:
+class HelloTriangleApplication {
+--- replace:
+float ourLerp(float a, float b, float f) {
+    return a + f * (b - a);
+}
+
+class HelloTriangleApplication {
+--- file: main.cpp
+--- find:
+    VkRenderPass gBufferRenderPass; // the geometry pass draws into the G-buffer with this render pass
+    // TODO: the SSAO pass's render pass
+--- replace:
+    VkRenderPass gBufferRenderPass; // the geometry pass draws into the G-buffer with this render pass
+    VkRenderPass ssaoRenderPass; // the SSAO pass draws into a one-channel image with this render pass
+--- file: main.cpp
+--- find:
+    VkPipeline lightingPipeline; // learnopengl's shaderLightingPass (ssao_lighting): the screen quad
+    // TODO: the SSAO pass's pipeline
+--- replace:
+    VkPipeline lightingPipeline; // learnopengl's shaderLightingPass (ssao_lighting): the screen quad
+    VkPipeline ssaoPipeline; // learnopengl's shaderSSAO (ssao): the screen quad into the SSAO image
+--- file: main.cpp
+--- find:
+    // TODO: the SSAO image and framebuffer
+
+    VkSampler gBufferSampler; // for the G-buffer's images: the nearest texel, clamp to the edge
+--- replace:
+    // the SSAO pass's target (learnopengl's ssaoFBO and ssaoColorBuffer): one channel, the ambient occlusion
+    VkImage ssaoColorImage;
+    VkDeviceMemory ssaoColorImageMemory;
+    VkImageView ssaoColorImageView;
+    VkFramebuffer ssaoFramebuffer;
+
+    // the SSAO pass's input: the sample kernel (in the uniform buffer) and the noise texture
+    std::vector<glm::vec3> ssaoKernel;
+    VkImage noiseTextureImage;
+    VkDeviceMemory noiseTextureImageMemory;
+    VkImageView noiseTextureImageView;
+
+    VkSampler gBufferSampler; // for the G-buffer's images: the nearest texel, clamp to the edge
+    VkSampler noiseSampler; // for the noise texture: the nearest texel, repeated over the window
+--- file: main.cpp
+--- find:
+        // TODO: the SSAO pass's render pass (createSsaoRenderPass)
+--- replace:
+        createSsaoRenderPass();
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/ssao.vert.spv", "shaders/ssao_lighting.frag.spv", renderPass, 1, VK_FALSE, lightingPipeline);
+        // TODO: the SSAO pass's pipeline
+--- replace:
+        createPipeline("shaders/ssao.vert.spv", "shaders/ssao_lighting.frag.spv", renderPass, 1, VK_FALSE, lightingPipeline);
+        // the SSAO pass's for its own (one channel, no depth)
+        createPipeline("shaders/ssao.vert.spv", "shaders/ssao.frag.spv", ssaoRenderPass, 1, VK_FALSE, ssaoPipeline);
+--- file: main.cpp
+--- find:
+        // TODO: the SSAO image and framebuffer (createSsaoFramebuffers)
+--- replace:
+        createSsaoFramebuffers();
+--- file: main.cpp
+--- find:
+        // TODO: the sample kernel and the noise texture
+--- replace:
+        // the SSAO pass's input: first the kernel, then the noise (the random numbers are drawn in this order)
+        generateSampleKernel();
+        createNoiseTexture();
+        createTextureSampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT, noiseSampler);
+--- file: main.cpp
+--- find:
+        // TODO: destroy the noise texture
+--- replace:
+        vkDestroySampler(device, noiseSampler, nullptr);
+
+        vkDestroyImageView(device, noiseTextureImageView, nullptr);
+        vkDestroyImage(device, noiseTextureImage, nullptr);
+        vkFreeMemory(device, noiseTextureImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        // TODO: destroy the SSAO image and framebuffer
+--- replace:
+        vkDestroyFramebuffer(device, ssaoFramebuffer, nullptr);
+        vkDestroyImageView(device, ssaoColorImageView, nullptr);
+        vkDestroyImage(device, ssaoColorImage, nullptr);
+        vkFreeMemory(device, ssaoColorImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        // TODO: destroy the SSAO pass's pipeline
+--- replace:
+        vkDestroyPipeline(device, ssaoPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        // TODO: destroy the SSAO pass's render pass
+--- replace:
+        vkDestroyRenderPass(device, ssaoRenderPass, nullptr);
+--- file: main.cpp
+--- find:
+    // TODO: createSsaoRenderPass()
+--- replace:
+    // The SSAO pass's render pass: one colour attachment with one channel (learnopengl: GL_RED), no depth. Its old
+    // contents are not needed (the screen quad covers every pixel); it is kept and left ready to be sampled.
+    void createSsaoRenderPass() {
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = VK_FORMAT_R8_UNORM; // one 8-bit channel: the ambient occlusion, 0..1
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE; // every pixel is written: no need to clear
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+
+        VkAttachmentReference colorAttachmentRef{};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: wait until the last frame's shaders have read the image (it is written again now)
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[0].srcAccessMask = 0;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        // after the pass: the next pass's fragment shader waits until the image has been written
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = &colorAttachment;
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &ssaoRenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create SSAO render pass!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        // TODO: the noise texture (binding 4) and the SSAO image (binding 5)
+
+        std::array<VkDescriptorSetLayoutBinding, 4> bindings = {uboLayoutBinding, gPositionLayoutBinding, gNormalLayoutBinding, gAlbedoLayoutBinding};
+--- replace:
+        // the SSAO pass's noise texture at binding 4, the SSAO image (read by the lighting pass) at binding 5
+        VkDescriptorSetLayoutBinding texNoiseLayoutBinding = gPositionLayoutBinding;
+        texNoiseLayoutBinding.binding = 4;
+
+        VkDescriptorSetLayoutBinding ssaoLayoutBinding = gPositionLayoutBinding;
+        ssaoLayoutBinding.binding = 5;
+
+        std::array<VkDescriptorSetLayoutBinding, 6> bindings = {uboLayoutBinding, gPositionLayoutBinding, gNormalLayoutBinding, gAlbedoLayoutBinding, texNoiseLayoutBinding, ssaoLayoutBinding};
+--- file: main.cpp
+--- find:
+    // TODO: createSsaoFramebuffers()
+--- replace:
+    // The SSAO image, the size of the window (learnopengl's ssaoColorBuffer): drawn into by the SSAO pass (colour
+    // attachment) and read by the next pass (sampled), and its framebuffer (learnopengl's ssaoFBO).
+    void createSsaoFramebuffers() {
+        // SSAO color buffer
+        createImage(swapChainExtent.width, swapChainExtent.height, VK_FORMAT_R8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, ssaoColorImage, ssaoColorImageMemory);
+        ssaoColorImageView = createImageView(ssaoColorImage, VK_FORMAT_R8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = ssaoRenderPass;
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments = &ssaoColorImageView;
+        framebufferInfo.width = swapChainExtent.width;
+        framebufferInfo.height = swapChainExtent.height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &ssaoFramebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create SSAO framebuffer!");
+        }
+    }
+--- file: main.cpp
+--- find:
+    // TODO: createNoiseTexture()
+--- replace:
+    // generate noise texture: 16 random rotations about the normal (the z axis in tangent space), in a 4 x 4 image that
+    // the SSAO pass tiles over the window. Its texels are 4 floats (learnopengl's GL_RGBA32F): Vulkan devices need not
+    // sample 3-channel float images, so the noise vectors are vec4s (w unused).
+    void createNoiseTexture() {
+        std::vector<glm::vec4> ssaoNoise;
+        for (unsigned int i = 0; i < 16; i++) {
+            float x = rand() / (float)RAND_MAX * 2.0f - 1.0f;
+            float y = rand() / (float)RAND_MAX * 2.0f - 1.0f;
+            glm::vec4 noise(x, y, 0.0f, 0.0f); // rotate around z-axis (in tangent space)
+            ssaoNoise.push_back(noise);
+        }
+
+        VkDeviceSize imageSize = sizeof(ssaoNoise[0]) * ssaoNoise.size();
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+            memcpy(data, ssaoNoise.data(), static_cast<size_t>(imageSize));
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        createImage(4, 4, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, noiseTextureImage, noiseTextureImageMemory);
+
+        transitionImageLayout(noiseTextureImage, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            copyBufferToImage(stagingBuffer, noiseTextureImage, 4, 4);
+        transitionImageLayout(noiseTextureImage, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+        noiseTextureImageView = createImageView(noiseTextureImage, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
+    }
+--- file: main.cpp
+--- find:
+    // TODO: generateSampleKernel()
+--- replace:
+    // generate sample kernel: 32 random points in a hemisphere around +z (the normal, in tangent space), more of them
+    // close to its centre. (learnopengl draws its random floats with std::uniform_real_distribution and
+    // std::default_random_engine; here rand() / (float)RAND_MAX between 0.0 and 1.0 with a fixed seed: the same kernel
+    // every run. One random number per statement, so they are drawn in a fixed order.)
+    void generateSampleKernel() {
+        srand(42);
+        for (unsigned int i = 0; i < 32; ++i) { // 32 samples (learnopengl uses 64)
+            float x = rand() / (float)RAND_MAX * 2.0f - 1.0f;
+            float y = rand() / (float)RAND_MAX * 2.0f - 1.0f;
+            float z = rand() / (float)RAND_MAX; // a hemisphere: z only positive (along the normal)
+            glm::vec3 sample(x, y, z);
+            sample = glm::normalize(sample);
+            sample *= rand() / (float)RAND_MAX;
+            float scale = float(i) / 32.0f;
+
+            // scale samples s.t. they're more aligned to center of kernel
+            scale = ourLerp(0.1f, 1.0f, scale * scale);
+            sample *= scale;
+            ssaoKernel.push_back(sample);
+        }
+    }
+--- file: main.cpp
+--- find:
+        poolSizes[1].descriptorCount = 3;
+--- replace:
+        poolSizes[1].descriptorCount = 5;
+--- file: main.cpp
+--- find:
+    // passes read - the G-buffer's at bindings 1, 2 and 3 (learnopengl's gPosition, gNormal and gAlbedo texture units).
+--- replace:
+    // passes read - the G-buffer's at bindings 1, 2 and 3 (learnopengl's gPosition, gNormal and gAlbedo texture units),
+    // the noise texture at binding 4 and the SSAO image at binding 5.
+--- file: main.cpp
+--- find:
+        // TODO: the noise texture's and the SSAO image's infos
+
+        std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
+--- replace:
+        VkDescriptorImageInfo noiseInfo{};
+        noiseInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        noiseInfo.imageView = noiseTextureImageView;
+        noiseInfo.sampler = noiseSampler;
+
+        VkDescriptorImageInfo ssaoInfo{};
+        ssaoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        ssaoInfo.imageView = ssaoColorImageView;
+        ssaoInfo.sampler = gBufferSampler;
+
+        std::array<VkWriteDescriptorSet, 6> descriptorWrites{};
+--- file: main.cpp
+--- find:
+        // TODO: write the noise texture (binding 4) and the SSAO image (binding 5)
+--- replace:
+        descriptorWrites[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[4].dstSet = descriptorSet;
+        descriptorWrites[4].dstBinding = 4;
+        descriptorWrites[4].dstArrayElement = 0;
+        descriptorWrites[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[4].descriptorCount = 1;
+        descriptorWrites[4].pImageInfo = &noiseInfo;
+
+        descriptorWrites[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[5].dstSet = descriptorSet;
+        descriptorWrites[5].dstBinding = 5;
+        descriptorWrites[5].dstArrayElement = 0;
+        descriptorWrites[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[5].descriptorCount = 1;
+        descriptorWrites[5].pImageInfo = &ssaoInfo;
+--- file: main.cpp
+--- find:
+        // TODO: 2. generate SSAO texture
+--- replace:
+        // 2. generate SSAO texture
+        VkRenderPassBeginInfo ssaoPassInfo{};
+        ssaoPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        ssaoPassInfo.renderPass = ssaoRenderPass;
+        ssaoPassInfo.framebuffer = ssaoFramebuffer;
+        ssaoPassInfo.renderArea.offset = {0, 0};
+        ssaoPassInfo.renderArea.extent = swapChainExtent;
+        ssaoPassInfo.clearValueCount = 0; // loadOp DONT_CARE: nothing to clear
+
+        vkCmdBeginRenderPass(commandBuffer, &ssaoPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ssaoPipeline);
+        // the kernel and the projection are in the uniform buffer, gPosition, gNormal and the noise in the descriptor set
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // renderQuad()
+        vkCmdEndRenderPass(commandBuffer); // the SSAO image is now in VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+--- file: main.cpp
+--- find:
+        // TODO: send the kernel
+--- replace:
+        // send kernel
+        for (unsigned int i = 0; i < 32; ++i) {
+            ubo.samples[i] = glm::vec4(ssaoKernel[i], 0.0f);
+        }
+--- file: shaders/ssao.frag
+--- find:
+// TODO: the SSAO pass: for each pixel, the share of the kernel's samples around it that are not hidden behind the
+// G-buffer's surfaces
+
+void main() {
+}
+--- replace:
+// std140: a vec3 starts at a multiple of 16 bytes - a float after each vec3 fills the 4 bytes up to the next one
+struct Light {
+    vec3 position;
+    float linear;
+    vec3 color;
+    float quadratic;
+};
+
+// the uniform buffer up to the kernel
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    Light light;
+    vec4 samples[32]; // the kernel (xyz; std140: array elements are 16 bytes apart)
+} ubo;
+
+layout(binding = 1) uniform sampler2D gPosition;
+layout(binding = 2) uniform sampler2D gNormal;
+layout(binding = 4) uniform sampler2D texNoise;
+
+layout(location = 0) in vec2 fragTexCoord;
+
+layout(location = 0) out float outColor; // the SSAO image has one channel
+
+// parameters (you'd probably want to use them as uniforms to more easily tweak the effect)
+int kernelSize = 32;
+float radius = 0.5;
+float bias = 0.025;
+
+// tile noise texture over screen based on screen dimensions divided by noise size
+const vec2 noiseScale = vec2(800.0/4.0, 600.0/4.0);
+
+void main() {
+    // get input for SSAO algorithm
+    vec3 fragPos = texture(gPosition, fragTexCoord).xyz;
+    vec3 normal = normalize(texture(gNormal, fragTexCoord).rgb);
+    vec3 randomVec = normalize(texture(texNoise, fragTexCoord * noiseScale).xyz);
+    // create TBN change-of-basis matrix: from tangent-space to view-space
+    vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
+    vec3 bitangent = cross(normal, tangent);
+    mat3 TBN = mat3(tangent, bitangent, normal);
+    // iterate over the sample kernel and calculate occlusion factor
+    float occlusion = 0.0;
+    for (int i = 0; i < kernelSize; ++i) {
+        // get sample position
+        vec3 samplePos = TBN * ubo.samples[i].xyz; // from tangent to view-space
+        samplePos = fragPos + samplePos * radius;
+
+        // project sample position (to sample texture) (to get position on screen/texture)
+        vec4 offset = vec4(samplePos, 1.0);
+        offset = ubo.proj * offset; // from view to clip-space
+        offset.xyz /= offset.w; // perspective divide
+        offset.xy = offset.xy * 0.5 + 0.5; // transform to range 0.0 - 1.0 (the flipped projection's y points down, like v)
+
+        // get sample depth
+        float sampleDepth = texture(gPosition, offset.xy).z; // get depth value of kernel sample
+
+        // range check & accumulate
+        float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
+        occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
+    }
+    occlusion = 1.0 - (occlusion / kernelSize);
+
+    outColor = occlusion;
+}
+--- file: shaders/ssao_lighting.frag
+--- find:
+layout(binding = 3) uniform sampler2D gAlbedo;
+--- replace:
+layout(binding = 3) uniform sampler2D gAlbedo;
+layout(binding = 5) uniform sampler2D ssao;
+--- file: shaders/ssao_lighting.frag
+--- find:
+
+    vec3 lighting  = ambient;
+    vec3 viewDir  = normalize(-FragPos); // viewpos is (0.0.0)
+    // diffuse
+    vec3 lightDir = normalize(ubo.light.position - FragPos);
+    vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Diffuse * ubo.light.color;
+    // specular
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(Normal, halfwayDir), 0.0), 8.0);
+    vec3 specular = ubo.light.color * spec;
+    // attenuation
+    float distance = length(ubo.light.position - FragPos);
+    float attenuation = 1.0 / (1.0 + ubo.light.linear * distance + ubo.light.quadratic * distance * distance);
+    diffuse *= attenuation;
+    specular *= attenuation;
+    lighting += diffuse + specular;
+
+    outColor = vec4(lighting, 1.0);
+--- replace:
+
+    vec3 lighting  = ambient;
+    vec3 viewDir  = normalize(-FragPos); // viewpos is (0.0.0)
+    // diffuse
+    vec3 lightDir = normalize(ubo.light.position - FragPos);
+    vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Diffuse * ubo.light.color;
+    // specular
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(Normal, halfwayDir), 0.0), 8.0);
+    vec3 specular = ubo.light.color * spec;
+    // attenuation
+    float distance = length(ubo.light.position - FragPos);
+    float attenuation = 1.0 / (1.0 + ubo.light.linear * distance + ubo.light.quadratic * distance * distance);
+    diffuse *= attenuation;
+    specular *= attenuation;
+    lighting += diffuse + specular;
+
+    outColor = vec4(lighting, 1.0);
+    outColor = vec4(vec3(texture(ssao, fragTexCoord).r), 1.0); // for now: show the SSAO texture
+
+=== task: blur
+--- file: main.cpp
+--- find:
+    VkPipeline ssaoPipeline; // learnopengl's shaderSSAO (ssao): the screen quad into the SSAO image
+--- replace:
+    VkPipeline ssaoPipeline; // learnopengl's shaderSSAO (ssao): the screen quad into the SSAO image
+    VkPipeline ssaoBlurPipeline; // learnopengl's shaderSSAOBlur (ssao_blur): the screen quad into the blurred SSAO image
+--- file: main.cpp
+--- find:
+    VkFramebuffer ssaoFramebuffer;
+--- replace:
+    VkFramebuffer ssaoFramebuffer;
+    // and the blur's (learnopengl's ssaoBlurFBO and ssaoColorBufferBlur)
+    VkImage ssaoBlurImage;
+    VkDeviceMemory ssaoBlurImageMemory;
+    VkImageView ssaoBlurImageView;
+    VkFramebuffer ssaoBlurFramebuffer;
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/ssao.vert.spv", "shaders/ssao.frag.spv", ssaoRenderPass, 1, VK_FALSE, ssaoPipeline);
+--- replace:
+        createPipeline("shaders/ssao.vert.spv", "shaders/ssao.frag.spv", ssaoRenderPass, 1, VK_FALSE, ssaoPipeline);
+        // the blur's target has the same format: the same render pass
+        createPipeline("shaders/ssao.vert.spv", "shaders/ssao_blur.frag.spv", ssaoRenderPass, 1, VK_FALSE, ssaoBlurPipeline);
+--- file: main.cpp
+--- find:
+        vkFreeMemory(device, ssaoColorImageMemory, nullptr);
+--- replace:
+        vkFreeMemory(device, ssaoColorImageMemory, nullptr);
+        vkDestroyFramebuffer(device, ssaoBlurFramebuffer, nullptr);
+        vkDestroyImageView(device, ssaoBlurImageView, nullptr);
+        vkDestroyImage(device, ssaoBlurImage, nullptr);
+        vkFreeMemory(device, ssaoBlurImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, ssaoPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, ssaoPipeline, nullptr);
+        vkDestroyPipeline(device, ssaoBlurPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        // the SSAO pass's noise texture at binding 4, the SSAO image (read by the lighting pass) at binding 5
+--- replace:
+        // the SSAO pass's noise texture at binding 4, the SSAO image (read by the blur) at binding 5, the blurred SSAO
+        // image (read by the lighting pass) at binding 6
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorSetLayoutBinding, 6> bindings = {uboLayoutBinding, gPositionLayoutBinding, gNormalLayoutBinding, gAlbedoLayoutBinding, texNoiseLayoutBinding, ssaoLayoutBinding};
+--- replace:
+        VkDescriptorSetLayoutBinding ssaoBlurLayoutBinding = gPositionLayoutBinding;
+        ssaoBlurLayoutBinding.binding = 6;
+
+        std::array<VkDescriptorSetLayoutBinding, 7> bindings = {uboLayoutBinding, gPositionLayoutBinding, gNormalLayoutBinding, gAlbedoLayoutBinding, texNoiseLayoutBinding, ssaoLayoutBinding, ssaoBlurLayoutBinding};
+--- file: main.cpp
+--- find:
+    // The SSAO image, the size of the window (learnopengl's ssaoColorBuffer): drawn into by the SSAO pass (colour
+    // attachment) and read by the next pass (sampled), and its framebuffer (learnopengl's ssaoFBO).
+--- replace:
+    // The SSAO image, the size of the window (learnopengl's ssaoColorBuffer): drawn into by the SSAO pass (colour
+    // attachment) and read by the next pass (sampled), and its framebuffer (learnopengl's ssaoFBO); then the same for
+    // the blur's result.
+--- file: main.cpp
+--- find:
+            throw std::runtime_error("failed to create SSAO framebuffer!");
+        }
+--- replace:
+            throw std::runtime_error("failed to create SSAO framebuffer!");
+        }
+
+        // and blur stage
+        createImage(swapChainExtent.width, swapChainExtent.height, VK_FORMAT_R8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, ssaoBlurImage, ssaoBlurImageMemory);
+        ssaoBlurImageView = createImageView(ssaoBlurImage, VK_FORMAT_R8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+
+        framebufferInfo.pAttachments = &ssaoBlurImageView;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &ssaoBlurFramebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create SSAO blur framebuffer!");
+        }
+--- file: main.cpp
+--- find:
+        poolSizes[1].descriptorCount = 5;
+--- replace:
+        poolSizes[1].descriptorCount = 6;
+--- file: main.cpp
+--- find:
+    // the noise texture at binding 4 and the SSAO image at binding 5.
+--- replace:
+    // the noise texture at binding 4, the SSAO image at binding 5 and the blurred SSAO image at binding 6.
+--- file: main.cpp
+--- find:
+        std::array<VkWriteDescriptorSet, 6> descriptorWrites{};
+--- replace:
+        VkDescriptorImageInfo ssaoBlurInfo{};
+        ssaoBlurInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        ssaoBlurInfo.imageView = ssaoBlurImageView;
+        ssaoBlurInfo.sampler = gBufferSampler;
+
+        std::array<VkWriteDescriptorSet, 7> descriptorWrites{};
+--- file: main.cpp
+--- find:
+        descriptorWrites[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[5].dstSet = descriptorSet;
+        descriptorWrites[5].dstBinding = 5;
+        descriptorWrites[5].dstArrayElement = 0;
+        descriptorWrites[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[5].descriptorCount = 1;
+        descriptorWrites[5].pImageInfo = &ssaoInfo;
+--- replace:
+        descriptorWrites[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[5].dstSet = descriptorSet;
+        descriptorWrites[5].dstBinding = 5;
+        descriptorWrites[5].dstArrayElement = 0;
+        descriptorWrites[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[5].descriptorCount = 1;
+        descriptorWrites[5].pImageInfo = &ssaoInfo;
+
+        descriptorWrites[6].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[6].dstSet = descriptorSet;
+        descriptorWrites[6].dstBinding = 6;
+        descriptorWrites[6].dstArrayElement = 0;
+        descriptorWrites[6].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[6].descriptorCount = 1;
+        descriptorWrites[6].pImageInfo = &ssaoBlurInfo;
+--- file: main.cpp
+--- find:
+        vkCmdEndRenderPass(commandBuffer); // the SSAO image is now in VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+--- replace:
+        vkCmdEndRenderPass(commandBuffer); // the SSAO image is now in VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+
+        // 3. blur SSAO texture to remove noise
+        VkRenderPassBeginInfo ssaoBlurPassInfo = ssaoPassInfo;
+        ssaoBlurPassInfo.framebuffer = ssaoBlurFramebuffer;
+
+        vkCmdBeginRenderPass(commandBuffer, &ssaoBlurPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ssaoBlurPipeline);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // renderQuad(): reads the SSAO image (binding 5)
+        vkCmdEndRenderPass(commandBuffer);
+--- file: shaders/ssao_blur.frag
+--- find:
+// TODO: the blur: the average of the 4 x 4 SSAO texels around the pixel
+
+void main() {
+}
+--- replace:
+// the SSAO image (binding 5)
+layout(binding = 5) uniform sampler2D ssaoInput;
+
+layout(location = 0) in vec2 fragTexCoord;
+
+layout(location = 0) out float outColor;
+
+void main() {
+    vec2 texelSize = 1.0 / vec2(textureSize(ssaoInput, 0));
+    float result = 0.0;
+    for (int x = -2; x < 2; ++x) {
+        for (int y = -2; y < 2; ++y) {
+            vec2 offset = vec2(float(x), float(y)) * texelSize;
+            result += texture(ssaoInput, fragTexCoord + offset).r;
+        }
+    }
+    outColor = result / (4.0 * 4.0);
+}
+--- file: shaders/ssao_lighting.frag
+--- find:
+layout(binding = 5) uniform sampler2D ssao;
+--- replace:
+layout(binding = 6) uniform sampler2D ssao; // the blurred SSAO image
+
+=== task: apply
+--- file: main.cpp
+--- find:
+        // 4. lighting pass: traditional deferred Blinn-Phong lighting
+--- replace:
+        // 4. lighting pass: traditional deferred Blinn-Phong lighting with added screen-space ambient occlusion
+--- file: shaders/ssao_lighting.frag
+--- find:
+    vec3 Diffuse = texture(gAlbedo, fragTexCoord).rgb;
+
+    // then calculate lighting as usual
+    vec3 ambient = vec3(0.3 * Diffuse);
+--- replace:
+    vec3 Diffuse = texture(gAlbedo, fragTexCoord).rgb;
+    float AmbientOcclusion = texture(ssao, fragTexCoord).r;
+
+    // then calculate lighting as usual
+    vec3 ambient = vec3(0.3 * Diffuse * AmbientOcclusion);
+--- file: shaders/ssao_lighting.frag
+--- find:
+    outColor = vec4(vec3(texture(ssao, fragTexCoord).r), 1.0); // for now: show the SSAO texture
+}
+--- replace:
+}

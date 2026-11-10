@@ -11,6 +11,8 @@ public sealed partial class ShaderRunner
         var name = c.Function;
         if (name == "string") return ShaderValue.Str(((Name)c.Args[0]).Id);
         if (c.ArrayConstructor) return ShaderValue.Array(c.Args.Select(a => Coerce(name, Eval(a))).ToArray());
+        // C++: std::fmaxf, std::sqrt … are the maths functions themselves.
+        if (Lenient && name.StartsWith("std::", StringComparison.Ordinal) && name.Length > 5) name = name[5..];
         if (name.StartsWith('.'))
         {
             if (Lenient && Hook?.Invoke(name, c.Args) is { } methodHooked) return methodHooked;
@@ -140,8 +142,8 @@ public sealed partial class ShaderRunner
             case "pow": return Zip(Math.Pow);
             case "mod": return Zip((x, y) => x - y * Math.Floor(x / y));
             case "fmod": return Zip((x, y) => x % y);
-            case "min" or "fmin": return Zip(Math.Min);
-            case "max" or "fmax": return Zip(Math.Max);
+            case "min" or "fmin" or "fminf": return Zip(Math.Min);
+            case "max" or "fmax" or "fmaxf": return Zip(Math.Max);
             case "step": return Zip((edge, x) => x < edge ? 0 : 1);
             case "clamp" when a.Count == 3:
                 return Componentwise(Componentwise(a[0], a[1], Math.Max, c.Line), a[2], Math.Min, c.Line);

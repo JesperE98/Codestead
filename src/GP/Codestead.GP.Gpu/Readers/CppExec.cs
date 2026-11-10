@@ -34,10 +34,54 @@ public sealed class CppExec
         {
             Lenient = true,
             Time = time,
-            Hook = hook,
+            // Without a hook of its own (the OpenGL reader), the program's helpers that make no API calls run here.
+            Hook = hook ?? HelperFunction,
             DepthZeroToOne = src.Code.Contains("GLM_FORCE_DEPTH_ZERO_TO_ONE", StringComparison.Ordinal),
         };
         Runner.Resolve = Resolve;
+    }
+
+    private int helperDepth;
+    private readonly Dictionary<string, (List<(string Name, bool Ref)> Params, List<Stmt> Body)?> helpers = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// A call of one of the program's own functions that makes no graphics API calls (learnopengl's ourLerp in the SSAO
+    /// kernel): its body runs with the arguments, reference parameters written back. Functions with gl* calls are left to
+    /// the OpenGL reader, which follows them itself.
+    /// </summary>
+    private ShaderValue? HelperFunction(string name, IReadOnlyList<Expr> args)
+    {
+        if (helperDepth > 6 || name is "main" || name.StartsWith('.') || !src.Functions.ContainsKey(name)) return null;
+        if (!helpers.TryGetValue(name, out var helper))
+        {
+            var body = src.FunctionBody(name) ?? "";
+            var header = System.Text.RegularExpressions.Regex.Match(src.Code, @"(?<![\w.>])" + System.Text.RegularExpressions.Regex.Escape(name) + @"\s*\(([^()]*)\)\s*(?:const\s*)?\{");
+            helper = !header.Success || System.Text.RegularExpressions.Regex.IsMatch(body, @"\b(?:gl[A-Z]\w*|glfw\w+|vk[A-Z]\w*)\s*\(") ? null
+                : (CppSource.SplitArgs(header.Groups[1].Value).Where(p => p.Trim() is not ("" or "void"))
+                    .Select(p => (System.Text.RegularExpressions.Regex.Match(p, @"(\w+)\s*(?:\[\s*\])?\s*(?:=[^,]*)?$").Groups[1].Value, p.Contains('&') && !p.Contains("&&"))).ToList(),
+                   ShaderParser.ParseStatementsLenient(CppSource.Prepare("{" + body + "}")));
+            helpers[name] = helper;
+        }
+        if (helper is not { } h) return null;
+        var values = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+        for (int i = 0; i < h.Params.Count && i < args.Count; i++)
+            values[h.Params[i].Name] = Runner.EvalArg(args[i]).Clone();
+        helperDepth++;
+        try
+        {
+            var (result, scope) = Runner.RunBody(h.Body, values);
+            for (int i = 0; i < h.Params.Count && i < args.Count; i++)
+                if (h.Params[i].Ref && args[i] is Name or Member or IndexOf && scope.TryGetValue(h.Params[i].Name, out var v)) Runner.Assign(args[i], v);
+            return result ?? ShaderValue.Scalar(0);
+        }
+        catch (ShaderRuntimeException)
+        {
+            return null;
+        }
+        finally
+        {
+            helperDepth--;
+        }
     }
 
     /// <summary>The window's size, for the names the tutorials use for it (swapChainExtent, m_width, m_aspectRatio …).</summary>

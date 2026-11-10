@@ -1,0 +1,502 @@
+=== task: kernel
+--- file: main.cpp
+--- find:
+XMFLOAT3 lightColor = XMFLOAT3(0.2f, 0.2f, 0.7f);
+--- replace:
+XMFLOAT3 lightColor = XMFLOAT3(0.2f, 0.2f, 0.7f);
+
+// the SSAO sample kernel: 32 offsets in a hemisphere above a surface (filled in LoadAssets)
+std::vector<XMFLOAT3> ssaoKernel;
+
+// linear interpolation: a when f is 0.0, b when f is 1.0 (learnopengl's ourLerp)
+float ourLerp(float a, float b, float f)
+{
+    return a + f * (b - a);
+}
+--- file: main.cpp
+--- find:
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer, laid out as
+    // HLSL packs it.
+    struct SceneConstantBuffer
+    {
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+        Light light;
+    };
+--- replace:
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer, laid out as
+    // HLSL packs it. Every element of an array starts a new 16-byte row, so a sample of the
+    // kernel (a float3) is stored as an XMFLOAT4 (w unused).
+    struct SceneConstantBuffer
+    {
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+        Light light;
+        XMFLOAT4 samples[32];
+    };
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_pipelineState;              // the geometry pass's (learnopengl's shaderGeometryPass)
+--- replace:
+    ComPtr<ID3D12PipelineState> m_pipelineState;              // the geometry pass's (learnopengl's shaderGeometryPass)
+    ComPtr<ID3D12PipelineState> m_ssaoPipelineState;          // the SSAO pass's (learnopengl's shaderSSAO)
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_gBuffer[3];    // the G-buffer: gPosition, gNormal and gAlbedo
+--- replace:
+    ComPtr<ID3D12Resource> m_gBuffer[3];    // the G-buffer: gPosition, gNormal and gAlbedo
+    ComPtr<ID3D12Resource> m_ssaoColorBuffer;        // the SSAO pass's result: one channel
+    ComPtr<ID3D12Resource> m_noiseTexture;           // 4 x 4 random rotations
+--- file: main.cpp
+--- find:
+        rtvHeapDesc.NumDescriptors = FrameCount + 3;    // the swap chain's buffers + the G-buffer's 3 textures
+--- replace:
+        rtvHeapDesc.NumDescriptors = FrameCount + 4;    // the swap chain's buffers + the G-buffer's 3 textures + the SSAO texture
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 1 + 2 * MaxMeshes + 3;    // one CBV + two SRVs per mesh + the G-buffer's 3 SRVs
+--- replace:
+        cbvSrvHeapDesc.NumDescriptors = 1 + 2 * MaxMeshes + 5;    // one CBV + two SRVs per mesh + the G-buffer's 3 SRVs + the SSAO and noise textures' SRVs
+--- file: main.cpp
+--- find:
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1; 2 SRVs
+        // at registers t0 and t1 (a mesh's two maps, or the G-buffer's gPosition and gNormal),
+        // for root parameter 2; and 1 SRV at register t2 (gAlbedo), for root parameter 3.
+        CD3DX12_DESCRIPTOR_RANGE ranges[3];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
+        ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
+
+        // Root parameter 0: root constants for register b0 - the values of a draw (the model
+        // and normal matrices, invertedNormals) - for all shaders.
+        // Root parameter 1: a descriptor table with the constant buffer view (b1: the camera's
+        // matrices and the light), for all shaders.
+        // Root parameters 2 and 3: descriptor tables with the textures' SRVs (t0 and t1, t2),
+        // for the pixel shaders.
+        CD3DX12_ROOT_PARAMETER rootParameters[4];
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+--- replace:
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1; 2 SRVs
+        // at registers t0 and t1 (a mesh's two maps, the G-buffer's gPosition and gNormal, or
+        // the texture the blur reads), for root parameter 2; 1 SRV at register t2 (gAlbedo or
+        // the noise texture), for root parameter 3; and 1 SRV at register t3 (the SSAO
+        // texture), for root parameter 4.
+        CD3DX12_DESCRIPTOR_RANGE ranges[4];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
+        ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
+        ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3);
+
+        // Root parameter 0: root constants for register b0 - the values of a draw (the model
+        // and normal matrices, invertedNormals) - for all shaders.
+        // Root parameter 1: a descriptor table with the constant buffer view (b1: the camera's
+        // matrices, the light, the kernel), for all shaders.
+        // Root parameters 2, 3 and 4: descriptor tables with the textures' SRVs (t0 and t1,
+        // t2, t3), for the pixel shaders.
+        CD3DX12_ROOT_PARAMETER rootParameters[5];
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[4].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_PIXEL);
+--- file: main.cpp
+--- find:
+        D3D12_STATIC_SAMPLER_DESC samplers[1] = {};
+--- replace:
+        D3D12_STATIC_SAMPLER_DESC samplers[2] = {};
+--- file: main.cpp
+--- find:
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+--- replace:
+        samplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        // Sampler s1, for the noise texture: point filtering, and texture coordinates outside
+        // 0..1 wrap around (GL_REPEAT), so the 4 x 4 texture tiles the whole window.
+        samplers[1] = samplers[0];
+        samplers[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[1].ShaderRegister = 1;
+--- file: main.cpp
+--- find:
+        // TODO: the SSAO pass's pipeline state (m_ssaoPipelineState): the shaders of ssao.hlsl, one render target with a single 8-bit channel (R8_UNORM), no depth buffer and no depth test
+--- replace:
+        // The SSAO pass's pipeline state: the shaders of ssao.hlsl, one render target with a
+        // single 8-bit channel (the occlusion factor: learnopengl's GL_RED), no depth buffer
+        // and so no depth test.
+        ComPtr<ID3DBlob> ssaoVertexShader;
+        ComPtr<ID3DBlob> ssaoPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"ssao.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &ssaoVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"ssao.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &ssaoPixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(ssaoVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(ssaoPixelShader.Get());
+        psoDesc.NumRenderTargets = 1;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8_UNORM;
+        psoDesc.RTVFormats[1] = DXGI_FORMAT_UNKNOWN;
+        psoDesc.RTVFormats[2] = DXGI_FORMAT_UNKNOWN;
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_ssaoPipelineState)));
+--- file: main.cpp
+--- find:
+    // TODO: also create framebuffer to hold SSAO processing stage: a texture as big as the window with a single 8-bit channel (m_ssaoColorBuffer: R8_UNORM, a render target that starts as PIXEL_SHADER_RESOURCE) with a render target view (RTV heap slot FrameCount + 3) and a shader resource view (CBV/SRV heap slot 8)
+--- replace:
+    // also create framebuffer to hold SSAO processing stage: a texture as big as the window
+    // with a single 8-bit channel (learnopengl's GL_RED) - the occlusion factor of every
+    // pixel - with a render target view (RTV heap slot FrameCount + 3) and a shader resource
+    // view (CBV/SRV heap slot 8).
+    {
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8_UNORM, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        const float optimizedClearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        CD3DX12_CLEAR_VALUE clearValue(DXGI_FORMAT_R8_UNORM, optimizedClearColor);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+            &clearValue,
+            IID_PPV_ARGS(&m_ssaoColorBuffer)));
+
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount + 3, m_rtvDescriptorSize);
+        m_device->CreateRenderTargetView(m_ssaoColorBuffer.Get(), nullptr, rtvHandle);
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_R8_UNORM;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 8, m_cbvSrvDescriptorSize);
+        m_device->CreateShaderResourceView(m_ssaoColorBuffer.Get(), &srvDesc, srvHandle);
+    }
+--- file: main.cpp
+--- find:
+    // TODO: generate sample kernel: 32 random points in a hemisphere along +z (srand(42), then rand() / (float)RAND_MAX for x and y * 2 - 1, z, and a length factor; scaled by ourLerp(0.1f, 1.0f, scale * scale)) into ssaoKernel - then the noise texture: 16 random rotations (x, y * 2 - 1, z = 0) in a 4 x 4 texture (m_noiseTexture: R32G32B32A32_FLOAT, CBV/SRV heap slot 9)
+--- replace:
+    // generate sample kernel: 32 random points in a hemisphere of radius 1 along +z (the
+    // normal, in tangent space), more of them close to the centre.
+    // (learnopengl draws its random floats with std::uniform_real_distribution and
+    //  std::default_random_engine; here rand() / (float)RAND_MAX between 0.0 and 1.0 with a
+    //  fixed seed: the same kernel every run. One random number per statement, so they are
+    //  drawn in a fixed order.)
+    srand(42);
+    for (unsigned int i = 0; i < 32; ++i) // 32 samples (learnopengl uses 64)
+    {
+        float x = rand() / (float)RAND_MAX * 2.0f - 1.0f;
+        float y = rand() / (float)RAND_MAX * 2.0f - 1.0f;
+        float z = rand() / (float)RAND_MAX; // a hemisphere: z only positive (along the normal)
+        XMVECTOR sample = XMVectorSet(x, y, z, 0.0f);
+        sample = XMVector3Normalize(sample);
+        sample *= rand() / (float)RAND_MAX;
+        float scale = static_cast<float>(i) / 32.0f;
+
+        // scale samples s.t. they're more aligned to center of kernel
+        scale = ourLerp(0.1f, 1.0f, scale * scale);
+        sample *= scale;
+        XMFLOAT3 kernelSample;
+        XMStoreFloat3(&kernelSample, sample);
+        ssaoKernel.push_back(kernelSample);
+    }
+
+    // generate noise texture: 16 random rotations around the normal, as a 4 x 4 texture that
+    // the SSAO pass tiles over the window. A texel holds four 32-bit floats (learnopengl's
+    // GL_RGBA32F): x and y random, z and w 0.
+    std::vector<XMFLOAT4> ssaoNoise;
+    for (unsigned int i = 0; i < 16; i++)
+    {
+        float x = rand() / (float)RAND_MAX * 2.0f - 1.0f;
+        float y = rand() / (float)RAND_MAX * 2.0f - 1.0f;
+        XMFLOAT4 noise(x, y, 0.0f, 0.0f); // rotate around z-axis (in tangent space)
+        ssaoNoise.push_back(noise);
+    }
+    // The upload buffer must stay alive until the command list that copies from it has
+    // executed (the end of this method waits for it).
+    ComPtr<ID3D12Resource> noiseTextureUploadHeap;
+    {
+        // The texture in a default heap, in the COPY_DEST state: the noise is copied into it next.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32G32B32A32_FLOAT, 4, 4, 1, 1);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&m_noiseTexture)));
+
+        // The upload heap, big enough for the texture's rows as the GPU lays them out.
+        const UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_noiseTexture.Get(), 0, 1);
+        CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RESOURCE_DESC uploadBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &uploadHeapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &uploadBufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&noiseTextureUploadHeap)));
+
+        // Copy the noise to the upload heap now and schedule the copy into the texture.
+        D3D12_SUBRESOURCE_DATA textureData = {};
+        textureData.pData = ssaoNoise.data();
+        textureData.RowPitch = 4 * sizeof(XMFLOAT4);              // bytes per row: 4 texels
+        textureData.SlicePitch = textureData.RowPitch * 4;       // bytes in the whole texture: 4 rows
+        UpdateSubresources(m_commandList.Get(), m_noiseTexture.Get(), noiseTextureUploadHeap.Get(), 0, 0, 1, &textureData);
+
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_noiseTexture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        m_commandList->ResourceBarrier(1, &barrier);
+
+        // Its shader resource view: slot 9 of the CBV/SRV heap.
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 9, m_cbvSrvDescriptorSize);
+        m_device->CreateShaderResourceView(m_noiseTexture.Get(), &srvDesc, srvHandle);
+    }
+--- file: main.cpp
+--- find:
+    constantBufferData.light.Quadratic = quadratic;
+--- replace:
+    constantBufferData.light.Quadratic = quadratic;
+
+    // Send kernel: the 32 samples, for the SSAO pass.
+    for (unsigned int i = 0; i < 32; ++i)
+        constantBufferData.samples[i] = XMFLOAT4(ssaoKernel[i].x, ssaoKernel[i].y, ssaoKernel[i].z, 0.0f);
+--- file: main.cpp
+--- find:
+    // TODO: 2. generate SSAO texture: the screen quad into the SSAO texture (a barrier PIXEL_SHADER_RESOURCE -> RENDER_TARGET, RTV heap slot FrameCount + 3, no depth buffer, cleared) with m_ssaoPipelineState, reading gPosition and gNormal (root parameter 2: gPositionNormal) and the noise texture (root parameter 3: heap slot 9), then the barrier back
+--- replace:
+    // 2. generate SSAO texture: the screen quad into the SSAO texture (RTV heap slot
+    // FrameCount + 3) with the SSAO pass's pipeline state, reading gPosition and gNormal
+    // (heap slots 5 and 6: root parameter 2's table, t0 and t1) and the noise texture (slot 9:
+    // root parameter 3's, t2).
+    barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(m_ssaoColorBuffer.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_commandList->ResourceBarrier(1, barriers);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE ssaoRtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount + 3, m_rtvDescriptorSize);
+    m_commandList->OMSetRenderTargets(1, &ssaoRtvHandle, FALSE, nullptr);
+    m_commandList->ClearRenderTargetView(ssaoRtvHandle, clearColor, 0, nullptr);
+    m_commandList->SetPipelineState(m_ssaoPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(2, gPositionNormal);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE texNoise(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 9, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(3, texNoise);
+    m_commandList->DrawInstanced(6, 1, 36, 0);    // the screen quad: vertices 36 to 41
+    barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(m_ssaoColorBuffer.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    m_commandList->ResourceBarrier(1, barriers);
+--- file: main.cpp
+--- find:
+    // The lighting pass's pipeline state, gPosition and gNormal (heap slots 5 and 6) as root
+    // parameter 2's table (t0, t1) and gAlbedo (slot 7) as root parameter 3's (t2).
+    m_commandList->SetPipelineState(m_lightingPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(2, gPositionNormal);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE gAlbedo(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 7, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(3, gAlbedo);
+--- replace:
+    // The lighting pass's pipeline state, gPosition and gNormal (heap slots 5 and 6) as root
+    // parameter 2's table (t0, t1), gAlbedo (slot 7) as root parameter 3's (t2) and the
+    // SSAO texture (slot 8) as root parameter 4's (t3).
+    m_commandList->SetPipelineState(m_lightingPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(2, gPositionNormal);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE gAlbedo(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 7, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(3, gAlbedo);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE ssao(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 8, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(4, ssao);
+--- file: ssao.hlsl
+--- find:
+    // TODO: the occlusion factor: build a TBN matrix from the normal and a random vector of the noise texture, then for each of the kernelSize samples move it into view space around fragPos (times radius), project it to texture coordinates, read the depth (z) of gPosition there and count it as occluding (with the range check) if it is at least bias in front of the sample - return 1.0 minus the occluding fraction
+    return 1.0f;
+--- replace:
+    // get input for SSAO algorithm
+    float3 fragPos = gPosition.Sample(clampSampler, input.texCoord).xyz;
+    float3 normal = normalize(gNormal.Sample(clampSampler, input.texCoord).rgb);
+    float3 randomVec = normalize(texNoise.Sample(wrapSampler, input.texCoord * noiseScale).xyz);
+    // create TBN change-of-basis matrix: from tangent-space to view-space (its rows are the
+    // tangent, the bitangent and the normal, so mul(v, TBN) = v.x * T + v.y * B + v.z * N)
+    float3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
+    float3 bitangent = cross(normal, tangent);
+    float3x3 TBN = float3x3(tangent, bitangent, normal);
+    // iterate over the sample kernel and calculate occlusion factor
+    float occlusion = 0.0f;
+    for (int i = 0; i < kernelSize; ++i)
+    {
+        // get sample position
+        float3 samplePos = mul(samples[i].xyz, TBN); // from tangent to view-space
+        samplePos = fragPos + samplePos * radius;
+
+        // project sample position (to sample texture) (to get position on screen/texture)
+        float4 offset = float4(samplePos, 1.0f);
+        offset = mul(offset, projection); // from view to clip-space
+        offset.xyz /= offset.w; // perspective divide
+        // transform to range 0.0 - 1.0: x as in OpenGL, y flipped - texture coordinate v
+        // points down, normalized device y up
+        offset.xy = float2(offset.x * 0.5f + 0.5f, -offset.y * 0.5f + 0.5f);
+
+        // get sample depth
+        float sampleDepth = gPosition.Sample(clampSampler, offset.xy).z; // get depth value of kernel sample
+
+        // range check & accumulate
+        float rangeCheck = smoothstep(0.0f, 1.0f, radius / abs(fragPos.z - sampleDepth));
+        occlusion += (sampleDepth >= samplePos.z + bias ? 1.0f : 0.0f) * rangeCheck;
+    }
+    occlusion = 1.0f - (occlusion / kernelSize);
+
+    return occlusion;
+--- file: ssao_lighting.hlsl
+--- find:
+Texture2D gAlbedo : register(t2);
+--- replace:
+Texture2D gAlbedo : register(t2);
+Texture2D ssao : register(t3);
+--- file: ssao_lighting.hlsl
+--- find:
+// gAlbedo at t2 (root parameter 3's table).
+--- replace:
+// gAlbedo at t2 (root parameter 3's table); the SSAO texture at t3 (root parameter 4's).
+--- file: ssao_lighting.hlsl
+--- find:
+    return float4(lighting, 1.0f);
+--- replace:
+    // for now: show the SSAO texture
+    return float4(ssao.Sample(clampSampler, input.texCoord).rrr, 1.0f);
+=== task: blur
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_ssaoPipelineState;          // the SSAO pass's (learnopengl's shaderSSAO)
+--- replace:
+    ComPtr<ID3D12PipelineState> m_ssaoPipelineState;          // the SSAO pass's (learnopengl's shaderSSAO)
+    ComPtr<ID3D12PipelineState> m_ssaoBlurPipelineState;      // the blur's (learnopengl's shaderSSAOBlur)
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_noiseTexture;           // 4 x 4 random rotations
+--- replace:
+    ComPtr<ID3D12Resource> m_noiseTexture;           // 4 x 4 random rotations
+    ComPtr<ID3D12Resource> m_ssaoColorBufferBlur;    // the SSAO texture, blurred
+--- file: main.cpp
+--- find:
+        rtvHeapDesc.NumDescriptors = FrameCount + 4;    // the swap chain's buffers + the G-buffer's 3 textures + the SSAO texture
+--- replace:
+        rtvHeapDesc.NumDescriptors = FrameCount + 5;    // the swap chain's buffers + the G-buffer's 3 textures + the SSAO texture + the blurred SSAO texture
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 1 + 2 * MaxMeshes + 5;    // one CBV + two SRVs per mesh + the G-buffer's 3 SRVs + the SSAO and noise textures' SRVs
+--- replace:
+        cbvSrvHeapDesc.NumDescriptors = 1 + 2 * MaxMeshes + 6;    // one CBV + two SRVs per mesh + the G-buffer's 3 SRVs + the SSAO, noise and blurred SSAO textures' SRVs
+--- file: main.cpp
+--- find:
+        // TODO: the blur's pipeline state (m_ssaoBlurPipelineState): the shaders of ssao_blur.hlsl, the same render target format (R8_UNORM), no depth test
+--- replace:
+        // The blur's pipeline state: the shaders of ssao_blur.hlsl, the same kind of target.
+        ComPtr<ID3DBlob> ssaoBlurVertexShader;
+        ComPtr<ID3DBlob> ssaoBlurPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"ssao_blur.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &ssaoBlurVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"ssao_blur.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &ssaoBlurPixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(ssaoBlurVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(ssaoBlurPixelShader.Get());
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_ssaoBlurPipelineState)));
+--- file: main.cpp
+--- find:
+    // TODO: and blur stage: one more such texture (m_ssaoColorBufferBlur, RTV heap slot FrameCount + 4, CBV/SRV heap slot 10)
+--- replace:
+    // and blur stage: one more such texture (RTV heap slot FrameCount + 4, CBV/SRV heap slot 10).
+    {
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8_UNORM, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        const float optimizedClearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        CD3DX12_CLEAR_VALUE clearValue(DXGI_FORMAT_R8_UNORM, optimizedClearColor);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+            &clearValue,
+            IID_PPV_ARGS(&m_ssaoColorBufferBlur)));
+
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount + 4, m_rtvDescriptorSize);
+        m_device->CreateRenderTargetView(m_ssaoColorBufferBlur.Get(), nullptr, rtvHandle);
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_R8_UNORM;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 10, m_cbvSrvDescriptorSize);
+        m_device->CreateShaderResourceView(m_ssaoColorBufferBlur.Get(), &srvDesc, srvHandle);
+    }
+--- file: main.cpp
+--- find:
+    // TODO: 3. blur SSAO texture to remove noise: the screen quad into the blurred SSAO texture (barriers around it, RTV heap slot FrameCount + 4, cleared) with m_ssaoBlurPipelineState, reading the SSAO texture (heap slot 8) as root parameter 2's table
+--- replace:
+    // 3. blur SSAO texture to remove noise: the screen quad into the blurred SSAO texture
+    // (RTV heap slot FrameCount + 4) with the blur's pipeline state, reading the SSAO
+    // texture (heap slot 8: root parameter 2's table, t0).
+    barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(m_ssaoColorBufferBlur.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_commandList->ResourceBarrier(1, barriers);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE ssaoBlurRtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount + 4, m_rtvDescriptorSize);
+    m_commandList->OMSetRenderTargets(1, &ssaoBlurRtvHandle, FALSE, nullptr);
+    m_commandList->ClearRenderTargetView(ssaoBlurRtvHandle, clearColor, 0, nullptr);
+    m_commandList->SetPipelineState(m_ssaoBlurPipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE ssaoInput(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 8, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, ssaoInput);
+    m_commandList->DrawInstanced(6, 1, 36, 0);
+    barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(m_ssaoColorBufferBlur.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    m_commandList->ResourceBarrier(1, barriers);
+--- file: main.cpp
+--- find:
+    // parameter 2's table (t0, t1), gAlbedo (slot 7) as root parameter 3's (t2) and the
+    // SSAO texture (slot 8) as root parameter 4's (t3).
+--- replace:
+    // parameter 2's table (t0, t1), gAlbedo (slot 7) as root parameter 3's (t2) and the
+    // blurred SSAO texture (slot 10) as root parameter 4's (t3).
+--- file: main.cpp
+--- find:
+    CD3DX12_GPU_DESCRIPTOR_HANDLE ssao(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 8, m_cbvSrvDescriptorSize);
+--- replace:
+    CD3DX12_GPU_DESCRIPTOR_HANDLE ssao(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 10, m_cbvSrvDescriptorSize);
+--- file: ssao_blur.hlsl
+--- find:
+    // TODO: the mean of the 4 x 4 texels around the pixel: x and y offsets from -2 to 1, times the size of one texel (1 / the texture's size: ssaoInput.GetDimensions)
+    return 1.0f;
+--- replace:
+    float width, height;
+    ssaoInput.GetDimensions(width, height);
+    float2 texelSize = 1.0f / float2(width, height);
+    float result = 0.0f;
+    for (int x = -2; x < 2; ++x)
+    {
+        for (int y = -2; y < 2; ++y)
+        {
+            float2 offset = float2(float(x), float(y)) * texelSize;
+            result += ssaoInput.Sample(clampSampler, input.texCoord + offset).r;
+        }
+    }
+    return result / (4.0f * 4.0f);
+=== task: apply
+--- file: main.cpp
+--- find:
+    // 4. lighting pass: traditional deferred Blinn-Phong lighting. Indicate that the back
+    // buffer will be used as a render target.
+--- replace:
+    // 4. lighting pass: traditional deferred Blinn-Phong lighting with added screen-space
+    // ambient occlusion. Indicate that the back buffer will be used as a render target.
+--- file: ssao_lighting.hlsl
+--- find:
+    float3 Diffuse = gAlbedo.Sample(clampSampler, input.texCoord).rgb;
+
+    // then calculate lighting as usual
+    float3 ambient = 0.3f * Diffuse;
+--- replace:
+    float3 Diffuse = gAlbedo.Sample(clampSampler, input.texCoord).rgb;
+    float AmbientOcclusion = ssao.Sample(clampSampler, input.texCoord).r;
+
+    // then calculate lighting as usual
+    float3 ambient = 0.3f * Diffuse * AmbientOcclusion;
+--- file: ssao_lighting.hlsl
+--- find:
+    // for now: show the SSAO texture
+    return float4(ssao.Sample(clampSampler, input.texCoord).rrr, 1.0f);
+--- replace:
+    return float4(lighting, 1.0f);

@@ -1192,7 +1192,8 @@ private:
         samplerInfo.addressModeU = addressMode;
         samplerInfo.addressModeV = addressMode;
         samplerInfo.addressModeW = addressMode;
-        samplerInfo.anisotropyEnable = VK_TRUE;
+        // anisotropic filtering only with LINEAR: a NEAREST sampler must return exactly one texel (the G-buffer's data)
+        samplerInfo.anisotropyEnable = filter == VK_FILTER_LINEAR ? VK_TRUE : VK_FALSE;
         samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
         samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
         samplerInfo.unnormalizedCoordinates = VK_FALSE;

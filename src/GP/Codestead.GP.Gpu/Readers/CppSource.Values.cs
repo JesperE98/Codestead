@@ -112,6 +112,8 @@ public sealed partial class CppSource
     {
         "TRUE" or "GL_TRUE" or "VK_TRUE" or "GLFW_TRUE" => 1,
         "FALSE" or "GL_FALSE" or "VK_FALSE" or "GLFW_FALSE" or "NULL" or "nullptr" => 0,
+        // glibc's rand() range (the simulator's rand() is glibc's).
+        "RAND_MAX" => 2147483647,
         _ => null,
     };
 
