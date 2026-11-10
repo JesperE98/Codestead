@@ -528,6 +528,14 @@ internal sealed class VulkanDevice : IDeviceModel
         var img = ImageOf(view.Image);
         if (img is null) return (null, null);
         var sampler = b.Sampler is not null && samplers.TryGetValue(b.Sampler, out var st) ? st : SamplerState.Default;
+        if ((view.Cube || img.Cube) && img.LayerImages.All(i => i is null) && !img.Window)
+        {
+            // A cube map drawn into (point shadows: a 6-layer framebuffer, gl_Layer): face i is layer i of the target.
+            var cubeId = img.TargetId;
+            bool cubeDepth = img.Depth;
+            return (null, new CubeTexture(Enumerable.Range(0, 6).Select(face =>
+                (Texture?)new Texture(() => Raster.Rasterizer.TargetImage(face == 0 ? cubeId : cubeId + "@" + face, 0, cubeDepth), sampler) { Components = 4 }).ToList()));
+        }
         if (view.Cube || img.Cube)
             return (null, new CubeTexture(img.LayerImages.Select(i => i is null ? null : new Texture(i, sampler) { Components = 4 }).ToList()));
         if (img.LayerImages.FirstOrDefault() is { } image) return (new Texture(image, sampler) { Components = image.Channels == 4 ? 4 : 3, Srgb = img.Srgb || srgbViews.Contains(b.View) }, null);

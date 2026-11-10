@@ -168,6 +168,6 @@ public sealed partial class VulkanReader
     private void RegisterTarget(VulkanDevice device, string id)
     {
         if (scene.Targets.ContainsKey(id) || device.Image(id) is not { } img) return;
-        scene.Targets[id] = new RenderTarget(id, img.Width, img.Height, 1, true, true, Math.Max(1, img.Samples), img.Float);
+        scene.Targets[id] = new RenderTarget(id, img.Width, img.Height, 1, true, true, Math.Max(1, img.Samples), img.Float, Math.Max(1, img.Layers));
     }
 }
