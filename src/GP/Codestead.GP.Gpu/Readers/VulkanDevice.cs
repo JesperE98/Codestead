@@ -69,6 +69,12 @@ internal sealed class VulkanDevice : IDeviceModel
     private readonly Dictionary<string, string> resolves = new(StringComparer.Ordinal);
     /// <summary>Render passes: the first subpass's colour attachment and resolve attachment (indices into the framebuffer's attachments).</summary>
     private readonly Dictionary<string, (int Color, int? Resolve, int[] Colors)> renderPasses = new(StringComparer.Ordinal);
+    /// <summary>Per render pass: each attachment's loadOp, and which attachment is the depth one.</summary>
+    private readonly Dictionary<string, (string[] LoadOps, int? Depth)> passLoads = new(StringComparer.Ordinal);
+    /// <summary>Per framebuffer: its render pass and its attachments' views.</summary>
+    private readonly Dictionary<string, (string? Pass, string?[] Views)> framebufferInfo = new(StringComparer.Ordinal);
+    /// <summary>Which target drew into a depth image last (null: the window): a later pass that loads it continues from it.</summary>
+    private readonly Dictionary<string, string?> depthOwner = new(StringComparer.Ordinal);
     /// <summary>
     /// The images behind a framebuffer's further colour attachments (multiple render targets: bloom's bright colour):
     /// image → (the target of the first colour attachment, the attachment number).
@@ -280,6 +286,8 @@ internal sealed class VulkanDevice : IDeviceModel
                 var resolve = Number(Items(Field(subpass, "pResolveAttachments")).FirstOrDefault(), "attachment");
                 var rp = Set(args[3], "rp");
                 renderPasses[rp] = (color, resolve is null ? null : (int)resolve, colorRefs);
+                var depthRef = Number(Field(subpass, "pDepthStencilAttachment"), "attachment");
+                passLoads[rp] = (Items(Field(info, "pAttachments")).Select(a => Text(a, "loadOp") ?? "").ToArray(), depthRef is null ? null : (int)depthRef);
                 return ShaderValue.Str("VK_SUCCESS");
             }
             case "vkCreateFramebuffer" when args.Count >= 4:
@@ -287,6 +295,7 @@ internal sealed class VulkanDevice : IDeviceModel
                 var info = Eval(Strip(args[1]));
                 var attachments = Items(Field(info, "pAttachments"));
                 var fb = Set(args[3], "fb");
+                framebufferInfo[fb] = (Text(info, "renderPass"), attachments.Select(a => a.Text).ToArray());
                 var pass = Text(info, "renderPass") is { } rpName && renderPasses.TryGetValue(rpName, out var r) ? r : (0, null, [0]);
                 if (pass.Color < attachments.Length && attachments[pass.Color].Text is { } colorView) framebuffers[fb] = colorView;
                 if (pass.Resolve is int ri && ri < attachments.Length && attachments[ri].Text is { } resolveTo) resolves[fb] = resolveTo;
@@ -420,15 +429,33 @@ internal sealed class VulkanDevice : IDeviceModel
                 framebuffer = Text(info, "framebuffer");
                 resolveView = framebuffer is not null && resolves.TryGetValue(framebuffer, out var rv) ? rv : null;
                 var target = TargetOf(framebuffer);
+                // Each attachment's loadOp: only CLEAR clears; a depth image loaded (LOAD) that another pass drew into
+                // continues from that pass's depth (deferred shading's light cubes over the G-buffer's depth).
+                bool clearColor = true, clearDepth = true;
+                if (framebuffer is not null && framebufferInfo.TryGetValue(framebuffer, out var fbi) && fbi.Pass is { } passName && passLoads.TryGetValue(passName, out var loads))
+                {
+                    var colorIndex = renderPasses.TryGetValue(passName, out var rpi) ? rpi.Color : 0;
+                    if (colorIndex < loads.LoadOps.Length && loads.LoadOps[colorIndex] is { Length: > 0 } colorLoad) clearColor = colorLoad.Contains("CLEAR", StringComparison.Ordinal);
+                    if (loads.Depth is int di && di < loads.LoadOps.Length)
+                    {
+                        if (loads.LoadOps[di] is { Length: > 0 } depthLoad) clearDepth = depthLoad.Contains("CLEAR", StringComparison.Ordinal);
+                        if (di < fbi.Views.Length && fbi.Views[di] is { } depthView && views.TryGetValue(depthView, out var dv))
+                        {
+                            if (!clearDepth && depthOwner.TryGetValue(dv.Image, out var owner) && owner != target)
+                                Ops.Add(new CopyOp(DrawCount(), owner, target, Color: false, Depth: true));
+                            depthOwner[dv.Image] = target;
+                        }
+                    }
+                }
                 foreach (var clear in Items(Field(info, "pClearValues")))
                 {
-                    if (Field(clear, "color") is { } color)
+                    if (Field(clear, "color") is { } color && clearColor)
                     {
                         var rgba = new List<double>();
                         CppExec.Flatten(color, rgba);
                         if (rgba.Count >= 3) Ops.Add(new ClearOp(DrawCount(), target, rgba.Take(4).ToArray(), null, null));
                     }
-                    if (Field(clear, "depthStencil") is { } ds)
+                    if (Field(clear, "depthStencil") is { } ds && clearDepth)
                     {
                         var v = new List<double>();
                         CppExec.Flatten(ds, v);

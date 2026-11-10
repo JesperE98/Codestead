@@ -114,6 +114,14 @@ public sealed class CppExec
             Runner.Globals[name] = made;
             return made;
         }
+        // A std::vector member with no initializer (filled by push_back in a setup helper): empty, kept as a global.
+        if (src.Initializer(name) is null && src.DeclaredType(name) is { } vectorType
+            && System.Text.RegularExpressions.Regex.IsMatch(vectorType, @"^(?:const)?std::vector<"))
+        {
+            var empty = ShaderValue.Array([]);
+            Runner.Globals[name] = empty;
+            return empty;
+        }
         if (src.Evaluate(name, Runner.Time) is { } v)
         {
             // An array of the program's structs (const std::vector<Vertex> vertices = { … }): its elements as structs.

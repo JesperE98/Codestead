@@ -365,10 +365,11 @@ public sealed partial class VulkanReader
             if (!ModelVertices(fields, into)) return false;
             // indices.size() and vertices.size() are the loaded model's.
             int vertexCount = into.Count;
+            // (Only when the program does not give them a value itself: the SSAO chapter's own room vertices.)
             src.Extra = name => name switch
             {
-                "indices" => ShaderValue.Array(modelIndices!.Select(ShaderValue.Scalar).ToArray()),
-                "vertices" => ShaderValue.Array(Enumerable.Range(0, vertexCount).Select(_ => ShaderValue.Scalar(0)).ToArray()),
+                "indices" when src.Initializer("indices") is null => ShaderValue.Array(modelIndices!.Select(ShaderValue.Scalar).ToArray()),
+                "vertices" when src.Initializer("vertices") is null => ShaderValue.Array(Enumerable.Range(0, vertexCount).Select(_ => ShaderValue.Scalar(0)).ToArray()),
                 _ => null,
             };
             return true;

@@ -22,8 +22,8 @@ public static partial class TaskChecks
             ["kernel"] = c => c.Drew && At(c, 400, 376, p => Grey(p) && p[0] < 0.85) && At(c, 400, 500, p => p[0] > 0.9),
             // Blurred: still grey, the 4 × 4 noise pattern smoothed away.
             ["blur"] = c => c.Drew && At(c, 400, 376, p => Grey(p) && p[0] < 0.85) && At(c, 400, 500, p => p[0] > 0.9) && c.Has(@"(?i)ssao_?blur"),
-            // The lit scene with the ambient light darkened by the occlusion: the ring's underside almost black-blue.
-            ["apply"] = c => c.Drew && At(c, 150, 213, p => p[2] > p[0] + 0.05 && p[0] < 0.2) && At(c, 400, 500, p => p[2] > p[0] + 0.1),
+            // The lit scene with the ambient light darkened by the occlusion: the floor under the planet darker (start 93,93,144).
+            ["apply"] = c => c.Drew && At(c, 400, 376, p => p[2] > p[0] + 0.1 && p[0] < 0.32) && At(c, 400, 500, p => p[2] > p[0] + 0.1),
         }),
     ];
 }

@@ -16,15 +16,16 @@ internal static class StructLayout
         // Drop member functions (static VkVertexInputBindingDescription getBindingDescription() { … }).
         body = RemoveBlocks(body);
         var fields = new List<(string, string, int)>();
-        foreach (Match f in Regex.Matches(body, @"(?:^|;)\s*(?<type>(?:glm::|DirectX::)?[A-Za-z_]\w*)\s+(?<names>[A-Za-z_]\w*(?:\s*\[\s*\d+\s*\])?(?:\s*,\s*[A-Za-z_]\w*)*)\s*(?=;)", RegexOptions.CultureInvariant))
+        foreach (Match f in Regex.Matches(body, @"(?:^|;)\s*(?<type>(?:glm::|DirectX::)?[A-Za-z_]\w*)\s+(?<names>[A-Za-z_]\w*(?:\s*\[\s*\w+\s*\])?(?:\s*,\s*[A-Za-z_]\w*)*)\s*(?=;)", RegexOptions.CultureInvariant))
         {
             var type = f.Groups["type"].Value.Replace("glm::", "").Replace("DirectX::", "");
             if (type is "static" or "return" or "using" or "friend") continue;
             foreach (var raw in f.Groups["names"].Value.Split(','))
             {
-                var nm = Regex.Match(raw.Trim(), @"^(\w+)(?:\s*\[\s*(\d+)\s*\])?$");
+                var nm = Regex.Match(raw.Trim(), @"^(\w+)(?:\s*\[\s*(\w+)\s*\])?$");
                 if (!nm.Success) continue;
-                int count = nm.Groups[2].Success ? int.Parse(nm.Groups[2].Value) : 1;
+                // The size: a number or a constant (Light lights[NR_LIGHTS]; with const unsigned int NR_LIGHTS = 32;).
+                int count = !nm.Groups[2].Success ? 1 : int.TryParse(nm.Groups[2].Value, out var literal) ? literal : src.Int(nm.Groups[2].Value) ?? 1;
                 fields.Add((type, nm.Groups[1].Value, FloatsOf(type) * count));
             }
         }
