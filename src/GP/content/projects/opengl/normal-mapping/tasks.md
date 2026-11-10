@@ -57,8 +57,8 @@ right of the quad: highlight = 229,125,101, brick-1 = 99,44,30, brick-2 = 125,55
   `glVertexAttribPointer(3, 3, …, (void*)(8 * sizeof(float)))`, `glVertexAttribPointer(4, 3, …, (void*)(11 *
   sizeof(float)))` with `glEnableVertexAttribArray(3)` / `(4)`. `normal_mapping.vs`: `layout (location = 3) in vec3
   aTangent;`, `layout (location = 4) in vec3 aBitangent;`. **No visible change** (the shaders do not use them yet):
-  the picture is identical to `normal-map` (0 pixels differ). For this quad both triangles get tangent (1, 0, 0) and
-  bitangent (0, 1, 0).
+  the picture is identical to `normal-map` (0 pixels differ). For this quad both triangles get tangent (2, 0, 0) and
+  bitangent (0, 2, 0) (2 units of quad per 1 unit of texture; the shaders normalise them).
 
 ## `tbn`
 - **Task:** Build the TBN matrix in the vertex shader (tangent, bitangent and normal transformed with the normal matrix) and use its transpose to bring the light position, the view position and the fragment position into tangent space; the fragment shader lights with those, so the normal map's normals are used in the space they were made in.

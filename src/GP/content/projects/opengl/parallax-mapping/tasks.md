@@ -47,7 +47,7 @@ inside the quad ≈ 88.0.
   `glDeleteTextures(1, &heightMap);`. `parallax_mapping.fs`: `uniform sampler2D depthMap;`, `uniform float heightScale;`,
   the one-sample `ParallaxMapping` and `texCoords = ParallaxMapping(fs_in.TexCoords,  viewDir);`. **The bricks look
   raised** above the mortar: their front sides appear towards the camera, the mortar narrows. ≈ 80,400 pixels change.
-  brick-top-1/2 unchanged (120,75,49 / 123,78,50), highlight = 220,140,91, centre = 188,121,81, front-1 = 192,124,83,
+  brick-top-1/2 unchanged (120,75,49 / 123,78,50, ±1), highlight = 220,140,91, centre = 188,121,81, front-1 = 192,124,83,
   front-2 = 169,129,102, top-edge = 138,97,72, corner = 95,59,38 – at the quad's borders the shifted coordinates leave
   0..1 and the texture repeats there (bits of the neighbouring bricks show along the edges). Mean luminance inside the
   quad ≈ 94.6. Close up, the bricks' sides look smeared (one sample cannot follow the depth map's steep steps).
@@ -87,7 +87,8 @@ inside the quad ≈ 88.0.
   image's bottom row and the normal map's +y points up the texture; an API that does not flip must flip v (or the
   bitangent) consistently for the colour, normal and depth maps – the depth map must be sampled at exactly the same
   coordinates as the other two.
-- `while` loops with a data-dependent count: GLSL and HLSL both allow them in a pixel shader (HLSL may need
-  `SampleLevel`/`SampleGrad` instead of `Sample` inside the loop, because gradients are undefined in divergent flow –
-  learnopengl's GLSL `texture()` in the loop works in OpenGL because the drivers compute derivatives before the loop or
-  tolerate it; on Mesa it gives the pictures above).
+- `while` loops with a data-dependent count: GLSL and HLSL both allow them. Implicit-derivative sampling (`texture()` /
+  `Sample`) inside such a loop is, strictly, in non-uniform control flow (GLSL leaves the derivatives undefined there);
+  learnopengl does it and Mesa gives the pictures above. HLSL compilers refuse or warn about `Sample` in a loop whose
+  count depends on a texture read – use `SampleLevel(…, 0)` or `SampleGrad` with the gradients of the original
+  coordinates taken before the loop there, and say so.
