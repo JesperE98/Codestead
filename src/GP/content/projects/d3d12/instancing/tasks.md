@@ -120,19 +120,3 @@ top-right (learnopengl's loop runs y from −10 (bottom) up).
   Why `srand(42)`: learnopengl seeds with the time – a different field each run. A fixed seed gives the same field every
   run, so the picture can be compared. learnopengl's 10.2 (one draw per rock, 500 draw calls) is described in the text
   only; learnopengl's 100,000 rocks / radius 150 are reduced to 500 / radius 15 for the simulator.
-
-## Simulator notes (for the lead)
-1. `offsets`: the offsets are written once in `LoadAssets` (a local `OffsetConstantBuffer offsetData` `memcpy`'d into
-   the mapped upload buffer `m_offsetBuffer`) and bound as a root CBV with `SetGraphicsRootConstantBufferView(3,
-   m_offsetBuffer->GetGPUVirtualAddress())`. The reader takes cbuffer values only from struct variables alive while
-   `OnUpdate` / `PopulateCommandList` run, not from the device model's buffer bytes at the bound GPU address: the
-   offsets are all 0 and the 100 quads lie on top of each other in the centre (the start picture).
-2. `asteroids`: nothing is drawn at all (`draws=0`, note `dxNoIndexBuffer`) – not even the planet. The reader picks
-   the `DrawIndexedInstanced` in `PopulateCommandList` as "the" draw call before the `m_planet.Draw(...)` Model draw,
-   then looks for an index array copied with `memcpy` and finds none (the rock mesh's index/vertex buffers are filled in
-   `Mesh::SetupMesh` from Assimp's data, which the device model never sees). Needed: the OpenGL reader's idiom in D3D12
-   form – `m_rock.meshes[i].vertexBufferView` / `indexBufferView` / `srvHandle` / `indices.size()` of a `Model` member
-   loaded from `"models/rock.obj"` (the OBJ and its material's map), per-instance data from the slot-1 buffer
-   (`modelMatrices` → `m_instanceBuffer`, 64-byte stride, rows read untransposed into `float4x4(row0..row3)`), `amount`
-   instances; and each `Model` member tied to its own `.obj` (the reader takes the first `.obj` string of the file for
-   every Model draw – here `planet.obj` comes first, so `m_planet.Draw` happens to be right).

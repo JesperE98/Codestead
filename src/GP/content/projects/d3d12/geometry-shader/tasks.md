@@ -124,12 +124,3 @@ y = 149 / 449; check a 3×3 neighbourhood. Everything else 26,26,26.
   passes: centre (400,300) = 105,140,60, (395,186) = 235,240,245, (350,250) = 84,130,55, (450,350) = 75,127,53, sea
   (380,215) = 28,70,150, ring (160,330) = 164,140,109, (640,330) = 149,128,99; background (100,100), (400,520) = 26,26,26.
   0.6 % of the pixels differ from Mesa (where single lines run). Static. Final state.
-
-## Simulator note (for the lead)
-The shipped simulator's D3D12 reader does not use geometry shaders: `D3DCompileFromFile(…, "GSMain", "gs_5_0", …)` and
-`psoDesc.GS` are ignored (`DrawCall.GeometryShader` is never set; `PipelineInfo` has no GS). So `houses` and
-`roof-white` still show the four points, `explode` shows the whole planet, and `normals` draws the model once more with
-the normal PSO's vertex shader (view-space positions taken as clip positions) and no lines. The rasterizer's HLSL
-geometry stage itself works with this code: wired in a local copy (the GS compiled last before each
-`CreateGraphicsPipelineState` whose `psoDesc.GS` was set after the previous one, and passed to `ModelDraws`), every
-picture above came out as described.
