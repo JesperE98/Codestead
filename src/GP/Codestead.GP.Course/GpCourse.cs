@@ -10,7 +10,7 @@ namespace Codestead.GP.Course;
 /// </summary>
 public static class GpCourse
 {
-    public static IReadOnlyList<string> Parts { get; } = ["start", "getting-started", "lighting", "model-loading", "advanced-opengl", "advanced-lighting"];
+    public static IReadOnlyList<string> Parts { get; } = ["start", "getting-started", "lighting", "model-loading", "advanced-opengl", "advanced-lighting", "pbr"];
 
     /// <summary>The lessons in course order: (chapter id, part).</summary>
     private static readonly (string Id, string Part)[] LessonList =
@@ -55,6 +55,10 @@ public static class GpCourse
         ("bloom", "advanced-lighting"),
         ("deferred-shading", "advanced-lighting"),
         ("ssao", "advanced-lighting"),
+        ("pbr-theory", "pbr"),
+        ("pbr-lighting", "pbr"),
+        ("diffuse-irradiance", "pbr"),
+        ("specular-ibl", "pbr"),
     ];
 
     public static IReadOnlyList<CourseChapter> Chapters { get; } = Build();

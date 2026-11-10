@@ -210,7 +210,7 @@ public sealed partial class ShaderRunner
                 if (a.Count < 2) throw Arity();
                 var size = TextureSize?.Invoke(PathOf(c.Args[0])) ?? (1, 1);
                 var p = a[1].Padded(2);
-                return SampleTexture(c.Args[0], ShaderValue.Vec((Math.Floor(p[0]) + 0.5) / size.Width, (Math.Floor(p[1]) + 0.5) / size.Height));
+                return SampleTexture(c.Args[0], ShaderValue.Vec((Math.Floor(p[0]) + 0.5) / size.Width, (Math.Floor(p[1]) + 0.5) / size.Height), null, 0);
             }
             case "textureSize":
             {
@@ -460,8 +460,18 @@ public sealed partial class ShaderRunner
         var id = sampler is null ? PathOf(texture) : PathOf(texture) + "|" + sampler;
         if (uv.Size >= 3 && lod is { } level && SampleCubeLod?.Invoke(id, uv.V![0], uv.V[1], uv.V[2], level) is { } mip) return ShaderValue.Vec(mip);
         if (uv.Size >= 3 && SampleCube?.Invoke(id, uv.V![0], uv.V[1], uv.V[2]) is { } cube) return ShaderValue.Vec(cube);
-        var rgba = Sample?.Invoke(id, uv.Padded(2)[0], uv.Padded(2)[1]) ?? [1, 0, 1, 1];
-        return ShaderValue.Vec(rgba);
+        var at = uv.Padded(2);
+        if (Sample is null) return ShaderValue.Vec(1, 0, 1, 1);
+        // A minified texture is read from its mip levels: where these coordinates go from pixel to pixel.
+        Textures.Texture.Footprint = Footprint is { } footprint && lod is null ? footprint(at[0], at[1]) : null;
+        try
+        {
+            return ShaderValue.Vec(Sample(id, at[0], at[1]));
+        }
+        finally
+        {
+            Textures.Texture.Footprint = null;
+        }
     }
 
     /// <summary>The uniform name of a texture expression: texture1, material.diffuse, shadowMaps[2].</summary>

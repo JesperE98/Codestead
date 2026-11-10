@@ -74,6 +74,9 @@ public static partial class Rasterizer
         // What the program draws once before its render loop (an environment captured into a cube map, a look-up
         // table) is drawn for the first frame and kept for the next ones, as the program keeps it.
         var setupOwner = original;
+        // Kept on the scene, or – for another scene with the same setup (the program built again: the same passes) – in
+        // a small cache shared by all scenes.
+        if (scene.SetupDraws > 0 && setupOwner.SetupCache is null && SharedSetups.TryGetValue(SetupKey(scene), out var shared)) setupOwner.SetupCache = shared;
         var setup = setupOwner.SetupCache as SetupResult;
         bool setupDone = scene.SetupDraws > 0 && setup is not null && (setup.Width == 0 || setup.Width == width) && setup.Draws == scene.SetupDraws;
         if (setupDone)
@@ -96,8 +99,9 @@ public static partial class Rasterizer
                 int w, h;
                 if (setupTargets.TryGetValue(Family(id), out bool heavy))
                 {
-                    w = t.Width > 0 ? Math.Max(1, t.Width / (heavy ? HeavySetupDivisor : 1)) : width;
-                    h = t.Height > 0 ? Math.Max(1, t.Height / (heavy ? HeavySetupDivisor : 1)) : height;
+                    // (A small mip level keeps its own size up to 8 texels: a pre-filter's 4 × 4 level stays 4 × 4.)
+                    w = t.Width > 0 ? (heavy ? Math.Max(Math.Min(t.Width, 8), t.Width / HeavySetupDivisor) : t.Width) : width;
+                    h = t.Height > 0 ? (heavy ? Math.Max(Math.Min(t.Height, 8), t.Height / HeavySetupDivisor) : t.Height) : height;
                 }
                 else
                 {
@@ -247,7 +251,62 @@ public static partial class Rasterizer
         if (targets.Keys.Any(id => later.Contains(Base(id)))) return;
         // Targets with a size of their own are the same at every preview width.
         bool anyWidth = targets.Keys.All(id => scene.Targets.GetValueOrDefault(Base(id)) is { Width: > 0, Height: > 0 });
-        owner.SetupCache = new SetupResult(anyWidth ? 0 : width, scene.SetupDraws, new Dictionary<string, Framebuffer>(targets, StringComparer.Ordinal), errors.ToList());
+        var result = new SetupResult(anyWidth ? 0 : width, scene.SetupDraws, new Dictionary<string, Framebuffer>(targets, StringComparer.Ordinal), errors.ToList());
+        owner.SetupCache = result;
+        if (anyWidth)
+        {
+            lock (SharedSetups)
+            {
+                if (SharedSetups.Count >= 12) SharedSetups.Clear();
+                SharedSetups[SetupKey(scene)] = result;
+            }
+        }
+    }
+
+    /// <summary>Setups drawn before, by what they draw (<see cref="SetupKey"/>).</summary>
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, SetupResult> SharedSetups = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// What a scene's setup draws: each draw's shaders, state, vertices, uniforms and what its textures read at a few
+    /// points (loaded images; targets drawn by earlier setup draws are covered by those draws), its ops and its targets.
+    /// Two scenes with the same key draw the same setup pictures.
+    /// </summary>
+    private static string SetupKey(Scene.Scene scene)
+    {
+        if (scene.SetupKey is { } known) return known;
+        var sb = new System.Text.StringBuilder();
+        static string Numbers(double[]? v) => v is null ? "-" : string.Join(",", v.Select(x => x.ToString("R", System.Globalization.CultureInfo.InvariantCulture)));
+        foreach (var d in scene.Draws.Take(scene.SetupDraws))
+        {
+            sb.Append(d.VertexShader.Source.GetHashCode()).Append('|').Append(d.FragmentShader.Source.GetHashCode()).Append('|').Append(d.GeometryShader?.Source.GetHashCode())
+              .Append('|').Append(d.VertexEntry).Append(d.FragmentEntry).Append('|').Append(d.Target).Append('|').Append(d.Topology).Append(d.First).Append(',').Append(d.Count)
+              .Append(',').Append(d.Instances).Append('|').Append(d.Cull).Append(d.FrontCcw).Append(d.DepthTest).Append(d.DepthFunc).Append(d.DepthWrite)
+              .Append(d.Blend).Append(d.Stencil).Append(string.Join("", d.ColorMask)).Append('|');
+            var hash = new HashCode();
+            foreach (var v in d.Vertices) foreach (var (k, x) in v) { hash.Add(k); if (x.V is { } nums) foreach (var n in nums) hash.Add(n); }
+            if (d.Indices is { } ix) foreach (var i in ix) hash.Add(i);
+            sb.Append(hash.ToHashCode()).Append('|');
+            foreach (var (k, v) in d.Uniforms(1.0).OrderBy(kv => kv.Key, StringComparer.Ordinal)) sb.Append(k).Append('=').Append(v).Append(';');
+            foreach (var g in d.VertexShader.Globals.Concat(d.FragmentShader.Globals).Where(g => g.Type.StartsWith("sampler", StringComparison.Ordinal) || g.Type.StartsWith("Texture", StringComparison.Ordinal)))
+            {
+                sb.Append(g.Id).Append(':');
+                foreach (var id in new[] { g.Id }.Concat(d.Hlsl ? d.FragmentShader.Globals.Where(s => s.Type.StartsWith("Sampler", StringComparison.Ordinal)).Select(s => g.Id + "|" + s.Id) : []))
+                {
+                    sb.Append(Numbers(d.Textures?.Invoke(id, 0.31, 0.27))).Append(Numbers(d.Textures?.Invoke(id, 0.77, 0.61)));
+                    sb.Append(Numbers(d.CubeTextures?.Invoke(id, 0.3, 0.8, -0.5))).Append(Numbers(d.CubeTextures?.Invoke(id, -0.9, -0.2, 0.4)));
+                }
+            }
+            sb.Append('\n');
+        }
+        foreach (var op in scene.Ops.Take(scene.SetupOps))
+            sb.Append(op switch
+            {
+                ClearOp c => $"clear {c.BeforeDraw} {c.Target} {Numbers(c.Color)} {c.Depth} {c.Stencil}",
+                CopyOp c => $"copy {c.BeforeDraw} {c.From} {c.To} {c.Color} {c.Depth} {c.Average}",
+                _ => op.ToString(),
+            }).Append('\n');
+        foreach (var t in scene.Targets.Values.OrderBy(t => t.Id, StringComparer.Ordinal)) sb.Append(t).Append('\n');
+        return scene.SetupKey = sb.ToString();
     }
 
     private static byte ToByte(double v) => (byte)Math.Round(Math.Clamp(double.IsNaN(v) ? 0 : v, 0, 1) * 255);

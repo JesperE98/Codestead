@@ -37,6 +37,8 @@ internal sealed class VulkanDevice : IDeviceModel
         public int TargetLevels = 1;
         /// <summary>The image is drawn into through views of single layers (one cube face per framebuffer).</summary>
         public bool PerLayer;
+        /// <summary>A loaded image whose smaller mip levels were made with vkCmdBlitImage (vulkan-tutorial's generateMipmaps).</summary>
+        public bool Mipmapped;
 
         public string LevelTarget(int level) => level > 0 ? $"{TargetId}~{level}" : TargetId;
     }
@@ -275,7 +277,12 @@ internal sealed class VulkanDevice : IDeviceModel
                 // A mip level made from the level above (vulkan-tutorial's generateMipmaps), of an image that was drawn
                 // into: each layer's smaller copy is the average of the pixels it covers.
                 if (ImageOf(Handle(args[1])) is not { Window: false } from || ImageOf(Handle(args[3])) is not { Window: false } to) return ShaderValue.Scalar(0);
-                if (to.LayerImages.Any(i => i is not null) || from.LayerImages.Any(i => i is not null)) return ShaderValue.Scalar(0);
+                if (to.LayerImages.Any(i => i is not null) || from.LayerImages.Any(i => i is not null))
+                {
+                    // A loaded texture's levels made from level 0: sampled with mip levels from now on.
+                    if (from == to) to.Mipmapped = true;
+                    return ShaderValue.Scalar(0);
+                }
                 foreach (var region in Items(Eval(Strip(args[6]))))
                 {
                     var srcSub = Field(region, "srcSubresource");
@@ -652,7 +659,8 @@ internal sealed class VulkanDevice : IDeviceModel
         }
         if (view.Cube || img.Cube)
             return (null, new CubeTexture(img.LayerImages.Select(i => i is null ? null : new Texture(i, sampler) { Components = 4 }).ToList()));
-        if (img.LayerImages.FirstOrDefault() is { } image) return (new Texture(image, sampler) { Components = image.Channels == 4 ? 4 : 3, Srgb = img.Srgb || srgbViews.Contains(b.View) }, null);
+        if (img.LayerImages.FirstOrDefault() is { } image)
+            return (new Texture(image, sampler) { Components = image.Channels == 4 ? 4 : 3, Srgb = img.Srgb || srgbViews.Contains(b.View), Mipmapped = img.Mipmapped }, null);
         var id = img.TargetId;
         bool depth = img.Depth;
         return (new Texture(() => Raster.Rasterizer.TargetImage(id, 0, depth), sampler) { Components = 4 }, null);

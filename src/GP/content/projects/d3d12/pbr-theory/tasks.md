@@ -17,4 +17,4 @@ Picture (800×600, nothing depends on time; the same as the OpenGL project's): t
 318, 400, 482, 565, 647 and y = 53, 135, 218, 300, 382, 465, 547; each is about 66 pixels wide (the centre one covers
 x 367..432, y 267..332). About 174,600 pixels are not the clear colour.
 
-*Simulator:* see the notes in `../pbr-lighting/tasks.md` (the sphere's triangle strip).
+*Simulator:* it follows this project and shows this picture (see `../pbr-lighting/tasks.md`).

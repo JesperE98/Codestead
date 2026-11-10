@@ -338,7 +338,7 @@ float3 ImportanceSampleGGX(float2 Xi, float3 N, float roughness)
     ComPtr<ID3D12Resource> m_brdfLUTTexture;   // the BRDF lookup texture: a scale and a bias for F0, by view angle and roughness
 --- file: main.cpp
 --- find:
-        // TODO: the pipeline state that integrates the BRDF (brdf.hlsl)
+        // TODO: the pipeline states that integrate the BRDF (brdf.hlsl) and show a texture on the screen quad (brdf.hlsl, debug_quad.hlsl)
 --- replace:
         // The pipeline state that integrates the BRDF (learnopengl: Shader brdfShader("brdf.vs",
         // "brdf.fs")): the shaders of brdf.hlsl, and a render target with two channels, a
@@ -351,18 +351,17 @@ float3 ImportanceSampleGGX(float2 Xi, float3 N, float roughness)
         psoDesc.PS = CD3DX12_SHADER_BYTECODE(brdfPixelShader.Get());
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16_FLOAT;
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_brdfPipelineState)));
---- file: main.cpp
---- find:
-        // TODO: the pipeline state that shows a texture on the screen quad (brdf.hlsl, debug_quad.hlsl)
---- replace:
+
         // The pipeline state that shows a texture on the screen quad (learnopengl would use
-        // Shader debugQuad("brdf.vs", "debug_quad.fs")): the vertex shader of brdf.hlsl, the
-        // pixel shader of debug_quad.hlsl, the window's back buffer, no depth test.
+        // Shader debugQuad("brdf.vs", "debug_quad.fs")): the same vertex shader, the pixel
+        // shader of debug_quad.hlsl, and the window's back buffer as the render target. The
+        // window's pass binds the depth buffer too, so the format is named, but there is
+        // still no depth test (DepthEnable is FALSE since the capture passes).
         ComPtr<ID3DBlob> debugQuadPixelShader;
         ThrowIfFailed(D3DCompileFromFile(L"debug_quad.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &debugQuadPixelShader, nullptr));
-        psoDesc.VS = CD3DX12_SHADER_BYTECODE(brdfVertexShader.Get());
         psoDesc.PS = CD3DX12_SHADER_BYTECODE(debugQuadPixelShader.Get());
-        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_debugQuadPipelineState)));
 --- file: main.cpp
 --- find:
@@ -568,19 +567,21 @@ float2 IntegrateBRDF(float NdotV, float roughness)
         rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
 --- file: main.cpp
 --- find:
-        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_backgroundPipelineState)));
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_brdfPipelineState)));
 
         // The pipeline state that shows a texture on the screen quad (learnopengl would use
-        // Shader debugQuad("brdf.vs", "debug_quad.fs")): the vertex shader of brdf.hlsl, the
-        // pixel shader of debug_quad.hlsl, the window's back buffer, no depth test.
+        // Shader debugQuad("brdf.vs", "debug_quad.fs")): the same vertex shader, the pixel
+        // shader of debug_quad.hlsl, and the window's back buffer as the render target. The
+        // window's pass binds the depth buffer too, so the format is named, but there is
+        // still no depth test (DepthEnable is FALSE since the capture passes).
         ComPtr<ID3DBlob> debugQuadPixelShader;
         ThrowIfFailed(D3DCompileFromFile(L"debug_quad.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &debugQuadPixelShader, nullptr));
-        psoDesc.VS = CD3DX12_SHADER_BYTECODE(brdfVertexShader.Get());
         psoDesc.PS = CD3DX12_SHADER_BYTECODE(debugQuadPixelShader.Get());
-        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_debugQuadPipelineState)));
 --- replace:
-        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_backgroundPipelineState)));
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_brdfPipelineState)));
 --- file: main.cpp
 --- find:
     // bind pre-computed IBL data: the irradiance map (heap slot 3) as the texture of root

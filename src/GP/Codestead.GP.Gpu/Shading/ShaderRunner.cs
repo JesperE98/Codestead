@@ -42,6 +42,12 @@ public sealed partial class ShaderRunner
     /// <summary>Reads a cube map at a mip level (textureLod, SampleLevel): (name, direction, lod) → RGBA, or null.</summary>
     public Func<string, double, double, double, double, double[]?>? SampleCubeLod { get; set; }
 
+    /// <summary>
+    /// The screen-space derivatives of texture coordinates (u, v) where the fragment being shaded reads them – what a
+    /// GPU picks a mip level from: (du/dx, dv/dx, du/dy, dv/dy), or null when not known.
+    /// </summary>
+    public Func<double, double, (double, double, double, double)?>? Footprint { get; set; }
+
     /// <summary>Texture sizes for textureSize(): name → (width, height).</summary>
     public Func<string, (int Width, int Height)?>? TextureSize { get; set; }
 

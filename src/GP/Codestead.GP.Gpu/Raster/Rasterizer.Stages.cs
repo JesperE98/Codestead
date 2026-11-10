@@ -53,7 +53,7 @@ public static partial class Rasterizer
             this.scale = scale;
             this.yDown = yDown;
             vs = new ShaderRunner(draw.VertexShader) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, SampleCubeLod = textures.SampleCubeLod, TextureSize = textures.Size };
-            fs = new ShaderRunner(draw.FragmentShader) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, SampleCubeLod = textures.SampleCubeLod, TextureSize = textures.Size };
+            fs = new ShaderRunner(draw.FragmentShader) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, SampleCubeLod = textures.SampleCubeLod, TextureSize = textures.Size, Footprint = Footprint };
             if (draw.GeometryShader is { } geometry)
             {
                 gs = new ShaderRunner(geometry) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, SampleCubeLod = textures.SampleCubeLod, TextureSize = textures.Size };
@@ -276,8 +276,41 @@ public static partial class Rasterizer
             return Sized(type, data.TryGetValue(Semantic(semantic), out var v) ? v : null);
         }
 
-        public double[]?[]? Fragment(ShadedVertex[] vs3, double p0, double p1, double p2, double x, double y, double z, double invW, bool front)
+        /// <summary>The fragment being shaded: its triangle and how its weights change one pixel right / down (for mip levels).</summary>
+        private ShadedVertex[]? fragmentVertices;
+        private (double, double, double) fragmentWeights;
+        private (double X0, double X1, double X2, double Y0, double Y1, double Y2)? fragmentDerivatives;
+
+        /// <summary>
+        /// Where texture coordinates (u, v) go from pixel to pixel at the fragment being shaded: the 2-component varying
+        /// that has this value here (else the first one – coordinates computed from it), its change per pixel of the
+        /// program's window.
+        /// </summary>
+        private (double, double, double, double)? Footprint(double u, double v)
         {
+            if (fragmentDerivatives is not { } d || fragmentVertices is not { } t) return null;
+            var (p0, p1, p2) = fragmentWeights;
+            (double, double, double, double)? first = null;
+            foreach (var (key, a) in t[0].Outputs)
+            {
+                if (a.V is not { Length: 2 } va || a.IsMatrix || !t[1].Outputs.TryGetValue(key, out var b) || !t[2].Outputs.TryGetValue(key, out var c)
+                    || b.V is not { Length: 2 } vb || c.V is not { Length: 2 } vc) continue;
+                // Per pixel of the program's window (the preview's pixels are `scale` of them).
+                var derivative = ((d.X0 * va[0] + d.X1 * vb[0] + d.X2 * vc[0]) / scale, (d.X0 * va[1] + d.X1 * vb[1] + d.X2 * vc[1]) / scale,
+                    (d.Y0 * va[0] + d.Y1 * vb[0] + d.Y2 * vc[0]) / scale, (d.Y0 * va[1] + d.Y1 * vb[1] + d.Y2 * vc[1]) / scale);
+                double iu = p0 * va[0] + p1 * vb[0] + p2 * vc[0], iv = p0 * va[1] + p1 * vb[1] + p2 * vc[1];
+                if (Math.Abs(iu - u) < 1e-7 && Math.Abs(iv - v) < 1e-7) return derivative;
+                first ??= derivative;
+            }
+            return first;
+        }
+
+        public double[]?[]? Fragment(ShadedVertex[] vs3, double p0, double p1, double p2, double x, double y, double z, double invW, bool front,
+            (double, double, double, double, double, double)? derivatives = null)
+        {
+            fragmentVertices = vs3;
+            fragmentWeights = (p0, p1, p2);
+            fragmentDerivatives = derivatives;
             Dictionary<string, ShaderValue> Interp()
             {
                 var d = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);

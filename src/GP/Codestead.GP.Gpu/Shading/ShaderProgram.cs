@@ -5,6 +5,9 @@ namespace Codestead.GP.Gpu.Shading;
 /// <summary>A parsed shader file: its structs, globals (inputs, outputs, uniforms, constants) and functions.</summary>
 public sealed class ShaderProgram
 {
+    /// <summary>The text the program was parsed from.</summary>
+    public string Source { get; set; } = "";
+
     public List<Struct> Structs { get; } = new();
     public List<Global> Globals { get; } = new();
     public List<Function> Functions { get; } = new();

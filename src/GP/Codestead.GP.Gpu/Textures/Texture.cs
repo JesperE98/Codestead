@@ -37,9 +37,101 @@ public sealed class Texture
 
     private static readonly double[] SrgbToLinear = Enumerable.Range(0, 256).Select(i => Raster.SrgbCurve.ToLinear(i / 255.0)).ToArray();
 
+    /// <summary>
+    /// The texture has mip levels (glGenerateMipmap with a *_MIPMAP_* minification filter; a Vulkan image whose levels
+    /// were blitted): a minified texture is read from the smaller levels, as a GPU does, instead of from level 0.
+    /// </summary>
+    public bool Mipmapped { get; init; }
+
+    /// <summary>Blend the two nearest levels (GL_LINEAR_MIPMAP_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR); else the nearest.</summary>
+    public bool MipLinear { get; init; } = true;
+
+    /// <summary>
+    /// How the texture coordinates change from one pixel of the window to the next where the fragment being shaded
+    /// reads (du/dx, dv/dx, du/dy, dv/dy, in the program's own pixels), set by the shader runner around a texture() call:
+    /// a GPU picks the mip level from it. Null: level 0.
+    /// </summary>
+    [ThreadStatic] internal static (double DuDx, double DvDx, double DuDy, double DvDy)? Footprint;
+
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Image, Image[]> MipChains = new();
+
+    /// <summary>Level 0 and the smaller levels (each the average of 2 × 2 texels of the one above), made once per image.</summary>
+    private Image[] Levels(Image img)
+    {
+        if (MipChains.TryGetValue(img, out var levels)) return levels;
+        lock (MipChains)
+        {
+            if (MipChains.TryGetValue(img, out levels)) return levels;
+            var list = new List<Image> { img };
+            var current = img;
+            // Linear values (an sRGB texture's colours decoded first, as a GPU filters them), as floats.
+            var values = new double[current.Width * current.Height * 4];
+            for (int i = 0; i < current.Width * current.Height; i++)
+            {
+                var t = Texel(current, i % current.Width, i / current.Width, false);
+                for (int k = 0; k < 4; k++) values[i * 4 + k] = t[k];
+            }
+            int w = current.Width, h = current.Height;
+            while (w > 1 || h > 1)
+            {
+                int nw = Math.Max(1, w / 2), nh = Math.Max(1, h / 2);
+                var next = new double[nw * nh * 4];
+                var bytes = new byte[nw * nh * 4];
+                for (int y = 0; y < nh; y++)
+                    for (int x = 0; x < nw; x++)
+                        for (int k = 0; k < 4; k++)
+                        {
+                            double sum = 0;
+                            int n = 0;
+                            for (int dy = 0; dy < 2; dy++)
+                                for (int dx = 0; dx < 2; dx++)
+                                {
+                                    int sx = Math.Min(w - 1, x * 2 + dx), sy = Math.Min(h - 1, y * 2 + dy);
+                                    sum += values[(sy * w + sx) * 4 + k];
+                                    n++;
+                                }
+                            next[(y * nw + x) * 4 + k] = sum / n;
+                            bytes[(y * nw + x) * 4 + k] = (byte)Math.Round(Math.Clamp(sum / n, 0, 1) * 255);
+                        }
+                list.Add(new Image(nw, nh, 4, bytes, next));
+                (values, w, h) = (next, nw, nh);
+            }
+            levels = list.ToArray();
+            MipChains.AddOrUpdate(img, levels);
+            return levels;
+        }
+    }
+
     public double[] Sample(double u, double v)
     {
         var img = Image;
+        if (Mipmapped && Footprint is { } f && img.Width * img.Height > 1)
+        {
+            // The level of detail: log2 of how many texels one pixel covers (the longer of its two directions).
+            double rx = Math.Sqrt(Sq(f.DuDx * img.Width) + Sq(f.DvDx * img.Height)), ry = Math.Sqrt(Sq(f.DuDy * img.Width) + Sq(f.DvDy * img.Height));
+            double lod = Math.Log2(Math.Max(rx, ry));
+            if (lod > 0 && !double.IsNaN(lod))
+            {
+                var levels = Levels(img);
+                lod = Math.Min(lod, levels.Length - 1);
+                if (!MipLinear) return SampleLevel(levels[(int)Math.Round(lod)], u, v);
+                int lower = (int)Math.Floor(lod);
+                double t = lod - lower;
+                var a = SampleLevel(levels[lower], u, v);
+                if (t <= 0 || lower + 1 >= levels.Length) return a;
+                var b = SampleLevel(levels[lower + 1], u, v);
+                for (int k = 0; k < 4; k++) a[k] += (b[k] - a[k]) * t;
+                return a;
+            }
+        }
+        return SampleLevel(img, u, v);
+    }
+
+    private static double Sq(double x) => x * x;
+
+    /// <summary>Bilinear (or nearest) filtering in one level; a smaller level holds linear values already.</summary>
+    private double[] SampleLevel(Image img, double u, double v)
+    {
         int w = img.Width, h = img.Height;
         if (!Sampler.Linear)
             return Texel(img, Coord(u * w - 0.5 + 0.5, w, Sampler.WrapS, out var outS), Coord(v * h, h, Sampler.WrapT, out var outT), outS || outT);

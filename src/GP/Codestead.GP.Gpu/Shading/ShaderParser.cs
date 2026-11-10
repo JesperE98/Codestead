@@ -32,7 +32,9 @@ public sealed partial class ShaderParser
     public static ShaderProgram ParseProgram(string source)
     {
         var p = new ShaderParser(ShaderLexer.Tokenize(source));
-        return p.Program();
+        var program = p.Program();
+        program.Source = source;
+        return program;
     }
 
     /// <summary>Parses one expression (e.g. the right-hand side of a C++ assignment).</summary>

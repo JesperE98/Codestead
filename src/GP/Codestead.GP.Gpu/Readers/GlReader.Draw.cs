@@ -198,7 +198,14 @@ public sealed partial class GlReader
                     var (attachment, depth) = (t.Attachment, t.IsDepth);
                     texture = new Textures.Texture(() => Raster.Rasterizer.TargetImage(fbo, attachment, depth), sampler) { Components = 4 };
                 }
-                else texture = new Textures.Texture(t.Image!, sampler) { Components = t.Components, Srgb = t.Srgb };
+                else texture = new Textures.Texture(t.Image!, sampler)
+                {
+                    Components = t.Components,
+                    Srgb = t.Srgb,
+                    // glGenerateMipmap and a *_MIPMAP_* minification filter: a minified texture reads its smaller levels.
+                    Mipmapped = t.Mipmaps && t.MinFilter.Contains("MIPMAP", StringComparison.Ordinal),
+                    MipLinear = t.MinFilter.EndsWith("MIPMAP_LINEAR", StringComparison.Ordinal),
+                };
             }
             else scene.Notes.Add(SimNote.Warning("noTextureOnUnit", ("name", name), ("unit", unit.ToString())));
             bound[name] = texture;

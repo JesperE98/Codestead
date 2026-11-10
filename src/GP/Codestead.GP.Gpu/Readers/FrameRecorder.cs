@@ -203,10 +203,10 @@ internal sealed class FrameRecorder
         switch (name)
         {
             case "vkCmdBindPipeline" when args.Count >= 3:
-                pipeline = NameOf(args[2]);
+                pipeline = PipelineName(args[2]);
                 return ShaderValue.Scalar(0);
             case ".SetPipelineState" when args.Count >= 2:
-                pipeline = NameOf(args[1]);
+                pipeline = PipelineName(args[1]);
                 return ShaderValue.Scalar(0);
             case ".Reset" when args.Count >= 3:
                 pipeline = NameOf(args[2]) ?? pipeline;
@@ -254,6 +254,19 @@ internal sealed class FrameRecorder
         return name.StartsWith("vk", StringComparison.Ordinal) || name.StartsWith("glfw", StringComparison.Ordinal) && name != "glfwGetTime"
             || (name.StartsWith('.') && name is not (".size" or ".data" or ".c_str" or ".length" or ".begin" or ".end" or ".rbegin" or ".rend" or ".push_back" or ".emplace_back" or ".resize" or ".Get" or ".get")) || name is "memcpy" or "ThrowIfFailed" or "WaitForPreviousFrame"
             ? ShaderValue.Scalar(0) : null;
+    }
+
+    /// <summary>
+    /// The program's variable for a pipeline argument: a helper's parameter (renderToCubemap(VkPipeline pipeline, …))
+    /// is the member that holds the same handle.
+    /// </summary>
+    private string? PipelineName(Expr e)
+    {
+        var name = NameOf(e);
+        if (name is null || Value(e)?.Text is not { Length: > 0 } handle || !handle.Contains(':')) return name;
+        if (exec.Runner.Globals.TryGetValue(name, out var own) && own.Text == handle) return name;
+        var holders = exec.Runner.Globals.Where(kv => kv.Value.Text == handle).Select(kv => kv.Key).ToList();
+        return holders.Count == 1 ? holders[0] : name;
     }
 
     private ShaderValue? Value(Expr e)

@@ -56,9 +56,8 @@ multiplied with the vector on the left (`mul(position, model)`), as in every cha
 transpose(inverse(model)) stored transposed is `XMMatrixInverse(nullptr, model)`.
 
 Pixels: coordinates from the top left of the 800×600 client area; nothing depends on time. D3D12 cannot run here; the
-values are the OpenGL project's (Mesa), which the app's simulator reproduces for this project's shaders and draws in
-every state of this chapter (all but about 16 edge pixels equal) once it draws the sphere as a triangle strip – see
-*Simulator* at the end. The spheres' centres are at x = 153, 235, 318, 400, 482, 565, 647 (col 0..6) and y = 547, 465,
+values are the OpenGL project's (Mesa), which the app's simulator reproduces for this project in every state (at full
+size all but about 16 edge pixels equal up to `tone-map`; see *Simulator* at the end). The spheres' centres are at x = 153, 235, 318, 400, 482, 565, 647 (col 0..6) and y = 547, 465,
 382, 300, 218, 135, 53 (row 0..6, row 0 at the bottom); each is about 66 pixels wide (the centre one covers x 367..432,
 y 267..332). About 174,600 pixels belong to spheres in every state of the 7 × 7 grid. Named points (as OpenGL's):
 **background** (20,20) and **gap** (359,259) (between four spheres) = 26,26,26 in every state of the 7 × 7 grid; sphere
@@ -130,10 +129,9 @@ non-metal, rough), **c33** (400,300), **c60** (153,53) (top left: metal, smooth)
   runs on the CPU; a real GPU handles learnopengl's values easily.
 
 ## Simulator
-Checked with a runner on the app's simulator (`Simulator.Build` + `Rasterizer.Render`), every state:
-- **Triangle strip:** `IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP)` is read as a triangle list (the
-  topology name is matched as `TRIANGLE_STRIP`, OpenGL's spelling): every sphere is drawn as scattered triangles – one
-  in three of the strip's. Shown: speckled spheres; expected: solid ones.
-- With the strip read as a strip (a test copy that names the topology through a constant containing `TRIANGLE_STRIP`),
-  the simulator's picture equals the OpenGL project's Mesa screenshot in every state from the start to `tone-map` (at
-  most 16 pixels differ, on sphere edges), and after `textured` up to the mipmap differences noted above.
+Checked with a runner on the app's simulator (`Simulator.Build` + `Rasterizer.Render`, commit e1fc5e0), every state:
+it follows this project – the sphere's indexed triangle strip (`D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP`, per draw), the
+38 root constants per sphere, the constant buffer, the five SRVs of one table. At 800 px the picture equals the OpenGL
+project's Mesa screenshot from the start to `tone-map` (at most 16 pixels differ, on sphere edges); after `textured` the
+named points agree within 2 levels (mean difference 0.24 levels; the differences sit where the maps are minified).
+Render time of the final state: about 12 s at a 240-pixel-wide preview (SIMW=240), about 40 s at 800.

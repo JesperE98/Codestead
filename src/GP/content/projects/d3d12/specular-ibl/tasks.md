@@ -79,10 +79,9 @@ The fixed choices of the whole PBR part are at the top of `../pbr-lighting/tasks
 - No `glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS)`: Direct3D always filters across the edges of a cube map's faces.
 - The lookup texture is *shown* with v flipped (`debug_quad.hlsl`), so the picture matches the other APIs'.
 
-Pixels: coordinates from the top left of the 800×600 client area; nothing depends on time. D3D12 cannot run here, and
-the app's simulator does not follow the capture passes of this project yet (see *Simulator* at the end): the values
-below are the **OpenGL project's Mesa values** of the same states – the same maths, sizes and sample counts; expect a
-few levels of difference from rounding and the points above. Sphere points as before: **c00** (153,547), **c03**
+Pixels: coordinates from the top left of the 800×600 client area; nothing depends on time. D3D12 cannot run here; the
+values below are the **OpenGL project's Mesa values** of the same states – the same maths, sizes and sample counts. The
+app's simulator follows this project in every state (see *Simulator* at the end for where it differs). Sphere points as before: **c00** (153,547), **c03**
 (400,547), **c06** (647,547), **c30** (153,300), **c33** (400,300), **c36** (647,300), **c60** (153,53), **c63** (400,53),
 **c66** (647,53), **h33** (411,288), **h62** (331,46). On the smooth bottom left sphere (row 0, col 0): **sky-refl**
 (146,527) (its upper half), **ground-refl** (153,563) (its lower half), **sun00** (157,539) (where the sun's reflection
@@ -106,8 +105,8 @@ bottom-right = 105,98,88, gap-sky = 170,179,195, gap-ground = 107,100,89; c00 �
 
 ## brdf-lut
 - **Task:** Render the BRDF integration map: a 128 × 128 two-channel floating-point texture (`m_brdfLUTTexture`, `DXGI_FORMAT_R16G16_FLOAT`) that stores, for every NdotV (u) and roughness (v), the scale and the bias applied to F0. Write `ImportanceSampleGGX`, the geometry functions (with the IBL `k`) and `IntegrateBRDF` in `brdf.hlsl`, draw the screen quad once into the texture in `LoadAssets`, and for now show the texture on a screen quad that covers the window.
-- **Hint:** A pipeline state after the pre-filter one: `brdf.hlsl`'s `VSMain` and `PSMain`, `psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16_FLOAT` → `m_brdfPipelineState`; and one after the background's: `brdfVertexShader` again with `debug_quad.hlsl`'s `PSMain`, `psoDesc.DepthStencilState.DepthEnable = FALSE` → `m_debugQuadPipelineState`. In `LoadAssets` after the pre-filter pass: `CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16_FLOAT, 128, 128, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)` in the RENDER_TARGET state, an SRV (`D3D12_SRV_DIMENSION_TEXTURE2D`, `DXGI_FORMAT_R16G16_FLOAT`) in slot 5; `CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_rtvDescriptorSize); m_device->CreateRenderTargetView(m_brdfLUTTexture.Get(), nullptr, rtvHandle); m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);`, a 128 × 128 viewport and scissor rectangle, `SetPipelineState(m_brdfPipelineState.Get())`, `RenderQuad()`, the barrier to PIXEL_SHADER_RESOURCE. `brdf.hlsl`: `float k = (a * a) / 2.0f;` with `a = roughness` in `GeometrySchlickGGX`; `IntegrateBRDF`: `V = (sqrt(1.0f - NdotV * NdotV), 0.0f, NdotV)`, `N = (0, 0, 1)`, per sample `H`, `L = normalize(2.0f * dot(V, H) * H - V)`, and if `NdotL > 0.0f`: `G_Vis = (G * VdotH) / (NdotH * NdotV)`, `Fc = pow(1.0f - VdotH, 5.0f)`, `A += (1.0f - Fc) * G_Vis; B += Fc * G_Vis;`; both divided by the sample count; `PSMain` returns `IntegrateBRDF(input.texCoords.x, input.texCoords.y)`. To look at it, at the end of `PopulateCommandList`: `SetPipelineState(m_debugQuadPipelineState.Get())`, table 2 = slot 5, `RenderQuad()`.
-- **When done:** `main.cpp`: members `m_brdfPipelineState`, `m_debugQuadPipelineState`, `m_brdfLUTTexture`; `D3DCompileFromFile(L"brdf.hlsl", …)` twice (`VSMain`, `PSMain`), `psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16_FLOAT`, `CreateGraphicsPipelineState(…, &m_brdfPipelineState)`; after the background's pipeline state `D3DCompileFromFile(L"debug_quad.hlsl", …, "PSMain", …)`, `psoDesc.VS = CD3DX12_SHADER_BYTECODE(brdfVertexShader.Get())`, `DepthEnable = FALSE`, `CreateGraphicsPipelineState(…, &m_debugQuadPipelineState)`; the block `// pbr: generate a 2D LUT from the BRDF equations used.` (`Tex2D(DXGI_FORMAT_R16G16_FLOAT, 128, 128, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)`, the SRV at slot 5, `CreateRenderTargetView(m_brdfLUTTexture.Get(), nullptr, rtvHandle)` at RTV slot `FrameCount`, `OMSetRenderTargets`, the 128 × 128 viewport, `m_brdfPipelineState`, `RenderQuad()`, the barrier); in `PopulateCommandList` after the background the `// render BRDF map to screen` block (`m_debugQuadPipelineState`, table 2 = `brdfLUTTexture` at heap slot 5, `RenderQuad()`). `brdf.hlsl`: `ImportanceSampleGGX`, `GeometrySchlickGGX` (`k = (a * a) / 2.0f`), `GeometrySmith`, `IntegrateBRDF` with `SAMPLE_COUNT = 128u`, `return integratedBRDF;` (`PSMain` returns a `float2`).
+- **Hint:** Two pipeline states after the pre-filter one: `brdf.hlsl`'s `VSMain` and `PSMain`, `psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16_FLOAT` → `m_brdfPipelineState`; right after it the same vertex shader with `debug_quad.hlsl`'s `PSMain`, `RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM` and `DSVFormat = DXGI_FORMAT_D32_FLOAT` (the window's pass binds the depth buffer; `DepthEnable` is still `FALSE` from the capture passes) → `m_debugQuadPipelineState`. In `LoadAssets` after the pre-filter pass: `CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16_FLOAT, 128, 128, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)` in the RENDER_TARGET state, an SRV (`D3D12_SRV_DIMENSION_TEXTURE2D`, `DXGI_FORMAT_R16G16_FLOAT`) in slot 5; `CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_rtvDescriptorSize); m_device->CreateRenderTargetView(m_brdfLUTTexture.Get(), nullptr, rtvHandle); m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);`, a 128 × 128 viewport and scissor rectangle, `SetPipelineState(m_brdfPipelineState.Get())`, `RenderQuad()`, the barrier to PIXEL_SHADER_RESOURCE. `brdf.hlsl`: `float k = (a * a) / 2.0f;` with `a = roughness` in `GeometrySchlickGGX`; `IntegrateBRDF`: `V = (sqrt(1.0f - NdotV * NdotV), 0.0f, NdotV)`, `N = (0, 0, 1)`, per sample `H`, `L = normalize(2.0f * dot(V, H) * H - V)`, and if `NdotL > 0.0f`: `G_Vis = (G * VdotH) / (NdotH * NdotV)`, `Fc = pow(1.0f - VdotH, 5.0f)`, `A += (1.0f - Fc) * G_Vis; B += Fc * G_Vis;`; both divided by the sample count; `PSMain` returns `IntegrateBRDF(input.texCoords.x, input.texCoords.y)`. To look at it, at the end of `PopulateCommandList`: `SetPipelineState(m_debugQuadPipelineState.Get())`, table 2 = slot 5, `RenderQuad()`.
+- **When done:** `main.cpp`: members `m_brdfPipelineState`, `m_debugQuadPipelineState`, `m_brdfLUTTexture`; `D3DCompileFromFile(L"brdf.hlsl", …)` twice (`VSMain`, `PSMain`), `psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16_FLOAT`, `CreateGraphicsPipelineState(…, &m_brdfPipelineState)`; right after it `D3DCompileFromFile(L"debug_quad.hlsl", …, "PSMain", …)`, `psoDesc.PS = …`, `RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM`, `DSVFormat = DXGI_FORMAT_D32_FLOAT`, `CreateGraphicsPipelineState(…, &m_debugQuadPipelineState)`; the block `// pbr: generate a 2D LUT from the BRDF equations used.` (`Tex2D(DXGI_FORMAT_R16G16_FLOAT, 128, 128, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)`, the SRV at slot 5, `CreateRenderTargetView(m_brdfLUTTexture.Get(), nullptr, rtvHandle)` at RTV slot `FrameCount`, `OMSetRenderTargets`, the 128 × 128 viewport, `m_brdfPipelineState`, `RenderQuad()`, the barrier); in `PopulateCommandList` after the background the `// render BRDF map to screen` block (`m_debugQuadPipelineState`, table 2 = `brdfLUTTexture` at heap slot 5, `RenderQuad()`). `brdf.hlsl`: `ImportanceSampleGGX`, `GeometrySchlickGGX` (`k = (a * a) / 2.0f`), `GeometrySmith`, `IntegrateBRDF` with `SAMPLE_COUNT = 128u`, `return integratedBRDF;` (`PSMain` returns a `float2`).
   **Picture: the red-green lookup texture fills the window** (the quad lies in front of everything; blue is 0 everywhere): red on the right and at the bottom (F0 counts fully when you look straight at a smooth surface), darker red towards the top (rough), and a green-yellow corner at the bottom left (at grazing angles on smooth surfaces the bias takes over – everything reflects). Points (x, y) → NdotV = (x + 0.5) / 800, roughness = 1 - (y + 0.5) / 600: (20,590) ≈ 31,222,0, (40,570) ≈ 56,188,0, (80,540) ≈ 97,136,0, (200,450) ≈ 164,45,0, (400,300) ≈ 186,5,0, (600,450) ≈ 248,0,0, (760,570) = 255,0,0, (780,590) = 255,0,0, (200,150) ≈ 154,5,0, (600,150) ≈ 150,0,0, (40,30) ≈ 150,5,0, (760,30) ≈ 94,0,0.
 
 ## specular
@@ -145,17 +144,31 @@ bottom-right = 105,98,88, gap-sky = 170,179,195, gap-ground = 107,100,89; c00 �
   `../pbr-lighting/tasks.md`, also for the texture coordinates' v and the normal map's y.
 
 ## Simulator
-Checked with a runner on the app's simulator (`Simulator.Build` + `Rasterizer.Render`), every state. Besides the gaps
-listed in `../diffuse-irradiance/tasks.md` (setup draws dropped, the capture RTV slot written again per face, per-draw
-topology, `TRIANGLESTRIP`), which leave all cube maps and the lookup texture empty – **black background in every
-state, a black window after `brdf-lut`** (the quad shows an empty texture), spheres without image based light – this
-chapter needs:
-- render target views with `Texture2DArray.MipSlice` (a face of a mip level as the target, with that level's size) and
-  viewports per level;
-- shader resource views of a single mip level (`TextureCube.MostDetailedMip`, `MipLevels = 1`) read while another level
-  of the same texture is the render target (the hand-made mip chain);
-- `SampleLevel` on cube maps with fractional levels (trilinear) for the pre-filter pass, the background (1.2) and the
-  spheres (`roughness * 4.0`);
-- a two-channel target (`DXGI_FORMAT_R16G16_FLOAT`) written by a `float2 PSMain`, and
-  `CreateRenderTargetView(resource, nullptr, handle)` into the reused slot;
-- `DrawInstanced(4, 1, 36, 0)` as a triangle strip from a vertex buffer that also holds a triangle list.
+Checked with a runner on the app's simulator (`Simulator.Build` + `Rasterizer.Render`, commit e1fc5e0), every state at
+SIMW=240, compared with the OpenGL project's Mesa screenshots scaled to the same size. The simulator follows the whole
+chapter: the hand-made mip chain (single-mip SRVs, per-mip render target views, per-subresource barriers), the
+pre-filter levels, `SampleLevel` with fractional levels, the `R16G16_FLOAT` lookup texture written by a `float2 PSMain`,
+the screen quad's strip in the same vertex buffer as the cube's list, the four descriptor tables of `specular` and
+`textured`.
+- `brdf-lut`: the lookup texture equals OpenGL's (all twelve points within 1 level, e.g. (20,590) 32,220,0, (400,300)
+  187,5,0, (760,30) 94,0,0; mean difference 0.29 levels).
+- `specular`: the background equals OpenGL's within 2 levels; the spheres within 3 levels except on the rough metal
+  ones (c66 148,23,24 against 142,21,22, c63 130,18,18 against 127,17,18) – they read the pre-filter map's blurriest
+  levels, see the next point.
+- `prefilter-map` (the background shows the pre-filter map at level 1.2): the simulator is **brighter and warmer than
+  Mesa** below the horizon – hills 180,174,174 against 167,163,163, ground-bottom 132,119,112 against 119,111,104,
+  gap-ground 140,127,119 against 127,118,111, glow 224,207,172 against 215,196,160 (sky within 5). The simulator's
+  rendering of the *OpenGL* project shows the same (hills 179,173,173, ground-bottom 125,115,108), so this is the
+  simulator against Mesa in the pre-filter pass or in sampling level 1.2 (trilinear between levels 1 and 2 of a 64²
+  cube map), not a difference of the two programs. Between the two programs in the simulator: within 3 levels, except
+  ground-bottom / gap-ground / bottom-right 5–8 levels brighter in Direct3D – the environment's mip chain here is drawn
+  with a linear 2 × 2 filter instead of `glGenerateMipmap`, and the irradiance convolution reads level 0.
+- `textured`: the named points at a 240-pixel preview differ by up to about 40 levels on the rivets, grooves and steel edges in both
+  chapters' textured states (the course's maps have no mipmaps in Direct3D, so the minified preview samples them
+  sharper than OpenGL's mipmapped textures); at 800 px they agree within 2 levels (`pbr-lighting`).
+- A pipeline state whose vertex shader is a blob compiled earlier than the last `vs_` compile before it is paired with
+  that last compile (the simulator's rule "the shaders compiled last before the PSO"): the course's code is written so
+  that this does not matter (the debug quad's pipeline state follows the BRDF one directly), but a reordering would show
+  the wrong vertex shader (seen while writing: the debug quad was drawn with the background's vertex shader).
+- Render time of the final state: about 36 s at SIMW=240 (the D3D12 setup passes; the OpenGL project's `prefilter-map`
+  takes about 15 s, this one's 33 s).

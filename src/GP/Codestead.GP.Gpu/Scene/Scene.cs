@@ -27,6 +27,7 @@ public sealed class Scene
     public int SetupOps { get; set; }
     /// <summary>What the setup draws left in their targets, kept between frames (the simulator's own; see Rasterizer).</summary>
     internal object? SetupCache { get; set; }
+    internal string? SetupKey { get; set; }
     /// <summary>Off-screen render targets by id (framebuffer objects …); draws name them in <see cref="DrawCall.Target"/>.</summary>
     public Dictionary<string, RenderTarget> Targets { get; } = new(StringComparer.Ordinal);
     /// <summary>Clears and copies between draws, in program order (the window's first clear is <see cref="ClearColor"/>).</summary>

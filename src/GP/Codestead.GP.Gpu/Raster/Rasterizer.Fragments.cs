@@ -94,7 +94,12 @@ public static partial class Rasterizer
                     p0 /= sum;
                     p1 /= sum;
                     p2 /= sum;
-                    WriteFragment(fb, py * width + px, mask, zs, draw, stages, () => stages.Fragment(vs, p0, p1, p2, x, y, z, sum, front));
+                    // The weights one pixel to the right and one down: how the varyings change across pixels (a GPU's
+                    // derivatives, for the mip level of a texture read).
+                    var (rx0, rx1, rx2) = Perspective(Weights(x + 1, y), invW);
+                    var (ry0, ry1, ry2) = Perspective(Weights(x, y + 1), invW);
+                    var derivatives = (rx0 - p0, rx1 - p1, rx2 - p2, ry0 - p0, ry1 - p1, ry2 - p2);
+                    WriteFragment(fb, py * width + px, mask, zs, draw, stages, () => stages.Fragment(vs, p0, p1, p2, x, y, z, sum, front, derivatives));
                 }
             }
         };
@@ -104,6 +109,12 @@ public static partial class Rasterizer
     /// Sets up a line one pixel wide (glLineWidth beyond 1 is not part of the core profile) and the number of steps
     /// along it.
     /// </summary>
+    private static (double, double, double) Perspective((double C0, double C1, double C2) c, double[] invW)
+    {
+        double p0 = c.C0 * invW[0], p1 = c.C1 * invW[1], p2 = c.C2 * invW[2], sum = p0 + p1 + p2;
+        return sum == 0 ? (0, 0, 0) : (p0 / sum, p1 / sum, p2 / sum);
+    }
+
     private static Fill? Line(ShadedVertex a, ShadedVertex b, DrawCall draw, Framebuffer fb, bool yDown, bool zMinusOneToOne, out long pixels)
     {
         pixels = 0;

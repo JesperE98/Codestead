@@ -81,10 +81,10 @@ The sun (direction (0.455, 0.682, 0.573): up, to the right, **behind** the camer
 outside the view; they light the spheres from the front. The 128² faces are magnified about ten times, so the
 background is soft.
 
-Pixels: coordinates from the top left of the 800×600 client area; nothing depends on time. D3D12 cannot run here, and
-the app's simulator does not follow the capture passes of this project yet (see *Simulator* at the end): the values
-below are the **OpenGL project's Mesa values** of the same states – the same maths, sizes and sample counts; expect a
-level or two of difference from rounding and from the convolution reading mip level 0. The sphere points are the
+Pixels: coordinates from the top left of the 800×600 client area; nothing depends on time. D3D12 cannot run here; the
+values below are the **OpenGL project's Mesa values** of the same states – the same maths, sizes and sample counts. The
+app's simulator follows this project in every state and agrees with them within 1–3 levels at the named points (see
+*Simulator* at the end). The sphere points are the
 previous chapter's: **c00** (153,547), **c03** (400,547), **c06** (647,547), **c33** (400,300), **c60** (153,53),
 **c63** (400,53), **c66** (647,53), **h33** (411,288), **h62** (331,46). Background points: **sky** (60,60), **sky-top**
 (400,10), **sky-right** (740,180), **hills** (60,270), **hills-high** (60,255) (hill on the left, sky at the same height
@@ -93,7 +93,7 @@ on the right: **sky-low-right** (740,255)), **hills-right** (740,270), **ground*
 
 **Start picture:** the previous chapter's tone-mapped spheres on the clear colour: every background point = 26,26,26;
 c00 = 157,1,1, c03 = 146,27,27, c06 = 159,41,41, c33 = 115,19,19, c60 = 68,0,0, c63 = 95,11,11, c66 = 124,17,17, h33 =
-177,71,71, h62 = 239,81,81. (The simulator follows this state, with the triangle strip caveat of `pbr-lighting`.)
+177,71,71, h62 = 239,81,81.
 
 ## environment-map
 - **Task:** Load `environment.hdr` with `stbi_loadf` into a floating-point 2D texture (`LoadHdrTexture`), render it once – in `LoadAssets` – into the six faces of a 128 × 128 floating-point cube map (`m_envCubemap`) with the 90° capture projection and the six capture views, and draw that cube map as the background behind the spheres.
@@ -128,20 +128,17 @@ c00 = 157,1,1, c03 = 146,27,27, c06 = 159,41,41, c33 = 115,19,19, c60 = 68,0,0, 
   (t0) and always point at a slot that was written when its texture was created.
 
 ## Simulator
-Checked with a runner on the app's simulator (`Simulator.Build` + `Rasterizer.Render`), every state. What it shows now
-and what is missing for this project (states `environment-map`, `irradiance-map`, `ambient`):
-- **Draws recorded in the setup are dropped** (`FrameRecorder.Setup` clears the draws and clears recorded in
-  `LoadAssets`): the six conversion draws and the six convolution draws never happen, the cube maps stay empty. Shown:
-  a **black background** in all three states (the background samples an empty cube map); after `ambient` the spheres
-  lose their ambient light (irradiance 0) instead of gaining it. Expected: the pictures above.
-- **A render target view written again between draws** (`SetCaptureTarget`: `CreateRenderTargetView` into the same RTV
-  heap slot for each face, then `OMSetRenderTargets`): the device model keeps one resource per RTV handle and resolves
-  it after the run, and it ignores the view description (`Texture2DArray.FirstArraySlice`, `MipSlice`) – it would need
-  the (resource, array slice, mip level) at the time of `OMSetRenderTargets`.
-- **Per-draw topology:** the simulator takes the first `IASetPrimitiveTopology` in the source for every draw; here
-  `RenderSphere()` sets `TRIANGLESTRIP` and `RenderCube()` `TRIANGLELIST` (and `TRIANGLESTRIP` is read as a list, see
-  `pbr-lighting`).
-- Not reached yet, so untested here: `stbi_loadf` data with four channels as an `R32G32B32A32_FLOAT` texture
-  (`UpdateSubresources` with `pData` = the loader's pointer), `atan2` / `asin` in HLSL, `SampleLevel` on a
-  `TextureCube`, `float` loop counters in HLSL.
-- The start state is followed (with the triangle strip caveat).
+Checked with a runner on the app's simulator (`Simulator.Build` + `Rasterizer.Render`, commit e1fc5e0), every state at
+a 240-pixel-wide preview (SIMW=240), compared with the OpenGL project's Mesa screenshots scaled to the same size: the
+simulator follows this project – the passes recorded in `LoadAssets` (kept as setup passes), the single-face render
+target views written into one reused RTV descriptor by `SetCaptureTarget`, `stbi_loadf` into an `R32G32B32A32_FLOAT`
+texture, the y flip of `captureProjection`, `SampleLevel` on the cube maps, the per-draw topology (strip spheres, list
+cube). The named points agree within 1–3 levels in every state (e.g. after `environment-map`: sky 169,178,195 against
+168,177,195, hills 64,89,64 against 64,89,64, sky-top 161,173,193 against 159,170,189; after `irradiance-map`: sky
+163,164,176 against 162,163,175; after `ambient`: c00 193,1,1 against 192,0,0, c33 145,19,19 against 145,19,19); the
+sky is upright and the hills are higher on the left, as in OpenGL. Render time of the final state: about 20 s at
+SIMW=240.
+
+Earlier simulator versions (before e1fc5e0) dropped the draws recorded in `LoadAssets`, kept one resource per RTV handle
+(no per-face targets), took the first `IASetPrimitiveTopology` of the source for every draw and read `TRIANGLESTRIP`
+as a list: all fixed.

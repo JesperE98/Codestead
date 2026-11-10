@@ -473,7 +473,7 @@ void D3D12App::LoadAssets()
 
         // TODO: the pipeline states that generate the environment cube map's mip levels (cubemap.hlsl, downsample.hlsl) and pre-filter it (cubemap.hlsl, prefilter.hlsl)
 
-        // TODO: the pipeline state that integrates the BRDF (brdf.hlsl)
+        // TODO: the pipeline states that integrate the BRDF (brdf.hlsl) and show a texture on the screen quad (brdf.hlsl, debug_quad.hlsl)
 
         // The background's pipeline state (learnopengl: Shader backgroundShader("background.vs",
         // "background.fs")): the shaders of background.hlsl, the window's back buffer and
@@ -491,8 +491,6 @@ void D3D12App::LoadAssets()
         psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
         psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_backgroundPipelineState)));
-
-        // TODO: the pipeline state that shows a texture on the screen quad (brdf.hlsl, debug_quad.hlsl)
     }
 
     // Create the command list.
