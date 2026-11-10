@@ -1,0 +1,53 @@
+{
+  "title": "Deferred shading",
+  "tasks": {
+    "g-buffer": {
+      "text": {
+        "opengl": "Rendera lådorna i en G-buffer i stället för fönstret: en framebuffer med tre färgtexturer – positioner (`GL_RGBA16F`), normaler (`GL_RGBA16F`), albedo + spekulär (`GL_RGBA`) – och en djup-renderbuffer, fylld av `g_buffer.vs` / `g_buffer.fs`. Rita sedan skärmfyrhörningen med belysningspassets shader, som än så länge visar albedot.",
+        "vulkan": "Rendera lådorna i en G-buffer i stället för fönstret: ett render pass med tre färg-attachments – positioner (`VK_FORMAT_R16G16B16A16_SFLOAT`), normaler (samma), albedo + spekulär (`VK_FORMAT_R8G8B8A8_UNORM`) – och en djup-attachment, fylld av `g_buffer.vert` / `.frag`. Rita sedan skärmfyrhörningen i fönstret med belysningspassets shader, som än så länge visar albedot.",
+        "d3d12": "Rita lådorna i en G-buffer i stället för fönstret: tre render targets – positioner (`R16G16B16A16_FLOAT`), normaler (`R16G16B16A16_FLOAT`), albedo + spekulär (`R8G8B8A8_UNORM`) – fyllda av `g_buffer.hlsl`, med djupbuffern. Rita sedan skärmfyrhörningen i back buffern med belysningspassets pipeline state (`deferred_shading.hlsl`), som än så länge visar albedot."
+      },
+      "hint": {
+        "opengl": "Tre block med `glGenTextures` / `glTexImage2D` / `GL_NEAREST` kopplade som `GL_COLOR_ATTACHMENT0`, `1`, `2`, sedan `unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 }; glDrawBuffers(3, attachments);` och en `GL_DEPTH_COMPONENT`-renderbuffer. `g_buffer.fs`: `gPosition = FragPos; gNormal = normalize(Normal); gAlbedoSpec.rgb = texture(texture_diffuse1, TexCoords).rgb; gAlbedoSpec.a = texture(texture_specular1, TexCoords).r;`. Loopen: bind `gBuffer`, rensa, lådorna med `shaderGeometryPass`; bind 0, rensa, `gPosition` / `gNormal` / `gAlbedoSpec` på enhet 0–2, `renderQuad()` med `shaderLightingPass`.",
+        "vulkan": "`createGBufferRenderPass()`: tre färg-attachments (CLEAR, STORE, slutlayout `SHADER_READ_ONLY_OPTIMAL`), `std::array<VkAttachmentReference, 3>`, djupet på attachment 3, två dependencies. `createGBuffer()`: tre bilder (färg-attachment + samplad), views, en djupbild, en framebuffer med fyra views. `geometryPipeline` med `gBufferRenderPass` och 3, `lightingPipeline` med `renderPass` och 1. `gBufferSampler` NEAREST + CLAMP_TO_EDGE; binding 3 i layouten; poolen 2 / 6, `maxSets = 2`; `createGBufferDescriptorSet(…)`. Geometripasset med fyra rensningsvärden, sedan fyrhörningen: `vkCmdDraw(commandBuffer, 6, 1, 36, 0)` med `gBufferDescriptorSet`.",
+        "d3d12": "`m_gBuffer[3]` i en `for`-loop över `gBufferFormats[3]` (RTV `FrameCount + i`, SRV `3 + i`; heaparna `FrameCount + 3` och 6). Geometri-PSO: `g_buffer.hlsl`, `NumRenderTargets = 3`; `m_lightingPipelineState`: `deferred_shading.hlsl`, ett mål i `R8G8B8A8_UNORM`, `DepthEnable = FALSE`, `DSVFormat = DXGI_FORMAT_UNKNOWN`. `ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2)` + `rootParameters[3]`, sampler s1 (punkt, CLAMP). Bildrutan: tre barriärer, `OMSetRenderTargets(3, gBufferRtvHandles, FALSE, &dsvHandle)`, rensningar, lådorna, barriärer tillbaka; back buffern utan DSV, tabell 2 = plats 3, tabell 3 = plats 5, `DrawInstanced(6, 1, 36, 0)`."
+      }
+    },
+    "lighting-pass": {
+      "text": {
+        "opengl": "Belys G-buffern i belysningspasset: skicka de 32 ljusen och vypositionen till `shaderLightingPass`, och beräkna i `deferred_shading.fs` learnopengls belysning med positionen, normalen, albedot och den spekulära intensiteten ur G-buffern.",
+        "vulkan": "Belys G-buffern i belysningspasset: läs i `deferred_shading.frag` positionen, normalen, albedot och den spekulära intensiteten ur G-bufferns tre bilder och beräkna learnopengls belysning med de 32 ljusen och vypositionen i uniform buffern.",
+        "d3d12": "Belys G-buffern i `deferred_shading.hlsl`: läs pixelns position, normal, albedo och spekulära intensitet och beräkna learnopengls belysning med de 32 ljusen i konstantbuffern."
+      },
+      "hint": {
+        "opengl": "Forward-passets loop, nu på `shaderLightingPass` (`lights[i].Position`, `.Color`, `.Linear` = 0.7, `.Quadratic` = 1.8, sedan `viewPos`). I shadern: `vec3 lighting = Diffuse * 0.1;`, `vec3 viewDir = normalize(viewPos - FragPos);` och per ljus det diffusa, den spekulära Blinn-Phong-termen (`pow(…, 16.0)` gånger `Specular`) och dämpningen – forward-shaderns kod.",
+        "vulkan": "Bara shadern ändras: ljusen ligger redan i uniform buffern. Deklarera `struct Light { vec3 position; float linear; vec3 color; float quadratic; };` och uniform-blocket som i `forward_shading.frag`, `gPosition` / `gNormal` / `gAlbedoSpec` på binding 1, 2, 3; sedan `vec3 lighting = Diffuse * 0.1;`, `vec3 viewDir = normalize(ubo.viewPos - FragPos);` och forward-shaderns loop.",
+        "d3d12": "Bara shadern ändras. Deklarera `struct Light` och `cbuffer SceneConstantBuffer : register(b1)` som i `forward_shading.hlsl` (`#define NR_LIGHTS 32`). I `PSMain`: `FragPos`, `Normal`, `Diffuse` (`.rgb`), `Specular` (`.a` i gAlbedoSpec) med `pointSampler`, `float3 lighting = Diffuse * 0.1f;`, `float3 viewDir = normalize(viewPos - FragPos);` och forward-shaderns loop."
+      }
+    },
+    "light-cubes": {
+      "text": {
+        "opengl": "Visa ljusen: kopiera G-bufferns djup till fönstrets djupbuffer, och rita sedan en liten kub vid varje ljus (skala 0.125) i ljusets färg med `shaderLightBox`, djuptestad mot lådorna.",
+        "vulkan": "Visa ljusen: rita en liten kub vid varje ljus (skala 0.125) i ljusets färg med `deferred_light_box.vert` / `.frag`, i fönstrets pass efter skärmfyrhörningen, djuptestad mot lådorna – fönstrets pass använder G-bufferns djupbild som sin djup-attachment.",
+        "d3d12": "Visa ljusen: bind efter belysningspasset geometripassets djupbuffer tillsammans med back buffern och rita en liten kub vid varje ljus (skala 0.125) i ljusets färg med ett nytt pipeline state för `deferred_light_box.hlsl`, djuptestad mot lådorna."
+      },
+      "hint": {
+        "opengl": "`glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer); glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);` sedan `glBindFramebuffer(GL_FRAMEBUFFER, 0)`. Kuberna: `renderCube()` med model = translate(lightPositions[i]) · scale(0.125) och `setVec3(\"lightColor\", lightColors[i])`.",
+        "vulkan": "G-bufferns djup: `storeOp = STORE`. Fönsterpassets djup: `loadOp = VK_ATTACHMENT_LOAD_OP_LOAD`, `initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL`, dependencyns `dstAccessMask` + `VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT`; `createFramebuffers()` använder `gBufferDepthImageView`, fönstrets djupbild försvinner. `createPipeline(…, VkBool32 depthTestEnable, …)`: `VK_FALSE` för `lightingPipeline`, `VK_TRUE` för `lightBoxPipeline`. `glm::vec3 lightColor;` i `PushConstants`, vertex- | fragmentsteget överallt. `deferred_light_box.frag`: `outColor = vec4(pc.lightColor, 1.0);`.",
+        "d3d12": "`m_lightBoxPipelineState`: `deferred_light_box.hlsl`s `VSMain` / `PSMain`, `DepthStencilState.DepthEnable = TRUE`, `DSVFormat = DXGI_FORMAT_D32_FLOAT`. Efter fyrhörningen: `OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle)` (ingen kopia behövs), PSO:t, och per ljus `XMMatrixScaling(0.125f, 0.125f, 0.125f) * XMMatrixTranslation(…)`, `modelConstants.lightColor = lightColors[i]`, rotkonstanter, `DrawInstanced(36, 1, 0, 0)`."
+      }
+    },
+    "light-volumes": {
+      "text": {
+        "opengl": "Ge varje ljus en radie (learnopengls ljusvolym: avståndet där dess dämpade ljusstyrka faller under 5/256) och hoppa i belysningsshadern över ljuset där fragmentet ligger längre bort än så.",
+        "vulkan": "Ge varje ljus en radie (learnopengls ljusvolym: avståndet där dess dämpade ljusstyrka faller under 5/256), skicka den i uniform buffern, och hoppa i belysningsshadern över ljuset där fragmentet ligger längre bort.",
+        "d3d12": "Ge varje ljus en radie (learnopengls ljusvolym: avståndet där dess dämpade ljusstyrka faller under 5/256) och hoppa i `deferred_shading.hlsl` över ljuset där pixeln ligger längre bort än så."
+      },
+      "hint": {
+        "opengl": "I ljusloopen: `const float constant = 1.0f;`, `const float maxBrightness = std::fmaxf(std::fmaxf(lightColors[i].r, lightColors[i].g), lightColors[i].b);`, `float radius = (-linear + std::sqrt(linear * linear - 4 * quadratic * (constant - (256.0f / 5.0f) * maxBrightness))) / (2.0f * quadratic);` och `setFloat(\"lights[…].Radius\", radius)`. Shadern: `float Radius;` i `Light`, avståndet först, sedan `if(distance < lights[i].Radius) { … }`.",
+        "vulkan": "`float radius;` efter `quadratic` gör structen 36 byte, och std140 avrundar ett arrayelement uppåt till 48: C++ lägger till `float pad1, pad2, pad3;`. I `updateUniformBuffer()`: `constant`, `maxBrightness` med `std::fmaxf`, learnopengls formel för `radius`, `ubo.lights[i].radius = radius;`. Shadern: `float radius;` i `Light`, avståndet först, sedan `if (distance < ubo.lights[i].radius) { … }`.",
+        "d3d12": "C++-`Light`: `float Radius; float padding1[2];` efter `Quadratic`. I `OnUpdate`: `const float constant = 1.0f;`, `const float maxBrightness = std::fmax(std::fmax(lightColors[i].x, lightColors[i].y), lightColors[i].z);`, learnopengls formel för `radius`, `constantBufferData.lights[i].Radius = radius;`. HLSL: `float Radius;` i `Light`, avståndet först, sedan `if (distance < lights[i].Radius) { … }`."
+      }
+    }
+  }
+}

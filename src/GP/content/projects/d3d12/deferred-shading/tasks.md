@@ -75,14 +75,13 @@ Pixels in the 800×600 client area from the top left; nothing depends on time. N
 **light-orange** (609,233), **light-pink** (428,258), **light-mint** (288,212), **light-cyan** (320,446),
 **light-purple** (543,556).
 
-D3D12 cannot run here. The values below are OpenGL's (Mesa) – the reference picture; the simulator's values for this
-project are given where they differ (measured with the simulator gap of note 1 worked around; see the notes).
+D3D12 cannot run here. The values below are OpenGL's (Mesa) – the reference picture; the app's simulator follows
+every state of this project and differs from them by a few units at most (it samples textures without mip maps).
 
 **Start picture** (forward rendering, no light cubes): mid-box = 81,48,26, front-top = 35,24,13, front-face =
 15,10,5, left-side = 86,59,32, right-side = 51,34,18, back-frame = 149,146,159, left-top = 33,22,12, background =
 0,0,0, light-grey = 34,24,13 (the box behind it), light-orange = 81,81,73 (a box frame), light-pink = 114,60,34,
-light-mint = light-cyan = light-purple = 0,0,0. (Simulator: the same, except mid-box = 75,44,24, back-frame =
-143,141,153, light-orange = 80,79,72 – the specular highlights come out a little weaker than Mesa's.)
+light-mint = light-cyan = light-purple = 0,0,0.
 
 ## g-buffer
 - **Task:** Draw the boxes into a G-buffer instead of the window: three render targets – positions (`R16G16B16A16_FLOAT`), normals (`R16G16B16A16_FLOAT`), albedo + specular (`R8G8B8A8_UNORM`) – filled by `g_buffer.hlsl`, with the depth buffer. Then draw the screen quad into the back buffer with the lighting pass's pipeline state (`deferred_shading.hlsl`), which for now shows the albedo.
@@ -103,10 +102,6 @@ light-mint = light-cyan = light-purple = 0,0,0. (Simulator: the same, except mid
   150,98,52, light-grey = 150,98,52, light-orange = 153,155,161, light-pink = 133,88,46, background = light-mint =
   light-cyan = light-purple = 0,0,0 – every face equally bright; wood ≈ 150,98,52, steel ≈ 155,157,163.
 
-  *Simulator:* follows this state (with note 1 worked around it is identical anyway – the lights are not used): wood =
-  150,98,52, mid-box = right-side = light-pink = 134,88,46, back-frame = light-orange = 150,152,158 (a few texels
-  differ from Mesa's filtering).
-
 ## lighting-pass
 - **Task:** Light the G-buffer in `deferred_shading.hlsl`: read the position, normal, albedo and specular intensity of the pixel and compute learnopengl's lighting with the 32 lights of the constant buffer.
 - **Hint:** Declare `struct Light` and `cbuffer SceneConstantBuffer : register(b1)` as in `forward_shading.hlsl` (`#define NR_LIGHTS 32`). In `PSMain`: `FragPos`, `Normal`, `Diffuse` (`.rgb`) and `Specular` (`.a` of gAlbedoSpec) with `pointSampler`; `float3 lighting = Diffuse * 0.1f;`, `float3 viewDir = normalize(viewPos - FragPos);` and the forward shader's loop. `main.cpp` already sends the lights (they were the forward pass's).
@@ -121,10 +116,6 @@ light-mint = light-cyan = light-purple = 0,0,0. (Simulator: the same, except mid
   light-mint = light-cyan = light-purple = 0,0,0. Now each pixel is lit once (800 × 600 × 32 light calculations),
   however many boxes overlap there.
 
-  *Simulator:* with note 1 worked around it gives exactly its start values again (mid-box = 75,44,24, back-frame =
-  143,141,153, the rest as OpenGL's). As the code stands (note 1): the boxes show only the ambient term (front-top =
-  15,10,5, wood ≈ 15,10,5, steel ≈ 15,15,16).
-
 ## light-cubes
 - **Task:** Show the lights: after the lighting pass, bind the geometry pass's depth buffer together with the back buffer and draw a small cube at every light (scale 0.125) in the light's colour with a new pipeline state for `deferred_light_box.hlsl`, depth-tested against the boxes.
 - **Hint:** `m_lightBoxPipelineState`: `deferred_light_box.hlsl`'s `VSMain`/`PSMain`, the back buffer's format, `DepthStencilState.DepthEnable = TRUE`, `DSVFormat = DXGI_FORMAT_D32_FLOAT`. In `PopulateCommandList` after the quad: `OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle)` (no copy: the depth buffer still holds the boxes' depths), `SetPipelineState(m_lightBoxPipelineState.Get())`, and for every light `XMMatrixScaling(0.125f, …) * XMMatrixTranslation(lightPositions[i]…)` and `modelConstants.lightColor = lightColors[i]` as root constants, `DrawInstanced(36, 1, 0, 0)`.
@@ -135,9 +126,6 @@ light-mint = light-cyan = light-purple = 0,0,0. (Simulator: the same, except mid
   0)`. **32 small pastel cubes** appear (about 12 × 12 to 28 × 28 px; a few hidden behind boxes, e.g. under the left
   middle box): light-grey = 161,159,163, light-orange = 244,209,158, light-pink = 238,150,171, light-mint =
   143,204,181, light-cyan = 129,242,231, light-purple = 201,157,237. Everything else as before.
-
-  *Simulator:* with note 1 worked around: exactly these cube colours, the rest as its `lighting-pass` values. As the
-  code stands (note 1): no cubes at all (the loop runs over an empty vector).
 
 ## light-volumes
 - **Task:** Give every light a radius (learnopengl's light volume: the distance where its attenuated brightness drops below 5/256) and skip the light in `deferred_shading.hlsl` where the pixel is farther away than that.
@@ -154,22 +142,3 @@ light-mint = light-cyan = light-purple = 0,0,0. (Simulator: the same, except mid
   **volume** (a sphere of that radius, front faces culled so it also works with the camera inside) and light only the
   pixels it covers, additively blended: the lighting shader then runs once per light per covered pixel. This is the
   solution.
-
-  *Simulator:* with note 1 worked around: mid-box = 74,44,23, back-frame = 113,109,120, left-side = 66,46,25,
-  right-side = 37,24,12, left-top = 31,20,11, front-top = 35,24,13, the cubes as before. As the code stands: ambient only,
-  no cubes (note 1).
-
-## Notes on the simulator (for the lead)
-1. **Globals filled in `LoadAssets` are lost** (states start, `lighting-pass`, `light-cubes`, `light-volumes`): the
-   globals `std::vector<XMFLOAT3> lightPositions;` / `lightColors;` have no initializer, so the setup runner does not
-   register them as globals – `lightPositions.push_back(…)` in `LoadAssets` stores into a local of that function, and
-   `OnUpdate` / `PopulateCommandList` see empty vectors (all lights black, the light-cube loop runs 0 times). With
-   `= {}` added to both declarations the simulator follows everything (that is how the values above were measured).
-   The same happens to a fixed array without initializer (`XMFLOAT3 lightPositions[NR_LIGHTS];` assigned by index):
-   it becomes a single XMFLOAT3. Real D3D12: the lights are what `LoadAssets` computed.
-2. A C++ struct array whose size is a named constant (`Light lights[NR_LIGHTS];` with `const unsigned int NR_LIGHTS =
-   32;`) is not followed: the whole `lights` member stays zero in the constant buffer. The code therefore writes
-   `Light lights[32];    // NR_LIGHTS`. (HLSL's `#define NR_LIGHTS 32` works; HLSL `static const int NR_LIGHTS = 32;` as
-   an array size in a cbuffer does not – the whole pass went black.)
-3. Render time: 4–7 minutes per full 800×600 frame (the 32-light loop per pixel; `light-cubes` 430 s, the slowest
-   state), the albedo state 10 s.

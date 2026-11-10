@@ -57,6 +57,7 @@ learnopengl's deferred demo does not gamma-correct, and neither does this chapte
 
 The lights are learnopengl's: **32 point lights** at "slightly random" positions with random colours:
 
+:::opengl vulkan
 ```cpp
     srand(13);
     for (unsigned int i = 0; i < NR_LIGHTS; i++)
@@ -73,6 +74,25 @@ The lights are learnopengl's: **32 point lights** at "slightly random" positions
         lightColors.push_back(glm::vec3(rColor, gColor, bColor));
     }
 ```
+:::
+:::d3d12
+```cpp
+    srand(13);
+    for (unsigned int i = 0; i < NR_LIGHTS; i++)
+    {
+        // calculate slightly random offsets
+        float xPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 3.0);
+        float yPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 4.0);
+        float zPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 3.0);
+        lightPositions.push_back(XMFLOAT3(xPos, yPos, zPos));
+        // also calculate random color
+        float rColor = static_cast<float>(((rand() % 100) / 200.0f) + 0.5); // between 0.5 and 1.0
+        float gColor = static_cast<float>(((rand() % 100) / 200.0f) + 0.5); // between 0.5 and 1.0
+        float bColor = static_cast<float>(((rand() % 100) / 200.0f) + 0.5); // between 0.5 and 1.0
+        lightColors.push_back(XMFLOAT3(rColor, gColor, bColor));
+    }
+```
+:::
 
 `srand(13)` seeds the C library's random number generator: the same seed gives the same sequence, so the lights land in
 the same places every run. The sequence itself belongs to the C library, though: the pictures described here are those
@@ -1150,7 +1170,7 @@ With Kc = 1, Kl = 0.7 and Kq = 1.8, a light whose brightest channel is 0.5 reach
 channel of 1.0 about 5.1. Every light's radius is computed once per light on the CPU and sent with it; the shader skips
 the light wherever the fragment is farther away:
 
-```glsl
+```text
 for(int i = 0; i < NR_LIGHTS; ++i)
 {
     // calculate distance between light source and current fragment

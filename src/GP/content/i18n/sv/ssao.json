@@ -1,0 +1,41 @@
+{
+  "title": "SSAO",
+  "tasks": {
+    "kernel": {
+      "text": {
+        "opengl": "Generera SSAO-indata på CPU:n – kärnan med 32 samplingar i en halvsfär (`srand(42)`, `rand() / (float)RAND_MAX`) och brustexturen på 4 × 4 med slumpmässiga rotationer – och lägg till SSAO-passet: en framebuffer med en `GL_RED`-textur, fylld av `ssao.fs` på skärmfyrhörningen. Visa än så länge SSAO-texturen i fönstret.",
+        "vulkan": "Generera SSAO-indata på CPU:n – kärnan med 32 samplingar i en halvsfär (`srand(42)`, `rand() / (float)RAND_MAX`) och brustexturen på 4 × 4 med slumpmässiga rotationer – och lägg till SSAO-passet: ett render pass med en färg-attachment i `VK_FORMAT_R8_UNORM`, fylld av `ssao.frag` på skärmfyrhörningen. Visa än så länge SSAO-bilden i fönstret.",
+        "d3d12": "Generera SSAO-indata på CPU:n – kärnan med 32 samplingar i en halvsfär (`srand(42)`, `rand() / (float)RAND_MAX`) i `ssaoKernel`, och brustexturen på 4 × 4 med slumpmässiga rotationer – och lägg till SSAO-passet: ett render target med en kanal (`R8_UNORM`) fyllt av `ssao.hlsl` på skärmfyrhörningen, som läser gPosition, gNormal och bruset. Visa än så länge SSAO-texturen i fönstret."
+      },
+      "hint": {
+        "opengl": "Per sampling: `x`, `y` = `rand() / (float)RAND_MAX * 2.0f - 1.0f`, `z` = `rand() / (float)RAND_MAX`; normalisera, multiplicera med ett slumptal till, sedan med `ourLerp(0.1f, 1.0f, scale * scale)` där `scale = float(i) / 32.0f`. Brus: 16 × `glm::vec3(x, y, 0.0f)` i en `GL_RGBA32F`-textur på 4 × 4 med `GL_REPEAT` och `GL_NEAREST`. `ssao.fs`: TBN från normalen och `randomVec` (Gram-Schmidt), `samplePos = fragPos + TBN * samples[i] * radius`, projicera med `projection`, `* 0.5 + 0.5`, `texture(gPosition, offset.xy).z`, addera `(sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck`; `FragColor = 1.0 - occlusion / kernelSize`. Belysningspasset: `ssaoColorBuffer` på enhet 3 och raden \"for now\".",
+        "vulkan": "`generateSampleKernel()` (learnopengls loop, `ssaoKernel.push_back`), sedan `createNoiseTexture()`: 16 × `glm::vec4(x, y, 0.0f, 0.0f)`, staging buffer, en bild på 4 × 4 i `VK_FORMAT_R32G32B32A32_SFLOAT`, övergångar och kopia; `noiseSampler` NEAREST + REPEAT. `createSsaoRenderPass()` (som bloom-kapitlets blur-pass, `VK_FORMAT_R8_UNORM`), `createSsaoFramebuffers()`, `ssaoPipeline` med `VK_FALSE`. Binding 4 och 5, poolen 5 samplers. `glm::vec4 samples[32]` i uniform buffern. `// 2. generate SSAO texture` mellan geometripasset och fönstrets pass. `ssao.frag`: `ubo.samples[i].xyz`, `ubo.proj`, `offset.xy * 0.5 + 0.5`.",
+        "d3d12": "Kärnan: `XMVector3Normalize(XMVectorSet(x, y, z, 0.0f))`, `*= rand() / (float)RAND_MAX`, `*= ourLerp(0.1f, 1.0f, scale * scale)`, `XMStoreFloat3` + `push_back`. Brus: 16 × `XMFLOAT4(x, y, 0.0f, 0.0f)`, en textur på 4 × 4 i `R32G32B32A32_FLOAT` (COPY_DEST, upload heap, `UpdateSubresources`, barriär, SRV-plats 9). `ranges[3]` (SRV, t3) + `rootParameters[4]`, sampler s1 WRAP. `m_ssaoPipelineState`: `RTVFormats[0] = DXGI_FORMAT_R8_UNORM`, inget djup. `XMFLOAT4 samples[32]` i konstantbuffern. Bildrutan: barriär, `OMSetRenderTargets(1, &ssaoRtvHandle, FALSE, nullptr)`, rensa, tabell 2 = `gPositionNormal`, tabell 3 = plats 9, fyrhörningen, barriär tillbaka; belysningens tabell 4 = plats 8. HLSL: `mul(samples[i].xyz, TBN)`, `-offset.y * 0.5f + 0.5f`."
+      }
+    },
+    "blur": {
+      "text": {
+        "opengl": "Blurra SSAO-texturen för att ta bort brusmönstret: en andra framebuffer med en `GL_RED`-textur, fylld av `ssao_blur.fs` (learnopengls box blur på 4 × 4) som läser SSAO-texturen. Visa den blurrade texturen.",
+        "vulkan": "Blurra SSAO-bilden för att ta bort brusmönstret: en andra bild i `VK_FORMAT_R8_UNORM` och en framebuffer (samma render pass), fylld av `ssao_blur.frag` (learnopengls box blur på 4 × 4) som läser SSAO-bilden. Visa den blurrade bilden.",
+        "d3d12": "Blurra SSAO-texturen för att ta bort brusmönstret: ett andra render target med en kanal, fyllt av `ssao_blur.hlsl` (learnopengls box blur på 4 × 4) som läser SSAO-texturen. Visa den blurrade texturen."
+      },
+      "hint": {
+        "opengl": "`ssaoBlurFBO` / `ssaoColorBufferBlur` som `ssaoFBO`. `ssao_blur.fs`: `vec2 texelSize = 1.0 / vec2(textureSize(ssaoInput, 0));` och summan av `texture(ssaoInput, TexCoords + vec2(float(x), float(y)) * texelSize).r` för x och y från -2 till 1, delad med 16. Loopen: bind `ssaoBlurFBO`, rensa, `shaderSSAOBlur`, `ssaoColorBuffer` på enhet 0, `renderQuad()`. Belysningspasset binder `ssaoColorBufferBlur` på enhet 3.",
+        "vulkan": "I `createSsaoFramebuffers()` en andra bild + view och `framebufferInfo.pAttachments = &ssaoBlurImageView;` för `ssaoBlurFramebuffer`. `ssaoBlurPipeline` med `ssao_blur.frag` och `ssaoRenderPass`. Binding 6 (poolen 6 samplers). Efter SSAO-passet: `VkRenderPassBeginInfo ssaoBlurPassInfo = ssaoPassInfo;` med `ssaoBlurFramebuffer`, pipelinen, fyrhörningen. `ssao_blur.frag`: `ssaoInput` på binding 5, summan över x, y = -2..1, delad med 16. `ssao_lighting.frag` läser binding 6.",
+        "d3d12": "`m_ssaoColorBufferBlur` som `m_ssaoColorBuffer` (RTV `FrameCount + 4`, SRV-plats 10; heaparna `FrameCount + 5` och `1 + 2 * MaxMeshes + 6`), `m_ssaoBlurPipelineState` från `ssao_blur.hlsl`. Bildrutan: barriär, dess RTV, rensa, PSO:t, tabell 2 = plats 8, fyrhörningen, barriär tillbaka; belysningens tabell 4 = plats 10. `ssao_blur.hlsl`: `ssaoInput.GetDimensions(width, height); float2 texelSize = 1.0f / float2(width, height);` och summan för x och y från -2 till 1, delad med 16."
+      }
+    },
+    "apply": {
+      "text": {
+        "opengl": "Använd den blurrade AO:n i belysningen: multiplicera omgivningstermen med den, och ta bort raden som visade SSAO-texturen.",
+        "vulkan": "Använd den blurrade AO:n i belysningen: multiplicera omgivningstermen med den, och ta bort raden som visade SSAO-bilden.",
+        "d3d12": "Använd den blurrade AO:n i belysningen: multiplicera omgivningstermen med den, och returnera den belysta färgen igen i stället för SSAO-texturen."
+      },
+      "hint": {
+        "opengl": "`float AmbientOcclusion = texture(ssao, TexCoords).r;` och `vec3 ambient = vec3(0.3 * Diffuse * AmbientOcclusion);` – bara omgivningsljuset skyms; det direkta ljuset behåller sitt diffusa och spekulära.",
+        "vulkan": "`float AmbientOcclusion = texture(ssao, fragTexCoord).r;` och `vec3 ambient = vec3(0.3 * Diffuse * AmbientOcclusion);` – bara omgivningsljuset skyms; det direkta ljuset behåller sitt diffusa och spekulära.",
+        "d3d12": "`float AmbientOcclusion = ssao.Sample(clampSampler, input.texCoord).r;` och `float3 ambient = 0.3f * Diffuse * AmbientOcclusion;`, och avsluta `PSMain` med `return float4(lighting, 1.0f);` – bara omgivningsljuset skyms."
+      }
+    }
+  }
+}
