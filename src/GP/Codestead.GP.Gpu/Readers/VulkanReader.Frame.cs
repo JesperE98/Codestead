@@ -19,7 +19,9 @@ public sealed partial class VulkanReader
             return;
         }
         // The colour attachment's loadOp (not a resolve or depth attachment's: they are DONT_CARE / their own).
-        var loadOp = src.FieldAssignments("loadOp").Where(a => !Regex.IsMatch(a.Target, "(?i)resolve|depth")).Select(a => a.Value).LastOrDefault() ?? src.LastFieldValue("loadOp");
+        // (several render passes – a blur pass that overwrites everything may not care – : the window's pass clearing is enough)
+        var colorLoadOps = src.FieldAssignments("loadOp").Where(a => !Regex.IsMatch(a.Target, "(?i)resolve|depth")).Select(a => a.Value).ToList();
+        var loadOp = colorLoadOps.FirstOrDefault(v => v.Contains("CLEAR", StringComparison.Ordinal)) ?? colorLoadOps.LastOrDefault() ?? src.LastFieldValue("loadOp");
         var clearVar = Regex.Match(src.Code, @"\bVkClearValue\s+(\w+)");
         // std::array<VkClearValue, 2> clearValues{}; clearValues[0].color = {{0.2f, 0.3f, 0.3f, 1.0f}};
         var colorField = Regex.Match(src.Code, @"(\w+)\s*\[\s*0\s*\]\s*\.\s*color\s*=\s*(\{[^;]*\})\s*;");
