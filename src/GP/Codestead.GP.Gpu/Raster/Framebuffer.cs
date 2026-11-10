@@ -118,8 +118,21 @@ internal sealed class Framebuffer
     private static double[] ToDoubles(byte[] bytes) => bytes.Select(b => b / 255.0).ToArray();
 
     /// <summary>Copies (and resolves or scales) another framebuffer's colour into this one, like glBlitFramebuffer.</summary>
-    public void CopyFrom(Framebuffer other)
+    public void CopyFrom(Framebuffer other, bool color = true, bool depth = false)
     {
+        if (depth)
+            for (int y = 0; y < Height; y++)
+                for (int x = 0; x < Width; x++)
+                {
+                    int sx = Math.Min(other.Width - 1, x * other.Width / Width), sy = Math.Min(other.Height - 1, y * other.Height / Height);
+                    int from = (sy * other.Width + sx) * other.Samples;
+                    for (int s = 0; s < Samples; s++)
+                    {
+                        Depth[(y * Width + x) * Samples + s] = other.Depth[from];
+                        Stencil[(y * Width + x) * Samples + s] = other.Stencil[from];
+                    }
+                }
+        if (!color) return;
         for (int a = 0; a < Colors.Length; a++)
             for (int y = 0; y < Height; y++)
                 for (int x = 0; x < Width; x++)

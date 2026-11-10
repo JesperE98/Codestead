@@ -95,7 +95,7 @@ public static partial class Rasterizer
                             context.Changed(c.Target);
                             break;
                         case CopyOp c:
-                            Fb(c.To).CopyFrom(Fb(c.From));
+                            Fb(c.To).CopyFrom(Fb(c.From), c.Color, c.Depth);
                             context.Changed(c.To);
                             break;
                     }

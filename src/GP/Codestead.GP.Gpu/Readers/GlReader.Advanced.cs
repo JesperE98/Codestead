@@ -131,7 +131,13 @@ public sealed partial class GlReader
             case "glDrawBuffer" or "glDrawBuffers" or "glReadBuffer":
                 return true;
             case "glBlitFramebuffer":
-                if (inLoop) scene.Ops.Add(new CopyOp(scene.Draws.Count, gl.ReadFramebuffer, gl.DrawFramebuffer));
+                if (inLoop)
+                {
+                    // The mask says what is copied: GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT (or both).
+                    var mask = a.Count > 8 ? A(8) : "GL_COLOR_BUFFER_BIT";
+                    scene.Ops.Add(new CopyOp(scene.Draws.Count, gl.ReadFramebuffer, gl.DrawFramebuffer,
+                        mask.Contains("COLOR", StringComparison.Ordinal), mask.Contains("DEPTH", StringComparison.Ordinal) || mask.Contains("STENCIL", StringComparison.Ordinal)));
+                }
                 return true;
             case "glTexImage2DMultisample":
             {

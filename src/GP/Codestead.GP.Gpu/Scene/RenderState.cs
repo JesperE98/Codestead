@@ -89,4 +89,6 @@ public abstract record FrameOp(int BeforeDraw);
 public sealed record ClearOp(int BeforeDraw, string? Target, double[]? Color, double? Depth, int? Stencil) : FrameOp(BeforeDraw);
 
 /// <summary>Copying one target into another (glBlitFramebuffer, resolving a multisampled image); null = the window.</summary>
-public sealed record CopyOp(int BeforeDraw, string? From, string? To) : FrameOp(BeforeDraw);
+/// <param name="Color">The colour is copied (GL_COLOR_BUFFER_BIT; a resolve).</param>
+/// <param name="Depth">The depth (and stencil) is copied (GL_DEPTH_BUFFER_BIT: deferred shading's G-buffer depth into the window).</param>
+public sealed record CopyOp(int BeforeDraw, string? From, string? To, bool Color = true, bool Depth = false) : FrameOp(BeforeDraw);
