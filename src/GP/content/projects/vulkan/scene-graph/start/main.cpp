@@ -1233,8 +1233,7 @@ private:
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
-    // the model (learnopengl: Model ourModel("models/planet.obj")) and the scene graph's entities: the root planet and a
-    // chain of ten children, each one a smaller copy beside its parent
+    // the model every entity draws (learnopengl: Model ourModel("models/planet.obj")) and the scene graph's entities
     void loadEntities() {
         ourModel.vertexBuffer = vertexBuffer;
         ourModel.indexBuffer = indexBuffer;
