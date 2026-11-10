@@ -126,7 +126,8 @@ public sealed partial class VulkanReader
         bool deviceVertices = inputs.Count > 0 && recorder.Draws.Any(d => d.State is VulkanDevice.DrawState { VertexBuffers.Count: > 0 } st
             && device.Read(st.VertexBuffers.Values.First().Buffer, st.VertexBuffers.Values.First().Offset, 1) is not null);
         if (!staticVertices && !deviceVertices) return;
-        if (deviceVertices && !staticVertices) scene.Notes.RemoveRange(notesBefore, notesAfterVertices - notesBefore);
+        // The device model reads the bound buffers: what the static reading of `vertices` said does not apply.
+        if (deviceVertices) scene.Notes.RemoveRange(notesBefore, notesAfterVertices - notesBefore);
         var opsByDraw = device.Ops.GroupBy(o => o.BeforeDraw).ToDictionary(g => g.Key, g => g.ToList());
         var indexData = drawIndexed is not null ? modelIndices ?? src.Numbers("indices") : null;
         var pipelines = recorder.Draws.Any(d => d.Pipeline is not null) ? Pipelines() : new();
