@@ -1,0 +1,45 @@
+{
+  "title": "Textrendering",
+  "tasks": {
+    "freetype": {
+      "text": {
+        "opengl": "Inkludera FreeType, initiera det, ladda `fonts/Inter-Bold.otf` som ett face, sätt glyfstorleken till 48 pixlar och frigör facet och biblioteket när glyferna har laddats.",
+        "vulkan": "Inkludera FreeType och, i `loadFont()`, initiera det, ladda `fonts/Inter-Bold.otf` som ett face, sätt glyfstorleken till 48 pixlar och frigör facet och biblioteket i slutet.",
+        "d3d12": "Inkludera FreeType (och länka `freetype.lib`) och, i `LoadGlyphs`, initiera det, ladda `fonts/Inter-Bold.otf` som ett face, sätt glyfstorleken till 48 pixlar och frigör facet och biblioteket när glyferna har laddats."
+      },
+      "hint": {
+        "opengl": "`#include <ft2build.h>` och sedan `#include FT_FREETYPE_H`; `FT_Init_FreeType(&ft)` och `FT_New_Face(ft, \"fonts/Inter-Bold.otf\", 0, &face)` returnerar något annat än 0 vid fel (skriv ut och `return -1`); `FT_Set_Pixel_Sizes(face, 0, 48);`; `FT_Done_Face(face); FT_Done_FreeType(ft);`.",
+        "vulkan": "`#include <ft2build.h>` och sedan `#include FT_FREETYPE_H`; `FT_Init_FreeType(&ft)` och `FT_New_Face(ft, \"fonts/Inter-Bold.otf\", 0, &face)` returnerar något annat än 0 vid fel – kasta ett `std::runtime_error`; `FT_Set_Pixel_Sizes(face, 0, 48);`; lämna glyf-TODO:n mellan det och `FT_Done_Face(face); FT_Done_FreeType(ft);`.",
+        "d3d12": "`#include <ft2build.h>` och sedan `#include FT_FREETYPE_H`, och `#pragma comment(lib, \"freetype.lib\")`; `FT_Init_FreeType(&ft)` och `FT_New_Face(ft, \"fonts/Inter-Bold.otf\", 0, &face)` returnerar något annat än 0 vid fel – kasta ett `std::runtime_error`; `FT_Set_Pixel_Sizes(face, 0, 48);`; `FT_Done_Face(face); FT_Done_FreeType(ft);`."
+      }
+    },
+    "glyphs": {
+      "text": {
+        "opengl": "Lägg till learnopengls struct `Character` och mappen `Characters`, och ladda de första 128 ASCII-tecknen: rendera varje glyf med FreeType, ladda upp dess bitmapp till en `GL_RED`-textur och spara en `Character` för den.",
+        "vulkan": "Lägg till structen `Character` (med `AtlasOffset`) och mappen `Characters`, och ladda de första 128 ASCII-tecknen: rendera varje glyf med FreeType, kopiera dess bitmapp till dess ruta i atlasen och spara en `Character` för den.",
+        "d3d12": "Lägg till `Character` (med `AtlasPos`), `Characters` och atlasens storlek, ladda de första 128 ASCII-tecknen till atlasen och skapa atlastexturen (`DXGI_FORMAT_R8_UNORM`) med dess shader resource view i heapens plats 1."
+      },
+      "hint": {
+        "opengl": "Först `glPixelStorei(GL_UNPACK_ALIGNMENT, 1)`. I `for (unsigned char c = 0; c < 128; c++)`: `FT_Load_Char(face, c, FT_LOAD_RENDER)`, `glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer)`, CLAMP_TO_EDGE och LINEAR, sedan `Characters.insert(std::pair<char, Character>(c, character));`.",
+        "vulkan": "Rutan: `glm::ivec2 offset((c % 16) * ATLAS_CELL, (c / 16) * ATLAS_CELL);`; för var och en av de `bitmap.rows` raderna `memcpy(&atlasPixels[(offset.y + row) * ATLAS_WIDTH + offset.x], &face->glyph->bitmap.buffer[row * face->glyph->bitmap.pitch], face->glyph->bitmap.width);`. `createAtlasImage()` laddar upp `atlasPixels` efter `loadFont()`.",
+        "d3d12": "`std::vector<unsigned char> atlas(AtlasWidth * AtlasHeight, 0)`; rutan `(c % 16) * AtlasCellSize, (c / 16) * AtlasCellSize`; en `memcpy` per rad från `face->glyph->bitmap.buffer + row * face->glyph->bitmap.pitch`. Texturen som de tidigare kapitlens `LoadTexture` med `DXGI_FORMAT_R8_UNORM`, `RowPitch = AtlasWidth`, `pData = atlas.data()`, barriären till `PIXEL_SHADER_RESOURCE` och SRV:n."
+      }
+    },
+    "render-text": {
+      "text": {
+        "opengl": "Konfigurera en VAO med en dynamisk VBO för en rektangel (6 vertex av vec4: position xy, texturkoordinater zw), skriv learnopengls `RenderText` och rita \"This is sample text\" på (25, 25), skala 1.0, färg (0.5, 0.8, 0.2).",
+        "vulkan": "Skriv `RenderText` – en rektangel per tecken, skriven i vertex buffern efter de rektanglar som redan skrivits i bildrutan, och ett `vkCmdDraw` för den – och rita \"This is sample text\" på (25, 25), skala 1.0, färg (0.5, 0.8, 0.2).",
+        "d3d12": "Skapa vertex buffern för glyfrektanglarna, skriv `RenderText` – varje rektangel på sin egen plats i buffern, ett `DrawInstanced` per rad – och rita \"This is sample text\" på (25, 25), skala 1.0, färg (0.5, 0.8, 0.2)."
+      },
+      "hint": {
+        "opengl": "`glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW)`, attribut 0 med 4 floats. Per tecken: `xpos = x + ch.Bearing.x * scale`, `ypos = y - (ch.Size.y - ch.Bearing.y) * scale`, `w = ch.Size.x * scale`, `h = ch.Size.y * scale`; de 6 vertexen med `glBufferSubData`, bind `ch.TextureID`, `glDrawArrays(GL_TRIANGLES, 0, 6)`, sedan `x += (ch.Advance >> 6) * scale`.",
+        "vulkan": "Pusha färgen först (`VK_SHADER_STAGE_FRAGMENT_BIT`). Per tecken: learnopengls `xpos`, `ypos`, `w`, `h`; `u0 = ch.AtlasOffset.x / (float) ATLAS_WIDTH` … `v1 = (ch.AtlasOffset.y + ch.Size.y) / (float) ATLAS_HEIGHT`, (u0, v0) i övre vänstra hörnet; `memcpy((char*) vertexBufferMapped + vertexCount * sizeof(Vertex), vertices, sizeof(vertices));`, `vkCmdDraw(commandBuffer, 6, 1, vertexCount, 0);`, `vertexCount += 6;`. I `recordCommandBuffer`: `vertexCount = 0;` och anropet.",
+        "d3d12": "Buffern: `MaxTextVertices * sizeof(Vertex)` byte i en upload heap, mappad en gång till `m_pVertexDataBegin`, och dess vy. `RenderText`: `SetGraphicsRoot32BitConstants(0, …)` med färgen, `firstVertex = m_textVertexCount`, varje rektangel med `memcpy(m_pVertexDataBegin + m_textVertexCount * sizeof(Vertex), …)` och `m_textVertexCount += 6`, sedan `DrawInstanced(m_textVertexCount - firstVertex, 1, firstVertex, 0)`. I `PopulateCommandList`: `IASetVertexBuffers`, `m_textVertexCount = 0;`, anropet."
+      }
+    },
+    "second-line": {
+      "text": "Rita en andra rad: \"(C) Codestead GP\" på (540, 570), skala 0.5, färg (0.3, 0.7, 0.9).",
+      "hint": "Ett anrop till av `RenderText` efter det första; y = 570 ligger nära fönstrets överkant, eftersom y pekar uppåt i de här koordinaterna."
+    }
+  }
+}
