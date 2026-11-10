@@ -61,9 +61,3 @@ the view, their light reaches the edges). The vertical seam at x ≈ 400 is avoi
   **light3** (630,430) ≈ 255,188,117, **between** (450,430) ≈ 121,84,53, **edge-left** (30,470) ≈ 106,73,45,
   **edge-right** (770,470) ≈ 121,83,52, **near** (450,560) ≈ 57,39,24, (350,560) ≈ 61,42,26 – learnopengl's
   gamma-corrected picture. This is the solution.
-
-Simulator (checked with the app's simulator): it does not yet follow two idioms of this code – `glUniform3fv(…, 4,
-&lightPositions[0][0])` (it reads only `lightPositions[0]`, one vec3: "index 3 is out of range" in the shader loop) and
-learnopengl's braced `if (…) { … } else if (…) { … }` chain in loadTexture (the glBindTexture/glTexImage2D after it are
-not run: "noTextureBound"). With those two written differently (setVec3 per element, a one-line format choice) it
-matches the values above within 1–3/255, sRGB decoding included.

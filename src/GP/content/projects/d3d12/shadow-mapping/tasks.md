@@ -33,10 +33,8 @@ plus the floor and the floating cube's shadow on it (lower right). The cubes at 
 the view, close to the camera on its left and right; their shadows fall outside the view too. They show in the depth map.
 
 Pixels in the 800×600 client area from the top left; nothing depends on time. D3D12 cannot run here. The start picture is
-the app's simulator's. The simulator does not follow the depth-only pass yet (see the end), so the pictures after
-`depth-map` were computed with the simulator on a variant of each state whose shadow map is an `R32_FLOAT` colour target
-written by a pixel shader with `SV_Position.z` (the same depth values) – they match the OpenGL project's Mesa screenshots
-within a few units at every named point. Named points (as OpenGL's): **background** (400,100) = 26,26,26;
+the app's simulator's (it follows every state, the depth-only pass included); they match the OpenGL project's Mesa
+screenshots within a few units at every named point. Named points (as OpenGL's): **background** (400,100) = 26,26,26;
 **cube0-bottom** (400,50) ≈ 6,4,3 and (300,30) ≈ 15,11,6 (the floating cube's underside: ambient only); **floor-left**
 (200,450) ≈ 62,42,26 and (330,520) ≈ 60,41,25 (lit, never in shadow); **shadow-1** (650,450), **shadow-2** (560,440),
 **shadow-3** (700,480) – inside the floating cube's shadow; **floor-right** (750,560) ≈ 57,39,24 (lit, outside the shadow).
@@ -133,12 +131,3 @@ cube0-bottom ≈ 6,4,3 / 15,11,6, background 26,26,26.
 **Coordinates (DirectX 12):** the light's orthographic projection (`XMMatrixOrthographicRH`) gives NDC x, y in -1..1 and
 z already in 0..1 (the depth written into the shadow map), so `projCoords.z` is compared as it is; x and y go through
 `* 0.5f + 0.5f`, and y is negated because Direct3D's texture v = 0 is the render target's top row, NDC y = +1.
-
-**Simulator (checked with the app's simulator on every state):** start: as above. It does not follow the depth-only
-pass yet: `OMSetRenderTargets(0, nullptr, FALSE, &shadowDsvHandle)` – a pass with a depth stencil view and no render
-target – is not recorded as drawing into `m_shadowMap` (the draws count as window draws), so the `R32_FLOAT` SRV of the
-`R32_TYPELESS` resource reads nothing: `depth-map` shows a white window (255,255,255 everywhere) and `shadows`, `bias`,
-`over-sampling` show the start picture (no shadow, no acne). The depth PSO without a pixel shader
-(`CD3DX12_SHADER_BYTECODE(nullptr, 0)`) is skipped by the PSO reader (it pairs each PSO with the last compiled vertex
-and pixel shaders). In `pcf`, HLSL's `Texture2D::GetDimensions(width, height)` is unknown to the shader runner ("no
-member function 'GetDimensions'"): nothing is drawn, the window shows only the clear colour 26,26,26.

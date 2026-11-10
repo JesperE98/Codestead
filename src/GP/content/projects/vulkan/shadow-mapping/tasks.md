@@ -130,8 +130,3 @@ cube0-bottom 15,11,6, background 26,26,26.
   in-between values: column 600, top edge rows 414–416 = 63, 57, 26 → 15; bottom edge rows 481–484 = 27, 27, 40, 53
   (was 14, 14, 53, 53). In the box x 450..800, y 400..520 the pixels with red 20..49 go from ≈ 1,050 (bias) to ≈ 3,200,
   the fully dark ones (red < 20) from ≈ 22,100 to ≈ 20,900. This is the solution (learnopengl's `shadow_mapping.fs`).
-
-Simulator (checked with the app's simulator): it does not show this chapter yet. Every state is rejected with
-"vkDrawOutsideRenderPass" (the draws are in the `renderScene()` helper, outside the text between `vkCmdBeginRenderPass`
-and `vkCmdEndRenderPass`); with the draws written inline the start matches lavapipe, but the depth pass (a depth-only
-render pass, a fragment shader without outputs) and the sampled depth image are not modelled yet.

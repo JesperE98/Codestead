@@ -100,8 +100,8 @@ I {{shaderLanguage}}-kod blir det:
 
 :::opengl
 ```glsl
-vec3 lightDir   = normalize(lightPos - FragPos);
-vec3 viewDir    = normalize(viewPos - FragPos);
+vec3 lightDir   = normalize(lightPos - fs_in.FragPos);
+vec3 viewDir    = normalize(viewPos - fs_in.FragPos);
 vec3 halfwayDir = normalize(lightDir + viewDir);
 ```
 :::
