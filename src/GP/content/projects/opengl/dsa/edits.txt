@@ -1,0 +1,207 @@
+=== task: context
+--- file: main.cpp
+--- find:
+    // TODO: direct state access is core in OpenGL 4.5 - ask for a 4.5 core context
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+--- replace:
+    // direct state access is core in OpenGL 4.5
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+=== task: vertex-buffer
+--- file: main.cpp
+--- find:
+    unsigned int VBO, VAO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+--- replace:
+    // Here we create the VBO with DSA.
+    GLuint VBO = 0;
+    // Note how we do not have to call glBindBuffer() after the create call.
+    glCreateBuffers(1, &VBO);
+    glNamedBufferStorage(VBO, sizeof(vertices), vertices, 0x0);
+
+    unsigned int VAO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &EBO);
+--- file: main.cpp
+--- find:
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+--- replace:
+    glBindBuffer(GL_ARRAY_BUFFER, VBO); // the data is already in the buffer: bound only for glVertexAttribPointer
+=== task: element-buffer
+--- file: main.cpp
+--- find:
+    unsigned int VAO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &EBO);
+--- replace:
+    // Here we create the EBO with DSA while also specifying that the buffer is mutable from the client side.
+    GLuint EBO = 0;
+    glCreateBuffers(1, &EBO);
+    glNamedBufferStorage(EBO, sizeof(indices), nullptr, GL_DYNAMIC_STORAGE_BIT);
+    glNamedBufferSubData(EBO, 0, sizeof(indices), indices);
+
+    unsigned int VAO;
+    glGenVertexArrays(1, &VAO);
+--- file: main.cpp
+--- find:
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+--- replace:
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO); // stored in the bound VAO
+=== task: vertex-array
+--- file: main.cpp
+--- find:
+    unsigned int VAO;
+    glGenVertexArrays(1, &VAO);
+    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO); // the data is already in the buffer: bound only for glVertexAttribPointer
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO); // stored in the bound VAO
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
+    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
+    glBindVertexArray(0);
+--- replace:
+    // Here we create the VAO with DSA and specify its format.
+    GLuint VAO = 0;
+    glCreateVertexArrays(1, &VAO);
+
+    // Specifying our vertex layout with the VAO: attribute 0 = three floats at offset 0, read from binding point 0.
+    glEnableVertexArrayAttrib(VAO, 0);
+    glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(VAO, 0, 0);
+
+    // Binding the VBO (to binding point 0, with the stride between vertices) and the element buffer to the VAO.
+    glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 3);
+    glVertexArrayElementBuffer(VAO, EBO);
+=== task: texture
+--- file: main.cpp
+--- find:
+const char *vertexShaderSource = "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "}\0";
+const char *fragmentShaderSource = "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "void main()\n"
+    "{\n"
+    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "}\n\0";
+--- replace:
+const char *vertexShaderSource = "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "layout (location = 1) in vec2 aTexCoord;\n"
+    "out vec2 TexCoord;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "   TexCoord = aTexCoord;\n"
+    "}\0";
+const char *fragmentShaderSource = "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "in vec2 TexCoord;\n"
+    "uniform sampler2D texture1;\n"
+    "void main()\n"
+    "{\n"
+    "   FragColor = texture(texture1, TexCoord);\n"
+    "}\n\0";
+--- file: main.cpp
+--- find:
+    float vertices[] = {
+         0.5f,  0.5f, 0.0f,  // top right
+         0.5f, -0.5f, 0.0f,  // bottom right
+        -0.5f, -0.5f, 0.0f,  // bottom left
+        -0.5f,  0.5f, 0.0f   // top left
+    };
+--- replace:
+    float vertices[] = {
+        // positions          // texture coords
+         0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
+         0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f  // top left
+    };
+--- file: main.cpp
+--- find:
+    glVertexArrayAttribBinding(VAO, 0, 0);
+
+    // Binding the VBO (to binding point 0, with the stride between vertices) and the element buffer to the VAO.
+    glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 3);
+--- replace:
+    glVertexArrayAttribBinding(VAO, 0, 0);
+    // attribute 1 = two floats 3 floats into each vertex, from the same binding point
+    glEnableVertexArrayAttrib(VAO, 1);
+    glVertexArrayAttribFormat(VAO, 1, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
+    glVertexArrayAttribBinding(VAO, 1, 0);
+
+    // Binding the VBO (to binding point 0, with the stride between vertices) and the element buffer to the VAO.
+    glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 5);
+--- file: main.cpp
+--- find:
+    // TODO: a texture created with direct state access (container.png)
+--- replace:
+    // load and create a texture with DSA: no glBindTexture needed to set it up
+    // -------------------------------------------------------------------------
+    GLuint texture = 0;
+    glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+    // set the texture wrapping and filtering parameters
+    glTextureParameteri(texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTextureParameteri(texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // load image, allocate immutable storage for all mip levels, upload level 0 and generate the mipmaps
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+    unsigned char *data = stbi_load("container.png", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        int levels = 1 + (int)std::floor(std::log2((float)std::max(width, height)));
+        glTextureStorage2D(texture, levels, GL_RGB8, width, height);
+        glTextureSubImage2D(texture, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateTextureMipmap(texture);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+--- file: main.cpp
+--- find:
+        // draw our first triangle
+        glUseProgram(shaderProgram);
+--- replace:
+        // bind the texture to texture unit 0 (the sampler's default unit)
+        glBindTextureUnit(0, texture);
+
+        // draw our first triangle
+        glUseProgram(shaderProgram);
+--- file: main.cpp
+--- find:
+    glDeleteProgram(shaderProgram);
+--- replace:
+    glDeleteTextures(1, &texture);
+    glDeleteProgram(shaderProgram);
+--- file: main.cpp
+--- find:
+#include <iostream>
+--- replace:
+#include <iostream>
+#include <algorithm>
+#include <cmath>
