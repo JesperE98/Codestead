@@ -15,10 +15,13 @@ public sealed record StbImage(string File, Image? Image, int Offset, string? Var
     public static Image? Load(GpuProject project, string file, bool flip, int wanted)
     {
         var bytes = project.FindAsset(file);
-        if (bytes is null || Png.Decode(bytes) is not { } image) return null;
+        if (bytes is null || Decode(bytes) is not { } image) return null;
         if (wanted > 0) image = image with { Channels = wanted };
         return flip ? image.FlippedVertically() : image;
     }
+
+    /// <summary>A PNG, or a Radiance .hdr (its floats kept: radiance above 1.0).</summary>
+    public static Image? Decode(byte[] bytes) => RadianceHdr.IsHdr(bytes) ? RadianceHdr.Decode(bytes) : Png.Decode(bytes);
 
     private static readonly Regex Assign = new(@"(?<var>[A-Za-z_]\w*)\s*=\s*(?:\([^()]*\)\s*)?$", RegexOptions.CultureInvariant);
 
@@ -27,7 +30,8 @@ public sealed record StbImage(string File, Image? Image, int Offset, string? Var
     {
         var flips = src.Calls("stbi_set_flip_vertically_on_load").Select(c => (c.Offset, On: Regex.IsMatch(c.Arg(0), @"^\s*(?:true|1|TRUE)\s*$"), Fn: src.FunctionAt(c.Offset))).ToList();
         var list = new List<StbImage>();
-        foreach (var call in src.Calls("stbi_load"))
+        // stbi_load (8-bit images) and stbi_loadf (floats: a Radiance .hdr environment map), in source order.
+        foreach (var call in src.Calls("stbi_load").Concat(src.Calls("stbi_loadf")).OrderBy(c => c.Offset))
         {
             // The flip in effect: a call earlier in the same function (learnopengl's loadCubemap turns it off), else
             // the program's setting (stbi_set_flip_vertically_on_load(true) in main).
@@ -53,7 +57,7 @@ public sealed record StbImage(string File, Image? Image, int Offset, string? Var
             var bytes = project.FindAsset(file);
             Image? image = null;
             if (bytes is null) scene.Notes.Add(SimNote.Error("textureFileMissing", ("file", file)));
-            else if ((image = Png.Decode(bytes)) is null) scene.Notes.Add(SimNote.Error("textureNotPng", ("file", file)));
+            else if ((image = Decode(bytes)) is null) scene.Notes.Add(SimNote.Error("textureNotPng", ("file", file)));
             if (image is not null)
             {
                 if (wanted > 0) image = image with { Channels = wanted };

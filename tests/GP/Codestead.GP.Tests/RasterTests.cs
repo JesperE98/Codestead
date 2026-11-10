@@ -287,6 +287,20 @@ public class RasterTests
         AssertColor([188 / 255.0, 128 / 255.0, 0], Render(s => s.WindowSrgb = true, Draw(Quad(-1, -1, 1, 1), fs)).At(50, 50));
     }
 
+    [Fact(DisplayName = "HDR: en Radiance-fil (.hdr) läses som flyttal, med värden över 1.0")]
+    public void RadianceHdrImage()
+    {
+        var bytes = File.ReadAllBytes(Path.Combine(Repo.Content, "textures", "hdr", "environment.hdr"));
+        Assert.True(RadianceHdr.IsHdr(bytes));
+        var image = RadianceHdr.Decode(bytes)!;
+        Assert.Equal((512, 256, 3), (image.Width, image.Height, image.Channels));
+        Assert.NotNull(image.Floats);
+        // The sun is far brighter than white; the zenith is a moderate blue.
+        Assert.True(image.Floats!.Max() > 100);
+        var zenith = new Texture(image, SamplerState.Default).Sample(0.1, 0.02);
+        Assert.True(zenith[2] > zenith[0] && zenith[2] > 0.5 && zenith[2] < 3);
+    }
+
     [Fact(DisplayName = "C++: std::map sorterar fönstren och reverse_iterator går bakifrån")]
     public void MapReverseIterator()
     {

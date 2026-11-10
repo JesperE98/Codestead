@@ -1,0 +1,9 @@
+[
+  { "title": "SSAO", "url": "https://learnopengl.com/Advanced-Lighting/SSAO", "publisher": "LearnOpenGL" },
+  { "title": "std::rand", "url": "https://en.cppreference.com/w/cpp/numeric/random/rand", "publisher": "cppreference.com" },
+  { "title": "ssao.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/5.advanced_lighting/9.ssao/ssao.cpp", "publisher": "LearnOpenGL", "api": "opengl" },
+  { "title": "Texture mapping: Images", "url": "https://vulkan-tutorial.com/Texture_mapping/Images", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Formats (Vulkan specification)", "url": "https://docs.vulkan.org/spec/latest/chapters/formats.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "UpdateSubresources", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/updatesubresources2", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "D3D12_STATIC_SAMPLER_DESC", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_static_sampler_desc", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

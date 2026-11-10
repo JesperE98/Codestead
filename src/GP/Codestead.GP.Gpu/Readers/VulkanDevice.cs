@@ -194,7 +194,7 @@ internal sealed class VulkanDevice : IDeviceModel
             case "stbi_set_flip_vertically_on_load" when args.Count >= 1:
                 flip = Num(args[0]) != 0 || Eval(args[0])?.Text is "true" or "TRUE";
                 return ShaderValue.Scalar(0);
-            case "stbi_load" when args.Count >= 5:
+            case "stbi_load" or "stbi_loadf" when args.Count >= 5:
             {
                 var path = Eval(args[0])?.Text;
                 if (path is null) return ShaderValue.Scalar(0);

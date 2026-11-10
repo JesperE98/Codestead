@@ -30,3 +30,11 @@ For the Advanced Lighting chapters (drawn by `make_advanced_lighting.py`):
   convention: +x right, +y up in the texture as loaded with a vertical flip, z out of the wall) – normal mapping.
 - `bricks2.png` + `bricks2_normal.png` + `bricks2_disp.png` (256×256): sandier bricks with deep mortar, their normal
   map and their depth map (white = deep, the mortar) – parallax mapping.
+
+For the PBR chapters (drawn by `make_pbr.py`):
+- `pbr/albedo.png`, `pbr/normal.png`, `pbr/metallic.png`, `pbr/roughness.png`, `pbr/ao.png` (256×256): one material –
+  riveted steel plates with patches of rust (the albedo as sRGB colours; the normal map tangent-space, OpenGL
+  convention; metallic, roughness and ambient occlusion as grey data). learnopengl uses a rusted iron material.
+- `hdr/environment.hdr` (512×256, Radiance RGBE): an equirectangular HDR environment for image based lighting – a blue
+  sky with clouds and a very bright sun (radiance about 400), hills on the horizon, a dark ground and three coloured
+  lamps. `hdr/environment_preview.png` is a tone-mapped look at it (not used by the course).
