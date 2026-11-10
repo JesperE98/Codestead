@@ -1,0 +1,53 @@
+{
+  "title": "Deferred Shading",
+  "tasks": {
+    "g-buffer": {
+      "text": {
+        "opengl": "Render the boxes into a G-buffer instead of the window: a framebuffer with three colour textures – positions (`GL_RGBA16F`), normals (`GL_RGBA16F`), albedo + specular (`GL_RGBA`) – and a depth renderbuffer, filled by `g_buffer.vs` / `g_buffer.fs`. Then draw the screen quad with the lighting pass's shader, which for now shows the albedo.",
+        "vulkan": "Render the boxes into a G-buffer instead of the window: a render pass with three colour attachments – positions (`VK_FORMAT_R16G16B16A16_SFLOAT`), normals (the same), albedo + specular (`VK_FORMAT_R8G8B8A8_UNORM`) – and a depth attachment, filled by `g_buffer.vert` / `.frag`. Then draw the screen quad into the window with the lighting pass's shader, which for now shows the albedo.",
+        "d3d12": "Draw the boxes into a G-buffer instead of the window: three render targets – positions (`R16G16B16A16_FLOAT`), normals (`R16G16B16A16_FLOAT`), albedo + specular (`R8G8B8A8_UNORM`) – filled by `g_buffer.hlsl`, with the depth buffer. Then draw the screen quad into the back buffer with the lighting pass's pipeline state (`deferred_shading.hlsl`), which for now shows the albedo."
+      },
+      "hint": {
+        "opengl": "Three `glGenTextures` / `glTexImage2D` / `GL_NEAREST` blocks attached as `GL_COLOR_ATTACHMENT0`, `1`, `2`, then `unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 }; glDrawBuffers(3, attachments);` and a `GL_DEPTH_COMPONENT` renderbuffer. `g_buffer.fs`: `gPosition = FragPos; gNormal = normalize(Normal); gAlbedoSpec.rgb = texture(texture_diffuse1, TexCoords).rgb; gAlbedoSpec.a = texture(texture_specular1, TexCoords).r;`. Loop: bind `gBuffer`, clear, the boxes with `shaderGeometryPass`; bind 0, clear, `gPosition` / `gNormal` / `gAlbedoSpec` on units 0–2, `renderQuad()` with `shaderLightingPass`.",
+        "vulkan": "`createGBufferRenderPass()`: three colour attachments (CLEAR, STORE, final layout `SHADER_READ_ONLY_OPTIMAL`), `std::array<VkAttachmentReference, 3>`, depth at attachment 3, two dependencies. `createGBuffer()`: three images (colour attachment + sampled), views, a depth image, a framebuffer with four views. `geometryPipeline` with `gBufferRenderPass` and 3, `lightingPipeline` with `renderPass` and 1. `gBufferSampler` NEAREST + CLAMP_TO_EDGE; binding 3 in the layout; pool 2 / 6, `maxSets = 2`; `createGBufferDescriptorSet(…)`. Geometry pass with four clear values, then the quad: `vkCmdDraw(commandBuffer, 6, 1, 36, 0)` with `gBufferDescriptorSet`.",
+        "d3d12": "`m_gBuffer[3]` in a `for` loop over `gBufferFormats[3]` (RTV `FrameCount + i`, SRV `3 + i`; heaps `FrameCount + 3` and 6). Geometry PSO: `g_buffer.hlsl`, `NumRenderTargets = 3`; `m_lightingPipelineState`: `deferred_shading.hlsl`, one `R8G8B8A8_UNORM` target, `DepthEnable = FALSE`, `DSVFormat = DXGI_FORMAT_UNKNOWN`. `ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2)` + `rootParameters[3]`, sampler s1 (point, CLAMP). Frame: three barriers, `OMSetRenderTargets(3, gBufferRtvHandles, FALSE, &dsvHandle)`, clears, boxes, barriers back; back buffer without DSV, table 2 = slot 3, table 3 = slot 5, `DrawInstanced(6, 1, 36, 0)`."
+      }
+    },
+    "lighting-pass": {
+      "text": {
+        "opengl": "Light the G-buffer in the lighting pass: send the 32 lights and the view position to `shaderLightingPass`, and in `deferred_shading.fs` compute learnopengl's lighting from the position, normal, albedo and specular read from the G-buffer.",
+        "vulkan": "Light the G-buffer in the lighting pass: in `deferred_shading.frag` read the position, normal, albedo and specular from the G-buffer's three images and compute learnopengl's lighting with the 32 lights and the view position of the uniform buffer.",
+        "d3d12": "Light the G-buffer in `deferred_shading.hlsl`: read the position, normal, albedo and specular intensity of the pixel and compute learnopengl's lighting with the 32 lights of the constant buffer."
+      },
+      "hint": {
+        "opengl": "The forward pass's loop, now on `shaderLightingPass` (`lights[i].Position`, `.Color`, `.Linear` = 0.7, `.Quadratic` = 1.8, then `viewPos`). In the shader: `vec3 lighting = Diffuse * 0.1;`, `vec3 viewDir = normalize(viewPos - FragPos);` and per light the diffuse, the Blinn-Phong specular (`pow(…, 16.0)` times `Specular`) and the attenuation – the forward shader's code.",
+        "vulkan": "Only the shader changes: the lights are already in the uniform buffer. Declare `struct Light { vec3 position; float linear; vec3 color; float quadratic; };` and the uniform block like `forward_shading.frag`, `gPosition` / `gNormal` / `gAlbedoSpec` at bindings 1, 2, 3; then `vec3 lighting = Diffuse * 0.1;`, `vec3 viewDir = normalize(ubo.viewPos - FragPos);` and the forward shader's loop.",
+        "d3d12": "Only the shader changes. Declare `struct Light` and `cbuffer SceneConstantBuffer : register(b1)` as in `forward_shading.hlsl` (`#define NR_LIGHTS 32`). In `PSMain`: `FragPos`, `Normal`, `Diffuse` (`.rgb`), `Specular` (`.a` of gAlbedoSpec) with `pointSampler`, `float3 lighting = Diffuse * 0.1f;`, `float3 viewDir = normalize(viewPos - FragPos);` and the forward shader's loop."
+      }
+    },
+    "light-cubes": {
+      "text": {
+        "opengl": "Show the lights: copy the G-buffer's depth into the window's depth buffer, then draw a small cube at every light (scale 0.125) in the light's colour with `shaderLightBox`, depth-tested against the boxes.",
+        "vulkan": "Show the lights: draw a small cube at every light (scale 0.125) in the light's colour with `deferred_light_box.vert` / `.frag`, in the window's pass after the screen quad, depth-tested against the boxes – the window's pass uses the G-buffer's depth image as its depth attachment.",
+        "d3d12": "Show the lights: after the lighting pass, bind the geometry pass's depth buffer together with the back buffer and draw a small cube at every light (scale 0.125) in the light's colour with a new pipeline state for `deferred_light_box.hlsl`, depth-tested against the boxes."
+      },
+      "hint": {
+        "opengl": "`glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer); glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);` then `glBindFramebuffer(GL_FRAMEBUFFER, 0)`. The cubes: `renderCube()` with model = translate(lightPositions[i]) · scale(0.125) and `setVec3(\"lightColor\", lightColors[i])`.",
+        "vulkan": "G-buffer depth: `storeOp = STORE`. Window pass depth: `loadOp = VK_ATTACHMENT_LOAD_OP_LOAD`, `initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL`, dependency `dstAccessMask` + `VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT`; `createFramebuffers()` uses `gBufferDepthImageView`, the window's depth image goes. `createPipeline(…, VkBool32 depthTestEnable, …)`: `VK_FALSE` for `lightingPipeline`, `VK_TRUE` for `lightBoxPipeline`. `glm::vec3 lightColor;` in `PushConstants`, vertex | fragment stages everywhere. `deferred_light_box.frag`: `outColor = vec4(pc.lightColor, 1.0);`.",
+        "d3d12": "`m_lightBoxPipelineState`: `deferred_light_box.hlsl`'s `VSMain` / `PSMain`, `DepthStencilState.DepthEnable = TRUE`, `DSVFormat = DXGI_FORMAT_D32_FLOAT`. After the quad: `OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle)` (no copy needed), the PSO, and per light `XMMatrixScaling(0.125f, 0.125f, 0.125f) * XMMatrixTranslation(…)`, `modelConstants.lightColor = lightColors[i]`, root constants, `DrawInstanced(36, 1, 0, 0)`."
+      }
+    },
+    "light-volumes": {
+      "text": {
+        "opengl": "Give every light a radius (learnopengl's light volume: the distance where its attenuated brightness drops below 5/256) and skip the light in the lighting shader where the fragment is farther away than that.",
+        "vulkan": "Give every light a radius (learnopengl's light volume: the distance where its attenuated brightness drops below 5/256), send it in the uniform buffer, and skip the light in the lighting shader where the fragment is farther away.",
+        "d3d12": "Give every light a radius (learnopengl's light volume: the distance where its attenuated brightness drops below 5/256) and skip the light in `deferred_shading.hlsl` where the pixel is farther away than that."
+      },
+      "hint": {
+        "opengl": "In the light loop: `const float constant = 1.0f;`, `const float maxBrightness = std::fmaxf(std::fmaxf(lightColors[i].r, lightColors[i].g), lightColors[i].b);`, `float radius = (-linear + std::sqrt(linear * linear - 4 * quadratic * (constant - (256.0f / 5.0f) * maxBrightness))) / (2.0f * quadratic);` and `setFloat(\"lights[…].Radius\", radius)`. Shader: `float Radius;` in `Light`, the distance first, then `if(distance < lights[i].Radius) { … }`.",
+        "vulkan": "`float radius;` after `quadratic` makes the struct 36 bytes, and std140 rounds an array element up to 48: C++ adds `float pad1, pad2, pad3;`. In `updateUniformBuffer()`: `constant`, `maxBrightness` with `std::fmaxf`, learnopengl's `radius` formula, `ubo.lights[i].radius = radius;`. Shader: `float radius;` in `Light`, the distance first, then `if (distance < ubo.lights[i].radius) { … }`.",
+        "d3d12": "C++ `Light`: `float Radius; float padding1[2];` after `Quadratic`. In `OnUpdate`: `const float constant = 1.0f;`, `const float maxBrightness = std::fmax(std::fmax(lightColors[i].x, lightColors[i].y), lightColors[i].z);`, learnopengl's `radius` formula, `constantBufferData.lights[i].Radius = radius;`. HLSL: `float Radius;` in `Light`, the distance first, then `if (distance < lights[i].Radius) { … }`."
+      }
+    }
+  }
+}

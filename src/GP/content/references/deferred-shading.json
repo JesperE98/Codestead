@@ -1,0 +1,9 @@
+[
+  { "title": "Deferred Shading", "url": "https://learnopengl.com/Advanced-Lighting/Deferred-Shading", "publisher": "LearnOpenGL" },
+  { "title": "deferred_shading.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/5.advanced_lighting/8.1.deferred_shading/deferred_shading.cpp", "publisher": "LearnOpenGL", "api": "opengl" },
+  { "title": "glBlitFramebuffer", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBlitFramebuffer.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Render Pass (Vulkan specification)", "url": "https://docs.vulkan.org/spec/latest/chapters/renderpass.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Shader memory layout", "url": "https://docs.vulkan.org/guide/latest/shader_memory_layout.html", "publisher": "Vulkan Guide", "api": "vulkan" },
+  { "title": "ID3D12GraphicsCommandList::OMSetRenderTargets", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetrendertargets", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Packing rules for constant variables", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-packing-rules", "publisher": "Microsoft Learn", "api": "d3d12" }
+]
