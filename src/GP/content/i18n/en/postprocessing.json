@@ -9,7 +9,7 @@
       },
       "hint": {
         "opengl": "learnopengl's post_processing.vs / .frag. `if (chaos || shake) for (int i = 0; i < 9; i++) sample[i] = vec3(texture(scene, TexCoords.st + offsets[i]));` then `color += vec4(sample[i] * edge_kernel[i], 0.0)` (or `blur_kernel`). `LoadShader(\"post_processing.vs\", \"post_processing.fs\", nullptr, \"postprocessing\");`",
-        "vulkan": "learnopengl's post_processing.vs / .frag with `pc.` and `kernels.` (and the two sign changes for Vulkan's y, see above). `if (pc.chaos != 0 || pc.shake != 0) for (int i = 0; i < 9; i++) samples[i] = vec3(texture(scene, TexCoords.st + kernels.offsets[i].xy));`. `LoadShader(\"shaders/post_processing.vert.spv\", \"shaders/post_processing.frag.spv\", \"postprocessing\", VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, renderPass, VK_SAMPLE_COUNT_1_BIT);`",
+        "vulkan": "learnopengl's post_processing.vs / .frag with `pc.` and `kernels.` (and the two sign changes for Vulkan's y, see the chapter). `if (pc.chaos != 0 || pc.shake != 0) for (int i = 0; i < 9; i++) samples[i] = vec3(texture(scene, TexCoords.st + kernels.offsets[i].xy));`. `LoadShader(\"shaders/post_processing.vert.spv\", \"shaders/post_processing.frag.spv\", \"postprocessing\", VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, renderPass, VK_SAMPLE_COUNT_1_BIT);`",
         "d3d12": "learnopengl's post_processing.vs / .frag in HLSL: `if (chaos || shake) for (int i = 0; i < 9; i++) samples[i] = scene.Sample(wrapSampler, input.texCoord + offsets[i]).rgb;` then `color += float4(samples[i] * edge_kernel[i], 0.0f)` (or `blur_kernel`). Chaos: `float2(texCoord.x + sin(time) * strength, texCoord.y - cos(time) * strength)` (v points down). `LoadShader(L\"post_processing.hlsl\", \"postprocessing\");`"
       }
     },
