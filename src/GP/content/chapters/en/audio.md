@@ -110,7 +110,8 @@ go in exactly the same places – the game's `Init`, `DoCollisions` and its clea
 
 - **OpenAL** (and its open-source implementation **OpenAL Soft**): a cross-platform 3D audio API, designed after
   OpenGL's style – sources, buffers and a listener.
-- **miniaudio**: a single-file C library (public domain or MIT-0) that plays and decodes WAV, FLAC and MP3 on every platform.
+- **miniaudio**: a single-file C library (public domain or MIT-0) that plays and decodes WAV, FLAC and MP3 on every
+  platform.
 - **SDL_mixer**: SDL's library for music and sound effects.
 - **XAudio2**: Microsoft's low-level audio API, part of Windows.
 
@@ -120,8 +121,9 @@ On Windows, XAudio2 is the natural partner of Direct3D 12. A program creates the
 (`CreateSourceVoice`, with the sound's format). It submits the sound's samples in an `XAUDIO2_BUFFER` with
 `SubmitSourceBuffer` and starts the voice with `Start`. For the music, the buffer's `LoopCount` is
 `XAUDIO2_LOOP_INFINITE`; an effect is a buffer played once. Two things irrKlang does for you are left to the program:
-XAudio2 plays uncompressed PCM samples (and a few Microsoft formats such as ADPCM), so an MP3 file has to be decoded first – with Media Foundation or a
-library –, and one source voice plays one sound at a time, so overlapping effects need several voices.
+XAudio2 plays uncompressed PCM samples (and a few Microsoft formats such as ADPCM), so an MP3 file has to be decoded
+first – with Media Foundation or a library –, and one source voice plays one sound at a time, so overlapping effects
+need several voices.
 :::
 
 ```quiz

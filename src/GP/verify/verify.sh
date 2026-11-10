@@ -26,8 +26,8 @@ CACHE="${VERIFY_CACHE:-$HOME/.cache/codestead-gp-verify}"
 mkdir -p "$OUT" "$CACHE"
 status=0
 
-# GLAD for OpenGL 3.3 core (the course's version), or for 4.3 core when a project asks GLFW for a 4.x context
-# (the debugging chapter: glDebugMessageCallback is core in 4.3).
+# GLAD for OpenGL 3.3 core (the course's version), or for 4.x core when a project asks GLFW for a 4.x context
+# (the debugging chapter: glDebugMessageCallback is core in 4.3; the guest articles: 4.1, 4.2, 4.5).
 glad_dir() {
   local ver="${1:-3.3}" dir="$CACHE/glad"
   [ "$ver" != 3.3 ] && dir="$CACHE/glad$(echo "$ver" | tr -d .)"
@@ -122,7 +122,11 @@ for dir in "$@"; do
   cp -r "$dir"/. "$work"/
   case "$api" in
     opengl)
-      glver=3.3; grep -qsE "GLFW_CONTEXT_VERSION_MAJOR, *4" "$work/main.cpp" && glver=4.3
+      # A 4.x context (the debugging chapter 4.3, the guest articles 4.1 / 4.2 / 4.5): GLAD for that version.
+      glver=3.3
+      if grep -qsE "GLFW_CONTEXT_VERSION_MAJOR, *4" "$work/main.cpp"; then
+        glver=4.$(grep -oE "GLFW_CONTEXT_VERSION_MINOR, *[0-9]" "$work/main.cpp" | head -1 | grep -oE "[0-9]$")
+      fi
       glad=$(glad_dir $glver)
       for s in "$work"/*.vs "$work"/*.vert; do [ -f "$s" ] && { glslangValidator -S vert "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S vert "$s" | tail -n +2)"; }; done
       for s in "$work"/*.fs "$work"/*.frag; do [ -f "$s" ] && { glslangValidator -S frag "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S frag "$s" | tail -n +2)"; }; done

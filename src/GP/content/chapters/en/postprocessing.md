@@ -179,7 +179,7 @@ true, the vertex shader will manipulate the texture coordinates to move the scen
 coordinates in a circle-like fashion – (sin(time), cos(time)) scaled by 0.3 –, or inverse them (`1.0 - texture`: the
 picture upside down and mirrored). Because the texture's wrapping method repeats, the chaos effect will cause the scene
 to repeat itself at various parts of the quad. Additionally, if shake is set to true, it will move the vertex positions
-around by a small amount – at most 0.01 in normalized device coordinates, 4 pixels across and 3 down –, as if the screen
+around by a small amount – at most 0.01 in normalized device coordinates, 4 pixels horizontally and 3 vertically –, as if the screen
 shakes. Note that chaos and confuse shouldn't be true at the same time, while shake is able to work with any of the
 other effects on.
 
