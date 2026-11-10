@@ -142,8 +142,11 @@ public sealed partial class D3D12Reader
                     foreach (var (k, v) in buffer) mValues[k] = v;
                     foreach (var (k, v) in d.Constants) mValues[k] = v;
                     RootCbvValues(device, d, blocks, mValues);
+                    // The model's meshes go where the command list draws now (an off-screen G-buffer too).
+                    var modelTarget = (d.State as D3D12Device.DrawState)?.RenderTarget is { } mrt ? device.TargetOf(mrt) : null;
+                    if (modelTarget is not null) RegisterTarget(device, modelTarget);
                     ModelDraws(pl?.Vs ?? vs, pl?.Fs ?? ps, pl?.VsEntry ?? vsEntry, pl?.FsEntry ?? psEntry, mValues, pl?.Cull ?? cullMode, pl?.FrontCcw ?? frontCcw, pl?.DepthTest ?? depth,
-                        pl is not null ? pl.Gs : gsInfo?.Program, pl is not null ? pl.GsEntry : gsInfo?.Entry ?? "main", d);
+                        pl is not null ? pl.Gs : gsInfo?.Program, pl is not null ? pl.GsEntry : gsInfo?.Entry ?? "main", d, modelTarget);
                     continue;
                 }
                 var values = new Dictionary<string, ShaderValue>(fallback(time), StringComparer.Ordinal);
@@ -491,7 +494,7 @@ public sealed partial class D3D12Reader
     /// as the shader's first and second Texture2D.
     /// </summary>
     private void ModelDraws(ShaderProgram vs, ShaderProgram ps, string vsEntry, string psEntry, Dictionary<string, ShaderValue> values, CullMode cull, bool frontCcw, bool depth,
-        ShaderProgram? gs = null, string gsEntry = "main", FrameRecorder.RecordedDraw? recorded = null)
+        ShaderProgram? gs = null, string gsEntry = "main", FrameRecorder.RecordedDraw? recorded = null, string? target = null)
     {
         // The model of the draw: the .obj its Load call names (m_rock.Load("models/rock.obj", …)), else the first one.
         var path = recorded?.ModelName is { } modelName && Regex.Match(src.Code, Regex.Escape(modelName) + @"\s*(?:\.|->)\s*Load\s*\(\s*""([^""]+\.obj)""") is { Success: true } lm
@@ -516,6 +519,7 @@ public sealed partial class D3D12Reader
                 .Select(f => Models.ModelFiles.Texture(project, path!, f, false)).ToList();
             scene.Draws.Add(new DrawCall
             {
+                Target = target,
                 VertexShader = vs,
                 FragmentShader = ps,
                 VertexEntry = vsEntry,

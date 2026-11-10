@@ -312,7 +312,8 @@ public sealed partial class ShaderParser
             // HLSL resources (Texture2D, SamplerState …) and plain HLSL globals are uniforms.
             var st = storage == "" && (type.StartsWith("Texture", StringComparison.Ordinal) || type.StartsWith("Sampler", StringComparison.Ordinal) || type.StartsWith("RWTexture", StringComparison.Ordinal)) ? "uniform" : storage;
             program.Globals.Add(new Global(st, type, id, location, pushConstant, null, value, size, line, register ?? binding));
-            if (st == "const" && value is Number constant) constInts[id] = (int)constant.Value;
+            // (HLSL: static const int N = 32; – the storage is "static" there)
+            if (st is "const" or "static" && type is "int" or "uint" && value is Number constant) constInts[id] = (int)constant.Value;
             _ = semantic;
             if (!Accept(",")) break;
             id = Identifier();

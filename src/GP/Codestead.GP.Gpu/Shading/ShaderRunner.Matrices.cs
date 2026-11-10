@@ -167,6 +167,19 @@ public sealed partial class ShaderRunner
                 var r1 = Cross(r2, r0);
                 return Rows([[r0[0], r1[0], r2[0], 0], [r0[1], r1[1], r2[1], 0], [r0[2], r1[2], r2[2], 0], [-Dot3(r0, eye), -Dot3(r1, eye), -Dot3(r2, eye), 1]]);
             }
+            case "XMVector3TransformCoord" or "XMVector3TransformNormal" or "XMVector4Transform" when a.Count == 2 && a[1].IsMatrix:
+            {
+                // DirectXMath's row vector times the matrix: (x, y, z, 1) for a point (divided by w), w = 0 for a normal.
+                var m = a[1];
+                var v = a[0].Padded(4);
+                double w = name switch { "XMVector3TransformCoord" => 1, "XMVector3TransformNormal" => 0, _ => v[3] };
+                double[] row = [v[0], v[1], v[2], w];
+                var r = new double[4];
+                for (int c = 0; c < 4; c++)
+                    for (int k = 0; k < 4; k++) r[c] += row[k] * m.V![c * 4 + k];
+                if (name == "XMVector3TransformCoord" && r[3] != 0) return ShaderValue.Vec(r[0] / r[3], r[1] / r[3], r[2] / r[3], 1);
+                return ShaderValue.Vec(r);
+            }
             case "XMMatrixMultiply" when a.Count == 2:
                 return MatrixMultiply(a[0], a[1], line);
             case "XMMatrixTranspose" when a.Count == 1:

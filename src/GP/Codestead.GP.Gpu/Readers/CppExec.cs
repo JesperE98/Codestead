@@ -139,6 +139,17 @@ public sealed class CppExec
         if (src.DeclaredType(name) is { } type)
         {
             var t = type.Replace("glm::", "").Replace("DirectX::", "");
+            // An array of them (XMFLOAT3 lightPositions[32];): that many zero values.
+            var arraySize = System.Text.RegularExpressions.Regex.Match(src.Code, @"\b" + System.Text.RegularExpressions.Regex.Escape(name) + @"\s*\[\s*(\w+)\s*\]\s*;");
+            if (arraySize.Success && (int.TryParse(arraySize.Groups[1].Value, out var n) ? n : src.Int(arraySize.Groups[1].Value) ?? 0) is int count and > 0 and <= 4096)
+            {
+                var items = ShaderValue.Array(Enumerable.Range(0, count).Select(_ => Runner.Default(t)).ToArray());
+                if (items.Items!.All(i => i.Fields is not null || i.V is not null))
+                {
+                    Runner.Globals[name] = items;
+                    return items;
+                }
+            }
             var value = Runner.Default(t);
             if (value.Fields is not null || value.V is not null)
             {

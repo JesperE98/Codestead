@@ -92,7 +92,10 @@ OpenGL's): **planet** (400,280), **planet-left** (300,240), **planet-lit** (470,
 = 73,73,75, ring-mid = 87,87,122, ring-left = 84,84,114, ring-right = 99,99,165, contact = 93,93,144, contact-left =
 91,91,136, edge = 79,79,95, floor = 90,90,134, wall = 81,81,102, wall-lit = 109,109,199.
 
-@SIMSTART@
+*Simulator:* as the code stands it shows the room with the light at the wrong place (note 3) and **no planet** (note
+4). With notes 1–3 worked around, the room matches OpenGL's exactly: edge = 79,79,95, floor = 90,90,134, wall =
+81,81,102, wall-lit = 109,109,199; the planet's points show the room behind it instead (planet = 96,96,154,
+planet-lit = 112,112,209).
 
 ## kernel
 - **Task:** Generate the SSAO input on the CPU – the 32-sample kernel in a hemisphere (`srand(42)`, `rand() / (float)RAND_MAX`) into `ssaoKernel`, and the 4 × 4 noise texture of random rotations – and add the SSAO pass: a single-channel render target (`R8_UNORM`) filled by `ssao.hlsl` on the screen quad, reading gPosition, gNormal and the noise. For now show the SSAO texture in the window.
@@ -117,7 +120,10 @@ OpenGL's): **planet** (400,280), **planet-left** (300,240), **planet-lit** (470,
   just above the ring (above-ring = 249,249,249). The grey areas show the **4 × 4 noise pattern** (a fine regular
   dither: neighbouring pixels differ).
 
-  @SIMKERNEL@
+  *Simulator:* as the code stands the SSAO texture is **white everywhere** (notes 2 and 5: the kernel and the noise are
+NaN / zero; and no planet, note 4). With notes 1–3 and 5 worked around, the room's AO matches OpenGL's: the floor/wall
+edge is a dithered grey line, edge = 205,205,205 (OpenGL 208); floor, wall, wall-lit = 255,255,255; the planet and the
+ring are missing (note 4), so ring/contact/planet points are 255.
 
 ## blur
 - **Task:** Blur the SSAO texture to remove the noise pattern: a second single-channel render target filled by `ssao_blur.hlsl` (learnopengl's 4 × 4 box blur) reading the SSAO texture. Show the blurred texture.
@@ -132,7 +138,8 @@ OpenGL's): **planet** (400,280), **planet-left** (300,240), **planet-lit** (470,
   196,196,196, edge = 219,219,219, above-ring = 233,233,233, planet-left = 254,254,254; still white: planet,
   planet-lit, floor, wall, wall-lit = 255,255,255.
 
-  @SIMBLUR@
+  *Simulator:* with notes 1–3 and 5 worked around: edge = 216,216,216 (OpenGL 219), the dither gone, the rest of the
+room 255; no planet (note 4).
 
 ## apply
 - **Task:** Use the blurred AO in the lighting: multiply the ambient term by it, and remove the line that showed the SSAO texture.
@@ -147,7 +154,32 @@ OpenGL's): **planet** (400,280), **planet-left** (300,240), **planet-lit** (470,
   unchanged: planet = 73,73,73, planet-lit = 103,103,179, floor = 90,90,134, wall = 81,81,102, wall-lit = 109,109,199,
   planet-left = 72,72,72. This is the solution.
 
-  @SIMAPPLY@
+  *Simulator:* with notes 1–3 and 5 worked around: edge = 68,68,84 (OpenGL 69,69,85; start 79,79,95), floor =
+90,90,134, wall = 81,81,102, wall-lit = 109,109,199 unchanged; no planet (note 4), so its points show the room behind
+it.
 
 ## Notes on the simulator (for the lead)
-@SIMNOTES@
+1. **Globals filled in `LoadAssets` are lost**: `std::vector<XMFLOAT3> ssaoKernel;` (no initializer) –
+   `ssaoKernel.push_back(…)` in `LoadAssets` lands in a local of that function; `OnUpdate` reads an empty vector. With
+   `= {}` it works (as in the deferred-shading chapter, note 1 there).
+2. **`RAND_MAX` is unknown** to the simulator (in every API's C++ runner – it appears nowhere in the simulator's
+   source): `rand() / (float)RAND_MAX` is NaN, so the whole kernel and the noise are NaN/zero and the SSAO pass returns
+   1.0 everywhere. With `(float)RAND_MAX` replaced by `2147483647.0f` (glibc's value) the kernel is right. (OpenGL's
+   project uses the same expression.)
+3. **`XMVector3TransformCoord` is not supported** (neither `XMVector3Transform` / `XMVector4Transform`): `lightPosView`
+   stays (2, 4, -2) – the world position used as a view-space one, i.e. the light sits at world (2, 4, 3): the floor
+   comes out far too bright (floor = 141,141,255 instead of 90,90,134) and the back wall too dark. Measured with
+   `XMVectorSet(2.0f, 4.0f, -7.0f, 1.0f)` (the transformed value for this camera).
+4. **`m_model.Draw(…)` inside an off-screen pass is drawn to the window**: the D3D12 reader's `ModelDraws` creates the
+   mesh draws without the render target(s) bound at that point (no `Target`), so the planet never reaches the G-buffer
+   (and is then overdrawn by the screen passes) – the planet is missing in every state. Real D3D12: the meshes are drawn
+   into the three G-buffer targets like the room. (The draws inside off-screen passes work for `DrawInstanced`.)
+5. **A texture filled from CPU data reads zero**: the noise texture (`R32G32B32A32_FLOAT`, `UpdateSubresources` from
+   `ssaoNoise.data()` of a `std::vector<XMFLOAT4>`, `RowPitch = 4 * sizeof(XMFLOAT4)`) samples as (0, 0, 0, 0), so
+   `randomVec` is NaN. Images loaded with `stbi_load` work. Measured with the 16 noise vectors written into the shader
+   (`noiseData[x % 4 + 4 * (y % 4)]`, glibc values).
+6. Minor: a float division by zero is not +inf in the simulator's HLSL (`0.5f / 0.0f`): learnopengl's `rangeCheck =
+   smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth))` gives 0 instead of 1 where the sample's depth equals
+   the pixel's exactly (a flat wall facing the camera). No visible effect here (those samples are never occluding).
+   Also the simulator's `uint(x)` of a float does not truncate (`uint(input.position.x) % 4` gave index 16).
+7. Render time: start 34 s, `kernel` 406 s, `blur` 501 s, `apply` 501 s (the slowest; 32 samples per pixel).

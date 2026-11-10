@@ -206,8 +206,30 @@ internal sealed class D3D12Device : IDeviceModel
                 int first = (int)Num(args[4]), count = (int)Math.Max(1, Num(args[5]));
                 foreach (var (item, i) in list.Take(count).Select((x, i) => (x, i)))
                 {
-                    var pData = item.Fields?.GetValueOrDefault("pData")?.Text;
+                    var pDataValue = item.Fields?.GetValueOrDefault("pData");
+                    var pData = pDataValue?.Text;
                     var image = pData is not null && images.TryGetValue(pData, out var img) ? img : null;
+                    // Data the program computed (the SSAO noise: XMFLOAT4 noise[16]): its numbers, four per texel (RGBA).
+                    if (image is null && pDataValue is not null && pData is null && dst.Width > 0)
+                    {
+                        var numbers = new List<double>();
+                        CppExec.Flatten(pDataValue, numbers);
+                        int w = dst.Width, h = Math.Max(1, dst.Height);
+                        if (numbers.Count >= w * h)
+                        {
+                            int per = Math.Clamp(numbers.Count / (w * h), 1, 4);
+                            var floats = new double[w * h * 4];
+                            var bytes = new byte[w * h * 4];
+                            for (int t = 0; t < w * h; t++)
+                                for (int k = 0; k < 4; k++)
+                                {
+                                    double v = k < per ? numbers[t * per + k] : (k == 3 ? 1 : 0);
+                                    floats[t * 4 + k] = v;
+                                    bytes[t * 4 + k] = (byte)Math.Round(Math.Clamp(v, 0, 1) * 255);
+                                }
+                            image = new Image(w, h, 4, bytes, floats);
+                        }
+                    }
                     while (dst.Images.Count <= first + i) dst.Images.Add(null);
                     dst.Images[first + i] = image;
                 }
