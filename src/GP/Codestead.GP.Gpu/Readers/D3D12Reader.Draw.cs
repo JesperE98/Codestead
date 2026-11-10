@@ -153,6 +153,9 @@ public sealed partial class D3D12Reader
                 if (d.State is D3D12Device.DrawState { NoHeap: true }) continue;
                 // With several pipeline state objects, the draw uses the one set before it.
                 var pl = d.Pipeline is not null && pipelines.Count > 1 && pipelines.TryGetValue(d.Pipeline, out var p) ? p : null;
+                // PSOs the reading of the code cannot follow (a map of shaders, a Compile helper): the one the device saw set.
+                if (pl is null && device.CreatedPsos.Count > Math.Max(1, pipelines.Count) && d.State is D3D12Device.DrawState { Pso: { } bound })
+                    pl = RuntimePso(device, bound);
                 if (d.Model)
                 {
                     var mValues = new Dictionary<string, ShaderValue>(fallback(time), StringComparer.Ordinal);
