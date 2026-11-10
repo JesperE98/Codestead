@@ -75,12 +75,7 @@ background is black. (The simulator gives exactly these values for the OpenGL pr
   `bright-pass`): the light cubes, the steel frame right above the white light, the bright stripe along the big box's top
   edge, rivet dots near the lights; everything else black.
 
-  *Simulator:* it does not follow the second render target yet (Direct3D 12 `OMSetRenderTargets` with 2 RTVs: only the
-  first RTV is used, `SV_TARGET1` is dropped), so its preview of this state shows the bright texture **black**. With the
-  two `SV_TARGET` semantics swapped in a scratch copy (the bright parts into the first target, shown through slot 3) the
-  simulator shows the expected picture: white-light = 254,254,254, green-light = 0,254,0, box-frame = 207,209,217; box-top, box-right,
-  floor-mid, floor-left, floor-right, background, glow-right, glow-below, glow-green, frame-green, corner, rim = 0,0,0 –
-  the OpenGL project's Mesa values (box-frame 208,210,218 there).
+  *Simulator:* it follows this state and shows the picture above (the OpenGL project's Mesa values).
 
 ## blur
 - **Task:** Blur the bright texture with learnopengl's two-pass Gaussian blur: two ping-pong render targets, 10 passes of the screen quad that alternate horizontal and vertical, each reading the texture the previous pass wrote (the first reads the bright texture). Show the last blurred texture in the window.
@@ -95,14 +90,7 @@ background is black. (The simulator gives exactly these values for the OpenGL pr
   `tex_offset`, the two `for` loops. The window shows the **blurred bright parts** (as OpenGL's `blur`): soft blobs around
   the light cubes and a soft white band along the big box's edge; black far from the lights.
 
-  *Simulator:* it does not follow the second render target yet (Direct3D 12 `OMSetRenderTargets` with 2 RTVs: only the
-  first RTV is used, `SV_TARGET1` is dropped), so its preview of this state is **black**. With the
-  two `SV_TARGET` semantics swapped in a scratch copy (the bright parts into the first target, shown through slot 3) the
-  simulator shows the expected picture: (the same swap, the first blur pass reading slot 3) white-light = 254,254,254, green-light = 0,254,0,
-  glow-green = 0,176,0, glow-right = 49,49,49, glow-below = 33,33,33, corner = 128,129,140, rim = 149,149,149,
-  frame-green = 0,149,0, box-frame = 228,229,233; box-top, box-right, floor-mid, floor-left, floor-right, background =
-  0,0,0 – equal to the OpenGL project's Mesa values (rim 148,148,148, frame-green 0,148,0 there). This also checks the
-  ping-pong passes, their barriers and descriptor tables, `GetDimensions` and the root constant `horizontal`.
+  *Simulator:* it follows this state and shows the picture above (the OpenGL project's Mesa values).
 
 ## combine
 - **Task:** Add the blurred bright texture to the scene in the final pass before the tone mapping: the scene (colour buffer 0) as the first texture (t0), the blurred texture as a second one (t1, in its own descriptor table), and in `bloom_final.hlsl` add the two colours.
@@ -121,7 +109,4 @@ background is black. (The simulator gives exactly these values for the OpenGL pr
   from the bright parts: box-top = 164,116,71, box-right = 174,124,69, floor-mid = 172,134,93, floor-left = 85,59,48,
   floor-right = 123,91,70, background = 0,0,0.
 
-  *Simulator:* because of the dropped `SV_TARGET1` (see `bright-pass`) the blurred texture is black and its preview of
-  this state equals the start picture. The second descriptor table (root parameter 3, t1) itself is followed: with the
-  blur reading the scene instead of the bright texture (a scratch copy) the preview shows the scene plus its blurred
-  copy. This is the solution.
+  *Simulator:* it follows this state and shows the picture above (the OpenGL project's Mesa values).

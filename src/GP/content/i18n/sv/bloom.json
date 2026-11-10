@@ -1,0 +1,41 @@
+{
+  "title": "Bloom",
+  "tasks": {
+    "bright-pass": {
+      "text": {
+        "opengl": "Ge HDR-framebuffern en andra flyttalsfärg-attachment och låt `bloom.fs` och `light_box.fs` skriva två utdata: färgen som förut, och – bara där dess ljusstyrka är över 1.0 – samma färg i den andra (svart annars). Visa än så länge den andra färgbuffern i fönstret.",
+        "vulkan": "Ge flyttalsmålet en andra färg-attachment (den ljusa bilden) och låt `bloom.frag` och `light_box.frag` skriva de fragment som är ljusare än 1.0 i den (`dot(color, vec3(0.2126, 0.7152, 0.0722)) > 1.0`, annars svart). Visa än så länge den ljusa bilden på skärmfyrhörningen.",
+        "d3d12": "Ge scenens pass ett andra flyttals-render target och låt båda scenens pixel shaders skriva två utdata: färgen som förut (`SV_TARGET0`), och – bara där dess ljusstyrka är över 1.0 – samma färg i det andra (`SV_TARGET1`, svart annars). Visa än så länge den andra färgbuffern i fönstret."
+      },
+      "hint": {
+        "opengl": "`unsigned int colorBuffers[2]; glGenTextures(2, colorBuffers);` och en `for`-loop med den gamla texturuppsättningen, inkopplad på `GL_COLOR_ATTACHMENT0 + i`. Sedan `unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 }; glDrawBuffers(2, attachments);`. Shaderna: `layout (location = 1) out vec4 BrightColor;` och `float brightness = dot(result, vec3(0.2126, 0.7152, 0.0722)); if(brightness > 1.0) BrightColor = vec4(result, 1.0); else BrightColor = vec4(0.0, 0.0, 0.0, 1.0);`. Pass 3 binder `colorBuffers[1]`.",
+        "vulkan": "`VkAttachmentDescription brightAttachment = colorAttachment;`, två färgreferenser (attachment 0 och 1, djupet på 2), `colorAttachmentCount = 2`; den ljusa bilden som färgbilden och tre views i framebuffern; tre rensningsvärden. `createPipeline(…, uint32_t colorAttachmentCount, …)` med `std::array<VkPipelineColorBlendAttachmentState, 2>` och `colorBlending.attachmentCount = colorAttachmentCount` – 2 för scenens pipelines, 1 för den sista. Shaderna: `layout(location = 1) out vec4 brightColor;`. `brightDescriptorSet` (poolen: 4 set) bundet för det sista passet.",
+        "d3d12": "`m_colorBuffers[2]` i en `for`-loop (RTV:er `FrameCount + i`, SRV:er `3 + i`; heaparna `FrameCount + 2` och 5). Scenens PSO: `NumRenderTargets = 2`, `RTVFormats[1] = DXGI_FORMAT_R16G16B16A16_FLOAT`; det sista PSO:t: `NumRenderTargets = 1`, `RTVFormats[1] = DXGI_FORMAT_UNKNOWN`. Pass 1: `barriers[2]`, `OMSetRenderTargets(2, hdrRtvHandles, FALSE, &dsvHandle)`, rensa båda. HLSL: `struct PSOutput { float4 FragColor : SV_TARGET0; float4 BrightColor : SV_TARGET1; };` och ljusstyrketestet med `float3(0.2126f, 0.7152f, 0.0722f)`. Sista tabell 2: plats 4."
+      }
+    },
+    "blur": {
+      "text": {
+        "opengl": "Blurra den ljusa texturen med learnopengls gaussiska blur i två pass: två ping-pong-framebuffers (en `GL_RGBA16F`-färgtextur var), 10 pass som växlar mellan horisontellt och vertikalt och läser det som föregående pass skrev (det första läser den ljusa texturen). Visa den sista blurrade texturen i fönstret.",
+        "vulkan": "Blurra den ljusa bilden med learnopengls gaussiska blur i två pass: två ping-pong-mål med flyttal och 10 render passes som ritar skärmfyrhörningen i det ena medan de samplar det andra (det första samplar den ljusa bilden), växelvis horisontellt och vertikalt. Visa den blurrade bilden på skärmfyrhörningen.",
+        "d3d12": "Blurra den ljusa texturen med learnopengls gaussiska blur i två pass: två ping-pong-render targets och 10 pass med skärmfyrhörningen, växelvis horisontellt och vertikalt, som var och ett läser det som föregående pass skrev (det första läser den ljusa texturen). Visa den sista blurrade texturen i fönstret."
+      },
+      "hint": {
+        "opengl": "`Shader shaderBlur(\"blur.vs\", \"blur.fs\");`, loopen med `pingpongFBO[2]` / `pingpongColorbuffers[2]` (inget djup). Loopen: `bool horizontal = true, first_iteration = true; unsigned int amount = 10;`, per pass `glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]); shaderBlur.setInt(\"horizontal\", horizontal); glBindTexture(GL_TEXTURE_2D, first_iteration ? colorBuffers[1] : pingpongColorbuffers[!horizontal]); renderQuad(); horizontal = !horizontal;`. `blur.fs`: `vec2 tex_offset = 1.0 / textureSize(image, 0);`, `weight[0]` för mitten, `± tex_offset.x * i` eller `± tex_offset.y * i` gånger `weight[i]`. Sista passet: `pingpongColorbuffers[!horizontal]`.",
+        "vulkan": "`createBlurRenderPass()`: en `VK_FORMAT_R16G16B16A16_SFLOAT`-attachment, loadOp `DONT_CARE`, storeOp STORE, finalLayout `SHADER_READ_ONLY_OPTIMAL`, inget djup, två dependencies. `createPingpongFramebuffers()`: bild, view och framebuffer för `i` = 0, 1. `blurPipeline` med `blurRenderPass` och 1 attachment; `pingpongDescriptorSets[i]` (poolen: 6). `VkBool32 horizontal;` i `PushConstants`. Per pass: börja med `pingpongFramebuffers[horizontal]`, pusha `horizontal`, bind `first_iteration ? brightDescriptorSet : pingpongDescriptorSets[!horizontal]`, rita fyrhörningen, avsluta. `blur.frag`: push constant-blocket fram till `bool horizontal`, learnopengls loopar.",
+        "d3d12": "`m_blurPipelineState`: `blur.hlsl`, `NumRenderTargets = 1`, `RTVFormats[1] = DXGI_FORMAT_UNKNOWN`, `DepthEnable = FALSE`, `DSVFormat = DXGI_FORMAT_UNKNOWN`. `m_pingpongColorbuffers[2]`: RTV:er `FrameCount + 2 + i`, SRV:er `5 + i` (heaparna `FrameCount + 4` och 7). Per pass: barriär till RENDER_TARGET, `OMSetRenderTargets(1, &pingpongRtvHandle, FALSE, nullptr)`, `BlurConstants` som root constants, tabell 2 = `first_iteration ? 4 : 5 + !horizontal`, `DrawInstanced(6, 1, 36, 0)`, barriär tillbaka. `blur.hlsl`: `image.GetDimensions(width, height); float2 tex_offset = 1.0f / float2(width, height);`. Sista tabell 2: `5 + !horizontal`."
+      }
+    },
+    "combine": {
+      "text": {
+        "opengl": "Addera den blurrade ljusa texturen till scenen i det sista passet, före tone mappingen: scenen (`colorBuffers[0]`) på enhet 0, den blurrade texturen på enhet 1 (samplern `bloomBlur`), och addera de två färgerna i `bloom_final.fs`.",
+        "vulkan": "Addera den blurrade ljusa bilden till scenen i det sista passet, före tone mappingen: en andra textur `bloomBlur` på binding 2 i ett nytt descriptor set för det sista passet, och addera de två färgerna i `bloom_final.frag` – ljuskuberna glöder.",
+        "d3d12": "Addera den blurrade ljusa texturen till scenen i det sista passet, före tone mappingen: scenen (färgbuffer 0) på t0, den blurrade texturen på t1 i en egen descriptor table, och addera de två färgerna i `bloom_final.hlsl`."
+      },
+      "hint": {
+        "opengl": "`shaderBloomFinal.setInt(\"bloomBlur\", 1);`; pass 3: `glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, colorBuffers[0]); glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);`. `bloom_final.fs`: `uniform sampler2D bloomBlur;`, `vec3 bloomColor = texture(bloomBlur, TexCoords).rgb; hdrColor += bloomColor;` före tone mappingen.",
+        "vulkan": "Binding 2 i layouten (combined image sampler, fragmentsteget); `createBloomDescriptorSet(hdrColorImageView, pingpongImageViews[0], colorBufferSampler, bloomDescriptorSet)` med tre descriptor writes; poolen 7 uniformbuffrar, **14** samplers, `maxSets = 7`; det sista passet binder `bloomDescriptorSet`. `bloom_final.frag`: `layout(binding = 2) uniform sampler2D bloomBlur;`, `hdrColor += texture(bloomBlur, fragTexCoord).rgb;` före tone mappingen.",
+        "d3d12": "`ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1)`, `rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL)`. Sista passet: tabell 2 = plats 3, tabell 3 = plats `5 + !horizontal`. `bloom_final.hlsl`: `Texture2D bloomBlur : register(t1);`, `float3 bloomColor = bloomBlur.Sample(clampSampler, input.texCoord).rgb; hdrColor += bloomColor;` före tone mappingen."
+      }
+    }
+  }
+}
