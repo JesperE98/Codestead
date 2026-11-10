@@ -48,6 +48,9 @@ public static class GpCourse
         ("advanced-lighting", "advanced-lighting"),
         ("gamma-correction", "advanced-lighting"),
         ("shadow-mapping", "advanced-lighting"),
+        ("point-shadows", "advanced-lighting"),
+        ("normal-mapping", "advanced-lighting"),
+        ("parallax-mapping", "advanced-lighting"),
     ];
 
     public static IReadOnlyList<CourseChapter> Chapters { get; } = Build();
