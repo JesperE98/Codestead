@@ -1,0 +1,734 @@
+=== task: opaque-pass
+--- file: main.cpp
+--- find:
+    // TODO: the render passes of the solid, transparent and composite passes
+--- replace:
+    VkRenderPass opaqueRenderPass; // the solid pass: the opaque objects into the opaque colour image and the depth image
+    // TODO: the render passes of the transparent and composite passes
+--- file: main.cpp
+--- find:
+    // TODO: the pipelines of the composite pass and the final pass
+--- replace:
+    // TODO: the composite pass's pipeline
+    VkPipeline screenPipeline; // learnopengl's screenShader
+--- file: main.cpp
+--- find:
+    // TODO: the off-screen framebuffers and their images
+--- replace:
+    // the opaque framebuffer (learnopengl's opaqueFBO): a 16-bit float colour image and a depth image of its own
+    // (learnopengl's opaqueTexture and depthTexture); the depth image is shared with the transparent framebuffer
+    VkImage opaqueImage;
+    VkDeviceMemory opaqueImageMemory;
+    VkImageView opaqueImageView;
+    VkImage opaqueDepthImage;
+    VkDeviceMemory opaqueDepthImageMemory;
+    VkImageView opaqueDepthImageView;
+    VkFramebuffer opaqueFramebuffer;
+
+    // TODO: the transparent framebuffer and its images
+
+    // TODO: the composite pass's framebuffer
+--- file: main.cpp
+--- find:
+    // TODO: the descriptor sets of the composite pass and the final pass
+--- replace:
+    // TODO: the composite pass's descriptor set
+    VkDescriptorSet screenDescriptorSet; // the opaque colour image (learnopengl's screen)
+--- file: main.cpp
+--- find:
+        // TODO: create the render passes of the solid, transparent and composite passes
+--- replace:
+        createOpaqueRenderPass();
+        // TODO: create the render passes of the transparent and composite passes
+--- file: main.cpp
+--- find:
+createPipeline("shaders/solid.vert.spv", "shaders/solid.frag.spv", renderPass,
+--- replace:
+createPipeline("shaders/solid.vert.spv", "shaders/solid.frag.spv", opaqueRenderPass,
+--- file: main.cpp
+--- find:
+"shaders/transparent.frag.spv", renderPass,
+--- replace:
+"shaders/transparent.frag.spv", opaqueRenderPass,
+--- file: main.cpp
+--- find:
+        // TODO: create the final pass's pipeline
+--- replace:
+        // final pass: no depth test, no blending
+        createPipeline("shaders/screen.vert.spv", "shaders/screen.frag.spv", renderPass, 1, VK_FALSE, VK_FALSE, VK_FALSE,
+            VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, screenPipeline);
+--- file: main.cpp
+--- find:
+        // TODO: create the off-screen framebuffers
+--- replace:
+        createOpaqueFramebuffer();
+        // TODO: create the transparent and composite framebuffers
+--- file: main.cpp
+--- find:
+        // TODO: create the descriptor sets of the composite pass and the final pass
+--- replace:
+        // TODO: create the composite pass's descriptor set
+        createDescriptorSet(opaqueImageView, opaqueImageView, screenDescriptorSet); // binding 1 is not used by screen.frag
+--- file: main.cpp
+--- find:
+        // TODO: destroy the off-screen framebuffers and their images
+--- replace:
+        vkDestroyFramebuffer(device, opaqueFramebuffer, nullptr);
+        vkDestroyImageView(device, opaqueImageView, nullptr);
+        vkDestroyImage(device, opaqueImage, nullptr);
+        vkFreeMemory(device, opaqueImageMemory, nullptr);
+        vkDestroyImageView(device, opaqueDepthImageView, nullptr);
+        vkDestroyImage(device, opaqueDepthImage, nullptr);
+        vkFreeMemory(device, opaqueDepthImageMemory, nullptr);
+        // TODO: destroy the transparent and composite framebuffers and their images
+--- file: main.cpp
+--- find:
+        // TODO: destroy the composite and screen pipelines
+--- replace:
+        // TODO: destroy the composite pipeline
+        vkDestroyPipeline(device, screenPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        // TODO: destroy the off-screen render passes
+--- replace:
+        vkDestroyRenderPass(device, opaqueRenderPass, nullptr);
+        // TODO: destroy the transparent and composite render passes
+--- file: main.cpp
+--- find:
+    // TODO: createOpaqueRenderPass() - the solid pass's render pass
+--- replace:
+    // The solid pass (learnopengl: opaqueFBO cleared, the solid objects drawn): a 16-bit float colour attachment and a
+    // depth attachment, both cleared at the start and kept (STORE) at the end: they are used again later in the frame.
+    void createOpaqueRenderPass() {
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = VK_FORMAT_R16G16B16A16_SFLOAT; // learnopengl: GL_RGBA16F
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthFormat();
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // the transparent pass tests against it
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference colorAttachmentRef{};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 1;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: wait until the last frame's passes have used the images (the final pass read the colour, the
+        // transparent pass tested against the depth)
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        // after the pass: a fragment shader that samples the colour image waits until it has been written
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderPassInfo.pAttachments = attachments.data();
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &opaqueRenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create opaque render pass!");
+        }
+    }
+--- file: main.cpp
+--- find:
+    // TODO: createOpaqueFramebuffer() - the opaque framebuffer and its images
+--- replace:
+    // set up attachments for opaque framebuffer: the colour image (drawn into, then sampled by the final pass) and the
+    // depth image (learnopengl's opaqueTexture and depthTexture)
+    void createOpaqueFramebuffer() {
+        createImage(swapChainExtent.width, swapChainExtent.height, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, opaqueImage, opaqueImageMemory);
+        opaqueImageView = createImageView(opaqueImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
+
+        VkFormat depthFormat = findDepthFormat();
+        createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, opaqueDepthImage, opaqueDepthImageMemory);
+        opaqueDepthImageView = createImageView(opaqueDepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+        std::array<VkImageView, 2> attachments = {
+            opaqueImageView,
+            opaqueDepthImageView
+        };
+
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = opaqueRenderPass;
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        framebufferInfo.pAttachments = attachments.data();
+        framebufferInfo.width = swapChainExtent.width;
+        framebufferInfo.height = swapChainExtent.height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &opaqueFramebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create opaque framebuffer!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        // draw solid objects
+        // ------
+        // TODO: render the solid objects into the opaque framebuffer (a render pass of its own) instead of the window
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = swapChainExtent;
+
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+        clearValues[1].depthStencil = {1.0f, 0};
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+--- replace:
+        // draw solid objects (solid pass)
+        // ------
+        VkRenderPassBeginInfo opaquePassInfo{};
+        opaquePassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        opaquePassInfo.renderPass = opaqueRenderPass;
+        opaquePassInfo.framebuffer = opaqueFramebuffer;
+        opaquePassInfo.renderArea.offset = {0, 0};
+        opaquePassInfo.renderArea.extent = swapChainExtent;
+
+        std::array<VkClearValue, 2> opaqueClearValues{};
+        opaqueClearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+        opaqueClearValues[1].depthStencil = {1.0f, 0};
+
+        opaquePassInfo.clearValueCount = static_cast<uint32_t>(opaqueClearValues.size());
+        opaquePassInfo.pClearValues = opaqueClearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &opaquePassInfo, VK_SUBPASS_CONTENTS_INLINE);
+--- file: main.cpp
+--- find:
+        // TODO: draw the opaque framebuffer's image to the window (final pass)
+--- replace:
+        // draw to backbuffer (final pass)
+        // -----
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = swapChainExtent;
+
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+        clearValues[1].depthStencil = {1.0f, 0};
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        // use screen shader
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, screenPipeline);
+
+        // draw final screen quad
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &screenDescriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+
+        vkCmdEndRenderPass(commandBuffer);
+=== task: transparent-pass
+--- file: main.cpp
+--- find:
+        deviceFeatures.samplerAnisotropy = VK_TRUE;
+--- replace:
+        deviceFeatures.samplerAnisotropy = VK_TRUE;
+        deviceFeatures.independentBlend = VK_TRUE; // a different blend function per colour attachment (glBlendFunci)
+--- file: main.cpp
+--- find:
+supportedFeatures.samplerAnisotropy;
+--- replace:
+supportedFeatures.samplerAnisotropy && supportedFeatures.independentBlend;
+--- file: main.cpp
+--- find:
+    // TODO: the render passes of the transparent and composite passes
+--- replace:
+    VkRenderPass transparentRenderPass; // the transparent pass: accumulation and revealage, testing the opaque depth
+    // TODO: the render pass of the composite pass
+--- file: main.cpp
+--- find:
+    // TODO: the transparent framebuffer and its images
+--- replace:
+    // the transparent framebuffer (learnopengl's transparentFBO): the accumulation image (RGBA, 16-bit float) and the
+    // revealage image (one 8-bit channel)
+    VkImage accumImage;
+    VkDeviceMemory accumImageMemory;
+    VkImageView accumImageView;
+    VkImage revealImage;
+    VkDeviceMemory revealImageMemory;
+    VkImageView revealImageView;
+    VkFramebuffer transparentFramebuffer;
+--- file: main.cpp
+--- find:
+        // TODO: create the render passes of the transparent and composite passes
+--- replace:
+        createTransparentRenderPass();
+        // TODO: create the composite pass's render pass
+--- file: main.cpp
+--- find:
+        // transparent objects: ordinary alpha blending (SRC_ALPHA, ONE_MINUS_SRC_ALPHA), depth test with depth writes
+        createPipeline("shaders/transparent.vert.spv", "shaders/transparent.frag.spv", opaqueRenderPass, 1, VK_TRUE, VK_TRUE, VK_TRUE,
+            VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, transparentPipeline);
+--- replace:
+        // transparent objects: depth test against the opaque depth, no depth writes; a blend function per attachment
+        // (learnopengl's glBlendFunci): accum ONE, ONE (add up), reveal ZERO, ONE_MINUS_SRC_COLOR (multiply by 1 - alpha)
+        createPipeline("shaders/transparent.vert.spv", "shaders/transparent.frag.spv", transparentRenderPass, 2, VK_TRUE, VK_FALSE, VK_TRUE,
+            VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR, transparentPipeline);
+--- file: main.cpp
+--- find:
+        // TODO: create the transparent and composite framebuffers
+--- replace:
+        createTransparentFramebuffer();
+        // TODO: create the composite pass's framebuffer
+--- file: main.cpp
+--- find:
+        // TODO: destroy the transparent and composite framebuffers and their images
+--- replace:
+        vkDestroyFramebuffer(device, transparentFramebuffer, nullptr);
+        vkDestroyImageView(device, accumImageView, nullptr);
+        vkDestroyImage(device, accumImage, nullptr);
+        vkFreeMemory(device, accumImageMemory, nullptr);
+        vkDestroyImageView(device, revealImageView, nullptr);
+        vkDestroyImage(device, revealImage, nullptr);
+        vkFreeMemory(device, revealImageMemory, nullptr);
+        // TODO: destroy the composite pass's framebuffer
+--- file: main.cpp
+--- find:
+        // TODO: destroy the transparent and composite render passes
+--- replace:
+        vkDestroyRenderPass(device, transparentRenderPass, nullptr);
+        // TODO: destroy the composite render pass
+--- file: main.cpp
+--- find:
+    // TODO: createTransparentRenderPass() - the transparent pass's render pass
+--- replace:
+    // The transparent pass (learnopengl: transparentFBO, glDrawBuffers with two attachments): the accumulation image
+    // (cleared to 0) and the revealage image (cleared to 1), and the opaque pass's depth, loaded as it is (not cleared).
+    // At the end the two images are left ready to be read by the composite shader.
+    void createTransparentRenderPass() {
+        VkAttachmentDescription accumAttachment{};
+        accumAttachment.format = VK_FORMAT_R16G16B16A16_SFLOAT; // learnopengl: GL_RGBA16F
+        accumAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        accumAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        accumAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        accumAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        accumAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        accumAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        accumAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkAttachmentDescription revealAttachment = accumAttachment;
+        revealAttachment.format = VK_FORMAT_R8_UNORM; // learnopengl: GL_R8
+
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthFormat();
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD; // the opaque objects' depth
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        // the fragment shader's outputs: location 0 -> accum, location 1 -> reveal
+        std::array<VkAttachmentReference, 2> colorAttachmentRefs{};
+        colorAttachmentRefs[0].attachment = 0;
+        colorAttachmentRefs[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachmentRefs[1].attachment = 1;
+        colorAttachmentRefs[1].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 2;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
+        subpass.pColorAttachments = colorAttachmentRefs.data();
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: the solid pass's depth writes are done, and the last frame's composite pass has read the
+        // two images
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+        // after the pass: the composite shader waits until the two images have been written
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        std::array<VkAttachmentDescription, 3> attachments = {accumAttachment, revealAttachment, depthAttachment};
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderPassInfo.pAttachments = attachments.data();
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &transparentRenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create transparent render pass!");
+        }
+    }
+--- file: main.cpp
+--- find:
+    // TODO: createTransparentFramebuffer() - the transparent framebuffer and its images
+--- replace:
+    // set up attachments for transparent framebuffer: the accumulation and revealage images, and the opaque
+    // framebuffer's depth image
+    void createTransparentFramebuffer() {
+        createImage(swapChainExtent.width, swapChainExtent.height, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, accumImage, accumImageMemory);
+        accumImageView = createImageView(accumImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
+        createImage(swapChainExtent.width, swapChainExtent.height, VK_FORMAT_R8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, revealImage, revealImageMemory);
+        revealImageView = createImageView(revealImage, VK_FORMAT_R8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+
+        std::array<VkImageView, 3> attachments = {
+            accumImageView,
+            revealImageView,
+            opaqueDepthImageView // opaque framebuffer's depth image
+        };
+
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = transparentRenderPass;
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        framebufferInfo.pAttachments = attachments.data();
+        framebufferInfo.width = swapChainExtent.width;
+        framebufferInfo.height = swapChainExtent.height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &transparentFramebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create transparent framebuffer!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        // draw transparent objects
+        // -----
+        // ordinary alpha blending, in the order the objects happen to be drawn (not sorted by distance):
+        // the green quad is drawn first although it is the nearest
+        // TODO: the transparent pass - a render pass and framebuffer of its own, a blend function per attachment, no depth writes
+--- replace:
+        vkCmdEndRenderPass(commandBuffer);
+
+        // draw transparent objects (transparent pass)
+        // -----
+        VkRenderPassBeginInfo transparentPassInfo{};
+        transparentPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        transparentPassInfo.renderPass = transparentRenderPass;
+        transparentPassInfo.framebuffer = transparentFramebuffer;
+        transparentPassInfo.renderArea.offset = {0, 0};
+        transparentPassInfo.renderArea.extent = swapChainExtent;
+
+        // accum starts at 0 (nothing added yet), reveal at 1 (everything behind fully visible); the depth is loaded
+        std::array<VkClearValue, 3> transparentClearValues{};
+        transparentClearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+        transparentClearValues[1].color = {{1.0f, 1.0f, 1.0f, 1.0f}};
+
+        transparentPassInfo.clearValueCount = static_cast<uint32_t>(transparentClearValues.size());
+        transparentPassInfo.pClearValues = transparentClearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &transparentPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+--- file: main.cpp
+--- find:
+        vkCmdEndRenderPass(commandBuffer);
+
+        // TODO: draw the composite image (composite pass)
+--- replace:
+        vkCmdEndRenderPass(commandBuffer); // accum and reveal are now in VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+
+        // TODO: draw the composite image (composite pass)
+--- file: shaders/transparent.frag
+--- find:
+// shader outputs
+layout(location = 0) out vec4 frag;
+
+// material color (alpha = opacity)
+layout(push_constant) uniform PushConstants {
+    mat4 mvp;
+    vec4 color;
+} pc;
+
+void main() {
+    // ordinary alpha blending: the colour with its alpha, blended over what is already there
+    frag = pc.color;
+}
+--- replace:
+// shader outputs
+layout(location = 0) out vec4 accum;
+layout(location = 1) out float reveal;
+
+// material color
+layout(push_constant) uniform PushConstants {
+    mat4 mvp;
+    vec4 color;
+} pc;
+
+void main() {
+    // weight function
+    float weight = clamp(pow(min(1.0, pc.color.a * 10.0) + 0.01, 3.0) * 1e8 * pow(1.0 - gl_FragCoord.z * 0.9, 3.0), 1e-2, 3e3);
+
+    // store pixel color accumulation
+    accum = vec4(pc.color.rgb * pc.color.a, pc.color.a) * weight;
+
+    // store pixel revealage threshold
+    reveal = pc.color.a;
+}
+=== task: composite
+--- file: main.cpp
+--- find:
+    // TODO: the render pass of the composite pass
+--- replace:
+    VkRenderPass compositeRenderPass; // the composite pass: the transparent result blended over the opaque image
+--- file: main.cpp
+--- find:
+    // TODO: the composite pass's pipeline
+--- replace:
+    VkPipeline compositePipeline; // learnopengl's compositeShader
+--- file: main.cpp
+--- find:
+    // TODO: the composite pass's framebuffer
+--- replace:
+    // the composite pass draws into the opaque colour image again (learnopengl binds opaqueFBO; its depth test is
+    // GL_ALWAYS, so the pass needs no depth attachment)
+    VkFramebuffer compositeFramebuffer;
+--- file: main.cpp
+--- find:
+    // TODO: the composite pass's descriptor set
+--- replace:
+    VkDescriptorSet compositeDescriptorSet; // the accumulation and revealage images (learnopengl's accum and reveal)
+--- file: main.cpp
+--- find:
+        // TODO: create the composite pass's render pass
+--- replace:
+        createCompositeRenderPass();
+--- file: main.cpp
+--- find:
+        // TODO: create the composite pass's pipeline
+--- replace:
+        // composite pass: no depth test (learnopengl: GL_ALWAYS), the usual alpha blending over the opaque image
+        createPipeline("shaders/composite.vert.spv", "shaders/composite.frag.spv", compositeRenderPass, 1, VK_FALSE, VK_FALSE, VK_TRUE,
+            VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, compositePipeline);
+--- file: main.cpp
+--- find:
+        // TODO: create the composite pass's framebuffer
+--- replace:
+        createCompositeFramebuffer();
+--- file: main.cpp
+--- find:
+        // TODO: create the composite pass's descriptor set
+--- replace:
+        createDescriptorSet(accumImageView, revealImageView, compositeDescriptorSet);
+--- file: main.cpp
+--- find:
+        // TODO: destroy the composite pass's framebuffer
+--- replace:
+        vkDestroyFramebuffer(device, compositeFramebuffer, nullptr);
+--- file: main.cpp
+--- find:
+        // TODO: destroy the composite pipeline
+--- replace:
+        vkDestroyPipeline(device, compositePipeline, nullptr);
+--- file: main.cpp
+--- find:
+        // TODO: destroy the composite render pass
+--- replace:
+        vkDestroyRenderPass(device, compositeRenderPass, nullptr);
+--- file: main.cpp
+--- find:
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+--- replace:
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; // the composite pass draws into it again
+--- file: main.cpp
+--- find:
+    // TODO: createCompositeRenderPass() - the composite pass's render pass
+--- replace:
+    // The composite pass (learnopengl binds opaqueFBO again): the opaque colour image, loaded with the solid objects
+    // in it (not cleared), and left ready to be read by the final pass's screen shader.
+    void createCompositeRenderPass() {
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD; // keep the solid objects: the composite blends over them
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; // as the solid pass left it
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkAttachmentReference colorAttachmentRef{};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: the solid pass's colour writes are done (blending reads them)
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        // after the pass: the final pass's screen shader waits until the image has been written
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = &colorAttachment;
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &compositeRenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create composite render pass!");
+        }
+    }
+--- file: main.cpp
+--- find:
+    // TODO: createCompositeFramebuffer() - the composite pass's framebuffer
+--- replace:
+    // the composite pass's framebuffer: only the opaque colour image
+    void createCompositeFramebuffer() {
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = compositeRenderPass;
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments = &opaqueImageView;
+        framebufferInfo.width = swapChainExtent.width;
+        framebufferInfo.height = swapChainExtent.height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &compositeFramebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create composite framebuffer!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        // TODO: draw the composite image (composite pass)
+--- replace:
+        // draw composite image (composite pass)
+        // -----
+        VkRenderPassBeginInfo compositePassInfo{};
+        compositePassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        compositePassInfo.renderPass = compositeRenderPass;
+        compositePassInfo.framebuffer = compositeFramebuffer;
+        compositePassInfo.renderArea.offset = {0, 0};
+        compositePassInfo.renderArea.extent = swapChainExtent;
+        compositePassInfo.clearValueCount = 0; // loadOp LOAD: nothing to clear
+
+        vkCmdBeginRenderPass(commandBuffer, &compositePassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        // use composite shader
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, compositePipeline);
+
+        // draw screen quad (accum at binding 0, reveal at binding 1)
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &compositeDescriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+
+        vkCmdEndRenderPass(commandBuffer); // the opaque image is now in VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+--- file: shaders/composite.frag
+--- find:
+// TODO: the composite pass - read the accumulation and revealage images and blend their average colour over the opaque image
+void main() {
+    frag = vec4(0.0);
+}
+--- replace:
+// color accumulation buffer
+layout(binding = 0) uniform sampler2D accum;
+
+// revealage threshold buffer
+layout(binding = 1) uniform sampler2D reveal;
+
+// epsilon number
+const float EPSILON = 0.00001;
+
+// calculate floating point numbers equality accurately
+bool isApproximatelyEqual(float a, float b) {
+    return abs(a - b) <= (abs(a) < abs(b) ? abs(b) : abs(a)) * EPSILON;
+}
+
+// get the max value between three values
+float max3(vec3 v) {
+    return max(max(v.x, v.y), v.z);
+}
+
+void main() {
+    // fragment coordination
+    ivec2 coords = ivec2(gl_FragCoord.xy);
+
+    // fragment revealage
+    float revealage = texelFetch(reveal, coords, 0).r;
+
+    // save the blending and color texture fetch cost if there is not a transparent fragment
+    if (isApproximatelyEqual(revealage, 1.0))
+        discard;
+
+    // fragment color
+    vec4 accumulation = texelFetch(accum, coords, 0);
+
+    // suppress overflow
+    if (isinf(max3(abs(accumulation.rgb))))
+        accumulation.rgb = vec3(accumulation.a);
+
+    // prevent floating point precision bug
+    vec3 average_color = accumulation.rgb / max(accumulation.a, EPSILON);
+
+    // blend pixels
+    frag = vec4(average_color, 1.0 - revealage);
+}
