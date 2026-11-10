@@ -97,7 +97,7 @@ middle box), light-mint = light-cyan = light-purple = 0,0,0.
 
 ## `light-cubes`
 - **Task:** Show the lights: copy the G-buffer's depth into the window's depth buffer, then draw a small cube at every light (scale 0.125) in the light's colour with `shaderLightBox`, depth-tested against the boxes.
-- **Hint:** `glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer); glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);` then `glBindFramebuffer(GL_FRAMEBUFFER, 0)`. The lighting pass's quad wrote no depth, so without the copy the cubes would be drawn over the boxes. The cubes: `renderCube()` with model = translate(lightPositions[i]) · scale(0.125) and `setVec3("lightColor", lightColors[i])`.
+- **Hint:** `glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer); glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);` then `glBindFramebuffer(GL_FRAMEBUFFER, 0)`. The window's depth buffer only holds the screen quad's flat depth (0.5 everywhere, NDC z = 0), not the boxes', so without the copy the cubes would not be hidden behind the boxes correctly. The cubes: `renderCube()` with model = translate(lightPositions[i]) · scale(0.125) and `setVec3("lightColor", lightColors[i])`.
 - **When done:** `main.cpp`: `Shader shaderLightBox("deferred_light_box.vs", "deferred_light_box.fs");`; after the
   lighting pass `// 2.5. copy content of geometry's depth buffer to default framebuffer's depth buffer`:
   `glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer)`, `glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0)`,
