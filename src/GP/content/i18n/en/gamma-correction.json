@@ -1,0 +1,41 @@
+{
+  "title": "Gamma Correction",
+  "tasks": {
+    "gamma-shader": {
+      "text": {
+        "opengl": "Gamma-correct the output: at the end of `gamma_correction.fs` raise the colour to the power 1.0 / 2.2 before writing it.",
+        "vulkan": "Gamma-correct the output: at the end of `gamma_correction.frag` raise the colour to the power 1.0 / 2.2 before writing it.",
+        "d3d12": "Gamma-correct the output: at the end of `PSMain` raise the colour to the power 1.0 / 2.2 before returning it."
+      },
+      "hint": {
+        "opengl": "`color = pow(color, vec3(1.0/2.2));` right before `FragColor = vec4(color, 1.0);`. The monitor darkens what it gets (≈ power 2.2); the inverse power cancels that.",
+        "vulkan": "`color = pow(color, vec3(1.0 / 2.2));` right before `outColor = vec4(color, 1.0);`. The monitor darkens what it gets (≈ power 2.2); the inverse power cancels that.",
+        "d3d12": "`float gamma = 2.2f;` and `color = pow(color, float3(1.0f / gamma, 1.0f / gamma, 1.0f / gamma));` right before `return float4(color, 1.0f);`."
+      }
+    },
+    "srgb-texture": {
+      "text": {
+        "opengl": "Load the wood as an sRGB texture: give `loadTexture` a `bool gammaCorrection` parameter that picks the internal format `GL_SRGB` (`GL_SRGB_ALPHA` for 4 channels), and load `wood.png` with `true`.",
+        "vulkan": "Load the wood as an sRGB texture: in `initVulkan()` call `loadTexture(\"textures/wood.png\", VK_FORMAT_R8G8B8A8_SRGB, …)` instead of `VK_FORMAT_R8G8B8A8_UNORM`.",
+        "d3d12": "Create the wood as an sRGB texture: in `LoadTexture` use the format `DXGI_FORMAT_R8G8B8A8_UNORM_SRGB`."
+      },
+      "hint": {
+        "opengl": "`GLenum internalFormat` and `GLenum dataFormat`: for 3 components `internalFormat = gammaCorrection ? GL_SRGB : GL_RGB; dataFormat = GL_RGB;`, for 4 `GL_SRGB_ALPHA` / `GL_RGBA`, for 1 both `GL_RED`; then `glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);`. Change the prototype too.",
+        "vulkan": "The format is used for the image, its layout transitions and its view. An `_SRGB` format decodes each texel from sRGB to linear when the shader samples it. Only colour textures are sRGB.",
+        "d3d12": "`textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;` – the uploaded bytes stay the same, and the SRV copies the texture's format, so sampling decodes sRGB to linear."
+      }
+    },
+    "quadratic": {
+      "text": {
+        "opengl": "Use the physically correct attenuation `1.0 / (distance * distance)` in `BlinnPhong()`, now that the lighting happens in linear space.",
+        "vulkan": "Use the physically correct attenuation `1.0 / (distance * distance)` in `BlinnPhong()`, now that the lighting happens in linear space.",
+        "d3d12": "Use the physically correct attenuation `1.0f / (lightDistance * lightDistance)` in `BlinnPhong()`, now that the lighting happens in linear space."
+      },
+      "hint": {
+        "opengl": "`float attenuation = 1.0 / (distance * distance);` – without gamma correction the monitor made `1/d²` look like `1/d^4.4`, which is why `1/d` was used.",
+        "vulkan": "`float attenuation = 1.0 / (distance * distance);` – without gamma correction the monitor made `1/d²` look like `1/d^4.4`, which is why `1/d` was used.",
+        "d3d12": "`float attenuation = 1.0f / (lightDistance * lightDistance);` – without gamma correction the monitor made `1/d²` look like `1/d^4.4`, which is why `1/d` was used."
+      }
+    }
+  }
+}

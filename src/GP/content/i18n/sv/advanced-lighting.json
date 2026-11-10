@@ -1,0 +1,29 @@
+{
+  "title": "Avancerad belysning",
+  "tasks": {
+    "halfway": {
+      "text": {
+        "opengl": "Implementera Blinn-Phong i grenen `if (blinn)` i `advanced_lighting.fs` – halvvägsvektorn mellan ljus- och blickriktningen, `spec` = dess skalärprodukt med normalen (minst 0) upphöjd till 8.0 – och slå om programmet till den: `bool blinn = true;`.",
+        "vulkan": "Implementera Blinn-Phong i grenen `if (pc.blinn)` i `advanced_lighting.frag` – halvvägsvektorn mellan ljus- och blickriktningen, `spec` = dess skalärprodukt med normalen (minst 0) upphöjd till 8.0 – och slå om programmet till den: `bool blinn = true;`.",
+        "d3d12": "Implementera Blinn-Phong i grenen `if (blinn)` i `PSMain` – halvvägsvektorn mellan ljus- och blickriktningen, `spec` = dess skalärprodukt med normalen (minst 0) upphöjd till 8.0 – och slå om programmet till den: `bool blinn = true;`."
+      },
+      "hint": {
+        "opengl": "`vec3 halfwayDir = normalize(lightDir + viewDir);` sedan `spec = pow(max(dot(normal, halfwayDir), 0.0), 8.0);`. Phong-grenen `else` blir kvar; `shader.setInt(\"blinn\", blinn)` skickar flaggan varje bildruta.",
+        "vulkan": "`vec3 halfwayDir = normalize(lightDir + viewDir);` sedan `spec = pow(max(dot(normal, halfwayDir), 0.0), 8.0);`. Phong-grenen `else` blir kvar; `recordCommandBuffer()` pushar flaggan som en `VkBool32`.",
+        "d3d12": "`float3 halfwayDir = normalize(lightDir + viewDir);` sedan `spec = pow(max(dot(normal, halfwayDir), 0.0f), 8.0f);`. Phong-grenen `else` blir kvar; `SetGraphicsRoot32BitConstant(0, blinn, 0)` skickar flaggan varje bildruta."
+      }
+    },
+    "shininess": {
+      "text": {
+        "opengl": "Höj Blinn-Phongs exponent från 8.0 till 32.0, learnopengls värde.",
+        "vulkan": "Höj Blinn-Phongs exponent från 8.0 till 32.0, learnopengls värde.",
+        "d3d12": "Höj Blinn-Phongs exponent från `8.0f` till `32.0f`, learnopengls värde."
+      },
+      "hint": {
+        "opengl": "`spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);` – vinkeln mellan normalen och halvvägsvektorn är mindre än Phongs vinkel, så Blinn-Phong behöver 2–4 gånger exponenten för samma storlek på högdagern.",
+        "vulkan": "`spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);` – vinkeln mellan normalen och halvvägsvektorn är mindre än Phongs vinkel, så Blinn-Phong behöver 2–4 gånger exponenten för samma storlek på högdagern.",
+        "d3d12": "`spec = pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);` – vinkeln mellan normalen och halvvägsvektorn är mindre än Phongs vinkel, så Blinn-Phong behöver 2–4 gånger exponenten för samma storlek på högdagern."
+      }
+    }
+  }
+}

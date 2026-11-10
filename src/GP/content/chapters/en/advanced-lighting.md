@@ -438,8 +438,8 @@ Blinn-Phong lights.
 :::vulkan
 - [Advanced Lighting](https://learnopengl.com/Advanced-Lighting/Advanced-Lighting): learnopengl's chapter this chapter
   follows, with the pictures comparing Phong and Blinn-Phong.
-- [Push constants](https://docs.vulkan.org/guide/latest/push_constants.html): the Vulkan Guide on push constants and
-  their layout.
+- [Resource descriptors](https://docs.vulkan.org/spec/latest/chapters/descriptorsets.html): the chapter of the Vulkan
+  specification on pipeline layouts, including push constant ranges and their updates.
 - [vkCmdPushConstants](https://registry.khronos.org/vulkan/specs/latest/man/html/vkCmdPushConstants.html): the reference
   page.
 :::

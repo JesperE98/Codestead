@@ -1,0 +1,10 @@
+[
+  { "title": "Shadow Mapping", "url": "https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping", "publisher": "LearnOpenGL" },
+  { "title": "shadow_mapping.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/5.advanced_lighting/3.1.3.shadow_mapping/shadow_mapping.cpp", "publisher": "LearnOpenGL", "api": "opengl" },
+  { "title": "Framebuffer Object (OpenGL wiki)", "url": "https://www.khronos.org/opengl/wiki/Framebuffer_Object", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Render pass (Vulkan specification)", "url": "https://docs.vulkan.org/spec/latest/chapters/renderpass.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "VkSamplerCreateInfo", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkSamplerCreateInfo.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Walkthrough: Implement shadow volumes using depth buffers in Direct3D 11", "url": "https://learn.microsoft.com/en-us/windows/uwp/gaming/implementing-depth-buffers-for-shadow-mapping", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "D3D12Multithreading sample", "url": "https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Samples/Desktop/D3D12Multithreading", "publisher": "Microsoft", "api": "d3d12" },
+  { "title": "Common Techniques to Improve Shadow Depth Maps", "url": "https://learn.microsoft.com/en-us/windows/win32/dxtecharts/common-techniques-to-improve-shadow-depth-maps", "publisher": "Microsoft Learn" }
+]
