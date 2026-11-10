@@ -6,9 +6,10 @@ namespace Codestead.GP.Gpu.Raster;
 
 // Shading fragments on every core. The fragment shader (an interpreted GLSL/HLSL program) is what makes a frame slow,
 // so the primitives of a draw are set up in order on the draw's thread and their fragments shaded in batches by one
-// worker per core, each with its own shader runners. Worker w owns the rows w, w + n, w + 2n … and runs every
-// primitive of the batch in draw order over its rows: a pixel still sees the primitives – depth test, stencil,
-// blending – in exactly the order the program drew them, so the frame is the same as on one core.
+// worker per core, each with its own shader runners. The framebuffer's rows are split into bands; a worker takes the
+// next free band and runs every primitive of the batch in draw order over it: a pixel still meets the primitives –
+// depth test, stencil, blending – in exactly the order the program drew them, so the frame is the same as on one
+// core.
 public static partial class Rasterizer
 {
     /// <summary>The texture reads of a draw's shaders: texture() and friends, cube maps, textureSize().</summary>
@@ -53,17 +54,55 @@ public static partial class Rasterizer
     }
 
     /// <summary>
+    /// The rows a worker changed in the batch it is shading, as they were before it (each row is kept the first time a
+    /// fragment is written into it). A shader error puts them back, so the batch can be shaded again on one thread and
+    /// stop exactly where one core would have stopped – the frame with the error is the same as on one core too.
+    /// </summary>
+    private sealed class RowLog
+    {
+        private readonly Dictionary<(Framebuffer Fb, int Row), (double[][] Colors, double[] Depth, int[] Stencil)> rows = new();
+
+        /// <summary>Keeps the row of a pixel before the first write into it.</summary>
+        public void Before(Framebuffer fb, int pixel)
+        {
+            int row = pixel / fb.Width;
+            if (rows.ContainsKey((fb, row))) return;
+            int start = row * fb.Width * fb.Samples, length = fb.Width * fb.Samples;
+            rows[(fb, row)] = (fb.Colors.Select(c => c.AsSpan(start * 4, length * 4).ToArray()).ToArray(),
+                fb.Depth.AsSpan(start, length).ToArray(), fb.Stencil.AsSpan(start, length).ToArray());
+        }
+
+        /// <summary>Puts every kept row back.</summary>
+        public void Restore()
+        {
+            foreach (var ((fb, row), (colors, depth, stencil)) in rows)
+            {
+                int start = row * fb.Width * fb.Samples;
+                for (int a = 0; a < colors.Length; a++) colors[a].CopyTo(fb.Colors[a], start * 4);
+                depth.CopyTo(fb.Depth, start);
+                stencil.CopyTo(fb.Stencil, start);
+            }
+            rows.Clear();
+        }
+
+        public void Clear() => rows.Clear();
+    }
+
+    /// <summary>
     /// The set-up primitives of a draw waiting for their fragments, in draw order. <see cref="Run"/> shades them: a
     /// small batch on the draw's thread with the draw's stages, a large one by a worker per core with stages of its
     /// own (made on first use, then kept for the rest of the draw).
     /// </summary>
-    private sealed class FragmentBatch(Stages stages, Func<Stages> newWorker)
+    private sealed class FragmentBatch(Stages stages, int height, Func<Stages> newWorker)
     {
         /// <summary>Primitives per batch: enough to keep the cores busy, few enough to bound what they hold on to.</summary>
         private const int MaxPrimitives = 1024;
 
         /// <summary>Below this many pixels (bounding boxes) a batch is shaded on one thread: handing it over costs more.</summary>
         private const long MinParallelPixels = 256;
+
+        /// <summary>Bands per worker: small enough that a worker slowed down by other work hands its share to the others.</summary>
+        private const int BandsPerWorker = 8;
 
         private static readonly int Cores = Math.Max(1, Environment.ProcessorCount);
 
@@ -79,14 +118,14 @@ public static partial class Rasterizer
             if (fills.Count >= MaxPrimitives) Run();
         }
 
-        /// <summary>Shades the waiting primitives; a shader error is thrown as one core would have hit it first.</summary>
+        /// <summary>Shades the waiting primitives; a shader error is thrown where one core would have hit it.</summary>
         public void Run()
         {
             if (fills.Count == 0) return;
             try
             {
-                if (Cores == 1 || pixels < MinParallelPixels)
-                    foreach (var fill in fills) fill(stages, 0, 1);
+                if (Cores == 1 || height < 2 || pixels < MinParallelPixels)
+                    foreach (var fill in fills) fill(stages, 0, height);
                 else RunParallel();
             }
             finally
@@ -96,14 +135,26 @@ public static partial class Rasterizer
             }
         }
 
+        /// <summary>
+        /// The workers take bands of rows one after another; a band runs every primitive of the batch in draw order, so
+        /// each pixel meets the primitives in the order the program drew them, whichever worker shades it.
+        /// </summary>
         private void RunParallel()
         {
-            int n = Cores;
+            int n = Math.Min(Cores, height);
             // Made here on the draw's thread: setting a uniform may write into values the stages share.
-            while (workers.Count < n) workers.Add(newWorker());
+            while (workers.Count < n)
+            {
+                var worker = newWorker();
+                worker.Log = new RowLog();
+                workers.Add(worker);
+            }
+            int band = Math.Max(1, (height + n * BandsPerWorker - 1) / (n * BandsPerWorker));
+            int bands = (height + band - 1) / band;
+            int next = 0;
             var context = current;
-            var errors = new (int Primitive, long Position, Exception Error)?[n];
-            // The first primitive an error was hit in: no worker goes past it (one core would have stopped there).
+            var errors = new List<(int Primitive, Exception Error)>();
+            // The first primitive an error was hit in: no band goes past it (the batch is shaded again anyway).
             int stop = int.MaxValue;
             Parallel.For(0, n, new ParallelOptions { MaxDegreeOfParallelism = n }, w =>
             {
@@ -112,18 +163,22 @@ public static partial class Rasterizer
                 current = context;
                 try
                 {
-                    for (int i = 0; i < fills.Count && i <= Volatile.Read(ref stop); i++)
+                    for (int b = Interlocked.Increment(ref next) - 1; b < bands; b = Interlocked.Increment(ref next) - 1)
                     {
-                        try
+                        int from = b * band, to = Math.Min(height, from + band);
+                        for (int i = 0; i < fills.Count && i <= Volatile.Read(ref stop); i++)
                         {
-                            fills[i](workers[w], w, n);
-                        }
-                        catch (Exception e)
-                        {
-                            errors[w] = (i, workers[w].Position, e);
-                            for (int seen = Volatile.Read(ref stop); i < seen; seen = Volatile.Read(ref stop))
-                                if (Interlocked.CompareExchange(ref stop, i, seen) == seen) break;
-                            break;
+                            try
+                            {
+                                fills[i](workers[w], from, to);
+                            }
+                            catch (Exception e)
+                            {
+                                lock (errors) errors.Add((i, e));
+                                for (int seen = Volatile.Read(ref stop); i < seen; seen = Volatile.Read(ref stop))
+                                    if (Interlocked.CompareExchange(ref stop, i, seen) == seen) break;
+                                break;
+                            }
                         }
                     }
                 }
@@ -132,9 +187,17 @@ public static partial class Rasterizer
                     current = previous;
                 }
             });
-            // Of the errors, the one a single core would have met first: the earliest primitive, then pixel.
-            if (errors.Where(e => e is not null).Select(e => e!.Value).OrderBy(e => e.Primitive).ThenBy(e => e.Position).FirstOrDefault() is { Error: { } first })
-                ExceptionDispatchInfo.Capture(first).Throw();
+            if (errors.Count == 0)
+            {
+                foreach (var worker in workers) worker.Log!.Clear();
+                return;
+            }
+            // Workers went on past the error: the batch is undone and shaded again on this thread, which stops at the
+            // fragment one core stops at (the rare error is paid for with a slow batch, not with a different frame).
+            foreach (var worker in workers) worker.Log!.Restore();
+            foreach (var fill in fills) fill(stages, 0, height);
+            // Not met again (a shader that keeps state from one fragment to the next): the error in the earliest primitive.
+            ExceptionDispatchInfo.Capture(errors.MinBy(e => e.Primitive).Error).Throw();
         }
     }
 }

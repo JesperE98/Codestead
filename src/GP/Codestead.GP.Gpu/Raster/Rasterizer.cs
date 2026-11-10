@@ -163,7 +163,7 @@ public static partial class Rasterizer
         // The vertex and geometry stages run here, in order; the fragments of the primitives they make are shaded in
         // batches on every core (Rasterizer.Parallel.cs).
         TextureReads? shared = null;
-        var fragments = new FragmentBatch(stages, () => new Stages(draw, uniforms, shared ??= textures.Shared(), time, baseFb.Height, scale, yDown));
+        var fragments = new FragmentBatch(stages, baseFb.Height, () => new Stages(draw, uniforms, shared ??= textures.Shared(), time, baseFb.Height, scale, yDown));
         try
         {
             for (int instance = 0; instance < Math.Max(1, draw.Instances); instance++)

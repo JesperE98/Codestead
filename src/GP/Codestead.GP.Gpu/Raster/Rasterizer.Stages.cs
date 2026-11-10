@@ -22,6 +22,11 @@ public static partial class Rasterizer
         private readonly Global? fsOutput;
         /// <summary>The fragment shader's outputs by colour attachment (layout(location = n) out …).</summary>
         private readonly Global?[] fsOutputs;
+        /// <summary>
+        /// The GLSL fragment shader's outputs as they start: every fragment starts from them, so an output a shader
+        /// leaves unwritten reads the same whichever fragment the runner shaded before (fragments run on several threads).
+        /// </summary>
+        private readonly (string Id, ShaderValue Value)[] fsInitialOutputs;
         private readonly ShaderRunner? gs;
         private readonly List<Global> gsInputs = new();
         private readonly List<Global> gsOutputs = new();
@@ -34,11 +39,8 @@ public static partial class Rasterizer
         /// <summary>The depth the last fragment wrote (0–1), when <see cref="WritesDepth"/>.</summary>
         public double? FragDepth { get; private set; }
 
-        /// <summary>
-        /// The place of the fragment being shaded in its primitive's own order (pixel index or step along a line): of
-        /// the errors several threads hit in one primitive, the first in that order is reported.
-        /// </summary>
-        public long Position { get; set; }
+        /// <summary>A worker's record of the rows it changed in the current batch (null on the draw's own thread).</summary>
+        public RowLog? Log { get; set; }
 
         /// <summary>
         /// The stages of a draw with its uniforms (draw.Uniforms(time), worked out once per draw) and the textures it
@@ -75,6 +77,7 @@ public static partial class Rasterizer
             fsOutput = outs.OrderBy(g => g.Location ?? 0).FirstOrDefault();
             fsOutputs = new Global?[outs.Count == 0 ? 0 : outs.Select((g, i) => g.Location ?? i).Max() + 1];
             for (int i = 0; i < outs.Count; i++) fsOutputs[outs[i].Location ?? i] = outs[i];
+            fsInitialOutputs = outs.Where(g => g.Block is null && fs.Globals.ContainsKey(g.Id)).Select(g => (g.Id, fs.Globals[g.Id].Clone())).ToArray();
             if (!draw.Hlsl)
             {
                 if (draw.VertexShader.FindFunction("main") is null) throw new ShaderRuntimeException("the vertex shader has no main()", 0);
@@ -324,6 +327,7 @@ public static partial class Rasterizer
             }
             fs.Globals["gl_FragCoord"] = fragCoord;
             fs.Globals["gl_FrontFacing"] = ShaderValue.Scalar(front ? 1 : 0);
+            foreach (var (id, value) in fsInitialOutputs) fs.Globals[id] = value.Clone();
             // gl_FragDepth starts as the fragment's own depth (in window depth 0–1).
             if (WritesDepth) fs.Globals["gl_FragDepth"] = ShaderValue.Scalar(fragCoord.V![2]);
             fs.Call("main", []);

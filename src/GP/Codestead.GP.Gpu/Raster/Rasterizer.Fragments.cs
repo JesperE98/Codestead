@@ -8,13 +8,10 @@ namespace Codestead.GP.Gpu.Raster;
 public static partial class Rasterizer
 {
     /// <summary>
-    /// The fragments of a set-up primitive in the rows <paramref name="row0"/>, row0 + step, … of its framebuffer (a
-    /// worker's share; 0 and 1 for all rows), shaded with <paramref name="stages"/> (that worker's).
+    /// Shades the fragments of a set-up primitive in the rows <paramref name="from"/> up to (not including)
+    /// <paramref name="to"/> of its framebuffer, with <paramref name="stages"/> (those of the thread that runs it).
     /// </summary>
-    private delegate void Fill(Stages stages, int row0, int step);
-
-    /// <summary>The first row from <paramref name="from"/> on in a worker's share (rows row0, row0 + step, …).</summary>
-    private static int FirstRow(int from, int row0, int step) => from + ((row0 - from % step) % step + step) % step;
+    private delegate void Fill(Stages stages, int from, int to);
 
     private static (double[] X, double[] Y, double[] Z, double[] InvW) ToScreen(ShadedVertex[] vs, Framebuffer fb, bool yDown, bool zMinusOneToOne)
     {
@@ -66,10 +63,11 @@ public static partial class Rasterizer
             double w1 = ((sx[0] - sx[2]) * (y - sy[2]) - (sy[0] - sy[2]) * (x - sx[2])) / area;
             return (w0, w1, 1 - w0 - w1);
         }
-        return (stages, row0, step) =>
+        return (stages, from, to) =>
         {
+            if (from > maxY || to <= minY) return;
             var zs = new double[fb.Samples];
-            for (int py = FirstRow(minY, row0, step); py <= maxY; py += step)
+            for (int py = Math.Max(minY, from); py <= maxY && py < to; py++)
             {
                 for (int px = minX; px <= maxX; px++)
                 {
@@ -96,7 +94,6 @@ public static partial class Rasterizer
                     p0 /= sum;
                     p1 /= sum;
                     p2 /= sum;
-                    stages.Position = py * width + px;
                     WriteFragment(fb, py * width + px, mask, zs, draw, stages, () => stages.Fragment(vs, p0, p1, p2, x, y, z, sum, front));
                 }
             }
@@ -117,11 +114,11 @@ public static partial class Rasterizer
         int steps = Math.Max(1, (int)Math.Ceiling(Math.Max(Math.Abs(dx), Math.Abs(dy))));
         int full = (1 << fb.Samples) - 1;
         pixels = steps;
-        return (stages, row0, step) =>
+        return (stages, from, to) =>
         {
             var zs = new double[fb.Samples];
             int last = -1;
-            // Every worker walks the whole line and shades the pixels in its rows.
+            // The whole line is walked; the pixels in the rows asked for are shaded.
             for (int i = 0; i < steps; i++)
             {
                 double t = (i + 0.5) / steps;
@@ -131,12 +128,11 @@ public static partial class Rasterizer
                 int index = py * fb.Width + px;
                 if (index == last) continue;
                 last = index;
-                if (py % step != row0) continue;
+                if (py < from || py >= to) continue;
                 double z = sz[0] + (sz[1] - sz[0]) * t;
                 Array.Fill(zs, z);
                 double q0 = (1 - t) * invW[0], q1 = t * invW[1], sum = q0 + q1;
                 double p0 = q0 / sum, p1 = q1 / sum;
-                stages.Position = i;
                 WriteFragment(fb, index, full, zs, draw, stages, () => stages.Fragment(vs, p0, p1, 0, px + 0.5, py + 0.5, z, sum, true));
             }
         };
@@ -159,11 +155,12 @@ public static partial class Rasterizer
         int minY = Math.Max(0, (int)Math.Floor(sy[0] - half)), maxY = Math.Min(fb.Height - 1, (int)Math.Ceiling(sy[0] + half));
         if (minX > maxX || minY > maxY) return null;
         pixels = (long)(maxX - minX + 1) * (maxY - minY + 1);
-        return (stages, row0, step) =>
+        return (stages, from, to) =>
         {
+            if (from > maxY || to <= minY) return;
             var zs = new double[fb.Samples];
             Array.Fill(zs, sz[0]);
-            for (int py = FirstRow(minY, row0, step); py <= maxY; py += step)
+            for (int py = Math.Max(minY, from); py <= maxY && py < to; py++)
                 for (int px = minX; px <= maxX; px++)
                 {
                     int mask = 0;
@@ -174,7 +171,6 @@ public static partial class Rasterizer
                     }
                     if (mask == 0) continue;
                     int cx = px, cy = py;
-                    stages.Position = py * fb.Width + px;
                     WriteFragment(fb, py * fb.Width + px, mask, zs, draw, stages, () => stages.Fragment(vs, 1, 0, 0, cx + 0.5, cy + 0.5, sz[0], invW[0], true));
                 }
         };
@@ -215,6 +211,7 @@ public static partial class Rasterizer
         }
         var colors = shade();
         if (colors is null) return;
+        stages.Log?.Before(fb, pixel);
         for (int s = 0; s < samples; s++)
         {
             if ((mask & (1 << s)) == 0) continue;
