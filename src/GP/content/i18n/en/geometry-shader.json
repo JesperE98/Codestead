@@ -1,0 +1,73 @@
+{
+  "title": "Geometry Shader",
+  "tasks": {
+    "pass-through": {
+      "text": {
+        "opengl": "Give the `Shader` class an optional geometry shader file (`const char* geometryPath = nullptr`, compiled as `GL_GEOMETRY_SHADER`), write `geometry_shader.gs` that passes each point through with its colour, and use it.",
+        "vulkan": "Turn on the `geometryShader` device feature, give `createPipeline()` an optional third shader file `geomShaderFile` (a `VK_SHADER_STAGE_GEOMETRY_BIT` stage), and write `geometry_shader.geom` that passes each point through with its colour.",
+        "d3d12": "Add a geometry shader `GSMain` to `geometry_shader.hlsl` that passes each point through with its colour, compile it with the target `gs_5_0` and set it as `psoDesc.GS`."
+      },
+      "hint": {
+        "opengl": "`layout (points) in; layout (points, max_vertices = 1) out;`, then `fColor = gs_in[0].color; gl_Position = gl_in[0].gl_Position; EmitVertex(); EndPrimitive();`. The vertex shader writes `out VS_OUT { vec3 color; } vs_out;`, the geometry shader reads `in VS_OUT { vec3 color; } gs_in[];`. Attach the geometry shader before linking, delete it afterwards.",
+        "vulkan": "`deviceFeatures.geometryShader = VK_TRUE;` and `&& supportedFeatures.geometryShader` in `isDeviceSuitable()`. The stages become a `std::vector`; `push_back` the geometry stage if `!geomShaderFile.empty()`; `stageCount = shaderStages.size()`. Vertex shader: `layout(location = 0) out VS_OUT { vec3 color; } vs_out;`, geometry shader: `gs_in[]` in and `layout(location = 0) out vec3 fragColor;`.",
+        "d3d12": "Rename `PSInput` to `VSOutput`, add a `GSOutput` with the same members for `PSMain`. `[maxvertexcount(1)] void GSMain(point VSOutput input[1], inout PointStream<GSOutput> outputStream)`: copy position and colour, `Append`, `RestartStrip`. `PrimitiveTopologyType` stays `POINT`."
+      }
+    },
+    "houses": {
+      "text": {
+        "opengl": "Turn each point into a house: output a `triangle_strip` of 5 vertices (`build_house`): bottom-left, bottom-right, top-left, top-right (±0.2 around the point) and the roof's top (0, 0.4).",
+        "vulkan": "Turn each point into a house: output a `triangle_strip` of 5 vertices (`build_house`). Vulkan's y points down: bottom-left (-0.2, 0.2), bottom-right (0.2, 0.2), top-left (-0.2, -0.2), top-right (0.2, -0.2), roof top (0.0, -0.4).",
+        "d3d12": "Turn each point into a house: `[maxvertexcount(5)]` and a `TriangleStream<GSOutput>`; `build_house` appends bottom-left, bottom-right, top-left, top-right (±0.2 around the point) and the roof's top (0, 0.4)."
+      },
+      "hint": {
+        "opengl": "`layout (triangle_strip, max_vertices = 5) out;` Set `fColor` once, then `gl_Position = position + vec4(-0.2, -0.2, 0.0, 0.0); EmitVertex();` … and `EndPrimitive();`. `main` calls `build_house(gl_in[0].gl_Position);`.",
+        "vulkan": "`layout(triangle_strip, max_vertices = 5) out;` Set `fragColor` once, then `gl_Position = position + vec4(-0.2, 0.2, 0.0, 0.0); EmitVertex();` … and `EndPrimitive();`. `main` calls `build_house(gl_in[0].gl_Position);`.",
+        "d3d12": "`void build_house(float4 position, float3 color, inout TriangleStream<GSOutput> triStream)`: fill a `GSOutput`, `output.position = position + float4(-0.2f, -0.2f, 0.0f, 0.0f); triStream.Append(output);` … `triStream.RestartStrip();`."
+      }
+    },
+    "roof-white": {
+      "text": "Put snow on the roofs: give the last vertex of the strip – the roof's top – the colour white.",
+      "hint": {
+        "opengl": "The colour is a per-vertex output: set `fColor = vec3(1.0, 1.0, 1.0);` just before the fifth `EmitVertex()`.",
+        "vulkan": "The colour is a per-vertex output: set `fragColor = vec3(1.0, 1.0, 1.0);` just before the fifth `EmitVertex()`.",
+        "d3d12": "`Append` copies the output as it is at that moment: set `output.color = float3(1.0f, 1.0f, 1.0f);` just before the fifth `Append`."
+      }
+    },
+    "planet": {
+      "text": {
+        "opengl": "Switch to the planet: camera globals at (0, 0, 3), `Model ourModel(\"models/planet.obj\");` drawn with the `explode` shaders, the projection (45°, 0.1, 100), the view and the model matrix (tilted 25° about x, scaled 0.5). Remove the points.",
+        "vulkan": "Switch to the planet: camera globals at (0, 0, 3), the view and projection in `updateUniformBuffer()`, a triangle-list pipeline with the `explode` shaders and the `Vertex` input, and the model drawn with the model matrix (tilted 25° about x, scaled 0.5). Remove the points.",
+        "d3d12": "Switch to the planet: camera globals at (0, 0, 3), `m_model.Load(\"models/planet.obj\", …, 1)`, the three shaders of `explode.hlsl` with the mesh's input layout and `TRIANGLE`, view and projection in `OnUpdate`, the model matrix (tilted 25° about x, scaled 0.5) as root constants. Remove the points."
+      },
+      "hint": {
+        "opengl": "`Shader shader(\"explode.vs\", \"explode.fs\", \"explode.gs\");` In the loop: `glm::perspective(glm::radians(45.0f), …, 0.1f, 100.0f)`, `glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp)`, translate (0,0,0) · rotate 25° about (1,0,0) · scale 0.5, three `setMat4` and `ourModel.Draw(shader);`.",
+        "vulkan": "`createPipeline(\"shaders/explode.vert.spv\", \"shaders/explode.frag.spv\", \"shaders/explode.geom.spv\", VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, …)`; `ubo.proj[1][1] *= -1;`. Bind `vertexBuffer`, `indexBuffer` (`VK_INDEX_TYPE_UINT32`) and `descriptorSet`, push the model matrix, `vkCmdDrawIndexed(…, indices.size(), 1, 0, 0, 0)`.",
+        "d3d12": "`XMMatrixLookAtRH` and `XMMatrixPerspectiveFovRH`, transposed into the constant buffer. The model matrix: `XMMatrixScaling(0.5f, …) * XMMatrixRotationAxis(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), XMConvertToRadians(25.0f)) * XMMatrixTranslation(0.0f, 0.0f, 0.0f)`. `m_model.uploadHeaps.clear();` after the wait."
+      }
+    },
+    "explode": {
+      "text": {
+        "opengl": "Explode the planet: in `explode.gs` move every triangle along its face normal by `(sin(time) + 1) / 2 * 2.0` (`explode` and `GetNormal`), with a `uniform float time` set from `glfwGetTime()`.",
+        "vulkan": "Explode the planet: in `explode.geom` move every triangle along its face normal by `(sin(time) + 1) / 2 * 2.0` (`explode` and `GetNormal`); the time is a new member of the uniform buffer, which the geometry stage now reads too.",
+        "d3d12": "Explode the planet: in `explode.hlsl` move every triangle along its face normal by `(sin(time) + 1) / 2 * 2.0` (`explode` and `GetNormal`), with `float time` in the constant buffer, set every frame in `OnUpdate`."
+      },
+      "hint": {
+        "opengl": "`GetNormal()`: `a = gl_in[0] - gl_in[1]`, `b = gl_in[2] - gl_in[1]` (the `gl_Position`s), `normalize(cross(a, b))`. `main`: `vec3 normal = GetNormal();` and `gl_Position = explode(gl_in[i].gl_Position, normal);`. C++: `shader.setFloat(\"time\", static_cast<float>(glfwGetTime()));`.",
+        "vulkan": "`float time;` after `proj` in `UniformBufferObject` and in the shader's block; `ubo.time = static_cast<float>(glfwGetTime());`; `stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT`. `GetNormal()` returns `normalize(cross(b, a))`: the y-flipped projection mirrors clip space.",
+        "d3d12": "`GetNormal(float4 position0, float4 position1, float4 position2)` with `a = position0.xyz - position1.xyz`, `b = position2.xyz - position1.xyz`, `normalize(cross(a, b))`. `float time;` after `projection` in both `SceneConstantBuffer`s, filled with `std::chrono` like the transformations chapter."
+      }
+    },
+    "normals": {
+      "text": {
+        "opengl": "Draw the planet as usual (`default.vs/.fs`), then a second time with `normal_visualization.vs/.fs/.gs`, whose geometry shader emits a yellow line of length 0.2 along each vertex normal.",
+        "vulkan": "Draw the planet as usual (`default` shaders, no geometry shader), then a second time with a second pipeline `normalPipeline` (`normal_visualization`), whose geometry shader emits a yellow line of length 0.2 along each vertex normal.",
+        "d3d12": "Draw the planet as usual (`default.hlsl`, no geometry shader), then a second time with `m_normalPipelineState` (`normal_visualization.hlsl`), whose geometry shader emits a yellow line of length 0.2 along each vertex normal; the root constants get the normal matrix."
+      },
+      "hint": {
+        "opengl": "`layout (triangles) in; layout (line_strip, max_vertices = 6) out;`, `GenerateLine(int index)` emits `projection * gl_in[index].gl_Position` and `projection * (gl_in[index].gl_Position + vec4(gs_in[index].normal, 0.0) * MAGNITUDE)`, then `EndPrimitive()`. Remove the time uniform.",
+        "vulkan": "The geometry shader declares the uniform buffer block and uses `ubo.proj`. `createPipeline(…default…, \"\", …, graphicsPipeline)` and `createPipeline(…normal_visualization…, normalPipeline)`; after the first draw: `vkCmdBindPipeline(…, normalPipeline)` and `vkCmdDrawIndexed` again. Remove `time`.",
+        "d3d12": "`XMFLOAT4X4 normalMatrix` in `ModelConstants` = `XMMatrixTranspose(XMMatrixInverse(nullptr, model))`, stored transposed. `[maxvertexcount(6)] GSMain(triangle VSOutput input[3], inout LineStream<GSOutput> lineStream)`. After the first `m_model.Draw`: `SetPipelineState(m_normalPipelineState.Get())` and draw again."
+      }
+    }
+  }
+}

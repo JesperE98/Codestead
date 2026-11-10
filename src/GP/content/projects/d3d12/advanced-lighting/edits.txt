@@ -1,0 +1,19 @@
+=== task: halfway
+--- file: advanced_lighting.hlsl
+--- find:
+        // TODO: Blinn-Phong: the halfway vector between the light and view directions; spec = (its dot product with the normal) to the power 8.0
+--- replace:
+        float3 halfwayDir = normalize(lightDir + viewDir);
+        spec = pow(max(dot(normal, halfwayDir), 0.0f), 8.0f);
+--- file: main.cpp
+--- find:
+bool blinn = false;
+--- replace:
+bool blinn = true;
+
+=== task: shininess
+--- file: advanced_lighting.hlsl
+--- find:
+        spec = pow(max(dot(normal, halfwayDir), 0.0f), 8.0f);
+--- replace:
+        spec = pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);    // 2-4 times Phong's exponent: about the same highlight size

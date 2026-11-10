@@ -1,0 +1,73 @@
+{
+  "title": "Geometry shader",
+  "tasks": {
+    "pass-through": {
+      "text": {
+        "opengl": "Ge klassen `Shader` en valfri geometry shader-fil (`const char* geometryPath = nullptr`, kompilerad som `GL_GEOMETRY_SHADER`), skriv `geometry_shader.gs` som släpper igenom varje punkt med sin färg, och använd den.",
+        "vulkan": "Slå på device-funktionen `geometryShader`, ge `createPipeline()` en valfri tredje shaderfil `geomShaderFile` (ett steg med `VK_SHADER_STAGE_GEOMETRY_BIT`), och skriv `geometry_shader.geom` som släpper igenom varje punkt med sin färg.",
+        "d3d12": "Lägg till en geometry shader `GSMain` i `geometry_shader.hlsl` som släpper igenom varje punkt med sin färg, kompilera den med målet `gs_5_0` och sätt den som `psoDesc.GS`."
+      },
+      "hint": {
+        "opengl": "`layout (points) in; layout (points, max_vertices = 1) out;`, sedan `fColor = gs_in[0].color; gl_Position = gl_in[0].gl_Position; EmitVertex(); EndPrimitive();`. Vertex shadern skriver `out VS_OUT { vec3 color; } vs_out;`, geometry shadern läser `in VS_OUT { vec3 color; } gs_in[];`. Fäst geometry shadern före länkningen och ta bort den efteråt.",
+        "vulkan": "`deviceFeatures.geometryShader = VK_TRUE;` och `&& supportedFeatures.geometryShader` i `isDeviceSuitable()`. Stegen blir en `std::vector`; `push_back` geometry-steget om `!geomShaderFile.empty()`; `stageCount = shaderStages.size()`. Vertex shader: `layout(location = 0) out VS_OUT { vec3 color; } vs_out;`, geometry shader: `gs_in[]` in och `layout(location = 0) out vec3 fragColor;`.",
+        "d3d12": "Byt namn på `PSInput` till `VSOutput`, lägg till en `GSOutput` med samma medlemmar till `PSMain`. `[maxvertexcount(1)] void GSMain(point VSOutput input[1], inout PointStream<GSOutput> outputStream)`: kopiera position och färg, `Append`, `RestartStrip`. `PrimitiveTopologyType` förblir `POINT`."
+      }
+    },
+    "houses": {
+      "text": {
+        "opengl": "Gör varje punkt till ett hus: ge ut en `triangle_strip` med 5 vertices (`build_house`): nere till vänster, nere till höger, uppe till vänster, uppe till höger (±0.2 runt punkten) och takets topp (0, 0.4).",
+        "vulkan": "Gör varje punkt till ett hus: ge ut en `triangle_strip` med 5 vertices (`build_house`). Vulkans y pekar nedåt: nere till vänster (-0.2, 0.2), nere till höger (0.2, 0.2), uppe till vänster (-0.2, -0.2), uppe till höger (0.2, -0.2), takets topp (0.0, -0.4).",
+        "d3d12": "Gör varje punkt till ett hus: `[maxvertexcount(5)]` och en `TriangleStream<GSOutput>`; `build_house` lägger till nere till vänster, nere till höger, uppe till vänster, uppe till höger (±0.2 runt punkten) och takets topp (0, 0.4)."
+      },
+      "hint": {
+        "opengl": "`layout (triangle_strip, max_vertices = 5) out;` Sätt `fColor` en gång, sedan `gl_Position = position + vec4(-0.2, -0.2, 0.0, 0.0); EmitVertex();` … och `EndPrimitive();`. `main` anropar `build_house(gl_in[0].gl_Position);`.",
+        "vulkan": "`layout(triangle_strip, max_vertices = 5) out;` Sätt `fragColor` en gång, sedan `gl_Position = position + vec4(-0.2, 0.2, 0.0, 0.0); EmitVertex();` … och `EndPrimitive();`. `main` anropar `build_house(gl_in[0].gl_Position);`.",
+        "d3d12": "`void build_house(float4 position, float3 color, inout TriangleStream<GSOutput> triStream)`: fyll i en `GSOutput`, `output.position = position + float4(-0.2f, -0.2f, 0.0f, 0.0f); triStream.Append(output);` … `triStream.RestartStrip();`."
+      }
+    },
+    "roof-white": {
+      "text": "Lägg snö på taken: ge stripens sista vertex – takets topp – färgen vit.",
+      "hint": {
+        "opengl": "Färgen är utdata per vertex: sätt `fColor = vec3(1.0, 1.0, 1.0);` precis före den femte `EmitVertex()`.",
+        "vulkan": "Färgen är utdata per vertex: sätt `fragColor = vec3(1.0, 1.0, 1.0);` precis före den femte `EmitVertex()`.",
+        "d3d12": "`Append` kopierar utdatan som den är just då: sätt `output.color = float3(1.0f, 1.0f, 1.0f);` precis före den femte `Append`."
+      }
+    },
+    "planet": {
+      "text": {
+        "opengl": "Byt till planeten: kamerans globala variabler på (0, 0, 3), `Model ourModel(\"models/planet.obj\");` ritad med `explode`-shadrarna, projektionen (45°, 0.1, 100), view och modellmatrisen (lutad 25° kring x, skalad 0.5). Ta bort punkterna.",
+        "vulkan": "Byt till planeten: kamerans globala variabler på (0, 0, 3), view och projektion i `updateUniformBuffer()`, en triangle list-pipeline med `explode`-shadrarna och `Vertex`-indatan, och modellen ritad med modellmatrisen (lutad 25° kring x, skalad 0.5). Ta bort punkterna.",
+        "d3d12": "Byt till planeten: kamerans globala variabler på (0, 0, 3), `m_model.Load(\"models/planet.obj\", …, 1)`, de tre shadrarna i `explode.hlsl` med meshens input layout och `TRIANGLE`, view och projektion i `OnUpdate`, modellmatrisen (lutad 25° kring x, skalad 0.5) som root constants. Ta bort punkterna."
+      },
+      "hint": {
+        "opengl": "`Shader shader(\"explode.vs\", \"explode.fs\", \"explode.gs\");` I loopen: `glm::perspective(glm::radians(45.0f), …, 0.1f, 100.0f)`, `glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp)`, translate (0,0,0) · rotate 25° kring (1,0,0) · scale 0.5, tre `setMat4` och `ourModel.Draw(shader);`.",
+        "vulkan": "`createPipeline(\"shaders/explode.vert.spv\", \"shaders/explode.frag.spv\", \"shaders/explode.geom.spv\", VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, …)`; `ubo.proj[1][1] *= -1;`. Bind `vertexBuffer`, `indexBuffer` (`VK_INDEX_TYPE_UINT32`) och `descriptorSet`, pusha modellmatrisen, `vkCmdDrawIndexed(…, indices.size(), 1, 0, 0, 0)`.",
+        "d3d12": "`XMMatrixLookAtRH` och `XMMatrixPerspectiveFovRH`, transponerade in i constant buffern. Modellmatrisen: `XMMatrixScaling(0.5f, …) * XMMatrixRotationAxis(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), XMConvertToRadians(25.0f)) * XMMatrixTranslation(0.0f, 0.0f, 0.0f)`. `m_model.uploadHeaps.clear();` efter väntan."
+      }
+    },
+    "explode": {
+      "text": {
+        "opengl": "Spräng planeten: flytta i `explode.gs` varje triangel längs dess ytnormal med `(sin(time) + 1) / 2 * 2.0` (`explode` och `GetNormal`), med en `uniform float time` som sätts från `glfwGetTime()`.",
+        "vulkan": "Spräng planeten: flytta i `explode.geom` varje triangel längs dess ytnormal med `(sin(time) + 1) / 2 * 2.0` (`explode` och `GetNormal`); tiden är en ny medlem i uniform buffern, som geometry-steget nu också läser.",
+        "d3d12": "Spräng planeten: flytta i `explode.hlsl` varje triangel längs dess ytnormal med `(sin(time) + 1) / 2 * 2.0` (`explode` och `GetNormal`), med `float time` i constant buffern, satt varje bildruta i `OnUpdate`."
+      },
+      "hint": {
+        "opengl": "`GetNormal()`: `a = gl_in[0] - gl_in[1]`, `b = gl_in[2] - gl_in[1]` (deras `gl_Position`), `normalize(cross(a, b))`. `main`: `vec3 normal = GetNormal();` och `gl_Position = explode(gl_in[i].gl_Position, normal);`. C++: `shader.setFloat(\"time\", static_cast<float>(glfwGetTime()));`.",
+        "vulkan": "`float time;` efter `proj` i `UniformBufferObject` och i shaderns block; `ubo.time = static_cast<float>(glfwGetTime());`; `stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT`. `GetNormal()` returnerar `normalize(cross(b, a))`: den y-vända projektionen speglar clip space.",
+        "d3d12": "`GetNormal(float4 position0, float4 position1, float4 position2)` med `a = position0.xyz - position1.xyz`, `b = position2.xyz - position1.xyz`, `normalize(cross(a, b))`. `float time;` efter `projection` i båda `SceneConstantBuffer`, ifylld med `std::chrono` som i transformationskapitlet."
+      }
+    },
+    "normals": {
+      "text": {
+        "opengl": "Rita planeten som vanligt (`default.vs/.fs`), sedan en gång till med `normal_visualization.vs/.fs/.gs`, vars geometry shader ger ut en gul linje med längden 0.2 längs varje vertexnormal.",
+        "vulkan": "Rita planeten som vanligt (`default`-shadrarna, ingen geometry shader), sedan en gång till med en andra pipeline `normalPipeline` (`normal_visualization`), vars geometry shader ger ut en gul linje med längden 0.2 längs varje vertexnormal.",
+        "d3d12": "Rita planeten som vanligt (`default.hlsl`, ingen geometry shader), sedan en gång till med `m_normalPipelineState` (`normal_visualization.hlsl`), vars geometry shader ger ut en gul linje med längden 0.2 längs varje vertexnormal; root constants får normalmatrisen."
+      },
+      "hint": {
+        "opengl": "`layout (triangles) in; layout (line_strip, max_vertices = 6) out;`, `GenerateLine(int index)` ger ut `projection * gl_in[index].gl_Position` och `projection * (gl_in[index].gl_Position + vec4(gs_in[index].normal, 0.0) * MAGNITUDE)`, sedan `EndPrimitive()`. Ta bort tidsuniformen.",
+        "vulkan": "Geometry shadern deklarerar uniform buffer-blocket och använder `ubo.proj`. `createPipeline(…default…, \"\", …, graphicsPipeline)` och `createPipeline(…normal_visualization…, normalPipeline)`; efter den första ritningen: `vkCmdBindPipeline(…, normalPipeline)` och `vkCmdDrawIndexed` igen. Ta bort `time`.",
+        "d3d12": "`XMFLOAT4X4 normalMatrix` i `ModelConstants` = `XMMatrixTranspose(XMMatrixInverse(nullptr, model))`, lagrad transponerad. `[maxvertexcount(6)] GSMain(triangle VSOutput input[3], inout LineStream<GSOutput> lineStream)`. Efter första `m_model.Draw`: `SetPipelineState(m_normalPipelineState.Get())` och rita igen."
+      }
+    }
+  }
+}

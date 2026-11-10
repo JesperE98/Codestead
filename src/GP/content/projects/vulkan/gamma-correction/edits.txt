@@ -1,0 +1,23 @@
+=== task: gamma-shader
+--- file: shaders/gamma_correction.frag
+--- find:
+    // TODO: gamma correction: raise the colour to the power 1.0 / 2.2 before it is written
+--- replace:
+    // gamma correction: the monitor darkens colours by the power 2.2, so brighten them by the inverse power first
+    color = pow(color, vec3(1.0 / 2.2));
+
+=== task: srgb-texture
+--- file: main.cpp
+--- find:
+        // UNORM: the shaders read the bytes of the file unchanged (0..255 -> 0.0..1.0)
+        loadTexture("textures/wood.png", VK_FORMAT_R8G8B8A8_UNORM, floorTextureImage, floorTextureImageMemory, floorTextureImageView);
+--- replace:
+        // SRGB: the image's colours are gamma-encoded (sRGB), the sampler decodes them to linear colours
+        loadTexture("textures/wood.png", VK_FORMAT_R8G8B8A8_SRGB, floorTextureImage, floorTextureImageMemory, floorTextureImageView);
+
+=== task: quadratic
+--- file: shaders/gamma_correction.frag
+--- find:
+    float attenuation = 1.0 / distance;
+--- replace:
+    float attenuation = 1.0 / (distance * distance); // physically right, now that the lighting happens in linear space
