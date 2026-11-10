@@ -78,7 +78,8 @@ int main()
     // -------------------------
     Shader solidShader("solid.vs", "solid.fs");
     Shader transparentShader("transparent.vs", "transparent.fs");
-    // TODO: the composite and screen shaders (composite.vs/.fs, screen.vs/.fs)
+    // TODO: the composite shader (composite.vs/.fs)
+    // TODO: the screen shader (screen.vs/.fs) that draws a texture to the window
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
