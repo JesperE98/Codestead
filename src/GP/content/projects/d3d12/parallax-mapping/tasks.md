@@ -38,8 +38,7 @@ Start: the normal-mapped quad with bricks2 (TBN, tangent space), no depth map: `
 line that shifts `texCoords`. TODO in `main.cpp`: load the depth map (`LoadAssets`, after the normal map).
 
 Pixels in the 800×600 client area from the top left; nothing depends on time. D3D12 cannot run here; every picture below
-is the app's simulator's (for `steep` and `occlusion` with the `while` loop written as `for (; …; )`, see the end). They
-match the OpenGL project's Mesa screenshots (mean difference ≤ 0.61 per pixel; ≈ 4,000–7,000 pixels differ by more than
+is the app's simulator's. They match the OpenGL project's Mesa screenshots (mean difference ≤ 0.61 per pixel; ≈ 4,000–7,000 pixels differ by more than
 8, all along the bricks' edges, where OpenGL samples mipmaps and Direct3D the one level). The quad covers x 84..715, y
 162..522 (a trapezoid, narrower at the top), 184,592 pixels. Named points (as OpenGL's): **background** (400,100) =
 26,26,26 in every state; **brick-top-1** (300,230) and **brick-top-2** (250,400) – on brick surfaces (depth 0: never
@@ -96,8 +95,6 @@ brick-top-1 = 121,76,49, brick-top-2 = 123,78,50, highlight = 238,163,117, centr
   against `steep`, almost all on the bricks' front sides; the quad ≈ 174,500 pixels. This is the solution
   (learnopengl's `5.3.parallax_mapping.fs`, ported).
 
-**Simulator (checked with the app's simulator on every state):** `start`, `parallax`, `discard-edges` as above. In
-`steep` and `occlusion` the HLSL reader does not know **`while` loops**: "parallax_mapping.hlsl:94: error: expected ';'
-before '{'" on `while (currentLayerDepth < currentDepthMapValue)` – no scene at all. With the loop written as
-`for (; currentLayerDepth < currentDepthMapValue; )` (a test copy) both render as described (and as OpenGL's); the
-course keeps learnopengl's `while`.
+**Simulator (checked with the app's simulator on every state):** every state renders as described, including the
+`while` loops of `steep` and `occlusion` (the HLSL reader follows them since the simulator update of this round); no
+mismatch found.
