@@ -1,0 +1,377 @@
+=== task: opaque-pass
+--- file: main.cpp
+--- find:
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;    // the window's back buffer
+--- replace:
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;    // the opaque texture: 16-bit floats
+--- file: main.cpp
+--- find:
+        // TODO: the screen pipeline state (screen.hlsl) that draws a texture to the window
+--- replace:
+        // The final pass's pipeline state (learnopengl's screenShader): a screen quad that copies
+        // the opaque texture to the window's back buffer (8 bits per channel); no depth test,
+        // no blending.
+        ComPtr<ID3DBlob> screenVertexShader;
+        ComPtr<ID3DBlob> screenPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"screen.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &screenVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"screen.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &screenPixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(screenVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(screenPixelShader.Get());
+        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        psoDesc.NumRenderTargets = 1;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.RTVFormats[1] = DXGI_FORMAT_UNKNOWN;
+        psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_screenPipelineState)));
+--- file: main.cpp
+--- find:
+    // TODO: set up the opaque texture (a floating-point render target with an RTV and an SRV)
+--- replace:
+    // set up attachments for the opaque pass: a floating-point colour texture as big as the
+    // window (learnopengl: GL_RGBA16F) that the solid objects are drawn into, with the depth
+    // buffer above.
+    {
+        // A render target that the final pass reads (ALLOW_RENDER_TARGET, an RTV and an SRV).
+        // It starts in the PIXEL_SHADER_RESOURCE state: every frame turns it into a render
+        // target first, and back for the final pass.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        const float zeroFillerVec[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        CD3DX12_CLEAR_VALUE clearValue(DXGI_FORMAT_R16G16B16A16_FLOAT, zeroFillerVec);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+            &clearValue,
+            IID_PPV_ARGS(&m_opaqueTexture)));
+
+        // Its render target view: in the RTV heap after the swap chain's buffers (slot
+        // FrameCount). Its shader resource view: slot 0 of the SRV heap. (nullptr: views of
+        // the whole texture in its own format.)
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_rtvDescriptorSize);
+        m_device->CreateRenderTargetView(m_opaqueTexture.Get(), nullptr, rtvHandle);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_srvDescriptorSize);
+        m_device->CreateShaderResourceView(m_opaqueTexture.Get(), nullptr, srvHandle);
+    }
+--- file: main.cpp
+--- find:
+    // Indicate that the back buffer will be used as a render target.
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    // draw solid objects (solid pass)
+    // ------
+    // TODO: render the solid objects into the opaque texture instead of the back buffer
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+
+    const float zeroFillerVec[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    m_commandList->ClearRenderTargetView(rtvHandle, zeroFillerVec, 0, nullptr);
+--- replace:
+    // draw solid objects (solid pass)
+    // ------
+    // The opaque texture becomes a render target (the final pass of the previous frame read
+    // it), with the depth buffer: both are cleared.
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_opaqueTexture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_commandList->ResourceBarrier(1, &barrier);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE opaqueRtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_rtvDescriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+    m_commandList->OMSetRenderTargets(1, &opaqueRtvHandle, FALSE, &dsvHandle);
+
+    const float zeroFillerVec[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    m_commandList->ClearRenderTargetView(opaqueRtvHandle, zeroFillerVec, 0, nullptr);
+--- file: main.cpp
+--- find:
+    // TODO: draw the opaque texture to the window (final pass)
+--- replace:
+    // draw to backbuffer (final pass)
+    // -----
+    // The opaque texture holds the finished picture: the final pass reads it. Indicate that
+    // the back buffer will be used as a render target.
+    CD3DX12_RESOURCE_BARRIER finalBarriers[2] =
+    {
+        CD3DX12_RESOURCE_BARRIER::Transition(m_opaqueTexture.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+        CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET)
+    };
+    m_commandList->ResourceBarrier(2, finalBarriers);
+
+    // bind backbuffer (no depth buffer: the screen quad needs no depth test) and clear it
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+    m_commandList->ClearRenderTargetView(rtvHandle, zeroFillerVec, 0, nullptr);
+
+    // use screen pipeline state, with the opaque texture (t0): the table starts at slot 0
+    m_commandList->SetPipelineState(m_screenPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(1, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
+
+    // draw final screen quad
+    m_commandList->DrawInstanced(6, 1, 0, 0);
+
+=== task: transparent-pass
+--- file: main.cpp
+--- find:
+        // The transparent objects' pipeline state (learnopengl's transparentShader): ordinary
+        // alpha blending (glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)), depth test and
+        // depth writes on.
+--- replace:
+        // The transparent objects' pipeline state (learnopengl's transparentShader): two render
+        // targets - accum (floating-point) and reveal (one 8-bit channel) - each with its own
+        // blending (learnopengl: glBlendFunci), and the depth test against the solid objects'
+        // depth without writing it (glDepthMask(GL_FALSE)).
+--- file: main.cpp
+--- find:
+        psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
+        psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+        psoDesc.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+--- replace:
+        psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+        psoDesc.NumRenderTargets = 2;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+        psoDesc.RTVFormats[1] = DXGI_FORMAT_R8_UNORM;
+        // Each render target blends in its own way: IndependentBlendEnable makes Direct3D use
+        // RenderTarget[1] for the second target (otherwise every target uses RenderTarget[0]).
+        psoDesc.BlendState.IndependentBlendEnable = TRUE;
+        // accum: glBlendFunci(0, GL_ONE, GL_ONE) - the colours are added up.
+        psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
+        psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
+        psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+        psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+        psoDesc.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+        psoDesc.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ONE;
+        psoDesc.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+        // reveal: glBlendFunci(1, GL_ZERO, GL_ONE_MINUS_SRC_COLOR) - the target is multiplied
+        // by (1 - alpha) of every fragment. (Alpha factors cannot be _COLOR factors in
+        // Direct3D: INV_SRC_ALPHA does the same for the alpha channel, which R8 does not have.)
+        psoDesc.BlendState.RenderTarget[1].BlendEnable = TRUE;
+        psoDesc.BlendState.RenderTarget[1].SrcBlend = D3D12_BLEND_ZERO;
+        psoDesc.BlendState.RenderTarget[1].DestBlend = D3D12_BLEND_INV_SRC_COLOR;
+        psoDesc.BlendState.RenderTarget[1].BlendOp = D3D12_BLEND_OP_ADD;
+        psoDesc.BlendState.RenderTarget[1].SrcBlendAlpha = D3D12_BLEND_ZERO;
+        psoDesc.BlendState.RenderTarget[1].DestBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[1].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+        psoDesc.BlendState.RenderTarget[1].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+--- file: main.cpp
+--- find:
+    // TODO: set up the transparent pass's textures (accum and reveal, with RTVs and SRVs)
+--- replace:
+    // set up attachments for the transparent pass: accum, a floating-point colour texture
+    // (GL_RGBA16F), and reveal, one 8-bit channel (GL_R8) - render targets with an RTV each
+    // (RTV heap slots FrameCount + 1 and + 2) and an SRV each (SRV heap slots 1 and 2), read by
+    // the composite pass.
+    {
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+
+        CD3DX12_RESOURCE_DESC accumDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        const float zeroFillerVec[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        CD3DX12_CLEAR_VALUE accumClearValue(DXGI_FORMAT_R16G16B16A16_FLOAT, zeroFillerVec);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &accumDesc,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+            &accumClearValue,
+            IID_PPV_ARGS(&m_accumTexture)));
+
+        CD3DX12_RESOURCE_DESC revealDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8_UNORM, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        const float oneFillerVec[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        CD3DX12_CLEAR_VALUE revealClearValue(DXGI_FORMAT_R8_UNORM, oneFillerVec);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &revealDesc,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+            &revealClearValue,
+            IID_PPV_ARGS(&m_revealTexture)));
+
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount + 1, m_rtvDescriptorSize);
+        m_device->CreateRenderTargetView(m_accumTexture.Get(), nullptr, rtvHandle);
+        rtvHandle.Offset(1, m_rtvDescriptorSize);
+        m_device->CreateRenderTargetView(m_revealTexture.Get(), nullptr, rtvHandle);
+
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_srvDescriptorSize);
+        m_device->CreateShaderResourceView(m_accumTexture.Get(), nullptr, srvHandle);
+        srvHandle.Offset(1, m_srvDescriptorSize);
+        m_device->CreateShaderResourceView(m_revealTexture.Get(), nullptr, srvHandle);
+    }
+--- file: main.cpp
+--- find:
+    // draw transparent objects
+    // -----
+    // ordinary alpha blending, in the order the objects happen to be drawn (not sorted by
+    // distance): the green quad is drawn first although it is the nearest
+    // TODO: the transparent pass - its own render targets and blend states, depth writes off
+--- replace:
+    // draw transparent objects (transparent pass)
+    // -----
+    // accum and reveal become render targets, with the solid pass's depth buffer (the depth
+    // test hides what is behind the red quad); accum is cleared to 0, reveal to 1 (nothing
+    // covers the background yet).
+    CD3DX12_RESOURCE_BARRIER transparentBarriers[2] =
+    {
+        CD3DX12_RESOURCE_BARRIER::Transition(m_accumTexture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET),
+        CD3DX12_RESOURCE_BARRIER::Transition(m_revealTexture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET)
+    };
+    m_commandList->ResourceBarrier(2, transparentBarriers);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE transparentRtvHandles[2] =
+    {
+        CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount + 1, m_rtvDescriptorSize),
+        CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount + 2, m_rtvDescriptorSize)
+    };
+    m_commandList->OMSetRenderTargets(2, transparentRtvHandles, FALSE, &dsvHandle);
+    const float oneFillerVec[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    m_commandList->ClearRenderTargetView(transparentRtvHandles[0], zeroFillerVec, 0, nullptr);
+    m_commandList->ClearRenderTargetView(transparentRtvHandles[1], oneFillerVec, 0, nullptr);
+--- file: main.cpp
+--- find:
+    // TODO: draw the composite image (composite pass)
+--- replace:
+    // accum and reveal are done: from now on pixel shaders read them.
+    transparentBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(m_accumTexture.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    transparentBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_revealTexture.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    m_commandList->ResourceBarrier(2, transparentBarriers);
+
+    // TODO: draw the composite image (composite pass)
+--- file: transparent.hlsl
+--- find:
+// The pixel shader: ordinary alpha blending - the colour with its alpha, blended over what is
+// already there.
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    // TODO: the weighted blended output - the weighted colour into accum (SV_TARGET0), the opacity into reveal (SV_TARGET1)
+    return color;
+}
+--- replace:
+// The pixel shader's two outputs: SV_TARGET0 goes to the first render target (accum),
+// SV_TARGET1 to the second (reveal).
+struct PSOutput
+{
+    float4 accum : SV_TARGET0;
+    float reveal : SV_TARGET1;
+};
+
+// The pixel shader: the weighted, premultiplied colour into accum and the opacity into reveal.
+PSOutput PSMain(PSInput input)
+{
+    PSOutput output;
+
+    // weight function: input.position.z is the fragment's depth (0 at the near plane, 1 at
+    // the far plane - learnopengl's gl_FragCoord.z)
+    float weight = clamp(pow(min(1.0f, color.a * 10.0f) + 0.01f, 3.0f) * 1e8 * pow(1.0f - input.position.z * 0.9f, 3.0f), 1e-2, 3e3);
+
+    // store pixel color accumulation
+    output.accum = float4(color.rgb * color.a, color.a) * weight;
+
+    // store pixel revealage threshold
+    output.reveal = color.a;
+
+    return output;
+}
+
+=== task: composite
+--- file: main.cpp
+--- find:
+        // TODO: the composite pipeline state (composite.hlsl)
+--- replace:
+        // The composite pass's pipeline state (learnopengl's compositeShader): a screen quad
+        // drawn into the opaque texture, the depth test always passing (glDepthFunc(GL_ALWAYS))
+        // and ordinary alpha blending (glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)).
+        ComPtr<ID3DBlob> compositeVertexShader;
+        ComPtr<ID3DBlob> compositePixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"composite.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &compositeVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"composite.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &compositePixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(compositeVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(compositePixelShader.Get());
+        psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+        psoDesc.NumRenderTargets = 1;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+        psoDesc.RTVFormats[1] = DXGI_FORMAT_UNKNOWN;
+        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
+        psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+        psoDesc.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_compositePipelineState)));
+--- file: main.cpp
+--- find:
+    // TODO: draw the composite image (composite pass)
+--- replace:
+    // draw composite image (composite pass)
+    // -----
+    // bind the opaque texture again (with the depth buffer: the depth test always passes)
+    m_commandList->OMSetRenderTargets(1, &opaqueRtvHandle, FALSE, &dsvHandle);
+
+    // use composite pipeline state, with accum (t0) and reveal (t1): root parameter 1's
+    // table starts at SRV heap slot 1
+    m_commandList->SetPipelineState(m_compositePipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE accumAndReveal(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_srvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(1, accumAndReveal);
+
+    // draw screen quad
+    m_commandList->DrawInstanced(6, 1, 0, 0);
+--- file: composite.hlsl
+--- find:
+// The pixel shader.
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    // TODO: the composite pass - read accum and reveal and blend their average colour over the opaque image
+    return float4(0.0f, 0.0f, 0.0f, 0.0f);
+}
+--- replace:
+// color accumulation buffer: register t0, the first SRV of root parameter 1's table
+Texture2D accum : register(t0);
+
+// revealage threshold buffer: register t1, the second SRV
+Texture2D reveal : register(t1);
+
+// epsilon number
+static const float EPSILON = 0.00001f;
+
+// calculate floating point numbers equality accurately
+bool isApproximatelyEqual(float a, float b)
+{
+    return abs(a - b) <= (abs(a) < abs(b) ? abs(b) : abs(a)) * EPSILON;
+}
+
+// get the max value between three values
+float max3(float3 v)
+{
+    return max(max(v.x, v.y), v.z);
+}
+
+// The pixel shader: the average colour of the transparent fragments, with alpha = how much
+// of what is behind them they cover.
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    // fragment coordination: the pixel's column and row (SV_POSITION's x and y)
+    int2 coords = int2(input.position.xy);
+
+    // fragment revealage: Load reads one texel without filtering (learnopengl's texelFetch)
+    float revealage = reveal.Load(int3(coords, 0)).r;
+
+    // save the blending and color texture fetch cost if there is not a transparent fragment
+    if (isApproximatelyEqual(revealage, 1.0f))
+        discard;
+
+    // fragment color
+    float4 accumulation = accum.Load(int3(coords, 0));
+
+    // suppress overflow
+    if (isinf(max3(abs(accumulation.rgb))))
+        accumulation.rgb = accumulation.aaa;
+
+    // prevent floating point precision bug
+    float3 average_color = accumulation.rgb / max(accumulation.a, EPSILON);
+
+    // blend pixels
+    return float4(average_color, 1.0f - revealage);
+}
