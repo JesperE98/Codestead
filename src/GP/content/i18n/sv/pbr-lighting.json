@@ -1,0 +1,69 @@
+{
+  "title": "PBR-belysning",
+  "tasks": {
+    "lambert": {
+      "text": {
+        "opengl": "Skriv ljusloopen i `pbr.fs`: räkna för vart och ett av de fyra ljusen ut `L`, radiansen `lightColors[i] * 1.0 / (distance * distance)` och `NdotL`, och lägg till den Lambertska diffusa reflektionen `(albedo / PI) * radiance * NdotL` till `Lo`.",
+        "vulkan": "Skriv ljusloopen i `shaders/pbr.frag`: räkna för vart och ett av de fyra ljusen ut `L`, radiansen `ubo.lightColors[i].rgb * 1.0 / (distance * distance)` och `NdotL`, och lägg till den Lambertska diffusa reflektionen `(albedo / PI) * radiance * NdotL` till `Lo`.",
+        "d3d12": "Skriv ljusloopen i `PSMain` (`pbr.hlsl`): räkna för vart och ett av de fyra ljusen ut `L`, radiansen `lightColors[i].rgb * 1.0f / (distance * distance)` och `NdotL`, och lägg till den Lambertska diffusa reflektionen `(albedo / PI) * radiance * NdotL` till `Lo`."
+      },
+      "hint": {
+        "opengl": "`for(int i = 0; i < 4; ++i) { vec3 L = normalize(lightPositions[i] - WorldPos); float distance = length(lightPositions[i] - WorldPos); float attenuation = 1.0 / (distance * distance); vec3 radiance = lightColors[i] * attenuation; float NdotL = max(dot(N, L), 0.0); Lo += (albedo / PI) * radiance * NdotL; }` – ljusens 300 äts upp av det kvadrerade avståndet (ungefär 300).",
+        "vulkan": "`for (int i = 0; i < 4; ++i) { vec3 L = normalize(ubo.lightPositions[i].xyz - fragWorldPos); float distance = length(ubo.lightPositions[i].xyz - fragWorldPos); float attenuation = 1.0 / (distance * distance); vec3 radiance = ubo.lightColors[i].rgb * attenuation; float NdotL = max(dot(N, L), 0.0); Lo += (albedo / PI) * radiance * NdotL; }` – ljusen är `vec4` (std140), så använd `.xyz` / `.rgb`.",
+        "d3d12": "`for (int i = 0; i < 4; ++i) { float3 L = normalize(lightPositions[i].xyz - input.worldPos); float distance = length(lightPositions[i].xyz - input.worldPos); float attenuation = 1.0f / (distance * distance); float3 radiance = lightColors[i].rgb * attenuation; float NdotL = max(dot(N, L), 0.0f); Lo += (albedo / PI) * radiance * NdotL; }` – ljusen är `float4`, så använd `.xyz` / `.rgb`."
+      }
+    },
+    "ndf": {
+      "text": {
+        "opengl": "Skriv `DistributionGGX(N, H, roughness)` (Trowbridge-Reitz GGX), räkna ut `H = normalize(V + L)` i loopen och använd tills vidare NDF:en ensam som spekulär term: `vec3 specular = vec3(NDF);` och `Lo += (albedo / PI + specular) * radiance * NdotL;`.",
+        "vulkan": "Skriv `DistributionGGX(N, H, roughness)` (Trowbridge-Reitz GGX), räkna ut `H = normalize(V + L)` i loopen och använd tills vidare NDF:en ensam som spekulär term: `vec3 specular = vec3(NDF);` och `Lo += (albedo / PI + specular) * radiance * NdotL;`.",
+        "d3d12": "Skriv `DistributionGGX(N, H, roughness)` (Trowbridge-Reitz GGX), räkna ut `H = normalize(V + L)` i loopen och använd tills vidare NDF:en ensam som spekulär term: `float3 specular = float3(NDF, NDF, NDF);` och `Lo += (albedo / PI + specular) * radiance * NdotL;`."
+      },
+      "hint": {
+        "opengl": "`float a = roughness*roughness; float a2 = a*a; float NdotH = max(dot(N, H), 0.0); float NdotH2 = NdotH*NdotH; float denom = (NdotH2 * (a2 - 1.0) + 1.0); denom = PI * denom * denom; return a2 / denom;` – strävheten kvadreras först. I loopen: `float NDF = DistributionGGX(N, H, roughness);`.",
+        "vulkan": "`float a = roughness*roughness; float a2 = a*a; float NdotH = max(dot(N, H), 0.0); float NdotH2 = NdotH*NdotH; float denom = (NdotH2 * (a2 - 1.0) + 1.0); denom = PI * denom * denom; return a2 / denom;` – strävheten kvadreras först. I loopen: `float NDF = DistributionGGX(N, H, roughness);`.",
+        "d3d12": "`float a = roughness * roughness; float a2 = a * a; float NdotH = max(dot(N, H), 0.0f); float NdotH2 = NdotH * NdotH; float denom = (NdotH2 * (a2 - 1.0f) + 1.0f); denom = PI * denom * denom; return a2 / denom;` – strävheten kvadreras först. I loopen: `float NDF = DistributionGGX(N, H, roughness);`."
+      }
+    },
+    "geometry": {
+      "text": "Lägg till geometrifunktionen – `GeometrySchlickGGX(NdotV, roughness)` med `k = (roughness + 1)² / 8` och `GeometrySmith(N, V, L, roughness)` – och gör den spekulära termen till `NDF * G / (4 * NdotV * NdotL + 0.0001)`.",
+      "hint": {
+        "opengl": "`float r = (roughness + 1.0); float k = (r*r) / 8.0; return NdotV / (NdotV * (1.0 - k) + k);`; `GeometrySmith` multiplicerar värdena för `max(dot(N, V), 0.0)` och `max(dot(N, L), 0.0)`. I loopen: `float G = GeometrySmith(N, V, L, roughness); vec3 numerator = vec3(NDF * G); float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; vec3 specular = numerator / denominator;`.",
+        "vulkan": "`float r = (roughness + 1.0); float k = (r*r) / 8.0; return NdotV / (NdotV * (1.0 - k) + k);`; `GeometrySmith` multiplicerar värdena för `max(dot(N, V), 0.0)` och `max(dot(N, L), 0.0)`. I loopen: `float G = GeometrySmith(N, V, L, roughness); vec3 numerator = vec3(NDF * G); float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; vec3 specular = numerator / denominator;`.",
+        "d3d12": "`float r = (roughness + 1.0f); float k = (r * r) / 8.0f; return NdotV / (NdotV * (1.0f - k) + k);`; `GeometrySmith` multiplicerar värdena för `max(dot(N, V), 0.0f)` och `max(dot(N, L), 0.0f)`. I loopen: `float G = GeometrySmith(N, V, L, roughness); float numerator = NDF * G; float denominator = 4.0f * max(dot(N, V), 0.0f) * max(dot(N, L), 0.0f) + 0.0001f; float3 specular = numerator / denominator;`."
+      }
+    },
+    "fresnel": {
+      "text": {
+        "opengl": "Lägg till `fresnelSchlick(cosTheta, F0)` och gör färdigt reflektansekvationen: `F0 = mix(vec3(0.04), albedo, metallic)`, den spekulära termen `NDF * G * F / (4 * NdotV * NdotL + 0.0001)`, `kS = F`, `kD = (1 - kS) * (1 - metallic)` och `Lo += (kD * albedo / PI + specular) * radiance * NdotL`.",
+        "vulkan": "Lägg till `fresnelSchlick(cosTheta, F0)` och gör färdigt reflektansekvationen: `F0 = mix(vec3(0.04), albedo, metallic)`, den spekulära termen `NDF * G * F / (4 * NdotV * NdotL + 0.0001)`, `kS = F`, `kD = (1 - kS) * (1 - metallic)` och `Lo += (kD * albedo / PI + specular) * radiance * NdotL`.",
+        "d3d12": "Lägg till `fresnelSchlick(cosTheta, F0)` och gör färdigt reflektansekvationen: `F0 = lerp(0.04, albedo, metallic)`, den spekulära termen `NDF * G * F / (4 * NdotV * NdotL + 0.0001)`, `kS = F`, `kD = (1 - kS) * (1 - metallic)` och `Lo += (kD * albedo / PI + specular) * radiance * NdotL`."
+      },
+      "hint": {
+        "opengl": "`return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);`. Före loopen `vec3 F0 = vec3(0.04); F0 = mix(F0, albedo, metallic);`; i loopen `vec3 F = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);`, `vec3 numerator = NDF * G * F;`, `vec3 kS = F; vec3 kD = vec3(1.0) - kS; kD *= 1.0 - metallic;`. Den spekulära termen multipliceras inte med `kS` en gång till.",
+        "vulkan": "`return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);`. Före loopen `vec3 F0 = vec3(0.04); F0 = mix(F0, albedo, metallic);`; i loopen `vec3 F = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);`, `vec3 numerator = NDF * G * F;`, `vec3 kS = F; vec3 kD = vec3(1.0) - kS; kD *= 1.0 - metallic;`. Den spekulära termen multipliceras inte med `kS` en gång till.",
+        "d3d12": "`return F0 + (1.0f - F0) * pow(clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);`. Före loopen `float3 F0 = float3(0.04f, 0.04f, 0.04f); F0 = lerp(F0, albedo, metallic);`; i loopen `float3 F = fresnelSchlick(clamp(dot(H, V), 0.0f, 1.0f), F0);`, `float3 numerator = NDF * G * F;`, `float3 kS = F; float3 kD = float3(1.0f, 1.0f, 1.0f) - kS; kD *= 1.0f - metallic;`. Den spekulära termen multipliceras inte med `kS` en gång till."
+      }
+    },
+    "tone-map": {
+      "text": "Tonmappa färgen i slutet av shadern med Reinhard (`color / (color + 1.0)`) och gammakorrigera den sedan (`pow(color, 1.0 / 2.2)`) innan den skrivs.",
+      "hint": {
+        "opengl": "Två rader före `FragColor = vec4(color, 1.0);`: `color = color / (color + vec3(1.0));` och `color = pow(color, vec3(1.0/2.2));` – först tonmappning, sedan gamma.",
+        "vulkan": "Två rader före `outColor = vec4(color, 1.0);`: `color = color / (color + vec3(1.0));` och `color = pow(color, vec3(1.0 / 2.2));` – swap chainen är `B8G8R8A8_UNORM`, så shadern gör gammakorrigeringen.",
+        "d3d12": "Två rader före `return float4(color, 1.0f);`: `color = color / (color + float3(1.0f, 1.0f, 1.0f));` och `color = pow(color, 1.0f / 2.2f);` – först tonmappning, sedan gamma."
+      }
+    },
+    "textured": {
+      "text": {
+        "opengl": "Ta materialet från de fem mapparna: ladda `albedo.png`, `normal.png`, `metallic.png`, `roughness.png`, `ao.png` på texturenheterna 0–4, läs albedo (med `pow(…, vec3(2.2))`), metallic, roughness och ao från dem i `pbr.fs` och normalen via `getNormalFromMap()` med en TBN från vertexens tangent, och rita ett 3 × 3-rutnät av stora sfärer (avstånd 6.0, vridna 90° kring y, skala 2.4).",
+        "vulkan": "Ta materialet från de fem mapparna: ladda dem med `loadTexture` i bilder på descriptor-bindningarna 1–5 med en `textureSampler`, läs albedo (med `pow(…, vec3(2.2))`), metallic, roughness och ao från dem i `pbr.frag` och normalen via `getNormalFromMap()` med en TBN från vertexens tangent, och rita ett 3 × 3-rutnät av stora sfärer (avstånd 6.0, vridna 90° kring y, skala 2.4).",
+        "d3d12": "Ta materialet från de fem mapparna: ladda dem med `LoadTexture` i heap-platserna 1–5, lägg till en descriptor table (t0–t4) och en statisk WRAP-sampler i root signaturen, läs albedo (med `pow(…, 2.2f)`), metallic, roughness och ao från dem i `pbr.hlsl` och normalen via `getNormalFromMap(input)` med en TBN från vertexens tangent, och rita ett 3 × 3-rutnät av stora sfärer (avstånd 6.0, vridna 90° kring y, skala 2.4)."
+      },
+      "hint": {
+        "opengl": "`main.cpp`: `shader.setInt(\"albedoMap\", 0);` … `(\"aoMap\", 4)`, `unsigned int albedoMap = loadTexture(\"albedo.png\");` …, de fem paren `glActiveTexture` / `glBindTexture` före sfärerna, `nrRows = 3`, `nrColumns = 3`, `spacing = 6.0`, och efter translationen `glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f))` och `glm::scale(model, glm::vec3(2.4f))`. `pbr.vs`: `aTangent` på location 3, `Tangent = mat3(model) * aTangent;`. `pbr.fs`: `T = normalize(T - dot(T, N) * N); vec3 B = cross(N, T); return normalize(mat3(T, B, N) * tangentNormal);`.",
+        "vulkan": "`loadTexture(\"textures/albedo.png\", VK_FORMAT_R8G8B8A8_UNORM, albedoImage, albedoImageMemory, albedoImageView);` … och `createTextureSampler(VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FALSE, textureSampler);`; bindningarna 1–5 som `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`, en andra pool size, fem descriptor writes till (`dstBinding = i + 1`); `PushConstants` behåller bara `model`, `albedo` / `ao` lämnar uniform buffern; `nrRows = 3`, `nrColumns = 3`, `spacing = 6.0`, `glm::rotate` / `glm::scale` efter translationen. `pbr.vert`: `fragTangent = mat3(pc.model) * inTangent;`.",
+        "d3d12": "`cbvSrvHeapDesc.NumDescriptors = 6`; `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0)`, `rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL)`, `samplers[0]` (`MIN_MAG_MIP_LINEAR`, WRAP, register 0); `LoadTexture(\"albedo.png\", m_albedoTexture, albedoUploadHeap, 1);` … plats 5; `SetGraphicsRootDescriptorTable(2, …)` på plats 1; `ModelConstants` behåller bara de två matriserna; `XMMatrixScaling(2.4f, 2.4f, 2.4f) * XMMatrixRotationY(XMConvertToRadians(90.0f)) * XMMatrixTranslation(…)`. `pbr.hlsl`: `float3x3 TBN = float3x3(T, B, N); return normalize(mul(tangentNormal, TBN));`."
+      }
+    }
+  }
+}
