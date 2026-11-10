@@ -480,7 +480,8 @@ Texture2D bloomBlur : register(t1);
 --- file: bloom_final.hlsl
 --- find:
 // The shaders of the final screen quad (learnopengl's 6.bloom_final.vs / 6.bloom_final.fs):
-// they tone-map and gamma-correct the scene onto the window.
+// they tone-map and gamma-correct the scene onto the
+// window.
 --- replace:
 // The shaders of the final screen quad (learnopengl's 6.bloom_final.vs / 6.bloom_final.fs):
 // they mix the bloom texture into the scene, tone-map and gamma-correct the result onto the

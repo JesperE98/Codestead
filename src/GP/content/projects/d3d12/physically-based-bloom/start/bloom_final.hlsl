@@ -1,5 +1,6 @@
 // The shaders of the final screen quad (learnopengl's 6.bloom_final.vs / 6.bloom_final.fs):
-// they tone-map and gamma-correct the scene onto the window. main.cpp compiles them at run time with D3DCompileFromFile.
+// they tone-map and gamma-correct the scene onto the
+// window. main.cpp compiles them at run time with D3DCompileFromFile.
 
 // The scene's floating-point colour buffer: register t0, in the table of root parameter 2.
 Texture2D scene : register(t0);
