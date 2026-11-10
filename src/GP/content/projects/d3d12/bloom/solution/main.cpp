@@ -350,9 +350,9 @@ void D3D12App::LoadAssets()
         ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
         ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
 
-        // Root parameter 0: root constants for register b0 - for the scene's shaders the model
-        // and normal matrices of the draw and the light cube's colour, for the blur whether it
-        // is horizontal, for the final screen quad the exposure - so all shaders can see them.
+        // Root parameter 0: root constants for register b0 - the values of a draw, which each
+        // pipeline's shaders read as their own cbuffer (the scene's model and normal matrices
+        // and the light cube's colour, a screen quad's settings) - for all shaders.
         // Root parameter 1: a descriptor table with the constant buffer view (b1: the camera's
         // matrices and position and the lights), for all shaders.
         // Root parameters 2 and 3: a descriptor table each with one texture's SRV (t0, t1),
@@ -585,6 +585,9 @@ void D3D12App::LoadAssets()
     // end of this method waits for it).
     ComPtr<ID3D12Resource> woodTextureUploadHeap;
     LoadTexture("wood.png", m_woodTexture, woodTextureUploadHeap, 1);
+    // The container texture: slot 2.
+    ComPtr<ID3D12Resource> containerTextureUploadHeap;
+    LoadTexture("container2.png", m_containerTexture, containerTextureUploadHeap, 2);
 
     // Create the constant buffer.
     {
@@ -642,42 +645,81 @@ void D3D12App::LoadAssets()
         m_device->CreateDepthStencilView(m_depthStencil.Get(), &depthStencilDesc, m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
     }
 
-    // configure floating point framebuffer: the colour buffer the scene is drawn into
-    // (learnopengl: the hdrFBO's GL_RGBA16F colour texture), which the screen quad then reads.
-    // The scene uses the depth buffer above with it.
+    // configure (floating point) framebuffers: 2 floating point color buffers (1 for normal
+    // rendering, other for brightness threshold values) that the scene is drawn into at the
+    // same time (learnopengl: the hdrFBO's two GL_RGBA16F colour attachments). The scene uses
+    // the depth buffer above with them.
     {
-        // A texture as big as the window with a half-precision float per channel, so it holds
-        // colours brighter than 1.0, that can be a render target (ALLOW_RENDER_TARGET). It
-        // starts in the PIXEL_SHADER_RESOURCE state: every frame turns it into a render target
-        // for the scene, and back for the screen quad.
+        // Textures as big as the window with a half-precision float per channel, so they hold
+        // colours brighter than 1.0, that can be render targets (ALLOW_RENDER_TARGET). They
+        // start in the PIXEL_SHADER_RESOURCE state: every frame turns them into render targets
+        // for the scene, and back for the passes that read them.
         CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
         CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 
-        // The colour it is usually cleared to (clearing to this colour is fastest).
-        const float optimizedClearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+        // The colour they are usually cleared to (clearing to this colour is fastest).
+        const float optimizedClearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
         CD3DX12_CLEAR_VALUE clearValue(DXGI_FORMAT_R16G16B16A16_FLOAT, optimizedClearColor);
 
-        ThrowIfFailed(m_device->CreateCommittedResource(
-            &heapProperties,
-            D3D12_HEAP_FLAG_NONE,
-            &textureDesc,
-            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-            &clearValue,
-            IID_PPV_ARGS(&m_colorBuffer)));
-
-        // A render target view, to draw into it: in the RTV heap after the swap chain's buffers.
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_rtvDescriptorSize);
-        m_device->CreateRenderTargetView(m_colorBuffer.Get(), nullptr, rtvHandle);
-
-        // A shader resource view, to read it in the screen quad's pixel shader: slot 2 of the
-        // CBV/SRV heap.
+        // Their shader resource views: a 2D texture each.
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         srvDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = 1;
-        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
-        m_device->CreateShaderResourceView(m_colorBuffer.Get(), &srvDesc, srvHandle);
+
+        for (UINT i = 0; i < 2; i++)
+        {
+            ThrowIfFailed(m_device->CreateCommittedResource(
+                &heapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &textureDesc,
+                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+                &clearValue,
+                IID_PPV_ARGS(&m_colorBuffers[i])));
+
+            // A render target view, to draw into it: in the RTV heap after the swap chain's
+            // buffers (slots FrameCount and FrameCount + 1).
+            CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount + i, m_rtvDescriptorSize);
+            m_device->CreateRenderTargetView(m_colorBuffers[i].Get(), nullptr, rtvHandle);
+
+            // A shader resource view, to read it: slots 3 and 4 of the CBV/SRV heap.
+            CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 3 + i, m_cbvSrvDescriptorSize);
+            m_device->CreateShaderResourceView(m_colorBuffers[i].Get(), &srvDesc, srvHandle);
+        }
+    }
+
+    // ping-pong-framebuffer for blurring: two more floating-point colour buffers of the same
+    // size (no depth buffer). Each blur pass reads one and draws into the other.
+    {
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        const float optimizedClearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        CD3DX12_CLEAR_VALUE clearValue(DXGI_FORMAT_R16G16B16A16_FLOAT, optimizedClearColor);
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+
+        for (UINT i = 0; i < 2; i++)
+        {
+            ThrowIfFailed(m_device->CreateCommittedResource(
+                &heapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &textureDesc,
+                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+                &clearValue,
+                IID_PPV_ARGS(&m_pingpongColorbuffers[i])));
+
+            // Render target views in RTV heap slots FrameCount + 2 and FrameCount + 3, shader
+            // resource views in slots 5 and 6 of the CBV/SRV heap.
+            CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount + 2 + i, m_rtvDescriptorSize);
+            m_device->CreateRenderTargetView(m_pingpongColorbuffers[i].Get(), nullptr, rtvHandle);
+            CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 5 + i, m_cbvSrvDescriptorSize);
+            m_device->CreateShaderResourceView(m_pingpongColorbuffers[i].Get(), &srvDesc, srvHandle);
+        }
     }
 
     // Close the command list and execute it to begin the initial GPU setup.
@@ -798,43 +840,71 @@ void D3D12App::PopulateCommandList()
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 
-    // 1. render scene into floating point framebuffer: the colour buffer (after the swap
-    // chain's buffers in the RTV heap) and the depth buffer. The screen quad of the previous
-    // frame read the colour buffer: now it is written again.
-    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_colorBuffer.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    m_commandList->ResourceBarrier(1, &barrier);
+    // 1. render scene into floating point framebuffer: both colour buffers (after the swap
+    // chain's buffers in the RTV heap) at once, and the depth buffer. The passes of the
+    // previous frame read the colour buffers: now they are written again.
+    CD3DX12_RESOURCE_BARRIER barriers[2] =
+    {
+        CD3DX12_RESOURCE_BARRIER::Transition(m_colorBuffers[0].Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET),
+        CD3DX12_RESOURCE_BARRIER::Transition(m_colorBuffers[1].Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET)
+    };
+    m_commandList->ResourceBarrier(2, barriers);
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE hdrRtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_rtvDescriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE hdrRtvHandles[2] =
+    {
+        CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_rtvDescriptorSize),
+        CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount + 1, m_rtvDescriptorSize)
+    };
     CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
-    m_commandList->OMSetRenderTargets(1, &hdrRtvHandle, FALSE, &dsvHandle);
+    m_commandList->OMSetRenderTargets(2, hdrRtvHandles, FALSE, &dsvHandle);
 
-    const float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
-    m_commandList->ClearRenderTargetView(hdrRtvHandle, clearColor, 0, nullptr);
+    const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    m_commandList->ClearRenderTargetView(hdrRtvHandles[0], clearColor, 0, nullptr);
+    m_commandList->ClearRenderTargetView(hdrRtvHandles[1], clearColor, 0, nullptr);
     m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+    RenderScene();
 
-    // render tunnel: the wood (heap slot 1) as the texture of root parameter 2, and the cube
-    // stretched into a long box from z = -2.5 to 52.5, lit from the inside. With row vectors
-    // the matrices apply from left to right: scale, then translate (learnopengl's translate
-    // * scale). The normal matrix is the transpose of the inverse of the model matrix; stored
-    // transposed for HLSL, that is the inverse itself.
-    CD3DX12_GPU_DESCRIPTOR_HANDLE woodTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
-    m_commandList->SetGraphicsRootDescriptorTable(2, woodTexture);
-    ModelConstants modelConstants = {};
-    XMMATRIX model = XMMatrixScaling(2.5f, 2.5f, 27.5f) * XMMatrixTranslation(0.0f, 0.0f, 25.0f);
-    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
-    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
-    modelConstants.inverseNormals = TRUE;
-    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
-    m_commandList->DrawInstanced(36, 1, 0, 0);    // the cube: vertices 0 to 35
+    // The scene and its bright parts are in the colour buffers: from now on pixel shaders read them.
+    barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(m_colorBuffers[0].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_colorBuffers[1].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    m_commandList->ResourceBarrier(2, barriers);
 
-    // The scene is in the colour buffer: from now on the pixel shader reads it.
-    barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_colorBuffer.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    m_commandList->ResourceBarrier(1, &barrier);
+    // 2. blur bright fragments with two-pass Gaussian Blur: 10 passes, each drawing the screen
+    // quad into one ping-pong buffer while reading the other - horizontal, vertical,
+    // horizontal ... The first pass reads the bright parts (colour buffer 1, heap slot 4).
+    bool horizontal = true, first_iteration = true;
+    unsigned int amount = 10;
+    m_commandList->SetPipelineState(m_blurPipelineState.Get());
+    for (unsigned int i = 0; i < amount; i++)
+    {
+        // The target: ping-pong buffer [horizontal] (RTV heap slot FrameCount + 2 + horizontal).
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_pingpongColorbuffers[horizontal].Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        m_commandList->ResourceBarrier(1, &barrier);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE pingpongRtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount + 2 + horizontal, m_rtvDescriptorSize);
+        m_commandList->OMSetRenderTargets(1, &pingpongRtvHandle, FALSE, nullptr);
 
-    // 2. now render floating point color buffer to 2D quad and tonemap HDR colors to default
+        BlurConstants blurConstants = {};
+        blurConstants.horizontal = horizontal;
+        m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(BlurConstants) / 4, &blurConstants, 0);
+        // bind texture of other framebuffer (or scene if first iteration): the bright parts'
+        // SRV (heap slot 4) or ping-pong buffer [!horizontal]'s (slot 5 + !horizontal)
+        CD3DX12_GPU_DESCRIPTOR_HANDLE image(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), first_iteration ? 4 : 5 + !horizontal, m_cbvSrvDescriptorSize);
+        m_commandList->SetGraphicsRootDescriptorTable(2, image);
+        m_commandList->DrawInstanced(6, 1, 36, 0);    // the screen quad: vertices 36 to 41
+
+        // Done: the next pass reads it.
+        barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_pingpongColorbuffers[horizontal].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        m_commandList->ResourceBarrier(1, &barrier);
+
+        horizontal = !horizontal;
+        if (first_iteration)
+            first_iteration = false;
+    }
+
+    // 3. now render floating point color buffer to 2D quad and tonemap HDR colors to default
     // framebuffer's (clamped) color range. Indicate that the back buffer will be used as a
     // render target.
-    barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     m_commandList->ResourceBarrier(1, &barrier);
 
     // The back buffer, without a depth buffer: the screen quad needs no depth test.
@@ -842,12 +912,15 @@ void D3D12App::PopulateCommandList()
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
-    // The screen quad: its pipeline state, the colour buffer (heap slot 2) as the texture of
-    // root parameter 2, and its 6 vertices from vertex 36 on.
-    m_commandList->SetPipelineState(m_hdrPipelineState.Get());
-    CD3DX12_GPU_DESCRIPTOR_HANDLE hdrBuffer(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
-    m_commandList->SetGraphicsRootDescriptorTable(2, hdrBuffer);
-    // The exposure, as the root constants (cbuffer HdrConstants in hdr.hlsl).
+    // The final screen quad: its pipeline state, the scene (colour buffer 0, heap slot 3) as
+    // the texture of root parameter 2 and the blurred bright parts (ping-pong buffer
+    // [!horizontal]: the one the last pass drew into) as the texture of root parameter 3.
+    m_commandList->SetPipelineState(m_bloomFinalPipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE scene(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, scene);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE bloomBlur(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 5 + !horizontal, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(3, bloomBlur);
+    // The exposure, as the root constants (cbuffer HdrConstants in bloom_final.hlsl).
     HdrConstants hdrConstants = {};
     hdrConstants.exposure = exposure;
     m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(HdrConstants) / 4, &hdrConstants, 0);
@@ -859,6 +932,76 @@ void D3D12App::PopulateCommandList()
 
     ThrowIfFailed(m_commandList->Close());
 }
+
+// The scene (learnopengl's bloom.cpp): a large flat cube as the floor, six wooden boxes and
+// the four lights as small bright cubes - all with the one cube of the vertex buffer, each
+// with its model matrix and its normal matrix (root parameter 0). With row vectors the
+// matrices apply from left to right: scale, then rotate, then translate (learnopengl's
+// translate * rotate * scale). The normal matrix is the transpose of the inverse of the model
+// matrix; stored transposed for HLSL, that is the inverse itself.
+void D3D12App::RenderScene()
+{
+    // create one large cube that acts as the floor: the wood (heap slot 1)
+    CD3DX12_GPU_DESCRIPTOR_HANDLE woodTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, woodTexture);
+    ModelConstants modelConstants = {};
+    XMMATRIX model = XMMatrixScaling(12.5f, 0.5f, 12.5f) * XMMatrixTranslation(0.0f, -1.0f, 0.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);    // the cube: vertices 0 to 35
+    // then create multiple cubes as the scenery: the container (heap slot 2)
+    CD3DX12_GPU_DESCRIPTOR_HANDLE containerTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, containerTexture);
+    model = XMMatrixScaling(0.5f, 0.5f, 0.5f) * XMMatrixTranslation(0.0f, 1.5f, 0.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    model = XMMatrixScaling(0.5f, 0.5f, 0.5f) * XMMatrixTranslation(2.0f, 0.0f, 1.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    model = XMMatrixRotationAxis(XMVector3Normalize(XMVectorSet(1.0f, 0.0f, 1.0f, 0.0f)), XMConvertToRadians(60.0f))
+        * XMMatrixTranslation(-1.0f, -1.0f, 2.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    model = XMMatrixScaling(1.25f, 1.25f, 1.25f)
+        * XMMatrixRotationAxis(XMVector3Normalize(XMVectorSet(1.0f, 0.0f, 1.0f, 0.0f)), XMConvertToRadians(23.0f))
+        * XMMatrixTranslation(0.0f, 2.7f, 4.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    model = XMMatrixRotationAxis(XMVector3Normalize(XMVectorSet(1.0f, 0.0f, 1.0f, 0.0f)), XMConvertToRadians(124.0f))
+        * XMMatrixTranslation(-2.0f, 1.0f, -3.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    model = XMMatrixScaling(0.5f, 0.5f, 0.5f) * XMMatrixTranslation(-3.0f, 0.0f, 0.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+
+    // finally show all the light sources as bright cubes: the light cubes' pipeline state,
+    // and each cube's colour in the root constants
+    m_commandList->SetPipelineState(m_lightBoxPipelineState.Get());
+    for (unsigned int i = 0; i < 4; i++)
+    {
+        model = XMMatrixScaling(0.25f, 0.25f, 0.25f) * XMMatrixTranslation(lightPositions[i].x, lightPositions[i].y, lightPositions[i].z);
+        XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+        XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+        modelConstants.lightColor = lightColors[i];
+        m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+        m_commandList->DrawInstanced(36, 1, 0, 0);
+    }
+}
+
 void D3D12App::WaitForPreviousFrame()
 {
     // WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.

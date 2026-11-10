@@ -252,9 +252,10 @@ public sealed partial class GlReader
         return id;
     }
 
-    private static int AttachmentIndex(string attachment) =>
-        Regex.Match(attachment, @"GL_COLOR_ATTACHMENT(\d+)(?:\s*\+\s*(\d+))?") is { Success: true } m
-            ? int.Parse(m.Groups[1].Value) + (m.Groups[2].Success ? int.Parse(m.Groups[2].Value) : 0) : 0;
+    /// <summary>GL_COLOR_ATTACHMENT1, or GL_COLOR_ATTACHMENT0 + i in learnopengl's loop (the offset worked out now).</summary>
+    private int AttachmentIndex(string attachment) =>
+        Regex.Match(attachment, @"GL_COLOR_ATTACHMENT(\d+)(?:\s*\+\s*(.+))?$") is { Success: true } m
+            ? int.Parse(m.Groups[1].Value) + (m.Groups[2].Success ? (int)Math.Round(Eval(m.Groups[2].Value)?.X ?? 0) : 0) : 0;
 
     private static bool IsFloatFormat(string format) => Regex.IsMatch(format, @"16F|32F|R11F", RegexOptions.CultureInvariant);
 

@@ -166,7 +166,7 @@ public static partial class Rasterizer
         if (mask == 0) return;
         var stencil = draw.Stencil;
         bool Passes(int idx, int s) =>
-            (stencil is null || StencilPasses(stencil, fb.Stencil[idx])) && (!draw.DepthTest || Compare(draw.DepthFunc, zs[s], fb.Depth[idx]));
+            (stencil is null || StencilPasses(stencil, fb.Stencil[idx])) && (!draw.DepthTest || !fb.HasDepth || Compare(draw.DepthFunc, zs[s], fb.Depth[idx]));
         bool sideEffectsOnFail = stencil is not null && (stencil.StencilFail != StencilOp.Keep || stencil.DepthFail != StencilOp.Keep);
         if (!sideEffectsOnFail)
         {
@@ -186,13 +186,13 @@ public static partial class Rasterizer
                 UpdateStencil(fb, idx, stencil, stencil.StencilFail);
                 continue;
             }
-            if (draw.DepthTest && !Compare(draw.DepthFunc, zs[s], fb.Depth[idx]))
+            if (draw.DepthTest && fb.HasDepth && !Compare(draw.DepthFunc, zs[s], fb.Depth[idx]))
             {
                 if (stencil is not null) UpdateStencil(fb, idx, stencil, stencil.DepthFail);
                 continue;
             }
             if (stencil is not null) UpdateStencil(fb, idx, stencil, stencil.Pass);
-            if (draw.DepthTest && draw.DepthWrite) fb.Depth[idx] = Math.Clamp(zs[s], 0, 1);
+            if (draw.DepthTest && draw.DepthWrite && fb.HasDepth) fb.Depth[idx] = Math.Clamp(zs[s], 0, 1);
             for (int a = 0; a < fb.Colors.Length && a < colors.Length; a++)
                 if (colors[a] is { } color) WriteColor(fb, fb.Colors[a], idx * 4, color, draw);
         }

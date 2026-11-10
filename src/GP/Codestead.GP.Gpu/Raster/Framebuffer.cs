@@ -22,6 +22,9 @@ internal sealed class Framebuffer
     /// <summary>Sample positions inside a pixel (0–1), the standard 4× pattern for multisampling.</summary>
     public (double X, double Y)[] Pattern { get; }
 
+    /// <summary>A depth attachment: without one (a ping-pong blur target) the depth test and depth writes do nothing.</summary>
+    public bool HasDepth { get; init; } = true;
+
     public Framebuffer(int width, int height, int samples = 1, bool isFloat = false, int attachments = 1)
     {
         Width = width;

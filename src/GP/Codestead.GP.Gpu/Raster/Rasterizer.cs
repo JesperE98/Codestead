@@ -69,7 +69,7 @@ public static partial class Rasterizer
                 var t = scene.Targets.GetValueOrDefault(baseId) ?? new RenderTarget(id);
                 int w = t.Width > 0 ? Math.Max(1, (int)Math.Round(t.Width / scale)) : width;
                 int h = t.Height > 0 ? Math.Max(1, (int)Math.Round(t.Height / scale)) : height;
-                targets[id] = fb = new Framebuffer(w, h, t.Samples, t.Float, t.ColorAttachments);
+                targets[id] = fb = new Framebuffer(w, h, t.Samples, t.Float, t.ColorAttachments) { HasDepth = t.Depth };
             }
             return fb;
         }

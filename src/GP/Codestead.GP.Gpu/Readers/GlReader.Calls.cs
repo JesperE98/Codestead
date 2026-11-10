@@ -255,6 +255,11 @@ public sealed partial class GlReader
     /// </summary>
     private string ObjOf(string arg, Func<string, bool> known)
     {
+        // cond ? a : b (learnopengl's first_iteration ? colorBuffers[1] : pingpongColorbuffers[!horizontal]): the branch the
+        // condition picks now.
+        var choice = System.Text.RegularExpressions.Regex.Match(arg.Trim(), @"^([^?]+)\?([^:]+):(.+)$");
+        if (choice.Success && Eval(choice.Groups[1].Value.Trim()) is { V: { Length: > 0 } cond })
+            return ObjOf(cond[0] != 0 ? choice.Groups[2].Value : choice.Groups[3].Value, known);
         var name = Obj(arg);
         if (known(name)) return name;
         return Eval(arg.Trim())?.Text is { } held && known(held) ? held : name;

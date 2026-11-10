@@ -1,0 +1,652 @@
+=== task: bright-pass
+--- file: main.cpp
+--- find:
+    VkImageView hdrColorImageView;
+--- replace:
+    VkImageView hdrColorImageView;
+    VkImage brightColorImage; // the second colour attachment: only the bright fragments (learnopengl's colorBuffers[1])
+    VkDeviceMemory brightColorImageMemory;
+    VkImageView brightColorImageView;
+--- file: main.cpp
+--- find:
+    VkDescriptorSet hdrDescriptorSet; // the uniform buffer and the floating point colour image
+--- replace:
+    VkDescriptorSet hdrDescriptorSet; // the uniform buffer and the floating point colour image
+    VkDescriptorSet brightDescriptorSet; // the uniform buffer and the bright image
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/bloom.vert.spv", "shaders/bloom.frag.spv", hdrRenderPass, graphicsPipeline);
+        createPipeline("shaders/bloom.vert.spv", "shaders/light_box.frag.spv", hdrRenderPass, lightPipeline);
+--- replace:
+        // a pipeline is made for one render pass: the scene's pipelines for the floating point target's (2 colour attachments)
+        createPipeline("shaders/bloom.vert.spv", "shaders/bloom.frag.spv", hdrRenderPass, 2, graphicsPipeline);
+        createPipeline("shaders/bloom.vert.spv", "shaders/light_box.frag.spv", hdrRenderPass, 2, lightPipeline);
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/bloom_final.vert.spv", "shaders/bloom_final.frag.spv", renderPass, bloomFinalPipeline);
+--- replace:
+        createPipeline("shaders/bloom_final.vert.spv", "shaders/bloom_final.frag.spv", renderPass, 1, bloomFinalPipeline);
+--- file: main.cpp
+--- find:
+        createDescriptorSet(hdrColorImageView, colorBufferSampler, hdrDescriptorSet);
+--- replace:
+        createDescriptorSet(hdrColorImageView, colorBufferSampler, hdrDescriptorSet);
+        createDescriptorSet(brightColorImageView, colorBufferSampler, brightDescriptorSet);
+--- file: main.cpp
+--- find:
+        vkFreeMemory(device, hdrColorImageMemory, nullptr);
+--- replace:
+        vkFreeMemory(device, hdrColorImageMemory, nullptr);
+        vkDestroyImageView(device, brightColorImageView, nullptr);
+        vkDestroyImage(device, brightColorImage, nullptr);
+        vkFreeMemory(device, brightColorImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+
+        VkAttachmentDescription depthAttachment{};
+--- replace:
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+
+        // the bright image: the same kind of attachment (learnopengl: GL_COLOR_ATTACHMENT1)
+        VkAttachmentDescription brightAttachment = colorAttachment;
+
+        VkAttachmentDescription depthAttachment{};
+--- file: main.cpp
+--- find:
+        VkAttachmentReference colorAttachmentRef{};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 1;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: wait until the last frame's screen quad has read the image and its depth writes are done
+--- replace:
+        // the fragment shader's outputs: location 0 -> attachment 0, location 1 -> attachment 1 (learnopengl's
+        // glDrawBuffers(2, attachments))
+        std::array<VkAttachmentReference, 2> colorAttachmentRefs{};
+        colorAttachmentRefs[0].attachment = 0;
+        colorAttachmentRefs[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachmentRefs[1].attachment = 1;
+        colorAttachmentRefs[1].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 2;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
+        subpass.pColorAttachments = colorAttachmentRefs.data();
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: wait until the last frame's screen quad has read the image and its depth writes are done
+--- file: main.cpp
+--- find:
+        std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderPassInfo.pAttachments = attachments.data();
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &hdrRenderPass) != VK_SUCCESS) {
+--- replace:
+        std::array<VkAttachmentDescription, 3> attachments = {colorAttachment, brightAttachment, depthAttachment};
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderPassInfo.pAttachments = attachments.data();
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &hdrRenderPass) != VK_SUCCESS) {
+--- file: main.cpp
+--- find:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, VkPipeline& pipeline) {
+--- replace:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, uint32_t colorAttachmentCount, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+        colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        colorBlendAttachment.blendEnable = VK_FALSE;
+--- replace:
+        // one blend state per colour attachment of the subpass (up to 2 here), all the same: no blending
+        std::array<VkPipelineColorBlendAttachmentState, 2> colorBlendAttachments{};
+        for (auto& colorBlendAttachment : colorBlendAttachments) {
+            colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+            colorBlendAttachment.blendEnable = VK_FALSE;
+        }
+--- file: main.cpp
+--- find:
+        colorBlending.attachmentCount = 1;
+        colorBlending.pAttachments = &colorBlendAttachment;
+--- replace:
+        colorBlending.attachmentCount = colorAttachmentCount; // as many as the render pass's subpass has
+        colorBlending.pAttachments = colorBlendAttachments.data();
+--- file: main.cpp
+--- find:
+        hdrColorImageView = createImageView(hdrColorImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
+--- replace:
+        hdrColorImageView = createImageView(hdrColorImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
+        createImage(swapChainExtent.width, swapChainExtent.height, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, brightColorImage, brightColorImageMemory);
+        brightColorImageView = createImageView(brightColorImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
+--- file: main.cpp
+--- find:
+        std::array<VkImageView, 2> attachments = {
+            hdrColorImageView,
+            hdrDepthImageView
+        };
+--- replace:
+        std::array<VkImageView, 3> attachments = {
+            hdrColorImageView,
+            brightColorImageView,
+            hdrDepthImageView
+        };
+--- file: main.cpp
+--- find:
+        // three descriptor sets, each with the uniform buffer and one texture: the wood, the container, the floating point
+        // colour image
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 3;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 3;
+--- replace:
+        // four descriptor sets, each with the uniform buffer and one texture: the wood, the container, the floating point
+        // colour image, the bright image
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 4;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 4;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 3;
+--- replace:
+        poolInfo.maxSets = 4;
+--- file: main.cpp
+--- find:
+        // one clear value per attachment: the colour, and the depth 1.0 (the far plane)
+        std::array<VkClearValue, 2> hdrClearValues{};
+        hdrClearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        hdrClearValues[1].depthStencil = {1.0f, 0};
+--- replace:
+        // one clear value per attachment: the two colours, and the depth 1.0 (the far plane)
+        std::array<VkClearValue, 3> hdrClearValues{};
+        hdrClearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        hdrClearValues[1].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        hdrClearValues[2].depthStencil = {1.0f, 0};
+--- file: main.cpp
+--- find:
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &hdrDescriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // the screen quad's 6 vertices start at vertex 36
+--- replace:
+        // for now the bright image instead of the scene: only what is brighter than 1.0
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &brightDescriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // the screen quad's 6 vertices start at vertex 36
+--- file: shaders/bloom.frag
+--- find:
+layout(location = 0) out vec4 outColor;
+--- replace:
+layout(location = 0) out vec4 outColor;
+layout(location = 1) out vec4 brightColor; // the second colour attachment
+--- file: shaders/bloom.frag
+--- find:
+    outColor = vec4(result, 1.0);
+}
+--- replace:
+    // check whether result is higher than some threshold, if so, output as bloom threshold color
+    float brightness = dot(result, vec3(0.2126, 0.7152, 0.0722));
+    if (brightness > 1.0)
+        brightColor = vec4(result, 1.0);
+    else
+        brightColor = vec4(0.0, 0.0, 0.0, 1.0);
+    outColor = vec4(result, 1.0);
+}
+--- file: shaders/light_box.frag
+--- find:
+layout(location = 0) out vec4 outColor;
+--- replace:
+layout(location = 0) out vec4 outColor;
+layout(location = 1) out vec4 brightColor; // the second colour attachment
+--- file: shaders/light_box.frag
+--- find:
+
+void main() {
+    outColor = vec4(pc.lightColor, 1.0);
+}
+--- replace:
+
+void main() {
+    outColor = vec4(pc.lightColor, 1.0);
+    float brightness = dot(outColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    if (brightness > 1.0)
+        brightColor = vec4(outColor.rgb, 1.0);
+    else
+        brightColor = vec4(0.0, 0.0, 0.0, 1.0);
+}
+
+=== task: blur
+--- file: main.cpp
+--- find:
+    glm::vec3 lightColor;
+};
+--- replace:
+    glm::vec3 lightColor;
+    VkBool32 horizontal; // the blur's direction (blur.frag): a GLSL bool is 4 bytes
+};
+--- file: main.cpp
+--- find:
+    VkRenderPass hdrRenderPass; // the scene is drawn into the floating point colour image with this render pass
+--- replace:
+    VkRenderPass hdrRenderPass; // the scene is drawn into the floating point colour image with this render pass
+    VkRenderPass blurRenderPass; // one blur step: the screen quad into one of the ping-pong images
+--- file: main.cpp
+--- find:
+    VkPipeline lightPipeline; // learnopengl's shaderLight (light_box): the light cubes
+--- replace:
+    VkPipeline lightPipeline; // learnopengl's shaderLight (light_box): the light cubes
+    VkPipeline blurPipeline; // learnopengl's shaderBlur: one blur step
+--- file: main.cpp
+--- find:
+    VkFramebuffer hdrFramebuffer;
+--- replace:
+    VkFramebuffer hdrFramebuffer;
+
+    // the ping-pong targets of the blur (learnopengl's pingpongFBO / pingpongColorbuffers)
+    VkImage pingpongImages[2];
+    VkDeviceMemory pingpongImageMemories[2];
+    VkImageView pingpongImageViews[2];
+    VkFramebuffer pingpongFramebuffers[2];
+--- file: main.cpp
+--- find:
+    VkDescriptorSet brightDescriptorSet; // the uniform buffer and the bright image
+--- replace:
+    VkDescriptorSet brightDescriptorSet; // the uniform buffer and the bright image
+    VkDescriptorSet pingpongDescriptorSets[2]; // the uniform buffer and one ping-pong image
+--- file: main.cpp
+--- find:
+        // TODO: the render pass of the blur (createBlurRenderPass): one floating point colour attachment, no depth
+--- replace:
+        createBlurRenderPass();
+--- file: main.cpp
+--- find:
+        // TODO: the blur's pipeline (blurPipeline: blur.vert / blur.frag, blurRenderPass)
+--- replace:
+        // the blur's pipeline for the blur's render pass
+        createPipeline("shaders/blur.vert.spv", "shaders/blur.frag.spv", blurRenderPass, 1, blurPipeline);
+--- file: main.cpp
+--- find:
+        // TODO: the two ping-pong targets of the blur (createPingpongFramebuffers)
+--- replace:
+        createPingpongFramebuffers();
+--- file: main.cpp
+--- find:
+        createDescriptorSet(brightColorImageView, colorBufferSampler, brightDescriptorSet);
+--- replace:
+        createDescriptorSet(brightColorImageView, colorBufferSampler, brightDescriptorSet);
+        for (unsigned int i = 0; i < 2; i++) {
+            createDescriptorSet(pingpongImageViews[i], colorBufferSampler, pingpongDescriptorSets[i]);
+        }
+--- file: main.cpp
+--- find:
+        vkDestroyImageView(device, hdrDepthImageView, nullptr);
+        vkDestroyImage(device, hdrDepthImage, nullptr);
+        vkFreeMemory(device, hdrDepthImageMemory, nullptr);
+--- replace:
+        vkDestroyImageView(device, hdrDepthImageView, nullptr);
+        vkDestroyImage(device, hdrDepthImage, nullptr);
+        vkFreeMemory(device, hdrDepthImageMemory, nullptr);
+
+        for (unsigned int i = 0; i < 2; i++) {
+            vkDestroyFramebuffer(device, pingpongFramebuffers[i], nullptr);
+            vkDestroyImageView(device, pingpongImageViews[i], nullptr);
+            vkDestroyImage(device, pingpongImages[i], nullptr);
+            vkFreeMemory(device, pingpongImageMemories[i], nullptr);
+        }
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, lightPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, lightPipeline, nullptr);
+        vkDestroyPipeline(device, blurPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyRenderPass(device, hdrRenderPass, nullptr);
+--- replace:
+        vkDestroyRenderPass(device, hdrRenderPass, nullptr);
+        vkDestroyRenderPass(device, blurRenderPass, nullptr);
+--- file: main.cpp
+--- find:
+    // TODO: createPingpongFramebuffers(): learnopengl's ping-pong framebuffers for blurring - two floating point colour
+    // images (VK_FORMAT_R16G16B16A16_SFLOAT, colour attachment + sampled) with their views and framebuffers for
+    // blurRenderPass (no depth needed)
+--- replace:
+    // ping-pong-framebuffer for blurring: two floating point images the size of the window (learnopengl's
+    // pingpongColorbuffers), each drawn into by one blur step and sampled by the next, and their framebuffers
+    // (learnopengl's pingpongFBO - no need for depth buffer)
+    void createPingpongFramebuffers() {
+        for (unsigned int i = 0; i < 2; i++) {
+            createImage(swapChainExtent.width, swapChainExtent.height, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, pingpongImages[i], pingpongImageMemories[i]);
+            pingpongImageViews[i] = createImageView(pingpongImages[i], VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
+
+            VkFramebufferCreateInfo framebufferInfo{};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = blurRenderPass;
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = &pingpongImageViews[i];
+            framebufferInfo.width = swapChainExtent.width;
+            framebufferInfo.height = swapChainExtent.height;
+            framebufferInfo.layers = 1;
+
+            if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &pingpongFramebuffers[i]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create ping-pong framebuffer!");
+            }
+        }
+    }
+--- file: main.cpp
+--- find:
+    // TODO: createBlurRenderPass(): one floating point colour attachment (VK_FORMAT_R16G16B16A16_SFLOAT) whose old
+    // contents are not needed (loadOp DONT_CARE: the quad covers every pixel), kept (storeOp STORE) and left in
+    // VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL for the next pass; no depth attachment
+--- replace:
+    // The render pass of one blur step: one floating point colour attachment, no depth. Its old contents are not
+    // needed (the screen quad covers every pixel), it is kept for the next step and left ready to be sampled.
+    void createBlurRenderPass() {
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE; // every pixel is written: no need to clear
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+
+        VkAttachmentReference colorAttachmentRef{};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: wait until the step before the last one has read the image (it is written again now)
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[0].srcAccessMask = 0;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        // after the pass: the next step's fragment shader (or the final pass's) waits until the image has been written
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = &colorAttachment;
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &blurRenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create blur render pass!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        // four descriptor sets, each with the uniform buffer and one texture: the wood, the container, the floating point
+        // colour image, the bright image
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 4;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 4;
+--- replace:
+        // six descriptor sets, each with the uniform buffer and one texture: the wood, the container, the floating point
+        // colour image, the bright image, the two ping-pong images
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 6;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 6;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 4;
+--- replace:
+        poolInfo.maxSets = 6;
+--- file: main.cpp
+--- find:
+        // TODO: 2. blur bright fragments with two-pass Gaussian Blur (10 render passes into the ping-pong targets)
+--- replace:
+        // 2. blur bright fragments with two-pass Gaussian Blur: 10 render passes, each one draws the screen quad into one
+        // ping-pong image while sampling the other (or the bright image in the first pass)
+        bool horizontal = true, first_iteration = true;
+        unsigned int amount = 10;
+        for (unsigned int i = 0; i < amount; i++) {
+            VkRenderPassBeginInfo blurPassInfo{};
+            blurPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            blurPassInfo.renderPass = blurRenderPass;
+            blurPassInfo.framebuffer = pingpongFramebuffers[horizontal];
+            blurPassInfo.renderArea.offset = {0, 0};
+            blurPassInfo.renderArea.extent = swapChainExtent;
+            blurPassInfo.clearValueCount = 0; // loadOp DONT_CARE: nothing to clear
+
+            vkCmdBeginRenderPass(commandBuffer, &blurPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, blurPipeline);
+            constants.horizontal = horizontal;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+            // the image of the other framebuffer (or the bright image if first iteration)
+            VkDescriptorSet imageDescriptorSet = first_iteration ? brightDescriptorSet : pingpongDescriptorSets[!horizontal];
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &imageDescriptorSet, 0, nullptr);
+            vkCmdDraw(commandBuffer, 6, 1, 36, 0); // the screen quad
+            vkCmdEndRenderPass(commandBuffer);
+
+            horizontal = !horizontal;
+            if (first_iteration)
+                first_iteration = false;
+        }
+--- file: main.cpp
+--- find:
+        // for now the bright image instead of the scene: only what is brighter than 1.0
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &brightDescriptorSet, 0, nullptr);
+--- replace:
+        // for now the blurred bright image instead of the scene: the last ping-pong image written
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &pingpongDescriptorSets[!horizontal], 0, nullptr);
+--- file: shaders/blur.frag
+--- find:
+// TODO: the push constants up to horizontal (blur along x or along y)
+--- replace:
+// the push constants up to horizontal: blur along x (true) or along y (false)
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    vec3 lightColor;
+    bool horizontal;
+} pc;
+--- file: shaders/blur.frag
+--- find:
+void main() {
+    // TODO: a 9-tap Gaussian blur in one direction: the texel at fragTexCoord times weight[0], plus the 4 texels on each
+    // side (horizontal or vertical) times weight[1..4]
+}
+--- replace:
+void main() {
+    vec2 tex_offset = 1.0 / textureSize(image, 0); // gets size of single texel
+    vec3 result = texture(image, fragTexCoord).rgb * weight[0];
+    if (pc.horizontal) {
+        for (int i = 1; i < 5; ++i) {
+            result += texture(image, fragTexCoord + vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+            result += texture(image, fragTexCoord - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+        }
+    } else {
+        for (int i = 1; i < 5; ++i) {
+            result += texture(image, fragTexCoord + vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+            result += texture(image, fragTexCoord - vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+        }
+    }
+    outColor = vec4(result, 1.0);
+}
+
+=== task: combine
+--- file: main.cpp
+--- find:
+    VkDescriptorSet pingpongDescriptorSets[2]; // the uniform buffer and one ping-pong image
+--- replace:
+    VkDescriptorSet pingpongDescriptorSets[2]; // the uniform buffer and one ping-pong image
+    VkDescriptorSet bloomDescriptorSet; // the uniform buffer, the scene and the blurred bright image
+--- file: main.cpp
+--- find:
+        for (unsigned int i = 0; i < 2; i++) {
+            createDescriptorSet(pingpongImageViews[i], colorBufferSampler, pingpongDescriptorSets[i]);
+        }
+        // TODO: the descriptor sets of the bright image and the ping-pong images, and the final pass's set
+--- replace:
+        for (unsigned int i = 0; i < 2; i++) {
+            createDescriptorSet(pingpongImageViews[i], colorBufferSampler, pingpongDescriptorSets[i]);
+        }
+        // the 10 blur steps end in ping-pong image 0 (the last, vertical step writes into pingpongImages[0])
+        createBloomDescriptorSet(hdrColorImageView, pingpongImageViews[0], colorBufferSampler, bloomDescriptorSet);
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
+--- replace:
+        // a second texture at binding 2: the final pass's blurred bright image (the other sets leave it empty; their
+        // shaders do not use it)
+        VkDescriptorSetLayoutBinding bloomBlurLayoutBinding{};
+        bloomBlurLayoutBinding.binding = 2;
+        bloomBlurLayoutBinding.descriptorCount = 1;
+        bloomBlurLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        bloomBlurLayoutBinding.pImmutableSamplers = nullptr;
+        bloomBlurLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {uboLayoutBinding, samplerLayoutBinding, bloomBlurLayoutBinding};
+--- file: main.cpp
+--- find:
+        // six descriptor sets, each with the uniform buffer and one texture: the wood, the container, the floating point
+        // colour image, the bright image, the two ping-pong images
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 6;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 6;
+--- replace:
+        // seven descriptor sets: the wood, the container, the floating point colour image, the bright image, the two
+        // ping-pong images and the final pass's set. Each set takes what the layout has - one uniform buffer and two
+        // textures -, even when binding 2 stays empty.
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 7;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 14;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 6;
+--- replace:
+        poolInfo.maxSets = 7;
+--- file: main.cpp
+--- find:
+    void createBuffer(VkDeviceSize size
+--- replace:
+    // The final pass's descriptor set: the uniform buffer (binding 0), the scene (binding 1) and the blurred bright image
+    // (binding 2) - learnopengl's two texture units for bloom_final.
+    void createBloomDescriptorSet(VkImageView sceneImageView, VkImageView bloomBlurImageView, VkSampler sampler, VkDescriptorSet& descriptorSet) {
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &descriptorSetLayout;
+
+        if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        VkDescriptorImageInfo sceneInfo{};
+        sceneInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        sceneInfo.imageView = sceneImageView;
+        sceneInfo.sampler = sampler;
+
+        VkDescriptorImageInfo bloomBlurInfo{};
+        bloomBlurInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        bloomBlurInfo.imageView = bloomBlurImageView;
+        bloomBlurInfo.sampler = sampler;
+
+        std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &sceneInfo;
+
+        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[2].dstSet = descriptorSet;
+        descriptorWrites[2].dstBinding = 2;
+        descriptorWrites[2].dstArrayElement = 0;
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[2].descriptorCount = 1;
+        descriptorWrites[2].pImageInfo = &bloomBlurInfo;
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+
+    void createBuffer(VkDeviceSize size
+--- file: main.cpp
+--- find:
+        // for now the blurred bright image instead of the scene: the last ping-pong image written
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &pingpongDescriptorSets[!horizontal], 0, nullptr);
+--- replace:
+        // the scene and the blurred bright image (pingpongImages[!horizontal] = pingpongImages[0])
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &bloomDescriptorSet, 0, nullptr);
+--- file: shaders/bloom_final.frag
+--- find:
+layout(binding = 1) uniform sampler2D scene;
+--- replace:
+layout(binding = 1) uniform sampler2D scene;
+layout(binding = 2) uniform sampler2D bloomBlur;
+--- file: shaders/bloom_final.frag
+--- find:
+    vec3 hdrColor = texture(scene, fragTexCoord).rgb;
+--- replace:
+    vec3 hdrColor = texture(scene, fragTexCoord).rgb;
+    vec3 bloomColor = texture(bloomBlur, fragTexCoord).rgb;
+    hdrColor += bloomColor; // additive blending

@@ -209,10 +209,19 @@ public sealed partial class GlReader
         }
     }
 
-    private static string Obj(string arg) => Regex.Replace(arg.Trim().TrimStart('&'), @"\s+", "");
+    /// <summary>
+    /// The OpenGL object an argument names: "colorBuffers[1]" also for colorBuffers[i] in a loop or pingpongFBO[!horizontal]
+    /// (an index worked out now).
+    /// </summary>
+    private string Obj(string arg)
+    {
+        var name = Regex.Replace(arg.Trim().TrimStart('&'), @"\s+", "");
+        var r = Regex.Replace(name, @"\[([^\[\]]*[^\d\[\]][^\[\]]*)\]", m => Eval(m.Groups[1].Value) is { V: { Length: > 0 } v } ? $"[{(int)Math.Round(v[0])}]" : m.Value);
+        return r;
+    }
 
     /// <summary>The array or vector behind a data argument: vertices, &amp;vertices[0], vertices.data().</summary>
-    private static string DataName(string arg)
+    private string DataName(string arg)
     {
         var a = Obj(arg);
         a = Regex.Replace(a, @"\.data\(\)$|\[0\]$", "");
