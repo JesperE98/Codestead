@@ -164,6 +164,7 @@ public sealed partial class ShaderParser
                     var init = (InitList)Initializer();
                     return new Call(t.Text, init.Items, t.Line);
                 }
+                names.Add(t.Text);
                 return new Name(t.Text, t.Line);
             }
             case ShaderTokenKind.Symbol when t.Is("("):

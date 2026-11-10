@@ -80,7 +80,7 @@ public sealed record BlendState(
 /// size (0 = the window's), its colour attachments (0 for a depth-only shadow map), whether it has depth and stencil, multisampling, and whether its colour is stored as
 /// floating point (GL_RGBA16F …, not clamped to 0–1).
 /// </summary>
-public sealed record RenderTarget(string Id, int Width = 0, int Height = 0, int ColorAttachments = 1, bool Depth = true, bool Stencil = true, int Samples = 1, bool Float = false);
+public sealed record RenderTarget(string Id, int Width = 0, int Height = 0, int ColorAttachments = 1, bool Depth = true, bool Stencil = true, int Samples = 1, bool Float = false, int Layers = 1);
 
 /// <summary>Something done to the targets between draws, before draw number <see cref="BeforeDraw"/> (or after the last).</summary>
 public abstract record FrameOp(int BeforeDraw);

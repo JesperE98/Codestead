@@ -8,6 +8,9 @@ public sealed class ShaderProgram
     public List<Struct> Structs { get; } = new();
     public List<Global> Globals { get; } = new();
     public List<Function> Functions { get; } = new();
+
+    /// <summary>Every name the program's code reads or writes (gl_FragDepth, gl_Layer …).</summary>
+    public HashSet<string> Names { get; } = new(StringComparer.Ordinal);
     /// <summary>A geometry shader's input primitive (points, lines, triangles), from layout (…) in;.</summary>
     public string? InputPrimitive { get; set; }
     /// <summary>A geometry shader's output (points, line_strip, triangle_strip) and its max_vertices.</summary>

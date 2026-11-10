@@ -81,7 +81,7 @@ public static partial class Rasterizer
                 p0 /= sum;
                 p1 /= sum;
                 p2 /= sum;
-                WriteFragment(fb, py * width + px, mask, zs, draw, () => stages.Fragment(vs, p0, p1, p2, x, y, z, sum, front));
+                WriteFragment(fb, py * width + px, mask, zs, draw, stages, () => stages.Fragment(vs, p0, p1, p2, x, y, z, sum, front));
             }
         }
     }
@@ -110,7 +110,7 @@ public static partial class Rasterizer
             Array.Fill(zs, z);
             double q0 = (1 - t) * invW[0], q1 = t * invW[1], sum = q0 + q1;
             double p0 = q0 / sum, p1 = q1 / sum;
-            WriteFragment(fb, index, full, zs, draw, () => stages.Fragment(vs, p0, p1, 0, px + 0.5, py + 0.5, z, sum, true));
+            WriteFragment(fb, index, full, zs, draw, stages, () => stages.Fragment(vs, p0, p1, 0, px + 0.5, py + 0.5, z, sum, true));
         }
     }
 
@@ -138,7 +138,7 @@ public static partial class Rasterizer
                 }
                 if (mask == 0) continue;
                 int cx = px, cy = py;
-                WriteFragment(fb, py * fb.Width + px, mask, zs, draw, () => stages.Fragment(vs, 1, 0, 0, cx + 0.5, cy + 0.5, sz[0], invW[0], true));
+                WriteFragment(fb, py * fb.Width + px, mask, zs, draw, stages, () => stages.Fragment(vs, 1, 0, 0, cx + 0.5, cy + 0.5, sz[0], invW[0], true));
             }
     }
 
@@ -148,8 +148,18 @@ public static partial class Rasterizer
     /// shader runs once (<paramref name="shade"/>; null = discarded) – and not at all when every sample fails a test
     /// that changes nothing.
     /// </summary>
-    private static void WriteFragment(Framebuffer fb, int pixel, int mask, double[] zs, DrawCall draw, Func<double[]?[]?> shade)
+    private static void WriteFragment(Framebuffer fb, int pixel, int mask, double[] zs, DrawCall draw, Stages stages, Func<double[]?[]?> shade)
     {
+        // A fragment shader that writes its depth (gl_FragDepth, SV_Depth): it runs first, its depth is tested.
+        if (stages.WritesDepth)
+        {
+            if (mask == 0) return;
+            var shaded = shade();
+            if (shaded is null || stages.FragDepth is not double written) return;
+            zs = Enumerable.Repeat(written, zs.Length).ToArray();
+            var once = shaded;
+            shade = () => once;
+        }
         int samples = fb.Samples;
         for (int s = 0; s < samples; s++)
             if ((mask & (1 << s)) != 0 && (zs[s] < -1e-7 || zs[s] > 1 + 1e-7)) mask &= ~(1 << s);

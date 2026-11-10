@@ -28,6 +28,12 @@ public static partial class Rasterizer
 
         public bool HasGeometry => gs is not null;
 
+        /// <summary>The fragment shader writes its own depth (gl_FragDepth, an SV_Depth output).</summary>
+        public bool WritesDepth { get; }
+
+        /// <summary>The depth the last fragment wrote (0–1), when <see cref="WritesDepth"/>.</summary>
+        public double? FragDepth { get; private set; }
+
         public Stages(DrawCall draw, double time, int height, double scale, bool yDown)
         {
             this.draw = draw;
@@ -49,6 +55,9 @@ public static partial class Rasterizer
                 SetUniform(fs, k, v);
                 if (gs is not null) SetUniform(gs, k, v);
             }
+            WritesDepth = draw.Hlsl
+                ? draw.FragmentShader.Structs.Any(st => st.Fields.Any(f => string.Equals(f.Semantic, "SV_Depth", StringComparison.OrdinalIgnoreCase)))
+                : draw.FragmentShader.Names.Contains("gl_FragDepth");
             vsInputs = draw.VertexShader.Globals.Where(g => g.Storage == "in").ToList();
             vsOutputs = draw.VertexShader.Globals.Where(g => g.Storage == "out").ToList();
             fsInputs = draw.FragmentShader.Globals.Where(g => g.Storage == "in").ToList();
@@ -305,7 +314,10 @@ public static partial class Rasterizer
             }
             fs.Globals["gl_FragCoord"] = fragCoord;
             fs.Globals["gl_FrontFacing"] = ShaderValue.Scalar(front ? 1 : 0);
+            // gl_FragDepth starts as the fragment's own depth (in window depth 0–1).
+            if (WritesDepth) fs.Globals["gl_FragDepth"] = ShaderValue.Scalar(fragCoord.V![2]);
             fs.Call("main", []);
+            if (WritesDepth) FragDepth = fs.Globals.TryGetValue("gl_FragDepth", out var fd) ? fd.X : fragCoord.V![2];
             if (fs.Discarded)
             {
                 ResetDiscard();
@@ -343,6 +355,12 @@ public static partial class Rasterizer
                 return null;
             }
             result ??= ShaderValue.Vec(0, 0, 0, 1);
+            if (WritesDepth)
+            {
+                // An SV_Depth output (the point shadows' distance): the fragment's depth from now on.
+                var depthField = draw.FragmentShader.FindStruct(f.ReturnType)?.Fields.FirstOrDefault(x => string.Equals(x.Semantic, "SV_Depth", StringComparison.OrdinalIgnoreCase));
+                FragDepth = depthField is not null && result.Fields?.TryGetValue(depthField.Id, out var dv) == true ? dv.X : fragCoord.V![2];
+            }
             // A struct with SV_Target0, SV_Target1 …: one colour per render target.
             if (result.Fields is not null && draw.FragmentShader.FindStruct(f.ReturnType) is { } rs)
             {
@@ -397,15 +415,17 @@ public static partial class Rasterizer
                     if (value?.Fields is null) return;
                     var outputs = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
                     double[]? clip = null;
+                    int layer = 0;
                     var outStruct = geometry.Structs.FirstOrDefault(st => st.Fields.Select(x => x.Id).ToHashSet().SetEquals(value.Fields.Keys));
                     foreach (var (k, v) in value.Fields)
                     {
                         outputs[k] = v.Clone();
                         var semantic = outStruct?.Fields.FirstOrDefault(x => x.Id == k)?.Semantic;
                         if (IsPosition(semantic)) clip = v.Padded(4);
+                        else if (string.Equals(semantic, "SV_RenderTargetArrayIndex", StringComparison.OrdinalIgnoreCase)) layer = (int)v.X;
                         else if (semantic is not null) outputs["@" + Semantic(semantic)] = outputs[k];
                     }
-                    strips[^1].Add(new ShadedVertex(clip ?? [0, 0, 0, 1], outputs));
+                    strips[^1].Add(new ShadedVertex(clip ?? [0, 0, 0, 1], outputs, null, layer));
                 };
                 gs.Call(f.Id, args);
             }
@@ -431,9 +451,11 @@ public static partial class Rasterizer
                         return;
                     }
                     var position = gs.Globals.TryGetValue("gl_Position", out var p) ? p.Padded(4) : [0, 0, 0, 1];
-                    strips[^1].Add(new ShadedVertex(position, Outputs(gs, gsOutputs)));
+                    int layer = gs.Globals.TryGetValue("gl_Layer", out var l) ? (int)l.X : 0;
+                    strips[^1].Add(new ShadedVertex(position, Outputs(gs, gsOutputs), null, layer));
                 };
                 gs.Globals["gl_Position"] = ShaderValue.Vec(0, 0, 0, 1);
+                gs.Globals["gl_Layer"] = ShaderValue.Scalar(0);
                 gs.Call("main", []);
             }
             var result = new List<(Topology, ShadedVertex[])>();

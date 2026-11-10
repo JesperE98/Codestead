@@ -34,7 +34,8 @@ public static partial class Rasterizer
         public void Changed(string? id)
         {
             if (id is null) return;
-            foreach (var key in images.Keys.Where(k => k.Item1 == id).ToList()) images.Remove(key);
+            // A layered target's layers ("id@1" … "id@5") change with it.
+            foreach (var key in images.Keys.Where(k => k.Item1 == id || k.Item1.StartsWith(id + "@", StringComparison.Ordinal)).ToList()) images.Remove(key);
         }
     }
 
@@ -63,7 +64,9 @@ public static partial class Rasterizer
             if (id is null) return window;
             if (!targets.TryGetValue(id, out var fb))
             {
-                var t = scene.Targets.GetValueOrDefault(id) ?? new RenderTarget(id);
+                // A layer of a layered target ("id@3": a cube map's face) has the target's size and format.
+                var baseId = id.Contains('@') ? id[..id.IndexOf('@')] : id;
+                var t = scene.Targets.GetValueOrDefault(baseId) ?? new RenderTarget(id);
                 int w = t.Width > 0 ? Math.Max(1, (int)Math.Round(t.Width / scale)) : width;
                 int h = t.Height > 0 ? Math.Max(1, (int)Math.Round(t.Height / scale)) : height;
                 targets[id] = fb = new Framebuffer(w, h, t.Samples, t.Float, t.ColorAttachments);
@@ -86,6 +89,9 @@ public static partial class Rasterizer
                     {
                         case ClearOp c:
                             Fb(c.Target).Clear(c.Color, c.Depth, c.Stencil);
+                            // A layered target is cleared in every layer.
+                            if (c.Target is not null && scene.Targets.GetValueOrDefault(c.Target) is { Layers: > 1 } layered)
+                                for (int l = 1; l < layered.Layers; l++) Fb(c.Target + "@" + l).Clear(c.Color, c.Depth, c.Stencil);
                             context.Changed(c.Target);
                             break;
                         case CopyOp c:
@@ -103,7 +109,9 @@ public static partial class Rasterizer
                 var fb = Fb(draw.Target);
                 try
                 {
-                    DrawOne(draw, time, fb, LogicalWidth(draw.Target) / fb.Width, yDown, zMinusOneToOne);
+                    var target = draw.Target;
+                    DrawOne(draw, time, fb, LogicalWidth(draw.Target) / fb.Width, yDown, zMinusOneToOne,
+                        layer => layer <= 0 || target is null || scene.Targets.GetValueOrDefault(target) is not { Layers: > 1 } lt || layer >= lt.Layers ? fb : Fb(target + "@" + layer));
                 }
                 catch (ShaderRuntimeException e)
                 {
@@ -136,8 +144,9 @@ public static partial class Rasterizer
 
     private static byte ToByte(double v) => (byte)Math.Round(Math.Clamp(double.IsNaN(v) ? 0 : v, 0, 1) * 255);
 
-    private static void DrawOne(DrawCall draw, double time, Framebuffer fb, double scale, bool yDown, bool zMinusOneToOne)
+    private static void DrawOne(DrawCall draw, double time, Framebuffer fb, double scale, bool yDown, bool zMinusOneToOne, Func<int, Framebuffer>? layers = null)
     {
+        var baseFb = fb;
         var stages = new Stages(draw, time, fb.Height, scale, yDown);
         for (int instance = 0; instance < Math.Max(1, draw.Instances); instance++)
         {
@@ -154,6 +163,8 @@ public static partial class Rasterizer
                 var output = stages.HasGeometry ? stages.Geometry(input) : [(KindOf(draw.Topology), input)];
                 foreach (var (kind, v) in output)
                 {
+                    // A geometry shader may send the primitive to a layer of a layered target (gl_Layer).
+                    fb = v[0].Layer != 0 && layers is not null ? layers(v[0].Layer) : baseFb;
                     switch (kind)
                     {
                         case Topology.Points:

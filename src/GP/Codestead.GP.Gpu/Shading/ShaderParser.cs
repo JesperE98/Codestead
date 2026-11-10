@@ -83,6 +83,9 @@ public sealed partial class ShaderParser
 
     private string? hlslInputPrimitive, hlslOutputPrimitive;
 
+    /// <summary>The names the code uses (ShaderProgram.Names).</summary>
+    private readonly HashSet<string> names = new(StringComparer.Ordinal);
+
     private ShaderProgram Program()
     {
         var program = new ShaderProgram();
@@ -118,6 +121,7 @@ public sealed partial class ShaderParser
         }
         program.InputPrimitive ??= hlslInputPrimitive;
         program.OutputPrimitive ??= hlslOutputPrimitive;
+        program.Names.UnionWith(names);
         return program;
     }
 
