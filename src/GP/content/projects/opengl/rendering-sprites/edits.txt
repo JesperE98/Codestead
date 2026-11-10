@@ -1,0 +1,137 @@
+=== task: sprite-shader
+--- file: sprite.vs
+--- find:
+    // TODO: pass the texture coordinates on and transform the position with projection * model
+    gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+--- replace:
+    TexCoords = vertex.zw;
+    gl_Position = projection * model * vec4(vertex.xy, 0.0, 1.0);
+--- file: sprite.fs
+--- find:
+    // TODO: the sprite's texture colour multiplied by spriteColor
+    color = vec4(1.0);
+--- replace:
+    color = vec4(spriteColor, 1.0) * texture(image, TexCoords);
+--- file: main.cpp
+--- find:
+    // TODO: load the sprite shader (sprite.vs, sprite.fs) as "sprite" and configure it: the sampler image on unit 0 and the orthographic projection (0..Width, Height..0)
+--- replace:
+    // load shaders
+    LoadShader("sprite.vs", "sprite.fs", nullptr, "sprite");
+    // configure shaders
+    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(game.Width),
+        static_cast<float>(game.Height), 0.0f, -1.0f, 1.0f);
+    Use(GetShader("sprite"));
+    SetInteger(GetShader("sprite"), "image", 0);
+    SetMatrix4(GetShader("sprite"), "projection", projection);
+
+=== task: sprite-renderer
+--- file: main.cpp
+--- find:
+// TODO: struct SpriteRenderer (shader, quadVAO) and the functions InitRenderData and DrawSprite
+--- replace:
+// renders textured quads (sprites) with one shader
+struct SpriteRenderer
+{
+    // render state
+    Shader       shader;
+    unsigned int quadVAO = 0;
+};
+
+// initializes and configures the quad's buffer and vertex attributes (learnopengl's SpriteRenderer constructor calls it)
+void InitRenderData(SpriteRenderer& renderer)
+{
+    // configure VAO/VBO
+    unsigned int VBO;
+    float vertices[] = {
+        // pos      // tex
+        0.0f, 1.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+
+        0.0f, 1.0f, 0.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, 1.0f,
+        1.0f, 0.0f, 1.0f, 0.0f
+    };
+
+    glGenVertexArrays(1, &renderer.quadVAO);
+    glGenBuffers(1, &VBO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindVertexArray(renderer.quadVAO);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
+// TODO: DrawSprite(renderer, texture, position, size, rotate, color): draw the quad with the texture, moved to position and scaled to size
+--- file: main.cpp
+--- find:
+// TODO: the sprite renderer: a global SpriteRenderer Renderer
+--- replace:
+SpriteRenderer Renderer;
+--- file: main.cpp
+--- find:
+    // TODO: set up the sprite renderer with the sprite shader
+--- replace:
+    // set render-specific controls
+    Renderer.shader = GetShader("sprite");
+    InitRenderData(Renderer);
+--- file: main.cpp
+--- find:
+    // TODO: delete the sprite renderer's quad VAO
+--- replace:
+    glDeleteVertexArrays(1, &Renderer.quadVAO);
+
+=== task: draw-sprite
+--- file: main.cpp
+--- find:
+// TODO: DrawSprite(renderer, texture, position, size, rotate, color): draw the quad with the texture, moved to position and scaled to size
+--- replace:
+// renders a defined quad textured with given sprite
+void DrawSprite(SpriteRenderer& renderer, unsigned int texture, glm::vec2 position, glm::vec2 size = glm::vec2(10.0f, 10.0f), float rotate = 0.0f, glm::vec3 color = glm::vec3(1.0f))
+{
+    // prepare transformations
+    Use(renderer.shader);
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(position, 0.0f));  // first translate (transformations are: scale happens first, then rotation, and then final translation happens; reversed order)
+
+    // TODO: rotate by rotate degrees about the quad's centre
+
+    model = glm::scale(model, glm::vec3(size, 1.0f)); // last scale
+
+    SetMatrix4(renderer.shader, "model", model);
+
+    // render textured quad
+    SetVector3f(renderer.shader, "spriteColor", color);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glBindVertexArray(renderer.quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
+--- file: main.cpp
+--- find:
+    // TODO: load the texture textures/ball.png (with alpha) as "ball"
+--- replace:
+    // load textures
+    LoadTexture("textures/ball.png", true, "ball");
+--- file: main.cpp
+--- find:
+    // TODO: draw the ball sprite at (200, 200), size (300, 400), rotated 45 degrees, coloured green
+--- replace:
+    DrawSprite(Renderer, GetTexture("ball").ID, glm::vec2(200.0f, 200.0f), glm::vec2(300.0f, 400.0f), 45.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+
+=== task: rotate
+--- file: main.cpp
+--- find:
+    // TODO: rotate by rotate degrees about the quad's centre
+--- replace:
+    model = glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f)); // move origin of rotation to center of quad
+    model = glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f, 0.0f, 1.0f)); // then rotate
+    model = glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f * size.y, 0.0f)); // move origin back

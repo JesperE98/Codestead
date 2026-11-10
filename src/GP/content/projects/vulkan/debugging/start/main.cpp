@@ -96,51 +96,56 @@ struct Vertex {
     }
 };
 
-// learnopengl's cube of the debugging demo: 36 vertices with position and texture coordinates, every face
-// counter-clockwise seen from outside (the face culling chapter's cube)
+// learnopengl's cube of the debugging demo: 36 vertices with position and texture coordinates
 const std::vector<Vertex> vertices = {
-    // back face
-    {{-0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f}}, // bottom-left
-    {{ 0.5f,  0.5f, -0.5f}, { 1.0f,  1.0f}}, // top-right
-    {{ 0.5f, -0.5f, -0.5f}, { 1.0f,  0.0f}}, // bottom-right
-    {{ 0.5f,  0.5f, -0.5f}, { 1.0f,  1.0f}}, // top-right
-    {{-0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f}}, // bottom-left
-    {{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f}}, // top-left
-    // front face
-    {{-0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f}}, // bottom-left
-    {{ 0.5f, -0.5f,  0.5f}, { 1.0f,  0.0f}}, // bottom-right
-    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  1.0f}}, // top-right
-    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  1.0f}}, // top-right
-    {{-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f}}, // top-left
-    {{-0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f}}, // bottom-left
-    // left face
-    {{-0.5f,  0.5f,  0.5f}, {-1.0f,  0.0f}}, // top-right
-    {{-0.5f,  0.5f, -0.5f}, {-1.0f,  1.0f}}, // top-left
-    {{-0.5f, -0.5f, -0.5f}, {-0.0f,  1.0f}}, // bottom-left
-    {{-0.5f, -0.5f, -0.5f}, {-0.0f,  1.0f}}, // bottom-left
-    {{-0.5f, -0.5f,  0.5f}, {-0.0f,  0.0f}}, // bottom-right
-    {{-0.5f,  0.5f,  0.5f}, {-1.0f,  0.0f}}, // top-right
-    // right face
-    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f}}, // top-left
-    {{ 0.5f, -0.5f, -0.5f}, { 0.0f,  1.0f}}, // bottom-right
-    {{ 0.5f,  0.5f, -0.5f}, { 1.0f,  1.0f}}, // top-right
-    {{ 0.5f, -0.5f, -0.5f}, { 0.0f,  1.0f}}, // bottom-right
-    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f}}, // top-left
-    {{ 0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f}}, // bottom-left
-    // bottom face
-    {{-0.5f, -0.5f, -0.5f}, { 0.0f,  1.0f}}, // top-right
-    {{ 0.5f, -0.5f, -0.5f}, { 1.0f,  1.0f}}, // top-left
-    {{ 0.5f, -0.5f,  0.5f}, { 1.0f,  0.0f}}, // bottom-left
-    {{ 0.5f, -0.5f,  0.5f}, { 1.0f,  0.0f}}, // bottom-left
-    {{-0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f}}, // bottom-right
-    {{-0.5f, -0.5f, -0.5f}, { 0.0f,  1.0f}}, // top-right
-    // top face
-    {{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f}}, // top-left
-    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f}}, // bottom-right
-    {{ 0.5f,  0.5f, -0.5f}, { 1.0f,  1.0f}}, // top-right
-    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f}}, // bottom-right
-    {{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f}}, // top-left
-    {{-0.5f,  0.5f,  0.5f}, { 0.0f,  0.0f}} // bottom-left
+    // every triangle is counter-clockwise when you look at its face from outside the cube
+    // back face (z = -0.5)
+    {{-0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, { 1.0f,  1.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, { 1.0f,  0.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, { 1.0f,  1.0f}},
+    {{-0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f}},
+    {{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f}},
+
+    // front face (z = 0.5)
+    {{-0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, { 1.0f,  0.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  1.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  1.0f}},
+    {{-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f}},
+    {{-0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f}},
+
+    // left face (x = -0.5)
+    {{-0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f}},
+    {{-0.5f,  0.5f, -0.5f}, { 1.0f,  1.0f}},
+    {{-0.5f, -0.5f, -0.5f}, { 0.0f,  1.0f}},
+    {{-0.5f, -0.5f, -0.5f}, { 0.0f,  1.0f}},
+    {{-0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f}},
+    {{-0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f}},
+
+    // right face (x = 0.5)
+    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, { 0.0f,  1.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, { 1.0f,  1.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, { 0.0f,  1.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f}},
+
+    // bottom face (y = -0.5)
+    {{-0.5f, -0.5f, -0.5f}, { 0.0f,  1.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, { 1.0f,  1.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, { 1.0f,  0.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, { 1.0f,  0.0f}},
+    {{-0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, { 0.0f,  1.0f}},
+
+    // top face (y = 0.5)
+    {{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, { 1.0f,  1.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f}},
+    {{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f}},
+    {{-0.5f,  0.5f,  0.5f}, { 0.0f,  0.0f}}
 };
 
 // The same layout as the push constant block in the vertex shader: the model matrix of one draw.
@@ -813,6 +818,9 @@ private:
     // learnopengl's loadTexture: an image file -> a texture image (device local, ready for sampling) and its view
     void loadTexture(const char* path, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView) {
         int texWidth, texHeight, texChannels;
+        // learnopengl's demo flips the image so that v = 0 is its bottom row; the same here, so the cube's texture
+        // coordinates are the same as in OpenGL
+        stbi_set_flip_vertically_on_load(true);
         stbi_uc* pixels = stbi_load(path, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 
         if (!pixels) {
@@ -1205,7 +1213,7 @@ private:
 
         // one clear value per attachment: the colour, and the depth 1.0 (the far plane)
         std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        clearValues[0].color = {{0.2f, 0.3f, 0.3f, 1.0f}};
         clearValues[1].depthStencil = {1.0f, 0};
 
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
@@ -1333,7 +1341,7 @@ private:
         vkQueuePresentKHR(presentQueue, &presentInfo);
     }
 
-    // TODO: setObjectName – give a Vulkan object a name for the validation layer's messages
+    // TODO: setObjectName: give a Vulkan object a name for the validation layer's messages
 
     VkShaderModule createShaderModule(const std::vector<char>& code) {
         VkShaderModuleCreateInfo createInfo{};

@@ -21,7 +21,7 @@ public sealed partial class ShaderRunner
                 if (owner.Iterator is { } iter && m.Field is "first" or "second")
                 {
                     var cur = iter.Current ?? throw new ShaderRuntimeException("the iterator is at the end of the map", m.Line);
-                    return m.Field == "first" ? ShaderValue.Scalar(cur.Key) : cur.Value;
+                    return m.Field == "first" ? ShaderValue.FromMapKey(cur.Key) : cur.Value;
                 }
                 if (owner.Fields is not null)
                     return owner.Fields.TryGetValue(m.Field, out var f) ? f : throw new ShaderRuntimeException($"no member named '{m.Field}'", m.Line);
@@ -45,7 +45,12 @@ public sealed partial class ShaderRunner
             {
                 var owner = Eval(ix.Target);
                 if (owner.Map is not null)
-                    return owner.Map.TryGetValue(Eval(ix.At).X, out var mv) ? mv : ShaderValue.Scalar(0);
+                    {
+                    // map[key] of a key not there yet: a new element (C++ inserts a default value).
+                    var mapKey = ShaderValue.MapKey(Eval(ix.At));
+                    if (owner.Map.TryGetValue(mapKey, out var mv)) return mv;
+                    return ShaderValue.Scalar(0);
+                }
                 int at = (int)Math.Floor(Eval(ix.At).X);
                 if (owner.Items is not null)
                     return at >= 0 && at < owner.Items.Length ? owner.Items[at] : throw new ShaderRuntimeException($"array index {at} is out of range", ix.Line);
@@ -85,7 +90,12 @@ public sealed partial class ShaderRunner
             case Binary b:
             {
                 // C++: stream >> x reads the next word into x.
-                if (Lenient && b.Op == ">>" && Eval(b.Left) is { } stream && IsStream(stream)) return StreamRead(stream, b.Right);
+                if (Lenient && b.Op is ">>" or "<<" && Eval(b.Left) is { } stream)
+                {
+                    if (IsStream(stream)) return b.Op == ">>" ? StreamRead(stream, b.Right) : StreamWrite(stream, Eval(b.Right));
+                    if (b.Op == "<<" && IsConsole(stream)) return ConsoleWrite(Eval(b.Right));
+                    return BinaryOp(b.Op, stream, Eval(b.Right), b.Line);
+                }
                 if (b.Op == "&&") return ShaderValue.Scalar(Truthy(Eval(b.Left)) && Truthy(Eval(b.Right)) ? 1 : 0);
                 if (b.Op == "||") return ShaderValue.Scalar(Truthy(Eval(b.Left)) || Truthy(Eval(b.Right)) ? 1 : 0);
                 return BinaryOp(b.Op, Eval(b.Left), Eval(b.Right), b.Line);

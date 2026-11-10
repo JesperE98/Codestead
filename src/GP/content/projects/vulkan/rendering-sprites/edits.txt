@@ -1,0 +1,143 @@
+=== task: sprite-shader
+--- file: shaders/sprite.vert
+--- find:
+    // TODO: pass vertex.zw on as TexCoords and transform vertex.xy by the model matrix and the projection
+--- replace:
+    TexCoords = vertex.zw;
+    // no view matrix: the view never changes (the window shows the game's 800 x 600 pixels)
+    gl_Position = ubo.projection * pc.model * vec4(vertex.xy, 0.0, 1.0);
+--- file: shaders/sprite.frag
+--- find:
+    // TODO: the colour: spriteColor times the texture's colour
+--- replace:
+    color = vec4(pc.spriteColor, 1.0) * texture(image, TexCoords);
+--- file: main.cpp
+--- find:
+        // TODO: load the sprite shader (shaders/sprite.vert.spv, shaders/sprite.frag.spv) as "sprite"
+--- replace:
+        // load shaders
+        LoadShader("shaders/sprite.vert.spv", "shaders/sprite.frag.spv", "sprite");
+--- file: main.cpp
+--- find:
+        // TODO: the orthographic projection: the game's pixels, (0, 0) at the top-left corner, y down
+--- replace:
+        // the game's coordinates: pixels from the top-left corner, y down. learnopengl writes glm::ortho(0, width,
+        // height, 0, -1, 1) because OpenGL's clip space y points up; Vulkan's points down already, so bottom = 0 and
+        // top = height here.
+        ubo.projection = glm::ortho(0.0f, static_cast<float>(Hedgerow.Width), 0.0f, static_cast<float>(Hedgerow.Height), -1.0f, 1.0f);
+=== task: sprite-renderer
+--- file: main.cpp
+--- find:
+// TODO: struct SpriteRenderer (the pipeline, its layout, the quad's vertex buffer and the command buffer being recorded) and the function DrawSprite
+--- replace:
+struct SpriteRenderer {
+    // render state
+    VkPipeline       pipeline = VK_NULL_HANDLE;
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+    VkBuffer         quadBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory   quadBufferMemory = VK_NULL_HANDLE;
+    VkCommandBuffer  commandBuffer = VK_NULL_HANDLE; // the command buffer being recorded this frame
+};
+
+// TODO: DrawSprite(renderer, texture, position, size, rotate, color): the model matrix and colour as push constants, the texture's descriptor set, the quad drawn
+--- file: main.cpp
+--- find:
+    // TODO: InitRenderData(renderer): the quad's vertex buffer (learnopengl's 6 vertices)
+--- replace:
+    // SpriteRenderer: initializes and configures the quad's buffer (learnopengl's SpriteRenderer constructor calls it)
+    void InitRenderData(SpriteRenderer& renderer) {
+        // the quad: (0, 0) is the sprite's top-left corner, (1, 1) its bottom-right, in position and texture coordinates
+        const std::vector<Vertex> vertices = {
+            // pos      // tex
+            {{0.0f, 1.0f, 0.0f, 1.0f}},
+            {{1.0f, 0.0f, 1.0f, 0.0f}},
+            {{0.0f, 0.0f, 0.0f, 0.0f}},
+
+            {{0.0f, 1.0f, 0.0f, 1.0f}},
+            {{1.0f, 1.0f, 1.0f, 1.0f}},
+            {{1.0f, 0.0f, 1.0f, 0.0f}}
+        };
+        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, renderer.quadBuffer, renderer.quadBufferMemory);
+
+        void* data;
+        vkMapMemory(device, renderer.quadBufferMemory, 0, bufferSize, 0, &data);
+            memcpy(data, vertices.data(), (size_t) bufferSize);
+        vkUnmapMemory(device, renderer.quadBufferMemory);
+    }
+--- file: main.cpp
+--- find:
+// TODO: the sprite renderer: a global SpriteRenderer Renderer
+--- replace:
+SpriteRenderer Renderer;
+--- file: main.cpp
+--- find:
+        // TODO: set up the sprite renderer with the sprite pipeline and the pipeline layout
+--- replace:
+        // set render-specific controls
+        Renderer.pipeline = GetShader("sprite");
+        Renderer.pipelineLayout = pipelineLayout;
+        InitRenderData(Renderer);
+--- file: main.cpp
+--- find:
+        // TODO: destroy the sprite renderer's quad buffer
+--- replace:
+        vkDestroyBuffer(device, Renderer.quadBuffer, nullptr);
+        vkFreeMemory(device, Renderer.quadBufferMemory, nullptr);
+--- file: main.cpp
+--- find:
+        // TODO: the game's draws go into this command buffer (Renderer.commandBuffer)
+--- replace:
+        // the game's draws go into this command buffer
+        Renderer.commandBuffer = commandBuffer;
+=== task: draw-sprite
+--- file: main.cpp
+--- find:
+// TODO: DrawSprite(renderer, texture, position, size, rotate, color): the model matrix and colour as push constants, the texture's descriptor set, the quad drawn
+--- replace:
+// renders a defined quad textured with given sprite (the texture's descriptor set)
+void DrawSprite(SpriteRenderer& renderer, VkDescriptorSet texture, glm::vec2 position, glm::vec2 size = glm::vec2(10.0f, 10.0f), float rotate = 0.0f, glm::vec3 color = glm::vec3(1.0f)) {
+    vkCmdBindPipeline(renderer.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer.pipeline);
+
+    // prepare transformations
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(position, 0.0f));  // first translate (transformations are: scale happens first, then rotation, and then final translation happens; reversed order)
+
+    // TODO: rotate the sprite by `rotate` degrees about its centre (move the origin to the centre, rotate about z, move it back)
+
+    model = glm::scale(model, glm::vec3(size, 1.0f)); // last scale
+
+    PushConstants constants{};
+    constants.model = model;
+
+    // render textured quad
+    constants.spriteColor = color;
+    vkCmdPushConstants(renderer.commandBuffer, renderer.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+
+    vkCmdBindDescriptorSets(renderer.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer.pipelineLayout, 0, 1, &texture, 0, nullptr);
+
+    VkBuffer vertexBuffers[] = {renderer.quadBuffer};
+    VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(renderer.commandBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdDraw(renderer.commandBuffer, 6, 1, 0, 0);
+}
+--- file: main.cpp
+--- find:
+        // TODO: load the texture textures/ball.png as "ball"
+--- replace:
+        // load textures
+        LoadTexture("textures/ball.png", "ball");
+--- file: main.cpp
+--- find:
+    // TODO: draw the ball sprite at (200, 200), size (300, 400), rotated 45 degrees, coloured green
+--- replace:
+    DrawSprite(Renderer, GetTexture("ball").DescriptorSet, glm::vec2(200.0f, 200.0f), glm::vec2(300.0f, 400.0f), 45.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+=== task: rotate
+--- file: main.cpp
+--- find:
+    // TODO: rotate the sprite by `rotate` degrees about its centre (move the origin to the centre, rotate about z, move it back)
+--- replace:
+    model = glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f)); // move origin of rotation to center of quad
+    model = glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f, 0.0f, 1.0f)); // then rotate
+    model = glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f * size.y, 0.0f)); // move origin back

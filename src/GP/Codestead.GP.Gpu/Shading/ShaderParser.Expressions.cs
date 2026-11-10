@@ -222,6 +222,12 @@ public sealed partial class ShaderParser
             {
                 Next();
                 var e = Expression();
+                // C++: an assignment as a value – while ((errorCode = glGetError()) != GL_NO_ERROR).
+                if (lenient && Peek.Is("="))
+                {
+                    Next();
+                    e = new Call("__assign", [e, Expression()], t.Line);
+                }
                 Expect(")");
                 return e;
             }

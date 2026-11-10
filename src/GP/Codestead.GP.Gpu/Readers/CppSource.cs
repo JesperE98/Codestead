@@ -209,6 +209,97 @@ public sealed partial class CppSource
     public string? FunctionAt(int offset) => Functions.FirstOrDefault(kv => offset >= kv.Value.Start && offset < kv.Value.End).Key;
 
     /// <summary>Does a function call another function (directly)?</summary>
+    /// <summary>A parameter of one of the program's functions: its name, whether it is a reference, its default value.</summary>
+    public sealed record Parameter(string Name, bool Ref, string? Default);
+
+    /// <summary>
+    /// The parameters of a function's definition (the one with a body), also with default values that contain calls
+    /// (glm::vec2 size = glm::vec2(10.0f, 10.0f)); null when the definition is not found.
+    /// </summary>
+    public IReadOnlyList<Parameter>? ParametersOf(string function)
+    {
+        if (parameterCache.TryGetValue(function, out var known)) return known;
+        IReadOnlyList<Parameter>? result = null;
+        if (Functions.TryGetValue(function, out var range))
+        {
+            // The header right before the body: name ( … ) [const] {
+            int brace = range.Start - 1;
+            while (brace >= 0 && Code[brace] != '{') brace--;
+            int close = brace - 1;
+            while (close >= 0 && char.IsWhiteSpace(Code[close])) close--;
+            if (close >= 5 && Code[(close - 4)..(close + 1)] == "const") close -= 5;
+            while (close >= 0 && char.IsWhiteSpace(Code[close])) close--;
+            int open = close >= 0 && Code[close] == ')' ? MatchOpenBracket(Code, close) : -1;
+            if (open >= 0)
+                result = SplitArgs(Code[(open + 1)..close]).Select(p => p.Trim()).Where(p => p is not ("" or "void")).Select(p =>
+                {
+                    int eq = TopLevelEquals(p);
+                    var decl = eq >= 0 ? p[..eq].Trim() : p;
+                    var name = Regex.Match(decl, @"(\w+)\s*(?:\[\s*\])?$").Groups[1].Value;
+                    return new Parameter(name, decl.Contains('&') && !decl.Contains("&&"), eq >= 0 ? p[(eq + 1)..].Trim() : null);
+                }).ToList();
+        }
+        return parameterCache[function] = result;
+    }
+
+    private readonly Dictionary<string, IReadOnlyList<Parameter>?> parameterCache = new(StringComparer.Ordinal);
+
+    private static int TopLevelEquals(string s)
+    {
+        int depth = 0;
+        for (int i = 0; i < s.Length; i++)
+        {
+            char c = s[i];
+            if (c is '(' or '[' or '{' or '<') depth++;
+            else if (c is ')' or ']' or '}' or '>') depth--;
+            else if (c == '=' && depth == 0 && (i + 1 >= s.Length || s[i + 1] != '=')) return i;
+        }
+        return -1;
+    }
+
+    /// <summary>The '(' that matches the ')' at <paramref name="close"/>, or -1.</summary>
+    private static int MatchOpenBracket(string s, int close)
+    {
+        int depth = 0;
+        for (int i = close; i >= 0; i--)
+        {
+            if (s[i] == ')') depth++;
+            else if (s[i] == '(' && --depth == 0) return i;
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// Whether a function of the program makes graphics API calls (gl*, glfw*, vk*, a Shader class method), itself
+    /// or through the program's other functions it calls (Render → DrawLevel → DrawObject → DrawSprite).
+    /// </summary>
+    public bool CallsApi(string function)
+    {
+        if (callsApi.TryGetValue(function, out var known)) return known;
+        callsApi[function] = false; // a cycle (recursion) counts as no call until proven otherwise
+        bool result = false;
+        if (FunctionBody(function) is { } body)
+        {
+            result = ApiCallRe.IsMatch(body);
+            if (!result)
+                foreach (Match m in CalledRe.Matches(body))
+                {
+                    var callee = m.Groups[1].Value;
+                    if (callee != function && Functions.ContainsKey(callee) && CallsApi(callee))
+                    {
+                        result = true;
+                        break;
+                    }
+                }
+        }
+        return callsApi[function] = result;
+    }
+
+    private readonly Dictionary<string, bool> callsApi = new(StringComparer.Ordinal);
+    // glGetError is a query the program's own code may ask anywhere (learnopengl's glCheckError_): not a call to follow.
+    private static readonly Regex ApiCallRe = new(@"\b(?!glGetError\b)(?:gl[A-Z]\w*|glfw[A-Z]\w*|vk[A-Z]\w*)\s*\(|\.\s*(?:use|setFloat|setInt|setBool|setVec2|setVec3|setVec4|setMat2|setMat3|setMat4)\s*\(", RegexOptions.CultureInvariant);
+    private static readonly Regex CalledRe = new(@"(?<![\w.>])([A-Za-z_]\w*)\s*\(", RegexOptions.CultureInvariant);
+
     public bool Calls(string caller, string callee) => FunctionBody(caller) is { } body && CallRe(callee).IsMatch(body);
 
     /// <summary>

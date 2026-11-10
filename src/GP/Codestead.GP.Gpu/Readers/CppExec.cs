@@ -24,25 +24,42 @@ public sealed class CppExec
         {
             var fields = StructLayout.Fields(src, m.Groups[1].Value);
             if (fields is null) continue;
+            // Default member initialisers (unsigned int Width = SCREEN_WIDTH;) are what a new value starts with.
+            var defaults = StructLayout.Defaults(src, m.Groups[1].Value);
             program.Structs.Add(new Struct(m.Groups[1].Value, fields.Select(f =>
             {
                 int per = StructLayout.FloatsOf(f.Type);
-                return new Field(f.Type, f.Name, null, f.Floats > per ? f.Floats / per : 0);
+                Expr? init = null;
+                if (defaults.TryGetValue(f.Name, out var text))
+                {
+                    try
+                    {
+                        init = ShaderParser.ParseExpression(CppSource.Prepare(text));
+                    }
+                    catch (ShaderSyntaxException)
+                    {
+                    }
+                }
+                return new Field(f.Type, f.Name, null, f.Floats > per ? f.Floats / per : 0) { Default = init };
             }).ToList()));
         }
         Runner = new ShaderRunner(program)
         {
             Lenient = true,
             Time = time,
-            // Without a hook of its own (the OpenGL reader), the program's helpers that make no API calls run here.
-            Hook = hook ?? HelperFunction,
+            // Without a hook of its own (the OpenGL reader), the program's helpers that make no API calls run here. The
+            // reader can answer API queries first (glGetError, glGetShaderiv …: ApiValue).
+            Hook = (name, args) => ApiValue?.Invoke(name, args) ?? (hook ?? HelperFunction)(name, args),
             DepthZeroToOne = src.Code.Contains("GLM_FORCE_DEPTH_ZERO_TO_ONE", StringComparison.Ordinal),
         };
         Runner.Resolve = Resolve;
     }
 
+    /// <summary>The reader's answers to API queries the program's own code evaluates (null: not one of them).</summary>
+    public Func<string, IReadOnlyList<Expr>, ShaderValue?>? ApiValue { get; set; }
+
     private int helperDepth;
-    private readonly Dictionary<string, (List<(string Name, bool Ref)> Params, List<Stmt> Body)?> helpers = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, (List<(string Name, bool Ref, string? Default)> Params, List<Stmt> Body)?> helpers = new(StringComparer.Ordinal);
 
     /// <summary>
     /// A call of one of the program's own functions that makes no graphics API calls (learnopengl's ourLerp in the SSAO
@@ -55,19 +72,19 @@ public sealed class CppExec
         if (!helpers.TryGetValue(name, out var helper))
         {
             var body = src.FunctionBody(name) ?? "";
-            var header = System.Text.RegularExpressions.Regex.Match(src.Code, @"(?<![\w.>])" + System.Text.RegularExpressions.Regex.Escape(name) + @"\s*\(([^()]*)\)\s*(?:const\s*)?\{");
-            helper = !header.Success || System.Text.RegularExpressions.Regex.IsMatch(body, @"\b(?:gl[A-Z]\w*|glfw\w+|vk[A-Z]\w*)\s*\(") ? null
-                : (CppSource.SplitArgs(header.Groups[1].Value).Where(p => p.Trim() is not ("" or "void"))
-                    .Select(p => (System.Text.RegularExpressions.Regex.Match(p, @"(\w+)\s*(?:\[\s*\])?\s*(?:=[^,]*)?$").Groups[1].Value, p.Contains('&') && !p.Contains("&&"))).ToList(),
-                   ShaderParser.ParseStatementsLenient(CppSource.Prepare("{" + body + "}")));
+            var declared = src.ParametersOf(name);
+            helper = declared is null || src.CallsApi(name) ? null
+                : (declared.Select(p => (p.Name, p.Ref, p.Default)).ToList(), ShaderParser.ParseStatementsLenient(CppSource.Prepare("{" + body + "}")));
             helpers[name] = helper;
         }
         if (helper is not { } h) return null;
         var values = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
-        for (int i = 0; i < h.Params.Count && i < args.Count; i++)
+        for (int i = 0; i < h.Params.Count; i++)
         {
-            // The parameters' types are not read: numbers come in as plain numbers.
-            var arg = Runner.EvalArg(args[i]);
+            // The parameters' types are not read: numbers come in as plain numbers. A parameter not given takes its
+            // default value.
+            var arg = i < args.Count ? Runner.EvalArg(args[i]) : h.Params[i].Default is { } fallback ? Eval(fallback) : null;
+            if (arg is null) continue;
             values[h.Params[i].Name] = arg.Int ? ShaderValue.Scalar(arg.X) : arg.Clone();
         }
         helperDepth++;

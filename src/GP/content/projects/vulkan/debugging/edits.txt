@@ -27,7 +27,7 @@ VkResult SetDebugUtilsObjectNameEXT(VkInstance instance, VkDevice device, const 
 struct QueueFamilyIndices {
 --- file: main.cpp
 --- find:
-    // TODO: setObjectName – give a Vulkan object a name for the validation layer's messages
+    // TODO: setObjectName: give a Vulkan object a name for the validation layer's messages
 --- replace:
     // Gives a Vulkan object a name (any text) that the validation layer prints with the object's handle.
     void setObjectName(VkObjectType objectType, uint64_t objectHandle, const char* name) {
@@ -53,14 +53,6 @@ struct QueueFamilyIndices {
         // TODO: name the image after its file
 --- replace:
         setObjectName(VK_OBJECT_TYPE_IMAGE, (uint64_t) image, path);
-=== task: shader-output
---- file: shaders/debugging.frag
---- find:
-    outColor = texture(texSampler, fragTexCoord);
---- replace:
-    // debugging the shader's input: the texture coordinates as a colour (u in red, v in green; blue 1.0 so the cube
-    // stays visible on the black background even where u and v are 0)
-    outColor = vec4(fragTexCoord, 1.0, 1.0);
 === task: fix-attribute
 --- file: main.cpp
 --- find:
@@ -84,11 +76,11 @@ struct QueueFamilyIndices {
         attributeDescriptions[1].location = 1;
         attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
         attributeDescriptions[1].offset = offsetof(Vertex, texCoord);
-=== task: texture
+=== task: shader-output
 --- file: shaders/debugging.frag
 --- find:
-    // debugging the shader's input: the texture coordinates as a colour (u in red, v in green; blue 1.0 so the cube
-    // stays visible on the black background even where u and v are 0)
-    outColor = vec4(fragTexCoord, 1.0, 1.0);
---- replace:
     outColor = texture(texSampler, fragTexCoord);
+--- replace:
+    // debugging shader output: show the texture coordinates as a colour (u = red, v = green)
+    outColor = vec4(fragTexCoord, 0.0, 1.0);
+    // outColor = texture(texSampler, fragTexCoord);

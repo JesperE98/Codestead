@@ -1,0 +1,203 @@
+=== task: game-struct
+--- file: main.cpp
+--- find:
+// TODO: enum GameState, struct Game (State, Keys[1024], Width, Height), the global Game Hedgerow and the game functions ProcessInput, Update and Render
+--- replace:
+// Represents the current state of the game
+enum GameState {
+    GAME_ACTIVE,
+    GAME_MENU,
+    GAME_WIN
+};
+
+// Game holds all game-related state.
+// Combines all game-related data into a single struct for
+// easy access to each of the components and manageability.
+struct Game {
+    // game state
+    GameState               State = GAME_ACTIVE;
+    bool                    Keys[1024] = {};
+    unsigned int            Width = WIDTH, Height = HEIGHT;
+};
+
+// Game-related State data
+Game           Hedgerow;
+
+// game loop (Init, which loads the resources, is part of the application class)
+void ProcessInput(Game& game, float dt) {
+
+}
+
+void Update(Game& game, float dt) {
+
+}
+
+// records the frame's draws
+void Render(Game& game) {
+
+}
+--- file: main.cpp
+--- find:
+    // TODO: Init(game): initialize the game state (it will load the shaders, textures and levels)
+--- replace:
+    // initialize game state (load all shaders/textures/levels)
+    void Init(Game& game) {
+
+    }
+--- file: main.cpp
+--- find:
+        // TODO: initialize the game (Init)
+--- replace:
+        // initialize game
+        Init(Hedgerow);
+--- file: main.cpp
+--- find:
+        // TODO: record the game's draws (Render)
+--- replace:
+        Render(Hedgerow);
+=== task: delta-time
+--- file: main.cpp
+--- find:
+        while (!glfwWindowShouldClose(window)) {
+            // TODO: calculate the time since the last frame (deltaTime) before polling the events
+            glfwPollEvents();
+
+            // TODO: manage user input and update the game state (ProcessInput, Update)
+
+            // render
+            drawFrame();
+        }
+--- replace:
+        // deltaTime variables
+        float deltaTime = 0.0f;
+        float lastFrame = 0.0f;
+
+        while (!glfwWindowShouldClose(window)) {
+            // calculate delta time
+            float currentFrame = static_cast<float>(glfwGetTime());
+            deltaTime = currentFrame - lastFrame;
+            lastFrame = currentFrame;
+            glfwPollEvents();
+
+            // manage user input
+            ProcessInput(Hedgerow, deltaTime);
+
+            // update game state
+            Update(Hedgerow, deltaTime);
+
+            // render
+            drawFrame();
+        }
+=== task: key-callback
+--- file: main.cpp
+--- find:
+// TODO: key_callback(window, key, scancode, action, mode): Escape closes the window, every other key's state goes into Hedgerow.Keys
+--- replace:
+// glfw: the keyboard state goes into Hedgerow.Keys
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
+    // when a user presses the escape key, we set the WindowShouldClose property to true, closing the application
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+    if (key >= 0 && key < 1024) {
+        if (action == GLFW_PRESS)
+            Hedgerow.Keys[key] = true;
+        else if (action == GLFW_RELEASE)
+            Hedgerow.Keys[key] = false;
+    }
+}
+--- file: main.cpp
+--- find:
+        // TODO: register the key callback
+--- replace:
+        glfwSetKeyCallback(window, key_callback);
+=== task: texture
+--- file: main.cpp
+--- find:
+// TODO: struct Texture2D (the image, its memory, its view, its descriptor set, and the width and height in pixels)
+--- replace:
+struct Texture2D {
+    VkImage         Image = VK_NULL_HANDLE;
+    VkDeviceMemory  Memory = VK_NULL_HANDLE;
+    VkImageView     View = VK_NULL_HANDLE;
+    VkDescriptorSet DescriptorSet = VK_NULL_HANDLE;
+    // texture image dimensions
+    unsigned int Width = 0, Height = 0; // width and height of loaded image in pixels
+};
+--- file: main.cpp
+--- find:
+    // TODO: loadTextureFromFile(file): the image (stb_image, RGBA), its view and its descriptor set as a Texture2D
+--- replace:
+    // ResourceManager: loads a single texture from file: an image (device local, ready for sampling), its view and
+    // its descriptor set. Every texture is RGBA (VK_FORMAT_R8G8B8A8_UNORM): devices need not sample 3-channel images,
+    // and stb_image gives the pixels of an RGB file an alpha of 255 (learnopengl's `alpha` flag picks GL_RGB or
+    // GL_RGBA; here there is nothing to choose).
+    Texture2D loadTextureFromFile(const char* file) {
+        Texture2D texture;
+        // load image
+        int width, height, nrChannels;
+        stbi_uc* data = stbi_load(file, &width, &height, &nrChannels, STBI_rgb_alpha);
+        if (!data) {
+            throw std::runtime_error("failed to load texture image!");
+        }
+        texture.Width = width;
+        texture.Height = height;
+        // now generate texture
+        createTextureImage(data, width, height, texture.Image, texture.Memory);
+        // and finally free image data
+        stbi_image_free(data);
+
+        texture.View = createImageView(texture.Image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+        createDescriptorSet(texture.View, textureSampler, texture.DescriptorSet);
+        return texture;
+    }
+=== task: resource-manager
+--- file: main.cpp
+--- find:
+// TODO: the maps Shaders (name -> pipeline) and Textures (name -> Texture2D) and the functions GetShader and GetTexture
+--- replace:
+std::map<std::string, VkPipeline> Shaders;
+std::map<std::string, Texture2D>  Textures;
+
+// retrieves a stored shader (its pipeline)
+VkPipeline& GetShader(std::string name) {
+    return Shaders[name];
+}
+
+// retrieves a stored texture
+Texture2D& GetTexture(std::string name) {
+    return Textures[name];
+}
+--- file: main.cpp
+--- find:
+    // TODO: LoadShader, LoadTexture and ClearResources (the resource manager's functions that need the device)
+--- replace:
+    // ResourceManager: loads a shader's two SPIR-V files and makes the graphics pipeline that runs them
+    VkPipeline LoadShader(const char* vShaderFile, const char* fShaderFile, std::string name) {
+        createPipeline(vShaderFile, fShaderFile, Shaders[name]);
+        return Shaders[name];
+    }
+
+    // ResourceManager: loads (and generates) a texture from file
+    Texture2D LoadTexture(const char* file, std::string name) {
+        Textures[name] = loadTextureFromFile(file);
+        return Textures[name];
+    }
+
+    // ResourceManager: properly de-allocates all loaded resources
+    void ClearResources() {
+        // (properly) delete all shaders
+        for (auto iter : Shaders)
+            vkDestroyPipeline(device, iter.second, nullptr);
+        // (properly) delete all textures (their descriptor sets go with the descriptor pool)
+        for (auto iter : Textures) {
+            vkDestroyImageView(device, iter.second.View, nullptr);
+            vkDestroyImage(device, iter.second.Image, nullptr);
+            vkFreeMemory(device, iter.second.Memory, nullptr);
+        }
+    }
+--- file: main.cpp
+--- find:
+        // TODO: delete all resources as loaded using the resource manager (ClearResources)
+--- replace:
+        // delete all resources as loaded using the resource manager
+        ClearResources();

@@ -288,7 +288,7 @@ public sealed partial class ShaderRunner
             {
                 // map.insert(std::pair<K, V>(k, v)) / map.emplace(k, v): added unless the key is there already.
                 var (key, value) = c.Args.Count >= 3 ? (Eval(c.Args[1]), Eval(c.Args[2])) : Eval(c.Args[1]) is { Items: [var k, var v] } pair ? (k, v) : (null, null);
-                if (key is not null && value is not null && !into.ContainsKey(key.X)) into[key.X] = value.Clone();
+                if (key is not null && value is not null && !into.ContainsKey(ShaderValue.MapKey(key))) into[ShaderValue.MapKey(key)] = value.Clone();
                 return ShaderValue.Scalar(0);
             }
             case "is_open" or "good" when Lenient && Eval(c.Args[0]) is { } openStream && IsStream(openStream):
@@ -297,6 +297,29 @@ public sealed partial class ShaderRunner
                 return ShaderValue.Scalar(failStream.Fields![StreamOk].X == 0 ? 1 : 0);
             case "close" when Lenient:
                 return ShaderValue.Scalar(0);
+            case "clear" when Lenient && c.Args.Count == 1 && Eval(c.Args[0]) is { } cleared && (cleared.Items is not null || cleared.Map is not null):
+                // vector.clear(), map.clear(): empty.
+                if (cleared.Map is { } clearedMap) clearedMap.Clear();
+                else Store(c.Args[0], ShaderValue.Array([]));
+                return ShaderValue.Scalar(0);
+            case "empty" when Lenient && c.Args.Count == 1:
+            {
+                var target = Eval(c.Args[0]);
+                return ShaderValue.Scalar((target.Map?.Count ?? target.Items?.Length ?? target.Text?.Length ?? 0) == 0 ? 1 : 0);
+            }
+            case "rdbuf" when Lenient && Eval(c.Args[0]) is { } bufStream && IsStream(bufStream):
+                return bufStream;
+            case "str" when Lenient && Eval(c.Args[0]) is { } strStream && IsStream(strStream):
+                return ShaderValue.Str(strStream.Fields![StreamText].Text ?? "");
+            case "open" when Lenient && c.Args.Count >= 2 && Eval(c.Args[0]) is { } fileStream && IsStream(fileStream):
+            {
+                var path = Eval(c.Args[1]).Text;
+                var text = path is null ? null : ReadText?.Invoke(path);
+                fileStream.Fields![StreamText] = ShaderValue.Str(text ?? "");
+                fileStream.Fields[StreamPos] = ShaderValue.Scalar(0);
+                fileStream.Fields[StreamOk] = ShaderValue.Scalar(text is null ? 0 : 1);
+                return ShaderValue.Scalar(0);
+            }
             case "data" or "c_str":
                 return Eval(c.Args[0]);
             case "Get" or "get" when Lenient && c.Args.Count == 1:

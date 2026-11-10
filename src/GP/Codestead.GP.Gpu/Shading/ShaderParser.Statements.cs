@@ -49,6 +49,66 @@ public sealed partial class ShaderParser
         }
     }
 
+    /// <summary>
+    /// switch (e) { case A: … break; case B: case C: … default: … } as an if / else if chain: each group of labels with
+    /// its statements up to its break (a group without one falls through into the next groups' statements).
+    /// </summary>
+    private Stmt Switch(int line)
+    {
+        Expect("(");
+        var subject = Expression();
+        Expect(")");
+        Expect("{");
+        var groups = new List<(List<Expr?> Labels, List<Stmt> Body)>();
+        while (!Accept("}"))
+        {
+            if (Peek.Kind == ShaderTokenKind.End) throw new ShaderSyntaxException("expected '}' to end the switch", line);
+            if (Accept("case"))
+            {
+                var label = Expression();
+                Expect(":");
+                if (groups.Count == 0 || groups[^1].Body.Count > 0) groups.Add((new List<Expr?>(), new List<Stmt>()));
+                groups[^1].Labels.Add(label);
+                continue;
+            }
+            if (Accept("default"))
+            {
+                Expect(":");
+                if (groups.Count == 0 || groups[^1].Body.Count > 0) groups.Add((new List<Expr?>(), new List<Stmt>()));
+                groups[^1].Labels.Add(null);
+                continue;
+            }
+            if (groups.Count == 0) groups.Add((new List<Expr?>(), new List<Stmt>()));
+            groups[^1].Body.AddRange(lenient ? StatementOrSkip() : Statement());
+        }
+        // Each group's statements up to its break, falling through into the next groups when it has none.
+        List<Stmt> Effective(int g)
+        {
+            var result = new List<Stmt>();
+            for (int i = g; i < groups.Count; i++)
+            {
+                foreach (var s in groups[i].Body)
+                {
+                    if (s is Break) return result;
+                    result.Add(s);
+                }
+            }
+            return result;
+        }
+        List<Stmt>? otherwise = null;
+        int defaultGroup = groups.FindIndex(g => g.Labels.Contains(null));
+        if (defaultGroup >= 0) otherwise = Effective(defaultGroup);
+        Stmt? chain = null;
+        for (int g = groups.Count - 1; g >= 0; g--)
+        {
+            var labels = groups[g].Labels.Where(l => l is not null).Select(l => l!).ToList();
+            if (labels.Count == 0) continue;
+            Expr cond = labels.Select(l => (Expr)new ShaderAst.Binary("==", subject, l, line)).Aggregate((a, b) => new ShaderAst.Binary("||", a, b, line));
+            chain = new If(cond, Effective(g), chain is null ? otherwise : [chain], line);
+        }
+        return chain ?? new If(new Number(1, line), otherwise ?? [], null, line);
+    }
+
     private List<Stmt> BodyOrStatement() => Peek.Is("{") ? Block() : Statement();
 
     private List<Stmt> Statement()
@@ -67,6 +127,28 @@ public sealed partial class ShaderParser
             Expect(";");
             return [new Return(value, line)];
         }
+        // C++: try { … } catch (…) { … } – the try block (a simulated program does not throw).
+        if (lenient && Accept("try"))
+        {
+            var tried = Block();
+            while (Accept("catch"))
+            {
+                SkipBalanced("(", ")");
+                if (Peek.Is("{")) SkipBalanced("{", "}");
+            }
+            return tried;
+        }
+        if (Accept("break"))
+        {
+            Expect(";");
+            return [new Break(line)];
+        }
+        if (Accept("continue"))
+        {
+            Expect(";");
+            return [new Continue(line)];
+        }
+        if (Accept("switch")) return [Switch(line)];
         if (Accept("discard") || Accept("clip_discard"))
         {
             Expect(";");

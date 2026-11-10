@@ -165,6 +165,7 @@ public sealed partial class ShaderRunner
     /// </summary>
     private ShaderValue LenientDefault(string type, int arraySize)
     {
+        if (Lenient && arraySize == 0 && EmptyStream(type) is { } stream) return stream;
         if (Lenient && arraySize > 0) return ShaderValue.Array(Enumerable.Range(0, arraySize).Select(_ => LenientDefault(type, 0)).ToArray());
         var v = Default(type, arraySize);
         return Lenient && v.Text is not null ? ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)) : v;
@@ -192,9 +193,25 @@ public sealed partial class ShaderRunner
         {
             var f = st.Fields[i];
             var part = i < parts.Length ? parts[i] : null;
-            fields[f.Id] = part is null || part.V is { Length: 0 } || part.Items is { Length: 0 } ? Default(f.Type, f.ArraySize) : Coerce(f.Type, part);
+            fields[f.Id] = part is null || part.V is { Length: 0 } || part.Items is { Length: 0 } ? FieldDefault(f) : Coerce(f.Type, part);
         }
         return ShaderValue.Struct(fields);
+    }
+
+    /// <summary>A struct member's first value: its default initialiser, else its type's zero value.</summary>
+    private ShaderValue FieldDefault(Field f)
+    {
+        if (f.Default is { } init && f.ArraySize == 0)
+        {
+            try
+            {
+                return Coerce(f.Type, Eval(init)).Clone();
+            }
+            catch (ShaderRuntimeException)
+            {
+            }
+        }
+        return Default(f.Type, f.ArraySize);
     }
 
     /// <summary>A zero value of a type (struct types get their fields).</summary>
@@ -206,7 +223,7 @@ public sealed partial class ShaderRunner
         if (type is "string" or "std::string" or "wstring") return ShaderValue.Str("");
         if (arraySize > 0) return ShaderValue.Array(Enumerable.Range(0, arraySize).Select(_ => Default(type)).ToArray());
         if (program.FindStruct(type) is { } s)
-            return ShaderValue.Struct(s.Fields.ToDictionary(f => f.Id, f => Default(f.Type, f.ArraySize)));
+            return ShaderValue.Struct(s.Fields.ToDictionary(f => f.Id, FieldDefault));
         int n = ComponentCount(type);
         if (MatrixSize(type) is int m and > 0) return ShaderValue.Identity(m);
         if (n == 1 && ShaderValue.IsIntType(type)) return ShaderValue.Integer(0);
@@ -244,7 +261,11 @@ public sealed partial class ShaderRunner
         }
     }
 
-    private readonly record struct Flow(bool Returned, ShaderValue? Value, bool Discarded = false);
+    private readonly record struct Flow(bool Returned, ShaderValue? Value, bool Discarded = false, bool Broke = false, bool Continued = false)
+    {
+        /// <summary>The statements after this one in the block do not run.</summary>
+        public bool Leaves => Returned || Discarded || Broke || Continued;
+    }
 
     /// <summary>True when the last fragment was discarded.</summary>
     public bool Discarded { get; private set; }
@@ -270,7 +291,7 @@ public sealed partial class ShaderRunner
                 {
                     continue;
                 }
-                if (flow.Returned || flow.Discarded) return flow;
+                if (flow.Leaves) return flow;
             }
             return default;
         }
@@ -313,6 +334,10 @@ public sealed partial class ShaderRunner
             case Discard:
                 Discarded = true;
                 return new Flow(false, null, true);
+            case Break:
+                return new Flow(false, null, Broke: true);
+            case Continue:
+                return new Flow(false, null, Continued: true);
             case If i:
                 return Truthy(Eval(i.Condition)) ? Run(i.Then) : i.Else is not null ? Run(i.Else) : default;
             case For f:
@@ -326,6 +351,7 @@ public sealed partial class ShaderRunner
                         if (n > 1024) throw new ShaderRuntimeException("the loop runs too long for the simulator", f.Line);
                         var flow = Run(f.Body);
                         if (flow.Returned || flow.Discarded) return flow;
+                        if (flow.Broke) break;
                         if (f.Step is not null) Exec(f.Step);
                     }
                     return default;
@@ -351,6 +377,7 @@ public sealed partial class ShaderRunner
                         scopes[^1][fe.Id] = item;
                         var flow = Run(fe.Body);
                         if (flow.Returned || flow.Discarded) return flow;
+                        if (flow.Broke) break;
                     }
                     return default;
                 }
@@ -365,7 +392,10 @@ public sealed partial class ShaderRunner
     }
 
     /// <summary>True: a non-zero number; in C++ also a handle or a set of flags (a name), but not a null handle.</summary>
-    private static bool Truthy(ShaderValue v) => v.V is { Length: > 0 } ? v.V[0] != 0 : v.Text is { Length: > 0 } t && t is not ("VK_NULL_HANDLE" or "nullptr" or "NULL");
+    private static bool Truthy(ShaderValue v) => v.V is { Length: > 0 } ? v.V[0] != 0
+        // if (fstream): a stream is true while it is good.
+        : v.Fields is { } f && f.TryGetValue(StreamOk, out var ok) ? ok.X != 0
+        : v.Text is { Length: > 0 } t && t is not ("VK_NULL_HANDLE" or "nullptr" or "NULL");
 
     private ShaderValue Lookup(string id, int line)
     {
@@ -376,6 +406,8 @@ public sealed partial class ShaderRunner
         return id switch
         {
             "M_PI" or "PI" or "XM_PI" => ShaderValue.Scalar(Math.PI),
+            "cout" or "std::cout" or "cerr" or "std::cerr" when Lenient => Console,
+            "endl" or "std::endl" when Lenient => ShaderValue.Str("\n"),
             "XM_2PI" => ShaderValue.Scalar(2 * Math.PI),
             "XM_PIDIV2" => ShaderValue.Scalar(Math.PI / 2),
             "XM_PIDIV4" => ShaderValue.Scalar(Math.PI / 4),
@@ -463,7 +495,7 @@ public sealed partial class ShaderRunner
                 }
                 if (owner.Map is not null)
                 {
-                    owner.Map[atValue.X] = value.Clone();
+                    owner.Map[ShaderValue.MapKey(atValue)] = value.Clone();
                     return;
                 }
                 int at = (int)Math.Floor(atValue.X);

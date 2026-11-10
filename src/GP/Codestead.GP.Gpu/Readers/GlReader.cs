@@ -19,7 +19,6 @@ public sealed partial class GlReader
     private readonly List<DrawCall> setupDraws = new();
     private readonly List<StbImage> images;
     private int statementOffset;
-    private int textureCount;
 
     private readonly CppExec env;
 
@@ -33,6 +32,9 @@ public sealed partial class GlReader
         // std::ifstream reads the project's files (a game's levels), FreeType its fonts.
         env.Runner.ReadText = project.Find;
         env.Runner.ReadBytes = project.FindAsset;
+        // What the program prints (std::cout) is its output; its own code's API queries are answered here.
+        env.Runner.Output = scene.Log.Add;
+        env.ApiValue = ApiValue;
     }
 
     /// <summary>What the program does when its clock reads <paramref name="time"/> seconds.</summary>
@@ -46,7 +48,7 @@ public sealed partial class GlReader
     private List<double>? Numbers(string expr) => env.Numbers(expr) ?? src.Numbers(expr, env.Runner.Time);
 
     private static readonly Regex CallStart = new(@"(?<![\w.>])(?<name>gl[A-Z]\w*|glfw[A-Z]\w*|gladLoadGL(?:Loader)?|memcpy)\s*\(|(?<obj>[A-Za-z_]\w*)\s*\.\s*(?<method>use|setFloat|setInt|setBool|setVec2|setVec3|setVec4|setMat2|setMat3|setMat4|Draw)\s*\(", RegexOptions.CultureInvariant);
-    private static readonly Regex AssignRe = new(@"^(?:[A-Za-z_][\w:<>]*(?:\s*[*&]+\s*|\s+))*(?<lhs>[A-Za-z_]\w*(?:\[\d+\])?)\s*=\s*(?<rhs>[\s\S]+)$", RegexOptions.CultureInvariant);
+    private static readonly Regex AssignRe = new(@"^(?:[A-Za-z_][\w:<>]*(?:\s*[*&]+\s*|\s+))*(?<lhs>[A-Za-z_]\w*(?:(?:\.|->)\w+|\[[^\]=]*\])*)\s*=(?!=)\s*(?<rhs>[\s\S]+)$", RegexOptions.CultureInvariant);
     private static readonly Regex ModelRe = new(@"^Model\s+(?<name>\w+)\s*\(\s*""(?<path>[^""]+)""", RegexOptions.CultureInvariant);
     private readonly Dictionary<string, (Models.ObjModel Model, string Path)> models = new(StringComparer.Ordinal);
 
@@ -86,13 +88,16 @@ public sealed partial class GlReader
     /// <summary>Runs a function of the program with its arguments; returns the name of the variable it returns.</summary>
     private string? Inline(string fn, IReadOnlyList<string> args)
     {
-        var header = Regex.Match(src.Code, @"(?<![\w.>])" + Regex.Escape(fn) + @"\s*\(([^()]*)\)\s*\{");
-        var parameters = header.Success
-            ? CppSource.SplitArgs(header.Groups[1].Value).Select(p => Regex.Match(p, @"(\w+)\s*$").Groups[1].Value).ToList()
-            : [];
+        var declared = src.ParametersOf(fn) ?? [];
+        var parameters = declared.Select(p => p.Name).ToList();
         var values = args.Select(a => Eval(a)).ToList();
-        for (int i = 0; i < parameters.Count && i < values.Count; i++)
-            if (values[i] is { } v) env.Runner.Globals[parameters[i]] = v;
+        for (int i = 0; i < parameters.Count; i++)
+        {
+            // A parameter not given takes its default value (DrawSprite(…, float rotate = 0.0f, glm::vec3 color = …)).
+            var v = i < values.Count ? values[i] : declared[i].Default is { } fallback ? Eval(fallback) : null;
+            // By value: a copy (a struct changed in the function stays as it was for the caller).
+            if (v is not null) env.Runner.Globals[parameters[i]] = declared[i].Ref ? v : v.Clone();
+        }
         // A parameter that receives a Shader or Model (renderScene(simpleDepthShader) with `const Shader& shader`)
         // names the caller's object while the function runs.
         var aliases = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -116,6 +121,74 @@ public sealed partial class GlReader
             inlineDepth--;
             inlineReturn = saved;
             aliasStack.RemoveAt(aliasStack.Count - 1);
+        }
+    }
+
+    /// <summary>
+    /// After a followed function returned an expression: when the statement assigns or declares with that call as its
+    /// value, the target gets the expression's value now (a struct returned by value is copied).
+    /// </summary>
+    private void PassReturnValue(string statement, string fn, string returned)
+    {
+        List<ShaderAst.Stmt> parsed;
+        try
+        {
+            parsed = ShaderParser.ParseStatementsLenient(CppSource.Prepare(statement + ";"));
+        }
+        catch (ShaderSyntaxException)
+        {
+            return;
+        }
+        ShaderAst.Expr? target = parsed.FirstOrDefault() switch
+        {
+            ShaderAst.Assign { Op: "=", Value: ShaderAst.Call c } a when c.Function == fn => a.Target,
+            ShaderAst.Declare { Value: ShaderAst.Call c } d when c.Function == fn => new ShaderAst.Name(d.Id, 0),
+            _ => null,
+        };
+        if (target is null || env.Eval(returned) is not { } value) return;
+        try
+        {
+            env.Runner.Assign(target, value.Clone());
+        }
+        catch (ShaderRuntimeException)
+        {
+        }
+    }
+
+    /// <summary>Images loaded while the program ran, by the name their variable now holds ("stbi#2").</summary>
+    private readonly Dictionary<string, StbImage> loadedImages = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// stbi_load(…) has just run: the image it loaded (its path worked out now, when it is a helper's parameter) is
+    /// remembered under a name of its own, which its variable holds – so glTexImage2D finds it in any function it is
+    /// passed to (Generate(texture, width, height, data)).
+    /// </summary>
+    private void RememberImage(CppStatement st)
+    {
+        var load = images.FirstOrDefault(i => i.Offset >= st.Offset && i.Offset < st.Offset + st.Text.Length + 1 && i.Variable is not null);
+        if (load is null) return;
+        if (load.Image is null && load.File == "" && Eval(load.Arg)?.Text is { } path)
+        {
+            load = load with { File = path, Image = StbImage.Load(project, path, load.Flip, load.Wanted) };
+            if (load.Image is null) scene.Notes.Add(SimNote.Error("textureFileMissing", ("file", path)));
+        }
+        var own = $"stbi#{loadedImages.Count + 1}";
+        loadedImages[own] = load;
+        try
+        {
+            env.Runner.Assign(new ShaderAst.Name(load.Variable!, 0), ShaderValue.Str(own));
+            // The size stb_image reports through its out-parameters (&width, &height, &nrChannels).
+            if (load.Image is { } img && Regex.Match(st.Text, @"stbi_loadf?\s*\(([^;]*)\)") is { Success: true } call && CppSource.SplitArgs(call.Groups[1].Value) is { Count: >= 4 } a)
+            {
+                foreach (var (arg, value) in new[] { (a[1], img.Width), (a[2], img.Height), (a[3], img.Channels) })
+                    if (Regex.IsMatch(arg.Trim(), @"^&\s*[A-Za-z_][\w.]*$")) env.Runner.Assign(ShaderParser.ParseExpression(arg.Trim()[1..].Trim()), ShaderValue.Integer(value));
+            }
+        }
+        catch (ShaderRuntimeException)
+        {
+        }
+        catch (ShaderSyntaxException)
+        {
         }
     }
 
@@ -234,22 +307,26 @@ public sealed partial class GlReader
             }
             return;
         }
-        var text = st.Text;
+        var text = ExpandMacros(st.Text, src.LineAt(st.Offset));
         statementOffset = st.Offset;
         // The program's own variables (GL calls do nothing here; they are followed below).
         env.Run(text + ";");
-        if (inlineReturn is not null && Regex.Match(text, @"^return\s+(\w+)$") is { Success: true } ret) inlineReturn[0] = ret.Groups[1].Value;
+        if (text.Contains("stbi_load", StringComparison.Ordinal)) RememberImage(st);
+        if (inlineReturn is not null && Regex.Match(text, @"^return\s+([\s\S]+)$") is { Success: true } ret) inlineReturn[0] = ret.Groups[1].Value.Trim();
         // The program's own functions that make GL calls (learnopengl's loadTexture): followed as if written here.
         foreach (Match call in Regex.Matches(text, @"(?<![\w.>])(\w+)\s*\("))
         {
             var fn = call.Groups[1].Value;
-            if (fn == "main" || inlineDepth > 6 || !src.Functions.ContainsKey(fn) || src.FunctionBody(fn) is not { } body || !Regex.IsMatch(body, @"\bgl[A-Z]\w*\s*\(")) continue;
+            if (fn == "main" || inlineDepth > 8 || !src.Functions.ContainsKey(fn) || !src.CallsApi(fn)) continue;
             int open = call.Index + call.Length - 1;
             int close = CppSource.MatchBracket(text, open);
             if (close < 0) continue;
             var returned = Inline(fn, CppSource.SplitArgs(text[(open + 1)..close]));
             var lhsMatch = AssignRe.Match(text);
-            if (returned is not null && lhsMatch.Success) Alias(lhsMatch.Groups["lhs"].Value, returned);
+            if (returned is not null && lhsMatch.Success && Regex.IsMatch(returned, @"^\w+$")) Alias(lhsMatch.Groups["lhs"].Value, returned);
+            // The value it returns reaches the caller (Shaders[name] = loadShaderFromFile(…); Shader s = Compile(…)):
+            // the C++ above ran before the function was followed.
+            if (returned is not null) PassReturnValue(text, fn, returned);
         }
         statementOffset = st.Offset;
         var shaderClass = ShaderClassRe.Match(text);

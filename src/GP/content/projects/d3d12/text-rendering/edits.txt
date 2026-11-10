@@ -1,0 +1,287 @@
+=== task: freetype
+--- file: main.cpp
+--- find:
+#include "d3dx12.h"
+
+// TODO: include FreeType (ft2build.h and FT_FREETYPE_H)
+--- replace:
+#include "d3dx12.h"
+
+// FreeType loads fonts and renders their glyphs into bitmaps.
+#include <ft2build.h>
+#include FT_FREETYPE_H
+--- file: main.cpp
+--- find:
+// The libraries to link: d3d12.lib, dxgi.lib and d3dcompiler.lib (Visual Studio reads these lines).
+#if defined(_MSC_VER)
+#pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3dcompiler.lib")
+--- replace:
+// The libraries to link: d3d12.lib, dxgi.lib, d3dcompiler.lib and FreeType's freetype.lib
+// (Visual Studio reads these lines).
+#if defined(_MSC_VER)
+#pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3dcompiler.lib")
+#pragma comment(lib, "freetype.lib")
+--- file: main.cpp
+--- find:
+    // TODO: initialise FreeType, load fonts/Inter-Bold.otf as a face and set its size to 48 pixels
+--- replace:
+    // FreeType
+    // --------
+    FT_Library ft;
+    // All functions return a value different than 0 whenever an error occurred
+    if (FT_Init_FreeType(&ft))
+    {
+        throw std::runtime_error("ERROR::FREETYPE: Could not init FreeType Library");
+    }
+
+    // load font as face
+    FT_Face face;
+    if (FT_New_Face(ft, "fonts/Inter-Bold.otf", 0, &face))
+    {
+        throw std::runtime_error("ERROR::FREETYPE: Failed to load font");
+    }
+
+    // set size to load glyphs as
+    FT_Set_Pixel_Sizes(face, 0, 48);
+--- file: main.cpp
+--- find:
+    // TODO: destroy the face and the FreeType library once the glyphs are loaded
+--- replace:
+    // destroy FreeType once we're finished
+    FT_Done_Face(face);
+    FT_Done_FreeType(ft);
+
+=== task: glyphs
+--- file: main.cpp
+--- find:
+// TODO: struct Character (AtlasPos, Size, Bearing, Advance), the map Characters from char to Character, and the atlas's size (16 x 8 cells of 64 x 64 texels)
+--- replace:
+/// Holds all state information relevant to a character as loaded using FreeType
+struct Character {
+    XMINT2       AtlasPos;  // Top-left texel of the glyph's bitmap in the atlas
+    XMINT2       Size;      // Size of glyph
+    XMINT2       Bearing;   // Offset from baseline to left/top of glyph
+    unsigned int Advance;   // Horizontal offset to advance to next glyph
+};
+
+std::map<char, Character> Characters;
+
+// The glyph atlas: one texture with the bitmaps of all 128 characters, in a grid of
+// 16 x 8 cells of 64 x 64 texels (a glyph of the font at 48 pixels fits in a cell).
+const UINT AtlasCellSize = 64;
+const UINT AtlasWidth = 16 * AtlasCellSize;
+const UINT AtlasHeight = 8 * AtlasCellSize;
+--- file: main.cpp
+--- find:
+    // TODO: load the first 128 ASCII characters: render each glyph and copy its bitmap into its cell of the atlas, and keep a Character for it
+--- replace:
+    // The atlas's texels on the CPU, one byte each, all 0 (nothing covered) to begin with.
+    std::vector<unsigned char> atlas(AtlasWidth * AtlasHeight, 0);
+
+    // load first 128 characters of ASCII set
+    for (unsigned char c = 0; c < 128; c++)
+    {
+        // Load character glyph
+        if (FT_Load_Char(face, c, FT_LOAD_RENDER))
+        {
+            OutputDebugStringA("ERROR::FREETYPE: Failed to load Glyph\n");
+            continue;
+        }
+
+        // the glyph's cell in the atlas: 16 characters a row
+        int cellX = (c % 16) * AtlasCellSize;
+        int cellY = (c / 16) * AtlasCellSize;
+
+        // copy the bitmap into the cell row by row (a row of the bitmap is pitch bytes
+        // long, a row of the atlas AtlasWidth bytes)
+        for (unsigned int row = 0; row < face->glyph->bitmap.rows; row++)
+        {
+            memcpy(&atlas[(cellY + row) * AtlasWidth + cellX],
+                face->glyph->bitmap.buffer + row * face->glyph->bitmap.pitch,
+                face->glyph->bitmap.width);
+        }
+
+        // now store character for later use
+        Character character = {
+            XMINT2(cellX, cellY),
+            XMINT2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+            XMINT2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+            static_cast<unsigned int>(face->glyph->advance.x)
+        };
+        Characters.insert(std::pair<char, Character>(c, character));
+    }
+--- file: main.cpp
+--- find:
+    // TODO: create the atlas texture (DXGI_FORMAT_R8_UNORM), copy the atlas into it and create its SRV in slot 1 of the CBV/SRV heap
+--- replace:
+    // Describe and create the atlas texture in a default heap: one 8-bit channel
+    // (DXGI_FORMAT_R8_UNORM, learnopengl's GL_RED). It starts in the COPY_DEST state.
+    D3D12_RESOURCE_DESC textureDesc = {};
+    textureDesc.MipLevels = 1;
+    textureDesc.Format = DXGI_FORMAT_R8_UNORM;
+    textureDesc.Width = AtlasWidth;
+    textureDesc.Height = AtlasHeight;
+    textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    textureDesc.DepthOrArraySize = 1;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.SampleDesc.Quality = 0;
+    textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+    ThrowIfFailed(m_device->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &textureDesc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(&m_atlasTexture)));
+
+    // The upload heap: a buffer in memory the CPU can write, big enough for the
+    // texture's rows as the GPU lays them out (GetRequiredIntermediateSize).
+    const UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_atlasTexture.Get(), 0, 1);
+
+    CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+    CD3DX12_RESOURCE_DESC uploadBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+    ThrowIfFailed(m_device->CreateCommittedResource(
+        &uploadHeapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &uploadBufferDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&uploadHeap)));
+
+    // Copy the atlas to the upload heap now and schedule the copy from there to the
+    // texture. One byte per texel: no row alignment needed (learnopengl's
+    // glPixelStorei(GL_UNPACK_ALIGNMENT, 1)); UpdateSubresources lays the rows out as
+    // the GPU wants them.
+    D3D12_SUBRESOURCE_DATA textureData = {};
+    textureData.pData = atlas.data();
+    textureData.RowPitch = AtlasWidth;                         // bytes per row: 1 per texel
+    textureData.SlicePitch = textureData.RowPitch * AtlasHeight;
+
+    UpdateSubresources(m_commandList.Get(), m_atlasTexture.Get(), uploadHeap.Get(), 0, 0, 1, &textureData);
+
+    // After the copy, the texture is read by the pixel shader.
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_atlasTexture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    // Describe and create a SRV for the atlas, in slot 1 of the CBV/SRV heap.
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = textureDesc.Format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
+    m_device->CreateShaderResourceView(m_atlasTexture.Get(), &srvDesc, srvHandle);
+
+=== task: render-text
+--- file: main.cpp
+--- find:
+    // TODO: create the vertex buffer for the glyphs' quads (MaxTextVertices vertices in an upload heap, mapped for good) and its view
+--- replace:
+    // Create the vertex buffer for the glyphs' quads.
+    {
+        // The quads change every frame (RenderText writes them), so the buffer stays in an
+        // upload heap, mapped for the program's whole life, like the constant buffer.
+        const UINT vertexBufferSize = MaxTextVertices * sizeof(Vertex);
+
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_vertexBuffer)));
+
+        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+        ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pVertexDataBegin)));
+
+        // Initialize the vertex buffer view.
+        m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+        m_vertexBufferView.StrideInBytes = sizeof(Vertex);
+        m_vertexBufferView.SizeInBytes = vertexBufferSize;
+    }
+--- file: main.cpp
+--- find:
+// TODO: RenderText(): write a quad per character of a line of text into the vertex buffer and draw them
+--- replace:
+// render line of text: writes a quad per character into the vertex buffer and records one
+// draw for the line (every glyph is in the one atlas texture)
+void D3D12App::RenderText(std::string text, float x, float y, float scale, XMFLOAT3 color)
+{
+    // activate corresponding render state: the text's colour (root parameter 0)
+    TextConstants textConstants = {};
+    textConstants.textColor = color;
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(TextConstants) / 4, &textConstants, 0);
+
+    // this line's quads come after the ones already written this frame
+    UINT firstVertex = m_textVertexCount;
+
+    // iterate through all characters
+    std::string::const_iterator c;
+    for (c = text.begin(); c != text.end(); c++)
+    {
+        Character ch = Characters[*c];
+
+        float xpos = x + ch.Bearing.x * scale;
+        float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
+
+        float w = ch.Size.x * scale;
+        float h = ch.Size.y * scale;
+
+        // the glyph's rectangle in the atlas, in texture coordinates (v = 0 is the
+        // atlas's top row, where each bitmap's top row is)
+        float u0 = static_cast<float>(ch.AtlasPos.x) / AtlasWidth;
+        float v0 = static_cast<float>(ch.AtlasPos.y) / AtlasHeight;
+        float u1 = static_cast<float>(ch.AtlasPos.x + ch.Size.x) / AtlasWidth;
+        float v1 = static_cast<float>(ch.AtlasPos.y + ch.Size.y) / AtlasHeight;
+
+        // the character's quad: two triangles
+        Vertex vertices[6] = {
+            { XMFLOAT2(xpos,     ypos + h), XMFLOAT2(u0, v0) },
+            { XMFLOAT2(xpos,     ypos),     XMFLOAT2(u0, v1) },
+            { XMFLOAT2(xpos + w, ypos),     XMFLOAT2(u1, v1) },
+
+            { XMFLOAT2(xpos,     ypos + h), XMFLOAT2(u0, v0) },
+            { XMFLOAT2(xpos + w, ypos),     XMFLOAT2(u1, v1) },
+            { XMFLOAT2(xpos + w, ypos + h), XMFLOAT2(u1, v0) }
+        };
+
+        // write them into the vertex buffer after the ones before: the GPU reads the
+        // buffer only when the command list executes, so every quad needs its own place
+        // (overwriting one place, like learnopengl's glBufferSubData, would draw the
+        // last character everywhere)
+        memcpy(m_pVertexDataBegin + m_textVertexCount * sizeof(Vertex), vertices, sizeof(vertices));
+        m_textVertexCount += 6;
+
+        // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+        x += (ch.Advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
+    }
+
+    // render the line's quads
+    m_commandList->DrawInstanced(m_textVertexCount - firstVertex, 1, firstVertex, 0);
+}
+--- file: main.cpp
+--- find:
+    // TODO: render the text
+--- replace:
+    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+
+    // the text: the vertex buffer is filled from the start again every frame (the GPU
+    // has finished the previous frame: OnRender waits for it)
+    m_textVertexCount = 0;
+    RenderText("This is sample text", 25.0f, 25.0f, 1.0f, XMFLOAT3(0.5f, 0.8f, 0.2f));
+
+=== task: second-line
+--- file: main.cpp
+--- find:
+    RenderText("This is sample text", 25.0f, 25.0f, 1.0f, XMFLOAT3(0.5f, 0.8f, 0.2f));
+--- replace:
+    RenderText("This is sample text", 25.0f, 25.0f, 1.0f, XMFLOAT3(0.5f, 0.8f, 0.2f));
+    RenderText("(C) Codestead GP", 540.0f, 570.0f, 0.5f, XMFLOAT3(0.3f, 0.7f, 0.9f));

@@ -9,6 +9,7 @@ public sealed partial class GlReader
     private void Call(string name, IReadOnlyList<string> a, string? lhs, int line)
     {
         string A(int i) => i < a.Count ? a[i] : "";
+        if (DebugCall(name, a)) return;
         switch (name)
         {
             case "glfwInit":
@@ -87,39 +88,50 @@ public sealed partial class GlReader
             }
             case "glCreateShader":
                 if (lhs is not null) gl.ShaderObjects[lhs] = new GlState.ShaderObject { Stage = A(0).Contains("FRAGMENT", StringComparison.Ordinal) ? "fragment" : A(0).Contains("VERTEX", StringComparison.Ordinal) ? "vertex" : A(0).Contains("GEOMETRY", StringComparison.Ordinal) ? "geometry" : "other" };
+                if (lhs is not null) OwnName("shader", lhs, own => gl.ShaderObjects[own] = gl.ShaderObjects[lhs]);
                 return;
             case "glShaderSource":
-                if (gl.ShaderObjects.TryGetValue(Obj(A(0)), out var so))
+                if (gl.ShaderObjects.TryGetValue(ObjOf(A(0), gl.ShaderObjects.ContainsKey), out var so))
                     so.Source = Eval(Obj(A(2)))?.Text;
                 return;
             case "glCompileShader":
-                if (gl.ShaderObjects.TryGetValue(Obj(A(0)), out var cs)) cs.Compiled = true;
+                if (gl.ShaderObjects.TryGetValue(ObjOf(A(0), gl.ShaderObjects.ContainsKey), out var cs)) cs.Compiled = true;
                 return;
             case "glCreateProgram":
-                if (lhs is not null) gl.Programs[lhs] = new GlState.ProgramObject();
+                if (lhs is not null)
+                {
+                    gl.Programs[lhs] = new GlState.ProgramObject();
+                    OwnName("program", lhs, own => gl.Programs[own] = gl.Programs[lhs]);
+                }
                 return;
             case "glAttachShader":
-                if (gl.Programs.TryGetValue(Obj(A(0)), out var ap)) ap.Shaders.Add(Obj(A(1)));
+                if (gl.Programs.TryGetValue(ObjOf(A(0), gl.Programs.ContainsKey), out var ap)) ap.Shaders.Add(ObjOf(A(1), gl.ShaderObjects.ContainsKey));
                 return;
             case "glLinkProgram":
-                if (gl.Programs.TryGetValue(Obj(A(0)), out var lp)) Link(lp, line);
+                if (gl.Programs.TryGetValue(ObjOf(A(0), gl.Programs.ContainsKey), out var lp)) Link(lp, line);
                 return;
             case "glUseProgram":
-                gl.CurrentProgram = Obj(A(0)) is "0" ? null : Obj(A(0));
+                gl.CurrentProgram = Obj(A(0)) is "0" ? null : ObjOf(A(0), gl.Programs.ContainsKey);
                 return;
             case "glGenVertexArrays" or "glGenBuffers":
-                foreach (var n in Names(A(0), A(1)))
+            {
+                var generated = Names(A(0), A(1)).ToList();
+                foreach (var n in generated)
                 {
                     if (name == "glGenVertexArrays") gl.VertexArrays[n] = new GlState.VertexArray();
                     else gl.Buffers[n] = null;
                 }
+                // A buffer's data is kept by name: its own name is an alias that later writes keep in step (see Alias).
+                if (generated.Count <= 2 && name == "glGenVertexArrays") OwnName("vao", A(1), own => gl.VertexArrays[own] = gl.VertexArrays[generated[^1]]);
+                else if (generated.Count <= 2) OwnName("buffer", A(1), own => bufferAliases[own] = generated[^1]);
                 return;
+            }
             case "glBindVertexArray":
                 gl.CurrentVertexArray = Obj(A(0)) is "0" ? null : ObjOf(A(0), gl.VertexArrays.ContainsKey);
                 return;
             case "glBindBuffer":
             {
-                var b = Obj(A(1)) is "0" ? null : Obj(A(1));
+                var b = Obj(A(1)) is "0" ? null : BufferName(A(1));
                 if (A(0).Contains("GL_ELEMENT_ARRAY_BUFFER", StringComparison.Ordinal))
                 {
                     if (Vao is { } vao) vao.ElementBuffer = b;
@@ -195,24 +207,7 @@ public sealed partial class GlReader
             {
                 var names = Names(A(0), A(1)).ToList();
                 foreach (var n in names) gl.TextureObjects[n] = new GlState.TextureObject();
-                // One texture: also known by a name of its own, which the variable holds – so a texture made in a loop
-                // (a glyph per character) stays itself when the variable gets the next one, and a copy of the variable
-                // (Character{ texture, … }) still names it.
-                if (names.Count <= 2 && System.Text.RegularExpressions.Regex.IsMatch(A(1).Trim(), @"^&\s*[A-Za-z_][\w.\[\]]*$"))
-                {
-                    var own = $"texture#{++textureCount}";
-                    gl.TextureObjects[own] = gl.TextureObjects[names[^1]];
-                    try
-                    {
-                        env.Runner.Assign(ShaderParser.ParseExpression(A(1).Trim().TrimStart('&').Trim()), ShaderValue.Str(own));
-                    }
-                    catch (ShaderSyntaxException)
-                    {
-                    }
-                    catch (ShaderRuntimeException)
-                    {
-                    }
-                }
+                if (names.Count <= 2) OwnName("texture", A(1), own => gl.TextureObjects[own] = gl.TextureObjects[names[^1]]);
                 return;
             }
             case "glPixelStorei":
@@ -247,6 +242,9 @@ public sealed partial class GlReader
             }
             case "glTexImage2D":
                 TexImage(a, line);
+                return;
+            case "glGenerateMipmap" when BoundTexture is not { } noBase || noBase.Image is null && !noBase.IsCube && noBase.Framebuffer is null && noBase.Width == 0:
+                GlError(GlInvalidOperation, "GL_INVALID_OPERATION in glGenerateMipmap(zero size base image)");
                 return;
             case "glGenerateMipmap":
                 if (BoundTexture is { } mt)
@@ -350,6 +348,46 @@ public sealed partial class GlReader
         });
     }
 
+    /// <summary>
+    /// A buffer an argument names: the variable it was generated into, also through a copy of its value
+    /// (renderer.quadVBO after the renderer struct was copied).
+    /// </summary>
+    private string BufferName(string arg)
+    {
+        var name = Obj(arg);
+        if (gl.Buffers.ContainsKey(name)) return name;
+        return Eval(arg.Trim())?.Text is { } held && bufferAliases.TryGetValue(held, out var original) ? original : name;
+    }
+
+    /// <summary>A buffer's own name (buffer#3) → the variable it was generated into, which holds its data.</summary>
+    private readonly Dictionary<string, string> bufferAliases = new(StringComparer.Ordinal);
+
+    private int objectCount;
+
+    /// <summary>
+    /// An object created into a variable (glGenTextures(1, &amp;texture), shader.ID = glCreateProgram()) also gets a
+    /// name of its own, which the variable now holds: an object made in a loop (a glyph's texture per character) stays
+    /// itself when the variable gets the next one, and a copy of the value (a struct field, a map entry, a function's
+    /// return value) still names it.
+    /// </summary>
+    private void OwnName(string kind, string variable, Action<string> register)
+    {
+        var target = variable.Trim().TrimStart('&').Trim();
+        if (!System.Text.RegularExpressions.Regex.IsMatch(target, @"^[A-Za-z_][\w.\[\]>-]*$")) return;
+        var own = $"{kind}#{++objectCount}";
+        register(own);
+        try
+        {
+            env.Runner.Assign(ShaderParser.ParseExpression(CppSource.Prepare(target)), ShaderValue.Str(own));
+        }
+        catch (ShaderSyntaxException)
+        {
+        }
+        catch (ShaderRuntimeException)
+        {
+        }
+    }
+
     private GlState.TextureObject? BoundTexture =>
         gl.Units.TryGetValue(gl.ActiveUnit, out var name) && gl.TextureObjects.TryGetValue(name, out var t) ? t : null;
 
@@ -362,6 +400,13 @@ public sealed partial class GlReader
         if (BoundTexture is not { } tex || a.Count < 9)
         {
             scene.Notes.Add(SimNote.Warning("noTextureBound", ("line", line.ToString())));
+            return;
+        }
+        // Not a texture target (glTexImage2D(GL_FRAMEBUFFER, …): learnopengl's debugging mistake): an error, no upload.
+        var targetName = a[0].Trim();
+        if (System.Text.RegularExpressions.Regex.IsMatch(targetName, @"^GL_[A-Z0-9_]+$") && !System.Text.RegularExpressions.Regex.IsMatch(targetName, @"^GL_(?:PROXY_)?TEXTURE_(?:2D|1D_ARRAY|RECTANGLE|CUBE_MAP)"))
+        {
+            GlError(GlInvalidEnum, $"GL_INVALID_ENUM in glTexImage2D(target={targetName})");
             return;
         }
         // A cube map face: GL_TEXTURE_CUBE_MAP_POSITIVE_X + i.
@@ -386,7 +431,10 @@ public sealed partial class GlReader
             if (tex.Width == 0 || tex.Height == 0) tex.Image = new Textures.Image(1, 1, 4, [0, 0, 0, 0], [0, 0, 0, 0]);
             return;
         }
-        var loaded = images.LastOrDefault(i => i.Variable == data && i.Offset < statementOffset);
+        // The image the data names: one loaded while the program ran (its variable holds its name), or the last
+        // stbi_load into a variable of that name before this call.
+        var loaded = Eval(data)?.Text is { } held && loadedImages.TryGetValue(held, out var remembered) ? remembered
+            : images.LastOrDefault(i => i.Variable == data && i.Offset < statementOffset);
         var image = loaded?.Image;
         if (loaded is not null && image is null && loaded.File == "" && Eval(loaded.Arg)?.Text is { } path)
         {
@@ -484,6 +532,7 @@ public sealed partial class GlReader
         if (gl.CurrentProgram is not { } cur || !gl.Programs.TryGetValue(cur, out var program))
         {
             scene.Notes.Add(SimNote.Warning("uniformWithoutProgram", ("call", name), ("line", line.ToString())));
+            GlError(GlInvalidOperation, name.StartsWith("glUniformMatrix", StringComparison.Ordinal) ? "GL_INVALID_OPERATION in glUniformMatrix(program not linked)" : "GL_INVALID_OPERATION in glUniform(program not linked)");
             return;
         }
         var locArg = a.Count > 0 ? a[0] : "";
@@ -492,6 +541,10 @@ public sealed partial class GlReader
         {
             var m = System.Text.RegularExpressions.Regex.Match(locArg, "\"([^\"]+)\"");
             if (m.Success) uniform = m.Groups[1].Value;
+            // The name in a variable (SetMatrix4(shader, const char* name, …): glGetUniformLocation(shader.ID, name)).
+            else if (System.Text.RegularExpressions.Regex.Match(locArg, @"glGetUniformLocation\s*\((.*)\)\s*$") is { Success: true } call
+                && CppSource.SplitArgs(call.Groups[1].Value) is { Count: 2 } locationArgs && Eval(locationArgs[1].Trim())?.Text is { Length: > 0 } named)
+                uniform = named;
         }
         if (uniform is null) return;
         var values = a.Skip(1).ToList();
@@ -614,6 +667,7 @@ public sealed partial class GlReader
         {
             // glUniform* works on the program in use; the Shader class's setters call glUniform* directly.
             scene.Notes.Add(SimNote.Warning("uniformWithoutProgram", ("call", $"{obj}.{method}"), ("line", line.ToString())));
+            GlError(GlInvalidOperation, method.StartsWith("setMat", StringComparison.Ordinal) ? "GL_INVALID_OPERATION in glUniformMatrix(program not linked)" : "GL_INVALID_OPERATION in glUniform(program not linked)");
             return;
         }
         var values = a.Skip(1).ToList();

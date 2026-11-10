@@ -12,6 +12,7 @@ namespace Codestead.GP.Gpu.Readers;
 public static class CppStatements
 {
     private static readonly Regex Keyword = new(@"^(if|while|for|switch|do|else|try|catch)\b", RegexOptions.CultureInvariant);
+    // try { … } is walked as its block; its catch blocks are skipped (a simulated program does not throw).
 
     /// <summary>name, !name, name == 0, name != nullptr …: a condition on one variable.</summary>
     private static readonly Regex SimpleCondition = new(@"^\s*!?\s*[A-Za-z_]\w*\s*(?:[!=]=\s*(?:0|true|false|NULL|nullptr)\s*)?$", RegexOptions.CultureInvariant);
@@ -154,6 +155,7 @@ public static class CppStatements
                         }
                     }
                 }
+                else if (word == "try") Walk(code, bodyStart, bodyEnd, into);
                 else if (word == "for")
                 {
                     var body = new List<CppStatement>();

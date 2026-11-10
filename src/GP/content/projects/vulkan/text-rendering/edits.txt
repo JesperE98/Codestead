@@ -1,0 +1,140 @@
+=== task: freetype
+--- file: main.cpp
+--- find:
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <iostream>
+--- replace:
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+#include <iostream>
+--- file: main.cpp
+--- find:
+        // TODO: initialise FreeType, load fonts/Inter-Bold.otf as a face and set the glyph size to 48 pixels; free the
+        // face and the library at the end
+--- replace:
+        FT_Library ft;
+        // All functions return a value different than 0 whenever an error occurred
+        if (FT_Init_FreeType(&ft)) {
+            throw std::runtime_error("ERROR::FREETYPE: Could not init FreeType Library");
+        }
+
+        // load font as face
+        FT_Face face;
+        if (FT_New_Face(ft, "fonts/Inter-Bold.otf", 0, &face)) {
+            throw std::runtime_error("ERROR::FREETYPE: Failed to load font");
+        }
+
+        // set size to load glyphs as
+        FT_Set_Pixel_Sizes(face, 0, 48);
+
+        // TODO: load the first 128 characters: render each glyph with FreeType, copy its bitmap into its cell of the
+        // atlas and store a Character for it
+
+        // destroy FreeType once we're finished
+        FT_Done_Face(face);
+        FT_Done_FreeType(ft);
+=== task: glyphs
+--- file: main.cpp
+--- find:
+// TODO: the Character struct (where a glyph is in the atlas, its size, bearing and advance) and the Characters map
+--- replace:
+/// Holds all state information relevant to a character as loaded using FreeType
+struct Character {
+    glm::ivec2   AtlasOffset; // where the glyph's bitmap is in the atlas (pixels, top-left corner)
+    glm::ivec2   Size;        // Size of glyph
+    glm::ivec2   Bearing;     // Offset from baseline to left/top of glyph
+    unsigned int Advance;     // Horizontal offset to advance to next glyph
+};
+
+std::map<char, Character> Characters;
+--- file: main.cpp
+--- find:
+        // TODO: load the first 128 characters: render each glyph with FreeType, copy its bitmap into its cell of the
+        // atlas and store a Character for it
+--- replace:
+        // load first 128 characters of ASCII set
+        for (unsigned char c = 0; c < 128; c++) {
+            // Load character glyph
+            if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
+                std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+                continue;
+            }
+            // copy the glyph's bitmap (one byte per pixel, rows `pitch` bytes apart) into its cell of the atlas
+            glm::ivec2 offset((c % 16) * ATLAS_CELL, (c / 16) * ATLAS_CELL);
+            for (unsigned int row = 0; row < face->glyph->bitmap.rows; row++) {
+                memcpy(&atlasPixels[(offset.y + row) * ATLAS_WIDTH + offset.x], &face->glyph->bitmap.buffer[row * face->glyph->bitmap.pitch], face->glyph->bitmap.width);
+            }
+            // now store character for later use
+            Character character = {
+                offset,
+                glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+                glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+                static_cast<unsigned int>(face->glyph->advance.x)
+            };
+            Characters.insert(std::pair<char, Character>(c, character));
+        }
+=== task: render-text
+--- file: main.cpp
+--- find:
+    // TODO: RenderText(commandBuffer, text, x, y, scale, color): one quad and one draw per character
+--- replace:
+    // render line of text: one quad per character, its 6 vertices written into the vertex buffer after the ones
+    // already written this frame, and one draw for it
+    void RenderText(VkCommandBuffer commandBuffer, std::string text, float x, float y, float scale, glm::vec3 color) {
+        PushConstants constants{};
+        constants.textColor = color;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+
+        // iterate through all characters
+        std::string::const_iterator c;
+        for (c = text.begin(); c != text.end(); c++) {
+            Character ch = Characters[*c];
+
+            float xpos = x + ch.Bearing.x * scale;
+            float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
+
+            float w = ch.Size.x * scale;
+            float h = ch.Size.y * scale;
+            // the glyph's rectangle in the atlas (0..1); its first row (v0) is the top of the glyph
+            float u0 = ch.AtlasOffset.x / (float) ATLAS_WIDTH;
+            float v0 = ch.AtlasOffset.y / (float) ATLAS_HEIGHT;
+            float u1 = (ch.AtlasOffset.x + ch.Size.x) / (float) ATLAS_WIDTH;
+            float v1 = (ch.AtlasOffset.y + ch.Size.y) / (float) ATLAS_HEIGHT;
+            // the quad of this character
+            float vertices[6][4] = {
+                { xpos,     ypos + h,   u0, v0 },
+                { xpos,     ypos,       u0, v1 },
+                { xpos + w, ypos,       u1, v1 },
+
+                { xpos,     ypos + h,   u0, v0 },
+                { xpos + w, ypos,       u1, v1 },
+                { xpos + w, ypos + h,   u1, v0 }
+            };
+            // write it after the vertices of the characters drawn before (the GPU reads them when the frame runs)
+            memcpy((char*) vertexBufferMapped + vertexCount * sizeof(Vertex), vertices, sizeof(vertices));
+            // render quad
+            vkCmdDraw(commandBuffer, 6, 1, vertexCount, 0);
+            vertexCount += 6;
+            // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+            x += (ch.Advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
+        }
+    }
+--- file: main.cpp
+--- find:
+        // TODO: draw the text (RenderText)
+--- replace:
+        vertexCount = 0;
+        RenderText(commandBuffer, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+=== task: second-line
+--- file: main.cpp
+--- find:
+        vertexCount = 0;
+        RenderText(commandBuffer, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+--- replace:
+        vertexCount = 0;
+        RenderText(commandBuffer, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+        RenderText(commandBuffer, "(C) Codestead GP", 540.0f, 570.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));

@@ -13,7 +13,35 @@ public sealed partial class ShaderRunner
     /// <summary>C++ mode: a file of the project as bytes (a font for FreeType), or null.</summary>
     public Func<string, byte[]?>? ReadBytes { get; set; }
 
-    private const string StreamText = "__text", StreamPos = "__pos", StreamOk = "__ok";
+    private const string StreamText = "__text", StreamPos = "__pos", StreamOk = "__ok", ConsoleMark = "__console";
+
+    /// <summary>C++ mode: each line the program writes to std::cout / std::cerr.</summary>
+    public Action<string>? Output { get; set; }
+
+    private readonly System.Text.StringBuilder console = new();
+
+    private static readonly ShaderValue Console = ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { [ConsoleMark] = ShaderValue.Scalar(1) });
+
+    private static bool IsConsole(ShaderValue v) => v.Fields is { } f && f.ContainsKey(ConsoleMark);
+
+    /// <summary>std::cout &lt;&lt; x: x as C++ prints it (a float with 6 significant digits); a finished line goes out.</summary>
+    private ShaderValue ConsoleWrite(ShaderValue value)
+    {
+        string text = value.Text ?? (value.V is { Length: 1 } v
+            ? value.Int || v[0] == Math.Floor(v[0]) && Math.Abs(v[0]) < 1e15 ? ((long)v[0]).ToString(System.Globalization.CultureInfo.InvariantCulture)
+                : v[0].ToString("G6", System.Globalization.CultureInfo.InvariantCulture)
+            : value.ToString());
+        console.Append(text);
+        var all = console.ToString();
+        int nl;
+        while ((nl = all.IndexOf('\n')) >= 0)
+        {
+            Output?.Invoke(all[..nl]);
+            all = all[(nl + 1)..];
+        }
+        console.Clear().Append(all);
+        return Console;
+    }
 
     private static bool IsStream(ShaderValue v) => v.Fields is { } f && f.ContainsKey(StreamText);
 
@@ -29,6 +57,12 @@ public sealed partial class ShaderRunner
     {
         switch (name)
         {
+            case "__assign" when c.Args.Count == 2:
+            {
+                var assigned = Eval(c.Args[1]);
+                Store(c.Args[0], assigned);
+                return assigned;
+            }
             case "ifstream" or "fstream":
             {
                 // std::ifstream file(path): the project's file (a stream that fails when it does not exist).
@@ -111,6 +145,31 @@ public sealed partial class ShaderRunner
             ["y"] = ShaderValue.Integer(0),
         }),
     });
+
+    /// <summary>stream &lt;&lt; x: appends x (another stream's rest – file.rdbuf() –, a string or a number).</summary>
+    private ShaderValue StreamWrite(ShaderValue stream, ShaderValue value)
+    {
+        string text;
+        if (IsStream(value))
+        {
+            var all = value.Fields![StreamText].Text ?? "";
+            int at = Math.Min(all.Length, (int)value.Fields[StreamPos].X);
+            text = all[at..];
+            value.Fields[StreamPos] = ShaderValue.Scalar(all.Length);
+        }
+        else text = value.Text ?? value.ToString();
+        stream.Fields![StreamText] = ShaderValue.Str((stream.Fields[StreamText].Text ?? "") + text);
+        stream.Fields[StreamOk] = ShaderValue.Scalar(1);
+        return stream;
+    }
+
+    /// <summary>A stream declared without arguments (std::stringstream ss; std::ifstream file; – opened later).</summary>
+    internal static ShaderValue? EmptyStream(string type) => type switch
+    {
+        "stringstream" or "ostringstream" or "istringstream" => NewStream(""),
+        "ifstream" or "fstream" => NewStream(null),
+        _ => null,
+    };
 
     /// <summary>stream &gt;&gt; x: the next whitespace-separated word into x (as a number when x holds one); 0 at the end.</summary>
     private ShaderValue StreamRead(ShaderValue stream, Expr target)

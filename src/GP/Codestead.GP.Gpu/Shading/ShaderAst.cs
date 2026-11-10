@@ -48,6 +48,12 @@ public static class ShaderAst
 
     public sealed record Discard(int Line) : Stmt(Line);
 
+    /// <summary>break; – leaves the innermost loop.</summary>
+    public sealed record Break(int Line) : Stmt(Line);
+
+    /// <summary>continue; – the innermost loop's next iteration.</summary>
+    public sealed record Continue(int Line) : Stmt(Line);
+
     /// <summary>C++: for (const T&amp; name : container) body.</summary>
     public sealed record ForEach(string Id, Expr Container, IReadOnlyList<Stmt> Body, int Line) : Stmt(Line);
 
@@ -60,7 +66,11 @@ public static class ShaderAst
     public sealed record Function(string ReturnType, string Id, IReadOnlyList<Param> Params, string? Semantic, IReadOnlyList<Stmt> Body, int Line);
 
     /// <summary>A struct member (HLSL members can have a semantic).</summary>
-    public sealed record Field(string Type, string Id, string? Semantic, int ArraySize);
+    public sealed record Field(string Type, string Id, string? Semantic, int ArraySize)
+    {
+        /// <summary>C++: the member's default initialiser (unsigned int Width = SCREEN_WIDTH;), or null.</summary>
+        public Expr? Default { get; init; }
+    }
 
     public sealed record Struct(string Id, IReadOnlyList<Field> Fields);
 

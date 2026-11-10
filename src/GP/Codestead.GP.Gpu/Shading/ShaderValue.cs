@@ -27,6 +27,30 @@ public sealed class ShaderValue
 
     public static ShaderValue Scalar(double x) => new() { V = [x] };
 
+    // std::map keys are numbers in the runner (SortedDictionary<double, …>); a string key (std::map<std::string, Shader>)
+    // gets a number of its own, far below any key a program uses, so it can be turned back into its text (it->first).
+    private const double TextKeyBase = -1e15;
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, double> TextKeys = new(StringComparer.Ordinal);
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<double, string> KeyTexts = new();
+
+    /// <summary>A value as a std::map key: its number, or a string's own key.</summary>
+    public static double MapKey(ShaderValue key)
+    {
+        if (key.Text is not { } text) return key.X;
+        return TextKeys.GetOrAdd(text, t =>
+        {
+            lock (KeyTexts)
+            {
+                double k = TextKeyBase - KeyTexts.Count;
+                KeyTexts[k] = t;
+                return k;
+            }
+        });
+    }
+
+    /// <summary>A std::map key back as a value (it->first): a string key's text, else the number.</summary>
+    public static ShaderValue FromMapKey(double key) => KeyTexts.TryGetValue(key, out var text) ? Str(text) : Scalar(key);
+
     public static ShaderValue Integer(double x) => new() { V = [x], Int = true };
 
     /// <summary>True for the names of the integer types of GLSL, HLSL and the C++ the simulator reads.</summary>
