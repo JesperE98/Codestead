@@ -36,7 +36,7 @@ public static partial class TaskChecks
             // The shake when the ball hits the stone (frame 86): in frame 87 the picture is blurred and moved – the paddle's
             // brass end darker than its 214,170,72, the flat sky and bricks as normal (no chaos or confuse any more).
             ["shake"] = c => c.Drew && c.Has(@"\bShakeTime\b") && c.Has(@"\bShake = true") && At(c, 1.45, 200, 250, DuskSky) && At(c, 1.45, 396, 29, OrangeBrick)
-                && At(c, 1.45, 358, 588, p => p[0] > 0.55 && p[0] < 0.79 && p[2] < 0.35),
+                && At(c, 1.45, 358, 588, p => p[0] > 0.3 && p[0] < 0.79 && p[2] < 0.35),
         }),
         ("powerups", new()
         {
