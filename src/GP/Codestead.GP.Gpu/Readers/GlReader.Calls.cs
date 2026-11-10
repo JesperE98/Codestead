@@ -119,7 +119,13 @@ public sealed partial class GlReader
                 foreach (var n in generated)
                 {
                     if (name == "glGenVertexArrays") gl.VertexArrays[n] = new GlState.VertexArray();
-                    else gl.Buffers[n] = null;
+                    else
+                    {
+                        // The same variable name again (a local `unsigned int VBO;` in two functions): the buffer made before
+                        // keeps its data under a name of its own, and what refers to it (a VAO's attributes) follows.
+                        if (gl.Buffers.ContainsKey(n)) RetireBuffer(n);
+                        gl.Buffers[n] = null;
+                    }
                 }
                 // A buffer's data is kept by name: its own name is an alias that later writes keep in step (see Alias).
                 if (generated.Count <= 2 && name == "glGenVertexArrays") OwnName("vao", A(1), own => gl.VertexArrays[own] = gl.VertexArrays[generated[^1]]);
@@ -356,6 +362,25 @@ public sealed partial class GlReader
     /// A buffer an argument names: the variable it was generated into, also through a copy of its value
     /// (renderer.quadVBO after the renderer struct was copied).
     /// </summary>
+    private int retiredBuffers;
+
+    private void RetireBuffer(string name)
+    {
+        var retired = $"{name}@{++retiredBuffers}";
+        gl.Buffers[retired] = gl.Buffers[name];
+        string? Moved(string? b) => b == name ? retired : b;
+        foreach (var vao in gl.VertexArrays.Values.Distinct())
+        {
+            vao.ElementBuffer = Moved(vao.ElementBuffer);
+            foreach (var attribute in vao.Attributes.Values) attribute.Buffer = Moved(attribute.Buffer);
+        }
+        gl.UniformBuffer = Moved(gl.UniformBuffer);
+        gl.CopyReadBuffer = Moved(gl.CopyReadBuffer);
+        gl.CopyWriteBuffer = Moved(gl.CopyWriteBuffer);
+        gl.ArrayBuffer = Moved(gl.ArrayBuffer);
+        foreach (var own in bufferAliases.Where(kv => kv.Value == name).Select(kv => kv.Key).ToList()) bufferAliases[own] = retired;
+    }
+
     private string BufferName(string arg)
     {
         var name = Obj(arg);

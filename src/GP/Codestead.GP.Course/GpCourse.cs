@@ -69,6 +69,11 @@ public static class GpCourse
         ("collision-detection", "in-practice"),
         ("collision-resolution", "in-practice"),
         ("particles", "in-practice"),
+        ("postprocessing", "in-practice"),
+        ("powerups", "in-practice"),
+        ("audio", "in-practice"),
+        ("render-text", "in-practice"),
+        ("final-thoughts", "in-practice"),
     ];
 
     public static IReadOnlyList<CourseChapter> Chapters { get; } = Build();
