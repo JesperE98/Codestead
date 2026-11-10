@@ -419,6 +419,20 @@ public sealed partial class ShaderRunner
 
     private readonly HashSet<string> staticLocals = new(StringComparer.Ordinal);
 
+    private const string LambdaMark = "__lambda#";
+    private readonly List<Lambda> lambdas = new();
+
+    /// <summary>Calls a lambda value with arguments (std::remove_if's predicate).</summary>
+    private ShaderValue Invoke(ShaderValue function, IReadOnlyList<ShaderValue> args, int line)
+    {
+        if (function.Text is not { } t || !t.StartsWith(LambdaMark, StringComparison.Ordinal) || !int.TryParse(t[LambdaMark.Length..], out var index) || index >= lambdas.Count)
+            throw new ShaderRuntimeException("not a function", line);
+        var lambda = lambdas[index];
+        var parameters = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+        for (int i = 0; i < lambda.Params.Count && i < args.Count; i++) parameters[lambda.Params[i]] = args[i];
+        return RunBody(lambda.Body, parameters).Value ?? ShaderValue.Scalar(0);
+    }
+
     private bool IsVariable(string id) => scopes.Any(s => s.ContainsKey(id)) || Globals.ContainsKey(id);
 
     private ShaderValue Lookup(string id, int line)

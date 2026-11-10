@@ -112,6 +112,9 @@ public sealed partial class ShaderRunner
             }
             case Call c:
                 return CallExpr(c);
+            case Lambda lambda when Lenient:
+                lambdas.Add(lambda);
+                return ShaderValue.Str(LambdaMark + (lambdas.Count - 1));
             default:
                 throw new ShaderRuntimeException("unsupported expression", e.Line);
         }

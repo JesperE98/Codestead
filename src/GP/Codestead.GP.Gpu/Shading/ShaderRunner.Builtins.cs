@@ -347,6 +347,14 @@ public sealed partial class ShaderRunner
                 {
                     return ShaderValue.Scalar(0);
                 }
+            case "erase" when Lenient && c.Args.Count >= 2 && c.Args[1] is Call { Function: "remove_if", Args.Count: 3 } removeIf:
+            {
+                // v.erase(std::remove_if(v.begin(), v.end(), predicate), v.end()): the elements the predicate keeps.
+                var vec = Eval(c.Args[0]);
+                var predicate = Eval(removeIf.Args[2]);
+                Store(c.Args[0], ShaderValue.Array((vec.Items ?? []).Where(item => !Truthy(Invoke(predicate, [item], c.Line))).ToArray()));
+                return ShaderValue.Scalar(0);
+            }
             case "push_back" or "emplace_back" when Lenient && c.Args.Count >= 2:
             {
                 // vector.push_back(x): the variable holds a new, longer array.

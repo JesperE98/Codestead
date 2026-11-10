@@ -252,9 +252,43 @@ public sealed partial class ShaderParser
             }
             case ShaderTokenKind.Symbol when t.Is("{"):
                 return Initializer();
+            case ShaderTokenKind.Symbol when lenient && t.Is("["):
+                return LambdaExpr();
             default:
                 throw new ShaderSyntaxException(t.Kind == ShaderTokenKind.End ? "expected an expression at end of input" : $"expected an expression before '{t.Text}'", t.Line);
         }
+    }
+
+    /// <summary>C++: [captures](Type a, Type b) -> R { body } – captures and types are not needed here.</summary>
+    private Expr LambdaExpr()
+    {
+        int line = Next().Line;
+        for (int depth = 1; depth > 0 && Peek.Kind != ShaderTokenKind.End;)
+        {
+            var c = Next();
+            if (c.Is("[")) depth++;
+            else if (c.Is("]")) depth--;
+        }
+        var parameters = new List<string>();
+        if (Accept("("))
+        {
+            string? last = null;
+            for (int depth = 1; Peek.Kind != ShaderTokenKind.End;)
+            {
+                var p = Next();
+                if (p.Is("(")) depth++;
+                else if (p.Is(")") && --depth == 0) break;
+                if (depth == 1 && p.Is(","))
+                {
+                    if (last is not null) parameters.Add(last);
+                    last = null;
+                }
+                else if (p.Kind == ShaderTokenKind.Identifier) last = p.Text;
+            }
+            if (last is not null && last != "void") parameters.Add(last);
+        }
+        while (!Peek.Is("{") && Peek.Kind != ShaderTokenKind.End) Next(); // mutable, -> R
+        return new Lambda(parameters, Block(), line);
     }
 
     private static bool LooksLikeType(string id) =>

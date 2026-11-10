@@ -22,6 +22,9 @@ public static class ShaderAst
     /// <summary>f(args) – a function, a constructor (vec4, float3) or an array constructor (vec2[]).</summary>
     public sealed record Call(string Function, IReadOnlyList<Expr> Args, int Line, bool ArrayConstructor = false) : Expr(Line);
 
+    /// <summary>C++: a lambda, [](const PowerUp&amp; p) { return p.Destroyed; } – its parameters' names and its body.</summary>
+    public sealed record Lambda(IReadOnlyList<string> Params, IReadOnlyList<Stmt> Body, int Line) : Expr(Line);
+
     public sealed record Unary(string Op, Expr Operand, int Line) : Expr(Line);
 
     public sealed record Binary(string Op, Expr Left, Expr Right, int Line) : Expr(Line);
