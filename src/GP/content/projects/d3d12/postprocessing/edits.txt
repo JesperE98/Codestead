@@ -1,0 +1,409 @@
+=== task: post-shader
+--- file: post_processing.hlsl
+--- find:
+    // TODO: chaos: texture coordinates swirling with time (strength 0.3); confuse: mirrored in x and y; shake: the position wobbling with time (strength 0.01)
+    result.texCoord = texCoord;
+--- replace:
+    if (chaos)
+    {
+        float strength = 0.3f;
+        // v points down in Direct3D: minus moves the picture the way learnopengl's plus does
+        float2 pos = float2(texCoord.x + sin(time) * strength, texCoord.y - cos(time) * strength);
+        result.texCoord = pos;
+    }
+    else if (confuse)
+    {
+        result.texCoord = float2(1.0f - texCoord.x, 1.0f - texCoord.y);
+    }
+    else
+    {
+        result.texCoord = texCoord;
+    }
+    if (shake)
+    {
+        float strength = 0.01f;
+        result.position.x += cos(time * 10.0f) * strength;
+        result.position.y += cos(time * 15.0f) * strength;
+    }
+--- file: post_processing.hlsl
+--- find:
+    // TODO: chaos: the edge kernel over 9 samples; confuse: the inverted colour; shake: the blur kernel over 9 samples
+    return float4(scene.Sample(wrapSampler, input.texCoord).rgb, 1.0f);
+--- replace:
+    float4 color = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    float3 samples[9];    // learnopengl's "sample" is a keyword in HLSL
+    // sample from texture offsets if using convolution matrix
+    if (chaos || shake)
+        for (int i = 0; i < 9; i++)
+            samples[i] = scene.Sample(wrapSampler, input.texCoord + offsets[i]).rgb;
+
+    // process effects
+    if (chaos)
+    {
+        for (int i = 0; i < 9; i++)
+            color += float4(samples[i] * edge_kernel[i], 0.0f);
+        color.a = 1.0f;
+    }
+    else if (confuse)
+    {
+        color = float4(1.0f - scene.Sample(wrapSampler, input.texCoord).rgb, 1.0f);
+    }
+    else if (shake)
+    {
+        for (int i = 0; i < 9; i++)
+            color += float4(samples[i] * blur_kernel[i], 0.0f);
+        color.a = 1.0f;
+    }
+    else
+    {
+        // alpha 1: learnopengl's texture is GL_RGB (alpha 1); this one has alpha, which the
+        // sprites' blending lowers at their soft edges - the quad would blend them with black
+        color = float4(scene.Sample(wrapSampler, input.texCoord).rgb, 1.0f);
+    }
+    return color;
+--- file: main.cpp
+--- find:
+    // TODO: load the postprocessing shader (post_processing.hlsl) as "postprocessing"
+--- replace:
+    LoadShader(L"post_processing.hlsl", "postprocessing");
+
+=== task: post-processor
+--- file: main.cpp
+--- find:
+// TODO: struct PostProcessor (shader, texture, size, the options Confuse, Chaos, Shake, the render targets) and the functions InitRenderData and InitPostProcessor
+--- replace:
+// PostProcessor hosts all PostProcessing effects for the Hedgerow
+// Game. It renders the game on a textured quad after which one can
+// enable specific effects by enabling either the Confuse, Chaos or
+// Shake boolean.
+// It is required to call BeginRender() before rendering the game
+// and EndRender() after rendering the game for the struct to work.
+struct PostProcessor
+{
+    // state
+    Shader                       PostProcessingShader;
+    Texture2D                    Texture;
+    unsigned int                 Width = 0, Height = 0;
+    // options
+    bool                         Confuse = false, Chaos = false, Shake = false;
+    // render state
+    ComPtr<ID3D12Resource>       MSRenderTarget;  // the multisampled colour buffer the game is drawn into (learnopengl's MSFBO with its RBO)
+    ComPtr<ID3D12DescriptorHeap> RtvHeap;         // its render target view
+    ComPtr<ID3D12Resource>       quadVertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW     quadVertexBufferView = {};
+};
+
+// initialize quad for rendering postprocessing texture
+void InitRenderData(PostProcessor& effects)
+{
+    // the screen quad: the corners in normalized device coordinates (-1 to 1, y up) and the
+    // texture coordinates (v = 0 is the texture's top row, which is the window's top row)
+    float vertices[] = {
+        // pos        // tex
+        -1.0f, -1.0f, 0.0f, 1.0f,
+         1.0f,  1.0f, 1.0f, 0.0f,
+        -1.0f,  1.0f, 0.0f, 0.0f,
+
+        -1.0f, -1.0f, 0.0f, 1.0f,
+         1.0f, -1.0f, 1.0f, 1.0f,
+         1.0f,  1.0f, 1.0f, 0.0f
+    };
+
+    // an upload heap, like the sprites' quad
+    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertices));
+    ThrowIfFailed(Graphics.Device->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &bufferDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&effects.quadVertexBuffer)));
+
+    UINT8* pVertexDataBegin = nullptr;
+    CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+    ThrowIfFailed(effects.quadVertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+    memcpy(pVertexDataBegin, vertices, sizeof(vertices));
+    effects.quadVertexBuffer->Unmap(0, nullptr);
+
+    effects.quadVertexBufferView.BufferLocation = effects.quadVertexBuffer->GetGPUVirtualAddress();
+    effects.quadVertexBufferView.StrideInBytes = 4 * sizeof(float);
+    effects.quadVertexBufferView.SizeInBytes = sizeof(vertices);
+}
+
+// creates the render targets and the quad (learnopengl's PostProcessor constructor)
+void InitPostProcessor(PostProcessor& effects, Shader shader, unsigned int width, unsigned int height)
+{
+    effects.PostProcessingShader = shader;
+    effects.Width = width;
+    effects.Height = height;
+    // initialize the multisampled colour buffer: a texture with 4 samples per pixel that can
+    // be a render target (don't need a depth/stencil buffer). Every Direct3D 11-class GPU can
+    // draw 4 samples per pixel in this format; check it anyway.
+    D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS qualityLevels = {};
+    qualityLevels.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    qualityLevels.SampleCount = 4;
+    qualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
+    ThrowIfFailed(Graphics.Device->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &qualityLevels, sizeof(qualityLevels)));
+    if (qualityLevels.NumQualityLevels == 0)
+        throw std::runtime_error("ERROR::POSTPROCESSOR: Failed to initialize the multisampled render target");
+    const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };    // the colour BeginRender clears it to (fastest)
+    CD3DX12_CLEAR_VALUE clearValue(DXGI_FORMAT_R8G8B8A8_UNORM, clearColor);
+    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+    CD3DX12_RESOURCE_DESC msDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM, width, height, 1, 1, 4, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+    ThrowIfFailed(Graphics.Device->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &msDesc,
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        &clearValue,
+        IID_PPV_ARGS(&effects.MSRenderTarget)));
+    // its render target view, in a small RTV heap of its own
+    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+    rtvHeapDesc.NumDescriptors = 1;
+    rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+    rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    ThrowIfFailed(Graphics.Device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&effects.RtvHeap)));
+    Graphics.Device->CreateRenderTargetView(effects.MSRenderTarget.Get(), nullptr, effects.RtvHeap->GetCPUDescriptorHandleForHeapStart());
+    // also initialize the texture to resolve the multisampled colour buffer into; used for
+    // shader operations (for postprocessing effects): one sample per pixel, its view in the
+    // next free slot of the CBV/SRV heap
+    effects.Texture.ID = Graphics.SrvCount++;
+    effects.Texture.Width = width;
+    effects.Texture.Height = height;
+    CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(effects.Texture.Internal_Format, width, height, 1, 1);
+    ThrowIfFailed(Graphics.Device->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &textureDesc,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        nullptr,
+        IID_PPV_ARGS(&effects.Texture.Resource)));
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = effects.Texture.Internal_Format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(Graphics.SrvHeap->GetCPUDescriptorHandleForHeapStart(), effects.Texture.ID, Graphics.SrvDescriptorSize);
+    Graphics.Device->CreateShaderResourceView(effects.Texture.Resource.Get(), &srvDesc, srvHandle);
+    // initialize render data (the kernels are constants in post_processing.hlsl)
+    InitRenderData(effects);
+}
+--- file: main.cpp
+--- find:
+// TODO: the postprocessor: a global PostProcessor Effects
+--- replace:
+PostProcessor  Effects;
+--- file: main.cpp
+--- find:
+    // TODO: set up the postprocessor with the postprocessing shader and the window's size
+--- replace:
+    // set up the postprocessor (learnopengl's PostProcessor constructor)
+    InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height);
+--- file: main.cpp
+--- find:
+    Particles = ParticleGenerator();
+--- replace:
+    Particles = ParticleGenerator();
+    Effects = PostProcessor();
+
+=== task: render-to-texture
+--- file: main.cpp
+--- find:
+    UINT                       SrvCount = 1;               // the descriptors in use (slot 0: the CBV)
+--- replace:
+    UINT                       SrvCount = 1;               // the descriptors in use (slot 0: the CBV)
+    D3D12_CPU_DESCRIPTOR_HANDLE BackBufferRtv = {};        // this frame's back buffer (the window's render target)
+--- file: main.cpp
+--- find:
+// INV_SRC_ALPHA mixes by alpha (GL_ONE_MINUS_SRC_ALPHA), ONE adds the colour (GL_ONE)
+// TODO: a parameter sampleCount (default 1), the samples per pixel of the render target, passed on by loadShaderFromFile and LoadShader
+void Compile(Shader& shader, ID3DBlob* vertexShader, ID3DBlob* pixelShader, D3D12_BLEND destBlend = D3D12_BLEND_INV_SRC_ALPHA)
+--- replace:
+// INV_SRC_ALPHA mixes by alpha (GL_ONE_MINUS_SRC_ALPHA), ONE adds the colour (GL_ONE).
+// sampleCount: the samples per pixel of the render target it draws into
+void Compile(Shader& shader, ID3DBlob* vertexShader, ID3DBlob* pixelShader, D3D12_BLEND destBlend = D3D12_BLEND_INV_SRC_ALPHA, UINT sampleCount = 1)
+--- file: main.cpp
+--- find:
+    psoDesc.SampleDesc.Count = 1;
+    ThrowIfFailed(Graphics.Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&shader.PipelineState)));
+--- replace:
+    psoDesc.SampleDesc.Count = sampleCount;
+    ThrowIfFailed(Graphics.Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&shader.PipelineState)));
+--- file: main.cpp
+--- find:
+// PSMain of an HLSL file, blending with destBlend (see Compile)
+Shader loadShaderFromFile(const wchar_t* shaderFile, D3D12_BLEND destBlend)
+--- replace:
+// PSMain of an HLSL file, blending with destBlend, for sampleCount samples per pixel (see Compile)
+Shader loadShaderFromFile(const wchar_t* shaderFile, D3D12_BLEND destBlend, UINT sampleCount)
+--- file: main.cpp
+--- find:
+    Compile(shader, vertexShader.Get(), pixelShader.Get(), destBlend);
+--- replace:
+    Compile(shader, vertexShader.Get(), pixelShader.Get(), destBlend, sampleCount);
+--- file: main.cpp
+--- find:
+Shader LoadShader(const wchar_t* shaderFile, std::string name, D3D12_BLEND destBlend = D3D12_BLEND_INV_SRC_ALPHA)
+{
+    Shaders[name] = loadShaderFromFile(shaderFile, destBlend);
+--- replace:
+Shader LoadShader(const wchar_t* shaderFile, std::string name, D3D12_BLEND destBlend = D3D12_BLEND_INV_SRC_ALPHA, UINT sampleCount = 1)
+{
+    Shaders[name] = loadShaderFromFile(shaderFile, destBlend, sampleCount);
+--- file: main.cpp
+--- find:
+// TODO: the functions BeginRender, EndRender and Render (the postprocessing quad with the effects)
+--- replace:
+// prepares the postprocessor's render target before rendering the game
+void BeginRender(PostProcessor& effects)
+{
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(effects.RtvHeap->GetCPUDescriptorHandleForHeapStart());
+    Graphics.CommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+    const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    Graphics.CommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+}
+
+// should be called after rendering the game, so it stores all the rendered data into a texture object
+void EndRender(PostProcessor& effects)
+{
+    // now resolve the multisampled colour buffer into the texture: each pixel gets the average
+    // of its samples. The render target becomes the resolve's source, the texture its destination.
+    CD3DX12_RESOURCE_BARRIER barriers[2] =
+    {
+        CD3DX12_RESOURCE_BARRIER::Transition(effects.MSRenderTarget.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE),
+        CD3DX12_RESOURCE_BARRIER::Transition(effects.Texture.Resource.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RESOLVE_DEST)
+    };
+    Graphics.CommandList->ResourceBarrier(_countof(barriers), barriers);
+    Graphics.CommandList->ResolveSubresource(effects.Texture.Resource.Get(), 0, effects.MSRenderTarget.Get(), 0, effects.Texture.Internal_Format);
+    // and back: the render target for the next frame, the texture for the pixel shader
+    barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(effects.MSRenderTarget.Get(), D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(effects.Texture.Resource.Get(), D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    Graphics.CommandList->ResourceBarrier(_countof(barriers), barriers);
+    // draw into the back buffer again (learnopengl: the default framebuffer)
+    Graphics.CommandList->OMSetRenderTargets(1, &Graphics.BackBufferRtv, FALSE, nullptr);
+}
+
+// the root constants of the postprocessing quad: what the postprocessing shaders see as
+// cbuffer PostProcessingConstants (the bools as ints: 4 bytes each, like HLSL's)
+struct PostProcessingConstants
+{
+    float time;
+    int   confuse;
+    int   chaos;
+    int   shake;
+};
+
+// renders the PostProcessor texture quad (as a screen-encompassing large sprite)
+void Render(PostProcessor& effects, float time)
+{
+    // set the shader and its options (root constants)
+    Use(effects.PostProcessingShader);
+    PostProcessingConstants constants = {};
+    constants.time = time;
+    constants.confuse = effects.Confuse;
+    constants.chaos = effects.Chaos;
+    constants.shake = effects.Shake;
+    Graphics.CommandList->SetGraphicsRoot32BitConstants(0, sizeof(PostProcessingConstants) / 4, &constants, 0);
+    // render textured quad
+    CD3DX12_GPU_DESCRIPTOR_HANDLE textureHandle(Graphics.SrvHeap->GetGPUDescriptorHandleForHeapStart(), effects.Texture.ID, Graphics.SrvDescriptorSize);
+    Graphics.CommandList->SetGraphicsRootDescriptorTable(2, textureHandle);
+    Graphics.CommandList->IASetVertexBuffers(0, 1, &effects.quadVertexBufferView);
+    Graphics.CommandList->DrawInstanced(6, 1, 0, 0);
+}
+--- file: main.cpp
+--- find:
+// TODO: GetTime: the time since the game started (learnopengl's glfwGetTime())
+--- replace:
+// the time since the game started, in seconds (learnopengl's glfwGetTime()): the clock of
+// OnUpdate's deltaTime, started at the first call
+float GetTime()
+{
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration<float, std::chrono::seconds::period>(std::chrono::high_resolution_clock::now() - startTime).count();
+}
+--- file: main.cpp
+--- find:
+    LoadShader(L"sprite.hlsl", "sprite");
+    LoadShader(L"particle.hlsl", "particle", D3D12_BLEND_ONE);
+--- replace:
+    // (the game is drawn into the postprocessor's 4x multisampled render target: their pipeline
+    // states must say so; the postprocessing quad is drawn into the window: 1 sample)
+    LoadShader(L"sprite.hlsl", "sprite", D3D12_BLEND_INV_SRC_ALPHA, 4);
+    LoadShader(L"particle.hlsl", "particle", D3D12_BLEND_ONE, 4);
+--- file: main.cpp
+--- find:
+        // TODO: begin rendering to the postprocessing render target
+--- replace:
+        // begin rendering to postprocessing render target
+        BeginRender(Effects);
+--- file: main.cpp
+--- find:
+        // TODO: end rendering to the postprocessing render target, then render the postprocessing quad
+--- replace:
+        // end rendering to postprocessing render target
+        EndRender(Effects);
+        // render postprocessing quad
+        Render(Effects, GetTime());
+--- file: main.cpp
+--- find:
+    // TODO: tell the game which render target the window's is
+    Render(Hedgerow);
+--- replace:
+    Graphics.BackBufferRtv = rtvHandle;
+    Render(Hedgerow);
+
+=== task: confuse
+--- file: main.cpp
+--- find:
+    InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height);
+--- replace:
+    InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height);
+    Effects.Confuse = true; // try the effects: confuse (the picture upside down, its colours inverted)
+
+=== task: chaos
+--- file: main.cpp
+--- find:
+    Effects.Confuse = true; // try the effects: confuse (the picture upside down, its colours inverted)
+--- replace:
+    Effects.Chaos = true; // try the effects: chaos (edge detection, the picture swirling around)
+
+=== task: shake
+--- file: main.cpp
+--- find:
+    InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height);
+    Effects.Chaos = true; // try the effects: chaos (edge detection, the picture swirling around)
+--- replace:
+    InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height);
+--- file: main.cpp
+--- find:
+PostProcessor  Effects;
+--- replace:
+PostProcessor  Effects;
+
+float ShakeTime = 0.0f;
+--- file: main.cpp
+--- find:
+                if (!box.IsSolid)
+                    box.Destroyed = true;
+                // TODO: if the block is solid, shake the screen for 0.05 seconds
+--- replace:
+                if (!box.IsSolid)
+                    box.Destroyed = true;
+                else
+                {   // if block is solid, enable shake effect
+                    ShakeTime = 0.05f;
+                    Effects.Shake = true;
+                }
+--- file: main.cpp
+--- find:
+    // TODO: reduce the shake time; when it is over, stop shaking
+--- replace:
+    // reduce shake time
+    if (ShakeTime > 0.0f)
+    {
+        ShakeTime -= dt;
+        if (ShakeTime <= 0.0f)
+            Effects.Shake = false;
+    }

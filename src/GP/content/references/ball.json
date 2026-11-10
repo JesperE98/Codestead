@@ -1,0 +1,7 @@
+[
+  { "title": "2D Game / Ball", "url": "https://learnopengl.com/In-Practice/2D-Game/Ball", "publisher": "LearnOpenGL" },
+  { "title": "Derived classes", "url": "https://en.cppreference.com/w/cpp/language/derived_class", "publisher": "cppreference.com" },
+  { "title": "LearnOpenGL source code: the 2D game", "url": "https://github.com/JoeyDeVries/LearnOpenGL/tree/master/src/7.in_practice/3.2d_game", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
+  { "title": "LearnOpenGL source code: the 2D game", "url": "https://github.com/JoeyDeVries/LearnOpenGL/tree/master/src/7.in_practice/3.2d_game", "publisher": "Joey de Vries (GitHub)", "api": "vulkan" },
+  { "title": "Code optimization with the DirectXMath library", "url": "https://learn.microsoft.com/en-us/windows/win32/dxmath/pg-xnamath-optimizing", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

@@ -1,0 +1,561 @@
+=== task: post-shader
+--- file: shaders/post_processing.vert
+--- find:
+    // TODO: chaos: texture coordinates swirling with time (strength 0.3); confuse: mirrored in x and y; shake: the position wobbling with time (strength 0.01)
+    gl_Position = vec4(vertex.xy, 0.0, 1.0);
+    TexCoords = vertex.zw;
+--- replace:
+    gl_Position = vec4(vertex.xy, 0.0, 1.0);
+    vec2 texture = vertex.zw;
+    if (pc.chaos != 0) {
+        float strength = 0.3;
+        // Vulkan's texture v points down (OpenGL's up): minus here, so the picture moves as in OpenGL
+        vec2 pos = vec2(texture.x + sin(pc.time) * strength, texture.y - cos(pc.time) * strength);
+        TexCoords = pos;
+    } else if (pc.confuse != 0) {
+        TexCoords = vec2(1.0 - texture.x, 1.0 - texture.y);
+    } else {
+        TexCoords = texture;
+    }
+    if (pc.shake != 0) {
+        float strength = 0.01;
+        gl_Position.x += cos(pc.time * 10.0) * strength;
+        gl_Position.y -= cos(pc.time * 15.0) * strength; // Vulkan's clip space y points down: minus moves up, as OpenGL's +
+    }
+--- file: shaders/post_processing.frag
+--- find:
+    // TODO: chaos: the edge kernel over 9 samples; confuse: the inverted colour; shake: the blur kernel over 9 samples
+    // (alpha 1: the texture has an alpha channel, below 1 where the sprites' transparent parts were drawn)
+    color = vec4(texture(scene, TexCoords).rgb, 1.0);
+--- replace:
+    // zero out memory since an out variable is initialized with undefined values by default
+    color = vec4(0.0);
+
+    vec3 samples[9]; // learnopengl's "sample" is a keyword in GLSL 4.50
+    // sample from texture offsets if using convolution matrix
+    if (pc.chaos != 0 || pc.shake != 0)
+        for (int i = 0; i < 9; i++)
+            samples[i] = vec3(texture(scene, TexCoords.st + kernels.offsets[i].xy));
+
+    // process effects
+    if (pc.chaos != 0) {
+        for (int i = 0; i < 9; i++)
+            color += vec4(samples[i] * kernels.edge_kernel[i].x, 0.0);
+        color.a = 1.0;
+    } else if (pc.confuse != 0) {
+        color = vec4(1.0 - texture(scene, TexCoords).rgb, 1.0);
+    } else if (pc.shake != 0) {
+        for (int i = 0; i < 9; i++)
+            color += vec4(samples[i] * kernels.blur_kernel[i].x, 0.0);
+        color.a = 1.0;
+    } else {
+        // alpha 1: the texture has an alpha channel (where the sprites' transparent parts were drawn it is below 1);
+        // OpenGL's GL_RGB texture has none and reads 1
+        color = vec4(texture(scene, TexCoords).rgb, 1.0);
+    }
+--- file: main.cpp
+--- find:
+// TODO: struct PostProcessingConstants and struct PostProcessingUniforms, the C++ side of the postprocessing shaders' push constant block and uniform block
+--- replace:
+// The same layout as the push constant block in the postprocessing shaders: what changes every frame (learnopengl's
+// uniforms time, chaos, confuse and shake; a bool in a shader block takes 4 bytes, so the flags are ints).
+struct PostProcessingConstants {
+    float time;
+    int   chaos;
+    int   confuse;
+    int   shake;
+};
+
+// The same layout as the uniform block in the postprocessing fragment shader: learnopengl's offsets and kernels, set
+// once. In a uniform block (std140) every element of an array starts at a multiple of 16 bytes, so each element is a
+// vec4 / ivec4 of which only .xy (offsets) or .x (the kernels) is used.
+struct PostProcessingUniforms {
+    glm::vec4  offsets[9];
+    glm::ivec4 edge_kernel[9];
+    glm::vec4  blur_kernel[9];
+};
+--- file: main.cpp
+--- find:
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+--- replace:
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; // the projection / the postprocessing kernels
+--- file: main.cpp
+--- find:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkBlendFactor dstColorBlendFactor, VkPipeline& pipeline) {
+--- replace:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkBlendFactor dstColorBlendFactor, VkRenderPass pipelineRenderPass, VkSampleCountFlagBits rasterizationSamples, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+--- replace:
+        multisampling.rasterizationSamples = rasterizationSamples; // must match the render pass's attachments
+--- file: main.cpp
+--- find:
+        pipelineInfo.renderPass = renderPass;
+--- replace:
+        pipelineInfo.renderPass = pipelineRenderPass; // a pipeline is made for one render pass
+--- file: main.cpp
+--- find:
+    VkPipeline LoadShader(const char* vShaderFile, const char* fShaderFile, std::string name, VkBlendFactor dstColorBlendFactor) {
+        createPipeline(vShaderFile, fShaderFile, dstColorBlendFactor, Shaders[name]);
+--- replace:
+    // A pipeline is also made for one render pass and its number of samples per pixel: the sprites and particles are
+    // drawn into the postprocessor's multisampled off-screen pass, the postprocessing quad into the window's.
+    VkPipeline LoadShader(const char* vShaderFile, const char* fShaderFile, std::string name, VkBlendFactor dstColorBlendFactor, VkRenderPass pipelineRenderPass, VkSampleCountFlagBits rasterizationSamples) {
+        createPipeline(vShaderFile, fShaderFile, dstColorBlendFactor, pipelineRenderPass, rasterizationSamples, Shaders[name]);
+--- file: main.cpp
+--- find:
+        // TODO: load the postprocessing shader (shaders/post_processing.vert.spv, shaders/post_processing.frag.spv) as "postprocessing", for the window's render pass
+        LoadShader("shaders/sprite.vert.spv", "shaders/sprite.frag.spv", "sprite", VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
+        LoadShader("shaders/particle.vert.spv", "shaders/particle.frag.spv", "particle", VK_BLEND_FACTOR_ONE); // additive blending
+--- replace:
+        LoadShader("shaders/post_processing.vert.spv", "shaders/post_processing.frag.spv", "postprocessing", VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, renderPass, VK_SAMPLE_COUNT_1_BIT); // the window's pass
+        // TODO: set up the postprocessor with the postprocessing shader and the window's size
+        LoadShader("shaders/sprite.vert.spv", "shaders/sprite.frag.spv", "sprite", VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, renderPass, VK_SAMPLE_COUNT_1_BIT);
+        LoadShader("shaders/particle.vert.spv", "shaders/particle.frag.spv", "particle", VK_BLEND_FACTOR_ONE, renderPass, VK_SAMPLE_COUNT_1_BIT); // additive blending
+=== task: post-processor
+--- file: main.cpp
+--- find:
+// TODO: struct PostProcessor (the pipeline, the texture, the size, the options Confuse, Chaos, Shake and the render state)
+--- replace:
+// PostProcessor (learnopengl: post_processor.h)
+// ----------------------------------------------
+// PostProcessor hosts all PostProcessing effects for the Hedgerow
+// Game. It renders the game on a textured quad after which one can
+// enable specific effects by enabling either the Confuse, Chaos or
+// Shake boolean.
+// It is required to call BeginRender() before rendering the game
+// and EndRender() after rendering the game for the struct to work.
+struct PostProcessor {
+    // state
+    VkPipeline       PostProcessingShader = VK_NULL_HANDLE; // the postprocessing pipeline
+    Texture2D        Texture;   // the picture of the game the quad shows: the multisampled image resolved into it
+    unsigned int     Width = 0, Height = 0;
+    // options
+    bool             Confuse = false, Chaos = false, Shake = false;
+    // render state (learnopengl: the multisampled framebuffer MSFBO with its renderbuffer RBO, blitted into the
+    // framebuffer FBO with the texture; Vulkan: one render pass whose multisampled colour attachment is resolved into
+    // Texture at the end of the pass, and one framebuffer with both images)
+    VkRenderPass     RenderPass = VK_NULL_HANDLE;
+    VkFramebuffer    Framebuffer = VK_NULL_HANDLE;
+    VkImage          MSImage = VK_NULL_HANDLE;       // the multisampled colour image (learnopengl's RBO)
+    VkDeviceMemory   MSImageMemory = VK_NULL_HANDLE;
+    VkImageView      MSImageView = VK_NULL_HANDLE;
+    VkBuffer         UniformBuffer = VK_NULL_HANDLE; // the offsets and kernels (PostProcessingUniforms)
+    VkDeviceMemory   UniformBufferMemory = VK_NULL_HANDLE;
+    VkBuffer         quadBuffer = VK_NULL_HANDLE;    // learnopengl's VAO: the quad over the whole window
+    VkDeviceMemory   quadBufferMemory = VK_NULL_HANDLE;
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+    VkCommandBuffer  commandBuffer = VK_NULL_HANDLE;     // the command buffer being recorded this frame
+    VkRenderPass     WindowRenderPass = VK_NULL_HANDLE;  // learnopengl's default framebuffer: the window's render
+    VkFramebuffer    WindowFramebuffer = VK_NULL_HANDLE; // pass and this frame's swap chain framebuffer
+};
+--- file: main.cpp
+--- find:
+ParticleGenerator Particles;
+
+--- replace:
+ParticleGenerator Particles;
+PostProcessor  Effects;
+
+--- file: main.cpp
+--- find:
+    // TODO: InitRenderData for the PostProcessor (the quad over the window), createPostProcessingRenderPass and InitPostProcessor
+--- replace:
+    // PostProcessor: initialize quad for rendering postprocessing texture (learnopengl's initRenderData)
+    void InitRenderData(PostProcessor& effects) {
+        // the quad over the whole window: Vulkan's clip space y points down, so (-1, -1) is the top-left corner and
+        // gets the texture's top-left texel (0, 0) - the picture shows the right way up, as in OpenGL
+        const std::vector<Vertex> vertices = {
+            // pos        // tex
+            {{-1.0f, -1.0f, 0.0f, 0.0f}},
+            {{ 1.0f,  1.0f, 1.0f, 1.0f}},
+            {{-1.0f,  1.0f, 0.0f, 1.0f}},
+
+            {{-1.0f, -1.0f, 0.0f, 0.0f}},
+            {{ 1.0f, -1.0f, 1.0f, 0.0f}},
+            {{ 1.0f,  1.0f, 1.0f, 1.0f}}
+        };
+        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, effects.quadBuffer, effects.quadBufferMemory);
+
+        void* data;
+        vkMapMemory(device, effects.quadBufferMemory, 0, bufferSize, 0, &data);
+            memcpy(data, vertices.data(), (size_t) bufferSize);
+        vkUnmapMemory(device, effects.quadBufferMemory);
+    }
+
+    // PostProcessor: the off-screen render pass (vulkan-tutorial's multisampled render pass, without a depth buffer):
+    // a colour attachment with 4 samples per pixel, resolved into the texture at the end of the subpass
+    void createPostProcessingRenderPass(PostProcessor& effects) {
+        // the multisampled colour image: only its resolved pixels are kept
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = VK_FORMAT_R8G8B8A8_UNORM;
+        colorAttachment.samples = VK_SAMPLE_COUNT_4_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        // the texture: each pixel's 4 samples are averaged ("resolved") into it, then it is ready to be sampled
+        VkAttachmentDescription colorAttachmentResolve{};
+        colorAttachmentResolve.format = VK_FORMAT_R8G8B8A8_UNORM;
+        colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkAttachmentReference colorAttachmentRef{};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference colorAttachmentResolveRef{};
+        colorAttachmentResolveRef.attachment = 1;
+        colorAttachmentResolveRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+        subpass.pResolveAttachments = &colorAttachmentResolveRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: wait until the last frame's postprocessing quad has read the texture
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        // after the pass: the postprocessing shaders that sample the texture wait until the resolve has written it
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, colorAttachmentResolve};
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderPassInfo.pAttachments = attachments.data();
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &effects.RenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create postprocessing render pass!");
+        }
+    }
+
+    // PostProcessor: the images, the off-screen render pass and framebuffer, the quad and the shader's kernels
+    // (learnopengl's PostProcessor constructor)
+    void InitPostProcessor(PostProcessor& effects, VkPipeline shader, unsigned int width, unsigned int height) {
+        effects.PostProcessingShader = shader;
+        effects.Width = width;
+        effects.Height = height;
+        effects.pipelineLayout = pipelineLayout;
+        effects.WindowRenderPass = renderPass;
+        // the multisampled colour image (learnopengl's renderbuffer with 4 samples; no depth/stencil buffer needed).
+        // Every Vulkan device supports 4 samples for colour attachments.
+        createImage(width, height, VK_SAMPLE_COUNT_4_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, effects.MSImage, effects.MSImageMemory);
+        effects.MSImageView = createImageView(effects.MSImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+        // the texture the samples are resolved into and the quad samples (learnopengl's FBO texture)
+        createImage(width, height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, effects.Texture.Image, effects.Texture.Memory);
+        effects.Texture.View = createImageView(effects.Texture.Image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+        effects.Texture.Width = width;
+        effects.Texture.Height = height;
+        // the off-screen render pass and its framebuffer with both images
+        createPostProcessingRenderPass(effects);
+        std::array<VkImageView, 2> attachments = {effects.MSImageView, effects.Texture.View};
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = effects.RenderPass;
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        framebufferInfo.pAttachments = attachments.data();
+        framebufferInfo.width = width;
+        framebufferInfo.height = height;
+        framebufferInfo.layers = 1;
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &effects.Framebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create postprocessing framebuffer!");
+        }
+        // initialize render data and uniforms
+        InitRenderData(effects);
+        float offset = 1.0f / 300.0f;
+        float offsets[9][2] = {
+            { -offset,  offset  },  // top-left
+            {  0.0f,    offset  },  // top-center
+            {  offset,  offset  },  // top-right
+            { -offset,  0.0f    },  // center-left
+            {  0.0f,    0.0f    },  // center-center
+            {  offset,  0.0f    },  // center - right
+            { -offset, -offset  },  // bottom-left
+            {  0.0f,   -offset  },  // bottom-center
+            {  offset, -offset  }   // bottom-right
+        };
+        int edge_kernel[9] = {
+            -1, -1, -1,
+            -1,  8, -1,
+            -1, -1, -1
+        };
+        float blur_kernel[9] = {
+            1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f,
+            2.0f / 16.0f, 4.0f / 16.0f, 2.0f / 16.0f,
+            1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f
+        };
+        // (Vulkan's texture v points down, so "top" and "bottom" swap their names; both kernels are symmetric, so the
+        // result is the same)
+        PostProcessingUniforms kernels{};
+        for (int i = 0; i < 9; i++) {
+            kernels.offsets[i] = glm::vec4(offsets[i][0], offsets[i][1], 0.0f, 0.0f);
+            kernels.edge_kernel[i] = glm::ivec4(edge_kernel[i], 0, 0, 0);
+            kernels.blur_kernel[i] = glm::vec4(blur_kernel[i], 0.0f, 0.0f, 0.0f);
+        }
+        // learnopengl sets these uniforms once: a uniform buffer written once
+        createBuffer(sizeof(PostProcessingUniforms), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, effects.UniformBuffer, effects.UniformBufferMemory);
+        void* data;
+        vkMapMemory(device, effects.UniformBufferMemory, 0, sizeof(PostProcessingUniforms), 0, &data);
+            memcpy(data, &kernels, sizeof(PostProcessingUniforms));
+        vkUnmapMemory(device, effects.UniformBufferMemory);
+        // the descriptor set of the quad: the kernels (binding 0) and the texture (binding 1, learnopengl's "scene")
+        createDescriptorSet(effects.UniformBuffer, sizeof(PostProcessingUniforms), effects.Texture.View, textureSampler, effects.Texture.DescriptorSet);
+    }
+--- file: main.cpp
+--- find:
+        // TODO: set up the postprocessor with the postprocessing shader and the window's size
+        LoadShader("shaders/sprite.vert.spv"
+--- replace:
+        // set up the postprocessor (learnopengl's PostProcessor constructor): before the sprite and particle
+        // pipelines, which are made for its off-screen render pass
+        InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height);
+        LoadShader("shaders/sprite.vert.spv"
+--- file: main.cpp
+--- find:
+    void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) {
+--- replace:
+    void createImage(uint32_t width, uint32_t height, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) {
+--- file: main.cpp
+--- find:
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+--- replace:
+        imageInfo.samples = numSamples;
+--- file: main.cpp
+--- find:
+        createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM,
+--- replace:
+        createImage(texWidth, texHeight, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM,
+--- file: main.cpp
+--- find:
+    // A descriptor set with the uniform buffer (binding 0) and one texture (binding 1). Binding it before a draw
+    // (vkCmdBindDescriptorSets) is Vulkan's glBindTexture.
+    void createDescriptorSet(VkImageView textureImageView, VkSampler sampler, VkDescriptorSet& descriptorSet) {
+--- replace:
+    // A descriptor set with a uniform buffer (binding 0: the projection for the sprites, the kernels for the
+    // postprocessing quad) and one texture (binding 1). Binding it before a draw (vkCmdBindDescriptorSets) is
+    // Vulkan's glBindTexture.
+    void createDescriptorSet(VkBuffer buffer, VkDeviceSize range, VkImageView textureImageView, VkSampler sampler, VkDescriptorSet& descriptorSet) {
+--- file: main.cpp
+--- find:
+        bufferInfo.buffer = uniformBuffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+--- replace:
+        bufferInfo.buffer = buffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = range;
+--- file: main.cpp
+--- find:
+        createDescriptorSet(texture.View, textureSampler, texture.DescriptorSet);
+--- replace:
+        createDescriptorSet(uniformBuffer, sizeof(UniformBufferObject), texture.View, textureSampler, texture.DescriptorSet);
+--- file: main.cpp
+--- find:
+        vkFreeMemory(device, Particles.quadBufferMemory, nullptr);
+
+--- replace:
+        vkFreeMemory(device, Particles.quadBufferMemory, nullptr);
+        vkDestroyBuffer(device, Effects.quadBuffer, nullptr);
+        vkFreeMemory(device, Effects.quadBufferMemory, nullptr);
+        vkDestroyBuffer(device, Effects.UniformBuffer, nullptr);
+        vkFreeMemory(device, Effects.UniformBufferMemory, nullptr);
+        vkDestroyFramebuffer(device, Effects.Framebuffer, nullptr);
+        vkDestroyRenderPass(device, Effects.RenderPass, nullptr);
+        vkDestroyImageView(device, Effects.MSImageView, nullptr);
+        vkDestroyImage(device, Effects.MSImage, nullptr);
+        vkFreeMemory(device, Effects.MSImageMemory, nullptr);
+        vkDestroyImageView(device, Effects.Texture.View, nullptr);
+        vkDestroyImage(device, Effects.Texture.Image, nullptr);
+        vkFreeMemory(device, Effects.Texture.Memory, nullptr);
+
+=== task: render-to-texture
+--- file: main.cpp
+--- find:
+// TODO: the functions BeginRender, EndRender and Render (the postprocessing quad with the effects)
+--- replace:
+// prepares the postprocessor's framebuffer operations before rendering the game: the off-screen render pass begins
+// (cleared to black)
+void BeginRender(PostProcessor& effects) {
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = effects.RenderPass;
+    renderPassInfo.framebuffer = effects.Framebuffer;
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = {effects.Width, effects.Height};
+
+    VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &clearColor;
+
+    vkCmdBeginRenderPass(effects.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+// should be called after rendering the game, so it stores all the rendered data into a texture object
+void EndRender(PostProcessor& effects) {
+    // the end of the off-screen pass resolves the multisampled image into Texture (learnopengl's glBlitFramebuffer)
+    vkCmdEndRenderPass(effects.commandBuffer);
+    // then the window's render pass begins (learnopengl binds the default framebuffer again)
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = effects.WindowRenderPass;
+    renderPassInfo.framebuffer = effects.WindowFramebuffer;
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = {effects.Width, effects.Height};
+
+    VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &clearColor;
+
+    vkCmdBeginRenderPass(effects.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+// renders the PostProcessor texture quad (as a screen-encompassing large sprite)
+void Render(PostProcessor& effects, float time) {
+    vkCmdBindPipeline(effects.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, effects.PostProcessingShader);
+    // set uniforms/options
+    PostProcessingConstants constants{};
+    constants.time = time;
+    constants.confuse = effects.Confuse;
+    constants.chaos = effects.Chaos;
+    constants.shake = effects.Shake;
+    vkCmdPushConstants(effects.commandBuffer, effects.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PostProcessingConstants), &constants);
+    // render textured quad
+    vkCmdBindDescriptorSets(effects.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, effects.pipelineLayout, 0, 1, &effects.Texture.DescriptorSet, 0, nullptr);
+    VkBuffer vertexBuffers[] = {effects.quadBuffer};
+    VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(effects.commandBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdDraw(effects.commandBuffer, 6, 1, 0, 0);
+}
+--- file: main.cpp
+--- find:
+        // TODO: begin rendering to the postprocessing framebuffer
+--- replace:
+        // begin rendering to postprocessing framebuffer
+        BeginRender(Effects);
+--- file: main.cpp
+--- find:
+        // TODO: end rendering to the postprocessing framebuffer, then render the postprocessing quad
+--- replace:
+        // end rendering to postprocessing framebuffer
+        EndRender(Effects);
+        // render postprocessing quad
+        Render(Effects, static_cast<float>(glfwGetTime()));
+--- file: main.cpp
+--- find:
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = swapChainExtent;
+
+        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+        renderPassInfo.clearValueCount = 1;
+        renderPassInfo.pClearValues = &clearColor;
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        VkViewport viewport{};
+--- replace:
+        // the viewport and scissor (dynamic state) hold for both render passes of the frame
+        VkViewport viewport{};
+--- file: main.cpp
+--- find:
+        Particles.commandBuffer = commandBuffer;
+        Render(Hedgerow);
+
+        vkCmdEndRenderPass(commandBuffer);
+--- replace:
+        Particles.commandBuffer = commandBuffer;
+        Effects.commandBuffer = commandBuffer;
+        Effects.WindowFramebuffer = swapChainFramebuffers[imageIndex];
+        // the game's picture: the off-screen pass (BeginRender ... EndRender), then the window's render pass with the
+        // postprocessing quad (EndRender begins it)
+        Render(Hedgerow);
+
+        vkCmdEndRenderPass(commandBuffer); // the window's render pass
+--- file: main.cpp
+--- find:
+        LoadShader("shaders/sprite.vert.spv", "shaders/sprite.frag.spv", "sprite", VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, renderPass, VK_SAMPLE_COUNT_1_BIT);
+        LoadShader("shaders/particle.vert.spv", "shaders/particle.frag.spv", "particle", VK_BLEND_FACTOR_ONE, renderPass, VK_SAMPLE_COUNT_1_BIT); // additive blending
+--- replace:
+        LoadShader("shaders/sprite.vert.spv", "shaders/sprite.frag.spv", "sprite", VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, Effects.RenderPass, VK_SAMPLE_COUNT_4_BIT);
+        LoadShader("shaders/particle.vert.spv", "shaders/particle.frag.spv", "particle", VK_BLEND_FACTOR_ONE, Effects.RenderPass, VK_SAMPLE_COUNT_4_BIT); // additive blending
+=== task: confuse
+--- file: main.cpp
+--- find:
+        InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height);
+--- replace:
+        InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height);
+        Effects.Confuse = true; // try the effects: confuse (the picture upside down, its colours inverted)
+=== task: chaos
+--- file: main.cpp
+--- find:
+        Effects.Confuse = true; // try the effects: confuse (the picture upside down, its colours inverted)
+--- replace:
+        Effects.Chaos = true; // try the effects: chaos (edge detection, the picture swirling around)
+=== task: shake
+--- file: main.cpp
+--- find:
+        InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height);
+        Effects.Chaos = true; // try the effects: chaos (edge detection, the picture swirling around)
+--- replace:
+        InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height);
+--- file: main.cpp
+--- find:
+PostProcessor  Effects;
+
+--- replace:
+PostProcessor  Effects;
+
+float ShakeTime = 0.0f;
+
+--- file: main.cpp
+--- find:
+                if (!box.IsSolid)
+                    box.Destroyed = true;
+                // TODO: if the block is solid, shake the screen for 0.05 seconds
+--- replace:
+                if (!box.IsSolid)
+                    box.Destroyed = true;
+                else { // if block is solid, enable shake effect
+                    ShakeTime = 0.05f;
+                    Effects.Shake = true;
+                }
+--- file: main.cpp
+--- find:
+    // TODO: reduce the shake time; when it is over, stop shaking
+--- replace:
+    // reduce shake time
+    if (ShakeTime > 0.0f) {
+        ShakeTime -= dt;
+        if (ShakeTime <= 0.0f)
+            Effects.Shake = false;
+    }

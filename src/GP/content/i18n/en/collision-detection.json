@@ -1,0 +1,21 @@
+{
+  "title": "Collision detection",
+  "tasks": {
+    "aabb": {
+      "text": "Write `CheckCollision` for two GameObjects as axis-aligned bounding boxes (AABB – AABB): they collide when they overlap on the x axis and on the y axis.",
+      "hint": "On x: `one.Position.x + one.Size.x >= two.Position.x && two.Position.x + two.Size.x >= one.Position.x`; the same with y and the heights; `return collisionX && collisionY;`."
+    },
+    "do-collisions": {
+      "text": "Write `DoCollisions`: for every brick that is not destroyed yet, if the ball collides with it, destroy it – unless it is solid. Call it in `Update` after moving the ball.",
+      "hint": "`for (GameObject& box : game.Levels[game.Level].Bricks)` (a reference, so `box.Destroyed = true` changes the level's brick), `if (!box.Destroyed)`, `if (CheckCollision(Ball, box))`, `if (!box.IsSolid) box.Destroyed = true;`. `DoCollisions(game);` after `Move(Ball, dt, game.Width);`."
+    },
+    "circle": {
+      "text": "Write `CheckCollision` for the ball and a GameObject (AABB – circle): find the point of the box closest to the ball's centre (clamp the centres' difference to the box's half extents) and test whether it is less than `Radius` away.",
+      "hint": {
+        "opengl": "An overload above `DoCollisions`: `bool CheckCollision(BallObject& one, GameObject& two)`. `center = one.Position + one.Radius`, `clamped = glm::clamp(difference, -aabb_half_extents, aabb_half_extents)`, `closest = aabb_center + clamped`, `return glm::length(closest - center) < one.Radius;`.",
+        "vulkan": "An overload above `DoCollisions`: `bool CheckCollision(BallObject& one, GameObject& two)`. `center = one.Position + one.Radius`, `clamped = glm::clamp(difference, -aabb_half_extents, aabb_half_extents)`, `closest = aabb_center + clamped`, `return glm::length(closest - center) < one.Radius;`.",
+        "d3d12": "An overload above `DoCollisions`: `bool CheckCollision(BallObject& one, GameObject& two)`. `XMVECTOR center = XMLoadFloat2(&one.Position) + XMVectorReplicate(one.Radius);`, the box's centre and half extents with `XMVectorSet`, `XMVectorClamp(difference, -aabb_half_extents, aabb_half_extents)`, `return XMVectorGetX(XMVector2Length(difference)) < one.Radius;`."
+      }
+    }
+  }
+}

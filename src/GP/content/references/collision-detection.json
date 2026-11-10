@@ -1,0 +1,6 @@
+[
+  { "title": "Collisions / Collision detection", "url": "https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-detection", "publisher": "LearnOpenGL" },
+  { "title": "Overload resolution", "url": "https://en.cppreference.com/w/cpp/language/overload_resolution", "publisher": "cppreference.com" },
+  { "title": "Range-based for loop", "url": "https://en.cppreference.com/w/cpp/language/range-for", "publisher": "cppreference.com" },
+  { "title": "XMVectorClamp", "url": "https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmvectorclamp", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

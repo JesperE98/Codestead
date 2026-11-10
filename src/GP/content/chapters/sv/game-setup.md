@@ -507,7 +507,7 @@ inuti bildruta 33:s).
 (`OnKeyDown(VK_SPACE)` före `OnUpdate` i bildruta 30, `OnKeyUp(VK_SPACE)` före den i bildruta 33).
 :::
 Alltså ser `ProcessInput` mellanslag nedhållet i bildrutorna 30, 31 och 32. Ingen annan tangent trycks någonsin ned –
-racketen rör sig aldrig i kursens bilder. Fram till kapitlet Boll läser ingenting mellanslag.
+racketen rör sig aldrig i kursens bilder. Fram till kapitlet Bollen läser ingenting mellanslag.
 
 ```quiz
 Varför sparar key-callbacken bara tangentens tillstånd i `Keys` i stället för att flytta racketen själv?
@@ -1032,7 +1032,7 @@ I vilka bildrutor i kursens spelloop ser `ProcessInput` mellanslag nedhållet?
 - [ ] I ingen: kursen trycker aldrig på någon tangent
 - [x] I bildrutorna 30, 31 och 32: nedtryckningen kommer vid 0.5 s (bildruta 30, före dess `ProcessInput`), släppet vid 0.55 s (bildruta 33)
 ---
-Bildruta n ser tiden n / 60, så 0.5 s är bildruta 30 och 0.55 s är bildruta 33. Den enda skriptade tangenttryckningen är det som skjuter iväg bollen i kapitlet Boll; fram till dess läser ingenting den.
+Bildruta n ser tiden n / 60, så 0.5 s är bildruta 30 och 0.55 s är bildruta 33. Den enda skriptade tangenttryckningen är det som skjuter iväg bollen i kapitlet Bollen; fram till dess läser ingenting den.
 ```
 
 ## Mer att läsa

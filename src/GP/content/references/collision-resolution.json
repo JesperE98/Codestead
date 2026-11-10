@@ -1,0 +1,6 @@
+[
+  { "title": "Collisions / Collision resolution", "url": "https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-resolution", "publisher": "LearnOpenGL" },
+  { "title": "std::tuple", "url": "https://en.cppreference.com/w/cpp/utility/tuple", "publisher": "cppreference.com" },
+  { "title": "std::abs (float)", "url": "https://en.cppreference.com/w/cpp/numeric/math/fabs", "publisher": "cppreference.com" },
+  { "title": "XMVector2Dot", "url": "https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmvector2dot", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

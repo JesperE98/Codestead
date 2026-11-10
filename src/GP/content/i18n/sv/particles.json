@@ -1,0 +1,49 @@
+{
+  "title": "Partiklar",
+  "tasks": {
+    "particle-shader": {
+      "text": {
+        "opengl": "Skriv partikelshadern – en rektangel på 10 × 10 pixlar vid `offset`, partikeltexturen gånger partikelns färg –, lägg till setters `SetVector2f` och `SetVector4f`, och ladda i `Init` shadern som `\"particle\"` (samplern `sprite` på enhet 0, samma projektion) och `textures/particle.png` (med alfa) som `\"particle\"`.",
+        "vulkan": "Skriv partikelshadern – en rektangel på 10 × 10 pixlar vid `offset`, partikeltexturen gånger partikelns färg – och dess push constant-struct `ParticleConstants`; ge `createPipeline` och `LoadShader` en parameter för blendfaktorn, ladda partikelshadern som `\"particle\"` med additiv blending och `textures/particle.png` som `\"particle\"`.",
+        "d3d12": "Skriv partikelshadern – en rektangel på 10 × 10 pixlar vid `offset`, partikeltexturen gånger partikelns färg – och dess root constants-struct `ParticleConstants`; ge `Compile`, `loadShaderFromFile` och `LoadShader` en parameter `destBlend`, ladda partikelshadern som `\"particle\"` med additiv blending och `textures/particle.png` (med alfa) som `\"particle\"`."
+      },
+      "hint": {
+        "opengl": "particle.vs: `float scale = 10.0; TexCoords = vertex.zw; ParticleColor = color; gl_Position = projection * vec4((vertex.xy * scale) + offset, 0.0, 1.0);`; particle.fs: `color = (texture(sprite, TexCoords) * ParticleColor);`. `LoadShader(\"particle.vs\", \"particle.fs\", nullptr, \"particle\");`, `SetInteger(GetShader(\"particle\"), \"sprite\", 0);`, `SetMatrix4(GetShader(\"particle\"), \"projection\", projection);`.",
+        "vulkan": "particle.vert: `gl_Position = ubo.projection * vec4((vertex.xy * scale) + pc.offset, 0.0, 1.0);` med `float scale = 10.0f;`; particle.frag: `color = (texture(sprite, TexCoords) * ParticleColor);`. `struct ParticleConstants { glm::vec2 offset; alignas(16) glm::vec4 color; };`. `colorBlendAttachment.dstColorBlendFactor = dstColorBlendFactor;` – sprites `VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA`, partiklar `VK_BLEND_FACTOR_ONE`.",
+        "d3d12": "particle.hlsl: `result.position = mul(float4((position * scale) + offset, 0.0f, 1.0f), projection);` med `float scale = 10.0f;`, `PSMain` returnerar `sprite.Sample(wrapSampler, input.texCoord) * input.particleColor`. `struct ParticleConstants { XMFLOAT2 offset; XMFLOAT2 padding; XMFLOAT4 color; };`. `DestBlend` och `DestBlendAlpha` = `destBlend`; `LoadShader(L\"particle.hlsl\", \"particle\", D3D12_BLEND_ONE);`."
+      }
+    },
+    "particle-generator": {
+      "text": {
+        "opengl": "Lägg till `struct Particle`, `struct ParticleGenerator` och `InitParticles` (rektangelns VAO och `amount` döda partiklar); ställ in den globala `Particles` i `Init`: 500 partiklar med partikelshadern och partikeltexturen. Ta bort dess VAO i slutet.",
+        "vulkan": "Lägg till `struct Particle`, `struct ParticleGenerator` och medlemmen `InitParticles` (rektangelns vertex buffer och `amount` döda partiklar); ställ in den globala `Particles` i `Init`: 500 partiklar med partikelpipelinen och partikeltexturen, och ge den command buffern i `recordCommandBuffer()`. Förstör dess buffer i `cleanup()`.",
+        "d3d12": "Lägg till `struct Particle`, `struct ParticleGenerator` och `InitParticles` (rektangelns vertex buffer och `amount` döda partiklar); ställ in den globala `Particles` i `Init`: 500 partiklar med partikelshadern och partikeltexturen. Frigör den i `OnDestroy`."
+      },
+      "hint": {
+        "opengl": "Rektangeln är sprite-rektangeln (6 vertex, attribut 0 med 4 floats). `for (unsigned int i = 0; i < generator.amount; ++i) generator.particles.push_back(Particle());`. I Init: `Particles.shader = GetShader(\"particle\"); Particles.texture = GetTexture(\"particle\").ID; Particles.amount = 500; InitParticles(Particles);`.",
+        "vulkan": "Rektangeln i en host-visible buffer som i `InitRenderData`. `for (unsigned int i = 0; i < generator.amount; ++i) generator.particles.push_back(Particle());`. I Init: `Particles.shader = GetShader(\"particle\"); Particles.texture = GetTexture(\"particle\").DescriptorSet; Particles.amount = 500; InitParticles(Particles);` (den sätter också `generator.pipelineLayout`); i `recordCommandBuffer()` `Particles.commandBuffer = commandBuffer;`.",
+        "d3d12": "Rektangeln i en vertex buffer i en upload heap som i `InitRenderData`. `for (unsigned int i = 0; i < generator.amount; ++i) generator.particles.push_back(Particle());`. I Init: `Particles.shader = GetShader(\"particle\"); Particles.texture = GetTexture(\"particle\").ID; Particles.amount = 500; InitParticles(Particles);`; i OnDestroy `Particles = ParticleGenerator();`."
+      }
+    },
+    "spawn": {
+      "text": "Väck partiklarna till liv: `firstUnusedParticle` (den första döda partikeln, sökt från den senast använda), `respawnParticle` (en ny partikel vid ett objekt, med learnopengls slumpade förskjutning och ljusstyrka) och `Update` för generatorn (skapa nya, sedan åldra, flytta och tona ut de levande); anropa den i spelets `Update` med 2 nya partiklar per bildruta vid bollen, förskjutna med halva radien.",
+      "hint": {
+        "opengl": "`float random = ((rand() % 100) - 50) / 10.0f;` och `float rColor = 0.5f + ((rand() % 100) / 100.0f);` (`#include <cstdlib>`). I Update: `p.Life -= dt; if (p.Life > 0.0f) { p.Position -= p.Velocity * dt; p.Color.a -= dt * 2.5f; }`. Anropet: `Update(Particles, dt, Ball, 2, glm::vec2(Ball.Radius / 2.0f));` efter `DoCollisions(game);`.",
+        "vulkan": "`float random = ((rand() % 100) - 50) / 10.0f;` och `float rColor = 0.5f + ((rand() % 100) / 100.0f);` (`#include <cstdlib>`). I Update: `p.Life -= dt; if (p.Life > 0.0f) { p.Position -= p.Velocity * dt; p.Color.a -= dt * 2.5f; }`. Anropet: `Update(Particles, dt, Ball, 2, glm::vec2(Ball.Radius / 2.0f));` efter `DoCollisions(game);`.",
+        "d3d12": "`float random = ((rand() % 100) - 50) / 10.0f;` och `float rColor = 0.5f + ((rand() % 100) / 100.0f);`; positioner med `XMStoreFloat2(&particle.Position, XMLoadFloat2(&object.Position) + XMVectorReplicate(random) + XMLoadFloat2(&offset));`. I Update är alfa `p.Color.w -= dt * 2.5f;`. Anropet: `Update(Particles, dt, Ball, 2, XMFLOAT2(Ball.Radius / 2.0f, Ball.Radius / 2.0f));`."
+      }
+    },
+    "draw-particles": {
+      "text": {
+        "opengl": "Skriv `DrawParticles`: rita med additiv blending (`GL_SRC_ALPHA, GL_ONE`) varje levande partikel med partikelshadern – dess uniforms `offset` och `color`, partikeltexturen, rektangeln –, och sätt sedan tillbaka den vanliga blendingen; rita partiklarna i `Render` efter racketen, före bollen.",
+        "vulkan": "Skriv `DrawParticles`: bind partikelpipelinen (additiv blending) och rita varje levande partikel – dess förskjutning och färg som push constants, partikeltexturens descriptor set, rektangeln; rita partiklarna i `Render` efter racketen, före bollen.",
+        "d3d12": "Skriv `DrawParticles`: använd partikelshaderns PSO (additiv blending) och rita varje levande partikel – dess förskjutning och färg som root constants, partikeltexturens tabell, rektangeln; rita partiklarna i `Render` efter racketen, före bollen."
+      },
+      "hint": {
+        "opengl": "`for (Particle particle : generator.particles) if (particle.Life > 0.0f) { SetVector2f(generator.shader, \"offset\", particle.Position); SetVector4f(generator.shader, \"color\", particle.Color); glBindTexture(GL_TEXTURE_2D, generator.texture); glBindVertexArray(generator.VAO); glDrawArrays(GL_TRIANGLES, 0, 6); … }` – och `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);` i slutet.",
+        "vulkan": "`vkCmdBindPipeline(generator.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, generator.shader);`, sedan per levande partikel en `ParticleConstants` pushad med `vkCmdPushConstants(…, sizeof(ParticleConstants), &constants)`, `vkCmdBindDescriptorSets(…, &generator.texture, …)`, `vkCmdBindVertexBuffers` med rektangeln, `vkCmdDraw(generator.commandBuffer, 6, 1, 0, 0)`. Ingenting att återställa.",
+        "d3d12": "`Use(generator.shader);`, sedan per levande partikel `SetGraphicsRoot32BitConstants(0, sizeof(ParticleConstants) / 4, &constants, 0)`, `SetGraphicsRootDescriptorTable(2, …generator.texture…)`, `IASetVertexBuffers(0, 1, &generator.quadVertexBufferView)`, `DrawInstanced(6, 1, 0, 0)`. Ingenting att återställa."
+      }
+    }
+  }
+}

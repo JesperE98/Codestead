@@ -301,8 +301,9 @@ egen plats.
 Gör nu den första uppgiften, **info-queue**: hämta info queue i `LoadPipeline` direkt efter att enheten har skapats
 (innanför `#if defined(_DEBUG)` – i en release-build finns inget debuglager, `As` misslyckas och `m_infoQueue` förblir
 tom), lägg till funktionen och makrot, och anropa `CheckDebugMessages();` efter `LoadTexture(…)` i `LoadAssets` och
-efter `ExecuteCommandLists` i `OnRender`. Kör programmet. Bilden ändras inte, men utskriften innehåller nu
-meddelandena:
+efter `ExecuteCommandLists` i `OnRender`. Kör programmet – den inbyggda simulatorn efterliknar debuglagret: den
+rapporterar felen med debuglagrets egna meddelanden, sparar dem i info queue och anropar senare din callback, precis
+som Windows gör. Bilden ändras inte, men utskriften innehåller nu meddelandena:
 
 ```text
 ERROR #31: ID3D12Device::CreateShaderResourceView: The Dimensions of the View are invalid due to at least one of the following conditions. MostDetailedMip (value = 0) must be between 0 and MipLevels-1 of the Texture Resource, 0, inclusively. With the current MostDetailedMip, MipLevels (value = 0) must be between 1 and 1, inclusively, or -1 to default to all mips from MostDetailedMip, in order that the View fit on the Texture. | main.cpp (…)
@@ -785,7 +786,8 @@ Category: State creation
 Severity: ERROR
 ```
 
-– och med en ansluten debugger stannar programmet precis på den raden i `LoadTexture`. (Meddelandena ligger också kvar
+– och med en ansluten debugger stannar programmet precis på den raden i `LoadTexture`. (Den inbyggda simulatorn är
+ingen debugger: `IsDebuggerPresent()` returnerar false där, så programmet skriver ut meddelandet och fortsätter.) (Meddelandena ligger också kvar
 i kön, så `CheckDebugMessages()` skriver ut dem en gång till efteråt.)
 
 ### Det andra felet

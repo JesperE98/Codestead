@@ -1,0 +1,41 @@
+{
+  "title": "Collision resolution",
+  "tasks": {
+    "direction": {
+      "text": "Add `enum Direction` (UP, RIGHT, DOWN, LEFT) and `VectorDirection`, which returns the direction a vector points to most: the one of the four compass vectors with the largest dot product with the normalised vector.",
+      "hint": {
+        "opengl": "`glm::vec2 compass[] = { glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f), glm::vec2(0.0f, -1.0f), glm::vec2(-1.0f, 0.0f) };` (up, right, down, left – the enum's order), then keep the index with the largest `glm::dot(glm::normalize(target), compass[i])` and `return (Direction)best_match;`.",
+        "vulkan": "`glm::vec2 compass[] = { glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f), glm::vec2(0.0f, -1.0f), glm::vec2(-1.0f, 0.0f) };` (up, right, down, left – the enum's order), then keep the index with the largest `glm::dot(glm::normalize(target), compass[i])` and `return (Direction)best_match;`.",
+        "d3d12": "`XMFLOAT2 compass[] = { XMFLOAT2(0.0f, 1.0f), XMFLOAT2(1.0f, 0.0f), XMFLOAT2(0.0f, -1.0f), XMFLOAT2(-1.0f, 0.0f) };`, the dot product `XMVectorGetX(XMVector2Dot(XMVector2Normalize(XMLoadFloat2(&target)), XMLoadFloat2(&compass[i])))`, keep the largest and `return (Direction)best_match;`."
+      }
+    },
+    "collision-tuple": {
+      "text": "Make the circle `CheckCollision` return more than yes/no: a `Collision` tuple of (collision?, its direction, the difference vector); `DoCollisions` reads the first element.",
+      "hint": {
+        "opengl": "`#include <tuple>`, `typedef std::tuple<bool, Direction, glm::vec2> Collision;` after `enum Direction`. `return std::make_tuple(true, VectorDirection(difference), difference);` or `std::make_tuple(false, UP, glm::vec2(0.0f, 0.0f));`. In DoCollisions: `Collision collision = CheckCollision(Ball, box); if (std::get<0>(collision)) …`.",
+        "vulkan": "`#include <tuple>`, `typedef std::tuple<bool, Direction, glm::vec2> Collision;` after `enum Direction`. `return std::make_tuple(true, VectorDirection(difference), difference);` or `std::make_tuple(false, UP, glm::vec2(0.0f, 0.0f));`. In DoCollisions: `Collision collision = CheckCollision(Ball, box); if (std::get<0>(collision)) …`.",
+        "d3d12": "`#include <tuple>`, `typedef std::tuple<bool, Direction, XMFLOAT2> Collision;`. Store the difference first: `XMFLOAT2 diff; XMStoreFloat2(&diff, difference); return std::make_tuple(true, VectorDirection(diff), diff);` or `std::make_tuple(false, UP, XMFLOAT2(0.0f, 0.0f));`. In DoCollisions: `Collision collision = CheckCollision(Ball, box); if (std::get<0>(collision)) …`."
+      }
+    },
+    "resolve": {
+      "text": "Resolve each brick collision: reverse the ball's velocity component in the collision's direction (x for LEFT/RIGHT, y for UP/DOWN) and move the ball out of the brick by how far it went in (`Radius` minus the difference vector's component).",
+      "hint": "`Direction dir = std::get<1>(collision);` and the vector `std::get<2>(collision)`; `if (dir == LEFT || dir == RIGHT) { Ball.Velocity.x = -Ball.Velocity.x; float penetration = Ball.Radius - std::abs(diff_vector.x); if (dir == LEFT) Ball.Position.x += penetration; else Ball.Position.x -= penetration; } else { … the same with y: UP `-=`, DOWN `+=` … }`."
+    },
+    "paddle": {
+      "text": "After the bricks, test the ball against the paddle (unless it is stuck): bounce it up, sideways by where it hit – `percentage` of the half paddle from its centre, times `strength` 2 – keeping its speed.",
+      "hint": {
+        "opengl": "`float distance = (Ball.Position.x + Ball.Radius) - centerBoard; float percentage = distance / (Player.Size.x / 2.0f);`, `Ball.Velocity.x = INITIAL_BALL_VELOCITY.x * percentage * strength;`, `Ball.Velocity = glm::normalize(Ball.Velocity) * glm::length(oldVelocity);` and always up: `Ball.Velocity.y = -1.0f * std::abs(Ball.Velocity.y);`. With the course's fixed input the ball never meets the paddle: the picture does not change.",
+        "vulkan": "`float distance = (Ball.Position.x + Ball.Radius) - centerBoard; float percentage = distance / (Player.Size.x / 2.0f);`, `Ball.Velocity.x = INITIAL_BALL_VELOCITY.x * percentage * strength;`, `Ball.Velocity = glm::normalize(Ball.Velocity) * glm::length(oldVelocity);` and always up: `Ball.Velocity.y = -1.0f * std::abs(Ball.Velocity.y);`. With the course's fixed input the ball never meets the paddle: the picture does not change.",
+        "d3d12": "`float distance = (Ball.Position.x + Ball.Radius) - centerBoard; float percentage = distance / (Player.Size.x / 2.0f);`, `XMVECTOR oldVelocity = XMLoadFloat2(&Ball.Velocity);`, `Ball.Velocity.x = INITIAL_BALL_VELOCITY.x * percentage * strength;`, `XMStoreFloat2(&Ball.Velocity, XMVector2Normalize(XMLoadFloat2(&Ball.Velocity)) * XMVector2Length(oldVelocity));` and `Ball.Velocity.y = -1.0f * std::abs(Ball.Velocity.y);`. The picture does not change."
+      }
+    },
+    "lose-ball": {
+      "text": "Add `ResetLevel` (reload the current level from its file) and `ResetPlayer` (paddle back at the bottom centre, the ball stuck on it with the initial velocity); in `Update`, when the ball reaches the bottom edge, call both.",
+      "hint": {
+        "opengl": "`if (game.Level == 0) LoadLevel(game.Levels[0], \"levels/one.lvl\", game.Width, game.Height / 2); else if …` for the four levels; `Reset(Ball, Player.Position + glm::vec2(PLAYER_SIZE.x / 2.0f - BALL_RADIUS, -(BALL_RADIUS * 2.0f)), INITIAL_BALL_VELOCITY);`. After DoCollisions: `if (Ball.Position.y >= game.Height) { ResetLevel(game); ResetPlayer(game); }`.",
+        "vulkan": "`if (game.Level == 0) LoadLevel(game.Levels[0], \"levels/one.lvl\", game.Width, game.Height / 2); else if …` for the four levels; `Reset(Ball, Player.Position + glm::vec2(PLAYER_SIZE.x / 2.0f - BALL_RADIUS, -(BALL_RADIUS * 2.0f)), INITIAL_BALL_VELOCITY);`. After DoCollisions: `if (Ball.Position.y >= game.Height) { ResetLevel(game); ResetPlayer(game); }`.",
+        "d3d12": "`if (game.Level == 0) LoadLevel(game.Levels[0], \"levels/one.lvl\", game.Width, game.Height / 2); else if …` for the four levels; `Reset(Ball, XMFLOAT2(Player.Position.x + PLAYER_SIZE.x / 2.0f - BALL_RADIUS, Player.Position.y - BALL_RADIUS * 2.0f), INITIAL_BALL_VELOCITY);`. After DoCollisions: `if (Ball.Position.y >= game.Height) { ResetLevel(game); ResetPlayer(game); }`."
+      }
+    }
+  }
+}

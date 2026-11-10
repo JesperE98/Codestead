@@ -1,0 +1,21 @@
+{
+  "title": "Kollisionsdetektering",
+  "tasks": {
+    "aabb": {
+      "text": "Skriv `CheckCollision` för två GameObjects som axelriktade lådor (AABB – AABB): de krockar när de överlappar på x-axeln och på y-axeln.",
+      "hint": "På x: `one.Position.x + one.Size.x >= two.Position.x && two.Position.x + two.Size.x >= one.Position.x`; likadant med y och höjderna; `return collisionX && collisionY;`."
+    },
+    "do-collisions": {
+      "text": "Skriv `DoCollisions`: för varje block som inte är förstört än, förstör det om bollen krockar med det – om det inte är solitt. Anropa den i `Update` efter att bollen har flyttats.",
+      "hint": "`for (GameObject& box : game.Levels[game.Level].Bricks)` (en referens, så att `box.Destroyed = true` ändrar banans block), `if (!box.Destroyed)`, `if (CheckCollision(Ball, box))`, `if (!box.IsSolid) box.Destroyed = true;`. `DoCollisions(game);` efter `Move(Ball, dt, game.Width);`."
+    },
+    "circle": {
+      "text": "Skriv `CheckCollision` för bollen och ett GameObject (AABB – cirkel): hitta den punkt i lådan som ligger närmast bollens mittpunkt (kläm skillnaden mellan mittpunkterna till lådans halva utsträckning) och testa om den ligger närmare än `Radius`.",
+      "hint": {
+        "opengl": "En överlagring ovanför `DoCollisions`: `bool CheckCollision(BallObject& one, GameObject& two)`. `center = one.Position + one.Radius`, `clamped = glm::clamp(difference, -aabb_half_extents, aabb_half_extents)`, `closest = aabb_center + clamped`, `return glm::length(closest - center) < one.Radius;`.",
+        "vulkan": "En överlagring ovanför `DoCollisions`: `bool CheckCollision(BallObject& one, GameObject& two)`. `center = one.Position + one.Radius`, `clamped = glm::clamp(difference, -aabb_half_extents, aabb_half_extents)`, `closest = aabb_center + clamped`, `return glm::length(closest - center) < one.Radius;`.",
+        "d3d12": "En överlagring ovanför `DoCollisions`: `bool CheckCollision(BallObject& one, GameObject& two)`. `XMVECTOR center = XMLoadFloat2(&one.Position) + XMVectorReplicate(one.Radius);`, lådans mitt och halva utsträckning med `XMVectorSet`, `XMVectorClamp(difference, -aabb_half_extents, aabb_half_extents)`, `return XMVectorGetX(XMVector2Length(difference)) < one.Radius;`."
+      }
+    }
+  }
+}

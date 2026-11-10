@@ -32,6 +32,7 @@ public static partial class TaskChecks
         foreach (var (chapter, checks) in AdvancedLighting4) Add(chapter, checks);
         foreach (var (chapter, checks) in Pbr) Add(chapter, checks);
         foreach (var (chapter, checks) in InPractice) Add(chapter, checks);
+        foreach (var (chapter, checks) in InPractice2) Add(chapter, checks);
         return d;
     });
 

@@ -1,0 +1,379 @@
+=== task: remove-test
+--- file: main.cpp
+--- find:
+    Ball = MakeBallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, GetTexture("ball").ID);
+    // try the power-ups out: one of each kind in the empty row above the stones (no brick breaks with the fixed input)
+    game.PowerUps.push_back(MakePowerUp("speed", glm::vec3(0.5f, 0.5f, 1.0f), 0.0f, glm::vec2(40.0f, 160.0f), GetTexture("powerup_speed").ID));
+    game.PowerUps.push_back(MakePowerUp("sticky", glm::vec3(1.0f, 0.5f, 1.0f), 20.0f, glm::vec2(150.0f, 160.0f), GetTexture("powerup_sticky").ID));
+    game.PowerUps.push_back(MakePowerUp("pass-through", glm::vec3(0.5f, 1.0f, 0.5f), 10.0f, glm::vec2(260.0f, 160.0f), GetTexture("powerup_pass").ID));
+    game.PowerUps.push_back(MakePowerUp("pad-size-increase", glm::vec3(1.0f, 0.6f, 0.4f), 0.0f, glm::vec2(370.0f, 160.0f), GetTexture("powerup_increase").ID));
+    game.PowerUps.push_back(MakePowerUp("confuse", glm::vec3(1.0f, 0.3f, 0.3f), 15.0f, glm::vec2(480.0f, 160.0f), GetTexture("powerup_confuse").ID));
+    game.PowerUps.push_back(MakePowerUp("chaos", glm::vec3(0.9f, 0.25f, 0.25f), 15.0f, glm::vec2(590.0f, 160.0f), GetTexture("powerup_chaos").ID));
+--- replace:
+    Ball = MakeBallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, GetTexture("ball").ID);
+
+=== task: text-renderer
+--- file: text_2d.vs
+--- find:
+    // TODO: transform the position with the projection and pass the texture coordinates on
+    gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+--- replace:
+    gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);
+    TexCoords = vertex.zw;
+--- file: text_2d.fs
+--- find:
+    // TODO: the glyph texture's red channel as the alpha of textColor
+    color = vec4(textColor, 1.0);
+--- replace:
+    // the glyph texture has one channel (red): it is the glyph's coverage, used as alpha
+    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);
+    color = vec4(textColor, 1.0) * sampled;
+--- file: main.cpp
+--- find:
+// TODO: struct Character, struct TextRenderer (Characters, TextShader, VAO, VBO) and the function InitTextRenderer
+--- replace:
+/// Holds all state information relevant to a character as loaded using FreeType
+struct Character {
+    unsigned int TextureID; // ID handle of the glyph texture
+    glm::ivec2   Size;      // size of glyph
+    glm::ivec2   Bearing;   // offset from baseline to left/top of glyph
+    unsigned int Advance;   // horizontal offset to advance to next glyph
+};
+
+// A renderer for rendering text displayed by a font loaded using the
+// FreeType library. A single font is loaded, processed into a list of Character
+// items for later rendering.
+struct TextRenderer
+{
+    // holds a list of pre-compiled Characters
+    std::map<char, Character> Characters;
+    // shader used for text rendering
+    Shader       TextShader;
+    // render state
+    unsigned int VAO = 0, VBO = 0;
+};
+
+// loads the text shader and configures the quad's buffer (learnopengl's TextRenderer constructor)
+void InitTextRenderer(TextRenderer& renderer, unsigned int width, unsigned int height)
+{
+    // load and configure shader
+    renderer.TextShader = LoadShader("text_2d.vs", "text_2d.fs", nullptr, "text");
+    SetMatrix4(renderer.TextShader, "projection", glm::ortho(0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f), true);
+    SetInteger(renderer.TextShader, "text", 0);
+    // configure VAO/VBO for texture quads
+    glGenVertexArrays(1, &renderer.VAO);
+    glGenBuffers(1, &renderer.VBO);
+    glBindVertexArray(renderer.VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, renderer.VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+--- file: main.cpp
+--- find:
+// TODO: the text renderer: a global TextRenderer Text
+--- replace:
+TextRenderer   Text;
+--- file: main.cpp
+--- find:
+    // TODO: set up the text renderer (the text shader with its projection, the quad's buffer)
+--- replace:
+    // set up the text renderer (learnopengl's TextRenderer constructor) and load the font at 24 pixels
+    InitTextRenderer(Text, game.Width, game.Height);
+--- file: main.cpp
+--- find:
+    glDeleteTextures(1, &Effects.Texture.ID);
+--- replace:
+    glDeleteTextures(1, &Effects.Texture.ID);
+    glDeleteVertexArrays(1, &Text.VAO);
+    glDeleteBuffers(1, &Text.VBO);
+
+=== task: load-font
+--- file: main.cpp
+--- find:
+#include <glm/gtc/type_ptr.hpp>
+--- replace:
+#include <glm/gtc/type_ptr.hpp>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+--- file: main.cpp
+--- find:
+// TODO: the function Load: a GL_RED texture and a Character for each of the first 128 ASCII characters of the font, with FreeType
+--- replace:
+// pre-compiles a list of characters from the given font
+void Load(TextRenderer& renderer, std::string font, unsigned int fontSize)
+{
+    // first clear the previously loaded Characters
+    renderer.Characters.clear();
+    // then initialize and load the FreeType library
+    FT_Library ft;
+    if (FT_Init_FreeType(&ft)) // all functions return a value different than 0 whenever an error occurred
+        std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+    // load font as face
+    FT_Face face;
+    if (FT_New_Face(ft, font.c_str(), 0, &face))
+        std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+    // set size to load glyphs as
+    FT_Set_Pixel_Sizes(face, 0, fontSize);
+    // disable byte-alignment restriction
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    // then for the first 128 ASCII characters, pre-load/compile their characters and store them
+    for (GLubyte c = 0; c < 128; c++)
+    {
+        // load character glyph
+        if (FT_Load_Char(face, c, FT_LOAD_RENDER))
+        {
+            std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+            continue;
+        }
+        // generate texture
+        unsigned int texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RED,
+            face->glyph->bitmap.width,
+            face->glyph->bitmap.rows,
+            0,
+            GL_RED,
+            GL_UNSIGNED_BYTE,
+            face->glyph->bitmap.buffer
+            );
+        // set texture options
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        // now store character for later use
+        Character character = {
+            texture,
+            glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+            glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+            static_cast<unsigned int>(face->glyph->advance.x)
+        };
+        renderer.Characters.insert(std::pair<char, Character>(c, character));
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+    // destroy FreeType once we're finished
+    FT_Done_Face(face);
+    FT_Done_FreeType(ft);
+}
+--- file: main.cpp
+--- find:
+    // TODO: load the font fonts/Inter-Bold.otf at 24 pixels
+--- replace:
+    Load(Text, "fonts/Inter-Bold.otf", 24);
+--- file: main.cpp
+--- find:
+    glDeleteBuffers(1, &Text.VBO);
+--- replace:
+    glDeleteBuffers(1, &Text.VBO);
+    for (auto& character : Text.Characters)
+        glDeleteTextures(1, &character.second.TextureID);
+
+=== task: lives
+--- file: main.cpp
+--- find:
+    // TODO: the player's lives (3)
+--- replace:
+    unsigned int            Lives = 3;
+--- file: main.cpp
+--- find:
+        LoadLevel(game.Levels[3], "levels/four.lvl", game.Width, game.Height / 2);
+}
+--- replace:
+        LoadLevel(game.Levels[3], "levels/four.lvl", game.Width, game.Height / 2);
+
+    game.Lives = 3;
+}
+--- file: main.cpp
+--- find:
+    if (Ball.Position.y >= game.Height) // did ball reach bottom edge?
+    {
+        ResetLevel(game);
+        ResetPlayer(game);
+    }
+--- replace:
+    if (Ball.Position.y >= game.Height) // did ball reach bottom edge?
+    {
+        --game.Lives;
+        // did the player lose all his lives? : game over
+        if (game.Lives == 0)
+        {
+            ResetLevel(game);
+            game.State = GAME_MENU;
+        }
+        ResetPlayer(game);
+    }
+
+=== task: render-text
+--- file: main.cpp
+--- find:
+// TODO: the function RenderText: a quad per character, with the glyph's texture, from the top-left corner (x, y)
+--- replace:
+// renders a string of text using the precompiled list of characters (x, y: its top-left corner)
+void RenderText(TextRenderer& renderer, std::string text, float x, float y, float scale, glm::vec3 color = glm::vec3(1.0f))
+{
+    // activate corresponding render state
+    Use(renderer.TextShader);
+    SetVector3f(renderer.TextShader, "textColor", color);
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(renderer.VAO);
+
+    // iterate through all characters
+    std::string::const_iterator c;
+    for (c = text.begin(); c != text.end(); c++)
+    {
+        Character ch = renderer.Characters[*c];
+
+        float xpos = x + ch.Bearing.x * scale;
+        float ypos = y + (renderer.Characters['H'].Bearing.y - ch.Bearing.y) * scale;
+
+        float w = ch.Size.x * scale;
+        float h = ch.Size.y * scale;
+        // update VBO for each character
+        float vertices[6][4] = {
+            { xpos,     ypos + h,   0.0f, 1.0f },
+            { xpos + w, ypos,       1.0f, 0.0f },
+            { xpos,     ypos,       0.0f, 0.0f },
+
+            { xpos,     ypos + h,   0.0f, 1.0f },
+            { xpos + w, ypos + h,   1.0f, 1.0f },
+            { xpos + w, ypos,       1.0f, 0.0f }
+        };
+        // render glyph texture over quad
+        glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+        // update content of VBO memory
+        glBindBuffer(GL_ARRAY_BUFFER, renderer.VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); // be sure to use glBufferSubData and not glBufferData
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        // render quad
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        // now advance cursors for next glyph
+        x += (ch.Advance >> 6) * scale; // bitshift by 6 to get value in pixels (1/64th times 2^6 = 64)
+    }
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+--- file: main.cpp
+--- find:
+        // TODO: render the text "Lives:" with the number of lives at (5, 5), after the postprocessing quad
+--- replace:
+        // render text (don't include in postprocessing)
+        RenderText(Text, "Lives:" + std::to_string(game.Lives), 5.0f, 5.0f, 1.0f);
+
+=== task: menu
+--- file: main.cpp
+--- find:
+    GameState               State = GAME_ACTIVE;
+    bool                    Keys[1024] = {};
+--- replace:
+    GameState               State = GAME_MENU;
+    bool                    Keys[1024] = {};
+    bool                    KeysProcessed[1024] = {};
+--- file: main.cpp
+--- find:
+    // TODO: the menu: ENTER starts the game, W and S select the level (each only once per key press: KeysProcessed)
+--- replace:
+    if (game.State == GAME_MENU)
+    {
+        if (game.Keys[GLFW_KEY_ENTER] && !game.KeysProcessed[GLFW_KEY_ENTER])
+        {
+            game.State = GAME_ACTIVE;
+            game.KeysProcessed[GLFW_KEY_ENTER] = true;
+        }
+        if (game.Keys[GLFW_KEY_W] && !game.KeysProcessed[GLFW_KEY_W])
+        {
+            game.Level = (game.Level + 1) % 4;
+            game.KeysProcessed[GLFW_KEY_W] = true;
+        }
+        if (game.Keys[GLFW_KEY_S] && !game.KeysProcessed[GLFW_KEY_S])
+        {
+            if (game.Level > 0)
+                --game.Level;
+            else
+                game.Level = 3;
+            game.KeysProcessed[GLFW_KEY_S] = true;
+        }
+    }
+--- file: main.cpp
+--- find:
+    if (game.State == GAME_ACTIVE)
+    {
+        // begin rendering
+--- replace:
+    if (game.State == GAME_ACTIVE || game.State == GAME_MENU || game.State == GAME_WIN)
+    {
+        // begin rendering
+--- file: main.cpp
+--- find:
+    // TODO: in the menu: "Press ENTER to start" and "Press W or S to select level"
+--- replace:
+    if (game.State == GAME_MENU)
+    {
+        RenderText(Text, "Press ENTER to start", 250.0f, game.Height / 2.0f, 1.0f);
+        RenderText(Text, "Press W or S to select level", 245.0f, game.Height / 2.0f + 20.0f, 0.75f);
+    }
+--- file: main.cpp
+--- find:
+        else if (action == GLFW_RELEASE)
+            Hedgerow.Keys[key] = false;
+--- replace:
+        else if (action == GLFW_RELEASE)
+        {
+            Hedgerow.Keys[key] = false;
+            Hedgerow.KeysProcessed[key] = false;
+        }
+
+=== task: win
+--- file: main.cpp
+--- find:
+// TODO: IsCompleted: is every brick that is not solid destroyed?
+--- replace:
+// check if the level is completed (all non-solid tiles are destroyed)
+bool IsCompleted(GameLevel& level)
+{
+    for (GameObject& tile : level.Bricks)
+        if (!tile.IsSolid && !tile.Destroyed)
+            return false;
+    return true;
+}
+--- file: main.cpp
+--- find:
+    // TODO: check the win condition: when the level is completed, reset it and the player, switch chaos on and show the win screen
+--- replace:
+    // check win condition
+    if (game.State == GAME_ACTIVE && IsCompleted(game.Levels[game.Level]))
+    {
+        ResetLevel(game);
+        ResetPlayer(game);
+        Effects.Chaos = true;
+        game.State = GAME_WIN;
+    }
+--- file: main.cpp
+--- find:
+    // TODO: the win screen: ENTER switches chaos off and goes back to the menu
+--- replace:
+    if (game.State == GAME_WIN)
+    {
+        if (game.Keys[GLFW_KEY_ENTER])
+        {
+            game.KeysProcessed[GLFW_KEY_ENTER] = true;
+            Effects.Chaos = false;
+            game.State = GAME_MENU;
+        }
+    }
+--- file: main.cpp
+--- find:
+    // TODO: when won: "You WON!!!" and "Press ENTER to retry or ESC to quit"
+--- replace:
+    if (game.State == GAME_WIN)
+    {
+        RenderText(Text, "You WON!!!", 320.0f, game.Height / 2.0f - 20.0f, 1.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        RenderText(Text, "Press ENTER to retry or ESC to quit", 130.0f, game.Height / 2.0f, 1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
+    }

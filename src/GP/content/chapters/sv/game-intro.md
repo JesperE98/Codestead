@@ -71,7 +71,7 @@ Spelet byggs upp under de här kapitlen, och vart och ett lägger till en del; d
 2. **Rendera sprites** – den ortografiska projektionen och sprite-renderaren: en texturerad rektangel, ritad var som
    helst, i valfri storlek och vinkel.
 3. **Banor** – spelobjekten, banfilerna, bakgrunden, den första banan och racketen.
-4. **Boll**, **Kollisionsdetektering** och **Kollisionshantering** – bollen, och hur den träffar och studsar mot saker.
+4. **Bollen**, **Kollisionsdetektering** och **Kollisionshantering** – bollen, och hur den träffar och studsar mot saker.
 5. **Partiklar**, **Efterbehandling** och **Power-ups** – spåret efter bollen, effekterna, power-upsen.
 6. **Ljud**, **Rendera text** och **Slutord** – ljud, menyn och liven, och en återblick.
 

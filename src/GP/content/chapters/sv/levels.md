@@ -166,7 +166,7 @@ Innan det finns något att göra objekt av behöver spelet sina bilder. Kursens 
 - `block.png` – 128 × 128, en ljus platta med fasad kant, som spelet tonar med blockets färg;
 - `block_solid.png` – 128 × 128, ett block av grå sten;
 - `paddle.png` – 512 × 128 med genomskinliga hörn, en racket av trä med mässingsändar;
-- och `ball.png` från förra kapitlet, som förblir laddad för kapitlet Boll men inte längre ritas.
+- och `ball.png` från förra kapitlet, som förblir laddad för kapitlet Bollen men inte längre ritas.
 
 learnopengl laddar sina egna bilder här under samma namn.
 
