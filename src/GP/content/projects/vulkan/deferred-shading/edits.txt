@@ -1,0 +1,841 @@
+=== task: g-buffer
+--- file: main.cpp
+--- find:
+    VkRenderPass renderPass;
+--- replace:
+    VkRenderPass renderPass;
+    VkRenderPass gBufferRenderPass; // the geometry pass draws into the G-buffer with this render pass
+--- file: main.cpp
+--- find:
+    VkPipeline forwardPipeline; // forward_shading: the boxes, each fragment lit by all the lights
+--- replace:
+    VkPipeline geometryPipeline; // learnopengl's shaderGeometryPass (g_buffer): the boxes into the G-buffer
+    VkPipeline lightingPipeline; // learnopengl's shaderLightingPass (deferred_shading): the screen quad
+--- file: main.cpp
+--- find:
+    // TODO: the G-buffer (createGBuffer)
+--- replace:
+    // the G-buffer (learnopengl's gBuffer): three colour images - the positions, the normals, and the diffuse colour +
+    // specular intensity - and a depth image of its own
+    VkImage gPositionImage;
+    VkDeviceMemory gPositionImageMemory;
+    VkImageView gPositionImageView;
+    VkImage gNormalImage;
+    VkDeviceMemory gNormalImageMemory;
+    VkImageView gNormalImageView;
+    VkImage gAlbedoSpecImage;
+    VkDeviceMemory gAlbedoSpecImageMemory;
+    VkImageView gAlbedoSpecImageView;
+    VkImage gBufferDepthImage;
+    VkDeviceMemory gBufferDepthImageMemory;
+    VkImageView gBufferDepthImageView;
+    VkFramebuffer gBufferFramebuffer;
+--- file: main.cpp
+--- find:
+    VkSampler textureSampler;
+--- replace:
+    VkSampler textureSampler;
+    VkSampler gBufferSampler; // for the G-buffer's images: the nearest texel, clamp to the edge
+--- file: main.cpp
+--- find:
+    VkDescriptorSet containerDescriptorSet; // the uniform buffer and the box's two textures
+--- replace:
+    VkDescriptorSet containerDescriptorSet; // the uniform buffer and the box's two textures
+    VkDescriptorSet gBufferDescriptorSet; // the uniform buffer and the G-buffer's three images
+--- file: main.cpp
+--- find:
+        // TODO: the G-buffer's render pass (createGBufferRenderPass)
+--- replace:
+        createGBufferRenderPass();
+--- file: main.cpp
+--- find:
+        // forward rendering: the boxes drawn straight into the window, every fragment lit by all the lights
+        createPipeline("shaders/forward_shading.vert.spv", "shaders/forward_shading.frag.spv", renderPass, 1, forwardPipeline);
+--- replace:
+        // a pipeline is made for one render pass: the geometry pass's for the G-buffer's (3 colour attachments)
+        createPipeline("shaders/g_buffer.vert.spv", "shaders/g_buffer.frag.spv", gBufferRenderPass, 3, geometryPipeline);
+        // the lighting pass's (the screen quad) for the window's
+        createPipeline("shaders/deferred_shading.vert.spv", "shaders/deferred_shading.frag.spv", renderPass, 1, lightingPipeline);
+--- file: main.cpp
+--- find:
+        // TODO: the G-buffer's images and framebuffer (createGBuffer)
+--- replace:
+        createGBuffer();
+--- file: main.cpp
+--- find:
+        createTextureSampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, textureSampler);
+--- replace:
+        createTextureSampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, textureSampler);
+        // the screen quad reads the G-buffer texel by texel (learnopengl: GL_NEAREST)
+        createTextureSampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, gBufferSampler);
+--- file: main.cpp
+--- find:
+        createDescriptorSet(diffuseTextureImageView, specularTextureImageView, textureSampler, containerDescriptorSet);
+--- replace:
+        createDescriptorSet(diffuseTextureImageView, specularTextureImageView, textureSampler, containerDescriptorSet);
+        createGBufferDescriptorSet(gPositionImageView, gNormalImageView, gAlbedoSpecImageView, gBufferSampler, gBufferDescriptorSet);
+--- file: main.cpp
+--- find:
+        vkDestroySampler(device, textureSampler, nullptr);
+--- replace:
+        vkDestroySampler(device, textureSampler, nullptr);
+        vkDestroySampler(device, gBufferSampler, nullptr);
+--- file: main.cpp
+--- find:
+        // TODO: destroy the G-buffer
+--- replace:
+        vkDestroyFramebuffer(device, gBufferFramebuffer, nullptr);
+        vkDestroyImageView(device, gPositionImageView, nullptr);
+        vkDestroyImage(device, gPositionImage, nullptr);
+        vkFreeMemory(device, gPositionImageMemory, nullptr);
+        vkDestroyImageView(device, gNormalImageView, nullptr);
+        vkDestroyImage(device, gNormalImage, nullptr);
+        vkFreeMemory(device, gNormalImageMemory, nullptr);
+        vkDestroyImageView(device, gAlbedoSpecImageView, nullptr);
+        vkDestroyImage(device, gAlbedoSpecImage, nullptr);
+        vkFreeMemory(device, gAlbedoSpecImageMemory, nullptr);
+        vkDestroyImageView(device, gBufferDepthImageView, nullptr);
+        vkDestroyImage(device, gBufferDepthImage, nullptr);
+        vkFreeMemory(device, gBufferDepthImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, forwardPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, geometryPipeline, nullptr);
+        vkDestroyPipeline(device, lightingPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyRenderPass(device, renderPass, nullptr);
+--- replace:
+        vkDestroyRenderPass(device, renderPass, nullptr);
+        vkDestroyRenderPass(device, gBufferRenderPass, nullptr);
+--- file: main.cpp
+--- find:
+    // TODO: createGBufferRenderPass()
+--- replace:
+    // The G-buffer's render pass (the geometry pass): three colour attachments - learnopengl's gPosition and gNormal
+    // (16-bit floats: positions and normals are not limited to 0..1) and gAlbedoSpec (8 bits per channel are enough for a
+    // colour and the specular intensity) - and a depth attachment. At the end of the pass the colour images are left
+    // ready to be read by the lighting pass's shader.
+    void createGBufferRenderPass() {
+        VkAttachmentDescription positionAttachment{};
+        positionAttachment.format = VK_FORMAT_R16G16B16A16_SFLOAT; // learnopengl: GL_RGBA16F
+        positionAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        positionAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        positionAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // keep the data: the lighting pass reads it
+        positionAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        positionAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        positionAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        positionAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+
+        // the normals: the same kind of attachment
+        VkAttachmentDescription normalAttachment = positionAttachment;
+
+        // the diffuse colour (rgb) and the specular intensity (a): learnopengl's GL_RGBA
+        VkAttachmentDescription albedoSpecAttachment = positionAttachment;
+        albedoSpecAttachment.format = VK_FORMAT_R8G8B8A8_UNORM;
+
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthFormat();
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        // the fragment shader's outputs: location n -> attachment n (learnopengl's glDrawBuffers(3, attachments))
+        std::array<VkAttachmentReference, 3> colorAttachmentRefs{};
+        colorAttachmentRefs[0].attachment = 0;
+        colorAttachmentRefs[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachmentRefs[1].attachment = 1;
+        colorAttachmentRefs[1].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachmentRefs[2].attachment = 2;
+        colorAttachmentRefs[2].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 3;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
+        subpass.pColorAttachments = colorAttachmentRefs.data();
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: wait until the last frame's lighting pass has read the images and its depth writes are done
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        // after the pass: the lighting pass's fragment shader waits until the G-buffer has been written
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        std::array<VkAttachmentDescription, 4> attachments = {positionAttachment, normalAttachment, albedoSpecAttachment, depthAttachment};
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderPassInfo.pAttachments = attachments.data();
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &gBufferRenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create G-buffer render pass!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {uboLayoutBinding, samplerLayoutBinding, sampler2LayoutBinding};
+--- replace:
+        // a third texture at binding 3: the lighting pass reads the G-buffer's three images at bindings 1, 2 and 3 (the
+        // boxes' set leaves binding 3 empty; their shaders do not use it)
+        VkDescriptorSetLayoutBinding sampler3LayoutBinding = samplerLayoutBinding;
+        sampler3LayoutBinding.binding = 3;
+
+        std::array<VkDescriptorSetLayoutBinding, 4> bindings = {uboLayoutBinding, samplerLayoutBinding, sampler2LayoutBinding, sampler3LayoutBinding};
+--- file: main.cpp
+--- find:
+    // TODO: createGBuffer()
+--- replace:
+    // The G-buffer, the size of the window (learnopengl's gBuffer): three colour images that the geometry pass draws into
+    // (colour attachments) and the lighting pass reads (sampled), a depth image (learnopengl's rboDepth) and the
+    // framebuffer that puts them together for gBufferRenderPass. (Every Vulkan device can render into and sample
+    // VK_FORMAT_R16G16B16A16_SFLOAT and VK_FORMAT_R8G8B8A8_UNORM images.)
+    void createGBuffer() {
+        // position color buffer
+        createImage(swapChainExtent.width, swapChainExtent.height, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, gPositionImage, gPositionImageMemory);
+        gPositionImageView = createImageView(gPositionImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
+        // normal color buffer
+        createImage(swapChainExtent.width, swapChainExtent.height, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, gNormalImage, gNormalImageMemory);
+        gNormalImageView = createImageView(gNormalImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
+        // color + specular color buffer
+        createImage(swapChainExtent.width, swapChainExtent.height, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, gAlbedoSpecImage, gAlbedoSpecImageMemory);
+        gAlbedoSpecImageView = createImageView(gAlbedoSpecImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+        // and a depth image
+        VkFormat depthFormat = findDepthFormat();
+        createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, gBufferDepthImage, gBufferDepthImageMemory);
+        gBufferDepthImageView = createImageView(gBufferDepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+        std::array<VkImageView, 4> attachments = {
+            gPositionImageView,
+            gNormalImageView,
+            gAlbedoSpecImageView,
+            gBufferDepthImageView
+        };
+
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = gBufferRenderPass;
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        framebufferInfo.pAttachments = attachments.data();
+        framebufferInfo.width = swapChainExtent.width;
+        framebufferInfo.height = swapChainExtent.height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &gBufferFramebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create G-buffer framebuffer!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        // one descriptor set: the uniform buffer and the two textures of the boxes
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 2;
+--- replace:
+        // two descriptor sets: the boxes' and the G-buffer's. Each set takes what the layout has - one uniform buffer
+        // and three textures -, even when a binding stays empty.
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 2;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 6;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 1;
+--- replace:
+        poolInfo.maxSets = 2;
+--- file: main.cpp
+--- find:
+    // TODO: createGBufferDescriptorSet()
+--- replace:
+    // The lighting pass's descriptor set: the uniform buffer (binding 0) and the G-buffer's three images (bindings 1, 2
+    // and 3) - learnopengl's gPosition, gNormal and gAlbedoSpec texture units.
+    void createGBufferDescriptorSet(VkImageView positionImageView, VkImageView normalImageView, VkImageView albedoSpecImageView, VkSampler sampler, VkDescriptorSet& descriptorSet) {
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &descriptorSetLayout;
+
+        if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        VkDescriptorImageInfo positionInfo{};
+        positionInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        positionInfo.imageView = positionImageView;
+        positionInfo.sampler = sampler;
+
+        VkDescriptorImageInfo normalInfo{};
+        normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        normalInfo.imageView = normalImageView;
+        normalInfo.sampler = sampler;
+
+        VkDescriptorImageInfo albedoSpecInfo{};
+        albedoSpecInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        albedoSpecInfo.imageView = albedoSpecImageView;
+        albedoSpecInfo.sampler = sampler;
+
+        std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &positionInfo;
+
+        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[2].dstSet = descriptorSet;
+        descriptorWrites[2].dstBinding = 2;
+        descriptorWrites[2].dstArrayElement = 0;
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[2].descriptorCount = 1;
+        descriptorWrites[2].pImageInfo = &normalInfo;
+
+        descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[3].dstSet = descriptorSet;
+        descriptorWrites[3].dstBinding = 3;
+        descriptorWrites[3].dstArrayElement = 0;
+        descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[3].descriptorCount = 1;
+        descriptorWrites[3].pImageInfo = &albedoSpecInfo;
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+--- file: main.cpp
+--- find:
+        // TODO: 1. geometry pass: render the scene's geometry/colour data into the G-buffer
+
+        // forward rendering: the boxes straight into the window
+--- replace:
+        // 1. geometry pass: render scene's geometry/color data into gbuffer
+        VkRenderPassBeginInfo gBufferPassInfo{};
+        gBufferPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        gBufferPassInfo.renderPass = gBufferRenderPass;
+        gBufferPassInfo.framebuffer = gBufferFramebuffer;
+        gBufferPassInfo.renderArea.offset = {0, 0};
+        gBufferPassInfo.renderArea.extent = swapChainExtent;
+
+        // one clear value per attachment: the three colour images, and the depth 1.0 (the far plane)
+        std::array<VkClearValue, 4> gBufferClearValues{};
+        gBufferClearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        gBufferClearValues[1].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        gBufferClearValues[2].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        gBufferClearValues[3].depthStencil = {1.0f, 0};
+
+        gBufferPassInfo.clearValueCount = static_cast<uint32_t>(gBufferClearValues.size());
+        gBufferPassInfo.pClearValues = gBufferClearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &gBufferPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(swapChainExtent.width);
+        viewport.height = static_cast<float>(swapChainExtent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = swapChainExtent;
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        VkBuffer vertexBuffers[] = {vertexBuffer};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, geometryPipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &containerDescriptorSet, 0, nullptr);
+        PushConstants constants{};
+        for (unsigned int i = 0; i < objectPositions.size(); i++) {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, objectPositions[i]);
+            model = glm::scale(model, glm::vec3(0.75f)); // boxes 1.5 units wide
+            constants.model = model;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+            vkCmdDraw(commandBuffer, 36, 1, 0, 0); // renderCube()
+        }
+
+        vkCmdEndRenderPass(commandBuffer); // the G-buffer's colour images are now in VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+
+        // 2. lighting pass: calculate lighting by iterating over a screen filled quad pixel-by-pixel using the gbuffer's
+        // content
+--- file: main.cpp
+--- find:
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(swapChainExtent.width);
+        viewport.height = static_cast<float>(swapChainExtent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = swapChainExtent;
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        VkBuffer vertexBuffers[] = {vertexBuffer};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, forwardPipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &containerDescriptorSet, 0, nullptr);
+        PushConstants constants{};
+        for (unsigned int i = 0; i < objectPositions.size(); i++) {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, objectPositions[i]);
+            model = glm::scale(model, glm::vec3(0.75f)); // boxes 1.5 units wide
+            constants.model = model;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+            vkCmdDraw(commandBuffer, 36, 1, 0, 0); // renderCube()
+        }
+--- replace:
+
+        // the screen quad, lit with the G-buffer's data (the viewport, scissor and vertex buffer set above still apply)
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightingPipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &gBufferDescriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // renderQuad(): the screen quad's 6 vertices start at vertex 36
+--- file: shaders/g_buffer.frag
+--- find:
+// TODO: the geometry pass: write the fragment's position, normal and diffuse colour + specular intensity into the
+// G-buffer's three colour attachments
+
+void main() {
+}
+--- replace:
+layout(binding = 1) uniform sampler2D texture_diffuse1;
+layout(binding = 2) uniform sampler2D texture_specular1;
+
+layout(location = 0) in VS_OUT {
+    vec3 fragPos;
+    vec3 normal;
+    vec2 texCoord;
+} fs_in;
+
+// location n = colour attachment n of the G-buffer's subpass (learnopengl's glDrawBuffers)
+layout(location = 0) out vec4 gPosition;
+layout(location = 1) out vec4 gNormal;
+layout(location = 2) out vec4 gAlbedoSpec;
+
+void main() {
+    // store the fragment position vector in the first gbuffer texture
+    gPosition = vec4(fs_in.fragPos, 1.0);
+    // also store the per-fragment normals into the gbuffer
+    gNormal = vec4(normalize(fs_in.normal), 1.0);
+    // and the diffuse per-fragment color
+    gAlbedoSpec.rgb = texture(texture_diffuse1, fs_in.texCoord).rgb;
+    // store specular intensity in gAlbedoSpec's alpha component
+    gAlbedoSpec.a = texture(texture_specular1, fs_in.texCoord).r;
+}
+--- file: shaders/deferred_shading.frag
+--- find:
+// TODO: the lighting pass: light every pixel of the screen quad with the G-buffer's data
+
+void main() {
+}
+--- replace:
+// the G-buffer: bindings 1, 2 and 3 (learnopengl's gPosition, gNormal and gAlbedoSpec texture units)
+layout(binding = 3) uniform sampler2D gAlbedoSpec;
+
+layout(location = 0) in vec2 fragTexCoord;
+
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    // for now: show the G-buffer's albedo (the diffuse colour)
+    vec3 Diffuse = texture(gAlbedoSpec, fragTexCoord).rgb;
+    outColor = vec4(Diffuse, 1.0);
+}
+
+=== task: lighting-pass
+--- file: shaders/deferred_shading.frag
+--- find:
+// the G-buffer: bindings 1, 2 and 3 (learnopengl's gPosition, gNormal and gAlbedoSpec texture units)
+layout(binding = 3) uniform sampler2D gAlbedoSpec;
+
+layout(location = 0) in vec2 fragTexCoord;
+
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    // for now: show the G-buffer's albedo (the diffuse colour)
+    vec3 Diffuse = texture(gAlbedoSpec, fragTexCoord).rgb;
+    outColor = vec4(Diffuse, 1.0);
+}
+--- replace:
+const int NR_LIGHTS = 32;
+
+// std140: a vec3 starts at a multiple of 16 bytes - a float after each vec3 fills the 4 bytes up to the next one
+struct Light {
+    vec3 position;
+    float linear;
+    vec3 color;
+    float quadratic;
+};
+
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    Light lights[NR_LIGHTS];
+    vec3 viewPos;
+} ubo;
+
+// the G-buffer: bindings 1, 2 and 3 (learnopengl's gPosition, gNormal and gAlbedoSpec texture units)
+layout(binding = 1) uniform sampler2D gPosition;
+layout(binding = 2) uniform sampler2D gNormal;
+layout(binding = 3) uniform sampler2D gAlbedoSpec;
+
+layout(location = 0) in vec2 fragTexCoord;
+
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    // retrieve data from gbuffer
+    vec3 FragPos = texture(gPosition, fragTexCoord).rgb;
+    vec3 Normal = texture(gNormal, fragTexCoord).rgb;
+    vec3 Diffuse = texture(gAlbedoSpec, fragTexCoord).rgb;
+    float Specular = texture(gAlbedoSpec, fragTexCoord).a;
+
+    // then calculate lighting as usual
+    vec3 lighting  = Diffuse * 0.1; // hard-coded ambient component
+    vec3 viewDir  = normalize(ubo.viewPos - FragPos);
+    for (int i = 0; i < NR_LIGHTS; ++i) {
+        // diffuse
+        vec3 lightDir = normalize(ubo.lights[i].position - FragPos);
+        vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Diffuse * ubo.lights[i].color;
+        // specular
+        vec3 halfwayDir = normalize(lightDir + viewDir);
+        float spec = pow(max(dot(Normal, halfwayDir), 0.0), 16.0);
+        vec3 specular = ubo.lights[i].color * spec * Specular;
+        // attenuation
+        float distance = length(ubo.lights[i].position - FragPos);
+        float attenuation = 1.0 / (1.0 + ubo.lights[i].linear * distance + ubo.lights[i].quadratic * distance * distance);
+        diffuse *= attenuation;
+        specular *= attenuation;
+        lighting += diffuse + specular;
+    }
+    outColor = vec4(lighting, 1.0);
+}
+
+=== task: light-cubes
+--- file: main.cpp
+--- find:
+// The same layout as the push constant block in the vertex shaders: the model matrix of one draw.
+struct PushConstants {
+    glm::mat4 model;
+};
+--- replace:
+// The same layout as the push constant blocks in the shaders: the model matrix of one draw (vertex shaders) and the
+// colour of a light cube (deferred_light_box.frag). Push constants are laid out like std430: the vec3 starts right after
+// the mat4.
+struct PushConstants {
+    glm::mat4 model;
+    glm::vec3 lightColor;
+};
+--- file: main.cpp
+--- find:
+    VkPipeline lightingPipeline; // learnopengl's shaderLightingPass (deferred_shading): the screen quad
+--- replace:
+    VkPipeline lightingPipeline; // learnopengl's shaderLightingPass (deferred_shading): the screen quad
+    VkPipeline lightBoxPipeline; // learnopengl's shaderLightBox (deferred_light_box): the light cubes
+--- file: main.cpp
+--- find:
+    VkCommandPool commandPool;
+
+    VkImage depthImage;
+    VkDeviceMemory depthImageMemory;
+    VkImageView depthImageView;
+--- replace:
+    VkCommandPool commandPool;
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/g_buffer.vert.spv", "shaders/g_buffer.frag.spv", gBufferRenderPass, 3, geometryPipeline);
+        // the lighting pass's (the screen quad) for the window's
+        createPipeline("shaders/deferred_shading.vert.spv", "shaders/deferred_shading.frag.spv", renderPass, 1, lightingPipeline);
+        createDepthResources();
+--- replace:
+        createPipeline("shaders/g_buffer.vert.spv", "shaders/g_buffer.frag.spv", gBufferRenderPass, 3, VK_TRUE, geometryPipeline);
+        // the lighting pass's (the screen quad) for the window's - without the depth test: the quad must neither be hidden
+        // by the G-buffer's depth nor overwrite it
+        createPipeline("shaders/deferred_shading.vert.spv", "shaders/deferred_shading.frag.spv", renderPass, 1, VK_FALSE, lightingPipeline);
+        // the light cubes, also in the window's pass, tested against the G-buffer's depth
+        createPipeline("shaders/deferred_light_box.vert.spv", "shaders/deferred_light_box.frag.spv", renderPass, 1, VK_TRUE, lightBoxPipeline);
+--- file: main.cpp
+--- find:
+        vkDestroyCommandPool(device, commandPool, nullptr);
+
+        vkDestroyImageView(device, depthImageView, nullptr);
+        vkDestroyImage(device, depthImage, nullptr);
+        vkFreeMemory(device, depthImageMemory, nullptr);
+--- replace:
+        vkDestroyCommandPool(device, commandPool, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, lightingPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, lightingPipeline, nullptr);
+        vkDestroyPipeline(device, lightBoxPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthFormat();
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference colorAttachmentRef{};
+--- replace:
+        // the depth attachment is the G-buffer's depth image: keep what the geometry pass wrote (load it, don't clear it)
+        // - learnopengl copies it into the window's depth buffer with glBlitFramebuffer
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthFormat();
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // as the geometry pass left it
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference colorAttachmentRef{};
+--- file: main.cpp
+--- find:
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+--- replace:
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; // the loaded depth is read
+--- file: main.cpp
+--- find:
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        // the fragment shader's outputs: location n -> attachment n
+--- replace:
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // keep the depth: the window's pass uses it for the light cubes
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        // the fragment shader's outputs: location n -> attachment n
+--- file: main.cpp
+--- find:
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // the model matrix
+--- replace:
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; // model: vertex, lightColor: fragment
+--- file: main.cpp
+--- find:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, uint32_t colorAttachmentCount, VkPipeline& pipeline) {
+--- replace:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, uint32_t colorAttachmentCount, VkBool32 depthTestEnable, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        depthStencil.depthTestEnable = VK_TRUE;
+        depthStencil.depthWriteEnable = VK_TRUE;
+--- replace:
+        depthStencil.depthTestEnable = depthTestEnable;
+        depthStencil.depthWriteEnable = depthTestEnable;
+--- file: main.cpp
+--- find:
+                swapChainImageViews[i],
+                depthImageView
+--- replace:
+                swapChainImageViews[i],
+                gBufferDepthImageView // the G-buffer's depth (createGBuffer() comes first)
+--- file: main.cpp
+--- find:
+    void createDepthResources() {
+        VkFormat depthFormat = findDepthFormat();
+
+        createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+        depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+    }
+
+    VkFormat findSupportedFormat(
+--- replace:
+    VkFormat findSupportedFormat(
+--- file: main.cpp
+--- find:
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+            vkCmdDraw(commandBuffer, 36, 1, 0, 0); // renderCube()
+--- replace:
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+            vkCmdDraw(commandBuffer, 36, 1, 0, 0); // renderCube()
+--- file: main.cpp
+--- find:
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        clearValues[1].depthStencil = {1.0f, 0};
+--- replace:
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        clearValues[1].depthStencil = {1.0f, 0}; // not used: the depth is loaded
+--- file: main.cpp
+--- find:
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // renderQuad(): the screen quad's 6 vertices start at vertex 36
+--- replace:
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // renderQuad(): the screen quad's 6 vertices start at vertex 36
+
+        // 3. render lights on top of scene: the pass's depth is the G-buffer's, so the boxes hide the light cubes behind them
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightBoxPipeline);
+        for (unsigned int i = 0; i < lightPositions.size(); i++) {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, lightPositions[i]);
+            model = glm::scale(model, glm::vec3(0.125f));
+            constants.model = model;
+            constants.lightColor = lightColors[i];
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+            vkCmdDraw(commandBuffer, 36, 1, 0, 0); // renderCube()
+        }
+--- file: shaders/deferred_light_box.frag
+--- find:
+// TODO: the light cubes: the light's colour
+
+void main() {
+}
+--- replace:
+// the push constants: the light's colour comes after the model matrix
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    vec3 lightColor;
+} pc;
+
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = vec4(pc.lightColor, 1.0);
+}
+
+=== task: light-volumes
+--- file: main.cpp
+--- find:
+struct Light {
+    glm::vec3 position;
+    float linear;
+    glm::vec3 color;
+    float quadratic;
+};
+--- replace:
+struct Light {
+    glm::vec3 position;
+    float linear;
+    glm::vec3 color;
+    float quadratic;
+    float radius; // the light volume's radius: farther away the light adds (almost) nothing
+    float pad1;   // std140 rounds the size of a struct up to a multiple of 16 bytes: 48
+    float pad2;
+    float pad3;
+};
+--- file: main.cpp
+--- find:
+    Light lights[NR_LIGHTS]; // an array of structs: the same stride (32 bytes) in both
+--- replace:
+    Light lights[NR_LIGHTS]; // an array of structs: the same stride (48 bytes) in both
+--- file: main.cpp
+--- find:
+            // update attenuation parameters
+            const float linear = 0.7f;
+            const float quadratic = 1.8f;
+            ubo.lights[i].linear = linear;
+            ubo.lights[i].quadratic = quadratic;
+--- replace:
+            // update attenuation parameters and calculate radius
+            const float constant = 1.0f; // note that we don't send this to the shader, we assume it is always 1.0 (in our case)
+            const float linear = 0.7f;
+            const float quadratic = 1.8f;
+            ubo.lights[i].linear = linear;
+            ubo.lights[i].quadratic = quadratic;
+            // then calculate radius of light volume/sphere
+            const float maxBrightness = std::fmaxf(std::fmaxf(lightColors[i].r, lightColors[i].g), lightColors[i].b);
+            float radius = (-linear + std::sqrt(linear * linear - 4 * quadratic * (constant - (256.0f / 5.0f) * maxBrightness))) / (2.0f * quadratic);
+            ubo.lights[i].radius = radius;
+--- file: shaders/deferred_shading.frag
+--- find:
+    float quadratic;
+};
+--- replace:
+    float quadratic;
+    float radius;
+};
+--- file: shaders/deferred_shading.frag
+--- find:
+        // diffuse
+        vec3 lightDir = normalize(ubo.lights[i].position - FragPos);
+        vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Diffuse * ubo.lights[i].color;
+        // specular
+        vec3 halfwayDir = normalize(lightDir + viewDir);
+        float spec = pow(max(dot(Normal, halfwayDir), 0.0), 16.0);
+        vec3 specular = ubo.lights[i].color * spec * Specular;
+        // attenuation
+        float distance = length(ubo.lights[i].position - FragPos);
+        float attenuation = 1.0 / (1.0 + ubo.lights[i].linear * distance + ubo.lights[i].quadratic * distance * distance);
+        diffuse *= attenuation;
+        specular *= attenuation;
+        lighting += diffuse + specular;
+--- replace:
+        // calculate distance between light source and current fragment
+        float distance = length(ubo.lights[i].position - FragPos);
+        if (distance < ubo.lights[i].radius) {
+            // diffuse
+            vec3 lightDir = normalize(ubo.lights[i].position - FragPos);
+            vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Diffuse * ubo.lights[i].color;
+            // specular
+            vec3 halfwayDir = normalize(lightDir + viewDir);
+            float spec = pow(max(dot(Normal, halfwayDir), 0.0), 16.0);
+            vec3 specular = ubo.lights[i].color * spec * Specular;
+            // attenuation
+            float attenuation = 1.0 / (1.0 + ubo.lights[i].linear * distance + ubo.lights[i].quadratic * distance * distance);
+            diffuse *= attenuation;
+            specular *= attenuation;
+            lighting += diffuse + specular;
+        }
