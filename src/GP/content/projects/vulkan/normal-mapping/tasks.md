@@ -73,8 +73,8 @@ quad darker than 25.
   tangent/bitangent block (`tangent1`, `bitangent1`, `tangent2`, `bitangent2`, `edge1`, `edge2`, `deltaUV1`,
   `deltaUV2`, `f`) and the six vertices with their triangle's tangent/bitangent. `normal_mapping.vert`: `layout(location =
   3) in vec3 inTangent;`, `layout(location = 4) in vec3 inBitangent;`. **No visible change** (the shaders do not use them
-  yet): the picture is identical to `normal-map` (0 pixels differ). For this quad both triangles get tangent (1, 0, 0)
-  and bitangent (0, 1, 0).
+  yet): the picture is identical to `normal-map` (0 pixels differ). For this quad both triangles get tangent (2, 0, 0)
+  and bitangent (0, 2, 0) (learnopengl's formula; the shader normalises them).
 
 ## tbn
 - **Task:** Build the TBN matrix in the vertex shader (tangent, bitangent and normal transformed with the normal matrix) and use its transpose to bring the light position, the view position and the fragment position into tangent space; the fragment shader lights with those, so the normal map's normals are used in the space they were made in.

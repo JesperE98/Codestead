@@ -110,10 +110,3 @@ highlight); **seam** (400,300) = 47,32,19; **wall-right** (700,450) = 61,42,25; 
   the shadow's edges (x 38..357, y 0..202); in the box x 0..360, y 0..200 the pixels with red < 20 go from ≈ 12,080 to
   ≈ 10,545, those with red 20..49 from ≈ 5,416 to ≈ 7,990. The rest of the picture is unchanged. This is the solution
   (learnopengl's `3.2.2.point_shadows.fs`, without the `shadows` toggle).
-
-Simulator (checked with the app's simulator, `Simulator.Build` + `Rasterizer.Render`): the start matches lavapipe
-(mean difference 0.01). From `depth-cubemap` on it does not: the debug view is black everywhere (lavapipe: grey 15..84)
-and in `shadows` / `pcf` everything is in shadow (seam (400,300) 6,4,3 instead of 47,32,19) – sampling the cube view of the
-rendered depth image returns 0 (the reader's cube textures come only from uploaded layer images, not from a layered depth
-render target: the 6-layer framebuffer, `gl_Layer` routing and `gl_FragDepth` of the depth pass are not connected to the
-`samplerCube` lookup).

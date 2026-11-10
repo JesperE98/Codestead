@@ -314,5 +314,7 @@ internal sealed class FrameRecorder
     }
 
     private ShaderValue Upload(ShaderValue v) =>
-        transposeMatrices && v.IsMatrix ? ShaderValue.Matrix(v.Cols, Enumerable.Range(0, v.Cols * v.Cols).Select(i => v.V![(i % v.Cols) * v.Cols + i / v.Cols]).ToArray()) : v;
+        transposeMatrices && v.IsMatrix ? ShaderValue.Matrix(v.Cols, Enumerable.Range(0, v.Cols * v.Cols).Select(i => v.V![(i % v.Cols) * v.Cols + i / v.Cols]).ToArray())
+        // An array of matrices (float4x4 shadowMatrices[6]): each one.
+        : transposeMatrices && v.Items is { Length: > 0 } items && items.Any(x => x.IsMatrix) ? ShaderValue.Array(items.Select(Upload).ToArray()) : v;
 }

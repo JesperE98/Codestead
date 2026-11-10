@@ -22,7 +22,7 @@ on the D3D12HelloWorld structure of the earlier chapters. Files: `main.cpp`, `no
 - **Deviation from learnopengl:** learnopengl also draws the quad a second time, scaled 0.1 at the light's position, as
   a marker for the light; the course leaves that out (as the OpenGL project).
 - **Direct3D's v and the bitangent:** with v growing *down* the image, the bitangent (the direction in which v grows)
-  points down the wall – learnopengl's formula gives (0, -2, 0) here, learnopengl's own (0, 1, 0). The normal map's y
+  points down the wall – learnopengl's formula gives (0, -2, 0) here, learnopengl's own (0, 2, 0). The normal map's y
   points *up* the image (OpenGL-style, "Y+"; DirectX-style maps store "Y-"), so in tangent space the shader flips it:
   `normal.y = -normal.y;` (task `tbn`), and Gram-Schmidt computes `B = cross(T, N)` (down the image) instead of
   learnopengl's `cross(N, T)` (task `gram-schmidt`). Without the flip the bevels are lit from the wrong side (checked:
@@ -66,7 +66,7 @@ bevel-down = 94,46,34. Centre (400,300) = 143,124,115 (a mortar line).
   (offset 32) and `BINORMAL` (offset 44) elements. `normal_mapping.hlsl`: `VSMain(…, float3 tangent : TANGENT, float3
   bitangent : BINORMAL)`. **No visible change** (the shaders do not use them yet): the picture is identical to
   `normal-map`. For this quad both triangles get tangent (2, 0, 0) and bitangent (0, -2, 0) (the quad is 2 units wide
-  for one texture: learnopengl's are (1, 0, 0) / (0, 1, 0) with its v up; the shader normalises them).
+  for one texture: learnopengl's are (2, 0, 0) / (0, 2, 0) with its v up; the shader normalises them).
 
 ## tbn
 - **Task:** Build the TBN matrix in the vertex shader (tangent, bitangent and normal transformed with the normal matrix) and use it to bring the light position, the view position and the fragment position into tangent space; the pixel shader lights with those, so the normal map's normals are used in the space they were made in – with their y flipped for Direct3D's v.

@@ -44,15 +44,10 @@ shadow: the shadow shows as a dark band around the cube's upper-left edge (x 38.
 lower-left edge and a small piece right of its top corner (x ≈ 300..350, y 0..40). The other four cubes and their
 shadows (on the side walls, floor and ceiling) are outside the view.
 
-Pixels in the 800×600 client area from the top left; nothing depends on time. D3D12 cannot run here. The start picture is
-the app's simulator's (with `RenderScene()`'s body pasted into `PopulateCommandList`, see the end); it matches the OpenGL
-project's Mesa screenshot (mean difference 0.25 per pixel, none more than 24). The simulator does not follow the depth
-cube map yet (see the end): the pictures of the later tasks were computed with the simulator on a test copy of each state
-that keeps every matrix and shader line but stores the six faces in six 2D `R32_FLOAT` targets (one pass per face, the
-face's matrix chosen by an extra root constant instead of the geometry shader, the distance written as the pixel
-shader's colour instead of `SV_Depth`) and replaces `depthMap.Sample(shadowSampler, dir)` by a lookup that applies
-Direct3D's cube face table by hand – they equal the OpenGL project's Mesa screenshots at every named point (whole
-pictures: mean difference ≤ 0.25 per pixel). This also checks the y flip of `shadowProj` end to end.
+Pixels in the 800×600 client area from the top left; nothing depends on time. D3D12 cannot run here. The pictures are
+the app's simulator's, which follows every state (the depth cube map's six slices drawn through the geometry shader's
+`SV_RenderTargetArrayIndex`, `SV_Depth`, the `TEXTURECUBE` view): they equal the OpenGL project's Mesa screenshots
+pixel for pixel. This also checks the y flip of `shadowProj` end to end.
 Named points (as OpenGL's): **wall-centre** (350,300) = 117,80,49 (in the highlight); **seam** (400,300) = 47,32,19;
 **wall-right** (700,450) = 61,42,25; **wall-left** (100,500) = 60,41,25; **wall-top-right** (750,50) = 54,37,22;
 **cube-face** (150,100) = 69,47,29 (the rotated cube's lit face); **shadow-1** (60,40), **shadow-2** (50,80),
@@ -140,29 +135,3 @@ shadow's lower edge.
   not matter; near 1.0 and far 25.0 still clip (nothing is nearer than 1.0 – the closest cube corner is ≈ 1.5 from the
   light – or farther than 25: the room's corners are 8.7 away). Writing `SV_Depth` turns off the early depth test for
   the depth pass; the hardware alternative is a depth bias in the rasterizer – not used, as learnopengl.
-
-**Simulator (checked with the app's simulator on every state):**
-- **Draws in a helper are not found:** `PopulateCommandList` has no `DrawInstanced` itself – the six draws are in
-  `RenderScene()`, which it calls – so the reader's draw search (`Recorded(c)`: the draw call must be written in
-  `PopulateCommandList`) finds nothing and **every state shows only the clear colour** (26,26,26, `draws=0`). With the
-  helper's body pasted into `PopulateCommandList` (in braces, at each call) the start renders as described above.
-- `depth-cubemap`, `shadows`, `pcf` (with the helper inlined): **the depth cube map is not rendered or not read** – the
-  debug view is black (0,0,0 everywhere) and the shadows do not appear: the six-slice resource behind a
-  `D3D12_DSV_DIMENSION_TEXTURE2DARRAY` depth stencil view is registered as a one-layer target (`RegisterTarget` passes no
-  `Layers`), and a `D3D12_SRV_DIMENSION_TEXTURECUBE` view of a render-target resource gives a cube texture of its loaded
-  images – none – instead of the six rendered slices (`D3D12Device.TextureAt`).
-- **Arrays of matrices in the constant buffer arrive empty:** `float4x4 shadowMatrices[6]` in the cbuffer, filled from
-  the C++ struct's `XMFLOAT4X4 shadowMatrices[6]`, reaches the geometry shader as empty matrices – "cannot multiply a
-  vec4 by a mat0" on `mul(output.fragPos, shadowMatrices[face])` – whether the six are stored in the `for` loop from
-  `XMMATRIX shadowTransforms[6] = { … }` or one by one (`XMStoreFloat4x4(&constantBufferData.shadowMatrices[0],
-  XMMatrixTranspose(XMMatrixLookAtRH(…) * shadowProj))` …). Six separate `XMFLOAT4X4` / `float4x4` fields work. (Also:
-  `FrameRecorder.Upload` transposes single matrices only, not matrices inside arrays.)
-- **`SV_Depth` is ignored in the depth-only pass:** the depth pass's pixel shader runs (the draw has the right pixel
-  shader, `PSOutput` with `SV_Depth` is seen), but the shadow map holds the rasterizer's depth, not the written one –
-  checked with a pixel shader returning a constant 0.1: the six faces still hold the light projection's depth (0.833 on
-  the back wall, distance 5). Both forms fail: `float PSMain(…) : SV_Depth` (a semantic on the function, which
-  `Rasterizer.Stages`' `WritesDepth` does not look at – it only checks struct fields) and a `struct { float depth :
-  SV_Depth; }` return value. With the distance written as an `R32_FLOAT` colour instead, the pictures are right.
-- A vertex shader that feeds a geometry shader must return `SV_POSITION` for the simulator ("'VSMain' returns no
-  SV_POSITION") – Direct3D does not require it; the code returns the world position in `SV_POSITION` anyway (learnopengl's
-  `gl_Position = model * vec4(aPos, 1.0)`).

@@ -1,0 +1,53 @@
+{
+  "title": "Normal mapping",
+  "tasks": {
+    "normal-map": {
+      "text": {
+        "opengl": "Ladda normal mapen (`brickwall_normal.png`, texturenhet 1, samplern `normalMap`) och använd dess värde som normal: sampla den, för färgen från [0,1] till [-1,1] och normalisera – använd direkt som normal i världsrymden (learnopengls första försök).",
+        "vulkan": "Ladda normal mapen (`textures/brickwall_normal.png`) till binding 2 i descriptor setet (`normalMap`) och använd dess värde som normal: sampla den, för färgen från [0,1] till [-1,1] och normalisera – använd direkt som normal i världsrymden (learnopengls första försök).",
+        "d3d12": "Ladda normal mapen (`brickwall_normal.png`, plats 2 i CBV/SRV-heapen, register t1) och använd dess värde som normal: sampla den, för färgen från [0,1] till [-1,1] och normalisera – använd direkt som normal i världsrymden (learnopengls första försök)."
+      },
+      "hint": {
+        "opengl": "`unsigned int normalMap = loadTexture(\"brickwall_normal.png\");`, `shader.setInt(\"normalMap\", 1);`, `glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, normalMap);`. Shadern: `vec3 normal = texture(normalMap, fs_in.TexCoords).rgb; normal = normalize(normal * 2.0 - 1.0);`.",
+        "vulkan": "`loadTexture(\"textures/brickwall_normal.png\", normalMapImage, normalMapImageMemory, normalMapImageView);`, en layout binding 2 (combined image sampler, fragmentsteget), 2 image samplers i poolen, `createDescriptorSet(diffuseMapImageView, normalMapImageView, textureSampler, descriptorSet)` med en tredje write. Shadern: `layout(binding = 2) uniform sampler2D normalMap;`, `normal = normalize(texture(normalMap, fs_in.texCoord).rgb * 2.0 - 1.0);`.",
+        "d3d12": "`LoadTexture(\"brickwall_normal.png\", m_normalMap, normalMapUploadHeap, 2);`, `cbvSrvHeapDesc.NumDescriptors = 3`, `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0)`. Shadern: `Texture2D normalMap : register(t1);`, `float3 normal = normalMap.Sample(wrapSampler, input.texCoords).rgb; normal = normalize(normal * 2.0f - 1.0f);`."
+      }
+    },
+    "tangents": {
+      "text": {
+        "opengl": "Räkna ut tangenten och bitangenten för båda trianglarna ur deras kanter och skillnader i texturkoordinater, och skicka dem som vertexattribut 3 och 4 (14 floats per vertex).",
+        "vulkan": "Räkna ut tangenten och bitangenten för båda trianglarna ur deras kanter och skillnader i texturkoordinater, och skicka dem som vertexattribut 3 och 4 (`Vertex::tangent`, `Vertex::bitangent`).",
+        "d3d12": "Räkna ut tangenten och bitangenten för båda trianglarna ur deras kanter och skillnader i texturkoordinater, och skicka dem som vertexindata `TANGENT` och `BINORMAL`."
+      },
+      "hint": {
+        "opengl": "`edge1 = pos2 - pos1`, `edge2 = pos3 - pos1`, `deltaUV1 = uv2 - uv1`, `deltaUV2 = uv3 - uv1`, `f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y)`, `tangent = f * (deltaUV2.y * edge1 - deltaUV1.y * edge2)`, `bitangent = f * (-deltaUV2.x * edge1 + deltaUV1.x * edge2)`; den andra triangeln använder pos1, pos3, pos4. Stride `14 * sizeof(float)`, offset 8 och 11 floats.",
+        "vulkan": "Samma formler som learnopengl (`f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y)`, …); den andra triangeln använder pos1, pos3, pos4. `glm::vec3 tangent; glm::vec3 bitangent;` i `Vertex`, `std::array<VkVertexInputAttributeDescription, 5>` med location 3 och 4 på `offsetof(Vertex, tangent)` / `offsetof(Vertex, bitangent)`; `layout(location = 3) in vec3 inTangent;`, `layout(location = 4) in vec3 inBitangent;`.",
+        "d3d12": "Samma formler som learnopengl, skrivna per komponent (`XMFLOAT3 edge1(pos2.x - pos1.x, …)`); den andra triangeln använder pos1, pos3, pos4. `XMFLOAT3 tangent; XMFLOAT3 bitangent;` i `Vertex`, input-elementen `TANGENT` (offset 32) och `BINORMAL` (offset 44), `VSMain(…, float3 tangent : TANGENT, float3 bitangent : BINORMAL)`."
+      }
+    },
+    "tbn": {
+      "text": {
+        "opengl": "Bygg TBN-matrisen i vertex shadern och använd dess transponat för att föra ljusets, vyns och fragmentets positioner till tangentrymden; fragment shadern belyser med dem.",
+        "vulkan": "Bygg TBN-matrisen i vertex shadern och använd dess transponat för att föra ljusets, vyns och fragmentets positioner till tangentrymden; fragment shadern belyser med dem.",
+        "d3d12": "Bygg TBN-matrisen i `VSMain` (T, B, N som rader) för att föra ljusets, vyns och fragmentets positioner till tangentrymden; `PSMain` belyser med dem och vänder normal mapens y för Direct3D:s v."
+      },
+      "hint": {
+        "opengl": "`mat3 normalMatrix = transpose(inverse(mat3(model)));`, `T`, `B`, `N` = `normalize(normalMatrix * …)`, `mat3 TBN = transpose(mat3(T, B, N));`, `vs_out.TangentLightPos = TBN * lightPos;` (och `TangentViewPos`, `TangentFragPos`). FS: `lightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos)`, `viewDir` likadant.",
+        "vulkan": "`mat3 normalMatrix = transpose(inverse(mat3(pc.model)));`, `T`, `B`, `N` = `normalize(normalMatrix * …)`, `mat3 TBN = transpose(mat3(T, B, N));`, `vs_out.tangentLightPos = TBN * ubo.lightPos;` (och `tangentViewPos`, `tangentFragPos`). Båda `VS_OUT`-blocken: samma medlemmar i samma ordning.",
+        "d3d12": "`float3 T = normalize(mul(float4(tangent, 0.0f), normalMatrix).xyz);` (B och N likadant), `float3x3 TBN = float3x3(T, B, N);` – HLSL:s konstruktor tar rader –, `mul(TBN, lightPos)` osv. I `PSInput`: `tangentLightPos`, `tangentViewPos`, `tangentFragPos` (`TEXCOORD1`…`3`). I `PSMain`: `normal.y = -normal.y;`."
+      }
+    },
+    "gram-schmidt": {
+      "text": {
+        "opengl": "Ortogonalisera TBN-vektorerna igen (Gram-Schmidt): gör T vinkelrät mot N igen och räkna ut B som `cross(N, T)` i stället för att läsa bitangentattributet.",
+        "vulkan": "Ortogonalisera TBN-vektorerna igen (Gram-Schmidt): gör T vinkelrät mot N igen och räkna ut B som `cross(N, T)` i stället för att läsa bitangentattributet.",
+        "d3d12": "Ortogonalisera TBN-vektorerna igen (Gram-Schmidt): gör T vinkelrät mot N igen och räkna ut B som `cross(T, N)` – nedåt i bilden, som Direct3D:s v – i stället för att läsa bitangentindatan."
+      },
+      "hint": {
+        "opengl": "`vec3 T = normalize(normalMatrix * aTangent); vec3 N = normalize(normalMatrix * aNormal); T = normalize(T - dot(T, N) * N); vec3 B = cross(N, T);`. Ingenting syns ändras på den platta fyrhörningen.",
+        "vulkan": "`vec3 T = normalize(normalMatrix * inTangent); vec3 N = normalize(normalMatrix * inNormal); T = normalize(T - dot(T, N) * N); vec3 B = cross(N, T);`. Ingenting syns ändras på den platta fyrhörningen.",
+        "d3d12": "`T = normalize(T - dot(T, N) * N); float3 B = cross(T, N);` – inte learnopengls `cross(N, T)`, som pekar uppåt i bilden. Ingenting syns ändras på den platta fyrhörningen."
+      }
+    }
+  }
+}
