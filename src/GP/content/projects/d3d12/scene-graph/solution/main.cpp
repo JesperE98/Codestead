@@ -490,9 +490,9 @@ struct ModelConstants
 struct Transform
 {
     // local space information
-    XMFLOAT3 pos = { 0.0f, 0.0f, 0.0f };
-    XMFLOAT3 eulerRot = { 0.0f, 0.0f, 0.0f };    // in degrees
-    XMFLOAT3 scale = { 1.0f, 1.0f, 1.0f };
+    XMFLOAT3 pos = XMFLOAT3(0.0f, 0.0f, 0.0f);
+    XMFLOAT3 eulerRot = XMFLOAT3(0.0f, 0.0f, 0.0f);    // in degrees
+    XMFLOAT3 scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 
     // global space information concatenated in a matrix (XMFLOAT4X4: the storage type of
     // DirectXMath - an XMMATRIX is for calculations)
