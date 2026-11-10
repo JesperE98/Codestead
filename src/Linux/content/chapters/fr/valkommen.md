@@ -3,8 +3,8 @@
 Ce guide vous apprend à utiliser Linux en ligne de commande – de vos toutes
 premières commandes jusqu'à la gestion des paquets sur différentes
 distributions. Chaque chapitre explique un sujet. En chemin, le texte contient
-de courtes **questions** ; répondez-y, et le terminal à droite ainsi que les
-**tâches** du chapitre se débloquent. Une tâche est cochée automatiquement dès
+de courtes **questions** ; certaines se font dans le terminal à droite.
+Répondez à toutes, et les **tâches** du chapitre se débloquent. Une tâche est cochée automatiquement dès
 que vous l'avez réussie. La meilleure façon d'apprendre,
 c'est de *pratiquer* : lisez, essayez, trompez-vous, et recommencez.
 

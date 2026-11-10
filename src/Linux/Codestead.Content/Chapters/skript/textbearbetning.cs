@@ -1,6 +1,6 @@
 namespace Codestead.Content;
 
-// The chapter "textbearbetning" (part "grunder"). Its place in the course is set by DefineChapters() in ChapterDefinitions.cs.
+// The chapter "textbearbetning" (part "skript"). Its place in the course is set by DefineChapters() in ChapterDefinitions.cs.
 
 public static partial class ChaptersLib
 {
@@ -8,8 +8,8 @@ public static partial class ChaptersLib
         new()
         {
             Id = "textbearbetning",
-            Part = "grunder",
-            Title = "Textbearbetning med sed, tr och awk",
+            Part = "skript",
+            Title = "Textbearbetning med sed och awk",
             Tasks = new()
             {
                 new()
@@ -28,22 +28,6 @@ public static partial class ChaptersLib
                     Hint = "Adressen `/INFO/` väljer raderna och kommandot `d` tar bort dem: `sed '/INFO/d' fil`",
                     Solution = Cmds("sed '/INFO/d' ~/{{documents}}/server.log"),
                     Check = c => Ran(c, Re(@"^sed\b")) && OutLines(c).Count == 6 && !c.Output.Contains("INFO"),
-                },
-                new()
-                {
-                    Id = "tr-upper",
-                    Text = "Skriv ut alla användarnamn i `/etc/passwd` med **versaler**: plocka ut fält 1 med `cut` och skicka vidare till `tr`.",
-                    Hint = "`cut -d: -f1 /etc/passwd` ger användarnamnen. Lägg till `| tr a-z A-Z`.",
-                    Solution = Cmds("cut -d: -f1 /etc/passwd | tr a-z A-Z"),
-                    Check = c => Ran(c, Re(@"\|\s*tr\b")) && OutLines(c).Contains("ROOT") && OutLines(c).Contains(W(c).User.ToUpperInvariant()),
-                },
-                new()
-                {
-                    Id = "tr-path",
-                    Text = "Visa katalogerna i `$PATH` på **varsin rad** genom att byta `:` mot radbrytning med `tr`.",
-                    Hint = "Radbrytning skrivs `\\n`: `echo $PATH | tr ':' '\\n'`",
-                    Solution = Cmds("echo $PATH | tr ':' '\\n'"),
-                    Check = c => Ran(c, Re(@"\btr\b")) && OutLines(c).Count >= 2 && OutLines(c).Contains("/usr/bin"),
                 },
                 new()
                 {

@@ -28,7 +28,7 @@ namespace Codestead.UI.Learning;
 /// A quiz with several [x] options requires all of them (check boxes); with one it is a single choice.
 /// A predict block shows the command(s) after "$ " and expects the remaining lines as the answer.
 /// A try block lists accepted commands; it is solved when the student runs one of them (or a command
-/// with the same output) in the mini terminal.
+/// with the same output) in the tool's terminal.
 /// </summary>
 public sealed class Checkpoint
 {

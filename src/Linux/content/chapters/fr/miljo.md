@@ -67,6 +67,14 @@ répertoires listés dans la variable `PATH`, l'un après l'autre :
 echo $PATH
 ```
 
+Une astuce classique consiste à transformer les deux-points en retours à la
+ligne (`\n`), pour que chaque répertoire de `PATH` se retrouve sur sa propre
+ligne :
+
+```sh
+echo $PATH | tr ':' '\n'
+```
+
 `which` indique où un programme a été trouvé. Certaines commandes, comme
 `cd`, ne sont pas du tout des fichiers mais sont *intégrées* au shell
 (*builtins*) – `type` vous dit ce qu'est un nom :

@@ -105,7 +105,7 @@ ruta por defecto a la puerta de enlace.
 ```
 
 ```predict
-$ ip route | grep default | awk '{print $3}'
+$ ip route | grep default | cut -d' ' -f3
 192.168.1.1
 ---
 La tercera palabra de la línea `default` es la dirección de la puerta de enlace.

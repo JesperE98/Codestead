@@ -110,17 +110,3 @@ b
 ---
 `-d,` gör kommatecknet till avgränsare, och `-f2` behåller fält 2.
 ```
-
-```predict
-$ echo "x y z" | awk '{print NF}'
-3
----
-`NF` är antalet fält på raden. Fälten skiljs åt av mellanslag.
-```
-
-```quiz
-Varför ska ett awk-program som `'{print $3}'` skrivas inom **enkla** citattecken?
-- [ ] awk kan inte läsa dubbla citattecken
-- [x] Annars tror skalet att `$3` är en skalvariabel och byter ut den innan awk startar
-- [ ] Enkla citattecken gör att awk går snabbare
-```

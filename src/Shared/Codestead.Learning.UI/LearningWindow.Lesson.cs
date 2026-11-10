@@ -23,6 +23,8 @@ public partial class LearningWindow
     /// <summary>Turns ```quiz / ```predict / ```try blocks in a lesson or exam into interactive checkpoints.</summary>
     private int nextCheckpoint;
     private readonly List<CheckpointView> examViews = new();
+    /// <summary>The checkpoints shown now: every command line run in the terminal is passed on to them ("try it" questions).</summary>
+    private readonly List<CheckpointView> checkpointViews = new();
     private bool renderingExam;
 
     private Control? RenderCheckpoint(Markdig.Syntax.FencedCodeBlock fenced)
@@ -34,6 +36,7 @@ public partial class LearningWindow
         var cp = Codestead.UI.Learning.Checkpoint.Parse(kind, fenced.Lines.ToString().TrimEnd('\n', '\r'), index);
         var key = CheckpointKey(chapter, index);
         var view = new CheckpointView(cp, CheckpointTexts(), state.Checkpoints.ContainsKey(key), tool.Sandbox(chapter.Id), renderingExam, cmd => tool.Inject(cmd));
+        checkpointViews.Add(view);
         if (renderingExam)
         {
             examViews.Add(view);
@@ -90,6 +93,7 @@ public partial class LearningWindow
         var text = tool.LessonText(chapter.Id, Lang);
         nextCheckpoint = 0;
         examViews.Clear();
+        checkpointViews.Clear();
         if (chapter.Kind == ChapterKinds.Exam) RenderExam(chapter, text);
         else
         {

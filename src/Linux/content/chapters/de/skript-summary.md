@@ -2,6 +2,10 @@
 
 In diesem Teil hast du Befehle in eigene Programme verwandelt.
 
+## Textverarbeitung mit sed und awk
+
+`sed` bearbeitet Zeilen: `s/alt/neu/` ersetzt (`g` für jeden Treffer), Adressen wählen Zeilen aus, `d` löscht, und `-n` mit `p` gibt nur das aus, worum du bittest. `sed -i` ändert die Datei selbst. `awk` arbeitet mit Spalten: `-F` legt das Trennzeichen fest, `$1` … `$NF` sind die Felder, ein Muster vor `{ }` wählt Zeilen aus, und `END { }` läuft nach der letzten Zeile.
+
 ## Shell-Skripte
 
 Ein Skript ist eine Textdatei mit Befehlen, die mit dem Shebang `#!/bin/bash`
@@ -38,6 +42,8 @@ Timer von systemd.
 
 | Syntax | Tut |
 |---|---|
+| `sed`: `s/…/…/g`, `d`, `p`, `q`, `-n`, `-i`, `-E`, `-e` | Bearbeitet einen Strom von Zeilen |
+| `awk`: `-F` Trennzeichen, `$1`, `$NF`, `NF`, `NR`, `BEGIN`, `END` | Arbeitet mit Spalten |
 | `#!/bin/bash` | Der Shebang: welches Programm das Skript ausführt |
 | `cat > datei << '{{heredocEnd}}'` | Zeilen in eine Datei schreiben, bis zur Zeile `{{heredocEnd}}` |
 | `name=value` · `"$name"` · `"${name}"` | Eine Variable anlegen · verwenden |

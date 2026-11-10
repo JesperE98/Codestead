@@ -37,7 +37,7 @@ $ echo $?
 $ touch tools.sh
 $ chmod 755 tools.sh
 $ chmod go-x tools.sh
-$ ls -l tools.sh | awk '{print $1}'
+$ ls -l tools.sh | cut -d' ' -f1
 -rwxr--r--
 ```
 

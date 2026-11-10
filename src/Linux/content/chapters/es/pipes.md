@@ -123,6 +123,53 @@ Léelo paso a paso: ordena las frutas, cuenta cuántas hay de cada una
 ls /etc | wc -l
 ```
 
+## Traducir caracteres – `tr`
+
+`tr` (*translate*) sustituye cada carácter del primer conjunto por el carácter
+que ocupa la misma posición en el segundo. `a-z` significa todas las letras de
+la a a la z:
+
+```sh
+echo "hello from café" | tr a-z A-Z
+```
+
+```text
+HELLO FROM CAFé
+```
+
+¿Te has fijado en la é? `tr` trabaja con *bytes* individuales, y letras como
+la á, la é o la ñ no forman parte de `a-z`.
+
+`tr` lee **solo** de stdin, nunca de archivos. Si quieres usar un archivo,
+pásaselo con `<` o con una pipe:
+
+```sh
+tr a-z A-Z < ~/{{documents}}/{{fruits}}
+```
+
+Con `-d` (*delete*) eliminas caracteres, y con `-s` (*squeeze*) reduces a uno
+solo varios caracteres idénticos seguidos:
+
+```sh
+echo "070-123 45 67" | tr -d ' -'
+echo "demasiados     espacios      seguidos" | tr -s ' '
+```
+
+```predict
+$ echo "hello world" | tr -d o
+hell wrld
+---
+`-d` elimina cada `o`, esté donde esté.
+```
+
+En lugar de rangos puedes escribir *clases*, p. ej. `[:upper:]` (mayúsculas),
+`[:lower:]` (minúsculas), `[:digit:]` (dígitos) y `[:space:]` (espacios en
+blanco):
+
+```sh
+echo "Aula 101, planta 3" | tr -d '[:digit:]'
+```
+
 ## De la entrada a los argumentos – `xargs`
 
 Algunos comandos no leen de una pipe en absoluto, sino que quieren nombres

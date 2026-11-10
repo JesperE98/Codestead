@@ -10,8 +10,8 @@ namespace Codestead.UI.Controls;
 
 /// <summary>
 /// One interactive checkpoint in a lesson (or a question in an exam): a quiz, a "what does this print?"
-/// question or a "try it" mini terminal. In lessons a "what does this print?" question can also open its
-/// own mini terminal to run the commands in (closed at first, so the student can guess before trying).
+/// question or a "try it" question. A "try it" question has no terminal of its own: the student runs the
+/// command in the tool's terminal, and the window passes every command line on with <see cref="CommandRan"/>.
 /// In lesson mode answers are checked at once and the control turns green when solved.
 /// In exam mode (<see cref="ExamMode"/>) answers are only collected; <see cref="Grade"/> marks them.
 /// </summary>
@@ -22,6 +22,7 @@ public sealed class CheckpointView : UserControl
     private readonly bool examMode;
     private readonly Border card;
     private readonly StackPanel body = new() { Spacing = 8 };
+    private readonly ISandbox sandbox;
     private readonly TextBlock feedback = new() { TextWrapping = TextWrapping.Wrap, IsVisible = false, FontWeight = FontWeight.SemiBold };
     private readonly MarkdownView explanation = new() { BaseFontSize = 14, IsVisible = false };
     private readonly List<ToggleButton> optionButtons = new();
@@ -33,18 +34,16 @@ public sealed class CheckpointView : UserControl
     /// <summary>Fired once when the checkpoint has been answered correctly (lesson mode).</summary>
     public event Action<Checkpoint>? Solved;
 
-    /// <summary>Fired when a "try" command line was run in the mini terminal.</summary>
-    public event Action<string>? CommandRun;
-
     public bool IsSolved => solved;
     public bool ExamMode => examMode;
 
-    /// <param name="sandbox">Where "try" blocks and the predict terminal run (separate from the student's own work).</param>
+    /// <param name="sandbox">Gives the output a "try" command has on a fresh computer (another command with the same output also counts).</param>
     public CheckpointView(Checkpoint cp, CheckpointTexts texts, bool alreadySolved, ISandbox sandbox, bool examMode = false, Action<string>? onCommandClicked = null)
     {
         this.cp = cp;
         this.texts = texts;
         this.examMode = examMode;
+        this.sandbox = sandbox;
         card = new Border
         {
             CornerRadius = new CornerRadius(10),
@@ -67,10 +66,10 @@ public sealed class CheckpointView : UserControl
                 BuildQuiz(onCommandClicked);
                 break;
             case Checkpoint.Predict:
-                BuildPredict(sandbox);
+                BuildPredict();
                 break;
             default:
-                BuildTry(sandbox);
+                BuildTry(onCommandClicked);
                 break;
         }
 
@@ -111,7 +110,7 @@ public sealed class CheckpointView : UserControl
         }
     }
 
-    private void BuildPredict(ISandbox sandbox)
+    private void BuildPredict()
     {
         body.Children.Add(new TextBlock { Text = texts.PredictPrompt, TextWrapping = TextWrapping.Wrap });
         var code = new SelectableTextBlock { FontFamily = new FontFamily("Cascadia Mono, DejaVu Sans Mono, Liberation Mono, monospace"), FontSize = 14, Foreground = new SolidColorBrush(Color.Parse("#e6edf3")), Inlines = new InlineCollection() };
@@ -138,61 +137,49 @@ public sealed class CheckpointView : UserControl
                 CheckNow();
             }
         };
-        // Lessons only: an exam asks what the student can predict.
-        if (!examMode) AddPredictTerminal(sandbox);
         body.Children.Add(answerBox);
     }
 
-    /// <summary>The "try it in a terminal" button of a predict question, and the terminal it opens.</summary>
-    internal ISandboxTerminal? PredictTerminal { get; private set; }
+    private string? tryExpected;
 
-    private void AddPredictTerminal(ISandbox sandbox)
-    {
-        var open = new Button { Content = "▶ " + texts.TryPredict, HorizontalAlignment = HorizontalAlignment.Left };
-        open.Classes.Add("secondary");
-        var holder = new Border { CornerRadius = new CornerRadius(8), ClipToBounds = true, IsVisible = false };
-        open.Click += (_, _) =>
-        {
-            if (PredictTerminal is null)
-            {
-                // A fresh sandbox: the same computer the answer was written for, not the student's terminal.
-                PredictTerminal = sandbox.NewTerminal();
-                PredictTerminal.View.Height = 170;
-                PredictTerminal.Ran += r => CommandRun?.Invoke(r.Line);
-                holder.Child = PredictTerminal.View;
-            }
-            open.IsVisible = false;
-            holder.IsVisible = true;
-            PredictTerminal.Focus();
-        };
-        body.Children.Add(open);
-        body.Children.Add(holder);
-    }
-
-    private void BuildTry(ISandbox sandbox)
+    private void BuildTry(Action<string>? onCommandClicked)
     {
         var prompt = new TextBlock { Text = texts.TryPrompt, TextWrapping = TextWrapping.Wrap };
         body.Children.Add(prompt);
-        var hint = new SelectableTextBlock { FontFamily = new FontFamily("Cascadia Mono, DejaVu Sans Mono, Liberation Mono, monospace"), FontSize = 14, Text = string.Join("\n", cp.Commands.Take(1)), FlowDirection = FlowDirection.LeftToRight };
-        hint.Bind(TextBlock.ForegroundProperty, hint.GetResourceObservable("CsAccent"));
-        body.Children.Add(hint);
-        // The output the reference command gives in a fresh sandbox – another command with the same output also counts.
-        var expected = sandbox.OutputOf(cp.Commands[0]).Trim();
-        var terminal = sandbox.NewTerminal();
-        terminal.View.Height = 170;
-        terminal.Ran += r =>
+        var command = cp.Commands[0];
+        if (onCommandClicked is not null)
         {
-            CommandRun?.Invoke(r.Line);
-            if (!r.Finished) return;
-            var line = Checkpoint.Normalize(r.Line);
-            var output = r.Output.Trim();
-            if (cp.Commands.Any(c => Checkpoint.Normalize(c) == line) || (expected != "" && output == expected && r.ExitCode == 0))
-            {
-                trySolved = true;
-                if (!examMode) MarkSolved(silent: false);
-            }
-        };
-        body.Children.Add(new Border { CornerRadius = new CornerRadius(8), ClipToBounds = true, Child = terminal.View });
+            // A click puts the command in the terminal, like the commands in the lesson text.
+            var b = new Button { Content = command, HorizontalAlignment = HorizontalAlignment.Left, FlowDirection = FlowDirection.LeftToRight };
+            b.Classes.Add("solution");
+            b.Click += (_, _) => onCommandClicked(command);
+            body.Children.Add(b);
+        }
+        else
+        {
+            var hint = new SelectableTextBlock { FontFamily = new FontFamily("Cascadia Mono, DejaVu Sans Mono, Liberation Mono, monospace"), FontSize = 14, Text = command, FlowDirection = FlowDirection.LeftToRight };
+            hint.Bind(TextBlock.ForegroundProperty, hint.GetResourceObservable("CsAccent"));
+            body.Children.Add(hint);
+        }
+    }
+
+    /// <summary>
+    /// A command line run in the tool's terminal. Solves a "try it" question when it is one of the accepted
+    /// commands, or prints what the first of them prints on a fresh computer. Other kinds ignore it.
+    /// </summary>
+    public void CommandRan(SandboxRun run)
+    {
+        if (cp.Kind != Checkpoint.Try || solved || !run.Finished) return;
+        var line = Checkpoint.Normalize(run.Line);
+        bool right = cp.Commands.Any(c => Checkpoint.Normalize(c) == line);
+        if (!right && run.ExitCode == 0)
+        {
+            tryExpected ??= sandbox.OutputOf(cp.Commands[0]).Trim();
+            right = tryExpected != "" && run.Output.Trim() == tryExpected;
+        }
+        if (!right) return;
+        trySolved = true;
+        if (!examMode) MarkSolved(silent: false);
     }
 
     private bool IsAnswerRight() => cp.Kind switch

@@ -32,3 +32,6 @@ förväntade utskrifter (predict) och try-kommandon är kontrollerade mot simula
 | Checkpoint (quiz): `grep -c WARN dokument/server.log` prints 2 (case-sensitive; one line has lowercase `warn`); `grep -ic WARN` would count 3 |  | ogranskad |  |
 | Checkpoint (quiz): `grep -v INFO` shows lines that do not contain INFO |  | ogranskad |  |
 | Checkpoint (quiz): `uniq` only removes adjacent identical lines, hence `sort` first |  | ogranskad |  |
+| CSV = comma-separated values; columns separated by commas, first line a header |  | ogranskad |  |
+| `cut -d` chooses the delimiter and `-f` the field to keep |  | ogranskad |  |
+| In `/etc/passwd` fields are separated by colons; field 1 is the user name |  | ogranskad |  |

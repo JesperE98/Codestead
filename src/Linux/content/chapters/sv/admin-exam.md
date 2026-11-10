@@ -80,7 +80,7 @@ Din hemkatalog ligger inte på ett eget filsystem på den här datorn. Vad
 skriver det här ut?
 
 ```predict
-$ df -h ~ | awk 'NR > 1 {print $6}'
+$ df -h ~ | tail -n 1 | tr -s ' ' | cut -d' ' -f6
 /
 ---
 Med en sökväg visar `df` bara filsystemet som den ligger på. Den sjätte

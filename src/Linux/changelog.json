@@ -1,5 +1,39 @@
 [
   {
+    "version": "0.6.2",
+    "date": "2026-11-09",
+    "changes": {
+      "en": [
+        "The big terminal is back: it is always next to the lesson, also before the tasks are unlocked. The small terminals in the questions are gone – \"try it\" questions are answered in the big terminal. The tasks still unlock only when you have answered every question in the chapter.",
+        "The basics are easier to get into: `cut` is now in \"Reading and searching text\" and `tr` in \"Redirection and pipes\", and `sed` and `awk` have their own chapter at the start of \"Scripts and automation\" – after variables and quotes, which awk needs. A new task practises `cut`, and the tasks you already solved count where they are now."
+      ],
+      "sv": [
+        "Den stora terminalen är tillbaka: den finns alltid bredvid lektionen, även innan uppgifterna är upplåsta. De små terminalerna i frågorna är borta – \"prova själv\"-frågor besvaras i den stora terminalen. Uppgifterna låses fortfarande upp först när du har svarat på alla frågor i kapitlet.",
+        "Grunderna är lättare att komma in i: `cut` finns nu i \"Läsa och söka i text\" och `tr` i \"Omdirigering och pipes\", och `sed` och `awk` har fått ett eget kapitel först i \"Skript och automatisering\" – efter variabler och citattecken, som awk behöver. En ny uppgift övar `cut`, och uppgifter du redan har klarat räknas där de ligger nu."
+      ],
+      "de": [
+        "Das große Terminal ist zurück: Es steht immer neben der Lektion, auch bevor die Aufgaben freigeschaltet sind. Die kleinen Terminals in den Fragen sind weg – „Probier es aus“-Fragen beantwortest du im großen Terminal. Die Aufgaben werden weiterhin erst freigeschaltet, wenn du alle Fragen des Kapitels beantwortet hast.",
+        "Der Einstieg in die Grundlagen ist leichter: `cut` steht jetzt in „Text lesen und durchsuchen“ und `tr` in „Umleitungen und Pipes“, und `sed` und `awk` haben ein eigenes Kapitel am Anfang von „Skripte und Automatisierung“ – nach Variablen und Anführungszeichen, die awk braucht. Eine neue Aufgabe übt `cut`, und bereits gelöste Aufgaben zählen dort, wo sie jetzt stehen."
+      ],
+      "fr": [
+        "Le grand terminal est de retour : il est toujours à côté de la leçon, même avant que les tâches soient débloquées. Les petits terminaux dans les questions ont disparu – les questions « Essayez » se font dans le grand terminal. Les tâches ne se débloquent toujours qu'une fois toutes les questions du chapitre répondues.",
+        "Les bases sont plus faciles à aborder : `cut` est maintenant dans « Lire et rechercher du texte » et `tr` dans « Redirections et pipes », et `sed` et `awk` ont leur propre chapitre au début de « Scripts et automatisation » – après les variables et les guillemets, dont awk a besoin. Un nouvel exercice entraîne `cut`, et les exercices déjà réussis comptent là où ils se trouvent maintenant."
+      ],
+      "es": [
+        "La terminal grande ha vuelto: siempre está junto a la lección, también antes de que se desbloqueen las tareas. Las terminales pequeñas de las preguntas ya no están: las preguntas de \"pruébalo\" se responden en la terminal grande. Las tareas siguen desbloqueándose solo cuando has respondido todas las preguntas del capítulo.",
+        "Los fundamentos son más fáciles de empezar: `cut` está ahora en \"Leer y buscar texto\" y `tr` en \"Redirecciones y pipes\", y `sed` y `awk` tienen su propio capítulo al comienzo de \"Scripts y automatización\", después de las variables y las comillas, que awk necesita. Una tarea nueva practica `cut`, y las tareas que ya resolviste cuentan donde están ahora."
+      ],
+      "zh": [
+        "大终端回来了：它始终显示在课程旁边，即使任务尚未解锁。问题中的小终端已移除——“试一试”类问题改在大终端中完成。只有回答完本章的所有问题后，任务才会解锁，这一点保持不变。",
+        "基础部分更容易上手了：`cut` 现在位于“阅读和搜索文本”，`tr` 位于“重定向和管道”，`sed` 和 `awk` 则在“脚本与自动化”的开头有了单独的一章——放在 awk 所需的变量和引号之后。新增了一个练习 `cut` 的任务，你已经完成的任务会在新的位置继续计入。"
+      ],
+      "ja": [
+        "大きなターミナルが戻りました。課題のロックが解除される前から、常にレッスンの隣に表示されます。問題の中の小さなターミナルはなくなり、「試してみよう」の問題は大きなターミナルで答えます。課題のロックが解除されるのは、これまでどおり章のすべての問題に答えたときです。",
+        "基礎編に入りやすくなりました。`cut` は「テキストを読む・検索する」に、`tr` は「リダイレクトとパイプ」に移り、`sed` と `awk` は「スクリプトと自動化」の最初に独立した章になりました。awk に必要な変数と引用符を学んだ後に来ます。`cut` を練習する課題が 1 つ増え、すでに解いた課題は新しい場所でもそのまま数えられます。"
+      ]
+    }
+  },
+  {
     "version": "0.6.1",
     "date": "2026-11-03",
     "changes": {

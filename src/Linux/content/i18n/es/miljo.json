@@ -4,6 +4,10 @@
     "path": {
       "text": "Muestra el contenido de la variable `PATH`."
     },
+    "tr-path": {
+      "text": "Muestra los directorios de `$PATH` en **líneas separadas** sustituyendo `:` por un salto de línea con `tr`.",
+      "hint": "Un salto de línea se escribe `\\n`: `echo $PATH | tr ':' '\\n'`"
+    },
     "export": {
       "text": "Crea la variable de entorno `{{favVar}}` con el valor `linux`.",
       "hint": "Sin espacios alrededor del signo igual: `export NOMBRE=valor`."

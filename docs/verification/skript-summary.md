@@ -2,11 +2,12 @@
 
 Status: **ogranskad**
 
-Källtext: `src/Linux/content/chapters/en/skript-summary.md`. Allt bygger på sub-kapitlet skript;
+Källtext: `src/Linux/content/chapters/en/skript-summary.md`. Allt bygger på sub-kapitlen textbearbetning och skript;
 här kontrolleras att sammanfattningen återger det rätt.
 
 | Påstående | Källa | Status | Datum |
 |---|---|---|---|
+| `sed` redigerar rader (`s/gammalt/nytt/`, `g`, adresser, `d`, `-n` med `p`, `sed -i`); `awk` arbetar med kolumner (`-F`, `$1` … `$NF`, mönster, `END { }`) – se textbearbetning | | ogranskad | |
 | Ett skript börjar med shebang `#!/bin/bash`, görs körbart med `chmod +x` och körs med `./` | | ogranskad | |
 | Here-dokument `cat > fil << 'SLUT'` skriver rader till filen fram till raden `SLUT` | | ogranskad | |
 | `#` inleder kommentarer | | ogranskad | |

@@ -20,6 +20,10 @@
     "devnull": {
       "text": "Exécutez `ls /{{missing}}`, mais envoyez le message d'erreur vers `/dev/null` pour que rien ne s'affiche."
     },
+    "tr-upper": {
+      "text": "Affichez tous les noms d'utilisateur de `/etc/passwd` en **majuscules** : extrayez le champ 1 avec `cut` et passez-le à `tr`.",
+      "hint": "`cut -d: -f1 /etc/passwd` vous donne les noms d'utilisateur. Ajoutez `| tr a-z A-Z`."
+    },
     "xargs": {
       "text": "Comptez les lignes de chaque fichier de `~/{{documents}}` : trouvez les fichiers avec `find -type f` et passez-les à `wc -l` avec `xargs`.",
       "hint": "`find ~/{{documents}} -type f | xargs wc -l` – `wc` ne lit pas de noms de fichiers depuis un pipe, mais `xargs` les transforme en arguments."

@@ -1,5 +1,5 @@
 {
-  "title": "sed, tr और awk से text processing",
+  "title": "sed और awk से text processing",
   "tasks": {
     "sed-s": {
       "text": "`sed` से `~/{{documents}}/server.log` को इस तरह दिखाइए कि हर line पर शब्द `ERROR` की जगह `{{errorWord}}` हो।",
@@ -8,14 +8,6 @@
     "sed-d": {
       "text": "`sed` से server.log को `INFO` वाली सारी lines के **बिना** दिखाइए।",
       "hint": "Address `/INFO/` lines चुनता है और command `d` उन्हें delete करता है: `sed '/INFO/d' file`"
-    },
-    "tr-upper": {
-      "text": "`/etc/passwd` का हर user name **uppercase** में print कीजिए: `cut` से field 1 निकालिए और उसे आगे `tr` को दीजिए।",
-      "hint": "`cut -d: -f1 /etc/passwd` आपको user names देता है। `| tr a-z A-Z` जोड़िए।"
-    },
-    "tr-path": {
-      "text": "`tr` से `:` को newline में बदलकर `$PATH` की directories को **अलग-अलग lines** पर दिखाइए।",
-      "hint": "Newline को `\\n` लिखा जाता है: `echo $PATH | tr ':' '\\n'`"
     },
     "awk-print": {
       "text": "`awk` से `/etc/passwd` का user name और shell (fields 1 और 7) print कीजिए।",

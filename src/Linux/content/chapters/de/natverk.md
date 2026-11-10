@@ -106,7 +106,7 @@ die Default-Route zum Gateway.
 ```
 
 ```predict
-$ ip route | grep default | awk '{print $3}'
+$ ip route | grep default | cut -d' ' -f3
 192.168.1.1
 ---
 Das dritte Wort in der `default`-Zeile ist die Adresse des Gateways.

@@ -108,6 +108,46 @@ sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ls /etc | wc -l
 ```
 
+## 转换字符——`tr`
+
+`tr`（*translate*，转换）会把第一个集合中的每个字符替换成第二个集合中相同位置的字符。`a-z` 表示从 a 到 z 的所有字母：
+
+```sh
+echo "hello from café" | tr a-z A-Z
+```
+
+```text
+HELLO FROM CAFé
+```
+
+注意到那个 é 了吗？`tr` 处理的是单个*字节*，而像 é 这样的字母并不在 `a-z` 的范围内。
+
+`tr` **只**从 stdin 读取，从不读取文件。如果你想处理一个文件，可以用 `<` 或管道把它送进去：
+
+```sh
+tr a-z A-Z < ~/{{notes}}
+```
+
+用 `-d`（*delete*，删除）可以删除字符，用 `-s`（*squeeze*，压缩）可以把连续出现的多个相同字符压缩成一个：
+
+```sh
+echo "070-123 45 67" | tr -d ' -'
+echo "too     many      spaces" | tr -s ' '
+```
+
+```predict
+$ echo "hello world" | tr -d o
+hell wrld
+---
+`-d` 会删除每一个 `o`，无论它在哪里。
+```
+
+除了范围，你还可以使用*字符类*，例如 `[:upper:]`（大写字母）、`[:lower:]`（小写字母）、`[:digit:]`（数字）和 `[:space:]`（空白字符）：
+
+```sh
+echo "Room 101, floor 3" | tr -d '[:digit:]'
+```
+
 ## 从输入到参数——`xargs`
 
 有些命令根本不从管道读取——它们要的是作为**参数**的名字：`rm`、`mkdir`、`touch`，以及要统计文件内容时的 `wc`。`xargs` 在两者之间架起桥梁：它读取输入中的单词，并把它们放到某个命令的后面。

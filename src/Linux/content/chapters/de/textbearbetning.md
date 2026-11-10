@@ -1,84 +1,19 @@
-# Textverarbeitung mit sed, tr und awk
+# Textverarbeitung mit sed und awk
 
-Mit `grep` kannst du Zeilen *finden*. Oft willst du aber mehr: ein Wort
-ersetzen, bestimmte Zeilen löschen, eine Spalte herausziehen oder ein paar
-Zahlen zusammenzählen. Dann greifst du zu drei klassischen Werkzeugen:
+Du kennst schon einige Werkzeuge für Text: `grep` findet Zeilen, `cut` zieht
+ein Feld heraus und `tr` ersetzt einzelne Zeichen. In diesem Kapitel geht es
+um zwei mächtigere Werkzeuge – für den Fall, dass du Wörter ersetzen, Zeilen
+löschen oder Zahlen zusammenzählen willst:
 
 | Werkzeug | Arbeitet mit | Typische Aufgabe |
 |---|---|---|
-| `tr` | einzelnen **Zeichen** | in Großbuchstaben umwandeln, `:` in Zeilenumbrüche verwandeln |
 | `sed` | **Zeilen** | ein Wort ersetzen, Zeilen löschen |
 | `awk` | **Spalten** (Feldern) | Spalten herausziehen, summieren, zählen |
 
-Alle drei sind *Filter*: Sie lesen Text, machen etwas damit und schreiben das
+Beide sind *Filter*: Sie lesen Text, machen etwas damit und schreiben das
 Ergebnis nach stdout. Deshalb passen sie perfekt in Pipes. Und die
 Originaldatei wird **nicht** verändert (mit einer Ausnahme, `sed -i`, zu der
 wir noch kommen).
-
-In `{{documents}}` gibt es eine dritte Übungsdatei, `{{grades}}`, eine CSV-Datei mit
-den Punkten der Schüler in verschiedenen Fächern:
-
-```sh
-cat ~/{{documents}}/{{grades}}
-```
-
-CSV steht für *comma-separated values* – die Spalten sind durch Kommas
-getrennt, und die erste Zeile ist eine Kopfzeile.
-
-## Zeichen übersetzen – `tr`
-
-`tr` (*translate*) ersetzt jedes Zeichen aus der ersten Menge durch das Zeichen
-an derselben Position in der zweiten. `a-z` bedeutet alle Buchstaben von a bis
-z:
-
-```sh
-echo "hallo aus dem café" | tr a-z A-Z
-```
-
-```text
-HALLO AUS DEM CAFé
-```
-
-Ist dir das é aufgefallen? `tr` arbeitet mit einzelnen *Bytes*, und Buchstaben
-wie é – oder die Umlaute ä, ö und ü – gehören nicht zu `a-z`. Das solltest du
-wissen – GNU `awk` (weiter unten) kommt damit besser zurecht.
-
-`tr` liest **nur** von stdin, nie aus Dateien. Willst du eine Datei verwenden,
-füttere sie mit `<` oder einer Pipe hinein:
-
-```sh
-tr a-z A-Z < ~/{{documents}}/{{fruits}}
-```
-
-Ein klassischer Trick ist, Doppelpunkte in Zeilenumbrüche (`\n`) zu
-verwandeln, damit jedes Verzeichnis in `PATH` in einer eigenen Zeile landet:
-
-```sh
-echo $PATH | tr ':' '\n'
-```
-
-Mit `-d` (*delete*) entfernst du Zeichen, und mit `-s` (*squeeze*) presst du
-mehrere gleiche Zeichen hintereinander zu einem zusammen:
-
-```sh
-echo "070-123 45 67" | tr -d ' -'
-echo "zu     viele      Leerzeichen" | tr -s ' '
-```
-
-```predict
-$ echo "hello world" | tr -d o
-hell wrld
----
-`-d` löscht jedes `o`, egal wo es steht.
-```
-
-Statt Bereichen kannst du *Klassen* schreiben, z. B. `[:upper:]`
-(Großbuchstaben), `[:lower:]` (Kleinbuchstaben), `[:digit:]` (Ziffern) und
-`[:space:]` (Leerraum):
-
-```sh
-echo "Raum 101, Etage 3" | tr -d '[:digit:]'
-```
 
 ## Der Stream-Editor – `sed`
 
@@ -226,20 +161,6 @@ Konfigurationsdateien in `/etc` gehören root, dort brauchst du also
 `sudo sed -i ...`. Das ist ein gängiger Weg, eine Einstellung aus einem Skript
 heraus zu ändern, ohne einen Texteditor zu öffnen.
 
-## Felder herausschneiden – `cut`
-
-Besteht eine Datei aus Feldern mit einem Trennzeichen dazwischen, kann `cut`
-ein Feld herauspicken. `-d` wählt das Trennzeichen (*delimiter*) und `-f`, welches
-Feld übrig bleiben soll. Hier sind die Fächer – Feld 2 – aus der CSV-Datei:
-
-```sh
-cut -d, -f2 ~/{{documents}}/{{grades}}
-```
-
-In `/etc/passwd` sind die Felder durch Doppelpunkte getrennt, und Feld 1 ist
-der Benutzername, also listet `cut -d: -f1 /etc/passwd` alle Benutzer auf. Wie
-die anderen Filter passt `cut` in eine Pipe – zum Beispiel vor `tr`.
-
 ## Spalten – `awk`
 
 `awk` ist eigentlich eine ganze kleine Programmiersprache, wird aber meistens
@@ -288,7 +209,7 @@ einfügen:
 awk -F: '{print $1 " nutzt " $7}' /etc/passwd
 ```
 
-Vergleiche mit `cut -d: -f1` aus dem vorigen Abschnitt. Der Unterschied ist,
+Vergleiche mit `cut -d: -f1` aus dem Kapitel über das Lesen und Durchsuchen von Text. Der Unterschied ist,
 dass awk die Felder umsortieren, Text einfügen und mit mehreren Leerzeichen
 hintereinander umgehen kann.
 
@@ -378,8 +299,7 @@ läuft, ist `awk` standardmäßig **mawk**, eine kleine und schnelle Variante. B
 einfachen Programmen wie diesen merkst du keinen Unterschied – aber mawk
 wandelt ä, ö und ü mit `toupper()` nicht um. **GNU awk** (das Paket `gawk`)
 kann das, anders als `tr`. Distributionen unterscheiden sich darin, welches awk
-sie verwenden und wie man Software installiert – das kommt im Kapitel über
-Distributionen.
+sie verwenden und wie man Software installiert – das hast du im Teil über Distributionen gesehen.
 
 Der Simulator kennt nur einen Teil der Sprache awk – das, was hier behandelt
 wird, und ein bisschen mehr (`if`, Schleifen und Arrays). Siehe `man awk`.

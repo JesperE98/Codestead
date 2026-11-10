@@ -39,7 +39,7 @@ Propietario: 4 + 2 + 1 = 7. Grupo: 4 + 1 = 5. Los demás: 0.
 $ touch herramienta.sh
 $ chmod 755 herramienta.sh
 $ chmod go-x herramienta.sh
-$ ls -l herramienta.sh | awk '{print $1}'
+$ ls -l herramienta.sh | cut -d' ' -f1
 -rwxr--r--
 ```
 

@@ -122,6 +122,51 @@ sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ls /etc | wc -l
 ```
 
+## Characters बदलना – `tr`
+
+`tr` (*translate*) पहले set के हर character को दूसरे set में उसी जगह वाले character
+से बदल देता है। `a-z` का मतलब है a से z तक के सारे letters:
+
+```sh
+echo "hello from café" | tr a-z A-Z
+```
+
+```text
+HELLO FROM CAFé
+```
+
+é पर ध्यान गया? `tr` अलग-अलग *bytes* पर काम करता है, और é जैसे letters `a-z` का
+हिस्सा नहीं हैं।
+
+`tr` **सिर्फ़** stdin से पढ़ता है, files से कभी नहीं। अगर आप कोई file इस्तेमाल करना
+चाहते हैं, तो उसे `<` या pipe से अंदर भेजिए:
+
+```sh
+tr a-z A-Z < ~/{{documents}}/{{fruits}}
+```
+
+`-d` (*delete*) से आप characters हटाते हैं, और `-s` (*squeeze*) से लगातार आए कई एक
+जैसे characters को दबाकर एक कर देते हैं:
+
+```sh
+echo "070-123 45 67" | tr -d ' -'
+echo "too     many      spaces" | tr -s ' '
+```
+
+```predict
+$ echo "hello world" | tr -d o
+hell wrld
+---
+`-d` हर `o` को हटा देता है, चाहे वह कहीं भी हो।
+```
+
+Ranges की जगह आप *classes* भी लिख सकते हैं, जैसे `[:upper:]` (uppercase),
+`[:lower:]` (lowercase), `[:digit:]` (अंक) और `[:space:]` (whitespace):
+
+```sh
+echo "Room 101, floor 3" | tr -d '[:digit:]'
+```
+
 ## Input से arguments तक – `xargs`
 
 कुछ commands pipe से पढ़ते ही नहीं – उन्हें नाम **arguments** के रूप में चाहिए:

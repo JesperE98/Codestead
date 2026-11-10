@@ -79,8 +79,8 @@ usuários de sistema variam entre as distribuições):
 grep www-data /etc/passwd
 ```
 
-Com o `awk` do capítulo de processamento de texto você pode listar todos com
-UID 1000 ou mais – os usuários comuns:
+Com o `awk`, que você vai conhecer melhor no capítulo de processamento de
+texto, você pode listar todos com UID 1000 ou mais – os usuários comuns:
 
 ```sh
 awk -F: '$3 >= 1000 {print $1}' /etc/passwd

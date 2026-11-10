@@ -170,53 +170,70 @@ public class CheckpointTests
         w.Close();
     });
 
-    [Fact(DisplayName = "predict: en egen miniterminal att prova i (bara i lektioner)")]
-    public void PredictHasATerminal()
+    [Fact(DisplayName = "inga miniterminaler: varken predict eller try har en egen terminal")]
+    public void NoMiniTerminals()
         => Ui.Run(() =>
     {
-        var view = View("predict", "$ echo $((2 + 3))\n5");
-        var w = new Window { Content = view };
-        w.Show();
-        // Closed at first, so the student can guess before trying.
-        Assert.Null(view.PredictTerminal);
-        var open = view.GetLogicalDescendants().OfType<Button>().First(b => (b.Content as string)?.Contains("terminal") == true);
-        open.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-        var terminal = view.PredictTerminal;
-        Assert.NotNull(terminal);
-        Assert.True(terminal.View.IsEffectivelyVisible);
-        Assert.False(open.IsVisible);
-        string? output = null;
-        terminal.Ran += r => output = r.Output;
-        var input = (TextBox)terminal.View;
-        input.Text = "echo $((2 + 3))";
-        input.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
-        Assert.Equal("5", output?.Trim());
-        // Running it does not answer the question: the answer is still written in the box.
-        Assert.False(view.IsSolved);
-        w.Close();
-
-        var exam = View("predict", "$ echo hej\nhej", exam: true);
-        Assert.DoesNotContain(exam.GetLogicalDescendants().OfType<Button>(), b => (b.Content as string)?.Contains("terminal") == true);
+        foreach (var (kind, body) in new[] { ("predict", "$ echo $((2 + 3))\n5"), ("try", "pwd") })
+        {
+            var view = View(kind, body);
+            var w = new Window { Content = view };
+            w.Show();
+            Assert.DoesNotContain(view.GetLogicalDescendants().OfType<Button>(), b => (b.Content as string)?.Contains("terminal") == true);
+            if (kind == "try") Assert.Empty(view.GetLogicalDescendants().OfType<TextBox>());
+            w.Close();
+        }
     });
 
-    [Fact(DisplayName = "try: rätt kommando – eller ett med samma utskrift – i miniterminalen löser den")]
+    [Fact(DisplayName = "try: rätt kommando – eller ett med samma utskrift – i verktygets terminal löser den")]
     public void TrySolves()
         => Ui.Run(() =>
     {
         foreach (var typed in new[] { "pwd", "echo $PWD" })
         {
             var view = View("try", "pwd");
-            var w = new Window { Content = view };
-            w.Show();
-            var input = view.GetLogicalDescendants().OfType<TextBox>().First();
-            input.Text = "ls";
-            input.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
+            int solved = 0;
+            view.Solved += _ => solved++;
+            view.CommandRan(new SandboxRun("ls", FakeSandbox.Run("ls"), 0, true));
             Assert.False(view.IsSolved);
-            input.Text = typed;
-            input.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
+            // Waiting for more input does not count.
+            view.CommandRan(new SandboxRun(typed, "", 0, false));
+            Assert.False(view.IsSolved);
+            view.CommandRan(new SandboxRun(typed, FakeSandbox.Run(typed), 0, true));
             Assert.True(view.IsSolved, typed);
-            w.Close();
+            view.CommandRan(new SandboxRun(typed, FakeSandbox.Run(typed), 0, true));
+            Assert.Equal(1, solved);
         }
+
+        // Other kinds ignore the terminal.
+        var predict = View("predict", "$ echo hej\nhej");
+        predict.CommandRan(new SandboxRun("echo hej", "hej\n", 0, true));
+        Assert.False(predict.IsSolved);
+    });
+
+    [Fact(DisplayName = "try: kommandot kan klickas in i terminalen")]
+    public void TryCommandIsClickable()
+        => Ui.Run(() =>
+    {
+        string? injected = null;
+        var view = new CheckpointView(Checkpoint.Parse("try", "pwd", 0), Texts, false, new FakeSandbox(), false, c => injected = c);
+        var w = new Window { Content = view };
+        w.Show();
+        var button = view.GetLogicalDescendants().OfType<Button>().First(b => b.Content as string == "pwd");
+        button.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+        Assert.Equal("pwd", injected);
+        w.Close();
+    });
+
+    [Fact(DisplayName = "try i prov: rättas först med Grade()")]
+    public void TryInExam()
+        => Ui.Run(() =>
+    {
+        var view = View("try", "pwd", exam: true);
+        view.CommandRan(new SandboxRun("pwd", "/home/elev\n", 0, true));
+        Assert.False(view.IsSolved);
+        Assert.True(view.Grade());
+        Assert.False(View("try", "pwd", exam: true).Grade());
     });
 
     [Fact(DisplayName = "redan klarad kontrollpunkt visas som klar utan att Solved skickas")]

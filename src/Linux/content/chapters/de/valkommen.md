@@ -3,8 +3,8 @@
 Diese Anleitung bringt dir bei, Linux über die Kommandozeile zu benutzen – von
 deinen allerersten Befehlen bis hin zur Paketverwaltung auf verschiedenen
 Distributionen. Jedes Kapitel erklärt ein Thema. Unterwegs gibt es im Text
-kurze **Fragen**; beantworte sie, dann werden das Terminal rechts und die
-**Aufgaben** des Kapitels freigeschaltet. Eine Aufgabe wird automatisch
+kurze **Fragen**; einige davon probierst du im Terminal rechts aus. Beantworte
+sie alle, dann werden die **Aufgaben** des Kapitels freigeschaltet. Eine Aufgabe wird automatisch
 abgehakt, sobald du sie richtig gelöst hast. Am besten lernst du durch *Tun*:
 lesen, ausprobieren, Fehler machen und es noch einmal versuchen.
 

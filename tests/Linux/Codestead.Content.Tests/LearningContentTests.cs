@@ -89,6 +89,21 @@ public class LearningContentTests
             }
     }
 
+    [Fact(DisplayName = "Grunderna använder inte sed eller awk – de kommer i kapitlet om textbearbetning")]
+    public void TheBasicsUseNoSedOrAwk()
+    {
+        var command = new System.Text.RegularExpressions.Regex(@"(^|[|;&]\s*|\$ )(sed|awk)\s");
+        foreach (var chapter in ChaptersLib.Chapters.Where(c => c.Part is "start" or "grunder"))
+            foreach (var lang in Langs(chapter))
+            {
+                var text = I18nLib.ChapterMarkdown(chapter, lang);
+                var code = System.Text.RegularExpressions.Regex.Matches(text, @"^```(sh|text|predict|try)\n(.*?)^```", System.Text.RegularExpressions.RegexOptions.Multiline | System.Text.RegularExpressions.RegexOptions.Singleline)
+                    .SelectMany(m => m.Groups[2].Value.Split('\n'));
+                foreach (var line in code)
+                    Assert.False(command.IsMatch(line), $"{lang}/{chapter.Id}: \"{line}\" – sed and awk are taught in \"textbearbetning\"");
+            }
+    }
+
     [Theory(DisplayName = "try-kommandona fungerar i en ny sandlåda")]
     [MemberData(nameof(ChapterIds))]
     public void TryCommandsWork(string chapterId)

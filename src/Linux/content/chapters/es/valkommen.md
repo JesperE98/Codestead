@@ -3,8 +3,8 @@
 Esta guía te enseña a usar Linux desde la línea de comandos: desde tus
 primeros comandos hasta la gestión de paquetes en distintas distribuciones.
 Cada capítulo explica un tema. Por el camino hay breves **preguntas** en el
-texto; respóndelas y se desbloquearán la terminal de la derecha y las
-**tareas** del capítulo. Una tarea se marca automáticamente como completada en
+texto; algunas las pruebas en la terminal de la derecha. Respóndelas todas y se
+desbloquearán las **tareas** del capítulo. Una tarea se marca automáticamente como completada en
 cuanto la resuelves bien. La mejor forma de aprender es *haciendo*: lee,
 prueba, equivócate y vuelve a intentarlo.
 

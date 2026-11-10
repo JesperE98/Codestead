@@ -82,7 +82,7 @@ O seu diretório pessoal não fica em um sistema de arquivos próprio neste
 computador. O que isto imprime?
 
 ```predict
-$ df -h ~ | awk 'NR > 1 {print $6}'
+$ df -h ~ | tail -n 1 | tr -s ' ' | cut -d' ' -f6
 /
 ---
 Quando recebe um caminho, o `df` mostra só o sistema de arquivos em que ele

@@ -120,6 +120,31 @@ Pourquoi utilise-t-on presque toujours `uniq` après `sort` ?
 - [ ] `sort` supprime les doublons et `uniq` les remet
 ```
 
+## Découper des champs – `cut`
+
+Dans `{{documents}}` se trouve un troisième fichier d'exercice, un fichier CSV
+avec les notes des élèves :
+
+```sh
+cat ~/{{documents}}/{{grades}}
+```
+
+CSV signifie *comma-separated values* (valeurs séparées par des virgules) –
+les colonnes sont séparées par des virgules, et la première ligne est un
+en-tête.
+
+Quand un fichier est constitué de champs séparés par un séparateur, `cut`
+peut en extraire un. `-d` choisit le séparateur (*delimiter*) et `-f` le champ
+à garder. Voici les matières – le champ 2 – du fichier CSV :
+
+```sh
+cut -d, -f2 ~/{{documents}}/{{grades}}
+```
+
+Dans `/etc/passwd`, les champs sont séparés par des deux-points et le champ 1
+est le nom d'utilisateur, donc `cut -d: -f1 /etc/passwd` liste tous les
+utilisateurs.
+
 ## Le manuel – `man`
 
 Vous avez oublié ce que fait une option ? Chaque commande a sa page de

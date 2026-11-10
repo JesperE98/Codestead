@@ -110,17 +110,3 @@ b
 ---
 O `-d,` faz da vírgula o separador, e o `-f2` mantém o campo 2.
 ```
-
-```predict
-$ echo "x y z" | awk '{print NF}'
-3
----
-`NF` é o número de campos na linha. Os campos são separados por espaços.
-```
-
-```quiz
-Por que um programa awk como `'{print $3}'` deve ser escrito entre aspas **simples**?
-- [ ] O awk não consegue ler aspas duplas
-- [x] Senão o shell acha que `$3` é uma variável do shell e a substitui antes de o awk iniciar
-- [ ] Aspas simples fazem o awk rodar mais rápido
-```

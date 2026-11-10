@@ -4,6 +4,10 @@
     "path": {
       "text": "`PATH` variable का content दिखाइए।"
     },
+    "tr-path": {
+      "text": "`tr` से `:` को newline में बदलकर `$PATH` की directories को **अलग-अलग lines** पर दिखाइए।",
+      "hint": "Newline को `\\n` लिखा जाता है: `echo $PATH | tr ':' '\\n'`"
+    },
     "export": {
       "text": "Value `linux` के साथ environment variable `{{favVar}}` बनाइए।",
       "hint": "Equals sign के आसपास कोई space नहीं: `export NAME=value`।"

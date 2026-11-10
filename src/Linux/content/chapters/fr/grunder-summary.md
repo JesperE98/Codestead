@@ -30,7 +30,7 @@ s'exécute, et les noms qui contiennent des espaces ont besoin de guillemets.
 `tail -f` suit un fichier). `wc` compte les lignes, les mots et les octets.
 `grep` montre les lignes qui correspondent à un motif, `sort` trie les lignes
 et `uniq` supprime les lignes répétées qui se suivent. `man` affiche le
-manuel d'une commande.
+manuel d'une commande. `cut` extrait un champ (`-d` définit le séparateur, `-f` le champ).
 
 ## Redirections et pipes
 
@@ -40,18 +40,7 @@ fichier et `2>` redirige les messages d'erreur – par exemple vers
 `/dev/null`. Un pipe `|` envoie la sortie d'une commande dans la suivante, et
 `tee` en garde une copie au passage. `xargs` transforme les mots de son
 entrée en arguments pour une commande. `;`, `&&` et `||` lancent plusieurs
-commandes sur une seule ligne.
-
-## Traitement de texte avec sed, tr et awk
-
-`tr` remplace, supprime (`-d`) ou compresse (`-s`) des caractères isolés et
-ne lit que stdin. `sed` modifie des lignes : `s/ancien/nouveau/` remplace
-(`g` pour toutes les correspondances), les adresses choisissent des lignes,
-`d` supprime et `-n` avec `p` n'affiche que ce que vous demandez. `sed -i`
-modifie le fichier lui-même. `cut` extrait un champ, et `awk` travaille avec
-des colonnes : `-F` définit le séparateur, `$1` … `$NF` sont les champs, un
-motif avant `{ }` choisit des lignes, et `END { }` s'exécute après la
-dernière ligne.
+commandes sur une seule ligne. `tr` remplace, supprime (`-d`) ou compresse (`-s`) des caractères isolés et ne lit que stdin.
 
 ## Commandes et options
 
@@ -77,9 +66,7 @@ dernière ligne.
 | `tee` | Transmet l'entrée et en garde une copie | |
 | `xargs` | Transforme son entrée en arguments pour une commande | `-n 1` un à la fois, `-I {}` une ligne à la fois |
 | `tr` | Transforme des caractères | `-d` supprimer, `-s` compresser |
-| `sed` | Modifie un flux de lignes | `s/…/…/g`, `d`, `p`, `q`, `-n`, `-i`, `-E`, `-e` |
 | `cut` | Extrait des champs | `-d` séparateur, `-f` champ |
-| `awk` | Travaille avec des colonnes | `-F` séparateur, `$1`, `$NF`, `NF`, `NR`, `BEGIN`, `END` |
 
 | Syntaxe | Signifie |
 |---|---|

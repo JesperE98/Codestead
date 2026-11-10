@@ -1,6 +1,20 @@
 # Prov: Skript och automatisering
 
-Svara på frågorna om shell-skript – du behöver 80 % för godkänt.
+Svara på frågorna om textbearbetning och shell-skript – du behöver 80 % för godkänt.
+
+```predict
+$ echo "x y z" | awk '{print NF}'
+3
+---
+`NF` är antalet fält på raden. Fälten skiljs åt av mellanslag.
+```
+
+```quiz
+Varför ska ett awk-program som `'{print $3}'` skrivas inom **enkla** citattecken?
+- [ ] awk kan inte läsa dubbla citattecken
+- [x] Annars tror skalet att `$3` är en skalvariabel och byter ut den innan awk startar
+- [ ] Enkla citattecken gör att awk går snabbare
+```
 
 ```quiz
 Vad gör den första raden `#!/bin/bash` i ett skript?

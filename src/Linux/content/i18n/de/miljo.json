@@ -4,6 +4,10 @@
     "path": {
       "text": "Zeige den Inhalt der Variable `PATH` an."
     },
+    "tr-path": {
+      "text": "Zeige die Verzeichnisse in `$PATH` in **eigenen Zeilen** an, indem du mit `tr` jeden `:` durch einen Zeilenumbruch ersetzt.",
+      "hint": "Ein Zeilenumbruch wird `\\n` geschrieben: `echo $PATH | tr ':' '\\n'`"
+    },
     "export": {
       "text": "Lege die Umgebungsvariable `{{favVar}}` mit dem Wert `linux` an.",
       "hint": "Keine Leerzeichen um das Gleichheitszeichen: `export NAME=value`."

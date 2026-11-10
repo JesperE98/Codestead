@@ -100,7 +100,7 @@ settings router से **DHCP** के ज़रिए अपने-आप म�
 ```
 
 ```predict
-$ ip route | grep default | awk '{print $3}'
+$ ip route | grep default | cut -d' ' -f3
 192.168.1.1
 ---
 `default` वाली पंक्ति का तीसरा शब्द गेटवे का पता है।

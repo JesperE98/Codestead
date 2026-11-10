@@ -1,87 +1,19 @@
-# Traitement de texte avec sed, tr et awk
+# Traitement de texte avec sed et awk
 
-Avec `grep`, vous pouvez *trouver* des lignes. Mais souvent, on veut aller
-plus loin : remplacer un mot, supprimer certaines lignes, extraire une colonne
-ou additionner des nombres. C'est là qu'interviennent trois outils
-classiques :
+Vous connaissez déjà quelques outils pour le texte : `grep` trouve des
+lignes, `cut` extrait un champ et `tr` remplace des caractères isolés. Ce
+chapitre porte sur deux outils plus puissants, pour remplacer des mots,
+supprimer des lignes ou additionner des nombres :
 
 | Outil | Travaille sur | Usage typique |
 |---|---|---|
-| `tr` | des **caractères** isolés | passer en majuscules, transformer les `:` en retours à la ligne |
 | `sed` | des **lignes** | remplacer un mot, supprimer des lignes |
 | `awk` | des **colonnes** (champs) | extraire des colonnes, additionner, compter |
 
-Tous les trois sont des *filtres* : ils lisent du texte, le transforment et
+Tous les deux sont des *filtres* : ils lisent du texte, le transforment et
 écrivent le résultat sur stdout. Ils se marient donc parfaitement avec les
 pipes. Et le fichier d'origine n'est **pas** modifié (à une exception près,
 `sed -i`, que nous verrons plus loin).
-
-Dans `{{documents}}` se trouve un troisième fichier d'exercice, un fichier CSV
-avec les notes des élèves :
-
-```sh
-cat ~/{{documents}}/{{grades}}
-```
-
-CSV signifie *comma-separated values* (valeurs séparées par des virgules) –
-les colonnes sont séparées par des virgules, et la première ligne est un
-en-tête.
-
-## Transformer des caractères – `tr`
-
-`tr` (*translate*) remplace chaque caractère du premier ensemble par le
-caractère à la même position dans le second. `a-z` désigne toutes les lettres
-de a à z :
-
-```sh
-echo "hello from café" | tr a-z A-Z
-```
-
-```text
-HELLO FROM CAFé
-```
-
-Vous avez remarqué le é ? `tr` travaille sur des *octets* individuels, et les
-lettres comme é – ou è, à et ç – ne font pas partie de `a-z`. C'est
-bon à savoir – GNU `awk` (plus bas) s'en sort mieux.
-
-`tr` lit **uniquement** depuis stdin, jamais depuis des fichiers. Pour
-utiliser un fichier, faites-le entrer avec `<` ou un pipe :
-
-```sh
-tr a-z A-Z < ~/{{documents}}/{{fruits}}
-```
-
-Une astuce classique consiste à transformer les deux-points en retours à la
-ligne (`\n`), pour que chaque répertoire de `PATH` se retrouve sur sa propre
-ligne :
-
-```sh
-echo $PATH | tr ':' '\n'
-```
-
-Avec `-d` (*delete*), vous supprimez des caractères, et avec `-s` (*squeeze*),
-vous réduisez plusieurs caractères identiques consécutifs à un seul :
-
-```sh
-echo "070-123 45 67" | tr -d ' -'
-echo "beaucoup     trop      espacé" | tr -s ' '
-```
-
-```predict
-$ echo "hello world" | tr -d o
-hell wrld
----
-`-d` supprime chaque `o`, où qu'il se trouve.
-```
-
-Au lieu de plages, vous pouvez écrire des *classes*, p. ex. `[:upper:]`
-(majuscules), `[:lower:]` (minuscules), `[:digit:]` (chiffres) et
-`[:space:]` (espaces) :
-
-```sh
-echo "Salle 101, étage 3" | tr -d '[:digit:]'
-```
 
 ## L'éditeur de flux – `sed`
 
@@ -231,21 +163,6 @@ Les fichiers de configuration de `/etc` appartiennent à root, il faut donc y
 utiliser `sudo sed -i ...`. C'est une façon courante de modifier un réglage
 depuis un script sans ouvrir d'éditeur de texte.
 
-## Découper des champs – `cut`
-
-Quand un fichier est constitué de champs séparés par un séparateur, `cut`
-peut en extraire un. `-d` choisit le séparateur (*delimiter*) et `-f` le champ
-à garder. Voici les matières – le champ 2 – du fichier CSV :
-
-```sh
-cut -d, -f2 ~/{{documents}}/{{grades}}
-```
-
-Dans `/etc/passwd`, les champs sont séparés par des deux-points et le champ 1
-est le nom d'utilisateur, donc `cut -d: -f1 /etc/passwd` liste tous les
-utilisateurs. Comme les autres filtres, `cut` trouve sa place dans un pipe –
-par exemple devant `tr`.
-
 ## Les colonnes – `awk`
 
 `awk` est en réalité tout un petit langage de programmation, mais la plupart
@@ -296,7 +213,7 @@ texte :
 awk -F: '{print $1 " utilise " $7}' /etc/passwd
 ```
 
-Comparez avec `cut -d: -f1` de la section précédente. La différence, c'est
+Comparez avec `cut -d: -f1` du chapitre sur la lecture et la recherche de texte. La différence, c'est
 que awk peut réordonner les champs, y mêler du texte et gérer plusieurs
 espaces consécutifs.
 
@@ -388,8 +305,7 @@ ici, `awk` est par défaut **mawk**, une variante petite et rapide. Pour des
 programmes simples comme ceux-ci, vous ne verrez aucune différence – mais mawk
 ne convertit pas è et ç avec `toupper()`. **GNU awk** (le paquet `gawk`),
 lui, le fait, contrairement à `tr`. Les distributions diffèrent quant à l'awk
-qu'elles utilisent et à la façon d'installer des logiciels – nous y viendrons
-dans le chapitre sur les distributions.
+qu'elles utilisent et à la façon d'installer des logiciels – vous l'avez vu dans la partie sur les distributions.
 
 Le simulateur ne connaît qu'une partie du langage awk – ce qui est présenté
 ici et un peu plus (`if`, boucles et tableaux). Voir `man awk`.

@@ -45,33 +45,27 @@ public class TerminalTests
 
     [Fact(DisplayName = "sandlådan för kontrollfrågor är en ny dator varje gång")]
     public void SandboxIsFresh()
-        => Ui.Run(() =>
     {
         var sandbox = new ShellSandbox("ubuntu", "en");
         Assert.Equal("5", sandbox.OutputOf("echo $((2 + 3))").Trim());
-        var terminal = sandbox.NewTerminal();
-        var w = new Window { Content = terminal.View };
-        w.Show();
-        SandboxRun? run = null;
-        terminal.Ran += r => run = r;
-        var input = terminal.View.GetLogicalDescendants().OfType<TextBox>().First();
-        input.Text = "touch spår.txt";
-        input.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
-        Assert.True(run is { Finished: true, ExitCode: 0 });
-        // A new terminal does not see the file of the first one.
+        Assert.Equal("", sandbox.OutputOf("touch spår.txt").Trim());
+        // The next command runs on a new computer that does not have the file.
         Assert.Contains("No such file", sandbox.OutputOf("ls spår.txt"));
-        w.Close();
-    });
+    }
 
-    [Fact(DisplayName = "en try-fråga löses i en riktig simulerad terminal")]
+    [Fact(DisplayName = "en try-fråga löses av ett kommando i den riktiga simulerade terminalen")]
     public void TryWithTheSimulator()
         => Ui.Run(() =>
     {
         var texts = new CheckpointTexts("Check", "Correct", "Wrong", "Predict", "Try", "Done", "Answer", "Question");
         var view = new CheckpointView(Checkpoint.Parse("try", "pwd", 0), texts, false, new ShellSandbox("ubuntu", "en"));
-        var w = new Window { Content = view };
+        var sh = Codestead.Shell.Shell.Create("ubuntu", "en");
+        var term = new TerminalView { Shell = sh };
+        term.CommandExecuted += r => view.CommandRan(new SandboxRun(r.Line, Codestead.Shell.Commands.UtilCmd.StripAnsi(r.Output), r.ExitCode, !r.Pending && !r.Incomplete));
+        var w = new Window { Content = term };
         w.Show();
-        var input = view.GetLogicalDescendants().OfType<TerminalView>().First().GetLogicalDescendants().OfType<TextBox>().First();
+        var input = term.GetLogicalDescendants().OfType<TextBox>().First();
+        // Another command with the same output counts too.
         input.Text = "echo $PWD";
         input.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
         Assert.True(view.IsSolved);

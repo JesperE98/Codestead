@@ -66,6 +66,13 @@ I like $x
 echo $PATH
 ```
 
+एक classic trick है colons को newlines (`\n`) में बदलना, ताकि `PATH` की हर directory
+अपनी अलग line पर आ जाए:
+
+```sh
+echo $PATH | tr ':' '\n'
+```
+
 `which` बताता है कि कोई program कहाँ मिला। कुछ commands, जैसे `cd`, files हैं ही
 नहीं बल्कि shell में *built in* हैं – `type` बताता है कि कोई नाम असल में क्या है:
 

@@ -1,6 +1,20 @@
 # Exam: Scripts and automation
 
-Answer the questions about shell scripts – you need 80 % to pass.
+Answer the questions about text processing and shell scripts – you need 80 % to pass.
+
+```predict
+$ echo "x y z" | awk '{print NF}'
+3
+---
+`NF` is the number of fields on the line. Fields are separated by spaces.
+```
+
+```quiz
+Why should an awk program such as `'{print $3}'` be written in **single** quotes?
+- [ ] awk can't read double quotes
+- [x] Otherwise the shell thinks `$3` is a shell variable and replaces it before awk starts
+- [ ] Single quotes make awk run faster
+```
 
 ```quiz
 What does the first line `#!/bin/bash` in a script do?

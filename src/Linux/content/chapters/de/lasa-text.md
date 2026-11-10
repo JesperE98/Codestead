@@ -117,6 +117,29 @@ Warum wird `uniq` fast immer nach `sort` verwendet?
 - [ ] `sort` entfernt Duplikate und `uniq` fügt sie wieder ein
 ```
 
+## Felder herausschneiden – `cut`
+
+In `{{documents}}` gibt es eine dritte Übungsdatei, `{{grades}}`, eine CSV-Datei mit
+den Punkten der Schüler in verschiedenen Fächern:
+
+```sh
+cat ~/{{documents}}/{{grades}}
+```
+
+CSV steht für *comma-separated values* – die Spalten sind durch Kommas
+getrennt, und die erste Zeile ist eine Kopfzeile.
+
+Besteht eine Datei aus Feldern mit einem Trennzeichen dazwischen, kann `cut`
+ein Feld herauspicken. `-d` wählt das Trennzeichen (*delimiter*) und `-f`, welches
+Feld übrig bleiben soll. Hier sind die Fächer – Feld 2 – aus der CSV-Datei:
+
+```sh
+cut -d, -f2 ~/{{documents}}/{{grades}}
+```
+
+In `/etc/passwd` sind die Felder durch Doppelpunkte getrennt, und Feld 1 ist
+der Benutzername, also listet `cut -d: -f1 /etc/passwd` alle Benutzer auf.
+
 ## Das Handbuch – `man`
 
 Vergessen, was eine Option macht? Jeder Befehl hat eine Handbuchseite

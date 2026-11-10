@@ -78,8 +78,8 @@ Namen der Systembenutzer unterscheiden sich zwischen Distributionen):
 grep www-data /etc/passwd
 ```
 
-Mit `awk` aus dem Kapitel über Textbearbeitung kannst du alle mit UID 1000
-oder höher auflisten – die normalen Benutzer:
+Mit `awk`, das du im Kapitel über Textverarbeitung genauer kennenlernst,
+kannst du alle mit UID 1000 oder höher auflisten – die normalen Benutzer:
 
 ```sh
 awk -F: '$3 >= 1000 {print $1}' /etc/passwd

@@ -77,7 +77,7 @@ chmod go-w fil.txt
 $ touch plan.txt
 $ chmod 600 plan.txt
 $ chmod g+r plan.txt
-$ ls -l plan.txt | awk '{print $1}'
+$ ls -l plan.txt | cut -d' ' -f1
 -rw-r-----
 ```
 

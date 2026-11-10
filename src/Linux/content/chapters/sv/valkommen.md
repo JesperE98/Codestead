@@ -2,8 +2,8 @@
 
 Den här guiden lär dig använda Linux från kommandoraden – från de allra första
 kommandona till pakethantering i olika distributioner. Varje kapitel förklarar
-ett område. Längs vägen finns korta **frågor** i texten; svara på dem så låses
-terminalen till höger och kapitlets **uppgifter** upp. Uppgifterna bockas av
+ett område. Längs vägen finns korta **frågor** i texten; några av dem provar du i
+terminalen till höger. Svara på alla så låses kapitlets **uppgifter** upp. Uppgifterna bockas av
 automatiskt när du gjort rätt. Det bästa sättet att lära sig är att *göra*:
 läs, prova, gör fel, prova igen.
 

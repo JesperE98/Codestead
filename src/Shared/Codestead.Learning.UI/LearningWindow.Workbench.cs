@@ -33,10 +33,14 @@ public partial class LearningWindow
 
     private void OnResult(SandboxRun result)
     {
-        var newly = tool.Evaluate(Chapter.Id, result, state.Progress).ToList();
+        // The "try it" questions in the text are answered in the terminal (this may unlock the tasks).
+        foreach (var view in checkpointViews.ToList()) view.CommandRan(result);
+        // Locked tasks are not checked: the text comes first, even though the terminal is already there.
+        bool tasksOpen = Chapter.Kind == ChapterKinds.Lesson && IsUnlocked(Chapter);
+        var newly = tasksOpen ? tool.Evaluate(Chapter.Id, result, state.Progress).ToList() : new List<string>();
         // Every finished command line counts as an attempt for the tasks that are not done yet.
         bool solutionUnlocked = false;
-        if (result.Finished && result.Line.Trim() != "")
+        if (tasksOpen && result.Finished && result.Line.Trim() != "")
         {
             foreach (var key in TaskKeys(Chapter))
             {

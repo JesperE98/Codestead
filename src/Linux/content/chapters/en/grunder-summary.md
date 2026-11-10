@@ -27,7 +27,7 @@ the command runs, and names with spaces need quotes.
 show the beginning and the end (`-n` chooses how many lines, `tail -f`
 follows a file). `wc` counts lines, words and bytes. `grep` shows the lines
 that match a pattern, `sort` sorts lines and `uniq` removes repeated lines
-that are next to each other. `man` shows the manual for a command.
+that are next to each other. `man` shows the manual for a command. `cut` picks out a field (`-d` sets the separator, `-f` the field).
 
 ## Redirection and pipes
 
@@ -36,16 +36,7 @@ to a file (and overwrites it), `>>` appends, `<` reads stdin from a file and
 `2>` redirects error messages – for example to `/dev/null`. A pipe `|` sends
 the output of one command into the next, and `tee` saves a copy on the way.
 `xargs` turns the words in its input into arguments for a command.
-`;`, `&&` and `||` run several commands on one line.
-
-## Text processing with sed, tr and awk
-
-`tr` replaces, deletes (`-d`) or squeezes (`-s`) single characters and only
-reads stdin. `sed` edits lines: `s/old/new/` replaces (`g` for every match),
-addresses choose lines, `d` deletes and `-n` with `p` prints only what you
-ask for. `sed -i` changes the file itself. `cut` picks out a field, and `awk`
-works with columns: `-F` sets the separator, `$1` … `$NF` are the fields, a
-pattern before `{ }` chooses lines, and `END { }` runs after the last line.
+`;`, `&&` and `||` run several commands on one line. `tr` replaces, deletes (`-d`) or squeezes (`-s`) single characters and only reads stdin.
 
 ## Commands and options
 
@@ -71,9 +62,7 @@ pattern before `{ }` chooses lines, and `END { }` runs after the last line.
 | `tee` | Passes input on and saves a copy | |
 | `xargs` | Turns its input into arguments for a command | `-n 1` one at a time, `-I {}` one per line |
 | `tr` | Translates characters | `-d` delete, `-s` squeeze |
-| `sed` | Edits a stream of lines | `s/…/…/g`, `d`, `p`, `q`, `-n`, `-i`, `-E`, `-e` |
 | `cut` | Picks out fields | `-d` separator, `-f` field |
-| `awk` | Works with columns | `-F` separator, `$1`, `$NF`, `NF`, `NR`, `BEGIN`, `END` |
 
 | Syntax | Means |
 |---|---|

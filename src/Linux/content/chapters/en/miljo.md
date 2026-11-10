@@ -66,6 +66,13 @@ listed in the `PATH` variable, one after another:
 echo $PATH
 ```
 
+A classic trick is to turn colons into newlines (`\n`), so that each
+directory in `PATH` ends up on a line of its own:
+
+```sh
+echo $PATH | tr ':' '\n'
+```
+
 `which` shows where a program was found. Some commands, like `cd`, aren't
 files at all but are *built into* the shell – `type` tells you what a name is:
 

@@ -1,79 +1,18 @@
-# Textbearbetning med sed, tr och awk
+# Textbearbetning med sed och awk
 
-Med `grep` kan du *hitta* rader. Men ofta vill du göra mer än så: byta ut ett
-ord, ta bort vissa rader, plocka ut en kolumn eller räkna ihop siffror. Då
-använder du tre klassiska verktyg:
+Du känner redan till några verktyg för text: `grep` hittar rader, `cut`
+plockar ut ett fält och `tr` byter enskilda tecken. Det här kapitlet handlar
+om två kraftfullare verktyg, för när du vill byta ut ord, ta bort rader eller
+räkna ihop siffror:
 
 | Verktyg | Arbetar med | Typiskt jobb |
 |---|---|---|
-| `tr` | enskilda **tecken** | gör om till versaler, byt `:` mot ny rad |
 | `sed` | **rader** | byt ut ett ord, ta bort rader |
 | `awk` | **kolumner** (fält) | plocka ut kolumner, summera, räkna |
 
-Alla tre är *filter*: de läser text, gör något med den och skriver resultatet
+Båda är *filter*: de läser text, gör något med den och skriver resultatet
 till stdout. Därför passar de perfekt i pipes. Och originalfilen ändras **inte**
 (med ett undantag, `sed -i`, som vi kommer till).
-
-I `{{documents}}` finns en tredje övningsfil, en CSV-fil med elevernas poäng:
-
-```sh
-cat ~/{{documents}}/{{grades}}
-```
-
-CSV betyder *comma-separated values* – kolumnerna skiljs åt av kommatecken,
-och första raden är en rubrikrad.
-
-## Byta tecken – `tr`
-
-`tr` (*translate*) byter varje tecken i den första mängden mot tecknet på samma
-plats i den andra. `a-z` betyder alla bokstäver från a till z:
-
-```sh
-echo "hej från terminalen" | tr a-z A-Z
-```
-
-```text
-HEJ FRåN TERMINALEN
-```
-
-Ser du å:et? `tr` arbetar med enskilda *byte*, och å, ä och ö ingår inte i
-`a-z`. Det är bra att känna till – GNU `awk` (längre ner) klarar det bättre.
-
-`tr` läser **bara** från stdin, aldrig från filer. Vill du använda en fil
-skickar du in den med `<` eller en pipe:
-
-```sh
-tr a-z A-Z < ~/{{documents}}/{{fruits}}
-```
-
-Ett klassiskt knep är att byta kolon mot radbrytning (`\n`), så att varje
-katalog i `PATH` hamnar på en egen rad:
-
-```sh
-echo $PATH | tr ':' '\n'
-```
-
-Med `-d` (*delete*) tar du bort tecken och med `-s` (*squeeze*) pressar du
-ihop flera likadana tecken i rad till ett:
-
-```sh
-echo "070-123 45 67" | tr -d ' -'
-echo "för     många      mellanslag" | tr -s ' '
-```
-
-```predict
-$ echo "hello world" | tr -d o
-hell wrld
----
-`-d` tar bort varje `o`, var det än står.
-```
-
-I stället för intervall kan du skriva *klasser*, t.ex. `[:upper:]` (versaler),
-`[:lower:]` (gemener), `[:digit:]` (siffror) och `[:space:]` (blanktecken):
-
-```sh
-echo "Rum 101, våning 3" | tr -d '[:digit:]'
-```
 
 ## Strömeditorn – `sed`
 
@@ -216,20 +155,6 @@ Konfigurationsfiler i `/etc` ägs av root, så där behövs `sudo sed -i ...`.
 Det är ett vanligt sätt att ändra en inställning i ett skript, utan att öppna
 en texteditor.
 
-## Klippa ut fält – `cut`
-
-När en fil består av fält med en avgränsare emellan kan `cut` plocka ut ett
-fält. `-d` väljer avgränsaren (*delimiter*) och `-f` vilket fält som ska
-behållas. Här är ämnena – fält 2 – i CSV-filen:
-
-```sh
-cut -d, -f2 ~/{{documents}}/{{grades}}
-```
-
-I `/etc/passwd` skiljs fälten åt av kolon och fält 1 är användarnamnet, så
-`cut -d: -f1 /etc/passwd` listar alla användare. Precis som de andra filtren
-passar `cut` i en pipe – till exempel framför `tr`.
-
 ## Kolumner – `awk`
 
 `awk` är egentligen ett helt litet programspråk, men för det mesta används det
@@ -276,7 +201,7 @@ fälten ihop, och då kan du blanda in egen text:
 awk -F: '{print $1 " använder " $7}' /etc/passwd
 ```
 
-Jämför med `cut -d: -f1` från förra avsnittet. Skillnaden är att awk kan byta
+Jämför med `cut -d: -f1` från kapitlet om att läsa och söka i text. Skillnaden är att awk kan byta
 ordning på fälten, blanda in text och klarar flera mellanslag i rad.
 
 ```predict
@@ -361,7 +286,7 @@ Titta noga på `äpple` och `päron`. På Ubuntu, som terminalen här kör, är
 de här märks ingen skillnad – men mawk gör inte om å, ä och ö med
 `toupper()`. Det gör **GNU awk** (paketet `gawk`), till skillnad från `tr`.
 Distributionerna skiljer sig i vilken awk de använder och i hur man
-installerar program – det kommer i kapitlet om distributioner.
+installerar program – det såg du i delen om distributioner.
 
 Simulatorn kan bara en del av awk-språket – det som tas upp här och lite
 till (`if`, loopar och arrayer). Se `man awk`.

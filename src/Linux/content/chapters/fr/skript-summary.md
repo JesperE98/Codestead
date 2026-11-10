@@ -3,6 +3,10 @@
 Dans cette partie, vous avez transformé des commandes en programmes bien à
 vous.
 
+## Traitement de texte avec sed et awk
+
+`sed` modifie des lignes : `s/ancien/nouveau/` remplace (`g` pour toutes les correspondances), les adresses choisissent des lignes, `d` supprime et `-n` avec `p` n'affiche que ce que vous demandez. `sed -i` modifie le fichier lui-même. `awk` travaille avec des colonnes : `-F` définit le séparateur, `$1` … `$NF` sont les champs, un motif avant `{ }` choisit des lignes, et `END { }` s'exécute après la dernière ligne.
+
 ## Les scripts shell
 
 Un script est un fichier texte contenant des commandes, qui commence par le
@@ -40,6 +44,8 @@ dans un fichier. `journalctl -u cron` montre chaque exécution, et
 
 | Syntaxe | Fait |
 |---|---|
+| `sed`: `s/…/…/g`, `d`, `p`, `q`, `-n`, `-i`, `-E`, `-e` | Modifie un flux de lignes |
+| `awk`: `-F` séparateur, `$1`, `$NF`, `NF`, `NR`, `BEGIN`, `END` | Travaille avec des colonnes |
 | `#!/bin/bash` | Le shebang : quel programme exécute le script |
 | `cat > file << '{{heredocEnd}}'` | Écrire des lignes dans un fichier jusqu'à la ligne `{{heredocEnd}}` |
 | `name=value` · `"$name"` · `"${name}"` | Créer · utiliser une variable |
