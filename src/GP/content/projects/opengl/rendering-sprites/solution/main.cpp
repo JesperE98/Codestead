@@ -15,7 +15,7 @@
 #include <vector>
 
 // Hedgerow: a ball, a paddle and a wall of blocks.
-// learnopengl splits its game into classes and files (Game, ResourceManager, Shader, Texture2D, SpriteRenderer …);
+// learnopengl splits its game into classes and files (Game, ResourceManager, Shader, Texture2D, SpriteRenderer ...);
 // here each class is a plain struct with free functions, in one file, in the order of learnopengl's files.
 
 // The width of the screen

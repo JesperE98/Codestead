@@ -288,9 +288,13 @@ public sealed partial class GlReader
         var choice = System.Text.RegularExpressions.Regex.Match(arg.Trim(), @"^([^?]+)\?([^:]+):(.+)$");
         if (choice.Success && Eval(choice.Groups[1].Value.Trim()) is { V: { Length: > 0 } cond })
             return ObjOf(cond[0] != 0 ? choice.Groups[2].Value : choice.Groups[3].Value, known);
+        // The object the variable holds (its own name, "program#3"), before the expression's text: the text
+        // (shader.ID) names whichever object was made last through it, a copy of the struct holds its own.
+        var held = Eval(arg.Trim())?.Text;
+        if (held is not null && held.Contains('#') && known(held)) return held;
         var name = Obj(arg);
         if (known(name)) return name;
-        return Eval(arg.Trim())?.Text is { } held && known(held) ? held : name;
+        return held is not null && known(held) ? held : name;
     }
 
     /// <summary>

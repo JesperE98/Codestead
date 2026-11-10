@@ -1,0 +1,41 @@
+{
+  "title": "Banor",
+  "tasks": {
+    "background": {
+      "text": "Ladda spelets texturer – `background` (textures/background.png), `block`, `block_solid` och `paddle` – och rita i `Render` bakgrunden över hela fönstret i stället för bollen, bara medan spelet är aktivt.",
+      "hint": {
+        "opengl": "`LoadTexture(\"textures/background.png\", false, \"background\");` … `block` och `block_solid` utan alfa, `paddle` med. I `Render`: `if (game.State == GAME_ACTIVE) { DrawSprite(Renderer, GetTexture(\"background\").ID, glm::vec2(0.0f, 0.0f), glm::vec2(game.Width, game.Height), 0.0f); }`.",
+        "vulkan": "`LoadTexture(\"textures/background.png\", \"background\");` … (ingen alfaflagga: varje textur är RGBA). I `Render`: `if (game.State == GAME_ACTIVE) { DrawSprite(Renderer, GetTexture(\"background\").DescriptorSet, glm::vec2(0.0f, 0.0f), glm::vec2(game.Width, game.Height), 0.0f); }`.",
+        "d3d12": "`LoadTexture(\"textures/background.png\", false, \"background\");` … `block` och `block_solid` utan alfa, `paddle` med. I `Render`: `if (game.State == GAME_ACTIVE) { DrawSprite(Renderer, GetTexture(\"background\").ID, XMFLOAT2(0.0f, 0.0f), XMFLOAT2(static_cast<float>(game.Width), static_cast<float>(game.Height)), 0.0f); }`."
+      }
+    },
+    "game-object": {
+      "text": {
+        "opengl": "Lägg till learnopengls GameObject som en struct (Position, Size, Velocity, Color, Rotation, IsSolid, Destroyed och spritens textur-ID), `MakeGameObject` (learnopengls konstruktor) och `DrawObject`, som ritar objektets sprite.",
+        "vulkan": "Lägg till learnopengls GameObject som en struct (Position, Size, Velocity, Color, Rotation, IsSolid, Destroyed och spritens descriptor set), `MakeGameObject` (learnopengls konstruktor) och `DrawObject`, som ritar objektets sprite.",
+        "d3d12": "Lägg till learnopengls GameObject som en struct (Position, Size, Velocity, Color, Rotation, IsSolid, Destroyed och spritens textur-ID), `MakeGameObject` (learnopengls konstruktor) och `DrawObject`, som ritar objektets sprite."
+      },
+      "hint": "Standardvärden: Position (0, 0), Size (1, 1), Velocity (0, 0), Color (1, 1, 1), Rotation 0, båda flaggorna false. `MakeGameObject(pos, size, sprite, color = 1, velocity = 0)` kopierar sina argument till ett nytt objekt; `DrawObject`: `DrawSprite(renderer, obj.Sprite, obj.Position, obj.Size, obj.Rotation, obj.Color);`."
+    },
+    "load-level": {
+      "text": "Lägg till `struct GameLevel` (dess Bricks), `LoadLevel`, som läser en banfil rad för rad till rader av blockkoder, och `InitLevel`, som gör koderna till block: ett per ruta, `unit_width` × `unit_height` stort, solida stenar för 1, tonade block för 2–5.",
+      "hint": {
+        "opengl": "`std::ifstream fstream(file)`, `while (std::getline(fstream, line))`, `std::istringstream sstream(line)`, `while (sstream >> tileCode) row.push_back(tileCode);`. `unit_width = levelWidth / static_cast<float>(width)`, likadant för höjden; position `(unit_width * x, unit_height * y)`; 1 → `GetTexture(\"block_solid\").ID` med (0.8, 0.8, 0.7) och `IsSolid = true`; 2–5 → `GetTexture(\"block\").ID` med learnopengls färger.",
+        "vulkan": "`std::ifstream fstream(file)`, `while (std::getline(fstream, line))`, `std::istringstream sstream(line)`, `while (sstream >> tileCode) row.push_back(tileCode);`. `unit_width = levelWidth / static_cast<float>(width)`, likadant för höjden; position `(unit_width * x, unit_height * y)`; 1 → `GetTexture(\"block_solid\").DescriptorSet` med (0.8, 0.8, 0.7) och `IsSolid = true`; 2–5 → `GetTexture(\"block\").DescriptorSet` med learnopengls färger.",
+        "d3d12": "`std::ifstream fstream(file)`, `while (std::getline(fstream, line))`, `std::istringstream sstream(line)`, `while (sstream >> tileCode) row.push_back(tileCode);`. `unit_width = levelWidth / static_cast<float>(width)`, likadant för höjden; `XMFLOAT2 pos(unit_width * x, unit_height * y);`; 1 → `GetTexture(\"block_solid\").ID` med (0.8, 0.8, 0.7) och `IsSolid = true`; 2–5 → `GetTexture(\"block\").ID` med learnopengls färger."
+      }
+    },
+    "draw-level": {
+      "text": "Lägg till `DrawLevel` (varje block som inte är förstört), ge `Game` dess `Levels` och aktuella `Level`, ladda de fyra banfilerna i `Init` till fönstrets övre halva, och rita den aktuella banan efter bakgrunden.",
+      "hint": "`for (GameObject& tile : level.Bricks) if (!tile.Destroyed) DrawObject(tile, renderer);`. `GameLevel one; LoadLevel(one, \"levels/one.lvl\", game.Width, game.Height / 2);` … `game.Levels.push_back(one);` …, `game.Level = 0;` (efter texturerna). I `Render`: `DrawLevel(game.Levels[game.Level], Renderer);`."
+    },
+    "player": {
+      "text": "Lägg till racketen: `PLAYER_SIZE` (100, 20) och `PLAYER_VELOCITY` (500), en global `GameObject Player` som skapas i `Init` nere i mitten med racket-texturen och ritas efter banan; flytta den i `ProcessInput` med A och D så länge den stannar inne i fönstret.",
+      "hint": {
+        "opengl": "`glm::vec2 playerPos = glm::vec2(game.Width / 2.0f - PLAYER_SIZE.x / 2.0f, game.Height - PLAYER_SIZE.y);`, `Player = MakeGameObject(playerPos, PLAYER_SIZE, GetTexture(\"paddle\").ID);`. `float velocity = PLAYER_VELOCITY * dt;` och `if (game.Keys[GLFW_KEY_A]) { if (Player.Position.x >= 0.0f) Player.Position.x -= velocity; }`, likadant för D med `game.Width - Player.Size.x`.",
+        "vulkan": "`glm::vec2 playerPos = glm::vec2(game.Width / 2.0f - PLAYER_SIZE.x / 2.0f, game.Height - PLAYER_SIZE.y);`, `Player = MakeGameObject(playerPos, PLAYER_SIZE, GetTexture(\"paddle\").DescriptorSet);`. `float velocity = PLAYER_VELOCITY * dt;` och `if (game.Keys[GLFW_KEY_A]) { if (Player.Position.x >= 0.0f) Player.Position.x -= velocity; }`, likadant för D med `game.Width - Player.Size.x`.",
+        "d3d12": "`XMFLOAT2 playerPos = XMFLOAT2(game.Width / 2.0f - PLAYER_SIZE.x / 2.0f, game.Height - PLAYER_SIZE.y);`, `Player = MakeGameObject(playerPos, PLAYER_SIZE, GetTexture(\"paddle\").ID);`. `float velocity = PLAYER_VELOCITY * dt;` och `if (game.Keys['A']) { if (Player.Position.x >= 0.0f) Player.Position.x -= velocity; }`, likadant för 'D' med `game.Width - Player.Size.x`."
+      }
+    }
+  }
+}

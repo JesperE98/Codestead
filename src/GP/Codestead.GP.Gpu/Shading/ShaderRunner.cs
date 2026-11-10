@@ -325,6 +325,12 @@ public sealed partial class ShaderRunner
                 }
                 return default;
             }
+            case Declare { Reference: true, Value: { } referred } d when Eval(referred) is { Fields: not null } or { Items: not null } or { Map: not null }:
+            {
+                // A reference to a struct or a container: the same object under another name.
+                scopes[^1][d.Id] = Eval(referred);
+                return default;
+            }
             case Declare d:
             {
                 // C++: Type name{} / Type name = {} is a zero-initialised struct.

@@ -1,0 +1,53 @@
+{
+  "title": "Rendera sprites",
+  "tasks": {
+    "sprite-shader": {
+      "text": {
+        "opengl": "Skriv sprite-shadrarna – `sprite.vs` skickar `vertex.zw` vidare som `TexCoords` och transformerar `vertex.xy` med `projection * model`, `sprite.fs` multiplicerar texturen med `spriteColor` – och ladda dem i `Init` som `\"sprite\"` och sätt samplern `image` till enhet 0 och den ortografiska projektionen.",
+        "vulkan": "Skriv sprite-shadrarna – `sprite.vert` skickar `vertex.zw` vidare som `TexCoords` och transformerar `vertex.xy` med `ubo.projection * pc.model`, `sprite.frag` multiplicerar texturen med `pc.spriteColor` – ladda dem i `Init` som `\"sprite\"`, och sätt den ortografiska projektionen i `updateUniformBuffer()`.",
+        "d3d12": "Skriv sprite-shadrarna – `VSMain` skickar texturkoordinaterna vidare och transformerar positionen med `model`, sedan `projection`; `PSMain` multiplicerar texturen med `spriteColor` – ladda dem i `Init` som `\"sprite\"`, och skriv den ortografiska projektionen till constant buffern i `OnUpdate`."
+      },
+      "hint": {
+        "opengl": "`LoadShader(\"sprite.vs\", \"sprite.fs\", nullptr, \"sprite\");`, `glm::ortho(0.0f, static_cast<float>(game.Width), static_cast<float>(game.Height), 0.0f, -1.0f, 1.0f)` (botten = höjden, topp = 0: y pekar nedåt), sedan `Use(GetShader(\"sprite\"))`, `SetInteger(GetShader(\"sprite\"), \"image\", 0)`, `SetMatrix4(GetShader(\"sprite\"), \"projection\", projection)`.",
+        "vulkan": "`LoadShader(\"shaders/sprite.vert.spv\", \"shaders/sprite.frag.spv\", \"sprite\");`. Projektion: `ubo.projection = glm::ortho(0.0f, static_cast<float>(Hedgerow.Width), 0.0f, static_cast<float>(Hedgerow.Height), -1.0f, 1.0f);` – botten 0 och topp = höjden, eftersom Vulkans clip space redan har y nedåt.",
+        "d3d12": "`result.position = mul(mul(float4(position, 0.0f, 1.0f), model), projection);`, `return float4(spriteColor, 1.0f) * image.Sample(wrapSampler, input.texCoord);`, `LoadShader(L\"sprite.hlsl\", \"sprite\");`. I `OnUpdate`: `XMMatrixOrthographicOffCenterRH(0.0f, static_cast<float>(Hedgerow.Width), static_cast<float>(Hedgerow.Height), 0.0f, -1.0f, 1.0f)`, `XMStoreFloat4x4(&constantBufferData.projection, XMMatrixTranspose(projection))`, `memcpy(m_pCbvDataBegin, …)`."
+      }
+    },
+    "sprite-renderer": {
+      "text": {
+        "opengl": "Lägg till structen `SpriteRenderer` (dess shader och rektangelns VAO) med `InitRenderData`, som skapar learnopengls rektangel (6 vertex, position xy och texturkoordinater zw i ett vec4-attribut), den globala `SpriteRenderer Renderer`; ställ in den i `Init` och ta bort dess VAO i slutet av `main`.",
+        "vulkan": "Lägg till structen `SpriteRenderer` (pipelinen, dess layout, rektangelns vertex buffer och command buffern som spelas in), medlemmen `InitRenderData`, som skapar learnopengls rektangel i en vertex buffer, och den globala `SpriteRenderer Renderer`; ställ in den i `Init`, ge den command buffern i `recordCommandBuffer()` och förstör dess buffer i `cleanup()`.",
+        "d3d12": "Lägg till `SpriteRenderer` (dess shader, rektangelns vertex buffer och vy), root constants-structen `SpriteConstants` och `InitRenderData`, som skapar learnopengls rektangel (6 vertex med 4 floats); en global `SpriteRenderer Renderer`, inställd i `Init` och frigjord i `OnDestroy`."
+      },
+      "hint": {
+        "opengl": "`glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0)`. I `Init` efter shadern: `Renderer.shader = GetShader(\"sprite\"); InitRenderData(Renderer);`. Efter `ClearResources();`: `glDeleteVertexArrays(1, &Renderer.quadVAO);`.",
+        "vulkan": "I `Init`: `Renderer.pipeline = GetShader(\"sprite\"); Renderer.pipelineLayout = pipelineLayout; InitRenderData(Renderer);`. `InitRenderData`: `createBuffer(…, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, renderer.quadBuffer, renderer.quadBufferMemory)`, mappa, `memcpy`, avmappa. `Renderer.commandBuffer = commandBuffer;` före `Render(Hedgerow);`.",
+        "d3d12": "Vertex buffern som i de tidigare kapitlen (upload heap, `Map`, `memcpy`, `Unmap`), dess vy med `StrideInBytes = 4 * sizeof(float)`. I `Init`: `Renderer.shader = GetShader(\"sprite\"); InitRenderData(Renderer);`. I `OnDestroy` efter `ClearResources();`: `Renderer = SpriteRenderer();`."
+      }
+    },
+    "draw-sprite": {
+      "text": {
+        "opengl": "Skriv `DrawSprite` – modellmatrisen (förflytta till `position`, skala till `size`; rotationen är nästa uppgift), uniforms `model` och `spriteColor`, texturen på enhet 0, rektangeln ritad –, ladda `textures/ball.png` med alfa som `\"ball\"` och rita den i `Render` på (200, 200), storlek (300, 400), 45°, grön.",
+        "vulkan": "Skriv `DrawSprite` – modellmatrisen (förflytta till `position`, skala till `size`; rotationen är nästa uppgift), matrisen och färgen som push constants, texturens descriptor set, rektangeln ritad –, ladda `textures/ball.png` som `\"ball\"` och rita den i `Render` på (200, 200), storlek (300, 400), 45°, grön.",
+        "d3d12": "Skriv `DrawSprite` – modellmatrisen (skala till `size`, flytta till `position`; rotationen är nästa uppgift), root constants, texturens descriptor-tabell, rektangeln ritad –, ladda `textures/ball.png` med alfa som `\"ball\"` och rita den i `Render` på (200, 200), storlek (300, 400), 45°, grön."
+      },
+      "hint": {
+        "opengl": "Ordningen är omvänd: `glm::translate(model, glm::vec3(position, 0.0f))` först i koden, `glm::scale(model, glm::vec3(size, 1.0f))` sist. Sedan `SetMatrix4(renderer.shader, \"model\", model)`, `SetVector3f(renderer.shader, \"spriteColor\", color)`, `glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, texture);`, `glBindVertexArray(renderer.quadVAO); glDrawArrays(GL_TRIANGLES, 0, 6);`.",
+        "vulkan": "`vkCmdBindPipeline(renderer.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer.pipeline)`; förflytta först, skala sist; `vkCmdPushConstants(renderer.commandBuffer, renderer.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants)`, `vkCmdBindDescriptorSets(…, &texture, …)`, `vkCmdBindVertexBuffers` med `renderer.quadBuffer`, `vkCmdDraw(renderer.commandBuffer, 6, 1, 0, 0)`. Rita med `GetTexture(\"ball\").DescriptorSet`.",
+        "d3d12": "DirectXMaths ordning är den ordning sakerna sker i: `XMMatrixScaling(size.x, size.y, 1.0f)` först, `* XMMatrixTranslation(position.x, position.y, 0.0f)` sist; `XMStoreFloat4x4(&constants.model, XMMatrixTranspose(model))`. Sedan `Use(renderer.shader)`, `SetGraphicsRoot32BitConstants(0, sizeof(SpriteConstants) / 4, &constants, 0)`, `SetGraphicsRootDescriptorTable(2, textureHandle)`, `IASetVertexBuffers`, `DrawInstanced(6, 1, 0, 0)`."
+      }
+    },
+    "rotate": {
+      "text": {
+        "opengl": "Vrid spriten `rotate` grader kring sin mitt: flytta origo till rektangelns mitt, rotera kring z, flytta tillbaka – mellan förflyttningen och skalningen.",
+        "vulkan": "Vrid spriten `rotate` grader kring sin mitt: flytta origo till rektangelns mitt, rotera kring z, flytta tillbaka – mellan förflyttningen och skalningen.",
+        "d3d12": "Vrid spriten `rotate` grader kring sin mitt: flytta rektangelns mitt till origo, rotera kring z, flytta tillbaka – mellan skalningen och förflyttningen."
+      },
+      "hint": {
+        "opengl": "`glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f))`, `glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f, 0.0f, 1.0f))`, `glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f * size.y, 0.0f))`.",
+        "vulkan": "`glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f))`, `glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f, 0.0f, 1.0f))`, `glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f * size.y, 0.0f))`.",
+        "d3d12": "`model = model * XMMatrixTranslation(-0.5f * size.x, -0.5f * size.y, 0.0f);`, `model = model * XMMatrixRotationZ(XMConvertToRadians(rotate));`, `model = model * XMMatrixTranslation(0.5f * size.x, 0.5f * size.y, 0.0f);` – learnopengls tre rader i DirectXMaths ordning."
+      }
+    }
+  }
+}

@@ -41,6 +41,9 @@ public static class ShaderAst
     {
         /// <summary>C++: a static local – initialised once, it keeps its value between calls.</summary>
         public bool Static { get; init; }
+
+        /// <summary>C++: a reference (Particle&amp; p = particles[i]) – another name for the value, not a copy.</summary>
+        public bool Reference { get; init; }
     }
 
     /// <summary>target op value; with op "=", "+=", "-=", "*=" or "/=".</summary>
