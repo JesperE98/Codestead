@@ -72,9 +72,11 @@ public sealed partial class ShaderParser
         {
             Next();
             var type = Next().Text;
-            Accept("*");
+            bool pointer = Accept("*");
             Expect(")");
             var operand = UnaryExpr();
+            // A pointer cast ((char*) mapped + offset, (void*)0): the address itself.
+            if (pointer) return operand;
             // (uint64_t) handle: a 64-bit integer that holds an object handle (vkSetDebugUtilsObjectNameEXT's
             // objectHandle) – the value itself, so a handle stays the handle.
             if (type is "uint64_t" or "int64_t" or "uintptr_t" or "intptr_t" or "UINT64" or "UINT_PTR") return operand;

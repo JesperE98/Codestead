@@ -134,7 +134,10 @@ public static class ShaderLexer
                     i++;
                 }
                 i++;
-                tokens.Add(new ShaderToken(ShaderTokenKind.String, sb.ToString(), line));
+                // C++: a character literal ('H', '\n') is a number, its character code (a map of char keys, 'A' == 65).
+                if (c == '\'' && sb.Length == 1)
+                    tokens.Add(new ShaderToken(ShaderTokenKind.Number, ((int)sb[0]).ToString(System.Globalization.CultureInfo.InvariantCulture), line));
+                else tokens.Add(new ShaderToken(ShaderTokenKind.String, sb.ToString(), line));
                 continue;
             }
             var symbol = Symbols.FirstOrDefault(s => string.CompareOrdinal(source, i, s, 0, s.Length) == 0) ?? c.ToString();
