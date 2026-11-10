@@ -42,6 +42,13 @@ internal sealed class D3D12Device : IDeviceModel
     private readonly Dictionary<string, Image?> images = new(StringComparer.Ordinal);
     /// <summary>SRVs by handle: the resource and whether it is viewed as a cube map.</summary>
     public readonly Dictionary<long, (int Resource, bool Cube)> Srvs = new();
+    /// <summary>Resources drawn as a further render target of another one's target: resource → (target, attachment).</summary>
+    private readonly Dictionary<int, (string Target, int Attachment)> attachmentOf = new();
+    /// <summary>Per render target: how many colour attachments, and whether a depth stencil view is bound with it.</summary>
+    private readonly Dictionary<string, (int Colors, bool Depth)> targetShape = new(StringComparer.Ordinal);
+
+    public (int Colors, bool Depth)? ShapeOf(string target) => targetShape.TryGetValue(target, out var s) ? s : null;
+
     /// <summary>SRVs that read their texture as sRGB (an _SRGB view format, or the resource's own).</summary>
     private readonly HashSet<long> srgbSrvs = new();
 
@@ -277,6 +284,20 @@ internal sealed class D3D12Device : IDeviceModel
                 if (renderTarget is null && args.Count >= 5 && args[4] is not Name { Id: "nullptr" or "NULL" } && Eval(Strip(args[4])) is { V: { Length: > 0 } dsv }
                     && Dsvs.TryGetValue((long)dsv[0], out var depthOnly) && ResourceAt(depthOnly) is { Window: false } depthRes && SrvOf(depthRes.Id))
                     renderTarget = -(long)dsv[0] - 1;
+                // Several render targets (bloom's bright colour: SV_TARGET1): RTV k is attachment k of the first one's target.
+                if (renderTarget is long firstRtv && firstRtv >= 0 && TargetOf(firstRtv) is { } mrtTarget)
+                {
+                    int count = (int)Num(args[1]);
+                    bool single = args.Count >= 4 && (Eval(args[3])?.X ?? 0) != 0;
+                    var listed = Eval(Strip(args[2]))?.Items;
+                    for (int k = 1; k < count; k++)
+                    {
+                        long handle = single || listed is null || k >= listed.Length ? firstRtv + k : (long)listed[k].X;
+                        if (Rtvs.TryGetValue(handle, out var extra)) attachmentOf[extra] = (mrtTarget, k);
+                    }
+                    bool hasDsv = args.Count >= 5 && args[4] is not Name { Id: "nullptr" or "NULL" };
+                    targetShape[mrtTarget] = (Math.Max(1, count), hasDsv || (targetShape.TryGetValue(mrtTarget, out var old) && old.Depth));
+                }
                 return ShaderValue.Scalar(0);
             case ".ClearRenderTargetView" when args.Count >= 3:
             {
@@ -490,6 +511,8 @@ internal sealed class D3D12Device : IDeviceModel
                 (Texture?)new Texture(() => Raster.Rasterizer.TargetImage(face == 0 ? cubeId : cubeId + "@" + face, 0, cubeDepth), sampler) { Components = 4 }).ToList()));
         }
         if (srv.Cube) return (null, new CubeTexture(res.Images.Select(i => i is null ? null : new Texture(i, sampler) { Components = i.Channels == 4 ? 4 : 3 }).ToList()));
+        if (attachmentOf.TryGetValue(res.Id, out var att))
+            return (new Texture(() => Raster.Rasterizer.TargetImage(att.Target, att.Attachment, false), sampler) { Components = 4 }, null);
         if (res.Images.FirstOrDefault() is { } image) return (new Texture(image, sampler) { Components = image.Channels == 4 ? 4 : 3, Srgb = srgbSrvs.Contains(handle) }, null);
         if (res.Images.Count == 0 && !res.Buffer)
         {

@@ -68,7 +68,16 @@ internal sealed class VulkanDevice : IDeviceModel
     /// <summary>Framebuffers whose render pass resolves the (multisampled) colour attachment: the resolve attachment's view.</summary>
     private readonly Dictionary<string, string> resolves = new(StringComparer.Ordinal);
     /// <summary>Render passes: the first subpass's colour attachment and resolve attachment (indices into the framebuffer's attachments).</summary>
-    private readonly Dictionary<string, (int Color, int? Resolve)> renderPasses = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, (int Color, int? Resolve, int[] Colors)> renderPasses = new(StringComparer.Ordinal);
+    /// <summary>
+    /// The images behind a framebuffer's further colour attachments (multiple render targets: bloom's bright colour):
+    /// image → (the target of the first colour attachment, the attachment number).
+    /// </summary>
+    private readonly Dictionary<string, (string Target, int Attachment)> attachmentOf = new(StringComparer.Ordinal);
+    /// <summary>Per render target (its first colour image): how many colour attachments, and whether it has a depth attachment.</summary>
+    private readonly Dictionary<string, (int Colors, bool Depth)> targetShape = new(StringComparer.Ordinal);
+
+    public (int Colors, bool Depth)? ShapeOf(string target) => targetShape.TryGetValue(target, out var s) ? s : null;
     private string? resolveView;
     /// <summary>Descriptor sets: binding → (image view, sampler).</summary>
     private readonly Dictionary<string, Dictionary<int, (string? View, string? Sampler)>> sets = new(StringComparer.Ordinal);
@@ -265,10 +274,12 @@ internal sealed class VulkanDevice : IDeviceModel
             {
                 var info = Eval(Strip(args[1]));
                 var subpass = Items(Field(info, "pSubpasses")).FirstOrDefault();
-                int color = (int)(Number(Items(Field(subpass, "pColorAttachments")).FirstOrDefault(), "attachment") ?? 0);
+                var colorRefs = Items(Field(subpass, "pColorAttachments")).Take((int)(Number(subpass, "colorAttachmentCount") ?? int.MaxValue))
+                    .Select(c => (int)(Number(c, "attachment") ?? 0)).ToArray();
+                int color = colorRefs.Length > 0 ? colorRefs[0] : 0;
                 var resolve = Number(Items(Field(subpass, "pResolveAttachments")).FirstOrDefault(), "attachment");
                 var rp = Set(args[3], "rp");
-                renderPasses[rp] = (color, resolve is null ? null : (int)resolve);
+                renderPasses[rp] = (color, resolve is null ? null : (int)resolve, colorRefs);
                 return ShaderValue.Str("VK_SUCCESS");
             }
             case "vkCreateFramebuffer" when args.Count >= 4:
@@ -276,9 +287,19 @@ internal sealed class VulkanDevice : IDeviceModel
                 var info = Eval(Strip(args[1]));
                 var attachments = Items(Field(info, "pAttachments"));
                 var fb = Set(args[3], "fb");
-                var pass = Text(info, "renderPass") is { } rpName && renderPasses.TryGetValue(rpName, out var r) ? r : (0, null);
+                var pass = Text(info, "renderPass") is { } rpName && renderPasses.TryGetValue(rpName, out var r) ? r : (0, null, [0]);
                 if (pass.Color < attachments.Length && attachments[pass.Color].Text is { } colorView) framebuffers[fb] = colorView;
                 if (pass.Resolve is int ri && ri < attachments.Length && attachments[ri].Text is { } resolveTo) resolves[fb] = resolveTo;
+                // The target's shape: its colour attachments (further ones are read as attachments 1, 2 … of it) and
+                // whether any attachment is a depth image (a ping-pong blur pass has none: no depth test).
+                if (TargetOf(fb) is { } target)
+                {
+                    for (int k = 1; k < pass.Colors.Length; k++)
+                        if (pass.Colors[k] < attachments.Length && attachments[pass.Colors[k]].Text is { } extra && views.TryGetValue(extra, out var ev))
+                            attachmentOf[ev.Image] = (target, k);
+                    bool depth = attachments.Any(a => a.Text is { } av && views.TryGetValue(av, out var v) && ImageOf(v.Image) is { Depth: true });
+                    targetShape[target] = (Math.Max(1, pass.Colors.Length), depth);
+                }
                 return ShaderValue.Str("VK_SUCCESS");
             }
             case "vkAllocateDescriptorSets" when args.Count >= 3:
@@ -528,6 +549,9 @@ internal sealed class VulkanDevice : IDeviceModel
         var img = ImageOf(view.Image);
         if (img is null) return (null, null);
         var sampler = b.Sampler is not null && samplers.TryGetValue(b.Sampler, out var st) ? st : SamplerState.Default;
+        // A further colour attachment of a target (bloom's bright colour): that attachment of the target's picture.
+        if (attachmentOf.TryGetValue(view.Image, out var att))
+            return (new Texture(() => Raster.Rasterizer.TargetImage(att.Target, att.Attachment, false), sampler) { Components = 4 }, null);
         if ((view.Cube || img.Cube) && img.LayerImages.All(i => i is null) && !img.Window)
         {
             // A cube map drawn into (point shadows: a 6-layer framebuffer, gl_Layer): face i is layer i of the target.

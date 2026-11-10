@@ -320,7 +320,8 @@ public sealed partial class D3D12Reader
     {
         if (scene.Targets.ContainsKey(id) || !int.TryParse(id[4..], out var n) || device.ResourceAt(n) is not { } r) return;
         // A texture array drawn into slice by slice (a point shadow's cube map: SV_RenderTargetArrayIndex) has layers.
-        scene.Targets[id] = new RenderTarget(id, r.Width, r.Height, 1, true, true, Math.Max(1, r.Samples), r.Float, Math.Max(1, r.ArraySize));
+        var shape = device.ShapeOf(id);
+        scene.Targets[id] = new RenderTarget(id, r.Width, r.Height, shape?.Colors ?? 1, shape?.Depth ?? true, shape?.Depth ?? true, Math.Max(1, r.Samples), r.Float, Math.Max(1, r.ArraySize));
     }
 
     /// <summary>Every input layout of the program: (semantic, input slot, byte offset, floats, per instance, step rate).</summary>
