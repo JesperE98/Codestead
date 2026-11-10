@@ -1,0 +1,37 @@
+{
+  "title": "HDR",
+  "tasks": {
+    "float-buffer": {
+      "text": {
+        "opengl": "Render the tunnel into a framebuffer whose colour buffer is a floating point texture (`GL_RGBA16F`, values above 1.0 are kept), then draw that texture onto the window on a screen quad with `hdr.fs`, which only gamma-corrects. Move the gamma correction from `lighting.fs` to `hdr.fs`.",
+        "vulkan": "Render the tunnel into a floating point image (`VK_FORMAT_R16G16B16A16_SFLOAT`, values above 1.0 are kept) with its own render pass, depth image and framebuffer, then draw that image onto the window on a screen quad with `hdr.frag`, which only gamma-corrects. Move the gamma correction from `lighting.frag` to `hdr.frag`.",
+        "d3d12": "Render the tunnel into a floating point colour buffer (`DXGI_FORMAT_R16G16B16A16_FLOAT`, values above 1.0 are kept) instead of the back buffer, then draw that buffer onto the window on a screen quad whose pixel shader (`hdr.hlsl`) only gamma-corrects. Move the gamma correction from `lighting.hlsl` to `hdr.hlsl`."
+      },
+      "hint": {
+        "opengl": "`glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);` for `colorBuffer`, a `GL_DEPTH_COMPONENT` renderbuffer, both attached to `hdrFBO`. In the loop: bind `hdrFBO` and clear before the tunnel; after it bind 0, clear, `hdrShader.use()`, bind `colorBuffer` to unit 0, `renderQuad()`. `lighting.fs`: `FragColor = vec4(ambient + lighting, 1.0);`. `hdr.fs`: `vec3 hdrColor = texture(hdrBuffer, TexCoords).rgb; vec3 result = pow(hdrColor, vec3(1.0 / gamma));`.",
+        "vulkan": "The quad: learnopengl's `quadVertices` as 6 vertices (36..41), texture coordinates unchanged. `createHdrRenderPass()`: like `createRenderPass()`, colour format `VK_FORMAT_R16G16B16A16_SFLOAT`, storeOp STORE, `finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`, two subpass dependencies. `createHdrFramebuffer()`: the colour image with `VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT`, a depth image, `vkCreateFramebuffer`. Scene pipeline with `hdrRenderPass`, `hdrPipeline` with `renderPass`; `createDescriptorSet(hdrColorImageView, textureSampler, hdrDescriptorSet)` (pool: 2 sets). Record pass 1 (`hdrRenderPass`) around the tunnel, then pass 2 with `hdrPipeline` and `vkCmdDraw(commandBuffer, 6, 1, 36, 0)`.",
+        "d3d12": "`Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)`, created in `PIXEL_SHADER_RESOURCE` with a `CD3DX12_CLEAR_VALUE`; RTV at slot `FrameCount` (heap `FrameCount + 1`), SRV at slot 2 (heap 3). Scene PSO: `RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT`; `m_hdrPipelineState`: `hdr.hlsl`, `R8G8B8A8_UNORM`, `DepthEnable = FALSE`, `DSVFormat = DXGI_FORMAT_UNKNOWN`. Barriers PIXEL_SHADER_RESOURCE ↔ RENDER_TARGET around pass 1; pass 2: back buffer without DSV, table 2 = slot 2, `DrawInstanced(6, 1, 36, 0)`."
+      }
+    },
+    "reinhard": {
+      "text": "Tone-map the HDR colour with Reinhard before the gamma correction: `hdrColor / (hdrColor + 1.0)` maps 0..∞ into 0..1.",
+      "hint": {
+        "opengl": "In `hdr.fs`: `vec3 result = hdrColor / (hdrColor + vec3(1.0));` then `result = pow(result, vec3(1.0 / gamma));`.",
+        "vulkan": "In `hdr.frag`: `vec3 result = hdrColor / (hdrColor + vec3(1.0));` then `result = pow(result, vec3(1.0 / gamma));`.",
+        "d3d12": "In `hdr.hlsl`: `float3 result = hdrColor / (hdrColor + float3(1.0f, 1.0f, 1.0f));` then `result = pow(result, 1.0f / gamma);`."
+      }
+    },
+    "exposure": {
+      "text": {
+        "opengl": "Replace Reinhard with learnopengl's exposure tone mapping `1.0 - exp(-hdrColor * exposure)`, with an `exposure` uniform set to 1.0 from `main.cpp` (keep the Reinhard line as a comment).",
+        "vulkan": "Replace Reinhard with learnopengl's exposure tone mapping `1.0 - exp(-hdrColor * exposure)`, with an `exposure` of 1.0 passed through the uniform buffer (keep the Reinhard line as a comment).",
+        "d3d12": "Replace Reinhard with learnopengl's exposure tone mapping `1.0 - exp(-hdrColor * exposure)`, with an `exposure` of 1.0 passed as a root constant (keep the Reinhard line as a comment)."
+      },
+      "hint": {
+        "opengl": "`main.cpp`: a global `float exposure = 1.0f;` and `hdrShader.setFloat(\"exposure\", exposure);` before `renderQuad()`. `hdr.fs`: `uniform float exposure;` and `vec3 result = vec3(1.0) - exp(-hdrColor * exposure);`.",
+        "vulkan": "A global `float exposure = 1.0f;`; `float exposure;` in place of `pad1` in `UniformBufferObject`; `ubo.exposure = exposure;`. `hdr.frag`: the uniform block at binding 0 with the same members up to `float exposure;`, and `vec3 result = vec3(1.0) - exp(-hdrColor * ubo.exposure);`.",
+        "d3d12": "A global `float exposure = 1.0f;`, `struct HdrConstants { float exposure; };`, root parameter 0 with `D3D12_SHADER_VISIBILITY_ALL`, and before the quad's draw `SetGraphicsRoot32BitConstants(0, sizeof(HdrConstants) / 4, &hdrConstants, 0)`. `hdr.hlsl`: `cbuffer HdrConstants : register(b0) { float exposure; };` and `float3 result = float3(1.0f, 1.0f, 1.0f) - exp(-hdrColor * exposure);`."
+      }
+    }
+  }
+}

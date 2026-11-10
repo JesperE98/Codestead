@@ -1,0 +1,9 @@
+[
+  { "title": "HDR", "url": "https://learnopengl.com/Advanced-Lighting/HDR", "publisher": "LearnOpenGL" },
+  { "title": "hdr.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/5.advanced_lighting/6.hdr/hdr.cpp", "publisher": "LearnOpenGL", "api": "opengl" },
+  { "title": "glTexImage2D", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexImage2D.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Render passes", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Graphics_pipeline_basics/Render_passes", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Formats (Vulkan specification)", "url": "https://docs.vulkan.org/spec/latest/chapters/formats.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "DXGI_FORMAT", "url": "https://learn.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Using constants directly in the root signature", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/using-constants-directly-in-the-root-signature", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

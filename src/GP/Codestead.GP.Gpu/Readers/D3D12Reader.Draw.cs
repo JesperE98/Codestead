@@ -418,7 +418,7 @@ public sealed partial class D3D12Reader
             var parts = id.Split('|');
             if (!flat.ContainsKey(id))
             {
-                var (t, c) = registers.TryGetValue(parts[0], out var reg) ? device.TextureAt(start + reg, sampler(parts.Length > 1 ? parts[1] : null)) : (null, null);
+                var (t, c) = registers.TryGetValue(parts[0], out var reg) ? device.TextureAt(TableHandle(state, reg) ?? start + reg, sampler(parts.Length > 1 ? parts[1] : null)) : (null, null);
                 flat[id] = t;
                 cubes[id] = c;
             }
@@ -427,6 +427,34 @@ public sealed partial class D3D12Reader
         deviceTextureSizes = id => Lookup(id).Item1 is { } t ? (t.Image.Width, t.Image.Height) : null;
         return ((id, u, v) => Lookup(id).Item1 is { } t ? t.Sample(u, v) : [0, 0, 0, 1],
             (id, x, y, z) => Lookup(id).Item2 is { } c ? c.Sample(x, y, z) : null);
+    }
+
+    /// <summary>
+    /// The descriptor of an SRV register through the root signature: the root parameter whose table's SRV range covers the
+    /// register (ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); rootParameters[3].InitAsDescriptorTable(1, &amp;ranges[2])),
+    /// at the handle bound to it – several tables per draw (bloom's scene and bloomBlur). Null when the code does not say.
+    /// </summary>
+    private long? TableHandle(D3D12Device.DrawState state, int register)
+    {
+        srvTables ??= SrvTables();
+        foreach (var (param, baseRegister, count) in srvTables)
+            if (register >= baseRegister && register < baseRegister + count && state.Tables.TryGetValue(param, out var handle))
+                return handle + (register - baseRegister);
+        return null;
+    }
+
+    private List<(int Param, int Base, int Count)>? srvTables;
+
+    private List<(int Param, int Base, int Count)> SrvTables()
+    {
+        var ranges = new Dictionary<string, (int Base, int Count)>(StringComparer.Ordinal);
+        foreach (Match m in Regex.Matches(src.Code, @"(\w+(?:\[\d+\])?)\s*\.\s*Init\s*\(\s*D3D12_DESCRIPTOR_RANGE_TYPE_SRV\s*,\s*([^,]+),\s*([^,)]+)"))
+            if (src.Int(m.Groups[2].Value) is int count && src.Int(m.Groups[3].Value) is int baseRegister)
+                ranges[Regex.Replace(m.Groups[1].Value, @"\s+", "")] = (baseRegister, count);
+        var list = new List<(int, int, int)>();
+        foreach (Match m in Regex.Matches(src.Code, @"rootParameters\s*\[\s*(\d+)\s*\]\s*\.\s*InitAsDescriptorTable\s*\(\s*\d+\s*,\s*&\s*(\w+(?:\s*\[\s*\d+\s*\])?)"))
+            if (ranges.TryGetValue(Regex.Replace(m.Groups[2].Value, @"\s+", ""), out var r)) list.Add((int.Parse(m.Groups[1].Value), r.Base, r.Count));
+        return list;
     }
 
     /// <summary>The texture sizes of the last DeviceTextures call (GetDimensions, textureSize).</summary>
