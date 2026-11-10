@@ -1,0 +1,239 @@
+=== task: transform
+--- file: main.cpp
+--- find:
+// TODO: the Transform struct (local position, rotation and scale, the model matrix) and its functions
+--- replace:
+// an object's place in space: its local position, rotation and scale (relative to its parent)
+// and its model matrix in world space (learnopengl's Transform class, written as a struct)
+struct Transform
+{
+    // local space information
+    glm::vec3 pos = { 0.0f, 0.0f, 0.0f };
+    glm::vec3 eulerRot = { 0.0f, 0.0f, 0.0f }; // in degrees
+    glm::vec3 scale = { 1.0f, 1.0f, 1.0f };
+
+    // global space information concatenated in a matrix
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+};
+
+// the local model matrix: translation * rotation * scale (also known as a TRS matrix)
+glm::mat4 getLocalModelMatrix(const Transform& transform)
+{
+    const glm::mat4 transformX = glm::rotate(glm::mat4(1.0f), glm::radians(transform.eulerRot.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    const glm::mat4 transformY = glm::rotate(glm::mat4(1.0f), glm::radians(transform.eulerRot.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    const glm::mat4 transformZ = glm::rotate(glm::mat4(1.0f), glm::radians(transform.eulerRot.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    // Y * X * Z
+    const glm::mat4 rotationMatrix = transformY * transformX * transformZ;
+
+    // translation * rotation * scale (also known as TRS matrix)
+    return glm::translate(glm::mat4(1.0f), transform.pos) * rotationMatrix * glm::scale(glm::mat4(1.0f), transform.scale);
+}
+
+// the model matrix in world space: the parent's model matrix * the local one (the root's parent matrix is the identity)
+void computeModelMatrix(Transform& transform, const glm::mat4& parentGlobalModelMatrix)
+{
+    transform.modelMatrix = parentGlobalModelMatrix * getLocalModelMatrix(transform);
+}
+
+void setLocalPosition(Transform& transform, const glm::vec3& newPosition)
+{
+    transform.pos = newPosition;
+}
+
+void setLocalRotation(Transform& transform, const glm::vec3& newRotation)
+{
+    transform.eulerRot = newRotation;
+}
+
+void setLocalScale(Transform& transform, const glm::vec3& newScale)
+{
+    transform.scale = newScale;
+}
+--- file: main.cpp
+--- find:
+        // draw the model once, at the origin
+        glm::mat4 model = glm::mat4(1.0f);
+        ourShader.setMat4("model", model);
+        ourModel.Draw(ourShader);
+--- replace:
+        // draw the model once, with the model matrix of a transform (no parent: the identity)
+        Transform planetTransform;
+        computeModelMatrix(planetTransform, glm::mat4(1.0f));
+        ourShader.setMat4("model", planetTransform.modelMatrix);
+        ourModel.Draw(ourShader);
+=== task: entity
+--- file: main.cpp
+--- find:
+// TODO: the Entity struct (children, transform, model) and its functions
+--- replace:
+// a node of the scene graph: an object with its transform, the model it draws and its children
+// (learnopengl's Entity class, written as a struct: the children are stored by value in a vector,
+// and each function gets the parent's model matrix as a parameter instead of following a parent pointer)
+struct Entity
+{
+    // scene graph
+    std::vector<Entity> children;
+
+    // space information
+    Transform transform;
+
+    Model* pModel = nullptr;
+};
+
+// add a child that draws the given model
+void addChild(Entity& parent, Model& model)
+{
+    Entity child;
+    child.pModel = &model;
+    parent.children.push_back(child);
+}
+
+// update the model matrices of an entity and all of its children
+void updateSelfAndChild(Entity& entity, const glm::mat4& parentGlobalModelMatrix)
+{
+    computeModelMatrix(entity.transform, parentGlobalModelMatrix);
+
+    for (Entity& child : entity.children)
+    {
+        updateSelfAndChild(child, entity.transform.modelMatrix);
+    }
+}
+
+// draw an entity and all of its children
+void drawSelfAndChild(Entity& entity, Shader& ourShader)
+{
+    ourShader.setMat4("model", entity.transform.modelMatrix);
+    entity.pModel->Draw(ourShader);
+
+    for (Entity& child : entity.children)
+    {
+        drawSelfAndChild(child, ourShader);
+    }
+}
+--- file: main.cpp
+--- find:
+    // TODO: load entities - the root planet and a chain of ten children, each one a smaller copy beside its parent
+--- replace:
+    // load entities
+    // -------------
+    Entity ourEntity;
+    ourEntity.pModel = &ourModel;
+    setLocalPosition(ourEntity.transform, glm::vec3(0.0f, 0.0f, 0.0f));
+    const float scale = 0.6f;
+
+    {
+        Entity* lastEntity = &ourEntity;
+
+        for (unsigned int i = 0; i < 10; ++i)
+        {
+            addChild(*lastEntity, ourModel);
+            lastEntity = &lastEntity->children.back();
+
+            // set transform values: beside its parent, 0.6 times its size
+            setLocalPosition(lastEntity->transform, glm::vec3(3.5f, 0.0f, 0.0f));
+            setLocalScale(lastEntity->transform, glm::vec3(scale, scale, scale));
+        }
+    }
+    updateSelfAndChild(ourEntity, glm::mat4(1.0f));
+--- file: main.cpp
+--- find:
+        // draw the model once, with the model matrix of a transform (no parent: the identity)
+        Transform planetTransform;
+        computeModelMatrix(planetTransform, glm::mat4(1.0f));
+        ourShader.setMat4("model", planetTransform.modelMatrix);
+        ourModel.Draw(ourShader);
+--- replace:
+        // draw our scene graph
+        drawSelfAndChild(ourEntity, ourShader);
+=== task: dirty-flag
+--- file: main.cpp
+--- find:
+    // global space information concatenated in a matrix
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+};
+--- replace:
+    // global space information concatenated in a matrix
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+
+    // dirty flag: the local values changed since the model matrix was last computed
+    bool isDirty = true;
+};
+--- file: main.cpp
+--- find:
+    transform.modelMatrix = parentGlobalModelMatrix * getLocalModelMatrix(transform);
+}
+--- replace:
+    transform.modelMatrix = parentGlobalModelMatrix * getLocalModelMatrix(transform);
+    transform.isDirty = false;
+}
+--- file: main.cpp
+--- find:
+    transform.pos = newPosition;
+}
+--- replace:
+    transform.pos = newPosition;
+    transform.isDirty = true;
+}
+--- file: main.cpp
+--- find:
+    transform.eulerRot = newRotation;
+}
+--- replace:
+    transform.eulerRot = newRotation;
+    transform.isDirty = true;
+}
+--- file: main.cpp
+--- find:
+    transform.scale = newScale;
+}
+--- replace:
+    transform.scale = newScale;
+    transform.isDirty = true;
+}
+--- file: main.cpp
+--- find:
+// update the model matrices of an entity and all of its children
+void updateSelfAndChild(Entity& entity, const glm::mat4& parentGlobalModelMatrix)
+{
+    computeModelMatrix(entity.transform, parentGlobalModelMatrix);
+
+    for (Entity& child : entity.children)
+    {
+        updateSelfAndChild(child, entity.transform.modelMatrix);
+    }
+}
+--- replace:
+// force the update of an entity's model matrix and all of its children's, even if their local values did not change
+void forceUpdateSelfAndChild(Entity& entity, const glm::mat4& parentGlobalModelMatrix)
+{
+    computeModelMatrix(entity.transform, parentGlobalModelMatrix);
+
+    for (Entity& child : entity.children)
+    {
+        forceUpdateSelfAndChild(child, entity.transform.modelMatrix);
+    }
+}
+
+// update the model matrices that changed: a dirty entity and everything below it
+void updateSelfAndChild(Entity& entity, const glm::mat4& parentGlobalModelMatrix)
+{
+    if (entity.transform.isDirty)
+    {
+        forceUpdateSelfAndChild(entity, parentGlobalModelMatrix);
+        return;
+    }
+
+    for (Entity& child : entity.children)
+    {
+        updateSelfAndChild(child, entity.transform.modelMatrix);
+    }
+}
+=== task: animate
+--- file: main.cpp
+--- find:
+        // TODO: turn the root about its y axis over time and update the scene graph's model matrices
+--- replace:
+        // turn the root about its y axis (20 degrees per second): its children follow it
+        setLocalRotation(ourEntity.transform, glm::vec3(0.0f, 20.0f * currentFrame, 0.0f));
+        updateSelfAndChild(ourEntity, glm::mat4(1.0f));

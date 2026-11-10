@@ -112,11 +112,70 @@ const std::vector<Vertex> vertices = {
     {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}}
 };
 
-// camera: learnopengl's weighted blended demo, at (0, 0, 5) looking down -z
+// camera: at (0, 0, 5) looking down -z, like learnopengl's weighted blended demo
 glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  5.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
-float fov = 45.0f;
+
+bool firstMouse = true;
+float yaw   = -90.0f; // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
+float pitch =  0.0f;
+float lastX =  WIDTH / 2.0f;
+float lastY =  HEIGHT / 2.0f;
+float fov   =  45.0f;
+
+// timing
+float deltaTime = 0.0f; // time between current frame and last frame
+float lastFrame = 0.0f;
+
+// glfw: whenever the mouse moves, this callback is called
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
+    if (firstMouse) {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // reversed since window y-coordinates go from top to bottom
+    lastX = xpos;
+    lastY = ypos;
+
+    float sensitivity = 0.1f; // change this value to your liking
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw += xoffset;
+    pitch += yoffset;
+
+    // make sure that when pitch is out of bounds, screen doesn't get flipped
+    if (pitch > 89.0f) {
+        pitch = 89.0f;
+    }
+    if (pitch < -89.0f) {
+        pitch = -89.0f;
+    }
+
+    glm::vec3 front;
+    front.x = std::cos(glm::radians(yaw)) * std::cos(glm::radians(pitch));
+    front.y = std::sin(glm::radians(pitch));
+    front.z = std::sin(glm::radians(yaw)) * std::cos(glm::radians(pitch));
+    cameraFront = glm::normalize(front);
+}
+
+// glfw: whenever the mouse scroll wheel scrolls, this callback is called
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    fov -= static_cast<float>(yoffset);
+    if (fov < 1.0f) {
+        fov = 1.0f;
+    }
+    if (fov > 45.0f) {
+        fov = 45.0f;
+    }
+}
 
 // generate a model matrix (learnopengl's calculate_model_matrix): translate, then rotate about x, y and z (degrees),
 // then scale
@@ -168,7 +227,7 @@ private:
     std::vector<VkImageView> swapChainImageViews;
     std::vector<VkFramebuffer> swapChainFramebuffers;
 
-    VkRenderPass renderPass; // the final pass: the screen quad into the window
+    VkRenderPass renderPass; // the window's render pass
     VkRenderPass opaqueRenderPass; // the solid pass: the opaque objects into the opaque colour image and the depth image
     VkRenderPass transparentRenderPass; // the transparent pass: accumulation and revealage, testing the opaque depth
     VkRenderPass compositeRenderPass; // the composite pass: the transparent result blended over the opaque image
@@ -181,14 +240,18 @@ private:
 
     VkCommandPool commandPool;
 
-    // the opaque framebuffer (learnopengl's opaqueFBO): a 16-bit float colour image and a depth image; the depth image
-    // is shared with the transparent framebuffer (learnopengl attaches its depthTexture to both)
-    VkImage opaqueImage;
-    VkDeviceMemory opaqueImageMemory;
-    VkImageView opaqueImageView;
     VkImage depthImage;
     VkDeviceMemory depthImageMemory;
     VkImageView depthImageView;
+
+    // the opaque framebuffer (learnopengl's opaqueFBO): a 16-bit float colour image and a depth image of its own
+    // (learnopengl's opaqueTexture and depthTexture); the depth image is shared with the transparent framebuffer
+    VkImage opaqueImage;
+    VkDeviceMemory opaqueImageMemory;
+    VkImageView opaqueImageView;
+    VkImage opaqueDepthImage;
+    VkDeviceMemory opaqueDepthImageMemory;
+    VkImageView opaqueDepthImageView;
     VkFramebuffer opaqueFramebuffer;
 
     // the transparent framebuffer (learnopengl's transparentFBO): the accumulation image (RGBA, 16-bit float) and the
@@ -227,6 +290,11 @@ private:
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
         window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+        glfwSetCursorPosCallback(window, mouse_callback);
+        glfwSetScrollCallback(window, scroll_callback);
+
+        // tell GLFW to capture our mouse
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 
     void initVulkan() {
@@ -245,10 +313,10 @@ private:
         createPipelineLayout();
         // build the pipelines (learnopengl: build and compile shaders) - each with the render states learnopengl sets
         // before its pass, for the render pass it draws in
-        // solid pass: depth test LESS with depth writes, no blending
+        // solid objects: depth test LESS with depth writes, no blending
         createPipeline("shaders/solid.vert.spv", "shaders/solid.frag.spv", opaqueRenderPass, 1, VK_TRUE, VK_TRUE, VK_FALSE,
             VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, solidPipeline);
-        // transparent pass: depth test against the opaque depth, no depth writes; a blend function per attachment
+        // transparent objects: depth test against the opaque depth, no depth writes; a blend function per attachment
         // (learnopengl's glBlendFunci): accum ONE, ONE (add up), reveal ZERO, ONE_MINUS_SRC_COLOR (multiply by 1 - alpha)
         createPipeline("shaders/transparent.vert.spv", "shaders/transparent.frag.spv", transparentRenderPass, 2, VK_TRUE, VK_FALSE, VK_TRUE,
             VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR, transparentPipeline);
@@ -258,6 +326,7 @@ private:
         // final pass: no depth test, no blending
         createPipeline("shaders/screen.vert.spv", "shaders/screen.frag.spv", renderPass, 1, VK_FALSE, VK_FALSE, VK_FALSE,
             VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, screenPipeline);
+        createDepthResources();
         createFramebuffers();
         createOpaqueFramebuffer();
         createTransparentFramebuffer();
@@ -274,6 +343,11 @@ private:
 
     void mainLoop() {
         while (!glfwWindowShouldClose(window)) {
+            // per-frame time logic
+            float currentFrame = static_cast<float>(glfwGetTime());
+            deltaTime = currentFrame - lastFrame;
+            lastFrame = currentFrame;
+
             glfwPollEvents();
             processInput();
             drawFrame();
@@ -285,6 +359,20 @@ private:
     void processInput() {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
+        }
+
+        float cameraSpeed = 2.5f * deltaTime; // units per second, the same speed at any frame rate
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            cameraPos += cameraSpeed * cameraFront;
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            cameraPos -= cameraSpeed * cameraFront;
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
         }
     }
 
@@ -304,25 +392,29 @@ private:
 
         vkDestroyCommandPool(device, commandPool, nullptr);
 
+        vkDestroyImageView(device, depthImageView, nullptr);
+        vkDestroyImage(device, depthImage, nullptr);
+        vkFreeMemory(device, depthImageMemory, nullptr);
+
         for (auto framebuffer : swapChainFramebuffers) {
             vkDestroyFramebuffer(device, framebuffer, nullptr);
         }
 
         vkDestroyFramebuffer(device, opaqueFramebuffer, nullptr);
-        vkDestroyFramebuffer(device, transparentFramebuffer, nullptr);
-        vkDestroyFramebuffer(device, compositeFramebuffer, nullptr);
         vkDestroyImageView(device, opaqueImageView, nullptr);
         vkDestroyImage(device, opaqueImage, nullptr);
         vkFreeMemory(device, opaqueImageMemory, nullptr);
-        vkDestroyImageView(device, depthImageView, nullptr);
-        vkDestroyImage(device, depthImage, nullptr);
-        vkFreeMemory(device, depthImageMemory, nullptr);
+        vkDestroyImageView(device, opaqueDepthImageView, nullptr);
+        vkDestroyImage(device, opaqueDepthImage, nullptr);
+        vkFreeMemory(device, opaqueDepthImageMemory, nullptr);
+        vkDestroyFramebuffer(device, transparentFramebuffer, nullptr);
         vkDestroyImageView(device, accumImageView, nullptr);
         vkDestroyImage(device, accumImage, nullptr);
         vkFreeMemory(device, accumImageMemory, nullptr);
         vkDestroyImageView(device, revealImageView, nullptr);
         vkDestroyImage(device, revealImage, nullptr);
         vkFreeMemory(device, revealImageMemory, nullptr);
+        vkDestroyFramebuffer(device, compositeFramebuffer, nullptr);
 
         vkDestroyPipeline(device, solidPipeline, nullptr);
         vkDestroyPipeline(device, transparentPipeline, nullptr);
@@ -551,8 +643,6 @@ private:
     }
 
 
-    // The window's render pass (the final pass): one colour attachment, no depth - learnopengl disables the depth test
-    // for the screen quad.
     void createRenderPass() {
         VkAttachmentDescription colorAttachment{};
         colorAttachment.format = swapChainImageFormat;
@@ -564,27 +654,43 @@ private:
         colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthFormat();
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
         VkAttachmentReference colorAttachmentRef{};
         colorAttachmentRef.attachment = 0;
         colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 1;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkSubpassDescription subpass{};
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass.colorAttachmentCount = 1;
         subpass.pColorAttachments = &colorAttachmentRef;
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
         VkSubpassDependency dependency{};
         dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
         dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.srcAccessMask = 0;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
+        std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
         VkRenderPassCreateInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = 1;
-        renderPassInfo.pAttachments = &colorAttachment;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        renderPassInfo.pAttachments = attachments.data();
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
         renderPassInfo.dependencyCount = 1;
@@ -595,9 +701,8 @@ private:
         }
     }
 
-    // The solid pass (learnopengl: opaqueFBO cleared, the solid objects drawn): a 16-bit float colour attachment and the
-    // depth attachment, both cleared. Both are kept: the transparent pass tests against the depth, the composite pass
-    // draws over the colour.
+    // The solid pass (learnopengl: opaqueFBO cleared, the solid objects drawn): a 16-bit float colour attachment and a
+    // depth attachment, both cleared at the start and kept (STORE) at the end: they are used again later in the frame.
     void createOpaqueRenderPass() {
         VkAttachmentDescription colorAttachment{};
         colorAttachment.format = VK_FORMAT_R16G16B16A16_SFLOAT; // learnopengl: GL_RGBA16F
@@ -633,15 +738,22 @@ private:
         subpass.pColorAttachments = &colorAttachmentRef;
         subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
+        std::array<VkSubpassDependency, 2> dependencies{};
         // before the pass: wait until the last frame's passes have used the images (the final pass read the colour, the
         // transparent pass tested against the depth)
-        VkSubpassDependency dependency{};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-        dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        // after the pass: a fragment shader that samples the colour image waits until it has been written
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
         std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
         VkRenderPassCreateInfo renderPassInfo{};
@@ -650,8 +762,8 @@ private:
         renderPassInfo.pAttachments = attachments.data();
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
 
         if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &opaqueRenderPass) != VK_SUCCESS) {
             throw std::runtime_error("failed to create opaque render pass!");
@@ -970,15 +1082,16 @@ private:
         swapChainFramebuffers.resize(swapChainImageViews.size());
 
         for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-            VkImageView attachments[] = {
-                swapChainImageViews[i]
+            std::array<VkImageView, 2> attachments = {
+                swapChainImageViews[i],
+                depthImageView
             };
 
             VkFramebufferCreateInfo framebufferInfo{};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
             framebufferInfo.renderPass = renderPass;
-            framebufferInfo.attachmentCount = 1;
-            framebufferInfo.pAttachments = attachments;
+            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+            framebufferInfo.pAttachments = attachments.data();
             framebufferInfo.width = swapChainExtent.width;
             framebufferInfo.height = swapChainExtent.height;
             framebufferInfo.layers = 1;
@@ -996,12 +1109,12 @@ private:
         opaqueImageView = createImageView(opaqueImage, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
 
         VkFormat depthFormat = findDepthFormat();
-        createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
-        depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+        createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, opaqueDepthImage, opaqueDepthImageMemory);
+        opaqueDepthImageView = createImageView(opaqueDepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         std::array<VkImageView, 2> attachments = {
             opaqueImageView,
-            depthImageView
+            opaqueDepthImageView
         };
 
         VkFramebufferCreateInfo framebufferInfo{};
@@ -1029,7 +1142,7 @@ private:
         std::array<VkImageView, 3> attachments = {
             accumImageView,
             revealImageView,
-            depthImageView // opaque framebuffer's depth image
+            opaqueDepthImageView // opaque framebuffer's depth image
         };
 
         VkFramebufferCreateInfo framebufferInfo{};
@@ -1073,6 +1186,13 @@ private:
         if (vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
             throw std::runtime_error("failed to create command pool!");
         }
+    }
+
+    void createDepthResources() {
+        VkFormat depthFormat = findDepthFormat();
+
+        createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+        depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
     }
 
     VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) {
@@ -1309,10 +1429,11 @@ private:
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         glm::mat4 vp = projection * view;
 
-        // set up transformation matrices: the red quad in the middle, the green one behind it, the blue one in front
-        glm::mat4 redModelMat = calculate_model_matrix(glm::vec3(0.0f, 0.0f, 1.0f));
-        glm::mat4 greenModelMat = calculate_model_matrix(glm::vec3(0.0f, 0.0f, 0.0f));
-        glm::mat4 blueModelMat = calculate_model_matrix(glm::vec3(0.0f, 0.0f, 2.0f));
+        // set up transformation matrices
+        // three 2x2 quads facing the camera: the red one is opaque, the green and blue ones are half transparent
+        glm::mat4 redModelMat = calculate_model_matrix(glm::vec3(0.5f, -0.2f, 1.0f));
+        glm::mat4 greenModelMat = calculate_model_matrix(glm::vec3(-0.3f, -0.6f, 2.0f)); // nearest to the camera
+        glm::mat4 blueModelMat = calculate_model_matrix(glm::vec3(-0.6f, 0.5f, 0.0f));   // farthest, partly behind the red quad
 
         VkViewport viewport{};
         viewport.x = 0.0f;
@@ -1430,9 +1551,12 @@ private:
         renderPassInfo.renderArea.offset = {0, 0};
         renderPassInfo.renderArea.extent = swapChainExtent;
 
-        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 0.0f}}};
-        renderPassInfo.clearValueCount = 1;
-        renderPassInfo.pClearValues = &clearColor;
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+        clearValues[1].depthStencil = {1.0f, 0};
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
 
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
