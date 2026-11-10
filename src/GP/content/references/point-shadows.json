@@ -1,0 +1,12 @@
+[
+  { "title": "Point Shadows", "url": "https://learnopengl.com/Advanced-Lighting/Shadows/Point-Shadows", "publisher": "LearnOpenGL" },
+  { "title": "point_shadows_soft.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/5.advanced_lighting/3.2.2.point_shadows_soft/point_shadows_soft.cpp", "publisher": "LearnOpenGL", "api": "opengl" },
+  { "title": "Cubemap Texture (OpenGL wiki)", "url": "https://www.khronos.org/opengl/wiki/Cubemap_Texture", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Geometry Shader (OpenGL wiki)", "url": "https://www.khronos.org/opengl/wiki/Geometry_Shader", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Textures (Vulkan specification)", "url": "https://docs.vulkan.org/spec/latest/chapters/textures.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "VkImageCreateInfo", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkImageCreateInfo.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "VkFramebufferCreateInfo", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkFramebufferCreateInfo.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Geometry shader stage", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d11/geometry-shader-stage", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Texture views", "url": "https://learn.microsoft.com/en-us/windows/uwp/graphics-concepts/texture-views", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Semantics (HLSL)", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

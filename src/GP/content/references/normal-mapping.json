@@ -1,0 +1,9 @@
+[
+  { "title": "Normal Mapping", "url": "https://learnopengl.com/Advanced-Lighting/Normal-Mapping", "publisher": "LearnOpenGL" },
+  { "title": "normal_mapping.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/5.advanced_lighting/4.normal_mapping/normal_mapping.cpp", "publisher": "LearnOpenGL", "api": "opengl" },
+  { "title": "Vertex Specification (OpenGL wiki)", "url": "https://www.khronos.org/opengl/wiki/Vertex_Specification", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "Vertex input description", "url": "https://vulkan-tutorial.com/Vertex_buffers/Vertex_input_description", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "VkVertexInputAttributeDescription", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkVertexInputAttributeDescription.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Semantics (HLSL)", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Per-Component Math Operations (HLSL)", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-per-component-math", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

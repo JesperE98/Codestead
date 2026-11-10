@@ -1,0 +1,41 @@
+{
+  "title": "Point Shadows",
+  "tasks": {
+    "depth-cubemap": {
+      "text": {
+        "opengl": "Create the depth cube map – six 1024 × 1024 `GL_DEPTH_COMPONENT` faces attached as a whole (layered) to a framebuffer without colour – and fill all six faces in one pass from the light: the geometry shader sends every triangle to each face (`gl_Layer`), the fragment shader writes the distance to the light / `far_plane` as the depth. Then show the cube map as grey in the scene's fragment shader.",
+        "vulkan": "Create the depth cube map – one depth image with six layers that can be viewed as a cube, a framebuffer with six layers, a sampler and a depth pipeline with a geometry shader that sends every triangle to each face (`gl_Layer`) and writes the distance to the light / `far_plane` as the depth – record that pass before the window's, and show the cube map as grey in the scene's fragment shader.",
+        "d3d12": "Create the depth cube map – a 1024 × 1024 `R32_TYPELESS` resource with six slices, a `TEXTURE2DARRAY` depth stencil view over all six and a `TEXTURECUBE` shader resource view – and a depth pipeline state whose geometry shader sends every triangle to each face (`SV_RenderTargetArrayIndex`) and whose pixel shader writes the distance to the light / `far_plane` (`SV_Depth`); draw that pass every frame and show the cube map as grey in `PSMain`."
+      },
+      "hint": {
+        "opengl": "`glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap)`, six `glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, …)`, `glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0)` (no `2D`). `shadowProj = glm::perspective(glm::radians(90.0f), …, near_plane, far_plane)` times six `glm::lookAt(lightPos, lightPos + dir, up)`. GS: `gl_Layer = face;`, `gl_Position = shadowMatrices[face] * FragPos;`. FS: `gl_FragDepth = length(FragPos.xyz - lightPos) / far_plane;`. Debug: `texture(depthMap, fs_in.FragPos - lightPos).r` on a `samplerCube` (unit 1).",
+        "vulkan": "`flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT`, `arrayLayers = 6`, a `VK_IMAGE_VIEW_TYPE_CUBE` view with `layerCount = 6`, `framebufferInfo.layers = 6`. Uniform buffer: `float far_plane;` in place of `pad2`, then `glm::mat4 shadowMatrices[6];` – no y flip in `shadowProj`. `deviceFeatures.geometryShader = VK_TRUE`, `VK_SHADER_STAGE_GEOMETRY_BIT` for the UBO. GS: `gl_Layer = face;`; FS: `gl_FragDepth = length(fragPos.xyz - ubo.lightPos) / ubo.far_plane;`. Debug: `texture(depthMap, fs_in.fragPos - ubo.lightPos).r` (binding 2).",
+        "d3d12": "`Tex2D(DXGI_FORMAT_R32_TYPELESS, SHADOW_WIDTH, SHADOW_HEIGHT, 6, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)`; DSV `D3D12_DSV_DIMENSION_TEXTURE2DARRAY` with `ArraySize = 6`, SRV `D3D12_SRV_DIMENSION_TEXTURECUBE`. `shadowProj = XMMatrixPerspectiveFovRH(…) * XMMatrixScaling(1.0f, -1.0f, 1.0f)`, `XMMatrixLookAtRH(…) * shadowProj`. GS: `output.layer = face;` (`SV_RenderTargetArrayIndex`); PS: `float PSMain(PSInput input) : SV_Depth`. Debug: `depthMap.Sample(shadowSampler, input.fragPos - lightPos).r`."
+      }
+    },
+    "shadows": {
+      "text": {
+        "opengl": "Draw the lit scene with shadows again: `ShadowCalculation(fragPos)` reads the closest depth in the direction from the light to the fragment, turns it back into a distance (`* far_plane`) and compares it with the fragment's own distance to the light, with a bias of 0.05.",
+        "vulkan": "Draw the lit scene with shadows again: `ShadowCalculation(fragPos)` reads the closest depth in the direction from the light to the fragment, turns it back into a distance (`* ubo.far_plane`) and compares it with the fragment's own distance to the light, with a bias of 0.05.",
+        "d3d12": "Draw the lit scene with shadows again: `ShadowCalculation(fragPos)` reads the closest depth in the direction from the light to the fragment, turns it back into a distance (`* far_plane`) and compares it with the fragment's own distance to the light, with a bias of 0.05."
+      },
+      "hint": {
+        "opengl": "`vec3 fragToLight = fragPos - lightPos; float closestDepth = texture(depthMap, fragToLight).r * far_plane; float currentDepth = length(fragToLight);` then `currentDepth - bias > closestDepth ? 1.0 : 0.0`. In `main`: `float shadow = ShadowCalculation(fs_in.FragPos);` and `FragColor = vec4(lighting, 1.0);` again.",
+        "vulkan": "`vec3 fragToLight = fragPos - ubo.lightPos; float closestDepth = texture(depthMap, fragToLight).r * ubo.far_plane; float currentDepth = length(fragToLight);` then `currentDepth - bias > closestDepth ? 1.0 : 0.0`. In `main()`: `float shadow = ShadowCalculation(fs_in.fragPos);` and `outColor = vec4(lighting, 1.0);` again.",
+        "d3d12": "`float3 fragToLight = fragPos - lightPos; float closestDepth = depthMap.Sample(shadowSampler, fragToLight).r * far_plane; float currentDepth = length(fragToLight);` then `currentDepth - bias > closestDepth ? 1.0f : 0.0f`. In `PSMain`: `float shadow = ShadowCalculation(input.fragPos);` and `return float4(lighting, 1.0f);` again."
+      }
+    },
+    "pcf": {
+      "text": {
+        "opengl": "Soften the shadow's edges with learnopengl's PCF for cube maps: average 20 comparisons in the `gridSamplingDisk` offset directions around `fragToLight`, scaled by a disk radius that grows with the distance to the viewer; bias 0.15.",
+        "vulkan": "Soften the shadow's edges with learnopengl's PCF for cube maps: average 20 comparisons in the `gridSamplingDisk` offset directions around `fragToLight`, scaled by a disk radius that grows with the distance to the viewer; bias 0.15.",
+        "d3d12": "Soften the shadow's edges with learnopengl's PCF for cube maps: average 20 comparisons in the `gridSamplingDisk` offset directions around `fragToLight`, scaled by a disk radius that grows with the distance to the viewer; bias 0.15."
+      },
+      "hint": {
+        "opengl": "Global `vec3 gridSamplingDisk[20] = vec3[](…)` (a cube's 8 corners and 12 edge middles). `float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0;`, loop `i < samples` (20): `texture(depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r * far_plane`, `if(currentDepth - bias > closestDepth) shadow += 1.0;`, then `shadow /= float(samples);`.",
+        "vulkan": "Global `vec3 gridSamplingDisk[20] = vec3[](…)` (a cube's 8 corners and 12 edge middles). `float diskRadius = (1.0 + (viewDistance / ubo.far_plane)) / 25.0;`, loop `i < samples` (20): `texture(depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r * ubo.far_plane`, `if (currentDepth - bias > closestDepth) shadow += 1.0;`, then `shadow /= float(samples);`.",
+        "d3d12": "`static const float3 gridSamplingDisk[20] = { … };` (a cube's 8 corners and 12 edge middles). `float diskRadius = (1.0f + (viewDistance / far_plane)) / 25.0f;`, loop `i < samples` (20): `depthMap.Sample(shadowSampler, fragToLight + gridSamplingDisk[i] * diskRadius).r * far_plane`, `if (currentDepth - bias > closestDepth) shadow += 1.0f;`, then `shadow /= float(samples);`."
+      }
+    }
+  }
+}

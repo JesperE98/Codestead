@@ -1,0 +1,41 @@
+{
+  "title": "Punktskuggor",
+  "tasks": {
+    "depth-cubemap": {
+      "text": {
+        "opengl": "Skapa djup-cube mapen – sex `GL_DEPTH_COMPONENT`-sidor på 1024 × 1024 kopplade som helhet (i lager) till en framebuffer utan färg – och fyll alla sex sidorna i ett pass från ljuset: geometry shadern skickar varje triangel till varje sida (`gl_Layer`), fragment shadern skriver avståndet till ljuset / `far_plane` som djup. Visa sedan cube mapen som grått i scenens fragment shader.",
+        "vulkan": "Skapa djup-cube mapen – en djupbild med sex lager som kan ses som en kub, en framebuffer med sex lager, en sampler och en djuppipeline med en geometry shader som skickar varje triangel till varje sida (`gl_Layer`) och skriver avståndet till ljuset / `far_plane` som djup – spela in det passet före fönstrets, och visa cube mapen som grått i scenens fragment shader.",
+        "d3d12": "Skapa djup-cube mapen – en `R32_TYPELESS`-resurs på 1024 × 1024 med sex skivor, en `TEXTURE2DARRAY`-depth stencil view över alla sex och en `TEXTURECUBE`-shader resource view – och en pipeline state för djupet vars geometry shader skickar varje triangel till varje sida (`SV_RenderTargetArrayIndex`) och vars pixel shader skriver avståndet till ljuset / `far_plane` (`SV_Depth`); rita det passet varje bildruta och visa cube mapen som grått i `PSMain`."
+      },
+      "hint": {
+        "opengl": "`glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap)`, sex `glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, …)`, `glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0)` (utan `2D`). `shadowProj = glm::perspective(glm::radians(90.0f), …, near_plane, far_plane)` gånger sex `glm::lookAt(lightPos, lightPos + dir, up)`. GS: `gl_Layer = face;`, `gl_Position = shadowMatrices[face] * FragPos;`. FS: `gl_FragDepth = length(FragPos.xyz - lightPos) / far_plane;`. Felsökning: `texture(depthMap, fs_in.FragPos - lightPos).r` på en `samplerCube` (enhet 1).",
+        "vulkan": "`flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT`, `arrayLayers = 6`, en `VK_IMAGE_VIEW_TYPE_CUBE`-vy med `layerCount = 6`, `framebufferInfo.layers = 6`. Uniformbuffern: `float far_plane;` på `pad2`:s plats, sedan `glm::mat4 shadowMatrices[6];` – ingen y-vändning i `shadowProj`. `deviceFeatures.geometryShader = VK_TRUE`, `VK_SHADER_STAGE_GEOMETRY_BIT` för UBO:n. GS: `gl_Layer = face;`; FS: `gl_FragDepth = length(fragPos.xyz - ubo.lightPos) / ubo.far_plane;`. Felsökning: `texture(depthMap, fs_in.fragPos - ubo.lightPos).r` (binding 2).",
+        "d3d12": "`Tex2D(DXGI_FORMAT_R32_TYPELESS, SHADOW_WIDTH, SHADOW_HEIGHT, 6, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)`; DSV `D3D12_DSV_DIMENSION_TEXTURE2DARRAY` med `ArraySize = 6`, SRV `D3D12_SRV_DIMENSION_TEXTURECUBE`. `shadowProj = XMMatrixPerspectiveFovRH(…) * XMMatrixScaling(1.0f, -1.0f, 1.0f)`, `XMMatrixLookAtRH(…) * shadowProj`. GS: `output.layer = face;` (`SV_RenderTargetArrayIndex`); PS: `float PSMain(PSInput input) : SV_Depth`. Felsökning: `depthMap.Sample(shadowSampler, input.fragPos - lightPos).r`."
+      }
+    },
+    "shadows": {
+      "text": {
+        "opengl": "Rita den belysta scenen med skuggor igen: `ShadowCalculation(fragPos)` läser det närmaste djupet i riktningen från ljuset till fragmentet, gör om det till ett avstånd (`* far_plane`) och jämför det med fragmentets eget avstånd till ljuset, med biasen 0.05.",
+        "vulkan": "Rita den belysta scenen med skuggor igen: `ShadowCalculation(fragPos)` läser det närmaste djupet i riktningen från ljuset till fragmentet, gör om det till ett avstånd (`* ubo.far_plane`) och jämför det med fragmentets eget avstånd till ljuset, med biasen 0.05.",
+        "d3d12": "Rita den belysta scenen med skuggor igen: `ShadowCalculation(fragPos)` läser det närmaste djupet i riktningen från ljuset till fragmentet, gör om det till ett avstånd (`* far_plane`) och jämför det med fragmentets eget avstånd till ljuset, med biasen 0.05."
+      },
+      "hint": {
+        "opengl": "`vec3 fragToLight = fragPos - lightPos; float closestDepth = texture(depthMap, fragToLight).r * far_plane; float currentDepth = length(fragToLight);` sedan `currentDepth - bias > closestDepth ? 1.0 : 0.0`. I `main`: `float shadow = ShadowCalculation(fs_in.FragPos);` och `FragColor = vec4(lighting, 1.0);` igen.",
+        "vulkan": "`vec3 fragToLight = fragPos - ubo.lightPos; float closestDepth = texture(depthMap, fragToLight).r * ubo.far_plane; float currentDepth = length(fragToLight);` sedan `currentDepth - bias > closestDepth ? 1.0 : 0.0`. I `main()`: `float shadow = ShadowCalculation(fs_in.fragPos);` och `outColor = vec4(lighting, 1.0);` igen.",
+        "d3d12": "`float3 fragToLight = fragPos - lightPos; float closestDepth = depthMap.Sample(shadowSampler, fragToLight).r * far_plane; float currentDepth = length(fragToLight);` sedan `currentDepth - bias > closestDepth ? 1.0f : 0.0f`. I `PSMain`: `float shadow = ShadowCalculation(input.fragPos);` och `return float4(lighting, 1.0f);` igen."
+      }
+    },
+    "pcf": {
+      "text": {
+        "opengl": "Gör skuggans kanter mjuka med learnopengls PCF för cube maps: ta medelvärdet av 20 jämförelser i `gridSamplingDisk`-riktningarna runt `fragToLight`, skalade med en diskradie som växer med avståndet till betraktaren; bias 0.15.",
+        "vulkan": "Gör skuggans kanter mjuka med learnopengls PCF för cube maps: ta medelvärdet av 20 jämförelser i `gridSamplingDisk`-riktningarna runt `fragToLight`, skalade med en diskradie som växer med avståndet till betraktaren; bias 0.15.",
+        "d3d12": "Gör skuggans kanter mjuka med learnopengls PCF för cube maps: ta medelvärdet av 20 jämförelser i `gridSamplingDisk`-riktningarna runt `fragToLight`, skalade med en diskradie som växer med avståndet till betraktaren; bias 0.15."
+      },
+      "hint": {
+        "opengl": "Global `vec3 gridSamplingDisk[20] = vec3[](…)` (en kubs 8 hörn och 12 kantmittpunkter). `float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0;`, loop `i < samples` (20): `texture(depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r * far_plane`, `if(currentDepth - bias > closestDepth) shadow += 1.0;`, sedan `shadow /= float(samples);`.",
+        "vulkan": "Global `vec3 gridSamplingDisk[20] = vec3[](…)` (en kubs 8 hörn och 12 kantmittpunkter). `float diskRadius = (1.0 + (viewDistance / ubo.far_plane)) / 25.0;`, loop `i < samples` (20): `texture(depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r * ubo.far_plane`, `if (currentDepth - bias > closestDepth) shadow += 1.0;`, sedan `shadow /= float(samples);`.",
+        "d3d12": "`static const float3 gridSamplingDisk[20] = { … };` (en kubs 8 hörn och 12 kantmittpunkter). `float diskRadius = (1.0f + (viewDistance / far_plane)) / 25.0f;`, loop `i < samples` (20): `depthMap.Sample(shadowSampler, fragToLight + gridSamplingDisk[i] * diskRadius).r * far_plane`, `if (currentDepth - bias > closestDepth) shadow += 1.0f;`, sedan `shadow /= float(samples);`."
+      }
+    }
+  }
+}
