@@ -1,9 +1,9 @@
 {
-  "en": "Learn graphics programming by doing – OpenGL, Vulkan or DirectX 12, with a built-in GPU simulator, checkpoints and a live preview.",
-  "sv": "Lär dig grafikprogrammering genom att göra – OpenGL, Vulkan eller DirectX 12, med inbyggd GPU-simulator, kontrollfrågor och förhandsvisning.",
-  "es": "Aprende programación gráfica practicando: OpenGL, Vulkan o DirectX 12, con un simulador de GPU integrado, preguntas de control y vista previa en vivo.",
-  "de": "Lerne Grafikprogrammierung durch Tun – OpenGL, Vulkan oder DirectX 12, mit eingebautem GPU-Simulator, Kontrollfragen und Live-Vorschau.",
-  "fr": "Apprenez la programmation graphique en pratiquant : OpenGL, Vulkan ou DirectX 12, avec un simulateur de GPU intégré, des questions de contrôle et un aperçu en direct.",
-  "zh": "边做边学图形编程——OpenGL、Vulkan 或 DirectX 12，内置 GPU 模拟器、检查题和实时预览。",
-  "ja": "手を動かしてグラフィックスプログラミングを学ぶ――OpenGL、Vulkan、DirectX 12 から選べ、GPU シミュレーター、確認問題、ライブプレビュー付き。"
+  "en": "Learn graphics programming by doing – OpenGL, Vulkan or DirectX 12 in your own IDE, with checkpoints, the expected result of every task and automatic checks after each build and run.",
+  "sv": "Lär dig grafikprogrammering genom att göra – OpenGL, Vulkan eller DirectX 12 i din egen IDE, med kontrollfrågor, förväntat resultat för varje uppgift och automatisk kontroll efter varje bygge och körning.",
+  "es": "Aprende programación gráfica practicando: OpenGL, Vulkan o DirectX 12 en tu propio IDE, con preguntas de control, el resultado esperado de cada tarea y comprobación automática tras cada compilación y ejecución.",
+  "de": "Lerne Grafikprogrammierung durch Tun – OpenGL, Vulkan oder DirectX 12 in deiner eigenen IDE, mit Kontrollfragen, dem erwarteten Ergebnis jeder Aufgabe und automatischer Prüfung nach jedem Bauen und Ausführen.",
+  "fr": "Apprenez la programmation graphique en pratiquant : OpenGL, Vulkan ou DirectX 12 dans votre propre IDE, avec des questions de contrôle, le résultat attendu de chaque tâche et une vérification automatique après chaque compilation et exécution.",
+  "zh": "边做边学图形编程——在你自己的 IDE 中使用 OpenGL、Vulkan 或 DirectX 12，配有检查题、每个任务的预期结果，并在每次构建和运行后自动检查。",
+  "ja": "手を動かしてグラフィックスプログラミングを学ぶ――自分の IDE で OpenGL、Vulkan、DirectX 12 を使い、確認問題、各課題の期待される結果、ビルドと実行のたびの自動チェック付き。"
 }
