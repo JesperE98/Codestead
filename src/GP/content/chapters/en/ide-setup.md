@@ -7,9 +7,12 @@ your project is in: when you have built and run your program, it checks your cod
 
 learnopengl.com spends a good part of its *Creating a window* chapter on setting up a project, and so does
 vulkan-tutorial.com with its *Development environment* chapter. This chapter does the same for the three APIs of
-this course: you choose an IDE, install a compiler and CMake, get the libraries {{api}} needs, write a small
-`CMakeLists.txt`, and learn how the **Your project** panel follows what you do. It has no tasks, but its start files
-are the triangle program from the introduction, so at the end you can check that everything works.
+this course: you choose an IDE, install a compiler, get the libraries {{api}} needs, set up the project files, and
+learn how the **Your project** panel follows what you do. It has no tasks, but its start files are the triangle
+program from the introduction, so at the end you can check that everything works.
+
+Choose your IDE in the **IDE** picker at the top of the window, next to the API. From here on the chapters show the
+steps for the IDE you have chosen, wherever the IDEs differ – you can change it at any time.
 
 ## How you work in this course
 
@@ -22,8 +25,8 @@ panel connects a chapter with a folder on your disk:
    `learn/opengl/hello-window` next to `learn/opengl/creating-a-window`.
 2. **Copy start files** copies the chapter's start files into the folder. If a file is already there, the app asks
    before it overwrites it.
-3. You add your `CMakeLists.txt` (the same one for every chapter of an API – see below) and open the folder in your
-   IDE. **Open folder** opens it in your file manager.
+3. You add your project files – the same for every chapter of an API, see below – and open the folder in your IDE.
+   **Open folder** opens it in your file manager.
 4. You write the code of a task, **build** the program and **run** it from your IDE.
 
 The app sees both steps. A build counts when the folder contains a program (an `.exe` on Windows, an executable file
@@ -57,10 +60,16 @@ Any C++ IDE will do, but the course gives steps for four of them:
 
 | IDE | Runs on | Cost | Good to know |
 |---|---|---|---|
-| [Visual Studio](https://visualstudio.microsoft.com/) | Windows | The Community edition is free for individuals, students, open-source work and small teams | Comes with Microsoft's compiler (MSVC), the Windows SDK and CMake; the best choice for DirectX 12 |
+| [Visual Studio](https://visualstudio.microsoft.com/) | Windows | The Community edition is free for individuals, students, open-source work and small teams | Comes with Microsoft's compiler (MSVC) and the Windows SDK; the best choice for DirectX 12 |
 | [CLion](https://www.jetbrains.com/clion/) | Windows, macOS, Linux | Free for non-commercial use; a paid licence for commercial work | Built around CMake; brings its own CMake, and on Windows its own MinGW compiler |
-| [Rider](https://www.jetbrains.com/rider/) | Windows, macOS, Linux | Free for non-commercial use; a paid licence for commercial work | Its C++ support is for Visual Studio solutions (and Unreal Engine), which in practice means Windows with Microsoft's build tools |
+| [Rider](https://www.jetbrains.com/rider/) | Windows, macOS, Linux | Free for non-commercial use; a paid licence for commercial work | Builds C++ with Microsoft's build tools from Visual Studio solutions, which in practice means Windows |
 | [Visual Studio Code](https://code.visualstudio.com/) | Windows, macOS, Linux | Free | An editor that becomes a C++ IDE with Microsoft's **C/C++** and **CMake Tools** extensions; you install the compiler and CMake yourself |
+
+The four build the course's projects in two ways. **CLion** and **VS Code** use **CMake**: a `CMakeLists.txt` in the
+chapter folder describes the program. **Visual Studio** and **Rider** use a **Visual Studio solution**: a `.sln` file
+and a project file, `.vcxproj`, whose settings name the include folders, the libraries and the working directory.
+(Visual Studio can also open a CMake folder, and Rider a CMake project; the course's steps for them follow the
+solution.)
 
 :::opengl
 For OpenGL every one of them works. On Windows, Visual Studio is what learnopengl.com uses; on Linux and macOS,
@@ -74,22 +83,22 @@ CMake, CLion and VS Code work the same on all three systems. On macOS, Vulkan ru
 :::
 :::d3d12
 Direct3D 12 only exists on Windows, and Microsoft's samples are Visual Studio solutions, so Visual Studio is the
-natural choice. CLion and VS Code work too, as long as they use Microsoft's compiler (MSVC); Rider opens the same
-solutions as Visual Studio.
+natural choice. Rider opens the same solutions; CLion and VS Code work too, as long as they use Microsoft's compiler
+(MSVC).
 :::
 
 ```quiz
-You work on a Mac. Which of these IDEs can you use for this course's CMake projects? (Choose all that apply.)
-- [x] CLion
-- [ ] Visual Studio
-- [x] Visual Studio Code with the C/C++ and CMake Tools extensions
-- [ ] Rider
+How do the IDEs build the course's projects? (Choose all that apply.)
+- [x] CLion and VS Code build from a `CMakeLists.txt` with CMake
+- [ ] VS Code needs no build files at all
+- [x] Visual Studio and Rider build a Visual Studio solution (`.sln` and `.vcxproj`)
+- [ ] Rider builds from a makefile
 ---
-Visual Studio runs only on Windows. Rider runs on macOS, but its C++ support is for Visual Studio solutions and
-Unreal Engine – not for CMake projects. CLion and VS Code open a `CMakeLists.txt` on every system.
+CMake is the build system of CLion and of VS Code's CMake Tools. Visual Studio's own projects are solutions, and Rider
+builds the same solutions with Microsoft's build tools.
 ```
 
-## A compiler and CMake
+## A compiler
 
 Your IDE needs a C++17 compiler:
 
@@ -106,11 +115,17 @@ Your IDE needs a C++17 compiler:
 - **macOS:** Apple's Clang from the **Xcode Command Line Tools** (`xcode-select --install` in a terminal), and CMake
   from [cmake.org](https://cmake.org/download/) or Homebrew (`brew install cmake`).
 
+:::ide clion vscode
 **CMake** describes a project in a file called `CMakeLists.txt`: which sources make up the program, which libraries
-it uses and where they are. From that file CMake generates the build files for your compiler (Ninja files,
-makefiles or a Visual Studio solution), which the IDE then builds. All four IDEs understand it, so one
-`CMakeLists.txt` works everywhere. Visual Studio and CLion bring CMake along; for VS Code you install it yourself.
-The `CMakeLists.txt` below needs CMake 3.24 or newer, and Git, which CMake uses to download libraries.
+it uses and where they are. From that file CMake generates the build files for your compiler (Ninja files or
+makefiles), which the IDE then builds. CLion brings CMake along; for VS Code you install it yourself. The
+`CMakeLists.txt` below needs CMake 3.24 or newer, and Git, which CMake uses to download libraries.
+:::
+:::ide vs rider
+A **Visual Studio solution** is built by MSBuild, which comes with Visual Studio and with the *Build Tools for Visual
+Studio*. Rider uses the same MSBuild and the same compiler, so for Rider you install the Build Tools (or Visual Studio
+Community) with the **Desktop development with C++** workload too.
+:::
 
 ## The libraries for {{api}}
 
@@ -119,20 +134,28 @@ OpenGL itself needs nothing to install: it comes with your graphics driver. What
 learnopengl.com code uses:
 
 - **GLFW** ([glfw.org](https://www.glfw.org/download.html)) creates the window and the OpenGL context and gives you
-  keyboard and mouse input. The `CMakeLists.txt` below downloads and builds it for you, unless it finds an installed
-  GLFW (on Linux `libglfw3-dev` or your distribution's equivalent, on macOS `brew install glfw`).
+  keyboard and mouse input.
 - **GLAD** loads the OpenGL functions at run time. You generate it on [glad.dav1d.de](https://glad.dav1d.de/):
   language **C/C++**, specification **OpenGL**, API **gl** version **3.3**, profile **Core**, **Generate a loader**
   ticked, then **Generate**. The zip file contains `include/glad/glad.h`, `include/KHR/khrplatform.h` and
   `src/glad.c`. ([gen.glad.sh](https://gen.glad.sh/) is the generator of GLAD 2, whose functions have other names;
   the course's code uses GLAD 1's `gladLoadGLLoader`.)
 - **GLM** ([github.com/g-truc/glm](https://github.com/g-truc/glm)), the maths library, from *Transformations* on.
-  The `CMakeLists.txt` downloads it as well.
 - **stb_image** ([github.com/nothings/stb](https://github.com/nothings/stb)), one header, `stb_image.h`, that loads
   images, from *Textures* on.
 - Later, **Assimp** ([assimp.org](https://www.assimp.org/), [github.com/assimp/assimp](https://github.com/assimp/assimp))
   for *Model Loading*, and **FreeType** ([freetype.org](https://freetype.org/)) for *Text Rendering*. Those chapters
   tell you what to add.
+
+:::ide clion vscode
+GLFW and GLM come by themselves: the `CMakeLists.txt` below downloads and builds them, unless it finds installed ones
+(on Linux `libglfw3-dev` and `libglm-dev` or your distribution's equivalents, on macOS `brew install glfw glm`).
+:::
+:::ide vs rider
+For GLFW, download the **64-bit Windows binaries** from glfw.org: the zip file has an `include` folder and a
+`lib-vc2022` folder with `glfw3.lib` (it works with newer Visual Studio versions too). GLM is only headers: download
+the repository (or a release) so that its `glm` folder, the one with `glm.hpp` in it, is available.
+:::
 
 ```quiz
 Why does the course generate GLAD on glad.dav1d.de rather than on gen.glad.sh?
@@ -148,8 +171,9 @@ written for GLAD 1, as learnopengl.com's is.
 - **The Vulkan SDK** from LunarG ([vulkan.lunarg.com](https://vulkan.lunarg.com/)), for Windows, Linux and macOS. It
   contains the Vulkan headers, the **loader** your program links with, the **validation layers**
   (`VK_LAYER_KHRONOS_validation`), the shader compiler **glslc** that turns your GLSL into SPIR-V, and `vkcube`, a
-  small demo – run it first to see that your graphics card and driver support Vulkan. On Linux you can use your
-  distribution's packages instead, for example on Debian and Ubuntu:
+  small demo – run it first to see that your graphics card and driver support Vulkan. On Windows its installer also
+  sets the environment variable `VULKAN_SDK` to the folder it installed to. On Linux you can use your distribution's
+  packages instead, for example on Debian and Ubuntu:
 
   ```text
   sudo apt install libvulkan-dev vulkan-validationlayers vulkan-tools glslc libglfw3-dev libglm-dev
@@ -160,13 +184,21 @@ written for GLAD 1, as learnopengl.com's is.
   and set `VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR` in the create info's `flags`; the course's code targets
   Windows and Linux and doesn't do that.
 - **GLFW** ([glfw.org](https://www.glfw.org/download.html)) for the window, and **GLM**
-  ([github.com/g-truc/glm](https://github.com/g-truc/glm)) for the maths. The `CMakeLists.txt` below downloads and
-  builds both, unless it finds installed ones.
+  ([github.com/g-truc/glm](https://github.com/g-truc/glm)) for the maths.
 - **stb_image** ([github.com/nothings/stb](https://github.com/nothings/stb)), one header, `stb_image.h`, from
   *Textures* on, and **tinyobjloader** ([github.com/tinyobjloader/tinyobjloader](https://github.com/tinyobjloader/tinyobjloader)),
   one header, `tiny_obj_loader.h`, for the models, as in vulkan-tutorial.com.
 - Later, **Assimp** ([assimp.org](https://www.assimp.org/), [github.com/assimp/assimp](https://github.com/assimp/assimp))
   and **FreeType** ([freetype.org](https://freetype.org/)). Those chapters tell you what to add.
+
+:::ide clion vscode
+GLFW and GLM come by themselves: the `CMakeLists.txt` below downloads and builds them, unless it finds installed ones.
+:::
+:::ide vs rider
+For GLFW, download the **64-bit Windows binaries** from glfw.org: the zip file has an `include` folder and a
+`lib-vc2022` folder with `glfw3.lib` (it works with newer Visual Studio versions too). GLM is only headers: download
+the repository (or a release) so that its `glm` folder, the one with `glm.hpp` in it, is available.
+:::
 
 ```quiz
 What does glslc, which comes with the Vulkan SDK, do for your project?
@@ -217,6 +249,7 @@ Every chapter gets its own folder, and the libraries that are just files – the
 one `libs` folder that all chapters share:
 
 :::opengl
+:::ide clion vscode
 ```text
 learn/
   libs/
@@ -230,7 +263,26 @@ learn/
       ...
 ```
 :::
+:::ide vs rider
+```text
+learn/
+  libs/
+    glad/        include/glad/glad.h, include/KHR/khrplatform.h, src/glad.c
+    glfw/        include/GLFW/glfw3.h, lib-vc2022/glfw3.lib
+    glm/         glm/glm.hpp …
+    stb/         stb_image.h
+  opengl/
+    LearnOpenGL/          the project you copy into every chapter (see below)
+    creating-a-window/
+      LearnOpenGL.sln, LearnOpenGL.vcxproj
+      main.cpp
+    hello-window/
+      ...
+```
+:::
+:::
 :::vulkan
+:::ide clion vscode
 ```text
 learn/
   libs/
@@ -247,7 +299,29 @@ learn/
     ...
 ```
 :::
+:::ide vs rider
+```text
+learn/
+  libs/
+    glfw/            include/GLFW/glfw3.h, lib-vc2022/glfw3.lib
+    glm/             glm/glm.hpp …
+    stb/             stb_image.h
+    tinyobjloader/   tiny_obj_loader.h
+  vulkan/
+    LearnVulkan/     the project you copy into every chapter (see below)
+    creating-a-window/
+      LearnVulkan.sln, LearnVulkan.vcxproj
+      main.cpp
+    hello-triangle/
+      LearnVulkan.sln, LearnVulkan.vcxproj
+      main.cpp
+      shaders/shader.vert, shaders/shader.frag
+    ...
+```
+:::
+:::
 :::d3d12
+:::ide clion vscode
 ```text
 learn/
   libs/
@@ -264,14 +338,32 @@ learn/
     ...
 ```
 :::
+:::ide vs rider
+```text
+learn/
+  libs/
+    DirectX-Headers/   the repository: include/directx/d3dx12.h …
+    stb/               stb_image.h
+  d3d12/
+    LearnDirectX/      the project you copy into every chapter (see below)
+    creating-a-window/
+      LearnDirectX.sln, LearnDirectX.vcxproj
+      main.cpp
+    hello-triangle/
+      LearnDirectX.sln, LearnDirectX.vcxproj
+      main.cpp
+      shaders.hlsl
+    ...
+```
+:::
+:::
 
 Keep your IDE's build folder inside the chapter folder – all four IDEs do that by default – so that the app finds the
 program you build.
 
 The programs load their shaders, textures and models with paths relative to the **working directory**, the folder a
 program runs in: `"shaders/vert.spv"`, `"container.png"`, `L"shaders.hlsl"`. The start files put those files in the
-chapter folder, so the program has to run with the chapter folder as its working directory. The steps for each IDE
-below say how.
+chapter folder, so the program has to run with the chapter folder as its working directory. The steps below say how.
 
 ```quiz
 Your program builds, but when it starts it stops with an error that it can't open one of its shader files. The file is in the chapter folder. What is the most likely cause?
@@ -281,15 +373,23 @@ Your program builds, but when it starts it stops with an error that it can't ope
 - [ ] The libs folder is missing
 ---
 Relative paths are resolved from the working directory. IDEs often run a program in the folder it was built in, so
-set the working directory to the chapter folder (the `CMakeLists.txt` below does that for Visual Studio).
+the working directory has to be the chapter folder – the steps below show how for your IDE.
 ```
 
-## A CMakeLists.txt
+## The project files
 
-This is all a chapter needs. Put it into each chapter folder next to the start files – it is the same file for every
-chapter of the course.
+:::ide clion vscode
+A `CMakeLists.txt` is all a chapter needs. Put it into each chapter folder next to the start files – it is the same
+file for every chapter of the course.
+:::
+:::ide vs rider
+You set up a Visual Studio project once per API and copy its two files, the `.sln` and the `.vcxproj`, into every
+chapter folder. The project refers to `main.cpp` and to the `libs` folder by relative paths, so the copies work
+unchanged in every chapter folder at the same depth (`learn/<api>/<chapter>`).
+:::
 
 :::opengl
+:::ide clion vscode
 ```text
 cmake_minimum_required(VERSION 3.24)
 project(LearnOpenGL C CXX)
@@ -322,7 +422,42 @@ On Linux, install your distribution's GLFW package: building GLFW from source th
 development packages. You don't have to link `opengl32.lib` or `libGL` yourself – GLFW creates the context and GLAD
 asks it for every function.
 :::
+:::ide vs rider
+The project, `LearnOpenGL`, compiles `main.cpp` and GLAD's `glad.c`, and needs these settings for **all
+configurations** and the **x64** platform:
+
+- **C/C++ → General → Additional Include Directories:**
+  `..\..\libs\glfw\include;..\..\libs\glad\include;..\..\libs\glm;..\..\libs\stb`
+- **C/C++ → Language → C++ Language Standard:** ISO C++17
+- **Linker → General → Additional Library Directories:** `..\..\libs\glfw\lib-vc2022`
+- **Linker → Input → Additional Dependencies:** `glfw3.lib;opengl32.lib` in front of the ones already there
+- **Debugging → Working Directory:** `$(ProjectDir)` – the default, which is the chapter folder
+
+In the project file these settings are an `ItemDefinitionGroup`, after the ones that are already there, and the two
+source files an `ItemGroup`:
+
+```text
+<ItemDefinitionGroup>
+  <ClCompile>
+    <AdditionalIncludeDirectories>..\..\libs\glfw\include;..\..\libs\glad\include;..\..\libs\glm;..\..\libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    <LanguageStandard>stdcpp17</LanguageStandard>
+  </ClCompile>
+  <Link>
+    <AdditionalLibraryDirectories>..\..\libs\glfw\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    <AdditionalDependencies>glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+  </Link>
+</ItemDefinitionGroup>
+<ItemGroup>
+  <ClCompile Include="main.cpp" />
+  <ClCompile Include="..\..\libs\glad\src\glad.c" />
+</ItemGroup>
+```
+
+Relative paths in these settings start at the folder of the `.vcxproj`, which is the chapter folder.
+:::
+:::
 :::vulkan
+:::ide clion vscode
 ```text
 cmake_minimum_required(VERSION 3.24)
 project(LearnVulkan CXX)
@@ -371,10 +506,54 @@ set_target_properties(LearnVulkan PROPERTIES LINK_DEPENDS "${SHADERS}")
 ```
 
 The loop does what vulkan-tutorial.com's `compile.bat` and `compile.sh` do by hand: it runs `glslc` for each shader,
-and again whenever you change one. Don't build the **Release** configuration while you learn: it defines `NDEBUG`,
-which switches the validation layers off.
+and again whenever you change one.
+:::
+:::ide vs rider
+The project, `LearnVulkan`, compiles `main.cpp` and needs these settings for **all configurations** and the **x64**
+platform:
+
+- **C/C++ → General → Additional Include Directories:**
+  `$(VULKAN_SDK)\Include;..\..\libs\glfw\include;..\..\libs\glm;..\..\libs\stb;..\..\libs\tinyobjloader`
+- **C/C++ → Language → C++ Language Standard:** ISO C++17
+- **Linker → General → Additional Library Directories:** `$(VULKAN_SDK)\Lib;..\..\libs\glfw\lib-vc2022`
+- **Linker → Input → Additional Dependencies:** `vulkan-1.lib;glfw3.lib` in front of the ones already there
+- **Build Events → Pre-Build Event → Command Line:** the `glslc` commands below
+- **Debugging → Working Directory:** `$(ProjectDir)` – the default, which is the chapter folder
+
+A solution doesn't compile shaders by itself. The pre-build event does what vulkan-tutorial.com's `compile.bat`
+does: it runs the SDK's `glslc` for every shader in `shaders\` before each build – `shader.vert` becomes `vert.spv`
+(vulkan-tutorial's names), any other `name.vert` becomes `name.vert.spv`. In the project file:
+
+```text
+<ItemDefinitionGroup>
+  <ClCompile>
+    <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;..\..\libs\glfw\include;..\..\libs\glm;..\..\libs\stb;..\..\libs\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    <LanguageStandard>stdcpp17</LanguageStandard>
+  </ClCompile>
+  <Link>
+    <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;..\..\libs\glfw\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+  </Link>
+  <PreBuildEvent>
+    <Command>for %%f in (shaders\*.vert shaders\*.frag shaders\*.geom shaders\*.tesc shaders\*.tese shaders\*.comp) do "$(VULKAN_SDK)\Bin\glslc.exe" "%%f" -o "%%f.spv"
+if exist shaders\shader.vert "$(VULKAN_SDK)\Bin\glslc.exe" shaders\shader.vert -o shaders\vert.spv
+if exist shaders\shader.frag "$(VULKAN_SDK)\Bin\glslc.exe" shaders\shader.frag -o shaders\frag.spv</Command>
+  </PreBuildEvent>
+</ItemDefinitionGroup>
+<ItemGroup>
+  <ClCompile Include="main.cpp" />
+</ItemGroup>
+```
+
+Relative paths in these settings start at the folder of the `.vcxproj`, which is the chapter folder, and the build
+events run there too.
+:::
+
+Don't build the **Release** configuration while you learn: it defines `NDEBUG`, which switches the validation layers
+off.
 :::
 :::d3d12
+:::ide clion vscode
 ```text
 cmake_minimum_required(VERSION 3.24)
 project(LearnDirectX CXX)
@@ -396,68 +575,72 @@ set_target_properties(LearnDirectX PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CM
 file(GLOB SHADERS CONFIGURE_DEPENDS *.hlsl)
 set_target_properties(LearnDirectX PROPERTIES LINK_DEPENDS "${SHADERS}")
 ```
+:::
+:::ide vs rider
+The project, `LearnDirectX`, compiles `main.cpp` and needs these settings for **all configurations** and the **x64**
+platform:
 
-`d3d12.lib`, `dxgi.lib` and `d3dcompiler.lib` need no line here: the `#pragma comment(lib, ...)` lines at the top of
+- **C/C++ → General → Additional Include Directories:** `..\..\libs\DirectX-Headers\include\directx;..\..\libs\stb`
+- **C/C++ → Language → C++ Language Standard:** ISO C++17
+- **Linker → System → SubSystem:** Windows – the program starts in `wWinMain`, not in `main`
+- **Debugging → Working Directory:** `$(ProjectDir)` – the default, which is the chapter folder, where `shaders.hlsl`
+  is
+
+In the project file:
+
+```text
+<ItemDefinitionGroup>
+  <ClCompile>
+    <AdditionalIncludeDirectories>..\..\libs\DirectX-Headers\include\directx;..\..\libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    <LanguageStandard>stdcpp17</LanguageStandard>
+  </ClCompile>
+  <Link>
+    <SubSystem>Windows</SubSystem>
+  </Link>
+</ItemDefinitionGroup>
+<ItemGroup>
+  <ClCompile Include="main.cpp" />
+</ItemGroup>
+```
+:::
+
+`d3d12.lib`, `dxgi.lib` and `d3dcompiler.lib` need no setting: the `#pragma comment(lib, ...)` lines at the top of
 `main.cpp` link them. Build the **Debug** configuration: it defines `_DEBUG`, which turns on the debug layer code.
 :::
 
+:::ide clion vscode
 Two lines are there for the course rather than for the compiler. `VS_DEBUGGER_WORKING_DIRECTORY` makes Visual Studio
-(and the solutions CMake generates) run the program in the chapter folder. `LINK_DEPENDS` links the program again
+run the program in the chapter folder, should you ever open the folder there. `LINK_DEPENDS` links the program again
 when you only changed a shader: the shaders are sources too, and the app only counts a build whose program is newer
 than all of them.
+:::
+:::ide vs rider
+The shaders, textures and models stay in the chapter folder, where the program runs. (If you'd rather run the `.exe`
+from its own folder, copy them next to it with a post-build event, for example
+`xcopy /y /s /i "$(ProjectDir)shaders" "$(OutDir)shaders"`.) A solution doesn't link the program again when you only
+changed a shader, but the shaders are sources too, and the app only counts a build whose program is newer than all of
+them: after a shader-only change, use **Build → Rebuild Solution**.
+:::
 
-## Visual Studio
+## Building and running
 
-**Opening the folder (CMake).** Since Visual Studio understands CMake directly, there is no solution to create:
-
+:::ide vs
 1. In the Visual Studio Installer, install the **Desktop development with C++** workload.
-2. **File → Open → Folder…** and choose the chapter folder. Visual Studio runs CMake by itself; the *Output* window
-   shows when it is done.
-3. In the toolbar, choose the program (`LearnOpenGL.exe`, `LearnVulkan.exe` or `LearnDirectX.exe`) in the
-   **Select Startup Item** list.
-4. **Build → Build All** (Ctrl+Shift+B) builds it; **Debug → Start Without Debugging** (Ctrl+F5) or
+2. Once per API, create the project you'll copy: **File → New → Project…**, **Empty Project** (C++). Name it
+   `LearnOpenGL`, `LearnVulkan` or `LearnDirectX`, choose your `learn/<api>` folder as the location and tick **Place
+   solution and project in the same directory**.
+3. Add a `main.cpp` with **Project → Add New Item…** (an empty one is fine – every chapter brings its own; for OpenGL
+   also add `glad.c` with **Project → Add Existing Item…**), and make the settings above in **Project → Properties**
+   (Configuration *All Configurations*, Platform *x64*).
+4. For each chapter, copy the project's `.sln`, `.vcxproj` and `.vcxproj.filters` into the chapter folder next to the
+   start files, and open the `.sln` there.
+5. **Build → Build Solution** (Ctrl+Shift+B) builds the program; **Debug → Start Without Debugging** (Ctrl+F5) or
    **Start Debugging** (F5) builds it if needed and runs it.
 
-The program ends up in `out/build/<configuration>/` inside the chapter folder, for example
-`out/build/x64-Debug/LearnOpenGL.exe`, and runs in the chapter folder thanks to `VS_DEBUGGER_WORKING_DIRECTORY`.
-
-**A solution of your own (without CMake).** This is the route learnopengl.com and vulkan-tutorial.com describe:
-
-1. **File → New → Project…**, **Empty Project** (C++). Tick **Place solution and project in the same directory**,
-   and let Visual Studio create the chapter folder.
-2. Choose that folder in the **Your project** panel and copy the start files into it. Add them to the project with
-   **Project → Add Existing Item…**.
-3. In the project's **Properties** (Configuration *All Configurations*, Platform *x64*), set
-   **C/C++ → General → Additional Include Directories** to the libraries' include folders,
-   **Linker → General → Additional Library Directories** to their library folders,
-   **Linker → Input → Additional Dependencies** to their `.lib` files, and
-   **C/C++ → Language → C++ Language Standard** to C++17.
-4. Build with **Build → Build Solution** and run with Ctrl+F5 or F5.
-
-The program ends up in `x64/Debug/` inside the folder. Visual Studio runs it in the project folder by default
-(**Debugging → Working Directory** is `$(ProjectDir)`), which is the chapter folder.
-
-:::opengl
-For OpenGL, use the pre-compiled GLFW binaries from glfw.org: their `include` folder, the `lib-vc…` folder that
-matches your Visual Studio, and `glfw3.lib` plus `opengl32.lib` as dependencies. Add `glad.c` to the project.
+The program ends up in `x64/Debug/` inside the chapter folder, for example `x64/Debug/LearnOpenGL.exe`, and runs in
+the chapter folder.
 :::
-:::vulkan
-For Vulkan, add the SDK's `Include` and `Lib` folders, GLFW's `include` and library folders, and `vulkan-1.lib` and
-`glfw3.lib`. A solution doesn't compile your shaders: add a **Build Events → Pre-Build Event** that runs the SDK's
-`%VULKAN_SDK%\Bin\glslc.exe` for each shader, as vulkan-tutorial.com's `compile.bat` does. The CMake route does all
-of this for you.
-:::
-:::d3d12
-For DirectX 12, add `DirectX-Headers\include\directx` to the include directories and set
-**Linker → System → SubSystem** to **Windows**, because the program starts in `wWinMain`. That is all: the
-`#pragma comment` lines link the Direct3D libraries.
-:::
-
-A solution has no `LINK_DEPENDS`: when you only changed a shader, use **Build → Rebuild Solution**, so that the
-program is newer than the shader.
-
-## CLion
-
+:::ide clion
 1. **File → Open…** and choose the chapter folder. CLion reads the `CMakeLists.txt` and asks for a CMake profile the
    first time; the default **Debug** profile is fine.
 2. CLion creates a run configuration for the program. Open **Run → Edit Configurations…** and set its
@@ -465,28 +648,23 @@ program is newer than the shader.
 3. **Build → Build Project** (Ctrl+F9) builds it; **Run → Run** (Shift+F10) or the green ▶ button runs it.
 
 The program ends up in `cmake-build-debug/` inside the chapter folder.
-
-:::d3d12
-On Windows CLion uses its bundled MinGW by default. For DirectX 12, add a **Visual Studio** toolchain under
-**Settings → Build, Execution, Deployment → Toolchains** and move it to the top (or choose it in the CMake profile).
 :::
+:::ide rider
+1. Install the *Build Tools for Visual Studio* (or Visual Studio Community) with the **Desktop development with C++**
+   workload: Rider builds C++ with Microsoft's MSBuild and compiler.
+2. Once per API, create the project you'll copy: a C++ project named `LearnOpenGL`, `LearnVulkan` or `LearnDirectX`
+   in your `learn/<api>` folder, with the `.sln` and the `.vcxproj` in the same folder – with Rider's **File → New
+   Solution…** or, if you have it, with Visual Studio's **Empty Project**.
+3. Add a `main.cpp` (for OpenGL also `glad.c`) and the settings above: open the `.vcxproj` in the editor – it is
+   MSBuild XML – and add the `ItemDefinitionGroup` and the `ItemGroup` after the ones already there.
+4. For each chapter, copy the project's `.sln`, `.vcxproj` and `.vcxproj.filters` into the chapter folder next to the
+   start files, and open the `.sln` there with **File → Open…**.
+5. **Build → Build Solution** builds the program; **Run → Run** runs it.
 
-## Rider
-
-Rider builds C++ through Visual Studio solutions, so it needs Microsoft's build tools (Visual Studio or the *Build
-Tools for Visual Studio* with the **Desktop development with C++** workload). There are two ways to get a solution:
-
-- Create one as described under *A solution of your own* above (in Visual Studio), and open it in Rider.
-- Or let CMake generate one: in a terminal in the chapter folder, run `cmake -B build`. On Windows CMake uses the
-  newest Visual Studio it finds, and writes a Visual Studio solution into `build`. Open it in Rider with
-  **File → Open…**.
-
-Choose the program's project (not `ALL_BUILD`) as the one to run, build with **Build → Build Solution** and run it
-with **Run → Run**. The program ends up in `build/Debug/` (or `x64/Debug/` for your own solution). If it can't find
-its files, set **Working directory** in **Run → Edit Configurations…** to the chapter folder.
-
-## Visual Studio Code
-
+The program ends up in `x64/Debug/` inside the chapter folder. If it can't find its files, set **Working directory**
+in **Run → Edit Configurations…** to the chapter folder.
+:::
+:::ide vscode
 1. Install the **C/C++** and **CMake Tools** extensions (both from Microsoft), a compiler and CMake.
 2. **File → Open Folder…** and choose the chapter folder. CMake Tools finds the `CMakeLists.txt` and asks for a
    *kit* – the compiler to use. (For DirectX 12, choose a Visual Studio kit.)
@@ -504,11 +682,19 @@ To run it under the debugger with **CMake: Debug** (Ctrl+F5), tell CMake Tools t
     "cmake.debugConfig": { "cwd": "${workspaceFolder}" }
 }
 ```
+:::
+
+:::d3d12
+:::ide clion
+On Windows CLion uses its bundled MinGW by default. For DirectX 12, add a **Visual Studio** toolchain under
+**Settings → Build, Execution, Deployment → Toolchains** and move it to the top (or choose it in the CMake profile).
+:::
+:::
 
 ## Trying it out
 
 This chapter's start files are the triangle program from the introduction. Choose a folder for this chapter, copy
-the start files, add your `CMakeLists.txt`, open the folder in your IDE, build and run. If a window with an orange
+the start files, add your project files, open the folder in your IDE, build and run. If a window with an orange
 triangle on a dark teal background appears, your IDE, your compiler and the libraries for {{api}} are ready – the
 next chapter starts from an empty window.
 
