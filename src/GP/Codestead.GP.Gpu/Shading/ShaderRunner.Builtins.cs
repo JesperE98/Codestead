@@ -292,6 +292,18 @@ public sealed partial class ShaderRunner
             case "RestartStrip" when Emit is not null:
                 Emit("RestartStrip", null);
                 return ShaderValue.Scalar(0);
+            case "Load" when c.Args.Count >= 2 && !Lenient:
+            {
+                // HLSL Texture2D.Load(int3(x, y, mip)): one texel, unfiltered (GLSL's texelFetch); a Texture2DArray's
+                // int4(x, y, layer, mip) names the layer too.
+                var path = PathOf(c.Args[0]);
+                var at = Eval(c.Args[1]).Padded(4);
+                bool array = IsArrayTexture(path);
+                var size = TextureSize?.Invoke(path) ?? (1, 1);
+                var uv = array ? ShaderValue.Vec((Math.Floor(at[0]) + 0.5) / size.Width, (Math.Floor(at[1]) + 0.5) / size.Height, at[2])
+                    : ShaderValue.Vec((Math.Floor(at[0]) + 0.5) / size.Width, (Math.Floor(at[1]) + 0.5) / size.Height);
+                return SampleTexture(c.Args[0], uv, null, 0);
+            }
             case "Sample" or "SampleLevel" when c.Args.Count >= 3:
                 // HLSL names the sampler: the texture is looked up as "texture|sampler". SampleLevel gives the mip level.
                 return SampleTexture(c.Args[0], Eval(c.Args[2]), PathOf(c.Args[1]), method == "SampleLevel" && c.Args.Count >= 4 ? Eval(c.Args[3]).X : null);

@@ -136,6 +136,14 @@ public sealed partial class ShaderRunner
     /// </summary>
     private const int MaxSteps = 400000;
 
+    /// <summary>
+    /// C++ mode: a frame of the program is one run (PopulateCommandList walking a scene graph of a hundred entities,
+    /// each tested against the frustum's planes) – it may take far more steps than a shader.
+    /// </summary>
+    private const int LenientMaxSteps = 40_000_000;
+
+    private int StepLimit => Lenient ? LenientMaxSteps : MaxSteps;
+
     private GlibcRandom? random;
 
     public ShaderRunner(ShaderProgram program)
@@ -285,7 +293,7 @@ public sealed partial class ShaderRunner
             for (int index = 0; index < body.Count; index++)
             {
                 var s = body[index];
-                if (++steps > MaxSteps) throw new ShaderRuntimeException("the shader runs too long for the simulator", s.Line);
+                if (++steps > StepLimit) throw new ShaderRuntimeException("the shader runs too long for the simulator", s.Line);
                 Flow flow;
                 try
                 {
@@ -470,6 +478,14 @@ public sealed partial class ShaderRunner
             "XM_2PI" => ShaderValue.Scalar(2 * Math.PI),
             "XM_PIDIV2" => ShaderValue.Scalar(Math.PI / 2),
             "XM_PIDIV4" => ShaderValue.Scalar(Math.PI / 4),
+            // <cfloat> / <climits>: the limits of the number types.
+            "FLT_MAX" => ShaderValue.Scalar(float.MaxValue),
+            "FLT_MIN" => ShaderValue.Scalar(1.17549435e-38),
+            "FLT_EPSILON" => ShaderValue.Scalar(1.1920929e-07),
+            "DBL_MAX" => ShaderValue.Scalar(double.MaxValue),
+            "INT_MAX" => ShaderValue.Integer(int.MaxValue),
+            "INT_MIN" => ShaderValue.Integer(int.MinValue),
+            "UINT_MAX" => ShaderValue.Integer(uint.MaxValue),
             _ => throw new ShaderRuntimeException($"'{id}' was not declared in this scope", line),
         };
     }

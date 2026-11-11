@@ -23,7 +23,9 @@ public sealed partial class D3D12Reader
         var draws = src.Calls(".DrawInstanced").ToList();
         var indexedDraws = src.Calls(".DrawIndexedInstanced").ToList();
         // A Model (learnopengl's Model class ported): m_model.Draw(m_commandList.Get()) draws its meshes.
-        var modelDraw = src.Calls(".Draw").FirstOrDefault(c => Recorded(c) && c.Target is { } t && (src.DeclaredType(t) ?? "").Contains("Model", StringComparison.Ordinal));
+        // (Through a member or a pointer too: entity.pModel->Draw(commandList) – the member's declared type.)
+        var modelDraw = src.Calls(".Draw").FirstOrDefault(c => Recorded(c) && c.Target is { } t
+            && (src.DeclaredType(Regex.Match(t, @"(\w+)\s*(?:\[[^\]]*\])?\s*$").Groups[1].Value) ?? "").Contains("Model", StringComparison.Ordinal));
         // With a PopulateCommandList, only what it records is drawn (a Mesh::Draw nobody calls yet draws nothing).
         bool recordsHere = src.Functions.ContainsKey("PopulateCommandList");
         var draw = draws.FirstOrDefault(Recorded) ?? (modelDraw is null && !recordsHere ? draws.FirstOrDefault() : null);
@@ -221,6 +223,7 @@ public sealed partial class D3D12Reader
                     DepthWrite = (pl?.State ?? state).DepthWrite,
                     Stencil = (pl?.State ?? state).Stencil is { } st ? st with { Ref = d.StencilRef ?? st.Ref } : null,
                     Blend = (pl?.State ?? state).Blend,
+                    AttachmentBlends = (pl?.State ?? state).Attachments,
                     Textures = deviceTextures ?? PerDrawTextures(pl?.Vs ?? vs, pl?.Fs ?? ps, d.Bound) ?? (pl is null ? textures : Textures(pl.Vs, pl.Fs) ?? textures),
                 });
             }
@@ -364,7 +367,8 @@ public sealed partial class D3D12Reader
         // has layers; drawn into through a view per slice (a cube map's faces one by one), each slice is its own target.
         var shape = device.ShapeOf(id) ?? device.ShapeOf(levelId);
         scene.Targets[levelId] = new RenderTarget(levelId, Math.Max(1, r.Width >> level), Math.Max(1, r.Height >> level), shape?.Colors ?? 1, shape?.Depth ?? true, shape?.Depth ?? true,
-            Math.Max(1, r.Samples), r.Float, r.PerSlice ? 1 : Math.Max(1, r.ArraySize));
+            Math.Max(1, r.Samples), r.Float, r.PerSlice ? 1 : Math.Max(1, r.ArraySize), device.DepthOf(levelId));
+        if (device.DepthOf(levelId) is { } owner) RegisterTarget(device, owner);
     }
 
     /// <summary>Every input layout of the program: (semantic, input slot, byte offset, floats, per instance, step rate).</summary>
