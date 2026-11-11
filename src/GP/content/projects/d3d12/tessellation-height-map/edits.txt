@@ -1,0 +1,193 @@
+=== task: load-heightmap
+--- file: main.cpp
+--- find:
+    // TODO: load the height map (heightmap.png) with stbi_load: its width, height, number of channels and pixels
+--- replace:
+    // load the height map: one grey value (0..255) per pixel
+    // ------------------------------------------------------
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load("heightmap.png", &width, &height, &nrChannels, 0);
+    if (data == nullptr)
+    {
+        throw std::runtime_error("Failed to load texture heightmap.png");
+    }
+    {
+        // the debugger's output window (Visual Studio's Output) shows the text
+        char text[128] = {};
+        snprintf(text, sizeof(text), "Loaded heightmap of size %d x %d\n", height, width);
+        OutputDebugStringA(text);
+    }
+
+=== task: vertices
+--- file: main.cpp
+--- find:
+    // App resources.
+--- replace:
+    // App resources.
+    ComPtr<ID3D12Resource> m_vertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+    UINT m_vertexCount = 0;       // one vertex per pixel of the height map
+--- file: main.cpp
+--- find:
+    // TODO: one vertex per pixel (x from the column, y from the pixel's value, z from the row), and the
+    // terrain's vertex buffer and its view
+--- replace:
+    // set up vertex data: one vertex per pixel of the height map, its height from the pixel's value
+    // ---------------------------------------------------------------------------------------------
+    std::vector<float> vertices;
+    float yScale = 64.0f / 256.0f, yShift = 16.0f; // apply a scale and a shift to the height data
+    unsigned bytePerPixel = nrChannels;
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+        {
+            unsigned char* pixelOffset = data + (j + width * i) * bytePerPixel;
+            unsigned char y = pixelOffset[0];
+
+            // vertex: column j along x, row i along z (the image's top row at the back)
+            vertices.push_back(-width / 2.0f + width * j / (float)width);   // vx
+            vertices.push_back((int)y * yScale - yShift);                    // vy
+            vertices.push_back(-height / 2.0f + height * i / (float)height); // vz
+        }
+    }
+    m_vertexCount = static_cast<UINT>(vertices.size() / 3);
+    stbi_image_free(data);
+
+    // Create the vertex buffer: the terrain's vertices, 3 floats each.
+    {
+        const UINT vertexBufferSize = static_cast<UINT>(vertices.size() * sizeof(float));
+
+        // An upload heap, as in the earlier chapters (simple, not the fastest for the GPU).
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_vertexBuffer)));
+
+        // Copy the vertex data to the vertex buffer.
+        UINT8* pVertexDataBegin = nullptr;
+        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+        ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+        memcpy(pVertexDataBegin, vertices.data(), vertexBufferSize);
+        m_vertexBuffer->Unmap(0, nullptr);
+
+        // Initialize the vertex buffer view.
+        m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+        m_vertexBufferView.StrideInBytes = 3 * sizeof(float);
+        m_vertexBufferView.SizeInBytes = vertexBufferSize;
+    }
+--- file: main.cpp
+--- find:
+    // TODO: draw the terrain
+--- replace:
+    // for now: render the terrain's vertices as points
+    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+    m_commandList->DrawInstanced(m_vertexCount, 1, 0, 0);
+
+=== task: indices
+--- file: main.cpp
+--- find:
+    UINT m_vertexCount = 0;       // one vertex per pixel of the height map
+--- replace:
+    UINT m_vertexCount = 0;       // one vertex per pixel of the height map
+    ComPtr<ID3D12Resource> m_indexBuffer;
+    D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};
+    int m_numStrips = 0;          // one triangle strip per pair of rows of the height map
+    int m_numTrisPerStrip = 0;    // the triangles of one strip
+--- file: main.cpp
+--- find:
+    // TODO: the indices of the triangle strips (one strip per pair of rows) and the index buffer
+--- replace:
+    // index data: one triangle strip per pair of rows (rows i and i + rez), every rez-th vertex
+    // -----------------------------------------------------------------------------------------
+    std::vector<unsigned int> indices;
+    int rez = 1;
+    for (int i = 0; i < height - 1; i += rez)
+    {
+        for (int j = 0; j < width; j += rez)
+        {
+            for (int k = 0; k < 2; k++)
+            {
+                indices.push_back(j + width * (i + k * rez));
+            }
+        }
+    }
+
+    m_numStrips = (height - 1) / rez;
+    m_numTrisPerStrip = (width / rez) * 2 - 2;
+    {
+        char text[128] = {};
+        snprintf(text, sizeof(text), "Created lattice of %d strips with %d triangles each\n", m_numStrips, m_numTrisPerStrip);
+        OutputDebugStringA(text);
+    }
+
+    // Create the index buffer: 32-bit unsigned indices.
+    {
+        const UINT indexBufferSize = static_cast<UINT>(indices.size() * sizeof(unsigned int));
+
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_indexBuffer)));
+
+        UINT8* pIndexDataBegin = nullptr;
+        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+        ThrowIfFailed(m_indexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
+        memcpy(pIndexDataBegin, indices.data(), indexBufferSize);
+        m_indexBuffer->Unmap(0, nullptr);
+
+        // Initialize the index buffer view.
+        m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
+        m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+        m_indexBufferView.SizeInBytes = indexBufferSize;
+    }
+
+=== task: strips
+--- file: main.cpp
+--- find:
+        // The kind of primitives the pipeline draws: points, for now.
+        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+--- replace:
+        // Strips are triangles too: the topology type is TRIANGLE, the command list's
+        // primitive topology (IASetPrimitiveTopology) says list or strip.
+        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+--- file: main.cpp
+--- find:
+    // for now: render the terrain's vertices as points
+    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+    m_commandList->DrawInstanced(m_vertexCount, 1, 0, 0);
+--- replace:
+    // render the terrain: the vertices make triangle strips
+    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+    m_commandList->IASetIndexBuffer(&m_indexBufferView);
+
+    // one draw per strip: numTrisPerStrip + 2 indices, starting where the strip's
+    // indices start in the index buffer
+    for (int strip = 0; strip < m_numStrips; strip++)
+    {
+        m_commandList->DrawIndexedInstanced(m_numTrisPerStrip + 2,    // number of indices to render
+            1,                                                       // one instance
+            (m_numTrisPerStrip + 2) * strip,                         // offset to starting index
+            0, 0);
+    }
+
+=== task: height-colour
+--- file: cpuheight.hlsl
+--- find:
+    // TODO: the height as a grey value (height runs from -16 to 48)
+    return float4(1.0f, 1.0f, 1.0f, 1.0f);
+--- replace:
+    float h = (input.height + 16.0f) / 64.0f;    // shift and scale the height into a grey value (0 .. 1)
+    return float4(h, h, h, 1.0f);

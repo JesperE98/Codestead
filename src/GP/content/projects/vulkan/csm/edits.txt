@@ -1,0 +1,1015 @@
+=== task: light-matrices
+--- file: main.cpp
+--- find:
+// TODO: the cascades: the distances where they split the camera's view
+--- replace:
+// the cascades: where they split the camera's view (10, 20, 50 and 250 units from the camera: five cascades)
+std::vector<float> shadowCascadeLevels{ cameraFarPlane / 50.0f, cameraFarPlane / 25.0f, cameraFarPlane / 10.0f, cameraFarPlane / 2.0f };
+--- file: main.cpp
+--- find:
+// TODO: the light-space matrix of each cascade (getFrustumCornersWorldSpace, getLightSpaceMatrix, getLightSpaceMatrices)
+--- replace:
+// the 8 corners of a frustum in world space: the corners of Vulkan's normalized device coordinates box (x and y from
+// -1 to 1, z from 0 to 1 - GLM_FORCE_DEPTH_ZERO_TO_ONE; learnopengl's OpenGL box has z from -1 to 1) through the
+// inverse of projection * view
+std::vector<glm::vec4> getFrustumCornersWorldSpace(const glm::mat4& projview) {
+    const glm::mat4 inv = glm::inverse(projview);
+
+    std::vector<glm::vec4> frustumCorners;
+    for (unsigned int x = 0; x < 2; ++x) {
+        for (unsigned int y = 0; y < 2; ++y) {
+            for (unsigned int z = 0; z < 2; ++z) {
+                const glm::vec4 pt = inv * glm::vec4(2.0f * x - 1.0f, 2.0f * y - 1.0f, (float)z, 1.0f);
+                frustumCorners.push_back(pt / pt.w);
+            }
+        }
+    }
+
+    return frustumCorners;
+}
+
+std::vector<glm::vec4> getFrustumCornersWorldSpace(const glm::mat4& proj, const glm::mat4& view) {
+    return getFrustumCornersWorldSpace(proj * view);
+}
+
+// the light-space matrix of the part of the camera's frustum between nearPlane and farPlane
+glm::mat4 getLightSpaceMatrix(const float nearPlane, const float farPlane) {
+    const glm::mat4 proj = glm::perspective(glm::radians(fov), (float)WIDTH / (float)HEIGHT, nearPlane, farPlane);
+    const glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    const std::vector<glm::vec4> corners = getFrustumCornersWorldSpace(proj, view);
+
+    glm::vec3 center = glm::vec3(0, 0, 0);
+    for (const glm::vec4& v : corners) {
+        center += glm::vec3(v);
+    }
+    center /= corners.size();
+
+    const glm::mat4 lightView = glm::lookAt(center + lightDir, center, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    float minX = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::lowest();
+    float minY = std::numeric_limits<float>::max();
+    float maxY = std::numeric_limits<float>::lowest();
+    float minZ = std::numeric_limits<float>::max();
+    float maxZ = std::numeric_limits<float>::lowest();
+    for (const glm::vec4& v : corners) {
+        const glm::vec4 trf = lightView * v;
+        minX = std::min(minX, trf.x);
+        maxX = std::max(maxX, trf.x);
+        minY = std::min(minY, trf.y);
+        maxY = std::max(maxY, trf.y);
+        minZ = std::min(minZ, trf.z);
+        maxZ = std::max(maxZ, trf.z);
+    }
+
+    // Tune this parameter according to the scene
+    constexpr float zMult = 10.0f;
+    if (minZ < 0) {
+        minZ *= zMult;
+    } else {
+        minZ /= zMult;
+    }
+    if (maxZ < 0) {
+        maxZ /= zMult;
+    } else {
+        maxZ *= zMult;
+    }
+
+    // no y flip: the depth pass and the shadow lookup use the same matrix, so their y directions agree
+    const glm::mat4 lightProjection = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
+    return lightProjection * lightView;
+}
+
+// one light-space matrix per cascade: camera near plane .. level 0, level 0 .. level 1, ..., last level .. camera far plane
+std::vector<glm::mat4> getLightSpaceMatrices() {
+    std::vector<glm::mat4> ret;
+    for (size_t i = 0; i < shadowCascadeLevels.size() + 1; ++i) {
+        if (i == 0) {
+            ret.push_back(getLightSpaceMatrix(cameraNearPlane, shadowCascadeLevels[i]));
+        } else if (i < shadowCascadeLevels.size()) {
+            ret.push_back(getLightSpaceMatrix(shadowCascadeLevels[i - 1], shadowCascadeLevels[i]));
+        } else {
+            ret.push_back(getLightSpaceMatrix(shadowCascadeLevels[i - 1], cameraFarPlane));
+        }
+    }
+    return ret;
+}
+--- file: main.cpp
+--- find:
+// TODO: the light-space matrices' uniform block (LightSpaceMatrices)
+--- replace:
+// The same layout as the LightSpaceMatrices block (learnopengl's second uniform buffer, binding 2 here): the
+// light-space matrix of every cascade, read by the depth pass's geometry shader and the scene's fragment shader.
+struct LightSpaceMatrices {
+    glm::mat4 lightSpaceMatrices[16];
+};
+--- file: main.cpp
+--- find:
+    // TODO: the light-space matrices' uniform buffer (learnopengl's matricesUBO)
+--- replace:
+    // the light-space matrices (learnopengl's matricesUBO)
+    VkBuffer lightMatricesBuffer;
+    VkDeviceMemory lightMatricesBufferMemory;
+    void* lightMatricesBufferMapped;
+--- file: main.cpp
+--- find:
+        // TODO: destroy the light-space matrices' uniform buffer
+--- replace:
+        vkDestroyBuffer(device, lightMatricesBuffer, nullptr);
+        vkFreeMemory(device, lightMatricesBufferMemory, nullptr);
+--- file: main.cpp
+--- find:
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
+--- replace:
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        // the light-space matrices at binding 2: the depth pass's geometry shader and the scene's fragment shader read them
+        VkDescriptorSetLayoutBinding lightMatricesLayoutBinding{};
+        lightMatricesLayoutBinding.binding = 2;
+        lightMatricesLayoutBinding.descriptorCount = 1;
+        lightMatricesLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        lightMatricesLayoutBinding.pImmutableSamplers = nullptr;
+        lightMatricesLayoutBinding.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {uboLayoutBinding, samplerLayoutBinding, lightMatricesLayoutBinding};
+--- file: main.cpp
+--- find:
+&uniformBufferMapped);
+    }
+--- replace:
+&uniformBufferMapped);
+
+        // configure UBO: the light-space matrices (16 x mat4, learnopengl's matricesUBO), also written every frame
+        VkDeviceSize lightMatricesSize = sizeof(LightSpaceMatrices);
+        createBuffer(lightMatricesSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, lightMatricesBuffer, lightMatricesBufferMemory);
+        vkMapMemory(device, lightMatricesBufferMemory, 0, lightMatricesSize, 0, &lightMatricesBufferMapped);
+    }
+--- file: main.cpp
+--- find:
+        // one descriptor set: the uniform buffer and the wood texture
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 1;
+--- replace:
+        // one descriptor set: the two uniform buffers and the wood texture
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 2;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 1;
+--- file: main.cpp
+--- find:
+    // A descriptor set with the uniform buffer (binding 0), and one texture (binding 1).
+    // Binding it before a draw (vkCmdBindDescriptorSets) is Vulkan's glBindTexture.
+    void createDescriptorSet(VkImageView textureImageView, VkSampler sampler, VkDescriptorSet& descriptorSet) {
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &descriptorSetLayout;
+
+        if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = textureImageView;
+        imageInfo.sampler = sampler;
+
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &imageInfo;
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+--- replace:
+    // A descriptor set with the uniform buffer (binding 0), one texture (binding 1) and the light-space matrices
+    // (binding 2).
+    // Binding it before a draw (vkCmdBindDescriptorSets) is Vulkan's glBindTexture.
+    void createDescriptorSet(VkImageView textureImageView, VkSampler sampler, VkDescriptorSet& descriptorSet) {
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &descriptorSetLayout;
+
+        if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        VkDescriptorBufferInfo lightMatricesInfo{};
+        lightMatricesInfo.buffer = lightMatricesBuffer;
+        lightMatricesInfo.offset = 0;
+        lightMatricesInfo.range = sizeof(LightSpaceMatrices);
+
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = textureImageView;
+        imageInfo.sampler = sampler;
+
+        std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &imageInfo;
+
+        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[2].dstSet = descriptorSet;
+        descriptorWrites[2].dstBinding = 2;
+        descriptorWrites[2].dstArrayElement = 0;
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[2].descriptorCount = 1;
+        descriptorWrites[2].pBufferInfo = &lightMatricesInfo;
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+--- file: main.cpp
+--- find:
+        // TODO: 0. UBO setup: the light-space matrices of this frame's cascades
+--- replace:
+        // 0. UBO setup: the light-space matrices of this frame's cascades
+        const std::vector<glm::mat4> lightMatrices = getLightSpaceMatrices();
+        LightSpaceMatrices matrices{};
+        for (size_t i = 0; i < lightMatrices.size(); ++i) {
+            matrices.lightSpaceMatrices[i] = lightMatrices[i];
+        }
+        memcpy(lightMatricesBufferMapped, &matrices, sizeof(matrices));
+=== task: depth-maps
+--- file: main.cpp
+--- find:
+// TODO: the shadow maps' size and the debug view (which layer it shows)
+--- replace:
+constexpr unsigned int depthMapResolution = 1024;
+
+// debug view: show one layer of the shadow maps instead of the scene
+bool showQuad = true; // for now
+int debugLayer = 2; // the third cascade (20 to 50 units from the camera)
+--- file: main.cpp
+--- find:
+// The same layout as the push constant block in the vertex shaders: the model matrix of one draw.
+struct PushConstants {
+    glm::mat4 model;
+};
+--- replace:
+// The same layout as the push constant blocks in the shaders: the model matrix of one draw (vertex shaders) and the
+// layer of the shadow maps the debug quad shows (debug_quad_depth.frag).
+struct PushConstants {
+    glm::mat4 model;
+    int layer;
+};
+--- file: main.cpp
+--- find:
+    // TODO: the shadow maps' render pass (depthMapRenderPass)
+--- replace:
+    VkRenderPass depthMapRenderPass; // the scene's depth, seen from the light, is drawn into the shadow maps with this render pass
+--- file: main.cpp
+--- find:
+    // TODO: the depth pass's and the debug quad's pipelines
+--- replace:
+    VkPipeline depthPipeline; // learnopengl's simpleDepthShader
+    VkPipeline debugPipeline; // learnopengl's debugDepthQuad
+--- file: main.cpp
+--- find:
+    // TODO: the shadow maps: a depth image with a layer per cascade, its view, framebuffer and sampler
+--- replace:
+    // the shadow maps (learnopengl's lightDepthMaps + lightFBO): one depth image with a layer per cascade, drawn into
+    // from the light and sampled afterwards
+    VkImage lightDepthMaps;
+    VkDeviceMemory lightDepthMapsMemory;
+    VkImageView lightDepthMapsView;
+    VkFramebuffer lightFramebuffer;
+    VkSampler depthMapSampler;
+--- file: main.cpp
+--- find:
+        // TODO: create the shadow maps' render pass (createDepthMapRenderPass)
+--- replace:
+        createDepthMapRenderPass();
+--- file: main.cpp
+--- find:
+        // TODO: create the depth pass's pipeline (with the geometry shader) and the debug quad's pipeline
+--- replace:
+        // the depth pass: only the position, a geometry shader that sends each triangle to every cascade's layer, for
+        // the shadow maps' render pass, which has no colour attachment
+        createPipeline("shaders/shadow_mapping_depth.vert.spv", "shaders/shadow_mapping_depth.frag.spv", "shaders/shadow_mapping_depth.geom.spv", 1, depthMapRenderPass, 0, depthPipeline);
+        createPipeline("shaders/debug_quad.vert.spv", "shaders/debug_quad_depth.frag.spv", "", 3, renderPass, 1, debugPipeline);
+--- file: main.cpp
+--- find:
+        // TODO: create the shadow maps (createDepthMaps)
+--- replace:
+        createDepthMaps();
+--- file: main.cpp
+--- find:
+        // TODO: create the shadow maps' sampler (createDepthMapSampler)
+--- replace:
+        createDepthMapSampler();
+--- file: main.cpp
+--- find:
+        createDescriptorSet(woodTextureImageView, textureSampler, descriptorSet);
+--- replace:
+        createDescriptorSet(woodTextureImageView, textureSampler, lightDepthMapsView, depthMapSampler, descriptorSet);
+--- file: main.cpp
+--- find:
+        // TODO: destroy the shadow maps, their sampler, render pass and pipelines
+--- replace:
+        vkDestroyFramebuffer(device, lightFramebuffer, nullptr);
+        vkDestroyImageView(device, lightDepthMapsView, nullptr);
+        vkDestroyImage(device, lightDepthMaps, nullptr);
+        vkFreeMemory(device, lightDepthMapsMemory, nullptr);
+        vkDestroySampler(device, depthMapSampler, nullptr);
+        vkDestroyPipeline(device, depthPipeline, nullptr);
+        vkDestroyPipeline(device, debugPipeline, nullptr);
+        vkDestroyRenderPass(device, depthMapRenderPass, nullptr);
+--- file: main.cpp
+--- find:
+        deviceFeatures.samplerAnisotropy = VK_TRUE;
+--- replace:
+        deviceFeatures.samplerAnisotropy = VK_TRUE;
+        deviceFeatures.geometryShader = VK_TRUE; // the depth pass's geometry shader: an optional feature, turn it on
+--- file: main.cpp
+--- find:
+supportedFeatures.samplerAnisotropy;
+--- replace:
+supportedFeatures.samplerAnisotropy && supportedFeatures.geometryShader;
+--- file: main.cpp
+--- find:
+    // TODO: createDepthMapRenderPass() - a render pass with only a depth attachment, left ready to be sampled
+--- replace:
+    // The render pass that draws into the shadow maps: only a depth attachment (learnopengl: a framebuffer with only
+    // GL_DEPTH_ATTACHMENT, glDrawBuffer(GL_NONE)). At the end of the pass the depth image is left ready to be sampled.
+    void createDepthMapRenderPass() {
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthMapFormat();
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // keep the depths: the shaders read them afterwards
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 0;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 0; // no colour: only the depth is drawn
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: wait until the last frame's fragment shaders have read the depth map
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        // after the pass: the fragment shaders that sample the depth map wait until the depths have been written
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = &depthAttachment;
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &depthMapRenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create depth map render pass!");
+        }
+    }
+--- file: main.cpp
+--- find:
+    // TODO: createDepthMaps() - one depth image with a layer per cascade, a 2D-array view and a layered framebuffer
+--- replace:
+    // The shadow maps, learnopengl's lightDepthMaps: ONE depth image with a layer per cascade (a 2D array texture,
+    // GL_TEXTURE_2D_ARRAY) of depthMapResolution x depthMapResolution, drawn into as a depth attachment and sampled
+    // afterwards (sampler2DArray); one 2D-array view of all its layers, and a framebuffer with all the layers (a
+    // "layered" framebuffer - learnopengl's glFramebufferTexture: the geometry shader picks each triangle's layer).
+    void createDepthMaps() {
+        VkFormat depthMapFormat = findDepthMapFormat();
+        uint32_t layerCount = static_cast<uint32_t>(shadowCascadeLevels.size()) + 1; // one layer per cascade: 5
+
+        VkImageCreateInfo imageInfo{};
+        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.extent.width = depthMapResolution;
+        imageInfo.extent.height = depthMapResolution;
+        imageInfo.extent.depth = 1;
+        imageInfo.mipLevels = 1;
+        imageInfo.arrayLayers = layerCount;
+        imageInfo.format = depthMapFormat;
+        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if (vkCreateImage(device, &imageInfo, nullptr, &lightDepthMaps) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create shadow map image!");
+        }
+
+        VkMemoryRequirements memRequirements;
+        vkGetImageMemoryRequirements(device, lightDepthMaps, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        if (vkAllocateMemory(device, &allocInfo, nullptr, &lightDepthMapsMemory) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate shadow map memory!");
+        }
+
+        vkBindImageMemory(device, lightDepthMaps, lightDepthMapsMemory, 0);
+
+        // all layers as one array texture (sampled with texture coordinates and a layer: sampler2DArray)
+        VkImageViewCreateInfo viewInfo{};
+        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image = lightDepthMaps;
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+        viewInfo.format = depthMapFormat;
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+        viewInfo.subresourceRange.baseMipLevel = 0;
+        viewInfo.subresourceRange.levelCount = 1;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount = layerCount;
+
+        if (vkCreateImageView(device, &viewInfo, nullptr, &lightDepthMapsView) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create shadow map image view!");
+        }
+
+        // the same view is the framebuffer's depth attachment, with all the layers
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = depthMapRenderPass;
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments = &lightDepthMapsView;
+        framebufferInfo.width = depthMapResolution;
+        framebufferInfo.height = depthMapResolution;
+        framebufferInfo.layers = layerCount;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &lightFramebuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create shadow map framebuffer!");
+        }
+    }
+--- file: main.cpp
+--- find:
+    // TODO: createDepthMapSampler() - nearest filtering, clamp to a white border
+--- replace:
+    // The shadow maps' sampler: the nearest depth value, no filtering (learnopengl: GL_NEAREST). Outside a shadow map
+    // it returns the border colour: white, depth 1.0 - the farthest depth, so nothing out there is in shadow.
+    void createDepthMapSampler() {
+        VkSamplerCreateInfo samplerInfo{};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.magFilter = VK_FILTER_NEAREST;
+        samplerInfo.minFilter = VK_FILTER_NEAREST;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        samplerInfo.anisotropyEnable = VK_FALSE;
+        samplerInfo.maxAnisotropy = 1.0f;
+        samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &depthMapSampler) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create depth map sampler!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {uboLayoutBinding, samplerLayoutBinding, lightMatricesLayoutBinding};
+--- replace:
+        // the shadow maps at binding 3 (one array texture)
+        VkDescriptorSetLayoutBinding depthMapLayoutBinding{};
+        depthMapLayoutBinding.binding = 3;
+        depthMapLayoutBinding.descriptorCount = 1;
+        depthMapLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        depthMapLayoutBinding.pImmutableSamplers = nullptr;
+        depthMapLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 4> bindings = {uboLayoutBinding, samplerLayoutBinding, lightMatricesLayoutBinding, depthMapLayoutBinding};
+--- file: main.cpp
+--- find:
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+--- replace:
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; // model: vertex, layer: fragment
+--- file: main.cpp
+--- find:
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+--- replace:
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+--- file: main.cpp
+--- find:
+            constants.model = model;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+--- replace:
+            constants.model = model;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+--- file: main.cpp
+--- find:
+        // one descriptor set: the two uniform buffers and the wood texture
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 2;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 1;
+--- replace:
+        // one descriptor set: the two uniform buffers, the wood texture and the shadow maps
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 2;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 2;
+--- file: main.cpp
+--- find:
+    // A descriptor set with the uniform buffer (binding 0), one texture (binding 1) and the light-space matrices
+    // (binding 2).
+    // Binding it before a draw (vkCmdBindDescriptorSets) is Vulkan's glBindTexture.
+    void createDescriptorSet(VkImageView textureImageView, VkSampler sampler, VkDescriptorSet& descriptorSet) {
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &descriptorSetLayout;
+
+        if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        VkDescriptorBufferInfo lightMatricesInfo{};
+        lightMatricesInfo.buffer = lightMatricesBuffer;
+        lightMatricesInfo.offset = 0;
+        lightMatricesInfo.range = sizeof(LightSpaceMatrices);
+
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = textureImageView;
+        imageInfo.sampler = sampler;
+
+        std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &imageInfo;
+
+        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[2].dstSet = descriptorSet;
+        descriptorWrites[2].dstBinding = 2;
+        descriptorWrites[2].dstArrayElement = 0;
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[2].descriptorCount = 1;
+        descriptorWrites[2].pBufferInfo = &lightMatricesInfo;
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+--- replace:
+    // A descriptor set with the uniform buffer (binding 0), one texture (binding 1), the light-space matrices (binding 2)
+    // and the shadow maps (binding 3).
+    // Binding it before a draw (vkCmdBindDescriptorSets) is Vulkan's glBindTexture.
+    void createDescriptorSet(VkImageView textureImageView, VkSampler sampler, VkImageView depthMapView, VkSampler depthMapSampler, VkDescriptorSet& descriptorSet) {
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &descriptorSetLayout;
+
+        if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        VkDescriptorBufferInfo lightMatricesInfo{};
+        lightMatricesInfo.buffer = lightMatricesBuffer;
+        lightMatricesInfo.offset = 0;
+        lightMatricesInfo.range = sizeof(LightSpaceMatrices);
+
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = textureImageView;
+        imageInfo.sampler = sampler;
+
+        VkDescriptorImageInfo depthMapInfo{};
+        depthMapInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // the depth pass's finalLayout
+        depthMapInfo.imageView = depthMapView;
+        depthMapInfo.sampler = depthMapSampler;
+
+        std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &imageInfo;
+
+        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[2].dstSet = descriptorSet;
+        descriptorWrites[2].dstBinding = 2;
+        descriptorWrites[2].dstArrayElement = 0;
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[2].descriptorCount = 1;
+        descriptorWrites[2].pBufferInfo = &lightMatricesInfo;
+
+        descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[3].dstSet = descriptorSet;
+        descriptorWrites[3].dstBinding = 3;
+        descriptorWrites[3].dstArrayElement = 0;
+        descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[3].descriptorCount = 1;
+        descriptorWrites[3].pImageInfo = &depthMapInfo;
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+--- file: main.cpp
+--- find:
+        // TODO: 1. render the depth of the scene into the shadow maps (from the light's direction): all cascades in one pass
+--- replace:
+        // 1. render depth of scene to texture (from light's perspective): all cascades in one pass
+        VkRenderPassBeginInfo depthMapPassInfo{};
+        depthMapPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        depthMapPassInfo.renderPass = depthMapRenderPass;
+        depthMapPassInfo.framebuffer = lightFramebuffer;
+        depthMapPassInfo.renderArea.offset = {0, 0};
+        depthMapPassInfo.renderArea.extent = {depthMapResolution, depthMapResolution};
+
+        // one clear value: the depth 1.0 (the far plane)
+        VkClearValue depthMapClearValue{};
+        depthMapClearValue.depthStencil = {1.0f, 0};
+
+        depthMapPassInfo.clearValueCount = 1;
+        depthMapPassInfo.pClearValues = &depthMapClearValue;
+
+        vkCmdBeginRenderPass(commandBuffer, &depthMapPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, depthPipeline);
+
+        // the viewport and scissor of the shadow maps (learnopengl: glViewport(0, 0, depthMapResolution, depthMapResolution))
+        VkViewport depthMapViewport{};
+        depthMapViewport.x = 0.0f;
+        depthMapViewport.y = 0.0f;
+        depthMapViewport.width = static_cast<float>(depthMapResolution);
+        depthMapViewport.height = static_cast<float>(depthMapResolution);
+        depthMapViewport.minDepth = 0.0f;
+        depthMapViewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &depthMapViewport);
+
+        VkRect2D depthMapScissor{};
+        depthMapScissor.offset = {0, 0};
+        depthMapScissor.extent = {depthMapResolution, depthMapResolution};
+        vkCmdSetScissor(commandBuffer, 0, 1, &depthMapScissor);
+
+        renderScene(commandBuffer);
+
+        vkCmdEndRenderPass(commandBuffer); // the shadow maps are now in VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+--- file: main.cpp
+--- find:
+        // TODO: render a layer of the shadow maps to the debug quad for visual debugging
+--- replace:
+        // render Depth map to quad for visual debugging: one layer of the shadow maps over the scene
+        if (showQuad) {
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, debugPipeline);
+            PushConstants constants{};
+            constants.layer = debugLayer;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+            vkCmdDraw(commandBuffer, 6, 1, 42, 0);
+        }
+--- file: shaders/shadow_mapping_depth.geom
+--- find:
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 3) out;
+
+// TODO: one invocation per cascade (invocations = 5): transform the triangle with that cascade's light-space
+// matrix (the LightSpaceMatrices uniform block, binding 2) and send it to that layer of the shadow maps (gl_Layer)
+void main() {
+    for (int i = 0; i < 3; ++i) {
+        gl_Position = gl_in[i].gl_Position;
+        EmitVertex();
+    }
+    EndPrimitive();
+}
+--- replace:
+// the shader runs 5 times per triangle (once per cascade): gl_InvocationID = 0 ... 4
+layout(triangles, invocations = 5) in;
+layout(triangle_strip, max_vertices = 3) out;
+
+layout(binding = 2) uniform LightSpaceMatrices {
+    mat4 lightSpaceMatrices[16];
+};
+
+void main() {
+    for (int i = 0; i < 3; ++i) {
+        gl_Position = lightSpaceMatrices[gl_InvocationID] * gl_in[i].gl_Position;
+        gl_Layer = gl_InvocationID;
+        EmitVertex();
+    }
+    EndPrimitive();
+}
+=== task: cascade-layer
+--- file: main.cpp
+--- find:
+bool showQuad = true; // for now
+--- replace:
+bool showQuad = false;
+--- file: main.cpp
+--- find:
+// The same layout as the uniform block in the shaders: the values that stay the same for every draw of a frame.
+// std140: a vec3 starts at a multiple of 16 bytes, so each vec3 is followed by 4 bytes of padding.
+struct UniformBufferObject {
+    glm::mat4 view;
+    glm::mat4 proj;
+    glm::vec3 viewPos;
+    float pad1;
+    glm::vec3 lightDir;
+    float pad2;
+};
+--- replace:
+// The same layout as the uniform block in the shaders: the values that stay the same for every draw of a frame.
+// std140: a vec3 starts at a multiple of 16 bytes - the float and the int fill the 4 bytes after each vec3 -, and the
+// elements of an array are 16 bytes apart, so the cascades' distances are vec4s (only x is used).
+struct UniformBufferObject {
+    glm::mat4 view;
+    glm::mat4 proj;
+    glm::vec3 viewPos;
+    float farPlane;
+    glm::vec3 lightDir;
+    int cascadeCount; // number of frusta - 1
+    glm::vec4 cascadePlaneDistances[16];
+};
+--- file: main.cpp
+--- find:
+        // TODO: the cascades (farPlane, cascadeCount, cascadePlaneDistances)
+--- replace:
+        // the cascades
+        ubo.farPlane = cameraFarPlane;
+        ubo.cascadeCount = static_cast<int>(shadowCascadeLevels.size());
+        for (size_t i = 0; i < shadowCascadeLevels.size(); ++i) {
+            ubo.cascadePlaneDistances[i] = glm::vec4(shadowCascadeLevels[i]);
+        }
+--- file: shaders/shadow_mapping.frag
+--- find:
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    vec3 viewPos;
+    vec3 lightDir;
+} ubo;
+--- replace:
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    vec3 viewPos;
+    float farPlane;
+    vec3 lightDir;
+    int cascadeCount;   // number of frusta - 1
+    vec4 cascadePlaneDistances[16]; // std140: 16 bytes per element - only x is used
+} ubo;
+--- file: shaders/shadow_mapping.frag
+--- find:
+// TODO: CascadeLayer - the fragment's cascade from its depth in view space
+--- replace:
+// the cascade of a fragment: the first one whose far distance lies beyond the fragment's depth in view space
+int CascadeLayer(vec3 fragPosWorldSpace) {
+    vec4 fragPosViewSpace = ubo.view * vec4(fragPosWorldSpace, 1.0);
+    float depthValue = abs(fragPosViewSpace.z);
+
+    int layer = -1;
+    for (int i = 0; i < ubo.cascadeCount; ++i) {
+        if (depthValue < ubo.cascadePlaneDistances[i].x) {
+            layer = i;
+            break;
+        }
+    }
+    if (layer == -1) {
+        layer = ubo.cascadeCount;
+    }
+    return layer;
+}
+--- file: shaders/shadow_mapping.frag
+--- find:
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;
+--- replace:
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;
+    // for now: tint every fragment with the colour of its cascade
+    const vec3 cascadeColors[5] = vec3[](vec3(1.0, 0.4, 0.4), vec3(0.4, 1.0, 0.4), vec3(0.4, 0.4, 1.0), vec3(1.0, 1.0, 0.4), vec3(1.0, 0.4, 1.0));
+    lighting *= cascadeColors[CascadeLayer(fs_in.fragPos)];
+=== task: shadows
+--- file: shaders/shadow_mapping.frag
+--- find:
+// TODO: the light-space matrices (binding 2) and the shadow map array (binding 3)
+--- replace:
+layout(binding = 2) uniform LightSpaceMatrices {
+    mat4 lightSpaceMatrices[16];
+};
+
+layout(binding = 3) uniform sampler2DArray shadowMap;
+--- file: shaders/shadow_mapping.frag
+--- find:
+// TODO: ShadowCalculation - look the fragment up in its cascade's layer of the shadow maps
+--- replace:
+float ShadowCalculation(vec3 fragPosWorldSpace) {
+    // select cascade layer
+    int layer = CascadeLayer(fragPosWorldSpace);
+
+    vec4 fragPosLightSpace = lightSpaceMatrices[layer] * vec4(fragPosWorldSpace, 1.0);
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform x and y to the [0,1] range of texture coordinates; z is in [0,1] already (GLM_FORCE_DEPTH_ZERO_TO_ONE)
+    projCoords.xy = projCoords.xy * 0.5 + 0.5;
+
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+
+    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+    if (currentDepth > 1.0) {
+        return 0.0;
+    }
+    // calculate bias (based on depth map resolution and slope)
+    vec3 normal = normalize(fs_in.normal);
+    float bias = max(0.05 * (1.0 - dot(normal, ubo.lightDir)), 0.005);
+    const float biasModifier = 0.5;
+    if (layer == ubo.cascadeCount) {
+        bias *= 1 / (ubo.farPlane * biasModifier);
+    } else {
+        bias *= 1 / (ubo.cascadePlaneDistances[layer].x * biasModifier);
+    }
+
+    // check whether current frag pos is in shadow
+    float closestDepth = texture(shadowMap, vec3(projCoords.xy, layer)).r;
+    float shadow = (currentDepth - bias) > closestDepth ? 1.0 : 0.0;
+
+    return shadow;
+}
+--- file: shaders/shadow_mapping.frag
+--- find:
+    float shadow = 0.0; // no shadows yet
+--- replace:
+    float shadow = ShadowCalculation(fs_in.fragPos);
+--- file: shaders/shadow_mapping.frag
+--- find:
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;
+    // for now: tint every fragment with the colour of its cascade
+    const vec3 cascadeColors[5] = vec3[](vec3(1.0, 0.4, 0.4), vec3(0.4, 1.0, 0.4), vec3(0.4, 0.4, 1.0), vec3(1.0, 1.0, 0.4), vec3(1.0, 0.4, 1.0));
+    lighting *= cascadeColors[CascadeLayer(fs_in.fragPos)];
+--- replace:
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;
+=== task: pcf
+--- file: shaders/shadow_mapping.frag
+--- find:
+float ShadowCalculation(vec3 fragPosWorldSpace) {
+    // select cascade layer
+    int layer = CascadeLayer(fragPosWorldSpace);
+
+    vec4 fragPosLightSpace = lightSpaceMatrices[layer] * vec4(fragPosWorldSpace, 1.0);
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform x and y to the [0,1] range of texture coordinates; z is in [0,1] already (GLM_FORCE_DEPTH_ZERO_TO_ONE)
+    projCoords.xy = projCoords.xy * 0.5 + 0.5;
+
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+
+    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+    if (currentDepth > 1.0) {
+        return 0.0;
+    }
+    // calculate bias (based on depth map resolution and slope)
+    vec3 normal = normalize(fs_in.normal);
+    float bias = max(0.05 * (1.0 - dot(normal, ubo.lightDir)), 0.005);
+    const float biasModifier = 0.5;
+    if (layer == ubo.cascadeCount) {
+        bias *= 1 / (ubo.farPlane * biasModifier);
+    } else {
+        bias *= 1 / (ubo.cascadePlaneDistances[layer].x * biasModifier);
+    }
+
+    // check whether current frag pos is in shadow
+    float closestDepth = texture(shadowMap, vec3(projCoords.xy, layer)).r;
+    float shadow = (currentDepth - bias) > closestDepth ? 1.0 : 0.0;
+
+    return shadow;
+}
+--- replace:
+float ShadowCalculation(vec3 fragPosWorldSpace) {
+    // select cascade layer
+    int layer = CascadeLayer(fragPosWorldSpace);
+
+    vec4 fragPosLightSpace = lightSpaceMatrices[layer] * vec4(fragPosWorldSpace, 1.0);
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform x and y to the [0,1] range of texture coordinates; z is in [0,1] already (GLM_FORCE_DEPTH_ZERO_TO_ONE)
+    projCoords.xy = projCoords.xy * 0.5 + 0.5;
+
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+
+    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+    if (currentDepth > 1.0) {
+        return 0.0;
+    }
+    // calculate bias (based on depth map resolution and slope)
+    vec3 normal = normalize(fs_in.normal);
+    float bias = max(0.05 * (1.0 - dot(normal, ubo.lightDir)), 0.005);
+    const float biasModifier = 0.5;
+    if (layer == ubo.cascadeCount) {
+        bias *= 1 / (ubo.farPlane * biasModifier);
+    } else {
+        bias *= 1 / (ubo.cascadePlaneDistances[layer].x * biasModifier);
+    }
+
+    // PCF
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
+    for (int x = -1; x <= 1; ++x) {
+        for (int y = -1; y <= 1; ++y) {
+            float pcfDepth = texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, layer)).r;
+            shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+
+    return shadow;
+}

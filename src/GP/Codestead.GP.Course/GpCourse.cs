@@ -65,6 +65,15 @@ public static class GpCourse
         ("game-setup", "in-practice"),
         ("rendering-sprites", "in-practice"),
         ("levels", "in-practice"),
+        ("ball", "in-practice"),
+        ("collision-detection", "in-practice"),
+        ("collision-resolution", "in-practice"),
+        ("particles", "in-practice"),
+        ("postprocessing", "in-practice"),
+        ("powerups", "in-practice"),
+        ("audio", "in-practice"),
+        ("render-text", "in-practice"),
+        ("final-thoughts", "in-practice"),
     ];
 
     public static IReadOnlyList<CourseChapter> Chapters { get; } = Build();

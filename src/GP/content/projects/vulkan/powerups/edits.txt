@@ -1,0 +1,289 @@
+=== task: powerup-object
+--- file: main.cpp
+--- find:
+// TODO: the power-ups' size (60, 20) and falling velocity (0, 150), struct PowerUp derived from GameObject (Type, Duration, Activated) and the function MakePowerUp
+--- replace:
+// PowerUp (learnopengl: power_up.h)
+// ----------------------------------
+// The size of a PowerUp block
+const glm::vec2 POWERUP_SIZE(60.0f, 20.0f);
+// Velocity a PowerUp block has when spawned
+const glm::vec2 VELOCITY(0.0f, 150.0f);
+
+// PowerUp inherits its state and rendering functions from
+// GameObject but also holds extra information to state its
+// active duration and whether it is activated or not.
+// The type of PowerUp is stored as a string.
+struct PowerUp : GameObject {
+    // powerup state
+    std::string Type;
+    float       Duration = 0.0f;
+    bool        Activated = false;
+};
+
+// creates a power-up (learnopengl's PowerUp constructor)
+PowerUp MakePowerUp(std::string type, glm::vec3 color, float duration, glm::vec2 position, VkDescriptorSet sprite) {
+    PowerUp powerUp;
+    powerUp.Position = position;
+    powerUp.Size = POWERUP_SIZE;
+    powerUp.Velocity = VELOCITY;
+    powerUp.Color = color;
+    powerUp.Sprite = sprite;
+    powerUp.Type = type;
+    powerUp.Duration = duration;
+    powerUp.Activated = false;
+    return powerUp;
+}
+--- file: main.cpp
+--- find:
+    bool  Stuck = true;
+};
+--- replace:
+    bool  Stuck = true;
+    bool  Sticky = false, PassThrough = false;
+};
+--- file: main.cpp
+--- find:
+    ball.Stuck = true;
+}
+--- replace:
+    ball.Stuck = true;
+    ball.Sticky = false;
+    ball.PassThrough = false;
+}
+--- file: main.cpp
+--- find:
+    // TODO: the power-ups in the game
+--- replace:
+    std::vector<PowerUp>    PowerUps;
+--- file: main.cpp
+--- find:
+        // TODO: load the six power-up textures (textures/powerup_speed, sticky, increase, confuse, chaos, pass .png)
+--- replace:
+        LoadTexture("textures/powerup_speed.png", "powerup_speed");
+        LoadTexture("textures/powerup_sticky.png", "powerup_sticky");
+        LoadTexture("textures/powerup_increase.png", "powerup_increase");
+        LoadTexture("textures/powerup_confuse.png", "powerup_confuse");
+        LoadTexture("textures/powerup_chaos.png", "powerup_chaos");
+        LoadTexture("textures/powerup_pass.png", "powerup_pass");
+--- file: main.cpp
+--- find:
+        // TODO: draw the power-ups that are not destroyed
+--- replace:
+        // draw PowerUps
+        for (PowerUp& powerUp : game.PowerUps)
+            if (!powerUp.Destroyed)
+                DrawObject(powerUp, Renderer);
+=== task: try-powerups
+--- file: main.cpp
+--- find:
+        // TODO: try the power-ups out: one of each kind at y = 160 (x = 40, 150, 260, 370, 480, 590)
+--- replace:
+        // try the power-ups out: one of each kind in the empty row above the stones (no brick breaks with the fixed input)
+        game.PowerUps.push_back(MakePowerUp("speed", glm::vec3(0.5f, 0.5f, 1.0f), 0.0f, glm::vec2(40.0f, 160.0f), GetTexture("powerup_speed").DescriptorSet));
+        game.PowerUps.push_back(MakePowerUp("sticky", glm::vec3(1.0f, 0.5f, 1.0f), 20.0f, glm::vec2(150.0f, 160.0f), GetTexture("powerup_sticky").DescriptorSet));
+        game.PowerUps.push_back(MakePowerUp("pass-through", glm::vec3(0.5f, 1.0f, 0.5f), 10.0f, glm::vec2(260.0f, 160.0f), GetTexture("powerup_pass").DescriptorSet));
+        game.PowerUps.push_back(MakePowerUp("pad-size-increase", glm::vec3(1.0f, 0.6f, 0.4f), 0.0f, glm::vec2(370.0f, 160.0f), GetTexture("powerup_increase").DescriptorSet));
+        game.PowerUps.push_back(MakePowerUp("confuse", glm::vec3(1.0f, 0.3f, 0.3f), 15.0f, glm::vec2(480.0f, 160.0f), GetTexture("powerup_confuse").DescriptorSet));
+        game.PowerUps.push_back(MakePowerUp("chaos", glm::vec3(0.9f, 0.25f, 0.25f), 15.0f, glm::vec2(590.0f, 160.0f), GetTexture("powerup_chaos").DescriptorSet));
+=== task: update-powerups
+--- file: main.cpp
+--- find:
+// TODO: IsOtherPowerUpActive and UpdatePowerUps (move the power-ups, count down the active ones, remove the finished ones)
+--- replace:
+// PowerUps (learnopengl: game.cpp)
+// --------------------------------
+// Check if another PowerUp of the same type is still active
+// in which case we don't disable its effect (yet)
+bool IsOtherPowerUpActive(std::vector<PowerUp>& powerUps, std::string type) {
+    for (const PowerUp& powerUp : powerUps) {
+        if (powerUp.Activated)
+            if (powerUp.Type == type)
+                return true;
+    }
+    return false;
+}
+
+// moves the power-ups, counts down the active ones and removes the ones that are done
+void UpdatePowerUps(Game& game, float dt) {
+    for (PowerUp& powerUp : game.PowerUps) {
+        powerUp.Position += powerUp.Velocity * dt;
+        if (powerUp.Activated) {
+            powerUp.Duration -= dt;
+
+            if (powerUp.Duration <= 0.0f) {
+                // remove powerup from list (will later be removed)
+                powerUp.Activated = false;
+                // deactivate effects
+                if (powerUp.Type == "sticky") {
+                    if (!IsOtherPowerUpActive(game.PowerUps, "sticky")) { // only reset if no other PowerUp of type sticky is active
+                        Ball.Sticky = false;
+                        Player.Color = glm::vec3(1.0f);
+                    }
+                } else if (powerUp.Type == "pass-through") {
+                    if (!IsOtherPowerUpActive(game.PowerUps, "pass-through")) { // only reset if no other PowerUp of type pass-through is active
+                        Ball.PassThrough = false;
+                        Ball.Color = glm::vec3(1.0f);
+                    }
+                } else if (powerUp.Type == "confuse") {
+                    if (!IsOtherPowerUpActive(game.PowerUps, "confuse")) { // only reset if no other PowerUp of type confuse is active
+                        Effects.Confuse = false;
+                    }
+                } else if (powerUp.Type == "chaos") {
+                    if (!IsOtherPowerUpActive(game.PowerUps, "chaos")) { // only reset if no other PowerUp of type chaos is active
+                        Effects.Chaos = false;
+                    }
+                }
+            }
+        }
+    }
+    // Remove all PowerUps from vector that are destroyed AND !activated (thus either off the map or finished)
+    // Note we use a lambda expression to remove each PowerUp which is destroyed and not activated
+    game.PowerUps.erase(std::remove_if(game.PowerUps.begin(), game.PowerUps.end(),
+        [](const PowerUp& powerUp) { return powerUp.Destroyed && !powerUp.Activated; }
+    ), game.PowerUps.end());
+}
+--- file: main.cpp
+--- find:
+    // TODO: update the power-ups
+--- replace:
+    // update PowerUps
+    UpdatePowerUps(game, dt);
+=== task: activate
+--- file: main.cpp
+--- find:
+// TODO: ActivatePowerUp: switch the power-up's effect on
+--- replace:
+// switches a power-up's effect on
+void ActivatePowerUp(PowerUp& powerUp) {
+    if (powerUp.Type == "speed") {
+        Ball.Velocity *= 1.2f;
+    } else if (powerUp.Type == "sticky") {
+        Ball.Sticky = true;
+        Player.Color = glm::vec3(1.0f, 0.5f, 1.0f);
+    } else if (powerUp.Type == "pass-through") {
+        Ball.PassThrough = true;
+        Ball.Color = glm::vec3(1.0f, 0.5f, 0.5f);
+    } else if (powerUp.Type == "pad-size-increase") {
+        Player.Size.x += 50;
+    } else if (powerUp.Type == "confuse") {
+        if (!Effects.Chaos)
+            Effects.Confuse = true; // only activate if chaos wasn't already active
+    } else if (powerUp.Type == "chaos") {
+        if (!Effects.Confuse)
+            Effects.Chaos = true;
+    }
+}
+--- file: main.cpp
+--- find:
+    // TODO: check the power-ups: destroy those below the window, activate those the paddle catches
+    // check collisions for player pad (unless stuck)
+--- replace:
+    // also check collisions on PowerUps and if so, activate them
+    for (PowerUp& powerUp : game.PowerUps) {
+        if (!powerUp.Destroyed) {
+            // first check if powerup passed bottom edge, if so: keep as inactive and destroy
+            if (powerUp.Position.y >= game.Height)
+                powerUp.Destroyed = true;
+
+            if (CheckCollision(Player, powerUp)) { // collided with player, now activate powerup
+                ActivatePowerUp(powerUp);
+                powerUp.Destroyed = true;
+                powerUp.Activated = true;
+            }
+        }
+    }
+    // and finally check collisions for player pad (unless stuck)
+=== task: spawn-powerups
+--- file: main.cpp
+--- find:
+// TODO: ShouldSpawn (true with a chance of 1 in chance, with rand()) and SpawnPowerUps (each kind with its own chance, at the destroyed block)
+--- replace:
+// true with a chance of 1 in chance
+bool ShouldSpawn(unsigned int chance) {
+    unsigned int random = rand() % chance;
+    return random == 0;
+}
+
+// spawns power-ups (each with its own chance) at a destroyed block
+void SpawnPowerUps(Game& game, GameObject& block) {
+    if (ShouldSpawn(75)) // 1 in 75 chance
+        game.PowerUps.push_back(MakePowerUp("speed", glm::vec3(0.5f, 0.5f, 1.0f), 0.0f, block.Position, GetTexture("powerup_speed").DescriptorSet));
+    if (ShouldSpawn(75))
+        game.PowerUps.push_back(MakePowerUp("sticky", glm::vec3(1.0f, 0.5f, 1.0f), 20.0f, block.Position, GetTexture("powerup_sticky").DescriptorSet));
+    if (ShouldSpawn(75))
+        game.PowerUps.push_back(MakePowerUp("pass-through", glm::vec3(0.5f, 1.0f, 0.5f), 10.0f, block.Position, GetTexture("powerup_pass").DescriptorSet));
+    if (ShouldSpawn(75))
+        game.PowerUps.push_back(MakePowerUp("pad-size-increase", glm::vec3(1.0f, 0.6f, 0.4f), 0.0f, block.Position, GetTexture("powerup_increase").DescriptorSet));
+    if (ShouldSpawn(15)) // Negative powerups should spawn more often
+        game.PowerUps.push_back(MakePowerUp("confuse", glm::vec3(1.0f, 0.3f, 0.3f), 15.0f, block.Position, GetTexture("powerup_confuse").DescriptorSet));
+    if (ShouldSpawn(15))
+        game.PowerUps.push_back(MakePowerUp("chaos", glm::vec3(0.9f, 0.25f, 0.25f), 15.0f, block.Position, GetTexture("powerup_chaos").DescriptorSet));
+}
+--- file: main.cpp
+--- find:
+                if (!box.IsSolid)
+                    box.Destroyed = true;
+                else {
+--- replace:
+                if (!box.IsSolid) {
+                    box.Destroyed = true;
+                    SpawnPowerUps(game, box);
+                } else {
+=== task: sticky-pass
+--- file: main.cpp
+--- find:
+                if (dir == LEFT || dir == RIGHT) { // horizontal collision
+                    Ball.Velocity.x = -Ball.Velocity.x; // reverse horizontal velocity
+                    // relocate
+                    float penetration = Ball.Radius - std::abs(diff_vector.x);
+                    if (dir == LEFT)
+                        Ball.Position.x += penetration; // move ball to right
+                    else
+                        Ball.Position.x -= penetration; // move ball to left;
+                } else { // vertical collision
+                    Ball.Velocity.y = -Ball.Velocity.y; // reverse vertical velocity
+                    // relocate
+                    float penetration = Ball.Radius - std::abs(diff_vector.y);
+                    if (dir == UP)
+                        Ball.Position.y -= penetration; // move ball back up
+                    else
+                        Ball.Position.y += penetration; // move ball back down
+                }
+--- replace:
+                if (!(Ball.PassThrough && !box.IsSolid)) { // don't do collision resolution on non-solid bricks if pass-through is activated
+                    if (dir == LEFT || dir == RIGHT) { // horizontal collision
+                        Ball.Velocity.x = -Ball.Velocity.x; // reverse horizontal velocity
+                        // relocate
+                        float penetration = Ball.Radius - std::abs(diff_vector.x);
+                        if (dir == LEFT)
+                            Ball.Position.x += penetration; // move ball to right
+                        else
+                            Ball.Position.x -= penetration; // move ball to left;
+                    } else { // vertical collision
+                        Ball.Velocity.y = -Ball.Velocity.y; // reverse vertical velocity
+                        // relocate
+                        float penetration = Ball.Radius - std::abs(diff_vector.y);
+                        if (dir == UP)
+                            Ball.Position.y -= penetration; // move ball back up
+                        else
+                            Ball.Position.y += penetration; // move ball back down
+                    }
+                }
+--- file: main.cpp
+--- find:
+        Ball.Velocity.y = -1.0f * std::abs(Ball.Velocity.y);
+--- replace:
+        Ball.Velocity.y = -1.0f * std::abs(Ball.Velocity.y);
+        // if Sticky powerup is activated, also stick ball to paddle once new velocity vectors were calculated
+        Ball.Stuck = Ball.Sticky;
+--- file: main.cpp
+--- find:
+    Reset(Ball, Player.Position + glm::vec2(PLAYER_SIZE.x / 2.0f - BALL_RADIUS, -(BALL_RADIUS * 2.0f)), INITIAL_BALL_VELOCITY);
+--- replace:
+    Reset(Ball, Player.Position + glm::vec2(PLAYER_SIZE.x / 2.0f - BALL_RADIUS, -(BALL_RADIUS * 2.0f)), INITIAL_BALL_VELOCITY);
+    // also disable all active powerups
+    Effects.Chaos = Effects.Confuse = false;
+    Ball.PassThrough = Ball.Sticky = false;
+    Player.Color = glm::vec3(1.0f);
+    Ball.Color = glm::vec3(1.0f);

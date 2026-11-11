@@ -1,0 +1,368 @@
+=== task: limits
+--- file: main.cpp
+--- find:
+    // TODO: write the limits of compute shaders to the debugger's output: the most thread groups per
+    // dispatch (x, y, z), the largest thread group (x, y, z) and the most threads in one thread group
+--- replace:
+    // query limitations
+    // -----------------
+    // OpenGL asks the driver (glGetIntegeri_v): Direct3D 12 fixes the limits for every
+    // device, as constants in d3d12.h. A Windows program has no console: the text goes to
+    // the debugger's output window (Visual Studio's Output).
+    {
+        char text[512] = {};
+        snprintf(text, sizeof(text),
+            "Direct3D 12 limitations:\n"
+            "maximum number of thread groups in X, Y and Z dimension %d\n"
+            "maximum size of a thread group in X dimension %d\n"
+            "maximum size of a thread group in Y dimension %d\n"
+            "maximum size of a thread group in Z dimension %d\n"
+            "Number of threads in a single thread group %d\n",
+            D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION,
+            D3D12_CS_THREAD_GROUP_MAX_X,
+            D3D12_CS_THREAD_GROUP_MAX_Y,
+            D3D12_CS_THREAD_GROUP_MAX_Z,
+            D3D12_CS_THREAD_GROUP_MAX_THREADS_PER_GROUP);
+        OutputDebugStringA(text);
+    }
+
+=== task: image-unit
+--- file: main.cpp
+--- find:
+        // Describe and create a heap for the texture's view: slot 0 the shader resource view
+        // (SRV: the quad's pixel shader reads through it). Shader visible.
+        D3D12_DESCRIPTOR_HEAP_DESC srvUavHeapDesc = {};
+        srvUavHeapDesc.NumDescriptors = 1;
+--- replace:
+        // Describe and create a heap for the texture's views: slot 0 the shader resource
+        // view (SRV: the quad's pixel shader reads through it), slot 1 the unordered access
+        // view (UAV: the compute shader writes through it). Shader visible.
+        D3D12_DESCRIPTOR_HEAP_DESC srvUavHeapDesc = {};
+        srvUavHeapDesc.NumDescriptors = 2;
+--- file: main.cpp
+--- find:
+CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32G32B32A32_FLOAT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+--- replace:
+CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32G32B32A32_FLOAT, TEXTURE_WIDTH, TEXTURE_HEIGHT, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+--- file: main.cpp
+--- find:
+        // TODO: an unordered access view (UAV) of the texture in slot 1, for the compute shader
+--- replace:
+        // The unordered access view in slot 1: level 0 of the texture, four floats per texel -
+        // the compute shader's RWTexture2D at u0 (OpenGL's glBindImageTexture to image unit 0).
+        D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+        uavDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+        uavDesc.Texture2D.MipSlice = 0;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle(m_srvUavHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_srvUavDescriptorSize);
+        m_device->CreateUnorderedAccessView(m_texture.Get(), nullptr, &uavDesc, uavHandle);
+
+=== task: compute-shader
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12RootSignature> m_rootSignature;
+--- replace:
+    ComPtr<ID3D12RootSignature> m_rootSignature;
+    ComPtr<ID3D12RootSignature> m_computeRootSignature;
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+--- replace:
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+    ComPtr<ID3D12PipelineState> m_computePipelineState;
+--- file: main.cpp
+--- find:
+    // TODO: the compute root signature (a table with the texture's UAV at u0) and the compute
+    // pipeline state (CSMain in computeShader.hlsl, cs_5_0)
+--- replace:
+    // Create the compute root signature: what the compute shader reads and writes. A
+    // compute shader has no vertices, so no input assembler flag.
+    {
+        // Root parameter 0: a descriptor table with one UAV at register u0 (the texture the
+        // compute shader writes: OpenGL's image unit 0).
+        CD3DX12_DESCRIPTOR_RANGE ranges[1];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+
+        CD3DX12_ROOT_PARAMETER rootParameters[1];
+        rootParameters[0].InitAsDescriptorTable(1, &ranges[0]);
+
+        CD3DX12_ROOT_SIGNATURE_DESC computeRootSignatureDesc;
+        computeRootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr);
+
+        ComPtr<ID3DBlob> signature;
+        ComPtr<ID3DBlob> error;
+        ThrowIfFailed(D3D12SerializeRootSignature(&computeRootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
+        ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_computeRootSignature)));
+    }
+
+    // Create the compute pipeline state: the compute shader (CSMain) in computeShader.hlsl,
+    // compiled for shader model 5.0's compute stage (cs_5_0).
+    {
+        ComPtr<ID3DBlob> computeShader;
+
+#if defined(_DEBUG)
+        // Enable better shader debugging with the graphics debugging tools.
+        UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#else
+        UINT compileFlags = 0;
+#endif
+
+        ThrowIfFailed(D3DCompileFromFile(L"computeShader.hlsl", nullptr, nullptr, "CSMain", "cs_5_0", compileFlags, 0, &computeShader, nullptr));
+
+        // Describe and create the compute pipeline state object: only the root signature
+        // and the compute shader - no input layout, rasterizer or render targets.
+        D3D12_COMPUTE_PIPELINE_STATE_DESC computePsoDesc = {};
+        computePsoDesc.pRootSignature = m_computeRootSignature.Get();
+        computePsoDesc.CS = CD3DX12_SHADER_BYTECODE(computeShader.Get());
+        ThrowIfFailed(m_device->CreateComputePipelineState(&computePsoDesc, IID_PPV_ARGS(&m_computePipelineState)));
+    }
+--- file: main.cpp
+--- find:
+    // Note: ComPtr's are CPU objects, but an upload heap needs to stay in scope until
+    // the command list that copies from it has finished executing on the GPU.
+    // We will flush the GPU at the end of this method to ensure it is not
+    // prematurely destroyed.
+    ComPtr<ID3D12Resource> textureUploadHeap;
+
+    // Create the texture the compute shader writes and the quad shows
+--- replace:
+    // Create the texture the compute shader writes and the quad shows
+--- file: main.cpp
+--- find:
+        // TEXTURE_WIDTH x TEXTURE_HEIGHT texels of four 32-bit floats (OpenGL's GL_RGBA32F), in a
+        // default heap. ALLOW_UNORDERED_ACCESS: shaders may also write it, through a UAV.
+        // It starts in the COPY_DEST state: the pixels are copied into it next.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32G32B32A32_FLOAT, TEXTURE_WIDTH, TEXTURE_HEIGHT, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&m_texture)));
+
+        // for now: fill the texture from the CPU, every texel dark blue
+        std::vector<float> pixels(TEXTURE_WIDTH * TEXTURE_HEIGHT * 4, 0.0f);
+        for (size_t i = 0; i < pixels.size(); i += 4)
+        {
+            pixels[i + 2] = 0.5f; // blue
+            pixels[i + 3] = 1.0f; // alpha
+        }
+
+        // The upload heap, the copy into the texture (on the setup command list) and the
+        // barrier to PIXEL_SHADER_RESOURCE, as in the textures chapter.
+        const UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_texture.Get(), 0, 1);
+        CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RESOURCE_DESC uploadBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &uploadHeapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &uploadBufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&textureUploadHeap)));
+
+        D3D12_SUBRESOURCE_DATA textureData = {};
+        textureData.pData = pixels.data();
+        textureData.RowPitch = TEXTURE_WIDTH * 4 * sizeof(float);    // bytes per row: 16 per texel
+        textureData.SlicePitch = textureData.RowPitch * TEXTURE_HEIGHT;
+        UpdateSubresources(m_commandList.Get(), m_texture.Get(), textureUploadHeap.Get(), 0, 0, 1, &textureData);
+
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        m_commandList->ResourceBarrier(1, &barrier);
+--- replace:
+        // TEXTURE_WIDTH x TEXTURE_HEIGHT texels of four 32-bit floats (OpenGL's GL_RGBA32F), in a
+        // default heap. ALLOW_UNORDERED_ACCESS: shaders may also write it, through a UAV.
+        // No data: the compute shader fills it every frame. It starts in the
+        // UNORDERED_ACCESS state, ready for the compute shader.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32G32B32A32_FLOAT, TEXTURE_WIDTH, TEXTURE_HEIGHT, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+            nullptr,
+            IID_PPV_ARGS(&m_texture)));
+--- file: main.cpp
+--- find:
+    // TODO: fill the texture with the compute shader (one thread per texel) and wait for its writes
+
+    // render image to quad: the root signature and the SRV table (root parameter 0, heap
+    // slot 0); the pipeline state is set by Reset
+    m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(0, m_srvUavHeap->GetGPUDescriptorHandleForHeapStart());
+    m_commandList->RSSetViewports(1, &m_viewport);
+    m_commandList->RSSetScissorRects(1, &m_scissorRect);
+--- replace:
+    // fill the texture: the compute pipeline state and root signature, what the compute shader
+    // reads (its root parameters), then one thread per texel, in thread groups of 10 x 10
+    // ([numthreads(10, 10, 1)])
+    m_commandList->SetPipelineState(m_computePipelineState.Get());
+    m_commandList->SetComputeRootSignature(m_computeRootSignature.Get());
+    m_commandList->SetComputeRootDescriptorTable(0, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_srvUavHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_srvUavDescriptorSize));    // the UAV, heap slot 1
+    m_commandList->Dispatch(TEXTURE_WIDTH / 10, TEXTURE_HEIGHT / 10, 1);
+
+    // make sure writing to the texture has finished before it is read: the barrier waits for
+    // the compute shader and turns the texture from an unordered access target into a shader
+    // resource (OpenGL's glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT))
+    CD3DX12_RESOURCE_BARRIER textureBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    m_commandList->ResourceBarrier(1, &textureBarrier);
+
+    // render image to quad: the graphics pipeline state and root signature, the SRV table
+    // (root parameter 0, heap slot 0)
+    m_commandList->SetPipelineState(m_pipelineState.Get());
+    m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(0, m_srvUavHeap->GetGPUDescriptorHandleForHeapStart());
+    m_commandList->RSSetViewports(1, &m_viewport);
+    m_commandList->RSSetScissorRects(1, &m_scissorRect);
+--- file: main.cpp
+--- find:
+    // Indicate that the back buffer will now be used to present.
+--- replace:
+    // The next frame's compute shader writes the texture again.
+    textureBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    m_commandList->ResourceBarrier(1, &textureBarrier);
+
+    // Indicate that the back buffer will now be used to present.
+--- file: computeShader.hlsl
+--- find:
+// TODO: the texture as a RWTexture2D<float4> at register u0, thread groups of 10 x 10 x 1, and in
+// CSMain one thread per texel that writes red = x / width and green = y / height
+[numthreads(1, 1, 1)]
+void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
+{
+}
+--- replace:
+// The texture the compute shader writes: a read-write texture of float4 texels at register u0
+// (an unordered access view; GLSL's image2D at binding 0).
+RWTexture2D<float4> imgOutput : register(u0);
+
+[numthreads(10, 10, 1)]
+void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
+{
+    float4 value = float4(0.0f, 0.0f, 0.0f, 1.0f);
+    // SV_DispatchThreadID: the thread's position among all threads of the dispatch
+    // (GLSL's gl_GlobalInvocationID) - here the texel it writes.
+    int2 texelCoord = int2(dispatchThreadID.xy);
+
+    // The texture's size: all the threads of the dispatch, one per texel (GLSL's
+    // gl_NumWorkGroups * gl_WorkGroupSize - HLSL has no number of thread groups).
+    uint imageWidth, imageHeight;
+    imgOutput.GetDimensions(imageWidth, imageHeight);
+
+    value.x = float(texelCoord.x) / imageWidth;
+    value.y = float(texelCoord.y) / imageHeight;
+    imgOutput[texelCoord] = value;
+}
+
+=== task: time
+--- file: main.cpp
+--- find:
+    UINT m_width;
+--- replace:
+    // The root constants of the compute shader: what it sees as cbuffer TimeConstants.
+    struct TimeConstants
+    {
+        float t;    // the time, in seconds
+    };
+
+    UINT m_width;
+--- file: main.cpp
+--- find:
+        // Root parameter 0: a descriptor table with one UAV at register u0 (the texture the
+        // compute shader writes: OpenGL's image unit 0).
+        CD3DX12_DESCRIPTOR_RANGE ranges[1];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+
+        CD3DX12_ROOT_PARAMETER rootParameters[1];
+        rootParameters[0].InitAsDescriptorTable(1, &ranges[0]);
+--- replace:
+        // Root parameter 0: a descriptor table with one UAV at register u0 (the texture the
+        // compute shader writes: OpenGL's image unit 0).
+        // Root parameter 1: one 32-bit root constant at register b0 (the time).
+        CD3DX12_DESCRIPTOR_RANGE ranges[1];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+
+        CD3DX12_ROOT_PARAMETER rootParameters[2];
+        rootParameters[0].InitAsDescriptorTable(1, &ranges[0]);
+        rootParameters[1].InitAsConstants(sizeof(TimeConstants) / 4, 0);
+--- file: main.cpp
+--- find:
+    // fill the texture: the compute pipeline state
+--- replace:
+    // Set frame time: the seconds since the first frame.
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float currentFrame = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+    // fill the texture: the compute pipeline state
+--- file: main.cpp
+--- find:
+    // fill the texture: the compute pipeline state and root signature, what the compute shader
+    // reads (its root parameters), then one thread per texel, in thread groups of 10 x 10
+    // ([numthreads(10, 10, 1)])
+    m_commandList->SetPipelineState(m_computePipelineState.Get());
+    m_commandList->SetComputeRootSignature(m_computeRootSignature.Get());
+    m_commandList->SetComputeRootDescriptorTable(0, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_srvUavHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_srvUavDescriptorSize));    // the UAV, heap slot 1
+    m_commandList->Dispatch(TEXTURE_WIDTH / 10, TEXTURE_HEIGHT / 10, 1);
+
+    // make sure writing to the texture has finished before it is read: the barrier waits for
+    // the compute shader and turns the texture from an unordered access target into a shader
+    // resource (OpenGL's glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT))
+    CD3DX12_RESOURCE_BARRIER textureBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    m_commandList->ResourceBarrier(1, &textureBarrier);
+
+    // render image to quad: the graphics pipeline state and root signature, the SRV table
+    // (root parameter 0, heap slot 0)
+    m_commandList->SetPipelineState(m_pipelineState.Get());
+    m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(0, m_srvUavHeap->GetGPUDescriptorHandleForHeapStart());
+    m_commandList->RSSetViewports(1, &m_viewport);
+    m_commandList->RSSetScissorRects(1, &m_scissorRect);
+--- replace:
+    // fill the texture: the compute pipeline state and root signature, what the compute shader
+    // reads (its root parameters), then one thread per texel, in thread groups of 10 x 10
+    // ([numthreads(10, 10, 1)])
+    m_commandList->SetPipelineState(m_computePipelineState.Get());
+    m_commandList->SetComputeRootSignature(m_computeRootSignature.Get());
+    m_commandList->SetComputeRootDescriptorTable(0, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_srvUavHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_srvUavDescriptorSize));    // the UAV, heap slot 1
+    TimeConstants timeConstants = {};
+    timeConstants.t = currentFrame;
+    m_commandList->SetComputeRoot32BitConstants(1, sizeof(TimeConstants) / 4, &timeConstants, 0);
+    m_commandList->Dispatch(TEXTURE_WIDTH / 10, TEXTURE_HEIGHT / 10, 1);
+
+    // make sure writing to the texture has finished before it is read: the barrier waits for
+    // the compute shader and turns the texture from an unordered access target into a shader
+    // resource (OpenGL's glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT))
+    CD3DX12_RESOURCE_BARRIER textureBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    m_commandList->ResourceBarrier(1, &textureBarrier);
+
+    // render image to quad: the graphics pipeline state and root signature, the SRV table
+    // (root parameter 0, heap slot 0)
+    m_commandList->SetPipelineState(m_pipelineState.Get());
+    m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(0, m_srvUavHeap->GetGPUDescriptorHandleForHeapStart());
+    m_commandList->RSSetViewports(1, &m_viewport);
+    m_commandList->RSSetScissorRects(1, &m_scissorRect);
+--- file: computeShader.hlsl
+--- find:
+[numthreads(10, 10, 1)]
+--- replace:
+// The time, in seconds: a root constant at register b0 (GLSL's uniform float t).
+cbuffer TimeConstants : register(b0)
+{
+    float t;
+};
+
+[numthreads(10, 10, 1)]
+--- file: computeShader.hlsl
+--- find:
+    value.x = float(texelCoord.x) / imageWidth;
+--- replace:
+    float speed = 100.0f;
+    // the width of the texture
+    float width = 800.0f;
+
+    value.x = fmod(float(texelCoord.x) + t * speed, width) / imageWidth;

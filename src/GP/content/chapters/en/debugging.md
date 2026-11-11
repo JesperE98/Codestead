@@ -299,7 +299,9 @@ with the file and the line they appear in, so each `CheckDebugMessages()` call r
 Now do the first task, **info-queue**: get the info queue in `LoadPipeline` right after the device is created (inside
 `#if defined(_DEBUG)` – in a release build there is no debug layer, `As` fails and `m_infoQueue` stays empty), add the
 function and the macro, and call `CheckDebugMessages();` after `LoadTexture(…)` in `LoadAssets` and after
-`ExecuteCommandLists` in `OnRender`. Run it. The picture does not change, but the output now holds the messages:
+`ExecuteCommandLists` in `OnRender`. Run it – the built-in simulator reproduces the debug layer: it reports these
+mistakes with the debug layer's own messages, stores them in the info queue and later calls your callback, as Windows
+does. The picture does not change, but the output now holds the messages:
 
 ```text
 ERROR #31: ID3D12Device::CreateShaderResourceView: The Dimensions of the View are invalid due to at least one of the following conditions. MostDetailedMip (value = 0) must be between 0 and MipLevels-1 of the Texture Resource, 0, inclusively. With the current MostDetailedMip, MipLevels (value = 0) must be between 1 and 1, inclusively, or -1 to default to all mips from MostDetailedMip, in order that the View fit on the Texture. | main.cpp (…)
@@ -781,7 +783,8 @@ Category: State creation
 Severity: ERROR
 ```
 
-– and with a debugger attached the program stops right at that line of `LoadTexture`. (The messages also stay in the
+– and with a debugger attached the program stops right at that line of `LoadTexture`. (The built-in simulator is no
+debugger: `IsDebuggerPresent()` returns false there, so the program prints the message and carries on.) (The messages also stay in the
 queue, so `CheckDebugMessages()` prints them once more afterwards.)
 
 ### The second mistake

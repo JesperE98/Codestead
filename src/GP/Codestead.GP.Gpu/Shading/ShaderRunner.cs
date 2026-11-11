@@ -325,6 +325,12 @@ public sealed partial class ShaderRunner
                 }
                 return default;
             }
+            case Declare { Reference: true, Value: { } referred } d when Eval(referred) is { Fields: not null } or { Items: not null } or { Map: not null }:
+            {
+                // A reference to a struct or a container: the same object under another name.
+                scopes[^1][d.Id] = Eval(referred);
+                return default;
+            }
             case Declare d:
             {
                 // C++: Type name{} / Type name = {} is a zero-initialised struct.
@@ -461,12 +467,16 @@ public sealed partial class ShaderRunner
             case Name n:
             {
                 for (int i = scopes.Count - 1; i >= 0; i--)
-                    if (scopes[i].ContainsKey(n.Id))
+                    if (scopes[i].TryGetValue(n.Id, out var current))
                     {
-                        scopes[i][n.Id] = Like(scopes[i][n.Id], value);
+                        if (!AssignInPlace(current, value)) scopes[i][n.Id] = Like(current, value);
                         return;
                     }
-                Globals[n.Id] = Globals.TryGetValue(n.Id, out var old) ? Like(old, value) : value;
+                if (Globals.TryGetValue(n.Id, out var old))
+                {
+                    if (!AssignInPlace(old, value)) Globals[n.Id] = Like(old, value);
+                }
+                else Globals[n.Id] = value;
                 return;
             }
             case Member m:
@@ -485,6 +495,13 @@ public sealed partial class ShaderRunner
                 if (owner.Fields is not null)
                 {
                     owner.Fields[m.Field] = owner.Fields.TryGetValue(m.Field, out var old) ? Like(old, value) : value;
+                    return;
+                }
+                // C++ mode: a placeholder of an API struct type (an element of std::vector<VkVertexInputAttributeDescription>
+                // after resize) becomes a struct when the program sets one of its fields.
+                if (Lenient && owner.Text is { } placeholder && placeholder.Length > 0 && char.IsUpper(placeholder[0]) && m.Target is Name or Member or IndexOf)
+                {
+                    Store(m.Target, ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { [m.Field] = value }));
                     return;
                 }
                 if (owner.V is not null && Swizzle(m.Field) is { } idx)
@@ -550,6 +567,19 @@ public sealed partial class ShaderRunner
     }
 
     /// <summary>A value stored into a variable keeps the variable's number of components (vec3 v = vec4(…) is not allowed, but float → vecN broadcasts).</summary>
+    /// <summary>
+    /// C++ mode: a struct variable given another struct keeps being the same object, its members replaced – so a
+    /// reference to it (a range-for's GameObject&amp; box, an element of a vector) sees the change.
+    /// </summary>
+    private bool AssignInPlace(ShaderValue current, ShaderValue value)
+    {
+        if (!Lenient || ReferenceEquals(current, value) || current.Fields is not { } target || value.Fields is not { } source || IsStream(current) || IsConsole(current)) return ReferenceEquals(current, value);
+        var copied = source.ToDictionary(kv => kv.Key, kv => kv.Value.Clone(), StringComparer.Ordinal);
+        target.Clear();
+        foreach (var (k, v) in copied) target[k] = v;
+        return true;
+    }
+
     private static ShaderValue Like(ShaderValue old, ShaderValue value)
     {
         // A float variable given an integer holds a float (x = 1; x / 2 is 0.5).

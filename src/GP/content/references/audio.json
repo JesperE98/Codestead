@@ -1,0 +1,5 @@
+[
+  { "title": "2D Game / Audio", "url": "https://learnopengl.com/In-Practice/2D-Game/Audio", "publisher": "LearnOpenGL" },
+  { "title": "How to: Initialize XAudio2", "url": "https://learn.microsoft.com/en-us/windows/win32/xaudio2/how-to--initialize-xaudio2", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "How to: Play a sound with XAudio2", "url": "https://learn.microsoft.com/en-us/windows/win32/xaudio2/how-to--play-a-sound-with-xaudio2", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

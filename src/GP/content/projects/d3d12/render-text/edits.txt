@@ -1,0 +1,459 @@
+=== task: remove-test
+--- file: main.cpp
+--- find:
+    Ball = MakeBallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, GetTexture("ball").ID);
+    // try the power-ups out: one of each kind in the empty row above the stones (no brick breaks with the fixed input)
+    game.PowerUps.push_back(MakePowerUp("speed", XMFLOAT3(0.5f, 0.5f, 1.0f), 0.0f, XMFLOAT2(40.0f, 160.0f), GetTexture("powerup_speed").ID));
+    game.PowerUps.push_back(MakePowerUp("sticky", XMFLOAT3(1.0f, 0.5f, 1.0f), 20.0f, XMFLOAT2(150.0f, 160.0f), GetTexture("powerup_sticky").ID));
+    game.PowerUps.push_back(MakePowerUp("pass-through", XMFLOAT3(0.5f, 1.0f, 0.5f), 10.0f, XMFLOAT2(260.0f, 160.0f), GetTexture("powerup_pass").ID));
+    game.PowerUps.push_back(MakePowerUp("pad-size-increase", XMFLOAT3(1.0f, 0.6f, 0.4f), 0.0f, XMFLOAT2(370.0f, 160.0f), GetTexture("powerup_increase").ID));
+    game.PowerUps.push_back(MakePowerUp("confuse", XMFLOAT3(1.0f, 0.3f, 0.3f), 15.0f, XMFLOAT2(480.0f, 160.0f), GetTexture("powerup_confuse").ID));
+    game.PowerUps.push_back(MakePowerUp("chaos", XMFLOAT3(0.9f, 0.25f, 0.25f), 15.0f, XMFLOAT2(590.0f, 160.0f), GetTexture("powerup_chaos").ID));
+--- replace:
+    Ball = MakeBallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, GetTexture("ball").ID);
+
+=== task: text-renderer
+--- file: text_2d.hlsl
+--- find:
+    // TODO: transform the position with the projection and pass the texture coordinates on
+    result.position = float4(0.0f, 0.0f, 0.0f, 1.0f);
+    result.texCoord = float2(0.0f, 0.0f);
+--- replace:
+    result.position = mul(float4(position, 0.0f, 1.0f), projection);
+    result.texCoord = texCoord;
+--- file: text_2d.hlsl
+--- find:
+    // TODO: the glyph atlas's red channel as the alpha of textColor
+    return float4(textColor, 1.0f);
+--- replace:
+    // the atlas has one channel (red): it is the glyph's coverage, used as alpha
+    float4 sampled = float4(1.0f, 1.0f, 1.0f, text.Sample(wrapSampler, input.texCoord).r);
+    return float4(textColor, 1.0f) * sampled;
+--- file: main.cpp
+--- find:
+// TODO: struct Character, struct TextRenderer (Characters, TextShader, the atlas, the vertex buffer) and the function InitTextRenderer
+--- replace:
+/// Holds all state information relevant to a character as loaded using FreeType
+struct Character {
+    XMINT2       AtlasPos;  // the glyph's place (top-left corner) in the glyph atlas, in texels
+    XMINT2       Size;      // size of glyph
+    XMINT2       Bearing;   // offset from baseline to left/top of glyph
+    unsigned int Advance;   // horizontal offset to advance to next glyph
+};
+
+// The glyph atlas: one texture with all glyphs, in a grid of 16 x 8 cells of 64 x 64 texels
+// (character c in cell (c % 16, c / 16)) - see the text rendering chapter.
+const unsigned int AtlasCellSize = 64;
+const unsigned int AtlasWidth = 16 * AtlasCellSize;
+const unsigned int AtlasHeight = 8 * AtlasCellSize;
+// Room for the quads of 256 characters a frame (6 vertices each).
+const unsigned int MaxTextVertices = 6 * 256;
+
+// A renderer for rendering text displayed by a font loaded using the
+// FreeType library. A single font is loaded, processed into a list of Character
+// items for later rendering.
+struct TextRenderer
+{
+    // holds a list of pre-compiled Characters
+    std::map<char, Character> Characters;
+    // shader used for text rendering
+    Shader                   TextShader;
+    // render state
+    Texture2D                Atlas;                 // the glyph atlas (its ID: its view's slot in the heap)
+    ComPtr<ID3D12Resource>   VertexBuffer;          // the quads of this frame's text: an upload heap, mapped for good
+    D3D12_VERTEX_BUFFER_VIEW VertexBufferView = {};
+    UINT8*                   pVertexDataBegin = nullptr;
+    unsigned int             VertexCount = 0;       // the vertices written into it this frame
+};
+
+// loads the text shader and creates the quads' vertex buffer (learnopengl's TextRenderer constructor)
+void InitTextRenderer(TextRenderer& renderer, unsigned int width, unsigned int height)
+{
+    // load shader (its projection is the game's - 0 to width, 0 to height, y down -, the
+    // constant buffer the game's OnUpdate writes, so there is nothing to configure here)
+    renderer.TextShader = LoadShader(L"text_2d.hlsl", "text");
+    // the vertex buffer for the texture quads: in an upload heap, mapped as long as it lives -
+    // RenderText writes each frame's quads into it
+    const UINT vertexBufferSize = MaxTextVertices * 4 * sizeof(float);
+    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+    ThrowIfFailed(Graphics.Device->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &bufferDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&renderer.VertexBuffer)));
+    CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+    ThrowIfFailed(renderer.VertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&renderer.pVertexDataBegin)));
+    renderer.VertexBufferView.BufferLocation = renderer.VertexBuffer->GetGPUVirtualAddress();
+    renderer.VertexBufferView.StrideInBytes = 4 * sizeof(float);
+    renderer.VertexBufferView.SizeInBytes = vertexBufferSize;
+}
+--- file: main.cpp
+--- find:
+// TODO: the text renderer: a global TextRenderer Text
+--- replace:
+TextRenderer   Text;
+--- file: main.cpp
+--- find:
+    // TODO: set up the text renderer (the text shader, the quads' vertex buffer)
+--- replace:
+    // set up the text renderer (learnopengl's TextRenderer constructor) and load the font at 24 pixels
+    InitTextRenderer(Text, game.Width, game.Height);
+--- file: main.cpp
+--- find:
+    Effects = PostProcessor();
+
+--- replace:
+    Effects = PostProcessor();
+    Text = TextRenderer();
+
+
+=== task: load-font
+--- file: main.cpp
+--- find:
+#include "d3dx12.h"
+
+--- replace:
+#include "d3dx12.h"
+
+// FreeType loads fonts and renders their glyphs into bitmaps.
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+--- file: main.cpp
+--- find:
+#pragma comment(lib, "d3dcompiler.lib")
+
+--- replace:
+#pragma comment(lib, "d3dcompiler.lib")
+#pragma comment(lib, "freetype.lib")
+
+--- file: main.cpp
+--- find:
+// TODO: the function Load: a Character for each of the first 128 ASCII characters of the font, with FreeType, and the glyph atlas
+--- replace:
+// pre-compiles a list of characters from the given font into the glyph atlas
+void Load(TextRenderer& renderer, std::string font, unsigned int fontSize)
+{
+    // first clear the previously loaded Characters
+    renderer.Characters.clear();
+    // then initialize and load the FreeType library
+    FT_Library ft;
+    if (FT_Init_FreeType(&ft)) // all functions return a value different than 0 whenever an error occurred
+        throw std::runtime_error("ERROR::FREETYPE: Could not init FreeType Library");
+    // load font as face
+    FT_Face face;
+    if (FT_New_Face(ft, font.c_str(), 0, &face))
+        throw std::runtime_error("ERROR::FREETYPE: Failed to load font");
+    // set size to load glyphs as
+    FT_Set_Pixel_Sizes(face, 0, fontSize);
+    // the atlas's texels on the CPU, one byte each (so no row alignment is needed: learnopengl's
+    // GL_UNPACK_ALIGNMENT 1), all 0 (nothing covered) to begin with
+    std::vector<unsigned char> atlas(AtlasWidth * AtlasHeight, 0);
+    // then for the first 128 ASCII characters, pre-load/compile their characters and store them
+    for (unsigned char c = 0; c < 128; c++)
+    {
+        // load character glyph
+        if (FT_Load_Char(face, c, FT_LOAD_RENDER))
+        {
+            OutputDebugStringA("ERROR::FREETYPE: Failed to load Glyph\n");
+            continue;
+        }
+        // the glyph's cell in the atlas: 16 characters a row; copy the bitmap into it row by
+        // row (a row of the bitmap is pitch bytes long, a row of the atlas AtlasWidth bytes)
+        int cellX = (c % 16) * AtlasCellSize;
+        int cellY = (c / 16) * AtlasCellSize;
+        for (unsigned int row = 0; row < face->glyph->bitmap.rows; row++)
+        {
+            memcpy(&atlas[(cellY + row) * AtlasWidth + cellX],
+                face->glyph->bitmap.buffer + row * face->glyph->bitmap.pitch,
+                face->glyph->bitmap.width);
+        }
+        // now store character for later use
+        Character character = {
+            XMINT2(cellX, cellY),
+            XMINT2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+            XMINT2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+            static_cast<unsigned int>(face->glyph->advance.x)
+        };
+        renderer.Characters.insert(std::pair<char, Character>(c, character));
+    }
+    // destroy FreeType once we're finished
+    FT_Done_Face(face);
+    FT_Done_FreeType(ft);
+
+    // the atlas texture: one 8-bit channel (DXGI_FORMAT_R8_UNORM, learnopengl's GL_RED), in a
+    // default heap, filled from an upload heap by the setup's command list, its view in the
+    // next free slot of the CBV/SRV heap
+    renderer.Atlas.ID = Graphics.SrvCount++;
+    renderer.Atlas.Width = AtlasWidth;
+    renderer.Atlas.Height = AtlasHeight;
+    renderer.Atlas.Internal_Format = DXGI_FORMAT_R8_UNORM;
+    CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(renderer.Atlas.Internal_Format, AtlasWidth, AtlasHeight, 1, 1);
+    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+    ThrowIfFailed(Graphics.Device->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &textureDesc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(&renderer.Atlas.Resource)));
+    const UINT64 uploadBufferSize = GetRequiredIntermediateSize(renderer.Atlas.Resource.Get(), 0, 1);
+    CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+    CD3DX12_RESOURCE_DESC uploadBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+    ThrowIfFailed(Graphics.Device->CreateCommittedResource(
+        &uploadHeapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &uploadBufferDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&renderer.Atlas.UploadHeap)));
+    D3D12_SUBRESOURCE_DATA textureData = {};
+    textureData.pData = atlas.data();
+    textureData.RowPitch = AtlasWidth;                         // bytes per row: 1 per texel
+    textureData.SlicePitch = textureData.RowPitch * AtlasHeight;
+    UpdateSubresources(Graphics.CommandList, renderer.Atlas.Resource.Get(), renderer.Atlas.UploadHeap.Get(), 0, 0, 1, &textureData);
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(renderer.Atlas.Resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    Graphics.CommandList->ResourceBarrier(1, &barrier);
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = renderer.Atlas.Internal_Format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(Graphics.SrvHeap->GetCPUDescriptorHandleForHeapStart(), renderer.Atlas.ID, Graphics.SrvDescriptorSize);
+    Graphics.Device->CreateShaderResourceView(renderer.Atlas.Resource.Get(), &srvDesc, srvHandle);
+}
+--- file: main.cpp
+--- find:
+    // TODO: load the font fonts/Inter-Bold.otf at 24 pixels
+--- replace:
+    Load(Text, "fonts/Inter-Bold.otf", 24);
+
+=== task: lives
+--- file: main.cpp
+--- find:
+    // TODO: the player's lives (3)
+--- replace:
+    unsigned int            Lives = 3;
+--- file: main.cpp
+--- find:
+        LoadLevel(game.Levels[3], "levels/four.lvl", game.Width, game.Height / 2);
+}
+--- replace:
+        LoadLevel(game.Levels[3], "levels/four.lvl", game.Width, game.Height / 2);
+
+    game.Lives = 3;
+}
+--- file: main.cpp
+--- find:
+    if (Ball.Position.y >= game.Height) // did ball reach bottom edge?
+    {
+        ResetLevel(game);
+        ResetPlayer(game);
+    }
+--- replace:
+    if (Ball.Position.y >= game.Height) // did ball reach bottom edge?
+    {
+        --game.Lives;
+        // did the player lose all his lives? : game over
+        if (game.Lives == 0)
+        {
+            ResetLevel(game);
+            game.State = GAME_MENU;
+        }
+        ResetPlayer(game);
+    }
+
+=== task: render-text
+--- file: main.cpp
+--- find:
+// TODO: the function RenderText: a quad per character from the top-left corner (x, y), written into the vertex buffer, one draw per line
+--- replace:
+// the root constants of a line of text: what the text shaders see as cbuffer TextConstants
+struct TextConstants
+{
+    XMFLOAT3 textColor;
+};
+
+// renders a string of text using the precompiled list of characters (x, y: its top-left corner)
+void RenderText(TextRenderer& renderer, std::string text, float x, float y, float scale, XMFLOAT3 color = XMFLOAT3(1.0f, 1.0f, 1.0f))
+{
+    // activate corresponding render state: the shader, the colour (root constants), the atlas
+    Use(renderer.TextShader);
+    TextConstants constants = {};
+    constants.textColor = color;
+    Graphics.CommandList->SetGraphicsRoot32BitConstants(0, sizeof(TextConstants) / 4, &constants, 0);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE textureHandle(Graphics.SrvHeap->GetGPUDescriptorHandleForHeapStart(), renderer.Atlas.ID, Graphics.SrvDescriptorSize);
+    Graphics.CommandList->SetGraphicsRootDescriptorTable(2, textureHandle);
+    Graphics.CommandList->IASetVertexBuffers(0, 1, &renderer.VertexBufferView);
+
+    // this line's quads come after the ones already written this frame
+    unsigned int firstVertex = renderer.VertexCount;
+
+    // iterate through all characters
+    std::string::const_iterator c;
+    for (c = text.begin(); c != text.end(); c++)
+    {
+        if (renderer.VertexCount + 6 > MaxTextVertices)
+            break; // the vertex buffer is full
+        Character ch = renderer.Characters[*c];
+
+        float xpos = x + ch.Bearing.x * scale;
+        float ypos = y + (renderer.Characters['H'].Bearing.y - ch.Bearing.y) * scale;
+
+        float w = ch.Size.x * scale;
+        float h = ch.Size.y * scale;
+        // the glyph's rectangle in the atlas, in texture coordinates (v = 0 is the atlas's top
+        // row, where each bitmap's top row is)
+        float u0 = static_cast<float>(ch.AtlasPos.x) / AtlasWidth;
+        float v0 = static_cast<float>(ch.AtlasPos.y) / AtlasHeight;
+        float u1 = static_cast<float>(ch.AtlasPos.x + ch.Size.x) / AtlasWidth;
+        float v1 = static_cast<float>(ch.AtlasPos.y + ch.Size.y) / AtlasHeight;
+        // the character's quad
+        float vertices[6][4] = {
+            { xpos,     ypos + h,   u0, v1 },
+            { xpos + w, ypos,       u1, v0 },
+            { xpos,     ypos,       u0, v0 },
+
+            { xpos,     ypos + h,   u0, v1 },
+            { xpos + w, ypos + h,   u1, v1 },
+            { xpos + w, ypos,       u1, v0 }
+        };
+        // write it into the vertex buffer after the ones before: the GPU reads the buffer only
+        // when the command list executes, so every quad needs its own place (learnopengl
+        // overwrites one quad with glBufferSubData before each draw)
+        memcpy(renderer.pVertexDataBegin + renderer.VertexCount * 4 * sizeof(float), vertices, sizeof(vertices));
+        renderer.VertexCount += 6;
+        // now advance cursors for next glyph
+        x += (ch.Advance >> 6) * scale; // bitshift by 6 to get value in pixels (1/64th times 2^6 = 64)
+    }
+    // render the line's quads: one draw for the whole line
+    Graphics.CommandList->DrawInstanced(renderer.VertexCount - firstVertex, 1, firstVertex, 0);
+}
+--- file: main.cpp
+--- find:
+    // TODO: the text's quads of this frame start at the vertex buffer's beginning
+--- replace:
+    // the text's quads of this frame start at the vertex buffer's beginning (the GPU has finished the last frame)
+    Text.VertexCount = 0;
+--- file: main.cpp
+--- find:
+        // TODO: render the text "Lives:" with the number of lives at (5, 5), after the postprocessing quad
+--- replace:
+        // render text (don't include in postprocessing)
+        RenderText(Text, "Lives:" + std::to_string(game.Lives), 5.0f, 5.0f, 1.0f);
+
+=== task: menu
+--- file: main.cpp
+--- find:
+    GameState               State = GAME_ACTIVE;
+    bool                    Keys[1024] = {};
+--- replace:
+    GameState               State = GAME_MENU;
+    bool                    Keys[1024] = {};
+    bool                    KeysProcessed[1024] = {};
+--- file: main.cpp
+--- find:
+    // TODO: the menu: ENTER starts the game, W and S select the level (each only once per key press: KeysProcessed)
+--- replace:
+    if (game.State == GAME_MENU)
+    {
+        if (game.Keys[VK_RETURN] && !game.KeysProcessed[VK_RETURN])
+        {
+            game.State = GAME_ACTIVE;
+            game.KeysProcessed[VK_RETURN] = true;
+        }
+        if (game.Keys['W'] && !game.KeysProcessed['W'])
+        {
+            game.Level = (game.Level + 1) % 4;
+            game.KeysProcessed['W'] = true;
+        }
+        if (game.Keys['S'] && !game.KeysProcessed['S'])
+        {
+            if (game.Level > 0)
+                --game.Level;
+            else
+                game.Level = 3;
+            game.KeysProcessed['S'] = true;
+        }
+    }
+--- file: main.cpp
+--- find:
+    if (game.State == GAME_ACTIVE)
+    {
+        // begin rendering
+--- replace:
+    if (game.State == GAME_ACTIVE || game.State == GAME_MENU || game.State == GAME_WIN)
+    {
+        // begin rendering
+--- file: main.cpp
+--- find:
+    // TODO: in the menu: "Press ENTER to start" and "Press W or S to select level"
+--- replace:
+    if (game.State == GAME_MENU)
+    {
+        RenderText(Text, "Press ENTER to start", 250.0f, game.Height / 2.0f, 1.0f);
+        RenderText(Text, "Press W or S to select level", 245.0f, game.Height / 2.0f + 20.0f, 0.75f);
+    }
+--- file: main.cpp
+--- find:
+void OnKeyUp(UINT8 key)
+{
+    Hedgerow.Keys[key] = false;
+}
+--- replace:
+void OnKeyUp(UINT8 key)
+{
+    Hedgerow.Keys[key] = false;
+    Hedgerow.KeysProcessed[key] = false;
+}
+
+=== task: win
+--- file: main.cpp
+--- find:
+// TODO: IsCompleted: is every brick that is not solid destroyed?
+--- replace:
+// check if the level is completed (all non-solid tiles are destroyed)
+bool IsCompleted(GameLevel& level)
+{
+    for (GameObject& tile : level.Bricks)
+        if (!tile.IsSolid && !tile.Destroyed)
+            return false;
+    return true;
+}
+--- file: main.cpp
+--- find:
+    // TODO: check the win condition: when the level is completed, reset it and the player, switch chaos on and show the win screen
+--- replace:
+    // check win condition
+    if (game.State == GAME_ACTIVE && IsCompleted(game.Levels[game.Level]))
+    {
+        ResetLevel(game);
+        ResetPlayer(game);
+        Effects.Chaos = true;
+        game.State = GAME_WIN;
+    }
+--- file: main.cpp
+--- find:
+    // TODO: the win screen: ENTER switches chaos off and goes back to the menu
+--- replace:
+    if (game.State == GAME_WIN)
+    {
+        if (game.Keys[VK_RETURN])
+        {
+            game.KeysProcessed[VK_RETURN] = true;
+            Effects.Chaos = false;
+            game.State = GAME_MENU;
+        }
+    }
+--- file: main.cpp
+--- find:
+    // TODO: when won: "You WON!!!" and "Press ENTER to retry or ESC to quit"
+--- replace:
+    if (game.State == GAME_WIN)
+    {
+        RenderText(Text, "You WON!!!", 320.0f, game.Height / 2.0f - 20.0f, 1.0f, XMFLOAT3(0.0f, 1.0f, 0.0f));
+        RenderText(Text, "Press ENTER to retry or ESC to quit", 130.0f, game.Height / 2.0f, 1.0f, XMFLOAT3(1.0f, 1.0f, 0.0f));
+    }

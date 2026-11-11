@@ -1,0 +1,693 @@
+=== task: light-matrices
+--- file: main.cpp
+--- find:
+// TODO: the light-space matrix of each cascade (getLightSpaceMatrix, getLightSpaceMatrices)
+--- replace:
+// The light-space matrix of the part of the camera's frustum between nearPlane and farPlane:
+// a light view looking at the part's centre along the light's direction, and an orthographic
+// projection around its eight corners.
+XMFLOAT4X4 D3D12App::getLightSpaceMatrix(const float nearPlane, const float farPlane)
+{
+    const XMMATRIX proj = XMMatrixPerspectiveFovRH(XMConvertToRadians(fov), static_cast<float>(m_width) / static_cast<float>(m_height), nearPlane, farPlane);
+    const XMMATRIX view = XMMatrixLookAtRH(cameraPos, cameraPos + cameraFront, cameraUp);
+    const std::vector<XMFLOAT4> corners = getFrustumCornersWorldSpace(proj, view);
+
+    XMVECTOR center = XMVectorZero();
+    for (const XMFLOAT4& v : corners)
+    {
+        center += XMLoadFloat4(&v);
+    }
+    center /= static_cast<float>(corners.size());
+
+    const XMMATRIX lightView = XMMatrixLookAtRH(center + lightDir, center, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+
+    // the corners' bounding box in light space (-FLT_MAX: the lowest float)
+    float minX = FLT_MAX;
+    float maxX = -FLT_MAX;
+    float minY = FLT_MAX;
+    float maxY = -FLT_MAX;
+    float minZ = FLT_MAX;
+    float maxZ = -FLT_MAX;
+    for (const XMFLOAT4& v : corners)
+    {
+        const XMVECTOR trf = XMVector4Transform(XMLoadFloat4(&v), lightView);
+        minX = fminf(minX, XMVectorGetX(trf));
+        maxX = fmaxf(maxX, XMVectorGetX(trf));
+        minY = fminf(minY, XMVectorGetY(trf));
+        maxY = fmaxf(maxY, XMVectorGetY(trf));
+        minZ = fminf(minZ, XMVectorGetZ(trf));
+        maxZ = fmaxf(maxZ, XMVectorGetZ(trf));
+    }
+
+    // Tune this parameter according to the scene: the depth range reaches further towards and
+    // away from the light, so objects outside the camera's view still cast their shadows into it
+    constexpr float zMult = 10.0f;
+    if (minZ < 0)
+    {
+        minZ *= zMult;
+    }
+    else
+    {
+        minZ /= zMult;
+    }
+    if (maxZ < 0)
+    {
+        maxZ /= zMult;
+    }
+    else
+    {
+        maxZ *= zMult;
+    }
+
+    // learnopengl's glm::ortho(minX, maxX, minY, maxY, minZ, maxZ): the same box, with
+    // Direct3D's depth from 0 to 1
+    const XMMATRIX lightProjection = XMMatrixOrthographicOffCenterRH(minX, maxX, minY, maxY, minZ, maxZ);
+    XMFLOAT4X4 lightSpaceMatrix;
+    XMStoreFloat4x4(&lightSpaceMatrix, lightView * lightProjection);    // row vectors: the view first, then the projection
+    return lightSpaceMatrix;
+}
+
+// one light-space matrix per cascade: camera near plane .. level 0, level 0 .. level 1, ...,
+// last level .. camera far plane
+std::vector<XMFLOAT4X4> D3D12App::getLightSpaceMatrices()
+{
+    std::vector<XMFLOAT4X4> ret;
+    for (size_t i = 0; i < shadowCascadeLevels.size() + 1; ++i)
+    {
+        if (i == 0)
+        {
+            ret.push_back(getLightSpaceMatrix(cameraNearPlane, shadowCascadeLevels[i]));
+        }
+        else if (i < shadowCascadeLevels.size())
+        {
+            ret.push_back(getLightSpaceMatrix(shadowCascadeLevels[i - 1], shadowCascadeLevels[i]));
+        }
+        else
+        {
+            ret.push_back(getLightSpaceMatrix(shadowCascadeLevels[i - 1], cameraFarPlane));
+        }
+    }
+    return ret;
+}
+--- file: main.cpp
+--- find:
+
+    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+--- replace:
+    // Root parameter 3: the light-space matrices' table (heap slot 3).
+    CD3DX12_GPU_DESCRIPTOR_HANDLE matrices(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(3, matrices);
+
+    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+--- file: main.cpp
+--- find:
+    // TODO: 0. UBO setup: the light-space matrices of this frame's cascades
+--- replace:
+    // 0. UBO setup: the light-space matrices of this frame's cascades, transposed for HLSL
+    const std::vector<XMFLOAT4X4> lightMatrices = getLightSpaceMatrices();
+    LightSpaceMatrices lightSpaceMatricesData = {};
+    for (size_t i = 0; i < lightMatrices.size(); ++i)
+    {
+        XMStoreFloat4x4(&lightSpaceMatricesData.lightSpaceMatrices[i], XMMatrixTranspose(XMLoadFloat4x4(&lightMatrices[i])));
+    }
+    memcpy(m_pMatricesDataBegin, &lightSpaceMatricesData, sizeof(lightSpaceMatricesData));
+--- file: main.cpp
+--- find:
+    // TODO: configure the constant buffer of the light-space matrices (room for 16, its view in CBV/SRV heap slot 3)
+--- replace:
+    // configure the constant buffer of the light-space matrices (learnopengl's UBO with binding
+    // point 0): room for 16 matrices, its view in slot 3 of the CBV/SRV heap (root parameter 3)
+    {
+        const UINT constantBufferSize = CalculateConstantBufferByteSize(sizeof(LightSpaceMatrices));
+
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(constantBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_matricesBuffer)));
+
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+        cbvDesc.BufferLocation = m_matricesBuffer->GetGPUVirtualAddress();
+        cbvDesc.SizeInBytes = constantBufferSize;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 3, m_cbvSrvDescriptorSize);
+        m_device->CreateConstantBufferView(&cbvDesc, cbvHandle);
+
+        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+        ThrowIfFailed(m_matricesBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pMatricesDataBegin)));
+    }
+--- file: main.cpp
+--- find:
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1, and
+        // 2 SRVs at registers t0 and t1 (the wood texture and the shadow maps: consecutive
+        // descriptors in the heap), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
+
+        // Root parameter 0: root constants for register b0 (the model and normal matrices of
+        // the draw; the debug quad's layer), for all shaders.
+        // Root parameter 1: a descriptor table with the constant buffer view (b1: the camera,
+        // the light and the cascades), for all shaders.
+        // Root parameter 2: a descriptor table with the textures' SRVs, for the pixel shaders.
+        CD3DX12_ROOT_PARAMETER rootParameters[3];
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+--- replace:
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1; 2 SRVs
+        // at registers t0 and t1 (the wood texture and the shadow maps: consecutive
+        // descriptors in the heap), for root parameter 2; and 1 CBV at register b2 (the
+        // light-space matrices), for root parameter 3.
+        CD3DX12_DESCRIPTOR_RANGE ranges[3];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
+        ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
+
+        // Root parameter 0: root constants for register b0 (the model and normal matrices of
+        // the draw; the debug quad's layer), for all shaders.
+        // Root parameter 1: a descriptor table with the constant buffer view (b1: the camera,
+        // the light and the cascades), for all shaders.
+        // Root parameter 2: a descriptor table with the textures' SRVs, for the pixel shaders.
+        // Root parameter 3: a descriptor table with the light-space matrices' constant buffer
+        // view (b2), for all shaders (the depth pass's geometry shader and the scene's pixel
+        // shader read it).
+        CD3DX12_ROOT_PARAMETER rootParameters[4];
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_ALL);
+--- file: main.cpp
+--- find:
+    void WaitForPreviousFrame();
+--- replace:
+    XMFLOAT4X4 getLightSpaceMatrix(const float nearPlane, const float farPlane);
+    std::vector<XMFLOAT4X4> getLightSpaceMatrices();
+    void WaitForPreviousFrame();
+--- file: main.cpp
+--- find:
+
+    // Synchronization objects.
+--- replace:
+    UINT8* m_pMatricesDataBegin = nullptr;    // where the light-space matrices' buffer is mapped
+
+    // Synchronization objects.
+--- file: main.cpp
+--- find:
+    UINT8* m_pCbvDataBegin = nullptr;    // where the constant buffer is mapped (CPU address)
+--- replace:
+    ComPtr<ID3D12Resource> m_matricesBuffer;    // the light-space matrices' constant buffer (learnopengl's matricesUBO)
+    UINT8* m_pCbvDataBegin = nullptr;    // where the constant buffer is mapped (CPU address)
+--- file: main.cpp
+--- find:
+
+    UINT m_width;
+--- replace:
+
+    // The second constant buffer: what the shaders see as cbuffer LightSpaceMatrices
+    // (learnopengl's uniform block): room for 16 cascades' light-space matrices.
+    struct LightSpaceMatrices
+    {
+        XMFLOAT4X4 lightSpaceMatrices[16];
+    };
+
+    UINT m_width;
+--- file: main.cpp
+--- find:
+// TODO: the corners of a frustum in world space (getFrustumCornersWorldSpace)
+--- replace:
+// The eight corners of a frustum in world space: the corners of the clip-space box (x and y
+// from -1 to 1, Direct3D's z from 0 to 1) taken back through the inverse of view * projection.
+// (In containers DirectXMath keeps its storage types: XMFLOAT4, XMFLOAT4X4.)
+std::vector<XMFLOAT4> getFrustumCornersWorldSpace(const XMMATRIX& projview)
+{
+    const XMMATRIX inv = XMMatrixInverse(nullptr, projview);
+
+    std::vector<XMFLOAT4> frustumCorners;
+    for (unsigned int x = 0; x < 2; ++x)
+    {
+        for (unsigned int y = 0; y < 2; ++y)
+        {
+            for (unsigned int z = 0; z < 2; ++z)
+            {
+                const XMVECTOR pt = XMVector4Transform(XMVectorSet(2.0f * x - 1.0f, 2.0f * y - 1.0f, static_cast<float>(z), 1.0f), inv);
+                XMFLOAT4 corner;
+                XMStoreFloat4(&corner, pt / XMVectorSplatW(pt));
+                frustumCorners.push_back(corner);
+            }
+        }
+    }
+
+    return frustumCorners;
+}
+
+std::vector<XMFLOAT4> getFrustumCornersWorldSpace(const XMMATRIX& proj, const XMMATRIX& view)
+{
+    return getFrustumCornersWorldSpace(view * proj);    // row vectors: the view first
+}
+--- file: main.cpp
+--- find:
+// TODO: the cascades: the distances where they split the camera's view
+--- replace:
+// the cascades: where they split the camera's view (10, 20, 50 and 250 units from the camera:
+// five cascades)
+std::vector<float> shadowCascadeLevels{ cameraFarPlane / 50.0f, cameraFarPlane / 25.0f, cameraFarPlane / 10.0f, cameraFarPlane / 2.0f };
+
+=== task: depth-maps
+--- file: shadow_mapping_depth.hlsl
+--- find:
+// The geometry shader: for now it passes each triangle through unchanged.
+// TODO: one invocation per cascade ([instance(5)], SV_GSInstanceID): transform the triangle with
+// that cascade's light-space matrix (cbuffer LightSpaceMatrices) and send it to that layer of
+// the shadow maps (SV_RenderTargetArrayIndex)
+[maxvertexcount(3)]
+void GSMain(triangle GSInput input[3], inout TriangleStream<PSInput> triStream)
+{
+    for (int i = 0; i < 3; ++i)
+    {
+        PSInput output;
+        output.position = input[i].position;
+        output.layer = 0;
+        triStream.Append(output);
+    }
+    triStream.RestartStrip();
+}
+--- replace:
+// The geometry shader runs 5 times per triangle (geometry shader instancing: learnopengl's
+// layout(triangles, invocations = 5)), once per cascade: invocation = 0 ... 4. Each time it
+// transforms the triangle with that cascade's matrix and sends it to that layer.
+[instance(5)]
+[maxvertexcount(3)]
+void GSMain(triangle GSInput input[3], uint invocation : SV_GSInstanceID, inout TriangleStream<PSInput> triStream)
+{
+    for (int i = 0; i < 3; ++i)
+    {
+        PSInput output;
+        output.position = mul(input[i].position, lightSpaceMatrices[invocation]);
+        output.layer = invocation;
+        triStream.Append(output);
+    }
+    triStream.RestartStrip();
+}
+--- file: main.cpp
+--- find:
+
+    ThrowIfFailed(m_commandList->Close());
+}
+--- replace:
+
+    // The next frame's depth pass writes the shadow maps again.
+    shadowBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_lightDepthMaps.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+    m_commandList->ResourceBarrier(1, &shadowBarrier);
+
+    ThrowIfFailed(m_commandList->Close());
+}
+--- file: main.cpp
+--- find:
+    // TODO: render a layer of the depth map to a quad for visual debugging
+--- replace:
+    // render Depth map to quad for visual debugging: one layer of the shadow maps (the debug
+    // quad's pipeline state, the layer as its root constants, vertices 42 to 47)
+    if (showQuad)
+    {
+        m_commandList->SetPipelineState(m_debugQuadPipelineState.Get());
+        DebugConstants debugConstants = {};
+        debugConstants.layer = debugLayer;
+        m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(DebugConstants) / 4, &debugConstants, 0);
+        m_commandList->DrawInstanced(6, 1, 42, 0);
+    }
+--- file: main.cpp
+--- find:
+    // TODO: 1. render the depth of the scene into the shadow map layers (from the light's direction)
+--- replace:
+    // 1. render depth of scene to texture (from light's perspective): the depth pass's
+    // pipeline state, the shadow maps' size as the viewport, and the shadow maps - all five
+    // layers - as the depth buffer with no render target (learnopengl: glDrawBuffer(GL_NONE)).
+    // The scene is drawn once: the geometry shader copies every triangle into each layer.
+    m_commandList->SetPipelineState(m_depthPipelineState.Get());
+    m_commandList->RSSetViewports(1, &m_shadowViewport);
+    m_commandList->RSSetScissorRects(1, &m_shadowScissorRect);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE shadowDsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_dsvDescriptorSize);
+    m_commandList->OMSetRenderTargets(0, nullptr, FALSE, &shadowDsvHandle);
+    m_commandList->ClearDepthStencilView(shadowDsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+    RenderScene();
+
+    // The shadow maps are done: from now on the pixel shaders read them.
+    CD3DX12_RESOURCE_BARRIER shadowBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_lightDepthMaps.Get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    m_commandList->ResourceBarrier(1, &shadowBarrier);
+--- file: main.cpp
+--- find:
+    // TODO: configure the light depth maps: a depth texture array with one layer per cascade (R32_TYPELESS, 1024 x 1024 x 5), a DSV of all layers (DSV heap slot 1) and an SRV (Texture2DArray, CBV/SRV heap slot 2)
+--- replace:
+    // configure the light depth maps: a depth texture array with one layer per cascade (5),
+    // which the depth pass draws into - all layers at once - and the camera's pass reads
+    // (learnopengl: the lightFBO with a GL_TEXTURE_2D_ARRAY of GL_DEPTH_COMPONENT32F)
+    {
+        // R32_TYPELESS: the same 32 bits per texel are a D32_FLOAT depth to the depth stencil
+        // view and an R32_FLOAT colour to the shader resource view. DepthOrArraySize: one array
+        // slice per cascade.
+        const UINT16 layers = static_cast<UINT16>(shadowCascadeLevels.size() + 1);
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC shadowDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_TYPELESS, depthMapResolution, depthMapResolution, layers, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+
+        // It is cleared to 1.0, the far plane, every frame.
+        D3D12_CLEAR_VALUE clearValue = {};
+        clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+        clearValue.DepthStencil.Depth = 1.0f;
+        clearValue.DepthStencil.Stencil = 0;
+
+        // It starts in the DEPTH_WRITE state: each frame the depth pass draws into it, a
+        // barrier turns it into a PIXEL_SHADER_RESOURCE for the camera's pass, and another
+        // one back at the end of the frame.
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &shadowDesc,
+            D3D12_RESOURCE_STATE_DEPTH_WRITE,
+            &clearValue,
+            IID_PPV_ARGS(&m_lightDepthMaps)));
+
+        // A depth stencil view of all the layers (learnopengl: glFramebufferTexture, layered):
+        // the geometry shader's SV_RenderTargetArrayIndex picks the layer of each triangle.
+        // Slot 1 of the DSV heap, after the depth buffer's.
+        D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+        dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+        dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
+        dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+        dsvDesc.Texture2DArray.MipSlice = 0;
+        dsvDesc.Texture2DArray.FirstArraySlice = 0;
+        dsvDesc.Texture2DArray.ArraySize = layers;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_dsvDescriptorSize);
+        m_device->CreateDepthStencilView(m_lightDepthMaps.Get(), &dsvDesc, dsvHandle);
+
+        // A shader resource view of the array (HLSL: Texture2DArray): slot 2 of the CBV/SRV
+        // heap, right after the wood's, so that one descriptor table holds both (t0 and t1).
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+        srvDesc.Texture2DArray.MostDetailedMip = 0;
+        srvDesc.Texture2DArray.MipLevels = 1;
+        srvDesc.Texture2DArray.FirstArraySlice = 0;
+        srvDesc.Texture2DArray.ArraySize = layers;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
+        m_device->CreateShaderResourceView(m_lightDepthMaps.Get(), &srvDesc, srvHandle);
+    }
+--- file: main.cpp
+--- find:
+        // TODO: the depth pass's pipeline state (shadow_mapping_depth.hlsl: a vertex and a geometry shader, no pixel shader, no render target) and the debug quad's (debug_quad.hlsl)
+--- replace:
+        // The depth pass's pipeline state (learnopengl's simpleDepthShader): the vertex and the
+        // geometry shader of shadow_mapping_depth.hlsl (gs_5_0: the geometry shader runs five
+        // times per triangle, once per cascade, and sends each copy to its layer of the shadow
+        // maps) and no pixel shader - there is no render target, so no colour to compute; the
+        // rasterizer writes the depth by itself. The depth format is the shadow maps' DSV format.
+        ComPtr<ID3DBlob> depthVertexShader;
+        ComPtr<ID3DBlob> depthGeometryShader;
+        ThrowIfFailed(D3DCompileFromFile(L"shadow_mapping_depth.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &depthVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"shadow_mapping_depth.hlsl", nullptr, nullptr, "GSMain", "gs_5_0", compileFlags, 0, &depthGeometryShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(depthVertexShader.Get());
+        psoDesc.GS = CD3DX12_SHADER_BYTECODE(depthGeometryShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(nullptr, 0);
+        psoDesc.NumRenderTargets = 0;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+        psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_depthPipelineState)));
+
+        // The debug quad's pipeline state: the shaders of debug_quad.hlsl (no geometry shader),
+        // the window's render target again, and no depth test (the quad covers everything).
+        ComPtr<ID3DBlob> quadVertexShader;
+        ComPtr<ID3DBlob> quadPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"debug_quad.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &quadVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"debug_quad.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &quadPixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(quadVertexShader.Get());
+        psoDesc.GS = CD3DX12_SHADER_BYTECODE(nullptr, 0);
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(quadPixelShader.Get());
+        psoDesc.NumRenderTargets = 1;
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_debugQuadPipelineState)));
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_matricesBuffer;    // the light-space matrices' constant buffer (learnopengl's matricesUBO)
+--- replace:
+    ComPtr<ID3D12Resource> m_lightDepthMaps;    // the shadow maps: a texture array, one layer per cascade
+    ComPtr<ID3D12Resource> m_matricesBuffer;    // the light-space matrices' constant buffer (learnopengl's matricesUBO)
+--- file: main.cpp
+--- find:
+
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer. Laid out
+--- replace:
+    // The same root constants as the debug quad's pixel shader sees them: cbuffer
+    // DebugConstants.
+    struct DebugConstants
+    {
+        int layer;    // the layer of the shadow maps to show
+    };
+
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer. Laid out
+--- file: main.cpp
+--- find:
+// TODO: the shadow maps' debug view (showQuad, debugLayer)
+--- replace:
+// debug view: show one layer of the shadow maps instead of the scene
+bool showQuad = true;    // for now
+int debugLayer = 2;    // the third cascade (20 to 50 units from the camera)
+
+=== task: cascade-layer
+--- file: main.cpp
+--- find:
+bool showQuad = true;    // for now
+--- replace:
+bool showQuad = false;
+--- file: main.cpp
+--- find:
+    // set light uniforms: the camera's position and the light's direction
+    XMStoreFloat3(&constantBufferData.viewPos, cameraPos);
+    XMStoreFloat3(&constantBufferData.lightDir, lightDir);
+--- replace:
+    // set light uniforms: the camera's position, the light's direction, and the cascades
+    // (where they end, and how many there are)
+    XMStoreFloat3(&constantBufferData.viewPos, cameraPos);
+    XMStoreFloat3(&constantBufferData.lightDir, lightDir);
+    constantBufferData.farPlane = cameraFarPlane;
+    constantBufferData.cascadeCount = static_cast<int>(shadowCascadeLevels.size());
+    for (size_t i = 0; i < shadowCascadeLevels.size(); ++i)
+    {
+        constantBufferData.cascadePlaneDistances[i].x = shadowCascadeLevels[i];
+    }
+--- file: main.cpp
+--- find:
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer. Laid out
+    // as HLSL packs it: a float3 never crosses a 16-byte row, so lightDir starts a new row
+    // and each float3 is followed by a float of padding.
+    struct SceneConstantBuffer
+    {
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+        XMFLOAT3 viewPos;
+        float padding0;
+        XMFLOAT3 lightDir;
+        float padding1;
+    };
+--- replace:
+    // The constant buffer: what the shaders see as cbuffer SceneConstantBuffer. Laid out
+    // as HLSL packs it: a float3 never crosses a 16-byte row, so lightDir starts a new row
+    // and viewPos is followed by a float of padding; every element of an array starts a new
+    // row, so the cascades' distances are float4s (only x is used).
+    struct SceneConstantBuffer
+    {
+        XMFLOAT4X4 view;
+        XMFLOAT4X4 projection;
+        XMFLOAT3 viewPos;
+        float padding0;
+        XMFLOAT3 lightDir;
+        float farPlane;
+        XMFLOAT4 cascadePlaneDistances[16];
+        int cascadeCount;    // number of frusta - 1
+    };
+--- file: shadow_mapping.hlsl
+--- find:
+// The pixel shader: runs once per pixel a triangle covers and returns its colour (RGBA).
+--- replace:
+// The colours of the cascades for the debug view: red, green, blue, yellow, magenta.
+static const float3 cascadeColors[5] =
+{
+    float3(1.0f, 0.4f, 0.4f),
+    float3(0.4f, 1.0f, 0.4f),
+    float3(0.4f, 0.4f, 1.0f),
+    float3(1.0f, 1.0f, 0.4f),
+    float3(1.0f, 0.4f, 1.0f)
+};
+
+// The pixel shader: runs once per pixel a triangle covers and returns its colour (RGBA).
+--- file: shadow_mapping.hlsl
+--- find:
+
+    return float4(lighting, 1.0f);
+--- replace:
+    // debug view: tint each fragment with the colour of its cascade
+    lighting *= cascadeColors[CascadeLayer(input.fragPos)];
+
+    return float4(lighting, 1.0f);
+--- file: shadow_mapping.hlsl
+--- find:
+// TODO: the cascades - the fragment's cascade (CascadeLayer)
+--- replace:
+// the cascade of a fragment: the first one whose far distance lies beyond the fragment's depth
+// in view space
+int CascadeLayer(float3 fragPosWorldSpace)
+{
+    float4 fragPosViewSpace = mul(float4(fragPosWorldSpace, 1.0f), view);
+    float depthValue = abs(fragPosViewSpace.z);
+
+    int layer = -1;
+    for (int i = 0; i < cascadeCount; ++i)
+    {
+        if (depthValue < cascadePlaneDistances[i].x)
+        {
+            layer = i;
+            break;
+        }
+    }
+    if (layer == -1)
+    {
+        layer = cascadeCount;
+    }
+    return layer;
+}
+--- file: shadow_mapping.hlsl
+--- find:
+    float3 viewPos;
+    float3 lightDir;    // the direction towards the light
+};
+--- replace:
+    float3 viewPos;
+    float3 lightDir;    // the direction towards the light
+    float farPlane;
+    float4 cascadePlaneDistances[16];    // where each cascade ends (x; float4: every array element takes a 16-byte row)
+    int cascadeCount;   // number of frusta - 1
+};
+
+=== task: shadows
+--- file: shadow_mapping.hlsl
+--- find:
+// The colours of the cascades for the debug view: red, green, blue, yellow, magenta.
+static const float3 cascadeColors[5] =
+{
+    float3(1.0f, 0.4f, 0.4f),
+    float3(0.4f, 1.0f, 0.4f),
+    float3(0.4f, 0.4f, 1.0f),
+    float3(1.0f, 1.0f, 0.4f),
+    float3(1.0f, 0.4f, 1.0f)
+};
+
+// The pixel shader: runs once per pixel
+--- replace:
+// The pixel shader: runs once per pixel
+--- file: shadow_mapping.hlsl
+--- find:
+    float shadow = 0.0f;    // TODO: 1.0 in shadow, 0.0 in the light (ShadowCalculation)
+    float3 lighting = (ambient + (1.0f - shadow) * (diffuse + specular)) * color;
+    // debug view: tint each fragment with the colour of its cascade
+    lighting *= cascadeColors[CascadeLayer(input.fragPos)];
+--- replace:
+    float shadow = ShadowCalculation(input.fragPos, normal);
+    float3 lighting = (ambient + (1.0f - shadow) * (diffuse + specular)) * color;
+--- file: shadow_mapping.hlsl
+--- find:
+// TODO: ShadowCalculation - pick the fragment's cascade, look it up in that layer of the shadow maps
+--- replace:
+float ShadowCalculation(float3 fragPosWorldSpace, float3 normal)
+{
+    // select cascade layer
+    int layer = CascadeLayer(fragPosWorldSpace);
+
+    float4 fragPosLightSpace = mul(float4(fragPosWorldSpace, 1.0f), lightSpaceMatrices[layer]);
+    // perform perspective divide
+    float3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform x and y from [-1,1] to [0,1] texture coordinates: in Direct3D v points down
+    // while y points up, so y is flipped. z needs nothing: Direct3D's depth is 0..1 already.
+    float2 shadowUV = float2(projCoords.x * 0.5f + 0.5f, -projCoords.y * 0.5f + 0.5f);
+
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+
+    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+    if (currentDepth > 1.0f)
+    {
+        return 0.0f;
+    }
+    // calculate bias (based on depth map resolution and slope), smaller for the bigger cascades
+    float bias = max(0.05f * (1.0f - dot(normal, lightDir)), 0.005f);
+    const float biasModifier = 0.5f;
+    if (layer == cascadeCount)
+    {
+        bias *= 1.0f / (farPlane * biasModifier);
+    }
+    else
+    {
+        bias *= 1.0f / (cascadePlaneDistances[layer].x * biasModifier);
+    }
+
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = shadowMap.Sample(shadowSampler, float3(shadowUV, layer)).r;
+    // check whether current frag pos is in shadow
+    float shadow = (currentDepth - bias) > closestDepth ? 1.0f : 0.0f;
+
+    return shadow;
+}
+--- file: shadow_mapping.hlsl
+--- find:
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+--- replace:
+// The light-space matrices of the cascades (learnopengl's uniform block LightSpaceMatrices):
+// register b2, the constant buffer view in root parameter 3's table.
+cbuffer LightSpaceMatrices : register(b2)
+{
+    float4x4 lightSpaceMatrices[16];
+};
+
+// What the vertex shader hands on to the rasterizer and the pixel shader.
+--- file: shadow_mapping.hlsl
+--- find:
+// The texture, in the descriptor table of root parameter 2: the wood (t0).
+Texture2D diffuseTexture : register(t0);
+// The sampler, a static sampler of the root signature: s0 for the wood (linear, WRAP).
+SamplerState wrapSampler : register(s0);
+--- replace:
+// The textures, in the descriptor table of root parameter 2: the wood (t0) and the shadow
+// maps (t1, a texture array: one layer per cascade).
+Texture2D diffuseTexture : register(t0);
+Texture2DArray shadowMap : register(t1);
+// The samplers, static samplers of the root signature: s0 for the wood (linear, WRAP), s1
+// for the shadow maps (no filtering, a white BORDER).
+SamplerState wrapSampler : register(s0);
+SamplerState shadowSampler : register(s1);
+
+=== task: pcf
+--- file: shadow_mapping.hlsl
+--- find:
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = shadowMap.Sample(shadowSampler, float3(shadowUV, layer)).r;
+    // check whether current frag pos is in shadow
+    float shadow = (currentDepth - bias) > closestDepth ? 1.0f : 0.0f;
+--- replace:
+    // PCF (percentage-closer filtering): the test for the 3 x 3 texels around the
+    // fragment's place in its layer, averaged - soft shadow edges
+    float shadow = 0.0f;
+    uint width, height, elements;
+    shadowMap.GetDimensions(width, height, elements);
+    float2 texelSize = 1.0f / float2(width, height);
+    for (int x = -1; x <= 1; ++x)
+    {
+        for (int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = shadowMap.Sample(shadowSampler, float3(shadowUV + float2(x, y) * texelSize, layer)).r;
+            shadow += (currentDepth - bias) > pcfDepth ? 1.0f : 0.0f;
+        }
+    }
+    shadow /= 9.0f;

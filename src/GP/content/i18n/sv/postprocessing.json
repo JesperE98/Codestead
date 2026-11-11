@@ -1,0 +1,53 @@
+{
+  "title": "Efterbehandling",
+  "tasks": {
+    "post-shader": {
+      "text": {
+        "opengl": "Skriv efterbehandlingsshadern – vertexshader: chaos virvlar texturkoordinaterna med tiden, confuse speglar dem, shake vickar positionen; fragmentshader: chaos = kantdetektering, confuse = inverterade färger, shake = oskärpa, allt över 9 samples vid `offsets` – lägg till `SetFloat` och ladda shadern som `\"postprocessing\"`.",
+        "vulkan": "Skriv efterbehandlingsshadrarna – vertexshader: chaos virvlar texturkoordinaterna med tiden, confuse speglar dem, shake vickar positionen; fragmentshader: chaos = kantdetektering, confuse = inverterade färger, shake = oskärpa, allt över 9 samples vid `offsets` – och deras C++-structar; ge `createPipeline` och `LoadShader` render passet och antalet samples, och ladda shadern som `\"postprocessing\"` för fönstrets render pass.",
+        "d3d12": "Skriv efterbehandlingsshadern i `post_processing.hlsl` – vertexshader: chaos virvlar texturkoordinaterna med tiden, confuse speglar dem, shake vickar positionen; pixelshader: chaos = kantdetektering, confuse = inverterade färger, shake = oskärpa, allt över 9 samples vid `offsets` – och ladda den som `\"postprocessing\"`."
+      },
+      "hint": {
+        "opengl": "learnopengls post_processing.vs / .frag. `if (chaos || shake) for (int i = 0; i < 9; i++) sample[i] = vec3(texture(scene, TexCoords.st + offsets[i]));` och sedan `color += vec4(sample[i] * edge_kernel[i], 0.0)` (eller `blur_kernel`). `LoadShader(\"post_processing.vs\", \"post_processing.fs\", nullptr, \"postprocessing\");`",
+        "vulkan": "learnopengls post_processing.vs / .frag med `pc.` och `kernels.` (och de två teckenbytena för Vulkans y, se kapitlet). `if (pc.chaos != 0 || pc.shake != 0) for (int i = 0; i < 9; i++) samples[i] = vec3(texture(scene, TexCoords.st + kernels.offsets[i].xy));`. `LoadShader(\"shaders/post_processing.vert.spv\", \"shaders/post_processing.frag.spv\", \"postprocessing\", VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, renderPass, VK_SAMPLE_COUNT_1_BIT);`",
+        "d3d12": "learnopengls post_processing.vs / .frag i HLSL: `if (chaos || shake) for (int i = 0; i < 9; i++) samples[i] = scene.Sample(wrapSampler, input.texCoord + offsets[i]).rgb;` och sedan `color += float4(samples[i] * edge_kernel[i], 0.0f)` (eller `blur_kernel`). Chaos: `float2(texCoord.x + sin(time) * strength, texCoord.y - cos(time) * strength)` (v pekar nedåt). `LoadShader(L\"post_processing.hlsl\", \"postprocessing\");`"
+      }
+    },
+    "post-processor": {
+      "text": {
+        "opengl": "Lägg till learnopengls PostProcessor som en struct, med `InitRenderData` (skärmrektangeln) och `InitPostProcessor` (en multisamplad framebuffer med en renderbuffer med 4 samples, en andra framebuffer med en textur, rektangeln och shaderns kärnor); gör den globala `Effects` i Init; ta bort dess objekt i slutet.",
+        "vulkan": "Lägg till learnopengls PostProcessor som en struct, med `InitRenderData` (skärmrektangeln), `createPostProcessingRenderPass` (ett färg-attachment med 4 samples som löses upp i texturen) och `InitPostProcessor` (de två bilderna, render passet, framebuffern, rektangeln, kärnornas uniform buffer och descriptor setet); sätt upp den globala `Effects` i Init; förstör dess objekt i `cleanup()`.",
+        "d3d12": "Lägg till learnopengls PostProcessor som en struct, med `InitRenderData` (skärmrektangeln) och `InitPostProcessor` (ett 4× multisamplat render target med sin RTV, en textur att lösa upp det i med sin SRV, rektangeln); gör den globala `Effects` i Init; släpp den i OnDestroy."
+      },
+      "hint": {
+        "opengl": "`glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGB, width, height);` och `glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, effects.RBO);`; för FBO: `glGenTextures(1, &effects.Texture.ID); Generate(effects.Texture, width, height, NULL);` och `glFramebufferTexture2D(…)`. `glUniform2fv(glGetUniformLocation(…, \"offsets\"), 9, (float*)offsets);`",
+        "vulkan": "`createImage(width, height, VK_SAMPLE_COUNT_4_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, …)` för den multisamplade bilden, `COLOR_ATTACHMENT | SAMPLED` med 1 sample för texturen; `subpass.pResolveAttachments = &colorAttachmentResolveRef;`; framebuffern med båda vyerna; `createDescriptorSet(effects.UniformBuffer, sizeof(PostProcessingUniforms), effects.Texture.View, textureSampler, effects.Texture.DescriptorSet);`.",
+        "d3d12": "`CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM, width, height, 1, 1, 4, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)` i tillståndet RENDER_TARGET med ett svart rensningsvärde; en RTV-heap med en descriptor och `CreateRenderTargetView(effects.MSRenderTarget.Get(), nullptr, …)`; för texturen: `effects.Texture.ID = Graphics.SrvCount++;`, `Tex2D(effects.Texture.Internal_Format, width, height, 1, 1)` i PIXEL_SHADER_RESOURCE och dess SRV (som `Generate`, utan uppladdningen)."
+      }
+    },
+    "render-to-texture": {
+      "text": {
+        "opengl": "Skriv `BeginRender` (rita i den multisamplade framebuffern, rensad till svart), `EndRender` (lös upp den i texturens framebuffer med en blit) och `Render` (rektangeln med efterbehandlingsshadern och dess val); lägg i spelets `Render` ritandet mellan BeginRender / EndRender och rita sedan rektangeln med tiden.",
+        "vulkan": "Skriv `BeginRender` (börja passet utanför skärmen, rensat till svart), `EndRender` (avsluta det – resolven – och börja fönstrets render pass) och `Render` (rektangeln med efterbehandlingspipelinen och dess val som push constants); lägg i spelets `Render` ritandet mellan BeginRender / EndRender och rita sedan rektangeln med tiden; gör sprite- och partikelpipelines för passet utanför skärmen med 4 samples, och låt `recordCommandBuffer` lämna fönstrets pass åt EndRender.",
+        "d3d12": "Skriv `BeginRender` (rita i det multisamplade målet, rensat till svart), `EndRender` (lös upp det i texturen och rita sedan i back buffern igen) och `Render` (rektangeln med efterbehandlingsshadern och dess val); PSO:erna för det som ritas i det multisamplade målet behöver 4 samples; lägg i spelets `Render` ritandet mellan BeginRender / EndRender och rita sedan rektangeln med tiden."
+      },
+      "hint": {
+        "opengl": "`glBindFramebuffer(GL_READ_FRAMEBUFFER, effects.MSFBO); glBindFramebuffer(GL_DRAW_FRAMEBUFFER, effects.FBO); glBlitFramebuffer(0, 0, effects.Width, effects.Height, 0, 0, effects.Width, effects.Height, GL_COLOR_BUFFER_BIT, GL_NEAREST);` och sedan `glBindFramebuffer(GL_FRAMEBUFFER, 0);`. I Render(Game&): `BeginRender(Effects);` … `EndRender(Effects); Render(Effects, glfwGetTime());`.",
+        "vulkan": "BeginRender / EndRender: `VkRenderPassBeginInfo` med `effects.RenderPass, effects.Framebuffer` / `effects.WindowRenderPass, effects.WindowFramebuffer` och `vkCmdBeginRenderPass`; EndRender först `vkCmdEndRenderPass(effects.commandBuffer);`. I Render(Game&): `BeginRender(Effects);` … `EndRender(Effects); Render(Effects, static_cast<float>(glfwGetTime()));`. `LoadShader(…, Effects.RenderPass, VK_SAMPLE_COUNT_4_BIT);` för sprite och partikel.",
+        "d3d12": "`Graphics.CommandList->ResolveSubresource(effects.Texture.Resource.Get(), 0, effects.MSRenderTarget.Get(), 0, effects.Texture.Internal_Format);` mellan barriärerna (RENDER_TARGET ↔ RESOLVE_SOURCE, PIXEL_SHADER_RESOURCE ↔ RESOLVE_DEST), sedan `OMSetRenderTargets(1, &Graphics.BackBufferRtv, FALSE, nullptr);`. `Compile(…, UINT sampleCount = 1)` → `psoDesc.SampleDesc.Count = sampleCount;`. I Render(Game&): `BeginRender(Effects);` … `EndRender(Effects); Render(Effects, GetTime());`."
+      }
+    },
+    "confuse": {
+      "text": "Prova den första effekten: slå på `Confuse` i Init, efter att efterbehandlaren har satts upp.",
+      "hint": "`Effects.Confuse = true;`"
+    },
+    "chaos": {
+      "text": "Byt confuse-raden mot chaos-effekten.",
+      "hint": "`Effects.Chaos = true;` (chaos vinner ändå över confuse i shadern, men prova en i taget)."
+    },
+    "shake": {
+      "text": "Ta bort provraden igen; skaka i stället skärmen när bollen träffar ett solitt block: sätt `ShakeTime` till 0,05 sekunder och `Effects.Shake`, och räkna i `Update` ned ShakeTime och stoppa skakningen när den är slut.",
+      "hint": "I DoCollisions: `if (!box.IsSolid) box.Destroyed = true; else { ShakeTime = 0.05f; Effects.Shake = true; }`. I Update efter partiklarna: `if (ShakeTime > 0.0f) { ShakeTime -= dt; if (ShakeTime <= 0.0f) Effects.Shake = false; }`. `float ShakeTime = 0.0f;` bland de globala variablerna."
+    }
+  }
+}

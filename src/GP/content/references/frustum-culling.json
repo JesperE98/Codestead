@@ -1,0 +1,9 @@
+[
+  { "title": "Frustum Culling", "url": "https://learnopengl.com/Guest-Articles/2021/Scene/Frustum-Culling", "publisher": "LearnOpenGL" },
+  { "title": "frustum_culling.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/8.guest/2021/1.scene/2.frustum_culling/frustum_culling.cpp", "publisher": "LearnOpenGL" },
+  { "title": "std::numeric_limits::lowest", "url": "https://en.cppreference.com/w/cpp/types/numeric_limits/lowest", "publisher": "cppreference.com" },
+  { "title": "Window reference (glfwSetWindowTitle)", "url": "https://www.glfw.org/docs/latest/group__window.html", "publisher": "GLFW", "api": "opengl" },
+  { "title": "Window reference (glfwSetWindowTitle)", "url": "https://www.glfw.org/docs/latest/group__window.html", "publisher": "GLFW", "api": "vulkan" },
+  { "title": "SetWindowTextW", "url": "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowtextw", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "DirectXMath programming guide", "url": "https://learn.microsoft.com/en-us/windows/win32/dxmath/directxmath-portal", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

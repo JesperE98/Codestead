@@ -1,0 +1,73 @@
+{
+  "title": "Render text",
+  "tasks": {
+    "remove-test": {
+      "text": "The power-ups work: remove the six test power-ups from Init.",
+      "hint": "Delete the comment and the six `game.PowerUps.push_back(…)` lines after `Ball = MakeBallObject(…);`."
+    },
+    "text-renderer": {
+      "text": {
+        "opengl": "Add `struct Character`, `struct TextRenderer` and `InitTextRenderer` (load the text shader with a y-down projection of the window, sampler `text` on unit 0, a VAO and a dynamic VBO for one quad of 6 vertices × 4 floats), write the text shader, make the global `Text` in Init, and delete its VAO and VBO at the end.",
+        "vulkan": "Add `struct TextConstants` (the text shader's colour), `struct Character` (with its place in the atlas), the atlas's size and `struct TextRenderer`, and the member `InitTextRenderer` (the text shader's pipeline for the window's render pass, the vertex buffer for 256 characters, mapped); write the text shader; set up the global `Text` in Init and destroy its buffer in `cleanup()`.",
+        "d3d12": "Add `struct Character`, `struct TextRenderer` and `InitTextRenderer` (load the text shader, create the vertex buffer for the text's quads), write the text shader, make the global `Text` in Init, and release it in OnDestroy."
+      },
+      "hint": {
+        "opengl": "`renderer.TextShader = LoadShader(\"text_2d.vs\", \"text_2d.fs\", nullptr, \"text\"); SetMatrix4(renderer.TextShader, \"projection\", glm::ortho(0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f), true);` and `glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);`. Fragment shader: `vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r); color = vec4(textColor, 1.0) * sampled;`.",
+        "vulkan": "`renderer.TextShader = LoadShader(\"shaders/text_2d.vert.spv\", \"shaders/text_2d.frag.spv\", \"text\", VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, renderPass, VK_SAMPLE_COUNT_1_BIT);` and `createBuffer(sizeof(Vertex) * 6 * MAX_CHARACTERS, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, …HOST_VISIBLE | HOST_COHERENT…)` + `vkMapMemory(…, &renderer.VBOMapped)`. Fragment shader: `vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r); color = vec4(pc.textColor, 1.0) * sampled;`.",
+        "d3d12": "`renderer.TextShader = LoadShader(L\"text_2d.hlsl\", \"text\");` – the projection is the game's (b1). The vertex buffer: `MaxTextVertices * 4 * sizeof(float)` bytes in an upload heap, `Map` once into `renderer.pVertexDataBegin`, a view with stride `4 * sizeof(float)`. Pixel shader: `float4 sampled = float4(1.0f, 1.0f, 1.0f, text.Sample(wrapSampler, input.texCoord).r); return float4(textColor, 1.0f) * sampled;`."
+      }
+    },
+    "load-font": {
+      "text": {
+        "opengl": "Write `Load`: with FreeType, load the font at the given pixel size and make a GL_RED texture and a `Character` (size, bearing, advance) for each of the first 128 ASCII characters; load `fonts/Inter-Bold.otf` at 24 pixels in Init; delete the glyph textures at the end.",
+        "vulkan": "Write the member `Load`: with FreeType, load the font at the given pixel size, copy each of the first 128 ASCII characters' bitmaps into its cell of the atlas pixels and store its `Character` (atlas offset, size, bearing, advance); then make the atlas image (`createAtlasImage`) and its descriptor set; load `fonts/Inter-Bold.otf` at 24 pixels in Init; destroy the atlas in `cleanup()`.",
+        "d3d12": "Write `Load`: with FreeType, load the font at the given pixel size, copy each of the first 128 ASCII characters' bitmap into its cell of the glyph atlas and make a `Character` (cell, size, bearing, advance); upload the atlas as an R8 texture with its view; load `fonts/Inter-Bold.otf` at 24 pixels in Init."
+      },
+      "hint": {
+        "opengl": "The text-rendering chapter's loop: `FT_Init_FreeType`, `FT_New_Face(ft, font.c_str(), 0, &face)`, `FT_Set_Pixel_Sizes(face, 0, fontSize)`, `glPixelStorei(GL_UNPACK_ALIGNMENT, 1)`, `FT_Load_Char(face, c, FT_LOAD_RENDER)`, `glTexImage2D(…, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer)`, `renderer.Characters.insert(std::pair<char, Character>(c, character));`.",
+        "vulkan": "The text-rendering chapter's loop: `FT_Init_FreeType`, `FT_New_Face(ft, font.c_str(), 0, &face)`, `FT_Set_Pixel_Sizes(face, 0, fontSize)`, `FT_Load_Char(face, c, FT_LOAD_RENDER)`, `glm::ivec2 offset((c % 16) * ATLAS_CELL, (c / 16) * ATLAS_CELL);` and a memcpy per bitmap row (`pitch` bytes apart); `renderer.Characters.insert(std::pair<char, Character>(c, character));`; `createDescriptorSet(uniformBuffer, sizeof(UniformBufferObject), renderer.Atlas.View, textureSampler, renderer.Atlas.DescriptorSet);`.",
+        "d3d12": "The text rendering chapter's LoadGlyphs: `FT_Init_FreeType`, `FT_New_Face(ft, font.c_str(), 0, &face)`, `FT_Set_Pixel_Sizes(face, 0, fontSize)`, `FT_Load_Char(face, c, FT_LOAD_RENDER)`, a `memcpy` per bitmap row into `atlas[(cellY + row) * AtlasWidth + cellX]`, `renderer.Characters.insert(std::pair<char, Character>(c, character));`; then the texture like `Generate` with `RowPitch = AtlasWidth` (1 byte per texel)."
+      }
+    },
+    "lives": {
+      "text": "Give the player 3 lives: losing the ball costs one; with none left the level is reset and the game goes back to the menu; ResetLevel gives the 3 lives back.",
+      "hint": {
+        "opengl": "`unsigned int Lives = 3;` in Game. In Update's loss check: `--game.Lives; if (game.Lives == 0) { ResetLevel(game); game.State = GAME_MENU; } ResetPlayer(game);` – ResetLevel no longer runs on every lost ball. `game.Lives = 3;` at the end of ResetLevel.",
+        "vulkan": "`unsigned int Lives = 3;` in Game. In Update's loss check: `--game.Lives; if (game.Lives == 0) { ResetLevel(game); game.State = GAME_MENU; } ResetPlayer(game);` – ResetLevel no longer runs on every lost ball. `game.Lives = 3;` at the end of ResetLevel.",
+        "d3d12": "`unsigned int Lives = 3;` in Game. In Update's loss check: `--game.Lives; if (game.Lives == 0) { ResetLevel(game); game.State = GAME_MENU; } ResetPlayer(game);`. `game.Lives = 3;` at the end of ResetLevel."
+      }
+    },
+    "render-text": {
+      "text": {
+        "opengl": "Write `RenderText`: for each character a quad of the glyph's size at its bearing, from the text's top-left corner (x, y), with the glyph's texture, the VBO updated with glBufferSubData; then advance x. Show `\"Lives:\"` and the number of lives at (5, 5) after the postprocessing quad.",
+        "vulkan": "Write `RenderText`: bind the text pipeline, push the colour and bind the atlas; for each character write a quad of the glyph's size at its bearing, from the text's top-left corner (x, y), with the glyph's rectangle of the atlas, after the quads already written this frame, and draw it; then advance x. Show `\"Lives:\"` and the number of lives at (5, 5) after the postprocessing quad; in `recordCommandBuffer` give `Text` the command buffer and start its vertex count at 0.",
+        "d3d12": "Write `RenderText`: for each character a quad of the glyph's size at its bearing, from the text's top-left corner (x, y), with its cell of the atlas, written into the vertex buffer; one draw for the line; then advance x. Start each frame's text at the vertex buffer's beginning. Show `\"Lives:\"` and the number of lives at (5, 5) after the postprocessing quad."
+      },
+      "hint": {
+        "opengl": "`float xpos = x + ch.Bearing.x * scale; float ypos = y + (renderer.Characters['H'].Bearing.y - ch.Bearing.y) * scale;` – the six vertices from (xpos, ypos) to (xpos + w, ypos + h) with texcoords 0…1 (v = 0 at the top: the glyph bitmap's first row). `x += (ch.Advance >> 6) * scale;`. `RenderText(Text, \"Lives:\" + std::to_string(game.Lives), 5.0f, 5.0f, 1.0f);`.",
+        "vulkan": "`float xpos = x + ch.Bearing.x * scale; float ypos = y + (renderer.Characters['H'].Bearing.y - ch.Bearing.y) * scale;` – the six vertices from (xpos, ypos) to (xpos + w, ypos + h) with the atlas coordinates u0…u1, v0…v1 (v0 at the top: the bitmap's first row). `memcpy((char*) renderer.VBOMapped + renderer.vertexCount * sizeof(Vertex), vertices, sizeof(vertices)); vkCmdDraw(renderer.commandBuffer, 6, 1, renderer.vertexCount, 0); renderer.vertexCount += 6;` `RenderText(Text, \"Lives:\" + std::to_string(game.Lives), 5.0f, 5.0f, 1.0f);`.",
+        "d3d12": "`float xpos = x + ch.Bearing.x * scale; float ypos = y + (renderer.Characters['H'].Bearing.y - ch.Bearing.y) * scale;` – the six vertices from (xpos, ypos) to (xpos + w, ypos + h) with the cell's texture coordinates (`u0 = AtlasPos.x / AtlasWidth` …, v0 at the top). `memcpy(renderer.pVertexDataBegin + renderer.VertexCount * 4 * sizeof(float), vertices, sizeof(vertices)); renderer.VertexCount += 6;`. `Text.VertexCount = 0;` at the start of `Render(Game&)`."
+      }
+    },
+    "menu": {
+      "text": {
+        "opengl": "Add learnopengl's menu: the game starts in `GAME_MENU`; ENTER starts it, W and S choose the level – each only once per key press (`KeysProcessed`, cleared on release in the key callback); draw the scene in the menu and win states too, and in the menu the two lines \"Press ENTER to start\" (250, Height / 2, scale 1) and \"Press W or S to select level\" (245, Height / 2 + 20, scale 0.75).",
+        "vulkan": "Add learnopengl's menu: the game starts in `GAME_MENU`; ENTER starts it, W and S choose the level – each only once per key press (`KeysProcessed`, cleared on release in the key callback); draw the scene in the menu and win states too, and in the menu the two lines \"Press ENTER to start\" (250, Height / 2, scale 1) and \"Press W or S to select level\" (245, Height / 2 + 20, scale 0.75).",
+        "d3d12": "Add learnopengl's menu: the game starts in `GAME_MENU`; ENTER starts it, W and S choose the level – each only once per key press (`KeysProcessed`, cleared in OnKeyUp); draw the scene in the menu and win states too, and in the menu the two lines \"Press ENTER to start\" (250, Height / 2, scale 1) and \"Press W or S to select level\" (245, Height / 2 + 20, scale 0.75)."
+      },
+      "hint": {
+        "opengl": "`if (game.State == GAME_MENU) { if (game.Keys[GLFW_KEY_ENTER] && !game.KeysProcessed[GLFW_KEY_ENTER]) { game.State = GAME_ACTIVE; game.KeysProcessed[GLFW_KEY_ENTER] = true; } … }` before the GAME_ACTIVE block. In Render: `if (game.State == GAME_ACTIVE || game.State == GAME_MENU || game.State == GAME_WIN)` around the scene, then `if (game.State == GAME_MENU) { RenderText(…); RenderText(…); }`.",
+        "vulkan": "`if (game.State == GAME_MENU) { if (game.Keys[GLFW_KEY_ENTER] && !game.KeysProcessed[GLFW_KEY_ENTER]) { game.State = GAME_ACTIVE; game.KeysProcessed[GLFW_KEY_ENTER] = true; } … }` before the GAME_ACTIVE block. In Render: `if (game.State == GAME_ACTIVE || game.State == GAME_MENU || game.State == GAME_WIN)` around the scene, then `if (game.State == GAME_MENU) { RenderText(…); RenderText(…); }`.",
+        "d3d12": "`if (game.State == GAME_MENU) { if (game.Keys[VK_RETURN] && !game.KeysProcessed[VK_RETURN]) { game.State = GAME_ACTIVE; game.KeysProcessed[VK_RETURN] = true; } … }` before the GAME_ACTIVE block (`'W'`, `'S'` for the level). In Render: `if (game.State == GAME_ACTIVE || game.State == GAME_MENU || game.State == GAME_WIN)` around the scene, then `if (game.State == GAME_MENU) { RenderText(…); RenderText(…); }`."
+      }
+    },
+    "win": {
+      "text": "Add learnopengl's win state: `IsCompleted` (every brick that is not solid is destroyed); in Update, when the active level is completed, reset the level and the player, switch chaos on and go to `GAME_WIN`; there ENTER switches chaos off and goes back to the menu; draw \"You WON!!!\" (green) and \"Press ENTER to retry or ESC to quit\" (yellow).",
+      "hint": {
+        "opengl": "`for (GameObject& tile : level.Bricks) if (!tile.IsSolid && !tile.Destroyed) return false; return true;` – `RenderText(Text, \"You WON!!!\", 320.0f, game.Height / 2.0f - 20.0f, 1.0f, glm::vec3(0.0f, 1.0f, 0.0f));` and the second line at (130, Height / 2) in (1, 1, 0).",
+        "vulkan": "`for (GameObject& tile : level.Bricks) if (!tile.IsSolid && !tile.Destroyed) return false; return true;` – `RenderText(Text, \"You WON!!!\", 320.0f, game.Height / 2.0f - 20.0f, 1.0f, glm::vec3(0.0f, 1.0f, 0.0f));` and the second line at (130, Height / 2) in (1, 1, 0).",
+        "d3d12": "`for (GameObject& tile : level.Bricks) if (!tile.IsSolid && !tile.Destroyed) return false; return true;` – `RenderText(Text, \"You WON!!!\", 320.0f, game.Height / 2.0f - 20.0f, 1.0f, XMFLOAT3(0.0f, 1.0f, 0.0f));` and the second line at (130, Height / 2) in (1, 1, 0). ESC already closes the window (WindowProc)."
+      }
+    }
+  }
+}

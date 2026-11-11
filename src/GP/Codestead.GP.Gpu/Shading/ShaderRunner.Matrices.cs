@@ -199,6 +199,48 @@ public sealed partial class ShaderRunner
             }
             case "XMVectorSet" when a.Count == 4:
                 return ShaderValue.Vec(S(0), S(1), S(2), S(3));
+            case "XMLoadFloat2" when a.Count == 1:
+                return ShaderValue.Vec(a[0].Padded(2)[0], a[0].Padded(2)[1], 0, 0);
+            case "XMVectorReplicate" when a.Count == 1:
+                return ShaderValue.Vec(S(0), S(0), S(0), S(0));
+            case "XMVectorZero" when a.Count == 0:
+                return ShaderValue.Vec(0, 0, 0, 0);
+            case "XMVectorMultiply" when a.Count == 2:
+                return ShaderValue.Vec(a[0].Padded(4).Zip(a[1].Padded(4), (x, y) => x * y).ToArray());
+            case "XMVectorDivide" when a.Count == 2:
+                return ShaderValue.Vec(a[0].Padded(4).Zip(a[1].Padded(4), (x, y) => x / y).ToArray());
+            case "XMVectorAbs" when a.Count == 1:
+                return ShaderValue.Vec(a[0].Padded(4).Select(Math.Abs).ToArray());
+            case "XMVectorMin" or "XMVectorMax" when a.Count == 2:
+                return ShaderValue.Vec(a[0].Padded(4).Zip(a[1].Padded(4), (x, y) => name == "XMVectorMin" ? Math.Min(x, y) : Math.Max(x, y)).ToArray());
+            case "XMVectorClamp" when a.Count == 3:
+            {
+                var v = a[0].Padded(4);
+                var lo = a[1].Padded(4);
+                var hi = a[2].Padded(4);
+                return ShaderValue.Vec(Enumerable.Range(0, 4).Select(i => Math.Min(Math.Max(v[i], lo[i]), hi[i])).ToArray());
+            }
+            case "XMVector2Length" or "XMVector2LengthSq" when a.Count == 1:
+            {
+                var v = a[0].Padded(2);
+                double sq = v[0] * v[0] + v[1] * v[1];
+                double len = name == "XMVector2Length" ? Math.Sqrt(sq) : sq;
+                return ShaderValue.Vec(len, len, len, len);
+            }
+            case "XMVector2Dot" when a.Count == 2:
+            {
+                var p = a[0].Padded(2);
+                var q = a[1].Padded(2);
+                double dot = p[0] * q[0] + p[1] * q[1];
+                return ShaderValue.Vec(dot, dot, dot, dot);
+            }
+            case "XMVector2Normalize" when a.Count == 1:
+            {
+                // DirectXMath scales the whole vector by 1 / its 2D length.
+                var v = a[0].Padded(4);
+                double len = Math.Sqrt(v[0] * v[0] + v[1] * v[1]);
+                return ShaderValue.Vec(v.Select(x => len > 0 ? x / len : 0).ToArray());
+            }
             case "XMLoadFloat3" when a.Count == 1 && !a[0].IsMatrix:
                 // An XMVECTOR has four components: w = 0 for a loaded XMFLOAT3.
                 return ShaderValue.Vec(a[0].Padded(3)[0], a[0].Padded(3)[1], a[0].Padded(3)[2], 0);

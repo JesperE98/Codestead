@@ -1,0 +1,14 @@
+<Project>
+  <!--
+    The repository's settings first (Directory.Build.props above, with build/Codestead.props), then Codestead GP's own
+    name, id and version (major.minor, as for the other products in build/Codestead.props). They are kept here, in
+    GP's own folder, so that a change to GP does not touch the files Codestead Linux and the hub are released from
+    (packaging/products.json): those would otherwise get new versions with nothing new in them.
+  -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  <PropertyGroup>
+    <CodesteadGPName>$(CodesteadBrand) GP</CodesteadGPName>
+    <CodesteadGPId>codestead-gp</CodesteadGPId>
+    <CodesteadGPVersion>0.1</CodesteadGPVersion>
+  </PropertyGroup>
+</Project>

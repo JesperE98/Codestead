@@ -1,0 +1,316 @@
+=== task: post-shader
+--- file: post_processing.vs
+--- find:
+    // TODO: chaos: texture coordinates swirling with time (strength 0.3); confuse: mirrored in x and y; shake: the position wobbling with time (strength 0.01)
+    gl_Position = vec4(vertex.xy, 0.0, 1.0);
+    TexCoords = vertex.zw;
+--- replace:
+    gl_Position = vec4(vertex.xy, 0.0, 1.0);
+    vec2 texture = vertex.zw;
+    if (chaos)
+    {
+        float strength = 0.3;
+        vec2 pos = vec2(texture.x + sin(time) * strength, texture.y + cos(time) * strength);
+        TexCoords = pos;
+    }
+    else if (confuse)
+    {
+        TexCoords = vec2(1.0 - texture.x, 1.0 - texture.y);
+    }
+    else
+    {
+        TexCoords = texture;
+    }
+    if (shake)
+    {
+        float strength = 0.01;
+        gl_Position.x += cos(time * 10.0) * strength;
+        gl_Position.y += cos(time * 15.0) * strength;
+    }
+--- file: post_processing.fs
+--- find:
+    // TODO: chaos: the edge kernel over 9 samples; confuse: the inverted colour; shake: the blur kernel over 9 samples
+    color = texture(scene, TexCoords);
+--- replace:
+    // zero out memory since an out variable is initialized with undefined values by default
+    color = vec4(0.0);
+
+    vec3 sample[9];
+    // sample from texture offsets if using convolution matrix
+    if (chaos || shake)
+        for (int i = 0; i < 9; i++)
+            sample[i] = vec3(texture(scene, TexCoords.st + offsets[i]));
+
+    // process effects
+    if (chaos)
+    {
+        for (int i = 0; i < 9; i++)
+            color += vec4(sample[i] * edge_kernel[i], 0.0);
+        color.a = 1.0;
+    }
+    else if (confuse)
+    {
+        color = vec4(1.0 - texture(scene, TexCoords).rgb, 1.0);
+    }
+    else if (shake)
+    {
+        for (int i = 0; i < 9; i++)
+            color += vec4(sample[i] * blur_kernel[i], 0.0);
+        color.a = 1.0;
+    }
+    else
+    {
+        color = texture(scene, TexCoords);
+    }
+--- file: main.cpp
+--- find:
+// TODO: SetFloat (glUniform1f), like SetInteger
+--- replace:
+void SetFloat(Shader& shader, const char* name, float value, bool useShader = false)
+{
+    if (useShader)
+        Use(shader);
+    glUniform1f(glGetUniformLocation(shader.ID, name), value);
+}
+--- file: main.cpp
+--- find:
+    // TODO: load the postprocessing shader (post_processing.vs, post_processing.fs) as "postprocessing"
+--- replace:
+    LoadShader("post_processing.vs", "post_processing.fs", nullptr, "postprocessing");
+
+=== task: post-processor
+--- file: main.cpp
+--- find:
+// TODO: struct PostProcessor (shader, texture, size, the options Confuse, Chaos, Shake, the framebuffers) and the functions InitRenderData and InitPostProcessor
+--- replace:
+// PostProcessor hosts all PostProcessing effects for the Hedgerow
+// Game. It renders the game on a textured quad after which one can
+// enable specific effects by enabling either the Confuse, Chaos or
+// Shake boolean.
+// It is required to call BeginRender() before rendering the game
+// and EndRender() after rendering the game for the struct to work.
+struct PostProcessor
+{
+    // state
+    Shader       PostProcessingShader;
+    Texture2D    Texture;
+    unsigned int Width = 0, Height = 0;
+    // options
+    bool         Confuse = false, Chaos = false, Shake = false;
+    // render state
+    unsigned int MSFBO = 0, FBO = 0; // MSFBO = Multisampled FBO. FBO is regular, used for blitting MS color-buffer to texture
+    unsigned int RBO = 0;            // RBO is used for multisampled color buffer
+    unsigned int VAO = 0;
+};
+
+// initialize quad for rendering postprocessing texture
+void InitRenderData(PostProcessor& effects)
+{
+    // configure VAO/VBO
+    unsigned int VBO;
+    float vertices[] = {
+        // pos        // tex
+        -1.0f, -1.0f, 0.0f, 0.0f,
+         1.0f,  1.0f, 1.0f, 1.0f,
+        -1.0f,  1.0f, 0.0f, 1.0f,
+
+        -1.0f, -1.0f, 0.0f, 0.0f,
+         1.0f, -1.0f, 1.0f, 0.0f,
+         1.0f,  1.0f, 1.0f, 1.0f
+    };
+    glGenVertexArrays(1, &effects.VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindVertexArray(effects.VAO);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
+// creates the framebuffers, the quad and the shader's kernels (learnopengl's PostProcessor constructor)
+void InitPostProcessor(PostProcessor& effects, Shader shader, unsigned int width, unsigned int height)
+{
+    effects.PostProcessingShader = shader;
+    effects.Width = width;
+    effects.Height = height;
+    // initialize renderbuffer/framebuffer object
+    glGenFramebuffers(1, &effects.MSFBO);
+    glGenFramebuffers(1, &effects.FBO);
+    glGenRenderbuffers(1, &effects.RBO);
+    // initialize renderbuffer storage with a multisampled color buffer (don't need a depth/stencil buffer)
+    glBindFramebuffer(GL_FRAMEBUFFER, effects.MSFBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, effects.RBO);
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGB, width, height); // allocate storage for render buffer object
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, effects.RBO); // attach MS render buffer object to framebuffer
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "ERROR::POSTPROCESSOR: Failed to initialize MSFBO" << std::endl;
+    // also initialize the FBO/texture to blit multisampled color-buffer to; used for shader operations (for postprocessing effects)
+    glBindFramebuffer(GL_FRAMEBUFFER, effects.FBO);
+    glGenTextures(1, &effects.Texture.ID);
+    Generate(effects.Texture, width, height, NULL);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, effects.Texture.ID, 0); // attach texture to framebuffer as its color attachment
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "ERROR::POSTPROCESSOR: Failed to initialize FBO" << std::endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // initialize render data and uniforms
+    InitRenderData(effects);
+    SetInteger(effects.PostProcessingShader, "scene", 0, true);
+    float offset = 1.0f / 300.0f;
+    float offsets[9][2] = {
+        { -offset,  offset  },  // top-left
+        {  0.0f,    offset  },  // top-center
+        {  offset,  offset  },  // top-right
+        { -offset,  0.0f    },  // center-left
+        {  0.0f,    0.0f    },  // center-center
+        {  offset,  0.0f    },  // center - right
+        { -offset, -offset  },  // bottom-left
+        {  0.0f,   -offset  },  // bottom-center
+        {  offset, -offset  }   // bottom-right
+    };
+    glUniform2fv(glGetUniformLocation(effects.PostProcessingShader.ID, "offsets"), 9, (float*)offsets);
+    int edge_kernel[9] = {
+        -1, -1, -1,
+        -1,  8, -1,
+        -1, -1, -1
+    };
+    glUniform1iv(glGetUniformLocation(effects.PostProcessingShader.ID, "edge_kernel"), 9, edge_kernel);
+    float blur_kernel[9] = {
+        1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f,
+        2.0f / 16.0f, 4.0f / 16.0f, 2.0f / 16.0f,
+        1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f
+    };
+    glUniform1fv(glGetUniformLocation(effects.PostProcessingShader.ID, "blur_kernel"), 9, blur_kernel);
+}
+--- file: main.cpp
+--- find:
+// TODO: the postprocessor: a global PostProcessor Effects
+--- replace:
+PostProcessor  Effects;
+--- file: main.cpp
+--- find:
+    // TODO: set up the postprocessor with the postprocessing shader and the window's size
+--- replace:
+    // set up the postprocessor (learnopengl's PostProcessor constructor)
+    InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height);
+--- file: main.cpp
+--- find:
+    glDeleteVertexArrays(1, &Particles.VAO);
+--- replace:
+    glDeleteVertexArrays(1, &Particles.VAO);
+    glDeleteVertexArrays(1, &Effects.VAO);
+    glDeleteFramebuffers(1, &Effects.MSFBO);
+    glDeleteFramebuffers(1, &Effects.FBO);
+    glDeleteRenderbuffers(1, &Effects.RBO);
+    glDeleteTextures(1, &Effects.Texture.ID);
+
+=== task: render-to-texture
+--- file: main.cpp
+--- find:
+// TODO: the functions BeginRender, EndRender and Render (the postprocessing quad with the effects)
+--- replace:
+// prepares the postprocessor's framebuffer operations before rendering the game
+void BeginRender(PostProcessor& effects)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, effects.MSFBO);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
+// should be called after rendering the game, so it stores all the rendered data into a texture object
+void EndRender(PostProcessor& effects)
+{
+    // now resolve multisampled color-buffer into intermediate FBO to store to texture
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, effects.MSFBO);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, effects.FBO);
+    glBlitFramebuffer(0, 0, effects.Width, effects.Height, 0, 0, effects.Width, effects.Height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0); // binds both READ and WRITE framebuffer to default framebuffer
+}
+
+// renders the PostProcessor texture quad (as a screen-encompassing large sprite)
+void Render(PostProcessor& effects, float time)
+{
+    // set uniforms/options
+    Use(effects.PostProcessingShader);
+    SetFloat(effects.PostProcessingShader, "time", time);
+    SetInteger(effects.PostProcessingShader, "confuse", effects.Confuse);
+    SetInteger(effects.PostProcessingShader, "chaos", effects.Chaos);
+    SetInteger(effects.PostProcessingShader, "shake", effects.Shake);
+    // render textured quad
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, effects.Texture.ID);
+    glBindVertexArray(effects.VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
+--- file: main.cpp
+--- find:
+        // TODO: begin rendering to the postprocessing framebuffer
+--- replace:
+        // begin rendering to postprocessing framebuffer
+        BeginRender(Effects);
+--- file: main.cpp
+--- find:
+        // TODO: end rendering to the postprocessing framebuffer, then render the postprocessing quad
+--- replace:
+        // end rendering to postprocessing framebuffer
+        EndRender(Effects);
+        // render postprocessing quad
+        Render(Effects, glfwGetTime());
+
+=== task: confuse
+--- file: main.cpp
+--- find:
+    InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height);
+--- replace:
+    InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height);
+    Effects.Confuse = true; // try the effects: confuse (the picture upside down, its colours inverted)
+
+=== task: chaos
+--- file: main.cpp
+--- find:
+    Effects.Confuse = true; // try the effects: confuse (the picture upside down, its colours inverted)
+--- replace:
+    Effects.Chaos = true; // try the effects: chaos (edge detection, the picture swirling around)
+
+=== task: shake
+--- file: main.cpp
+--- find:
+    InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height);
+    Effects.Chaos = true; // try the effects: chaos (edge detection, the picture swirling around)
+--- replace:
+    InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height);
+--- file: main.cpp
+--- find:
+PostProcessor  Effects;
+--- replace:
+PostProcessor  Effects;
+
+float ShakeTime = 0.0f;
+--- file: main.cpp
+--- find:
+                if (!box.IsSolid)
+                    box.Destroyed = true;
+                // TODO: if the block is solid, shake the screen for 0.05 seconds
+--- replace:
+                if (!box.IsSolid)
+                    box.Destroyed = true;
+                else
+                {   // if block is solid, enable shake effect
+                    ShakeTime = 0.05f;
+                    Effects.Shake = true;
+                }
+--- file: main.cpp
+--- find:
+    // TODO: reduce the shake time; when it is over, stop shaking
+--- replace:
+    // reduce shake time
+    if (ShakeTime > 0.0f)
+    {
+        ShakeTime -= dt;
+        if (ShakeTime <= 0.0f)
+            Effects.Shake = false;
+    }

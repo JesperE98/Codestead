@@ -1,0 +1,656 @@
+=== task: mip-chain
+--- file: main.cpp
+--- find:
+void D3D12App::WaitForPreviousFrame()
+--- replace:
+// Creates the bloom's mip chain (learnopengl's bloomFBO::Init): mipChainLength textures, each
+// half the size of the one before, starting at half the window's size - floating-point render
+// targets (R11G11B10_FLOAT: learnopengl's GL_R11F_G11F_B10F) with a render target view each
+// (RTV heap slots FrameCount + 1 on) and a shader resource view each (CBV/SRV heap slots 4 on).
+void D3D12App::InitBloomFBO(BloomFBO& bloomFBO, unsigned int windowWidth, unsigned int windowHeight, unsigned int mipChainLength)
+{
+    XMFLOAT2 mipSize(static_cast<float>(windowWidth), static_cast<float>(windowHeight));
+    XMINT2 mipIntSize(static_cast<int>(windowWidth), static_cast<int>(windowHeight));
+
+    for (unsigned int i = 0; i < mipChainLength; i++)
+    {
+        BloomMip mip;
+
+        mipSize.x *= 0.5f;
+        mipSize.y *= 0.5f;
+        mipIntSize.x /= 2;
+        mipIntSize.y /= 2;
+        mip.size = mipSize;
+        mip.intSize = mipIntSize;
+
+        // A render target that the next passes read: it starts in the PIXEL_SHADER_RESOURCE
+        // state; each pass that draws into it turns it into a render target and back.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R11G11B10_FLOAT, mipIntSize.x, mipIntSize.y, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        const float optimizedClearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        CD3DX12_CLEAR_VALUE clearValue(DXGI_FORMAT_R11G11B10_FLOAT, optimizedClearColor);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+            &clearValue,
+            IID_PPV_ARGS(&mip.texture)));
+
+        // Its views: the whole texture, in its own format (nullptr).
+        mip.rtvIndex = FrameCount + 1 + i;
+        mip.srvIndex = 4 + i;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), mip.rtvIndex, m_rtvDescriptorSize);
+        m_device->CreateRenderTargetView(mip.texture.Get(), nullptr, rtvHandle);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), mip.srvIndex, m_cbvSrvDescriptorSize);
+        m_device->CreateShaderResourceView(mip.texture.Get(), nullptr, srvHandle);
+
+        bloomFBO.mipChain.push_back(mip);
+    }
+}
+
+void D3D12App::WaitForPreviousFrame()
+--- file: main.cpp
+--- find:
+    // TODO: the bloom's mip chain (InitBloomFBO): 6 levels, from half the window's size down
+--- replace:
+    // bloom: the mip chain, 6 levels from half the window's size down (learnopengl's
+    // BloomRenderer::Init: mFBO.Init(windowWidth, windowHeight, num_bloom_mips))
+    InitBloomFBO(m_bloomFBO, m_width, m_height, 6);
+--- file: main.cpp
+--- find:
+cbvSrvHeapDesc.NumDescriptors = 4;    // one CBV + the 2 textures' SRVs + the colour buffer's SRV
+--- replace:
+cbvSrvHeapDesc.NumDescriptors = 4 + 6;    // one CBV + the 2 textures' SRVs + the colour buffer's SRV + the bloom's 6 levels
+--- file: main.cpp
+--- find:
+rtvHeapDesc.NumDescriptors = FrameCount + 1;    // the swap chain's buffers + the floating-point colour buffer
+--- replace:
+rtvHeapDesc.NumDescriptors = FrameCount + 1 + 6;    // the swap chain's buffers + the floating-point colour buffer + the bloom's 6 levels
+--- file: main.cpp
+--- find:
+    void WaitForPreviousFrame();
+--- replace:
+    void InitBloomFBO(BloomFBO& bloomFBO, unsigned int windowWidth, unsigned int windowHeight, unsigned int mipChainLength);
+    void WaitForPreviousFrame();
+--- file: main.cpp
+--- find:
+    UINT8* m_pCbvDataBegin = nullptr;    // where the constant buffer is mapped (CPU address)
+--- replace:
+    BloomFBO m_bloomFBO;                     // the bloom's mip chain
+    UINT8* m_pCbvDataBegin = nullptr;    // where the constant buffer is mapped (CPU address)
+--- file: main.cpp
+--- find:
+// TODO: the bloom's mip chain - the BloomMip and BloomFBO structs
+--- replace:
+// One level of the bloom's mip chain (learnopengl's bloomMip): its size as floats and as
+// integers, the texture, and the slots of its views in the descriptor heaps.
+struct BloomMip
+{
+    XMFLOAT2 size;
+    XMINT2 intSize;
+    ComPtr<ID3D12Resource> texture;
+    UINT rtvIndex = 0;    // its render target view: slot in the RTV heap
+    UINT srvIndex = 0;    // its shader resource view: slot in the CBV/SRV heap
+};
+
+// The bloom's render targets (learnopengl's bloomFBO): Direct3D 12 has no framebuffer
+// objects - each level is drawn through its own render target view - so the chain is all
+// there is.
+struct BloomFBO
+{
+    std::vector<BloomMip> mipChain;
+};
+--- file: main.cpp
+--- find:
+#include <string>
+--- replace:
+#include <string>
+#include <vector>
+
+=== task: downsample
+--- file: downsample.hlsl
+--- find:
+// The pixel shader: 13 samples around the pixel, weighted.
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    // TODO: the 13-tap downsample filter
+    return float4(0.0f, 0.0f, 0.0f, 1.0f);
+}
+--- replace:
+// The pixel shader: 13 samples around the pixel, weighted.
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    float2 srcTexelSize = 1.0f / srcResolution;
+    float x = srcTexelSize.x;
+    float y = srcTexelSize.y;
+    float2 texCoord = input.texCoord;
+
+    // Take 13 samples around current texel:
+    // a - b - c
+    // - j - k -
+    // d - e - f
+    // - l - m -
+    // g - h - i
+    // === ('e' is the current texel) ===
+    float3 a = srcTexture.Sample(clampSampler, float2(texCoord.x - 2 * x, texCoord.y + 2 * y)).rgb;
+    float3 b = srcTexture.Sample(clampSampler, float2(texCoord.x,         texCoord.y + 2 * y)).rgb;
+    float3 c = srcTexture.Sample(clampSampler, float2(texCoord.x + 2 * x, texCoord.y + 2 * y)).rgb;
+
+    float3 d = srcTexture.Sample(clampSampler, float2(texCoord.x - 2 * x, texCoord.y)).rgb;
+    float3 e = srcTexture.Sample(clampSampler, float2(texCoord.x,         texCoord.y)).rgb;
+    float3 f = srcTexture.Sample(clampSampler, float2(texCoord.x + 2 * x, texCoord.y)).rgb;
+
+    float3 g = srcTexture.Sample(clampSampler, float2(texCoord.x - 2 * x, texCoord.y - 2 * y)).rgb;
+    float3 h = srcTexture.Sample(clampSampler, float2(texCoord.x,         texCoord.y - 2 * y)).rgb;
+    float3 i = srcTexture.Sample(clampSampler, float2(texCoord.x + 2 * x, texCoord.y - 2 * y)).rgb;
+
+    float3 j = srcTexture.Sample(clampSampler, float2(texCoord.x - x, texCoord.y + y)).rgb;
+    float3 k = srcTexture.Sample(clampSampler, float2(texCoord.x + x, texCoord.y + y)).rgb;
+    float3 l = srcTexture.Sample(clampSampler, float2(texCoord.x - x, texCoord.y - y)).rgb;
+    float3 m = srcTexture.Sample(clampSampler, float2(texCoord.x + x, texCoord.y - y)).rgb;
+
+    // Apply weighted distribution:
+    // 0.5 + 0.125 + 0.125 + 0.125 + 0.125 = 1
+    // a,b,d,e * 0.125
+    // b,c,e,f * 0.125
+    // d,e,g,h * 0.125
+    // e,f,h,i * 0.125
+    // j,k,l,m * 0.5
+    // This shows 5 square areas that are being sampled. But some of them overlap,
+    // so to have an energy preserving downsample we need to make some adjustments.
+    // The weights are the distributed, so that the sum of j,k,l,m (e.g.)
+    // contribute 0.5 to the final color output. The code below is written
+    // to effectively yield this sum. We get:
+    // 0.125*5 + 0.03125*4 + 0.0625*4 = 1
+    float3 downsample = e * 0.125f;
+    downsample += (a + c + g + i) * 0.03125f;
+    downsample += (b + d + f + h) * 0.0625f;
+    downsample += (j + k + l + m) * 0.125f;
+
+    return float4(downsample, 1.0f);
+}
+--- file: main.cpp
+--- find:
+    // The final screen quad: its pipeline state, and the scene (the colour buffer, heap slot 3)
+    // as the texture of root parameter 2.
+    m_commandList->SetPipelineState(m_bloomFinalPipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE scene(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_cbvSrvDescriptorSize);
+--- replace:
+    // The final screen quad: its pipeline state, and - for now - the third level of the bloom's
+    // mip chain (100 x 75), stretched over the window, as the texture of root parameter 2.
+    m_commandList->SetPipelineState(m_bloomFinalPipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE scene(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), m_bloomFBO.mipChain[2].srvIndex, m_cbvSrvDescriptorSize);
+--- file: main.cpp
+--- find:
+    // TODO: 2. the bloom: downsample the scene through the mip chain and upsample it again (RenderDownsamples, RenderUpsamples)
+--- replace:
+    // 2. physically based bloom (learnopengl's BloomRenderer::RenderBloomTexture): downsample
+    // the scene (the colour buffer, heap slot 3) through the mip chain
+    RenderDownsamples(m_bloomFBO, 3, XMFLOAT2(static_cast<float>(m_width), static_cast<float>(m_height)));
+    // back to the window's viewport
+    m_commandList->RSSetViewports(1, &m_viewport);
+    m_commandList->RSSetScissorRects(1, &m_scissorRect);
+--- file: main.cpp
+--- find:
+void D3D12App::WaitForPreviousFrame()
+--- replace:
+// Downsamples the texture in CBV/SRV heap slot srcTexture (the scene, srcViewportSize big)
+// through the mip chain (learnopengl's BloomRenderer::RenderDownsamples): each level is drawn
+// from the one before it with the 13-tap filter of downsample.hlsl.
+void D3D12App::RenderDownsamples(BloomFBO& bloomFBO, UINT srcTexture, XMFLOAT2 srcViewportSize)
+{
+    m_commandList->SetPipelineState(m_downsamplePipelineState.Get());
+
+    // The size of the texture the pass reads, as root constants (cbuffer DownsampleConstants).
+    DownsampleConstants downsampleConstants = {};
+    downsampleConstants.srcResolution = srcViewportSize;
+
+    // Bind srcTexture (HDR color buffer) as initial texture input
+    CD3DX12_GPU_DESCRIPTOR_HANDLE srcHandle(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), srcTexture, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, srcHandle);
+
+    // Progressively downsample through the mip chain
+    for (int i = 0; i < static_cast<int>(bloomFBO.mipChain.size()); i++)
+    {
+        const BloomMip& mip = bloomFBO.mipChain[i];
+
+        // The viewport and the scissor rectangle of the level, and the level as the render
+        // target (learnopengl: glViewport and glFramebufferTexture2D).
+        CD3DX12_VIEWPORT viewport(0.0f, 0.0f, static_cast<float>(mip.intSize.x), static_cast<float>(mip.intSize.y));
+        CD3DX12_RECT scissorRect(0, 0, mip.intSize.x, mip.intSize.y);
+        m_commandList->RSSetViewports(1, &viewport);
+        m_commandList->RSSetScissorRects(1, &scissorRect);
+
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(mip.texture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        m_commandList->ResourceBarrier(1, &barrier);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), mip.rtvIndex, m_rtvDescriptorSize);
+        m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+
+        // Render screen-filled quad of resolution of current mip
+        m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(DownsampleConstants) / 4, &downsampleConstants, 0);
+        m_commandList->DrawInstanced(6, 1, 36, 0);
+
+        // The level is done: the next pass reads it.
+        barrier = CD3DX12_RESOURCE_BARRIER::Transition(mip.texture.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        m_commandList->ResourceBarrier(1, &barrier);
+
+        // Set current mip resolution as srcResolution for next iteration
+        downsampleConstants.srcResolution = mip.size;
+        // Set current mip as texture input for next iteration
+        CD3DX12_GPU_DESCRIPTOR_HANDLE mipHandle(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), mip.srvIndex, m_cbvSrvDescriptorSize);
+        m_commandList->SetGraphicsRootDescriptorTable(2, mipHandle);
+    }
+}
+
+void D3D12App::WaitForPreviousFrame()
+--- file: main.cpp
+--- find:
+        // TODO: the downsample's pipeline state (downsample.hlsl): one R11G11B10_FLOAT render target, no depth buffer
+--- replace:
+        // The downsample's pipeline state: the shaders of downsample.hlsl, one render target -
+        // a level of the bloom's mip chain (R11G11B10_FLOAT: three small floats, no alpha) -
+        // and no depth buffer.
+        ComPtr<ID3DBlob> downsampleVertexShader;
+        ComPtr<ID3DBlob> downsamplePixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"downsample.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &downsampleVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"downsample.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &downsamplePixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(downsampleVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(downsamplePixelShader.Get());
+        psoDesc.RTVFormats[0] = DXGI_FORMAT_R11G11B10_FLOAT;
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_downsamplePipelineState)));
+--- file: main.cpp
+--- find:
+    void WaitForPreviousFrame();
+--- replace:
+    void RenderDownsamples(BloomFBO& bloomFBO, UINT srcTexture, XMFLOAT2 srcViewportSize);
+    void WaitForPreviousFrame();
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_bloomFinalPipelineState;    // the final screen quad's (learnopengl's shaderBloomFinal)
+--- replace:
+    ComPtr<ID3D12PipelineState> m_downsamplePipelineState;    // the bloom's downsample (learnopengl's mDownsampleShader)
+    ComPtr<ID3D12PipelineState> m_bloomFinalPipelineState;    // the final screen quad's (learnopengl's shaderBloomFinal)
+--- file: main.cpp
+--- find:
+
+    // A light of the constant buffer (learnopengl's struct Light). Every element of an array
+--- replace:
+
+    // The same root constants as the downsample's pixel shader sees them: cbuffer
+    // DownsampleConstants.
+    struct DownsampleConstants
+    {
+        XMFLOAT2 srcResolution;    // the size of the texture the pass reads
+    };
+
+    // A light of the constant buffer (learnopengl's struct Light). Every element of an array
+
+=== task: upsample
+--- file: upsample.hlsl
+--- find:
+// The pixel shader: a 3x3 tent filter. The blending adds the result to the level it draws into.
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    // TODO: the 3x3 tent filter, filterRadius apart
+    return float4(0.0f, 0.0f, 0.0f, 1.0f);
+}
+--- replace:
+// The pixel shader: a 3x3 tent filter. The blending adds the result to the level it draws into.
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    // The filter kernel is applied with a radius, specified in texture coordinates, so that
+    // the radius will vary across mip resolutions.
+    float x = filterRadius;
+    float y = filterRadius;
+    float2 texCoord = input.texCoord;
+
+    // Take 9 samples around current texel:
+    // a - b - c
+    // d - e - f
+    // g - h - i
+    // === ('e' is the current texel) ===
+    float3 a = srcTexture.Sample(clampSampler, float2(texCoord.x - x, texCoord.y + y)).rgb;
+    float3 b = srcTexture.Sample(clampSampler, float2(texCoord.x,     texCoord.y + y)).rgb;
+    float3 c = srcTexture.Sample(clampSampler, float2(texCoord.x + x, texCoord.y + y)).rgb;
+
+    float3 d = srcTexture.Sample(clampSampler, float2(texCoord.x - x, texCoord.y)).rgb;
+    float3 e = srcTexture.Sample(clampSampler, float2(texCoord.x,     texCoord.y)).rgb;
+    float3 f = srcTexture.Sample(clampSampler, float2(texCoord.x + x, texCoord.y)).rgb;
+
+    float3 g = srcTexture.Sample(clampSampler, float2(texCoord.x - x, texCoord.y - y)).rgb;
+    float3 h = srcTexture.Sample(clampSampler, float2(texCoord.x,     texCoord.y - y)).rgb;
+    float3 i = srcTexture.Sample(clampSampler, float2(texCoord.x + x, texCoord.y - y)).rgb;
+
+    // Apply weighted distribution, by using a 3x3 tent filter:
+    //  1   | 1 2 1 |
+    // -- * | 2 4 2 |
+    // 16   | 1 2 1 |
+    float3 upsample = e * 4.0f;
+    upsample += (b + d + f + h) * 2.0f;
+    upsample += (a + c + g + i);
+    upsample *= 1.0f / 16.0f;
+
+    return float4(upsample, 1.0f);
+}
+--- file: main.cpp
+--- find:
+    // The final screen quad: its pipeline state, and - for now - the third level of the bloom's
+    // mip chain (100 x 75), stretched over the window, as the texture of root parameter 2.
+    m_commandList->SetPipelineState(m_bloomFinalPipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE scene(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), m_bloomFBO.mipChain[2].srvIndex, m_cbvSrvDescriptorSize);
+--- replace:
+    // The final screen quad: its pipeline state, and - for now - the bloom texture (level 0 of
+    // the mip chain) as the texture of root parameter 2.
+    m_commandList->SetPipelineState(m_bloomFinalPipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE scene(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), m_bloomFBO.mipChain[0].srvIndex, m_cbvSrvDescriptorSize);
+--- file: main.cpp
+--- find:
+    // back to the window's viewport
+--- replace:
+    // and upsample it back up
+    RenderUpsamples(m_bloomFBO, bloomFilterRadius);
+    // back to the window's viewport
+--- file: main.cpp
+--- find:
+void D3D12App::WaitForPreviousFrame()
+--- replace:
+// Upsamples the mip chain back up (learnopengl's BloomRenderer::RenderUpsamples): from the
+// smallest level up, each level is read with the tent filter of upsample.hlsl and added
+// (blending ONE / ONE) to the level above it. Level 0 ends up as the bloom texture.
+void D3D12App::RenderUpsamples(BloomFBO& bloomFBO, float filterRadius)
+{
+    // The upsample's pipeline state blends additively (learnopengl: glBlendFunc(GL_ONE,
+    // GL_ONE) and glBlendEquation(GL_FUNC_ADD)).
+    m_commandList->SetPipelineState(m_upsamplePipelineState.Get());
+
+    UpsampleConstants upsampleConstants = {};
+    upsampleConstants.filterRadius = filterRadius;
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(UpsampleConstants) / 4, &upsampleConstants, 0);
+
+    for (int i = static_cast<int>(bloomFBO.mipChain.size()) - 1; i > 0; i--)
+    {
+        const BloomMip& mip = bloomFBO.mipChain[i];
+        const BloomMip& nextMip = bloomFBO.mipChain[i - 1];
+
+        // Bind viewport and texture from where to read
+        CD3DX12_GPU_DESCRIPTOR_HANDLE mipHandle(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), mip.srvIndex, m_cbvSrvDescriptorSize);
+        m_commandList->SetGraphicsRootDescriptorTable(2, mipHandle);
+
+        // Set framebuffer render target (we write to this texture)
+        CD3DX12_VIEWPORT viewport(0.0f, 0.0f, static_cast<float>(nextMip.intSize.x), static_cast<float>(nextMip.intSize.y));
+        CD3DX12_RECT scissorRect(0, 0, nextMip.intSize.x, nextMip.intSize.y);
+        m_commandList->RSSetViewports(1, &viewport);
+        m_commandList->RSSetScissorRects(1, &scissorRect);
+
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(nextMip.texture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        m_commandList->ResourceBarrier(1, &barrier);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), nextMip.rtvIndex, m_rtvDescriptorSize);
+        m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+
+        // Render screen-filled quad of resolution of current mip
+        m_commandList->DrawInstanced(6, 1, 36, 0);
+
+        barrier = CD3DX12_RESOURCE_BARRIER::Transition(nextMip.texture.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        m_commandList->ResourceBarrier(1, &barrier);
+    }
+}
+
+void D3D12App::WaitForPreviousFrame()
+--- file: main.cpp
+--- find:
+        // TODO: the upsample's pipeline state (upsample.hlsl): additive blending (ONE, ONE)
+--- replace:
+        // The upsample's pipeline state: the shaders of upsample.hlsl, the same render target
+        // format, and additive blending (learnopengl: glBlendFunc(GL_ONE, GL_ONE),
+        // glBlendEquation(GL_FUNC_ADD)) - each level is added to the level above it.
+        ComPtr<ID3DBlob> upsampleVertexShader;
+        ComPtr<ID3DBlob> upsamplePixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"upsample.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &upsampleVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"upsample.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &upsamplePixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(upsampleVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(upsamplePixelShader.Get());
+        psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
+        psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
+        psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+        psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+        psoDesc.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+        psoDesc.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ONE;
+        psoDesc.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_upsamplePipelineState)));
+        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);    // no blending for the final screen quad
+--- file: main.cpp
+--- find:
+    void WaitForPreviousFrame();
+--- replace:
+    void RenderUpsamples(BloomFBO& bloomFBO, float filterRadius);
+    void WaitForPreviousFrame();
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_bloomFinalPipelineState;    // the final screen quad's (learnopengl's shaderBloomFinal)
+--- replace:
+    ComPtr<ID3D12PipelineState> m_upsamplePipelineState;      // the bloom's upsample (learnopengl's mUpsampleShader)
+    ComPtr<ID3D12PipelineState> m_bloomFinalPipelineState;    // the final screen quad's (learnopengl's shaderBloomFinal)
+--- file: main.cpp
+--- find:
+
+    // A light of the constant buffer (learnopengl's struct Light). Every element of an array
+--- replace:
+
+    // The upsample's: cbuffer UpsampleConstants.
+    struct UpsampleConstants
+    {
+        float filterRadius;
+    };
+
+    // A light of the constant buffer (learnopengl's struct Light). Every element of an array
+--- file: main.cpp
+--- find:
+float exposure = 1.0f;
+--- replace:
+float exposure = 1.0f;
+
+// The radius of the bloom's upsample filter, in texture coordinates (learnopengl's
+// bloomFilterRadius).
+float bloomFilterRadius = 0.005f;
+
+=== task: combine
+--- file: bloom_final.hlsl
+--- find:
+    float3 hdrColor = scene.Sample(clampSampler, input.texCoord).rgb;
+--- replace:
+    float3 hdrColor = scene.Sample(clampSampler, input.texCoord).rgb;
+    float3 bloomColor = bloomBlur.Sample(clampSampler, input.texCoord).rgb;
+    hdrColor = lerp(hdrColor, bloomColor, bloomStrength); // linear interpolation (GLSL's mix)
+--- file: bloom_final.hlsl
+--- find:
+    float exposure;
+--- replace:
+    float exposure;
+    float bloomStrength;    // how much of the bloom texture is mixed in
+--- file: bloom_final.hlsl
+--- find:
+Texture2D scene : register(t0);
+--- replace:
+Texture2D scene : register(t0);
+// The bloom texture (level 0 of the mip chain): register t1, in the table of root parameter 3.
+Texture2D bloomBlur : register(t1);
+--- file: bloom_final.hlsl
+--- find:
+// The shaders of the final screen quad (learnopengl's 6.bloom_final.vs / 6.bloom_final.fs):
+// they tone-map and gamma-correct the scene onto the
+// window.
+--- replace:
+// The shaders of the final screen quad (learnopengl's 6.bloom_final.vs / 6.bloom_final.fs):
+// they mix the bloom texture into the scene, tone-map and gamma-correct the result onto the
+// window.
+--- file: main.cpp
+--- find:
+    hdrConstants.exposure = exposure;
+--- replace:
+    hdrConstants.exposure = exposure;
+    hdrConstants.bloomStrength = bloomStrength;
+--- file: main.cpp
+--- find:
+    // The final screen quad: its pipeline state, and - for now - the bloom texture (level 0 of
+    // the mip chain) as the texture of root parameter 2.
+    m_commandList->SetPipelineState(m_bloomFinalPipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE scene(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), m_bloomFBO.mipChain[0].srvIndex, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, scene);
+--- replace:
+    // The final screen quad: its pipeline state, the scene (the colour buffer, heap slot 3) as
+    // the texture of root parameter 2 and the bloom texture (level 0 of the mip chain) as the
+    // texture of root parameter 3.
+    m_commandList->SetPipelineState(m_bloomFinalPipelineState.Get());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE scene(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(2, scene);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE bloomBlur(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), m_bloomFBO.mipChain[0].srvIndex, m_cbvSrvDescriptorSize);
+    m_commandList->SetGraphicsRootDescriptorTable(3, bloomBlur);
+--- file: main.cpp
+--- find:
+        float exposure;
+--- replace:
+        float exposure;
+        float bloomStrength;    // how much of the bloom texture is mixed in
+--- file: main.cpp
+--- find:
+float bloomFilterRadius = 0.005f;
+--- replace:
+float bloomFilterRadius = 0.005f;
+
+// How much of the bloom texture is mixed into the scene (learnopengl's bloomStrength).
+float bloomStrength = 0.04f;
+--- file: main.cpp
+--- find:
+        // Root parameter 2: a descriptor table with the texture's SRV (t0), for the pixel shaders.
+        CD3DX12_ROOT_PARAMETER rootParameters[3];
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+--- replace:
+        // Root parameters 2 and 3: a descriptor table each with one texture's SRV (t0, t1),
+        // for the pixel shaders.
+        CD3DX12_ROOT_PARAMETER rootParameters[4];
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+        rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+--- file: main.cpp
+--- find:
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1, and 1
+        // SRV at register t0 (the texture of the draw), for root parameter 2.
+        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+--- replace:
+        // Descriptor ranges: 1 CBV at register b1, for the table of root parameter 1; 1 SRV at
+        // register t0 (the texture of the draw), for root parameter 2; and 1 SRV at register
+        // t1 (the final screen quad's second texture: the bloom texture), for root parameter 3.
+        CD3DX12_DESCRIPTOR_RANGE ranges[3];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+        ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
+
+=== task: karis-average
+--- file: main.cpp
+--- find:
+        // Set current mip as texture input for next iteration
+        CD3DX12_GPU_DESCRIPTOR_HANDLE mipHandle(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), mip.srvIndex, m_cbvSrvDescriptorSize);
+        m_commandList->SetGraphicsRootDescriptorTable(2, mipHandle);
+--- replace:
+        // Set current mip as texture input for next iteration
+        CD3DX12_GPU_DESCRIPTOR_HANDLE mipHandle(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), mip.srvIndex, m_cbvSrvDescriptorSize);
+        m_commandList->SetGraphicsRootDescriptorTable(2, mipHandle);
+
+        // Disable Karis average for consequent downsamples
+        if (i == 0)
+        {
+            downsampleConstants.mipLevel = 1;
+        }
+--- file: main.cpp
+--- find:
+    downsampleConstants.srcResolution = srcViewportSize;
+--- replace:
+    downsampleConstants.srcResolution = srcViewportSize;
+    // Karis average on the first pass only (mipLevel 0)
+    downsampleConstants.mipLevel = 0;
+--- file: main.cpp
+--- find:
+        XMFLOAT2 srcResolution;    // the size of the texture the pass reads
+--- replace:
+        XMFLOAT2 srcResolution;    // the size of the texture the pass reads
+        int mipLevel;              // 0 for the first pass (Karis average), then 1
+--- file: downsample.hlsl
+--- find:
+    float3 downsample = e * 0.125f;
+    downsample += (a + c + g + i) * 0.03125f;
+    downsample += (b + d + f + h) * 0.0625f;
+    downsample += (j + k + l + m) * 0.125f;
+
+    return float4(downsample, 1.0f);
+--- replace:
+    float3 downsample;
+
+    // Check if we need to perform Karis average on each block of 4 samples
+    float3 groups[5];
+    if (mipLevel == 0)
+    {
+        // We are writing to mip 0, so we need to apply Karis average to each block
+        // of 4 samples to prevent fireflies (very bright subpixels, leads to pulsating
+        // artifacts).
+        groups[0] = (a + b + d + e) * (0.125f / 4.0f);
+        groups[1] = (b + c + e + f) * (0.125f / 4.0f);
+        groups[2] = (d + e + g + h) * (0.125f / 4.0f);
+        groups[3] = (e + f + h + i) * (0.125f / 4.0f);
+        groups[4] = (j + k + l + m) * (0.5f / 4.0f);
+        groups[0] *= KarisAverage(groups[0]);
+        groups[1] *= KarisAverage(groups[1]);
+        groups[2] *= KarisAverage(groups[2]);
+        groups[3] *= KarisAverage(groups[3]);
+        groups[4] *= KarisAverage(groups[4]);
+        downsample = groups[0] + groups[1] + groups[2] + groups[3] + groups[4];
+        downsample = max(downsample, 0.0001f);
+    }
+    else
+    {
+        downsample = e * 0.125f;
+        downsample += (a + c + g + i) * 0.03125f;
+        downsample += (b + d + f + h) * 0.0625f;
+        downsample += (j + k + l + m) * 0.125f;
+    }
+
+    return float4(downsample, 1.0f);
+--- file: downsample.hlsl
+--- find:
+// The pixel shader: 13 samples
+--- replace:
+float3 PowVec3(float3 v, float p)
+{
+    return float3(pow(v.x, p), pow(v.y, p), pow(v.z, p));
+}
+
+static const float invGamma = 1.0f / 2.2f;
+float3 ToSRGB(float3 v) { return PowVec3(v, invGamma); }
+
+float sRGBToLuma(float3 col)
+{
+    //return dot(col, float3(0.2126f, 0.7152f, 0.0722f));
+    return dot(col, float3(0.299f, 0.587f, 0.114f));
+}
+
+float KarisAverage(float3 col)
+{
+    // Formula is 1 / (1 + luma)
+    float luma = sRGBToLuma(ToSRGB(col)) * 0.25f;
+    return 1.0f / (1.0f + luma);
+}
+
+// The pixel shader: 13 samples
+--- file: downsample.hlsl
+--- find:
+    float2 srcResolution;    // the size of srcTexture, in texels
+--- replace:
+    float2 srcResolution;    // the size of srcTexture, in texels
+    int mipLevel;            // which mip we are writing to, used for Karis average

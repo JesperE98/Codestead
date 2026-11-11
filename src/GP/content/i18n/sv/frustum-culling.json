@@ -1,0 +1,57 @@
+{
+  "title": "Frustum culling",
+  "tasks": {
+    "grid": {
+      "text": "Ersätt kedjan med learnopengls scen för frustum culling: ett rutnät med 10 × 10 planeter, alla barn till roten, 5 enheter isär (lokala positioner x · 5 − 22.5 och z · 5 − 22.5), var och en hälften så stor som roten.",
+      "hint": {
+        "opengl": "Två nästlade `for`-loopar över `x` och `z`; `addChild(ourEntity, ourModel); lastEntity = &ourEntity.children.back();` sedan `setLocalPosition(lastEntity->transform, glm::vec3(x * 5.0f - 22.5f, 0.0f, z * 5.0f - 22.5f));` och `setLocalScale(…, glm::vec3(scale, scale, scale))` med `const float scale = 0.5f;`.",
+        "vulkan": "I `loadEntities()`: två nästlade `for`-loopar över `x` och `z`; `addChild(ourEntity, ourModel); lastEntity = &ourEntity.children.back();` sedan `setLocalPosition(lastEntity->transform, glm::vec3(x * 5.0f - 22.5f, 0.0f, z * 5.0f - 22.5f));` och `setLocalScale(…, glm::vec3(scale, scale, scale))` med `const float scale = 0.5f;`.",
+        "d3d12": "Två nästlade `for`-loopar över `x` och `z` i `LoadAssets`; `addChild(m_ourEntity, m_model); lastEntity = &m_ourEntity.children.back();` sedan `setLocalPosition(lastEntity->transform, XMFLOAT3(x * 5.0f - 22.5f, 0.0f, z * 5.0f - 22.5f));` och `setLocalScale(…, XMFLOAT3(scale, scale, scale))` med `const float scale = 0.5f;`."
+      }
+    },
+    "frustum": {
+      "text": "Skriv structen `Plane` (en enhetsnormal och dess avstånd från origo) med `makePlane` och `getSignedDistanceToPlane`, structen `Frustum` (sex plan) och `createFrustumFromCamera`, som bygger de sex planen ur kamerans position, front- och up-vektorer, bildförhållande, vertikala synfält och nära/bortre avstånd, med normalerna pekande in i frustumet.",
+      "hint": {
+        "opengl": "`halfVSide = zFar * tanf(fovY * 0.5f)`, `halfHSide = halfVSide * aspect`, `frontMultFar = zFar * front`; nära: `makePlane(position + zNear * front, front)`, bortre: `makePlane(position + frontMultFar, -front)`, höger: `makePlane(position, glm::cross(frontMultFar - right * halfHSide, up))`, vänster: `glm::cross(up, frontMultFar + right * halfHSide)`, topp: `glm::cross(right, frontMultFar - up * halfVSide)`, botten: `glm::cross(frontMultFar + up * halfVSide, right)`.",
+        "vulkan": "`halfVSide = zFar * tanf(fovY * 0.5f)`, `halfHSide = halfVSide * aspect`, `frontMultFar = zFar * front`; nära: `makePlane(position + zNear * front, front)`, bortre: `makePlane(position + frontMultFar, -front)`, höger: `makePlane(position, glm::cross(frontMultFar - right * halfHSide, up))`, vänster: `glm::cross(up, frontMultFar + right * halfHSide)`, topp: `glm::cross(right, frontMultFar - up * halfVSide)`, botten: `glm::cross(frontMultFar + up * halfVSide, right)`.",
+        "d3d12": "`halfVSide = zFar * tanf(fovY * 0.5f)`, `halfHSide = halfVSide * aspect`, `frontMultFar = zFar * front`; nära: `makePlane(position + zNear * front, front)`, bortre: `makePlane(position + frontMultFar, -front)`, höger: `makePlane(position, XMVector3Cross(frontMultFar - right * halfHSide, up))`, vänster: `XMVector3Cross(up, frontMultFar + right * halfHSide)`, topp: `XMVector3Cross(right, frontMultFar - up * halfVSide)`, botten: `XMVector3Cross(frontMultFar + up * halfVSide, right)`. `makePlane`: `XMVector3Normalize(norm)`, `distance = XMVectorGetX(XMVector3Dot(normal, p1))`."
+      }
+    },
+    "bounding-sphere": {
+      "text": {
+        "opengl": "Ge varje entitet en avgränsningssfär: skriv structen `Sphere`, `generateSphereBV` (lådan runt alla modellens vertexar; mittpunkt = lådans mittpunkt, radie = halva dess diagonal), `isOnOrForwardPlane` (tecknat avstånd > −radie) och `isOnFrustum`, som flyttar och skalar sfären med entitetens modellmatris och testar den mot de sex planen. Lagra den i `Entity` (`boundingVolume`) för roten och varje barn.",
+        "vulkan": "Ge varje entitet en avgränsningssfär: behåll en kopia av modellens vertexar i `Model`, skriv structen `Sphere`, `generateSphereBV` (lådan runt alla modellens vertexar; mittpunkt = lådans mittpunkt, radie = halva dess diagonal), `isOnOrForwardPlane` (tecknat avstånd > −radie) och `isOnFrustum`, som flyttar och skalar sfären med entitetens modellmatris och testar den mot de sex planen. Lagra den i `Entity` (`boundingVolume`) för roten och varje barn.",
+        "d3d12": "Ge varje entitet en avgränsningssfär: skriv structen `Sphere`, `generateSphereBV` (lådan runt alla modellens vertexar; mittpunkt = lådans mittpunkt, radie = halva dess diagonal), `isOnOrForwardPlane` (tecknat avstånd > −radie) och `isOnFrustum`, som flyttar och skalar sfären med entitetens modellmatris och testar den mot de sex planen. Lagra den i `Entity` (`boundingVolume`) för roten och varje barn."
+      },
+      "hint": {
+        "opengl": "Loopa `for (const Mesh& mesh : model.meshes) for (const Vertex& vertex : mesh.vertices)` med `std::min` / `std::max` per axel. I `isOnFrustum`: den globala skalan är längden av modellmatrisens tre första kolumner, mittpunkten `glm::vec3(transform.modelMatrix * glm::vec4(sphere.center, 1.0f))`, radien `sphere.radius * maxScale`. `#include <limits>` och `<algorithm>`.",
+        "vulkan": "`std::vector<Vertex> vertices;` i `struct Model` och `ourModel.vertices = vertices;` i `loadEntities()`. Loopa `for (const Vertex& vertex : model.vertices)` med `std::min` / `std::max` per axel av `vertex.pos`. I `isOnFrustum`: den globala skalan är längden av modellmatrisens tre första kolumner, mittpunkten `glm::vec3(transform.modelMatrix * glm::vec4(sphere.center, 1.0f))`, radien `sphere.radius * maxScale`.",
+        "d3d12": "Loopa `for (const Mesh& mesh : model.meshes) for (const Vertex& vertex : mesh.vertices)` med `XMVectorMin` / `XMVectorMax` av `XMLoadFloat3(&vertex.position)`. I `isOnFrustum`: den globala skalan är längden av modellmatrisens tre första rader (`XMVector3Length(modelMatrix.r[0])` …), mittpunkten `XMVector3Transform(XMLoadFloat3(&sphere.center), modelMatrix)`, radien `sphere.radius * maxScale` (`fmaxf`). `#include <cfloat>` för `FLT_MAX`."
+      }
+    },
+    "cull": {
+      "text": {
+        "opengl": "Culla: bygg kamerans frustum varje bildruta och låt `drawSelfAndChild` bara rita en entitet när dess avgränsningssfär ligger i frustumet, räkna de ritade och de besökta entiteterna och visa antalen i fönstrets titel. För att se cullingen arbeta: bygg tills vidare frustumet med det bortre planet på 15 (projektionen når fortfarande 100).",
+        "vulkan": "Culla: bygg kamerans frustum varje bildruta och låt `drawSelfAndChild` bara spela in en entitet när dess avgränsningssfär ligger i frustumet, räkna de ritade och de besökta entiteterna och visa antalen i fönstrets titel. För att se cullingen arbeta: bygg tills vidare frustumet med det bortre planet på 15 (projektionen når fortfarande 100).",
+        "d3d12": "Culla: bygg kamerans frustum varje bildruta och låt `drawSelfAndChild` bara rita en entitet när dess avgränsningssfär ligger i frustumet, räkna de ritade och de besökta entiteterna och visa antalen i fönstrets titel. För att se cullingen arbeta: bygg tills vidare frustumet med det bortre planet på 15 (projektionen når fortfarande 100)."
+      },
+      "hint": {
+        "opengl": "`const Frustum camFrustum = createFrustumFromCamera(cameraPos, cameraFront, cameraUp, (float)SCR_WIDTH / (float)SCR_HEIGHT, glm::radians(fov), 0.1f, 15.0f);`, `unsigned int total = 0, display = 0; drawSelfAndChild(ourEntity, camFrustum, ourShader, display, total);`, sedan `std::string title = \"LearnOpenGL - drawn: \" + std::to_string(display) + \" / \" + std::to_string(total); glfwSetWindowTitle(window, title.c_str());`.",
+        "vulkan": "I `recordCommandBuffer()`: `const Frustum camFrustum = createFrustumFromCamera(cameraPos, cameraFront, cameraUp, swapChainExtent.width / (float) swapChainExtent.height, glm::radians(fov), 0.1f, 15.0f);`, `unsigned int total = 0, display = 0; drawSelfAndChild(ourEntity, camFrustum, commandBuffer, pipelineLayout, display, total);`, sedan `std::string title = \"Vulkan - drawn: \" + std::to_string(display) + \" / \" + std::to_string(total); glfwSetWindowTitle(window, title.c_str());`.",
+        "d3d12": "`const Frustum camFrustum = createFrustumFromCamera(cameraPos, cameraFront, cameraUp, static_cast<float>(m_width) / static_cast<float>(m_height), XMConvertToRadians(fov), 0.1f, 15.0f);`, `unsigned int total = 0, display = 0; drawSelfAndChild(m_ourEntity, camFrustum, m_commandList.Get(), display, total);`, sedan `std::wstring title = L\"LearnDirectX - drawn: \" + std::to_wstring(display) + L\" / \" + std::to_wstring(total); SetWindowTextW(m_hwnd, title.c_str());`."
+      }
+    },
+    "camera-frustum": {
+      "text": "Bygg cullingfrustumet med projektionens egna värden – bortre plan 100 – så att precis det som kameran ser ritas.",
+      "hint": "Ändra det sista argumentet till `createFrustumFromCamera` från `15.0f` till `100.0f`."
+    },
+    "aabb": {
+      "text": "Använd i stället learnopengls tätare avgränsningsvolym: en axelparallell låda (`AABB`, mittpunkt och halva storlekar) med `generateAABB`, `isOnOrForwardPlane` (lådans projektionsradie på planets normal) och `isOnFrustum` (lådan i världsrummet runt den vridna och skalade lådan), och lagra en `AABB` i `Entity`.",
+      "hint": {
+        "opengl": "`r = extents.x * std::abs(plane.normal.x) + extents.y * std::abs(plane.normal.y) + extents.z * std::abs(plane.normal.z)`; innanför: `-r <= getSignedDistanceToPlane(plane, center)`. I `isOnFrustum`: `right = glm::vec3(modelMatrix[0]) * extents.x`, `up = glm::vec3(modelMatrix[1]) * extents.y`, `forward = -glm::vec3(modelMatrix[2]) * extents.z`, och de nya halva storlekarna `newIi`, `newIj`, `newIk` som summor av `std::abs(glm::dot(axis, …))`.",
+        "vulkan": "`r = extents.x * std::abs(plane.normal.x) + extents.y * std::abs(plane.normal.y) + extents.z * std::abs(plane.normal.z)`; innanför: `-r <= getSignedDistanceToPlane(plane, center)`. I `isOnFrustum`: `right = glm::vec3(modelMatrix[0]) * extents.x`, `up = glm::vec3(modelMatrix[1]) * extents.y`, `forward = -glm::vec3(modelMatrix[2]) * extents.z`, och de nya halva storlekarna `newIi`, `newIj`, `newIk` som summor av `std::abs(glm::dot(axis, …))`.",
+        "d3d12": "`r = extents.x * fabsf(plane.normal.x) + extents.y * fabsf(plane.normal.y) + extents.z * fabsf(plane.normal.z)`; innanför: `-r <= getSignedDistanceToPlane(plane, center)`. I `isOnFrustum`: `right = modelMatrix.r[0] * extents.x`, `up = modelMatrix.r[1] * extents.y`, `forward = -modelMatrix.r[2] * extents.z`, och de nya halva storlekarna `newIi`, `newIj`, `newIk` som summor av `fabsf(XMVectorGetX(XMVector3Dot(axis, …)))`."
+      }
+    }
+  }
+}

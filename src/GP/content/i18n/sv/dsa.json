@@ -1,0 +1,25 @@
+{
+  "title": "DSA",
+  "tasks": {
+    "context": {
+      "text": "Be GLFW om en OpenGL 4.5 core-kontext – versionen där direct state access blev core.",
+      "hint": "`glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);` (GLAD måste vara genererat för 4.5 för att DSA-funktionerna ska läsas in)."
+    },
+    "vertex-buffer": {
+      "text": "Skapa vertex buffern med DSA: `glCreateBuffers` i stället för `glGenBuffers`, och dess data med `glNamedBufferStorage` (oföränderligt minne, flaggorna 0: programmet ändrar den aldrig) i stället för att binda den och anropa `glBufferData`.",
+      "hint": "`GLuint VBO = 0; glCreateBuffers(1, &VBO); glNamedBufferStorage(VBO, sizeof(vertices), vertices, 0x0);` – ingen `glBindBuffer` behövs för att skapa eller fylla den. VAO-uppsättningen binder den fortfarande till `GL_ARRAY_BUFFER` en gång för `glVertexAttribPointer`."
+    },
+    "element-buffer": {
+      "text": "Skapa även element buffern med DSA: `glCreateBuffers`, minne med `glNamedBufferStorage` utan data men med `GL_DYNAMIC_STORAGE_BIT` (så att den får uppdateras), och ladda sedan upp indexen med `glNamedBufferSubData`.",
+      "hint": "`glNamedBufferStorage(EBO, sizeof(indices), nullptr, GL_DYNAMIC_STORAGE_BIT); glNamedBufferSubData(EBO, 0, sizeof(indices), indices);` – utan flaggan är `glNamedBufferSubData` på oföränderligt minne ett fel (`GL_INVALID_OPERATION`)."
+    },
+    "vertex-array": {
+      "text": "Skapa och beskriv vertex array-objektet med DSA: `glCreateVertexArrays`, slå på attribut 0, ge det dess format (tre flyttal på förskjutningen 0) och bindningspunkt 0, koppla vertex buffern till bindningspunkt 0 med strided, och element buffern till VAO:n – ingen bindning av VAO:n eller buffrarna vid uppsättningen.",
+      "hint": "learnopengls `glEnableVertexArrayAttrib(VAO, 0); glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, 0); glVertexArrayAttribBinding(VAO, 0, 0); glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 3); glVertexArrayElementBuffer(VAO, EBO);`. Formatet (vad ett attribut är) och buffern (varifrån det kommer) är nu åtskilda."
+    },
+    "texture": {
+      "text": "Texturera rektangeln med `container.png`, skapad med DSA: lägg till texturkoordinater i vertexarna som attribut 1 (två flyttal, tre flyttal in i varje vertex, samma bindningspunkt, stride 5 flyttal), skapa texturen med `glCreateTextures`, sätt parametrarna med `glTextureParameteri`, allokera oföränderligt minne för alla mip-nivåer med `glTextureStorage2D`, ladda upp bilden med `glTextureSubImage2D`, generera mipmaps med `glGenerateTextureMipmap` och bind den för ritning med `glBindTextureUnit`. Shaderna skickar vidare texturkoordinaterna och samplar texturen.",
+      "hint": "`glVertexArrayAttribFormat(VAO, 1, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(float))` – sista argumentet är förskjutningen inuti en vertex; strided flyttar till `glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 5)`. `glCreateTextures(GL_TEXTURE_2D, 1, &texture)`, `glTextureStorage2D(texture, levels, GL_RGB8, width, height)` med `levels = 1 + (int)std::floor(std::log2((float)std::max(width, height)))`, `glTextureSubImage2D(texture, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data)`; i loopen `glBindTextureUnit(0, texture);`."
+    }
+  }
+}

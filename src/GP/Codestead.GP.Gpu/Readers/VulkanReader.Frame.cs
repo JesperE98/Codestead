@@ -33,6 +33,23 @@ public sealed partial class VulkanReader
         Draw(begin.Offset, end.Offset);
     }
 
+    /// <summary>
+    /// The function that records the frame's command buffer: the one with the render pass's begin, or – when a helper of
+    /// the program begins the pass (a post-processor's BeginRender) – the caller up the chain that calls
+    /// vkBeginCommandBuffer (vulkan-tutorial's recordCommandBuffer).
+    /// </summary>
+    private string? RecordFunction(string? fn)
+    {
+        var current = fn;
+        for (int depth = 0; current is not null && depth < 6; depth++)
+        {
+            if (src.FunctionBody(current) is { } body && body.Contains("vkBeginCommandBuffer", StringComparison.Ordinal)) return current;
+            var callee = current.Split('#')[0];
+            current = src.Functions.Keys.FirstOrDefault(f => f.Split('#')[0] != callee && src.FunctionBody(f) is { } b && Regex.IsMatch(b, @"(?<![\w.>])" + Regex.Escape(callee) + @"\s*\("));
+        }
+        return fn;
+    }
+
     private void Draw(int beginOffset, int endOffset)
     {
         var draw = src.Calls("vkCmdDraw").FirstOrDefault();
@@ -127,7 +144,7 @@ public sealed partial class VulkanReader
         recorder.Setup();
         if (device.WindowSrgb) scene.WindowSrgb = true;
         // A game: the frames before the shown one (its input and update, without drawing).
-        var recordFunction = src.FunctionAt(beginOffset) ?? src.FunctionAt(call.Offset);
+        var recordFunction = RecordFunction(src.FunctionAt(beginOffset) ?? src.FunctionAt(call.Offset));
         GameFrames.RunGlfw(src, recorder, time, UpdateFunctions(blocks).Append("drawFrame").Append(recordFunction ?? "drawFrame"));
         foreach (var fn in UpdateFunctions(blocks)) recorder.Run(fn);
         if (recordFunction is { } recordFn) recorder.Run(recordFn);
@@ -157,6 +174,9 @@ public sealed partial class VulkanReader
                 if (opsByDraw.TryGetValue(di, out var ops)) AddDeviceOps(ops, device);
                 // With several pipelines, the draw uses the one bound before it.
                 var pl = d.Pipeline is not null && pipelines.Count > 1 && pipelines.TryGetValue(d.Pipeline, out var p) ? p : null;
+                // Pipelines the reading of the code cannot follow (kept in a map): the one the device saw bound.
+                if (pl is null && (created.Count == 0 || device.CreatedPipelines.Count > created.Count) && d.State is VulkanDevice.DrawState { Pipeline: { } bound })
+                    pl = RuntimePipeline(device, bound);
                 // One pipeline: its own state (a helper's parameters: createPipeline(…, VK_PRIMITIVE_TOPOLOGY_POINT_LIST, …)).
                 var one = pl is null ? only : null;
                 var dvs = pl?.Vs ?? vs;

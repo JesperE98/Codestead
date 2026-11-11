@@ -1,0 +1,41 @@
+{
+  "title": "Ball",
+  "tasks": {
+    "ball-object": {
+      "text": "Add learnopengl's BallObject as a struct derived from `GameObject` with its own state – `Radius` (12.5) and `Stuck` (true) – and `MakeBallObject`, learnopengl's constructor.",
+      "hint": {
+        "opengl": "`struct BallObject : GameObject { float Radius = 12.5f; bool Stuck = true; };` – a BallObject has every GameObject field too. `MakeBallObject(pos, radius, velocity, sprite)` sets Position, `Size = glm::vec2(radius * 2.0f, radius * 2.0f)`, Velocity, Sprite, Radius and `Stuck = true`.",
+        "vulkan": "`struct BallObject : GameObject { float Radius = 12.5f; bool Stuck = true; };` – a BallObject has every GameObject field too. `MakeBallObject(pos, radius, velocity, VkDescriptorSet sprite)` sets Position, `Size = glm::vec2(radius * 2.0f, radius * 2.0f)`, Velocity, Sprite, Radius and `Stuck = true`.",
+        "d3d12": "`struct BallObject : GameObject { float Radius = 12.5f; bool Stuck = true; };` – a BallObject has every GameObject field too. `MakeBallObject(pos, radius, velocity, sprite)` sets Position, `Size = XMFLOAT2(radius * 2.0f, radius * 2.0f)`, Velocity, Sprite, Radius and `Stuck = true`."
+      }
+    },
+    "move-reset": {
+      "text": "Write `Move` (unless the ball is stuck: move it by `Velocity * dt` and bounce it off the left, right and top edges of the window) and `Reset` (put it back at a position with a velocity, stuck again).",
+      "hint": {
+        "opengl": "learnopengl's `BallObject::Move` with `ball.` instead of `this->`: `ball.Position += ball.Velocity * dt;`, then at an edge reverse the velocity component and put the ball back on the edge (`Position.x = 0.0f`, `Position.x = window_width - ball.Size.x`, `Position.y = 0.0f`). No bottom edge: the player has to catch the ball.",
+        "vulkan": "learnopengl's `BallObject::Move` with `ball.` instead of `this->`: `ball.Position += ball.Velocity * dt;`, then at an edge reverse the velocity component and put the ball back on the edge (`Position.x = 0.0f`, `Position.x = window_width - ball.Size.x`, `Position.y = 0.0f`). No bottom edge: the player has to catch the ball.",
+        "d3d12": "learnopengl's `BallObject::Move` with `ball.` instead of `this->`; the vector step `XMStoreFloat2(&ball.Position, XMLoadFloat2(&ball.Position) + XMLoadFloat2(&ball.Velocity) * dt);`, then at an edge reverse the velocity component and put the ball back on the edge. No bottom edge: the player has to catch the ball."
+      }
+    },
+    "draw-ball": {
+      "text": "Add the ball's constants `INITIAL_BALL_VELOCITY` (100, -350) and `BALL_RADIUS` (12.5) and a global `BallObject Ball`; in `Init` make it on top of the paddle, in its middle, with the `ball` texture; draw it in `Render` after the paddle.",
+      "hint": {
+        "opengl": "`glm::vec2 ballPos = playerPos + glm::vec2(PLAYER_SIZE.x / 2.0f - BALL_RADIUS, -BALL_RADIUS * 2.0f);`, `Ball = MakeBallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, GetTexture(\"ball\").ID);` and `DrawObject(Ball, Renderer);` – the ball is a GameObject too.",
+        "vulkan": "`glm::vec2 ballPos = playerPos + glm::vec2(PLAYER_SIZE.x / 2.0f - BALL_RADIUS, -BALL_RADIUS * 2.0f);`, `Ball = MakeBallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, GetTexture(\"ball\").DescriptorSet);` and `DrawObject(Ball, Renderer);` – the ball is a GameObject too.",
+        "d3d12": "`XMFLOAT2 ballPos = XMFLOAT2(playerPos.x + PLAYER_SIZE.x / 2.0f - BALL_RADIUS, playerPos.y - BALL_RADIUS * 2.0f);`, `Ball = MakeBallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, GetTexture(\"ball\").ID);` and `DrawObject(Ball, Renderer);` – the ball is a GameObject too."
+      }
+    },
+    "update": {
+      "text": "Move the ball every frame: call `Move` in `Update` with the window's width.",
+      "hint": "`Move(Ball, dt, game.Width);` – nothing changes yet: the ball is stuck, and Move leaves a stuck ball where it is."
+    },
+    "launch": {
+      "text": "In `ProcessInput`, move the ball together with the paddle while it is stuck (A and D), and release it when SPACE is pressed.",
+      "hint": {
+        "opengl": "In both paddle branches: `{ Player.Position.x -= velocity; if (Ball.Stuck) Ball.Position.x -= velocity; }` (`+=` for D). Then `if (game.Keys[GLFW_KEY_SPACE]) Ball.Stuck = false;`.",
+        "vulkan": "In both paddle branches: `{ Player.Position.x -= velocity; if (Ball.Stuck) Ball.Position.x -= velocity; }` (`+=` for D). Then `if (game.Keys[GLFW_KEY_SPACE]) Ball.Stuck = false;`.",
+        "d3d12": "In both paddle branches: `{ Player.Position.x -= velocity; if (Ball.Stuck) Ball.Position.x -= velocity; }` (`+=` for 'D'). Then `if (game.Keys[VK_SPACE]) Ball.Stuck = false;`."
+      }
+    }
+  }
+}

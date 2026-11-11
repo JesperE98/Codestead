@@ -1,0 +1,536 @@
+=== task: bone-weights
+--- file: mesh.h
+--- find:
+    // TODO: the bone data: the ids of the (up to MAX_BONE_INFLUENCE) bones that move this vertex, and their weights
+--- replace:
+    // bone indexes which will influence this vertex
+    int m_BoneIDs[MAX_BONE_INFLUENCE];
+    // weights from each bone
+    float m_Weights[MAX_BONE_INFLUENCE];
+--- file: mesh.h
+--- find:
+        // TODO: the bone ids (attribute 3, integers) and the weights (attribute 4)
+--- replace:
+        // ids: integers, so glVertexAttribIPointer (the 'I' keeps them integers instead of converting them to floats)
+        glEnableVertexAttribArray(3);
+        glVertexAttribIPointer(3, 4, GL_INT, sizeof(Vertex), (void*)offsetof(Vertex, m_BoneIDs));
+        // weights
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_Weights));
+--- file: model.h
+--- find:
+// TODO: struct BoneInfo: a bone's id (its index in the final bone matrices) and its offset matrix
+--- replace:
+// a bone of the model: its index in the final bone matrices and its offset matrix
+struct BoneInfo
+{
+    // id is index in finalBoneMatrices
+    int id;
+
+    // offset matrix transforms vertex from model space to bone space
+    glm::mat4 offset;
+};
+--- file: model.h
+--- find:
+    // TODO: GetBoneInfoMap() and GetBoneCount(), and (private) the bones by name and their count
+
+private:
+--- replace:
+    auto& GetBoneInfoMap() { return m_BoneInfoMap; }
+    int& GetBoneCount() { return m_BoneCounter; }
+
+private:
+    std::map<std::string, BoneInfo> m_BoneInfoMap; // the bones by name
+    int m_BoneCounter = 0;                         // the number of bones found so far (the next bone's id)
+--- file: model.h
+--- find:
+            // TODO: no bones yet (SetVertexBoneDataToDefault)
+--- replace:
+            SetVertexBoneDataToDefault(vertex);
+--- file: model.h
+--- find:
+        // TODO: the bones that move each vertex, and how much (ExtractBoneWeightForVertices)
+--- replace:
+        // the bones that move each vertex, and how much
+        ExtractBoneWeightForVertices(vertices, mesh, scene);
+--- file: model.h
+--- find:
+    // TODO: SetVertexBoneDataToDefault, SetVertexBoneData and ExtractBoneWeightForVertices
+--- replace:
+    // no bones yet: id -1 (no bone), weight 0
+    void SetVertexBoneDataToDefault(Vertex& vertex)
+    {
+        for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+        {
+            vertex.m_BoneIDs[i] = -1;
+            vertex.m_Weights[i] = 0.0f;
+        }
+    }
+
+    // put the bone and its weight into the vertex's first free slot (at most MAX_BONE_INFLUENCE bones per vertex)
+    void SetVertexBoneData(Vertex& vertex, int boneID, float weight)
+    {
+        for (int i = 0; i < MAX_BONE_INFLUENCE; ++i)
+        {
+            if (vertex.m_BoneIDs[i] < 0)
+            {
+                vertex.m_Weights[i] = weight;
+                vertex.m_BoneIDs[i] = boneID;
+                break;
+            }
+        }
+    }
+
+    // assimp stores the weights per bone (aiBone: its vertices and weights); a shader needs them per vertex
+    void ExtractBoneWeightForVertices(std::vector<Vertex>& vertices, aiMesh* mesh, const aiScene* scene)
+    {
+        auto& boneInfoMap = m_BoneInfoMap;
+        int& boneCount = m_BoneCounter;
+
+        for (unsigned int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex)
+        {
+            int boneID = -1;
+            std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
+            if (boneInfoMap.find(boneName) == boneInfoMap.end())
+            {
+                // a new bone: the next id, and its offset matrix
+                BoneInfo newBoneInfo;
+                newBoneInfo.id = boneCount;
+                newBoneInfo.offset = ConvertMatrixToGLMFormat(mesh->mBones[boneIndex]->mOffsetMatrix);
+                boneInfoMap[boneName] = newBoneInfo;
+                boneID = boneCount;
+                boneCount++;
+            }
+            else
+            {
+                boneID = boneInfoMap[boneName].id;
+            }
+            auto weights = mesh->mBones[boneIndex]->mWeights;
+            int numWeights = mesh->mBones[boneIndex]->mNumWeights;
+
+            for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex)
+            {
+                int vertexId = weights[weightIndex].mVertexId;
+                float weight = weights[weightIndex].mWeight;
+                SetVertexBoneData(vertices[vertexId], boneID, weight);
+            }
+        }
+    }
+=== task: bone
+--- file: main.cpp
+--- find:
+// ---------------------------------------------------------------------------------------------------------------------
+// TODO: Bone: one bone's keyframes (KeyPosition, KeyRotation, KeyScale, struct Bone) and its local transform at a
+// time (CreateBone, GetPositionIndex / GetRotationIndex / GetScaleIndex, GetScaleFactor, InterpolatePosition /
+// InterpolateRotation / InterpolateScaling, UpdateBone)
+// ---------------------------------------------------------------------------------------------------------------------
+--- replace:
+// ---------------------------------------------------------------------------------------------------------------------
+// Bone: one bone's keyframes, and its local transform at the animation's current time
+// (learnopengl's Bone class, written as a struct with free functions)
+// ---------------------------------------------------------------------------------------------------------------------
+struct KeyPosition
+{
+    glm::vec3 position;
+    float timeStamp;
+};
+
+struct KeyRotation
+{
+    glm::quat orientation;
+    float timeStamp;
+};
+
+struct KeyScale
+{
+    glm::vec3 scale;
+    float timeStamp;
+};
+
+struct Bone
+{
+    std::vector<KeyPosition> m_Positions;
+    std::vector<KeyRotation> m_Rotations;
+    std::vector<KeyScale> m_Scales;
+    int m_NumPositions;
+    int m_NumRotations;
+    int m_NumScalings;
+
+    glm::mat4 m_LocalTransform;
+    std::string m_Name;
+    int m_ID;
+};
+
+// reads the keyframes of one animation channel (aiNodeAnim) into a Bone
+Bone CreateBone(const std::string& name, int ID, const aiNodeAnim* channel)
+{
+    Bone bone;
+    bone.m_Name = name;
+    bone.m_ID = ID;
+    bone.m_LocalTransform = glm::mat4(1.0f);
+
+    bone.m_NumPositions = channel->mNumPositionKeys;
+    for (int positionIndex = 0; positionIndex < bone.m_NumPositions; ++positionIndex)
+    {
+        aiVector3D aiPosition = channel->mPositionKeys[positionIndex].mValue;
+        float timeStamp = channel->mPositionKeys[positionIndex].mTime;
+        KeyPosition data;
+        data.position = GetGLMVec(aiPosition);
+        data.timeStamp = timeStamp;
+        bone.m_Positions.push_back(data);
+    }
+
+    bone.m_NumRotations = channel->mNumRotationKeys;
+    for (int rotationIndex = 0; rotationIndex < bone.m_NumRotations; ++rotationIndex)
+    {
+        aiQuaternion aiOrientation = channel->mRotationKeys[rotationIndex].mValue;
+        float timeStamp = channel->mRotationKeys[rotationIndex].mTime;
+        KeyRotation data;
+        data.orientation = GetGLMQuat(aiOrientation);
+        data.timeStamp = timeStamp;
+        bone.m_Rotations.push_back(data);
+    }
+
+    bone.m_NumScalings = channel->mNumScalingKeys;
+    for (int keyIndex = 0; keyIndex < bone.m_NumScalings; ++keyIndex)
+    {
+        aiVector3D scale = channel->mScalingKeys[keyIndex].mValue;
+        float timeStamp = channel->mScalingKeys[keyIndex].mTime;
+        KeyScale data;
+        data.scale = GetGLMVec(scale);
+        data.timeStamp = timeStamp;
+        bone.m_Scales.push_back(data);
+    }
+    return bone;
+}
+
+// the index of the key before animationTime (the key after it is index + 1)
+int GetPositionIndex(const Bone& bone, float animationTime)
+{
+    for (int index = 0; index < bone.m_NumPositions - 1; ++index)
+    {
+        if (animationTime < bone.m_Positions[index + 1].timeStamp)
+            return index;
+    }
+    return bone.m_NumPositions - 2; // not reached: the animation's time stays below its duration
+}
+
+int GetRotationIndex(const Bone& bone, float animationTime)
+{
+    for (int index = 0; index < bone.m_NumRotations - 1; ++index)
+    {
+        if (animationTime < bone.m_Rotations[index + 1].timeStamp)
+            return index;
+    }
+    return bone.m_NumRotations - 2;
+}
+
+int GetScaleIndex(const Bone& bone, float animationTime)
+{
+    for (int index = 0; index < bone.m_NumScalings - 1; ++index)
+    {
+        if (animationTime < bone.m_Scales[index + 1].timeStamp)
+            return index;
+    }
+    return bone.m_NumScalings - 2;
+}
+
+// how far animationTime is from the last key to the next one: 0 at the last key, 1 at the next
+float GetScaleFactor(float lastTimeStamp, float nextTimeStamp, float animationTime)
+{
+    float scaleFactor = 0.0f;
+    float midWayLength = animationTime - lastTimeStamp;
+    float framesDiff = nextTimeStamp - lastTimeStamp;
+    scaleFactor = midWayLength / framesDiff;
+    return scaleFactor;
+}
+
+// positions: linear interpolation (mix) between the two keys around animationTime
+glm::mat4 InterpolatePosition(const Bone& bone, float animationTime)
+{
+    if (1 == bone.m_NumPositions)
+        return glm::translate(glm::mat4(1.0f), bone.m_Positions[0].position);
+
+    int p0Index = GetPositionIndex(bone, animationTime);
+    int p1Index = p0Index + 1;
+    float scaleFactor = GetScaleFactor(bone.m_Positions[p0Index].timeStamp,
+        bone.m_Positions[p1Index].timeStamp, animationTime);
+    glm::vec3 finalPosition = glm::mix(bone.m_Positions[p0Index].position, bone.m_Positions[p1Index].position,
+        scaleFactor);
+    return glm::translate(glm::mat4(1.0f), finalPosition);
+}
+
+// rotations: spherical linear interpolation (slerp) between the two quaternions
+glm::mat4 InterpolateRotation(const Bone& bone, float animationTime)
+{
+    if (1 == bone.m_NumRotations)
+    {
+        auto rotation = glm::normalize(bone.m_Rotations[0].orientation);
+        return glm::toMat4(rotation);
+    }
+
+    int p0Index = GetRotationIndex(bone, animationTime);
+    int p1Index = p0Index + 1;
+    float scaleFactor = GetScaleFactor(bone.m_Rotations[p0Index].timeStamp,
+        bone.m_Rotations[p1Index].timeStamp, animationTime);
+    glm::quat finalRotation = glm::slerp(bone.m_Rotations[p0Index].orientation, bone.m_Rotations[p1Index].orientation,
+        scaleFactor);
+    finalRotation = glm::normalize(finalRotation);
+    return glm::toMat4(finalRotation);
+}
+
+// scales: linear interpolation like the positions
+glm::mat4 InterpolateScaling(const Bone& bone, float animationTime)
+{
+    if (1 == bone.m_NumScalings)
+        return glm::scale(glm::mat4(1.0f), bone.m_Scales[0].scale);
+
+    int p0Index = GetScaleIndex(bone, animationTime);
+    int p1Index = p0Index + 1;
+    float scaleFactor = GetScaleFactor(bone.m_Scales[p0Index].timeStamp,
+        bone.m_Scales[p1Index].timeStamp, animationTime);
+    glm::vec3 finalScale = glm::mix(bone.m_Scales[p0Index].scale, bone.m_Scales[p1Index].scale,
+        scaleFactor);
+    return glm::scale(glm::mat4(1.0f), finalScale);
+}
+
+// the bone's local transform at animationTime: translation * rotation * scale
+void UpdateBone(Bone& bone, float animationTime)
+{
+    glm::mat4 translation = InterpolatePosition(bone, animationTime);
+    glm::mat4 rotation = InterpolateRotation(bone, animationTime);
+    glm::mat4 scale = InterpolateScaling(bone, animationTime);
+    bone.m_LocalTransform = translation * rotation * scale;
+}
+=== task: animation
+--- file: main.cpp
+--- find:
+// ---------------------------------------------------------------------------------------------------------------------
+// TODO: Animation: the node hierarchy (struct AssimpNodeData) and the bones' keyframes of one animation
+// (struct Animation, ReadHierarchyData, ReadMissingBones, LoadAnimation, FindBone)
+// ---------------------------------------------------------------------------------------------------------------------
+--- replace:
+// ---------------------------------------------------------------------------------------------------------------------
+// Animation: the bones' keyframes and the node hierarchy of the file (learnopengl's Animation class)
+// ---------------------------------------------------------------------------------------------------------------------
+struct AssimpNodeData
+{
+    glm::mat4 transformation;
+    std::string name;
+    int childrenCount;
+    std::vector<AssimpNodeData> children;
+};
+
+struct Animation
+{
+    float m_Duration;
+    int m_TicksPerSecond;
+    std::vector<Bone> m_Bones;
+    AssimpNodeData m_RootNode;
+    std::map<std::string, BoneInfo> m_BoneInfoMap;
+};
+
+// copies assimp's node tree (names, transformations, children) into our own AssimpNodeData tree
+void ReadHierarchyData(AssimpNodeData& dest, const aiNode* src)
+{
+    dest.name = src->mName.data;
+    dest.transformation = ConvertMatrixToGLMFormat(src->mTransformation);
+    dest.childrenCount = src->mNumChildren;
+
+    for (unsigned int i = 0; i < src->mNumChildren; i++)
+    {
+        AssimpNodeData newData;
+        ReadHierarchyData(newData, src->mChildren[i]);
+        dest.children.push_back(newData);
+    }
+}
+
+// one Bone per animation channel; a bone the mesh does not use (no weights) gets a new id too
+void ReadMissingBones(Animation& animation, const aiAnimation* aiAnim, Model& model)
+{
+    int size = aiAnim->mNumChannels;
+
+    auto& boneInfoMap = model.GetBoneInfoMap(); // getting m_BoneInfoMap from Model class
+    int& boneCount = model.GetBoneCount();      // getting the m_BoneCounter from Model class
+
+    // reading channels (bones engaged in an animation and their keyframes)
+    for (int i = 0; i < size; i++)
+    {
+        auto channel = aiAnim->mChannels[i];
+        std::string boneName = channel->mNodeName.data;
+
+        if (boneInfoMap.find(boneName) == boneInfoMap.end())
+        {
+            boneInfoMap[boneName].id = boneCount;
+            boneCount++;
+        }
+        animation.m_Bones.push_back(CreateBone(channel->mNodeName.data,
+            boneInfoMap[channel->mNodeName.data].id, channel));
+    }
+
+    animation.m_BoneInfoMap = boneInfoMap;
+}
+
+// loads the file's first animation (the same file as the model)
+void LoadAnimation(Animation& animation, const std::string& animationPath, Model& model)
+{
+    Assimp::Importer importer;
+    const aiScene* scene = importer.ReadFile(animationPath, aiProcess_Triangulate);
+    if (!scene || !scene->mRootNode || scene->mNumAnimations == 0)
+    {
+        std::cout << "ERROR::ASSIMP:: no animation in " << animationPath << std::endl;
+        return;
+    }
+    auto aiAnim = scene->mAnimations[0];
+    animation.m_Duration = aiAnim->mDuration;
+    animation.m_TicksPerSecond = aiAnim->mTicksPerSecond;
+    ReadHierarchyData(animation.m_RootNode, scene->mRootNode);
+    ReadMissingBones(animation, aiAnim, model);
+}
+
+// the animated bone with this name, or nullptr when the node is not animated
+Bone* FindBone(Animation& animation, const std::string& name)
+{
+    for (Bone& bone : animation.m_Bones)
+    {
+        if (bone.m_Name == name)
+            return &bone;
+    }
+    return nullptr;
+}
+--- file: main.cpp
+--- find:
+    // TODO: load the animation from the same file
+--- replace:
+    Animation swayAnimation;
+    LoadAnimation(swayAnimation, "models/tentacle.gltf", ourModel);
+=== task: animator
+--- file: main.cpp
+--- find:
+// ---------------------------------------------------------------------------------------------------------------------
+// TODO: Animator: plays an animation and computes the final bone matrices (struct Animator, InitAnimator,
+// CalculateBoneTransform, UpdateAnimation)
+// ---------------------------------------------------------------------------------------------------------------------
+--- replace:
+// ---------------------------------------------------------------------------------------------------------------------
+// Animator: plays an animation and computes the final bone matrices (learnopengl's Animator class)
+// ---------------------------------------------------------------------------------------------------------------------
+struct Animator
+{
+    std::vector<glm::mat4> m_FinalBoneMatrices;
+    Animation* m_CurrentAnimation;
+    float m_CurrentTime;
+    float m_DeltaTime;
+};
+
+void InitAnimator(Animator& animator, Animation* animation)
+{
+    animator.m_CurrentTime = 0.0f;
+    animator.m_CurrentAnimation = animation;
+
+    animator.m_FinalBoneMatrices.reserve(100);
+
+    for (int i = 0; i < 100; i++)
+        animator.m_FinalBoneMatrices.push_back(glm::mat4(1.0f));
+}
+
+// walks the node tree from the root: every node's global transform is its parent's times its own (the bone's
+// interpolated transform when the node is animated); a bone's final matrix = global transform * offset matrix
+void CalculateBoneTransform(Animator& animator, const AssimpNodeData* node, glm::mat4 parentTransform)
+{
+    std::string nodeName = node->name;
+    glm::mat4 nodeTransform = node->transformation;
+
+    Bone* bone = FindBone(*animator.m_CurrentAnimation, nodeName);
+
+    if (bone)
+    {
+        UpdateBone(*bone, animator.m_CurrentTime);
+        nodeTransform = bone->m_LocalTransform;
+    }
+
+    glm::mat4 globalTransformation = parentTransform * nodeTransform;
+
+    auto& boneInfoMap = animator.m_CurrentAnimation->m_BoneInfoMap;
+    if (boneInfoMap.find(nodeName) != boneInfoMap.end())
+    {
+        int index = boneInfoMap[nodeName].id;
+        glm::mat4 offset = boneInfoMap[nodeName].offset;
+        animator.m_FinalBoneMatrices[index] = globalTransformation * offset;
+    }
+
+    for (int i = 0; i < node->childrenCount; i++)
+        CalculateBoneTransform(animator, &node->children[i], globalTransformation);
+}
+
+// advances the animation by dt seconds (in the file's ticks, looping) and recomputes the bone matrices
+void UpdateAnimation(Animator& animator, float dt)
+{
+    animator.m_DeltaTime = dt;
+    if (animator.m_CurrentAnimation)
+    {
+        animator.m_CurrentTime += animator.m_CurrentAnimation->m_TicksPerSecond * dt;
+        animator.m_CurrentTime = fmod(animator.m_CurrentTime, animator.m_CurrentAnimation->m_Duration);
+        CalculateBoneTransform(animator, &animator.m_CurrentAnimation->m_RootNode, glm::mat4(1.0f));
+    }
+}
+--- file: main.cpp
+--- find:
+    // TODO: an animator that plays the animation
+--- replace:
+    Animator animator;
+    InitAnimator(animator, &swayAnimation);
+    UpdateAnimation(animator, 0.0f); // for now: the bone matrices at the animation's time 0
+=== task: skinning
+--- file: anim_model.vs
+--- find:
+// TODO: the bone ids (location 3, ivec4) and weights (location 4, vec4)
+--- replace:
+layout (location = 3) in ivec4 boneIds;
+layout (location = 4) in vec4 weights;
+--- file: anim_model.vs
+--- find:
+// TODO: the final bone matrices (MAX_BONES = 100) and MAX_BONE_INFLUENCE = 4
+--- replace:
+const int MAX_BONES = 100;
+const int MAX_BONE_INFLUENCE = 4;
+uniform mat4 finalBonesMatrices[MAX_BONES];
+--- file: anim_model.vs
+--- find:
+    // TODO: the position as the weighted sum of where each of the vertex's bones moves it
+    vec4 totalPosition = vec4(pos, 1.0);
+--- replace:
+    // the position as the weighted sum of where each of the vertex's bones moves it
+    vec4 totalPosition = vec4(0.0);
+    for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+    {
+        if (boneIds[i] == -1)
+            continue;
+        if (boneIds[i] >= MAX_BONES)
+        {
+            totalPosition = vec4(pos, 1.0);
+            break;
+        }
+        vec4 localPosition = finalBonesMatrices[boneIds[i]] * vec4(pos, 1.0);
+        totalPosition += localPosition * weights[i];
+    }
+--- file: main.cpp
+--- find:
+        // TODO: the bones' final matrices (finalBonesMatrices[0..99])
+--- replace:
+        // the bones' final matrices
+        auto transforms = animator.m_FinalBoneMatrices;
+        for (int i = 0; i < (int)transforms.size(); ++i)
+            ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+=== task: play
+--- file: main.cpp
+--- find:
+    InitAnimator(animator, &swayAnimation);
+    UpdateAnimation(animator, 0.0f); // for now: the bone matrices at the animation's time 0
+--- replace:
+    InitAnimator(animator, &swayAnimation);
+--- file: main.cpp
+--- find:
+        // TODO: advance the animation by deltaTime
+--- replace:
+        UpdateAnimation(animator, deltaTime);

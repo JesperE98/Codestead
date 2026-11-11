@@ -9,6 +9,7 @@ Usage: releases_readme.py --repo OWNER/REPO --tags FILE [--out README.md]
   --tags  a file with the repository's release tags, one per line (gh release list --json tagName ...)
 """
 import argparse
+import glob
 import json
 import os
 import re
@@ -29,13 +30,15 @@ ORDER = {"hub": 0}
 
 
 def product_ids():
-    """(key, id, title, summary) of every product, read from build/Codestead.props and packaging/products.json."""
-    props = open(os.path.join(ROOT, "build", "Codestead.props"), encoding="utf-8").read()
+    """(key, id, title, summary) of every product, read from build/Codestead.props (or a product's own
+    src/<Product>/Directory.Build.props, e.g. Codestead GP's) and packaging/products.json."""
+    files = [os.path.join(ROOT, "build", "Codestead.props")] + sorted(glob.glob(os.path.join(ROOT, "src", "*", "Directory.Build.props")))
+    props = "\n".join(open(f, encoding="utf-8").read() for f in files)
     out = []
     for p in json.load(open(os.path.join(ROOT, "packaging", "products.json"), encoding="utf-8")):
         m = re.search(rf"<{p['idProperty']}>([^<]+)</{p['idProperty']}>", props)
         if not m:
-            raise SystemExit(f"{p['idProperty']} is missing from build/Codestead.props")
+            raise SystemExit(f"{p['idProperty']} is missing from build/Codestead.props and src/*/Directory.Build.props")
         out.append((p["key"], m.group(1), p.get("title", m.group(1)), p["summary"]))
     return sorted(out, key=lambda x: ORDER.get(x[0], 1))
 

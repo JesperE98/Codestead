@@ -36,6 +36,20 @@ public sealed class CheckContext
     /// <summary>The frame at time 1 s, 160 pixels wide (null when nothing is shown).</summary>
     public Frame? Frame => Shows ? frame ??= Rasterizer.Render(Scene!, 160) : null;
 
+    private readonly Dictionary<double, Frame> framesAt = new();
+
+    /// <summary>The frame at another time (a game's state after t × 60 frames), 160 pixels wide; null when nothing is shown.</summary>
+    public Frame? FrameAt(double time)
+    {
+        if (time == 1.0) return Frame;
+        if (!Shows) return null;
+        if (!framesAt.TryGetValue(time, out var f)) framesAt[time] = f = Rasterizer.Render(Scene!, 160, time);
+        return f;
+    }
+
+    /// <summary>The colour at a point of the frame at a time (0–1 of width and height, from the top left).</summary>
+    public double[]? PixelAt(double time, double x, double y) => FrameAt(time)?.AtRelative(x, y);
+
     /// <summary>A file's code with comments removed and whitespace collapsed to single spaces ("" if missing).</summary>
     public string Code(string file)
     {

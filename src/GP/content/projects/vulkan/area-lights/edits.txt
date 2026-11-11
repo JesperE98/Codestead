@@ -1,0 +1,707 @@
+=== task: ltc-textures
+--- file: main.cpp
+--- find:
+// TODO: the LTC lookup tables (ltc_matrix.hpp)
+--- replace:
+// the LTC lookup tables LTC1 and LTC2: 64 x 64 texels of four floats each
+#include "ltc_matrix.hpp"
+--- file: main.cpp
+--- find:
+    // TODO: the two LTC tables as float textures (images, memory, views)
+
+    VkSampler textureSampler; // the wood: linear, repeat
+    // TODO: the tables' sampler
+--- replace:
+    // the two LTC tables as float textures
+    VkImage ltc1Image;
+    VkDeviceMemory ltc1ImageMemory;
+    VkImageView ltc1ImageView;
+    VkImage ltc2Image;
+    VkDeviceMemory ltc2ImageMemory;
+    VkImageView ltc2ImageView;
+
+    VkSampler textureSampler; // the wood: linear, repeat
+    VkSampler ltcSampler;     // the tables: nearest when minified, linear when magnified, clamp to edge
+--- file: main.cpp
+--- find:
+        // TODO: the LUT textures (loadMTexture, loadLUTTexture) and their sampler (createLTCSampler)
+--- replace:
+        loadMTexture();
+        loadLUTTexture();
+        createLTCSampler();
+--- file: main.cpp
+--- find:
+        vkDestroySampler(device, textureSampler, nullptr);
+--- replace:
+        vkDestroySampler(device, textureSampler, nullptr);
+        vkDestroySampler(device, ltcSampler, nullptr);
+
+        vkDestroyImageView(device, ltc1ImageView, nullptr);
+        vkDestroyImage(device, ltc1Image, nullptr);
+        vkFreeMemory(device, ltc1ImageMemory, nullptr);
+        vkDestroyImageView(device, ltc2ImageView, nullptr);
+        vkDestroyImage(device, ltc2Image, nullptr);
+        vkFreeMemory(device, ltc2ImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+    // TODO: createFloatTexture (a 64 x 64 RGBA float texture from a table, through a staging buffer), loadMTexture /
+    // loadLUTTexture (LTC1 / LTC2) and createLTCSampler
+--- replace:
+    // learnopengl's loadMTexture / loadLUTTexture: a 64 x 64 texture of four 32-bit floats per texel from one of the
+    // tables, copied through a staging buffer. Row 0 of the table is the texture's row 0 (v = 0): it is not an image.
+    void createFloatTexture(const float* table, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView) {
+        VkDeviceSize imageSize = 64 * 64 * 4 * sizeof(float);
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+            memcpy(data, table, static_cast<size_t>(imageSize));
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        createImage(64, 64, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image, imageMemory);
+
+        transitionImageLayout(image, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            copyBufferToImage(stagingBuffer, image, 64, 64);
+        transitionImageLayout(image, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+        imageView = createImageView(image, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
+    }
+
+    // LTC1: the inverse matrices M^-1
+    void loadMTexture() {
+        createFloatTexture(LTC1, ltc1Image, ltc1ImageMemory, ltc1ImageView);
+    }
+
+    // LTC2: the BRDF's norm and Fresnel terms, and the horizon-clipped sphere's form factor
+    void loadLUTTexture() {
+        createFloatTexture(LTC2, ltc2Image, ltc2ImageMemory, ltc2ImageView);
+    }
+
+    // learnopengl's GL_NEAREST (min) / GL_LINEAR (mag) and GL_CLAMP_TO_EDGE. Linear filtering of 32-bit float
+    // textures is an optional feature in Vulkan: check it (R16G16B16A16_SFLOAT would always have it).
+    void createLTCSampler() {
+        VkFormatProperties formatProperties;
+        vkGetPhysicalDeviceFormatProperties(physicalDevice, VK_FORMAT_R32G32B32A32_SFLOAT, &formatProperties);
+        if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
+            throw std::runtime_error("32-bit float textures cannot be filtered linearly on this GPU!");
+        }
+
+        VkSamplerCreateInfo samplerInfo{};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_NEAREST;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.anisotropyEnable = VK_FALSE;
+        samplerInfo.maxAnisotropy = 1.0f;
+        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &ltcSampler) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create texture sampler!");
+        }
+    }
+--- file: main.cpp
+--- find:
+    void createDescriptorSetLayout() {
+        // the uniform buffer at binding 0, then the textures in learnopengl's unit order: LTC1, LTC2, the floor's
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        // TODO: LTC1 at binding 1 and LTC2 at binding 2 (combined image samplers, fragment shader)
+
+        VkDescriptorSetLayoutBinding diffuseLayoutBinding{};
+        diffuseLayoutBinding.binding = 3;
+        diffuseLayoutBinding.descriptorCount = 1;
+        diffuseLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        diffuseLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, diffuseLayoutBinding};
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        layoutInfo.pBindings = bindings.data();
+
+        if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor set layout!");
+        }
+    }
+--- replace:
+    void createDescriptorSetLayout() {
+        // the uniform buffer at binding 0, then the textures in learnopengl's unit order: LTC1, LTC2, the floor's
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutBinding ltc1LayoutBinding{};
+        ltc1LayoutBinding.binding = 1;
+        ltc1LayoutBinding.descriptorCount = 1;
+        ltc1LayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        ltc1LayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutBinding ltc2LayoutBinding{};
+        ltc2LayoutBinding.binding = 2;
+        ltc2LayoutBinding.descriptorCount = 1;
+        ltc2LayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        ltc2LayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutBinding diffuseLayoutBinding{};
+        diffuseLayoutBinding.binding = 3;
+        diffuseLayoutBinding.descriptorCount = 1;
+        diffuseLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        diffuseLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 4> bindings = {uboLayoutBinding, ltc1LayoutBinding, ltc2LayoutBinding, diffuseLayoutBinding};
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        layoutInfo.pBindings = bindings.data();
+
+        if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor set layout!");
+        }
+    }
+--- file: main.cpp
+--- find:
+    void createDescriptorPool() {
+        // one descriptor set: the uniform buffer and the floor's texture
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 1;
+
+        VkDescriptorPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+        poolInfo.pPoolSizes = poolSizes.data();
+        poolInfo.maxSets = 1;
+
+        if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor pool!");
+        }
+    }
+--- replace:
+    void createDescriptorPool() {
+        // one descriptor set: the uniform buffer and three textures
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 3;
+
+        VkDescriptorPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+        poolInfo.pPoolSizes = poolSizes.data();
+        poolInfo.maxSets = 1;
+
+        if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor pool!");
+        }
+    }
+--- file: main.cpp
+--- find:
+    // The descriptor set: the uniform buffer (binding 0), LTC1 (1), LTC2 (2) and the wood (3) - learnopengl's texture
+    // units 0, 1 and 2.
+    void createDescriptorSet() {
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &descriptorSetLayout;
+
+        if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        VkDescriptorImageInfo diffuseInfo{};
+        diffuseInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        diffuseInfo.imageView = floorTextureImageView;
+        diffuseInfo.sampler = textureSampler;
+
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        // TODO: the writes for LTC1 (binding 1) and LTC2 (binding 2)
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 3;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &diffuseInfo;
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+--- replace:
+    // The descriptor set: the uniform buffer (binding 0), LTC1 (1), LTC2 (2) and the wood (3) - learnopengl's texture
+    // units 0, 1 and 2.
+    void createDescriptorSet() {
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &descriptorSetLayout;
+
+        if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        VkDescriptorImageInfo ltc1Info{};
+        ltc1Info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        ltc1Info.imageView = ltc1ImageView;
+        ltc1Info.sampler = ltcSampler;
+
+        VkDescriptorImageInfo ltc2Info{};
+        ltc2Info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        ltc2Info.imageView = ltc2ImageView;
+        ltc2Info.sampler = ltcSampler;
+
+        VkDescriptorImageInfo diffuseInfo{};
+        diffuseInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        diffuseInfo.imageView = floorTextureImageView;
+        diffuseInfo.sampler = textureSampler;
+
+        std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &ltc1Info;
+
+        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[2].dstSet = descriptorSet;
+        descriptorWrites[2].dstBinding = 2;
+        descriptorWrites[2].dstArrayElement = 0;
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[2].descriptorCount = 1;
+        descriptorWrites[2].pImageInfo = &ltc2Info;
+
+        descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[3].dstSet = descriptorSet;
+        descriptorWrites[3].dstBinding = 3;
+        descriptorWrites[3].dstArrayElement = 0;
+        descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[3].descriptorCount = 1;
+        descriptorWrites[3].pImageInfo = &diffuseInfo;
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+=== task: diffuse
+--- file: shaders/area_light.frag
+--- find:
+// TODO: the LTC textures (LTC1 at binding 1, LTC2 at binding 2), the lookup's scale and bias (LUT_SIZE, LUT_SCALE,
+// LUT_BIAS), IntegrateEdgeVec and LTC_Evaluate
+--- replace:
+layout(binding = 1) uniform sampler2D LTC1; // for inverse M
+layout(binding = 2) uniform sampler2D LTC2; // GGX norm, fresnel, 0(unused), sphere
+
+const float LUT_SIZE  = 64.0; // ltc_texture size
+const float LUT_SCALE = (LUT_SIZE - 1.0)/LUT_SIZE;
+const float LUT_BIAS  = 0.5/LUT_SIZE;
+
+// Vector form without project to the plane (dot with the normal)
+// Use for proxy sphere clipping
+vec3 IntegrateEdgeVec(vec3 v1, vec3 v2)
+{
+    // Using built-in acos() function will result flaws
+    // Using fitting result for calculating acos()
+    float x = dot(v1, v2);
+    float y = abs(x);
+
+    float a = 0.8543985 + (0.4965155 + 0.0145206*y)*y;
+    float b = 3.4175940 + (4.1616724 + y)*y;
+    float v = a / b;
+
+    float theta_sintheta = (x > 0.0) ? v : 0.5*inversesqrt(max(1.0 - x*x, 1e-7)) - v;
+
+    return cross(v1, v2)*theta_sintheta;
+}
+
+// P is fragPos in world space (LTC distribution)
+vec3 LTC_Evaluate(vec3 N, vec3 V, vec3 P, mat3 Minv, vec3 points[4], bool twoSided)
+{
+    // construct orthonormal basis around N
+    vec3 T1, T2;
+    T1 = normalize(V - N * dot(V, N));
+    T2 = cross(N, T1);
+
+    // rotate area light in (T1, T2, N) basis
+    Minv = Minv * transpose(mat3(T1, T2, N));
+
+    // polygon (allocate 4 vertices for clipping)
+    vec3 L[4];
+    // transform polygon from LTC back to origin Do (cosine weighted)
+    L[0] = Minv * (points[0] - P);
+    L[1] = Minv * (points[1] - P);
+    L[2] = Minv * (points[2] - P);
+    L[3] = Minv * (points[3] - P);
+
+    // use tabulated horizon-clipped sphere
+    // check if the shading point is behind the light
+    vec3 dir = points[0] - P; // LTC space
+    vec3 lightNormal = cross(points[1] - points[0], points[3] - points[0]);
+    bool behind = (dot(dir, lightNormal) < 0.0);
+
+    // cos weighted space
+    L[0] = normalize(L[0]);
+    L[1] = normalize(L[1]);
+    L[2] = normalize(L[2]);
+    L[3] = normalize(L[3]);
+
+    // integrate
+    vec3 vsum = vec3(0.0);
+    vsum += IntegrateEdgeVec(L[0], L[1]);
+    vsum += IntegrateEdgeVec(L[1], L[2]);
+    vsum += IntegrateEdgeVec(L[2], L[3]);
+    vsum += IntegrateEdgeVec(L[3], L[0]);
+
+    // form factor of the polygon in direction vsum
+    float len = length(vsum);
+
+    float z = vsum.z/len;
+    if (behind)
+        z = -z;
+
+    vec2 uv = vec2(z*0.5f + 0.5f, len); // range [0, 1]
+    uv = uv*LUT_SCALE + LUT_BIAS;
+
+    // Fetch the form factor for horizon clipping
+    float scale = texture(LTC2, uv).w;
+
+    float sum = len*scale;
+    if (!behind && !twoSided)
+        sum = 0.0;
+
+    // Outgoing radiance (solid angle) for the entire polygon
+    vec3 Lo_i = vec3(sum, sum, sum);
+    return Lo_i;
+}
+--- file: shaders/area_light.frag
+--- find:
+    // TODO: the light's diffuse part: LTC_Evaluate with the identity matrix (a plain cosine) over the light's polygon
+--- replace:
+    // the light's corners
+    vec3 points[4];
+    points[0] = ubo.areaLight.points[0].xyz;
+    points[1] = ubo.areaLight.points[1].xyz;
+    points[2] = ubo.areaLight.points[2].xyz;
+    points[3] = ubo.areaLight.points[3].xyz;
+
+    // Evaluate LTC shading: the diffuse part with the identity matrix (a plain cosine distribution)
+    vec3 diffuse = LTC_Evaluate(N, V, P, mat3(1), points, ubo.areaLight.twoSided);
+
+    result = ubo.areaLight.color * ubo.areaLight.intensity * (mDiffuse * diffuse);
+=== task: specular
+--- file: shaders/area_light.frag
+--- find:
+    // the light's corners
+    vec3 points[4];
+    points[0] = ubo.areaLight.points[0].xyz;
+    points[1] = ubo.areaLight.points[1].xyz;
+    points[2] = ubo.areaLight.points[2].xyz;
+    points[3] = ubo.areaLight.points[3].xyz;
+
+    // Evaluate LTC shading: the diffuse part with the identity matrix (a plain cosine distribution)
+    vec3 diffuse = LTC_Evaluate(N, V, P, mat3(1), points, ubo.areaLight.twoSided);
+
+    result = ubo.areaLight.color * ubo.areaLight.intensity * (mDiffuse * diffuse);
+--- replace:
+    // use roughness and sqrt(1-cos_theta) to sample M_texture
+    vec2 uv = vec2(ubo.material.albedoRoughness.w, sqrt(1.0f - dotNV));
+    uv = uv*LUT_SCALE + LUT_BIAS;
+
+    // get 4 parameters for inverse_M
+    vec4 t1 = texture(LTC1, uv);
+
+    // Get 2 parameters for Fresnel calculation
+    vec4 t2 = texture(LTC2, uv);
+
+    mat3 Minv = mat3(
+        vec3(t1.x, 0, t1.y),
+        vec3(  0,  1,    0),
+        vec3(t1.z, 0, t1.w)
+    );
+
+    // the light's corners
+    vec3 points[4];
+    points[0] = ubo.areaLight.points[0].xyz;
+    points[1] = ubo.areaLight.points[1].xyz;
+    points[2] = ubo.areaLight.points[2].xyz;
+    points[3] = ubo.areaLight.points[3].xyz;
+
+    // Evaluate LTC shading
+    vec3 diffuse = LTC_Evaluate(N, V, P, mat3(1), points, ubo.areaLight.twoSided);
+    vec3 specular = LTC_Evaluate(N, V, P, Minv, points, ubo.areaLight.twoSided);
+
+    // GGX BRDF shadowing and Fresnel
+    // t2.x: shadowedF90 (F90 normally it should be 1.0)
+    // t2.y: Smith function for Geometric Attenuation Term, it is dot(V or L, H).
+    specular *= mSpecular*t2.x + (1.0f - mSpecular) * t2.y;
+
+    result = ubo.areaLight.color * ubo.areaLight.intensity * (specular + mDiffuse * diffuse);
+=== task: multiple-lights
+--- file: shaders/area_light.frag
+--- find:
+// learnopengl's struct Light (std140: the corners are vec4s, so the C++ struct can use glm::vec4 – .xyz is used)
+struct Light {
+    float intensity;
+    vec3 color;
+    vec4 points[4];
+    bool twoSided;
+};
+
+// learnopengl's struct Material without the sampler (no samplers in uniform blocks in Vulkan): see binding 3
+struct Material {
+    vec4 albedoRoughness; // (x,y,z) = color, w = roughness
+};
+
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    vec3 viewPosition;
+    Material material;
+    Light areaLight;
+} ubo;
+--- replace:
+// learnopengl's struct Light (std140: the corners are vec4s, so the C++ struct can use glm::vec4 – .xyz is used)
+struct Light {
+    float intensity;
+    vec3 color;
+    vec4 points[4];
+    bool twoSided;
+};
+
+// learnopengl's struct Material without the sampler (no samplers in uniform blocks in Vulkan): see binding 3
+struct Material {
+    vec4 albedoRoughness; // (x,y,z) = color, w = roughness
+};
+
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    vec3 viewPosition;
+    Material material;
+    Light areaLights[32];
+    int numAreaLights;
+} ubo;
+--- file: shaders/area_light.frag
+--- find:
+    // use roughness and sqrt(1-cos_theta) to sample M_texture
+    vec2 uv = vec2(ubo.material.albedoRoughness.w, sqrt(1.0f - dotNV));
+    uv = uv*LUT_SCALE + LUT_BIAS;
+
+    // get 4 parameters for inverse_M
+    vec4 t1 = texture(LTC1, uv);
+
+    // Get 2 parameters for Fresnel calculation
+    vec4 t2 = texture(LTC2, uv);
+
+    mat3 Minv = mat3(
+        vec3(t1.x, 0, t1.y),
+        vec3(  0,  1,    0),
+        vec3(t1.z, 0, t1.w)
+    );
+
+    // the light's corners
+    vec3 points[4];
+    points[0] = ubo.areaLight.points[0].xyz;
+    points[1] = ubo.areaLight.points[1].xyz;
+    points[2] = ubo.areaLight.points[2].xyz;
+    points[3] = ubo.areaLight.points[3].xyz;
+
+    // Evaluate LTC shading
+    vec3 diffuse = LTC_Evaluate(N, V, P, mat3(1), points, ubo.areaLight.twoSided);
+    vec3 specular = LTC_Evaluate(N, V, P, Minv, points, ubo.areaLight.twoSided);
+
+    // GGX BRDF shadowing and Fresnel
+    // t2.x: shadowedF90 (F90 normally it should be 1.0)
+    // t2.y: Smith function for Geometric Attenuation Term, it is dot(V or L, H).
+    specular *= mSpecular*t2.x + (1.0f - mSpecular) * t2.y;
+
+    result = ubo.areaLight.color * ubo.areaLight.intensity * (specular + mDiffuse * diffuse);
+--- replace:
+    // use roughness and sqrt(1-cos_theta) to sample M_texture
+    vec2 uv = vec2(ubo.material.albedoRoughness.w, sqrt(1.0f - dotNV));
+    uv = uv*LUT_SCALE + LUT_BIAS;
+
+    // get 4 parameters for inverse_M
+    vec4 t1 = texture(LTC1, uv);
+
+    // Get 2 parameters for Fresnel calculation
+    vec4 t2 = texture(LTC2, uv);
+
+    mat3 Minv = mat3(
+        vec3(t1.x, 0, t1.y),
+        vec3(  0,  1,    0),
+        vec3(t1.z, 0, t1.w)
+    );
+
+    // iterate through all area lights
+    for (int i = 0; i < ubo.numAreaLights; i++)
+    {
+        // the light's corners
+        vec3 points[4];
+        points[0] = ubo.areaLights[i].points[0].xyz;
+        points[1] = ubo.areaLights[i].points[1].xyz;
+        points[2] = ubo.areaLights[i].points[2].xyz;
+        points[3] = ubo.areaLights[i].points[3].xyz;
+
+        // Evaluate LTC shading
+        vec3 diffuse = LTC_Evaluate(N, V, P, mat3(1), points, ubo.areaLights[i].twoSided);
+        vec3 specular = LTC_Evaluate(N, V, P, Minv, points, ubo.areaLights[i].twoSided);
+
+        // GGX BRDF shadowing and Fresnel
+        // t2.x: shadowedF90 (F90 normally it should be 1.0)
+        // t2.y: Smith function for Geometric Attenuation Term, it is dot(V or L, H).
+        specular *= mSpecular*t2.x + (1.0f - mSpecular) * t2.y;
+
+        // Add contribution
+        result += ubo.areaLights[i].color * ubo.areaLights[i].intensity * (specular + mDiffuse * diffuse);
+    }
+--- file: main.cpp
+--- find:
+// the area light's colour and intensity (learnopengl's BurlyWood and 4.0; its keys change them)
+const glm::vec3 LIGHT_COLOR = glm::vec3(0.870588f, 0.721569f, 0.529412f); // BurlyWood
+const float LIGHT_INTENSITY = 4.0f;
+
+// camera: learnopengl's area light demo: a little above the floor, looking along -x at the light (yaw 180, pitch 0)
+glm::vec3 cameraPos   = glm::vec3(0.0f, 1.0f, 0.5f);
+glm::vec3 cameraFront = glm::vec3(-1.0f, 0.0f, 0.0f);
+--- replace:
+// several area lights: each one the rectangle above, turned about the y axis (and moved by an offset)
+struct AreaLight {
+    glm::vec3 offset;
+    float yRotation;
+
+    glm::vec3 color;
+    float intensity = 2.0f;
+    bool twoSided = true;
+};
+
+// eight lights on a ring of radius 8 around the middle of the floor, every one turned to face the middle
+const int NUM_AREA_LIGHTS = 8;
+AreaLight areaLights[NUM_AREA_LIGHTS] = {
+    { glm::vec3(0.0f), glm::radians(  0.0f), glm::vec3(1.0f, 0.55f, 0.25f) },
+    { glm::vec3(0.0f), glm::radians( 45.0f), glm::vec3(1.0f, 0.85f, 0.3f) },
+    { glm::vec3(0.0f), glm::radians( 90.0f), glm::vec3(0.55f, 1.0f, 0.35f) },
+    { glm::vec3(0.0f), glm::radians(135.0f), glm::vec3(0.3f, 1.0f, 0.75f) },
+    { glm::vec3(0.0f), glm::radians(180.0f), glm::vec3(0.3f, 0.75f, 1.0f) },
+    { glm::vec3(0.0f), glm::radians(225.0f), glm::vec3(0.4f, 0.45f, 1.0f) },
+    { glm::vec3(0.0f), glm::radians(270.0f), glm::vec3(0.8f, 0.4f, 1.0f) },
+    { glm::vec3(0.0f), glm::radians(315.0f), glm::vec3(1.0f, 0.4f, 0.65f) }
+};
+
+// camera: high above the floor behind the lights, looking down at them (yaw 89.4, pitch -34.3)
+glm::vec3 cameraPos   = glm::vec3(-0.224556f, 10.4038f, -18.9259f);
+glm::vec3 cameraFront = glm::vec3(0.00865f, -0.56356f, 0.82605f);
+--- file: main.cpp
+--- find:
+float yaw   = 180.0f;
+float pitch =  0.0f;
+--- replace:
+float yaw   = 89.3999f;
+float pitch = -34.3001f;
+--- file: main.cpp
+--- find:
+    Material material;
+    Light areaLight;
+};
+--- replace:
+    Material material;
+    Light areaLights[32];
+    int numAreaLights;
+};
+--- file: main.cpp
+--- find:
+        // the area light: its four corners (vertices 6, 7, 10 and 11: the rectangle's 0, 1, 4 and 5), colour, intensity
+        ubo.areaLight.points[0] = glm::vec4(vertices[6].pos, 1.0f);
+        ubo.areaLight.points[1] = glm::vec4(vertices[7].pos, 1.0f);
+        ubo.areaLight.points[2] = glm::vec4(vertices[10].pos, 1.0f);
+        ubo.areaLight.points[3] = glm::vec4(vertices[11].pos, 1.0f);
+        ubo.areaLight.color = LIGHT_COLOR;
+        ubo.areaLight.intensity = LIGHT_INTENSITY;
+        ubo.areaLight.twoSided = VK_TRUE; // learnopengl's light shines both ways
+--- replace:
+        // the area lights
+        for (int i = 0; i < NUM_AREA_LIGHTS; i++) {
+            // the light's model matrix: turned about y, then moved by its offset
+            glm::mat4 model(1.0f);
+            model = glm::translate(model, areaLights[i].offset);
+            model = glm::rotate(model, areaLights[i].yRotation, glm::vec3(0.0f, 1.0f, 0.0f));
+
+            // its four corners in world space (vertices 6, 7, 10 and 11: the rectangle's 0, 1, 4 and 5)
+            ubo.areaLights[i].points[0] = model * glm::vec4(vertices[6].pos, 1.0f);
+            ubo.areaLights[i].points[1] = model * glm::vec4(vertices[7].pos, 1.0f);
+            ubo.areaLights[i].points[2] = model * glm::vec4(vertices[10].pos, 1.0f);
+            ubo.areaLights[i].points[3] = model * glm::vec4(vertices[11].pos, 1.0f);
+            ubo.areaLights[i].color = areaLights[i].color;
+            ubo.areaLights[i].intensity = areaLights[i].intensity;
+            ubo.areaLights[i].twoSided = areaLights[i].twoSided;
+        }
+        ubo.numAreaLights = NUM_AREA_LIGHTS;
+--- file: main.cpp
+--- find:
+        // the light's rectangle in the light's colour
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightPlanePipeline);
+        constants.model = glm::mat4(1.0f);
+        constants.lightColor = LIGHT_COLOR;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 6, 1, 6, 0);
+--- replace:
+        // the lights' rectangles, each in its colour
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightPlanePipeline);
+        for (int i = 0; i < NUM_AREA_LIGHTS; i++) {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, areaLights[i].offset);
+            model = glm::rotate(model, areaLights[i].yRotation, glm::vec3(0.0f, 1.0f, 0.0f));
+            constants.model = model;
+            constants.lightColor = areaLights[i].color;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+            vkCmdDraw(commandBuffer, 6, 1, 6, 0);
+        }

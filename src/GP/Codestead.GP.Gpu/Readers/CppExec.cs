@@ -62,10 +62,9 @@ public sealed class CppExec
             var element = System.Text.RegularExpressions.Regex.Match(declared, @"vector\s*<\s*(?:unsigned\s+)?([\w:]+)");
             if (!element.Success) return null;
             var type = element.Groups[1].Value.Replace("glm::", "").Replace("DirectX::", "").Replace("std::", "");
-            var value = Runner.Default(type);
-            // An API struct the program does not declare (VkVertexInputAttributeDescription): an empty struct whose
-            // fields the program sets (attributeDescriptions[4].location = 4).
-            return value.Text is not null && type is not ("string" or "wstring") ? ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)) : value;
+            // An API type the program does not declare is a placeholder (its name): a handle stays one, a struct
+            // becomes one when a field is set (attributeDescriptions[4].location = 4).
+            return Runner.Default(type);
         };
     }
 

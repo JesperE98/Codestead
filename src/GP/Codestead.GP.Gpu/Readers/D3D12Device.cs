@@ -44,7 +44,7 @@ internal sealed partial class D3D12Device : IDeviceModel
     /// the window.</param>
     public sealed record DrawState(long? RenderTarget, IReadOnlyDictionary<int, (long Address, int Stride)> VertexBuffers,
         (long Address, int Bytes)? IndexBuffer, IReadOnlyDictionary<int, long> Tables, IReadOnlyDictionary<int, long>? RootCbvs = null, string? Target = null, string? Topology = null,
-        bool NoHeap = false);
+        bool NoHeap = false, string? Pso = null);
 
     private const double AddressUnit = 1e9;
     private const double HeapUnit = 1e6;
@@ -105,7 +105,7 @@ internal sealed partial class D3D12Device : IDeviceModel
     List<FrameOp> IDeviceModel.Ops => Ops;
 
     public DrawState Snapshot() => new(renderTarget, new Dictionary<int, (long, int)>(vertexBuffers), indexBuffer, new Dictionary<int, long>(tables), new Dictionary<int, long>(rootCbvs),
-        renderTarget is { } rt ? TargetOf(rt) : null, topology, tablesWithoutHeap);
+        renderTarget is { } rt ? TargetOf(rt) : null, topology, tablesWithoutHeap, boundPso);
 
     private ShaderValue? Eval(Expr e)
     {
@@ -176,6 +176,7 @@ internal sealed partial class D3D12Device : IDeviceModel
         if (exec is null) return null;
         if (Debug && name is not "ThrowIfFailed") Console.Error.WriteLine($"[d3d12] {name}({string.Join(", ", args.Select(a => { var v = Eval(a); return v is null ? "?" : v.ToString(); }))})");
         if (DebugLayerCall(name, args) is { } answered) return answered;
+        if (PipelineCall(name, args) is { } made) return made;
         switch (name)
         {
             case "ThrowIfFailed" when args.Count >= 1:

@@ -1,0 +1,419 @@
+=== task: remove-test
+--- file: main.cpp
+--- find:
+        Ball = MakeBallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, GetTexture("ball").DescriptorSet);
+        // try the power-ups out: one of each kind in the empty row above the stones (no brick breaks with the fixed input)
+        game.PowerUps.push_back(MakePowerUp("speed", glm::vec3(0.5f, 0.5f, 1.0f), 0.0f, glm::vec2(40.0f, 160.0f), GetTexture("powerup_speed").DescriptorSet));
+        game.PowerUps.push_back(MakePowerUp("sticky", glm::vec3(1.0f, 0.5f, 1.0f), 20.0f, glm::vec2(150.0f, 160.0f), GetTexture("powerup_sticky").DescriptorSet));
+        game.PowerUps.push_back(MakePowerUp("pass-through", glm::vec3(0.5f, 1.0f, 0.5f), 10.0f, glm::vec2(260.0f, 160.0f), GetTexture("powerup_pass").DescriptorSet));
+        game.PowerUps.push_back(MakePowerUp("pad-size-increase", glm::vec3(1.0f, 0.6f, 0.4f), 0.0f, glm::vec2(370.0f, 160.0f), GetTexture("powerup_increase").DescriptorSet));
+        game.PowerUps.push_back(MakePowerUp("confuse", glm::vec3(1.0f, 0.3f, 0.3f), 15.0f, glm::vec2(480.0f, 160.0f), GetTexture("powerup_confuse").DescriptorSet));
+        game.PowerUps.push_back(MakePowerUp("chaos", glm::vec3(0.9f, 0.25f, 0.25f), 15.0f, glm::vec2(590.0f, 160.0f), GetTexture("powerup_chaos").DescriptorSet));
+--- replace:
+        Ball = MakeBallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, GetTexture("ball").DescriptorSet);
+=== task: text-renderer
+--- file: shaders/text_2d.vert
+--- find:
+    // TODO: transform the position with the projection and pass the texture coordinates on
+    gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+--- replace:
+    gl_Position = ubo.projection * vec4(vertex.xy, 0.0, 1.0);
+    TexCoords = vertex.zw;
+--- file: shaders/text_2d.frag
+--- find:
+    // TODO: the glyph atlas's red channel as the alpha of textColor
+    color = vec4(pc.textColor, 1.0);
+--- replace:
+    // the glyph atlas has one channel (red): it is the glyph's coverage, used as alpha
+    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);
+    color = vec4(pc.textColor, 1.0) * sampled;
+--- file: main.cpp
+--- find:
+// TODO: struct TextConstants, the C++ side of the text fragment shader's push constant block
+--- replace:
+// The same layout as the push constant block in the text fragment shader: the colour of one line of text.
+struct TextConstants {
+    glm::vec3 textColor;
+};
+--- file: main.cpp
+--- find:
+// TODO: struct Character, the glyph atlas's size and struct TextRenderer (Characters, TextShader, Atlas, the vertex buffer)
+--- replace:
+// TextRenderer (learnopengl: text_renderer.h)
+// --------------------------------------------
+/// Holds all state information relevant to a character as loaded using FreeType
+struct Character {
+    glm::ivec2   AtlasOffset; // where the glyph's bitmap is in the atlas (pixels, top-left corner)
+    glm::ivec2   Size;        // size of glyph
+    glm::ivec2   Bearing;     // offset from baseline to left/top of glyph
+    unsigned int Advance;     // horizontal offset to advance to next glyph
+};
+
+// The glyph atlas (learnopengl: one texture per glyph; Vulkan programs put the glyphs into one image, as in the text
+// rendering chapter): the first 128 characters, each in a cell of 32 x 32 pixels (16 cells per row, 8 rows). At 24
+// pixels the font's largest glyph is 24 x 29, so every glyph fits into its cell.
+const uint32_t ATLAS_CELL = 32;
+const uint32_t ATLAS_WIDTH = 16 * ATLAS_CELL;
+const uint32_t ATLAS_HEIGHT = 8 * ATLAS_CELL;
+// The text vertex buffer has room for this many characters per frame (6 vertices each).
+const uint32_t MAX_CHARACTERS = 256;
+
+// A renderer for rendering text displayed by a font loaded using the
+// FreeType library. A single font is loaded, processed into a list of Character
+// items for later rendering.
+struct TextRenderer {
+    // holds a list of pre-compiled Characters
+    std::map<char, Character> Characters;
+    // shader used for text rendering (its pipeline)
+    VkPipeline       TextShader = VK_NULL_HANDLE;
+    // the glyph atlas (one 8-bit channel) and its descriptor set
+    Texture2D        Atlas;
+    // render state: learnopengl's VBO, here big enough for every character of a frame (host visible, mapped while
+    // the program runs) - each character's quad is written after the ones before it
+    VkBuffer         VBO = VK_NULL_HANDLE;
+    VkDeviceMemory   VBOMemory = VK_NULL_HANDLE;
+    void*            VBOMapped = nullptr;
+    uint32_t         vertexCount = 0; // vertices written so far in this frame
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+    VkCommandBuffer  commandBuffer = VK_NULL_HANDLE; // the command buffer being recorded this frame
+};
+--- file: main.cpp
+--- find:
+PostProcessor  Effects;
+
+--- replace:
+PostProcessor  Effects;
+TextRenderer   Text;
+
+--- file: main.cpp
+--- find:
+    // TODO: InitTextRenderer: the text shader's pipeline and the text vertex buffer
+--- replace:
+    // TextRenderer: loads the text shader and makes the vertex buffer (learnopengl's TextRenderer constructor). The text
+    // uses the game's projection (the uniform buffer): pixels from the top-left corner, y down.
+    void InitTextRenderer(TextRenderer& renderer) {
+        // load the shader: its pipeline is made for the window's render pass (the text is drawn after the
+        // postprocessing quad, so the effects never touch it)
+        renderer.TextShader = LoadShader("shaders/text_2d.vert.spv", "shaders/text_2d.frag.spv", "text", VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, renderPass, VK_SAMPLE_COUNT_1_BIT);
+        renderer.pipelineLayout = pipelineLayout;
+        // configure the vertex buffer for texture quads
+        VkDeviceSize bufferSize = sizeof(Vertex) * 6 * MAX_CHARACTERS;
+        createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, renderer.VBO, renderer.VBOMemory);
+        vkMapMemory(device, renderer.VBOMemory, 0, bufferSize, 0, &renderer.VBOMapped);
+    }
+--- file: main.cpp
+--- find:
+        // TODO: set up the text renderer (the text shader's pipeline, the vertex buffer)
+--- replace:
+        // set up the text renderer (learnopengl's TextRenderer constructor) and load the font at 24 pixels
+        InitTextRenderer(Text);
+--- file: main.cpp
+--- find:
+        vkFreeMemory(device, Effects.Texture.Memory, nullptr);
+
+--- replace:
+        vkFreeMemory(device, Effects.Texture.Memory, nullptr);
+        vkDestroyBuffer(device, Text.VBO, nullptr);
+        vkFreeMemory(device, Text.VBOMemory, nullptr);
+
+=== task: load-font
+--- file: main.cpp
+--- find:
+#include <stb_image.h>
+
+--- replace:
+#include <stb_image.h>
+
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+--- file: main.cpp
+--- find:
+    // TODO: Load (FreeType: the first 128 characters of the font into the atlas pixels and Characters) and createAtlasImage
+--- replace:
+    // TextRenderer: pre-compiles a list of characters from the given font: FreeType renders the first 128 characters
+    // into the atlas pixels, which become the atlas image (called once; loading another font would first destroy the
+    // atlas)
+    void Load(TextRenderer& renderer, std::string font, unsigned int fontSize) {
+        // first clear the previously loaded Characters
+        renderer.Characters.clear();
+        std::vector<unsigned char> atlasPixels(ATLAS_WIDTH * ATLAS_HEIGHT, 0);
+        // then initialize and load the FreeType library
+        FT_Library ft;
+        if (FT_Init_FreeType(&ft)) { // all functions return a value different than 0 whenever an error occurred
+            throw std::runtime_error("ERROR::FREETYPE: Could not init FreeType Library");
+        }
+        // load font as face
+        FT_Face face;
+        if (FT_New_Face(ft, font.c_str(), 0, &face)) {
+            throw std::runtime_error("ERROR::FREETYPE: Failed to load font");
+        }
+        // set size to load glyphs as
+        FT_Set_Pixel_Sizes(face, 0, fontSize);
+        // then for the first 128 ASCII characters, pre-load/compile their characters and store them
+        for (unsigned char c = 0; c < 128; c++) {
+            // load character glyph
+            if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
+                std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+                continue;
+            }
+            // copy the glyph's bitmap (one byte per pixel, rows `pitch` bytes apart) into its cell of the atlas
+            glm::ivec2 offset((c % 16) * ATLAS_CELL, (c / 16) * ATLAS_CELL);
+            for (unsigned int row = 0; row < face->glyph->bitmap.rows; row++) {
+                memcpy(&atlasPixels[(offset.y + row) * ATLAS_WIDTH + offset.x], &face->glyph->bitmap.buffer[row * face->glyph->bitmap.pitch], face->glyph->bitmap.width);
+            }
+            // now store character for later use
+            Character character = {
+                offset,
+                glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+                glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+                static_cast<unsigned int>(face->glyph->advance.x)
+            };
+            renderer.Characters.insert(std::pair<char, Character>(c, character));
+        }
+        // destroy FreeType once we're finished
+        FT_Done_Face(face);
+        FT_Done_FreeType(ft);
+        // the atlas image: one 8-bit channel (VK_FORMAT_R8_UNORM: the shader reads 0..255 as 0.0..1.0 in .r)
+        createAtlasImage(atlasPixels, renderer.Atlas);
+        createDescriptorSet(uniformBuffer, sizeof(UniformBufferObject), renderer.Atlas.View, textureSampler, renderer.Atlas.DescriptorSet);
+    }
+
+    // TextRenderer: the atlas pixels -> an image (staging buffer, copy, layout transitions) and its view
+    void createAtlasImage(const std::vector<unsigned char>& pixels, Texture2D& atlas) {
+        VkDeviceSize imageSize = ATLAS_WIDTH * ATLAS_HEIGHT;
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+            memcpy(data, pixels.data(), static_cast<size_t>(imageSize));
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        createImage(ATLAS_WIDTH, ATLAS_HEIGHT, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, atlas.Image, atlas.Memory);
+
+        transitionImageLayout(atlas.Image, VK_FORMAT_R8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            copyBufferToImage(stagingBuffer, atlas.Image, ATLAS_WIDTH, ATLAS_HEIGHT);
+        transitionImageLayout(atlas.Image, VK_FORMAT_R8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+        atlas.View = createImageView(atlas.Image, VK_FORMAT_R8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+        atlas.Width = ATLAS_WIDTH;
+        atlas.Height = ATLAS_HEIGHT;
+    }
+--- file: main.cpp
+--- find:
+        InitTextRenderer(Text);
+        // TODO: load the font fonts/Inter-Bold.otf at 24 pixels
+--- replace:
+        InitTextRenderer(Text);
+        Load(Text, "fonts/Inter-Bold.otf", 24);
+--- file: main.cpp
+--- find:
+        vkFreeMemory(device, Text.VBOMemory, nullptr);
+
+--- replace:
+        vkFreeMemory(device, Text.VBOMemory, nullptr);
+        vkDestroyImageView(device, Text.Atlas.View, nullptr);
+        vkDestroyImage(device, Text.Atlas.Image, nullptr);
+        vkFreeMemory(device, Text.Atlas.Memory, nullptr);
+
+=== task: lives
+--- file: main.cpp
+--- find:
+    // TODO: the player's lives (3)
+--- replace:
+    unsigned int            Lives = 3;
+--- file: main.cpp
+--- find:
+        LoadLevel(game.Levels[3], "levels/four.lvl", game.Width, game.Height / 2);
+}
+--- replace:
+        LoadLevel(game.Levels[3], "levels/four.lvl", game.Width, game.Height / 2);
+
+    game.Lives = 3;
+}
+--- file: main.cpp
+--- find:
+    if (Ball.Position.y >= game.Height) { // did ball reach bottom edge?
+        ResetLevel(game);
+        ResetPlayer(game);
+    }
+--- replace:
+    if (Ball.Position.y >= game.Height) { // did ball reach bottom edge?
+        --game.Lives;
+        // did the player lose all his lives? : game over
+        if (game.Lives == 0) {
+            ResetLevel(game);
+            game.State = GAME_MENU;
+        }
+        ResetPlayer(game);
+    }
+=== task: render-text
+--- file: main.cpp
+--- find:
+// TODO: the function RenderText: a quad per character, with the glyph's part of the atlas, from the top-left corner (x, y)
+--- replace:
+// renders a string of text using the precompiled list of characters (x, y: its top-left corner)
+void RenderText(TextRenderer& renderer, std::string text, float x, float y, float scale, glm::vec3 color = glm::vec3(1.0f)) {
+    // activate corresponding render state
+    vkCmdBindPipeline(renderer.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer.TextShader);
+    TextConstants constants{};
+    constants.textColor = color;
+    vkCmdPushConstants(renderer.commandBuffer, renderer.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TextConstants), &constants);
+    vkCmdBindDescriptorSets(renderer.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer.pipelineLayout, 0, 1, &renderer.Atlas.DescriptorSet, 0, nullptr);
+    VkBuffer vertexBuffers[] = {renderer.VBO};
+    VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(renderer.commandBuffer, 0, 1, vertexBuffers, offsets);
+
+    // iterate through all characters
+    std::string::const_iterator c;
+    for (c = text.begin(); c != text.end(); c++) {
+        Character ch = renderer.Characters[*c];
+        // the buffer holds MAX_CHARACTERS characters per frame: stop before writing past its end
+        if (renderer.vertexCount + 6 > MAX_CHARACTERS * 6) break;
+
+        float xpos = x + ch.Bearing.x * scale;
+        float ypos = y + (renderer.Characters['H'].Bearing.y - ch.Bearing.y) * scale;
+
+        float w = ch.Size.x * scale;
+        float h = ch.Size.y * scale;
+        // the glyph's rectangle in the atlas (0..1); its first row (v0) is the top of the glyph
+        float u0 = ch.AtlasOffset.x / (float) ATLAS_WIDTH;
+        float v0 = ch.AtlasOffset.y / (float) ATLAS_HEIGHT;
+        float u1 = (ch.AtlasOffset.x + ch.Size.x) / (float) ATLAS_WIDTH;
+        float v1 = (ch.AtlasOffset.y + ch.Size.y) / (float) ATLAS_HEIGHT;
+        // the quad of this character
+        float vertices[6][4] = {
+            { xpos,     ypos + h,   u0, v1 },
+            { xpos + w, ypos,       u1, v0 },
+            { xpos,     ypos,       u0, v0 },
+
+            { xpos,     ypos + h,   u0, v1 },
+            { xpos + w, ypos + h,   u1, v1 },
+            { xpos + w, ypos,       u1, v0 }
+        };
+        // write it after the vertices of the characters drawn before (the GPU reads them when the frame runs)
+        memcpy((char*) renderer.VBOMapped + renderer.vertexCount * sizeof(Vertex), vertices, sizeof(vertices));
+        // render quad
+        vkCmdDraw(renderer.commandBuffer, 6, 1, renderer.vertexCount, 0);
+        renderer.vertexCount += 6;
+        // now advance cursors for next glyph
+        x += (ch.Advance >> 6) * scale; // bitshift by 6 to get value in pixels (1/64th times 2^6 = 64)
+    }
+}
+--- file: main.cpp
+--- find:
+        // TODO: render the text "Lives:" with the number of lives at (5, 5), after the postprocessing quad
+--- replace:
+        // render text (don't include in postprocessing)
+        RenderText(Text, "Lives:" + std::to_string(game.Lives), 5.0f, 5.0f, 1.0f);
+--- file: main.cpp
+--- find:
+        Effects.WindowFramebuffer = swapChainFramebuffers[imageIndex];
+
+--- replace:
+        Effects.WindowFramebuffer = swapChainFramebuffers[imageIndex];
+        Text.commandBuffer = commandBuffer;
+        Text.vertexCount = 0; // this frame's characters start at the beginning of the text vertex buffer
+
+=== task: menu
+--- file: main.cpp
+--- find:
+    GameState               State = GAME_ACTIVE;
+    bool                    Keys[1024] = {};
+--- replace:
+    GameState               State = GAME_MENU;
+    bool                    Keys[1024] = {};
+    bool                    KeysProcessed[1024] = {};
+--- file: main.cpp
+--- find:
+    // TODO: the menu: ENTER starts the game, W and S select the level (each only once per key press: KeysProcessed)
+--- replace:
+    if (game.State == GAME_MENU) {
+        if (game.Keys[GLFW_KEY_ENTER] && !game.KeysProcessed[GLFW_KEY_ENTER]) {
+            game.State = GAME_ACTIVE;
+            game.KeysProcessed[GLFW_KEY_ENTER] = true;
+        }
+        if (game.Keys[GLFW_KEY_W] && !game.KeysProcessed[GLFW_KEY_W]) {
+            game.Level = (game.Level + 1) % 4;
+            game.KeysProcessed[GLFW_KEY_W] = true;
+        }
+        if (game.Keys[GLFW_KEY_S] && !game.KeysProcessed[GLFW_KEY_S]) {
+            if (game.Level > 0)
+                --game.Level;
+            else
+                game.Level = 3;
+            game.KeysProcessed[GLFW_KEY_S] = true;
+        }
+    }
+--- file: main.cpp
+--- find:
+void Render(Game& game) {
+    if (game.State == GAME_ACTIVE) {
+--- replace:
+void Render(Game& game) {
+    if (game.State == GAME_ACTIVE || game.State == GAME_MENU || game.State == GAME_WIN) {
+--- file: main.cpp
+--- find:
+    // TODO: in the menu: "Press ENTER to start" and "Press W or S to select level"
+--- replace:
+    if (game.State == GAME_MENU) {
+        RenderText(Text, "Press ENTER to start", 250.0f, game.Height / 2.0f, 1.0f);
+        RenderText(Text, "Press W or S to select level", 245.0f, game.Height / 2.0f + 20.0f, 0.75f);
+    }
+--- file: main.cpp
+--- find:
+        else if (action == GLFW_RELEASE)
+            Hedgerow.Keys[key] = false;
+--- replace:
+        else if (action == GLFW_RELEASE) {
+            Hedgerow.Keys[key] = false;
+            Hedgerow.KeysProcessed[key] = false;
+        }
+=== task: win
+--- file: main.cpp
+--- find:
+// TODO: IsCompleted: is every brick that is not solid destroyed?
+--- replace:
+// check if the level is completed (all non-solid tiles are destroyed)
+bool IsCompleted(GameLevel& level) {
+    for (GameObject& tile : level.Bricks)
+        if (!tile.IsSolid && !tile.Destroyed)
+            return false;
+    return true;
+}
+--- file: main.cpp
+--- find:
+    // TODO: check the win condition: when the level is completed, reset it and the player, switch chaos on and show the win screen
+--- replace:
+    // check win condition
+    if (game.State == GAME_ACTIVE && IsCompleted(game.Levels[game.Level])) {
+        ResetLevel(game);
+        ResetPlayer(game);
+        Effects.Chaos = true;
+        game.State = GAME_WIN;
+    }
+--- file: main.cpp
+--- find:
+    // TODO: the win screen: ENTER switches chaos off and goes back to the menu
+--- replace:
+    if (game.State == GAME_WIN) {
+        if (game.Keys[GLFW_KEY_ENTER]) {
+            game.KeysProcessed[GLFW_KEY_ENTER] = true;
+            Effects.Chaos = false;
+            game.State = GAME_MENU;
+        }
+    }
+--- file: main.cpp
+--- find:
+    // TODO: when won: "You WON!!!" and "Press ENTER to retry or ESC to quit"
+--- replace:
+    if (game.State == GAME_WIN) {
+        RenderText(Text, "You WON!!!", 320.0f, game.Height / 2.0f - 20.0f, 1.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        RenderText(Text, "Press ENTER to retry or ESC to quit", 130.0f, game.Height / 2.0f, 1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
+    }

@@ -56,6 +56,9 @@ internal sealed partial class VulkanDevice : IDeviceModel
     /// </summary>
     public sealed record Pipeline(List<Attribute> Attributes, Dictionary<int, (int Stride, bool Instance)> Bindings, int Samples);
 
+    /// <summary>Every pipeline made: its handle → the SPIR-V files of its stages and its VkGraphicsPipelineCreateInfo.</summary>
+    public Dictionary<string, (List<string> Files, ShaderValue Info)> CreatedPipelines { get; } = new(StringComparer.Ordinal);
+
     private readonly Dictionary<string, Pipeline> pipelines = new(StringComparer.Ordinal);
     private string? boundPipeline;
 
@@ -479,6 +482,11 @@ internal sealed partial class VulkanDevice : IDeviceModel
                         if (bd.Fields is not null)
                             bindings[(int)(Number(bd, "binding") ?? 0)] = ((int)(Number(bd, "stride") ?? 0), (Text(bd, "inputRate") ?? "").Contains("INSTANCE", StringComparison.Ordinal));
                     CheckVertexInputs(info, attributes, handles.Count - 1);
+                    // Its shaders (the files its modules were made of) and its create-info, for a program whose pipelines
+                    // the reader cannot follow by name (kept in a std::map).
+                    var stageFiles = Items(Field(info, "pStages")).Take((int)(Number(info, "stageCount") ?? int.MaxValue))
+                        .Select(st => Text(st, "module") is { } module && moduleFiles.TryGetValue(module, out var file) ? file : null).Where(f => f is not null).Select(f => f!).ToList();
+                    CreatedPipelines[handle] = (stageFiles, info.Clone());
                     var samples = System.Text.RegularExpressions.Regex.Match(Text(Field(info, "pMultisampleState"), "rasterizationSamples") ?? "", @"(\d+)_BIT");
                     pipelines[handle] = new Pipeline(attributes, bindings, samples.Success ? int.Parse(samples.Groups[1].Value) : 1);
                 }

@@ -1,0 +1,73 @@
+{
+  "title": "Rendera text",
+  "tasks": {
+    "remove-test": {
+      "text": "Power-upsen fungerar: ta bort de sex test-power-upsen från Init.",
+      "hint": "Ta bort kommentaren och de sex raderna `game.PowerUps.push_back(…)` efter `Ball = MakeBallObject(…);`."
+    },
+    "text-renderer": {
+      "text": {
+        "opengl": "Lägg till `struct Character`, `struct TextRenderer` och `InitTextRenderer` (ladda textshadern med en projektion av fönstret med y nedåt, samplern `text` på enhet 0, en VAO och en dynamisk VBO för en rektangel med 6 hörn × 4 floats), skriv textshadern, gör den globala `Text` i Init och ta bort dess VAO och VBO i slutet.",
+        "vulkan": "Lägg till `struct TextConstants` (textshaderns färg), `struct Character` (med sin plats i atlasen), atlasens storlek och `struct TextRenderer`, och medlemmen `InitTextRenderer` (textshaderns pipeline för fönstrets render pass, vertexbufferten för 256 tecken, mappad); skriv textshadern; sätt upp den globala `Text` i Init och förstör dess buffert i `cleanup()`.",
+        "d3d12": "Lägg till `struct Character`, `struct TextRenderer` och `InitTextRenderer` (ladda textshadern, skapa vertexbufferten för textens rektanglar), skriv textshadern, gör den globala `Text` i Init och släpp den i OnDestroy."
+      },
+      "hint": {
+        "opengl": "`renderer.TextShader = LoadShader(\"text_2d.vs\", \"text_2d.fs\", nullptr, \"text\"); SetMatrix4(renderer.TextShader, \"projection\", glm::ortho(0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f), true);` och `glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);`. Fragmentshader: `vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r); color = vec4(textColor, 1.0) * sampled;`.",
+        "vulkan": "`renderer.TextShader = LoadShader(\"shaders/text_2d.vert.spv\", \"shaders/text_2d.frag.spv\", \"text\", VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, renderPass, VK_SAMPLE_COUNT_1_BIT);` och `createBuffer(sizeof(Vertex) * 6 * MAX_CHARACTERS, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, …HOST_VISIBLE | HOST_COHERENT…)` + `vkMapMemory(…, &renderer.VBOMapped)`. Fragmentshader: `vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r); color = vec4(pc.textColor, 1.0) * sampled;`.",
+        "d3d12": "`renderer.TextShader = LoadShader(L\"text_2d.hlsl\", \"text\");` – projektionen är spelets (b1). Vertexbufferten: `MaxTextVertices * 4 * sizeof(float)` byte i en upload heap, `Map` en gång till `renderer.pVertexDataBegin`, en vy med stride `4 * sizeof(float)`. Pixelshader: `float4 sampled = float4(1.0f, 1.0f, 1.0f, text.Sample(wrapSampler, input.texCoord).r); return float4(textColor, 1.0f) * sampled;`."
+      }
+    },
+    "load-font": {
+      "text": {
+        "opengl": "Skriv `Load`: ladda med FreeType typsnittet i den givna pixelstorleken och gör en GL_RED-textur och en `Character` (storlek, bearing, advance) för vart och ett av de första 128 ASCII-tecknen; ladda `fonts/Inter-Bold.otf` i 24 pixlar i Init; ta bort glyftexturerna i slutet.",
+        "vulkan": "Skriv medlemmen `Load`: ladda med FreeType typsnittet i den givna pixelstorleken, kopiera bitmappen för vart och ett av de första 128 ASCII-tecknen till dess cell i atlasens pixlar och lagra dess `Character` (atlasoffset, storlek, bearing, advance); gör sedan atlasbilden (`createAtlasImage`) och dess descriptor set; ladda `fonts/Inter-Bold.otf` i 24 pixlar i Init; förstör atlasen i `cleanup()`.",
+        "d3d12": "Skriv `Load`: ladda med FreeType typsnittet i den givna pixelstorleken, kopiera bitmappen för vart och ett av de första 128 ASCII-tecknen till dess cell i glyfatlasen och gör en `Character` (cell, storlek, bearing, advance); ladda upp atlasen som en R8-textur med sin vy; ladda `fonts/Inter-Bold.otf` i 24 pixlar i Init."
+      },
+      "hint": {
+        "opengl": "Loopen från kapitlet Textrendering: `FT_Init_FreeType`, `FT_New_Face(ft, font.c_str(), 0, &face)`, `FT_Set_Pixel_Sizes(face, 0, fontSize)`, `glPixelStorei(GL_UNPACK_ALIGNMENT, 1)`, `FT_Load_Char(face, c, FT_LOAD_RENDER)`, `glTexImage2D(…, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer)`, `renderer.Characters.insert(std::pair<char, Character>(c, character));`.",
+        "vulkan": "Loopen från kapitlet Textrendering: `FT_Init_FreeType`, `FT_New_Face(ft, font.c_str(), 0, &face)`, `FT_Set_Pixel_Sizes(face, 0, fontSize)`, `FT_Load_Char(face, c, FT_LOAD_RENDER)`, `glm::ivec2 offset((c % 16) * ATLAS_CELL, (c / 16) * ATLAS_CELL);` och en memcpy per bitmappsrad (`pitch` byte isär); `renderer.Characters.insert(std::pair<char, Character>(c, character));`; `createDescriptorSet(uniformBuffer, sizeof(UniformBufferObject), renderer.Atlas.View, textureSampler, renderer.Atlas.DescriptorSet);`.",
+        "d3d12": "LoadGlyphs från kapitlet Textrendering: `FT_Init_FreeType`, `FT_New_Face(ft, font.c_str(), 0, &face)`, `FT_Set_Pixel_Sizes(face, 0, fontSize)`, `FT_Load_Char(face, c, FT_LOAD_RENDER)`, en `memcpy` per bitmappsrad till `atlas[(cellY + row) * AtlasWidth + cellX]`, `renderer.Characters.insert(std::pair<char, Character>(c, character));`; sedan texturen som i `Generate` med `RowPitch = AtlasWidth` (1 byte per texel)."
+      }
+    },
+    "lives": {
+      "text": "Ge spelaren 3 liv: att tappa bollen kostar ett; när inga finns kvar återställs banan och spelet går tillbaka till menyn; ResetLevel ger de 3 liven tillbaka.",
+      "hint": {
+        "opengl": "`unsigned int Lives = 3;` i Game. I Updates förlustkontroll: `--game.Lives; if (game.Lives == 0) { ResetLevel(game); game.State = GAME_MENU; } ResetPlayer(game);` – ResetLevel körs inte längre för varje tappad boll. `game.Lives = 3;` i slutet av ResetLevel.",
+        "vulkan": "`unsigned int Lives = 3;` i Game. I Updates förlustkontroll: `--game.Lives; if (game.Lives == 0) { ResetLevel(game); game.State = GAME_MENU; } ResetPlayer(game);` – ResetLevel körs inte längre för varje tappad boll. `game.Lives = 3;` i slutet av ResetLevel.",
+        "d3d12": "`unsigned int Lives = 3;` i Game. I Updates förlustkontroll: `--game.Lives; if (game.Lives == 0) { ResetLevel(game); game.State = GAME_MENU; } ResetPlayer(game);`. `game.Lives = 3;` i slutet av ResetLevel."
+      }
+    },
+    "render-text": {
+      "text": {
+        "opengl": "Skriv `RenderText`: för varje tecken en rektangel i glyfens storlek vid dess bearing, från textens övre vänstra hörn (x, y), med glyfens textur, där VBO:n uppdateras med glBufferSubData; flytta sedan fram x. Visa `\"Lives:\"` och antalet liv vid (5, 5) efter efterbehandlingsrektangeln.",
+        "vulkan": "Skriv `RenderText`: bind textpipelinen, skicka färgen och bind atlasen; skriv för varje tecken en rektangel i glyfens storlek vid dess bearing, från textens övre vänstra hörn (x, y), med glyfens rektangel i atlasen, efter de rektanglar som redan skrivits den här bildrutan, och rita den; flytta sedan fram x. Visa `\"Lives:\"` och antalet liv vid (5, 5) efter efterbehandlingsrektangeln; ge i `recordCommandBuffer` `Text` command buffern och börja dess antal hörn på 0.",
+        "d3d12": "Skriv `RenderText`: för varje tecken en rektangel i glyfens storlek vid dess bearing, från textens övre vänstra hörn (x, y), med dess cell i atlasen, skriven i vertexbufferten; ett ritanrop för raden; flytta sedan fram x. Börja varje bildrutas text i vertexbuffertens början. Visa `\"Lives:\"` och antalet liv vid (5, 5) efter efterbehandlingsrektangeln."
+      },
+      "hint": {
+        "opengl": "`float xpos = x + ch.Bearing.x * scale; float ypos = y + (renderer.Characters['H'].Bearing.y - ch.Bearing.y) * scale;` – de sex hörnen från (xpos, ypos) till (xpos + w, ypos + h) med texturkoordinaterna 0…1 (v = 0 upptill: glyfbitmappens första rad). `x += (ch.Advance >> 6) * scale;`. `RenderText(Text, \"Lives:\" + std::to_string(game.Lives), 5.0f, 5.0f, 1.0f);`.",
+        "vulkan": "`float xpos = x + ch.Bearing.x * scale; float ypos = y + (renderer.Characters['H'].Bearing.y - ch.Bearing.y) * scale;` – de sex hörnen från (xpos, ypos) till (xpos + w, ypos + h) med atlaskoordinaterna u0…u1, v0…v1 (v0 upptill: bitmappens första rad). `memcpy((char*) renderer.VBOMapped + renderer.vertexCount * sizeof(Vertex), vertices, sizeof(vertices)); vkCmdDraw(renderer.commandBuffer, 6, 1, renderer.vertexCount, 0); renderer.vertexCount += 6;` `RenderText(Text, \"Lives:\" + std::to_string(game.Lives), 5.0f, 5.0f, 1.0f);`.",
+        "d3d12": "`float xpos = x + ch.Bearing.x * scale; float ypos = y + (renderer.Characters['H'].Bearing.y - ch.Bearing.y) * scale;` – de sex hörnen från (xpos, ypos) till (xpos + w, ypos + h) med cellens texturkoordinater (`u0 = AtlasPos.x / AtlasWidth` …, v0 upptill). `memcpy(renderer.pVertexDataBegin + renderer.VertexCount * 4 * sizeof(float), vertices, sizeof(vertices)); renderer.VertexCount += 6;`. `Text.VertexCount = 0;` i början av `Render(Game&)`."
+      }
+    },
+    "menu": {
+      "text": {
+        "opengl": "Lägg till learnopengls meny: spelet börjar i `GAME_MENU`; ENTER startar det, W och S väljer bana – var och en bara en gång per tangenttryck (`KeysProcessed`, nollställs vid släpp i tangentcallbacken); rita scenen även i meny- och vinsttillstånden, och i menyn de två raderna \"Press ENTER to start\" (250, Height / 2, skala 1) och \"Press W or S to select level\" (245, Height / 2 + 20, skala 0,75).",
+        "vulkan": "Lägg till learnopengls meny: spelet börjar i `GAME_MENU`; ENTER startar det, W och S väljer bana – var och en bara en gång per tangenttryck (`KeysProcessed`, nollställs vid släpp i tangentcallbacken); rita scenen även i meny- och vinsttillstånden, och i menyn de två raderna \"Press ENTER to start\" (250, Height / 2, skala 1) och \"Press W or S to select level\" (245, Height / 2 + 20, skala 0,75).",
+        "d3d12": "Lägg till learnopengls meny: spelet börjar i `GAME_MENU`; ENTER startar det, W och S väljer bana – var och en bara en gång per tangenttryck (`KeysProcessed`, nollställs i OnKeyUp); rita scenen även i meny- och vinsttillstånden, och i menyn de två raderna \"Press ENTER to start\" (250, Height / 2, skala 1) och \"Press W or S to select level\" (245, Height / 2 + 20, skala 0,75)."
+      },
+      "hint": {
+        "opengl": "`if (game.State == GAME_MENU) { if (game.Keys[GLFW_KEY_ENTER] && !game.KeysProcessed[GLFW_KEY_ENTER]) { game.State = GAME_ACTIVE; game.KeysProcessed[GLFW_KEY_ENTER] = true; } … }` före GAME_ACTIVE-blocket. I Render: `if (game.State == GAME_ACTIVE || game.State == GAME_MENU || game.State == GAME_WIN)` runt scenen, sedan `if (game.State == GAME_MENU) { RenderText(…); RenderText(…); }`.",
+        "vulkan": "`if (game.State == GAME_MENU) { if (game.Keys[GLFW_KEY_ENTER] && !game.KeysProcessed[GLFW_KEY_ENTER]) { game.State = GAME_ACTIVE; game.KeysProcessed[GLFW_KEY_ENTER] = true; } … }` före GAME_ACTIVE-blocket. I Render: `if (game.State == GAME_ACTIVE || game.State == GAME_MENU || game.State == GAME_WIN)` runt scenen, sedan `if (game.State == GAME_MENU) { RenderText(…); RenderText(…); }`.",
+        "d3d12": "`if (game.State == GAME_MENU) { if (game.Keys[VK_RETURN] && !game.KeysProcessed[VK_RETURN]) { game.State = GAME_ACTIVE; game.KeysProcessed[VK_RETURN] = true; } … }` före GAME_ACTIVE-blocket (`'W'`, `'S'` för banan). I Render: `if (game.State == GAME_ACTIVE || game.State == GAME_MENU || game.State == GAME_WIN)` runt scenen, sedan `if (game.State == GAME_MENU) { RenderText(…); RenderText(…); }`."
+      }
+    },
+    "win": {
+      "text": "Lägg till learnopengls vinsttillstånd: `IsCompleted` (varje block som inte är solitt är förstört); när den aktiva banan är klar i Update, återställ banan och spelaren, slå på chaos och gå till `GAME_WIN`; där slår ENTER av chaos och går tillbaka till menyn; rita \"You WON!!!\" (grönt) och \"Press ENTER to retry or ESC to quit\" (gult).",
+      "hint": {
+        "opengl": "`for (GameObject& tile : level.Bricks) if (!tile.IsSolid && !tile.Destroyed) return false; return true;` – `RenderText(Text, \"You WON!!!\", 320.0f, game.Height / 2.0f - 20.0f, 1.0f, glm::vec3(0.0f, 1.0f, 0.0f));` och andra raden vid (130, Height / 2) i (1, 1, 0).",
+        "vulkan": "`for (GameObject& tile : level.Bricks) if (!tile.IsSolid && !tile.Destroyed) return false; return true;` – `RenderText(Text, \"You WON!!!\", 320.0f, game.Height / 2.0f - 20.0f, 1.0f, glm::vec3(0.0f, 1.0f, 0.0f));` och andra raden vid (130, Height / 2) i (1, 1, 0).",
+        "d3d12": "`for (GameObject& tile : level.Bricks) if (!tile.IsSolid && !tile.Destroyed) return false; return true;` – `RenderText(Text, \"You WON!!!\", 320.0f, game.Height / 2.0f - 20.0f, 1.0f, XMFLOAT3(0.0f, 1.0f, 0.0f));` och andra raden vid (130, Height / 2) i (1, 1, 0). ESC stänger redan fönstret (WindowProc)."
+      }
+    }
+  }
+}

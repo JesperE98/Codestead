@@ -1,0 +1,253 @@
+=== task: transform
+--- file: main.cpp
+--- find:
+    // draw the model once, at the origin
+    XMMATRIX model = XMMatrixIdentity();
+    ModelConstants modelConstants = {};
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+--- replace:
+    // draw the model once, with the model matrix of a transform (no parent: the identity)
+    Transform planetTransform;
+    computeModelMatrix(planetTransform, XMMatrixIdentity());
+    ModelConstants modelConstants = {};
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(XMLoadFloat4x4(&planetTransform.modelMatrix)));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+--- file: main.cpp
+--- find:
+// TODO: the Transform struct (local position, rotation and scale, the model matrix) and its functions
+--- replace:
+// an object's place in space: its local position, rotation and scale (relative to its parent)
+// and its model matrix in world space (learnopengl's Transform class, written as a struct)
+struct Transform
+{
+    // local space information
+    XMFLOAT3 pos = XMFLOAT3(0.0f, 0.0f, 0.0f);
+    XMFLOAT3 eulerRot = XMFLOAT3(0.0f, 0.0f, 0.0f);    // in degrees
+    XMFLOAT3 scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+
+    // global space information concatenated in a matrix (XMFLOAT4X4: the storage type of
+    // DirectXMath - an XMMATRIX is for calculations)
+    XMFLOAT4X4 modelMatrix = XMFLOAT4X4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+};
+
+// the local model matrix: translation * rotation * scale (also known as a TRS matrix)
+XMMATRIX getLocalModelMatrix(const Transform& transform)
+{
+    const XMMATRIX transformX = XMMatrixRotationX(XMConvertToRadians(transform.eulerRot.x));
+    const XMMATRIX transformY = XMMatrixRotationY(XMConvertToRadians(transform.eulerRot.y));
+    const XMMATRIX transformZ = XMMatrixRotationZ(XMConvertToRadians(transform.eulerRot.z));
+
+    // learnopengl's Y * X * Z: with DirectXMath's row vectors the matrices apply from left to
+    // right, so the same rotation is Z * X * Y
+    const XMMATRIX rotationMatrix = transformZ * transformX * transformY;
+
+    // translation * rotation * scale (also known as TRS matrix) - here scale * rotation * translation
+    return XMMatrixScaling(transform.scale.x, transform.scale.y, transform.scale.z) * rotationMatrix * XMMatrixTranslation(transform.pos.x, transform.pos.y, transform.pos.z);
+}
+
+// the model matrix in world space: the local one, then the parent's (learnopengl's
+// parent * local; the root's parent matrix is the identity)
+void computeModelMatrix(Transform& transform, const XMMATRIX& parentGlobalModelMatrix)
+{
+    XMStoreFloat4x4(&transform.modelMatrix, getLocalModelMatrix(transform) * parentGlobalModelMatrix);
+}
+
+void setLocalPosition(Transform& transform, const XMFLOAT3& newPosition)
+{
+    transform.pos = newPosition;
+}
+
+void setLocalRotation(Transform& transform, const XMFLOAT3& newRotation)
+{
+    transform.eulerRot = newRotation;
+}
+
+void setLocalScale(Transform& transform, const XMFLOAT3& newScale)
+{
+    transform.scale = newScale;
+}
+
+=== task: entity
+--- file: main.cpp
+--- find:
+    // draw the model once, with the model matrix of a transform (no parent: the identity)
+    Transform planetTransform;
+    computeModelMatrix(planetTransform, XMMatrixIdentity());
+    ModelConstants modelConstants = {};
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(XMLoadFloat4x4(&planetTransform.modelMatrix)));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+
+    // render the loaded model: each mesh binds its textures and draws itself
+    m_model.Draw(m_commandList.Get());
+--- replace:
+    // draw our scene graph: each entity sets its model matrix and draws its model (each mesh
+    // binds its textures and draws itself)
+    drawSelfAndChild(m_ourEntity, m_commandList.Get());
+--- file: main.cpp
+--- find:
+
+    // TODO: load entities - the root planet and a chain of ten children, each one a smaller copy beside its parent
+--- replace:
+
+    // load entities: the root planet and a chain of ten children, each one the child of the
+    // one before - beside its parent and 0.6 times its size
+    m_ourEntity.pModel = &m_model;
+    setLocalPosition(m_ourEntity.transform, XMFLOAT3(0.0f, 0.0f, 0.0f));
+    const float scale = 0.6f;
+    {
+        Entity* lastEntity = &m_ourEntity;
+
+        for (unsigned int i = 0; i < 10; ++i)
+        {
+            addChild(*lastEntity, m_model);
+            lastEntity = &lastEntity->children.back();
+
+            // set transform values
+            setLocalPosition(lastEntity->transform, XMFLOAT3(3.5f, 0.0f, 0.0f));
+            setLocalScale(lastEntity->transform, XMFLOAT3(scale, scale, scale));
+        }
+    }
+    updateSelfAndChild(m_ourEntity, XMMatrixIdentity());
+--- file: main.cpp
+--- find:
+    Model m_model;    // the model: its meshes and their textures
+--- replace:
+    Model m_model;    // the model: its meshes and their textures
+    Entity m_ourEntity;    // the scene graph: the root planet and its children
+--- file: main.cpp
+--- find:
+// TODO: the Entity struct (children, transform, model) and its functions
+--- replace:
+// a node of the scene graph: an object with its transform, the model it draws and its children
+// (learnopengl's Entity class, written as a struct: the children are stored by value in a vector,
+// and each function gets the parent's model matrix as a parameter instead of following a parent pointer)
+struct Entity
+{
+    // scene graph
+    std::vector<Entity> children;
+
+    // space information
+    Transform transform;
+
+    Model* pModel = nullptr;
+};
+
+// add a child that draws the given model
+void addChild(Entity& parent, Model& model)
+{
+    Entity child;
+    child.pModel = &model;
+    parent.children.push_back(child);
+}
+
+// update the model matrices of an entity and all of its children
+void updateSelfAndChild(Entity& entity, const XMMATRIX& parentGlobalModelMatrix)
+{
+    computeModelMatrix(entity.transform, parentGlobalModelMatrix);
+
+    for (Entity& child : entity.children)
+    {
+        updateSelfAndChild(child, XMLoadFloat4x4(&entity.transform.modelMatrix));
+    }
+}
+
+// draw an entity and all of its children: its model matrix as the root constants (root
+// parameter 0, transposed for HLSL), then its model
+void drawSelfAndChild(Entity& entity, ID3D12GraphicsCommandList* commandList)
+{
+    ModelConstants modelConstants = {};
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(XMLoadFloat4x4(&entity.transform.modelMatrix)));
+    commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    entity.pModel->Draw(commandList);
+
+    for (Entity& child : entity.children)
+    {
+        drawSelfAndChild(child, commandList);
+    }
+}
+
+=== task: dirty-flag
+--- file: main.cpp
+--- find:
+// update the model matrices of an entity and all of its children
+void updateSelfAndChild(Entity& entity, const XMMATRIX& parentGlobalModelMatrix)
+{
+    computeModelMatrix(entity.transform, parentGlobalModelMatrix);
+
+    for (Entity& child : entity.children)
+    {
+        updateSelfAndChild(child, XMLoadFloat4x4(&entity.transform.modelMatrix));
+    }
+}
+--- replace:
+// force the update of an entity's model matrix and all of its children's, even if their local values did not change
+void forceUpdateSelfAndChild(Entity& entity, const XMMATRIX& parentGlobalModelMatrix)
+{
+    computeModelMatrix(entity.transform, parentGlobalModelMatrix);
+
+    for (Entity& child : entity.children)
+    {
+        forceUpdateSelfAndChild(child, XMLoadFloat4x4(&entity.transform.modelMatrix));
+    }
+}
+
+// update the model matrices that changed: a dirty entity and everything below it
+void updateSelfAndChild(Entity& entity, const XMMATRIX& parentGlobalModelMatrix)
+{
+    if (entity.transform.isDirty)
+    {
+        forceUpdateSelfAndChild(entity, parentGlobalModelMatrix);
+        return;
+    }
+
+    for (Entity& child : entity.children)
+    {
+        updateSelfAndChild(child, XMLoadFloat4x4(&entity.transform.modelMatrix));
+    }
+}
+--- file: main.cpp
+--- find:
+    transform.scale = newScale;
+--- replace:
+    transform.scale = newScale;
+    transform.isDirty = true;
+--- file: main.cpp
+--- find:
+    transform.eulerRot = newRotation;
+--- replace:
+    transform.eulerRot = newRotation;
+    transform.isDirty = true;
+--- file: main.cpp
+--- find:
+    transform.pos = newPosition;
+--- replace:
+    transform.pos = newPosition;
+    transform.isDirty = true;
+--- file: main.cpp
+--- find:
+    XMStoreFloat4x4(&transform.modelMatrix, getLocalModelMatrix(transform) * parentGlobalModelMatrix);
+--- replace:
+    XMStoreFloat4x4(&transform.modelMatrix, getLocalModelMatrix(transform) * parentGlobalModelMatrix);
+    transform.isDirty = false;
+--- file: main.cpp
+--- find:
+    XMFLOAT4X4 modelMatrix = XMFLOAT4X4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+};
+--- replace:
+    XMFLOAT4X4 modelMatrix = XMFLOAT4X4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+
+    // dirty flag: the local values changed since the model matrix was last computed
+    bool isDirty = true;
+};
+
+=== task: animate
+--- file: main.cpp
+--- find:
+    // TODO: turn the root about its y axis over time and update the scene graph's model matrices
+--- replace:
+    // turn the root about its y axis (20 degrees per second): its children follow it
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - startTime).count();
+    setLocalRotation(m_ourEntity.transform, XMFLOAT3(0.0f, 20.0f * time, 0.0f));
+    updateSelfAndChild(m_ourEntity, XMMatrixIdentity());

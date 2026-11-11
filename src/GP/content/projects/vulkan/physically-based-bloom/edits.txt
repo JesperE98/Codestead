@@ -1,0 +1,1056 @@
+=== task: mip-chain
+--- file: main.cpp
+--- find:
+// TODO: the bloom framebuffer - the BloomMip and BloomFBO structs
+--- replace:
+// learnopengl's bloomFBO class, written as structs. One level of the mip chain: its size (as a float and as an integer),
+// and in Vulkan its image (learnopengl: texture), the image's memory and view, the framebuffer that renders into it
+// (learnopengl switches the colour attachment of one FBO; a Vulkan framebuffer's attachments are fixed, so every level
+// has its own) and the descriptor set that reads it.
+struct BloomMip {
+    glm::vec2 size;
+    glm::ivec2 intSize;
+    VkImage image;
+    VkDeviceMemory memory;
+    VkImageView view;
+    VkFramebuffer framebuffer;
+};
+
+// The render pass(es) that draw into a level (learnopengl's FBO) and the mip chain.
+struct BloomFBO {
+    VkRenderPass renderPass = VK_NULL_HANDLE;         // writes a whole level (the downsample)
+    std::vector<BloomMip> mipChain;
+};
+--- file: main.cpp
+--- find:
+    // TODO: the bloom framebuffer (a BloomFBO)
+--- replace:
+    // bloom framebuffer: the render passes and the mip chain
+    BloomFBO bloomFBO;
+--- file: main.cpp
+--- find:
+        // TODO: the bloom framebuffer: its render pass and a mip chain of 6 levels (InitBloomFBO)
+--- replace:
+        // bloom framebuffer: its render passes and a mip chain of 6 images, 400 x 300 down to 12 x 9
+        if (!InitBloomFBO(bloomFBO, swapChainExtent.width, swapChainExtent.height, 6)) {
+            throw std::runtime_error("failed to initialize bloom FBO!");
+        }
+--- file: main.cpp
+--- find:
+    // TODO: InitBloomFBO() and DestroyBloomFBO() - learnopengl's bloomFBO::Init and Destroy
+--- replace:
+    // learnopengl's bloomFBO::Init: the render pass(es) that draw into a level, and the mip chain - mipChainLength images,
+    // each half the size of the one before (starting at half the window), with their views and framebuffers. (The
+    // other Vulkan way: one image with mipChainLength mip levels and a view per level - the course follows
+    // learnopengl's separate textures.)
+    bool InitBloomFBO(BloomFBO& bloomFBO, unsigned int windowWidth, unsigned int windowHeight, unsigned int mipChainLength) {
+        // the downsample draws over the whole level: its old contents are not needed (DONT_CARE); the level is kept and
+        // left ready to be read by the next pass
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = VK_FORMAT_B10G11R11_UFLOAT_PACK32; // learnopengl: GL_R11F_G11F_B10F
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkAttachmentReference colorAttachmentRef{};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+
+        std::array<VkSubpassDependency, 2> dependencies{};
+        // before the pass: the passes that read or wrote the level before (the last frame's, the previous level's) are done
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        // after the pass: the fragment shaders that read the level wait until it has been written
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = &colorAttachment;
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &bloomFBO.renderPass) != VK_SUCCESS) {
+            return false;
+        }
+
+        glm::vec2 mipSize((float)windowWidth, (float)windowHeight);
+        glm::ivec2 mipIntSize((int)windowWidth, (int)windowHeight);
+
+        for (unsigned int i = 0; i < mipChainLength; i++) {
+            BloomMip mip;
+
+            mipSize *= 0.5f;
+            mipIntSize /= 2;
+            mip.size = mipSize;
+            mip.intSize = mipIntSize;
+
+            // we are downscaling an HDR color buffer, so we need a float texture format (B10G11R11: three small floats,
+            // no alpha); drawn into and sampled
+            createImage(static_cast<uint32_t>(mipSize.x), static_cast<uint32_t>(mipSize.y), VK_FORMAT_B10G11R11_UFLOAT_PACK32, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mip.image, mip.memory);
+            mip.view = createImageView(mip.image, VK_FORMAT_B10G11R11_UFLOAT_PACK32, VK_IMAGE_ASPECT_COLOR_BIT);
+
+            VkFramebufferCreateInfo framebufferInfo{};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = bloomFBO.renderPass;
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = &mip.view;
+            framebufferInfo.width = static_cast<uint32_t>(mipSize.x);
+            framebufferInfo.height = static_cast<uint32_t>(mipSize.y);
+            framebufferInfo.layers = 1;
+
+            if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &mip.framebuffer) != VK_SUCCESS) {
+                return false;
+            }
+
+            bloomFBO.mipChain.push_back(mip);
+        }
+
+        return true;
+    }
+
+    // learnopengl's bloomFBO::Destroy
+    void DestroyBloomFBO(BloomFBO& bloomFBO) {
+        for (unsigned int i = 0; i < bloomFBO.mipChain.size(); i++) {
+            vkDestroyFramebuffer(device, bloomFBO.mipChain[i].framebuffer, nullptr);
+            vkDestroyImageView(device, bloomFBO.mipChain[i].view, nullptr);
+            vkDestroyImage(device, bloomFBO.mipChain[i].image, nullptr);
+            vkFreeMemory(device, bloomFBO.mipChain[i].memory, nullptr);
+        }
+        bloomFBO.mipChain.clear();
+        vkDestroyRenderPass(device, bloomFBO.renderPass, nullptr);
+    }
+--- file: main.cpp
+--- find:
+        // TODO: destroy the bloom framebuffer (DestroyBloomFBO)
+--- replace:
+        DestroyBloomFBO(bloomFBO);
+=== task: downsample
+--- file: main.cpp
+--- find:
+    VkFramebuffer framebuffer;
+};
+--- replace:
+    VkFramebuffer framebuffer;
+    VkDescriptorSet descriptorSet; // the uniform buffer and this level's image (binding 1)
+};
+--- file: main.cpp
+--- find:
+// The same layout as the push constant blocks in the shaders: the model matrix of one draw (vertex shader) and the
+// colour of a light cube (light_box.frag). Push constants are laid out like std430: the vec3 starts right after the mat4.
+struct PushConstants {
+    glm::mat4 model;
+    glm::vec3 lightColor;
+};
+--- replace:
+// The same layout as the push constant blocks in the shaders: the model matrix of one draw (vertex shader) and the
+// colour of a light cube (light_box.frag), then the bloom's values (downsample.frag, upsample.frag). Push constants are
+// laid out like std430: the vec3 starts right after the mat4, a vec2 at a multiple of 8 bytes.
+struct PushConstants {
+    glm::mat4 model;
+    glm::vec3 lightColor;
+    alignas(8) glm::vec2 srcResolution; // the size of the texture the downsample reads (offset 80: 4 bytes of padding before it)
+};
+--- file: main.cpp
+--- find:
+// TODO: RenderDownsamples - downsample the HDR scene through the mip chain
+--- replace:
+// progressively downsample the source texture (the HDR scene) through the mip chain: one render pass per level, each
+// drawing the screen quad (vertices 36..41) at the level's size and reading the level before it
+void RenderDownsamples(BloomFBO& bloomFBO, VkCommandBuffer commandBuffer, VkPipeline downsamplePipeline, VkPipelineLayout pipelineLayout, VkDescriptorSet srcTexture, glm::vec2 srcViewportSize) {
+    PushConstants constants{};
+    constants.srcResolution = srcViewportSize;
+
+    // srcTexture (HDR color buffer) as initial texture input
+    VkDescriptorSet inputTexture = srcTexture;
+
+    // progressively downsample through the mip chain
+    for (unsigned int i = 0; i < bloomFBO.mipChain.size(); i++) {
+        const BloomMip& mip = bloomFBO.mipChain[i];
+
+        // render into this level, at its size (learnopengl: glFramebufferTexture2D and glViewport)
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = bloomFBO.renderPass;
+        renderPassInfo.framebuffer = mip.framebuffer;
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = {static_cast<uint32_t>(mip.intSize.x), static_cast<uint32_t>(mip.intSize.y)};
+        renderPassInfo.clearValueCount = 0; // loadOp DONT_CARE: the quad covers every pixel
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(mip.intSize.x);
+        viewport.height = static_cast<float>(mip.intSize.y);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = renderPassInfo.renderArea.extent;
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        // render screen-filled quad of resolution of current mip
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, downsamplePipeline);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &inputTexture, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0);
+
+        vkCmdEndRenderPass(commandBuffer); // the level is now in VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+
+        // set current mip resolution as srcResolution for next iteration
+        constants.srcResolution = mip.size;
+        // set current mip as texture input for next iteration
+        inputTexture = mip.descriptorSet;
+    }
+}
+--- file: main.cpp
+--- find:
+    // TODO: the downsample's and the upsample's pipeline objects
+--- replace:
+    VkPipeline downsamplePipeline; // learnopengl's downsampleShader
+    // TODO: the upsample's pipeline object
+--- file: main.cpp
+--- find:
+        // TODO: create the bloom's pipelines for its render passes
+--- replace:
+        // the bloom's pipelines for its render passes: the upsample adds to the level it draws into
+        createPipeline("shaders/downsample.vert.spv", "shaders/downsample.frag.spv", bloomFBO.renderPass, downsamplePipeline);
+        // TODO: create the upsample's pipeline
+--- file: main.cpp
+--- find:
+        // three descriptor sets, each with the uniform buffer and one texture: the wood, the container, the floating point
+        // colour image
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 3;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 3;
+--- replace:
+        // nine descriptor sets, each with the uniform buffer and one texture: the wood, the container, the floating point
+        // colour image and the six levels of the mip chain
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 9;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 9;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 3;
+--- replace:
+        poolInfo.maxSets = 9;
+--- file: main.cpp
+--- find:
+        // TODO: the descriptor sets of the mip chain's levels
+--- replace:
+        // the mip chain's levels: each one is read by the next downsample and by the upsample
+        for (BloomMip& mip : bloomFBO.mipChain) {
+            createDescriptorSet(mip.view, colorBufferSampler, mip.descriptorSet);
+        }
+        // TODO: the final pass's descriptor set: the scene and the bloom texture
+--- file: main.cpp
+--- find:
+        // TODO: destroy the bloom's pipelines
+--- replace:
+        vkDestroyPipeline(device, downsamplePipeline, nullptr);
+        // TODO: destroy the upsample's pipeline
+--- file: main.cpp
+--- find:
+        // TODO: 2. render the bloom texture: downsample the HDR scene through the mip chain, then upsample it back up
+--- replace:
+        // 2. render the bloom texture: downsample the HDR scene through the mip chain, then upsample it back up
+        RenderDownsamples(bloomFBO, commandBuffer, downsamplePipeline, pipelineLayout, hdrDescriptorSet, glm::vec2((float)swapChainExtent.width, (float)swapChainExtent.height));
+        // TODO: then upsample it back up (RenderUpsamples)
+
+        // back to the window's size (learnopengl: glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT))
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+--- file: main.cpp
+--- find:
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &hdrDescriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // the screen quad's 6 vertices start at vertex 36
+--- replace:
+        // for now the third level of the mip chain (100 x 75) instead of the scene
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &bloomFBO.mipChain[2].descriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // the screen quad's 6 vertices start at vertex 36
+--- file: shaders/downsample.frag
+--- find:
+// TODO: the push constants up to srcResolution (the size of the texture being read)
+
+layout(location = 0) in vec2 texCoord;
+layout(location = 0) out vec3 downsample;
+
+void main() {
+    // TODO: take 13 samples a ... m around texCoord, 1 and 2 source texels apart, and add them with learnopengl's weights
+    downsample = vec3(0.0);
+}
+--- replace:
+// the push constants up to srcResolution: the size of the texture being read
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    vec3 lightColor;
+    vec2 srcResolution;
+} pc;
+
+layout(location = 0) in vec2 texCoord;
+layout(location = 0) out vec3 downsample;
+
+void main() {
+    vec2 srcTexelSize = 1.0 / pc.srcResolution;
+    float x = srcTexelSize.x;
+    float y = srcTexelSize.y;
+
+    // Take 13 samples around current texel:
+    // a - b - c
+    // - j - k -
+    // d - e - f
+    // - l - m -
+    // g - h - i
+    // === ('e' is the current texel) ===
+    vec3 a = texture(srcTexture, vec2(texCoord.x - 2*x, texCoord.y + 2*y)).rgb;
+    vec3 b = texture(srcTexture, vec2(texCoord.x,       texCoord.y + 2*y)).rgb;
+    vec3 c = texture(srcTexture, vec2(texCoord.x + 2*x, texCoord.y + 2*y)).rgb;
+
+    vec3 d = texture(srcTexture, vec2(texCoord.x - 2*x, texCoord.y)).rgb;
+    vec3 e = texture(srcTexture, vec2(texCoord.x,       texCoord.y)).rgb;
+    vec3 f = texture(srcTexture, vec2(texCoord.x + 2*x, texCoord.y)).rgb;
+
+    vec3 g = texture(srcTexture, vec2(texCoord.x - 2*x, texCoord.y - 2*y)).rgb;
+    vec3 h = texture(srcTexture, vec2(texCoord.x,       texCoord.y - 2*y)).rgb;
+    vec3 i = texture(srcTexture, vec2(texCoord.x + 2*x, texCoord.y - 2*y)).rgb;
+
+    vec3 j = texture(srcTexture, vec2(texCoord.x - x, texCoord.y + y)).rgb;
+    vec3 k = texture(srcTexture, vec2(texCoord.x + x, texCoord.y + y)).rgb;
+    vec3 l = texture(srcTexture, vec2(texCoord.x - x, texCoord.y - y)).rgb;
+    vec3 m = texture(srcTexture, vec2(texCoord.x + x, texCoord.y - y)).rgb;
+
+    // Apply weighted distribution:
+    // 0.5 + 0.125 + 0.125 + 0.125 + 0.125 = 1
+    // a,b,d,e * 0.125
+    // b,c,e,f * 0.125
+    // d,e,g,h * 0.125
+    // e,f,h,i * 0.125
+    // j,k,l,m * 0.5
+    // This shows 5 square areas that are being sampled. But some of them overlap,
+    // so to have an energy preserving downsample we need to make some adjustments.
+    // The weights are the distributed, so that the sum of j,k,l,m (e.g.)
+    // contribute 0.5 to the final color output. The code below is written
+    // to effectively yield this sum. We get:
+    // 0.125*5 + 0.03125*4 + 0.0625*4 = 1
+    downsample = e*0.125;
+    downsample += (a+c+g+i)*0.03125;
+    downsample += (b+d+f+h)*0.0625;
+    downsample += (j+k+l+m)*0.125;
+}
+=== task: upsample
+--- file: main.cpp
+--- find:
+// TODO: the upsample's settings (bloomFilterRadius)
+--- replace:
+// the physically based bloom: the upsample filter's radius (in texture coordinates)
+float bloomFilterRadius = 0.005f;
+--- file: main.cpp
+--- find:
+// The same layout as the push constant blocks in the shaders: the model matrix of one draw (vertex shader) and the
+// colour of a light cube (light_box.frag), then the bloom's values (downsample.frag, upsample.frag). Push constants are
+// laid out like std430: the vec3 starts right after the mat4, a vec2 at a multiple of 8 bytes.
+struct PushConstants {
+    glm::mat4 model;
+    glm::vec3 lightColor;
+    alignas(8) glm::vec2 srcResolution; // the size of the texture the downsample reads (offset 80: 4 bytes of padding before it)
+};
+--- replace:
+// The same layout as the push constant blocks in the shaders: the model matrix of one draw (vertex shader) and the
+// colour of a light cube (light_box.frag), then the bloom's values (downsample.frag, upsample.frag). Push constants are
+// laid out like std430: the vec3 starts right after the mat4, a vec2 at a multiple of 8 bytes.
+struct PushConstants {
+    glm::mat4 model;
+    glm::vec3 lightColor;
+    alignas(8) glm::vec2 srcResolution; // the size of the texture the downsample reads (offset 80: 4 bytes of padding before it)
+    float filterRadius;                 // the upsample's filter radius, in texture coordinates
+};
+--- file: main.cpp
+--- find:
+    VkRenderPass renderPass = VK_NULL_HANDLE;         // writes a whole level (the downsample)
+--- replace:
+    VkRenderPass renderPass = VK_NULL_HANDLE;         // writes a whole level (the downsample)
+    VkRenderPass upsampleRenderPass = VK_NULL_HANDLE; // adds to a level: its old contents are loaded (the upsample)
+--- file: main.cpp
+--- find:
+// TODO: RenderUpsamples - upsample back up the mip chain, adding each level to the next larger one
+--- replace:
+// upsample back up the mip chain: each level is filtered and added to the next larger one (the upsample pipeline
+// blends with ONE, ONE: the result is added to what is already there)
+void RenderUpsamples(BloomFBO& bloomFBO, VkCommandBuffer commandBuffer, VkPipeline upsamplePipeline, VkPipelineLayout pipelineLayout, float filterRadius) {
+    PushConstants constants{};
+    constants.filterRadius = filterRadius;
+
+    for (int i = (int)bloomFBO.mipChain.size() - 1; i > 0; i--) {
+        const BloomMip& mip = bloomFBO.mipChain[i];
+        const BloomMip& nextMip = bloomFBO.mipChain[i - 1];
+
+        // set framebuffer render target (we write to this texture): its contents are loaded and the quad added to them
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = bloomFBO.upsampleRenderPass;
+        renderPassInfo.framebuffer = nextMip.framebuffer;
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = {static_cast<uint32_t>(nextMip.intSize.x), static_cast<uint32_t>(nextMip.intSize.y)};
+        renderPassInfo.clearValueCount = 0; // loadOp LOAD: nothing to clear
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(nextMip.intSize.x);
+        viewport.height = static_cast<float>(nextMip.intSize.y);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = renderPassInfo.renderArea.extent;
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        // bind the texture from where to read and render screen-filled quad of resolution of the next mip
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, upsamplePipeline);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &mip.descriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0);
+
+        vkCmdEndRenderPass(commandBuffer);
+    }
+}
+--- file: main.cpp
+--- find:
+            return false;
+        }
+
+        glm::vec2 mipSize((float)windowWidth, (float)windowHeight);
+--- replace:
+            return false;
+        }
+
+        // the upsample adds to a level: its contents are loaded (LOAD), coming from the downsample already in
+        // VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL. Its framebuffers are the same (the two render passes are compatible:
+        // only the load operation and the layouts differ).
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &bloomFBO.upsampleRenderPass) != VK_SUCCESS) {
+            return false;
+        }
+
+        glm::vec2 mipSize((float)windowWidth, (float)windowHeight);
+--- file: main.cpp
+--- find:
+        vkDestroyRenderPass(device, bloomFBO.renderPass, nullptr);
+    }
+--- replace:
+        vkDestroyRenderPass(device, bloomFBO.renderPass, nullptr);
+        vkDestroyRenderPass(device, bloomFBO.upsampleRenderPass, nullptr);
+    }
+--- file: main.cpp
+--- find:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, VkPipeline& pipeline) {
+--- replace:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, VkBool32 blendEnable, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        colorBlendAttachment.blendEnable = VK_FALSE;
+--- replace:
+        // blendEnable: add the fragment's colour to the attachment's (learnopengl: glBlendFunc(GL_ONE, GL_ONE), GL_FUNC_ADD)
+        colorBlendAttachment.blendEnable = blendEnable;
+        colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+        colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+        colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+        colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/bloom.vert.spv", "shaders/bloom.frag.spv", hdrRenderPass, graphicsPipeline);
+--- replace:
+        createPipeline("shaders/bloom.vert.spv", "shaders/bloom.frag.spv", hdrRenderPass, VK_FALSE, graphicsPipeline);
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/bloom.vert.spv", "shaders/light_box.frag.spv", hdrRenderPass, lightPipeline);
+--- replace:
+        createPipeline("shaders/bloom.vert.spv", "shaders/light_box.frag.spv", hdrRenderPass, VK_FALSE, lightPipeline);
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/bloom_final.vert.spv", "shaders/bloom_final.frag.spv", renderPass, bloomFinalPipeline);
+--- replace:
+        createPipeline("shaders/bloom_final.vert.spv", "shaders/bloom_final.frag.spv", renderPass, VK_FALSE, bloomFinalPipeline);
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/downsample.vert.spv", "shaders/downsample.frag.spv", bloomFBO.renderPass, downsamplePipeline);
+        // TODO: create the upsample's pipeline
+--- replace:
+        createPipeline("shaders/downsample.vert.spv", "shaders/downsample.frag.spv", bloomFBO.renderPass, VK_FALSE, downsamplePipeline);
+        createPipeline("shaders/upsample.vert.spv", "shaders/upsample.frag.spv", bloomFBO.upsampleRenderPass, VK_TRUE, upsamplePipeline);
+--- file: main.cpp
+--- find:
+    // TODO: the upsample's pipeline object
+--- replace:
+    VkPipeline upsamplePipeline; // learnopengl's upsampleShader: blends with ONE, ONE
+--- file: main.cpp
+--- find:
+        // TODO: destroy the upsample's pipeline
+--- replace:
+        vkDestroyPipeline(device, upsamplePipeline, nullptr);
+--- file: main.cpp
+--- find:
+        // TODO: then upsample it back up (RenderUpsamples)
+--- replace:
+        RenderUpsamples(bloomFBO, commandBuffer, upsamplePipeline, pipelineLayout, bloomFilterRadius);
+--- file: main.cpp
+--- find:
+        // for now the third level of the mip chain (100 x 75) instead of the scene
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &bloomFBO.mipChain[2].descriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // the screen quad's 6 vertices start at vertex 36
+--- replace:
+        // for now the bloom texture (level 0 of the mip chain) instead of the scene
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &bloomFBO.mipChain[0].descriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // the screen quad's 6 vertices start at vertex 36
+--- file: shaders/upsample.frag
+--- find:
+// TODO: the push constants up to filterRadius (the filter's radius in texture coordinates)
+
+layout(location = 0) in vec2 texCoord;
+layout(location = 0) out vec3 upsample;
+
+void main() {
+    // TODO: a 3 x 3 tent filter: 9 samples filterRadius apart, weighted 1 2 1 / 2 4 2 / 1 2 1, divided by 16
+    upsample = vec3(0.0);
+}
+--- replace:
+// the push constants up to filterRadius
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    vec3 lightColor;
+    vec2 srcResolution;
+    float filterRadius;
+} pc;
+
+layout(location = 0) in vec2 texCoord;
+layout(location = 0) out vec3 upsample;
+
+void main() {
+    // The filter kernel is applied with a radius, specified in texture
+    // coordinates, so that the radius will vary across mip resolutions.
+    float x = pc.filterRadius;
+    float y = pc.filterRadius;
+
+    // Take 9 samples around current texel:
+    // a - b - c
+    // d - e - f
+    // g - h - i
+    // === ('e' is the current texel) ===
+    vec3 a = texture(srcTexture, vec2(texCoord.x - x, texCoord.y + y)).rgb;
+    vec3 b = texture(srcTexture, vec2(texCoord.x,     texCoord.y + y)).rgb;
+    vec3 c = texture(srcTexture, vec2(texCoord.x + x, texCoord.y + y)).rgb;
+
+    vec3 d = texture(srcTexture, vec2(texCoord.x - x, texCoord.y)).rgb;
+    vec3 e = texture(srcTexture, vec2(texCoord.x,     texCoord.y)).rgb;
+    vec3 f = texture(srcTexture, vec2(texCoord.x + x, texCoord.y)).rgb;
+
+    vec3 g = texture(srcTexture, vec2(texCoord.x - x, texCoord.y - y)).rgb;
+    vec3 h = texture(srcTexture, vec2(texCoord.x,     texCoord.y - y)).rgb;
+    vec3 i = texture(srcTexture, vec2(texCoord.x + x, texCoord.y - y)).rgb;
+
+    // Apply weighted distribution, by using a 3x3 tent filter:
+    //  1   | 1 2 1 |
+    // -- * | 2 4 2 |
+    // 16   | 1 2 1 |
+    upsample = e*4.0;
+    upsample += (b+d+f+h)*2.0;
+    upsample += (a+c+g+i);
+    upsample *= 1.0 / 16.0;
+}
+=== task: combine
+--- file: main.cpp
+--- find:
+// the physically based bloom: the upsample filter's radius (in texture coordinates)
+float bloomFilterRadius = 0.005f;
+--- replace:
+// the physically based bloom: the upsample filter's radius (in texture coordinates)
+float bloomFilterRadius = 0.005f;
+// and how much of the bloom texture is mixed into the scene
+float bloomStrength = 0.04f;
+--- file: main.cpp
+--- find:
+    float exposure; // a float fits into the 4 bytes after a vec3
+};
+--- replace:
+    float exposure; // a float fits into the 4 bytes after a vec3
+    float bloomStrength;
+};
+--- file: main.cpp
+--- find:
+        ubo.exposure = exposure;
+--- replace:
+        ubo.exposure = exposure;
+        ubo.bloomStrength = bloomStrength;
+--- file: main.cpp
+--- find:
+    // TODO: the final pass's descriptor set (the scene and the bloom texture)
+--- replace:
+    VkDescriptorSet bloomDescriptorSet; // the uniform buffer, the scene and the bloom texture (the mip chain's level 0)
+--- file: main.cpp
+--- find:
+        // TODO: the final pass's descriptor set: the scene and the bloom texture
+--- replace:
+        // the final pass: the scene and the bloom texture (level 0)
+        createBloomDescriptorSet(hdrColorImageView, bloomFBO.mipChain[0].view, colorBufferSampler, bloomDescriptorSet);
+--- file: main.cpp
+--- find:
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
+--- replace:
+        // a second texture at binding 2: the final pass's bloom texture (the other sets leave it empty; their shaders do
+        // not use it)
+        VkDescriptorSetLayoutBinding bloomBlurLayoutBinding{};
+        bloomBlurLayoutBinding.binding = 2;
+        bloomBlurLayoutBinding.descriptorCount = 1;
+        bloomBlurLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        bloomBlurLayoutBinding.pImmutableSamplers = nullptr;
+        bloomBlurLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {uboLayoutBinding, samplerLayoutBinding, bloomBlurLayoutBinding};
+--- file: main.cpp
+--- find:
+        // nine descriptor sets, each with the uniform buffer and one texture: the wood, the container, the floating point
+        // colour image and the six levels of the mip chain
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 9;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 9;
+--- replace:
+        // ten descriptor sets: the wood, the container, the floating point colour image, the six levels of the mip chain
+        // and the final pass's set. Each set takes what the layout has - one uniform buffer and two textures -, even when
+        // binding 2 stays empty.
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 10;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 20;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 9;
+--- replace:
+        poolInfo.maxSets = 10;
+--- file: main.cpp
+--- find:
+    void createBuffer(VkDeviceSize size
+--- replace:
+    // The final pass's descriptor set: the uniform buffer (binding 0), the scene (binding 1) and the bloom texture
+    // (binding 2) - learnopengl's two texture units for bloom_final.
+    void createBloomDescriptorSet(VkImageView sceneImageView, VkImageView bloomBlurImageView, VkSampler sampler, VkDescriptorSet& descriptorSet) {
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &descriptorSetLayout;
+
+        if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        VkDescriptorImageInfo sceneInfo{};
+        sceneInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        sceneInfo.imageView = sceneImageView;
+        sceneInfo.sampler = sampler;
+
+        VkDescriptorImageInfo bloomBlurInfo{};
+        bloomBlurInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        bloomBlurInfo.imageView = bloomBlurImageView;
+        bloomBlurInfo.sampler = sampler;
+
+        std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &sceneInfo;
+
+        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[2].dstSet = descriptorSet;
+        descriptorWrites[2].dstBinding = 2;
+        descriptorWrites[2].dstArrayElement = 0;
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[2].descriptorCount = 1;
+        descriptorWrites[2].pImageInfo = &bloomBlurInfo;
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+
+    void createBuffer(VkDeviceSize size
+--- file: main.cpp
+--- find:
+        // for now the bloom texture (level 0 of the mip chain) instead of the scene
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &bloomFBO.mipChain[0].descriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // the screen quad's 6 vertices start at vertex 36
+--- replace:
+        // the scene and the bloom texture
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &bloomDescriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // the screen quad's 6 vertices start at vertex 36
+--- file: shaders/bloom_final.frag
+--- find:
+// the uniform buffer up to exposure, so that its offset matches the C++ struct
+--- replace:
+// the uniform buffer up to bloomStrength, so that the offsets match the C++ struct
+--- file: shaders/bloom_final.frag
+--- find:
+    float exposure;
+} ubo;
+--- replace:
+    float exposure;
+    float bloomStrength;
+} ubo;
+--- file: shaders/bloom_final.frag
+--- find:
+layout(binding = 1) uniform sampler2D scene;
+--- replace:
+layout(binding = 1) uniform sampler2D scene;
+layout(binding = 2) uniform sampler2D bloomBlur;
+--- file: shaders/bloom_final.frag
+--- find:
+    vec3 hdrColor = texture(scene, fragTexCoord).rgb;
+--- replace:
+    vec3 hdrColor = texture(scene, fragTexCoord).rgb;
+    vec3 bloomColor = texture(bloomBlur, fragTexCoord).rgb;
+    hdrColor = mix(hdrColor, bloomColor, ubo.bloomStrength); // linear interpolation
+=== task: karis-average
+--- file: main.cpp
+--- find:
+// The same layout as the push constant blocks in the shaders: the model matrix of one draw (vertex shader) and the
+// colour of a light cube (light_box.frag), then the bloom's values (downsample.frag, upsample.frag). Push constants are
+// laid out like std430: the vec3 starts right after the mat4, a vec2 at a multiple of 8 bytes.
+struct PushConstants {
+    glm::mat4 model;
+    glm::vec3 lightColor;
+    alignas(8) glm::vec2 srcResolution; // the size of the texture the downsample reads (offset 80: 4 bytes of padding before it)
+    float filterRadius;                 // the upsample's filter radius, in texture coordinates
+};
+--- replace:
+// The same layout as the push constant blocks in the shaders: the model matrix of one draw (vertex shader) and the
+// colour of a light cube (light_box.frag), then the bloom's values (downsample.frag, upsample.frag). Push constants are
+// laid out like std430: the vec3 starts right after the mat4, a vec2 at a multiple of 8 bytes.
+struct PushConstants {
+    glm::mat4 model;
+    glm::vec3 lightColor;
+    alignas(8) glm::vec2 srcResolution; // the size of the texture the downsample reads (offset 80: 4 bytes of padding before it)
+    float filterRadius;                 // the upsample's filter radius, in texture coordinates
+    int mipLevel;                       // which level the downsample writes: 0 = the first, with the Karis average
+};
+--- file: main.cpp
+--- find:
+// progressively downsample the source texture (the HDR scene) through the mip chain: one render pass per level, each
+// drawing the screen quad (vertices 36..41) at the level's size and reading the level before it
+void RenderDownsamples(BloomFBO& bloomFBO, VkCommandBuffer commandBuffer, VkPipeline downsamplePipeline, VkPipelineLayout pipelineLayout, VkDescriptorSet srcTexture, glm::vec2 srcViewportSize) {
+    PushConstants constants{};
+    constants.srcResolution = srcViewportSize;
+
+    // srcTexture (HDR color buffer) as initial texture input
+    VkDescriptorSet inputTexture = srcTexture;
+
+    // progressively downsample through the mip chain
+    for (unsigned int i = 0; i < bloomFBO.mipChain.size(); i++) {
+        const BloomMip& mip = bloomFBO.mipChain[i];
+
+        // render into this level, at its size (learnopengl: glFramebufferTexture2D and glViewport)
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = bloomFBO.renderPass;
+        renderPassInfo.framebuffer = mip.framebuffer;
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = {static_cast<uint32_t>(mip.intSize.x), static_cast<uint32_t>(mip.intSize.y)};
+        renderPassInfo.clearValueCount = 0; // loadOp DONT_CARE: the quad covers every pixel
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(mip.intSize.x);
+        viewport.height = static_cast<float>(mip.intSize.y);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = renderPassInfo.renderArea.extent;
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        // render screen-filled quad of resolution of current mip
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, downsamplePipeline);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &inputTexture, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0);
+
+        vkCmdEndRenderPass(commandBuffer); // the level is now in VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+
+        // set current mip resolution as srcResolution for next iteration
+        constants.srcResolution = mip.size;
+        // set current mip as texture input for next iteration
+        inputTexture = mip.descriptorSet;
+    }
+}
+--- replace:
+// progressively downsample the source texture (the HDR scene) through the mip chain: one render pass per level, each
+// drawing the screen quad (vertices 36..41) at the level's size and reading the level before it
+void RenderDownsamples(BloomFBO& bloomFBO, VkCommandBuffer commandBuffer, VkPipeline downsamplePipeline, VkPipelineLayout pipelineLayout, VkDescriptorSet srcTexture, glm::vec2 srcViewportSize) {
+    PushConstants constants{};
+    constants.srcResolution = srcViewportSize;
+    // the first downsample (into mip 0) uses the Karis average
+    constants.mipLevel = 0;
+
+    // srcTexture (HDR color buffer) as initial texture input
+    VkDescriptorSet inputTexture = srcTexture;
+
+    // progressively downsample through the mip chain
+    for (unsigned int i = 0; i < bloomFBO.mipChain.size(); i++) {
+        const BloomMip& mip = bloomFBO.mipChain[i];
+
+        // render into this level, at its size (learnopengl: glFramebufferTexture2D and glViewport)
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = bloomFBO.renderPass;
+        renderPassInfo.framebuffer = mip.framebuffer;
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = {static_cast<uint32_t>(mip.intSize.x), static_cast<uint32_t>(mip.intSize.y)};
+        renderPassInfo.clearValueCount = 0; // loadOp DONT_CARE: the quad covers every pixel
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(mip.intSize.x);
+        viewport.height = static_cast<float>(mip.intSize.y);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = renderPassInfo.renderArea.extent;
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        // render screen-filled quad of resolution of current mip
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, downsamplePipeline);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &inputTexture, 0, nullptr);
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0);
+
+        vkCmdEndRenderPass(commandBuffer); // the level is now in VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+
+        // set current mip resolution as srcResolution for next iteration
+        constants.srcResolution = mip.size;
+        // set current mip as texture input for next iteration
+        inputTexture = mip.descriptorSet;
+        // disable Karis average for consequent downsamples
+        if (i == 0) { constants.mipLevel = 1; }
+    }
+}
+--- file: shaders/downsample.frag
+--- find:
+// the push constants up to srcResolution: the size of the texture being read
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    vec3 lightColor;
+    vec2 srcResolution;
+} pc;
+
+layout(location = 0) in vec2 texCoord;
+layout(location = 0) out vec3 downsample;
+
+void main() {
+    vec2 srcTexelSize = 1.0 / pc.srcResolution;
+    float x = srcTexelSize.x;
+    float y = srcTexelSize.y;
+
+    // Take 13 samples around current texel:
+    // a - b - c
+    // - j - k -
+    // d - e - f
+    // - l - m -
+    // g - h - i
+    // === ('e' is the current texel) ===
+    vec3 a = texture(srcTexture, vec2(texCoord.x - 2*x, texCoord.y + 2*y)).rgb;
+    vec3 b = texture(srcTexture, vec2(texCoord.x,       texCoord.y + 2*y)).rgb;
+    vec3 c = texture(srcTexture, vec2(texCoord.x + 2*x, texCoord.y + 2*y)).rgb;
+
+    vec3 d = texture(srcTexture, vec2(texCoord.x - 2*x, texCoord.y)).rgb;
+    vec3 e = texture(srcTexture, vec2(texCoord.x,       texCoord.y)).rgb;
+    vec3 f = texture(srcTexture, vec2(texCoord.x + 2*x, texCoord.y)).rgb;
+
+    vec3 g = texture(srcTexture, vec2(texCoord.x - 2*x, texCoord.y - 2*y)).rgb;
+    vec3 h = texture(srcTexture, vec2(texCoord.x,       texCoord.y - 2*y)).rgb;
+    vec3 i = texture(srcTexture, vec2(texCoord.x + 2*x, texCoord.y - 2*y)).rgb;
+
+    vec3 j = texture(srcTexture, vec2(texCoord.x - x, texCoord.y + y)).rgb;
+    vec3 k = texture(srcTexture, vec2(texCoord.x + x, texCoord.y + y)).rgb;
+    vec3 l = texture(srcTexture, vec2(texCoord.x - x, texCoord.y - y)).rgb;
+    vec3 m = texture(srcTexture, vec2(texCoord.x + x, texCoord.y - y)).rgb;
+
+    // Apply weighted distribution:
+    // 0.5 + 0.125 + 0.125 + 0.125 + 0.125 = 1
+    // a,b,d,e * 0.125
+    // b,c,e,f * 0.125
+    // d,e,g,h * 0.125
+    // e,f,h,i * 0.125
+    // j,k,l,m * 0.5
+    // This shows 5 square areas that are being sampled. But some of them overlap,
+    // so to have an energy preserving downsample we need to make some adjustments.
+    // The weights are the distributed, so that the sum of j,k,l,m (e.g.)
+    // contribute 0.5 to the final color output. The code below is written
+    // to effectively yield this sum. We get:
+    // 0.125*5 + 0.03125*4 + 0.0625*4 = 1
+    downsample = e*0.125;
+    downsample += (a+c+g+i)*0.03125;
+    downsample += (b+d+f+h)*0.0625;
+    downsample += (j+k+l+m)*0.125;
+}
+--- replace:
+// the push constants up to mipLevel: srcResolution is the size of the texture being read, mipLevel the level written
+// (0: the first downsample, with the Karis average)
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    vec3 lightColor;
+    vec2 srcResolution;
+    float filterRadius;
+    int mipLevel;
+} pc;
+
+layout(location = 0) in vec2 texCoord;
+layout(location = 0) out vec3 downsample;
+
+vec3 PowVec3(vec3 v, float p) {
+    return vec3(pow(v.x, p), pow(v.y, p), pow(v.z, p));
+}
+
+const float invGamma = 1.0 / 2.2;
+vec3 ToSRGB(vec3 v) { return PowVec3(v, invGamma); }
+
+float sRGBToLuma(vec3 col) {
+    //return dot(col, vec3(0.2126, 0.7152, 0.0722));
+    return dot(col, vec3(0.299, 0.587, 0.114));
+}
+
+float KarisAverage(vec3 col) {
+    // Formula is 1 / (1 + luma)
+    float luma = sRGBToLuma(ToSRGB(col)) * 0.25;
+    return 1.0 / (1.0 + luma);
+}
+
+void main() {
+    vec2 srcTexelSize = 1.0 / pc.srcResolution;
+    float x = srcTexelSize.x;
+    float y = srcTexelSize.y;
+
+    // Take 13 samples around current texel:
+    // a - b - c
+    // - j - k -
+    // d - e - f
+    // - l - m -
+    // g - h - i
+    // === ('e' is the current texel) ===
+    vec3 a = texture(srcTexture, vec2(texCoord.x - 2*x, texCoord.y + 2*y)).rgb;
+    vec3 b = texture(srcTexture, vec2(texCoord.x,       texCoord.y + 2*y)).rgb;
+    vec3 c = texture(srcTexture, vec2(texCoord.x + 2*x, texCoord.y + 2*y)).rgb;
+
+    vec3 d = texture(srcTexture, vec2(texCoord.x - 2*x, texCoord.y)).rgb;
+    vec3 e = texture(srcTexture, vec2(texCoord.x,       texCoord.y)).rgb;
+    vec3 f = texture(srcTexture, vec2(texCoord.x + 2*x, texCoord.y)).rgb;
+
+    vec3 g = texture(srcTexture, vec2(texCoord.x - 2*x, texCoord.y - 2*y)).rgb;
+    vec3 h = texture(srcTexture, vec2(texCoord.x,       texCoord.y - 2*y)).rgb;
+    vec3 i = texture(srcTexture, vec2(texCoord.x + 2*x, texCoord.y - 2*y)).rgb;
+
+    vec3 j = texture(srcTexture, vec2(texCoord.x - x, texCoord.y + y)).rgb;
+    vec3 k = texture(srcTexture, vec2(texCoord.x + x, texCoord.y + y)).rgb;
+    vec3 l = texture(srcTexture, vec2(texCoord.x - x, texCoord.y - y)).rgb;
+    vec3 m = texture(srcTexture, vec2(texCoord.x + x, texCoord.y - y)).rgb;
+
+    // Apply weighted distribution:
+    // 0.5 + 0.125 + 0.125 + 0.125 + 0.125 = 1
+    // a,b,d,e * 0.125
+    // b,c,e,f * 0.125
+    // d,e,g,h * 0.125
+    // e,f,h,i * 0.125
+    // j,k,l,m * 0.5
+    // This shows 5 square areas that are being sampled. But some of them overlap,
+    // so to have an energy preserving downsample we need to make some adjustments.
+    // The weights are the distributed, so that the sum of j,k,l,m (e.g.)
+    // contribute 0.5 to the final color output. The code below is written
+    // to effectively yield this sum. We get:
+    // 0.125*5 + 0.03125*4 + 0.0625*4 = 1
+    // Check if we need to perform Karis average on each block of 4 samples
+    vec3 groups[5];
+    if (pc.mipLevel == 0) {
+        // We are writing to mip 0, so we need to apply Karis average to each block
+        // of 4 samples to prevent fireflies (very bright subpixels, leads to pulsating
+        // artifacts).
+        groups[0] = (a+b+d+e) * (0.125/4.0);
+        groups[1] = (b+c+e+f) * (0.125/4.0);
+        groups[2] = (d+e+g+h) * (0.125/4.0);
+        groups[3] = (e+f+h+i) * (0.125/4.0);
+        groups[4] = (j+k+l+m) * (0.5/4.0);
+        groups[0] *= KarisAverage(groups[0]);
+        groups[1] *= KarisAverage(groups[1]);
+        groups[2] *= KarisAverage(groups[2]);
+        groups[3] *= KarisAverage(groups[3]);
+        groups[4] *= KarisAverage(groups[4]);
+        downsample = groups[0]+groups[1]+groups[2]+groups[3]+groups[4];
+        downsample = max(downsample, 0.0001);
+    } else {
+        downsample = e*0.125;
+        downsample += (a+c+g+i)*0.03125;
+        downsample += (b+d+f+h)*0.0625;
+        downsample += (j+k+l+m)*0.125;
+    }
+}

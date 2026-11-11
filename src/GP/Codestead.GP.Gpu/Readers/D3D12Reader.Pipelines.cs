@@ -26,6 +26,62 @@ public sealed partial class D3D12Reader
     private bool UsesGeometry(int before) =>
         src.FieldValueBefore("GS", before) is { } gsField && !Regex.IsMatch(gsField, @"^\{\s*\}$|^D3D12_SHADER_BYTECODE\s*\{\s*\}$|nullptr");
 
+    private readonly Dictionary<string, PipelineInfo?> runtimePsos = new(StringComparer.Ordinal);
+
+    /// <summary>A PSO as the device saw it made: its blobs' files and entry points, its description's state.</summary>
+    private PipelineInfo? RuntimePso(D3D12Device device, string handle)
+    {
+        if (runtimePsos.TryGetValue(handle, out var known)) return known;
+        PipelineInfo? result = null;
+        if (device.CreatedPsos.TryGetValue(handle, out var desc))
+        {
+            (ShaderProgram Program, string Entry)? Stage(string field)
+            {
+                if (device.Blob(desc.Fields!.GetValueOrDefault(field)?.Text) is not { } blob || project.Find(blob.File) is not { } text) return null;
+                try
+                {
+                    return (ShaderParser.ParseProgram(text), blob.Entry);
+                }
+                catch (ShaderSyntaxException)
+                {
+                    return null;
+                }
+            }
+            string? Field(string name) => Find(desc, name, 0) is { } v ? v.Text ?? (v.V is { Length: > 0 } n ? n[0].ToString(System.Globalization.CultureInfo.InvariantCulture) : null) : null;
+            var vs = Stage("VS");
+            (ShaderProgram Program, string Entry) ps = Stage("PS") ?? (ShaderParser.ParseProgram("void PSMain() { }"), "PSMain");
+            var gs = Stage("GS");
+            if (vs is not null)
+            {
+                var cull = Field("CullMode") ?? "D3D12_CULL_MODE_BACK";
+                var depth = Field("DepthEnable") ?? "TRUE";
+                result = new PipelineInfo(handle, vs.Value.Program, ps.Program, vs.Value.Entry, ps.Entry,
+                    cull.Contains("NONE", StringComparison.Ordinal) ? CullMode.None : cull.Contains("FRONT", StringComparison.Ordinal) ? CullMode.Front : CullMode.Back,
+                    (Field("FrontCounterClockwise") ?? "FALSE") is "TRUE" or "true" or "1",
+                    (Field("FillMode") ?? "SOLID").Contains("WIREFRAME", StringComparison.Ordinal),
+                    depth is "TRUE" or "true" or "1",
+                    Topology.Triangles,
+                    PipelineState.D3D12(f => Field(f)!, f => Field(f) is { } v ? src.Int(v) : null),
+                    gs?.Program, gs?.Entry ?? "main");
+            }
+        }
+        return runtimePsos[handle] = result;
+    }
+
+    /// <summary>A field of a description by its name, anywhere in it (BlendState → RenderTarget[0] → DestBlend).</summary>
+    private static ShaderValue? Find(ShaderValue? v, string name, int depth)
+    {
+        if (v is null || depth > 6) return null;
+        if (v.Fields is { } f)
+        {
+            if (f.TryGetValue(name, out var direct)) return direct;
+            foreach (var child in f.Values)
+                if (Find(child, name, depth + 1) is { } found) return found;
+        }
+        if (v.Items is { Length: > 0 } items) return Find(items[0], name, depth + 1);
+        return null;
+    }
+
     private Dictionary<string, PipelineInfo> Pipelines()
     {
         var result = new Dictionary<string, PipelineInfo>(StringComparer.Ordinal);

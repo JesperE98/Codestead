@@ -1,0 +1,25 @@
+{
+  "title": "DSA",
+  "tasks": {
+    "context": {
+      "text": "Ask GLFW for an OpenGL 4.5 core context – the version in which direct state access became core.",
+      "hint": "`glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);` (GLAD must be generated for 4.5 to load the DSA functions)."
+    },
+    "vertex-buffer": {
+      "text": "Create the vertex buffer with DSA: `glCreateBuffers` instead of `glGenBuffers`, and its data with `glNamedBufferStorage` (immutable storage, flags 0: the program never changes it) instead of binding it and calling `glBufferData`.",
+      "hint": "`GLuint VBO = 0; glCreateBuffers(1, &VBO); glNamedBufferStorage(VBO, sizeof(vertices), vertices, 0x0);` – no `glBindBuffer` is needed to create or fill it. The VAO setup still binds it to `GL_ARRAY_BUFFER` once for `glVertexAttribPointer`."
+    },
+    "element-buffer": {
+      "text": "Create the element buffer with DSA too: `glCreateBuffers`, storage with `glNamedBufferStorage` without data but with `GL_DYNAMIC_STORAGE_BIT` (so it may be updated), then upload the indices with `glNamedBufferSubData`.",
+      "hint": "`glNamedBufferStorage(EBO, sizeof(indices), nullptr, GL_DYNAMIC_STORAGE_BIT); glNamedBufferSubData(EBO, 0, sizeof(indices), indices);` – without the flag, `glNamedBufferSubData` on immutable storage is an error (`GL_INVALID_OPERATION`)."
+    },
+    "vertex-array": {
+      "text": "Create and describe the vertex array object with DSA: `glCreateVertexArrays`, enable attribute 0, give it its format (three floats at offset 0) and binding point 0, attach the vertex buffer to binding point 0 with the stride, and the element buffer to the VAO – no binding of the VAO or the buffers at setup.",
+      "hint": "learnopengl's `glEnableVertexArrayAttrib(VAO, 0); glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, 0); glVertexArrayAttribBinding(VAO, 0, 0); glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 3); glVertexArrayElementBuffer(VAO, EBO);`. The format (what an attribute is) and the buffer (where it comes from) are now separate."
+    },
+    "texture": {
+      "text": "Texture the rectangle with `container.png`, created through DSA: add texture coordinates to the vertices as attribute 1 (two floats, 3 floats into each vertex, same binding point, stride 5 floats), create the texture with `glCreateTextures`, set its parameters with `glTextureParameteri`, allocate immutable storage for all mip levels with `glTextureStorage2D`, upload the image with `glTextureSubImage2D`, generate the mipmaps with `glGenerateTextureMipmap`, and bind it for drawing with `glBindTextureUnit`. The shaders pass the texture coordinates on and sample the texture.",
+      "hint": "`glVertexArrayAttribFormat(VAO, 1, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(float))` – the last argument is the offset inside a vertex; the stride moves to `glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 5)`. `glCreateTextures(GL_TEXTURE_2D, 1, &texture)`, `glTextureStorage2D(texture, levels, GL_RGB8, width, height)` with `levels = 1 + (int)std::floor(std::log2((float)std::max(width, height)))`, `glTextureSubImage2D(texture, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data)`; in the loop `glBindTextureUnit(0, texture);`."
+    }
+  }
+}

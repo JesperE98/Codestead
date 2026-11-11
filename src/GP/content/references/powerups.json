@@ -1,0 +1,5 @@
+[
+  { "title": "2D Game / Powerups", "url": "https://learnopengl.com/In-Practice/2D-Game/Powerups", "publisher": "LearnOpenGL" },
+  { "title": "std::remove, std::remove_if", "url": "https://en.cppreference.com/w/cpp/algorithm/remove", "publisher": "cppreference.com" },
+  { "title": "Lambda expressions", "url": "https://en.cppreference.com/w/cpp/language/lambda", "publisher": "cppreference.com" }
+]

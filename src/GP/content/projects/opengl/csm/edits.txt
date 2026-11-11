@@ -1,0 +1,419 @@
+=== task: light-matrices
+--- file: main.cpp
+--- find:
+// TODO: the light-space matrices of the cascades (getFrustumCornersWorldSpace, getLightSpaceMatrix, getLightSpaceMatrices)
+--- replace:
+std::vector<glm::mat4> getLightSpaceMatrices();
+std::vector<glm::vec4> getFrustumCornersWorldSpace(const glm::mat4& projview);
+--- file: main.cpp
+--- find:
+// TODO: the cascades: the distances where they split the camera's view
+--- replace:
+// the cascades: where they split the camera's view (10, 20, 50 and 250 units from the camera: five cascades)
+std::vector<float> shadowCascadeLevels{ cameraFarPlane / 50.0f, cameraFarPlane / 25.0f, cameraFarPlane / 10.0f, cameraFarPlane / 2.0f };
+--- file: main.cpp
+--- find:
+    // TODO: configure the UBO for the light-space matrices (binding point 0)
+--- replace:
+    // configure UBO
+    // --------------------
+    unsigned int matricesUBO;
+    glGenBuffers(1, &matricesUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4x4) * 16, nullptr, GL_STATIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, matricesUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+--- file: main.cpp
+--- find:
+        // TODO: 0. UBO setup: the light-space matrices of this frame's cascades
+--- replace:
+        // 0. UBO setup: the light-space matrices of this frame's cascades
+        const std::vector<glm::mat4> lightMatrices = getLightSpaceMatrices();
+        glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
+        for (size_t i = 0; i < lightMatrices.size(); ++i)
+        {
+            glBufferSubData(GL_UNIFORM_BUFFER, i * sizeof(glm::mat4x4), sizeof(glm::mat4x4), &lightMatrices[i]);
+        }
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+--- file: main.cpp
+--- find:
+    // TODO: delete the shadow maps, their framebuffer and the UBO
+--- replace:
+    glDeleteBuffers(1, &matricesUBO);
+    // TODO: delete the shadow maps and their framebuffer
+--- file: main.cpp
+--- find:
+// TODO: the light-space matrix of each cascade: the corners of its part of the camera's frustum, a light view
+// looking at their centre, an orthographic projection around them
+--- replace:
+// the 8 corners of a frustum in world space: the NDC cube's corners through the inverse of projection * view
+std::vector<glm::vec4> getFrustumCornersWorldSpace(const glm::mat4& projview)
+{
+    const glm::mat4 inv = glm::inverse(projview);
+
+    std::vector<glm::vec4> frustumCorners;
+    for (unsigned int x = 0; x < 2; ++x)
+    {
+        for (unsigned int y = 0; y < 2; ++y)
+        {
+            for (unsigned int z = 0; z < 2; ++z)
+            {
+                const glm::vec4 pt = inv * glm::vec4(2.0f * x - 1.0f, 2.0f * y - 1.0f, 2.0f * z - 1.0f, 1.0f);
+                frustumCorners.push_back(pt / pt.w);
+            }
+        }
+    }
+
+    return frustumCorners;
+}
+
+std::vector<glm::vec4> getFrustumCornersWorldSpace(const glm::mat4& proj, const glm::mat4& view)
+{
+    return getFrustumCornersWorldSpace(proj * view);
+}
+
+// the light-space matrix of the part of the camera's frustum between nearPlane and farPlane
+glm::mat4 getLightSpaceMatrix(const float nearPlane, const float farPlane)
+{
+    const glm::mat4 proj = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, nearPlane, farPlane);
+    const glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    const std::vector<glm::vec4> corners = getFrustumCornersWorldSpace(proj, view);
+
+    glm::vec3 center = glm::vec3(0, 0, 0);
+    for (const glm::vec4& v : corners)
+    {
+        center += glm::vec3(v);
+    }
+    center /= corners.size();
+
+    const glm::mat4 lightView = glm::lookAt(center + lightDir, center, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    float minX = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::lowest();
+    float minY = std::numeric_limits<float>::max();
+    float maxY = std::numeric_limits<float>::lowest();
+    float minZ = std::numeric_limits<float>::max();
+    float maxZ = std::numeric_limits<float>::lowest();
+    for (const glm::vec4& v : corners)
+    {
+        const glm::vec4 trf = lightView * v;
+        minX = std::min(minX, trf.x);
+        maxX = std::max(maxX, trf.x);
+        minY = std::min(minY, trf.y);
+        maxY = std::max(maxY, trf.y);
+        minZ = std::min(minZ, trf.z);
+        maxZ = std::max(maxZ, trf.z);
+    }
+
+    // Tune this parameter according to the scene
+    constexpr float zMult = 10.0f;
+    if (minZ < 0)
+    {
+        minZ *= zMult;
+    }
+    else
+    {
+        minZ /= zMult;
+    }
+    if (maxZ < 0)
+    {
+        maxZ /= zMult;
+    }
+    else
+    {
+        maxZ *= zMult;
+    }
+
+    const glm::mat4 lightProjection = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
+    return lightProjection * lightView;
+}
+
+// one light-space matrix per cascade: camera near plane .. level 0, level 0 .. level 1, ..., last level .. camera far plane
+std::vector<glm::mat4> getLightSpaceMatrices()
+{
+    std::vector<glm::mat4> ret;
+    for (size_t i = 0; i < shadowCascadeLevels.size() + 1; ++i)
+    {
+        if (i == 0)
+        {
+            ret.push_back(getLightSpaceMatrix(cameraNearPlane, shadowCascadeLevels[i]));
+        }
+        else if (i < shadowCascadeLevels.size())
+        {
+            ret.push_back(getLightSpaceMatrix(shadowCascadeLevels[i - 1], shadowCascadeLevels[i]));
+        }
+        else
+        {
+            ret.push_back(getLightSpaceMatrix(shadowCascadeLevels[i - 1], cameraFarPlane));
+        }
+    }
+    return ret;
+}
+=== task: depth-maps
+--- file: main.cpp
+--- find:
+// TODO: the shadow maps: a framebuffer and a texture array with one depth layer per cascade (and a debug view)
+--- replace:
+unsigned int lightFBO;
+unsigned int lightDepthMaps;
+constexpr unsigned int depthMapResolution = 1024;
+
+// debug view: show one layer of the shadow maps instead of the scene
+bool showQuad = true; // for now
+int debugLayer = 2; // the third cascade (20 to 50 units from the camera)
+--- file: main.cpp
+--- find:
+    // TODO: configure the light FBO with a depth texture array (one layer per cascade)
+--- replace:
+    // configure light FBO
+    // -----------------------
+    glGenFramebuffers(1, &lightFBO);
+
+    glGenTextures(1, &lightDepthMaps);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, lightDepthMaps);
+    glTexImage3D(
+        GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, depthMapResolution, depthMapResolution, int(shadowCascadeLevels.size()) + 1,
+        0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    constexpr float bordercolor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, bordercolor);
+
+    // attach the whole array (all layers): the geometry shader picks the layer of each triangle
+    glBindFramebuffer(GL_FRAMEBUFFER, lightFBO);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, lightDepthMaps, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+--- file: main.cpp
+--- find:
+        // TODO: 1. render the depth of the scene into the shadow map layers (from the light's direction)
+--- replace:
+        // 1. render depth of scene to texture (from light's perspective): all cascades in one pass
+        // --------------------------------------------------------------
+        simpleDepthShader.use();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, lightFBO);
+        glViewport(0, 0, depthMapResolution, depthMapResolution);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        renderScene(simpleDepthShader);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+--- file: main.cpp
+--- find:
+        // TODO: render a layer of the depth map to a quad for visual debugging
+--- replace:
+        // render Depth map to quad for visual debugging
+        // ---------------------------------------------
+        if (showQuad)
+        {
+            debugDepthQuad.use();
+            debugDepthQuad.setInt("layer", debugLayer);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, lightDepthMaps);
+            renderQuad();
+        }
+--- file: main.cpp
+--- find:
+    // TODO: delete the shadow maps and their framebuffer
+--- replace:
+    glDeleteTextures(1, &lightDepthMaps);
+    glDeleteFramebuffers(1, &lightFBO);
+--- file: shadow_mapping_depth.gs
+--- find:
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 3) out;
+
+// TODO: one invocation per cascade (invocations = 5): transform the triangle with that cascade's light-space
+// matrix (the LightSpaceMatrices uniform block) and send it to that layer of the shadow map (gl_Layer)
+void main()
+{
+    for (int i = 0; i < 3; ++i)
+    {
+        gl_Position = gl_in[i].gl_Position;
+        EmitVertex();
+    }
+    EndPrimitive();
+}
+--- replace:
+// the shader runs 5 times per triangle (once per cascade): gl_InvocationID = 0 ... 4
+layout(triangles, invocations = 5) in;
+layout(triangle_strip, max_vertices = 3) out;
+
+layout (std140) uniform LightSpaceMatrices
+{
+    mat4 lightSpaceMatrices[16];
+};
+
+void main()
+{
+    for (int i = 0; i < 3; ++i)
+    {
+        gl_Position = lightSpaceMatrices[gl_InvocationID] * gl_in[i].gl_Position;
+        gl_Layer = gl_InvocationID;
+        EmitVertex();
+    }
+    EndPrimitive();
+}
+=== task: cascade-layer
+--- file: main.cpp
+--- find:
+bool showQuad = true; // for now
+--- replace:
+bool showQuad = false;
+--- file: main.cpp
+--- find:
+        // TODO: the cascades' uniforms (farPlane, cascadeCount, cascadePlaneDistances)
+--- replace:
+        shader.setFloat("farPlane", cameraFarPlane);
+        shader.setInt("cascadeCount", shadowCascadeLevels.size());
+        for (size_t i = 0; i < shadowCascadeLevels.size(); ++i)
+        {
+            shader.setFloat("cascadePlaneDistances[" + std::to_string(i) + "]", shadowCascadeLevels[i]);
+        }
+--- file: shadow_mapping.fs
+--- find:
+// TODO: the cascades - the shadow map array, the light-space matrices (uniform block), the cascade distances
+--- replace:
+uniform float farPlane;
+
+uniform mat4 view;
+
+uniform float cascadePlaneDistances[16];
+uniform int cascadeCount;   // number of frusta - 1
+
+// TODO: the shadow map array and the light-space matrices (uniform block)
+
+// the cascade of a fragment: the first one whose far distance lies beyond the fragment's depth in view space
+int CascadeLayer(vec3 fragPosWorldSpace)
+{
+    vec4 fragPosViewSpace = view * vec4(fragPosWorldSpace, 1.0);
+    float depthValue = abs(fragPosViewSpace.z);
+
+    int layer = -1;
+    for (int i = 0; i < cascadeCount; ++i)
+    {
+        if (depthValue < cascadePlaneDistances[i])
+        {
+            layer = i;
+            break;
+        }
+    }
+    if (layer == -1)
+    {
+        layer = cascadeCount;
+    }
+    return layer;
+}
+--- file: shadow_mapping.fs
+--- find:
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;
+--- replace:
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;
+
+    // for now: tint every fragment with the colour of its cascade (red, green, blue, yellow, magenta)
+    const vec3 cascadeColors[5] = vec3[](vec3(1.0, 0.4, 0.4), vec3(0.4, 1.0, 0.4), vec3(0.4, 0.4, 1.0), vec3(1.0, 1.0, 0.4), vec3(1.0, 0.4, 1.0));
+    lighting *= cascadeColors[CascadeLayer(fs_in.FragPos)];
+=== task: shadows
+--- file: main.cpp
+--- find:
+    shader.setInt("diffuseTexture", 0);
+--- replace:
+    shader.setInt("diffuseTexture", 0);
+    shader.setInt("shadowMap", 1);
+--- file: main.cpp
+--- find:
+        // TODO: the shadow map array on texture unit 1
+--- replace:
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, lightDepthMaps);
+--- file: shadow_mapping.fs
+--- find:
+// TODO: the shadow map array and the light-space matrices (uniform block)
+--- replace:
+uniform sampler2DArray shadowMap;
+
+layout (std140) uniform LightSpaceMatrices
+{
+    mat4 lightSpaceMatrices[16];
+};
+--- file: shadow_mapping.fs
+--- find:
+// TODO: ShadowCalculation - pick the fragment's cascade, look it up in that layer of the shadow map
+--- replace:
+float ShadowCalculation(vec3 fragPosWorldSpace)
+{
+    // select cascade layer
+    int layer = CascadeLayer(fragPosWorldSpace);
+
+    vec4 fragPosLightSpace = lightSpaceMatrices[layer] * vec4(fragPosWorldSpace, 1.0);
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+
+    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+    if (currentDepth > 1.0)
+    {
+        return 0.0;
+    }
+    // calculate bias (based on depth map resolution and slope)
+    vec3 normal = normalize(fs_in.Normal);
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    const float biasModifier = 0.5f;
+    if (layer == cascadeCount)
+    {
+        bias *= 1 / (farPlane * biasModifier);
+    }
+    else
+    {
+        bias *= 1 / (cascadePlaneDistances[layer] * biasModifier);
+    }
+
+    float closestDepth = texture(shadowMap, vec3(projCoords.xy, layer)).r;
+    float shadow = (currentDepth - bias) > closestDepth ? 1.0 : 0.0;
+
+    return shadow;
+}
+--- file: shadow_mapping.fs
+--- find:
+    float shadow = 0.0; // no shadows yet
+--- replace:
+    float shadow = ShadowCalculation(fs_in.FragPos);
+--- file: shadow_mapping.fs
+--- find:
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;
+
+    // for now: tint every fragment with the colour of its cascade (red, green, blue, yellow, magenta)
+    const vec3 cascadeColors[5] = vec3[](vec3(1.0, 0.4, 0.4), vec3(0.4, 1.0, 0.4), vec3(0.4, 0.4, 1.0), vec3(1.0, 1.0, 0.4), vec3(1.0, 0.4, 1.0));
+    lighting *= cascadeColors[CascadeLayer(fs_in.FragPos)];
+--- replace:
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;
+=== task: pcf
+--- file: shadow_mapping.fs
+--- find:
+    float closestDepth = texture(shadowMap, vec3(projCoords.xy, layer)).r;
+    float shadow = (currentDepth - bias) > closestDepth ? 1.0 : 0.0;
+--- replace:
+    // PCF
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, layer)).r;
+            shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;

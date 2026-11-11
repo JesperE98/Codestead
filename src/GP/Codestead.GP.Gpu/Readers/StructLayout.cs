@@ -90,7 +90,8 @@ internal static class StructLayout
         }
         // "static X f(...)" leftovers before a body: drop function declarations (a parenthesis before any "=";
         // a member's initialiser glm::vec2 Position = glm::vec2(0.0f) stays).
-        return Regex.Replace(sb.ToString(), @"(?<=^|;)[^;=]*\([^;]*\)\s*(?:const\s*)?;", ";");
+        var members = Regex.Replace(sb.ToString(), @"(?<=^|;)[^;]*\boperator\b[^;]*;", ";");
+        return Regex.Replace(members, @"(?<=^|;)[^;=]*\([^;]*\)\s*(?:const\s*)?;", ";");
     }
 
     public static int FloatsOf(string type) => type switch

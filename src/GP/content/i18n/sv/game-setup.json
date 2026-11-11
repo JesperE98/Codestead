@@ -1,0 +1,75 @@
+{
+  "title": "Förberedelser",
+  "tasks": {
+    "game-struct": {
+      "text": {
+        "opengl": "Lägg till spelets tillstånd – `enum GameState` och `struct Game` (State, Keys[1024], Width, Height) –, den globala `Game Hedgerow;` och de fyra tomma spelfunktionerna `Init`, `ProcessInput`, `Update`, `Render`; anropa `Init` före renderloopen och `Render` efter rensningen.",
+        "vulkan": "Lägg till spelets tillstånd – `enum GameState` och `struct Game` (State, Keys[1024], Width, Height) –, den globala `Game Hedgerow;`, de tomma fria funktionerna `ProcessInput`, `Update`, `Render` och den tomma medlemmen `Init`; anropa `Init` i slutet av `initVulkan()` och `Render` i `recordCommandBuffer()` inuti render passet.",
+        "d3d12": "Lägg till spelets tillstånd – `enum GameState` och `struct Game` (State, Keys[1024], Width, Height) –, den globala `Game Hedgerow;` och de fyra tomma spelfunktionerna `Init`, `ProcessInput`, `Update`, `Render`; anropa `Init` i slutet av `LoadAssets` och `Render` efter rensningen i `PopulateCommandList`."
+      },
+      "hint": {
+        "opengl": "learnopengls klass Game som en struct med standardvärden: `GameState State = GAME_ACTIVE; bool Keys[1024] = {}; unsigned int Width = SCREEN_WIDTH, Height = SCREEN_HEIGHT;`; varje medlemsfunktion blir en fri funktion som tar `Game& game`. `Init(Hedgerow);` efter blending-inställningen, `Render(Hedgerow);` efter `glClear(GL_COLOR_BUFFER_BIT);`.",
+        "vulkan": "Standardvärden `GameState State = GAME_ACTIVE; bool Keys[1024] = {}; unsigned int Width = WIDTH, Height = HEIGHT;`. `Init` ligger i klassen eftersom laddning av resurser behöver enheten: `Init(Hedgerow);` efter `createDescriptorPool();`; `Render(Hedgerow);` efter `vkCmdSetScissor`, före `vkCmdEndRenderPass`.",
+        "d3d12": "Standardvärden `GameState State = GAME_ACTIVE; bool Keys[1024] = {}; unsigned int Width = SCREEN_WIDTH, Height = SCREEN_HEIGHT;`. `Init(Hedgerow);` efter tilldelningarna `Graphics.…` och före `m_commandList->Close()` (setup-command listen är fortfarande öppen); `Render(Hedgerow);` efter `IASetPrimitiveTopology`."
+      }
+    },
+    "delta-time": {
+      "text": {
+        "opengl": "Mät tiden varje bildruta tar (deltaTime) överst i loopen, före hämtningen av händelser, och skicka den till `ProcessInput` och `Update`, som anropas efter hämtningen.",
+        "vulkan": "Mät tiden varje bildruta tar (deltaTime) överst i loopen i `mainLoop()`, före hämtningen av händelser, och skicka den till `ProcessInput` och `Update`, som anropas efter hämtningen och före `drawFrame()`.",
+        "d3d12": "Mät tiden varje bildruta tar (deltaTime) i början av `OnUpdate` och skicka den till `ProcessInput` och `Update`."
+      },
+      "hint": {
+        "opengl": "`float deltaTime = 0.0f; float lastFrame = 0.0f;` före loopen; i den `float currentFrame = static_cast<float>(glfwGetTime()); deltaTime = currentFrame - lastFrame; lastFrame = currentFrame;` före `glfwPollEvents();`, sedan `ProcessInput(Hedgerow, deltaTime); Update(Hedgerow, deltaTime);`.",
+        "vulkan": "`float deltaTime = 0.0f; float lastFrame = 0.0f;` före `while`; i den `float currentFrame = static_cast<float>(glfwGetTime()); deltaTime = currentFrame - lastFrame; lastFrame = currentFrame;` före `glfwPollEvents();`, sedan `ProcessInput(Hedgerow, deltaTime); Update(Hedgerow, deltaTime);`.",
+        "d3d12": "`static auto lastFrame = std::chrono::high_resolution_clock::now(); auto currentFrame = std::chrono::high_resolution_clock::now(); float deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - lastFrame).count(); lastFrame = currentFrame;`, sedan `ProcessInput(Hedgerow, deltaTime); Update(Hedgerow, deltaTime);`."
+      }
+    },
+    "key-callback": {
+      "text": {
+        "opengl": "Spara tangentbordets tillstånd i `Hedgerow.Keys` med en GLFW-key-callback (Escape stänger fönstret), och registrera den.",
+        "vulkan": "Spara tangentbordets tillstånd i `Hedgerow.Keys` med en GLFW-key-callback (Escape stänger fönstret), och registrera den i `initWindow()`.",
+        "d3d12": "Spara tangentbordets tillstånd i `Hedgerow.Keys`: skriv `OnKeyDown(key)` / `OnKeyUp(key)` och anropa dem från `WindowProc` för `WM_KEYDOWN` och `WM_KEYUP` (Escape stänger fortfarande fönstret)."
+      },
+      "hint": {
+        "opengl": "`void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)`: Escape med `GLFW_PRESS` → `glfwSetWindowShouldClose(window, true)`; `if (key >= 0 && key < 1024)` sätter `GLFW_PRESS` `Hedgerow.Keys[key] = true`, `GLFW_RELEASE` false. Deklarera den med den andra callbacken; `glfwSetKeyCallback(window, key_callback);` efter GLAD.",
+        "vulkan": "`void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)` före klassen: Escape med `GLFW_PRESS` → `glfwSetWindowShouldClose(window, true)`; `if (key >= 0 && key < 1024)` sätter `GLFW_PRESS` `Hedgerow.Keys[key] = true`, `GLFW_RELEASE` false. `glfwSetKeyCallback(window, key_callback);` direkt efter `glfwCreateWindow`.",
+        "d3d12": "`Hedgerow.Keys[key] = true;` / `false;`. I `WindowProc`: `OnKeyDown(static_cast<UINT8>(wParam));` efter Escape-testet i `case WM_KEYDOWN:`, och ett `case WM_KEYUP:` med `OnKeyUp(static_cast<UINT8>(wParam)); return 0;`. Virtual-key codes: 'A' = 65, `VK_SPACE` = 32 – GLFW:s tal."
+      }
+    },
+    "shader": {
+      "text": {
+        "opengl": "Skriv learnopengls Shader som en struct med fria funktioner: `struct Shader { unsigned int ID; }`, `Use`, `checkCompileErrors`, `Compile` (vertex, fragment och en valfri geometry shader) och setterfunktionerna `SetInteger`, `SetVector3f`, `SetMatrix4`.",
+        "d3d12": "Skriv learnopengls Shader för Direct3D 12: `struct Shader` med ett pipeline state object, `Use` (sätter det på command listen) och `Compile` (skapar det från en kompilerad vertex och pixel shader med de tillstånd som 2D-sprites behöver)."
+      },
+      "hint": {
+        "opengl": "`Compile` är learnopengls `Shader::Compile` med `shader.ID` i stället för `this->ID`; varje setter anropar först `Use(shader)` när `useShader` är true, sedan `glUniform1i` / `glUniform3f` / `glUniformMatrix4fv(…, glm::value_ptr(matrix))` på `glGetUniformLocation(shader.ID, name)`.",
+        "d3d12": "En `D3D12_GRAPHICS_PIPELINE_STATE_DESC` som i de tidigare kapitlen med `Graphics.RootSignature`, input layouten POSITION (R32G32_FLOAT, offset 0) och TEXCOORD (R32G32_FLOAT, offset 8), blending SRC_ALPHA / INV_SRC_ALPHA, `DepthEnable = FALSE`, `CullMode = D3D12_CULL_MODE_NONE`; sedan `Graphics.Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&shader.PipelineState))`. `Use`: `Graphics.CommandList->SetPipelineState(shader.PipelineState.Get())`."
+      }
+    },
+    "texture": {
+      "text": {
+        "opengl": "Skriv learnopengls Texture2D som en struct med sina inställningar (och learnopengls standardvärden) och funktionen `Generate`, som laddar upp bilddata med de inställningarna.",
+        "vulkan": "Skriv learnopengls Texture2D för Vulkan: structen (bild, minne, vy, descriptor set, bredd, höjd) och medlemsfunktionen `loadTextureFromFile`, som laddar en bildfil till en sådan textur.",
+        "d3d12": "Skriv learnopengls Texture2D för Direct3D 12: structen (vyns plats i heapen som `ID`, storleken, formatet, texturen och dess upload buffer) och `Generate`, som skapar texturen, spelar in kopieringen av pixlarna och skapar shader resource viewn."
+      },
+      "hint": {
+        "opengl": "Standardvärden: `Internal_Format`/`Image_Format` `GL_RGB`, `Wrap_S`/`Wrap_T` `GL_REPEAT`, `Filter_Min`/`Filter_Max` `GL_LINEAR`. `Generate`: spara storleken, bind `texture.ID`, `glTexImage2D(GL_TEXTURE_2D, 0, texture.Internal_Format, width, height, 0, texture.Image_Format, GL_UNSIGNED_BYTE, data)`, de fyra `glTexParameteri`, avbind.",
+        "vulkan": "`stbi_load(file, &width, &height, &nrChannels, STBI_rgb_alpha)` (kasta ett undantag när det misslyckas); `createTextureImage(data, width, height, texture.Image, texture.Memory)`, `stbi_image_free(data)`, `texture.View = createImageView(texture.Image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT)`, `createDescriptorSet(texture.View, textureSampler, texture.DescriptorSet)`.",
+        "d3d12": "Som de tidigare kapitlens `LoadTexture` med `Graphics.Device` och `Graphics.CommandList`: texturen i COPY_DEST, upload heapen på `GetRequiredIntermediateSize`, `UpdateSubresources` (`RowPitch = width * 4`), barriären till PIXEL_SHADER_RESOURCE och SRV:n på `CD3DX12_CPU_DESCRIPTOR_HANDLE(Graphics.SrvHeap->GetCPUDescriptorHandleForHeapStart(), texture.ID, Graphics.SrvDescriptorSize)`. Spara upload buffern i structen."
+      }
+    },
+    "resource-manager": {
+      "text": {
+        "opengl": "Skriv learnopengls ResourceManager som två globala mappar och fria funktioner – `LoadShader` / `GetShader`, `LoadTexture` / `GetTexture`, `ClearResources` – med hjälpfunktionerna `loadShaderFromFile` (std::ifstream) och `loadTextureFromFile` (stb_image); anropa `ClearResources()` före `glfwTerminate()`.",
+        "vulkan": "Skriv learnopengls ResourceManager: de globala mapparna `Shaders` (namn → pipeline) och `Textures`, de fria funktionerna `GetShader` / `GetTexture`, och medlemmarna `LoadShader`, `LoadTexture` och `ClearResources`; anropa `ClearResources()` i `cleanup()`.",
+        "d3d12": "Skriv learnopengls ResourceManager som två globala mappar och fria funktioner – `LoadShader` / `GetShader`, `LoadTexture` / `GetTexture`, `ClearResources` – med hjälpfunktionerna `loadShaderFromFile` (D3DCompileFromFile av VSMain och PSMain) och `loadTextureFromFile` (stb_image); anropa `ClearResources()` i `OnDestroy`."
+      },
+      "hint": {
+        "opengl": "`std::map<std::string, Shader> Shaders; std::map<std::string, Texture2D> Textures;`. `loadTextureFromFile`: `glGenTextures(1, &texture.ID)`, GL_RGBA-format om `alpha`, `stbi_load(file, &width, &height, &nrChannels, 0)`, `Generate`, `stbi_image_free`. `GetShader` / `GetTexture` returnerar en referens till det lagrade objektet.",
+        "vulkan": "`LoadShader(vShaderFile, fShaderFile, name)`: `createPipeline(vShaderFile, fShaderFile, Shaders[name]);` – \"shadern\" är pipelinen. `LoadTexture(file, name)`: `Textures[name] = loadTextureFromFile(file);`. `ClearResources()`: `vkDestroyPipeline` för varje pipeline, `vkDestroyImageView`, `vkDestroyImage`, `vkFreeMemory` för varje textur (descriptor seten följer med poolen).",
+        "d3d12": "En texturs ID är nästa lediga plats i heapen: `texture.ID = Graphics.SrvCount++;`, sedan `stbi_load(file, &width, &height, &nrChannels, 4)`. `D3DCompileFromFile(shaderFile, nullptr, nullptr, \"VSMain\", \"vs_5_0\", …)` och `\"PSMain\", \"ps_5_0\"`; vid fel skriv ut fel-bloben med `OutputDebugStringA` och kasta ett undantag. `ClearResources()`: `Shaders.clear(); Textures.clear();`, efter `WaitForPreviousFrame()` i `OnDestroy`."
+      }
+    }
+  }
+}

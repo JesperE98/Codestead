@@ -1,0 +1,41 @@
+{
+  "title": "Bollen",
+  "tasks": {
+    "ball-object": {
+      "text": "Lägg till learnopengls BallObject som en struct härledd från `GameObject` med eget tillstånd – `Radius` (12.5) och `Stuck` (true) – och `MakeBallObject`, learnopengls konstruktor.",
+      "hint": {
+        "opengl": "`struct BallObject : GameObject { float Radius = 12.5f; bool Stuck = true; };` – en BallObject har också alla fält i GameObject. `MakeBallObject(pos, radius, velocity, sprite)` sätter Position, `Size = glm::vec2(radius * 2.0f, radius * 2.0f)`, Velocity, Sprite, Radius och `Stuck = true`.",
+        "vulkan": "`struct BallObject : GameObject { float Radius = 12.5f; bool Stuck = true; };` – en BallObject har också alla fält i GameObject. `MakeBallObject(pos, radius, velocity, VkDescriptorSet sprite)` sätter Position, `Size = glm::vec2(radius * 2.0f, radius * 2.0f)`, Velocity, Sprite, Radius och `Stuck = true`.",
+        "d3d12": "`struct BallObject : GameObject { float Radius = 12.5f; bool Stuck = true; };` – en BallObject har också alla fält i GameObject. `MakeBallObject(pos, radius, velocity, sprite)` sätter Position, `Size = XMFLOAT2(radius * 2.0f, radius * 2.0f)`, Velocity, Sprite, Radius och `Stuck = true`."
+      }
+    },
+    "move-reset": {
+      "text": "Skriv `Move` (om bollen inte sitter fast: flytta den med `Velocity * dt` och låt den studsa mot fönstrets vänster-, höger- och överkant) och `Reset` (sätt tillbaka den på en position med en hastighet, fastsittande igen).",
+      "hint": {
+        "opengl": "learnopengls `BallObject::Move` med `ball.` i stället för `this->`: `ball.Position += ball.Velocity * dt;`, och vid en kant vänd hastighetskomponenten och sätt tillbaka bollen på kanten (`Position.x = 0.0f`, `Position.x = window_width - ball.Size.x`, `Position.y = 0.0f`). Ingen nederkant: spelaren måste fånga bollen.",
+        "vulkan": "learnopengls `BallObject::Move` med `ball.` i stället för `this->`: `ball.Position += ball.Velocity * dt;`, och vid en kant vänd hastighetskomponenten och sätt tillbaka bollen på kanten (`Position.x = 0.0f`, `Position.x = window_width - ball.Size.x`, `Position.y = 0.0f`). Ingen nederkant: spelaren måste fånga bollen.",
+        "d3d12": "learnopengls `BallObject::Move` med `ball.` i stället för `this->`; vektorsteget `XMStoreFloat2(&ball.Position, XMLoadFloat2(&ball.Position) + XMLoadFloat2(&ball.Velocity) * dt);`, och vid en kant vänd hastighetskomponenten och sätt tillbaka bollen på kanten. Ingen nederkant: spelaren måste fånga bollen."
+      }
+    },
+    "draw-ball": {
+      "text": "Lägg till bollens konstanter `INITIAL_BALL_VELOCITY` (100, -350) och `BALL_RADIUS` (12.5) och en global `BallObject Ball`; skapa den i `Init` ovanpå racketen, i dess mitt, med texturen `ball`; rita den i `Render` efter racketen.",
+      "hint": {
+        "opengl": "`glm::vec2 ballPos = playerPos + glm::vec2(PLAYER_SIZE.x / 2.0f - BALL_RADIUS, -BALL_RADIUS * 2.0f);`, `Ball = MakeBallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, GetTexture(\"ball\").ID);` och `DrawObject(Ball, Renderer);` – bollen är också ett GameObject.",
+        "vulkan": "`glm::vec2 ballPos = playerPos + glm::vec2(PLAYER_SIZE.x / 2.0f - BALL_RADIUS, -BALL_RADIUS * 2.0f);`, `Ball = MakeBallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, GetTexture(\"ball\").DescriptorSet);` och `DrawObject(Ball, Renderer);` – bollen är också ett GameObject.",
+        "d3d12": "`XMFLOAT2 ballPos = XMFLOAT2(playerPos.x + PLAYER_SIZE.x / 2.0f - BALL_RADIUS, playerPos.y - BALL_RADIUS * 2.0f);`, `Ball = MakeBallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, GetTexture(\"ball\").ID);` och `DrawObject(Ball, Renderer);` – bollen är också ett GameObject."
+      }
+    },
+    "update": {
+      "text": "Flytta bollen varje bildruta: anropa `Move` i `Update` med fönstrets bredd.",
+      "hint": "`Move(Ball, dt, game.Width);` – ingenting ändras ännu: bollen sitter fast, och Move låter en fastsittande boll ligga kvar."
+    },
+    "launch": {
+      "text": "Flytta i `ProcessInput` bollen tillsammans med racketen medan den sitter fast (A och D), och släpp den när mellanslag trycks ned.",
+      "hint": {
+        "opengl": "I båda racket-grenarna: `{ Player.Position.x -= velocity; if (Ball.Stuck) Ball.Position.x -= velocity; }` (`+=` för D). Sedan `if (game.Keys[GLFW_KEY_SPACE]) Ball.Stuck = false;`.",
+        "vulkan": "I båda racket-grenarna: `{ Player.Position.x -= velocity; if (Ball.Stuck) Ball.Position.x -= velocity; }` (`+=` för D). Sedan `if (game.Keys[GLFW_KEY_SPACE]) Ball.Stuck = false;`.",
+        "d3d12": "I båda racket-grenarna: `{ Player.Position.x -= velocity; if (Ball.Stuck) Ball.Position.x -= velocity; }` (`+=` för 'D'). Sedan `if (game.Keys[VK_SPACE]) Ball.Stuck = false;`."
+      }
+    }
+  }
+}

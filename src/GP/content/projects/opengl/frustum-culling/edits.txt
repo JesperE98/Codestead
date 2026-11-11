@@ -1,0 +1,372 @@
+=== task: grid
+--- file: main.cpp
+--- find:
+    // load entities
+    // -------------
+    Entity ourEntity;
+    ourEntity.pModel = &ourModel;
+    setLocalPosition(ourEntity.transform, glm::vec3(0.0f, 0.0f, 0.0f));
+    const float scale = 0.6f;
+
+    {
+        Entity* lastEntity = &ourEntity;
+
+        for (unsigned int i = 0; i < 10; ++i)
+        {
+            addChild(*lastEntity, ourModel);
+            lastEntity = &lastEntity->children.back();
+
+            // set transform values: beside its parent, 0.6 times its size
+            setLocalPosition(lastEntity->transform, glm::vec3(3.5f, 0.0f, 0.0f));
+            setLocalScale(lastEntity->transform, glm::vec3(scale, scale, scale));
+        }
+    }
+--- replace:
+    // load entities: the root planet and a 10 x 10 grid of smaller planets around it, all children of the root
+    // -------------
+    Entity ourEntity;
+    ourEntity.pModel = &ourModel;
+    setLocalPosition(ourEntity.transform, glm::vec3(0.0f, 0.0f, 0.0f));
+    const float scale = 0.5f;
+
+    {
+        Entity* lastEntity = &ourEntity;
+
+        for (unsigned int x = 0; x < 10; ++x)
+        {
+            for (unsigned int z = 0; z < 10; ++z)
+            {
+                addChild(ourEntity, ourModel);
+                lastEntity = &ourEntity.children.back();
+
+                // set transform values: 5 units apart, half the root's size
+                setLocalPosition(lastEntity->transform, glm::vec3(x * 5.0f - 22.5f, 0.0f, z * 5.0f - 22.5f));
+                setLocalScale(lastEntity->transform, glm::vec3(scale, scale, scale));
+            }
+        }
+    }
+=== task: frustum
+--- file: main.cpp
+--- find:
+// TODO: the frustum - the Plane and Frustum structs and createFrustumFromCamera
+--- replace:
+// a plane: a unit normal and the distance from the origin along it (the points p with dot(normal, p) = distance)
+struct Plane
+{
+    glm::vec3 normal = { 0.0f, 1.0f, 0.0f }; // unit vector
+    float distance = 0.0f;                    // distance with origin
+};
+
+// the plane through the point p1 with the normal norm
+Plane makePlane(const glm::vec3& p1, const glm::vec3& norm)
+{
+    Plane plane;
+    plane.normal = glm::normalize(norm);
+    plane.distance = glm::dot(plane.normal, p1);
+    return plane;
+}
+
+// > 0: the point is on the side the normal points to, < 0: behind the plane
+float getSignedDistanceToPlane(const Plane& plane, const glm::vec3& point)
+{
+    return glm::dot(plane.normal, point) - plane.distance;
+}
+
+// the six planes that bound what a camera sees, their normals pointing inwards
+struct Frustum
+{
+    Plane topFace;
+    Plane bottomFace;
+
+    Plane rightFace;
+    Plane leftFace;
+
+    Plane farFace;
+    Plane nearFace;
+};
+
+Frustum createFrustumFromCamera(const glm::vec3& position, const glm::vec3& front, const glm::vec3& worldUp, float aspect, float fovY, float zNear, float zFar)
+{
+    // the camera's right and up vectors (learnopengl's Camera class keeps them as Right and Up)
+    const glm::vec3 right = glm::normalize(glm::cross(front, worldUp));
+    const glm::vec3 up = glm::normalize(glm::cross(right, front));
+
+    Frustum frustum;
+    const float halfVSide = zFar * tanf(fovY * 0.5f);
+    const float halfHSide = halfVSide * aspect;
+    const glm::vec3 frontMultFar = zFar * front;
+
+    frustum.nearFace = makePlane(position + zNear * front, front);
+    frustum.farFace = makePlane(position + frontMultFar, -front);
+    frustum.rightFace = makePlane(position, glm::cross(frontMultFar - right * halfHSide, up));
+    frustum.leftFace = makePlane(position, glm::cross(up, frontMultFar + right * halfHSide));
+    frustum.topFace = makePlane(position, glm::cross(right, frontMultFar - up * halfVSide));
+    frustum.bottomFace = makePlane(position, glm::cross(frontMultFar + up * halfVSide, right));
+    return frustum;
+}
+=== task: bounding-sphere
+--- file: main.cpp
+--- find:
+#include <iostream>
+#include <vector>
+--- replace:
+#include <iostream>
+#include <vector>
+#include <limits>
+#include <algorithm>
+--- file: main.cpp
+--- find:
+// TODO: the bounding volume - a sphere around the model (generateSphereBV) and the tests against the frustum's planes
+--- replace:
+// a bounding volume: a sphere that encloses the model
+struct Sphere
+{
+    glm::vec3 center = { 0.0f, 0.0f, 0.0f };
+    float radius = 0.0f;
+};
+
+// the sphere around the box that encloses all the model's vertices
+Sphere generateSphereBV(const Model& model)
+{
+    glm::vec3 minAABB = glm::vec3(std::numeric_limits<float>::max());
+    glm::vec3 maxAABB = glm::vec3(std::numeric_limits<float>::lowest());
+    for (const Mesh& mesh : model.meshes)
+    {
+        for (const Vertex& vertex : mesh.vertices)
+        {
+            minAABB.x = std::min(minAABB.x, vertex.Position.x);
+            minAABB.y = std::min(minAABB.y, vertex.Position.y);
+            minAABB.z = std::min(minAABB.z, vertex.Position.z);
+
+            maxAABB.x = std::max(maxAABB.x, vertex.Position.x);
+            maxAABB.y = std::max(maxAABB.y, vertex.Position.y);
+            maxAABB.z = std::max(maxAABB.z, vertex.Position.z);
+        }
+    }
+
+    Sphere sphere;
+    sphere.center = (maxAABB + minAABB) * 0.5f;
+    sphere.radius = glm::length(maxAABB - minAABB) * 0.5f; // half the box's diagonal
+    return sphere;
+}
+
+// the sphere is (at least partly) on the side of the plane its normal points to
+bool isOnOrForwardPlane(const Sphere& sphere, const Plane& plane)
+{
+    return getSignedDistanceToPlane(plane, sphere.center) > -sphere.radius;
+}
+
+// the sphere, moved and scaled by the entity's model matrix, is (at least partly) inside the frustum
+bool isOnFrustum(const Sphere& sphere, const Frustum& camFrustum, const Transform& transform)
+{
+    // get global scale thanks to our transform (the lengths of the model matrix's first three columns)
+    const glm::vec3 globalScale = glm::vec3(glm::length(glm::vec3(transform.modelMatrix[0])),
+                                            glm::length(glm::vec3(transform.modelMatrix[1])),
+                                            glm::length(glm::vec3(transform.modelMatrix[2])));
+
+    // get our global center with process it with the global model matrix of our transform
+    const glm::vec3 globalCenter = glm::vec3(transform.modelMatrix * glm::vec4(sphere.center, 1.0f));
+
+    // to wrap correctly our shape, we need the maximum scale scalar
+    const float maxScale = std::max(std::max(globalScale.x, globalScale.y), globalScale.z);
+
+    Sphere globalSphere;
+    globalSphere.center = globalCenter;
+    globalSphere.radius = sphere.radius * maxScale;
+
+    // check firstly the result that have the most chance to failure to avoid to call all functions
+    return (isOnOrForwardPlane(globalSphere, camFrustum.leftFace) &&
+        isOnOrForwardPlane(globalSphere, camFrustum.rightFace) &&
+        isOnOrForwardPlane(globalSphere, camFrustum.farFace) &&
+        isOnOrForwardPlane(globalSphere, camFrustum.nearFace) &&
+        isOnOrForwardPlane(globalSphere, camFrustum.topFace) &&
+        isOnOrForwardPlane(globalSphere, camFrustum.bottomFace));
+}
+--- file: main.cpp
+--- find:
+    Model* pModel = nullptr;
+};
+--- replace:
+    Model* pModel = nullptr;
+    Sphere boundingVolume;
+};
+--- file: main.cpp
+--- find:
+    child.pModel = &model;
+--- replace:
+    child.pModel = &model;
+    child.boundingVolume = generateSphereBV(model);
+--- file: main.cpp
+--- find:
+    ourEntity.pModel = &ourModel;
+--- replace:
+    ourEntity.pModel = &ourModel;
+    ourEntity.boundingVolume = generateSphereBV(ourModel);
+=== task: cull
+--- file: main.cpp
+--- find:
+#include <limits>
+#include <algorithm>
+--- replace:
+#include <limits>
+#include <algorithm>
+#include <string>
+--- file: main.cpp
+--- find:
+// draw an entity and all of its children
+void drawSelfAndChild(Entity& entity, Shader& ourShader)
+{
+    ourShader.setMat4("model", entity.transform.modelMatrix);
+    entity.pModel->Draw(ourShader);
+
+    for (Entity& child : entity.children)
+    {
+        drawSelfAndChild(child, ourShader);
+    }
+}
+--- replace:
+// draw an entity and all of its children - only those inside the frustum; count the drawn (display) and all (total) entities
+void drawSelfAndChild(Entity& entity, const Frustum& frustum, Shader& ourShader, unsigned int& display, unsigned int& total)
+{
+    if (isOnFrustum(entity.boundingVolume, frustum, entity.transform))
+    {
+        ourShader.setMat4("model", entity.transform.modelMatrix);
+        entity.pModel->Draw(ourShader);
+        display++;
+    }
+    total++;
+
+    for (Entity& child : entity.children)
+    {
+        drawSelfAndChild(child, frustum, ourShader, display, total);
+    }
+}
+--- file: main.cpp
+--- find:
+        // draw our scene graph
+        // TODO: build the camera's frustum and draw only the entities whose bounding volume is inside it
+        drawSelfAndChild(ourEntity, ourShader);
+--- replace:
+        // the camera's frustum - for now with its far plane at 15 instead of 100, to see the culling at work
+        const Frustum camFrustum = createFrustumFromCamera(cameraPos, cameraFront, cameraUp, (float)SCR_WIDTH / (float)SCR_HEIGHT, glm::radians(fov), 0.1f, 15.0f);
+
+        // draw our scene graph: only the entities inside the frustum
+        unsigned int total = 0, display = 0;
+        drawSelfAndChild(ourEntity, camFrustum, ourShader, display, total);
+
+        // show how many entities were drawn in the window's title
+        std::string title = "LearnOpenGL - drawn: " + std::to_string(display) + " / " + std::to_string(total);
+        glfwSetWindowTitle(window, title.c_str());
+=== task: camera-frustum
+--- file: main.cpp
+--- find:
+        // the camera's frustum - for now with its far plane at 15 instead of 100, to see the culling at work
+        const Frustum camFrustum = createFrustumFromCamera(cameraPos, cameraFront, cameraUp, (float)SCR_WIDTH / (float)SCR_HEIGHT, glm::radians(fov), 0.1f, 15.0f);
+--- replace:
+        // the camera's frustum: the same field of view, aspect, near and far plane as the projection
+        const Frustum camFrustum = createFrustumFromCamera(cameraPos, cameraFront, cameraUp, (float)SCR_WIDTH / (float)SCR_HEIGHT, glm::radians(fov), 0.1f, 100.0f);
+=== task: aabb
+--- file: main.cpp
+--- find:
+    Model* pModel = nullptr;
+    Sphere boundingVolume;
+};
+--- replace:
+    Model* pModel = nullptr;
+    AABB boundingVolume;
+};
+--- file: main.cpp
+--- find:
+    child.boundingVolume = generateSphereBV(model);
+--- replace:
+    child.boundingVolume = generateAABB(model);
+--- file: main.cpp
+--- find:
+    ourEntity.boundingVolume = generateSphereBV(ourModel);
+--- replace:
+    ourEntity.boundingVolume = generateAABB(ourModel);
+--- file: main.cpp
+--- find:
+        isOnOrForwardPlane(globalSphere, camFrustum.bottomFace));
+}
+--- replace:
+        isOnOrForwardPlane(globalSphere, camFrustum.bottomFace));
+}
+
+// a tighter bounding volume: an axis-aligned box, its center and its half sizes along x, y and z
+struct AABB
+{
+    glm::vec3 center = { 0.0f, 0.0f, 0.0f };
+    glm::vec3 extents = { 0.0f, 0.0f, 0.0f };
+};
+
+// the box that encloses all the model's vertices
+AABB generateAABB(const Model& model)
+{
+    glm::vec3 minAABB = glm::vec3(std::numeric_limits<float>::max());
+    glm::vec3 maxAABB = glm::vec3(std::numeric_limits<float>::lowest());
+    for (const Mesh& mesh : model.meshes)
+    {
+        for (const Vertex& vertex : mesh.vertices)
+        {
+            minAABB.x = std::min(minAABB.x, vertex.Position.x);
+            minAABB.y = std::min(minAABB.y, vertex.Position.y);
+            minAABB.z = std::min(minAABB.z, vertex.Position.z);
+
+            maxAABB.x = std::max(maxAABB.x, vertex.Position.x);
+            maxAABB.y = std::max(maxAABB.y, vertex.Position.y);
+            maxAABB.z = std::max(maxAABB.z, vertex.Position.z);
+        }
+    }
+
+    AABB aabb;
+    aabb.center = (maxAABB + minAABB) * 0.5f;
+    aabb.extents = maxAABB - aabb.center;
+    return aabb;
+}
+
+// see https://gdbooks.gitbooks.io/3dcollisions/content/Chapter2/static_aabb_plane.html
+bool isOnOrForwardPlane(const AABB& aabb, const Plane& plane)
+{
+    // compute the projection interval radius of the box onto the plane's normal
+    const float r = aabb.extents.x * std::abs(plane.normal.x) + aabb.extents.y * std::abs(plane.normal.y) +
+        aabb.extents.z * std::abs(plane.normal.z);
+
+    return -r <= getSignedDistanceToPlane(plane, aabb.center);
+}
+
+// the box, moved, turned and scaled by the entity's model matrix, is (at least partly) inside the frustum
+bool isOnFrustum(const AABB& aabb, const Frustum& camFrustum, const Transform& transform)
+{
+    // get global center thanks to our transform
+    const glm::vec3 globalCenter = glm::vec3(transform.modelMatrix * glm::vec4(aabb.center, 1.0f));
+
+    // scaled orientation: the box's three half axes in world space
+    const glm::vec3 right = glm::vec3(transform.modelMatrix[0]) * aabb.extents.x;
+    const glm::vec3 up = glm::vec3(transform.modelMatrix[1]) * aabb.extents.y;
+    const glm::vec3 forward = -glm::vec3(transform.modelMatrix[2]) * aabb.extents.z;
+
+    // the half sizes of the world-space axis-aligned box around the turned box
+    const float newIi = std::abs(glm::dot(glm::vec3(1.0f, 0.0f, 0.0f), right)) +
+        std::abs(glm::dot(glm::vec3(1.0f, 0.0f, 0.0f), up)) +
+        std::abs(glm::dot(glm::vec3(1.0f, 0.0f, 0.0f), forward));
+
+    const float newIj = std::abs(glm::dot(glm::vec3(0.0f, 1.0f, 0.0f), right)) +
+        std::abs(glm::dot(glm::vec3(0.0f, 1.0f, 0.0f), up)) +
+        std::abs(glm::dot(glm::vec3(0.0f, 1.0f, 0.0f), forward));
+
+    const float newIk = std::abs(glm::dot(glm::vec3(0.0f, 0.0f, 1.0f), right)) +
+        std::abs(glm::dot(glm::vec3(0.0f, 0.0f, 1.0f), up)) +
+        std::abs(glm::dot(glm::vec3(0.0f, 0.0f, 1.0f), forward));
+
+    AABB globalAABB;
+    globalAABB.center = globalCenter;
+    globalAABB.extents = glm::vec3(newIi, newIj, newIk);
+
+    return (isOnOrForwardPlane(globalAABB, camFrustum.leftFace) &&
+        isOnOrForwardPlane(globalAABB, camFrustum.rightFace) &&
+        isOnOrForwardPlane(globalAABB, camFrustum.topFace) &&
+        isOnOrForwardPlane(globalAABB, camFrustum.bottomFace) &&
+        isOnOrForwardPlane(globalAABB, camFrustum.nearFace) &&
+        isOnOrForwardPlane(globalAABB, camFrustum.farFace));
+}

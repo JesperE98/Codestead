@@ -26,8 +26,8 @@ CACHE="${VERIFY_CACHE:-$HOME/.cache/codestead-gp-verify}"
 mkdir -p "$OUT" "$CACHE"
 status=0
 
-# GLAD for OpenGL 3.3 core (the course's version), or for 4.3 core when a project asks GLFW for a 4.x context
-# (the debugging chapter: glDebugMessageCallback is core in 4.3).
+# GLAD for OpenGL 3.3 core (the course's version), or for 4.x core when a project asks GLFW for a 4.x context
+# (the debugging chapter: glDebugMessageCallback is core in 4.3; the guest articles: 4.1, 4.2, 4.5).
 glad_dir() {
   local ver="${1:-3.3}" dir="$CACHE/glad"
   [ "$ver" != 3.3 ] && dir="$CACHE/glad$(echo "$ver" | tr -d .)"
@@ -122,7 +122,11 @@ for dir in "$@"; do
   cp -r "$dir"/. "$work"/
   case "$api" in
     opengl)
-      glver=3.3; grep -qsE "GLFW_CONTEXT_VERSION_MAJOR, *4" "$work/main.cpp" && glver=4.3
+      # A 4.x context (the debugging chapter 4.3, the guest articles 4.1 / 4.2 / 4.5): GLAD for that version.
+      glver=3.3
+      if grep -qsE "GLFW_CONTEXT_VERSION_MAJOR, *4" "$work/main.cpp"; then
+        glver=4.$(grep -oE "GLFW_CONTEXT_VERSION_MINOR, *[0-9]" "$work/main.cpp" | head -1 | grep -oE "[0-9]$")
+      fi
       glad=$(glad_dir $glver)
       for s in "$work"/*.vs "$work"/*.vert; do [ -f "$s" ] && { glslangValidator -S vert "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S vert "$s" | tail -n +2)"; }; done
       for s in "$work"/*.fs "$work"/*.frag; do [ -f "$s" ] && { glslangValidator -S frag "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S frag "$s" | tail -n +2)"; }; done
@@ -145,7 +149,8 @@ for dir in "$@"; do
       ;;
     vulkan)
       mkdir -p "$work/shaders"
-      for s in "$work"/shaders/*.vert "$work"/shaders/*.frag "$work"/shaders/*.geom; do
+      # Also the tessellation (.tesc/.tese) and compute (.comp) stages of the guest articles.
+      for s in "$work"/shaders/*.vert "$work"/shaders/*.frag "$work"/shaders/*.geom "$work"/shaders/*.tesc "$work"/shaders/*.tese "$work"/shaders/*.comp; do
         [ -f "$s" ] || continue
         # shader.vert -> vert.spv (vulkan-tutorial's names); any other name -> name.vert.spv
         case "$(basename "$s")" in
@@ -155,6 +160,8 @@ for dir in "$@"; do
         glslangValidator -V "$s" -o "$out" >"$work/glslang.log" || { fail "$(basename "$s"):"; cat "$work/glslang.log"; }
       done
       libs=""; grep -qs "ft2build.h" "$work/main.cpp" && libs="$(pkg-config --cflags --libs freetype2)"
+      # Skeletal animation reads the animated model with Assimp.
+      grep -qs "assimp/" "$work/main.cpp" && libs="$libs -lassimp"
       shim=$(fixedtime_for "$work"); [ -n "$shim" ] && echo "  fixed time (frames / 60, space pressed at 0.5 s; shows frame $(awk "BEGIN { print int(${VERIFY_T:-1.0} * 60 + 0.5) }") = ${VERIFY_T:-1.0} s)"
       if g++ -std=c++17 -Wall -I/usr/include/stb -o "$work/app" "$work/main.cpp" -lglfw -lvulkan $libs 2>"$work/build.log"; then
         echo "  compiled"

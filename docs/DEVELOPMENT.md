@@ -40,7 +40,11 @@ och gör om ICO-filen (16–256 px) och kopiorna under `Assets/`.
 
 ## Namn och version
 
-Produktnamn, id:n och versioner finns **bara** i `build/Codestead.props`. Byt namn där.
+Produktnamn, id:n och versioner finns **bara** i `build/Codestead.props`. Byt namn där. Ett nytt verktyg lägger
+sina egna i `src/<Verktyg>/Directory.Build.props` (som Codestead GP:s `src/GP/Directory.Build.props`, som först
+importerar repots `Directory.Build.props`): `build/Codestead.props` hör till alla produkters filer i
+`packaging/products.json`, så en rad där för det nya verktyget skulle ge Codestead Linux och hubben nya versioner
+utan något nytt i dem.
 
 Versionerna anges bara som `major.minor` (`CodesteadLinuxVersion` = `0.6`, `CodesteadHubVersion` = `0.2`).
 Patchnumret sätts av release-flödet när du **släpper en version för hand** (se "Bygga installationsfilerna"):
@@ -213,7 +217,7 @@ packaging/                       Byggskript, installationstester, products.json 
 ```
 
 En ny app (t.ex. C++) får en egen mapp `src/Cpp/` och `tests/Cpp/`, en post i `packaging/products.json` och
-sina id:n och versioner i `build/Codestead.props` – se "Så gör du ett nytt verktyg" nedan.
+sina id:n och versioner i `src/Cpp/Directory.Build.props` – se "Så gör du ett nytt verktyg" nedan.
 
 ## Så gör du ett nytt verktyg
 
@@ -222,7 +226,7 @@ Allt som inte handlar om Linux finns i `src/Shared/` och används av Codestead L
 
 1. **Mappar och produkt**: `src/Cpp/Codestead.Cpp/` (appen), gärna `src/Cpp/Codestead.Cpp.Course/` (kursen),
    `src/Cpp/changelog.json`, `description.json`, `release-notes.md`, ikoner i `build/icons/codestead-cpp.*`,
-   id/namn/version i `build/Codestead.props` och en post med `"dir": "src/Cpp"` i `packaging/products.json`.
+   id/namn/version i `src/Cpp/Directory.Build.props` och en post med `"dir": "src/Cpp"` i `packaging/products.json`.
 2. **Appen**: `Program.cs` anropar `AppHost.Run<App>(args, product)`; `App.axaml.cs` lägger in en egen `Brand`
    (accentfärg) och öppnar `new LearningWindow(new CppTool(), smokeTest)`.
 3. **`CppTool : LearningTool`** (jämför `src/Linux/Codestead.Linux/LinuxTool*.cs`):

@@ -1,0 +1,24 @@
+#version 450
+
+// one work group = 10 x 10 invocations (gl_WorkGroupSize); the program dispatches 80 x 60 groups (gl_NumWorkGroups)
+layout(local_size_x = 10, local_size_y = 10, local_size_z = 1) in;
+
+// the texture the program also samples, as a storage image: four 32-bit floats per texel
+layout(rgba32f, binding = 0) uniform image2D imgOutput;
+
+// learnopengl's uniform float t: the time, as a push constant
+layout(push_constant) uniform PushConstants {
+    float t;
+} pc;
+
+void main() {
+    vec4 value = vec4(0.0, 0.0, 0.0, 1.0);
+    ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
+    float speed = 100;
+    // the width of the texture
+    float width = 800;
+
+    value.x = mod(float(texelCoord.x) + pc.t * speed, width) / (gl_NumWorkGroups.x * gl_WorkGroupSize.x);
+    value.y = float(texelCoord.y) / (gl_NumWorkGroups.y * gl_WorkGroupSize.y);
+    imageStore(imgOutput, texelCoord, value);
+}

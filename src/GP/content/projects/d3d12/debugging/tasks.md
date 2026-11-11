@@ -53,7 +53,7 @@ Task order: `info-queue`, `set-name`, `descriptor-heaps`, `debug-callback`, `fix
   (Output window: `… [ STATE_CREATION ERROR #31: CREATESHADERRESOURCEVIEW_INVALIDDIMENSIONS]`.)
   (This is the debug layer's wording as Windows prints it; it could not be run here – the course runs no Windows.)
 
-What the simulator should do (it reports nothing of this yet, and draws the cube in every state – see the report):
+What the simulator does (src/GP/Codestead.GP.Gpu/Readers/D3D12Device.Debug.cs):
 the debug layer's messages exist only when `EnableDebugLayer` is called; the program sees them only through the
 calls below. Picture: with mistake 1, nothing is drawn (only the clear colour); with mistake 2 only, the cube is black (an
 invalid SRV reads as 0).

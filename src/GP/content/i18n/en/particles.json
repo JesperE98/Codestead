@@ -1,0 +1,49 @@
+{
+  "title": "Particles",
+  "tasks": {
+    "particle-shader": {
+      "text": {
+        "opengl": "Write the particle shader – a 10 × 10 pixel quad at `offset`, the particle texture times the particle's colour –, add the setters `SetVector2f` and `SetVector4f`, and in `Init` load the shader as `\"particle\"` (sampler `sprite` on unit 0, the same projection) and `textures/particle.png` (with alpha) as `\"particle\"`.",
+        "vulkan": "Write the particle shader – a 10 × 10 pixel quad at `offset`, the particle texture times the particle's colour – and its push constant struct `ParticleConstants`; give `createPipeline` and `LoadShader` a blend factor parameter, load the particle shader as `\"particle\"` with additive blending and `textures/particle.png` as `\"particle\"`.",
+        "d3d12": "Write the particle shader – a 10 × 10 pixel quad at `offset`, the particle texture times the particle's colour – and its root constants struct `ParticleConstants`; give `Compile`, `loadShaderFromFile` and `LoadShader` a `destBlend` parameter, load the particle shader as `\"particle\"` with additive blending and `textures/particle.png` (with alpha) as `\"particle\"`."
+      },
+      "hint": {
+        "opengl": "particle.vs: `float scale = 10.0; TexCoords = vertex.zw; ParticleColor = color; gl_Position = projection * vec4((vertex.xy * scale) + offset, 0.0, 1.0);`; particle.fs: `color = (texture(sprite, TexCoords) * ParticleColor);`. `LoadShader(\"particle.vs\", \"particle.fs\", nullptr, \"particle\");`, `SetInteger(GetShader(\"particle\"), \"sprite\", 0);`, `SetMatrix4(GetShader(\"particle\"), \"projection\", projection);`.",
+        "vulkan": "particle.vert: `gl_Position = ubo.projection * vec4((vertex.xy * scale) + pc.offset, 0.0, 1.0);` with `float scale = 10.0f;`; particle.frag: `color = (texture(sprite, TexCoords) * ParticleColor);`. `struct ParticleConstants { glm::vec2 offset; alignas(16) glm::vec4 color; };`. `colorBlendAttachment.dstColorBlendFactor = dstColorBlendFactor;` – sprites `VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA`, particles `VK_BLEND_FACTOR_ONE`.",
+        "d3d12": "particle.hlsl: `result.position = mul(float4((position * scale) + offset, 0.0f, 1.0f), projection);` with `float scale = 10.0f;`, `PSMain` returns `sprite.Sample(wrapSampler, input.texCoord) * input.particleColor`. `struct ParticleConstants { XMFLOAT2 offset; XMFLOAT2 padding; XMFLOAT4 color; };`. `DestBlend` and `DestBlendAlpha` = `destBlend`; `LoadShader(L\"particle.hlsl\", \"particle\", D3D12_BLEND_ONE);`."
+      }
+    },
+    "particle-generator": {
+      "text": {
+        "opengl": "Add `struct Particle`, `struct ParticleGenerator` and `InitParticles` (the quad's VAO and `amount` dead particles); set up the global `Particles` in `Init`: 500 particles with the particle shader and texture. Delete its VAO at the end.",
+        "vulkan": "Add `struct Particle`, `struct ParticleGenerator` and the member `InitParticles` (the quad's vertex buffer and `amount` dead particles); set up the global `Particles` in `Init`: 500 particles with the particle pipeline and texture, and give it the command buffer in `recordCommandBuffer()`. Destroy its buffer in `cleanup()`.",
+        "d3d12": "Add `struct Particle`, `struct ParticleGenerator` and `InitParticles` (the quad's vertex buffer and `amount` dead particles); set up the global `Particles` in `Init`: 500 particles with the particle shader and texture. Release it in `OnDestroy`."
+      },
+      "hint": {
+        "opengl": "The quad is the sprite quad (6 vertices, attribute 0 with 4 floats). `for (unsigned int i = 0; i < generator.amount; ++i) generator.particles.push_back(Particle());`. In Init: `Particles.shader = GetShader(\"particle\"); Particles.texture = GetTexture(\"particle\").ID; Particles.amount = 500; InitParticles(Particles);`.",
+        "vulkan": "The quad in a host-visible buffer like `InitRenderData`'s. `for (unsigned int i = 0; i < generator.amount; ++i) generator.particles.push_back(Particle());`. In Init: `Particles.shader = GetShader(\"particle\"); Particles.texture = GetTexture(\"particle\").DescriptorSet; Particles.amount = 500; InitParticles(Particles);` (it also sets `generator.pipelineLayout`); in `recordCommandBuffer()` `Particles.commandBuffer = commandBuffer;`.",
+        "d3d12": "The quad in an upload-heap vertex buffer like `InitRenderData`'s. `for (unsigned int i = 0; i < generator.amount; ++i) generator.particles.push_back(Particle());`. In Init: `Particles.shader = GetShader(\"particle\"); Particles.texture = GetTexture(\"particle\").ID; Particles.amount = 500; InitParticles(Particles);`; in OnDestroy `Particles = ParticleGenerator();`."
+      }
+    },
+    "spawn": {
+      "text": "Bring the particles to life: `firstUnusedParticle` (the first dead particle, searching from the last one used), `respawnParticle` (a new particle at an object, with learnopengl's random offset and brightness) and `Update` for the generator (spawn new ones, then age, move and fade the living ones); call it in the game's `Update` with 2 new particles per frame at the ball, offset by half its radius.",
+      "hint": {
+        "opengl": "`float random = ((rand() % 100) - 50) / 10.0f;` and `float rColor = 0.5f + ((rand() % 100) / 100.0f);` (`#include <cstdlib>`). In Update: `p.Life -= dt; if (p.Life > 0.0f) { p.Position -= p.Velocity * dt; p.Color.a -= dt * 2.5f; }`. The call: `Update(Particles, dt, Ball, 2, glm::vec2(Ball.Radius / 2.0f));` after `DoCollisions(game);`.",
+        "vulkan": "`float random = ((rand() % 100) - 50) / 10.0f;` and `float rColor = 0.5f + ((rand() % 100) / 100.0f);` (`#include <cstdlib>`). In Update: `p.Life -= dt; if (p.Life > 0.0f) { p.Position -= p.Velocity * dt; p.Color.a -= dt * 2.5f; }`. The call: `Update(Particles, dt, Ball, 2, glm::vec2(Ball.Radius / 2.0f));` after `DoCollisions(game);`.",
+        "d3d12": "`float random = ((rand() % 100) - 50) / 10.0f;` and `float rColor = 0.5f + ((rand() % 100) / 100.0f);`; positions with `XMStoreFloat2(&particle.Position, XMLoadFloat2(&object.Position) + XMVectorReplicate(random) + XMLoadFloat2(&offset));`. In Update the alpha is `p.Color.w -= dt * 2.5f;`. The call: `Update(Particles, dt, Ball, 2, XMFLOAT2(Ball.Radius / 2.0f, Ball.Radius / 2.0f));`."
+      }
+    },
+    "draw-particles": {
+      "text": {
+        "opengl": "Write `DrawParticles`: with additive blending (`GL_SRC_ALPHA, GL_ONE`), draw every living particle with the particle shader – its `offset` and `color` uniforms, the particle texture, the quad –, then restore the normal blending; draw the particles in `Render` after the paddle, before the ball.",
+        "vulkan": "Write `DrawParticles`: bind the particle pipeline (additive blending) and draw every living particle – its offset and colour as push constants, the particle texture's descriptor set, the quad; draw the particles in `Render` after the paddle, before the ball.",
+        "d3d12": "Write `DrawParticles`: use the particle shader's PSO (additive blending) and draw every living particle – its offset and colour as root constants, the particle texture's table, the quad; draw the particles in `Render` after the paddle, before the ball."
+      },
+      "hint": {
+        "opengl": "`for (Particle particle : generator.particles) if (particle.Life > 0.0f) { SetVector2f(generator.shader, \"offset\", particle.Position); SetVector4f(generator.shader, \"color\", particle.Color); glBindTexture(GL_TEXTURE_2D, generator.texture); glBindVertexArray(generator.VAO); glDrawArrays(GL_TRIANGLES, 0, 6); … }` – and `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);` at the end.",
+        "vulkan": "`vkCmdBindPipeline(generator.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, generator.shader);`, then per living particle a `ParticleConstants` pushed with `vkCmdPushConstants(…, sizeof(ParticleConstants), &constants)`, `vkCmdBindDescriptorSets(…, &generator.texture, …)`, `vkCmdBindVertexBuffers` with the quad, `vkCmdDraw(generator.commandBuffer, 6, 1, 0, 0)`. Nothing to restore.",
+        "d3d12": "`Use(generator.shader);`, then per living particle `SetGraphicsRoot32BitConstants(0, sizeof(ParticleConstants) / 4, &constants, 0)`, `SetGraphicsRootDescriptorTable(2, …generator.texture…)`, `IASetVertexBuffers(0, 1, &generator.quadVertexBufferView)`, `DrawInstanced(6, 1, 0, 0)`. Nothing to restore."
+      }
+    }
+  }
+}
