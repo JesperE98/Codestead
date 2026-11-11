@@ -12,8 +12,6 @@ public sealed class BuildFacts : CommandFacts
     public bool ShowsFrames { get; init; }
     /// <summary>Something was drawn in the frame.</summary>
     public bool Drew { get; init; }
-    /// <summary>The build stopped at a misspelt API name ("did you mean …?").</summary>
-    public bool Typo { get; init; }
     public double[]? ClearColor { get; init; }
 
     public static BuildFacts From(CheckContext c)
@@ -27,7 +25,6 @@ public sealed class BuildFacts : CommandFacts
             Succeeded = c.Built,
             ShowsFrames = c.Shows,
             Drew = c.Shows && c.Drew,
-            Typo = c.Build.Diagnostics.Any(d => d.Message.Contains("did you mean", StringComparison.Ordinal)),
             ClearColor = c.Shows ? c.Scene!.ClearColor : null,
         };
         foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(c.Cpp, @"\b(gl[A-Z]\w*|glfw[A-Z]\w*|vk[A-Z]\w*|D3D12[A-Z]\w*|CreateDXGIFactory\d?)\s*\("))

@@ -129,6 +129,7 @@ public sealed partial class ProjectPanel : Border
         Grid.SetColumn(ran, 1);
         line.Children.Add(ran);
         box.Children.Add(line);
+        if (m.WhereProgram is { } where) box.Children.Add(Wrapped(where, 12.5, "muted"));
         string Time(DateTime? utc) => utc is { } u ? u.ToLocalTime().ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture) : t("yourProject.never");
         box.Children.Add(Text(t("yourProject.times", ("built", Time(m.Status.BuiltAt)), ("run", Time(m.Status.LastRunAt))), 12.5, null, "muted"));
         return Note(box, m.Status.Ready ? "CsSuccessSoft" : "CsSurface2");

@@ -49,6 +49,8 @@ public sealed partial class GpTool
     {
         Folders.Set(watchedApi, chapter, path);
         Watch(Folders.Get(watchedApi, chapter));
+        // The first project folder is an achievement.
+        Window.RefreshGame();
     }
 
     /// <summary>Copies files into the folder, asking first when that would overwrite files with other contents.</summary>

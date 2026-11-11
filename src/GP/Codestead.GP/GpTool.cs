@@ -44,9 +44,10 @@ public sealed partial class GpTool : LearningTool
     /// The text for the chosen API: its checkpoints are what the window counts, so every API's version of a chapter
     /// has the same number of questions (the tests check it).
     /// </summary>
-    public override string RawText(string chapterId, string lang) => CourseText.Preprocess(CourseText.Raw(chapterId, lang), Api);
+    public override string RawText(string chapterId, string lang) => CourseText.Preprocess(CourseText.Raw(chapterId, lang), Api, Ide);
 
-    public override string LessonText(string chapterId, string lang) => CourseText.Lesson(chapterId, lang, Api);
+    /// <summary>The text for the chosen API and IDE.</summary>
+    public override string LessonText(string chapterId, string lang) => WithIdeHint(chapterId, CourseText.Lesson(chapterId, lang, Api, Ide));
 
     public override IReadOnlyList<Reference> References(string chapterId) => CourseText.References(chapterId, Api);
 

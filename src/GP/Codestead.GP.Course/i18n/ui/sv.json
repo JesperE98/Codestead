@@ -257,6 +257,8 @@
   "ach.checkpoints-25.desc": "Svara på 25 frågor i kapiteltexterna.",
   "ach.first-build.title": "Det kompilerar!",
   "ach.first-build.desc": "Bygg ett projekt utan fel.",
+  "ach.first-folder.title": "Hemmabas",
+  "ach.first-folder.desc": "Välj en projektmapp för ett kapitel.",
   "ach.first-frame.title": "Ett fönster mot världen",
   "ach.first-frame.desc": "Kör ett program vars fönster stannar öppet och visar en bild.",
   "ach.first-draw.title": "Första pixlarna",
@@ -265,8 +267,6 @@
   "ach.builds-100.desc": "Bygg och kör 100 gånger.",
   "ach.functions-25.title": "Flytande i API:t",
   "ach.functions-25.desc": "Anropa 25 olika API-funktioner i dina projekt.",
-  "ach.typo.title": "Menade du …?",
-  "ach.typo.desc": "Bygget stannade vid ett felstavat API-namn.",
   "ach.magenta.title": "Felsökningsrosa",
   "ach.magenta.desc": "Du rensade skärmen till ren magenta – färgen på saknade texturer överallt.",
   "sim.textureFileMissing": "Bilden {file} finns inte i projektet, så stbi_load ger ingenting.",
@@ -336,5 +336,12 @@
   "expected.show": "Visa uppgiftens förväntade resultat",
   "expected.enlarge": "Klicka för att förstora",
   "expected.drawing": "Ritar…",
-  "expected.none": "Det finns ingen bild för den här uppgiften."
+  "expected.none": "Det finns ingen bild för den här uppgiften.",
+  "ide.group": "IDE",
+  "ide.label": "Din IDE: kapitlens steg följer den",
+  "ide.chooseHint": "**Välj din IDE** högst upp, bredvid grafik-API:t: stegen i det här kapitlet och i de senare följer ditt val. Visas nu: **{ide}**.",
+  "yourProject.where.vs": "Visual Studio lägger programmet i x64/Debug/ bredvid lösningen (en CMake-mapp: out/build/x64-Debug/).",
+  "yourProject.where.clion": "CLion lägger programmet i cmake-build-debug/.",
+  "yourProject.where.rider": "Rider lägger programmet i x64/Debug/ bredvid lösningen.",
+  "yourProject.where.vscode": "VS Code (CMake Tools) lägger programmet i build/."
 }

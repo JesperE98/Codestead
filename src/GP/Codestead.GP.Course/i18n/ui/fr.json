@@ -257,6 +257,8 @@
   "ach.checkpoints-25.desc": "Répondez à 25 questions dans les textes des chapitres.",
   "ach.first-build.title": "Ça compile !",
   "ach.first-build.desc": "Compilez un projet sans erreur.",
+  "ach.first-folder.title": "Camp de base",
+  "ach.first-folder.desc": "Choisissez un dossier de projet pour un chapitre.",
   "ach.first-frame.title": "Une fenêtre sur le monde",
   "ach.first-frame.desc": "Exécutez un programme dont la fenêtre reste ouverte et affiche une image.",
   "ach.first-draw.title": "Premiers pixels",
@@ -265,8 +267,6 @@
   "ach.builds-100.desc": "Compilez et exécutez 100 fois.",
   "ach.functions-25.title": "L’API couramment",
   "ach.functions-25.desc": "Appelez 25 fonctions différentes de l’API dans vos projets.",
-  "ach.typo.title": "Vouliez-vous dire … ?",
-  "ach.typo.desc": "La compilation s’est arrêtée sur un nom d’API mal orthographié.",
   "ach.magenta.title": "Rose débogage",
   "ach.magenta.desc": "Vous avez effacé l’écran en magenta pur – la couleur des textures manquantes partout.",
   "sim.textureFileMissing": "L’image {file} n’est pas dans le projet, stbi_load ne renvoie donc rien.",
@@ -336,5 +336,12 @@
   "expected.show": "Afficher le résultat attendu de cette tâche",
   "expected.enlarge": "Cliquez pour agrandir",
   "expected.drawing": "Dessin en cours…",
-  "expected.none": "Il n’y a pas d’image pour cette tâche."
+  "expected.none": "Il n’y a pas d’image pour cette tâche.",
+  "ide.group": "IDE",
+  "ide.label": "Votre IDE : les étapes des chapitres s’y adaptent",
+  "ide.chooseHint": "**Choisissez votre IDE** en haut, à côté de l’API graphique : les étapes de ce chapitre et des suivants s’adaptent à votre choix. Affiché pour l’instant : **{ide}**.",
+  "yourProject.where.vs": "Visual Studio place le programme dans x64/Debug/ à côté de la solution (pour un dossier CMake : out/build/x64-Debug/).",
+  "yourProject.where.clion": "CLion place le programme dans cmake-build-debug/.",
+  "yourProject.where.rider": "Rider place le programme dans x64/Debug/ à côté de la solution.",
+  "yourProject.where.vscode": "VS Code (CMake Tools) place le programme dans build/."
 }

@@ -257,6 +257,8 @@
   "ach.checkpoints-25.desc": "章の本文中の問題に 25 問答えましょう。",
   "ach.first-build.title": "コンパイル成功！",
   "ach.first-build.desc": "プロジェクトをエラーなしでビルドしましょう。",
+  "ach.first-folder.title": "拠点づくり",
+  "ach.first-folder.desc": "章のプロジェクトフォルダーを選びましょう。",
   "ach.first-frame.title": "世界への窓",
   "ach.first-frame.desc": "ウィンドウが開いたままフレームを表示するプログラムを実行しましょう。",
   "ach.first-draw.title": "はじめてのピクセル",
@@ -265,8 +267,6 @@
   "ach.builds-100.desc": "ビルドして実行を 100 回行いましょう。",
   "ach.functions-25.title": "API を使いこなす",
   "ach.functions-25.desc": "プロジェクトで 25 種類の API 関数を呼び出しましょう。",
-  "ach.typo.title": "もしかして…？",
-  "ach.typo.desc": "API 名のスペルミスでビルドが止まりました。",
   "ach.magenta.title": "デバッグピンク",
   "ach.magenta.desc": "画面を純粋なマゼンタでクリアしました – どこでも「テクスチャがない」ことを示す色です。",
   "sim.textureFileMissing": "画像 {file} がプロジェクトにないため、stbi_load は何も返しません。",
@@ -336,5 +336,12 @@
   "expected.show": "この課題の期待される結果を表示",
   "expected.enlarge": "クリックで拡大",
   "expected.drawing": "描画中…",
-  "expected.none": "この課題の画像はありません。"
+  "expected.none": "この課題の画像はありません。",
+  "ide.group": "IDE",
+  "ide.label": "あなたの IDE：各章の手順はこれに合わせて表示されます",
+  "ide.chooseHint": "上部のグラフィックス API の隣で **IDE を選んでください**。この章と以降の章の手順は選んだ IDE に合わせて表示されます。現在の表示：**{ide}**。",
+  "yourProject.where.vs": "Visual Studio はプログラムをソリューションの隣の x64/Debug/ に置きます（CMake フォルダーの場合は out/build/x64-Debug/）。",
+  "yourProject.where.clion": "CLion はプログラムを cmake-build-debug/ に置きます。",
+  "yourProject.where.rider": "Rider はプログラムをソリューションの隣の x64/Debug/ に置きます。",
+  "yourProject.where.vscode": "VS Code（CMake Tools）はプログラムを build/ に置きます。"
 }

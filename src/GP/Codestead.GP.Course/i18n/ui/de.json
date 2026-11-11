@@ -257,6 +257,8 @@
   "ach.checkpoints-25.desc": "Beantworte 25 Fragen in den Kapiteltexten.",
   "ach.first-build.title": "Es kompiliert!",
   "ach.first-build.desc": "Erstelle ein Projekt ohne Fehler.",
+  "ach.first-folder.title": "Heimathafen",
+  "ach.first-folder.desc": "Wähle einen Projektordner für ein Kapitel.",
   "ach.first-frame.title": "Ein Fenster zur Welt",
   "ach.first-frame.desc": "Führe ein Programm aus, dessen Fenster offen bleibt und einen Frame zeigt.",
   "ach.first-draw.title": "Erste Pixel",
@@ -265,8 +267,6 @@
   "ach.builds-100.desc": "Klicke 100-mal auf Erstellen & ausführen.",
   "ach.functions-25.title": "Fließend in der API",
   "ach.functions-25.desc": "Rufe in deinen Projekten 25 verschiedene API-Funktionen auf.",
-  "ach.typo.title": "Meintest du …?",
-  "ach.typo.desc": "Der Build blieb an einem falsch geschriebenen API-Namen hängen.",
   "ach.magenta.title": "Debug-Pink",
   "ach.magenta.desc": "Du hast den Bildschirm mit reinem Magenta gelöscht – der Farbe, die überall für fehlende Texturen steht.",
   "sim.textureFileMissing": "Das Bild {file} ist nicht im Projekt, also liefert stbi_load nichts.",
@@ -336,5 +336,12 @@
   "expected.show": "Das erwartete Ergebnis dieser Aufgabe zeigen",
   "expected.enlarge": "Zum Vergrößern klicken",
   "expected.drawing": "Wird gezeichnet…",
-  "expected.none": "Für diese Aufgabe gibt es kein Bild."
+  "expected.none": "Für diese Aufgabe gibt es kein Bild.",
+  "ide.group": "IDE",
+  "ide.label": "Deine IDE: Die Schritte in den Kapiteln richten sich nach ihr",
+  "ide.chooseHint": "**Wähle oben deine IDE**, neben der Grafik-API: Die Schritte in diesem und den folgenden Kapiteln richten sich nach deiner Wahl. Gerade gezeigt: **{ide}**.",
+  "yourProject.where.vs": "Visual Studio legt das Programm in x64/Debug/ neben der Projektmappe ab (bei einem CMake-Ordner: out/build/x64-Debug/).",
+  "yourProject.where.clion": "CLion legt das Programm in cmake-build-debug/ ab.",
+  "yourProject.where.rider": "Rider legt das Programm in x64/Debug/ neben der Projektmappe ab.",
+  "yourProject.where.vscode": "VS Code (CMake Tools) legt das Programm in build/ ab."
 }

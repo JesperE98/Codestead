@@ -139,6 +139,12 @@ public partial class LearningWindow : Window
     /// <summary>Is a task done (by its progress key)?</summary>
     public bool IsTaskDone(string key) => state.Progress.ContainsKey(key);
 
+    /// <summary>
+    /// Something the tool's achievements look at changed outside a command (Codestead GP: the first project folder):
+    /// the game is brought up to date and new achievements are shown.
+    /// </summary>
+    public void RefreshGame() => Present(tool.Rules.Sync(state.Game, Snapshot(), DateTime.Now));
+
     /// <summary>Shows a short notice at the bottom of the window.</summary>
     public void Toast(string text) => overlay.Toast(text);
 

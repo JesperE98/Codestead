@@ -85,6 +85,11 @@ public abstract class LearningTool
     /// <summary>Tasks that moved to another chapter: old progress key → new key (saved progress follows them).</summary>
     public virtual IReadOnlyDictionary<string, string> MovedTasks => new Dictionary<string, string>();
 
+    /// <summary>
+    /// A control of the tool's own in the top bar, after the variant picker (Codestead GP: the IDE picker); null: none.
+    /// </summary>
+    public virtual Control? TopBarExtra => null;
+
     /// <summary>Every variant there is, for the settings (null: no variant section).</summary>
     public virtual IReadOnlyList<VariantOption>? AllVariants => null;
 
