@@ -1,0 +1,57 @@
+{
+  "title": "Frustum Culling",
+  "tasks": {
+    "grid": {
+      "text": "Replace the chain with learnopengl's frustum-culling scene: a 10 × 10 grid of planets, all children of the root, 5 units apart (local positions x · 5 − 22.5 and z · 5 − 22.5), each half the root's size.",
+      "hint": {
+        "opengl": "Two nested `for` loops over `x` and `z`; `addChild(ourEntity, ourModel); lastEntity = &ourEntity.children.back();` then `setLocalPosition(lastEntity->transform, glm::vec3(x * 5.0f - 22.5f, 0.0f, z * 5.0f - 22.5f));` and `setLocalScale(…, glm::vec3(scale, scale, scale))` with `const float scale = 0.5f;`.",
+        "vulkan": "In `loadEntities()`: two nested `for` loops over `x` and `z`; `addChild(ourEntity, ourModel); lastEntity = &ourEntity.children.back();` then `setLocalPosition(lastEntity->transform, glm::vec3(x * 5.0f - 22.5f, 0.0f, z * 5.0f - 22.5f));` and `setLocalScale(…, glm::vec3(scale, scale, scale))` with `const float scale = 0.5f;`.",
+        "d3d12": "Two nested `for` loops over `x` and `z` in `LoadAssets`; `addChild(m_ourEntity, m_model); lastEntity = &m_ourEntity.children.back();` then `setLocalPosition(lastEntity->transform, XMFLOAT3(x * 5.0f - 22.5f, 0.0f, z * 5.0f - 22.5f));` and `setLocalScale(…, XMFLOAT3(scale, scale, scale))` with `const float scale = 0.5f;`."
+      }
+    },
+    "frustum": {
+      "text": "Write the `Plane` struct (a unit normal and its distance from the origin) with `makePlane` and `getSignedDistanceToPlane`, the `Frustum` struct (six planes) and `createFrustumFromCamera`, which builds the six planes from the camera's position, front and up vectors, aspect ratio, vertical field of view and near/far distances, with their normals pointing into the frustum.",
+      "hint": {
+        "opengl": "`halfVSide = zFar * tanf(fovY * 0.5f)`, `halfHSide = halfVSide * aspect`, `frontMultFar = zFar * front`; near: `makePlane(position + zNear * front, front)`, far: `makePlane(position + frontMultFar, -front)`, right: `makePlane(position, glm::cross(frontMultFar - right * halfHSide, up))`, left: `glm::cross(up, frontMultFar + right * halfHSide)`, top: `glm::cross(right, frontMultFar - up * halfVSide)`, bottom: `glm::cross(frontMultFar + up * halfVSide, right)`.",
+        "vulkan": "`halfVSide = zFar * tanf(fovY * 0.5f)`, `halfHSide = halfVSide * aspect`, `frontMultFar = zFar * front`; near: `makePlane(position + zNear * front, front)`, far: `makePlane(position + frontMultFar, -front)`, right: `makePlane(position, glm::cross(frontMultFar - right * halfHSide, up))`, left: `glm::cross(up, frontMultFar + right * halfHSide)`, top: `glm::cross(right, frontMultFar - up * halfVSide)`, bottom: `glm::cross(frontMultFar + up * halfVSide, right)`.",
+        "d3d12": "`halfVSide = zFar * tanf(fovY * 0.5f)`, `halfHSide = halfVSide * aspect`, `frontMultFar = zFar * front`; near: `makePlane(position + zNear * front, front)`, far: `makePlane(position + frontMultFar, -front)`, right: `makePlane(position, XMVector3Cross(frontMultFar - right * halfHSide, up))`, left: `XMVector3Cross(up, frontMultFar + right * halfHSide)`, top: `XMVector3Cross(right, frontMultFar - up * halfVSide)`, bottom: `XMVector3Cross(frontMultFar + up * halfVSide, right)`. `makePlane`: `XMVector3Normalize(norm)`, `distance = XMVectorGetX(XMVector3Dot(normal, p1))`."
+      }
+    },
+    "bounding-sphere": {
+      "text": {
+        "opengl": "Give every entity a bounding sphere: write the `Sphere` struct, `generateSphereBV` (the box around all of the model's vertices; centre = the box's centre, radius = half its diagonal), `isOnOrForwardPlane` (signed distance > −radius) and `isOnFrustum`, which moves and scales the sphere with the entity's model matrix and tests it against the six planes. Store it in `Entity` (`boundingVolume`) for the root and every child.",
+        "vulkan": "Give every entity a bounding sphere: keep a copy of the model's vertices in `Model`, write the `Sphere` struct, `generateSphereBV` (the box around all of the model's vertices; centre = the box's centre, radius = half its diagonal), `isOnOrForwardPlane` (signed distance > −radius) and `isOnFrustum`, which moves and scales the sphere with the entity's model matrix and tests it against the six planes. Store it in `Entity` (`boundingVolume`) for the root and every child.",
+        "d3d12": "Give every entity a bounding sphere: write the `Sphere` struct, `generateSphereBV` (the box around all of the model's vertices; centre = the box's centre, radius = half its diagonal), `isOnOrForwardPlane` (signed distance > −radius) and `isOnFrustum`, which moves and scales the sphere with the entity's model matrix and tests it against the six planes. Store it in `Entity` (`boundingVolume`) for the root and every child."
+      },
+      "hint": {
+        "opengl": "Loop `for (const Mesh& mesh : model.meshes) for (const Vertex& vertex : mesh.vertices)` with `std::min` / `std::max` per axis. In `isOnFrustum`: the global scale is the length of the model matrix's first three columns, the centre `glm::vec3(transform.modelMatrix * glm::vec4(sphere.center, 1.0f))`, the radius `sphere.radius * maxScale`. `#include <limits>` and `<algorithm>`.",
+        "vulkan": "`std::vector<Vertex> vertices;` in `struct Model` and `ourModel.vertices = vertices;` in `loadEntities()`. Loop `for (const Vertex& vertex : model.vertices)` with `std::min` / `std::max` per axis of `vertex.pos`. In `isOnFrustum`: the global scale is the length of the model matrix's first three columns, the centre `glm::vec3(transform.modelMatrix * glm::vec4(sphere.center, 1.0f))`, the radius `sphere.radius * maxScale`.",
+        "d3d12": "Loop `for (const Mesh& mesh : model.meshes) for (const Vertex& vertex : mesh.vertices)` with `XMVectorMin` / `XMVectorMax` of `XMLoadFloat3(&vertex.position)`. In `isOnFrustum`: the global scale is the length of the model matrix's first three rows (`XMVector3Length(modelMatrix.r[0])` …), the centre `XMVector3Transform(XMLoadFloat3(&sphere.center), modelMatrix)`, the radius `sphere.radius * maxScale` (`fmaxf`). `#include <cfloat>` for `FLT_MAX`."
+      }
+    },
+    "cull": {
+      "text": {
+        "opengl": "Cull: build the camera's frustum every frame and let `drawSelfAndChild` draw an entity only when its bounding sphere is in the frustum, counting the drawn and the visited entities; show the counts in the window title. To see the culling at work, build the frustum with its far plane at 15 for now (the projection still reaches 100).",
+        "vulkan": "Cull: build the camera's frustum every frame and let `drawSelfAndChild` record an entity only when its bounding sphere is in the frustum, counting the drawn and the visited entities; show the counts in the window title. To see the culling at work, build the frustum with its far plane at 15 for now (the projection still reaches 100).",
+        "d3d12": "Cull: build the camera's frustum every frame and let `drawSelfAndChild` draw an entity only when its bounding sphere is in the frustum, counting the drawn and the visited entities; show the counts in the window title. To see the culling at work, build the frustum with its far plane at 15 for now (the projection still reaches 100)."
+      },
+      "hint": {
+        "opengl": "`const Frustum camFrustum = createFrustumFromCamera(cameraPos, cameraFront, cameraUp, (float)SCR_WIDTH / (float)SCR_HEIGHT, glm::radians(fov), 0.1f, 15.0f);`, `unsigned int total = 0, display = 0; drawSelfAndChild(ourEntity, camFrustum, ourShader, display, total);`, then `std::string title = \"LearnOpenGL - drawn: \" + std::to_string(display) + \" / \" + std::to_string(total); glfwSetWindowTitle(window, title.c_str());`.",
+        "vulkan": "In `recordCommandBuffer()`: `const Frustum camFrustum = createFrustumFromCamera(cameraPos, cameraFront, cameraUp, swapChainExtent.width / (float) swapChainExtent.height, glm::radians(fov), 0.1f, 15.0f);`, `unsigned int total = 0, display = 0; drawSelfAndChild(ourEntity, camFrustum, commandBuffer, pipelineLayout, display, total);`, then `std::string title = \"Vulkan - drawn: \" + std::to_string(display) + \" / \" + std::to_string(total); glfwSetWindowTitle(window, title.c_str());`.",
+        "d3d12": "`const Frustum camFrustum = createFrustumFromCamera(cameraPos, cameraFront, cameraUp, static_cast<float>(m_width) / static_cast<float>(m_height), XMConvertToRadians(fov), 0.1f, 15.0f);`, `unsigned int total = 0, display = 0; drawSelfAndChild(m_ourEntity, camFrustum, m_commandList.Get(), display, total);`, then `std::wstring title = L\"LearnDirectX - drawn: \" + std::to_wstring(display) + L\" / \" + std::to_wstring(total); SetWindowTextW(m_hwnd, title.c_str());`."
+      }
+    },
+    "camera-frustum": {
+      "text": "Build the culling frustum with the projection's own values – far plane 100 – so that exactly what the camera can see is drawn.",
+      "hint": "Change the last argument of `createFrustumFromCamera` from `15.0f` to `100.0f`."
+    },
+    "aabb": {
+      "text": "Use learnopengl's tighter bounding volume instead: an axis-aligned box (`AABB`, centre and half sizes) with `generateAABB`, `isOnOrForwardPlane` (the box's projection radius on the plane's normal) and `isOnFrustum` (the world-space box around the turned and scaled box), and store an `AABB` in `Entity`.",
+      "hint": {
+        "opengl": "`r = extents.x * std::abs(plane.normal.x) + extents.y * std::abs(plane.normal.y) + extents.z * std::abs(plane.normal.z)`; inside: `-r <= getSignedDistanceToPlane(plane, center)`. In `isOnFrustum`: `right = glm::vec3(modelMatrix[0]) * extents.x`, `up = glm::vec3(modelMatrix[1]) * extents.y`, `forward = -glm::vec3(modelMatrix[2]) * extents.z`, and the new half sizes `newIi`, `newIj`, `newIk` as sums of `std::abs(glm::dot(axis, …))`.",
+        "vulkan": "`r = extents.x * std::abs(plane.normal.x) + extents.y * std::abs(plane.normal.y) + extents.z * std::abs(plane.normal.z)`; inside: `-r <= getSignedDistanceToPlane(plane, center)`. In `isOnFrustum`: `right = glm::vec3(modelMatrix[0]) * extents.x`, `up = glm::vec3(modelMatrix[1]) * extents.y`, `forward = -glm::vec3(modelMatrix[2]) * extents.z`, and the new half sizes `newIi`, `newIj`, `newIk` as sums of `std::abs(glm::dot(axis, …))`.",
+        "d3d12": "`r = extents.x * fabsf(plane.normal.x) + extents.y * fabsf(plane.normal.y) + extents.z * fabsf(plane.normal.z)`; inside: `-r <= getSignedDistanceToPlane(plane, center)`. In `isOnFrustum`: `right = modelMatrix.r[0] * extents.x`, `up = modelMatrix.r[1] * extents.y`, `forward = -modelMatrix.r[2] * extents.z`, and the new half sizes `newIi`, `newIj`, `newIk` as sums of `fabsf(XMVectorGetX(XMVector3Dot(axis, …)))`."
+      }
+    }
+  }
+}
