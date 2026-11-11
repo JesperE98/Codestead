@@ -88,7 +88,8 @@ jobs:
           printf 'codestead-linux-v0.0.1\ncodestead-hub-v0.0.1\n' > "$RUNNER_TEMP/tags.txt"
           python3 packaging/releases_readme.py --repo "$RELEASES_REPO" --tags "$RUNNER_TEMP/tags.txt" --out "$RUNNER_TEMP/README.md"
 
-  # The tests run once; the packaging jobs below only build.
+  # The tests run once; the packaging jobs below only build. Codestead GP's TaskTests run in parallel jobs by course
+  # part (gp-tasks, as in ci.yml; CiTests checks that the lists cover every part).
   test:
     runs-on: ubuntu-latest
     steps:
@@ -96,7 +97,53 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
-      - run: dotnet test -c Release
+      - run: dotnet test -c Release -- --filter-not-class Codestead.GP.Tests.TaskTests
+
+  # Does a pull request change anything Codestead GP's TaskTests depend on? Pushes and hand-started runs always test.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      gp: ${{ steps.diff.outputs.gp }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then echo "gp=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          if git diff --name-only "$BASE" HEAD | grep -qE '^(src/GP/|tests/GP/|src/Shared/|build/|global\.json$|Directory\.Build\.props$|\.github/workflows/)'; then
+            echo "gp=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "gp=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  gp-tasks:
+    name: GP tasks (${{ matrix.parts }})
+    needs: changes
+    if: needs.changes.outputs.gp == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        parts:
+          - 'start,getting-started'
+          - 'lighting,model-loading'
+          - 'advanced-opengl'
+          - 'advanced-lighting'
+          - 'pbr'
+          - 'in-practice'
+          - 'guest-articles'
+    runs-on: ubuntu-latest
+    env:
+      CODESTEAD_GP_PARTS: ${{ matrix.parts }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet test --project tests/GP/Codestead.GP.Tests -c Release -- --filter-class Codestead.GP.Tests.TaskTests
 
   build-linux:
     needs: plan
@@ -247,7 +294,7 @@ jobs:
             "$(get linux exe)${{ matrix.platform == 'windows' && '.exe' || '' }}" "${{ matrix.rid }}" "$(get linux dir)"
 
   publish:
-    needs: [plan, test, test-linux, test-windows, test-hub]
+    needs: [plan, test, gp-tasks, test-linux, test-windows, test-hub]
     if: needs.plan.outputs.publish != '[]'
     runs-on: ubuntu-latest
     strategy:
