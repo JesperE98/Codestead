@@ -355,6 +355,9 @@ public sealed partial class ShaderRunner
                 Store(c.Args[0], ShaderValue.Array((vec.Items ?? []).Where(item => !Truthy(Invoke(predicate, [item], c.Line))).ToArray()));
                 return ShaderValue.Scalar(0);
             }
+            case "back" or "front" when Lenient && c.Args.Count == 1 && Eval(c.Args[0]).Items is { Length: > 0 } elements:
+                // vector.back() / front(): the element itself (a reference: &children.back() points at it).
+                return method == "back" ? elements[^1] : elements[0];
             case "push_back" or "emplace_back" when Lenient && c.Args.Count >= 2:
             {
                 // vector.push_back(x): the variable holds a new, longer array.

@@ -242,9 +242,9 @@ public sealed partial class GlReader
             }).ToList();
             var maps = new Dictionary<string, Textures.Texture?>(StringComparer.Ordinal)
             {
-                ["texture_diffuse1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.DiffuseMap, flipImages),
-                ["texture_specular1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.SpecularMap, flipImages),
-                ["texture_normal1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.NormalMap, flipImages),
+                ["texture_diffuse1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.DiffuseMap, flipImages, mipmapped: true),
+                ["texture_specular1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.SpecularMap, flipImages, mipmapped: true),
+                ["texture_normal1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.NormalMap, flipImages, mipmapped: true),
             };
             var draw = MakeDraw(program, vertices, mesh.Indices.ToArray(), 0, mesh.Indices.Count, Topology.Triangles,
                 textures: (name, u, v) => maps.TryGetValue(name, out var t) && t is not null ? t.Sample(u, v) : [0, 0, 0, 1]);

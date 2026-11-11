@@ -47,7 +47,7 @@ public sealed partial class GlReader
 
     private List<double>? Numbers(string expr) => env.Numbers(expr) ?? src.Numbers(expr, env.Runner.Time);
 
-    private static readonly Regex CallStart = new(@"(?<![\w.>])(?<name>gl[A-Z]\w*|glfw[A-Z]\w*|gladLoadGL(?:Loader)?|memcpy)\s*\(|(?<obj>[A-Za-z_]\w*)\s*\.\s*(?<method>use|setFloat|setInt|setBool|setVec2|setVec3|setVec4|setMat2|setMat3|setMat4|Draw)\s*\(", RegexOptions.CultureInvariant);
+    private static readonly Regex CallStart = new(@"(?<![\w.>])(?<name>gl[A-Z]\w*|glfw[A-Z]\w*|gladLoadGL(?:Loader)?|memcpy)\s*\(|(?<![\w.>])(?<obj>[A-Za-z_]\w*(?:\s*(?:\.|->)\s*[A-Za-z_]\w*|\[[^\[\]]*\])*)\s*(?:\.|->)\s*(?<method>use|setFloat|setInt|setBool|setVec2|setVec3|setVec4|setMat2|setMat3|setMat4|Draw)\s*\(", RegexOptions.CultureInvariant);
     private static readonly Regex AssignRe = new(@"^(?:[A-Za-z_][\w:<>]*(?:\s*[*&]+\s*|\s+))*(?<lhs>[A-Za-z_]\w*(?:(?:\.|->)\w+|\[[^\]=]*\])*)\s*=(?!=)\s*(?<rhs>[\s\S]+)$", RegexOptions.CultureInvariant);
     private static readonly Regex ModelRe = new(@"^Model\s+(?<name>\w+)\s*\(\s*""(?<path>[^""]+)""", RegexOptions.CultureInvariant);
     private readonly Dictionary<string, (Models.ObjModel Model, string Path)> models = new(StringComparer.Ordinal);
@@ -96,6 +96,9 @@ public sealed partial class GlReader
     }
 
     private int inlineDepth;
+    /// <summary>How deep the program's own drawing functions are followed: a recursive one (drawSelfAndChild over a scene
+    /// graph) as deep as its data goes, up to this.</summary>
+    private const int MaxInlineDepth = 32;
     private string?[]? inlineReturn;
 
     /// <summary>Runs a function of the program with its arguments; returns the name of the variable it returns.</summary>
@@ -107,6 +110,9 @@ public sealed partial class GlReader
         var declared = src.ParametersOf(fn) ?? [];
         var parameters = declared.Select(p => p.Name).ToList();
         var values = args.Select(a => Eval(a)).ToList();
+        // The parameters are globals while the function runs: what they named before comes back afterwards (a recursive
+        // drawSelfAndChild(child, shader) leaves its caller's entity as it was).
+        var outer = parameters.Where(p => p != "").Distinct().ToDictionary(p => p, p => env.Runner.Globals.GetValueOrDefault(p), StringComparer.Ordinal);
         for (int i = 0; i < parameters.Count; i++)
         {
             // A parameter not given takes its default value (DrawSprite(…, float rotate = 0.0f, glm::vec3 color = …)).
@@ -137,6 +143,9 @@ public sealed partial class GlReader
             inlineDepth--;
             inlineReturn = saved;
             aliasStack.RemoveAt(aliasStack.Count - 1);
+            foreach (var (p, v) in outer)
+                if (v is null) env.Runner.Globals.Remove(p);
+                else env.Runner.Globals[p] = v;
         }
     }
 
@@ -334,7 +343,7 @@ public sealed partial class GlReader
         foreach (Match call in Regex.Matches(text, @"(?<![\w.>])(\w+)\s*\("))
         {
             var fn = call.Groups[1].Value;
-            if (fn == "main" || inlineDepth > 8 || !src.Functions.ContainsKey(fn) || !src.CallsApi(fn)) continue;
+            if (fn == "main" || inlineDepth > MaxInlineDepth || !src.Functions.ContainsKey(fn) || !src.CallsApi(fn)) continue;
             int open = call.Index + call.Length - 1;
             int close = CppSource.MatchBracket(text, open);
             if (close < 0) continue;

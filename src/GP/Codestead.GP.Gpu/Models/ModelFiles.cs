@@ -16,12 +16,15 @@ internal static class ModelFiles
         src.Uses("aiProcess_FlipUVs") || project.Files.Any(f => (f.Key.EndsWith(".h", StringComparison.Ordinal) || f.Key.EndsWith(".hpp", StringComparison.Ordinal) || f.Key.EndsWith(".cpp", StringComparison.Ordinal))
             && Regex.IsMatch(CppSource.BlankComments(f.Value), @"\baiProcess_FlipUVs\b"));
 
-    /// <summary>A texture of a material, next to the model, loaded like the program's stb_image calls.</summary>
-    public static Texture? Texture(GpuProject project, string modelPath, string? file, bool flip)
+    /// <summary>
+    /// A texture of a material, next to the model, loaded like the program's stb_image calls. Mipmapped: learnopengl's
+    /// model.h (TextureFromFile) calls glGenerateMipmap and sets GL_LINEAR_MIPMAP_LINEAR.
+    /// </summary>
+    public static Texture? Texture(GpuProject project, string modelPath, string? file, bool flip, bool mipmapped = false)
     {
         if (file is null) return null;
         var dir = System.IO.Path.GetDirectoryName(modelPath.Replace('\\', '/'))?.Replace('\\', '/') ?? "";
         var image = StbImage.Load(project, dir.Length > 0 ? dir + "/" + file : file, flip, 0);
-        return image is null ? null : new Texture(image, SamplerState.Default) { Components = image.Channels == 4 ? 4 : 3 };
+        return image is null ? null : new Texture(image, SamplerState.Default) { Components = image.Channels == 4 ? 4 : 3, Mipmapped = mipmapped };
     }
 }

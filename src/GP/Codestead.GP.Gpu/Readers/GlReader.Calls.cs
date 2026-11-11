@@ -355,8 +355,15 @@ public sealed partial class GlReader
         {
             ["meshes"] = ShaderValue.Array(meshes.ToArray()),
             ["textures_loaded"] = ShaderValue.Array(textures.ToArray()),
+            [ModelMark] = ShaderValue.Str(name),
         });
     }
+
+    /// <summary>
+    /// A member of a Model's value that names the model: a pointer to it kept in a struct (Model* pModel = &amp;ourModel)
+    /// is a copy once the struct is copied (into a std::vector), and still says which model it draws.
+    /// </summary>
+    private const string ModelMark = "__model";
 
     /// <summary>
     /// A buffer an argument names: the variable it was generated into, also through a copy of its value
@@ -679,7 +686,14 @@ public sealed partial class GlReader
 
     private void ShaderMethod(string obj, string method, IReadOnlyList<string> a, int line)
     {
-        obj = ResolveAlias(obj);
+        obj = ResolveAlias(System.Text.RegularExpressions.Regex.Replace(obj, @"\s+", ""));
+        if (!gl.Programs.ContainsKey(obj) && !models.ContainsKey(obj) && System.Text.RegularExpressions.Regex.IsMatch(obj, @"\.|->|\["))
+        {
+            // Through a member or a pointer (entity.pModel->Draw(shader), renderer.shader.use()): the model the value
+            // is (a copy of a Model carries its name), else the object its last name is.
+            obj = Eval(obj) is { Fields: { } fields } && fields.TryGetValue(ModelMark, out var mark) && mark.Text is { } modelName
+                ? modelName : ResolveAlias(System.Text.RegularExpressions.Regex.Match(obj, @"(\w+)$").Groups[1].Value);
+        }
         if (method == "Draw" && models.TryGetValue(obj, out var model))
         {
             DrawModel(model.Model, model.Path, a.Count > 0 ? Obj(a[0]) : "", line);

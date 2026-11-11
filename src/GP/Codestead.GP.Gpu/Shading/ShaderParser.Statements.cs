@@ -302,8 +302,13 @@ public sealed partial class ShaderParser
             Expr? vectorSize = null;
             do
             {
-                bool reference = false;
-                while (lenient && (Peek.Is("*") || Peek.Is("&") || Peek.Is("**"))) reference |= Next().Is("&");
+                bool reference = false, pointer = false;
+                while (lenient && (Peek.Is("*") || Peek.Is("&") || Peek.Is("**")))
+                {
+                    var star = Next();
+                    reference |= star.Is("&");
+                    pointer |= !star.Is("&");
+                }
                 var id = Identifier();
                 int size = ArraySuffix();
                 Expr? value = null;
@@ -314,7 +319,7 @@ public sealed partial class ShaderParser
                 // An empty std::vector<T>: an array with no elements yet (push_back adds them).
                 var declSize = sizeExpr ?? vectorSize ?? (vectorOf && value is null ? new Number(0, line) : null);
                 vectorSize = null;
-                list.Add(new Declare(type, id, value, line, size != 0 || declSize is not null || vectorOf && value is InitList, Math.Max(0, size), declSize) { Static = isStatic && lenient, Reference = reference && lenient && value is not null and not InitList });
+                list.Add(new Declare(type, id, value, line, size != 0 || declSize is not null || vectorOf && value is InitList, Math.Max(0, size), declSize) { Static = isStatic && lenient, Reference = reference && lenient && value is not null and not InitList, Pointer = pointer && lenient });
             } while (Accept(","));
             return list;
         }

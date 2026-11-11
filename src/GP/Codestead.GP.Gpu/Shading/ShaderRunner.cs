@@ -223,6 +223,8 @@ public sealed partial class ShaderRunner
         // C++: an empty std::vector, an empty std::string.
         if (type is "vector" && arraySize == 0) return ShaderValue.Array([]);
         if (type is "string" or "std::string" or "wstring") return ShaderValue.Str("");
+        // C++: a pointer member nothing was given (Model* pModel;) is null.
+        if (Lenient && type.EndsWith('*')) return ShaderValue.Str("nullptr");
         if (arraySize > 0) return ShaderValue.Array(Enumerable.Range(0, arraySize).Select(_ => Default(type)).ToArray());
         if (program.FindStruct(type) is { } s)
             return ShaderValue.Struct(s.Fields.ToDictionary(f => f.Id, FieldDefault));
@@ -329,10 +331,20 @@ public sealed partial class ShaderRunner
             {
                 // A reference to a struct or a container: the same object under another name.
                 scopes[^1][d.Id] = Eval(referred);
+                pointers.Remove(d.Id);
+                return default;
+            }
+            case Declare { Pointer: true, Value: { } pointee } d when !d.IsArray && Eval(pointee) is { Fields: not null } or { Items: not null } or { Map: not null }:
+            {
+                // A pointer to a struct or a container (Entity* last = &root): the object itself, not a copy.
+                scopes[^1][d.Id] = Eval(pointee);
+                pointers.Add(d.Id);
                 return default;
             }
             case Declare d:
             {
+                if (d.Pointer) pointers.Add(d.Id);
+                else pointers.Remove(d.Id);
                 // C++: Type name{} / Type name = {} is a zero-initialised struct.
                 int arraySize = d.SizeExpr is not null ? (int)Math.Max(0, Math.Min(1 << 20, Eval(d.SizeExpr).X)) : d.ArraySize;
                 if (d.SizeExpr is not null && d.Value is InitList { Items.Count: > 0 } && Eval(d.Value) is { Items: { } given } && given.Length < arraySize)
@@ -425,6 +437,9 @@ public sealed partial class ShaderRunner
 
     private readonly HashSet<string> staticLocals = new(StringComparer.Ordinal);
 
+    /// <summary>C++: the variables declared as pointers – assigning to one points it at another object.</summary>
+    private readonly HashSet<string> pointers = new(StringComparer.Ordinal);
+
     private const string LambdaMark = "__lambda#";
     private readonly List<Lambda> lambdas = new();
 
@@ -466,15 +481,20 @@ public sealed partial class ShaderRunner
         {
             case Name n:
             {
+                // A pointer given another address (last = &last->children.back()) points there; the object it pointed
+                // at stays as it was.
+                bool repoint = pointers.Contains(n.Id);
                 for (int i = scopes.Count - 1; i >= 0; i--)
                     if (scopes[i].TryGetValue(n.Id, out var current))
                     {
-                        if (!AssignInPlace(current, value)) scopes[i][n.Id] = Like(current, value);
+                        if (repoint) scopes[i][n.Id] = value;
+                        else if (!AssignInPlace(current, value)) scopes[i][n.Id] = Like(current, value);
                         return;
                     }
                 if (Globals.TryGetValue(n.Id, out var old))
                 {
-                    if (!AssignInPlace(old, value)) Globals[n.Id] = Like(old, value);
+                    if (repoint) Globals[n.Id] = value;
+                    else if (!AssignInPlace(old, value)) Globals[n.Id] = Like(old, value);
                 }
                 else Globals[n.Id] = value;
                 return;
