@@ -21,6 +21,10 @@ public sealed partial class GlReader
                 scene.Height = Int(A(1)) ?? 600;
                 scene.WindowTitle = CppSource.StringArg(A(2)) ?? Eval(A(2))?.Text ?? "";
                 return;
+            case "glfwSetWindowTitle":
+                // The title a program sets while it runs (the frame's counts: "drawn: 37 / 101"): the window shows it.
+                if (inLoop && (CppSource.StringArg(A(1)) ?? Eval(A(1))?.Text) is { } title) scene.WindowTitle = title;
+                return;
             case "gladLoadGLLoader" or "gladLoadGL":
                 gladLoaded = true;
                 return;
@@ -45,7 +49,7 @@ public sealed partial class GlReader
             if (!scene.Notes.Any(n => n.Key == "gladMissing")) scene.Notes.Add(SimNote.Error("gladMissing", ("call", name), ("line", line.ToString())));
             return;
         }
-        if (AdvancedCall(name, a, lhs, line)) return;
+        if (AdvancedCall(name, a, lhs, line) || DsaCall(name, a, line)) return;
         switch (name)
         {
             case "glClearColor":
@@ -59,35 +63,24 @@ public sealed partial class GlReader
                 return;
             }
             case "glClear":
+                ClearBound(A(0).Contains("GL_COLOR_BUFFER_BIT", StringComparison.Ordinal) ? gl.ClearColor.ToArray() : null,
+                    A(0).Contains("GL_DEPTH_BUFFER_BIT", StringComparison.Ordinal) ? 1.0 : null,
+                    A(0).Contains("GL_STENCIL_BUFFER_BIT", StringComparison.Ordinal) ? 0 : null);
+                return;
+            case "glClearBufferfv" or "glClearBufferiv" or "glClearBufferuiv" or "glClearBufferfi":
             {
-                // Before the render loop only a framebuffer object's clears count (a capture pass drawn once).
-                if (!inLoop && (gl.DrawFramebuffer is not { } setupFbo || !gl.Framebuffers.ContainsKey(setupFbo))) return;
-                bool color = A(0).Contains("GL_COLOR_BUFFER_BIT", StringComparison.Ordinal);
-                double? depth = A(0).Contains("GL_DEPTH_BUFFER_BIT", StringComparison.Ordinal) ? 1.0 : null;
-                int? stencil = A(0).Contains("GL_STENCIL_BUFFER_BIT", StringComparison.Ordinal) ? 0 : null;
-                if (gl.DrawFramebuffer is { } fbo)
-                {
-                    // A framebuffer object: cleared between the draws of the frame.
-                    var cleared = gl.Framebuffers.ContainsKey(fbo) ? DrawTarget() ?? fbo : fbo;
-                    scene.Ops.Add(new ClearOp(scene.Draws.Count, cleared, color ? gl.ClearColor.ToArray() : null, depth, stencil));
-                    return;
-                }
-                if (scene.Draws.Count > 0 && scene.Draws.Any(d => d.Target is not null))
-                {
-                    // The window, after drawing into framebuffer objects (post-processing).
-                    scene.Ops.Add(new ClearOp(scene.Draws.Count, null, color ? gl.ClearColor.ToArray() : null, depth, stencil));
-                    return;
-                }
-                if (color)
-                {
-                    scene.ClearColor = gl.ClearColor.ToArray();
-                    scene.Draws.Clear();
-                    scene.Ops.Clear();
-                }
+                // One buffer of the bound framebuffer with a value of its own: colour attachment i (GL_COLOR, i, rgba),
+                // the depth (GL_DEPTH, 0, &depth), the stencil, or both (glClearBufferfi(GL_DEPTH_STENCIL, 0, d, s)).
+                var values = name == "glClearBufferfi" ? null : Numbers(DataName(A(2)));
+                if (A(0).Contains("GL_COLOR", StringComparison.Ordinal) && values is { Count: > 0 })
+                    ClearBound(values.Take(4).Concat(Enumerable.Repeat(0.0, Math.Max(0, 4 - values.Count))).ToArray(), null, null, Int(A(1)) ?? 0);
+                else if (A(0).Contains("GL_DEPTH_STENCIL", StringComparison.Ordinal)) ClearBound(null, Eval(A(2))?.X ?? 1, Int(A(3)) ?? 0);
+                else if (A(0).Contains("GL_DEPTH", StringComparison.Ordinal) && values is { Count: > 0 }) ClearBound(null, values[0], null);
+                else if (A(0).Contains("GL_STENCIL", StringComparison.Ordinal) && values is { Count: > 0 }) ClearBound(null, null, (int)values[0]);
                 return;
             }
             case "glCreateShader":
-                if (lhs is not null) gl.ShaderObjects[lhs] = new GlState.ShaderObject { Stage = A(0).Contains("FRAGMENT", StringComparison.Ordinal) ? "fragment" : A(0).Contains("VERTEX", StringComparison.Ordinal) ? "vertex" : A(0).Contains("GEOMETRY", StringComparison.Ordinal) ? "geometry" : "other" };
+                if (lhs is not null) gl.ShaderObjects[lhs] = new GlState.ShaderObject { Stage = A(0).Contains("FRAGMENT", StringComparison.Ordinal) ? "fragment" : A(0).Contains("VERTEX", StringComparison.Ordinal) ? "vertex" : A(0).Contains("GEOMETRY", StringComparison.Ordinal) ? "geometry" : A(0).Contains("TESS_CONTROL", StringComparison.Ordinal) ? "tess_control" : A(0).Contains("TESS_EVALUATION", StringComparison.Ordinal) ? "tess_evaluation" : A(0).Contains("COMPUTE", StringComparison.Ordinal) ? "compute" : "other" };
                 if (lhs is not null) OwnName("shader", lhs, own => gl.ShaderObjects[own] = gl.ShaderObjects[lhs]);
                 return;
             case "glShaderSource":
@@ -198,7 +191,12 @@ public sealed partial class GlReader
                 if (A(0).Contains("GL_CULL_FACE", StringComparison.Ordinal)) gl.CullFace = on;
                 if (A(0).Contains("GL_DEPTH_TEST", StringComparison.Ordinal)) gl.DepthTest = on;
                 if (A(0).Contains("GL_STENCIL_TEST", StringComparison.Ordinal)) gl.StencilTest = on;
-                if (A(0).Contains("GL_BLEND", StringComparison.Ordinal)) gl.Blend = on;
+                if (A(0).Contains("GL_BLEND", StringComparison.Ordinal))
+                {
+                    gl.Blend = on;
+                    // For every draw buffer: one switched off with glDisablei follows again.
+                    foreach (var off in gl.BufferBlends.Where(kv => kv.Value is null).Select(kv => kv.Key).ToList()) gl.BufferBlends.Remove(off);
+                }
                 if (A(0).Contains("GL_PROGRAM_POINT_SIZE", StringComparison.Ordinal)) gl.ProgramPointSize = on;
                 if (A(0).Contains("GL_FRAMEBUFFER_SRGB", StringComparison.Ordinal)) scene.WindowSrgb = on;
                 return;
@@ -249,6 +247,16 @@ public sealed partial class GlReader
             case "glTexImage2D":
                 TexImage(a, line);
                 return;
+            case "glTexImage3D" when BoundTexture is { } array && a.Count >= 10 && DataName(a[9]) is "NULL" or "nullptr" or "0":
+                // A texture array with no data (glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, w, h, layers, …)):
+                // drawn into layer by layer (cascaded shadow maps).
+                array.Width = Int(a[3]) ?? 0;
+                array.Height = Int(a[4]) ?? 0;
+                array.Layers = Math.Max(1, Int(a[5]) ?? 1);
+                array.Float = IsFloatFormat(a[2]);
+                array.IsDepth = a[2].Contains("DEPTH", StringComparison.Ordinal);
+                array.Components = 4;
+                return;
             case "glGenerateMipmap" when BoundTexture is not { } noBase || noBase.Image is null && !noBase.IsCube && noBase.Framebuffer is null && noBase.Width == 0:
                 GlError(GlInvalidOperation, "GL_INVALID_OPERATION in glGenerateMipmap(zero size base image)");
                 return;
@@ -259,6 +267,19 @@ public sealed partial class GlReader
                     GenerateTargetMips(mt);
                 }
                 return;
+            case "glBindImageTexture":
+                // glBindImageTexture(unit, texture, level, layered, layer, access, format): an image unit for compute shaders.
+                if (Int(A(0)) is int imageUnit) gl.ImageUnits[imageUnit] = Obj(A(1));
+                return;
+            case "glDispatchCompute":
+                DispatchCompute(Int(A(0)) ?? 0, Int(A(1)) ?? 0, Int(A(2)) ?? 1, line);
+                return;
+            case "glMemoryBarrier":
+                // The dispatch has finished when the reader goes on.
+                return;
+            case "glPatchParameteri":
+                if (A(0).Contains("PATCH_VERTICES", StringComparison.Ordinal)) gl.PatchVertices = Math.Max(1, Int(A(1)) ?? 3);
+                return;
             case "glDrawArrays":
                 Draw(A(0), null, Int(A(1)) ?? 0, Int(A(2)) ?? 0, name, line);
                 return;
@@ -267,6 +288,35 @@ public sealed partial class GlReader
                 return;
         }
         if (name.StartsWith("glUniform", StringComparison.Ordinal)) Uniform(name, a, line);
+    }
+
+    /// <summary>
+    /// Clears the bound framebuffer: a colour (all attachments, or only <paramref name="attachment"/>), the depth, the
+    /// stencil.
+    /// </summary>
+    private void ClearBound(double[]? color, double? depth, int? stencil, int? attachment = null)
+    {
+        // Before the render loop only a framebuffer object's clears count (a capture pass drawn once).
+        if (!inLoop && (gl.DrawFramebuffer is not { } setupFbo || !gl.Framebuffers.ContainsKey(setupFbo))) return;
+        if (gl.DrawFramebuffer is { } fbo)
+        {
+            // A framebuffer object: cleared between the draws of the frame.
+            var cleared = gl.Framebuffers.ContainsKey(fbo) ? DrawTarget() ?? fbo : fbo;
+            scene.Ops.Add(new ClearOp(scene.Draws.Count, cleared, color, depth, stencil, attachment));
+            return;
+        }
+        if (scene.Draws.Count > 0 && scene.Draws.Any(d => d.Target is not null))
+        {
+            // The window, after drawing into framebuffer objects (post-processing).
+            scene.Ops.Add(new ClearOp(scene.Draws.Count, null, color, depth, stencil));
+            return;
+        }
+        if (color is not null)
+        {
+            scene.ClearColor = color;
+            scene.Draws.Clear();
+            scene.Ops.Clear();
+        }
     }
 
     /// <summary>
@@ -308,6 +358,26 @@ public sealed partial class GlReader
     /// name objects with the mesh's vertex data (location 0 position, 1 normal, 2 texture coordinates) and textures –
     /// what the asteroid field binds to add its per-instance matrices.
     /// </summary>
+    /// <summary>Does the project's Model read the bones (model.h calls ExtractBoneWeightForVertices)?</summary>
+    private bool ExtractsBones() => project.Files.Any(f => (f.Key.EndsWith(".h", StringComparison.Ordinal) || f.Key.EndsWith(".hpp", StringComparison.Ordinal))
+        && System.Text.RegularExpressions.Regex.IsMatch(CppSource.BlankComments(f.Value), @"\bExtractBoneWeightForVertices\s*\([^)]*\)\s*;"));
+
+    /// <summary>
+    /// The locations of the bone attributes of the project's mesh.h (glVertexAttribIPointer(3, 4, GL_INT, …,
+    /// offsetof(Vertex, m_BoneIDs)), glVertexAttribPointer(4, …, offsetof(Vertex, m_Weights))), or null.
+    /// </summary>
+    private (int? Ids, int? Weights) BoneAttributes()
+    {
+        int? ids = null, weights = null;
+        foreach (var (path, text) in project.Files.Where(f => f.Key.EndsWith(".h", StringComparison.Ordinal) || f.Key.EndsWith(".hpp", StringComparison.Ordinal)))
+            foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(CppSource.BlankComments(text), @"glVertexAttribI?Pointer\s*\(\s*(\d+)[^;]*offsetof\s*\(\s*\w+\s*,\s*(\w+)\s*\)"))
+            {
+                if (m.Groups[2].Value.Contains("BoneID", StringComparison.OrdinalIgnoreCase)) ids = int.Parse(m.Groups[1].Value);
+                else if (m.Groups[2].Value.Contains("Weight", StringComparison.OrdinalIgnoreCase)) weights = int.Parse(m.Groups[1].Value);
+            }
+        return (ids, weights);
+    }
+
     private void ModelObjects(string name, Models.ObjModel model, string path)
     {
         bool flipUv = Models.ModelFiles.FlipUVs(src, project);
@@ -339,7 +409,14 @@ public sealed partial class GlReader
             meshes.Add(ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
             {
                 ["VAO"] = ShaderValue.Str(vao),
-                ["indices"] = ShaderValue.Array(mesh.Indices.Select(_ => ShaderValue.Scalar(0)).ToArray()),
+                ["indices"] = ShaderValue.Array(mesh.Indices.Select(i => ShaderValue.Integer(i)).ToArray()),
+                // mesh.h's Vertex: what a program reads of the model's vertices (a bounding volume around them).
+                ["vertices"] = ShaderValue.Array(Enumerable.Range(0, mesh.Positions.Count).Select(v => ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+                {
+                    ["Position"] = ShaderValue.Vec(mesh.Positions[v].ToArray()),
+                    ["Normal"] = ShaderValue.Vec(mesh.Normals[v].ToArray()),
+                    ["TexCoords"] = ShaderValue.Vec(mesh.TexCoords[v][0], flipUv ? 1 - mesh.TexCoords[v][1] : mesh.TexCoords[v][1]),
+                })).ToArray()),
             }));
             foreach (var file in new[] { mesh.Material?.DiffuseMap, mesh.Material?.SpecularMap, mesh.Material?.NormalMap })
             {
@@ -351,12 +428,26 @@ public sealed partial class GlReader
                 textures.Add(ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["id"] = ShaderValue.Str(texName) }));
             }
         }
-        env.Runner.Globals[name] = ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+        env.Runner.Globals[name] = new ShaderValue
         {
-            ["meshes"] = ShaderValue.Array(meshes.ToArray()),
-            ["textures_loaded"] = ShaderValue.Array(textures.ToArray()),
-        });
+            Fields = new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+            {
+                ["meshes"] = ShaderValue.Array(meshes.ToArray()),
+                ["textures_loaded"] = ShaderValue.Array(textures.ToArray()),
+                [ModelMark] = ShaderValue.Str(name),
+                // learnopengl's model_animation.h: the bones by name and how many (ExtractBoneWeightForVertices).
+                ["m_BoneInfoMap"] = model.Gltf is { } gltf && ExtractsBones() ? gltf.BoneInfoMap(false) : new ShaderValue { Map = new SortedDictionary<double, ShaderValue>() },
+                ["m_BoneCounter"] = ShaderValue.Integer(model.Gltf is { } counted && ExtractsBones() ? counted.Bones.Count : 0),
+            },
+            Shared = true,
+        };
     }
+
+    /// <summary>
+    /// A member of a Model's value that names the model: a pointer to it kept in a struct (Model* pModel = &amp;ourModel)
+    /// is a copy once the struct is copied (into a std::vector), and still says which model it draws.
+    /// </summary>
+    private const string ModelMark = "__model";
 
     /// <summary>
     /// A buffer an argument names: the variable it was generated into, also through a copy of its value
@@ -415,134 +506,6 @@ public sealed partial class GlReader
         catch (ShaderRuntimeException)
         {
         }
-    }
-
-    private GlState.TextureObject? BoundTexture =>
-        gl.Units.TryGetValue(gl.ActiveUnit, out var name) && gl.TextureObjects.TryGetValue(name, out var t) ? t : null;
-
-    /// <summary>
-    /// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data): the image stb_image loaded
-    /// into <c>data</c>. A format with another number of channels than the data reads the bytes wrongly, as on a real GPU.
-    /// </summary>
-    private void TexImage(IReadOnlyList<string> a, int line)
-    {
-        if (BoundTexture is not { } tex || a.Count < 9)
-        {
-            scene.Notes.Add(SimNote.Warning("noTextureBound", ("line", line.ToString())));
-            return;
-        }
-        // Not a texture target (glTexImage2D(GL_FRAMEBUFFER, …): learnopengl's debugging mistake): an error, no upload.
-        var targetName = a[0].Trim();
-        if (System.Text.RegularExpressions.Regex.IsMatch(targetName, @"^GL_[A-Z0-9_]+$") && !System.Text.RegularExpressions.Regex.IsMatch(targetName, @"^GL_(?:PROXY_)?TEXTURE_(?:2D|1D_ARRAY|RECTANGLE|CUBE_MAP)"))
-        {
-            GlError(GlInvalidEnum, $"GL_INVALID_ENUM in glTexImage2D(target={targetName})");
-            return;
-        }
-        // A cube map face: GL_TEXTURE_CUBE_MAP_POSITIVE_X + i.
-        int face = -1;
-        var faceMatch = System.Text.RegularExpressions.Regex.Match(a[0].Trim(), @"GL_TEXTURE_CUBE_MAP_(POSITIVE|NEGATIVE)_([XYZ])\s*(?:\+\s*(.+))?$");
-        if (faceMatch.Success)
-        {
-            face = "XYZ".IndexOf(faceMatch.Groups[2].Value[0]) * 2 + (faceMatch.Groups[1].Value == "NEGATIVE" ? 1 : 0)
-                + (faceMatch.Groups[3].Success ? Int(faceMatch.Groups[3].Value) ?? 0 : 0);
-            tex.IsCube = true;
-        }
-        var data = DataName(a[8]);
-        if (data is "NULL" or "nullptr" or "0" || Eval(data)?.Text is "nullptr" or "NULL")
-        {
-            // No data: the texture is drawn into (a framebuffer's colour or depth attachment).
-            tex.Width = Int(a[3]) ?? 0;
-            tex.Height = Int(a[4]) ?? 0;
-            tex.Float = IsFloatFormat(a[2]);
-            tex.IsDepth = a[2].Contains("DEPTH", StringComparison.Ordinal);
-            tex.Components = 4;
-            // An empty image (a space's glyph: 0 × 0): a texture with nothing in it, which reads 0.
-            if (tex.Width == 0 || tex.Height == 0) tex.Image = new Textures.Image(1, 1, 4, [0, 0, 0, 0], [0, 0, 0, 0]);
-            return;
-        }
-        // The image the data names: one loaded while the program ran (its variable holds its name), or the last
-        // stbi_load into a variable of that name before this call.
-        var loaded = Eval(data)?.Text is { } held && loadedImages.TryGetValue(held, out var remembered) ? remembered
-            : images.LastOrDefault(i => i.Variable == data && i.Offset < statementOffset);
-        var image = loaded?.Image;
-        if (loaded is not null && image is null && loaded.File == "" && Eval(loaded.Arg)?.Text is { } path)
-        {
-            // stbi_load(path, …) inside a helper: the path is the helper's argument.
-            image = StbImage.Load(project, path, loaded.Flip, loaded.Wanted);
-            if (image is null) scene.Notes.Add(SimNote.Error("textureFileMissing", ("file", path)));
-            loaded = loaded with { File = path };
-        }
-        // Data computed by the program (the SSAO noise: std::vector<glm::vec3> ssaoNoise, &ssaoNoise[0]): its numbers,
-        // GL_FLOAT values as they are, row by row from the bottom (OpenGL's first row is v = 0).
-        if (image is null && loaded is null && Numbers(data) is { Count: > 0 } values && Int(a[3]) is int w && Int(a[4]) is int h && w > 0 && h > 0)
-        {
-            int per = Math.Max(1, Components(a[6]));
-            // Bytes (GL_UNSIGNED_BYTE: a FreeType glyph's coverage) are 0–255; each row starts at a multiple of
-            // GL_UNPACK_ALIGNMENT (4 unless glPixelStorei says otherwise) – learnopengl sets 1 for its glyphs.
-            bool ofBytes = a[7].Contains("UNSIGNED_BYTE", StringComparison.Ordinal);
-            int rowLength = ofBytes ? (w * per + gl.UnpackAlignment - 1) / gl.UnpackAlignment * gl.UnpackAlignment : w * per;
-            var floats = new double[w * h * 4];
-            var bytes = new byte[w * h * 4];
-            for (int i = 0; i < w * h; i++)
-                for (int k = 0; k < 4; k++)
-                {
-                    int at = i / w * rowLength + i % w * per + k;
-                    double v = k < per ? (at < values.Count ? values[at] : 0) : (k == 3 ? 1 : 0);
-                    if (ofBytes && k < per) v /= 255.0;
-                    floats[i * 4 + k] = v;
-                    bytes[i * 4 + k] = (byte)Math.Round(Math.Clamp(v, 0, 1) * 255);
-                }
-            tex.Components = per == 4 ? 4 : 3;
-            tex.Float = IsFloatFormat(a[2]) || a[7].Contains("FLOAT", StringComparison.Ordinal);
-            var computed = new Textures.Image(w, h, 4, bytes, floats);
-            if (face >= 0) { if (face < 6) tex.Faces[face] = computed; }
-            else tex.Image = computed;
-            tex.Mipmaps = false;
-            return;
-        }
-        if (image is null) return;
-        // The internal format: GL_SRGB / GL_SRGB_ALPHA (also through a variable: learnopengl's loadTexture with gammaCorrection).
-        tex.Srgb = a[2].Contains("SRGB", StringComparison.Ordinal) || (Eval(a[2])?.Text ?? "").Contains("SRGB", StringComparison.Ordinal);
-        int components = Components(a[6]);
-        // A format in a variable (learnopengl's loadTexture: GL_RED / GL_RGB / GL_RGBA by nrComponents) fits the image.
-        tex.Components = components == 4 || (components == 0 && image.Channels == 4) ? 4 : 3;
-        var uploaded = image.Channels == components || components == 0 ? image : Reinterpret(image, image.Channels, components);
-        if (face >= 0)
-        {
-            if (face < 6) tex.Faces[face] = uploaded;
-        }
-        else tex.Image = uploaded;
-        if (image.Channels != components && components != 0)
-            scene.Notes.Add(SimNote.Warning("textureFormatMismatch", ("file", loaded!.File), ("channels", image.Channels.ToString()), ("format", a[6].Trim())));
-        tex.Mipmaps = false;
-    }
-
-    private static int Components(string format) => format.Trim() switch
-    {
-        "GL_RGBA" or "GL_BGRA" => 4,
-        "GL_RGB" or "GL_BGR" => 3,
-        "GL_RG" => 2,
-        "GL_RED" => 1,
-        _ => 0,
-    };
-
-    /// <summary>The bytes of an image with <paramref name="actual"/> channels read as if it had <paramref name="assumed"/>.</summary>
-    private static Textures.Image Reinterpret(Textures.Image image, int actual, int assumed)
-    {
-        int n = image.Width * image.Height;
-        var packed = new byte[n * actual];
-        for (int i = 0; i < n; i++)
-            for (int k = 0; k < actual; k++) packed[i * actual + k] = image.Rgba[i * 4 + Math.Min(k, 3)];
-        var rgba = new byte[n * 4];
-        for (int i = 0; i < n; i++)
-        {
-            for (int k = 0; k < 4; k++)
-            {
-                int at = i * assumed + Math.Min(k, assumed - 1);
-                rgba[i * 4 + k] = k < assumed ? (at < packed.Length ? packed[at] : (byte)0) : (k == 3 ? (byte)255 : rgba[i * 4]);
-            }
-        }
-        return image with { Rgba = rgba, Channels = assumed };
     }
 
     private GlState.VertexArray? Vao => gl.CurrentVertexArray is { } v && gl.VertexArrays.TryGetValue(v, out var vao) ? vao : null;
@@ -613,8 +576,11 @@ public sealed partial class GlReader
             if (so.Stage == "vertex") program.Vertex = parsed;
             else if (so.Stage == "fragment") program.Fragment = parsed;
             else if (so.Stage == "geometry") program.Geometry = parsed;
+            else if (so.Stage == "tess_control") program.TessControl = parsed;
+            else if (so.Stage == "tess_evaluation") program.TessEval = parsed;
+            else if (so.Stage == "compute") program.Compute = parsed;
         }
-        program.Linked = program.Vertex is not null && program.Fragment is not null;
+        program.Linked = program.Vertex is not null && program.Fragment is not null || program.Compute is not null;
         if (!program.Linked && program.Shaders.Count > 0 && !scene.Notes.Any(n => n.Key == "shaderSyntax"))
             scene.Notes.Add(SimNote.Error("notLinked", ("line", line.ToString())));
     }
@@ -637,7 +603,7 @@ public sealed partial class GlReader
 
     // ---------- learnopengl.com's Shader class (shader_s.h / shader.h) ----------
 
-    private void ShaderClass(string name, string vsFile, string fsFile, string? gsFile, int line)
+    private void ShaderClass(string name, string vsFile, string fsFile, string? gsFile, int line, string? tcsFile = null, string? tesFile = null)
     {
         var program = new GlState.ProgramObject();
         gl.Programs[name] = program;
@@ -648,6 +614,8 @@ public sealed partial class GlReader
         }
         var files = new List<(string, string)> { (vsFile, "vertex"), (fsFile, "fragment") };
         if (gsFile is not null) files.Add((gsFile, "geometry"));
+        if (tcsFile is not null) files.Add((tcsFile, "tess_control"));
+        if (tesFile is not null) files.Add((tesFile, "tess_evaluation"));
         foreach (var (file, stage) in files)
         {
             var text = project.Find(file);
@@ -668,6 +636,8 @@ public sealed partial class GlReader
                 program.Geometry = parsed;
                 program.GeometryFile = project.PathOf(file);
             }
+            else if (stage == "tess_control") program.TessControl = parsed;
+            else if (stage == "tess_evaluation") program.TessEval = parsed;
             else
             {
                 program.Fragment = parsed;
@@ -677,9 +647,78 @@ public sealed partial class GlReader
         program.Linked = program.Vertex is not null && program.Fragment is not null;
     }
 
+    /// <summary>learnopengl's ComputeShader(path): a program with the compute shader read from the file.</summary>
+    private void ComputeShaderClass(string name, string file, int line)
+    {
+        var program = new GlState.ProgramObject();
+        gl.Programs[name] = program;
+        if (!gladLoaded)
+        {
+            scene.Notes.Add(SimNote.Error("gladMissing", ("call", "ComputeShader"), ("line", line.ToString())));
+            return;
+        }
+        var text = project.Find(file);
+        if (text is null)
+        {
+            scene.Log.Add("ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " + file);
+            scene.Notes.Add(SimNote.Error("shaderFileMissing", ("file", file)));
+            return;
+        }
+        program.Compute = ParseShader(text, "compute", project.PathOf(file));
+        program.Linked = program.Compute is not null;
+    }
+
+    /// <summary>
+    /// glDispatchCompute(x, y, z): the current program's compute shader runs over x × y × z work groups now; the textures
+    /// on the image units its image2D uniforms name are written (and read) – what is drawn after sees them.
+    /// </summary>
+    private void DispatchCompute(int x, int y, int z, int line)
+    {
+        if (discardDraws) return;
+        if (gl.CurrentProgram is not { } cur || !gl.Programs.TryGetValue(cur, out var program) || program.Compute is not { } cs)
+        {
+            scene.Notes.Add(SimNote.Error("noProgram", ("call", "glDispatchCompute"), ("line", line.ToString())));
+            return;
+        }
+        var images = new Dictionary<string, Raster.StorageImage>(StringComparer.Ordinal);
+        var targets = new List<(GlState.TextureObject Texture, Raster.StorageImage Image)>();
+        foreach (var g in cs.Globals.Where(g => g.Storage == "uniform" && g.Type.StartsWith("image", StringComparison.Ordinal)))
+        {
+            int unit = program.Uniforms.TryGetValue(g.Id, out var set) && set(env.Runner.Time) is { } v ? (int)v.X : g.Binding ?? 0;
+            // No texture on the image unit: the shader's writes go nowhere.
+            if (!gl.ImageUnits.TryGetValue(unit, out var texName) || !gl.TextureObjects.TryGetValue(texName, out var tex)) continue;
+            int w = tex.Image?.Width ?? tex.Width, h = tex.Image?.Height ?? tex.Height;
+            var storage = Raster.StorageImage.From(tex.Image, w, h);
+            images[g.Id] = storage;
+            targets.Add((tex, storage));
+        }
+        var uniforms = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+        foreach (var (name, f) in program.Uniforms)
+            if (f(env.Runner.Time) is { } value) uniforms[name] = value;
+        foreach (var (k, v) in BlockUniforms(program)) uniforms[k] = v;
+        var errors = Raster.Rasterizer.Dispatch(cs, "main", false, uniforms, images, (x, y, z), env.Runner.Time);
+        foreach (var e in errors) scene.Log.Add("compute shader: " + e);
+        foreach (var (tex, storage) in targets)
+        {
+            tex.Image = storage.ToImage();
+            tex.Float = true;
+            tex.Components = 4;
+            tex.Width = storage.Width;
+            tex.Height = storage.Height;
+        }
+        if (env.Runner.UsedTime || src.UsedTime) scene.Animated = true;
+    }
+
     private void ShaderMethod(string obj, string method, IReadOnlyList<string> a, int line)
     {
-        obj = ResolveAlias(obj);
+        obj = ResolveAlias(System.Text.RegularExpressions.Regex.Replace(obj, @"\s+", ""));
+        if (!gl.Programs.ContainsKey(obj) && !models.ContainsKey(obj) && System.Text.RegularExpressions.Regex.IsMatch(obj, @"\.|->|\["))
+        {
+            // Through a member or a pointer (entity.pModel->Draw(shader), renderer.shader.use()): the model the value
+            // is (a copy of a Model carries its name), else the object its last name is.
+            obj = Eval(obj) is { Fields: { } fields } && fields.TryGetValue(ModelMark, out var mark) && mark.Text is { } modelName
+                ? modelName : ResolveAlias(System.Text.RegularExpressions.Regex.Match(obj, @"(\w+)$").Groups[1].Value);
+        }
         if (method == "Draw" && models.TryGetValue(obj, out var model))
         {
             DrawModel(model.Model, model.Path, a.Count > 0 ? Obj(a[0]) : "", line);

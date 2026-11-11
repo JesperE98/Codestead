@@ -100,7 +100,7 @@ public partial class LearningWindow : Window
         ApplyLanguage();
         Opened += (_, _) =>
         {
-            if (this.smokeTest) Dispatcher.UIThread.Post(RunSmokeTest, DispatcherPriority.Background);
+            if (this.smokeTest) Dispatcher.UIThread.Post(() => _ = RunSmokeTest(), DispatcherPriority.Background);
             else
             {
                 tool.FocusWorkbench();
@@ -132,6 +132,12 @@ public partial class LearningWindow : Window
 
     /// <summary>Re-renders everything (e.g. after the workbench was reset).</summary>
     public void Refresh() => RenderAll();
+
+    /// <summary>Are a chapter's tasks unlocked (its text worked through)?</summary>
+    public bool IsChapterUnlocked(string chapterId) => Chapters.FirstOrDefault(c => c.Id == chapterId) is { } c && IsUnlocked(c);
+
+    /// <summary>Is a task done (by its progress key)?</summary>
+    public bool IsTaskDone(string key) => state.Progress.ContainsKey(key);
 
     /// <summary>Shows a short notice at the bottom of the window.</summary>
     public void Toast(string text) => overlay.Toast(text);

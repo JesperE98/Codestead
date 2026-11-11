@@ -32,8 +32,8 @@ the file formats we want to import. Luckily for us, there just happens to be a l
 ## The model of this part
 
 learnopengl.com uses a backpack model for this part; this course has a model of its own: a small planet with a ring,
-`models/planet.obj`. It is a Wavefront `.obj` file, a plain text file you can open in the editor (the model files
-are read-only). Its first lines name the material library, `planet.mtl`, and start the first object:
+`models/planet.obj`. It is a Wavefront `.obj` file, a plain text file you can open in your IDE (**Copy start files**
+puts it into your project folder). Its first lines name the material library, `planet.mtl`, and start the first object:
 
 ```text
 # A small planet with a ring - drawn for Codestead GP (see make_planet.py).
@@ -237,17 +237,18 @@ On Windows, a package manager like [vcpkg](https://learn.microsoft.com/en-us/vcp
 install assimp`) saves you the CMake build; without it you add Assimp's `include` folder and its `.lib` to the
 project like GLFW's, and put its DLL next to your executable.
 
-The headers you need are `<assimp/Importer.hpp>` (the `Assimp::Importer` class that reads a file),
-`<assimp/scene.h>` (the `aiScene`, `aiNode`, `aiMesh` … structures) and `<assimp/postprocess.h>` (the flags of the
-post-processing steps that Assimp can apply while loading, like turning every face into triangles). In this course
-everything is installed already: **Build & run** links with `-lassimp`.
+The headers you need are `<assimp/Importer.hpp>` (the `Assimp::Importer` class that reads a file), `<assimp/scene.h>`
+(the `aiScene`, `aiNode`, `aiMesh` … structures) and `<assimp/postprocess.h>` (the flags of the post-processing steps
+that Assimp can apply while loading, like turning every face into triangles). In your `CMakeLists.txt`,
+`find_package(assimp REQUIRED)` finds the installed library, and linking the target `assimp::assimp` adds its include
+folder and its library.
 :::
 :::vulkan
-learnopengl.com's OpenGL code needs Assimp built and linked, as described on its page. For this course's Vulkan
-program there is nothing to build: tinyobjloader is one header, and **Build & run** has it ready. On your own machine
-you download `tiny_obj_loader.h` from its GitHub page (vulkan-tutorial does exactly that) and put it into your include
-directory, next to `stb_image.h`. If you do want Assimp for Vulkan – for other formats, or animations – it is
-installed and linked exactly as for OpenGL: the distribution's package and `-lassimp` on Linux, or vcpkg on Windows.
+learnopengl.com's OpenGL code needs Assimp built and linked, as described on its page. For this course's Vulkan program
+there is nothing to build: tinyobjloader is one header. You download `tiny_obj_loader.h` from its GitHub page
+(vulkan-tutorial does exactly that) and put it into your include directory, next to `stb_image.h`. If you do want Assimp
+for Vulkan – for other formats, or animations – it is installed and linked exactly as for OpenGL: the distribution's
+package and `-lassimp` on Linux, or vcpkg on Windows.
 :::
 :::d3d12
 The DirectX 12 program uses Assimp too: the course ports learnopengl's `Mesh` and `Model` classes, so it needs the
@@ -259,9 +260,10 @@ directories and its `.lib` to the linker's input, and put its DLL next to your `
 without it).
 
 The headers are `<assimp/Importer.hpp>` (the `Assimp::Importer` class that reads a file), `<assimp/scene.h>` (the
-`aiScene`, `aiNode`, `aiMesh` … structures) and `<assimp/postprocess.h>` (the flags of the post-processing steps
-that Assimp can apply while loading, like turning every face into triangles). In this course everything is installed
-already, and **Build & run** links Assimp for you.
+`aiScene`, `aiNode`, `aiMesh` … structures) and `<assimp/postprocess.h>` (the flags of the post-processing steps that
+Assimp can apply while loading, like turning every face into triangles). In your `CMakeLists.txt`,
+`find_package(assimp REQUIRED)` finds the library vcpkg installed (when CMake uses vcpkg's toolchain file), and linking
+the target `assimp::assimp` adds its include folder and its library.
 
 One thing to know when Assimp meets Direct3D: Assimp hands out its data in a right-handed coordinate system with
 counter-clockwise front faces, OpenGL's conventions, and it has a post-processing flag,
@@ -303,10 +305,10 @@ Assimp is a compiled library, not a single header: the headers declare its class
 
 ## The project
 
-This chapter has no code to write – learnopengl's *Assimp* chapter has none either. Its project is already the one
-the next two chapters work in, so you can look around in it and press **Build & run**: the window shows only the
-dark grey clear colour (0.05, 0.05, 0.05), since nothing is drawn yet. (In the next chapters the `// TODO:` comments
-mark where your code goes, and **Build & run** – or Ctrl+Enter – compiles and runs it in the built-in simulator.)
+This chapter has no code to write – learnopengl's *Assimp* chapter has none either. Its project is already the one the
+next two chapters work in, so you can look around in it, then build and run: the window shows only the dark grey clear
+colour (0.05, 0.05, 0.05), since nothing is drawn yet. (In the next chapters the `// TODO:` comments mark where your
+code goes, and you build and run it in your IDE as before.)
 
 :::opengl
 The project is learnopengl's `model_loading.cpp` scene before the model: `main.cpp` with the camera of the *Camera*

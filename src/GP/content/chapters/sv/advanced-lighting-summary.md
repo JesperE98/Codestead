@@ -463,8 +463,8 @@ delen vad du har lärt dig.
   själv (en hel sfär gör allt grått).
 - **Vyrymd**: G-bufferten lagrar positioner och normaler i **vyrymden**, så det lagrade z är djupet att jämföra;
   albedot är ett enkelt 0.95.
-- **Samplingskärnan**: 32 sampel (learnopengl 64 – simulatorn körs på CPU:n), z ≥ 0, var och en skalad med
-  `lerp(0.1, 1.0, (i / 32)²)`: fler sampel nära fragmentet. Radie 0.5, bias 0.025.
+- **Samplingskärnan**: 32 sampel (learnopengl 64 – kursen ritar sina kontroller och förväntade resultat på CPU:n), z ≥
+  0, var och en skalad med `lerp(0.1, 1.0, (i / 32)²)`: fler sampel nära fragmentet. Radie 0.5, bias 0.025.
 - **Slumpmässiga rotationer av kärnan**: en **brustextur** på 4 × 4 med slumpvektorer i xy-planet, upprepad över
   fönstret med repeat och närmaste-sampling. Med normalen ger den en TBN-matris (Gram-Schmidt), så varje pixel i ett
   block på 4 × 4 vrider kärnan olika: få sampel, inga band – men ett regelbundet brusmönster.
@@ -477,7 +477,7 @@ delen vad du har lärt dig.
   behåller sin egen diffusa och spekulära del.
 - **Scenen**: planeten i ett rum i stället för learnopengls ryggsäck. Dess ring är ett enda plan med normalen uppåt,
   sett underifrån: halvsfären ligger bakom den sett från kameran, så dess undersida blir mörk. Slumptalen kommer från
-  `srand(42)` och `rand() / (float)RAND_MAX` – samma kärna och brus i simulatorn och vid varje körning (learnopengls
+  `srand(42)` och `rand() / (float)RAND_MAX` – samma kärna och brus i kursens bilder och vid varje körning (learnopengls
   `std::uniform_real_distribution` skiljer sig mellan standardbibliotek).
 
 :::opengl

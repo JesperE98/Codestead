@@ -43,10 +43,10 @@ vågräta och lodräta kanter, som inte visar några trappsteg alls – så anti
 `aa_post.hlsl`, för en skärmfyrhörning, används från uppgiften `resolve`.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift trycker du på **Build & run**
-(Ctrl+Enter) för att kompilera programmet och köra det i den inbyggda simulatorn. Just nu visar den kubens gröna
-siluett – en sexhörning av tre sidor, alla i samma grönt – med hårda, trappstegsformade kanter: varje pixel är antingen
-exakt grön eller exakt bakgrunden. Zooma in på en sned kant i tanken, så ser du trappan.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
+IDE. Just nu visar den kubens gröna siluett – en sexhörning av tre sidor, alla i samma grönt – med hårda,
+trappstegsformade kanter: varje pixel är antingen exakt grön eller exakt bakgrunden. Zooma in på en sned kant i tanken,
+så ser du trappan.
 
 ## Multisampling
 
@@ -131,10 +131,10 @@ och efter `glEnable(GL_DEPTH_TEST);`:
 Eftersom själva multisamplingalgoritmerna sitter i rastreraren i dina OpenGL-drivrutiner behöver vi inte göra mycket
 mer. Renderar vi nu den gröna kuben från kapitlets början bör vi se mjukare kanter.
 
-Tryck på **Build & run**: kubens kanter är mjuka nu. Ungefär 800 pixlar längs kanterna är inte längre rent gröna eller
-ren bakgrund, utan blandningar med en fjärdedel, hälften och tre fjärdedelar grönt. Om ett riktigt fönster får en
-multisample buffer beror på fönstersystemet och drivrutinen: där ingen finns skapar GLFW tyst ett fönster utan, och
-kanterna förblir taggiga. Nästa avsnitts version utanför skärmen beror inte på det.
+Bygg och kör: kubens kanter är mjuka nu. Ungefär 800 pixlar längs kanterna är inte längre rent gröna eller ren bakgrund,
+utan blandningar med en fjärdedel, hälften och tre fjärdedelar grönt. Om ett riktigt fönster får en multisample buffer
+beror på fönstersystemet och drivrutinen: där ingen finns skapar GLFW tyst ett fönster utan, och kanterna förblir
+taggiga. Nästa avsnitts version utanför skärmen beror inte på det.
 :::
 :::vulkan
 I OpenGL börjar MSAA med en fönsterhint: GLFW ber fönstersystemet om en multisamplad standard-framebuffer
@@ -192,8 +192,8 @@ hamnar i `imageInfo.samples`:
         imageInfo.samples = numSamples;
 ```
 
-Än så länge skickar djupbilden `VK_SAMPLE_COUNT_1_BIT`. Tryck på **Build & run**: ingenting ändras ännu – vi har bara
-tagit reda på vad vi kan använda.
+Än så länge skickar djupbilden `VK_SAMPLE_COUNT_1_BIT`. Bygg och kör: ingenting ändras ännu – vi har bara tagit reda på
+vad vi kan använda.
 
 ### Sätta upp ett render target
 
@@ -303,10 +303,10 @@ Till sist säger vi åt pipelinen att rastrera med så många samples – det m�
         multisampling.rasterizationSamples = msaaSamples; // must match the render pass's attachments
 ```
 
-Tryck på **Build & run**: kubens kanter är mjuka nu. Ungefär 800 pixlar längs kanterna är inte längre rent gröna eller
-ren bakgrund, utan blandningar med en fjärdedel, hälften och tre fjärdedelar grönt. (Vilken kantpixel som får vilken
-blandning beror på samplepositionerna: Vulkans standardmönster för 4 samples är OpenGL:s speglat i y, så enstaka
-kantpixlar kan skilja sig från OpenGL-bilden.)
+Bygg och kör: kubens kanter är mjuka nu. Ungefär 800 pixlar längs kanterna är inte längre rent gröna eller ren bakgrund,
+utan blandningar med en fjärdedel, hälften och tre fjärdedelar grönt. (Vilken kantpixel som får vilken blandning beror
+på samplepositionerna: Vulkans standardmönster för 4 samples är OpenGL:s speglat i y, så enstaka kantpixlar kan skilja
+sig från OpenGL-bilden.)
 :::
 :::d3d12
 I OpenGL börjar MSAA med en fönsterhint: GLFW ber fönstersystemet om en multisamplad standard-framebuffer
@@ -428,8 +428,8 @@ targetet för att ritas i nästa bildruta, back buffern för att presenteras:
 Parametrarna är målet och dess subresurs, källan och dess subresurs, och formatet att resolva i – här har båda
 resurserna `DXGI_FORMAT_R8G8B8A8_UNORM`, som swap chainen.
 
-Tryck på **Build & run**: kubens kanter är mjuka nu. Ungefär 800 pixlar längs kanterna är inte längre rent gröna eller
-ren bakgrund, utan blandningar med en fjärdedel, hälften och tre fjärdedelar grönt.
+Bygg och kör: kubens kanter är mjuka nu. Ungefär 800 pixlar längs kanterna är inte längre rent gröna eller ren bakgrund,
+utan blandningar med en fjärdedel, hälften och tre fjärdedelar grönt.
 :::
 
 ```quiz
@@ -539,8 +539,8 @@ och efter kubens ritning blittar du den till fönstret:
 Ta bort `textureColorBufferMultiSampled`, `rbo` och `framebuffer` i slutet. (En blit till ett multisamplat fönster
 skulle kräva samma antal samples och format på båda sidor – ett skäl till att fönstret inte längre ber om samples.)
 
-Tryck på **Build & run**: samma mjuka kanter som i uppgiften `msaa` – men nu sker multisamplingen i vår egen
-framebuffer, oberoende av vad fönstersystemet erbjuder.
+Bygg och kör: samma mjuka kanter som i uppgiften `msaa` – men nu sker multisamplingen i vår egen framebuffer, oberoende
+av vad fönstersystemet erbjuder.
 :::
 :::vulkan
 ## Off-screen MSAA
@@ -817,8 +817,8 @@ fyrhörningen ritas med skärmtexturen:
 och sist back bufferns barrier `RENDER_TARGET` → `PRESENT`.
 :::
 
-Tryck på **Build & run**: ingenting ändras – samma mjuka kub, pixel för pixel. Den vita rensningen täcks helt av
-fyrhörningen. Men nu ligger den kantutjämnade bilden i en textur som en shader läser, så vi kan ändra den.
+Bygg och kör: ingenting ändras – samma mjuka kub, pixel för pixel. Den vita rensningen täcks helt av fyrhörningen. Men
+nu ligger den kantutjämnade bilden i en textur som en shader läser, så vi kan ändra den.
 
 :::opengl
 ```quiz
@@ -885,8 +885,8 @@ Gör nu den sista uppgiften, **post-process**. I `aa_post.hlsl`:
 ```
 :::
 
-Tryck på **Build & run**: kuben blir grå (0.7152 × 255 ≈ 182), bakgrunden behåller sitt mörkgrå, och kanterna är
-fortfarande mjuka, nu i gråtoner.
+Bygg och kör: kuben blir grå (0.7152 × 255 ≈ 182), bakgrunden behåller sitt mörkgrå, och kanterna är fortfarande mjuka,
+nu i gråtoner.
 
 ```quiz
 Gråskaleeffekten körs på skärmfyrhörningen, efter resolven. Varför är kubens kanter fortfarande mjuka?

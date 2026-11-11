@@ -47,9 +47,9 @@ scene: a light colour of 0.3, ambient, diffuse and Blinn-Phong specular, combine
 :::
 
 From the camera at (0, 0, 3) you see the floor and, at the top of the window, the floating cube from below. The two
-other cubes are just outside the view, left and right of the camera; you'll meet them in the depth map. Press **Build &
-run** (Ctrl+Enter): the floor is lit evenly – dim, the light colour is only 0.3 – and nothing casts a shadow. The
-`// TODO:` comments in the project mark where your code goes.
+other cubes are just outside the view, left and right of the camera; you'll meet them in the depth map. Build and run
+the program: the floor is lit evenly – dim, the light colour is only 0.3 – and nothing casts a shadow. The `// TODO:`
+comments in the project mark where your code goes.
 
 ## Shadow mapping
 
@@ -720,12 +720,12 @@ s1, the two pipeline states, the quad's vertices, the shadow map with its two vi
 its barriers, and the debug quad's draw.
 :::
 
-Press **Build & run**: instead of the scene, the window shows the **depth map** – grey everywhere, the 1024 × 1024 map
-stretched to the window. The floor is a vertical gradient: white at the top, where it lies beyond the far plane (nothing
-was drawn there and the cleared depth 1.0 stays), mid grey in the middle, darker towards the bottom where it comes
-closer to the light, and then white again in a band at the bottom: that part of the floor is in front of the near plane
-and was clipped. The floating cube is the darkest spot, closest to the light; the cube at (2, 0, 1) is lighter than the
-floor around it, and the small rotated cube sits between the two.
+Build and run: instead of the scene, the window shows the **depth map** – grey everywhere, the 1024 × 1024 map stretched
+to the window. The floor is a vertical gradient: white at the top, where it lies beyond the far plane (nothing was drawn
+there and the cleared depth 1.0 stays), mid grey in the middle, darker towards the bottom where it comes closer to the
+light, and then white again in a band at the bottom: that part of the floor is in front of the near plane and was
+clipped. The floating cube is the darkest spot, closest to the light; the cube at (2, 0, 1) is lighter than the floor
+around it, and the small rotated cube sits between the two.
 
 ## Rendering shadows
 
@@ -987,9 +987,9 @@ The textures' descriptor table already reaches the shadow map's SRV (t1), and sa
 signature.
 :::
 
-Press **Build & run**: the floating cube now casts a **shadow** on the floor, lower right – the fragments there get only
-the ambient light. But something is clearly off: the lit floor is covered in fine dark stripes, a moiré of rings. Let's
-fix that.
+Build and run: the floating cube now casts a **shadow** on the floor, lower right – the fragments there get only the
+ambient light. But something is clearly off: the lit floor is covered in fine dark stripes, a moiré of rings. Let's fix
+that.
 
 ## Improving shadow maps
 
@@ -1072,8 +1072,8 @@ course stays with learnopengl's shader bias.
 :::
 
 The depth is linear from 0 at the near plane to 1 at the far plane in all three APIs (the projection is orthographic),
-so learnopengl's bias values fit unchanged. Press **Build & run**: **the stripes are gone**, the floor is lit as at the
-start, and the cube's shadow stays – with hard, jagged edges.
+so learnopengl's bias values fit unchanged. Build and run: **the stripes are gone**, the floor is lit as at the start,
+and the cube's shadow stays – with hard, jagged edges.
 
 ### Peter panning
 
@@ -1193,12 +1193,12 @@ Now do the task **over-sampling**: the four sampler lines above, and in `ShadowC
 ```
 :::
 
-Press **Build & run** – and look closely, because from the default camera this changes almost nothing. The regions
-outside the light's frustum lie far away, near the horizon: only a thin dark line on the far floor at the right edge
-of the window disappears. Look down with the mouse and move back with S – the camera rises as it moves away – until you
-see the scene from above, and you'll see the difference: before this task, the floor beyond the far plane is dark and copies of the shadows repeat far away;
-after it, all of that floor is lit. This all means that only the region of the depth map that the light's frustum
-covers gets shadows, while everything outside it has none – which is what we want in this scene.
+Build and run – and look closely, because from the default camera this changes almost nothing. The regions outside the
+light's frustum lie far away, near the horizon: only a thin dark line on the far floor at the right edge of the window
+disappears. Look down with the mouse and move back with S – the camera rises as it moves away – until you see the scene
+from above, and you'll see the difference: before this task, the floor beyond the far plane is dark and copies of the
+shadows repeat far away; after it, all of that floor is lit. This all means that only the region of the depth map that
+the light's frustum covers gets shadows, while everything outside it has none – which is what we want in this scene.
 
 ```quiz
 Why does a white border colour (depth 1.0) stop over sampling outside the depth map?
@@ -1302,10 +1302,10 @@ Now do the last task, **pcf**: these lines replace the single comparison, and `c
 learnopengl's loop.)
 :::
 
-Press **Build & run**: the shadow's **edges become soft**. Inside the shadow and on the lit floor nothing changes, but
-the edge pixels now get in-between values: where 3 of the 9 samples are in shadow, the fragment is a third in shadow.
-From a distance the shadows look a lot better and less hard. If you zoom in, you can still see the resolution artifacts
-of shadow mapping, but in general this gives good results for most applications.
+Build and run: the shadow's **edges become soft**. Inside the shadow and on the lit floor nothing changes, but the edge
+pixels now get in-between values: where 3 of the 9 samples are in shadow, the fragment is a third in shadow. From a
+distance the shadows look a lot better and less hard. If you zoom in, you can still see the resolution artifacts of
+shadow mapping, but in general this gives good results for most applications.
 
 ```quiz
 With the 3 × 3 PCF, a fragment on the shadow's edge finds 6 of the 9 samples in shadow. What is its `shadow` value?

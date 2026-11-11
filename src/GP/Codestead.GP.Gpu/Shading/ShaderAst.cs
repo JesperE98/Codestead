@@ -44,6 +44,15 @@ public static class ShaderAst
 
         /// <summary>C++: a reference (Particle&amp; p = particles[i]) – another name for the value, not a copy.</summary>
         public bool Reference { get; init; }
+
+        /// <summary>
+        /// C++: a pointer (Entity* last = &amp;root) – it points at the object (no copy), and assigning another address to
+        /// it points it elsewhere instead of changing the object.
+        /// </summary>
+        public bool Pointer { get; init; }
+
+        /// <summary>C++: std::vector&lt;T&gt; name(n, value) – the value every element starts with.</summary>
+        public Expr? Fill { get; init; }
     }
 
     /// <summary>target op value; with op "=", "+=", "-=", "*=" or "/=".</summary>

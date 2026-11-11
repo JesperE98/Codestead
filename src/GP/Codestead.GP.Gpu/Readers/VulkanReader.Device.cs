@@ -100,7 +100,7 @@ public sealed partial class VulkanReader
     private (List<VkAttribute> Attributes, Dictionary<int, int> Strides)? layout;
 
     /// <summary>Vertices (and per-instance values) from the buffers bound at a draw, keyed by location.</summary>
-    private (List<Dictionary<string, ShaderValue>>, List<Dictionary<string, ShaderValue>>?) DeviceVertices(VulkanDevice device, VulkanDevice.DrawState state, int count, int instances)
+    private (List<Dictionary<string, ShaderValue>>, List<Dictionary<string, ShaderValue>>?) DeviceVertices(VulkanDevice device, VulkanDevice.DrawState state, int count, int instances, int baseVertex = 0)
     {
         layout ??= DeviceLayout();
         var (attributes, strides) = layout.Value;
@@ -110,7 +110,7 @@ public sealed partial class VulkanReader
             attributes = pipe.Attributes.Select(a => new VkAttribute(a.Location, a.Binding, a.Offset, a.Comps, pipe.Bindings.TryGetValue(a.Binding, out var b) && b.Instance)).ToList();
             strides = pipe.Bindings.ToDictionary(b => b.Key, b => b.Value.Stride);
         }
-        List<Dictionary<string, ShaderValue>> Read(IEnumerable<VkAttribute> attrs, int n)
+        List<Dictionary<string, ShaderValue>> Read(IEnumerable<VkAttribute> attrs, int n, int first)
         {
             var list = new List<Dictionary<string, ShaderValue>>();
             var a = attrs.ToList();
@@ -118,15 +118,15 @@ public sealed partial class VulkanReader
             {
                 var dict = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
                 foreach (var at in a)
-                    if (state.VertexBuffers.TryGetValue(at.Binding, out var vb) && device.Read(vb.Buffer, vb.Offset + (long)i * strides.GetValueOrDefault(at.Binding) + at.Offset, at.Comps) is { } v)
+                    if (state.VertexBuffers.TryGetValue(at.Binding, out var vb) && device.Read(vb.Buffer, vb.Offset + (long)(i + first) * strides.GetValueOrDefault(at.Binding) + at.Offset, at.Comps) is { } v)
                         dict[at.Location.ToString()] = ShaderValue.Vec(v);
                 list.Add(dict);
             }
             return list;
         }
-        var vertices = Read(attributes.Where(a => !a.Instance), count);
+        var vertices = Read(attributes.Where(a => !a.Instance), count, baseVertex);
         var perInstance = attributes.Where(a => a.Instance).ToList();
-        return (vertices, perInstance.Count == 0 ? null : Read(perInstance, instances));
+        return (vertices, perInstance.Count == 0 ? null : Read(perInstance, instances, 0));
     }
 
     /// <summary>The textures of a draw: each sampler's binding in the bound descriptor set (set 0).</summary>
@@ -137,15 +137,19 @@ public sealed partial class VulkanReader
         var bindings = vs.Globals.Concat(fs.Globals).Where(g => g.Type.StartsWith("sampler", StringComparison.Ordinal)).GroupBy(g => g.Id).ToDictionary(g => g.Key, g => g.First().Binding ?? 0);
         if (bindings.Count == 0) return (null, null);
         var found = bindings.ToDictionary(b => b.Key, b => device.TextureAt(set, b.Value));
-        deviceTextureSizes = id => found.TryGetValue(id.Split('|')[0], out var t) && t?.Texture is { } tex ? (tex.Image.Width, tex.Image.Height) : null;
+        deviceTextureSizes = id => found.TryGetValue(id.Split('|')[0], out var t) && t?.Texture is { } tex ? tex.Image : null;
         if (found.Values.All(v => v is null)) return (null, null);
+        // "name@k": layer k of a sampler2DArray, looked up when first read.
+        foreach (var array in bindings.Keys.Where(k => vs.Globals.Concat(fs.Globals).Any(g => g.Id == k && g.Type.Contains("Array", StringComparison.Ordinal))).ToList())
+            for (int layer = 0; layer < 16; layer++)
+                found[array + "@" + layer] = device.TextureAt(set, bindings[array], layer);
         deviceCubeLod = (id, x, y, z, lod) => found.TryGetValue(id.Split('|')[0], out var t) && t?.Cube is { } c ? c.Sample(x, y, z, lod) : null;
         return ((id, u, v) => found.TryGetValue(id.Split('|')[0], out var t) && t?.Texture is { } tex ? tex.Sample(u, v) : [0, 0, 0, 1],
             (id, x, y, z) => found.TryGetValue(id.Split('|')[0], out var t) && t?.Cube is { } c ? c.Sample(x, y, z) : null);
     }
 
     /// <summary>The texture sizes of the last DeviceTextures call (textureSize, texelFetch).</summary>
-    private Func<string, (int Width, int Height)?>? deviceTextureSizes;
+    private Func<string, Codestead.GP.Gpu.Textures.Image?>? deviceTextureSizes;
     /// <summary>The cube maps of the last DeviceTextures call read at a mip level (textureLod).</summary>
     private Func<string, double, double, double, double, double[]?>? deviceCubeLod;
 
@@ -180,6 +184,6 @@ public sealed partial class VulkanReader
         // own; a layered framebuffer (gl_Layer) has them all.
         int layers = img.PerLayer ? 1 : Math.Max(1, img.Layers);
         scene.Targets[levelId] = new RenderTarget(levelId, Math.Max(1, img.Width >> level), Math.Max(1, img.Height >> level), shape?.Colors ?? 1, shape?.Depth ?? true, shape?.Depth ?? true,
-            Math.Max(1, img.Samples), img.Float, layers);
+            Math.Max(1, img.Samples), img.Float, layers, Channels: device.ChannelsOf(levelId, shape?.Colors ?? 1));
     }
 }

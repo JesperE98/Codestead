@@ -18,17 +18,18 @@ grafiktekniker, utan snarare hur man kombinerar all kunskap hittills till en st�
 :::d3d12
 `main.cpp` innehåller klassen `D3D12App` och spelets structar och fria funktioner.
 :::
-Med kursens fasta indata (bara mellanslag) visar det menyn över bana ett, "Lives:3" uppe till vänster och bollen på
-racketen. På din egen dator trycker du på ENTER för att starta, A och D för att flytta racketen och mellanslag för att
-släppa bollen – och spelar.
+Med kursens fasta indata (bara mellanslag) visar dess förväntade resultat menyn över bana ett, "Lives:3" uppe till
+vänster och bollen på racketen. I ditt eget program trycker du på ENTER för att starta, A och D för att flytta racketen
+och mellanslag för att släppa bollen – och spelar.
 
-Ett enkelt spel som det här kan göras på tusentals olika sätt, och det här är bara ett av många. Ju större ett spel blir,
-desto mer börjar man använda abstraktioner och designmönster; learnopengl rekommenderar boken och webbplatsen *Game
-Programming Patterns* för vidare läsning. Kursen skrev learnopengls klasser som vanliga structar och fria funktioner i en
-enda fil, eftersom det är lätt att följa i en editor; ett riktigt projekt skulle dela upp koden i klasser och filer, som
-learnopengl gör. Tänk på att det är en svår bedrift att skapa ett spel med extremt ren och genomtänkt kod (ofta nästan
-omöjligt). Gör helt enkelt ditt spel på det sätt som känns rätt just då. Ju mer du övar på spelutveckling, desto fler nya
-och bättre sätt att lösa problem lär du dig. Låt inte strävan efter perfekt kod ta modet ifrån dig; fortsätt koda!
+Ett enkelt spel som det här kan göras på tusentals olika sätt, och det här är bara ett av många. Ju större ett spel
+blir, desto mer börjar man använda abstraktioner och designmönster; learnopengl rekommenderar boken och webbplatsen
+*Game Programming Patterns* för vidare läsning. Kursen skrev learnopengls klasser som vanliga structar och fria
+funktioner i en enda fil, eftersom det är lätt att följa i en enda fil; ett riktigt projekt skulle dela upp koden i
+klasser och filer, som learnopengl gör. Tänk på att det är en svår bedrift att skapa ett spel med extremt ren och
+genomtänkt kod (ofta nästan omöjligt). Gör helt enkelt ditt spel på det sätt som känns rätt just då. Ju mer du övar på
+spelutveckling, desto fler nya och bättre sätt att lösa problem lär du dig. Låt inte strävan efter perfekt kod ta modet
+ifrån dig; fortsätt koda!
 
 ## Optimeringar
 
@@ -119,7 +120,7 @@ För en banas block spelar det knappt någon roll; för ett spel med tusentals o
 
 ```quiz
 Varför har kursens spel allt i en `main.cpp` med structar och fria funktioner?
-- [x] Därför att det är lätt att följa i en editor och i den inbyggda simulatorn, medan learnopengl delar upp sitt spel i klasser och filer; ett riktigt projekt skulle göra som learnopengl
+- [x] Därför att det är lätt att följa i en enda fil och kursens kontroller kan läsa det, medan learnopengl delar upp sitt spel i klasser och filer; ett riktigt projekt skulle göra som learnopengl
 - [ ] Därför att {{api}} bara kan anropa fria funktioner
 - [ ] Därför att klasser är långsammare än structar i C++
 - [ ] Därför att ett spel måste kompileras från en enda fil

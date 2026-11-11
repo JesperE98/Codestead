@@ -6,6 +6,12 @@ namespace Codestead.GP.Gpu.Shading;
 // and the few C++ calls the simulator understands (glfwGetTime, the size of a container).
 public sealed partial class ShaderRunner
 {
+    private static readonly HashSet<string> FloatMath = new(StringComparer.Ordinal)
+    {
+        "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "exp", "exp2", "log", "log2", "sqrt", "pow", "fabs", "floor", "ceil",
+        "round", "trunc", "fmod",
+    };
+
     private ShaderValue CallExpr(Call c)
     {
         var name = c.Function;
@@ -20,8 +26,12 @@ public sealed partial class ShaderRunner
         if (!Lenient && FastCall(c, name) is { } fast) return fast;
         // C++: std::fmaxf, std::sqrt … are the maths functions themselves.
         if (Lenient && name.StartsWith("std::", StringComparison.Ordinal) && name.Length > 5) name = name[5..];
+        // C's float versions of the maths functions (tanf, sqrtf, powf …) are the functions themselves.
+        if (Lenient && name.Length > 3 && name[^1] == 'f' && FloatMath.Contains(name[..^1]) && program.FindFunction(name) is null) name = name[..^1];
         if (name.StartsWith('.'))
         {
+            // assimp's methods are the runner's (the hook would take an upper-case method for an API object's).
+            if (Lenient && name is ".ReadFile" or ".GetErrorString" or ".GetTextureCount" or ".GetTexture" or ".C_Str") return Method(name[1..], c);
             if (Lenient && Hook?.Invoke(name, c.Args) is { } methodHooked) return methodHooked;
             return Method(name[1..], c);
         }
@@ -38,7 +48,18 @@ public sealed partial class ShaderRunner
         // DirectXMath stores into its first argument: XMStoreFloat4x4(&constants.transform, m).
         if (name.StartsWith("XMStoreFloat", StringComparison.Ordinal) && c.Args.Count == 2)
         {
-            Store(c.Args[0], Eval(c.Args[1]));
+            var stored = Eval(c.Args[1]);
+            // &points[0] arrives as the array (the parser's &a[0]): a vector goes into its first element, not over it.
+            ShaderValue? into = null;
+            try
+            {
+                into = Eval(c.Args[0]);
+            }
+            catch (ShaderRuntimeException)
+            {
+            }
+            if (into?.Items is { Length: > 0 } && stored.V is not null) Store(new IndexOf(c.Args[0], new Number(0, c.Line, true), c.Line), stored);
+            else Store(c.Args[0], stored);
             return ShaderValue.Scalar(0);
         }
         if (name is "sizeof") return ShaderValue.Scalar(SizeOf(c.Args.FirstOrDefault()));
@@ -89,7 +110,7 @@ public sealed partial class ShaderRunner
             try
             {
                 var arr = Eval(c.Args[0]);
-                return ShaderValue.Scalar(arr.Items?.Length ?? arr.Map?.Count ?? arr.V?.Length ?? 0);
+                return ShaderValue.Scalar(arr.IsArray ? arr.Count : arr.Map?.Count ?? arr.V?.Length ?? 0);
             }
             catch (ShaderRuntimeException) when (Lenient)
             {
@@ -107,6 +128,12 @@ public sealed partial class ShaderRunner
             return ShaderValue.Struct(fields);
         }
 
+        // glm::quat(w, x, y, z): a quaternion, kept as (x, y, z, w) like GLM's memory (.w is the last).
+        if (Lenient && name is "quat" or "fquat" or "dquat" && c.Args.Count == 4)
+        {
+            var q = c.Args.Select(Eval).ToList();
+            return ShaderValue.Vec(q[1].X, q[2].X, q[3].X, q[0].X);
+        }
         int m = MatrixSize(name);
         if (m > 0)
         {
@@ -162,6 +189,9 @@ public sealed partial class ShaderRunner
             case "min" or "fmin" or "fminf": return Zip(Math.Min);
             case "max" or "fmax" or "fmaxf": return Zip(Math.Max);
             case "step": return Zip((edge, x) => x < edge ? 0 : 1);
+            // isinf / isnan (GLSL and HLSL): a bool per component (weighted blended OIT's overflow check).
+            case "isinf": return Map(x => double.IsInfinity(x) ? 1 : 0);
+            case "isnan": return Map(x => double.IsNaN(x) ? 1 : 0);
             case "clamp" when a.Count == 3:
                 return Componentwise(Componentwise(a[0], a[1], Math.Max, c.Line), a[2], Math.Min, c.Line);
             case "mix" or "lerp" when a.Count == 3:
@@ -226,15 +256,39 @@ public sealed partial class ShaderRunner
             {
                 // texelFetch(sampler, ivec2 texel, lod): the texel's centre.
                 if (a.Count < 2) throw Arity();
-                var size = TextureSize?.Invoke(PathOf(c.Args[0])) ?? (1, 1);
+                var size = TextureImage?.Invoke(PathOf(c.Args[0]))?.ProgramSize ?? (1, 1);
                 var p = a[1].Padded(2);
                 return SampleTexture(c.Args[0], ShaderValue.Vec((Math.Floor(p[0]) + 0.5) / size.Width, (Math.Floor(p[1]) + 0.5) / size.Height), null, 0);
             }
+            case "imageStore":
+            {
+                // imageStore(image, ivec2 texel, vec4 value): a compute shader writes a texel.
+                if (a.Count < 3) throw Arity();
+                var p = a[1].Padded(2);
+                ImageStore?.Invoke(PathOf(c.Args[0]), (int)Math.Floor(p[0]), (int)Math.Floor(p[1]), a[2].Padded(4));
+                return ShaderValue.Scalar(0);
+            }
+            case "imageLoad":
+            {
+                if (a.Count < 2) throw Arity();
+                var p = a[1].Padded(2);
+                return ShaderValue.Vec(ImageLoad?.Invoke(PathOf(c.Args[0]), (int)Math.Floor(p[0]), (int)Math.Floor(p[1])) ?? [0, 0, 0, 0]);
+            }
+            case "imageSize":
+            {
+                if (a.Count < 1) throw Arity();
+                var size = ImageSize?.Invoke(PathOf(c.Args[0])) ?? (1, 1);
+                return new ShaderValue { V = [size.Width, size.Height] };
+            }
+            case "barrier" or "memoryBarrier" or "memoryBarrierImage" or "memoryBarrierShared" or "groupMemoryBarrier" or "GroupMemoryBarrierWithGroupSync"
+                or "DeviceMemoryBarrier" or "AllMemoryBarrier" or "GroupMemoryBarrier" or "DeviceMemoryBarrierWithGroupSync" or "AllMemoryBarrierWithGroupSync":
+                // The invocations run one after another here: nothing to wait for.
+                return ShaderValue.Scalar(0);
             case "textureSize":
             {
                 if (a.Count < 1) throw Arity();
-                var size = TextureSize?.Invoke(PathOf(c.Args[0])) ?? (1, 1);
-                return ShaderValue.Vec(size.Width, size.Height);
+                var size = TextureImage?.Invoke(PathOf(c.Args[0])) is { } image ? (image.Width, image.Height) : (1, 1);
+                return ShaderValue.Vec(size.Item1, size.Item2);
             }
             default:
                 if (Lenient) return ShaderValue.Scalar(0);
@@ -250,6 +304,7 @@ public sealed partial class ShaderRunner
             if (n.Id is "float" or "int" or "GLfloat" or "GLint" or "GLuint" or "uint32_t" or "int32_t" or "unsigned" or "UINT" or "DWORD") return 4;
             if (n.Id is "uint16_t" or "UINT16" or "GLushort" or "short" or "unsigned short") return 2;
             if (n.Id is "double" or "uint64_t" or "size_t") return 8;
+            if (n.Id is "uint8_t" or "int8_t" or "char" or "BYTE" or "UINT8" or "stbi_uc" or "GLubyte" or "bool") return 1;
             int comps = ComponentCount(n.Id);
             if (comps > 0) return 4 * comps;
             int m = MatrixSize(n.Id);
@@ -281,13 +336,44 @@ public sealed partial class ShaderRunner
             case "RestartStrip" when Emit is not null:
                 Emit("RestartStrip", null);
                 return ShaderValue.Scalar(0);
+            case "Load" when c.Args.Count >= 2 && !Lenient:
+            {
+                // HLSL Texture2D.Load(int3(x, y, mip)): one texel, unfiltered (GLSL's texelFetch); a Texture2DArray's
+                // int4(x, y, layer, mip) names the layer too.
+                var path = PathOf(c.Args[0]);
+                var at = Eval(c.Args[1]).Padded(4);
+                bool array = IsArrayTexture(path);
+                var size = TextureImage?.Invoke(path)?.ProgramSize ?? (1, 1);
+                var uv = array ? ShaderValue.Vec((Math.Floor(at[0]) + 0.5) / size.Width, (Math.Floor(at[1]) + 0.5) / size.Height, at[2])
+                    : ShaderValue.Vec((Math.Floor(at[0]) + 0.5) / size.Width, (Math.Floor(at[1]) + 0.5) / size.Height);
+                return SampleTexture(c.Args[0], uv, null, 0);
+            }
             case "Sample" or "SampleLevel" when c.Args.Count >= 3:
                 // HLSL names the sampler: the texture is looked up as "texture|sampler". SampleLevel gives the mip level.
                 return SampleTexture(c.Args[0], Eval(c.Args[2]), PathOf(c.Args[1]), method == "SampleLevel" && c.Args.Count >= 4 ? Eval(c.Args[3]).X : null);
+            case "find" when Lenient && c.Args.Count == 2 && Eval(c.Args[0]).Map is { } searched:
+            {
+                // map.find(key): an iterator at the key, or end().
+                var key = ShaderValue.MapKey(Eval(c.Args[1]));
+                int position = 0;
+                bool found = false;
+                foreach (var k in searched.Keys)
+                {
+                    if (k == key)
+                    {
+                        found = true;
+                        break;
+                    }
+                    position++;
+                }
+                return new ShaderValue { Iterator = new MapIterator(searched, found ? position : searched.Count, false) };
+            }
+            case "count" or "contains" when Lenient && c.Args.Count == 2 && Eval(c.Args[0]).Map is { } counted:
+                return ShaderValue.Integer(counted.ContainsKey(ShaderValue.MapKey(Eval(c.Args[1]))) ? 1 : 0);
             case "size" or "length" or "Length" or "count":
             {
                 var target = Eval(c.Args[0]);
-                return ShaderValue.Scalar(target.Map?.Count ?? target.Items?.Length ?? target.V?.Length ?? 0);
+                return ShaderValue.Scalar(target.Map?.Count ?? (target.IsArray ? target.Count : (int?)null) ?? target.V?.Length ?? 0);
             }
             case "begin" or "end" or "rbegin" or "rend" when Eval(c.Args[0]).Map is { } map:
                 return new ShaderValue { Iterator = new MapIterator(map, method.EndsWith("end", StringComparison.Ordinal) && !method.EndsWith("begin", StringComparison.Ordinal) ? map.Count : 0, method.StartsWith('r')) };
@@ -306,6 +392,17 @@ public sealed partial class ShaderRunner
                 if (key is not null && value is not null && !into.ContainsKey(ShaderValue.MapKey(key))) into[ShaderValue.MapKey(key)] = value.Clone();
                 return ShaderValue.Scalar(0);
             }
+            case "insert" when Lenient && c.Args.Count == 4 && c.Args[2] is Call { Function: ".begin" or ".cbegin", Args: [var from] } && c.Args[3] is Call { Function: ".end" or ".cend", Args: [var fromAgain] }
+                && ExprText(from) == ExprText(fromAgain) && Eval(c.Args[0]).IsArray:
+            {
+                // v.insert(v.end(), other.begin(), other.end()): the other vector's elements appended (or put first).
+                var into = Eval(c.Args[0]);
+                var added = (Eval(from).Items ?? []).Select(x => x.Clone()).ToList();
+                bool atStart = c.Args[1] is Call { Function: ".begin" or ".cbegin" };
+                if (atStart) Store(c.Args[0], ShaderValue.Array([.. added, .. into.Items ?? []]));
+                else foreach (var item in added) into.Append(item);
+                return ShaderValue.Scalar(0);
+            }
             case "is_open" or "good" when Lenient && Eval(c.Args[0]) is { } openStream && IsStream(openStream):
                 return ShaderValue.Scalar(openStream.Fields![StreamOk].X);
             case "fail" or "eof" when Lenient && Eval(c.Args[0]) is { } failStream && IsStream(failStream):
@@ -320,7 +417,7 @@ public sealed partial class ShaderRunner
             case "empty" when Lenient && c.Args.Count == 1:
             {
                 var target = Eval(c.Args[0]);
-                return ShaderValue.Scalar((target.Map?.Count ?? target.Items?.Length ?? target.Text?.Length ?? 0) == 0 ? 1 : 0);
+                return ShaderValue.Scalar((target.Map?.Count ?? (target.IsArray ? target.Count : (int?)null) ?? target.Text?.Length ?? 0) == 0 ? 1 : 0);
             }
             case "rdbuf" when Lenient && Eval(c.Args[0]) is { } bufStream && IsStream(bufStream):
                 return bufStream;
@@ -334,6 +431,29 @@ public sealed partial class ShaderRunner
                 fileStream.Fields[StreamPos] = ShaderValue.Scalar(0);
                 fileStream.Fields[StreamOk] = ShaderValue.Scalar(text is null ? 0 : 1);
                 return ShaderValue.Scalar(0);
+            }
+            case "C_Str":
+                return Eval(c.Args[0]);
+            case "ReadFile" when Lenient && c.Args.Count >= 2 && Eval(c.Args[1]).Text is { } modelPath:
+            {
+                // Assimp::Importer::ReadFile(path, flags): the model's aiScene (glTF), with aiProcess_FlipUVs as asked.
+                bool flipUvs = c.Args.Count >= 3 && ExprText(c.Args[2]).Contains("aiProcess_FlipUVs", StringComparison.Ordinal);
+                var key = modelPath + (flipUvs ? "|flip" : "");
+                if (!assimpScenes.TryGetValue(key, out var loadedScene))
+                    assimpScenes[key] = loadedScene = ReadBytes is { } read && Models.GltfModel.IsGltf(modelPath) && Models.GltfModel.Load(read, modelPath) is { } gltf
+                        ? gltf.Scene(flipUvs) : ShaderValue.Str("nullptr");
+                return loadedScene;
+            }
+            case "GetErrorString" when Lenient:
+                return ShaderValue.Str("");
+            case "GetTextureCount" when Lenient && c.Args.Count >= 2 && Eval(c.Args[0]).Fields?.GetValueOrDefault(Models.GltfModel.MaterialTextures) is { Fields: { } byType }:
+                return ShaderValue.Integer(byType.GetValueOrDefault(Eval(c.Args[1]).Text ?? "")?.Count ?? 0);
+            case "GetTexture" when Lenient && c.Args.Count >= 4 && Eval(c.Args[0]).Fields?.GetValueOrDefault(Models.GltfModel.MaterialTextures) is { Fields: { } textureFiles }:
+            {
+                var files = textureFiles.GetValueOrDefault(Eval(c.Args[1]).Text ?? "")?.Items ?? [];
+                int index = (int)Eval(c.Args[2]).X;
+                if (index >= 0 && index < files.Length) Store(c.Args[3] is Unary { Op: "&" } address ? address.Operand : c.Args[3], files[index]);
+                return ShaderValue.Str("aiReturn_SUCCESS");
             }
             case "data" or "c_str":
                 return Eval(c.Args[0]);
@@ -355,20 +475,26 @@ public sealed partial class ShaderRunner
                 Store(c.Args[0], ShaderValue.Array((vec.Items ?? []).Where(item => !Truthy(Invoke(predicate, [item], c.Line))).ToArray()));
                 return ShaderValue.Scalar(0);
             }
+            case "back" or "front" when Lenient && c.Args.Count == 1 && Eval(c.Args[0]).Items is { Length: > 0 } elements:
+                // vector.back() / front(): the element itself (a reference: &children.back() points at it).
+                return method == "back" ? elements[^1] : elements[0];
             case "push_back" or "emplace_back" when Lenient && c.Args.Count >= 2:
             {
                 // vector.push_back(x): the variable holds a new, longer array.
                 var vec = Eval(c.Args[0]);
                 var item = Eval(c.Args[1]).Clone();
-                Store(c.Args[0], ShaderValue.Array([.. vec.Items ?? [], item]));
+                if (vec.IsArray && !vec.Shared) vec.Append(item);
+                else Store(c.Args[0], ShaderValue.Array([.. vec.Items ?? [], item]));
                 return ShaderValue.Scalar(0);
             }
             case "GetDimensions" when c.Args.Count >= 3:
             {
                 // HLSL Texture2D::GetDimensions(out width, out height): the texture's size in texels.
-                var size = TextureSize?.Invoke(PathOf(c.Args[0])) ?? (1, 1);
-                Store(c.Args[1], ShaderValue.Scalar(size.Width));
-                Store(c.Args[2], ShaderValue.Scalar(size.Height));
+                // A RWTexture2D (a compute shader's UAV) reports the storage image's size.
+                var size = (IsRwTexture(c.Args[0]) ? ImageSize?.Invoke(PathOf(c.Args[0])) : null)
+                    ?? (TextureImage?.Invoke(PathOf(c.Args[0])) is { } image ? (image.Width, image.Height) : (1, 1));
+                Store(c.Args[1], ShaderValue.Scalar(size.Item1));
+                Store(c.Args[2], ShaderValue.Scalar(size.Item2));
                 return ShaderValue.Scalar(0);
             }
             case "resize" when Lenient && c.Args.Count >= 2:
@@ -531,7 +657,14 @@ public sealed partial class ShaderRunner
 
     private ShaderValue SampleTexture(Expr texture, ShaderValue uv, string? sampler = null, double? lod = null)
     {
-        var id = sampler is null ? PathOf(texture) : PathOf(texture) + "|" + sampler;
+        var path = PathOf(texture);
+        if (uv.Size >= 3 && IsArrayTexture(path))
+        {
+            // A texture array (sampler2DArray, Texture2DArray): the third coordinate picks the layer, "name@layer".
+            path += "@" + Math.Max(0, (int)Math.Floor(uv.V![2] + 0.5));
+            uv = ShaderValue.Vec(uv.V[0], uv.V[1]);
+        }
+        var id = sampler is null ? path : path + "|" + sampler;
         if (uv.Size >= 3 && lod is { } level && SampleCubeLod?.Invoke(id, uv.V![0], uv.V[1], uv.V[2], level) is { } mip) return ShaderValue.Vec(mip);
         if (uv.Size >= 3 && SampleCube?.Invoke(id, uv.V![0], uv.V[1], uv.V[2]) is { } cube) return ShaderValue.Vec(cube);
         var at = uv.Padded(2);
@@ -547,6 +680,13 @@ public sealed partial class ShaderRunner
             Textures.Texture.Footprint = null;
         }
     }
+
+    private HashSet<string>? arrayTextures;
+
+    /// <summary>Whether a texture the shader declares is an array of 2D layers (sampler2DArray, Texture2DArray).</summary>
+    private bool IsArrayTexture(string name) => (arrayTextures ??= program.Globals
+        .Where(g => g.Type is "sampler2DArray" or "sampler2DArrayShadow" or "isampler2DArray" or "usampler2DArray" or "texture2DArray" || g.Type.StartsWith("Texture2DArray", StringComparison.Ordinal))
+        .Select(g => g.Id).ToHashSet(StringComparer.Ordinal)).Contains(name);
 
     /// <summary>The uniform name of a texture expression: texture1, material.diffuse, shadowMaps[2].</summary>
     private string PathOf(Expr e) => e switch

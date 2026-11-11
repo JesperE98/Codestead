@@ -38,8 +38,8 @@ vertex buffer – kuben är vertex 0 till 35, golvet 36 till 41. PSO:t har
 eftersom learnopengls kub inte är gjord för det. I det här kapitlet rättar vi till det.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift trycker du på **Build & run**
-(Ctrl+Enter) för att kompilera programmet och köra det i den inbyggda simulatorn.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
+IDE.
 
 ## Winding order
 
@@ -173,8 +173,8 @@ gamla baksidan är det (1, 0, 0) × (1, 1, 0) = (0, 0, 1) – in i kuben, så se
 det (1, 1, 0) × (1, 0, 0) = (0, 0, -1): ut ur kuben.
 
 Gör nu den första uppgiften, **ccw-cube**: skriv om kubens 36 vertexar så att varje triangel går moturs sett utifrån,
-med varje vertex texturkoordinater bevarade, och tryck på **Build & run**. Ingenting ändras – inte en enda pixel –
-eftersom ingenting cullas än. Ordningen på en triangels hörn spelar roll först när culling är påslaget.
+med varje vertex texturkoordinater bevarade, och bygg och kör sedan. Ingenting ändras – inte en enda pixel – eftersom
+ingenting cullas än. Ordningen på en triangels hörn spelar roll först när culling är påslaget.
 
 ```quiz
 Hur kan du kontrollera att en triangel med hörnen a, b, c (i den ordningen) går moturs när du tittar på kubens sida utifrån?
@@ -372,8 +372,8 @@ Vad skulle hända med backface culling påslaget om du lät learnopengls golvver
 Culling känner inte till golv och kuber, bara trianglar och deras ordning på skärmen. Kameran tittar på golvet ovanifrån; om dess hörn går medurs därifrån är båda trianglarna baksidor och cullas.
 ```
 
-Gör nu uppgiften **cull-back**: slå på culling som ovan och rätta golvet, och tryck sedan på **Build & run**. Du borde
-se … exakt samma bild som förut. (Några golvpixlar kan skilja sig en nivå eller två på grund av avrundning.)
+Gör nu uppgiften **cull-back**: slå på culling som ovan och rätta golvet, och bygg och kör sedan. Du borde se … exakt
+samma bild som förut. (Några golvpixlar kan skilja sig en nivå eller två på grund av avrundning.)
 
 Det är inget misstag. Kubernas baksidor – varje kubs bortre sidor – var redan dolda: de ritades, men framsidorna täckte
 dem, och där en baksida ritades efter en framsida kastade djuptestet dess fragment. Nu rastreras de inte ens, så
@@ -408,9 +408,9 @@ som är vända mot kameran. Samma sak händer om du behåller moturs framsidor o
 ```
 :::
 
-Gör nu den sista uppgiften, **cull-front**, och tryck på **Build & run**. Kuberna behåller sina konturer, men nu tittar
-du in i dem: sidorna närmast dig är borta, och du ser insidan av de bortre sidorna, med marmorn på. Och golvet har
-försvunnit: dess framsida är vänd uppåt, mot kameran, så det cullas nu.
+Gör nu den sista uppgiften, **cull-front**, och bygg och kör sedan. Kuberna behåller sina konturer, men nu tittar du in
+i dem: sidorna närmast dig är borta, och du ser insidan av de bortre sidorna, med marmorn på. Och golvet har försvunnit:
+dess framsida är vänd uppåt, mot kameran, så det cullas nu.
 
 ```quiz
 Med framsidorna cullade, varför ser kuberna ihåliga ut medan golvet försvinner helt?

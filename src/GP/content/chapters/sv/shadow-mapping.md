@@ -45,10 +45,10 @@ ambient, diffust och Blinn-Phong-spekulärt, kombinerat som `(ambient + (1.0f - 
 uppgiften kompilerar dem.
 :::
 
-Från kameran på (0, 0, 3) ser du golvet och, överst i fönstret, den svävande kuben underifrån. De två andra kuberna ligger
-precis utanför bilden, till vänster och höger om kameran; dem möter du i djupkartan. Tryck på **Build & run**
-(Ctrl+Enter): golvet är jämnt belyst – svagt, ljusfärgen är bara 0.3 – och ingenting kastar någon skugga. Kommentarerna
-`// TODO:` i projektet visar var din kod ska in.
+Från kameran på (0, 0, 3) ser du golvet och, överst i fönstret, den svävande kuben underifrån. De två andra kuberna
+ligger precis utanför bilden, till vänster och höger om kameran; dem möter du i djupkartan. Bygg och kör programmet:
+golvet är jämnt belyst – svagt, ljusfärgen är bara 0.3 – och ingenting kastar någon skugga. Kommentarerna `// TODO:` i
+projektet visar var din kod ska in.
 
 ## Shadow mapping
 
@@ -711,12 +711,12 @@ s1, de två pipeline states, fyrhörningens vertices, djupkartan med sina två v
 barriärer, och debugfyrhörningens draw.
 :::
 
-Tryck på **Build & run**: i stället för scenen visar fönstret **djupkartan** – grå överallt, kartan på 1024 × 1024
-utsträckt till fönstret. Golvet är en lodrät gradient: vitt överst, där det ligger bortom far-planet (där ritades
-ingenting och det rensade djupet 1.0 står kvar), mellangrått i mitten, mörkare nedåt där det kommer närmare ljuset, och
-sedan vitt igen i ett band längst ned: den delen av golvet ligger framför near-planet och klipptes bort. Den svävande
-kuben är den mörkaste fläcken, närmast ljuset; kuben på (2, 0, 1) är ljusare än golvet runt den, och den lilla vridna
-kuben ligger mellan de två.
+Bygg och kör: i stället för scenen visar fönstret **djupkartan** – grå överallt, kartan på 1024 × 1024 utsträckt till
+fönstret. Golvet är en lodrät gradient: vitt överst, där det ligger bortom far-planet (där ritades ingenting och det
+rensade djupet 1.0 står kvar), mellangrått i mitten, mörkare nedåt där det kommer närmare ljuset, och sedan vitt igen i
+ett band längst ned: den delen av golvet ligger framför near-planet och klipptes bort. Den svävande kuben är den
+mörkaste fläcken, närmast ljuset; kuben på (2, 0, 1) är ljusare än golvet runt den, och den lilla vridna kuben ligger
+mellan de två.
 
 ## Rendera skuggor
 
@@ -974,8 +974,8 @@ bort debugfyrhörningens två rader i `main.cpp` så att vi ser scenen igen:
 Texturernas descriptor table når redan djupkartans SRV (t1), och sampler s1 är en del av root signaturen.
 :::
 
-Tryck på **Build & run**: den svävande kuben kastar nu en **skugga** på golvet, nere till höger – fragmenten där får bara
-det ambienta ljuset. Men något är uppenbart fel: det belysta golvet är täckt av fina mörka ränder, ett moirémönster av
+Bygg och kör: den svävande kuben kastar nu en **skugga** på golvet, nere till höger – fragmenten där får bara det
+ambienta ljuset. Men något är uppenbart fel: det belysta golvet är täckt av fina mörka ränder, ett moirémönster av
 ringar. Låt oss fixa det.
 
 ## Bättre shadow maps
@@ -1058,8 +1058,8 @@ håller sig till learnopengls bias i shadern.
 :::
 
 Djupet är linjärt från 0 vid near-planet till 1 vid far-planet i alla tre API:erna (projektionen är ortografisk), så
-learnopengls biasvärden passar oförändrade. Tryck på **Build & run**: **ränderna är borta**, golvet är belyst som i
-starten, och kubens skugga står kvar – med hårda, taggiga kanter.
+learnopengls biasvärden passar oförändrade. Bygg och kör: **ränderna är borta**, golvet är belyst som i starten, och
+kubens skugga står kvar – med hårda, taggiga kanter.
 
 ### Peter panning
 
@@ -1178,12 +1178,12 @@ Gör nu uppgiften **over-sampling**: de fyra samplerraderna ovan, och i `ShadowC
 ```
 :::
 
-Tryck på **Build & run** – och titta noga, för från standardkameran ändrar det här nästan ingenting. Områdena utanför
-ljusets frustum ligger långt bort, nära horisonten: bara en tunn mörk linje på det bortre golvet vid fönstrets högra kant
-försvinner. Titta nedåt med musen och backa med S – kameran stiger när den backar – tills du ser scenen ovanifrån, så ser
-du skillnaden: före den här uppgiften är golvet bortom far-planet mörkt och kopior av skuggorna upprepas långt borta;
-efter den är hela det golvet belyst. Det betyder att bara den del av djupkartan som ljusets frustum täcker får skuggor,
-medan allt utanför har inga – vilket är vad vi vill i den här scenen.
+Bygg och kör – och titta noga, för från standardkameran ändrar det här nästan ingenting. Områdena utanför ljusets
+frustum ligger långt bort, nära horisonten: bara en tunn mörk linje på det bortre golvet vid fönstrets högra kant
+försvinner. Titta nedåt med musen och backa med S – kameran stiger när den backar – tills du ser scenen ovanifrån, så
+ser du skillnaden: före den här uppgiften är golvet bortom far-planet mörkt och kopior av skuggorna upprepas långt
+borta; efter den är hela det golvet belyst. Det betyder att bara den del av djupkartan som ljusets frustum täcker får
+skuggor, medan allt utanför har inga – vilket är vad vi vill i den här scenen.
 
 ```quiz
 Varför stoppar en vit kantfärg (djup 1.0) översampling utanför djupkartan?
@@ -1285,7 +1285,7 @@ exempel `D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT` med `ComparisonFunc =
 learnopengls loop.)
 :::
 
-Tryck på **Build & run**: skuggans **kanter blir mjuka**. Inne i skuggan och på det belysta golvet ändras ingenting, men
+Bygg och kör: skuggans **kanter blir mjuka**. Inne i skuggan och på det belysta golvet ändras ingenting, men
 kantpixlarna får nu mellanvärden: där 3 av de 9 samplen ligger i skugga är fragmentet till en tredjedel skuggat. På
 avstånd ser skuggorna mycket bättre och mindre hårda ut. Zoomar du in kan du fortfarande se shadow mappingens
 upplösningsartefakter, men i allmänhet ger det här bra resultat för de flesta tillämpningar.

@@ -28,8 +28,7 @@ One value differs from learnopengl's demo: the window is cleared to **(0.2, 0.3,
 black. You will see why soon: halfway through the chapter the cube is drawn *black*, and on a black background you
 would not see it at all.
 
-learnopengl hides two mistakes in its demo for the reader to find, and so does the project. Build and run it
-(**Build & run**, Ctrl+Enter, compiles and runs it in the built-in simulator):
+learnopengl hides two mistakes in its demo for the reader to find, and so does the project. Build and run it:
 
 :::opengl
 the window shows only the teal clear colour. There is no cube, and nothing is printed. The two mistakes are
@@ -142,8 +141,8 @@ these `glCheckError` calls in our codebase it's helpful to more precisely know w
 error.
 
 Now do the first task, **check-error**: add the function and the macro, and call `glCheckError();` twice – right after
-the texture is loaded (after `stbi_image_free(data);`) and right after the two uniforms are set. Press **Build & run**.
-The window does not change, but the program now prints two lines:
+the texture is loaded (after `stbi_image_free(data);`) and right after the two uniforms are set. Build and run. The
+window does not change, but the program now prints two lines:
 
 ```text
 INVALID_ENUM | main.cpp (180)
@@ -213,7 +212,7 @@ so – as vulkan-tutorial points out – a comparison is enough to keep only the
         }
 ```
 
-Press **Build & run**. The cube is as brown as before, but the output is down to one message (shortened here):
+Build and run. The cube is as brown as before, but the program's console is down to one message (shortened here):
 
 ```text
 validation layer: Validation Error: [ VUID-VkGraphicsPipelineCreateInfo-Input-07904 ] Object 0: handle = 0x…, type = VK_OBJECT_TYPE_SHADER_MODULE; | MessageID = 0xcc9c32be | vkCreateGraphicsPipelines(): pCreateInfos[0].pVertexInputState->pVertexAttributeDescriptions does not have a Location 1 but vertex shader has an input variable at that Location. The Vulkan spec states: …
@@ -299,9 +298,9 @@ with the file and the line they appear in, so each `CheckDebugMessages()` call r
 Now do the first task, **info-queue**: get the info queue in `LoadPipeline` right after the device is created (inside
 `#if defined(_DEBUG)` – in a release build there is no debug layer, `As` fails and `m_infoQueue` stays empty), add the
 function and the macro, and call `CheckDebugMessages();` after `LoadTexture(…)` in `LoadAssets` and after
-`ExecuteCommandLists` in `OnRender`. Run it – the built-in simulator reproduces the debug layer: it reports these
-mistakes with the debug layer's own messages, stores them in the info queue and later calls your callback, as Windows
-does. The picture does not change, but the output now holds the messages:
+`ExecuteCommandLists` in `OnRender`. Run it under the debugger (F5): the debug layer reports these mistakes, stores them
+in the info queue, and your function writes them out. The picture does not change, but the debugger's Output window now
+holds the messages:
 
 ```text
 ERROR #31: ID3D12Device::CreateShaderResourceView: The Dimensions of the View are invalid due to at least one of the following conditions. MostDetailedMip (value = 0) must be between 0 and MipLevels-1 of the Texture Resource, 0, inclusively. With the current MostDetailedMip, MipLevels (value = 0) must be between 1 and 1, inclusively, or -1 to default to all mips from MostDetailedMip, in order that the View fit on the Texture. | main.cpp (…)
@@ -348,10 +347,10 @@ Without the debug layer, nothing checks the description at all – the descripto
 :::
 
 :::opengl
-Now do the task **use-program**: call `shader.use();` before the two uniform calls. Press **Build & run**: the cube
-appears – **all black**. Only one line is printed now, `INVALID_ENUM | main.cpp (…)`, from the texture code. The
-texture is still broken, and a texture without a (valid) image is *incomplete*: sampling it returns (0, 0, 0, 1). This
-is where the teal clear colour pays off.
+Now do the task **use-program**: call `shader.use();` before the two uniform calls. Build and run: the cube appears –
+**all black**. Only one line is printed now, `INVALID_ENUM | main.cpp (…)`, from the texture code. The texture is still
+broken, and a texture without a (valid) image is *incomplete*: sampling it returns (0, 0, 0, 1). This is where the teal
+clear colour pays off.
 
 `glGetError` told us *that* something failed between two checks. It did not tell us *which* call, or why. For that
 there is a better tool.
@@ -486,8 +485,8 @@ which messages are sent; with `GL_DONT_CARE` for source, type and severity and `
 (including the low-severity ones, which are off by default).
 
 Now do the task **debug-output**: the 4.3 debug context, the `glDebugOutput` function, and its initialization right
-after GLAD is loaded. Press **Build & run**. The picture is the same black cube, but now the driver describes the
-errors in words (these are Mesa's texts; NVIDIA and AMD word them differently and use other ids):
+after GLAD is loaded. Build and run. The picture is the same black cube, but now the driver describes the errors in
+words (these are Mesa's texts; NVIDIA and AMD word them differently and use other ids):
 
 ```text
 ---------------
@@ -516,7 +515,7 @@ Now do the task **fix-texture**: upload the image to `GL_TEXTURE_2D`, the target
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 ```
 
-Press **Build & run**: **the wooden cube**, the boards running up its front face – and nothing is printed any more.
+Build and run: **the wooden cube**, the boards running up its front face – and nothing is printed any more.
 
 ### Filtering debug output
 
@@ -624,7 +623,7 @@ It returns at once without the validation layer: the extension is only enabled t
         setObjectName(VK_OBJECT_TYPE_SHADER_MODULE, (uint64_t) fragShaderModule, fragShaderFile.c_str());
 ```
 
-Press **Build & run**. The message now says which shader it means:
+Build and run. The message now says which shader it means:
 
 ```text
 validation layer: Validation Error: [ VUID-VkGraphicsPipelineCreateInfo-Input-07904 ] Object 0: handle = 0x…, name = shaders/debugging.vert.spv, type = VK_OBJECT_TYPE_SHADER_MODULE; | MessageID = 0xcc9c32be | vkCreateGraphicsPipelines(): pCreateInfos[0].pVertexInputState->pVertexAttributeDescriptions does not have a Location 1 but vertex shader has an input variable at that Location. …
@@ -652,7 +651,7 @@ Now do the task **fix-attribute**: give the array two elements and describe the 
         attributeDescriptions[1].offset = offsetof(Vertex, texCoord);
 ```
 
-Press **Build & run**: **the wooden cube**, the boards running up its front face – and nothing is printed any more.
+Build and run: **the wooden cube**, the boards running up its front face – and nothing is printed any more.
 
 ### Labels
 
@@ -783,9 +782,9 @@ Category: State creation
 Severity: ERROR
 ```
 
-– and with a debugger attached the program stops right at that line of `LoadTexture`. (The built-in simulator is no
-debugger: `IsDebuggerPresent()` returns false there, so the program prints the message and carries on.) (The messages also stay in the
-queue, so `CheckDebugMessages()` prints them once more afterwards.)
+– and with a debugger attached the program stops right at that line of `LoadTexture`. (Started without a debugger, with
+Ctrl+F5, `IsDebuggerPresent()` returns false, so the program writes the message and carries on.) (The messages also stay
+in the queue, so `CheckDebugMessages()` prints them once more afterwards.)
 
 ### The second mistake
 
@@ -871,7 +870,7 @@ Before the fix, the cube was one flat brown – the colour of the texel at (0, 0
 - [x] Because no attribute fed location 1: the shader read the texture coordinates as (0, 0) at every vertex, so every fragment sampled the same texel
 - [ ] Because the descriptor set pointed at an empty image
 ---
-What a shader reads from an input that no attribute describes is undefined – (0, 0) on this driver and in the simulator, something else elsewhere. A wrong colour that is the same everywhere often means that the inputs a value is computed from are not varying.
+What a shader reads from an input that no attribute describes is undefined – (0, 0) on one driver, something else on another. A wrong colour that is the same everywhere often means that the inputs a value is computed from are not varying.
 ```
 :::
 :::d3d12
@@ -932,9 +931,9 @@ and keep the texture line as a comment:
     // FragColor = texture(tex, TexCoords);
 ```
 
-Press **Build & run**: the cube shows a **red–green gradient** on each face: black at a face's bottom-left corner
-(u, v = 0, 0), red at the bottom-right (1, 0), green at the top-left (0, 1) and yellow at the top-right (1, 1). The
-texture coordinates are what they should be.
+Build and run: the cube shows a **red–green gradient** on each face: black at a face's bottom-left corner (u, v = 0, 0),
+red at the bottom-right (1, 0), green at the top-left (0, 1) and yellow at the top-right (1, 1). The texture coordinates
+are what they should be.
 :::
 :::vulkan
 ```glsl
@@ -943,11 +942,10 @@ texture coordinates are what they should be.
     // outColor = texture(texSampler, fragTexCoord);
 ```
 
-Press **Build & run**: the cube shows a **red–green gradient** on each face: black at a face's bottom-left corner
-(u, v = 0, 0), red at the bottom-right (1, 0), green at the top-left (0, 1) and yellow at the top-right (1, 1) – the
-texture is loaded flipped (`stbi_set_flip_vertically_on_load(true)`), so the coordinates are OpenGL's. Had you done
-this before the fix, the whole cube would have been black: (0, 0) everywhere – which points straight at the texture
-coordinates.
+Build and run: the cube shows a **red–green gradient** on each face: black at a face's bottom-left corner (u, v = 0, 0),
+red at the bottom-right (1, 0), green at the top-left (0, 1) and yellow at the top-right (1, 1) – the texture is loaded
+flipped (`stbi_set_flip_vertically_on_load(true)`), so the coordinates are OpenGL's. Had you done this before the fix,
+the whole cube would have been black: (0, 0) everywhere – which points straight at the texture coordinates.
 :::
 :::d3d12
 ```hlsl

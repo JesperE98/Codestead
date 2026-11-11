@@ -62,8 +62,8 @@ metal (slot 2). A second shader file, `framebuffers_screen.hlsl`, is there for t
 complete, its `PSMain` still returns black.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, press **Build & run**
-(Ctrl+Enter) to compile the program and run it in the built-in simulator.
+The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
+IDE.
 
 ## Creating a framebuffer
 
@@ -752,7 +752,7 @@ The barrier that ends the frame – the back buffer from RENDER_TARGET to PRESEN
 default framebuffer, draw".
 :::
 
-Now do the first task, **offscreen-target**, and press **Build & run**. The window is completely white.
+Now do the first task, **offscreen-target**, then build and run. The window is completely white.
 
 ```quiz
 After the **offscreen-target** task the window is white everywhere, although the scene is still drawn every frame. Why?
@@ -1063,9 +1063,9 @@ A PSO is created for fixed render target and depth formats. The quad is one flat
 ```
 :::
 
-Now do the task **screen-quad** and press **Build & run**. The scene is back, exactly as it looked at the start of
-the chapter – the cubes, the floor, the dark grey background. If you'd look at it in wireframe mode you'd see a single
-quad covering the window, but nothing in the picture tells that the scene took a detour through a texture.
+Now do the task **screen-quad**, then build and run. The scene is back, exactly as it looked at the start of the chapter
+– the cubes, the floor, the dark grey background. If you'd look at it in wireframe mode you'd see a single quad covering
+the window, but nothing in the picture tells that the scene took a detour through a texture.
 
 So what was the use of this? Because we can now freely access each of the pixels of the completely rendered scene as a
 single texture image, we can create some interesting effects in the fragment shader.
@@ -1108,9 +1108,9 @@ float4 PSMain(PSInput input) : SV_TARGET
 :::
 
 While inversion is a relatively simple post-processing effect it already creates funky results. Do the task
-**inversion** and press **Build & run**: the whole scene has all its colours inversed with a single line of code in
-the fragment shader. The dark grey background turns light grey, the white marble becomes a dark blue-grey and the grey
-steel floor turns brownish.
+**inversion**, then build and run: the whole scene has all its colours inversed with a single line of code in the
+fragment shader. The dark grey background turns light grey, the white marble becomes a dark blue-grey and the grey steel
+floor turns brownish.
 
 ```quiz
 The background was cleared to (0.1, 0.1, 0.1) – 26, 26, 26 in 8-bit values. What colour does it have after the inversion?
@@ -1194,10 +1194,10 @@ float4 PSMain(PSInput input) : SV_TARGET
 ```
 :::
 
-Do the task **grayscale** with the weighted version and press **Build & run**: the inversion is gone, and the scene
-is shown in shades of grey – every pixel has the same red, green and blue value. You probably won't notice the
-difference to the plain average right away, but with more complicated scenes, such a weighted grayscaling effect tends
-to be more realistic.
+Do the task **grayscale** with the weighted version, then build and run: the inversion is gone, and the scene is shown
+in shades of grey – every pixel has the same red, green and blue value. You probably won't notice the difference to the
+plain average right away, but with more complicated scenes, such a weighted grayscaling effect tends to be more
+realistic.
 
 ## Kernel effects
 
@@ -1387,10 +1387,10 @@ This particular sharpen kernel looks like this:
 Its weights add up to 9 − 8 = 1: where all nine samples have the same colour, the result is that colour. Where the
 centre differs from its neighbours, the difference is amplified eightfold.
 
-Do the task **sharpen** and press **Build & run**. The colours are back, and the background and the even parts of the
-floor look as before – but every edge is hard: the dark veins of the marble turn black, light pixels beside them turn
-almost white, the cubes get bright rims, and the floor's pattern looks grainy. This could create some interesting
-effects of where your player may be on a narcotic adventure.
+Do the task **sharpen**, then build and run. The colours are back, and the background and the even parts of the floor
+look as before – but every edge is hard: the dark veins of the marble turn black, light pixels beside them turn almost
+white, the cubes get bright rims, and the floor's pattern looks grainy. This could create some interesting effects of
+where your player may be on a narcotic adventure.
 
 ```quiz
 Why does the sharpen kernel leave the uniform dark grey background unchanged, while it turns the marble's veins black?
@@ -1436,8 +1436,8 @@ colour so we have to divide each value of the kernel by `16`. The resulting kern
 :::
 
 By only changing the kernel array in the fragment shader we can completely change the post-processing effect. Do the
-task **blur** and press **Build & run**: the picture looks like the start picture, slightly blurred – the marble's
-veins are softened and the outlines of the cubes are no longer crisp.
+task **blur**, then build and run: the picture looks like the start picture, slightly blurred – the marble's veins are
+softened and the outlines of the cubes are no longer crisp.
 
 Such a blur effect creates interesting possibilities. We could vary the blur amount over time to create the effect of
 someone being drunk, or increase the blur whenever the main character is not wearing glasses. Blurring can also be a
@@ -1479,9 +1479,9 @@ image. Its weights add up to 0: wherever all nine samples are the same, the resu
 ```
 :::
 
-Do the last task, **edge-detection**, and press **Build & run**. Almost everything is black now: the background, the
-even parts of the floor and the flat areas of the marble. What's left are bright lines wherever the colour changes –
-the cubes' outlines, the marble's veins, the floor's pattern and the horizon where the floor meets the background.
+Do the last task, **edge-detection**, then build and run. Almost everything is black now: the background, the even parts
+of the floor and the flat areas of the marble. What's left are bright lines wherever the colour changes – the cubes'
+outlines, the marble's veins, the floor's pattern and the horizon where the floor meets the background.
 
 It probably does not come as a surprise that kernels like this are used as image-manipulating tools/filters in tools
 like Photoshop. Because of a graphic card's ability to process fragments with extreme parallel capabilities, we can

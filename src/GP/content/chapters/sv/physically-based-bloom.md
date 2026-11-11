@@ -55,8 +55,8 @@ på skärmfyrhörningen (vertex 36–41) med det sista pipeline state-objektet. 
 indata; deras pixel shaders är TODO:er.
 :::
 
-Kommentarerna `// TODO:` visar var din kod ska in; **Build & run** (Ctrl+Enter) kompilerar programmet och kör det i den
-inbyggda simulatorn: scenen med skarpa ljuskuber och svart bakgrund alldeles intill dem.
+Kommentarerna `// TODO:` visar var din kod ska in. Bygg och kör programmet i din IDE: scenen med skarpa ljuskuber och
+svart bakgrund alldeles intill dem.
 
 ## Mip-kedjan
 

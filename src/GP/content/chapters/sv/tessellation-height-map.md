@@ -16,9 +16,9 @@ säger hur högt marken ligger där – svart är lågt, vitt är högt. Höjdka
 terräng: en grafiker målar kullar och dalar, eller ett program genererar dem ur brus, eller så kommer de från verkliga
 höjddata. learnopengl använder en stor karta över verklig terräng, 2,6 tusen pixlar på varje sida. Kursen använder en
 egen, mindre karta – `heightmap.png`, 256 × 256 pixlar med en grå kanal på 8 bitar, genererad av kursens skript
-`textures/make_guest.py` ur seedat fraktalt brus: böljande kullar, en kam av toppar längs bildens överkant, en floddal från
-vänsterkanten ned till underkanten, och en sjö nere till höger. Den mindre storleken håller rutnätet på 65 536 vertexar,
-vilket den inbyggda simulatorn klarar att rita.
+`textures/make_guest.py` ur seedat fraktalt brus: böljande kullar, en kam av toppar längs bildens överkant, en floddal
+från vänsterkanten ned till underkanten, och en sjö nere till höger. Den mindre storleken håller rutnätet på 65 536
+vertexar, vilket kursen klarar att rita på CPU:n för sina kontroller och förväntade resultat.
 
 Kameran tittar på hela landskapet framifrån och ovanifrån: från (0, 190, 290), vriden 35° nedåt, med det bortre planet på
 1000 (learnopengl börjar på en punkt över sin mycket större karta). Fragment shadern färgar varje punkt efter dess höjd.
@@ -42,8 +42,7 @@ learnopengl skriver ut med `std::cout` skriver kursen till felsökarens utdataf�
 `snprintf` till en buffer).
 :::
 
-Kommentarerna `// TODO:` visar var din kod ska in; **Build & run** (Ctrl+Enter) kompilerar programmet och kör det i den
-inbyggda simulatorn: ett tomt, mörkt fönster.
+Kommentarerna `// TODO:` visar var din kod ska in. Bygg och kör programmet i din IDE: ett tomt, mörkt fönster.
 
 ## Att läsa in höjdkartan
 

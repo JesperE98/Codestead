@@ -16,15 +16,41 @@ public sealed partial class D3D12Reader
     {
         var assign = src.FieldAssignments(field).Where(a => a.Offset < before).LastOrDefault();
         if (assign.Value is null) return null;
-        var group = field is "BlendEnable" or "SrcBlend" or "DestBlend" or "BlendOp" or "SrcBlendAlpha" or "DestBlendAlpha" or "BlendOpAlpha" or "RenderTargetWriteMask"
+        var group = field is "IndependentBlendEnable" or "BlendEnable" or "SrcBlend" or "DestBlend" or "BlendOp" or "SrcBlendAlpha" or "DestBlendAlpha" or "BlendOpAlpha" or "RenderTargetWriteMask"
             ? "BlendState" : "DepthStencilState";
         var reset = src.FieldAssignments(group).Where(a => a.Offset < before).LastOrDefault();
         return reset.Value is not null && reset.Offset > assign.Offset ? null : assign.Value;
     }
 
+    /// <summary>
+    /// A blend field of BlendState.RenderTarget[<paramref name="index"/>] set before an offset (as <see cref="StateField(string, int)"/>);
+    /// a field written for no particular target counts for target 0.
+    /// </summary>
+    private string? TargetField(string field, int before, int index)
+    {
+        if (field is not ("BlendEnable" or "SrcBlend" or "DestBlend" or "BlendOp" or "SrcBlendAlpha" or "DestBlendAlpha" or "BlendOpAlpha" or "RenderTargetWriteMask"))
+            return StateField(field, before);
+        var assign = src.FieldAssignments(field).Where(a => a.Offset < before
+            && (Regex.Match(a.Target, @"RenderTarget\[\s*(\d+)\s*\]$") is { Success: true } m ? int.Parse(m.Groups[1].Value) == index : index == 0)).LastOrDefault();
+        if (assign.Value is null) return null;
+        var reset = src.FieldAssignments("BlendState").Where(a => a.Offset < before).LastOrDefault();
+        return reset.Value is not null && reset.Offset > assign.Offset ? null : assign.Value;
+    }
+
+    /// <summary>The blend description of BlendState.RenderTarget[i] in a created description (the device saw it).</summary>
+    private static Func<string, string?> RuntimeTarget(ShaderValue desc, int index)
+    {
+        var targets = Find(desc, "RenderTarget", 0)?.Items;
+        var element = targets is { } t && index < t.Length ? t[index] : null;
+        return name => element?.Fields?.GetValueOrDefault(name) is { } v ? v.Text ?? (v.V is { Length: > 0 } n ? n[0].ToString(System.Globalization.CultureInfo.InvariantCulture) : null) : null;
+    }
+
     /// <summary>Does the pipeline state description created at an offset have a geometry shader (its GS field set to bytecode)?</summary>
-    private bool UsesGeometry(int before) =>
-        src.FieldValueBefore("GS", before) is { } gsField && !Regex.IsMatch(gsField, @"^\{\s*\}$|^D3D12_SHADER_BYTECODE\s*\{\s*\}$|nullptr");
+    private bool UsesGeometry(int before) => UsesStage("GS", before);
+
+    /// <summary>Does the description created at an offset set a stage's field (GS, HS, DS) to bytecode?</summary>
+    private bool UsesStage(string field, int before) =>
+        src.FieldValueBefore(field, before) is { } value && !Regex.IsMatch(value, @"^\{\s*\}$|^D3D12_SHADER_BYTECODE\s*\{\s*\}$|nullptr");
 
     private readonly Dictionary<string, PipelineInfo?> runtimePsos = new(StringComparer.Ordinal);
 
@@ -51,6 +77,8 @@ public sealed partial class D3D12Reader
             var vs = Stage("VS");
             (ShaderProgram Program, string Entry) ps = Stage("PS") ?? (ShaderParser.ParseProgram("void PSMain() { }"), "PSMain");
             var gs = Stage("GS");
+            var hs = Stage("HS");
+            var ds = Stage("DS");
             if (vs is not null)
             {
                 var cull = Field("CullMode") ?? "D3D12_CULL_MODE_BACK";
@@ -61,8 +89,14 @@ public sealed partial class D3D12Reader
                     (Field("FillMode") ?? "SOLID").Contains("WIREFRAME", StringComparison.Ordinal),
                     depth is "TRUE" or "true" or "1",
                     Topology.Triangles,
-                    PipelineState.D3D12(f => Field(f)!, f => Field(f) is { } v ? src.Int(v) : null),
-                    gs?.Program, gs?.Entry ?? "main");
+                    PipelineState.D3D12(f => Field(f)!, f => Field(f) is { } v ? src.Int(v) : null, i => RuntimeTarget(desc, i)),
+                    gs?.Program, gs?.Entry ?? "main")
+                {
+                    Tcs = hs is not null && ds is not null ? hs.Value.Program : null,
+                    Tes = hs is not null && ds is not null ? ds.Value.Program : null,
+                    TcsEntry = hs?.Entry ?? "main",
+                    TesEntry = ds?.Entry ?? "main",
+                };
             }
         }
         return runtimePsos[handle] = result;
@@ -116,6 +150,8 @@ public sealed partial class D3D12Reader
             var ps = Regex.IsMatch(psField, @"nullptr|^\{\s*\}$") ? (ShaderParser.ParseProgram("void PSMain() { }"), "PSMain") : Stage("ps_");
             // A geometry shader when the description sets one (psoDesc.GS = CD3DX12_SHADER_BYTECODE(geometryShader.Get())).
             var gs = UsesGeometry(create.Offset) ? Stage("gs_") : null;
+            var hs = UsesStage("HS", create.Offset) ? Stage("hs_") : null;
+            var ds = hs is not null && UsesStage("DS", create.Offset) ? Stage("ds_") : null;
             if (vs is null || ps is null) continue;
             string Field(string f, string fallback) => src.FieldValueBefore(f, create.Offset) ?? fallback;
             var cull = Field("CullMode", "D3D12_CULL_MODE_BACK");
@@ -125,8 +161,14 @@ public sealed partial class D3D12Reader
                 Field("FillMode", "SOLID").Contains("WIREFRAME", StringComparison.Ordinal),
                 DepthEnabled(create.Offset),
                 Topology.Triangles,
-                PipelineState.D3D12(f => StateField(f, create.Offset), f => StateField(f, create.Offset) is { } v ? src.Int(v) : null),
-                gs?.Program, gs?.Entry ?? "main");
+                PipelineState.D3D12(f => StateField(f, create.Offset), f => StateField(f, create.Offset) is { } v ? src.Int(v) : null, i => f => TargetField(f, create.Offset, i)),
+                gs?.Program, gs?.Entry ?? "main")
+            {
+                Tcs = ds is not null ? hs?.Program : null,
+                Tes = ds?.Program,
+                TcsEntry = hs?.Entry ?? "main",
+                TesEntry = ds?.Entry ?? "main",
+            };
         }
         return result;
     }

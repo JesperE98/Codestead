@@ -61,8 +61,8 @@ are your work (the file is not compiled until then).
 
 The camera is at (0, 0, 3), looking down -z: the back wall of the room (z = -5) fills the window, the wood stretched
 over its 10 × 10 units, with a soft highlight a little left of the centre. Only one of the five cubes is in view – the
-rotated one at (-1.5, 2, -3), in the top-left corner. Press **Build & run** (Ctrl+Enter): the room is lit, but nothing
-casts a shadow. The `// TODO:` comments in the project mark where your code goes.
+rotated one at (-1.5, 2, -3), in the top-left corner. Build and run the program: the room is lit, but nothing casts a
+shadow. The `// TODO:` comments in the project mark where your code goes.
 
 ## Generating the depth cubemap
 
@@ -870,12 +870,12 @@ s1, the depth pipeline state, the depth cube map with its two views, the matrice
 barriers, the three depth shaders and this debug output.
 :::
 
-Press **Build & run**: the window shows the **depth cube map seen from the camera** – grey everywhere, and quite dark.
-The back wall is 5 to 8.7 units away from the light, 0.2 to 0.35 of `far_plane`: its centre is 51 out of 255, and it
-gets lighter towards the edges and the corners, which are farther from the light. The cube in the top-left corner is
-darker – closer to the light. And the shadow shows already: where the cube hides the wall from the light, the cube map
-holds the cube's distance, not the wall's – a dark band around the cube's upper-left edge, as dark as the cube itself.
-No wood, no lighting: this is the depth cube map, nothing else.
+Build and run: the window shows the **depth cube map seen from the camera** – grey everywhere, and quite dark. The back
+wall is 5 to 8.7 units away from the light, 0.2 to 0.35 of `far_plane`: its centre is 51 out of 255, and it gets lighter
+towards the edges and the corners, which are farther from the light. The cube in the top-left corner is darker – closer
+to the light. And the shadow shows already: where the cube hides the wall from the light, the cube map holds the cube's
+distance, not the wall's – a dark band around the cube's upper-left edge, as dark as the cube itself. No wood, no
+lighting: this is the depth cube map, nothing else.
 
 ## Omnidirectional shadow maps
 
@@ -991,10 +991,10 @@ with the y flip, the lookup finds what the depth pass drew. Now do the task **sh
 `return float4(lighting, 1.0f);` again instead of the debug output.
 :::
 
-Press **Build & run**: the lit room is back, and the rotated cube casts a **shadow** on the back wall – where the depth
-cube map showed the dark band, the wall now gets only the ambient light. Light and camera are almost on one line, so the
-cube hides most of its own shadow: you see a dark band around its upper-left edge, a thin line along its lower-left edge
-and a small piece to the right of its top corner. The other four cubes and their shadows on the side walls, floor and
+Build and run: the lit room is back, and the rotated cube casts a **shadow** on the back wall – where the depth cube map
+showed the dark band, the wall now gets only the ambient light. Light and camera are almost on one line, so the cube
+hides most of its own shadow: you see a dark band around its upper-left edge, a thin line along its lower-left edge and
+a small piece to the right of its top corner. The other four cubes and their shadows on the side walls, floor and
 ceiling are outside the view – turn the camera if your program runs outside the course. The shadow's edges are hard and
 jagged (one cube map texel per sample), but there's no shadow acne: the bias in world units covers the depth texels.
 
@@ -1143,7 +1143,7 @@ and in `ShadowCalculation`, after `fragToLight`:
 Now do the last task, **pcf**: these lines replace the single sample and comparison.
 :::
 
-Press **Build & run**: the shadow's **edges become soft** – its inside stays as dark as before, the lit wall around it
+Build and run: the shadow's **edges become soft** – its inside stays as dark as before, the lit wall around it
 unchanged, but along the edges the brightness now changes gradually: where 5 of the 20 samples are in shadow, the
 fragment is a quarter in shadow. Only the pixels at the shadow's edges change.
 

@@ -19,7 +19,7 @@ chapter for one of three graphics APIs:
   documentation on Microsoft Learn.
 
 You don't only read about graphics programming: every chapter comes with a project that you change, build and run
-yourself. By the end of a chapter you have written the code it talks about.
+yourself, in your own IDE on your own computer. By the end of a chapter you have written the code it talks about.
 
 ## Prerequisites
 
@@ -96,41 +96,50 @@ best to follow them in order.
 Each chapter is a lesson in three parts:
 
 1. **The text** (on the left) explains the theory and the code, step by step, the way learnopengl.com does. Code
-   excerpts in the text are taken from the chapter's project, so you can find every line again in the editor.
+   excerpts in the text are taken from the chapter's start files, so you can find every line again in your project.
 2. **Questions** in the text ("Check yourself") make sure you have understood the important points. Answer them
-   as you read: once you have answered them, the tasks and the project open up.
-3. **The workbench** (on the right) is where you write the code.
+   as you read: once you have answered them, the tasks open up.
+3. **The tasks** (on the right) are the code you write – in your own IDE. The **Your project** panel connects the
+   chapter with the folder your project is in.
 
 At the end of most chapters you find *Additional resources*: links to the official documentation and the original
 tutorials, if you want to read more.
 
-## The workbench
+## How you work in this course
 
-The workbench has two parts.
+You write, build and run the code in a real IDE – Visual Studio, CLion, Rider or Visual Studio Code – with a real
+compiler, and your program opens a real window on your screen. The app is your textbook and your checker. The chapter
+*Setting up your IDE*, two chapters from here, shows how to set up the IDE, the compiler and the libraries for the
+API you have chosen.
 
-At the top are the **tasks**. Each task is one change to the project: a function to call, a value to change, a few
-lines to add. The text tells you when it is time for a task. If you get stuck, open the **Hint**. After a few
-attempts – or as soon as you have opened the hint – you can also show the **solution**: click its code to put it
-into the project in place of the TODO it belongs to.
+On the right of each chapter are the **tasks**. Each task is one change to the project: a function to call, a value
+to change, a few lines to add. The text tells you when it is time for a task. If you get stuck, open the **Hint**.
+After a few attempts – or as soon as you have opened the hint – you can also show the **solution**, the code that
+belongs where the task's `// TODO:` comment is.
 
-Below the tasks is the **project editor**. Every file of the project is a tab: `main.cpp` first, then headers and
-shader files. In the projects of the coming chapters, `// TODO:` comments mark where your code goes. When you are
-ready, press **Build & run** (or Ctrl+Enter). The project is compiled and run in the built-in simulator:
+Above the tasks is the **Your project** panel:
 
-- The **output** shows the compiler's messages. If the build fails, click an error to jump to the line. When the
-  program runs, the output also shows what the program prints.
-- The **preview window** shows the window your program opens and what it draws in it.
+- **Choose folder…** picks the folder for the chapter's project on your disk, and **Copy start files** copies the
+  chapter's files into it: `main.cpp`, and later also shaders, textures and models. In the projects of the coming
+  chapters, `// TODO:` comments mark where your code goes. **Open folder** opens the folder, so you can open it in
+  your IDE.
+- When you have written a task's code, you **build** the program and **run** it from your IDE. The app watches the
+  folder: once it has seen a new build and a run of it, it checks your source files with the course's checks and
+  ticks the task – or tells you what is still missing.
+- For each task the panel shows the **Expected result**: a picture of what your program's window should show when
+  the task is done.
 
-If you want to start a chapter over, **Reset** puts the project back the way it was at the start of the chapter
-(your finished tasks are kept).
+If your IDE builds or runs the program somewhere the app can't see (in WSL or on another machine, for example), the
+**I ran it** link tells the app that you have run it.
 
 ```quiz
-How do you compile and run the project in the editor? (Choose all that work.)
-- [x] Press Ctrl+Enter
-- [x] Press **Build & run**
-- [ ] Answer the questions in the text again
+You have written the code of a task. What makes the app tick it? (Choose all that apply.)
+- [x] You build the program in your IDE
+- [x] You run the program you have built
+- [ ] You open the **Expected result** picture
 ---
-Both start the same build: the project is compiled, and if that succeeds it runs and the preview shows its window.
+The app waits for a new build and a run of it, then checks your source files. The expected result is only there to
+compare with what your program draws.
 ```
 
 ## Your first program
@@ -159,8 +168,9 @@ contains the two shaders, written in HLSL; `main.cpp` compiles them when the pro
 
 Don't worry if none of this means anything to you yet – that is what the course is for. For now, just see it run.
 
-Now do the first task: press **Build & run** and look at the window in the preview: an orange triangle on a dark
-teal background.
+This chapter's start files are that program. You'll build it yourself once your IDE is set up – the first task
+asks you to build and run it and look at its window: an orange triangle on a dark teal background. Until then, its
+**Expected result** shows you what it draws.
 
 ### The colour of the triangle
 
@@ -246,9 +256,8 @@ Colour values in a shader go from 0.0 to 1.0, in the order red, green, blue, alp
 ```
 :::
 
-Now do the second task: make the triangle green by changing the colour to `(0.2, 0.8, 0.3, 1.0)`. Press
-**Build & run** again and check the preview: the triangle has the same shape and position, only its colour has
-changed.
+The second task: make the triangle green by changing the colour to `(0.2, 0.8, 0.3, 1.0)`. Build and run it again
+and check your program's window: the triangle has the same shape and position, only its colour has changed.
 
 ## Course map
 
@@ -260,6 +269,7 @@ the app now; the rest is coming, in this order.
 | Chapter | |
 |---|---|
 | {{api}} | available |
+| Setting up your IDE | available |
 | Creating a window | available |
 | Hello Window | available |
 | Hello Triangle | available |
@@ -284,8 +294,8 @@ HDR, Bloom, Deferred Shading, SSAO.
 
 **In Practice** – coming: Debugging, Text Rendering, 2D Game.
 
-The next chapter, *{{api}}*, explains what the API you have chosen actually is and how it is organised. After that
-you start writing code: first a window, then a cleared window, then the triangle you just saw.
+The next chapter, *{{api}}*, explains what the API you have chosen actually is and how it is organised. Then you set
+up your IDE and start writing code: first a window, then a cleared window, then the triangle you just saw.
 
 ## Additional resources
 

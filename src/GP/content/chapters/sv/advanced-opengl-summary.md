@@ -417,7 +417,8 @@ har lärt dig.
 - **Asteroidfält**: 500 stenar i en ring (radie 15) runt planeten, var och en med en model-matris som beräknas en gång
   på CPU:n (`srand(42)`: samma fält varje körning), lagrad som ett **mat4-attribut** per instans. Ett vertexattribut har
   högst fyra komponenter, så matrisen tar fyra attribut, ett per kolumn. learnopengl ritar 100 000 stenar – en riktig
-  GPU klarar det lätt med instancing; kursen använder 500 eftersom dess simulator körs på CPU:n.
+  GPU klarar det lätt med instancing; kursen använder 500 eftersom den ritar sina kontroller och förväntade resultat på
+  CPU:n.
 
 :::opengl
 - **Rita**: `glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100)`, `glDrawElementsInstanced(…, amount)`; i shadern

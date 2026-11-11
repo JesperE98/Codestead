@@ -48,6 +48,42 @@ public sealed partial class ShaderRunner
         return Rows(rows);
     }
 
+    /// <summary>A quaternion's rotation (x, y, z, w) as a column-vector matrix (GLM's toMat4).</summary>
+    private static ShaderValue QuaternionMatrix(double[] q, int n)
+    {
+        double x = q[0], y = q[1], z = q[2], w = q[3];
+        double[][] r =
+        [
+            [1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y), 0],
+            [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x), 0],
+            [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y), 0],
+            [0, 0, 0, 1],
+        ];
+        return M(n, (row, col) => r[row][col]);
+    }
+
+    /// <summary>Spherical interpolation the short way round (GLM's slerp, DirectXMath's XMQuaternionSlerp); nearly equal: linear.</summary>
+    private static ShaderValue Slerp(double[] x, double[] y, double t, double linearAbove)
+    {
+        double cos = x[0] * y[0] + x[1] * y[1] + x[2] * y[2] + x[3] * y[3];
+        var z = (double[])y.Clone();
+        if (cos < 0)
+        {
+            for (int i = 0; i < 4; i++) z[i] = -z[i];
+            cos = -cos;
+        }
+        var r = new double[4];
+        if (cos > linearAbove)
+        {
+            for (int i = 0; i < 4; i++) r[i] = x[i] + (z[i] - x[i]) * t;
+            return ShaderValue.Vec(r);
+        }
+        double angle = Math.Acos(Math.Min(1, cos)), s = Math.Sin(angle);
+        double a = Math.Sin((1 - t) * angle) / s, b = Math.Sin(t * angle) / s;
+        for (int i = 0; i < 4; i++) r[i] = a * x[i] + b * z[i];
+        return ShaderValue.Vec(r);
+    }
+
     private static ShaderValue Transpose(ShaderValue m) => M(m.Cols, (r, c) => m.V![r * m.Cols + c]);
 
     /// <summary>The GLM and DirectXMath functions; null when the name is neither.</summary>
@@ -96,6 +132,41 @@ public sealed partial class ShaderRunner
             }
             case "inverse" when a.Count == 1 && a[0].IsMatrix:
                 return Inverse(a[0], line);
+            // Quaternions (x, y, z, w): glm::slerp, glm::toMat4 / mat4_cast, DirectXMath's XMQuaternion*.
+            case "slerp" when a.Count == 3 && a[0].V is { Length: 4 } && a[1].V is { Length: 4 }:
+                return Slerp(a[0].V!, a[1].V!, S(2), 1 - 1.1920929e-7);
+            case "XMQuaternionSlerp" when a.Count == 3:
+                return Slerp(a[0].Padded(4), a[1].Padded(4), S(2), 1 - 0.00001);
+            case "XMQuaternionNormalize" when a.Count == 1:
+            {
+                var q = a[0].Padded(4);
+                double l = Math.Sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]);
+                return l == 0 ? ShaderValue.Vec(q) : ShaderValue.Vec(q[0] / l, q[1] / l, q[2] / l, q[3] / l);
+            }
+            case "toMat4" or "mat4_cast" when a.Count == 1 && a[0].V is { Length: 4 }:
+                return QuaternionMatrix(a[0].V!, 4);
+            case "toMat3" or "mat3_cast" when a.Count == 1 && a[0].V is { Length: 4 }:
+                return QuaternionMatrix(a[0].V!, 3);
+            case "XMMatrixRotationQuaternion" when a.Count == 1:
+                // Row vectors: the transpose of the column-vector rotation.
+                return Transpose(QuaternionMatrix(a[0].Padded(4), 4));
+            case "XMMatrixTranslationFromVector" when a.Count == 1:
+            {
+                var v = V3(a[0]);
+                return Rows([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [v[0], v[1], v[2], 1]]);
+            }
+            case "XMMatrixScalingFromVector" when a.Count == 1:
+            {
+                var v = V3(a[0]);
+                return Rows([[v[0], 0, 0, 0], [0, v[1], 0, 0], [0, 0, v[2], 0], [0, 0, 0, 1]]);
+            }
+            case "XMVectorLerp" when a.Count == 3:
+            {
+                var x = a[0].Padded(4);
+                var y = a[1].Padded(4);
+                double t = S(2);
+                return ShaderValue.Vec(x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * t, x[2] + (y[2] - x[2]) * t, x[3] + (y[3] - x[3]) * t);
+            }
 
             // ---------- DirectXMath (row vectors: v' = v * M) ----------
             case "XMMatrixIdentity":
@@ -167,12 +238,13 @@ public sealed partial class ShaderRunner
                 var r1 = Cross(r2, r0);
                 return Rows([[r0[0], r1[0], r2[0], 0], [r0[1], r1[1], r2[1], 0], [r0[2], r1[2], r2[2], 0], [-Dot3(r0, eye), -Dot3(r1, eye), -Dot3(r2, eye), 1]]);
             }
-            case "XMVector3TransformCoord" or "XMVector3TransformNormal" or "XMVector4Transform" when a.Count == 2 && a[1].IsMatrix:
+            case "XMVector3TransformCoord" or "XMVector3TransformNormal" or "XMVector3Transform" or "XMVector4Transform" when a.Count == 2 && a[1].IsMatrix:
             {
-                // DirectXMath's row vector times the matrix: (x, y, z, 1) for a point (divided by w), w = 0 for a normal.
+                // DirectXMath's row vector times the matrix: (x, y, z, 1) for a point (divided by w; XMVector3Transform
+                // keeps w), w = 0 for a normal.
                 var m = a[1];
                 var v = a[0].Padded(4);
-                double w = name switch { "XMVector3TransformCoord" => 1, "XMVector3TransformNormal" => 0, _ => v[3] };
+                double w = name switch { "XMVector3TransformCoord" or "XMVector3Transform" => 1, "XMVector3TransformNormal" => 0, _ => v[3] };
                 double[] row = [v[0], v[1], v[2], w];
                 var r = new double[4];
                 for (int c = 0; c < 4; c++)
@@ -203,6 +275,11 @@ public sealed partial class ShaderRunner
                 return ShaderValue.Vec(a[0].Padded(2)[0], a[0].Padded(2)[1], 0, 0);
             case "XMVectorReplicate" when a.Count == 1:
                 return ShaderValue.Vec(S(0), S(0), S(0), S(0));
+            case "XMVectorSplatX" or "XMVectorSplatY" or "XMVectorSplatZ" or "XMVectorSplatW" when a.Count == 1:
+            {
+                double c = a[0].Padded(4)["XYZW".IndexOf(name[^1])];
+                return ShaderValue.Vec(c, c, c, c);
+            }
             case "XMVectorZero" when a.Count == 0:
                 return ShaderValue.Vec(0, 0, 0, 0);
             case "XMVectorMultiply" when a.Count == 2:

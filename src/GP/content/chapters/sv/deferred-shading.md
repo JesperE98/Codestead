@@ -95,11 +95,11 @@ Ljusen är learnopengls: **32 punktljus** på "lite slumpmässiga" positioner me
 
 `srand(13)` sätter fröet för C-bibliotekets slumptalsgenerator: samma frö ger samma talföljd, så ljusen hamnar på samma
 ställen vid varje körning. Själva talföljden hör dock till C-biblioteket: bilderna som beskrivs här är glibc:s `rand()`
-(Linux, och den inbyggda simulatorn); med Microsofts C-runtime på Windows hamnar de 32 ljusen på andra ställen – samma
-sorts scen, annorlunda i detaljerna. Ljusens dämpning är konstant 1, linjär 0.7 och kvadratisk 1.8, en kort räckvidd, så
-varje ljus färgar bara lådorna nära det. Belysningen är learnopengls: en omgivningsterm `Diffuse * 0.1`, och för varje
-ljus en diffus term och en spekulär Blinn-Phong-term (exponent 16, gånger den spekulära kartans värde), båda dämpade – i
-världsrymden.
+(Linux, och kursens bilder **Förväntat resultat**); med Microsofts C-runtime på Windows hamnar de 32 ljusen på andra
+ställen – samma sorts scen, annorlunda i detaljerna. Ljusens dämpning är konstant 1, linjär 0.7 och kvadratisk 1.8, en
+kort räckvidd, så varje ljus färgar bara lådorna nära det. Belysningen är learnopengls: en omgivningsterm
+`Diffuse * 0.1`, och för varje ljus en diffus term och en spekulär Blinn-Phong-term (exponent 16, gånger den spekulära
+kartans värde), båda dämpade – i världsrymden.
 
 Kameran är inte learnopengls (0, 0, 5) som tittar rakt fram: därifrån döljer den främre raden rutnätet och de flesta
 ljusen. Den står på **(0, 5, 9) och tittar ner på rutnätet** (yaw -90, pitch -35), så hela rutnätet syns, med ljusen
@@ -155,11 +155,11 @@ shaderfilerna finns: `g_buffer.hlsl` (dess `PSMain` en TODO), `deferred_shading.
 `deferred_light_box.hlsl` (klar, används i den tredje uppgiften).
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Tryck på **Build & run** (Ctrl+Enter) för att kompilera
-programmet och köra det i den inbyggda simulatorn: rutnätet på 3 × 3 trälådor med stålramar, sett ovanifrån och bakifrån,
-den främre raden stor längst ner, den bakre liten längst upp, svart runt omkring. Lådornas ovansidor och de sidor som
-vetter mot närliggande ljus är belysta i varma pastellfärger, resten är mörkt – bara omgivningstermen 0.1. Själva ljusen
-syns inte. Varje fragment av varje låda belystes med alla 32 ljus, även de fragment som en närmare låda sedan täckte.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Bygg och kör programmet i din IDE: rutnätet på 3 × 3
+trälådor med stålramar, sett ovanifrån och bakifrån, den främre raden stor längst ner, den bakre liten längst upp, svart
+runt omkring. Lådornas ovansidor och de sidor som vetter mot närliggande ljus är belysta i varma pastellfärger, resten
+är mörkt – bara omgivningstermen 0.1. Själva ljusen syns inte. Varje fragment av varje låda belystes med alla 32 ljus,
+även de fragment som en närmare låda sedan täckte.
 
 ## G-buffern
 
@@ -681,8 +681,8 @@ En tabell pekar på deskriptorer som ligger i följd i heapen. G-bufferns SRV:er
 ```
 :::
 
-Tryck på **Build & run**: fönstret visar **albedot**, obelyst. Lådorna finns där, men varje sida är lika ljus – ovansidorna,
-de mörka framsidorna, sidorna – i texturens rena färger: trä ungefär (150, 98, 52), stål ungefär (155, 157, 163) av 255.
+Bygg och kör: fönstret visar **albedot**, obelyst. Lådorna finns där, men varje sida är lika ljus – ovansidorna, de
+mörka framsidorna, sidorna – i texturens rena färger: trä ungefär (150, 98, 52), stål ungefär (155, 157, 163) av 255.
 Bakgrunden förblir svart: G-buffern rensades till noll där. Inget har belysts: det är belysningspassets jobb.
 
 ## Det fördröjda belysningspasset
@@ -895,10 +895,10 @@ Varför läses G-buffern med nearest-filtrering (punktfiltrering) i belysningspa
 En färg kan blandas mellan texlar utan större skada; en position halvvägs mellan en låda och väggen bakom den är en punkt i tomma luften, och den skulle belysas som om den vore en yta.
 ```
 
-Tryck på **Build & run**: bilden är **startbilden igen** – de belysta lådorna, varma där ljus finns nära, mörka annars;
-ingen pixel skiljer sig med mer än 1 från forward-renderaren. Det är poängen: samma belysningskod med samma indata ger
-samma färger. Det som ändrats är arbetet: varje pixel belyses nu exakt en gång – 800 × 600 × 32 belysningsberäkningar
-per bildruta, hur många lådor som än överlappar.
+Bygg och kör: bilden är **startbilden igen** – de belysta lådorna, varma där ljus finns nära, mörka annars; ingen pixel
+skiljer sig med mer än 1 från forward-renderaren. Det är poängen: samma belysningskod med samma indata ger samma färger.
+Det som ändrats är arbetet: varje pixel belyses nu exakt en gång – 800 × 600 × 32 belysningsberäkningar per bildruta,
+hur många lådor som än överlappar.
 
 ## Att kombinera deferred rendering med forward rendering
 
@@ -1108,9 +1108,9 @@ Belysningsfyrhörningen ritades utan DSV (`nullptr`) och dess PSO har `DepthEnab
 ```
 :::
 
-Tryck på **Build & run**: **32 små kuber i pastellfärger** dyker upp mellan, ovanför och under lådorna, ungefär 12 till 28
-pixlar breda – grå, orange, rosa, mintgröna, cyan, lila. Några döljs bakom lådor, till exempel under den vänstra
-mittlådan; andra svävar över den svarta bakgrunden runt rutnätet. Allt annat är oförändrat.
+Bygg och kör: **32 små kuber i pastellfärger** dyker upp mellan, ovanför och under lådorna, ungefär 12 till 28 pixlar
+breda – grå, orange, rosa, mintgröna, cyan, lila. Några döljs bakom lådor, till exempel under den vänstra mittlådan;
+andra svävar över den svarta bakgrunden runt rutnätet. Allt annat är oförändrat.
 
 Kuberna har ingen egen belysning: de visar ljusets färg. Alla objekt som behöver en annan shader – ett genomskinligt
 objekt, ett speciellt material – kan forward-renderas på det här sättet efter belysningspasset, djuptestade mot
@@ -1340,10 +1340,10 @@ loopen beräknar avståndet först och lägger resten inuti testet:
 Gör nu den sista uppgiften, **light-volumes**.
 :::
 
-Tryck på **Build & run**: bilden är **nästan densamma – lite mörkare på sina ställen**. Ljuskuberna, de främre lådornas
-ovansidor och de mörka framsidorna är oförändrade; men stålramarna i den bakre raden tappar ungefär en femtedel av sin
-ljusstyrka (den bakre mittlådans ram går från ungefär 149 till 117), och innersidorna på de främre hörnlådorna blir också
-mörkare. Ungefär 28 000 pixlar blir mer än 5 nivåer mörkare, ingen blir ljusare.
+Bygg och kör: bilden är **nästan densamma – lite mörkare på sina ställen**. Ljuskuberna, de främre lådornas ovansidor
+och de mörka framsidorna är oförändrade; men stålramarna i den bakre raden tappar ungefär en femtedel av sin ljusstyrka
+(den bakre mittlådans ram går från ungefär 149 till 117), och innersidorna på de främre hörnlådorna blir också mörkare.
+Ungefär 28 000 pixlar blir mer än 5 nivåer mörkare, ingen blir ljusare.
 
 Varför, om ett ljus som hoppas över bidrar med "inget synligt"? Radien är där *en* ljuskällas ljusaste kanal faller till
 5/256 – varje ljus som hoppas över där skulle ha lagt till som mest några nivåer. Men scenen har 32 ljus, några enheter

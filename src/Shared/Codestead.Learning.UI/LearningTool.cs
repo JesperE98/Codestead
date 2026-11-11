@@ -106,6 +106,21 @@ public abstract class LearningTool
     /// <summary>Runs a command in the workbench as if typed (the smoke test).</summary>
     public abstract void Run(string command);
 
+    /// <summary>
+    /// The smoke test solves a task: by default each line of its solution is put in the workbench and run. A tool whose
+    /// tasks are checked another way (Codestead GP: the learner's own project folder) does that here instead; the task
+    /// counts once the returned task has completed.
+    /// </summary>
+    public virtual Task SolveForSmokeTest(TaskInfo task)
+    {
+        foreach (var cmd in task.Solution)
+        {
+            Inject(cmd);
+            Run(cmd);
+        }
+        return Task.CompletedTask;
+    }
+
     /// <summary>The tasks of the chapter that <paramref name="run"/> completed (keys).</summary>
     public abstract IReadOnlyList<string> Evaluate(string chapterId, SandboxRun run, OrderedDictionary<string, bool> completed);
 
@@ -122,6 +137,9 @@ public abstract class LearningTool
 
     /// <summary>The language changed (Codestead Linux: translates the learner's files and user).</summary>
     public virtual void LanguageChanged(string lang) { }
+
+    /// <summary>The learner unlocked the chapter's tasks (finished its text).</summary>
+    public virtual void TasksUnlocked(string chapterId) { }
 
     /// <summary>The texts were (re)applied in the current language.</summary>
     public virtual void TextsApplied() { }

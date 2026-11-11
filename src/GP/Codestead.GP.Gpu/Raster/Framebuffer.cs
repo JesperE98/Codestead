@@ -22,19 +22,32 @@ internal sealed class Framebuffer
     /// <summary>Sample positions inside a pixel (0–1), the standard 4× pattern for multisampling.</summary>
     public (double X, double Y)[] Pattern { get; }
 
+    /// <summary>The channels each colour attachment keeps (R8: 1); null: all four.</summary>
+    public IReadOnlyList<int>? Channels { get; init; }
+
     /// <summary>A depth attachment: without one (a ping-pong blur target) the depth test and depth writes do nothing.</summary>
     public bool HasDepth { get; init; } = true;
 
-    public Framebuffer(int width, int height, int samples = 1, bool isFloat = false, int attachments = 1)
+    /// <param name="depthOf">A framebuffer of the same size whose depth and stencil this one uses (one depth texture
+    /// attached to two framebuffers).</param>
+    public Framebuffer(int width, int height, int samples = 1, bool isFloat = false, int attachments = 1, Framebuffer? depthOf = null)
     {
         Width = width;
         Height = height;
         Samples = samples <= 1 ? 1 : samples >= 4 ? 4 : 2;
         Float = isFloat;
         Colors = Enumerable.Range(0, Math.Max(0, attachments)).Select(_ => new double[width * height * Samples * 4]).ToArray();
-        Depth = new double[width * height * Samples];
-        Stencil = new int[width * height * Samples];
-        Array.Fill(Depth, 1.0);
+        if (depthOf is not null && depthOf.Width == width && depthOf.Height == height && depthOf.Samples == Samples)
+        {
+            Depth = depthOf.Depth;
+            Stencil = depthOf.Stencil;
+        }
+        else
+        {
+            Depth = new double[width * height * Samples];
+            Stencil = new int[width * height * Samples];
+            Array.Fill(Depth, 1.0);
+        }
         Pattern = Samples switch
         {
             1 => [(0.5, 0.5)],
@@ -43,12 +56,12 @@ internal sealed class Framebuffer
         };
     }
 
-    public void Clear(double[]? color, double? depth, int? stencil)
+    public void Clear(double[]? color, double? depth, int? stencil, int? attachment = null)
     {
         if (color is not null)
         {
             var c = color.Length >= 4 ? color : [.. color, .. new double[4 - color.Length]];
-            foreach (var buffer in Colors)
+            foreach (var buffer in attachment is int only ? Colors.Skip(only).Take(1) : Colors)
                 for (int i = 0; i < buffer.Length; i += 4)
                     for (int k = 0; k < 4; k++) buffer[i + k] = Float ? c[k] : Math.Clamp(c[k], 0, 1);
         }
@@ -77,10 +90,14 @@ internal sealed class Framebuffer
     {
         var bytes = new byte[Width * Height * 4];
         var floats = Float ? new double[Width * Height * 4] : null;
+        int kept = Channels is { } channels && attachment < channels.Count ? channels[attachment] : 4;
         for (int y = 0; y < Height; y++)
             for (int x = 0; x < Width; x++)
             {
                 var c = Resolved(x, y, attachment);
+                // A format without green, blue or alpha reads them as 0, 0 and 1.
+                if (kept < 4)
+                    for (int k = kept; k < 4; k++) c[k] = k == 3 ? 1 : 0;
                 int row = bottomUp ? Height - 1 - y : y;
                 int i = (row * Width + x) * 4;
                 for (int k = 0; k < 4; k++)

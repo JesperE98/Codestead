@@ -19,11 +19,11 @@ learnopengl writes its game as classes in separate files – `game.h` / `game.cp
 `shader.h` / `.cpp`, `texture.h` / `.cpp`, later `sprite_renderer`, `game_object`, `game_level` and more – plus a
 `program.cpp` with `main`. The course keeps learnopengl's names and its steps, but writes the classes as **plain structs
 and free functions in one `main.cpp`**, in the order of learnopengl's files, each function defined before it is used.
-The built-in simulator follows plain structs and free functions, not classes with member functions. The rule is
-simple: a class becomes a struct with its data members, and a member function becomes a free function that takes the
-struct by reference as its first parameter – learnopengl's call of `Init()` on its game object becomes
-`Init(Hedgerow)`, `shader.Use()` becomes `Use(shader)`. A real project would split the code into classes and files as
-learnopengl does; one file of free functions is not a design to copy, just a way to keep everything in view.
+The course's checks read plain structs and free functions, not classes with member functions. The rule is simple: a
+class becomes a struct with its data members, and a member function becomes a free function that takes the struct by
+reference as its first parameter – learnopengl's call of `Init()` on its game object becomes `Init(Hedgerow)`,
+`shader.Use()` becomes `Use(shader)`. A real project would split the code into classes and files as learnopengl does;
+one file of free functions is not a design to copy, just a way to keep everything in view.
 
 :::opengl
 | learnopengl | the course (OpenGL) |
@@ -85,8 +85,7 @@ defaults `GL_LINEAR` and `GL_REPEAT`. In Direct3D 12 sampling is part of the roo
 :::
 
 The `// TODO:` comments in the project mark where each piece goes. This chapter draws nothing – learnopengl's "Setting
-up" doesn't either –, so **Build & run** (Ctrl+Enter) shows a black window after every task; the tasks are checked in
-the code.
+up" doesn't either –, so your program shows a black window after every task; the tasks are checked in the code.
 
 ## The game
 
@@ -364,25 +363,25 @@ records the frame (`PopulateCommandList`, with `Render(Hedgerow)`), executes it 
 Now do the task **delta-time**: measure the frame's time at the top of the loop and pass it to `ProcessInput` and
 `Update`.
 
-**The course's time is deterministic.** For the pictures of the game to be comparable – between the three APIs, between
-drivers, and with the built-in simulator – the game must be in exactly the same state at the same moment. With a real
-clock that is impossible: every frame takes a slightly different time. So in the course, **frame n of the loop sees
-the time n / 60 seconds**: frame 0 sees 0, frame 1 sees 1/60, and deltaTime is 0 in the first frame and exactly 1/60 in
-every frame after it. To show the game at a time t, the simulator runs the loop t × 60 times.
+**The course's time is deterministic.** For the pictures of the game to be comparable – between the three APIs and
+between drivers – the game must be in exactly the same state at the same moment. With a real clock that is impossible:
+every frame takes a slightly different time. So when the course checks your code and draws the **Expected result**,
+**frame n of the loop sees the time n / 60 seconds**: frame 0 sees 0, frame 1 sees 1/60, and deltaTime is 0 in the first
+frame and exactly 1/60 in every frame after it. To show the game at a time t, the course runs the loop t × 60 times.
 :::opengl
-The program does nothing special for that: it reads `glfwGetTime()` as learnopengl does, and the simulator (and the
-course's test runs on real drivers) let `glfwGetTime()` count the frames – it returns the number of `glfwPollEvents`
-calls so far divided by 60. On your own computer, outside the course, the same code runs on the real clock.
+The program does nothing special for that: it reads `glfwGetTime()` as learnopengl does, and the course's checks (and
+its test runs on real drivers) let `glfwGetTime()` count the frames – it returns the number of `glfwPollEvents` calls so
+far divided by 60. When you run your program, the same code runs on the real clock.
 :::
 :::vulkan
-The program does nothing special for that: it reads `glfwGetTime()` as learnopengl does, and the simulator (and the
-course's test runs on real drivers) let `glfwGetTime()` count the frames – it returns the number of `glfwPollEvents`
-calls so far divided by 60. On your own computer, outside the course, the same code runs on the real clock.
+The program does nothing special for that: it reads `glfwGetTime()` as learnopengl does, and the course's checks (and
+its test runs on real drivers) let `glfwGetTime()` count the frames – it returns the number of `glfwPollEvents` calls so
+far divided by 60. When you run your program, the same code runs on the real clock.
 :::
 :::d3d12
-The program does nothing special for that: it reads the clock as the earlier chapters do, and the simulator gives the
-n-th `OnUpdate` call the clock value n / 60 s. On Windows the same code runs on the real clock, so the game runs at the
-same speed at any refresh rate.
+The program does nothing special for that: it reads the clock as the earlier chapters do, and the course's checks give
+the n-th `OnUpdate` call the clock value n / 60 s. When you run your program, the same code runs on the real clock, so
+the game runs at the same speed at any refresh rate.
 :::
 
 ```quiz
@@ -496,9 +495,9 @@ handled by the message loop before it calls `OnUpdate`, just as GLFW calls its c
 
 Now do the task **key-callback**.
 
-**The course's input is deterministic too.** Nobody presses keys in the simulator. So that the later chapters can show
-the ball being launched, the course presses one key by itself: **space, pressed at t = 0.5 s and released at
-t = 0.55 s**, through the program's own key callback
+**The course's input is deterministic too.** Nobody presses keys in the course's checks and pictures. So that the later
+chapters can show the ball being launched, the course presses one key by itself: **space, pressed at t = 0.5 s and
+released at t = 0.55 s**, through the program's own key callback
 :::opengl vulkan
 (`key_callback(window, GLFW_KEY_SPACE, scancode, GLFW_PRESS, 0)` inside the `glfwPollEvents()` of frame 30, and the
 release inside frame 33's).
@@ -1021,8 +1020,8 @@ and runs the message loop, which calls `OnUpdate` and `OnRender` whenever no mes
 blending on – is part of each pipeline state object in Direct3D 12.
 :::
 
-Press **Build & run** once more: a black window, as in learnopengl's chapter. It doesn't look like much, but every
-piece the game needs to load its resources, follow the time and read the keyboard is now in place.
+Build and run once more: a black window, as in learnopengl's chapter. It doesn't look like much, but every piece the
+game needs to load its resources, follow the time and read the keyboard is now in place.
 
 ```quiz
 In which frames of the course's game loop does `ProcessInput` see the space bar held down?

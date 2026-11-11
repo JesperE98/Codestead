@@ -80,13 +80,14 @@ Spelet byggs upp under de här kapitlen, och vart och ett lägger till en del; d
 learnopengl delar upp sitt spel i klasser, var och en i sin egen header- och källfil: `Game`, `ResourceManager`,
 `Shader`, `Texture2D`, `SpriteRenderer`, `GameObject`, `GameLevel` och senare fler. Så bör ett riktigt projekt vara
 organiserat. Kursen behåller namnen på klasserna och deras funktioner, men skriver dem som **vanliga structs och fria
-funktioner, alla i en `main.cpp`**, i ordningen för learnopengls filer – den inbyggda simulatorn följer vanliga structs
-och fria funktioner. En medlemsfunktion som learnopengls `Renderer->DrawSprite(…)` blir en fri funktion som tar structen
-som sin första parameter, `DrawSprite(Renderer, …)`. Nästa kapitel visar detaljerna.
+funktioner, alla i en `main.cpp`**, i ordningen för learnopengls filer – kursens kontroller läser vanliga structs och
+fria funktioner. En medlemsfunktion som learnopengls `Renderer->DrawSprite(…)` blir en fri funktion som tar structen som
+sin första parameter, `DrawSprite(Renderer, …)`. Nästa kapitel visar detaljerna.
 
-Spelet måste också vara **deterministiskt** i kursen, så att alla API:er, alla drivrutiner och simulatorn visar samma
-bild för samma ögonblick: spelets tid går fram exakt 1/60 sekund per bildruta, och den enda tangent som någonsin
-"trycks ned" av sig själv är mellanslag, en halv sekund efter starten. Nästa kapitel förklarar hur.
+Spelet måste också vara **deterministiskt** i kursens kontroller och bilder **Förväntat resultat**, så att alla API:er
+och alla drivrutiner ger samma bild för samma ögonblick: där går spelets tid fram exakt 1/60 sekund per bildruta, och
+den enda tangent som någonsin "trycks ned" är mellanslag, en halv sekund efter starten. Ditt eget program går på den
+riktiga klockan och reagerar på dina tangenter. Nästa kapitel förklarar hur.
 
 :::opengl
 ## Projektet
@@ -118,9 +119,8 @@ och rita med (nästa kapitel förklarar den). Spelets delar är `// TODO:`-avsni
 Shader, Texture2D, ResourceManager, Game och programmet.
 :::
 
-Tryck på **Build & run** (Ctrl+Enter): projektet kompileras och körs i den inbyggda simulatorn, och du ser ett tomt,
-svart fönster. Det är allt som learnopengls "Setting up" ritar också – nästa kapitel bygger skelettet som varje senare
-kapitel hänger sina delar på.
+Bygg och kör programmet: du ser ett tomt, svart fönster. Det är allt som learnopengls "Setting up" ritar också – nästa
+kapitel bygger skelettet som varje senare kapitel hänger sina delar på.
 
 ```quiz
 När är en bana i Hedgerow klar?

@@ -11,10 +11,14 @@ public sealed class ObjModel
 {
     public List<ObjMesh> Meshes { get; } = new();
     public Dictionary<string, ObjMaterial> Materials { get; } = new(StringComparer.Ordinal);
+    /// <summary>A glTF model's skeleton, node tree and animations (null for an OBJ model).</summary>
+    public GltfModel? Gltf { get; internal set; }
 
     /// <summary>The model at a path of the project (its .mtl and textures next to it), or null.</summary>
     public static ObjModel? Load(GpuProject project, string path)
     {
+        // A glTF model (.gltf + .bin): read as assimp reads it.
+        if (GltfModel.IsGltf(path)) return GltfModel.Load(project, path) is { } gltf ? gltf.Model : null;
         var bytes = project.FindAsset(path);
         if (bytes is null) return null;
         var model = new ObjModel();

@@ -88,7 +88,6 @@ top (the highest at (420,95)), the river valley as a darker band from the left e
   = 102,102,102, valley = 88,88,88, lake = 28,28,28 (the flat water level, almost the background's grey), front =
   66,66,66, background = below = 26,26,26. This is the solution.
 
-*Simulator:* the start (clear colour) matches. From `vertices` on the simulator does not show the terrain: with the
-heights read through `pixelOffset[0]` (`data + (j + width * i) * bytePerPixel` of the `stbi_load` data) no point is
-drawn, and with a constant height only a narrow band of the first rows appears (the 65,536-iteration loop seems cut
-short) – the OpenGL project shows the same in the simulator (see the D3D12 writer's report).
+*Simulator:* every state matches Mesa's OpenGL picture of the same step (the points of `vertices` / `indices`: 0.15 %
+of the pixels differ, the strips: none): the heights read through `pixelOffset[0]`, the whole 65,536-vertex loop, the
+255 strips' byte offsets.

@@ -66,10 +66,10 @@ The fitted M⁻¹ (from LTC1) moves the polygon's corners. The integral of a cla
 ## The project
 
 The start draws learnopengl's scene. A floor of two triangles, 20 × 20 units, carries the wood texture of the Advanced
-Lighting chapters as an sRGB texture (learnopengl uses its own concrete texture). A light, a 2 × 2 rectangle standing
-at x = −8 and facing +x, is drawn in its colour, BurlyWood. The camera stands at (0, 1, 0.5) and looks along −x
-towards the light. The floor's shader writes black because there is no light yet. **Build & run** (Ctrl+Enter) shows
-the rectangle on black; the `// TODO:` comments mark where your code goes.
+Lighting chapters as an sRGB texture (learnopengl uses its own concrete texture). A light, a 2 × 2 rectangle standing at
+x = −8 and facing +x, is drawn in its colour, BurlyWood. The camera stands at (0, 1, 0.5) and looks along −x towards the
+light. The floor's shader writes black because there is no light yet. Build and run the program: it shows the rectangle
+on black; the `// TODO:` comments mark where your code goes.
 
 The values are learnopengl's: intensity 4, roughness 0.5, a specular colour of 0.23 (converted to linear), a
 two-sided light, output gamma-corrected with a power of 1/2.2. learnopengl changes the roughness, the intensity, the

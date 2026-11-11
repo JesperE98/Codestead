@@ -50,8 +50,8 @@ inget att begära eller slå på.
 Starten är förra kapitlets lösning, terrängen på CPU:n, med GPU-versionens filer tillagda: `gpuheight`-shaders för
 vertex-steget (som skickar vidare kontrollpunkterna), control-/hull-steget (som skickar vidare dem och sätter varje nivå
 till 1 – mer om det nedan), ett tomt evaluation-/domain-steg, och fragment-steget som färgar efter höjd, som förut.
-Kameran, höjdkartan och färgerna är förra kapitlets, så de två kapitlen visar samma landskap från samma plats. **Build &
-run** (Ctrl+Enter) visar den grå CPU-terrängen; kommentarerna `// TODO:` visar var GPU-versionen ska in.
+Kameran, höjdkartan och färgerna är förra kapitlets, så de två kapitlen visar samma landskap från samma plats. Bygg och
+kör programmet: det visar den grå CPU-terrängen; kommentarerna `// TODO:` visar var GPU-versionen ska in.
 
 :::opengl
 Den första uppgiften begär 4.1-kontexten och skriver ut den högsta tesselleringsnivå som GPU:n klarar:

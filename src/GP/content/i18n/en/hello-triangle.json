@@ -82,7 +82,7 @@
         "vulkan": "Write the two shaders: `shader.vert` reads `layout(location = 0) in vec3 inPosition;` and writes `gl_Position = vec4(inPosition, 1.0);`, `shader.frag` declares `layout(location = 0) out vec4 outColor;` and writes `outColor = vec4(1.0, 0.5, 0.2, 1.0);`."
       },
       "hint": {
-        "vulkan": "Vulkan shaders need explicit `location`s; `#version 450` is already there. Build & run compiles them to `vert.spv` and `frag.spv`."
+        "vulkan": "Vulkan shaders need explicit `location`s; `#version 450` is already there. The build compiles them to `vert.spv` and `frag.spv` with `glslc`."
       }
     },
     "shader-modules": {

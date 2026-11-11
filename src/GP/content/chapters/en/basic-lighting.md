@@ -43,8 +43,8 @@ still read correctly.
 :::
 
 Most tasks of this chapter change code that is already there; the one `// TODO:` comment marks where the normal
-attribute goes. Press **Build & run** (Ctrl+Enter) after each task to see the result in the built-in simulator. The
-start picture is the end of the previous chapter: a flat coral cube and a white lamp.
+attribute goes. Build and run the program after each task to see the result. The start picture is the end of the
+previous chapter: a flat coral cube and a white lamp.
 
 ## Ambient lighting
 
@@ -572,12 +572,12 @@ the color of the object to get the resulting fragment's output color:
 ```
 :::
 
-Now do the task **diffuse**. If your application (and shaders) compiled successfully you should see the cube come
-alive: the **front face**, which faces the lamp, is lit – about (202, 101, 63) in its centre, brighter towards the
-lamp and slightly darker away from it – while the **left face** stays as dark as before. You can see that with diffuse
-lighting the cube starts to look like an actual cube again. Try visualizing the normal vectors in your head and move
-the camera around the cube (on your own computer) to see that the larger the angle between the normal vector and the
-light's direction, the darker the fragment.
+Now do the task **diffuse**. If your application (and shaders) compiled successfully you should see the cube come alive:
+the **front face**, which faces the lamp, is lit – about (202, 101, 63) in its centre, brighter towards the lamp and
+slightly darker away from it – while the **left face** stays as dark as before. You can see that with diffuse lighting
+the cube starts to look like an actual cube again. Try visualizing the normal vectors in your head and move the camera
+around the cube to see that the larger the angle between the normal vector and the light's direction, the darker the
+fragment.
 
 Let's check the number in the centre of the front face, (0, 0, 0.5): the direction to the lamp
 is (1.2, 1.0, 1.5), of length 2.17, so `lightDir` = (0.55, 0.46, 0.69). With the normal (0, 0, 1) the dot product is
@@ -907,13 +907,12 @@ your point of view you should see a **highlight** appear in the upper-left part 
 colour rises to (255, 145, 90) – brighter than coral itself, because ambient + diffuse + specular add up to more than
 1 there and the colour is clamped – while the lower right of the face hardly changes.
 
-Why there? The highlight appears where the face would mirror the lamp into the camera. The front face is the plane
-z = 0.5; the lamp is 1.5 units in front of it, the camera 2.5 units. The mirror point lies on the line between the
-lamp's and the camera's positions in that plane, 1.5 / (1.5 + 2.5) of the way from the lamp: at about x = -0.4,
-y = 0.6 – in the left half, just above the top edge of the face. So the face's brightest specular light is along its
-upper-left edge, and it fades towards the lower right. From learnopengl's default camera at (0, 0, 3) with the lamp
-in view, you'd see the same effect at a different spot; move the camera on your own computer and watch the highlight
-slide over the face.
+Why there? The highlight appears where the face would mirror the lamp into the camera. The front face is the plane z =
+0.5; the lamp is 1.5 units in front of it, the camera 2.5 units. The mirror point lies on the line between the lamp's
+and the camera's positions in that plane, 1.5 / (1.5 + 2.5) of the way from the lamp: at about x = -0.4, y = 0.6 – in
+the left half, just above the top edge of the face. So the face's brightest specular light is along its upper-left edge,
+and it fades towards the lower right. From learnopengl's default camera at (0, 0, 3) with the lamp in view, you'd see
+the same effect at a different spot; move the camera in your program and watch the highlight slide over the face.
 
 ```quiz
 Why is `lightDir` negated in `reflect(-lightDir, norm)`?
@@ -996,11 +995,11 @@ That is before `constantBufferData.lightPos` is set, and `OnUpdate` runs before 
 light is.
 :::
 
-Now do the task **moving-light**. In the simulator the lamp now swings from side to side and up and down (one full
-swing to the side takes 2π ≈ 6.3 seconds), and the lighting on the cube follows it: when the lamp moves to the right,
-the highlight slides towards the right edge of the front face; when the lamp moves left past x = -0.5, the plane of
-the left face, that face starts to catch light too. After 1 second, for example, the light is
-at (2.68, 0.48, 2.0) and the lamp is lower and further right than before.
+Now do the task **moving-light**. The lamp now swings from side to side and up and down (one full swing to the side
+takes 2π ≈ 6.3 seconds), and the lighting on the cube follows it: when the lamp moves to the right, the highlight slides
+towards the right edge of the front face; when the lamp moves left past x = -0.5, the plane of the left face, that face
+starts to catch light too. After 1 second, for example, the light is at (2.68, 0.48, 2.0) and the lamp is lower and
+further right than before.
 
 ### View space and Gouraud shading
 

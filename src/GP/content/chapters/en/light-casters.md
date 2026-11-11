@@ -53,16 +53,15 @@ the centre of the window. The light is still the point light of *Lighting maps* 
 `OnUpdate` with ambient 0.2, diffuse 0.5, specular 1.0 and shininess 64.
 :::
 
-> The earlier lighting chapters placed the camera off to the side so you could see the lit cube *and* the lamp. In
-> this chapter and the next we use learnopengl's camera instead. The price is that the lamp at (1.2, 1.0, 2.0) is
-> now **outside the window**: it is just one unit in front of the camera but off to the right (and a little up),
-> beyond the edge of the view. Even in the steps where the lamp is drawn, you won't see it. You can still fly around
-> with the keyboard and mouse on your own computer to find it.
+> The earlier lighting chapters placed the camera off to the side so you could see the lit cube *and* the lamp. In this
+> chapter and the next we use learnopengl's camera instead. The price is that the lamp at (1.2, 1.0, 2.0) is now
+> **outside the window**: it is just one unit in front of the camera but off to the right (and a little up), beyond the
+> edge of the view. Even in the steps where the lamp is drawn, you won't see it. You can still fly around with the
+> keyboard and mouse in your program to find it.
 
-The project has no `// TODO:` comments this time: every task changes code that is already there, and the task text
-tells you where. After each task, press **Build & run** (Ctrl+Enter) to compile the program and run it in the
-built-in simulator. Build it once now: all ten containers are lit by the lamp, the far ones just as brightly as the
-near ones.
+The project has no `// TODO:` comments this time: every task changes code that is already there, and the task text tells
+you where. After each task, build and run the program in your IDE. Build it once now: all ten containers are lit by the
+lamp, the far ones just as brightly as the near ones.
 
 ## Directional Light
 
@@ -910,10 +909,10 @@ ring. learnopengl also changes the light's strengths for the flashlight: ambient
 the diffuse intensity slightly higher; the right lighting conditions differ with each lighting method and
 environment*). And the light is at the camera now, so the lamp cube is commented out again.
 
-Now do the task **spotlight**. Running the program results in a round spot of light in the middle of container 0,
-with a hard edge: inside, wood and steel frame are brightly lit; the corners of container 0 and the other containers
-(but for the edge of the one just to its right) get only the ambient light. Since the flashlight sits at the camera,
-on your own computer it follows you when you move and look around.
+Now do the task **spotlight**. Running the program results in a round spot of light in the middle of container 0, with a
+hard edge: inside, wood and steel frame are brightly lit; the corners of container 0 and the other containers (but for
+the edge of the one just to its right) get only the ambient light. Since the flashlight sits at the camera, it follows
+you when you move and look around.
 
 :::opengl
 ```quiz
@@ -1157,7 +1156,7 @@ in the soft zone and are half lit. The containers outside the cone are almost bl
 the *attenuated* ambient light.
 
 Ahhh, that's much better. Play around with the inner and outer cutoff angles and try to create a spotlight that better
-suits your needs. On your own computer you can walk around with the flashlight and look at the containers it hits.
+suits your needs. In your program you can walk around with the flashlight and look at the containers it hits.
 
 The final fragment shader:
 
@@ -1280,11 +1279,11 @@ float4 PSMain(PSInput input) : SV_TARGET
 - Try experimenting with all the different light types and their fragment shaders. Try inverting some vectors and/or
   use `<` instead of `>`. Try to explain the different visual outcomes.
 
-This is not a task in the project: try it once you have finished the tasks, and use **Build & run** to see the
+This is not a task in the project: try it once you have finished the tasks, and build and run the program to see the
 result. For example, with `theta < light.cutOff` in the spotlight step the circle turns inside out – everything
 *outside* the cone is lit and the centre of container 0 gets only the ambient light. And if you use
-`normalize(light.direction)` without the minus, theta becomes the cosine of the angle to the *opposite* direction,
-which is negative for everything in front of the camera: no fragment is ever in the cone.
+`normalize(light.direction)` without the minus, theta becomes the cosine of the angle to the *opposite* direction, which
+is negative for everything in front of the camera: no fragment is ever in the cone.
 
 In the next chapter we'll put all of these light casters together – a directional light, four point lights and the
 flashlight – in one scene.

@@ -45,24 +45,43 @@ public static partial class Rasterizer
         bool ccw = area < 0;
         bool front = draw.FrontCcw ? ccw : !ccw;
         if (draw.Cull == CullMode.FrontAndBack || (draw.Cull == CullMode.Back && !front) || (draw.Cull == CullMode.Front && front)) return null;
+        if (draw.Wireframe)
+        {
+            // Wireframe (glPolygonMode GL_LINE, VK_POLYGON_MODE_LINE, D3D12_FILL_MODE_WIREFRAME): the triangle's three
+            // edges as lines one pixel wide, after the facing test.
+            var edges = new[] { Line(v0, v1, draw, fb, yDown, zMinusOneToOne, out var p0), Line(v1, v2, draw, fb, yDown, zMinusOneToOne, out var p1), Line(v2, v0, draw, fb, yDown, zMinusOneToOne, out var p2) };
+            pixels = p0 + p1 + p2;
+            return (stages, from, to) =>
+            {
+                foreach (var edge in edges) edge?.Invoke(stages, from, to);
+            };
+        }
 
         int width = fb.Width, height = fb.Height;
         int minX = Math.Max(0, (int)Math.Floor(sx.Min())), maxX = Math.Min(width - 1, (int)Math.Ceiling(sx.Max()));
         int minY = Math.Max(0, (int)Math.Floor(sy.Min())), maxY = Math.Min(height - 1, (int)Math.Ceiling(sy.Max()));
         if (minX > maxX || minY > maxY) return null;
         pixels = (long)(maxX - minX + 1) * (maxY - minY + 1);
-        double[] edgeLen =
-        [
-            Math.Sqrt(Sq(sx[2] - sx[1]) + Sq(sy[2] - sy[1])),
-            Math.Sqrt(Sq(sx[0] - sx[2]) + Sq(sy[0] - sy[2])),
-            Math.Sqrt(Sq(sx[1] - sx[0]) + Sq(sy[1] - sy[0])),
-        ];
         (double, double, double) Weights(double x, double y)
         {
             double w0 = ((sx[2] - sx[1]) * (y - sy[1]) - (sy[2] - sy[1]) * (x - sx[1])) / area;
             double w1 = ((sx[0] - sx[2]) * (y - sy[2]) - (sy[0] - sy[2]) * (x - sx[2])) / area;
             return (w0, w1, 1 - w0 - w1);
         }
+        // The top-left rule: a sample exactly on an edge belongs to the triangle only when that edge is a top edge
+        // (horizontal, the triangle below it) or a left edge (the triangle to its right) – so the shared diagonal of a
+        // quad's two triangles is drawn once, not twice (which additive blending would show).
+        bool OwnsEdge(int i)
+        {
+            int a = (i + 1) % 3, b = (i + 2) % 3;
+            if (Math.Abs(sy[a] - sy[b]) < 1e-12) return sy[i] > sy[a];
+            double edgeX = sx[a] + (sy[i] - sy[a]) * (sx[b] - sx[a]) / (sy[b] - sy[a]);
+            return sx[i] > edgeX;
+        }
+        bool own0 = OwnsEdge(0), own1 = OwnsEdge(1), own2 = OwnsEdge(2);
+        const double onEdge = 1e-9;
+        bool Covers(double w0, double w1, double w2) =>
+            (w0 > onEdge || (w0 >= -onEdge && own0)) && (w1 > onEdge || (w1 >= -onEdge && own1)) && (w2 > onEdge || (w2 >= -onEdge && own2));
         return (stages, from, to) =>
         {
             if (from > maxY || to <= minY) return;
@@ -75,18 +94,13 @@ public static partial class Rasterizer
                     for (int s = 0; s < fb.Samples; s++)
                     {
                         var (w0, w1, w2) = Weights(px + fb.Pattern[s].X, py + fb.Pattern[s].Y);
-                        if (w0 < -1e-9 || w1 < -1e-9 || w2 < -1e-9) continue;
+                        if (!Covers(w0, w1, w2)) continue;
                         mask |= 1 << s;
                         zs[s] = w0 * sz[0] + w1 * sz[1] + w2 * sz[2];
                     }
                     if (mask == 0) continue;
                     double x = px + 0.5, y = py + 0.5;
                     var (c0, c1, c2) = Weights(x, y);
-                    if (draw.Wireframe)
-                    {
-                        double d0 = Math.Abs(c0 * area) / edgeLen[0], d1 = Math.Abs(c1 * area) / edgeLen[1], d2 = Math.Abs(c2 * area) / edgeLen[2];
-                        if (Math.Min(d0, Math.Min(d1, d2)) > 0.8) continue;
-                    }
                     double z = c0 * sz[0] + c1 * sz[1] + c2 * sz[2];
                     // Perspective-correct weights.
                     double p0 = c0 * invW[0], p1 = c1 * invW[1], p2 = c2 * invW[2];
@@ -240,7 +254,7 @@ public static partial class Rasterizer
             if (stencil is not null) UpdateStencil(fb, idx, stencil, stencil.Pass);
             if (draw.DepthTest && draw.DepthWrite && fb.HasDepth) fb.Depth[idx] = Math.Clamp(zs[s], 0, 1);
             for (int a = 0; a < fb.Colors.Length && a < colors.Length; a++)
-                if (colors[a] is { } color) WriteColor(fb, fb.Colors[a], idx * 4, color, draw);
+                if (colors[a] is { } color) WriteColor(fb, fb.Colors[a], idx * 4, color, draw, draw.AttachmentBlends is { } blends && a < blends.Count ? blends[a] : draw.Blend);
         }
     }
 
@@ -289,14 +303,14 @@ public static partial class Rasterizer
         fb.Stencil[idx] = ((old & ~st.WriteMask) | (value & st.WriteMask)) & 0xFF;
     }
 
-    private static void WriteColor(Framebuffer fb, double[] buffer, int o, double[] src, DrawCall draw)
+    private static void WriteColor(Framebuffer fb, double[] buffer, int o, double[] src, DrawCall draw, BlendState? blend)
     {
         // A vec3 output leaves alpha at 1.
         double[] s = [src.Length > 0 ? src[0] : 0, src.Length > 1 ? src[1] : 0, src.Length > 2 ? src[2] : 0, src.Length > 3 ? src[3] : 1];
         if (!fb.Float)
             for (int k = 0; k < 4; k++) s[k] = Math.Clamp(double.IsNaN(s[k]) ? 0 : s[k], 0, 1);
         var result = s;
-        if (draw.Blend is { } b)
+        if (blend is { } b)
         {
             double[] d = [buffer[o], buffer[o + 1], buffer[o + 2], buffer[o + 3]];
             var constant = b.Constant ?? [0, 0, 0, 0];

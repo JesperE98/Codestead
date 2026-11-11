@@ -18,12 +18,12 @@ learnopengl's frustum demo replaces the chain of planets with a grid: many plane
 course's grid has 10 × 10 children, 5 units apart, at local positions (x · 5 − 22.5, 0, z · 5 − 22.5) for x and z from 0
 to 9, each half the root's size – 101 planets in all. learnopengl's demo has 20 × 20 planets 10 units apart, seen from
 (0, 10, 0); the course keeps the last chapter's camera at (3, 6, 12), looking down 25°, and fewer planets, because the
-built-in simulator draws on the CPU. The root keeps turning at 20° per second, as at the end of the last chapter, so the
-whole grid turns about the origin, and which planets are in view changes over time. The screenshots are taken at 2.0 s,
-with the grid turned by 40°.
+course draws its checks and expected results on the CPU. The root keeps turning at 20° per second, as at the end of the
+last chapter, so the whole grid turns about the origin, and which planets are in view changes over time. The expected
+results show the grid at 2.0 s, with the grid turned by 40°.
 
-The project is the last chapter's solution with three new `// TODO:` comments. **Build & run** (Ctrl+Enter) compiles it
-and runs it in the built-in simulator: the turned chain of planets.
+The project is the last chapter's solution with three new `// TODO:` comments. Build and run it in your IDE: you see the
+turning chain of planets.
 
 :::opengl
 The grid is built with two nested loops, where the chain was built before:
@@ -684,7 +684,8 @@ display, total);` between them.
 Now do the fourth task, **cull**. Build and run: the back of the grid is gone. At 2.0 s the title says **8 / 101**:
 only eight planets are drawn, the root and the nearest ones, whose bounding spheres reach closer than 15 units – among
 them a planet whose centre is 16 units away but whose sphere still pokes inside the far plane. The planets 17, 20 or 42 units away
-are culled, although the projection would have shown them.
+are culled, although the projection would have shown them. The scene is animated, so the counts change over time: at 1.0 s the title says
+10 / 101 here – the numbers in this chapter are the ones at 2.0 s, the time the task checks look at.
 
 ```quiz
 `drawSelfAndChild` visits the children of an entity even when the entity itself is culled. Why?
@@ -847,8 +848,8 @@ In model space the box is tighter than the sphere for the flat ringed planet. Tu
 
 Frustum culling saves work on both sides: the CPU records and submits fewer draw calls (and with a real engine sets
 fewer states and uploads fewer constants), and the GPU runs fewer vertices through the vertex shader and clips fewer
-triangles. In this scene, 64 of 101 planets are skipped at the moment of the screenshot. Culling costs a few dot products
-per entity per frame – far less than drawing the entity.
+triangles. In this scene, 64 of 101 planets are skipped at the moment of the expected result. Culling costs a few dot
+products per entity per frame – far less than drawing the entity.
 
 What it does *not* save:
 

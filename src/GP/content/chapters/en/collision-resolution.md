@@ -376,12 +376,12 @@ If horizontal, we calculate the penetration value R from the `diff_vector`'s x c
 this from the ball's position based on its direction. The same applies to the vertical collisions, but this time we
 operate on the y component of all the vectors.
 
-Now do the task **resolve**. Press **Build & run**. The picture is at **2.0 s** (frame 120) now, and it looks very
+Now do the task **resolve**. Build and run. The expected result is at **2.0 s** (frame 120) now, and it looks very
 different from the last chapter: **all bricks are there**, and the ball is on its way *down*, to the right of the
 paddle. What happened: on its way up, the ball's first contact is the solid stone of row 5, column 9 – the one it flew
 through before. In frame 86 its circle reaches the stone from below, direction `DOWN`: its vertical velocity is
-reversed, from (100, −350) to (100, 350), and it is moved out of the stone. The stone is solid, so nothing is
-destroyed, and the ball comes down to the right.
+reversed, from (100, −350) to (100, 350), and it is moved out of the stone. The stone is solid, so nothing is destroyed,
+and the ball comes down to the right.
 
 ```quiz
 The resolution finds a horizontal collision with `diff_vector` = (−9, 2) and the ball's radius is 12.5. How far is the ball moved, and which way?
@@ -492,11 +492,11 @@ One small change from learnopengl: it writes `abs(…)` there. On a `float`, a p
 `int abs(int)` – depending on which headers declared what – and silently truncate the speed to whole pixels per second.
 `std::abs` (from `<cmath>`) has the `float` overload; learnopengl itself uses it for the penetration two lines up.
 
-Now do the task **paddle**. Press **Build & run**: the picture does not change – and it can't. **With the course's
-fixed input, the ball never meets the paddle.** Nobody moves the paddle, so it stays at x 350…450, and the ball comes
-down from its bounce off the stone at x ≈ 576, well to the right of it. The ball bounces once, off the stone, and is
-then lost. The paddle bounce is in the code – the task is checked there –, but not in the picture. On your own
-computer, outside the course, you would steer the paddle under the ball with A and D and see it work.
+Now do the task **paddle**. Build and run: the picture does not change – and it can't. **With the course's fixed input,
+the ball never meets the paddle.** Nobody moves the paddle, so it stays at x 350…450, and the ball comes down from its
+bounce off the stone at x ≈ 576, well to the right of it. The ball bounces once, off the stone, and is then lost. The
+paddle bounce is in the code – the task is checked there –, but not in the picture. In your own program you can steer
+the paddle under the ball with A and D and see it work.
 
 ```quiz
 The ball hits the paddle with its centre 40 pixels right of the paddle's centre; the paddle is 100 pixels wide. What happens to its velocity, with learnopengl's `strength` of 2?

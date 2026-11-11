@@ -76,11 +76,11 @@ lets compute run alongside drawing, which this program doesn't need.
 
 ## The project
 
-The start creates the texture – 800 × 600 texels of four 32-bit floats – fills it from the CPU with dark blue, and draws it
-on a screen quad that covers the window: learnopengl's `renderQuad()` with `screenQuad.vs` / `.fs`. The CPU fill is the
-course's addition, so that the quad shows something before there is a compute shader; learnopengl creates the texture
-without data. The compute shader's file is there, empty. **Build & run** (Ctrl+Enter) shows a dark blue window; the
-`// TODO:` comments mark where your code goes.
+The start creates the texture – 800 × 600 texels of four 32-bit floats – fills it from the CPU with dark blue, and draws
+it on a screen quad that covers the window: learnopengl's `renderQuad()` with `screenQuad.vs` / `.fs`. The CPU fill is
+the course's addition, so that the quad shows something before there is a compute shader; learnopengl creates the
+texture without data. The compute shader's file is there, empty. Build and run the program: it shows a dark blue window;
+the `// TODO:` comments mark where your code goes.
 
 ## Limits
 
@@ -112,12 +112,13 @@ Direct3D 12 doesn't ask the driver: the limits are the same for every device, co
 `OutputDebugStringA`, in learnopengl's words.
 :::
 
-The built-in simulator reports the numbers of Mesa's CPU driver: 65535 groups in each dimension, work groups of
-1024 × 1024 × 1024 and 1024 invocations. Desktop GPUs typically report 65535 or 2³¹ − 1 groups in x, work groups of
-1024 × 1024 × 64 and 1024 invocations. Note that the size limits per dimension are *not* the whole story: a work group of
-1024 × 1024 × 1 is within the per-dimension limits but far beyond the 1024 invocations allowed in total.
+Your program prints your driver's numbers. Mesa's CPU driver, for example, reports 65535 groups in each dimension, work
+groups of 1024 × 1024 × 1024 and 1024 invocations. Desktop GPUs typically report 65535 or 2³¹ − 1 groups in x, work
+groups of 1024 × 1024 × 64 and 1024 invocations. Note that the size limits per dimension are *not* the whole story: a
+work group of 1024 × 1024 × 1 is within the per-dimension limits but far beyond the 1024 invocations allowed in total.
 
-Now do the first task, **limits**. The window stays dark blue; the numbers appear in the output.
+Now do the first task, **limits**. The window stays dark blue; the numbers appear where your program writes its text:
+the console, or for `OutputDebugStringA` the debugger's Output window.
 
 ```quiz
 Which work group size is allowed on a GPU that reports work groups up to 1024 × 1024 × 64 and 1024 invocations?

@@ -11,7 +11,8 @@ namespace Codestead.GP;
 
 /// <summary>
 /// Codestead GP in the shared learning window: the course, its texts, the graphics APIs (OpenGL, Vulkan,
-/// DirectX 12) as variants, and the project editor with the simulated GPU as the workbench (GpTool.Workbench.cs).
+/// DirectX 12) as variants, and "Your project" as the workbench: the learner's own project folder, built and run in
+/// their IDE and checked in the background (GpTool.Project.cs, GpTool.Folder.cs).
 /// </summary>
 public sealed partial class GpTool : LearningTool
 {
@@ -60,7 +61,8 @@ public sealed partial class GpTool : LearningTool
             // The same task in the other APIs, as chips (done in OpenGL ✓, Vulkan, DirectX 12).
             var chips = Apis.All.Where(a => GpCourse.Tasks(chapterId, a.Id).Any(t => t.Id == task.Id))
                 .Select(a => new TaskChip(a.Name, GpCourse.TaskKey(chapterId, task.Id, a.Id), a.Id == api)).ToList();
-            var solution = task.Edits.Count > 0 ? task.Edits.Select(e => e.Replace).ToList() : new List<string> { BuildCommand };
+            // The solution's code is copied to the clipboard when clicked; a task without code is solved in the IDE.
+            var solution = task.Edits.Count > 0 ? task.Edits.Select(e => e.Replace).ToList() : new List<string> { BuildRunSolution };
             return new TaskInfo(
                 GpCourse.TaskKey(chapterId, task.Id, api),
                 CourseText.TaskText(chapterId, task.Id, lang, api),
@@ -88,7 +90,7 @@ public sealed partial class GpTool : LearningTool
 
     public override void VariantChosen(string variantId)
     {
-        // The window saves the choice and calls ChapterShown, which opens the chapter's project for the new API.
+        // The window saves the choice and calls ChapterShown, which watches the chapter's folder for the new API.
     }
 
     public override IReadOnlyList<VariantOption>? AllVariants => Apis.All.Select(a => new VariantOption(a.Id, a.Name)).ToList();

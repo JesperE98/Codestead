@@ -49,8 +49,8 @@ lådornas placeringar är learnopengls translate · rotate · scale i DirectXMat
 `XMMatrixScaling(…) * XMMatrixRotationAxis(…) * XMMatrixTranslation(…)`.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Tryck på **Build & run** (Ctrl+Enter) för att kompilera
-och köra det i den inbyggda simulatorn: det belysta golvet och lådorna – ännu helt utan skuggor.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Bygg och kör det i din IDE: det belysta golvet och
+lådorna – ännu helt utan skuggor.
 
 ## Att dela upp frustumet
 
@@ -389,10 +389,10 @@ bildruta. Ingenting läser matriserna ännu, så bilden förblir densamma.
 ## En skuggkarta per kaskad – i en textur
 
 Fem skuggkartor skulle kunna vara fem texturer. learnopengl använder i stället en **2D-texturarray** med fem lager: ett
-texturobjekt, en bindning i shadern, och lagret är bara en tredje texturkoordinat. Den låter också djuppasset rendera alla
-fem på en gång, som vi ska se. Kursen använder 1024 × 1024 texlar per lager (learnopengl: 4096 × 4096 – den inbyggda
-simulatorn ritar på CPU:n), närmaste-filtrering, och en kant med djupet 1.0 utanför kartan, så att inget utanför en
-kaskads låda hamnar i skugga.
+texturobjekt, en bindning i shadern, och lagret är bara en tredje texturkoordinat. Den låter också djuppasset rendera
+alla fem på en gång, som vi ska se. Kursen använder 1024 × 1024 texlar per lager (learnopengl: 4096 × 4096 – kursen
+ritar sina kontroller och förväntade resultat på CPU:n), närmaste-filtrering, och en kant med djupet 1.0 utanför kartan,
+så att inget utanför en kaskads låda hamnar i skugga.
 
 :::opengl
 ```cpp

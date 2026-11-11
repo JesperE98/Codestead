@@ -275,7 +275,7 @@ och skriv projektionen till constant buffern i `OnUpdate`, efter `Update`:
 ```
 :::
 
-Tryck på **Build & run**: fortfarande svart – shadern finns, men ingenting ritas med den ännu.
+Bygg och kör: fortfarande svart – shadern finns, men ingenting ritas med den ännu.
 
 Nu när shadrarna är på plats kan vi skriva sprite-renderaren – hos learnopengl en klass som innehåller en shader och ett
 enda vertex array object, med en funktion `DrawSprite` som ritar en texturerad rektangel givet en position, storlek,
@@ -703,14 +703,14 @@ och i `Render`:
 :::
 
 Gör nu uppgiften **draw-sprite**: `DrawSprite` – för tillfället bara med förflyttningen och skalningen; rotationsraderna
-är nästa uppgift –, texturen och anropet. Tryck på **Build & run**: **den gröna bollen, utdragen till en upprätt
-ellips**, 300 pixlar bred och 400 hög, från (200, 200) till (500, 600). Den är bara grön: bollens egna färger gånger
-(0, 1, 0) behåller bara den gröna kanalen. Dess genomskinliga hörn syns inte – blending, påslagen i förra kapitlet. De
-45° skickas med men används inte ännu.
+är nästa uppgift –, texturen och anropet. Bygg och kör: **den gröna bollen, utdragen till en upprätt ellips**, 300
+pixlar bred och 400 hög, från (200, 200) till (500, 600). Den är bara grön: bollens egna färger gånger (0, 1, 0)
+behåller bara den gröna kanalen. Dess genomskinliga hörn syns inte – blending, påslagen i förra kapitlet. De 45° skickas
+med men används inte ännu.
 
-Gör nu uppgiften **rotate**: de tre raderna mellan förflyttningen och skalningen. Tryck på **Build & run**: ellipsen är
-**vriden 45° medurs kring sin mitt (350, 400)** – dess långa axel går nu från nere till vänster till uppe till höger. Det
-är learnopengls bild med kursens boll.
+Gör nu uppgiften **rotate**: de tre raderna mellan förflyttningen och skalningen. Bygg och kör: ellipsen är **vriden 45°
+medurs kring sin mitt (350, 400)** – dess långa axel går nu från nere till vänster till uppe till höger. Det är
+learnopengls bild med kursens boll.
 
 ```quiz
 Spriten ritas på `position` (200, 200) med `size` (300, 400). Var ligger dess mitt, punkten den roterar kring?

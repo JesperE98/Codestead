@@ -82,6 +82,7 @@ public sealed partial class CppSource
     private static void Flatten(ShaderValue v, List<double> into)
     {
         if (v.V is not null) into.AddRange(v.V);
+        else if (v.Packed is { } packed) into.AddRange(packed);
         else if (v.Items is not null) foreach (var i in v.Items) Flatten(i, into);
         else if (v.Fields is not null) foreach (var f in v.Fields.Values) Flatten(f, into);
     }

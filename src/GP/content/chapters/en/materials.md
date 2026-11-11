@@ -126,9 +126,8 @@ cube's left and front faces and at the lamp. `light_cube.hlsl`, the lamp's shade
 matrices of the constant buffer, so nothing in this chapter changes it.
 :::
 
-There are no `// TODO:` comments this time: every task changes code that is already there, and the task text tells
-you where. After each task, press **Build & run** (Ctrl+Enter) to compile the program and run it in the built-in
-simulator.
+There are no `// TODO:` comments this time: every task changes code that is already there, and the task text tells you
+where. After each task, build and run the program in your IDE.
 
 We created a material struct in the fragment shader, so next we want to change the lighting calculations to comply
 with the new material properties. Since all the material variables are stored in a struct we can access them from
@@ -408,8 +407,8 @@ The C++ `Material` has `padding0` after `ambient` and `padding1` after `diffuse`
 ```
 :::
 
-Now do the first task, **material**: add the `Material` struct, use it in the lighting instead of `objectColor`, the
-two strengths and the 32, and set the coral material from the application. Then press **Build & run**.
+Now do the first task, **material**: add the `Material` struct, use it in the lighting instead of `objectColor`, the two
+strengths and the 32, and set the coral material from the application. Then build and run.
 
 The cube is far too bright! The light colour is still white, (1.0, 1.0, 1.0), at full strength for all three
 components – and the ambient component now uses the full `material.ambient`. Before, ambient lighting was scaled by
@@ -635,9 +634,9 @@ light is darkened a bit to (0.5, 0.5, 0.5); and the specular light shines at ful
 are learnopengl's values; the exact numbers are a matter of taste, as long as the ambient part stays weak.
 
 Now do the task **light**: add the `Light` struct, let it replace `lightPos` and `lightColor`, use its intensities in
-the three terms, and set them from the application. Press **Build & run**: the cube looks lit normally again, coral
-with a dark left face and a whitish highlight on the front face – the highlight is white because the light's specular
-colour is white, toned down by the material's specular colour of 0.5.
+the three terms, and set them from the application. Build and run: the cube looks lit normally again, coral with a dark
+left face and a whitish highlight on the front face – the highlight is white because the light's specular colour is
+white, toned down by the material's specular colour of 0.5.
 
 ```quiz
 With `light.ambient` = (0.2, 0.2, 0.2) and `material.ambient` = (1.0, 0.5, 0.31), what colour does a face get that only ambient light reaches?
@@ -719,9 +718,9 @@ scaled with the `*` operator, and stored back into the constant buffer's `XMFLOA
 The three components change with different speeds, so the light runs through many different colours over time. The
 diffuse colour is half of it and the ambient colour a fifth of that, as before; the specular part stays white.
 
-Now do the task **light-color** and press **Build & run**. The cube's colour now changes over time. At one second,
-for example, the light colour is about (0.91, 0.64, 0.96) and the cube is a dark red-brown. The lamp stays white: its
-shader doesn't know the light colour – making it follow the light is a nice extra if you like.
+Now do the task **light-color**, then build and run. The cube's colour now changes over time. At one second, for
+example, the light colour is about (0.91, 0.64, 0.96) and the cube is a dark red-brown. The lamp stays white: its shader
+doesn't know the light colour – making it follow the light is a nice extra if you like.
 
 ```quiz
 At one second the light colour is about (0.91, 0.64, 0.96), a pale purple. Why does the coral cube look red-brown and not purple?
@@ -741,7 +740,7 @@ Try and experiment with several lighting and material values and see how they af
   light intensities into account. To correctly set their values you'd have to set all the light intensities to
   (1.0, 1.0, 1.0) to get the same output. learnopengl's solution is a **cyan plastic** container.
 
-This is not a task in the project: try it once you have finished the tasks, and use **Build & run** to see the
+This is not a task in the project: try it once you have finished the tasks, and build and run the program to see the
 result. Replace the changing light colour with a white light at full intensity and set the cyan plastic material:
 
 :::opengl

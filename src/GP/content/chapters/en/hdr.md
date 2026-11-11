@@ -142,13 +142,12 @@ already in normalized device coordinates, no matrices), its `PSMain` still retur
 need it.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. Press **Build & run** (Ctrl+Enter) to compile the
-program and run it in the built-in simulator: you look down the tunnel, its boards running towards a small square in
-the middle of the window – the far end. Near the camera the walls are very dark (only a faint red tint in the
-bottom-right corner, from the red light); towards the end they get brighter. And the end itself is **flat white**: the
-200-strength light makes the colour there far brighter than 1.0, the window stores 0.0 to 1.0 per channel, and
-everything above is cut off at 1.0. The wood's boards are gone from that square – only along its edges, where the blue
-channel of the wood is still below 1.0, a little yellow remains.
+The `// TODO:` comments in the project mark where your code goes. Build and run the program in your IDE: you look down
+the tunnel, its boards running towards a small square in the middle of the window – the far end. Near the camera the
+walls are very dark (only a faint red tint in the bottom-right corner, from the red light); towards the end they get
+brighter. And the end itself is **flat white**: the 200-strength light makes the colour there far brighter than 1.0, the
+window stores 0.0 to 1.0 per channel, and everything above is cut off at 1.0. The wood's boards are gone from that
+square – only along its edges, where the blue channel of the wood is still below 1.0, a little yellow remains.
 
 ```quiz
 The lighting shader computes the colour (3.5, 2.4, 1.2) for a fragment at the tunnel's end and writes it into the window, whose colour buffer has 8 bits per channel. What is stored?
@@ -496,10 +495,10 @@ Why does the screen quad need a pipeline state object of its own, `m_hdrPipeline
 ```
 :::
 
-Press **Build & run**: **nothing changes**. The far end is as flat white as before. That is expected: the floating point
-buffer now holds the true colours, 200-light and all, but the screen quad's shader writes them unchanged (only
-gamma-corrected) into the 8-bit window – where they are clamped, exactly as before. Keeping the values isn't enough;
-something has to map them into 0.0 to 1.0.
+Build and run: **nothing changes**. The far end is as flat white as before. That is expected: the floating point buffer
+now holds the true colours, 200-light and all, but the screen quad's shader writes them unchanged (only gamma-corrected)
+into the 8-bit window – where they are clamped, exactly as before. Keeping the values isn't enough; something has to map
+them into 0.0 to 1.0.
 
 ## Tone mapping
 
@@ -560,9 +559,9 @@ Reinhard tone mapping computes `hdrColor / (hdrColor + 1.0)` per channel. Which 
 No value ever reaches 1.0, so no two different bright colours collapse into the same white. The price: values around 1.0 come out noticeably darker (0.5), which is why the bright parts gain detail while the scene as a whole gets a little darker.
 ```
 
-Press **Build & run**: **the far end shows its wood again** – the boards are back in the bright square, warm and
-detailed, and no pixel is pure white any more. The glow on the walls around it gets a little darker; the dark rest of the
-tunnel looks the same, because small values pass through Reinhard almost unchanged.
+Build and run: **the far end shows its wood again** – the boards are back in the bright square, warm and detailed, and
+no pixel is pure white any more. The glow on the walls around it gets a little darker; the dark rest of the tunnel looks
+the same, because small values pass through Reinhard almost unchanged.
 
 With Reinhard tone mapping applied we no longer lose any detail on the bright areas of our scene. It does tend to
 slightly favour brighter areas, making darker regions seem less detailed and distinct.
@@ -698,9 +697,8 @@ the Reinhard line becomes a comment and the exposure curve takes its place:
 That is learnopengl's `hdr.fs`, without the `hdr` toggle. Now do the last task, **exposure**.
 :::
 
-Press **Build & run**: the far end is **brighter than with Reinhard, but still shows its boards** – its brightest
-middle gets close to white, the edges and the glow around it are a little brighter too. The dark rest of the tunnel is
-unchanged.
+Build and run: the far end is **brighter than with Reinhard, but still shows its boards** – its brightest middle gets
+close to white, the edges and the glow around it are a little brighter too. The dark rest of the tunnel is unchanged.
 
 learnopengl changes the exposure at run time with the Q and E keys (and toggles HDR with the space bar). Here the tasks
 switch the code instead, so try other values for the global `exposure` yourself:

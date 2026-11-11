@@ -66,6 +66,18 @@ public sealed partial class ShaderParser
             if (op == "&" && operand is IndexOf { At: Number { Value: 0 } } first) return first.Target;
             return op is "+" or "&" or "*" ? operand : new Unary(op, operand, line);
         }
+        // (unsigned char)y, (unsigned int)x: the second word is the type.
+        if (Peek.Is("(") && PeekAt(1).Is("unsigned") && PeekAt(2).Kind == ShaderTokenKind.Identifier && (PeekAt(3).Is(")") || PeekAt(3).Is("*") && PeekAt(4).Is(")")))
+        {
+            Next();
+            Next();
+            var word = Next().Text;
+            bool pointer = Accept("*");
+            Expect(")");
+            var operand = UnaryExpr();
+            if (pointer) return operand;
+            return new Call("int", [operand], line);
+        }
         // C-style casts: (float)x, (void*)0, (GLfloat)x – and HLSL's (float3x3)m, (float3)v, which convert.
         if (Peek.Is("(") && PeekAt(1).Kind == ShaderTokenKind.Identifier && (PeekAt(2).Is(")") || (PeekAt(2).Is("*") && PeekAt(3).Is(")")))
             && (IsCastType(PeekAt(1).Text) || ShaderRunner.MatrixSize(PeekAt(1).Text) > 0 || ShaderRunner.ComponentCount(PeekAt(1).Text) > 1))
@@ -102,6 +114,38 @@ public sealed partial class ShaderParser
     /// <summary>The conversion a cast to a number type makes: (float)i is float(i), (int)x is int(x), which cuts the fraction off.</summary>
     private static string? ScalarCast(string type) => type is "float" or "double" or "GLfloat" or "FLOAT" or "half" ? "float"
         : ShaderValue.IsIntType(type) ? "int" : null;
+
+    /// <summary>std::numeric_limits&lt;type&gt;::max(), lowest(), min(), epsilon(), infinity() as a number.</summary>
+    private static Number NumericLimit(string type, string which, int line)
+    {
+        bool isFloat = type is "float" or "GLfloat", isDouble = type is "double" or "long double";
+        if (isFloat || isDouble)
+        {
+            double max = isFloat ? float.MaxValue : double.MaxValue;
+            return new Number(which switch
+            {
+                "max" => max,
+                "lowest" => -max,
+                "min" => isFloat ? 1.17549435e-38 : 2.2250738585072014e-308,
+                "epsilon" => isFloat ? 1.1920929e-07 : 2.220446049250313e-16,
+                "infinity" => double.PositiveInfinity,
+                "quiet_NaN" or "signaling_NaN" => double.NaN,
+                _ => 0,
+            }, line);
+        }
+        var (lo, hi) = type switch
+        {
+            "unsigned int" or "unsigned" or "uint32_t" or "GLuint" or "UINT" => (0.0, uint.MaxValue),
+            "unsigned short" or "uint16_t" => (0.0, ushort.MaxValue),
+            "unsigned char" or "uint8_t" => (0.0, byte.MaxValue),
+            "short" or "int16_t" => (short.MinValue, short.MaxValue),
+            "char" or "int8_t" => (sbyte.MinValue, sbyte.MaxValue),
+            "long long" or "int64_t" => (long.MinValue, (double)long.MaxValue),
+            "size_t" or "uint64_t" or "unsigned long long" => (0.0, (double)ulong.MaxValue),
+            _ => (int.MinValue, int.MaxValue),
+        };
+        return new Number(which is "max" ? hi : which is "min" or "lowest" ? lo : 0, line, Integer: true);
+    }
 
     /// <summary>&lt;types&gt;( ahead: a template's arguments (names, ::, commas, * and &amp;), then a call.</summary>
     private bool TemplateCallAhead()
@@ -194,6 +238,26 @@ public sealed partial class ShaderParser
                     return t.Text == "static_cast" && ScalarCast(to) is { } scalar ? new Call(scalar, [inner], t.Line) : inner;
                 }
                 if (t.Text is "true" or "false") return new Number(t.Text == "true" ? 1 : 0, t.Line);
+                // sizeof(unsigned int), sizeof(unsigned char): a type of two words.
+                if (t.Text == "sizeof" && Peek.Is("(") && (PeekAt(1).Is("unsigned") || PeekAt(1).Is("signed")))
+                {
+                    Next();
+                    Next();
+                    var word = Peek.Kind == ShaderTokenKind.Identifier && !Peek.Is(")") ? Next().Text : "int";
+                    Expect(")");
+                    return new Call("sizeof", [new Name(word is "char" ? "uint8_t" : word is "short" ? "uint16_t" : word is "long" ? "uint32_t" : "unsigned", t.Line)], t.Line);
+                }
+                // C++: std::numeric_limits<float>::max() and friends – the limits of a number type.
+                if (lenient && t.Text == "numeric_limits" && Peek.Is("<"))
+                {
+                    Expect("<");
+                    var limitType = new List<string>();
+                    while (!Accept(">")) limitType.Add(Next().Text);
+                    Expect("::");
+                    var which = Identifier();
+                    if (Accept("(")) Expect(")");
+                    return NumericLimit(string.Join(" ", limitType), which, t.Line);
+                }
                 // C++: new glm::mat4[amount] – an array of zeroed values.
                 if (lenient && t.Text == "new" && Peek.Kind == ShaderTokenKind.Identifier)
                 {

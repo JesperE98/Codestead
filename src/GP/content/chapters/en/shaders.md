@@ -31,9 +31,8 @@ vertex. Both shaders are in the file `shaders.hlsl`: the vertex shader `VSMain` 
 (Direct3D's name for the fragment shader).
 :::
 
-All the tasks in this chapter change a program that already works, so there are no `// TODO:` comments this time:
-each task tells you which lines to change. After each one, press **Build & run** (Ctrl+Enter) to see the result in
-the built-in simulator.
+All the tasks in this chapter change a program that already works, so there are no `// TODO:` comments this time: each
+task tells you which lines to change. After each one, build and run the program to see the result.
 
 ## {{shaderLanguage}}
 
@@ -1101,9 +1100,9 @@ In OpenGL, learnopengl.com now writes a small `Shader` class that reads the GLSL
 the driver compile and link them. Vulkan has no such step at run time: there is no compiler for GLSL in the Vulkan
 driver and no "shader program" object to link. Instead, the work is split differently:
 
-1. **Before the program runs**, the GLSL files are compiled to SPIR-V by `glslc`, the compiler from Google's
-   shaderc project that ships with the Vulkan SDK. When you press **Build & run**, the build does exactly what
-   vulkan-tutorial's `compile` script does:
+1. **Before the program runs**, the GLSL files are compiled to SPIR-V by `glslc`, the compiler from Google's shaderc
+   project that ships with the Vulkan SDK. When you build and run, the build does exactly what vulkan-tutorial's
+   `compile` script does:
 
    ```text
    glslc shaders/shader.vert -o shaders/vert.spv
@@ -1343,8 +1342,8 @@ read everything at once.
 aligned for that.
 
 Notice what is *not* here compared with OpenGL: no compile step and no info log. The GLSL was already checked and
-compiled by `glslc` during the build. When you make a mistake in a shader in the exercises below, the error appears
-in the build output with the file name and line, and the program doesn't run at all.
+compiled by `glslc` during the build. When you make a mistake in a shader in the exercises below, the error appears in
+your IDE's build output with the file name and line, and the program doesn't run at all.
 :::
 :::d3d12
 `D3DCompileFromFile` reads the file for us, so there is no file-reading code of our own. Its parameters, in order:

@@ -10,13 +10,14 @@ namespace Codestead.GP.Course;
 /// </summary>
 public static class GpCourse
 {
-    public static IReadOnlyList<string> Parts { get; } = ["start", "getting-started", "lighting", "model-loading", "advanced-opengl", "advanced-lighting", "pbr", "in-practice"];
+    public static IReadOnlyList<string> Parts { get; } = ["start", "getting-started", "lighting", "model-loading", "advanced-opengl", "advanced-lighting", "pbr", "in-practice", "guest-articles"];
 
     /// <summary>The lessons in course order: (chapter id, part).</summary>
     private static readonly (string Id, string Part)[] LessonList =
     [
         ("introduction", "start"),
         ("api", "getting-started"),
+        ("ide-setup", "getting-started"),
         ("creating-a-window", "getting-started"),
         ("hello-window", "getting-started"),
         ("hello-triangle", "getting-started"),
@@ -74,6 +75,18 @@ public static class GpCourse
         ("audio", "in-practice"),
         ("render-text", "in-practice"),
         ("final-thoughts", "in-practice"),
+        ("oit-introduction", "guest-articles"),
+        ("weighted-blended", "guest-articles"),
+        ("skeletal-animation", "guest-articles"),
+        ("scene-graph", "guest-articles"),
+        ("frustum-culling", "guest-articles"),
+        ("csm", "guest-articles"),
+        ("tessellation-height-map", "guest-articles"),
+        ("tessellation", "guest-articles"),
+        ("dsa", "guest-articles"),
+        ("physically-based-bloom", "guest-articles"),
+        ("compute-shaders", "guest-articles"),
+        ("area-lights", "guest-articles"),
     ];
 
     public static IReadOnlyList<CourseChapter> Chapters { get; } = Build();
@@ -132,9 +145,9 @@ public static class GpCourse
         return new GpuProject(new Dictionary<string, string> { ["main.cpp"] = "" });
     }
 
-    /// <summary>Binary files of a project (images), loaded as assets rather than code.</summary>
+    /// <summary>Binary files of a project (images, models: OBJ + MTL, glTF + its .bin), loaded as assets rather than code.</summary>
     public static bool IsAsset(string path) =>
-        new[] { ".png", ".jpg", ".hdr", ".obj", ".mtl", ".otf", ".ttf" }.Any(e => path.EndsWith(e, StringComparison.OrdinalIgnoreCase));
+        new[] { ".png", ".jpg", ".hdr", ".obj", ".mtl", ".otf", ".ttf", ".gltf", ".bin" }.Any(e => path.EndsWith(e, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>main.cpp first, then headers, then shaders – the order of the editor's tabs.</summary>
     private static IEnumerable<KeyValuePair<string, string>> Order(IEnumerable<KeyValuePair<string, string>> files) =>

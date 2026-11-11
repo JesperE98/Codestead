@@ -601,7 +601,7 @@ to the picture.
 
 **rand().** `rand()` returns the numbers of a fixed sequence; without a `srand` (learnopengl calls none) every run
 starts at the same seed, 1, and gets the same numbers. The course's pictures use glibc's sequence – the C library of
-Linux, which the simulator follows too.
+Linux.
 :::d3d12
 A Direct3D 12 program runs on Windows and gets the Microsoft C runtime's `rand()`: a different sequence (with a
 `RAND_MAX` of 32767), so on a real Windows machine the particles' random offsets and brightnesses differ a little from
@@ -782,8 +782,8 @@ Finally, the particles are drawn in `Render` **after the paddle and before the b
 
 so the ball covers the newest particles, which spawn under it, and the trail seems to come out from behind it.
 
-Now do the task **draw-particles**. Press **Build & run**: **a glowing trail follows the ball**, from its upper left
-back up towards the stone it bounced off – white where the newest particles overlap, fading out further back.
+Now do the task **draw-particles**. Build and run: **a glowing trail follows the ball**, from its upper left back up
+towards the stone it bounced off – white where the newest particles overlap, fading out further back.
 
 :::opengl
 ```quiz

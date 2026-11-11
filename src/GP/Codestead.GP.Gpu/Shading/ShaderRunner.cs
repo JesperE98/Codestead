@@ -33,6 +33,24 @@ public sealed partial class ShaderRunner
     /// <summary>Asked for names the shader does not declare (null: unknown name).</summary>
     public Func<string, ShaderValue?>? Resolve { get; set; }
 
+    /// <summary>
+    /// C++ mode: the byte at an offset into memory a handle names (the pixels stbi_load returned), or null when the
+    /// handle names no bytes – so pointer arithmetic and reads through the pointer (pixelOffset[0]) work.
+    /// </summary>
+    public Func<string, long, double?>? PointerRead { get; set; }
+
+    /// <summary>
+    /// Storage images of a compute shader (GLSL image2D, HLSL RWTexture2D): read a texel, write a texel (RGBA), the
+    /// size – by the image's name.
+    /// </summary>
+    public Func<string, int, int, double[]?>? ImageLoad { get; set; }
+    public Action<string, int, int, double[]>? ImageStore { get; set; }
+    public Func<string, (int Width, int Height)?>? ImageSize { get; set; }
+
+    /// <summary>The program's HLSL read-write textures (RWTexture2D&lt;float4&gt; tex): tex[xy] reads and writes texels.</summary>
+    private HashSet<string>? rwTextures;
+    private bool IsRwTexture(Expr e) => e is Name n && (rwTextures ??= program.Globals.Where(g => g.Type.StartsWith("RWTexture", StringComparison.Ordinal)).Select(g => g.Id).ToHashSet(StringComparer.Ordinal)).Contains(n.Id);
+
     /// <summary>Reads a texture: (texture or sampler name, u, v) → RGBA.</summary>
     public Func<string, double, double, double[]>? Sample { get; set; }
 
@@ -48,8 +66,8 @@ public sealed partial class ShaderRunner
     /// </summary>
     public Func<double, double, (double, double, double, double)?>? Footprint { get; set; }
 
-    /// <summary>Texture sizes for textureSize(): name → (width, height).</summary>
-    public Func<string, (int Width, int Height)?>? TextureSize { get; set; }
+    /// <summary>The image a sampler reads, for its size (textureSize(), texelFetch()): name → image.</summary>
+    public Func<string, Codestead.GP.Gpu.Textures.Image?>? TextureImage { get; set; }
 
     /// <summary>Geometry shaders: EmitVertex() / EndPrimitive() (GLSL), stream.Append(v) / stream.RestartStrip() (HLSL).</summary>
     public Action<string, ShaderValue?>? Emit { get; set; }
@@ -136,6 +154,14 @@ public sealed partial class ShaderRunner
     /// </summary>
     private const int MaxSteps = 400000;
 
+    /// <summary>
+    /// C++ mode: a frame of the program is one run (PopulateCommandList walking a scene graph of a hundred entities,
+    /// each tested against the frustum's planes) – it may take far more steps than a shader.
+    /// </summary>
+    private const int LenientMaxSteps = 40_000_000;
+
+    private int StepLimit => Lenient ? LenientMaxSteps : MaxSteps;
+
     private GlibcRandom? random;
 
     public ShaderRunner(ShaderProgram program)
@@ -163,9 +189,16 @@ public sealed partial class ShaderRunner
     /// A declared variable's zero value; in C++ mode a struct the runner does not know (D3D12_RESOURCE_DESC desc = {};)
     /// is an empty struct that takes the fields assigned to it.
     /// </summary>
+    /// <summary>Vectors of numbers this long or longer are kept packed (<see cref="ShaderValue.Packed"/>).</summary>
+    private const int PackedFrom = 256;
+
+    private bool IsPackable(string type) => program.FindStruct(type) is null && MatrixSize(type) == 0 && (ComponentCount(type) == 1 || ShaderValue.IsIntType(type)) && type is not ("bool" or "string");
+
     private ShaderValue LenientDefault(string type, int arraySize)
     {
         if (Lenient && arraySize == 0 && EmptyStream(type) is { } stream) return stream;
+        // A large vector of numbers (a CPU-filled texture's floats): packed.
+        if (Lenient && arraySize >= PackedFrom && IsPackable(type)) return ShaderValue.PackedArray(new double[arraySize], ShaderValue.IsIntType(type));
         if (Lenient && arraySize > 0) return ShaderValue.Array(Enumerable.Range(0, arraySize).Select(_ => LenientDefault(type, 0)).ToArray());
         var v = Default(type, arraySize);
         return Lenient && v.Text is not null ? ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)) : v;
@@ -223,6 +256,8 @@ public sealed partial class ShaderRunner
         // C++: an empty std::vector, an empty std::string.
         if (type is "vector" && arraySize == 0) return ShaderValue.Array([]);
         if (type is "string" or "std::string" or "wstring") return ShaderValue.Str("");
+        // C++: a pointer member nothing was given (Model* pModel;) is null.
+        if (Lenient && type.EndsWith('*')) return ShaderValue.Str("nullptr");
         if (arraySize > 0) return ShaderValue.Array(Enumerable.Range(0, arraySize).Select(_ => Default(type)).ToArray());
         if (program.FindStruct(type) is { } s)
             return ShaderValue.Struct(s.Fields.ToDictionary(f => f.Id, FieldDefault));
@@ -283,7 +318,7 @@ public sealed partial class ShaderRunner
             for (int index = 0; index < body.Count; index++)
             {
                 var s = body[index];
-                if (++steps > MaxSteps) throw new ShaderRuntimeException("the shader runs too long for the simulator", s.Line);
+                if (++steps > StepLimit) throw new ShaderRuntimeException("the shader runs too long for the simulator", s.Line);
                 Flow flow;
                 try
                 {
@@ -329,12 +364,31 @@ public sealed partial class ShaderRunner
             {
                 // A reference to a struct or a container: the same object under another name.
                 scopes[^1][d.Id] = Eval(referred);
+                pointers.Remove(d.Id);
+                return default;
+            }
+            case Declare { Pointer: true, Value: { } pointee } d when !d.IsArray && Eval(pointee) is { Fields: not null } or { Items: not null } or { Map: not null }:
+            {
+                // A pointer to a struct or a container (Entity* last = &root): the object itself, not a copy.
+                scopes[^1][d.Id] = Eval(pointee);
+                pointers.Add(d.Id);
                 return default;
             }
             case Declare d:
             {
+                if (d.Pointer) pointers.Add(d.Id);
+                else pointers.Remove(d.Id);
                 // C++: Type name{} / Type name = {} is a zero-initialised struct.
-                int arraySize = d.SizeExpr is not null ? (int)Math.Max(0, Math.Min(1 << 20, Eval(d.SizeExpr).X)) : d.ArraySize;
+                int arraySize = d.SizeExpr is not null ? (int)Math.Max(0, Math.Min(1 << 24, Eval(d.SizeExpr).X)) : d.ArraySize;
+                if (d.Fill is not null && d.SizeExpr is not null)
+                {
+                    // std::vector<T> name(n, value): n copies of the value (numbers packed when there are many).
+                    var fill = Coerce(d.Type, Eval(d.Fill));
+                    scopes[^1][d.Id] = arraySize >= PackedFrom && IsPackable(d.Type) && fill.V is { Length: 1 }
+                        ? ShaderValue.PackedArray(Enumerable.Repeat(fill.X, arraySize).ToArray(), ShaderValue.IsIntType(d.Type))
+                        : ShaderValue.Array(Enumerable.Range(0, arraySize).Select(_ => fill.Clone()).ToArray());
+                    return default;
+                }
                 if (d.SizeExpr is not null && d.Value is InitList { Items.Count: > 0 } && Eval(d.Value) is { Items: { } given } && given.Length < arraySize)
                 {
                     // std::array<VkImageView, 2> attachments = { a, b }: the elements given, the rest zero.
@@ -351,6 +405,8 @@ public sealed partial class ShaderRunner
             case Assign a:
             {
                 var value = Eval(a.Value);
+                // C++ copies a container given to another variable (a = b): push_back on one leaves the other as it was.
+                if (Lenient && a.Op == "=" && a.Value is Name or Member or IndexOf && value.IsArray && !value.Shared) value = value.Clone();
                 if (a.Op != "=") value = BinaryOp(a.Op[..1], Eval(a.Target), value, a.Line);
                 Store(a.Target, value);
                 return default;
@@ -374,7 +430,9 @@ public sealed partial class ShaderRunner
                     if (f.Init is not null) Exec(f.Init);
                     for (int n = 0; f.Condition is null || Truthy(Eval(f.Condition)); n++)
                     {
-                        if (n > 1024) throw new ShaderRuntimeException("the loop runs too long for the simulator", f.Line);
+                        // A shader's loop runs at most 1024 times here; the C++ program's (a CPU-filled texture's 480,000 texels) as
+                        // long as the step limit allows.
+                        if (n > (Lenient ? 1 << 24 : 1024)) throw new ShaderRuntimeException("the loop runs too long for the simulator", f.Line);
                         var flow = Run(f.Body);
                         if (flow.Returned || flow.Discarded) return flow;
                         if (flow.Broke) break;
@@ -421,9 +479,17 @@ public sealed partial class ShaderRunner
     private static bool Truthy(ShaderValue v) => v.V is { Length: > 0 } ? v.V[0] != 0
         // if (fstream): a stream is true while it is good.
         : v.Fields is { } f && f.TryGetValue(StreamOk, out var ok) ? ok.X != 0
-        : v.Text is { Length: > 0 } t && t is not ("VK_NULL_HANDLE" or "nullptr" or "NULL");
+        // C++: a pointer to an object or a container (if (!scene), if (mesh->mTextureCoords[0])) is not null.
+        : v.Fields is not null || v.IsArray || v.Map is not null
+        || v.Text is { Length: > 0 } t && t is not ("VK_NULL_HANDLE" or "nullptr" or "NULL");
 
     private readonly HashSet<string> staticLocals = new(StringComparer.Ordinal);
+
+    /// <summary>The aiScenes Assimp::Importer::ReadFile gave, by path (and aiProcess_FlipUVs).</summary>
+    private readonly Dictionary<string, ShaderValue> assimpScenes = new(StringComparer.Ordinal);
+
+    /// <summary>C++: the variables declared as pointers – assigning to one points it at another object.</summary>
+    private readonly HashSet<string> pointers = new(StringComparer.Ordinal);
 
     private const string LambdaMark = "__lambda#";
     private readonly List<Lambda> lambdas = new();
@@ -455,6 +521,14 @@ public sealed partial class ShaderRunner
             "XM_2PI" => ShaderValue.Scalar(2 * Math.PI),
             "XM_PIDIV2" => ShaderValue.Scalar(Math.PI / 2),
             "XM_PIDIV4" => ShaderValue.Scalar(Math.PI / 4),
+            // <cfloat> / <climits>: the limits of the number types.
+            "FLT_MAX" => ShaderValue.Scalar(float.MaxValue),
+            "FLT_MIN" => ShaderValue.Scalar(1.17549435e-38),
+            "FLT_EPSILON" => ShaderValue.Scalar(1.1920929e-07),
+            "DBL_MAX" => ShaderValue.Scalar(double.MaxValue),
+            "INT_MAX" => ShaderValue.Integer(int.MaxValue),
+            "INT_MIN" => ShaderValue.Integer(int.MinValue),
+            "UINT_MAX" => ShaderValue.Integer(uint.MaxValue),
             _ => throw new ShaderRuntimeException($"'{id}' was not declared in this scope", line),
         };
     }
@@ -466,15 +540,20 @@ public sealed partial class ShaderRunner
         {
             case Name n:
             {
+                // A pointer given another address (last = &last->children.back()) points there; the object it pointed
+                // at stays as it was.
+                bool repoint = pointers.Contains(n.Id);
                 for (int i = scopes.Count - 1; i >= 0; i--)
                     if (scopes[i].TryGetValue(n.Id, out var current))
                     {
-                        if (!AssignInPlace(current, value)) scopes[i][n.Id] = Like(current, value);
+                        if (repoint) scopes[i][n.Id] = value;
+                        else if (!AssignInPlace(current, value)) scopes[i][n.Id] = Like(current, value);
                         return;
                     }
                 if (Globals.TryGetValue(n.Id, out var old))
                 {
-                    if (!AssignInPlace(old, value)) Globals[n.Id] = Like(old, value);
+                    if (repoint) Globals[n.Id] = value;
+                    else if (!AssignInPlace(old, value)) Globals[n.Id] = Like(old, value);
                 }
                 else Globals[n.Id] = value;
                 return;
@@ -527,6 +606,13 @@ public sealed partial class ShaderRunner
                 mat.V![col * mat.Cols + row] = value.X;
                 return;
             }
+            case IndexOf ix when ImageStore is not null && IsRwTexture(ix.Target):
+            {
+                // HLSL: imgOutput[texelCoord] = value – a texel of a read-write texture.
+                var at = Eval(ix.At).Padded(2);
+                ImageStore(((Name)ix.Target).Id, (int)Math.Floor(at[0]), (int)Math.Floor(at[1]), value.Padded(4));
+                return;
+            }
             case IndexOf ix:
             {
                 ShaderValue owner;
@@ -554,6 +640,12 @@ public sealed partial class ShaderRunner
                     return;
                 }
                 int at = (int)Math.Floor(atValue.X);
+                if (owner.Packed is { } packedNumbers)
+                {
+                    if (at < 0 || at >= packedNumbers.Length) throw new ShaderRuntimeException("array index out of range", ix.Line);
+                    packedNumbers[at] = owner.PackedInt ? Math.Truncate(value.X) : value.X;
+                    return;
+                }
                 if (owner.Items is not null && at >= 0 && at < owner.Items.Length) owner.Items[at] = value.Int && !owner.Items[at].Int ? ShaderValue.Scalar(value.X) : value;
                 else if (owner.V is not null && at >= 0 && at < owner.V.Length && owner.Cols == 0) owner.V[at] = value.X;
                 else if (owner.IsMatrix && at >= 0 && at < owner.Cols)

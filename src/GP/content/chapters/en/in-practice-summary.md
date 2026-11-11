@@ -1,13 +1,13 @@
 # Review: In Practice
 
-Congratulations on reaching the end of the *In Practice* part – and of the course. You started by learning to find
-mistakes: the error checks, the messages of the driver or the layers, a value written out as a colour, and the tools
-that capture a frame. You drew text with FreeType's glyphs. And then you built a whole game, Hedgerow, step by step:
-a game loop with input, a sprite renderer with an orthographic projection, levels loaded from text files, a paddle and
-a ball, collision detection and resolution, a trail of particles, post-processing effects through a multisampled
-target, power-ups, lives, a menu and a win screen. This page is a glossary of the most important terms of the part,
-chapter by chapter, like the reviews learnopengl.com has at the end of its sections. Use it to look things up, and as
-a check: if a definition surprises you, go back to the chapter it comes from.
+Congratulations on reaching the end of the *In Practice* part – and of learnopengl's main course. You started by
+learning to find mistakes: the error checks, the messages of the driver or the layers, a value written out as a colour,
+and the tools that capture a frame. You drew text with FreeType's glyphs. And then you built a whole game, Hedgerow,
+step by step: a game loop with input, a sprite renderer with an orthographic projection, levels loaded from text files,
+a paddle and a ball, collision detection and resolution, a trail of particles, post-processing effects through a
+multisampled target, power-ups, lives, a menu and a win screen. This page is a glossary of the most important terms of
+the part, chapter by chapter, like the reviews learnopengl.com has at the end of its sections. Use it to look things up,
+and as a check: if a definition surprises you, go back to the chapter it comes from.
 
 Most of a game is logic that has nothing to do with the graphics API – the loop, the collisions, the power-ups, the
 lives –, so most of this page is outside the boxes. What differs is how {{api}} reports mistakes and how it draws:
@@ -87,7 +87,8 @@ barriers. When you're done, the exam at the end of the part checks what you've l
   size; then `x += (advance >> 6) · scale`. The text shader uses the red channel as alpha: `vec4(textColor, 1.0) *
   vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r)`, with alpha blending.
 - **The course's font**: Inter Bold (SIL Open Font License, `OFL.txt` next to it; learnopengl: Antonio Bold); the
-  simulator has its glyphs at 24 and 48 pixels. Going further: **signed distance field** fonts stay sharp at any scale.
+  course's checks have its glyphs at 24 and 48 pixels. Going further: **signed distance field** fonts stay sharp at any
+  scale.
 
 :::opengl
 - **One texture per glyph**: `GL_RED`, `GL_CLAMP_TO_EDGE`, `GL_LINEAR`, and `glPixelStorei(GL_UNPACK_ALIGNMENT, 1)` – a
@@ -233,7 +234,7 @@ barriers. When you're done, the exam at the end of the part checks what you've l
   the paddle catches pad-size-increase and then – wider now – confuse.
 - **Audio**: no graphics API plays sound. learnopengl uses **irrKlang** (`createIrrKlangDevice`, `play2D(file, loop)`,
   `drop`; free for non-commercial use only): looping music in `Init`, effects in `DoCollisions`. Alternatives: OpenAL
-  Soft, miniaudio, SDL_mixer, XAudio2 on Windows. The simulator plays no sound.
+  Soft, miniaudio, SDL_mixer, XAudio2 on Windows. The course can't check sound.
 - **The game's text**: a y-down projection, so (x, y) is the text's top-left corner: `ypos = y + (Characters['H'].Bearing.y
   − ch.Bearing.y) · scale`. 24 pixels; "Lives:" at (5, 5), after the post-processing quad.
 - **Lives**: 3; a lost ball costs one; at 0 the level is reset and the game returns to the menu.

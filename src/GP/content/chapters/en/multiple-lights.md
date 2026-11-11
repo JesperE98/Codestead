@@ -111,9 +111,8 @@ global are gone, `OnUpdate` sets only `viewPos` and `material.shininess`, follow
 the lights, and a fourth `// TODO:` in `PopulateCommandList` marks where the lamps are drawn.
 :::
 
-The `// TODO:` comments mark where your code goes. After each task, press **Build & run** (Ctrl+Enter) to compile
-the program and run it in the built-in simulator. Build it once now: with no light at all, all ten containers are
-black against the dark grey background.
+The `// TODO:` comments mark where your code goes. After each task, build and run the program in your IDE. Build it once
+now: with no light at all, all ten containers are black against the dark grey background.
 
 > As in *Light casters* we use learnopengl's camera at (0, 0, 3), so that all ten containers are in view. At the end
 > of this chapter you'll see that this hides most of the lamps: they are outside the window or behind containers.
@@ -1285,8 +1284,8 @@ camera at (0, 0, 3) looking down -z:
 - lamp 3 at (-4.0, 2.0, -12.0) is hidden behind container 9, near the top left;
 - lamp 4 at (0.0, 0.0, -3.0) is straight behind container 0.
 
-The code is right all the same: four more draw calls with the lamp's shaders. On your own computer, step back with S
-and look around with the mouse, and the four lamps appear where the light comes from.
+The code is right all the same: four more draw calls with the lamp's shaders. In your program, step back with S and look
+around with the mouse, and the four lamps appear where the light comes from.
 
 ```quiz
 After the task **lamps** you only see a thin white sliver at the right border. Where are the other lamps?
@@ -1321,31 +1320,30 @@ to create your own atmospheres.
   **horror** scene and a **biochemical lab** – by tweaking the light's attribute values?
 
 :::opengl
-This is not a task in the project: try it once you have finished the tasks, and use **Build & run** to compare. Change
-the clear colour in `glClearColor` and the lights' colours in the render loop. For a desert, for example, make
-everything warm: a yellowish clear colour, a strong yellow-white directional light and orange point lights. For a
-horror scene, an almost black clear colour, a very weak directional light, dim reddish point lights with a short range
-(linear 0.14, quadratic 0.07 or smaller ranges from the table in *Light casters*) and a narrow flashlight. Remember to
-give the lamps the point lights' colours too if you want them to match – that needs a colour uniform in
-`light_cube.fs`.
+This is not a task in the project: try it once you have finished the tasks, and build and run the program to compare.
+Change the clear colour in `glClearColor` and the lights' colours in the render loop. For a desert, for example, make
+everything warm: a yellowish clear colour, a strong yellow-white directional light and orange point lights. For a horror
+scene, an almost black clear colour, a very weak directional light, dim reddish point lights with a short range (linear
+0.14, quadratic 0.07 or smaller ranges from the table in *Light casters*) and a narrow flashlight. Remember to give the
+lamps the point lights' colours too if you want them to match – that needs a colour uniform in `light_cube.fs`.
 :::
 :::vulkan
-This is not a task in the project: try it once you have finished the tasks, and use **Build & run** to compare. Change
-the clear colour (`clearValues[0].color` in `recordCommandBuffer()`) and the lights' colours in
+This is not a task in the project: try it once you have finished the tasks, and build and run the program to compare.
+Change the clear colour (`clearValues[0].color` in `recordCommandBuffer()`) and the lights' colours in
 `updateUniformBuffer()`. For a desert, for example, make everything warm: a yellowish clear colour, a strong
 yellow-white directional light and orange point lights. For a horror scene, an almost black clear colour, a very weak
 directional light, dim reddish point lights with a short range (linear 0.14, quadratic 0.07 or smaller ranges from the
-table in *Light casters*) and a narrow flashlight. If you want the lamps to show the point lights' colours too, give
-the lamp shader a colour – for example in the push constants.
+table in *Light casters*) and a narrow flashlight. If you want the lamps to show the point lights' colours too, give the
+lamp shader a colour – for example in the push constants.
 :::
 :::d3d12
-This is not a task in the project: try it once you have finished the tasks, and use **Build & run** to compare. Change
-the clear colour (`clearColor` in `PopulateCommandList`) and the lights' colours in `OnUpdate`. For a desert, for
+This is not a task in the project: try it once you have finished the tasks, and build and run the program to compare.
+Change the clear colour (`clearColor` in `PopulateCommandList`) and the lights' colours in `OnUpdate`. For a desert, for
 example, make everything warm: a yellowish clear colour, a strong yellow-white directional light and orange point
-lights. For a horror scene, an almost black clear colour, a very weak directional light, dim reddish point lights with
-a short range (linear 0.14, quadratic 0.07 or smaller ranges from the table in *Light casters*) and a narrow
-flashlight. If you want the lamps to show the point lights' colours too, give `light_cube.hlsl` a colour – for example
-in the root constants.
+lights. For a horror scene, an almost black clear colour, a very weak directional light, dim reddish point lights with a
+short range (linear 0.14, quadratic 0.07 or smaller ranges from the table in *Light casters*) and a narrow flashlight.
+If you want the lamps to show the point lights' colours too, give `light_cube.hlsl` a colour – for example in the root
+constants.
 :::
 
 This was the last chapter of the *Lighting* part. Everything you've learned here – the Phong model, materials,

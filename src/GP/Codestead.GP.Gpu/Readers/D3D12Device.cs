@@ -63,6 +63,23 @@ internal sealed partial class D3D12Device : IDeviceModel
 
     public (int Colors, bool Depth)? ShapeOf(string target) => targetShape.TryGetValue(target, out var s) ? s : null;
 
+    /// <summary>A depth resource → the first off-screen target drawn with it; a target → the target whose depth it shares.</summary>
+    private readonly Dictionary<int, string> depthUsers = new();
+    private readonly Dictionary<string, string> depthOf = new(StringComparer.Ordinal);
+
+    /// <summary>The channels each colour attachment of a target keeps (an R8_UNORM revealage texture: 1), or null.</summary>
+    public IReadOnlyList<int>? ChannelsOf(string target, int colors)
+    {
+        var formats = new string?[Math.Max(1, colors)];
+        foreach (var r in resources.Where(r => r.TargetId == target)) formats[0] = r.Format;
+        foreach (var (id, (t, k)) in attachmentOf)
+            if (t == target && k < formats.Length && ResourceAt(id) is { } attached) formats[k] = attached.Format;
+        return FormatChannels.List(formats.Select(FormatChannels.Of));
+    }
+
+    /// <summary>The target whose depth buffer a target uses too (both drawn with one depth stencil view), or null.</summary>
+    public string? DepthOf(string target) => depthOf.GetValueOrDefault(target);
+
     /// <summary>SRVs that read their texture as sRGB (an _SRGB view format, or the resource's own).</summary>
     private readonly HashSet<long> srgbSrvs = new();
 
@@ -177,6 +194,7 @@ internal sealed partial class D3D12Device : IDeviceModel
         if (Debug && name is not "ThrowIfFailed") Console.Error.WriteLine($"[d3d12] {name}({string.Join(", ", args.Select(a => { var v = Eval(a); return v is null ? "?" : v.ToString(); }))})");
         if (DebugLayerCall(name, args) is { } answered) return answered;
         if (PipelineCall(name, args) is { } made) return made;
+        if (ComputeCall(name, args) is { } computed) return computed;
         switch (name)
         {
             case "ThrowIfFailed" when args.Count >= 1:
@@ -274,7 +292,10 @@ internal sealed partial class D3D12Device : IDeviceModel
                 {
                     if (Strip(args[1]) is var w) exec.Runner.Assign(w, ShaderValue.Scalar(image.Width));
                     if (Strip(args[2]) is var h) exec.Runner.Assign(h, ShaderValue.Scalar(image.Height));
-                    if (Strip(args[3]) is var c) exec.Runner.Assign(c, ShaderValue.Scalar(image.Channels));
+                    int fileChannels = StbImage.FileChannels(project, path);
+                    if (Strip(args[3]) is var c) exec.Runner.Assign(c, ShaderValue.Scalar(fileChannels));
+                    // The bytes, read through a pointer (pixelOffset[0]): the channels asked for (0: the file's).
+                    exec.Runner.PointerRead ??= (handle, at) => images.TryGetValue(handle, out var img) && img is not null ? StbImage.Byte(img, img.Channels, at) : null;
                 }
                 return ShaderValue.Str(key);
             }
@@ -361,6 +382,13 @@ internal sealed partial class D3D12Device : IDeviceModel
                     }
                     bool hasDsv = args.Count >= 5 && args[4] is not Name { Id: "nullptr" or "NULL" };
                     targetShape[mrtTarget] = (Math.Max(1, count), hasDsv || (targetShape.TryGetValue(mrtTarget, out var old) && old.Depth));
+                    // One depth buffer for two targets (weighted blended OIT's transparent pass tests against the opaque
+                    // pass's depth): the second uses the first one's.
+                    if (hasDsv && Eval(Strip(args[4])) is { V: { Length: > 0 } dsvHandle } && Dsvs.TryGetValue((long)dsvHandle[0], out var depthResource))
+                    {
+                        if (!depthUsers.TryGetValue(depthResource, out var firstUser)) depthUsers[depthResource] = mrtTarget;
+                        else if (firstUser != mrtTarget) depthOf[mrtTarget] = firstUser;
+                    }
                 }
                 return ShaderValue.Scalar(0);
             case ".ClearRenderTargetView" when args.Count >= 3:
@@ -368,7 +396,12 @@ internal sealed partial class D3D12Device : IDeviceModel
                 var color = Eval(Strip(args[2]));
                 var rgba = new List<double>();
                 if (color is not null) CppExec.Flatten(color, rgba);
-                Ops.Add(new ClearOp(DrawCount(), TargetOf((long)Num(args[1])), rgba.Count >= 3 ? rgba.ToArray() : null, null, null));
+                // One view's target: an RTV that is attachment k of the render targets set (OMSetRenderTargets with
+                // several) clears that attachment only; the first one attachment 0.
+                long rtvHandle = (long)Num(args[1]);
+                var (cleared, attachment) = Rtvs.TryGetValue(rtvHandle, out var viewed) && attachmentOf.TryGetValue(viewed, out var att) ? (att.Target, (int?)att.Attachment)
+                    : (TargetOf(rtvHandle), TargetOf(rtvHandle) is { } single && targetShape.TryGetValue(single, out var shape) && shape.Colors > 1 ? 0 : (int?)null);
+                Ops.Add(new ClearOp(DrawCount(), cleared, rgba.Count >= 3 ? rgba.ToArray() : null, null, null, attachment));
                 return ShaderValue.Scalar(0);
             }
             case ".ClearDepthStencilView" when args.Count >= 5:
@@ -404,7 +437,7 @@ internal sealed partial class D3D12Device : IDeviceModel
             case ".SetGraphicsRootConstantBufferView" when args.Count >= 3:
                 rootCbvs[(int)Num(args[1])] = (long)Num(args[2]);
                 return ShaderValue.Scalar(0);
-            case ".Load" when args.Count >= 6 && Eval(args[1])?.Text is { } objPath && objPath.EndsWith(".obj", StringComparison.OrdinalIgnoreCase):
+            case ".Load" when args.Count >= 6 && Eval(args[1])?.Text is { } objPath && (objPath.EndsWith(".obj", StringComparison.OrdinalIgnoreCase) || Models.GltfModel.IsGltf(objPath)):
                 LoadModel(args[0], objPath, args[4], (int)Num(args[5]));
                 return ShaderValue.Scalar(0);
             case ".SetGraphicsRootDescriptorTable" when args.Count >= 3:
@@ -460,10 +493,35 @@ internal sealed partial class D3D12Device : IDeviceModel
                 ["vertexBufferView"] = Desc(("BufferLocation", ShaderValue.Scalar(vb.Id * AddressUnit)), ("StrideInBytes", ShaderValue.Scalar(32)), ("SizeInBytes", ShaderValue.Scalar(mesh.Positions.Count * 32))),
                 ["indexBufferView"] = Desc(("BufferLocation", ShaderValue.Scalar(ib.Id * AddressUnit)), ("Format", ShaderValue.Str("DXGI_FORMAT_R32_UINT")), ("SizeInBytes", ShaderValue.Scalar(mesh.Indices.Count * 4))),
                 ["srvHandle"] = ShaderValue.Scalar(slot),
-                ["indices"] = ShaderValue.Array(mesh.Indices.Select(_ => ShaderValue.Scalar(0)).ToArray()),
+                ["indices"] = ShaderValue.Array(mesh.Indices.Select(i => ShaderValue.Integer(i)).ToArray()),
+                ["vertices"] = ModelVertices(mesh, flipUv),
             }));
         }
-        exec!.Runner.Assign(target, ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["meshes"] = ShaderValue.Array(meshes.ToArray()) }));
+        // The meshes are the device's: a copy of a struct that points at the model (Entity's Model* pModel) shares them.
+        var modelValue = new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["meshes"] = new ShaderValue { Items = meshes.ToArray(), Shared = true } };
+        // A skinned model whose class reads the bones (learnopengl's model_animation.h): its bones by name and their count.
+        if (model.Gltf is { } gltf)
+        {
+            bool extracts = System.Text.RegularExpressions.Regex.IsMatch(src.Code, @"\bExtractBoneWeightForVertices\s*\([^)]*\)\s*;");
+            modelValue["m_BoneInfoMap"] = extracts ? gltf.BoneInfoMap(true) : new ShaderValue { Map = new SortedDictionary<double, ShaderValue>() };
+            modelValue["m_BoneCounter"] = ShaderValue.Integer(extracts ? gltf.Bones.Count : 0);
+        }
+        exec!.Runner.Assign(target, ShaderValue.Struct(modelValue));
+    }
+
+    /// <summary>
+    /// A mesh's vertices as the program's Vertex struct (position, normal, texture coordinates by their names), for code
+    /// that reads them (a bounding volume around the model).
+    /// </summary>
+    private ShaderValue ModelVertices(Models.ObjMesh mesh, bool flipUv)
+    {
+        var fields = StructLayout.Fields(src, "Vertex")?.Select(f => f.Name).ToList() ?? ["position", "normal", "texCoord"];
+        return ShaderValue.Array(Enumerable.Range(0, mesh.Positions.Count).Select(v => ShaderValue.Struct(fields.ToDictionary(f => f, f =>
+            f.Contains("pos", StringComparison.OrdinalIgnoreCase) ? ShaderValue.Vec(mesh.Positions[v].ToArray())
+            : f.Contains("normal", StringComparison.OrdinalIgnoreCase) ? ShaderValue.Vec(mesh.Normals[v].ToArray())
+            : f.Contains("tex", StringComparison.OrdinalIgnoreCase) || f.Contains("uv", StringComparison.OrdinalIgnoreCase)
+                ? ShaderValue.Vec(mesh.TexCoords[v][0], flipUv ? 1 - mesh.TexCoords[v][1] : mesh.TexCoords[v][1])
+            : ShaderValue.Vec(0, 0, 0), StringComparer.Ordinal))).ToArray());
     }
 
     /// <summary>
@@ -583,9 +641,17 @@ internal sealed partial class D3D12Device : IDeviceModel
     }
 
     /// <summary>The texture a shader register reads through a descriptor table: a loaded image, a cube map or a render target.</summary>
-    public (Texture? Texture, CubeTexture? Cube) TextureAt(long handle, SamplerState sampler)
+    /// <param name="layer">The slice a Texture2DArray read names (its third coordinate): slice k of a render target is
+    /// "res:N@k".</param>
+    public (Texture? Texture, CubeTexture? Cube) TextureAt(long handle, SamplerState sampler, int layer = 0)
     {
         if (!Srvs.TryGetValue(handle, out var srv) || ResourceAt(srv.Resource) is not { } res) return (null, null);
+        if (layer > 0 && !srv.Cube && res.Images.Count == 0 && !res.Buffer && !res.Window)
+        {
+            var slice = res.TargetId + "@" + Math.Min(layer, res.ArraySize - 1);
+            bool sliceDepth = res.Depth;
+            return (new Texture(() => Raster.Rasterizer.TargetImage(slice, 0, sliceDepth), sampler) { Components = 4 }, null);
+        }
         // An invalid view (the debug layer's message #31): the shader reads 0.
         if (invalidSrvs.Contains(handle)) return (new Texture(new Image(1, 1, 4, new byte[4]), sampler) { Components = 4 }, null);
         if (srv.Cube && res.Images.All(i => i is null) && !res.Buffer && !res.Window)

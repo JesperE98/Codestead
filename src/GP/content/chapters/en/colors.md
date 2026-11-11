@@ -176,11 +176,11 @@ The program is built with `Shader lightingShader("colors.vs", "colors.fs");`, an
 :::
 :::vulkan
 The shaders are `shaders/colors.vert` and `shaders/colors.frag` (the lit cube) and `shaders/light_cube.vert` and
-`shaders/light_cube.frag` (the lamp – more about those below). **Build & run** compiles each of them to SPIR-V,
-`shaders/<name>.vert.spv` and `shaders/<name>.frag.spv`. As before, the view and projection matrices live in the
-uniform buffer (still at **binding 2** – bindings 0 and 1 held the textures and come back with the lighting maps),
-filled every frame by `updateUniformBuffer()`, and the model matrix is a push constant. The `Vertex` struct holds just
-a `glm::vec3 pos`, and `getAttributeDescriptions()` describes that one attribute.
+`shaders/light_cube.frag` (the lamp – more about those below). Your `CMakeLists.txt` compiles each of them to SPIR-V,
+`shaders/<name>.vert.spv` and `shaders/<name>.frag.spv`. As before, the view and projection matrices live in the uniform
+buffer (still at **binding 2** – bindings 0 and 1 held the textures and come back with the lighting maps), filled every
+frame by `updateUniformBuffer()`, and the model matrix is a push constant. The `Vertex` struct holds just a
+`glm::vec3 pos`, and `getAttributeDescriptions()` describes that one attribute.
 
 Since this chapter needs **two** graphics pipelines – one for the cube, one for the lamp – the old
 `createGraphicsPipeline()` has been split in two:
@@ -257,9 +257,8 @@ block, with `compileFlags` at its top, so that a second pipeline state can reuse
 vertices.
 :::
 
-The project's `// TODO:` comments mark where your code goes. Press **Build & run** (Ctrl+Enter) at any time to compile
-the program and run it in the built-in simulator. At the start you see a flat **white** cube on the dark grey
-background – the cube's fragment shader still writes plain white.
+The project's `// TODO:` comments mark where your code goes. Build and run the program at any time. At the start you see
+a flat **white** cube on the dark grey background – the cube's fragment shader still writes plain white.
 
 ### The default camera
 
@@ -311,8 +310,8 @@ pitch asin(0.4 / 4.15) ≈ 5.5°). They have to match: the first mouse movement 
 and with the old values (-90°, 0°) the camera would jump back to looking down -z. *Colors*, *Basic Lighting*,
 *Materials* and *Lighting Maps* keep this camera; *Light Casters* and *Multiple Lights* go back to (0, 0, 3).
 
-> The built-in simulator cannot press keys or move the mouse, so its picture always shows this starting view. On
-> your own computer you can still fly around the scene as in the previous chapter.
+> The **Expected result** pictures can't press keys or move the mouse, so they always show this starting view. In your
+> own program you can still fly around the scene as in the previous chapter.
 
 ```quiz
 Why does the course start the camera at (-3, 0, 3) instead of learnopengl's (0, 0, 3)?

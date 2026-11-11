@@ -9,6 +9,6 @@
   <PropertyGroup>
     <CodesteadGPName>$(CodesteadBrand) GP</CodesteadGPName>
     <CodesteadGPId>codestead-gp</CodesteadGPId>
-    <CodesteadGPVersion>0.1</CodesteadGPVersion>
+    <CodesteadGPVersion>0.2</CodesteadGPVersion>
   </PropertyGroup>
 </Project>

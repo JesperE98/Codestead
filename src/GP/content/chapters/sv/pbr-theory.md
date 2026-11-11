@@ -637,10 +637,10 @@ funktioner är fortfarande `// TODO:`-kommentarer. De fem `.png`-mapparna använ
 uppgift.
 :::
 
-Tryck på **Build & run** (Ctrl+Enter): projektet kompileras och körs i den inbyggda simulatorn. Du ser 49 nästan svarta
-skivor på den mörkgrå clear-färgen (0.1, 0.1, 0.1). Fragment shadern lägger hittills bara till den ambienta termen
-`0.03 * albedo * ao` = (0.015, 0, 0) och inget annat: inget ljus når sfärerna ännu, det finns ingen skuggning, och varje
-sfärpixel har samma mycket mörka röda färg (4, 0, 0 av 255). Nästa kapitel fyller i reflektansekvationen steg för steg.
+Bygg och kör programmet: du ser 49 nästan svarta skivor på den mörkgrå clear-färgen (0.1, 0.1, 0.1). Fragment shadern
+lägger hittills bara till den ambienta termen `0.03 * albedo * ao` = (0.015, 0, 0) och inget annat: inget ljus når
+sfärerna ännu, det finns ingen skuggning, och varje sfärpixel har samma mycket mörka röda färg (4, 0, 0 av 255). Nästa
+kapitel fyller i reflektansekvationen steg för steg.
 
 ## Mer att läsa
 

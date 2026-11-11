@@ -458,8 +458,8 @@ you're done, the exam at the end of the part checks what you've learned.
   occlude itself (a full sphere makes everything grey).
 - **View space**: the G-buffer stores positions and normals in **view space**, so the stored z is the depth to compare;
   the albedo is a plain 0.95.
-- **The sample kernel**: 32 samples (learnopengl 64 – the simulator runs on the CPU), z ≥ 0, each scaled by
-  `lerp(0.1, 1.0, (i / 32)²)`: more samples close to the fragment. Radius 0.5, bias 0.025.
+- **The sample kernel**: 32 samples (learnopengl 64 – the course draws its checks and expected results on the CPU), z ≥
+  0, each scaled by `lerp(0.1, 1.0, (i / 32)²)`: more samples close to the fragment. Radius 0.5, bias 0.025.
 - **Random kernel rotations**: a 4 × 4 **noise texture** of random vectors in the xy plane, tiled over the window with
   repeat and nearest sampling. With the normal it gives a TBN matrix (Gram-Schmidt), so each pixel of a 4 × 4 block
   turns the kernel differently: few samples, no banding – but a regular noise pattern.
@@ -472,8 +472,8 @@ you're done, the exam at the end of the part checks what you've learned.
   diffuse and specular.
 - **The scene**: the planet in a room instead of learnopengl's backpack. Its ring is a single plane with an upward
   normal, seen from below: the hemisphere lies behind it as the camera sees it, so its underside comes out dark. The
-  random numbers come from `srand(42)` and `rand() / (float)RAND_MAX` – the same kernel and noise in the simulator and
-  every run (learnopengl's `std::uniform_real_distribution` differs between standard libraries).
+  random numbers come from `srand(42)` and `rand() / (float)RAND_MAX` – the same kernel and noise in the course's
+  pictures and every run (learnopengl's `std::uniform_real_distribution` differs between standard libraries).
 
 :::opengl
 - **Targets**: `ssaoColorBuffer` and `ssaoColorBufferBlur` with the internal format `GL_RED` (one channel);

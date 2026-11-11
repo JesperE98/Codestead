@@ -11,9 +11,71 @@ public sealed class ShaderValue
     public double[]? V { get; init; }
     /// <summary>0 for scalars and vectors; 2, 3 or 4 for a matrix.</summary>
     public int Cols { get; init; }
-    public ShaderValue[]? Items { get; init; }
+    public ShaderValue[]? Items
+    {
+        get
+        {
+            // A packed vector of numbers read element by element as values: it becomes an array of them now.
+            if (packed is { } numbers)
+            {
+                var made = new ShaderValue[numbers.Length];
+                for (int i = 0; i < numbers.Length; i++) made[i] = PackedInt ? Integer(numbers[i]) : Scalar(numbers[i]);
+                items = made;
+                packed = null;
+                return made;
+            }
+            // Elements appended since the last read (push_back in a loop of 65,536 pixels) become the array now.
+            if (grow is { } g)
+            {
+                var arr = g.ToArray();
+                items = arr;
+                grow = null;
+                return arr;
+            }
+            return items;
+        }
+        init => items = value;
+    }
+
+    private ShaderValue[]? items;
+    private List<ShaderValue>? grow;
+    private double[]? packed;
+
+    /// <summary>
+    /// A large std::vector of numbers (std::vector&lt;float&gt; pixels(800 * 600 * 4)) kept as plain numbers: read and
+    /// written element by element (and flattened) without a value per element. Null once it was read as
+    /// <see cref="Items"/>.
+    /// </summary>
+    public double[]? Packed => packed;
+    public bool PackedInt { get; init; }
+
+    public static ShaderValue PackedArray(double[] numbers, bool integers = false) => new() { packed = numbers, PackedInt = integers };
+
+    /// <summary>An array (a std::vector), without making its elements an array first.</summary>
+    public bool IsArray => items is not null || grow is not null || packed is not null;
+
+    /// <summary>The number of elements of an array, without making them an array first.</summary>
+    public int Count => packed?.Length ?? grow?.Count ?? items?.Length ?? 0;
+
+    /// <summary>
+    /// std::vector::push_back: the element is added to this array in place, in amortised constant time (the array the
+    /// other readers see is made when it is next read).
+    /// </summary>
+    public void Append(ShaderValue item)
+    {
+        if (packed is not null) _ = Items;
+        if (grow is null)
+        {
+            grow = new List<ShaderValue>(Math.Max(16, (items?.Length ?? 0) * 2));
+            if (items is not null) grow.AddRange(items);
+            items = null;
+        }
+        grow.Add(item);
+    }
     public Dictionary<string, ShaderValue>? Fields { get; init; }
     public string? Text { get; init; }
+    /// <summary>A pointer into the bytes a handle names (data + (j + width * i) * bytePerPixel): bytes past its start.</summary>
+    public long Offset { get; init; }
     /// <summary>A C++ std::map with number keys (learnopengl sorts its windows by distance with one).</summary>
     public SortedDictionary<double, ShaderValue>? Map { get; init; }
     /// <summary>An iterator into a std::map: begin()/rbegin() …, ++it, it->first / it->second.</summary>
@@ -88,7 +150,13 @@ public sealed class ShaderValue
         return r;
     }
 
-    public ShaderValue Clone() => new()
+    /// <summary>
+    /// An object the API owns that the program only reads (learnopengl's Model: its meshes and vertices): a copy of a
+    /// struct that points at it (Entity's Model* pModel) points at the same one, it is not copied.
+    /// </summary>
+    public bool Shared { get; init; }
+
+    public ShaderValue Clone() => Shared ? this : packed is not null ? PackedArray(packed.ToArray(), PackedInt) : new()
     {
         V = V?.ToArray(),
         Int = Int,
@@ -96,6 +164,7 @@ public sealed class ShaderValue
         Items = Items?.Select(i => i.Clone()).ToArray(),
         Fields = Fields?.ToDictionary(kv => kv.Key, kv => kv.Value.Clone()),
         Text = Text,
+        Offset = Offset,
         Map = Map is null ? null : new SortedDictionary<double, ShaderValue>(Map),
         Iterator = Iterator,
     };

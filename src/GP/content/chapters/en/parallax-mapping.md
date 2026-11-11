@@ -53,9 +53,9 @@ the normal map and the colour at `float2 texCoords = input.texCoords;` – the T
 The light is at `lightPos` (0.5, 1.0, 0.3).
 :::
 
-Press **Build & run** (Ctrl+Enter): a brick floor seen at an angle, a trapezoid narrower at the top. The normal map gives
-the mortar its bevels, but every brick is at the same height – look along the bricks and they're painted on a flat
-board. The `// TODO:` comments in the project mark where your code goes.
+Build and run the program: a brick floor seen at an angle, a trapezoid narrower at the top. The normal map gives the
+mortar its bevels, but every brick is at the same height – look along the bricks and they're painted on a flat board.
+The `// TODO:` comments in the project mark where your code goes.
 
 ## Parallax mapping
 
@@ -238,10 +238,10 @@ tangent space's y (B = `cross(T, N)`, the direction v grows), so `viewDir.xy` is
 the first task, **parallax**.
 :::
 
-Press **Build & run**: the **bricks look raised** above the mortar. Their front sides – the sides facing the camera –
-appear, and the mortar between them narrows. Not bad for two triangles. Look at the borders of the quad, though: there
-the shifted coordinates leave the [0,1] range, and because the textures repeat, bits of the neighbouring bricks show
-along the edges. And close up the bricks' sides look smeared – we'll come to that.
+Build and run: the **bricks look raised** above the mortar. Their front sides – the sides facing the camera – appear,
+and the mortar between them narrows. Not bad for two triangles. Look at the borders of the quad, though: there the
+shifted coordinates leave the [0,1] range, and because the textures repeat, bits of the neighbouring bricks show along
+the edges. And close up the bricks' sides look smeared – we'll come to that.
 
 ### Discarding the edges
 
@@ -294,8 +294,8 @@ HLSL's `discard` works like GLSL's (`clip(x)`, which discards where x < 0, is an
 **discard-edges**.
 :::
 
-Press **Build & run**: the quad's borders become **ragged** – where the raised bricks' outline ends, the background
-shows. Everything inside is unchanged.
+Build and run: the quad's borders become **ragged** – where the raised bricks' outline ends, the background shows.
+Everything inside is unchanged.
 
 ## Steep Parallax Mapping
 
@@ -505,9 +505,9 @@ With one mip level, level 0 is what `Sample` would have read anyway, so the pict
 ```
 :::
 
-Press **Build & run**: the **bricks get sharp, solid sides** – no more smearing. But look at the front sides: they're
-made of **steps**, horizontal bands, one per layer. The ray stops at the first layer below the surface, so every depth
-in between is rounded to a layer.
+Build and run: the **bricks get sharp, solid sides** – no more smearing. But look at the front sides: they're made of
+**steps**, horizontal bands, one per layer. The ray stops at the first layer below the surface, so every depth in
+between is rounded to a layer.
 
 We can reduce the issue by taking a larger number of samples, but this quickly becomes too heavy a burden on
 performance. There are several approaches that aim to fix this issue by not taking the first position that's below the
@@ -604,8 +604,8 @@ function after a varying loop:
 Now do the last task, **occlusion**.
 :::
 
-Press **Build & run**: **the steps disappear** – the bricks' front sides become smooth gradients. The tops of the bricks
-and the background are unchanged.
+Build and run: **the steps disappear** – the bricks' front sides become smooth gradients. The tops of the bricks and the
+background are unchanged.
 
 Parallax occlusion mapping gives surprisingly good results and although some slight artifacts and aliasing issues are
 still visible, it's generally a good trade-off and only really visible when heavily zoomed in or looking at very steep

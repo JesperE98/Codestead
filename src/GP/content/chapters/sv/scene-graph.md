@@ -107,8 +107,8 @@ Starten ritar planeten med enhetsmatrisen som modellmatris, i root constants (ro
 planetens två meshar, klotet och ringarna, där var och en binder sin egen textur.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in; **Build & run** (Ctrl+Enter) kompilerar programmet och kör
-det i den inbyggda simulatorn: en planet med ringar till vänster i fönstret.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Bygg och kör programmet i din IDE: en planet med ringar
+till vänster i fönstret.
 
 ## Transform
 
@@ -664,8 +664,8 @@ En omarkerad entitet under en markerad behöver ändå en ny global matris. Om b
 Nu kan grafen visa vad den är till för: flytta en entitet, och allt som sitter fast i den följer med. Roten vrider sig
 kring sin y-axel med 20 grader per sekund, learnopengls fart. learnopengl adderar `20 * deltaTime` till vinkeln efter
 varje bildruta; kursen sätter i stället vinkeln utifrån tiden – `20 · time` – så att bilden vid en given tidpunkt alltid
-blir densamma (skärmbilden tas vid 2.0 s, en vinkel på 40°). Sedan uppdateras grafen, **innan** den ritas, så att
-bildrutan visar den här bildrutans matriser.
+blir densamma (det förväntade resultatet visar den vid 2.0 s, en vinkel på 40°). Sedan uppdateras grafen, **innan** den
+ritas, så att bildrutan visar den här bildrutans matriser.
 
 :::opengl
 Överst i bildrutan, efter tiden:

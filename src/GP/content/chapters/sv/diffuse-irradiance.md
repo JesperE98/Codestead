@@ -114,9 +114,10 @@ ljus, disig sol, gröna kullar vid horisonten, en gråbrun mark och tre färgade
 blågrå himmel upptill, mörkgröna kullar vid horisonten (högre till vänster i fönstret), marken nedtill. Solen – uppe, till
 höger och *bakom* kameran – och lamporna är utanför bilden, men de kommer att belysa sfärerna framifrån.
 
-Två tal är mindre än learnopengls, eftersom den inbyggda simulatorn körs på processorn (en riktig GPU klarar learnopengls
-värden lätt): environment-cube mappen har 128 × 128 texlar per sida i stället för 512 × 512, och konvolutionen samplar
-halvsfären med steget 0.1 i stället för 0.025 – 1008 samples per texel i stället för ungefär 16 000.
+Två tal är mindre än learnopengls, eftersom kursen ritar sina kontroller och förväntade resultat på CPU:n (en riktig GPU
+klarar learnopengls värden lätt): environment-cube mappen har 128 × 128 texlar per sida i stället för 512 × 512, och
+konvolutionen samplar halvsfären med steget 0.1 i stället för 0.025 – 1008 samples per texel i stället för ungefär 16
+000.
 
 :::opengl
 `main.cpp` har shaderobjekten från learnopengls IBL-demo: sfärernas shader heter nu `pbrShader`. De nya filerna är
@@ -902,9 +903,9 @@ Bakgrundskuben ritas sist med `gl_Position = clipPos.xyww` (`xyww` i HLSL) och d
 Med standardtestet mindre än skulle 1.0 < 1.0 underkännas överallt och bakgrunden försvinna. Kapitlet Cubemaps införde samma trick för sin skybox.
 ```
 
-Tryck på **Build & run**: **himlen syns bakom sfärerna**. Blekt blågrå upptill, ett band av mörkgröna kullar vid
-horisonten – högre till vänster i fönstret –, den gråbruna marken nedtill; den är rättvänd. Sidorna på 128 × 128 förstoras
-ungefär tio gånger, så bakgrunden är mjuk. Sfärerna har inte ändrats: deras ambienta term är fortfarande konstanten.
+Bygg och kör: **himlen syns bakom sfärerna**. Blekt blågrå upptill, ett band av mörkgröna kullar vid horisonten – högre
+till vänster i fönstret –, den gråbruna marken nedtill; den är rättvänd. Sidorna på 128 × 128 förstoras ungefär tio
+gånger, så bakgrunden är mjuk. Sfärerna har inte ändrats: deras ambienta term är fortfarande konstanten.
 
 Att omvandla en ekvirektangulär HDR-bild till en cube map var det första steget; en cube map är också vad konvolutionen
 behöver, och med den syns omgivningen ordentligt bakom scenen. Nu går vi vidare till själva konvolutionen.
@@ -1140,8 +1141,8 @@ skrivningar – båda ligger i samma command list.
 Visa tills vidare irradiansmappen som bakgrund: bind den i stället för environment mappen när bakgrunden ritas –
 bakgrundens shader förblir som den är. Gör nu uppgiften **irradiance-map**.
 
-Tryck på **Build & run**: bakgrunden är **en mycket mjuk oskärpa** utan detaljer – kullarna och horisonten är borta; en
-blek gråviolett ton överallt, lite blåare upptill och varmare nedtill. Den är ljus även under horisonten: varje riktnings
+Bygg och kör: bakgrunden är **en mycket mjuk oskärpa** utan detaljer – kullarna och horisonten är borta; en blek
+gråviolett ton överallt, lite blåare upptill och varmare nedtill. Den är ljus även under horisonten: varje riktnings
 halvsfär når en del av himlen eller solen. Det här är det ljus som en matt yta riktad åt det hållet får från hela
 omgivningen.
 
@@ -1286,11 +1287,11 @@ Utan strävhetstermen stiger F till 1 vid kanterna på varje sfär, och kD sjunk
 ```
 
 Gör nu den sista uppgiften, **ambient**: använd irradiansmappen som ambient ljus och visa environment mappen som
-bakgrund igen. Tryck på **Build & run**: **de icke-metalliska sfärerna belyses av himlen**. De nedersta raderna är
-tydligt ljusare och jämnt belysta, deras övre halvor – som vetter mot den ljusa himlen – ljusare än de nedre, som vetter
-mot den mörkare marken; det finns inga svarta sidor längre. Metallraderna upptill ändras knappt: metaller har ingen
-diffus reflektion, och deras reflektion av omgivningen är nästa kapitels ämne. Bara den röda kanalen ökar, eftersom
-albedot är (0.5, 0, 0). Det här är learnopengls `2.1.2.ibl_irradiance`.
+bakgrund igen. Bygg och kör: **de icke-metalliska sfärerna belyses av himlen**. De nedersta raderna är tydligt ljusare
+och jämnt belysta, deras övre halvor – som vetter mot den ljusa himlen – ljusare än de nedre, som vetter mot den mörkare
+marken; det finns inga svarta sidor längre. Metallraderna upptill ändras knappt: metaller har ingen diffus reflektion,
+och deras reflektion av omgivningen är nästa kapitels ämne. Bara den röda kanalen ökar, eftersom albedot är (0.5, 0, 0).
+Det här är learnopengls `2.1.2.ibl_irradiance`.
 
 Det kan först verka konstigt att metallsfärerna ser så mörka ut i en så ljus omgivning, men det är vad den diffusa delen
 ensam kan göra: en metallsfär borde spegla himlen, och ännu finns inget i shadern som reflekterar omgivningen. Nästa

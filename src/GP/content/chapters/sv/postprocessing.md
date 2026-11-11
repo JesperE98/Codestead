@@ -58,8 +58,9 @@ deras startkroppar skickar bara vidare rektangeln och texturen.
 Den nya shadern är `post_processing.hlsl` med `VSMain` och `PSMain`; deras startkroppar skickar bara vidare rektangeln
 och texturen.
 :::
-Kapitlets bilder tas vid **1,45 sekunder** (bildruta 87). Det ögonblicket är valt med flit: bollen träffar den solida
-stenen i bildruta 86 (se `collision-resolution`), och i slutet av kapitlet kommer den träffen att skaka skärmen.
+Kapitlets förväntade resultat visar spelet vid **1,45 sekunder** (bildruta 87). Det ögonblicket är valt med flit: bollen
+träffar den solida stenen i bildruta 86 (se `collision-resolution`), och i slutet av kapitlet kommer den träffen att
+skaka skärmen.
 
 ## Efterbehandlingsshadern
 
@@ -1109,9 +1110,9 @@ void Render(Game& game)
 ```
 :::
 
-Gör nu uppgiften **render-to-texture**. Tryck på **Build & run**: **nästan ingen synlig förändring** – och det är
-poängen: spelet tar nu omvägen genom det multisamplade målet, resolven och rektangeln, och bara kanterna avslöjar det. De
-är kantutjämnade: bollens och racketens kanter är mjukare, och pixelraderna 37, 112 och 187, som kanterna mellan två rader
+Gör nu uppgiften **render-to-texture**. Bygg och kör: **nästan ingen synlig förändring** – och det är poängen: spelet
+tar nu omvägen genom det multisamplade målet, resolven och rektangeln, och bara kanterna avslöjar det. De är
+kantutjämnade: bollens och racketens kanter är mjukare, och pixelraderna 37, 112 och 187, som kanterna mellan två rader
 block korsar precis i pixelcentrumen, är nu till hälften det ena blocket och till hälften det andra.
 :::vulkan d3d12
 (Förut hörde de raderna till det nedre blocket i {{api}} och till det övre i OpenGL – rastreringsreglerna skiljer sig
@@ -1208,9 +1209,8 @@ InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height)
 Effects.Confuse = true; // try the effects: confuse (the picture upside down, its colours inverted)
 ```
 
-Gör nu uppgiften **confuse**. Tryck på **Build & run**: **hela bilden är upp och ned och spegelvänd, med inverterade
-färger** – den ljusa himlen nedtill, blocken nedtill, racketen upptill, skymningens mörkblå blekt och de orange blocken
-blåaktiga.
+Gör nu uppgiften **confuse**. Bygg och kör: **hela bilden är upp och ned och spegelvänd, med inverterade färger** – den
+ljusa himlen nedtill, blocken nedtill, racketen upptill, skymningens mörkblå blekt och de orange blocken blåaktiga.
 
 Byt sedan raden mot `Effects.Chaos = true;` och gör uppgiften **chaos**: **kantdetektering på en bild förskjuten med
 (sin(time), cos(time)) × 0,3**. Där bilden är jämn summeras kärnan till svart; tunna ljusa linjer löper längs blockens och
@@ -1280,12 +1280,12 @@ if (ShakeTime > 0.0f) {
 ```
 :::
 
-Gör nu uppgiften **shake**: ta bort provraden och lägg till variabeln, else-grenen och nedräkningen. Tryck på **Build &
-run**. Med kursens fasta indata träffar bollen stenen i bildruta 86, så i bilden vid 1,45 s – bildruta 87 – **är bilden
-suddig och flyttad ungefär 1,4 pixlar åt vänster och 2,9 pixlar nedåt**: racketens kanter är mjuka, blockens kanter
-utsmetade. Jämna ytor ändras knappt. Från bildruta 88 är bilden skarp igen. Varje gång bollen träffar ett solitt block
-börjar skärmen kort att skaka och bli suddig, vilket ger spelaren synlig återkoppling på att bollen krockade med något
-solitt. I nästa kapitel, om power-ups, får de två andra effekterna komma till nytta.
+Gör nu uppgiften **shake**: ta bort provraden och lägg till variabeln, else-grenen och nedräkningen. Bygg och kör. Med
+kursens fasta indata träffar bollen stenen i bildruta 86, så i bilden vid 1,45 s – bildruta 87 – **är bilden suddig och
+flyttad ungefär 1,4 pixlar åt vänster och 2,9 pixlar nedåt**: racketens kanter är mjuka, blockens kanter utsmetade.
+Jämna ytor ändras knappt. Från bildruta 88 är bilden skarp igen. Varje gång bollen träffar ett solitt block börjar
+skärmen kort att skaka och bli suddig, vilket ger spelaren synlig återkoppling på att bollen krockade med något solitt.
+I nästa kapitel, om power-ups, får de två andra effekterna komma till nytta.
 
 ```quiz
 Bollen träffar stenen i bildruta 86. `DoCollisions` sätter `ShakeTime = 0.05f`, och varje `Update` drar sedan av dt = 1/60 s. I vilka bildrutor skakas bilden?

@@ -74,9 +74,9 @@ HLSL.) Kameran står på (0, 0, 3) som tidigare.
 :::
 
 learnopengl slår om allt som det här kapitlet ändrar med en enda flagga `gamma` (mellanslagstangenten). Här är varje
-steg en egen uppgift, så att du ser vad vart och ett gör. Just nu finns ingen gammakorrigering alls. Tryck på **Build &
-run** (Ctrl+Enter): ett mörkt golv med fyra ljuspölar, de högra ljusare och starkt mättade – rakt under det tredje ljuset
-är den röda kanalen redan på sitt maximum. Kommentarerna `// TODO:` i projektet visar var din kod ska in.
+steg en egen uppgift, så att du ser vad vart och ett gör. Just nu finns ingen gammakorrigering alls. Bygg och kör
+programmet: ett mörkt golv med fyra ljuspölar, de högra ljusare och starkt mättade – rakt under det tredje ljuset är den
+röda kanalen redan på sitt maximum. Kommentarerna `// TODO:` i projektet visar var din kod ska in.
 
 ### Fyra ljus i {{api}}
 
@@ -338,9 +338,9 @@ Har du flera fragment shaders för olika objekt måste du se till att alla gör 
 införa ett post-processing-steg i renderloopen och gammakorrigera skärmfyrhörningen som sista steg, vilket du bara
 behöver göra en gång.
 
-Tryck på **Build & run**. Resultatet är överraskande: hela golvet blir **mycket ljusare och urblekt** – gråaktigt, som om
-det låg dimma över det. Bakgrunden behåller samma mörkgrå färg: rensningsfärgen ritas inte av shadern, så den korrigeras
-inte. En kodrad – men det var inte hela historien.
+Bygg och kör. Resultatet är överraskande: hela golvet blir **mycket ljusare och urblekt** – gråaktigt, som om det låg
+dimma över det. Bakgrunden behåller samma mörkgrå färg: rensningsfärgen ritas inte av shadern, så den korrigeras inte.
+En kodrad – men det var inte hela historien.
 
 ## sRGB-texturer
 
@@ -448,9 +448,9 @@ Gör nu uppgiften **srgb-texture**. Skapa texturen med sRGB-formatet i `LoadText
 ```
 :::
 
-Tryck på **Build & run**: träet får tillbaka sina **varma, mättade färger** – avkodade till linjärt, belysta i linjärt
-rum, kodade en gång. Jämfört med starten är golvets mörka delar ljusare och ljuspölarna mindre mättade. Det ser bättre
-ut, men ljuset verkar nu för brett och platt. Det fixar vi strax.
+Bygg och kör: träet får tillbaka sina **varma, mättade färger** – avkodade till linjärt, belysta i linjärt rum, kodade
+en gång. Jämfört med starten är golvets mörka delar ljusare och ljuspölarna mindre mättade. Det ser bättre ut, men
+ljuset verkar nu för brett och platt. Det fixar vi strax.
 
 Var försiktig när du anger texturer som sRGB, för alla texturer ligger faktiskt inte i sRGB-rummet. Texturer som används
 för att färglägga objekt (som diffusa texturer) ligger nästan alltid i sRGB-rummet. Texturer som används för att hämta
@@ -552,10 +552,10 @@ Gör nu den sista uppgiften, **quadratic**. I `BlinnPhong()` i `gamma_correction
 ```
 :::
 
-Tryck på **Build & run**: ljuset **avtar snabbare** – ljusare rakt under ljusen, mörkare mellan dem och framför dem. Det
-här är learnopengls gammakorrigerade bild. Jämför med starten: där var det högra ljusets pöl en mättad orange fläck, och
-de fyra ljusens gråtoner (0.25 till 1.00) såg mer olika ut än de är; nu följer ljusstyrkan ljusens färger och avståndet
-så som fysiken säger att den ska.
+Bygg och kör: ljuset **avtar snabbare** – ljusare rakt under ljusen, mörkare mellan dem och framför dem. Det här är
+learnopengls gammakorrigerade bild. Jämför med starten: där var det högra ljusets pöl en mättad orange fläck, och de
+fyra ljusens gråtoner (0.25 till 1.00) såg mer olika ut än de är; nu följer ljusstyrkan ljusens färger och avståndet så
+som fysiken säger att den ska.
 
 Gammakorrigering låter oss alltså arbeta med och visa våra renderingar i linjärt rum. Eftersom linjärt rum är meningsfullt
 i den fysiska världen ger de flesta fysikaliska ekvationer nu faktiskt bra resultat (som verklig ljusdämpning). Ju mer

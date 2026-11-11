@@ -11,9 +11,9 @@ tvådimensionell matris av pixlar. En stor del av det arbete som {{api}} gör ä
 delar: den första omvandlar dina 3D-koordinater till 2D-koordinater, den andra omvandlar 2D-koordinaterna till
 faktiska färgade pixlar.
 
-Som vanligt börjar projektet till höger med `// TODO:`-kommentarer som markerar var din kod ska in, och
-**Bygg & kör** (Ctrl+Enter) kompilerar projektet och kör det i den inbyggda simulatorn. Tills du kommer till
-uppgiften som ritar visar programmet bara det blågröna fönstret från förra kapitlet.
+Som vanligt har kapitlets startfiler `// TODO:`-kommentarer som markerar var din kod ska in, och du bygger och kör
+programmet i din IDE. Tills du kommer till uppgiften som ritar visar programmet bara det blågröna fönstret från förra
+kapitlet.
 
 ## Grafikpipelinen
 
@@ -545,9 +545,9 @@ glslc shaders/shader.frag -o shaders/frag.spv
 ```
 
 Fördelen är att drivrutinen inte behöver en egen fullständig GLSL-kompilator (varje tillverkares kompilator brukade
-godta lite olika GLSL), och att syntaxfel syns när du bygger, inte när programmet körs. I det här projektet
-kompilerar **Bygg & kör** båda shaderfilerna till `shaders/vert.spv` och `shaders/frag.spv` åt dig innan det bygger
-`main.cpp`; ett fel i en shader rapporteras i utdatan som vilket kompileringsfel som helst.
+godta lite olika GLSL), och att syntaxfel syns när du bygger, inte när programmet körs. Din `CMakeLists.txt` från *Sätt
+upp din IDE* kompilerar båda shaderfilerna till `shaders/vert.spv` och `shaders/frag.spv` med `glslc` innan den bygger
+`main.cpp`; ett fel i en shader rapporteras i din IDE:s byggutdata som vilket kompileringsfel som helst.
 
 När programmet körs laddar det bytekoden med en liten hjälpfunktion, `readFile`:
 
@@ -1428,12 +1428,12 @@ glDrawArrays(GL_TRIANGLES, 0, 3);
 `GL_TRIANGLES`. Det andra argumentet är startindex i vertexarrayen, `0`. Det sista argumentet är hur många vertexar
 som ska ritas: `3` (du renderar bara en triangel från din data, som är exakt 3 vertexar lång).
 
-Gör nu den sjätte uppgiften: lägg till de tre anropen i render loopen och tryck på **Bygg & kör**. Du ska se en
-orange triangel på den blågröna bakgrunden, med hörnen på pixlarna (400, 150), (600, 450) och (200, 450).
+Gör nu den sjätte uppgiften: lägg till de tre anropen i render loopen och bygg och kör sedan. Du ska se en orange
+triangel på den blågröna bakgrunden, med hörnen på pixlarna (400, 150), (600, 450) och (200, 450).
 
-Om triangeln inte syns, titta i utdatan efter kompilerings- eller länkningsfel i shaderna och jämför sedan din kod
-med utdragen ovan. Att komma hit är en riktig milstolpe: det här är ögonblicket då learnopengl talar om triangeln
-"vi alla har väntat på".
+Om triangeln inte syns, titta i programmets konsol efter kompilerings- eller länkningsfel i shaderna och jämför sedan
+din kod med utdragen ovan. Att komma hit är en riktig milstolpe: det här är ögonblicket då learnopengl talar om
+triangeln "vi alla har väntat på".
 :::
 :::vulkan
 Ritandet sker i `recordCommandBuffer()`, mellan `vkCmdBeginRenderPass` och `vkCmdEndRenderPass` – den render pass
@@ -1474,13 +1474,14 @@ vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 - `vkCmdDraw` tar antalet vertexar (3), antalet instanser (`1`: ingen instansierad rendering), första vertexen (`0`)
   och första instansen (`0`).
 
-Gör nu den sjunde uppgiften: lägg till de här kommandona vid TODO-kommentaren i `recordCommandBuffer()` och tryck
-på **Bygg & kör**. Du ska se en orange triangel på den blågröna bakgrunden, med hörnen på pixlarna (400, 150),
-(600, 450) och (200, 450).
+Gör nu den sjunde uppgiften: lägg till de här kommandona vid TODO-kommentaren i `recordCommandBuffer()` och bygg och kör
+sedan. Du ska se en orange triangel på den blågröna bakgrunden, med hörnen på pixlarna (400, 150), (600, 450) och (200,
+450).
 
-Om fönstret förblir blågrönt, titta först i utdatan efter valideringsmeddelanden: de brukar peka ut problemet.
-Kontrollera sedan vertexarna och rasterizer-inställningarna (`cullMode` och `frontFace`). Det krävdes mycket kod för
-att komma hit – ungefär tusen rader – men nu är varje del på plats, och de kommande kapitlen ändrar bara små delar.
+Om fönstret förblir blågrönt, titta först i programmets konsol efter valideringsmeddelanden: de brukar peka ut
+problemet. Kontrollera sedan vertexarna och rasterizer-inställningarna (`cullMode` och `frontFace`). Det krävdes mycket
+kod för att komma hit – ungefär tusen rader – men nu är varje del på plats, och de kommande kapitlen ändrar bara små
+delar.
 :::
 :::d3d12
 Ritandet sker i `PopulateCommandList`, som spelar in en frames kommandon. `m_commandList->Reset` sätter redan
@@ -1527,9 +1528,8 @@ m_commandList->DrawInstanced(3, 1, 0, 0);
 - `DrawInstanced` tar antalet vertexar per instans (3), antalet instanser (`1`), första vertexen (`0`) och första
   instansen (`0`).
 
-Gör nu den sjätte uppgiften: lägg till de tre grupperna av anrop i `PopulateCommandList` och tryck på
-**Bygg & kör**. Du ska se en orange triangel på den blågröna bakgrunden, med hörnen på pixlarna (400, 150),
-(600, 450) och (200, 450).
+Gör nu den sjätte uppgiften: lägg till de tre grupperna av anrop i `PopulateCommandList` och bygg och kör sedan. Du ska
+se en orange triangel på den blågröna bakgrunden, med hörnen på pixlarna (400, 150), (600, 450) och (200, 450).
 
 Om du bara ser clear-färgen, kontrollera först vertexarnas ordning (medurs!), sedan att root signaturen, viewporten,
 scissor-rektangeln och render target alla är satta.
@@ -1664,8 +1664,8 @@ indexarray, när du inte använder något EBO – det gör vi inte här). `glDra
 bundet till `GL_ELEMENT_ARRAY_BUFFER`, och det tar VAO:n med sig. Annars skulle du behöva binda motsvarande EBO varje
 gång du renderar ett objekt med index – det gör en VAO åt dig.
 
-Gör nu den åttonde uppgiften: byt ut `glDrawArrays` mot `glDrawElements` och tryck på **Bygg & kör**. Du ska se en
-orange rektangel som täcker pixlarna (200, 150) till (600, 450).
+Gör nu den åttonde uppgiften: byt ut `glDrawArrays` mot `glDrawElements` och bygg och kör sedan. Du ska se en orange
+rektangel som täcker pixlarna (200, 150) till (600, 450).
 :::
 :::vulkan
 I Vulkan är en indexbuffert en `VkBuffer` precis som vertexbufferten – bara med en annan användning. Indexen är en
@@ -1749,9 +1749,8 @@ vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 
 tar antalet index (6), antalet instanser (1), första index (0), en offset som läggs till varje index (0) och första
 instansen (0).
 
-Gör nu den nionde uppgiften: ändra `vertices` till de fyra hörnen, bind indexbufferten och rita med
-`vkCmdDrawIndexed`. Tryck på **Bygg & kör**: du ska se en orange rektangel som täcker pixlarna (200, 150) till
-(600, 450).
+Gör nu den nionde uppgiften: ändra `vertices` till de fyra hörnen, bind indexbufferten och rita med `vkCmdDrawIndexed`.
+Bygg och kör: du ska se en orange rektangel som täcker pixlarna (200, 150) till (600, 450).
 :::
 :::d3d12
 I Direct3D 12 är en indexbuffert en resurs precis som vertexbufferten. Först byter du ut triangelns vertexar mot
@@ -1835,8 +1834,7 @@ m_commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 läggs till varje index innan vertexen läses (*base vertex*, 0) och första instansen (0).
 
 Gör nu den åttonde uppgiften: lägg till de två medlemmarna, indexbuffertblocket, `IASetIndexBuffer` och
-`DrawIndexedInstanced`. Tryck på **Bygg & kör**: du ska se en orange rektangel som täcker pixlarna (200, 150) till
-(600, 450).
+`DrawIndexedInstanced`. Bygg och kör: du ska se en orange rektangel som täcker pixlarna (200, 150) till (600, 450).
 :::
 
 ```quiz
@@ -1932,9 +1930,9 @@ kapitlen blir förhoppningsvis mycket lättare att förstå.
 
 ## Övningar
 
-För att verkligen förstå begreppen som tagits upp finns några övningar. Det är bra att arbeta igenom dem innan du
-går vidare till nästa ämne, så att du har koll på vad som händer. Projektet är ditt att ändra i: prova övningarna i
-editorn, och använd **Återställ** om du vill få tillbaka kapitlets sluttillstånd.
+För att verkligen förstå begreppen som tagits upp finns några övningar. Det är bra att arbeta igenom dem innan du går
+vidare till nästa ämne, så att du har koll på vad som händer. Projektet är ditt att ändra i: prova övningarna i din IDE,
+och kopiera startfilerna till en ny mapp om du vill börja om från början.
 
 :::opengl
 1. Försök rita 2 trianglar bredvid varandra med `glDrawArrays` genom att lägga till fler vertexar i din data.

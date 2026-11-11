@@ -23,7 +23,9 @@ public sealed partial class D3D12Reader
         var draws = src.Calls(".DrawInstanced").ToList();
         var indexedDraws = src.Calls(".DrawIndexedInstanced").ToList();
         // A Model (learnopengl's Model class ported): m_model.Draw(m_commandList.Get()) draws its meshes.
-        var modelDraw = src.Calls(".Draw").FirstOrDefault(c => Recorded(c) && c.Target is { } t && (src.DeclaredType(t) ?? "").Contains("Model", StringComparison.Ordinal));
+        // (Through a member or a pointer too: entity.pModel->Draw(commandList) – the member's declared type.)
+        var modelDraw = src.Calls(".Draw").FirstOrDefault(c => Recorded(c) && c.Target is { } t
+            && (src.DeclaredType(Regex.Match(t, @"(\w+)\s*(?:\[[^\]]*\])?\s*$").Groups[1].Value) ?? "").Contains("Model", StringComparison.Ordinal));
         // With a PopulateCommandList, only what it records is drawn (a Mesh::Draw nobody calls yet draws nothing).
         bool recordsHere = src.Functions.ContainsKey("PopulateCommandList");
         var draw = draws.FirstOrDefault(Recorded) ?? (modelDraw is null && !recordsHere ? draws.FirstOrDefault() : null);
@@ -52,6 +54,9 @@ public sealed partial class D3D12Reader
         var (vs, vsEntry) = vsInfo.Value;
         var (ps, psEntry) = psInfo.Value;
         var gsInfo = UsesGeometry(int.MaxValue) ? Compile("gs_") : null;
+        // Tessellation: a hull and a domain shader in the description (psoDesc.HS / DS set to bytecode).
+        var hsInfo = UsesStage("HS", int.MaxValue) ? Compile("hs_") : null;
+        var dsInfo = hsInfo is not null && UsesStage("DS", int.MaxValue) ? Compile("ds_") : null;
 
         var vertices = new List<Dictionary<string, ShaderValue>>();
         var entry = vs.FindFunction(vsEntry);
@@ -183,11 +188,16 @@ public sealed partial class D3D12Reader
                 {
                     if (d.Indexed && ds.IndexBuffer is { } ib)
                         dIndices = Enumerable.Range(0, d.Count).Select(k => (int)(device.ReadIndex(ib.Address, (long)(d.First + k) * ib.Bytes, ib.Bytes) ?? 0)).ToArray();
+                    // Only the vertices the indices reach (a strip of a large grid), the indices counted from the lowest.
+                    int baseVertex = d.Indexed && dIndices is { Length: > 0 } && !dvs.Names.Contains("SV_VertexID") ? dIndices.Min() : 0;
+                    if (baseVertex > 0) for (int k = 0; k < dIndices!.Length; k++) dIndices[k] -= baseVertex;
                     int vertexCount = d.Indexed ? (dIndices is { Length: > 0 } ? dIndices.Max() + 1 : 0) : d.First + d.Count;
-                    (dVertices, perInstance, stepRate) = DeviceVertices(device, ds, ChooseLayout(layouts, dvs, pl?.VsEntry ?? vsEntry), vertexCount, Math.Max(1, d.Instances));
+                    (dVertices, perInstance, stepRate) = DeviceVertices(device, ds, ChooseLayout(layouts, dvs, pl?.VsEntry ?? vsEntry), vertexCount, Math.Max(1, d.Instances), baseVertex);
                 }
                 deviceTextureSizes = null;
-                var (deviceTextures, deviceCubes) = d.State is D3D12Device.DrawState { Tables.Count: > 0 } ts ? DeviceTextures(device, ts, dvs, dps) : (null, null);
+                var dhs = pl is not null ? pl.Tcs : hsInfo?.Program;
+                var dds = pl is not null ? pl.Tes : dsInfo?.Program;
+                var (deviceTextures, deviceCubes) = d.State is D3D12Device.DrawState { Tables.Count: > 0 } ts ? DeviceTextures(device, ts, PipelineInfo.Merged(dvs, dhs, dds, pl is not null ? pl.Gs : gsInfo?.Program), dps) : (null, null);
                 var textureSizes = deviceTextures is null ? null : deviceTextureSizes;
                 var target = (d.State as D3D12Device.DrawState)?.Target;
                 if (target is not null) RegisterTarget(device, target);
@@ -196,11 +206,16 @@ public sealed partial class D3D12Reader
                     Target = target,
                     GeometryShader = pl is not null ? pl.Gs : gsInfo?.Program,
                     GeometryEntry = pl is not null ? pl.GsEntry : gsInfo?.Entry ?? "main",
+                    TessControlShader = dds is not null ? dhs : null,
+                    TessControlEntry = pl is not null ? pl.TcsEntry : hsInfo?.Entry ?? "main",
+                    TessEvalShader = dhs is not null ? dds : null,
+                    TessEvalEntry = pl is not null ? pl.TesEntry : dsInfo?.Entry ?? "main",
+                    PatchVertices = PatchPoints((d.State as D3D12Device.DrawState)?.Topology ?? topology),
                     InstanceVertices = perInstance,
                     InstanceDivisor = stepRate,
                     CubeTextures = deviceCubes,
                     CubeTexturesLod = deviceCubes is null ? null : deviceCubeLod,
-                    TextureSizes = textureSizes,
+                    TextureImages = textureSizes,
                     VertexShader = dvs,
                     FragmentShader = dps,
                     VertexEntry = pl?.VsEntry ?? vsEntry,
@@ -221,6 +236,7 @@ public sealed partial class D3D12Reader
                     DepthWrite = (pl?.State ?? state).DepthWrite,
                     Stencil = (pl?.State ?? state).Stencil is { } st ? st with { Ref = d.StencilRef ?? st.Ref } : null,
                     Blend = (pl?.State ?? state).Blend,
+                    AttachmentBlends = (pl?.State ?? state).Attachments,
                     Textures = deviceTextures ?? PerDrawTextures(pl?.Vs ?? vs, pl?.Fs ?? ps, d.Bound) ?? (pl is null ? textures : Textures(pl.Vs, pl.Fs) ?? textures),
                 });
             }
@@ -321,8 +337,13 @@ public sealed partial class D3D12Reader
     }
 
     /// <summary>D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP, …_LINESTRIP, …_TRIANGLELIST, …_POINTLIST (no underscore before STRIP).</summary>
+    /// <summary>D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST → 4.</summary>
+    private static int PatchPoints(string? name) =>
+        name is not null && Regex.Match(name, @"(\d+)_CONTROL_POINT") is { Success: true } m ? int.Parse(m.Groups[1].Value) : 3;
+
     private static Topology TopologyOf(string name) => name switch
     {
+        _ when name.Contains("CONTROL_POINT_PATCHLIST", StringComparison.Ordinal) => Topology.Patches,
         _ when name.Contains("TRIANGLESTRIP", StringComparison.Ordinal) => Topology.TriangleStrip,
         _ when name.Contains("LINESTRIP", StringComparison.Ordinal) => Topology.LineStrip,
         _ => GlReader.TopologyOf(name),
@@ -364,7 +385,8 @@ public sealed partial class D3D12Reader
         // has layers; drawn into through a view per slice (a cube map's faces one by one), each slice is its own target.
         var shape = device.ShapeOf(id) ?? device.ShapeOf(levelId);
         scene.Targets[levelId] = new RenderTarget(levelId, Math.Max(1, r.Width >> level), Math.Max(1, r.Height >> level), shape?.Colors ?? 1, shape?.Depth ?? true, shape?.Depth ?? true,
-            Math.Max(1, r.Samples), r.Float, r.PerSlice ? 1 : Math.Max(1, r.ArraySize));
+            Math.Max(1, r.Samples), r.Float, r.PerSlice ? 1 : Math.Max(1, r.ArraySize), device.DepthOf(levelId), device.ChannelsOf(levelId, shape?.Colors ?? 1));
+        if (device.DepthOf(levelId) is { } owner) RegisterTarget(device, owner);
     }
 
     /// <summary>Every input layout of the program: (semantic, input slot, byte offset, floats, per instance, step rate).</summary>
@@ -414,14 +436,15 @@ public sealed partial class D3D12Reader
 
     /// <summary>Vertices (and per-instance values) read from the vertex buffers bound at the draw, through the layout.</summary>
     private static (List<Dictionary<string, ShaderValue>>, List<Dictionary<string, ShaderValue>>?, int) DeviceVertices(D3D12Device device, D3D12Device.DrawState state,
-        List<(string Semantic, int Slot, int Offset, int Comps, bool Instance, int Step)> layout, int count, int instances)
+        List<(string Semantic, int Slot, int Offset, int Comps, bool Instance, int Step)> layout, int count, int instances, int baseVertex = 0)
     {
         var vertices = new List<Dictionary<string, ShaderValue>>();
+        var perVertex = layout.Where(e => !e.Instance).ToList();
         for (int i = 0; i < count; i++)
         {
             var dict = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
-            foreach (var e in layout.Where(e => !e.Instance))
-                if (state.VertexBuffers.TryGetValue(e.Slot, out var vb) && device.Read(vb.Address, (long)i * vb.Stride + e.Offset, e.Comps) is { } v)
+            foreach (var e in perVertex)
+                if (state.VertexBuffers.TryGetValue(e.Slot, out var vb) && device.Read(vb.Address, (long)(i + baseVertex) * vb.Stride + e.Offset, e.Comps) is { } v)
                     dict[e.Semantic] = ShaderValue.Vec(v);
             vertices.Add(dict);
         }
@@ -461,13 +484,17 @@ public sealed partial class D3D12Reader
             var parts = id.Split('|');
             if (!flat.ContainsKey(id))
             {
-                var (t, c) = registers.TryGetValue(parts[0], out var reg) ? device.TextureAt(TableHandle(state, reg) ?? start + reg, sampler(parts.Length > 1 ? parts[1] : null)) : (null, null);
+                // "name@k": slice k of a Texture2DArray.
+                int at = parts[0].IndexOf('@');
+                var name = at < 0 ? parts[0] : parts[0][..at];
+                int layer = at < 0 ? 0 : int.Parse(parts[0][(at + 1)..], System.Globalization.CultureInfo.InvariantCulture);
+                var (t, c) = registers.TryGetValue(name, out var reg) ? device.TextureAt(TableHandle(state, reg) ?? start + reg, sampler(parts.Length > 1 ? parts[1] : null), layer) : (null, null);
                 flat[id] = t;
                 cubes[id] = c;
             }
             return (flat[id], cubes[id]);
         }
-        deviceTextureSizes = id => Lookup(id).Item1 is { } t ? (t.Image.Width, t.Image.Height) : null;
+        deviceTextureSizes = id => Lookup(id).Item1?.Image;
         deviceCubeLod = (id, x, y, z, lod) => Lookup(id).Item2 is { } c ? c.Sample(x, y, z, lod) : null;
         return ((id, u, v) => Lookup(id).Item1 is { } t ? t.Sample(u, v) : [0, 0, 0, 1],
             (id, x, y, z) => Lookup(id).Item2 is { } c ? c.Sample(x, y, z) : null);
@@ -502,7 +529,7 @@ public sealed partial class D3D12Reader
     }
 
     /// <summary>The texture sizes of the last DeviceTextures call (GetDimensions, textureSize).</summary>
-    private Func<string, (int Width, int Height)?>? deviceTextureSizes;
+    private Func<string, Codestead.GP.Gpu.Textures.Image?>? deviceTextureSizes;
     /// <summary>The cube maps of the last DeviceTextures call read at a mip level (SampleLevel).</summary>
     private Func<string, double, double, double, double, double[]?>? deviceCubeLod;
 
@@ -540,7 +567,7 @@ public sealed partial class D3D12Reader
         ShaderProgram? gs = null, string gsEntry = "main", FrameRecorder.RecordedDraw? recorded = null, string? target = null)
     {
         // The model of the draw: the .obj its Load call names (m_rock.Load("models/rock.obj", …)), else the first one.
-        var path = recorded?.ModelName is { } modelName && Regex.Match(src.Code, Regex.Escape(modelName) + @"\s*(?:\.|->)\s*Load\s*\(\s*""([^""]+\.obj)""") is { Success: true } lm
+        var path = recorded?.ModelName is { } modelName && Regex.Match(src.Code, Regex.Escape(modelName) + @"\s*(?:\.|->)\s*Load\s*\(\s*""([^""]+\.(?:obj|gltf))""") is { Success: true } lm
             ? lm.Groups[1].Value : Models.ModelFiles.Path(src);
         var model = path is null ? null : Models.ObjModel.Load(project, path);
         if (model is null)
@@ -558,6 +585,18 @@ public sealed partial class D3D12Reader
                 ["NORMAL0"] = ShaderValue.Vec(mesh.Normals[i]),
                 ["TEXCOORD0"] = ShaderValue.Vec(mesh.TexCoords[i][0], flipUv ? 1 - mesh.TexCoords[i][1] : mesh.TexCoords[i][1]),
             }).ToList();
+            // A skinned model: the bone ids and weights (BLENDINDICES, BLENDWEIGHT) as the class's
+            // ExtractBoneWeightForVertices leaves them (ids -1 when it does not read them).
+            if (mesh.Joints is not null)
+            {
+                bool extracts = Regex.IsMatch(src.Code, @"\bExtractBoneWeightForVertices\s*\([^)]*\)\s*;");
+                for (int i = 0; i < vertices.Count; i++)
+                {
+                    var (ids, weights) = extracts ? Models.GltfModel.VertexBones(mesh, i) : ([-1, -1, -1, -1], [0, 0, 0, 0]);
+                    vertices[i]["BLENDINDICES0"] = ShaderValue.Vec(ids);
+                    vertices[i]["BLENDWEIGHT0"] = ShaderValue.Vec(weights);
+                }
+            }
             var maps = new[] { mesh.Material?.DiffuseMap, mesh.Material?.SpecularMap, mesh.Material?.NormalMap }
                 .Select(f => Models.ModelFiles.Texture(project, path!, f, false)).ToList();
             scene.Draws.Add(new DrawCall
@@ -682,6 +721,7 @@ public sealed partial class D3D12Reader
     private static void Flatten(ShaderValue v, List<double> into)
     {
         if (v.V is not null) into.AddRange(v.V);
+        else if (v.Packed is { } packed) into.AddRange(packed);
         else if (v.Items is not null) foreach (var i in v.Items) Flatten(i, into);
     }
 

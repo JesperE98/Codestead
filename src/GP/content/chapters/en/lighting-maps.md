@@ -290,8 +290,8 @@ PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL, float2 texCoo
 The lamp's pipeline uses the same input layout; its vertex shader simply ignores the elements it doesn't read.
 :::
 
-Now do the first task, **texcoords**, and press **Build & run**. Nothing changes yet – the cube is still coral – but
-the coordinates are now on their way to the fragment shader.
+Now do the first task, **texcoords**, then build and run. Nothing changes yet – the cube is still coral – but the
+coordinates are now on their way to the fragment shader.
 
 Next comes the texture itself.
 
@@ -585,10 +585,10 @@ Registers are reached through the root signature: the range `SRV, 1, 0` says "th
 ```
 :::
 
-Now do the task **diffuse-map** and press **Build & run**. The coral cube is now a wooden crate in a steel frame,
-lit like before: the front face bright, the left face dark. As you can see the container now looks like a proper
-container: a dramatic increase in visual quality. Look closely at the specular highlight in the upper-left corner of
-the front face, though: it is a grey-white sheen that covers the steel and the wood alike.
+Now do the task **diffuse-map**, then build and run. The coral cube is now a wooden crate in a steel frame, lit like
+before: the front face bright, the left face dark. As you can see the container now looks like a proper container: a
+dramatic increase in visual quality. Look closely at the specular highlight in the upper-left corner of the front face,
+though: it is a grey-white sheen that covers the steel and the wood alike.
 
 ## Specular maps
 
@@ -822,9 +822,9 @@ A descriptor table is a starting handle plus a run of consecutive descriptors. T
 ```
 :::
 
-Now do the task **specular-map** and press **Build & run**. Only the steel shines now: the highlight on the frame in
-the upper-left corner is bright white, while the wooden planks right next to it lost their sheen and only show their
-diffuse colour.
+Now do the task **specular-map**, then build and run. Only the steel shines now: the highlight on the frame in the
+upper-left corner is bright white, while the wooden planks right next to it lost their sheen and only show their diffuse
+colour.
 
 By using a specular map we can specify with enormous detail what parts of an object have shiny properties and we can
 even control the corresponding intensity. Specular maps give us an added layer of control over lighting on top of the
@@ -946,9 +946,9 @@ Texture2D emissionMap : register(t2);
 ```
 :::
 
-Now do the task **emission** and press **Build & run**. Green glyphs glow over both visible faces of the crate – also
-on the left face, which the light doesn't reach. Between the glyphs, where the emission map is black, the crate looks
-exactly as before.
+Now do the task **emission**, then build and run. Green glyphs glow over both visible faces of the crate – also on the
+left face, which the light doesn't reach. Between the glyphs, where the emission map is black, the crate looks exactly
+as before.
 
 ```quiz
 Why do the green glyphs glow just as brightly on the left face, which gets no diffuse light?

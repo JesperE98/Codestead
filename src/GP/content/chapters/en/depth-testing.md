@@ -335,8 +335,7 @@ image repeats. The shaders are in `depth_testing.hlsl`. This project has no `// 
 lines that are already there.
 :::
 
-Press **Build & run** (Ctrl+Enter) to see the start picture in the built-in simulator: two marble cubes on a metal
-floor whose far edge forms the horizon.
+Build and run the program to see the start picture: two marble cubes on a metal floor whose far edge forms the horizon.
 
 Now we set the depth function to "always": every fragment passes the depth test.
 
@@ -373,12 +372,12 @@ for the picture. (Strictly speaking, the two aren't identical: with ALWAYS the d
 the depth test disabled it isn't.)
 :::
 
-Now do the task **depth-always** and press **Build & run**. This simulates the same behavior we'd get if we didn't
-enable depth testing. The depth test always passes so the fragments that are drawn last are rendered in front of the
-fragments that were drawn before, even though they should've been at the front. Since we've drawn the floor last, the
-floor's fragments overwrite each of the container's fragments wherever they cover them: the lower parts of both
-cubes, below the horizon, now show the metal floor. And inside each cube, the faces drawn later (the back, the sides,
-the top) cover the front face, so the upper part of the left cube no longer looks like its front.
+Now do the task **depth-always**, then build and run. This simulates the same behavior we'd get if we didn't enable
+depth testing. The depth test always passes so the fragments that are drawn last are rendered in front of the fragments
+that were drawn before, even though they should've been at the front. Since we've drawn the floor last, the floor's
+fragments overwrite each of the container's fragments wherever they cover them: the lower parts of both cubes, below the
+horizon, now show the metal floor. And inside each cube, the faces drawn later (the back, the sides, the top) cover the
+front face, so the upper part of the left cube no longer looks like its front.
 
 ```quiz
 With the depth function ALWAYS, why does the floor cover the lower half of the cubes – although it lies behind them?
@@ -438,8 +437,8 @@ Then set the depth function back to "less" – a fragment passes when it is near
 ```
 :::
 
-Do the task **depth-less** and press **Build & run**: the start picture is back, with the cubes standing in front of
-the floor.
+Do the task **depth-less**, then build and run: the start picture is back, with the cubes standing in front of the
+floor.
 
 ## Depth value precision
 
@@ -549,9 +548,9 @@ In `PSMain`, in `depth_testing.hlsl`, the texture sample makes way for the pixel
 `input.position.zzz` is a *swizzle*: a `float3` with the z component three times.
 :::
 
-Now do the task **visualize-depth** and press **Build & run**. If you'd then run the program you'll probably notice
-that everything is white, making it look like all of our depth values are the maximum depth value of `1.0`. So why
-aren't any of the depth values closer to `0.0` and thus darker?
+Now do the task **visualize-depth**, then build and run. If you'd then run the program you'll probably notice that
+everything is white, making it look like all of our depth values are the maximum depth value of `1.0`. So why aren't any
+of the depth values closer to `0.0` and thus darker?
 
 In the previous section we described that depth values in screen space are non-linear, e.g. they have a very high
 precision for small z-values and a low precision for large z-values. The depth value of the fragment increases rapidly
@@ -724,12 +723,12 @@ OpenGL's projection produces NDC z in -1..1 and its viewport maps that to 0..1; 
 ```
 :::
 
-Now do the task **linear-depth** and press **Build & run**. The output is now almost black: the value is the distance
-divided by 100, and the objects are only a few units away – the front of the left cube, 3.5 units from the camera,
-gets 0.035. The floor grows lighter towards the back, and the background (the clear colour, 0.1) is now lighter than
-everything that was drawn. The colors are mostly black because the depth values range linearly from the near plane,
-which is 0.1, to the far plane, which is 100 – still quite far away from us. The result is that we're relatively
-close to the near plane and therefore get lower (darker) depth values.
+Now do the task **linear-depth**, then build and run. The output is now almost black: the value is the distance divided
+by 100, and the objects are only a few units away – the front of the left cube, 3.5 units from the camera, gets 0.035.
+The floor grows lighter towards the back, and the background (the clear colour, 0.1) is now lighter than everything that
+was drawn. The colors are mostly black because the depth values range linearly from the near plane, which is 0.1, to the
+far plane, which is 100 – still quite far away from us. The result is that we're relatively close to the near plane and
+therefore get lower (darker) depth values.
 
 ## Z-fighting
 

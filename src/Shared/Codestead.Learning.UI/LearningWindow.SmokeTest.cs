@@ -20,7 +20,7 @@ namespace Codestead.Learning.UI;
 // The --smoke-test of the installation tests.
 public partial class LearningWindow
 {
-    private void RunSmokeTest() => SmokeTest.Run(this, tool.Product, () =>
+    private Task RunSmokeTest() => SmokeTest.RunAsync(this, tool.Product, async () =>
     {
         // Every chapter renders in every language without throwing.
         foreach (var l in Languages.Offered)
@@ -61,25 +61,17 @@ public partial class LearningWindow
         ApplyLanguage();
         var task = tool.Tasks(Chapter.Id, Lang)[0];
         var before = state.Progress.ContainsKey(task.Key);
-        void Solve()
-        {
-            foreach (var cmd in task.Solution)
-            {
-                tool.Inject(cmd);
-                tool.Run(cmd);
-            }
-        }
         if (!IsUnlocked(Chapter))
         {
             // The terminal is there from the start, but the tasks stay locked until the text is done.
             if (!workbenchFrame.IsVisible) throw new InvalidOperationException("The terminal of a locked lesson is hidden.");
-            Solve();
+            await tool.SolveForSmokeTest(task);
             if (state.Progress.ContainsKey(task.Key)) throw new InvalidOperationException("A task was checked before the lesson was unlocked.");
             for (int i = 0; i < CheckpointCount(Chapter); i++) state.Checkpoints[CheckpointKey(Chapter, i)] = true;
             if (!state.Read.Contains(Chapter.Id)) state.Read.Add(Chapter.Id);
             RenderAll();
         }
-        Solve();
+        await tool.SolveForSmokeTest(task);
         var after = state.Progress.ContainsKey(task.Key);
         if (!before && !after) throw new InvalidOperationException("The first task was not completed by its solution.");
         if (state.Game.Xp <= 0 || !state.Game.Achievements.ContainsKey("first-task"))

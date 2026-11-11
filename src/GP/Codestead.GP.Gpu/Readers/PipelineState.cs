@@ -9,10 +9,20 @@ namespace Codestead.GP.Gpu.Readers;
 /// </summary>
 internal static class PipelineState
 {
-    public sealed record Fixed(CompareFunc DepthFunc, bool DepthWrite, StencilState? Stencil, BlendState? Blend);
+    /// <param name="Attachments">Blending per colour attachment when it differs between them (D3D12's
+    /// IndependentBlendEnable, Vulkan's pAttachments array), else null: every attachment blends with <paramref name="Blend"/>.</param>
+    public sealed record Fixed(CompareFunc DepthFunc, bool DepthWrite, StencilState? Stencil, BlendState? Blend, IReadOnlyList<BlendState?>? Attachments = null);
 
-    /// <summary>Vulkan: VkPipelineDepthStencilStateCreateInfo and VkPipelineColorBlendAttachmentState fields.</summary>
-    public static Fixed Vulkan(Func<string, string?> field, Func<string, int?> number)
+    /// <summary>The attachments' blending, or null when they all blend alike.</summary>
+    private static IReadOnlyList<BlendState?>? Distinct(List<BlendState?> blends) =>
+        blends.Count > 1 && blends.Skip(1).Any(b => b != blends[0]) ? blends : null;
+
+    /// <summary>
+    /// Vulkan: VkPipelineDepthStencilStateCreateInfo and VkPipelineColorBlendAttachmentState fields.
+    /// <paramref name="attachments"/>: the fields of each element of pAttachments (attachmentCount of them), when the
+    /// program sets them element by element.
+    /// </summary>
+    public static Fixed Vulkan(Func<string, string?> field, Func<string, int?> number, IReadOnlyList<Func<string, string?>>? attachments = null)
     {
         var depthFunc = field("depthCompareOp") is { } d ? VkCompare(d) : CompareFunc.Less;
         bool depthWrite = !Regex.IsMatch(field("depthWriteEnable") ?? "VK_TRUE", "FALSE|^0$");
@@ -26,17 +36,21 @@ internal static class PipelineState
                 VkStencilOp(field("failOp")),
                 VkStencilOp(field("depthFailOp")),
                 VkStencilOp(field("passOp")));
-        BlendState? blend = null;
-        if (Regex.IsMatch(field("blendEnable") ?? "", "TRUE|^1$"))
-            blend = new BlendState(
+        static BlendState? Blend(Func<string, string?> field) => !Regex.IsMatch(field("blendEnable") ?? "", "TRUE|^1$") ? null
+            : new BlendState(
                 VkFactor(field("srcColorBlendFactor"), BlendFactor.One), VkFactor(field("dstColorBlendFactor"), BlendFactor.Zero),
                 VkFactor(field("srcAlphaBlendFactor"), BlendFactor.One), VkFactor(field("dstAlphaBlendFactor"), BlendFactor.Zero),
                 VkOp(field("colorBlendOp")), VkOp(field("alphaBlendOp")));
-        return new Fixed(depthFunc, depthWrite, stencil, blend);
+        var perAttachment = attachments is { Count: > 1 } ? Distinct(attachments.Select(Blend).ToList()) : null;
+        return new Fixed(depthFunc, depthWrite, stencil, attachments is { Count: > 0 } ? Blend(attachments[0]) : Blend(field), perAttachment);
     }
 
-    /// <summary>DirectX 12: D3D12_DEPTH_STENCIL_DESC and D3D12_RENDER_TARGET_BLEND_DESC fields.</summary>
-    public static Fixed D3D12(Func<string, string?> field, Func<string, int?> number)
+    /// <summary>
+    /// DirectX 12: D3D12_DEPTH_STENCIL_DESC and D3D12_RENDER_TARGET_BLEND_DESC fields. With IndependentBlendEnable,
+    /// <paramref name="target"/> gives the fields of BlendState.RenderTarget[i] (otherwise every target blends as
+    /// RenderTarget[0]).
+    /// </summary>
+    public static Fixed D3D12(Func<string, string?> field, Func<string, int?> number, Func<int, Func<string, string?>>? target = null)
     {
         var depthFunc = field("DepthFunc") is { } d ? DxCompare(d) : CompareFunc.Less;
         bool depthWrite = !(field("DepthWriteMask") ?? "").Contains("ZERO", StringComparison.Ordinal);
@@ -50,13 +64,20 @@ internal static class PipelineState
                 DxStencilOp(field("StencilFailOp")),
                 DxStencilOp(field("StencilDepthFailOp")),
                 DxStencilOp(field("StencilPassOp")));
-        BlendState? blend = null;
-        if (Regex.IsMatch(field("BlendEnable") ?? "", "TRUE|true|^1$"))
-            blend = new BlendState(
+        static BlendState? Blend(Func<string, string?> field) => !Regex.IsMatch(field("BlendEnable") ?? "", "TRUE|true|^1$") ? null
+            : new BlendState(
                 DxFactor(field("SrcBlend"), BlendFactor.One), DxFactor(field("DestBlend"), BlendFactor.Zero),
                 DxFactor(field("SrcBlendAlpha"), BlendFactor.One), DxFactor(field("DestBlendAlpha"), BlendFactor.Zero),
                 DxOp(field("BlendOp")), DxOp(field("BlendOpAlpha")));
-        return new Fixed(depthFunc, depthWrite, stencil, blend);
+        if (target is not null)
+        {
+            // RenderTarget[0] is the blending of every target, unless IndependentBlendEnable lets each have its own.
+            var first = Blend(target(0));
+            var perTarget = Regex.IsMatch(field("IndependentBlendEnable") ?? "", "TRUE|true|^1$")
+                ? Distinct(Enumerable.Range(0, 8).Select(i => Blend(target(i))).ToList()) : null;
+            return new Fixed(depthFunc, depthWrite, stencil, first, perTarget);
+        }
+        return new Fixed(depthFunc, depthWrite, stencil, Blend(field));
     }
 
     private static CompareFunc VkCompare(string v) => Suffix(v, "VK_COMPARE_OP_") switch

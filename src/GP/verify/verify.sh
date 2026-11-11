@@ -131,6 +131,10 @@ for dir in "$@"; do
       for s in "$work"/*.vs "$work"/*.vert; do [ -f "$s" ] && { glslangValidator -S vert "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S vert "$s" | tail -n +2)"; }; done
       for s in "$work"/*.fs "$work"/*.frag; do [ -f "$s" ] && { glslangValidator -S frag "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S frag "$s" | tail -n +2)"; }; done
       for s in "$work"/*.gs "$work"/*.geom; do [ -f "$s" ] && { glslangValidator -S geom "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S geom "$s" | tail -n +2)"; }; done
+      # The guest articles' tessellation (learnopengl's .tcs / .tes) and compute (.comp) stages.
+      for s in "$work"/*.tcs "$work"/*.tesc; do [ -f "$s" ] && { glslangValidator -S tesc "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S tesc "$s" | tail -n +2)"; }; done
+      for s in "$work"/*.tes "$work"/*.tese; do [ -f "$s" ] && { glslangValidator -S tese "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S tese "$s" | tail -n +2)"; }; done
+      for s in "$work"/*.comp; do [ -f "$s" ] && { glslangValidator -S comp "$s" >/dev/null || fail "$(basename "$s"): $(glslangValidator -S comp "$s" | tail -n +2)"; }; done
       # Model loading: learnopengl's model.h uses Assimp.
       libs=""; grep -rqs "assimp/" "$work" --include=*.cpp --include=*.h && libs="-lassimp"
       # Text rendering: FreeType.
@@ -186,6 +190,10 @@ for dir in "$@"; do
         grep -q "VSMain" "$s" && { glslangValidator -V -D -e VSMain -S vert -o "$work/vs.spv" "$s" >"$work/hlsl.log" || { fail "$(basename "$s") VSMain:"; cat "$work/hlsl.log"; }; }
         grep -q "PSMain" "$s" && { glslangValidator -V -D -e PSMain -S frag -o "$work/ps.spv" "$s" >"$work/hlsl.log" || { fail "$(basename "$s") PSMain:"; cat "$work/hlsl.log"; }; }
         grep -qE "void[[:space:]]+GSMain[[:space:]]*\(" "$s" && { glslangValidator -V -D -e GSMain -S geom -o "$work/gs.spv" "$s" >"$work/hlsl.log" || { fail "$(basename "$s") GSMain:"; cat "$work/hlsl.log"; }; }
+        # The guest articles' hull / domain (tessellation) and compute shaders.
+        grep -qE "[[:space:]]HSMain[[:space:]]*\(" "$s" && { glslangValidator -V -D -e HSMain -S tesc -o "$work/hs.spv" "$s" >"$work/hlsl.log" || { fail "$(basename "$s") HSMain:"; cat "$work/hlsl.log"; }; }
+        grep -qE "[[:space:]]DSMain[[:space:]]*\(" "$s" && { glslangValidator -V -D -e DSMain -S tese -o "$work/ds.spv" "$s" >"$work/hlsl.log" || { fail "$(basename "$s") DSMain:"; cat "$work/hlsl.log"; }; }
+        grep -qE "void[[:space:]]+CSMain[[:space:]]*\(" "$s" && { glslangValidator -V -D -e CSMain -S comp -o "$work/cs.spv" "$s" >"$work/hlsl.log" || { fail "$(basename "$s") CSMain:"; cat "$work/hlsl.log"; }; }
       done
       # For MinGW, d3d12.h/d3dx12 declare the methods that return a struct (GetCPUDescriptorHandleForHeapStart,
       # GetDesc ...) with an extra out-parameter (an ABI workaround). The course code is written for MSVC, like the

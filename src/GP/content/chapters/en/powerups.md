@@ -31,7 +31,8 @@ without colour, so each power-up's colour vector tints them: the colour makes ea
 and nothing of this chapter would show. So the second task puts one power-up of each kind into the game by hand, in
 `Init`, as if six blocks had just broken in the empty row between the blue blocks and the stones. A real game would not
 have these lines; they stay through the `audio` chapter, and the first task of `render-text` removes them again. The
-chapter's pictures are taken at **1.5 s** (frame 90), when the power-ups are falling, and at **3.0 s** (frame 180).
+chapter's expected results show the game at **1.5 s** (frame 90), when the power-ups are falling, and at **3.0 s**
+(frame 180).
 
 ## The power-up
 
@@ -179,9 +180,9 @@ game.PowerUps.push_back(MakePowerUp("chaos", XMFLOAT3(0.9f, 0.25f, 0.25f), 15.0f
 ```
 :::
 
-A duration of 0 means the effect is permanent: the speed and the paddle size, once changed, stay changed. Press
-**Build & run**: **six tinted pills in the row above the stones** – blue, pink, green, orange and two reds. They don't
-move yet: nothing updates them.
+A duration of 0 means the effect is permanent: the speed and the paddle size, once changed, stay changed. Build and run:
+**six tinted pills in the row above the stones** – blue, pink, green, orange and two reds. They don't move yet: nothing
+updates them.
 
 ## Updating the power-ups
 
@@ -412,10 +413,10 @@ Call it in `Update`, after the particles:
 UpdatePowerUps(game, dt);
 ```
 
-Now do the task **update-powerups**. Press **Build & run**: at 1.5 s **all six pills have fallen to the middle of the
-window** (y = 385, 2.5 pixels per frame), and the row above the stones is empty again. The ball flies past them; a
-power-up only reacts to the paddle. At 3.0 s they have fallen out of the window – but nothing destroys them yet, so
-they are still in the vector, drawn below the window.
+Now do the task **update-powerups**. Build and run: at 1.5 s **all six pills have fallen to the middle of the window**
+(y = 385, 2.5 pixels per frame), and the row above the stones is empty again. The ball flies past them; a power-up only
+reacts to the paddle. At 3.0 s they have fallen out of the window – but nothing destroys them yet, so they are still in
+the vector, drawn below the window.
 
 ```quiz
 `UpdatePowerUps` ends with `game.PowerUps.erase(std::remove_if(game.PowerUps.begin(), game.PowerUps.end(), […](…) { … }), game.PowerUps.end());`. What does `std::remove_if` on its own do?

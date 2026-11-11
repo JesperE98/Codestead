@@ -40,6 +40,14 @@ public sealed partial class GlReader
             indices = data.Skip(skip).Take(count).Select(d => (int)d).ToArray();
             first = 0;
         }
+        // Indexed: only the vertices the indices reach (a strip of a 65,536-vertex terrain reads 512 of them), the
+        // indices counted from the lowest.
+        int baseVertex = 0;
+        if (indices is { Length: > 0 } && !program.Vertex.Names.Contains("gl_VertexID") && indices.Min() is int lowest and > 0)
+        {
+            baseVertex = lowest;
+            for (int i = 0; i < indices.Length; i++) indices[i] -= lowest;
+        }
         int vertexCount = indices is null ? first + count : (indices.Length == 0 ? 0 : indices.Max() + 1);
 
         // The vertex shader's inputs, by location.
@@ -53,7 +61,7 @@ public sealed partial class GlReader
             {
                 if (attr.Divisor > 0 || !attr.Enabled || attr.Buffer is null || !gl.Buffers.TryGetValue(attr.Buffer, out var data) || data is null) continue;
                 int stride = attr.StrideBytes == 0 ? attr.Size : attr.StrideBytes / 4;
-                int start = attr.OffsetBytes / 4 + v * stride;
+                int start = attr.OffsetBytes / 4 + (v + baseVertex) * stride;
                 var comps = new double[attr.Size];
                 for (int k = 0; k < attr.Size; k++)
                 {
@@ -111,6 +119,9 @@ public sealed partial class GlReader
             VertexShader = program.Vertex!,
             FragmentShader = program.Fragment!,
             GeometryShader = program.Geometry,
+            TessControlShader = program.TessEval is not null ? program.TessControl : null,
+            TessEvalShader = program.TessEval,
+            PatchVertices = gl.PatchVertices,
             Vertices = vertices,
             Indices = indices,
             First = first,
@@ -134,6 +145,7 @@ public sealed partial class GlReader
             DepthWrite = gl.DepthMask,
             Stencil = gl.StencilTest ? gl.Stencil : null,
             Blend = gl.Blend ? gl.BlendState : null,
+            AttachmentBlends = AttachmentBlends(),
             ColorMask = gl.ColorMask.ToArray(),
             PointSize = gl.PointSize,
             ProgramPointSize = gl.ProgramPointSize,
@@ -141,7 +153,7 @@ public sealed partial class GlReader
             Textures = textures ?? samplers,
             CubeTextures = cubes,
             CubeTexturesLod = cubesLod,
-            TextureSizes = sizes,
+            TextureImages = sizes,
         };
     }
 
@@ -150,7 +162,7 @@ public sealed partial class GlReader
     /// glUniform1i / setInt), and the texture bound to that unit now. An incomplete texture reads black.
     /// </summary>
     /// <summary>The texture sizes of the samplers the last Samplers call bound.</summary>
-    private Func<string, (int Width, int Height)?>? samplerSizes;
+    private Func<string, Codestead.GP.Gpu.Textures.Image?>? samplerSizes;
     /// <summary>The cube maps of the last Samplers call read at a mip level (textureLod).</summary>
     private Func<string, double, double, double, double, double[]?>? samplerCubeLod;
 
@@ -158,16 +170,20 @@ public sealed partial class GlReader
     {
         samplerSizes = null;
         samplerCubeLod = null;
-        var cubeSamplers = new[] { program.Vertex!, program.Fragment! }.Concat(program.Geometry is { } pg ? [pg] : [])
+        var cubeSamplers = program.AllStages
             .SelectMany(s => s.Globals).Where(u => u.Storage == "uniform" && u.Type.StartsWith("samplerCube", StringComparison.Ordinal)).Select(u => u.Id).ToHashSet(StringComparer.Ordinal);
-        var samplers = SamplerNames(program.Vertex!).Concat(SamplerNames(program.Fragment!))
-            .Concat(program.Geometry is { } g ? SamplerNames(g) : []).Distinct().ToList();
+        var samplers = program.AllStages.SelectMany(SamplerNames).Distinct().ToList();
         if (samplers.Count == 0) return (null, null);
         var bound = new Dictionary<string, Textures.Texture?>(StringComparer.Ordinal);
+        var layerCounts = new Dictionary<string, int>(StringComparer.Ordinal);
         var cubes = new Dictionary<string, Textures.CubeTexture>(StringComparer.Ordinal);
+        // layout (binding = N) uniform sampler2D …: unit N unless the program sets the uniform itself.
+        var bindings = program.AllStages
+            .SelectMany(s => s.Globals).Where(u => u.Storage == "uniform" && u.Binding is not null && u.Block is null)
+            .GroupBy(u => u.Id).ToDictionary(g => g.Key, g => g.First().Binding!.Value, StringComparer.Ordinal);
         foreach (var name in samplers)
         {
-            int unit = program.Uniforms.TryGetValue(name, out var f) && f(1.0) is { } v ? (int)v.X : 0;
+            int unit = program.Uniforms.TryGetValue(name, out var f) && f(1.0) is { } v ? (int)v.X : UnitOf(bindings, name);
             Textures.Texture? texture = null;
             // The unit's binding of the sampler's kind (a cube map and a 2D texture can be bound to one unit).
             var ofKind = cubeSamplers.Contains(name) ? gl.UnitsCube : gl.Units2D;
@@ -196,9 +212,17 @@ public sealed partial class GlReader
                 }
                 else if (t.Framebuffer is { } fbo)
                 {
-                    // A texture a framebuffer object draws into: what has been drawn so far in this frame.
+                    // A texture a framebuffer object draws into: what has been drawn so far in this frame (a texture
+                    // array: each layer, "fbo@layer", read as "name@layer").
                     var (attachment, depth) = (t.Attachment, t.IsDepth);
                     texture = new Textures.Texture(() => Raster.Rasterizer.TargetImage(fbo, attachment, depth), sampler) { Components = 4 };
+                    for (int layer = 1; layer < t.Layers; layer++)
+                    {
+                        var layerTarget = fbo + "@" + layer;
+                        bound[name + "@" + layer] = new Textures.Texture(() => Raster.Rasterizer.TargetImage(layerTarget, attachment, depth), sampler) { Components = 4 };
+                    }
+                    if (t.Layers > 1) bound[name + "@0"] = texture;
+                    layerCounts[name] = t.Layers;
                 }
                 else texture = new Textures.Texture(t.Image!, sampler)
                 {
@@ -212,10 +236,26 @@ public sealed partial class GlReader
             else scene.Notes.Add(SimNote.Warning("noTextureOnUnit", ("name", name), ("unit", unit.ToString())));
             bound[name] = texture;
         }
-        samplerSizes = name => bound.TryGetValue(name, out var t) && t is not null ? (t.Image.Width, t.Image.Height) : null;
+        samplerSizes = name => bound.TryGetValue(name, out var t) && t is not null ? t.Image : null;
         samplerCubeLod = cubes.Count == 0 ? null : (name, x, y, z, lod) => cubes.TryGetValue(name, out var c) ? c.Sample(x, y, z, lod) : null;
-        return ((name, u, v) => bound.TryGetValue(name, out var t) && t is not null ? t.Sample(u, v) : [0, 0, 0, 1],
+        // A layer past the array's last reads the last one (GLSL clamps the layer).
+        Textures.Texture? Layer(string name)
+        {
+            if (bound.TryGetValue(name, out var t)) return t;
+            int at = name.LastIndexOf('@');
+            if (at < 0 || !layerCounts.TryGetValue(name[..at], out var layers)) return null;
+            return bound.GetValueOrDefault(name[..at] + "@" + (layers - 1));
+        }
+        return ((name, u, v) => Layer(name) is { } t ? t.Sample(u, v) : [0, 0, 0, 1],
             cubes.Count == 0 ? null : (name, x, y, z) => cubes.TryGetValue(name, out var c) ? c.Sample(x, y, z) : null);
+    }
+
+    /// <summary>The unit a sampler's layout (binding = N) names: an array's element i is unit N + i.</summary>
+    private static int UnitOf(Dictionary<string, int> bindings, string sampler)
+    {
+        if (bindings.TryGetValue(sampler, out var unit)) return unit;
+        var element = System.Text.RegularExpressions.Regex.Match(sampler, @"^(\w+)\[(\d+)\]$");
+        return element.Success && bindings.TryGetValue(element.Groups[1].Value, out var first) ? first + int.Parse(element.Groups[2].Value) : 0;
     }
 
     /// <summary>
@@ -231,27 +271,43 @@ public sealed partial class GlReader
         }
         bool flipUv = Models.ModelFiles.FlipUVs(src, project);
         bool flipImages = System.Text.RegularExpressions.Regex.IsMatch(src.Code, @"stbi_set_flip_vertically_on_load\s*\(\s*(?:true|1)\s*\)");
-        var uniforms = program.Uniforms.ToList();
         foreach (var mesh in model.Meshes)
         {
-            var vertices = mesh.Positions.Select((p, i) => new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+            // A model drawn many times (a scene graph's hundred planets) is read and its textures loaded once.
+            if (!meshData.TryGetValue(mesh, out var made))
             {
-                ["0"] = ShaderValue.Vec(p),
-                ["1"] = ShaderValue.Vec(mesh.Normals[i]),
-                ["2"] = ShaderValue.Vec(mesh.TexCoords[i][0], flipUv ? 1 - mesh.TexCoords[i][1] : mesh.TexCoords[i][1]),
-            }).ToList();
-            var maps = new Dictionary<string, Textures.Texture?>(StringComparer.Ordinal)
-            {
-                ["texture_diffuse1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.DiffuseMap, flipImages),
-                ["texture_specular1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.SpecularMap, flipImages),
-                ["texture_normal1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.NormalMap, flipImages),
-            };
+                var meshVertices = mesh.Positions.Select((p, i) => new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+                {
+                    ["0"] = ShaderValue.Vec(p),
+                    ["1"] = ShaderValue.Vec(mesh.Normals[i]),
+                    ["2"] = ShaderValue.Vec(mesh.TexCoords[i][0], flipUv ? 1 - mesh.TexCoords[i][1] : mesh.TexCoords[i][1]),
+                }).ToList();
+                // A skinned model (model_animation.h): the bone ids and weights at mesh.h's locations.
+                var (idsAt, weightsAt) = BoneAttributes();
+                bool extracted = ExtractsBones();
+                for (int i = 0; i < meshVertices.Count && (idsAt is not null || weightsAt is not null); i++)
+                {
+                    var (ids, weights) = extracted ? Models.GltfModel.VertexBones(mesh, i) : ([-1, -1, -1, -1], [0, 0, 0, 0]);
+                    if (idsAt is int ia) meshVertices[i][ia.ToString()] = ShaderValue.Vec(ids);
+                    if (weightsAt is int wa) meshVertices[i][wa.ToString()] = ShaderValue.Vec(weights);
+                }
+                var meshMaps = new Dictionary<string, Textures.Texture?>(StringComparer.Ordinal)
+                {
+                    ["texture_diffuse1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.DiffuseMap, flipImages, mipmapped: true),
+                    ["texture_specular1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.SpecularMap, flipImages, mipmapped: true),
+                    ["texture_normal1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.NormalMap, flipImages, mipmapped: true),
+                };
+                meshData[mesh] = made = (meshVertices, meshMaps);
+            }
+            var (vertices, maps) = made;
             var draw = MakeDraw(program, vertices, mesh.Indices.ToArray(), 0, mesh.Indices.Count, Topology.Triangles,
                 textures: (name, u, v) => maps.TryGetValue(name, out var t) && t is not null ? t.Sample(u, v) : [0, 0, 0, 1]);
             if (inLoop) scene.Draws.Add(draw);
             else setupDraws.Add(draw);
         }
     }
+
+    private readonly Dictionary<Models.ObjMesh, (List<Dictionary<string, ShaderValue>> Vertices, Dictionary<string, Textures.Texture?> Maps)> meshData = new();
 
     /// <summary>The sampler uniforms of a shader, with struct fields ("material.diffuse") and array elements ("maps[1]").</summary>
     private static IEnumerable<string> SamplerNames(ShaderProgram shader)
@@ -269,6 +325,7 @@ public sealed partial class GlReader
 
     internal static Topology TopologyOf(string mode) => mode switch
     {
+        _ when mode.Contains("PATCHES", StringComparison.Ordinal) => Topology.Patches,
         _ when mode.Contains("TRIANGLE_STRIP", StringComparison.Ordinal) => Topology.TriangleStrip,
         _ when mode.Contains("TRIANGLE_FAN", StringComparison.Ordinal) => Topology.TriangleFan,
         _ when mode.Contains("TRIANGLE", StringComparison.Ordinal) => Topology.Triangles,

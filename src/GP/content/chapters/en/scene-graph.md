@@ -108,8 +108,8 @@ The start draws the planet with the identity as its model matrix, in the root co
 the planet's two meshes, the sphere and the rings, each binding its own texture.
 :::
 
-The `// TODO:` comments in the project mark where your code goes; **Build & run** (Ctrl+Enter) compiles the program and
-runs it in the built-in simulator: one ringed planet on the left of the window.
+The `// TODO:` comments in the project mark where your code goes. Build and run the program in your IDE: one ringed
+planet on the left of the window.
 
 ## The Transform
 
@@ -663,10 +663,10 @@ A clean entity below a dirty one still needs a new global matrix. Had only the l
 
 ## Moving the graph
 
-Now the graph can show what it is for: move one entity and everything attached to it follows. The root turns about its
-y axis at 20 degrees per second, learnopengl's speed. learnopengl adds `20 * deltaTime` to the angle after each frame;
-the course sets the angle from the time instead – `20 · time` – so that the picture at a given moment is always the same
-(the screenshot is taken at 2.0 s, an angle of 40°). Then the graph is updated, **before** it is drawn, so that the
+Now the graph can show what it is for: move one entity and everything attached to it follows. The root turns about its y
+axis at 20 degrees per second, learnopengl's speed. learnopengl adds `20 * deltaTime` to the angle after each frame; the
+course sets the angle from the time instead – `20 · time` – so that the picture at a given moment is always the same
+(the expected result shows it at 2.0 s, an angle of 40°). Then the graph is updated, **before** it is drawn, so that the
 frame shows this frame's matrices.
 
 :::opengl

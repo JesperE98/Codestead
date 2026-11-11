@@ -37,15 +37,30 @@ public sealed class CheckContext
     public Frame? Frame => Shows ? frame ??= Rasterizer.Render(Scene!, 160) : null;
 
     private readonly Dictionary<double, Frame> framesAt = new();
+    private readonly Dictionary<double, Gpu.Scene.Scene> scenesAt = new();
 
     /// <summary>The frame at another time (a game's state after t × 60 frames), 160 pixels wide; null when nothing is shown.</summary>
     public Frame? FrameAt(double time)
     {
         if (time == 1.0) return Frame;
         if (!Shows) return null;
-        if (!framesAt.TryGetValue(time, out var f)) framesAt[time] = f = Rasterizer.Render(Scene!, 160, time);
+        if (!framesAt.TryGetValue(time, out var f)) framesAt[time] = f = Rasterizer.Render(SceneAt(time)!, 160, time);
         return f;
     }
+
+    /// <summary>
+    /// What the program does when its clock reads another time (read once per time: the frame and the window title
+    /// at that time come from it); the scene itself when nothing depends on the time.
+    /// </summary>
+    public Gpu.Scene.Scene? SceneAt(double time)
+    {
+        if (time == 1.0 || Scene is not { Animated: true, AtTime: { } at }) return Scene;
+        if (!scenesAt.TryGetValue(time, out var s)) scenesAt[time] = s = at(time);
+        return s;
+    }
+
+    /// <summary>The window's title at a time (a program that sets it in its render loop: glfwSetWindowTitle, SetWindowTextW); "" when nothing is shown.</summary>
+    public string WindowTitleAt(double time) => Shows ? SceneAt(time)?.WindowTitle ?? "" : "";
 
     /// <summary>The colour at a point of the frame at a time (0–1 of width and height, from the top left).</summary>
     public double[]? PixelAt(double time, double x, double y) => FrameAt(time)?.AtRelative(x, y);
@@ -134,6 +149,36 @@ public sealed class CheckContext
                 }
             return n / (double)(f.Width * f.Height);
         }
+    }
+
+    private Frame? fullFrame;
+
+    /// <summary>
+    /// The frame at time 1 s at the window's own size (one pixel per window pixel), null when nothing is shown: for
+    /// pictures whose density depends on the resolution – lines of a wireframe are one pixel wide at any size.
+    /// </summary>
+    public Frame? FullFrame => Shows ? fullFrame ??= Rasterizer.Render(Scene!, Scene!.Width) : null;
+
+    /// <summary>
+    /// The share (0–1) of a box of window pixels (x0…x1, y0…y1, inclusive, from the top left) that is not the clear
+    /// colour – in the check frame, or in <see cref="FullFrame"/> (lines of a wireframe: how dense the mesh is).
+    /// </summary>
+    public double CoveredIn(int x0, int y0, int x1, int y1, bool fullSize = false)
+    {
+        if ((fullSize ? FullFrame : Frame) is not { } f) return 0;
+        var clear = Scene!.ClearColor ?? [0, 0, 0, 1];
+        double sx = f.Width / (double)Scene.Width, sy = f.Height / (double)Scene.Height;
+        int fx0 = Math.Clamp((int)(x0 * sx), 0, f.Width - 1), fx1 = Math.Clamp((int)(x1 * sx), 0, f.Width - 1);
+        int fy0 = Math.Clamp((int)(y0 * sy), 0, f.Height - 1), fy1 = Math.Clamp((int)(y1 * sy), 0, f.Height - 1);
+        int n = 0, all = 0;
+        for (int y = fy0; y <= fy1; y++)
+            for (int x = fx0; x <= fx1; x++)
+            {
+                var p = f.At(x, y);
+                all++;
+                if (!Near(p[0], clear[0], 0.02) || !Near(p[1], clear[1], 0.02) || !Near(p[2], clear[2], 0.02)) n++;
+            }
+        return n / (double)all;
     }
 
     /// <summary>The pixel at a point shows the clear colour (nothing drawn there).</summary>

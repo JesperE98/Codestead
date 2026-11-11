@@ -71,11 +71,11 @@ learnopengl klämmer sina färgbuffrar vid kanten "as the blur filter would othe
 (filen kompileras inte förrän du behöver den).
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Tryck på **Build & run** (Ctrl+Enter) för att kompilera
-programmet och köra det i den inbyggda simulatorn: golvet och lådorna, den **vita ljuskuben** i mitten ovanför centrum,
-under den översta lådan, och den **gröna ljuskuben** vid överkanten. Den röda och den blå ljuskuben syns inte härifrån,
-men deras ljus färgar golvet och lådornas sidor. Tone mappingen behåller detaljerna, men ljuskuberna ser inte ut som ljus:
-de har skarpa kanter, och precis bredvid dem är den svarta bakgrunden lika svart som överallt annars.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Bygg och kör programmet i din IDE: golvet och lådorna,
+den **vita ljuskuben** i mitten ovanför centrum, under den översta lådan, och den **gröna ljuskuben** vid överkanten.
+Den röda och den blå ljuskuben syns inte härifrån, men deras ljus färgar golvet och lådornas sidor. Tone mappingen
+behåller detaljerna, men ljuskuberna ser inte ut som ljus: de har skarpa kanter, och precis bredvid dem är den svarta
+bakgrunden lika svart som överallt annars.
 
 ## Att extrahera ljusa färger
 
@@ -366,11 +366,11 @@ Pixel shadern i `bloom.hlsl` returnerar `float4 BrightColor : SV_TARGET1`. Vad m
 ```
 :::
 
-Tryck på **Build & run**: fönstret visar **bara de ljusa delarna**, tone mappade, mot svart. Ljuskuberna finns där, den
-vita och den gröna; stålramen på lådan precis ovanför det vita ljuset; en ljus kant på den stora lådan nere till vänster,
-den som vetter mot det vita ljuset; och små prickar – ramarnas nitar där ljuset faller på dem. Allt annat är svart. Till
-och med golvets belysta fläck under det vita ljuset förblir svart: den är ljus, men dess luminans stannar under 1.0.
-Kanterna på de ljusa delarna är fortfarande skarpa.
+Bygg och kör: fönstret visar **bara de ljusa delarna**, tone mappade, mot svart. Ljuskuberna finns där, den vita och den
+gröna; stålramen på lådan precis ovanför det vita ljuset; en ljus kant på den stora lådan nere till vänster, den som
+vetter mot det vita ljuset; och små prickar – ramarnas nitar där ljuset faller på dem. Allt annat är svart. Till och med
+golvets belysta fläck under det vita ljuset förblir svart: den är ljus, men dess luminans stannar under 1.0. Kanterna på
+de ljusa delarna är fortfarande skarpa.
 
 ## Gaussisk blur
 
@@ -717,10 +717,10 @@ kör i ordning. Än så länge visar det sista passet det blurrade resultatet: d
 Gör nu uppgiften **blur**.
 :::
 
-Tryck på **Build & run**: **de ljusa delarna är blurrade**. Mjuka glödande fläckar omger ljuskuberna – vitt runt den vita,
-grönt runt den gröna – och stålkanten och nitarna har blivit mjuka band och prickar. Mitten av den vita kuben förblir
-mättad; bortom de ljusa delarna är allt fortfarande svart. Titta längs en rad till höger om den vita kuben: där
-ljusstyrkan föll från vitt till svart i ett enda steg tonar den nu ut över ett dussin pixlar.
+Bygg och kör: **de ljusa delarna är blurrade**. Mjuka glödande fläckar omger ljuskuberna – vitt runt den vita, grönt
+runt den gröna – och stålkanten och nitarna har blivit mjuka band och prickar. Mitten av den vita kuben förblir mättad;
+bortom de ljusa delarna är allt fortfarande svart. Titta längs en rad till höger om den vita kuben: där ljusstyrkan föll
+från vitt till svart i ett enda steg tonar den nu ut över ett dussin pixlar.
 
 ## Att blanda båda texturerna
 
@@ -908,9 +908,9 @@ Scenens SRV ligger på plats 3, ping-pong-buffrarnas på 5 och 6: plats 4, buffe
 ```
 :::
 
-Tryck på **Build & run**: scenen är tillbaka, och **ljuskuberna glöder**. Ett mjukt vitt sken sprider sig från den vita
-kuben över den svarta bakgrunden och lådan ovanför; den gröna kuben blöder grönt över stålramen bredvid; den stora lådans
-ljusa stålkant glöder också. Bortom de ljusa delarna – golvet, lådornas trä, bakgrunden – har ingenting ändrats. Det är
+Bygg och kör: scenen är tillbaka, och **ljuskuberna glöder**. Ett mjukt vitt sken sprider sig från den vita kuben över
+den svarta bakgrunden och lådan ovanför; den gröna kuben blöder grönt över stålramen bredvid; den stora lådans ljusa
+stålkant glöder också. Bortom de ljusa delarna – golvet, lådornas trä, bakgrunden – har ingenting ändrats. Det är
 lösningen, och learnopengls bloom.
 
 ## Avslutande tankar

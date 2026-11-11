@@ -20,6 +20,74 @@ internal sealed partial class VulkanDevice : IDeviceModel
         public readonly SortedDictionary<long, double> Bytes = new();
         /// <summary>Images copied in with memcpy (stb_image pixels), by byte offset.</summary>
         public readonly SortedDictionary<long, string> Images = new();
+        /// <summary>
+        /// Long runs of numbers written at once (memcpy of a CPU-filled texture's 1.92 million floats): where they start,
+        /// the bytes per number and the numbers – kept as arrays instead of one entry per number.
+        /// </summary>
+        public readonly List<(long Start, int Step, double[] Values)> Runs = new();
+
+        private const int RunFrom = 1024;
+
+        public bool TryGet(long at, out double value)
+        {
+            if (Bytes.TryGetValue(at, out value)) return true;
+            for (int i = Runs.Count - 1; i >= 0; i--)
+            {
+                var (start, step, values) = Runs[i];
+                long d = at - start;
+                if (d >= 0 && d % step == 0 && d / step < values.Length)
+                {
+                    value = values[d / step];
+                    return true;
+                }
+            }
+            value = 0;
+            return false;
+        }
+
+        /// <summary>Does anything lie in [from, to)?</summary>
+        public bool Any(long from, long to) =>
+            Bytes.Keys.Any(k => k >= from && k < to) || Runs.Any(r => r.Start < to && r.Start + (long)r.Values.Length * r.Step > from);
+
+        public void Write(long at, int step, IReadOnlyList<double> numbers)
+        {
+            if (numbers.Count < RunFrom)
+            {
+                for (int i = 0; i < numbers.Count; i++) Set(at + (long)i * step, numbers[i]);
+                return;
+            }
+            long end = at + (long)numbers.Count * step;
+            foreach (var k in Bytes.Keys.Where(k => k >= at && k < end).ToList()) Bytes.Remove(k);
+            Runs.Add((at, step, numbers.ToArray()));
+        }
+
+        public void Set(long at, double value)
+        {
+            for (int i = Runs.Count - 1; i >= 0; i--)
+            {
+                var (start, step, values) = Runs[i];
+                long d = at - start;
+                if (d >= 0 && d % step == 0 && d / step < values.Length)
+                {
+                    values[d / step] = value;
+                    return;
+                }
+            }
+            Bytes[at] = value;
+        }
+
+        /// <summary>The numbers in [from, from + bytes), with their offsets.</summary>
+        public IEnumerable<(long At, double Value)> Range(long from, long bytes)
+        {
+            foreach (var r in Runs)
+                for (long i = Math.Max(0, (from - r.Start + r.Step - 1) / r.Step); i < r.Values.Length; i++)
+                {
+                    long at = r.Start + i * r.Step;
+                    if (at >= from + bytes) break;
+                    yield return (at, r.Values[i]);
+                }
+            foreach (var kv in Bytes.Where(kv => kv.Key >= from && kv.Key < from + bytes).ToList()) yield return (kv.Key, kv.Value);
+        }
     }
 
     public sealed class ImageObject
@@ -99,10 +167,22 @@ internal sealed partial class VulkanDevice : IDeviceModel
     private readonly Dictionary<string, (int Colors, bool Depth)> targetShape = new(StringComparer.Ordinal);
 
     public (int Colors, bool Depth)? ShapeOf(string target) => targetShape.TryGetValue(target, out var s) ? s : null;
+
+    /// <summary>The channels each colour attachment of a target keeps (an R8_UNORM revealage image: 1), or null.</summary>
+    public IReadOnlyList<int>? ChannelsOf(string target, int colors)
+    {
+        var formats = new string?[Math.Max(1, colors)];
+        foreach (var img in images.Where(i => i.TargetId == target)) formats[0] = img.Format;
+        foreach (var (image, (t, k)) in attachmentOf)
+            if (t == target && k < formats.Length && ImageOf(image) is { } attached) formats[k] = attached.Format;
+        return FormatChannels.List(formats.Select(FormatChannels.Of));
+    }
     private string? resolveView;
     /// <summary>Descriptor sets: binding → (image view, sampler).</summary>
     private readonly Dictionary<string, Dictionary<int, (string? View, string? Sampler)>> sets = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Image?> loaded = new(StringComparer.Ordinal);
+    /// <summary>The channels per pixel of the bytes stbi_load returned for an image (as the program reads them).</summary>
+    private readonly Dictionary<string, int> pointerChannels = new(StringComparer.Ordinal);
     private int counter;
     private bool flip;
     private CppExec? exec;
@@ -170,6 +250,7 @@ internal sealed partial class VulkanDevice : IDeviceModel
         if (exec is null) return null;
         if (Debug) Console.Error.WriteLine($"[vk] {name}({string.Join(", ", args.Select(a => { var v = Eval(a); var t = v is null ? "?" : v.ToString(); return t.Length > 80 ? t[..80] + "…" : t; }))})");
         if (ValidationCall(name, args) is { } answered) return answered;
+        if (ComputeCall(name, args) is { } computed) return computed;
         switch (name)
         {
             case "vkCreateBuffer" when args.Count >= 4:
@@ -203,7 +284,7 @@ internal sealed partial class VulkanDevice : IDeviceModel
                     var numbers = new List<double>();
                     CppExec.Flatten(data, numbers);
                     long at = place.Offset + (long)Num(args[2]);
-                    for (int i = 0; i < numbers.Count; i++) memories[place.Memory].Bytes[at + i * 4] = numbers[i];
+                    memories[place.Memory].Write(at, 4, numbers);
                 }
                 return ShaderValue.Scalar(0);
             }
@@ -219,9 +300,14 @@ internal sealed partial class VulkanDevice : IDeviceModel
                 loaded[key] = image;
                 if (image is not null)
                 {
+                    // The channels the file has (stb_image reports them whatever it was asked for); the bytes come
+                    // with the channels asked for (0: the file's) – read through a pointer (pixelOffset[0]).
+                    int fileChannels = StbImage.FileChannels(project, path), wanted = (int)Num(args[4]);
+                    pointerChannels[key] = wanted is > 0 and <= 4 ? wanted : fileChannels;
                     Set(args[1], ShaderValue.Scalar(image.Width));
                     Set(args[2], ShaderValue.Scalar(image.Height));
-                    Set(args[3], ShaderValue.Scalar(image.Channels));
+                    Set(args[3], ShaderValue.Scalar(fileChannels));
+                    exec!.Runner.PointerRead ??= (handle, at) => loaded.TryGetValue(handle, out var img) && img is not null && pointerChannels.TryGetValue(handle, out var ch) ? StbImage.Byte(img, ch, at) : null;
                 }
                 return ShaderValue.Str(key);
             }
@@ -240,7 +326,8 @@ internal sealed partial class VulkanDevice : IDeviceModel
                 img.Samples = sm.Success ? int.Parse(sm.Groups[1].Value) : 1;
                 var format = Text(info, "format") ?? "";
                 img.Depth = format.Contains("_D16", StringComparison.Ordinal) || format.Contains("_D24", StringComparison.Ordinal) || format.Contains("_D32", StringComparison.Ordinal);
-                img.Float = format.Contains("SFLOAT", StringComparison.Ordinal) && !img.Depth;
+                // SFLOAT and UFLOAT (B10G11R11_UFLOAT_PACK32: an HDR target without sign or alpha) keep values above 1.
+                img.Float = format.Contains("FLOAT", StringComparison.Ordinal) && !img.Depth;
                 img.Srgb = format.Contains("_SRGB", StringComparison.Ordinal);
                 img.Format = format;
                 Set(args[3], ShaderValue.Str(img.TargetId));
@@ -276,14 +363,33 @@ internal sealed partial class VulkanDevice : IDeviceModel
                         if (image is null && BytesPerTexel(dst.Format) is int bpp and > 0 && dst.Width > 0 && dst.Height > 0)
                         {
                             long start = offset + (long)l * dst.Width * dst.Height * bpp;
-                            if (mem.Bytes.ContainsKey(start) || mem.Bytes.Keys.Any(k => k >= start && k < start + (long)dst.Width * dst.Height * bpp))
+                            if (mem.Any(start, start + (long)dst.Width * dst.Height * bpp))
                             {
                                 int w = dst.Width, h = dst.Height;
                                 var rgba = new byte[w * h * 4];
                                 for (int t = 0; t < w * h; t++)
                                     for (int k = 0; k < 4; k++)
-                                        rgba[t * 4 + k] = k < bpp ? (byte)Math.Clamp(mem.Bytes.TryGetValue(start + (long)t * bpp + k, out var texelByte) ? texelByte : 0, 0, 255) : (byte)(k == 3 ? 255 : 0);
+                                        rgba[t * 4 + k] = k < bpp ? (byte)Math.Clamp(mem.TryGet(start + (long)t * bpp + k, out var texelByte) ? texelByte : 0, 0, 255) : (byte)(k == 3 ? 255 : 0);
                                 image = new Image(w, h, bpp == 4 ? 4 : bpp, rgba);
+                            }
+                        }
+                        // Floats the program made (a CPU-filled R32G32B32A32_SFLOAT texture, LTC tables): 4 bytes each.
+                        if (image is null && FloatsPerTexel(dst.Format) is int fpt and > 0 && dst.Width > 0 && dst.Height > 0)
+                        {
+                            long start = offset + (long)l * dst.Width * dst.Height * fpt * 4;
+                            if (mem.Any(start, start + (long)dst.Width * dst.Height * fpt * 4))
+                            {
+                                int w = dst.Width, h = dst.Height;
+                                var floats = new double[w * h * 4];
+                                var rgba = new byte[w * h * 4];
+                                for (int t = 0; t < w * h; t++)
+                                    for (int k = 0; k < 4; k++)
+                                    {
+                                        double v = k < fpt ? (mem.TryGet(start + ((long)t * fpt + k) * 4, out var f) ? f : 0) : k == 3 ? 1 : 0;
+                                        floats[t * 4 + k] = v;
+                                        rgba[t * 4 + k] = (byte)Math.Round(Math.Clamp(v, 0, 1) * 255);
+                                    }
+                                image = new Image(w, h, 4, rgba, floats);
                             }
                         }
                         while (dst.LayerImages.Count <= first + l) dst.LayerImages.Add(null);
@@ -377,7 +483,10 @@ internal sealed partial class VulkanDevice : IDeviceModel
                         if (pass.Colors[k] < attachments.Length && attachments[pass.Colors[k]].Text is { } extra && views.TryGetValue(extra, out var ev))
                             attachmentOf[ev.Image] = (target, k);
                     bool depth = attachments.Any(a => a.Text is { } av && views.TryGetValue(av, out var v) && ImageOf(v.Image) is { Depth: true });
-                    targetShape[target] = (Math.Max(1, pass.Colors.Length), depth);
+                    // (Another framebuffer of the same image – a later pass without depth, weighted blended OIT's
+                    // composite into the opaque image – keeps the depth buffer the first one gave it.)
+                    targetShape[target] = targetShape.TryGetValue(target, out var before)
+                        ? (Math.Max(before.Colors, Math.Max(1, pass.Colors.Length)), before.Depth || depth) : (Math.Max(1, pass.Colors.Length), depth);
                 }
                 return ShaderValue.Str("VK_SUCCESS");
             }
@@ -412,6 +521,14 @@ internal sealed partial class VulkanDevice : IDeviceModel
                     ["framebufferColorSampleCounts"] = ShaderValue.Str(counts),
                     ["framebufferDepthSampleCounts"] = ShaderValue.Str(counts),
                     ["maxSamplerAnisotropy"] = ShaderValue.Scalar(16),
+                    // lavapipe's limits.
+                    ["maxTessellationGenerationLevel"] = ShaderValue.Integer(64),
+                    ["maxTessellationPatchSize"] = ShaderValue.Integer(32),
+                    ["maxComputeWorkGroupCount"] = ShaderValue.Array([ShaderValue.Integer(65535), ShaderValue.Integer(65535), ShaderValue.Integer(65535)]),
+                    ["maxComputeWorkGroupSize"] = ShaderValue.Array([ShaderValue.Integer(1024), ShaderValue.Integer(1024), ShaderValue.Integer(1024)]),
+                    ["maxComputeWorkGroupInvocations"] = ShaderValue.Integer(1024),
+                    ["maxComputeSharedMemorySize"] = ShaderValue.Integer(32768),
+                    ["maxImageDimension2D"] = ShaderValue.Integer(16384),
                 };
                 Set(args[1], ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["limits"] = ShaderValue.Struct(limits) }));
                 return ShaderValue.Scalar(0);
@@ -523,15 +640,24 @@ internal sealed partial class VulkanDevice : IDeviceModel
                         }
                     }
                 }
-                foreach (var clear in Items(Field(info, "pClearValues")))
+                // pClearValues[i] is attachment i's: a colour attachment's (colour k of the subpass: attachment k of the
+                // target) when its loadOp clears, the depth attachment's.
+                var passInfo = framebuffer is not null && framebufferInfo.TryGetValue(framebuffer, out var fbInfo) && fbInfo.Pass is { } pn
+                    && renderPasses.TryGetValue(pn, out var rpInfo) && passLoads.TryGetValue(pn, out var passLoad) ? (rpInfo.Colors, passLoad.LoadOps, passLoad.Depth) : default;
+                var clears = Items(Field(info, "pClearValues"));
+                for (int i = 0; i < clears.Length; i++)
                 {
-                    if (Field(clear, "color") is { } color && clearColor)
+                    var clear = clears[i];
+                    int colorIndex = passInfo.Colors is null ? -1 : Array.IndexOf(passInfo.Colors, i);
+                    bool known = passInfo.Colors is not null && (colorIndex >= 0 || passInfo.Depth == i);
+                    bool loadClears = passInfo.LoadOps is null || i >= passInfo.LoadOps.Length || passInfo.LoadOps[i] is not { Length: > 0 } op || op.Contains("CLEAR", StringComparison.Ordinal);
+                    if (Field(clear, "color") is { } color && (known ? colorIndex >= 0 && loadClears : clearColor))
                     {
                         var rgba = new List<double>();
                         CppExec.Flatten(color, rgba);
-                        if (rgba.Count >= 3) Ops.Add(new ClearOp(DrawCount(), target, rgba.Take(4).ToArray(), null, null));
+                        if (rgba.Count >= 3) Ops.Add(new ClearOp(DrawCount(), target, rgba.Take(4).ToArray(), null, null, known && passInfo.Colors!.Length > 1 ? colorIndex : null));
                     }
-                    if (Field(clear, "depthStencil") is { } ds && clearDepth)
+                    if (Field(clear, "depthStencil") is { } ds && (known ? passInfo.Depth == i && loadClears : clearDepth))
                     {
                         var v = new List<double>();
                         CppExec.Flatten(ds, v);
@@ -613,86 +739,21 @@ internal sealed partial class VulkanDevice : IDeviceModel
     /// <summary>A recorded draw goes to an off-screen target (not to the window).</summary>
     public bool Offscreen(object? state) => state is DrawState { Framebuffer: { } fb } && TargetOf(fb) is not null;
 
-    private void Write(Expr dst, Expr from, Expr? size)
-    {
-        var address = Eval(dst) is { V: { Length: > 0 } v } ? v[0] : 0;
-        if (address < AddressUnit) return;
-        int m = (int)(address / AddressUnit) - 1;
-        if (m < 0 || m >= memories.Count) return;
-        long offset = (long)(address - (m + 1) * AddressUnit);
-        var value = Eval(Strip(from));
-        if (value is null) return;
-        if (value.Text is { } key && loaded.ContainsKey(key))
-        {
-            memories[m].Images[offset] = key;
-            return;
-        }
-        var numbers = new List<double>();
-        CppExec.Flatten(value, numbers);
-        // 16-bit indices (std::vector<uint16_t> indices) take 2 bytes each.
-        // 16-bit indices take 2 bytes each, bytes (std::vector<unsigned char>: a glyph atlas) 1.
-        int bytes = 4;
-        if (SourceName(Strip(from)) is { } n && src.DeclaredType(n) is { } type)
-        {
-            if (System.Text.RegularExpressions.Regex.IsMatch(type, @"uint16|int16|short", System.Text.RegularExpressions.RegexOptions.IgnoreCase)) bytes = 2;
-            else if (System.Text.RegularExpressions.Regex.IsMatch(type, @"char\b|uint8|int8|\bBYTE\b|stbi_uc|GLubyte", System.Text.RegularExpressions.RegexOptions.IgnoreCase)) bytes = 1;
-        }
-        long limit = size is null ? long.MaxValue : bytes == 1 ? (long)Num(size) : (long)Num(size) * bytes / 4;
-        for (int i = 0; i < numbers.Count && (long)i * bytes < limit; i++) memories[m].Bytes[offset + (long)i * bytes] = numbers[i];
-    }
-
-    /// <summary>The variable a memcpy source names: pixels, atlas.data(), &amp;atlas[0].</summary>
-    private static string? SourceName(Expr e) => e switch
-    {
-        Name n => n.Id,
-        Call { Function: ".data", Args: [var t] } => SourceName(t),
-        IndexOf { Target: var t } => SourceName(t),
-        Member m => m.Field,
-        _ => null,
-    };
-
-    /// <summary>Bytes per texel of an 8-bit format the program fills itself (R8 … R8G8B8A8), or 0.</summary>
-    private static int BytesPerTexel(string format) => format switch
-    {
-        _ when format.Contains("R8G8B8A8", StringComparison.Ordinal) || format.Contains("B8G8R8A8", StringComparison.Ordinal) => 4,
-        _ when format.Contains("R8G8B8_", StringComparison.Ordinal) => 3,
-        _ when format.Contains("R8G8_", StringComparison.Ordinal) => 2,
-        _ when format.Contains("R8_", StringComparison.Ordinal) => 1,
-        _ => 0,
-    };
-
-    private void Copy(string? from, long fromOffset, string? to, long toOffset, long bytes)
-    {
-        if (from is null || to is null || !buffers.TryGetValue(from, out var s) || !buffers.TryGetValue(to, out var d) || s.Memory < 0 || d.Memory < 0) return;
-        var src = memories[s.Memory];
-        var dst = memories[d.Memory];
-        long a = s.Offset + fromOffset, b = d.Offset + toOffset;
-        foreach (var (k, v) in src.Bytes.Where(kv => kv.Key >= a && kv.Key < a + bytes).ToList()) dst.Bytes[k - a + b] = v;
-        foreach (var (k, v) in src.Images.Where(kv => kv.Key >= a && kv.Key < a + bytes).ToList()) dst.Images[k - a + b] = v;
-    }
-
-    /// <summary>Numbers of a buffer at a byte offset (from where it is bound in its memory).</summary>
-    public double[]? Read(string buffer, long byteOffset, int comps)
-    {
-        if (!buffers.TryGetValue(buffer, out var place) || place.Memory < 0) return null;
-        var mem = memories[place.Memory];
-        long at = place.Offset + byteOffset;
-        if (!mem.Bytes.ContainsKey(at)) return null;
-        var r = new double[comps];
-        for (int k = 0; k < comps; k++) r[k] = mem.Bytes.TryGetValue(at + k * 4, out var x) ? x : 0;
-        return r;
-    }
-
-    public double? ReadIndex(string buffer, long byteOffset) =>
-        buffers.TryGetValue(buffer, out var place) && place.Memory >= 0 && memories[place.Memory].Bytes.TryGetValue(place.Offset + byteOffset, out var x) ? x : null;
-
     /// <summary>The texture behind a binding of a descriptor set: a loaded image, a cube map or a render target.</summary>
-    public (Texture? Texture, CubeTexture? Cube)? TextureAt(string set, int binding)
+    /// <param name="layer">The layer a sampler2DArray read names (its third coordinate): layer k of a render target is
+    /// "img:N@k".</param>
+    public (Texture? Texture, CubeTexture? Cube)? TextureAt(string set, int binding, int layer = 0)
     {
         if (!sets.TryGetValue(set, out var bindings) || !bindings.TryGetValue(binding, out var b) || b.View is null || !views.TryGetValue(b.View, out var view)) return null;
         var img = ImageOf(view.Image);
         if (img is null) return (null, null);
         var sampler = b.Sampler is not null && samplers.TryGetValue(b.Sampler, out var st) ? st : SamplerState.Default;
+        if (layer > 0 && !view.Cube && !img.Cube && img.LayerImages.All(i => i is null) && !img.Window)
+        {
+            var slice = img.TargetId + "@" + Math.Min(layer, img.Layers - 1);
+            bool sliceDepth = img.Depth;
+            return (new Texture(() => Raster.Rasterizer.TargetImage(slice, 0, sliceDepth), sampler) { Components = 4 }, null);
+        }
         // A further colour attachment of a target (bloom's bright colour): that attachment of the target's picture.
         if (attachmentOf.TryGetValue(view.Image, out var att))
             return (new Texture(() => Raster.Rasterizer.TargetImage(att.Target, att.Attachment, false), sampler) { Components = 4 }, null);

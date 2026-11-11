@@ -8,7 +8,7 @@ namespace Codestead.GP.Gpu.Raster;
 // in/out globals and gl_Position) and HLSL (entry points with semantics).
 public static partial class Rasterizer
 {
-    private sealed class Stages
+    private sealed partial class Stages
     {
         private readonly DrawCall draw;
         private readonly ShaderRunner vs;
@@ -52,11 +52,11 @@ public static partial class Rasterizer
             this.height = height;
             this.scale = scale;
             this.yDown = yDown;
-            vs = new ShaderRunner(draw.VertexShader) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, SampleCubeLod = textures.SampleCubeLod, TextureSize = textures.Size };
-            fs = new ShaderRunner(draw.FragmentShader) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, SampleCubeLod = textures.SampleCubeLod, TextureSize = textures.Size, Footprint = Footprint };
+            vs = new ShaderRunner(draw.VertexShader) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, SampleCubeLod = textures.SampleCubeLod, TextureImage = textures.Size };
+            fs = new ShaderRunner(draw.FragmentShader) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, SampleCubeLod = textures.SampleCubeLod, TextureImage = textures.Size, Footprint = Footprint };
             if (draw.GeometryShader is { } geometry)
             {
-                gs = new ShaderRunner(geometry) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, SampleCubeLod = textures.SampleCubeLod, TextureSize = textures.Size };
+                gs = new ShaderRunner(geometry) { Time = time, Sample = textures.Sample, SampleCube = textures.SampleCube, SampleCubeLod = textures.SampleCubeLod, TextureImage = textures.Size };
                 gsInputs = geometry.Globals.Where(g => g.Storage == "in").ToList();
                 gsOutputs = geometry.Globals.Where(g => g.Storage == "out").ToList();
             }
@@ -66,6 +66,7 @@ public static partial class Rasterizer
                 SetUniform(fs, k, v);
                 if (gs is not null) SetUniform(gs, k, v);
             }
+            TessellationStages(textures, time, uniforms);
             WritesDepth = draw.Hlsl
                 ? draw.FragmentShader.Structs.Any(st => st.Fields.Any(f => string.Equals(f.Semantic, "SV_Depth", StringComparison.OrdinalIgnoreCase)))
                     || string.Equals(draw.FragmentShader.FindFunction(draw.FragmentEntry)?.Semantic, "SV_Depth", StringComparison.OrdinalIgnoreCase)
@@ -92,7 +93,7 @@ public static partial class Rasterizer
         /// ("material.shininess", "ubo.view"), an array element ("pointLights[0].position"), or a field of a block found
         /// by the field's name alone (push constants and cbuffers).
         /// </summary>
-        private static void SetUniform(ShaderRunner runner, string key, ShaderValue value)
+        internal static void SetUniform(ShaderRunner runner, string key, ShaderValue value)
         {
             var parts = System.Text.RegularExpressions.Regex.Matches(key, @"(\w+)|\[(\d+)\]").Select(m => m.Groups[1].Success ? m.Groups[1].Value : "#" + m.Groups[2].Value).ToList();
             if (parts.Count == 0) return;
@@ -260,6 +261,8 @@ public static partial class Rasterizer
                 }
             }
             else if (IsPosition(f.Semantic)) clip = result.Padded(4);
+            // Before the tessellation stages the vertex shader hands on control points: no SV_POSITION needed.
+            if (clip is null && draw.TessEvalShader is not null) clip = [0, 0, 0, 1];
             return new ShadedVertex(clip ?? throw new ShaderRuntimeException($"'{f.Id}' returns no SV_POSITION", f.Line), outputs);
         }
 
@@ -445,6 +448,35 @@ public static partial class Rasterizer
         {
             var geometry = draw.GeometryShader!;
             var strips = new List<List<ShadedVertex>> { new() };
+            for (int invocation = 0; invocation < Math.Max(1, geometry.Invocations); invocation++)
+            {
+                // Each instance of the shader starts strips of its own.
+                if (strips[^1].Count > 0) strips.Add(new());
+                Invoke(geometry, input, strips, invocation);
+            }
+            var result = new List<(Topology, ShadedVertex[])>();
+            foreach (var strip in strips)
+            {
+                switch (geometry.OutputPrimitive)
+                {
+                    case "points":
+                        result.AddRange(strip.Select(v => (Topology.Points, new[] { v })));
+                        break;
+                    case "line_strip":
+                        for (int i = 0; i + 1 < strip.Count; i++) result.Add((Topology.Lines, new[] { strip[i], strip[i + 1] }));
+                        break;
+                    default:
+                        for (int i = 0; i + 2 < strip.Count; i++)
+                            result.Add((Topology.Triangles, i % 2 == 0 ? new[] { strip[i], strip[i + 1], strip[i + 2] } : new[] { strip[i + 1], strip[i], strip[i + 2] }));
+                        break;
+                }
+            }
+            return result;
+        }
+
+        /// <summary>One run of the geometry shader on a primitive: instance <paramref name="invocation"/> of it.</summary>
+        private void Invoke(ShaderProgram geometry, ShadedVertex[] input, List<List<ShadedVertex>> strips, int invocation)
+        {
             if (draw.Hlsl)
             {
                 var f = geometry.FindFunction(draw.GeometryEntry) ?? throw new ShaderRuntimeException($"the geometry shader has no function '{draw.GeometryEntry}'", 0);
@@ -454,6 +486,11 @@ public static partial class Rasterizer
                     if (p.Out)
                     {
                         args.Add(ShaderValue.Scalar(0));
+                        continue;
+                    }
+                    if (string.Equals(p.Semantic, "SV_GSInstanceID", StringComparison.OrdinalIgnoreCase))
+                    {
+                        args.Add(ShaderValue.Integer(invocation));
                         continue;
                     }
                     var st = geometry.FindStruct(p.Type);
@@ -499,6 +536,7 @@ public static partial class Rasterizer
                     gs.Globals[g.Id == "" ? g.Type : g.Id] = ShaderValue.Array(input.Select(v => v.Outputs.TryGetValue(key, out var o) ? o : gs.Default(g.Type)).ToArray());
                 }
                 gs.Globals["gl_PrimitiveIDIn"] = ShaderValue.Scalar(0);
+                gs.Globals["gl_InvocationID"] = ShaderValue.Integer(invocation);
                 gs.Emit = (kind, _) =>
                 {
                     if (kind == "EndPrimitive")
@@ -514,24 +552,6 @@ public static partial class Rasterizer
                 gs.Globals["gl_Layer"] = ShaderValue.Scalar(0);
                 gs.Call("main", []);
             }
-            var result = new List<(Topology, ShadedVertex[])>();
-            foreach (var strip in strips)
-            {
-                switch (geometry.OutputPrimitive)
-                {
-                    case "points":
-                        result.AddRange(strip.Select(v => (Topology.Points, new[] { v })));
-                        break;
-                    case "line_strip":
-                        for (int i = 0; i + 1 < strip.Count; i++) result.Add((Topology.Lines, new[] { strip[i], strip[i + 1] }));
-                        break;
-                    default:
-                        for (int i = 0; i + 2 < strip.Count; i++)
-                            result.Add((Topology.Triangles, i % 2 == 0 ? new[] { strip[i], strip[i + 1], strip[i + 2] } : new[] { strip[i + 1], strip[i], strip[i + 2] }));
-                        break;
-                }
-            }
-            return result;
         }
     }
 }

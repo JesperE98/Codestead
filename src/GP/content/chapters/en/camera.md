@@ -30,14 +30,13 @@ constants and draws it. All camera work in this chapter happens in `OnUpdate` an
 `WindowProc`; `PopulateCommandList` does not change.
 :::
 
-This time the project has no `// TODO:` comments: every task changes or extends code that is already there, and the
-task text tells you where. After each task, press **Build & run** (Ctrl+Enter) to compile the program and run it in
-the built-in simulator.
+This time the project has no `// TODO:` comments: every task changes or extends code that is already there, and the task
+text tells you where. After each task, build and run the program in your IDE.
 
-> The built-in simulator cannot press keys or move the mouse. Once the camera is controlled by the keyboard and the
-> mouse, the preview therefore shows the camera's **starting view** – which, as you will see, is exactly the picture
-> you start with. Only the circling camera of the second task visibly moves on its own, over time. Everything you
-> write is still real input code: on your own computer, the same program lets you fly through the scene.
+> The course's checks and the **Expected result** pictures can't press keys or move the mouse. Once the camera is
+> controlled by the keyboard and the mouse, the expected result therefore shows the camera's **starting view** – which,
+> as you will see, is exactly the picture you start with. Only the circling camera of the second task moves on its own,
+> over time. In your own program, of course, the same code lets you fly through the scene.
 
 ## Camera/View space
 
@@ -294,11 +293,10 @@ the first frame with `std::chrono`, as the project already does for the turning 
 ```
 :::
 
-Now do the task **circle**. The camera now orbits the scene at a distance of 10, one full turn every 2π ≈ 6.3
-seconds, and always looks at the origin: cube 0 stays in the centre of the window while the other crates – much
-smaller now – swing around it. At t = 0 the camera is at (0, 0, 10), in front of the scene; one second later it is at
-(8.4, 0, 5.4), and all crates have moved into the right half of the window. Run it for a while in the simulator and
-watch the scene turn.
+Now do the task **circle**. The camera now orbits the scene at a distance of 10, one full turn every 2π ≈ 6.3 seconds,
+and always looks at the origin: cube 0 stays in the centre of the window while the other crates – much smaller now –
+swing around it. At t = 0 the camera is at (0, 0, 10), in front of the scene; one second later it is at (8.4, 0, 5.4),
+and all crates have moved into the right half of the window. Let it run for a while and watch the scene turn.
 
 The view matrix is rebuilt every frame, and every frame it has to reach the vertex shader again:
 
@@ -587,10 +585,10 @@ last one.
 Now that we have `deltaTime` we can take it into account when calculating the velocities: `cameraSpeed` is
 2.5 × `deltaTime`, which makes the camera move 2.5 units per second, however fast the frames come.
 
-Now do the task **wasd**. Without keys, nothing visible changes – the simulator shows the default picture. On your
-own computer, holding W moves the camera forward into the scene (the crates grow), S back, A left and D right, the
-same distance per second at any frame rate. Together with the previous section we now have a much smoother and more
-consistent camera system for moving around the scene.
+Now do the task **wasd**. The expected result doesn't change – nobody presses keys there. In your program, holding W
+moves the camera forward into the scene (the crates grow), S back, A left and D right, the same distance per second at
+any frame rate. Together with the previous section we now have a much smoother and more consistent camera system for
+moving around the scene.
 
 ```quiz
 One computer runs the program at 30 frames per second, another at 120. On both, the user holds W for exactly one second. How far does the camera move?
@@ -1064,8 +1062,8 @@ GLFW may report the cursor's position once when it is captured, but thanks to `f
 only sets `lastX` and `lastY`.
 :::
 
-On your own computer the cursor disappears, moving the mouse right turns the view right (the scene slides left),
-moving it up looks up – but never beyond ±89° – and W now walks where you look.
+When you run it, the cursor disappears, moving the mouse right turns the view right (the scene slides left), moving it
+up looks up – but never beyond ±89° – and W now walks where you look.
 
 :::opengl vulkan
 ```quiz
@@ -1209,10 +1207,10 @@ projection now changes whenever fov changes (zoom), so it is set every frame.
 `OnUpdate` already rebuilds the projection every frame, so this is the only change there.
 :::
 
-Now do the task **zoom**. Without scrolling, fov stays 45 and you see the default picture. On your own computer,
-scrolling up zooms in (a smaller fov, bigger crates) down to a field of view of 1°, and scrolling down zooms out
-again, at most back to 45°. And there you have it: a simple camera system that allows for free movement in a 3D
-environment.
+Now do the task **zoom**. Without scrolling, fov stays 45 and you see the default picture – that is the expected result.
+In your program, scrolling up zooms in (a smaller fov, bigger crates) down to a field of view of 1°, and scrolling down
+zooms out again, at most back to 45°. And there you have it: a simple camera system that allows for free movement in a
+3D environment.
 
 ```quiz
 Scrolling up three notches changes `fov` from 45 to 42. What happens to the picture?
@@ -1339,7 +1337,7 @@ share the same camera. The globals you wrote do exactly the same work, which is 
   this chapter. Replace the library's look-at function with your own implementation and see if it still acts the
   same. Try it with the circling camera too, where every frame gives a different matrix.
 
-These are not tasks in the project: try them once you have finished the tasks, and use **Build & run** to compare
+These are not tasks in the project: try them once you have finished the tasks, and build and run the program to compare
 the pictures.
 
 :::opengl vulkan

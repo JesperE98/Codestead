@@ -254,11 +254,13 @@ learnopengl.com, Vulkan-koden vulkan-tutorial.com och DirectX 12-koden Microsoft
 
 ```text
 src/GP/
-├── Codestead.GP/          Appen: GpTool (kursen i lärfönstret), Workbench/ProjectView (editor, flikar, Bygg & kör,
-│                          utdata och förhandsvisning), NoSandbox (lektionerna har bara quiz-frågor)
+├── Codestead.GP/          Appen: GpTool (kursen i lärfönstret; .Project: bevakning och kontroller, .Folder:
+│                          panelens knappar, .SmokeTest), YourProject/ (panelen "Your project", mapparna per kapitel
+│                          och API i folders.json, bilden av förväntat resultat), NoSandbox (bara quiz-frågor)
 ├── Codestead.GP.Course/   Kursen: GpCourse (delar och kapitel i ordning, startprojekt, uppgifter), Edits
 │                          (edits.txt), CourseText (texter per språk och API), Checks/ (uppgifternas kontroller),
-│                          Game/ (utmärkelser), UI-texter i i18n/ui/<språk>.json
+│                          Ide/ (elevens projektmapp: ProjectWatcher, ProjectReader, ProjectChecker, StartFiles,
+│                          ExpectedResult), Game/ (utmärkelser), UI-texter i i18n/ui/<språk>.json
 ├── Codestead.GP.Gpu/      Den simulerade GPU:n (utan UI):
 │   ├── Build/             Kompileringssteget: klamrar, okända API-namn med "did you mean" (symbols/*.txt från de
 │   │                      riktiga headerfilerna), shaders som inte går att tolka
@@ -284,7 +286,7 @@ src/GP/
   det valda API:t); en API-specifik fråga skrivs därför som en fråga i vart och ett av de tre blocken.
   `ContentTests` kontrollerar det, och att svenskan har samma frågor.
 - `edits.txt` är uppgifterna för ett API, i ordning: varje uppgift är en eller flera kodändringar (`find` → `replace`)
-  från `start/`. När eleven klickar på lösningen läggs ändringen in i projektet. Alla ändringar efter varandra ska ge
+  från `start/`. När eleven klickar på lösningen kopieras koden till urklipp, för att klistras in i IDE:n. Alla ändringar efter varandra ska ge
   exakt `solution/` (`apply_edits.py` och `TaskTests` kontrollerar det).
 - Kontrollerna finns i `Codestead.GP.Course/Checks/TaskChecks.<Kapitel>.cs`, per uppgifts-id. Kontrollera helst
   **resultatet** (pixlar i den simulerade bilden, rensningsfärgen) så att samma kontroll gäller alla API:er; annars
@@ -300,9 +302,38 @@ Xvfb med Mesa (llvmpipe/lavapipe) och Khronos valideringslager – ett enda vali
 skärmbild sparas. Skriptets kommentar listar paketen som behövs (Ubuntu 24.04). Kör det på `start/` och `solution/`
 för varje kapitel du ändrar, och `apply_edits.py` på kapitlet.
 
+**Eleven skriver, bygger och kör koden i sin egen IDE** (Visual Studio, CLion, Rider, VS Code); appen har ingen
+editor, ingen Bygg & kör-knapp och ingen förhandsvisning. Panelen **Your project** (`YourProject/ProjectPanel`) under
+uppgifterna har kapitlets mapp per API (`folders.json` i appens datamapp; efter första valet föreslås
+`<bas>/<api>/<kapitel>`), knapparna *Choose folder…*, *Copy start files* (frågar innan filer med annat innehåll skrivs
+över) och *Open folder*, vad appen har sett ("Last built hh:mm · last run hh:mm"), varje uppgifts läge (låst, väntar på
+bygge, väntar på körning, kontrolleras, klar, inte än – med kontrollens meddelanden) och bilden av **förväntat
+resultat**: kursens lösning fram till uppgiften (`ExpectedResult`), ritad av simulatorn i bakgrunden.
+
+- `ProjectWatcher` bevakar mappen med FileSystemWatcher och söker igenom den var 2:a sekund ändå. Källor är C++
+  (`.cpp .cc .c .h .hpp .inl` …) och det programmet läser när det körs (shaders `.vert .frag .vs .fs .gs .tcs .tes .comp
+  .glsl .hlsl` …, `.lvl`, kursens bilder, modeller och typsnitt); bygg- och IDE-mappar (`build*`, `cmake-build-*`,
+  `out`, `.vs`, `.idea`, `.vscode`, `x64`, `Debug`, `Release`, `bin`, `obj`, `.git`) räknas inte som källor, men där
+  letas programmet. **Byggt**: den nyaste körbara filen (Windows: `.exe`; Linux: ELF med x-bit, inte `.so`; macOS:
+  Mach-O) är minst lika ny som den nyaste C++-filen – en ändrad shader kräver alltså bara en ny körning. **Kört**: en
+  process som kör programmet (Linux `/proc/<pid>/exe`, Windows QueryFullProcessImageName, macOS `proc_pidpath`)
+  startade efter bygget och efter den senaste ändringen av en shader eller fil; processerna tittas på var 0,3 s medan
+  appen väntar på en körning. Ett program som avslutas fortare än så kan missas; länken **I ran it** finns för det och
+  för WSL, andra datorer och IDE:er i sandlåda (den kräver ändå ett program nyare än koden, utom när inget program alls
+  hittas).
+- När programmet är byggt och kört läser `ProjectReader` kapitlets filer ur mappen (efter sökväg eller namn; en
+  huvudfil med annat namn hittas på `main(`/`WinMain(`; bibliotek som GLAD, GLM och stb läses inte) och
+  `ProjectChecker` kör kapitlets kontroller i ordning på simulatorns bygge, i bakgrunden (avbryts om koden ändras).
+  Resultatet lämnas till fönstret som ett avslutat "bygge": uppgifter, XP och utmärkelser räknas som förut, och
+  låsta uppgifter bockas av när de låses upp om koden är densamma.
+- Snabbtestet kopierar första lektionens startfiler och lösning till en tillfällig mapp, "bygger" genom att kopiera
+  systemets `sleep` (Windows: `ping.exe`) till `build/`, startar det och kräver att appen ser körningen (på Linux) och
+  att första uppgiften bockas av.
+
 **Simulatorn är inte en riktig GPU.** Den förstår kursens kod och de vanliga misstagen (glömd `glClear`, avstängt
 vertexattribut, ingen pipeline bunden, saknade barriärer …) och säger till med meddelanden som `sim.<nyckel>` i
-UI-texterna. Kod utanför det den förstår ger en förhandsvisning som kan skilja sig från en riktig körning. Nya kapitel
+UI-texterna. Den är numera osynlig för eleven: den kontrollerar elevens kod och ritar förväntat resultat. Kod utanför
+det den förstår kan ge en annan bild än en riktig körning. Nya kapitel
 (texturer, transformationer, 3D) kräver att läsarna och tolken lär sig mer, t.ex. texturer och glm/DirectXMath-matriser.
 
 ## Skriva ett nytt kapitel (Codestead Linux)

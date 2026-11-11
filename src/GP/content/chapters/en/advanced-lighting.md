@@ -38,10 +38,10 @@ ambient `0.05f * color`, diffuse, and a specular term `float3(0.3f, 0.3f, 0.3f) 
 buffer (b1) holds `view`, `projection`, `viewPos` and `lightPos`.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, press **Build & run** (Ctrl+Enter)
-to compile the program and run it in the built-in simulator. Right now it shows the lit wooden floor stretching away to
-the horizon, the dark background above it, and a soft white highlight in the middle of the lower half – the reflection
-of the light, computed with Phong's specular term and a shininess exponent of 8.
+The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
+IDE. Right now it shows the lit wooden floor stretching away to the horizon, the dark background above it, and a soft
+white highlight in the middle of the lower half – the reflection of the light, computed with Phong's specular term and a
+shininess exponent of 8.
 
 ## Blinn-Phong
 
@@ -365,9 +365,9 @@ bool blinn = true;
 ```
 :::
 
-There's nothing more to it than calculating a halfway vector and changing the specular component's cosine term. Press
-**Build & run**: the highlight becomes **wider** and reaches further back towards the horizon, brighter in its middle
-and dimmer at the near sides – the light now spreads over the floor and fades out smoothly instead of being clamped.
+There's nothing more to it than calculating a halfway vector and changing the specular component's cosine term. Build
+and run: the highlight becomes **wider** and reaches further back towards the horizon, brighter in its middle and dimmer
+at the near sides – the light now spreads over the floor and fades out smoothly instead of being clamped.
 
 Another subtle difference between Phong and Blinn-Phong shading is that the angle between the halfway vector and the
 surface normal is often shorter than the angle between the view and reflection vector. As a result, to get visuals
@@ -406,10 +406,10 @@ Now do the task **shininess**. Give Blinn-Phong learnopengl's exponent, four tim
 ```
 :::
 
-Press **Build & run**: the highlight shrinks again to about the size of the start's Phong highlight, but it is centred a
-little further back and fades out evenly in every direction. That's learnopengl's comparison – Phong with an exponent
-of 8.0, Blinn-Phong with 32.0. If you want to see both again, set `blinn` back to false: the Phong branch is still in
-the shader.
+Build and run: the highlight shrinks again to about the size of the start's Phong highlight, but it is centred a little
+further back and fades out evenly in every direction. That's learnopengl's comparison – Phong with an exponent of 8.0,
+Blinn-Phong with 32.0. If you want to see both again, set `blinn` back to false: the Phong branch is still in the
+shader.
 
 ```quiz
 Phong and Blinn-Phong are both used with a light and a viewer above a flat floor. When can the angle between the normal and the halfway vector exceed 90°?

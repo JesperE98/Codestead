@@ -51,10 +51,11 @@ public sealed class CppExec
             Time = time,
             // Without a hook of its own (the OpenGL reader), the program's helpers that make no API calls run here. The
             // reader can answer API queries first (glGetError, glGetShaderiv …: ApiValue).
-            Hook = (name, args) => ApiValue?.Invoke(name, args) ?? (hook ?? HelperFunction)(name, args),
+            Hook = (name, args) => Getter(name, args) ?? ApiValue?.Invoke(name, args) ?? (hook ?? HelperFunction)(name, args),
             DepthZeroToOne = src.Code.Contains("GLM_FORCE_DEPTH_ZERO_TO_ONE", StringComparison.Ordinal),
         };
         Runner.Resolve = Resolve;
+        AddGetters(src.Code);
         Runner.ElementDefault = target =>
         {
             var name = target switch { Name n => n.Id, Member m => m.Field, _ => null };
@@ -68,10 +69,30 @@ public sealed class CppExec
         };
     }
 
+    /// <summary>
+    /// Getters of the program's classes (std::map&lt;…&gt;&amp; GetBoneInfoMap() { return m_BoneInfoMap; }): method → the
+    /// member it returns – so a call on an object the reader made (a Model) answers with that member.
+    /// </summary>
+    public Dictionary<string, string> Getters { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>Adds the trivial getters of a piece of C++ (a header of the project).</summary>
+    public void AddGetters(string code)
+    {
+        foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(code, @"\b(\w+)\s*\(\s*\)\s*(?:const\s*)?\{\s*return\s+(?:this\s*->\s*)?(\w+)\s*;\s*\}"))
+            Getters.TryAdd(m.Groups[1].Value, m.Groups[2].Value);
+    }
+
     /// <summary>The reader's answers to API queries the program's own code evaluates (null: not one of them).</summary>
     public Func<string, IReadOnlyList<Expr>, ShaderValue?>? ApiValue { get; set; }
 
+    private ShaderValue? Getter(string name, IReadOnlyList<Expr> args)
+    {
+        if (args.Count != 1 || name.Length < 2 || name[0] != '.' || !Getters.TryGetValue(name[1..], out var field)) return null;
+        return TryEval(args[0])?.Fields?.GetValueOrDefault(field);
+    }
+
     private int helperDepth;
+    private const int MaxHelperDepth = 48;
     private readonly Dictionary<string, (List<(string Name, bool Ref, string? Default)> Params, List<Stmt> Body)?> helpers = new(StringComparer.Ordinal);
 
     /// <summary>
@@ -81,7 +102,9 @@ public sealed class CppExec
     /// </summary>
     private ShaderValue? HelperFunction(string name, IReadOnlyList<Expr> args)
     {
-        if (helperDepth > 6 || name is "main" || name.StartsWith('.') || !src.Functions.ContainsKey(name)) return null;
+        // A recursive function goes as deep as the program's data (a scene graph's chain of eleven entities); the limit
+        // only stops a recursion that never ends.
+        if (helperDepth > MaxHelperDepth || name is "main" || name.StartsWith('.') || !src.Functions.ContainsKey(name)) return null;
         name = src.ChooseOverload(name, args, TryEval);
         if (!helpers.TryGetValue(name, out var helper))
         {
@@ -99,7 +122,10 @@ public sealed class CppExec
             // default value.
             var arg = i < args.Count ? Runner.EvalArg(args[i]) : h.Params[i].Default is { } fallback ? Eval(fallback) : null;
             if (arg is null) continue;
-            values[h.Params[i].Name] = arg.Int ? ShaderValue.Scalar(arg.X) : arg.Clone();
+            // A struct or container given by reference (addChild(Entity& parent, …)) is the caller's object itself:
+            // what the function changes in it, the caller sees.
+            values[h.Params[i].Name] = arg.Int ? ShaderValue.Scalar(arg.X)
+                : h.Params[i].Ref && arg is { Fields: not null } or { Items: not null } or { Map: not null } ? arg : arg.Clone();
         }
         helperDepth++;
         try
@@ -124,6 +150,8 @@ public sealed class CppExec
 
     private ShaderValue? Resolve(string name)
     {
+        // d3d12.h's numeric limits (the same on every device).
+        if (D3D12Limits.TryGetValue(name, out var limit)) return ShaderValue.Integer(limit);
         switch (name)
         {
             case "swapChainExtent":
@@ -151,8 +179,11 @@ public sealed class CppExec
         }
         // A std::vector member with no initializer (filled by push_back in a setup helper): empty, kept as a global.
         // A std::map likewise (learnopengl's Characters).
-        if (src.Initializer(name) is null && src.DeclaredType(name) is { } vectorType
-            && System.Text.RegularExpressions.Regex.IsMatch(vectorType, @"^(?:const)?std::(?:vector|map|unordered_map)<"))
+        // (A local of another function with the same name and an initializer – QueueFamilyIndices indices =
+        // findQueueFamilies(…) – does not make the member something else.)
+        if (src.DeclaredType(name) is { } vectorType
+            && System.Text.RegularExpressions.Regex.IsMatch(vectorType, @"^(?:const)?std::(?:vector|map|unordered_map)<")
+            && (src.Initializer(name) is null || System.Text.RegularExpressions.Regex.IsMatch(src.Code, @"(?:vector|map)\s*<[^;=(){}]*>\s+" + System.Text.RegularExpressions.Regex.Escape(name) + @"\s*;")))
         {
             var empty = vectorType.Contains("map<", StringComparison.Ordinal) ? Runner.Default("map") : ShaderValue.Array([]);
             Runner.Globals[name] = empty;
@@ -197,6 +228,24 @@ public sealed class CppExec
         if (System.Text.RegularExpressions.Regex.IsMatch(name, @"^(?:D3D12|DXGI|D3D|VK|GL)_[A-Z0-9_]+$")) return ShaderValue.Str(name);
         return null;
     }
+
+    private static readonly Dictionary<string, long> D3D12Limits = new(StringComparer.Ordinal)
+    {
+        ["D3D12_TESSELLATOR_MAX_TESSELLATION_FACTOR"] = 64,
+        ["D3D12_TESSELLATOR_MAX_ODD_TESSELLATION_FACTOR"] = 63,
+        ["D3D12_TESSELLATOR_MAX_EVEN_TESSELLATION_FACTOR"] = 64,
+        ["D3D12_TESSELLATOR_MIN_ODD_TESSELLATION_FACTOR"] = 1,
+        ["D3D12_TESSELLATOR_MIN_EVEN_TESSELLATION_FACTOR"] = 2,
+        ["D3D12_IA_PATCH_MAX_CONTROL_POINT_COUNT"] = 32,
+        ["D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION"] = 65535,
+        ["D3D12_CS_THREAD_GROUP_MAX_X"] = 1024,
+        ["D3D12_CS_THREAD_GROUP_MAX_Y"] = 1024,
+        ["D3D12_CS_THREAD_GROUP_MAX_Z"] = 64,
+        ["D3D12_CS_THREAD_GROUP_MAX_THREADS_PER_GROUP"] = 1024,
+        ["D3D12_CS_TGSM_REGISTER_COUNT"] = 8192,
+        ["D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION"] = 16384,
+        ["D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT"] = 8,
+    };
 
     /// <summary>An argument's value now, or null (for choosing an overload).</summary>
     public ShaderValue? TryEval(Expr e)
@@ -280,6 +329,7 @@ public sealed class CppExec
             for (int r = 0; r < v.Cols; r++)
                 for (int c = 0; c < v.Cols; c++) into.Add(v.V[c * v.Cols + r]);
         else if (v.V is not null) into.AddRange(v.V);
+        else if (v.Packed is { } packed) into.AddRange(packed);
         else if (v.Items is not null) foreach (var i in v.Items) Flatten(i, into, rowMajor);
         else if (v.Fields is not null) foreach (var f in v.Fields.Values) Flatten(f, into, rowMajor);
     }

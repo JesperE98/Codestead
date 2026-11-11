@@ -46,8 +46,8 @@ metallgolvet, kameran på (0, 0, 3) som tittar längs -z, ett PSO med djupfunkti
 shadern på en av dem före varje ritning. Nytt bredvid de andra bilderna: `grass.png` och `window.png`.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift trycker du på **Build & run**
-(Ctrl+Enter) för att kompilera programmet och köra det i den inbyggda simulatorn.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
+IDE.
 
 ## Kasta fragment
 
@@ -299,8 +299,8 @@ gräs-texturen och ritar quaden en gång per position:
 ```
 :::
 
-Gör nu den första uppgiften, **grass**, och tryck på **Build & run**. Fem quads står mellan och framför kuberna –
-grässtråna finns där, men vart och ett sitter på en svart fyrkant som döljer allt bakom den.
+Gör nu den första uppgiften, **grass**, och bygg och kör sedan. Fem quads står mellan och framför kuberna – grässtråna
+finns där, men vart och ett sitter på en svart fyrkant som döljer allt bakom den.
 
 Det beror på att {{api}} som standard inte vet vad det ska göra med alfavärden, eller när de ska kastas. Alfavärdet är
 bara färgens fjärde komponent: shadern skriver ut det, och det skrivs till color buffern tillsammans med rött, grönt och
@@ -457,8 +457,8 @@ SamplerState clampSampler : register(s1);
 Gör nu uppgiften **discard**: samplern, `PSTransparent`, det andra PSO:t och anropet till `SetPipelineState`.
 :::
 
-Tryck på **Build & run**: bara grässtråna är kvar. Där de svarta fyrkanterna var ser du kuberna, golvet och bakgrunden
-igen, och det finns ingen tunn linje längs quadarnas överkant.
+Bygg och kör: bara grässtråna är kvar. Där de svarta fyrkanterna var ser du kuberna, golvet och bakgrunden igen, och det
+finns ingen tunn linje längs quadarnas överkant.
 
 ```quiz
 Varför behöver gräs-quadarna ett samplerläge som clampar mot kanten i stället för att upprepa?
@@ -773,9 +773,9 @@ utan `discard`. I projektet behåller `PSTransparent` den: ingen texel i fönstr
 till – och den clampande samplern är fortfarande vad fönstren behöver.
 :::
 
-Gör nu uppgiften **blend** och tryck på **Build & run**. Fem rödtonade fönster står i scenen: kuben, golvet och
-bakgrunden syns genom glaset, mörkare och rödare, medan ramen och dess kors är ogenomskinliga. Över bakgrunden blandas
-glasets färg med clear-färgens mörkgrå; över marmorn blir den mycket ljusare.
+Gör nu uppgiften **blend** och bygg och kör sedan. Fem rödtonade fönster står i scenen: kuben, golvet och bakgrunden
+syns genom glaset, mörkare och rödare, medan ramen och dess kors är ogenomskinliga. Över bakgrunden blandas glasets färg
+med clear-färgens mörkgrå; över marmorn blir den mycket ljusare.
 
 Om du tittar närmare kanske du ändå märker att något är fel. Titta på det närmaste fönstret, framför mitten: det står
 ett andra fönster bakom det, delvis skymt (på (0.5, 0, -0.6)). Genom det närmaste fönstrets glas ser du golvet och
@@ -927,9 +927,9 @@ sedan varje fönster-quad till motsvarande fönsterposition. Det här relativt e
 föremål löser det tidigare problemet. Från startpositionen blir ordningen (-0.3, 0, -2.3), (-1.5, 0, -0.48),
 (0.5, 0, -0.6), (1.5, 0, 0.51) och sist (0, 0, 0.7).
 
-Gör nu den sista uppgiften, **sort**, och tryck på **Build & run**. Fönstret bakom det närmaste syns nu genom dess
-glas: där de överlappar tittar du genom två lager glas, och färgen där är ett djupare rött än genom ett lager.
-Eftersom sorteringen körs varje bildruta förblir ordningen rätt när kameran rör sig.
+Gör nu den sista uppgiften, **sort**, och bygg och kör sedan. Fönstret bakom det närmaste syns nu genom dess glas: där
+de överlappar tittar du genom två lager glas, och färgen där är ett djupare rött än genom ett lager. Eftersom
+sorteringen körs varje bildruta förblir ordningen rätt när kameran rör sig.
 
 ```quiz
 Varför ritar upplägget ovan alla ogenomskinliga föremål före de sorterade genomskinliga?

@@ -81,7 +81,7 @@ public sealed partial class ShaderParser
     {
         "in", "out", "inout", "uniform", "const", "static", "flat", "smooth", "noperspective", "centroid", "highp", "mediump", "lowp",
         "linear", "nointerpolation", "readonly", "writeonly", "buffer", "shared", "groupshared", "precise", "invariant", "row_major", "column_major",
-        "unsigned", "signed", "constexpr", "volatile", "inline",
+        "unsigned", "signed", "constexpr", "volatile", "inline", "patch", "coherent", "restrict",
     };
 
     private static readonly HashSet<string> Primitives = new(StringComparer.Ordinal)
@@ -90,6 +90,9 @@ public sealed partial class ShaderParser
     };
 
     private string? hlslInputPrimitive, hlslOutputPrimitive;
+
+    /// <summary>HLSL attributes read since the last function: they belong to the next one.</summary>
+    private Dictionary<string, string[]> pendingAttributes = new(StringComparer.Ordinal);
 
     /// <summary>The names the code uses (ShaderProgram.Names).</summary>
     private readonly HashSet<string> names = new(StringComparer.Ordinal);
@@ -105,6 +108,22 @@ public sealed partial class ShaderParser
             if (Accept(";")) continue;
             if (Peek.Is("[")) // HLSL attribute: [numthreads(8, 8, 1)], [RootSignature(...)]
             {
+                // [instance(5)]: a geometry shader that runs 5 times per primitive (SV_GSInstanceID 0 … 4).
+                if (PeekAt(1).Is("instance") && PeekAt(2).Is("(") && PeekAt(3).Kind == ShaderTokenKind.Number && PeekAt(4).Is(")"))
+                    program.Invocations = Math.Max(1, (int)double.Parse(PeekAt(3).Text, CultureInfo.InvariantCulture));
+                // The attribute and its arguments, for the function that follows ([domain("quad")], [numthreads(16, 16, 1)]).
+                if (PeekAt(1).Kind == ShaderTokenKind.Identifier && PeekAt(2).Is("("))
+                {
+                    var attribute = PeekAt(1).Text;
+                    var values = new List<string>();
+                    int k = 3;
+                    while (!PeekAt(k).Is(")") && PeekAt(k).Kind != ShaderTokenKind.End)
+                    {
+                        if (!PeekAt(k).Is(",")) values.Add(PeekAt(k).Text);
+                        k++;
+                    }
+                    pendingAttributes[attribute] = values.ToArray();
+                }
                 SkipBalanced("[", "]");
                 continue;
             }
@@ -260,7 +279,8 @@ public sealed partial class ShaderParser
         int? location = null, binding = null;
         bool pushConstant = false;
         string? primitive = null;
-        int? maxVertices = null;
+        int? maxVertices = null, invocations = null;
+        bool tessTriangles = false;
         if (Accept("layout"))
         {
             Expect("(");
@@ -271,6 +291,17 @@ public sealed partial class ShaderParser
                 if (key.Is("push_constant")) pushConstant = true;
                 if (key.Kind == ShaderTokenKind.Identifier && Primitives.Contains(key.Text)) primitive = key.Text;
                 if (key.Is("max_vertices") && Peek.Is("=") && PeekAt(1).Kind == ShaderTokenKind.Number) maxVertices = (int)double.Parse(PeekAt(1).Text, CultureInfo.InvariantCulture);
+                if (key.Is("invocations") && Peek.Is("=") && PeekAt(1).Kind == ShaderTokenKind.Number) invocations = (int)double.Parse(PeekAt(1).Text, CultureInfo.InvariantCulture);
+                // Tessellation: layout (vertices = 4) out; layout (quads, fractional_odd_spacing, ccw) in;
+                if (key.Is("vertices") && Peek.Is("=") && PeekAt(1).Kind == ShaderTokenKind.Number) program.TessVertices = (int)double.Parse(PeekAt(1).Text, CultureInfo.InvariantCulture);
+                if (key.Is("quads") || key.Is("isolines")) program.TessDomain = key.Text;
+                if (key.Is("triangles")) tessTriangles = true;
+                if (key.Is("equal_spacing") || key.Is("fractional_odd_spacing") || key.Is("fractional_even_spacing")) program.TessSpacing = key.Text;
+                if (key.Is("cw")) program.TessCw = true;
+                if (key.Is("point_mode")) program.TessPointMode = true;
+                // Compute: layout (local_size_x = 16, local_size_y = 16) in;
+                if (key.Text is "local_size_x" or "local_size_y" or "local_size_z" && Peek.Is("=") && PeekAt(1).Kind == ShaderTokenKind.Number)
+                    program.LocalSize[key.Text[^1] - 'x'] = Math.Max(1, (int)double.Parse(PeekAt(1).Text, CultureInfo.InvariantCulture));
                 if ((key.Is("location") || key.Is("binding")) && Accept("="))
                 {
                     var v = Next();
@@ -294,6 +325,10 @@ public sealed partial class ShaderParser
         if (Accept(";"))
         {
             if (storage == "in" && primitive is not null) program.InputPrimitive = primitive;
+            // A tessellation evaluation shader's triangle domain: triangles with a spacing or a winding.
+            if (storage == "in" && tessTriangles && (program.TessSpacing is not null || program.TessCw || program.TessPointMode))
+                program.TessDomain = "triangles";
+            if (storage == "in" && invocations is > 0) program.Invocations = invocations.Value;
             if (storage == "out" && primitive is not null) program.OutputPrimitive = primitive;
             if (storage == "out" && maxVertices is not null) program.MaxVertices = maxVertices.Value;
             return;
@@ -314,6 +349,11 @@ public sealed partial class ShaderParser
         if (Peek.Is("("))
         {
             program.Functions.Add(FunctionRest(type, id, line));
+            if (pendingAttributes.Count > 0)
+            {
+                program.Attributes[id] = pendingAttributes;
+                pendingAttributes = new(StringComparer.Ordinal);
+            }
             return;
         }
         while (true)
@@ -359,6 +399,9 @@ public sealed partial class ShaderParser
                         && PeekAt(1).Kind == ShaderTokenKind.Identifier && PeekAt(2).Kind == ShaderTokenKind.Identifier)
                         hlslInputPrimitive = Next().Text switch { "point" => "points", "line" => "lines", "triangle" => "triangles", var x => x };
                     var type = TypeName();
+                    // A hull or domain shader's patch: InputPatch<VSOutput, 4> – the element type kept with it.
+                    if (type is "InputPatch" or "OutputPatch" && templateArgs.Count >= 1 && templateArgs[0].Count >= 1)
+                        type = $"{type}<{templateArgs[0][^1].Text}>";
                     if (type is "PointStream" or "LineStream" or "TriangleStream")
                         hlslOutputPrimitive = type switch { "PointStream" => "points", "LineStream" => "line_strip", _ => "triangle_strip" };
                     var name = Identifier();

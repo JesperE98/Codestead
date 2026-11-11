@@ -82,6 +82,15 @@ public sealed partial class GlReader
                 // log would) – the program's own check sees success.
                 Out(2, ShaderValue.Integer(1));
                 return ShaderValue.Integer(0);
+            case "glGetIntegerv" when args.Count >= 2 && args[0] is Name { Id: var limit } && GlLimit(limit, 0) is int value:
+                Out(1, ShaderValue.Integer(value));
+                return ShaderValue.Integer(0);
+            case "glGetIntegeri_v" when args.Count >= 3 && args[0] is Name { Id: var indexed }:
+            {
+                int index = env.TryEval(args[1]) is { V: { Length: > 0 } at } ? (int)at[0] : 0;
+                if (GlLimit(indexed, index) is int limitValue) Out(2, ShaderValue.Integer(limitValue));
+                return ShaderValue.Integer(0);
+            }
             case "glGetIntegerv" when args.Count >= 2 && args[0] is Name { Id: "GL_CONTEXT_FLAGS" }:
                 // GL_CONTEXT_FLAG_DEBUG_BIT in a debug context (4.3: debug output is core).
                 Out(1, ShaderValue.Integer(debugContext ? 0x2 : 0));
@@ -89,6 +98,24 @@ public sealed partial class GlReader
         }
         return null;
     }
+
+    /// <summary>The limits Mesa's llvmpipe reports (glGetIntegerv, glGetIntegeri_v), or null for another query.</summary>
+    private static int? GlLimit(string name, int index) => name switch
+    {
+        "GL_MAX_TESS_GEN_LEVEL" => 64,
+        "GL_MAX_PATCH_VERTICES" => 32,
+        "GL_MAX_COMPUTE_WORK_GROUP_COUNT" => 65535,
+        "GL_MAX_COMPUTE_WORK_GROUP_SIZE" => index == 2 ? 1024 : 1024,
+        "GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS" => 1024,
+        "GL_MAX_COMPUTE_SHARED_MEMORY_SIZE" => 32768,
+        "GL_MAX_IMAGE_UNITS" => 32,
+        "GL_MAX_TEXTURE_IMAGE_UNITS" => 32,
+        "GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS" => 192,
+        "GL_MAX_VERTEX_ATTRIBS" => 16,
+        "GL_MAX_TEXTURE_SIZE" => 16384,
+        "GL_MAX_UNIFORM_BLOCK_SIZE" => 65536,
+        _ => null,
+    };
 
     /// <summary>
     /// A statement with the program's function-like macros expanded (glCheckError() → glCheckError_(__FILE__,

@@ -18,11 +18,11 @@ learnopengl skriver sitt spel som klasser i separata filer – `game.h` / `game.
 `shader.h` / `.cpp`, `texture.h` / `.cpp`, senare `sprite_renderer`, `game_object`, `game_level` med flera – plus en
 `program.cpp` med `main`. Kursen behåller learnopengls namn och steg, men skriver klasserna som **vanliga structs och
 fria funktioner i en `main.cpp`**, i ordningen för learnopengls filer, med varje funktion definierad innan den används.
-Den inbyggda simulatorn följer vanliga structs och fria funktioner, inte klasser med medlemsfunktioner. Regeln är enkel:
-en klass blir en struct med sina datamedlemmar, och en medlemsfunktion blir en fri funktion som tar structen som
-referens som sin första parameter – learnopengls anrop av `Init()` på sitt spelobjekt blir `Init(Hedgerow)`,
-`shader.Use()` blir `Use(shader)`. Ett riktigt projekt skulle dela upp koden i klasser och filer som learnopengl gör; en
-fil med fria funktioner är ingen design att kopiera, bara ett sätt att ha allt inom synhåll.
+Kursens kontroller läser vanliga structs och fria funktioner, inte klasser med medlemsfunktioner. Regeln är enkel: en
+klass blir en struct med sina datamedlemmar, och en medlemsfunktion blir en fri funktion som tar structen som referens
+som sin första parameter – learnopengls anrop av `Init()` på sitt spelobjekt blir `Init(Hedgerow)`, `shader.Use()` blir
+`Use(shader)`. Ett riktigt projekt skulle dela upp koden i klasser och filer som learnopengl gör; en fil med fria
+funktioner är ingen design att kopiera, bara ett sätt att ha allt inom synhåll.
 
 :::opengl
 | learnopengl | kursen (OpenGL) |
@@ -85,8 +85,8 @@ inte av texturen.
 :::
 
 Kommentarerna `// TODO:` i projektet visar var varje del ska in. Det här kapitlet ritar ingenting – det gör inte
-learnopengls "Setting up" heller –, så **Build & run** (Ctrl+Enter) visar ett svart fönster efter varje uppgift;
-uppgifterna kontrolleras i koden.
+learnopengls "Setting up" heller –, så ditt program visar ett svart fönster efter varje uppgift; uppgifterna
+kontrolleras i koden.
 
 ## Spelet
 
@@ -363,25 +363,25 @@ sedan in bildrutan (`PopulateCommandList`, med `Render(Hedgerow)`), kör den och
 
 Gör nu uppgiften **delta-time**: mät bildrutans tid överst i loopen och skicka den till `ProcessInput` och `Update`.
 
-**Kursens tid är deterministisk.** För att bilderna av spelet ska gå att jämföra – mellan de tre API:erna, mellan
-drivrutiner och med den inbyggda simulatorn – måste spelet vara i exakt samma tillstånd i samma ögonblick. Med en
-riktig klocka är det omöjligt: varje bildruta tar lite olika lång tid. Därför ser **bildruta n i loopen tiden n / 60
-sekunder** i kursen: bildruta 0 ser 0, bildruta 1 ser 1/60, och deltaTime är 0 i den första bildrutan och exakt 1/60 i
-varje bildruta efter den. För att visa spelet vid tiden t kör simulatorn loopen t × 60 gånger.
+**Kursens tid är deterministisk.** För att bilderna av spelet ska gå att jämföra – mellan de tre API:erna och mellan
+drivrutiner – måste spelet vara i exakt samma tillstånd i samma ögonblick. Med en riktig klocka är det omöjligt: varje
+bildruta tar lite olika lång tid. Därför ser **bildruta n i loopen tiden n / 60 sekunder** när kursen kontrollerar din
+kod och ritar **Förväntat resultat**: bildruta 0 ser 0, bildruta 1 ser 1/60, och deltaTime är 0 i den första bildrutan
+och exakt 1/60 i varje bildruta efter den. För att visa spelet vid tiden t kör kursen loopen t × 60 gånger.
 :::opengl
-Programmet gör inget särskilt för det: det läser `glfwGetTime()` som learnopengl gör, och simulatorn (och kursens
+Programmet gör inget särskilt för det: det läser `glfwGetTime()` som learnopengl gör, och kursens kontroller (och dess
 testkörningar på riktiga drivrutiner) låter `glfwGetTime()` räkna bildrutorna – den returnerar antalet anrop av
-`glfwPollEvents` hittills delat med 60. På din egen dator, utanför kursen, går samma kod på den riktiga klockan.
+`glfwPollEvents` hittills delat med 60. När du kör ditt program går samma kod på den riktiga klockan.
 :::
 :::vulkan
-Programmet gör inget särskilt för det: det läser `glfwGetTime()` som learnopengl gör, och simulatorn (och kursens
+Programmet gör inget särskilt för det: det läser `glfwGetTime()` som learnopengl gör, och kursens kontroller (och dess
 testkörningar på riktiga drivrutiner) låter `glfwGetTime()` räkna bildrutorna – den returnerar antalet anrop av
-`glfwPollEvents` hittills delat med 60. På din egen dator, utanför kursen, går samma kod på den riktiga klockan.
+`glfwPollEvents` hittills delat med 60. När du kör ditt program går samma kod på den riktiga klockan.
 :::
 :::d3d12
-Programmet gör inget särskilt för det: det läser klockan som de tidigare kapitlen gör, och simulatorn ger det n:te
-anropet av `OnUpdate` klockvärdet n / 60 s. På Windows går samma kod på den riktiga klockan, så spelet går lika fort
-vid alla uppdateringsfrekvenser.
+Programmet gör inget särskilt för det: det läser klockan som de tidigare kapitlen gör, och kursens kontroller ger det
+n:te anropet av `OnUpdate` klockvärdet n / 60 s. När du kör ditt program går samma kod på den riktiga klockan, så spelet
+går lika fort vid alla uppdateringsfrekvenser.
 :::
 
 ```quiz
@@ -496,9 +496,9 @@ meddelandeloopen innan den anropar `OnUpdate`, precis som GLFW anropar sina call
 
 Gör nu uppgiften **key-callback**.
 
-**Kursens indata är också deterministiska.** Ingen trycker på tangenter i simulatorn. För att de senare kapitlen ska
-kunna visa när bollen skjuts iväg trycker kursen ned en tangent av sig själv: **mellanslag, nedtryckt vid t = 0.5 s och
-släppt vid t = 0.55 s**, via programmets egen key-callback
+**Kursens indata är också deterministiska.** Ingen trycker på tangenter i kursens kontroller och bilder. För att de
+senare kapitlen ska kunna visa när bollen skjuts iväg trycker kursen ned en tangent av sig själv: **mellanslag,
+nedtryckt vid t = 0.5 s och släppt vid t = 0.55 s**, via programmets egen key-callback
 :::opengl vulkan
 (`key_callback(window, GLFW_KEY_SPACE, scancode, GLFW_PRESS, 0)` inuti `glfwPollEvents()` i bildruta 30, och släppet
 inuti bildruta 33:s).
@@ -1022,8 +1022,8 @@ kör meddelandeloopen, som anropar `OnUpdate` och `OnRender` när inget meddelan
 `main` – blending på – är en del av varje pipeline state object i Direct3D 12.
 :::
 
-Tryck på **Build & run** en gång till: ett svart fönster, som i learnopengls kapitel. Det ser inte mycket ut för
-världen, men varje del som spelet behöver för att ladda sina resurser, följa tiden och läsa tangentbordet är nu på plats.
+Bygg och kör en gång till: ett svart fönster, som i learnopengls kapitel. Det ser inte mycket ut för världen, men varje
+del som spelet behöver för att ladda sina resurser, följa tiden och läsa tangentbordet är nu på plats.
 
 ```quiz
 I vilka bildrutor i kursens spelloop ser `ProcessInput` mellanslag nedhållet?

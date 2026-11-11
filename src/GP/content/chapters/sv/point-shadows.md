@@ -58,8 +58,8 @@ kompileras inte förrän dess).
 
 Kameran står på (0, 0, 3) och tittar längs -z: rummets bakre vägg (z = -5) fyller fönstret, med träet utsträckt över
 dess 10 × 10 enheter och ett mjukt högdager lite till vänster om mitten. Bara en av de fem kuberna syns – den vridna på
-(-1.5, 2, -3), i övre vänstra hörnet. Tryck på **Build & run** (Ctrl+Enter): rummet är belyst, men ingenting kastar någon
-skugga. Kommentarerna `// TODO:` i projektet visar var din kod ska in.
+(-1.5, 2, -3), i övre vänstra hörnet. Bygg och kör programmet: rummet är belyst, men ingenting kastar någon skugga.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in.
 
 ## Att skapa djup-cube mapen
 
@@ -861,12 +861,12 @@ djupets pipeline state, djup-cube mapen med sina två vyer, matriserna i `OnUpda
 djupshadrarna och den här felsökningsutdatan.
 :::
 
-Tryck på **Build & run**: fönstret visar **djup-cube mapen sedd från kameran** – grått överallt, och ganska mörkt. Den
-bakre väggen ligger 5 till 8.7 enheter från ljuset, 0.2 till 0.35 av `far_plane`: dess mitt är 51 av 255, och den blir
-ljusare mot kanterna och hörnen, som ligger längre från ljuset. Kuben i övre vänstra hörnet är mörkare – närmare ljuset.
-Och skuggan syns redan: där kuben skymmer väggen från ljuset innehåller cube mapen kubens avstånd, inte väggens – ett
-mörkt band runt kubens övre vänstra kant, lika mörkt som kuben själv. Inget trä, ingen belysning: det här är djup-cube
-mapen och inget annat.
+Bygg och kör: fönstret visar **djup-cube mapen sedd från kameran** – grått överallt, och ganska mörkt. Den bakre väggen
+ligger 5 till 8.7 enheter från ljuset, 0.2 till 0.35 av `far_plane`: dess mitt är 51 av 255, och den blir ljusare mot
+kanterna och hörnen, som ligger längre från ljuset. Kuben i övre vänstra hörnet är mörkare – närmare ljuset. Och skuggan
+syns redan: där kuben skymmer väggen från ljuset innehåller cube mapen kubens avstånd, inte väggens – ett mörkt band
+runt kubens övre vänstra kant, lika mörkt som kuben själv. Inget trä, ingen belysning: det här är djup-cube mapen och
+inget annat.
 
 ## Rundstrålande shadow maps
 
@@ -981,13 +981,13 @@ i `point_shadows.hlsl`, anropa den i `PSMain` – `float shadow = ShadowCalculat
 `return float4(lighting, 1.0f);` igen i stället för felsökningsutdatan.
 :::
 
-Tryck på **Build & run**: det belysta rummet är tillbaka, och den vridna kuben kastar en **skugga** på den bakre väggen
-– där djup-cube mapen visade det mörka bandet får väggen nu bara ambient ljus. Ljuset och kameran står nästan på en
-linje, så kuben döljer det mesta av sin egen skugga: du ser ett mörkt band runt dess övre vänstra kant, en tunn linje
-längs dess nedre vänstra kant och en liten bit till höger om dess översta hörn. De andra fyra kuberna och deras skuggor
-på sidoväggarna, golvet och taket ligger utanför bilden – vrid kameran om ditt program körs utanför kursen. Skuggans
-kanter är hårda och hackiga (en texel i cube mapen per sampling), men det finns ingen shadow acne: biasen i
-världsenheter täcker djuptexlarna.
+Bygg och kör: det belysta rummet är tillbaka, och den vridna kuben kastar en **skugga** på den bakre väggen – där
+djup-cube mapen visade det mörka bandet får väggen nu bara ambient ljus. Ljuset och kameran står nästan på en linje, så
+kuben döljer det mesta av sin egen skugga: du ser ett mörkt band runt dess övre vänstra kant, en tunn linje längs dess
+nedre vänstra kant och en liten bit till höger om dess översta hörn. De andra fyra kuberna och deras skuggor på
+sidoväggarna, golvet och taket ligger utanför bilden – vrid kameran om ditt program körs utanför kursen. Skuggans kanter
+är hårda och hackiga (en texel i cube mapen per sampling), men det finns ingen shadow acne: biasen i världsenheter
+täcker djuptexlarna.
 
 ## PCF
 
@@ -1134,8 +1134,8 @@ och i `ShadowCalculation`, efter `fragToLight`:
 Gör nu den sista uppgiften, **pcf**: de här raderna ersätter den enda samplingen och jämförelsen.
 :::
 
-Tryck på **Build & run**: skuggans **kanter blir mjuka** – dess inre är lika mörkt som förut och den belysta väggen
-runtom oförändrad, men längs kanterna ändras ljusstyrkan nu gradvis: där 5 av de 20 samplingarna ligger i skugga ligger
+Bygg och kör: skuggans **kanter blir mjuka** – dess inre är lika mörkt som förut och den belysta väggen runtom
+oförändrad, men längs kanterna ändras ljusstyrkan nu gradvis: där 5 av de 20 samplingarna ligger i skugga ligger
 fragmentet till en fjärdedel i skugga. Bara pixlarna vid skuggans kanter ändras.
 
 PCF-algoritmen här är fortfarande ganska enkel; det finns mycket mer att säga om mjuka skuggor, och om punktskuggor över

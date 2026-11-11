@@ -375,10 +375,10 @@ räknar vi ut inträngningen ur x-komponenten i `diff_vector` och lägger anting
 position beroende på riktningen. Samma sak gäller de lodräta kollisionerna, men den här gången arbetar vi med
 y-komponenten i alla vektorer.
 
-Gör nu uppgiften **resolve**. Tryck på **Build & run**. Bilden visar nu **2.0 s** (bildruta 120), och den ser helt
-annorlunda ut än i förra kapitlet: **alla block finns kvar**, och bollen är på väg *nedåt*, till höger om racketen. Vad
-som hände: på väg upp är bollens första kontakt den solida stenen i rad 5, kolumn 9 – den som den flög igenom förut. I
-bildruta 86 når dess cirkel stenen underifrån, riktning `DOWN`: dess lodräta hastighet vänds, från (100, −350) till
+Gör nu uppgiften **resolve**. Bygg och kör. Det förväntade resultatet visar nu **2.0 s** (bildruta 120), och den ser
+helt annorlunda ut än i förra kapitlet: **alla block finns kvar**, och bollen är på väg *nedåt*, till höger om racketen.
+Vad som hände: på väg upp är bollens första kontakt den solida stenen i rad 5, kolumn 9 – den som den flög igenom förut.
+I bildruta 86 når dess cirkel stenen underifrån, riktning `DOWN`: dess lodräta hastighet vänds, från (100, −350) till
 (100, 350), och den flyttas ut ur stenen. Stenen är solid, så ingenting förstörs, och bollen kommer ned åt höger.
 
 ```quiz
@@ -488,11 +488,11 @@ En liten ändring mot learnopengl: där står `abs(…)`. På en `float` kan ett
 sekund. `std::abs` (från `<cmath>`) har överlagringen för `float`; learnopengl använder den själv för inträngningen två
 rader ovanför.
 
-Gör nu uppgiften **paddle**. Tryck på **Build & run**: bilden ändras inte – och kan inte göra det. **Med kursens fasta
-indata möter bollen aldrig racketen.** Ingen flyttar racketen, så den står kvar på x 350…450, och bollen kommer ned
-efter sin studs mot stenen på x ≈ 576, en bra bit till höger om den. Bollen studsar en gång, mot stenen, och går sedan
-förlorad. Racketstudsen finns i koden – uppgiften kontrolleras där –, men inte i bilden. På din egen dator, utanför
-kursen, skulle du styra racketen under bollen med A och D och se att det fungerar.
+Gör nu uppgiften **paddle**. Bygg och kör: bilden ändras inte – och kan inte göra det. **Med kursens fasta indata möter
+bollen aldrig racketen.** Ingen flyttar racketen, så den står kvar på x 350…450, och bollen kommer ned efter sin studs
+mot stenen på x ≈ 576, en bra bit till höger om den. Bollen studsar en gång, mot stenen, och går sedan förlorad.
+Racketstudsen finns i koden – uppgiften kontrolleras där –, men inte i bilden. I ditt eget program kan du styra racketen
+under bollen med A och D och se att det fungerar.
 
 ```quiz
 Bollen träffar racketen med sin mittpunkt 40 pixlar till höger om racketens mitt; racketen är 100 pixlar bred. Vad händer med dess hastighet, med learnopengls `strength` på 2?
