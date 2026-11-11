@@ -66,6 +66,8 @@ internal sealed class GlState
         public int Width, Height;
         public bool Float, IsDepth;
         public int Samples = 1;
+        /// <summary>The layers of a texture array (GL_TEXTURE_2D_ARRAY, glTexImage3D): a layered framebuffer draws into them.</summary>
+        public int Layers = 1;
         public string? Framebuffer;
         public int Attachment;
         /// <summary>

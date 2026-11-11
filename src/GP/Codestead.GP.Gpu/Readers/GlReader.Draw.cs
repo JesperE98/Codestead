@@ -165,6 +165,7 @@ public sealed partial class GlReader
             .Concat(program.Geometry is { } g ? SamplerNames(g) : []).Distinct().ToList();
         if (samplers.Count == 0) return (null, null);
         var bound = new Dictionary<string, Textures.Texture?>(StringComparer.Ordinal);
+        var layerCounts = new Dictionary<string, int>(StringComparer.Ordinal);
         var cubes = new Dictionary<string, Textures.CubeTexture>(StringComparer.Ordinal);
         // layout (binding = N) uniform sampler2D …: unit N unless the program sets the uniform itself.
         var bindings = new[] { program.Vertex!, program.Fragment! }.Concat(program.Geometry is { } bg ? [bg] : [])
@@ -201,9 +202,17 @@ public sealed partial class GlReader
                 }
                 else if (t.Framebuffer is { } fbo)
                 {
-                    // A texture a framebuffer object draws into: what has been drawn so far in this frame.
+                    // A texture a framebuffer object draws into: what has been drawn so far in this frame (a texture
+                    // array: each layer, "fbo@layer", read as "name@layer").
                     var (attachment, depth) = (t.Attachment, t.IsDepth);
                     texture = new Textures.Texture(() => Raster.Rasterizer.TargetImage(fbo, attachment, depth), sampler) { Components = 4 };
+                    for (int layer = 1; layer < t.Layers; layer++)
+                    {
+                        var layerTarget = fbo + "@" + layer;
+                        bound[name + "@" + layer] = new Textures.Texture(() => Raster.Rasterizer.TargetImage(layerTarget, attachment, depth), sampler) { Components = 4 };
+                    }
+                    if (t.Layers > 1) bound[name + "@0"] = texture;
+                    layerCounts[name] = t.Layers;
                 }
                 else texture = new Textures.Texture(t.Image!, sampler)
                 {
@@ -219,7 +228,15 @@ public sealed partial class GlReader
         }
         samplerSizes = name => bound.TryGetValue(name, out var t) && t is not null ? (t.Image.Width, t.Image.Height) : null;
         samplerCubeLod = cubes.Count == 0 ? null : (name, x, y, z, lod) => cubes.TryGetValue(name, out var c) ? c.Sample(x, y, z, lod) : null;
-        return ((name, u, v) => bound.TryGetValue(name, out var t) && t is not null ? t.Sample(u, v) : [0, 0, 0, 1],
+        // A layer past the array's last reads the last one (GLSL clamps the layer).
+        Textures.Texture? Layer(string name)
+        {
+            if (bound.TryGetValue(name, out var t)) return t;
+            int at = name.LastIndexOf('@');
+            if (at < 0 || !layerCounts.TryGetValue(name[..at], out var layers)) return null;
+            return bound.GetValueOrDefault(name[..at] + "@" + (layers - 1));
+        }
+        return ((name, u, v) => Layer(name) is { } t ? t.Sample(u, v) : [0, 0, 0, 1],
             cubes.Count == 0 ? null : (name, x, y, z) => cubes.TryGetValue(name, out var c) ? c.Sample(x, y, z) : null);
     }
 

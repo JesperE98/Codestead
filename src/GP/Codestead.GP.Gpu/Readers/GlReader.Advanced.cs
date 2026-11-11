@@ -155,6 +155,8 @@ public sealed partial class GlReader
                 fb.Samples = Math.Max(fb.Samples, tex.Samples);
                 // glFramebufferTexture (not …2D) attaches every layer: a cube map's six faces.
                 if (name == "glFramebufferTexture" && tex.IsCube) fb.Layers = 6;
+                // … and a texture array's layers (gl_Layer picks one).
+                else if (name == "glFramebufferTexture" && tex.Layers > 1) fb.Layers = tex.Layers;
                 if (fb.Width == 0) (fb.Width, fb.Height) = (tex.Width, tex.Height);
                 if (A(1).Contains("DEPTH", StringComparison.Ordinal))
                 {
@@ -438,12 +440,36 @@ public sealed partial class GlReader
             {
                 var (align, size) = Std140(f.Type, f.ArraySize);
                 offset = (offset + align - 1) / align * align;
-                if (writes.TryGetValue(buf.Offset + offset, out var value)) d[g.Id == "" ? f.Id : g.Id + "." + f.Id] = value;
+                var member = g.Id == "" ? f.Id : g.Id + "." + f.Id;
+                if (f.ArraySize > 0)
+                {
+                    // An array (mat4 lightSpaceMatrices[16]): its elements at their std140 stride, written one by one
+                    // (glBufferSubData per element) or several at once (a whole std::vector).
+                    int stride = size / f.ArraySize;
+                    var items = new ShaderValue?[f.ArraySize];
+                    for (int i = 0; i < f.ArraySize; i++)
+                    {
+                        if (!writes.TryGetValue(buf.Offset + offset + i * stride, out var written)) continue;
+                        var parts = written.Items ?? [written];
+                        for (int k = 0; k < parts.Length && i + k < f.ArraySize; k++) items[i + k] = parts[k];
+                    }
+                    if (items.Any(x => x is not null))
+                        d[member] = ShaderValue.Array(items.Select(x => x ?? ZeroOf(f.Type)).ToArray());
+                }
+                else if (writes.TryGetValue(buf.Offset + offset, out var value)) d[member] = value;
                 offset += size;
             }
         }
         return d;
     }
+
+    /// <summary>The value of a uniform block member nothing was written to: zero.</summary>
+    private static ShaderValue ZeroOf(string type) => type switch
+    {
+        _ when ShaderRunner.MatrixSize(type) is int n and > 0 => ShaderValue.Matrix(n, new double[n * n]),
+        _ when Regex.Match(type, @"^[iub]?vec([234])$") is { Success: true } v => ShaderValue.Vec(new double[v.Groups[1].Value[0] - '0']),
+        _ => ShaderValue.Scalar(0),
+    };
 
     /// <summary>The std140 alignment and size of a member, in bytes.</summary>
     internal static (int Align, int Size) Std140(string type, int arraySize)
@@ -453,9 +479,9 @@ public sealed partial class GlReader
             "vec2" or "ivec2" or "uvec2" or "bvec2" => (8, 8),
             "vec3" or "ivec3" or "uvec3" or "bvec3" => (16, 12),
             "vec4" or "ivec4" or "uvec4" or "bvec4" => (16, 16),
-            "mat2" => (16, 32),
-            "mat3" => (16, 48),
-            "mat4" => (16, 64),
+            "mat2" or "mat2x2" => (16, 32),
+            "mat3" or "mat3x3" => (16, 48),
+            "mat4" or "mat4x4" => (16, 64),
             _ => (4, 4),
         };
         if (arraySize > 0)

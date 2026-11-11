@@ -545,7 +545,14 @@ public sealed partial class ShaderRunner
 
     private ShaderValue SampleTexture(Expr texture, ShaderValue uv, string? sampler = null, double? lod = null)
     {
-        var id = sampler is null ? PathOf(texture) : PathOf(texture) + "|" + sampler;
+        var path = PathOf(texture);
+        if (uv.Size >= 3 && IsArrayTexture(path))
+        {
+            // A texture array (sampler2DArray, Texture2DArray): the third coordinate picks the layer, "name@layer".
+            path += "@" + Math.Max(0, (int)Math.Floor(uv.V![2] + 0.5));
+            uv = ShaderValue.Vec(uv.V[0], uv.V[1]);
+        }
+        var id = sampler is null ? path : path + "|" + sampler;
         if (uv.Size >= 3 && lod is { } level && SampleCubeLod?.Invoke(id, uv.V![0], uv.V[1], uv.V[2], level) is { } mip) return ShaderValue.Vec(mip);
         if (uv.Size >= 3 && SampleCube?.Invoke(id, uv.V![0], uv.V[1], uv.V[2]) is { } cube) return ShaderValue.Vec(cube);
         var at = uv.Padded(2);
@@ -561,6 +568,13 @@ public sealed partial class ShaderRunner
             Textures.Texture.Footprint = null;
         }
     }
+
+    private HashSet<string>? arrayTextures;
+
+    /// <summary>Whether a texture the shader declares is an array of 2D layers (sampler2DArray, Texture2DArray).</summary>
+    private bool IsArrayTexture(string name) => (arrayTextures ??= program.Globals
+        .Where(g => g.Type is "sampler2DArray" or "sampler2DArrayShadow" or "isampler2DArray" or "usampler2DArray" or "texture2DArray" || g.Type.StartsWith("Texture2DArray", StringComparison.Ordinal))
+        .Select(g => g.Id).ToHashSet(StringComparer.Ordinal)).Contains(name);
 
     /// <summary>The uniform name of a texture expression: texture1, material.diffuse, shadowMaps[2].</summary>
     private string PathOf(Expr e) => e switch

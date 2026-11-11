@@ -322,9 +322,10 @@ public sealed partial class ShaderRunner
     /// <summary>The size of a square matrix type (mat4, float4x4, XMFLOAT4X4, XMMATRIX), or 0.</summary>
     internal static int MatrixSize(string type) => type switch
     {
-        "mat2" or "float2x2" or "dmat2" => 2,
-        "mat3" or "float3x3" or "XMFLOAT3X3" or "dmat3" => 3,
-        "mat4" or "float4x4" or "XMFLOAT4X4" or "XMMATRIX" or "dmat4" => 4,
+        // (mat4x4 is mat4's other name in GLSL and GLM.)
+        "mat2" or "mat2x2" or "float2x2" or "dmat2" => 2,
+        "mat3" or "mat3x3" or "float3x3" or "XMFLOAT3X3" or "dmat3" => 3,
+        "mat4" or "mat4x4" or "float4x4" or "XMFLOAT4X4" or "XMMATRIX" or "dmat4" or "dmat4x4" => 4,
         _ => 0,
     };
 

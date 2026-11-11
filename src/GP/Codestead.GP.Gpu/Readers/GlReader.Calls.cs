@@ -247,6 +247,16 @@ public sealed partial class GlReader
             case "glTexImage2D":
                 TexImage(a, line);
                 return;
+            case "glTexImage3D" when BoundTexture is { } array && a.Count >= 10 && DataName(a[9]) is "NULL" or "nullptr" or "0":
+                // A texture array with no data (glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, w, h, layers, …)):
+                // drawn into layer by layer (cascaded shadow maps).
+                array.Width = Int(a[3]) ?? 0;
+                array.Height = Int(a[4]) ?? 0;
+                array.Layers = Math.Max(1, Int(a[5]) ?? 1);
+                array.Float = IsFloatFormat(a[2]);
+                array.IsDepth = a[2].Contains("DEPTH", StringComparison.Ordinal);
+                array.Components = 4;
+                return;
             case "glGenerateMipmap" when BoundTexture is not { } noBase || noBase.Image is null && !noBase.IsCube && noBase.Framebuffer is null && noBase.Width == 0:
                 GlError(GlInvalidOperation, "GL_INVALID_OPERATION in glGenerateMipmap(zero size base image)");
                 return;
