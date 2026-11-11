@@ -48,8 +48,8 @@ public sealed partial class ShaderRunner
     /// </summary>
     public Func<double, double, (double, double, double, double)?>? Footprint { get; set; }
 
-    /// <summary>Texture sizes for textureSize(): name → (width, height).</summary>
-    public Func<string, (int Width, int Height)?>? TextureSize { get; set; }
+    /// <summary>The image a sampler reads, for its size (textureSize(), texelFetch()): name → image.</summary>
+    public Func<string, Codestead.GP.Gpu.Textures.Image?>? TextureImage { get; set; }
 
     /// <summary>Geometry shaders: EmitVertex() / EndPrimitive() (GLSL), stream.Append(v) / stream.RestartStrip() (HLSL).</summary>
     public Action<string, ShaderValue?>? Emit { get; set; }

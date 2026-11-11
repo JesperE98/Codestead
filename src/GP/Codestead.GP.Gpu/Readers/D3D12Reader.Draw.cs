@@ -202,7 +202,7 @@ public sealed partial class D3D12Reader
                     InstanceDivisor = stepRate,
                     CubeTextures = deviceCubes,
                     CubeTexturesLod = deviceCubes is null ? null : deviceCubeLod,
-                    TextureSizes = textureSizes,
+                    TextureImages = textureSizes,
                     VertexShader = dvs,
                     FragmentShader = dps,
                     VertexEntry = pl?.VsEntry ?? vsEntry,
@@ -475,7 +475,7 @@ public sealed partial class D3D12Reader
             }
             return (flat[id], cubes[id]);
         }
-        deviceTextureSizes = id => Lookup(id).Item1 is { } t ? (t.Image.Width, t.Image.Height) : null;
+        deviceTextureSizes = id => Lookup(id).Item1?.Image;
         deviceCubeLod = (id, x, y, z, lod) => Lookup(id).Item2 is { } c ? c.Sample(x, y, z, lod) : null;
         return ((id, u, v) => Lookup(id).Item1 is { } t ? t.Sample(u, v) : [0, 0, 0, 1],
             (id, x, y, z) => Lookup(id).Item2 is { } c ? c.Sample(x, y, z) : null);
@@ -510,7 +510,7 @@ public sealed partial class D3D12Reader
     }
 
     /// <summary>The texture sizes of the last DeviceTextures call (GetDimensions, textureSize).</summary>
-    private Func<string, (int Width, int Height)?>? deviceTextureSizes;
+    private Func<string, Codestead.GP.Gpu.Textures.Image?>? deviceTextureSizes;
     /// <summary>The cube maps of the last DeviceTextures call read at a mip level (SampleLevel).</summary>
     private Func<string, double, double, double, double, double[]?>? deviceCubeLod;
 

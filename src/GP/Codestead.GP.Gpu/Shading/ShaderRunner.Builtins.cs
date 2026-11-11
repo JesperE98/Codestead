@@ -237,15 +237,15 @@ public sealed partial class ShaderRunner
             {
                 // texelFetch(sampler, ivec2 texel, lod): the texel's centre.
                 if (a.Count < 2) throw Arity();
-                var size = TextureSize?.Invoke(PathOf(c.Args[0])) ?? (1, 1);
+                var size = TextureImage?.Invoke(PathOf(c.Args[0]))?.ProgramSize ?? (1, 1);
                 var p = a[1].Padded(2);
                 return SampleTexture(c.Args[0], ShaderValue.Vec((Math.Floor(p[0]) + 0.5) / size.Width, (Math.Floor(p[1]) + 0.5) / size.Height), null, 0);
             }
             case "textureSize":
             {
                 if (a.Count < 1) throw Arity();
-                var size = TextureSize?.Invoke(PathOf(c.Args[0])) ?? (1, 1);
-                return ShaderValue.Vec(size.Width, size.Height);
+                var size = TextureImage?.Invoke(PathOf(c.Args[0])) is { } image ? (image.Width, image.Height) : (1, 1);
+                return ShaderValue.Vec(size.Item1, size.Item2);
             }
             default:
                 if (Lenient) return ShaderValue.Scalar(0);
@@ -299,7 +299,7 @@ public sealed partial class ShaderRunner
                 var path = PathOf(c.Args[0]);
                 var at = Eval(c.Args[1]).Padded(4);
                 bool array = IsArrayTexture(path);
-                var size = TextureSize?.Invoke(path) ?? (1, 1);
+                var size = TextureImage?.Invoke(path)?.ProgramSize ?? (1, 1);
                 var uv = array ? ShaderValue.Vec((Math.Floor(at[0]) + 0.5) / size.Width, (Math.Floor(at[1]) + 0.5) / size.Height, at[2])
                     : ShaderValue.Vec((Math.Floor(at[0]) + 0.5) / size.Width, (Math.Floor(at[1]) + 0.5) / size.Height);
                 return SampleTexture(c.Args[0], uv, null, 0);
@@ -392,9 +392,9 @@ public sealed partial class ShaderRunner
             case "GetDimensions" when c.Args.Count >= 3:
             {
                 // HLSL Texture2D::GetDimensions(out width, out height): the texture's size in texels.
-                var size = TextureSize?.Invoke(PathOf(c.Args[0])) ?? (1, 1);
-                Store(c.Args[1], ShaderValue.Scalar(size.Width));
-                Store(c.Args[2], ShaderValue.Scalar(size.Height));
+                var size = TextureImage?.Invoke(PathOf(c.Args[0])) is { } image ? (image.Width, image.Height) : (1, 1);
+                Store(c.Args[1], ShaderValue.Scalar(size.Item1));
+                Store(c.Args[2], ShaderValue.Scalar(size.Item2));
                 return ShaderValue.Scalar(0);
             }
             case "resize" when Lenient && c.Args.Count >= 2:

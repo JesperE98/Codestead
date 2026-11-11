@@ -217,7 +217,7 @@ public sealed partial class VulkanReader
                     Target = target,
                     CubeTextures = deviceCubes,
                     CubeTexturesLod = deviceTextures is null ? null : deviceCubeLod,
-                    TextureSizes = textureSizes,
+                    TextureImages = textureSizes,
                     First = d.Indexed ? 0 : d.First,
                     Count = d.Count,
                     Instances = Math.Max(1, d.Instances),

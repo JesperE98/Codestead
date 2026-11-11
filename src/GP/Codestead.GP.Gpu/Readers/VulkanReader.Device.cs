@@ -137,7 +137,7 @@ public sealed partial class VulkanReader
         var bindings = vs.Globals.Concat(fs.Globals).Where(g => g.Type.StartsWith("sampler", StringComparison.Ordinal)).GroupBy(g => g.Id).ToDictionary(g => g.Key, g => g.First().Binding ?? 0);
         if (bindings.Count == 0) return (null, null);
         var found = bindings.ToDictionary(b => b.Key, b => device.TextureAt(set, b.Value));
-        deviceTextureSizes = id => found.TryGetValue(id.Split('|')[0], out var t) && t?.Texture is { } tex ? (tex.Image.Width, tex.Image.Height) : null;
+        deviceTextureSizes = id => found.TryGetValue(id.Split('|')[0], out var t) && t?.Texture is { } tex ? tex.Image : null;
         if (found.Values.All(v => v is null)) return (null, null);
         // "name@k": layer k of a sampler2DArray, looked up when first read.
         foreach (var array in bindings.Keys.Where(k => vs.Globals.Concat(fs.Globals).Any(g => g.Id == k && g.Type.Contains("Array", StringComparison.Ordinal))).ToList())
@@ -149,7 +149,7 @@ public sealed partial class VulkanReader
     }
 
     /// <summary>The texture sizes of the last DeviceTextures call (textureSize, texelFetch).</summary>
-    private Func<string, (int Width, int Height)?>? deviceTextureSizes;
+    private Func<string, Codestead.GP.Gpu.Textures.Image?>? deviceTextureSizes;
     /// <summary>The cube maps of the last DeviceTextures call read at a mip level (textureLod).</summary>
     private Func<string, double, double, double, double, double[]?>? deviceCubeLod;
 

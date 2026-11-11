@@ -65,6 +65,6 @@ public sealed class DrawCall
     /// <summary>Cube maps with mip levels read at a level (textureLod, SampleLevel): (name, direction, lod) → RGBA, or null.</summary>
     public Func<string, double, double, double, double, double[]?>? CubeTexturesLod { get; init; }
 
-    /// <summary>The size in texels of the texture a sampler reads (textureSize, texelFetch), or null.</summary>
-    public Func<string, (int Width, int Height)?>? TextureSizes { get; init; }
+    /// <summary>The image of the texture a sampler reads, for its size in texels (textureSize, texelFetch), or null.</summary>
+    public Func<string, Codestead.GP.Gpu.Textures.Image?>? TextureImages { get; init; }
 }

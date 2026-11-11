@@ -19,7 +19,7 @@ public static partial class Rasterizer
     /// </summary>
     [ThreadStatic] private static RenderContext? current;
 
-    private sealed class RenderContext(Func<string, Framebuffer> target, bool bottomUp)
+    private sealed class RenderContext(Func<string, Framebuffer> target, bool bottomUp, Func<string, (int Width, int Height)>? programSize = null)
     {
         // Read by the fragment workers side by side; an image is made once, by the first thread that needs it.
         private readonly ConcurrentDictionary<(string, int, bool), Image> images = new();
@@ -34,7 +34,10 @@ public static partial class Rasterizer
                 if (!images.TryGetValue((id, attachment, depth), out image))
                 {
                     var fb = Target(id);
-                    images[(id, attachment, depth)] = image = depth ? fb.DepthImage(BottomUp) : fb.ColorImage(BottomUp, attachment);
+                    image = depth ? fb.DepthImage(BottomUp) : fb.ColorImage(BottomUp, attachment);
+                    // A target drawn at the preview's scale: the program still addresses its texels at its own size.
+                    if (programSize?.Invoke(id) is var (w, h) && (w != image.Width || h != image.Height)) image = image with { ProgramWidth = w, ProgramHeight = h };
+                    images[(id, attachment, depth)] = image;
                 }
                 return image;
             }
@@ -116,9 +119,11 @@ public static partial class Rasterizer
         }
         // The size in the program's own pixels (gl_FragCoord) of a target.
         double LogicalWidth(string? id) => id is not null && scene.Targets.GetValueOrDefault(id.Contains('@') ? id[..id.IndexOf('@')] : id) is { Width: > 0 } t ? t.Width : scene.Width;
+        (int, int) LogicalSize(string id) => scene.Targets.GetValueOrDefault(id.Contains('@') ? id[..id.IndexOf('@')] : id) is { } t
+            ? (t.Width > 0 ? t.Width : scene.Width, t.Height > 0 ? t.Height : scene.Height) : (scene.Width, scene.Height);
 
         var previous = current;
-        var context = new RenderContext(id => Fb(id), zMinusOneToOne);
+        var context = new RenderContext(id => Fb(id), zMinusOneToOne, LogicalSize);
         current = context;
         try
         {

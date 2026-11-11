@@ -142,7 +142,7 @@ public sealed partial class GlReader
             Textures = textures ?? samplers,
             CubeTextures = cubes,
             CubeTexturesLod = cubesLod,
-            TextureSizes = sizes,
+            TextureImages = sizes,
         };
     }
 
@@ -151,7 +151,7 @@ public sealed partial class GlReader
     /// glUniform1i / setInt), and the texture bound to that unit now. An incomplete texture reads black.
     /// </summary>
     /// <summary>The texture sizes of the samplers the last Samplers call bound.</summary>
-    private Func<string, (int Width, int Height)?>? samplerSizes;
+    private Func<string, Codestead.GP.Gpu.Textures.Image?>? samplerSizes;
     /// <summary>The cube maps of the last Samplers call read at a mip level (textureLod).</summary>
     private Func<string, double, double, double, double, double[]?>? samplerCubeLod;
 
@@ -226,7 +226,7 @@ public sealed partial class GlReader
             else scene.Notes.Add(SimNote.Warning("noTextureOnUnit", ("name", name), ("unit", unit.ToString())));
             bound[name] = texture;
         }
-        samplerSizes = name => bound.TryGetValue(name, out var t) && t is not null ? (t.Image.Width, t.Image.Height) : null;
+        samplerSizes = name => bound.TryGetValue(name, out var t) && t is not null ? t.Image : null;
         samplerCubeLod = cubes.Count == 0 ? null : (name, x, y, z, lod) => cubes.TryGetValue(name, out var c) ? c.Sample(x, y, z, lod) : null;
         // A layer past the array's last reads the last one (GLSL clamps the layer).
         Textures.Texture? Layer(string name)
