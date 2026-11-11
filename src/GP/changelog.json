@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.1.1",
+    "date": "2026-11-11",
+    "changes": {
+      "en": [
+        "New part: **Guest Articles**, learnopengl's articles by guest authors in twelve chapters – order-independent transparency, skeletal animation with an animated tentacle, scene graphs and frustum culling, cascaded shadow maps, terrain from a height map on the CPU and with tessellation, OpenGL's direct state access, physically based bloom, compute shaders and area lights – ending with a review and an exam."
+      ],
+      "sv": [
+        "Ny del: **Gästartiklar**, learnopengls artiklar av gästskribenter i tolv kapitel – ordningsoberoende transparens, skelettanimation med en animerad tentakel, scengrafer och frustum culling, kaskaderade skuggkartor, terräng från en höjdkarta på CPU:n och med tessellering, OpenGL:s direct state access, fysikaliskt baserad bloom, compute shaders och ytljus – som avslutas med en sammanfattning och ett prov."
+      ],
+      "es": [
+        "Nueva parte: **Artículos invitados**, los artículos de autores invitados de learnopengl en doce capítulos: transparencia independiente del orden, animación esquelética con un tentáculo animado, grafos de escena y frustum culling, mapas de sombras en cascada, terreno a partir de un mapa de alturas en la CPU y con teselación, el acceso directo al estado (DSA) de OpenGL, bloom basado en la física, compute shaders y luces de área; termina con un repaso y un examen."
+      ],
+      "de": [
+        "Neuer Teil: **Gastartikel**, die Artikel der Gastautoren von learnopengl in zwölf Kapiteln – reihenfolgeunabhängige Transparenz, Skelettanimation mit einem animierten Tentakel, Szenengraphen und Frustum Culling, kaskadierte Shadow Maps, Gelände aus einer Höhenkarte auf der CPU und mit Tessellation, Direct State Access in OpenGL, physikalisch basiertes Bloom, Compute Shader und Flächenlichter – mit einer Zusammenfassung und einer Prüfung am Ende."
+      ],
+      "fr": [
+        "Nouvelle partie : **Articles invités**, les articles des auteurs invités de learnopengl en douze chapitres – transparence indépendante de l'ordre, animation squelettique avec un tentacule animé, graphes de scène et frustum culling, shadow maps en cascade, terrain à partir d'une carte de hauteurs sur le CPU puis avec la tessellation, le direct state access d'OpenGL, bloom physiquement réaliste, compute shaders et lumières surfaciques – qui se termine par une révision et un examen."
+      ],
+      "zh": [
+        "新部分：**客座文章**，learnopengl 客座作者的文章，共十二章——顺序无关透明、带动画触手的骨骼动画、场景图与视锥体剔除、级联阴影贴图、在 CPU 上和用曲面细分由高度图生成地形、OpenGL 的直接状态访问（DSA）、基于物理的泛光、计算着色器和面光源——最后是复习和考试。"
+      ],
+      "ja": [
+        "新しいパート：**ゲスト記事**。learnopengl のゲスト著者による記事を 12 章で — 順序に依存しない透明度、アニメーションする触手によるスケルタルアニメーション、シーングラフと視錐台カリング、カスケードシャドウマップ、CPU とテッセレーションによるハイトマップからの地形、OpenGL のダイレクトステートアクセス（DSA）、物理ベースのブルーム、コンピュートシェーダー、エリアライト — 最後に復習と試験があります。"
+      ]
+    }
+  },
+  {
     "version": "0.1.0",
     "date": "2026-11-09",
     "changes": {
