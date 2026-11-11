@@ -149,7 +149,8 @@ for dir in "$@"; do
       ;;
     vulkan)
       mkdir -p "$work/shaders"
-      for s in "$work"/shaders/*.vert "$work"/shaders/*.frag "$work"/shaders/*.geom; do
+      # Also the tessellation (.tesc/.tese) and compute (.comp) stages of the guest articles.
+      for s in "$work"/shaders/*.vert "$work"/shaders/*.frag "$work"/shaders/*.geom "$work"/shaders/*.tesc "$work"/shaders/*.tese "$work"/shaders/*.comp; do
         [ -f "$s" ] || continue
         # shader.vert -> vert.spv (vulkan-tutorial's names); any other name -> name.vert.spv
         case "$(basename "$s")" in
@@ -159,6 +160,8 @@ for dir in "$@"; do
         glslangValidator -V "$s" -o "$out" >"$work/glslang.log" || { fail "$(basename "$s"):"; cat "$work/glslang.log"; }
       done
       libs=""; grep -qs "ft2build.h" "$work/main.cpp" && libs="$(pkg-config --cflags --libs freetype2)"
+      # Skeletal animation reads the animated model with Assimp.
+      grep -qs "assimp/" "$work/main.cpp" && libs="$libs -lassimp"
       shim=$(fixedtime_for "$work"); [ -n "$shim" ] && echo "  fixed time (frames / 60, space pressed at 0.5 s; shows frame $(awk "BEGIN { print int(${VERIFY_T:-1.0} * 60 + 0.5) }") = ${VERIFY_T:-1.0} s)"
       if g++ -std=c++17 -Wall -I/usr/include/stb -o "$work/app" "$work/main.cpp" -lglfw -lvulkan $libs 2>"$work/build.log"; then
         echo "  compiled"
