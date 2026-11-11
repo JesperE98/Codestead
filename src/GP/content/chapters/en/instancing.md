@@ -142,9 +142,9 @@ planet, the course's rock (`models/rock.obj`, `rock.mtl`, `rock.png`), the root 
 CBV table (b1) and a texture table, and the shaders `planet.hlsl` and `asteroids.hlsl`.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, press **Build & run**
-(Ctrl+Enter) to compile the program and run it in the built-in simulator. Right now it shows one small quad in the
-centre of the window, coloured from its corners: red, green, blue and cyan.
+The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
+IDE. Right now it shows one small quad in the centre of the window, coloured from its corners: red, green, blue and
+cyan.
 
 ## Instancing
 
@@ -362,7 +362,7 @@ parameter points at the buffer, and the draw gets its instance count:
 ```
 :::
 
-Press **Build & run**: a 10x10 grid of the little quad fills the window – a hundred quads, drawn with one draw call.
+Build and run: a 10x10 grid of the little quad fills the window – a hundred quads, drawn with one draw call.
 
 ```quiz
 The loops run y from -10 upwards and, inside, x from -10 to the right. Which instance number does the quad in the top-right corner of the window have?
@@ -580,8 +580,8 @@ When drawing, both vertex buffers are set, each to its slot:
 The draw stays `DrawInstanced(6, 100, 0, 0)`.
 :::
 
-Press **Build & run**: nothing changes – the same grid, pixel for pixel. But now the offsets come from a vertex buffer,
-which can hold far more instances than a uniform array.
+Build and run: nothing changes – the same grid, pixel for pixel. But now the offsets come from a vertex buffer, which
+can hold far more instances than a uniform array.
 
 ```quiz
 Why does learnopengl replace the uniform array of offsets by an instanced array?
@@ -663,11 +663,11 @@ PSInput VSMain(float2 position : POSITION, float3 color : COLOR, float2 offset :
 ```
 :::
 
-Press **Build & run**. The result is that the first instances of the quads are drawn extremely small and the further
-we're in the process of drawing the instances, the closer the instance number gets to 100 and thus the more the quads
-regain their original size: the top-right quad has its full size, the quads shrink row by row towards the bottom, and
-the bottom-left one – instance 0 – has disappeared completely. It's perfectly legal to use instanced arrays together
-with the instance number like this.
+Build and run. The result is that the first instances of the quads are drawn extremely small and the further we're in
+the process of drawing the instances, the closer the instance number gets to 100 and thus the more the quads regain
+their original size: the top-right quad has its full size, the quads shrink row by row towards the bottom, and the
+bottom-left one – instance 0 – has disappeared completely. It's perfectly legal to use instanced arrays together with
+the instance number like this.
 
 ```quiz
 In the **scale-quads** task, what would happen if you divided the instance number by `100` instead of `100.0`?
@@ -704,11 +704,12 @@ thousand rocks on, the scene stops running smoothly, although each rock is a sma
 instanced, and the very same machine handles 100,000 rocks (in a ring of radius 150) easily. A real GPU draws such a
 field with instancing in a fraction of a frame.
 
-Our version is smaller: 500 rocks in a ring of radius 15. The built-in simulator runs on the CPU, so it can't show
-what instancing gains on a real GPU – but the code is exactly the code that would draw 100,000 rocks: change `amount`
-and the radius, and nothing else. And instead of seeding the random numbers with the time, as learnopengl does, we use
-`srand(42)`: the same field every run, so you can compare your picture with the expected one. (Only the same C library
-gives the same sequence: on another platform, `rand()` produces a different field.)
+Our version is smaller: 500 rocks in a ring of radius 15. The course draws its checks and expected results on the CPU,
+so it keeps the field small – it can't show what instancing gains on a real GPU – but the code is exactly the code that
+would draw 100,000 rocks: change `amount` and the radius, and nothing else. And instead of seeding the random numbers
+with the time, as learnopengl does, we use `srand(42)`: the same field every run, so you can compare your picture with
+the expected one. (Only the same C library gives the same sequence: on another platform, `rand()` produces a different
+field.)
 
 First, the planet on its own.
 
@@ -847,8 +848,8 @@ And `PopulateCommandList` draws the planet below the centre, scaled by 4:
 ```
 :::
 
-Press **Build & run**: a small textured planet just below the centre of the window. The camera is 3 units above the
-plane of its ring, so the ring is seen almost edge-on – a thin beige line through the middle of the planet.
+Build and run: a small textured planet just below the centre of the window. The camera is 3 units above the plane of its
+ring, so the ring is seen almost edge-on – a thin beige line through the middle of the planet.
 
 Now the rocks. Instead of a draw call per rock, we compute all their model matrices once, put them into a buffer, and
 read the matrix in the vertex shader as an instanced array – one matrix per instance. learnopengl's loop that creates
@@ -1218,8 +1219,8 @@ ourselves instead of calling `m_rock.Draw`. No root constants are needed for the
 from slot 1.
 :::
 
-Press **Build & run**: a flat band of grey rocks across the upper half of the planet – the ring of radius 15 seen from
-3 units above its plane, so it looks like a band. The planet below the band is unchanged.
+Build and run: a flat band of grey rocks across the upper half of the planet – the ring of radius 15 seen from 3 units
+above its plane, so it looks like a band. The planet below the band is unchanged.
 
 :::opengl
 ```quiz

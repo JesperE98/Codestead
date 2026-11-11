@@ -61,9 +61,9 @@ medlemmen `Model m_model;`. `explode.hlsl` (vars geometry shader släpper igenom
 `CullMode = D3D12_CULL_MODE_NONE`, som learnopengl, som ritar utan face culling.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift trycker du på **Build & run**
-(Ctrl+Enter) för att kompilera programmet och köra det i den inbyggda simulatorn. Just nu visar den fyra enstaka
-pixlar: röd uppe till vänster, grön uppe till höger, gul nere till vänster och blå nere till höger.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
+IDE. Just nu visar den fyra enstaka pixlar: röd uppe till vänster, grön uppe till höger, gul nere till vänster och blå
+nere till höger.
 
 ## Använda geometry shaders
 
@@ -560,9 +560,9 @@ I `main.cpp` kompilerar du `GSMain` med geometry shader-målet, mellan vertex oc
 `PrimitiveTopologyType` förblir `D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT`: det är geometry shaderns indata.
 :::
 
-Tryck på **Build & run**. Om allt gick bra ser du ingen skillnad alls: samma fyra punkter på en pixel, i samma färger
-och på samma platser. Det är just poängen – geometry shadern släpper igenom allt. Det kan verka som mycket arbete för
-ingenting, men nu är allt på plats för att ändra det som kommer ut.
+Bygg och kör. Om allt gick bra ser du ingen skillnad alls: samma fyra punkter på en pixel, i samma färger och på samma
+platser. Det är just poängen – geometry shadern släpper igenom allt. Det kan verka som mycket arbete för ingenting, men
+nu är allt på plats för att ändra det som kommer ut.
 
 :::opengl
 ```quiz
@@ -721,9 +721,9 @@ Den här geometry shadern skapar 5 vertices, där varje vertex är punktens posi
 bildar en stor triangle strip. Primitiven rastreras sedan och fragment shadern körs över hela stripen, vilket ger ett
 färgat hus för varje punkt vi har ritat.
 
-Tryck på **Build & run**: fyra hus, vart och ett i sin punkts färg – en vägg 160 pixlar bred och 120 hög med ett 60
-pixlar högt tak ovanpå, där de enstaka pixlarna var förut. Du ser att varje hus verkligen består av 3 trianglar – alla
-ritade utifrån en enda punkt i rummet.
+Bygg och kör: fyra hus, vart och ett i sin punkts färg – en vägg 160 pixlar bred och 120 hög med ett 60 pixlar högt tak
+ovanpå, där de enstaka pixlarna var förut. Du ser att varje hus verkligen består av 3 trianglar – alla ritade utifrån en
+enda punkt i rummet.
 
 ```quiz
 Husets fem vertices ges ut som en triangle strip: 1 nere till vänster, 2 nere till höger, 3 uppe till vänster, 4 uppe till höger, 5 toppen. Vilka vertices bildar taket?
@@ -775,8 +775,8 @@ Gör nu uppgiften **roof-white**: i `build_house`, sätt färgen precis innan de
 sista är vit.
 :::
 
-Tryck på **Build & run**. Väggarna är oförändrade, men varje tak tonar nu från husets färg vid takfoten till vitt i
-toppen, som om det vore täckt av snö.
+Bygg och kör. Väggarna är oförändrade, men varje tak tonar nu från husets färg vid takfoten till vitt i toppen, som om
+det vore täckt av snö.
 
 ```quiz
 Bara takets översta vertex är vit, ändå blir hela taket ljusare uppåt. Varför?
@@ -986,7 +986,7 @@ Och `PopulateCommandList` ritar modellen i stället för punkterna:
 `TriangleStream` igen, var och en med sina texturkoordinater.
 :::
 
-Tryck på **Build & run**: den texturerade planeten med sin ring, lutad mot dig, på den mörka bakgrunden – bilden från
+Bygg och kör: den texturerade planeten med sin ring, lutad mot dig, på den mörka bakgrunden – bilden från
 Model-kapitlet, utan ljussättning. Den går nu genom en geometry shader som inte ändrar något ännu.
 
 Det vi ska göra är att flytta varje vertex i en triangel i riktning mot triangelns normalvektor. Det betyder att vi
@@ -1216,10 +1216,10 @@ och likadant med `explode(input[1].position, normal)` och `explode(input[2].posi
 vertices. Observera att vi också ger ut rätt texturkoordinater innan varje vertex läggs till.
 :::
 
-Tryck på **Build & run**. Resultatet är en planet som verkar spränga sina trianglar om och om igen och sedan återgå
-till det normala: med `sin(time)` flyger bitarna isär och kommer tillbaka med en period på 2π sekunder – längst isär
-efter ungefär 1,6 sekunder, hel igen efter ungefär 4,7 sekunder. Det är kanske inte superanvändbart, men det visar en
-mer avancerad användning av geometry shadern.
+Bygg och kör. Resultatet är en planet som verkar spränga sina trianglar om och om igen och sedan återgå till det
+normala: med `sin(time)` flyger bitarna isär och kommer tillbaka med en period på 2π sekunder – längst isär efter
+ungefär 1,6 sekunder, hel igen efter ungefär 4,7 sekunder. Det är kanske inte superanvändbart, men det visar en mer
+avancerad användning av geometry shadern.
 
 Lägg märke till *var* det här händer: vertex shadern har redan multiplicerat positionerna med projektionsmatrisen, så
 geometry shadern arbetar i clip space, och både normalen och förflyttningen är vektorer i clip space – som hos
@@ -1532,9 +1532,9 @@ Båda pipeline states använder samma root signatur, så root constants och CBV-
 ritningen gäller fortfarande för den andra.
 :::
 
-Tryck på **Build & run**: planeten som i uppgiften `planet`, oexploderad, med gula strån som sticker ut ur klotet och
-upp från ringen – ett per vertex. Av bilden att döma verkar normalerna verkligen vara rätt: de pekar rakt ut från ytan
-överallt. Förutom att visualisera normaler används en sådan här geometry shader ofta för att ge objekt päls.
+Bygg och kör: planeten som i uppgiften `planet`, oexploderad, med gula strån som sticker ut ur klotet och upp från
+ringen – ett per vertex. Av bilden att döma verkar normalerna verkligen vara rätt: de pekar rakt ut från ytan överallt.
+Förutom att visualisera normaler används en sådan här geometry shader ofta för att ge objekt päls.
 
 ```quiz
 Varför låter normalvisualiseringens vertex shader bli att projicera och lämnar det till geometry shadern?

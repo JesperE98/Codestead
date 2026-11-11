@@ -58,8 +58,8 @@ v = 0 bildens översta rad. Ingen `aiProcess_ConvertToLeftHanded`: kursens matem
 `XMMatrixPerspectiveFovRH`). Modellmatrisen är en root constant, som i kapitlet *Modell*.
 :::
 
-Kommentarerna `// TODO:` visar var din kod ska in; **Build & run** (Ctrl+Enter) kompilerar programmet och kör det i den
-inbyggda simulatorn: en rak tentakel mitt i fönstret – meshet i sin *vilopose*, den form det modellerades i.
+Kommentarerna `// TODO:` visar var din kod ska in. Bygg och kör programmet i din IDE: en rak tentakel mitt i fönstret –
+meshet i sin *vilopose*, den form det modellerades i.
 
 ## Ben, bindposen och offsetmatrisen
 
@@ -624,10 +624,10 @@ efter indata och före ritningen, och ta bort engångsuppdateringen vid tiden 0.
 `UpdateAnimation(m_animator, deltaTime);` i `OnUpdate`, efter indata och innan constant buffern fylls.
 :::
 
-Gör nu den sista uppgiften, **play**. Bygg och kör: tentakeln svajar – en våg löper uppåt från basen, basen vrider sig och
-guppar, spetsen sväller och krymper – ett varv varannan sekund, och den upprepas utan hopp eftersom den sista nyckeln är
-lika med den första. Skärmbilden tas vid 1.25 s, 1250 ticks, mellan nycklarna vid 1000 och 1500: tentakeln lutar åt
-höger, med spetsen uppe till höger. Vid 0.25 s lutar den åt vänster i spegelposen.
+Gör nu den sista uppgiften, **play**. Bygg och kör: tentakeln svajar – en våg löper uppåt från basen, basen vrider sig
+och guppar, spetsen sväller och krymper – ett varv varannan sekund, och den upprepas utan hopp eftersom den sista
+nyckeln är lika med den första. Det förväntade resultatet visar den vid 1.25 s, 1250 ticks, mellan nycklarna vid 1000
+och 1500: tentakeln lutar åt höger, med spetsen uppe till höger. Vid 0.25 s lutar den åt vänster i spegelposen.
 
 ```quiz
 Animationen är 2000 ticks lång med 1000 ticks per sekund. Animatorns tid står på 1990 ticks och nästa bildruta tar 1/60 s. Var är animationen efter uppdateringen?

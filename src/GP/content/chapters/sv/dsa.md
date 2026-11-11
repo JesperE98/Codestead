@@ -135,24 +135,22 @@ det här kapitlets program fungerar inte på en Mac – bind to edit-koden i de 
 `glTextureParameteriEXT`; du kan fortfarande stöta på dem i äldre kod.)
 
 Projektet är kursens lösning till *Hello Triangle*, den orange rektangeln, med `// TODO:`-kommentarer där DSA-koden ska
-in. **Build & run** (Ctrl+Enter) kompilerar det och kör det i den inbyggda simulatorn. Gör nu den första uppgiften,
-**context**. Bilden ändras inte: bind to edit-koden körs oförändrad i en 4.5-kontext.
+in. Bygg och kör det i din IDE. Gör nu den första uppgiften, **context**. Bilden ändras inte: bind to edit-koden körs
+oförändrad i en 4.5-kontext.
 :::
 :::vulkan
 ### Projektet
 
 Projektet är kursens Vulkan-lösning till *Hello Triangle*: den orange rektangeln `(1.0, 0.5, 0.2)` – två trianglar från
-en index buffer – mot den blågröna rensningsfärgen. **Build & run** (Ctrl+Enter) kompilerar det och kör det i den
-inbyggda simulatorn; det är samma rektangel som OpenGL-versionen av kapitlet börjar med. Avsnitten nedan ställer dess kod
-bredvid OpenGL:s DSA-anrop.
+en index buffer – mot den blågröna rensningsfärgen. Bygg och kör det i din IDE; det är samma rektangel som
+OpenGL-versionen av kapitlet börjar med. Avsnitten nedan ställer dess kod bredvid OpenGL:s DSA-anrop.
 :::
 :::d3d12
 ### Projektet
 
 Projektet är kursens DirectX 12-lösning till *Hello Triangle*: den orange rektangeln `(1.0, 0.5, 0.2)` – två trianglar
-från en index buffer – mot den blågröna rensningsfärgen. **Build & run** (Ctrl+Enter) kompilerar det och kör det i den
-inbyggda simulatorn; det är samma rektangel som OpenGL-versionen av kapitlet börjar med. Avsnitten nedan ställer dess kod
-bredvid OpenGL:s DSA-anrop.
+från en index buffer – mot den blågröna rensningsfärgen. Bygg och kör det i din IDE; det är samma rektangel som
+OpenGL-versionen av kapitlet börjar med. Avsnitten nedan ställer dess kod bredvid OpenGL:s DSA-anrop.
 :::
 
 ## Buffrar

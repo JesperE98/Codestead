@@ -76,8 +76,8 @@ no ambient – and `PSMain` multiplies the floor's colour with their sum. (The d
 :::
 
 learnopengl switches everything this chapter changes with one `gamma` flag (the space bar). Here each step is its own
-task, so you can see what each one does. Right now there is no gamma correction at all. Press **Build & run** (Ctrl+Enter):
-a dark floor with four pools of light, the right ones brighter and strongly saturated – right below the third light the
+task, so you can see what each one does. Right now there is no gamma correction at all. Build and run the program: a
+dark floor with four pools of light, the right ones brighter and strongly saturated – right below the third light the
 red channel is already at its maximum. The `// TODO:` comments in the project mark where your code goes.
 
 ### Four lights in {{api}}
@@ -342,8 +342,8 @@ If you have multiple fragment shaders for different objects, you have to make su
 correction; an easier approach would be to introduce a post-processing stage in your render loop and apply gamma
 correction on the post-processed quad as a final step, which you only need to do once.
 
-Press **Build & run**. The result is surprising: the whole floor becomes **much brighter and washed out** – greyish,
-as if covered in fog. The background stays the same dark grey: the clear colour is not drawn by the shader, so it isn't
+Build and run. The result is surprising: the whole floor becomes **much brighter and washed out** – greyish, as if
+covered in fog. The background stays the same dark grey: the clear colour is not drawn by the shader, so it isn't
 corrected. One line of code – but it was not the whole story.
 
 ## sRGB textures
@@ -454,9 +454,9 @@ Now do the task **srgb-texture**. In `LoadTexture`, create the texture with the 
 ```
 :::
 
-Press **Build & run**: the wood gets its **warm, saturated colours back** – decoded to linear, lit in linear space,
-encoded once. Compared with the start the dark parts of the floor are brighter and the pools of light less saturated.
-It looks better, but the light now seems too wide and flat. We'll fix that in a moment.
+Build and run: the wood gets its **warm, saturated colours back** – decoded to linear, lit in linear space, encoded
+once. Compared with the start the dark parts of the floor are brighter and the pools of light less saturated. It looks
+better, but the light now seems too wide and flat. We'll fix that in a moment.
 
 You should be careful when specifying your textures in sRGB space as not all textures will actually be in sRGB space.
 Textures used for colouring objects (like diffuse textures) are almost always in sRGB space. Textures used for
@@ -559,10 +559,10 @@ Now do the last task, **quadratic**. In `BlinnPhong()` of `gamma_correction.hlsl
 ```
 :::
 
-Press **Build & run**: the light **falls off faster** – brighter right below the lights, darker between and in front of
-them. This is learnopengl's gamma-corrected picture. Compare it with the start: there the right light's pool was a
-saturated orange blot and the four lights' greys (0.25 to 1.00) looked more different than they are; now the
-brightness follows the light colours and the distance the way physics says it should.
+Build and run: the light **falls off faster** – brighter right below the lights, darker between and in front of them.
+This is learnopengl's gamma-corrected picture. Compare it with the start: there the right light's pool was a saturated
+orange blot and the four lights' greys (0.25 to 1.00) looked more different than they are; now the brightness follows
+the light colours and the distance the way physics says it should.
 
 In general, gamma correction allows us to work and visualize our renders in linear space. Because linear space makes
 sense in the physical world, most physical equations now actually give good results (like real light attenuation). The

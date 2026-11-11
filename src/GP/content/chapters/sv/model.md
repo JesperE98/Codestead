@@ -69,10 +69,10 @@ Funktionen `Draw` är inget märkvärdigt; den loopar helt enkelt över alla mes
 
 Projektet är resultatet av *Mesh*, med en ny fil `model.h`. Dess `// TODO:`-kommentarer visar var din kod ska in:
 konstruktorn och `Draw`, kropparna i `loadModel`, `processNode` och `processMesh`, samt funktionerna
-`loadMaterialTextures` och `TextureFromFile`. `main.cpp` inkluderar nu `"model.h"` (som inkluderar `"mesh.h"`) och
-har två egna TODO: att läsa in modellen och att rita den. Programmet länkas med Assimp (`-lassimp`). Tills modellen
-ritas visar **Build & run** (Ctrl+Enter) bara den mörkgrå bakgrunden (0.05, 0.05, 0.05) – varje steg dessförinnan
-kompileras och körs i den inbyggda simulatorn, det ritar bara ingenting än.
+`loadMaterialTextures` och `TextureFromFile`. `main.cpp` inkluderar nu `"model.h"` (som inkluderar `"mesh.h"`) och har
+två egna TODO: att läsa in modellen och att rita den. Programmet länkas med Assimp (`-lassimp`). Tills modellen ritas
+visar ditt program bara den mörkgrå bakgrunden (0.05, 0.05, 0.05) – varje steg dessförinnan kompileras och körs, det
+ritar bara ingenting än.
 :::
 :::vulkan
 Vulkan har ingen modellinläsare, och precis som vulkan-tutorial.com:s kapitel *Loading models* använder vi det lilla
@@ -87,10 +87,10 @@ och rita – och vi gör samma fyra jobb i applikationsklassen, bredvid vertex- 
 | `loadMaterialTextures`, `TextureFromFile` | `createTextures()`: de fyra kartorna, på descriptor-bindings 1–4 |
 | `Draw`: ett draw-anrop per mesh, var och en med sina texturer | ett `vkCmdDrawIndexed`; fragment shadern väljer varje fragments material |
 
-Projektet är resultatet av *Mesh*, oförändrat: testkvadraten, ritad i texturkoordinatfärger (rött = u, grönt = v)
-med ett `vkCmdDrawIndexed`. Den här gången finns inga `// TODO:`-kommentarer: varje uppgift ändrar koden du skrev i
-förra kapitlet, steg för steg, tills kvadraten har blivit planeten. Tryck på **Build & run** (Ctrl+Enter) efter varje
-uppgift för att se resultatet i den inbyggda simulatorn.
+Projektet är resultatet av *Mesh*, oförändrat: testkvadraten, ritad i texturkoordinatfärger (rött = u, grönt = v) med
+ett `vkCmdDrawIndexed`. Den här gången finns inga `// TODO:`-kommentarer: varje uppgift ändrar koden du skrev i förra
+kapitlet, steg för steg, tills kvadraten har blivit planeten. Bygg och kör programmet efter varje uppgift för att se
+resultatet.
 :::
 :::d3d12
 Precis som learnopengl.com läser vi in modellen med Assimp och översätter den till `Mesh`-objekt av klassen du skrev i
@@ -146,9 +146,9 @@ loopar helt enkelt över alla meshar och anropar deras respektive `Draw`-funktio
 
 Projektet är resultatet av *Mesh*, med klassen `Model` tillagd. Dess `// TODO:`-kommentarer visar var din kod ska in:
 kropparna i `loadModel`, `processNode` och `loadMaterialTextures`, två delar av `processMesh`, och i `D3D12App`
-modellmedlemmen, inläsningen av den, frigörandet av dess upload-buffrar och ritandet. Tills modellen ritas visar
-**Build & run** (Ctrl+Enter) bara den mörkgrå bakgrunden (0.05, 0.05, 0.05) – varje steg dessförinnan kompileras och
-körs i den inbyggda simulatorn, det ritar bara ingenting än.
+modellmedlemmen, inläsningen av den, frigörandet av dess upload-buffrar och ritandet. Tills modellen ritas visar ditt
+program bara den mörkgrå bakgrunden (0.05, 0.05, 0.05) – varje steg dessförinnan kompileras och körs, det ritar bara
+ingenting än.
 :::
 
 :::opengl d3d12
@@ -238,8 +238,8 @@ Konstruktorn gör inget annat än att anropa den:
 Lägg märke till att `importer` är en lokal variabel: `aiScene` tillhör den och frigörs när `loadModel` returnerar.
 Det gör inget, för då har allt vi behöver redan kopierats till våra egna `Mesh`-objekt.
 
-Gör nu den första uppgiften, **load-model**: konstruktorn och `loadModel`. Tryck på **Build & run**: ingenting ritas
-än, eftersom `main.cpp` inte skapar någon `Model` – programmet kompileras och körs, och det är allt för tillfället.
+Gör nu den första uppgiften, **load-model**: konstruktorn och `loadModel`. Bygg och kör: ingenting ritas än, eftersom
+`main.cpp` inte skapar någon `Model` – programmet kompileras och körs, och det är allt för tillfället.
 :::
 :::d3d12
 ```cpp
@@ -270,8 +270,8 @@ att rita. Vi hämtar också katalogen i den givna filsökvägen: för `"models/p
 Lägg märke till att `importer` är en lokal variabel: `aiScene` tillhör den och frigörs när `loadModel` returnerar.
 Det gör inget, för då har allt vi behöver redan kopierats till våra egna `Mesh`-objekt.
 
-Gör nu den första uppgiften, **load-model**. Tryck på **Build & run**: ingenting ritas än, eftersom ingenting anropar
-`Load` – programmet kompileras och körs, och det är allt för tillfället.
+Gör nu den första uppgiften, **load-model**. Bygg och kör: ingenting ritas än, eftersom ingenting anropar `Load` –
+programmet kompileras och körs, och det är allt för tillfället.
 :::
 :::opengl d3d12
 Om inget gick fel vill vi bearbeta alla scenens noder. Vi skickar den första noden (rotnoden) till den rekursiva
@@ -554,11 +554,11 @@ Utan mappen vore varje hörn en egen vertex: 3168 vertices med indexen 0, 1, 2, 
 ```
 
 Gör nu den första uppgiften, **load-model**: includen, `MODEL_PATH`, de tomma vektorerna och `loadModel()`, anropad före
-`createVertexBuffer()`. Tryck på **Build & run**: kvadraten har blivit planeten med sin ring, sedd lite ovanifrån –
-fortfarande i texturkoordinatfärger, eftersom fragment shadern visar dem som rött och grönt. Varje punkts färg anger
-dess u (rött) och v (grönt): den färdiga planetens vita nordpol är nu nästan helt röd (v ≈ 0 högst upp i bilden), och
-till höger på ringen ser du en skarp kant i färgerna: ringens söm, där dess texturkoordinater börjar om. Allt är
-fortfarande ett enda `vkCmdDrawIndexed`, nu med alla modellens index.
+`createVertexBuffer()`. Bygg och kör: kvadraten har blivit planeten med sin ring, sedd lite ovanifrån – fortfarande i
+texturkoordinatfärger, eftersom fragment shadern visar dem som rött och grönt. Varje punkts färg anger dess u (rött) och
+v (grönt): den färdiga planetens vita nordpol är nu nästan helt röd (v ≈ 0 högst upp i bilden), och till höger på ringen
+ser du en skarp kant i färgerna: ringens söm, där dess texturkoordinater börjar om. Allt är fortfarande ett enda
+`vkCmdDrawIndexed`, nu med alla modellens index.
 :::
 :::d3d12
 ```quiz
@@ -1269,9 +1269,9 @@ vilket GPU:n mäter genom att köra fragment i grupper om 2×2. Inuti en `if` va
 på gränsen mellan ringen och planeten – kör några av dem inte anropet till `texture()`, och resultatet är odefinierat.
 Att sampla båda utanför villkoret är alltid rätt; för två texturer är det extra samplet billigt.
 
-Gör nu uppgiften **material-textures** och tryck på **Build & run**. Planeten syns med textur: blå hav, grönt land och
-den vita nordpolen högst upp – texturen är upprätt – med ringens beige band runt sig, sedd lite ovanifrån. Det här är
-bilden från learnopengls `model_loading.cpp`: bara diffuse-texturen, ingen ljussättning.
+Gör nu uppgiften **material-textures** och bygg och kör sedan. Planeten syns med textur: blå hav, grönt land och den
+vita nordpolen högst upp – texturen är upprätt – med ringens beige band runt sig, sedd lite ovanifrån. Det här är bilden
+från learnopengls `model_loading.cpp`: bara diffuse-texturen, ingen ljussättning.
 
 ```quiz
 Planeten och ringen har olika diffuse maps, men hela modellen är ett enda `vkCmdDrawIndexed`. Hur får ett fragment på ringen färgen från `rings.png`?
@@ -1349,9 +1349,9 @@ void main()
 }
 ```
 
-Gör nu uppgiften **draw-model**: `Model::Draw` och de två raderna i `main.cpp`. Tryck på **Build & run**: planeten
-syns, med textur och utan ljussättning – blå hav, grönt land, den vita nordpolen högst upp – med den beige ringen runt
-sig, sedd lite ovanifrån. Ringens närmaste del går framför planeten; bakom planeten döljer djuptestet den.
+Gör nu uppgiften **draw-model**: `Model::Draw` och de två raderna i `main.cpp`. Bygg och kör: planeten syns, med textur
+och utan ljussättning – blå hav, grönt land, den vita nordpolen högst upp – med den beige ringen runt sig, sedd lite
+ovanifrån. Ringens närmaste del går framför planeten; bakom planeten döljer djuptestet den.
 
 ```quiz
 Fragment shadern samplar bara `texture_diffuse1`, men ändå visar planeten `planet_diffuse.png` och ringen `rings.png`. Varför?
@@ -1417,9 +1417,9 @@ float4 PSMain(PSInput input) : SV_TARGET
 }
 ```
 
-Gör nu uppgiften **draw-model** och tryck på **Build & run**: planeten syns, med textur och utan ljussättning – blå hav,
-grönt land, den vita nordpolen högst upp – med den beige ringen runt sig, sedd lite ovanifrån. Ringens närmaste del
-går framför planeten; bakom planeten döljer djuptestet den.
+Gör nu uppgiften **draw-model** och bygg och kör sedan: planeten syns, med textur och utan ljussättning – blå hav, grönt
+land, den vita nordpolen högst upp – med den beige ringen runt sig, sedd lite ovanifrån. Ringens närmaste del går
+framför planeten; bakom planeten döljer djuptestet den.
 
 ```quiz
 När får `LoadAssets` släppa texturernas upload-buffrar (`m_model.uploadHeaps.clear()`)?
@@ -1862,9 +1862,9 @@ float4 PSMain(PSInput input) : SV_TARGET
 täcker redan två SRV:er: bara shadern behövde börja läsa `t1`.
 :::
 
-Gör nu uppgiften **lighting** och tryck på **Build & run**. Planeten lyses upp snett uppifrån höger framifrån, där
-ljuset är: sidan som vetter mot det är ljusast, nedre vänstra delen får bara det ambienta ljuset, och hela bilden är
-mörkare än förut (högst 0.2 + 0.5 av texturens färg, plus högdagern). Ringen, en platt skiva, lyses upp jämnt.
+Gör nu uppgiften **lighting** och bygg och kör sedan. Planeten lyses upp snett uppifrån höger framifrån, där ljuset är:
+sidan som vetter mot det är ljusast, nedre vänstra delen får bara det ambienta ljuset, och hela bilden är mörkare än
+förut (högst 0.2 + 0.5 av texturens färg, plus högdagern). Ringen, en platt skiva, lyses upp jämnt.
 
 Och högdagern? Med den här kameran hamnar ljusets reflex lite till höger om och ovanför planetens mitt – på land.
 Planetens specular map är mörk på land och ljus på haven (vattnet glänser, marken knappt), så högdagern är bara en

@@ -43,9 +43,9 @@ XMFLOAT3 position; XMFLOAT3 normal; }`. Vertex buffer-vyns steg är `sizeof(Vert
 fortfarande rätt.
 :::
 
-De flesta uppgifterna i kapitlet ändrar kod som redan finns; den enda `// TODO:`-kommentaren visar var
-normalattributet ska in. Tryck på **Build & run** (Ctrl+Enter) efter varje uppgift för att se resultatet i den
-inbyggda simulatorn. Startbilden är slutet på förra kapitlet: en platt korallfärgad kub och en vit lampa.
+De flesta uppgifterna i kapitlet ändrar kod som redan finns; den enda `// TODO:`-kommentaren visar var normalattributet
+ska in. Bygg och kör programmet efter varje uppgift för att se resultatet. Startbilden är slutet på förra kapitlet: en
+platt korallfärgad kub och en vit lampa.
 
 ## Ambient ljus
 
@@ -565,10 +565,10 @@ att få fragmentets slutliga färg:
 :::
 
 Gör nu uppgiften **diffuse**. Om programmet (och shaderna) kompilerades bör du se kuben vakna till liv: **framsidan**,
-som är vänd mot lampan, är belyst – ungefär (202, 101, 63) i mitten, ljusare mot lampan och lite mörkare bort från den
-– medan **vänstersidan** förblir lika mörk som förut. Du ser att kuben med diffust ljus börjar se ut som en riktig kub
-igen. Försök föreställa dig normalvektorerna och flytta kameran runt kuben (på din egen dator) för att se att ju större
-vinkeln mellan normalvektorn och ljusets riktning är, desto mörkare blir fragmentet.
+som är vänd mot lampan, är belyst – ungefär (202, 101, 63) i mitten, ljusare mot lampan och lite mörkare bort från den –
+medan **vänstersidan** förblir lika mörk som förut. Du ser att kuben med diffust ljus börjar se ut som en riktig kub
+igen. Försök föreställa dig normalvektorerna och flytta kameran runt kuben för att se att ju större vinkeln mellan
+normalvektorn och ljusets riktning är, desto mörkare blir fragmentet.
 
 Låt oss kontrollera värdet i mitten av framsidan, (0, 0, 0.5): riktningen mot lampan är (1.2, 1.0, 1.5), med längden
 2.17, så `lightDir` = (0.55, 0.46, 0.69). Med normalen (0, 0, 1) blir skalärprodukten 0.69; ambient plus diffust ger
@@ -894,12 +894,12 @@ bör du se en **högdager** dyka upp i den övre vänstra delen av framsidan: ru
 ljusare än själva korallfärgen, eftersom ambient + diffust + spekulärt där blir mer än 1 och färgen kläms – medan den
 nedre högra delen av sidan knappt ändras.
 
-Varför just där? Högdagern syns där sidan skulle spegla lampan in i kameran. Framsidan är planet z = 0.5; lampan är
-1.5 enheter framför det, kameran 2.5 enheter. Spegelpunkten ligger på linjen mellan lampans och kamerans positioner i
+Varför just där? Högdagern syns där sidan skulle spegla lampan in i kameran. Framsidan är planet z = 0.5; lampan är 1.5
+enheter framför det, kameran 2.5 enheter. Spegelpunkten ligger på linjen mellan lampans och kamerans positioner i
 planet, 1.5 / (1.5 + 2.5) av vägen från lampan: vid ungefär x = -0.4, y = 0.6 – i den vänstra halvan, strax ovanför
 sidans överkant. Så sidans starkaste spekulära ljus ligger längs dess övre vänstra kant, och det klingar av mot nedre
 högra hörnet. Från learnopengl:s standardkamera i (0, 0, 3), med lampan i bild, skulle du se samma effekt på ett annat
-ställe; flytta kameran på din egen dator och se högdagern glida över sidan.
+ställe; flytta kameran i ditt program och se högdagern glida över sidan.
 
 ```quiz
 Varför negeras `lightDir` i `reflect(-lightDir, norm)`?
@@ -979,10 +979,10 @@ Det är innan `constantBufferData.lightPos` sätts, och `OnUpdate` körs innan `
 så lampans modellmatris använder samma nya position och lampan ritas exakt där ljuset är.
 :::
 
-Gör nu uppgiften **moving-light**. I simulatorn svänger lampan nu från sida till sida och upp och ner (en hel sväng åt
-sidan tar 2π ≈ 6.3 sekunder), och belysningen på kuben följer med: när lampan rör sig åt höger glider högdagern mot
-framsidans högra kant; när lampan rör sig åt vänster förbi x = -0.5, vänstersidans plan, börjar även den sidan få ljus.
-Efter 1 sekund, till exempel, är ljuset i (2.68, 0.48, 2.0) och lampan står lägre och längre till höger än förut.
+Gör nu uppgiften **moving-light**. Lampan svänger nu från sida till sida och upp och ner (en hel sväng åt sidan tar 2π ≈
+6.3 sekunder), och belysningen på kuben följer med: när lampan rör sig åt höger glider högdagern mot framsidans högra
+kant; när lampan rör sig åt vänster förbi x = -0.5, vänstersidans plan, börjar även den sidan få ljus. Efter 1 sekund,
+till exempel, är ljuset i (2.68, 0.48, 2.0) och lampan står lägre och längre till höger än förut.
 
 ### View space och Gouraud shading
 

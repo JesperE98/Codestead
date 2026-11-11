@@ -45,10 +45,10 @@ front, is a square with horizontal and vertical edges, which show no stairs at a
 nothing you could see. `aa_post.hlsl`, for a screen quad, is used from the `resolve` task on.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, press **Build & run**
-(Ctrl+Enter) to compile the program and run it in the built-in simulator. Right now it shows the green silhouette of the
-cube – a hexagon of three faces, all the same green – with hard, stair-stepped edges: every pixel is either exactly
-green or exactly the background. Zoom in on a slanted edge in your mind's eye and you see the staircase.
+The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
+IDE. Right now it shows the green silhouette of the cube – a hexagon of three faces, all the same green – with hard,
+stair-stepped edges: every pixel is either exactly green or exactly the background. Zoom in on a slanted edge in your
+mind's eye and you see the staircase.
 
 ## Multisampling
 
@@ -135,10 +135,10 @@ Because the actual multisampling algorithms are implemented in the rasterizer in
 else we need to do. If we now were to render the green cube from the start of this chapter we should see smoother
 edges.
 
-Press **Build & run**: the cube's edges are smooth now. About 800 pixels along the edges are no longer pure green or
-pure background, but mixes of a quarter, a half and three quarters green. Whether a real window gets a multisample
-buffer depends on the window system and driver: where none is available, GLFW quietly creates a window without one,
-and the edges stay jagged. The next section's off-screen version doesn't depend on that.
+Build and run: the cube's edges are smooth now. About 800 pixels along the edges are no longer pure green or pure
+background, but mixes of a quarter, a half and three quarters green. Whether a real window gets a multisample buffer
+depends on the window system and driver: where none is available, GLFW quietly creates a window without one, and the
+edges stay jagged. The next section's off-screen version doesn't depend on that.
 :::
 :::vulkan
 In OpenGL, MSAA starts with a window hint: GLFW asks the window system for a multisampled default framebuffer
@@ -197,8 +197,8 @@ the height, which ends up in `imageInfo.samples`:
         imageInfo.samples = numSamples;
 ```
 
-For now the depth image passes `VK_SAMPLE_COUNT_1_BIT`. Press **Build & run**: nothing changes yet – we only found out
-what we can use.
+For now the depth image passes `VK_SAMPLE_COUNT_1_BIT`. Build and run: nothing changes yet – we only found out what we
+can use.
 
 ### Setting up a render target
 
@@ -310,10 +310,10 @@ Finally, tell the pipeline to rasterize with that many samples – it must match
         multisampling.rasterizationSamples = msaaSamples; // must match the render pass's attachments
 ```
 
-Press **Build & run**: the cube's edges are smooth now. About 800 pixels along the edges are no longer pure green or
-pure background, but mixes of a quarter, a half and three quarters green. (Which edge pixel gets which mix depends on
-the sample positions: Vulkan's standard 4-sample pattern is OpenGL's mirrored in y, so single edge pixels can differ
-from the OpenGL picture.)
+Build and run: the cube's edges are smooth now. About 800 pixels along the edges are no longer pure green or pure
+background, but mixes of a quarter, a half and three quarters green. (Which edge pixel gets which mix depends on the
+sample positions: Vulkan's standard 4-sample pattern is OpenGL's mirrored in y, so single edge pixels can differ from
+the OpenGL picture.)
 :::
 :::d3d12
 In OpenGL, MSAA starts with a window hint: GLFW asks the window system for a multisampled default framebuffer
@@ -434,8 +434,8 @@ back – the target to be drawn into next frame, the back buffer to be presented
 The parameters are the destination and its subresource, the source and its subresource, and the format to resolve in
 – here both resources have `DXGI_FORMAT_R8G8B8A8_UNORM`, like the swap chain.
 
-Press **Build & run**: the cube's edges are smooth now. About 800 pixels along the edges are no longer pure green or
-pure background, but mixes of a quarter, a half and three quarters green.
+Build and run: the cube's edges are smooth now. About 800 pixels along the edges are no longer pure green or pure
+background, but mixes of a quarter, a half and three quarters green.
 :::
 
 ```quiz
@@ -547,8 +547,8 @@ and after the cube's draw, blit it to the window:
 At the end, delete `textureColorBufferMultiSampled`, `rbo` and `framebuffer`. (A blit into a multisampled window would
 need the same sample count and format on both sides – one reason the window no longer asks for samples.)
 
-Press **Build & run**: the same smooth edges as in the `msaa` task – but now the multisampling happens in our own
-framebuffer, independent of what the window system offers.
+Build and run: the same smooth edges as in the `msaa` task – but now the multisampling happens in our own framebuffer,
+independent of what the window system offers.
 :::
 :::vulkan
 ## Off-screen MSAA
@@ -825,8 +825,8 @@ buffer, and the quad is drawn with the screen texture:
 and finally the back buffer's barrier `RENDER_TARGET` → `PRESENT`.
 :::
 
-Press **Build & run**: nothing changes – the same smooth cube, pixel for pixel. The white clear is completely covered by
-the quad. But now the anti-aliased picture is in a texture that a shader reads, so we can change it.
+Build and run: nothing changes – the same smooth cube, pixel for pixel. The white clear is completely covered by the
+quad. But now the anti-aliased picture is in a texture that a shader reads, so we can change it.
 
 :::opengl
 ```quiz
@@ -893,8 +893,8 @@ Now do the last task, **post-process**. In `aa_post.hlsl`:
 ```
 :::
 
-Press **Build & run**: the cube turns grey (0.7152 × 255 ≈ 182), the background stays its dark grey, and the edges are
-still smooth, now in shades of grey.
+Build and run: the cube turns grey (0.7152 × 255 ≈ 182), the background stays its dark grey, and the edges are still
+smooth, now in shades of grey.
 
 ```quiz
 The grayscale effect runs on the screen quad, after the resolve. Why are the cube's edges still smooth?

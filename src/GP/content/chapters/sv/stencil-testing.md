@@ -271,9 +271,9 @@ kanterna ritar vi uppskalade versioner av föremålen bara där stenciltestet g�
 kastar vi i praktiken alla fragment av de uppskalade versionerna som ligger där originalföremålens fragment ligger.
 
 Kapitlets projekt är scenen från *Djuptestning* ritad på vanligt sätt (med texturer och djupfunktionen LESS), med en
-ändring hämtad från learnopengls stencilkod: loopen ritar **golvet först**, sedan de två kuberna. Med djuptestet
-ändrar ordningen inte bilden, men den spelar roll för stencilbuffern, som du ska se. Tryck på **Build & run**
-(Ctrl+Enter): startbilden är den du känner igen från förra kapitlet.
+ändring hämtad från learnopengls stencilkod: loopen ritar **golvet först**, sedan de två kuberna. Med djuptestet ändrar
+ordningen inte bilden, men den spelar roll för stencilbuffern, som du ska se. Bygg och kör programmet: startbilden är
+den du känner igen från förra kapitlet.
 
 :::opengl
 `// TODO:`-kommentarerna markerar var din kod ska stå: efter `glDepthFunc`, efter shadern, vid `glClear`-anropet, efter
@@ -397,8 +397,8 @@ Stenciloperationerna är KEEP (stenciltestet misslyckas), KEEP (djuptestet missl
 REPLACE är bara den tredje åtgärden, den för "båda testerna går igenom". Ett kubfragment som är dolt bakom något närmare lämnar alltså stencilbuffern orörd: ettorna hamnar exakt där kuben syns.
 ```
 
-Gör nu uppgiften **stencil-buffer** och tryck på **Build & run**. Inget synligt ändras: testfunktionen är ALWAYS, så
-varje fragment går igenom och ritas som förut.
+Gör nu uppgiften **stencil-buffer** och bygg och kör sedan. Inget synligt ändras: testfunktionen är ALWAYS, så varje
+fragment går igenom och ritas som förut.
 
 :::opengl
 (Varje fragment skriver också referensvärdet – OpenGL:s standard, 0.)
@@ -490,8 +490,7 @@ Behåll `// TODO:`-raden: konturens djup- och stenciltillstånd kommer i den sis
 fortfarande `TEXCOORD`; en vertex shader får strunta i element som den inte läser.
 :::
 
-Gör uppgiften **single-color** och tryck på **Build & run**. Inte heller nu ändras något: inget ritas med den nya
-shadern än.
+Gör uppgiften **single-color** och bygg och kör sedan. Inte heller nu ändras något: inget ritas med den nya shadern än.
 
 Nu steg 1 till 3. Vi vill rita kuberna som vanligt och skriva 1 i stencilbuffern överallt där de ritas. Golvet ritas
 också, men dess fragment får *inte* hamna i stencilbuffern: vi bryr oss bara om lådorna. Därför ritas golvet först,
@@ -608,8 +607,8 @@ Varför får golvet inte skriva till stencilbuffern?
 Stencilbuffern ska innehålla 1 exakt där kuberna är. De skalade kubernas ring ligger över bakgrunden upptill och över golvet nedtill; ett golv som skrev 1 där skulle blockera konturens nedre del.
 ```
 
-Gör uppgiften **write-stencil** och tryck på **Build & run**. Än en gång ändras inte bilden – men stencilbuffern
-innehåller nu 1 överallt där en kub syns och 0 överallt annars.
+Gör uppgiften **write-stencil** och bygg och kör sedan. Än en gång ändras inte bilden – men stencilbuffern innehåller nu
+1 överallt där en kub syns och 0 överallt annars.
 
 Nu när stencilbuffern är uppdaterad med ettor där lådorna ritades ska vi rita de uppskalade lådorna, men den här gången
 med rätt testfunktion och med skrivningar till stencilbuffern avslagna: steg 4 till 8. Vi sätter testfunktionen till
@@ -783,9 +782,9 @@ När `m_floorPipelineState` väljs i nästa bildruta följer dess eget tillstån
 ```
 :::
 
-Gör nu uppgiften **outline** och tryck på **Build & run**. Båda kuberna har nu en heldragen mörkt blågrön kant, ungefär
-8 till 15 pixlar bred, runt allt du kan se av dem – upptill över bakgrunden och nedtill över golvet, eftersom
-djuptestet är avslaget. Själva kuberna, golvet och bakgrunden är oförändrade.
+Gör nu uppgiften **outline** och bygg och kör sedan. Båda kuberna har nu en heldragen mörkt blågrön kant, ungefär 8 till
+15 pixlar bred, runt allt du kan se av dem – upptill över bakgrunden och nedtill över golvet, eftersom djuptestet är
+avslaget. Själva kuberna, golvet och bakgrunden är oförändrade.
 
 ```quiz
 De skalade kuberna ritas i sin helhet, men bara en ring runt varje kub syns. Varför?

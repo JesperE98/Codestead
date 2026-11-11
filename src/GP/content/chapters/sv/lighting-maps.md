@@ -287,7 +287,7 @@ PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL, float2 texCoo
 Lampans pipeline använder samma input layout; dess vertex shader ignorerar helt enkelt de element den inte läser.
 :::
 
-Gör nu den första uppgiften, **texcoords**, och tryck på **Build & run**. Ingenting ändras än – kuben är fortfarande
+Gör nu den första uppgiften, **texcoords**, och bygg och kör sedan. Ingenting ändras än – kuben är fortfarande
 korallfärgad – men koordinaterna är nu på väg till fragment shadern.
 
 Sedan kommer själva texturen.
@@ -583,10 +583,10 @@ Register nås genom root signaturen: rangen `SRV, 1, 0` säger "tabellens först
 ```
 :::
 
-Gör nu uppgiften **diffuse-map** och tryck på **Build & run**. Den korallfärgade kuben är nu en trälåda med stålram,
-belyst som förut: framsidan ljus, vänstersidan mörk. Som du ser ser lådan nu ut som en riktig låda: ett dramatiskt
-lyft i bildkvalitet. Titta dock noga på den spekulära högdagern i framsidans övre vänstra hörn: det är en gråvit glans
-som täcker stålet och träet likadant.
+Gör nu uppgiften **diffuse-map** och bygg och kör sedan. Den korallfärgade kuben är nu en trälåda med stålram, belyst
+som förut: framsidan ljus, vänstersidan mörk. Som du ser ser lådan nu ut som en riktig låda: ett dramatiskt lyft i
+bildkvalitet. Titta dock noga på den spekulära högdagern i framsidans övre vänstra hörn: det är en gråvit glans som
+täcker stålet och träet likadant.
 
 ## Specular maps
 
@@ -817,8 +817,8 @@ En descriptor table är ett starthandtag plus en följd av intilliggande descrip
 ```
 :::
 
-Gör nu uppgiften **specular-map** och tryck på **Build & run**. Nu glänser bara stålet: högdagern på ramen i det övre
-vänstra hörnet är klart vit, medan träplankorna precis bredvid har förlorat sin glans och bara visar sin diffusa färg.
+Gör nu uppgiften **specular-map** och bygg och kör sedan. Nu glänser bara stålet: högdagern på ramen i det övre vänstra
+hörnet är klart vit, medan träplankorna precis bredvid har förlorat sin glans och bara visar sin diffusa färg.
 
 Med en specular map kan vi ange in i minsta detalj vilka delar av ett föremål som är blanka, och till och med styra
 intensiteten. Specular maps ger oss ett extra lager av kontroll över belysningen ovanpå diffuse mapen.
@@ -937,8 +937,8 @@ Texture2D emissionMap : register(t2);
 ```
 :::
 
-Gör nu uppgiften **emission** och tryck på **Build & run**. Gröna tecken lyser över lådans båda synliga sidor – även
-på vänstersidan, som ljuset inte når. Mellan tecknen, där emission mapen är svart, ser lådan ut precis som förut.
+Gör nu uppgiften **emission** och bygg och kör sedan. Gröna tecken lyser över lådans båda synliga sidor – även på
+vänstersidan, som ljuset inte når. Mellan tecknen, där emission mapen är svart, ser lådan ut precis som förut.
 
 ```quiz
 Varför lyser de gröna tecknen lika starkt på vänstersidan, som inte får något diffust ljus?

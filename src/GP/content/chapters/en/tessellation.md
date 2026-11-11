@@ -49,12 +49,12 @@ There is nothing to ask for or enable.
 
 ## The project
 
-The start is the last chapter's solution, the CPU terrain, with the GPU version's files added: `gpuheight` shaders for the
-vertex stage (passing the control points through), the control/hull stage (passing them through and setting every level
-to 1 – more on that below), an empty evaluation/domain stage, and the fragment stage that colours by height, the same as
-before. The camera, the height map and the colours are the last chapter's, so the two chapters show the same landscape
-from the same place. **Build & run** (Ctrl+Enter) shows the grey CPU terrain; the `// TODO:` comments mark where the GPU
-version goes.
+The start is the last chapter's solution, the CPU terrain, with the GPU version's files added: `gpuheight` shaders for
+the vertex stage (passing the control points through), the control/hull stage (passing them through and setting every
+level to 1 – more on that below), an empty evaluation/domain stage, and the fragment stage that colours by height, the
+same as before. The camera, the height map and the colours are the last chapter's, so the two chapters show the same
+landscape from the same place. Build and run the program: it shows the grey CPU terrain; the `// TODO:` comments mark
+where the GPU version goes.
 
 :::opengl
 The first task asks for the 4.1 context and prints the largest tessellation level the GPU supports:

@@ -38,10 +38,10 @@ står på (0, 0, 3) och tittar längs -z; WASD, musen och hjulet flyttar den for
 innehåller `view`, `projection`, `viewPos` och `lightPos`.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift trycker du på **Build & run**
-(Ctrl+Enter) för att kompilera programmet och köra det i den inbyggda simulatorn. Just nu visar den det upplysta trägolvet
-som sträcker sig bort mot horisonten, den mörka bakgrunden ovanför och en mjuk vit högdager mitt i nedre halvan –
-reflexen av ljuset, beräknad med Phongs spekulära term och en glansexponent på 8.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
+IDE. Just nu visar den det upplysta trägolvet som sträcker sig bort mot horisonten, den mörka bakgrunden ovanför och en
+mjuk vit högdager mitt i nedre halvan – reflexen av ljuset, beräknad med Phongs spekulära term och en glansexponent på
+8.
 
 ## Blinn-Phong
 
@@ -363,9 +363,9 @@ bool blinn = true;
 ```
 :::
 
-Mer än att beräkna en halvvägsvektor och byta ut cosinustermen i den spekulära komponenten är det inte. Tryck på
-**Build & run**: högdagern blir **bredare** och når längre bak mot horisonten, ljusare i mitten och svagare vid de närmre
-sidorna – ljuset breder nu ut sig över golvet och tonar ut mjukt i stället för att klämmas av.
+Mer än att beräkna en halvvägsvektor och byta ut cosinustermen i den spekulära komponenten är det inte. Bygg och kör:
+högdagern blir **bredare** och når längre bak mot horisonten, ljusare i mitten och svagare vid de närmre sidorna –
+ljuset breder nu ut sig över golvet och tonar ut mjukt i stället för att klämmas av.
 
 En annan subtil skillnad mellan Phong- och Blinn-Phong-shading är att vinkeln mellan halvvägsvektorn och ytans normal
 ofta är mindre än vinkeln mellan view-vektorn och reflektionsvektorn. För att få ett resultat som liknar Phong-shading
@@ -403,9 +403,9 @@ Gör nu uppgiften **shininess**. Ge Blinn-Phong learnopengls exponent, fyra gån
 ```
 :::
 
-Tryck på **Build & run**: högdagern krymper igen till ungefär samma storlek som startens Phong-högdager, men den ligger
-lite längre bak och tonar ut jämnt åt alla håll. Det är learnopengls jämförelse – Phong med exponenten 8.0, Blinn-Phong
-med 32.0. Vill du se båda igen sätter du tillbaka `blinn` till false: Phong-grenen finns kvar i shadern.
+Bygg och kör: högdagern krymper igen till ungefär samma storlek som startens Phong-högdager, men den ligger lite längre
+bak och tonar ut jämnt åt alla håll. Det är learnopengls jämförelse – Phong med exponenten 8.0, Blinn-Phong med 32.0.
+Vill du se båda igen sätter du tillbaka `blinn` till false: Phong-grenen finns kvar i shadern.
 
 ```quiz
 Phong och Blinn-Phong används båda med ett ljus och en betraktare ovanför ett plant golv. När kan vinkeln mellan normalen och halvvägsvektorn överstiga 90°?

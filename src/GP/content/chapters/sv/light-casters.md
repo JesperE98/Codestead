@@ -53,15 +53,14 @@ mitten av fönstret. Ljuset är fortfarande punktljuset från *Lighting maps* i 
 :::
 
 > De tidigare belysningskapitlen placerade kameran åt sidan så att du kunde se både den belysta kuben *och* lampan. I
-> det här kapitlet och nästa använder vi i stället learnopengls kamera. Priset är att lampan i (1.2, 1.0, 2.0) nu
-> ligger **utanför fönstret**: bara en enhet framför kameran men en bit åt höger (och lite uppåt), bortom kanten av
-> vyn. Även i de steg där lampan ritas ser du den alltså inte. På din egen dator kan du fortfarande flyga runt med
-> tangentbordet och musen och leta upp den.
+> det här kapitlet och nästa använder vi i stället learnopengls kamera. Priset är att lampan i (1.2, 1.0, 2.0) nu ligger
+> **utanför fönstret**: bara en enhet framför kameran men en bit åt höger (och lite uppåt), bortom kanten av vyn. Även i
+> de steg där lampan ritas ser du den alltså inte. I ditt program kan du fortfarande flyga runt med tangentbordet och
+> musen och leta upp den.
 
 Den här gången har projektet inga `// TODO:`-kommentarer: varje uppgift ändrar kod som redan finns, och uppgiftstexten
-talar om var. Efter varje uppgift trycker du på **Build & run** (Ctrl+Enter) för att kompilera programmet och köra det
-i den inbyggda simulatorn. Bygg det en gång nu: alla tio behållarna lyses upp av lampan, de avlägsna lika starkt som
-de nära.
+talar om var. Efter varje uppgift bygger och kör du programmet i din IDE. Bygg det en gång nu: alla tio behållarna lyses
+upp av lampan, de avlägsna lika starkt som de nära.
 
 ## Riktat ljus
 
@@ -897,8 +896,8 @@ nu vid kameran, så lampkuben kommenteras bort igen.
 
 Gör nu uppgiften **spotlight**. När du kör programmet får du en rund ljusfläck mitt på behållare 0, med en skarp kant:
 innanför är trä och stålram starkt upplysta; hörnen på behållare 0 och de andra behållarna (utom kanten på den precis
-till höger om den) får bara det omgivande ljuset. Eftersom ficklampan sitter vid kameran följer den med dig när du
-rör dig och tittar runt på din egen dator.
+till höger om den) får bara det omgivande ljuset. Eftersom ficklampan sitter vid kameran följer den med dig när du rör
+dig och tittar runt.
 
 :::opengl
 ```quiz
@@ -1141,8 +1140,8 @@ bygger och kör den tonar fläckens kant ut mjukt: hörnen på behållare 0, som
 zonen och är halvt upplysta. Behållarna utanför konen är nästan svarta, eftersom de där nu bara får det *dämpade*
 omgivande ljuset.
 
-Ahhh, det där är mycket bättre. Lek med den inre och den yttre gränsvinkeln och försök skapa en strålkastare som
-passar dina behov bättre. På din egen dator kan du gå runt med ficklampan och titta på behållarna den träffar.
+Ahhh, det där är mycket bättre. Lek med den inre och den yttre gränsvinkeln och försök skapa en strålkastare som passar
+dina behov bättre. I ditt program kan du gå runt med ficklampan och titta på behållarna den träffar.
 
 Den slutliga fragment shadern:
 
@@ -1265,11 +1264,11 @@ float4 PSMain(PSInput input) : SV_TARGET
 - Experimentera med alla de olika ljustyperna och deras fragment shaders. Prova att vända på några vektorer och/eller
   använda `<` i stället för `>`. Försök förklara de olika visuella resultaten.
 
-Det här är ingen uppgift i projektet: prova när du är klar med uppgifterna, och använd **Build & run** för att se
-resultatet. Med `theta < light.cutOff` i strålkastarsteget vänds till exempel cirkeln ut och in – allt *utanför*
-konen lyses upp, och mitten av behållare 0 får bara det omgivande ljuset. Och om du använder
-`normalize(light.direction)` utan minustecken blir theta cosinus för vinkeln mot den *motsatta* riktningen, som är
-negativ för allt framför kameran: inget fragment hamnar någonsin i konen.
+Det här är ingen uppgift i projektet: prova när du är klar med uppgifterna, och bygg och kör programmet för att se
+resultatet. Med `theta < light.cutOff` i strålkastarsteget vänds till exempel cirkeln ut och in – allt *utanför* konen
+lyses upp, och mitten av behållare 0 får bara det omgivande ljuset. Och om du använder `normalize(light.direction)` utan
+minustecken blir theta cosinus för vinkeln mot den *motsatta* riktningen, som är negativ för allt framför kameran: inget
+fragment hamnar någonsin i konen.
 
 I nästa kapitel sätter vi ihop alla de här ljuskällorna – ett riktat ljus, fyra punktljus och ficklampan – i en och
 samma scen.

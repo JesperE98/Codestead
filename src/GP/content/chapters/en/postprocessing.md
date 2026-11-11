@@ -58,8 +58,9 @@ its start bodies only pass the quad and the texture through.
 The new shader is `post_processing.hlsl` with `VSMain` and `PSMain`; its start bodies only pass the quad and the
 texture through.
 :::
-The chapter's pictures are taken at **1.45 seconds** (frame 87). That moment is chosen on purpose: the ball hits the
-solid stone in frame 86 (see `collision-resolution`), and at the end of the chapter that hit will shake the screen.
+The chapter's expected results show the game at **1.45 seconds** (frame 87). That moment is chosen on purpose: the ball
+hits the solid stone in frame 86 (see `collision-resolution`), and at the end of the chapter that hit will shake the
+screen.
 
 ## The postprocessing shader
 
@@ -1110,10 +1111,10 @@ void Render(Game& game)
 ```
 :::
 
-Now do the task **render-to-texture**. Press **Build & run**: **almost no visible change** – and that is the point:
-the game now takes the detour through the multisampled target, the resolve and the quad, and only the edges show it.
-They are anti-aliased: the rims of the ball and the paddle are smoother, and pixel rows 37, 112 and 187, which the
-edges between two rows of blocks cross exactly at the pixel centres, are now half one block and half the other.
+Now do the task **render-to-texture**. Build and run: **almost no visible change** – and that is the point: the game now
+takes the detour through the multisampled target, the resolve and the quad, and only the edges show it. They are
+anti-aliased: the rims of the ball and the paddle are smoother, and pixel rows 37, 112 and 187, which the edges between
+two rows of blocks cross exactly at the pixel centres, are now half one block and half the other.
 :::vulkan d3d12
 (Before, those rows belonged to the lower block in {{api}} and to the upper one in OpenGL – the rasterization rules
 differ at exactly that boundary, see `levels`. With 4 samples per pixel both APIs average the two blocks and agree.)
@@ -1208,9 +1209,9 @@ InitPostProcessor(Effects, GetShader("postprocessing"), game.Width, game.Height)
 Effects.Confuse = true; // try the effects: confuse (the picture upside down, its colours inverted)
 ```
 
-Now do the task **confuse**. Press **Build & run**: **the whole picture is upside down and mirrored, its colours
-inverted** – the light sky at the bottom, the blocks at the bottom, the paddle at the top, the dark blue of the dusk
-turned pale and the orange blocks bluish.
+Now do the task **confuse**. Build and run: **the whole picture is upside down and mirrored, its colours inverted** –
+the light sky at the bottom, the blocks at the bottom, the paddle at the top, the dark blue of the dusk turned pale and
+the orange blocks bluish.
 
 Then replace the line with `Effects.Chaos = true;` and do the task **chaos**: **edge detection on a picture shifted by
 (sin(time), cos(time)) × 0.3**. Wherever the picture is flat the kernel adds up to black; thin bright lines run along
@@ -1280,13 +1281,12 @@ if (ShakeTime > 0.0f) {
 ```
 :::
 
-Now do the task **shake**: remove the try-out line, and add the variable, the else branch and the countdown. Press
-**Build & run**. With the course's fixed input the ball hits the stone in frame 86, so in the picture at 1.45 s –
-frame 87 – **the picture is blurred and moved by about 1.4 pixels to the left and 2.9 pixels down**: the paddle's
-edges are soft, the blocks' rims are smeared. Flat areas hardly change. From frame 88 on the picture is sharp again.
-Each time the ball hits a solid block, the screen briefly starts to shake and blur, giving the player some visual
-feedback that the ball collided with a solid object. In the next chapter, about power-ups, we'll bring the other two
-effects to good use.
+Now do the task **shake**: remove the try-out line, and add the variable, the else branch and the countdown. Build and
+run. With the course's fixed input the ball hits the stone in frame 86, so in the picture at 1.45 s – frame 87 – **the
+picture is blurred and moved by about 1.4 pixels to the left and 2.9 pixels down**: the paddle's edges are soft, the
+blocks' rims are smeared. Flat areas hardly change. From frame 88 on the picture is sharp again. Each time the ball hits
+a solid block, the screen briefly starts to shake and blur, giving the player some visual feedback that the ball
+collided with a solid object. In the next chapter, about power-ups, we'll bring the other two effects to good use.
 
 ```quiz
 The ball hits the stone in frame 86. `DoCollisions` sets `ShakeTime = 0.05f`, and each `Update` subtracts dt = 1/60 s afterwards. In which frames is the picture shaken?

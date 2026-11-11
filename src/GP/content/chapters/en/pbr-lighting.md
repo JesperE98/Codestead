@@ -81,9 +81,9 @@ A few numbers differ from learnopengl's program:
 
 - **The camera is at (0, 0, 22)**, looking down -z with a field of view of 45°: the whole grid, about 17 units across,
   fits into the window. learnopengl's camera starts at (0, 0, 3), in the middle of the grid.
-- **The sphere has 24 × 24 segments** instead of learnopengl's 64 × 64. The built-in simulator runs on the CPU and draws
-  every triangle itself; a real GPU draws learnopengl's 64 × 64 spheres just as easily. With 24 segments the spheres'
-  outlines are a little polygonal, the lighting is the same.
+- **The sphere has 24 × 24 segments** instead of learnopengl's 64 × 64. The course draws its checks and expected results
+  on the CPU, every triangle itself; a real GPU draws learnopengl's 64 × 64 spheres just as easily. With 24 segments the
+  spheres' outlines are a little polygonal, the lighting is the same.
 - The project has no multisampling (learnopengl asks GLFW for 4 samples), so that the three APIs give the same picture.
 
 The sphere is learnopengl's `renderSphere()`: a *UV sphere*, whose vertices lie on a grid of 25 × 25 points in (u, v) =
@@ -250,8 +250,8 @@ The pipeline state fixes the type of primitive (point, line, triangle, patch) th
 ```
 :::
 
-The `// TODO:` comments in the project mark where your code goes. Each task is one step of learnopengl's shader, and
-**Build & run** (Ctrl+Enter) shows after each one how the spheres change.
+The `// TODO:` comments in the project mark where your code goes. Each task is one step of learnopengl's shader; build
+and run the program after each one to see how the spheres change.
 
 ## A PBR surface model
 
@@ -446,8 +446,8 @@ the light's incident angle n · ωi. The loop ends with:
 After the loop the shader already adds the constant ambient term `0.03 * albedo * ao` and writes the colour. Now do the
 first task, **lambert**: write the light loop.
 
-Press **Build & run**: the spheres are **matt red**, all 49 alike – metallic and roughness are not used yet. Each sphere
-is brighter on the sides that face the lights, and the spheres near the corners of the grid are brighter than the one in
+Build and run: the spheres are **matt red**, all 49 alike – metallic and roughness are not used yet. Each sphere is
+brighter on the sides that face the lights, and the spheres near the corners of the grid are brighter than the one in
 the middle, because they are closer to a light: the centre sphere is about 17 units from each light, a corner sphere
 only about 10.6 from the nearest one. Only the red channel is lit (the albedo is pure red), and nothing is saturated.
 
@@ -530,8 +530,8 @@ and `Lo += (albedo / PI + specular) * radiance * NdotL;` at the end of the loop.
 and `Lo += (albedo / PI + specular) * radiance * NdotL;` at the end of the loop.
 :::
 
-Now do the task **ndf**. Press **Build & run**: **glaring white highlights that grow with the roughness**, the same in
-every row. In the left column (roughness 0.05) each sphere has four tiny white dots – one reflection per light –, in the
+Now do the task **ndf**. Build and run: **glaring white highlights that grow with the roughness**, the same in every
+row. In the left column (roughness 0.05) each sphere has four tiny white dots – one reflection per light –, in the
 middle columns they have grown into four fat white blobs, and the spheres of the right column are white all over. This
 is what the NDF is: for a smooth surface it is huge where the halfway vector meets the normal and almost zero elsewhere,
 for a rough one it is spread over the whole sphere. But nothing limits it yet: the specular term is not divided by the
@@ -625,8 +625,8 @@ The division gives one float; assigning it to a `float3` copies it into the thre
 :::
 
 Note that we add 0.0001 to the denominator to prevent a divide by zero in case any dot product ends up 0.0. Now do the
-task **geometry**. Press **Build & run**: the highlights are **smaller and dimmer on the rough spheres**, which are pink
-now instead of white; the centres of the highlights on the smooth and middle spheres are still white. Every sphere still
+task **geometry**. Build and run: the highlights are **smaller and dimmer on the rough spheres**, which are pink now
+instead of white; the centres of the highlights on the smooth and middle spheres are still white. Every sphere still
 reflects like a perfect mirror in its highlight – nothing depends on what the sphere is made of yet, so the rows still
 look alike.
 
@@ -766,10 +766,10 @@ the fragment – the project already has it after the loop:
 ```
 :::
 
-Now do the task **fresnel**. Press **Build & run**: **the rows differ now**. The bottom row (non-metal) keeps its red
-diffuse colour with small white-ish highlights – a dielectric's reflection is not tinted. Towards the top (metal) the
-diffuse light disappears and the highlights take the albedo's red; the top row is almost black except for its red
-highlights. The picture is dark and harsh, though: the colours are linear and are cut off at 1.0.
+Now do the task **fresnel**. Build and run: **the rows differ now**. The bottom row (non-metal) keeps its red diffuse
+colour with small white-ish highlights – a dielectric's reflection is not tinted. Towards the top (metal) the diffuse
+light disappears and the highlights take the albedo's red; the top row is almost black except for its red highlights.
+The picture is dark and harsh, though: the colours are linear and are cut off at 1.0.
 
 ```quiz
 After the task fresnel, why are the spheres of the top rows so dark apart from their highlights?
@@ -845,9 +845,9 @@ The lighting maths needs linear values and is not bounded by 1.0. Reinhard is no
 All that's left now is to put it all together: the inputs, the BRDF's three functions, the loop with the complete
 reflectance equation, the ambient term, the tone mapping and the gamma correction. Now do the task **tone-map**.
 
-Press **Build & run**: this is learnopengl's picture. The spheres are brighter and softer, and the highlights are no
-longer cut off. From bottom to top, the bottom row looks like red plastic, shiny on the left and matt on the right, with
-small white highlights on the smooth ones and broad, faint sheens on the rough ones; the top row is dark red metal whose
+Build and run: this is learnopengl's picture. The spheres are brighter and softer, and the highlights are no longer cut
+off. From bottom to top, the bottom row looks like red plastic, shiny on the left and matt on the right, with small
+white highlights on the smooth ones and broad, faint sheens on the rough ones; the top row is dark red metal whose
 reflections are red, sharp on the left and wide and dim on the right. Each sphere has a different look, while all share
 the same albedo: the roughness and the metalness alone make the difference. The clear colour around them is not tone
 mapped, so it stays the same grey.
@@ -1004,10 +1004,9 @@ learnopengl's `mat3(T, B, N) * tangentNormal`, whose `mat3` has them as columns.
 :::
 
 Why not learnopengl's derivatives? They give one tangent per triangle (the derivatives are constant across a triangle),
-so the lighting shows the facets of the sphere; the vertex tangent is smooth. And it works the same way in every API and
-in the simulator. Why `B = cross(N, T)` and not `cross(T, N)`? T points where u grows; the normal map's green channel
-means "up in the image", which is where the image's rows go up – and with the sphere's texture coordinates that is
-`cross(N, T)`.
+so the lighting shows the facets of the sphere; the vertex tangent is smooth. And it works the same way in every API.
+Why `B = cross(N, T)` and not `cross(T, N)`? T points where u grows; the normal map's green channel means "up in the
+image", which is where the image's rows go up – and with the sphere's texture coordinates that is `cross(N, T)`.
 
 :::opengl
 The images are flipped when they are loaded (`stbi_set_flip_vertically_on_load(true)` in `loadTexture`, as in every
@@ -1153,14 +1152,14 @@ The textured task reads the albedo with `pow(…, 2.2)`, but metallic, roughness
 Only images of colours, made by looking at a monitor, carry the monitor's curve. Converting a roughness map would change the material: a roughness of 0.5 would become about 0.22.
 ```
 
-Now do the last task, **textured**. Press **Build & run**: nine large spheres of **riveted steel with rust**. Through the
-middle of each sphere runs a dark cross of grooves with four dome-shaped rivets around it; the steel is grey and shiny,
-with the four lights' soft white highlights, and the rust patches – mostly on the right and in the lower part of each
-sphere – are matt orange-brown, without highlights: rust is rough and not a metal, so the roughness and metallic maps
-switch it to a different material within the same sphere. The rivets look raised: each one is lit on the side facing a
-light and dark on the other, and the grooves' far walls catch the light – the normal map's directions arrive in world
-space the right way round. The ambient light is still the constant `0.03 * albedo * ao`, so the parts that no light
-reaches are nearly black; the next chapters replace it with light from an environment.
+Now do the last task, **textured**. Build and run: nine large spheres of **riveted steel with rust**. Through the middle
+of each sphere runs a dark cross of grooves with four dome-shaped rivets around it; the steel is grey and shiny, with
+the four lights' soft white highlights, and the rust patches – mostly on the right and in the lower part of each sphere
+– are matt orange-brown, without highlights: rust is rough and not a metal, so the roughness and metallic maps switch it
+to a different material within the same sphere. The rivets look raised: each one is lit on the side facing a light and
+dark on the other, and the grooves' far walls catch the light – the normal map's directions arrive in world space the
+right way round. The ambient light is still the constant `0.03 * albedo * ao`, so the parts that no light reaches are
+nearly black; the next chapters replace it with light from an environment.
 
 ## Further reading
 

@@ -19,11 +19,11 @@ We would have to manually load audio files into a collection of bytes, process a
 and manage multiple audio streams appropriately for use in our game. This can get complicated pretty quickly and
 requires some low-level knowledge of audio engineering. So games use a library for it, and so does learnopengl.
 
-**This chapter has no tasks.** The course's simulator plays no sound, and the course ships no audio files. The
-project is the `powerups` chapter's solution as it is – the six test power-ups included –, so you can build and run
-the game; its pictures are those of `powerups`: at 1.5 s the six falling pills, at 3.0 s the confused picture with the
-wide paddle. What follows explains learnopengl's audio code and where it would go in Hedgerow; on your own computer
-you can add it with one of the libraries below.
+**This chapter has no tasks.** The course can't check sound, and it ships no audio files. The project is the `powerups`
+chapter's solution as it is – the six test power-ups included –, so you can build and run the game; its pictures are
+those of `powerups`: at 1.5 s the six falling pills, at 3.0 s the confused picture with the wide paddle. What follows
+explains learnopengl's audio code and where it would go in Hedgerow; you can add it to your own copy with one of the
+libraries below.
 
 ## irrKlang
 

@@ -88,8 +88,9 @@ resursernas tillstånd med barriärer. När du är klar kontrollerar provet i sl
 - **RenderText**: per tecken en rektangel vid `x + bearing.x · scale`, `y − (size.y − bearing.y) · scale` (y uppåt), i
   glyfens storlek; sedan `x += (advance >> 6) · scale`. Textshadern använder den röda kanalen som alfa:
   `vec4(textColor, 1.0) * vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r)`, med alfablending.
-- **Kursens typsnitt**: Inter Bold (SIL Open Font License, `OFL.txt` bredvid; learnopengl: Antonio Bold); simulatorn har
-  dess glyfer i 24 och 48 pixlar. Vidare: typsnitt med **signed distance fields** förblir skarpa i alla skalor.
+- **Kursens typsnitt**: Inter Bold (SIL Open Font License, `OFL.txt` bredvid; learnopengl: Antonio Bold); kursens
+  kontroller har dess glyfer i 24 och 48 pixlar. Vidare: typsnitt med **signed distance fields** förblir skarpa i alla
+  skalor.
 
 :::opengl
 - **En textur per glyf**: `GL_RED`, `GL_CLAMP_TO_EDGE`, `GL_LINEAR`, och `glPixelStorei(GL_UNPACK_ALIGNMENT, 1)` – en
@@ -234,9 +235,9 @@ resursernas tillstånd med barriärer. När du är klar kontrollerar provet i sl
   ingen kollisionshantering för block som inte är solida. `ResetPlayer` slår av allt.
 - **Testet**: inget block går sönder med de fasta indata, så en power-up av varje sort lades in för hand; i bildruta 161
   fångar racketen pad-size-increase och sedan – nu bredare – confuse.
-- **Ljud**: inget grafik-API spelar ljud. learnopengl använder **irrKlang** (`createIrrKlangDevice`, `play2D(file, loop)`,
-  `drop`; gratis bara för icke-kommersiellt bruk): musik som upprepas i `Init`, effekter i `DoCollisions`. Alternativ:
-  OpenAL Soft, miniaudio, SDL_mixer, XAudio2 på Windows. Simulatorn spelar inget ljud.
+- **Ljud**: inget grafik-API spelar ljud. learnopengl använder **irrKlang** (`createIrrKlangDevice`,
+  `play2D(file, loop)`, `drop`; gratis bara för icke-kommersiellt bruk): musik som upprepas i `Init`, effekter i
+  `DoCollisions`. Alternativ: OpenAL Soft, miniaudio, SDL_mixer, XAudio2 på Windows. Kursen kan inte kontrollera ljud.
 - **Spelets text**: en projektion med y nedåt, så (x, y) är textens övre vänstra hörn: `ypos = y +
   (Characters['H'].Bearing.y − ch.Bearing.y) · scale`. 24 pixlar; "Lives:" vid (5, 5), efter efterbehandlingsrektangeln.
 - **Liv**: 3; en tappad boll kostar ett; vid 0 återställs banan och spelet går tillbaka till menyn.

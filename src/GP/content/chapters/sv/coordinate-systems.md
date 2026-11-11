@@ -62,8 +62,8 @@ Constant buffern följer Microsofts exempel D3D12HelloConstBuffers, depth buffer
 D3D12-exemplen (till exempel D3D12Bundles) skapar sina på.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift trycker du på **Build & run**
-(Ctrl+Enter) för att kompilera programmet och köra det i den inbyggda simulatorn.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
+IDE.
 
 ## Helheten
 

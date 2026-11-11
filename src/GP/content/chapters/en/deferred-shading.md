@@ -96,11 +96,11 @@ The lights are learnopengl's: **32 point lights** at "slightly random" positions
 
 `srand(13)` seeds the C library's random number generator: the same seed gives the same sequence, so the lights land in
 the same places every run. The sequence itself belongs to the C library, though: the pictures described here are those
-of glibc's `rand()` (Linux, and the built-in simulator); with Microsoft's C runtime on Windows the 32 lights land
-elsewhere – the same kind of scene, different in detail. The lights' attenuation is constant 1, linear 0.7 and quadratic
-1.8, a short reach, so each light colours only the boxes near it. The lighting is learnopengl's: an ambient term of
-`Diffuse * 0.1`, and for each light a diffuse term and a Blinn-Phong specular term (exponent 16, times the specular
-map's value), both attenuated – in world space.
+of glibc's `rand()` (Linux, and the course's **Expected result** pictures); with Microsoft's C runtime on Windows the 32
+lights land elsewhere – the same kind of scene, different in detail. The lights' attenuation is constant 1, linear 0.7
+and quadratic 1.8, a short reach, so each light colours only the boxes near it. The lighting is learnopengl's: an
+ambient term of `Diffuse * 0.1`, and for each light a diffuse term and a Blinn-Phong specular term (exponent 16, times
+the specular map's value), both attenuated – in world space.
 
 The camera is not learnopengl's (0, 0, 5) looking straight ahead: from there the front row hides the grid and most of the
 lights. It sits at **(0, 5, 9) and looks down at the grid** (yaw -90, pitch -35), so the whole grid shows, with the lights
@@ -156,12 +156,11 @@ shader files are there: `g_buffer.hlsl` (its `PSMain` a TODO), `deferred_shading
 `deferred_light_box.hlsl` (complete, used in the third task).
 :::
 
-The `// TODO:` comments in the project mark where your code goes. Press **Build & run** (Ctrl+Enter) to compile the
-program and run it in the built-in simulator: the 3 × 3 grid of wooden boxes with steel frames from above and behind,
-the near row large at the bottom, the far row small at the top, black around them. The boxes' tops and the faces turned
-towards nearby lights are lit in warm pastel colours, the rest is dark – only the 0.1 ambient term. The lights themselves
-are invisible. Every fragment of every box was lit with all 32 lights, including the fragments that a nearer box then
-covered.
+The `// TODO:` comments in the project mark where your code goes. Build and run the program in your IDE: the 3 × 3 grid
+of wooden boxes with steel frames from above and behind, the near row large at the bottom, the far row small at the top,
+black around them. The boxes' tops and the faces turned towards nearby lights are lit in warm pastel colours, the rest
+is dark – only the 0.1 ambient term. The lights themselves are invisible. Every fragment of every box was lit with all
+32 lights, including the fragments that a nearer box then covered.
 
 ## The G-buffer
 
@@ -683,9 +682,9 @@ A table points at consecutive descriptors in the heap. The G-buffer's SRVs are i
 ```
 :::
 
-Press **Build & run**: the window shows the **albedo**, unlit. The boxes are there, but every face is equally bright – the
-tops, the dark front faces, the sides – in the texture's plain colours: wood about (150, 98, 52), steel about (155, 157,
-163) out of 255. The background stays black: the G-buffer was cleared to zero there. Nothing has been lit: that is the
+Build and run: the window shows the **albedo**, unlit. The boxes are there, but every face is equally bright – the tops,
+the dark front faces, the sides – in the texture's plain colours: wood about (150, 98, 52), steel about (155, 157, 163)
+out of 255. The background stays black: the G-buffer was cleared to zero there. Nothing has been lit: that is the
 lighting pass's job.
 
 ## The deferred lighting pass
@@ -900,10 +899,10 @@ Why is the G-buffer read with nearest (point) filtering in the lighting pass?
 A colour can be blended between texels without much harm; a position halfway between a box and the wall behind it is a point in empty space, and it would be lit as if it were a surface.
 ```
 
-Press **Build & run**: the picture is **the start picture again** – the lit boxes, warm where lights are near, dark
-elsewhere; no pixel differs by more than 1 from the forward renderer. That's the point: the same lighting code with the
-same inputs gives the same colours. What changed is the work: each pixel is now lit exactly once – 800 × 600 × 32 light
-calculations per frame, however many boxes overlap.
+Build and run: the picture is **the start picture again** – the lit boxes, warm where lights are near, dark elsewhere;
+no pixel differs by more than 1 from the forward renderer. That's the point: the same lighting code with the same inputs
+gives the same colours. What changed is the work: each pixel is now lit exactly once – 800 × 600 × 32 light calculations
+per frame, however many boxes overlap.
 
 ## Combining deferred rendering with forward rendering
 
@@ -1115,9 +1114,9 @@ The lighting quad was drawn without a DSV (`nullptr`) and its PSO has `DepthEnab
 ```
 :::
 
-Press **Build & run**: **32 small pastel cubes** appear between, above and below the boxes, about 12 to 28 pixels
-wide – grey, orange, pink, mint, cyan, purple. A few are hidden behind boxes, for example under the left middle box;
-others float over the black background around the grid. Everything else is unchanged.
+Build and run: **32 small pastel cubes** appear between, above and below the boxes, about 12 to 28 pixels wide – grey,
+orange, pink, mint, cyan, purple. A few are hidden behind boxes, for example under the left middle box; others float
+over the black background around the grid. Everything else is unchanged.
 
 These cubes don't have any lighting of their own: they show the light's colour. Any object that needs another shader –
 a transparent object, a special material – can be forward rendered this way after the lighting pass, depth-tested
@@ -1349,10 +1348,10 @@ the loop computes the distance first and wraps the rest in the test:
 Now do the last task, **light-volumes**.
 :::
 
-Press **Build & run**: the picture is **almost the same – a little darker in places**. The light cubes, the tops of the
-front boxes and the dark front faces are unchanged; but the steel frames of the far row lose about a fifth of their
-brightness (the far middle box's frame drops from about 149 to 117), and the inner sides of the front corner boxes get
-darker too. About 28,000 pixels darken by more than 5 levels, none gets brighter.
+Build and run: the picture is **almost the same – a little darker in places**. The light cubes, the tops of the front
+boxes and the dark front faces are unchanged; but the steel frames of the far row lose about a fifth of their brightness
+(the far middle box's frame drops from about 149 to 117), and the inner sides of the front corner boxes get darker too.
+About 28,000 pixels darken by more than 5 levels, none gets brighter.
 
 Why, if a skipped light contributes "nothing visible"? The radius is where *one* light's brightest channel falls to 5/256
 – each light skipped there would have added at most a few levels. But the scene has 32 lights, a few units apart, and

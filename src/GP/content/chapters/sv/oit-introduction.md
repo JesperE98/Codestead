@@ -255,12 +255,12 @@ som den är. `composite.hlsl` och `screen.hlsl` finns redan till nästa kapitel;
 fortfarande en TODO.
 :::
 
-Det här kapitlet har inga uppgifter. Tryck på **Build & run** (Ctrl+Enter): projektet kompileras och körs i den inbyggda
-simulatorn. Mot svart ser du den röda fyrhörningen till höger, den halvgenomskinliga gröna nere till vänster framför den,
-och den halvgenomskinliga blå uppe till vänster, delvis dold bakom den röda. Där den gröna ligger över den röda blandas
-de till en olivgrön ton – rätt, eftersom den röda är ogenomskinlig och ritades först. Men titta på den blå
-fyrhörningens nedre vänstra hörn: där den gröna täcker den (runt pixeln (230, 300)) saknas den blå helt enkelt. Hörnet är
-avskuret längs den gröna fyrhörningens överkant, och pixeln där är rent mörkgrön (0, 128, 0) – grönt över svart.
+Det här kapitlet har inga uppgifter. Bygg och kör programmet: mot svart ser du den röda fyrhörningen till höger, den
+halvgenomskinliga gröna nere till vänster framför den, och den halvgenomskinliga blå uppe till vänster, delvis dold
+bakom den röda. Där den gröna ligger över den röda blandas de till en olivgrön ton – rätt, eftersom den röda är
+ogenomskinlig och ritades först. Men titta på den blå fyrhörningens nedre vänstra hörn: där den gröna täcker den (runt
+pixeln (230, 300)) saknas den blå helt enkelt. Hörnet är avskuret längs den gröna fyrhörningens överkant, och pixeln där
+är rent mörkgrön (0, 128, 0) – grönt över svart.
 
 ```quiz
 Varför saknas den blå fyrhörningen där den gröna täcker den?

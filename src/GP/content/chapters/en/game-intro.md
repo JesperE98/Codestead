@@ -80,15 +80,16 @@ The game is built over these chapters, each adding one piece; the first three co
 ## How the course writes the game
 
 learnopengl splits its game into classes, each in its own header and source file: `Game`, `ResourceManager`, `Shader`,
-`Texture2D`, `SpriteRenderer`, `GameObject`, `GameLevel` and later more. That is how a real project should be
-organised. The course keeps the names of those classes and of their functions, but writes them as **plain structs and
-free functions, all in one `main.cpp`**, in the order of learnopengl's files – the built-in simulator follows plain
-structs and free functions. A member function like learnopengl's `Renderer->DrawSprite(…)` becomes a free function
-that takes the struct as its first parameter, `DrawSprite(Renderer, …)`. The next chapter shows the details.
+`Texture2D`, `SpriteRenderer`, `GameObject`, `GameLevel` and later more. That is how a real project should be organised.
+The course keeps the names of those classes and of their functions, but writes them as **plain structs and free
+functions, all in one `main.cpp`**, in the order of learnopengl's files – the course's checks read plain structs and
+free functions. A member function like learnopengl's `Renderer->DrawSprite(…)` becomes a free function that takes the
+struct as its first parameter, `DrawSprite(Renderer, …)`. The next chapter shows the details.
 
-The game also has to be **deterministic** in the course, so that every API, every driver and the simulator show the
-same picture for the same moment: the game's time advances by exactly 1/60 of a second per frame, and the only key ever
-"pressed" by itself is the space bar, half a second after the start. The next chapter explains how.
+The game also has to be **deterministic** in the course's checks and **Expected result** pictures, so that every API and
+every driver give the same picture for the same moment: there the game's time advances by exactly 1/60 of a second per
+frame, and the only key ever "pressed" is the space bar, half a second after the start. Your own program runs on the
+real clock and reacts to your keys. The next chapter explains how.
 
 :::opengl
 ## The project
@@ -120,9 +121,8 @@ create resources and draw with (the next chapter explains it). The game's parts 
 learnopengl's files: Shader, Texture2D, ResourceManager, Game and the program.
 :::
 
-Press **Build & run** (Ctrl+Enter): the project is compiled and run in the built-in simulator, and you see an empty,
-black window. That is all learnopengl's "Setting up" draws, too – the next chapter builds the skeleton that every later
-chapter hangs its pieces on.
+Build and run the program: you see an empty, black window. That is all learnopengl's "Setting up" draws, too – the next
+chapter builds the skeleton that every later chapter hangs its pieces on.
 
 ```quiz
 When is a level of Hedgerow complete?

@@ -104,10 +104,10 @@ av irradiansmappen, framför omgivningen. Nytt i det:
   1.0)`), för att titta på BRDF-integrationsmappen en stund.
 - Materialets fem mappar för den sista uppgiften.
 
-Tre tal är mindre än learnopengls, eftersom den inbyggda simulatorn körs på processorn (en riktig GPU klarar learnopengls
-värden lätt): förfiltermappen har 64 × 64 texlar per sida i stället för 128 × 128 (fortfarande med 5 mipnivåer),
-förfilterkonvolutionen och BRDF-integrationen tar 128 samples i stället för 1024, och BRDF-integrationsmappen är 128 × 128
-i stället för 512 × 512.
+Tre tal är mindre än learnopengls, eftersom kursen ritar sina kontroller och förväntade resultat på CPU:n (en riktig GPU
+klarar learnopengls värden lätt): förfiltermappen har 64 × 64 texlar per sida i stället för 128 × 128 (fortfarande med 5
+mipnivåer), förfilterkonvolutionen och BRDF-integrationen tar 128 samples i stället för 1024, och
+BRDF-integrationsmappen är 128 × 128 i stället för 512 × 512.
 
 :::opengl
 Filerna är `prefilter.fs`, `brdf.vs` (färdig), `brdf.fs`, `debug_quad.fs` (färdig) och de fem `.png`-mapparna;
@@ -863,10 +863,10 @@ Visa tills vidare förfiltermappen som bakgrund: bind den i stället för enviro
 bakgrundens shader sampla mipnivå **1.2** i stället för 0.0 – mellan nivåerna för strävheten 0.25 och 0.5. Gör nu den
 första uppgiften, **prefilter-map**.
 
-Tryck på **Build & run**: bakgrunden är **en suddig omgivning**. Himlen är fortfarande blågrå upptill, kullarna är
-utsmetade, och nere till vänster finns ett stort varmt sken: en orange lampa i omgivningen, strax utanför bilden till
-vänster, utspridd av oskärpan. Det finns inga ljusa prickar någonstans – mipnivå-tricket i arbete. Sfärerna ändras knappt;
-irradiansmappen görs nu av en omgivning med mipnivåer.
+Bygg och kör: bakgrunden är **en suddig omgivning**. Himlen är fortfarande blågrå upptill, kullarna är utsmetade, och
+nere till vänster finns ett stort varmt sken: en orange lampa i omgivningen, strax utanför bilden till vänster, utspridd
+av oskärpan. Det finns inga ljusa prickar någonstans – mipnivå-tricket i arbete. Sfärerna ändras knappt; irradiansmappen
+görs nu av en omgivning med mipnivåer.
 
 ## Att räkna ut BRDF:en i förväg
 
@@ -1216,8 +1216,8 @@ v för att lägga strävhet 0 nederst, som i OpenGL:s bild:
 Bara *visningen* är vänd; texturens data stämmer med OpenGL:s.
 :::
 
-Gör nu uppgiften **brdf-lut**. Tryck på **Build & run**: **den rödgröna uppslagstexturen fyller fönstret** (fyrhörningen
-ligger framför allt; blått är 0 överallt). Rött till höger och nederst, mörkare rött uppåt, och ett gröngult hörn nere till
+Gör nu uppgiften **brdf-lut**. Bygg och kör: **den rödgröna uppslagstexturen fyller fönstret** (fyrhörningen ligger
+framför allt; blått är 0 överallt). Rött till höger och nederst, mörkare rött uppåt, och ett gröngult hörn nere till
 vänster.
 
 ```quiz
@@ -1403,12 +1403,12 @@ Förfilterloopen renderade nivå `mip` med `roughness = mip / 4`; att läsa niv�
 Ta bort debug-fyrhörningen igen (dess shaderobjekt eller pipeline och dess ritanrop), och visa environment mappen som
 bakgrund igen på nivå 0.0. Gör nu uppgiften **specular**.
 
-Tryck på **Build & run**: **sfärerna speglar omgivningen**. På de släta sfärerna i de vänstra kolumnerna ser du himlen i den
-övre halvan och den mörkare marken i den nedre, med horisonten emellan; en stor vit fläck upp och till höger om mitten är
-solen, som står bakom kameran; små färgade fläckar nära kanterna är lamporna; och de fyra punktljusens prickar finns kvar.
-Åt höger suddas reflektionen ut till en mjuk glans. Metallraderna speglar i sin egen röda färg, och grönt och blått syns på
-sfärerna för första gången: icke-metallers spekulära reflektion färgas inte av albedot. Det här är learnopengls
-`2.2.1.ibl_specular`.
+Bygg och kör: **sfärerna speglar omgivningen**. På de släta sfärerna i de vänstra kolumnerna ser du himlen i den övre
+halvan och den mörkare marken i den nedre, med horisonten emellan; en stor vit fläck upp och till höger om mitten är
+solen, som står bakom kameran; små färgade fläckar nära kanterna är lamporna; och de fyra punktljusens prickar finns
+kvar. Åt höger suddas reflektionen ut till en mjuk glans. Metallraderna speglar i sin egen röda färg, och grönt och
+blått syns på sfärerna för första gången: icke-metallers spekulära reflektion färgas inte av albedot. Det här är
+learnopengls `2.2.1.ibl_specular`.
 
 Hela scenen – direkt ljus, diffus IBL, spekulär IBL – kostar sfärernas fragment shader tre texturuppslagningar för
 omgivningen; allt dyrt hände en gång, före första bildrutan.
@@ -1444,9 +1444,9 @@ clamping, så det finns en andra statisk sampler, `samplers[1] = samplers[0];` m
 måste rymma den största struct som skickas genom dem.
 :::
 
-Gör nu den sista uppgiften, **textured**. Tryck på **Build & run**: nio stora sfärer av **nitat stål med rost framför
-himlen**. Stålplåtarna speglar omgivningen mjukt – blåaktigt från himlen i de övre halvorna, mörkare nedtill, en ljus glans
-där solen och punktljusen speglas –, spåren och de fyra nitarna runt varje sfärs mitt fångar ljuset på sidorna som vetter
+Gör nu den sista uppgiften, **textured**. Bygg och kör: nio stora sfärer av **nitat stål med rost framför himlen**.
+Stålplåtarna speglar omgivningen mjukt – blåaktigt från himlen i de övre halvorna, mörkare nedtill, en ljus glans där
+solen och punktljusen speglas –, spåren och de fyra nitarna runt varje sfärs mitt fångar ljuset på sidorna som vetter
 mot det, och rostfläckarna förblir matt orangebruna, nu belysta av irradiansmappen (ljusare än i kapitlet PBR-belysning,
 där bara den konstanta ambienta termen nådde dem). Jämför sfärerna: de översta speglar mer himmel, de nedersta mer mark.
 Det här är lösningen, och slutet på learnopengls PBR-kapitel.

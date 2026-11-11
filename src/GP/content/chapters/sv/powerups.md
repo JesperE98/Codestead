@@ -30,8 +30,8 @@ bildruta 86 och tappas i bildruta 151 (se `collision-resolution`): inget block f
 skulle någonsin skapas, och inget i det här kapitlet skulle synas. Därför lägger den andra uppgiften in en power-up av
 varje sort i spelet för hand, i `Init`, som om sex block just hade gått sönder i den tomma raden mellan de blå blocken
 och stenarna. Ett riktigt spel skulle inte ha de raderna; de finns kvar genom kapitlet `audio`, och första uppgiften i
-`render-text` tar bort dem igen. Kapitlets bilder tas vid **1,5 s** (bildruta 90), när power-upsen faller, och vid
-**3,0 s** (bildruta 180).
+`render-text` tar bort dem igen. Kapitlets förväntade resultat visar spelet vid **1,5 s** (bildruta 90), när power-upsen
+faller, och vid **3,0 s** (bildruta 180).
 
 ## Power-upen
 
@@ -180,8 +180,8 @@ game.PowerUps.push_back(MakePowerUp("chaos", XMFLOAT3(0.9f, 0.25f, 0.25f), 15.0f
 :::
 
 En varaktighet på 0 betyder att effekten är permanent: farten och racketens storlek förblir ändrade när de väl har
-ändrats. Tryck på **Build & run**: **sex tonade piller i raden ovanför stenarna** – blått, rosa, grönt, orange och två
-röda. De rör sig inte än: inget uppdaterar dem.
+ändrats. Bygg och kör: **sex tonade piller i raden ovanför stenarna** – blått, rosa, grönt, orange och två röda. De rör
+sig inte än: inget uppdaterar dem.
 
 ## Uppdatera power-upsen
 
@@ -412,10 +412,10 @@ Anropa den i `Update`, efter partiklarna:
 UpdatePowerUps(game, dt);
 ```
 
-Gör nu uppgiften **update-powerups**. Tryck på **Build & run**: vid 1,5 s **har alla sex pillren fallit till mitten av
-fönstret** (y = 385, 2,5 pixlar per bildruta), och raden ovanför stenarna är tom igen. Bollen flyger förbi dem; en
-power-up reagerar bara på racketen. Vid 3,0 s har de fallit ut ur fönstret – men inget förstör dem än, så de finns kvar i
-vektorn och ritas nedanför fönstret.
+Gör nu uppgiften **update-powerups**. Bygg och kör: vid 1,5 s **har alla sex pillren fallit till mitten av fönstret** (y
+= 385, 2,5 pixlar per bildruta), och raden ovanför stenarna är tom igen. Bollen flyger förbi dem; en power-up reagerar
+bara på racketen. Vid 3,0 s har de fallit ut ur fönstret – men inget förstör dem än, så de finns kvar i vektorn och
+ritas nedanför fönstret.
 
 ```quiz
 `UpdatePowerUps` slutar med `game.PowerUps.erase(std::remove_if(game.PowerUps.begin(), game.PowerUps.end(), […](…) { … }), game.PowerUps.end());`. Vad gör `std::remove_if` ensam?

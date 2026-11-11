@@ -16,13 +16,12 @@ The text shader is `shaders/text_2d.vert` / `shaders/text_2d.frag`.
 :::d3d12
 The text shader is `text_2d.hlsl`.
 :::
-The pictures are taken at **3.0 s** (frame 180).
+The expected results show the game at **3.0 s** (frame 180).
 
 The power-ups work, so their test has done its job. Do the first task, **remove-test**: delete the comment and the six
-`game.PowerUps.push_back(…)` lines at the end of `Init`; `Init` ends with the ball's `MakeBallObject` line again. Press
-**Build & run**: **the normal game again** – nothing is caught, the picture is not confused, the paddle is 100 pixels
-wide, and at 3.0 s the ball, lost in frame 151, waits on the paddle. The real game spawns power-ups from broken blocks
-only.
+`game.PowerUps.push_back(…)` lines at the end of `Init`; `Init` ends with the ball's `MakeBallObject` line again. Build
+and run: **the normal game again** – nothing is caught, the picture is not confused, the paddle is 100 pixels wide, and
+at 3.0 s the ball, lost in frame 151, waits on the paddle. The real game spawns power-ups from broken blocks only.
 
 ## The text renderer
 
@@ -385,8 +384,8 @@ In `Init` the font is loaded at **24 pixels**:
 Load(Text, "fonts/Inter-Bold.otf", 24);
 ```
 
-(The simulator stands in for FreeType with this font's glyphs at 24 and 48 pixels; with the real FreeType any size
-works.) Now do the task **load-font**. Nothing draws the glyphs yet: **no visible change**.
+(The course's checks stand in for FreeType with this font's glyphs at 24 and 48 pixels; with the real FreeType in your
+program any size works.) Now do the task **load-font**. Nothing draws the glyphs yet: **no visible change**.
 
 ## Player lives
 
@@ -638,7 +637,7 @@ RenderText(Text, "Lives:" + std::to_string(game.Lives), 5.0f, 5.0f, 1.0f);
 ```
 
 learnopengl builds the string with a `std::stringstream`; `std::to_string` does the same. Now do the task
-**render-text**. Press **Build & run**: **"Lives:2" in white at the top left** – the ball was lost once.
+**render-text**. Build and run: **"Lives:2" in white at the top left** – the ball was lost once.
 :::opengl vulkan
 Seven more draws, one per character.
 :::
@@ -779,11 +778,11 @@ RenderText(Text, "Press W or S to select level", 245.0f, game.Height / 2.0f + 20
 The positions are learnopengl's, made for its font; with Inter the lines sit a little left of the centre. For this to
 work when the game launches, its state must start as `GAME_MENU`: `GameState State = GAME_MENU;` in `Game`.
 
-Now do the task **menu**. Press **Build & run**: **the menu over the level** – "Press ENTER to start" and, smaller,
-"Press W or S to select level" in the middle of the window, "Lives:3" at the top left, the ball on the paddle. The
-course's fixed input never presses ENTER, so the game never starts: SPACE in frames 30 to 32 does nothing in the menu
-(only `GAME_ACTIVE` reads it), the ball stays on the paddle – the particles keep spawning there, because `Update` still
-runs – and no life is lost.
+Now do the task **menu**. Build and run: **the menu over the level** – "Press ENTER to start" and, smaller, "Press W or
+S to select level" in the middle of the window, "Lives:3" at the top left, the ball on the paddle. The course's fixed
+input never presses ENTER, so the game never starts: SPACE in frames 30 to 32 does nothing in the menu (only
+`GAME_ACTIVE` reads it), the ball stays on the paddle – the particles keep spawning there, because `Update` still runs –
+and no life is lost.
 
 ## Winning
 
@@ -910,8 +909,8 @@ if (game.State == GAME_WIN)
 
 Note that it sets `KeysProcessed` for ENTER: the same key press would otherwise start the game in the menu right away,
 in the next frame. Now do the task **win**. No block breaks with the fixed input, so the game stays in the menu: **no
-visible change**. And that is it – the final piece of the game. Try it out: press ENTER, A and D and SPACE yourself
-in the program on your own computer, customize it to your liking, and show it to your family and friends.
+visible change**. And that is it – the final piece of the game. Try it out: press ENTER, A and D and SPACE yourself in
+your program, customize it to your liking, and show it to your family and friends.
 
 ```quiz
 `RenderText` computes `ypos = y + (Characters['H'].Bearing.y - ch.Bearing.y) * scale`. What does it achieve?

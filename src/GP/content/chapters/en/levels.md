@@ -240,8 +240,8 @@ draw something else):
 :::
 
 The `// TODO:` comments in the project mark where the code of each task goes. Now do the first task, **background**:
-load the four textures after the ball's and draw the background instead of the ball. Press **Build & run** (Ctrl+Enter):
-**the garden at dusk fills the window** – the stars, the moon in the upper right, the hills and the hedges.
+load the four textures after the ball's and draw the background instead of the ball. Build and run the program: **the
+garden at dusk fills the window** – the stars, the moon in the upper right, the hills and the hedges.
 
 Now do the task **game-object**: the struct, `MakeGameObject` and `DrawObject`. Nothing uses them yet – the picture
 stays the same.
@@ -532,9 +532,9 @@ And in `Render`, after the background:
 ```
 
 Now do the task **draw-level**: `DrawLevel`, the two members of `Game`, the levels in `Init` and the call in `Render`.
-Press **Build & run**: **level one appears in the top half** – the rows of orange, yellow, green and blue tiles, each
-tile lighter and darker at its bevelled edges around a flat middle, and below a gap the row of grey stones. The moon is
-now hidden behind the green row.
+Build and run: **level one appears in the top half** – the rows of orange, yellow, green and blue tiles, each tile
+lighter and darker at its bevelled edges around a flat middle, and below a gap the row of grey stones. The moon is now
+hidden behind the green row.
 
 :::opengl
 That is 69 draws per frame – the background and 68 bricks –, each one its `glUniform*` calls, a texture bind and a
@@ -720,10 +720,10 @@ position with the right edge of the paddle (subtract the paddle's width from the
 test is made *before* the move: a paddle at x = 3 still moves left by 8.3 pixels, to x = −5.3, and only then stops. The
 paddle can stick out of the window by up to one frame's movement – learnopengl's simple check, good enough here.
 
-Now do the task **player**: the constants, the global, the paddle in `Init`, its movement in `ProcessInput` and its
-draw in `Render`. Press **Build & run**: **the wooden paddle appears at the bottom centre**, from (350, 580) to
-(450, 600), its brass ends on both sides. The course presses no movement keys, so it stays there; on your own computer,
-outside the course, A and D would move it.
+Now do the task **player**: the constants, the global, the paddle in `Init`, its movement in `ProcessInput` and its draw
+in `Render`. Build and run: **the wooden paddle appears at the bottom centre**, from (350, 580) to (450, 600), its brass
+ends on both sides. The course presses no movement keys, so in the expected result it stays there; in your own program,
+A and D move it.
 
 :::opengl
 70 draws per frame: background, 68 bricks, paddle.

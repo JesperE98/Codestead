@@ -55,8 +55,8 @@ coordinates); the CBV/SRV heap holds the CBV (slot 0) and the marble (slot 1). N
 has a TODO comment, and the six images of the sky in `skybox/`.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, press **Build & run**
-(Ctrl+Enter) to compile the program and run it in the built-in simulator.
+The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
+IDE.
 
 ## Creating a cubemap
 
@@ -557,8 +557,8 @@ The upload heap must stay alive until the command list that copies from it has e
 local that lives until the end of `LoadAssets`, which waits for the GPU.
 :::
 
-Now do the first task, **load-cubemap**, and press **Build & run**. Nothing changes – the cube map is loaded, but
-nothing samples it yet. Let's change that.
+Now do the first task, **load-cubemap**, then build and run. Nothing changes – the cube map is loaded, but nothing
+samples it yet. Let's change that.
 
 :::opengl
 ```quiz
@@ -937,11 +937,11 @@ Why does the skybox use the view matrix without its translation?
 With the translation removed, the skybox cube moves with the camera, so the sky seems infinitely far away. The rotation stays, so looking around still shows other parts of the sky.
 ```
 
-Now do the task **skybox** and press **Build & run**. The dark grey background is gone: behind the cubes there is a
-blue sky with clouds, grey mountains along the horizon in the middle of the window, a light haze along the horizon
-and green chequered fields below it. In the top right corner the sky is brighter – the sun is just outside the
-view. The cubes are unchanged and stand in front of the sky. Move the camera around with the mouse and the WASD keys:
-the sky turns with you when you look around, but you never get any closer to the mountains.
+Now do the task **skybox**, then build and run. The dark grey background is gone: behind the cubes there is a blue sky
+with clouds, grey mountains along the horizon in the middle of the window, a light haze along the horizon and green
+chequered fields below it. In the top right corner the sky is brighter – the sun is just outside the view. The cubes are
+unchanged and stand in front of the sky. Move the camera around with the mouse and the WASD keys: the sky turns with you
+when you look around, but you never get any closer to the mountains.
 
 ## An optimization
 
@@ -1082,8 +1082,8 @@ The skybox is drawn last with its depth forced to 1.0. Why does it need the "les
 The depth buffer is cleared to 1.0 and the skybox's fragments all have depth 1.0. Only "equal" lets them pass on the empty pixels, while anything nearer – the cubes – keeps them out.
 ```
 
-Now do the task **skybox-last** and press **Build & run**. Nothing visible changes – which is the point: the picture
-is the same, but the fragment shader of the skybox no longer runs for the pixels the cubes cover.
+Now do the task **skybox-last**, then build and run. Nothing visible changes – which is the point: the picture is the
+same, but the fragment shader of the skybox no longer runs for the pixels the cubes cover.
 
 ## Environment mapping
 
@@ -1371,13 +1371,13 @@ In the reflection shader, what is `I`, and why must the camera position be known
 A mirror shows what lies in the reflected viewing direction, so the result depends on where you look from. That's why the cube's fragment position (in world space) and the camera position are both needed.
 ```
 
-Now do the task **reflection** and press **Build & run**. The marble is gone, and the cubes have become mirrors. With
-the camera looking straight at them, their front faces mirror the sky behind the camera – which looks much like the
-sky behind the cubes: sky above, a band of mountains, the ground below. The cubes almost disappear into the
-background; you only see them where the reflected horizon, clouds and fields don't line up with the sky around them.
-Move the camera to see the reflections change. Press A until you stand right in front of the left cube, at
-x = -1, and look straight at it: its front face now mirrors what is behind you – the red and white tower that stands
-towards +Z, behind the default camera.
+Now do the task **reflection**, then build and run. The marble is gone, and the cubes have become mirrors. With the
+camera looking straight at them, their front faces mirror the sky behind the camera – which looks much like the sky
+behind the cubes: sky above, a band of mountains, the ground below. The cubes almost disappear into the background; you
+only see them where the reflected horizon, clouds and fields don't line up with the sky around them. Move the camera to
+see the reflections change. Press A until you stand right in front of the left cube, at x = -1, and look straight at it:
+its front face now mirrors what is behind you – the red and white tower that stands towards +Z, behind the default
+camera.
 
 When reflection is applied to an entire object (like a cube) the object looks as if it has a high reflective
 material like steel or chrome. If we were to load a more interesting model, it would look like it's entirely made out
@@ -1465,10 +1465,10 @@ The shader uses `ratio = 1.00 / 1.52`. What does that number describe?
 `refract` bends the ray according to Snell's law, which depends on the ratio of the refractive indices on both sides of the surface. For water instead of glass it would be 1.00 / 1.33.
 ```
 
-Do the last task, **refraction**, and press **Build & run**. The cubes now look like blocks of glass: you see the sky
-behind them through them, but bent – magnified and shifted, so that through the left cube the mountains look taller
-than around it, and its outline shows as a slightly different square against the sky. The effect is much clearer when
-you move the camera; try walking around the cubes.
+Do the last task, **refraction**, then build and run. The cubes now look like blocks of glass: you see the sky behind
+them through them, but bent – magnified and shifted, so that through the left cube the mountains look taller than around
+it, and its outline shows as a slightly different square against the sky. The effect is much clearer when you move the
+camera; try walking around the cubes.
 
 Note that for physically accurate results we should refract the light again when it leaves the object; now we simply
 used single-sided refraction which is fine for most purposes.

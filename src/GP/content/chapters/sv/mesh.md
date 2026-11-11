@@ -52,9 +52,9 @@ bara en gång – vi lägger till den direkt. (Till skillnad från learnopengls 
 `std::string`: en header bör inte säga `using namespace std;` åt varje fil som inkluderar den. Vertexen har bara det
 som OpenGL 3.3 behöver här – learnopengls tangenter, bitangenter och bendata hör till senare kapitel.)
 
-Gör nu den första uppgiften, **vertex-struct**, och tryck på **Build & run** (Ctrl+Enter). Ingenting ändras på
-skärmen – och det kommer inget att göra i det här kapitlet: precis som i learnopengls kapitel *Mesh* skriver vi bara
-klassen här; kapitlet *Model* skapar mesharna och ritar dem. Varje steg kompilerar och körs ändå.
+Gör nu den första uppgiften, **vertex-struct**, och bygg och kör sedan programmet. Ingenting ändras på skärmen – och det
+kommer inget att göra i det här kapitlet: precis som i learnopengls kapitel *Mesh* skriver vi bara klassen här; kapitlet
+*Model* skapar mesharna och ritar dem. Varje steg kompilerar och körs ändå.
 
 När vi vet hur en vertex och en textur faktiskt representeras kan vi börja definiera meshklassens struktur:
 
@@ -178,9 +178,9 @@ Där OpenGL hänvisar till en textur med ett id har Direct3D 12 själva texturre
 diffuse map eller en specular map, och `path` är namnet på filen den kom från; learnopengl lägger till det i kapitlet
 *Model*, där det gör att modellen läser in varje bildfil bara en gång – vi lägger till det direkt.
 
-Gör nu den första uppgiften, **vertex**, och tryck på **Build & run** (Ctrl+Enter). Ingenting ändras på skärmen – och
-det kommer inget att göra i det här kapitlet: precis som i learnopengls kapitel *Mesh* skriver vi bara klassen här;
-kapitlet *Model* skapar mesharna och ritar dem. Varje steg kompilerar och körs ändå.
+Gör nu den första uppgiften, **vertex**, och bygg och kör sedan programmet. Ingenting ändras på skärmen – och det kommer
+inget att göra i det här kapitlet: precis som i learnopengls kapitel *Mesh* skriver vi bara klassen här; kapitlet
+*Model* skapar mesharna och ritar dem. Varje steg kompilerar och körs ändå.
 
 När vi vet hur en vertex och en textur faktiskt representeras kan vi börja definiera meshklassens struktur:
 
@@ -423,8 +423,8 @@ Normalen och materialnumret läses men används inte än; kapitlet *Model* skick
 som skickas från vertex shadern till fragment shadern måste deklareras `flat`: det kan inte interpoleras mellan en
 triangels hörn.)
 
-Gör nu den första uppgiften, **vertex**, och tryck på **Build & run** (Ctrl+Enter). Ingenting ritas än – fönstret
-förblir mörkgrått – eftersom inget anropar ett draw-kommando; det kommer med den sista uppgiften.
+Gör nu den första uppgiften, **vertex**, och bygg och kör sedan programmet. Ingenting ritas än – fönstret förblir
+mörkgrått – eftersom inget anropar ett draw-kommando; det kommer med den sista uppgiften.
 
 ### Jämföra vertexar
 
@@ -855,9 +855,9 @@ Till sist ritas meshen med sin VAO: `glDrawElements` med `GL_UNSIGNED_INT`, efte
 slutet återställs den aktiva texturenheten till `GL_TEXTURE0`, så att kod som binder en textur efter ritningen inte av
 misstag binder den till meshens sista enhet.
 
-Gör nu uppgiften **draw-mesh** och tryck på **Build & run**. Fönstret visar fortfarande bara den mörkgrå bakgrunden:
-ingen mesh finns än. Klassen är dock komplett; kapitlet *Model* läser in planeten med Assimp, skapar en `Mesh` för
-planeten och en för ringen, och anropar deras `Draw`.
+Gör nu uppgiften **draw-mesh** och bygg och kör sedan. Fönstret visar fortfarande bara den mörkgrå bakgrunden: ingen
+mesh finns än. Klassen är dock komplett; kapitlet *Model* läser in planeten med Assimp, skapar en `Mesh` för planeten
+och en för ringen, och anropar deras `Draw`.
 :::
 :::vulkan
 Det sista steget är learnopengls funktion `Draw`: att binda meshens buffrar och rita dess trianglar. I Vulkan spelas
@@ -885,11 +885,11 @@ Som i *Hello Triangle*: antalet index, en instans, första index 0, inget som l�
 Descriptor setet med uniform buffern binds som förut. Det finns inga texturer att binda än – i nästa kapitel blir de
 en del av descriptor setet, och hela modellen är fortfarande det här enda draw-anropet.
 
-Gör nu uppgiften **draw** och tryck på **Build & run**. Testkvadraten syns, lutad mot dig av modellmatrisens 25° –
-bredare upptill, där den är närmare – och färgad efter sina texturkoordinater: svart i det övre vänstra hörnet
-(u = v = 0), röd uppe till höger (u = 1), grön nere till vänster (v = 1) och gul nere till höger (u = v = 1), med en
-mjuk övergång emellan. Det är beviset för att alla fyra attributen når GPU:n på rätt ställen: positionen placerar
-kvadraten på skärmen, och texturkoordinaterna kommer fram på offset 24 i varje vertex.
+Gör nu uppgiften **draw** och bygg och kör sedan. Testkvadraten syns, lutad mot dig av modellmatrisens 25° – bredare
+upptill, där den är närmare – och färgad efter sina texturkoordinater: svart i det övre vänstra hörnet (u = v = 0), röd
+uppe till höger (u = 1), grön nere till vänster (v = 1) och gul nere till höger (u = v = 1), med en mjuk övergång
+emellan. Det är beviset för att alla fyra attributen når GPU:n på rätt ställen: positionen placerar kvadraten på
+skärmen, och texturkoordinaterna kommer fram på offset 24 i varje vertex.
 :::
 :::d3d12
 Den sista funktionen vi behöver definiera för att klassen `Mesh` ska bli komplett är funktionen `Draw`. learnopengl
@@ -929,9 +929,9 @@ första meshens texturer. `DrawIndexedInstanced` tar antalet index, en instans, 
 indexen (base vertex) och första instans 0. Primitivtopologin (en triangellista), root signaturen, heapen och
 modellmatrisen sätts i `PopulateCommandList` innan modellen ritas.
 
-Gör nu uppgiften **draw-mesh** och tryck på **Build & run**. Fönstret visar fortfarande bara den mörkgrå bakgrunden:
-ingen mesh finns än. Klassen är dock komplett – kapitlet *Model* läser in planeten med Assimp, skapar en `Mesh` för
-planeten och en för ringen, och anropar deras `Draw`.
+Gör nu uppgiften **draw-mesh** och bygg och kör sedan. Fönstret visar fortfarande bara den mörkgrå bakgrunden: ingen
+mesh finns än. Klassen är dock komplett – kapitlet *Model* läser in planeten med Assimp, skapar en `Mesh` för planeten
+och en för ringen, och anropar deras `Draw`.
 :::
 
 :::opengl

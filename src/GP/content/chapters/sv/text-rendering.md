@@ -66,10 +66,10 @@ orsakar sannolikt flera konflikter mellan headers.
 
 **Kursens typsnitt.** learnopengl använder typsnittet Antonio Bold. Kursen använder **Inter Bold**
 (`fonts/Inter-Bold.otf`, nedbantat till de skrivbara ASCII-tecknen), som är fritt under SIL Open Font License 1.1 –
-licensen måste följa med typsnittet, så `fonts/OFL.txt` ligger bredvid i projektet. Den inbyggda simulatorn har ingen
-egen FreeType: den ersätter den med de glyfer som FreeType renderar från det här typsnittet i **48 och 24 pixlar**
-(storleken det här kapitlet använder, och den som spelets text använder senare). Med riktig FreeType på din dator
-fungerar alla storlekar.
+licensen måste följa med typsnittet, så `fonts/OFL.txt` ligger bredvid i projektet. Kursens kontroller har ingen egen
+FreeType: de ersätter den med de glyfer som FreeType renderar från det här typsnittet i **48 och 24 pixlar** (storleken
+det här kapitlet använder, och den som spelets text använder senare). Med riktig FreeType i ditt program fungerar alla
+storlekar.
 
 FreeType laddar TrueType-typsnitten och genererar för varje glyf en bitmappsbild och räknar ut flera mått. Vi kan
 plocka ut bitmappsbilderna för att skapa texturer och placera varje glyf rätt med hjälp av de laddade måtten.
@@ -248,8 +248,7 @@ FT_Done_Face(face);
 FT_Done_FreeType(ft);
 ```
 
-Tryck på **Build & run**: fortfarande bara rensningsfärgen, (0.2, 0.3, 0.3), och ingenting skrivs ut – ingenting ritas
-ännu.
+Bygg och kör: fortfarande bara rensningsfärgen, (0.2, 0.3, 0.3), och ingenting skrivs ut – ingenting ritas ännu.
 
 :::opengl
 ### En textur per glyf
@@ -961,9 +960,9 @@ vertex buffern i `LoadAssets`, `RenderText`, och i `PopulateCommandList`:
 ```
 :::
 
-Tryck på **Build & run**: **"This is sample text" i grönt nere till vänster** i fönstret. Titta noga på bokstävernas
-kanter: de smälter mjukt in i bakgrunden – FreeTypes kantutjämning. Mellanslagen är också rektanglar, med storleken
-0 × 0: de ritar ingenting, men deras advance flyttar pennan.
+Bygg och kör: **"This is sample text" i grönt nere till vänster** i fönstret. Titta noga på bokstävernas kanter: de
+smälter mjukt in i bakgrunden – FreeTypes kantutjämning. Mellanslagen är också rektanglar, med storleken 0 × 0: de ritar
+ingenting, men deras advance flyttar pennan.
 
 :::opengl
 ```quiz
@@ -1018,8 +1017,8 @@ Gör nu uppgiften **second-line**: learnopengls andra rad är en upphovsrättsra
 ```
 :::
 
-y = 570 ligger nära fönstrets *överkant* – y pekar uppåt i de här koordinaterna. Tryck på **Build & run**: en liten
-**ljusblå rad uppe till höger**.
+y = 570 ligger nära fönstrets *överkant* – y pekar uppåt i de här koordinaterna. Bygg och kör: en liten **ljusblå rad
+uppe till höger**.
 
 :::vulkan
 Dess rektanglar hamnar i buffern efter den första radens: 35 ritanrop totalt, 210 vertex. Jämförd pixel för pixel med

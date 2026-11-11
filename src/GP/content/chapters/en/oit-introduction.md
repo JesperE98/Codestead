@@ -252,13 +252,12 @@ root constants (`struct ObjectConstants { XMFLOAT4X4 mvp; XMFLOAT4 color; }`), a
 is still a TODO.
 :::
 
-This chapter has no tasks. Press **Build & run** (Ctrl+Enter): the project is compiled and run in the built-in
-simulator. On black you see the red quad on the right, the half-transparent green quad at the bottom left in front of
-it, and the half-transparent blue quad at the top left, partly hidden behind the red quad. Where the green quad lies over
-the red one, both mix to an olive colour – correct, because the red quad is opaque and was drawn first. But look at the
-blue quad's lower left corner: where the green quad covers it (around the pixel (230, 300)), the blue quad is simply
-missing. Its corner is cut off along the green quad's top edge, and the pixel there is pure dark green (0, 128, 0) – green
-over black.
+This chapter has no tasks. Build and run the program: on black you see the red quad on the right, the half-transparent
+green quad at the bottom left in front of it, and the half-transparent blue quad at the top left, partly hidden behind
+the red quad. Where the green quad lies over the red one, both mix to an olive colour – correct, because the red quad is
+opaque and was drawn first. But look at the blue quad's lower left corner: where the green quad covers it (around the
+pixel (230, 300)), the blue quad is simply missing. Its corner is cut off along the green quad's top edge, and the pixel
+there is pure dark green (0, 128, 0) – green over black.
 
 ```quiz
 Why is the blue quad missing where the green quad covers it?

@@ -140,9 +140,8 @@ kursens sten (`models/rock.obj`, `rock.mtl`, `rock.png`), root signaturen med ro
 och en texturtabell, och shadrarna `planet.hlsl` och `asteroids.hlsl`.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift trycker du på **Build & run**
-(Ctrl+Enter) för att kompilera programmet och köra det i den inbyggda simulatorn. Just nu visar den en liten
-fyrhörning mitt i fönstret, färgad från hörnen: rött, grönt, blått och cyan.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
+IDE. Just nu visar den en liten fyrhörning mitt i fönstret, färgad från hörnen: rött, grönt, blått och cyan.
 
 ## Instancing
 
@@ -359,8 +358,8 @@ buffern, och ritningen får sitt antal instanser:
 ```
 :::
 
-Tryck på **Build & run**: ett rutnät på 10x10 av den lilla fyrhörningen fyller fönstret – hundra fyrhörningar, ritade
-med ett enda ritanrop.
+Bygg och kör: ett rutnät på 10x10 av den lilla fyrhörningen fyller fönstret – hundra fyrhörningar, ritade med ett enda
+ritanrop.
 
 ```quiz
 Looparna låter y gå från -10 och uppåt och, inuti, x från -10 åt höger. Vilket instansnummer har fyrhörningen i fönstrets övre högra hörn?
@@ -576,8 +575,8 @@ Vid ritningen sätts båda vertexbuffrarna, var och en till sin slot:
 Ritningen förblir `DrawInstanced(6, 100, 0, 0)`.
 :::
 
-Tryck på **Build & run**: ingenting ändras – samma rutnät, pixel för pixel. Men nu kommer förskjutningarna från en
-vertexbuffer, som kan rymma många fler instanser än en uniform-array.
+Bygg och kör: ingenting ändras – samma rutnät, pixel för pixel. Men nu kommer förskjutningarna från en vertexbuffer, som
+kan rymma många fler instanser än en uniform-array.
 
 ```quiz
 Varför byter learnopengl ut uniform-arrayen med förskjutningar mot en instansierad array?
@@ -659,11 +658,10 @@ PSInput VSMain(float2 position : POSITION, float3 color : COLOR, float2 offset :
 ```
 :::
 
-Tryck på **Build & run**. Resultatet är att de första instanserna ritas extremt små, och ju längre fram i ritningen vi
-kommer, desto närmare 100 hamnar instansnumret och desto mer får fyrhörningarna tillbaka sin ursprungliga storlek:
-fyrhörningen uppe till höger har full storlek, fyrhörningarna krymper rad för rad nedåt, och den nere till vänster –
-instans 0 – har försvunnit helt. Det är helt tillåtet att använda instansierade arrayer tillsammans med instansnumret
-på det här sättet.
+Bygg och kör. Resultatet är att de första instanserna ritas extremt små, och ju längre fram i ritningen vi kommer, desto
+närmare 100 hamnar instansnumret och desto mer får fyrhörningarna tillbaka sin ursprungliga storlek: fyrhörningen uppe
+till höger har full storlek, fyrhörningarna krymper rad för rad nedåt, och den nere till vänster – instans 0 – har
+försvunnit helt. Det är helt tillåtet att använda instansierade arrayer tillsammans med instansnumret på det här sättet.
 
 ```quiz
 Vad skulle hända i uppgiften **scale-quads** om du delade instansnumret med `100` i stället för `100.0`?
@@ -698,11 +696,11 @@ uppåt flyter scenen inte längre, trots att varje sten är en liten modell. Sed
 och precis samma dator klarar 100 000 stenar (i en ring med radien 150) med lätthet. En riktig GPU ritar ett sådant
 fält med instancing på en bråkdel av en bildruta.
 
-Vår version är mindre: 500 stenar i en ring med radien 15. Den inbyggda simulatorn körs på CPU:n, så den kan inte
-visa vad instancing vinner på en riktig GPU – men koden är exakt den som skulle rita 100 000 stenar: ändra `amount` och
-radien, ingenting annat. Och i stället för att seeda slumptalen med tiden, som learnopengl gör, använder vi
-`srand(42)`: samma fält varje körning, så att du kan jämföra din bild med den förväntade. (Bara samma C-bibliotek ger
-samma talföljd: på en annan plattform ger `rand()` ett annat fält.)
+Vår version är mindre: 500 stenar i en ring med radien 15. Kursen ritar sina kontroller och förväntade resultat på
+CPU:n, så den håller fältet litet – den kan inte visa vad instancing vinner på en riktig GPU – men koden är exakt den
+som skulle rita 100 000 stenar: ändra `amount` och radien, ingenting annat. Och i stället för att seeda slumptalen med
+tiden, som learnopengl gör, använder vi `srand(42)`: samma fält varje körning, så att du kan jämföra din bild med den
+förväntade. (Bara samma C-bibliotek ger samma talföljd: på en annan plattform ger `rand()` ett annat fält.)
 
 Först planeten ensam.
 
@@ -840,8 +838,8 @@ Och `PopulateCommandList` ritar planeten under mitten, skalad med 4:
 ```
 :::
 
-Tryck på **Build & run**: en liten texturerad planet strax under fönstrets mitt. Kameran är 3 enheter ovanför ringens
-plan, så ringen syns nästan från kanten – en tunn beige linje genom planetens mitt.
+Bygg och kör: en liten texturerad planet strax under fönstrets mitt. Kameran är 3 enheter ovanför ringens plan, så
+ringen syns nästan från kanten – en tunn beige linje genom planetens mitt.
 
 Nu stenarna. I stället för ett ritanrop per sten räknar vi ut alla deras modellmatriser en gång, lägger dem i en
 buffer och läser matrisen i vertex shadern som en instansierad array – en matris per instans. learnopengls loop som
@@ -1209,8 +1207,8 @@ Därför gjordes meshens vyer och `srvHandle` publika: som i learnopengls demo r
 för att anropa `m_rock.Draw`. Stenarna behöver inga root constants: varje instans matris kommer från slot 1.
 :::
 
-Tryck på **Build & run**: ett platt band av grå stenar över planetens övre halva – ringen med radien 15 sedd från 3
-enheter ovanför sitt plan, så att den ser ut som ett band. Planeten under bandet är oförändrad.
+Bygg och kör: ett platt band av grå stenar över planetens övre halva – ringen med radien 15 sedd från 3 enheter ovanför
+sitt plan, så att den ser ut som ett band. Planeten under bandet är oförändrad.
 
 :::opengl
 ```quiz

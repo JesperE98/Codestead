@@ -79,7 +79,7 @@ att compute kan köras parallellt med ritandet, men det behöver det här progra
 Startkoden skapar texturen – 800 × 600 texlar med fyra 32-bitars flyttal – fyller den från CPU:n med mörkblått och ritar
 den på en skärmfyrhörning som täcker fönstret: learnopengls `renderQuad()` med `screenQuad.vs` / `.fs`. Fyllningen från
 CPU:n är kursens tillägg, så att fyrhörningen visar något innan det finns en compute shader; learnopengl skapar texturen
-utan data. Compute shaderns fil finns redan, men är tom. **Bygg & kör** (Ctrl+Enter) visar ett mörkblått fönster;
+utan data. Compute shaderns fil finns redan, men är tom. Bygg och kör programmet: det visar ett mörkblått fönster;
 kommentarerna `// TODO:` visar var din kod ska in.
 
 ## Gränser
@@ -112,13 +112,14 @@ Direct3D 12 frågar inte drivrutinen: gränserna är desamma för alla enheter o
 `OutputDebugStringA`, med learnopengls formuleringar.
 :::
 
-Den inbyggda simulatorn rapporterar värdena från Mesas CPU-drivrutin: 65535 grupper i varje dimension, arbetsgrupper på
-1024 × 1024 × 1024 och 1024 anrop. Grafikkort i vanliga datorer brukar rapportera 65535 eller 2³¹ − 1 grupper i x,
-arbetsgrupper på 1024 × 1024 × 64 och 1024 anrop. Observera att gränserna per dimension *inte* säger allt: en arbetsgrupp
-på 1024 × 1024 × 1 håller sig inom gränserna för varje dimension men ligger långt över de 1024 anrop som är tillåtna
-totalt.
+Ditt program skriver ut din drivrutins värden. Mesas CPU-drivrutin rapporterar till exempel 65535 grupper i varje
+dimension, arbetsgrupper på 1024 × 1024 × 1024 och 1024 anrop. Grafikkort i vanliga datorer brukar rapportera 65535
+eller 2³¹ − 1 grupper i x, arbetsgrupper på 1024 × 1024 × 64 och 1024 anrop. Observera att gränserna per dimension
+*inte* säger allt: en arbetsgrupp på 1024 × 1024 × 1 håller sig inom gränserna för varje dimension men ligger långt över
+de 1024 anrop som är tillåtna totalt.
 
-Gör nu den första uppgiften, **limits**. Fönstret förblir mörkblått; siffrorna syns i utdatan.
+Gör nu den första uppgiften, **limits**. Fönstret förblir mörkblått; siffrorna syns där ditt program skriver sin text: i
+konsolen, eller för `OutputDebugStringA` i debuggerns Output-fönster.
 
 ```quiz
 Vilken arbetsgruppsstorlek är tillåten på en GPU som rapporterar arbetsgrupper upp till 1024 × 1024 × 64 och 1024 anrop?

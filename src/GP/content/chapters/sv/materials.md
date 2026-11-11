@@ -124,9 +124,8 @@ fyller i den varje bildruta. Kameran tittar på kubens vänstra och främre sida
 lampans shadrar, deklarerar bara constant bufferns två första matriser, så inget i det här kapitlet ändrar den.
 :::
 
-Den här gången finns inga `// TODO:`-kommentarer: varje uppgift ändrar kod som redan finns, och uppgiftstexten talar
-om var. Efter varje uppgift trycker du på **Build & run** (Ctrl+Enter) för att kompilera programmet och köra det i den
-inbyggda simulatorn.
+Den här gången finns inga `// TODO:`-kommentarer: varje uppgift ändrar kod som redan finns, och uppgiftstexten talar om
+var. Efter varje uppgift bygger och kör du programmet i din IDE.
 
 Vi har skapat en material-struct i fragment shadern, så nu vill vi ändra ljusberäkningarna så att de följer de nya
 materialegenskaperna. Eftersom alla materialvariabler ligger i en struct kommer vi åt dem via medlemmen `material`:
@@ -406,8 +405,7 @@ C++-structen `Material` har `padding0` efter `ambient` och `padding1` efter `dif
 :::
 
 Gör nu den första uppgiften, **material**: lägg till structen `Material`, använd den i belysningen i stället för
-`objectColor`, de två styrkorna och 32:an, och sätt det korallfärgade materialet från programmet. Tryck sedan på
-**Build & run**.
+`objectColor`, de två styrkorna och 32:an, och sätt det korallfärgade materialet från programmet. Bygg och kör sedan.
 
 Kuben är alldeles för ljus! Ljusfärgen är fortfarande vit, (1.0, 1.0, 1.0), med full styrka för alla tre
 komponenterna – och den ambienta komponenten använder nu hela `material.ambient`. Förut skalades det ambienta ljuset
@@ -634,9 +632,9 @@ diffusa ljuset dämpas lite till (0.5, 0.5, 0.5); och det spekulära ljuset lyse
 Det är learnopengls värden; de exakta talen är en smaksak, så länge den ambienta delen förblir svag.
 
 Gör nu uppgiften **light**: lägg till structen `Light`, låt den ersätta `lightPos` och `lightColor`, använd dess
-intensiteter i de tre termerna och sätt dem från programmet. Tryck på **Build & run**: kuben ser normalt belyst ut
-igen, korallfärgad med en mörk vänstersida och en vitaktig högdager på framsidan – högdagern är vit eftersom ljusets
-spekulära färg är vit, dämpad av materialets spekulära färg 0.5.
+intensiteter i de tre termerna och sätt dem från programmet. Bygg och kör: kuben ser normalt belyst ut igen,
+korallfärgad med en mörk vänstersida och en vitaktig högdager på framsidan – högdagern är vit eftersom ljusets spekulära
+färg är vit, dämpad av materialets spekulära färg 0.5.
 
 ```quiz
 Med `light.ambient` = (0.2, 0.2, 0.2) och `material.ambient` = (1.0, 0.5, 0.31), vilken färg får en sida som bara nås av ambient ljus?
@@ -716,9 +714,9 @@ lagras tillbaka i constant bufferns `XMFLOAT3` med `XMStoreFloat3`.
 De tre komponenterna ändras med olika hastighet, så ljuset går igenom många olika färger över tid. Den diffusa färgen
 är hälften av den och den ambienta en femtedel av det, som förut; den spekulära delen förblir vit.
 
-Gör nu uppgiften **light-color** och tryck på **Build & run**. Kubens färg ändras nu över tid. Efter en sekund är
-ljusfärgen till exempel ungefär (0.91, 0.64, 0.96) och kuben är mörkt rödbrun. Lampan förblir vit: dess shader känner
-inte till ljusfärgen – att låta den följa ljuset är ett trevligt extra om du vill.
+Gör nu uppgiften **light-color** och bygg och kör sedan. Kubens färg ändras nu över tid. Efter en sekund är ljusfärgen
+till exempel ungefär (0.91, 0.64, 0.96) och kuben är mörkt rödbrun. Lampan förblir vit: dess shader känner inte till
+ljusfärgen – att låta den följa ljuset är ett trevligt extra om du vill.
 
 ```quiz
 Efter en sekund är ljusfärgen ungefär (0.91, 0.64, 0.96), en blek lila. Varför ser den korallfärgade kuben rödbrun ut och inte lila?
@@ -738,7 +736,7 @@ Experimentera med olika ljus- och materialvärden och se hur de påverkar result
   värdena rätt måste du sätta alla ljusintensiteter till (1.0, 1.0, 1.0) för att få samma resultat. learnopengls
   lösning är en behållare av **cyanfärgad plast**.
 
-Det här är ingen uppgift i projektet: prova den när du är klar med uppgifterna, och använd **Build & run** för att se
+Det här är ingen uppgift i projektet: prova den när du är klar med uppgifterna, och bygg och kör programmet för att se
 resultatet. Byt ut den föränderliga ljusfärgen mot ett vitt ljus med full intensitet och sätt materialet cyanfärgad
 plast:
 

@@ -53,8 +53,8 @@ rymmer CBV:n (plats 0) och marmorn (plats 1). Nya filer: `skybox.hlsl`, som bara
 sex bilder i `skybox/`.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift trycker du på **Build & run**
-(Ctrl+Enter) för att kompilera programmet och köra det i den inbyggda simulatorn.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
+IDE.
 
 ## Skapa en cube map
 
@@ -553,8 +553,8 @@ Upload heapen måste leva tills command listen som kopierar från den har körts
 variabel som lever till slutet av `LoadAssets`, som väntar på GPU:n.
 :::
 
-Gör nu den första uppgiften, **load-cubemap**, och tryck på **Build & run**. Ingenting ändras – cube mapen är inläst,
-men ingenting samplar den än. Det ändrar vi nu.
+Gör nu den första uppgiften, **load-cubemap**, och bygg och kör sedan. Ingenting ändras – cube mapen är inläst, men
+ingenting samplar den än. Det ändrar vi nu.
 
 :::opengl
 ```quiz
@@ -934,11 +934,11 @@ Varför använder skyboxen view-matrisen utan dess translation?
 Med translationen borttagen följer skyboxkuben med kameran, så himlen verkar oändligt långt borta. Rotationen finns kvar, så när du ser dig omkring syns andra delar av himlen.
 ```
 
-Gör nu uppgiften **skybox** och tryck på **Build & run**. Den mörkgrå bakgrunden är borta: bakom kuberna finns en blå
-himmel med moln, grå berg längs horisonten mitt i fönstret, ett ljust dis längs horisonten och gröna rutiga fält
-nedanför. Uppe i högra hörnet är himlen ljusare – solen ligger strax utanför synfältet. Kuberna är oförändrade och står
-framför himlen. Flytta kameran med musen och WASD-tangenterna: himlen vrids med dig när du ser dig omkring, men du
-kommer aldrig närmare bergen.
+Gör nu uppgiften **skybox** och bygg och kör sedan. Den mörkgrå bakgrunden är borta: bakom kuberna finns en blå himmel
+med moln, grå berg längs horisonten mitt i fönstret, ett ljust dis längs horisonten och gröna rutiga fält nedanför. Uppe
+i högra hörnet är himlen ljusare – solen ligger strax utanför synfältet. Kuberna är oförändrade och står framför himlen.
+Flytta kameran med musen och WASD-tangenterna: himlen vrids med dig när du ser dig omkring, men du kommer aldrig närmare
+bergen.
 
 ## En optimering
 
@@ -1077,8 +1077,8 @@ Skyboxen ritas sist med sitt djup tvingat till 1.0. Varför behöver den djupfun
 Djupbuffern rensas till 1.0 och skyboxens fragment har alla djupet 1.0. Bara "lika med" släpper igenom dem på de tomma pixlarna, medan allt som ligger närmare – kuberna – håller dem borta.
 ```
 
-Gör nu uppgiften **skybox-last** och tryck på **Build & run**. Ingenting syns ändras – och det är just poängen: bilden
-är densamma, men skyboxens fragment shader körs inte längre för de pixlar som kuberna täcker.
+Gör nu uppgiften **skybox-last** och bygg och kör sedan. Ingenting syns ändras – och det är just poängen: bilden är
+densamma, men skyboxens fragment shader körs inte längre för de pixlar som kuberna täcker.
 
 ## Environment mapping
 
@@ -1364,12 +1364,12 @@ Vad är `I` i reflektionsshadern, och varför måste kamerans position vara kän
 En spegel visar det som ligger i den speglade blickriktningen, så resultatet beror på varifrån du tittar. Därför behövs både kubfragmentets position (i världsrymden) och kamerans position.
 ```
 
-Gör nu uppgiften **reflection** och tryck på **Build & run**. Marmorn är borta, och kuberna har blivit speglar. När
-kameran tittar rakt på dem speglar deras framsidor himlen bakom kameran – som ser ungefär ut som himlen bakom kuberna:
-himmel upptill, ett band av berg, marken nedtill. Kuberna försvinner nästan in i bakgrunden; du ser dem bara där den
-speglade horisonten, molnen och fälten inte stämmer överens med himlen runt omkring. Flytta kameran för att se
-reflektionerna ändras. Tryck på A tills du står rakt framför den vänstra kuben, vid x = -1, och titta rakt på den:
-dess framsida speglar nu det som finns bakom dig – det rödvitrandiga tornet som står åt +Z, bakom standardkameran.
+Gör nu uppgiften **reflection** och bygg och kör sedan. Marmorn är borta, och kuberna har blivit speglar. När kameran
+tittar rakt på dem speglar deras framsidor himlen bakom kameran – som ser ungefär ut som himlen bakom kuberna: himmel
+upptill, ett band av berg, marken nedtill. Kuberna försvinner nästan in i bakgrunden; du ser dem bara där den speglade
+horisonten, molnen och fälten inte stämmer överens med himlen runt omkring. Flytta kameran för att se reflektionerna
+ändras. Tryck på A tills du står rakt framför den vänstra kuben, vid x = -1, och titta rakt på den: dess framsida
+speglar nu det som finns bakom dig – det rödvitrandiga tornet som står åt +Z, bakom standardkameran.
 
 När reflektion tillämpas på ett helt föremål (som en kub) ser föremålet ut att vara av ett starkt speglande material
 som stål eller krom. Om vi laddade en mer intressant modell skulle den se ut att vara helt gjord av krom. Det ser
@@ -1456,10 +1456,10 @@ Shadern använder `ratio = 1.00 / 1.52`. Vad beskriver det talet?
 `refract` böjer strålen enligt Snells lag, som beror på förhållandet mellan brytningsindexen på ytans båda sidor. För vatten i stället för glas skulle det vara 1.00 / 1.33.
 ```
 
-Gör den sista uppgiften, **refraction**, och tryck på **Build & run**. Kuberna ser nu ut som glasblock: du ser himlen
-bakom dem genom dem, men böjd – förstorad och förskjuten, så att bergen genom den vänstra kuben ser högre ut än runt
-omkring, och dess kontur syns som en lite annorlunda kvadrat mot himlen. Effekten blir mycket tydligare när du flyttar
-kameran; prova att gå runt kuberna.
+Gör den sista uppgiften, **refraction**, och bygg och kör sedan. Kuberna ser nu ut som glasblock: du ser himlen bakom
+dem genom dem, men böjd – förstorad och förskjuten, så att bergen genom den vänstra kuben ser högre ut än runt omkring,
+och dess kontur syns som en lite annorlunda kvadrat mot himlen. Effekten blir mycket tydligare när du flyttar kameran;
+prova att gå runt kuberna.
 
 Observera att vi för fysikaliskt korrekta resultat borde bryta ljuset igen när det lämnar föremålet; nu använde vi
 bara enkelsidig refraktion, vilket räcker för de flesta ändamål.

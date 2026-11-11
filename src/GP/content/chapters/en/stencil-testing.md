@@ -277,10 +277,10 @@ draw the borders, we draw scaled-up versions of the objects only where the stenc
 discarding all the fragments of the scaled-up versions that are part of the original objects' fragments using the
 stencil buffer.
 
-This chapter's project is the scene of *Depth testing* drawn normally (with textures and the depth function LESS),
-with one change, taken from learnopengl's stencil code: the loop draws the **floor first**, then the two cubes. With
-the depth test the order doesn't change the picture, but it matters for the stencil buffer, as you'll see. Press
-**Build & run** (Ctrl+Enter): the start picture is the one you know from the previous chapter.
+This chapter's project is the scene of *Depth testing* drawn normally (with textures and the depth function LESS), with
+one change, taken from learnopengl's stencil code: the loop draws the **floor first**, then the two cubes. With the
+depth test the order doesn't change the picture, but it matters for the stencil buffer, as you'll see. Build and run the
+program: the start picture is the one you know from the previous chapter.
 
 :::opengl
 The `// TODO:` comments mark where your code goes: after `glDepthFunc`, after the shader, at the `glClear` call, after
@@ -406,8 +406,8 @@ The stencil operations are KEEP (stencil test fails), KEEP (depth test fails), R
 REPLACE is only the third action, the one for "both tests pass". So a cube fragment hidden behind something nearer leaves the stencil buffer as it is: the 1s end up exactly where the cube is visible.
 ```
 
-Now do the task **stencil-buffer** and press **Build & run**. Nothing visible changes: the test function is ALWAYS,
-so every fragment passes and is drawn as before.
+Now do the task **stencil-buffer**, then build and run. Nothing visible changes: the test function is ALWAYS, so every
+fragment passes and is drawn as before.
 
 :::opengl
 (Every fragment also writes the reference value – OpenGL's default, 0.)
@@ -500,8 +500,7 @@ Keep the `// TODO:` line: the outline's depth and stencil state come in the last
 `TEXCOORD`; a vertex shader may ignore elements it doesn't read.
 :::
 
-Do the task **single-color** and press **Build & run**. Again nothing changes: nothing is drawn with the new shader
-yet.
+Do the task **single-color**, then build and run. Again nothing changes: nothing is drawn with the new shader yet.
 
 Now steps 1 to 3. We want to draw the cubes as normal and write 1 into the stencil buffer wherever they are drawn. The
 floor is drawn as well, but its fragments must *not* end up in the stencil buffer: we only care about the containers.
@@ -620,8 +619,8 @@ Why must the floor not write to the stencil buffer?
 The stencil buffer should hold 1 exactly where the cubes are. The ring of the scaled cubes lies over the background at the top and over the floor at the bottom; a floor that wrote 1 there would block the bottom of the outline.
 ```
 
-Do the task **write-stencil** and press **Build & run**. Once again the picture doesn't change – but the stencil buffer
-now holds 1 wherever a cube is visible and 0 everywhere else.
+Do the task **write-stencil**, then build and run. Once again the picture doesn't change – but the stencil buffer now
+holds 1 wherever a cube is visible and 0 everywhere else.
 
 Now that the stencil buffer is updated with 1s where the containers were drawn we're going to draw the upscaled
 containers, but this time with the appropriate test function and disabling writes to the stencil buffer: steps 4 to
@@ -794,9 +793,9 @@ Selecting `m_floorPipelineState` in the next frame brings its own state (depth t
 ```
 :::
 
-Now do the task **outline** and press **Build & run**. Both cubes now have a solid dark teal border, about 8 to 15
-pixels wide, around everything you can see of them – at the top over the background and at the bottom over the floor,
-because the depth test is off. The cubes themselves, the floor and the background are unchanged.
+Now do the task **outline**, then build and run. Both cubes now have a solid dark teal border, about 8 to 15 pixels
+wide, around everything you can see of them – at the top over the background and at the bottom over the floor, because
+the depth test is off. The cubes themselves, the floor and the background are unchanged.
 
 ```quiz
 The scaled cubes are drawn in full, but only a ring around each cube appears. Why?

@@ -1,9 +1,8 @@
 # {{api}}
 
-Before you write any code, it helps to know what {{api}} actually is, how it is organised and what kind of
-programming it asks of you. This chapter has no tasks: it is the theory you need for the next chapters. The project
-on the right is still the triangle program from the introduction, so you can build and run it and find the code
-this chapter talks about.
+Before you write any code, it helps to know what {{api}} actually is, how it is organised and what kind of programming
+it asks of you. This chapter has no tasks: it is the theory you need for the next chapters. Its start files are still
+the triangle program from the introduction, so you can build and run it and find the code this chapter talks about.
 
 :::opengl
 ## What OpenGL is
@@ -389,7 +388,7 @@ const bool enableValidationLayers = true;
 #endif
 ```
 
-In debug builds the layer is enabled, and the project's `debugCallback` prints its messages to the output as
+In debug builds the layer is enabled, and the project's `debugCallback` prints its messages to the program's console as
 `validation layer: …`. In release builds you switch it off and pay nothing for it. A correct program produces no
 validation errors – treat every one as a bug.
 
@@ -404,10 +403,10 @@ Vulkan itself checks very little to keep the driver fast. The validation layers 
 
 ## Shaders: SPIR-V
 
-Vulkan doesn't take shader source code. It takes **SPIR-V**, a binary intermediate format. You still write the
-shaders in a high-level language – in this course GLSL, as in OpenGL – and compile them to SPIR-V before the
-program runs (normally with `glslc` from the Vulkan SDK; here **Build & run** does it for you). The program then
-loads the compiled files:
+Vulkan doesn't take shader source code. It takes **SPIR-V**, a binary intermediate format. You still write the shaders
+in a high-level language – in this course GLSL, as in OpenGL – and compile them to SPIR-V before the program runs with
+`glslc` from the Vulkan SDK; the `CMakeLists.txt` from *Setting up your IDE* does that for you whenever you build. The
+program then loads the compiled files:
 
 ```cpp
 auto vertShaderCode = readFile("shaders/vert.spv");
@@ -696,9 +695,9 @@ OpenGL.
 
 ## Let's get started
 
-You now know a bit about what {{api}} is and how it works. In the next chapters you build the triangle program
-yourself: first a window, then a window cleared to a colour, then the triangle. Before you go on, you can build and
-run the project once more and find the code from this chapter in the editor.
+You now know a bit about what {{api}} is and how it works. In the next chapters you build the triangle program yourself:
+first a window, then a window cleared to a colour, then the triangle. Before you go on, set up your IDE – that is the
+next chapter – and build and run this chapter's start files: you will find the code from this chapter in them.
 
 ## Additional resources
 

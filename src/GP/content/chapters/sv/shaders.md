@@ -31,8 +31,8 @@ fragment shadern).
 :::
 
 Alla uppgifter i det här kapitlet ändrar ett program som redan fungerar, så den här gången finns det inga
-`// TODO:`-kommentarer: varje uppgift talar om vilka rader du ska ändra. Tryck efter varje uppgift på
-**Bygg & kör** (Ctrl+Enter) för att se resultatet i den inbyggda simulatorn.
+`// TODO:`-kommentarer: varje uppgift talar om vilka rader du ska ändra. Bygg och kör programmet efter varje uppgift för
+att se resultatet.
 
 ## {{shaderLanguage}}
 
@@ -1084,9 +1084,8 @@ låter drivrutinen kompilera och länka dem. Vulkan har inget sådant steg när 
 GLSL-kompilator i Vulkan-drivrutinen och inget "shaderprogram"-objekt att länka. I stället delas arbetet upp
 annorlunda:
 
-1. **Innan programmet körs** kompileras GLSL-filerna till SPIR-V av `glslc`, kompilatorn från Googles
-   shaderc-projekt som följer med Vulkan SDK. När du trycker på **Bygg & kör** gör bygget precis det som
-   vulkan-tutorials `compile`-skript gör:
+1. **Innan programmet körs** kompileras GLSL-filerna till SPIR-V av `glslc`, kompilatorn från Googles shaderc-projekt
+   som följer med Vulkan SDK. När du bygger gör bygget precis det som vulkan-tutorials `compile`-skript gör:
 
    ```text
    glslc shaders/shader.vert -o shaders/vert.spv
@@ -1326,9 +1325,9 @@ allt på en gång.
 `reinterpret_cast` är säker här eftersom `std::vector`s standardallokerare ger minne som är tillräckligt justerat
 för det.
 
-Lägg märke till vad som *inte* finns här jämfört med OpenGL: inget kompileringssteg och ingen infolog. GLSL-koden
-har redan kontrollerats och kompilerats av `glslc` under bygget. När du gör ett fel i en shader i övningarna nedan
-visas felet i byggutdatan med filnamn och rad, och programmet körs inte alls.
+Lägg märke till vad som *inte* finns här jämfört med OpenGL: inget kompileringssteg och ingen infolog. GLSL-koden har
+redan kontrollerats och kompilerats av `glslc` under bygget. När du gör ett fel i en shader i övningarna nedan visas
+felet i din IDE:s byggutdata med filnamn och rad, och programmet körs inte alls.
 :::
 :::d3d12
 `D3DCompileFromFile` läser filen åt oss, så vi har ingen egen kod för att läsa filer. Dess parametrar, i ordning:

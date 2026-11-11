@@ -67,12 +67,12 @@ function:
     }
 ```
 
-The project is the result of *Mesh*, with a new file `model.h`. Its `// TODO:` comments mark where your code goes:
-the constructor and `Draw`, the bodies of `loadModel`, `processNode` and `processMesh`, and the functions
-`loadMaterialTextures` and `TextureFromFile`. `main.cpp` now includes `"model.h"` (which includes `"mesh.h"`) and
-has two TODOs of its own: loading the model and drawing it. The program is linked with Assimp (`-lassimp`). Until
-the model is drawn, **Build & run** (Ctrl+Enter) shows only the dark grey background (0.05, 0.05, 0.05) – every step
-before that compiles and runs in the built-in simulator, it just doesn't draw anything yet.
+The project is the result of *Mesh*, with a new file `model.h`. Its `// TODO:` comments mark where your code goes: the
+constructor and `Draw`, the bodies of `loadModel`, `processNode` and `processMesh`, and the functions
+`loadMaterialTextures` and `TextureFromFile`. `main.cpp` now includes `"model.h"` (which includes `"mesh.h"`) and has
+two TODOs of its own: loading the model and drawing it. The program is linked with Assimp (`-lassimp`). Until the model
+is drawn, your program shows only the dark grey background (0.05, 0.05, 0.05) – every step before that compiles and
+runs, it just doesn't draw anything yet.
 :::
 :::vulkan
 Vulkan has no model loader, and like vulkan-tutorial.com's chapter *Loading models* we use the small header-only
@@ -87,10 +87,10 @@ the same four jobs in the application class, next to the vertex and index buffer
 | `loadMaterialTextures`, `TextureFromFile` | `createTextures()`: the four maps, at descriptor bindings 1–4 |
 | `Draw`: one draw per mesh, each with its own textures | one `vkCmdDrawIndexed`; the fragment shader picks each fragment's material |
 
-The project is the result of *Mesh*, unchanged: the test square, drawn in texture-coordinate colours (red = u,
-green = v) with one `vkCmdDrawIndexed`. There are no `// TODO:` comments this time: each task changes the code you
-wrote in the previous chapter, step by step, until the square has become the planet. Press **Build & run**
-(Ctrl+Enter) after each task to see the result in the built-in simulator.
+The project is the result of *Mesh*, unchanged: the test square, drawn in texture-coordinate colours (red = u, green =
+v) with one `vkCmdDrawIndexed`. There are no `// TODO:` comments this time: each task changes the code you wrote in the
+previous chapter, step by step, until the square has become the planet. Build and run the program after each task to see
+the result.
 :::
 :::d3d12
 Like learnopengl.com, we'll load the model with Assimp and translate it to `Mesh` objects of the class you wrote in
@@ -146,10 +146,10 @@ We also store the directory of the file path that we'll later need when loading 
 and basically loops over each of the meshes to call their respective `Draw` function.
 
 The project is the result of *Mesh*, with the `Model` class added. Its `// TODO:` comments mark where your code goes:
-the bodies of `loadModel`, `processNode` and `loadMaterialTextures`, and two parts of `processMesh`; and in
-`D3D12App`, the model member, loading it, freeing its upload buffers and drawing it. Until the model is drawn,
-**Build & run** (Ctrl+Enter) shows only the dark grey background (0.05, 0.05, 0.05) – every step before that compiles
-and runs in the built-in simulator, it just doesn't draw anything yet.
+the bodies of `loadModel`, `processNode` and `loadMaterialTextures`, and two parts of `processMesh`; and in `D3D12App`,
+the model member, loading it, freeing its upload buffers and drawing it. Until the model is drawn, your program shows
+only the dark grey background (0.05, 0.05, 0.05) – every step before that compiles and runs, it just doesn't draw
+anything yet.
 :::
 
 :::opengl d3d12
@@ -238,8 +238,8 @@ The constructor does nothing but call it:
 Note that `importer` is a local variable: the `aiScene` belongs to it and is freed when `loadModel` returns. That's
 fine, because by then everything we need has been copied into our own `Mesh` objects.
 
-Now do the first task, **load-model**: the constructor and `loadModel`. Press **Build & run**: nothing is drawn yet,
-because `main.cpp` doesn't create a `Model` – the program compiles and runs, and that's all for now.
+Now do the first task, **load-model**: the constructor and `loadModel`. Build and run: nothing is drawn yet, because
+`main.cpp` doesn't create a `Model` – the program compiles and runs, and that's all for now.
 :::
 :::d3d12
 ```cpp
@@ -271,8 +271,8 @@ that is `"models"`.
 Note that `importer` is a local variable: the `aiScene` belongs to it and is freed when `loadModel` returns. That's
 fine, because by then everything we need has been copied into our own `Mesh` objects.
 
-Now do the first task, **load-model**. Press **Build & run**: nothing is drawn yet, because nothing calls `Load` –
-the program compiles and runs, and that's all for now.
+Now do the first task, **load-model**. Build and run: nothing is drawn yet, because nothing calls `Load` – the program
+compiles and runs, and that's all for now.
 :::
 :::opengl d3d12
 If nothing went wrong, we want to process all of the scene's nodes. We pass the first node (the root node) to the
@@ -560,11 +560,11 @@ Without the map every corner would be a vertex of its own: 3168 vertices with in
 ```
 
 Now do the first task, **load-model**: the include, `MODEL_PATH`, the empty vectors and `loadModel()`, called before
-`createVertexBuffer()`. Press **Build & run**: the square has become the planet and its ring, seen slightly from
-above – still in texture-coordinate colours, because the fragment shader shows them as red and green. Each point's
-colour tells you its u (red) and v (green): the white-capped pole of the finished planet is now almost pure red
-(v ≈ 0 at the top of the image), and on the right of the ring you can see a sharp edge in the colours: the ring's
-seam, where its texture coordinates wrap around. All of it is still one `vkCmdDrawIndexed`, now with all of the model's indices.
+`createVertexBuffer()`. Build and run: the square has become the planet and its ring, seen slightly from above – still
+in texture-coordinate colours, because the fragment shader shows them as red and green. Each point's colour tells you
+its u (red) and v (green): the white-capped pole of the finished planet is now almost pure red (v ≈ 0 at the top of the
+image), and on the right of the ring you can see a sharp edge in the colours: the ring's seam, where its texture
+coordinates wrap around. All of it is still one `vkCmdDrawIndexed`, now with all of the model's indices.
 :::
 :::d3d12
 ```quiz
@@ -1275,9 +1275,9 @@ GPU measures by running fragments in 2×2 groups. Inside an `if` whose condition
 on the border between the ring and the planet – some of them don't run the `texture()` call, and the result is
 undefined. Sampling both outside the condition is always correct; for two textures the extra sample is cheap.
 
-Now do the task **material-textures** and press **Build & run**. The planet appears textured: blue oceans, green land
-and the white north pole at the top – the texture is upright – with the beige bands of the ring around it, seen from
-slightly above. This is the picture of learnopengl's `model_loading.cpp`: the diffuse texture only, no lighting.
+Now do the task **material-textures**, then build and run. The planet appears textured: blue oceans, green land and the
+white north pole at the top – the texture is upright – with the beige bands of the ring around it, seen from slightly
+above. This is the picture of learnopengl's `model_loading.cpp`: the diffuse texture only, no lighting.
 
 ```quiz
 The planet and the ring have different diffuse maps, but the whole model is one `vkCmdDrawIndexed`. How does a fragment of the ring get the colour of `rings.png`?
@@ -1356,9 +1356,9 @@ void main()
 }
 ```
 
-Now do the task **draw-model**: `Model::Draw`, and the two lines in `main.cpp`. Press **Build & run**: the planet
-appears, textured and unlit – blue oceans, green land, the white north pole at the top – with the beige ring around
-it, seen slightly from above. Its near side passes in front of the planet; behind the planet the depth test hides it.
+Now do the task **draw-model**: `Model::Draw`, and the two lines in `main.cpp`. Build and run: the planet appears,
+textured and unlit – blue oceans, green land, the white north pole at the top – with the beige ring around it, seen
+slightly from above. Its near side passes in front of the planet; behind the planet the depth test hides it.
 
 ```quiz
 The fragment shader samples only `texture_diffuse1`, yet the planet shows `planet_diffuse.png` and the ring `rings.png`. Why?
@@ -1424,9 +1424,9 @@ float4 PSMain(PSInput input) : SV_TARGET
 }
 ```
 
-Now do the task **draw-model** and press **Build & run**: the planet appears, textured and unlit – blue oceans, green
-land, the white north pole at the top – with the beige ring around it, seen slightly from above. Its near side passes
-in front of the planet; behind the planet the depth test hides it.
+Now do the task **draw-model**, then build and run: the planet appears, textured and unlit – blue oceans, green land,
+the white north pole at the top – with the beige ring around it, seen slightly from above. Its near side passes in front
+of the planet; behind the planet the depth test hides it.
 
 ```quiz
 When may `LoadAssets` release the textures' upload buffers (`m_model.uploadHeaps.clear()`)?
@@ -1870,9 +1870,9 @@ float4 PSMain(PSInput input) : SV_TARGET
 already covers two SRVs: only the shader had to start reading `t1`.
 :::
 
-Now do the task **lighting** and press **Build & run**. The planet is lit from the upper right front, where the light
-is: the side facing it is brightest, the lower left only gets the ambient light, and the whole picture is darker than
-before (at most 0.2 + 0.5 of the texture's colour, plus the highlight). The ring, a flat disc, is lit evenly.
+Now do the task **lighting**, then build and run. The planet is lit from the upper right front, where the light is: the
+side facing it is brightest, the lower left only gets the ambient light, and the whole picture is darker than before (at
+most 0.2 + 0.5 of the texture's colour, plus the highlight). The ring, a flat disc, is lit evenly.
 
 And the highlight? With this camera the reflection of the light falls a little right of and above the centre of the
 planet – on land. The planet's specular map is dark on land and bright on the oceans (the water shines, the ground

@@ -132,8 +132,7 @@ djupbuffern (`D32_FLOAT`). Varje textur utanför skärmen vilar i tillståndet `
 `RENDER_TARGET` med en barriär inför passet som ritar i den.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in; **Build & run** (Ctrl+Enter) kompilerar programmet och kör
-det i den inbyggda simulatorn.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in; du bygger och kör programmet i din IDE.
 
 ## Det ogenomskinliga passet
 

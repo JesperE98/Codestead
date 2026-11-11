@@ -52,9 +52,9 @@ once – we add it right away. (Unlike learnopengl's `mesh.h`, the code writes `
 header shouldn't say `using namespace std;` for every file that includes it. The vertex has only what OpenGL 3.3 needs
 here – learnopengl's tangents, bitangents and bone data belong to later chapters.)
 
-Now do the first task, **vertex-struct**, and press **Build & run** (Ctrl+Enter). Nothing changes on the screen – and
-nothing will in this chapter: like learnopengl's *Mesh* chapter, we only write the class here; the *Model* chapter
-creates the meshes and draws them. Every step still compiles and runs.
+Now do the first task, **vertex-struct**, then build and run the program. Nothing changes on the screen – and nothing
+will in this chapter: like learnopengl's *Mesh* chapter, we only write the class here; the *Model* chapter creates the
+meshes and draws them. Every step still compiles and runs.
 
 Knowing the actual representation of a vertex and a texture we can start defining the structure of the mesh class:
 
@@ -179,9 +179,9 @@ Where OpenGL refers to a texture by an id, Direct3D 12 has the texture resource 
 diffuse or a specular map, and `path` is the name of the file it came from; learnopengl adds that in the *Model*
 chapter, where it lets the model load every image file only once – we add it right away.
 
-Now do the first task, **vertex**, and press **Build & run** (Ctrl+Enter). Nothing changes on the screen – and nothing
-will in this chapter: like learnopengl's *Mesh* chapter, we only write the class here; the *Model* chapter creates the
-meshes and draws them. Every step still compiles and runs.
+Now do the first task, **vertex**, then build and run the program. Nothing changes on the screen – and nothing will in
+this chapter: like learnopengl's *Mesh* chapter, we only write the class here; the *Model* chapter creates the meshes
+and draws them. Every step still compiles and runs.
 
 Knowing the actual representation of a vertex and a texture we can start defining the structure of the mesh class:
 
@@ -425,8 +425,8 @@ The normal and the material number are read but not used yet; the *Model* chapte
 (An integer passed from the vertex to the fragment shader must be declared `flat`: it can't be interpolated between
 the corners of a triangle.)
 
-Now do the first task, **vertex**, and press **Build & run** (Ctrl+Enter). Nothing is drawn yet – the window stays
-dark grey – because nothing calls a draw command; that comes with the last task.
+Now do the first task, **vertex**, then build and run the program. Nothing is drawn yet – the window stays dark grey –
+because nothing calls a draw command; that comes with the last task.
 
 ### Comparing vertices
 
@@ -858,8 +858,8 @@ Finally, the mesh is drawn with its VAO: `glDrawElements` with `GL_UNSIGNED_INT`
 `unsigned int`. At the end the active texture unit goes back to `GL_TEXTURE0`, so code that binds a texture after
 the draw doesn't accidentally bind it to the mesh's last unit.
 
-Now do the task **draw-mesh** and press **Build & run**. The window still shows only the dark grey background: no
-mesh exists yet. The class is complete, though; the *Model* chapter loads the planet with Assimp, makes a `Mesh` for the planet and
+Now do the task **draw-mesh**, then build and run. The window still shows only the dark grey background: no mesh exists
+yet. The class is complete, though; the *Model* chapter loads the planet with Assimp, makes a `Mesh` for the planet and
 one for the ring, and calls their `Draw`.
 :::
 :::vulkan
@@ -887,11 +887,11 @@ As in *Hello Triangle*: the number of indices, one instance, the first index 0, 
 first instance 0. The descriptor set with the uniform buffer is bound as before. There are no textures to bind yet –
 in the next chapter they become part of the descriptor set, and the whole model is still this one draw call.
 
-Now do the task **draw** and press **Build & run**. The test square appears, tilted towards you by the model matrix's
-25° – wider at the top, where it is nearer – and coloured by its texture coordinates: black in the top-left corner
-(u = v = 0), red in the top right (u = 1), green in the bottom left (v = 1) and yellow in the bottom right (u = v =
-1), with a smooth blend between them. That is the proof that all four attributes reach the GPU in the right places:
-the position puts the square on the screen, and the texture coordinates arrive at offset 24 of each vertex.
+Now do the task **draw**, then build and run. The test square appears, tilted towards you by the model matrix's 25° –
+wider at the top, where it is nearer – and coloured by its texture coordinates: black in the top-left corner (u = v =
+0), red in the top right (u = 1), green in the bottom left (v = 1) and yellow in the bottom right (u = v = 1), with a
+smooth blend between them. That is the proof that all four attributes reach the GPU in the right places: the position
+puts the square on the screen, and the texture coordinates arrive at offset 24 of each vertex.
 :::
 :::d3d12
 The last function we need to define for the `Mesh` class to be complete is its `Draw` function. learnopengl binds the
@@ -931,9 +931,9 @@ the root arguments of each draw separately, so the first mesh's draw still reads
 (the base vertex) and the first instance 0. The primitive topology (a triangle list), the root signature, the heap and
 the model matrix are set in `PopulateCommandList` before the model is drawn.
 
-Now do the task **draw-mesh** and press **Build & run**. The window still shows only the dark grey background: no
-mesh exists yet. The class is complete, though – the *Model* chapter loads the planet with Assimp, makes a `Mesh` for
-the planet and one for the ring, and calls their `Draw`.
+Now do the task **draw-mesh**, then build and run. The window still shows only the dark grey background: no mesh exists
+yet. The class is complete, though – the *Model* chapter loads the planet with Assimp, makes a `Mesh` for the planet and
+one for the ring, and calls their `Draw`.
 :::
 
 :::opengl

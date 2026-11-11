@@ -51,8 +51,8 @@ the cubes' placements are learnopengl's translate · rotate · scale in DirectXM
 `XMMatrixScaling(…) * XMMatrixRotationAxis(…) * XMMatrixTranslation(…)`.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. Press **Build & run** (Ctrl+Enter) to compile it and
-run it in the built-in simulator: the lit floor and cubes – without any shadows yet.
+The `// TODO:` comments in the project mark where your code goes. Build and run it in your IDE: the lit floor and cubes
+– without any shadows yet.
 
 ## Splitting the frustum
 
@@ -391,9 +391,9 @@ frame. Nothing reads the matrices yet, so the picture stays the same.
 
 Five shadow maps could be five textures. learnopengl uses one **2D texture array** with five layers instead: one texture
 object, one binding in the shader, and the layer is just a third texture coordinate. It also lets the depth pass render
-all five at once, as we'll see. The course uses 1024 × 1024 texels per layer (learnopengl: 4096 × 4096 – the built-in
-simulator draws on the CPU), nearest filtering, and a border of depth 1.0 outside the map, so that nothing outside a
-cascade's box is in shadow.
+all five at once, as we'll see. The course uses 1024 × 1024 texels per layer (learnopengl: 4096 × 4096 – the course
+draws its checks and expected results on the CPU), nearest filtering, and a border of depth 1.0 outside the map, so that
+nothing outside a cascade's box is in shadow.
 
 :::opengl
 ```cpp

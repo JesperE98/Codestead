@@ -176,7 +176,7 @@ och en enhetsmatris som `model` på det innan den ritar de 36 hörnen med `cubeV
 :::
 :::vulkan
 Shaderfilerna är `shaders/colors.vert` och `shaders/colors.frag` (den belysta kuben) samt `shaders/light_cube.vert` och
-`shaders/light_cube.frag` (lampan – mer om dem nedan). **Build & run** kompilerar var och en till SPIR-V,
+`shaders/light_cube.frag` (lampan – mer om dem nedan). Din `CMakeLists.txt` kompilerar var och en till SPIR-V,
 `shaders/<namn>.vert.spv` och `shaders/<namn>.frag.spv`. Som förut ligger vy- och projektionsmatriserna i uniform
 buffern (fortfarande på **binding 2** – bindings 0 och 1 höll texturerna och kommer tillbaka med lighting maps), som
 `updateUniformBuffer()` fyller i varje bildruta, och modellmatrisen är en push constant. `Vertex`-structen innehåller
@@ -256,9 +256,8 @@ och samma block, med `compileFlags` överst, så att ett andra pipeline state ka
 `PopulateCommandList` sätter kubens modellmatris (`XMMatrixIdentity()`) som root constants och ritar de 36 hörnen.
 :::
 
-Projektets `// TODO:`-kommentarer visar var din kod ska in. Tryck på **Build & run** (Ctrl+Enter) när som helst för
-att kompilera programmet och köra det i den inbyggda simulatorn. I början ser du en platt **vit** kub mot den mörkgrå
-bakgrunden – kubens fragment shader skriver fortfarande bara vitt.
+Projektets `// TODO:`-kommentarer visar var din kod ska in. Bygg och kör programmet när som helst. I början ser du en
+platt **vit** kub mot den mörkgrå bakgrunden – kubens fragment shader skriver fortfarande bara vitt.
 
 ### Standardkameran
 
@@ -311,8 +310,8 @@ och med de gamla värdena (-90°, 0°) skulle kameran hoppa tillbaka till att ti
 *Materials* och *Lighting Maps* behåller den här kameran; *Light Casters* och *Multiple Lights* går tillbaka till
 (0, 0, 3).
 
-> Den inbyggda simulatorn kan inte trycka på tangenter eller flytta musen, så dess bild visar alltid den här
-> startvyn. På din egen dator kan du fortfarande flyga runt i scenen som i förra kapitlet.
+> Bilderna **Förväntat resultat** kan inte trycka på tangenter eller flytta musen, så de visar alltid den här startvyn.
+> I ditt eget program kan du fortfarande flyga runt i scenen som i förra kapitlet.
 
 ```quiz
 Varför låter kursen kameran börja i (-3, 0, 3) i stället för learnopengl:s (0, 0, 3)?

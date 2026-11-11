@@ -107,10 +107,10 @@ and indirectly by the irradiance map, in front of the environment. New in it:
   1.0)`), to look at the BRDF integration map for a moment.
 - The material's five maps for the last task.
 
-Three numbers are smaller than learnopengl's, because the built-in simulator runs on the CPU (a real GPU handles
-learnopengl's values easily): the pre-filter map has 64 × 64 texels per face instead of 128 × 128 (still with 5 mip
-levels), the pre-filter convolution and the BRDF integration take 128 samples instead of 1024, and the BRDF integration
-map is 128 × 128 instead of 512 × 512.
+Three numbers are smaller than learnopengl's, because the course draws its checks and expected results on the CPU (a
+real GPU handles learnopengl's values easily): the pre-filter map has 64 × 64 texels per face instead of 128 × 128
+(still with 5 mip levels), the pre-filter convolution and the BRDF integration take 128 samples instead of 1024, and the
+BRDF integration map is 128 × 128 instead of 512 × 512.
 
 :::opengl
 The files are `prefilter.fs`, `brdf.vs` (complete), `brdf.fs`, `debug_quad.fs` (complete) and the five `.png` maps;
@@ -876,10 +876,10 @@ For now, show the pre-filter map as the background: bind it instead of the envir
 let the background shader sample mip level **1.2** instead of 0.0 – between the levels for the roughness 0.25 and 0.5.
 Now do the first task, **prefilter-map**.
 
-Press **Build & run**: the background is **a blurred environment**. The sky is still blue-grey at the top, the hills
-are smeared away, and at the bottom left there is a large warm glow: an orange lamp of the environment, just outside
-the view on the left, spread out by the blur. There are no bright speckles anywhere – the mip-level trick at work. The
-spheres hardly change; the irradiance map is now made from an environment with mip levels.
+Build and run: the background is **a blurred environment**. The sky is still blue-grey at the top, the hills are smeared
+away, and at the bottom left there is a large warm glow: an orange lamp of the environment, just outside the view on the
+left, spread out by the blur. There are no bright speckles anywhere – the mip-level trick at work. The spheres hardly
+change; the irradiance map is now made from an environment with mip levels.
 
 ## Pre-computing the BRDF
 
@@ -1233,9 +1233,9 @@ to put roughness 0 at the bottom, as in OpenGL's picture:
 Only the *showing* is flipped; the texture's data matches OpenGL's.
 :::
 
-Now do the task **brdf-lut**. Press **Build & run**: **the red-green lookup texture fills the window** (the quad lies
-in front of everything; blue is 0 everywhere). Red on the right and at the bottom, darker red towards the top, and a
-green-yellow corner at the bottom left.
+Now do the task **brdf-lut**. Build and run: **the red-green lookup texture fills the window** (the quad lies in front
+of everything; blue is 0 everywhere). Red on the right and at the bottom, darker red towards the top, and a green-yellow
+corner at the bottom left.
 
 ```quiz
 In the BRDF integration map, what do the horizontal axis, the vertical axis and the two channels hold?
@@ -1421,12 +1421,12 @@ The pre-filter loop rendered level `mip` with `roughness = mip / 4`; reading lev
 Remove the debug quad again (its shader object or pipeline, and its draw), and show the environment map as the
 background again at level 0.0. Now do the task **specular**.
 
-Press **Build & run**: **the spheres reflect the environment**. On the smooth spheres of the left columns you see the
-sky in the upper half and the darker ground in the lower half, with the horizon between them; a large white spot up
-and to the right of the centre is the sun, which is behind the camera; small coloured spots near the rims are the lamps;
-and the four point lights' dots are still there. Towards the right the reflection blurs into a soft sheen. The metal
-rows reflect in their own red colour, and green and blue appear on the spheres for the first time: the specular
-reflection of non-metals is not tinted by the albedo. This is learnopengl's `2.2.1.ibl_specular`.
+Build and run: **the spheres reflect the environment**. On the smooth spheres of the left columns you see the sky in the
+upper half and the darker ground in the lower half, with the horizon between them; a large white spot up and to the
+right of the centre is the sun, which is behind the camera; small coloured spots near the rims are the lamps; and the
+four point lights' dots are still there. Towards the right the reflection blurs into a soft sheen. The metal rows
+reflect in their own red colour, and green and blue appear on the spheres for the first time: the specular reflection of
+non-metals is not tinted by the albedo. This is learnopengl's `2.2.1.ibl_specular`.
 
 The whole scene – direct light, diffuse IBL, specular IBL – costs the spheres' fragment shader three texture lookups
 for the environment; everything expensive happened once, before the first frame.
@@ -1462,13 +1462,13 @@ values – one fewer than `CaptureConstants`' 33 –, so root parameter 0 become
 / 4, …)`: the root constants must hold the largest struct sent through them.
 :::
 
-Now do the last task, **textured**. Press **Build & run**: nine large spheres of **riveted steel with rust in front of
-the sky**. The steel plates reflect the environment softly – bluish from the sky in the upper halves, darker below, a
-bright sheen where the sun and the point lights reflect –, the grooves and the four rivets around each sphere's middle
-catch the light on the sides that face it, and the rust patches stay matt orange-brown, now lit by the irradiance map
-(brighter than in the PBR Lighting chapter, where only the constant ambient term reached them). Compare the spheres:
-the ones at the top reflect more sky, the ones at the bottom more ground. This is the solution, and the end of
-learnopengl's PBR chapters.
+Now do the last task, **textured**. Build and run: nine large spheres of **riveted steel with rust in front of the
+sky**. The steel plates reflect the environment softly – bluish from the sky in the upper halves, darker below, a bright
+sheen where the sun and the point lights reflect –, the grooves and the four rivets around each sphere's middle catch
+the light on the sides that face it, and the rust patches stay matt orange-brown, now lit by the irradiance map
+(brighter than in the PBR Lighting chapter, where only the constant ambient term reached them). Compare the spheres: the
+ones at the top reflect more sky, the ones at the bottom more ground. This is the solution, and the end of learnopengl's
+PBR chapters.
 
 ## What's next?
 

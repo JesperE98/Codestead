@@ -279,7 +279,7 @@ and write the projection into the constant buffer in `OnUpdate`, after `Update`:
 ```
 :::
 
-Press **Build & run**: still black – the shader exists, but nothing is drawn with it yet.
+Build and run: still black – the shader exists, but nothing is drawn with it yet.
 
 Now that we have the shaders in place, we can write the sprite renderer – in learnopengl a class that holds a shader
 and a single vertex array object, with a `DrawSprite` function that draws a textured quad given a position, size,
@@ -708,14 +708,14 @@ and in `Render`:
 :::
 
 Now do the task **draw-sprite**: `DrawSprite` – for now only with the translation and the scale; the rotation lines are
-the next task –, the texture and the call. Press **Build & run**: **the green ball, stretched into an upright
-ellipse**, 300 pixels wide and 400 high, from (200, 200) to (500, 600). It is green only: the ball's own colours times
-(0, 1, 0) keep just their green channel. Its transparent corners don't show – blending, switched on in the previous
-chapter. The 45° are passed but not used yet.
+the next task –, the texture and the call. Build and run: **the green ball, stretched into an upright ellipse**, 300
+pixels wide and 400 high, from (200, 200) to (500, 600). It is green only: the ball's own colours times (0, 1, 0) keep
+just their green channel. Its transparent corners don't show – blending, switched on in the previous chapter. The 45°
+are passed but not used yet.
 
-Now do the task **rotate**: the three lines between the translation and the scale. Press **Build & run**: the ellipse
-is **turned 45° clockwise about its centre (350, 400)** – its long axis now runs from the lower left to the upper
-right. That is learnopengl's picture with the course's ball.
+Now do the task **rotate**: the three lines between the translation and the scale. Build and run: the ellipse is
+**turned 45° clockwise about its centre (350, 400)** – its long axis now runs from the lower left to the upper right.
+That is learnopengl's picture with the course's ball.
 
 ```quiz
 The sprite is drawn at `position` (200, 200) with `size` (300, 400). Where is its centre, the point it rotates about?

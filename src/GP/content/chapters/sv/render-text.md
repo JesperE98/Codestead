@@ -16,13 +16,13 @@ Textshadern är `shaders/text_2d.vert` / `shaders/text_2d.frag`.
 :::d3d12
 Textshadern är `text_2d.hlsl`.
 :::
-Bilderna tas vid **3,0 s** (bildruta 180).
+De förväntade resultaten visar spelet vid **3,0 s** (bildruta 180).
 
 Power-upsen fungerar, så deras test har gjort sitt jobb. Gör den första uppgiften, **remove-test**: ta bort kommentaren
 och de sex raderna `game.PowerUps.push_back(…)` i slutet av `Init`; `Init` slutar med bollens rad `MakeBallObject` igen.
-Tryck på **Build & run**: **det vanliga spelet igen** – inget fångas, bilden är inte förvirrad, racketen är 100 pixlar
-bred, och vid 3,0 s väntar bollen, som tappades i bildruta 151, på racketen. Det riktiga spelet skapar power-ups bara från
-block som går sönder.
+Bygg och kör: **det vanliga spelet igen** – inget fångas, bilden är inte förvirrad, racketen är 100 pixlar bred, och vid
+3,0 s väntar bollen, som tappades i bildruta 151, på racketen. Det riktiga spelet skapar power-ups bara från block som
+går sönder.
 
 ## Textrenderaren
 
@@ -384,8 +384,8 @@ I `Init` laddas typsnittet i **24 pixlar**:
 Load(Text, "fonts/Inter-Bold.otf", 24);
 ```
 
-(Simulatorn ersätter FreeType med det här typsnittets glyfer i 24 och 48 pixlar; med riktiga FreeType fungerar alla
-storlekar.) Gör nu uppgiften **load-font**. Inget ritar glyferna än: **ingen synlig förändring**.
+(Kursens kontroller ersätter FreeType med det här typsnittets glyfer i 24 och 48 pixlar; med riktiga FreeType i ditt
+program fungerar alla storlekar.) Gör nu uppgiften **load-font**. Inget ritar glyferna än: **ingen synlig förändring**.
 
 ## Spelarens liv
 
@@ -637,7 +637,7 @@ RenderText(Text, "Lives:" + std::to_string(game.Lives), 5.0f, 5.0f, 1.0f);
 ```
 
 learnopengl bygger strängen med en `std::stringstream`; `std::to_string` gör samma sak. Gör nu uppgiften
-**render-text**. Tryck på **Build & run**: **"Lives:2" i vitt uppe till vänster** – bollen har tappats en gång.
+**render-text**. Bygg och kör: **"Lives:2" i vitt uppe till vänster** – bollen har tappats en gång.
 :::opengl vulkan
 Sju ritanrop till, ett per tecken.
 :::
@@ -778,11 +778,11 @@ RenderText(Text, "Press W or S to select level", 245.0f, game.Height / 2.0f + 20
 Positionerna är learnopengls, gjorda för dess typsnitt; med Inter hamnar raderna lite till vänster om mitten. För att det
 ska fungera när spelet startar måste dess tillstånd börja som `GAME_MENU`: `GameState State = GAME_MENU;` i `Game`.
 
-Gör nu uppgiften **menu**. Tryck på **Build & run**: **menyn över banan** – "Press ENTER to start" och, mindre, "Press W
-or S to select level" mitt i fönstret, "Lives:3" uppe till vänster, bollen på racketen. Kursens fasta indata trycker
-aldrig på ENTER, så spelet startar aldrig: mellanslaget i bildrutorna 30 till 32 gör inget i menyn (bara `GAME_ACTIVE`
-läser det), bollen stannar på racketen – partiklarna fortsätter att skapas där, eftersom `Update` fortfarande körs – och
-inget liv går förlorat.
+Gör nu uppgiften **menu**. Bygg och kör: **menyn över banan** – "Press ENTER to start" och, mindre, "Press W or S to
+select level" mitt i fönstret, "Lives:3" uppe till vänster, bollen på racketen. Kursens fasta indata trycker aldrig på
+ENTER, så spelet startar aldrig: mellanslaget i bildrutorna 30 till 32 gör inget i menyn (bara `GAME_ACTIVE` läser det),
+bollen stannar på racketen – partiklarna fortsätter att skapas där, eftersom `Update` fortfarande körs – och inget liv
+går förlorat.
 
 ## Vinna
 
@@ -907,9 +907,9 @@ if (game.State == GAME_WIN)
 :::
 
 Lägg märke till att den sätter `KeysProcessed` för ENTER: samma tangenttryck skulle annars starta spelet i menyn direkt,
-i nästa bildruta. Gör nu uppgiften **win**. Inget block går sönder med de fasta indata, så spelet stannar i menyn: **ingen
-synlig förändring**. Och det var allt – spelets sista bit. Prova det: tryck själv på ENTER, A och D och mellanslag i
-programmet på din egen dator, anpassa det efter din smak och visa det för familj och vänner.
+i nästa bildruta. Gör nu uppgiften **win**. Inget block går sönder med de fasta indata, så spelet stannar i menyn:
+**ingen synlig förändring**. Och det var allt – spelets sista bit. Prova det: tryck själv på ENTER, A och D och
+mellanslag i ditt program, anpassa det efter din smak och visa det för familj och vänner.
 
 ```quiz
 `RenderText` räknar ut `ypos = y + (Characters['H'].Bearing.y - ch.Bearing.y) * scale`. Vad åstadkommer det?

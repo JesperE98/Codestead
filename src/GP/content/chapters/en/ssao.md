@@ -49,17 +49,17 @@ One point light, learnopengl's: at (2, 4, -2) – above and behind the planet, t
 `0.3 * Diffuse`, diffuse and specular (exponent 8), attenuated. It works in **view space**: the light's position is
 transformed by the view matrix before it is sent, and the viewer sits at the origin, so `viewDir = normalize(-FragPos)`.
 
-Two deviations from learnopengl's code, both for the same reason – the built-in simulator computes every pixel on the
-CPU, and the SSAO pass is one of the most expensive passes in this course:
+Two deviations from learnopengl's code, both for the same reason – the course computes every pixel of its checks and
+expected results on the CPU, and the SSAO pass is one of the most expensive passes in this course:
 
 - **32 kernel samples instead of 64.** That halves the SSAO pass's work; the result is a little noisier before the blur
   and practically the same after it.
 - **`rand()` instead of `std::uniform_real_distribution`.** learnopengl draws its random floats with
-  `std::uniform_real_distribution<GLfloat>` and `std::default_random_engine`, and the numbers that engine produces differ
-  between standard libraries. The course uses `srand(42)` and `rand() / (float)RAND_MAX` – a float between 0.0 and 1.0 –
-  whose sequence the simulator reproduces (glibc's), so the preview shows the same kernel and noise as the real program,
-  every run. On Windows, Microsoft's `rand()` (with a `RAND_MAX` of 32767) gives other numbers: the picture looks the same,
-  the noise differs in detail.
+  `std::uniform_real_distribution<GLfloat>` and `std::default_random_engine`, and the numbers that engine produces
+  differ between standard libraries. The course uses `srand(42)` and `rand() / (float)RAND_MAX` – a float between 0.0
+  and 1.0 – whose sequence the course's pictures reproduce (glibc's), so the **Expected result** shows the same kernel
+  and noise as your program on Linux, every run. On Windows, Microsoft's `rand()` (with a `RAND_MAX` of 32767) gives
+  other numbers: the picture looks the same, the noise differs in detail.
 
 :::opengl
 The start is a deferred renderer like the last chapter's: `main.cpp` draws the room (`renderCube()` with
@@ -94,12 +94,12 @@ learnopengl's shared `ssao.vs` as `VSMain` – a pipeline state takes its shader
 `ssao_blur.hlsl` have their declarations; their `PSMain` is a TODO (they aren't compiled before you need them).
 :::
 
-The `// TODO:` comments in the project mark where your code goes. Press **Build & run** (Ctrl+Enter) to compile the
-program and run it in the built-in simulator: the inside of a large grey room lit blue from the upper right – the back
-wall, the floor below a thin edge line, and the grey planet in the middle, standing on the floor. Its front faces away
-from the light and gets only the ambient light; its upper right edge is lit blue. The ring crosses in front of it from
-one side of the window to the other, just above the eye: you see it **from below**. Everything that isn't lit directly is
-the same flat grey; nothing shows where the planet touches the floor.
+The `// TODO:` comments in the project mark where your code goes. Build and run the program in your IDE: the inside of a
+large grey room lit blue from the upper right – the back wall, the floor below a thin edge line, and the grey planet in
+the middle, standing on the floor. Its front faces away from the light and gets only the ambient light; its upper right
+edge is lit blue. The ring crosses in front of it from one side of the window to the other, just above the eye: you see
+it **from below**. Everything that isn't lit directly is the same flat grey; nothing shows where the planet touches the
+floor.
 
 ## Sample buffers
 
@@ -928,11 +928,11 @@ What is the range check `smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDep
 Within the radius the check is 1.0 and the sample counts fully; at twice the radius it's down to about 0.5 and keeps falling. Without it you'd see dark halos around the planet on the back wall.
 ```
 
-Press **Build & run**: the window shows **the raw SSAO texture in grey**. White where nothing occludes: most of the
-planet, the floor, the walls. Grey where something does: a contact shadow on the floor right under the planet, a thin
-grey line along the edge between the floor and the back wall, a faint band on the planet just above the ring – and the
-**ring's underside, dark**, darkest towards its outer edge. The grey areas are dithered in a fine regular pattern:
-the 4 × 4 noise, each pixel rotated by one of the 16 vectors, the pattern repeating every 4 pixels.
+Build and run: the window shows **the raw SSAO texture in grey**. White where nothing occludes: most of the planet, the
+floor, the walls. Grey where something does: a contact shadow on the floor right under the planet, a thin grey line
+along the edge between the floor and the back wall, a faint band on the planet just above the ring – and the **ring's
+underside, dark**, darkest towards its outer edge. The grey areas are dithered in a fine regular pattern: the 4 × 4
+noise, each pixel rotated by one of the 16 vectors, the pattern repeating every 4 pixels.
 
 Why is the ring so dark? The ring is a single flat plane whose normal points up (+y), and the camera sees its underside.
 SSAO puts the hemisphere of samples on the normal's side – above the ring, which is *behind* the ring's surface as the
@@ -1107,9 +1107,9 @@ Why does the blur average exactly a 4 × 4 block of texels?
 A smaller block would leave part of the pattern; a larger one would blur the occlusion itself more than needed.
 ```
 
-Press **Build & run**: the window shows **the smooth AO**. The dither is gone; the ring's underside is a soft dark
-gradient, the contact shadow under the planet a smooth grey patch, the floor/wall edge a soft line, and the band on the
-planet above the ring a little wider and softer. Everything else is still white.
+Build and run: the window shows **the smooth AO**. The dither is gone; the ring's underside is a soft dark gradient, the
+contact shadow under the planet a smooth grey patch, the floor/wall edge a soft line, and the band on the planet above
+the ring a little wider and softer. Everything else is still white.
 
 ## Applying ambient occlusion
 
@@ -1180,8 +1180,8 @@ Why does the occlusion factor multiply only the ambient term, not the diffuse an
 In this scene the planet's front gets only ambient light, so that's where the occlusion shows best; the lit parts barely change.
 ```
 
-Press **Build & run**: the lit scene is back, **darker where the AO was grey**. The ring's underside is much darker than
-before (its outer parts lose half to two thirds of their brightness), the floor right under the planet has a soft contact
+Build and run: the lit scene is back, **darker where the AO was grey**. The ring's underside is much darker than before
+(its outer parts lose half to two thirds of their brightness), the floor right under the planet has a soft contact
 shadow that sets the planet on the floor, and the floor/wall edge is a little darker. The open floor, the walls, the
 planet's front and its lit edge are unchanged. That is the solution, and learnopengl's SSAO.
 

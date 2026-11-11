@@ -29,8 +29,8 @@ scene – the two marble cubes, the metal floor, the camera at (0, 0, 3) – and
 gets into the buffers, not *what* is drawn. **After every task the picture is exactly the same.** That is the point:
 the tasks check your code, and the unchanged picture proves the data arrived where the GPU expects it.
 
-The `// TODO:` comments in the project mark where your code goes. After each task, press **Build & run**
-(Ctrl+Enter) to compile the program and run it in the built-in simulator.
+The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
+IDE.
 
 ## Filling buffers
 
@@ -422,9 +422,9 @@ at the first texture coordinates:
 and its draw binds them with `IASetVertexBuffers(0, 2, m_floorVertexBufferViews)`.
 :::
 
-Press **Build & run**: the marble on the cubes is exactly the same. Which approach is better? Neither is wrong for
-{{api}}; the interleaved approach is still the most common one, since the vertex attributes for each vertex shader run
-are then closely aligned in memory.
+Build and run: the marble on the cubes is exactly the same. Which approach is better? Neither is wrong for {{api}}; the
+interleaved approach is still the most common one, since the vertex attributes for each vertex shader run are then
+closely aligned in memory.
 
 ```quiz
 You batch the 36 positions (3 floats each) of a cube and then its 36 texture coordinates (2 floats each) into one buffer. A float is 4 bytes. At which byte does the block of texture coordinates start?
@@ -635,7 +635,7 @@ waits for the GPU – the upload buffer must still exist at that point. The view
 `m_vertexBuffer`, now in a default heap.
 :::
 
-Press **Build & run**: the floor and the cubes are drawn exactly as before – now from copied data.
+Build and run: the floor and the cubes are drawn exactly as before – now from copied data.
 
 ```quiz
 What happens to the data during a buffer-to-buffer copy (`glCopyBufferSubData`, `vkCmdCopyBuffer`, `CopyBufferRegion`)?

@@ -14,11 +14,11 @@ extra vertices.
 > Next to images, textures can also be used to store a large collection of arbitrary data to send to the shaders,
 > but we'll leave that for a different topic.
 
-In this chapter you put two images on the rectangle from the previous chapters: a wooden crate, `container.png`,
-and a smiley, `awesomeface.png`. Both are 256×256 pixels and both are part of the project – click them in the
-editor and they open as image tabs. `container.png` has three channels (RGB). `awesomeface.png` has four (RGBA):
-around the face it is transparent, and those transparent pixels are stored as **black** with an alpha of 0. Keep
-that in mind; it will explain something you see later.
+In this chapter you put two images on the rectangle from the previous chapters: a wooden crate, `container.png`, and a
+smiley, `awesomeface.png`. Both are 256×256 pixels and both are part of the project – **Copy start files** puts them
+into your project folder. `container.png` has three channels (RGB). `awesomeface.png` has four (RGBA): around the face
+it is transparent, and those transparent pixels are stored as **black** with an alpha of 0. Keep that in mind; it will
+explain something you see later.
 
 :::opengl
 This chapter's project is the indexed rectangle of *Hello Triangle* with the `Shader` class of the *Shaders*
@@ -47,8 +47,8 @@ Microsoft's D3D12HelloTexture sample – except that the sample generates a blac
 while we load real images.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, press **Build & run**
-(Ctrl+Enter) to compile the program and run it in the built-in simulator.
+The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
+IDE.
 
 ## Texture coordinates
 
@@ -340,8 +340,8 @@ and does all the hard work for us. A library like `stb_image.h`.
 
 :::d3d12
 > Windows programs often load images with the Windows Imaging Component (WIC), which is part of Windows, or with
-> Microsoft's DirectXTex library, which also reads DDS files with ready-made mipmaps. This course uses `stb_image.h`
-> for all three APIs, so the loading code is the same everywhere and runs in the built-in simulator.
+> Microsoft's DirectXTex library, which also reads DDS files with ready-made mipmaps. This course uses `stb_image.h` for
+> all three APIs, so the loading code is the same everywhere.
 :::
 
 ### stb_image.h
@@ -390,9 +390,9 @@ the row at t = 0, the bottom. Without help the crate would therefore end up upsi
 `stbi_set_flip_vertically_on_load(true)` tells `stb_image.h` to flip the image on the y-axis while loading, so the
 bottom row comes first and the image appears upright.
 
-Now do the first task, **load-image**: include `stb_image.h` (after the GLFW include) and load `container.png` as
-shown above, at the second `// TODO:` in `main.cpp`. Leave the inside of `if (data)` for the next tasks. Nothing
-visible changes yet – but if the file can't be loaded, you'll see `Failed to load texture` in the output.
+Now do the first task, **load-image**: include `stb_image.h` (after the GLFW include) and load `container.png` as shown
+above, at the second `// TODO:` in `main.cpp`. Leave the inside of `if (data)` for the next tasks. Nothing visible
+changes yet – but if the file can't be loaded, you'll see `Failed to load texture` in the program's console.
 :::
 :::vulkan
 In `createTextureImage()`:

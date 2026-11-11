@@ -19,12 +19,12 @@ learnopengls frustum-demo ersätter kedjan av planeter med ett rutnät: många p
 rutnät har 10 × 10 barn, 5 enheter isär, i de lokala positionerna (x · 5 − 22.5, 0, z · 5 − 22.5) för x och z från 0
 till 9, var och en hälften så stor som roten – 101 planeter totalt. learnopengls demo har 20 × 20 planeter 10 enheter
 isär, sedda från (0, 10, 0); kursen behåller förra kapitlets kamera i (3, 6, 12), som tittar nedåt 25°, och färre
-planeter, eftersom den inbyggda simulatorn ritar på CPU:n. Roten fortsätter att vrida sig 20° per sekund, som i slutet av
-förra kapitlet, så hela rutnätet vrider sig kring origo och vilka planeter som syns ändras med tiden. Skärmbilderna tas
-vid 2.0 s, med rutnätet vridet 40°.
+planeter, eftersom kursen ritar sina kontroller och förväntade resultat på CPU:n. Roten fortsätter att vrida sig 20° per
+sekund, som i slutet av förra kapitlet, så hela rutnätet vrider sig kring origo och vilka planeter som syns ändras med
+tiden. De förväntade resultaten visar rutnätet vid 2.0 s, med rutnätet vridet 40°.
 
-Projektet är förra kapitlets lösning med tre nya `// TODO:`-kommentarer. **Build & run** (Ctrl+Enter) kompilerar det och
-kör det i den inbyggda simulatorn: den vridna kedjan av planeter.
+Projektet är förra kapitlets lösning med tre nya `// TODO:`-kommentarer. Bygg och kör det i din IDE: du ser den vridna
+kedjan av planeter.
 
 :::opengl
 Rutnätet byggs med två nästlade loopar, där kedjan byggdes förut:
@@ -846,9 +846,9 @@ I modellrummet sitter lådan tätare än sfären kring den platta planeten med r
 ## Vad culling sparar – och vad den inte sparar
 
 Frustum culling sparar arbete på båda sidor: CPU:n spelar in och skickar färre draw-anrop (och i en riktig motor sätter
-den färre tillstånd och laddar upp färre konstanter), och GPU:n kör färre vertexar genom vertex shadern och klipper färre
-trianglar. I den här scenen hoppas 64 av 101 planeter över i ögonblicket för skärmbilden. Cullingen kostar några
-skalärprodukter per entitet och bildruta – långt mindre än att rita entiteten.
+den färre tillstånd och laddar upp färre konstanter), och GPU:n kör färre vertexar genom vertex shadern och klipper
+färre trianglar. I den här scenen hoppas 64 av 101 planeter över i ögonblicket för det förväntade resultatet. Cullingen
+kostar några skalärprodukter per entitet och bildruta – långt mindre än att rita entiteten.
 
 Det den *inte* sparar:
 

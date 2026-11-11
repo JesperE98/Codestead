@@ -110,9 +110,8 @@ Material { float shininess; }`, cbuffern `SceneConstantBuffer` med `view`, `proj
 ljusen, och en fjärde `// TODO:` i `PopulateCommandList` markerar var lamporna ritas.
 :::
 
-`// TODO:`-kommentarerna markerar var din kod ska in. Efter varje uppgift trycker du på **Build & run** (Ctrl+Enter)
-för att kompilera programmet och köra det i den inbyggda simulatorn. Bygg det en gång nu: utan något ljus alls är alla
-tio behållarna svarta mot den mörkgrå bakgrunden.
+`// TODO:`-kommentarerna markerar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din IDE. Bygg
+det en gång nu: utan något ljus alls är alla tio behållarna svarta mot den mörkgrå bakgrunden.
 
 > Som i *Light casters* använder vi learnopengls kamera i (0, 0, 3), så att alla tio behållarna syns. I slutet av
 > kapitlet ser du att det döljer de flesta lamporna: de ligger utanför fönstret eller bakom behållare.
@@ -1285,8 +1284,8 @@ kameran i (0, 0, 3) som tittar längs -z:
 - lampa 3 i (-4.0, 2.0, -12.0) är dold bakom behållare 9, nära det övre vänstra hörnet;
 - lampa 4 i (0.0, 0.0, -3.0) ligger rakt bakom behållare 0.
 
-Koden är rätt ändå: fyra ritanrop till med lampans shaders. På din egen dator kan du backa med S och titta runt med
-musen, så dyker de fyra lamporna upp där ljuset kommer ifrån.
+Koden är rätt ändå: fyra ritanrop till med lampans shaders. I ditt program kan du backa med S och titta runt med musen,
+så dyker de fyra lamporna upp där ljuset kommer ifrån.
 
 ```quiz
 Efter uppgiften **lamps** ser du bara en smal vit strimma vid högra kanten. Var är de andra lamporna?
@@ -1319,29 +1318,29 @@ stämningar.
   **skräckscen** och ett **biokemiskt laboratorium** – genom att justera ljusens attributvärden?
 
 :::opengl
-Det här är ingen uppgift i projektet: prova när du är klar med uppgifterna, och använd **Build & run** för att
-jämföra. Ändra clear-färgen i `glClearColor` och ljusens färger i renderloopen. För en öken kan du till exempel göra
-allt varmt: en gulaktig clear-färg, ett starkt gulvitt riktat ljus och orange punktljus. För en skräckscen: en nästan
-svart clear-färg, ett mycket svagt riktat ljus, dämpade rödaktiga punktljus med kort räckvidd (linear 0.14, quadratic
-0.07 eller kortare räckvidder ur tabellen i *Light casters*) och en smal ficklampa. Kom ihåg att ge lamporna
-punktljusens färger också om du vill att de ska stämma – det kräver en färguniform i `light_cube.fs`.
+Det här är ingen uppgift i projektet: prova när du är klar med uppgifterna, och bygg och kör programmet för att jämföra.
+Ändra clear-färgen i `glClearColor` och ljusens färger i renderloopen. För en öken kan du till exempel göra allt varmt:
+en gulaktig clear-färg, ett starkt gulvitt riktat ljus och orange punktljus. För en skräckscen: en nästan svart
+clear-färg, ett mycket svagt riktat ljus, dämpade rödaktiga punktljus med kort räckvidd (linear 0.14, quadratic 0.07
+eller kortare räckvidder ur tabellen i *Light casters*) och en smal ficklampa. Kom ihåg att ge lamporna punktljusens
+färger också om du vill att de ska stämma – det kräver en färguniform i `light_cube.fs`.
 :::
 :::vulkan
-Det här är ingen uppgift i projektet: prova när du är klar med uppgifterna, och använd **Build & run** för att
-jämföra. Ändra clear-färgen (`clearValues[0].color` i `recordCommandBuffer()`) och ljusens färger i
-`updateUniformBuffer()`. För en öken kan du till exempel göra allt varmt: en gulaktig clear-färg, ett starkt gulvitt
-riktat ljus och orange punktljus. För en skräckscen: en nästan svart clear-färg, ett mycket svagt riktat ljus,
-dämpade rödaktiga punktljus med kort räckvidd (linear 0.14, quadratic 0.07 eller kortare räckvidder ur tabellen i
-*Light casters*) och en smal ficklampa. Om du vill att lamporna också ska visa punktljusens färger, ge lampans shader
-en färg – till exempel i push constants.
+Det här är ingen uppgift i projektet: prova när du är klar med uppgifterna, och bygg och kör programmet för att jämföra.
+Ändra clear-färgen (`clearValues[0].color` i `recordCommandBuffer()`) och ljusens färger i `updateUniformBuffer()`. För
+en öken kan du till exempel göra allt varmt: en gulaktig clear-färg, ett starkt gulvitt riktat ljus och orange
+punktljus. För en skräckscen: en nästan svart clear-färg, ett mycket svagt riktat ljus, dämpade rödaktiga punktljus med
+kort räckvidd (linear 0.14, quadratic 0.07 eller kortare räckvidder ur tabellen i *Light casters*) och en smal
+ficklampa. Om du vill att lamporna också ska visa punktljusens färger, ge lampans shader en färg – till exempel i push
+constants.
 :::
 :::d3d12
-Det här är ingen uppgift i projektet: prova när du är klar med uppgifterna, och använd **Build & run** för att
-jämföra. Ändra clear-färgen (`clearColor` i `PopulateCommandList`) och ljusens färger i `OnUpdate`. För en öken kan du
-till exempel göra allt varmt: en gulaktig clear-färg, ett starkt gulvitt riktat ljus och orange punktljus. För en
-skräckscen: en nästan svart clear-färg, ett mycket svagt riktat ljus, dämpade rödaktiga punktljus med kort räckvidd
-(linear 0.14, quadratic 0.07 eller kortare räckvidder ur tabellen i *Light casters*) och en smal ficklampa. Om du vill
-att lamporna också ska visa punktljusens färger, ge `light_cube.hlsl` en färg – till exempel i root constants.
+Det här är ingen uppgift i projektet: prova när du är klar med uppgifterna, och bygg och kör programmet för att jämföra.
+Ändra clear-färgen (`clearColor` i `PopulateCommandList`) och ljusens färger i `OnUpdate`. För en öken kan du till
+exempel göra allt varmt: en gulaktig clear-färg, ett starkt gulvitt riktat ljus och orange punktljus. För en skräckscen:
+en nästan svart clear-färg, ett mycket svagt riktat ljus, dämpade rödaktiga punktljus med kort räckvidd (linear 0.14,
+quadratic 0.07 eller kortare räckvidder ur tabellen i *Light casters*) och en smal ficklampa. Om du vill att lamporna
+också ska visa punktljusens färger, ge `light_cube.hlsl` en färg – till exempel i root constants.
 :::
 
 Det här var det sista kapitlet i delen *Lighting*. Allt du har lärt dig här – Phong-modellen, material, lighting maps
