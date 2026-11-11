@@ -22,6 +22,7 @@
 #include <cstdio>
 #include <cstring>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 // The libraries to link: d3d12.lib, dxgi.lib and d3dcompiler.lib (Visual Studio reads these lines).
@@ -121,6 +122,7 @@ private:
     // App resources.
     ComPtr<ID3D12Resource> m_vertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+    UINT m_vertexCount = 0;       // one vertex per pixel of the height map
     ComPtr<ID3D12Resource> m_indexBuffer;
     D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};
     int m_numStrips = 0;          // one triangle strip per pair of rows of the height map
@@ -347,6 +349,12 @@ void D3D12App::LoadAssets()
     {
         throw std::runtime_error("Failed to load texture heightmap.png");
     }
+    {
+        // the debugger's output window (Visual Studio's Output) shows the text
+        char text[128] = {};
+        snprintf(text, sizeof(text), "Loaded heightmap of size %d x %d\n", height, width);
+        OutputDebugStringA(text);
+    }
 
     // set up vertex data: one vertex per pixel of the height map, its height from the pixel's value
     // ---------------------------------------------------------------------------------------------
@@ -366,34 +374,8 @@ void D3D12App::LoadAssets()
             vertices.push_back(-height / 2.0f + height * i / (float)height); // vz
         }
     }
+    m_vertexCount = static_cast<UINT>(vertices.size() / 3);
     stbi_image_free(data);
-
-    // index data: one triangle strip per pair of rows (rows i and i + rez), every rez-th vertex,
-    // zig-zagging between the two rows - each new index makes a triangle with the two before it
-    // -----------------------------------------------------------------------------------------
-    std::vector<unsigned int> indices;
-    int rez = 1;
-    for (int i = 0; i < height - 1; i += rez)
-    {
-        for (int j = 0; j < width; j += rez)
-        {
-            for (int k = 0; k < 2; k++)
-            {
-                indices.push_back(j + width * (i + k * rez));
-            }
-        }
-    }
-
-    m_numStrips = (height - 1) / rez;
-    m_numTrisPerStrip = (width / rez) * 2 - 2;
-
-    // Some numbers, in the debugger's output window.
-    {
-        char text[256] = {};
-        snprintf(text, sizeof(text), "Loaded heightmap of size %d x %d: %d vertices, %d strips with %d triangles each\n",
-            height, width, static_cast<int>(vertices.size() / 3), m_numStrips, m_numTrisPerStrip);
-        OutputDebugStringA(text);
-    }
 
     // Create the vertex buffer: the terrain's vertices, 3 floats each.
     {
@@ -423,6 +405,29 @@ void D3D12App::LoadAssets()
         m_vertexBufferView.SizeInBytes = vertexBufferSize;
     }
 
+    // index data: one triangle strip per pair of rows (rows i and i + rez), every rez-th vertex
+    // -----------------------------------------------------------------------------------------
+    std::vector<unsigned int> indices;
+    int rez = 1;
+    for (int i = 0; i < height - 1; i += rez)
+    {
+        for (int j = 0; j < width; j += rez)
+        {
+            for (int k = 0; k < 2; k++)
+            {
+                indices.push_back(j + width * (i + k * rez));
+            }
+        }
+    }
+
+    m_numStrips = (height - 1) / rez;
+    m_numTrisPerStrip = (width / rez) * 2 - 2;
+    {
+        char text[128] = {};
+        snprintf(text, sizeof(text), "Created lattice of %d strips with %d triangles each\n", m_numStrips, m_numTrisPerStrip);
+        OutputDebugStringA(text);
+    }
+
     // Create the index buffer: 32-bit unsigned indices.
     {
         const UINT indexBufferSize = static_cast<UINT>(indices.size() * sizeof(unsigned int));
@@ -443,6 +448,7 @@ void D3D12App::LoadAssets()
         memcpy(pIndexDataBegin, indices.data(), indexBufferSize);
         m_indexBuffer->Unmap(0, nullptr);
 
+        // Initialize the index buffer view.
         m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
         m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
         m_indexBufferView.SizeInBytes = indexBufferSize;

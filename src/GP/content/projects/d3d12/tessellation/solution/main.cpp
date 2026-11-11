@@ -22,6 +22,7 @@
 #include <cstdio>
 #include <cstring>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 // The libraries to link: d3d12.lib, dxgi.lib and d3dcompiler.lib (Visual Studio reads these lines).
