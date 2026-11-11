@@ -213,6 +213,7 @@ public partial class LearningWindow
     {
         RenderWorkbench();
         RenderSidebar();
+        tool.TasksUnlocked(Chapter.Id);
         if (!smokeTest) tool.FocusWorkbench();
     }
 }
