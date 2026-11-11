@@ -33,9 +33,11 @@ adapter (graphics card), the **device** and the **command queue**. That is the b
 the D3D12HelloWindow sample.
 :::
 
-The project on the right already contains the program's skeleton. `// TODO:` comments mark where your code goes,
-and **Build & run** (Ctrl+Enter) compiles the project and runs it in the built-in simulator. If you'd rather also
-run the program on your own machine, each API has a short *building it yourself* section below.
+The chapter's start files already contain the program's skeleton: copy them into this chapter's folder with
+**Copy start files**, add your `CMakeLists.txt` and open the folder in your IDE. `// TODO:` comments mark where your
+code goes; after each task you build and run the program in your IDE, and the app ticks the task. How to set up the
+IDE, the compiler and the libraries is the subject of the previous chapter, *Setting up your IDE*; the sections below
+explain what each piece is for, the way learnopengl.com does.
 
 ```quiz
 Why does a graphics program need a library like GLFW, or the operating system's own window functions, to get a window?
@@ -129,30 +131,17 @@ sure **Generate a loader** is ticked, and press **Generate**. You get a zip file
 (`include/glad/glad.h` and `include/KHR/khrplatform.h`) and a single `glad.c`. Copy both include folders into your
 include directory and add `glad.c` to your project.
 
-### Building it yourself
+### Your project
 
-The project in this chapter is one file, `main.cpp`. With GLFW installed and the generated GLAD files in a folder
-next to it (`include/` and `glad.c`), you can compile it on Linux like this:
+The project in this chapter is one file, `main.cpp`. The `CMakeLists.txt` from *Setting up your IDE* builds it
+together with `glad.c` and links GLFW – that is all of the above in a few lines. In a Visual Studio solution of your
+own it is an empty C++ project with `main.cpp` and `glad.c`, the include and library folders set, and `glfw3.lib`
+and `opengl32.lib` as additional linker dependencies. From a terminal on Linux, with GLFW installed and the GLAD files
+in `include/` and `glad.c` next to `main.cpp`, this works too:
 
 ```text
 g++ -std=c++17 main.cpp glad.c -Iinclude -o window -lglfw -ldl
 ```
-
-Or, more portably, with a small `CMakeLists.txt` (GLFW installs a CMake package that provides the `glfw` target):
-
-```text
-cmake_minimum_required(VERSION 3.16)
-project(LearnOpenGL C CXX)
-
-find_package(glfw3 REQUIRED)
-
-add_executable(window main.cpp glad.c)
-target_include_directories(window PRIVATE include)
-target_link_libraries(window PRIVATE glfw ${CMAKE_DL_LIBS})
-```
-
-In Visual Studio: an empty C++ project with `main.cpp` and `glad.c`, the include and library folders set, and
-`glfw3.lib` and `opengl32.lib` as additional linker dependencies.
 
 ## Hello Window
 
@@ -328,29 +317,29 @@ Linux distribution's Vulkan packages) and GLFW.
 
 vulkan-tutorial.com also installs GLM, a maths library; you won't need it until transformations.
 
-### Building it yourself
+### Your project
 
-On Linux (Debian/Ubuntu package names; Fedora and Arch have the same under similar names) install the loader, the
-validation layers, the tools and GLFW:
+*Setting up your IDE* shows how to install all of this and gives you a `CMakeLists.txt`: `find_package(Vulkan)` and
+GLFW give it the targets `Vulkan::Vulkan` and `glfw` to link with. Build the **Debug** configuration and don't define
+`NDEBUG` while you learn – you'll see why under *Validation layers*.
+
+On Linux (Debian/Ubuntu package names; Fedora and Arch have the same under similar names) you can also install the
+loader, the validation layers, the tools and GLFW from your distribution:
 
 ```text
 sudo apt install libvulkan-dev vulkan-validationlayers vulkan-tools libglfw3-dev
 ```
 
-Then compile `main.cpp` with:
+and compile `main.cpp` in a terminal:
 
 ```text
 g++ -std=c++17 -o VulkanTest main.cpp -lglfw -lvulkan
 ```
 
 (vulkan-tutorial.com's makefile uses `-lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi`; with a shared
-GLFW the first two are enough.) Don't define `NDEBUG` while you learn – you'll see why under *Validation layers*.
-With CMake, `find_package(Vulkan REQUIRED)` and `find_package(glfw3 REQUIRED)` give you the targets `Vulkan::Vulkan`
-and `glfw` to link with.
-
-On Windows, install the SDK and unpack GLFW, then in a Visual Studio C++ project add the `Include` folder of the SDK
-and GLFW's `include` folder to the include directories, the SDK's `Lib` folder and GLFW's library folder to the
-library directories, `vulkan-1.lib` and `glfw3.lib` to the linker input, and set the language standard to C++17.
+GLFW the first two are enough.) In a Visual Studio solution of your own, add the `Include` folder of the SDK and
+GLFW's `include` folder to the include directories, the SDK's `Lib` folder and GLFW's library folder to the library
+directories, `vulkan-1.lib` and `glfw3.lib` to the linker input, and set the language standard to C++17.
 
 On macOS the SDK runs Vulkan on top of Metal (MoltenVK). There `vkCreateInstance` can return
 `VK_ERROR_INCOMPATIBLE_DRIVER` unless you enable the `VK_KHR_portability_enumeration` instance extension and set
@@ -724,7 +713,7 @@ if (enableValidationLayers) {
 
 Now do the third task – it touches several places, so follow the TODO comments: the two proxy functions, the
 `debugMessenger` member, `debugCallback`, `populateDebugMessengerCreateInfo()` and `setupDebugMessenger()`, the
-extension, the `pNext` chain, the call in `initVulkan` and the destruction in `cleanup`. Build & run: the output now
+extension, the `pNext` chain, the call in `initVulkan` and the destruction in `cleanup`. Build & run: the program's console now
 shows lines starting with `validation layer:`. Because we asked for verbose messages too, these are mostly harmless
 information from the loader. A correct program shows no messages with `Validation Error` or `Validation Warning` in
 them – watch out for those from now on.
@@ -986,11 +975,12 @@ The libraries are linked by three lines at the top of `main.cpp`, which only the
 #endif
 ```
 
-### Building it yourself
+### Your project
 
-In Visual Studio, create an empty C++ project, add `main.cpp`, add DirectX-Headers' `include/directx` folder to the
-include directories, and set **Linker → System → SubSystem** to **Windows**: the program starts in `wWinMain`, the
-entry point of a Windows (not console) program. Build the **Debug** configuration – it defines `_DEBUG`, which turns
+*Setting up your IDE* gives you a `CMakeLists.txt` for this: it adds DirectX-Headers' `include/directx` folder to the
+include directories and builds a `WIN32` program – the program starts in `wWinMain`, the entry point of a Windows
+(not console) program. In a Visual Studio solution of your own, add `main.cpp`, add the same include folder and set
+**Linker → System → SubSystem** to **Windows**. Build the **Debug** configuration – it defines `_DEBUG`, which turns
 on the debug layer code. From a *Developer Command Prompt*, the same is:
 
 ```text

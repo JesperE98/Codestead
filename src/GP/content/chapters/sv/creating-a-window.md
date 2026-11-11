@@ -33,9 +33,11 @@ igenom den så att du vet vad den gör. Sedan startar vi själva Direct3D 12: de
 exemplet D3D12HelloWindow.
 :::
 
-Projektet till höger innehåller redan programmets skelett. `// TODO:`-kommentarerna visar var din kod ska stå, och
-**Bygg & kör** (Ctrl+Enter) kompilerar projektet och kör det i den inbyggda simulatorn. Vill du också köra programmet
-på din egen dator finns det för varje API ett kort avsnitt *bygga själv* här nedan.
+Kapitlets startfiler innehåller redan programmets skelett: kopiera dem till kapitlets mapp med **Kopiera
+startfilerna**, lägg till din `CMakeLists.txt` och öppna mappen i din IDE. `// TODO:`-kommentarerna visar var din kod
+ska stå; efter varje uppgift bygger och kör du programmet i din IDE, och appen bockar av uppgiften. Hur du sätter upp
+IDE:n, kompilatorn och biblioteken är ämnet för förra kapitlet, *Sätt upp din IDE*; avsnitten här nedan förklarar vad
+varje del är till för, så som learnopengl.com gör.
 
 ```quiz
 Varför behöver ett grafikprogram ett bibliotek som GLFW, eller operativsystemets egna fönsterfunktioner, för att få ett fönster?
@@ -128,30 +130,17 @@ till att **Generate a loader** är ikryssad och trycker på **Generate**. Du få
 (`include/glad/glad.h` och `include/KHR/khrplatform.h`) och en enda `glad.c`. Kopiera båda include-mapparna till din
 include-katalog och lägg till `glad.c` i ditt projekt.
 
-### Bygga själv
+### Ditt projekt
 
-Projektet i det här kapitlet är en enda fil, `main.cpp`. Med GLFW installerat och de genererade GLAD-filerna i en mapp
-bredvid (`include/` och `glad.c`) kan du kompilera det på Linux så här:
+Projektet i det här kapitlet är en enda fil, `main.cpp`. `CMakeLists.txt` från *Sätt upp din IDE* bygger den tillsammans
+med `glad.c` och länkar GLFW – allt ovan på några rader. I en egen Visual Studio-solution är det ett tomt C++-projekt
+med `main.cpp` och `glad.c`, include- och biblioteksmapparna inställda, och `glfw3.lib` och `opengl32.lib` som extra
+beroenden för länkaren. Från en terminal på Linux, med GLFW installerat och GLAD-filerna i `include/` och `glad.c`
+bredvid `main.cpp`, fungerar även det här:
 
 ```text
 g++ -std=c++17 main.cpp glad.c -Iinclude -o window -lglfw -ldl
 ```
-
-Eller, mer portabelt, med en liten `CMakeLists.txt` (GLFW installerar ett CMake-paket som ger målet `glfw`):
-
-```text
-cmake_minimum_required(VERSION 3.16)
-project(LearnOpenGL C CXX)
-
-find_package(glfw3 REQUIRED)
-
-add_executable(window main.cpp glad.c)
-target_include_directories(window PRIVATE include)
-target_link_libraries(window PRIVATE glfw ${CMAKE_DL_LIBS})
-```
-
-I Visual Studio: ett tomt C++-projekt med `main.cpp` och `glad.c`, include- och biblioteksmapparna inställda, och
-`glfw3.lib` och `opengl32.lib` som extra beroenden för länkaren.
 
 ## Hello Window
 
@@ -326,29 +315,29 @@ Linux-distributions Vulkan-paket) och GLFW.
 
 vulkan-tutorial.com installerar också GLM, ett matematikbibliotek; det behöver du inte förrän vid transformationer.
 
-### Bygga själv
+### Ditt projekt
 
-På Linux (paketnamn för Debian/Ubuntu; Fedora och Arch har samma sak med liknande namn) installerar du loadern,
-valideringslagren, verktygen och GLFW:
+*Sätt upp din IDE* visar hur du installerar allt detta och ger dig en `CMakeLists.txt`: `find_package(Vulkan)` och GLFW
+ger den målen `Vulkan::Vulkan` och `glfw` att länka mot. Bygg konfigurationen **Debug** och definiera inte `NDEBUG`
+medan du lär dig – du ser varför under *Valideringslager*.
+
+På Linux (paketnamn för Debian/Ubuntu; Fedora och Arch har samma sak med liknande namn) kan du också installera
+loadern, valideringslagren, verktygen och GLFW från din distribution:
 
 ```text
 sudo apt install libvulkan-dev vulkan-validationlayers vulkan-tools libglfw3-dev
 ```
 
-Kompilera sedan `main.cpp` med:
+och kompilera `main.cpp` i en terminal:
 
 ```text
 g++ -std=c++17 -o VulkanTest main.cpp -lglfw -lvulkan
 ```
 
 (vulkan-tutorial.coms makefile använder `-lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi`; med en delad
-GLFW räcker de två första.) Definiera inte `NDEBUG` medan du lär dig – du ser varför under *Valideringslager*. Med CMake
-ger `find_package(Vulkan REQUIRED)` och `find_package(glfw3 REQUIRED)` dig målen `Vulkan::Vulkan` och `glfw` att länka
-mot.
-
-På Windows installerar du SDK:t och packar upp GLFW, och i ett C++-projekt i Visual Studio lägger du sedan till SDK:ts
-mapp `Include` och GLFW:s mapp `include` bland include-katalogerna, SDK:ts mapp `Lib` och GLFW:s biblioteksmapp bland
-bibliotekskatalogerna, `vulkan-1.lib` och `glfw3.lib` i länkarens indata, och ställer in språkstandarden på C++17.
+GLFW räcker de två första.) I en egen Visual Studio-solution lägger du till SDK:ts mapp `Include` och GLFW:s mapp
+`include` bland include-katalogerna, SDK:ts mapp `Lib` och GLFW:s biblioteksmapp bland bibliotekskatalogerna,
+`vulkan-1.lib` och `glfw3.lib` i länkarens indata, och ställer in språkstandarden på C++17.
 
 På macOS kör SDK:t Vulkan ovanpå Metal (MoltenVK). Där kan `vkCreateInstance` returnera
 `VK_ERROR_INCOMPATIBLE_DRIVER` om du inte aktiverar instans-extensionen `VK_KHR_portability_enumeration` och sätter
@@ -721,10 +710,10 @@ if (enableValidationLayers) {
 
 Gör nu den tredje uppgiften – den berör flera ställen, så följ TODO-kommentarerna: de två proxyfunktionerna, medlemmen
 `debugMessenger`, `debugCallback`, `populateDebugMessengerCreateInfo()` och `setupDebugMessenger()`, extensionen,
-`pNext`-kedjan, anropet i `initVulkan` och förstöringen i `cleanup`. Bygg & kör: utdata visar nu rader som börjar med
-`validation layer:`. Eftersom vi också bad om verbose-meddelanden är det mest ofarlig information från loadern. Ett
-korrekt program visar inga meddelanden med `Validation Error` eller `Validation Warning` i – håll utkik efter dem från
-och med nu.
+`pNext`-kedjan, anropet i `initVulkan` och förstöringen i `cleanup`. Bygg & kör: programmets konsol visar nu rader som
+börjar med `validation layer:`. Eftersom vi också bad om verbose-meddelanden är det mest ofarlig information från
+loadern. Ett korrekt program visar inga meddelanden med `Validation Error` eller `Validation Warning` i – håll utkik
+efter dem från och med nu.
 
 ```quiz
 Varför kedjas en `VkDebugUtilsMessengerCreateInfoEXT` också in i `pNext` i `VkInstanceCreateInfo`?
@@ -981,12 +970,13 @@ Biblioteken länkas av tre rader överst i `main.cpp`, som bara Microsofts kompi
 #endif
 ```
 
-### Bygga själv
+### Ditt projekt
 
-I Visual Studio skapar du ett tomt C++-projekt, lägger till `main.cpp`, lägger till DirectX-Headers mapp
-`include/directx` bland include-katalogerna och ställer in **Linker → System → SubSystem** på **Windows**: programmet
-startar i `wWinMain`, ingångspunkten för ett Windows-program (inte ett konsolprogram). Bygg konfigurationen **Debug** –
-den definierar `_DEBUG`, vilket slår på koden för debug-lagret. Från en *Developer Command Prompt* blir samma sak:
+*Sätt upp din IDE* ger dig en `CMakeLists.txt` för det här: den lägger till DirectX-Headers mapp `include/directx` bland
+include-katalogerna och bygger ett `WIN32`-program – programmet startar i `wWinMain`, ingångspunkten för ett
+Windows-program (inte ett konsolprogram). I en egen Visual Studio-solution lägger du till `main.cpp`, lägger till samma
+include-mapp och ställer in **Linker → System → SubSystem** på **Windows**. Bygg konfigurationen **Debug** – den
+definierar `_DEBUG`, vilket slår på koden för debug-lagret. Från en *Developer Command Prompt* blir samma sak:
 
 ```text
 cl /std:c++17 /EHsc /MDd /Zi /I DirectX-Headers\include\directx main.cpp /link /SUBSYSTEM:WINDOWS user32.lib

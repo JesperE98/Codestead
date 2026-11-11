@@ -2,7 +2,7 @@
   "title": "Välkommen till grafikprogrammering",
   "tasks": {
     "build-run": {
-      "text": "Tryck på **Bygg & kör** (Ctrl+Enter) och titta på fönstret: en orange triangel på en mörkt blågrön bakgrund.",
+      "text": "Bygg och kör programmet i din IDE och titta på dess fönster: en orange triangel på en mörkt blågrön bakgrund.",
       "hint": {
         "opengl": "Inget att ändra än: `main.cpp` är hela programmet, som du skriver själv i de kommande kapitlen.",
         "vulkan": "Inget att ändra än: programmet är färdigt. Det öppnar ett fönster på 800×600 med titeln \"Vulkan\".",
