@@ -135,24 +135,22 @@ OpenGL 4.1**, so this chapter's program doesn't run on a Mac – the bind-to-edi
 `glNamedBufferDataEXT` and `glTextureParameteriEXT`; you may still meet them in older code.)
 
 The project is the course's *Hello Triangle* solution, the orange rectangle, with `// TODO:` comments where the DSA code
-goes. **Build & run** (Ctrl+Enter) compiles it and runs it in the built-in simulator. Now do the first task,
-**context**. The picture doesn't change: the bind-to-edit code runs unchanged in a 4.5 context.
+goes. Build and run it in your IDE. Now do the first task, **context**. The picture doesn't change: the bind-to-edit
+code runs unchanged in a 4.5 context.
 :::
 :::vulkan
 ### The project
 
 The project is the course's Vulkan *Hello Triangle* solution: the orange rectangle `(1.0, 0.5, 0.2)` – two triangles
-from an index buffer – on the teal clear colour. **Build & run** (Ctrl+Enter) compiles it and runs it in the built-in
-simulator; it is the same rectangle the OpenGL version of this chapter starts from. The sections below put its code next
-to OpenGL's DSA calls.
+from an index buffer – on the teal clear colour. Build and run it in your IDE; it is the same rectangle the OpenGL
+version of this chapter starts from. The sections below put its code next to OpenGL's DSA calls.
 :::
 :::d3d12
 ### The project
 
-The project is the course's DirectX 12 *Hello Triangle* solution: the orange rectangle `(1.0, 0.5, 0.2)` – two
-triangles from an index buffer – on the teal clear colour. **Build & run** (Ctrl+Enter) compiles it and runs it in the
-built-in simulator; it is the same rectangle the OpenGL version of this chapter starts from. The sections below put its
-code next to OpenGL's DSA calls.
+The project is the course's DirectX 12 *Hello Triangle* solution: the orange rectangle `(1.0, 0.5, 0.2)` – two triangles
+from an index buffer – on the teal clear colour. Build and run it in your IDE; it is the same rectangle the OpenGL
+version of this chapter starts from. The sections below put its code next to OpenGL's DSA calls.
 :::
 
 ## Buffers

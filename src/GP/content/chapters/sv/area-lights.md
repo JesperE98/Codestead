@@ -70,7 +70,7 @@ Den anpassade M⁻¹ (ur LTC1) flyttar polygonens hörn. Integralen av en klampa
 Startkoden ritar learnopengls scen. Ett golv av två trianglar, 20 × 20 enheter, har trätexturen från kapitlen om
 avancerad belysning som sRGB-textur (learnopengl använder en egen betongtextur). Ett ljus, en rektangel på 2 × 2 som
 står vid x = −8 och är vänd mot +x, ritas i sin färg, BurlyWood. Kameran står i (0, 1, 0,5) och tittar längs −x mot
-ljuset. Golvets shader skriver svart eftersom det inte finns något ljus ännu. **Bygg & kör** (Ctrl+Enter) visar
+ljuset. Golvets shader skriver svart eftersom det inte finns något ljus ännu. Bygg och kör programmet: det visar
 rektangeln mot svart; kommentarerna `// TODO:` visar var din kod ska in.
 
 Värdena är learnopengls: intensitet 4, strävhet 0,5, en spekulär färg på 0,23 (omräknad till linjär), ett ljus som

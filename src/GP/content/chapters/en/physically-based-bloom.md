@@ -55,8 +55,8 @@ and draws it on the screen quad (vertices 36–41) with the final pipeline state
 have their inputs; their pixel shaders are TODOs.
 :::
 
-The `// TODO:` comments mark where your code goes; **Build & run** (Ctrl+Enter) compiles the program and runs it in the
-built-in simulator: the scene with hard light cubes and a black background right next to them.
+The `// TODO:` comments mark where your code goes. Build and run the program in your IDE: the scene with hard light
+cubes and a black background right next to them.
 
 ## The mip chain
 

@@ -61,8 +61,8 @@ två buffrar, och CBV/SRV-heapen CBV:n (plats 0), marmorn (plats 1) och metallen
 fortfarande svart.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift trycker du på **Build & run**
-(Ctrl+Enter) för att kompilera programmet och köra det i den inbyggda simulatorn.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
+IDE.
 
 ## Skapa en framebuffer
 
@@ -742,7 +742,7 @@ Barriären som avslutar bildrutan – back buffern från RENDER_TARGET till PRES
 framebuffer, rita".
 :::
 
-Gör nu den första uppgiften, **offscreen-target**, och tryck på **Build & run**. Fönstret är helt vitt.
+Gör nu den första uppgiften, **offscreen-target**, och bygg och kör sedan. Fönstret är helt vitt.
 
 ```quiz
 Efter uppgiften **offscreen-target** är fönstret vitt överallt, fast scenen fortfarande ritas varje bildruta. Varför?
@@ -1049,9 +1049,9 @@ Ett PSO skapas för fasta render target- och djupformat. Quaden är ett enda pla
 ```
 :::
 
-Gör nu uppgiften **screen-quad** och tryck på **Build & run**. Scenen är tillbaka, exakt som den såg ut i början av
-kapitlet – kuberna, golvet, den mörkgrå bakgrunden. Om du tittade på den i wireframe-läge skulle du se en enda quad som
-täcker fönstret, men ingenting i bilden avslöjar att scenen tog en omväg genom en textur.
+Gör nu uppgiften **screen-quad** och bygg och kör sedan. Scenen är tillbaka, exakt som den såg ut i början av kapitlet –
+kuberna, golvet, den mörkgrå bakgrunden. Om du tittade på den i wireframe-läge skulle du se en enda quad som täcker
+fönstret, men ingenting i bilden avslöjar att scenen tog en omväg genom en textur.
 
 Vad var då nyttan med det här? Eftersom vi nu fritt kan komma åt varje pixel i den färdigrenderade scenen som en enda
 texturbild kan vi skapa intressanta effekter i fragment shadern.
@@ -1094,9 +1094,8 @@ float4 PSMain(PSInput input) : SV_TARGET
 :::
 
 Även om invertering är en ganska enkel post-processing-effekt ger den redan häftiga resultat. Gör uppgiften
-**inversion** och tryck på **Build & run**: hela scenen har fått alla sina färger inverterade med en enda kodrad i
-fragment shadern. Den mörkgrå bakgrunden blir ljusgrå, den vita marmorn blir mörkt blågrå och det grå stålgolvet blir
-brunaktigt.
+**inversion** och bygg och kör sedan: hela scenen har fått alla sina färger inverterade med en enda kodrad i fragment
+shadern. Den mörkgrå bakgrunden blir ljusgrå, den vita marmorn blir mörkt blågrå och det grå stålgolvet blir brunaktigt.
 
 ```quiz
 Bakgrunden rensades till (0.1, 0.1, 0.1) – 26, 26, 26 i 8-bitarsvärden. Vilken färg har den efter inverteringen?
@@ -1179,9 +1178,9 @@ float4 PSMain(PSInput input) : SV_TARGET
 ```
 :::
 
-Gör uppgiften **grayscale** med den viktade versionen och tryck på **Build & run**: inverteringen är borta, och scenen
-visas i gråtoner – varje pixel har samma värde för rött, grönt och blått. Du märker förmodligen inte skillnaden mot det
-vanliga medelvärdet direkt, men i mer komplicerade scener brukar en sådan viktad gråskaleeffekt se mer realistisk ut.
+Gör uppgiften **grayscale** med den viktade versionen och bygg och kör sedan: inverteringen är borta, och scenen visas i
+gråtoner – varje pixel har samma värde för rött, grönt och blått. Du märker förmodligen inte skillnaden mot det vanliga
+medelvärdet direkt, men i mer komplicerade scener brukar en sådan viktad gråskaleeffekt se mer realistisk ut.
 
 ## Kerneleffekter
 
@@ -1372,10 +1371,10 @@ Just den här skärpekerneln ser ut så här:
 Dess vikter summerar till 9 − 8 = 1: där alla nio samples har samma färg blir resultatet den färgen. Där mitten skiljer
 sig från sina grannar förstärks skillnaden åttafalt.
 
-Gör uppgiften **sharpen** och tryck på **Build & run**. Färgerna är tillbaka, och bakgrunden och golvets jämna partier
-ser ut som förut – men varje kant är hård: marmorns mörka ådror blir svarta, ljusa pixlar bredvid dem blir nästan vita,
-kuberna får ljusa kanter, och golvets mönster ser kornigt ut. Det kan ge intressanta effekter om din spelare är ute på
-ett narkotiskt äventyr.
+Gör uppgiften **sharpen** och bygg och kör sedan. Färgerna är tillbaka, och bakgrunden och golvets jämna partier ser ut
+som förut – men varje kant är hård: marmorns mörka ådror blir svarta, ljusa pixlar bredvid dem blir nästan vita, kuberna
+får ljusa kanter, och golvets mönster ser kornigt ut. Det kan ge intressanta effekter om din spelare är ute på ett
+narkotiskt äventyr.
 
 ```quiz
 Varför lämnar skärpekerneln den jämnt mörkgrå bakgrunden oförändrad, medan den gör marmorns ådror svarta?
@@ -1421,7 +1420,7 @@ direkt, så vi måste dela varje värde i kerneln med `16`. Den resulterande ker
 :::
 
 Genom att bara ändra kernel-arrayen i fragment shadern kan vi helt ändra post-processing-effekten. Gör uppgiften
-**blur** och tryck på **Build & run**: bilden ser ut som startbilden, lätt suddig – marmorns ådror har mjukats upp och
+**blur** och bygg och kör sedan: bilden ser ut som startbilden, lätt suddig – marmorns ådror har mjukats upp och
 kubernas konturer är inte längre skarpa.
 
 En sådan oskärpeeffekt ger intressanta möjligheter. Vi kan variera mängden oskärpa över tid för att skapa effekten av
@@ -1464,9 +1463,9 @@ kanterna i en bild. Dess vikter summerar till 0: överallt där alla nio samples
 ```
 :::
 
-Gör den sista uppgiften, **edge-detection**, och tryck på **Build & run**. Nästan allt är svart nu: bakgrunden,
-golvets jämna partier och marmorns släta ytor. Kvar blir ljusa linjer överallt där färgen ändras – kubernas konturer,
-marmorns ådror, golvets mönster och horisonten där golvet möter bakgrunden.
+Gör den sista uppgiften, **edge-detection**, och bygg och kör sedan. Nästan allt är svart nu: bakgrunden, golvets jämna
+partier och marmorns släta ytor. Kvar blir ljusa linjer överallt där färgen ändras – kubernas konturer, marmorns ådror,
+golvets mönster och horisonten där golvet möter bakgrunden.
 
 Det kommer förmodligen inte som någon överraskning att kernlar som den här används som bildbehandlingsverktyg och
 filter i program som Photoshop. Tack vare grafikkortets förmåga att bearbeta fragment extremt parallellt kan vi

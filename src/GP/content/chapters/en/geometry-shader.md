@@ -63,9 +63,8 @@ member `Model m_model;`. `explode.hlsl` (whose geometry shader passes every tria
 like learnopengl, which draws without face culling.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, press **Build & run**
-(Ctrl+Enter) to compile the program and run it in the built-in simulator. Right now it shows four single pixels:
-red top-left, green top-right, yellow bottom-left and blue bottom-right.
+The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
+IDE. Right now it shows four single pixels: red top-left, green top-right, yellow bottom-left and blue bottom-right.
 
 ## Using geometry shaders
 
@@ -572,9 +571,9 @@ In `main.cpp`, compile `GSMain` with the geometry shader target, between the ver
 `PrimitiveTopologyType` stays `D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT`: it is the geometry shader's input.
 :::
 
-Press **Build & run**. If everything went well you see no change at all: the same four single-pixel points, in the same
-colours and places. That's the point – the geometry shader passes everything through. It may seem a lot of work for
-nothing, but now everything is in place to change what comes out.
+Build and run. If everything went well you see no change at all: the same four single-pixel points, in the same colours
+and places. That's the point – the geometry shader passes everything through. It may seem a lot of work for nothing, but
+now everything is in place to change what comes out.
 
 :::opengl
 ```quiz
@@ -735,9 +734,9 @@ This geometry shader generates 5 vertices, with each vertex being the point's po
 triangle strip. The resulting primitive is then rasterized and the fragment shader runs on the entire triangle strip,
 resulting in a coloured house for each point we've rendered.
 
-Press **Build & run**: four houses, each in the colour of its point – a wall 160 pixels wide and 120 high with a roof 60
-pixels high on top, where the single pixels were before. You can see that each house indeed consists of 3 triangles –
-all drawn using a single point in space.
+Build and run: four houses, each in the colour of its point – a wall 160 pixels wide and 120 high with a roof 60 pixels
+high on top, where the single pixels were before. You can see that each house indeed consists of 3 triangles – all drawn
+using a single point in space.
 
 ```quiz
 The five vertices of the house are emitted as one triangle strip: 1 bottom-left, 2 bottom-right, 3 top-left, 4 top-right, 5 top. Which vertices form the roof?
@@ -789,8 +788,8 @@ Now do the task **roof-white**: in `build_house`, set the colour just before the
 only the last one is white.
 :::
 
-Press **Build & run**. The walls are unchanged, but each roof now fades from the house's colour at the eaves to white at
-its tip, as if covered in snow.
+Build and run. The walls are unchanged, but each roof now fades from the house's colour at the eaves to white at its
+tip, as if covered in snow.
 
 ```quiz
 Only the roof's top vertex is white, yet the whole roof gets lighter towards the top. Why?
@@ -1001,8 +1000,8 @@ And `PopulateCommandList` draws the model instead of the points:
 `TriangleStream` again, each with its texture coordinates.
 :::
 
-Press **Build & run**: the textured planet with its ring, tilted towards you, on the dark background – the picture of the
-Model chapter, unlit. It now goes through a geometry shader that changes nothing yet.
+Build and run: the textured planet with its ring, tilted towards you, on the dark background – the picture of the Model
+chapter, unlit. It now goes through a geometry shader that changes nothing yet.
 
 What we're going to do is translate each vertex of a triangle in the direction of the triangle's normal vector. That
 means we first need to calculate this normal vector. What we need to do is calculate a vector that is perpendicular to
@@ -1238,10 +1237,10 @@ and the same with `explode(input[1].position, normal)` and `explode(input[2].pos
 vertices. Note that we're also outputting the appropriate texture coordinates before appending a vertex.
 :::
 
-Press **Build & run**. The result is a planet that seems to continually explode its triangles over time and then
-return to normal again: with `sin(time)` the pieces fly apart and come back with a period of 2π seconds – furthest apart
-at about 1.6 seconds, whole again at about 4.7 seconds. Although not exactly super useful, it does show you a more
-advanced use of the geometry shader.
+Build and run. The result is a planet that seems to continually explode its triangles over time and then return to
+normal again: with `sin(time)` the pieces fly apart and come back with a period of 2π seconds – furthest apart at about
+1.6 seconds, whole again at about 4.7 seconds. Although not exactly super useful, it does show you a more advanced use
+of the geometry shader.
 
 Note *where* this happens: the vertex shader already multiplied the positions by the projection matrix, so the
 geometry shader works in clip space, and both the normal and the movement are clip-space vectors – as in learnopengl.
@@ -1558,10 +1557,10 @@ Both pipeline states use the same root signature, so the root constants and the 
 stay set for the second.
 :::
 
-Press **Build & run**: the planet as in the `planet` task, unexploded, with yellow hairs standing out of its sphere and
-up from its ring – one per vertex. Looking at the picture, it seems the normals are indeed correct: they point straight
-away from the surface everywhere. Apart from visualizing normals, a geometry shader like this is frequently used to add
-fur to objects.
+Build and run: the planet as in the `planet` task, unexploded, with yellow hairs standing out of its sphere and up from
+its ring – one per vertex. Looking at the picture, it seems the normals are indeed correct: they point straight away
+from the surface everywhere. Apart from visualizing normals, a geometry shader like this is frequently used to add fur
+to objects.
 
 ```quiz
 Why does the normal visualization's vertex shader leave out the projection and let the geometry shader apply it?

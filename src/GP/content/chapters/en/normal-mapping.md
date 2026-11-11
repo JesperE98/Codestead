@@ -60,9 +60,9 @@ specular `float3(0.2f, 0.2f, 0.2f) * pow(…, 32.0f)`. (learnopengl also draws a
 position as a marker; the course leaves it out.)
 :::
 
-Press **Build & run** (Ctrl+Enter): a brick wall, turned at an angle – its bottom corner reaches below the window – with
-a highlight in its upper right. It is lit evenly – the bricks and the light mortar lines between them look painted on a flat board. The
-`// TODO:` comments in the project mark where your code goes.
+Build and run the program: a brick wall, turned at an angle – its bottom corner reaches below the window – with a
+highlight in its upper right. It is lit evenly – the bricks and the light mortar lines between them look painted on a
+flat board. The `// TODO:` comments in the project mark where your code goes.
 
 ## Normal mapping
 
@@ -186,9 +186,9 @@ Now do the first task, **normal-map**: the member `m_normalMap`, the larger heap
 shader lines.
 :::
 
-Press **Build & run**: the bricks get **bumps** – the mortar between them now has edges – but the lighting is wrong.
-The whole wall is darker, most of all at its lower left, and the bevels along the bricks don't match the light: the
-ones that face up, towards the light, are dark.
+Build and run: the bricks get **bumps** – the mortar between them now has edges – but the lighting is wrong. The whole
+wall is darker, most of all at its lower left, and the bevels along the bricks don't match the light: the ones that face
+up, towards the light, are dark.
 
 There is one issue however that greatly limits this use of normal maps. The normal map we used had normal vectors that
 all pointed somewhat in the positive z direction. This worked because the plane's surface normal was also pointing in
@@ -411,8 +411,8 @@ PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL, float2 texCoo
 Now do the task **tangents**.
 :::
 
-Press **Build & run**: nothing changes – the shaders don't use the new attributes yet. For our quad both triangles get
-the same vectors, of course: the quad is flat, and its texture is not distorted.
+Build and run: nothing changes – the shaders don't use the new attributes yet. For our quad both triangles get the same
+vectors, of course: the quad is flat, and its texture is not distorted.
 
 :::opengl
 Work it out for the first triangle: E1 = (0, -2, 0), E2 = (2, -2, 0), ΔUV1 = (0, -1), ΔUV2 = (1, -1), so f = 1,
@@ -612,9 +612,9 @@ bevel would be lit from the wrong side. With a DirectX-style map, no flip would 
 no flip: used as a world-space normal, the map's y was simply the wall's up.) Now do the task **tbn**.
 :::
 
-Press **Build & run**: the bricks' **bumps are lit correctly**. The flat faces of the bricks look as at the start –
-they are flat in the normal map too – but the bevels facing the light are bright now, and those facing away are in their
-own shade. The wall looks like it has depth, and it's still just two triangles.
+Build and run: the bricks' **bumps are lit correctly**. The flat faces of the bricks look as at the start – they are
+flat in the normal map too – but the bevels facing the light are bright now, and those facing away are in their own
+shade. The wall looks like it has depth, and it's still just two triangles.
 
 :::opengl
 ```quiz
@@ -740,9 +740,9 @@ that computed T, B and N; the `bitangent` attribute stays in the vertex data and
 learnopengl.
 :::
 
-Press **Build & run**: nothing changes. On our flat quad T, B and N are already perpendicular, and the cross product
-equals the normalized bitangent we passed. On a real mesh with smoothed tangents it makes the difference between a TBN
-matrix whose transpose is its inverse and one whose isn't.
+Build and run: nothing changes. On our flat quad T, B and N are already perpendicular, and the cross product equals the
+normalized bitangent we passed. On a real mesh with smoothed tangents it makes the difference between a TBN matrix whose
+transpose is its inverse and one whose isn't.
 
 ## Additional resources
 

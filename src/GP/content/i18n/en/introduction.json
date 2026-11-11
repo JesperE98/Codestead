@@ -2,7 +2,7 @@
   "title": "Welcome to graphics programming",
   "tasks": {
     "build-run": {
-      "text": "Press **Build & run** (Ctrl+Enter) and look at the window: an orange triangle on a dark teal background.",
+      "text": "Build and run the program in your IDE and look at its window: an orange triangle on a dark teal background.",
       "hint": {
         "opengl": "Nothing to edit yet: `main.cpp` is the complete program you will write yourself in the coming chapters.",
         "vulkan": "Nothing to edit yet: the program is complete. It opens an 800×600 window titled \"Vulkan\".",

@@ -597,7 +597,7 @@ bildrutor, medan partikeln lever en hel sekund, 60 bildrutor. Under de sista 36 
 fortfarande "levande" och ritas, men med ett alfa på 0 eller lägre bidrar den inte med något till bilden.
 
 **rand().** `rand()` returnerar talen i en fast följd; utan `srand` (learnopengl anropar ingen) börjar varje körning med
-samma frö, 1, och får samma tal. Kursens bilder använder glibc:s följd – Linux C-bibliotek, som simulatorn också följer.
+samma frö, 1, och får samma tal. Kursens bilder använder glibc:s följd – Linux C-bibliotek.
 :::d3d12
 Ett Direct3D 12-program körs på Windows och får Microsofts C-runtimes `rand()`: en annan följd (med `RAND_MAX` 32767), så
 på en riktig Windows-dator skiljer sig partiklarnas slumpade förskjutningar och ljusstyrkor lite från kursens bilder –
@@ -777,8 +777,8 @@ Till sist ritas partiklarna i `Render` **efter racketen och före bollen**:
 
 så att bollen täcker de nyaste partiklarna, som skapas under den, och spåret verkar komma fram bakom den.
 
-Gör nu uppgiften **draw-particles**. Tryck på **Build & run**: **ett glödande spår följer bollen**, från dess övre vänstra
-del tillbaka upp mot stenen den studsade mot – vitt där de nyaste partiklarna överlappar, uttonande längre bak.
+Gör nu uppgiften **draw-particles**. Bygg och kör: **ett glödande spår följer bollen**, från dess övre vänstra del
+tillbaka upp mot stenen den studsade mot – vitt där de nyaste partiklarna överlappar, uttonande längre bak.
 
 :::opengl
 ```quiz

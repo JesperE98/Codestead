@@ -581,10 +581,10 @@ GLM.
 
 ### GLM
 
-GLM stands for Open**GL** **M**athematics and is a *header-only* library, which means that we only have to include
-the proper header files and we're done; no linking or compiling necessary. In the built-in environment it is
-already available. Most of GLM's functionality that we need can be found in 3 headers files that we'll include as
-follows:
+GLM stands for Open**GL** **M**athematics and is a *header-only* library, which means that we only have to include the
+proper header files and we're done; no linking or compiling necessary. The `CMakeLists.txt` from *Setting up your IDE*
+already makes it available. Most of GLM's functionality that we need can be found in 3 headers files that we'll include
+as follows:
 
 ```cpp
 #include <glm/glm.hpp>
@@ -828,8 +828,7 @@ The root signature has one parameter so far: parameter 0, the descriptor table w
 `PopulateCommandList()`.
 :::
 
-The `// TODO:` comments mark where your code goes. After each task, press **Build & run** (Ctrl+Enter) to compile
-the program and run it in the built-in simulator.
+The `// TODO:` comments mark where your code goes. After each task, build and run the program in your IDE.
 
 ### Getting the matrix to the shader
 

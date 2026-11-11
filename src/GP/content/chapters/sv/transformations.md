@@ -576,9 +576,9 @@ matematikbibliotek. Som tur är finns det ett lättanvänt matematikbibliotek sk
 
 ### GLM
 
-GLM står för Open**GL** **M**athematics och är ett *header-only*-bibliotek, vilket betyder att vi bara behöver
-inkludera rätt headerfiler; ingen länkning eller kompilering behövs. I den inbyggda miljön finns det redan. Det mesta
-av GLM:s funktionalitet som vi behöver finns i 3 headerfiler, som vi inkluderar så här:
+GLM står för Open**GL** **M**athematics och är ett *header-only*-bibliotek, vilket betyder att vi bara behöver inkludera
+rätt headerfiler; ingen länkning eller kompilering behövs. `CMakeLists.txt` från *Sätt upp din IDE* gör det redan
+tillgängligt. Det mesta av GLM:s funktionalitet som vi behöver finns i 3 headerfiler, som vi inkluderar så här:
 
 ```cpp
 #include <glm/glm.hpp>
@@ -824,8 +824,7 @@ Root signaturen har hittills en parameter: parameter 0, descriptor-tabellen med 
 `PopulateCommandList()`.
 :::
 
-Kommentarerna `// TODO:` visar var din kod ska in. Efter varje uppgift trycker du på **Build & run** (Ctrl+Enter) för
-att kompilera programmet och köra det i den inbyggda simulatorn.
+Kommentarerna `// TODO:` visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din IDE.
 
 ### Att få matrisen till shadern
 

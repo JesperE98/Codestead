@@ -668,10 +668,10 @@ the three functions of the BRDF are still `// TODO:` comments. The five `.png` m
 the next chapter.
 :::
 
-Press **Build & run** (Ctrl+Enter): the project is compiled and run in the built-in simulator. You see 49 almost black
-discs on the dark grey clear colour (0.1, 0.1, 0.1). The fragment shader so far only adds the ambient term
-`0.03 * albedo * ao` = (0.015, 0, 0), and nothing else: no light reaches the spheres yet, there is no shading, and every
-sphere pixel is the same very dark red (4, 0, 0 of 255). The next chapter fills in the reflectance equation step by step.
+Build and run the program: you see 49 almost black discs on the dark grey clear colour (0.1, 0.1, 0.1). The fragment
+shader so far only adds the ambient term `0.03 * albedo * ao` = (0.015, 0, 0), and nothing else: no light reaches the
+spheres yet, there is no shading, and every sphere pixel is the same very dark red (4, 0, 0 of 255). The next chapter
+fills in the reflectance equation step by step.
 
 ## Further reading
 

@@ -51,9 +51,9 @@ normal mapen och färgen på `float2 texCoords = input.texCoords;` – TODO:n ä
 `lightPos` (0.5, 1.0, 0.3).
 :::
 
-Tryck på **Build & run** (Ctrl+Enter): ett tegelgolv sett snett, en trapets som är smalare upptill. Normal mapen ger
-fogarna deras fasningar, men alla tegelstenar ligger på samma höjd – titta längs teglen så ser de målade ut på en platt
-skiva. Kommentarerna `// TODO:` i projektet visar var din kod ska in.
+Bygg och kör programmet: ett tegelgolv sett snett, en trapets som är smalare upptill. Normal mapen ger fogarna deras
+fasningar, men alla tegelstenar ligger på samma höjd – titta längs teglen så ser de målade ut på en platt skiva.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in.
 
 ## Parallax mapping
 
@@ -234,8 +234,8 @@ tangentrymds y också (B = `cross(T, N)`, riktningen där v växer), så `viewDi
 riktningar. Gör nu första uppgiften, **parallax**.
 :::
 
-Tryck på **Build & run**: **teglen ser upphöjda ut** över fogarna. Deras framsidor – sidorna som vetter mot kameran –
-syns, och fogarna mellan dem blir smalare. Inte illa för två trianglar. Titta dock på fyrhörningens kanter: där hamnar de
+Bygg och kör: **teglen ser upphöjda ut** över fogarna. Deras framsidor – sidorna som vetter mot kameran – syns, och
+fogarna mellan dem blir smalare. Inte illa för två trianglar. Titta dock på fyrhörningens kanter: där hamnar de
 förskjutna koordinaterna utanför intervallet [0,1], och eftersom texturerna upprepas syns bitar av grannteglen längs
 kanterna. Och på nära håll ser teglens sidor utsmetade ut – dit kommer vi.
 
@@ -290,8 +290,8 @@ HLSL:s `discard` fungerar som GLSL:s (`clip(x)`, som kastar där x < 0, är ett 
 **discard-edges**.
 :::
 
-Tryck på **Build & run**: fyrhörningens kanter blir **ojämna** – där de upphöjda teglens kontur slutar syns bakgrunden.
-Allt innanför är oförändrat.
+Bygg och kör: fyrhörningens kanter blir **ojämna** – där de upphöjda teglens kontur slutar syns bakgrunden. Allt
+innanför är oförändrat.
 
 ## Steep parallax mapping
 
@@ -499,9 +499,9 @@ Med en mipnivå är nivå 0 vad `Sample` ändå skulle ha läst, så bilden blir
 ```
 :::
 
-Tryck på **Build & run**: **teglen får skarpa, solida sidor** – ingen utsmetning längre. Men titta på framsidorna: de
-består av **trappsteg**, vågräta band, ett per lager. Strålen stannar vid första lagret under ytan, så varje djup
-däremellan avrundas till ett lager.
+Bygg och kör: **teglen får skarpa, solida sidor** – ingen utsmetning längre. Men titta på framsidorna: de består av
+**trappsteg**, vågräta band, ett per lager. Strålen stannar vid första lagret under ytan, så varje djup däremellan
+avrundas till ett lager.
 
 Vi kan minska problemet genom att ta fler samplingar, men det blir snabbt en för tung börda för prestandan. Det finns
 flera metoder som försöker rätta till det genom att inte ta den första positionen under den (förskjutna) ytan, utan
@@ -596,8 +596,8 @@ funktion efter en loop med varierande antal varv:
 Gör nu den sista uppgiften, **occlusion**.
 :::
 
-Tryck på **Build & run**: **trappstegen försvinner** – teglens framsidor blir mjuka övergångar. Teglens ovansidor och
-bakgrunden är oförändrade.
+Bygg och kör: **trappstegen försvinner** – teglens framsidor blir mjuka övergångar. Teglens ovansidor och bakgrunden är
+oförändrade.
 
 Parallax occlusion mapping ger förvånansvärt bra resultat, och även om några små artefakter och aliasingproblem
 fortfarande syns är det i allmänhet en bra avvägning som bara märks på mycket nära håll eller i mycket branta vinklar.

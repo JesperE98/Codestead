@@ -237,8 +237,8 @@ annat):
 :::
 
 Kommentarerna `// TODO:` i projektet visar var koden för varje uppgift ska in. Gör nu den första uppgiften,
-**background**: ladda de fyra texturerna efter bollens och rita bakgrunden i stället för bollen. Tryck på **Build & run**
-(Ctrl+Enter): **trädgården i skymningen fyller fönstret** – stjärnorna, månen uppe till höger, kullarna och häckarna.
+**background**: ladda de fyra texturerna efter bollens och rita bakgrunden i stället för bollen. Bygg och kör
+programmet: **trädgården i skymningen fyller fönstret** – stjärnorna, månen uppe till höger, kullarna och häckarna.
 
 Gör nu uppgiften **game-object**: structen, `MakeGameObject` och `DrawObject`. Ingenting använder dem ännu – bilden är
 densamma.
@@ -529,10 +529,10 @@ Och i `Render`, efter bakgrunden:
         DrawLevel(game.Levels[game.Level], Renderer);
 ```
 
-Gör nu uppgiften **draw-level**: `DrawLevel`, de två medlemmarna i `Game`, banorna i `Init` och anropet i `Render`. Tryck
-på **Build & run**: **bana ett dyker upp i den övre halvan** – raderna med orange, gula, gröna och blå plattor, varje
-platta ljusare och mörkare vid sina fasade kanter runt en platt mitt, och under en lucka raden av grå stenar. Månen är nu
-dold bakom den gröna raden.
+Gör nu uppgiften **draw-level**: `DrawLevel`, de två medlemmarna i `Game`, banorna i `Init` och anropet i `Render`. Bygg
+och kör: **bana ett dyker upp i den övre halvan** – raderna med orange, gula, gröna och blå plattor, varje platta
+ljusare och mörkare vid sina fasade kanter runt en platt mitt, och under en lucka raden av grå stenar. Månen är nu dold
+bakom den gröna raden.
 
 :::opengl
 Det är 69 ritanrop per bildruta – bakgrunden och 68 block –, vart och ett med sina `glUniform*`-anrop, en texturbindning
@@ -720,9 +720,9 @@ x = 3 flyttas ändå 8.3 pixlar åt vänster, till x = −5.3, och stannar förs
 upp till en bildrutas rörelse – learnopengls enkla kontroll, tillräckligt bra här.
 
 Gör nu uppgiften **player**: konstanterna, den globala variabeln, racketen i `Init`, dess rörelse i `ProcessInput` och
-dess ritanrop i `Render`. Tryck på **Build & run**: **träracketen dyker upp nere i mitten**, från (350, 580) till
-(450, 600), med sina mässingsändar på båda sidor. Kursen trycker inte på några rörelsetangenter, så den stannar där; på
-din egen dator, utanför kursen, skulle A och D flytta den.
+dess ritanrop i `Render`. Bygg och kör: **träracketen dyker upp nere i mitten**, från (350, 580) till (450, 600), med
+sina mässingsändar på båda sidor. Kursen trycker inte på några rörelsetangenter, så i det förväntade resultatet stannar
+den där; i ditt eget program flyttar A och D den.
 
 :::opengl
 70 ritanrop per bildruta: bakgrund, 68 block, racket.

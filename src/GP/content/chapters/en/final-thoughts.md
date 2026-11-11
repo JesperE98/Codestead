@@ -18,18 +18,18 @@ The `main.cpp` holds vulkan-tutorial's application class and the game's structs 
 :::d3d12
 The `main.cpp` holds the `D3D12App` class and the game's structs and free functions.
 :::
-With the course's fixed input (only SPACE) it shows the menu over level one, "Lives:3" at the top left and the ball on
-the paddle. On your own computer, press ENTER to start, A and D to move the paddle and SPACE to release the ball – and
-play.
+With the course's fixed input (only SPACE) its expected result shows the menu over level one, "Lives:3" at the top left
+and the ball on the paddle. In your own program, press ENTER to start, A and D to move the paddle and SPACE to release
+the ball – and play.
 
-Creating a simple game like this can be accomplished in thousands of different ways, of which this approach is just
-one of many. The larger a game becomes, the more you start applying abstractions and design patterns; learnopengl
-recommends the book and website *Game Programming Patterns* for reading on. The course wrote learnopengl's classes as
-plain structs and free functions in a single file, because that is easy to follow in one editor; a real project would
-split the code into classes and files, as learnopengl does. Keep in mind that it is a difficult feat to create a game
-with extremely clean and well-thought-out code (often close to impossible). Simply make your game in whatever way you
-think feels right at the time. The more you practice video game development, the more you learn new and better
-approaches to solve problems. Don't let the struggle to want to create perfect code demotivate you; keep on coding!
+Creating a simple game like this can be accomplished in thousands of different ways, of which this approach is just one
+of many. The larger a game becomes, the more you start applying abstractions and design patterns; learnopengl recommends
+the book and website *Game Programming Patterns* for reading on. The course wrote learnopengl's classes as plain structs
+and free functions in a single file, because that is easy to follow in one file; a real project would split the code
+into classes and files, as learnopengl does. Keep in mind that it is a difficult feat to create a game with extremely
+clean and well-thought-out code (often close to impossible). Simply make your game in whatever way you think feels right
+at the time. The more you practice video game development, the more you learn new and better approaches to solve
+problems. Don't let the struggle to want to create perfect code demotivate you; keep on coding!
 
 ## Optimizations
 
@@ -121,7 +121,7 @@ For one level's blocks it hardly matters; for a game with thousands of objects a
 
 ```quiz
 Why does the course's game keep everything in one `main.cpp` of structs and free functions?
-- [x] Because it is easy to follow in one editor and in the built-in simulator, while learnopengl splits its game into classes and files; a real project would do the same as learnopengl
+- [x] Because it is easy to follow in one file and the course's checks can read it, while learnopengl splits its game into classes and files; a real project would do the same as learnopengl
 - [ ] Because {{api}} can only call free functions
 - [ ] Because classes are slower than structs in C++
 - [ ] Because a game must be compiled from a single file

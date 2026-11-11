@@ -39,8 +39,8 @@ one vertex buffer – the cube is vertices 0 to 35, the floor 36 to 41. The PSO 
 chapter, because learnopengl's cube isn't made for it. In this chapter we fix that.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, press **Build & run**
-(Ctrl+Enter) to compile the program and run it in the built-in simulator.
+The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
+IDE.
 
 ## Winding order
 
@@ -179,8 +179,8 @@ are counter-clockwise. For the old back face that's (1, 0, 0) × (1, 1, 0) = (0,
 outside it was clockwise. For the new one it's (1, 1, 0) × (1, 0, 0) = (0, 0, -1): out of the cube.
 
 Now do the first task, **ccw-cube**: rewrite the cube's 36 vertices so that every triangle is counter-clockwise seen
-from outside, keeping each vertex's texture coordinates, and press **Build & run**. Nothing changes – not a single
-pixel – because nothing is culled yet. The order of a triangle's corners only matters once culling is on.
+from outside, keeping each vertex's texture coordinates, then build and run. Nothing changes – not a single pixel –
+because nothing is culled yet. The order of a triangle's corners only matters once culling is on.
 
 ```quiz
 How can you check that a triangle with the corners a, b, c (in this order) is counter-clockwise when you look at the cube's face from outside?
@@ -381,8 +381,8 @@ What would happen with back-face culling on if you left learnopengl's floor vert
 Culling doesn't know about floors and cubes, only about triangles and their winding on the screen. The camera looks at the floor from above; if its corners are clockwise from there, both triangles are back faces and get culled.
 ```
 
-Now do the task **cull-back**: turn culling on as shown above and fix the floor, then press **Build & run**. You
-should see... exactly the same picture as before. (A few floor pixels may differ by a level or two from rounding.)
+Now do the task **cull-back**: turn culling on as shown above and fix the floor, then build and run. You should see...
+exactly the same picture as before. (A few floor pixels may differ by a level or two from rounding.)
 
 That's not a mistake. The cubes' back faces – the far sides of each cube – were already hidden: they were drawn, but
 the front faces covered them, and wherever a back face was drawn after a front face, the depth test threw its
@@ -419,9 +419,9 @@ cull the front faces instead:
 ```
 :::
 
-Now do the last task, **cull-front**, and press **Build & run**. The cubes keep their outlines, but you now look into
-them: the faces nearest to you are gone, and you see the inside of the far faces, with the marble on them. And the floor has disappeared: its front face points up, at the camera, so
-it's culled now.
+Now do the last task, **cull-front**, then build and run. The cubes keep their outlines, but you now look into them: the
+faces nearest to you are gone, and you see the inside of the far faces, with the marble on them. And the floor has
+disappeared: its front face points up, at the camera, so it's culled now.
 
 ```quiz
 With the front faces culled, why do the cubes look hollow, while the floor disappears completely?

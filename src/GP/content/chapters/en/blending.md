@@ -47,8 +47,8 @@ to 41 – and each draw picks its part with `DrawInstanced`'s start vertex. Ever
 shader at one of them before each draw. New next to the other images: `grass.png` and `window.png`.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, press **Build & run**
-(Ctrl+Enter) to compile the program and run it in the built-in simulator.
+The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
+IDE.
 
 ## Discarding fragments
 
@@ -300,8 +300,8 @@ grass texture and draw the quad once per position:
 ```
 :::
 
-Now do the first task, **grass**, and press **Build & run**. Five quads stand between and in front of the cubes – the
-grass blades are there, but each of them sits on a black square that hides whatever is behind it.
+Now do the first task, **grass**, then build and run. Five quads stand between and in front of the cubes – the grass
+blades are there, but each of them sits on a black square that hides whatever is behind it.
 
 This happens because {{api}} by default does not know what to do with alpha values, nor when to discard them. The
 alpha value is just the fourth component of the colour: the shader outputs it, and it is written into the colour
@@ -460,8 +460,8 @@ SamplerState clampSampler : register(s1);
 Now do the task **discard**: the sampler, `PSTransparent`, the second PSO and the `SetPipelineState` call.
 :::
 
-Press **Build & run**: only the grass blades are left. Where the black squares were, you see the cubes, the floor and
-the background again, and there's no thin line along the top of the quads.
+Build and run: only the grass blades are left. Where the black squares were, you see the cubes, the floor and the
+background again, and there's no thin line along the top of the quads.
 
 ```quiz
 Why do the grass quads need a sampler mode that clamps to the edge instead of repeating?
@@ -781,9 +781,9 @@ Since we enabled blending there is no need to discard pixels, so we could go bac
 clamping sampler is still what the windows need.
 :::
 
-Now do the task **blend** and press **Build & run**. Five red tinted windows stand in the scene: the cube, the floor
-and the background show through the glass, darker and redder, while the frame and its cross are opaque. Over the
-background, the glass's colour is mixed with the dark grey of the clear colour; over the marble it's much brighter.
+Now do the task **blend**, then build and run. Five red tinted windows stand in the scene: the cube, the floor and the
+background show through the glass, darker and redder, while the frame and its cross are opaque. Over the background, the
+glass's colour is mixed with the dark grey of the clear colour; over the marble it's much brighter.
 
 If you take a closer look however, you may notice something is off. Look at the nearest window, in front of the
 middle: there is a second window behind it, partly covered by it (at (0.5, 0, -0.6)). Through the near window's glass
@@ -935,9 +935,9 @@ each window quad to the corresponding window position. This relatively simple ap
 fixes the previous problem. From the starting position the order is (-0.3, 0, -2.3), (-1.5, 0, -0.48),
 (0.5, 0, -0.6), (1.5, 0, 0.51) and finally (0, 0, 0.7).
 
-Now do the last task, **sort**, and press **Build & run**. The window behind the nearest one now shows through its
-glass: where they overlap you look through two layers of glass, and the colour there is a deeper red than through one
-layer. Because the sort runs every frame, the order stays right when the camera moves.
+Now do the last task, **sort**, then build and run. The window behind the nearest one now shows through its glass: where
+they overlap you look through two layers of glass, and the colour there is a deeper red than through one layer. Because
+the sort runs every frame, the order stays right when the camera moves.
 
 ```quiz
 Why does the outline above draw all opaque objects before the sorted transparent ones?

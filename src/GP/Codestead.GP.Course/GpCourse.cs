@@ -77,11 +77,16 @@ public static class GpCourse
         ("final-thoughts", "in-practice"),
         ("oit-introduction", "guest-articles"),
         ("weighted-blended", "guest-articles"),
+        ("skeletal-animation", "guest-articles"),
         ("scene-graph", "guest-articles"),
         ("frustum-culling", "guest-articles"),
         ("csm", "guest-articles"),
+        ("tessellation-height-map", "guest-articles"),
+        ("tessellation", "guest-articles"),
         ("dsa", "guest-articles"),
         ("physically-based-bloom", "guest-articles"),
+        ("compute-shaders", "guest-articles"),
+        ("area-lights", "guest-articles"),
     ];
 
     public static IReadOnlyList<CourseChapter> Chapters { get; } = Build();

@@ -68,10 +68,10 @@ directory; they should be located at the root of your include directories. Inclu
 `#include <FreeType/ft2build.h>` will likely cause several header conflicts.
 
 **The course's font.** learnopengl uses the font Antonio Bold. The course uses **Inter Bold** (`fonts/Inter-Bold.otf`,
-reduced to the printable ASCII characters), which is free under the SIL Open Font License 1.1 – the license must
-travel with the font, so `fonts/OFL.txt` lies next to it in the project. The built-in simulator has no FreeType of its
-own: it stands in for it with the glyphs FreeType renders from this font at **48 and 24 pixels** (the size this
-chapter uses, and the one the game's text will use later). With the real FreeType on your computer any size works.
+reduced to the printable ASCII characters), which is free under the SIL Open Font License 1.1 – the license must travel
+with the font, so `fonts/OFL.txt` lies next to it in the project. The course's checks have no FreeType of their own:
+they stand in for it with the glyphs FreeType renders from this font at **48 and 24 pixels** (the size this chapter
+uses, and the one the game's text will use later). With the real FreeType in your program any size works.
 
 FreeType loads these TrueType fonts and, for each glyph, generates a bitmap image and calculates several metrics.
 We can extract these bitmap images for generating textures and position each character glyph appropriately using the
@@ -253,7 +253,7 @@ FT_Done_Face(face);
 FT_Done_FreeType(ft);
 ```
 
-Press **Build & run**: still only the clear colour, (0.2, 0.3, 0.3), and nothing printed – nothing is drawn yet.
+Build and run: still only the clear colour, (0.2, 0.3, 0.3), and nothing printed – nothing is drawn yet.
 
 :::opengl
 ### One texture per glyph
@@ -969,9 +969,9 @@ the vertex buffer in `LoadAssets`, `RenderText`, and in `PopulateCommandList`:
 ```
 :::
 
-Press **Build & run**: **"This is sample text" in green at the bottom left** of the window. Look closely at the edges
-of the letters: they blend smoothly into the background – FreeType's anti-aliasing. The spaces are quads too, of size
-0 × 0: they draw nothing, but their advance moves the pen.
+Build and run: **"This is sample text" in green at the bottom left** of the window. Look closely at the edges of the
+letters: they blend smoothly into the background – FreeType's anti-aliasing. The spaces are quads too, of size 0 × 0:
+they draw nothing, but their advance moves the pen.
 
 :::opengl
 ```quiz
@@ -1026,8 +1026,8 @@ Now do the task **second-line**: learnopengl's second line is a copyright notice
 ```
 :::
 
-y = 570 is near the *top* of the window – y points up in these coordinates. Press **Build & run**: a small
-**light-blue line in the top right**.
+y = 570 is near the *top* of the window – y points up in these coordinates. Build and run: a small **light-blue line in
+the top right**.
 
 :::vulkan
 Its quads go into the buffer after the first line's: 35 draws in all, 210 vertices. Compared pixel by pixel with the

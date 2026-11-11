@@ -1,9 +1,9 @@
 # {{api}}
 
 Innan du skriver någon kod är det bra att veta vad {{api}} egentligen är, hur det är organiserat och vilken sorts
-programmering det kräver av dig. Det här kapitlet har inga uppgifter: det är teorin du behöver för de kommande
-kapitlen. Projektet till höger är fortfarande triangelprogrammet från introduktionen, så du kan bygga och köra det
-och hitta koden som kapitlet pratar om.
+programmering det kräver av dig. Det här kapitlet har inga uppgifter: det är teorin du behöver för de kommande kapitlen.
+Kapitlets startfiler är fortfarande triangelprogrammet från introduktionen, så du kan bygga och köra det och hitta koden
+som kapitlet pratar om.
 
 :::opengl
 ## Vad OpenGL är
@@ -389,9 +389,9 @@ const bool enableValidationLayers = true;
 #endif
 ```
 
-I debug-byggen är lagret påslaget, och projektets `debugCallback` skriver ut dess meddelanden i utdata som
-`validation layer: …`. I release-byggen stänger du av det och betalar ingenting för det. Ett korrekt program ger
-inga valideringsfel – behandla vart och ett som en bugg.
+I debug-byggen är lagret påslaget, och projektets `debugCallback` skriver ut dess meddelanden i programmets konsol som
+`validation layer: …`. I release-byggen stänger du av det och betalar ingenting för det. Ett korrekt program ger inga
+valideringsfel – behandla vart och ett som en bugg.
 
 ```quiz
 Du gör ett fel i ett Vulkan-anrop, och validation layers är inte påslagna. Vad händer?
@@ -404,10 +404,10 @@ Vulkan självt kontrollerar väldigt lite för att hålla drivrutinen snabb. Val
 
 ## Shaders: SPIR-V
 
-Vulkan tar inte emot shaderkällkod. Det tar emot **SPIR-V**, ett binärt mellanformat. Du skriver fortfarande
-shaderna i ett högnivåspråk – i den här kursen GLSL, som i OpenGL – och kompilerar dem till SPIR-V innan programmet
-körs (normalt med `glslc` från Vulkan SDK; här gör **Bygg & kör** det åt dig). Programmet laddar sedan de
-kompilerade filerna:
+Vulkan tar inte emot shaderkällkod. Det tar emot **SPIR-V**, ett binärt mellanformat. Du skriver fortfarande shaderna i
+ett högnivåspråk – i den här kursen GLSL, som i OpenGL – och kompilerar dem till SPIR-V innan programmet körs med
+`glslc` från Vulkan SDK; din `CMakeLists.txt` från *Sätt upp din IDE* gör det åt dig varje gång du bygger. Programmet
+laddar sedan de kompilerade filerna:
 
 ```cpp
 auto vertShaderCode = readFile("shaders/vert.spv");
@@ -695,9 +695,9 @@ engångsuppsättning: när triangeln väl syns på skärmen kräver nya funktion
 
 ## Nu sätter vi igång
 
-Nu vet du lite om vad {{api}} är och hur det fungerar. I de kommande kapitlen bygger du triangelprogrammet själv:
-först ett fönster, sedan ett fönster som fylls med en färg, sedan triangeln. Innan du går vidare kan du bygga och
-köra projektet en gång till och leta upp koden från det här kapitlet i editorn.
+Nu vet du lite om vad {{api}} är och hur det fungerar. I de kommande kapitlen bygger du triangelprogrammet själv: först
+ett fönster, sedan ett fönster som fylls med en färg, sedan triangeln. Innan du går vidare sätter du upp din IDE – det
+är nästa kapitel – och bygger och kör kapitlets startfiler: där hittar du koden från det här kapitlet.
 
 ## Mer att läsa
 

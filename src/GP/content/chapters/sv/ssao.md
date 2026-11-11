@@ -48,17 +48,17 @@ dämpning 0.09 och kvadratisk 0.032. Belysningspasset är learnopengls Blinn-Pho
 diffust och spekulärt ljus (exponent 8), dämpat. Det arbetar i **vyrymden**: ljusets position transformeras med
 vymatrisen innan den skickas, och betraktaren sitter i origo, så `viewDir = normalize(-FragPos)`.
 
-Två avvikelser från learnopengls kod, båda av samma skäl – den inbyggda simulatorn beräknar varje pixel på CPU:n, och
-SSAO-passet är ett av de dyraste passen i kursen:
+Två avvikelser från learnopengls kod, båda av samma skäl – kursen beräknar varje pixel i sina kontroller och förväntade
+resultat på CPU:n, och SSAO-passet är ett av de dyraste passen i kursen:
 
 - **32 samplingar i kärnan i stället för 64.** Det halverar SSAO-passets arbete; resultatet är lite brusigare före bluren
   och i praktiken detsamma efter.
 - **`rand()` i stället för `std::uniform_real_distribution`.** learnopengl drar sina slumptal med
-  `std::uniform_real_distribution<GLfloat>` och `std::default_random_engine`, och talen den motorn ger skiljer sig mellan
-  standardbibliotek. Kursen använder `srand(42)` och `rand() / (float)RAND_MAX` – ett flyttal mellan 0.0 och 1.0 – vars
-  talföljd simulatorn återskapar (glibc:s), så förhandsvisningen visar samma kärna och brus som det riktiga programmet,
-  vid varje körning. På Windows ger Microsofts `rand()` (med ett `RAND_MAX` på 32767) andra tal: bilden ser likadan ut,
-  bruset skiljer sig i detaljerna.
+  `std::uniform_real_distribution<GLfloat>` och `std::default_random_engine`, och talen den motorn ger skiljer sig
+  mellan standardbibliotek. Kursen använder `srand(42)` och `rand() / (float)RAND_MAX` – ett flyttal mellan 0.0 och 1.0
+  – vars talföljd kursens bilder återskapar (glibc:s), så **Förväntat resultat** visar samma kärna och brus som ditt
+  program på Linux, vid varje körning. På Windows ger Microsofts `rand()` (med ett `RAND_MAX` på 32767) andra tal:
+  bilden ser likadan ut, bruset skiljer sig i detaljerna.
 
 :::opengl
 Starten är en deferred-renderare som förra kapitlets: `main.cpp` ritar rummet (`renderCube()` med `invertedNormals` = 1)
@@ -92,12 +92,11 @@ delade `ssao.vs` som `VSMain` – ett pipeline state tar här sina shaders från
 sina deklarationer; deras `PSMain` är en TODO (de kompileras inte förrän du behöver dem).
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Tryck på **Build & run** (Ctrl+Enter) för att kompilera
-programmet och köra det i den inbyggda simulatorn: insidan av ett stort grått rum, belyst blått uppifrån höger –
-bakväggen, golvet nedanför en tunn kantlinje, och den grå planeten i mitten, stående på golvet. Dess framsida vetter bort
-från ljuset och får bara omgivningsljuset; dess övre högra kant är blått belyst. Ringen går tvärs framför den från ena
-sidan av fönstret till den andra, strax ovanför ögonhöjd: du ser den **underifrån**. Allt som inte belyses direkt har
-samma platta grå ton; inget visar var planeten möter golvet.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Bygg och kör programmet i din IDE: insidan av ett stort
+grått rum, belyst blått uppifrån höger – bakväggen, golvet nedanför en tunn kantlinje, och den grå planeten i mitten,
+stående på golvet. Dess framsida vetter bort från ljuset och får bara omgivningsljuset; dess övre högra kant är blått
+belyst. Ringen går tvärs framför den från ena sidan av fönstret till den andra, strax ovanför ögonhöjd: du ser den
+**underifrån**. Allt som inte belyses direkt har samma platta grå ton; inget visar var planeten möter golvet.
 
 ## Samplingsbuffrar
 
@@ -920,11 +919,11 @@ Vad är avståndskontrollen `smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampl
 Inom radien är kontrollen 1.0 och samplingen räknas fullt ut; vid två gånger radien är den nere i ungefär 0.5 och fortsätter falla. Utan den skulle du se mörka halor runt planeten på bakväggen.
 ```
 
-Tryck på **Build & run**: fönstret visar **den råa SSAO-texturen i grått**. Vitt där inget skymmer: det mesta av planeten,
-golvet, väggarna. Grått där något gör det: en kontaktskugga på golvet precis under planeten, en tunn grå linje längs
-kanten mellan golvet och bakväggen, ett svagt band på planeten strax ovanför ringen – och **ringens undersida, mörk**,
-mörkast mot dess ytterkant. De grå områdena är ditrade i ett fint, regelbundet mönster: bruset på 4 × 4, varje pixel
-roterad med en av de 16 vektorerna, mönstret upprepat var fjärde pixel.
+Bygg och kör: fönstret visar **den råa SSAO-texturen i grått**. Vitt där inget skymmer: det mesta av planeten, golvet,
+väggarna. Grått där något gör det: en kontaktskugga på golvet precis under planeten, en tunn grå linje längs kanten
+mellan golvet och bakväggen, ett svagt band på planeten strax ovanför ringen – och **ringens undersida, mörk**, mörkast
+mot dess ytterkant. De grå områdena är ditrade i ett fint, regelbundet mönster: bruset på 4 × 4, varje pixel roterad med
+en av de 16 vektorerna, mönstret upprepat var fjärde pixel.
 
 Varför är ringen så mörk? Ringen är ett enda platt plan vars normal pekar uppåt (+y), och kameran ser dess undersida.
 SSAO lägger samplingarnas halvsfär på normalens sida – ovanför ringen, alltså *bakom* ringens yta som kameran ser den. Så
@@ -1099,9 +1098,9 @@ Varför tar bluren medelvärdet av precis ett block på 4 × 4 texlar?
 Ett mindre block skulle lämna en del av mönstret kvar; ett större skulle blurra själva ocklusionen mer än nödvändigt.
 ```
 
-Tryck på **Build & run**: fönstret visar **den mjuka AO:n**. Ditheringen är borta; ringens undersida är en mjuk mörk
-gradient, kontaktskuggan under planeten en jämn grå fläck, golv-/väggkanten en mjuk linje, och bandet på planeten ovanför
-ringen lite bredare och mjukare. Allt annat är fortfarande vitt.
+Bygg och kör: fönstret visar **den mjuka AO:n**. Ditheringen är borta; ringens undersida är en mjuk mörk gradient,
+kontaktskuggan under planeten en jämn grå fläck, golv-/väggkanten en mjuk linje, och bandet på planeten ovanför ringen
+lite bredare och mjukare. Allt annat är fortfarande vitt.
 
 ## Att använda ambient occlusion
 
@@ -1172,9 +1171,9 @@ Varför multiplicerar ocklusionsfaktorn bara omgivningstermen, inte det diffusa 
 I den här scenen får planetens framsida bara omgivningsljus, så det är där ocklusionen syns bäst; de belysta delarna ändras knappt.
 ```
 
-Tryck på **Build & run**: den belysta scenen är tillbaka, **mörkare där AO:n var grå**. Ringens undersida är mycket mörkare
-än förut (dess yttre delar tappar hälften till två tredjedelar av sin ljusstyrka), golvet precis under planeten har en
-mjuk kontaktskugga som ställer planeten på golvet, och golv-/väggkanten är lite mörkare. Det öppna golvet, väggarna,
+Bygg och kör: den belysta scenen är tillbaka, **mörkare där AO:n var grå**. Ringens undersida är mycket mörkare än förut
+(dess yttre delar tappar hälften till två tredjedelar av sin ljusstyrka), golvet precis under planeten har en mjuk
+kontaktskugga som ställer planeten på golvet, och golv-/väggkanten är lite mörkare. Det öppna golvet, väggarna,
 planetens framsida och dess belysta kant är oförändrade. Det är lösningen, och learnopengls SSAO.
 
 Screen-space ambient occlusion är en mycket anpassningsbar effekt som i hög grad bygger på att justera parametrarna

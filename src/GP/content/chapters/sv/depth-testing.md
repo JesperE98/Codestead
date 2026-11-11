@@ -329,8 +329,7 @@ Modellmatrisen ligger i root constants (root parameter 0):
 uppgifterna ändrar rader som redan finns.
 :::
 
-Tryck på **Build & run** (Ctrl+Enter) för att se startbilden i den inbyggda simulatorn: två marmorkuber på ett
-metallgolv vars bortre kant bildar horisonten.
+Bygg och kör programmet för att se startbilden: två marmorkuber på ett metallgolv vars bortre kant bildar horisonten.
 
 Nu sätter vi djupfunktionen till "alltid": varje fragment klarar djuptestet.
 
@@ -367,8 +366,8 @@ Med ALWAYS går testet igenom, så färgen från den pixel som ritas sist blir k
 djuptestet avslaget gör den inte det.)
 :::
 
-Gör nu uppgiften **depth-always** och tryck på **Build & run**. Det här ger samma beteende som om vi inte hade slagit
-på djuptestning. Djuptestet går alltid igenom, så de fragment som ritas sist hamnar framför de fragment som ritades
+Gör nu uppgiften **depth-always** och bygg och kör sedan. Det här ger samma beteende som om vi inte hade slagit på
+djuptestning. Djuptestet går alltid igenom, så de fragment som ritas sist hamnar framför de fragment som ritades
 tidigare, även om de borde ha legat längst fram. Eftersom vi ritar golvet sist skriver golvets fragment över lådornas
 fragment överallt där de täcker dem: de nedre delarna av båda kuberna, under horisonten, visar nu metallgolvet. Och
 inuti varje kub täcker de sidor som ritas senare (baksidan, sidorna, ovansidan) framsidan, så den övre delen av den
@@ -433,7 +432,7 @@ hittills lagrats:
 ```
 :::
 
-Gör uppgiften **depth-less** och tryck på **Build & run**: startbilden är tillbaka, med kuberna stående framför golvet.
+Gör uppgiften **depth-less** och bygg och kör sedan: startbilden är tillbaka, med kuberna stående framför golvet.
 
 ## Djupvärdenas precision
 
@@ -542,8 +541,8 @@ I `PSMain`, i `depth_testing.hlsl`, får textursamplingen ge plats åt pixelns d
 `input.position.zzz` är en *swizzle*: en `float3` med z-komponenten tre gånger.
 :::
 
-Gör nu uppgiften **visualize-depth** och tryck på **Build & run**. Om du kör programmet märker du förmodligen att allt
-är vitt, så att det ser ut som om alla våra djupvärden är det största djupvärdet `1.0`. Varför ligger inga djupvärden
+Gör nu uppgiften **visualize-depth** och bygg och kör sedan. Om du kör programmet märker du förmodligen att allt är
+vitt, så att det ser ut som om alla våra djupvärden är det största djupvärdet `1.0`. Varför ligger inga djupvärden
 närmare `0.0` och är därmed mörkare?
 
 I förra avsnittet beskrev vi att djupvärden i skärmrummet är icke-linjära: de har mycket hög precision för små
@@ -716,11 +715,11 @@ OpenGL:s projektion ger NDC-z i -1..1 och dess viewport avbildar det på 0..1; l
 ```
 :::
 
-Gör nu uppgiften **linear-depth** och tryck på **Build & run**. Bilden är nu nästan svart: värdet är avståndet delat
-med 100, och föremålen ligger bara några enheter bort – framsidan på den vänstra kuben, 3.5 enheter från kameran, får
-0.035. Golvet blir ljusare bakåt, och bakgrunden (clear-färgen, 0.1) är nu ljusare än allt som ritats. Färgerna är
-mest svarta eftersom djupvärdena går linjärt från near-planet, 0.1, till far-planet, 100 – som fortfarande ligger
-ganska långt bort. Resultatet är att vi befinner oss relativt nära near-planet och därför får låga (mörka) djupvärden.
+Gör nu uppgiften **linear-depth** och bygg och kör sedan. Bilden är nu nästan svart: värdet är avståndet delat med 100,
+och föremålen ligger bara några enheter bort – framsidan på den vänstra kuben, 3.5 enheter från kameran, får 0.035.
+Golvet blir ljusare bakåt, och bakgrunden (clear-färgen, 0.1) är nu ljusare än allt som ritats. Färgerna är mest svarta
+eftersom djupvärdena går linjärt från near-planet, 0.1, till far-planet, 100 – som fortfarande ligger ganska långt bort.
+Resultatet är att vi befinner oss relativt nära near-planet och därför får låga (mörka) djupvärden.
 
 ## Z-fighting
 

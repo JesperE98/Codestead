@@ -15,8 +15,8 @@ behöva lägga till fler vertexar.
 > shaderprogrammen, men det får vänta till ett annat ämne.
 
 I det här kapitlet lägger du två bilder på rektangeln från de tidigare kapitlen: en trälåda, `container.png`, och en
-smiley, `awesomeface.png`. Båda är 256×256 pixlar och båda ingår i projektet – klicka på dem i editorn så öppnas de
-som bildflikar. `container.png` har tre kanaler (RGB). `awesomeface.png` har fyra (RGBA): runt ansiktet är den
+smiley, `awesomeface.png`. Båda är 256×256 pixlar och båda ingår i projektet – **Kopiera startfilerna** lägger dem i din
+projektmapp. `container.png` har tre kanaler (RGB). `awesomeface.png` har fyra (RGBA): runt ansiktet är den
 genomskinlig, och de genomskinliga pixlarna är lagrade som **svarta** med alfa 0. Kom ihåg det; det förklarar något du
 kommer att se senare.
 
@@ -47,8 +47,8 @@ Texturkoden följer Microsofts exempel D3D12HelloTexture – med skillnaden att 
 schackbräde i koden, medan vi läser in riktiga bilder.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift trycker du på **Build & run**
-(Ctrl+Enter) för att kompilera programmet och köra det i den inbyggda simulatorn.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
+IDE.
 
 ## Texturkoordinater
 
@@ -333,7 +333,7 @@ populära format och gör allt det tunga arbetet åt oss. Ett bibliotek som `stb
 :::d3d12
 > Windows-program läser ofta in bilder med Windows Imaging Component (WIC), som ingår i Windows, eller med Microsofts
 > bibliotek DirectXTex, som också läser DDS-filer med färdiga mipmaps. Den här kursen använder `stb_image.h` för alla
-> tre API:erna, så att inläsningskoden är densamma överallt och fungerar i den inbyggda simulatorn.
+> tre API:erna, så att inläsningskoden är densamma överallt.
 :::
 
 ### stb_image.h
@@ -381,9 +381,9 @@ Bildfiler – och därmed `stb_image.h` – lägger bildens översta rad först.
 Utan hjälp skulle lådan alltså hamna upp och ned. `stbi_set_flip_vertically_on_load(true)` säger åt `stb_image.h` att
 vända bilden längs y-axeln vid inläsningen, så att den nedersta raden kommer först och bilden visas rättvänd.
 
-Gör nu den första uppgiften, **load-image**: inkludera `stb_image.h` (efter GLFW-includen) och läs in
-`container.png` som ovan, vid den andra `// TODO:` i `main.cpp`. Lämna insidan av `if (data)` till nästa uppgifter.
-Ingenting syns ändras ännu – men om filen inte kan läsas in ser du `Failed to load texture` i utdata.
+Gör nu den första uppgiften, **load-image**: inkludera `stb_image.h` (efter GLFW-includen) och läs in `container.png`
+som ovan, vid den andra `// TODO:` i `main.cpp`. Lämna insidan av `if (data)` till nästa uppgifter. Ingenting syns
+ändras ännu – men om filen inte kan läsas in ser du `Failed to load texture` i programmets konsol.
 :::
 :::vulkan
 I `createTextureImage()`:

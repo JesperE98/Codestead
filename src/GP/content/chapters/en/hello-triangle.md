@@ -10,9 +10,8 @@ pixels. A large part of {{api}}'s work is to turn 3D coordinates into 2D pixels 
 by the **graphics pipeline**. The graphics pipeline can be split into two large parts: the first turns your 3D
 coordinates into 2D coordinates, the second turns those 2D coordinates into actual coloured pixels.
 
-As usual, the project on the right starts with `// TODO:` comments that mark where your code goes, and
-**Build & run** (Ctrl+Enter) compiles the project and runs it in the built-in simulator. Until you reach the draw
-task, the program only shows the teal window from the previous chapter.
+As usual, the chapter's start files have `// TODO:` comments that mark where your code goes, and you build and run the
+program in your IDE. Until you reach the draw task, the program only shows the teal window from the previous chapter.
 
 ## The graphics pipeline
 
@@ -545,9 +544,9 @@ glslc shaders/shader.frag -o shaders/frag.spv
 ```
 
 The advantage is that the driver doesn't need a full GLSL compiler of its own (each vendor's compiler used to accept
-slightly different GLSL), and syntax errors show up at build time, not when the program runs. In this project,
-**Build & run** compiles both shader files to `shaders/vert.spv` and `shaders/frag.spv` for you before it builds
-`main.cpp`; a mistake in a shader is reported in the output like any other compile error.
+slightly different GLSL), and syntax errors show up at build time, not when the program runs. Your `CMakeLists.txt` from
+*Setting up your IDE* compiles both shader files to `shaders/vert.spv` and `shaders/frag.spv` with `glslc` before it
+builds `main.cpp`; a mistake in a shader is reported in your IDE's build output like any other compile error.
 
 At run time, the program loads the bytecode with a small helper, `readFile`:
 
@@ -1436,11 +1435,11 @@ glDrawArrays(GL_TRIANGLES, 0, 3);
 pass `GL_TRIANGLES`. The second argument is the starting index of the vertex array, `0`. The last argument is how
 many vertices to draw: `3` (you only render one triangle from your data, which is exactly 3 vertices long).
 
-Now do the sixth task: add the three calls to the render loop and press **Build & run**. You should see an orange
-triangle on the teal background, with its corners at the pixels (400, 150), (600, 450) and (200, 450).
+Now do the sixth task: add the three calls to the render loop, then build and run. You should see an orange triangle on
+the teal background, with its corners at the pixels (400, 150), (600, 450) and (200, 450).
 
-If the triangle doesn't appear, look at the output for shader compile or link errors, then compare your code with
-the excerpts above. Getting here is a real milestone: this is the moment learnopengl calls the triangle "we've all
+If the triangle doesn't appear, look at the program's console for shader compile or link errors, then compare your code
+with the excerpts above. Getting here is a real milestone: this is the moment learnopengl calls the triangle "we've all
 been waiting for".
 :::
 :::vulkan
@@ -1482,12 +1481,11 @@ vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 - `vkCmdDraw` takes the vertex count (3), the instance count (`1`: no instanced rendering), the first vertex (`0`)
   and the first instance (`0`).
 
-Now do the seventh task: add these commands at the TODO in `recordCommandBuffer()` and press **Build & run**. You
-should see an orange triangle on the teal background, with its corners at the pixels (400, 150), (600, 450) and
-(200, 450).
+Now do the seventh task: add these commands at the TODO in `recordCommandBuffer()`, then build and run. You should see
+an orange triangle on the teal background, with its corners at the pixels (400, 150), (600, 450) and (200, 450).
 
-If the window stays teal, check the output for validation messages first: they usually name the problem. Then check
-the vertices and the rasterizer settings (`cullMode` and `frontFace`). It took a lot of code to get here – about a
+If the window stays teal, check the program's console for validation messages first: they usually name the problem. Then
+check the vertices and the rasterizer settings (`cullMode` and `frontFace`). It took a lot of code to get here – about a
 thousand lines – but every piece of it is now in place, and the next chapters will change only small parts.
 :::
 :::d3d12
@@ -1535,8 +1533,8 @@ m_commandList->DrawInstanced(3, 1, 0, 0);
 - `DrawInstanced` takes the number of vertices per instance (3), the number of instances (`1`), the first vertex
   (`0`) and the first instance (`0`).
 
-Now do the sixth task: add the three groups of calls in `PopulateCommandList` and press **Build & run**. You should
-see an orange triangle on the teal background, with its corners at the pixels (400, 150), (600, 450) and (200, 450).
+Now do the sixth task: add the three groups of calls in `PopulateCommandList`, then build and run. You should see an
+orange triangle on the teal background, with its corners at the pixels (400, 150), (600, 450) and (200, 450).
 
 If you only see the clear colour, check the vertex order first (clockwise!), then that the root signature, the
 viewport, the scissor rectangle and the render target are all set.
@@ -1671,8 +1669,8 @@ offset into the EBO (or an index array, when you don't use an EBO – not done h
 indices from the EBO bound to `GL_ELEMENT_ARRAY_BUFFER`, which the VAO brings along. That means you would otherwise
 have to bind the corresponding EBO every time you render an object with indices – a VAO does that for you.
 
-Now do the eighth task: replace `glDrawArrays` with `glDrawElements` and press **Build & run**. You should see an
-orange rectangle covering the pixels (200, 150) to (600, 450).
+Now do the eighth task: replace `glDrawArrays` with `glDrawElements`, then build and run. You should see an orange
+rectangle covering the pixels (200, 150) to (600, 450).
 :::
 :::vulkan
 In Vulkan, an index buffer is a `VkBuffer` like the vertex buffer – only with a different usage. The indices are a
@@ -1756,7 +1754,7 @@ of indices (6), the number of instances (1), the first index (0), an offset adde
 instance (0).
 
 Now do the ninth task: change `vertices` to the four corners, bind the index buffer and draw with `vkCmdDrawIndexed`.
-Press **Build & run**: you should see an orange rectangle covering the pixels (200, 150) to (600, 450).
+Build and run: you should see an orange rectangle covering the pixels (200, 150) to (600, 450).
 :::
 :::d3d12
 In Direct3D 12, an index buffer is a resource like the vertex buffer. First, replace the triangle's vertices with
@@ -1840,7 +1838,7 @@ m_commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 (0), a value added to every index before the vertex is read (the *base vertex*, 0) and the first instance (0).
 
 Now do the eighth task: add the two members, the index buffer block, `IASetIndexBuffer` and `DrawIndexedInstanced`.
-Press **Build & run**: you should see an orange rectangle covering the pixels (200, 150) to (600, 450).
+Build and run: you should see an orange rectangle covering the pixels (200, 150) to (600, 450).
 :::
 
 ```quiz
@@ -1936,9 +1934,9 @@ the next chapters will hopefully be much easier to understand.
 
 ## Exercises
 
-To really get a good grasp of the concepts discussed, a few exercises were set up. It is advised to work through
-them before continuing to the next subject, to make sure you get a good grasp of what's going on. The project is
-yours to change: try them in the editor, and use **Reset** if you want the chapter's end state back.
+To really get a good grasp of the concepts discussed, a few exercises were set up. It is advised to work through them
+before continuing to the next subject, to make sure you get a good grasp of what's going on. The project is yours to
+change: try them in your IDE, and copy the start files into a new folder if you want a clean start.
 
 :::opengl
 1. Try to draw 2 triangles next to each other using `glDrawArrays` by adding more vertices to your data.

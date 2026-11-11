@@ -65,10 +65,11 @@ resources. När du är klar kontrollerar provet i slutet av delen vad du har lä
   dämpning; en spotlights intensitet beror på dess riktning.
 - **Omvända kvadratlagen**: `attenuation = 1.0 / (distance * distance)`, fysikaliskt korrekt i linjärt rum. Därav ljusens
   (300, 300, 300): på ungefär 17 enheters avstånd för 1/300 tillbaka dem till ungefär 1.0.
-- **Scenen**: learnopengls 7 × 7 sfärer, 2.5 isär, `metallic = row / 7` (nederst 0), `roughness = clamp(col / 7, 0.05,
-  1.0)` (strävheten exakt 0 skulle göra ett punktljus högdager oändligt liten), albedo (0.5, 0, 0), ao 1.0; fyra ljus på
-  (±10, ±10, 10). Kursens kamera står på (0, 0, 22) (learnopengl: (0, 0, 3), inne i rutnätet), sfären har 24 × 24 segment
-  (learnopengl: 64 × 64 – simulatorn ritar på processorn), ingen multisampling.
+- **Scenen**: learnopengls 7 × 7 sfärer, 2.5 isär, `metallic = row / 7` (nederst 0),
+  `roughness = clamp(col / 7, 0.05, 1.0)` (strävheten exakt 0 skulle göra ett punktljus högdager oändligt liten), albedo
+  (0.5, 0, 0), ao 1.0; fyra ljus på (±10, ±10, 10). Kursens kamera står på (0, 0, 22) (learnopengl: (0, 0, 3), inne i
+  rutnätet), sfären har 24 × 24 segment (learnopengl: 64 × 64 – kursen ritar sina kontroller och förväntade resultat på
+  CPU:n), ingen multisampling.
 - **UV-sfären**: 25 × 25 vertex på ett rutnät i (u, v), normal = position, och här en **tangent** per vertex
   (-sin 2πu, 0, cos 2πu) – riktningen där u växer. **Indexerad triangle strip**: raderna gås igenom i sicksack, 1200
   index; varje index efter de två första bildar en triangel med de två före det.

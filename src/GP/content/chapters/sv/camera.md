@@ -29,14 +29,13 @@ constants och ritar den. Allt kameraarbete i det här kapitlet sker i `OnUpdate`
 `WindowProc`; `PopulateCommandList` ändras inte.
 :::
 
-Den här gången har projektet inga `// TODO:`-kommentarer: varje uppgift ändrar eller bygger ut kod som redan finns,
-och uppgiftstexten talar om var. Efter varje uppgift trycker du på **Build & run** (Ctrl+Enter) för att kompilera
-programmet och köra det i den inbyggda simulatorn.
+Den här gången har projektet inga `// TODO:`-kommentarer: varje uppgift ändrar eller bygger ut kod som redan finns, och
+uppgiftstexten talar om var. Efter varje uppgift bygger och kör du programmet i din IDE.
 
-> Den inbyggda simulatorn kan inte trycka på tangenter eller flytta musen. När kameran väl styrs med tangentbordet och
-> musen visar förhandsvisningen därför kamerans **startvy** – som, ska du se, är exakt den bild du börjar med. Bara
-> den cirklande kameran i den andra uppgiften rör sig synbart av sig själv, över tid. Allt du skriver är ändå riktig
-> inmatningskod: på din egen dator låter samma program dig flyga genom scenen.
+> Kursens kontroller och bilderna **Förväntat resultat** kan inte trycka på tangenter eller flytta musen. När kameran
+> väl styrs med tangentbordet och musen visar det förväntade resultatet därför kamerans **startvy** – som, ska du se, är
+> exakt den bild du börjar med. Bara den cirklande kameran i den andra uppgiften rör sig av sig själv, över tid. I ditt
+> eget program låter samma kod dig förstås flyga genom scenen.
 
 ## Kamera-/vyrymd
 
@@ -290,9 +289,9 @@ sedan första bildrutan med `std::chrono`, precis som projektet redan gör för 
 :::
 
 Gör nu uppgiften **circle**. Kameran kretsar nu runt scenen på avståndet 10, ett helt varv var 2π ≈ 6,3 sekund, och
-tittar hela tiden mot origo: kub 0 stannar i mitten av fönstret medan de andra lådorna – mycket mindre nu – svänger
-runt den. Vid t = 0 står kameran i (0, 0, 10), framför scenen; en sekund senare står den i (8,4, 0, 5,4), och alla
-lådor har flyttat in i fönstrets högra halva. Låt den köra en stund i simulatorn och se scenen vrida sig.
+tittar hela tiden mot origo: kub 0 stannar i mitten av fönstret medan de andra lådorna – mycket mindre nu – svänger runt
+den. Vid t = 0 står kameran i (0, 0, 10), framför scenen; en sekund senare står den i (8,4, 0, 5,4), och alla lådor har
+flyttat in i fönstrets högra halva. Låt den köra en stund och se scenen vrida sig.
 
 Vymatrisen byggs om varje bildruta, och varje bildruta måste den nå vertex shadern igen:
 
@@ -580,7 +579,7 @@ Det här hamnar allra först i `OnUpdate`, före förflyttningskoden. Huvudloope
 Nu när vi har `deltaTime` kan vi ta med den när vi räknar ut hastigheterna: `cameraSpeed` är 2.5 × `deltaTime`,
 vilket får kameran att röra sig 2,5 enheter per sekund, hur snabbt bildrutorna än kommer.
 
-Gör nu uppgiften **wasd**. Utan tangenter syns ingen förändring – simulatorn visar standardbilden. På din egen dator
+Gör nu uppgiften **wasd**. Det förväntade resultatet ändras inte – där trycker ingen på några tangenter. I ditt program
 flyttar W kameran framåt in i scenen (lådorna växer), S bakåt, A åt vänster och D åt höger, lika långt per sekund vid
 alla bildfrekvenser. Tillsammans med förra avsnittet har vi nu ett mycket jämnare och mer konsekvent kamerasystem för
 att röra oss i scenen.
@@ -1053,8 +1052,8 @@ GLFW kan rapportera markörens position en gång när den fångas, men tack vare
 bara `lastX` och `lastY`.
 :::
 
-På din egen dator försvinner markören, när du flyttar musen åt höger vrids vyn åt höger (scenen glider åt vänster),
-när du flyttar den uppåt tittar du uppåt – men aldrig längre än ±89° – och W går nu dit du tittar.
+När du kör det försvinner markören, när du flyttar musen åt höger vrids vyn åt höger (scenen glider åt vänster), när du
+flyttar den uppåt tittar du uppåt – men aldrig längre än ±89° – och W går nu dit du tittar.
 
 :::opengl vulkan
 ```quiz
@@ -1199,9 +1198,10 @@ bildruta.
 `OnUpdate` bygger redan om projektionen varje bildruta, så det här är den enda ändringen där.
 :::
 
-Gör nu uppgiften **zoom**. Utan scrollning förblir fov 45 och du ser standardbilden. På din egen dator zoomar
-scrollning uppåt in (mindre fov, större lådor) ned till ett synfält på 1°, och scrollning nedåt zoomar ut igen, som
-mest tillbaka till 45°. Och där har du det: ett enkelt kamerasystem som låter dig röra dig fritt i en 3D-miljö.
+Gör nu uppgiften **zoom**. Utan scrollning förblir fov 45 och du ser standardbilden – det är det förväntade resultatet.
+I ditt program zoomar scrollning uppåt in (mindre fov, större lådor) ned till ett synfält på 1°, och scrollning nedåt
+zoomar ut igen, som mest tillbaka till 45°. Och där har du det: ett enkelt kamerasystem som låter dig röra dig fritt i
+en 3D-miljö.
 
 ```quiz
 Tre hack uppåt med scrollhjulet ändrar `fov` från 45 till 42. Vad händer med bilden?
@@ -1330,7 +1330,7 @@ delar samma kamera. De globala variablerna du skrev gör exakt samma jobb, och d
   bibliotekets look-at-funktion med din egen implementation och se om den fortfarande beter sig likadant. Prova också
   med den cirklande kameran, där varje bildruta ger en annan matris.
 
-Det här är inga uppgifter i projektet: prova dem när du är klar med uppgifterna, och använd **Build & run** för att
+Det här är inga uppgifter i projektet: prova dem när du är klar med uppgifterna, och bygg och kör programmet för att
 jämföra bilderna.
 
 :::opengl vulkan

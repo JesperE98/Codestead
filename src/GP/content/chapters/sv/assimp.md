@@ -29,10 +29,10 @@ vill kunna läsa. Som tur är finns det ett bibliotek för just detta.
 
 ## Den här delens modell
 
-learnopengl.com använder en ryggsäck som modell i den här delen; kursen har en egen modell: en liten planet med en
-ring, `models/planet.obj`. Det är en Wavefront-`.obj`-fil, en vanlig textfil som du kan öppna i editorn
-(modellfilerna är skrivskyddade). Dess första rader anger materialbiblioteket, `planet.mtl`, och börjar det första
-objektet:
+learnopengl.com använder en ryggsäck som modell i den här delen; kursen har en egen modell: en liten planet med en ring,
+`models/planet.obj`. Det är en Wavefront-`.obj`-fil, en vanlig textfil som du kan öppna i din IDE (**Kopiera
+startfilerna** lägger den i din projektmapp). Dess första rader anger materialbiblioteket, `planet.mtl`, och börjar det
+första objektet:
 
 ```text
 # A small planet with a ring - drawn for Codestead GP (see make_planet.py).
@@ -231,17 +231,18 @@ På Windows besparar en pakethanterare som [vcpkg](https://learn.microsoft.com/e
 (`vcpkg install assimp`) dig CMake-bygget; utan den lägger du till Assimps `include`-mapp och dess `.lib` i projektet
 som för GLFW, och lägger dess DLL bredvid den körbara filen.
 
-Headerfilerna du behöver är `<assimp/Importer.hpp>` (klassen `Assimp::Importer` som läser en fil),
-`<assimp/scene.h>` (strukturerna `aiScene`, `aiNode`, `aiMesh` …) och `<assimp/postprocess.h>` (flaggorna för de
-efterbearbetningssteg som Assimp kan göra vid inläsningen, som att göra om varje yta till trianglar). I den här kursen
-är allt redan installerat: **Build & run** länkar med `-lassimp`.
+Headerfilerna du behöver är `<assimp/Importer.hpp>` (klassen `Assimp::Importer` som läser en fil), `<assimp/scene.h>`
+(strukturerna `aiScene`, `aiNode`, `aiMesh` …) och `<assimp/postprocess.h>` (flaggorna för de efterbearbetningssteg som
+Assimp kan göra vid inläsningen, som att göra om varje yta till trianglar). I din `CMakeLists.txt` hittar
+`find_package(assimp REQUIRED)` det installerade biblioteket, och att länka mot målet `assimp::assimp` lägger till dess
+include-mapp och dess bibliotek.
 :::
 :::vulkan
 learnopengl.com:s OpenGL-kod behöver Assimp byggt och länkat, som beskrivs på dess sida. För kursens Vulkan-program
-finns det inget att bygga: tinyobjloader är en enda header, och **Build & run** har den redo. På din egen dator laddar
-du ner `tiny_obj_loader.h` från dess GitHub-sida (precis som vulkan-tutorial gör) och lägger den i din include-mapp,
-bredvid `stb_image.h`. Om du vill använda Assimp med Vulkan – för andra format, eller animationer – installeras och
-länkas det precis som för OpenGL: distributionens paket och `-lassimp` på Linux, eller vcpkg på Windows.
+finns det inget att bygga: tinyobjloader är en enda header. Du laddar ner `tiny_obj_loader.h` från dess GitHub-sida
+(precis som vulkan-tutorial gör) och lägger den i din include-mapp, bredvid `stb_image.h`. Om du vill använda Assimp med
+Vulkan – för andra format, eller animationer – installeras och länkas det precis som för OpenGL: distributionens paket
+och `-lassimp` på Linux, eller vcpkg på Windows.
 :::
 :::d3d12
 DirectX 12-programmet använder också Assimp: kursen portar learnopengls klasser `Mesh` och `Model`, så det behöver
@@ -251,10 +252,11 @@ vcpkg:s Visual Studio-integration läggs include-mappen och biblioteket till i p
 du Assimp från dess GitHub-sida med CMake, lägger till dess `include`-mapp bland projektets include-kataloger och dess
 `.lib` i länkarens indata, och lägger dess DLL bredvid din `.exe` (programmet skulle inte starta utan den).
 
-Headerfilerna är `<assimp/Importer.hpp>` (klassen `Assimp::Importer` som läser en fil), `<assimp/scene.h>`
-(strukturerna `aiScene`, `aiNode`, `aiMesh` …) och `<assimp/postprocess.h>` (flaggorna för de efterbearbetningssteg
-som Assimp kan göra vid inläsningen, som att göra om varje yta till trianglar). I den här kursen är allt redan
-installerat, och **Build & run** länkar Assimp åt dig.
+Headerfilerna är `<assimp/Importer.hpp>` (klassen `Assimp::Importer` som läser en fil), `<assimp/scene.h>` (strukturerna
+`aiScene`, `aiNode`, `aiMesh` …) och `<assimp/postprocess.h>` (flaggorna för de efterbearbetningssteg som Assimp kan
+göra vid inläsningen, som att göra om varje yta till trianglar). I din `CMakeLists.txt` hittar
+`find_package(assimp REQUIRED)` biblioteket som vcpkg installerade (när CMake använder vcpkg:s toolchain-fil), och att
+länka mot målet `assimp::assimp` lägger till dess include-mapp och dess bibliotek.
 
 En sak att känna till när Assimp möter Direct3D: Assimp lämnar ut sin data i ett högerhänt koordinatsystem med
 framsidor moturs, OpenGL:s konventioner, och har en efterbearbetningsflagga, `aiProcess_ConvertToLeftHanded`, för
@@ -295,11 +297,10 @@ Assimp är ett kompilerat bibliotek, inte en enda header: headerfilerna deklarer
 
 ## Projektet
 
-Det här kapitlet har ingen kod att skriva – learnopengls kapitel *Assimp* har inte heller någon. Projektet är redan
-det som de två nästa kapitlen arbetar i, så du kan se dig omkring i det och trycka på **Build & run**: fönstret visar
-bara den mörkgrå rensningsfärgen (0.05, 0.05, 0.05), eftersom inget ritas än. (I de följande kapitlen markerar
-`// TODO:`-kommentarerna var din kod ska in, och **Build & run** – eller Ctrl+Enter – kompilerar och kör den i den
-inbyggda simulatorn.)
+Det här kapitlet har ingen kod att skriva – learnopengls kapitel *Assimp* har inte heller någon. Projektet är redan det
+som de två nästa kapitlen arbetar i, så du kan se dig omkring i det och sedan bygga och köra det: fönstret visar bara
+den mörkgrå rensningsfärgen (0.05, 0.05, 0.05), eftersom inget ritas än. (I de följande kapitlen markerar
+`// TODO:`-kommentarerna var din kod ska in, och du bygger och kör den i din IDE som tidigare.)
 
 :::opengl
 Projektet är learnopengls scen `model_loading.cpp` före modellen: `main.cpp` med kameran från kapitlet *Camera* i

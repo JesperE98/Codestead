@@ -62,8 +62,8 @@ The constant buffer follows Microsoft's D3D12HelloConstBuffers sample, the depth
 D3D12 samples (for example D3D12Bundles) create theirs.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, press **Build & run**
-(Ctrl+Enter) to compile the program and run it in the built-in simulator.
+The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
+IDE.
 
 ## The global picture
 

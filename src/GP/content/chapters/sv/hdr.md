@@ -137,12 +137,12 @@ i normaliserade enhetskoordinater, inga matriser), dess `PSMain` returnerar fort
 förrän du behöver den.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Tryck på **Build & run** (Ctrl+Enter) för att kompilera
-programmet och köra det i den inbyggda simulatorn: du tittar längs tunneln, vars brädor löper mot en liten kvadrat mitt i
-fönstret – den bortre änden. Nära kameran är väggarna mycket mörka (bara en svag röd ton i nedre högra hörnet, från det
-röda ljuset); mot änden blir de ljusare. Och själva änden är **platt vit**: ljuset med styrkan 200 gör färgen där långt
-ljusare än 1.0, fönstret lagrar 0.0 till 1.0 per kanal, och allt däröver kapas vid 1.0. Träets brädor är borta från den
-kvadraten – bara längs dess kanter, där träets blå kanal fortfarande är under 1.0, finns lite gult kvar.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Bygg och kör programmet i din IDE: du tittar längs
+tunneln, vars brädor löper mot en liten kvadrat mitt i fönstret – den bortre änden. Nära kameran är väggarna mycket
+mörka (bara en svag röd ton i nedre högra hörnet, från det röda ljuset); mot änden blir de ljusare. Och själva änden är
+**platt vit**: ljuset med styrkan 200 gör färgen där långt ljusare än 1.0, fönstret lagrar 0.0 till 1.0 per kanal, och
+allt däröver kapas vid 1.0. Träets brädor är borta från den kvadraten – bara längs dess kanter, där träets blå kanal
+fortfarande är under 1.0, finns lite gult kvar.
 
 ```quiz
 Belysningsshadern räknar fram färgen (3.5, 2.4, 1.2) för ett fragment vid tunnelns ände och skriver den i fönstret, vars färgbuffer har 8 bitar per kanal. Vad lagras?
@@ -485,10 +485,10 @@ Varför behöver skärmfyrhörningen ett eget pipeline state object, `m_hdrPipel
 ```
 :::
 
-Tryck på **Build & run**: **ingenting ändras**. Den bortre änden är lika platt vit som förut. Det är väntat:
-flyttalsbuffern håller nu de sanna färgerna, 200-ljuset och allt, men skärmfyrhörningens shader skriver dem oförändrade
-(bara gammakorrigerade) i 8-bitarsfönstret – där de kläms, precis som förut. Att behålla värdena räcker inte; något måste
-avbilda dem på 0.0 till 1.0.
+Bygg och kör: **ingenting ändras**. Den bortre änden är lika platt vit som förut. Det är väntat: flyttalsbuffern håller
+nu de sanna färgerna, 200-ljuset och allt, men skärmfyrhörningens shader skriver dem oförändrade (bara gammakorrigerade)
+i 8-bitarsfönstret – där de kläms, precis som förut. Att behålla värdena räcker inte; något måste avbilda dem på 0.0
+till 1.0.
 
 ## Tone mapping
 
@@ -548,8 +548,8 @@ Reinhard tone mapping räknar `hdrColor / (hdrColor + 1.0)` per kanal. Vilket p�
 Inget värde når någonsin 1.0, så inga två olika ljusa färger smälter ihop till samma vita. Priset: värden kring 1.0 blir märkbart mörkare (0.5), och därför vinner de ljusa delarna detaljer medan scenen som helhet blir lite mörkare.
 ```
 
-Tryck på **Build & run**: **den bortre änden visar sitt trä igen** – brädorna är tillbaka i den ljusa kvadraten, varma
-och detaljerade, och ingen pixel är rent vit längre. Skenet på väggarna runt den blir lite mörkare; resten av den mörka
+Bygg och kör: **den bortre änden visar sitt trä igen** – brädorna är tillbaka i den ljusa kvadraten, varma och
+detaljerade, och ingen pixel är rent vit längre. Skenet på väggarna runt den blir lite mörkare; resten av den mörka
 tunneln ser likadan ut, eftersom små värden passerar Reinhard nästan oförändrade.
 
 Med Reinhard tone mapping förlorar vi inte längre några detaljer i scenens ljusa områden. Den tenderar dock att gynna
@@ -687,9 +687,8 @@ blir Reinhard-raden en kommentar och exponeringskurvan tar dess plats:
 Det är learnopengls `hdr.fs`, utan växeln `hdr`. Gör nu den sista uppgiften, **exposure**.
 :::
 
-Tryck på **Build & run**: den bortre änden är **ljusare än med Reinhard men visar fortfarande sina brädor** – dess
-ljusaste mitt kommer nära vitt, kanterna och skenet runt den blir också lite ljusare. Resten av den mörka tunneln är
-oförändrad.
+Bygg och kör: den bortre änden är **ljusare än med Reinhard men visar fortfarande sina brädor** – dess ljusaste mitt
+kommer nära vitt, kanterna och skenet runt den blir också lite ljusare. Resten av den mörka tunneln är oförändrad.
 
 learnopengl ändrar exponeringen medan programmet kör, med tangenterna Q och E (och slår av och på HDR med mellanslag).
 Här byter uppgifterna koden i stället, så prova själv andra värden för den globala `exposure`:

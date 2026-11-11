@@ -225,9 +225,9 @@ void Reset(BallObject& ball, XMFLOAT2 position, XMFLOAT2 velocity)
 ```
 :::
 
-The `// TODO:` comments in the project mark where your code goes, and **Build & run** (Ctrl+Enter) runs it in the
-built-in simulator. Now do the first two tasks: **ball-object** – the struct and `MakeBallObject` – and
-**move-reset** – the two functions. Nothing uses them yet, so the picture does not change.
+The `// TODO:` comments in the project mark where your code goes, and you build and run it in your IDE. Now do the first
+two tasks: **ball-object** – the struct and `MakeBallObject` – and **move-reset** – the two functions. Nothing uses them
+yet, so the picture does not change.
 
 ```quiz
 When the ball crosses the left edge, `Move` reverses `Velocity.x` *and* sets `Position.x = 0.0f`. What would go wrong without the second part?
@@ -293,7 +293,7 @@ The paddle is at (350, 580) and 100 pixels wide, so the ball's top-left corner g
         DrawObject(Ball, Renderer);
 ```
 
-Now do the task **draw-ball**. Press **Build & run**: **the pale green ball sits on the paddle.**
+Now do the task **draw-ball**. Build and run: **the pale green ball sits on the paddle.**
 
 Every frame, the game's `Update` moves the ball:
 
@@ -406,9 +406,9 @@ position of the ball alongside the paddle's position whenever the ball is stuck.
 
 Now do the task **launch**. Remember the course's fixed input (Setting up): nobody presses A or D, and the space bar is
 pressed once, at 0.5 s – frame 30 – and released at 0.55 s. So for half a second the ball sits on the paddle; in frame
-30 `ProcessInput` sets `Stuck = false`, and the same frame's `Update` moves it for the first time, by
-(100, −350) × 1/60. Press **Build & run**: the picture is at **1.0 s** – frame 60 –, and **the ball is flying up to the
-right**, at (439.17, 374.17), the paddle empty below it.
+30 `ProcessInput` sets `Stuck = false`, and the same frame's `Update` moves it for the first time, by (100, −350) ×
+1/60. Build and run: the picture is at **1.0 s** – frame 60 –, and **the ball is flying up to the right**, at (439.17,
+374.17), the paddle empty below it.
 
 ```quiz
 The ball is released in frame 30 and moves by `INITIAL_BALL_VELOCITY / 60` in every frame from then on, frame 30 included. Where is its top-left corner in frame 60 (the picture at 1.0 s)?
@@ -417,7 +417,7 @@ The ball is released in frame 30 and moves by `INITIAL_BALL_VELOCITY / 60` in ev
 - [x] At about (439.17, 374.17): 31 frames of movement (frames 30 to 60), 31 × (100, −350) / 60 from (387.5, 555)
 - [ ] At (487.5, 205): one second of movement
 ---
-31 × 100 / 60 ≈ 51.67 and 31 × 350 / 60 ≈ 180.83. Because the course's time is fixed at 1/60 per frame, the position is the same in every API, on every driver and in the simulator – and in learnopengl's program on a real clock it would be about the same.
+31 × 100 / 60 ≈ 51.67 and 31 × 350 / 60 ≈ 180.83. Because the course's time is fixed at 1/60 per frame, the position is the same in every API and on every driver – and in learnopengl's program on a real clock it would be about the same.
 ```
 
 The ball flies straight through the bricks: nothing checks for collisions yet. Run the project in your head a bit

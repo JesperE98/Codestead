@@ -57,9 +57,8 @@ top row. There is no `aiProcess_ConvertToLeftHanded`: the course's maths is righ
 `XMMatrixPerspectiveFovRH`). The model matrix is a root constant, as in the *Model* chapter.
 :::
 
-The `// TODO:` comments mark where your code goes; **Build & run** (Ctrl+Enter) compiles the program and runs it in the
-built-in simulator: a straight tentacle in the middle of the window – the mesh in its *rest pose*, the shape it was
-modelled in.
+The `// TODO:` comments mark where your code goes. Build and run the program in your IDE: a straight tentacle in the
+middle of the window – the mesh in its *rest pose*, the shape it was modelled in.
 
 ## Bones, the bind pose and the offset matrix
 
@@ -624,8 +623,8 @@ after the input and before drawing, and drop the one-time update at time 0.
 
 Now do the last task, **play**. Build and run: the tentacle sways – a wave runs up from the base, the base turns and
 bobs, the tip swells and shrinks – one cycle every two seconds, looping without a jump because the last key equals the
-first. The screenshot is taken at 1.25 s, 1250 ticks, between the keys at 1000 and 1500: the tentacle leans to the right,
-its tip at the top right. At 0.25 s it leans to the left in the mirror pose.
+first. The expected result shows it at 1.25 s, 1250 ticks, between the keys at 1000 and 1500: the tentacle leans to the
+right, its tip at the top right. At 0.25 s it leans to the left in the mirror pose.
 
 ```quiz
 The animation has a duration of 2000 ticks at 1000 ticks per second. The animator's time is at 1990 ticks and the next frame takes 1/60 s. Where is the animation after the update?

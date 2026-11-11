@@ -19,11 +19,11 @@ Vi skulle behöva läsa in ljudfiler till en samling byte för hand, bearbeta oc
 flera ljudströmmar på rätt sätt för spelet. Det kan bli komplicerat ganska snabbt och kräver en del lågnivåkunskap om
 ljudteknik. Därför använder spel ett bibliotek för det, och det gör learnopengl också.
 
-**Det här kapitlet har inga uppgifter.** Kursens simulator spelar inget ljud, och kursen har inga ljudfiler med.
-Projektet är lösningen från kapitlet `powerups` som den är – de sex test-power-upsen inräknade –, så du kan bygga och köra
-spelet; dess bilder är `powerups` bilder: vid 1,5 s de sex fallande pillren, vid 3,0 s den förvirrade bilden med den breda
-racketen. Det som följer förklarar learnopengls ljudkod och var den skulle hamna i Hedgerow; på din egen dator kan du lägga
-till den med något av biblioteken nedan.
+**Det här kapitlet har inga uppgifter.** Kursen kan inte kontrollera ljud, och den har inga ljudfiler med. Projektet är
+lösningen från kapitlet `powerups` som den är – de sex test-power-upsen inräknade –, så du kan bygga och köra spelet;
+dess bilder är `powerups` bilder: vid 1,5 s de sex fallande pillren, vid 3,0 s den förvirrade bilden med den breda
+racketen. Det som följer förklarar learnopengls ljudkod och var den skulle hamna i Hedgerow; du kan lägga till den i din
+egen version med något av biblioteken nedan.
 
 ## irrKlang
 

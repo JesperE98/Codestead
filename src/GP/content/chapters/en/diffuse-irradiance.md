@@ -119,9 +119,10 @@ blue-grey sky above, dark green hills on the horizon (higher on the left of the 
 up, to the right and *behind* the camera – and the lamps are outside the view, but they will light the spheres from the
 front.
 
-Two numbers are smaller than learnopengl's, because the built-in simulator runs on the CPU (a real GPU handles
-learnopengl's values easily): the environment cube map has 128 × 128 texels per face instead of 512 × 512, and the
-convolution samples the hemisphere with a step of 0.1 instead of 0.025 – 1008 samples per texel instead of about 16,000.
+Two numbers are smaller than learnopengl's, because the course computes its checks and expected results on the CPU (a
+real GPU handles learnopengl's values easily): the environment cube map has 128 × 128 texels per face instead of 512 ×
+512, and the convolution samples the hemisphere with a step of 0.1 instead of 0.025 – 1008 samples per texel instead of
+about 16,000.
 
 :::opengl
 `main.cpp` has the shader objects of learnopengl's IBL demo: the spheres' shader is called `pbrShader` now. The new
@@ -918,10 +919,10 @@ The background cube is drawn last with `gl_Position = clipPos.xyww` (`xyww` in H
 With the default less-than test, 1.0 < 1.0 would fail everywhere and the background would vanish. The Cubemaps chapter introduced the same trick for its skybox.
 ```
 
-Press **Build & run**: **the sky appears behind the spheres**. Pale blue-grey at the top, a band of dark green hills on
-the horizon – higher on the left of the window –, the grey-brown ground below; it is the right way up. The 128 × 128
-faces are magnified about ten times, so the background is soft. The spheres haven't changed: their ambient term is still
-the constant.
+Build and run: **the sky appears behind the spheres**. Pale blue-grey at the top, a band of dark green hills on the
+horizon – higher on the left of the window –, the grey-brown ground below; it is the right way up. The 128 × 128 faces
+are magnified about ten times, so the background is soft. The spheres haven't changed: their ambient term is still the
+constant.
 
 Converting an equirectangular HDR image into a cubemap was the first step; a cube map is also what the convolution
 needs, and with it the environment shows up properly behind the scene. Now let's get to the actual convolution.
@@ -1163,9 +1164,9 @@ conversion's writes – both are in the same command list.
 For now, show the irradiance map as the background: bind it instead of the environment map for the background draw –
 the background's shader stays as it is. Now do the task **irradiance-map**.
 
-Press **Build & run**: the background is **a very soft blur** with no detail – the hills and the horizon are gone; a
-pale grey-violet everywhere, slightly bluer at the top and warmer at the bottom. It is bright even below the horizon:
-every direction's hemisphere reaches part of the sky or the sun. This is the light a matt surface facing that direction
+Build and run: the background is **a very soft blur** with no detail – the hills and the horizon are gone; a pale
+grey-violet everywhere, slightly bluer at the top and warmer at the bottom. It is bright even below the horizon: every
+direction's hemisphere reaches part of the sky or the sun. This is the light a matt surface facing that direction
 receives from the whole environment.
 
 ```quiz
@@ -1313,11 +1314,11 @@ Without the roughness term, F rises to 1 at the rims of every sphere and kD fall
 ```
 
 Now do the last task, **ambient**: use the irradiance map as the ambient light, and show the environment map as the
-background again. Press **Build & run**: **the non-metal spheres are lit by the sky**. The bottom rows are clearly
-brighter and evenly lit, their upper halves – which face the bright sky – brighter than the lower ones, which face the
-darker ground; there are no black sides any more. The metal rows at the top hardly change: metals have no diffuse
-reflection, and their reflection of the environment is the next chapter's subject. Only the red channel grows, because
-the albedo is (0.5, 0, 0). This is learnopengl's `2.1.2.ibl_irradiance`.
+background again. Build and run: **the non-metal spheres are lit by the sky**. The bottom rows are clearly brighter and
+evenly lit, their upper halves – which face the bright sky – brighter than the lower ones, which face the darker ground;
+there are no black sides any more. The metal rows at the top hardly change: metals have no diffuse reflection, and their
+reflection of the environment is the next chapter's subject. Only the red channel grows, because the albedo is (0.5, 0,
+0). This is learnopengl's `2.1.2.ibl_irradiance`.
 
 It may seem odd at first that the metal spheres look so dark in an environment this bright, but that is what the
 diffuse part alone can do: a metal sphere should mirror the sky, and so far nothing in the shader reflects the

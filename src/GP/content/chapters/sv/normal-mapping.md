@@ -59,9 +59,9 @@ Blinn-Phong-spekulärt `float3(0.2f, 0.2f, 0.2f) * pow(…, 32.0f)`. (learnopeng
 fyrhörningen på ljusets position som markering; kursen hoppar över den.)
 :::
 
-Tryck på **Build & run** (Ctrl+Enter): en tegelvägg, vriden snett – dess nedersta hörn når nedanför fönstret – med ett
-högdager uppe till höger. Den är jämnt belyst – teglen och de ljusa fogarna mellan dem ser målade ut på en platt skiva.
-Kommentarerna `// TODO:` i projektet visar var din kod ska in.
+Bygg och kör programmet: en tegelvägg, vriden snett – dess nedersta hörn når nedanför fönstret – med ett högdager uppe
+till höger. Den är jämnt belyst – teglen och de ljusa fogarna mellan dem ser målade ut på en platt skiva. Kommentarerna
+`// TODO:` i projektet visar var din kod ska in.
 
 ## Normal mapping
 
@@ -183,9 +183,8 @@ Gör nu första uppgiften, **normal-map**: medlemmen `m_normalMap`, den större 
 shaderraderna.
 :::
 
-Tryck på **Build & run**: teglen får **knölar** – fogarna mellan dem har nu kanter – men belysningen är fel. Hela väggen
-är mörkare, mest nere till vänster, och fasningarna längs teglen stämmer inte med ljuset: de som vetter uppåt, mot
-ljuset, är mörka.
+Bygg och kör: teglen får **knölar** – fogarna mellan dem har nu kanter – men belysningen är fel. Hela väggen är mörkare,
+mest nere till vänster, och fasningarna längs teglen stämmer inte med ljuset: de som vetter uppåt, mot ljuset, är mörka.
 
 Det finns dock ett problem som starkt begränsar den här användningen av normal maps. Normal mapen vi använde har
 normalvektorer som alla pekar ungefär åt den positiva z-riktningen. Det fungerade eftersom planets ytnormal också pekade
@@ -406,8 +405,8 @@ PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL, float2 texCoo
 Gör nu uppgiften **tangents**.
 :::
 
-Tryck på **Build & run**: ingenting ändras – shadrarna använder inte de nya attributen än. För vår fyrhörning får båda
-trianglarna förstås samma vektorer: fyrhörningen är platt och dess textur är inte förvrängd.
+Bygg och kör: ingenting ändras – shadrarna använder inte de nya attributen än. För vår fyrhörning får båda trianglarna
+förstås samma vektorer: fyrhörningen är platt och dess textur är inte förvrängd.
 
 :::opengl
 Räkna ut det för den första triangeln: E1 = (0, -2, 0), E2 = (2, -2, 0), ΔUV1 = (0, -1), ΔUV2 = (1, -1), alltså f = 1,
@@ -606,9 +605,9 @@ fasning belysas från fel håll. Med en normal map i DirectX-stil behövdes inge
 vändning: använd som normal i världsrymden var kartans y helt enkelt väggens uppåt.) Gör nu uppgiften **tbn**.
 :::
 
-Tryck på **Build & run**: teglens **knölar belyses rätt**. Teglens platta ytor ser ut som i början – de är platta i
-normal mapen också – men fasningarna som vetter mot ljuset är ljusa nu, och de som vetter bort ligger i sin egen skugga.
-Väggen ser ut att ha djup, och den är fortfarande bara två trianglar.
+Bygg och kör: teglens **knölar belyses rätt**. Teglens platta ytor ser ut som i början – de är platta i normal mapen
+också – men fasningarna som vetter mot ljuset är ljusa nu, och de som vetter bort ligger i sin egen skugga. Väggen ser
+ut att ha djup, och den är fortfarande bara två trianglar.
 
 :::opengl
 ```quiz
@@ -731,9 +730,9 @@ ersätter de tre som räknade ut T, B och N; attributet `bitangent` blir kvar i 
 parametrar, som i learnopengl.
 :::
 
-Tryck på **Build & run**: ingenting ändras. På vår platta fyrhörning är T, B och N redan vinkelräta, och kryssprodukten
-är lika med den normaliserade bitangent vi skickade. På en riktig mesh med utjämnade tangenter är det skillnaden mellan
-en TBN-matris vars transponat är dess invers och en vars inte är det.
+Bygg och kör: ingenting ändras. På vår platta fyrhörning är T, B och N redan vinkelräta, och kryssprodukten är lika med
+den normaliserade bitangent vi skickade. På en riktig mesh med utjämnade tangenter är det skillnaden mellan en
+TBN-matris vars transponat är dess invers och en vars inte är det.
 
 ## Mer att läsa
 

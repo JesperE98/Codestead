@@ -1,12 +1,12 @@
 # OIT: introduktion
 
 Med det här kapitlet börjar en ny del: *Gästartiklar*. Mellan 2020 och 2022 publicerade learnopengl.com en serie
-artiklar av gästskribenter om ämnen utanför huvudkursen – ordningsoberoende transparens, skelettanimation, scengrafer och
-frustum culling, kaskaderade skuggkartor, tessellering, OpenGL:s direct state access, compute shaders, fysikaliskt
-baserad bloom och arealjus. Varje artikel står i stort sett på egna ben och bygger på de delar du redan gått igenom. Som
+artiklar av gästskribenter om ämnen utanför huvudkursen – ordningsoberoende transparens, skelettanimation, scengrafer
+och frustum culling, kaskaderade skuggkartor, tessellering, OpenGL:s direct state access, compute shaders, fysikaliskt
+baserad bloom och ytljus. Varje artikel står i stort sett på egna ben och bygger på de delar du redan gått igenom. Som
 allt tidigare är teknikerna inte knutna till ett visst API: de handlar om hur man organiserar pass, buffrar och shaders,
-och de fungerar likadant i OpenGL, Vulkan och DirectX 12. Varje kapitel visar var {{api}} lägger dem – och där en artikel
-handlar om OpenGL självt (*DSA*) berättar kapitlet vad de explicita API:erna gör i stället.
+och de fungerar likadant i OpenGL, Vulkan och DirectX 12. Varje kapitel visar var {{api}} lägger dem – och där en
+artikel handlar om OpenGL självt (*DSA*) berättar kapitlet vad de explicita API:erna gör i stället.
 
 De två första kapitlen handlar om *ordningsoberoende transparens* (order-independent transparency, förkortat OIT). Det här
 kapitlet förklarar problemet och de olika lösningsfamiljerna; nästa kapitel, *Weighted Blended*, implementerar en av dem.
@@ -255,12 +255,12 @@ som den är. `composite.hlsl` och `screen.hlsl` finns redan till nästa kapitel;
 fortfarande en TODO.
 :::
 
-Det här kapitlet har inga uppgifter. Tryck på **Build & run** (Ctrl+Enter): projektet kompileras och körs i den inbyggda
-simulatorn. Mot svart ser du den röda fyrhörningen till höger, den halvgenomskinliga gröna nere till vänster framför den,
-och den halvgenomskinliga blå uppe till vänster, delvis dold bakom den röda. Där den gröna ligger över den röda blandas
-de till en olivgrön ton – rätt, eftersom den röda är ogenomskinlig och ritades först. Men titta på den blå
-fyrhörningens nedre vänstra hörn: där den gröna täcker den (runt pixeln (230, 300)) saknas den blå helt enkelt. Hörnet är
-avskuret längs den gröna fyrhörningens överkant, och pixeln där är rent mörkgrön (0, 128, 0) – grönt över svart.
+Det här kapitlet har inga uppgifter. Bygg och kör programmet: mot svart ser du den röda fyrhörningen till höger, den
+halvgenomskinliga gröna nere till vänster framför den, och den halvgenomskinliga blå uppe till vänster, delvis dold
+bakom den röda. Där den gröna ligger över den röda blandas de till en olivgrön ton – rätt, eftersom den röda är
+ogenomskinlig och ritades först. Men titta på den blå fyrhörningens nedre vänstra hörn: där den gröna täcker den (runt
+pixeln (230, 300)) saknas den blå helt enkelt. Hörnet är avskuret längs den gröna fyrhörningens överkant, och pixeln där
+är rent mörkgrön (0, 128, 0) – grönt över svart.
 
 ```quiz
 Varför saknas den blå fyrhörningen där den gröna täcker den?

@@ -72,12 +72,11 @@ learnopengl clamps its colour buffers to the edge "as the blur filter would othe
 (the file isn't compiled before you need it).
 :::
 
-The `// TODO:` comments in the project mark where your code goes. Press **Build & run** (Ctrl+Enter) to compile the
-program and run it in the built-in simulator: the floor and the containers, the **white light cube** in the middle above
-the centre, under the top container, and the **green light cube** at the top edge. The red and blue light cubes aren't in
-view, but their light colours the floor and the sides of the boxes. The tone mapping keeps the details, but the light
-cubes don't look like lights: they have hard edges, and right next to them the black background is as black as
-anywhere.
+The `// TODO:` comments in the project mark where your code goes. Build and run the program in your IDE: the floor and
+the containers, the **white light cube** in the middle above the centre, under the top container, and the **green light
+cube** at the top edge. The red and blue light cubes aren't in view, but their light colours the floor and the sides of
+the boxes. The tone mapping keeps the details, but the light cubes don't look like lights: they have hard edges, and
+right next to them the black background is as black as anywhere.
 
 ## Extracting bright color
 
@@ -368,11 +367,11 @@ Output location n writes `pColorAttachments[n]`. The pipeline's `colorBlending.a
 ```
 :::
 
-Press **Build & run**: the window shows **only the bright parts**, tone-mapped, on black. The light cubes are there,
-the white and the green one; the steel frame of the container right above the white light; a bright edge of the big
-container in the lower left that faces the white light; and small dots – the frames' rivets where the light falls on
-them. Everything else is black. Even the floor's lit patch under the white light stays black: it is bright, but its
-luminance stays below 1.0. The edges of the bright parts are still hard.
+Build and run: the window shows **only the bright parts**, tone-mapped, on black. The light cubes are there, the white
+and the green one; the steel frame of the container right above the white light; a bright edge of the big container in
+the lower left that faces the white light; and small dots – the frames' rivets where the light falls on them. Everything
+else is black. Even the floor's lit patch under the white light stays black: it is bright, but its luminance stays below
+1.0. The edges of the bright parts are still hard.
 
 ## Gaussian blur
 
@@ -723,10 +722,10 @@ executes in order. For now, the final pass shows the blurred result: its table 2
 do the task **blur**.
 :::
 
-Press **Build & run**: the **bright parts are blurred**. Soft glowing blobs surround the light cubes – white around the
-white one, green around the green one – and the steel edge and the rivets have become soft bands and dots. The middle of
-the white cube stays saturated; away from the bright parts everything is still black. Look along a row to the right of
-the white cube: where the brightness dropped from white to black in one step, it now fades over a dozen pixels.
+Build and run: the **bright parts are blurred**. Soft glowing blobs surround the light cubes – white around the white
+one, green around the green one – and the steel edge and the rivets have become soft bands and dots. The middle of the
+white cube stays saturated; away from the bright parts everything is still black. Look along a row to the right of the
+white cube: where the brightness dropped from white to black in one step, it now fades over a dozen pixels.
 
 ## Blending both textures
 
@@ -915,10 +914,10 @@ The scene's SRV is in slot 3, the ping-pong buffers' in 5 and 6: slot 4, the bri
 ```
 :::
 
-Press **Build & run**: the scene is back, and **the light cubes glow**. A soft white halo spreads from the white cube
-over the black background and the container above it; the green cube bleeds green over the steel frame next to it; the
-bright steel edge of the big container glows too. Away from the bright parts – the floor, the boxes' wood, the
-background – nothing has changed. That is the solution, and learnopengl's bloom.
+Build and run: the scene is back, and **the light cubes glow**. A soft white halo spreads from the white cube over the
+black background and the container above it; the green cube bleeds green over the steel frame next to it; the bright
+steel edge of the big container glows too. Away from the bright parts – the floor, the boxes' wood, the background –
+nothing has changed. That is the solution, and learnopengl's bloom.
 
 ## Final thoughts
 

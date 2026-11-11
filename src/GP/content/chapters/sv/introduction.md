@@ -17,8 +17,8 @@ av tre grafik-API:er:
 - **DirectX 12** (Direct3D 12) – text och kod följer Microsofts D3D12HelloWorld-exempel och dokumentationen av
   Direct3D 12 på Microsoft Learn.
 
-Du läser inte bara om grafikprogrammering: varje kapitel har ett projekt som du ändrar, bygger och kör själv. När
-ett kapitel är slut har du skrivit koden som det handlar om.
+Du läser inte bara om grafikprogrammering: varje kapitel har ett projekt som du ändrar, bygger och kör själv, i din
+egen IDE på din egen dator. När ett kapitel är slut har du skrivit koden som det handlar om.
 
 ## Förkunskaper
 
@@ -95,41 +95,49 @@ bäst att följa dem i ordning.
 Varje kapitel är en lektion i tre delar:
 
 1. **Texten** (till vänster) förklarar teorin och koden steg för steg, så som learnopengl.com gör. Kodutdragen i
-   texten är hämtade ur kapitlets projekt, så du hittar varje rad igen i editorn.
+   texten är hämtade ur kapitlets startfiler, så du hittar varje rad igen i ditt projekt.
 2. **Frågor** i texten ("Testa dig själv") ser till att du har förstått de viktiga delarna. Svara på dem medan du
-   läser: när du har svarat på dem öppnas uppgifterna och projektet.
-3. **Arbetsbänken** (till höger) är där du skriver koden.
+   läser: när du har svarat på dem öppnas uppgifterna.
+3. **Uppgifterna** (till höger) är koden du skriver – i din egen IDE. Panelen **Ditt projekt** kopplar ihop kapitlet
+   med mappen där ditt projekt ligger.
 
 I slutet av de flesta kapitel finns *Mer att läsa*: länkar till den officiella dokumentationen och de
 ursprungliga guiderna, om du vill läsa mer.
 
-## Arbetsbänken
+## Så arbetar du i kursen
 
-Arbetsbänken har två delar.
+Du skriver, bygger och kör koden i en riktig IDE – Visual Studio, CLion, Rider eller Visual Studio Code – med en riktig
+kompilator, och ditt program öppnar ett riktigt fönster på din skärm. Appen är din lärobok och din granskare. Kapitlet
+*Sätt upp din IDE*, två kapitel härifrån, visar hur du sätter upp IDE:n, kompilatorn och biblioteken för det API du har
+valt.
 
-Överst finns **uppgifterna**. Varje uppgift är en ändring i projektet: en funktion att anropa, ett värde att
-ändra, några rader att lägga till. Texten säger till när det är dags för en uppgift. Om du kör fast kan du öppna
-**Tips**. Efter några försök – eller så snart du har öppnat tipset – kan du också visa **lösningen**: klicka på
-dess kod för att lägga in den i projektet i stället för den TODO den hör till.
+Till höger i varje kapitel finns **uppgifterna**. Varje uppgift är en ändring i projektet: en funktion att anropa, ett
+värde att ändra, några rader att lägga till. Texten säger till när det är dags för en uppgift. Om du kör fast kan du
+öppna **Tips**. Efter några försök – eller så snart du har öppnat tipset – kan du också visa **lösningen**, koden som
+hör hemma där uppgiftens `// TODO:`-kommentar står.
 
-Under uppgifterna finns **projekteditorn**. Varje fil i projektet är en flik: `main.cpp` först, sedan headerfiler
-och shaderfiler. I projekten i de kommande kapitlen markerar `// TODO:`-kommentarer var din kod ska stå. När du är
-klar trycker du på **Bygg & kör** (eller Ctrl+Enter). Projektet kompileras och körs i den inbyggda simulatorn:
+Ovanför uppgifterna finns panelen **Ditt projekt**:
 
-- **Utdata** visar kompilatorns meddelanden. Om bygget misslyckas klickar du på ett fel för att hoppa till raden.
-  När programmet körs visar utdata också vad programmet skriver ut.
-- **Förhandsvisningsfönstret** visar fönstret som ditt program öppnar och det som ritas i det.
+- **Välj mapp…** väljer mappen för kapitlets projekt på din disk, och **Kopiera startfilerna** kopierar kapitlets filer
+  dit: `main.cpp`, och senare även shaders, texturer och modeller. I projekten i de kommande kapitlen visar
+  `// TODO:`-kommentarer var din kod ska stå. **Öppna mappen** öppnar mappen, så att du kan öppna den i din IDE.
+- När du har skrivit koden för en uppgift **bygger** du programmet och **kör** det från din IDE. Appen håller koll på
+  mappen: när den har sett ett nytt bygge och en körning av det kontrollerar den dina källfiler med kursens kontroller
+  och bockar av uppgiften – eller säger vad som fortfarande saknas.
+- För varje uppgift visar panelen **Förväntat resultat**: en bild av vad ditt programs fönster ska visa när uppgiften
+  är klar.
 
-Om du vill börja om ett kapitel ställer **Återställ** tillbaka projektet som det var i början av kapitlet (dina
-klara uppgifter finns kvar).
+Om din IDE bygger eller kör programmet någonstans där appen inte kan se det (i WSL eller på en annan dator, till
+exempel) talar länken **Jag har kört det** om för appen att du har kört det.
 
 ```quiz
-Hur kompilerar och kör du projektet i editorn? (Välj alla som fungerar.)
-- [x] Tryck på Ctrl+Enter
-- [x] Tryck på **Bygg & kör**
-- [ ] Svara på frågorna i texten igen
+Du har skrivit koden för en uppgift. Vad får appen att bocka av den? (Välj alla som stämmer.)
+- [x] Du bygger programmet i din IDE
+- [x] Du kör programmet som du har byggt
+- [ ] Du öppnar bilden **Förväntat resultat**
 ---
-Båda startar samma bygge: projektet kompileras, och om det lyckas körs det och förhandsvisningen visar dess fönster.
+Appen väntar på ett nytt bygge och en körning av det, och kontrollerar sedan dina källfiler. Det förväntade resultatet
+finns bara där för att jämföras med det ditt program ritar.
 ```
 
 ## Ditt första program
@@ -158,8 +166,9 @@ Direct3D 12: en device, en command queue, en swap chain, ett pipeline state obje
 
 Oroa dig inte om inget av detta säger dig något än – det är det kursen är till för. Se det bara köra för tillfället.
 
-Gör nu den första uppgiften: tryck på **Bygg & kör** och titta på fönstret i förhandsvisningen: en orange triangel
-på en mörkt blågrön bakgrund.
+Kapitlets startfiler är det programmet. Du bygger det själv när din IDE är uppsatt – den första uppgiften ber dig
+bygga och köra det och titta på dess fönster: en orange triangel på en mörkt blågrön bakgrund. Till dess visar dess
+**Förväntat resultat** vad det ritar.
 
 ### Triangelns färg
 
@@ -245,8 +254,8 @@ Färgvärden i en shader går från 0.0 till 1.0, i ordningen röd, grön, blå,
 ```
 :::
 
-Gör nu den andra uppgiften: gör triangeln grön genom att ändra färgen till `(0.2, 0.8, 0.3, 1.0)`. Tryck på
-**Bygg & kör** igen och titta i förhandsvisningen: triangeln har samma form och position, bara färgen har ändrats.
+Den andra uppgiften: gör triangeln grön genom att ändra färgen till `(0.2, 0.8, 0.3, 1.0)`. Bygg och kör det igen och
+titta på ditt programs fönster: triangeln har samma form och position, bara färgen har ändrats.
 
 ## Kurskarta
 
@@ -258,6 +267,7 @@ i appen nu; resten kommer, i den här ordningen.
 | Kapitel | |
 |---|---|
 | {{api}} | finns |
+| Setting up your IDE | finns |
 | Creating a window | finns |
 | Hello Window | finns |
 | Hello Triangle | finns |
@@ -282,8 +292,9 @@ HDR, Bloom, Deferred Shading, SSAO.
 
 **In Practice** – kommer: Debugging, Text Rendering, 2D Game.
 
-Nästa kapitel, *{{api}}*, förklarar vad API:et du har valt egentligen är och hur det är organiserat. Sedan börjar du
-skriva kod: först ett fönster, sedan ett fönster som fylls med en färg, sedan triangeln du nyss såg.
+Nästa kapitel, *{{api}}*, förklarar vad API:et du har valt egentligen är och hur det är organiserat. Sedan sätter du
+upp din IDE och börjar skriva kod: först ett fönster, sedan ett fönster som fylls med en färg, sedan triangeln du nyss
+såg.
 
 ## Mer att läsa
 

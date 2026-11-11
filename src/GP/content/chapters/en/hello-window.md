@@ -42,8 +42,8 @@ empty. The window opens and stays open, but nothing is ever presented to it, so 
 until you render the first frame.
 :::
 
-As before, the `// TODO:` comments in the project mark where your code goes, and **Build & run** (Ctrl+Enter)
-compiles the program and runs it in the built-in simulator.
+As before, the `// TODO:` comments in the project mark where your code goes, and you build and run the program in your
+IDE.
 
 ## Ready your engines
 

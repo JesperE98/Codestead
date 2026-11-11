@@ -39,8 +39,8 @@ learnopengls uniform buffer-demo; dess shaders (`uniform_buffer.hlsl`, `red.hlsl
 `yellow.hlsl`) finns redan i projektet.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift trycker du på **Build & run**
-(Ctrl+Enter) för att kompilera programmet och köra det i den inbyggda simulatorn.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
+IDE.
 
 ## GLSL's built-in variables
 
@@ -266,9 +266,9 @@ utdata som bygger på pixelns fönsterkoordinater:
 ```
 :::
 
-Eftersom fönstret är 800 brett måste en pixel vars x-koordinat är mindre än 400 ligga på fönstrets vänstra sida, och
-då ger vi fragmentet en annan färg. Tryck på **Build & run**: allt som ritas – kuberna och golvet – är rött till
-vänster om fönstrets mitt och grönt till höger om den, medan bakgrunden, där inga fragment ritas, förblir mörk.
+Eftersom fönstret är 800 brett måste en pixel vars x-koordinat är mindre än 400 ligga på fönstrets vänstra sida, och då
+ger vi fragmentet en annan färg. Bygg och kör: allt som ritas – kuberna och golvet – är rött till vänster om fönstrets
+mitt och grönt till höger om den, medan bakgrunden, där inga fragment ritas, förblir mörk.
 
 Nu kan vi beräkna två helt olika resultat i fragment shadern och visa vart och ett på var sin sida av fönstret. Det
 är utmärkt för att till exempel prova olika ljussättningstekniker.
@@ -460,8 +460,8 @@ plats 1 håller marmor, plats 2 metall. Så ett enda GPU-handtag på plats 1 ger
 före dess ritanrop) – det är en baksida, så det får metall som förut.
 :::
 
-Tryck på **Build & run**. Kuberna behåller sina konturer, men nu tittar du in i dem: insidan av den bortre sidan,
-inramad av insidorna av sidoytorna – allt i metall. Inte en enda pixel marmor finns kvar, och golvet är oförändrat.
+Bygg och kör. Kuberna behåller sina konturer, men nu tittar du in i dem: insidan av den bortre sidan, inramad av
+insidorna av sidoytorna – allt i metall. Inte en enda pixel marmor finns kvar, och golvet är oförändrat.
 
 ```quiz
 Efter uppgiften **front-facing** syns ingen marmor någonstans, fast framsidornas textur är marmor. Varför?
@@ -775,7 +775,7 @@ kommer fram i pixel shaderns `TEXCOORD`-indata. Structen skulle till och med kun
 namn, i två filer – så länge semantiken stämmer.
 :::
 
-Tryck på **Build & run**: ingenting ändras, inte en enda pixel. Blocket organiserar bara shadrarnas in- och utdata.
+Bygg och kör: ingenting ändras, inte en enda pixel. Blocket organiserar bara shadrarnas in- och utdata.
 
 :::opengl
 ```quiz
@@ -1437,8 +1437,8 @@ med sitt eget PSO. Scenens PSO förblir command listens starttillstånd, och tex
 shadrarna inte läser någon textur.
 :::
 
-Tryck på **Build & run**: fyra enfärgade kuber – röd, grön, gul och blå – på den mörka bakgrunden, var och en ritad av
-en annan shader, alla med samma vy och projektion.
+Bygg och kör: fyra enfärgade kuber – röd, grön, gul och blå – på den mörka bakgrunden, var och en ritad av en annan
+shader, alla med samma vy och projektion.
 
 ```quiz
 Hur ofta per frame skriver programmet vymatrisen i demot med fyra kuber?

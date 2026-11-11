@@ -133,8 +133,7 @@ texture rests in the state `PIXEL_SHADER_RESOURCE` and is turned into a `RENDER_
 draws into it.
 :::
 
-The `// TODO:` comments in the project mark where your code goes; **Build & run** (Ctrl+Enter) compiles the program and
-runs it in the built-in simulator.
+The `// TODO:` comments in the project mark where your code goes; you build and run the program in your IDE.
 
 ## The opaque pass
 

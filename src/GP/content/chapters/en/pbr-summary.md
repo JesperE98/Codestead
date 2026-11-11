@@ -64,10 +64,11 @@ you've learned.
   and no attenuation; a spotlight's intensity depends on its direction.
 - **Inverse-square law**: `attenuation = 1.0 / (distance * distance)`, physically correct in linear space. Hence the
   lights' (300, 300, 300): about 17 units away, 1/300 brings them back to about 1.0.
-- **The scene**: learnopengl's 7 × 7 spheres, 2.5 apart, `metallic = row / 7` (bottom 0), `roughness = clamp(col / 7, 0.05,
-  1.0)` (a roughness of exactly 0 would make a point light's highlight infinitely small), albedo (0.5, 0, 0), ao 1.0;
-  four lights at (±10, ±10, 10). The course's camera is at (0, 0, 22) (learnopengl: (0, 0, 3), inside the grid), the
-  sphere has 24 × 24 segments (learnopengl: 64 × 64 – the simulator draws on the CPU), no multisampling.
+- **The scene**: learnopengl's 7 × 7 spheres, 2.5 apart, `metallic = row / 7` (bottom 0),
+  `roughness = clamp(col / 7, 0.05, 1.0)` (a roughness of exactly 0 would make a point light's highlight infinitely
+  small), albedo (0.5, 0, 0), ao 1.0; four lights at (±10, ±10, 10). The course's camera is at (0, 0, 22) (learnopengl:
+  (0, 0, 3), inside the grid), the sphere has 24 × 24 segments (learnopengl: 64 × 64 – the course draws its checks and
+  expected results on the CPU), no multisampling.
 - **The UV sphere**: 25 × 25 vertices on a (u, v) grid, normal = position, and here a vertex **tangent**
   (-sin 2πu, 0, cos 2πu) – the direction in which u grows. **Indexed triangle strip**: the rows walked in a zigzag,
   1200 indices; each index after the first two makes a triangle with the two before it.

@@ -173,12 +173,12 @@ as learnopengl does:
     DoCollisions(game);
 ```
 
-`CheckCollision(Ball, box)` passes the ball where a `GameObject&` is expected – its `GameObject` part, with its
-25 × 25 box. Now do the task **do-collisions**. Press **Build & run**: the picture is now at **3.0 s** (frame 180), and
-**the ball has cut a channel through the wall**: ten bricks are gone – the blue, green and yellow ones of columns 9, 10
-and 11 and one orange brick at the top –, and the moon shows through the gap. The ball itself is back in the open sky,
-on its way down to the right. Its path is still the one of the Ball chapter: nothing bounces yet, so the ball flies
-through the bricks it destroys, off the top edge and down again through the next column.
+`CheckCollision(Ball, box)` passes the ball where a `GameObject&` is expected – its `GameObject` part, with its 25 × 25
+box. Now do the task **do-collisions**. Build and run: the expected result is now at **3.0 s** (frame 180), and **the
+ball has cut a channel through the wall**: ten bricks are gone – the blue, green and yellow ones of columns 9, 10 and 11
+and one orange brick at the top –, and the moon shows through the gap. The ball itself is back in the open sky, on its
+way down to the right. Its path is still the one of the Ball chapter: nothing bounces yet, so the ball flies through the
+bricks it destroys, off the top edge and down again through the next column.
 
 Look at the row of stones below the coloured bricks: the ball flew through the stone of column 9 on its way up, and
 the stone is still there. Solid bricks are never destroyed – and since nothing bounces yet, they don't stop the ball
@@ -308,11 +308,11 @@ base class – so the circle version wins. Before it existed, the same call chos
 mind: a call only sees the overloads declared *before* it, which is why the circle version goes between the AABB
 version and `DoCollisions`. (learnopengl has both as overloads too.)
 
-Now do the task **circle**. Press **Build & run**: the picture at 3.0 s is the same, pixel for pixel. The round ball
-meets the same ten bricks on its path – only some of them a frame later, because the corners of the box reached them
-before the circle did. At 1.75 s, for instance, the box version had already destroyed four bricks, the circle version
-three; the fourth follows a frame later. The difference is small at this speed, but it is the difference between a
-ball that hits a brick and one that misses it by a corner – it shows when the ball grazes a brick.
+Now do the task **circle**. Build and run: the picture at 3.0 s is the same, pixel for pixel. The round ball meets the
+same ten bricks on its path – only some of them a frame later, because the corners of the box reached them before the
+circle did. At 1.75 s, for instance, the box version had already destroyed four bricks, the circle version three; the
+fourth follows a frame later. The difference is small at this speed, but it is the difference between a ball that hits a
+brick and one that misses it by a corner – it shows when the ball grazes a brick.
 
 ```quiz
 The ball's centre C is straight below a brick whose centre is B, a little to the right of B but within the brick's width. Where is the closest point P that the circle test measures the distance to?

@@ -77,9 +77,9 @@ Några tal skiljer sig från learnopengls program:
 
 - **Kameran står på (0, 0, 22)** och tittar längs -z med 45° synfält: hela rutnätet, ungefär 17 enheter brett, ryms i
   fönstret. learnopengls kamera börjar på (0, 0, 3), mitt i rutnätet.
-- **Sfären har 24 × 24 segment** i stället för learnopengls 64 × 64. Den inbyggda simulatorn körs på processorn och
-  ritar varje triangel själv; en riktig GPU ritar learnopengls sfärer med 64 × 64 segment lika lätt. Med 24 segment blir
-  sfärernas konturer lite kantiga, belysningen är densamma.
+- **Sfären har 24 × 24 segment** i stället för learnopengls 64 × 64. Kursen ritar sina kontroller och förväntade
+  resultat på CPU:n, varje triangel själv; en riktig GPU ritar learnopengls sfärer med 64 × 64 segment lika lätt. Med 24
+  segment blir sfärernas konturer lite kantiga, belysningen är densamma.
 - Projektet har ingen multisampling (learnopengl ber GLFW om 4 samples), så att de tre API:erna ger samma bild.
 
 Sfären är learnopengls `renderSphere()`: en *UV-sfär*, vars vertex ligger på ett rutnät med 25 × 25 punkter i (u, v) =
@@ -244,8 +244,8 @@ Pipeline staten bestämmer vilken typ av primitiv (punkt, linje, triangel, patch
 ```
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Varje uppgift är ett steg i learnopengls shader, och
-**Build & run** (Ctrl+Enter) visar efter varje steg hur sfärerna förändras.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Varje uppgift är ett steg i learnopengls shader; bygg och
+kör programmet efter varje steg för att se hur sfärerna förändras.
 
 ## En PBR-ytmodell
 
@@ -438,9 +438,9 @@ med ljusets infallsvinkel n · ωi. Loopen slutar med:
 Efter loopen lägger shadern redan till den konstanta ambienta termen `0.03 * albedo * ao` och skriver färgen. Gör nu den
 första uppgiften, **lambert**: skriv ljusloopen.
 
-Tryck på **Build & run**: sfärerna är **matt röda**, alla 49 likadana – metallic och roughness används inte ännu. Varje
-sfär är ljusare på sidorna som vetter mot ljusen, och sfärerna nära rutnätets hörn är ljusare än den i mitten, eftersom
-de ligger närmare ett ljus: mittsfären ligger ungefär 17 enheter från varje ljus, en hörnsfär bara ungefär 10.6 från det
+Bygg och kör: sfärerna är **matt röda**, alla 49 likadana – metallic och roughness används inte ännu. Varje sfär är
+ljusare på sidorna som vetter mot ljusen, och sfärerna nära rutnätets hörn är ljusare än den i mitten, eftersom de
+ligger närmare ett ljus: mittsfären ligger ungefär 17 enheter från varje ljus, en hörnsfär bara ungefär 10.6 från det
 närmaste. Bara den röda kanalen är belyst (albedot är rent rött), och inget är mättat.
 
 ### Normalfördelningsfunktionen
@@ -522,11 +522,11 @@ och `Lo += (albedo / PI + specular) * radiance * NdotL;` i slutet av loopen.
 och `Lo += (albedo / PI + specular) * radiance * NdotL;` i slutet av loopen.
 :::
 
-Gör nu uppgiften **ndf**. Tryck på **Build & run**: **bländande vita högdagrar som växer med strävheten**, likadana i
-varje rad. I vänstra kolumnen (strävhet 0.05) har varje sfär fyra pyttesmå vita prickar – en reflektion per ljus –, i
-mittkolumnerna har de vuxit till fyra feta vita fläckar, och sfärerna i högra kolumnen är vita över hela ytan. Det är vad
-NDF:en är: för en slät yta är den enorm där halvvägsvektorn sammanfaller med normalen och nästan noll överallt annars, för
-en sträv yta är den utspridd över hela sfären. Men inget begränsar den ännu: den spekulära termen delas inte med
+Gör nu uppgiften **ndf**. Bygg och kör: **bländande vita högdagrar som växer med strävheten**, likadana i varje rad. I
+vänstra kolumnen (strävhet 0.05) har varje sfär fyra pyttesmå vita prickar – en reflektion per ljus –, i mittkolumnerna
+har de vuxit till fyra feta vita fläckar, och sfärerna i högra kolumnen är vita över hela ytan. Det är vad NDF:en är:
+för en slät yta är den enorm där halvvägsvektorn sammanfaller med normalen och nästan noll överallt annars, för en sträv
+yta är den utspridd över hela sfären. Men inget begränsar den ännu: den spekulära termen delas inte med
 normaliseringsfaktorn och det finns ingen Fresnelfaktor, så sfärerna reflekterar mycket mer ljus än vad som kommer in.
 
 ```quiz
@@ -616,10 +616,10 @@ Divisionen ger en enda float; när den tilldelas en `float3` kopieras den till d
 :::
 
 Observera att vi lägger till 0.0001 i nämnaren för att undvika division med noll om någon skalärprodukt blir 0.0. Gör nu
-uppgiften **geometry**. Tryck på **Build & run**: högdagrarna är **mindre och svagare på de sträva sfärerna**, som nu är
-rosa i stället för vita; mitten av högdagrarna på de släta sfärerna och på dem i mitten är fortfarande vit. Varje sfär
-reflekterar fortfarande som en perfekt spegel i sin högdager – inget beror ännu på vad sfären är gjord av, så raderna ser
-fortfarande likadana ut.
+uppgiften **geometry**. Bygg och kör: högdagrarna är **mindre och svagare på de sträva sfärerna**, som nu är rosa i
+stället för vita; mitten av högdagrarna på de släta sfärerna och på dem i mitten är fortfarande vit. Varje sfär
+reflekterar fortfarande som en perfekt spegel i sin högdager – inget beror ännu på vad sfären är gjord av, så raderna
+ser fortfarande likadana ut.
 
 ### Fresnelekvationen
 
@@ -756,10 +756,10 @@ fragmentets slutliga belysta färg – projektet har den redan efter loopen:
 ```
 :::
 
-Gör nu uppgiften **fresnel**. Tryck på **Build & run**: **nu skiljer sig raderna åt**. Den nedersta raden (icke-metall)
-behåller sin röda diffusa färg med små vitaktiga högdagrar – ett dielektrikums reflektion är inte färgad. Uppåt (metall)
-försvinner det diffusa ljuset och högdagrarna får albedots röda färg; den översta raden är nästan svart så när som på sina
-röda högdagrar. Bilden är dock mörk och hård: färgerna är linjära och klipps vid 1.0.
+Gör nu uppgiften **fresnel**. Bygg och kör: **nu skiljer sig raderna åt**. Den nedersta raden (icke-metall) behåller sin
+röda diffusa färg med små vitaktiga högdagrar – ett dielektrikums reflektion är inte färgad. Uppåt (metall) försvinner
+det diffusa ljuset och högdagrarna får albedots röda färg; den översta raden är nästan svart så när som på sina röda
+högdagrar. Bilden är dock mörk och hård: färgerna är linjära och klipps vid 1.0.
 
 ```quiz
 Varför är sfärerna i de översta raderna så mörka utom i sina högdagrar efter uppgiften fresnel?
@@ -835,11 +835,11 @@ Belysningsmatematiken behöver linjära värden och är inte begränsad av 1.0. 
 Nu återstår bara att sätta ihop allt: indata, BRDF:ens tre funktioner, loopen med hela reflektansekvationen, den ambienta
 termen, tonmappningen och gammakorrigeringen. Gör nu uppgiften **tone-map**.
 
-Tryck på **Build & run**: det här är learnopengls bild. Sfärerna är ljusare och mjukare, och högdagrarna klipps inte
-längre. Nerifrån och upp ser den nedersta raden ut som röd plast, blank till vänster och matt till höger, med små vita
-högdagrar på de släta och breda, svaga glansytor på de sträva; den översta raden är mörkröd metall vars reflektioner är
-röda, skarpa till vänster och breda och svaga till höger. Varje sfär ser olika ut, fast alla har samma albedo: strävheten
-och metallgraden ensamma gör skillnaden. Clear-färgen runt dem tonmappas inte, så den förblir samma grå.
+Bygg och kör: det här är learnopengls bild. Sfärerna är ljusare och mjukare, och högdagrarna klipps inte längre.
+Nerifrån och upp ser den nedersta raden ut som röd plast, blank till vänster och matt till höger, med små vita högdagrar
+på de släta och breda, svaga glansytor på de sträva; den översta raden är mörkröd metall vars reflektioner är röda,
+skarpa till vänster och breda och svaga till höger. Varje sfär ser olika ut, fast alla har samma albedo: strävheten och
+metallgraden ensamma gör skillnaden. Clear-färgen runt dem tonmappas inte, så den förblir samma grå.
 
 Ta en stund och jämför bilden med de tidigare delarnas Blinn-Phong-sfärer: ingenstans har vi justerat en spekulär styrka
 eller en glansexponent. Högdagerns storlek följer av strävheten, dess ljusstyrka av energibevarandet och dess färg av
@@ -990,9 +990,9 @@ riktningar. `float3x3(T, B, N)` har T, B och N som *rader*, så vektorn står ti
 :::
 
 Varför inte learnopengls derivator? De ger en tangent per triangel (derivatorna är konstanta över en triangel), så
-belysningen visar sfärens fasetter; vertexens tangent är jämn. Och den fungerar likadant i alla API:er och i simulatorn.
-Varför `B = cross(N, T)` och inte `cross(T, N)`? T pekar dit u växer; normal mappens gröna kanal betyder "uppåt i
-bilden", alltså dit bildens rader går uppåt – och med sfärens texturkoordinater är det `cross(N, T)`.
+belysningen visar sfärens fasetter; vertexens tangent är jämn. Och den fungerar likadant i alla API:er. Varför
+`B = cross(N, T)` och inte `cross(T, N)`? T pekar dit u växer; normal mappens gröna kanal betyder "uppåt i bilden",
+alltså dit bildens rader går uppåt – och med sfärens texturkoordinater är det `cross(N, T)`.
 
 :::opengl
 Bilderna vänds när de laddas (`stbi_set_flip_vertically_on_load(true)` i `loadTexture`, som i alla OpenGL-kapitel), så
@@ -1137,9 +1137,9 @@ Uppgiften textured läser albedot med `pow(…, 2.2)`, men metallic, roughness o
 Bara bilder av färger, gjorda genom att titta på en skärm, bär skärmens kurva. Att omvandla en strävhetsmap skulle ändra materialet: strävheten 0.5 skulle bli ungefär 0.22.
 ```
 
-Gör nu den sista uppgiften, **textured**. Tryck på **Build & run**: nio stora sfärer av **nitat stål med rost**. Genom
-mitten av varje sfär löper ett mörkt kors av spår med fyra kupolformade nitar runt det; stålet är grått och blankt, med de
-fyra ljusens mjuka vita högdagrar, och rostfläckarna – mest till höger och i den nedre delen av varje sfär – är matt
+Gör nu den sista uppgiften, **textured**. Bygg och kör: nio stora sfärer av **nitat stål med rost**. Genom mitten av
+varje sfär löper ett mörkt kors av spår med fyra kupolformade nitar runt det; stålet är grått och blankt, med de fyra
+ljusens mjuka vita högdagrar, och rostfläckarna – mest till höger och i den nedre delen av varje sfär – är matt
 orangebruna, utan högdagrar: rost är sträv och ingen metall, så roughness- och metallic-mapparna gör den till ett annat
 material inom samma sfär. Nitarna ser upphöjda ut: var och en är belyst på sidan som vetter mot ett ljus och mörk på den
 andra, och spårens bortre väggar fångar ljuset – normal mappens riktningar kommer fram till världsrummet åt rätt håll.

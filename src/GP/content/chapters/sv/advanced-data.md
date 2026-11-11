@@ -29,8 +29,8 @@ testing* – de två marmorkuberna, metallgolvet, kameran på (0, 0, 3) – och 
 hamnar i buffrarna, inte *vad* som ritas. **Efter varje uppgift är bilden exakt densamma.** Det är själva poängen:
 uppgifterna kontrollerar din kod, och den oförändrade bilden bevisar att datan kom fram dit GPU:n väntar sig den.
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift trycker du på **Build & run**
-(Ctrl+Enter) för att kompilera programmet och köra det i den inbyggda simulatorn.
+Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
+IDE.
 
 ## Filling buffers
 
@@ -418,9 +418,9 @@ första texturkoordinaterna:
 och dess ritanrop binder dem med `IASetVertexBuffers(0, 2, m_floorVertexBufferViews)`.
 :::
 
-Tryck på **Build & run**: marmorn på kuberna är exakt densamma. Vilket sätt är bäst? Inget av dem är fel i {{api}};
-den omväxlande layouten är fortfarande vanligast, eftersom vertexattributen för varje körning av vertex shadern då
-ligger tätt intill varandra i minnet.
+Bygg och kör: marmorn på kuberna är exakt densamma. Vilket sätt är bäst? Inget av dem är fel i {{api}}; den omväxlande
+layouten är fortfarande vanligast, eftersom vertexattributen för varje körning av vertex shadern då ligger tätt intill
+varandra i minnet.
 
 ```quiz
 Du lägger en kubs 36 positioner (3 floats var) och sedan dess 36 texturkoordinater (2 floats var) blockvis i en buffer. En float är 4 byte. På vilken byte börjar blocket med texturkoordinater?
@@ -631,7 +631,7 @@ väntar på GPU:n – upload buffern måste finnas kvar då. Vyerna ändras inte
 i en default heap.
 :::
 
-Tryck på **Build & run**: golvet och kuberna ritas exakt som förut – nu från kopierad data.
+Bygg och kör: golvet och kuberna ritas exakt som förut – nu från kopierad data.
 
 ```quiz
 Vad händer med datan vid en kopiering från buffer till buffer (`glCopyBufferSubData`, `vkCmdCopyBuffer`, `CopyBufferRegion`)?

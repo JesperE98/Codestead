@@ -39,8 +39,8 @@ learnopengl's uniform buffer demo; its shaders (`uniform_buffer.hlsl`, `red.hlsl
 `yellow.hlsl`) are already in the project.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, press **Build & run**
-(Ctrl+Enter) to compile the program and run it in the built-in simulator.
+The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
+IDE.
 
 ## GLSL's built-in variables
 
@@ -274,10 +274,10 @@ based on the pixel's window coordinates:
 ```
 :::
 
-Because the width of the window is equal to 800, whenever a pixel's x-coordinate is less than 400 it must be at the
-left side of the window and we'll give that fragment a different color. Press **Build & run**: everything drawn – the
-cubes and the floor – is red left of the window's middle and green right of it, while the background, where no
-fragments are drawn, stays dark.
+Because the width of the window is equal to 800, whenever a pixel's x-coordinate is less than 400 it must be at the left
+side of the window and we'll give that fragment a different color. Build and run: everything drawn – the cubes and the
+floor – is red left of the window's middle and green right of it, while the background, where no fragments are drawn,
+stays dark.
 
 We can now calculate two completely different fragment shader results and display each of them on a different side
 of the window. This is great for testing out different lighting techniques for example.
@@ -472,8 +472,8 @@ replaces `cubeTexture` and `floorTexture`:
 before its draw) – it is a back face, so it gets metal as before.
 :::
 
-Press **Build & run**. The cubes keep their outlines, but now you look into them: the inside of the far face, framed by
-the insides of the side faces – all in metal. Not a single pixel of marble is left, and the floor is unchanged.
+Build and run. The cubes keep their outlines, but now you look into them: the inside of the far face, framed by the
+insides of the side faces – all in metal. Not a single pixel of marble is left, and the floor is unchanged.
 
 ```quiz
 After the **front-facing** task there is no marble anywhere, although the front-face texture is marble. Why?
@@ -791,7 +791,7 @@ The stages are matched by the *semantics* (`SV_POSITION`, `TEXCOORD`), not by th
 names, in two files – as long as the semantics match.
 :::
 
-Press **Build & run**: nothing changes, not a single pixel. The block only organizes the shaders' inputs and outputs.
+Build and run: nothing changes, not a single pixel. The block only organizes the shaders' inputs and outputs.
 
 :::opengl
 ```quiz
@@ -1455,8 +1455,8 @@ each with its own PSO. The scene's PSO stays the command list's initial state, a
 although these shaders read no texture.
 :::
 
-Press **Build & run**: four flat-coloured cubes – red, green, yellow and blue – on the dark background, each drawn by
-a different shader, all with the same view and projection.
+Build and run: four flat-coloured cubes – red, green, yellow and blue – on the dark background, each drawn by a
+different shader, all with the same view and projection.
 
 ```quiz
 In the four-cubes demo, how often per frame does the program write the view matrix?

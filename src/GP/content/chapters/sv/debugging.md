@@ -27,8 +27,7 @@ Ett värde skiljer sig från learnopengls demo: fönstret rensas till **(0.2, 0.
 för svart. Du ser snart varför: halvvägs genom kapitlet ritas kuben *svart*, och mot en svart bakgrund skulle du inte se
 den alls.
 
-learnopengl gömmer två fel i sin demo som läsaren ska hitta, och det gör projektet också. Bygg och kör det (**Build &
-run**, Ctrl+Enter, kompilerar programmet och kör det i den inbyggda simulatorn):
+learnopengl gömmer två fel i sin demo som läsaren ska hitta, och det gör projektet också. Bygg och kör det:
 
 :::opengl
 fönstret visar bara den blågröna rensningsfärgen. Ingen kub, och ingenting skrivs ut. De två felen är learnopengls
@@ -140,7 +139,7 @@ rapporterade felet.
 
 Gör nu den första uppgiften, **check-error**: lägg till funktionen och makrot, och anropa `glCheckError();` två gånger –
 direkt efter att texturen har laddats (efter `stbi_image_free(data);`) och direkt efter att de två uniformerna har
-satts. Tryck på **Build & run**. Fönstret ändras inte, men programmet skriver nu ut två rader:
+satts. Bygg och kör. Fönstret ändras inte, men programmet skriver nu ut två rader:
 
 ```text
 INVALID_ENUM | main.cpp (180)
@@ -213,8 +212,7 @@ värre:
         }
 ```
 
-Tryck på **Build & run**. Kuben är lika brun som förut, men utskriften har krympt till ett enda meddelande (förkortat
-här):
+Bygg och kör. Kuben är lika brun som förut, men programmets konsol har krympt till ett enda meddelande (förkortat här):
 
 ```text
 validation layer: Validation Error: [ VUID-VkGraphicsPipelineCreateInfo-Input-07904 ] Object 0: handle = 0x…, type = VK_OBJECT_TYPE_SHADER_MODULE; | MessageID = 0xcc9c32be | vkCreateGraphicsPipelines(): pCreateInfos[0].pVertexInputState->pVertexAttributeDescriptions does not have a Location 1 but vertex shader has an input variable at that Location. The Vulkan spec states: …
@@ -301,9 +299,9 @@ egen plats.
 Gör nu den första uppgiften, **info-queue**: hämta info queue i `LoadPipeline` direkt efter att enheten har skapats
 (innanför `#if defined(_DEBUG)` – i en release-build finns inget debuglager, `As` misslyckas och `m_infoQueue` förblir
 tom), lägg till funktionen och makrot, och anropa `CheckDebugMessages();` efter `LoadTexture(…)` i `LoadAssets` och
-efter `ExecuteCommandLists` i `OnRender`. Kör programmet – den inbyggda simulatorn efterliknar debuglagret: den
-rapporterar felen med debuglagrets egna meddelanden, sparar dem i info queue och anropar senare din callback, precis
-som Windows gör. Bilden ändras inte, men utskriften innehåller nu meddelandena:
+efter `ExecuteCommandLists` i `OnRender`. Kör programmet i debuggern (F5): debuglagret rapporterar felen, sparar dem i
+info queue, och din funktion skriver ut dem. Bilden ändras inte, men debuggerns Output-fönster innehåller nu
+meddelandena:
 
 ```text
 ERROR #31: ID3D12Device::CreateShaderResourceView: The Dimensions of the View are invalid due to at least one of the following conditions. MostDetailedMip (value = 0) must be between 0 and MipLevels-1 of the Texture Resource, 0, inclusively. With the current MostDetailedMip, MipLevels (value = 0) must be between 1 and 1, inclusively, or -1 to default to all mips from MostDetailedMip, in order that the View fit on the Texture. | main.cpp (…)
@@ -350,10 +348,10 @@ Utan debuglagret kontrollerar ingenting beskrivningen alls – deskriptorn i hea
 :::
 
 :::opengl
-Gör nu uppgiften **use-program**: anropa `shader.use();` före de två uniformanropen. Tryck på **Build & run**: kuben
-dyker upp – **helt svart**. Nu skrivs bara en rad ut, `INVALID_ENUM | main.cpp (…)`, från texturkoden. Texturen är
-fortfarande trasig, och en textur utan (giltig) bild är *ofullständig* (incomplete): att sampla den ger (0, 0, 0, 1).
-Här lönar sig den blågröna rensningsfärgen.
+Gör nu uppgiften **use-program**: anropa `shader.use();` före de två uniformanropen. Bygg och kör: kuben dyker upp –
+**helt svart**. Nu skrivs bara en rad ut, `INVALID_ENUM | main.cpp (…)`, från texturkoden. Texturen är fortfarande
+trasig, och en textur utan (giltig) bild är *ofullständig* (incomplete): att sampla den ger (0, 0, 0, 1). Här lönar sig
+den blågröna rensningsfärgen.
 
 `glGetError` berättade *att* något misslyckades mellan två kontroller. Den berättade inte *vilket* anrop, eller varför.
 För det finns ett bättre verktyg.
@@ -486,8 +484,8 @@ vilka meddelanden som skickas; med `GL_DONT_CARE` för källa, typ och allvarlig
 (också de med låg allvarlighetsgrad, som är avslagna från början).
 
 Gör nu uppgiften **debug-output**: 4.3-debugkontexten, funktionen `glDebugOutput` och initieringen direkt efter att GLAD
-har laddats. Tryck på **Build & run**. Bilden är samma svarta kub, men nu beskriver drivrutinen felen i ord (det här är
-Mesas texter; NVIDIA och AMD formulerar dem annorlunda och använder andra id:n):
+har laddats. Bygg och kör. Bilden är samma svarta kub, men nu beskriver drivrutinen felen i ord (det här är Mesas
+texter; NVIDIA och AMD formulerar dem annorlunda och använder andra id:n):
 
 ```text
 ---------------
@@ -516,7 +514,7 @@ Gör nu uppgiften **fix-texture**: ladda upp bilden till `GL_TEXTURE_2D`, målet
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 ```
 
-Tryck på **Build & run**: **träkuben**, med plankorna uppåt längs framsidan – och ingenting skrivs ut längre.
+Bygg och kör: **träkuben**, med plankorna uppåt längs framsidan – och ingenting skrivs ut längre.
 
 ### Filtrera debugutskriften
 
@@ -623,7 +621,7 @@ modules i `createPipeline()` efter sina filer och texturbilden i `loadTexture()`
         setObjectName(VK_OBJECT_TYPE_SHADER_MODULE, (uint64_t) fragShaderModule, fragShaderFile.c_str());
 ```
 
-Tryck på **Build & run**. Meddelandet säger nu vilken shader det menar:
+Bygg och kör. Meddelandet säger nu vilken shader det menar:
 
 ```text
 validation layer: Validation Error: [ VUID-VkGraphicsPipelineCreateInfo-Input-07904 ] Object 0: handle = 0x…, name = shaders/debugging.vert.spv, type = VK_OBJECT_TYPE_SHADER_MODULE; | MessageID = 0xcc9c32be | vkCreateGraphicsPipelines(): pCreateInfos[0].pVertexInputState->pVertexAttributeDescriptions does not have a Location 1 but vertex shader has an input variable at that Location. …
@@ -651,7 +649,7 @@ Gör nu uppgiften **fix-attribute**: ge arrayen två element och beskriv texturk
         attributeDescriptions[1].offset = offsetof(Vertex, texCoord);
 ```
 
-Tryck på **Build & run**: **träkuben**, med plankorna uppåt längs framsidan – och ingenting skrivs ut längre.
+Bygg och kör: **träkuben**, med plankorna uppåt längs framsidan – och ingenting skrivs ut längre.
 
 ### Etiketter
 
@@ -786,9 +784,9 @@ Category: State creation
 Severity: ERROR
 ```
 
-– och med en ansluten debugger stannar programmet precis på den raden i `LoadTexture`. (Den inbyggda simulatorn är
-ingen debugger: `IsDebuggerPresent()` returnerar false där, så programmet skriver ut meddelandet och fortsätter.) (Meddelandena ligger också kvar
-i kön, så `CheckDebugMessages()` skriver ut dem en gång till efteråt.)
+– och med en ansluten debugger stannar programmet precis på den raden i `LoadTexture`. (Startat utan debugger, med
+Ctrl+F5, returnerar `IsDebuggerPresent()` false, så programmet skriver ut meddelandet och fortsätter.) (Meddelandena
+ligger också kvar i kön, så `CheckDebugMessages()` skriver ut dem en gång till efteråt.)
 
 ### Det andra felet
 
@@ -874,7 +872,7 @@ Före rättningen var kuben en enda platt brun färg – färgen på texeln på 
 - [x] Därför att inget attribut matade location 1: shadern läste texturkoordinaterna som (0, 0) i varje vertex, så varje fragment samplade samma texel
 - [ ] Därför att descriptor seten pekade på en tom bild
 ---
-Vad en shader läser från en indata som inget attribut beskriver är odefinierat – (0, 0) med den här drivrutinen och i simulatorn, något annat på andra ställen. En felaktig färg som är likadan överallt betyder ofta att indata som ett värde räknas ut från inte varierar.
+Vad en shader läser från en indata som inget attribut beskriver är odefinierat – (0, 0) med en drivrutin, något annat med en annan. En felaktig färg som är likadan överallt betyder ofta att indata som ett värde räknas ut från inte varierar.
 ```
 :::
 :::d3d12
@@ -934,9 +932,9 @@ texturraden som en kommentar:
     // FragColor = texture(tex, TexCoords);
 ```
 
-Tryck på **Build & run**: kuben visar en **röd–grön gradient** på varje sida: svart i sidans nedre vänstra hörn
-(u, v = 0, 0), rött nere till höger (1, 0), grönt uppe till vänster (0, 1) och gult uppe till höger (1, 1).
-Texturkoordinaterna är som de ska vara.
+Bygg och kör: kuben visar en **röd–grön gradient** på varje sida: svart i sidans nedre vänstra hörn (u, v = 0, 0), rött
+nere till höger (1, 0), grönt uppe till vänster (0, 1) och gult uppe till höger (1, 1). Texturkoordinaterna är som de
+ska vara.
 :::
 :::vulkan
 ```glsl
@@ -945,10 +943,10 @@ Texturkoordinaterna är som de ska vara.
     // outColor = texture(texSampler, fragTexCoord);
 ```
 
-Tryck på **Build & run**: kuben visar en **röd–grön gradient** på varje sida: svart i sidans nedre vänstra hörn
-(u, v = 0, 0), rött nere till höger (1, 0), grönt uppe till vänster (0, 1) och gult uppe till höger (1, 1) – texturen
-laddas vänd (`stbi_set_flip_vertically_on_load(true)`), så koordinaterna är OpenGL:s. Hade du gjort det här före
-rättningen hade hela kuben varit svart: (0, 0) överallt – vilket pekar rakt på texturkoordinaterna.
+Bygg och kör: kuben visar en **röd–grön gradient** på varje sida: svart i sidans nedre vänstra hörn (u, v = 0, 0), rött
+nere till höger (1, 0), grönt uppe till vänster (0, 1) och gult uppe till höger (1, 1) – texturen laddas vänd
+(`stbi_set_flip_vertically_on_load(true)`), så koordinaterna är OpenGL:s. Hade du gjort det här före rättningen hade
+hela kuben varit svart: (0, 0) överallt – vilket pekar rakt på texturkoordinaterna.
 :::
 :::d3d12
 ```hlsl

@@ -417,10 +417,10 @@ checks what you've learned.
 - **Instanced arrays**: a vertex attribute that advances once per instance instead of once per vertex – no size limit
   of a uniform array.
 - **Integer division**: scaling by `gl_InstanceID / 100.0` needs the `.0`; `/ 100` would give 0.
-- **Asteroid field**: 500 rocks in a ring (radius 15) around the planet, each with a model matrix computed once on
-  the CPU (`srand(42)`: the same field every run), stored as a per-instance **mat4 attribute**. A vertex attribute is at
+- **Asteroid field**: 500 rocks in a ring (radius 15) around the planet, each with a model matrix computed once on the
+  CPU (`srand(42)`: the same field every run), stored as a per-instance **mat4 attribute**. A vertex attribute is at
   most four components, so the matrix takes four attributes, one per column. learnopengl draws 100 000 rocks – a real
-  GPU does that easily with instancing; the course uses 500 because its simulator runs on the CPU.
+  GPU does that easily with instancing; the course uses 500 because it draws its checks and expected results on the CPU.
 
 :::opengl
 - **Drawing**: `glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100)`, `glDrawElementsInstanced(…, amount)`; in the shader
