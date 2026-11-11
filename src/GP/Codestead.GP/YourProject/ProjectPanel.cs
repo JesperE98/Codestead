@@ -27,6 +27,9 @@ public sealed partial class ProjectPanel : Border
     /// <summary>The learner clicked a task in the list: show its expected result.</summary>
     public event Action<int>? TaskSelected;
 
+    /// <summary>Styled as a Border, so the theme's "card" style applies.</summary>
+    protected override Type StyleKeyOverride => typeof(Border);
+
     public ProjectPanel()
     {
         Classes.Add("card");
