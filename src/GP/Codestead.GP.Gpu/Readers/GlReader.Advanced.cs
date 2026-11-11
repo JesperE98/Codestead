@@ -364,7 +364,8 @@ public sealed partial class GlReader
     private void Register(string id, GlState.FramebufferObject fb)
     {
         int colors = fb.Colors.Count == 0 ? 0 : fb.Colors.Keys.Max() + 1;
-        scene.Targets[id] = new RenderTarget(id, fb.Width, fb.Height, colors, fb.Depth, fb.Stencil, fb.Samples, fb.Colors.Values.Any(c => c.Float), fb.Layers, fb.DepthOf);
+        scene.Targets[id] = new RenderTarget(id, fb.Width, fb.Height, colors, fb.Depth, fb.Stencil, fb.Samples, fb.Colors.Values.Any(c => c.Float), fb.Layers, fb.DepthOf,
+            FormatChannels.List(Enumerable.Range(0, colors).Select(k => fb.Colors.TryGetValue(k, out var c) ? c.Channels : 4)));
     }
 
     private static string LevelTarget(string texture, int level) => level > 0 ? $"tex:{texture}~{level}" : "tex:" + texture;

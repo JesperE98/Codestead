@@ -67,6 +67,16 @@ internal sealed partial class D3D12Device : IDeviceModel
     private readonly Dictionary<int, string> depthUsers = new();
     private readonly Dictionary<string, string> depthOf = new(StringComparer.Ordinal);
 
+    /// <summary>The channels each colour attachment of a target keeps (an R8_UNORM revealage texture: 1), or null.</summary>
+    public IReadOnlyList<int>? ChannelsOf(string target, int colors)
+    {
+        var formats = new string?[Math.Max(1, colors)];
+        foreach (var r in resources.Where(r => r.TargetId == target)) formats[0] = r.Format;
+        foreach (var (id, (t, k)) in attachmentOf)
+            if (t == target && k < formats.Length && ResourceAt(id) is { } attached) formats[k] = attached.Format;
+        return FormatChannels.List(formats.Select(FormatChannels.Of));
+    }
+
     /// <summary>The target whose depth buffer a target uses too (both drawn with one depth stencil view), or null.</summary>
     public string? DepthOf(string target) => depthOf.GetValueOrDefault(target);
 

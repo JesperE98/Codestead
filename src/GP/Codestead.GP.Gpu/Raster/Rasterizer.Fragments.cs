@@ -63,6 +63,20 @@ public static partial class Rasterizer
             double w1 = ((sx[0] - sx[2]) * (y - sy[2]) - (sy[0] - sy[2]) * (x - sx[2])) / area;
             return (w0, w1, 1 - w0 - w1);
         }
+        // The top-left rule: a sample exactly on an edge belongs to the triangle only when that edge is a top edge
+        // (horizontal, the triangle below it) or a left edge (the triangle to its right) – so the shared diagonal of a
+        // quad's two triangles is drawn once, not twice (which additive blending would show).
+        bool OwnsEdge(int i)
+        {
+            int a = (i + 1) % 3, b = (i + 2) % 3;
+            if (Math.Abs(sy[a] - sy[b]) < 1e-12) return sy[i] > sy[a];
+            double edgeX = sx[a] + (sy[i] - sy[a]) * (sx[b] - sx[a]) / (sy[b] - sy[a]);
+            return sx[i] > edgeX;
+        }
+        bool own0 = OwnsEdge(0), own1 = OwnsEdge(1), own2 = OwnsEdge(2);
+        const double onEdge = 1e-9;
+        bool Covers(double w0, double w1, double w2) =>
+            (w0 > onEdge || (w0 >= -onEdge && own0)) && (w1 > onEdge || (w1 >= -onEdge && own1)) && (w2 > onEdge || (w2 >= -onEdge && own2));
         return (stages, from, to) =>
         {
             if (from > maxY || to <= minY) return;
@@ -75,7 +89,7 @@ public static partial class Rasterizer
                     for (int s = 0; s < fb.Samples; s++)
                     {
                         var (w0, w1, w2) = Weights(px + fb.Pattern[s].X, py + fb.Pattern[s].Y);
-                        if (w0 < -1e-9 || w1 < -1e-9 || w2 < -1e-9) continue;
+                        if (!Covers(w0, w1, w2)) continue;
                         mask |= 1 << s;
                         zs[s] = w0 * sz[0] + w1 * sz[1] + w2 * sz[2];
                     }

@@ -367,7 +367,7 @@ public sealed partial class D3D12Reader
         // has layers; drawn into through a view per slice (a cube map's faces one by one), each slice is its own target.
         var shape = device.ShapeOf(id) ?? device.ShapeOf(levelId);
         scene.Targets[levelId] = new RenderTarget(levelId, Math.Max(1, r.Width >> level), Math.Max(1, r.Height >> level), shape?.Colors ?? 1, shape?.Depth ?? true, shape?.Depth ?? true,
-            Math.Max(1, r.Samples), r.Float, r.PerSlice ? 1 : Math.Max(1, r.ArraySize), device.DepthOf(levelId));
+            Math.Max(1, r.Samples), r.Float, r.PerSlice ? 1 : Math.Max(1, r.ArraySize), device.DepthOf(levelId), device.ChannelsOf(levelId, shape?.Colors ?? 1));
         if (device.DepthOf(levelId) is { } owner) RegisterTarget(device, owner);
     }
 

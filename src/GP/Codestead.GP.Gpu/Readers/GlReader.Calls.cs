@@ -511,6 +511,7 @@ public sealed partial class GlReader
             tex.Float = IsFloatFormat(a[2]);
             tex.IsDepth = a[2].Contains("DEPTH", StringComparison.Ordinal);
             tex.Components = 4;
+            tex.Channels = FormatChannels.Of(a[2]);
             // An empty image (a space's glyph: 0 × 0): a texture with nothing in it, which reads 0.
             if (tex.Width == 0 || tex.Height == 0) tex.Image = new Textures.Image(1, 1, 4, [0, 0, 0, 0], [0, 0, 0, 0]);
             return;

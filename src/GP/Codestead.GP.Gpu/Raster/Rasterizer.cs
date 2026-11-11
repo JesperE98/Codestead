@@ -110,7 +110,7 @@ public static partial class Rasterizer
                 }
                 // A depth buffer shared with another target is that target's own.
                 var depthOf = t.DepthOf is { } owner && owner != id ? Fb(owner) : null;
-                targets[id] = fb = new Framebuffer(w, h, t.Samples, t.Float, t.ColorAttachments, depthOf) { HasDepth = t.Depth || depthOf is not null };
+                targets[id] = fb = new Framebuffer(w, h, t.Samples, t.Float, t.ColorAttachments, depthOf) { HasDepth = t.Depth || depthOf is not null, Channels = t.Channels };
             }
             return fb;
         }

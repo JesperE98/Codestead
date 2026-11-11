@@ -99,6 +99,16 @@ internal sealed partial class VulkanDevice : IDeviceModel
     private readonly Dictionary<string, (int Colors, bool Depth)> targetShape = new(StringComparer.Ordinal);
 
     public (int Colors, bool Depth)? ShapeOf(string target) => targetShape.TryGetValue(target, out var s) ? s : null;
+
+    /// <summary>The channels each colour attachment of a target keeps (an R8_UNORM revealage image: 1), or null.</summary>
+    public IReadOnlyList<int>? ChannelsOf(string target, int colors)
+    {
+        var formats = new string?[Math.Max(1, colors)];
+        foreach (var img in images.Where(i => i.TargetId == target)) formats[0] = img.Format;
+        foreach (var (image, (t, k)) in attachmentOf)
+            if (t == target && k < formats.Length && ImageOf(image) is { } attached) formats[k] = attached.Format;
+        return FormatChannels.List(formats.Select(FormatChannels.Of));
+    }
     private string? resolveView;
     /// <summary>Descriptor sets: binding → (image view, sampler).</summary>
     private readonly Dictionary<string, Dictionary<int, (string? View, string? Sampler)>> sets = new(StringComparer.Ordinal);
@@ -700,12 +710,20 @@ internal sealed partial class VulkanDevice : IDeviceModel
         buffers.TryGetValue(buffer, out var place) && place.Memory >= 0 && memories[place.Memory].Bytes.TryGetValue(place.Offset + byteOffset, out var x) ? x : null;
 
     /// <summary>The texture behind a binding of a descriptor set: a loaded image, a cube map or a render target.</summary>
-    public (Texture? Texture, CubeTexture? Cube)? TextureAt(string set, int binding)
+    /// <param name="layer">The layer a sampler2DArray read names (its third coordinate): layer k of a render target is
+    /// "img:N@k".</param>
+    public (Texture? Texture, CubeTexture? Cube)? TextureAt(string set, int binding, int layer = 0)
     {
         if (!sets.TryGetValue(set, out var bindings) || !bindings.TryGetValue(binding, out var b) || b.View is null || !views.TryGetValue(b.View, out var view)) return null;
         var img = ImageOf(view.Image);
         if (img is null) return (null, null);
         var sampler = b.Sampler is not null && samplers.TryGetValue(b.Sampler, out var st) ? st : SamplerState.Default;
+        if (layer > 0 && !view.Cube && !img.Cube && img.LayerImages.All(i => i is null) && !img.Window)
+        {
+            var slice = img.TargetId + "@" + Math.Min(layer, img.Layers - 1);
+            bool sliceDepth = img.Depth;
+            return (new Texture(() => Raster.Rasterizer.TargetImage(slice, 0, sliceDepth), sampler) { Components = 4 }, null);
+        }
         // A further colour attachment of a target (bloom's bright colour): that attachment of the target's picture.
         if (attachmentOf.TryGetValue(view.Image, out var att))
             return (new Texture(() => Raster.Rasterizer.TargetImage(att.Target, att.Attachment, false), sampler) { Components = 4 }, null);

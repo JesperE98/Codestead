@@ -83,6 +83,8 @@ internal sealed class GlState
         public bool Float, IsDepth;
         /// <summary>glTextureStorage2D's internal format (GL_RGB8, GL_SRGB8_ALPHA8 …): the format its data is stored in.</summary>
         public string? StorageFormat;
+        /// <summary>The colour channels a render target texture keeps (GL_R8 / GL_RED: 1, GL_RG…: 2).</summary>
+        public int Channels = 4;
         public int Samples = 1;
         /// <summary>The layers of a texture array (GL_TEXTURE_2D_ARRAY, glTexImage3D): a layered framebuffer draws into them.</summary>
         public int Layers = 1;

@@ -22,6 +22,9 @@ internal sealed class Framebuffer
     /// <summary>Sample positions inside a pixel (0–1), the standard 4× pattern for multisampling.</summary>
     public (double X, double Y)[] Pattern { get; }
 
+    /// <summary>The channels each colour attachment keeps (R8: 1); null: all four.</summary>
+    public IReadOnlyList<int>? Channels { get; init; }
+
     /// <summary>A depth attachment: without one (a ping-pong blur target) the depth test and depth writes do nothing.</summary>
     public bool HasDepth { get; init; } = true;
 
@@ -87,10 +90,14 @@ internal sealed class Framebuffer
     {
         var bytes = new byte[Width * Height * 4];
         var floats = Float ? new double[Width * Height * 4] : null;
+        int kept = Channels is { } channels && attachment < channels.Count ? channels[attachment] : 4;
         for (int y = 0; y < Height; y++)
             for (int x = 0; x < Width; x++)
             {
                 var c = Resolved(x, y, attachment);
+                // A format without green, blue or alpha reads them as 0, 0 and 1.
+                if (kept < 4)
+                    for (int k = kept; k < 4; k++) c[k] = k == 3 ? 1 : 0;
                 int row = bottomUp ? Height - 1 - y : y;
                 int i = (row * Width + x) * 4;
                 for (int k = 0; k < 4; k++)
