@@ -37,15 +37,30 @@ public sealed class CheckContext
     public Frame? Frame => Shows ? frame ??= Rasterizer.Render(Scene!, 160) : null;
 
     private readonly Dictionary<double, Frame> framesAt = new();
+    private readonly Dictionary<double, Gpu.Scene.Scene> scenesAt = new();
 
     /// <summary>The frame at another time (a game's state after t × 60 frames), 160 pixels wide; null when nothing is shown.</summary>
     public Frame? FrameAt(double time)
     {
         if (time == 1.0) return Frame;
         if (!Shows) return null;
-        if (!framesAt.TryGetValue(time, out var f)) framesAt[time] = f = Rasterizer.Render(Scene!, 160, time);
+        if (!framesAt.TryGetValue(time, out var f)) framesAt[time] = f = Rasterizer.Render(SceneAt(time)!, 160, time);
         return f;
     }
+
+    /// <summary>
+    /// What the program does when its clock reads another time (read once per time: the frame and the window title
+    /// at that time come from it); the scene itself when nothing depends on the time.
+    /// </summary>
+    public Gpu.Scene.Scene? SceneAt(double time)
+    {
+        if (time == 1.0 || Scene is not { Animated: true, AtTime: { } at }) return Scene;
+        if (!scenesAt.TryGetValue(time, out var s)) scenesAt[time] = s = at(time);
+        return s;
+    }
+
+    /// <summary>The window's title at a time (a program that sets it in its render loop: glfwSetWindowTitle, SetWindowTextW); "" when nothing is shown.</summary>
+    public string WindowTitleAt(double time) => Shows ? SceneAt(time)?.WindowTitle ?? "" : "";
 
     /// <summary>The colour at a point of the frame at a time (0–1 of width and height, from the top left).</summary>
     public double[]? PixelAt(double time, double x, double y) => FrameAt(time)?.AtRelative(x, y);
