@@ -9,12 +9,32 @@ exe="$2"
 kind="$3"
 cd /artifacts
 
+# apt-get on Ubuntu: its package servers are sometimes unreachable from the runners' containers (archive.ubuntu.com
+# not resolving: every Ubuntu test of the release on 2026-11-11 failed that way while Fedora and Arch passed). Retry,
+# then fall back to other mirrors of the same archive, before giving up.
+apt_install() {
+  export DEBIAN_FRONTEND=noninteractive
+  local mirrors=("" "http://azure.archive.ubuntu.com/ubuntu" "http://mirrors.edge.kernel.org/ubuntu")
+  for mirror in "${mirrors[@]}"; do
+    if [ -n "$mirror" ]; then
+      echo "--- apt: using $mirror"
+      sed -i -E "s#https?://(archive|security)\.ubuntu\.com/ubuntu/?#$mirror/#g; s#https?://azure\.archive\.ubuntu\.com/ubuntu/?#$mirror/#g" \
+        /etc/apt/sources.list /etc/apt/sources.list.d/*.sources 2>/dev/null || true
+    fi
+    for attempt in 1 2 3; do
+      apt-get update -qq || true
+      if apt-get install -y -qq "$@" >/dev/null; then return 0; fi
+      sleep $((attempt * 5))
+    done
+  done
+  echo "apt-get could not install: $*" >&2
+  return 1
+}
+
 case "$kind" in
   deb)
-    export DEBIAN_FRONTEND=noninteractive
-    apt-get update -qq
-    apt-get install -y -qq xvfb xauth >/dev/null
-    apt-get install -y ./"${pkg}"_*_amd64.deb
+    apt_install xvfb xauth
+    apt_install ./"${pkg}"_*_amd64.deb
     run=("$pkg")
     ;;
   rpm)
@@ -29,8 +49,7 @@ case "$kind" in
     ;;
   appimage)
     if command -v apt-get >/dev/null; then
-      export DEBIAN_FRONTEND=noninteractive
-      apt-get update -qq && apt-get install -y -qq xvfb xauth libfontconfig1 libx11-6 libice6 libsm6 libxrandr2 libxi6 libxcursor1 >/dev/null
+      apt_install xvfb xauth libfontconfig1 libx11-6 libice6 libsm6 libxrandr2 libxi6 libxcursor1
     elif command -v dnf >/dev/null; then
       # OpenSSL 3 by its library name (openssl3-libs on Fedora 45 and later): .NET cannot use OpenSSL 4.
       dnf install -y -q xorg-x11-server-Xvfb xorg-x11-xauth fontconfig libX11 libICE libSM libXrandr libXi libXcursor 'libssl.so.3()(64bit)' >/dev/null
