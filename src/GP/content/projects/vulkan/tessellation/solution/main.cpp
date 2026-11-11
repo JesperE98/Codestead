@@ -104,7 +104,7 @@ struct Vertex {
 const unsigned int NUM_PATCH_PTS = 4; // four control points per patch: the corners of a square of the terrain
 const unsigned int rez = 20;          // rez x rez patches
 
-// the patches' control points (filled in createPatches)
+// the patches' control points (filled in loadHeightMap)
 std::vector<Vertex> vertices;
 
 // camera: in front of the terrain and high above it, looking down at its middle (yaw -90, pitch -35)
@@ -229,8 +229,8 @@ private:
     VkImageView heightMapImageView;
     VkSampler textureSampler;
 
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
+    VkBuffer vertexBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
 
     VkBuffer uniformBuffer;
     VkDeviceMemory uniformBufferMemory;
@@ -326,6 +326,8 @@ private:
         }
         vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
         vkDestroyFence(device, inFlightFence, nullptr);
+
+
 
         vkDestroyBuffer(device, vertexBuffer, nullptr);
         vkFreeMemory(device, vertexBufferMemory, nullptr);
@@ -888,7 +890,6 @@ private:
         );
     }
 
-
     // A texture image (device local, ready for sampling) with one byte per texel (VK_FORMAT_R8_UNORM: the height map's
     // grey value 0..255 is read as 0.0..1.0 in .r), copied through a staging buffer. The caller frees the pixels.
     void createTextureImage(stbi_uc* pixels, int texWidth, int texHeight, VkImage& image, VkDeviceMemory& imageMemory) {
@@ -913,8 +914,9 @@ private:
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
-    // The height map: loaded as a texture the tessellation evaluation shader samples, and the patches over its area:
-    // rez x rez patches of four control points each (learnopengl's corner order), with their texture coordinates.
+
+    // learnopengl's terrain on the GPU: the height map as a texture the tessellation evaluation shader reads the heights
+    // from, and (from the next task on) the patches over its area.
     void loadHeightMap(const char* path) {
         int width, height, nrChannels;
         unsigned char* data = stbi_load(path, &width, &height, &nrChannels, STBI_grey); // one channel: the grey value
@@ -927,7 +929,7 @@ private:
         heightMapImageView = createImageView(heightMapImage, VK_FORMAT_R8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
         stbi_image_free(data);
 
-        // set up vertex data: four control points per patch, position and texture coordinate
+        // set up vertex data: rez x rez patches of 4 control points (corners), each with a position and a texture coordinate
         for (unsigned i = 0; i <= rez - 1; i++) {
             for (unsigned j = 0; j <= rez - 1; j++) {
                 vertices.push_back({{-width / 2.0f + width * i / (float) rez,       0.0f, -height / 2.0f + height * j / (float) rez},       {i / (float) rez,       j / (float) rez}});
@@ -939,7 +941,6 @@ private:
         std::cout << "Loaded " << rez * rez << " patches of 4 control points each" << std::endl;
         std::cout << "Processing " << rez * rez * 4 << " vertices in vertex shader" << std::endl;
     }
-
 
     // The height map's sampler: linear, clamped at the edges (the edges must not blend with the opposite side). The
     // evaluation shader has no screen-space derivatives, so it always reads mip level 0: no mipmaps, no anisotropy.
@@ -963,7 +964,6 @@ private:
             throw std::runtime_error("failed to create texture sampler!");
         }
     }
-
 
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) {
         VkImageViewCreateInfo viewInfo{};
@@ -1091,6 +1091,7 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
+
     void createVertexBuffer() {
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
@@ -1112,6 +1113,8 @@ private:
         vkDestroyBuffer(device, stagingBuffer, nullptr);
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
+
+
 
     void createUniformBuffers() {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);

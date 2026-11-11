@@ -55,45 +55,36 @@ HSConstantOutput PatchConstantFunction(InputPatch<VSOutput, 4> patch)
 {
     HSConstantOutput output;
 
-    // ----------------------------------------------------------------------
-    // Step 1: define constants to control tessellation parameters
-    // set these as desired for your world height
-    const int MIN_TESS_LEVEL = 4;
-    const int MAX_TESS_LEVEL = 16;
-    const float MIN_DISTANCE = 100;
+    const int MIN_TESS_LEVEL = 2;
+    const int MAX_TESS_LEVEL = 8;
+    const float MIN_DISTANCE = 250;
     const float MAX_DISTANCE = 450;
 
-    // ----------------------------------------------------------------------
-    // Step 2: transform each vertex into eye space
+    // the corners in eye space (the camera looks along -z)
     float4 eyeSpacePos00 = mul(mul(patch[0].position, model), view);
     float4 eyeSpacePos01 = mul(mul(patch[1].position, model), view);
     float4 eyeSpacePos10 = mul(mul(patch[2].position, model), view);
     float4 eyeSpacePos11 = mul(mul(patch[3].position, model), view);
 
-    // ----------------------------------------------------------------------
-    // Step 3: "distance" from camera scaled between 0 and 1
+    // "distance" from camera scaled between 0 and 1
     float distance00 = clamp((abs(eyeSpacePos00.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0f, 1.0f);
     float distance01 = clamp((abs(eyeSpacePos01.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0f, 1.0f);
     float distance10 = clamp((abs(eyeSpacePos10.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0f, 1.0f);
     float distance11 = clamp((abs(eyeSpacePos11.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0f, 1.0f);
 
-    // ----------------------------------------------------------------------
-    // Step 4: interpolate edge tessellation level based on closer vertex
-    // (HLSL's lerp is GLSL's mix)
+    // each edge from its nearer corner (two patches sharing an edge compute the same level: no
+    // cracks) - HLSL's lerp is GLSL's mix
     float tessLevel0 = lerp(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance10, distance00));
     float tessLevel1 = lerp(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance00, distance01));
     float tessLevel2 = lerp(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance01, distance11));
     float tessLevel3 = lerp(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance11, distance10));
 
-    // ----------------------------------------------------------------------
-    // Step 5: set the corresponding outer edge tessellation levels
     output.edges[0] = tessLevel0;
     output.edges[1] = tessLevel1;
     output.edges[2] = tessLevel2;
     output.edges[3] = tessLevel3;
 
-    // ----------------------------------------------------------------------
-    // Step 6: set the inner tessellation levels to the max of the two parallel edges
+    // the inside: the larger level of its two parallel edges
     output.inside[0] = max(tessLevel1, tessLevel3);
     output.inside[1] = max(tessLevel0, tessLevel2);
 

@@ -1,0 +1,769 @@
+=== task: tessellation-feature
+--- file: main.cpp
+--- find:
+        VkPhysicalDeviceFeatures deviceFeatures{};
+--- replace:
+        VkPhysicalDeviceFeatures deviceFeatures{};
+        deviceFeatures.tessellationShader = VK_TRUE; // the tessellation control and evaluation stages
+--- file: main.cpp
+--- find:
+        return indices.isComplete() && extensionsSupported && swapChainAdequate;
+--- replace:
+        VkPhysicalDeviceFeatures supportedFeatures;
+        vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
+
+        return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.tessellationShader;
+--- file: main.cpp
+--- find:
+        pickPhysicalDevice();
+--- replace:
+        pickPhysicalDevice();
+        printTessellationLimits();
+--- file: main.cpp
+--- find:
+    void createLogicalDevice() {
+--- replace:
+    // how finely can this GPU tessellate? (at least 64)
+    void printTessellationLimits() {
+        VkPhysicalDeviceProperties properties{};
+        vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+        std::cout << "Max available tess level: " << properties.limits.maxTessellationGenerationLevel << std::endl;
+    }
+
+    void createLogicalDevice() {
+=== task: height-texture
+--- file: main.cpp
+--- find:
+// the terrain: one vertex per pixel of the height map, and the indices of its triangle strips (filled in loadHeightMap)
+std::vector<Vertex> vertices;
+std::vector<uint32_t> indices;
+int numStrips;
+int numTrisPerStrip;
+--- replace:
+// the terrain's vertices (filled in loadHeightMap)
+std::vector<Vertex> vertices;
+--- file: main.cpp
+--- find:
+    VkBuffer vertexBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
+    VkBuffer indexBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory indexBufferMemory = VK_NULL_HANDLE;
+--- replace:
+    // the height map, sampled by the tessellation evaluation shader
+    VkImage heightMapImage;
+    VkDeviceMemory heightMapImageMemory;
+    VkImageView heightMapImageView;
+    VkSampler textureSampler;
+
+    VkBuffer vertexBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
+--- file: main.cpp
+--- find:
+    VkDescriptorSet descriptorSet; // the uniform buffer
+--- replace:
+    VkDescriptorSet descriptorSet; // the uniform buffer and the height map
+--- file: main.cpp
+--- find:
+        loadHeightMap("textures/heightmap.png");
+        createVertexBuffer();
+        createIndexBuffer();
+--- replace:
+        loadHeightMap("textures/heightmap.png");
+        createTextureSampler();
+        // TODO: the patches' vertex buffer (createVertexBuffer)
+--- file: main.cpp
+--- find:
+        vkDestroyBuffer(device, indexBuffer, nullptr);
+        vkFreeMemory(device, indexBufferMemory, nullptr);
+--- replace:
+
+--- file: main.cpp
+--- find:
+        vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+--- replace:
+        vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+
+        vkDestroySampler(device, textureSampler, nullptr);
+
+        vkDestroyImageView(device, heightMapImageView, nullptr);
+        vkDestroyImage(device, heightMapImage, nullptr);
+        vkFreeMemory(device, heightMapImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+    void createDescriptorSetLayout() {
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // view and projection
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = 1;
+        layoutInfo.pBindings = &uboLayoutBinding;
+
+        if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor set layout!");
+        }
+    }
+--- replace:
+    void createDescriptorSetLayout() {
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // view and projection
+
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorCount = 1;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT; // the height map
+
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        layoutInfo.pBindings = bindings.data();
+
+        if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor set layout!");
+        }
+    }
+--- file: main.cpp
+--- find:
+    void createDescriptorPool() {
+        VkDescriptorPoolSize poolSize{};
+        poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSize.descriptorCount = 1;
+
+        VkDescriptorPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = 1;
+        poolInfo.pPoolSizes = &poolSize;
+        poolInfo.maxSets = 1;
+
+        if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor pool!");
+        }
+    }
+--- replace:
+    void createDescriptorPool() {
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 1;
+
+        VkDescriptorPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+        poolInfo.pPoolSizes = poolSizes.data();
+        poolInfo.maxSets = 1;
+
+        if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor pool!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        VkWriteDescriptorSet descriptorWrite{};
+        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrite.dstSet = descriptorSet;
+        descriptorWrite.dstBinding = 0;
+        descriptorWrite.dstArrayElement = 0;
+        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrite.descriptorCount = 1;
+        descriptorWrite.pBufferInfo = &bufferInfo;
+
+        vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+--- replace:
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = heightMapImageView;
+        imageInfo.sampler = textureSampler;
+
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &imageInfo;
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+--- file: main.cpp
+--- find:
+    // learnopengl's terrain: one vertex per pixel of the height map; its grey value (0..255) is the height. Then the
+    // indices of the triangle strips: one strip per pair of rows, zig-zagging between row i and row i + rez.
+    void loadHeightMap(const char* path) {
+        int width, height, nrChannels;
+        unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
+        if (!data) {
+            throw std::runtime_error("failed to load height map!");
+        }
+        std::cout << "Loaded heightmap of size " << height << " x " << width << std::endl;
+
+        // set up vertex data: one vertex per pixel of the height map, its height from the pixel's value
+        float yScale = 64.0f / 256.0f, yShift = 16.0f; // apply a scale and a shift to the height data
+        unsigned bytePerPixel = nrChannels;
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                unsigned char* pixelOffset = data + (j + width * i) * bytePerPixel;
+                unsigned char y = pixelOffset[0];
+
+                // vertex: column j along x, row i along z (the image's top row at the back)
+                Vertex vertex{};
+                vertex.pos.x = -width / 2.0f + width * j / (float) width;   // vx
+                vertex.pos.y = (int) y * yScale - yShift;                    // vy
+                vertex.pos.z = -height / 2.0f + height * i / (float) height; // vz
+                vertices.push_back(vertex);
+            }
+        }
+        std::cout << "Loaded " << vertices.size() << " vertices" << std::endl;
+        stbi_image_free(data);
+
+        // index data: one triangle strip per pair of rows (rows i and i + rez), every rez-th vertex
+        int rez = 1;
+        for (int i = 0; i < height - 1; i += rez) {
+            for (int j = 0; j < width; j += rez) {
+                for (int k = 0; k < 2; k++) {
+                    indices.push_back(j + width * (i + k * rez));
+                }
+            }
+        }
+        std::cout << "Loaded " << indices.size() << " indices" << std::endl;
+
+        numStrips = (height - 1) / rez;
+        numTrisPerStrip = (width / rez) * 2 - 2;
+        std::cout << "Created lattice of " << numStrips << " strips with " << numTrisPerStrip << " triangles each" << std::endl;
+        std::cout << "Created " << numStrips * numTrisPerStrip << " triangles total" << std::endl;
+    }
+--- replace:
+    // A texture image (device local, ready for sampling) with one byte per texel (VK_FORMAT_R8_UNORM: the height map's
+    // grey value 0..255 is read as 0.0..1.0 in .r), copied through a staging buffer. The caller frees the pixels.
+    void createTextureImage(stbi_uc* pixels, int texWidth, int texHeight, VkImage& image, VkDeviceMemory& imageMemory) {
+        VkDeviceSize imageSize = texWidth * texHeight;
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+            memcpy(data, pixels, static_cast<size_t>(imageSize));
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        createImage(texWidth, texHeight, VK_FORMAT_R8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image, imageMemory);
+
+        transitionImageLayout(image, VK_FORMAT_R8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            copyBufferToImage(stagingBuffer, image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+        transitionImageLayout(image, VK_FORMAT_R8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
+
+
+    // learnopengl's terrain on the GPU: the height map as a texture the tessellation evaluation shader reads the heights
+    // from, and (from the next task on) the patches over its area.
+    void loadHeightMap(const char* path) {
+        int width, height, nrChannels;
+        unsigned char* data = stbi_load(path, &width, &height, &nrChannels, STBI_grey); // one channel: the grey value
+        if (!data) {
+            throw std::runtime_error("failed to load height map!");
+        }
+        std::cout << "Loaded heightmap of size " << height << " x " << width << std::endl;
+
+        createTextureImage(data, width, height, heightMapImage, heightMapImageMemory);
+        heightMapImageView = createImageView(heightMapImage, VK_FORMAT_R8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+        stbi_image_free(data);
+
+        // TODO: the patches: rez x rez patches of 4 corners (position + texture coordinate)
+    }
+
+    // The height map's sampler: linear, clamped at the edges (the edges must not blend with the opposite side). The
+    // evaluation shader has no screen-space derivatives, so it always reads mip level 0: no mipmaps, no anisotropy.
+    void createTextureSampler() {
+        VkSamplerCreateInfo samplerInfo{};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.anisotropyEnable = VK_FALSE;
+        samplerInfo.maxAnisotropy = 1.0f;
+        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create texture sampler!");
+        }
+    }
+--- file: main.cpp
+--- find:
+    void createIndexBuffer() {
+        VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+            memcpy(data, indices.data(), (size_t) bufferSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
+
+        copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
+--- replace:
+
+--- file: main.cpp
+--- find:
+    void createVertexBuffer() {
+--- replace:
+    void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+        VkBufferImageCopy region{};
+        region.bufferOffset = 0;
+        region.bufferRowLength = 0;
+        region.bufferImageHeight = 0;
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel = 0;
+        region.imageSubresource.baseArrayLayer = 0;
+        region.imageSubresource.layerCount = 1;
+        region.imageOffset = {0, 0, 0};
+        region.imageExtent = {
+            width,
+            height,
+            1
+        };
+
+        vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+        endSingleTimeCommands(commandBuffer);
+    }
+
+
+    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) {
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = oldLayout;
+        barrier.newLayout = newLayout;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = image;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+
+        VkPipelineStageFlags sourceStage;
+        VkPipelineStageFlags destinationStage;
+
+        if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+            sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+            sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        } else {
+            throw std::invalid_argument("unsupported layout transition!");
+        }
+
+        vkCmdPipelineBarrier(
+            commandBuffer,
+            sourceStage, destinationStage,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &barrier
+        );
+
+        endSingleTimeCommands(commandBuffer);
+    }
+
+
+    void createVertexBuffer() {
+--- file: main.cpp
+--- find:
+        // render the terrain
+        VkBuffer vertexBuffers[] = {vertexBuffer};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+        // draw mesh strip by strip: each strip starts (numTrisPerStrip + 2) indices after the one before
+        for (int strip = 0; strip < numStrips; strip++) {
+            vkCmdDrawIndexed(commandBuffer,
+                             numTrisPerStrip + 2,                  // number of indices to render
+                             1,                                    // one instance
+                             (numTrisPerStrip + 2) * strip,        // the strip's first index
+                             0, 0);
+        }
+--- replace:
+        // TODO: draw the terrain's patches
+=== task: patch-grid
+--- file: main.cpp
+--- find:
+struct Vertex {
+    glm::vec3 pos;
+--- replace:
+struct Vertex {
+    glm::vec3 pos;
+    glm::vec2 texCoord;
+--- file: main.cpp
+--- find:
+    static std::array<VkVertexInputAttributeDescription, 1> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 1> attributeDescriptions{};
+--- replace:
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+--- file: main.cpp
+--- find:
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+--- replace:
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, texCoord);
+--- file: main.cpp
+--- find:
+// the terrain's vertices (filled in loadHeightMap)
+--- replace:
+const unsigned int NUM_PATCH_PTS = 4; // four control points per patch: the corners of a square of the terrain
+const unsigned int rez = 20;          // rez x rez patches
+
+// the patches' control points (filled in loadHeightMap)
+--- file: main.cpp
+--- find:
+        // TODO: the patches: rez x rez patches of 4 corners (position + texture coordinate)
+--- replace:
+        // set up vertex data: rez x rez patches of 4 control points (corners), each with a position and a texture coordinate
+        for (unsigned i = 0; i <= rez - 1; i++) {
+            for (unsigned j = 0; j <= rez - 1; j++) {
+                vertices.push_back({{-width / 2.0f + width * i / (float) rez,       0.0f, -height / 2.0f + height * j / (float) rez},       {i / (float) rez,       j / (float) rez}});
+                vertices.push_back({{-width / 2.0f + width * (i + 1) / (float) rez, 0.0f, -height / 2.0f + height * j / (float) rez},       {(i + 1) / (float) rez, j / (float) rez}});
+                vertices.push_back({{-width / 2.0f + width * i / (float) rez,       0.0f, -height / 2.0f + height * (j + 1) / (float) rez}, {i / (float) rez,       (j + 1) / (float) rez}});
+                vertices.push_back({{-width / 2.0f + width * (i + 1) / (float) rez, 0.0f, -height / 2.0f + height * (j + 1) / (float) rez}, {(i + 1) / (float) rez, (j + 1) / (float) rez}});
+            }
+        }
+        std::cout << "Loaded " << rez * rez << " patches of 4 control points each" << std::endl;
+        std::cout << "Processing " << rez * rez * 4 << " vertices in vertex shader" << std::endl;
+--- file: main.cpp
+--- find:
+        // TODO: the patches' vertex buffer (createVertexBuffer)
+--- replace:
+        createVertexBuffer();
+=== task: tess-evaluation
+--- file: shaders/gpuheight.tese
+--- find:
+#version 450
+
+// TODO: the tessellation evaluation shader: the patches' layout (quads, fractional_odd_spacing, ccw); place each
+// new vertex in its patch (bilinear interpolation of the corners) and move it up by the height from the texture
+layout(quads) in;
+
+void main() {
+    gl_Position = vec4(0.0);
+}
+--- replace:
+#version 450
+
+// quads, spaced with fractional odd levels, triangles counter-clockwise
+layout(quads, fractional_odd_spacing, ccw) in;
+
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+} ubo;
+
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+} pc;
+
+layout(binding = 1) uniform sampler2D heightMap; // the height map texture
+
+layout(location = 0) in vec2 TextureCoord[]; // from the control shader: one per control point
+
+layout(location = 0) out float Height;
+
+void main() {
+    // where in the patch this vertex is: (u, v) from 0 to 1
+    float u = gl_TessCoord.x;
+    float v = gl_TessCoord.y;
+
+    // the corners' texture coordinates
+    vec2 t00 = TextureCoord[0];
+    vec2 t01 = TextureCoord[1];
+    vec2 t10 = TextureCoord[2];
+    vec2 t11 = TextureCoord[3];
+
+    // bilinear interpolation: along u on both edges, then along v
+    vec2 t0 = (t01 - t00) * u + t00;
+    vec2 t1 = (t11 - t10) * u + t10;
+    vec2 texCoord = (t1 - t0) * v + t0;
+
+    // the height from the texture: 0..1 -> -16..48
+    Height = texture(heightMap, texCoord).r * 64.0 - 16.0;
+
+    // the corners' positions
+    vec4 p00 = gl_in[0].gl_Position;
+    vec4 p01 = gl_in[1].gl_Position;
+    vec4 p10 = gl_in[2].gl_Position;
+    vec4 p11 = gl_in[3].gl_Position;
+
+    // the patch's normal (up for our flat grid)
+    vec4 uVec = p01 - p00;
+    vec4 vVec = p10 - p00;
+    vec4 normal = normalize(vec4(cross(vVec.xyz, uVec.xyz), 0));
+
+    // bilinear interpolation of the position, moved along the normal by the height
+    vec4 p0 = (p01 - p00) * u + p00;
+    vec4 p1 = (p11 - p10) * u + p10;
+    vec4 p = (p1 - p0) * v + p0 + normal * Height;
+
+    // output patch point position in clip space
+    gl_Position = ubo.proj * ubo.view * pc.model * p;
+}
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/cpuheight.vert.spv", "shaders/cpuheight.frag.spv", graphicsPipeline);
+--- replace:
+        createPipeline("shaders/gpuheight.vert.spv", "shaders/gpuheight.tesc.spv", "shaders/gpuheight.tese.spv", "shaders/gpuheight.frag.spv", graphicsPipeline);
+--- file: main.cpp
+--- find:
+// The same layout as the push constant block in the vertex shader: the model matrix of the draw.
+--- replace:
+// The same layout as the push constant block in the tessellation shaders: the model matrix of the draw.
+--- file: main.cpp
+--- find:
+// The same layout as the uniform block in the vertex shader: the camera's matrices.
+--- replace:
+// The same layout as the uniform block in the tessellation shaders: the camera's matrices.
+--- file: main.cpp
+--- find:
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // view and projection
+--- replace:
+        // the control shader needs the view matrix (distances to the camera), the evaluation shader both matrices
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+--- file: main.cpp
+--- find:
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // the model matrix
+--- replace:
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT; // the model matrix
+--- file: main.cpp
+--- find:
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+--- replace:
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT, 0, sizeof(PushConstants), &constants);
+--- file: main.cpp
+--- find:
+    // One graphics pipeline from a vertex and a fragment shader, with the pipeline layout (descriptor set + push
+    // constants) and the fixed functions below.
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkPipeline& pipeline) {
+        auto vertShaderCode = readFile(vertShaderFile);
+        auto fragShaderCode = readFile(fragShaderFile);
+
+        VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
+        VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+--- replace:
+    // One graphics pipeline from a vertex, a tessellation control, a tessellation evaluation and a fragment shader,
+    // with the pipeline layout (descriptor set + push constants) and the fixed functions below.
+    void createPipeline(const std::string& vertShaderFile, const std::string& tescShaderFile, const std::string& teseShaderFile, const std::string& fragShaderFile, VkPipeline& pipeline) {
+        auto vertShaderCode = readFile(vertShaderFile);
+        auto tescShaderCode = readFile(tescShaderFile);
+        auto teseShaderCode = readFile(teseShaderFile);
+        auto fragShaderCode = readFile(fragShaderFile);
+
+        VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
+        VkShaderModule tescShaderModule = createShaderModule(tescShaderCode);
+        VkShaderModule teseShaderModule = createShaderModule(teseShaderCode);
+        VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+--- file: main.cpp
+--- find:
+        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+--- replace:
+        VkPipelineShaderStageCreateInfo tescShaderStageInfo{};
+        tescShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        tescShaderStageInfo.stage = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+        tescShaderStageInfo.module = tescShaderModule;
+        tescShaderStageInfo.pName = "main";
+
+        VkPipelineShaderStageCreateInfo teseShaderStageInfo{};
+        teseShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        teseShaderStageInfo.stage = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+        teseShaderStageInfo.module = teseShaderModule;
+        teseShaderStageInfo.pName = "main";
+
+        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+--- file: main.cpp
+--- find:
+        VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
+--- replace:
+        VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, tescShaderStageInfo, teseShaderStageInfo, fragShaderStageInfo};
+--- file: main.cpp
+--- find:
+        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; // each row of the terrain is one strip
+        inputAssembly.primitiveRestartEnable = VK_FALSE;
+--- replace:
+        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST; // learnopengl's GL_PATCHES
+        inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+        // learnopengl's glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS): a patch is 4 vertices of the buffer
+        VkPipelineTessellationStateCreateInfo tessellationState{};
+        tessellationState.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+        tessellationState.patchControlPoints = NUM_PATCH_PTS;
+--- file: main.cpp
+--- find:
+        rasterizer.cullMode = VK_CULL_MODE_NONE; // a strip's triangles alternate their winding; learnopengl culls nothing
+--- replace:
+        rasterizer.cullMode = VK_CULL_MODE_NONE; // learnopengl culls nothing
+--- file: main.cpp
+--- find:
+        pipelineInfo.stageCount = 2;
+--- replace:
+        pipelineInfo.stageCount = 4;
+--- file: main.cpp
+--- find:
+        pipelineInfo.pInputAssemblyState = &inputAssembly;
+--- replace:
+        pipelineInfo.pInputAssemblyState = &inputAssembly;
+        pipelineInfo.pTessellationState = &tessellationState;
+--- file: main.cpp
+--- find:
+        vkDestroyShaderModule(device, fragShaderModule, nullptr);
+--- replace:
+        vkDestroyShaderModule(device, fragShaderModule, nullptr);
+        vkDestroyShaderModule(device, teseShaderModule, nullptr);
+        vkDestroyShaderModule(device, tescShaderModule, nullptr);
+--- file: main.cpp
+--- find:
+        // TODO: draw the terrain's patches
+--- replace:
+        // render the terrain: every 4 vertices are one patch
+        VkBuffer vertexBuffers[] = {vertexBuffer};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdDraw(commandBuffer, NUM_PATCH_PTS * rez * rez, 1, 0, 0);
+=== task: tess-control
+--- file: shaders/gpuheight.tesc
+--- find:
+        // TODO: how finely to tessellate - for now 1 everywhere: no new vertices, every patch stays one quad
+        gl_TessLevelOuter[0] = 1;
+        gl_TessLevelOuter[1] = 1;
+        gl_TessLevelOuter[2] = 1;
+        gl_TessLevelOuter[3] = 1;
+
+        gl_TessLevelInner[0] = 1;
+        gl_TessLevelInner[1] = 1;
+    }
+}
+--- replace:
+        // for now: every patch the same, 8 segments along each edge and inside
+        gl_TessLevelOuter[0] = 8;
+        gl_TessLevelOuter[1] = 8;
+        gl_TessLevelOuter[2] = 8;
+        gl_TessLevelOuter[3] = 8;
+
+        gl_TessLevelInner[0] = 8;
+        gl_TessLevelInner[1] = 8;
+    }
+}
+=== task: wireframe
+--- file: main.cpp
+--- find:
+        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+--- replace:
+        rasterizer.polygonMode = VK_POLYGON_MODE_LINE; // wireframe: only the triangles' edges (learnopengl's GL_LINE)
+--- file: main.cpp
+--- find:
+        deviceFeatures.tessellationShader = VK_TRUE; // the tessellation control and evaluation stages
+--- replace:
+        deviceFeatures.tessellationShader = VK_TRUE; // the tessellation control and evaluation stages
+        deviceFeatures.fillModeNonSolid = VK_TRUE;   // polygonMode LINE (wireframe)
+--- file: main.cpp
+--- find:
+swapChainAdequate && supportedFeatures.tessellationShader;
+--- replace:
+swapChainAdequate && supportedFeatures.tessellationShader && supportedFeatures.fillModeNonSolid;
+=== task: distance-levels
+--- file: shaders/gpuheight.tesc
+--- find:
+        // for now: every patch the same, 8 segments along each edge and inside
+        gl_TessLevelOuter[0] = 8;
+        gl_TessLevelOuter[1] = 8;
+        gl_TessLevelOuter[2] = 8;
+        gl_TessLevelOuter[3] = 8;
+
+        gl_TessLevelInner[0] = 8;
+        gl_TessLevelInner[1] = 8;
+    }
+}
+--- replace:
+        const int MIN_TESS_LEVEL = 2;
+        const int MAX_TESS_LEVEL = 8;
+        const float MIN_DISTANCE = 250;
+        const float MAX_DISTANCE = 450;
+
+        // the corners in eye space (the camera looks along -z)
+        vec4 eyeSpacePos00 = ubo.view * pc.model * gl_in[0].gl_Position;
+        vec4 eyeSpacePos01 = ubo.view * pc.model * gl_in[1].gl_Position;
+        vec4 eyeSpacePos10 = ubo.view * pc.model * gl_in[2].gl_Position;
+        vec4 eyeSpacePos11 = ubo.view * pc.model * gl_in[3].gl_Position;
+
+        // "distance" from camera scaled between 0 and 1
+        float distance00 = clamp((abs(eyeSpacePos00.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0, 1.0);
+        float distance01 = clamp((abs(eyeSpacePos01.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0, 1.0);
+        float distance10 = clamp((abs(eyeSpacePos10.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0, 1.0);
+        float distance11 = clamp((abs(eyeSpacePos11.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0, 1.0);
+
+        // each edge from its nearer corner (two patches sharing an edge compute the same level: no cracks)
+        float tessLevel0 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance10, distance00));
+        float tessLevel1 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance00, distance01));
+        float tessLevel2 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance01, distance11));
+        float tessLevel3 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance11, distance10));
+
+        gl_TessLevelOuter[0] = tessLevel0;
+        gl_TessLevelOuter[1] = tessLevel1;
+        gl_TessLevelOuter[2] = tessLevel2;
+        gl_TessLevelOuter[3] = tessLevel3;
+
+        gl_TessLevelInner[0] = max(tessLevel1, tessLevel3);
+        gl_TessLevelInner[1] = max(tessLevel0, tessLevel2);
+    }
+}

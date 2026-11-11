@@ -57,9 +57,10 @@ inline UINT CalculateConstantBufferByteSize(UINT byteSize)
     return (byteSize + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
 }
 
-// The terrain: rez x rez patches of NUM_PATCH_PTS control points each (the corners of a square).
+// The number of control points of a patch: the corners of a square.
 const unsigned int NUM_PATCH_PTS = 4;
-const unsigned int rez = 20;// The camera: where it is, the direction it looks in, and which way is up. Globals,
+
+// The camera: where it is, the direction it looks in, and which way is up. Globals,
 // so that OnUpdate and the window's message handler can both use them.
 // camera: in front of the terrain and high above it, looking down at its middle (yaw -90, pitch -35)
 XMVECTOR cameraPos   = XMVectorSet(0.0f, 190.0f, 290.0f, 0.0f);
@@ -124,6 +125,7 @@ private:
     // App resources.
     ComPtr<ID3D12Resource> m_vertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+    UINT m_vertexCount = 0;       // the patches' control points
     ComPtr<ID3D12Resource> m_heightMap;    // the height map texture
     ComPtr<ID3D12Resource> m_constantBuffer;
     ComPtr<ID3D12Resource> m_depthStencil;
@@ -269,6 +271,14 @@ void D3D12App::LoadPipeline()
 // Load the assets.
 void D3D12App::LoadAssets()
 {
+    // how finely can the GPU tessellate? Direct3D 12 fixes it for every device: a factor of up
+    // to 64 (D3D12_TESSELLATOR_MAX_TESSELLATION_FACTOR)
+    {
+        char text[64] = {};
+        snprintf(text, sizeof(text), "Max available tess level: %d\n", D3D12_TESSELLATOR_MAX_TESSELLATION_FACTOR);
+        OutputDebugStringA(text);
+    }
+
     // Create the root signature: what the shaders read besides the vertices.
     {
         // Root parameter 0: a descriptor table with one CBV at register b0 (model, view
@@ -283,13 +293,13 @@ void D3D12App::LoadAssets()
         rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
         rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_DOMAIN);
 
-        // Sampler s0, for the domain shader: linear filtering, coordinates outside 0..1
-        // wrap around (learnopengl's GL_REPEAT).
+        // Sampler s0, for the domain shader: linear filtering, coordinates clamped to the
+        // edge, so the edges do not blend with the opposite side.
         D3D12_STATIC_SAMPLER_DESC samplers[1] = {};
         samplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-        samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
         samplers[0].MipLODBias = 0;
         samplers[0].MaxAnisotropy = 0;
         samplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
@@ -378,87 +388,91 @@ void D3D12App::LoadAssets()
     // prematurely destroyed.
     ComPtr<ID3D12Resource> heightMapUploadHeap;
 
-    // load and create a texture: the height map, read by the domain shader
-    // -------------------------------------------------------------------
+    // load the height map into a texture (the domain shader reads the heights from it)
+    // --------------------------------------------------------------------------------
+    // one channel (the grey) per pixel, the layout of DXGI_FORMAT_R8_UNORM; no vertical flip:
+    // texture coordinate v = 0 is the image's top row
     int width, height, nrChannels;
+    unsigned char* data = stbi_load("heightmap.png", &width, &height, &nrChannels, 1);
+    if (data == nullptr)
     {
-        // Load the image with one channel (its grey), the layout of DXGI_FORMAT_R8_UNORM.
-        // No vertical flip: texture coordinate v = 0 is the image's top row.
-        unsigned char* data = stbi_load("heightmap.png", &width, &height, &nrChannels, 1);
-        if (data == nullptr)
-        {
-            throw std::runtime_error("Failed to load texture heightmap.png");
-        }
-
-        // Describe and create a Texture2D in a default heap, in the COPY_DEST state. One
-        // mip level: the domain shader reads level 0 only (SampleLevel), as OpenGL's
-        // tessellation evaluation shader does (no derivatives outside the fragment shader).
-        D3D12_RESOURCE_DESC textureDesc = {};
-        textureDesc.MipLevels = 1;
-        textureDesc.Format = DXGI_FORMAT_R8_UNORM;    // one 8-bit channel: the shaders read it as .r
-        textureDesc.Width = static_cast<UINT64>(width);
-        textureDesc.Height = static_cast<UINT>(height);
-        textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-        textureDesc.DepthOrArraySize = 1;
-        textureDesc.SampleDesc.Count = 1;
-        textureDesc.SampleDesc.Quality = 0;
-        textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-
-        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
-        ThrowIfFailed(m_device->CreateCommittedResource(
-            &heapProperties,
-            D3D12_HEAP_FLAG_NONE,
-            &textureDesc,
-            D3D12_RESOURCE_STATE_COPY_DEST,
-            nullptr,
-            IID_PPV_ARGS(&m_heightMap)));
-
-        // The upload heap: a buffer in memory the CPU can write, big enough for the
-        // texture's rows as the GPU lays them out (GetRequiredIntermediateSize).
-        const UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_heightMap.Get(), 0, 1);
-
-        CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
-        CD3DX12_RESOURCE_DESC uploadBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
-        ThrowIfFailed(m_device->CreateCommittedResource(
-            &uploadHeapProperties,
-            D3D12_HEAP_FLAG_NONE,
-            &uploadBufferDesc,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&heightMapUploadHeap)));
-
-        // Copy the pixels into the upload heap now and schedule the copy into the texture.
-        D3D12_SUBRESOURCE_DATA textureData = {};
-        textureData.pData = data;
-        textureData.RowPitch = width;                              // bytes per row: 1 per pixel
-        textureData.SlicePitch = textureData.RowPitch * height;    // bytes in the whole image
-
-        UpdateSubresources(m_commandList.Get(), m_heightMap.Get(), heightMapUploadHeap.Get(), 0, 0, 1, &textureData);
-
-        // After the copy, the texture is read by a shader that is not the pixel shader:
-        // the domain shader (NON_PIXEL_SHADER_RESOURCE).
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_heightMap.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-        m_commandList->ResourceBarrier(1, &barrier);
-
-        // The SRV in slot 1 of the CBV/SRV heap (slot 0 is the CBV).
-        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.Format = textureDesc.Format;
-        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-        srvDesc.Texture2D.MipLevels = 1;
-        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
-        m_device->CreateShaderResourceView(m_heightMap.Get(), &srvDesc, srvHandle);
-
-        // Free the image memory.
-        stbi_image_free(data);
+        throw std::runtime_error("Failed to load texture heightmap.png");
+    }
+    {
+        // the debugger's output window (Visual Studio's Output) shows the text
+        char text[128] = {};
+        snprintf(text, sizeof(text), "Loaded heightmap of size %d x %d\n", height, width);
+        OutputDebugStringA(text);
     }
 
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
-    // rez x rez patches of 4 control points each, covering the height map's area: each
-    // patch a square of the flat terrain (y = 0) with its texture coordinates. The domain
-    // shader lifts the vertices the tessellator makes to the height map's height.
+    // Describe and create a Texture2D in a default heap, in the COPY_DEST state. One
+    // mip level: the domain shader reads level 0 only (SampleLevel), as OpenGL's
+    // tessellation evaluation shader does (no derivatives outside the fragment shader).
+    D3D12_RESOURCE_DESC textureDesc = {};
+    textureDesc.MipLevels = 1;
+    textureDesc.Format = DXGI_FORMAT_R8_UNORM;    // one 8-bit channel: the shaders read it as .r
+    textureDesc.Width = static_cast<UINT64>(width);
+    textureDesc.Height = static_cast<UINT>(height);
+    textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    textureDesc.DepthOrArraySize = 1;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.SampleDesc.Quality = 0;
+    textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+    ThrowIfFailed(m_device->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &textureDesc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(&m_heightMap)));
+
+    // The upload heap: a buffer in memory the CPU can write, big enough for the
+    // texture's rows as the GPU lays them out (GetRequiredIntermediateSize).
+    const UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_heightMap.Get(), 0, 1);
+
+    CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+    CD3DX12_RESOURCE_DESC uploadBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+    ThrowIfFailed(m_device->CreateCommittedResource(
+        &uploadHeapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &uploadBufferDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&heightMapUploadHeap)));
+
+    // Copy the pixels into the upload heap now and schedule the copy into the texture.
+    D3D12_SUBRESOURCE_DATA textureData = {};
+    textureData.pData = data;
+    textureData.RowPitch = width;                              // bytes per row: 1 per pixel
+    textureData.SlicePitch = textureData.RowPitch * height;    // bytes in the whole image
+
+    UpdateSubresources(m_commandList.Get(), m_heightMap.Get(), heightMapUploadHeap.Get(), 0, 0, 1, &textureData);
+
+    // After the copy, the texture is read by a shader that is not the pixel shader:
+    // the domain shader (NON_PIXEL_SHADER_RESOURCE).
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_heightMap.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    // The SRV in slot 1 of the CBV/SRV heap (slot 0 is the CBV).
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = textureDesc.Format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
+    m_device->CreateShaderResourceView(m_heightMap.Get(), &srvDesc, srvHandle);
+
+    stbi_image_free(data);
+
+    // set up vertex data: rez x rez patches of 4 control points (corners), each with a position
+    // and a texture coordinate - squares of the flat terrain (y = 0); the domain shader lifts the
+    // vertices the tessellator makes to the height map's height
+    // ------------------------------------------------------------------------------------------
     std::vector<float> vertices;
+
+    unsigned rez = 20;
     for (unsigned i = 0; i <= rez - 1; i++)
     {
         for (unsigned j = 0; j <= rez - 1; j++)
@@ -488,6 +502,7 @@ void D3D12App::LoadAssets()
             vertices.push_back((j + 1) / (float)rez);                           // v
         }
     }
+    m_vertexCount = NUM_PATCH_PTS * rez * rez;    // every 4 vertices are one patch
 
     // Create the vertex buffer: the patches' control points, 5 floats each.
     {
@@ -701,7 +716,7 @@ void D3D12App::PopulateCommandList()
     // glPatchParameteri(GL_PATCH_VERTICES, 4))
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    m_commandList->DrawInstanced(NUM_PATCH_PTS * rez * rez, 1, 0, 0);
+    m_commandList->DrawInstanced(m_vertexCount, 1, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
     barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);

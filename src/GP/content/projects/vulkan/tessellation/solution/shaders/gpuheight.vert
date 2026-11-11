@@ -5,8 +5,8 @@ layout(location = 1) in vec2 inTexCoord;
 
 layout(location = 0) out vec2 TexCoord;
 
-// the vertex shader only passes the control points on: the tessellation shaders place the vertices
 void main() {
+    // pass the control points through: the tessellation stages place the vertices
     gl_Position = vec4(inPosition, 1.0);
     TexCoord = inTexCoord;
 }
