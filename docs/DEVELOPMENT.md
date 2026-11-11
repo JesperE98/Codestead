@@ -294,6 +294,12 @@ src/GP/
   använd `PerApi(opengl: …, vulkan: …, d3d12: …)`. `TaskTests` kräver att varje uppgift löses av sin lösning och
   **inte** redan är löst före.
 - Lägg till kapitlet i `GpCourse.LessonList` (ordningen där är kursens ordning) och dess kontroller i `TaskChecks.cs`.
+- `TaskTests` tar knappt en timme i ett svep, så CI kör dem bara på Ubuntu, i parallella jobb per kursdel
+  (`gp-tasks` i `.github/workflows/ci.yml` och `release.yml`, med `CODESTEAD_GP_PARTS`), och hoppar över dem i
+  pull requests som inte ändrar `src/GP`, `tests/GP`, `src/Shared`, `build/` eller arbetsflödena. Alla andra tester
+  körs på både Ubuntu och Windows. **En ny kursdel ska in i matrisen i båda arbetsflödena** (`CiTests` kontrollerar
+  det). Lokalt: `CODESTEAD_GP_PARTS=pbr dotnet test --project tests/GP/Codestead.GP.Tests -- --filter-class
+  Codestead.GP.Tests.TaskTests`.
 
 **Koden ska vara korrekt.** `src/GP/verify/verify.sh <mappar>` kompilerar projekten med de riktiga verktygen:
 OpenGL och Vulkan med g++ (GLAD genereras med `pip install glad`), DirectX 12 med MinGW-w64 mot Microsofts

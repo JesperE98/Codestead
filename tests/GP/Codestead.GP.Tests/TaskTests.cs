@@ -10,11 +10,21 @@ namespace Codestead.GP.Tests;
 /// </summary>
 public class TaskTests
 {
+    /// <summary>
+    /// The course parts to test, from CODESTEAD_GP_PARTS ("lighting,pbr"); unset: all. CI runs the parts in parallel
+    /// jobs (.github/workflows/ci.yml and release.yml), and <see cref="CiTests"/> checks that their lists cover every part.
+    /// </summary>
+    public static IReadOnlySet<string>? PartsToTest() =>
+        Environment.GetEnvironmentVariable("CODESTEAD_GP_PARTS") is { Length: > 0 } parts
+            ? parts.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet(StringComparer.Ordinal)
+            : null;
+
     public static TheoryData<string, string> ChaptersAndApis()
     {
+        var parts = PartsToTest();
         var data = new TheoryData<string, string>();
         foreach (var api in Apis.All)
-            foreach (var chapter in GpCourse.Chapters.Where(c => c.IsLesson))
+            foreach (var chapter in GpCourse.Chapters.Where(c => c.IsLesson && (parts is null || parts.Contains(c.Part))))
                 if (Directory.Exists(Path.Combine(Repo.Content, "projects", api.Id, chapter.Id))) data.Add(api.Id, chapter.Id);
         return data;
     }
