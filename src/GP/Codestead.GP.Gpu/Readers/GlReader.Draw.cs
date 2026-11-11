@@ -282,6 +282,15 @@ public sealed partial class GlReader
                     ["1"] = ShaderValue.Vec(mesh.Normals[i]),
                     ["2"] = ShaderValue.Vec(mesh.TexCoords[i][0], flipUv ? 1 - mesh.TexCoords[i][1] : mesh.TexCoords[i][1]),
                 }).ToList();
+                // A skinned model (model_animation.h): the bone ids and weights at mesh.h's locations.
+                var (idsAt, weightsAt) = BoneAttributes();
+                bool extracted = ExtractsBones();
+                for (int i = 0; i < meshVertices.Count && (idsAt is not null || weightsAt is not null); i++)
+                {
+                    var (ids, weights) = extracted ? Models.GltfModel.VertexBones(mesh, i) : ([-1, -1, -1, -1], [0, 0, 0, 0]);
+                    if (idsAt is int ia) meshVertices[i][ia.ToString()] = ShaderValue.Vec(ids);
+                    if (weightsAt is int wa) meshVertices[i][wa.ToString()] = ShaderValue.Vec(weights);
+                }
                 var meshMaps = new Dictionary<string, Textures.Texture?>(StringComparer.Ordinal)
                 {
                     ["texture_diffuse1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.DiffuseMap, flipImages, mipmapped: true),

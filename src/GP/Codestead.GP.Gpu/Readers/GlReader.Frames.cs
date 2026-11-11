@@ -12,7 +12,16 @@ public sealed partial class GlReader
     public const int SpacePressFrame = 30, SpaceReleaseFrame = 33;
 
     /// <summary>The render loop runs frame by frame: the program has a key callback (a game).</summary>
-    private bool Stepped => src.HasCall("glfwSetKeyCallback");
+    private bool Stepped => src.HasCall("glfwSetKeyCallback") || RenderLoopBody() is { } body && src.PassesDeltaTime(body);
+
+    /// <summary>The text of main's render loop (while (!glfwWindowShouldClose(window)) { … }), or null.</summary>
+    private string? RenderLoopBody()
+    {
+        var loop = Regex.Match(src.Code, @"while\s*\(\s*!\s*glfwWindowShouldClose\s*\(\s*[\w.>-]+\s*\)\s*\)\s*\{");
+        if (!loop.Success) return null;
+        int close = CppSource.MatchBracket(src.Code, loop.Index + loop.Length - 1);
+        return close < 0 ? null : src.Code[(loop.Index + loop.Length)..close];
+    }
 
     /// <summary>The frame being run is not the one shown: its draws are skipped.</summary>
     private bool discardDraws;

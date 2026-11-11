@@ -25,6 +25,8 @@ public sealed partial class ShaderRunner
                 }
                 if (owner.Fields is not null)
                     return owner.Fields.TryGetValue(m.Field, out var f) ? f : throw new ShaderRuntimeException($"no member named '{m.Field}'", m.Line);
+                // assimp's aiString: its text (mName.data).
+                if (Lenient && owner.Text is not null && m.Field is "data") return owner;
                 // C++ mode: a descriptor handle held as a number (handle.ptr).
                 if (Lenient && m.Field == "ptr" && owner.V is { Length: 1 }) return owner;
                 // DirectXMath: an XMMATRIX's rows (m.r[0] … m.r[3]), an XMFLOAT4X4's elements (m._41: row 4, column 1).
@@ -88,6 +90,8 @@ public sealed partial class ShaderRunner
                     return u.Op.StartsWith("post", StringComparison.Ordinal) ? old : changed;
                 }
                 var v = Eval(u.Operand);
+                // C++: !pointer (if (!scene || !scene->mRootNode)).
+                if (v.V is null && u.Op == "!" && Lenient) return ShaderValue.Scalar(Truthy(v) ? 0 : 1);
                 if (v.V is null) throw new ShaderRuntimeException($"invalid operand to '{u.Op}'", u.Line);
                 return u.Op switch
                 {
@@ -340,6 +344,8 @@ public sealed partial class ShaderRunner
                 return 1;
         }
         if (ShaderValue.IsIntType(type)) return 1;
+        // GLM's and assimp's quaternions: (x, y, z, w).
+        if (type is "quat" or "fquat" or "dquat" or "aiQuaternion") return 4;
         foreach (var prefix in new[] { "vec", "ivec", "uvec", "bvec", "dvec", "float", "int", "uint", "half", "bool", "double", "XMFLOAT", "XMINT", "XMUINT", "min16float" })
             if (type.StartsWith(prefix, StringComparison.Ordinal) && type.Length == prefix.Length + 1 && type[^1] is >= '2' and <= '4')
                 return type[^1] - '0';

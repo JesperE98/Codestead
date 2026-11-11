@@ -30,6 +30,8 @@ public sealed partial class ShaderRunner
         if (Lenient && name.Length > 3 && name[^1] == 'f' && FloatMath.Contains(name[..^1]) && program.FindFunction(name) is null) name = name[..^1];
         if (name.StartsWith('.'))
         {
+            // assimp's methods are the runner's (the hook would take an upper-case method for an API object's).
+            if (Lenient && name is ".ReadFile" or ".GetErrorString" or ".GetTextureCount" or ".GetTexture" or ".C_Str") return Method(name[1..], c);
             if (Lenient && Hook?.Invoke(name, c.Args) is { } methodHooked) return methodHooked;
             return Method(name[1..], c);
         }
@@ -126,6 +128,12 @@ public sealed partial class ShaderRunner
             return ShaderValue.Struct(fields);
         }
 
+        // glm::quat(w, x, y, z): a quaternion, kept as (x, y, z, w) like GLM's memory (.w is the last).
+        if (Lenient && name is "quat" or "fquat" or "dquat" && c.Args.Count == 4)
+        {
+            var q = c.Args.Select(Eval).ToList();
+            return ShaderValue.Vec(q[1].X, q[2].X, q[3].X, q[0].X);
+        }
         int m = MatrixSize(name);
         if (m > 0)
         {
@@ -343,6 +351,25 @@ public sealed partial class ShaderRunner
             case "Sample" or "SampleLevel" when c.Args.Count >= 3:
                 // HLSL names the sampler: the texture is looked up as "texture|sampler". SampleLevel gives the mip level.
                 return SampleTexture(c.Args[0], Eval(c.Args[2]), PathOf(c.Args[1]), method == "SampleLevel" && c.Args.Count >= 4 ? Eval(c.Args[3]).X : null);
+            case "find" when Lenient && c.Args.Count == 2 && Eval(c.Args[0]).Map is { } searched:
+            {
+                // map.find(key): an iterator at the key, or end().
+                var key = ShaderValue.MapKey(Eval(c.Args[1]));
+                int position = 0;
+                bool found = false;
+                foreach (var k in searched.Keys)
+                {
+                    if (k == key)
+                    {
+                        found = true;
+                        break;
+                    }
+                    position++;
+                }
+                return new ShaderValue { Iterator = new MapIterator(searched, found ? position : searched.Count, false) };
+            }
+            case "count" or "contains" when Lenient && c.Args.Count == 2 && Eval(c.Args[0]).Map is { } counted:
+                return ShaderValue.Integer(counted.ContainsKey(ShaderValue.MapKey(Eval(c.Args[1]))) ? 1 : 0);
             case "size" or "length" or "Length" or "count":
             {
                 var target = Eval(c.Args[0]);
@@ -363,6 +390,17 @@ public sealed partial class ShaderRunner
                 // map.insert(std::pair<K, V>(k, v)) / map.emplace(k, v): added unless the key is there already.
                 var (key, value) = c.Args.Count >= 3 ? (Eval(c.Args[1]), Eval(c.Args[2])) : Eval(c.Args[1]) is { Items: [var k, var v] } pair ? (k, v) : (null, null);
                 if (key is not null && value is not null && !into.ContainsKey(ShaderValue.MapKey(key))) into[ShaderValue.MapKey(key)] = value.Clone();
+                return ShaderValue.Scalar(0);
+            }
+            case "insert" when Lenient && c.Args.Count == 4 && c.Args[2] is Call { Function: ".begin" or ".cbegin", Args: [var from] } && c.Args[3] is Call { Function: ".end" or ".cend", Args: [var fromAgain] }
+                && ExprText(from) == ExprText(fromAgain) && Eval(c.Args[0]).IsArray:
+            {
+                // v.insert(v.end(), other.begin(), other.end()): the other vector's elements appended (or put first).
+                var into = Eval(c.Args[0]);
+                var added = (Eval(from).Items ?? []).Select(x => x.Clone()).ToList();
+                bool atStart = c.Args[1] is Call { Function: ".begin" or ".cbegin" };
+                if (atStart) Store(c.Args[0], ShaderValue.Array([.. added, .. into.Items ?? []]));
+                else foreach (var item in added) into.Append(item);
                 return ShaderValue.Scalar(0);
             }
             case "is_open" or "good" when Lenient && Eval(c.Args[0]) is { } openStream && IsStream(openStream):
@@ -393,6 +431,29 @@ public sealed partial class ShaderRunner
                 fileStream.Fields[StreamPos] = ShaderValue.Scalar(0);
                 fileStream.Fields[StreamOk] = ShaderValue.Scalar(text is null ? 0 : 1);
                 return ShaderValue.Scalar(0);
+            }
+            case "C_Str":
+                return Eval(c.Args[0]);
+            case "ReadFile" when Lenient && c.Args.Count >= 2 && Eval(c.Args[1]).Text is { } modelPath:
+            {
+                // Assimp::Importer::ReadFile(path, flags): the model's aiScene (glTF), with aiProcess_FlipUVs as asked.
+                bool flipUvs = c.Args.Count >= 3 && ExprText(c.Args[2]).Contains("aiProcess_FlipUVs", StringComparison.Ordinal);
+                var key = modelPath + (flipUvs ? "|flip" : "");
+                if (!assimpScenes.TryGetValue(key, out var loadedScene))
+                    assimpScenes[key] = loadedScene = ReadBytes is { } read && Models.GltfModel.IsGltf(modelPath) && Models.GltfModel.Load(read, modelPath) is { } gltf
+                        ? gltf.Scene(flipUvs) : ShaderValue.Str("nullptr");
+                return loadedScene;
+            }
+            case "GetErrorString" when Lenient:
+                return ShaderValue.Str("");
+            case "GetTextureCount" when Lenient && c.Args.Count >= 2 && Eval(c.Args[0]).Fields?.GetValueOrDefault(Models.GltfModel.MaterialTextures) is { Fields: { } byType }:
+                return ShaderValue.Integer(byType.GetValueOrDefault(Eval(c.Args[1]).Text ?? "")?.Count ?? 0);
+            case "GetTexture" when Lenient && c.Args.Count >= 4 && Eval(c.Args[0]).Fields?.GetValueOrDefault(Models.GltfModel.MaterialTextures) is { Fields: { } textureFiles }:
+            {
+                var files = textureFiles.GetValueOrDefault(Eval(c.Args[1]).Text ?? "")?.Items ?? [];
+                int index = (int)Eval(c.Args[2]).X;
+                if (index >= 0 && index < files.Length) Store(c.Args[3] is Unary { Op: "&" } address ? address.Operand : c.Args[3], files[index]);
+                return ShaderValue.Str("aiReturn_SUCCESS");
             }
             case "data" or "c_str":
                 return Eval(c.Args[0]);

@@ -440,6 +440,21 @@ public sealed partial class CppSource
         return true;
     }
 
+    /// <summary>
+    /// Does this code (a render loop's body, OnUpdate) hand the frame's deltaTime to a function of the program that
+    /// keeps state with it (UpdateAnimation(animator, deltaTime): an animation that plays on frame by frame)? Input
+    /// handlers (processInput: a camera that moves only while a key is held) do not count.
+    /// </summary>
+    public bool PassesDeltaTime(string code)
+    {
+        foreach (Match m in Regex.Matches(code, @"(?<![\w.>])(\w+)\s*\(([^;]*?)\bdeltaTime\b"))
+        {
+            var callee = m.Groups[1].Value;
+            if (Functions.ContainsKey(callee) && !Regex.IsMatch(callee, "(?i)input|key|mouse|scroll|camera")) return true;
+        }
+        return false;
+    }
+
     private static readonly Regex ApiCallRe = new(@"\b(?!glGetError\b)(?:gl[A-Z]\w*|glfw[A-Z]\w*|vk[A-Z]\w*)\s*\(|(?:\.|->)\s*(?:use|setFloat|setInt|setBool|setVec2|setVec3|setVec4|setMat2|setMat3|setMat4|Draw)\s*\(", RegexOptions.CultureInvariant);
     private static readonly Regex CalledRe = new(@"(?<![\w.>])([A-Za-z_]\w*)\s*\(", RegexOptions.CultureInvariant);
 

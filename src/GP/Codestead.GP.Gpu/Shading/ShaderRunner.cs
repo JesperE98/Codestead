@@ -479,9 +479,14 @@ public sealed partial class ShaderRunner
     private static bool Truthy(ShaderValue v) => v.V is { Length: > 0 } ? v.V[0] != 0
         // if (fstream): a stream is true while it is good.
         : v.Fields is { } f && f.TryGetValue(StreamOk, out var ok) ? ok.X != 0
-        : v.Text is { Length: > 0 } t && t is not ("VK_NULL_HANDLE" or "nullptr" or "NULL");
+        // C++: a pointer to an object or a container (if (!scene), if (mesh->mTextureCoords[0])) is not null.
+        : v.Fields is not null || v.IsArray || v.Map is not null
+        || v.Text is { Length: > 0 } t && t is not ("VK_NULL_HANDLE" or "nullptr" or "NULL");
 
     private readonly HashSet<string> staticLocals = new(StringComparer.Ordinal);
+
+    /// <summary>The aiScenes Assimp::Importer::ReadFile gave, by path (and aiProcess_FlipUVs).</summary>
+    private readonly Dictionary<string, ShaderValue> assimpScenes = new(StringComparer.Ordinal);
 
     /// <summary>C++: the variables declared as pointers – assigning to one points it at another object.</summary>
     private readonly HashSet<string> pointers = new(StringComparer.Ordinal);

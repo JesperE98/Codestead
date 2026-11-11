@@ -35,6 +35,9 @@ public sealed partial class GlReader
         // What the program prints (std::cout) is its output; its own code's API queries are answered here.
         env.Runner.Output = scene.Log.Add;
         env.ApiValue = ApiValue;
+        // The getters of the project's headers (learnopengl's Model::GetBoneInfoMap): the reader's Model answers them.
+        foreach (var (path, text) in project.Files)
+            if (path.EndsWith(".h", StringComparison.Ordinal) || path.EndsWith(".hpp", StringComparison.Ordinal)) env.AddGetters(CppSource.BlankComments(text));
         // Bytes read through a pointer into an image stb_image loaded (pixelOffset[0]).
         env.Runner.PointerRead = (handle, at) => loadedImages.TryGetValue(handle, out var load) && load.Image is { } img ? StbImage.Byte(img, load.Wanted > 0 ? load.Wanted : img.Channels, at) : null;
     }

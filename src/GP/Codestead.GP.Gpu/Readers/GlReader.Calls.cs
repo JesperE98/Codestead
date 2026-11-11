@@ -358,6 +358,26 @@ public sealed partial class GlReader
     /// name objects with the mesh's vertex data (location 0 position, 1 normal, 2 texture coordinates) and textures –
     /// what the asteroid field binds to add its per-instance matrices.
     /// </summary>
+    /// <summary>Does the project's Model read the bones (model.h calls ExtractBoneWeightForVertices)?</summary>
+    private bool ExtractsBones() => project.Files.Any(f => (f.Key.EndsWith(".h", StringComparison.Ordinal) || f.Key.EndsWith(".hpp", StringComparison.Ordinal))
+        && System.Text.RegularExpressions.Regex.IsMatch(CppSource.BlankComments(f.Value), @"\bExtractBoneWeightForVertices\s*\([^)]*\)\s*;"));
+
+    /// <summary>
+    /// The locations of the bone attributes of the project's mesh.h (glVertexAttribIPointer(3, 4, GL_INT, …,
+    /// offsetof(Vertex, m_BoneIDs)), glVertexAttribPointer(4, …, offsetof(Vertex, m_Weights))), or null.
+    /// </summary>
+    private (int? Ids, int? Weights) BoneAttributes()
+    {
+        int? ids = null, weights = null;
+        foreach (var (path, text) in project.Files.Where(f => f.Key.EndsWith(".h", StringComparison.Ordinal) || f.Key.EndsWith(".hpp", StringComparison.Ordinal)))
+            foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(CppSource.BlankComments(text), @"glVertexAttribI?Pointer\s*\(\s*(\d+)[^;]*offsetof\s*\(\s*\w+\s*,\s*(\w+)\s*\)"))
+            {
+                if (m.Groups[2].Value.Contains("BoneID", StringComparison.OrdinalIgnoreCase)) ids = int.Parse(m.Groups[1].Value);
+                else if (m.Groups[2].Value.Contains("Weight", StringComparison.OrdinalIgnoreCase)) weights = int.Parse(m.Groups[1].Value);
+            }
+        return (ids, weights);
+    }
+
     private void ModelObjects(string name, Models.ObjModel model, string path)
     {
         bool flipUv = Models.ModelFiles.FlipUVs(src, project);
@@ -415,6 +435,9 @@ public sealed partial class GlReader
                 ["meshes"] = ShaderValue.Array(meshes.ToArray()),
                 ["textures_loaded"] = ShaderValue.Array(textures.ToArray()),
                 [ModelMark] = ShaderValue.Str(name),
+                // learnopengl's model_animation.h: the bones by name and how many (ExtractBoneWeightForVertices).
+                ["m_BoneInfoMap"] = model.Gltf is { } gltf && ExtractsBones() ? gltf.BoneInfoMap(false) : new ShaderValue { Map = new SortedDictionary<double, ShaderValue>() },
+                ["m_BoneCounter"] = ShaderValue.Integer(model.Gltf is { } counted && ExtractsBones() ? counted.Bones.Count : 0),
             },
             Shared = true,
         };

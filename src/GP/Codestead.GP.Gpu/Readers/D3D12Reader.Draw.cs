@@ -567,7 +567,7 @@ public sealed partial class D3D12Reader
         ShaderProgram? gs = null, string gsEntry = "main", FrameRecorder.RecordedDraw? recorded = null, string? target = null)
     {
         // The model of the draw: the .obj its Load call names (m_rock.Load("models/rock.obj", …)), else the first one.
-        var path = recorded?.ModelName is { } modelName && Regex.Match(src.Code, Regex.Escape(modelName) + @"\s*(?:\.|->)\s*Load\s*\(\s*""([^""]+\.obj)""") is { Success: true } lm
+        var path = recorded?.ModelName is { } modelName && Regex.Match(src.Code, Regex.Escape(modelName) + @"\s*(?:\.|->)\s*Load\s*\(\s*""([^""]+\.(?:obj|gltf))""") is { Success: true } lm
             ? lm.Groups[1].Value : Models.ModelFiles.Path(src);
         var model = path is null ? null : Models.ObjModel.Load(project, path);
         if (model is null)
@@ -585,6 +585,18 @@ public sealed partial class D3D12Reader
                 ["NORMAL0"] = ShaderValue.Vec(mesh.Normals[i]),
                 ["TEXCOORD0"] = ShaderValue.Vec(mesh.TexCoords[i][0], flipUv ? 1 - mesh.TexCoords[i][1] : mesh.TexCoords[i][1]),
             }).ToList();
+            // A skinned model: the bone ids and weights (BLENDINDICES, BLENDWEIGHT) as the class's
+            // ExtractBoneWeightForVertices leaves them (ids -1 when it does not read them).
+            if (mesh.Joints is not null)
+            {
+                bool extracts = Regex.IsMatch(src.Code, @"\bExtractBoneWeightForVertices\s*\([^)]*\)\s*;");
+                for (int i = 0; i < vertices.Count; i++)
+                {
+                    var (ids, weights) = extracts ? Models.GltfModel.VertexBones(mesh, i) : ([-1, -1, -1, -1], [0, 0, 0, 0]);
+                    vertices[i]["BLENDINDICES0"] = ShaderValue.Vec(ids);
+                    vertices[i]["BLENDWEIGHT0"] = ShaderValue.Vec(weights);
+                }
+            }
             var maps = new[] { mesh.Material?.DiffuseMap, mesh.Material?.SpecularMap, mesh.Material?.NormalMap }
                 .Select(f => Models.ModelFiles.Texture(project, path!, f, false)).ToList();
             scene.Draws.Add(new DrawCall

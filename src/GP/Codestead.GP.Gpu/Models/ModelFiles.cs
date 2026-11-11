@@ -9,7 +9,7 @@ internal static class ModelFiles
 {
     /// <summary>The first .obj file the code names ("planet.obj", MODEL_PATH = "models/planet.obj").</summary>
     public static string? Path(CppSource src) =>
-        Regex.Match(src.Code, "\"([^\"\\n]+\\.obj)\"") is { Success: true } m ? m.Groups[1].Value : null;
+        Regex.Match(src.Code, "\"([^\"\\n]+\\.(?:obj|gltf))\"") is { Success: true } m ? m.Groups[1].Value : null;
 
     /// <summary>Assimp's aiProcess_FlipUVs (in main.cpp or a header such as learnopengl's model.h): v becomes 1 - v.</summary>
     public static bool FlipUVs(CppSource src, GpuProject project) =>

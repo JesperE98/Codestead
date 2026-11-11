@@ -51,9 +51,9 @@ public sealed class GpuProject
     }
 
     /// <summary>
-    /// The main file's text as the simulator reads it: the project's headers it includes that only hold data (const
-    /// float LTC1[] = { … }: no functions, no classes) are appended after it, so their arrays are known (the main file's
-    /// own offsets and lines stay as they are).
+    /// The main file's text as the simulator reads it: the project's headers it includes that hold data (const float
+    /// LTC1[] = { … }) and free functions but no classes are appended after it, so their arrays and functions are known
+    /// (the main file's own offsets and lines stay as they are).
     /// </summary>
     public string MainText()
     {
@@ -64,7 +64,9 @@ public sealed class GpuProject
         {
             if (Find(m.Groups[1].Value) is not { } header || PathOf(m.Groups[1].Value) == main) continue;
             var code = Readers.CppSource.BlankComments(header);
-            if (System.Text.RegularExpressions.Regex.IsMatch(code, @"\)\s*(?:const\s*)?\{|\bclass\s+\w+|\bstruct\s+\w+\s*\{[^}]*\(")) continue;
+            // A header with classes (learnopengl's Shader, Model, Mesh: the reader has them itself) is not read; data and
+            // free functions (assimp_glm_helpers.h's ConvertMatrixToGLMFormat) are.
+            if (System.Text.RegularExpressions.Regex.IsMatch(code, @"\bclass\s+\w+\s*(?::[^{;]*)?\{|\bstruct\s+\w+\s*\{[^}]*\)\s*(?:const\s*)?\{")) continue;
             appended.Append("\n// ---- ").Append(m.Groups[1].Value).Append(" ----\n").Append(code);
         }
         return appended.Length == 0 ? text : text + "\n" + appended;

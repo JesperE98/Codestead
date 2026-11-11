@@ -9,4 +9,7 @@ public sealed class ObjMesh
     public List<double[]> Normals { get; } = new();
     public List<double[]> TexCoords { get; } = new();
     public List<int> Indices { get; } = new();
+    /// <summary>A skinned mesh (glTF's JOINTS_0 / WEIGHTS_0): per vertex four bone indices (the skin's joints) and weights.</summary>
+    public List<int[]>? Joints { get; set; }
+    public List<double[]>? Weights { get; set; }
 }

@@ -437,7 +437,7 @@ internal sealed partial class D3D12Device : IDeviceModel
             case ".SetGraphicsRootConstantBufferView" when args.Count >= 3:
                 rootCbvs[(int)Num(args[1])] = (long)Num(args[2]);
                 return ShaderValue.Scalar(0);
-            case ".Load" when args.Count >= 6 && Eval(args[1])?.Text is { } objPath && objPath.EndsWith(".obj", StringComparison.OrdinalIgnoreCase):
+            case ".Load" when args.Count >= 6 && Eval(args[1])?.Text is { } objPath && (objPath.EndsWith(".obj", StringComparison.OrdinalIgnoreCase) || Models.GltfModel.IsGltf(objPath)):
                 LoadModel(args[0], objPath, args[4], (int)Num(args[5]));
                 return ShaderValue.Scalar(0);
             case ".SetGraphicsRootDescriptorTable" when args.Count >= 3:
@@ -498,7 +498,15 @@ internal sealed partial class D3D12Device : IDeviceModel
             }));
         }
         // The meshes are the device's: a copy of a struct that points at the model (Entity's Model* pModel) shares them.
-        exec!.Runner.Assign(target, ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["meshes"] = new ShaderValue { Items = meshes.ToArray(), Shared = true } }));
+        var modelValue = new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["meshes"] = new ShaderValue { Items = meshes.ToArray(), Shared = true } };
+        // A skinned model whose class reads the bones (learnopengl's model_animation.h): its bones by name and their count.
+        if (model.Gltf is { } gltf)
+        {
+            bool extracts = System.Text.RegularExpressions.Regex.IsMatch(src.Code, @"\bExtractBoneWeightForVertices\s*\([^)]*\)\s*;");
+            modelValue["m_BoneInfoMap"] = extracts ? gltf.BoneInfoMap(true) : new ShaderValue { Map = new SortedDictionary<double, ShaderValue>() };
+            modelValue["m_BoneCounter"] = ShaderValue.Integer(extracts ? gltf.Bones.Count : 0);
+        }
+        exec!.Runner.Assign(target, ShaderValue.Struct(modelValue));
     }
 
     /// <summary>

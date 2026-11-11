@@ -51,10 +51,11 @@ public sealed class CppExec
             Time = time,
             // Without a hook of its own (the OpenGL reader), the program's helpers that make no API calls run here. The
             // reader can answer API queries first (glGetError, glGetShaderiv …: ApiValue).
-            Hook = (name, args) => ApiValue?.Invoke(name, args) ?? (hook ?? HelperFunction)(name, args),
+            Hook = (name, args) => Getter(name, args) ?? ApiValue?.Invoke(name, args) ?? (hook ?? HelperFunction)(name, args),
             DepthZeroToOne = src.Code.Contains("GLM_FORCE_DEPTH_ZERO_TO_ONE", StringComparison.Ordinal),
         };
         Runner.Resolve = Resolve;
+        AddGetters(src.Code);
         Runner.ElementDefault = target =>
         {
             var name = target switch { Name n => n.Id, Member m => m.Field, _ => null };
@@ -68,8 +69,27 @@ public sealed class CppExec
         };
     }
 
+    /// <summary>
+    /// Getters of the program's classes (std::map&lt;…&gt;&amp; GetBoneInfoMap() { return m_BoneInfoMap; }): method → the
+    /// member it returns – so a call on an object the reader made (a Model) answers with that member.
+    /// </summary>
+    public Dictionary<string, string> Getters { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>Adds the trivial getters of a piece of C++ (a header of the project).</summary>
+    public void AddGetters(string code)
+    {
+        foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(code, @"\b(\w+)\s*\(\s*\)\s*(?:const\s*)?\{\s*return\s+(?:this\s*->\s*)?(\w+)\s*;\s*\}"))
+            Getters.TryAdd(m.Groups[1].Value, m.Groups[2].Value);
+    }
+
     /// <summary>The reader's answers to API queries the program's own code evaluates (null: not one of them).</summary>
     public Func<string, IReadOnlyList<Expr>, ShaderValue?>? ApiValue { get; set; }
+
+    private ShaderValue? Getter(string name, IReadOnlyList<Expr> args)
+    {
+        if (args.Count != 1 || name.Length < 2 || name[0] != '.' || !Getters.TryGetValue(name[1..], out var field)) return null;
+        return TryEval(args[0])?.Fields?.GetValueOrDefault(field);
+    }
 
     private int helperDepth;
     private const int MaxHelperDepth = 48;
