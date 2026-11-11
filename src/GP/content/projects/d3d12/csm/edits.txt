@@ -511,7 +511,7 @@ bool showQuad = false;
     };
 --- file: shadow_mapping.hlsl
 --- find:
-// The pixel shader: runs once per pixel
+// The pixel shader: runs once per pixel a triangle covers and returns its colour (RGBA).
 --- replace:
 // The colours of the cascades for the debug view: red, green, blue, yellow, magenta.
 static const float3 cascadeColors[5] =
@@ -522,6 +522,8 @@ static const float3 cascadeColors[5] =
     float3(1.0f, 1.0f, 0.4f),
     float3(1.0f, 0.4f, 1.0f)
 };
+
+// The pixel shader: runs once per pixel a triangle covers and returns its colour (RGBA).
 --- file: shadow_mapping.hlsl
 --- find:
 
@@ -534,8 +536,6 @@ static const float3 cascadeColors[5] =
 --- file: shadow_mapping.hlsl
 --- find:
 // TODO: the cascades - the fragment's cascade (CascadeLayer)
-
-// TODO: ShadowCalculation
 --- replace:
 // the cascade of a fragment: the first one whose far distance lies beyond the fragment's depth
 // in view space

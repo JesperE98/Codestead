@@ -52,9 +52,9 @@ PSInput VSMain(float4 position : POSITION, float3 normal : NORMAL, float2 texCoo
 
 // TODO: the cascades - the fragment's cascade (CascadeLayer)
 
-// TODO: ShadowCalculation// TODO: ShadowCalculation - pick the fragment's cascade, look it up in that layer of the shadow maps
+// TODO: ShadowCalculation - pick the fragment's cascade, look it up in that layer of the shadow maps
 
-// The pixel shader: runs once per pixel// The pixel shader: runs once per pixel a triangle covers and returns its colour (RGBA).
+// The pixel shader: runs once per pixel a triangle covers and returns its colour (RGBA).
 float4 PSMain(PSInput input) : SV_TARGET
 {
     float3 color = diffuseTexture.Sample(wrapSampler, input.texCoord).rgb;
