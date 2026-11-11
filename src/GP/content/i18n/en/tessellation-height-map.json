@@ -1,0 +1,65 @@
+{
+  "title": "Tessellation: Height Map",
+  "tasks": {
+    "load-heightmap": {
+      "text": {
+        "opengl": "Load `heightmap.png` with stb_image (keep its width, height and number of channels) and print its size; if it cannot be loaded, print an error and end the program.",
+        "vulkan": "In `loadHeightMap()`, load the height map with stb_image (keep its width, height and number of channels) and print its size; if it cannot be loaded, throw an error.",
+        "d3d12": "Load `heightmap.png` with stb_image (keep its width, height and number of channels); if it cannot be loaded, throw an error. Write its size to the debugger's output."
+      },
+      "hint": {
+        "opengl": "`unsigned char *data = stbi_load(\"heightmap.png\", &width, &height, &nrChannels, 0);` – 0 asks for the file's own channels (1 here). Print `\"Loaded heightmap of size \" << height << \" x \" << width`. Do not free `data` yet: the next task reads the pixels.",
+        "vulkan": "`unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);` – 0 asks for the file's own channels (1 here). `if (!data) { throw std::runtime_error(\"failed to load height map!\"); }`, then `std::cout << \"Loaded heightmap of size \" << height << \" x \" << width << std::endl;`. Do not free `data` yet: the next task reads the pixels.",
+        "d3d12": "`unsigned char* data = stbi_load(\"heightmap.png\", &width, &height, &nrChannels, 0);` – 0 asks for the file's own channels (1 here). `snprintf(text, sizeof(text), \"Loaded heightmap of size %d x %d\\n\", height, width); OutputDebugStringA(text);`. Do not free `data` yet: the next task reads the pixels."
+      }
+    },
+    "vertices": {
+      "text": {
+        "opengl": "Make one vertex per pixel: x from the column, z from the row (both centred around 0), y from the pixel's grey value scaled by 64/256 and shifted down by 16. Free the image, put the vertices into a VBO with a VAO (attribute 0: three floats), and for now draw them as points.",
+        "vulkan": "Make one vertex per pixel: x from the column, z from the row (both centred around 0), y from the pixel's grey value scaled by 64/256 and shifted down by 16; free the image. Create the vertex buffer from them, and for now draw the vertices as points.",
+        "d3d12": "Make one vertex per pixel: x from the column, z from the row (both centred around 0), y from the pixel's grey value scaled by 64/256 and shifted down by 16. Free the image, put the vertices into a vertex buffer with its view, and for now draw them as points."
+      },
+      "hint": {
+        "opengl": "The pixel at row `i`, column `j` starts at `data + (j + width * i) * bytePerPixel`; its first byte is the height. `vertices.push_back(-width / 2.0f + width * j / (float)width);` (x), `(int)y * yScale - yShift` (y), `-height / 2.0f + height * i / (float)height` (z). Draw: `glDrawArrays(GL_POINTS, 0, (GLsizei)(vertices.size() / 3));`.",
+        "vulkan": "The pixel at row `i`, column `j` starts at `data + (j + width * i) * bytePerPixel`; its first byte is the height. `vertex.pos.x = -width / 2.0f + width * j / (float) width;`, `vertex.pos.y = (int) y * yScale - yShift;`, `vertex.pos.z = -height / 2.0f + height * i / (float) height;`, `vertices.push_back(vertex);`. Call `createVertexBuffer();` after `loadHeightMap(…)` in `initVulkan()`. Points: `inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;`, and the vertex shader must write `gl_PointSize = 1.0;` (Vulkan draws points only with a size from the shader). In `recordCommandBuffer()`: `vkCmdBindVertexBuffers` and `vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);`.",
+        "d3d12": "The pixel at row `i`, column `j` starts at `data + (j + width * i) * bytePerPixel`; its first byte is the height. `vertices.push_back(-width / 2.0f + width * j / (float)width);` (x), `(int)y * yScale - yShift` (y), `-height / 2.0f + height * i / (float)height` (z). Keep the count: `m_vertexCount = static_cast<UINT>(vertices.size() / 3);`. In `PopulateCommandList`: `IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST)`, `IASetVertexBuffers`, `DrawInstanced(m_vertexCount, 1, 0, 0)` – the PSO is already made for points."
+      }
+    },
+    "indices": {
+      "text": {
+        "opengl": "Build the index buffer for triangle strips: for every pair of neighbouring rows, one strip that zigzags between them (`j + width * i`, `j + width * (i + 1)` for each column j). Count the strips and their triangles, and put the indices into an element buffer bound to the VAO.",
+        "vulkan": "Build the indices of the triangle strips: for every pair of neighbouring rows, one strip that zigzags between them (`j + width * i`, `j + width * (i + 1)` for each column j). Count the strips and their triangles, print the numbers, and create the index buffer.",
+        "d3d12": "Build the index buffer for triangle strips: for every pair of neighbouring rows, one strip that zigzags between them (`j + width * i`, `j + width * (i + 1)` for each column j). Count the strips and their triangles, write them to the debugger's output, and put the indices into an index buffer with its view."
+      },
+      "hint": {
+        "opengl": "learnopengl's three loops: `for (int i = 0; i < height - 1; i += rez) for (int j = 0; j < width; j += rez) for (int k = 0; k < 2; k++) indices.push_back(j + width * (i + k * rez));` with `rez = 1`; `numStrips = (height - 1) / rez`, `numTrisPerStrip = (width / rez) * 2 - 2`. Bind the IBO while the VAO is bound.",
+        "vulkan": "learnopengl's three loops: `for (int i = 0; i < height - 1; i += rez) for (int j = 0; j < width; j += rez) for (int k = 0; k < 2; k++) indices.push_back(j + width * (i + k * rez));` with `int rez = 1;`; `numStrips = (height - 1) / rez;`, `numTrisPerStrip = (width / rez) * 2 - 2;`. Call `createIndexBuffer();` after `createVertexBuffer();`.",
+        "d3d12": "learnopengl's three loops: `for (int i = 0; i < height - 1; i += rez) for (int j = 0; j < width; j += rez) for (int k = 0; k < 2; k++) indices.push_back(j + width * (i + k * rez));` with `rez = 1`; `m_numStrips = (height - 1) / rez`, `m_numTrisPerStrip = (width / rez) * 2 - 2`. The view's format is `DXGI_FORMAT_R32_UINT`."
+      }
+    },
+    "strips": {
+      "text": {
+        "opengl": "Draw the terrain as triangle strips instead of points: one `glDrawElements` per strip, each starting at its own offset in the index buffer.",
+        "vulkan": "Draw the terrain as triangle strips instead of points: bind the index buffer and record one indexed draw per strip, each starting at its own first index.",
+        "d3d12": "Draw the terrain as triangle strips instead of points: make the PSO draw triangles, set the strip topology and the index buffer, and record one indexed draw per strip, each starting at its own place in the index buffer."
+      },
+      "hint": {
+        "opengl": "`glDrawElements(GL_TRIANGLE_STRIP, numTrisPerStrip + 2, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * (numTrisPerStrip + 2) * strip));` in a loop over `strip` – a strip of n triangles has n + 2 indices.",
+        "vulkan": "`inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;` (and the vertex shader no longer needs `gl_PointSize`). `vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);`, then `for (int strip = 0; strip < numStrips; strip++) vkCmdDrawIndexed(commandBuffer, numTrisPerStrip + 2, 1, (numTrisPerStrip + 2) * strip, 0, 0);` – a strip of n triangles has n + 2 indices.",
+        "d3d12": "`psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;` (strips are triangles too), `IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP)`, `IASetIndexBuffer(&m_indexBufferView)`, and `DrawIndexedInstanced(m_numTrisPerStrip + 2, 1, (m_numTrisPerStrip + 2) * strip, 0, 0);` in a loop over `strip` – a strip of n triangles has n + 2 indices."
+      }
+    },
+    "height-colour": {
+      "text": {
+        "opengl": "Colour the terrain by its height: in the fragment shader shift and scale the height (-16 … 48) into a grey value from 0 to 1.",
+        "vulkan": "Colour the terrain by its height: in the fragment shader shift and scale the height (-16 … 48) into a grey value from 0 to 1.",
+        "d3d12": "Colour the terrain by its height: in the pixel shader shift and scale the height (-16 … 48) into a grey value from 0 to 1."
+      },
+      "hint": {
+        "opengl": "`float h = (Height + 16.0) / 64.0; FragColor = vec4(h, h, h, 1.0);` – the vertex shader already passes `Height = aPos.y`.",
+        "vulkan": "`float h = (Height + 16.0) / 64.0; outColor = vec4(h, h, h, 1.0);` – the vertex shader already passes `Height = inPosition.y`.",
+        "d3d12": "`float h = (input.height + 16.0f) / 64.0f; return float4(h, h, h, 1.0f);` – the vertex shader already passes `result.height = position.y`."
+      }
+    }
+  }
+}

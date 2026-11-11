@@ -444,9 +444,9 @@ The results are the same matrices as GLM's, transposed. `UpdateAnimation(animato
 `XMMatrixIdentity()`.
 :::
 
-Note the order inside the walk: the root's transform comes first, each bone's local transform is multiplied on the right
-of its parent's global transform, and the offset matrix – the step *into* the bone's space – is the last transform
-applied to the vertex... which is written first in DirectXMath and last in GLM, as always.
+Read a final matrix from the vertex's point of view: the offset matrix acts first (it takes the bind-pose vertex into the
+bone's space), then the bone's local transform, then its parent's, and so on up to the root. GLM writes that chain from
+the root down to the offset; DirectXMath, with row vectors, writes it from the offset up to the root.
 
 Now do the fourth task, **animator**: create the animator for the sway animation and, for now, compute the bones once at
 time 0 with `UpdateAnimation(animator, 0.0f)` before the loop. The matrices exist, but nothing uses them yet.

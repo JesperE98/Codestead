@@ -1,0 +1,97 @@
+{
+  "title": "Tessellering",
+  "tasks": {
+    "opengl-4-1": {
+      "text": {
+        "opengl": "Be GLFW om en OpenGL 4.1 core-kontext (tessellation shaders är core sedan 4.0), och skriv ut den högsta tesselleringsnivå som GPU:n klarar."
+      },
+      "hint": {
+        "opengl": "`glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);` och, när GLAD har lästs in, `glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &maxTessLevel);` (minst 64)."
+      }
+    },
+    "height-texture": {
+      "text": {
+        "opengl": "GPU:n ska läsa höjderna själv: i stället för att göra om pixlarna till vertexar på CPU:n, läs in höjdkartan i en textur (en kanal, `GL_R8`, klämd vid kanterna, med mipmaps) på texturenhet 0. Ta bort CPU-rutnätet – dess vertexar, index, buffrar och strip-ritningen.",
+        "vulkan": "GPU:n ska läsa höjderna själv: `loadHeightMap()` läser nu in höjdkartan i en textur (en kanal, `VK_FORMAT_R8_UNORM`) med en klämmande sampler på bindning 1 i descriptor setet. Ta bort CPU-rutnätet – dess vertexar, index, index buffer och strip-ritningen – och, tills det finns patches, vertex buffern.",
+        "d3d12": "GPU:n ska läsa höjderna själv: i stället för att göra om pixlarna till vertexar på CPU:n, läs in höjdkartan i en textur med en kanal (`DXGI_FORMAT_R8_UNORM`) med en SRV, och ge root-signaturen en tabell för den och en klämmande sampler för domain shadern. Ta bort CPU-rutnätet – dess vertexar, index, buffrar och strip-ritningen."
+      },
+      "hint": {
+        "opengl": "`glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, data); glGenerateMipmap(GL_TEXTURE_2D);` med `GL_CLAMP_TO_EDGE` på S och T, `GL_LINEAR_MIPMAP_LINEAR` / `GL_LINEAR`, sedan `stbi_image_free(data)`. Ta bort texturen på slutet.",
+        "vulkan": "`stbi_load(path, &width, &height, &nrChannels, STBI_grey)`, `createTextureImage(data, width, height, heightMapImage, heightMapImageMemory)` (en staging buffer på `width * height` byte, `VK_FORMAT_R8_UNORM`), `createImageView(heightMapImage, VK_FORMAT_R8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT)`, `stbi_image_free(data)`. `createTextureSampler()`: linjär, `VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE`. Bindning 1: `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`, `VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT`; poolen får en combined image sampler, setet en andra write. Förstör sampler, vy, bild och minne i `cleanup()`.",
+        "d3d12": "`stbi_load(\"heightmap.png\", …, 1)`; texturen som i de tidigare kapitlen (default heap, upload heap, `UpdateSubresources` med `RowPitch = width`), men barriären går till `D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE`; SRV på plats 1 i heapen (`NumDescriptors = 2`). Root-parameter 0 blir `D3D12_SHADER_VISIBILITY_ALL`, root-parameter 1 en tabell med `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0)` för `D3D12_SHADER_VISIBILITY_DOMAIN`, den statiska samplern `D3D12_TEXTURE_ADDRESS_MODE_CLAMP`. Command listen förblir nu öppen till slutet av `LoadAssets` (`Close`, `ExecuteCommandLists`, `WaitForPreviousFrame` efter att fencen skapats). `PopulateCommandList` sätter tabell 1 till plats 1 i heapen."
+      }
+    },
+    "patch-grid": {
+      "text": {
+        "opengl": "Bygg patcharna: ett rutnät av 20 × 20 platta kvadrater, var och en angiven med sina 4 hörn (en patch med 4 kontrollpunkter) med en position (y = 0) och en texturkoordinat; lägg dem i en VAO/VBO (attribut 0: position, 1: texturkoordinat) och tala om för OpenGL att en patch har 4 vertexar.",
+        "vulkan": "Bygg patcharna: ett rutnät av 20 × 20 platta kvadrater, var och en angiven med sina 4 hörn (en patch med 4 kontrollpunkter) med en position (y = 0) och en texturkoordinat, och skapa vertex buffern av dem.",
+        "d3d12": "Bygg patcharna: ett rutnät av 20 × 20 platta kvadrater, var och en angiven med sina 4 hörn (en patch med 4 kontrollpunkter) med en position (y = 0) och en texturkoordinat; lägg dem i en vertex buffer (5 flyttal per vertex) och lägg till texturkoordinaten i input layouten."
+      },
+      "hint": {
+        "opengl": "learnopengls loop över `i` och `j` (0 … rez - 1) lägger in hörnen (i, j), (i + 1, j), (i, j + 1), (i + 1, j + 1): x = `-width / 2.0f + width * i / (float)rez`, z = `-height / 2.0f + height * j / (float)rez`, texturkoordinat `(i / (float)rez, j / (float)rez)`. `glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);` med `const unsigned int NUM_PATCH_PTS = 4;`.",
+        "vulkan": "`glm::vec2 texCoord;` i `Vertex`; `const unsigned int NUM_PATCH_PTS = 4;` och `const unsigned int rez = 20;`. learnopengls loop över `i` och `j` (0 … rez - 1) lägger in hörnen (i, j), (i + 1, j), (i, j + 1), (i + 1, j + 1): x = `-width / 2.0f + width * i / (float) rez`, z = `-height / 2.0f + height * j / (float) rez`, texturkoordinat `(i / (float) rez, j / (float) rez)`. Sedan `createVertexBuffer();` i `initVulkan()`.",
+        "d3d12": "learnopengls loop över `i` och `j` (0 … rez - 1) lägger in hörnen (i, j), (i + 1, j), (i, j + 1), (i + 1, j + 1): x = `-width / 2.0f + width * i / (float)rez`, z = `-height / 2.0f + height * j / (float)rez`, texturkoordinat `(i / (float)rez, j / (float)rez)`. `const unsigned int NUM_PATCH_PTS = 4;` (en global), `unsigned rez = 20;`, `m_vertexCount = NUM_PATCH_PTS * rez * rez;`, `StrideInBytes = 5 * sizeof(float)`, `{ \"TEXCOORD\", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, … }`."
+      }
+    },
+    "tess-evaluation": {
+      "text": {
+        "opengl": "Skriv tessellation evaluation shadern: för varje vertex som tessellatorn gör (vid `gl_TessCoord` u, v inuti patchen): interpolera hörnens texturkoordinater och positioner bilinjärt, läs höjden ur höjdkartan, flytta upp punkten med den och projicera den. Bygg shaderprogrammet av alla fyra stegen och rita patcharna.",
+        "vulkan": "Skriv tessellation evaluation shadern: för varje vertex som tessellatorn gör (vid `gl_TessCoord` u, v inuti patchen): interpolera hörnens texturkoordinater och positioner bilinjärt, läs höjden ur höjdkartan, flytta upp punkten med den och projicera den. Bygg pipelinen av alla fyra stegen – patches med 4 kontrollpunkter – och rita patcharna.",
+        "d3d12": "Skriv domain shadern: för varje vertex som tessellatorn gör (vid `SV_DomainLocation` u, v inuti patchen): interpolera hörnens texturkoordinater och positioner bilinjärt, läs höjden ur höjdkartan, flytta upp punkten med den och projicera den. Bygg pipelinen av alla fyra shaders och rita patcharna."
+      },
+      "hint": {
+        "opengl": "`layout (quads, fractional_odd_spacing, ccw) in;`; `t0 = (t01 - t00) * u + t00; t1 = (t11 - t10) * u + t10; texCoord = (t1 - t0) * v + t0;` (likadant för positionerna), `Height = texture(heightMap, texCoord).r * 64.0 - 16.0;`, normalen `normalize(cross(vVec.xyz, uVec.xyz))`. `Shader tessHeightMapShader(\"gpuheight.vs\", \"gpuheight.fs\", nullptr, \"gpuheight.tcs\", \"gpuheight.tes\");`, `glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);`.",
+        "vulkan": "`layout(quads, fractional_odd_spacing, ccw) in;`; `t0 = (t01 - t00) * u + t00; t1 = (t11 - t10) * u + t10; texCoord = (t1 - t0) * v + t0;` (likadant för positionerna), `Height = texture(heightMap, texCoord).r * 64.0 - 16.0;`, normalen `normalize(cross(vVec.xyz, uVec.xyz))`; blocket och push constanten som i control shadern, `layout(binding = 1) uniform sampler2D heightMap;`. I C++: `createPipeline(\"shaders/gpuheight.vert.spv\", \"shaders/gpuheight.tesc.spv\", \"shaders/gpuheight.tese.spv\", \"shaders/gpuheight.frag.spv\", graphicsPipeline)` med två steg till, `VK_PRIMITIVE_TOPOLOGY_PATCH_LIST`, `tessellationState.patchControlPoints = NUM_PATCH_PTS` (`pipelineInfo.pTessellationState`); attributbeskrivningen för `texCoord` (location 1, `VK_FORMAT_R32G32_SFLOAT`); uniform buffern, push constant-intervallet och `vkCmdPushConstants` för `VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT`; `vkCmdBindVertexBuffers` + `vkCmdDraw(commandBuffer, NUM_PATCH_PTS * rez * rez, 1, 0, 0)`.",
+        "d3d12": "`float2 t0 = (t01 - t00) * u + t00; float2 t1 = (t11 - t10) * u + t10; float2 texCoord = (t1 - t0) * v + t0;` (likadant för positionerna, `patch[0..3].position`), `output.height = heightMap.SampleLevel(heightMapSampler, texCoord, 0).r * 64.0f - 16.0f;`, normalen `normalize(float4(cross(vVec.xyz, uVec.xyz), 0.0f))`. C++: `hullShader` (`\"HSMain\", \"hs_5_0\"`) och `domainShader` (`\"DSMain\", \"ds_5_0\"`) från `gpuheight.hlsl`, `psoDesc.HS` / `psoDesc.DS`, `D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH`; `IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST)`, `DrawInstanced(m_vertexCount, 1, 0, 0)`."
+      }
+    },
+    "tess-control": {
+      "text": {
+        "opengl": "Tessellera: sätt i control shadern alla fyra yttre nivåerna och båda inre nivåerna till 8, så att varje patch delas i små fyrhörningar (9 × 9 med udda bråkdelsfördelning) vars nya vertexar var och en läser sin egen höjd.",
+        "vulkan": "Tessellera: sätt i control shadern alla fyra yttre nivåerna och båda inre nivåerna till 8, så att varje patch delas i små fyrhörningar (9 × 9 med udda bråkdelsfördelning) vars nya vertexar var och en läser sin egen höjd.",
+        "d3d12": "Tessellera: sätt i patchkonstantfunktionen alla fyra kantfaktorerna och båda inre faktorerna till 8, så att varje patch delas i små fyrhörningar (9 × 9 med udda bråkdelsfördelning) vars nya vertexar var och en läser sin egen höjd."
+      },
+      "hint": {
+        "opengl": "`gl_TessLevelOuter[0..3] = 8; gl_TessLevelInner[0..1] = 8;` – skrivna en gång per patch, av anrop 0 (`if (gl_InvocationID == 0)`).",
+        "vulkan": "`gl_TessLevelOuter[0..3] = 8; gl_TessLevelInner[0..1] = 8;` – skrivna en gång per patch, av anrop 0 (`if (gl_InvocationID == 0)`).",
+        "d3d12": "`output.edges[0..3] = 8; output.inside[0..1] = 8;` – patchkonstantfunktionen körs en gång per patch (OpenGL:s `if (gl_InvocationID == 0)` block)."
+      }
+    },
+    "wireframe": {
+      "text": "Rita bara trianglarnas kanter för att se tesselleringen.",
+      "hint": {
+        "opengl": "`glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);` en gång före renderingsloopen (learnopengl växlar med en tangent).",
+        "vulkan": "`rasterizer.polygonMode = VK_POLYGON_MODE_LINE;` kräver enhetsfunktionen `fillModeNonSolid`: `deviceFeatures.fillModeNonSolid = VK_TRUE;` och `&& supportedFeatures.fillModeNonSolid` i `isDeviceSuitable()`.",
+        "d3d12": "`psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;` (learnopengl växlar `glPolygonMode` med en tangent)."
+      }
+    },
+    "distance-levels": {
+      "text": {
+        "opengl": "Låt nivåerna bero på avståndet till kameran: för varje hörn dess djup i ögats rum, skalat till 0…1 mellan `MIN_DISTANCE` (250) och `MAX_DISTANCE` (450); varje yttre nivå ur det närmaste av kantens två hörn, blandad från `MAX_TESS_LEVEL` (8) nära till `MIN_TESS_LEVEL` (2) långt bort; de inre nivåerna den största av de motsatta yttre nivåerna.",
+        "vulkan": "Låt nivåerna bero på avståndet till kameran: för varje hörn dess djup i ögats rum, skalat till 0…1 mellan `MIN_DISTANCE` (250) och `MAX_DISTANCE` (450); varje yttre nivå ur det närmaste av kantens två hörn, blandad från `MAX_TESS_LEVEL` (8) nära till `MIN_TESS_LEVEL` (2) långt bort; de inre nivåerna den största av de motsatta yttre nivåerna.",
+        "d3d12": "Låt faktorerna bero på avståndet till kameran: för varje hörn dess djup i ögats rum, skalat till 0…1 mellan `MIN_DISTANCE` (250) och `MAX_DISTANCE` (450); varje kantfaktor ur det närmaste av kantens två hörn, interpolerad från `MAX_TESS_LEVEL` (8) nära till `MIN_TESS_LEVEL` (2) långt bort; de inre faktorerna den största av de motsatta kantfaktorerna."
+      },
+      "hint": {
+        "opengl": "learnopengls kod: `vec4 eyeSpacePos00 = view * model * gl_in[0].gl_Position;`, `float distance00 = clamp((abs(eyeSpacePos00.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0, 1.0);`, `tessLevel0 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance10, distance00));` …, `gl_TessLevelInner[0] = max(tessLevel1, tessLevel3);`. En kant som delas av två patches får samma nivå från båda, så inga sprickor öppnar sig.",
+        "vulkan": "learnopengls kod med blockets matriser: `vec4 eyeSpacePos00 = ubo.view * pc.model * gl_in[0].gl_Position;`, `float distance00 = clamp((abs(eyeSpacePos00.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0, 1.0);`, `tessLevel0 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance10, distance00));` …, `gl_TessLevelInner[0] = max(tessLevel1, tessLevel3);`. En kant som delas av två patches får samma nivå från båda, så inga sprickor öppnar sig.",
+        "d3d12": "learnopengls kod i patchkonstantfunktionen: `float4 eyeSpacePos00 = mul(mul(patch[0].position, model), view);`, `float distance00 = clamp((abs(eyeSpacePos00.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0f, 1.0f);`, `float tessLevel0 = lerp(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance10, distance00));` …, `output.inside[0] = max(tessLevel1, tessLevel3);`. En kant som delas av två patches får samma faktor från båda, så inga sprickor öppnar sig."
+      }
+    },
+    "tessellation-feature": {
+      "text": {
+        "vulkan": "Slå på GPU:ns tesselleringssteg – en valfri enhetsfunktion i Vulkan – och godta bara en GPU som har dem; skriv ut den högsta tesselleringsnivå som GPU:n klarar."
+      },
+      "hint": {
+        "vulkan": "`deviceFeatures.tessellationShader = VK_TRUE;` i `createLogicalDevice()`; i `isDeviceSuitable()` `vkGetPhysicalDeviceFeatures(device, &supportedFeatures)` och `&& supportedFeatures.tessellationShader`. `printTessellationLimits()` (anropad efter `pickPhysicalDevice()`): `properties.limits.maxTessellationGenerationLevel` från `vkGetPhysicalDeviceProperties`."
+      }
+    },
+    "max-tess-level": {
+      "text": {
+        "d3d12": "Skriv den högsta tesselleringsfaktor som Direct3D 12 klarar till felsökarens utdata (OpenGL frågar drivrutinen; Direct3D 12 har samma värde för alla enheter)."
+      },
+      "hint": {
+        "d3d12": "Överst i `LoadAssets`: `snprintf(text, sizeof(text), \"Max available tess level: %d\\n\", D3D12_TESSELLATOR_MAX_TESSELLATION_FACTOR); OutputDebugStringA(text);`."
+      }
+    }
+  }
+}
