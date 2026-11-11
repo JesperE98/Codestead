@@ -139,9 +139,9 @@ public static class GpCourse
         return new GpuProject(new Dictionary<string, string> { ["main.cpp"] = "" });
     }
 
-    /// <summary>Binary files of a project (images), loaded as assets rather than code.</summary>
+    /// <summary>Binary files of a project (images, models: OBJ + MTL, glTF + its .bin), loaded as assets rather than code.</summary>
     public static bool IsAsset(string path) =>
-        new[] { ".png", ".jpg", ".hdr", ".obj", ".mtl", ".otf", ".ttf" }.Any(e => path.EndsWith(e, StringComparison.OrdinalIgnoreCase));
+        new[] { ".png", ".jpg", ".hdr", ".obj", ".mtl", ".otf", ".ttf", ".gltf", ".bin" }.Any(e => path.EndsWith(e, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>main.cpp first, then headers, then shaders – the order of the editor's tabs.</summary>
     private static IEnumerable<KeyValuePair<string, string>> Order(IEnumerable<KeyValuePair<string, string>> files) =>

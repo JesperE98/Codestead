@@ -20,11 +20,13 @@ internal static class GameFrames
     public static bool RunGlfw(CppSource src, FrameRecorder recorder, double time, IEnumerable<string> drawing)
     {
         var callback = Regex.Match(src.Code, @"glfwSetKeyCallback\s*\(\s*[\w.>-]+\s*,\s*&?\s*(?:\w+::)?(\w+)\s*\)");
-        if (!callback.Success || !src.Functions.ContainsKey(callback.Groups[1].Value)) return false;
+        bool hasCallback = callback.Success && src.Functions.ContainsKey(callback.Groups[1].Value);
         var loop = Regex.Match(src.Code, @"while\s*\(\s*!\s*glfwWindowShouldClose\s*\(\s*[\w.>-]+\s*\)\s*\)\s*\{");
         if (!loop.Success || src.FunctionAt(loop.Index) is not { } fn || !src.Functions.TryGetValue(fn, out var range)) return false;
         int open = loop.Index + loop.Length - 1, close = CppSource.MatchBracket(src.Code, open);
         if (close < 0) return false;
+        // A game (a key callback), or a loop whose state moves on by deltaTime (an animation that plays).
+        if (!hasCallback && !src.PassesDeltaTime(src.Code[(open + 1)..close])) return false;
         // What the function does before its loop (float deltaTime = 0.0f; float lastFrame = 0.0f;), then the frames.
         recorder.RunCode(src.Code[range.Start..loop.Index]);
         var body = src.Code[(open + 1)..close];
@@ -32,6 +34,7 @@ internal static class GameFrames
         int frame = 0;
         recorder.OnPollEvents = () =>
         {
+            if (!hasCallback) return;
             if (frame == GlReader.SpacePressFrame) recorder.RunCode($"{key}(window, GLFW_KEY_SPACE, 0, GLFW_PRESS, 0);");
             else if (frame == GlReader.SpaceReleaseFrame) recorder.RunCode($"{key}(window, GLFW_KEY_SPACE, 0, GLFW_RELEASE, 0);");
         };
@@ -61,13 +64,16 @@ internal static class GameFrames
     /// </summary>
     public static bool RunWin32(CppSource src, FrameRecorder recorder, double time)
     {
-        if (!src.Functions.ContainsKey("OnKeyDown") || !src.Functions.ContainsKey("OnUpdate") || !src.Uses("deltaTime")) return false;
+        bool game = src.Functions.ContainsKey("OnKeyDown") && src.Functions.ContainsKey("OnUpdate") && src.Uses("deltaTime");
+        // An animation that plays on by deltaTime in OnUpdate (UpdateAnimation(m_animator, deltaTime)).
+        bool plays = src.FunctionBody("OnUpdate") is { } update && src.PassesDeltaTime(update);
+        if (!game && !plays) return false;
         int last = LastFrame(time);
         for (int frame = 0; frame <= last; frame++)
         {
             recorder.Runner.Time = frame / 60.0;
-            if (frame == GlReader.SpacePressFrame) recorder.RunCode("OnKeyDown(VK_SPACE);");
-            else if (frame == GlReader.SpaceReleaseFrame && src.Functions.ContainsKey("OnKeyUp")) recorder.RunCode("OnKeyUp(VK_SPACE);");
+            if (frame == GlReader.SpacePressFrame && game) recorder.RunCode("OnKeyDown(VK_SPACE);");
+            else if (frame == GlReader.SpaceReleaseFrame && game && src.Functions.ContainsKey("OnKeyUp")) recorder.RunCode("OnKeyUp(VK_SPACE);");
             if (frame < last) recorder.Run("OnUpdate");
         }
         return true;

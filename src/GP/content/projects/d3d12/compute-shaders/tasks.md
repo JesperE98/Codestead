@@ -95,9 +95,5 @@ quad (4 vertices, NDC ±1, a triangle strip); clear (0, 0, 0).
   top-left = 32,255,0, left = 64,127,0, centre = 159,127,0, wrap-a = 255,127,0, wrap-b = 0,127,0, bottom-right = 32,0,0,
   top = 159,255,0, bottom = 159,0,0. This is the solution.
 
-*Simulator:* no state of this project shows the right picture yet. The start (and `limits`, `image-unit`) shows black
-instead of dark blue: the `std::vector<float>` filled in a loop over 480,000 texels and uploaded with
-`UpdateSubresources` into the R32G32B32A32_FLOAT texture does not arrive (only the bottom row has a few odd pixels).
-From `compute-shader` on everything is black: the simulator has no compute stage – `CreateComputePipelineState`,
-`SetComputeRootSignature` / `SetComputeRootDescriptorTable` / `SetComputeRoot32BitConstants`, `Dispatch`, `RWTexture2D`
-stores and the UAV are not followed (see the D3D12 writer's report).
+*Simulator:* every state matches Mesa's OpenGL picture of the same step (dark blue from the CPU-filled float texture,
+then the compute shader's gradient, moving with the time), and the limits print 65535, 1024, 1024, 64, 1024.

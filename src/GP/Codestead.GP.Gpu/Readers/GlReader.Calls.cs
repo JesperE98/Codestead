@@ -80,7 +80,7 @@ public sealed partial class GlReader
                 return;
             }
             case "glCreateShader":
-                if (lhs is not null) gl.ShaderObjects[lhs] = new GlState.ShaderObject { Stage = A(0).Contains("FRAGMENT", StringComparison.Ordinal) ? "fragment" : A(0).Contains("VERTEX", StringComparison.Ordinal) ? "vertex" : A(0).Contains("GEOMETRY", StringComparison.Ordinal) ? "geometry" : "other" };
+                if (lhs is not null) gl.ShaderObjects[lhs] = new GlState.ShaderObject { Stage = A(0).Contains("FRAGMENT", StringComparison.Ordinal) ? "fragment" : A(0).Contains("VERTEX", StringComparison.Ordinal) ? "vertex" : A(0).Contains("GEOMETRY", StringComparison.Ordinal) ? "geometry" : A(0).Contains("TESS_CONTROL", StringComparison.Ordinal) ? "tess_control" : A(0).Contains("TESS_EVALUATION", StringComparison.Ordinal) ? "tess_evaluation" : A(0).Contains("COMPUTE", StringComparison.Ordinal) ? "compute" : "other" };
                 if (lhs is not null) OwnName("shader", lhs, own => gl.ShaderObjects[own] = gl.ShaderObjects[lhs]);
                 return;
             case "glShaderSource":
@@ -267,6 +267,19 @@ public sealed partial class GlReader
                     GenerateTargetMips(mt);
                 }
                 return;
+            case "glBindImageTexture":
+                // glBindImageTexture(unit, texture, level, layered, layer, access, format): an image unit for compute shaders.
+                if (Int(A(0)) is int imageUnit) gl.ImageUnits[imageUnit] = Obj(A(1));
+                return;
+            case "glDispatchCompute":
+                DispatchCompute(Int(A(0)) ?? 0, Int(A(1)) ?? 0, Int(A(2)) ?? 1, line);
+                return;
+            case "glMemoryBarrier":
+                // The dispatch has finished when the reader goes on.
+                return;
+            case "glPatchParameteri":
+                if (A(0).Contains("PATCH_VERTICES", StringComparison.Ordinal)) gl.PatchVertices = Math.Max(1, Int(A(1)) ?? 3);
+                return;
             case "glDrawArrays":
                 Draw(A(0), null, Int(A(1)) ?? 0, Int(A(2)) ?? 0, name, line);
                 return;
@@ -345,6 +358,26 @@ public sealed partial class GlReader
     /// name objects with the mesh's vertex data (location 0 position, 1 normal, 2 texture coordinates) and textures –
     /// what the asteroid field binds to add its per-instance matrices.
     /// </summary>
+    /// <summary>Does the project's Model read the bones (model.h calls ExtractBoneWeightForVertices)?</summary>
+    private bool ExtractsBones() => project.Files.Any(f => (f.Key.EndsWith(".h", StringComparison.Ordinal) || f.Key.EndsWith(".hpp", StringComparison.Ordinal))
+        && System.Text.RegularExpressions.Regex.IsMatch(CppSource.BlankComments(f.Value), @"\bExtractBoneWeightForVertices\s*\([^)]*\)\s*;"));
+
+    /// <summary>
+    /// The locations of the bone attributes of the project's mesh.h (glVertexAttribIPointer(3, 4, GL_INT, …,
+    /// offsetof(Vertex, m_BoneIDs)), glVertexAttribPointer(4, …, offsetof(Vertex, m_Weights))), or null.
+    /// </summary>
+    private (int? Ids, int? Weights) BoneAttributes()
+    {
+        int? ids = null, weights = null;
+        foreach (var (path, text) in project.Files.Where(f => f.Key.EndsWith(".h", StringComparison.Ordinal) || f.Key.EndsWith(".hpp", StringComparison.Ordinal)))
+            foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(CppSource.BlankComments(text), @"glVertexAttribI?Pointer\s*\(\s*(\d+)[^;]*offsetof\s*\(\s*\w+\s*,\s*(\w+)\s*\)"))
+            {
+                if (m.Groups[2].Value.Contains("BoneID", StringComparison.OrdinalIgnoreCase)) ids = int.Parse(m.Groups[1].Value);
+                else if (m.Groups[2].Value.Contains("Weight", StringComparison.OrdinalIgnoreCase)) weights = int.Parse(m.Groups[1].Value);
+            }
+        return (ids, weights);
+    }
+
     private void ModelObjects(string name, Models.ObjModel model, string path)
     {
         bool flipUv = Models.ModelFiles.FlipUVs(src, project);
@@ -402,6 +435,9 @@ public sealed partial class GlReader
                 ["meshes"] = ShaderValue.Array(meshes.ToArray()),
                 ["textures_loaded"] = ShaderValue.Array(textures.ToArray()),
                 [ModelMark] = ShaderValue.Str(name),
+                // learnopengl's model_animation.h: the bones by name and how many (ExtractBoneWeightForVertices).
+                ["m_BoneInfoMap"] = model.Gltf is { } gltf && ExtractsBones() ? gltf.BoneInfoMap(false) : new ShaderValue { Map = new SortedDictionary<double, ShaderValue>() },
+                ["m_BoneCounter"] = ShaderValue.Integer(model.Gltf is { } counted && ExtractsBones() ? counted.Bones.Count : 0),
             },
             Shared = true,
         };
@@ -669,8 +705,11 @@ public sealed partial class GlReader
             if (so.Stage == "vertex") program.Vertex = parsed;
             else if (so.Stage == "fragment") program.Fragment = parsed;
             else if (so.Stage == "geometry") program.Geometry = parsed;
+            else if (so.Stage == "tess_control") program.TessControl = parsed;
+            else if (so.Stage == "tess_evaluation") program.TessEval = parsed;
+            else if (so.Stage == "compute") program.Compute = parsed;
         }
-        program.Linked = program.Vertex is not null && program.Fragment is not null;
+        program.Linked = program.Vertex is not null && program.Fragment is not null || program.Compute is not null;
         if (!program.Linked && program.Shaders.Count > 0 && !scene.Notes.Any(n => n.Key == "shaderSyntax"))
             scene.Notes.Add(SimNote.Error("notLinked", ("line", line.ToString())));
     }
@@ -693,7 +732,7 @@ public sealed partial class GlReader
 
     // ---------- learnopengl.com's Shader class (shader_s.h / shader.h) ----------
 
-    private void ShaderClass(string name, string vsFile, string fsFile, string? gsFile, int line)
+    private void ShaderClass(string name, string vsFile, string fsFile, string? gsFile, int line, string? tcsFile = null, string? tesFile = null)
     {
         var program = new GlState.ProgramObject();
         gl.Programs[name] = program;
@@ -704,6 +743,8 @@ public sealed partial class GlReader
         }
         var files = new List<(string, string)> { (vsFile, "vertex"), (fsFile, "fragment") };
         if (gsFile is not null) files.Add((gsFile, "geometry"));
+        if (tcsFile is not null) files.Add((tcsFile, "tess_control"));
+        if (tesFile is not null) files.Add((tesFile, "tess_evaluation"));
         foreach (var (file, stage) in files)
         {
             var text = project.Find(file);
@@ -724,6 +765,8 @@ public sealed partial class GlReader
                 program.Geometry = parsed;
                 program.GeometryFile = project.PathOf(file);
             }
+            else if (stage == "tess_control") program.TessControl = parsed;
+            else if (stage == "tess_evaluation") program.TessEval = parsed;
             else
             {
                 program.Fragment = parsed;
@@ -731,6 +774,68 @@ public sealed partial class GlReader
             }
         }
         program.Linked = program.Vertex is not null && program.Fragment is not null;
+    }
+
+    /// <summary>learnopengl's ComputeShader(path): a program with the compute shader read from the file.</summary>
+    private void ComputeShaderClass(string name, string file, int line)
+    {
+        var program = new GlState.ProgramObject();
+        gl.Programs[name] = program;
+        if (!gladLoaded)
+        {
+            scene.Notes.Add(SimNote.Error("gladMissing", ("call", "ComputeShader"), ("line", line.ToString())));
+            return;
+        }
+        var text = project.Find(file);
+        if (text is null)
+        {
+            scene.Log.Add("ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " + file);
+            scene.Notes.Add(SimNote.Error("shaderFileMissing", ("file", file)));
+            return;
+        }
+        program.Compute = ParseShader(text, "compute", project.PathOf(file));
+        program.Linked = program.Compute is not null;
+    }
+
+    /// <summary>
+    /// glDispatchCompute(x, y, z): the current program's compute shader runs over x × y × z work groups now; the textures
+    /// on the image units its image2D uniforms name are written (and read) – what is drawn after sees them.
+    /// </summary>
+    private void DispatchCompute(int x, int y, int z, int line)
+    {
+        if (discardDraws) return;
+        if (gl.CurrentProgram is not { } cur || !gl.Programs.TryGetValue(cur, out var program) || program.Compute is not { } cs)
+        {
+            scene.Notes.Add(SimNote.Error("noProgram", ("call", "glDispatchCompute"), ("line", line.ToString())));
+            return;
+        }
+        var images = new Dictionary<string, Raster.StorageImage>(StringComparer.Ordinal);
+        var targets = new List<(GlState.TextureObject Texture, Raster.StorageImage Image)>();
+        foreach (var g in cs.Globals.Where(g => g.Storage == "uniform" && g.Type.StartsWith("image", StringComparison.Ordinal)))
+        {
+            int unit = program.Uniforms.TryGetValue(g.Id, out var set) && set(env.Runner.Time) is { } v ? (int)v.X : g.Binding ?? 0;
+            // No texture on the image unit: the shader's writes go nowhere.
+            if (!gl.ImageUnits.TryGetValue(unit, out var texName) || !gl.TextureObjects.TryGetValue(texName, out var tex)) continue;
+            int w = tex.Image?.Width ?? tex.Width, h = tex.Image?.Height ?? tex.Height;
+            var storage = Raster.StorageImage.From(tex.Image, w, h);
+            images[g.Id] = storage;
+            targets.Add((tex, storage));
+        }
+        var uniforms = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+        foreach (var (name, f) in program.Uniforms)
+            if (f(env.Runner.Time) is { } value) uniforms[name] = value;
+        foreach (var (k, v) in BlockUniforms(program)) uniforms[k] = v;
+        var errors = Raster.Rasterizer.Dispatch(cs, "main", false, uniforms, images, (x, y, z), env.Runner.Time);
+        foreach (var e in errors) scene.Log.Add("compute shader: " + e);
+        foreach (var (tex, storage) in targets)
+        {
+            tex.Image = storage.ToImage();
+            tex.Float = true;
+            tex.Components = 4;
+            tex.Width = storage.Width;
+            tex.Height = storage.Height;
+        }
+        if (env.Runner.UsedTime || src.UsedTime) scene.Animated = true;
     }
 
     private void ShaderMethod(string obj, string method, IReadOnlyList<string> a, int line)

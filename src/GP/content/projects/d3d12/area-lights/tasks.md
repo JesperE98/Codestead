@@ -106,11 +106,6 @@ points: **light** (400,263), **under** (400,380), **glossy** (400,420), **near**
   (400,20): light-2 = 140,255,89, light-6 = 204,102,255, light-0 = 255,140,64, light-4 = 76,191,255, centre = 47,30,19,
   front = 119,67,80, floor-left = 41,30,26, floor-right = 61,29,22, below = 0,0,0, top = 0,0,0. This is the solution.
 
-*Simulator:* the start matches (light = 222,184,135, the rest black), and so do the light rectangles in every state
-(the eight rectangles of `multiple-lights` have exactly OpenGL's colours at light-0/2/4/6). The LTC tables do not
-arrive: the float textures made from the header's `LTC1` / `LTC2` arrays (`UpdateSubresources` with `pData = table`)
-are not followed, so `diffuse` gives other values (under 150,94,52, glossy 131,82,45, near 71,44,24, left 65,41,22,
-right 90,56,31) and `specular` adds nothing (the same values) – the OpenGL project shows the same in the simulator
-("noTextureOnUnit LTC1/LTC2"). In `multiple-lights` the floor stays black: the shader fails with "vector has no
-component '.xyz'" at `points[0].xyz` when `areaLights[i].points` (an array member of a cbuffer array element) is passed
-to `LTC_Evaluate` (see the D3D12 writer's report).
+*Simulator:* every state matches Mesa's OpenGL picture of the same step (the LTC tables from `ltc_matrix.hpp`, the
+eight lights' corners in the constant buffer): `diffuse` and `specular` within 1 % of the pixels (differences of a few
+grey levels), `multiple-lights` 1.1 %.

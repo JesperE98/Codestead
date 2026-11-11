@@ -460,7 +460,7 @@ public sealed partial class GlReader
     private Dictionary<string, ShaderValue> BlockUniforms(GlState.ProgramObject program)
     {
         var d = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
-        var stages = new[] { program.Vertex, program.Geometry, program.Fragment }.Where(s => s is not null);
+        var stages = program.AllStages;
         foreach (var g in stages.SelectMany(s => s!.Globals).Where(g => g.Storage == "uniform" && g.Block is not null && !g.PushConstant))
         {
             int binding = program.BlockBindings.GetValueOrDefault(g.Type, 0);

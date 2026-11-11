@@ -54,7 +54,13 @@ public sealed partial class VulkanReader
                     Field("polygonMode", "FILL").Contains("LINE", StringComparison.Ordinal),
                     Regex.IsMatch(Field("depthTestEnable", "VK_FALSE"), "TRUE"),
                     GlReader.TopologyOf(Field("topology", "TRIANGLE_LIST")),
-                    PipelineState.Vulkan(f => Field(f, null!), f => src.Int(Field(f, "")) is int v ? v : null, attachments), gs);
+                    PipelineState.Vulkan(f => Field(f, null!), f => src.Int(Field(f, "")) is int v ? v : null, attachments), gs)
+                {
+                    // Tessellation: .tesc / .tese files for this pipeline, patchControlPoints of its tessellation state.
+                    Tcs = files.FirstOrDefault(f => f.Contains(".tesc", StringComparison.Ordinal)) is { } tesc ? ShaderFor(tesc, ".tesc", exact: true) : null,
+                    Tes = files.FirstOrDefault(f => f.Contains(".tese", StringComparison.Ordinal)) is { } tese ? ShaderFor(tese, ".tese", exact: true) : null,
+                    PatchPoints = src.Int(Field("patchControlPoints", "3")) ?? 3,
+                };
             }
         }
         return result;
@@ -87,7 +93,12 @@ public sealed partial class VulkanReader
                     (Field("polygonMode") ?? "FILL").Contains("LINE", StringComparison.Ordinal),
                     Field("depthTestEnable") is { } depth && (depth.Contains("TRUE", StringComparison.Ordinal) || depth == "1"),
                     GlReader.TopologyOf(Field("topology") ?? "TRIANGLE_LIST"),
-                    PipelineState.Vulkan(f => Field(f)!, f => Field(f) is { } v ? src.Int(v) : null, RuntimeAttachments(made.Info)), gs);
+                    PipelineState.Vulkan(f => Field(f)!, f => Field(f) is { } v ? src.Int(v) : null, RuntimeAttachments(made.Info)), gs)
+                {
+                    Tcs = made.Files.FirstOrDefault(f => f.Contains(".tesc", StringComparison.Ordinal)) is { } tesc ? ShaderFor(tesc, ".tesc", exact: true) : null,
+                    Tes = made.Files.FirstOrDefault(f => f.Contains(".tese", StringComparison.Ordinal)) is { } tese ? ShaderFor(tese, ".tese", exact: true) : null,
+                    PatchPoints = Field("patchControlPoints") is { } points && src.Int(points) is int n ? n : 3,
+                };
             }
         }
         return runtimePipelines[handle] = result;

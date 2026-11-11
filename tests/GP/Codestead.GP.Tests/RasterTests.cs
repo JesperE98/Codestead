@@ -347,4 +347,134 @@ public class RasterTests
         Assert.Equal("offsets[7]", runner.Globals["name"].Text);
         Assert.Equal(3, runner.Globals["matrices"].Items!.Length);
     }
+
+    private const string PatchTcs = """
+        #version 410 core
+        layout (vertices = 4) out;
+        uniform float level;
+        void main()
+        {
+            gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+            if (gl_InvocationID == 0)
+            {
+                gl_TessLevelOuter[0] = level; gl_TessLevelOuter[1] = level; gl_TessLevelOuter[2] = level; gl_TessLevelOuter[3] = level;
+                gl_TessLevelInner[0] = level; gl_TessLevelInner[1] = level;
+            }
+        }
+        """;
+
+    /// <summary>A patch of 4 corners (x0, y0) … (x1, y1) in learnopengl's order: (0,0), (1,0), (0,1), (1,1).</summary>
+    private static DrawCall Patch(string tes, double level, bool wireframe = false)
+    {
+        var corners = new[] { (-0.8, -0.8), (0.8, -0.8), (-0.8, 0.8), (0.8, 0.8) };
+        var vertices = corners.Select(c => new Dictionary<string, ShaderValue> { ["0"] = ShaderValue.Vec(c.Item1, c.Item2, 0) }).ToList();
+        return new DrawCall
+        {
+            VertexShader = ShaderParser.ParseProgram(PassVs),
+            FragmentShader = ShaderParser.ParseProgram(ColorFs("vec4(1.0)")),
+            TessControlShader = ShaderParser.ParseProgram(PatchTcs),
+            TessEvalShader = ShaderParser.ParseProgram(tes),
+            PatchVertices = 4,
+            Vertices = vertices,
+            Count = 4,
+            Topology = Topology.Patches,
+            Wireframe = wireframe,
+            Uniforms = _ => new() { ["level"] = ShaderValue.Scalar(level) },
+        };
+    }
+
+    private const string QuadTes = """
+        #version 410 core
+        layout (quads, equal_spacing, ccw) in;
+        void main()
+        {
+            vec4 p0 = mix(gl_in[0].gl_Position, gl_in[1].gl_Position, gl_TessCoord.x);
+            vec4 p1 = mix(gl_in[2].gl_Position, gl_in[3].gl_Position, gl_TessCoord.x);
+            gl_Position = mix(p0, p1, gl_TessCoord.y);
+        }
+        """;
+
+    private static int Lit(Frame f)
+    {
+        int n = 0;
+        for (int y = 0; y < f.Height; y++)
+            for (int x = 0; x < f.Width; x++)
+                if (f.At(x, y)[0] > 0.5) n++;
+        return n;
+    }
+
+    [Fact(DisplayName = "tessellering: en fyrhörningspatch delas upp och täcker samma yta, trådmodellen får fler linjer")]
+    public void TessellatedQuad()
+    {
+        // Filled, the tessellated patch covers what the patch covers (80 × 80 of 100 × 100 pixels).
+        int filled = Lit(Render(Patch(QuadTes, 4)));
+        Assert.InRange(filled, 80 * 80 - 200, 80 * 80 + 200);
+        // As lines, a level of 8 draws many more edges than a level of 1 (one quad, two triangles).
+        int coarse = Lit(Render(Patch(QuadTes, 1, wireframe: true)));
+        int fine = Lit(Render(Patch(QuadTes, 8, wireframe: true)));
+        Assert.True(fine > coarse * 3, $"level 1: {coarse} line pixels, level 8: {fine}");
+        Assert.True(fine < filled, "a wireframe leaves gaps");
+    }
+
+    [Fact(DisplayName = "tessellering: triangeldomän och fraktionerad udda uppdelning täcker hela patchen")]
+    public void TessellatedTriangleAndFractional()
+    {
+        var triangle = """
+            #version 410 core
+            layout (triangles, fractional_odd_spacing, ccw) in;
+            void main()
+            {
+                gl_Position = gl_TessCoord.x * gl_in[0].gl_Position + gl_TessCoord.y * gl_in[1].gl_Position + gl_TessCoord.z * gl_in[3].gl_Position;
+            }
+            """;
+        // The triangle (0,0)-(1,0)-(1,1) of the patch: half its square.
+        int half = Lit(Render(Patch(triangle, 5.5)));
+        Assert.InRange(half, 80 * 80 / 2 - 150, 80 * 80 / 2 + 150);
+        int quad = Lit(Render(Patch(QuadTes.Replace("equal_spacing", "fractional_odd_spacing"), 6.3)));
+        Assert.InRange(quad, 80 * 80 - 200, 80 * 80 + 200);
+    }
+
+    [Fact(DisplayName = "compute: en dispatch skriver varje texel i bilden med imageStore")]
+    public void ComputeDispatch()
+    {
+        var cs = ShaderParser.ParseProgram("""
+            #version 430 core
+            layout (local_size_x = 4, local_size_y = 2, local_size_z = 1) in;
+            layout (rgba32f, binding = 0) uniform image2D img;
+            uniform float t;
+            void main()
+            {
+                ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+                imageStore(img, p, vec4(float(p.x) / (gl_NumWorkGroups.x * gl_WorkGroupSize.x), float(p.y) / 6.0, t, 1.0));
+            }
+            """);
+        var image = new StorageImage(8, 6);
+        var errors = Rasterizer.Dispatch(cs, "main", false, new() { ["t"] = ShaderValue.Scalar(0.5) }, new Dictionary<string, StorageImage> { ["img"] = image }, (2, 3, 1), 1.0);
+        Assert.Empty(errors);
+        Assert.Equal(new double[] { 3 / 8.0, 4 / 6.0, 0.5, 1 }, image.Data.AsSpan((4 * 8 + 3) * 4, 4).ToArray());
+        Assert.Equal(1.0, image.Data[(5 * 8 + 7) * 4 + 3]);
+    }
+
+    [Fact(DisplayName = "C++: glm::quat, slerp och toMat4 ger GLM:s rotationer")]
+    public void Quaternions()
+    {
+        var runner = new ShaderRunner(new ShaderProgram()) { Lenient = true };
+        runner.RunStatements(ShaderParser.ParseStatementsLenient("""
+            {
+                float s = 0.70710678f;
+                glm::quat a = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+                glm::quat b = glm::quat(s, 0.0f, 0.0f, s);
+                glm::quat h = glm::normalize(glm::slerp(a, b, 0.5f));
+                glm::mat4 r = glm::toMat4(b);
+                glm::vec4 x = r * glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+            }
+            """));
+        // b turns 90° about z: x goes to y; halfway is 45°.
+        var x = runner.Globals["x"].V!;
+        Assert.Equal(0, x[0], 6);
+        Assert.Equal(1, x[1], 6);
+        var h = runner.Globals["h"].V!;
+        Assert.Equal(Math.Sin(Math.PI / 8), h[2], 6);
+        Assert.Equal(Math.Cos(Math.PI / 8), h[3], 6);
+    }
 }

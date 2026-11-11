@@ -54,6 +54,17 @@ public sealed class DrawCall
     /// <summary>A geometry shader between the vertex and the fragment shader, or null.</summary>
     public ShaderProgram? GeometryShader { get; init; }
     public string GeometryEntry { get; init; } = "main";
+    /// <summary>
+    /// The tessellation stages, or null: the control shader (GLSL tessellation control, HLSL hull shader – its entry
+    /// point runs once per output control point, its patch constant function once per patch) and the evaluation
+    /// shader (GLSL tessellation evaluation, HLSL domain shader) that runs once per vertex the tessellator makes.
+    /// </summary>
+    public ShaderProgram? TessControlShader { get; init; }
+    public string TessControlEntry { get; init; } = "main";
+    public ShaderProgram? TessEvalShader { get; init; }
+    public string TessEvalEntry { get; init; } = "main";
+    /// <summary>The control points per patch (glPatchParameteri(GL_PATCH_VERTICES, n), patchControlPoints, the D3D12 patch list's N).</summary>
+    public int PatchVertices { get; init; } = 3;
     /// <summary>Per-instance attributes (glVertexAttribDivisor, VK_VERTEX_INPUT_RATE_INSTANCE, D3D12 per-instance data):
     /// the values for instance i are InstanceVertices[i / divisor], keyed like <see cref="Vertices"/>.</summary>
     public List<Dictionary<string, ShaderValue>>? InstanceVertices { get; init; }

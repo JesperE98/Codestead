@@ -66,6 +66,18 @@ public sealed partial class ShaderParser
             if (op == "&" && operand is IndexOf { At: Number { Value: 0 } } first) return first.Target;
             return op is "+" or "&" or "*" ? operand : new Unary(op, operand, line);
         }
+        // (unsigned char)y, (unsigned int)x: the second word is the type.
+        if (Peek.Is("(") && PeekAt(1).Is("unsigned") && PeekAt(2).Kind == ShaderTokenKind.Identifier && (PeekAt(3).Is(")") || PeekAt(3).Is("*") && PeekAt(4).Is(")")))
+        {
+            Next();
+            Next();
+            var word = Next().Text;
+            bool pointer = Accept("*");
+            Expect(")");
+            var operand = UnaryExpr();
+            if (pointer) return operand;
+            return new Call("int", [operand], line);
+        }
         // C-style casts: (float)x, (void*)0, (GLfloat)x – and HLSL's (float3x3)m, (float3)v, which convert.
         if (Peek.Is("(") && PeekAt(1).Kind == ShaderTokenKind.Identifier && (PeekAt(2).Is(")") || (PeekAt(2).Is("*") && PeekAt(3).Is(")")))
             && (IsCastType(PeekAt(1).Text) || ShaderRunner.MatrixSize(PeekAt(1).Text) > 0 || ShaderRunner.ComponentCount(PeekAt(1).Text) > 1))
@@ -226,6 +238,15 @@ public sealed partial class ShaderParser
                     return t.Text == "static_cast" && ScalarCast(to) is { } scalar ? new Call(scalar, [inner], t.Line) : inner;
                 }
                 if (t.Text is "true" or "false") return new Number(t.Text == "true" ? 1 : 0, t.Line);
+                // sizeof(unsigned int), sizeof(unsigned char): a type of two words.
+                if (t.Text == "sizeof" && Peek.Is("(") && (PeekAt(1).Is("unsigned") || PeekAt(1).Is("signed")))
+                {
+                    Next();
+                    Next();
+                    var word = Peek.Kind == ShaderTokenKind.Identifier && !Peek.Is(")") ? Next().Text : "int";
+                    Expect(")");
+                    return new Call("sizeof", [new Name(word is "char" ? "uint8_t" : word is "short" ? "uint16_t" : word is "long" ? "uint32_t" : "unsigned", t.Line)], t.Line);
+                }
                 // C++: std::numeric_limits<float>::max() and friends – the limits of a number type.
                 if (lenient && t.Text == "numeric_limits" && Peek.Is("<"))
                 {

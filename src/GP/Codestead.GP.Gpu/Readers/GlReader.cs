@@ -26,7 +26,7 @@ public sealed partial class GlReader
     {
         this.project = project;
         var main = project.MainFile;
-        src = new CppSource(main, project.Files.TryGetValue(main, out var t) ? t : "");
+        src = new CppSource(main, project.MainText());
         images = StbImage.All(src, project, scene);
         env = new CppExec(src, time, null, scene);
         // std::ifstream reads the project's files (a game's levels), FreeType its fonts.
@@ -35,7 +35,13 @@ public sealed partial class GlReader
         // What the program prints (std::cout) is its output; its own code's API queries are answered here.
         env.Runner.Output = scene.Log.Add;
         env.ApiValue = ApiValue;
+        // The getters of the project's headers (learnopengl's Model::GetBoneInfoMap): the reader's Model answers them.
+        foreach (var (path, text) in project.Files)
+            if (path.EndsWith(".h", StringComparison.Ordinal) || path.EndsWith(".hpp", StringComparison.Ordinal)) env.AddGetters(CppSource.BlankComments(text));
+        // Bytes read through a pointer into an image stb_image loaded (pixelOffset[0]).
+        env.Runner.PointerRead = (handle, at) => loadedImages.TryGetValue(handle, out var load) && load.Image is { } img ? StbImage.Byte(img, load.Wanted > 0 ? load.Wanted : img.Channels, at) : null;
     }
+
 
     /// <summary>What the program does when its clock reads <paramref name="time"/> seconds.</summary>
     public static Scene.Scene Read(GpuProject project, double time = 1.0) => new GlReader(project, time).Run();
@@ -52,7 +58,8 @@ public sealed partial class GlReader
     private static readonly Regex ModelRe = new(@"^Model\s+(?<name>\w+)\s*\(\s*""(?<path>[^""]+)""", RegexOptions.CultureInvariant);
     private readonly Dictionary<string, (Models.ObjModel Model, string Path)> models = new(StringComparer.Ordinal);
 
-    private static readonly Regex ShaderClassRe = new(@"^Shader\s+(?<name>\w+)\s*\(\s*""(?<vs>[^""]+)""\s*,\s*""(?<fs>[^""]+)""(?:\s*,\s*""(?<gs>[^""]+)"")?", RegexOptions.CultureInvariant);
+    private static readonly Regex ComputeClassRe = new(@"^ComputeShader\s+(?<name>\w+)\s*\(\s*""(?<cs>[^""]+)""", RegexOptions.CultureInvariant);
+    private static readonly Regex ShaderClassRe = new(@"^Shader\s+(?<name>\w+)\s*\(\s*""(?<vs>[^""]+)""\s*,\s*""(?<fs>[^""]+)""(?:\s*,\s*(?:""(?<gs>[^""]+)""|nullptr|NULL|0)(?:\s*,\s*(?:""(?<tcs>[^""]+)""|nullptr|NULL|0)(?:\s*,\s*(?:""(?<tes>[^""]+)""|nullptr|NULL|0))?)?)?", RegexOptions.CultureInvariant);
 
     private Scene.Scene Run()
     {
@@ -256,6 +263,8 @@ public sealed partial class GlReader
         if (gl.Programs.TryGetValue(existing, out var p)) gl.Programs[name] = p;
     }
 
+    private readonly Dictionary<int, List<ShaderAst.Stmt>?> pureLoops = new();
+
     /// <summary>for (init; condition; step) { … }: runs the body while the condition holds (at most 1000 times).</summary>
     private void For(CppStatement loop)
     {
@@ -276,6 +285,22 @@ public sealed partial class GlReader
             return;
         }
         if (header.Length != 3) return;
+        // A loop of the program's own C++ only (a height map's 65,536 vertices from its pixels): run as a whole by the
+        // C++ runner, every iteration, instead of statement by statement.
+        if (loop.End > loop.Offset && src.IsPureLoop(src.Code[loop.Offset..loop.End]))
+        {
+            if (!pureLoops.TryGetValue(loop.Offset, out var parsed))
+            {
+                var statements = ShaderParser.ParseStatementsLenient(CppSource.Prepare(src.Code[loop.Offset..loop.End]));
+                // Only a loop that parses as one (else statement by statement, as before).
+                pureLoops[loop.Offset] = parsed = statements is [ShaderAst.For] ? statements : null;
+            }
+            if (parsed is not null)
+            {
+                env.Runner.RunStatements(parsed);
+                return;
+            }
+        }
         env.Run(header[0] + ";");
         for (int n = 0; n < 1000; n++)
         {
@@ -408,7 +433,15 @@ public sealed partial class GlReader
         if (shaderClass.Success)
         {
             ShaderClass(shaderClass.Groups["name"].Value, shaderClass.Groups["vs"].Value, shaderClass.Groups["fs"].Value,
-                shaderClass.Groups["gs"].Success ? shaderClass.Groups["gs"].Value : null, src.LineAt(st.Offset));
+                shaderClass.Groups["gs"].Success ? shaderClass.Groups["gs"].Value : null, src.LineAt(st.Offset),
+                shaderClass.Groups["tcs"].Success ? shaderClass.Groups["tcs"].Value : null, shaderClass.Groups["tes"].Success ? shaderClass.Groups["tes"].Value : null);
+            return;
+        }
+        var computeClass = ComputeClassRe.Match(text);
+        if (computeClass.Success)
+        {
+            // learnopengl's ComputeShader class (shader_c.h): a program of one compute shader.
+            ComputeShaderClass(computeClass.Groups["name"].Value, computeClass.Groups["cs"].Value, src.LineAt(st.Offset));
             return;
         }
         var modelDecl = ModelRe.Match(text);

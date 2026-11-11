@@ -160,7 +160,7 @@ public static class CppStatements
                 {
                     var body = new List<CppStatement>();
                     Walk(code, bodyStart, bodyEnd, body);
-                    into.Add(new CppStatement(condition, i, "for", body));
+                    into.Add(new CppStatement(condition, i, "for", body) { End = Math.Min(end, bodyEnd + 1) });
                 }
                 else if (word == "while" && IsRenderLoop(condition))
                 {

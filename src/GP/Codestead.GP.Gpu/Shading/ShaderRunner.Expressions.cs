@@ -25,6 +25,8 @@ public sealed partial class ShaderRunner
                 }
                 if (owner.Fields is not null)
                     return owner.Fields.TryGetValue(m.Field, out var f) ? f : throw new ShaderRuntimeException($"no member named '{m.Field}'", m.Line);
+                // assimp's aiString: its text (mName.data).
+                if (Lenient && owner.Text is not null && m.Field is "data") return owner;
                 // C++ mode: a descriptor handle held as a number (handle.ptr).
                 if (Lenient && m.Field == "ptr" && owner.V is { Length: 1 }) return owner;
                 // DirectXMath: an XMMATRIX's rows (m.r[0] … m.r[3]), an XMFLOAT4X4's elements (m._41: row 4, column 1).
@@ -43,6 +45,11 @@ public sealed partial class ShaderRunner
                 // .size() / .length() on arrays.
                 throw new ShaderRuntimeException($"no member named '{m.Field}'", m.Line);
             }
+            case IndexOf ix when ImageLoad is not null && IsRwTexture(ix.Target):
+            {
+                var at = Eval(ix.At).Padded(2);
+                return ShaderValue.Vec(ImageLoad(((Name)ix.Target).Id, (int)Math.Floor(at[0]), (int)Math.Floor(at[1])) ?? [0, 0, 0, 0]);
+            }
             case IndexOf ix:
             {
                 var owner = Eval(ix.Target);
@@ -54,6 +61,9 @@ public sealed partial class ShaderRunner
                     return ShaderValue.Scalar(0);
                 }
                 int at = (int)Math.Floor(Eval(ix.At).X);
+                if (Lenient && owner.Text is { } handle && PointerRead?.Invoke(handle, owner.Offset + at) is { } pointed) return ShaderValue.Integer(pointed);
+                if (owner.Packed is { } packedNumbers)
+                    return at >= 0 && at < packedNumbers.Length ? (owner.PackedInt ? ShaderValue.Integer(packedNumbers[at]) : ShaderValue.Scalar(packedNumbers[at])) : throw new ShaderRuntimeException($"array index {at} is out of range", ix.Line);
                 if (owner.Items is not null)
                     return at >= 0 && at < owner.Items.Length ? owner.Items[at] : throw new ShaderRuntimeException($"array index {at} is out of range", ix.Line);
                 if (owner.IsMatrix)
@@ -80,6 +90,8 @@ public sealed partial class ShaderRunner
                     return u.Op.StartsWith("post", StringComparison.Ordinal) ? old : changed;
                 }
                 var v = Eval(u.Operand);
+                // C++: !pointer (if (!scene || !scene->mRootNode)).
+                if (v.V is null && u.Op == "!" && Lenient) return ShaderValue.Scalar(Truthy(v) ? 0 : 1);
                 if (v.V is null) throw new ShaderRuntimeException($"invalid operand to '{u.Op}'", u.Line);
                 return u.Op switch
                 {
@@ -192,6 +204,9 @@ public sealed partial class ShaderRunner
             else if (op is "<=") return av[0] <= bv[0] ? True : False;
             else if (op is ">=") return av[0] >= bv[0] ? True : False;
         }
+        // C++ pointer arithmetic on bytes a handle names (unsigned char* pixelOffset = data + (j + width * i) * 1).
+        if (Lenient && op is "+" or "-" && a.Text is { } handle && b.V is { Length: 1 } && PointerRead?.Invoke(handle, a.Offset) is not null)
+            return new ShaderValue { Text = handle, Offset = a.Offset + (long)(op == "+" ? b.X : -b.X) };
         // C++ strings: "offsets[" + std::to_string(i) + "]".
         if (op == "+" && (a.Text is not null || b.Text is not null) && Lenient)
             return ShaderValue.Str((a.Text ?? a.ToString()) + (b.Text ?? b.ToString()));
@@ -329,6 +344,8 @@ public sealed partial class ShaderRunner
                 return 1;
         }
         if (ShaderValue.IsIntType(type)) return 1;
+        // GLM's and assimp's quaternions: (x, y, z, w).
+        if (type is "quat" or "fquat" or "dquat" or "aiQuaternion") return 4;
         foreach (var prefix in new[] { "vec", "ivec", "uvec", "bvec", "dvec", "float", "int", "uint", "half", "bool", "double", "XMFLOAT", "XMINT", "XMUINT", "min16float" })
             if (type.StartsWith(prefix, StringComparison.Ordinal) && type.Length == prefix.Length + 1 && type[^1] is >= '2' and <= '4')
                 return type[^1] - '0';

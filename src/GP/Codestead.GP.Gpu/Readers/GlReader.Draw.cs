@@ -40,6 +40,14 @@ public sealed partial class GlReader
             indices = data.Skip(skip).Take(count).Select(d => (int)d).ToArray();
             first = 0;
         }
+        // Indexed: only the vertices the indices reach (a strip of a 65,536-vertex terrain reads 512 of them), the
+        // indices counted from the lowest.
+        int baseVertex = 0;
+        if (indices is { Length: > 0 } && !program.Vertex.Names.Contains("gl_VertexID") && indices.Min() is int lowest and > 0)
+        {
+            baseVertex = lowest;
+            for (int i = 0; i < indices.Length; i++) indices[i] -= lowest;
+        }
         int vertexCount = indices is null ? first + count : (indices.Length == 0 ? 0 : indices.Max() + 1);
 
         // The vertex shader's inputs, by location.
@@ -53,7 +61,7 @@ public sealed partial class GlReader
             {
                 if (attr.Divisor > 0 || !attr.Enabled || attr.Buffer is null || !gl.Buffers.TryGetValue(attr.Buffer, out var data) || data is null) continue;
                 int stride = attr.StrideBytes == 0 ? attr.Size : attr.StrideBytes / 4;
-                int start = attr.OffsetBytes / 4 + v * stride;
+                int start = attr.OffsetBytes / 4 + (v + baseVertex) * stride;
                 var comps = new double[attr.Size];
                 for (int k = 0; k < attr.Size; k++)
                 {
@@ -111,6 +119,9 @@ public sealed partial class GlReader
             VertexShader = program.Vertex!,
             FragmentShader = program.Fragment!,
             GeometryShader = program.Geometry,
+            TessControlShader = program.TessEval is not null ? program.TessControl : null,
+            TessEvalShader = program.TessEval,
+            PatchVertices = gl.PatchVertices,
             Vertices = vertices,
             Indices = indices,
             First = first,
@@ -159,16 +170,15 @@ public sealed partial class GlReader
     {
         samplerSizes = null;
         samplerCubeLod = null;
-        var cubeSamplers = new[] { program.Vertex!, program.Fragment! }.Concat(program.Geometry is { } pg ? [pg] : [])
+        var cubeSamplers = program.AllStages
             .SelectMany(s => s.Globals).Where(u => u.Storage == "uniform" && u.Type.StartsWith("samplerCube", StringComparison.Ordinal)).Select(u => u.Id).ToHashSet(StringComparer.Ordinal);
-        var samplers = SamplerNames(program.Vertex!).Concat(SamplerNames(program.Fragment!))
-            .Concat(program.Geometry is { } g ? SamplerNames(g) : []).Distinct().ToList();
+        var samplers = program.AllStages.SelectMany(SamplerNames).Distinct().ToList();
         if (samplers.Count == 0) return (null, null);
         var bound = new Dictionary<string, Textures.Texture?>(StringComparer.Ordinal);
         var layerCounts = new Dictionary<string, int>(StringComparer.Ordinal);
         var cubes = new Dictionary<string, Textures.CubeTexture>(StringComparer.Ordinal);
         // layout (binding = N) uniform sampler2D …: unit N unless the program sets the uniform itself.
-        var bindings = new[] { program.Vertex!, program.Fragment! }.Concat(program.Geometry is { } bg ? [bg] : [])
+        var bindings = program.AllStages
             .SelectMany(s => s.Globals).Where(u => u.Storage == "uniform" && u.Binding is not null && u.Block is null)
             .GroupBy(u => u.Id).ToDictionary(g => g.Key, g => g.First().Binding!.Value, StringComparer.Ordinal);
         foreach (var name in samplers)
@@ -272,6 +282,15 @@ public sealed partial class GlReader
                     ["1"] = ShaderValue.Vec(mesh.Normals[i]),
                     ["2"] = ShaderValue.Vec(mesh.TexCoords[i][0], flipUv ? 1 - mesh.TexCoords[i][1] : mesh.TexCoords[i][1]),
                 }).ToList();
+                // A skinned model (model_animation.h): the bone ids and weights at mesh.h's locations.
+                var (idsAt, weightsAt) = BoneAttributes();
+                bool extracted = ExtractsBones();
+                for (int i = 0; i < meshVertices.Count && (idsAt is not null || weightsAt is not null); i++)
+                {
+                    var (ids, weights) = extracted ? Models.GltfModel.VertexBones(mesh, i) : ([-1, -1, -1, -1], [0, 0, 0, 0]);
+                    if (idsAt is int ia) meshVertices[i][ia.ToString()] = ShaderValue.Vec(ids);
+                    if (weightsAt is int wa) meshVertices[i][wa.ToString()] = ShaderValue.Vec(weights);
+                }
                 var meshMaps = new Dictionary<string, Textures.Texture?>(StringComparer.Ordinal)
                 {
                     ["texture_diffuse1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.DiffuseMap, flipImages, mipmapped: true),
@@ -306,6 +325,7 @@ public sealed partial class GlReader
 
     internal static Topology TopologyOf(string mode) => mode switch
     {
+        _ when mode.Contains("PATCHES", StringComparison.Ordinal) => Topology.Patches,
         _ when mode.Contains("TRIANGLE_STRIP", StringComparison.Ordinal) => Topology.TriangleStrip,
         _ when mode.Contains("TRIANGLE_FAN", StringComparison.Ordinal) => Topology.TriangleFan,
         _ when mode.Contains("TRIANGLE", StringComparison.Ordinal) => Topology.Triangles,

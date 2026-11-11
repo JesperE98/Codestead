@@ -194,6 +194,7 @@ internal sealed partial class D3D12Device : IDeviceModel
         if (Debug && name is not "ThrowIfFailed") Console.Error.WriteLine($"[d3d12] {name}({string.Join(", ", args.Select(a => { var v = Eval(a); return v is null ? "?" : v.ToString(); }))})");
         if (DebugLayerCall(name, args) is { } answered) return answered;
         if (PipelineCall(name, args) is { } made) return made;
+        if (ComputeCall(name, args) is { } computed) return computed;
         switch (name)
         {
             case "ThrowIfFailed" when args.Count >= 1:
@@ -291,7 +292,10 @@ internal sealed partial class D3D12Device : IDeviceModel
                 {
                     if (Strip(args[1]) is var w) exec.Runner.Assign(w, ShaderValue.Scalar(image.Width));
                     if (Strip(args[2]) is var h) exec.Runner.Assign(h, ShaderValue.Scalar(image.Height));
-                    if (Strip(args[3]) is var c) exec.Runner.Assign(c, ShaderValue.Scalar(image.Channels));
+                    int fileChannels = StbImage.FileChannels(project, path);
+                    if (Strip(args[3]) is var c) exec.Runner.Assign(c, ShaderValue.Scalar(fileChannels));
+                    // The bytes, read through a pointer (pixelOffset[0]): the channels asked for (0: the file's).
+                    exec.Runner.PointerRead ??= (handle, at) => images.TryGetValue(handle, out var img) && img is not null ? StbImage.Byte(img, img.Channels, at) : null;
                 }
                 return ShaderValue.Str(key);
             }
@@ -433,7 +437,7 @@ internal sealed partial class D3D12Device : IDeviceModel
             case ".SetGraphicsRootConstantBufferView" when args.Count >= 3:
                 rootCbvs[(int)Num(args[1])] = (long)Num(args[2]);
                 return ShaderValue.Scalar(0);
-            case ".Load" when args.Count >= 6 && Eval(args[1])?.Text is { } objPath && objPath.EndsWith(".obj", StringComparison.OrdinalIgnoreCase):
+            case ".Load" when args.Count >= 6 && Eval(args[1])?.Text is { } objPath && (objPath.EndsWith(".obj", StringComparison.OrdinalIgnoreCase) || Models.GltfModel.IsGltf(objPath)):
                 LoadModel(args[0], objPath, args[4], (int)Num(args[5]));
                 return ShaderValue.Scalar(0);
             case ".SetGraphicsRootDescriptorTable" when args.Count >= 3:
@@ -494,7 +498,15 @@ internal sealed partial class D3D12Device : IDeviceModel
             }));
         }
         // The meshes are the device's: a copy of a struct that points at the model (Entity's Model* pModel) shares them.
-        exec!.Runner.Assign(target, ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["meshes"] = new ShaderValue { Items = meshes.ToArray(), Shared = true } }));
+        var modelValue = new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["meshes"] = new ShaderValue { Items = meshes.ToArray(), Shared = true } };
+        // A skinned model whose class reads the bones (learnopengl's model_animation.h): its bones by name and their count.
+        if (model.Gltf is { } gltf)
+        {
+            bool extracts = System.Text.RegularExpressions.Regex.IsMatch(src.Code, @"\bExtractBoneWeightForVertices\s*\([^)]*\)\s*;");
+            modelValue["m_BoneInfoMap"] = extracts ? gltf.BoneInfoMap(true) : new ShaderValue { Map = new SortedDictionary<double, ShaderValue>() };
+            modelValue["m_BoneCounter"] = ShaderValue.Integer(extracts ? gltf.Bones.Count : 0);
+        }
+        exec!.Runner.Assign(target, ShaderValue.Struct(modelValue));
     }
 
     /// <summary>
