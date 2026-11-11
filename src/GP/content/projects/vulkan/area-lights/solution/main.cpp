@@ -110,17 +110,19 @@ struct Vertex {
     }
 };
 
-// learnopengl's planeVertices: the floor, 20 x 20 at y = 0, normals up, the wood texture once over it
+// learnopengl's planeVertices: the floor, 20 x 20 at y = 0, normals up, the wood texture once over it. v is flipped
+// (1 - v) so the image lies as in OpenGL (stb_image's first row, v = 0, is the image's top; OpenGL flips the image on
+// load instead).
 const float psize = 10.0f;
 // learnopengl's areaLightVertices: the light's rectangle at x = -8, from y 0.4 to 2.4 and z -1 to 1, facing +x
 const std::vector<Vertex> vertices = {
     // the floor: vertices 0..5
-    {{-psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-    {{-psize, 0.0f,  psize}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
-    {{ psize, 0.0f,  psize}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
-    {{-psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-    {{ psize, 0.0f,  psize}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
-    {{ psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+    {{-psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+    {{-psize, 0.0f,  psize}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+    {{ psize, 0.0f,  psize}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+    {{-psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+    {{ psize, 0.0f,  psize}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+    {{ psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
 
     // the area light: vertices 6..11 (its corners are vertices 6, 7, 10 and 11)
     {{-8.0f, 2.4f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
@@ -131,20 +133,41 @@ const std::vector<Vertex> vertices = {
     {{-8.0f, 0.4f, -1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}
 };
 
-const glm::vec3 LIGHT_COLOR = glm::vec3(0.870588f, 0.721569f, 0.529412f); // BurlyWood
-const float LIGHT_INTENSITY = 4.0f;
-const bool LIGHT_TWO_SIDED = true;
-const glm::vec3 MATERIAL_COLOR = glm::vec3(0.439216f, 0.501961f, 0.564706f); // SlateGray (not used by the shader)
-const float MATERIAL_ROUGHNESS = 0.5f;
+// the material: a grey colour (not used by the shader) and the roughness
+const glm::vec3 SLATE_GRAY = glm::vec3(0.439216f, 0.501961f, 0.564706f);
+const float ROUGHNESS = 0.5f;
 
-// camera: learnopengl's, at (0, 1, 0.5) looking along -x at the light (yaw 180, pitch 0)
-glm::vec3 cameraPos   = glm::vec3(0.0f, 1.0f,  0.5f);
-glm::vec3 cameraFront = glm::vec3(-1.0f, 0.0f, 0.0f);
-glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+// several area lights: each one the rectangle above, turned about the y axis (and moved by an offset)
+struct AreaLight {
+    glm::vec3 offset;
+    float yRotation;
+
+    glm::vec3 color;
+    float intensity = 2.0f;
+    bool twoSided = true;
+};
+
+// eight lights on a ring of radius 8 around the middle of the floor, every one turned to face the middle
+const int NUM_AREA_LIGHTS = 8;
+AreaLight areaLights[NUM_AREA_LIGHTS] = {
+    { glm::vec3(0.0f), glm::radians(  0.0f), glm::vec3(1.0f, 0.55f, 0.25f) },
+    { glm::vec3(0.0f), glm::radians( 45.0f), glm::vec3(1.0f, 0.85f, 0.3f) },
+    { glm::vec3(0.0f), glm::radians( 90.0f), glm::vec3(0.55f, 1.0f, 0.35f) },
+    { glm::vec3(0.0f), glm::radians(135.0f), glm::vec3(0.3f, 1.0f, 0.75f) },
+    { glm::vec3(0.0f), glm::radians(180.0f), glm::vec3(0.3f, 0.75f, 1.0f) },
+    { glm::vec3(0.0f), glm::radians(225.0f), glm::vec3(0.4f, 0.45f, 1.0f) },
+    { glm::vec3(0.0f), glm::radians(270.0f), glm::vec3(0.8f, 0.4f, 1.0f) },
+    { glm::vec3(0.0f), glm::radians(315.0f), glm::vec3(1.0f, 0.4f, 0.65f) }
+};
+
+// camera: high above the floor behind the lights, looking down at them (yaw 89.4, pitch -34.3)
+glm::vec3 cameraPos   = glm::vec3(-0.224556f, 10.4038f, -18.9259f);
+glm::vec3 cameraFront = glm::vec3(0.00865f, -0.56356f, 0.82605f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f, 0.0f);
 
 bool firstMouse = true;
-float yaw   = 180.0f;
-float pitch =  0.0f;
+float yaw   = 89.3999f;
+float pitch = -34.3001f;
 float lastX =  WIDTH / 2.0f;
 float lastY =  HEIGHT / 2.0f;
 float fov   =  45.0f;
@@ -233,7 +256,8 @@ struct UniformBufferObject {
     glm::vec3 viewPosition;
     float pad1;
     Material material;
-    Light areaLight;
+    Light areaLights[32];
+    int numAreaLights;
 };
 
 class HelloTriangleApplication {
@@ -706,20 +730,31 @@ private:
 
     void createDescriptorSetLayout() {
         // the uniform buffer at binding 0, then the textures in learnopengl's unit order: LTC1, LTC2, the floor's
-        std::array<VkDescriptorSetLayoutBinding, 4> bindings{};
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        bindings[0].binding = 0;
-        bindings[0].descriptorCount = 1;
-        bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        VkDescriptorSetLayoutBinding ltc1LayoutBinding{};
+        ltc1LayoutBinding.binding = 1;
+        ltc1LayoutBinding.descriptorCount = 1;
+        ltc1LayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        ltc1LayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        for (uint32_t i = 1; i < 4; i++) {
-            bindings[i].binding = i;
-            bindings[i].descriptorCount = 1;
-            bindings[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            bindings[i].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        }
+        VkDescriptorSetLayoutBinding ltc2LayoutBinding{};
+        ltc2LayoutBinding.binding = 2;
+        ltc2LayoutBinding.descriptorCount = 1;
+        ltc2LayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        ltc2LayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+        VkDescriptorSetLayoutBinding diffuseLayoutBinding{};
+        diffuseLayoutBinding.binding = 3;
+        diffuseLayoutBinding.descriptorCount = 1;
+        diffuseLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        diffuseLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 4> bindings = {uboLayoutBinding, ltc1LayoutBinding, ltc2LayoutBinding, diffuseLayoutBinding};
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -1264,16 +1299,20 @@ private:
         bufferInfo.offset = 0;
         bufferInfo.range = sizeof(UniformBufferObject);
 
-        std::array<VkDescriptorImageInfo, 3> imageInfos{};
-        imageInfos[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfos[0].imageView = ltc1ImageView;
-        imageInfos[0].sampler = ltcSampler;
-        imageInfos[1].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfos[1].imageView = ltc2ImageView;
-        imageInfos[1].sampler = ltcSampler;
-        imageInfos[2].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfos[2].imageView = floorTextureImageView;
-        imageInfos[2].sampler = textureSampler;
+        VkDescriptorImageInfo ltc1Info{};
+        ltc1Info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        ltc1Info.imageView = ltc1ImageView;
+        ltc1Info.sampler = ltcSampler;
+
+        VkDescriptorImageInfo ltc2Info{};
+        ltc2Info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        ltc2Info.imageView = ltc2ImageView;
+        ltc2Info.sampler = ltcSampler;
+
+        VkDescriptorImageInfo diffuseInfo{};
+        diffuseInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        diffuseInfo.imageView = floorTextureImageView;
+        diffuseInfo.sampler = textureSampler;
 
         std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
 
@@ -1285,15 +1324,29 @@ private:
         descriptorWrites[0].descriptorCount = 1;
         descriptorWrites[0].pBufferInfo = &bufferInfo;
 
-        for (uint32_t i = 0; i < 3; i++) {
-            descriptorWrites[i + 1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrites[i + 1].dstSet = descriptorSet;
-            descriptorWrites[i + 1].dstBinding = i + 1;
-            descriptorWrites[i + 1].dstArrayElement = 0;
-            descriptorWrites[i + 1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            descriptorWrites[i + 1].descriptorCount = 1;
-            descriptorWrites[i + 1].pImageInfo = &imageInfos[i];
-        }
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &ltc1Info;
+
+        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[2].dstSet = descriptorSet;
+        descriptorWrites[2].dstBinding = 2;
+        descriptorWrites[2].dstArrayElement = 0;
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[2].descriptorCount = 1;
+        descriptorWrites[2].pImageInfo = &ltc2Info;
+
+        descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[3].dstSet = descriptorSet;
+        descriptorWrites[3].dstBinding = 3;
+        descriptorWrites[3].dstArrayElement = 0;
+        descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[3].descriptorCount = 1;
+        descriptorWrites[3].pImageInfo = &diffuseInfo;
 
         vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
@@ -1433,12 +1486,17 @@ private:
         vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
         vkCmdDraw(commandBuffer, 6, 1, 0, 0);
 
-        // the light's rectangle in the light's colour
+        // the lights' rectangles, each in its colour
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightPlanePipeline);
-        constants.model = glm::mat4(1.0f);
-        constants.lightColor = LIGHT_COLOR;
-        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
-        vkCmdDraw(commandBuffer, 6, 1, 6, 0);
+        for (int i = 0; i < NUM_AREA_LIGHTS; i++) {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, areaLights[i].offset);
+            model = glm::rotate(model, areaLights[i].yRotation, glm::vec3(0.0f, 1.0f, 0.0f));
+            constants.model = model;
+            constants.lightColor = areaLights[i].color;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+            vkCmdDraw(commandBuffer, 6, 1, 6, 0);
+        }
 
         vkCmdEndRenderPass(commandBuffer);
 
@@ -1480,17 +1538,26 @@ private:
         ubo.proj[1][1] *= -1;
         ubo.viewPosition = cameraPos;
 
-        // the material: learnopengl's colour (unused) and roughness
-        ubo.material.albedoRoughness = glm::vec4(MATERIAL_COLOR, MATERIAL_ROUGHNESS);
+        // the material: a grey colour (not used by the shader) and the roughness
+        ubo.material.albedoRoughness = glm::vec4(SLATE_GRAY, ROUGHNESS);
 
-        // the area light: its four corners (vertices 6, 7, 10 and 11), colour, intensity, two-sided
-        ubo.areaLight.points[0] = glm::vec4(vertices[6].pos, 1.0f);
-        ubo.areaLight.points[1] = glm::vec4(vertices[7].pos, 1.0f);
-        ubo.areaLight.points[2] = glm::vec4(vertices[10].pos, 1.0f);
-        ubo.areaLight.points[3] = glm::vec4(vertices[11].pos, 1.0f);
-        ubo.areaLight.color = LIGHT_COLOR;
-        ubo.areaLight.intensity = LIGHT_INTENSITY;
-        ubo.areaLight.twoSided = LIGHT_TWO_SIDED;
+        // the area lights
+        for (int i = 0; i < NUM_AREA_LIGHTS; i++) {
+            // the light's model matrix: turned about y, then moved by its offset
+            glm::mat4 model(1.0f);
+            model = glm::translate(model, areaLights[i].offset);
+            model = glm::rotate(model, areaLights[i].yRotation, glm::vec3(0.0f, 1.0f, 0.0f));
+
+            // its four corners in world space (vertices 6, 7, 10 and 11: the rectangle's 0, 1, 4 and 5)
+            ubo.areaLights[i].points[0] = model * glm::vec4(vertices[6].pos, 1.0f);
+            ubo.areaLights[i].points[1] = model * glm::vec4(vertices[7].pos, 1.0f);
+            ubo.areaLights[i].points[2] = model * glm::vec4(vertices[10].pos, 1.0f);
+            ubo.areaLights[i].points[3] = model * glm::vec4(vertices[11].pos, 1.0f);
+            ubo.areaLights[i].color = areaLights[i].color;
+            ubo.areaLights[i].intensity = areaLights[i].intensity;
+            ubo.areaLights[i].twoSided = areaLights[i].twoSided;
+        }
+        ubo.numAreaLights = NUM_AREA_LIGHTS;
 
         memcpy(uniformBufferMapped, &ubo, sizeof(ubo));
     }

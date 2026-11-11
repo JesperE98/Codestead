@@ -18,11 +18,10 @@ layout(binding = 0) uniform UniformBufferObject {
     mat4 proj;
     vec3 viewPosition;
     Material material;
-    Light areaLight;
+    Light areaLights[32];
+    int numAreaLights;
 } ubo;
 
-layout(binding = 1) uniform sampler2D LTC1; // for inverse M
-layout(binding = 2) uniform sampler2D LTC2; // GGX norm, fresnel, 0(unused), sphere
 layout(binding = 3) uniform sampler2D diffuseMap; // learnopengl's material.diffuse
 
 layout(location = 0) in vec3 worldPosition;
@@ -30,6 +29,9 @@ layout(location = 1) in vec3 worldNormal;
 layout(location = 2) in vec2 texcoord;
 
 layout(location = 0) out vec4 fragColor;
+
+layout(binding = 1) uniform sampler2D LTC1; // for inverse M
+layout(binding = 2) uniform sampler2D LTC2; // GGX norm, fresnel, 0(unused), sphere
 
 const float LUT_SIZE  = 64.0; // ltc_texture size
 const float LUT_SCALE = (LUT_SIZE - 1.0)/LUT_SIZE;
@@ -127,7 +129,7 @@ vec3 ToSRGB(vec3 v)   { return PowVec3(v, 1.0/gamma); }
 
 void main()
 {
-    // gamma correction
+    // the floor's colour (an sRGB texture: already linear when sampled) and the specular colour
     vec3 mDiffuse = texture(diffuseMap, texcoord).xyz;
     vec3 mSpecular = ToLinear(vec3(0.23f, 0.23f, 0.23f));
 
@@ -154,23 +156,28 @@ void main()
         vec3(t1.z, 0, t1.w)
     );
 
-    // the light's corners
-    vec3 points[4];
-    points[0] = ubo.areaLight.points[0].xyz;
-    points[1] = ubo.areaLight.points[1].xyz;
-    points[2] = ubo.areaLight.points[2].xyz;
-    points[3] = ubo.areaLight.points[3].xyz;
+    // iterate through all area lights
+    for (int i = 0; i < ubo.numAreaLights; i++)
+    {
+        // the light's corners
+        vec3 points[4];
+        points[0] = ubo.areaLights[i].points[0].xyz;
+        points[1] = ubo.areaLights[i].points[1].xyz;
+        points[2] = ubo.areaLights[i].points[2].xyz;
+        points[3] = ubo.areaLights[i].points[3].xyz;
 
-    // Evaluate LTC shading
-    vec3 diffuse = LTC_Evaluate(N, V, P, mat3(1), points, ubo.areaLight.twoSided);
-    vec3 specular = LTC_Evaluate(N, V, P, Minv, points, ubo.areaLight.twoSided);
+        // Evaluate LTC shading
+        vec3 diffuse = LTC_Evaluate(N, V, P, mat3(1), points, ubo.areaLights[i].twoSided);
+        vec3 specular = LTC_Evaluate(N, V, P, Minv, points, ubo.areaLights[i].twoSided);
 
-    // GGX BRDF shadowing and Fresnel
-    // t2.x: shadowedF90 (F90 normally it should be 1.0)
-    // t2.y: Smith function for Geometric Attenuation Term, it is dot(V or L, H).
-    specular *= mSpecular*t2.x + (1.0f - mSpecular) * t2.y;
+        // GGX BRDF shadowing and Fresnel
+        // t2.x: shadowedF90 (F90 normally it should be 1.0)
+        // t2.y: Smith function for Geometric Attenuation Term, it is dot(V or L, H).
+        specular *= mSpecular*t2.x + (1.0f - mSpecular) * t2.y;
 
-    result = ubo.areaLight.color * ubo.areaLight.intensity * (specular + mDiffuse * diffuse);
+        // Add contribution
+        result += ubo.areaLights[i].color * ubo.areaLights[i].intensity * (specular + mDiffuse * diffuse);
+    }
 
     fragColor = vec4(ToSRGB(result), 1.0f);
 }

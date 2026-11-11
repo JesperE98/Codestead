@@ -1,0 +1,369 @@
+=== task: ltc-textures
+--- file: main.cpp
+--- find:
+#include <stb_image.h>
+--- replace:
+#include <stb_image.h>
+
+// The LTC tables: LTC1 and LTC2, 64 x 64 x 4 floats each.
+#include "ltc_matrix.hpp"
+--- file: main.cpp
+--- find:
+// TODO: struct LTC_matrices: the two LTC lookup tables of ltc_matrix.hpp as textures (mat1, mat2)
+--- replace:
+// The two LTC lookup tables as textures (learnopengl's struct of two texture ids).
+struct LTC_matrices
+{
+    ComPtr<ID3D12Resource> mat1;    // LTC1: the inverse matrices M^-1
+    ComPtr<ID3D12Resource> mat2;    // LTC2: GGX norm, fresnel, 0 (unused), sphere
+};
+--- file: main.cpp
+--- find:
+    void LoadTexture(const char* path, bool gammaCorrection
+--- replace:
+    void LoadLTCTexture(const float* table, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex);
+    void LoadTexture(const char* path, bool gammaCorrection
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_woodTexture;      // the floor's diffuse map
+--- replace:
+    LTC_matrices m_LTC;                        // the LUT textures
+    ComPtr<ID3D12Resource> m_woodTexture;      // the floor's diffuse map
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> woodTextureUploadHeap;
+
+    // TODO: the LUT textures (m_LTC): LTC1 and LTC2 as 64 x 64 float textures in heap slots 1 and 2
+    // (t0 and t1), each with its upload heap
+--- replace:
+    ComPtr<ID3D12Resource> woodTextureUploadHeap;
+    ComPtr<ID3D12Resource> ltcMat1UploadHeap;
+    ComPtr<ID3D12Resource> ltcMat2UploadHeap;
+
+    // LUT textures: the two LTC tables (CBV/SRV heap slots 1 and 2: t0 and t1)
+    LoadLTCTexture(LTC1, m_LTC.mat1, ltcMat1UploadHeap, 1);
+    LoadLTCTexture(LTC2, m_LTC.mat2, ltcMat2UploadHeap, 2);
+--- file: main.cpp
+--- find:
+// TODO: LoadLTCTexture: an LTC table (LTC1 or LTC2) as a 64 x 64 texture of four 32-bit floats per texel
+--- replace:
+// An LTC table (LTC1 or LTC2 of ltc_matrix.hpp) as a 64 x 64 texture of four 32-bit floats per
+// texel (learnopengl's loadMTexture and loadLUTTexture). The tables are not images: row 0 of
+// the array is texture row 0 (v = 0), as in OpenGL - no flip.
+void D3D12App::LoadLTCTexture(const float* table, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex)
+{
+    CreateTexture(table, 64, 64, DXGI_FORMAT_R32G32B32A32_FLOAT, 64 * 4 * sizeof(float), texture, uploadHeap, descriptorIndex);
+}
+
+=== task: diffuse
+--- file: area_light.hlsl
+--- find:
+// TODO: the LTC textures (LTC1 at t0, LTC2 at t1) and their sampler (s0)
+Texture2D material_diffuse : register(t2);    // learnopengl's material.diffuse
+
+SamplerState diffuseSampler : register(s1);  // linear, repeated
+--- replace:
+Texture2D LTC1 : register(t0); // for inverse M
+Texture2D LTC2 : register(t1); // GGX norm, fresnel, 0(unused), sphere
+Texture2D material_diffuse : register(t2);    // learnopengl's material.diffuse
+
+SamplerState ltcSampler : register(s0);      // nearest when minified, linear when magnified, clamped
+SamplerState diffuseSampler : register(s1);  // linear, repeated
+--- file: area_light.hlsl
+--- find:
+// TODO: the LTC lookup's scale and bias (LUT_SIZE, LUT_SCALE, LUT_BIAS), IntegrateEdgeVec and LTC_Evaluate
+--- replace:
+static const float LUT_SIZE  = 64.0f; // ltc_texture size
+static const float LUT_SCALE = (LUT_SIZE - 1.0f) / LUT_SIZE;
+static const float LUT_BIAS  = 0.5f / LUT_SIZE;
+
+// Vector form without project to the plane (dot with the normal)
+// Use for proxy sphere clipping
+float3 IntegrateEdgeVec(float3 v1, float3 v2)
+{
+    // Using built-in acos() function will result flaws
+    // Using fitting result for calculating acos()
+    float x = dot(v1, v2);
+    float y = abs(x);
+
+    float a = 0.8543985f + (0.4965155f + 0.0145206f * y) * y;
+    float b = 3.4175940f + (4.1616724f + y) * y;
+    float v = a / b;
+
+    float theta_sintheta = (x > 0.0f) ? v : 0.5f * rsqrt(max(1.0f - x * x, 1e-7f)) - v;
+
+    return cross(v1, v2) * theta_sintheta;
+}
+
+// P is fragPos in world space (LTC distribution)
+float3 LTC_Evaluate(float3 N, float3 V, float3 P, float3x3 Minv, float4 points[4], bool twoSided)
+{
+    // construct orthonormal basis around N
+    float3 T1, T2;
+    T1 = normalize(V - N * dot(V, N));
+    T2 = cross(N, T1);
+
+    // rotate area light in (T1, T2, N) basis: HLSL's float3x3(T1, T2, N) has the rows
+    // T1, T2 and N - GLSL's transpose(mat3(T1, T2, N))
+    Minv = mul(Minv, float3x3(T1, T2, N));
+
+    // polygon (allocate 4 vertices for clipping)
+    float3 L[4];
+    // transform polygon from LTC back to origin Do (cosine weighted)
+    L[0] = mul(Minv, points[0].xyz - P);
+    L[1] = mul(Minv, points[1].xyz - P);
+    L[2] = mul(Minv, points[2].xyz - P);
+    L[3] = mul(Minv, points[3].xyz - P);
+
+    // use tabulated horizon-clipped sphere
+    // check if the shading point is behind the light
+    float3 dir = points[0].xyz - P; // LTC space
+    float3 lightNormal = cross(points[1].xyz - points[0].xyz, points[3].xyz - points[0].xyz);
+    bool behind = (dot(dir, lightNormal) < 0.0f);
+
+    // cos weighted space
+    L[0] = normalize(L[0]);
+    L[1] = normalize(L[1]);
+    L[2] = normalize(L[2]);
+    L[3] = normalize(L[3]);
+
+    // integrate
+    float3 vsum = float3(0.0f, 0.0f, 0.0f);
+    vsum += IntegrateEdgeVec(L[0], L[1]);
+    vsum += IntegrateEdgeVec(L[1], L[2]);
+    vsum += IntegrateEdgeVec(L[2], L[3]);
+    vsum += IntegrateEdgeVec(L[3], L[0]);
+
+    // form factor of the polygon in direction vsum
+    float len = length(vsum);
+
+    float z = vsum.z / len;
+    if (behind)
+        z = -z;
+
+    float2 uv = float2(z * 0.5f + 0.5f, len); // range [0, 1]
+    uv = uv * LUT_SCALE + LUT_BIAS;
+
+    // Fetch the form factor for horizon clipping
+    float scale = LTC2.Sample(ltcSampler, uv).w;
+
+    float sum = len * scale;
+    if (!behind && !twoSided)
+        sum = 0.0f;
+
+    // Outgoing radiance (solid angle) for the entire polygon
+    float3 Lo_i = float3(sum, sum, sum);
+    return Lo_i;
+}
+--- file: area_light.hlsl
+--- find:
+    float dotNV = saturate(dot(N, V));
+
+    // TODO: the light's diffuse part: LTC_Evaluate with the identity matrix (a plain cosine) over the light's polygon
+--- replace:
+    float dotNV = saturate(dot(N, V));
+
+    // the identity matrix: the diffuse part is the plain cosine distribution
+    float3x3 identity = float3x3(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+
+    // Evaluate LTC shading: the cosine (the identity matrix) over the light's polygon
+    float3 diffuse = LTC_Evaluate(N, V, P, identity, areaLight.points, areaLight.twoSided);
+
+    result = areaLight.color * areaLight.intensity * (mDiffuse * diffuse);
+
+=== task: specular
+--- file: area_light.hlsl
+--- find:
+    float dotNV = saturate(dot(N, V));
+
+    // the identity matrix: the diffuse part is the plain cosine distribution
+    float3x3 identity = float3x3(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+
+    // Evaluate LTC shading: the cosine (the identity matrix) over the light's polygon
+    float3 diffuse = LTC_Evaluate(N, V, P, identity, areaLight.points, areaLight.twoSided);
+
+    result = areaLight.color * areaLight.intensity * (mDiffuse * diffuse);
+--- replace:
+    float dotNV = saturate(dot(N, V));
+
+    // use roughness and sqrt(1-cos_theta) to sample M_texture
+    float2 uv = float2(material.albedoRoughness.w, sqrt(1.0f - dotNV));
+    uv = uv * LUT_SCALE + LUT_BIAS;
+
+    // get 4 parameters for inverse_M
+    float4 t1 = LTC1.Sample(ltcSampler, uv);
+
+    // Get 2 parameters for Fresnel calculation
+    float4 t2 = LTC2.Sample(ltcSampler, uv);
+
+    // the inverse M: GLSL's mat3(vec3(t1.x, 0, t1.y), vec3(0, 1, 0), vec3(t1.z, 0, t1.w)) takes
+    // columns, HLSL's float3x3 rows - the same matrix written as rows
+    float3x3 Minv = float3x3(
+        float3(t1.x, 0.0f, t1.z),
+        float3(0.0f, 1.0f, 0.0f),
+        float3(t1.y, 0.0f, t1.w)
+    );
+
+    // the identity matrix: the diffuse part is the plain cosine distribution
+    float3x3 identity = float3x3(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+
+    // Evaluate LTC shading
+    float3 diffuse = LTC_Evaluate(N, V, P, identity, areaLight.points, areaLight.twoSided);
+    float3 specular = LTC_Evaluate(N, V, P, Minv, areaLight.points, areaLight.twoSided);
+
+    // GGX BRDF shadowing and Fresnel
+    // t2.x: shadowedF90 (F90 normally it should be 1.0)
+    // t2.y: Smith function for Geometric Attenuation Term, it is dot(V or L, H).
+    specular *= mSpecular * t2.x + (1.0f - mSpecular) * t2.y;
+
+    result = areaLight.color * areaLight.intensity * (specular + mDiffuse * diffuse);
+
+=== task: multiple-lights
+--- file: area_light.hlsl
+--- find:
+    float3 viewPosition;
+    Material material;
+    Light areaLight;
+};
+--- replace:
+    float3 viewPosition;
+    int numAreaLights;
+    Material material;
+    Light areaLights[32];
+};
+--- file: area_light.hlsl
+--- find:
+    // Evaluate LTC shading
+    float3 diffuse = LTC_Evaluate(N, V, P, identity, areaLight.points, areaLight.twoSided);
+    float3 specular = LTC_Evaluate(N, V, P, Minv, areaLight.points, areaLight.twoSided);
+
+    // GGX BRDF shadowing and Fresnel
+    // t2.x: shadowedF90 (F90 normally it should be 1.0)
+    // t2.y: Smith function for Geometric Attenuation Term, it is dot(V or L, H).
+    specular *= mSpecular * t2.x + (1.0f - mSpecular) * t2.y;
+
+    result = areaLight.color * areaLight.intensity * (specular + mDiffuse * diffuse);
+--- replace:
+    // iterate through all area lights
+    for (int i = 0; i < numAreaLights; i++)
+    {
+        // Evaluate LTC shading
+        float3 diffuse = LTC_Evaluate(N, V, P, identity, areaLights[i].points, areaLights[i].twoSided);
+        float3 specular = LTC_Evaluate(N, V, P, Minv, areaLights[i].points, areaLights[i].twoSided);
+
+        // GGX BRDF shadowing and Fresnel
+        // t2.x: shadowedF90 (F90 normally it should be 1.0)
+        // t2.y: Smith function for Geometric Attenuation Term, it is dot(V or L, H).
+        specular *= mSpecular * t2.x + (1.0f - mSpecular) * t2.y;
+
+        // Add contribution
+        result += areaLights[i].color * areaLights[i].intensity * (specular + mDiffuse * diffuse);
+    }
+--- file: main.cpp
+--- find:
+// the light: its colour and intensity
+const XMFLOAT3 LIGHT_COLOR = XMFLOAT3(0.870588f, 0.721569f, 0.529412f); // BurlyWood
+const float LIGHT_INTENSITY = 4.0f;
+--- replace:
+// several area lights: each one the rectangle above, turned about the y axis (and moved by an offset)
+struct AreaLight
+{
+    XMFLOAT3 offset;
+    float yRotation;    // in radians
+
+    XMFLOAT3 color;
+    float intensity = 2.0f;
+    bool twoSided = true;
+};
+
+// eight lights on a ring of radius 8 around the middle of the floor, every one turned to face the middle
+const int NUM_AREA_LIGHTS = 8;
+AreaLight areaLights[NUM_AREA_LIGHTS] = {
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians(  0.0f), XMFLOAT3(1.0f, 0.55f, 0.25f) },
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians( 45.0f), XMFLOAT3(1.0f, 0.85f, 0.3f) },
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians( 90.0f), XMFLOAT3(0.55f, 1.0f, 0.35f) },
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians(135.0f), XMFLOAT3(0.3f, 1.0f, 0.75f) },
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians(180.0f), XMFLOAT3(0.3f, 0.75f, 1.0f) },
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians(225.0f), XMFLOAT3(0.4f, 0.45f, 1.0f) },
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians(270.0f), XMFLOAT3(0.8f, 0.4f, 1.0f) },
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians(315.0f), XMFLOAT3(1.0f, 0.4f, 0.65f) }
+};
+--- file: main.cpp
+--- find:
+// camera: learnopengl's area light demo: a little above the floor, looking along -x at the light (yaw 180, pitch 0)
+XMVECTOR cameraPos   = XMVectorSet(0.0f, 1.0f, 0.5f, 0.0f);
+XMVECTOR cameraFront = XMVectorSet(-1.0f, 0.0f, 0.0f, 0.0f);
+XMVECTOR cameraUp    = XMVectorSet(0.0f, 1.0f,  0.0f, 0.0f);
+--- replace:
+// camera: high above the floor behind the lights, looking down at them (yaw 89.4, pitch -34.3)
+XMVECTOR cameraPos   = XMVectorSet(-0.224556f, 10.4038f, -18.9259f, 0.0f);
+XMVECTOR cameraFront = XMVectorSet(0.00865f, -0.56356f, 0.82605f, 0.0f);
+XMVECTOR cameraUp    = XMVectorSet(0.0f, 1.0f,  0.0f, 0.0f);
+--- file: main.cpp
+--- find:
+float yaw   = 180.0f;
+float pitch = 0.0f;
+--- replace:
+float yaw   = 89.3999f;
+float pitch = -34.3001f;
+--- file: main.cpp
+--- find:
+        XMFLOAT3 viewPosition;
+        float padding;
+        Material material;
+        Light areaLight;
+    };
+--- replace:
+        XMFLOAT3 viewPosition;
+        int numAreaLights;    // packs into viewPosition's 16-byte row
+        Material material;
+        Light areaLights[32];
+    };
+--- file: main.cpp
+--- find:
+    // and the area light: its corners (vertices 0, 1, 4 and 5 of its rectangle), colour,
+    // intensity and sides
+    constantBufferData.areaLight.points[0] = XMFLOAT4(areaLightVertices[0].position.x, areaLightVertices[0].position.y, areaLightVertices[0].position.z, 1.0f);
+    constantBufferData.areaLight.points[1] = XMFLOAT4(areaLightVertices[1].position.x, areaLightVertices[1].position.y, areaLightVertices[1].position.z, 1.0f);
+    constantBufferData.areaLight.points[2] = XMFLOAT4(areaLightVertices[4].position.x, areaLightVertices[4].position.y, areaLightVertices[4].position.z, 1.0f);
+    constantBufferData.areaLight.points[3] = XMFLOAT4(areaLightVertices[5].position.x, areaLightVertices[5].position.y, areaLightVertices[5].position.z, 1.0f);
+    constantBufferData.areaLight.color = LIGHT_COLOR;
+    constantBufferData.areaLight.intensity = LIGHT_INTENSITY;
+    constantBufferData.areaLight.twoSided = TRUE;
+--- replace:
+    // and the area lights: for each one its four corners in world space (vertices 0, 1, 4 and 5 of
+    // the rectangle, moved by the light's model matrix: turned about y, then moved by its offset
+    // - learnopengl's translate * rotate), its colour, intensity and sides
+    for (int i = 0; i < NUM_AREA_LIGHTS; i++)
+    {
+        XMMATRIX model = XMMatrixRotationY(areaLights[i].yRotation) * XMMatrixTranslation(areaLights[i].offset.x, areaLights[i].offset.y, areaLights[i].offset.z);
+
+        XMStoreFloat4(&constantBufferData.areaLights[i].points[0], XMVector3Transform(XMLoadFloat3(&areaLightVertices[0].position), model));
+        XMStoreFloat4(&constantBufferData.areaLights[i].points[1], XMVector3Transform(XMLoadFloat3(&areaLightVertices[1].position), model));
+        XMStoreFloat4(&constantBufferData.areaLights[i].points[2], XMVector3Transform(XMLoadFloat3(&areaLightVertices[4].position), model));
+        XMStoreFloat4(&constantBufferData.areaLights[i].points[3], XMVector3Transform(XMLoadFloat3(&areaLightVertices[5].position), model));
+        constantBufferData.areaLights[i].color = areaLights[i].color;
+        constantBufferData.areaLights[i].intensity = areaLights[i].intensity;
+        constantBufferData.areaLights[i].twoSided = areaLights[i].twoSided;
+    }
+    constantBufferData.numAreaLights = NUM_AREA_LIGHTS;
+--- file: main.cpp
+--- find:
+    // the light's rectangle, in the light's colour
+    m_commandList->SetPipelineState(m_lightPlanePipelineState.Get());
+    objectConstants.lightColor = XMFLOAT4(LIGHT_COLOR.x, LIGHT_COLOR.y, LIGHT_COLOR.z, 1.0f);
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ObjectConstants) / 4, &objectConstants, 0);
+    m_commandList->IASetVertexBuffers(0, 1, &m_areaLightVertexBufferView);
+    m_commandList->DrawInstanced(6, 1, 0, 0);
+--- replace:
+    // the lights' rectangles, each in its colour: its model matrix (as for its corners above)
+    m_commandList->SetPipelineState(m_lightPlanePipelineState.Get());
+    m_commandList->IASetVertexBuffers(0, 1, &m_areaLightVertexBufferView);
+    for (int i = 0; i < NUM_AREA_LIGHTS; i++)
+    {
+        model = XMMatrixRotationY(areaLights[i].yRotation) * XMMatrixTranslation(areaLights[i].offset.x, areaLights[i].offset.y, areaLights[i].offset.z);
+        XMStoreFloat4x4(&objectConstants.model, XMMatrixTranspose(model));
+        objectConstants.lightColor = XMFLOAT4(areaLights[i].color.x, areaLights[i].color.y, areaLights[i].color.z, 1.0f);
+        m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ObjectConstants) / 4, &objectConstants, 0);
+        m_commandList->DrawInstanced(6, 1, 0, 0);
+    }

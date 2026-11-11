@@ -9,7 +9,7 @@ cbuffer ObjectConstants : register(b0)
     float4 lightColor;
 };
 
-// The area light (learnopengl's struct Light): its corners are float4s (w unused), the
+// An area light (learnopengl's struct Light): its corners are float4s (w unused), the
 // packing of the C++ struct.
 struct Light
 {
@@ -30,8 +30,9 @@ cbuffer SceneConstantBuffer : register(b1)
     float4x4 view;
     float4x4 projection;
     float3 viewPosition;
+    int numAreaLights;
     Material material;
-    Light areaLight;
+    Light areaLights[32];
 };
 
 Texture2D LTC1 : register(t0); // for inverse M
@@ -193,16 +194,21 @@ float4 PSMain(PSInput input) : SV_TARGET
     // the identity matrix: the diffuse part is the plain cosine distribution
     float3x3 identity = float3x3(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 
-    // Evaluate LTC shading
-    float3 diffuse = LTC_Evaluate(N, V, P, identity, areaLight.points, areaLight.twoSided);
-    float3 specular = LTC_Evaluate(N, V, P, Minv, areaLight.points, areaLight.twoSided);
+    // iterate through all area lights
+    for (int i = 0; i < numAreaLights; i++)
+    {
+        // Evaluate LTC shading
+        float3 diffuse = LTC_Evaluate(N, V, P, identity, areaLights[i].points, areaLights[i].twoSided);
+        float3 specular = LTC_Evaluate(N, V, P, Minv, areaLights[i].points, areaLights[i].twoSided);
 
-    // GGX BRDF shadowing and Fresnel
-    // t2.x: shadowedF90 (F90 normally it should be 1.0)
-    // t2.y: Smith function for Geometric Attenuation Term, it is dot(V or L, H).
-    specular *= mSpecular * t2.x + (1.0f - mSpecular) * t2.y;
+        // GGX BRDF shadowing and Fresnel
+        // t2.x: shadowedF90 (F90 normally it should be 1.0)
+        // t2.y: Smith function for Geometric Attenuation Term, it is dot(V or L, H).
+        specular *= mSpecular * t2.x + (1.0f - mSpecular) * t2.y;
 
-    result = areaLight.color * areaLight.intensity * (specular + mDiffuse * diffuse);
+        // Add contribution
+        result += areaLights[i].color * areaLights[i].intensity * (specular + mDiffuse * diffuse);
+    }
 
     return float4(ToSRGB(result), 1.0f);
 }

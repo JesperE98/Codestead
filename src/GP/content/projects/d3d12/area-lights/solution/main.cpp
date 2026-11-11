@@ -132,7 +132,6 @@ struct LTC_matrices
     ComPtr<ID3D12Resource> mat2;    // LTC2: GGX norm, fresnel, 0 (unused), sphere
 };
 
-
 // The camera: where it is, the direction it looks in, and which way is up. Globals,
 // so that OnUpdate and the window's message handler can both use them.
 // camera: high above the floor behind the lights, looking down at them (yaw 89.4, pitch -34.3)
@@ -251,7 +250,9 @@ private:
     void CreateVertexBuffer(const VertexAL* vertices, UINT vertexBufferSize, ComPtr<ID3D12Resource>& vertexBuffer, D3D12_VERTEX_BUFFER_VIEW& vertexBufferView);
     void CreateTexture(const void* pixels, UINT width, UINT height, DXGI_FORMAT format, UINT rowPitch, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex);
     void LoadLTCTexture(const float* table, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex);
-    void LoadTexture(const char* path, bool gammaCorrection, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex);};
+    void LoadTexture(const char* path, bool gammaCorrection, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex);
+
+};
 
 D3D12App::D3D12App(UINT width, UINT height) :
     m_width(width),
@@ -759,6 +760,7 @@ void D3D12App::OnUpdate()
         constantBufferData.areaLights[i].twoSided = areaLights[i].twoSided;
     }
     constantBufferData.numAreaLights = NUM_AREA_LIGHTS;
+
     // The GPU has finished the previous frame (OnRender waits for it), so it is not reading
     // the buffer.
     memcpy(m_pCbvDataBegin, &constantBufferData, sizeof(constantBufferData));
@@ -849,6 +851,7 @@ void D3D12App::PopulateCommandList()
         m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ObjectConstants) / 4, &objectConstants, 0);
         m_commandList->DrawInstanced(6, 1, 0, 0);
     }
+
     // Indicate that the back buffer will now be used to present.
     barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
     m_commandList->ResourceBarrier(1, &barrier);
