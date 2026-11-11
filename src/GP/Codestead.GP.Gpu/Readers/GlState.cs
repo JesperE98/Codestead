@@ -180,6 +180,8 @@ internal sealed class GlState
     public bool Wireframe;
     /// <summary>glPatchParameteri(GL_PATCH_VERTICES, n): the control points of a patch.</summary>
     public int PatchVertices = 3;
+    /// <summary>glBindImageTexture: image unit → the texture bound there (for compute shaders' image2D).</summary>
+    public Dictionary<int, string> ImageUnits = new();
     public bool CullFace;
     public string CullFaceMode = "GL_BACK";
     public bool FrontCcw = true;

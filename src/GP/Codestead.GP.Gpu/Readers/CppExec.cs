@@ -309,6 +309,7 @@ public sealed class CppExec
             for (int r = 0; r < v.Cols; r++)
                 for (int c = 0; c < v.Cols; c++) into.Add(v.V[c * v.Cols + r]);
         else if (v.V is not null) into.AddRange(v.V);
+        else if (v.Packed is { } packed) into.AddRange(packed);
         else if (v.Items is not null) foreach (var i in v.Items) Flatten(i, into, rowMajor);
         else if (v.Fields is not null) foreach (var f in v.Fields.Values) Flatten(f, into, rowMajor);
     }

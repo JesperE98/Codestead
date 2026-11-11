@@ -39,6 +39,18 @@ public sealed partial class ShaderRunner
     /// </summary>
     public Func<string, long, double?>? PointerRead { get; set; }
 
+    /// <summary>
+    /// Storage images of a compute shader (GLSL image2D, HLSL RWTexture2D): read a texel, write a texel (RGBA), the
+    /// size – by the image's name.
+    /// </summary>
+    public Func<string, int, int, double[]?>? ImageLoad { get; set; }
+    public Action<string, int, int, double[]>? ImageStore { get; set; }
+    public Func<string, (int Width, int Height)?>? ImageSize { get; set; }
+
+    /// <summary>The program's HLSL read-write textures (RWTexture2D&lt;float4&gt; tex): tex[xy] reads and writes texels.</summary>
+    private HashSet<string>? rwTextures;
+    private bool IsRwTexture(Expr e) => e is Name n && (rwTextures ??= program.Globals.Where(g => g.Type.StartsWith("RWTexture", StringComparison.Ordinal)).Select(g => g.Id).ToHashSet(StringComparer.Ordinal)).Contains(n.Id);
+
     /// <summary>Reads a texture: (texture or sampler name, u, v) → RGBA.</summary>
     public Func<string, double, double, double[]>? Sample { get; set; }
 
@@ -177,9 +189,16 @@ public sealed partial class ShaderRunner
     /// A declared variable's zero value; in C++ mode a struct the runner does not know (D3D12_RESOURCE_DESC desc = {};)
     /// is an empty struct that takes the fields assigned to it.
     /// </summary>
+    /// <summary>Vectors of numbers this long or longer are kept packed (<see cref="ShaderValue.Packed"/>).</summary>
+    private const int PackedFrom = 256;
+
+    private bool IsPackable(string type) => program.FindStruct(type) is null && MatrixSize(type) == 0 && (ComponentCount(type) == 1 || ShaderValue.IsIntType(type)) && type is not ("bool" or "string");
+
     private ShaderValue LenientDefault(string type, int arraySize)
     {
         if (Lenient && arraySize == 0 && EmptyStream(type) is { } stream) return stream;
+        // A large vector of numbers (a CPU-filled texture's floats): packed.
+        if (Lenient && arraySize >= PackedFrom && IsPackable(type)) return ShaderValue.PackedArray(new double[arraySize], ShaderValue.IsIntType(type));
         if (Lenient && arraySize > 0) return ShaderValue.Array(Enumerable.Range(0, arraySize).Select(_ => LenientDefault(type, 0)).ToArray());
         var v = Default(type, arraySize);
         return Lenient && v.Text is not null ? ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)) : v;
@@ -360,7 +379,16 @@ public sealed partial class ShaderRunner
                 if (d.Pointer) pointers.Add(d.Id);
                 else pointers.Remove(d.Id);
                 // C++: Type name{} / Type name = {} is a zero-initialised struct.
-                int arraySize = d.SizeExpr is not null ? (int)Math.Max(0, Math.Min(1 << 20, Eval(d.SizeExpr).X)) : d.ArraySize;
+                int arraySize = d.SizeExpr is not null ? (int)Math.Max(0, Math.Min(1 << 24, Eval(d.SizeExpr).X)) : d.ArraySize;
+                if (d.Fill is not null && d.SizeExpr is not null)
+                {
+                    // std::vector<T> name(n, value): n copies of the value (numbers packed when there are many).
+                    var fill = Coerce(d.Type, Eval(d.Fill));
+                    scopes[^1][d.Id] = arraySize >= PackedFrom && IsPackable(d.Type) && fill.V is { Length: 1 }
+                        ? ShaderValue.PackedArray(Enumerable.Repeat(fill.X, arraySize).ToArray(), ShaderValue.IsIntType(d.Type))
+                        : ShaderValue.Array(Enumerable.Range(0, arraySize).Select(_ => fill.Clone()).ToArray());
+                    return default;
+                }
                 if (d.SizeExpr is not null && d.Value is InitList { Items.Count: > 0 } && Eval(d.Value) is { Items: { } given } && given.Length < arraySize)
                 {
                     // std::array<VkImageView, 2> attachments = { a, b }: the elements given, the rest zero.
@@ -402,7 +430,9 @@ public sealed partial class ShaderRunner
                     if (f.Init is not null) Exec(f.Init);
                     for (int n = 0; f.Condition is null || Truthy(Eval(f.Condition)); n++)
                     {
-                        if (n > 1024) throw new ShaderRuntimeException("the loop runs too long for the simulator", f.Line);
+                        // A shader's loop runs at most 1024 times here; the C++ program's (a CPU-filled texture's 480,000 texels) as
+                        // long as the step limit allows.
+                        if (n > (Lenient ? 1 << 24 : 1024)) throw new ShaderRuntimeException("the loop runs too long for the simulator", f.Line);
                         var flow = Run(f.Body);
                         if (flow.Returned || flow.Discarded) return flow;
                         if (flow.Broke) break;
@@ -571,6 +601,13 @@ public sealed partial class ShaderRunner
                 mat.V![col * mat.Cols + row] = value.X;
                 return;
             }
+            case IndexOf ix when ImageStore is not null && IsRwTexture(ix.Target):
+            {
+                // HLSL: imgOutput[texelCoord] = value – a texel of a read-write texture.
+                var at = Eval(ix.At).Padded(2);
+                ImageStore(((Name)ix.Target).Id, (int)Math.Floor(at[0]), (int)Math.Floor(at[1]), value.Padded(4));
+                return;
+            }
             case IndexOf ix:
             {
                 ShaderValue owner;
@@ -598,6 +635,12 @@ public sealed partial class ShaderRunner
                     return;
                 }
                 int at = (int)Math.Floor(atValue.X);
+                if (owner.Packed is { } packedNumbers)
+                {
+                    if (at < 0 || at >= packedNumbers.Length) throw new ShaderRuntimeException("array index out of range", ix.Line);
+                    packedNumbers[at] = owner.PackedInt ? Math.Truncate(value.X) : value.X;
+                    return;
+                }
                 if (owner.Items is not null && at >= 0 && at < owner.Items.Length) owner.Items[at] = value.Int && !owner.Items[at].Int ? ShaderValue.Scalar(value.X) : value;
                 else if (owner.V is not null && at >= 0 && at < owner.V.Length && owner.Cols == 0) owner.V[at] = value.X;
                 else if (owner.IsMatrix && at >= 0 && at < owner.Cols)

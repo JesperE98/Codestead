@@ -709,6 +709,7 @@ public sealed partial class D3D12Reader
     private static void Flatten(ShaderValue v, List<double> into)
     {
         if (v.V is not null) into.AddRange(v.V);
+        else if (v.Packed is { } packed) into.AddRange(packed);
         else if (v.Items is not null) foreach (var i in v.Items) Flatten(i, into);
     }
 

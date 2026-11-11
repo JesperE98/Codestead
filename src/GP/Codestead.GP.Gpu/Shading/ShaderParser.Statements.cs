@@ -315,7 +315,7 @@ public sealed partial class ShaderParser
                 vectorOf = true;
             }
             var list = new List<Stmt>();
-            Expr? vectorSize = null;
+            Expr? vectorSize = null, vectorFill = null;
             do
             {
                 bool reference = false, pointer = false;
@@ -330,12 +330,19 @@ public sealed partial class ShaderParser
                 Expr? value = null;
                 if (Accept("=")) value = Initializer();
                 else if (Peek.Is("{")) value = Initializer(); // C++: Type name{ … }
-                else if (vectorOf && Peek.Is("(")) vectorSize = CallArgs().FirstOrDefault(); // std::vector<T> name(n): n default Ts
+                else if (vectorOf && Peek.Is("("))
+                {
+                    // std::vector<T> name(n): n default Ts; name(n, value): n copies of the value.
+                    var sizeArgs = CallArgs();
+                    vectorSize = sizeArgs.FirstOrDefault();
+                    vectorFill = sizeArgs.Count >= 2 ? sizeArgs[1] : null;
+                }
                 else if (Peek.Is("(")) value = new Call(type, CallArgs(), line); // C++: Type name(args)
                 // An empty std::vector<T>: an array with no elements yet (push_back adds them).
                 var declSize = sizeExpr ?? vectorSize ?? (vectorOf && value is null ? new Number(0, line) : null);
                 vectorSize = null;
-                list.Add(new Declare(type, id, value, line, size != 0 || declSize is not null || vectorOf && value is InitList, Math.Max(0, size), declSize) { Static = isStatic && lenient, Reference = reference && lenient && value is not null and not InitList, Pointer = pointer && lenient });
+                list.Add(new Declare(type, id, value, line, size != 0 || declSize is not null || vectorOf && value is InitList, Math.Max(0, size), declSize) { Static = isStatic && lenient, Reference = reference && lenient && value is not null and not InitList, Pointer = pointer && lenient, Fill = vectorFill });
+                vectorFill = null;
             } while (Accept(","));
             return list;
         }

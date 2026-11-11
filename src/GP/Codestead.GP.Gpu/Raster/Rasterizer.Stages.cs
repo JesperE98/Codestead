@@ -93,7 +93,7 @@ public static partial class Rasterizer
         /// ("material.shininess", "ubo.view"), an array element ("pointLights[0].position"), or a field of a block found
         /// by the field's name alone (push constants and cbuffers).
         /// </summary>
-        private static void SetUniform(ShaderRunner runner, string key, ShaderValue value)
+        internal static void SetUniform(ShaderRunner runner, string key, ShaderValue value)
         {
             var parts = System.Text.RegularExpressions.Regex.Matches(key, @"(\w+)|\[(\d+)\]").Select(m => m.Groups[1].Success ? m.Groups[1].Value : "#" + m.Groups[2].Value).ToList();
             if (parts.Count == 0) return;

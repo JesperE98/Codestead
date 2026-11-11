@@ -43,6 +43,11 @@ public sealed partial class ShaderRunner
                 // .size() / .length() on arrays.
                 throw new ShaderRuntimeException($"no member named '{m.Field}'", m.Line);
             }
+            case IndexOf ix when ImageLoad is not null && IsRwTexture(ix.Target):
+            {
+                var at = Eval(ix.At).Padded(2);
+                return ShaderValue.Vec(ImageLoad(((Name)ix.Target).Id, (int)Math.Floor(at[0]), (int)Math.Floor(at[1])) ?? [0, 0, 0, 0]);
+            }
             case IndexOf ix:
             {
                 var owner = Eval(ix.Target);
@@ -55,6 +60,8 @@ public sealed partial class ShaderRunner
                 }
                 int at = (int)Math.Floor(Eval(ix.At).X);
                 if (Lenient && owner.Text is { } handle && PointerRead?.Invoke(handle, owner.Offset + at) is { } pointed) return ShaderValue.Integer(pointed);
+                if (owner.Packed is { } packedNumbers)
+                    return at >= 0 && at < packedNumbers.Length ? (owner.PackedInt ? ShaderValue.Integer(packedNumbers[at]) : ShaderValue.Scalar(packedNumbers[at])) : throw new ShaderRuntimeException($"array index {at} is out of range", ix.Line);
                 if (owner.Items is not null)
                     return at >= 0 && at < owner.Items.Length ? owner.Items[at] : throw new ShaderRuntimeException($"array index {at} is out of range", ix.Line);
                 if (owner.IsMatrix)

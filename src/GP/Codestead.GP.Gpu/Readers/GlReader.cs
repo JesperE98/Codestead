@@ -55,6 +55,7 @@ public sealed partial class GlReader
     private static readonly Regex ModelRe = new(@"^Model\s+(?<name>\w+)\s*\(\s*""(?<path>[^""]+)""", RegexOptions.CultureInvariant);
     private readonly Dictionary<string, (Models.ObjModel Model, string Path)> models = new(StringComparer.Ordinal);
 
+    private static readonly Regex ComputeClassRe = new(@"^ComputeShader\s+(?<name>\w+)\s*\(\s*""(?<cs>[^""]+)""", RegexOptions.CultureInvariant);
     private static readonly Regex ShaderClassRe = new(@"^Shader\s+(?<name>\w+)\s*\(\s*""(?<vs>[^""]+)""\s*,\s*""(?<fs>[^""]+)""(?:\s*,\s*(?:""(?<gs>[^""]+)""|nullptr|NULL|0)(?:\s*,\s*(?:""(?<tcs>[^""]+)""|nullptr|NULL|0)(?:\s*,\s*(?:""(?<tes>[^""]+)""|nullptr|NULL|0))?)?)?", RegexOptions.CultureInvariant);
 
     private Scene.Scene Run()
@@ -420,6 +421,13 @@ public sealed partial class GlReader
             ShaderClass(shaderClass.Groups["name"].Value, shaderClass.Groups["vs"].Value, shaderClass.Groups["fs"].Value,
                 shaderClass.Groups["gs"].Success ? shaderClass.Groups["gs"].Value : null, src.LineAt(st.Offset),
                 shaderClass.Groups["tcs"].Success ? shaderClass.Groups["tcs"].Value : null, shaderClass.Groups["tes"].Success ? shaderClass.Groups["tes"].Value : null);
+            return;
+        }
+        var computeClass = ComputeClassRe.Match(text);
+        if (computeClass.Success)
+        {
+            // learnopengl's ComputeShader class (shader_c.h): a program of one compute shader.
+            ComputeShaderClass(computeClass.Groups["name"].Value, computeClass.Groups["cs"].Value, src.LineAt(st.Offset));
             return;
         }
         var modelDecl = ModelRe.Match(text);

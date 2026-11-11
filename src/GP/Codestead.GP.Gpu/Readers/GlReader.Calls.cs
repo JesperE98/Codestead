@@ -267,6 +267,16 @@ public sealed partial class GlReader
                     GenerateTargetMips(mt);
                 }
                 return;
+            case "glBindImageTexture":
+                // glBindImageTexture(unit, texture, level, layered, layer, access, format): an image unit for compute shaders.
+                if (Int(A(0)) is int imageUnit) gl.ImageUnits[imageUnit] = Obj(A(1));
+                return;
+            case "glDispatchCompute":
+                DispatchCompute(Int(A(0)) ?? 0, Int(A(1)) ?? 0, Int(A(2)) ?? 1, line);
+                return;
+            case "glMemoryBarrier":
+                // The dispatch has finished when the reader goes on.
+                return;
             case "glPatchParameteri":
                 if (A(0).Contains("PATCH_VERTICES", StringComparison.Ordinal)) gl.PatchVertices = Math.Max(1, Int(A(1)) ?? 3);
                 return;
@@ -741,6 +751,68 @@ public sealed partial class GlReader
             }
         }
         program.Linked = program.Vertex is not null && program.Fragment is not null;
+    }
+
+    /// <summary>learnopengl's ComputeShader(path): a program with the compute shader read from the file.</summary>
+    private void ComputeShaderClass(string name, string file, int line)
+    {
+        var program = new GlState.ProgramObject();
+        gl.Programs[name] = program;
+        if (!gladLoaded)
+        {
+            scene.Notes.Add(SimNote.Error("gladMissing", ("call", "ComputeShader"), ("line", line.ToString())));
+            return;
+        }
+        var text = project.Find(file);
+        if (text is null)
+        {
+            scene.Log.Add("ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " + file);
+            scene.Notes.Add(SimNote.Error("shaderFileMissing", ("file", file)));
+            return;
+        }
+        program.Compute = ParseShader(text, "compute", project.PathOf(file));
+        program.Linked = program.Compute is not null;
+    }
+
+    /// <summary>
+    /// glDispatchCompute(x, y, z): the current program's compute shader runs over x × y × z work groups now; the textures
+    /// on the image units its image2D uniforms name are written (and read) – what is drawn after sees them.
+    /// </summary>
+    private void DispatchCompute(int x, int y, int z, int line)
+    {
+        if (discardDraws) return;
+        if (gl.CurrentProgram is not { } cur || !gl.Programs.TryGetValue(cur, out var program) || program.Compute is not { } cs)
+        {
+            scene.Notes.Add(SimNote.Error("noProgram", ("call", "glDispatchCompute"), ("line", line.ToString())));
+            return;
+        }
+        var images = new Dictionary<string, Raster.StorageImage>(StringComparer.Ordinal);
+        var targets = new List<(GlState.TextureObject Texture, Raster.StorageImage Image)>();
+        foreach (var g in cs.Globals.Where(g => g.Storage == "uniform" && g.Type.StartsWith("image", StringComparison.Ordinal)))
+        {
+            int unit = program.Uniforms.TryGetValue(g.Id, out var set) && set(env.Runner.Time) is { } v ? (int)v.X : g.Binding ?? 0;
+            // No texture on the image unit: the shader's writes go nowhere.
+            if (!gl.ImageUnits.TryGetValue(unit, out var texName) || !gl.TextureObjects.TryGetValue(texName, out var tex)) continue;
+            int w = tex.Image?.Width ?? tex.Width, h = tex.Image?.Height ?? tex.Height;
+            var storage = Raster.StorageImage.From(tex.Image, w, h);
+            images[g.Id] = storage;
+            targets.Add((tex, storage));
+        }
+        var uniforms = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
+        foreach (var (name, f) in program.Uniforms)
+            if (f(env.Runner.Time) is { } value) uniforms[name] = value;
+        foreach (var (k, v) in BlockUniforms(program)) uniforms[k] = v;
+        var errors = Raster.Rasterizer.Dispatch(cs, "main", false, uniforms, images, (x, y, z), env.Runner.Time);
+        foreach (var e in errors) scene.Log.Add("compute shader: " + e);
+        foreach (var (tex, storage) in targets)
+        {
+            tex.Image = storage.ToImage();
+            tex.Float = true;
+            tex.Components = 4;
+            tex.Width = storage.Width;
+            tex.Height = storage.Height;
+        }
+        if (env.Runner.UsedTime || src.UsedTime) scene.Animated = true;
     }
 
     private void ShaderMethod(string obj, string method, IReadOnlyList<string> a, int line)

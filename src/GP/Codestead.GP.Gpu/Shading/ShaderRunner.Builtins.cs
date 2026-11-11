@@ -97,7 +97,7 @@ public sealed partial class ShaderRunner
             try
             {
                 var arr = Eval(c.Args[0]);
-                return ShaderValue.Scalar(arr.Items?.Length ?? arr.Map?.Count ?? arr.V?.Length ?? 0);
+                return ShaderValue.Scalar(arr.IsArray ? arr.Count : arr.Map?.Count ?? arr.V?.Length ?? 0);
             }
             catch (ShaderRuntimeException) when (Lenient)
             {
@@ -241,6 +241,30 @@ public sealed partial class ShaderRunner
                 var p = a[1].Padded(2);
                 return SampleTexture(c.Args[0], ShaderValue.Vec((Math.Floor(p[0]) + 0.5) / size.Width, (Math.Floor(p[1]) + 0.5) / size.Height), null, 0);
             }
+            case "imageStore":
+            {
+                // imageStore(image, ivec2 texel, vec4 value): a compute shader writes a texel.
+                if (a.Count < 3) throw Arity();
+                var p = a[1].Padded(2);
+                ImageStore?.Invoke(PathOf(c.Args[0]), (int)Math.Floor(p[0]), (int)Math.Floor(p[1]), a[2].Padded(4));
+                return ShaderValue.Scalar(0);
+            }
+            case "imageLoad":
+            {
+                if (a.Count < 2) throw Arity();
+                var p = a[1].Padded(2);
+                return ShaderValue.Vec(ImageLoad?.Invoke(PathOf(c.Args[0]), (int)Math.Floor(p[0]), (int)Math.Floor(p[1])) ?? [0, 0, 0, 0]);
+            }
+            case "imageSize":
+            {
+                if (a.Count < 1) throw Arity();
+                var size = ImageSize?.Invoke(PathOf(c.Args[0])) ?? (1, 1);
+                return new ShaderValue { V = [size.Width, size.Height] };
+            }
+            case "barrier" or "memoryBarrier" or "memoryBarrierImage" or "memoryBarrierShared" or "groupMemoryBarrier" or "GroupMemoryBarrierWithGroupSync"
+                or "DeviceMemoryBarrier" or "AllMemoryBarrier" or "GroupMemoryBarrier" or "DeviceMemoryBarrierWithGroupSync" or "AllMemoryBarrierWithGroupSync":
+                // The invocations run one after another here: nothing to wait for.
+                return ShaderValue.Scalar(0);
             case "textureSize":
             {
                 if (a.Count < 1) throw Arity();
@@ -311,7 +335,7 @@ public sealed partial class ShaderRunner
             case "size" or "length" or "Length" or "count":
             {
                 var target = Eval(c.Args[0]);
-                return ShaderValue.Scalar(target.Map?.Count ?? target.Items?.Length ?? target.V?.Length ?? 0);
+                return ShaderValue.Scalar(target.Map?.Count ?? (target.IsArray ? target.Count : (int?)null) ?? target.V?.Length ?? 0);
             }
             case "begin" or "end" or "rbegin" or "rend" when Eval(c.Args[0]).Map is { } map:
                 return new ShaderValue { Iterator = new MapIterator(map, method.EndsWith("end", StringComparison.Ordinal) && !method.EndsWith("begin", StringComparison.Ordinal) ? map.Count : 0, method.StartsWith('r')) };
@@ -344,7 +368,7 @@ public sealed partial class ShaderRunner
             case "empty" when Lenient && c.Args.Count == 1:
             {
                 var target = Eval(c.Args[0]);
-                return ShaderValue.Scalar((target.Map?.Count ?? target.Items?.Length ?? target.Text?.Length ?? 0) == 0 ? 1 : 0);
+                return ShaderValue.Scalar((target.Map?.Count ?? (target.IsArray ? target.Count : (int?)null) ?? target.Text?.Length ?? 0) == 0 ? 1 : 0);
             }
             case "rdbuf" when Lenient && Eval(c.Args[0]) is { } bufStream && IsStream(bufStream):
                 return bufStream;
@@ -394,7 +418,7 @@ public sealed partial class ShaderRunner
             case "GetDimensions" when c.Args.Count >= 3:
             {
                 // HLSL Texture2D::GetDimensions(out width, out height): the texture's size in texels.
-                var size = TextureSize?.Invoke(PathOf(c.Args[0])) ?? (1, 1);
+                var size = (IsRwTexture(c.Args[0]) ? ImageSize?.Invoke(PathOf(c.Args[0])) : null) ?? TextureSize?.Invoke(PathOf(c.Args[0])) ?? (1, 1);
                 Store(c.Args[1], ShaderValue.Scalar(size.Width));
                 Store(c.Args[2], ShaderValue.Scalar(size.Height));
                 return ShaderValue.Scalar(0);
