@@ -327,8 +327,6 @@ private:
         vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
         vkDestroyFence(device, inFlightFence, nullptr);
 
-
-
         vkDestroyBuffer(device, vertexBuffer, nullptr);
         vkFreeMemory(device, vertexBufferMemory, nullptr);
 
@@ -914,9 +912,8 @@ private:
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
-
-    // learnopengl's terrain on the GPU: the height map as a texture the tessellation evaluation shader reads the heights
-    // from, and (from the next task on) the patches over its area.
+    // learnopengl's terrain on the GPU: the height map as a texture (the tessellation evaluation shader reads the heights
+    // from it), and the patches over its area.
     void loadHeightMap(const char* path) {
         int width, height, nrChannels;
         unsigned char* data = stbi_load(path, &width, &height, &nrChannels, STBI_grey); // one channel: the grey value
@@ -1043,7 +1040,6 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
-
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) {
         VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
@@ -1091,7 +1087,6 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
-
     void createVertexBuffer() {
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
@@ -1113,8 +1108,6 @@ private:
         vkDestroyBuffer(device, stagingBuffer, nullptr);
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
-
-
 
     void createUniformBuffers() {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);

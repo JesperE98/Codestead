@@ -1,0 +1,9 @@
+#version 430 core
+
+// TODO: the size of a work group (local_size_x / y / z), the image to write (an image2D on image unit 0), and main:
+// one invocation per texel, writing its colour with imageStore
+layout (local_size_x = 1) in;
+
+void main()
+{
+}

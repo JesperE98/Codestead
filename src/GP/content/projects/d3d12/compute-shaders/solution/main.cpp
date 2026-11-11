@@ -16,6 +16,7 @@
 #include <cstdio>
 #include <cstring>
 #include <stdexcept>
+#include <vector>
 
 // The libraries to link: d3d12.lib, dxgi.lib and d3dcompiler.lib (Visual Studio reads these lines).
 #if defined(_MSC_VER)
@@ -222,9 +223,9 @@ void D3D12App::LoadPipeline()
         rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
 
-        // Describe and create a heap for the texture's two views: slot 0 the unordered
-        // access view (UAV: the compute shader writes through it), slot 1 the shader
-        // resource view (SRV: the quad's pixel shader reads through it). Shader visible.
+        // Describe and create a heap for the texture's views: slot 0 the shader resource
+        // view (SRV: the quad's pixel shader reads through it), slot 1 the unordered access
+        // view (UAV: the compute shader writes through it). Shader visible.
         D3D12_DESCRIPTOR_HEAP_DESC srvUavHeapDesc = {};
         srvUavHeapDesc.NumDescriptors = 2;
         srvUavHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -290,33 +291,10 @@ void D3D12App::LoadAssets()
         ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
     }
 
-    // Create the compute root signature: what the compute shader reads and writes. A
-    // compute shader has no vertices, so no input assembler flag.
-    {
-        // Root parameter 0: one 32-bit root constant at register b0 (the time).
-        // Root parameter 1: a descriptor table with one UAV at register u0 (the texture
-        // the compute shader writes: learnopengl's image unit 0).
-        CD3DX12_DESCRIPTOR_RANGE ranges[1];
-        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
-
-        CD3DX12_ROOT_PARAMETER rootParameters[2];
-        rootParameters[0].InitAsConstants(sizeof(TimeConstants) / 4, 0);
-        rootParameters[1].InitAsDescriptorTable(1, &ranges[0]);
-
-        CD3DX12_ROOT_SIGNATURE_DESC computeRootSignatureDesc;
-        computeRootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr);
-
-        ComPtr<ID3DBlob> signature;
-        ComPtr<ID3DBlob> error;
-        ThrowIfFailed(D3D12SerializeRootSignature(&computeRootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
-        ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_computeRootSignature)));
-    }
-
-    // Create the pipeline states, which includes compiling and loading shaders.
+    // Create the pipeline state, which includes compiling and loading shaders.
     {
         ComPtr<ID3DBlob> vertexShader;
         ComPtr<ID3DBlob> pixelShader;
-        ComPtr<ID3DBlob> computeShader;
 
 #if defined(_DEBUG)
         // Enable better shader debugging with the graphics debugging tools.
@@ -325,9 +303,9 @@ void D3D12App::LoadAssets()
         UINT compileFlags = 0;
 #endif
 
-        // The screen quad: the vertex shader (VSMain) and the pixel shader (PSMain) in screen_quad.hlsl.
-        ThrowIfFailed(D3DCompileFromFile(L"screen_quad.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
-        ThrowIfFailed(D3DCompileFromFile(L"screen_quad.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+        // The screen quad: the vertex shader (VSMain) and the pixel shader (PSMain) in screenQuad.hlsl.
+        ThrowIfFailed(D3DCompileFromFile(L"screenQuad.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"screenQuad.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
 
         // Define the vertex input layout: a position and texture coordinates.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -354,10 +332,43 @@ void D3D12App::LoadAssets()
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
         psoDesc.SampleDesc.Count = 1;
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+    }
 
-        // The compute shader (CSMain) in compute_shader.hlsl, compiled for shader model 5.0's
-        // compute stage (cs_5_0).
-        ThrowIfFailed(D3DCompileFromFile(L"compute_shader.hlsl", nullptr, nullptr, "CSMain", "cs_5_0", compileFlags, 0, &computeShader, nullptr));
+    // Create the compute root signature: what the compute shader reads and writes. A
+    // compute shader has no vertices, so no input assembler flag.
+    {
+        // Root parameter 0: a descriptor table with one UAV at register u0 (the texture the
+        // compute shader writes: OpenGL's image unit 0).
+        // Root parameter 1: one 32-bit root constant at register b0 (the time).
+        CD3DX12_DESCRIPTOR_RANGE ranges[1];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+
+        CD3DX12_ROOT_PARAMETER rootParameters[2];
+        rootParameters[0].InitAsDescriptorTable(1, &ranges[0]);
+        rootParameters[1].InitAsConstants(sizeof(TimeConstants) / 4, 0);
+
+        CD3DX12_ROOT_SIGNATURE_DESC computeRootSignatureDesc;
+        computeRootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr);
+
+        ComPtr<ID3DBlob> signature;
+        ComPtr<ID3DBlob> error;
+        ThrowIfFailed(D3D12SerializeRootSignature(&computeRootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
+        ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_computeRootSignature)));
+    }
+
+    // Create the compute pipeline state: the compute shader (CSMain) in computeShader.hlsl,
+    // compiled for shader model 5.0's compute stage (cs_5_0).
+    {
+        ComPtr<ID3DBlob> computeShader;
+
+#if defined(_DEBUG)
+        // Enable better shader debugging with the graphics debugging tools.
+        UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#else
+        UINT compileFlags = 0;
+#endif
+
+        ThrowIfFailed(D3DCompileFromFile(L"computeShader.hlsl", nullptr, nullptr, "CSMain", "cs_5_0", compileFlags, 0, &computeShader, nullptr));
 
         // Describe and create the compute pipeline state object: only the root signature
         // and the compute shader - no input layout, rasterizer or render targets.
@@ -370,9 +381,8 @@ void D3D12App::LoadAssets()
     // Create the command list.
     ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)));
 
-    // Command lists are created in the recording state, but there is nothing
-    // to record yet. The main loop expects it to be closed, so close it now.
-    ThrowIfFailed(m_commandList->Close());
+    // Command lists are created in the recording state. This one stays open until the
+    // end of LoadAssets, where it is closed and executed once.
 
     // Create the vertex buffer.
     {
@@ -417,13 +427,13 @@ void D3D12App::LoadAssets()
         m_vertexBufferView.SizeInBytes = vertexBufferSize;
     }
 
-    // Create texture for the compute shader to write
-    // ----------------------------------------------
+    // Create the texture the compute shader writes and the quad shows
+    // ---------------------------------------------------------------
     {
-        // TEXTURE_WIDTH x TEXTURE_HEIGHT pixels of four 32-bit floats (learnopengl's
-        // GL_RGBA32F), in a default heap. ALLOW_UNORDERED_ACCESS lets shaders write it
-        // through a UAV. No pixels to upload: the compute shader fills it every frame. It
-        // starts in the UNORDERED_ACCESS state, ready for the compute shader.
+        // TEXTURE_WIDTH x TEXTURE_HEIGHT texels of four 32-bit floats (OpenGL's GL_RGBA32F), in a
+        // default heap. ALLOW_UNORDERED_ACCESS: shaders may also write it, through a UAV.
+        // No data: the compute shader fills it every frame. It starts in the
+        // UNORDERED_ACCESS state, ready for the compute shader.
         CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
         CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32G32B32A32_FLOAT, TEXTURE_WIDTH, TEXTURE_HEIGHT, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
         ThrowIfFailed(m_device->CreateCommittedResource(
@@ -434,26 +444,30 @@ void D3D12App::LoadAssets()
             nullptr,
             IID_PPV_ARGS(&m_texture)));
 
-        // The unordered access view in slot 0 of the heap: the compute shader's
-        // RWTexture2D at u0 (learnopengl's glBindImageTexture to image unit 0).
-        D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-        uavDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-        uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-        uavDesc.Texture2D.MipSlice = 0;
-        CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle(m_srvUavHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_srvUavDescriptorSize);
-        m_device->CreateUnorderedAccessView(m_texture.Get(), nullptr, &uavDesc, uavHandle);
-
-        // The shader resource view in slot 1: the quad's Texture2D at t0.
+        // The shader resource view in slot 0 of the heap: the quad's Texture2D at t0.
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = 1;
-        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvUavHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_srvUavDescriptorSize);
-        m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, srvHandle);
+        m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, m_srvUavHeap->GetCPUDescriptorHandleForHeapStart());
+
+        // The unordered access view in slot 1: level 0 of the texture, four floats per texel -
+        // the compute shader's RWTexture2D at u0 (OpenGL's glBindImageTexture to image unit 0).
+        D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+        uavDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+        uavDesc.Texture2D.MipSlice = 0;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle(m_srvUavHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_srvUavDescriptorSize);
+        m_device->CreateUnorderedAccessView(m_texture.Get(), nullptr, &uavDesc, uavHandle);
     }
 
-    // Create synchronization objects.
+    // Close the command list and execute it to begin the initial GPU setup.
+    ThrowIfFailed(m_commandList->Close());
+    ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+    m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+    // Create synchronization objects and wait until assets have been uploaded to the GPU.
     {
         ThrowIfFailed(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
         m_fenceValue = 1;
@@ -464,6 +478,11 @@ void D3D12App::LoadAssets()
         {
             ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
         }
+
+        // Wait for the command list to execute; we are reusing the same command
+        // list in our main loop but for now, we just want to wait for setup to
+        // complete before continuing.
+        WaitForPreviousFrame();
     }
 }
 
@@ -506,8 +525,8 @@ void D3D12App::PopulateCommandList()
 
     // However, when ExecuteCommandList() is called on a particular command
     // list, that command list can then be reset at any time and must be before
-    // re-recording. The first pipeline state is the compute one.
-    ThrowIfFailed(m_commandList->Reset(m_commandAllocator.Get(), m_computePipelineState.Get()));
+    // re-recording.
+    ThrowIfFailed(m_commandList->Reset(m_commandAllocator.Get(), m_pipelineState.Get()));
 
     // The heap with the texture's views, for both the compute and the graphics work.
     ID3D12DescriptorHeap* ppHeaps[] = { m_srvUavHeap.Get() };
@@ -518,29 +537,28 @@ void D3D12App::PopulateCommandList()
     auto currentTime = std::chrono::high_resolution_clock::now();
     float currentFrame = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-    // 1. the compute shader writes the texture: the compute root signature, the time
-    // (root parameter 0) and the UAV table (root parameter 1, heap slot 0). The compute
-    // pipeline state is set already (Reset). One thread group is 10 x 10 threads
-    // ([numthreads(10, 10, 1)]): TEXTURE_WIDTH / 10 x TEXTURE_HEIGHT / 10 groups cover
-    // every pixel once.
+    // fill the texture: the compute pipeline state and root signature, what the compute shader
+    // reads (its root parameters), then one thread per texel, in thread groups of 10 x 10
+    // ([numthreads(10, 10, 1)])
+    m_commandList->SetPipelineState(m_computePipelineState.Get());
     m_commandList->SetComputeRootSignature(m_computeRootSignature.Get());
+    m_commandList->SetComputeRootDescriptorTable(0, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_srvUavHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_srvUavDescriptorSize));    // the UAV, heap slot 1
     TimeConstants timeConstants = {};
     timeConstants.t = currentFrame;
-    m_commandList->SetComputeRoot32BitConstants(0, sizeof(TimeConstants) / 4, &timeConstants, 0);
-    m_commandList->SetComputeRootDescriptorTable(1, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_srvUavHeap->GetGPUDescriptorHandleForHeapStart(), 0, m_srvUavDescriptorSize));
+    m_commandList->SetComputeRoot32BitConstants(1, sizeof(TimeConstants) / 4, &timeConstants, 0);
     m_commandList->Dispatch(TEXTURE_WIDTH / 10, TEXTURE_HEIGHT / 10, 1);
 
-    // make sure writing to the texture has finished before it is read: the barrier waits
-    // for the compute shader and turns the texture from an unordered access target into
-    // a shader resource (learnopengl's glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)).
+    // make sure writing to the texture has finished before it is read: the barrier waits for
+    // the compute shader and turns the texture from an unordered access target into a shader
+    // resource (OpenGL's glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT))
     CD3DX12_RESOURCE_BARRIER textureBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     m_commandList->ResourceBarrier(1, &textureBarrier);
 
-    // 2. render image to quad: the graphics pipeline state and root signature, the SRV
-    // table (root parameter 0, heap slot 1).
+    // render image to quad: the graphics pipeline state and root signature, the SRV table
+    // (root parameter 0, heap slot 0)
     m_commandList->SetPipelineState(m_pipelineState.Get());
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-    m_commandList->SetGraphicsRootDescriptorTable(0, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_srvUavHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_srvUavDescriptorSize));
+    m_commandList->SetGraphicsRootDescriptorTable(0, m_srvUavHeap->GetGPUDescriptorHandleForHeapStart());
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 

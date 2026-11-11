@@ -60,8 +60,9 @@ inline UINT CalculateConstantBufferByteSize(UINT byteSize)
     return (byteSize + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
 }
 
-// the area light's colour (learnopengl's Color::BurlyWood)
-const XMFLOAT3 LIGHT_COLOR = XMFLOAT3(0.870588f, 0.721569f, 0.529412f);
+// the floor's material: SlateGray (not used by the shader) and the roughness
+const XMFLOAT3 SLATE_GRAY = XMFLOAT3(0.439216f, 0.501961f, 0.564706f);
+const float ROUGHNESS = 0.5f;
 
 // A vertex of the floor and of the light's rectangle.
 struct VertexAL
@@ -98,11 +99,45 @@ VertexAL areaLightVertices[6] = {
     { {-8.0f, 2.4f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} },
     { {-8.0f, 0.4f,  1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
     { {-8.0f, 0.4f, -1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f} }
-};// The camera: where it is, the direction it looks in, and which way is up. Globals,
+};
+
+// several area lights: each one the rectangle above, turned about the y axis (and moved by an offset)
+struct AreaLight
+{
+    XMFLOAT3 offset;
+    float yRotation;    // in radians
+
+    XMFLOAT3 color;
+    float intensity = 2.0f;
+    bool twoSided = true;
+};
+
+// eight lights on a ring of radius 8 around the middle of the floor, every one turned to face the middle
+const int NUM_AREA_LIGHTS = 8;
+AreaLight areaLights[NUM_AREA_LIGHTS] = {
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians(  0.0f), XMFLOAT3(1.0f, 0.55f, 0.25f) },
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians( 45.0f), XMFLOAT3(1.0f, 0.85f, 0.3f) },
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians( 90.0f), XMFLOAT3(0.55f, 1.0f, 0.35f) },
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians(135.0f), XMFLOAT3(0.3f, 1.0f, 0.75f) },
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians(180.0f), XMFLOAT3(0.3f, 0.75f, 1.0f) },
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians(225.0f), XMFLOAT3(0.4f, 0.45f, 1.0f) },
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians(270.0f), XMFLOAT3(0.8f, 0.4f, 1.0f) },
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians(315.0f), XMFLOAT3(1.0f, 0.4f, 0.65f) }
+};
+
+// The two LTC lookup tables as textures (learnopengl's struct of two texture ids).
+struct LTC_matrices
+{
+    ComPtr<ID3D12Resource> mat1;    // LTC1: the inverse matrices M^-1
+    ComPtr<ID3D12Resource> mat2;    // LTC2: GGX norm, fresnel, 0 (unused), sphere
+};
+
+
+// The camera: where it is, the direction it looks in, and which way is up. Globals,
 // so that OnUpdate and the window's message handler can both use them.
-// camera: above the floor, looking along -x at the light (yaw 180, pitch 0)
-XMVECTOR cameraPos   = XMVectorSet(0.0f, 1.0f, 0.5f, 0.0f);
-XMVECTOR cameraFront = XMVectorSet(-1.0f, 0.0f, 0.0f, 0.0f);
+// camera: high above the floor behind the lights, looking down at them (yaw 89.4, pitch -34.3)
+XMVECTOR cameraPos   = XMVectorSet(-0.224556f, 10.4038f, -18.9259f, 0.0f);
+XMVECTOR cameraFront = XMVectorSet(0.00865f, -0.56356f, 0.82605f, 0.0f);
 XMVECTOR cameraUp    = XMVectorSet(0.0f, 1.0f,  0.0f, 0.0f);
 
 // Which keys are held down, by virtual-key code ('W', VK_UP ...). WindowProc keeps it up to date.
@@ -110,8 +145,8 @@ bool keys[256] = {};
 
 // Mouse look: the camera's direction as two angles, in degrees.
 bool firstMouse = true;
-float yaw   = 180.0f;
-float pitch = 0.0f;
+float yaw   = 89.3999f;
+float pitch = -34.3001f;
 float lastX =  800.0f / 2.0f;
 float lastY =  600.0f / 2.0f;
 
@@ -139,7 +174,7 @@ private:
         XMFLOAT4 lightColor;
     };
 
-    // The area light as the floor's shader sees it (learnopengl's struct Light). HLSL packing:
+    // An area light as the floor's shader sees it (learnopengl's struct Light). HLSL packing:
     // intensity and color share one 16-byte row; every element of an array starts a new row, so
     // the four corners are float4s (w unused); twoSided is a 4-byte bool in the shader (BOOL).
     struct Light
@@ -164,9 +199,9 @@ private:
         XMFLOAT4X4 view;
         XMFLOAT4X4 projection;
         XMFLOAT3 viewPosition;
-        float padding;
+        int numAreaLights;    // packs into viewPosition's 16-byte row
         Material material;
-        Light areaLight;
+        Light areaLights[32];
     };
 
     UINT m_width;
@@ -196,8 +231,7 @@ private:
     D3D12_VERTEX_BUFFER_VIEW m_planeVertexBufferView = {};
     ComPtr<ID3D12Resource> m_areaLightVertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_areaLightVertexBufferView = {};
-    ComPtr<ID3D12Resource> m_ltcMat1;          // LTC1: the inverse matrices M^-1
-    ComPtr<ID3D12Resource> m_ltcMat2;          // LTC2: GGX norm, fresnel, 0 (unused), sphere
+    LTC_matrices m_LTC;                        // the LUT textures
     ComPtr<ID3D12Resource> m_woodTexture;      // the floor's diffuse map
     ComPtr<ID3D12Resource> m_constantBuffer;
     ComPtr<ID3D12Resource> m_depthStencil;
@@ -463,13 +497,13 @@ void D3D12App::LoadAssets()
     // the command list that copies from it has finished executing on the GPU.
     // We will flush the GPU at the end of this method to ensure it is not
     // prematurely destroyed.
+    ComPtr<ID3D12Resource> woodTextureUploadHeap;
     ComPtr<ID3D12Resource> ltcMat1UploadHeap;
     ComPtr<ID3D12Resource> ltcMat2UploadHeap;
-    ComPtr<ID3D12Resource> woodTextureUploadHeap;
 
     // LUT textures: the two LTC tables (CBV/SRV heap slots 1 and 2: t0 and t1)
-    LoadLTCTexture(LTC1, m_ltcMat1, ltcMat1UploadHeap, 1);
-    LoadLTCTexture(LTC2, m_ltcMat2, ltcMat2UploadHeap, 2);
+    LoadLTCTexture(LTC1, m_LTC.mat1, ltcMat1UploadHeap, 1);
+    LoadLTCTexture(LTC2, m_LTC.mat2, ltcMat2UploadHeap, 2);
 
     // TEXTURES: the floor's wood, an sRGB colour image (slot 3: t2)
     LoadTexture("wood.png", true, m_woodTexture, woodTextureUploadHeap, 3);
@@ -707,18 +741,24 @@ void D3D12App::OnUpdate()
     XMStoreFloat3(&constantBufferData.viewPosition, cameraPos);
 
     // SHADER CONFIGURATION (learnopengl sets these uniforms once; the whole constant buffer is
-    // written every frame here): the floor's material - SlateGray (not used by the shader)
-    // and the roughness 0.5 -
-    constantBufferData.material.albedoRoughness = XMFLOAT4(0.439216f, 0.501961f, 0.564706f, 0.5f);
-    // and the area light: its corners (vertices 0, 1, 4 and 5 of its rectangle), colour,
-    // intensity and sides.
-    constantBufferData.areaLight.points[0] = XMFLOAT4(areaLightVertices[0].position.x, areaLightVertices[0].position.y, areaLightVertices[0].position.z, 1.0f);
-    constantBufferData.areaLight.points[1] = XMFLOAT4(areaLightVertices[1].position.x, areaLightVertices[1].position.y, areaLightVertices[1].position.z, 1.0f);
-    constantBufferData.areaLight.points[2] = XMFLOAT4(areaLightVertices[4].position.x, areaLightVertices[4].position.y, areaLightVertices[4].position.z, 1.0f);
-    constantBufferData.areaLight.points[3] = XMFLOAT4(areaLightVertices[5].position.x, areaLightVertices[5].position.y, areaLightVertices[5].position.z, 1.0f);
-    constantBufferData.areaLight.color = LIGHT_COLOR;
-    constantBufferData.areaLight.intensity = 4.0f;
-    constantBufferData.areaLight.twoSided = TRUE;
+    // written every frame here): the floor's material: its colour (not used) and roughness,
+    constantBufferData.material.albedoRoughness = XMFLOAT4(SLATE_GRAY.x, SLATE_GRAY.y, SLATE_GRAY.z, ROUGHNESS);
+    // and the area lights: for each one its four corners in world space (vertices 0, 1, 4 and 5 of
+    // the rectangle, moved by the light's model matrix: turned about y, then moved by its offset
+    // - learnopengl's translate * rotate), its colour, intensity and sides
+    for (int i = 0; i < NUM_AREA_LIGHTS; i++)
+    {
+        XMMATRIX model = XMMatrixRotationY(areaLights[i].yRotation) * XMMatrixTranslation(areaLights[i].offset.x, areaLights[i].offset.y, areaLights[i].offset.z);
+
+        XMStoreFloat4(&constantBufferData.areaLights[i].points[0], XMVector3Transform(XMLoadFloat3(&areaLightVertices[0].position), model));
+        XMStoreFloat4(&constantBufferData.areaLights[i].points[1], XMVector3Transform(XMLoadFloat3(&areaLightVertices[1].position), model));
+        XMStoreFloat4(&constantBufferData.areaLights[i].points[2], XMVector3Transform(XMLoadFloat3(&areaLightVertices[4].position), model));
+        XMStoreFloat4(&constantBufferData.areaLights[i].points[3], XMVector3Transform(XMLoadFloat3(&areaLightVertices[5].position), model));
+        constantBufferData.areaLights[i].color = areaLights[i].color;
+        constantBufferData.areaLights[i].intensity = areaLights[i].intensity;
+        constantBufferData.areaLights[i].twoSided = areaLights[i].twoSided;
+    }
+    constantBufferData.numAreaLights = NUM_AREA_LIGHTS;
     // The GPU has finished the previous frame (OnRender waits for it), so it is not reading
     // the buffer.
     memcpy(m_pCbvDataBegin, &constantBufferData, sizeof(constantBufferData));
@@ -798,12 +838,17 @@ void D3D12App::PopulateCommandList()
     m_commandList->IASetVertexBuffers(0, 1, &m_planeVertexBufferView);
     m_commandList->DrawInstanced(6, 1, 0, 0);
 
-    // the light's rectangle, in the light's colour
+    // the lights' rectangles, each in its colour: its model matrix (as for its corners above)
     m_commandList->SetPipelineState(m_lightPlanePipelineState.Get());
-    objectConstants.lightColor = XMFLOAT4(LIGHT_COLOR.x, LIGHT_COLOR.y, LIGHT_COLOR.z, 1.0f);
-    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ObjectConstants) / 4, &objectConstants, 0);
     m_commandList->IASetVertexBuffers(0, 1, &m_areaLightVertexBufferView);
-    m_commandList->DrawInstanced(6, 1, 0, 0);
+    for (int i = 0; i < NUM_AREA_LIGHTS; i++)
+    {
+        model = XMMatrixRotationY(areaLights[i].yRotation) * XMMatrixTranslation(areaLights[i].offset.x, areaLights[i].offset.y, areaLights[i].offset.z);
+        XMStoreFloat4x4(&objectConstants.model, XMMatrixTranspose(model));
+        objectConstants.lightColor = XMFLOAT4(areaLights[i].color.x, areaLights[i].color.y, areaLights[i].color.z, 1.0f);
+        m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ObjectConstants) / 4, &objectConstants, 0);
+        m_commandList->DrawInstanced(6, 1, 0, 0);
+    }
     // Indicate that the back buffer will now be used to present.
     barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
     m_commandList->ResourceBarrier(1, &barrier);

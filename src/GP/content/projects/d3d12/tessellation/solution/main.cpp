@@ -1,6 +1,6 @@
 // A Direct3D 12 program in one file, modelled on Microsoft's D3D12HelloWorld samples
 // (D3D12HelloWindow, D3D12HelloTriangle, D3D12HelloConstBuffers) and the depth buffer of
-// the D3D12Bundles sample. learnopengl's terrain from a height map, tessellated on the GPU.
+// the D3D12Bundles sample. learnopengl's terrain from a height map (Guest Articles, Tessellation).
 
 #include <windows.h>
 #include <windowsx.h>

@@ -203,7 +203,7 @@ private:
         createComputePipeline("shaders/compute_shader.comp.spv");
         createFramebuffers();
         createCommandPool();
-        createStorageImage();
+        createTexture();
         createTextureSampler();
         createVertexBuffer();
         createDescriptorPool();
@@ -764,15 +764,17 @@ private:
         }
     }
 
-    // learnopengl's texture: 800 x 600 texels of four 32-bit floats (GL_RGBA32F) with no data yet. The compute shader writes it
-    // (STORAGE: imageStore) and the fragment shader samples it (SAMPLED). Both work in the GENERAL layout, so the
-    // image is moved to GENERAL once here and stays there.
-    void createStorageImage() {
+    // learnopengl's texture: TEXTURE_WIDTH x TEXTURE_HEIGHT texels of four 32-bit floats (GL_RGBA32F), without data:
+    // the compute shader writes it (STORAGE: imageStore) and the fragment shader samples it (SAMPLED). Both work in the
+    // GENERAL layout, so the image is moved to GENERAL once here and stays there.
+    void createTexture() {
         VkFormatProperties formatProperties;
         vkGetPhysicalDeviceFormatProperties(physicalDevice, VK_FORMAT_R32G32B32A32_SFLOAT, &formatProperties);
-        if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT) ||
-            !(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
-            throw std::runtime_error("the texture format does not support storage and linear filtering!");
+        if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
+            throw std::runtime_error("32-bit float textures cannot be filtered linearly on this GPU!");
+        }
+        if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT)) {
+            throw std::runtime_error("32-bit float textures cannot be storage images on this GPU!");
         }
 
         createImage(TEXTURE_WIDTH, TEXTURE_HEIGHT, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);

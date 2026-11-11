@@ -73,10 +73,12 @@ std::vector<Vertex> vertices;
         // TODO: the patches' vertex buffer (createVertexBuffer)
 --- file: main.cpp
 --- find:
+        vkDestroyFence(device, inFlightFence, nullptr);
+
         vkDestroyBuffer(device, indexBuffer, nullptr);
         vkFreeMemory(device, indexBufferMemory, nullptr);
 --- replace:
-
+        vkDestroyFence(device, inFlightFence, nullptr);
 --- file: main.cpp
 --- find:
         vkDestroyDescriptorPool(device, descriptorPool, nullptr);
@@ -277,9 +279,8 @@ std::vector<Vertex> vertices;
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
-
-    // learnopengl's terrain on the GPU: the height map as a texture the tessellation evaluation shader reads the heights
-    // from, and (from the next task on) the patches over its area.
+    // learnopengl's terrain on the GPU: the height map as a texture (the tessellation evaluation shader reads the heights
+    // from it), and the patches over its area.
     void loadHeightMap(const char* path) {
         int width, height, nrChannels;
         unsigned char* data = stbi_load(path, &width, &height, &nrChannels, STBI_grey); // one channel: the grey value
@@ -319,6 +320,9 @@ std::vector<Vertex> vertices;
     }
 --- file: main.cpp
 --- find:
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
+
     void createIndexBuffer() {
         VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
@@ -339,7 +343,8 @@ std::vector<Vertex> vertices;
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 --- replace:
-
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
 --- file: main.cpp
 --- find:
     void createVertexBuffer() {
@@ -366,7 +371,6 @@ std::vector<Vertex> vertices;
 
         endSingleTimeCommands(commandBuffer);
     }
-
 
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) {
         VkCommandBuffer commandBuffer = beginSingleTimeCommands();
@@ -415,7 +419,6 @@ std::vector<Vertex> vertices;
         endSingleTimeCommands(commandBuffer);
     }
 
-
     void createVertexBuffer() {
 --- file: main.cpp
 --- find:
@@ -444,23 +447,6 @@ struct Vertex {
 struct Vertex {
     glm::vec3 pos;
     glm::vec2 texCoord;
---- file: main.cpp
---- find:
-    static std::array<VkVertexInputAttributeDescription, 1> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 1> attributeDescriptions{};
---- replace:
-    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
---- file: main.cpp
---- find:
-        attributeDescriptions[0].offset = offsetof(Vertex, pos);
---- replace:
-        attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-        attributeDescriptions[1].binding = 0;
-        attributeDescriptions[1].location = 1;
-        attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(Vertex, texCoord);
 --- file: main.cpp
 --- find:
 // the terrain's vertices (filled in loadHeightMap)
@@ -560,6 +546,23 @@ void main() {
     // output patch point position in clip space
     gl_Position = ubo.proj * ubo.view * pc.model * p;
 }
+--- file: main.cpp
+--- find:
+    static std::array<VkVertexInputAttributeDescription, 1> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 1> attributeDescriptions{};
+--- replace:
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+--- file: main.cpp
+--- find:
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+--- replace:
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, texCoord);
 --- file: main.cpp
 --- find:
         createPipeline("shaders/cpuheight.vert.spv", "shaders/cpuheight.frag.spv", graphicsPipeline);
