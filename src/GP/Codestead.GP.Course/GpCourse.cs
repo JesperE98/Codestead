@@ -17,6 +17,7 @@ public static class GpCourse
     [
         ("introduction", "start"),
         ("api", "getting-started"),
+        ("ide-setup", "getting-started"),
         ("creating-a-window", "getting-started"),
         ("hello-window", "getting-started"),
         ("hello-triangle", "getting-started"),
