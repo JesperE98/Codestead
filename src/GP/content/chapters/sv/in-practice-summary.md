@@ -1,13 +1,13 @@
 # Sammanfattning: I praktiken
 
-Grattis, du har nått slutet av delen *I praktiken* – och av kursen. Du började med att lära dig hitta fel:
-felkontrollerna, meddelandena från drivrutinen eller lagren, ett värde som skrivs ut som en färg, och verktygen som
+Grattis, du har nått slutet av delen *I praktiken* – och av learnopengls huvudkurs. Du började med att lära dig hitta
+fel: felkontrollerna, meddelandena från drivrutinen eller lagren, ett värde som skrivs ut som en färg, och verktygen som
 fångar en bildruta. Du ritade text med FreeTypes glyfer. Och sedan byggde du ett helt spel, Hedgerow, steg för steg: en
-spelloop med indata, en sprite-renderare med en ortografisk projektion, banor som laddas från textfiler, en racket och en
-boll, kollisionsdetektering och kollisionshantering, ett spår av partiklar, efterbehandlingseffekter genom ett
-multisamplat mål, power-ups, liv, en meny och en vinstskärm. Den här sidan är en ordlista över delens viktigaste begrepp,
-kapitel för kapitel, som de genomgångar learnopengl.com har i slutet av sina delar. Använd den för att slå upp saker, och
-som en kontroll: om en definition överraskar dig, gå tillbaka till kapitlet den kommer från.
+spelloop med indata, en sprite-renderare med en ortografisk projektion, banor som laddas från textfiler, en racket och
+en boll, kollisionsdetektering och kollisionshantering, ett spår av partiklar, efterbehandlingseffekter genom ett
+multisamplat mål, power-ups, liv, en meny och en vinstskärm. Den här sidan är en ordlista över delens viktigaste
+begrepp, kapitel för kapitel, som de genomgångar learnopengl.com har i slutet av sina delar. Använd den för att slå upp
+saker, och som en kontroll: om en definition överraskar dig, gå tillbaka till kapitlet den kommer från.
 
 Det mesta av ett spel är logik som inte har med grafik-API:et att göra – loopen, kollisionerna, power-upsen, liven –, så
 det mesta på den här sidan står utanför rutorna. Det som skiljer är hur {{api}} rapporterar fel och hur det ritar: OpenGL

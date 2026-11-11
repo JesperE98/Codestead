@@ -1,13 +1,13 @@
 # Review: In Practice
 
-Congratulations on reaching the end of the *In Practice* part – and of the course. You started by learning to find
-mistakes: the error checks, the messages of the driver or the layers, a value written out as a colour, and the tools
-that capture a frame. You drew text with FreeType's glyphs. And then you built a whole game, Hedgerow, step by step:
-a game loop with input, a sprite renderer with an orthographic projection, levels loaded from text files, a paddle and
-a ball, collision detection and resolution, a trail of particles, post-processing effects through a multisampled
-target, power-ups, lives, a menu and a win screen. This page is a glossary of the most important terms of the part,
-chapter by chapter, like the reviews learnopengl.com has at the end of its sections. Use it to look things up, and as
-a check: if a definition surprises you, go back to the chapter it comes from.
+Congratulations on reaching the end of the *In Practice* part – and of learnopengl's main course. You started by
+learning to find mistakes: the error checks, the messages of the driver or the layers, a value written out as a colour,
+and the tools that capture a frame. You drew text with FreeType's glyphs. And then you built a whole game, Hedgerow,
+step by step: a game loop with input, a sprite renderer with an orthographic projection, levels loaded from text files,
+a paddle and a ball, collision detection and resolution, a trail of particles, post-processing effects through a
+multisampled target, power-ups, lives, a menu and a win screen. This page is a glossary of the most important terms of
+the part, chapter by chapter, like the reviews learnopengl.com has at the end of its sections. Use it to look things up,
+and as a check: if a definition surprises you, go back to the chapter it comes from.
 
 Most of a game is logic that has nothing to do with the graphics API – the loop, the collisions, the power-ups, the
 lives –, so most of this page is outside the boxes. What differs is how {{api}} reports mistakes and how it draws:

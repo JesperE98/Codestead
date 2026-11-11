@@ -1,12 +1,12 @@
 # OIT: introduktion
 
 Med det här kapitlet börjar en ny del: *Gästartiklar*. Mellan 2020 och 2022 publicerade learnopengl.com en serie
-artiklar av gästskribenter om ämnen utanför huvudkursen – ordningsoberoende transparens, skelettanimation, scengrafer och
-frustum culling, kaskaderade skuggkartor, tessellering, OpenGL:s direct state access, compute shaders, fysikaliskt
-baserad bloom och arealjus. Varje artikel står i stort sett på egna ben och bygger på de delar du redan gått igenom. Som
+artiklar av gästskribenter om ämnen utanför huvudkursen – ordningsoberoende transparens, skelettanimation, scengrafer
+och frustum culling, kaskaderade skuggkartor, tessellering, OpenGL:s direct state access, compute shaders, fysikaliskt
+baserad bloom och ytljus. Varje artikel står i stort sett på egna ben och bygger på de delar du redan gått igenom. Som
 allt tidigare är teknikerna inte knutna till ett visst API: de handlar om hur man organiserar pass, buffrar och shaders,
-och de fungerar likadant i OpenGL, Vulkan och DirectX 12. Varje kapitel visar var {{api}} lägger dem – och där en artikel
-handlar om OpenGL självt (*DSA*) berättar kapitlet vad de explicita API:erna gör i stället.
+och de fungerar likadant i OpenGL, Vulkan och DirectX 12. Varje kapitel visar var {{api}} lägger dem – och där en
+artikel handlar om OpenGL självt (*DSA*) berättar kapitlet vad de explicita API:erna gör i stället.
 
 De två första kapitlen handlar om *ordningsoberoende transparens* (order-independent transparency, förkortat OIT). Det här
 kapitlet förklarar problemet och de olika lösningsfamiljerna; nästa kapitel, *Weighted Blended*, implementerar en av dem.
