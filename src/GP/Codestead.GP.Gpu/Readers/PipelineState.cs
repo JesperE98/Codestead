@@ -19,7 +19,8 @@ internal static class PipelineState
 
     /// <summary>
     /// Vulkan: VkPipelineDepthStencilStateCreateInfo and VkPipelineColorBlendAttachmentState fields.
-    /// <paramref name="attachments"/>: the fields of each element of pAttachments, when it is an array of several.
+    /// <paramref name="attachments"/>: the fields of each element of pAttachments (attachmentCount of them), when the
+    /// program sets them element by element.
     /// </summary>
     public static Fixed Vulkan(Func<string, string?> field, Func<string, int?> number, IReadOnlyList<Func<string, string?>>? attachments = null)
     {
@@ -41,7 +42,7 @@ internal static class PipelineState
                 VkFactor(field("srcAlphaBlendFactor"), BlendFactor.One), VkFactor(field("dstAlphaBlendFactor"), BlendFactor.Zero),
                 VkOp(field("colorBlendOp")), VkOp(field("alphaBlendOp")));
         var perAttachment = attachments is { Count: > 1 } ? Distinct(attachments.Select(Blend).ToList()) : null;
-        return new Fixed(depthFunc, depthWrite, stencil, perAttachment?[0] ?? (attachments is { Count: > 1 } ? Blend(attachments[0]) : Blend(field)), perAttachment);
+        return new Fixed(depthFunc, depthWrite, stencil, attachments is { Count: > 0 } ? Blend(attachments[0]) : Blend(field), perAttachment);
     }
 
     /// <summary>
