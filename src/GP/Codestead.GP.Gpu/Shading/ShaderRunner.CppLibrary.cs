@@ -55,11 +55,106 @@ public sealed partial class ShaderRunner
         [StreamOk] = ShaderValue.Scalar(text is null ? 0 : 1),
     });
 
+    private bool IsFormat(Expr e)
+    {
+        try
+        {
+            return Eval(e).Text is not null;
+        }
+        catch (ShaderRuntimeException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>printf's formatting: %d %i %u %ld %f %.2f %e %g %s %c %x %X %08X %p %% (format, then the arguments).</summary>
+    private string Printf(IReadOnlyList<Expr> args)
+    {
+        var format = Eval(args[0]).Text ?? "";
+        var sb = new System.Text.StringBuilder();
+        int next = 1;
+        ShaderValue Arg() => next < args.Count ? Eval(args[next++]) : ShaderValue.Scalar(0);
+        for (int i = 0; i < format.Length; i++)
+        {
+            if (format[i] != '%' || i + 1 >= format.Length)
+            {
+                sb.Append(format[i]);
+                continue;
+            }
+            var spec = System.Text.RegularExpressions.Regex.Match(format[(i + 1)..], @"^([-+ 0#]*)(\d+|\*)?(?:\.(\d+|\*))?(hh|h|ll|l|L|z|j|t|I64|I32)?([diouxXfFeEgGcspn%])");
+            if (!spec.Success)
+            {
+                sb.Append('%');
+                continue;
+            }
+            i += spec.Length;
+            var flags = spec.Groups[1].Value;
+            int width = spec.Groups[2].Value == "*" ? (int)Arg().X : int.TryParse(spec.Groups[2].Value, out var w) ? w : 0;
+            int? precision = spec.Groups[3].Value == "*" ? (int)Arg().X : int.TryParse(spec.Groups[3].Value, out var p) ? p : null;
+            var kind = spec.Groups[5].Value[0];
+            string text;
+            switch (kind)
+            {
+                case '%':
+                    text = "%";
+                    break;
+                case 'd' or 'i':
+                    text = ((long)Math.Truncate(Arg().X)).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    break;
+                case 'u':
+                    text = ((ulong)(long)Math.Truncate(Arg().X)).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    break;
+                case 'x' or 'X':
+                    text = ((uint)(long)Math.Truncate(Arg().X)).ToString(kind == 'x' ? "x" : "X");
+                    break;
+                case 'o':
+                    text = Convert.ToString((long)Math.Truncate(Arg().X), 8);
+                    break;
+                case 'c':
+                    text = ((char)(int)Arg().X).ToString();
+                    break;
+                case 's':
+                {
+                    var v = Arg();
+                    text = v.Text ?? v.ToString();
+                    if (precision is int max && text.Length > max) text = text[..max];
+                    break;
+                }
+                case 'p':
+                    text = "0x" + ((long)Arg().X).ToString("x");
+                    break;
+                case 'e' or 'E':
+                    text = Arg().X.ToString((kind == 'e' ? "e" : "E") + (precision ?? 6), System.Globalization.CultureInfo.InvariantCulture);
+                    break;
+                case 'g' or 'G':
+                    text = Arg().X.ToString("G" + (precision ?? 6), System.Globalization.CultureInfo.InvariantCulture);
+                    break;
+                default:
+                    text = Arg().X.ToString("F" + (precision ?? 6), System.Globalization.CultureInfo.InvariantCulture);
+                    break;
+            }
+            if (text.Length < width)
+                text = flags.Contains('-') ? text.PadRight(width) : flags.Contains('0') && kind is not ('s' or 'c') ? (text.StartsWith('-') ? "-" + text[1..].PadLeft(width - 1, '0') : text.PadLeft(width, '0')) : text.PadLeft(width);
+            sb.Append(text);
+        }
+        return sb.ToString();
+    }
+
     /// <summary>The C++ library and FreeType calls the runner answers itself, or null.</summary>
     private ShaderValue? CppLibrary(Call c, string name)
     {
         switch (name)
         {
+            case "snprintf" or "_snprintf" or "swprintf" or "_snwprintf" or "sprintf_s" or "swprintf_s" when c.Args.Count >= 3 && IsFormat(c.Args[2]):
+                // snprintf(buffer, size, format, …): the formatted text into the buffer.
+                Store(c.Args[0], ShaderValue.Str(Printf(c.Args.Skip(2).ToList())));
+                return ShaderValue.Scalar(0);
+            case "sprintf" or "sprintf_s" or "swprintf" or "wsprintfA" or "wsprintfW" or "wsprintf" when c.Args.Count >= 2 && IsFormat(c.Args[1]):
+                Store(c.Args[0], ShaderValue.Str(Printf(c.Args.Skip(1).ToList())));
+                return ShaderValue.Scalar(0);
+            case "printf" when c.Args.Count >= 1:
+                ConsoleWrite(ShaderValue.Str(Printf(c.Args.ToList())));
+                return ShaderValue.Scalar(0);
             case "OutputDebugStringA" or "OutputDebugStringW" or "OutputDebugString" when c.Args.Count == 1:
                 // Windows' debugger output (Visual Studio's Output window): the output pane, like std::cout.
                 ConsoleWrite(Eval(c.Args[0]));

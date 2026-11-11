@@ -130,6 +130,8 @@ public sealed class CppExec
 
     private ShaderValue? Resolve(string name)
     {
+        // d3d12.h's numeric limits (the same on every device).
+        if (D3D12Limits.TryGetValue(name, out var limit)) return ShaderValue.Integer(limit);
         switch (name)
         {
             case "swapChainExtent":
@@ -202,8 +204,6 @@ public sealed class CppExec
                 return value;
             }
         }
-        // d3d12.h's numeric limits (the same on every device).
-        if (D3D12Limits.TryGetValue(name, out var limit)) return ShaderValue.Integer(limit);
         // An API constant (DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_SRV_DIMENSION_TEXTURECUBE): its name, so descriptions keep it.
         if (System.Text.RegularExpressions.Regex.IsMatch(name, @"^(?:D3D12|DXGI|D3D|VK|GL)_[A-Z0-9_]+$")) return ShaderValue.Str(name);
         return null;

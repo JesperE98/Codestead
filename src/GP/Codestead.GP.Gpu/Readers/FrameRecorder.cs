@@ -243,6 +243,9 @@ internal sealed class FrameRecorder
                 // The title the program sets while it runs (the frame's counts: "drawn: 37 / 101").
                 if (Value(args[1])?.Text is { } title) scene.WindowTitle = title;
                 return ShaderValue.Scalar(0);
+            // The compute bind point's pipeline and sets are the device model's (a dispatch), not the draws'.
+            case "vkCmdBindPipeline" or "vkCmdBindDescriptorSets" when args.Count >= 3 && (Value(args[1])?.Text ?? "").Contains("COMPUTE", StringComparison.Ordinal):
+                return fromDevice ?? ShaderValue.Scalar(0);
             case "vkCmdBindPipeline" when args.Count >= 3:
                 pipeline = PipelineName(args[2]);
                 return ShaderValue.Scalar(0);

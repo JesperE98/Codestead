@@ -194,6 +194,7 @@ internal sealed partial class D3D12Device : IDeviceModel
         if (Debug && name is not "ThrowIfFailed") Console.Error.WriteLine($"[d3d12] {name}({string.Join(", ", args.Select(a => { var v = Eval(a); return v is null ? "?" : v.ToString(); }))})");
         if (DebugLayerCall(name, args) is { } answered) return answered;
         if (PipelineCall(name, args) is { } made) return made;
+        if (ComputeCall(name, args) is { } computed) return computed;
         switch (name)
         {
             case "ThrowIfFailed" when args.Count >= 1:
