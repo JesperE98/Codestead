@@ -4,24 +4,38 @@
     "date": "2026-11-11",
     "changes": {
       "en": [
+        "**Code in your own IDE**: the built-in editor and preview are gone. You write, build and run each chapter in Visual Studio, CLion, Rider or VS Code, and the new **Your project** panel watches your project folder: once you have built and run your program, the course checks your code and ticks the tasks it solves. The panel copies a chapter's start files into your folder and shows the expected result of each task.",
+        "New chapter **Setting up your IDE**: choosing an IDE, the compiler and CMake, and what to install for OpenGL, Vulkan and DirectX 12, with links.",
         "New part: **Guest Articles**, learnopengl's articles by guest authors in twelve chapters – order-independent transparency, skeletal animation with an animated tentacle, scene graphs and frustum culling, cascaded shadow maps, terrain from a height map on the CPU and with tessellation, OpenGL's direct state access, physically based bloom, compute shaders and area lights – ending with a review and an exam."
       ],
       "sv": [
+        "**Koda i din egen IDE**: den inbyggda editorn och förhandsbilden är borta. Du skriver, bygger och kör varje kapitel i Visual Studio, CLion, Rider eller VS Code, och den nya panelen **Ditt projekt** bevakar din projektmapp: när du har byggt och kört programmet kontrollerar kursen din kod och bockar av de uppgifter den löser. Panelen kopierar kapitlets startfiler till din mapp och visar det förväntade resultatet för varje uppgift.",
+        "Nytt kapitel **Sätt upp din IDE**: att välja IDE, kompilatorn och CMake, och vad du installerar för OpenGL, Vulkan och DirectX 12, med länkar.",
         "Ny del: **Gästartiklar**, learnopengls artiklar av gästskribenter i tolv kapitel – ordningsoberoende transparens, skelettanimation med en animerad tentakel, scengrafer och frustum culling, kaskaderade skuggkartor, terräng från en höjdkarta på CPU:n och med tessellering, OpenGL:s direct state access, fysikaliskt baserad bloom, compute shaders och ytljus – som avslutas med en sammanfattning och ett prov."
       ],
       "es": [
+        "**Programa en tu propio IDE**: el editor integrado y la vista previa desaparecen. Escribes, compilas y ejecutas cada capítulo en Visual Studio, CLion, Rider o VS Code, y el nuevo panel **Tu proyecto** vigila la carpeta de tu proyecto: cuando has compilado y ejecutado tu programa, el curso comprueba tu código y marca las tareas que resuelve. El panel copia los archivos iniciales de un capítulo en tu carpeta y muestra el resultado esperado de cada tarea.",
+        "Nuevo capítulo **Configura tu IDE**: elegir un IDE, el compilador y CMake, y qué instalar para OpenGL, Vulkan y DirectX 12, con enlaces.",
         "Nueva parte: **Artículos invitados**, los artículos de autores invitados de learnopengl en doce capítulos: transparencia independiente del orden, animación esquelética con un tentáculo animado, grafos de escena y frustum culling, mapas de sombras en cascada, terreno a partir de un mapa de alturas en la CPU y con teselación, el acceso directo al estado (DSA) de OpenGL, bloom basado en la física, compute shaders y luces de área; termina con un repaso y un examen."
       ],
       "de": [
+        "**Programmiere in deiner eigenen IDE**: Der eingebaute Editor und die Vorschau sind weg. Du schreibst, baust und startest jedes Kapitel in Visual Studio, CLion, Rider oder VS Code, und das neue Feld **Dein Projekt** beobachtet deinen Projektordner: Sobald du dein Programm gebaut und gestartet hast, prüft der Kurs deinen Code und hakt die Aufgaben ab, die er löst. Das Feld kopiert die Startdateien eines Kapitels in deinen Ordner und zeigt das erwartete Ergebnis jeder Aufgabe.",
+        "Neues Kapitel **Deine IDE einrichten**: die Wahl der IDE, Compiler und CMake, und was du für OpenGL, Vulkan und DirectX 12 installierst, mit Links.",
         "Neuer Teil: **Gastartikel**, die Artikel der Gastautoren von learnopengl in zwölf Kapiteln – reihenfolgeunabhängige Transparenz, Skelettanimation mit einem animierten Tentakel, Szenengraphen und Frustum Culling, kaskadierte Shadow Maps, Gelände aus einer Höhenkarte auf der CPU und mit Tessellation, Direct State Access in OpenGL, physikalisch basiertes Bloom, Compute Shader und Flächenlichter – mit einer Zusammenfassung und einer Prüfung am Ende."
       ],
       "fr": [
+        "**Codez dans votre propre IDE** : l'éditeur intégré et l'aperçu disparaissent. Vous écrivez, compilez et lancez chaque chapitre dans Visual Studio, CLion, Rider ou VS Code, et le nouveau panneau **Votre projet** surveille votre dossier de projet : une fois votre programme compilé et lancé, le cours vérifie votre code et coche les tâches qu'il résout. Le panneau copie les fichiers de départ d'un chapitre dans votre dossier et montre le résultat attendu de chaque tâche.",
+        "Nouveau chapitre **Configurer votre IDE** : choisir un IDE, le compilateur et CMake, et ce qu'il faut installer pour OpenGL, Vulkan et DirectX 12, avec des liens.",
         "Nouvelle partie : **Articles invités**, les articles des auteurs invités de learnopengl en douze chapitres – transparence indépendante de l'ordre, animation squelettique avec un tentacule animé, graphes de scène et frustum culling, shadow maps en cascade, terrain à partir d'une carte de hauteurs sur le CPU puis avec la tessellation, le direct state access d'OpenGL, bloom physiquement réaliste, compute shaders et lumières surfaciques – qui se termine par une révision et un examen."
       ],
       "zh": [
+        "**在你自己的 IDE 中编写代码**：内置编辑器和预览已移除。你在 Visual Studio、CLion、Rider 或 VS Code 中编写、构建并运行每一章，新的 **你的项目** 面板会监视你的项目文件夹：当你构建并运行程序后，课程会检查你的代码，并勾选它完成的任务。该面板可将章节的起始文件复制到你的文件夹，并显示每个任务的预期结果。",
+        "新章节 **设置你的 IDE**：如何选择 IDE、编译器和 CMake，以及为 OpenGL、Vulkan 和 DirectX 12 需要安装什么，附带链接。",
         "新部分：**客座文章**，learnopengl 客座作者的文章，共十二章——顺序无关透明、带动画触手的骨骼动画、场景图与视锥体剔除、级联阴影贴图、在 CPU 上和用曲面细分由高度图生成地形、OpenGL 的直接状态访问（DSA）、基于物理的泛光、计算着色器和面光源——最后是复习和考试。"
       ],
       "ja": [
+        "**自分の IDE でコードを書く**：内蔵のエディターとプレビューはなくなりました。各章を Visual Studio、CLion、Rider、VS Code で書き、ビルドして実行します。新しい **あなたのプロジェクト** パネルがプロジェクトフォルダーを見守り、プログラムをビルドして実行すると、コースがコードを確認して解けたタスクにチェックを付けます。パネルは章の開始ファイルをフォルダーにコピーし、各タスクの期待される結果を表示します。",
+        "新しい章 **IDE のセットアップ**：IDE の選び方、コンパイラーと CMake、OpenGL・Vulkan・DirectX 12 のために何をインストールするかを、リンク付きで説明します。",
         "新しいパート：**ゲスト記事**。learnopengl のゲスト著者による記事を 12 章で — 順序に依存しない透明度、アニメーションする触手によるスケルタルアニメーション、シーングラフと視錐台カリング、カスケードシャドウマップ、CPU とテッセレーションによるハイトマップからの地形、OpenGL のダイレクトステートアクセス（DSA）、物理ベースのブルーム、コンピュートシェーダー、エリアライト — 最後に復習と試験があります。"
       ]
     }
