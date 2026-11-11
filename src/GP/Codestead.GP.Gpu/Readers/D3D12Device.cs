@@ -619,9 +619,17 @@ internal sealed partial class D3D12Device : IDeviceModel
     }
 
     /// <summary>The texture a shader register reads through a descriptor table: a loaded image, a cube map or a render target.</summary>
-    public (Texture? Texture, CubeTexture? Cube) TextureAt(long handle, SamplerState sampler)
+    /// <param name="layer">The slice a Texture2DArray read names (its third coordinate): slice k of a render target is
+    /// "res:N@k".</param>
+    public (Texture? Texture, CubeTexture? Cube) TextureAt(long handle, SamplerState sampler, int layer = 0)
     {
         if (!Srvs.TryGetValue(handle, out var srv) || ResourceAt(srv.Resource) is not { } res) return (null, null);
+        if (layer > 0 && !srv.Cube && res.Images.Count == 0 && !res.Buffer && !res.Window)
+        {
+            var slice = res.TargetId + "@" + Math.Min(layer, res.ArraySize - 1);
+            bool sliceDepth = res.Depth;
+            return (new Texture(() => Raster.Rasterizer.TargetImage(slice, 0, sliceDepth), sampler) { Components = 4 }, null);
+        }
         // An invalid view (the debug layer's message #31): the shader reads 0.
         if (invalidSrvs.Contains(handle)) return (new Texture(new Image(1, 1, 4, new byte[4]), sampler) { Components = 4 }, null);
         if (srv.Cube && res.Images.All(i => i is null) && !res.Buffer && !res.Window)

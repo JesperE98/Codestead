@@ -465,7 +465,11 @@ public sealed partial class D3D12Reader
             var parts = id.Split('|');
             if (!flat.ContainsKey(id))
             {
-                var (t, c) = registers.TryGetValue(parts[0], out var reg) ? device.TextureAt(TableHandle(state, reg) ?? start + reg, sampler(parts.Length > 1 ? parts[1] : null)) : (null, null);
+                // "name@k": slice k of a Texture2DArray.
+                int at = parts[0].IndexOf('@');
+                var name = at < 0 ? parts[0] : parts[0][..at];
+                int layer = at < 0 ? 0 : int.Parse(parts[0][(at + 1)..], System.Globalization.CultureInfo.InvariantCulture);
+                var (t, c) = registers.TryGetValue(name, out var reg) ? device.TextureAt(TableHandle(state, reg) ?? start + reg, sampler(parts.Length > 1 ? parts[1] : null), layer) : (null, null);
                 flat[id] = t;
                 cubes[id] = c;
             }
