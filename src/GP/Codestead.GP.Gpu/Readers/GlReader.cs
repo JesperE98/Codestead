@@ -35,7 +35,10 @@ public sealed partial class GlReader
         // What the program prints (std::cout) is its output; its own code's API queries are answered here.
         env.Runner.Output = scene.Log.Add;
         env.ApiValue = ApiValue;
+        // Bytes read through a pointer into an image stb_image loaded (pixelOffset[0]).
+        env.Runner.PointerRead = (handle, at) => loadedImages.TryGetValue(handle, out var load) && load.Image is { } img ? StbImage.Byte(img, load.Wanted > 0 ? load.Wanted : img.Channels, at) : null;
     }
+
 
     /// <summary>What the program does when its clock reads <paramref name="time"/> seconds.</summary>
     public static Scene.Scene Read(GpuProject project, double time = 1.0) => new GlReader(project, time).Run();
@@ -276,6 +279,13 @@ public sealed partial class GlReader
             return;
         }
         if (header.Length != 3) return;
+        // A loop of the program's own C++ only (a height map's 65,536 vertices from its pixels): run as a whole by the
+        // C++ runner, every iteration, instead of statement by statement.
+        if (loop.End > loop.Offset && src.IsPureLoop(src.Code[loop.Offset..loop.End]))
+        {
+            env.Run(src.Code[loop.Offset..loop.End]);
+            return;
+        }
         env.Run(header[0] + ";");
         for (int n = 0; n < 1000; n++)
         {

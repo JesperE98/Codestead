@@ -185,8 +185,11 @@ public sealed partial class D3D12Reader
                 {
                     if (d.Indexed && ds.IndexBuffer is { } ib)
                         dIndices = Enumerable.Range(0, d.Count).Select(k => (int)(device.ReadIndex(ib.Address, (long)(d.First + k) * ib.Bytes, ib.Bytes) ?? 0)).ToArray();
+                    // Only the vertices the indices reach (a strip of a large grid), the indices counted from the lowest.
+                    int baseVertex = d.Indexed && dIndices is { Length: > 0 } && !dvs.Names.Contains("SV_VertexID") ? dIndices.Min() : 0;
+                    if (baseVertex > 0) for (int k = 0; k < dIndices!.Length; k++) dIndices[k] -= baseVertex;
                     int vertexCount = d.Indexed ? (dIndices is { Length: > 0 } ? dIndices.Max() + 1 : 0) : d.First + d.Count;
-                    (dVertices, perInstance, stepRate) = DeviceVertices(device, ds, ChooseLayout(layouts, dvs, pl?.VsEntry ?? vsEntry), vertexCount, Math.Max(1, d.Instances));
+                    (dVertices, perInstance, stepRate) = DeviceVertices(device, ds, ChooseLayout(layouts, dvs, pl?.VsEntry ?? vsEntry), vertexCount, Math.Max(1, d.Instances), baseVertex);
                 }
                 deviceTextureSizes = null;
                 var (deviceTextures, deviceCubes) = d.State is D3D12Device.DrawState { Tables.Count: > 0 } ts ? DeviceTextures(device, ts, dvs, dps) : (null, null);
@@ -418,14 +421,15 @@ public sealed partial class D3D12Reader
 
     /// <summary>Vertices (and per-instance values) read from the vertex buffers bound at the draw, through the layout.</summary>
     private static (List<Dictionary<string, ShaderValue>>, List<Dictionary<string, ShaderValue>>?, int) DeviceVertices(D3D12Device device, D3D12Device.DrawState state,
-        List<(string Semantic, int Slot, int Offset, int Comps, bool Instance, int Step)> layout, int count, int instances)
+        List<(string Semantic, int Slot, int Offset, int Comps, bool Instance, int Step)> layout, int count, int instances, int baseVertex = 0)
     {
         var vertices = new List<Dictionary<string, ShaderValue>>();
+        var perVertex = layout.Where(e => !e.Instance).ToList();
         for (int i = 0; i < count; i++)
         {
             var dict = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
-            foreach (var e in layout.Where(e => !e.Instance))
-                if (state.VertexBuffers.TryGetValue(e.Slot, out var vb) && device.Read(vb.Address, (long)i * vb.Stride + e.Offset, e.Comps) is { } v)
+            foreach (var e in perVertex)
+                if (state.VertexBuffers.TryGetValue(e.Slot, out var vb) && device.Read(vb.Address, (long)(i + baseVertex) * vb.Stride + e.Offset, e.Comps) is { } v)
                     dict[e.Semantic] = ShaderValue.Vec(v);
             vertices.Add(dict);
         }

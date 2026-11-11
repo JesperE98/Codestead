@@ -33,6 +33,12 @@ public sealed partial class ShaderRunner
     /// <summary>Asked for names the shader does not declare (null: unknown name).</summary>
     public Func<string, ShaderValue?>? Resolve { get; set; }
 
+    /// <summary>
+    /// C++ mode: the byte at an offset into memory a handle names (the pixels stbi_load returned), or null when the
+    /// handle names no bytes – so pointer arithmetic and reads through the pointer (pixelOffset[0]) work.
+    /// </summary>
+    public Func<string, long, double?>? PointerRead { get; set; }
+
     /// <summary>Reads a texture: (texture or sampler name, u, v) → RGBA.</summary>
     public Func<string, double, double, double[]>? Sample { get; set; }
 
@@ -371,6 +377,8 @@ public sealed partial class ShaderRunner
             case Assign a:
             {
                 var value = Eval(a.Value);
+                // C++ copies a container given to another variable (a = b): push_back on one leaves the other as it was.
+                if (Lenient && a.Op == "=" && a.Value is Name or Member or IndexOf && value.IsArray && !value.Shared) value = value.Clone();
                 if (a.Op != "=") value = BinaryOp(a.Op[..1], Eval(a.Target), value, a.Line);
                 Store(a.Target, value);
                 return default;

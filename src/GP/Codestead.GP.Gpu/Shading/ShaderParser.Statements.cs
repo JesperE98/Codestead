@@ -240,6 +240,8 @@ public sealed partial class ShaderParser
         int i = 0;
         while (PeekAt(i).Kind == ShaderTokenKind.Identifier && Qualifiers.Contains(PeekAt(i).Text)) i++;
         if (PeekAt(i).Kind != ShaderTokenKind.Identifier) return false;
+        // C++: "unsigned rez = 20;" – unsigned (signed) alone is the type.
+        if (i > 0 && BareSignedType(i - 1)) return true;
         // type<...> name
         if (PeekAt(i + 1).Is("<"))
         {
@@ -256,6 +258,14 @@ public sealed partial class ShaderParser
         int k = i + 1;
         while (PeekAt(k).Is("::") && PeekAt(k + 1).Kind == ShaderTokenKind.Identifier) k += 2;
         return PeekAt(k).Kind == ShaderTokenKind.Identifier || lenient && PointerDeclarator(k);
+    }
+
+    /// <summary>C++: unsigned / signed at <paramref name="i"/> followed by a name and = ; , [ or ) (unsigned rez = 20;).</summary>
+    private bool BareSignedType(int i)
+    {
+        if (!lenient || !(PeekAt(i).Is("unsigned") || PeekAt(i).Is("signed")) || PeekAt(i + 1).Kind != ShaderTokenKind.Identifier) return false;
+        var after = PeekAt(i + 2);
+        return after.Is("=") || after.Is(";") || after.Is(",") || after.Is("[") || after.Is(")") || after.Kind == ShaderTokenKind.End;
     }
 
     /// <summary>C++: "* name =", "** name;", "&amp; name =" after a type – a pointer or reference declaration.</summary>
@@ -279,8 +289,14 @@ public sealed partial class ShaderParser
         if (LooksLikeDeclaration())
         {
             bool isStatic = false;
-            while (Peek.Kind == ShaderTokenKind.Identifier && Qualifiers.Contains(Peek.Text)) isStatic |= Next().Text == "static";
-            var type = TypeName();
+            string? signedType = null;
+            while (Peek.Kind == ShaderTokenKind.Identifier && Qualifiers.Contains(Peek.Text))
+            {
+                if (BareSignedType(0)) signedType = Peek.Text;
+                isStatic |= Next().Text == "static";
+            }
+            var type = signedType == "unsigned" ? "uint" : signedType is not null ? "int" : TypeName();
+            if (signedType is not null) templateArgs = new();
             // std::array<T, N>: an array of N T.
             Expr? sizeExpr = null;
             if (lenient && type == "array" && templateArgs.Count == 2 && templateArgs[0].Count >= 1)

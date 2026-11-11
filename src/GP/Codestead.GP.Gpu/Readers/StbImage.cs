@@ -20,6 +20,24 @@ public sealed record StbImage(string File, Image? Image, int Offset, string? Var
         return flip ? image.FlippedVertically() : image;
     }
 
+    /// <summary>
+    /// The byte at an offset into the pixels stbi_load returns (read through a pointer: pixelOffset[0]): rows of
+    /// <paramref name="channels"/> tightly packed channels – a grey image's grey, then its alpha.
+    /// </summary>
+    public static double? Byte(Image img, int channels, long at)
+    {
+        if (channels <= 0 || at < 0 || at >= (long)img.Width * img.Height * channels) return at >= 0 ? 0 : null;
+        long pixel = at / channels;
+        int c = (int)(at % channels);
+        // A grey image (one or two channels): the grey, then the alpha.
+        if (channels <= 2 && c == 1) c = 3;
+        return img.Rgba[pixel * 4 + c];
+    }
+
+    /// <summary>The number of channels of an image file (what stbi_load reports in its channels out-parameter).</summary>
+    public static int FileChannels(GpuProject project, string file) =>
+        project.FindAsset(file) is { } bytes && Decode(bytes) is { } image ? image.Channels : 4;
+
     /// <summary>A PNG, or a Radiance .hdr (its floats kept: radiance above 1.0).</summary>
     public static Image? Decode(byte[] bytes) => RadianceHdr.IsHdr(bytes) ? RadianceHdr.Decode(bytes) : Png.Decode(bytes);
 

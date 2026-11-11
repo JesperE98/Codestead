@@ -40,6 +40,14 @@ public sealed partial class GlReader
             indices = data.Skip(skip).Take(count).Select(d => (int)d).ToArray();
             first = 0;
         }
+        // Indexed: only the vertices the indices reach (a strip of a 65,536-vertex terrain reads 512 of them), the
+        // indices counted from the lowest.
+        int baseVertex = 0;
+        if (indices is { Length: > 0 } && !program.Vertex.Names.Contains("gl_VertexID") && indices.Min() is int lowest and > 0)
+        {
+            baseVertex = lowest;
+            for (int i = 0; i < indices.Length; i++) indices[i] -= lowest;
+        }
         int vertexCount = indices is null ? first + count : (indices.Length == 0 ? 0 : indices.Max() + 1);
 
         // The vertex shader's inputs, by location.
@@ -53,7 +61,7 @@ public sealed partial class GlReader
             {
                 if (attr.Divisor > 0 || !attr.Enabled || attr.Buffer is null || !gl.Buffers.TryGetValue(attr.Buffer, out var data) || data is null) continue;
                 int stride = attr.StrideBytes == 0 ? attr.Size : attr.StrideBytes / 4;
-                int start = attr.OffsetBytes / 4 + v * stride;
+                int start = attr.OffsetBytes / 4 + (v + baseVertex) * stride;
                 var comps = new double[attr.Size];
                 for (int k = 0; k < attr.Size; k++)
                 {

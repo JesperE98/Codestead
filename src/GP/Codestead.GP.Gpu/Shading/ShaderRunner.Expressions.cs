@@ -54,6 +54,7 @@ public sealed partial class ShaderRunner
                     return ShaderValue.Scalar(0);
                 }
                 int at = (int)Math.Floor(Eval(ix.At).X);
+                if (Lenient && owner.Text is { } handle && PointerRead?.Invoke(handle, owner.Offset + at) is { } pointed) return ShaderValue.Integer(pointed);
                 if (owner.Items is not null)
                     return at >= 0 && at < owner.Items.Length ? owner.Items[at] : throw new ShaderRuntimeException($"array index {at} is out of range", ix.Line);
                 if (owner.IsMatrix)
@@ -192,6 +193,9 @@ public sealed partial class ShaderRunner
             else if (op is "<=") return av[0] <= bv[0] ? True : False;
             else if (op is ">=") return av[0] >= bv[0] ? True : False;
         }
+        // C++ pointer arithmetic on bytes a handle names (unsigned char* pixelOffset = data + (j + width * i) * 1).
+        if (Lenient && op is "+" or "-" && a.Text is { } handle && b.V is { Length: 1 } && PointerRead?.Invoke(handle, a.Offset) is not null)
+            return new ShaderValue { Text = handle, Offset = a.Offset + (long)(op == "+" ? b.X : -b.X) };
         // C++ strings: "offsets[" + std::to_string(i) + "]".
         if (op == "+" && (a.Text is not null || b.Text is not null) && Lenient)
             return ShaderValue.Str((a.Text ?? a.ToString()) + (b.Text ?? b.ToString()));

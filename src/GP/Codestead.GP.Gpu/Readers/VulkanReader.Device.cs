@@ -100,7 +100,7 @@ public sealed partial class VulkanReader
     private (List<VkAttribute> Attributes, Dictionary<int, int> Strides)? layout;
 
     /// <summary>Vertices (and per-instance values) from the buffers bound at a draw, keyed by location.</summary>
-    private (List<Dictionary<string, ShaderValue>>, List<Dictionary<string, ShaderValue>>?) DeviceVertices(VulkanDevice device, VulkanDevice.DrawState state, int count, int instances)
+    private (List<Dictionary<string, ShaderValue>>, List<Dictionary<string, ShaderValue>>?) DeviceVertices(VulkanDevice device, VulkanDevice.DrawState state, int count, int instances, int baseVertex = 0)
     {
         layout ??= DeviceLayout();
         var (attributes, strides) = layout.Value;
@@ -110,7 +110,7 @@ public sealed partial class VulkanReader
             attributes = pipe.Attributes.Select(a => new VkAttribute(a.Location, a.Binding, a.Offset, a.Comps, pipe.Bindings.TryGetValue(a.Binding, out var b) && b.Instance)).ToList();
             strides = pipe.Bindings.ToDictionary(b => b.Key, b => b.Value.Stride);
         }
-        List<Dictionary<string, ShaderValue>> Read(IEnumerable<VkAttribute> attrs, int n)
+        List<Dictionary<string, ShaderValue>> Read(IEnumerable<VkAttribute> attrs, int n, int first)
         {
             var list = new List<Dictionary<string, ShaderValue>>();
             var a = attrs.ToList();
@@ -118,15 +118,15 @@ public sealed partial class VulkanReader
             {
                 var dict = new Dictionary<string, ShaderValue>(StringComparer.Ordinal);
                 foreach (var at in a)
-                    if (state.VertexBuffers.TryGetValue(at.Binding, out var vb) && device.Read(vb.Buffer, vb.Offset + (long)i * strides.GetValueOrDefault(at.Binding) + at.Offset, at.Comps) is { } v)
+                    if (state.VertexBuffers.TryGetValue(at.Binding, out var vb) && device.Read(vb.Buffer, vb.Offset + (long)(i + first) * strides.GetValueOrDefault(at.Binding) + at.Offset, at.Comps) is { } v)
                         dict[at.Location.ToString()] = ShaderValue.Vec(v);
                 list.Add(dict);
             }
             return list;
         }
-        var vertices = Read(attributes.Where(a => !a.Instance), count);
+        var vertices = Read(attributes.Where(a => !a.Instance), count, baseVertex);
         var perInstance = attributes.Where(a => a.Instance).ToList();
-        return (vertices, perInstance.Count == 0 ? null : Read(perInstance, instances));
+        return (vertices, perInstance.Count == 0 ? null : Read(perInstance, instances, 0));
     }
 
     /// <summary>The textures of a draw: each sampler's binding in the bound descriptor set (set 0).</summary>

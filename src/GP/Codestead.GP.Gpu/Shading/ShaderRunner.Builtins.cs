@@ -261,6 +261,7 @@ public sealed partial class ShaderRunner
             if (n.Id is "float" or "int" or "GLfloat" or "GLint" or "GLuint" or "uint32_t" or "int32_t" or "unsigned" or "UINT" or "DWORD") return 4;
             if (n.Id is "uint16_t" or "UINT16" or "GLushort" or "short" or "unsigned short") return 2;
             if (n.Id is "double" or "uint64_t" or "size_t") return 8;
+            if (n.Id is "uint8_t" or "int8_t" or "char" or "BYTE" or "UINT8" or "stbi_uc" or "GLubyte" or "bool") return 1;
             int comps = ComponentCount(n.Id);
             if (comps > 0) return 4 * comps;
             int m = MatrixSize(n.Id);
@@ -386,7 +387,8 @@ public sealed partial class ShaderRunner
                 // vector.push_back(x): the variable holds a new, longer array.
                 var vec = Eval(c.Args[0]);
                 var item = Eval(c.Args[1]).Clone();
-                Store(c.Args[0], ShaderValue.Array([.. vec.Items ?? [], item]));
+                if (vec.IsArray && !vec.Shared) vec.Append(item);
+                else Store(c.Args[0], ShaderValue.Array([.. vec.Items ?? [], item]));
                 return ShaderValue.Scalar(0);
             }
             case "GetDimensions" when c.Args.Count >= 3:

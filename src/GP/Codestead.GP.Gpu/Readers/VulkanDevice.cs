@@ -113,6 +113,8 @@ internal sealed partial class VulkanDevice : IDeviceModel
     /// <summary>Descriptor sets: binding → (image view, sampler).</summary>
     private readonly Dictionary<string, Dictionary<int, (string? View, string? Sampler)>> sets = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Image?> loaded = new(StringComparer.Ordinal);
+    /// <summary>The channels per pixel of the bytes stbi_load returned for an image (as the program reads them).</summary>
+    private readonly Dictionary<string, int> pointerChannels = new(StringComparer.Ordinal);
     private int counter;
     private bool flip;
     private CppExec? exec;
@@ -229,9 +231,14 @@ internal sealed partial class VulkanDevice : IDeviceModel
                 loaded[key] = image;
                 if (image is not null)
                 {
+                    // The channels the file has (stb_image reports them whatever it was asked for); the bytes come
+                    // with the channels asked for (0: the file's) – read through a pointer (pixelOffset[0]).
+                    int fileChannels = StbImage.FileChannels(project, path), wanted = (int)Num(args[4]);
+                    pointerChannels[key] = wanted is > 0 and <= 4 ? wanted : fileChannels;
                     Set(args[1], ShaderValue.Scalar(image.Width));
                     Set(args[2], ShaderValue.Scalar(image.Height));
-                    Set(args[3], ShaderValue.Scalar(image.Channels));
+                    Set(args[3], ShaderValue.Scalar(fileChannels));
+                    exec!.Runner.PointerRead ??= (handle, at) => loaded.TryGetValue(handle, out var img) && img is not null && pointerChannels.TryGetValue(handle, out var ch) ? StbImage.Byte(img, ch, at) : null;
                 }
                 return ShaderValue.Str(key);
             }

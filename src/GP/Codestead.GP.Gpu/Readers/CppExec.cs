@@ -157,8 +157,11 @@ public sealed class CppExec
         }
         // A std::vector member with no initializer (filled by push_back in a setup helper): empty, kept as a global.
         // A std::map likewise (learnopengl's Characters).
-        if (src.Initializer(name) is null && src.DeclaredType(name) is { } vectorType
-            && System.Text.RegularExpressions.Regex.IsMatch(vectorType, @"^(?:const)?std::(?:vector|map|unordered_map)<"))
+        // (A local of another function with the same name and an initializer – QueueFamilyIndices indices =
+        // findQueueFamilies(…) – does not make the member something else.)
+        if (src.DeclaredType(name) is { } vectorType
+            && System.Text.RegularExpressions.Regex.IsMatch(vectorType, @"^(?:const)?std::(?:vector|map|unordered_map)<")
+            && (src.Initializer(name) is null || System.Text.RegularExpressions.Regex.IsMatch(src.Code, @"(?:vector|map)\s*<[^;=(){}]*>\s+" + System.Text.RegularExpressions.Regex.Escape(name) + @"\s*;")))
         {
             var empty = vectorType.Contains("map<", StringComparison.Ordinal) ? Runner.Default("map") : ShaderValue.Array([]);
             Runner.Globals[name] = empty;

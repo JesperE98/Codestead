@@ -423,6 +423,23 @@ public sealed partial class CppSource
 
     private readonly Dictionary<string, bool> callsApi = new(StringComparer.Ordinal);
     // glGetError is a query the program's own code may ask anywhere (learnopengl's glCheckError_): not a call to follow.
+    /// <summary>
+    /// A piece of code (a for loop) that is the program's own C++ only: no API calls, no calls of the program's
+    /// API-calling functions, no images loaded, no shader or model objects made, no macros – the C++ runner can run it
+    /// as a whole.
+    /// </summary>
+    public bool IsPureLoop(string code)
+    {
+        if (ApiCallRe.IsMatch(code) || code.Contains("stbi_", StringComparison.Ordinal) || code.Contains("memcpy", StringComparison.Ordinal)
+            || Regex.IsMatch(code, @"\b(?:Shader|Model)\s+\w+\s*\(") || Regex.IsMatch(code, @"\b(?:return|goto)\b")) return false;
+        foreach (Match m in CalledRe.Matches(code))
+        {
+            var callee = m.Groups[1].Value;
+            if (FunctionMacros.ContainsKey(callee) || Functions.ContainsKey(callee) && CallsApi(callee)) return false;
+        }
+        return true;
+    }
+
     private static readonly Regex ApiCallRe = new(@"\b(?!glGetError\b)(?:gl[A-Z]\w*|glfw[A-Z]\w*|vk[A-Z]\w*)\s*\(|(?:\.|->)\s*(?:use|setFloat|setInt|setBool|setVec2|setVec3|setVec4|setMat2|setMat3|setMat4|Draw)\s*\(", RegexOptions.CultureInvariant);
     private static readonly Regex CalledRe = new(@"(?<![\w.>])([A-Za-z_]\w*)\s*\(", RegexOptions.CultureInvariant);
 

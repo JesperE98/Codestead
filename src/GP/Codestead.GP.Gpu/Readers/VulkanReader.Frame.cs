@@ -189,8 +189,11 @@ public sealed partial class VulkanReader
                 {
                     if (d.Indexed && ds.IndexBuffer is { } ib)
                         dIndices = Enumerable.Range(0, d.Count).Select(k => (int)(device.ReadIndex(ib.Buffer, ib.Offset + (long)(d.First + k) * ib.Bytes) ?? 0)).ToArray();
+                    // Only the vertices the indices reach (a strip of a large grid), the indices counted from the lowest.
+                    int baseVertex = d.Indexed && dIndices is { Length: > 0 } && !dvs.Names.Contains("gl_VertexIndex") ? dIndices.Min() : 0;
+                    if (baseVertex > 0) for (int k = 0; k < dIndices!.Length; k++) dIndices[k] -= baseVertex;
                     int vertexCount = d.Indexed ? (dIndices is { Length: > 0 } ? dIndices.Max() + 1 : 0) : d.First + d.Count;
-                    (dVertices, perInstance) = DeviceVertices(device, ds, vertexCount, Math.Max(1, d.Instances));
+                    (dVertices, perInstance) = DeviceVertices(device, ds, vertexCount, Math.Max(1, d.Instances), baseVertex);
                 }
                 else if (pl is not null)
                 {

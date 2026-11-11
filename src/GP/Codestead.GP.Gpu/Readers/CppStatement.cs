@@ -7,4 +7,7 @@ namespace Codestead.GP.Gpu.Readers;
 public sealed record CppStatement(string Text, int Offset, string Kind = "stmt", IReadOnlyList<CppStatement>? Body = null, IReadOnlyList<CppStatement>? Else = null)
 {
     public bool IsStatement => Kind == "stmt";
+
+    /// <summary>A "for": the offset just past its body (the loop's whole text is Code[Offset..End]); -1 when not known.</summary>
+    public int End { get; init; } = -1;
 }

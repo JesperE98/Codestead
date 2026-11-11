@@ -291,7 +291,10 @@ internal sealed partial class D3D12Device : IDeviceModel
                 {
                     if (Strip(args[1]) is var w) exec.Runner.Assign(w, ShaderValue.Scalar(image.Width));
                     if (Strip(args[2]) is var h) exec.Runner.Assign(h, ShaderValue.Scalar(image.Height));
-                    if (Strip(args[3]) is var c) exec.Runner.Assign(c, ShaderValue.Scalar(image.Channels));
+                    int fileChannels = StbImage.FileChannels(project, path);
+                    if (Strip(args[3]) is var c) exec.Runner.Assign(c, ShaderValue.Scalar(fileChannels));
+                    // The bytes, read through a pointer (pixelOffset[0]): the channels asked for (0: the file's).
+                    exec.Runner.PointerRead ??= (handle, at) => images.TryGetValue(handle, out var img) && img is not null ? StbImage.Byte(img, img.Channels, at) : null;
                 }
                 return ShaderValue.Str(key);
             }

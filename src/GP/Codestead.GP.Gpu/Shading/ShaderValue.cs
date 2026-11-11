@@ -11,9 +11,50 @@ public sealed class ShaderValue
     public double[]? V { get; init; }
     /// <summary>0 for scalars and vectors; 2, 3 or 4 for a matrix.</summary>
     public int Cols { get; init; }
-    public ShaderValue[]? Items { get; init; }
+    public ShaderValue[]? Items
+    {
+        get
+        {
+            // Elements appended since the last read (push_back in a loop of 65,536 pixels) become the array now.
+            if (grow is { } g)
+            {
+                var arr = g.ToArray();
+                items = arr;
+                grow = null;
+                return arr;
+            }
+            return items;
+        }
+        init => items = value;
+    }
+
+    private ShaderValue[]? items;
+    private List<ShaderValue>? grow;
+
+    /// <summary>An array (a std::vector), without making its elements an array first.</summary>
+    public bool IsArray => items is not null || grow is not null;
+
+    /// <summary>The number of elements of an array, without making them an array first.</summary>
+    public int Count => grow?.Count ?? items?.Length ?? 0;
+
+    /// <summary>
+    /// std::vector::push_back: the element is added to this array in place, in amortised constant time (the array the
+    /// other readers see is made when it is next read).
+    /// </summary>
+    public void Append(ShaderValue item)
+    {
+        if (grow is null)
+        {
+            grow = new List<ShaderValue>(Math.Max(16, (items?.Length ?? 0) * 2));
+            if (items is not null) grow.AddRange(items);
+            items = null;
+        }
+        grow.Add(item);
+    }
     public Dictionary<string, ShaderValue>? Fields { get; init; }
     public string? Text { get; init; }
+    /// <summary>A pointer into the bytes a handle names (data + (j + width * i) * bytePerPixel): bytes past its start.</summary>
+    public long Offset { get; init; }
     /// <summary>A C++ std::map with number keys (learnopengl sorts its windows by distance with one).</summary>
     public SortedDictionary<double, ShaderValue>? Map { get; init; }
     /// <summary>An iterator into a std::map: begin()/rbegin() …, ++it, it->first / it->second.</summary>
@@ -102,6 +143,7 @@ public sealed class ShaderValue
         Items = Items?.Select(i => i.Clone()).ToArray(),
         Fields = Fields?.ToDictionary(kv => kv.Key, kv => kv.Value.Clone()),
         Text = Text,
+        Offset = Offset,
         Map = Map is null ? null : new SortedDictionary<double, ShaderValue>(Map),
         Iterator = Iterator,
     };
