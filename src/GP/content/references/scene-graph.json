@@ -1,0 +1,8 @@
+[
+  { "title": "Scene Graph", "url": "https://learnopengl.com/Guest-Articles/2021/Scene/Scene-Graph", "publisher": "LearnOpenGL" },
+  { "title": "scene_graph.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/8.guest/2021/1.scene/1.scene_graph/scene_graph.cpp", "publisher": "LearnOpenGL" },
+  { "title": "std::vector::push_back", "url": "https://en.cppreference.com/w/cpp/container/vector/push_back", "publisher": "cppreference.com" },
+  { "title": "Transformations", "url": "https://learnopengl.com/Getting-started/Transformations", "publisher": "LearnOpenGL", "api": "opengl" },
+  { "title": "Push constants (Vulkan Guide)", "url": "https://docs.vulkan.org/guide/latest/push_constants.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "DirectXMath programming guide", "url": "https://learn.microsoft.com/en-us/windows/win32/dxmath/directxmath-portal", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

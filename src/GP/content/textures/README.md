@@ -50,3 +50,15 @@ For the In Practice chapters (drawn by `make_practice.py`):
 - `../fonts/Inter-Bold.otf` + `OFL.txt`: Inter Bold (SIL Open Font License 1.1) reduced to printable ASCII, the font
   of the text chapters. The same script writes `Codestead.GP.Gpu/Fonts/inter-bold.glyphs.json`: the glyphs FreeType
   makes of it at 24 and 48 pixels, which the simulator uses in FreeType's place.
+
+For the Guest Articles chapters:
+- `heightmap.png` (256×256, one grey channel, drawn by `make_guest.py`): seeded fractal hills, a ridge of peaks along
+  the top edge, a river valley from the left edge to the bottom edge and a lake in the bottom right – the terrain of the
+  two Tessellation chapters (learnopengl uses a 2.6 k map of Iceland).
+- `ltc/ltc_matrix.hpp` (written by `ltc/make_ltc.py`): the LTC lookup tables `LTC1` / `LTC2` (64 × 64 × RGBA floats) of
+  the Area Lights chapter. **Not ours**: the GGX fit of Heitz, Dupuy, Hill and Neubelt from github.com/selfshadow/ltc_code
+  (`fit/results/ltc.js`), shipped under its BSD-style licence, which allows redistribution with the copyright notice and
+  a reference to the paper – both are in the header and in `ltc/LICENSE-ltc_code.txt`.
+- `../models/tentacle.gltf` + `tentacle.bin` + `tentacle.png` (drawn by `../models/make_tentacle.py`): the animated model of
+  the Skeletal Animation chapter – a tentacle of 495 vertices with four bones (Base → Lower → Upper → Tip) and one
+  looping 2-second animation with position, rotation and scale keys (glTF 2.0; learnopengl uses a Mixamo vampire).

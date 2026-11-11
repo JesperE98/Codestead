@@ -1,0 +1,124 @@
+=== task: limits
+--- file: main.cpp
+--- find:
+    // TODO: query and print the limits: the most work groups (x, y, z) per dispatch, the largest work group (x, y, z)
+    // and the most invocations in one work group
+--- replace:
+    // query limitations
+    // -----------------
+    int max_compute_work_group_count[3];
+    int max_compute_work_group_size[3];
+    int max_compute_work_group_invocations;
+
+    for (int idx = 0; idx < 3; idx++)
+    {
+        glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, idx, &max_compute_work_group_count[idx]);
+        glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, idx, &max_compute_work_group_size[idx]);
+    }
+    glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &max_compute_work_group_invocations);
+
+    std::cout << "OpenGL Limitations: " << std::endl;
+    std::cout << "maximum number of work groups in X dimension " << max_compute_work_group_count[0] << std::endl;
+    std::cout << "maximum number of work groups in Y dimension " << max_compute_work_group_count[1] << std::endl;
+    std::cout << "maximum number of work groups in Z dimension " << max_compute_work_group_count[2] << std::endl;
+
+    std::cout << "maximum size of a work group in X dimension " << max_compute_work_group_size[0] << std::endl;
+    std::cout << "maximum size of a work group in Y dimension " << max_compute_work_group_size[1] << std::endl;
+    std::cout << "maximum size of a work group in Z dimension " << max_compute_work_group_size[2] << std::endl;
+
+    std::cout << "Number of invocations in a single local work group that may be dispatched to a compute shader " << max_compute_work_group_invocations << std::endl;
+=== task: image-unit
+--- file: main.cpp
+--- find:
+    // TODO: bind the texture to image unit 0 for the compute shader (glBindImageTexture)
+--- replace:
+    // bind level 0 of the texture to image unit 0, for reading and writing, as 4 floats per texel
+    glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+=== task: compute-shader
+--- file: computeShader.comp
+--- find:
+// TODO: the size of a work group (local_size_x / y / z), the image to write (an image2D on image unit 0), and main:
+// one invocation per texel, writing its colour with imageStore
+layout (local_size_x = 1) in;
+
+void main()
+{
+}
+--- replace:
+// a work group is 10 x 10 invocations (one per texel)
+layout (local_size_x = 10, local_size_y = 10, local_size_z = 1) in;
+
+// the texture we write to, on image unit 0
+layout (rgba32f, binding = 0) uniform image2D imgOutput;
+
+void main()
+{
+    vec4 value = vec4(0.0, 0.0, 0.0, 1.0);
+    ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy); // this invocation's texel
+
+    value.x = float(texelCoord.x) / (gl_NumWorkGroups.x * gl_WorkGroupSize.x);
+    value.y = float(texelCoord.y) / (gl_NumWorkGroups.y * gl_WorkGroupSize.y);
+    imageStore(imgOutput, texelCoord, value);
+}
+--- file: main.cpp
+--- find:
+    // TODO: the compute shader program (ComputeShader, computeShader.comp)
+--- replace:
+    ComputeShader computeShader("computeShader.comp");
+--- file: main.cpp
+--- find:
+    // for now: fill the texture from the CPU, every texel dark blue
+    std::vector<float> pixels(TEXTURE_WIDTH * TEXTURE_HEIGHT * 4, 0.0f);
+    for (size_t i = 0; i < pixels.size(); i += 4)
+    {
+        pixels[i + 2] = 0.5f; // blue
+        pixels[i + 3] = 1.0f; // alpha
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, TEXTURE_WIDTH, TEXTURE_HEIGHT, 0, GL_RGBA, GL_FLOAT, pixels.data());
+--- replace:
+    // no data: the compute shader fills the texture every frame
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, TEXTURE_WIDTH, TEXTURE_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+--- file: main.cpp
+--- find:
+        // TODO: run the compute shader over the texture (one invocation per texel) and wait for its writes
+--- replace:
+        // fill the texture: one invocation per texel, in work groups of 10 x 10
+        computeShader.use();
+        glDispatchCompute((unsigned int)TEXTURE_WIDTH / 10, (unsigned int)TEXTURE_HEIGHT / 10, 1);
+
+        // make sure writing to image has finished before read
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+--- file: main.cpp
+--- find:
+    glDeleteProgram(screenQuad.ID);
+--- replace:
+    glDeleteProgram(screenQuad.ID);
+    glDeleteProgram(computeShader.ID);
+=== task: time
+--- file: computeShader.comp
+--- find:
+layout (rgba32f, binding = 0) uniform image2D imgOutput;
+--- replace:
+layout (rgba32f, binding = 0) uniform image2D imgOutput;
+
+layout (location = 0) uniform float t; // time
+--- file: computeShader.comp
+--- find:
+    ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy); // this invocation's texel
+
+    value.x = float(texelCoord.x) / (gl_NumWorkGroups.x * gl_WorkGroupSize.x);
+--- replace:
+    ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy); // this invocation's texel
+    float speed = 100;
+    // the width of the texture
+    float width = 800;
+
+    value.x = mod(float(texelCoord.x) + t * speed, width) / (gl_NumWorkGroups.x * gl_WorkGroupSize.x);
+--- file: main.cpp
+--- find:
+        computeShader.use();
+        glDispatchCompute
+--- replace:
+        computeShader.use();
+        computeShader.setFloat("t", currentFrame);
+        glDispatchCompute

@@ -1,0 +1,427 @@
+=== task: opengl-4-1
+--- file: main.cpp
+--- find:
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+--- replace:
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+--- file: main.cpp
+--- find:
+    // configure global opengl state
+    // -----------------------------
+    glEnable(GL_DEPTH_TEST);
+--- replace:
+    // how finely can this GPU tessellate? (at least 64)
+    GLint maxTessLevel;
+    glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &maxTessLevel);
+    std::cout << "Max available tess level: " << maxTessLevel << std::endl;
+
+    // configure global opengl state
+    // -----------------------------
+    glEnable(GL_DEPTH_TEST);
+=== task: height-texture
+--- file: main.cpp
+--- find:
+    // load the height map: one grey value (0..255) per pixel
+    // ------------------------------------------------------
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("heightmap.png", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        std::cout << "Loaded heightmap of size " << height << " x " << width << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+        return -1;
+    }
+
+    // set up vertex data: one vertex per pixel of the height map, its height from the pixel's value
+    // ---------------------------------------------------------------------------------------------
+    std::vector<float> vertices;
+    float yScale = 64.0f / 256.0f, yShift = 16.0f; // apply a scale and a shift to the height data
+    unsigned bytePerPixel = nrChannels;
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+        {
+            unsigned char* pixelOffset = data + (j + width * i) * bytePerPixel;
+            unsigned char y = pixelOffset[0];
+
+            // vertex: column j along x, row i along z (the image's top row at the back)
+            vertices.push_back(-width / 2.0f + width * j / (float)width);   // vx
+            vertices.push_back((int)y * yScale - yShift);                    // vy
+            vertices.push_back(-height / 2.0f + height * i / (float)height); // vz
+        }
+    }
+    std::cout << "Loaded " << vertices.size() / 3 << " vertices" << std::endl;
+    stbi_image_free(data);
+
+    // configure the terrain's VAO (and terrainVBO)
+    // --------------------------------------------
+    unsigned int terrainVAO, terrainVBO;
+    glGenVertexArrays(1, &terrainVAO);
+    glBindVertexArray(terrainVAO);
+
+    glGenBuffers(1, &terrainVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, terrainVBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // index data: one triangle strip per pair of rows (rows i and i + rez), every rez-th vertex
+    // -----------------------------------------------------------------------------------------
+    std::vector<unsigned int> indices;
+    int rez = 1;
+    for (int i = 0; i < height - 1; i += rez)
+    {
+        for (int j = 0; j < width; j += rez)
+        {
+            for (int k = 0; k < 2; k++)
+            {
+                indices.push_back(j + width * (i + k * rez));
+            }
+        }
+    }
+    std::cout << "Loaded " << indices.size() << " indices" << std::endl;
+
+    const int numStrips = (height - 1) / rez;
+    const int numTrisPerStrip = (width / rez) * 2 - 2;
+    std::cout << "Created lattice of " << numStrips << " strips with " << numTrisPerStrip << " triangles each" << std::endl;
+    std::cout << "Created " << numStrips * numTrisPerStrip << " triangles total" << std::endl;
+
+    // the index buffer (terrainIBO): bound while the VAO is bound, so the VAO remembers it
+    unsigned int terrainIBO;
+    glGenBuffers(1, &terrainIBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, terrainIBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+--- replace:
+    // load the height map into a texture (the tessellation evaluation shader reads the heights from it)
+    // -------------------------------------------------------------------------------------------------
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
+    // set the texture wrapping parameters: clamp, so the edges do not blend with the opposite side
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // load image, create texture and generate mipmaps
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("heightmap.png", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        // one channel (GL_RED) per pixel, stored as GL_R8 (rows of 256 bytes: the default 4-byte row alignment fits)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        std::cout << "Loaded heightmap of size " << height << " x " << width << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+        return -1;
+    }
+    stbi_image_free(data);
+
+    // TODO: the patches: rez x rez patches of 4 corners (position + texture coordinate), the VAO and VBO, and the
+    // number of vertices per patch (glPatchParameteri)
+--- file: main.cpp
+--- find:
+        // render the terrain: one draw call per strip
+        glBindVertexArray(terrainVAO);
+        for (int strip = 0; strip < numStrips; strip++)
+        {
+            glDrawElements(GL_TRIANGLE_STRIP,   // primitive type
+                           numTrisPerStrip + 2, // number of indices to render
+                           GL_UNSIGNED_INT,     // index data type
+                           (void*)(sizeof(unsigned int) * (numTrisPerStrip + 2) * strip)); // offset to starting index
+        }
+--- replace:
+        // TODO: draw the terrain's patches
+--- file: main.cpp
+--- find:
+    glDeleteVertexArrays(1, &terrainVAO);
+    glDeleteBuffers(1, &terrainVBO);
+    glDeleteBuffers(1, &terrainIBO);
+--- replace:
+    glDeleteTextures(1, &texture);
+=== task: patch-grid
+--- file: main.cpp
+--- find:
+const unsigned int SCR_HEIGHT = 600;
+--- replace:
+const unsigned int SCR_HEIGHT = 600;
+const unsigned int NUM_PATCH_PTS = 4;
+--- file: main.cpp
+--- find:
+    // TODO: the patches: rez x rez patches of 4 corners (position + texture coordinate), the VAO and VBO, and the
+    // number of vertices per patch (glPatchParameteri)
+--- replace:
+    // set up vertex data: rez x rez patches of 4 control points (corners), each with a position and a texture coordinate
+    // ------------------------------------------------------------------------------------------------------------------
+    std::vector<float> vertices;
+
+    unsigned rez = 20;
+    for (unsigned i = 0; i <= rez - 1; i++)
+    {
+        for (unsigned j = 0; j <= rez - 1; j++)
+        {
+            vertices.push_back(-width / 2.0f + width * i / (float)rez); // v.x
+            vertices.push_back(0.0f); // v.y
+            vertices.push_back(-height / 2.0f + height * j / (float)rez); // v.z
+            vertices.push_back(i / (float)rez); // u
+            vertices.push_back(j / (float)rez); // v
+
+            vertices.push_back(-width / 2.0f + width * (i + 1) / (float)rez); // v.x
+            vertices.push_back(0.0f); // v.y
+            vertices.push_back(-height / 2.0f + height * j / (float)rez); // v.z
+            vertices.push_back((i + 1) / (float)rez); // u
+            vertices.push_back(j / (float)rez); // v
+
+            vertices.push_back(-width / 2.0f + width * i / (float)rez); // v.x
+            vertices.push_back(0.0f); // v.y
+            vertices.push_back(-height / 2.0f + height * (j + 1) / (float)rez); // v.z
+            vertices.push_back(i / (float)rez); // u
+            vertices.push_back((j + 1) / (float)rez); // v
+
+            vertices.push_back(-width / 2.0f + width * (i + 1) / (float)rez); // v.x
+            vertices.push_back(0.0f); // v.y
+            vertices.push_back(-height / 2.0f + height * (j + 1) / (float)rez); // v.z
+            vertices.push_back((i + 1) / (float)rez); // u
+            vertices.push_back((j + 1) / (float)rez); // v
+        }
+    }
+    std::cout << "Loaded " << rez * rez << " patches of 4 control points each" << std::endl;
+    std::cout << "Processing " << rez * rez * 4 << " vertices in vertex shader" << std::endl;
+
+    // configure the terrain's VAO (and terrainVBO)
+    // --------------------------------------------
+    unsigned int terrainVAO, terrainVBO;
+    glGenVertexArrays(1, &terrainVAO);
+    glBindVertexArray(terrainVAO);
+
+    glGenBuffers(1, &terrainVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, terrainVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // texCoord attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
+    glEnableVertexAttribArray(1);
+
+    // every patch has 4 vertices
+    glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
+--- file: main.cpp
+--- find:
+    glDeleteTextures(1, &texture);
+--- replace:
+    glDeleteVertexArrays(1, &terrainVAO);
+    glDeleteBuffers(1, &terrainVBO);
+    glDeleteTextures(1, &texture);
+=== task: tess-evaluation
+--- file: gpuheight.tes
+--- find:
+// TODO: the tessellation evaluation shader: the patches' layout (quads, fractional_odd_spacing, ccw); place each
+// new vertex in its patch (bilinear interpolation of the corners) and move it up by the height from the texture
+layout (quads) in;
+
+void main()
+{
+    gl_Position = vec4(0.0);
+}
+--- replace:
+// quads, spaced with fractional odd levels, triangles counter-clockwise
+layout (quads, fractional_odd_spacing, ccw) in;
+
+uniform sampler2D heightMap; // the height map texture
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+in vec2 TextureCoord[];
+
+out float Height;
+
+void main()
+{
+    // where in the patch this vertex is: (u, v) from 0 to 1
+    float u = gl_TessCoord.x;
+    float v = gl_TessCoord.y;
+
+    // the corners' texture coordinates
+    vec2 t00 = TextureCoord[0];
+    vec2 t01 = TextureCoord[1];
+    vec2 t10 = TextureCoord[2];
+    vec2 t11 = TextureCoord[3];
+
+    // bilinear interpolation: along u on both edges, then along v
+    vec2 t0 = (t01 - t00) * u + t00;
+    vec2 t1 = (t11 - t10) * u + t10;
+    vec2 texCoord = (t1 - t0) * v + t0;
+
+    // the height from the texture: 0..1 -> -16..48
+    Height = texture(heightMap, texCoord).r * 64.0 - 16.0;
+
+    // the corners' positions
+    vec4 p00 = gl_in[0].gl_Position;
+    vec4 p01 = gl_in[1].gl_Position;
+    vec4 p10 = gl_in[2].gl_Position;
+    vec4 p11 = gl_in[3].gl_Position;
+
+    // the patch's normal (up for our flat grid)
+    vec4 uVec = p01 - p00;
+    vec4 vVec = p10 - p00;
+    vec4 normal = normalize(vec4(cross(vVec.xyz, uVec.xyz), 0));
+
+    // bilinear interpolation of the position, moved along the normal by the height
+    vec4 p0 = (p01 - p00) * u + p00;
+    vec4 p1 = (p11 - p10) * u + p10;
+    vec4 p = (p1 - p0) * v + p0 + normal * Height;
+
+    // output patch point position in clip space
+    gl_Position = projection * view * model * p;
+}
+--- file: main.cpp
+--- find:
+    // build and compile our shader program
+    // ------------------------------------
+    Shader heightMapShader("cpuheight.vs", "cpuheight.fs");
+--- replace:
+    // build and compile our shader program
+    // ------------------------------------
+    Shader tessHeightMapShader("gpuheight.vs", "gpuheight.fs", nullptr, // no geometry shader
+                               "gpuheight.tcs", "gpuheight.tes");
+    tessHeightMapShader.use();
+    tessHeightMapShader.setInt("heightMap", 0); // the height map texture on unit 0
+--- file: main.cpp
+--- find:
+        // be sure to activate shader when setting uniforms/drawing objects
+        heightMapShader.use();
+
+        // view/projection transformations
+        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
+        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        heightMapShader.setMat4("projection", projection);
+        heightMapShader.setMat4("view", view);
+
+        // world transformation
+        glm::mat4 model = glm::mat4(1.0f);
+        heightMapShader.setMat4("model", model);
+
+        // TODO: draw the terrain's patches
+--- replace:
+        // be sure to activate shader when setting uniforms/drawing objects
+        tessHeightMapShader.use();
+
+        // view/projection transformations
+        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
+        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        tessHeightMapShader.setMat4("projection", projection);
+        tessHeightMapShader.setMat4("view", view);
+
+        // world transformation
+        glm::mat4 model = glm::mat4(1.0f);
+        tessHeightMapShader.setMat4("model", model);
+
+        // render the terrain: every 4 vertices are one patch
+        glBindVertexArray(terrainVAO);
+        glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);
+=== task: tess-control
+--- file: gpuheight.tcs
+--- find:
+    // the tessellation levels: once per patch (by invocation 0)
+    if (gl_InvocationID == 0)
+    {
+        // TODO: how finely to tessellate - for now 1 everywhere: no new vertices, every patch stays one quad
+        gl_TessLevelOuter[0] = 1;
+        gl_TessLevelOuter[1] = 1;
+        gl_TessLevelOuter[2] = 1;
+        gl_TessLevelOuter[3] = 1;
+
+        gl_TessLevelInner[0] = 1;
+        gl_TessLevelInner[1] = 1;
+    }
+}
+--- replace:
+    // the tessellation levels: once per patch (by invocation 0)
+    if (gl_InvocationID == 0)
+    {
+        // for now: every patch the same, 8 segments along each edge and inside
+        gl_TessLevelOuter[0] = 8;
+        gl_TessLevelOuter[1] = 8;
+        gl_TessLevelOuter[2] = 8;
+        gl_TessLevelOuter[3] = 8;
+
+        gl_TessLevelInner[0] = 8;
+        gl_TessLevelInner[1] = 8;
+    }
+}
+=== task: wireframe
+--- file: main.cpp
+--- find:
+    glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
+--- replace:
+    glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
+
+    // draw the triangles' edges only (wireframe), to see how finely the patches are tessellated
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+=== task: distance-levels
+--- file: gpuheight.tcs
+--- find:
+    // the tessellation levels: once per patch (by invocation 0)
+    if (gl_InvocationID == 0)
+    {
+        // for now: every patch the same, 8 segments along each edge and inside
+        gl_TessLevelOuter[0] = 8;
+        gl_TessLevelOuter[1] = 8;
+        gl_TessLevelOuter[2] = 8;
+        gl_TessLevelOuter[3] = 8;
+
+        gl_TessLevelInner[0] = 8;
+        gl_TessLevelInner[1] = 8;
+    }
+}
+--- replace:
+    // the tessellation levels: once per patch (by invocation 0)
+    if (gl_InvocationID == 0)
+    {
+        const int MIN_TESS_LEVEL = 2;
+        const int MAX_TESS_LEVEL = 8;
+        const float MIN_DISTANCE = 250;
+        const float MAX_DISTANCE = 450;
+
+        // the corners in eye space (the camera looks along -z)
+        vec4 eyeSpacePos00 = view * model * gl_in[0].gl_Position;
+        vec4 eyeSpacePos01 = view * model * gl_in[1].gl_Position;
+        vec4 eyeSpacePos10 = view * model * gl_in[2].gl_Position;
+        vec4 eyeSpacePos11 = view * model * gl_in[3].gl_Position;
+
+        // "distance" from camera scaled between 0 and 1
+        float distance00 = clamp((abs(eyeSpacePos00.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0, 1.0);
+        float distance01 = clamp((abs(eyeSpacePos01.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0, 1.0);
+        float distance10 = clamp((abs(eyeSpacePos10.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0, 1.0);
+        float distance11 = clamp((abs(eyeSpacePos11.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0, 1.0);
+
+        // each edge from its nearer corner (two patches sharing an edge compute the same level: no cracks)
+        float tessLevel0 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance10, distance00));
+        float tessLevel1 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance00, distance01));
+        float tessLevel2 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance01, distance11));
+        float tessLevel3 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance11, distance10));
+
+        gl_TessLevelOuter[0] = tessLevel0;
+        gl_TessLevelOuter[1] = tessLevel1;
+        gl_TessLevelOuter[2] = tessLevel2;
+        gl_TessLevelOuter[3] = tessLevel3;
+
+        gl_TessLevelInner[0] = max(tessLevel1, tessLevel3);
+        gl_TessLevelInner[1] = max(tessLevel0, tessLevel2);
+    }
+}

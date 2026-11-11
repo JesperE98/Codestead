@@ -1,0 +1,136 @@
+=== task: load-heightmap
+--- file: main.cpp
+--- find:
+    // TODO: load the height map (heightmap.png) with stbi_load: its width, height, number of channels and pixels
+--- replace:
+    // load the height map: one grey value (0..255) per pixel
+    // ------------------------------------------------------
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("heightmap.png", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        std::cout << "Loaded heightmap of size " << height << " x " << width << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+        return -1;
+    }
+=== task: vertices
+--- file: main.cpp
+--- find:
+    // TODO: one vertex per pixel (x from the column, y from the pixel's value, z from the row), and the terrain's VAO
+    // and VBO with the position attribute
+--- replace:
+    // set up vertex data: one vertex per pixel of the height map, its height from the pixel's value
+    // ---------------------------------------------------------------------------------------------
+    std::vector<float> vertices;
+    float yScale = 64.0f / 256.0f, yShift = 16.0f; // apply a scale and a shift to the height data
+    unsigned bytePerPixel = nrChannels;
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+        {
+            unsigned char* pixelOffset = data + (j + width * i) * bytePerPixel;
+            unsigned char y = pixelOffset[0];
+
+            // vertex: column j along x, row i along z (the image's top row at the back)
+            vertices.push_back(-width / 2.0f + width * j / (float)width);   // vx
+            vertices.push_back((int)y * yScale - yShift);                    // vy
+            vertices.push_back(-height / 2.0f + height * i / (float)height); // vz
+        }
+    }
+    std::cout << "Loaded " << vertices.size() / 3 << " vertices" << std::endl;
+    stbi_image_free(data);
+
+    // configure the terrain's VAO (and terrainVBO)
+    // --------------------------------------------
+    unsigned int terrainVAO, terrainVBO;
+    glGenVertexArrays(1, &terrainVAO);
+    glBindVertexArray(terrainVAO);
+
+    glGenBuffers(1, &terrainVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, terrainVBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+--- file: main.cpp
+--- find:
+        // TODO: draw the terrain
+--- replace:
+        // for now: render the terrain's vertices as points
+        glBindVertexArray(terrainVAO);
+        glDrawArrays(GL_POINTS, 0, (GLsizei)(vertices.size() / 3));
+--- file: main.cpp
+--- find:
+    // optional: de-allocate all resources once they've outlived their purpose:
+    // ------------------------------------------------------------------------
+
+--- replace:
+    // optional: de-allocate all resources once they've outlived their purpose:
+    // ------------------------------------------------------------------------
+    glDeleteVertexArrays(1, &terrainVAO);
+    glDeleteBuffers(1, &terrainVBO);
+=== task: indices
+--- file: main.cpp
+--- find:
+    // TODO: the indices of the triangle strips (one strip per pair of rows) and the index buffer
+--- replace:
+    // index data: one triangle strip per pair of rows (rows i and i + rez), every rez-th vertex
+    // -----------------------------------------------------------------------------------------
+    std::vector<unsigned int> indices;
+    int rez = 1;
+    for (int i = 0; i < height - 1; i += rez)
+    {
+        for (int j = 0; j < width; j += rez)
+        {
+            for (int k = 0; k < 2; k++)
+            {
+                indices.push_back(j + width * (i + k * rez));
+            }
+        }
+    }
+    std::cout << "Loaded " << indices.size() << " indices" << std::endl;
+
+    const int numStrips = (height - 1) / rez;
+    const int numTrisPerStrip = (width / rez) * 2 - 2;
+    std::cout << "Created lattice of " << numStrips << " strips with " << numTrisPerStrip << " triangles each" << std::endl;
+    std::cout << "Created " << numStrips * numTrisPerStrip << " triangles total" << std::endl;
+
+    // the index buffer (terrainIBO): bound while the VAO is bound, so the VAO remembers it
+    unsigned int terrainIBO;
+    glGenBuffers(1, &terrainIBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, terrainIBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+--- file: main.cpp
+--- find:
+    glDeleteBuffers(1, &terrainVBO);
+--- replace:
+    glDeleteBuffers(1, &terrainVBO);
+    glDeleteBuffers(1, &terrainIBO);
+=== task: strips
+--- file: main.cpp
+--- find:
+        // for now: render the terrain's vertices as points
+        glBindVertexArray(terrainVAO);
+        glDrawArrays(GL_POINTS, 0, (GLsizei)(vertices.size() / 3));
+--- replace:
+        // render the terrain: one draw call per strip
+        glBindVertexArray(terrainVAO);
+        for (int strip = 0; strip < numStrips; strip++)
+        {
+            glDrawElements(GL_TRIANGLE_STRIP,   // primitive type
+                           numTrisPerStrip + 2, // number of indices to render
+                           GL_UNSIGNED_INT,     // index data type
+                           (void*)(sizeof(unsigned int) * (numTrisPerStrip + 2) * strip)); // offset to starting index
+        }
+=== task: height-colour
+--- file: cpuheight.fs
+--- find:
+    // TODO: the height as a grey value (Height runs from -16 to 48)
+    FragColor = vec4(1.0);
+--- replace:
+    float h = (Height + 16.0) / 64.0; // shift and scale the height into a grey value (0 .. 1)
+    FragColor = vec4(h, h, h, 1.0);
