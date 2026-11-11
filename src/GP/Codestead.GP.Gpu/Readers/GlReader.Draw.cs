@@ -119,6 +119,9 @@ public sealed partial class GlReader
             VertexShader = program.Vertex!,
             FragmentShader = program.Fragment!,
             GeometryShader = program.Geometry,
+            TessControlShader = program.TessEval is not null ? program.TessControl : null,
+            TessEvalShader = program.TessEval,
+            PatchVertices = gl.PatchVertices,
             Vertices = vertices,
             Indices = indices,
             First = first,
@@ -167,16 +170,15 @@ public sealed partial class GlReader
     {
         samplerSizes = null;
         samplerCubeLod = null;
-        var cubeSamplers = new[] { program.Vertex!, program.Fragment! }.Concat(program.Geometry is { } pg ? [pg] : [])
+        var cubeSamplers = program.AllStages
             .SelectMany(s => s.Globals).Where(u => u.Storage == "uniform" && u.Type.StartsWith("samplerCube", StringComparison.Ordinal)).Select(u => u.Id).ToHashSet(StringComparer.Ordinal);
-        var samplers = SamplerNames(program.Vertex!).Concat(SamplerNames(program.Fragment!))
-            .Concat(program.Geometry is { } g ? SamplerNames(g) : []).Distinct().ToList();
+        var samplers = program.AllStages.SelectMany(SamplerNames).Distinct().ToList();
         if (samplers.Count == 0) return (null, null);
         var bound = new Dictionary<string, Textures.Texture?>(StringComparer.Ordinal);
         var layerCounts = new Dictionary<string, int>(StringComparer.Ordinal);
         var cubes = new Dictionary<string, Textures.CubeTexture>(StringComparer.Ordinal);
         // layout (binding = N) uniform sampler2D …: unit N unless the program sets the uniform itself.
-        var bindings = new[] { program.Vertex!, program.Fragment! }.Concat(program.Geometry is { } bg ? [bg] : [])
+        var bindings = program.AllStages
             .SelectMany(s => s.Globals).Where(u => u.Storage == "uniform" && u.Binding is not null && u.Block is null)
             .GroupBy(u => u.Id).ToDictionary(g => g.Key, g => g.First().Binding!.Value, StringComparer.Ordinal);
         foreach (var name in samplers)
@@ -314,6 +316,7 @@ public sealed partial class GlReader
 
     internal static Topology TopologyOf(string mode) => mode switch
     {
+        _ when mode.Contains("PATCHES", StringComparison.Ordinal) => Topology.Patches,
         _ when mode.Contains("TRIANGLE_STRIP", StringComparison.Ordinal) => Topology.TriangleStrip,
         _ when mode.Contains("TRIANGLE_FAN", StringComparison.Ordinal) => Topology.TriangleFan,
         _ when mode.Contains("TRIANGLE", StringComparison.Ordinal) => Topology.Triangles,

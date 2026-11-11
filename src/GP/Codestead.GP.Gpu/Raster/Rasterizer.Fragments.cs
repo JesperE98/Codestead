@@ -45,18 +45,23 @@ public static partial class Rasterizer
         bool ccw = area < 0;
         bool front = draw.FrontCcw ? ccw : !ccw;
         if (draw.Cull == CullMode.FrontAndBack || (draw.Cull == CullMode.Back && !front) || (draw.Cull == CullMode.Front && front)) return null;
+        if (draw.Wireframe)
+        {
+            // Wireframe (glPolygonMode GL_LINE, VK_POLYGON_MODE_LINE, D3D12_FILL_MODE_WIREFRAME): the triangle's three
+            // edges as lines one pixel wide, after the facing test.
+            var edges = new[] { Line(v0, v1, draw, fb, yDown, zMinusOneToOne, out var p0), Line(v1, v2, draw, fb, yDown, zMinusOneToOne, out var p1), Line(v2, v0, draw, fb, yDown, zMinusOneToOne, out var p2) };
+            pixels = p0 + p1 + p2;
+            return (stages, from, to) =>
+            {
+                foreach (var edge in edges) edge?.Invoke(stages, from, to);
+            };
+        }
 
         int width = fb.Width, height = fb.Height;
         int minX = Math.Max(0, (int)Math.Floor(sx.Min())), maxX = Math.Min(width - 1, (int)Math.Ceiling(sx.Max()));
         int minY = Math.Max(0, (int)Math.Floor(sy.Min())), maxY = Math.Min(height - 1, (int)Math.Ceiling(sy.Max()));
         if (minX > maxX || minY > maxY) return null;
         pixels = (long)(maxX - minX + 1) * (maxY - minY + 1);
-        double[] edgeLen =
-        [
-            Math.Sqrt(Sq(sx[2] - sx[1]) + Sq(sy[2] - sy[1])),
-            Math.Sqrt(Sq(sx[0] - sx[2]) + Sq(sy[0] - sy[2])),
-            Math.Sqrt(Sq(sx[1] - sx[0]) + Sq(sy[1] - sy[0])),
-        ];
         (double, double, double) Weights(double x, double y)
         {
             double w0 = ((sx[2] - sx[1]) * (y - sy[1]) - (sy[2] - sy[1]) * (x - sx[1])) / area;
@@ -96,11 +101,6 @@ public static partial class Rasterizer
                     if (mask == 0) continue;
                     double x = px + 0.5, y = py + 0.5;
                     var (c0, c1, c2) = Weights(x, y);
-                    if (draw.Wireframe)
-                    {
-                        double d0 = Math.Abs(c0 * area) / edgeLen[0], d1 = Math.Abs(c1 * area) / edgeLen[1], d2 = Math.Abs(c2 * area) / edgeLen[2];
-                        if (Math.Min(d0, Math.Min(d1, d2)) > 0.8) continue;
-                    }
                     double z = c0 * sz[0] + c1 * sz[1] + c2 * sz[2];
                     // Perspective-correct weights.
                     double p0 = c0 * invW[0], p1 = c1 * invW[1], p2 = c2 * invW[2];

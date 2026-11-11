@@ -54,6 +54,9 @@ public sealed partial class D3D12Reader
         var (vs, vsEntry) = vsInfo.Value;
         var (ps, psEntry) = psInfo.Value;
         var gsInfo = UsesGeometry(int.MaxValue) ? Compile("gs_") : null;
+        // Tessellation: a hull and a domain shader in the description (psoDesc.HS / DS set to bytecode).
+        var hsInfo = UsesStage("HS", int.MaxValue) ? Compile("hs_") : null;
+        var dsInfo = hsInfo is not null && UsesStage("DS", int.MaxValue) ? Compile("ds_") : null;
 
         var vertices = new List<Dictionary<string, ShaderValue>>();
         var entry = vs.FindFunction(vsEntry);
@@ -192,7 +195,9 @@ public sealed partial class D3D12Reader
                     (dVertices, perInstance, stepRate) = DeviceVertices(device, ds, ChooseLayout(layouts, dvs, pl?.VsEntry ?? vsEntry), vertexCount, Math.Max(1, d.Instances), baseVertex);
                 }
                 deviceTextureSizes = null;
-                var (deviceTextures, deviceCubes) = d.State is D3D12Device.DrawState { Tables.Count: > 0 } ts ? DeviceTextures(device, ts, dvs, dps) : (null, null);
+                var dhs = pl is not null ? pl.Tcs : hsInfo?.Program;
+                var dds = pl is not null ? pl.Tes : dsInfo?.Program;
+                var (deviceTextures, deviceCubes) = d.State is D3D12Device.DrawState { Tables.Count: > 0 } ts ? DeviceTextures(device, ts, PipelineInfo.Merged(dvs, dhs, dds, pl is not null ? pl.Gs : gsInfo?.Program), dps) : (null, null);
                 var textureSizes = deviceTextures is null ? null : deviceTextureSizes;
                 var target = (d.State as D3D12Device.DrawState)?.Target;
                 if (target is not null) RegisterTarget(device, target);
@@ -201,6 +206,11 @@ public sealed partial class D3D12Reader
                     Target = target,
                     GeometryShader = pl is not null ? pl.Gs : gsInfo?.Program,
                     GeometryEntry = pl is not null ? pl.GsEntry : gsInfo?.Entry ?? "main",
+                    TessControlShader = dds is not null ? dhs : null,
+                    TessControlEntry = pl is not null ? pl.TcsEntry : hsInfo?.Entry ?? "main",
+                    TessEvalShader = dhs is not null ? dds : null,
+                    TessEvalEntry = pl is not null ? pl.TesEntry : dsInfo?.Entry ?? "main",
+                    PatchVertices = PatchPoints((d.State as D3D12Device.DrawState)?.Topology ?? topology),
                     InstanceVertices = perInstance,
                     InstanceDivisor = stepRate,
                     CubeTextures = deviceCubes,
@@ -327,8 +337,13 @@ public sealed partial class D3D12Reader
     }
 
     /// <summary>D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP, …_LINESTRIP, …_TRIANGLELIST, …_POINTLIST (no underscore before STRIP).</summary>
+    /// <summary>D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST → 4.</summary>
+    private static int PatchPoints(string? name) =>
+        name is not null && Regex.Match(name, @"(\d+)_CONTROL_POINT") is { Success: true } m ? int.Parse(m.Groups[1].Value) : 3;
+
     private static Topology TopologyOf(string name) => name switch
     {
+        _ when name.Contains("CONTROL_POINT_PATCHLIST", StringComparison.Ordinal) => Topology.Patches,
         _ when name.Contains("TRIANGLESTRIP", StringComparison.Ordinal) => Topology.TriangleStrip,
         _ when name.Contains("LINESTRIP", StringComparison.Ordinal) => Topology.LineStrip,
         _ => GlReader.TopologyOf(name),

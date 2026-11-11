@@ -80,7 +80,7 @@ public sealed partial class GlReader
                 return;
             }
             case "glCreateShader":
-                if (lhs is not null) gl.ShaderObjects[lhs] = new GlState.ShaderObject { Stage = A(0).Contains("FRAGMENT", StringComparison.Ordinal) ? "fragment" : A(0).Contains("VERTEX", StringComparison.Ordinal) ? "vertex" : A(0).Contains("GEOMETRY", StringComparison.Ordinal) ? "geometry" : "other" };
+                if (lhs is not null) gl.ShaderObjects[lhs] = new GlState.ShaderObject { Stage = A(0).Contains("FRAGMENT", StringComparison.Ordinal) ? "fragment" : A(0).Contains("VERTEX", StringComparison.Ordinal) ? "vertex" : A(0).Contains("GEOMETRY", StringComparison.Ordinal) ? "geometry" : A(0).Contains("TESS_CONTROL", StringComparison.Ordinal) ? "tess_control" : A(0).Contains("TESS_EVALUATION", StringComparison.Ordinal) ? "tess_evaluation" : A(0).Contains("COMPUTE", StringComparison.Ordinal) ? "compute" : "other" };
                 if (lhs is not null) OwnName("shader", lhs, own => gl.ShaderObjects[own] = gl.ShaderObjects[lhs]);
                 return;
             case "glShaderSource":
@@ -266,6 +266,9 @@ public sealed partial class GlReader
                     mt.Mipmaps = mt.Image is not null || mt.IsCube || mt.Framebuffer is not null;
                     GenerateTargetMips(mt);
                 }
+                return;
+            case "glPatchParameteri":
+                if (A(0).Contains("PATCH_VERTICES", StringComparison.Ordinal)) gl.PatchVertices = Math.Max(1, Int(A(1)) ?? 3);
                 return;
             case "glDrawArrays":
                 Draw(A(0), null, Int(A(1)) ?? 0, Int(A(2)) ?? 0, name, line);
@@ -669,8 +672,11 @@ public sealed partial class GlReader
             if (so.Stage == "vertex") program.Vertex = parsed;
             else if (so.Stage == "fragment") program.Fragment = parsed;
             else if (so.Stage == "geometry") program.Geometry = parsed;
+            else if (so.Stage == "tess_control") program.TessControl = parsed;
+            else if (so.Stage == "tess_evaluation") program.TessEval = parsed;
+            else if (so.Stage == "compute") program.Compute = parsed;
         }
-        program.Linked = program.Vertex is not null && program.Fragment is not null;
+        program.Linked = program.Vertex is not null && program.Fragment is not null || program.Compute is not null;
         if (!program.Linked && program.Shaders.Count > 0 && !scene.Notes.Any(n => n.Key == "shaderSyntax"))
             scene.Notes.Add(SimNote.Error("notLinked", ("line", line.ToString())));
     }
@@ -693,7 +699,7 @@ public sealed partial class GlReader
 
     // ---------- learnopengl.com's Shader class (shader_s.h / shader.h) ----------
 
-    private void ShaderClass(string name, string vsFile, string fsFile, string? gsFile, int line)
+    private void ShaderClass(string name, string vsFile, string fsFile, string? gsFile, int line, string? tcsFile = null, string? tesFile = null)
     {
         var program = new GlState.ProgramObject();
         gl.Programs[name] = program;
@@ -704,6 +710,8 @@ public sealed partial class GlReader
         }
         var files = new List<(string, string)> { (vsFile, "vertex"), (fsFile, "fragment") };
         if (gsFile is not null) files.Add((gsFile, "geometry"));
+        if (tcsFile is not null) files.Add((tcsFile, "tess_control"));
+        if (tesFile is not null) files.Add((tesFile, "tess_evaluation"));
         foreach (var (file, stage) in files)
         {
             var text = project.Find(file);
@@ -724,6 +732,8 @@ public sealed partial class GlReader
                 program.Geometry = parsed;
                 program.GeometryFile = project.PathOf(file);
             }
+            else if (stage == "tess_control") program.TessControl = parsed;
+            else if (stage == "tess_evaluation") program.TessEval = parsed;
             else
             {
                 program.Fragment = parsed;

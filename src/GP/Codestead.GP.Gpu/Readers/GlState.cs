@@ -25,6 +25,14 @@ internal sealed class GlState
         public Dictionary<string, Func<double, ShaderValue?>> Uniforms = new(StringComparer.Ordinal);
         public ShaderProgram? Geometry;
         public string? GeometryFile;
+        /// <summary>The tessellation control and evaluation shaders, if the program has them.</summary>
+        public ShaderProgram? TessControl;
+        public ShaderProgram? TessEval;
+        /// <summary>A compute program's shader (glDispatchCompute runs it).</summary>
+        public ShaderProgram? Compute;
+
+        /// <summary>Every stage the program has (vertex, tessellation, geometry, fragment).</summary>
+        public IEnumerable<ShaderProgram> AllStages => new[] { Vertex, TessControl, TessEval, Geometry, Fragment }.Where(s => s is not null)!;
         /// <summary>glUniformBlockBinding: block name → binding point.</summary>
         public Dictionary<string, int> BlockBindings = new(StringComparer.Ordinal);
     }
@@ -170,6 +178,8 @@ internal sealed class GlState
     public int UnpackAlignment = 4;
     public bool ClearColorSet;
     public bool Wireframe;
+    /// <summary>glPatchParameteri(GL_PATCH_VERTICES, n): the control points of a patch.</summary>
+    public int PatchVertices = 3;
     public bool CullFace;
     public string CullFaceMode = "GL_BACK";
     public bool FrontCcw = true;

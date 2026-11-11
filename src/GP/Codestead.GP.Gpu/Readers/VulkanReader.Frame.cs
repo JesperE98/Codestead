@@ -138,7 +138,7 @@ public sealed partial class VulkanReader
         var pipeState = PipelineState.Vulkan(src.LastFieldValue, f => src.LastFieldValue(f) is { } v ? src.Int(v) : null);
 
         // Run the frame: the uniform buffer update and the recorded commands (each draw with its push constants).
-        var blocks = AllShaderBlocks([".vert", ".frag", ".geom"], vs, fs);
+        var blocks = AllShaderBlocks([".vert", ".frag", ".geom", ".tesc", ".tese"], vs, fs);
         var device = new VulkanDevice(project, src) { WindowWidth = scene.Width, WindowHeight = scene.Height };
         var recorder = new FrameRecorder(src, time, scene, blocks, transposeMatrices: false, device) { Project = project };
         recorder.Setup();
@@ -202,7 +202,7 @@ public sealed partial class VulkanReader
                     if (dInputs.Count > 0 && !VertexData(dInputs, dVertices)) continue;
                 }
                 deviceTextureSizes = null;
-                var (deviceTextures, deviceCubes) = ds is not null ? DeviceTextures(device, ds, dvs, dfs) : (null, null);
+                var (deviceTextures, deviceCubes) = ds is not null ? DeviceTextures(device, ds, PipelineInfo.Merged(dvs, (pl ?? only)?.Tcs, (pl ?? only)?.Tes, pl is not null ? pl.Gs : only?.Gs), dfs) : (null, null);
                 var textureSizes = deviceTextures is null ? null : deviceTextureSizes;
                 var target = device.TargetOf(ds?.Framebuffer);
                 if (target is not null) RegisterTarget(device, target);
@@ -213,6 +213,9 @@ public sealed partial class VulkanReader
                     VertexShader = dvs,
                     FragmentShader = dfs,
                     GeometryShader = pl is not null ? pl.Gs : only?.Gs,
+                    TessControlShader = (pl ?? only)?.Tes is not null ? (pl ?? only)!.Tcs : null,
+                    TessEvalShader = (pl ?? only)?.Tes,
+                    PatchVertices = (pl ?? only)?.PatchPoints ?? 3,
                     MatchByLocation = true,
                     Vertices = dVertices,
                     Indices = dIndices,

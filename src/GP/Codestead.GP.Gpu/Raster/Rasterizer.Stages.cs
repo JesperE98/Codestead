@@ -8,7 +8,7 @@ namespace Codestead.GP.Gpu.Raster;
 // in/out globals and gl_Position) and HLSL (entry points with semantics).
 public static partial class Rasterizer
 {
-    private sealed class Stages
+    private sealed partial class Stages
     {
         private readonly DrawCall draw;
         private readonly ShaderRunner vs;
@@ -66,6 +66,7 @@ public static partial class Rasterizer
                 SetUniform(fs, k, v);
                 if (gs is not null) SetUniform(gs, k, v);
             }
+            TessellationStages(textures, time, uniforms);
             WritesDepth = draw.Hlsl
                 ? draw.FragmentShader.Structs.Any(st => st.Fields.Any(f => string.Equals(f.Semantic, "SV_Depth", StringComparison.OrdinalIgnoreCase)))
                     || string.Equals(draw.FragmentShader.FindFunction(draw.FragmentEntry)?.Semantic, "SV_Depth", StringComparison.OrdinalIgnoreCase)
@@ -260,6 +261,8 @@ public static partial class Rasterizer
                 }
             }
             else if (IsPosition(f.Semantic)) clip = result.Padded(4);
+            // Before the tessellation stages the vertex shader hands on control points: no SV_POSITION needed.
+            if (clip is null && draw.TessEvalShader is not null) clip = [0, 0, 0, 1];
             return new ShadedVertex(clip ?? throw new ShaderRuntimeException($"'{f.Id}' returns no SV_POSITION", f.Line), outputs);
         }
 

@@ -336,10 +336,21 @@ public static partial class Rasterizer
                     if (!cache.TryGetValue(index, out var v)) cache[index] = v = stages.Vertex(index, instance);
                     return v;
                 }
-                foreach (var primitive in Primitives(order, draw.Topology))
+                // Tessellation: each patch of control points becomes the primitives the tessellator makes.
+                IEnumerable<(Topology Kind, ShadedVertex[] Vertices)> Assembled()
                 {
-                    var input = primitive.Select(Vertex).ToArray();
-                    var output = stages.HasGeometry ? stages.Geometry(input) : [(KindOf(draw.Topology), input)];
+                    if (stages.HasTessellation)
+                    {
+                        int size = Math.Max(1, draw.PatchVertices);
+                        for (int p = 0; p + size <= order.Length; p += size)
+                            foreach (var made in stages.Tessellate(order[p..(p + size)].Select(Vertex).ToArray(), p / size)) yield return made;
+                        yield break;
+                    }
+                    foreach (var primitive in Primitives(order, draw.Topology)) yield return (KindOf(draw.Topology), primitive.Select(Vertex).ToArray());
+                }
+                foreach (var (assembledKind, input) in Assembled())
+                {
+                    var output = stages.HasGeometry ? stages.Geometry(input) : [(assembledKind, input)];
                     foreach (var (kind, v) in output)
                     {
                         // A geometry shader may send the primitive to a layer of a layered target (gl_Layer).

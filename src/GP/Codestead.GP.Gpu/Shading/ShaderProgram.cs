@@ -25,6 +25,30 @@ public sealed class ShaderProgram
     /// </summary>
     public int Invocations { get; set; } = 1;
 
+    /// <summary>A tessellation control shader's output patch size (layout (vertices = 4) out;), 0 when not given.</summary>
+    public int TessVertices { get; set; }
+    /// <summary>
+    /// A tessellation evaluation shader's domain ("quads", "triangles", "isolines": layout (quads, …) in;), its spacing
+    /// ("equal_spacing", "fractional_odd_spacing", "fractional_even_spacing") and winding (cw; ccw by default), and
+    /// point_mode.
+    /// </summary>
+    public string? TessDomain { get; set; }
+    public string? TessSpacing { get; set; }
+    public bool TessCw { get; set; }
+    public bool TessPointMode { get; set; }
+    /// <summary>A compute shader's work group size (layout (local_size_x = 16, local_size_y = 16) in;), 1 where not given.</summary>
+    public int[] LocalSize { get; } = [1, 1, 1];
+
+    /// <summary>
+    /// HLSL attributes of the functions by name ([domain("quad")], [partitioning("fractional_odd")],
+    /// [outputcontrolpoints(4)], [patchconstantfunc("…")], [numthreads(16, 16, 1)]): attribute → its arguments as text.
+    /// </summary>
+    public Dictionary<string, Dictionary<string, string[]>> Attributes { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>An HLSL function's attribute (its arguments), or null.</summary>
+    public string[]? Attribute(string function, string name) =>
+        Attributes.TryGetValue(function, out var a) && a.TryGetValue(name, out var v) ? v : null;
+
     // Looked up at every call of a running shader: by name, made again when the program has grown (while it is parsed).
     private Dictionary<string, Function>? functionsByName;
     private Dictionary<string, Struct>? structsByName;

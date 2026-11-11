@@ -55,7 +55,7 @@ public sealed partial class GlReader
     private static readonly Regex ModelRe = new(@"^Model\s+(?<name>\w+)\s*\(\s*""(?<path>[^""]+)""", RegexOptions.CultureInvariant);
     private readonly Dictionary<string, (Models.ObjModel Model, string Path)> models = new(StringComparer.Ordinal);
 
-    private static readonly Regex ShaderClassRe = new(@"^Shader\s+(?<name>\w+)\s*\(\s*""(?<vs>[^""]+)""\s*,\s*""(?<fs>[^""]+)""(?:\s*,\s*""(?<gs>[^""]+)"")?", RegexOptions.CultureInvariant);
+    private static readonly Regex ShaderClassRe = new(@"^Shader\s+(?<name>\w+)\s*\(\s*""(?<vs>[^""]+)""\s*,\s*""(?<fs>[^""]+)""(?:\s*,\s*(?:""(?<gs>[^""]+)""|nullptr|NULL|0)(?:\s*,\s*(?:""(?<tcs>[^""]+)""|nullptr|NULL|0)(?:\s*,\s*(?:""(?<tes>[^""]+)""|nullptr|NULL|0))?)?)?", RegexOptions.CultureInvariant);
 
     private Scene.Scene Run()
     {
@@ -418,7 +418,8 @@ public sealed partial class GlReader
         if (shaderClass.Success)
         {
             ShaderClass(shaderClass.Groups["name"].Value, shaderClass.Groups["vs"].Value, shaderClass.Groups["fs"].Value,
-                shaderClass.Groups["gs"].Success ? shaderClass.Groups["gs"].Value : null, src.LineAt(st.Offset));
+                shaderClass.Groups["gs"].Success ? shaderClass.Groups["gs"].Value : null, src.LineAt(st.Offset),
+                shaderClass.Groups["tcs"].Success ? shaderClass.Groups["tcs"].Value : null, shaderClass.Groups["tes"].Success ? shaderClass.Groups["tes"].Value : null);
             return;
         }
         var modelDecl = ModelRe.Match(text);

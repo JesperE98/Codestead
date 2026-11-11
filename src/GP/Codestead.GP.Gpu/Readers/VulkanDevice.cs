@@ -433,6 +433,14 @@ internal sealed partial class VulkanDevice : IDeviceModel
                     ["framebufferColorSampleCounts"] = ShaderValue.Str(counts),
                     ["framebufferDepthSampleCounts"] = ShaderValue.Str(counts),
                     ["maxSamplerAnisotropy"] = ShaderValue.Scalar(16),
+                    // lavapipe's limits.
+                    ["maxTessellationGenerationLevel"] = ShaderValue.Integer(64),
+                    ["maxTessellationPatchSize"] = ShaderValue.Integer(32),
+                    ["maxComputeWorkGroupCount"] = ShaderValue.Array([ShaderValue.Integer(65535), ShaderValue.Integer(65535), ShaderValue.Integer(65535)]),
+                    ["maxComputeWorkGroupSize"] = ShaderValue.Array([ShaderValue.Integer(1024), ShaderValue.Integer(1024), ShaderValue.Integer(1024)]),
+                    ["maxComputeWorkGroupInvocations"] = ShaderValue.Integer(1024),
+                    ["maxComputeSharedMemorySize"] = ShaderValue.Integer(32768),
+                    ["maxImageDimension2D"] = ShaderValue.Integer(16384),
                 };
                 Set(args[1], ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["limits"] = ShaderValue.Struct(limits) }));
                 return ShaderValue.Scalar(0);

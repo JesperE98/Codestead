@@ -202,10 +202,30 @@ public sealed class CppExec
                 return value;
             }
         }
+        // d3d12.h's numeric limits (the same on every device).
+        if (D3D12Limits.TryGetValue(name, out var limit)) return ShaderValue.Integer(limit);
         // An API constant (DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_SRV_DIMENSION_TEXTURECUBE): its name, so descriptions keep it.
         if (System.Text.RegularExpressions.Regex.IsMatch(name, @"^(?:D3D12|DXGI|D3D|VK|GL)_[A-Z0-9_]+$")) return ShaderValue.Str(name);
         return null;
     }
+
+    private static readonly Dictionary<string, long> D3D12Limits = new(StringComparer.Ordinal)
+    {
+        ["D3D12_TESSELLATOR_MAX_TESSELLATION_FACTOR"] = 64,
+        ["D3D12_TESSELLATOR_MAX_ODD_TESSELLATION_FACTOR"] = 63,
+        ["D3D12_TESSELLATOR_MAX_EVEN_TESSELLATION_FACTOR"] = 64,
+        ["D3D12_TESSELLATOR_MIN_ODD_TESSELLATION_FACTOR"] = 1,
+        ["D3D12_TESSELLATOR_MIN_EVEN_TESSELLATION_FACTOR"] = 2,
+        ["D3D12_IA_PATCH_MAX_CONTROL_POINT_COUNT"] = 32,
+        ["D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION"] = 65535,
+        ["D3D12_CS_THREAD_GROUP_MAX_X"] = 1024,
+        ["D3D12_CS_THREAD_GROUP_MAX_Y"] = 1024,
+        ["D3D12_CS_THREAD_GROUP_MAX_Z"] = 64,
+        ["D3D12_CS_THREAD_GROUP_MAX_THREADS_PER_GROUP"] = 1024,
+        ["D3D12_CS_TGSM_REGISTER_COUNT"] = 8192,
+        ["D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION"] = 16384,
+        ["D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT"] = 8,
+    };
 
     /// <summary>An argument's value now, or null (for choosing an overload).</summary>
     public ShaderValue? TryEval(Expr e)
