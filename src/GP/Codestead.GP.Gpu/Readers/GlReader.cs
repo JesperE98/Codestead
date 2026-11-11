@@ -298,6 +298,9 @@ public sealed partial class GlReader
         // if (nrComponents == 1)); a pointer, a handle or an API result is not known.
         if (!m.Success) return env.Eval(condition) is { V: { Length: 1 } decided, Iterator: null } ? decided[0] != 0 : null;
         var name = m.Groups[2].Value;
+        // The value a followed function returned (FollowCalls).
+        if (name.StartsWith(ReturnedPrefix, StringComparison.Ordinal) && !m.Groups[3].Success && env.Runner.Globals.TryGetValue(name, out var returnedValue))
+            return returnedValue.V is { Length: 1 } r ? (m.Groups[1].Value == "!") == (r[0] == 0) : null;
         bool? value = gl.VertexArrays.ContainsKey(name) || gl.Buffers.ContainsKey(name) || gl.TextureObjects.ContainsKey(name) || gl.Framebuffers.ContainsKey(name)
             || gl.Renderbuffers.ContainsKey(name) || gl.Programs.ContainsKey(name) ? true
             : src.DeclaredType(name) is { } type && (type == "bool" || ShaderValue.IsIntType(type) || type is "float" or "double" or "GLboolean")
@@ -309,6 +312,31 @@ public sealed partial class GlReader
             truth = (truth == compared) == (m.Groups[3].Value == "==");
         }
         return m.Groups[1].Value == "!" ? !truth : truth;
+    }
+
+    private int followedResults;
+    private const string ReturnedPrefix = "__returned";
+
+    /// <summary>
+    /// Follows the calls of the program's own API-calling functions in a condition, and gives the condition with each
+    /// call replaced by a name that holds the value it returned.
+    /// </summary>
+    private string FollowCalls(string text, int offset)
+    {
+        foreach (Match call in Regex.Matches(text, @"(?<![\w.>])(\w+)\s*\(").Cast<Match>().Reverse())
+        {
+            var fn = call.Groups[1].Value;
+            if (fn == "main" || inlineDepth > MaxInlineDepth || !src.Functions.ContainsKey(fn) || !src.CallsApi(fn)) continue;
+            int open = call.Index + call.Length - 1;
+            int close = CppSource.MatchBracket(text, open);
+            if (close < 0) continue;
+            statementOffset = offset;
+            var returned = Inline(fn, CppSource.SplitArgs(text[(open + 1)..close]));
+            var holder = ReturnedPrefix + ++followedResults;
+            env.Runner.Globals[holder] = returned is not null && env.Eval(returned) is { } value ? value.Clone() : ShaderValue.Str("?");
+            text = text[..call.Index] + holder + text[(close + 1)..];
+        }
+        return text;
     }
 
     /// <summary>The API calls (gl*, glfw*, Shader methods) in a piece of code, without running its C++ again.</summary>
@@ -336,10 +364,12 @@ public sealed partial class GlReader
         }
         if (st.Kind == "if")
         {
-            // The condition's API calls first (if (glCheckFramebufferStatus(…) != …)), then the branch it picks:
-            // decided, that branch; not decided, the body, as for any other if.
+            // The condition's API calls first (if (glCheckFramebufferStatus(…) != …)), and the program's own functions
+            // that make API calls (if (!InitBloomFBO(bloomFBO, …))), then the branch it picks: decided, that branch; not
+            // decided, the body, as for any other if.
             ApiCalls(st.Text, st.Offset);
-            foreach (var inner in (Decide(st.Text) == false ? st.Else : st.Body) ?? []) Statement(inner);
+            var condition = FollowCalls(st.Text, st.Offset);
+            foreach (var inner in (Decide(condition) == false ? st.Else : st.Body) ?? []) Statement(inner);
             return;
         }
         if (st.Kind == "while")

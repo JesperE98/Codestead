@@ -126,8 +126,19 @@ public sealed partial class GlReader
             {
                 if (BoundFramebuffer(A(0)) is not { } fb) return true;
                 var texArg = name == "glFramebufferTexture2D" ? A(3) : A(2);
-                if (!gl.TextureObjects.TryGetValue(Obj(texArg), out var tex)) return true;
+                // The texture itself (its own name: mip.texture of a struct copied into a vector names the texture it
+                // got, not the last one made through that variable).
+                var texName = ObjOf(texArg, gl.TextureObjects.ContainsKey);
+                if (!gl.TextureObjects.TryGetValue(texName, out var tex)) return true;
                 var fboName = A(0).Contains("READ", StringComparison.Ordinal) ? gl.ReadFramebuffer! : gl.DrawFramebuffer!;
+                // Another texture in place of the one attached (learnopengl's bloom mip chain: one framebuffer, a
+                // texture per level): from now on each draw goes to the texture attached then, as for a mip level.
+                if (!fb.PerTexture && !A(1).Contains("DEPTH", StringComparison.Ordinal) && AttachmentIndex(A(1)) == 0 && fb.Colors.Count == 1
+                    && fb.Colors.TryGetValue(0, out var before) && !ReferenceEquals(before, tex))
+                {
+                    PerTextureFrom(fboName, before);
+                    fb.PerTexture = true;
+                }
                 // A face of a cube map (GL_TEXTURE_CUBE_MAP_POSITIVE_X + i) or a mip level: the attachment changes from
                 // draw to draw, so each draw goes to the texture's own target for that face and level.
                 int cubeFace = -1, level = Int(A(name == "glFramebufferTexture2D" ? 4 : 3)) ?? 0;
@@ -136,7 +147,7 @@ public sealed partial class GlReader
                 if (!A(1).Contains("DEPTH", StringComparison.Ordinal) && (cubeFace >= 0 || level > 0 || fb.PerTexture))
                 {
                     fb.PerTexture = true;
-                    fb.TargetTexture = Obj(texArg);
+                    fb.TargetTexture = texName;
                     fb.TargetFace = cubeFace;
                     fb.TargetLevel = level;
                     fb.Colors.Clear();
@@ -313,6 +324,24 @@ public sealed partial class GlReader
     {
         var name = target.Contains("READ", StringComparison.Ordinal) ? gl.ReadFramebuffer : gl.DrawFramebuffer;
         return name is not null && gl.Framebuffers.TryGetValue(name, out var fb) ? fb : null;
+    }
+
+    /// <summary>
+    /// A framebuffer whose colour texture is swapped for another one: what was drawn into it so far belongs to the
+    /// texture attached before, which becomes a target of its own ("tex:name"), like every texture attached later.
+    /// </summary>
+    private void PerTextureFrom(string fbo, GlState.TextureObject before)
+    {
+        var name = gl.TextureObjects.Where(kv => ReferenceEquals(kv.Value, before)).Select(kv => kv.Key).OrderBy(k => k.Contains('#') ? 0 : 1).FirstOrDefault();
+        if (name is null) return;
+        var target = "tex:" + name;
+        before.Framebuffer = target;
+        before.Attachment = 0;
+        if (scene.Targets.TryGetValue(fbo, out var drawn))
+        {
+            scene.Targets[target] = new RenderTarget(target, Math.Max(1, before.Width), Math.Max(1, before.Height), 1, drawn.Depth, drawn.Stencil, 1, before.Float);
+            scene.Ops.Add(new CopyOp(scene.Draws.Count, fbo, target));
+        }
     }
 
     /// <summary>The render target a draw goes to (registered in the scene), or null for the window.</summary>
