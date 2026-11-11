@@ -23,7 +23,9 @@ public sealed partial class D3D12Reader
         var draws = src.Calls(".DrawInstanced").ToList();
         var indexedDraws = src.Calls(".DrawIndexedInstanced").ToList();
         // A Model (learnopengl's Model class ported): m_model.Draw(m_commandList.Get()) draws its meshes.
-        var modelDraw = src.Calls(".Draw").FirstOrDefault(c => Recorded(c) && c.Target is { } t && (src.DeclaredType(t) ?? "").Contains("Model", StringComparison.Ordinal));
+        // (Through a member or a pointer too: entity.pModel->Draw(commandList) – the member's declared type.)
+        var modelDraw = src.Calls(".Draw").FirstOrDefault(c => Recorded(c) && c.Target is { } t
+            && (src.DeclaredType(Regex.Match(t, @"(\w+)\s*(?:\[[^\]]*\])?\s*$").Groups[1].Value) ?? "").Contains("Model", StringComparison.Ordinal));
         // With a PopulateCommandList, only what it records is drawn (a Mesh::Draw nobody calls yet draws nothing).
         bool recordsHere = src.Functions.ContainsKey("PopulateCommandList");
         var draw = draws.FirstOrDefault(Recorded) ?? (modelDraw is null && !recordsHere ? draws.FirstOrDefault() : null);
@@ -200,7 +202,7 @@ public sealed partial class D3D12Reader
                     InstanceDivisor = stepRate,
                     CubeTextures = deviceCubes,
                     CubeTexturesLod = deviceCubes is null ? null : deviceCubeLod,
-                    TextureSizes = textureSizes,
+                    TextureImages = textureSizes,
                     VertexShader = dvs,
                     FragmentShader = dps,
                     VertexEntry = pl?.VsEntry ?? vsEntry,
@@ -221,6 +223,7 @@ public sealed partial class D3D12Reader
                     DepthWrite = (pl?.State ?? state).DepthWrite,
                     Stencil = (pl?.State ?? state).Stencil is { } st ? st with { Ref = d.StencilRef ?? st.Ref } : null,
                     Blend = (pl?.State ?? state).Blend,
+                    AttachmentBlends = (pl?.State ?? state).Attachments,
                     Textures = deviceTextures ?? PerDrawTextures(pl?.Vs ?? vs, pl?.Fs ?? ps, d.Bound) ?? (pl is null ? textures : Textures(pl.Vs, pl.Fs) ?? textures),
                 });
             }
@@ -364,7 +367,8 @@ public sealed partial class D3D12Reader
         // has layers; drawn into through a view per slice (a cube map's faces one by one), each slice is its own target.
         var shape = device.ShapeOf(id) ?? device.ShapeOf(levelId);
         scene.Targets[levelId] = new RenderTarget(levelId, Math.Max(1, r.Width >> level), Math.Max(1, r.Height >> level), shape?.Colors ?? 1, shape?.Depth ?? true, shape?.Depth ?? true,
-            Math.Max(1, r.Samples), r.Float, r.PerSlice ? 1 : Math.Max(1, r.ArraySize));
+            Math.Max(1, r.Samples), r.Float, r.PerSlice ? 1 : Math.Max(1, r.ArraySize), device.DepthOf(levelId), device.ChannelsOf(levelId, shape?.Colors ?? 1));
+        if (device.DepthOf(levelId) is { } owner) RegisterTarget(device, owner);
     }
 
     /// <summary>Every input layout of the program: (semantic, input slot, byte offset, floats, per instance, step rate).</summary>
@@ -461,13 +465,17 @@ public sealed partial class D3D12Reader
             var parts = id.Split('|');
             if (!flat.ContainsKey(id))
             {
-                var (t, c) = registers.TryGetValue(parts[0], out var reg) ? device.TextureAt(TableHandle(state, reg) ?? start + reg, sampler(parts.Length > 1 ? parts[1] : null)) : (null, null);
+                // "name@k": slice k of a Texture2DArray.
+                int at = parts[0].IndexOf('@');
+                var name = at < 0 ? parts[0] : parts[0][..at];
+                int layer = at < 0 ? 0 : int.Parse(parts[0][(at + 1)..], System.Globalization.CultureInfo.InvariantCulture);
+                var (t, c) = registers.TryGetValue(name, out var reg) ? device.TextureAt(TableHandle(state, reg) ?? start + reg, sampler(parts.Length > 1 ? parts[1] : null), layer) : (null, null);
                 flat[id] = t;
                 cubes[id] = c;
             }
             return (flat[id], cubes[id]);
         }
-        deviceTextureSizes = id => Lookup(id).Item1 is { } t ? (t.Image.Width, t.Image.Height) : null;
+        deviceTextureSizes = id => Lookup(id).Item1?.Image;
         deviceCubeLod = (id, x, y, z, lod) => Lookup(id).Item2 is { } c ? c.Sample(x, y, z, lod) : null;
         return ((id, u, v) => Lookup(id).Item1 is { } t ? t.Sample(u, v) : [0, 0, 0, 1],
             (id, x, y, z) => Lookup(id).Item2 is { } c ? c.Sample(x, y, z) : null);
@@ -502,7 +510,7 @@ public sealed partial class D3D12Reader
     }
 
     /// <summary>The texture sizes of the last DeviceTextures call (GetDimensions, textureSize).</summary>
-    private Func<string, (int Width, int Height)?>? deviceTextureSizes;
+    private Func<string, Codestead.GP.Gpu.Textures.Image?>? deviceTextureSizes;
     /// <summary>The cube maps of the last DeviceTextures call read at a mip level (SampleLevel).</summary>
     private Func<string, double, double, double, double, double[]?>? deviceCubeLod;
 

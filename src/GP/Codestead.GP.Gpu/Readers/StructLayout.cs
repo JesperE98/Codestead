@@ -46,12 +46,30 @@ internal static class StructLayout
     /// <summary>The data members of a struct body: type, name, array size, default initialiser (or null).</summary>
     private static IEnumerable<(string Type, string Name, int Count, string? Default)> Members(CppSource src, string body)
     {
-        // Member functions go ({ … } blocks; an initialiser "= {}" keeps its braces' place as "{}").
-        body = Regex.Replace(body, @"=\s*\{\s*\}", "= {}");
-        var flat = RemoveBlocks(body.Replace("= {}", "= \u0001"));
+        // Member functions go ({ … } blocks); a brace initialiser (= {}, glm::vec3 scale = { 1.0f, 1.0f, 1.0f };) is
+        // kept aside first, so it is not taken for a block.
+        var initialisers = new List<string>();
+        var kept = new System.Text.StringBuilder();
+        for (int i = 0; i < body.Length; i++)
+        {
+            if (body[i] == '=' && Regex.Match(body[(i + 1)..], @"^\s*\{") is { Success: true } brace)
+            {
+                int open = i + 1 + brace.Length - 1;
+                int close = CppSource.MatchBracket(body, open);
+                if (close > open)
+                {
+                    initialisers.Add(body[open..(close + 1)]);
+                    kept.Append("= \u0001").Append(initialisers.Count - 1).Append('\u0002');
+                    i = close;
+                    continue;
+                }
+            }
+            kept.Append(body[i]);
+        }
+        var flat = RemoveBlocks(kept.ToString());
         // Types of one word (vec3, float), with a namespace (glm::vec2), unsigned int, std::string and templates
         // (std::vector<GameObject>: the game's members).
-        foreach (Match f in Regex.Matches(flat, @"(?:^|;)\s*(?:const\s+)?(?<type>(?:unsigned\s+|signed\s+)?(?:glm::|DirectX::|std::)?[A-Za-z_]\w*(?:\s*<[^;{}()]*>)?)\s+(?<names>[A-Za-z_][^;{}]*?)\s*(?=;)", RegexOptions.CultureInvariant))
+        foreach (Match f in Regex.Matches(flat, @"(?:^|;)\s*(?:const\s+)?(?<type>(?:unsigned\s+|signed\s+)?(?:glm::|DirectX::|std::)?[A-Za-z_]\w*(?:\s*<[^;{}()]*>)?)(?<pointer>\s*\*+\s*|\s+)(?<names>[A-Za-z_][^;{}]*?)\s*(?=;)", RegexOptions.CultureInvariant))
         {
             var type = f.Groups["type"].Value.Replace("glm::", "").Replace("DirectX::", "");
             if (type is "static" or "return" or "using" or "friend" or "typedef") continue;
@@ -62,6 +80,8 @@ internal static class StructLayout
             else if (Regex.IsMatch(type, @"^(?:std::)?(?:map|unordered_map)\s*<")) type = "map";
             else if (type is "std::string" or "string") type = "string";
             else if (type.StartsWith("std::", StringComparison.Ordinal)) type = type[5..];
+            // A pointer (Model* pModel = nullptr;): the type with its star – it holds another object, not a value of its own.
+            if (f.Groups["pointer"].Value.Contains('*')) type += "*";
             foreach (var raw in CppSource.SplitArgs(f.Groups["names"].Value))
             {
                 var nm = Regex.Match(raw.Trim(), @"^(\w+)(?:\s*\[\s*(\w+)\s*\])?\s*(?:=\s*(.+))?$", RegexOptions.Singleline);
@@ -69,7 +89,8 @@ internal static class StructLayout
                 // The size: a number or a constant (Light lights[NR_LIGHTS]; with const unsigned int NR_LIGHTS = 32;).
                 int count = !nm.Groups[2].Success ? 1 : int.TryParse(nm.Groups[2].Value, out var literal) ? literal : src.Int(nm.Groups[2].Value) ?? 1;
                 var init = nm.Groups[3].Success ? nm.Groups[3].Value.Trim() : null;
-                yield return (type, nm.Groups[1].Value, count, init == "\u0001" ? "{}" : init);
+                if (init is not null) init = Regex.Replace(init, "\u0001(\\d+)\u0002", m => Regex.IsMatch(initialisers[int.Parse(m.Groups[1].Value)], @"^\{\s*\}$") ? "{}" : initialisers[int.Parse(m.Groups[1].Value)]);
+                yield return (type, nm.Groups[1].Value, count, init);
             }
         }
     }
@@ -99,8 +120,8 @@ internal static class StructLayout
         "vec2" or "XMFLOAT2" or "float2" or "ivec2" or "uvec2" => 2,
         "vec3" or "XMFLOAT3" or "float3" or "ivec3" or "uvec3" => 3,
         "vec4" or "XMFLOAT4" or "float4" or "ivec4" or "uvec4" => 4,
-        "mat4" or "XMFLOAT4X4" or "XMMATRIX" or "float4x4" => 16,
-        "mat3" or "XMFLOAT3X3" or "float3x3" => 9,
+        "mat4" or "mat4x4" or "XMFLOAT4X4" or "XMMATRIX" or "float4x4" => 16,
+        "mat3" or "mat3x3" or "XMFLOAT3X3" or "float3x3" => 9,
         _ => 1,
     };
 }

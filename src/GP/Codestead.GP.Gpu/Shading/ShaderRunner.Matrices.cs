@@ -167,12 +167,13 @@ public sealed partial class ShaderRunner
                 var r1 = Cross(r2, r0);
                 return Rows([[r0[0], r1[0], r2[0], 0], [r0[1], r1[1], r2[1], 0], [r0[2], r1[2], r2[2], 0], [-Dot3(r0, eye), -Dot3(r1, eye), -Dot3(r2, eye), 1]]);
             }
-            case "XMVector3TransformCoord" or "XMVector3TransformNormal" or "XMVector4Transform" when a.Count == 2 && a[1].IsMatrix:
+            case "XMVector3TransformCoord" or "XMVector3TransformNormal" or "XMVector3Transform" or "XMVector4Transform" when a.Count == 2 && a[1].IsMatrix:
             {
-                // DirectXMath's row vector times the matrix: (x, y, z, 1) for a point (divided by w), w = 0 for a normal.
+                // DirectXMath's row vector times the matrix: (x, y, z, 1) for a point (divided by w; XMVector3Transform
+                // keeps w), w = 0 for a normal.
                 var m = a[1];
                 var v = a[0].Padded(4);
-                double w = name switch { "XMVector3TransformCoord" => 1, "XMVector3TransformNormal" => 0, _ => v[3] };
+                double w = name switch { "XMVector3TransformCoord" or "XMVector3Transform" => 1, "XMVector3TransformNormal" => 0, _ => v[3] };
                 double[] row = [v[0], v[1], v[2], w];
                 var r = new double[4];
                 for (int c = 0; c < 4; c++)
@@ -203,6 +204,11 @@ public sealed partial class ShaderRunner
                 return ShaderValue.Vec(a[0].Padded(2)[0], a[0].Padded(2)[1], 0, 0);
             case "XMVectorReplicate" when a.Count == 1:
                 return ShaderValue.Vec(S(0), S(0), S(0), S(0));
+            case "XMVectorSplatX" or "XMVectorSplatY" or "XMVectorSplatZ" or "XMVectorSplatW" when a.Count == 1:
+            {
+                double c = a[0].Padded(4)["XYZW".IndexOf(name[^1])];
+                return ShaderValue.Vec(c, c, c, c);
+            }
             case "XMVectorZero" when a.Count == 0:
                 return ShaderValue.Vec(0, 0, 0, 0);
             case "XMVectorMultiply" when a.Count == 2:

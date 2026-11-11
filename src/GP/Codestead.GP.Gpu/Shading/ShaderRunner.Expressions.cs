@@ -7,7 +7,7 @@ public sealed partial class ShaderRunner
 {
     private ShaderValue Eval(Expr e)
     {
-        if (++steps > MaxSteps * 10) throw new ShaderRuntimeException("the shader runs too long for the simulator", e.Line);
+        if (++steps > StepLimit * 10) throw new ShaderRuntimeException("the shader runs too long for the simulator", e.Line);
         switch (e)
         {
             case Number n:
@@ -27,6 +27,8 @@ public sealed partial class ShaderRunner
                     return owner.Fields.TryGetValue(m.Field, out var f) ? f : throw new ShaderRuntimeException($"no member named '{m.Field}'", m.Line);
                 // C++ mode: a descriptor handle held as a number (handle.ptr).
                 if (Lenient && m.Field == "ptr" && owner.V is { Length: 1 }) return owner;
+                // DirectXMath: an XMMATRIX's rows (m.r[0] … m.r[3]), an XMFLOAT4X4's elements (m._41: row 4, column 1).
+                if (Lenient && owner.IsMatrix && MatrixMember(owner, m.Field) is { } part) return part;
                 if (owner.V is not null && !owner.IsMatrix && Swizzle(m.Field) is { } idx)
                 {
                     var from = owner.V;
@@ -118,6 +120,20 @@ public sealed partial class ShaderRunner
             default:
                 throw new ShaderRuntimeException("unsupported expression", e.Line);
         }
+    }
+
+    /// <summary>
+    /// A DirectXMath matrix member: r (its rows, as DirectXMath's row vectors use them) or _RC. The runner keeps a
+    /// matrix column by column of the row-vector convention: row i is element i of each column.
+    /// </summary>
+    private static ShaderValue? MatrixMember(ShaderValue matrix, string field)
+    {
+        int n = matrix.Cols;
+        if (field == "r")
+            return ShaderValue.Array(Enumerable.Range(0, n).Select(row => ShaderValue.Vec(Enumerable.Range(0, n).Select(col => matrix.V![col * n + row]).ToArray())).ToArray());
+        if (field.Length == 3 && field[0] == '_' && field[1] - '1' is int r and >= 0 && field[2] - '1' is int c and >= 0 && r < n && c < n)
+            return ShaderValue.Scalar(matrix.V![c * n + r]);
+        return null;
     }
 
     // Comparisons give 1 or 0; like a literal, the value is never changed in place.
@@ -322,9 +338,10 @@ public sealed partial class ShaderRunner
     /// <summary>The size of a square matrix type (mat4, float4x4, XMFLOAT4X4, XMMATRIX), or 0.</summary>
     internal static int MatrixSize(string type) => type switch
     {
-        "mat2" or "float2x2" or "dmat2" => 2,
-        "mat3" or "float3x3" or "XMFLOAT3X3" or "dmat3" => 3,
-        "mat4" or "float4x4" or "XMFLOAT4X4" or "XMMATRIX" or "dmat4" => 4,
+        // (mat4x4 is mat4's other name in GLSL and GLM.)
+        "mat2" or "mat2x2" or "float2x2" or "dmat2" => 2,
+        "mat3" or "mat3x3" or "float3x3" or "XMFLOAT3X3" or "dmat3" => 3,
+        "mat4" or "mat4x4" or "float4x4" or "XMFLOAT4X4" or "XMMATRIX" or "dmat4" or "dmat4x4" => 4,
         _ => 0,
     };
 

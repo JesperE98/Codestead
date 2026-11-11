@@ -99,6 +99,16 @@ internal sealed partial class VulkanDevice : IDeviceModel
     private readonly Dictionary<string, (int Colors, bool Depth)> targetShape = new(StringComparer.Ordinal);
 
     public (int Colors, bool Depth)? ShapeOf(string target) => targetShape.TryGetValue(target, out var s) ? s : null;
+
+    /// <summary>The channels each colour attachment of a target keeps (an R8_UNORM revealage image: 1), or null.</summary>
+    public IReadOnlyList<int>? ChannelsOf(string target, int colors)
+    {
+        var formats = new string?[Math.Max(1, colors)];
+        foreach (var img in images.Where(i => i.TargetId == target)) formats[0] = img.Format;
+        foreach (var (image, (t, k)) in attachmentOf)
+            if (t == target && k < formats.Length && ImageOf(image) is { } attached) formats[k] = attached.Format;
+        return FormatChannels.List(formats.Select(FormatChannels.Of));
+    }
     private string? resolveView;
     /// <summary>Descriptor sets: binding → (image view, sampler).</summary>
     private readonly Dictionary<string, Dictionary<int, (string? View, string? Sampler)>> sets = new(StringComparer.Ordinal);
@@ -240,7 +250,8 @@ internal sealed partial class VulkanDevice : IDeviceModel
                 img.Samples = sm.Success ? int.Parse(sm.Groups[1].Value) : 1;
                 var format = Text(info, "format") ?? "";
                 img.Depth = format.Contains("_D16", StringComparison.Ordinal) || format.Contains("_D24", StringComparison.Ordinal) || format.Contains("_D32", StringComparison.Ordinal);
-                img.Float = format.Contains("SFLOAT", StringComparison.Ordinal) && !img.Depth;
+                // SFLOAT and UFLOAT (B10G11R11_UFLOAT_PACK32: an HDR target without sign or alpha) keep values above 1.
+                img.Float = format.Contains("FLOAT", StringComparison.Ordinal) && !img.Depth;
                 img.Srgb = format.Contains("_SRGB", StringComparison.Ordinal);
                 img.Format = format;
                 Set(args[3], ShaderValue.Str(img.TargetId));
@@ -377,7 +388,10 @@ internal sealed partial class VulkanDevice : IDeviceModel
                         if (pass.Colors[k] < attachments.Length && attachments[pass.Colors[k]].Text is { } extra && views.TryGetValue(extra, out var ev))
                             attachmentOf[ev.Image] = (target, k);
                     bool depth = attachments.Any(a => a.Text is { } av && views.TryGetValue(av, out var v) && ImageOf(v.Image) is { Depth: true });
-                    targetShape[target] = (Math.Max(1, pass.Colors.Length), depth);
+                    // (Another framebuffer of the same image – a later pass without depth, weighted blended OIT's
+                    // composite into the opaque image – keeps the depth buffer the first one gave it.)
+                    targetShape[target] = targetShape.TryGetValue(target, out var before)
+                        ? (Math.Max(before.Colors, Math.Max(1, pass.Colors.Length)), before.Depth || depth) : (Math.Max(1, pass.Colors.Length), depth);
                 }
                 return ShaderValue.Str("VK_SUCCESS");
             }
@@ -523,15 +537,24 @@ internal sealed partial class VulkanDevice : IDeviceModel
                         }
                     }
                 }
-                foreach (var clear in Items(Field(info, "pClearValues")))
+                // pClearValues[i] is attachment i's: a colour attachment's (colour k of the subpass: attachment k of the
+                // target) when its loadOp clears, the depth attachment's.
+                var passInfo = framebuffer is not null && framebufferInfo.TryGetValue(framebuffer, out var fbInfo) && fbInfo.Pass is { } pn
+                    && renderPasses.TryGetValue(pn, out var rpInfo) && passLoads.TryGetValue(pn, out var passLoad) ? (rpInfo.Colors, passLoad.LoadOps, passLoad.Depth) : default;
+                var clears = Items(Field(info, "pClearValues"));
+                for (int i = 0; i < clears.Length; i++)
                 {
-                    if (Field(clear, "color") is { } color && clearColor)
+                    var clear = clears[i];
+                    int colorIndex = passInfo.Colors is null ? -1 : Array.IndexOf(passInfo.Colors, i);
+                    bool known = passInfo.Colors is not null && (colorIndex >= 0 || passInfo.Depth == i);
+                    bool loadClears = passInfo.LoadOps is null || i >= passInfo.LoadOps.Length || passInfo.LoadOps[i] is not { Length: > 0 } op || op.Contains("CLEAR", StringComparison.Ordinal);
+                    if (Field(clear, "color") is { } color && (known ? colorIndex >= 0 && loadClears : clearColor))
                     {
                         var rgba = new List<double>();
                         CppExec.Flatten(color, rgba);
-                        if (rgba.Count >= 3) Ops.Add(new ClearOp(DrawCount(), target, rgba.Take(4).ToArray(), null, null));
+                        if (rgba.Count >= 3) Ops.Add(new ClearOp(DrawCount(), target, rgba.Take(4).ToArray(), null, null, known && passInfo.Colors!.Length > 1 ? colorIndex : null));
                     }
-                    if (Field(clear, "depthStencil") is { } ds && clearDepth)
+                    if (Field(clear, "depthStencil") is { } ds && (known ? passInfo.Depth == i && loadClears : clearDepth))
                     {
                         var v = new List<double>();
                         CppExec.Flatten(ds, v);
@@ -687,12 +710,20 @@ internal sealed partial class VulkanDevice : IDeviceModel
         buffers.TryGetValue(buffer, out var place) && place.Memory >= 0 && memories[place.Memory].Bytes.TryGetValue(place.Offset + byteOffset, out var x) ? x : null;
 
     /// <summary>The texture behind a binding of a descriptor set: a loaded image, a cube map or a render target.</summary>
-    public (Texture? Texture, CubeTexture? Cube)? TextureAt(string set, int binding)
+    /// <param name="layer">The layer a sampler2DArray read names (its third coordinate): layer k of a render target is
+    /// "img:N@k".</param>
+    public (Texture? Texture, CubeTexture? Cube)? TextureAt(string set, int binding, int layer = 0)
     {
         if (!sets.TryGetValue(set, out var bindings) || !bindings.TryGetValue(binding, out var b) || b.View is null || !views.TryGetValue(b.View, out var view)) return null;
         var img = ImageOf(view.Image);
         if (img is null) return (null, null);
         var sampler = b.Sampler is not null && samplers.TryGetValue(b.Sampler, out var st) ? st : SamplerState.Default;
+        if (layer > 0 && !view.Cube && !img.Cube && img.LayerImages.All(i => i is null) && !img.Window)
+        {
+            var slice = img.TargetId + "@" + Math.Min(layer, img.Layers - 1);
+            bool sliceDepth = img.Depth;
+            return (new Texture(() => Raster.Rasterizer.TargetImage(slice, 0, sliceDepth), sampler) { Components = 4 }, null);
+        }
         // A further colour attachment of a target (bloom's bright colour): that attachment of the target's picture.
         if (attachmentOf.TryGetValue(view.Image, out var att))
             return (new Texture(() => Raster.Rasterizer.TargetImage(att.Target, att.Attachment, false), sampler) { Components = 4 }, null);

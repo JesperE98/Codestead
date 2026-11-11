@@ -105,6 +105,9 @@ public sealed partial class ShaderParser
             if (Accept(";")) continue;
             if (Peek.Is("[")) // HLSL attribute: [numthreads(8, 8, 1)], [RootSignature(...)]
             {
+                // [instance(5)]: a geometry shader that runs 5 times per primitive (SV_GSInstanceID 0 … 4).
+                if (PeekAt(1).Is("instance") && PeekAt(2).Is("(") && PeekAt(3).Kind == ShaderTokenKind.Number && PeekAt(4).Is(")"))
+                    program.Invocations = Math.Max(1, (int)double.Parse(PeekAt(3).Text, CultureInfo.InvariantCulture));
                 SkipBalanced("[", "]");
                 continue;
             }
@@ -260,7 +263,7 @@ public sealed partial class ShaderParser
         int? location = null, binding = null;
         bool pushConstant = false;
         string? primitive = null;
-        int? maxVertices = null;
+        int? maxVertices = null, invocations = null;
         if (Accept("layout"))
         {
             Expect("(");
@@ -271,6 +274,7 @@ public sealed partial class ShaderParser
                 if (key.Is("push_constant")) pushConstant = true;
                 if (key.Kind == ShaderTokenKind.Identifier && Primitives.Contains(key.Text)) primitive = key.Text;
                 if (key.Is("max_vertices") && Peek.Is("=") && PeekAt(1).Kind == ShaderTokenKind.Number) maxVertices = (int)double.Parse(PeekAt(1).Text, CultureInfo.InvariantCulture);
+                if (key.Is("invocations") && Peek.Is("=") && PeekAt(1).Kind == ShaderTokenKind.Number) invocations = (int)double.Parse(PeekAt(1).Text, CultureInfo.InvariantCulture);
                 if ((key.Is("location") || key.Is("binding")) && Accept("="))
                 {
                     var v = Next();
@@ -294,6 +298,7 @@ public sealed partial class ShaderParser
         if (Accept(";"))
         {
             if (storage == "in" && primitive is not null) program.InputPrimitive = primitive;
+            if (storage == "in" && invocations is > 0) program.Invocations = invocations.Value;
             if (storage == "out" && primitive is not null) program.OutputPrimitive = primitive;
             if (storage == "out" && maxVertices is not null) program.MaxVertices = maxVertices.Value;
             return;

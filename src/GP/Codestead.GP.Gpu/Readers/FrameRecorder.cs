@@ -32,6 +32,7 @@ internal sealed class FrameRecorder
     };
 
     private readonly CppExec exec;
+    private readonly Scene.Scene scene;
     private readonly CppSource source;
     private readonly IReadOnlyList<Global> blocks;
     private readonly bool transposeMatrices;
@@ -50,6 +51,7 @@ internal sealed class FrameRecorder
     public FrameRecorder(CppSource src, double time, Scene.Scene scene, IReadOnlyList<Global> blocks, bool transposeMatrices, IDeviceModel? device = null)
     {
         this.blocks = blocks;
+        this.scene = scene;
         this.transposeMatrices = transposeMatrices;
         source = src;
         exec = new CppExec(src, time, Hook, scene);
@@ -94,6 +96,8 @@ internal sealed class FrameRecorder
     }
 
     private int callDepth;
+    /// <summary>A recursive function goes as deep as the program's data (a scene graph's chain of entities).</summary>
+    private const int MaxCallDepth = 32;
     private readonly Dictionary<string, List<Stmt>> bodies = new(StringComparer.Ordinal);
     private readonly Dictionary<string, List<(string Name, bool Ref, string? Default)>?> headers = new(StringComparer.Ordinal);
 
@@ -104,7 +108,7 @@ internal sealed class FrameRecorder
     private ShaderValue? CallProgramFunction(string name, IReadOnlyList<Expr> args)
     {
         if (name.Contains("::", StringComparison.Ordinal)) name = name[(name.LastIndexOf("::", StringComparison.Ordinal) + 2)..];
-        if (device is null || callDepth > 6 || name is "main" or "wWinMain" or "WinMain" or "OnRender" or "mainLoop" or "run" or "drawFrame" || !source.Functions.ContainsKey(name)) return null;
+        if (device is null || callDepth > MaxCallDepth || name is "main" or "wWinMain" or "WinMain" or "OnRender" or "mainLoop" or "run" or "drawFrame" || !source.Functions.ContainsKey(name)) return null;
         name = source.ChooseOverload(name, args, exec.TryEval);
         if (!headers.TryGetValue(name, out var parameters))
             headers[name] = parameters = source.ParametersOf(name)?.Select(p => (p.Name, p.Ref, p.Default)).ToList();
@@ -116,7 +120,10 @@ internal sealed class FrameRecorder
         for (int i = 0; i < parameters.Count; i++)
         {
             // A parameter not given takes its default value (DrawSprite(…, float rotate = 0.0f, …)).
-            if (i < args.Count) values[parameters[i].Name] = Value(args[i])?.Clone() ?? ShaderValue.Scalar(0);
+            // A struct or container by reference (addChild(Entity& parent, …)) is the caller's object itself.
+            if (i < args.Count) values[parameters[i].Name] = Value(args[i]) is { } given
+                ? parameters[i].Ref && given is { Fields: not null } or { Items: not null } or { Map: not null } ? given : given.Clone()
+                : ShaderValue.Scalar(0);
             else if (parameters[i].Default is { } fallback && exec.Eval(fallback) is { } v) values[parameters[i].Name] = v;
         }
         callDepth++;
@@ -232,6 +239,10 @@ internal sealed class FrameRecorder
         var fromDevice = device?.Hook(name, args);
         switch (name)
         {
+            case "SetWindowTextW" or "SetWindowTextA" or "SetWindowText" or "glfwSetWindowTitle" when args.Count >= 2:
+                // The title the program sets while it runs (the frame's counts: "drawn: 37 / 101").
+                if (Value(args[1])?.Text is { } title) scene.WindowTitle = title;
+                return ShaderValue.Scalar(0);
             case "vkCmdBindPipeline" when args.Count >= 3:
                 pipeline = PipelineName(args[2]);
                 return ShaderValue.Scalar(0);

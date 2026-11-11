@@ -16,10 +16,10 @@ public static partial class Rasterizer
     private sealed record TextureReads(
         Func<string, double, double, double[]>? Sample,
         Func<string, double, double, double, double[]?>? SampleCube,
-        Func<string, (int Width, int Height)?>? Size,
+        Func<string, Codestead.GP.Gpu.Textures.Image?>? Size,
         Func<string, double, double, double, double, double[]?>? SampleCubeLod = null)
     {
-        public static TextureReads Of(DrawCall draw) => new(draw.Textures, draw.CubeTextures, draw.TextureSizes, draw.CubeTexturesLod);
+        public static TextureReads Of(DrawCall draw) => new(draw.Textures, draw.CubeTextures, draw.TextureImages, draw.CubeTexturesLod);
 
         /// <summary>
         /// The same reads for worker threads. The readers' texture lookups fill caches of their own the first time they

@@ -19,6 +19,11 @@ public sealed class ShaderProgram
     /// <summary>A geometry shader's output (points, line_strip, triangle_strip) and its max_vertices.</summary>
     public string? OutputPrimitive { get; set; }
     public int MaxVertices { get; set; }
+    /// <summary>
+    /// A geometry shader's instances: it runs this many times per primitive (layout (triangles, invocations = 5) in;
+    /// HLSL [instance(5)]), with gl_InvocationID / SV_GSInstanceID 0, 1 ….
+    /// </summary>
+    public int Invocations { get; set; } = 1;
 
     // Looked up at every call of a running shader: by name, made again when the program has grown (while it is parsed).
     private Dictionary<string, Function>? functionsByName;

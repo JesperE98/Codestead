@@ -36,18 +36,38 @@ public sealed partial class GlReader
             case "glStencilMask" or "glStencilMaskSeparate":
                 gl.Stencil = gl.Stencil with { WriteMask = Int(A(name == "glStencilMask" ? 0 : 1)) ?? 0xFF };
                 return true;
+            // The calls without i set every draw buffer's blending; glBlendFunci & co. one buffer's (OpenGL 4.0).
             case "glBlendFunc":
-                gl.BlendState = gl.BlendState with { SrcColor = FactorOf(A(0)), DstColor = FactorOf(A(1)), SrcAlpha = FactorOf(A(0)), DstAlpha = FactorOf(A(1)) };
+                SetBlend(null, b => b with { SrcColor = FactorOf(A(0)), DstColor = FactorOf(A(1)), SrcAlpha = FactorOf(A(0)), DstAlpha = FactorOf(A(1)) });
                 return true;
             case "glBlendFuncSeparate":
-                gl.BlendState = gl.BlendState with { SrcColor = FactorOf(A(0)), DstColor = FactorOf(A(1)), SrcAlpha = FactorOf(A(2)), DstAlpha = FactorOf(A(3)) };
+                SetBlend(null, b => b with { SrcColor = FactorOf(A(0)), DstColor = FactorOf(A(1)), SrcAlpha = FactorOf(A(2)), DstAlpha = FactorOf(A(3)) });
                 return true;
             case "glBlendEquation":
-                gl.BlendState = gl.BlendState with { ColorOp = BlendOpOf(A(0)), AlphaOp = BlendOpOf(A(0)) };
+                SetBlend(null, b => b with { ColorOp = BlendOpOf(A(0)), AlphaOp = BlendOpOf(A(0)) });
                 return true;
             case "glBlendEquationSeparate":
-                gl.BlendState = gl.BlendState with { ColorOp = BlendOpOf(A(0)), AlphaOp = BlendOpOf(A(1)) };
+                SetBlend(null, b => b with { ColorOp = BlendOpOf(A(0)), AlphaOp = BlendOpOf(A(1)) });
                 return true;
+            case "glBlendFunci":
+                SetBlend(Int(A(0)) ?? 0, b => b with { SrcColor = FactorOf(A(1)), DstColor = FactorOf(A(2)), SrcAlpha = FactorOf(A(1)), DstAlpha = FactorOf(A(2)) });
+                return true;
+            case "glBlendFuncSeparatei":
+                SetBlend(Int(A(0)) ?? 0, b => b with { SrcColor = FactorOf(A(1)), DstColor = FactorOf(A(2)), SrcAlpha = FactorOf(A(3)), DstAlpha = FactorOf(A(4)) });
+                return true;
+            case "glBlendEquationi":
+                SetBlend(Int(A(0)) ?? 0, b => b with { ColorOp = BlendOpOf(A(1)), AlphaOp = BlendOpOf(A(1)) });
+                return true;
+            case "glBlendEquationSeparatei":
+                SetBlend(Int(A(0)) ?? 0, b => b with { ColorOp = BlendOpOf(A(1)), AlphaOp = BlendOpOf(A(2)) });
+                return true;
+            case "glEnablei" or "glDisablei" when A(0).Contains("GL_BLEND", StringComparison.Ordinal):
+            {
+                int buffer = Int(A(1)) ?? 0;
+                if (name == "glDisablei") gl.BufferBlends[buffer] = null;
+                else gl.BufferBlends.Remove(buffer);
+                return true;
+            }
             case "glBlendColor":
                 gl.BlendState = gl.BlendState with { Constant = a.Select(x => Eval(x)?.X ?? 0).ToArray() };
                 return true;
@@ -106,8 +126,19 @@ public sealed partial class GlReader
             {
                 if (BoundFramebuffer(A(0)) is not { } fb) return true;
                 var texArg = name == "glFramebufferTexture2D" ? A(3) : A(2);
-                if (!gl.TextureObjects.TryGetValue(Obj(texArg), out var tex)) return true;
+                // The texture itself (its own name: mip.texture of a struct copied into a vector names the texture it
+                // got, not the last one made through that variable).
+                var texName = ObjOf(texArg, gl.TextureObjects.ContainsKey);
+                if (!gl.TextureObjects.TryGetValue(texName, out var tex)) return true;
                 var fboName = A(0).Contains("READ", StringComparison.Ordinal) ? gl.ReadFramebuffer! : gl.DrawFramebuffer!;
+                // Another texture in place of the one attached (learnopengl's bloom mip chain: one framebuffer, a
+                // texture per level): from now on each draw goes to the texture attached then, as for a mip level.
+                if (!fb.PerTexture && !A(1).Contains("DEPTH", StringComparison.Ordinal) && AttachmentIndex(A(1)) == 0 && fb.Colors.Count == 1
+                    && fb.Colors.TryGetValue(0, out var before) && !ReferenceEquals(before, tex))
+                {
+                    PerTextureFrom(fboName, before);
+                    fb.PerTexture = true;
+                }
                 // A face of a cube map (GL_TEXTURE_CUBE_MAP_POSITIVE_X + i) or a mip level: the attachment changes from
                 // draw to draw, so each draw goes to the texture's own target for that face and level.
                 int cubeFace = -1, level = Int(A(name == "glFramebufferTexture2D" ? 4 : 3)) ?? 0;
@@ -116,7 +147,7 @@ public sealed partial class GlReader
                 if (!A(1).Contains("DEPTH", StringComparison.Ordinal) && (cubeFace >= 0 || level > 0 || fb.PerTexture))
                 {
                     fb.PerTexture = true;
-                    fb.TargetTexture = Obj(texArg);
+                    fb.TargetTexture = texName;
                     fb.TargetFace = cubeFace;
                     fb.TargetLevel = level;
                     fb.Colors.Clear();
@@ -127,10 +158,16 @@ public sealed partial class GlReader
                     tex.TargetLevels = Math.Max(tex.TargetLevels, level + 1);
                     return true;
                 }
-                tex.Framebuffer = fboName;
+                // A depth texture another framebuffer has attached already: both use one depth buffer (its owner's,
+                // which a shader that samples the texture reads).
+                if (A(1).Contains("DEPTH", StringComparison.Ordinal) && tex.Framebuffer is { } owner && owner != fboName && gl.Framebuffers.ContainsKey(owner))
+                    fb.DepthOf = owner;
+                else tex.Framebuffer = fboName;
                 fb.Samples = Math.Max(fb.Samples, tex.Samples);
                 // glFramebufferTexture (not …2D) attaches every layer: a cube map's six faces.
                 if (name == "glFramebufferTexture" && tex.IsCube) fb.Layers = 6;
+                // … and a texture array's layers (gl_Layer picks one).
+                else if (name == "glFramebufferTexture" && tex.Layers > 1) fb.Layers = tex.Layers;
                 if (fb.Width == 0) (fb.Width, fb.Height) = (tex.Width, tex.Height);
                 if (A(1).Contains("DEPTH", StringComparison.Ordinal))
                 {
@@ -245,6 +282,27 @@ public sealed partial class GlReader
         return false;
     }
 
+    /// <summary>Changes the blending of one draw buffer, or of all of them (null).</summary>
+    private void SetBlend(int? buffer, Func<BlendState, BlendState> change)
+    {
+        if (buffer is int one)
+        {
+            gl.BufferBlends[one] = change(gl.BufferBlends.TryGetValue(one, out var own) && own is not null ? own : gl.BlendState);
+            return;
+        }
+        gl.BlendState = change(gl.BlendState);
+        foreach (var b in gl.BufferBlends.Keys.ToList())
+            if (gl.BufferBlends[b] is { } state) gl.BufferBlends[b] = change(state);
+    }
+
+    /// <summary>The blending of each draw buffer, when one differs from the others (glBlendFunci); else null.</summary>
+    private List<BlendState?>? AttachmentBlends()
+    {
+        if (!gl.Blend || gl.BufferBlends.Count == 0) return null;
+        int count = gl.BufferBlends.Keys.Max() + 1;
+        return Enumerable.Range(0, count).Select(i => gl.BufferBlends.TryGetValue(i, out var b) ? b : gl.BlendState).ToList();
+    }
+
     /// <summary>memcpy(ptr, data, size) into a buffer mapped with glMapBuffer.</summary>
     private void Memcpy(IReadOnlyList<string> a)
     {
@@ -268,6 +326,24 @@ public sealed partial class GlReader
         return name is not null && gl.Framebuffers.TryGetValue(name, out var fb) ? fb : null;
     }
 
+    /// <summary>
+    /// A framebuffer whose colour texture is swapped for another one: what was drawn into it so far belongs to the
+    /// texture attached before, which becomes a target of its own ("tex:name"), like every texture attached later.
+    /// </summary>
+    private void PerTextureFrom(string fbo, GlState.TextureObject before)
+    {
+        var name = gl.TextureObjects.Where(kv => ReferenceEquals(kv.Value, before)).Select(kv => kv.Key).OrderBy(k => k.Contains('#') ? 0 : 1).FirstOrDefault();
+        if (name is null) return;
+        var target = "tex:" + name;
+        before.Framebuffer = target;
+        before.Attachment = 0;
+        if (scene.Targets.TryGetValue(fbo, out var drawn))
+        {
+            scene.Targets[target] = new RenderTarget(target, Math.Max(1, before.Width), Math.Max(1, before.Height), 1, drawn.Depth, drawn.Stencil, 1, before.Float);
+            scene.Ops.Add(new CopyOp(scene.Draws.Count, fbo, target));
+        }
+    }
+
     /// <summary>The render target a draw goes to (registered in the scene), or null for the window.</summary>
     private string? DrawTarget()
     {
@@ -279,9 +355,17 @@ public sealed partial class GlReader
             scene.Targets[levelId] = new RenderTarget(levelId, Math.Max(1, tex.Width >> fb.TargetLevel), Math.Max(1, tex.Height >> fb.TargetLevel), 1, fb.Depth, fb.Stencil, 1, tex.Float);
             return fb.TargetFace > 0 ? levelId + "@" + fb.TargetFace : levelId;
         }
-        int colors = fb.Colors.Count == 0 ? 0 : fb.Colors.Keys.Max() + 1;
-        scene.Targets[id] = new RenderTarget(id, fb.Width, fb.Height, colors, fb.Depth, fb.Stencil, fb.Samples, fb.Colors.Values.Any(c => c.Float), fb.Layers);
+        Register(id, fb);
+        // The framebuffer whose depth it shares is known to the rasterizer too (it may not have drawn yet).
+        if (fb.DepthOf is { } owner && !scene.Targets.ContainsKey(owner) && gl.Framebuffers.TryGetValue(owner, out var ownerFb)) Register(owner, ownerFb);
         return id;
+    }
+
+    private void Register(string id, GlState.FramebufferObject fb)
+    {
+        int colors = fb.Colors.Count == 0 ? 0 : fb.Colors.Keys.Max() + 1;
+        scene.Targets[id] = new RenderTarget(id, fb.Width, fb.Height, colors, fb.Depth, fb.Stencil, fb.Samples, fb.Colors.Values.Any(c => c.Float), fb.Layers, fb.DepthOf,
+            FormatChannels.List(Enumerable.Range(0, colors).Select(k => fb.Colors.TryGetValue(k, out var c) ? c.Channels : 4)));
     }
 
     private static string LevelTarget(string texture, int level) => level > 0 ? $"tex:{texture}~{level}" : "tex:" + texture;
@@ -386,12 +470,36 @@ public sealed partial class GlReader
             {
                 var (align, size) = Std140(f.Type, f.ArraySize);
                 offset = (offset + align - 1) / align * align;
-                if (writes.TryGetValue(buf.Offset + offset, out var value)) d[g.Id == "" ? f.Id : g.Id + "." + f.Id] = value;
+                var member = g.Id == "" ? f.Id : g.Id + "." + f.Id;
+                if (f.ArraySize > 0)
+                {
+                    // An array (mat4 lightSpaceMatrices[16]): its elements at their std140 stride, written one by one
+                    // (glBufferSubData per element) or several at once (a whole std::vector).
+                    int stride = size / f.ArraySize;
+                    var items = new ShaderValue?[f.ArraySize];
+                    for (int i = 0; i < f.ArraySize; i++)
+                    {
+                        if (!writes.TryGetValue(buf.Offset + offset + i * stride, out var written)) continue;
+                        var parts = written.Items ?? [written];
+                        for (int k = 0; k < parts.Length && i + k < f.ArraySize; k++) items[i + k] = parts[k];
+                    }
+                    if (items.Any(x => x is not null))
+                        d[member] = ShaderValue.Array(items.Select(x => x ?? ZeroOf(f.Type)).ToArray());
+                }
+                else if (writes.TryGetValue(buf.Offset + offset, out var value)) d[member] = value;
                 offset += size;
             }
         }
         return d;
     }
+
+    /// <summary>The value of a uniform block member nothing was written to: zero.</summary>
+    private static ShaderValue ZeroOf(string type) => type switch
+    {
+        _ when ShaderRunner.MatrixSize(type) is int n and > 0 => ShaderValue.Matrix(n, new double[n * n]),
+        _ when Regex.Match(type, @"^[iub]?vec([234])$") is { Success: true } v => ShaderValue.Vec(new double[v.Groups[1].Value[0] - '0']),
+        _ => ShaderValue.Scalar(0),
+    };
 
     /// <summary>The std140 alignment and size of a member, in bytes.</summary>
     internal static (int Align, int Size) Std140(string type, int arraySize)
@@ -401,9 +509,9 @@ public sealed partial class GlReader
             "vec2" or "ivec2" or "uvec2" or "bvec2" => (8, 8),
             "vec3" or "ivec3" or "uvec3" or "bvec3" => (16, 12),
             "vec4" or "ivec4" or "uvec4" or "bvec4" => (16, 16),
-            "mat2" => (16, 32),
-            "mat3" => (16, 48),
-            "mat4" => (16, 64),
+            "mat2" or "mat2x2" => (16, 32),
+            "mat3" or "mat3x3" => (16, 48),
+            "mat4" or "mat4x4" => (16, 64),
             _ => (4, 4),
         };
         if (arraySize > 0)

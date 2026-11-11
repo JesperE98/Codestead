@@ -423,7 +423,7 @@ public sealed partial class CppSource
 
     private readonly Dictionary<string, bool> callsApi = new(StringComparer.Ordinal);
     // glGetError is a query the program's own code may ask anywhere (learnopengl's glCheckError_): not a call to follow.
-    private static readonly Regex ApiCallRe = new(@"\b(?!glGetError\b)(?:gl[A-Z]\w*|glfw[A-Z]\w*|vk[A-Z]\w*)\s*\(|\.\s*(?:use|setFloat|setInt|setBool|setVec2|setVec3|setVec4|setMat2|setMat3|setMat4)\s*\(", RegexOptions.CultureInvariant);
+    private static readonly Regex ApiCallRe = new(@"\b(?!glGetError\b)(?:gl[A-Z]\w*|glfw[A-Z]\w*|vk[A-Z]\w*)\s*\(|(?:\.|->)\s*(?:use|setFloat|setInt|setBool|setVec2|setVec3|setVec4|setMat2|setMat3|setMat4|Draw)\s*\(", RegexOptions.CultureInvariant);
     private static readonly Regex CalledRe = new(@"(?<![\w.>])([A-Za-z_]\w*)\s*\(", RegexOptions.CultureInvariant);
 
     public bool Calls(string caller, string callee) => FunctionBody(caller) is { } body && CallRe(callee).IsMatch(body);

@@ -72,6 +72,7 @@ public sealed class CppExec
     public Func<string, IReadOnlyList<Expr>, ShaderValue?>? ApiValue { get; set; }
 
     private int helperDepth;
+    private const int MaxHelperDepth = 48;
     private readonly Dictionary<string, (List<(string Name, bool Ref, string? Default)> Params, List<Stmt> Body)?> helpers = new(StringComparer.Ordinal);
 
     /// <summary>
@@ -81,7 +82,9 @@ public sealed class CppExec
     /// </summary>
     private ShaderValue? HelperFunction(string name, IReadOnlyList<Expr> args)
     {
-        if (helperDepth > 6 || name is "main" || name.StartsWith('.') || !src.Functions.ContainsKey(name)) return null;
+        // A recursive function goes as deep as the program's data (a scene graph's chain of eleven entities); the limit
+        // only stops a recursion that never ends.
+        if (helperDepth > MaxHelperDepth || name is "main" || name.StartsWith('.') || !src.Functions.ContainsKey(name)) return null;
         name = src.ChooseOverload(name, args, TryEval);
         if (!helpers.TryGetValue(name, out var helper))
         {
@@ -99,7 +102,10 @@ public sealed class CppExec
             // default value.
             var arg = i < args.Count ? Runner.EvalArg(args[i]) : h.Params[i].Default is { } fallback ? Eval(fallback) : null;
             if (arg is null) continue;
-            values[h.Params[i].Name] = arg.Int ? ShaderValue.Scalar(arg.X) : arg.Clone();
+            // A struct or container given by reference (addChild(Entity& parent, …)) is the caller's object itself:
+            // what the function changes in it, the caller sees.
+            values[h.Params[i].Name] = arg.Int ? ShaderValue.Scalar(arg.X)
+                : h.Params[i].Ref && arg is { Fields: not null } or { Items: not null } or { Map: not null } ? arg : arg.Clone();
         }
         helperDepth++;
         try

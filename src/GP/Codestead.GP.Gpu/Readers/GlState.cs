@@ -38,12 +38,28 @@ internal sealed class GlState
         public bool Enabled;
         /// <summary>glVertexAttribDivisor: 0 = per vertex, n = a new value every n instances.</summary>
         public int Divisor;
+        /// <summary>
+        /// The separate attribute format of OpenGL 4.3/4.5 (glVertexArrayAttribFormat, glVertexArrayAttribBinding): the
+        /// buffer binding the attribute reads, and its offset within a vertex.
+        /// </summary>
+        public int? BindingIndex;
+        public int RelativeOffset;
+    }
+
+    /// <summary>A vertex buffer binding point (glVertexArrayVertexBuffer / glBindVertexBuffer): buffer, offset, stride.</summary>
+    public sealed class BufferBinding
+    {
+        public string? Buffer;
+        public int OffsetBytes;
+        public int StrideBytes;
+        public int Divisor;
     }
 
     public sealed class VertexArray
     {
         public Dictionary<int, Attribute> Attributes = new();
         public string? ElementBuffer;
+        public Dictionary<int, BufferBinding> Bindings = new();
     }
 
     public sealed class TextureObject
@@ -65,7 +81,13 @@ internal sealed class GlState
         /// <summary>Size and format from glTexImage2D with no data (a render target), and where it is attached.</summary>
         public int Width, Height;
         public bool Float, IsDepth;
+        /// <summary>glTextureStorage2D's internal format (GL_RGB8, GL_SRGB8_ALPHA8 …): the format its data is stored in.</summary>
+        public string? StorageFormat;
+        /// <summary>The colour channels a render target texture keeps (GL_R8 / GL_RED: 1, GL_RG…: 2).</summary>
+        public int Channels = 4;
         public int Samples = 1;
+        /// <summary>The layers of a texture array (GL_TEXTURE_2D_ARRAY, glTexImage3D): a layered framebuffer draws into them.</summary>
+        public int Layers = 1;
         public string? Framebuffer;
         public int Attachment;
         /// <summary>
@@ -91,6 +113,11 @@ internal sealed class GlState
         /// learnopengl's captureFBO): each draw goes to the texture, face and level attached then.
         /// </summary>
         public bool PerTexture;
+        /// <summary>
+        /// The framebuffer whose depth texture this one has attached as well (weighted blended OIT's transparent pass
+        /// tests against the opaque pass's depth): the two share one depth buffer.
+        /// </summary>
+        public string? DepthOf;
         public string? TargetTexture;
         public int TargetFace = -1, TargetLevel;
     }
@@ -153,6 +180,11 @@ internal sealed class GlState
     public Scene.StencilState Stencil = new();
     public bool Blend;
     public Scene.BlendState BlendState = new();
+    /// <summary>
+    /// Draw buffers whose blending differs from <see cref="BlendState"/> (glBlendFunci): buffer → its state; a buffer
+    /// switched off with glDisablei(GL_BLEND, i) has none.
+    /// </summary>
+    public Dictionary<int, Scene.BlendState?> BufferBlends = new();
     public bool[] ColorMask = [true, true, true, true];
     public double PointSize = 1;
     public bool ProgramPointSize;

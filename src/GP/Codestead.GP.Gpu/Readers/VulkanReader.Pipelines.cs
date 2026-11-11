@@ -38,13 +38,23 @@ public sealed partial class VulkanReader
                     src.FieldAssignments(f).Where(a => a.Offset >= range.Start && a.Offset < create.Offset).Select(a => Sub(a.Value)).LastOrDefault() ?? fallback;
                 var cull = Field("cullMode", "VK_CULL_MODE_NONE");
                 var front = Field("frontFace", "VK_FRONT_FACE_COUNTER_CLOCKWISE");
+                // An array of blend attachment states (std::array<VkPipelineColorBlendAttachmentState, 2>, set element by
+                // element): each attachment's own fields, attachmentCount of them.
+                List<Func<string, string?>>? attachments = null;
+                if (src.FieldAssignments("blendEnable").Any(a => a.Offset >= range.Start && a.Offset < create.Offset && Regex.IsMatch(a.Target, @"\[\s*\d+\s*\]$")))
+                {
+                    int count = Math.Clamp(src.Int(Field("attachmentCount", "1")) ?? 1, 1, 8);
+                    attachments = Enumerable.Range(0, count).Select(i => (Func<string, string?>)(f => src.FieldAssignments(f)
+                        .Where(a => a.Offset >= range.Start && a.Offset < create.Offset && (Regex.Match(a.Target, @"\[\s*(\d+)\s*\]$") is { Success: true } m ? int.Parse(m.Groups[1].Value) == i : true))
+                        .Select(a => Sub(a.Value)).LastOrDefault())).ToList();
+                }
                 result[name] = new PipelineInfo(name, vs, fs, "main", "main",
                     cull.Contains("FRONT_AND_BACK", StringComparison.Ordinal) ? CullMode.FrontAndBack : cull.Contains("BACK", StringComparison.Ordinal) ? CullMode.Back : cull.Contains("FRONT", StringComparison.Ordinal) ? CullMode.Front : CullMode.None,
                     !front.Contains("_CLOCKWISE", StringComparison.Ordinal) || front.Contains("COUNTER_CLOCKWISE", StringComparison.Ordinal),
                     Field("polygonMode", "FILL").Contains("LINE", StringComparison.Ordinal),
                     Regex.IsMatch(Field("depthTestEnable", "VK_FALSE"), "TRUE"),
                     GlReader.TopologyOf(Field("topology", "TRIANGLE_LIST")),
-                    PipelineState.Vulkan(f => Field(f, null!), f => src.Int(Field(f, "")) is int v ? v : null), gs);
+                    PipelineState.Vulkan(f => Field(f, null!), f => src.Int(Field(f, "")) is int v ? v : null, attachments), gs);
             }
         }
         return result;
@@ -77,10 +87,20 @@ public sealed partial class VulkanReader
                     (Field("polygonMode") ?? "FILL").Contains("LINE", StringComparison.Ordinal),
                     Field("depthTestEnable") is { } depth && (depth.Contains("TRUE", StringComparison.Ordinal) || depth == "1"),
                     GlReader.TopologyOf(Field("topology") ?? "TRIANGLE_LIST"),
-                    PipelineState.Vulkan(f => Field(f)!, f => Field(f) is { } v ? src.Int(v) : null), gs);
+                    PipelineState.Vulkan(f => Field(f)!, f => Field(f) is { } v ? src.Int(v) : null, RuntimeAttachments(made.Info)), gs);
             }
         }
         return runtimePipelines[handle] = result;
+    }
+
+    /// <summary>The fields of each blend attachment state the create-info's pColorBlendState lists (attachmentCount of them).</summary>
+    private static List<Func<string, string?>>? RuntimeAttachments(ShaderValue? info)
+    {
+        var blend = Find(info, "pColorBlendState", 0) ?? info;
+        if (Find(blend, "pAttachments", 0)?.Items is not { Length: > 0 } items) return null;
+        int count = Math.Clamp((int)(Find(blend, "attachmentCount", 0)?.X ?? 1), 1, items.Length);
+        return items.Take(count).Select(item => (Func<string, string?>)(name =>
+            item.Fields?.GetValueOrDefault(name) is { } v ? v.Text ?? (v.V is { Length: > 0 } n ? n[0].ToString(System.Globalization.CultureInfo.InvariantCulture) : null) : null)).ToList();
     }
 
     /// <summary>A field of a create-info by its name, anywhere in it (pColorBlendState → pAttachments → dstColorBlendFactor).</summary>

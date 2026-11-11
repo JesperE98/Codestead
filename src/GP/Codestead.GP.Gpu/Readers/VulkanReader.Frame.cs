@@ -217,7 +217,7 @@ public sealed partial class VulkanReader
                     Target = target,
                     CubeTextures = deviceCubes,
                     CubeTexturesLod = deviceTextures is null ? null : deviceCubeLod,
-                    TextureSizes = textureSizes,
+                    TextureImages = textureSizes,
                     First = d.Indexed ? 0 : d.First,
                     Count = d.Count,
                     Instances = Math.Max(1, d.Instances),
@@ -231,6 +231,7 @@ public sealed partial class VulkanReader
                     DepthWrite = (pl?.State ?? one?.State ?? pipeState).DepthWrite,
                     Stencil = (pl?.State ?? one?.State ?? pipeState).Stencil is { } st ? st with { Ref = d.StencilRef ?? st.Ref } : null,
                     Blend = (pl?.State ?? one?.State ?? pipeState).Blend,
+                    AttachmentBlends = (pl?.State ?? one?.State ?? pipeState).Attachments,
                     Textures = deviceTextures ?? PerDrawTextures(dvs, dfs, d.Bound) ?? (pl is null ? textures : Textures(dvs, dfs) ?? textures),
                 });
             }

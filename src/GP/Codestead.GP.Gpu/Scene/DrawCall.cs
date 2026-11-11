@@ -38,6 +38,11 @@ public sealed class DrawCall
     public StencilState? Stencil { get; init; }
     /// <summary>Blending, or null when it is off.</summary>
     public BlendState? Blend { get; init; }
+    /// <summary>
+    /// Blending per colour attachment when they differ (glBlendFunci, D3D12's IndependentBlendEnable): attachment i
+    /// blends with element i (null: off); attachments past the list use <see cref="Blend"/>. Null: all use Blend.
+    /// </summary>
+    public IReadOnlyList<BlendState?>? AttachmentBlends { get; init; }
     /// <summary>The colour channels written (glColorMask): R, G, B, A.</summary>
     public bool[] ColorMask { get; init; } = [true, true, true, true];
     /// <summary>The render target drawn into (<see cref="Scene.Targets"/>), or null for the window.</summary>
@@ -60,6 +65,6 @@ public sealed class DrawCall
     /// <summary>Cube maps with mip levels read at a level (textureLod, SampleLevel): (name, direction, lod) → RGBA, or null.</summary>
     public Func<string, double, double, double, double, double[]?>? CubeTexturesLod { get; init; }
 
-    /// <summary>The size in texels of the texture a sampler reads (textureSize, texelFetch), or null.</summary>
-    public Func<string, (int Width, int Height)?>? TextureSizes { get; init; }
+    /// <summary>The image of the texture a sampler reads, for its size in texels (textureSize, texelFetch), or null.</summary>
+    public Func<string, Codestead.GP.Gpu.Textures.Image?>? TextureImages { get; init; }
 }

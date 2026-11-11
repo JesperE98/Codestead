@@ -19,7 +19,7 @@ public static partial class Rasterizer
     /// </summary>
     [ThreadStatic] private static RenderContext? current;
 
-    private sealed class RenderContext(Func<string, Framebuffer> target, bool bottomUp)
+    private sealed class RenderContext(Func<string, Framebuffer> target, bool bottomUp, Func<string, (int Width, int Height)>? programSize = null)
     {
         // Read by the fragment workers side by side; an image is made once, by the first thread that needs it.
         private readonly ConcurrentDictionary<(string, int, bool), Image> images = new();
@@ -34,7 +34,10 @@ public static partial class Rasterizer
                 if (!images.TryGetValue((id, attachment, depth), out image))
                 {
                     var fb = Target(id);
-                    images[(id, attachment, depth)] = image = depth ? fb.DepthImage(BottomUp) : fb.ColorImage(BottomUp, attachment);
+                    image = depth ? fb.DepthImage(BottomUp) : fb.ColorImage(BottomUp, attachment);
+                    // A target drawn at the preview's scale: the program still addresses its texels at its own size.
+                    if (programSize?.Invoke(id) is var (w, h) && (w != image.Width || h != image.Height)) image = image with { ProgramWidth = w, ProgramHeight = h };
+                    images[(id, attachment, depth)] = image;
                 }
                 return image;
             }
@@ -108,15 +111,19 @@ public static partial class Rasterizer
                     w = t.Width > 0 ? Math.Max(1, (int)Math.Round(t.Width / scale)) : width;
                     h = t.Height > 0 ? Math.Max(1, (int)Math.Round(t.Height / scale)) : height;
                 }
-                targets[id] = fb = new Framebuffer(w, h, t.Samples, t.Float, t.ColorAttachments) { HasDepth = t.Depth };
+                // A depth buffer shared with another target is that target's own.
+                var depthOf = t.DepthOf is { } owner && owner != id ? Fb(owner) : null;
+                targets[id] = fb = new Framebuffer(w, h, t.Samples, t.Float, t.ColorAttachments, depthOf) { HasDepth = t.Depth || depthOf is not null, Channels = t.Channels };
             }
             return fb;
         }
         // The size in the program's own pixels (gl_FragCoord) of a target.
         double LogicalWidth(string? id) => id is not null && scene.Targets.GetValueOrDefault(id.Contains('@') ? id[..id.IndexOf('@')] : id) is { Width: > 0 } t ? t.Width : scene.Width;
+        (int, int) LogicalSize(string id) => scene.Targets.GetValueOrDefault(id.Contains('@') ? id[..id.IndexOf('@')] : id) is { } t
+            ? (t.Width > 0 ? t.Width : scene.Width, t.Height > 0 ? t.Height : scene.Height) : (scene.Width, scene.Height);
 
         var previous = current;
-        var context = new RenderContext(id => Fb(id), zMinusOneToOne);
+        var context = new RenderContext(id => Fb(id), zMinusOneToOne, LogicalSize);
         current = context;
         try
         {
@@ -129,10 +136,10 @@ public static partial class Rasterizer
                     switch (op)
                     {
                         case ClearOp c:
-                            Fb(c.Target).Clear(c.Color, c.Depth, c.Stencil);
+                            Fb(c.Target).Clear(c.Color, c.Depth, c.Stencil, c.Attachment);
                             // A layered target is cleared in every layer.
                             if (c.Target is not null && scene.Targets.GetValueOrDefault(c.Target) is { Layers: > 1 } layered)
-                                for (int l = 1; l < layered.Layers; l++) Fb(c.Target + "@" + l).Clear(c.Color, c.Depth, c.Stencil);
+                                for (int l = 1; l < layered.Layers; l++) Fb(c.Target + "@" + l).Clear(c.Color, c.Depth, c.Stencil, c.Attachment);
                             context.Changed(c.Target);
                             break;
                         case CopyOp c:
@@ -171,6 +178,8 @@ public static partial class Rasterizer
                     errors.Add(e.Line > 0 ? $"line {e.Line}: {e.Message}" : e.Message);
                 }
                 context.Changed(draw.Target);
+                // The depth it shares with another target was drawn into too.
+                if (draw.Target is not null && scene.Targets.GetValueOrDefault(draw.Target)?.DepthOf is { } sharedDepth) context.Changed(sharedDepth);
                 if (simTimer is not null) Console.Error.WriteLine($"SIMTIME draw {i} target={draw.Target ?? "window"} {fb.Width}x{fb.Height} {simTimer.ElapsedMilliseconds} ms");
             }
             int count = scene.Draws.Count;
@@ -301,7 +310,7 @@ public static partial class Rasterizer
         foreach (var op in scene.Ops.Take(scene.SetupOps))
             sb.Append(op switch
             {
-                ClearOp c => $"clear {c.BeforeDraw} {c.Target} {Numbers(c.Color)} {c.Depth} {c.Stencil}",
+                ClearOp c => $"clear {c.BeforeDraw} {c.Target} {Numbers(c.Color)} {c.Depth} {c.Stencil} {c.Attachment}",
                 CopyOp c => $"copy {c.BeforeDraw} {c.From} {c.To} {c.Color} {c.Depth} {c.Average}",
                 _ => op.ToString(),
             }).Append('\n');
