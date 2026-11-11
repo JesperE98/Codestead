@@ -63,31 +63,20 @@ public sealed partial class GlReader
                 return;
             }
             case "glClear":
+                ClearBound(A(0).Contains("GL_COLOR_BUFFER_BIT", StringComparison.Ordinal) ? gl.ClearColor.ToArray() : null,
+                    A(0).Contains("GL_DEPTH_BUFFER_BIT", StringComparison.Ordinal) ? 1.0 : null,
+                    A(0).Contains("GL_STENCIL_BUFFER_BIT", StringComparison.Ordinal) ? 0 : null);
+                return;
+            case "glClearBufferfv" or "glClearBufferiv" or "glClearBufferuiv" or "glClearBufferfi":
             {
-                // Before the render loop only a framebuffer object's clears count (a capture pass drawn once).
-                if (!inLoop && (gl.DrawFramebuffer is not { } setupFbo || !gl.Framebuffers.ContainsKey(setupFbo))) return;
-                bool color = A(0).Contains("GL_COLOR_BUFFER_BIT", StringComparison.Ordinal);
-                double? depth = A(0).Contains("GL_DEPTH_BUFFER_BIT", StringComparison.Ordinal) ? 1.0 : null;
-                int? stencil = A(0).Contains("GL_STENCIL_BUFFER_BIT", StringComparison.Ordinal) ? 0 : null;
-                if (gl.DrawFramebuffer is { } fbo)
-                {
-                    // A framebuffer object: cleared between the draws of the frame.
-                    var cleared = gl.Framebuffers.ContainsKey(fbo) ? DrawTarget() ?? fbo : fbo;
-                    scene.Ops.Add(new ClearOp(scene.Draws.Count, cleared, color ? gl.ClearColor.ToArray() : null, depth, stencil));
-                    return;
-                }
-                if (scene.Draws.Count > 0 && scene.Draws.Any(d => d.Target is not null))
-                {
-                    // The window, after drawing into framebuffer objects (post-processing).
-                    scene.Ops.Add(new ClearOp(scene.Draws.Count, null, color ? gl.ClearColor.ToArray() : null, depth, stencil));
-                    return;
-                }
-                if (color)
-                {
-                    scene.ClearColor = gl.ClearColor.ToArray();
-                    scene.Draws.Clear();
-                    scene.Ops.Clear();
-                }
+                // One buffer of the bound framebuffer with a value of its own: colour attachment i (GL_COLOR, i, rgba),
+                // the depth (GL_DEPTH, 0, &depth), the stencil, or both (glClearBufferfi(GL_DEPTH_STENCIL, 0, d, s)).
+                var values = name == "glClearBufferfi" ? null : Numbers(DataName(A(2)));
+                if (A(0).Contains("GL_COLOR", StringComparison.Ordinal) && values is { Count: > 0 })
+                    ClearBound(values.Take(4).Concat(Enumerable.Repeat(0.0, Math.Max(0, 4 - values.Count))).ToArray(), null, null, Int(A(1)) ?? 0);
+                else if (A(0).Contains("GL_DEPTH_STENCIL", StringComparison.Ordinal)) ClearBound(null, Eval(A(2))?.X ?? 1, Int(A(3)) ?? 0);
+                else if (A(0).Contains("GL_DEPTH", StringComparison.Ordinal) && values is { Count: > 0 }) ClearBound(null, values[0], null);
+                else if (A(0).Contains("GL_STENCIL", StringComparison.Ordinal) && values is { Count: > 0 }) ClearBound(null, null, (int)values[0]);
                 return;
             }
             case "glCreateShader":
@@ -202,7 +191,12 @@ public sealed partial class GlReader
                 if (A(0).Contains("GL_CULL_FACE", StringComparison.Ordinal)) gl.CullFace = on;
                 if (A(0).Contains("GL_DEPTH_TEST", StringComparison.Ordinal)) gl.DepthTest = on;
                 if (A(0).Contains("GL_STENCIL_TEST", StringComparison.Ordinal)) gl.StencilTest = on;
-                if (A(0).Contains("GL_BLEND", StringComparison.Ordinal)) gl.Blend = on;
+                if (A(0).Contains("GL_BLEND", StringComparison.Ordinal))
+                {
+                    gl.Blend = on;
+                    // For every draw buffer: one switched off with glDisablei follows again.
+                    foreach (var off in gl.BufferBlends.Where(kv => kv.Value is null).Select(kv => kv.Key).ToList()) gl.BufferBlends.Remove(off);
+                }
                 if (A(0).Contains("GL_PROGRAM_POINT_SIZE", StringComparison.Ordinal)) gl.ProgramPointSize = on;
                 if (A(0).Contains("GL_FRAMEBUFFER_SRGB", StringComparison.Ordinal)) scene.WindowSrgb = on;
                 return;
@@ -271,6 +265,35 @@ public sealed partial class GlReader
                 return;
         }
         if (name.StartsWith("glUniform", StringComparison.Ordinal)) Uniform(name, a, line);
+    }
+
+    /// <summary>
+    /// Clears the bound framebuffer: a colour (all attachments, or only <paramref name="attachment"/>), the depth, the
+    /// stencil.
+    /// </summary>
+    private void ClearBound(double[]? color, double? depth, int? stencil, int? attachment = null)
+    {
+        // Before the render loop only a framebuffer object's clears count (a capture pass drawn once).
+        if (!inLoop && (gl.DrawFramebuffer is not { } setupFbo || !gl.Framebuffers.ContainsKey(setupFbo))) return;
+        if (gl.DrawFramebuffer is { } fbo)
+        {
+            // A framebuffer object: cleared between the draws of the frame.
+            var cleared = gl.Framebuffers.ContainsKey(fbo) ? DrawTarget() ?? fbo : fbo;
+            scene.Ops.Add(new ClearOp(scene.Draws.Count, cleared, color, depth, stencil, attachment));
+            return;
+        }
+        if (scene.Draws.Count > 0 && scene.Draws.Any(d => d.Target is not null))
+        {
+            // The window, after drawing into framebuffer objects (post-processing).
+            scene.Ops.Add(new ClearOp(scene.Draws.Count, null, color, depth, stencil));
+            return;
+        }
+        if (color is not null)
+        {
+            scene.ClearColor = color;
+            scene.Draws.Clear();
+            scene.Ops.Clear();
+        }
     }
 
     /// <summary>

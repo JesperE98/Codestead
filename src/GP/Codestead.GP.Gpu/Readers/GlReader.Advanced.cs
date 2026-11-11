@@ -36,18 +36,38 @@ public sealed partial class GlReader
             case "glStencilMask" or "glStencilMaskSeparate":
                 gl.Stencil = gl.Stencil with { WriteMask = Int(A(name == "glStencilMask" ? 0 : 1)) ?? 0xFF };
                 return true;
+            // The calls without i set every draw buffer's blending; glBlendFunci & co. one buffer's (OpenGL 4.0).
             case "glBlendFunc":
-                gl.BlendState = gl.BlendState with { SrcColor = FactorOf(A(0)), DstColor = FactorOf(A(1)), SrcAlpha = FactorOf(A(0)), DstAlpha = FactorOf(A(1)) };
+                SetBlend(null, b => b with { SrcColor = FactorOf(A(0)), DstColor = FactorOf(A(1)), SrcAlpha = FactorOf(A(0)), DstAlpha = FactorOf(A(1)) });
                 return true;
             case "glBlendFuncSeparate":
-                gl.BlendState = gl.BlendState with { SrcColor = FactorOf(A(0)), DstColor = FactorOf(A(1)), SrcAlpha = FactorOf(A(2)), DstAlpha = FactorOf(A(3)) };
+                SetBlend(null, b => b with { SrcColor = FactorOf(A(0)), DstColor = FactorOf(A(1)), SrcAlpha = FactorOf(A(2)), DstAlpha = FactorOf(A(3)) });
                 return true;
             case "glBlendEquation":
-                gl.BlendState = gl.BlendState with { ColorOp = BlendOpOf(A(0)), AlphaOp = BlendOpOf(A(0)) };
+                SetBlend(null, b => b with { ColorOp = BlendOpOf(A(0)), AlphaOp = BlendOpOf(A(0)) });
                 return true;
             case "glBlendEquationSeparate":
-                gl.BlendState = gl.BlendState with { ColorOp = BlendOpOf(A(0)), AlphaOp = BlendOpOf(A(1)) };
+                SetBlend(null, b => b with { ColorOp = BlendOpOf(A(0)), AlphaOp = BlendOpOf(A(1)) });
                 return true;
+            case "glBlendFunci":
+                SetBlend(Int(A(0)) ?? 0, b => b with { SrcColor = FactorOf(A(1)), DstColor = FactorOf(A(2)), SrcAlpha = FactorOf(A(1)), DstAlpha = FactorOf(A(2)) });
+                return true;
+            case "glBlendFuncSeparatei":
+                SetBlend(Int(A(0)) ?? 0, b => b with { SrcColor = FactorOf(A(1)), DstColor = FactorOf(A(2)), SrcAlpha = FactorOf(A(3)), DstAlpha = FactorOf(A(4)) });
+                return true;
+            case "glBlendEquationi":
+                SetBlend(Int(A(0)) ?? 0, b => b with { ColorOp = BlendOpOf(A(1)), AlphaOp = BlendOpOf(A(1)) });
+                return true;
+            case "glBlendEquationSeparatei":
+                SetBlend(Int(A(0)) ?? 0, b => b with { ColorOp = BlendOpOf(A(1)), AlphaOp = BlendOpOf(A(2)) });
+                return true;
+            case "glEnablei" or "glDisablei" when A(0).Contains("GL_BLEND", StringComparison.Ordinal):
+            {
+                int buffer = Int(A(1)) ?? 0;
+                if (name == "glDisablei") gl.BufferBlends[buffer] = null;
+                else gl.BufferBlends.Remove(buffer);
+                return true;
+            }
             case "glBlendColor":
                 gl.BlendState = gl.BlendState with { Constant = a.Select(x => Eval(x)?.X ?? 0).ToArray() };
                 return true;
@@ -127,7 +147,11 @@ public sealed partial class GlReader
                     tex.TargetLevels = Math.Max(tex.TargetLevels, level + 1);
                     return true;
                 }
-                tex.Framebuffer = fboName;
+                // A depth texture another framebuffer has attached already: both use one depth buffer (its owner's,
+                // which a shader that samples the texture reads).
+                if (A(1).Contains("DEPTH", StringComparison.Ordinal) && tex.Framebuffer is { } owner && owner != fboName && gl.Framebuffers.ContainsKey(owner))
+                    fb.DepthOf = owner;
+                else tex.Framebuffer = fboName;
                 fb.Samples = Math.Max(fb.Samples, tex.Samples);
                 // glFramebufferTexture (not …2D) attaches every layer: a cube map's six faces.
                 if (name == "glFramebufferTexture" && tex.IsCube) fb.Layers = 6;
@@ -245,6 +269,27 @@ public sealed partial class GlReader
         return false;
     }
 
+    /// <summary>Changes the blending of one draw buffer, or of all of them (null).</summary>
+    private void SetBlend(int? buffer, Func<BlendState, BlendState> change)
+    {
+        if (buffer is int one)
+        {
+            gl.BufferBlends[one] = change(gl.BufferBlends.TryGetValue(one, out var own) && own is not null ? own : gl.BlendState);
+            return;
+        }
+        gl.BlendState = change(gl.BlendState);
+        foreach (var b in gl.BufferBlends.Keys.ToList())
+            if (gl.BufferBlends[b] is { } state) gl.BufferBlends[b] = change(state);
+    }
+
+    /// <summary>The blending of each draw buffer, when one differs from the others (glBlendFunci); else null.</summary>
+    private List<BlendState?>? AttachmentBlends()
+    {
+        if (!gl.Blend || gl.BufferBlends.Count == 0) return null;
+        int count = gl.BufferBlends.Keys.Max() + 1;
+        return Enumerable.Range(0, count).Select(i => gl.BufferBlends.TryGetValue(i, out var b) ? b : gl.BlendState).ToList();
+    }
+
     /// <summary>memcpy(ptr, data, size) into a buffer mapped with glMapBuffer.</summary>
     private void Memcpy(IReadOnlyList<string> a)
     {
@@ -279,9 +324,16 @@ public sealed partial class GlReader
             scene.Targets[levelId] = new RenderTarget(levelId, Math.Max(1, tex.Width >> fb.TargetLevel), Math.Max(1, tex.Height >> fb.TargetLevel), 1, fb.Depth, fb.Stencil, 1, tex.Float);
             return fb.TargetFace > 0 ? levelId + "@" + fb.TargetFace : levelId;
         }
-        int colors = fb.Colors.Count == 0 ? 0 : fb.Colors.Keys.Max() + 1;
-        scene.Targets[id] = new RenderTarget(id, fb.Width, fb.Height, colors, fb.Depth, fb.Stencil, fb.Samples, fb.Colors.Values.Any(c => c.Float), fb.Layers);
+        Register(id, fb);
+        // The framebuffer whose depth it shares is known to the rasterizer too (it may not have drawn yet).
+        if (fb.DepthOf is { } owner && !scene.Targets.ContainsKey(owner) && gl.Framebuffers.TryGetValue(owner, out var ownerFb)) Register(owner, ownerFb);
         return id;
+    }
+
+    private void Register(string id, GlState.FramebufferObject fb)
+    {
+        int colors = fb.Colors.Count == 0 ? 0 : fb.Colors.Keys.Max() + 1;
+        scene.Targets[id] = new RenderTarget(id, fb.Width, fb.Height, colors, fb.Depth, fb.Stencil, fb.Samples, fb.Colors.Values.Any(c => c.Float), fb.Layers, fb.DepthOf);
     }
 
     private static string LevelTarget(string texture, int level) => level > 0 ? $"tex:{texture}~{level}" : "tex:" + texture;

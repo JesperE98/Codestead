@@ -240,7 +240,7 @@ public static partial class Rasterizer
             if (stencil is not null) UpdateStencil(fb, idx, stencil, stencil.Pass);
             if (draw.DepthTest && draw.DepthWrite && fb.HasDepth) fb.Depth[idx] = Math.Clamp(zs[s], 0, 1);
             for (int a = 0; a < fb.Colors.Length && a < colors.Length; a++)
-                if (colors[a] is { } color) WriteColor(fb, fb.Colors[a], idx * 4, color, draw);
+                if (colors[a] is { } color) WriteColor(fb, fb.Colors[a], idx * 4, color, draw, draw.AttachmentBlends is { } blends && a < blends.Count ? blends[a] : draw.Blend);
         }
     }
 
@@ -289,14 +289,14 @@ public static partial class Rasterizer
         fb.Stencil[idx] = ((old & ~st.WriteMask) | (value & st.WriteMask)) & 0xFF;
     }
 
-    private static void WriteColor(Framebuffer fb, double[] buffer, int o, double[] src, DrawCall draw)
+    private static void WriteColor(Framebuffer fb, double[] buffer, int o, double[] src, DrawCall draw, BlendState? blend)
     {
         // A vec3 output leaves alpha at 1.
         double[] s = [src.Length > 0 ? src[0] : 0, src.Length > 1 ? src[1] : 0, src.Length > 2 ? src[2] : 0, src.Length > 3 ? src[3] : 1];
         if (!fb.Float)
             for (int k = 0; k < 4; k++) s[k] = Math.Clamp(double.IsNaN(s[k]) ? 0 : s[k], 0, 1);
         var result = s;
-        if (draw.Blend is { } b)
+        if (blend is { } b)
         {
             double[] d = [buffer[o], buffer[o + 1], buffer[o + 2], buffer[o + 3]];
             var constant = b.Constant ?? [0, 0, 0, 0];

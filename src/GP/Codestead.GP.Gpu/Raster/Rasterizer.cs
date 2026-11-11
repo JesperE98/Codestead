@@ -108,7 +108,9 @@ public static partial class Rasterizer
                     w = t.Width > 0 ? Math.Max(1, (int)Math.Round(t.Width / scale)) : width;
                     h = t.Height > 0 ? Math.Max(1, (int)Math.Round(t.Height / scale)) : height;
                 }
-                targets[id] = fb = new Framebuffer(w, h, t.Samples, t.Float, t.ColorAttachments) { HasDepth = t.Depth };
+                // A depth buffer shared with another target is that target's own.
+                var depthOf = t.DepthOf is { } owner && owner != id ? Fb(owner) : null;
+                targets[id] = fb = new Framebuffer(w, h, t.Samples, t.Float, t.ColorAttachments, depthOf) { HasDepth = t.Depth || depthOf is not null };
             }
             return fb;
         }
@@ -129,10 +131,10 @@ public static partial class Rasterizer
                     switch (op)
                     {
                         case ClearOp c:
-                            Fb(c.Target).Clear(c.Color, c.Depth, c.Stencil);
+                            Fb(c.Target).Clear(c.Color, c.Depth, c.Stencil, c.Attachment);
                             // A layered target is cleared in every layer.
                             if (c.Target is not null && scene.Targets.GetValueOrDefault(c.Target) is { Layers: > 1 } layered)
-                                for (int l = 1; l < layered.Layers; l++) Fb(c.Target + "@" + l).Clear(c.Color, c.Depth, c.Stencil);
+                                for (int l = 1; l < layered.Layers; l++) Fb(c.Target + "@" + l).Clear(c.Color, c.Depth, c.Stencil, c.Attachment);
                             context.Changed(c.Target);
                             break;
                         case CopyOp c:
@@ -171,6 +173,8 @@ public static partial class Rasterizer
                     errors.Add(e.Line > 0 ? $"line {e.Line}: {e.Message}" : e.Message);
                 }
                 context.Changed(draw.Target);
+                // The depth it shares with another target was drawn into too.
+                if (draw.Target is not null && scene.Targets.GetValueOrDefault(draw.Target)?.DepthOf is { } sharedDepth) context.Changed(sharedDepth);
                 if (simTimer is not null) Console.Error.WriteLine($"SIMTIME draw {i} target={draw.Target ?? "window"} {fb.Width}x{fb.Height} {simTimer.ElapsedMilliseconds} ms");
             }
             int count = scene.Draws.Count;
@@ -301,7 +305,7 @@ public static partial class Rasterizer
         foreach (var op in scene.Ops.Take(scene.SetupOps))
             sb.Append(op switch
             {
-                ClearOp c => $"clear {c.BeforeDraw} {c.Target} {Numbers(c.Color)} {c.Depth} {c.Stencil}",
+                ClearOp c => $"clear {c.BeforeDraw} {c.Target} {Numbers(c.Color)} {c.Depth} {c.Stencil} {c.Attachment}",
                 CopyOp c => $"copy {c.BeforeDraw} {c.From} {c.To} {c.Color} {c.Depth} {c.Average}",
                 _ => op.ToString(),
             }).Append('\n');

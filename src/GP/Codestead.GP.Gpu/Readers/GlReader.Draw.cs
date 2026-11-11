@@ -134,6 +134,7 @@ public sealed partial class GlReader
             DepthWrite = gl.DepthMask,
             Stencil = gl.StencilTest ? gl.Stencil : null,
             Blend = gl.Blend ? gl.BlendState : null,
+            AttachmentBlends = AttachmentBlends(),
             ColorMask = gl.ColorMask.ToArray(),
             PointSize = gl.PointSize,
             ProgramPointSize = gl.ProgramPointSize,
@@ -165,9 +166,13 @@ public sealed partial class GlReader
         if (samplers.Count == 0) return (null, null);
         var bound = new Dictionary<string, Textures.Texture?>(StringComparer.Ordinal);
         var cubes = new Dictionary<string, Textures.CubeTexture>(StringComparer.Ordinal);
+        // layout (binding = N) uniform sampler2D …: unit N unless the program sets the uniform itself.
+        var bindings = new[] { program.Vertex!, program.Fragment! }.Concat(program.Geometry is { } bg ? [bg] : [])
+            .SelectMany(s => s.Globals).Where(u => u.Storage == "uniform" && u.Binding is not null && u.Block is null)
+            .GroupBy(u => u.Id).ToDictionary(g => g.Key, g => g.First().Binding!.Value, StringComparer.Ordinal);
         foreach (var name in samplers)
         {
-            int unit = program.Uniforms.TryGetValue(name, out var f) && f(1.0) is { } v ? (int)v.X : 0;
+            int unit = program.Uniforms.TryGetValue(name, out var f) && f(1.0) is { } v ? (int)v.X : UnitOf(bindings, name);
             Textures.Texture? texture = null;
             // The unit's binding of the sampler's kind (a cube map and a 2D texture can be bound to one unit).
             var ofKind = cubeSamplers.Contains(name) ? gl.UnitsCube : gl.Units2D;
@@ -216,6 +221,14 @@ public sealed partial class GlReader
         samplerCubeLod = cubes.Count == 0 ? null : (name, x, y, z, lod) => cubes.TryGetValue(name, out var c) ? c.Sample(x, y, z, lod) : null;
         return ((name, u, v) => bound.TryGetValue(name, out var t) && t is not null ? t.Sample(u, v) : [0, 0, 0, 1],
             cubes.Count == 0 ? null : (name, x, y, z) => cubes.TryGetValue(name, out var c) ? c.Sample(x, y, z) : null);
+    }
+
+    /// <summary>The unit a sampler's layout (binding = N) names: an array's element i is unit N + i.</summary>
+    private static int UnitOf(Dictionary<string, int> bindings, string sampler)
+    {
+        if (bindings.TryGetValue(sampler, out var unit)) return unit;
+        var element = System.Text.RegularExpressions.Regex.Match(sampler, @"^(\w+)\[(\d+)\]$");
+        return element.Success && bindings.TryGetValue(element.Groups[1].Value, out var first) ? first + int.Parse(element.Groups[2].Value) : 0;
     }
 
     /// <summary>

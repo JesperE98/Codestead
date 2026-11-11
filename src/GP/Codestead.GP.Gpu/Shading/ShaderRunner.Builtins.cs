@@ -170,6 +170,9 @@ public sealed partial class ShaderRunner
             case "min" or "fmin" or "fminf": return Zip(Math.Min);
             case "max" or "fmax" or "fmaxf": return Zip(Math.Max);
             case "step": return Zip((edge, x) => x < edge ? 0 : 1);
+            // isinf / isnan (GLSL and HLSL): a bool per component (weighted blended OIT's overflow check).
+            case "isinf": return Map(x => double.IsInfinity(x) ? 1 : 0);
+            case "isnan": return Map(x => double.IsNaN(x) ? 1 : 0);
             case "clamp" when a.Count == 3:
                 return Componentwise(Componentwise(a[0], a[1], Math.Max, c.Line), a[2], Math.Min, c.Line);
             case "mix" or "lerp" when a.Count == 3:

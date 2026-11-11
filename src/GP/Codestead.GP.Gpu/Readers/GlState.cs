@@ -91,6 +91,11 @@ internal sealed class GlState
         /// learnopengl's captureFBO): each draw goes to the texture, face and level attached then.
         /// </summary>
         public bool PerTexture;
+        /// <summary>
+        /// The framebuffer whose depth texture this one has attached as well (weighted blended OIT's transparent pass
+        /// tests against the opaque pass's depth): the two share one depth buffer.
+        /// </summary>
+        public string? DepthOf;
         public string? TargetTexture;
         public int TargetFace = -1, TargetLevel;
     }
@@ -153,6 +158,11 @@ internal sealed class GlState
     public Scene.StencilState Stencil = new();
     public bool Blend;
     public Scene.BlendState BlendState = new();
+    /// <summary>
+    /// Draw buffers whose blending differs from <see cref="BlendState"/> (glBlendFunci): buffer → its state; a buffer
+    /// switched off with glDisablei(GL_BLEND, i) has none.
+    /// </summary>
+    public Dictionary<int, Scene.BlendState?> BufferBlends = new();
     public bool[] ColorMask = [true, true, true, true];
     public double PointSize = 1;
     public bool ProgramPointSize;
