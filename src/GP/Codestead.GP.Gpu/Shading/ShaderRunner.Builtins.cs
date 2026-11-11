@@ -6,6 +6,12 @@ namespace Codestead.GP.Gpu.Shading;
 // and the few C++ calls the simulator understands (glfwGetTime, the size of a container).
 public sealed partial class ShaderRunner
 {
+    private static readonly HashSet<string> FloatMath = new(StringComparer.Ordinal)
+    {
+        "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "exp", "exp2", "log", "log2", "sqrt", "pow", "fabs", "floor", "ceil",
+        "round", "trunc", "fmod",
+    };
+
     private ShaderValue CallExpr(Call c)
     {
         var name = c.Function;
@@ -20,6 +26,8 @@ public sealed partial class ShaderRunner
         if (!Lenient && FastCall(c, name) is { } fast) return fast;
         // C++: std::fmaxf, std::sqrt … are the maths functions themselves.
         if (Lenient && name.StartsWith("std::", StringComparison.Ordinal) && name.Length > 5) name = name[5..];
+        // C's float versions of the maths functions (tanf, sqrtf, powf …) are the functions themselves.
+        if (Lenient && name.Length > 3 && name[^1] == 'f' && FloatMath.Contains(name[..^1]) && program.FindFunction(name) is null) name = name[..^1];
         if (name.StartsWith('.'))
         {
             if (Lenient && Hook?.Invoke(name, c.Args) is { } methodHooked) return methodHooked;

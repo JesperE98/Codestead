@@ -88,7 +88,13 @@ public sealed class ShaderValue
         return r;
     }
 
-    public ShaderValue Clone() => new()
+    /// <summary>
+    /// An object the API owns that the program only reads (learnopengl's Model: its meshes and vertices): a copy of a
+    /// struct that points at it (Entity's Model* pModel) points at the same one, it is not copied.
+    /// </summary>
+    public bool Shared { get; init; }
+
+    public ShaderValue Clone() => Shared ? this : new()
     {
         V = V?.ToArray(),
         Int = Int,

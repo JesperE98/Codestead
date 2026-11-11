@@ -231,27 +231,34 @@ public sealed partial class GlReader
         }
         bool flipUv = Models.ModelFiles.FlipUVs(src, project);
         bool flipImages = System.Text.RegularExpressions.Regex.IsMatch(src.Code, @"stbi_set_flip_vertically_on_load\s*\(\s*(?:true|1)\s*\)");
-        var uniforms = program.Uniforms.ToList();
         foreach (var mesh in model.Meshes)
         {
-            var vertices = mesh.Positions.Select((p, i) => new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+            // A model drawn many times (a scene graph's hundred planets) is read and its textures loaded once.
+            if (!meshData.TryGetValue(mesh, out var made))
             {
-                ["0"] = ShaderValue.Vec(p),
-                ["1"] = ShaderValue.Vec(mesh.Normals[i]),
-                ["2"] = ShaderValue.Vec(mesh.TexCoords[i][0], flipUv ? 1 - mesh.TexCoords[i][1] : mesh.TexCoords[i][1]),
-            }).ToList();
-            var maps = new Dictionary<string, Textures.Texture?>(StringComparer.Ordinal)
-            {
-                ["texture_diffuse1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.DiffuseMap, flipImages, mipmapped: true),
-                ["texture_specular1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.SpecularMap, flipImages, mipmapped: true),
-                ["texture_normal1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.NormalMap, flipImages, mipmapped: true),
-            };
+                var meshVertices = mesh.Positions.Select((p, i) => new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+                {
+                    ["0"] = ShaderValue.Vec(p),
+                    ["1"] = ShaderValue.Vec(mesh.Normals[i]),
+                    ["2"] = ShaderValue.Vec(mesh.TexCoords[i][0], flipUv ? 1 - mesh.TexCoords[i][1] : mesh.TexCoords[i][1]),
+                }).ToList();
+                var meshMaps = new Dictionary<string, Textures.Texture?>(StringComparer.Ordinal)
+                {
+                    ["texture_diffuse1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.DiffuseMap, flipImages, mipmapped: true),
+                    ["texture_specular1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.SpecularMap, flipImages, mipmapped: true),
+                    ["texture_normal1"] = Models.ModelFiles.Texture(project, path, mesh.Material?.NormalMap, flipImages, mipmapped: true),
+                };
+                meshData[mesh] = made = (meshVertices, meshMaps);
+            }
+            var (vertices, maps) = made;
             var draw = MakeDraw(program, vertices, mesh.Indices.ToArray(), 0, mesh.Indices.Count, Topology.Triangles,
                 textures: (name, u, v) => maps.TryGetValue(name, out var t) && t is not null ? t.Sample(u, v) : [0, 0, 0, 1]);
             if (inLoop) scene.Draws.Add(draw);
             else setupDraws.Add(draw);
         }
     }
+
+    private readonly Dictionary<Models.ObjMesh, (List<Dictionary<string, ShaderValue>> Vertices, Dictionary<string, Textures.Texture?> Maps)> meshData = new();
 
     /// <summary>The sampler uniforms of a shader, with struct fields ("material.diffuse") and array elements ("maps[1]").</summary>
     private static IEnumerable<string> SamplerNames(ShaderProgram shader)

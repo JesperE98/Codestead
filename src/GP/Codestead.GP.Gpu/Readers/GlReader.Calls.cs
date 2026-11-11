@@ -21,6 +21,10 @@ public sealed partial class GlReader
                 scene.Height = Int(A(1)) ?? 600;
                 scene.WindowTitle = CppSource.StringArg(A(2)) ?? Eval(A(2))?.Text ?? "";
                 return;
+            case "glfwSetWindowTitle":
+                // The title a program sets while it runs (the frame's counts: "drawn: 37 / 101"): the window shows it.
+                if (inLoop && (CppSource.StringArg(A(1)) ?? Eval(A(1))?.Text) is { } title) scene.WindowTitle = title;
+                return;
             case "gladLoadGLLoader" or "gladLoadGL":
                 gladLoaded = true;
                 return;
@@ -339,7 +343,14 @@ public sealed partial class GlReader
             meshes.Add(ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
             {
                 ["VAO"] = ShaderValue.Str(vao),
-                ["indices"] = ShaderValue.Array(mesh.Indices.Select(_ => ShaderValue.Scalar(0)).ToArray()),
+                ["indices"] = ShaderValue.Array(mesh.Indices.Select(i => ShaderValue.Integer(i)).ToArray()),
+                // mesh.h's Vertex: what a program reads of the model's vertices (a bounding volume around them).
+                ["vertices"] = ShaderValue.Array(Enumerable.Range(0, mesh.Positions.Count).Select(v => ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+                {
+                    ["Position"] = ShaderValue.Vec(mesh.Positions[v].ToArray()),
+                    ["Normal"] = ShaderValue.Vec(mesh.Normals[v].ToArray()),
+                    ["TexCoords"] = ShaderValue.Vec(mesh.TexCoords[v][0], flipUv ? 1 - mesh.TexCoords[v][1] : mesh.TexCoords[v][1]),
+                })).ToArray()),
             }));
             foreach (var file in new[] { mesh.Material?.DiffuseMap, mesh.Material?.SpecularMap, mesh.Material?.NormalMap })
             {
@@ -351,12 +362,16 @@ public sealed partial class GlReader
                 textures.Add(ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal) { ["id"] = ShaderValue.Str(texName) }));
             }
         }
-        env.Runner.Globals[name] = ShaderValue.Struct(new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+        env.Runner.Globals[name] = new ShaderValue
         {
-            ["meshes"] = ShaderValue.Array(meshes.ToArray()),
-            ["textures_loaded"] = ShaderValue.Array(textures.ToArray()),
-            [ModelMark] = ShaderValue.Str(name),
-        });
+            Fields = new Dictionary<string, ShaderValue>(StringComparer.Ordinal)
+            {
+                ["meshes"] = ShaderValue.Array(meshes.ToArray()),
+                ["textures_loaded"] = ShaderValue.Array(textures.ToArray()),
+                [ModelMark] = ShaderValue.Str(name),
+            },
+            Shared = true,
+        };
     }
 
     /// <summary>

@@ -143,9 +143,28 @@ public sealed partial class GlReader
             inlineDepth--;
             inlineReturn = saved;
             aliasStack.RemoveAt(aliasStack.Count - 1);
+            // A number given by reference (unsigned int& display: display++ counts for the caller) goes back to the
+            // argument once the caller's names are back.
+            var written = new List<(string Arg, ShaderValue Value)>();
+            for (int i = 0; i < parameters.Count && i < args.Count; i++)
+                if (declared[i].Ref && env.Runner.Globals.GetValueOrDefault(parameters[i]) is { V: not null } number && Regex.IsMatch(args[i].Trim(), @"^[A-Za-z_][\w.]*(?:\[[^\]]*\])?$"))
+                    written.Add((args[i].Trim(), number));
             foreach (var (p, v) in outer)
                 if (v is null) env.Runner.Globals.Remove(p);
                 else env.Runner.Globals[p] = v;
+            foreach (var (arg, value) in written)
+            {
+                try
+                {
+                    env.Runner.Assign(ShaderParser.ParseExpression(arg), value);
+                }
+                catch (ShaderSyntaxException)
+                {
+                }
+                catch (ShaderRuntimeException)
+                {
+                }
+            }
         }
     }
 
