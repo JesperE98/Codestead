@@ -38,12 +38,28 @@ internal sealed class GlState
         public bool Enabled;
         /// <summary>glVertexAttribDivisor: 0 = per vertex, n = a new value every n instances.</summary>
         public int Divisor;
+        /// <summary>
+        /// The separate attribute format of OpenGL 4.3/4.5 (glVertexArrayAttribFormat, glVertexArrayAttribBinding): the
+        /// buffer binding the attribute reads, and its offset within a vertex.
+        /// </summary>
+        public int? BindingIndex;
+        public int RelativeOffset;
+    }
+
+    /// <summary>A vertex buffer binding point (glVertexArrayVertexBuffer / glBindVertexBuffer): buffer, offset, stride.</summary>
+    public sealed class BufferBinding
+    {
+        public string? Buffer;
+        public int OffsetBytes;
+        public int StrideBytes;
+        public int Divisor;
     }
 
     public sealed class VertexArray
     {
         public Dictionary<int, Attribute> Attributes = new();
         public string? ElementBuffer;
+        public Dictionary<int, BufferBinding> Bindings = new();
     }
 
     public sealed class TextureObject
@@ -65,6 +81,8 @@ internal sealed class GlState
         /// <summary>Size and format from glTexImage2D with no data (a render target), and where it is attached.</summary>
         public int Width, Height;
         public bool Float, IsDepth;
+        /// <summary>glTextureStorage2D's internal format (GL_RGB8, GL_SRGB8_ALPHA8 …): the format its data is stored in.</summary>
+        public string? StorageFormat;
         public int Samples = 1;
         /// <summary>The layers of a texture array (GL_TEXTURE_2D_ARRAY, glTexImage3D): a layered framebuffer draws into them.</summary>
         public int Layers = 1;

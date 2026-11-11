@@ -49,7 +49,7 @@ public sealed partial class GlReader
             if (!scene.Notes.Any(n => n.Key == "gladMissing")) scene.Notes.Add(SimNote.Error("gladMissing", ("call", name), ("line", line.ToString())));
             return;
         }
-        if (AdvancedCall(name, a, lhs, line)) return;
+        if (AdvancedCall(name, a, lhs, line) || DsaCall(name, a, line)) return;
         switch (name)
         {
             case "glClearColor":
@@ -472,8 +472,8 @@ public sealed partial class GlReader
         }
     }
 
-    private GlState.TextureObject? BoundTexture =>
-        gl.Units.TryGetValue(gl.ActiveUnit, out var name) && gl.TextureObjects.TryGetValue(name, out var t) ? t : null;
+    private GlState.TextureObject? BoundTexture => namedTexture ??
+        (gl.Units.TryGetValue(gl.ActiveUnit, out var name) && gl.TextureObjects.TryGetValue(name, out var t) ? t : null);
 
     /// <summary>
     /// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data): the image stb_image loaded
