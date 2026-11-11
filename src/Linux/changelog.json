@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.6.3",
+    "date": "2026-11-11",
+    "changes": {
+      "en": [
+        "Behind the scenes: the learning window shared with Codestead GP got a few new hooks for GP's project folders. Nothing changes in how you use the app."
+      ],
+      "sv": [
+        "Bakom kulisserna: lärfönstret som delas med Codestead GP har fått några nya kopplingar för GP:s projektmappar. Inget ändras i hur du använder appen."
+      ],
+      "de": [
+        "Hinter den Kulissen: Das mit Codestead GP geteilte Lernfenster hat einige neue Anknüpfungspunkte für die Projektordner von GP bekommen. An der Bedienung ändert sich nichts."
+      ],
+      "fr": [
+        "En coulisses : la fenêtre d'apprentissage partagée avec Codestead GP a reçu quelques nouveaux points d'accroche pour les dossiers de projet de GP. Rien ne change dans votre utilisation de l'application."
+      ],
+      "es": [
+        "Entre bastidores: la ventana de aprendizaje que comparte con Codestead GP tiene algunos puntos de enganche nuevos para las carpetas de proyecto de GP. No cambia nada en cómo usas la aplicación."
+      ],
+      "zh": [
+        "幕后改动：与 Codestead GP 共享的学习窗口新增了几个用于 GP 项目文件夹的挂接点。应用的使用方式没有任何变化。"
+      ],
+      "ja": [
+        "内部の変更：Codestead GP と共有している学習ウィンドウに、GP のプロジェクトフォルダー用の接続点をいくつか追加しました。アプリの使い方は変わりません。"
+      ]
+    }
+  },
+  {
     "version": "0.6.2",
     "date": "2026-11-09",
     "changes": {
