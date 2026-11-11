@@ -101,14 +101,14 @@ std::vector<uint32_t> indices;
 int numStrips;
 int numTrisPerStrip;
 
-// camera: CAMERA-PLACEHOLDER
-glm::vec3 cameraPos   = glm::vec3(0.0f, 150.0f, 200.0f);
-glm::vec3 cameraFront = glm::normalize(glm::vec3(0.0f, -0.6f, -1.0f));
+// camera: in front of the terrain and high above it, looking down at its middle (yaw -90, pitch -35)
+glm::vec3 cameraPos   = glm::vec3(0.0f, 190.0f, 290.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, -0.57358f, -0.81915f);
 glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
 bool firstMouse = true;
-float yaw   = -90.0f;
-float pitch = -31.0f;
+float yaw   = -90.0f; // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
+float pitch = -35.0f;
 float lastX =  WIDTH / 2.0f;
 float lastY =  HEIGHT / 2.0f;
 float fov   =  45.0f;
@@ -832,11 +832,9 @@ private:
         );
     }
 
-    // learnopengl's terrain: one vertex per pixel of the height map; its grey value is the height. Then the indices of
-    // the triangle strips: one strip per pair of rows, zig-zagging between row i and row i + 1.
+    // learnopengl's terrain: one vertex per pixel of the height map; its grey value (0..255) is the height. Then the
+    // indices of the triangle strips: one strip per pair of rows, zig-zagging between row i and row i + rez.
     void loadHeightMap(const char* path) {
-        // learnopengl flips the image on load (as for its textures), so row 0 is the image's bottom row
-        stbi_set_flip_vertically_on_load(true);
         int width, height, nrChannels;
         unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
         if (!data) {
@@ -844,39 +842,38 @@ private:
         }
         std::cout << "Loaded heightmap of size " << height << " x " << width << std::endl;
 
-        // vertex generation
-        float yScale = 64.0f / 256.0f, yShift = 16.0f; // apply a scale + shift to the height data
+        // set up vertex data: one vertex per pixel of the height map, its height from the pixel's value
+        float yScale = 64.0f / 256.0f, yShift = 16.0f; // apply a scale and a shift to the height data
         unsigned bytePerPixel = nrChannels;
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                // retrieve texel for (i,j) tex coord
                 unsigned char* pixelOffset = data + (j + width * i) * bytePerPixel;
-                // raw height at coordinate
                 unsigned char y = pixelOffset[0];
 
-                // vertex
+                // vertex: column j along x, row i along z (the image's top row at the back)
                 Vertex vertex{};
-                vertex.pos.x = -height / 2.0f + i;                 // v.x
-                vertex.pos.y = (int) y * yScale - yShift;          // v.y
-                vertex.pos.z = -width / 2.0f + j;                  // v.z
+                vertex.pos.x = -width / 2.0f + width * j / (float) width;   // vx
+                vertex.pos.y = (int) y * yScale - yShift;                    // vy
+                vertex.pos.z = -height / 2.0f + height * i / (float) height; // vz
                 vertices.push_back(vertex);
             }
         }
         std::cout << "Loaded " << vertices.size() << " vertices" << std::endl;
         stbi_image_free(data);
 
-        // index generation
-        for (unsigned i = 0; i < (unsigned) height - 1; i++) {   // for each row a.k.a. each strip
-            for (unsigned j = 0; j < (unsigned) width; j++) {    // for each column
-                for (unsigned k = 0; k < 2; k++) {               // for each side of the strip
-                    indices.push_back(j + width * (i + k));
+        // index data: one triangle strip per pair of rows (rows i and i + rez), every rez-th vertex
+        int rez = 1;
+        for (int i = 0; i < height - 1; i += rez) {
+            for (int j = 0; j < width; j += rez) {
+                for (int k = 0; k < 2; k++) {
+                    indices.push_back(j + width * (i + k * rez));
                 }
             }
         }
         std::cout << "Loaded " << indices.size() << " indices" << std::endl;
 
-        numStrips = height - 1;
-        numTrisPerStrip = width * 2 - 2;
+        numStrips = (height - 1) / rez;
+        numTrisPerStrip = (width / rez) * 2 - 2;
         std::cout << "Created lattice of " << numStrips << " strips with " << numTrisPerStrip << " triangles each" << std::endl;
         std::cout << "Created " << numStrips * numTrisPerStrip << " triangles total" << std::endl;
     }
@@ -934,53 +931,6 @@ private:
         }
 
         vkBindImageMemory(device, image, imageMemory, 0);
-    }
-
-    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) {
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
-
-        VkImageMemoryBarrier barrier{};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.oldLayout = oldLayout;
-        barrier.newLayout = newLayout;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = image;
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
-
-        VkPipelineStageFlags sourceStage;
-        VkPipelineStageFlags destinationStage;
-
-        if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
-            barrier.srcAccessMask = 0;
-            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-            sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-            destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-            sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-            destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        } else {
-            throw std::invalid_argument("unsupported layout transition!");
-        }
-
-        vkCmdPipelineBarrier(
-            commandBuffer,
-            sourceStage, destinationStage,
-            0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier
-        );
-
-        endSingleTimeCommands(commandBuffer);
     }
 
     void createVertexBuffer() {
@@ -1270,7 +1220,7 @@ private:
         UniformBufferObject ubo{};
         // camera/view transformation: look from cameraPos in the direction of cameraFront
         ubo.view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        ubo.proj = glm::perspective(glm::radians(fov), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 100000.0f);
+        ubo.proj = glm::perspective(glm::radians(fov), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 1000.0f);
         // GLM is made for OpenGL, where clip space y points up: flip it for Vulkan (this replaces the flip in the shader)
         ubo.proj[1][1] *= -1;
 

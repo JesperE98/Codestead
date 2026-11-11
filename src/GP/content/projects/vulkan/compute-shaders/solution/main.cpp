@@ -20,8 +20,8 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
-// the size of the texture the compute shader writes
-const uint32_t TEXTURE_WIDTH = 1000, TEXTURE_HEIGHT = 1000;
+// the size of the texture the compute shader writes: as large as the window, one texel per pixel
+const uint32_t TEXTURE_WIDTH = 800, TEXTURE_HEIGHT = 600;
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
@@ -764,7 +764,7 @@ private:
         }
     }
 
-    // learnopengl's texture: 1000 x 1000 four 32-bit floats (GL_RGBA32F) with no data yet. The compute shader writes it
+    // learnopengl's texture: 800 x 600 texels of four 32-bit floats (GL_RGBA32F) with no data yet. The compute shader writes it
     // (STORAGE: imageStore) and the fragment shader samples it (SAMPLED). Both work in the GENERAL layout, so the
     // image is moved to GENERAL once here and stays there.
     void createStorageImage() {
@@ -1100,7 +1100,7 @@ private:
             throw std::runtime_error("failed to begin recording command buffer!");
         }
 
-        // the compute shader fills the texture: 1000 / 10 x 1000 / 10 work groups of 10 x 10 invocations, one per texel
+        // the compute shader fills the texture: 800 / 10 x 600 / 10 work groups of 10 x 10 invocations, one per texel
         float currentFrame = static_cast<float>(glfwGetTime());
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePipeline);
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePipelineLayout, 0, 1, &computeDescriptorSet, 0, nullptr);

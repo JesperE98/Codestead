@@ -73,6 +73,7 @@ struct SwapChainSupportDetails {
 
 struct Vertex {
     glm::vec3 pos;
+    glm::vec2 texCoord;
 
     static VkVertexInputBindingDescription getBindingDescription() {
         VkVertexInputBindingDescription bindingDescription{};
@@ -83,32 +84,37 @@ struct Vertex {
         return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription, 1> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 1> attributeDescriptions{};
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
 
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
         attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
         attributeDescriptions[0].offset = offsetof(Vertex, pos);
 
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, texCoord);
+
         return attributeDescriptions;
     }
 };
 
-// the terrain: one vertex per pixel of the height map, and the indices of its triangle strips (filled in loadHeightMap)
-std::vector<Vertex> vertices;
-std::vector<uint32_t> indices;
-int numStrips;
-int numTrisPerStrip;
+const unsigned int NUM_PATCH_PTS = 4; // four control points per patch: the corners of a square of the terrain
+const unsigned int rez = 20;          // rez x rez patches
 
-// camera: CAMERA-PLACEHOLDER
-glm::vec3 cameraPos   = glm::vec3(0.0f, 150.0f, 200.0f);
-glm::vec3 cameraFront = glm::normalize(glm::vec3(0.0f, -0.6f, -1.0f));
+// the patches' control points (filled in createPatches)
+std::vector<Vertex> vertices;
+
+// camera: in front of the terrain and high above it, looking down at its middle (yaw -90, pitch -35)
+glm::vec3 cameraPos   = glm::vec3(0.0f, 190.0f, 290.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, -0.57358f, -0.81915f);
 glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
 bool firstMouse = true;
-float yaw   = -90.0f;
-float pitch = -31.0f;
+float yaw   = -90.0f; // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
+float pitch = -35.0f;
 float lastX =  WIDTH / 2.0f;
 float lastY =  HEIGHT / 2.0f;
 float fov   =  45.0f;
@@ -166,12 +172,12 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     }
 }
 
-// The same layout as the push constant block in the vertex shader: the model matrix of the draw.
+// The same layout as the push constant block in the tessellation shaders: the model matrix of the draw.
 struct PushConstants {
     glm::mat4 model;
 };
 
-// The same layout as the uniform block in the vertex shader: the camera's matrices.
+// The same layout as the uniform block in the tessellation shaders: the camera's matrices.
 struct UniformBufferObject {
     glm::mat4 view;
     glm::mat4 proj;
@@ -217,17 +223,21 @@ private:
     VkDeviceMemory depthImageMemory;
     VkImageView depthImageView;
 
-    VkBuffer vertexBuffer = VK_NULL_HANDLE;
-    VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
-    VkBuffer indexBuffer = VK_NULL_HANDLE;
-    VkDeviceMemory indexBufferMemory = VK_NULL_HANDLE;
+    // the height map, sampled by the tessellation evaluation shader
+    VkImage heightMapImage;
+    VkDeviceMemory heightMapImageMemory;
+    VkImageView heightMapImageView;
+    VkSampler textureSampler;
+
+    VkBuffer vertexBuffer;
+    VkDeviceMemory vertexBufferMemory;
 
     VkBuffer uniformBuffer;
     VkDeviceMemory uniformBufferMemory;
     void* uniformBufferMapped;
 
     VkDescriptorPool descriptorPool;
-    VkDescriptorSet descriptorSet; // the uniform buffer
+    VkDescriptorSet descriptorSet; // the uniform buffer and the height map
 
     VkCommandBuffer commandBuffer;
 
@@ -260,13 +270,13 @@ private:
         createRenderPass();
         createDescriptorSetLayout();
         createPipelineLayout();
-        createPipeline("shaders/cpuheight.vert.spv", "shaders/cpuheight.frag.spv", graphicsPipeline);
+        createPipeline("shaders/gpuheight.vert.spv", "shaders/gpuheight.tesc.spv", "shaders/gpuheight.tese.spv", "shaders/gpuheight.frag.spv", graphicsPipeline);
         createDepthResources();
         createFramebuffers();
         createCommandPool();
         loadHeightMap("textures/heightmap.png");
+        createTextureSampler(VK_SAMPLER_ADDRESS_MODE_REPEAT, textureSampler);
         createVertexBuffer();
-        createIndexBuffer();
         createUniformBuffers();
         createDescriptorPool();
         createDescriptorSet();
@@ -316,9 +326,6 @@ private:
         vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
         vkDestroyFence(device, inFlightFence, nullptr);
 
-        vkDestroyBuffer(device, indexBuffer, nullptr);
-        vkFreeMemory(device, indexBufferMemory, nullptr);
-
         vkDestroyBuffer(device, vertexBuffer, nullptr);
         vkFreeMemory(device, vertexBufferMemory, nullptr);
 
@@ -326,6 +333,12 @@ private:
         vkFreeMemory(device, uniformBufferMemory, nullptr);
 
         vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+
+        vkDestroySampler(device, textureSampler, nullptr);
+
+        vkDestroyImageView(device, heightMapImageView, nullptr);
+        vkDestroyImage(device, heightMapImage, nullptr);
+        vkFreeMemory(device, heightMapImageMemory, nullptr);
 
         vkDestroyCommandPool(device, commandPool, nullptr);
 
@@ -467,6 +480,9 @@ private:
         }
 
         VkPhysicalDeviceFeatures deviceFeatures{};
+        deviceFeatures.samplerAnisotropy = VK_TRUE;
+        deviceFeatures.tessellationShader = VK_TRUE; // the tessellation control and evaluation stages
+        deviceFeatures.fillModeNonSolid = VK_TRUE;   // polygonMode LINE (wireframe)
 
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -619,12 +635,21 @@ private:
         uboLayoutBinding.descriptorCount = 1;
         uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uboLayoutBinding.pImmutableSamplers = nullptr;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // view and projection
+        // the control shader needs the view matrix (distances to the camera), the evaluation shader both matrices
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
 
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorCount = 1;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT; // the height map
+
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = 1;
-        layoutInfo.pBindings = &uboLayoutBinding;
+        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        layoutInfo.pBindings = bindings.data();
 
         if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor set layout!");
@@ -633,7 +658,7 @@ private:
 
     void createPipelineLayout() {
         VkPushConstantRange pushConstantRange{};
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // the model matrix
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT; // the model matrix
         pushConstantRange.offset = 0;
         pushConstantRange.size = sizeof(PushConstants);
 
@@ -649,13 +674,17 @@ private:
         }
     }
 
-    // One graphics pipeline from a vertex and a fragment shader, with the pipeline layout (descriptor set + push
-    // constants) and the fixed functions below.
-    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkPipeline& pipeline) {
+    // One graphics pipeline from a vertex, a tessellation control, a tessellation evaluation and a fragment shader,
+    // with the pipeline layout (descriptor set + push constants) and the fixed functions below.
+    void createPipeline(const std::string& vertShaderFile, const std::string& tescShaderFile, const std::string& teseShaderFile, const std::string& fragShaderFile, VkPipeline& pipeline) {
         auto vertShaderCode = readFile(vertShaderFile);
+        auto tescShaderCode = readFile(tescShaderFile);
+        auto teseShaderCode = readFile(teseShaderFile);
         auto fragShaderCode = readFile(fragShaderFile);
 
         VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
+        VkShaderModule tescShaderModule = createShaderModule(tescShaderCode);
+        VkShaderModule teseShaderModule = createShaderModule(teseShaderCode);
         VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
 
         VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
@@ -664,13 +693,25 @@ private:
         vertShaderStageInfo.module = vertShaderModule;
         vertShaderStageInfo.pName = "main";
 
+        VkPipelineShaderStageCreateInfo tescShaderStageInfo{};
+        tescShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        tescShaderStageInfo.stage = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+        tescShaderStageInfo.module = tescShaderModule;
+        tescShaderStageInfo.pName = "main";
+
+        VkPipelineShaderStageCreateInfo teseShaderStageInfo{};
+        teseShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        teseShaderStageInfo.stage = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+        teseShaderStageInfo.module = teseShaderModule;
+        teseShaderStageInfo.pName = "main";
+
         VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
         fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
         fragShaderStageInfo.module = fragShaderModule;
         fragShaderStageInfo.pName = "main";
 
-        VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
+        VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, tescShaderStageInfo, teseShaderStageInfo, fragShaderStageInfo};
 
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -685,8 +726,13 @@ private:
 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; // each row of the terrain is one strip
+        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST; // learnopengl's GL_PATCHES
         inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+        // learnopengl's glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS): a patch is 4 vertices of the buffer
+        VkPipelineTessellationStateCreateInfo tessellationState{};
+        tessellationState.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+        tessellationState.patchControlPoints = NUM_PATCH_PTS;
 
         VkPipelineViewportStateCreateInfo viewportState{};
         viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -697,9 +743,9 @@ private:
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         rasterizer.depthClampEnable = VK_FALSE;
         rasterizer.rasterizerDiscardEnable = VK_FALSE;
-        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+        rasterizer.polygonMode = VK_POLYGON_MODE_LINE; // wireframe: only the triangles' edges (learnopengl's GL_LINE)
         rasterizer.lineWidth = 1.0f;
-        rasterizer.cullMode = VK_CULL_MODE_NONE; // a strip's triangles alternate their winding; learnopengl culls nothing
+        rasterizer.cullMode = VK_CULL_MODE_NONE; // learnopengl culls nothing
         rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
         rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -742,10 +788,11 @@ private:
 
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineInfo.stageCount = 2;
+        pipelineInfo.stageCount = 4;
         pipelineInfo.pStages = shaderStages;
         pipelineInfo.pVertexInputState = &vertexInputInfo;
         pipelineInfo.pInputAssemblyState = &inputAssembly;
+        pipelineInfo.pTessellationState = &tessellationState;
         pipelineInfo.pViewportState = &viewportState;
         pipelineInfo.pRasterizationState = &rasterizer;
         pipelineInfo.pMultisampleState = &multisampling;
@@ -762,6 +809,8 @@ private:
         }
 
         vkDestroyShaderModule(device, fragShaderModule, nullptr);
+        vkDestroyShaderModule(device, teseShaderModule, nullptr);
+        vkDestroyShaderModule(device, tescShaderModule, nullptr);
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
     }
 
@@ -832,54 +881,84 @@ private:
         );
     }
 
-    // learnopengl's terrain: one vertex per pixel of the height map; its grey value is the height. Then the indices of
-    // the triangle strips: one strip per pair of rows, zig-zagging between row i and row i + 1.
+
+    // A texture image (device local, ready for sampling) with one byte per texel (VK_FORMAT_R8_UNORM: the height map's
+    // grey value 0..255 is read as 0.0..1.0 in .r), copied through a staging buffer. The caller frees the pixels.
+    void createTextureImage(stbi_uc* pixels, int texWidth, int texHeight, VkImage& image, VkDeviceMemory& imageMemory) {
+        VkDeviceSize imageSize = texWidth * texHeight;
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+            memcpy(data, pixels, static_cast<size_t>(imageSize));
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        createImage(texWidth, texHeight, VK_FORMAT_R8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image, imageMemory);
+
+        transitionImageLayout(image, VK_FORMAT_R8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            copyBufferToImage(stagingBuffer, image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+        transitionImageLayout(image, VK_FORMAT_R8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
+
+    // The height map: loaded as a texture the tessellation evaluation shader samples, and the patches over its area:
+    // rez x rez patches of four control points each (learnopengl's corner order), with their texture coordinates.
     void loadHeightMap(const char* path) {
-        // learnopengl flips the image on load (as for its textures), so row 0 is the image's bottom row
-        stbi_set_flip_vertically_on_load(true);
         int width, height, nrChannels;
-        unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
+        unsigned char* data = stbi_load(path, &width, &height, &nrChannels, STBI_grey); // one channel: the grey value
         if (!data) {
             throw std::runtime_error("failed to load height map!");
         }
         std::cout << "Loaded heightmap of size " << height << " x " << width << std::endl;
 
-        // vertex generation
-        float yScale = 64.0f / 256.0f, yShift = 16.0f; // apply a scale + shift to the height data
-        unsigned bytePerPixel = nrChannels;
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                // retrieve texel for (i,j) tex coord
-                unsigned char* pixelOffset = data + (j + width * i) * bytePerPixel;
-                // raw height at coordinate
-                unsigned char y = pixelOffset[0];
-
-                // vertex
-                Vertex vertex{};
-                vertex.pos.x = -height / 2.0f + i;                 // v.x
-                vertex.pos.y = (int) y * yScale - yShift;          // v.y
-                vertex.pos.z = -width / 2.0f + j;                  // v.z
-                vertices.push_back(vertex);
-            }
-        }
-        std::cout << "Loaded " << vertices.size() << " vertices" << std::endl;
+        createTextureImage(data, width, height, heightMapImage, heightMapImageMemory);
+        heightMapImageView = createImageView(heightMapImage, VK_FORMAT_R8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
         stbi_image_free(data);
 
-        // index generation
-        for (unsigned i = 0; i < (unsigned) height - 1; i++) {   // for each row a.k.a. each strip
-            for (unsigned j = 0; j < (unsigned) width; j++) {    // for each column
-                for (unsigned k = 0; k < 2; k++) {               // for each side of the strip
-                    indices.push_back(j + width * (i + k));
-                }
+        // set up vertex data: four control points per patch, position and texture coordinate
+        for (unsigned i = 0; i <= rez - 1; i++) {
+            for (unsigned j = 0; j <= rez - 1; j++) {
+                vertices.push_back({{-width / 2.0f + width * i / (float) rez,       0.0f, -height / 2.0f + height * j / (float) rez},       {i / (float) rez,       j / (float) rez}});
+                vertices.push_back({{-width / 2.0f + width * (i + 1) / (float) rez, 0.0f, -height / 2.0f + height * j / (float) rez},       {(i + 1) / (float) rez, j / (float) rez}});
+                vertices.push_back({{-width / 2.0f + width * i / (float) rez,       0.0f, -height / 2.0f + height * (j + 1) / (float) rez}, {i / (float) rez,       (j + 1) / (float) rez}});
+                vertices.push_back({{-width / 2.0f + width * (i + 1) / (float) rez, 0.0f, -height / 2.0f + height * (j + 1) / (float) rez}, {(i + 1) / (float) rez, (j + 1) / (float) rez}});
             }
         }
-        std::cout << "Loaded " << indices.size() << " indices" << std::endl;
-
-        numStrips = height - 1;
-        numTrisPerStrip = width * 2 - 2;
-        std::cout << "Created lattice of " << numStrips << " strips with " << numTrisPerStrip << " triangles each" << std::endl;
-        std::cout << "Created " << numStrips * numTrisPerStrip << " triangles total" << std::endl;
+        std::cout << "Loaded " << rez * rez << " patches of 4 control points each" << std::endl;
+        std::cout << "Processing " << rez * rez * 4 << " vertices in vertex shader" << std::endl;
     }
+
+
+    // A sampler with the wrapping mode for texture coordinates outside 0..1 (REPEAT, CLAMP_TO_EDGE ...).
+    void createTextureSampler(VkSamplerAddressMode addressMode, VkSampler& sampler) {
+        VkPhysicalDeviceProperties properties{};
+        vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+
+        VkSamplerCreateInfo samplerInfo{};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+        samplerInfo.addressModeU = addressMode;
+        samplerInfo.addressModeV = addressMode;
+        samplerInfo.addressModeW = addressMode;
+        samplerInfo.anisotropyEnable = VK_TRUE;
+        samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create texture sampler!");
+        }
+    }
+
 
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) {
         VkImageViewCreateInfo viewInfo{};
@@ -935,6 +1014,30 @@ private:
 
         vkBindImageMemory(device, image, imageMemory, 0);
     }
+
+    void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+        VkBufferImageCopy region{};
+        region.bufferOffset = 0;
+        region.bufferRowLength = 0;
+        region.bufferImageHeight = 0;
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel = 0;
+        region.imageSubresource.baseArrayLayer = 0;
+        region.imageSubresource.layerCount = 1;
+        region.imageOffset = {0, 0, 0};
+        region.imageExtent = {
+            width,
+            height,
+            1
+        };
+
+        vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+        endSingleTimeCommands(commandBuffer);
+    }
+
 
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) {
         VkCommandBuffer commandBuffer = beginSingleTimeCommands();
@@ -1005,26 +1108,6 @@ private:
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
-    void createIndexBuffer() {
-        VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-        void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-            memcpy(data, indices.data(), (size_t) bufferSize);
-        vkUnmapMemory(device, stagingBufferMemory);
-
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
-
-        copyBuffer(stagingBuffer, indexBuffer, bufferSize);
-
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
-    }
-
     void createUniformBuffers() {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
@@ -1035,14 +1118,16 @@ private:
     }
 
     void createDescriptorPool() {
-        VkDescriptorPoolSize poolSize{};
-        poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSize.descriptorCount = 1;
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 1;
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        poolInfo.poolSizeCount = 1;
-        poolInfo.pPoolSizes = &poolSize;
+        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+        poolInfo.pPoolSizes = poolSizes.data();
         poolInfo.maxSets = 1;
 
         if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
@@ -1066,16 +1151,30 @@ private:
         bufferInfo.offset = 0;
         bufferInfo.range = sizeof(UniformBufferObject);
 
-        VkWriteDescriptorSet descriptorWrite{};
-        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrite.dstSet = descriptorSet;
-        descriptorWrite.dstBinding = 0;
-        descriptorWrite.dstArrayElement = 0;
-        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrite.descriptorCount = 1;
-        descriptorWrite.pBufferInfo = &bufferInfo;
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = heightMapImageView;
+        imageInfo.sampler = textureSampler;
 
-        vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &imageInfo;
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
@@ -1218,22 +1317,13 @@ private:
         // world transformation
         PushConstants constants{};
         constants.model = glm::mat4(1.0f);
-        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT, 0, sizeof(PushConstants), &constants);
 
-        // render the terrain
+        // render the terrain: every 4 vertices are one patch
         VkBuffer vertexBuffers[] = {vertexBuffer};
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-        // draw mesh strip by strip: each strip starts (numTrisPerStrip + 2) indices after the one before
-        for (int strip = 0; strip < numStrips; strip++) {
-            vkCmdDrawIndexed(commandBuffer,
-                             numTrisPerStrip + 2,                  // number of indices to render
-                             1,                                    // one instance
-                             (numTrisPerStrip + 2) * strip,        // the strip's first index
-                             0, 0);
-        }
+        vkCmdDraw(commandBuffer, NUM_PATCH_PTS * rez * rez, 1, 0, 0);
 
         vkCmdEndRenderPass(commandBuffer);
 
@@ -1270,7 +1360,7 @@ private:
         UniformBufferObject ubo{};
         // camera/view transformation: look from cameraPos in the direction of cameraFront
         ubo.view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        ubo.proj = glm::perspective(glm::radians(fov), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 100000.0f);
+        ubo.proj = glm::perspective(glm::radians(fov), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 1000.0f);
         // GLM is made for OpenGL, where clip space y points up: flip it for Vulkan (this replaces the flip in the shader)
         ubo.proj[1][1] *= -1;
 
@@ -1413,7 +1503,10 @@ private:
             swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
         }
 
-        return indices.isComplete() && extensionsSupported && swapChainAdequate;
+        VkPhysicalDeviceFeatures supportedFeatures;
+        vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
+
+        return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy && supportedFeatures.tessellationShader && supportedFeatures.fillModeNonSolid;
     }
 
     bool checkDeviceExtensionSupport(VkPhysicalDevice device) {

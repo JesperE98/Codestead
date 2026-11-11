@@ -42,8 +42,8 @@ inline void ThrowIfFailed(HRESULT hr)
     }
 }
 
-// texture size
-const unsigned int TEXTURE_WIDTH = 1000, TEXTURE_HEIGHT = 1000;
+// texture size: as large as the window, one texel per pixel (learnopengl: 1000 x 1000, stretched)
+const unsigned int TEXTURE_WIDTH = 800, TEXTURE_HEIGHT = 600;
 
 class D3D12App
 {

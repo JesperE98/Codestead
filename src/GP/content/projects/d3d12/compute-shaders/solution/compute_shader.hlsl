@@ -20,7 +20,7 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
     int2 texelCoord = int2(dispatchThreadID.xy);
     float speed = 100.0f;
     // the width of the texture
-    float width = 1000.0f;
+    float width = 800.0f;
 
     // The texture's size: all the threads of the dispatch, one per pixel (GLSL's
     // gl_NumWorkGroups * gl_WorkGroupSize - HLSL has no number of groups).
