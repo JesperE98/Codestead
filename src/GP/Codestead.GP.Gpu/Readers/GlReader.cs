@@ -263,6 +263,8 @@ public sealed partial class GlReader
         if (gl.Programs.TryGetValue(existing, out var p)) gl.Programs[name] = p;
     }
 
+    private readonly Dictionary<int, List<ShaderAst.Stmt>?> pureLoops = new();
+
     /// <summary>for (init; condition; step) { … }: runs the body while the condition holds (at most 1000 times).</summary>
     private void For(CppStatement loop)
     {
@@ -287,8 +289,17 @@ public sealed partial class GlReader
         // C++ runner, every iteration, instead of statement by statement.
         if (loop.End > loop.Offset && src.IsPureLoop(src.Code[loop.Offset..loop.End]))
         {
-            env.Run(src.Code[loop.Offset..loop.End]);
-            return;
+            if (!pureLoops.TryGetValue(loop.Offset, out var parsed))
+            {
+                var statements = ShaderParser.ParseStatementsLenient(CppSource.Prepare(src.Code[loop.Offset..loop.End]));
+                // Only a loop that parses as one (else statement by statement, as before).
+                pureLoops[loop.Offset] = parsed = statements is [ShaderAst.For] ? statements : null;
+            }
+            if (parsed is not null)
+            {
+                env.Runner.RunStatements(parsed);
+                return;
+            }
         }
         env.Run(header[0] + ";");
         for (int n = 0; n < 1000; n++)
