@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.2.2",
+    "date": "2026-11-11",
+    "changes": {
+      "en": [
+        "The hub now shows **Codestead GP** with its own icon, as in the app itself."
+      ],
+      "sv": [
+        "Hubben visar nu **Codestead GP** med sin egen ikon, samma som i själva appen."
+      ],
+      "de": [
+        "Der Hub zeigt **Codestead GP** jetzt mit seinem eigenen Symbol, wie in der App selbst."
+      ],
+      "fr": [
+        "Le hub affiche désormais **Codestead GP** avec sa propre icône, comme dans l'application elle-même."
+      ],
+      "es": [
+        "El hub muestra ahora **Codestead GP** con su propio icono, igual que en la propia aplicación."
+      ],
+      "zh": [
+        "中心现在会用 **Codestead GP** 自己的图标显示它，与应用本身一致。"
+      ],
+      "ja": [
+        "ハブで **Codestead GP** がアプリ本体と同じアイコンで表示されるようになりました。"
+      ]
+    }
+  },
+  {
     "version": "0.2.1",
     "date": "2026-11-03",
     "changes": {
