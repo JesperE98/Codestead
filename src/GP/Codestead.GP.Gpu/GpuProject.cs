@@ -50,6 +50,26 @@ public sealed class GpuProject
         return Files.Keys.FirstOrDefault(k => Path.GetFileName(k) == file);
     }
 
+    /// <summary>
+    /// The main file's text as the simulator reads it: the project's headers it includes that only hold data (const
+    /// float LTC1[] = { … }: no functions, no classes) are appended after it, so their arrays are known (the main file's
+    /// own offsets and lines stay as they are).
+    /// </summary>
+    public string MainText()
+    {
+        var main = MainFile;
+        var text = Files.TryGetValue(main, out var t) ? t : "";
+        var appended = new System.Text.StringBuilder();
+        foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(text, @"^[ \t]*#\s*include\s*""([^""]+)""", System.Text.RegularExpressions.RegexOptions.Multiline))
+        {
+            if (Find(m.Groups[1].Value) is not { } header || PathOf(m.Groups[1].Value) == main) continue;
+            var code = Readers.CppSource.BlankComments(header);
+            if (System.Text.RegularExpressions.Regex.IsMatch(code, @"\)\s*(?:const\s*)?\{|\bclass\s+\w+|\bstruct\s+\w+\s*\{[^}]*\(")) continue;
+            appended.Append("\n// ---- ").Append(m.Groups[1].Value).Append(" ----\n").Append(code);
+        }
+        return appended.Length == 0 ? text : text + "\n" + appended;
+    }
+
     /// <summary>The C++ sources (.cpp and .h files).</summary>
     public IEnumerable<KeyValuePair<string, string>> CppFiles =>
         Files.Where(kv => kv.Key.EndsWith(".cpp", StringComparison.Ordinal) || kv.Key.EndsWith(".h", StringComparison.Ordinal) || kv.Key.EndsWith(".hpp", StringComparison.Ordinal));

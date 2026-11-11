@@ -23,7 +23,7 @@ public sealed partial class VulkanReader
         this.time = time;
         this.project = project;
         var main = project.MainFile;
-        src = new CppSource(main, project.Files.TryGetValue(main, out var t) ? t : "");
+        src = new CppSource(main, project.MainText());
     }
 
     public static Scene.Scene Read(GpuProject project, double time = 1.0) => new VulkanReader(project, time).Run();

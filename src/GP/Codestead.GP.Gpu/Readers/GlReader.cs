@@ -26,7 +26,7 @@ public sealed partial class GlReader
     {
         this.project = project;
         var main = project.MainFile;
-        src = new CppSource(main, project.Files.TryGetValue(main, out var t) ? t : "");
+        src = new CppSource(main, project.MainText());
         images = StbImage.All(src, project, scene);
         env = new CppExec(src, time, null, scene);
         // std::ifstream reads the project's files (a game's levels), FreeType its fonts.

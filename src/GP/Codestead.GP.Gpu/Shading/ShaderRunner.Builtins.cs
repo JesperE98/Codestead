@@ -46,7 +46,18 @@ public sealed partial class ShaderRunner
         // DirectXMath stores into its first argument: XMStoreFloat4x4(&constants.transform, m).
         if (name.StartsWith("XMStoreFloat", StringComparison.Ordinal) && c.Args.Count == 2)
         {
-            Store(c.Args[0], Eval(c.Args[1]));
+            var stored = Eval(c.Args[1]);
+            // &points[0] arrives as the array (the parser's &a[0]): a vector goes into its first element, not over it.
+            ShaderValue? into = null;
+            try
+            {
+                into = Eval(c.Args[0]);
+            }
+            catch (ShaderRuntimeException)
+            {
+            }
+            if (into?.Items is { Length: > 0 } && stored.V is not null) Store(new IndexOf(c.Args[0], new Number(0, c.Line, true), c.Line), stored);
+            else Store(c.Args[0], stored);
             return ShaderValue.Scalar(0);
         }
         if (name is "sizeof") return ShaderValue.Scalar(SizeOf(c.Args.FirstOrDefault()));
