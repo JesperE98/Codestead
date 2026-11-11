@@ -1,0 +1,10 @@
+[
+  { "title": "OIT: Weighted Blended", "url": "https://learnopengl.com/Guest-Articles/2020/OIT/Weighted-Blended", "publisher": "LearnOpenGL" },
+  { "title": "weighted_blended.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/8.guest/2020/oit/weighted_blended.cpp", "publisher": "LearnOpenGL", "api": "opengl" },
+  { "title": "glBlendFunc", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBlendFunc.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "glClearBuffer", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glClearBuffer.xhtml", "publisher": "Khronos Group", "api": "opengl" },
+  { "title": "VkPipelineColorBlendAttachmentState", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkPipelineColorBlendAttachmentState.html", "publisher": "Khronos Group", "api": "vulkan" },
+  { "title": "Render passes", "url": "https://vulkan-tutorial.com/Drawing_a_triangle/Graphics_pipeline_basics/Render_passes", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "D3D12_BLEND_DESC", "url": "https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_blend_desc", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "Load (DirectX HLSL Texture Object)", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-load", "publisher": "Microsoft Learn", "api": "d3d12" }
+]
