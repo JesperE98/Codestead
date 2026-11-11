@@ -6,8 +6,10 @@ with `8.3.gpuheight.vs/.tcs/.tes/.fs` and `includes/learnopengl/shader_t.h`. Fil
 course's `shader_m.h` grown by two parameters), `cpuheight.vs/.fs` (the start's CPU shaders), `gpuheight.vs/.tcs/.tes/.fs`
 (learnopengl's names without the `8.3.` prefix) and `heightmap.png`.
 
-**Start = the solution of `tessellation-height-map`** (the CPU terrain), with the GPU version's files added as
-TODOs; the tasks replace the CPU grid by patches the GPU tessellates.
+**Start = the solution of `tessellation-height-map`** (the CPU terrain), with the GPU version's files added
+(`gpuheight.vs/.fs` complete, `gpuheight.tcs` passing the patches through with every level 1, `gpuheight.tes` an empty
+TODO stub) and `shader_t.h` included instead of `shader_m.h` (same class, two more optional stages); the tasks replace
+the CPU grid by patches the GPU tessellates.
 
 **Screenshot time: 1.0 s** (nothing moves).
 
