@@ -101,9 +101,9 @@ makes the same triangles (the same fractional-odd rules and edge order).
   lake = 28,28,28, front = 64,64,64, background = below = 26,26,26.
 
 ## `tess-control`
-- **Task:** Tessellate: in the patch constant function set all four edge factors and both inside factors to 8, so every patch is cut into 8 × 8 small quads whose new vertices each read their own height.
+- **Task:** Tessellate: in the patch constant function set all four edge factors and both inside factors to 8, so every patch is cut into 9 × 9 small quads (fractional_odd spacing rounds level 8 up to 9 segments) whose new vertices each read their own height.
 - **Hint:** `output.edges[0..3] = 8; output.inside[0..1] = 8;` – the patch constant function runs once per patch (OpenGL's `if (gl_InvocationID == 0)` block).
-- **When done:** `gpuheight.hlsl`: the six factors 8. **The full terrain** again (about 102,400 triangles; the same as the
+- **When done:** `gpuheight.hlsl`: the six factors 8. **The full terrain** again (about 64,800 triangles: 400 patches × 162; the same as the
   CPU terrain within a few grey levels): peak = 213,213,213, ridge = 145,145,145, centre = 91,91,91, hill =
   101,101,101, valley = 88,88,88, lake = 28,28,28, front = 67,67,67, background = below = 26,26,26.
 
