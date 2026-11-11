@@ -26,7 +26,8 @@ public static class BuildChecker
         {
             var ext = Path.GetExtension(file).ToLowerInvariant();
             if (ext is ".cpp" or ".h" or ".hpp" or ".c") Cpp(file, text, api, list);
-            else if (ext is ".vs" or ".fs" or ".vert" or ".frag" or ".glsl" or ".geom" or ".gs") Glsl(file, text, api, list);
+            // (the tessellation stages: .tcs / .tes, Vulkan's .tesc / .tese; compute: .comp)
+            else if (ext is ".vs" or ".fs" or ".vert" or ".frag" or ".glsl" or ".geom" or ".gs" or ".tcs" or ".tes" or ".tesc" or ".tese" or ".comp") Glsl(file, text, api, list);
             else if (ext is ".hlsl") Hlsl(file, text, list);
         }
         return list;

@@ -32,7 +32,7 @@ public static class Simulator
         switch (api)
         {
             case Apis.Vulkan:
-                foreach (var f in project.Files.Keys.Where(k => k.EndsWith(".vert", StringComparison.Ordinal) || k.EndsWith(".frag", StringComparison.Ordinal)))
+                foreach (var f in project.Files.Keys.Where(k => new[] { ".vert", ".frag", ".geom", ".tesc", ".tese", ".comp" }.Any(e => k.EndsWith(e, StringComparison.Ordinal))))
                 {
                     var dir = Path.GetDirectoryName(f)?.Replace('\\', '/') ?? "";
                     // shader.vert → vert.spv (vulkan-tutorial's names); any other name → lighting.vert.spv.
