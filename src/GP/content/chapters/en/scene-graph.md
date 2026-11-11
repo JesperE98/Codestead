@@ -162,6 +162,16 @@ the dirty-flag task. In the render loop the planet's model matrix now comes from
         computeModelMatrix(planetTransform, glm::mat4(1.0f));
         ourShader.setMat4("model", planetTransform.modelMatrix);
 ```
+
+```quiz
+In `getLocalModelMatrix`, which transformation is applied to a vertex first?
+- [ ] The translation to `pos`
+- [ ] The rotation about y
+- [ ] The rotation about z
+- [x] The scale
+---
+With column vectors (`M · v`), the matrix nearest to the vertex acts first: translate · rotation · scale scales first, then rotates (z, then x, then y), then moves the object into place. Scaling after the translation would also scale the offset.
+```
 :::
 :::vulkan
 ```cpp
@@ -192,6 +202,16 @@ likewise for y and z, and `transform.modelMatrix = parentGlobalModelMatrix * get
 setters only store the new value for now. In `recordCommandBuffer()` the push constant now comes from a transform:
 `Transform planetTransform; computeModelMatrix(planetTransform, glm::mat4(1.0f)); constants.model =
 planetTransform.modelMatrix;`.
+
+```quiz
+In `getLocalModelMatrix`, which transformation is applied to a vertex first?
+- [ ] The translation to `pos`
+- [ ] The rotation about y
+- [ ] The rotation about z
+- [x] The scale
+---
+With column vectors (`M · v`), the matrix nearest to the vertex acts first: translate · rotation · scale scales first, then rotates (z, then x, then y), then moves the object into place. Scaling after the translation would also scale the offset.
+```
 :::
 :::d3d12
 The struct stores DirectXMath's storage types – `XMFLOAT3` for the vectors and `XMFLOAT4X4` for the matrix – and the
@@ -228,6 +248,16 @@ void computeModelMatrix(Transform& transform, const XMMATRIX& parentGlobalModelM
 three setters only store the new value for now. In `PopulateCommandList` the planet's model matrix now comes from a
 transform: `Transform planetTransform; computeModelMatrix(planetTransform, XMMatrixIdentity());`, transposed for HLSL
 into the root constants as before.
+
+```quiz
+Why does the DirectX 12 version compute `getLocalModelMatrix(transform) * parentGlobalModelMatrix` while learnopengl writes `parent * local`?
+- [x] DirectXMath uses row vectors (`v · M`), so the matrix that should act first – the local one – stands on the left; it is the same transformation
+- [ ] Because Direct3D's y axis points down
+- [ ] Because HLSL needs the matrix transposed
+- [ ] Because Direct3D's depth range is 0..1
+---
+With row vectors every product is written in the opposite order: scale · rotation · translation for the local matrix, and local · parent for the global one. The transpose for HLSL is a separate matter of how the matrix is stored in the constants.
+```
 :::
 
 Now do the first task, **transform**. A default transform is the identity, so the picture doesn't change.
@@ -682,6 +712,16 @@ graph moved eleven planets. Note that the children turn about the *root's* axis,
 the root's global matrix, which every child's global matrix starts with. To make every planet also spin about its own
 axis, you would set each child's local rotation as well – try it, and the chain curls up, because each child's rotation
 adds to its parent's.
+
+```quiz
+You want the root and the first two children to stay where they are, and only the third child and everything after it to swing round. What do you change?
+- [x] The local rotation of the third child: its global matrix and those of all entities below it change, the ones above it don't
+- [ ] The root's local rotation, with the angle divided by three
+- [ ] The local rotation of every entity from the third child on, by the same angle
+- [ ] The global model matrix of the third child, directly
+---
+A change to an entity affects its own subtree only. Rotating every entity from the third on would add the angles up along the chain and curl it; overwriting a global matrix would be lost at the next update.
+```
 
 ## Going further
 

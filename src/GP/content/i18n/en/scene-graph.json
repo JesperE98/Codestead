@@ -1,0 +1,49 @@
+{
+  "title": "Scene Graph",
+  "tasks": {
+    "transform": {
+      "text": {
+        "opengl": "Write the `Transform` struct (local position, Euler rotation in degrees, scale, and the model matrix) with `getLocalModelMatrix` (translation · rotation · scale, the rotation as Y · X · Z), `computeModelMatrix` (parent's model matrix · local matrix) and the three `setLocal…` functions, and draw the planet with the model matrix of a `Transform`.",
+        "vulkan": "Write the `Transform` struct (local position, Euler rotation in degrees, scale, and the model matrix) with `getLocalModelMatrix` (translation · rotation · scale, the rotation as Y · X · Z), `computeModelMatrix` (parent's model matrix · local matrix) and the three `setLocal…` functions, and push the model matrix of a `Transform` for the planet.",
+        "d3d12": "Write the `Transform` struct (local position, Euler rotation in degrees, scale, and the model matrix) with `getLocalModelMatrix` (scale · rotation · translation in DirectXMath's order, the rotation as Z · X · Y), `computeModelMatrix` (local matrix · parent's model matrix) and the three `setLocal…` functions, and draw the planet with the model matrix of a `Transform`."
+      },
+      "hint": {
+        "opengl": "`glm::rotate(glm::mat4(1.0f), glm::radians(transform.eulerRot.x), glm::vec3(1.0f, 0.0f, 0.0f))` for each axis, then `transformY * transformX * transformZ`; `glm::translate(glm::mat4(1.0f), transform.pos) * rotationMatrix * glm::scale(glm::mat4(1.0f), transform.scale)`. In the loop: `Transform planetTransform; computeModelMatrix(planetTransform, glm::mat4(1.0f)); ourShader.setMat4(\"model\", planetTransform.modelMatrix);`.",
+        "vulkan": "`glm::rotate(glm::mat4(1.0f), glm::radians(transform.eulerRot.x), glm::vec3(1.0f, 0.0f, 0.0f))` for each axis, then `transformY * transformX * transformZ`; `glm::translate(glm::mat4(1.0f), transform.pos) * rotationMatrix * glm::scale(glm::mat4(1.0f), transform.scale)`. In `recordCommandBuffer()`: `Transform planetTransform; computeModelMatrix(planetTransform, glm::mat4(1.0f)); constants.model = planetTransform.modelMatrix;`.",
+        "d3d12": "`XMMatrixRotationX(XMConvertToRadians(transform.eulerRot.x))` for each axis, then `transformZ * transformX * transformY` (learnopengl's Y · X · Z for column vectors); `XMMatrixScaling(…) * rotationMatrix * XMMatrixTranslation(…)`; `XMStoreFloat4x4(&transform.modelMatrix, getLocalModelMatrix(transform) * parentGlobalModelMatrix)`. In `PopulateCommandList`: `Transform planetTransform; computeModelMatrix(planetTransform, XMMatrixIdentity());` and `XMMatrixTranspose(XMLoadFloat4x4(&planetTransform.modelMatrix))` into the root constants."
+      }
+    },
+    "entity": {
+      "text": {
+        "opengl": "Write the `Entity` struct (a vector of child entities, a `Transform`, a pointer to its `Model`) with `addChild`, a recursive `updateSelfAndChild` and a recursive `drawSelfAndChild`; build the root planet and a chain of ten children – each the child of the previous one, at local position (3.5, 0, 0) with local scale 0.6 – update the graph once and draw it.",
+        "vulkan": "Write the `Entity` struct (a vector of child entities, a `Transform`, a pointer to its `Model`) with `addChild`, a recursive `updateSelfAndChild` and a recursive `drawSelfAndChild` that records each entity's model matrix as a push constant and its model's draw; build the root and a chain of ten children (local position (3.5, 0, 0), local scale 0.6) in `loadEntities()`, update the graph once and draw it.",
+        "d3d12": "Write the `Entity` struct (a vector of child entities, a `Transform`, a pointer to its `Model`) with `addChild`, a recursive `updateSelfAndChild` and a recursive `drawSelfAndChild` (root constants, the model, the children); build the root `m_ourEntity` and a chain of ten children (local position (3.5, 0, 0), local scale 0.6) in `LoadAssets`, update the graph once and draw it in `PopulateCommandList`."
+      },
+      "hint": {
+        "opengl": "learnopengl's loop with `Entity* lastEntity = &ourEntity;`: `addChild(*lastEntity, ourModel); lastEntity = &lastEntity->children.back();` then `setLocalPosition(lastEntity->transform, glm::vec3(3.5f, 0.0f, 0.0f)); setLocalScale(lastEntity->transform, glm::vec3(scale, scale, scale));`. After the loop `updateSelfAndChild(ourEntity, glm::mat4(1.0f));`. In the render loop `drawSelfAndChild(ourEntity, ourShader);` instead of the single draw.",
+        "vulkan": "learnopengl's loop with `Entity* lastEntity = &ourEntity;`: `addChild(*lastEntity, ourModel); lastEntity = &lastEntity->children.back();` then `setLocalPosition(…, glm::vec3(3.5f, 0.0f, 0.0f)); setLocalScale(…, glm::vec3(scale, scale, scale));`. After the loop `updateSelfAndChild(ourEntity, glm::mat4(1.0f));`. Add the member `Entity ourEntity;`. In `recordCommandBuffer()` `drawSelfAndChild(ourEntity, commandBuffer, pipelineLayout);` (`vkCmdPushConstants` with `entity.transform.modelMatrix`, `Draw(*entity.pModel, commandBuffer)`, the children).",
+        "d3d12": "learnopengl's loop with `Entity* lastEntity = &m_ourEntity;`: `addChild(*lastEntity, m_model); lastEntity = &lastEntity->children.back();` then `setLocalPosition(…, XMFLOAT3(3.5f, 0.0f, 0.0f)); setLocalScale(…, XMFLOAT3(scale, scale, scale));`. After the loop `updateSelfAndChild(m_ourEntity, XMMatrixIdentity());`. The member `Entity m_ourEntity;` goes next to `m_model`; move `ModelConstants` out of the class. In `PopulateCommandList` `drawSelfAndChild(m_ourEntity, m_commandList.Get());`."
+      }
+    },
+    "dirty-flag": {
+      "text": "Add a dirty flag to `Transform` – the `setLocal…` functions set it, `computeModelMatrix` clears it – and split the update: `forceUpdateSelfAndChild` recomputes an entity and everything below it; `updateSelfAndChild` calls it only for a dirty entity and otherwise just looks further down.",
+      "hint": {
+        "opengl": "`bool isDirty = true;` in the struct. `updateSelfAndChild`: `if (entity.transform.isDirty) { forceUpdateSelfAndChild(entity, parentGlobalModelMatrix); return; }` then recurse into the children with `entity.transform.modelMatrix`.",
+        "vulkan": "`bool isDirty = true;` in the struct. `updateSelfAndChild`: `if (entity.transform.isDirty) { forceUpdateSelfAndChild(entity, parentGlobalModelMatrix); return; }` then recurse into the children with `entity.transform.modelMatrix`.",
+        "d3d12": "`bool isDirty = true;` in the struct. `updateSelfAndChild`: `if (entity.transform.isDirty) { forceUpdateSelfAndChild(entity, parentGlobalModelMatrix); return; }` then recurse into the children with `XMLoadFloat4x4(&entity.transform.modelMatrix)`."
+      }
+    },
+    "animate": {
+      "text": {
+        "opengl": "Turn the root about its y axis over time – 20 degrees per second – and update the scene graph every frame before drawing: the whole chain swings round with it.",
+        "vulkan": "Turn the root about its y axis over time – 20 degrees per second – and update the scene graph at the top of `recordCommandBuffer()`, before the draws: the whole chain swings round with it.",
+        "d3d12": "Turn the root about its y axis over time – 20 degrees per second – and update the scene graph every frame in `OnUpdate`, before the frame is drawn: the whole chain swings round with it."
+      },
+      "hint": {
+        "opengl": "At the top of the frame: `setLocalRotation(ourEntity.transform, glm::vec3(0.0f, 20.0f * currentFrame, 0.0f)); updateSelfAndChild(ourEntity, glm::mat4(1.0f));` – only the root is dirty, so the update recomputes it and, through it, all its children.",
+        "vulkan": "`float currentFrame = static_cast<float>(glfwGetTime()); setLocalRotation(ourEntity.transform, glm::vec3(0.0f, 20.0f * currentFrame, 0.0f)); updateSelfAndChild(ourEntity, glm::mat4(1.0f));` – only the root is dirty, so the update recomputes it and, through it, all its children.",
+        "d3d12": "`static auto startTime = std::chrono::high_resolution_clock::now(); float time = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - startTime).count();` then `setLocalRotation(m_ourEntity.transform, XMFLOAT3(0.0f, 20.0f * time, 0.0f)); updateSelfAndChild(m_ourEntity, XMMatrixIdentity());`."
+      }
+    }
+  }
+}
