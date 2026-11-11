@@ -684,7 +684,8 @@ display, total);` between them.
 Now do the fourth task, **cull**. Build and run: the back of the grid is gone. At 2.0 s the title says **8 / 101**:
 only eight planets are drawn, the root and the nearest ones, whose bounding spheres reach closer than 15 units – among
 them a planet whose centre is 16 units away but whose sphere still pokes inside the far plane. The planets 17, 20 or 42 units away
-are culled, although the projection would have shown them.
+are culled, although the projection would have shown them. The scene is animated, so the counts change over time: at 1.0 s the title says
+10 / 101 here – the numbers in this chapter are the ones at 2.0 s, the time the task checks look at.
 
 ```quiz
 `drawSelfAndChild` visits the children of an entity even when the entity itself is culled. Why?

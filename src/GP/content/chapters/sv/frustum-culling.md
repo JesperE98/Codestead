@@ -684,7 +684,8 @@ total);` mellan dem.
 Gör nu den fjärde uppgiften, **cull**. Bygg och kör: rutnätets bakre del är borta. Vid 2.0 s står det **8 / 101** i
 titeln: bara åtta planeter ritas, roten och de närmaste, vars avgränsningssfärer når närmare än 15 enheter – bland dem en
 planet vars mittpunkt ligger 16 enheter bort men vars sfär ändå sticker in innanför det bortre planet. Planeterna 17, 20
-eller 42 enheter bort sorteras bort, fast projektionen skulle ha visat dem.
+eller 42 enheter bort sorteras bort, fast projektionen skulle ha visat dem. Scenen är animerad, så antalen ändras med tiden: vid
+1.0 s står det 10 / 101 här – siffrorna i kapitlet är de vid 2.0 s, den tid som uppgiftskontrollerna tittar på.
 
 ```quiz
 `drawSelfAndChild` besöker en entitets barn även när entiteten själv sorteras bort. Varför?
