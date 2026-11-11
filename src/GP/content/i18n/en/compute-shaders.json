@@ -1,0 +1,59 @@
+{
+  "title": "Compute Shaders",
+  "tasks": {
+    "limits": {
+      "text": {
+        "opengl": "Ask OpenGL how large a dispatch may be and print it: the most work groups per dispatch in x, y and z, the largest work group in x, y and z, and the most invocations one work group may have.",
+        "vulkan": "Ask Vulkan how large a dispatch may be and print it: the most work groups per dispatch in x, y and z, the largest work group in x, y and z, and the most invocations one work group may have.",
+        "d3d12": "Write the limits of compute work to the debugger's output: the most thread groups per dispatch in x, y and z, the largest thread group in x, y and z, and the most threads one thread group may have – in Direct3D 12 they are constants, the same on every device."
+      },
+      "hint": {
+        "opengl": "`glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, idx, &max_compute_work_group_count[idx]);` and `GL_MAX_COMPUTE_WORK_GROUP_SIZE` for idx 0, 1, 2 (indexed queries), `glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &max_compute_work_group_invocations);`.",
+        "vulkan": "They are limits of the physical device: `vkGetPhysicalDeviceProperties(physicalDevice, &properties)`, then `properties.limits.maxComputeWorkGroupCount[0..2]`, `maxComputeWorkGroupSize[0..2]` and `maxComputeWorkGroupInvocations`. Write `printComputeLimits()` with learnopengl's prints and call it after `pickPhysicalDevice()`.",
+        "d3d12": "`snprintf` into a `char text[512]` with `D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION`, `D3D12_CS_THREAD_GROUP_MAX_X`, `_MAX_Y`, `_MAX_Z` and `D3D12_CS_THREAD_GROUP_MAX_THREADS_PER_GROUP`, then `OutputDebugStringA(text);` – in `LoadPipeline` after the device is created."
+      }
+    },
+    "image-unit": {
+      "text": {
+        "opengl": "Make the texture writable from a shader: bind its level 0 to image unit 0, for reading and writing, with the format `GL_RGBA32F`.",
+        "d3d12": "Make the texture writable from a shader: create it with `D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS`, give the heap a second slot and create an unordered access view (UAV) of the texture's level 0 in it – Direct3D's image unit."
+      },
+      "hint": {
+        "opengl": "`glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);` – unit, texture, level, layered, layer, access, format. An image unit is not a texture unit: the quad still samples it on texture unit 0.",
+        "d3d12": "`CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32G32B32A32_FLOAT, TEXTURE_WIDTH, TEXTURE_HEIGHT, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)`, `srvUavHeapDesc.NumDescriptors = 2;`, a `D3D12_UNORDERED_ACCESS_VIEW_DESC` with `DXGI_FORMAT_R32G32B32A32_FLOAT`, `D3D12_UAV_DIMENSION_TEXTURE2D`, `Texture2D.MipSlice = 0`, and `CreateUnorderedAccessView(m_texture.Get(), nullptr, &uavDesc, uavHandle)` with the handle of slot 1."
+      }
+    },
+    "compute-shader": {
+      "text": {
+        "opengl": "Write the compute shader – work groups of 10 × 10 × 1 invocations, the texture as `image2D imgOutput` on binding 0, and in `main` one invocation per texel that writes red = x / width and green = y / height with `imageStore` – load it with the `ComputeShader` class, and every frame dispatch 80 × 60 work groups (one invocation per texel) followed by a memory barrier before the quad reads the texture. The CPU fill is no longer needed: create the texture without data.",
+        "vulkan": "Write the compute shader – work groups of 10 × 10 × 1 invocations, the texture as `image2D imgOutput` at binding 0, and in `main` one invocation per texel that writes red = x / width and green = y / height with `imageStore` – create the compute pipeline, and every frame dispatch 80 × 60 work groups followed by a barrier before the quad reads the texture. The CPU fill is no longer needed: create the image without data (straight from `UNDEFINED` to `GENERAL`).",
+        "d3d12": "Write the compute shader – thread groups of 10 × 10 × 1 threads, the texture as `RWTexture2D<float4> imgOutput` at u0, and in `CSMain` one thread per texel that writes red = x / width and green = y / height – build its root signature and compute pipeline state, and every frame dispatch 80 × 60 thread groups followed by a transition barrier before the quad reads the texture (and the barrier back at the end of the frame). The CPU fill is no longer needed: create the texture without data, in the `UNORDERED_ACCESS` state."
+      },
+      "hint": {
+        "opengl": "`layout (local_size_x = 10, local_size_y = 10, local_size_z = 1) in;`, `layout (rgba32f, binding = 0) uniform image2D imgOutput;`, `ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);`, the width is `gl_NumWorkGroups.x * gl_WorkGroupSize.x`. In C++: `computeShader.use(); glDispatchCompute(TEXTURE_WIDTH / 10, TEXTURE_HEIGHT / 10, 1); glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);`.",
+        "vulkan": "`layout(local_size_x = 10, local_size_y = 10, local_size_z = 1) in;`, `layout(rgba32f, binding = 0) uniform image2D imgOutput;`, `ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);`, the width is `gl_NumWorkGroups.x * gl_WorkGroupSize.x`. `createComputePipeline(\"shaders/compute_shader.comp.spv\")`: a `VK_SHADER_STAGE_COMPUTE_BIT` stage, a pipeline layout with `computeDescriptorSetLayout`, `VkComputePipelineCreateInfo`, `vkCreateComputePipelines`. In `recordCommandBuffer()`, before `vkCmdBeginRenderPass`: bind the compute pipeline and set (`VK_PIPELINE_BIND_POINT_COMPUTE`), `vkCmdDispatch(commandBuffer, TEXTURE_WIDTH / 10, TEXTURE_HEIGHT / 10, 1);`, then a `VkImageMemoryBarrier` (shader write → shader read, layout GENERAL → GENERAL) with `vkCmdPipelineBarrier(…, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, …)`. In `createTexture()`: no pixels, no staging buffer, usage `STORAGE | SAMPLED`, one transition `UNDEFINED` → `GENERAL` (the only branch `transitionImageLayout` needs now; `copyBufferToImage` goes).",
+        "d3d12": "HLSL: `[numthreads(10, 10, 1)] void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)`, `int2 texelCoord = int2(dispatchThreadID.xy);`, `imgOutput.GetDimensions(imageWidth, imageHeight);`, `value.x = float(texelCoord.x) / imageWidth;`, `imgOutput[texelCoord] = value;`. C++: a root signature with `ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0)`, `D3DCompileFromFile(L\"computeShader.hlsl\", nullptr, nullptr, \"CSMain\", \"cs_5_0\", …)`, `D3D12_COMPUTE_PIPELINE_STATE_DESC` + `CreateComputePipelineState`; in `PopulateCommandList` `SetPipelineState(m_computePipelineState.Get())`, `SetComputeRootSignature`, `SetComputeRootDescriptorTable(0, …slot 1…)`, `Dispatch(TEXTURE_WIDTH / 10, TEXTURE_HEIGHT / 10, 1)`, `CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)`, then `SetPipelineState(m_pipelineState.Get())` for the quad."
+      }
+    },
+    "time": {
+      "text": {
+        "opengl": "Animate it: give the compute shader the time as a uniform `t` (location 0) and shift the red ramp to the right by `t * speed` texels (speed 100), wrapping around at the texture's width (800) with `mod`. Set `t` every frame from C++.",
+        "vulkan": "Animate it: give the compute shader the time `t` as a push constant and shift the red ramp to the right by `t * speed` texels (speed 100), wrapping around at the texture's width (800) with `mod`. Push `t` every frame.",
+        "d3d12": "Animate it: give the compute shader the time as a root constant `t` (register b0) and shift the red ramp to the right by `t * speed` texels (speed 100), wrapping around at the texture's width (800) with `fmod`. Set `t` every frame from C++."
+      },
+      "hint": {
+        "opengl": "`layout (location = 0) uniform float t;`, `value.x = mod(float(texelCoord.x) + t * speed, width) / (gl_NumWorkGroups.x * gl_WorkGroupSize.x);` with `float speed = 100; float width = 800;`. C++: `computeShader.setFloat(\"t\", currentFrame);` after `computeShader.use()`.",
+        "vulkan": "`layout(push_constant) uniform PushConstants { float t; } pc;`, `value.x = mod(float(texelCoord.x) + pc.t * speed, width) / (gl_NumWorkGroups.x * gl_WorkGroupSize.x);` with `float speed = 100; float width = 800;`. C++: `struct PushConstants { float t; };`, a `VkPushConstantRange` (`VK_SHADER_STAGE_COMPUTE_BIT`) in the compute pipeline layout, and in `recordCommandBuffer()` `constants.t = static_cast<float>(glfwGetTime());` with `vkCmdPushConstants(commandBuffer, computePipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstants), &constants);` before the dispatch.",
+        "d3d12": "HLSL: `cbuffer TimeConstants : register(b0) { float t; };`, `value.x = fmod(float(texelCoord.x) + t * speed, width) / imageWidth;` with `float speed = 100.0f; float width = 800.0f;`. C++: `struct TimeConstants { float t; };`, the compute root signature's second parameter `rootParameters[1].InitAsConstants(sizeof(TimeConstants) / 4, 0);`, the time from `std::chrono` (`static auto startTime`) and `SetComputeRoot32BitConstants(1, sizeof(TimeConstants) / 4, &timeConstants, 0);` before the dispatch."
+      }
+    },
+    "storage-image": {
+      "text": {
+        "vulkan": "Make the texture writable from a compute shader: give the image the storage usage and keep it in the `GENERAL` layout (where a shader may write and sample it), and describe it to the compute shader with a descriptor set of its own – binding 0 a storage image – next to the quad's sampler."
+      },
+      "hint": {
+        "vulkan": "`VK_IMAGE_USAGE_STORAGE_BIT` in `createTexture()`'s usage (and check `VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT`), the last transition `TRANSFER_DST_OPTIMAL` → `GENERAL` (a new branch in `transitionImageLayout`: dst access shader read | write, stages fragment | compute), `imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL` in `createDescriptorSet()`. `createComputeDescriptorSetLayout()`: one binding, `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE`, `VK_SHADER_STAGE_COMPUTE_BIT`; `createComputeDescriptorSet()`: the image view, layout `GENERAL`, no sampler; the pool gets a `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE` and `maxSets = 2`. Destroy the layout in `cleanup()`."
+      }
+    }
+  }
+}

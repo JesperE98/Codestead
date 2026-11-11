@@ -184,17 +184,31 @@ public sealed partial class GpTool
         });
     }
 
-    /// <summary>The smoke test: every chapter's starting project builds and runs in every API without crashing.</summary>
+    /// <summary>
+    /// The smoke test: every chapter's starting project is in the installed app in every API, and the first lesson of
+    /// every part builds and runs in the simulator. (Every task of every chapter is simulated by the TaskTests before a
+    /// release; simulating all of them here took longer than the installation test allows.)
+    /// </summary>
     public override string SmokeTest()
     {
-        int builds = 0;
+        int projects = 0, builds = 0;
         foreach (var chapter in GpCourse.Chapters.Where(c => c.IsLesson))
             foreach (var api in Apis.All)
             {
-                var result = Simulator.Build(GpCourse.StartProject(chapter.Id, api.Id), api.Id);
+                if (GpCourse.StartProject(chapter.Id, api.Id).Files.Count == 0)
+                    throw new InvalidOperationException($"The {api.Id} project of {chapter.Id} is missing.");
+                projects++;
+            }
+        foreach (var part in GpCourse.Parts)
+        {
+            if (GpCourse.LessonsIn(part).FirstOrDefault() is not { } first) continue;
+            foreach (var api in Apis.All)
+            {
+                var result = Simulator.Build(GpCourse.StartProject(first.Id, api.Id), api.Id);
                 if (result.Scene is { ShowsFrames: true } scene) Gpu.Raster.Rasterizer.Render(scene, 64);
                 builds++;
             }
-        return $"{builds} simulated builds";
+        }
+        return $"{projects} projects, {builds} simulated builds";
     }
 }

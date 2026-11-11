@@ -1,0 +1,65 @@
+{
+  "title": "Tessellering: höjdkarta",
+  "tasks": {
+    "load-heightmap": {
+      "text": {
+        "opengl": "Läs in `heightmap.png` med stb_image (behåll dess bredd, höjd och antal kanaler) och skriv ut dess storlek; om den inte går att läsa in, skriv ut ett fel och avsluta programmet.",
+        "vulkan": "Läs i `loadHeightMap()` in höjdkartan med stb_image (behåll dess bredd, höjd och antal kanaler) och skriv ut dess storlek; om den inte går att läsa in, kasta ett fel.",
+        "d3d12": "Läs in `heightmap.png` med stb_image (behåll dess bredd, höjd och antal kanaler); om den inte går att läsa in, kasta ett fel. Skriv dess storlek till felsökarens utdata."
+      },
+      "hint": {
+        "opengl": "`unsigned char *data = stbi_load(\"heightmap.png\", &width, &height, &nrChannels, 0);` – 0 ber om filens egna kanaler (1 här). Skriv ut `\"Loaded heightmap of size \" << height << \" x \" << width`. Frigör inte `data` ännu: nästa uppgift läser pixlarna.",
+        "vulkan": "`unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);` – 0 ber om filens egna kanaler (1 här). `if (!data) { throw std::runtime_error(\"failed to load height map!\"); }`, sedan `std::cout << \"Loaded heightmap of size \" << height << \" x \" << width << std::endl;`. Frigör inte `data` ännu: nästa uppgift läser pixlarna.",
+        "d3d12": "`unsigned char* data = stbi_load(\"heightmap.png\", &width, &height, &nrChannels, 0);` – 0 ber om filens egna kanaler (1 här). `snprintf(text, sizeof(text), \"Loaded heightmap of size %d x %d\\n\", height, width); OutputDebugStringA(text);`. Frigör inte `data` ännu: nästa uppgift läser pixlarna."
+      }
+    },
+    "vertices": {
+      "text": {
+        "opengl": "Gör en vertex per pixel: x ur kolumnen, z ur raden (båda centrerade kring 0), y ur pixelns gråvärde skalat med 64/256 och flyttat nedåt 16. Frigör bilden, lägg vertexarna i en VBO med en VAO (attribut 0: tre flyttal), och rita dem tills vidare som punkter.",
+        "vulkan": "Gör en vertex per pixel: x ur kolumnen, z ur raden (båda centrerade kring 0), y ur pixelns gråvärde skalat med 64/256 och flyttat nedåt 16; frigör bilden. Skapa vertex buffern av dem, och rita tills vidare vertexarna som punkter.",
+        "d3d12": "Gör en vertex per pixel: x ur kolumnen, z ur raden (båda centrerade kring 0), y ur pixelns gråvärde skalat med 64/256 och flyttat nedåt 16. Frigör bilden, lägg vertexarna i en vertex buffer med dess vy, och rita dem tills vidare som punkter."
+      },
+      "hint": {
+        "opengl": "Pixeln på rad `i`, kolumn `j` börjar vid `data + (j + width * i) * bytePerPixel`; dess första byte är höjden. `vertices.push_back(-width / 2.0f + width * j / (float)width);` (x), `(int)y * yScale - yShift` (y), `-height / 2.0f + height * i / (float)height` (z). Ritning: `glDrawArrays(GL_POINTS, 0, (GLsizei)(vertices.size() / 3));`.",
+        "vulkan": "Pixeln på rad `i`, kolumn `j` börjar vid `data + (j + width * i) * bytePerPixel`; dess första byte är höjden. `vertex.pos.x = -width / 2.0f + width * j / (float) width;`, `vertex.pos.y = (int) y * yScale - yShift;`, `vertex.pos.z = -height / 2.0f + height * i / (float) height;`, `vertices.push_back(vertex);`. Anropa `createVertexBuffer();` efter `loadHeightMap(…)` i `initVulkan()`. Punkter: `inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;`, och vertex shadern måste skriva `gl_PointSize = 1.0;` (Vulkan ritar bara punkter med en storlek från shadern). I `recordCommandBuffer()`: `vkCmdBindVertexBuffers` och `vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);`.",
+        "d3d12": "Pixeln på rad `i`, kolumn `j` börjar vid `data + (j + width * i) * bytePerPixel`; dess första byte är höjden. `vertices.push_back(-width / 2.0f + width * j / (float)width);` (x), `(int)y * yScale - yShift` (y), `-height / 2.0f + height * i / (float)height` (z). Spara antalet: `m_vertexCount = static_cast<UINT>(vertices.size() / 3);`. I `PopulateCommandList`: `IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST)`, `IASetVertexBuffers`, `DrawInstanced(m_vertexCount, 1, 0, 0)` – PSO:n är redan gjord för punkter."
+      }
+    },
+    "indices": {
+      "text": {
+        "opengl": "Bygg index buffern för triangle strips: för varje par av närliggande rader en strip som sicksackar mellan dem (`j + width * i`, `j + width * (i + 1)` för varje kolumn j). Räkna stripsen och deras trianglar, och lägg indexen i en element buffer bunden till VAO:n.",
+        "vulkan": "Bygg indexen för triangle strips: för varje par av närliggande rader en strip som sicksackar mellan dem (`j + width * i`, `j + width * (i + 1)` för varje kolumn j). Räkna stripsen och deras trianglar, skriv ut talen och skapa index buffern.",
+        "d3d12": "Bygg index buffern för triangle strips: för varje par av närliggande rader en strip som sicksackar mellan dem (`j + width * i`, `j + width * (i + 1)` för varje kolumn j). Räkna stripsen och deras trianglar, skriv dem till felsökarens utdata, och lägg indexen i en index buffer med dess vy."
+      },
+      "hint": {
+        "opengl": "learnopengls tre loopar: `for (int i = 0; i < height - 1; i += rez) for (int j = 0; j < width; j += rez) for (int k = 0; k < 2; k++) indices.push_back(j + width * (i + k * rez));` med `rez = 1`; `numStrips = (height - 1) / rez`, `numTrisPerStrip = (width / rez) * 2 - 2`. Bind IBO:n medan VAO:n är bunden.",
+        "vulkan": "learnopengls tre loopar: `for (int i = 0; i < height - 1; i += rez) for (int j = 0; j < width; j += rez) for (int k = 0; k < 2; k++) indices.push_back(j + width * (i + k * rez));` med `int rez = 1;`; `numStrips = (height - 1) / rez;`, `numTrisPerStrip = (width / rez) * 2 - 2;`. Anropa `createIndexBuffer();` efter `createVertexBuffer();`.",
+        "d3d12": "learnopengls tre loopar: `for (int i = 0; i < height - 1; i += rez) for (int j = 0; j < width; j += rez) for (int k = 0; k < 2; k++) indices.push_back(j + width * (i + k * rez));` med `rez = 1`; `m_numStrips = (height - 1) / rez`, `m_numTrisPerStrip = (width / rez) * 2 - 2`. Vyns format är `DXGI_FORMAT_R32_UINT`."
+      }
+    },
+    "strips": {
+      "text": {
+        "opengl": "Rita terrängen som triangle strips i stället för punkter: en `glDrawElements` per strip, var och en med start på sin egen förskjutning i index buffern.",
+        "vulkan": "Rita terrängen som triangle strips i stället för punkter: bind index buffern och spela in en indexerad ritning per strip, var och en med start på sitt eget första index.",
+        "d3d12": "Rita terrängen som triangle strips i stället för punkter: låt PSO:n rita trianglar, sätt strip-topologin och index buffern, och spela in en indexerad ritning per strip, var och en med start på sin egen plats i index buffern."
+      },
+      "hint": {
+        "opengl": "`glDrawElements(GL_TRIANGLE_STRIP, numTrisPerStrip + 2, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * (numTrisPerStrip + 2) * strip));` i en loop över `strip` – en strip med n trianglar har n + 2 index.",
+        "vulkan": "`inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;` (och vertex shadern behöver inte längre `gl_PointSize`). `vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);`, sedan `for (int strip = 0; strip < numStrips; strip++) vkCmdDrawIndexed(commandBuffer, numTrisPerStrip + 2, 1, (numTrisPerStrip + 2) * strip, 0, 0);` – en strip med n trianglar har n + 2 index.",
+        "d3d12": "`psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;` (strips är också trianglar), `IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP)`, `IASetIndexBuffer(&m_indexBufferView)`, och `DrawIndexedInstanced(m_numTrisPerStrip + 2, 1, (m_numTrisPerStrip + 2) * strip, 0, 0);` i en loop över `strip` – en strip med n trianglar har n + 2 index."
+      }
+    },
+    "height-colour": {
+      "text": {
+        "opengl": "Färga terrängen efter höjd: flytta och skala i fragment shadern höjden (-16 … 48) till ett gråvärde från 0 till 1.",
+        "vulkan": "Färga terrängen efter höjd: flytta och skala i fragment shadern höjden (-16 … 48) till ett gråvärde från 0 till 1.",
+        "d3d12": "Färga terrängen efter höjd: flytta och skala i pixel shadern höjden (-16 … 48) till ett gråvärde från 0 till 1."
+      },
+      "hint": {
+        "opengl": "`float h = (Height + 16.0) / 64.0; FragColor = vec4(h, h, h, 1.0);` – vertex shadern skickar redan vidare `Height = aPos.y`.",
+        "vulkan": "`float h = (Height + 16.0) / 64.0; outColor = vec4(h, h, h, 1.0);` – vertex shadern skickar redan vidare `Height = inPosition.y`.",
+        "d3d12": "`float h = (input.height + 16.0f) / 64.0f; return float4(h, h, h, 1.0f);` – vertex shadern skickar redan vidare `result.height = position.y`."
+      }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "title": "Skelettanimation",
+  "tasks": {
+    "bone-weights": {
+      "text": {
+        "opengl": "Ge varje vertex de ben som flyttar den: `Vertex` får id för upp till fyra ben och deras vikter (som attribut 3 och 4), och `Model` läser dem ur assimp – en `BoneInfo` (id + offsetmatris) per bennamn i `m_BoneInfoMap`, fylld av `ExtractBoneWeightForVertices`, som går igenom varje `aiBone`:s vikter och lägger in dem i vertexarna med `SetVertexBoneData`.",
+        "vulkan": "Ge varje vertex de ben som flyttar den: `Vertex` får id för upp till fyra ben och deras vikter (attribut 3 och 4, deklarerade även i vertex shadern), och modellen läser dem ur assimp – en `BoneInfo` (id + offsetmatris) per bennamn i `ourModel.m_BoneInfoMap`, fylld av `ExtractBoneWeightForVertices`, som går igenom varje `aiBone`:s vikter och lägger in dem i vertexarna med `SetVertexBoneData`.",
+        "d3d12": "Ge varje vertex de ben som flyttar den: `Vertex` får id för upp till fyra ben och deras vikter (input-elementen `BLENDINDICES` och `BLENDWEIGHT`), och `Model` läser dem ur assimp – en `BoneInfo` (id + offsetmatris) per bennamn i `m_BoneInfoMap`, fylld av `ExtractBoneWeightForVertices`, som går igenom varje `aiBone`:s vikter och lägger in dem i vertexarna med `SetVertexBoneData`."
+      },
+      "hint": {
+        "opengl": "Id:na är heltal: `glVertexAttribIPointer(3, 4, GL_INT, sizeof(Vertex), (void*)offsetof(Vertex, m_BoneIDs));` (ingen parameter \"normalized\"). Börja varje vertex med id −1 och vikter 0 (`SetVertexBoneDataToDefault`); ett bens offsetmatris är `ConvertMatrixToGLMFormat(mesh->mBones[boneIndex]->mOffsetMatrix)`, och dess vikter är `mesh->mBones[boneIndex]->mWeights[k]` (`mVertexId`, `mWeight`).",
+        "vulkan": "Id:na är heltal: `attributeDescriptions[3].format = VK_FORMAT_R32G32B32A32_SINT;` (`offsetof(Vertex, m_BoneIDs)`), vikterna `VK_FORMAT_R32G32B32A32_SFLOAT` – arrayen av beskrivningar växer från 3 till 5. I `anim_model.vert`: `layout(location = 3) in ivec4 boneIds;` och `layout(location = 4) in vec4 weights;`. Börja varje vertex med id −1 och vikter 0 (`SetVertexBoneDataToDefault`); ett bens offsetmatris är `ConvertMatrixToGLMFormat(mesh->mBones[boneIndex]->mOffsetMatrix)`, dess vikter `mesh->mBones[boneIndex]->mWeights[k]` (`mVertexId`, `mWeight`).",
+        "d3d12": "`{ \"BLENDINDICES\", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }` och `{ \"BLENDWEIGHT\", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 48, … }`. Börja varje vertex med id −1 och vikter 0 (`SetVertexBoneDataToDefault`); ett bens offsetmatris är `ConvertMatrixToXMFormat(mesh->mBones[boneIndex]->mOffsetMatrix)`, dess vikter `mesh->mBones[boneIndex]->mWeights[k]` (`mVertexId`, `mWeight`)."
+      }
+    },
+    "bone": {
+      "text": {
+        "opengl": "Skriv benet: nyckelbildrutorna i en animationskanal (`KeyPosition`, `KeyRotation`, `KeyScale` med sina tidsstämplar), inlästa ur en `aiNodeAnim` av `CreateBone`, och `UpdateBone`, som hittar de två nycklarna runt en tidpunkt, interpolerar mellan dem – `glm::mix` för positioner och skalor, `glm::slerp` för rotationerna – och sparar `translation * rotation * scale` som benets lokala transform.",
+        "vulkan": "Skriv benet: nyckelbildrutorna i en animationskanal (`KeyPosition`, `KeyRotation`, `KeyScale` med sina tidsstämplar), inlästa ur en `aiNodeAnim` av `CreateBone`, och `UpdateBone`, som hittar de två nycklarna runt en tidpunkt, interpolerar mellan dem – `glm::mix` för positioner och skalor, `glm::slerp` för rotationerna – och sparar `translation * rotation * scale` som benets lokala transform.",
+        "d3d12": "Skriv benet: nyckelbildrutorna i en animationskanal (`KeyPosition`, `KeyRotation`, `KeyScale` med sina tidsstämplar), inlästa ur en `aiNodeAnim` av `CreateBone`, och `UpdateBone`, som hittar de två nycklarna runt en tidpunkt, interpolerar mellan dem – `XMVectorLerp` för positioner och skalor, `XMQuaternionSlerp` för rotationerna – och sparar benets lokala transform: skala, sedan rotation, sedan translation (`scale * rotation * translation` med DirectXMaths radvektorer – learnopengls `translation * rotation * scale`)."
+      },
+      "hint": {
+        "opengl": "`GetPositionIndex` returnerar det första index vars *nästa* nyckel ligger senare än tiden; `GetScaleFactor(last, next, time) = (time - last) / (next - last)`. Ett spår med en nyckel är den nyckelns värde. Kvaternioner från assimp: `glm::quat(w, x, y, z)` (`GetGLMQuat`); `glm::toMat4` kräver `#define GLM_ENABLE_EXPERIMENTAL` och `<glm/gtx/quaternion.hpp>`.",
+        "vulkan": "`GetPositionIndex` returnerar det första index vars *nästa* nyckel ligger senare än tiden; `GetScaleFactor(last, next, time) = (time - last) / (next - last)`. Ett spår med en nyckel är den nyckelns värde. Kvaternioner från assimp: `glm::quat(w, x, y, z)` (`GetGLMQuat`); `glm::toMat4` kräver `#define GLM_ENABLE_EXPERIMENTAL` och `<glm/gtx/quaternion.hpp>` (båda finns redan överst i `main.cpp`).",
+        "d3d12": "`GetPositionIndex` returnerar det första index vars *nästa* nyckel ligger senare än tiden; `GetScaleFactor(last, next, time) = (time - last) / (next - last)`. Ett spår med en nyckel är den nyckelns värde. `XMMatrixTranslationFromVector(XMLoadFloat3(&…position))`, `XMMatrixRotationQuaternion(XMQuaternionNormalize(…))`, `XMMatrixScalingFromVector(…)`; spara resultatet med `XMStoreFloat4x4(&bone.m_LocalTransform, …)`."
+      }
+    },
+    "animation": {
+      "text": {
+        "opengl": "Skriv animationen: läs in filens första animation med assimp (`LoadAnimation`): dess längd och ticks per sekund, en kopia av nodträdet (`ReadHierarchyData` till `AssimpNodeData`), och en `Bone` per kanal (`ReadMissingBones`, som också ger ett ben som ingen vertex använder ett id); `FindBone` slår upp ett ben efter namn. Läs in tentakelns animation efter modellen.",
+        "vulkan": "Skriv animationen: läs in filens första animation med assimp (`LoadAnimation`): dess längd och ticks per sekund, en kopia av nodträdet (`ReadHierarchyData` till `AssimpNodeData`), och en `Bone` per kanal (`ReadMissingBones`, som också ger ett ben som ingen vertex använder ett id); `FindBone` slår upp ett ben efter namn. Ge applikationen en `Animation swayAnimation` och läs in den ur modellens fil efter modellen.",
+        "d3d12": "Skriv animationen: läs in filens första animation med assimp (`LoadAnimation`): dess längd och ticks per sekund, en kopia av nodträdet (`ReadHierarchyData` till `AssimpNodeData`), och en `Bone` per kanal (`ReadMissingBones`, som också ger ett ben som ingen vertex använder ett id); `FindBone` slår upp ett ben efter namn. Läs in tentakelns animation i `LoadAssets`, efter modellen."
+      },
+      "hint": {
+        "opengl": "`const aiScene* scene = importer.ReadFile(animationPath, aiProcess_Triangulate);`, `scene->mAnimations[0]`: `mDuration`, `mTicksPerSecond`, `mNumChannels`, `mChannels[i]->mNodeName`. `ReadHierarchyData` är rekursiv: namnet, `ConvertMatrixToGLMFormat(src->mTransformation)`, sedan varje barn. I main: `Animation swayAnimation; LoadAnimation(swayAnimation, \"models/tentacle.gltf\", ourModel);`.",
+        "vulkan": "`const aiScene* scene = importer.ReadFile(animationPath, aiProcess_Triangulate);`, `scene->mAnimations[0]`: `mDuration`, `mTicksPerSecond`, `mNumChannels`, `mChannels[i]->mNodeName`. `ReadHierarchyData` är rekursiv: namnet, `ConvertMatrixToGLMFormat(src->mTransformation)`, sedan varje barn. `ReadMissingBones` använder `model.m_BoneInfoMap` och `model.m_BoneCounter`. I `initVulkan()`: `LoadAnimation(swayAnimation, MODEL_PATH, ourModel);` efter `LoadModel`.",
+        "d3d12": "`const aiScene* scene = importer.ReadFile(animationPath, aiProcess_Triangulate);`, `scene->mAnimations[0]`: `mDuration`, `mTicksPerSecond`, `mNumChannels`, `mChannels[i]->mNodeName`. `ReadHierarchyData` är rekursiv: namnet, `ConvertMatrixToXMFormat(src->mTransformation)`, sedan varje barn. En medlem `Animation m_swayAnimation;` och `LoadAnimation(m_swayAnimation, \"models/tentacle.gltf\", m_model);`."
+      }
+    },
+    "animator": {
+      "text": {
+        "opengl": "Skriv animatorn: den håller de 100 slutliga benmatriserna och animationens aktuella tid. `CalculateBoneTransform` går igenom nodträdet från roten – en nods globala transform är förälderns gånger dess egen (benets interpolerade lokala transform när noden är animerad) – och sparar `global * offset` som varje bens slutliga matris; `UpdateAnimation` flyttar fram tiden (i ticks, med upprepning) och räknar om. Skapa en animator för sway-animationen och räkna tills vidare ut benen en gång vid tiden 0.",
+        "vulkan": "Skriv animatorn: den håller de 100 slutliga benmatriserna och animationens aktuella tid. `CalculateBoneTransform` går igenom nodträdet från roten – en nods globala transform är förälderns gånger dess egen (benets interpolerade lokala transform när noden är animerad) – och sparar `global * offset` som varje bens slutliga matris; `UpdateAnimation` flyttar fram tiden (i ticks, med upprepning) och räknar om. Ge applikationen en `Animator animator` för sway-animationen och räkna tills vidare ut benen en gång vid tiden 0.",
+        "d3d12": "Skriv animatorn: den håller de 100 slutliga benmatriserna och animationens aktuella tid. `CalculateBoneTransform` går igenom nodträdet från roten – en nods globala transform är dess egen (benets interpolerade lokala transform när noden är animerad) följd av förälderns (`nodeTransform * parentTransform`) – och sparar `offset * globalTransformation` som varje bens slutliga matris; `UpdateAnimation` flyttar fram tiden (i ticks, med upprepning) och räknar om. Skapa en animator för sway-animationen och räkna tills vidare ut benen en gång vid tiden 0."
+      },
+      "hint": {
+        "opengl": "`InitAnimator` fyller `m_FinalBoneMatrices` med 100 `glm::mat4(1.0f)`. `m_CurrentTime += m_TicksPerSecond * dt; m_CurrentTime = fmod(m_CurrentTime, m_Duration);`, sedan `CalculateBoneTransform(animator, &animation->m_RootNode, glm::mat4(1.0f))`. Benets id och offset kommer från `m_BoneInfoMap[nodeName]`. Efter att den skapats: `UpdateAnimation(animator, 0.0f);`.",
+        "vulkan": "`InitAnimator` fyller `m_FinalBoneMatrices` med 100 `glm::mat4(1.0f)`. `m_CurrentTime += m_TicksPerSecond * dt; m_CurrentTime = fmod(m_CurrentTime, m_Duration);`, sedan `CalculateBoneTransform(animator, &animation->m_RootNode, glm::mat4(1.0f))`. Benets id och offset kommer från `m_BoneInfoMap[nodeName]`. I `initVulkan()`: `InitAnimator(animator, &swayAnimation); UpdateAnimation(animator, 0.0f);`.",
+        "d3d12": "`InitAnimator` fyller `m_FinalBoneMatrices` (`std::vector<XMFLOAT4X4>`) med 100 enhetsmatriser. `m_CurrentTime += m_TicksPerSecond * dt; m_CurrentTime = fmod(m_CurrentTime, m_Duration);`, sedan `CalculateBoneTransform(animator, &animation->m_RootNode, XMMatrixIdentity())`. Benets id och offset kommer från `m_BoneInfoMap[nodeName]`. I `LoadAssets`: `InitAnimator(m_animator, &m_swayAnimation); UpdateAnimation(m_animator, 0.0f);`."
+      }
+    },
+    "skinning": {
+      "text": {
+        "opengl": "Skinna meshet i vertex shadern: ta ben-id:na (`ivec4`, location 3) och vikterna (location 4), och flytta varje vertex till den viktade summan av `finalBonesMatrices[boneId] * position` över dess ben (id −1 hoppas över). Ladda upp animatorns 100 matriser varje bildruta.",
+        "vulkan": "Skinna meshet i vertex shadern: flytta varje vertex till den viktade summan av `finalBonesMatrices[boneId] * position` över dess ben (id −1 hoppas över). De 100 matriserna hamnar i uniform buffern, kopierade från animatorn varje bildruta.",
+        "d3d12": "Skinna meshet i vertex shadern: ta ben-id:na (`int4 boneIds : BLENDINDICES`) och vikterna (`float4 weights : BLENDWEIGHT`), och flytta varje vertex till den viktade summan av var vart och ett av dess ben placerar den (id −1 hoppas över). Lägg animatorns 100 matriser i constant buffern varje bildruta."
+      },
+      "hint": {
+        "opengl": "`uniform mat4 finalBonesMatrices[MAX_BONES];` med `const int MAX_BONES = 100;`. I loopen: `auto transforms = animator.m_FinalBoneMatrices;` och `ourShader.setMat4(\"finalBonesMatrices[\" + std::to_string(i) + \"]\", transforms[i]);` för varje i.",
+        "vulkan": "I C++: `const int MAX_BONES = 100;` och `glm::mat4 finalBonesMatrices[MAX_BONES];` efter `proj` i `UniformBufferObject`; i `updateUniformBuffer()`: `auto transforms = animator.m_FinalBoneMatrices;` och `ubo.finalBonesMatrices[i] = transforms[i];` för varje i. I shadern samma medlem i uniform-blocket, `const int MAX_BONE_INFLUENCE = 4;`, och learnopengls loop: `totalPosition += ubo.finalBonesMatrices[boneIds[i]] * vec4(pos, 1.0) * weights[i];`.",
+        "d3d12": "HLSL: `static const int MAX_BONES = 100; static const int MAX_BONE_INFLUENCE = 4;`, `float4x4 finalBonesMatrices[MAX_BONES];` i `SceneConstantBuffer`, `float4 localPosition = mul(float4(pos, 1.0f), finalBonesMatrices[boneIds[i]]); totalPosition += localPosition * weights[i];`. C++: `const int MAX_BONES = 100;`, `XMFLOAT4X4 finalBonesMatrices[MAX_BONES];` i `SceneConstantBuffer`, och i `OnUpdate` `XMStoreFloat4x4(&constantBufferData.finalBonesMatrices[i], XMMatrixTranspose(XMLoadFloat4x4(&m_animator.m_FinalBoneMatrices[i])));` för varje i."
+      }
+    },
+    "play": {
+      "text": {
+        "opengl": "Spela upp animationen: flytta fram den med `deltaTime` varje bildruta (efter indata), och ta bort engångsuppdateringen vid tiden 0.",
+        "vulkan": "Spela upp animationen: flytta fram den med `deltaTime` varje bildruta (efter indata), och ta bort engångsuppdateringen vid tiden 0.",
+        "d3d12": "Spela upp animationen: flytta fram den med `deltaTime` varje bildruta i `OnUpdate` (efter indata, innan constant buffern fylls), och ta bort engångsuppdateringen vid tiden 0."
+      },
+      "hint": {
+        "opengl": "`UpdateAnimation(animator, deltaTime);` i renderingsloopen – learnopengls `animator.UpdateAnimation(deltaTime)`.",
+        "vulkan": "`UpdateAnimation(animator, deltaTime);` i `mainLoop()`, efter `processInput()` – learnopengls `animator.UpdateAnimation(deltaTime)`. `updateUniformBuffer()` kopierar redan de nya matriserna varje bildruta.",
+        "d3d12": "`UpdateAnimation(m_animator, deltaTime);` – learnopengls `animator.UpdateAnimation(deltaTime)`."
+      }
+    }
+  }
+}

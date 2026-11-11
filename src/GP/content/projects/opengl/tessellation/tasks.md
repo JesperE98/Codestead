@@ -110,9 +110,9 @@ the share of their pixels that are not the clear colour (lines) tells how dense 
   background).
 
 ## `tess-control`
-- **Task:** Tessellate: in the control shader set all four outer levels and both inner levels to 8, so every patch is cut into 8 × 8 small quads whose new vertices each read their own height.
+- **Task:** Tessellate: in the control shader set all four outer levels and both inner levels to 8, so every patch is cut into 9 × 9 small quads (fractional_odd spacing rounds level 8 up to 9 segments) whose new vertices each read their own height.
 - **Hint:** `gl_TessLevelOuter[0..3] = 8; gl_TessLevelInner[0..1] = 8;` – written once per patch, by invocation 0 (`if (gl_InvocationID == 0)`).
-- **When done:** `gpuheight.tcs`: the six levels 8. **The full terrain** again (about 102,400 triangles; the same
+- **When done:** `gpuheight.tcs`: the six levels 8. **The full terrain** again (about 64,800 triangles: 400 patches × 162; the same
   as the CPU terrain within a few grey levels): peak = 213,213,213, ridge = 145,145,145, centre = 91,91,91, hill =
   101,101,101, valley = 88,88,88, lake = 28,28,28, front = 67,67,67, background = below = 26,26,26 (213,964 pixels).
 

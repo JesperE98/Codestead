@@ -1,0 +1,59 @@
+{
+  "title": "Compute shaders",
+  "tasks": {
+    "limits": {
+      "text": {
+        "opengl": "Fråga OpenGL hur stor en dispatch får vara och skriv ut det: det högsta antalet arbetsgrupper per dispatch i x, y och z, den största arbetsgruppen i x, y och z, och det högsta antalet anrop som en arbetsgrupp får ha.",
+        "vulkan": "Fråga Vulkan hur stor en dispatch får vara och skriv ut det: det högsta antalet arbetsgrupper per dispatch i x, y och z, den största arbetsgruppen i x, y och z, och det högsta antalet anrop som en arbetsgrupp får ha.",
+        "d3d12": "Skriv gränserna för compute-arbete till felsökarens utdata: det högsta antalet trådgrupper per dispatch i x, y och z, den största trådgruppen i x, y och z, och det högsta antalet trådar som en trådgrupp får ha – i Direct3D 12 är de konstanter, desamma på alla enheter."
+      },
+      "hint": {
+        "opengl": "`glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, idx, &max_compute_work_group_count[idx]);` och `GL_MAX_COMPUTE_WORK_GROUP_SIZE` för idx 0, 1, 2 (indexerade frågor), `glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &max_compute_work_group_invocations);`.",
+        "vulkan": "De är gränser för den fysiska enheten: `vkGetPhysicalDeviceProperties(physicalDevice, &properties)`, sedan `properties.limits.maxComputeWorkGroupCount[0..2]`, `maxComputeWorkGroupSize[0..2]` och `maxComputeWorkGroupInvocations`. Skriv `printComputeLimits()` med learnopengls utskrifter och anropa den efter `pickPhysicalDevice()`.",
+        "d3d12": "`snprintf` till en `char text[512]` med `D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION`, `D3D12_CS_THREAD_GROUP_MAX_X`, `_MAX_Y`, `_MAX_Z` och `D3D12_CS_THREAD_GROUP_MAX_THREADS_PER_GROUP`, sedan `OutputDebugStringA(text);` – i `LoadPipeline` efter att enheten skapats."
+      }
+    },
+    "image-unit": {
+      "text": {
+        "opengl": "Gör texturen skrivbar från en shader: bind dess nivå 0 till bildenhet 0, för läsning och skrivning, med formatet `GL_RGBA32F`.",
+        "d3d12": "Gör texturen skrivbar från en shader: skapa den med `D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS`, ge heapen en andra plats och skapa där en unordered access view (UAV) av texturens nivå 0 – Direct3D:s motsvarighet till en bildenhet."
+      },
+      "hint": {
+        "opengl": "`glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);` – enhet, textur, nivå, skiktad, skikt, åtkomst, format. En bildenhet är inte en texturenhet: fyrhörningen samplar fortfarande texturen på texturenhet 0.",
+        "d3d12": "`CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32G32B32A32_FLOAT, TEXTURE_WIDTH, TEXTURE_HEIGHT, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)`, `srvUavHeapDesc.NumDescriptors = 2;`, en `D3D12_UNORDERED_ACCESS_VIEW_DESC` med `DXGI_FORMAT_R32G32B32A32_FLOAT`, `D3D12_UAV_DIMENSION_TEXTURE2D`, `Texture2D.MipSlice = 0`, och `CreateUnorderedAccessView(m_texture.Get(), nullptr, &uavDesc, uavHandle)` med handtaget till plats 1."
+      }
+    },
+    "compute-shader": {
+      "text": {
+        "opengl": "Skriv compute shadern – arbetsgrupper på 10 × 10 × 1 anrop, texturen som `image2D imgOutput` på bindning 0, och i `main` ett anrop per texel som skriver rött = x / bredd och grönt = y / höjd med `imageStore` – läs in den med klassen `ComputeShader`, och starta varje bildruta 80 × 60 arbetsgrupper (ett anrop per texel) följt av en minnesbarriär innan fyrhörningen läser texturen. Fyllningen från CPU:n behövs inte längre: skapa texturen utan data.",
+        "vulkan": "Skriv compute shadern – arbetsgrupper på 10 × 10 × 1 anrop, texturen som `image2D imgOutput` på bindning 0, och i `main` ett anrop per texel som skriver rött = x / bredd och grönt = y / höjd med `imageStore` – skapa compute-pipelinen, och starta varje bildruta 80 × 60 arbetsgrupper följt av en barriär innan fyrhörningen läser texturen. Fyllningen från CPU:n behövs inte längre: skapa bilden utan data (direkt från `UNDEFINED` till `GENERAL`).",
+        "d3d12": "Skriv compute shadern – trådgrupper på 10 × 10 × 1 trådar, texturen som `RWTexture2D<float4> imgOutput` på u0, och i `CSMain` en tråd per texel som skriver rött = x / bredd och grönt = y / höjd – bygg dess root-signatur och compute pipeline state, och starta varje bildruta 80 × 60 trådgrupper följt av en övergångsbarriär innan fyrhörningen läser texturen (och barriären tillbaka i slutet av bildrutan). Fyllningen från CPU:n behövs inte längre: skapa texturen utan data, i tillståndet `UNORDERED_ACCESS`."
+      },
+      "hint": {
+        "opengl": "`layout (local_size_x = 10, local_size_y = 10, local_size_z = 1) in;`, `layout (rgba32f, binding = 0) uniform image2D imgOutput;`, `ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);`, bredden är `gl_NumWorkGroups.x * gl_WorkGroupSize.x`. I C++: `computeShader.use(); glDispatchCompute(TEXTURE_WIDTH / 10, TEXTURE_HEIGHT / 10, 1); glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);`.",
+        "vulkan": "`layout(local_size_x = 10, local_size_y = 10, local_size_z = 1) in;`, `layout(rgba32f, binding = 0) uniform image2D imgOutput;`, `ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);`, bredden är `gl_NumWorkGroups.x * gl_WorkGroupSize.x`. `createComputePipeline(\"shaders/compute_shader.comp.spv\")`: ett steg med `VK_SHADER_STAGE_COMPUTE_BIT`, en pipeline layout med `computeDescriptorSetLayout`, `VkComputePipelineCreateInfo`, `vkCreateComputePipelines`. I `recordCommandBuffer()`, före `vkCmdBeginRenderPass`: bind compute-pipelinen och setet (`VK_PIPELINE_BIND_POINT_COMPUTE`), `vkCmdDispatch(commandBuffer, TEXTURE_WIDTH / 10, TEXTURE_HEIGHT / 10, 1);`, sedan en `VkImageMemoryBarrier` (shaderskrivning → shaderläsning, layout GENERAL → GENERAL) med `vkCmdPipelineBarrier(…, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, …)`. I `createTexture()`: inga pixlar, ingen staging buffer, usage `STORAGE | SAMPLED`, en övergång `UNDEFINED` → `GENERAL` (den enda gren som `transitionImageLayout` behöver nu; `copyBufferToImage` försvinner).",
+        "d3d12": "HLSL: `[numthreads(10, 10, 1)] void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)`, `int2 texelCoord = int2(dispatchThreadID.xy);`, `imgOutput.GetDimensions(imageWidth, imageHeight);`, `value.x = float(texelCoord.x) / imageWidth;`, `imgOutput[texelCoord] = value;`. C++: en root-signatur med `ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0)`, `D3DCompileFromFile(L\"computeShader.hlsl\", nullptr, nullptr, \"CSMain\", \"cs_5_0\", …)`, `D3D12_COMPUTE_PIPELINE_STATE_DESC` + `CreateComputePipelineState`; i `PopulateCommandList` `SetPipelineState(m_computePipelineState.Get())`, `SetComputeRootSignature`, `SetComputeRootDescriptorTable(0, …slot 1…)`, `Dispatch(TEXTURE_WIDTH / 10, TEXTURE_HEIGHT / 10, 1)`, `CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)`, sedan `SetPipelineState(m_pipelineState.Get())` för fyrhörningen."
+      }
+    },
+    "time": {
+      "text": {
+        "opengl": "Animera: ge compute shadern tiden som en uniform `t` (location 0) och flytta den röda rampen åt höger med `t * speed` texlar (speed 100), så att den slår runt vid texturens bredd (800) med `mod`. Sätt `t` varje bildruta från C++.",
+        "vulkan": "Animera: ge compute shadern tiden `t` som en push constant och flytta den röda rampen åt höger med `t * speed` texlar (speed 100), så att den slår runt vid texturens bredd (800) med `mod`. Skicka `t` varje bildruta.",
+        "d3d12": "Animera: ge compute shadern tiden som en root-konstant `t` (register b0) och flytta den röda rampen åt höger med `t * speed` texlar (speed 100), så att den slår runt vid texturens bredd (800) med `fmod`. Sätt `t` varje bildruta från C++."
+      },
+      "hint": {
+        "opengl": "`layout (location = 0) uniform float t;`, `value.x = mod(float(texelCoord.x) + t * speed, width) / (gl_NumWorkGroups.x * gl_WorkGroupSize.x);` med `float speed = 100; float width = 800;`. C++: `computeShader.setFloat(\"t\", currentFrame);` efter `computeShader.use()`.",
+        "vulkan": "`layout(push_constant) uniform PushConstants { float t; } pc;`, `value.x = mod(float(texelCoord.x) + pc.t * speed, width) / (gl_NumWorkGroups.x * gl_WorkGroupSize.x);` med `float speed = 100; float width = 800;`. C++: `struct PushConstants { float t; };`, en `VkPushConstantRange` (`VK_SHADER_STAGE_COMPUTE_BIT`) i compute-pipelinens layout, och i `recordCommandBuffer()` `constants.t = static_cast<float>(glfwGetTime());` med `vkCmdPushConstants(commandBuffer, computePipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstants), &constants);` före dispatchen.",
+        "d3d12": "HLSL: `cbuffer TimeConstants : register(b0) { float t; };`, `value.x = fmod(float(texelCoord.x) + t * speed, width) / imageWidth;` med `float speed = 100.0f; float width = 800.0f;`. C++: `struct TimeConstants { float t; };`, compute-root-signaturens andra parameter `rootParameters[1].InitAsConstants(sizeof(TimeConstants) / 4, 0);`, tiden från `std::chrono` (`static auto startTime`) och `SetComputeRoot32BitConstants(1, sizeof(TimeConstants) / 4, &timeConstants, 0);` före dispatchen."
+      }
+    },
+    "storage-image": {
+      "text": {
+        "vulkan": "Gör texturen skrivbar från en compute shader: ge bilden storage-användning och håll den i layouten `GENERAL` (där en shader både får skriva och sampla den), och beskriv den för compute shadern med ett eget descriptor set – bindning 0 är en storage image – bredvid fyrhörningens sampler."
+      },
+      "hint": {
+        "vulkan": "`VK_IMAGE_USAGE_STORAGE_BIT` i `createTexture()`:s usage (och kontrollera `VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT`), den sista övergången `TRANSFER_DST_OPTIMAL` → `GENERAL` (en ny gren i `transitionImageLayout`: dst-åtkomst shaderläsning | skrivning, stegen fragment | compute), `imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL` i `createDescriptorSet()`. `createComputeDescriptorSetLayout()`: en bindning, `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE`, `VK_SHADER_STAGE_COMPUTE_BIT`; `createComputeDescriptorSet()`: image viewn, layout `GENERAL`, ingen sampler; poolen får en `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE` och `maxSets = 2`. Förstör layouten i `cleanup()`."
+      }
+    }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "title": "Tessellation",
+  "tasks": {
+    "opengl-4-1": {
+      "text": {
+        "opengl": "Ask GLFW for an OpenGL 4.1 core context (tessellation shaders are core since 4.0), and print the largest tessellation level the GPU supports."
+      },
+      "hint": {
+        "opengl": "`glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);` and, after GLAD is loaded, `glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &maxTessLevel);` (at least 64)."
+      }
+    },
+    "height-texture": {
+      "text": {
+        "opengl": "The GPU will read the heights itself: instead of turning the pixels into vertices on the CPU, load the height map into a texture (one channel, `GL_R8`, clamped at the edges, with mipmaps) on texture unit 0. Remove the CPU grid – its vertices, indices, buffers and the strip drawing.",
+        "vulkan": "The GPU will read the heights itself: `loadHeightMap()` now loads the height map into a texture (one channel, `VK_FORMAT_R8_UNORM`) with a clamping sampler at binding 1 of the descriptor set. Remove the CPU grid – its vertices, indices, index buffer and the strip drawing – and, until there are patches, the vertex buffer.",
+        "d3d12": "The GPU will read the heights itself: instead of turning the pixels into vertices on the CPU, load the height map into a one-channel texture (`DXGI_FORMAT_R8_UNORM`) with an SRV, and give the root signature a table for it and a clamping sampler for the domain shader. Remove the CPU grid – its vertices, indices, buffers and the strip drawing."
+      },
+      "hint": {
+        "opengl": "`glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, data); glGenerateMipmap(GL_TEXTURE_2D);` with `GL_CLAMP_TO_EDGE` on S and T, `GL_LINEAR_MIPMAP_LINEAR` / `GL_LINEAR`, then `stbi_image_free(data)`. Delete the texture at the end.",
+        "vulkan": "`stbi_load(path, &width, &height, &nrChannels, STBI_grey)`, `createTextureImage(data, width, height, heightMapImage, heightMapImageMemory)` (a staging buffer of `width * height` bytes, `VK_FORMAT_R8_UNORM`), `createImageView(heightMapImage, VK_FORMAT_R8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT)`, `stbi_image_free(data)`. `createTextureSampler()`: linear, `VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE`. Binding 1: `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`, `VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT`; the pool gets one combined image sampler, the set a second write. Destroy the sampler, view, image and memory in `cleanup()`.",
+        "d3d12": "`stbi_load(\"heightmap.png\", …, 1)`; the texture like the earlier chapters' (default heap, upload heap, `UpdateSubresources` with `RowPitch = width`), but the barrier goes to `D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE`; SRV in heap slot 1 (`NumDescriptors = 2`). Root parameter 0 becomes `D3D12_SHADER_VISIBILITY_ALL`, root parameter 1 a table with `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0)` for `D3D12_SHADER_VISIBILITY_DOMAIN`, the static sampler `D3D12_TEXTURE_ADDRESS_MODE_CLAMP`. The command list now stays open until the end of `LoadAssets` (`Close`, `ExecuteCommandLists`, `WaitForPreviousFrame` after the fence is created). `PopulateCommandList` sets table 1 to heap slot 1."
+      }
+    },
+    "patch-grid": {
+      "text": {
+        "opengl": "Build the patches: a grid of 20 × 20 flat squares, each given as its 4 corners (a patch of 4 control points) with a position (y = 0) and a texture coordinate; put them into a VAO/VBO (attribute 0: position, 1: texture coordinate) and tell OpenGL that a patch has 4 vertices.",
+        "vulkan": "Build the patches: a grid of 20 × 20 flat squares, each given as its 4 corners (a patch of 4 control points) with a position (y = 0) and a texture coordinate, and create the vertex buffer from them.",
+        "d3d12": "Build the patches: a grid of 20 × 20 flat squares, each given as its 4 corners (a patch of 4 control points) with a position (y = 0) and a texture coordinate; put them into a vertex buffer (5 floats per vertex) and add the texture coordinate to the input layout."
+      },
+      "hint": {
+        "opengl": "learnopengl's loop over `i` and `j` (0 … rez - 1) pushes the corners (i, j), (i + 1, j), (i, j + 1), (i + 1, j + 1): x = `-width / 2.0f + width * i / (float)rez`, z = `-height / 2.0f + height * j / (float)rez`, texture coordinate `(i / (float)rez, j / (float)rez)`. `glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);` with `const unsigned int NUM_PATCH_PTS = 4;`.",
+        "vulkan": "`glm::vec2 texCoord;` in `Vertex`; `const unsigned int NUM_PATCH_PTS = 4;` and `const unsigned int rez = 20;`. learnopengl's loop over `i` and `j` (0 … rez - 1) pushes the corners (i, j), (i + 1, j), (i, j + 1), (i + 1, j + 1): x = `-width / 2.0f + width * i / (float) rez`, z = `-height / 2.0f + height * j / (float) rez`, texture coordinate `(i / (float) rez, j / (float) rez)`. Then `createVertexBuffer();` in `initVulkan()`.",
+        "d3d12": "learnopengl's loop over `i` and `j` (0 … rez - 1) pushes the corners (i, j), (i + 1, j), (i, j + 1), (i + 1, j + 1): x = `-width / 2.0f + width * i / (float)rez`, z = `-height / 2.0f + height * j / (float)rez`, texture coordinate `(i / (float)rez, j / (float)rez)`. `const unsigned int NUM_PATCH_PTS = 4;` (a global), `unsigned rez = 20;`, `m_vertexCount = NUM_PATCH_PTS * rez * rez;`, `StrideInBytes = 5 * sizeof(float)`, `{ \"TEXCOORD\", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, … }`."
+      }
+    },
+    "tess-evaluation": {
+      "text": {
+        "opengl": "Write the tessellation evaluation shader: for each vertex the tessellator makes (at `gl_TessCoord` u, v inside the patch) interpolate the corners' texture coordinates and positions bilinearly, read the height from the height map, move the point up by it, and project it. Build the shader program from all four stages and draw the patches.",
+        "vulkan": "Write the tessellation evaluation shader: for each vertex the tessellator makes (at `gl_TessCoord` u, v inside the patch) interpolate the corners' texture coordinates and positions bilinearly, read the height from the height map, move the point up by it, and project it. Build the pipeline from all four stages – patches of 4 control points – and draw the patches.",
+        "d3d12": "Write the domain shader: for each vertex the tessellator makes (at `SV_DomainLocation` u, v inside the patch) interpolate the corners' texture coordinates and positions bilinearly, read the height from the height map, move the point up by it, and project it. Build the pipeline from all four shaders and draw the patches."
+      },
+      "hint": {
+        "opengl": "`layout (quads, fractional_odd_spacing, ccw) in;`; `t0 = (t01 - t00) * u + t00; t1 = (t11 - t10) * u + t10; texCoord = (t1 - t0) * v + t0;` (the same for the positions), `Height = texture(heightMap, texCoord).r * 64.0 - 16.0;`, the normal `normalize(cross(vVec.xyz, uVec.xyz))`. `Shader tessHeightMapShader(\"gpuheight.vs\", \"gpuheight.fs\", nullptr, \"gpuheight.tcs\", \"gpuheight.tes\");`, `glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);`.",
+        "vulkan": "`layout(quads, fractional_odd_spacing, ccw) in;`; `t0 = (t01 - t00) * u + t00; t1 = (t11 - t10) * u + t10; texCoord = (t1 - t0) * v + t0;` (the same for the positions), `Height = texture(heightMap, texCoord).r * 64.0 - 16.0;`, the normal `normalize(cross(vVec.xyz, uVec.xyz))`; the block and push constant like the control shader's, `layout(binding = 1) uniform sampler2D heightMap;`. In C++: `createPipeline(\"shaders/gpuheight.vert.spv\", \"shaders/gpuheight.tesc.spv\", \"shaders/gpuheight.tese.spv\", \"shaders/gpuheight.frag.spv\", graphicsPipeline)` with two more stages, `VK_PRIMITIVE_TOPOLOGY_PATCH_LIST`, `tessellationState.patchControlPoints = NUM_PATCH_PTS` (`pipelineInfo.pTessellationState`); the attribute description of `texCoord` (location 1, `VK_FORMAT_R32G32_SFLOAT`); the uniform buffer, the push constant range and `vkCmdPushConstants` for `VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT`; `vkCmdBindVertexBuffers` + `vkCmdDraw(commandBuffer, NUM_PATCH_PTS * rez * rez, 1, 0, 0)`.",
+        "d3d12": "`float2 t0 = (t01 - t00) * u + t00; float2 t1 = (t11 - t10) * u + t10; float2 texCoord = (t1 - t0) * v + t0;` (the same for the positions, `patch[0..3].position`), `output.height = heightMap.SampleLevel(heightMapSampler, texCoord, 0).r * 64.0f - 16.0f;`, the normal `normalize(float4(cross(vVec.xyz, uVec.xyz), 0.0f))`. C++: `hullShader` (`\"HSMain\", \"hs_5_0\"`) and `domainShader` (`\"DSMain\", \"ds_5_0\"`) from `gpuheight.hlsl`, `psoDesc.HS` / `psoDesc.DS`, `D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH`; `IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST)`, `DrawInstanced(m_vertexCount, 1, 0, 0)`."
+      }
+    },
+    "tess-control": {
+      "text": {
+        "opengl": "Tessellate: in the control shader set all four outer levels and both inner levels to 8, so every patch is cut into small quads (9 × 9 with fractional odd spacing) whose new vertices each read their own height.",
+        "vulkan": "Tessellate: in the control shader set all four outer levels and both inner levels to 8, so every patch is cut into small quads (9 × 9 with fractional odd spacing) whose new vertices each read their own height.",
+        "d3d12": "Tessellate: in the patch constant function set all four edge factors and both inside factors to 8, so every patch is cut into small quads (9 × 9 with fractional odd spacing) whose new vertices each read their own height."
+      },
+      "hint": {
+        "opengl": "`gl_TessLevelOuter[0..3] = 8; gl_TessLevelInner[0..1] = 8;` – written once per patch, by invocation 0 (`if (gl_InvocationID == 0)`).",
+        "vulkan": "`gl_TessLevelOuter[0..3] = 8; gl_TessLevelInner[0..1] = 8;` – written once per patch, by invocation 0 (`if (gl_InvocationID == 0)`).",
+        "d3d12": "`output.edges[0..3] = 8; output.inside[0..1] = 8;` – the patch constant function runs once per patch (OpenGL's `if (gl_InvocationID == 0)` block)."
+      }
+    },
+    "wireframe": {
+      "text": "Draw only the triangles' edges to see the tessellation.",
+      "hint": {
+        "opengl": "`glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);` once before the render loop (learnopengl toggles it with a key).",
+        "vulkan": "`rasterizer.polygonMode = VK_POLYGON_MODE_LINE;` needs the `fillModeNonSolid` device feature: `deviceFeatures.fillModeNonSolid = VK_TRUE;` and `&& supportedFeatures.fillModeNonSolid` in `isDeviceSuitable()`.",
+        "d3d12": "`psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;` (learnopengl toggles `glPolygonMode` with a key)."
+      }
+    },
+    "distance-levels": {
+      "text": {
+        "opengl": "Make the levels depend on the distance to the camera: for each corner its eye-space depth, scaled to 0…1 between `MIN_DISTANCE` (250) and `MAX_DISTANCE` (450); each outer level from the nearer of its edge's two corners, mixed from `MAX_TESS_LEVEL` (8) near to `MIN_TESS_LEVEL` (2) far; the inner levels the larger of the opposite outer levels.",
+        "vulkan": "Make the levels depend on the distance to the camera: for each corner its eye-space depth, scaled to 0…1 between `MIN_DISTANCE` (250) and `MAX_DISTANCE` (450); each outer level from the nearer of its edge's two corners, mixed from `MAX_TESS_LEVEL` (8) near to `MIN_TESS_LEVEL` (2) far; the inner levels the larger of the opposite outer levels.",
+        "d3d12": "Make the factors depend on the distance to the camera: for each corner its eye-space depth, scaled to 0…1 between `MIN_DISTANCE` (250) and `MAX_DISTANCE` (450); each edge factor from the nearer of its edge's two corners, interpolated from `MAX_TESS_LEVEL` (8) near to `MIN_TESS_LEVEL` (2) far; the inside factors the larger of the opposite edge factors."
+      },
+      "hint": {
+        "opengl": "learnopengl's code: `vec4 eyeSpacePos00 = view * model * gl_in[0].gl_Position;`, `float distance00 = clamp((abs(eyeSpacePos00.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0, 1.0);`, `tessLevel0 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance10, distance00));` …, `gl_TessLevelInner[0] = max(tessLevel1, tessLevel3);`. An edge shared by two patches gets the same level from both, so no cracks open.",
+        "vulkan": "learnopengl's code with the block's matrices: `vec4 eyeSpacePos00 = ubo.view * pc.model * gl_in[0].gl_Position;`, `float distance00 = clamp((abs(eyeSpacePos00.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0, 1.0);`, `tessLevel0 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance10, distance00));` …, `gl_TessLevelInner[0] = max(tessLevel1, tessLevel3);`. An edge shared by two patches gets the same level from both, so no cracks open.",
+        "d3d12": "learnopengl's code in the patch constant function: `float4 eyeSpacePos00 = mul(mul(patch[0].position, model), view);`, `float distance00 = clamp((abs(eyeSpacePos00.z) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0f, 1.0f);`, `float tessLevel0 = lerp(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance10, distance00));` …, `output.inside[0] = max(tessLevel1, tessLevel3);`. An edge shared by two patches gets the same factor from both, so no cracks open."
+      }
+    },
+    "tessellation-feature": {
+      "text": {
+        "vulkan": "Turn on the GPU's tessellation stages – an optional device feature in Vulkan – and only accept a GPU that has them; print the largest tessellation level the GPU supports."
+      },
+      "hint": {
+        "vulkan": "`deviceFeatures.tessellationShader = VK_TRUE;` in `createLogicalDevice()`; in `isDeviceSuitable()` `vkGetPhysicalDeviceFeatures(device, &supportedFeatures)` and `&& supportedFeatures.tessellationShader`. `printTessellationLimits()` (called after `pickPhysicalDevice()`): `properties.limits.maxTessellationGenerationLevel` from `vkGetPhysicalDeviceProperties`."
+      }
+    },
+    "max-tess-level": {
+      "text": {
+        "d3d12": "Write the largest tessellation factor Direct3D 12 supports to the debugger's output (OpenGL asks the driver for it; Direct3D 12 fixes it for every device)."
+      },
+      "hint": {
+        "d3d12": "At the top of `LoadAssets`: `snprintf(text, sizeof(text), \"Max available tess level: %d\\n\", D3D12_TESSELLATOR_MAX_TESSELLATION_FACTOR); OutputDebugStringA(text);`."
+      }
+    }
+  }
+}
