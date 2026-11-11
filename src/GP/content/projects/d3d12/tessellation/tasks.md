@@ -122,7 +122,7 @@ makes the same triangles (the same fractional-odd rules and edge order).
   coarse**: the wireframe at the back opens up into large triangles (OpenGL: back box 47.3 % lines, was 87.3 %), the
   front stays dense (front box 71.8 %). This is the solution.
 
-*Simulator:* the start (the CPU terrain) shows nothing – see `tessellation-height-map`. `height-texture` and
-`patch-grid` match (only the clear colour). From `tess-evaluation` on the simulator draws nothing: it has no hull or
-domain stage – the pipeline's `HS`/`DS`, the patch topology and `DSMain` are not followed (it reports "'VSMain' returns
-no SV_POSITION").
+*Simulator:* every state matches Mesa's OpenGL picture of the same step: the solid terrains within 0.05 % of the
+pixels; the wireframes have the same density (front / back box 75.4 % / 87.8 % lines for `wireframe`, 72.6 % / 47.9 %
+for `distance-levels`; Mesa 74.8 / 87.3 and 71.8 / 47.3) – the simulator's tessellator places the points as the
+drivers' do, but joins the edges to the inner ring its own way, so single lines differ.

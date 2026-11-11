@@ -119,7 +119,7 @@ y100: 380..419, y200: 372..427, y300: 365..434, y400: 358..441, y500: 351..448.
   59,26,82; spans y100: 206..257, y200: 242..312, y300: 296..381, y400: 340..427, y500: 354..450. This is the solution.
   (OpenGL's values; the texture has no mipmaps here, so single pixels on the stripes may differ by a few levels.)
 
-*Simulator:* no state shows the tentacle yet: the simulator does not load glTF files ("modelFileMissing" – the Model
-reader knows `.obj`), so `m_model.Load("models/tentacle.gltf", …)` draws nothing, and assimp's bones and animations
-(`aiMesh::mBones`, `aiAnimation`, `aiNodeAnim`, `mTicksPerSecond`), `int4` / `BLENDINDICES` vertex input, the 100
-matrices in the constant buffer and `XMQuaternionSlerp` are untested (see the D3D12 writer's report).
+*Simulator:* every state matches Mesa's OpenGL picture of the same step at 1.25 s and 0.25 s (under 0.2 % of the
+pixels differ by more than 12/255): the glTF model with its bones (`BLENDINDICES` / `BLENDWEIGHT` as
+`ExtractBoneWeightForVertices` fills them), assimp's node tree and animation, `XMQuaternionSlerp`, the 100 matrices in
+the constant buffer, and the animation stepped by `deltaTime` frame by frame up to the time shown.
