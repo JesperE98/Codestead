@@ -264,6 +264,7 @@ private:
         setupDebugMessenger();
         createSurface();
         pickPhysicalDevice();
+        printTessellationLimits();
         createLogicalDevice();
         createSwapChain();
         createImageViews();
@@ -275,7 +276,7 @@ private:
         createFramebuffers();
         createCommandPool();
         loadHeightMap("textures/heightmap.png");
-        createTextureSampler(VK_SAMPLER_ADDRESS_MODE_REPEAT, textureSampler);
+        createTextureSampler();
         createVertexBuffer();
         createUniformBuffers();
         createDescriptorPool();
@@ -463,6 +464,13 @@ private:
         }
     }
 
+    // how finely can this GPU tessellate? (at least 64)
+    void printTessellationLimits() {
+        VkPhysicalDeviceProperties properties{};
+        vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+        std::cout << "Max available tess level: " << properties.limits.maxTessellationGenerationLevel << std::endl;
+    }
+
     void createLogicalDevice() {
         QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
@@ -480,7 +488,6 @@ private:
         }
 
         VkPhysicalDeviceFeatures deviceFeatures{};
-        deviceFeatures.samplerAnisotropy = VK_TRUE;
         deviceFeatures.tessellationShader = VK_TRUE; // the tessellation control and evaluation stages
         deviceFeatures.fillModeNonSolid = VK_TRUE;   // polygonMode LINE (wireframe)
 
@@ -934,27 +941,25 @@ private:
     }
 
 
-    // A sampler with the wrapping mode for texture coordinates outside 0..1 (REPEAT, CLAMP_TO_EDGE ...).
-    void createTextureSampler(VkSamplerAddressMode addressMode, VkSampler& sampler) {
-        VkPhysicalDeviceProperties properties{};
-        vkGetPhysicalDeviceProperties(physicalDevice, &properties);
-
+    // The height map's sampler: linear, clamped at the edges (the edges must not blend with the opposite side). The
+    // evaluation shader has no screen-space derivatives, so it always reads mip level 0: no mipmaps, no anisotropy.
+    void createTextureSampler() {
         VkSamplerCreateInfo samplerInfo{};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         samplerInfo.magFilter = VK_FILTER_LINEAR;
         samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.addressModeU = addressMode;
-        samplerInfo.addressModeV = addressMode;
-        samplerInfo.addressModeW = addressMode;
-        samplerInfo.anisotropyEnable = VK_TRUE;
-        samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.anisotropyEnable = VK_FALSE;
+        samplerInfo.maxAnisotropy = 1.0f;
         samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
         samplerInfo.unnormalizedCoordinates = VK_FALSE;
         samplerInfo.compareEnable = VK_FALSE;
         samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
 
-        if (vkCreateSampler(device, &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS) {
             throw std::runtime_error("failed to create texture sampler!");
         }
     }
@@ -1506,7 +1511,7 @@ private:
         VkPhysicalDeviceFeatures supportedFeatures;
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-        return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy && supportedFeatures.tessellationShader && supportedFeatures.fillModeNonSolid;
+        return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.tessellationShader && supportedFeatures.fillModeNonSolid;
     }
 
     bool checkDeviceExtensionSupport(VkPhysicalDevice device) {

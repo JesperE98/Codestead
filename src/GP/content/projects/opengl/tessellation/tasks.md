@@ -18,8 +18,10 @@ highest version macOS offers, so the chapter runs there.
 - Height map, orientation, heights, colour, camera, projection (near 0.1, far 1000), clear colour: exactly as in
   `tessellation-height-map` (see its tasks.md) – both chapters show the same terrain from the same place.
 - **The height map as a texture**: `GL_R8` (one channel, `GL_RED` data – our map has one channel; learnopengl uploads
-  its RGBA map with `GL_RGBA` and reads `.y`, the course reads `.r`), not flipped, `GL_REPEAT`,
-  `GL_LINEAR_MIPMAP_LINEAR` / `GL_LINEAR`, `glGenerateMipmap`, on texture unit 0 (`heightMap`). Vulkan:
+  its RGBA map with `GL_RGBA` and reads `.y`, the course reads `.r`), not flipped, **`GL_CLAMP_TO_EDGE`**
+  (learnopengl: `GL_REPEAT` – then the bilinear filter blends the last row with the first one at the terrain's edges
+  and pulls the far peaks' heights into the front edge: a fringe of spikes), `GL_LINEAR_MIPMAP_LINEAR` / `GL_LINEAR`,
+  `glGenerateMipmap`, on texture unit 0 (`heightMap`). Vulkan:
   `VK_FORMAT_R8_UNORM`; D3D12: `DXGI_FORMAT_R8_UNORM` (or the RGBA8 formats with the grey in every channel – say so).
 - **Patches** (learnopengl's): `rez = 20` → 20 × 20 patches of **4 control points** each (1,600 vertices, 5 floats:
   position + texture coordinate), patch (i, j) with the corners in learnopengl's order
@@ -39,9 +41,12 @@ highest version macOS offers, so the chapter runs there.
   `[patchconstantfunc(...)]` writing `SV_TessFactor[4]` / `SV_InsideTessFactor[2]`. Vulkan's tessellator reads
   `gl_TessCoord` with the same convention as OpenGL's; check on lavapipe that the terrain is not mirrored.
 - **Tessellation control** (`gpuheight.tcs`, `layout (vertices = 4) out;`): first (task `tess-control`) the article's
-  fixed levels: all four outer and both inner levels **16**; then (task `distance-levels`) learnopengl's distance-based
-  levels with the course's numbers for its smaller map: `MIN_TESS_LEVEL = 4`, `MAX_TESS_LEVEL = 16`,
-  `MIN_DISTANCE = 100`, `MAX_DISTANCE = 450` (learnopengl: 4, 64, 20, 800 for its 2.6 k map) – eye-space depth
+  fixed levels, with the course's number: all four outer and both inner levels **8** (the article: 16 – with 20 × 20
+  patches over a 256-pixel map, 8 already reaches about one segment per 1.6 texels, and the wireframe stays readable);
+  then (task `distance-levels`) learnopengl's distance-based levels with the course's numbers for its smaller map and
+  this camera: `MIN_TESS_LEVEL = 2`, `MAX_TESS_LEVEL = 8`, `MIN_DISTANCE = 250`, `MAX_DISTANCE = 450` (learnopengl: 4,
+  64, 20, 800 for its 2.6 k map; the terrain's eye-space depth here runs from about 240 at the front edge to 450 at the
+  back, so the front gets level 8 and the back about 2) – eye-space depth
   `abs((view * model * gl_in[k].gl_Position).z)` of each corner, scaled to 0 … 1, the outer level of an edge from the
   nearer of its two corners (`mix(MAX, MIN, min(d_a, d_b))`), the inner levels the max of the opposite outer levels –
   learnopengl's code exactly. Without a control shader (task `tess-evaluation`), OpenGL uses the default levels

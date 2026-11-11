@@ -88,9 +88,7 @@ float fov   =  45.0f;
 // The most bones that move one vertex.
 #define MAX_BONE_INFLUENCE 4
 
-// A vertex of a mesh: the layout of the vertex buffer, which the input layout describes
-// (POSITION at byte 0, NORMAL at byte 12, TEXCOORD at byte 24, BLENDINDICES at byte 32,
-// BLENDWEIGHT at byte 48).
+// A vertex of a mesh: the layout of the vertex buffer, which the input layout describes.
 struct Vertex
 {
     // position
@@ -1191,14 +1189,15 @@ void D3D12App::LoadAssets()
         ThrowIfFailed(D3DCompileFromFile(L"anim_model.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
 
         // Define the vertex input layout: a vertex of a mesh is a position, a normal and
-        // texture coordinates (3 + 3 + 2 floats, at byte offsets 0, 12 and 24), then its bones:
-        // four 32-bit signed integers (BLENDINDICES, the shader reads an int4 - no conversion to
-        // float) and four float weights (BLENDWEIGHT), at byte offsets 32 and 48.
+        // texture coordinates (3 + 3 + 2 floats, at byte offsets 0, 12 and 24) ...
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
         {
             { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
             { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
             { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            // ... and its bones: the ids as four 32-bit signed integers (BLENDINDICES - the shader
+            // reads an int4, no conversion to float) and four float weights (BLENDWEIGHT), at byte
+            // offsets 32 and 48
             { "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
             { "BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 48, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
         };
@@ -1235,8 +1234,9 @@ void D3D12App::LoadAssets()
     // from slot 1 on (slot 0 is the CBV).
     m_model.Load("models/tentacle.gltf", m_device.Get(), m_commandList.Get(), m_cbvSrvHeap.Get(), 1);
 
-    // the model's animation (from the same file) and the animator that plays it
+    // load the model's animation (from the same file)
     LoadAnimation(m_swayAnimation, "models/tentacle.gltf", m_model);
+    // the animator that plays it
     InitAnimator(m_animator, &m_swayAnimation);
 
     // Create the constant buffer.

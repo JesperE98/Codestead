@@ -76,18 +76,21 @@ int main()
         return -1;
     }
 
-    // configure global opengl state
-    // -----------------------------
-    glEnable(GL_DEPTH_TEST);
-
+    // how finely can this GPU tessellate? (at least 64)
     GLint maxTessLevel;
     glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &maxTessLevel);
     std::cout << "Max available tess level: " << maxTessLevel << std::endl;
+
+    // configure global opengl state
+    // -----------------------------
+    glEnable(GL_DEPTH_TEST);
 
     // build and compile our shader program
     // ------------------------------------
     Shader tessHeightMapShader("gpuheight.vs", "gpuheight.fs", nullptr, // no geometry shader
                                "gpuheight.tcs", "gpuheight.tes");
+    tessHeightMapShader.use();
+    tessHeightMapShader.setInt("heightMap", 0); // the height map texture on unit 0
 
     // load the height map into a texture (the tessellation evaluation shader reads the heights from it)
     // -------------------------------------------------------------------------------------------------
@@ -110,8 +113,6 @@ int main()
         glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        tessHeightMapShader.use();
-        tessHeightMapShader.setInt("heightMap", 0);
         std::cout << "Loaded heightmap of size " << height << " x " << width << std::endl;
     }
     else
