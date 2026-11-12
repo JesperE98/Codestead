@@ -21,6 +21,10 @@
       "packaging/linux",
       "global.json",
       "Directory.Build.props"
+    ],
+    "own": [
+      "src/Linux",
+      "build/icons/codestead-linux.*"
     ]
   },
   {
@@ -45,6 +49,10 @@
       "packaging/linux",
       "global.json",
       "Directory.Build.props"
+    ],
+    "own": [
+      "src/GP",
+      "build/icons/codestead-gp.*"
     ],
     "exclude": [
       "src/GP/verify"
@@ -73,6 +81,11 @@
       "packaging/linux",
       "global.json",
       "Directory.Build.props"
+    ],
+    "own": [
+      "src/Hub",
+      "build/icons/codestead-hub.*",
+      "build/catalog-signing.pub.pem"
     ],
     "exclude": [
       "src/Shared/Codestead.Learning",
