@@ -1,5 +1,39 @@
 [
   {
+    "version": "0.2.3",
+    "date": "2026-11-12",
+    "changes": {
+      "en": [
+        "**Choose your IDE** at the top, next to the graphics API – Visual Studio, CLion, Rider or VS Code. The chapters then show the steps for your IDE where they differ: CMake for CLion and VS Code, a Visual Studio solution for Visual Studio and Rider (libraries, shader files, the working directory, debugging), and the **Your project** panel says where your program will appear.",
+        "New achievement **Home base**: choose a project folder for a chapter. It replaces the typo achievement, which a real compiler made almost impossible."
+      ],
+      "sv": [
+        "**Välj din IDE** överst, bredvid grafik-API:et – Visual Studio, CLion, Rider eller VS Code. Kapitlen visar sedan stegen för din IDE där de skiljer sig: CMake för CLion och VS Code, en Visual Studio-lösning för Visual Studio och Rider (bibliotek, shaderfiler, arbetskatalogen, felsökning), och panelen **Ditt projekt** säger var ditt program kommer att hamna.",
+        "Ny utmärkelse **Hemmabas**: välj en projektmapp för ett kapitel. Den ersätter stavfelsutmärkelsen, som en riktig kompilator gjorde nästan omöjlig."
+      ],
+      "de": [
+        "**Wähle deine IDE** oben neben der Grafik-API – Visual Studio, CLion, Rider oder VS Code. Die Kapitel zeigen dann dort, wo es Unterschiede gibt, die Schritte für deine IDE: CMake für CLion und VS Code, eine Visual-Studio-Projektmappe für Visual Studio und Rider (Bibliotheken, Shader-Dateien, das Arbeitsverzeichnis, Debuggen), und das Feld **Dein Projekt** sagt, wo dein Programm landen wird.",
+        "Neue Auszeichnung **Heimathafen**: Wähle einen Projektordner für ein Kapitel. Sie ersetzt die Tippfehler-Auszeichnung, die ein echter Compiler fast unmöglich gemacht hat."
+      ],
+      "fr": [
+        "**Choisissez votre IDE** en haut, à côté de l'API graphique – Visual Studio, CLion, Rider ou VS Code. Les chapitres montrent alors les étapes propres à votre IDE là où elles diffèrent : CMake pour CLion et VS Code, une solution Visual Studio pour Visual Studio et Rider (bibliothèques, fichiers de shaders, répertoire de travail, débogage), et le panneau **Votre projet** indique où votre programme apparaîtra.",
+        "Nouveau succès **Camp de base** : choisir un dossier de projet pour un chapitre. Il remplace le succès de la faute de frappe, qu'un vrai compilateur rendait presque impossible."
+      ],
+      "es": [
+        "**Elige tu IDE** arriba, junto a la API gráfica: Visual Studio, CLion, Rider o VS Code. Los capítulos muestran entonces los pasos de tu IDE donde difieren: CMake para CLion y VS Code, una solución de Visual Studio para Visual Studio y Rider (bibliotecas, archivos de shaders, directorio de trabajo, depuración), y el panel **Tu proyecto** indica dónde aparecerá tu programa.",
+        "Nuevo logro **Campamento base**: elige una carpeta de proyecto para un capítulo. Sustituye al logro de la errata, que un compilador real hacía casi imposible."
+      ],
+      "zh": [
+        "在顶部图形 API 旁边**选择你的 IDE**——Visual Studio、CLion、Rider 或 VS Code。各章会在有差异的地方显示适用于你的 IDE 的步骤：CLion 和 VS Code 使用 CMake，Visual Studio 和 Rider 使用 Visual Studio 解决方案（库、着色器文件、工作目录、调试），**你的项目** 面板也会说明程序将出现在哪里。",
+        "新成就 **安营扎寨**：为某一章选择项目文件夹。它取代了拼写错误成就——真正的编译器让那个成就几乎无法获得。"
+      ],
+      "ja": [
+        "上部のグラフィックス API の隣で **IDE を選択** できるようになりました（Visual Studio、CLion、Rider、VS Code）。各章では違いのある箇所で選んだ IDE の手順が表示されます。CLion と VS Code は CMake、Visual Studio と Rider は Visual Studio ソリューション（ライブラリ、シェーダーファイル、作業ディレクトリ、デバッグ）で、**あなたのプロジェクト** パネルにはプログラムの出力先が表示されます。",
+        "新しい実績 **拠点づくり**：章のプロジェクトフォルダーを選ぶ。本物のコンパイラーではほぼ取れなくなったタイプミスの実績に代わるものです。"
+      ]
+    }
+  },
+  {
     "version": "0.2.2",
     "date": "2026-11-12",
     "changes": {
