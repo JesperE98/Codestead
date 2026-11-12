@@ -94,7 +94,8 @@ nyast först:
 ]
 ```
 
-- **Det finns en post för nästa version** (senaste releasen + 1 i patchnumret). Den första PR:en efter en
+- **Det finns en post för nästa version** (senaste releasen + 1 i patchnumret) när produktens egna filer har
+  ändrats. Har bara delad kod ändrats bestämmer posten om produkten släpps (se "Bygga installationsfilerna"). Den första PR:en efter en
   release skapar den; **varje följande PR fyller på samma post** med sina rader, tills versionen släpps. Uppdatera
   `date` till dagens datum när du lägger till rader. Posten ska finnas på alla språk med lika många rader på
   varje språk. `packaging/plan.py` stoppar både PR-bygget och releasen om posten saknas eller är ofullständig,
@@ -467,6 +468,12 @@ Allt byggs av GitHub Actions (`.github/workflows/release.yml`), för varje produ
 2. **Släpp en version:** Actions → **Release** → **Run workflow**, välj `main` och kryssa i **publish**.
    Flödet (`packaging/plan.py`) räknar ut nästa patchversion för varje produkt som ändrats sedan dess
    senaste release. Två körningar för hand väntar på varandra, så samma version kan inte tas två gånger.
+   - **Produktens egna filer** (`own` i `products.json`: dess mapp och ikon, för hubben även katalognyckeln)
+     ändrade: en ny version, och ändringsloggen måste ha en post för den.
+   - **Bara delade filer** ändrade (resten av `paths`: `src/Shared`, bygg- och paketeringsfilerna): en ny
+     version **bara om ändringsloggen redan har en post för den**. Utan post väntar ändringen till produktens
+     nästa release. Så slipper Codestead Linux en release med "inget ändras" när den delade koden ändras för
+     GP:s skull – och en delad buggfix som Linux märker får en rad i `src/Linux/changelog.json` och släpps.
 
 Flödet bygger alla produkter och installerar och startar dem på rena system (Windows Server 2022/2025,
 Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS). Hubben får dessutom installera och starta Codestead

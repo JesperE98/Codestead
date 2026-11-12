@@ -19,6 +19,31 @@ public class ProductFilesTests
 
     private static readonly Regex TypeRe = new(@"\b(?:class|record|struct|enum|interface)\s+([A-Z]\w*)", RegexOptions.CultureInvariant);
 
+    [Fact(DisplayName = "varje produkts egna filer (own) finns och hör till dess paths")]
+    public void OwnFilesArePartOfThePaths()
+    {
+        // packaging/plan.py: a change in a product's own files always makes a new version; a change only in the rest
+        // of its paths does so only when its changelog has an entry for it.
+        var root = RepoRoot();
+        using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "packaging", "products.json")));
+        foreach (var product in doc.RootElement.EnumerateArray())
+        {
+            var key = product.GetProperty("key").GetString();
+            var paths = product.GetProperty("paths").EnumerateArray().Select(e => e.GetString()!).ToList();
+            var own = product.GetProperty("own").EnumerateArray().Select(e => e.GetString()!).ToList();
+            Assert.Contains(product.GetProperty("dir").GetString()!, own);
+            foreach (var o in own)
+            {
+                Assert.True(paths.Contains(o), $"{key}: own entry {o} is not in its paths");
+                var dir = Path.GetDirectoryName(Path.Combine(root, o))!;
+                bool exists = o.Contains('*')
+                    ? Directory.Exists(dir) && Directory.GetFiles(dir, Path.GetFileName(o)).Length > 0
+                    : File.Exists(Path.Combine(root, o)) || Directory.Exists(Path.Combine(root, o));
+                Assert.True(exists, $"{key}: own entry {o} does not exist");
+            }
+        }
+    }
+
     [Fact(DisplayName = "hubben använder inget av det som products.json undantar för den")]
     public void HubDoesNotUseItsExcludedFiles()
     {

@@ -5,8 +5,12 @@ For each product in packaging/products.json:
   - major.minor comes from build/Codestead.props (e.g. CodesteadLinuxVersion = 0.5);
   - the patch number is one more than the newest release <id>-v<major.minor>.<patch> in the releases
     repository, or 0 if there is none;
-  - a new version is only made if the product's files ("paths", minus "exclude") changed since the commit
-    the newest release was built from (recorded as <!-- codestead-source: SHA --> in its release notes).
+  - a new version is made if the product's own files ("own": its folder and icon) changed since the commit
+    the newest release was built from (recorded as <!-- codestead-source: SHA --> in its release notes);
+  - if only shared files changed ("paths" minus "own", minus "exclude": src/Shared, the build and packaging
+    files), a new version is made only when the product's changelog already has an entry for it – a change in
+    shared code that does not change the product (say, a hook only Codestead GP uses) then waits for the
+    product's next release instead of releasing it with nothing to tell;
     "exclude" lists files in a shared folder that the product does not use, e.g. the lesson controls in
     src/Shared/Codestead.UI for the hub (tests/Hub/Codestead.Hub.Tests checks that the hub really does not use them).
   - every product has its own folder ("dir", e.g. src/Linux) with changelog.json (What's new, must have an entry
@@ -42,6 +46,17 @@ def source_commit(tag):
 def pathspecs(product):
     """The product's files as git pathspecs: its paths (globs allowed) without its excludes."""
     return list(product["paths"]) + [f":(exclude){e}" for e in product.get("exclude", [])]
+
+
+def own_pathspecs(product):
+    """The product's own files (its folder and icon); without "own", all of its paths count as its own."""
+    return list(product.get("own", product["paths"])) + [f":(exclude){e}" for e in product.get("exclude", [])]
+
+
+def has_entry(path, version):
+    """Does the changelog have an entry for `version`?"""
+    with open(path, encoding="utf-8") as f:
+        return any(e.get("version") == version for e in json.load(f))
 
 
 def changed_since(sha, specs):
@@ -102,10 +117,18 @@ def main():
         if not re.fullmatch(r"\d+\.\d+", minor):
             raise SystemExit(f"{p['versionProperty']} must be major.minor (e.g. 0.5), not {minor!r}")
         patches = sorted(int(m.group(1)) for t in tags if (m := re.fullmatch(rf"{re.escape(pid)}-v{re.escape(minor)}\.(\d+)", t)))
+        why = ""
         if patches:
-            last = f"{minor}.{patches[-1]}"
-            changed = changed_since(source_commit(f"{pid}-v{last}"), pathspecs(p))
-            version = f"{minor}.{patches[-1] + 1}" if changed else last
+            last, nxt = f"{minor}.{patches[-1]}", f"{minor}.{patches[-1] + 1}"
+            source = source_commit(f"{pid}-v{last}")
+            changed = changed_since(source, own_pathspecs(p))
+            if not changed and changed_since(source, pathspecs(p)):
+                # Only shared files changed: a release only if the product's changelog says what it brings.
+                changed = has_entry(f"{p['dir']}/changelog.json", nxt)
+                why = (" (only shared files changed, and the changelog has an entry for it)" if changed else
+                       f"no release: only shared files changed, and {p['dir']}/changelog.json has no entry for {nxt} "
+                       "(they come with its next release)")
+            version = nxt if changed else last
         else:
             changed, version = True, f"{minor}.0"
         if changed:
@@ -120,7 +143,7 @@ def main():
         products.append(product)
         if want and changed and secrets_ok:
             publish.append(product)
-        state = "new version" if changed else "no changes since the last release"
+        state = ("new version" + why) if changed else (why or "no changes since the last release")
         print(f"{product['name']} {version}: {state}" + (", will be published" if product in publish else ""))
     if want and not secrets_ok and any(True for _ in products):
         print(f"::warning::Nothing is published. Missing: {', '.join(missing)}. Secrets must be repository "
