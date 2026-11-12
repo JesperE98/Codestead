@@ -265,8 +265,16 @@ Gör den globala `Text` efter `Effects` och sätt upp den i `Init`, efter efterb
 
 ### Ladda typsnittet
 
-`Load` är kapitlet Textrenderings glyfloop: FreeType laddar typsnittet i den givna pixelstorleken, och vart och ett av
-de första 128 ASCII-tecknen blir en `Character`.
+`Load` är kapitlet Textrenderings glyfloop – projektet länkar FreeType så som du satte upp det där: FreeType laddar
+typsnittet i den givna pixelstorleken, och vart och ett av de första 128 ASCII-tecknen blir en `Character`.
+
+:::ide clion vscode
+För din `CMakeLists.txt` betyder det de två FreeType-raderna från *Textrendering* i slutet.
+:::
+:::ide vs rider
+Med vcpkg:s integration hittar projektet FreeType av sig självt; utan den gör du FreeType-inställningarna från
+*Textrendering* i det här kapitlets projekt också.
+:::
 
 :::opengl
 ```cpp

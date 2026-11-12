@@ -257,6 +257,8 @@
   "ach.checkpoints-25.desc": "Answer 25 questions in the chapter texts.",
   "ach.first-build.title": "It compiles!",
   "ach.first-build.desc": "Build a project without errors.",
+  "ach.first-folder.title": "Home base",
+  "ach.first-folder.desc": "Choose a project folder for a chapter.",
   "ach.first-frame.title": "A window to the world",
   "ach.first-frame.desc": "Run a program whose window stays open and shows a frame.",
   "ach.first-draw.title": "First pixels",
@@ -265,8 +267,6 @@
   "ach.builds-100.desc": "Build and run 100 times.",
   "ach.functions-25.title": "Fluent in the API",
   "ach.functions-25.desc": "Call 25 different API functions in your projects.",
-  "ach.typo.title": "Did you mean …?",
-  "ach.typo.desc": "The build stopped at a misspelt API name.",
   "ach.magenta.title": "Debug pink",
   "ach.magenta.desc": "You cleared the screen to pure magenta – the colour of missing textures everywhere.",
   "sim.textureFileMissing": "The image {file} is not in the project, so stbi_load returns nothing.",
@@ -338,5 +338,12 @@
   "expected.show": "Show the expected result of this task",
   "expected.enlarge": "Click to enlarge",
   "expected.drawing": "Drawing…",
-  "expected.none": "There is no picture for this task."
+  "expected.none": "There is no picture for this task.",
+  "ide.group": "IDE",
+  "ide.label": "Your IDE: the chapters' steps follow it",
+  "ide.chooseHint": "**Choose your IDE** at the top, next to the graphics API: the steps in this chapter and the later ones follow your choice. Shown now: **{ide}**.",
+  "yourProject.where.vs": "Visual Studio puts the program in x64/Debug/ next to the solution (a CMake folder: out/build/x64-Debug/).",
+  "yourProject.where.clion": "CLion puts the program in cmake-build-debug/.",
+  "yourProject.where.rider": "Rider puts the program in x64/Debug/ next to the solution.",
+  "yourProject.where.vscode": "VS Code (CMake Tools) puts the program in build/."
 }

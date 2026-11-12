@@ -257,6 +257,8 @@
   "ach.checkpoints-25.desc": "Responde 25 preguntas en los textos de los capítulos.",
   "ach.first-build.title": "¡Compila!",
   "ach.first-build.desc": "Compila un proyecto sin errores.",
+  "ach.first-folder.title": "Campamento base",
+  "ach.first-folder.desc": "Elige una carpeta de proyecto para un capítulo.",
   "ach.first-frame.title": "Una ventana al mundo",
   "ach.first-frame.desc": "Ejecuta un programa cuya ventana se mantenga abierta y muestre un fotograma.",
   "ach.first-draw.title": "Primeros píxeles",
@@ -265,8 +267,6 @@
   "ach.builds-100.desc": "Compila y ejecuta 100 veces.",
   "ach.functions-25.title": "Dominas la API",
   "ach.functions-25.desc": "Llama a 25 funciones distintas de la API en tus proyectos.",
-  "ach.typo.title": "¿Quisiste decir …?",
-  "ach.typo.desc": "La compilación se detuvo en un nombre de la API mal escrito.",
   "ach.magenta.title": "Rosa de depuración",
   "ach.magenta.desc": "Limpiaste la pantalla con magenta puro – el color de las texturas que faltan en todas partes.",
   "sim.textureFileMissing": "La imagen {file} no está en el proyecto, así que stbi_load no devuelve nada.",
@@ -338,5 +338,12 @@
   "expected.show": "Mostrar el resultado esperado de esta tarea",
   "expected.enlarge": "Haz clic para ampliar",
   "expected.drawing": "Dibujando…",
-  "expected.none": "No hay imagen para esta tarea."
+  "expected.none": "No hay imagen para esta tarea.",
+  "ide.group": "IDE",
+  "ide.label": "Tu IDE: los pasos de los capítulos se adaptan a él",
+  "ide.chooseHint": "**Elige tu IDE** arriba, junto a la API gráfica: los pasos de este capítulo y de los siguientes se adaptan a tu elección. Ahora se muestra: **{ide}**.",
+  "yourProject.where.vs": "Visual Studio deja el programa en x64/Debug/ junto a la solución (en una carpeta CMake: out/build/x64-Debug/).",
+  "yourProject.where.clion": "CLion deja el programa en cmake-build-debug/.",
+  "yourProject.where.rider": "Rider deja el programa en x64/Debug/ junto a la solución.",
+  "yourProject.where.vscode": "VS Code (CMake Tools) deja el programa en build/."
 }

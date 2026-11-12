@@ -406,8 +406,16 @@ Vulkan självt kontrollerar väldigt lite för att hålla drivrutinen snabb. Val
 
 Vulkan tar inte emot shaderkällkod. Det tar emot **SPIR-V**, ett binärt mellanformat. Du skriver fortfarande shaderna i
 ett högnivåspråk – i den här kursen GLSL, som i OpenGL – och kompilerar dem till SPIR-V innan programmet körs med
-`glslc` från Vulkan SDK; din `CMakeLists.txt` från *Sätt upp din IDE* gör det åt dig varje gång du bygger. Programmet
-laddar sedan de kompilerade filerna:
+`glslc` från Vulkan SDK.
+
+:::ide clion vscode
+Din `CMakeLists.txt` från *Sätt upp din IDE* gör det åt dig varje gång du bygger.
+:::
+:::ide vs rider
+Pre-build-händelsen i ditt projekt från *Sätt upp din IDE* gör det åt dig varje gång du bygger.
+:::
+
+Programmet laddar sedan de kompilerade filerna:
 
 ```cpp
 auto vertShaderCode = readFile("shaders/vert.spv");

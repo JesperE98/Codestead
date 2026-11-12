@@ -82,6 +82,24 @@ CPU:n är kursens tillägg, så att fyrhörningen visar något innan det finns e
 utan data. Compute shaderns fil finns redan, men är tom. Bygg och kör programmet: det visar ett mörkblått fönster;
 kommentarerna `// TODO:` visar var din kod ska in.
 
+:::opengl
+:::ide vs rider
+Lägg till `shader_c.h` och `computeShader.comp` i projektet (**Project → Add Existing Item…**; i Rider **Add → Existing
+Item…** i projektets snabbmeny) för att öppna dem från Solution Explorer; programmet läser `.comp`-filen medan det körs,
+precis som de andra shaderna.
+:::
+:::
+:::vulkan
+:::ide clion vscode
+Din `CMakeLists.txt` kompilerar compute shadern också – dess rad `file(GLOB …)` tar med `shaders/*.comp` – till
+`shaders/compute_shader.comp.spv`.
+:::
+:::ide vs rider
+Pre-build-händelsen i ditt projekt kompilerar compute shadern också – dess loop tar med `shaders\*.comp` – till
+`shaders\compute_shader.comp.spv`.
+:::
+:::
+
 ## Gränser
 
 En dispatch kan inte vara hur stor som helst. Tre gränser spelar roll: hur många arbetsgrupper en dispatch högst får ha i
@@ -119,7 +137,7 @@ eller 2³¹ − 1 grupper i x, arbetsgrupper på 1024 × 1024 × 64 och 1024 anr
 de 1024 anrop som är tillåtna totalt.
 
 Gör nu den första uppgiften, **limits**. Fönstret förblir mörkblått; siffrorna syns där ditt program skriver sin text: i
-konsolen, eller för `OutputDebugStringA` i debuggerns Output-fönster.
+konsolen, eller för `OutputDebugStringA` i debuggerns utdata (*Felsökning* visar var din IDE har den).
 
 ```quiz
 Vilken arbetsgruppsstorlek är tillåten på en GPU som rapporterar arbetsgrupper upp till 1024 × 1024 × 64 och 1024 anrop?

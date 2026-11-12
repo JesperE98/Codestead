@@ -227,36 +227,74 @@ och det delade biblioteket. Då länkas programmet med ett bibliotek till:
 g++ -std=c++17 main.cpp glad.c -Iinclude -o model_loading -lglfw -ldl -lassimp
 ```
 
-På Windows besparar en pakethanterare som [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview)
-(`vcpkg install assimp`) dig CMake-bygget; utan den lägger du till Assimps `include`-mapp och dess `.lib` i projektet
-som för GLFW, och lägger dess DLL bredvid den körbara filen.
+:::ide clion vscode
+Installera Assimp – på Debian och Ubuntu `libassimp-dev`, på macOS `brew install assimp`, på Windows med
+[vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview) `vcpkg install assimp:x64-windows` – och lägg till
+två rader i slutet av din `CMakeLists.txt`, för det här och alla senare kapitel:
+
+```text
+find_package(assimp REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp)
+```
+
+`find_package` hittar det installerade biblioteket, och att länka mot målet `assimp::assimp` lägger till dess
+include-mapp och dess bibliotek. Med vcpkg måste CMake använda vcpkg:s toolchain-fil: ge CMake
+`-DCMAKE_TOOLCHAIN_FILE=<vcpkg>/scripts/buildsystems/vcpkg.cmake` (i CLion under **CMake options** i profilen, i VS Code
+i inställningen `cmake.configureSettings`). Toolchain-filen kopierar då också Assimps DLL bredvid ditt program.
+:::
+:::ide vs rider
+Enklast på Windows är [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview):
+`vcpkg install assimp:x64-windows` bygger Assimp, och `vcpkg integrate install` (en gång) gör att varje Visual
+Studio-projekt hittar biblioteken som vcpkg installerade – Rider bygger samma projekt. Ditt projekt får då Assimps
+include-mapp och bibliotek av sig självt, och vcpkg kopierar Assimps DLL bredvid din `.exe` när du bygger. Utan vcpkg
+bygger du Assimp från källkoden med CMake, lägger till dess `include`-mapp bland **Additional Include Directories**,
+dess `.lib` bland **Additional Dependencies** (och filens mapp bland **Additional Library Directories**), och kopierar
+dess DLL bredvid din `.exe` – programmet skulle inte starta utan den.
+:::
 
 Headerfilerna du behöver är `<assimp/Importer.hpp>` (klassen `Assimp::Importer` som läser en fil), `<assimp/scene.h>`
 (strukturerna `aiScene`, `aiNode`, `aiMesh` …) och `<assimp/postprocess.h>` (flaggorna för de efterbearbetningssteg som
-Assimp kan göra vid inläsningen, som att göra om varje yta till trianglar). I din `CMakeLists.txt` hittar
-`find_package(assimp REQUIRED)` det installerade biblioteket, och att länka mot målet `assimp::assimp` lägger till dess
-include-mapp och dess bibliotek.
+Assimp kan göra vid inläsningen, som att göra om varje yta till trianglar).
 :::
 :::vulkan
 learnopengl.com:s OpenGL-kod behöver Assimp byggt och länkat, som beskrivs på dess sida. För kursens Vulkan-program
 finns det inget att bygga: tinyobjloader är en enda header. Du laddar ner `tiny_obj_loader.h` från dess GitHub-sida
-(precis som vulkan-tutorial gör) och lägger den i din include-mapp, bredvid `stb_image.h`. Om du vill använda Assimp med
-Vulkan – för andra format, eller animationer – installeras och länkas det precis som för OpenGL: distributionens paket
-och `-lassimp` på Linux, eller vcpkg på Windows.
+(precis som vulkan-tutorial gör) till `libs/tinyobjloader` – ditt projekt från *Sätt upp din IDE* har redan den mappen
+bland sina include-mappar. Om du vill använda Assimp med Vulkan – för andra format, eller animationer – visar
+gästartikeln *Skeletal Animation*, som behöver det, hur du lägger till det.
 :::
 :::d3d12
 DirectX 12-programmet använder också Assimp: kursen portar learnopengls klasser `Mesh` och `Model`, så det behöver
-samma bibliotek. Enklast på Windows är pakethanteraren
-[vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview): `vcpkg install assimp` bygger det, och med
-vcpkg:s Visual Studio-integration läggs include-mappen och biblioteket till i projektet automatiskt. Utan vcpkg bygger
-du Assimp från dess GitHub-sida med CMake, lägger till dess `include`-mapp bland projektets include-kataloger och dess
-`.lib` i länkarens indata, och lägger dess DLL bredvid din `.exe` (programmet skulle inte starta utan den).
+samma bibliotek.
+
+:::ide clion vscode
+Installera Assimp med [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview) –
+`vcpkg install assimp:x64-windows` – och lägg till två rader i slutet av din `CMakeLists.txt`, för det här och alla
+senare kapitel:
+
+```text
+find_package(assimp REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp)
+```
+
+`find_package` hittar det installerade biblioteket, och att länka mot målet `assimp::assimp` lägger till dess
+include-mapp och dess bibliotek. Med vcpkg måste CMake använda vcpkg:s toolchain-fil: ge CMake
+`-DCMAKE_TOOLCHAIN_FILE=<vcpkg>/scripts/buildsystems/vcpkg.cmake` (i CLion under **CMake options** i profilen, i VS Code
+i inställningen `cmake.configureSettings`). Toolchain-filen kopierar då också Assimps DLL bredvid ditt program.
+:::
+:::ide vs rider
+Enklast på Windows är [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview):
+`vcpkg install assimp:x64-windows` bygger Assimp, och `vcpkg integrate install` (en gång) gör att varje Visual
+Studio-projekt hittar biblioteken som vcpkg installerade – Rider bygger samma projekt. Ditt projekt får då Assimps
+include-mapp och bibliotek av sig självt, och vcpkg kopierar Assimps DLL bredvid din `.exe` när du bygger. Utan vcpkg
+bygger du Assimp från källkoden med CMake, lägger till dess `include`-mapp bland **Additional Include Directories**,
+dess `.lib` bland **Additional Dependencies** (och filens mapp bland **Additional Library Directories**), och kopierar
+dess DLL bredvid din `.exe` – programmet skulle inte starta utan den.
+:::
 
 Headerfilerna är `<assimp/Importer.hpp>` (klassen `Assimp::Importer` som läser en fil), `<assimp/scene.h>` (strukturerna
 `aiScene`, `aiNode`, `aiMesh` …) och `<assimp/postprocess.h>` (flaggorna för de efterbearbetningssteg som Assimp kan
-göra vid inläsningen, som att göra om varje yta till trianglar). I din `CMakeLists.txt` hittar
-`find_package(assimp REQUIRED)` biblioteket som vcpkg installerade (när CMake använder vcpkg:s toolchain-fil), och att
-länka mot målet `assimp::assimp` lägger till dess include-mapp och dess bibliotek.
+göra vid inläsningen, som att göra om varje yta till trianglar).
 
 En sak att känna till när Assimp möter Direct3D: Assimp lämnar ut sin data i ett högerhänt koordinatsystem med
 framsidor moturs, OpenGL:s konventioner, och har en efterbearbetningsflagga, `aiProcess_ConvertToLeftHanded`, för
@@ -321,6 +359,12 @@ Shadrarna är learnopengls `1.model_loading.vs/.fs`: vertex shadern tar emot en 
 texturkoordinater (location 0, 1 och 2), och fragment shadern ger ut färgen från `texture_diffuse1` – ett namn du
 förstår i nästa kapitel. `mesh.h` väntar med `// TODO:`-kommentarer på kapitlet *Mesh*; `model.h` och Assimps
 headerfiler kommer i kapitlet *Model*.
+
+:::ide vs rider
+Lägg till `mesh.h` i projektet (**Project → Add Existing Item…**; i Rider **Add → Existing Item…** i projektets
+snabbmeny) för att öppna den från Solution Explorer; `#include "mesh.h"` hittar den bredvid `main.cpp` utan någon
+inställning.
+:::
 :::
 :::vulkan
 Projektet är learnopengls scen `model_loading.cpp` före modellen, i Vulkan: kameran från kapitlet *Camera* i

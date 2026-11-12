@@ -58,6 +58,7 @@ public partial class LearningWindow
         right.Children.Add(gameBar);
         right.Children.Add(progress);
         right.Children.Add(variantPicker);
+        if (tool.TopBarExtra is { } extra) right.Children.Add(extra);
         right.Children.Add(langPicker);
 
         var topGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto") };

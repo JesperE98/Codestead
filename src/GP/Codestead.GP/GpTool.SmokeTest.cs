@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using System.Diagnostics;
 using Codestead.GP.Course;
 using Codestead.GP.Course.Ide;
@@ -140,6 +141,15 @@ public sealed partial class GpTool
             if (result.Scene is { ShowsFrames: true } scene) Gpu.Raster.Rasterizer.Render(scene, 64);
             Interlocked.Increment(ref builds);
         });
+        // The IDE picker switches the texts, as a click does (Setting up your IDE has steps per IDE).
+        Window.Navigate("ide-setup");
+        var ideIds = idePicker.Items.OfType<ComboBoxItem>().Select(i => i.Tag).OfType<string>().ToList();
+        foreach (var id in ideIds.Append(ideIds[0]))
+        {
+            idePicker.SelectedItem = idePicker.Items.OfType<ComboBoxItem>().First(i => Equals(i.Tag, id));
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            if (Ide != id) throw new InvalidOperationException($"The IDE picker did not switch to {id}.");
+        }
         // The first task with a picture (Creating a window's first tasks open a window that closes again at once).
         var pictured = GpCourse.Chapters.Where(c => c.IsLesson).Take(8)
             .SelectMany(c => Enumerable.Range(0, GpCourse.Tasks(c.Id, watchedApi).Count).Select(i => (c.Id, Index: i)))
@@ -154,6 +164,6 @@ public sealed partial class GpTool
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
         }
-        return $"{projects} projects, {builds} simulated builds, {smokeRun}";
+        return $"{projects} projects, {builds} simulated builds, {ideIds.Count} IDEs, {smokeRun}";
     }
 }

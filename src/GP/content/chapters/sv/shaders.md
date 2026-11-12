@@ -16,6 +16,22 @@ kapitlet: shaderkällkoden ligger inte längre som strängar i `main.cpp` utan i
 och länkar dem. Avsnitten *Vår egen shaderklass* och *Läsa från fil* förklarar hur klassen fungerar; fram till dess
 räcker det att veta att `Shader ourShader("shader.vs", "shader.fs");` bygger shaderprogrammet och att
 `ourShader.use();` aktiverar det.
+
+De nya filerna ligger i kapitelmappen, bredvid `main.cpp`. `main.cpp` inkluderar `"shader_s.h"` inom citattecken, som
+letar i den egna mappen först, och programmet läser shaderfilerna medan det körs, från sin arbetskatalog –
+kapitelmappen. Bygget behöver alltså inga nya inställningar.
+
+:::ide clion vscode
+Din `CMakeLists.txt` behöver inte heller ändras: dess rad `LINK_DEPENDS` tar redan med kapitelmappens `.vs`- och
+`.fs`-filer, så ett bygge efter en ändring i en shader länkar om programmet – och appen räknar det bygget.
+:::
+:::ide vs rider
+Lägg till `shader_s.h`, `shader.vs` och `shader.fs` i projektet så att du kan öppna dem från Solution Explorer: i
+Visual Studio med **Project → Add Existing Item…**, i Rider med **Add → Existing Item…** i projektets snabbmeny. De
+står utanför bygget. En solution länkar inte om programmet när bara en shader har ändrats, så efter en ändring som bara
+gäller en shader använder du **Build → Rebuild Solution**: appen räknar bara ett bygge som är nyare än alla dina
+källfiler. Gör likadant med senare kapitels headrar och shaders.
+:::
 :::
 :::vulkan
 Kapitlets projekt är det färdiga Hello Triangle-programmet: den orange triangeln på blågrön bakgrund, ritad från en

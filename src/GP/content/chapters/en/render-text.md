@@ -265,8 +265,16 @@ Make the global `Text` after `Effects` and set it up in `Init`, after the postpr
 
 ### Loading the font
 
-`Load` is the Text Rendering chapter's glyph loop: FreeType loads the font at the given pixel size, and each of the
-first 128 ASCII characters becomes a `Character`.
+`Load` is the Text Rendering chapter's glyph loop – the project links FreeType as you set it up there: FreeType loads
+the font at the given pixel size, and each of the first 128 ASCII characters becomes a `Character`.
+
+:::ide clion vscode
+For your `CMakeLists.txt` that means the two FreeType lines from *Text Rendering* at its end.
+:::
+:::ide vs rider
+With vcpkg's integration the project finds FreeType by itself; without it, make the FreeType settings from *Text
+Rendering* in this chapter's project too.
+:::
 
 :::opengl
 ```cpp

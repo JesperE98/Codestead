@@ -17,6 +17,22 @@ chapter: the shader sources no longer live as strings in `main.cpp` but in two f
 reads, compiles and links them. The sections *Our own shader class* and *Reading from file* explain how that class
 works; until then it is enough to know that `Shader ourShader("shader.vs", "shader.fs");` builds the
 shader program and `ourShader.use();` activates it.
+
+The new files stay in the chapter folder, next to `main.cpp`. `main.cpp` includes `"shader_s.h"` in quotes, which
+looks in its own folder first, and the program reads the shader files while it runs, from its working directory – the
+chapter folder. So the build needs no new settings.
+
+:::ide clion vscode
+Your `CMakeLists.txt` needs no change either: its `LINK_DEPENDS` line already lists the `.vs` and `.fs` files of the
+chapter folder, so building after a change to a shader links the program again – and the app counts that build.
+:::
+:::ide vs rider
+Add `shader_s.h`, `shader.vs` and `shader.fs` to the project so that you can open them from the Solution Explorer: in
+Visual Studio with **Project → Add Existing Item…**, in Rider with **Add → Existing Item…** in the project's context
+menu. They stay out of the build. A solution doesn't link the program again when only a shader changed, so after a
+change to a shader alone use **Build → Rebuild Solution**: the app counts only a build that is newer than all your
+sources. Do the same with the headers and shaders of later chapters.
+:::
 :::
 :::vulkan
 This chapter's project is the finished Hello Triangle program: the orange triangle on a teal background, drawn from

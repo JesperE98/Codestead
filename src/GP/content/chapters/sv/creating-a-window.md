@@ -34,7 +34,7 @@ exemplet D3D12HelloWindow.
 :::
 
 Kapitlets startfiler innehåller redan programmets skelett: kopiera dem till kapitlets mapp med **Kopiera
-startfilerna**, lägg till din `CMakeLists.txt` och öppna mappen i din IDE. `// TODO:`-kommentarerna visar var din kod
+startfilerna**, lägg till dina projektfiler och öppna mappen i din IDE. `// TODO:`-kommentarerna visar var din kod
 ska stå; efter varje uppgift bygger och kör du programmet i din IDE, och appen bockar av uppgiften. Hur du sätter upp
 IDE:n, kompilatorn och biblioteken är ämnet för förra kapitlet, *Sätt upp din IDE*; avsnitten här nedan förklarar vad
 varje del är till för, så som learnopengl.com gör.
@@ -132,11 +132,22 @@ include-katalog och lägg till `glad.c` i ditt projekt.
 
 ### Ditt projekt
 
-Projektet i det här kapitlet är en enda fil, `main.cpp`. `CMakeLists.txt` från *Sätt upp din IDE* bygger den tillsammans
-med `glad.c` och länkar GLFW – allt ovan på några rader. I en egen Visual Studio-solution är det ett tomt C++-projekt
-med `main.cpp` och `glad.c`, include- och biblioteksmapparna inställda, och `glfw3.lib` och `opengl32.lib` som extra
-beroenden för länkaren. Från en terminal på Linux, med GLFW installerat och GLAD-filerna i `include/` och `glad.c`
-bredvid `main.cpp`, fungerar även det här:
+Projektet i det här kapitlet är en enda fil, `main.cpp`.
+
+:::ide clion vscode
+`CMakeLists.txt` från *Sätt upp din IDE* bygger den tillsammans med `glad.c` och länkar GLFW – allt ovan på några
+rader: `target_include_directories` anger include-mapparna och `target_link_libraries` biblioteken. CMake hittar eller
+bygger GLFW själv, så det finns ingen biblioteksmapp att ange.
+:::
+:::ide vs rider
+Projektet från *Sätt upp din IDE* är precis den uppsättning som beskrivs ovan: `main.cpp` och `glad.c` är dess
+källfiler, `include`-mapparna för GLFW, GLAD, GLM och stb är dess **Additional Include Directories**, GLFW:s mapp
+`lib-vc2022` är dess **Additional Library Directories**, och `glfw3.lib` och `opengl32.lib` är dess **Additional
+Dependencies**.
+:::
+
+Från en terminal på Linux, med GLFW installerat och GLAD-filerna i `include/` och `glad.c` bredvid `main.cpp`, fungerar
+även det här:
 
 ```text
 g++ -std=c++17 main.cpp glad.c -Iinclude -o window -lglfw -ldl
@@ -317,9 +328,18 @@ vulkan-tutorial.com installerar också GLM, ett matematikbibliotek; det behöver
 
 ### Ditt projekt
 
+:::ide clion vscode
 *Sätt upp din IDE* visar hur du installerar allt detta och ger dig en `CMakeLists.txt`: `find_package(Vulkan)` och GLFW
-ger den målen `Vulkan::Vulkan` och `glfw` att länka mot. Bygg konfigurationen **Debug** och definiera inte `NDEBUG`
-medan du lär dig – du ser varför under *Valideringslager*.
+ger den målen `Vulkan::Vulkan` och `glfw` att länka mot.
+:::
+:::ide vs rider
+*Sätt upp din IDE* visar hur du installerar allt detta och ger dig ett projekt med vulkan-tutorial.coms
+Visual Studio-inställningar: SDK:ts mapp `Include` (`$(VULKAN_SDK)\Include`) och GLFW:s mapp `include` som
+**Additional Include Directories**, SDK:ts mapp `Lib` och GLFW:s mapp `lib-vc2022` som **Additional Library
+Directories**, `vulkan-1.lib` och `glfw3.lib` som **Additional Dependencies**, och C++17 som språkstandard.
+:::
+
+Bygg konfigurationen **Debug** och definiera inte `NDEBUG` medan du lär dig – du ser varför under *Valideringslager*.
 
 På Linux (paketnamn för Debian/Ubuntu; Fedora och Arch har samma sak med liknande namn) kan du också installera
 loadern, valideringslagren, verktygen och GLFW från din distribution:
@@ -335,9 +355,7 @@ g++ -std=c++17 -o VulkanTest main.cpp -lglfw -lvulkan
 ```
 
 (vulkan-tutorial.coms makefile använder `-lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi`; med en delad
-GLFW räcker de två första.) I en egen Visual Studio-solution lägger du till SDK:ts mapp `Include` och GLFW:s mapp
-`include` bland include-katalogerna, SDK:ts mapp `Lib` och GLFW:s biblioteksmapp bland bibliotekskatalogerna,
-`vulkan-1.lib` och `glfw3.lib` i länkarens indata, och ställer in språkstandarden på C++17.
+GLFW räcker de två första.)
 
 På macOS kör SDK:t Vulkan ovanpå Metal (MoltenVK). Där kan `vkCreateInstance` returnera
 `VK_ERROR_INCOMPATIBLE_DRIVER` om du inte aktiverar instans-extensionen `VK_KHR_portability_enumeration` och sätter
@@ -972,11 +990,19 @@ Biblioteken länkas av tre rader överst i `main.cpp`, som bara Microsofts kompi
 
 ### Ditt projekt
 
+:::ide clion vscode
 *Sätt upp din IDE* ger dig en `CMakeLists.txt` för det här: den lägger till DirectX-Headers mapp `include/directx` bland
 include-katalogerna och bygger ett `WIN32`-program – programmet startar i `wWinMain`, ingångspunkten för ett
-Windows-program (inte ett konsolprogram). I en egen Visual Studio-solution lägger du till `main.cpp`, lägger till samma
-include-mapp och ställer in **Linker → System → SubSystem** på **Windows**. Bygg konfigurationen **Debug** – den
-definierar `_DEBUG`, vilket slår på koden för debug-lagret. Från en *Developer Command Prompt* blir samma sak:
+Windows-program (inte ett konsolprogram).
+:::
+:::ide vs rider
+*Sätt upp din IDE* ger dig ett projekt för det här: DirectX-Headers mapp `include/directx` är en av dess **Additional
+Include Directories**, och **Linker → System → SubSystem** är **Windows** – programmet startar i `wWinMain`,
+ingångspunkten för ett Windows-program (inte ett konsolprogram).
+:::
+
+Bygg konfigurationen **Debug** – den definierar `_DEBUG`, vilket slår på koden för debug-lagret. Från en *Developer
+Command Prompt* blir samma sak:
 
 ```text
 cl /std:c++17 /EHsc /MDd /Zi /I DirectX-Headers\include\directx main.cpp /link /SUBSYSTEM:WINDOWS user32.lib

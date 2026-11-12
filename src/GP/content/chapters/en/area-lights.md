@@ -53,6 +53,12 @@ The course includes the tables from the reference implementation of the paper, t
 top of the header. learnopengl ships the same numbers. Each project copies the header unchanged next to its
 `main.cpp`.
 
+:::ide vs rider
+Add `ltc_matrix.hpp` to the project (**Project → Add Existing Item…**; in Rider **Add → Existing Item…** in the
+project's context menu) to open it from the Solution Explorer; `#include "ltc_matrix.hpp"` finds it next to `main.cpp`
+without a setting.
+:::
+
 ```quiz
 Why can the shader evaluate a GGX-like reflection over a polygon without integrating GGX?
 - [ ] It approximates the polygon by a single point at its centre and evaluates GGX there

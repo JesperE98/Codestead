@@ -51,6 +51,40 @@ chapter is about.
 The `// TODO:` comments in the project mark where your code goes. The tasks first add the tools, then use what they
 report to fix the mistakes.
 
+Some of the tools are your IDE's **debugger**: you run the program under it, stop it at a **breakpoint** and look at the
+**call stack** – the chain of calls that led there – and at the variables.
+
+:::ide vs
+**Debug → Start Debugging** (F5) runs the program under the debugger, **Debug → Start Without Debugging** (Ctrl+F5)
+without it. F9, or a click in the grey margin left of a line, sets a breakpoint there. When the program stops, the
+**Call Stack** window shows how it got there – double-click a line to jump to it – and **Locals** and **Autos** show the
+variables; F10 steps over a line, F11 into a call, F5 carries on. What the program prints goes to its console window,
+and what it sends to the debugger with `OutputDebugString` to the **Output** window (**View → Output**, *Show output
+from: Debug*).
+:::
+:::ide clion
+**Run → Debug** (Shift+F9) runs the program under the debugger, **Run → Run** (Shift+F10) without it – both with the
+working directory of your run configuration. A click in the gutter next to a line number, or Ctrl+F8, sets a breakpoint
+there. When the program stops, the **Debug** tool window shows the call stack under **Frames** – click a frame to jump
+to it – and the variables under **Variables**; F8 steps over a line, F7 into a call, F9 carries on. What the program
+prints appears in the **Console** tab of the same window.
+:::
+:::ide rider
+**Run → Debug** runs the program under the debugger, **Run → Run** without it. A click in the gutter next to a line
+number sets a breakpoint there. When the program stops, the **Debug** tool window shows the call stack under **Frames**
+– click a frame to jump to it – and the variables under **Variables**; the window's toolbar steps over a line, into a
+call, or carries on. What the program prints appears in its console, and what it sends to the debugger with
+`OutputDebugString` in the window's **Debug Output** tab.
+:::
+:::ide vscode
+**CMake: Debug** (Ctrl+F5, or the bug icon in the status bar) runs the program under the debugger, with the working
+directory from `cmake.debugConfig` (*Setting up your IDE*). F9, or a click left of a line number, sets a breakpoint
+there. When the program stops, the **Run and Debug** view (Ctrl+Shift+D) shows the **Call Stack** – click a frame to
+jump to it – and the **Variables**; F10 steps over a line, F11 into a call, F5 carries on. The debugger's messages – on
+Windows also what the program sends with `OutputDebugString` – appear in the **Debug Console** panel, and what the
+program prints in the Debug Console or the terminal.
+:::
+
 ## glGetError()
 
 :::opengl
@@ -250,12 +284,28 @@ line. Direct3D 12 reports errors in two ways:
 ```
 
 It exists only in a debug build (`_DEBUG`) on a Windows with the "Graphics Tools" optional feature installed. It checks
-each call and writes a message for each mistake to the debugger's Output window (in Visual Studio: start with F5, then
-*Output*, *Show output from: Debug*), as lines like
+each call and writes a message for each mistake to the debugger's output, as lines like
 
 ```text
 D3D12 ERROR: ID3D12Device::CreateShaderResourceView: … [ STATE_CREATION ERROR #31: CREATESHADERRESOURCEVIEW_INVALIDDIMENSIONS]
 ```
+
+:::ide vs
+In Visual Studio that is the **Output** window: start the program with F5 and choose *Show output from: Debug*.
+:::
+:::ide rider
+In Rider that is the **Debug Output** tab of the **Debug** tool window, when you start the program with **Run → Debug**.
+:::
+:::ide clion
+CLion debugs a program built with the Visual Studio toolchain with its own LLDB-based debugger: start the program with
+**Run → Debug** and look for the lines in the **Debug** tool window's **Console** tab. If they don't show up there,
+Microsoft's free [DebugView](https://learn.microsoft.com/en-us/sysinternals/downloads/debugview) shows them: start the
+program without the debugger (**Run → Run**) while DebugView runs.
+:::
+:::ide vscode
+In VS Code that is the **Debug Console**: with a Visual Studio kit, **CMake: Debug** runs the program under Microsoft's
+debugger, which shows these lines there.
+:::
 
 That is useful, but only while a debugger runs, and the program knows nothing about it. The program can read the
 messages itself, though: the debug layer also stores them in the device's **info queue**, `ID3D12InfoQueue`, which
@@ -298,9 +348,9 @@ with the file and the line they appear in, so each `CheckDebugMessages()` call r
 Now do the first task, **info-queue**: get the info queue in `LoadPipeline` right after the device is created (inside
 `#if defined(_DEBUG)` – in a release build there is no debug layer, `As` fails and `m_infoQueue` stays empty), add the
 function and the macro, and call `CheckDebugMessages();` after `LoadTexture(…)` in `LoadAssets` and after
-`ExecuteCommandLists` in `OnRender`. Run it under the debugger (F5): the debug layer reports these mistakes, stores them
-in the info queue, and your function writes them out. The picture does not change, but the debugger's Output window now
-holds the messages:
+`ExecuteCommandLists` in `OnRender`. Run it under the debugger: the debug layer reports these mistakes, stores them in
+the info queue, and your function writes them out. The picture does not change, but the debugger's output now holds the
+messages:
 
 ```text
 ERROR #31: ID3D12Device::CreateShaderResourceView: The Dimensions of the View are invalid due to at least one of the following conditions. MostDetailedMip (value = 0) must be between 0 and MipLevels-1 of the Texture Resource, 0, inclusively. With the current MostDetailedMip, MipLevels (value = 0) must be between 1 and 1, inclusively, or -1 to default to all mips from MostDetailedMip, in order that the View fit on the Texture. | main.cpp (…)
@@ -782,9 +832,9 @@ Category: State creation
 Severity: ERROR
 ```
 
-– and with a debugger attached the program stops right at that line of `LoadTexture`. (Started without a debugger, with
-Ctrl+F5, `IsDebuggerPresent()` returns false, so the program writes the message and carries on.) (The messages also stay
-in the queue, so `CheckDebugMessages()` prints them once more afterwards.)
+– and with a debugger attached the program stops right at that line of `LoadTexture`. (Started without the debugger,
+`IsDebuggerPresent()` returns false, so the program writes the message and carries on.) (The messages also stay in the
+queue, so `CheckDebugMessages()` prints them once more afterwards.)
 
 ### The second mistake
 

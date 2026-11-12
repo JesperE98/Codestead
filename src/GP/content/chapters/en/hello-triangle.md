@@ -544,9 +544,20 @@ glslc shaders/shader.frag -o shaders/frag.spv
 ```
 
 The advantage is that the driver doesn't need a full GLSL compiler of its own (each vendor's compiler used to accept
-slightly different GLSL), and syntax errors show up at build time, not when the program runs. Your `CMakeLists.txt` from
-*Setting up your IDE* compiles both shader files to `shaders/vert.spv` and `shaders/frag.spv` with `glslc` before it
-builds `main.cpp`; a mistake in a shader is reported in your IDE's build output like any other compile error.
+slightly different GLSL), and syntax errors show up at build time, not when the program runs.
+
+:::ide clion vscode
+Your `CMakeLists.txt` from *Setting up your IDE* compiles both shader files to `shaders/vert.spv` and
+`shaders/frag.spv` with `glslc` before it builds `main.cpp`; a mistake in a shader is reported in your IDE's build
+output like any other compile error.
+:::
+:::ide vs rider
+The pre-build event of your project from *Setting up your IDE* compiles both shader files to `shaders/vert.spv` and
+`shaders/frag.spv` with `glslc` before `main.cpp` is compiled; a mistake in a shader shows up in the build output with
+`glslc`'s message, and the build stops.
+A solution doesn't link the program again when only a shader changed, and the app counts only a program that is newer
+than all your sources: after a change to a shader alone, use **Build → Rebuild Solution**.
+:::
 
 At run time, the program loads the bytecode with a small helper, `readFile`:
 
@@ -623,6 +634,16 @@ The arguments are: the file name (looked up in the working directory), macro def
 profile**: `vs_5_0` is a vertex shader for shader model 5.0, `ps_5_0` a pixel shader. Then come the compile flags
 (in debug builds: debug information and no optimisation, which helps graphics debuggers), effect flags (unused), the
 output, and an optional blob for the compiler's error messages.
+
+:::ide vs rider
+`shaders.hlsl` is read while the program runs, so it must stay out of the build. If you add it to the project to open
+it from the Solution Explorer, set its **Properties → General → Item Type** to **Does not participate in build** – in
+the `.vcxproj`, which is where you change it in Rider: `<None Include="shaders.hlsl" />` instead of
+`<FxCompile Include="shaders.hlsl" />`. Otherwise MSBuild compiles it with Visual Studio's own HLSL compiler, which
+looks for a function called `main` and stops the build. The same goes for the `.hlsl` files of later chapters. And
+since a solution doesn't link the program again when only `shaders.hlsl` changed, use **Build → Rebuild Solution**
+after such a change: the app counts only a program that is newer than all your sources.
+:::
 
 The result is bytecode in an `ID3DBlob`, a simple block of memory. If the HLSL has an error, `D3DCompileFromFile`
 returns a failure code and `ThrowIfFailed` stops the program with that HRESULT. (The sample passes `nullptr` for the

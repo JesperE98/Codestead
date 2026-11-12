@@ -54,6 +54,23 @@ Kameran, höjdkartan och färgerna är förra kapitlets, så de två kapitlen vi
 kör programmet: det visar den grå CPU-terrängen; kommentarerna `// TODO:` visar var GPU-versionen ska in.
 
 :::opengl
+:::ide vs rider
+Lägg till `shader_t.h` och `gpuheight`-shaderna i projektet (**Project → Add Existing Item…**; i Rider **Add → Existing
+Item…** i projektets snabbmeny) för att öppna dem från Solution Explorer; bygget behöver ingen inställning för dem.
+:::
+:::
+:::vulkan
+:::ide clion vscode
+Din `CMakeLists.txt` kompilerar de två nya stegen också – dess rad `file(GLOB …)` tar med `shaders/*.tesc` och
+`shaders/*.tese` – till `shaders/gpuheight.tesc.spv` och `shaders/gpuheight.tese.spv`.
+:::
+:::ide vs rider
+Pre-build-händelsen i ditt projekt kompilerar de två nya stegen också – dess loop tar med `shaders\*.tesc` och
+`shaders\*.tese` – till `shaders\gpuheight.tesc.spv` och `shaders\gpuheight.tese.spv`.
+:::
+:::
+
+:::opengl
 Den första uppgiften begär 4.1-kontexten och skriver ut den högsta tesselleringsnivå som GPU:n klarar:
 
 ```cpp

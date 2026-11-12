@@ -582,8 +582,17 @@ GLM.
 ### GLM
 
 GLM stands for Open**GL** **M**athematics and is a *header-only* library, which means that we only have to include the
-proper header files and we're done; no linking or compiling necessary. The `CMakeLists.txt` from *Setting up your IDE*
-already makes it available. Most of GLM's functionality that we need can be found in 3 headers files that we'll include
+proper header files and we're done; no linking or compiling necessary. Your project from *Setting up your IDE* already
+makes it available:
+
+:::ide clion vscode
+the `CMakeLists.txt` links the target `glm::glm`, which adds GLM's include folder.
+:::
+:::ide vs rider
+GLM's folder, `..\..\libs\glm`, is one of the project's **Additional Include Directories**.
+:::
+
+Most of GLM's functionality that we need can be found in 3 headers files that we'll include
 as follows:
 
 ```cpp

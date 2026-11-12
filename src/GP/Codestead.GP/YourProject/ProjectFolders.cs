@@ -20,6 +20,9 @@ public sealed class ProjectFolders
 
     private static string Key(string api, string chapterId) => $"{api}/{chapterId}";
 
+    /// <summary>Has a folder been chosen for any chapter?</summary>
+    public bool Any => data.Folders.Count > 0;
+
     public string? Get(string api, string chapterId) => data.Folders.GetValueOrDefault(Key(api, chapterId));
 
     /// <summary>Remembers a chapter's folder; the base becomes the folder above &lt;api&gt;/&lt;chapter&gt; (or the folder's parent).</summary>

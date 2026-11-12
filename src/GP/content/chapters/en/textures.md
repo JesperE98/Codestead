@@ -347,8 +347,19 @@ and does all the hard work for us. A library like `stb_image.h`.
 ### stb_image.h
 
 `stb_image.h` is a very popular single header image loading library by Sean Barrett that is able to load most
-popular file formats and is easy to integrate in your project(s). In the course's projects it is already available
-as `<stb_image.h>`. To use it, you add the following lines to one source file:
+popular file formats and is easy to integrate in your project(s). You put it into `libs/stb` in *Setting up your
+IDE*, and your project already knows that folder:
+
+:::ide clion vscode
+the `CMakeLists.txt` names `${LIBS}/stb` in `target_include_directories`, so the header is available as
+`<stb_image.h>`.
+:::
+:::ide vs rider
+`..\..\libs\stb` is one of the project's **Additional Include Directories**, so the header is available as
+`<stb_image.h>`.
+:::
+
+To use it, you add the following lines to one source file:
 
 ```cpp
 #define STB_IMAGE_IMPLEMENTATION

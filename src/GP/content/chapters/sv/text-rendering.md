@@ -51,7 +51,32 @@ lika bra – deras konturer är antingen TrueTypes kvadratiska eller PostScripts
 FreeType kan laddas ned från projektets webbplats; du kan välja att kompilera biblioteket själv eller använda ett av de
 förkompilerade (på Windows till exempel vcpkg-paketet `freetype`, på Linux distributionens utvecklingspaket för
 `libfreetype`). Se till att länka mot `freetype.lib` (eller `-lfreetype`) och att kompilatorn vet var headerfilerna
-finns.
+finns. För ditt projekt:
+
+:::ide clion vscode
+Installera FreeType – på Debian och Ubuntu `libfreetype-dev`, på macOS `brew install freetype`, på Windows med
+[vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview) `vcpkg install freetype:x64-windows` – och lägg
+till två rader i slutet av din `CMakeLists.txt`, för det här och alla senare kapitel:
+
+```text
+find_package(Freetype REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE Freetype::Freetype)
+```
+
+`find_package` hittar det installerade biblioteket, och att länka mot målet `Freetype::Freetype` lägger till dess
+include-mapp och dess bibliotek. Med vcpkg måste CMake använda vcpkg:s toolchain-fil: ge CMake
+`-DCMAKE_TOOLCHAIN_FILE=<vcpkg>/scripts/buildsystems/vcpkg.cmake` (i CLion under **CMake options** i profilen, i VS Code
+i inställningen `cmake.configureSettings`). Toolchain-filen kopierar då också FreeTypes DLL bredvid ditt program.
+:::
+:::ide vs rider
+Enklast på Windows är [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview):
+`vcpkg install freetype:x64-windows` bygger FreeType, och `vcpkg integrate install` (en gång) gör att varje Visual
+Studio-projekt hittar biblioteken som vcpkg installerade – Rider bygger samma projekt. Ditt projekt får då FreeTypes
+include-mapp och bibliotek av sig självt, och vcpkg kopierar FreeTypes DLL bredvid din `.exe` när du bygger. Utan vcpkg
+bygger du FreeType från källkoden med CMake, lägger till dess `include`-mapp bland **Additional Include Directories**,
+dess `.lib` bland **Additional Dependencies** (och filens mapp bland **Additional Library Directories**), och kopierar
+dess DLL bredvid din `.exe` – programmet skulle inte starta utan den.
+:::
 
 Inkludera sedan rätt headers:
 
