@@ -36,7 +36,7 @@ public partial class LearningWindow
         bar.Bind(ProgressBar.ForegroundProperty, this.GetResourceObservable("CsSuccess"));
         taskPanel.Children.Add(bar);
 
-        foreach (var task in tasks) taskPanel.Children.Add(TaskItem(task));
+        for (int i = 0; i < tasks.Count; i++) taskPanel.Children.Add(TaskItem(tasks[i], i));
 
         if (done == tasks.Count)
         {
@@ -60,7 +60,7 @@ public partial class LearningWindow
         }
     }
 
-    private Control TaskItem(TaskInfo task)
+    private Control TaskItem(TaskInfo task, int index)
     {
         var key = task.Key;
         bool done = state.Progress.ContainsKey(key);
@@ -102,6 +102,7 @@ public partial class LearningWindow
             ToolTip.SetTip(chips, T("tasks.perFamily"));
             main.Children.Add(chips);
         }
+        if (tool.TaskStatus(task, index) is { } status) main.Children.Add(status);
 
         var hint = task.Hint;
         var solution = task.Solution;

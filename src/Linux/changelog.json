@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.6.4",
+    "date": "2026-11-12",
+    "changes": {
+      "en": [
+        "Behind the scenes: the learning window shared with Codestead GP can now let a tool show the tasks in its own panel. Nothing changes in how you use the app."
+      ],
+      "sv": [
+        "Bakom kulisserna: lärfönstret som delas med Codestead GP kan nu låta ett verktyg visa uppgifterna i sin egen panel. Inget ändras i hur du använder appen."
+      ],
+      "de": [
+        "Hinter den Kulissen: Das mit Codestead GP geteilte Lernfenster kann ein Tool die Aufgaben jetzt in seinem eigenen Feld zeigen lassen. An der Bedienung ändert sich nichts."
+      ],
+      "fr": [
+        "En coulisses : la fenêtre d'apprentissage partagée avec Codestead GP peut désormais laisser un outil afficher les tâches dans son propre panneau. Rien ne change dans votre utilisation de l'application."
+      ],
+      "es": [
+        "Entre bastidores: la ventana de aprendizaje compartida con Codestead GP ahora puede dejar que una herramienta muestre las tareas en su propio panel. No cambia nada en cómo usas la aplicación."
+      ],
+      "zh": [
+        "幕后改动：与 Codestead GP 共享的学习窗口现在可以让工具在自己的面板中显示任务。应用的使用方式没有任何变化。"
+      ],
+      "ja": [
+        "内部の変更：Codestead GP と共有している学習ウィンドウで、ツールが自分のパネルにタスクを表示できるようになりました。アプリの使い方は変わりません。"
+      ]
+    }
+  },
+  {
     "version": "0.6.3",
     "date": "2026-11-11",
     "changes": {

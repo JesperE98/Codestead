@@ -1,5 +1,8 @@
 # introduction – DirectX 12
 
+**No tasks** (since GP 0.2.1): the learner has no IDE or libraries yet – they come in `api` and `ide-setup`, and
+the first tasks are in `creating-a-window`. Start = solution; the chapter only shows the program and its expected result.
+
 Start: the finished Hello Triangle program (`main.cpp` + `shaders.hlsl`): a window "LearnDirectX" with an 800×600
 client area, cleared to `(0.2, 0.3, 0.3, 1.0)` (RGB 51, 77, 77), with an orange `(1.0, 0.5, 0.2, 1.0)`
 (RGB 255, 128, 51) triangle: top (400, 150), bottom right (600, 450), bottom left (200, 450) in client pixels.

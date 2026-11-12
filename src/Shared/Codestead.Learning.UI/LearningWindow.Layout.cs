@@ -89,7 +89,7 @@ public partial class LearningWindow
         lessonScroll.Content = lessonPanel;
 
         // Workbench: tasks (or the "read first" card) above, the tool's workbench (Codestead Linux: the terminal) below
-        tasksCard.Child = new ScrollViewer { Content = taskPanel };
+        if (!tool.HostsTasks) tasksCard.Child = new ScrollViewer { Content = taskPanel };
         tasksCard.Classes.Add("card");
         gateCard.Classes.Add("card");
         gateCard.Child = gatePanel;
@@ -185,10 +185,12 @@ public partial class LearningWindow
         body.ColumnDefinitions[3].Width = shown ? workbenchWidth : new GridLength(0);
         splitter.IsVisible = shown;
         workbenchFrame.IsVisible = shown;
-        Grid.SetRow(workbenchFrame, lesson ? 2 : 0);
-        Grid.SetRowSpan(workbenchFrame, lesson ? 1 : 3);
         bool unlocked = lesson && IsUnlocked(chapter);
-        tasksCard.IsVisible = unlocked;
+        // A tool that hosts the tasks gets the whole column once they are unlocked (no tasks card above it).
+        bool below = lesson && !(tool.HostsTasks && unlocked);
+        Grid.SetRow(workbenchFrame, below ? 2 : 0);
+        Grid.SetRowSpan(workbenchFrame, below ? 1 : 3);
+        tasksCard.IsVisible = unlocked && !tool.HostsTasks;
         gateCard.IsVisible = lesson && !unlocked;
         if (!gateCard.IsVisible) return;
 

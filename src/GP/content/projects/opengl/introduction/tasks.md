@@ -1,5 +1,8 @@
 # Introduction – tasks (OpenGL)
 
+**No tasks** (since GP 0.2.1): the learner has no IDE or libraries yet – they come in `api` and `ide-setup`, and
+the first tasks are in `creating-a-window`. Start = solution; the chapter only shows the program and its expected result.
+
 Start and solution: learnopengl's `hello_triangle.cpp` (one file, `main.cpp`, shaders as embedded strings).
 The program opens an 800×600 window titled "LearnOpenGL", clears it to `(0.2, 0.3, 0.3, 1.0)` (dark teal,
 sRGB 51,76,76) and draws an orange triangle `(1.0, 0.5, 0.2, 1.0)` (255,128,51) with the corners

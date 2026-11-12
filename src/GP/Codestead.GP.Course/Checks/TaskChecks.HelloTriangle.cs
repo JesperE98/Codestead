@@ -3,6 +3,9 @@ namespace Codestead.GP.Course.Checks;
 // Hello Triangle: the orange triangle, then the rectangle from an index buffer.
 public static partial class TaskChecks
 {
+    /// <summary>The orange of the course's first triangle: (1.0, 0.5, 0.2).</summary>
+    private static bool Orange(CheckContext c, double x, double y) => c.PixelIs(x, y, 1.0, 0.5, 0.2);
+
     /// <summary>The triangle (-0.5, -0.5), (0.5, -0.5), (0, 0.5) is drawn in orange (the same place on screen in every API).</summary>
     private static bool TriangleDrawn(CheckContext c) => Orange(c, 0.5, 0.55) && c.IsClear(0.1, 0.1);
 

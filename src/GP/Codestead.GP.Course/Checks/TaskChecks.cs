@@ -13,7 +13,6 @@ public static partial class TaskChecks
         {
             foreach (var (task, check) in checks) d[$"{chapter}/{task}"] = check;
         }
-        Add("introduction", Introduction);
         Add("creating-a-window", CreatingAWindow);
         Add("hello-window", HelloWindow);
         Add("hello-triangle", HelloTriangle);

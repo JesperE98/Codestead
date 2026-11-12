@@ -20,5 +20,5 @@ PSInput VSMain(float4 position : POSITION)
 // The pixel shader: runs once per pixel the triangle covers and returns its colour (RGBA).
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    return float4(0.2f, 0.8f, 0.3f, 1.0f);
+    return float4(1.0f, 0.5f, 0.2f, 1.0f);
 }

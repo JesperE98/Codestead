@@ -149,7 +149,7 @@ public sealed partial class GpTool
         {
             Dispatcher.UIThread.Post(() =>
             {
-                if (gen != generation || cancel.IsCancellationRequested || done.Status != TaskStatus.RanToCompletion) return;
+                if (gen != generation || cancel.IsCancellationRequested || done.Status != System.Threading.Tasks.TaskStatus.RanToCompletion) return;
                 checkingFingerprint = "";
                 report = done.Result;
                 Hand(report);
@@ -185,6 +185,16 @@ public sealed partial class GpTool
 
     public override void Rendered() => RenderPanel();
 
+    /// <summary>The tasks live in the "Your project" panel, each with its state under it.</summary>
+    public override bool HostsTasks => true;
+
+    public override Avalonia.Controls.Control? TaskStatus(Codestead.Learning.UI.TaskInfo task, int index)
+    {
+        var rows = Rows();
+        if (index < 0 || index >= rows.Count) return null;
+        return panel.StatusLine(rows[index], index == Selected(rows), Window.T);
+    }
+
     // ---------- The panel ----------
 
     private static (string, object)[] Args(CheckMessage m) => m.Args.Select(a => (a.Key, (object)a.Value)).ToArray();
@@ -192,6 +202,34 @@ public sealed partial class GpTool
     private void RenderPanel()
     {
         if (chapter == "" || Window is null) return;
+        var rows = Rows();
+        bool unlocked = Window.IsChapterUnlocked(chapter);
+        bool checking = checkingFingerprint != "";
+        bool current = report is { } r0 && r0.Fingerprint == status.Fingerprint;
+        int selected = Selected(rows);
+        bool missing = folder is not null && !Directory.Exists(folder);
+        var model = new PanelModel(chapter, watchedApi, Apis.Get(watchedApi).FullName, folder, missing,
+            folder is null ? Folders.Suggestion(watchedApi, chapter) : null, HasOldCode(), status, checking, StatusLine(checking, current), rows, selected);
+        // The window's task list (text, hints, solutions) sits in the panel once the tasks are unlocked; each task's
+        // state comes from TaskStatus, so the list is refreshed with the panel.
+        if (unlocked && rows.Count > 0)
+        {
+            Window.TaskList.Margin = new Avalonia.Thickness(0);
+            Window.RefreshTasks();
+            panel.HostedTasks = Window.TaskList;
+        }
+        else panel.HostedTasks = null;
+        panel.Render(model, Window.T);
+        if (rows.Count > 0) panel.Picture.Show(chapter, watchedApi, selected, Window.T);
+    }
+
+    /// <summary>The task whose expected result the panel shows: the one clicked, else the first not done.</summary>
+    private int Selected(List<TaskRow> rows) => selectedTask >= 0 && selectedTask < rows.Count ? selectedTask
+        : rows.FindIndex(r => r.State != TaskState.Done) is var first && first >= 0 ? first : Math.Max(0, rows.Count - 1);
+
+    /// <summary>Every task's state: done, locked, waiting for a folder, a build or a run, being checked, or not yet.</summary>
+    private List<TaskRow> Rows()
+    {
         var tasks = GpCourse.Tasks(chapter, watchedApi);
         bool unlocked = Window.IsChapterUnlocked(chapter);
         bool checking = checkingFingerprint != "";
@@ -218,13 +256,7 @@ public sealed partial class GpTool
             else state = TaskState.Checking;
             rows.Add(new TaskRow(i, Title(CourseText.TaskText(chapter, tasks[i].Id, Window.Lang, watchedApi)), state, messages));
         }
-        int selected = selectedTask >= 0 && selectedTask < rows.Count ? selectedTask
-            : rows.FindIndex(r => r.State != TaskState.Done) is var first && first >= 0 ? first : Math.Max(0, rows.Count - 1);
-        bool missing = folder is not null && !Directory.Exists(folder);
-        var model = new PanelModel(chapter, watchedApi, Apis.Get(watchedApi).FullName, folder, missing,
-            folder is null ? Folders.Suggestion(watchedApi, chapter) : null, HasOldCode(), status, checking, StatusLine(checking, current), rows, selected);
-        panel.Render(model, Window.T);
-        if (rows.Count > 0) panel.Picture.Show(chapter, watchedApi, selected, Window.T);
+        return rows;
     }
 
     private string StatusLine(bool checking, bool current)
