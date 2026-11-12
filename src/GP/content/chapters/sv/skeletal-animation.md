@@ -54,9 +54,9 @@ med `aiProcess_FlipUVs` tillagd, som vänder tillbaka dem. learnopengls GLM-hjä
 Det här är det första Vulkan-projektet som använder Assimp i stället för tinyobjloader, så ditt projekt behöver biblioteket:
 
 :::ide clion vscode
-Installera Assimp – på Debian och Ubuntu `libassimp-dev`, på macOS `brew install assimp`, på Windows med [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview)
-`vcpkg install assimp:x64-windows` – och lägg till två rader i slutet av din `CMakeLists.txt`, för det här och alla
-senare kapitel:
+Installera Assimp – på Debian och Ubuntu `libassimp-dev`, på macOS `brew install assimp`, på Windows med
+[vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview) `vcpkg install assimp:x64-windows` – och lägg till
+två rader i slutet av din `CMakeLists.txt`, för det här och alla senare kapitel:
 
 ```text
 find_package(assimp REQUIRED)
@@ -69,12 +69,13 @@ include-mapp och dess bibliotek. Med vcpkg måste CMake använda vcpkg:s toolcha
 i inställningen `cmake.configureSettings`). Toolchain-filen kopierar då också Assimps DLL bredvid ditt program.
 :::
 :::ide vs rider
-Enklast på Windows är [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview): `vcpkg install assimp:x64-windows` bygger Assimp, och `vcpkg integrate install` (en
-gång) gör att varje Visual Studio-projekt hittar biblioteken som vcpkg installerade – Rider bygger samma projekt. Ditt
-projekt får då Assimps include-mapp och bibliotek av sig självt, och vcpkg kopierar Assimps DLL bredvid din `.exe` när du
-bygger. Utan vcpkg bygger du Assimp från källkoden med CMake, lägger till dess `include`-mapp bland **Additional Include
-Directories**, dess `.lib` bland **Additional Dependencies** (och filens mapp bland **Additional Library
-Directories**), och kopierar dess DLL bredvid din `.exe` – programmet skulle inte starta utan den.
+Enklast på Windows är [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview):
+`vcpkg install assimp:x64-windows` bygger Assimp, och `vcpkg integrate install` (en gång) gör att varje Visual
+Studio-projekt hittar biblioteken som vcpkg installerade – Rider bygger samma projekt. Ditt projekt får då Assimps
+include-mapp och bibliotek av sig självt, och vcpkg kopierar Assimps DLL bredvid din `.exe` när du bygger. Utan vcpkg
+bygger du Assimp från källkoden med CMake, lägger till dess `include`-mapp bland **Additional Include Directories**,
+dess `.lib` bland **Additional Dependencies** (och filens mapp bland **Additional Library Directories**), och kopierar
+dess DLL bredvid din `.exe` – programmet skulle inte starta utan den.
 :::
 :::
 :::d3d12

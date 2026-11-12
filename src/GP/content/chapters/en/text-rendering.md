@@ -57,9 +57,9 @@ precompiled libraries (on Windows, for example, the vcpkg package `freetype`; on
 knows where to find the header files. For your project:
 
 :::ide clion vscode
-Install FreeType – on Debian and Ubuntu `libfreetype-dev`, on macOS `brew install freetype`, on Windows with [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview)
-`vcpkg install freetype:x64-windows` – and add two lines to the end of your `CMakeLists.txt`, for this and every later
-chapter:
+Install FreeType – on Debian and Ubuntu `libfreetype-dev`, on macOS `brew install freetype`, on Windows with
+[vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview) `vcpkg install freetype:x64-windows` – and add two
+lines to the end of your `CMakeLists.txt`, for this and every later chapter:
 
 ```text
 find_package(Freetype REQUIRED)
@@ -69,16 +69,17 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Freetype::Freetype)
 `find_package` finds the installed library, and linking the target `Freetype::Freetype` adds its include folder and its
 library. With vcpkg, CMake has to use vcpkg's toolchain file: pass
 `-DCMAKE_TOOLCHAIN_FILE=<vcpkg>/scripts/buildsystems/vcpkg.cmake` to CMake (in CLion under **CMake options** in the
-profile, in VS Code in the setting `cmake.configureSettings`). The toolchain then also copies FreeType's DLL next to your
-program.
+profile, in VS Code in the setting `cmake.configureSettings`). The toolchain then also copies FreeType's DLL next to
+your program.
 :::
 :::ide vs rider
-The easiest way on Windows is [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview): `vcpkg install freetype:x64-windows` builds FreeType, and `vcpkg integrate install`
-(once) makes every Visual Studio project find the libraries vcpkg installed – Rider builds the same projects. Your
-project then gets FreeType's include folder and library by itself, and vcpkg copies FreeType's DLL next to your `.exe` when you
-build. Without vcpkg you build FreeType from its sources with CMake, add its `include` folder to **Additional Include
-Directories**, its `.lib` to **Additional Dependencies** (and that file's folder to **Additional Library
-Directories**), and copy its DLL next to your `.exe` – the program would not start without it.
+The easiest way on Windows is [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview):
+`vcpkg install freetype:x64-windows` builds FreeType, and `vcpkg integrate install` (once) makes every Visual Studio
+project find the libraries vcpkg installed – Rider builds the same projects. Your project then gets FreeType's include
+folder and library by itself, and vcpkg copies FreeType's DLL next to your `.exe` when you build. Without vcpkg you
+build FreeType from its sources with CMake, add its `include` folder to **Additional Include Directories**, its `.lib`
+to **Additional Dependencies** (and that file's folder to **Additional Library Directories**), and copy its DLL next to
+your `.exe` – the program would not start without it.
 :::
 
 Then include the appropriate headers:

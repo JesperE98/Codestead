@@ -53,9 +53,9 @@ with `aiProcess_FlipUVs` added, which turns them back. learnopengl's GLM helpers
 This is the first Vulkan project that uses Assimp instead of tinyobjloader, so your project needs the library:
 
 :::ide clion vscode
-Install Assimp – on Debian and Ubuntu `libassimp-dev`, on macOS `brew install assimp`, on Windows with [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview)
-`vcpkg install assimp:x64-windows` – and add two lines to the end of your `CMakeLists.txt`, for this and every later
-chapter:
+Install Assimp – on Debian and Ubuntu `libassimp-dev`, on macOS `brew install assimp`, on Windows with
+[vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview) `vcpkg install assimp:x64-windows` – and add two
+lines to the end of your `CMakeLists.txt`, for this and every later chapter:
 
 ```text
 find_package(assimp REQUIRED)
@@ -69,12 +69,13 @@ profile, in VS Code in the setting `cmake.configureSettings`). The toolchain the
 program.
 :::
 :::ide vs rider
-The easiest way on Windows is [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview): `vcpkg install assimp:x64-windows` builds Assimp, and `vcpkg integrate install`
-(once) makes every Visual Studio project find the libraries vcpkg installed – Rider builds the same projects. Your
-project then gets Assimp's include folder and library by itself, and vcpkg copies Assimp's DLL next to your `.exe` when you
-build. Without vcpkg you build Assimp from its sources with CMake, add its `include` folder to **Additional Include
-Directories**, its `.lib` to **Additional Dependencies** (and that file's folder to **Additional Library
-Directories**), and copy its DLL next to your `.exe` – the program would not start without it.
+The easiest way on Windows is [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview):
+`vcpkg install assimp:x64-windows` builds Assimp, and `vcpkg integrate install` (once) makes every Visual Studio project
+find the libraries vcpkg installed – Rider builds the same projects. Your project then gets Assimp's include folder and
+library by itself, and vcpkg copies Assimp's DLL next to your `.exe` when you build. Without vcpkg you build Assimp from
+its sources with CMake, add its `include` folder to **Additional Include Directories**, its `.lib` to **Additional
+Dependencies** (and that file's folder to **Additional Library Directories**), and copy its DLL next to your `.exe` –
+the program would not start without it.
 :::
 :::
 :::d3d12
