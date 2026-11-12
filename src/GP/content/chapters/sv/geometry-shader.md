@@ -47,6 +47,15 @@ planetens vertex- och indexbuffer, dess två diffuse maps, uniform buffern med `
 modellmatrisen som push constant) skapas redan i `initVulkan()` men används inte förrän i uppgiften `planet`. Varje
 `.geom`-fil kompileras som de andra shadrarna; `geometry_shader.geom` och `normal_visualization.geom` har bara sina
 layout-rader och en tom `main`, och `explode.geom` släpper igenom varje triangel oförändrad.
+
+:::ide clion vscode
+Din `CMakeLists.txt` kompilerar dem – dess rad `file(GLOB …)` tar med `shaders/*.geom` – till
+`shaders/<namn>.geom.spv`.
+:::
+:::ide vs rider
+Pre-build-händelsen i ditt projekt kompilerar dem – dess loop tar med `shaders\*.geom` – till
+`shaders\<namn>.geom.spv`.
+:::
 :::
 :::d3d12
 Projektet börjar med learnopengls första exempel före geometry shadern: ingen kamera, inga matriser, rensningsfärgen

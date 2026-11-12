@@ -40,6 +40,17 @@ typer till GLM:s, som fria `inline`-funktioner: `ConvertMatrixToGLMFormat`, `Get
 aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace`, **utan** `aiProcess_FlipUVs`: assimp vänder redan glTF:s
 texturkoordinater till OpenGL:s konvention med v uppåt, och `stbi_set_flip_vertically_on_load(true)` vänder bilden på
 samma sätt. Programmet använder OpenGL 3.3 core, som learnopengls demo.
+
+:::ide clion vscode
+Din `CMakeLists.txt` behöver de två Assimp-raderna från kapitlet *Assimp* i slutet. `assimp_glm_helpers.h` behöver,
+precis som `model.h` och `mesh.h`, ingenting: `main.cpp` inkluderar dem inom citattecken, från sin egen mapp.
+:::
+:::ide vs rider
+Med vcpkg:s integration hittar projektet Assimp av sig självt; utan den gör du Assimp-inställningarna från kapitlet
+*Assimp* i det här kapitlets projekt också. Lägg till `assimp_glm_helpers.h`, `model.h` och `mesh.h` i projektet
+(**Project → Add Existing Item…**; i Rider **Add → Existing Item…** i projektets snabbmeny) för att öppna dem från
+Solution Explorer; de behöver ingen inställning.
+:::
 :::
 :::vulkan
 Projektet läser in modellen med assimp som vulkan-tutorials `loadModel` gör: hela modellen blir en lista med vertexar och
@@ -83,6 +94,14 @@ Projektet läser in modellen med klassen `Model` från kapitlet *Modell* och ass
 vänder glTF:s texturkoordinater till OpenGL:s konvention med v uppåt, flaggan vänder tillbaka dem, och i Direct3D är
 v = 0 bildens översta rad. Ingen `aiProcess_ConvertToLeftHanded`: kursens matematik är högerhänt (`XMMatrixLookAtRH`,
 `XMMatrixPerspectiveFovRH`). Modellmatrisen är en root constant, som i kapitlet *Modell*.
+
+:::ide clion vscode
+Din `CMakeLists.txt` behöver de två Assimp-raderna från kapitlet *Assimp* i slutet.
+:::
+:::ide vs rider
+Med vcpkg:s integration hittar projektet Assimp av sig självt; utan den gör du Assimp-inställningarna från kapitlet
+*Assimp* i det här kapitlets projekt också.
+:::
 :::
 
 Kommentarerna `// TODO:` visar var din kod ska in. Bygg och kör programmet i din IDE: en rak tentakel mitt i fönstret –

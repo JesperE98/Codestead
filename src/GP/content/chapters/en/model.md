@@ -73,6 +73,17 @@ constructor and `Draw`, the bodies of `loadModel`, `processNode` and `processMes
 two TODOs of its own: loading the model and drawing it. The program is linked with Assimp, as you set it up in the
 *Assimp* chapter. Until the model is drawn, your program shows only the dark grey background (0.05, 0.05, 0.05) – every
 step before that compiles and runs, it just doesn't draw anything yet.
+
+:::ide clion vscode
+This is the first OpenGL project that calls Assimp: add the two Assimp lines from the *Assimp* chapter to the end of
+this chapter's `CMakeLists.txt`. `model.h` needs nothing – `#include "model.h"` finds it next to `main.cpp`.
+:::
+:::ide vs rider
+This is the first OpenGL project that calls Assimp. With vcpkg's integration the project finds it by itself; without it,
+make the Assimp settings from the *Assimp* chapter in this chapter's project too. Add `model.h` to the project
+(**Project → Add Existing Item…**; in Rider **Add → Existing Item…** in the project's context menu) to open it from the
+Solution Explorer – `#include "model.h"` finds it next to `main.cpp` without a setting.
+:::
 :::
 :::vulkan
 Vulkan has no model loader, and like vulkan-tutorial.com's chapter *Loading models* we use the small header-only
@@ -150,6 +161,15 @@ the bodies of `loadModel`, `processNode` and `loadMaterialTextures`, and two par
 the model member, loading it, freeing its upload buffers and drawing it. Until the model is drawn, your program shows
 only the dark grey background (0.05, 0.05, 0.05) – every step before that compiles and runs, it just doesn't draw
 anything yet.
+
+:::ide clion vscode
+This is the first DirectX 12 project that calls Assimp: add the two Assimp lines from the *Assimp* chapter to the end of
+this chapter's `CMakeLists.txt`.
+:::
+:::ide vs rider
+This is the first DirectX 12 project that calls Assimp. With vcpkg's integration the project finds it by itself;
+without it, make the Assimp settings from the *Assimp* chapter in this chapter's project too.
+:::
 :::
 
 :::opengl d3d12
@@ -357,6 +377,15 @@ errors:
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 ```
+
+:::ide clion vscode
+The header is in `libs/tinyobjloader` from *Setting up your IDE*, and your `CMakeLists.txt` already names
+`${LIBS}/tinyobjloader` in `target_include_directories`: there is nothing to add.
+:::
+:::ide vs rider
+The header is in `libs/tinyobjloader` from *Setting up your IDE*, and `..\..\libs\tinyobjloader` is already one of the
+project's **Additional Include Directories**: there is nothing to add.
+:::
 
 Put a configuration variable with the model's path next to the window size, and add `<string>` and
 `<unordered_map>` to the includes:

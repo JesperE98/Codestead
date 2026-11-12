@@ -82,6 +82,24 @@ the course's addition, so that the quad shows something before there is a comput
 texture without data. The compute shader's file is there, empty. Build and run the program: it shows a dark blue window;
 the `// TODO:` comments mark where your code goes.
 
+:::opengl
+:::ide vs rider
+Add `shader_c.h` and `computeShader.comp` to the project (**Project → Add Existing Item…**; in Rider **Add → Existing
+Item…** in the project's context menu) to open them from the Solution Explorer; the program reads the `.comp` file while
+it runs, like the other shaders.
+:::
+:::
+:::vulkan
+:::ide clion vscode
+Your `CMakeLists.txt` compiles the compute shader too – its `file(GLOB …)` line lists `shaders/*.comp` – to
+`shaders/compute_shader.comp.spv`.
+:::
+:::ide vs rider
+The pre-build event of your project compiles the compute shader too – its loop lists `shaders\*.comp` – to
+`shaders\compute_shader.comp.spv`.
+:::
+:::
+
 ## Limits
 
 A dispatch can't be arbitrarily large. Three limits matter: the largest number of work groups in each dimension of a

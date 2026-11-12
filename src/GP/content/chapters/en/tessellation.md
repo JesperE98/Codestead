@@ -57,6 +57,23 @@ landscape from the same place. Build and run the program: it shows the grey CPU 
 where the GPU version goes.
 
 :::opengl
+:::ide vs rider
+Add `shader_t.h` and the `gpuheight` shaders to the project (**Project → Add Existing Item…**; in Rider **Add → Existing
+Item…** in the project's context menu) to open them from the Solution Explorer; the build needs no setting for them.
+:::
+:::
+:::vulkan
+:::ide clion vscode
+Your `CMakeLists.txt` compiles the two new stages too – its `file(GLOB …)` line lists `shaders/*.tesc` and
+`shaders/*.tese` – to `shaders/gpuheight.tesc.spv` and `shaders/gpuheight.tese.spv`.
+:::
+:::ide vs rider
+The pre-build event of your project compiles the two new stages too – its loop lists `shaders\*.tesc` and
+`shaders\*.tese` – to `shaders\gpuheight.tesc.spv` and `shaders\gpuheight.tese.spv`.
+:::
+:::
+
+:::opengl
 The first task asks for the 4.1 context and prints the largest tessellation level the GPU supports:
 
 ```cpp

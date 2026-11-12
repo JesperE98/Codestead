@@ -367,6 +367,11 @@ The shaders are learnopengl's `1.model_loading.vs/.fs`: the vertex shader takes 
 coordinates (locations 0, 1 and 2), and the fragment shader outputs the colour of `texture_diffuse1` – a name you'll
 understand in the next chapter. `mesh.h` waits with `// TODO:` comments for the *Mesh* chapter; `model.h` and
 Assimp's headers arrive in the *Model* chapter.
+
+:::ide vs rider
+Add `mesh.h` to the project (**Project → Add Existing Item…**; in Rider **Add → Existing Item…** in the project's
+context menu) to open it from the Solution Explorer; `#include "mesh.h"` finds it next to `main.cpp` without a setting.
+:::
 :::
 :::vulkan
 The project is learnopengl's `model_loading.cpp` scene before the model, in Vulkan: the camera of the *Camera*

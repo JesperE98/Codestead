@@ -73,6 +73,18 @@ konstruktorn och `Draw`, kropparna i `loadModel`, `processNode` och `processMesh
 två egna TODO: att läsa in modellen och att rita den. Programmet länkas med Assimp, så som du satte upp det i kapitlet
 *Assimp*. Tills modellen ritas visar ditt program bara den mörkgrå bakgrunden (0.05, 0.05, 0.05) – varje steg
 dessförinnan kompileras och körs, det ritar bara ingenting än.
+
+:::ide clion vscode
+Det här är det första OpenGL-projektet som anropar Assimp: lägg till de två Assimp-raderna från kapitlet *Assimp* i
+slutet av det här kapitlets `CMakeLists.txt`. `model.h` behöver ingenting – `#include "model.h"` hittar den bredvid
+`main.cpp`.
+:::
+:::ide vs rider
+Det här är det första OpenGL-projektet som anropar Assimp. Med vcpkg:s integration hittar projektet det av sig självt;
+utan den gör du Assimp-inställningarna från kapitlet *Assimp* i det här kapitlets projekt också. Lägg till `model.h` i
+projektet (**Project → Add Existing Item…**; i Rider **Add → Existing Item…** i projektets snabbmeny) för att öppna den
+från Solution Explorer – `#include "model.h"` hittar den bredvid `main.cpp` utan någon inställning.
+:::
 :::
 :::vulkan
 Vulkan har ingen modellinläsare, och precis som vulkan-tutorial.com:s kapitel *Loading models* använder vi det lilla
@@ -149,6 +161,15 @@ kropparna i `loadModel`, `processNode` och `loadMaterialTextures`, två delar av
 modellmedlemmen, inläsningen av den, frigörandet av dess upload-buffrar och ritandet. Tills modellen ritas visar ditt
 program bara den mörkgrå bakgrunden (0.05, 0.05, 0.05) – varje steg dessförinnan kompileras och körs, det ritar bara
 ingenting än.
+
+:::ide clion vscode
+Det här är det första DirectX 12-projektet som anropar Assimp: lägg till de två Assimp-raderna från kapitlet *Assimp* i
+slutet av det här kapitlets `CMakeLists.txt`.
+:::
+:::ide vs rider
+Det här är det första DirectX 12-projektet som anropar Assimp. Med vcpkg:s integration hittar projektet det av sig
+självt; utan den gör du Assimp-inställningarna från kapitlet *Assimp* i det här kapitlets projekt också.
+:::
 :::
 
 :::opengl d3d12
@@ -354,6 +375,15 @@ länkfel:
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 ```
+
+:::ide clion vscode
+Headerfilen ligger i `libs/tinyobjloader` från *Sätt upp din IDE*, och din `CMakeLists.txt` anger redan
+`${LIBS}/tinyobjloader` i `target_include_directories`: det finns inget att lägga till.
+:::
+:::ide vs rider
+Headerfilen ligger i `libs/tinyobjloader` från *Sätt upp din IDE*, och `..\..\libs\tinyobjloader` är redan en av
+projektets **Additional Include Directories**: det finns inget att lägga till.
+:::
 
 Lägg en konfigurationsvariabel med modellens sökväg bredvid fönsterstorleken, och lägg till `<string>` och
 `<unordered_map>` bland includerna:

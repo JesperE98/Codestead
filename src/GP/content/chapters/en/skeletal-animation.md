@@ -39,6 +39,17 @@ GLM's, as free `inline` functions: `ConvertMatrixToGLMFormat`, `GetGLMVec`, `Get
 aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace`, **without** `aiProcess_FlipUVs`: assimp already turns glTF's
 texture coordinates into OpenGL's v-up convention, and `stbi_set_flip_vertically_on_load(true)` turns the image the
 same way. The program uses OpenGL 3.3 core, like learnopengl's demo.
+
+:::ide clion vscode
+Your `CMakeLists.txt` needs the two Assimp lines from the *Assimp* chapter at its end. `assimp_glm_helpers.h`, like
+`model.h` and `mesh.h`, needs nothing: `main.cpp` includes them in quotes, from its own folder.
+:::
+:::ide vs rider
+With vcpkg's integration the project finds Assimp by itself; without it, make the Assimp settings from the *Assimp*
+chapter in this chapter's project too. Add `assimp_glm_helpers.h`, `model.h` and `mesh.h` to the project (**Project →
+Add Existing Item…**; in Rider **Add → Existing Item…** in the project's context menu) to open them from the Solution
+Explorer; they need no setting.
+:::
 :::
 :::vulkan
 The project loads the model with assimp as vulkan-tutorial's `loadModel` does: the whole model becomes one list of
@@ -83,6 +94,14 @@ The project loads the model with the *Model* chapter's `Model` class and assimp,
 glTF's texture coordinates into OpenGL's v-up convention, the flag turns them back, and Direct3D's v = 0 is the image's
 top row. There is no `aiProcess_ConvertToLeftHanded`: the course's maths is right-handed (`XMMatrixLookAtRH`,
 `XMMatrixPerspectiveFovRH`). The model matrix is a root constant, as in the *Model* chapter.
+
+:::ide clion vscode
+Your `CMakeLists.txt` needs the two Assimp lines from the *Assimp* chapter at its end.
+:::
+:::ide vs rider
+With vcpkg's integration the project finds Assimp by itself; without it, make the Assimp settings from the *Assimp*
+chapter in this chapter's project too.
+:::
 :::
 
 The `// TODO:` comments mark where your code goes. Build and run the program in your IDE: a straight tentacle in the

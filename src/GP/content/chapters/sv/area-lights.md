@@ -55,6 +55,12 @@ Kursen tar tabellerna från artikelns referensimplementation, repot `ltc_code`. 
 överst i headerfilen. learnopengl levererar samma tal. Varje projekt kopierar headerfilen oförändrad till platsen
 bredvid sin `main.cpp`.
 
+:::ide vs rider
+Lägg till `ltc_matrix.hpp` i projektet (**Project → Add Existing Item…**; i Rider **Add → Existing Item…** i projektets
+snabbmeny) för att öppna den från Solution Explorer; `#include "ltc_matrix.hpp"` hittar den bredvid `main.cpp` utan
+någon inställning.
+:::
+
 ```quiz
 Varför kan shadern räkna ut en GGX-liknande reflektion över en polygon utan att integrera GGX?
 - [ ] Den ersätter polygonen med en enda punkt i mitten och räknar ut GGX där

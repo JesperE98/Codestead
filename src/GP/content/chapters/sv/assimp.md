@@ -359,6 +359,12 @@ Shadrarna är learnopengls `1.model_loading.vs/.fs`: vertex shadern tar emot en 
 texturkoordinater (location 0, 1 och 2), och fragment shadern ger ut färgen från `texture_diffuse1` – ett namn du
 förstår i nästa kapitel. `mesh.h` väntar med `// TODO:`-kommentarer på kapitlet *Mesh*; `model.h` och Assimps
 headerfiler kommer i kapitlet *Model*.
+
+:::ide vs rider
+Lägg till `mesh.h` i projektet (**Project → Add Existing Item…**; i Rider **Add → Existing Item…** i projektets
+snabbmeny) för att öppna den från Solution Explorer; `#include "mesh.h"` hittar den bredvid `main.cpp` utan någon
+inställning.
+:::
 :::
 :::vulkan
 Projektet är learnopengls scen `model_loading.cpp` före modellen, i Vulkan: kameran från kapitlet *Camera* i

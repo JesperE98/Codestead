@@ -49,6 +49,13 @@ maps, the uniform buffer with `view` and `proj`, the descriptor set, the model m
 created in `initVulkan()` but unused until the `planet` task. Every `.geom` file is compiled like the other shaders;
 `geometry_shader.geom` and `normal_visualization.geom` only have their layout lines and an empty `main`, and
 `explode.geom` passes every triangle through unchanged.
+
+:::ide clion vscode
+Your `CMakeLists.txt` compiles them – its `file(GLOB …)` line lists `shaders/*.geom` – to `shaders/<name>.geom.spv`.
+:::
+:::ide vs rider
+The pre-build event of your project compiles them – its loop lists `shaders\*.geom` – to `shaders\<name>.geom.spv`.
+:::
 :::
 :::d3d12
 The project starts with learnopengl's first example before the geometry shader: no camera, no matrices, the clear
