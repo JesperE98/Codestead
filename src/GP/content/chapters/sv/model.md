@@ -70,9 +70,9 @@ Funktionen `Draw` är inget märkvärdigt; den loopar helt enkelt över alla mes
 Projektet är resultatet av *Mesh*, med en ny fil `model.h`. Dess `// TODO:`-kommentarer visar var din kod ska in:
 konstruktorn och `Draw`, kropparna i `loadModel`, `processNode` och `processMesh`, samt funktionerna
 `loadMaterialTextures` och `TextureFromFile`. `main.cpp` inkluderar nu `"model.h"` (som inkluderar `"mesh.h"`) och har
-två egna TODO: att läsa in modellen och att rita den. Programmet länkas med Assimp (`-lassimp`). Tills modellen ritas
-visar ditt program bara den mörkgrå bakgrunden (0.05, 0.05, 0.05) – varje steg dessförinnan kompileras och körs, det
-ritar bara ingenting än.
+två egna TODO: att läsa in modellen och att rita den. Programmet länkas med Assimp, så som du satte upp det i kapitlet
+*Assimp*. Tills modellen ritas visar ditt program bara den mörkgrå bakgrunden (0.05, 0.05, 0.05) – varje steg
+dessförinnan kompileras och körs, det ritar bara ingenting än.
 :::
 :::vulkan
 Vulkan har ingen modellinläsare, och precis som vulkan-tutorial.com:s kapitel *Loading models* använder vi det lilla

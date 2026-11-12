@@ -545,9 +545,18 @@ glslc shaders/shader.frag -o shaders/frag.spv
 ```
 
 Fördelen är att drivrutinen inte behöver en egen fullständig GLSL-kompilator (varje tillverkares kompilator brukade
-godta lite olika GLSL), och att syntaxfel syns när du bygger, inte när programmet körs. Din `CMakeLists.txt` från *Sätt
-upp din IDE* kompilerar båda shaderfilerna till `shaders/vert.spv` och `shaders/frag.spv` med `glslc` innan den bygger
-`main.cpp`; ett fel i en shader rapporteras i din IDE:s byggutdata som vilket kompileringsfel som helst.
+godta lite olika GLSL), och att syntaxfel syns när du bygger, inte när programmet körs.
+
+:::ide clion vscode
+Din `CMakeLists.txt` från *Sätt upp din IDE* kompilerar båda shaderfilerna till `shaders/vert.spv` och
+`shaders/frag.spv` med `glslc` innan den bygger `main.cpp`; ett fel i en shader rapporteras i din IDE:s byggutdata som
+vilket kompileringsfel som helst.
+:::
+:::ide vs rider
+Pre-build-händelsen i ditt projekt från *Sätt upp din IDE* kompilerar båda shaderfilerna till `shaders/vert.spv` och
+`shaders/frag.spv` med `glslc` innan `main.cpp` kompileras; ett fel i en shader syns i byggutdata med meddelandet från
+`glslc`, och bygget stannar.
+:::
 
 När programmet körs laddar det bytekoden med en liten hjälpfunktion, `readFile`:
 

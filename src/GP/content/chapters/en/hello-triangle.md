@@ -544,9 +544,18 @@ glslc shaders/shader.frag -o shaders/frag.spv
 ```
 
 The advantage is that the driver doesn't need a full GLSL compiler of its own (each vendor's compiler used to accept
-slightly different GLSL), and syntax errors show up at build time, not when the program runs. Your `CMakeLists.txt` from
-*Setting up your IDE* compiles both shader files to `shaders/vert.spv` and `shaders/frag.spv` with `glslc` before it
-builds `main.cpp`; a mistake in a shader is reported in your IDE's build output like any other compile error.
+slightly different GLSL), and syntax errors show up at build time, not when the program runs.
+
+:::ide clion vscode
+Your `CMakeLists.txt` from *Setting up your IDE* compiles both shader files to `shaders/vert.spv` and
+`shaders/frag.spv` with `glslc` before it builds `main.cpp`; a mistake in a shader is reported in your IDE's build
+output like any other compile error.
+:::
+:::ide vs rider
+The pre-build event of your project from *Setting up your IDE* compiles both shader files to `shaders/vert.spv` and
+`shaders/frag.spv` with `glslc` before `main.cpp` is compiled; a mistake in a shader shows up in the build output with
+`glslc`'s message, and the build stops.
+:::
 
 At run time, the program loads the bytecode with a small helper, `readFile`:
 

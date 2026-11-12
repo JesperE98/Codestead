@@ -577,8 +577,17 @@ matematikbibliotek. Som tur är finns det ett lättanvänt matematikbibliotek sk
 ### GLM
 
 GLM står för Open**GL** **M**athematics och är ett *header-only*-bibliotek, vilket betyder att vi bara behöver inkludera
-rätt headerfiler; ingen länkning eller kompilering behövs. `CMakeLists.txt` från *Sätt upp din IDE* gör det redan
-tillgängligt. Det mesta av GLM:s funktionalitet som vi behöver finns i 3 headerfiler, som vi inkluderar så här:
+rätt headerfiler; ingen länkning eller kompilering behövs. Ditt projekt från *Sätt upp din IDE* gör det redan
+tillgängligt:
+
+:::ide clion vscode
+`CMakeLists.txt` länkar mot målet `glm::glm`, som lägger till GLM:s include-mapp.
+:::
+:::ide vs rider
+GLM:s mapp, `..\..\libs\glm`, är en av projektets **Additional Include Directories**.
+:::
+
+Det mesta av GLM:s funktionalitet som vi behöver finns i 3 headerfiler, som vi inkluderar så här:
 
 ```cpp
 #include <glm/glm.hpp>
