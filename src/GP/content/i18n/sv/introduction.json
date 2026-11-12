@@ -1,25 +1,4 @@
 {
   "title": "Välkommen till grafikprogrammering",
-  "tasks": {
-    "build-run": {
-      "text": "Bygg och kör programmet i din IDE och titta på dess fönster: en orange triangel på en mörkt blågrön bakgrund.",
-      "hint": {
-        "opengl": "Inget att ändra än: `main.cpp` är hela programmet, som du skriver själv i de kommande kapitlen.",
-        "vulkan": "Inget att ändra än: programmet är färdigt. Det öppnar ett fönster på 800×600 med titeln \"Vulkan\".",
-        "d3d12": "Inget att ändra än: `main.cpp` sätter upp Direct3D 12 och ritar, `shaders.hlsl` innehåller de två shaderna."
-      }
-    },
-    "color": {
-      "text": {
-        "opengl": "Gör triangeln grön: ändra färgen i fragment shadern (`fragmentShaderSource`) till `vec4(0.2f, 0.8f, 0.3f, 1.0f)`.",
-        "vulkan": "Gör triangeln grön: ändra färgen som skrivs till `outColor` i `shaders/shader.frag` till `vec4(0.2, 0.8, 0.3, 1.0)`.",
-        "d3d12": "Gör triangeln grön: låt `PSMain` i `shaders.hlsl` returnera `float4(0.2f, 0.8f, 0.3f, 1.0f)`."
-      },
-      "hint": {
-        "opengl": "Raden `FragColor = vec4(r, g, b, a);` bestämmer färgen på varje pixel i triangeln; varje värde går från 0.0 till 1.0.",
-        "vulkan": "Fragment shadern körs för varje pixel i triangeln; `outColor` är dess utdata på location 0 (röd, grön, blå, alfa, 0.0 till 1.0).",
-        "d3d12": "Pixel shaderns returvärde är färgen på varje pixel i triangeln (röd, grön, blå, alfa, 0.0 till 1.0)."
-      }
-    }
-  }
+  "tasks": {}
 }

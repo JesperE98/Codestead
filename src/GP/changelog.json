@@ -1,5 +1,39 @@
 [
   {
+    "version": "0.2.1",
+    "date": "2026-11-12",
+    "changes": {
+      "en": [
+        "**One place for the tasks**: each chapter's tasks – with their hints and solutions – are now in the **Your project** panel, each with what the app is waiting for or why it isn't done yet, instead of in two boxes.",
+        "The **Welcome** chapter has no tasks any more: you can't build before your IDE and the libraries are set up, so it now lists what you need, with links, and the first tasks are in *Creating a window*."
+      ],
+      "sv": [
+        "**Ett ställe för uppgifterna**: kapitlets uppgifter – med tips och lösningar – finns nu i panelen **Ditt projekt**, var och en med vad appen väntar på eller varför den inte är klar än, i stället för i två rutor.",
+        "Kapitlet **Välkommen** har inga uppgifter längre: du kan inte bygga innan din IDE och biblioteken är uppsatta, så kapitlet listar nu vad du behöver, med länkar, och de första uppgifterna finns i *Creating a window*."
+      ],
+      "de": [
+        "**Ein Ort für die Aufgaben**: Die Aufgaben eines Kapitels – mit Tipps und Lösungen – stehen jetzt im Feld **Dein Projekt**, jede mit dem, worauf die App wartet oder warum sie noch nicht erledigt ist, statt in zwei Kästen.",
+        "Das Kapitel **Willkommen** hat keine Aufgaben mehr: Bauen geht erst, wenn deine IDE und die Bibliotheken eingerichtet sind. Es listet jetzt, was du brauchst, mit Links, und die ersten Aufgaben stehen in *Creating a window*."
+      ],
+      "fr": [
+        "**Un seul endroit pour les tâches** : les tâches d'un chapitre – avec leurs indices et solutions – sont désormais dans le panneau **Votre projet**, chacune avec ce que l'application attend ou ce qui manque encore, au lieu de deux encadrés.",
+        "Le chapitre **Bienvenue** n'a plus de tâches : on ne peut pas compiler avant d'avoir installé son IDE et les bibliothèques. Il liste maintenant ce qu'il faut, avec des liens, et les premières tâches sont dans *Creating a window*."
+      ],
+      "es": [
+        "**Un solo lugar para las tareas**: las tareas de cada capítulo – con sus pistas y soluciones – están ahora en el panel **Tu proyecto**, cada una con lo que la aplicación espera o por qué aún no está hecha, en lugar de en dos recuadros.",
+        "El capítulo **Bienvenida** ya no tiene tareas: no se puede compilar antes de configurar tu IDE y las bibliotecas. Ahora enumera lo que necesitas, con enlaces, y las primeras tareas están en *Creating a window*."
+      ],
+      "zh": [
+        "**任务集中在一处**：每章的任务（连同提示和答案）现在都在 **你的项目** 面板中，每项都会显示应用正在等待什么或尚未完成的原因，不再分成两个框。",
+        "**欢迎** 章节不再有任务：在设置好 IDE 和库之前无法构建，所以它现在列出你需要的东西并附有链接，第一批任务位于 *Creating a window*。"
+      ],
+      "ja": [
+        "**タスクを一か所に**：各章のタスク（ヒントと解答付き）は **あなたのプロジェクト** パネルにまとめられ、アプリが何を待っているか、なぜまだ完了していないかがタスクごとに表示されます。2 つの枠に分かれることはなくなりました。",
+        "**ようこそ** の章にはタスクがなくなりました。IDE とライブラリを用意するまではビルドできないため、この章では必要なものをリンク付きで紹介し、最初のタスクは *Creating a window* から始まります。"
+      ]
+    }
+  },
+  {
     "version": "0.2.0",
     "date": "2026-11-11",
     "changes": {

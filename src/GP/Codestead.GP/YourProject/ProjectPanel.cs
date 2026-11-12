@@ -39,6 +39,9 @@ public sealed partial class ProjectPanel : Border
     /// <summary>The expected-result picture (the tool tells it what to draw).</summary>
     public ExpectedPicture Picture => picture;
 
+    /// <summary>The window's task list, shown in the panel once the tasks are unlocked (else the short status list).</summary>
+    public Control? HostedTasks { get; set; }
+
     public void Render(PanelModel m, Tr t)
     {
         content.Children.Clear();
@@ -63,7 +66,12 @@ public sealed partial class ProjectPanel : Border
             content.Children.Add(Note(old, "CsInfoSoft"));
         }
         if (m.Folder is not null && !m.FolderMissing) content.Children.Add(StatusBox(m, t));
-        content.Children.Add(TaskList(m, t));
+        if (HostedTasks is { } tasks)
+        {
+            if (tasks.Parent is Panel old) old.Children.Remove(tasks);
+            content.Children.Add(tasks);
+        }
+        else content.Children.Add(TaskList(m, t));
         if (m.Tasks.Count > 0)
         {
             picture.Caption = t("expected.task", ("n", m.SelectedTask + 1));

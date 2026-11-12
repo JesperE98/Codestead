@@ -147,6 +147,16 @@ public abstract class LearningTool
     /// <summary>Everything was re-rendered (e.g. update the workbench title).</summary>
     public virtual void Rendered() { }
 
+    /// <summary>
+    /// The tool shows the chapter's tasks inside its own workbench (Codestead GP's "Your project" panel): the window
+    /// then has no tasks card of its own, gives the workbench the whole column once the tasks are unlocked, and the
+    /// tool places <see cref="LearningWindow.TaskList"/> where it wants it. Codestead Linux keeps the tasks card.
+    /// </summary>
+    public virtual bool HostsTasks => false;
+
+    /// <summary>Extra lines under a task in the task list (e.g. whether the app has seen it built and run), or null.</summary>
+    public virtual Control? TaskStatus(TaskInfo task, int index) => null;
+
     /// <summary>Save the workbench (the window saves its own state).</summary>
     public virtual void Save() { }
 

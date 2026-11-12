@@ -139,6 +139,13 @@ public partial class LearningWindow : Window
     /// <summary>Is a task done (by its progress key)?</summary>
     public bool IsTaskDone(string key) => state.Progress.ContainsKey(key);
 
+    /// <summary>The chapter's task list (header, progress, tasks with hints and solutions), for a tool that
+    /// <see cref="LearningTool.HostsTasks">hosts the tasks</see> in its workbench.</summary>
+    public Control TaskList => taskPanel;
+
+    /// <summary>Re-renders the task list (a tool whose <see cref="LearningTool.TaskStatus"/> changed).</summary>
+    public void RefreshTasks() => RenderTasks();
+
     /// <summary>Shows a short notice at the bottom of the window.</summary>
     public void Toast(string text) => overlay.Toast(text);
 

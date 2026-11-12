@@ -117,7 +117,7 @@ to change, a few lines to add. The text tells you when it is time for a task. If
 After a few attempts – or as soon as you have opened the hint – you can also show the **solution**, the code that
 belongs where the task's `// TODO:` comment is.
 
-Above the tasks is the **Your project** panel:
+The tasks are in the **Your project** panel, together with everything that connects them to your own project:
 
 - **Choose folder…** picks the folder for the chapter's project on your disk, and **Copy start files** copies the
   chapter's files into it: `main.cpp`, and later also shaders, textures and models. In the projects of the coming
@@ -168,9 +168,30 @@ contains the two shaders, written in HLSL; `main.cpp` compiles them when the pro
 
 Don't worry if none of this means anything to you yet – that is what the course is for. For now, just see it run.
 
-This chapter's start files are that program. You'll build it yourself once your IDE is set up – the first task
-asks you to build and run it and look at its window: an orange triangle on a dark teal background. Until then, its
-**Expected result** shows you what it draws.
+**You don't build anything in this chapter.** A program like this needs a compiler, a build system and a few
+libraries before it can run, and the next two chapters set them up: *{{api}}* explains the API, and *Setting up your
+IDE* walks you through the IDE, the compiler, CMake and the libraries, with links:
+
+:::opengl
+- **GLFW** (window and input) – [glfw.org](https://www.glfw.org/download.html)
+- **GLAD** (loads the OpenGL functions) – [glad.dav1d.de](https://glad.dav1d.de/)
+- later **GLM** (vector and matrix maths), **stb_image** (loading images), **assimp** (loading models) and
+  **FreeType** (fonts) – each in the chapter that first needs it
+:::
+:::vulkan
+- the **Vulkan SDK** from LunarG (headers, loader, validation layers and the shader compiler `glslc`) –
+  [vulkan.lunarg.com](https://vulkan.lunarg.com/)
+- **GLFW** (window and input) – [glfw.org](https://www.glfw.org/download.html)
+- **GLM** (vector and matrix maths) – [github.com/g-truc/glm](https://github.com/g-truc/glm)
+:::
+:::d3d12
+- **Visual Studio** with the *Desktop development with C++* workload, which brings the **Windows SDK** (Direct3D 12,
+  DirectXMath and the shader compiler)
+- **d3dx12.h**, Microsoft's helper header – [github.com/microsoft/DirectX-Headers](https://github.com/microsoft/DirectX-Headers)
+:::
+
+*Creating a window* is the first chapter where you write and build code – a window first, this triangle a few
+chapters later. Until then, this chapter's **Expected result** shows you what the program draws.
 
 ### The colour of the triangle
 
@@ -256,8 +277,9 @@ Colour values in a shader go from 0.0 to 1.0, in the order red, green, blue, alp
 ```
 :::
 
-The second task: make the triangle green by changing the colour to `(0.2, 0.8, 0.3, 1.0)`. Build and run it again
-and check your program's window: the triangle has the same shape and position, only its colour has changed.
+Once your IDE is set up, you can come back and try it: copy this chapter's start files, change the colour to
+`(0.2, 0.8, 0.3, 1.0)`, build and run – the triangle keeps its shape and position, only its colour changes. It is
+not a task; the course's tasks start in *Creating a window*.
 
 ## Course map
 

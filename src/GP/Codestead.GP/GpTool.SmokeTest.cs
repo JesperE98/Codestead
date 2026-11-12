@@ -140,9 +140,11 @@ public sealed partial class GpTool
             if (result.Scene is { ShowsFrames: true } scene) Gpu.Raster.Rasterizer.Render(scene, 64);
             Interlocked.Increment(ref builds);
         });
-        var lessonOne = GpCourse.Chapters.First(c => c.IsLesson).Id;
-        if (ExpectedResult.Scene(lessonOne, watchedApi, 0) is not { ShowsFrames: true })
-            throw new InvalidOperationException($"No expected result for the first task of {lessonOne}.");
+        // The first task with a picture (Creating a window's first tasks open a window that closes again at once).
+        var pictured = GpCourse.Chapters.Where(c => c.IsLesson).Take(8)
+            .SelectMany(c => Enumerable.Range(0, GpCourse.Tasks(c.Id, watchedApi).Count).Select(i => (c.Id, Index: i)))
+            .FirstOrDefault(x => ExpectedResult.Scene(x.Id, watchedApi, x.Index) is { ShowsFrames: true });
+        if (pictured.Id is null) throw new InvalidOperationException("No expected result for the first tasks of the course.");
         watcher?.Dispose();
         watcher = null;
         try

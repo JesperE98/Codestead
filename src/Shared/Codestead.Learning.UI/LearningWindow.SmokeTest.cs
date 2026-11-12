@@ -54,9 +54,10 @@ public partial class LearningWindow
                 if (tool.CurrentVariant(Chapter.Id) != id) throw new InvalidOperationException($"The variant picker did not switch to {id}.");
             }
         }
-        // Solve the first task of the first chapter in the real workbench.
+        // Solve the first task of the first chapter that has tasks, in the real workbench (Codestead GP's first
+        // chapters are reading chapters).
         state.Lang = Languages.Default;
-        state.Chapter = Chapters[0].Id;
+        state.Chapter = Chapters.First(c => tool.Tasks(c.Id, Languages.Default).Count > 0).Id;
         tool.ChapterShown(Chapter.Id);
         ApplyLanguage();
         var task = tool.Tasks(Chapter.Id, Lang)[0];

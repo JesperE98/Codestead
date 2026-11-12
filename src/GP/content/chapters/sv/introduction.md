@@ -116,7 +116,7 @@ värde att ändra, några rader att lägga till. Texten säger till när det är
 öppna **Tips**. Efter några försök – eller så snart du har öppnat tipset – kan du också visa **lösningen**, koden som
 hör hemma där uppgiftens `// TODO:`-kommentar står.
 
-Ovanför uppgifterna finns panelen **Ditt projekt**:
+Uppgifterna finns i panelen **Ditt projekt**, tillsammans med allt som kopplar ihop dem med ditt eget projekt:
 
 - **Välj mapp…** väljer mappen för kapitlets projekt på din disk, och **Kopiera startfilerna** kopierar kapitlets filer
   dit: `main.cpp`, och senare även shaders, texturer och modeller. I projekten i de kommande kapitlen visar
@@ -166,9 +166,30 @@ Direct3D 12: en device, en command queue, en swap chain, ett pipeline state obje
 
 Oroa dig inte om inget av detta säger dig något än – det är det kursen är till för. Se det bara köra för tillfället.
 
-Kapitlets startfiler är det programmet. Du bygger det själv när din IDE är uppsatt – den första uppgiften ber dig
-bygga och köra det och titta på dess fönster: en orange triangel på en mörkt blågrön bakgrund. Till dess visar dess
-**Förväntat resultat** vad det ritar.
+**Du bygger ingenting i det här kapitlet.** Ett sådant program behöver en kompilator, ett byggsystem och några
+bibliotek innan det kan köras, och de kommande två kapitlen sätter upp dem: *{{api}}* förklarar API:et, och *Sätt upp
+din IDE* tar dig igenom IDE:n, kompilatorn, CMake och biblioteken, med länkar:
+
+:::opengl
+- **GLFW** (fönster och inmatning) – [glfw.org](https://www.glfw.org/download.html)
+- **GLAD** (laddar OpenGL-funktionerna) – [glad.dav1d.de](https://glad.dav1d.de/)
+- senare **GLM** (vektor- och matrisräkning), **stb_image** (läser in bilder), **assimp** (läser in modeller) och
+  **FreeType** (typsnitt) – vart och ett i det kapitel som först behöver det
+:::
+:::vulkan
+- **Vulkan SDK** från LunarG (headerfiler, loadern, valideringslagren och shaderkompilatorn `glslc`) –
+  [vulkan.lunarg.com](https://vulkan.lunarg.com/)
+- **GLFW** (fönster och inmatning) – [glfw.org](https://www.glfw.org/download.html)
+- **GLM** (vektor- och matrisräkning) – [github.com/g-truc/glm](https://github.com/g-truc/glm)
+:::
+:::d3d12
+- **Visual Studio** med arbetsbelastningen *Desktop development with C++*, som tar med **Windows SDK** (Direct3D 12,
+  DirectXMath och shaderkompilatorn)
+- **d3dx12.h**, Microsofts hjälpheader – [github.com/microsoft/DirectX-Headers](https://github.com/microsoft/DirectX-Headers)
+:::
+
+*Creating a window* är det första kapitlet där du skriver och bygger kod – först ett fönster, den här triangeln några
+kapitel senare. Till dess visar kapitlets **Förväntat resultat** vad programmet ritar.
 
 ### Triangelns färg
 
@@ -254,8 +275,9 @@ Färgvärden i en shader går från 0.0 till 1.0, i ordningen röd, grön, blå,
 ```
 :::
 
-Den andra uppgiften: gör triangeln grön genom att ändra färgen till `(0.2, 0.8, 0.3, 1.0)`. Bygg och kör det igen och
-titta på ditt programs fönster: triangeln har samma form och position, bara färgen har ändrats.
+När din IDE är uppsatt kan du komma tillbaka och prova: kopiera kapitlets startfiler, ändra färgen till
+`(0.2, 0.8, 0.3, 1.0)`, bygg och kör – triangeln behåller sin form och position, bara färgen ändras. Det är ingen
+uppgift; kursens uppgifter börjar i *Creating a window*.
 
 ## Kurskarta
 

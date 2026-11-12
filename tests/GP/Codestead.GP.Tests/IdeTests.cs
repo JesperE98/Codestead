@@ -234,17 +234,19 @@ public sealed class IdeTests : IDisposable
         Assert.Equal([start.MainFile], StartFiles.Conflicts(dir, start));
     }
 
-    [Fact(DisplayName = "kontrollen: startprojektet löser första uppgiften men inte nästa, lösningen löser båda")]
+    [Fact(DisplayName = "kontrollen: startprojektet löser inte alla uppgifter, lösningen löser alla")]
     public void CheckerRunsTheTaskChecks()
     {
-        const string chapter = "introduction";
+        const string chapter = "hello-triangle";
         var api = Apis.OpenGL;
+        int count = GpCourse.Tasks(chapter, api).Count;
         StartFiles.Copy(dir, GpCourse.StartProject(chapter, api));
         var start = ProjectChecker.Check(dir, chapter, api, "a");
         Assert.Equal("a", start.Fingerprint);
-        Assert.Equal([true, false], start.Tasks.Select(t => t.Passed));
+        Assert.Equal(count, start.Tasks.Count);
+        Assert.Contains(start.Tasks, t => !t.Passed);
         Assert.NotNull(start.Facts);
-        StartFiles.Copy(dir, ExpectedResult.Project(chapter, api, 1));
+        StartFiles.Copy(dir, ExpectedResult.Project(chapter, api, count - 1));
         var solved = ProjectChecker.Check(dir, chapter, api, "b");
         Assert.All(solved.Tasks, t => Assert.True(t.Passed, t.TaskId));
         Assert.Empty(solved.Messages);
@@ -253,14 +255,14 @@ public sealed class IdeTests : IDisposable
     [Fact(DisplayName = "kontrollen säger vad som är fel när koden inte går att läsa")]
     public void CheckerExplainsFailures()
     {
-        StartFiles.Copy(dir, GpCourse.StartProject("introduction", Apis.OpenGL));
+        StartFiles.Copy(dir, GpCourse.StartProject("hello-triangle", Apis.OpenGL));
         var main = Path.Combine(dir, "main.cpp");
         File.WriteAllText(main, File.ReadAllText(main).Replace("glClear(", "glClaer("));
-        var report = ProjectChecker.Check(dir, "introduction", Apis.OpenGL, "x");
+        var report = ProjectChecker.Check(dir, "hello-triangle", Apis.OpenGL, "x");
         Assert.All(report.Tasks, t => Assert.False(t.Passed));
         Assert.Contains(report.Messages, m => m.Key == "ide.buildFailed" && m.IsError);
         File.Delete(main);
-        var missing = ProjectChecker.Check(dir, "introduction", Apis.OpenGL, "y");
+        var missing = ProjectChecker.Check(dir, "hello-triangle", Apis.OpenGL, "y");
         Assert.Contains(missing.Messages, m => m.Key == "ide.missing" && m.Args["files"].Contains("main.cpp"));
     }
 
