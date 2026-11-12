@@ -8,9 +8,9 @@ using Codestead.Learning;
 namespace Codestead.GP.Course;
 
 /// <summary>
-/// The course's texts in the learner's language and API: chapter markdown with :::opengl / :::vulkan / :::d3d12
-/// blocks (several APIs: ":::vulkan d3d12"), {{placeholders}}, titles and task texts. English is the source; a text
-/// missing in a language falls back to English.
+/// The course's texts in the learner's language, API and IDE: chapter markdown with :::opengl / :::vulkan / :::d3d12
+/// blocks (several APIs: ":::vulkan d3d12") and :::ide blocks (":::ide vs rider"), {{placeholders}}, titles and task
+/// texts. English is the source; a text missing in a language falls back to English.
 /// </summary>
 public static class CourseText
 {
@@ -33,19 +33,43 @@ public static class CourseText
     public static IReadOnlyCollection<string> LanguagesWithText(string chapterId) =>
         Resources.List("chapters/").Where(k => k.EndsWith($"/{chapterId}.md", StringComparison.Ordinal)).Select(k => k.Split('/')[1]).ToList();
 
-    private static readonly Regex ApiBlock = new(@"^:::[ \t]*([a-z0-9][a-z0-9 ,]*?)[ \t]*\n([\s\S]*?)\n:::[ \t]*$", RegexOptions.Multiline | RegexOptions.CultureInvariant);
+    private static readonly Regex Opener = new(@"^:::[ \t]*(\S.*?)[ \t]*$", RegexOptions.CultureInvariant);
+    private static readonly Regex Closer = new(@"^:::[ \t]*$", RegexOptions.CultureInvariant);
     private static readonly Regex PlaceholderRe = new(@"\{\{([A-Za-z0-9_]+)\}\}", RegexOptions.CultureInvariant);
 
-    /// <summary>Keeps the blocks for <paramref name="api"/> and fills in the placeholders.</summary>
-    public static string Preprocess(string markdown, string api)
+    /// <summary>The ids of a block's opening line (":::vulkan d3d12" → vulkan, d3d12; ":::ide vs rider" → ide, vs, rider).</summary>
+    public static string[] BlockIds(string opener) => opener.Split([' ', ',', '\t'], StringSplitOptions.RemoveEmptyEntries);
+
+    /// <summary>
+    /// Keeps the blocks for <paramref name="api"/> and <paramref name="ide"/> and fills in the placeholders. API blocks
+    /// (":::opengl", ":::vulkan d3d12") and IDE blocks (":::ide vs rider") end with a line ":::"; IDE blocks may sit
+    /// inside API blocks. Without an IDE every IDE block is kept (the tests, counting the questions).
+    /// </summary>
+    public static string Preprocess(string markdown, string api, string? ide = null)
     {
-        var text = markdown.Replace("\r\n", "\n");
-        text = ApiBlock.Replace(text, m =>
+        var lines = markdown.Replace("\r\n", "\n").Split('\n');
+        var output = new List<string>(lines.Length);
+        var open = new List<bool>();
+        foreach (var line in lines)
         {
-            var apis = m.Groups[1].Value.Split([' ', ','], StringSplitOptions.RemoveEmptyEntries);
-            return apis.Contains(api) ? m.Groups[2].Value : "";
-        });
-        return Fill(text, api);
+            var opener = Opener.Match(line);
+            if (opener.Success && !Closer.IsMatch(line))
+            {
+                var ids = BlockIds(opener.Groups[1].Value);
+                open.Add(ids[0] == "ide" ? ide is null || ids.Skip(1).Contains(ide) : ids.Contains(api));
+                continue;
+            }
+            if (Closer.IsMatch(line) && open.Count > 0)
+            {
+                bool shown = open[^1];
+                open.RemoveAt(open.Count - 1);
+                // A left-out block leaves an empty line, so the paragraphs around it stay apart.
+                if (!shown && open.All(v => v)) output.Add("");
+                continue;
+            }
+            if (open.All(v => v)) output.Add(line);
+        }
+        return Fill(string.Join("\n", output), api);
     }
 
     public static string Fill(string text, string api)
@@ -60,8 +84,8 @@ public static class CourseText
         return PlaceholderRe.Replace(text, m => values.TryGetValue(m.Groups[1].Value, out var v) ? v : m.Value);
     }
 
-    /// <summary>The chapter's text ready to show for an API.</summary>
-    public static string Lesson(string chapterId, string lang, string api) => Preprocess(Raw(chapterId, lang), api);
+    /// <summary>The chapter's text ready to show for an API (and an IDE: null keeps every IDE's steps).</summary>
+    public static string Lesson(string chapterId, string lang, string api, string? ide = null) => Preprocess(Raw(chapterId, lang), api, ide);
 
     public static string Title(string chapterId, string lang, string api)
     {

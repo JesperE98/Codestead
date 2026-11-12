@@ -12,6 +12,9 @@ public static class GpAchievements
     /// <summary>The APIs in which the learner has solved at least one task.</summary>
     public static int ApisUsed(AchievementContext c) => Apis.All.Count(a => c.Progress.Tasks.Any(t => t.EndsWith("@" + a.Id, StringComparison.Ordinal)));
 
+    /// <summary>Has the learner chosen a project folder for some chapter? (Set by the app, which keeps the folders.)</summary>
+    public static Func<bool> ProjectFolderChosen { get; set; } = () => false;
+
     public static IReadOnlyList<Achievement> All { get; } = new List<Achievement>
     {
         // Learning
@@ -30,7 +33,8 @@ public static class GpAchievements
         PartDone("guest-articles", "✍️"),
         Count("all-apis", "🌐", AchievementCategory.Learning, ApisUsed, 3),
         Checkpoints(25, "🤔"),
-        // The workbench
+        // Your project
+        new("first-folder", "📁", AchievementCategory.Terminal, _ => ProjectFolderChosen()),
         new("first-build", "🔨", AchievementCategory.Terminal, c => Build(c, b => b.Succeeded)),
         new("first-frame", "🪟", AchievementCategory.Terminal, c => Build(c, b => b.ShowsFrames)),
         new("first-draw", "🎨", AchievementCategory.Terminal, c => Build(c, b => b.Drew)),
@@ -42,7 +46,6 @@ public static class GpAchievements
         Streak(7, "🔥"),
         Streak(30, "🌋"),
         // Hidden – found by experimenting
-        new("typo", "🔤", AchievementCategory.Hidden, c => Build(c, b => b.Typo)),
         new("magenta", "💖", AchievementCategory.Hidden, c => Build(c, b => b.ClearColor is { } cc && cc[0] > 0.99 && cc[1] < 0.01 && cc[2] > 0.99)),
         new("night-owl", "🦉", AchievementCategory.Hidden, c => c.SolvedNow.Count > 0 && c.Now.Hour < 4),
     };

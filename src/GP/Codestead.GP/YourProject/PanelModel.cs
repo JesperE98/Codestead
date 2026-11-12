@@ -14,6 +14,7 @@ public sealed record PanelModel(
     WatchStatus Status,
     bool Checking,
     string StatusLine,
+    string? WhereProgram,
     IReadOnlyList<TaskRow> Tasks,
     int SelectedTask,
     string? LockNote = null,

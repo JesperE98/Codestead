@@ -406,6 +406,7 @@ Two lines are there for the course rather than for the compiler. `VS_DEBUGGER_WO
 when you only changed a shader: the shaders are sources too, and the app only counts a build whose program is newer
 than all of them.
 
+:::ide vs
 ## Visual Studio
 
 **Opening the folder (CMake).** Since Visual Studio understands CMake directly, there is no solution to create:
@@ -456,6 +457,9 @@ For DirectX 12, add `DirectX-Headers\include\directx` to the include directories
 A solution has no `LINK_DEPENDS`: when you only changed a shader, use **Build → Rebuild Solution**, so that the
 program is newer than the shader.
 
+:::
+
+:::ide clion
 ## CLion
 
 1. **File → Open…** and choose the chapter folder. CLion reads the `CMakeLists.txt` and asks for a CMake profile the
@@ -471,6 +475,9 @@ On Windows CLion uses its bundled MinGW by default. For DirectX 12, add a **Visu
 **Settings → Build, Execution, Deployment → Toolchains** and move it to the top (or choose it in the CMake profile).
 :::
 
+:::
+
+:::ide rider
 ## Rider
 
 Rider builds C++ through Visual Studio solutions, so it needs Microsoft's build tools (Visual Studio or the *Build
@@ -485,6 +492,9 @@ Choose the program's project (not `ALL_BUILD`) as the one to run, build with **B
 with **Run → Run**. The program ends up in `build/Debug/` (or `x64/Debug/` for your own solution). If it can't find
 its files, set **Working directory** in **Run → Edit Configurations…** to the chapter folder.
 
+:::
+
+:::ide vscode
 ## Visual Studio Code
 
 1. Install the **C/C++** and **CMake Tools** extensions (both from Microsoft), a compiler and CMake.
@@ -504,6 +514,8 @@ To run it under the debugger with **CMake: Debug** (Ctrl+F5), tell CMake Tools t
     "cmake.debugConfig": { "cwd": "${workspaceFolder}" }
 }
 ```
+
+:::
 
 ## Trying it out
 

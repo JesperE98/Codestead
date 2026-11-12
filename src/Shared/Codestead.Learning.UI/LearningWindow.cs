@@ -150,6 +150,12 @@ public partial class LearningWindow : Window
     /// <summary>Re-renders the task list (a tool whose <see cref="LearningTool.TaskStatus"/> changed).</summary>
     public void RefreshTasks() => RenderTasks();
 
+    /// <summary>
+    /// Something the tool's achievements look at changed outside a command (Codestead GP: the first project folder):
+    /// the game is brought up to date and new achievements are shown.
+    /// </summary>
+    public void RefreshGame() => Present(tool.Rules.Sync(state.Game, Snapshot(), DateTime.Now));
+
     /// <summary>Shows a short notice at the bottom of the window.</summary>
     public void Toast(string text) => overlay.Toast(text);
 

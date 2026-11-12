@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Codestead.Common;
 using Codestead.GP.Course;
+using Codestead.GP.Course.Ide;
 using Codestead.GP.Gpu;
 using Codestead.UI.Learning;
 
@@ -43,8 +44,11 @@ public class ContentTests
         foreach (var lang in Languages.Offered.Select(l => l.Code).Where(l => File.Exists(Path.Combine(Repo.Content, "chapters", l, chapter + ".md"))))
             foreach (var api in Apis.All)
             {
-                var cps = Checkpoint.ParseAll(CourseText.Preprocess(File.ReadAllText(Path.Combine(Repo.Content, "chapters", lang, chapter + ".md")), api.Id));
-                shape[$"{lang}/{api.Id}"] = string.Join(",", cps.Select(c => $"{c.Kind}:{c.Options.Count}:{string.Join("", c.Options.Select(o => o.Correct ? "x" : "-"))}"));
+                var raw = File.ReadAllText(Path.Combine(Repo.Content, "chapters", lang, chapter + ".md"));
+                string Shape(string? ide) => string.Join(",", Checkpoint.ParseAll(CourseText.Preprocess(raw, api.Id, ide)).Select(c => $"{c.Kind}:{c.Options.Count}:{string.Join("", c.Options.Select(o => o.Correct ? "x" : "-"))}"));
+                shape[$"{lang}/{api.Id}"] = Shape(null);
+                // The same questions whatever IDE is chosen.
+                foreach (var ide in Ides.All) Assert.True(Shape(ide.Id) == shape[$"{lang}/{api.Id}"], $"{lang}/{chapter} ({api.Id}): the questions differ for {ide.Name}");
             }
         var counts = shape.Values.Select(v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Length).Distinct().ToList();
         Assert.True(counts.Count == 1, "different numbers of questions:\n" + string.Join("\n", shape.Select(kv => $"{kv.Key}: {kv.Value}")));
@@ -86,23 +90,57 @@ public class ContentTests
                 }
     }
 
-    [Theory(DisplayName = "bara kända API-block och platshållare i texterna")]
+    [Theory(DisplayName = "bara kända API- och IDE-block och platshållare i texterna")]
     [MemberData(nameof(Lessons))]
     public void BlocksAndPlaceholders(string chapter)
     {
         foreach (var lang in ChapterLanguages)
         {
-            var text = File.ReadAllText(Path.Combine(Repo.Content, "chapters", lang, chapter + ".md"));
-            foreach (Match m in Regex.Matches(text, @"^:::[ \t]*(\S.*)$", RegexOptions.Multiline))
-                foreach (var api in m.Groups[1].Value.Split([' ', ','], StringSplitOptions.RemoveEmptyEntries))
-                    Assert.True(Apis.IsKnown(api), $"{lang}/{chapter}.md: unknown block :::{api}");
-            Assert.Equal(Regex.Matches(text, @"^:::[ \t]*\S", RegexOptions.Multiline).Count, Regex.Matches(text, @"^:::[ \t]*$", RegexOptions.Multiline).Count);
-            foreach (var api in Apis.All)
+            var file = $"{lang}/{chapter}.md";
+            var text = File.ReadAllText(Path.Combine(Repo.Content, "chapters", lang, chapter + ".md")).Replace("\r\n", "\n");
+            // Blocks: ":::opengl" / ":::vulkan d3d12" (APIs) and ":::ide vs rider" (IDEs), each closed by ":::". IDE blocks
+            // may sit inside API blocks, never the other way round, and hold no questions (they are the same for every IDE).
+            var open = new Stack<string>();
+            int lineNo = 0;
+            foreach (var line in text.Split('\n'))
             {
-                var shown = CourseText.Preprocess(text, api.Id);
-                Assert.DoesNotMatch(@"\{\{\w+\}\}", shown);
-                Assert.DoesNotMatch(@"(?m)^:::", shown);
+                lineNo++;
+                if (Regex.IsMatch(line, @"^:::[ \t]*$"))
+                {
+                    Assert.True(open.Count > 0, $"{file}:{lineNo}: ':::' closes no block");
+                    open.Pop();
+                    continue;
+                }
+                var m = Regex.Match(line, @"^:::[ \t]*(\S.*)$");
+                if (m.Success)
+                {
+                    var ids = CourseText.BlockIds(m.Groups[1].Value);
+                    if (ids[0] == "ide")
+                    {
+                        Assert.True(ids.Length > 1, $"{file}:{lineNo}: ':::ide' needs at least one IDE");
+                        foreach (var ide in ids.Skip(1)) Assert.True(Ides.IsKnown(ide), $"{file}:{lineNo}: unknown IDE '{ide}' (known: {string.Join(", ", Ides.All.Select(i => i.Id))})");
+                        Assert.False(open.Contains("ide"), $"{file}:{lineNo}: an IDE block inside an IDE block");
+                        open.Push("ide");
+                    }
+                    else
+                    {
+                        foreach (var api in ids) Assert.True(Apis.IsKnown(api), $"{file}:{lineNo}: unknown block :::{api}");
+                        Assert.False(open.Contains("ide"), $"{file}:{lineNo}: an API block inside an IDE block (put the IDE block inside the API block)");
+                        open.Push("api");
+                    }
+                    continue;
+                }
+                if (open.Contains("ide") && Regex.IsMatch(line, @"^\s*(```|~~~)\s*(" + string.Join("|", Checkpoint.Kinds) + @")\b"))
+                    Assert.Fail($"{file}:{lineNo}: a question inside an IDE block (questions are the same for every IDE)");
             }
+            Assert.True(open.Count == 0, $"{file}: {open.Count} block(s) not closed with ':::'");
+            foreach (var api in Apis.All)
+                foreach (var ide in Ides.All.Select(i => (string?)i.Id).Append(null))
+                {
+                    var shown = CourseText.Preprocess(text, api.Id, ide);
+                    Assert.DoesNotMatch(@"\{\{\w+\}\}", shown);
+                    Assert.DoesNotMatch(@"(?m)^:::", shown);
+                }
         }
     }
 

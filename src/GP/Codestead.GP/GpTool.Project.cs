@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Threading;
 using Codestead.GP.Course;
+using Codestead.GP.Course.Game;
 using Codestead.GP.Course.Ide;
 using Codestead.GP.Gpu;
 using Codestead.GP.YourProject;
@@ -35,6 +36,8 @@ public sealed partial class GpTool
 
     public GpTool()
     {
+        InitIdePicker();
+        GpAchievements.ProjectFolderChosen = () => Window is not null && Folders.Any;
         panel.ChooseRequested += () => _ = ChooseFolder();
         panel.UseSuggestionRequested += UseSuggestion;
         panel.CopyRequested += () => CopyStartFiles(GpCourse.StartProject(chapter, watchedApi));
@@ -214,7 +217,7 @@ public sealed partial class GpTool
             : questions.Total > 0 ? Window.T("yourProject.lockedQuestions", ("done", questions.Done), ("total", questions.Total))
             : Window.T("yourProject.lockedRead");
         var model = new PanelModel(chapter, watchedApi, Apis.Get(watchedApi).FullName, folder, missing,
-            folder is null ? Folders.Suggestion(watchedApi, chapter) : null, HasOldCode(), status, checking, StatusLine(checking, current), rows, selected,
+            folder is null ? Folders.Suggestion(watchedApi, chapter) : null, HasOldCode(), status, checking, StatusLine(checking, current), WhereProgram(checking), rows, selected,
             lockNote, questions);
         // The window's task list (text, hints, solutions) sits in the panel once the tasks are unlocked; each task's
         // state comes from TaskStatus, so the list is refreshed with the panel.
@@ -264,6 +267,10 @@ public sealed partial class GpTool
         }
         return rows;
     }
+
+    /// <summary>While the app waits for a build: where the chosen IDE puts the program (detection looks everywhere).</summary>
+    private string? WhereProgram(bool checking) =>
+        !checking && !status.Built && !(status.NoExecutable && status.RanByHand) ? Window.T("yourProject.where." + Ide) : null;
 
     private string StatusLine(bool checking, bool current)
     {
