@@ -556,6 +556,8 @@ vilket kompileringsfel som helst.
 Pre-build-händelsen i ditt projekt från *Sätt upp din IDE* kompilerar båda shaderfilerna till `shaders/vert.spv` och
 `shaders/frag.spv` med `glslc` innan `main.cpp` kompileras; ett fel i en shader syns i byggutdata med meddelandet från
 `glslc`, och bygget stannar.
+En solution länkar inte om programmet när bara en shader har ändrats, och appen räknar bara ett program som är nyare
+än alla dina källfiler: efter en ändring som bara gäller en shader använder du **Build → Rebuild Solution**.
 :::
 
 När programmet körs laddar det bytekoden med en liten hjälpfunktion, `readFile`:
@@ -633,6 +635,16 @@ Argumenten är: filnamnet (som letas upp i arbetskatalogen), makrodefinitioner o
 **målprofilen** (target profile): `vs_5_0` är en vertex shader för shader model 5.0, `ps_5_0` en pixel shader. Sedan
 kommer kompileringsflaggorna (i debug-byggen: debuginformation och ingen optimering, vilket hjälper grafikdebuggrar),
 effektflaggor (oanvända), utdatan och en valfri blob för kompilatorns felmeddelanden.
+
+:::ide vs rider
+`shaders.hlsl` läses medan programmet körs, så den måste stå utanför bygget. Om du lägger till den i projektet för att
+öppna den från Solution Explorer sätter du dess **Properties → General → Item Type** till **Does not participate in
+build** – i `.vcxproj`-filen, som är där du ändrar det i Rider: `<None Include="shaders.hlsl" />` i stället för
+`<FxCompile Include="shaders.hlsl" />`. Annars kompilerar MSBuild den med Visual Studios egen HLSL-kompilator, som
+letar efter en funktion som heter `main` och stoppar bygget. Detsamma gäller senare kapitels `.hlsl`-filer. Och
+eftersom en solution inte länkar om programmet när bara `shaders.hlsl` har ändrats använder du **Build → Rebuild
+Solution** efter en sådan ändring: appen räknar bara ett program som är nyare än alla dina källfiler.
+:::
 
 Resultatet är bytekod i en `ID3DBlob`, ett enkelt minnesblock. Om HLSL-koden har ett fel returnerar
 `D3DCompileFromFile` en felkod och `ThrowIfFailed` stoppar programmet med den HRESULT:en. (Exemplet skickar
