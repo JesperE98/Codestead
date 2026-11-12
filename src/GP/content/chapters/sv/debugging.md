@@ -49,6 +49,40 @@ texturens shader resource view. Programmet säger ingenting om dem. Att hitta de
 Kommentarerna `// TODO:` i projektet visar var din kod ska in. Uppgifterna lägger först till verktygen och använder
 sedan det de rapporterar för att rätta felen.
 
+Några av verktygen finns i din IDE:s **debugger**: du kör programmet i den, stoppar det vid en **brytpunkt** och tittar
+på **anropsstacken** – kedjan av anrop som ledde dit – och på variablerna.
+
+:::ide vs
+**Debug → Start Debugging** (F5) kör programmet i debuggern, **Debug → Start Without Debugging** (Ctrl+F5) utan den.
+F9, eller ett klick i den grå marginalen till vänster om en rad, sätter en brytpunkt där. När programmet stannar visar
+fönstret **Call Stack** hur det kom dit – dubbelklicka på en rad för att hoppa dit – och **Locals** och **Autos** visar
+variablerna; F10 stegar över en rad, F11 in i ett anrop, F5 fortsätter. Det programmet skriver ut hamnar i dess
+konsolfönster, och det som det skickar till debuggern med `OutputDebugString` i fönstret **Output** (**View →
+Output**, *Show output from: Debug*).
+:::
+:::ide clion
+**Run → Debug** (Shift+F9) kör programmet i debuggern, **Run → Run** (Shift+F10) utan den – båda med arbetskatalogen
+från din körkonfiguration. Ett klick i marginalen bredvid ett radnummer, eller Ctrl+F8, sätter en brytpunkt där. När
+programmet stannar visar verktygsfönstret **Debug** anropsstacken under **Frames** – klicka på en rad för att hoppa
+dit – och variablerna under **Variables**; F8 stegar över en rad, F7 in i ett anrop, F9 fortsätter. Det programmet
+skriver ut syns under fliken **Console** i samma fönster.
+:::
+:::ide rider
+**Run → Debug** kör programmet i debuggern, **Run → Run** utan den. Ett klick i marginalen bredvid ett radnummer sätter
+en brytpunkt där. När programmet stannar visar verktygsfönstret **Debug** anropsstacken under **Frames** – klicka på en
+rad för att hoppa dit – och variablerna under **Variables**; fönstrets verktygsfält stegar över en rad, in i ett anrop
+eller fortsätter. Det programmet skriver ut syns i dess konsol, och det som det skickar till debuggern med
+`OutputDebugString` under fönstrets flik **Debug Output**.
+:::
+:::ide vscode
+**CMake: Debug** (Ctrl+F5, eller insektsikonen i statusfältet) kör programmet i debuggern, med arbetskatalogen från
+`cmake.debugConfig` (*Sätt upp din IDE*). F9, eller ett klick till vänster om ett radnummer, sätter en brytpunkt där.
+När programmet stannar visar vyn **Run and Debug** (Ctrl+Shift+D) **Call Stack** – klicka på en rad för att hoppa
+dit – och **Variables**; F10 stegar över en rad, F11 in i ett anrop, F5 fortsätter. Debuggerns meddelanden – på Windows
+även det som programmet skickar med `OutputDebugString` – syns i panelen **Debug Console**, och det programmet skriver
+ut i Debug Console eller i terminalen.
+:::
+
 ## glGetError()
 
 :::opengl
@@ -251,12 +285,28 @@ Direct3D 12 rapporterar fel på två sätt:
 ```
 
 Det finns bara i en debug-build (`_DEBUG`) på ett Windows där den valfria funktionen "Graphics Tools" är installerad.
-Det kontrollerar varje anrop och skriver ett meddelande för varje fel till debuggerns Output-fönster (i Visual Studio:
-starta med F5, sedan *Output*, *Show output from: Debug*), som rader av typen
+Det kontrollerar varje anrop och skriver ett meddelande för varje fel till debuggerns utdata, som rader av typen
 
 ```text
 D3D12 ERROR: ID3D12Device::CreateShaderResourceView: … [ STATE_CREATION ERROR #31: CREATESHADERRESOURCEVIEW_INVALIDDIMENSIONS]
 ```
+
+:::ide vs
+I Visual Studio är det fönstret **Output**: starta programmet med F5 och välj *Show output from: Debug*.
+:::
+:::ide rider
+I Rider är det fliken **Debug Output** i verktygsfönstret **Debug**, när du startar programmet med **Run → Debug**.
+:::
+:::ide clion
+CLion felsöker ett program som är byggt med Visual Studio-toolchainen med sin egen LLDB-baserade debugger: starta
+programmet med **Run → Debug** och leta efter raderna under fliken **Console** i verktygsfönstret **Debug**. Om de inte
+syns där visar Microsofts kostnadsfria [DebugView](https://learn.microsoft.com/en-us/sysinternals/downloads/debugview)
+dem: starta programmet utan debuggern (**Run → Run**) medan DebugView körs.
+:::
+:::ide vscode
+I VS Code är det **Debug Console**: med ett Visual Studio-kit kör **CMake: Debug** programmet i Microsofts debugger,
+som visar raderna där.
+:::
 
 Det är användbart, men bara medan en debugger körs, och programmet vet ingenting om det. Programmet kan dock läsa
 meddelandena själv: debuglagret sparar dem också i enhetens **info queue**, `ID3D12InfoQueue`, som du får från enheten
@@ -299,9 +349,8 @@ egen plats.
 Gör nu den första uppgiften, **info-queue**: hämta info queue i `LoadPipeline` direkt efter att enheten har skapats
 (innanför `#if defined(_DEBUG)` – i en release-build finns inget debuglager, `As` misslyckas och `m_infoQueue` förblir
 tom), lägg till funktionen och makrot, och anropa `CheckDebugMessages();` efter `LoadTexture(…)` i `LoadAssets` och
-efter `ExecuteCommandLists` i `OnRender`. Kör programmet i debuggern (F5): debuglagret rapporterar felen, sparar dem i
-info queue, och din funktion skriver ut dem. Bilden ändras inte, men debuggerns Output-fönster innehåller nu
-meddelandena:
+efter `ExecuteCommandLists` i `OnRender`. Kör programmet i debuggern: debuglagret rapporterar felen, sparar dem i info
+queue, och din funktion skriver ut dem. Bilden ändras inte, men debuggerns utdata innehåller nu meddelandena:
 
 ```text
 ERROR #31: ID3D12Device::CreateShaderResourceView: The Dimensions of the View are invalid due to at least one of the following conditions. MostDetailedMip (value = 0) must be between 0 and MipLevels-1 of the Texture Resource, 0, inclusively. With the current MostDetailedMip, MipLevels (value = 0) must be between 1 and 1, inclusively, or -1 to default to all mips from MostDetailedMip, in order that the View fit on the Texture. | main.cpp (…)
@@ -784,9 +833,9 @@ Category: State creation
 Severity: ERROR
 ```
 
-– och med en ansluten debugger stannar programmet precis på den raden i `LoadTexture`. (Startat utan debugger, med
-Ctrl+F5, returnerar `IsDebuggerPresent()` false, så programmet skriver ut meddelandet och fortsätter.) (Meddelandena
-ligger också kvar i kön, så `CheckDebugMessages()` skriver ut dem en gång till efteråt.)
+– och med en ansluten debugger stannar programmet precis på den raden i `LoadTexture`. (Startat utan debugger returnerar
+`IsDebuggerPresent()` false, så programmet skriver ut meddelandet och fortsätter.) (Meddelandena ligger också kvar i
+kön, så `CheckDebugMessages()` skriver ut dem en gång till efteråt.)
 
 ### Det andra felet
 

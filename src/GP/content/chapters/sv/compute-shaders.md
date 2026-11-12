@@ -137,7 +137,7 @@ eller 2³¹ − 1 grupper i x, arbetsgrupper på 1024 × 1024 × 64 och 1024 anr
 de 1024 anrop som är tillåtna totalt.
 
 Gör nu den första uppgiften, **limits**. Fönstret förblir mörkblått; siffrorna syns där ditt program skriver sin text: i
-konsolen, eller för `OutputDebugStringA` i debuggerns Output-fönster.
+konsolen, eller för `OutputDebugStringA` i debuggerns utdata (*Felsökning* visar var din IDE har den).
 
 ```quiz
 Vilken arbetsgruppsstorlek är tillåten på en GPU som rapporterar arbetsgrupper upp till 1024 × 1024 × 64 och 1024 anrop?

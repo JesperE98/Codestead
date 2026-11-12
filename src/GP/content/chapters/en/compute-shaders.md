@@ -136,7 +136,7 @@ groups of 1024 × 1024 × 64 and 1024 invocations. Note that the size limits per
 work group of 1024 × 1024 × 1 is within the per-dimension limits but far beyond the 1024 invocations allowed in total.
 
 Now do the first task, **limits**. The window stays dark blue; the numbers appear where your program writes its text:
-the console, or for `OutputDebugStringA` the debugger's Output window.
+the console, or for `OutputDebugStringA` the debugger's output (*Debugging* shows where your IDE has it).
 
 ```quiz
 Which work group size is allowed on a GPU that reports work groups up to 1024 × 1024 × 64 and 1024 invocations?
