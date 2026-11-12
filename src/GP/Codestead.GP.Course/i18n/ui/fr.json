@@ -318,6 +318,8 @@
   "yourProject.ranNoExecutable": "L’application ne trouve pas votre programme dans le dossier : elle vous croit sur parole.",
   "yourProject.tasks": "État des tâches",
   "yourProject.task": "Tâche {n}",
+  "yourProject.lockedQuestions": "Répondez aux questions du texte ({done} sur {total}) pour débloquer les tâches.",
+  "yourProject.lockedRead": "Lisez le chapitre jusqu'au bout pour débloquer les tâches.",
   "yourProject.locked": "Verrouillée – parcourez d’abord le texte",
   "yourProject.needFolder": "Choisissez d’abord un dossier",
   "yourProject.waitBuild": "En attente d’une compilation",

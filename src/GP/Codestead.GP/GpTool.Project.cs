@@ -208,8 +208,14 @@ public sealed partial class GpTool
         bool current = report is { } r0 && r0.Fingerprint == status.Fingerprint;
         int selected = Selected(rows);
         bool missing = folder is not null && !Directory.Exists(folder);
+        // Until the text is done the tasks are locked: say what unlocks them (the panel has no "read first" card above it).
+        var questions = Window.CheckpointProgress(chapter);
+        string? lockNote = unlocked || rows.Count == 0 ? null
+            : questions.Total > 0 ? Window.T("yourProject.lockedQuestions", ("done", questions.Done), ("total", questions.Total))
+            : Window.T("yourProject.lockedRead");
         var model = new PanelModel(chapter, watchedApi, Apis.Get(watchedApi).FullName, folder, missing,
-            folder is null ? Folders.Suggestion(watchedApi, chapter) : null, HasOldCode(), status, checking, StatusLine(checking, current), rows, selected);
+            folder is null ? Folders.Suggestion(watchedApi, chapter) : null, HasOldCode(), status, checking, StatusLine(checking, current), rows, selected,
+            lockNote, questions);
         // The window's task list (text, hints, solutions) sits in the panel once the tasks are unlocked; each task's
         // state comes from TaskStatus, so the list is refreshed with the panel.
         if (unlocked && rows.Count > 0)

@@ -318,6 +318,8 @@
   "yourProject.ranNoExecutable": "Appen hittar inte ditt program i mappen, så den litar på dig.",
   "yourProject.tasks": "Uppgifternas status",
   "yourProject.task": "Uppgift {n}",
+  "yourProject.lockedQuestions": "Svara på frågorna i texten ({done} av {total}) för att låsa upp uppgifterna.",
+  "yourProject.lockedRead": "Läs kapitlet till slutet för att låsa upp uppgifterna.",
   "yourProject.locked": "Låst – gå igenom texten först",
   "yourProject.needFolder": "Välj en mapp först",
   "yourProject.waitBuild": "Väntar på ett bygge",

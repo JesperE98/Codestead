@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.2.2",
+    "date": "2026-11-12",
+    "changes": {
+      "en": [
+        "The **Your project** panel now fills the whole right-hand side of every chapter. The separate \"Read first\" box is gone: until you have answered the questions in the text, the panel itself shows how many are left, and the tasks stay locked."
+      ],
+      "sv": [
+        "Panelen **Ditt projekt** fyller nu hela högra sidan i varje kapitel. Den separata rutan \"Läs först\" är borta: tills du har svarat på frågorna i texten visar panelen själv hur många som är kvar, och uppgifterna är låsta så länge."
+      ],
+      "de": [
+        "Das Feld **Dein Projekt** füllt jetzt in jedem Kapitel die ganze rechte Seite. Der eigene Kasten „Zuerst lesen“ ist weg: Bis du die Fragen im Text beantwortet hast, zeigt das Feld selbst, wie viele noch fehlen, und die Aufgaben bleiben gesperrt."
+      ],
+      "fr": [
+        "Le panneau **Votre projet** occupe désormais tout le côté droit de chaque chapitre. L'encadré « À lire d'abord » a disparu : tant que vous n'avez pas répondu aux questions du texte, le panneau indique lui-même combien il en reste, et les tâches restent verrouillées."
+      ],
+      "es": [
+        "El panel **Tu proyecto** ocupa ahora todo el lado derecho de cada capítulo. El recuadro aparte «Lee primero» ha desaparecido: hasta que respondas a las preguntas del texto, el propio panel muestra cuántas quedan, y las tareas siguen bloqueadas."
+      ],
+      "zh": [
+        "**你的项目** 面板现在占据每章的整个右侧。单独的“先阅读”框已移除：在你回答完正文中的问题之前，面板本身会显示还剩多少题，任务保持锁定。"
+      ],
+      "ja": [
+        "**あなたのプロジェクト** パネルが各章の右側全体を使うようになりました。別枠の「まず読む」ボックスはなくなり、本文の問題に答えるまでは、パネル自体に残りの問題数が表示され、タスクはロックされたままです。"
+      ]
+    }
+  },
+  {
     "version": "0.2.1",
     "date": "2026-11-12",
     "changes": {

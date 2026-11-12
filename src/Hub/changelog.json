@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.2.4",
+    "date": "2026-11-12",
+    "changes": {
+      "en": [
+        "Behind the scenes: shared code of the Codestead tools was updated. Nothing changes in how you use the hub."
+      ],
+      "sv": [
+        "Bakom kulisserna: Codestead-verktygens gemensamma kod har uppdaterats. Inget ändras i hur du använder hubben."
+      ],
+      "de": [
+        "Hinter den Kulissen: Der gemeinsame Code der Codestead-Tools wurde aktualisiert. An der Bedienung des Hubs ändert sich nichts."
+      ],
+      "fr": [
+        "En coulisses : le code commun des outils Codestead a été mis à jour. Rien ne change dans votre utilisation du hub."
+      ],
+      "es": [
+        "Entre bastidores: se ha actualizado el código común de las herramientas de Codestead. No cambia nada en cómo usas el hub."
+      ],
+      "zh": [
+        "幕后改动：更新了 Codestead 工具的共享代码。中心的使用方式没有任何变化。"
+      ],
+      "ja": [
+        "内部の変更：Codestead ツール共通のコードを更新しました。ハブの使い方は変わりません。"
+      ]
+    }
+  },
+  {
     "version": "0.2.3",
     "date": "2026-11-12",
     "changes": {

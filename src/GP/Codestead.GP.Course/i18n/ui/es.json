@@ -318,6 +318,8 @@
   "yourProject.ranNoExecutable": "La aplicación no encuentra tu programa en la carpeta, así que confía en tu palabra.",
   "yourProject.tasks": "Estado de las tareas",
   "yourProject.task": "Tarea {n}",
+  "yourProject.lockedQuestions": "Responde a las preguntas del texto ({done} de {total}) para desbloquear las tareas.",
+  "yourProject.lockedRead": "Lee el capítulo hasta el final para desbloquear las tareas.",
   "yourProject.locked": "Bloqueada – primero trabaja el texto",
   "yourProject.needFolder": "Primero elige una carpeta",
   "yourProject.waitBuild": "Esperando una compilación",

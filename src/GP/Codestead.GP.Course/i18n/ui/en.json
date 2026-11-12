@@ -318,6 +318,8 @@
   "yourProject.ranNoExecutable": "The app cannot find your program in the folder, so it takes your word for it.",
   "yourProject.tasks": "Task status",
   "yourProject.task": "Task {n}",
+  "yourProject.lockedQuestions": "Answer the questions in the text ({done} of {total}) to unlock the tasks.",
+  "yourProject.lockedRead": "Read the chapter to the end to unlock the tasks.",
   "yourProject.locked": "Locked – work through the text first",
   "yourProject.needFolder": "Choose a folder first",
   "yourProject.waitBuild": "Waiting for a build",

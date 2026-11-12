@@ -318,6 +318,8 @@
   "yourProject.ranNoExecutable": "フォルダー内にプログラムが見つからないため、あなたの言葉を信じます。",
   "yourProject.tasks": "課題の状況",
   "yourProject.task": "課題 {n}",
+  "yourProject.lockedQuestions": "本文の問題に答えると（{done}/{total}）タスクが解放されます。",
+  "yourProject.lockedRead": "章を最後まで読むとタスクが解放されます。",
   "yourProject.locked": "ロック中 – まず本文を読み進めてください",
   "yourProject.needFolder": "まずフォルダーを選んでください",
   "yourProject.waitBuild": "ビルド待ち",

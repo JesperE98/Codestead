@@ -71,7 +71,22 @@ public sealed partial class ProjectPanel : Border
             if (tasks.Parent is Panel old) old.Children.Remove(tasks);
             content.Children.Add(tasks);
         }
-        else content.Children.Add(TaskList(m, t));
+        else
+        {
+            if (m.LockNote is { } note)
+            {
+                var box = new StackPanel { Spacing = 8 };
+                box.Children.Add(Wrapped("🔒  " + note, 13.5));
+                if (m.Questions.Total > 0)
+                {
+                    var bar = new ProgressBar { Minimum = 0, Maximum = m.Questions.Total, Value = m.Questions.Done, Height = 6, MinHeight = 6 };
+                    bar.Bind(ProgressBar.ForegroundProperty, this.GetResourceObservable("CsAccent"));
+                    box.Children.Add(bar);
+                }
+                content.Children.Add(Note(box, "CsSurface2"));
+            }
+            content.Children.Add(TaskList(m, t));
+        }
         if (m.Tasks.Count > 0)
         {
             picture.Caption = t("expected.task", ("n", m.SelectedTask + 1));
