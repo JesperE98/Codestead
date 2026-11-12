@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.6.5",
+    "date": "2026-11-12",
+    "changes": {
+      "en": [
+        "Behind the scenes: the learning window shared with Codestead GP can now let a tool use the whole right-hand side. Nothing changes in how you use the app."
+      ],
+      "sv": [
+        "Bakom kulisserna: lärfönstret som delas med Codestead GP kan nu låta ett verktyg använda hela högra sidan. Inget ändras i hur du använder appen."
+      ],
+      "de": [
+        "Hinter den Kulissen: Das mit Codestead GP geteilte Lernfenster kann ein Tool jetzt die ganze rechte Seite nutzen lassen. An der Bedienung ändert sich nichts."
+      ],
+      "fr": [
+        "En coulisses : la fenêtre d'apprentissage partagée avec Codestead GP peut désormais laisser un outil utiliser tout le côté droit. Rien ne change dans votre utilisation de l'application."
+      ],
+      "es": [
+        "Entre bastidores: la ventana de aprendizaje compartida con Codestead GP ahora puede dejar que una herramienta use todo el lado derecho. No cambia nada en cómo usas la aplicación."
+      ],
+      "zh": [
+        "幕后改动：与 Codestead GP 共享的学习窗口现在可以让工具使用整个右侧。应用的使用方式没有任何变化。"
+      ],
+      "ja": [
+        "内部の変更：Codestead GP と共有している学習ウィンドウで、ツールが右側全体を使えるようになりました。アプリの使い方は変わりません。"
+      ]
+    }
+  },
+  {
     "version": "0.6.4",
     "date": "2026-11-12",
     "changes": {

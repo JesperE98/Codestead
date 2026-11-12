@@ -143,6 +143,10 @@ public partial class LearningWindow : Window
     /// <see cref="LearningTool.HostsTasks">hosts the tasks</see> in its workbench.</summary>
     public Control TaskList => taskPanel;
 
+    /// <summary>The questions in a chapter's text: how many are answered, and how many there are (0: none).</summary>
+    public (int Done, int Total) CheckpointProgress(string chapterId) =>
+        Chapters.FirstOrDefault(c => c.Id == chapterId) is { } c ? (SolvedCheckpoints(c), CheckpointCount(c)) : (0, 0);
+
     /// <summary>Re-renders the task list (a tool whose <see cref="LearningTool.TaskStatus"/> changed).</summary>
     public void RefreshTasks() => RenderTasks();
 

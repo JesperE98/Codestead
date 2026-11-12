@@ -318,6 +318,8 @@
   "yourProject.ranNoExecutable": "应用在文件夹中找不到你的程序，所以相信你的话。",
   "yourProject.tasks": "任务状态",
   "yourProject.task": "任务 {n}",
+  "yourProject.lockedQuestions": "回答正文中的问题（{done}/{total}）即可解锁任务。",
+  "yourProject.lockedRead": "读完本章即可解锁任务。",
   "yourProject.locked": "已锁定 – 请先学完正文",
   "yourProject.needFolder": "请先选择文件夹",
   "yourProject.waitBuild": "等待构建",

@@ -318,6 +318,8 @@
   "yourProject.ranNoExecutable": "Die App findet dein Programm im Ordner nicht und verlässt sich auf dein Wort.",
   "yourProject.tasks": "Stand der Aufgaben",
   "yourProject.task": "Aufgabe {n}",
+  "yourProject.lockedQuestions": "Beantworte die Fragen im Text ({done} von {total}), um die Aufgaben freizuschalten.",
+  "yourProject.lockedRead": "Lies das Kapitel bis zum Ende, um die Aufgaben freizuschalten.",
   "yourProject.locked": "Gesperrt – arbeite zuerst den Text durch",
   "yourProject.needFolder": "Wähle zuerst einen Ordner",
   "yourProject.waitBuild": "Wartet auf einen Build",

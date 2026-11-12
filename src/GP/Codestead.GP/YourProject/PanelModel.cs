@@ -15,4 +15,6 @@ public sealed record PanelModel(
     bool Checking,
     string StatusLine,
     IReadOnlyList<TaskRow> Tasks,
-    int SelectedTask);
+    int SelectedTask,
+    string? LockNote = null,
+    (int Done, int Total) Questions = default);

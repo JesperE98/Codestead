@@ -186,12 +186,13 @@ public partial class LearningWindow
         splitter.IsVisible = shown;
         workbenchFrame.IsVisible = shown;
         bool unlocked = lesson && IsUnlocked(chapter);
-        // A tool that hosts the tasks gets the whole column once they are unlocked (no tasks card above it).
-        bool below = lesson && !(tool.HostsTasks && unlocked);
+        // A tool that hosts the tasks gets the whole column: no tasks card and no "read first" card above it (it says
+        // itself that the tasks are locked; Codestead Linux keeps both cards above its terminal).
+        bool below = lesson && !tool.HostsTasks;
         Grid.SetRow(workbenchFrame, below ? 2 : 0);
         Grid.SetRowSpan(workbenchFrame, below ? 1 : 3);
         tasksCard.IsVisible = unlocked && !tool.HostsTasks;
-        gateCard.IsVisible = lesson && !unlocked;
+        gateCard.IsVisible = lesson && !unlocked && !tool.HostsTasks;
         if (!gateCard.IsVisible) return;
 
         gatePanel.Children.Clear();
