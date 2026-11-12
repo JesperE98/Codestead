@@ -8,9 +8,12 @@ bockar av uppgiften.
 
 learnopengl.com ägnar en god del av sitt kapitel *Creating a window* åt att sätta upp ett projekt, och det gör
 vulkan-tutorial.com också i sitt kapitel *Development environment*. Det här kapitlet gör detsamma för kursens tre
-API:er: du väljer en IDE, installerar en kompilator och CMake, hämtar de bibliotek som {{api}} behöver, skriver en liten
-`CMakeLists.txt` och lär dig hur panelen **Ditt projekt** följer det du gör. Kapitlet har inga uppgifter, men dess
+API:er: du väljer en IDE, installerar en kompilator, hämtar de bibliotek som {{api}} behöver, sätter upp
+projektfilerna och lär dig hur panelen **Ditt projekt** följer det du gör. Kapitlet har inga uppgifter, men dess
 startfiler är triangelprogrammet från introduktionen, så i slutet kan du kontrollera att allt fungerar.
+
+Välj din IDE i väljaren **IDE** överst i fönstret, bredvid API:et. Från och med nu visar kapitlen stegen för den IDE
+du har valt, överallt där IDE:erna skiljer sig åt – du kan byta när som helst.
 
 ## Så arbetar du i kursen
 
@@ -23,7 +26,7 @@ kopplar ihop ett kapitel med en mapp på din disk:
    `learn/opengl/creating-a-window`.
 2. **Kopiera startfilerna** kopierar kapitlets startfiler till mappen. Om en fil redan finns där frågar appen innan
    den skriver över den.
-3. Du lägger till din `CMakeLists.txt` (samma för alla kapitel med ett API – se nedan) och öppnar mappen i din IDE.
+3. Du lägger till dina projektfiler – samma för alla kapitel med ett API, se nedan – och öppnar mappen i din IDE.
    **Öppna mappen** öppnar den i filhanteraren.
 4. Du skriver koden för en uppgift, **bygger** programmet och **kör** det från din IDE.
 
@@ -58,10 +61,15 @@ Vilken C++-IDE som helst duger, men kursen ger steg för fyra av dem:
 
 | IDE | Körs på | Kostnad | Bra att veta |
 |---|---|---|---|
-| [Visual Studio](https://visualstudio.microsoft.com/) | Windows | Community-utgåvan är gratis för privatpersoner, studenter, öppen källkod och små team | Kommer med Microsofts kompilator (MSVC), Windows SDK och CMake; det bästa valet för DirectX 12 |
+| [Visual Studio](https://visualstudio.microsoft.com/) | Windows | Community-utgåvan är gratis för privatpersoner, studenter, öppen källkod och små team | Kommer med Microsofts kompilator (MSVC) och Windows SDK; det bästa valet för DirectX 12 |
 | [CLion](https://www.jetbrains.com/clion/) | Windows, macOS, Linux | Gratis för icke-kommersiell användning; en betald licens för kommersiellt arbete | Byggd kring CMake; har med sig egen CMake och, på Windows, en egen MinGW-kompilator |
-| [Rider](https://www.jetbrains.com/rider/) | Windows, macOS, Linux | Gratis för icke-kommersiell användning; en betald licens för kommersiellt arbete | Dess C++-stöd gäller Visual Studio-solutions (och Unreal Engine), vilket i praktiken betyder Windows med Microsofts byggverktyg |
+| [Rider](https://www.jetbrains.com/rider/) | Windows, macOS, Linux | Gratis för icke-kommersiell användning; en betald licens för kommersiellt arbete | Bygger C++ med Microsofts byggverktyg utifrån Visual Studio-solutions, vilket i praktiken betyder Windows |
 | [Visual Studio Code](https://code.visualstudio.com/) | Windows, macOS, Linux | Gratis | En editor som blir en C++-IDE med Microsofts tillägg **C/C++** och **CMake Tools**; kompilatorn och CMake installerar du själv |
+
+De fyra bygger kursens projekt på två sätt. **CLion** och **VS Code** använder **CMake**: en `CMakeLists.txt` i
+kapitelmappen beskriver programmet. **Visual Studio** och **Rider** använder en **Visual Studio-solution**: en
+`.sln`-fil och en projektfil, `.vcxproj`, vars inställningar anger include-mapparna, biblioteken och arbetskatalogen.
+(Visual Studio kan också öppna en CMake-mapp, och Rider ett CMake-projekt; kursens steg för dem följer solutionen.)
 
 :::opengl
 För OpenGL fungerar alla. På Windows är Visual Studio det som learnopengl.com använder; på Linux och macOS CLion eller
@@ -74,22 +82,22 @@ nedan).
 :::
 :::d3d12
 Direct3D 12 finns bara på Windows, och Microsofts exempel är Visual Studio-solutions, så Visual Studio är det
-naturliga valet. CLion och VS Code fungerar också, så länge de använder Microsofts kompilator (MSVC); Rider öppnar
-samma solutions som Visual Studio.
+naturliga valet. Rider öppnar samma solutions; CLion och VS Code fungerar också, så länge de använder Microsofts
+kompilator (MSVC).
 :::
 
 ```quiz
-Du arbetar på en Mac. Vilka av de här IDE:erna kan du använda för kursens CMake-projekt? (Välj alla som stämmer.)
-- [x] CLion
-- [ ] Visual Studio
-- [x] Visual Studio Code med tilläggen C/C++ och CMake Tools
-- [ ] Rider
+Hur bygger IDE:erna kursens projekt? (Välj alla som stämmer.)
+- [x] CLion och VS Code bygger utifrån en `CMakeLists.txt` med CMake
+- [ ] VS Code behöver inga byggfiler alls
+- [x] Visual Studio och Rider bygger en Visual Studio-solution (`.sln` och `.vcxproj`)
+- [ ] Rider bygger utifrån en makefile
 ---
-Visual Studio körs bara på Windows. Rider körs på macOS, men dess C++-stöd gäller Visual Studio-solutions och Unreal
-Engine – inte CMake-projekt. CLion och VS Code öppnar en `CMakeLists.txt` på alla system.
+CMake är byggsystemet i CLion och i VS Codes CMake Tools. Visual Studios egna projekt är solutions, och Rider bygger
+samma solutions med Microsofts byggverktyg.
 ```
 
-## En kompilator och CMake
+## En kompilator
 
 Din IDE behöver en C++17-kompilator:
 
@@ -106,12 +114,17 @@ Din IDE behöver en C++17-kompilator:
 - **macOS:** Apples Clang från **Xcode Command Line Tools** (`xcode-select --install` i en terminal), och CMake från
   [cmake.org](https://cmake.org/download/) eller Homebrew (`brew install cmake`).
 
+:::ide clion vscode
 **CMake** beskriver ett projekt i en fil som heter `CMakeLists.txt`: vilka källfiler programmet består av, vilka
 bibliotek det använder och var de finns. Utifrån den filen genererar CMake byggfilerna för din kompilator
-(Ninja-filer, makefiler eller en Visual Studio-solution), som IDE:n sedan bygger. Alla fyra IDE:erna förstår den, så
-en och samma `CMakeLists.txt` fungerar överallt. Visual Studio och CLion har CMake med sig; till VS Code installerar
-du det själv. `CMakeLists.txt` här nedan kräver CMake 3.24 eller nyare, och Git, som CMake använder för att ladda ner
-bibliotek.
+(Ninja-filer eller makefiler), som IDE:n sedan bygger. CLion har CMake med sig; till VS Code installerar du det själv.
+`CMakeLists.txt` här nedan kräver CMake 3.24 eller nyare, och Git, som CMake använder för att ladda ner bibliotek.
+:::
+:::ide vs rider
+En **Visual Studio-solution** byggs av MSBuild, som följer med Visual Studio och med *Build Tools for Visual Studio*.
+Rider använder samma MSBuild och samma kompilator, så även för Rider installerar du Build Tools (eller Visual Studio
+Community) med arbetsbelastningen **Desktop development with C++**.
+:::
 
 ## Biblioteken för {{api}}
 
@@ -120,20 +133,30 @@ OpenGL självt behöver du inte installera: det följer med drivrutinen för dit
 bibliotek som learnopengl.coms kod använder:
 
 - **GLFW** ([glfw.org](https://www.glfw.org/download.html)) skapar fönstret och OpenGL-kontexten och ger dig
-  tangentbord och mus. `CMakeLists.txt` här nedan laddar ner och bygger det åt dig, om den inte hittar ett installerat
-  GLFW (på Linux `libglfw3-dev` eller motsvarande i din distribution, på macOS `brew install glfw`).
+  tangentbord och mus.
 - **GLAD** laddar OpenGL-funktionerna när programmet körs. Du genererar det på [glad.dav1d.de](https://glad.dav1d.de/):
   språk **C/C++**, specifikation **OpenGL**, API **gl** version **3.3**, profil **Core**, **Generate a loader**
   ikryssat, och sedan **Generate**. Zip-filen innehåller `include/glad/glad.h`, `include/KHR/khrplatform.h` och
   `src/glad.c`. ([gen.glad.sh](https://gen.glad.sh/) är generatorn för GLAD 2, vars funktioner heter något annat;
   kursens kod använder GLAD 1:s `gladLoadGLLoader`.)
 - **GLM** ([github.com/g-truc/glm](https://github.com/g-truc/glm)), matematikbiblioteket, från och med
-  *Transformationer*. `CMakeLists.txt` laddar ner det också.
+  *Transformationer*.
 - **stb_image** ([github.com/nothings/stb](https://github.com/nothings/stb)), en enda header, `stb_image.h`, som
   läser in bilder, från och med *Texturer*.
 - Senare **Assimp** ([assimp.org](https://www.assimp.org/), [github.com/assimp/assimp](https://github.com/assimp/assimp))
   för *Model Loading*, och **FreeType** ([freetype.org](https://freetype.org/)) för *Textrendering*. De kapitlen
   berättar vad du ska lägga till.
+
+:::ide clion vscode
+GLFW och GLM kommer av sig själva: `CMakeLists.txt` här nedan laddar ner och bygger dem, om den inte hittar
+installerade (på Linux `libglfw3-dev` och `libglm-dev` eller motsvarande i din distribution, på macOS
+`brew install glfw glm`).
+:::
+:::ide vs rider
+För GLFW laddar du ner **64-bit Windows binaries** från glfw.org: zip-filen har en `include`-mapp och en
+`lib-vc2022`-mapp med `glfw3.lib` (den fungerar även med nyare Visual Studio-versioner). GLM består bara av
+headerfiler: ladda ner repositoryt (eller en release) så att dess `glm`-mapp, den med `glm.hpp` i, finns till hands.
+:::
 
 ```quiz
 Varför genererar kursen GLAD på glad.dav1d.de och inte på gen.glad.sh?
@@ -149,7 +172,8 @@ för GLAD 1, precis som learnopengl.coms.
 - **Vulkan SDK** från LunarG ([vulkan.lunarg.com](https://vulkan.lunarg.com/)), för Windows, Linux och macOS. Det
   innehåller Vulkans headerfiler, **loadern** som ditt program länkar mot, **valideringslagren**
   (`VK_LAYER_KHRONOS_validation`), shaderkompilatorn **glslc** som gör om din GLSL till SPIR-V, och `vkcube`, en liten
-  demo – kör den först för att se att ditt grafikkort och din drivrutin stöder Vulkan. På Linux kan du i stället
+  demo – kör den först för att se att ditt grafikkort och din drivrutin stöder Vulkan. På Windows sätter
+  installationsprogrammet också miljövariabeln `VULKAN_SDK` till mappen det installerade i. På Linux kan du i stället
   använda din distributions paket, till exempel på Debian och Ubuntu:
 
   ```text
@@ -161,13 +185,22 @@ för GLAD 1, precis som learnopengl.coms.
   `VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR` i create-infons `flags`; kursens kod riktar sig mot Windows och
   Linux och gör inte det.
 - **GLFW** ([glfw.org](https://www.glfw.org/download.html)) för fönstret, och **GLM**
-  ([github.com/g-truc/glm](https://github.com/g-truc/glm)) för matematiken. `CMakeLists.txt` här nedan laddar ner och
-  bygger båda, om den inte hittar installerade.
+  ([github.com/g-truc/glm](https://github.com/g-truc/glm)) för matematiken.
 - **stb_image** ([github.com/nothings/stb](https://github.com/nothings/stb)), en enda header, `stb_image.h`, från och
   med *Texturer*, och **tinyobjloader** ([github.com/tinyobjloader/tinyobjloader](https://github.com/tinyobjloader/tinyobjloader)),
   en enda header, `tiny_obj_loader.h`, för modellerna, som i vulkan-tutorial.com.
 - Senare **Assimp** ([assimp.org](https://www.assimp.org/), [github.com/assimp/assimp](https://github.com/assimp/assimp))
   och **FreeType** ([freetype.org](https://freetype.org/)). De kapitlen berättar vad du ska lägga till.
+
+:::ide clion vscode
+GLFW och GLM kommer av sig själva: `CMakeLists.txt` här nedan laddar ner och bygger dem, om den inte hittar
+installerade.
+:::
+:::ide vs rider
+För GLFW laddar du ner **64-bit Windows binaries** från glfw.org: zip-filen har en `include`-mapp och en
+`lib-vc2022`-mapp med `glfw3.lib` (den fungerar även med nyare Visual Studio-versioner). GLM består bara av
+headerfiler: ladda ner repositoryt (eller en release) så att dess `glm`-mapp, den med `glm.hpp` i, finns till hands.
+:::
 
 ```quiz
 Vad gör glslc, som följer med Vulkan SDK, för ditt projekt?
@@ -217,6 +250,7 @@ Varje kapitel får en egen mapp, och de bibliotek som bara är filer – de du l
 `libs`-mapp som alla kapitel delar:
 
 :::opengl
+:::ide clion vscode
 ```text
 learn/
   libs/
@@ -230,7 +264,26 @@ learn/
       ...
 ```
 :::
+:::ide vs rider
+```text
+learn/
+  libs/
+    glad/        include/glad/glad.h, include/KHR/khrplatform.h, src/glad.c
+    glfw/        include/GLFW/glfw3.h, lib-vc2022/glfw3.lib
+    glm/         glm/glm.hpp …
+    stb/         stb_image.h
+  opengl/
+    LearnOpenGL/          projektet som du kopierar till varje kapitel (se nedan)
+    creating-a-window/
+      LearnOpenGL.sln, LearnOpenGL.vcxproj
+      main.cpp
+    hello-window/
+      ...
+```
+:::
+:::
 :::vulkan
+:::ide clion vscode
 ```text
 learn/
   libs/
@@ -247,7 +300,29 @@ learn/
     ...
 ```
 :::
+:::ide vs rider
+```text
+learn/
+  libs/
+    glfw/            include/GLFW/glfw3.h, lib-vc2022/glfw3.lib
+    glm/             glm/glm.hpp …
+    stb/             stb_image.h
+    tinyobjloader/   tiny_obj_loader.h
+  vulkan/
+    LearnVulkan/     projektet som du kopierar till varje kapitel (se nedan)
+    creating-a-window/
+      LearnVulkan.sln, LearnVulkan.vcxproj
+      main.cpp
+    hello-triangle/
+      LearnVulkan.sln, LearnVulkan.vcxproj
+      main.cpp
+      shaders/shader.vert, shaders/shader.frag
+    ...
+```
+:::
+:::
 :::d3d12
+:::ide clion vscode
 ```text
 learn/
   libs/
@@ -264,14 +339,33 @@ learn/
     ...
 ```
 :::
+:::ide vs rider
+```text
+learn/
+  libs/
+    DirectX-Headers/   repositoryt: include/directx/d3dx12.h …
+    stb/               stb_image.h
+  d3d12/
+    LearnDirectX/      projektet som du kopierar till varje kapitel (se nedan)
+    creating-a-window/
+      LearnDirectX.sln, LearnDirectX.vcxproj
+      main.cpp
+    hello-triangle/
+      LearnDirectX.sln, LearnDirectX.vcxproj
+      main.cpp
+      shaders.hlsl
+    ...
+```
+:::
+:::
 
 Låt din IDE:s byggmapp ligga inuti kapitelmappen – det gör alla fyra IDE:erna som standard – så att appen hittar
 programmet du bygger.
 
 Programmen läser in sina shaders, texturer och modeller med sökvägar relativt **arbetskatalogen** (working
 directory), mappen som ett program körs i: `"shaders/vert.spv"`, `"container.png"`, `L"shaders.hlsl"`. Startfilerna
-lägger de filerna i kapitelmappen, så programmet måste köras med kapitelmappen som arbetskatalog. Stegen för varje IDE
-här nedan visar hur.
+lägger de filerna i kapitelmappen, så programmet måste köras med kapitelmappen som arbetskatalog. Stegen här nedan
+visar hur.
 
 ```quiz
 Ditt program byggs, men när det startar avbryts det med ett fel om att det inte kan öppna en av sina shaderfiler. Filen ligger i kapitelmappen. Vad är den troligaste orsaken?
@@ -280,16 +374,24 @@ Ditt program byggs, men när det startar avbryts det med ett fel om att det inte
 - [x] Programmet körs med en annan arbetskatalog än kapitelmappen – oftast byggmappen
 - [ ] `libs`-mappen saknas
 ---
-Relativa sökvägar utgår från arbetskatalogen. IDE:er kör ofta ett program i mappen där det byggdes, så ställ in
-kapitelmappen som arbetskatalog (`CMakeLists.txt` här nedan gör det åt Visual Studio).
+Relativa sökvägar utgår från arbetskatalogen. IDE:er kör ofta ett program i mappen där det byggdes, så arbetskatalogen
+måste vara kapitelmappen – stegen här nedan visar hur för din IDE.
 ```
 
-## En CMakeLists.txt
+## Projektfilerna
 
-Det här är allt ett kapitel behöver. Lägg den i varje kapitelmapp bredvid startfilerna – det är samma fil för alla
-kapitel i kursen.
+:::ide clion vscode
+En `CMakeLists.txt` är allt ett kapitel behöver. Lägg den i varje kapitelmapp bredvid startfilerna – det är samma fil
+för alla kapitel i kursen.
+:::
+:::ide vs rider
+Du sätter upp ett Visual Studio-projekt en gång per API och kopierar dess två filer, `.sln` och `.vcxproj`, till varje
+kapitelmapp. Projektet hänvisar till `main.cpp` och till `libs`-mappen med relativa sökvägar, så kopiorna fungerar
+oförändrade i varje kapitelmapp på samma djup (`learn/<api>/<kapitel>`).
+:::
 
 :::opengl
+:::ide clion vscode
 ```text
 cmake_minimum_required(VERSION 3.24)
 project(LearnOpenGL C CXX)
@@ -322,7 +424,42 @@ På Linux installerar du din distributions GLFW-paket: att bygga GLFW från käl
 för X11 och Wayland. Du behöver inte länka mot `opengl32.lib` eller `libGL` själv – GLFW skapar kontexten och GLAD ber
 den om varje funktion.
 :::
+:::ide vs rider
+Projektet, `LearnOpenGL`, kompilerar `main.cpp` och GLAD:s `glad.c`, och behöver de här inställningarna för **alla
+konfigurationer** (All Configurations) och plattformen **x64**:
+
+- **C/C++ → General → Additional Include Directories:**
+  `..\..\libs\glfw\include;..\..\libs\glad\include;..\..\libs\glm;..\..\libs\stb`
+- **C/C++ → Language → C++ Language Standard:** ISO C++17
+- **Linker → General → Additional Library Directories:** `..\..\libs\glfw\lib-vc2022`
+- **Linker → Input → Additional Dependencies:** `glfw3.lib;opengl32.lib` före dem som redan står där
+- **Debugging → Working Directory:** `$(ProjectDir)` – standardvärdet, som är kapitelmappen
+
+I projektfilen är de här inställningarna en `ItemDefinitionGroup`, efter dem som redan finns, och de två källfilerna
+en `ItemGroup`:
+
+```text
+<ItemDefinitionGroup>
+  <ClCompile>
+    <AdditionalIncludeDirectories>..\..\libs\glfw\include;..\..\libs\glad\include;..\..\libs\glm;..\..\libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    <LanguageStandard>stdcpp17</LanguageStandard>
+  </ClCompile>
+  <Link>
+    <AdditionalLibraryDirectories>..\..\libs\glfw\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    <AdditionalDependencies>glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+  </Link>
+</ItemDefinitionGroup>
+<ItemGroup>
+  <ClCompile Include="main.cpp" />
+  <ClCompile Include="..\..\libs\glad\src\glad.c" />
+</ItemGroup>
+```
+
+Relativa sökvägar i de här inställningarna utgår från mappen där `.vcxproj` ligger, alltså kapitelmappen.
+:::
+:::
 :::vulkan
+:::ide clion vscode
 ```text
 cmake_minimum_required(VERSION 3.24)
 project(LearnVulkan CXX)
@@ -371,10 +508,53 @@ set_target_properties(LearnVulkan PROPERTIES LINK_DEPENDS "${SHADERS}")
 ```
 
 Loopen gör det som vulkan-tutorial.coms `compile.bat` och `compile.sh` gör för hand: den kör `glslc` för varje
-shader, och igen så fort du ändrar en. Bygg inte konfigurationen **Release** medan du lär dig: den definierar `NDEBUG`,
-som stänger av valideringslagren.
+shader, och igen så fort du ändrar en.
+:::
+:::ide vs rider
+Projektet, `LearnVulkan`, kompilerar `main.cpp` och behöver de här inställningarna för **alla konfigurationer** (All
+Configurations) och plattformen **x64**:
+
+- **C/C++ → General → Additional Include Directories:**
+  `$(VULKAN_SDK)\Include;..\..\libs\glfw\include;..\..\libs\glm;..\..\libs\stb;..\..\libs\tinyobjloader`
+- **C/C++ → Language → C++ Language Standard:** ISO C++17
+- **Linker → General → Additional Library Directories:** `$(VULKAN_SDK)\Lib;..\..\libs\glfw\lib-vc2022`
+- **Linker → Input → Additional Dependencies:** `vulkan-1.lib;glfw3.lib` före dem som redan står där
+- **Build Events → Pre-Build Event → Command Line:** `glslc`-kommandona här nedan
+- **Debugging → Working Directory:** `$(ProjectDir)` – standardvärdet, som är kapitelmappen
+
+En solution kompilerar inte shaders av sig själv. Pre-build-händelsen gör det som vulkan-tutorial.coms `compile.bat`
+gör: den kör SDK:ts `glslc` för varje shader i `shaders\` före varje bygge – `shader.vert` blir `vert.spv`
+(vulkan-tutorials namn), alla andra `namn.vert` blir `namn.vert.spv`. I projektfilen:
+
+```text
+<ItemDefinitionGroup>
+  <ClCompile>
+    <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;..\..\libs\glfw\include;..\..\libs\glm;..\..\libs\stb;..\..\libs\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    <LanguageStandard>stdcpp17</LanguageStandard>
+  </ClCompile>
+  <Link>
+    <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;..\..\libs\glfw\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+  </Link>
+  <PreBuildEvent>
+    <Command>for %%f in (shaders\*.vert shaders\*.frag shaders\*.geom shaders\*.tesc shaders\*.tese shaders\*.comp) do "$(VULKAN_SDK)\Bin\glslc.exe" "%%f" -o "%%f.spv"
+if exist shaders\shader.vert "$(VULKAN_SDK)\Bin\glslc.exe" shaders\shader.vert -o shaders\vert.spv
+if exist shaders\shader.frag "$(VULKAN_SDK)\Bin\glslc.exe" shaders\shader.frag -o shaders\frag.spv</Command>
+  </PreBuildEvent>
+</ItemDefinitionGroup>
+<ItemGroup>
+  <ClCompile Include="main.cpp" />
+</ItemGroup>
+```
+
+Relativa sökvägar i de här inställningarna utgår från mappen där `.vcxproj` ligger, alltså kapitelmappen, och
+bygghändelserna körs också där.
+:::
+
+Bygg inte konfigurationen **Release** medan du lär dig: den definierar `NDEBUG`, som stänger av valideringslagren.
 :::
 :::d3d12
+:::ide clion vscode
 ```text
 cmake_minimum_required(VERSION 3.24)
 project(LearnDirectX CXX)
@@ -396,68 +576,71 @@ set_target_properties(LearnDirectX PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CM
 file(GLOB SHADERS CONFIGURE_DEPENDS *.hlsl)
 set_target_properties(LearnDirectX PROPERTIES LINK_DEPENDS "${SHADERS}")
 ```
+:::
+:::ide vs rider
+Projektet, `LearnDirectX`, kompilerar `main.cpp` och behöver de här inställningarna för **alla konfigurationer** (All
+Configurations) och plattformen **x64**:
 
-`d3d12.lib`, `dxgi.lib` och `d3dcompiler.lib` behöver ingen rad här: raderna `#pragma comment(lib, ...)` överst i
+- **C/C++ → General → Additional Include Directories:** `..\..\libs\DirectX-Headers\include\directx;..\..\libs\stb`
+- **C/C++ → Language → C++ Language Standard:** ISO C++17
+- **Linker → System → SubSystem:** Windows – programmet startar i `wWinMain`, inte i `main`
+- **Debugging → Working Directory:** `$(ProjectDir)` – standardvärdet, som är kapitelmappen, där `shaders.hlsl` ligger
+
+I projektfilen:
+
+```text
+<ItemDefinitionGroup>
+  <ClCompile>
+    <AdditionalIncludeDirectories>..\..\libs\DirectX-Headers\include\directx;..\..\libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    <LanguageStandard>stdcpp17</LanguageStandard>
+  </ClCompile>
+  <Link>
+    <SubSystem>Windows</SubSystem>
+  </Link>
+</ItemDefinitionGroup>
+<ItemGroup>
+  <ClCompile Include="main.cpp" />
+</ItemGroup>
+```
+:::
+
+`d3d12.lib`, `dxgi.lib` och `d3dcompiler.lib` behöver ingen inställning: raderna `#pragma comment(lib, ...)` överst i
 `main.cpp` länkar dem. Bygg konfigurationen **Debug**: den definierar `_DEBUG`, som slår på koden för debug-lagret.
 :::
 
+:::ide clion vscode
 Två rader finns där för kursens skull snarare än för kompilatorns. `VS_DEBUGGER_WORKING_DIRECTORY` gör att Visual
-Studio (och de solutions som CMake genererar) kör programmet i kapitelmappen. `LINK_DEPENDS` länkar programmet igen när
-du bara har ändrat en shader: shaders är också källfiler, och appen räknar bara ett bygge vars program är nyare än alla
+Studio kör programmet i kapitelmappen, om du någon gång öppnar mappen där. `LINK_DEPENDS` länkar programmet igen när du
+bara har ändrat en shader: shaders är också källfiler, och appen räknar bara ett bygge vars program är nyare än alla
 dem.
+:::
+:::ide vs rider
+Shaders, texturer och modeller ligger kvar i kapitelmappen, där programmet körs. (Vill du hellre köra `.exe`-filen
+från dess egen mapp kopierar du dem dit med en post-build-händelse, till exempel
+`xcopy /y /s /i "$(ProjectDir)shaders" "$(OutDir)shaders"`.) En solution länkar inte om programmet när du bara har
+ändrat en shader, men shaders är också källfiler, och appen räknar bara ett bygge vars program är nyare än alla dem:
+efter en ändring som bara gäller shaders använder du **Build → Rebuild Solution**.
+:::
 
-## Visual Studio
+## Bygga och köra
 
-**Öppna mappen (CMake).** Eftersom Visual Studio förstår CMake direkt finns det ingen solution att skapa:
-
+:::ide vs
 1. Installera arbetsbelastningen **Desktop development with C++** i Visual Studio Installer.
-2. **File → Open → Folder…** och välj kapitelmappen. Visual Studio kör CMake av sig självt; fönstret *Output* visar
-   när det är klart.
-3. Välj programmet (`LearnOpenGL.exe`, `LearnVulkan.exe` eller `LearnDirectX.exe`) i listan **Select Startup Item** i
-   verktygsfältet.
-4. **Build → Build All** (Ctrl+Shift+B) bygger det; **Debug → Start Without Debugging** (Ctrl+F5) eller
+2. Skapa en gång per API projektet som du ska kopiera: **File → New → Project…**, **Empty Project** (C++). Döp det
+   till `LearnOpenGL`, `LearnVulkan` eller `LearnDirectX`, välj din mapp `learn/<api>` som plats (Location) och kryssa
+   i **Place solution and project in the same directory**.
+3. Lägg till en `main.cpp` med **Project → Add New Item…** (en tom duger – varje kapitel har med sig sin egen; för
+   OpenGL lägger du också till `glad.c` med **Project → Add Existing Item…**), och gör inställningarna ovan under
+   **Project → Properties** (Configuration *All Configurations*, Platform *x64*).
+4. För varje kapitel kopierar du projektets `.sln`, `.vcxproj` och `.vcxproj.filters` till kapitelmappen, bredvid
+   startfilerna, och öppnar `.sln`-filen där.
+5. **Build → Build Solution** (Ctrl+Shift+B) bygger programmet; **Debug → Start Without Debugging** (Ctrl+F5) eller
    **Start Debugging** (F5) bygger det vid behov och kör det.
 
-Programmet hamnar i `out/build/<konfiguration>/` inuti kapitelmappen, till exempel
-`out/build/x64-Debug/LearnOpenGL.exe`, och körs i kapitelmappen tack vare `VS_DEBUGGER_WORKING_DIRECTORY`.
-
-**En egen solution (utan CMake).** Det här är vägen som learnopengl.com och vulkan-tutorial.com beskriver:
-
-1. **File → New → Project…**, **Empty Project** (C++). Kryssa i **Place solution and project in the same directory**,
-   och låt Visual Studio skapa kapitelmappen.
-2. Välj den mappen i panelen **Ditt projekt** och kopiera startfilerna dit. Lägg till dem i projektet med
-   **Project → Add Existing Item…**.
-3. I projektets **Properties** (Configuration *All Configurations*, Platform *x64*) sätter du
-   **C/C++ → General → Additional Include Directories** till bibliotekens include-mappar,
-   **Linker → General → Additional Library Directories** till deras biblioteksmappar,
-   **Linker → Input → Additional Dependencies** till deras `.lib`-filer och
-   **C/C++ → Language → C++ Language Standard** till C++17.
-4. Bygg med **Build → Build Solution** och kör med Ctrl+F5 eller F5.
-
-Programmet hamnar i `x64/Debug/` inuti mappen. Visual Studio kör det som standard i projektmappen
-(**Debugging → Working Directory** är `$(ProjectDir)`), och det är kapitelmappen.
-
-:::opengl
-För OpenGL använder du GLFW:s förkompilerade binärer från glfw.org: deras `include`-mapp, den `lib-vc…`-mapp som passar
-din Visual Studio, och `glfw3.lib` plus `opengl32.lib` som beroenden. Lägg till `glad.c` i projektet.
+Programmet hamnar i `x64/Debug/` inuti kapitelmappen, till exempel `x64/Debug/LearnOpenGL.exe`, och körs i
+kapitelmappen.
 :::
-:::vulkan
-För Vulkan lägger du till SDK:ts mappar `Include` och `Lib`, GLFW:s `include`- och biblioteksmappar, och
-`vulkan-1.lib` och `glfw3.lib`. En solution kompilerar inte dina shaders: lägg till en **Build Events → Pre-Build
-Event** som kör SDK:ts `%VULKAN_SDK%\Bin\glslc.exe` för varje shader, så som vulkan-tutorial.coms `compile.bat` gör.
-CMake-vägen gör allt det här åt dig.
-:::
-:::d3d12
-För DirectX 12 lägger du till `DirectX-Headers\include\directx` bland include-mapparna och sätter
-**Linker → System → SubSystem** till **Windows**, eftersom programmet startar i `wWinMain`. Det är allt: raderna
-`#pragma comment` länkar Direct3D-biblioteken.
-:::
-
-En solution har ingen `LINK_DEPENDS`: när du bara har ändrat en shader använder du **Build → Rebuild Solution**, så att
-programmet blir nyare än shadern.
-
-## CLion
-
+:::ide clion
 1. **File → Open…** och välj kapitelmappen. CLion läser `CMakeLists.txt` och frågar första gången efter en
    CMake-profil; standardprofilen **Debug** duger.
 2. CLion skapar en körkonfiguration för programmet. Öppna **Run → Edit Configurations…** och sätt dess
@@ -465,28 +648,23 @@ programmet blir nyare än shadern.
 3. **Build → Build Project** (Ctrl+F9) bygger det; **Run → Run** (Shift+F10) eller den gröna ▶-knappen kör det.
 
 Programmet hamnar i `cmake-build-debug/` inuti kapitelmappen.
-
-:::d3d12
-På Windows använder CLion sin medföljande MinGW som standard. För DirectX 12 lägger du till en **Visual
-Studio**-toolchain under **Settings → Build, Execution, Deployment → Toolchains** och flyttar den överst (eller väljer
-den i CMake-profilen).
 :::
+:::ide rider
+1. Installera *Build Tools for Visual Studio* (eller Visual Studio Community) med arbetsbelastningen **Desktop
+   development with C++**: Rider bygger C++ med Microsofts MSBuild och kompilator.
+2. Skapa en gång per API projektet som du ska kopiera: ett C++-projekt som heter `LearnOpenGL`, `LearnVulkan` eller
+   `LearnDirectX` i din mapp `learn/<api>`, med `.sln` och `.vcxproj` i samma mapp – med Riders **File → New
+   Solution…** eller, om du har det, med Visual Studios **Empty Project**.
+3. Lägg till en `main.cpp` (för OpenGL även `glad.c`) och inställningarna ovan: öppna `.vcxproj`-filen i editorn – den
+   är MSBuild-XML – och lägg till `ItemDefinitionGroup` och `ItemGroup` efter dem som redan finns.
+4. För varje kapitel kopierar du projektets `.sln`, `.vcxproj` och `.vcxproj.filters` till kapitelmappen, bredvid
+   startfilerna, och öppnar `.sln`-filen där med **File → Open…**.
+5. **Build → Build Solution** bygger programmet; **Run → Run** kör det.
 
-## Rider
-
-Rider bygger C++ via Visual Studio-solutions, så det behöver Microsofts byggverktyg (Visual Studio eller *Build Tools
-for Visual Studio* med arbetsbelastningen **Desktop development with C++**). Det finns två sätt att få en solution:
-
-- Skapa en enligt *En egen solution* ovan (i Visual Studio) och öppna den i Rider.
-- Eller låt CMake generera en: kör `cmake -B build` i en terminal i kapitelmappen. På Windows använder CMake den nyaste
-  Visual Studio den hittar och skriver en Visual Studio-solution till `build`. Öppna den i Rider med **File → Open…**.
-
-Välj programmets projekt (inte `ALL_BUILD`) som det som ska köras, bygg med **Build → Build Solution** och kör med
-**Run → Run**. Programmet hamnar i `build/Debug/` (eller `x64/Debug/` för en egen solution). Om det inte hittar sina
-filer sätter du **Working directory** under **Run → Edit Configurations…** till kapitelmappen.
-
-## Visual Studio Code
-
+Programmet hamnar i `x64/Debug/` inuti kapitelmappen. Om det inte hittar sina filer sätter du **Working directory**
+under **Run → Edit Configurations…** till kapitelmappen.
+:::
+:::ide vscode
 1. Installera tilläggen **C/C++** och **CMake Tools** (båda från Microsoft), en kompilator och CMake.
 2. **File → Open Folder…** och välj kapitelmappen. CMake Tools hittar `CMakeLists.txt` och frågar efter ett *kit* –
    kompilatorn som ska användas. (För DirectX 12 väljer du ett Visual Studio-kit.)
@@ -504,11 +682,20 @@ För att köra det i debuggern med **CMake: Debug** (Ctrl+F5) talar du om arbets
     "cmake.debugConfig": { "cwd": "${workspaceFolder}" }
 }
 ```
+:::
+
+:::d3d12
+:::ide clion
+På Windows använder CLion sin medföljande MinGW som standard. För DirectX 12 lägger du till en **Visual
+Studio**-toolchain under **Settings → Build, Execution, Deployment → Toolchains** och flyttar den överst (eller väljer
+den i CMake-profilen).
+:::
+:::
 
 ## Prova
 
 Det här kapitlets startfiler är triangelprogrammet från introduktionen. Välj en mapp för kapitlet, kopiera
-startfilerna, lägg till din `CMakeLists.txt`, öppna mappen i din IDE, bygg och kör. Om ett fönster med en orange
+startfilerna, lägg till dina projektfiler, öppna mappen i din IDE, bygg och kör. Om ett fönster med en orange
 triangel på en mörkt blågrön bakgrund dyker upp är din IDE, din kompilator och biblioteken för {{api}} redo – nästa
 kapitel börjar med ett tomt fönster.
 

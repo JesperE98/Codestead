@@ -405,8 +405,16 @@ Vulkan itself checks very little to keep the driver fast. The validation layers 
 
 Vulkan doesn't take shader source code. It takes **SPIR-V**, a binary intermediate format. You still write the shaders
 in a high-level language – in this course GLSL, as in OpenGL – and compile them to SPIR-V before the program runs with
-`glslc` from the Vulkan SDK; the `CMakeLists.txt` from *Setting up your IDE* does that for you whenever you build. The
-program then loads the compiled files:
+`glslc` from the Vulkan SDK.
+
+:::ide clion vscode
+The `CMakeLists.txt` from *Setting up your IDE* does that for you whenever you build.
+:::
+:::ide vs rider
+The pre-build event of your project from *Setting up your IDE* does that for you whenever you build.
+:::
+
+The program then loads the compiled files:
 
 ```cpp
 auto vertShaderCode = readFile("shaders/vert.spv");

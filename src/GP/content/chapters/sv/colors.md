@@ -176,8 +176,19 @@ och en enhetsmatris som `model` på det innan den ritar de 36 hörnen med `cubeV
 :::
 :::vulkan
 Shaderfilerna är `shaders/colors.vert` och `shaders/colors.frag` (den belysta kuben) samt `shaders/light_cube.vert` och
-`shaders/light_cube.frag` (lampan – mer om dem nedan). Din `CMakeLists.txt` kompilerar var och en till SPIR-V,
-`shaders/<namn>.vert.spv` och `shaders/<namn>.frag.spv`. Som förut ligger vy- och projektionsmatriserna i uniform
+`shaders/light_cube.frag` (lampan – mer om dem nedan).
+
+:::ide clion vscode
+Din `CMakeLists.txt` kompilerar var och en till SPIR-V, `shaders/<namn>.vert.spv` och `shaders/<namn>.frag.spv`. Den
+kompilerar varje shader den hittar i `shaders/`, så nya shaderfiler kräver ingen ändring i den.
+:::
+:::ide vs rider
+Pre-build-händelsen i ditt projekt kompilerar var och en till SPIR-V, `shaders\<namn>.vert.spv` och
+`shaders\<namn>.frag.spv`. Den kompilerar varje shader den hittar i `shaders\`, så nya shaderfiler kräver ingen ändring
+i den.
+:::
+
+Som förut ligger vy- och projektionsmatriserna i uniform
 buffern (fortfarande på **binding 2** – bindings 0 och 1 höll texturerna och kommer tillbaka med lighting maps), som
 `updateUniformBuffer()` fyller i varje bildruta, och modellmatrisen är en push constant. `Vertex`-structen innehåller
 bara en `glm::vec3 pos`, och `getAttributeDescriptions()` beskriver det enda attributet.

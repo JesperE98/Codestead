@@ -265,8 +265,8 @@ Gör den globala `Text` efter `Effects` och sätt upp den i `Init`, efter efterb
 
 ### Ladda typsnittet
 
-`Load` är kapitlet Textrenderings glyfloop: FreeType laddar typsnittet i den givna pixelstorleken, och vart och ett av
-de första 128 ASCII-tecknen blir en `Character`.
+`Load` är kapitlet Textrenderings glyfloop – projektet länkar FreeType så som du satte upp det där: FreeType laddar
+typsnittet i den givna pixelstorleken, och vart och ett av de första 128 ASCII-tecknen blir en `Character`.
 
 :::opengl
 ```cpp

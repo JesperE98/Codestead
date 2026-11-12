@@ -176,8 +176,18 @@ The program is built with `Shader lightingShader("colors.vs", "colors.fs");`, an
 :::
 :::vulkan
 The shaders are `shaders/colors.vert` and `shaders/colors.frag` (the lit cube) and `shaders/light_cube.vert` and
-`shaders/light_cube.frag` (the lamp – more about those below). Your `CMakeLists.txt` compiles each of them to SPIR-V,
-`shaders/<name>.vert.spv` and `shaders/<name>.frag.spv`. As before, the view and projection matrices live in the uniform
+`shaders/light_cube.frag` (the lamp – more about those below).
+
+:::ide clion vscode
+Your `CMakeLists.txt` compiles each of them to SPIR-V, `shaders/<name>.vert.spv` and `shaders/<name>.frag.spv`. It
+compiles every shader it finds in `shaders/`, so new shader files need no change to it.
+:::
+:::ide vs rider
+The pre-build event of your project compiles each of them to SPIR-V, `shaders\<name>.vert.spv` and
+`shaders\<name>.frag.spv`. It compiles every shader it finds in `shaders\`, so new shader files need no change to it.
+:::
+
+As before, the view and projection matrices live in the uniform
 buffer (still at **binding 2** – bindings 0 and 1 held the textures and come back with the lighting maps), filled every
 frame by `updateUniformBuffer()`, and the model matrix is a push constant. The `Vertex` struct holds just a
 `glm::vec3 pos`, and `getAttributeDescriptions()` describes that one attribute.

@@ -34,7 +34,7 @@ the D3D12HelloWindow sample.
 :::
 
 The chapter's start files already contain the program's skeleton: copy them into this chapter's folder with
-**Copy start files**, add your `CMakeLists.txt` and open the folder in your IDE. `// TODO:` comments mark where your
+**Copy start files**, add your project files and open the folder in your IDE. `// TODO:` comments mark where your
 code goes; after each task you build and run the program in your IDE, and the app ticks the task. How to set up the
 IDE, the compiler and the libraries is the subject of the previous chapter, *Setting up your IDE*; the sections below
 explain what each piece is for, the way learnopengl.com does.
@@ -133,11 +133,22 @@ include directory and add `glad.c` to your project.
 
 ### Your project
 
-The project in this chapter is one file, `main.cpp`. The `CMakeLists.txt` from *Setting up your IDE* builds it
-together with `glad.c` and links GLFW – that is all of the above in a few lines. In a Visual Studio solution of your
-own it is an empty C++ project with `main.cpp` and `glad.c`, the include and library folders set, and `glfw3.lib`
-and `opengl32.lib` as additional linker dependencies. From a terminal on Linux, with GLFW installed and the GLAD files
-in `include/` and `glad.c` next to `main.cpp`, this works too:
+The project in this chapter is one file, `main.cpp`.
+
+:::ide clion vscode
+The `CMakeLists.txt` from *Setting up your IDE* builds it together with `glad.c` and links GLFW – that is all of the
+above in a few lines: `target_include_directories` names the include folders, and `target_link_libraries` the
+libraries. CMake finds or builds GLFW itself, so there is no library folder to name.
+:::
+:::ide vs rider
+The project from *Setting up your IDE* is exactly the set-up described above: `main.cpp` and `glad.c` are its source
+files, GLFW's, GLAD's, GLM's and stb's `include` folders are its **Additional Include Directories**, GLFW's
+`lib-vc2022` folder is its **Additional Library Directories**, and `glfw3.lib` and `opengl32.lib` are its **Additional
+Dependencies**.
+:::
+
+From a terminal on Linux, with GLFW installed and the GLAD files in `include/` and `glad.c` next to `main.cpp`, this
+works too:
 
 ```text
 g++ -std=c++17 main.cpp glad.c -Iinclude -o window -lglfw -ldl
@@ -319,9 +330,19 @@ vulkan-tutorial.com also installs GLM, a maths library; you won't need it until 
 
 ### Your project
 
+:::ide clion vscode
 *Setting up your IDE* shows how to install all of this and gives you a `CMakeLists.txt`: `find_package(Vulkan)` and
-GLFW give it the targets `Vulkan::Vulkan` and `glfw` to link with. Build the **Debug** configuration and don't define
-`NDEBUG` while you learn – you'll see why under *Validation layers*.
+GLFW give it the targets `Vulkan::Vulkan` and `glfw` to link with.
+:::
+:::ide vs rider
+*Setting up your IDE* shows how to install all of this and gives you a project with vulkan-tutorial.com's Visual
+Studio settings: the SDK's `Include` folder (`$(VULKAN_SDK)\Include`) and GLFW's `include` folder as **Additional
+Include Directories**, the SDK's `Lib` folder and GLFW's `lib-vc2022` folder as **Additional Library Directories**,
+`vulkan-1.lib` and `glfw3.lib` as **Additional Dependencies**, and C++17 as the language standard.
+:::
+
+Build the **Debug** configuration and don't define `NDEBUG` while you learn – you'll see why under *Validation
+layers*.
 
 On Linux (Debian/Ubuntu package names; Fedora and Arch have the same under similar names) you can also install the
 loader, the validation layers, the tools and GLFW from your distribution:
@@ -337,9 +358,7 @@ g++ -std=c++17 -o VulkanTest main.cpp -lglfw -lvulkan
 ```
 
 (vulkan-tutorial.com's makefile uses `-lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi`; with a shared
-GLFW the first two are enough.) In a Visual Studio solution of your own, add the `Include` folder of the SDK and
-GLFW's `include` folder to the include directories, the SDK's `Lib` folder and GLFW's library folder to the library
-directories, `vulkan-1.lib` and `glfw3.lib` to the linker input, and set the language standard to C++17.
+GLFW the first two are enough.)
 
 On macOS the SDK runs Vulkan on top of Metal (MoltenVK). There `vkCreateInstance` can return
 `VK_ERROR_INCOMPATIBLE_DRIVER` unless you enable the `VK_KHR_portability_enumeration` instance extension and set
@@ -977,11 +996,19 @@ The libraries are linked by three lines at the top of `main.cpp`, which only the
 
 ### Your project
 
+:::ide clion vscode
 *Setting up your IDE* gives you a `CMakeLists.txt` for this: it adds DirectX-Headers' `include/directx` folder to the
 include directories and builds a `WIN32` program – the program starts in `wWinMain`, the entry point of a Windows
-(not console) program. In a Visual Studio solution of your own, add `main.cpp`, add the same include folder and set
-**Linker → System → SubSystem** to **Windows**. Build the **Debug** configuration – it defines `_DEBUG`, which turns
-on the debug layer code. From a *Developer Command Prompt*, the same is:
+(not console) program.
+:::
+:::ide vs rider
+*Setting up your IDE* gives you a project for this: DirectX-Headers' `include/directx` folder is one of its
+**Additional Include Directories**, and **Linker → System → SubSystem** is **Windows** – the program starts in
+`wWinMain`, the entry point of a Windows (not console) program.
+:::
+
+Build the **Debug** configuration – it defines `_DEBUG`, which turns on the debug layer code. From a *Developer
+Command Prompt*, the same is:
 
 ```text
 cl /std:c++17 /EHsc /MDd /Zi /I DirectX-Headers\include\directx main.cpp /link /SUBSYSTEM:WINDOWS user32.lib

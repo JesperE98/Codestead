@@ -49,6 +49,33 @@ with free functions – `struct Model { std::vector<Vertex> vertices; std::vecto
 glTF's texture coordinates into OpenGL's v-up convention; Vulkan's v = 0 is the image's top row, so the model is read
 with `aiProcess_FlipUVs` added, which turns them back. learnopengl's GLM helpers (`ConvertMatrixToGLMFormat`,
 `GetGLMVec`, `GetGLMQuat`) are free `inline` functions at the top of `main.cpp`. The model matrix is a push constant.
+
+This is the first Vulkan project that uses Assimp instead of tinyobjloader, so your project needs the library:
+
+:::ide clion vscode
+Install Assimp – on Debian and Ubuntu `libassimp-dev`, on macOS `brew install assimp`, on Windows with [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview)
+`vcpkg install assimp:x64-windows` – and add two lines to the end of your `CMakeLists.txt`, for this and every later
+chapter:
+
+```text
+find_package(assimp REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp)
+```
+
+`find_package` finds the installed library, and linking the target `assimp::assimp` adds its include folder and its
+library. With vcpkg, CMake has to use vcpkg's toolchain file: pass
+`-DCMAKE_TOOLCHAIN_FILE=<vcpkg>/scripts/buildsystems/vcpkg.cmake` to CMake (in CLion under **CMake options** in the
+profile, in VS Code in the setting `cmake.configureSettings`). The toolchain then also copies Assimp's DLL next to your
+program.
+:::
+:::ide vs rider
+The easiest way on Windows is [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview): `vcpkg install assimp:x64-windows` builds Assimp, and `vcpkg integrate install`
+(once) makes every Visual Studio project find the libraries vcpkg installed – Rider builds the same projects. Your
+project then gets Assimp's include folder and library by itself, and vcpkg copies Assimp's DLL next to your `.exe` when you
+build. Without vcpkg you build Assimp from its sources with CMake, add its `include` folder to **Additional Include
+Directories**, its `.lib` to **Additional Dependencies** (and that file's folder to **Additional Library
+Directories**), and copy its DLL next to your `.exe` – the program would not start without it.
+:::
 :::
 :::d3d12
 The project loads the model with the *Model* chapter's `Model` class and assimp, with `aiProcess_FlipUVs` – assimp turns

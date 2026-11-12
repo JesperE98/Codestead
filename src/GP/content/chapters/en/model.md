@@ -70,9 +70,9 @@ function:
 The project is the result of *Mesh*, with a new file `model.h`. Its `// TODO:` comments mark where your code goes: the
 constructor and `Draw`, the bodies of `loadModel`, `processNode` and `processMesh`, and the functions
 `loadMaterialTextures` and `TextureFromFile`. `main.cpp` now includes `"model.h"` (which includes `"mesh.h"`) and has
-two TODOs of its own: loading the model and drawing it. The program is linked with Assimp (`-lassimp`). Until the model
-is drawn, your program shows only the dark grey background (0.05, 0.05, 0.05) – every step before that compiles and
-runs, it just doesn't draw anything yet.
+two TODOs of its own: loading the model and drawing it. The program is linked with Assimp, as you set it up in the
+*Assimp* chapter. Until the model is drawn, your program shows only the dark grey background (0.05, 0.05, 0.05) – every
+step before that compiles and runs, it just doesn't draw anything yet.
 :::
 :::vulkan
 Vulkan has no model loader, and like vulkan-tutorial.com's chapter *Loading models* we use the small header-only

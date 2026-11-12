@@ -233,37 +233,73 @@ and the shared library. Then the program links with one more library:
 g++ -std=c++17 main.cpp glad.c -Iinclude -o model_loading -lglfw -ldl -lassimp
 ```
 
-On Windows, a package manager like [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview) (`vcpkg
-install assimp`) saves you the CMake build; without it you add Assimp's `include` folder and its `.lib` to the
-project like GLFW's, and put its DLL next to your executable.
+:::ide clion vscode
+Install Assimp – on Debian and Ubuntu `libassimp-dev`, on macOS `brew install assimp`, on Windows with [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview)
+`vcpkg install assimp:x64-windows` – and add two lines to the end of your `CMakeLists.txt`, for this and every later
+chapter:
+
+```text
+find_package(assimp REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp)
+```
+
+`find_package` finds the installed library, and linking the target `assimp::assimp` adds its include folder and its
+library. With vcpkg, CMake has to use vcpkg's toolchain file: pass
+`-DCMAKE_TOOLCHAIN_FILE=<vcpkg>/scripts/buildsystems/vcpkg.cmake` to CMake (in CLion under **CMake options** in the
+profile, in VS Code in the setting `cmake.configureSettings`). The toolchain then also copies Assimp's DLL next to your
+program.
+:::
+:::ide vs rider
+The easiest way on Windows is [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview): `vcpkg install assimp:x64-windows` builds Assimp, and `vcpkg integrate install`
+(once) makes every Visual Studio project find the libraries vcpkg installed – Rider builds the same projects. Your
+project then gets Assimp's include folder and library by itself, and vcpkg copies Assimp's DLL next to your `.exe` when you
+build. Without vcpkg you build Assimp from its sources with CMake, add its `include` folder to **Additional Include
+Directories**, its `.lib` to **Additional Dependencies** (and that file's folder to **Additional Library
+Directories**), and copy its DLL next to your `.exe` – the program would not start without it.
+:::
 
 The headers you need are `<assimp/Importer.hpp>` (the `Assimp::Importer` class that reads a file), `<assimp/scene.h>`
 (the `aiScene`, `aiNode`, `aiMesh` … structures) and `<assimp/postprocess.h>` (the flags of the post-processing steps
-that Assimp can apply while loading, like turning every face into triangles). In your `CMakeLists.txt`,
-`find_package(assimp REQUIRED)` finds the installed library, and linking the target `assimp::assimp` adds its include
-folder and its library.
+that Assimp can apply while loading, like turning every face into triangles).
 :::
 :::vulkan
 learnopengl.com's OpenGL code needs Assimp built and linked, as described on its page. For this course's Vulkan program
 there is nothing to build: tinyobjloader is one header. You download `tiny_obj_loader.h` from its GitHub page
-(vulkan-tutorial does exactly that) and put it into your include directory, next to `stb_image.h`. If you do want Assimp
-for Vulkan – for other formats, or animations – it is installed and linked exactly as for OpenGL: the distribution's
-package and `-lassimp` on Linux, or vcpkg on Windows.
+(vulkan-tutorial does exactly that) into `libs/tinyobjloader` – your project from *Setting up your IDE* already has that
+folder among its include folders. If you do want Assimp for Vulkan – for other formats, or animations – the *Skeletal
+Animation* guest article, which needs it, shows how to add it.
 :::
 :::d3d12
 The DirectX 12 program uses Assimp too: the course ports learnopengl's `Mesh` and `Model` classes, so it needs the
-same library. The easiest way on Windows is the package manager
-[vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview): `vcpkg install assimp` builds it, and with
-vcpkg's Visual Studio integration the include folder and the library are added to your project automatically.
-Without vcpkg you build Assimp from its GitHub page with CMake, add its `include` folder to the project's include
-directories and its `.lib` to the linker's input, and put its DLL next to your `.exe` (the program would not start
-without it).
+same library.
+
+:::ide clion vscode
+Install Assimp – on Debian and Ubuntu `libassimp-dev`, on macOS `brew install assimp`, on Windows with [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview)
+`vcpkg install assimp:x64-windows` – and add two lines to the end of your `CMakeLists.txt`, for this and every later
+chapter:
+
+```text
+find_package(assimp REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp)
+```
+
+`find_package` finds the installed library, and linking the target `assimp::assimp` adds its include folder and its
+library. With vcpkg, CMake has to use vcpkg's toolchain file: pass
+`-DCMAKE_TOOLCHAIN_FILE=<vcpkg>/scripts/buildsystems/vcpkg.cmake` to CMake (in CLion under **CMake options** in the
+profile, in VS Code in the setting `cmake.configureSettings`). The toolchain then also copies Assimp's DLL next to your
+program.
+:::
+:::ide vs rider
+The easiest way on Windows is [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/overview): `vcpkg install assimp:x64-windows` builds Assimp, and `vcpkg integrate install`
+(once) makes every Visual Studio project find the libraries vcpkg installed – Rider builds the same projects. Your
+project then gets Assimp's include folder and library by itself, and vcpkg copies Assimp's DLL next to your `.exe` when you
+build. Without vcpkg you build Assimp from its sources with CMake, add its `include` folder to **Additional Include
+Directories**, its `.lib` to **Additional Dependencies** (and that file's folder to **Additional Library
+Directories**), and copy its DLL next to your `.exe` – the program would not start without it.
+:::
 
 The headers are `<assimp/Importer.hpp>` (the `Assimp::Importer` class that reads a file), `<assimp/scene.h>` (the
-`aiScene`, `aiNode`, `aiMesh` … structures) and `<assimp/postprocess.h>` (the flags of the post-processing steps that
-Assimp can apply while loading, like turning every face into triangles). In your `CMakeLists.txt`,
-`find_package(assimp REQUIRED)` finds the library vcpkg installed (when CMake uses vcpkg's toolchain file), and linking
-the target `assimp::assimp` adds its include folder and its library.
+`aiScene`, `aiNode`, `aiMesh` … structures) and `<assimp/postprocess.h>` (the flags of the post-processing steps that Assimp can apply while loading, like turning every face into triangles).
 
 One thing to know when Assimp meets Direct3D: Assimp hands out its data in a right-handed coordinate system with
 counter-clockwise front faces, OpenGL's conventions, and it has a post-processing flag,

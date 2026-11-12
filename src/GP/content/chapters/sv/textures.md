@@ -339,8 +339,18 @@ populära format och gör allt det tunga arbetet åt oss. Ett bibliotek som `stb
 ### stb_image.h
 
 `stb_image.h` är ett mycket populärt bildinläsningsbibliotek i en enda headerfil, skrivet av Sean Barrett. Det kan
-läsa de flesta populära filformat och är lätt att integrera i dina projekt. I kursens projekt finns det redan
-tillgängligt som `<stb_image.h>`. För att använda det lägger du till följande rader i en källfil:
+läsa de flesta populära filformat och är lätt att integrera i dina projekt. Du lade det i `libs/stb` i *Sätt upp din
+IDE*, och ditt projekt känner redan till den mappen:
+
+:::ide clion vscode
+`CMakeLists.txt` anger `${LIBS}/stb` i `target_include_directories`, så headern finns tillgänglig som `<stb_image.h>`.
+:::
+:::ide vs rider
+`..\..\libs\stb` är en av projektets **Additional Include Directories**, så headern finns tillgänglig som
+`<stb_image.h>`.
+:::
+
+För att använda det lägger du till följande rader i en källfil:
 
 ```cpp
 #define STB_IMAGE_IMPLEMENTATION
