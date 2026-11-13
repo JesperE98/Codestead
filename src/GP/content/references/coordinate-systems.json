@@ -3,7 +3,7 @@
   { "title": "LearnOpenGL source code: coordinate_systems_multiple.cpp", "url": "https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/1.getting_started/6.3.coordinate_systems_multiple/coordinate_systems_multiple.cpp", "publisher": "Joey de Vries (GitHub)", "api": "opengl" },
   { "title": "glUniform", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glUniform.xhtml", "publisher": "Khronos Group", "api": "opengl" },
   { "title": "glDepthFunc", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDepthFunc.xhtml", "publisher": "Khronos Group", "api": "opengl" },
-  { "title": "Uniform buffers: Descriptor layout and buffer", "url": "https://vulkan-tutorial.com/Uniform_buffers/Descriptor_layout_and_buffer", "publisher": "Vulkan Tutorial", "api": "vulkan" },
+  { "title": "Uniform buffers: Descriptor layout and buffer", "url": "https://vulkan-tutorial.com/Uniform_buffers/Descriptor_set_layout_and_buffer", "publisher": "Vulkan Tutorial", "api": "vulkan" },
   { "title": "Uniform buffers: Descriptor pool and sets", "url": "https://vulkan-tutorial.com/Uniform_buffers/Descriptor_pool_and_sets", "publisher": "Vulkan Tutorial", "api": "vulkan" },
   { "title": "Depth buffering", "url": "https://vulkan-tutorial.com/Depth_buffering", "publisher": "Vulkan Tutorial", "api": "vulkan" },
   { "title": "VkPipelineDepthStencilStateCreateInfo", "url": "https://registry.khronos.org/vulkan/specs/latest/man/html/VkPipelineDepthStencilStateCreateInfo.html", "publisher": "Khronos Group", "api": "vulkan" },
