@@ -99,8 +99,8 @@ Each chapter is a lesson in three parts:
    excerpts in the text are taken from the chapter's start files, so you can find every line again in your project.
 2. **Questions** in the text ("Check yourself") make sure you have understood the important points. Answer them
    as you read: once you have answered them, the tasks open up.
-3. **The tasks** (on the right) are the code you write – in your own IDE. The **Your project** panel connects the
-   chapter with the folder your project is in.
+3. **The tasks** (on the right) are the code you write – in your own IDE. The **Your project** panel is where you
+   tick them off and check your code.
 
 At the end of most chapters you find *Additional resources*: links to the official documentation and the original
 tutorials, if you want to read more.
@@ -117,29 +117,28 @@ to change, a few lines to add. The text tells you when it is time for a task. If
 After a few attempts – or as soon as you have opened the hint – you can also show the **solution**, the code that
 belongs where the task's `// TODO:` comment is.
 
-The tasks are in the **Your project** panel, together with everything that connects them to your own project:
+The tasks are in the **Your project** panel, together with everything that connects them to your own code. Where
+you keep that code is up to you – your own folders, any IDE:
 
-- **Choose folder…** picks the folder for the chapter's project on your disk, and **Copy start files** copies the
-  chapter's files into it: `main.cpp`, and later also shaders, textures and models. In the projects of the coming
-  chapters, `// TODO:` comments mark where your code goes. **Open folder** opens the folder, so you can open it in
-  your IDE.
-- When you have written a task's code, you **build** the program and **run** it from your IDE. The app watches the
-  folder: once it has seen a new build and a run of it, it checks your source files with the course's checks and
-  ticks the task – or tells you what is still missing.
-- For each task the panel shows the **Expected result**: a picture of what your program's window should show when
-  the task is done.
-
-If your IDE builds or runs the program somewhere the app can't see (in WSL or on another machine, for example), the
-**I ran it** link tells the app that you have run it.
+- **Save start files…** copies the chapter's files into a folder you pick: `main.cpp`, and later also shaders,
+  textures and models. In the projects of the coming chapters, `// TODO:` comments mark where your code goes.
+- When you have written a task's code, you **build** the program and **run** it from your IDE to see what it does.
+  For each task the panel shows the **Expected result**: a picture of what your program's window should show when the
+  task is done.
+- When your program does what the task asks, you tick the task yourself with **Mark as done**.
+- **Check my code** checks your code with the course's own checks whenever you want. The first time, it asks for the
+  chapter's main source file (`main.cpp`, or whatever you called it), wherever it is on your disk; then it ticks every
+  task that passes and tells you what is still missing for the others. It reads your sources only – nothing has to be
+  built or run for the check.
 
 ```quiz
-You have written the code of a task. What makes the app tick it? (Choose all that apply.)
-- [x] You build the program in your IDE
-- [x] You run the program you have built
+You have written the code of a task. How does it get ticked? (Choose all that apply.)
+- [x] You tick it yourself with **Mark as done**, once your program does what the task asks
+- [x] You press **Check my code**, and the course's checks for the task pass
 - [ ] You open the **Expected result** picture
 ---
-The app waits for a new build and a run of it, then checks your source files. The expected result is only there to
-compare with what your program draws.
+The app doesn't watch your IDE: you tick a task yourself, or let **Check my code** read your sources and tick what
+passes. The expected result is there to compare with what your program draws.
 ```
 
 ## Your first program
@@ -277,9 +276,9 @@ Colour values in a shader go from 0.0 to 1.0, in the order red, green, blue, alp
 ```
 :::
 
-Once your IDE is set up, you can come back and try it: copy this chapter's start files, change the colour to
-`(0.2, 0.8, 0.3, 1.0)`, build and run – the triangle keeps its shape and position, only its colour changes. It is
-not a task; the course's tasks start in *Creating a window*.
+Once your IDE is set up, you can come back and try it: save this chapter's start files with **Save start files…**,
+change the colour to `(0.2, 0.8, 0.3, 1.0)`, build and run – the triangle keeps its shape and position, only its
+colour changes. It is not a task; the course's tasks start in *Creating a window*.
 
 ## Course map
 

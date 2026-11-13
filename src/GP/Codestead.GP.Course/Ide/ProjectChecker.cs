@@ -6,27 +6,28 @@ using Codestead.GP.Gpu.Scene;
 namespace Codestead.GP.Course.Ide;
 
 /// <summary>
-/// Checks the learner's code with the course's own task checks: the folder is read into a project, the simulated
+/// Checks the learner's code with the course's own task checks: the code is read into a project, the simulated
 /// GPU builds and runs it once, and every task's check of the chapter looks at the result in order – as the
 /// TaskTests do with the course's solutions. Runs on a background thread; it can be cancelled between tasks.
 /// </summary>
 public static class ProjectChecker
 {
-    public static CheckReport Check(string folder, string chapterId, string api, string fingerprint, CancellationToken cancel = default)
+    /// <summary>Checks the code around the chapter's main file, which the learner picked (<see cref="ProjectReader.ReadFrom"/>).</summary>
+    public static CheckReport Check(string mainFile, string chapterId, string api, CancellationToken cancel = default)
     {
-        var read = ProjectReader.Read(folder, chapterId, api);
+        var read = ProjectReader.ReadFrom(mainFile, chapterId, api);
         cancel.ThrowIfCancellationRequested();
-        return Check(read, chapterId, api, fingerprint, cancel);
+        return Check(read, chapterId, api, cancel);
     }
 
-    public static CheckReport Check(ProjectRead read, string chapterId, string api, string fingerprint, CancellationToken cancel = default)
+    public static CheckReport Check(ProjectRead read, string chapterId, string api, CancellationToken cancel = default)
     {
         var messages = new List<CheckMessage>();
         if (read.Missing.Count > 0)
             messages.Add(new CheckMessage("ide.missing", new Dictionary<string, string> { ["files"] = string.Join(", ", read.Missing) }, true));
         var tasks = GpCourse.Tasks(chapterId, api);
         if (read.Project.Files.Count == 0)
-            return new CheckReport(chapterId, api, fingerprint, tasks.Select(t => new TaskResult(t.Id, GpCourse.TaskKey(chapterId, t.Id, api), false)).ToList(), messages, null);
+            return new CheckReport(chapterId, api, tasks.Select(t => new TaskResult(t.Id, GpCourse.TaskKey(chapterId, t.Id, api), false)).ToList(), messages, null);
         var context = new CheckContext(api, read.Project, Simulator.Build(read.Project, api));
         cancel.ThrowIfCancellationRequested();
         if (context.Build.Diagnostics.FirstOrDefault(d => d.IsError) is { } error)
@@ -50,7 +51,7 @@ public static class ProjectChecker
         {
             // The facts are for the statistics; the checks above count.
         }
-        return new CheckReport(chapterId, api, fingerprint, results, messages, facts);
+        return new CheckReport(chapterId, api, results, messages, facts);
     }
 
     private static bool Safe(TaskCheck check, CheckContext c)

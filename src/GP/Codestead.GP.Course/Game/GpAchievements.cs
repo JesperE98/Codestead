@@ -12,9 +12,6 @@ public static class GpAchievements
     /// <summary>The APIs in which the learner has solved at least one task.</summary>
     public static int ApisUsed(AchievementContext c) => Apis.All.Count(a => c.Progress.Tasks.Any(t => t.EndsWith("@" + a.Id, StringComparison.Ordinal)));
 
-    /// <summary>Has the learner chosen a project folder for some chapter? (Set by the app, which keeps the folders.)</summary>
-    public static Func<bool> ProjectFolderChosen { get; set; } = () => false;
-
     public static IReadOnlyList<Achievement> All { get; } = new List<Achievement>
     {
         // Learning
@@ -34,7 +31,7 @@ public static class GpAchievements
         Count("all-apis", "🌐", AchievementCategory.Learning, ApisUsed, 3),
         Checkpoints(25, "🤔"),
         // Your project
-        new("first-folder", "📁", AchievementCategory.Terminal, _ => ProjectFolderChosen()),
+        new("first-check", "🔍", AchievementCategory.Terminal, c => c.Command is BuildFacts),
         new("first-build", "🔨", AchievementCategory.Terminal, c => Build(c, b => b.Succeeded)),
         new("first-frame", "🪟", AchievementCategory.Terminal, c => Build(c, b => b.ShowsFrames)),
         new("first-draw", "🎨", AchievementCategory.Terminal, c => Build(c, b => b.Drew)),

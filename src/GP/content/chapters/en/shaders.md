@@ -23,15 +23,15 @@ looks in its own folder first, and the program reads the shader files while it r
 chapter folder. So the build needs no new settings.
 
 :::ide clion vscode
-Your `CMakeLists.txt` needs no change either: its `LINK_DEPENDS` line already lists the `.vs` and `.fs` files of the
-chapter folder, so building after a change to a shader links the program again – and the app counts that build.
+Your `CMakeLists.txt` needs no change either. The program reads the shader files each time it starts, so after a
+change to a shader alone there is nothing to build: just run the program again.
 :::
 :::ide vs rider
 Add `shader_s.h`, `shader.vs` and `shader.fs` to the project so that you can open them from the Solution Explorer: in
 Visual Studio with **Project → Add Existing Item…**, in Rider with **Add → Existing Item…** in the project's context
-menu. They stay out of the build. A solution doesn't link the program again when only a shader changed, so after a
-change to a shader alone use **Build → Rebuild Solution**: the app counts only a build that is newer than all your
-sources. Do the same with the headers and shaders of later chapters.
+menu. They stay out of the build. Do the same with the headers and shaders of later chapters. The program reads the
+shader files each time it starts, so after a change to a shader alone there is nothing to build: just run the program
+again.
 :::
 :::
 :::vulkan

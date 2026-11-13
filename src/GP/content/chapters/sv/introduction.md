@@ -98,8 +98,8 @@ Varje kapitel är en lektion i tre delar:
    texten är hämtade ur kapitlets startfiler, så du hittar varje rad igen i ditt projekt.
 2. **Frågor** i texten ("Testa dig själv") ser till att du har förstått de viktiga delarna. Svara på dem medan du
    läser: när du har svarat på dem öppnas uppgifterna.
-3. **Uppgifterna** (till höger) är koden du skriver – i din egen IDE. Panelen **Ditt projekt** kopplar ihop kapitlet
-   med mappen där ditt projekt ligger.
+3. **Uppgifterna** (till höger) är koden du skriver – i din egen IDE. I panelen **Ditt projekt** bockar du av dem
+   och kontrollerar din kod.
 
 I slutet av de flesta kapitel finns *Mer att läsa*: länkar till den officiella dokumentationen och de
 ursprungliga guiderna, om du vill läsa mer.
@@ -116,28 +116,28 @@ värde att ändra, några rader att lägga till. Texten säger till när det är
 öppna **Tips**. Efter några försök – eller så snart du har öppnat tipset – kan du också visa **lösningen**, koden som
 hör hemma där uppgiftens `// TODO:`-kommentar står.
 
-Uppgifterna finns i panelen **Ditt projekt**, tillsammans med allt som kopplar ihop dem med ditt eget projekt:
+Uppgifterna finns i panelen **Ditt projekt**, tillsammans med allt som kopplar ihop dem med din egen kod. Var du har
+den koden bestämmer du själv – dina egna mappar, vilken IDE som helst:
 
-- **Välj mapp…** väljer mappen för kapitlets projekt på din disk, och **Kopiera startfilerna** kopierar kapitlets filer
-  dit: `main.cpp`, och senare även shaders, texturer och modeller. I projekten i de kommande kapitlen visar
-  `// TODO:`-kommentarer var din kod ska stå. **Öppna mappen** öppnar mappen, så att du kan öppna den i din IDE.
-- När du har skrivit koden för en uppgift **bygger** du programmet och **kör** det från din IDE. Appen håller koll på
-  mappen: när den har sett ett nytt bygge och en körning av det kontrollerar den dina källfiler med kursens kontroller
-  och bockar av uppgiften – eller säger vad som fortfarande saknas.
-- För varje uppgift visar panelen **Förväntat resultat**: en bild av vad ditt programs fönster ska visa när uppgiften
-  är klar.
-
-Om din IDE bygger eller kör programmet någonstans där appen inte kan se det (i WSL eller på en annan dator, till
-exempel) talar länken **Jag har kört det** om för appen att du har kört det.
+- **Spara startfilerna…** kopierar kapitlets filer till en mapp som du väljer: `main.cpp`, och senare även shaders,
+  texturer och modeller. I projekten i de kommande kapitlen visar `// TODO:`-kommentarer var din kod ska stå.
+- När du har skrivit koden för en uppgift **bygger** du programmet och **kör** det från din IDE för att se vad det gör.
+  För varje uppgift visar panelen **Förväntat resultat**: en bild av vad ditt programs fönster ska visa när
+  uppgiften är klar.
+- När ditt program gör det som uppgiften ber om bockar du själv av uppgiften med **Markera som klar**.
+- **Kontrollera min kod** kontrollerar din kod med kursens egna kontroller när du vill. Första gången frågar den efter
+  kapitlets huvudfil (`main.cpp`, eller vad du nu döpte den till), var den än ligger på din disk; sedan bockar den av
+  varje uppgift som klarar kontrollen och talar om vad som fortfarande saknas för de andra. Den läser bara dina
+  källfiler – ingenting behöver byggas eller köras för kontrollen.
 
 ```quiz
-Du har skrivit koden för en uppgift. Vad får appen att bocka av den? (Välj alla som stämmer.)
-- [x] Du bygger programmet i din IDE
-- [x] Du kör programmet som du har byggt
+Du har skrivit koden för en uppgift. Hur blir den avbockad? (Välj alla som stämmer.)
+- [x] Du bockar av den själv med **Markera som klar**, när ditt program gör det som uppgiften ber om
+- [x] Du trycker på **Kontrollera min kod**, och kursens kontroller för uppgiften godkänns
 - [ ] Du öppnar bilden **Förväntat resultat**
 ---
-Appen väntar på ett nytt bygge och en körning av det, och kontrollerar sedan dina källfiler. Det förväntade resultatet
-finns bara där för att jämföras med det ditt program ritar.
+Appen håller inte koll på din IDE: du bockar av en uppgift själv, eller låter **Kontrollera min kod** läsa dina
+källfiler och bocka av det som klarar kontrollen. Bilden finns där för att jämföras med det ditt program ritar.
 ```
 
 ## Ditt första program
@@ -275,9 +275,9 @@ Färgvärden i en shader går från 0.0 till 1.0, i ordningen röd, grön, blå,
 ```
 :::
 
-När din IDE är uppsatt kan du komma tillbaka och prova: kopiera kapitlets startfiler, ändra färgen till
-`(0.2, 0.8, 0.3, 1.0)`, bygg och kör – triangeln behåller sin form och position, bara färgen ändras. Det är ingen
-uppgift; kursens uppgifter börjar i *Creating a window*.
+När din IDE är uppsatt kan du komma tillbaka och prova: spara kapitlets startfiler med **Spara startfilerna…**,
+ändra färgen till `(0.2, 0.8, 0.3, 1.0)`, bygg och kör – triangeln behåller sin form och position, bara färgen
+ändras. Det är ingen uppgift; kursens uppgifter börjar i *Creating a window*.
 
 ## Kurskarta
 

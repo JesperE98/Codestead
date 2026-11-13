@@ -15,8 +15,8 @@ behöva lägga till fler vertexar.
 > shaderprogrammen, men det får vänta till ett annat ämne.
 
 I det här kapitlet lägger du två bilder på rektangeln från de tidigare kapitlen: en trälåda, `container.png`, och en
-smiley, `awesomeface.png`. Båda är 256×256 pixlar och båda ingår i projektet – **Kopiera startfilerna** lägger dem i din
-projektmapp. `container.png` har tre kanaler (RGB). `awesomeface.png` har fyra (RGBA): runt ansiktet är den
+smiley, `awesomeface.png`. Båda är 256×256 pixlar och båda ingår i projektet – **Spara startfilerna…** lägger dem i
+din projektmapp. `container.png` har tre kanaler (RGB). `awesomeface.png` har fyra (RGBA): runt ansiktet är den
 genomskinlig, och de genomskinliga pixlarna är lagrade som **svarta** med alfa 0. Kom ihåg det; det förklarar något du
 kommer att se senare.
 

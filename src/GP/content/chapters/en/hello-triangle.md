@@ -555,8 +555,9 @@ output like any other compile error.
 The pre-build event of your project from *Setting up your IDE* compiles both shader files to `shaders/vert.spv` and
 `shaders/frag.spv` with `glslc` before `main.cpp` is compiled; a mistake in a shader shows up in the build output with
 `glslc`'s message, and the build stops.
-A solution doesn't link the program again when only a shader changed, and the app counts only a program that is newer
-than all your sources: after a change to a shader alone, use **Build → Rebuild Solution**.
+A solution doesn't count the shaders as sources: when only a shader has changed, the IDE may find nothing to build
+and skip the pre-build event. After a change to a shader alone, use **Build → Rebuild Solution**, so that `glslc`
+compiles it again.
 :::
 
 At run time, the program loads the bytecode with a small helper, `readFile`:
@@ -640,9 +641,9 @@ output, and an optional blob for the compiler's error messages.
 it from the Solution Explorer, set its **Properties → General → Item Type** to **Does not participate in build** – in
 the `.vcxproj`, which is where you change it in Rider: `<None Include="shaders.hlsl" />` instead of
 `<FxCompile Include="shaders.hlsl" />`. Otherwise MSBuild compiles it with Visual Studio's own HLSL compiler, which
-looks for a function called `main` and stops the build. The same goes for the `.hlsl` files of later chapters. And
-since a solution doesn't link the program again when only `shaders.hlsl` changed, use **Build → Rebuild Solution**
-after such a change: the app counts only a program that is newer than all your sources.
+looks for a function called `main` and stops the build. The same goes for the `.hlsl` files of later chapters. A
+change to `shaders.hlsl` alone needs no new build: the program compiles the file each time it starts, so just run it
+again.
 :::
 
 The result is bytecode in an `ID3DBlob`, a simple block of memory. If the HLSL has an error, `D3DCompileFromFile`
@@ -1957,7 +1958,8 @@ the next chapters will hopefully be much easier to understand.
 
 To really get a good grasp of the concepts discussed, a few exercises were set up. It is advised to work through them
 before continuing to the next subject, to make sure you get a good grasp of what's going on. The project is yours to
-change: try them in your IDE, and copy the start files into a new folder if you want a clean start.
+change: try them in your IDE, and save the start files into a new folder with **Save start files…** if you want a
+clean start.
 
 :::opengl
 1. Try to draw 2 triangles next to each other using `glDrawArrays` by adding more vertices to your data.

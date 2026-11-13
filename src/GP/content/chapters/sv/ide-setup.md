@@ -2,15 +2,15 @@
 
 Från och med nästa kapitel skriver du kod – och du skriver den så som grafikprogrammerare gör: i en riktig IDE, med en
 riktig kompilator, och bygger ett program som öppnar ett riktigt fönster på din egen dator. Den här appen är din
-lärobok och din granskare. Den visar texten, uppgifterna och en bild av resultatet som varje uppgift ska ge, och den
-håller koll på mappen där ditt projekt ligger: när du har byggt och kört ditt program kontrollerar den din kod och
-bockar av uppgiften.
+lärobok och din granskare. Den visar texten, uppgifterna och en bild av resultatet som varje uppgift ska ge. Du bockar
+själv av en uppgift när ditt program gör det som uppgiften ber om – och när du vill läser appen din kod och kontrollerar
+den med kursens egna kontroller.
 
 learnopengl.com ägnar en god del av sitt kapitel *Creating a window* åt att sätta upp ett projekt, och det gör
 vulkan-tutorial.com också i sitt kapitel *Development environment*. Det här kapitlet gör detsamma för kursens tre
 API:er: du väljer en IDE, installerar en kompilator, hämtar de bibliotek som {{api}} behöver, sätter upp
-projektfilerna och lär dig hur panelen **Ditt projekt** följer det du gör. Kapitlet har inga uppgifter, men dess
-startfiler är triangelprogrammet från introduktionen, så i slutet kan du kontrollera att allt fungerar.
+projektfilerna och lär dig hur panelen **Ditt projekt** fungerar. Kapitlet har inga uppgifter, men dess startfiler
+är triangelprogrammet från introduktionen, så i slutet kan du kontrollera att allt fungerar.
 
 Välj din IDE i väljaren **IDE** överst i fönstret, bredvid API:et. Från och med nu visar kapitlen stegen för den IDE
 du har valt, överallt där IDE:erna skiljer sig åt – du kan byta när som helst.
@@ -18,41 +18,38 @@ du har valt, överallt där IDE:erna skiljer sig åt – du kan byta när som he
 ## Så arbetar du i kursen
 
 Varje kapitel med uppgifter har **startfiler**: `main.cpp`, och från senare kapitel även headerfiler, shaderfiler,
-texturer, modeller och typsnitt. `// TODO:`-kommentarerna i dem visar var din kod ska stå. Panelen **Ditt projekt**
-kopplar ihop ett kapitel med en mapp på din disk:
+texturer, modeller och typsnitt. `// TODO:`-kommentarerna i dem visar var din kod ska stå. Var du har din kod
+bestämmer du själv: dina egna mappar, ett projekt per kapitel eller ett för hela kursen, den IDE du gillar. Panelen
+**Ditt projekt** kopplar ihop kapitlet med din kod:
 
-1. **Välj mapp…** väljer mappen för det här kapitlet. Använd en ny, tom mapp för varje kapitel. När du har valt en
-   föreslår appen själv nästa, som `<bas>/<api>/<kapitel>` – till exempel `learn/opengl/hello-window` bredvid
-   `learn/opengl/creating-a-window`.
-2. **Kopiera startfilerna** kopierar kapitlets startfiler till mappen. Om en fil redan finns där frågar appen innan
-   den skriver över den.
-3. Du lägger till dina projektfiler – samma för alla kapitel med ett API, se nedan – och öppnar mappen i din IDE.
-   **Öppna mappen** öppnar den i filhanteraren.
-4. Du skriver koden för en uppgift, **bygger** programmet och **kör** det från din IDE.
+1. **Spara startfilerna…** frågar efter en mapp och kopierar kapitlets startfiler dit: `main.cpp`, shaderna och
+   kursens texturer, modeller och typsnitt. Om en fil redan finns där frågar appen innan den skriver över den. Sedan
+   lägger du till dina projektfiler – se nedan – och öppnar projektet i din IDE.
+2. Du skriver koden för en uppgift, **bygger** programmet och **kör** det från din IDE. Det är så du ser vad din kod
+   gör: jämför ditt fönster med **Förväntat resultat**, bilden som panelen visar för varje uppgift.
+3. När ditt program gör det som uppgiften ber om bockar du av den med **Markera som klar**. XP, dagar i rad och
+   utmärkelser räknas precis som förut.
+4. När du vill ha en extra koll trycker du på **Kontrollera min kod**. Första gången frågar den efter kapitlets
+   huvudfil – `main.cpp`, eller vad du nu döpte den till – var den än ligger på din disk. (Efter **Spara
+   startfilerna…** använder den redan den `main.cpp` som sparades.) Appen läser den filen och kapitlets övriga filer –
+   shaders och headerfiler – som den hittar bredvid den, i mapparna under den eller i mappen ovanför, och kontrollerar
+   dem med kursens egna kontroller. Den bockar av varje uppgift som klarar kontrollen och talar om vad som fortfarande
+   saknas för de andra. **Byt fil…** väljer en annan fil.
 
-Appen ser båda stegen. Ett bygge räknas när mappen innehåller ett program (en `.exe` på Windows, en körbar fil på
-Linux och macOS) som är nyare än alla dina källfiler, shaders inräknade. En körning räknas när det programmet startas
-efter bygget. Sedan kontrollerar appen dina källfiler i bakgrunden med kursens egna kontroller för uppgiften, och bockar
-av den om de godkänns. Om något saknas står det *inte än* vid uppgiften, tillsammans med det som kontrollen saknade.
-För varje uppgift visar panelen också **Förväntat resultat**: en bild av hur ditt fönster ska se ut när uppgiften är
-klar, så att du kan jämföra med det ditt program ritar.
+**Kontrollera min kod** läser bara dina källfiler: ingenting behöver byggas eller köras för den. Bygg och kör ändå ditt
+program – en kontroll kan se att rätt anrop finns där, men bara ditt fönster visar vad de ritar.
 
-Varje uppgift har en status: *låst* (svara först på frågorna i texten), *väntar på bygge*, *väntar på körning*,
-*kontrollerar*, *klar* eller *inte än*, och en liten rad visar när appen senast såg ett bygge och en körning.
-
-Ibland kan appen inte se ditt program starta: när du bygger i WSL, på en annan dator eller i en IDE som körs i en
-sandlåda. För de fallen finns en liten länk, **Jag har kört det**. Den kräver fortfarande ett bygge som är nyare än
-dina källfiler – om inte appen inte hittar något program alls i mappen, och då säger den det.
+Uppgifterna är låsta tills du har svarat på frågorna i texten.
 
 ```quiz
-Du gör klart en uppgift i `main.cpp` och sparar filen. Vad måste hända innan appen kan bocka av uppgiften? (Välj alla som stämmer.)
-- [x] Du bygger programmet, så att mappen innehåller ett program som är nyare än dina källfiler
-- [ ] Du kopierar startfilerna igen
-- [x] Du kör programmet som du just byggde
-- [ ] Du öppnar mappen med **Öppna mappen**
+Du gör klart en uppgift i `main.cpp` och sparar filen. Hur kan uppgiften bli avbockad? (Välj alla som stämmer.)
+- [x] Du bockar av den själv med **Markera som klar**, när ditt program gör det som uppgiften ber om
+- [ ] Appen märker att du har byggt och kört programmet, och bockar av den
+- [x] Du trycker på **Kontrollera min kod**, och kursens kontroller för uppgiften godkänns
+- [ ] Du sparar startfilerna igen med **Spara startfilerna…**
 ---
-Appen väntar på ett nytt bygge och på en körning av det bygget. Sedan kontrollerar den dina källfiler med kursens
-kontroller för uppgiften. Att kopiera startfilerna igen skulle skriva över ditt arbete.
+Appen följer inte din IDE: du bockar av en uppgift själv, eller låter **Kontrollera min kod** läsa dina källfiler och
+bocka av varje uppgift som klarar kontrollen. Att spara startfilerna igen skulle skriva över ditt arbete.
 ```
 
 ## Välj en IDE
@@ -246,8 +243,10 @@ DirectXMath är matematikbiblioteket.
 
 ## Mapparna
 
-Varje kapitel får en egen mapp, och de bibliotek som bara är filer – de du laddar ner själv – hamnar i en enda
-`libs`-mapp som alla kapitel delar:
+Hur du organiserar din kod bestämmer du själv. Stegen i kursen använder en uppställning, som ett förslag: varje kapitel
+får en egen mapp, och de bibliotek som bara är filer – de du laddar ner själv – hamnar i en enda `libs`-mapp som alla
+kapitel delar. `CMakeLists.txt` och Visual Studio-inställningarna här nedan hittar den mappen som `../../libs`, två
+nivåer ovanför kapitelmappen:
 
 :::opengl
 :::ide clion vscode
@@ -359,17 +358,18 @@ learn/
 :::
 :::
 
-Låt din IDE:s byggmapp ligga inuti kapitelmappen – det gör alla fyra IDE:erna som standard – så att appen hittar
-programmet du bygger.
+Vilken annan struktur som helst fungerar lika bra – till exempel ett enda CMake-projekt för hela kursen, med ett
+program per kapitel. Justera då sökvägarna till biblioteken: `LIBS` i `CMakeLists.txt`, eller include- och
+bibliotekskatalogerna i Visual Studio-projektet.
 
 Programmen läser in sina shaders, texturer och modeller med sökvägar relativt **arbetskatalogen** (working
 directory), mappen som ett program körs i: `"shaders/vert.spv"`, `"container.png"`, `L"shaders.hlsl"`. Startfilerna
-lägger de filerna i kapitelmappen, så programmet måste köras med kapitelmappen som arbetskatalog. Stegen här nedan
-visar hur.
+lägger de filerna bredvid `main.cpp`, i kapitelmappen, så programmet måste köras med kapitelmappen som arbetskatalog.
+Stegen här nedan visar hur.
 
 ```quiz
 Ditt program byggs, men när det startar avbryts det med ett fel om att det inte kan öppna en av sina shaderfiler. Filen ligger i kapitelmappen. Vad är den troligaste orsaken?
-- [ ] Appen har inte kontrollerat uppgiften än
+- [ ] Du har inte tryckt på **Kontrollera min kod** än
 - [ ] Shaderfilen är äldre än programmet
 - [x] Programmet körs med en annan arbetskatalog än kapitelmappen – oftast byggmappen
 - [ ] `libs`-mappen saknas
@@ -387,7 +387,8 @@ för alla kapitel i kursen.
 :::ide vs rider
 Du sätter upp ett Visual Studio-projekt en gång per API och kopierar dess två filer, `.sln` och `.vcxproj`, till varje
 kapitelmapp. Projektet hänvisar till `main.cpp` och till `libs`-mappen med relativa sökvägar, så kopiorna fungerar
-oförändrade i varje kapitelmapp på samma djup (`learn/<api>/<kapitel>`).
+oförändrade i varje kapitelmapp på samma djup (`learn/<api>/<kapitel>`). Om dina mappar ser annorlunda ut ändrar du
+sökvägarna `..\..\libs` i inställningarna så att de stämmer.
 :::
 
 :::opengl
@@ -414,10 +415,6 @@ target_link_libraries(LearnOpenGL PRIVATE glfw glm::glm ${CMAKE_DL_LIBS})
 
 # Visual Studio: run the program in the chapter folder, where its shaders and textures are
 set_target_properties(LearnOpenGL PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-# Link again when only a shader changed, so that the program is newer than all sources (Ninja and makefiles)
-file(GLOB SHADERS CONFIGURE_DEPENDS *.vs *.fs *.gs *.tcs *.tes *.comp)
-set_target_properties(LearnOpenGL PROPERTIES LINK_DEPENDS "${SHADERS}")
 ```
 
 På Linux installerar du din distributions GLFW-paket: att bygga GLFW från källkod kräver där också utvecklingspaketen
@@ -502,9 +499,6 @@ foreach(SHADER ${SHADERS})
 endforeach()
 add_custom_target(shaders DEPENDS ${SPIRV_FILES})
 add_dependencies(LearnVulkan shaders)
-
-# Link again when only a shader changed, so that the program is newer than all sources (Ninja and makefiles)
-set_target_properties(LearnVulkan PROPERTIES LINK_DEPENDS "${SHADERS}")
 ```
 
 Loopen gör det som vulkan-tutorial.coms `compile.bat` och `compile.sh` gör för hand: den kör `glslc` för varje
@@ -571,10 +565,6 @@ target_include_directories(LearnDirectX PRIVATE ${LIBS}/DirectX-Headers/include/
 
 # Visual Studio: run the program in the chapter folder, where shaders.hlsl and the textures are
 set_target_properties(LearnDirectX PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-# Link again when only a shader changed, so that the program is newer than all sources (Ninja and makefiles)
-file(GLOB SHADERS CONFIGURE_DEPENDS *.hlsl)
-set_target_properties(LearnDirectX PROPERTIES LINK_DEPENDS "${SHADERS}")
 ```
 :::
 :::ide vs rider
@@ -609,17 +599,28 @@ I projektfilen:
 :::
 
 :::ide clion vscode
-Två rader finns där för kursens skull snarare än för kompilatorns. `VS_DEBUGGER_WORKING_DIRECTORY` gör att Visual
-Studio kör programmet i kapitelmappen, om du någon gång öppnar mappen där. `LINK_DEPENDS` länkar programmet igen när du
-bara har ändrat en shader: shaders är också källfiler, och appen räknar bara ett bygge vars program är nyare än alla
-dem.
+`VS_DEBUGGER_WORKING_DIRECTORY` finns där för Visual Studios skull: om du någon gång öppnar mappen där gör den att
+Visual Studio kör programmet i kapitelmappen.
 :::
 :::ide vs rider
 Shaders, texturer och modeller ligger kvar i kapitelmappen, där programmet körs. (Vill du hellre köra `.exe`-filen
 från dess egen mapp kopierar du dem dit med en post-build-händelse, till exempel
-`xcopy /y /s /i "$(ProjectDir)shaders" "$(OutDir)shaders"`.) En solution länkar inte om programmet när du bara har
-ändrat en shader, men shaders är också källfiler, och appen räknar bara ett bygge vars program är nyare än alla dem:
-efter en ändring som bara gäller shaders använder du **Build → Rebuild Solution**.
+`xcopy /y /s /i "$(ProjectDir)shaders" "$(OutDir)shaders"`.)
+:::
+
+:::opengl d3d12
+Programmet läser sina shaders varje gång det startar, så en ändring som bara gäller en shader kräver inget nytt bygge:
+kör bara programmet igen.
+:::
+:::vulkan
+:::ide clion vscode
+Efter en ändring i en shader bygger du som vanligt: CMake ser ändringen och kör `glslc` på den shadern igen.
+:::
+:::ide vs rider
+En solution räknar inte shaderna som källfiler: när bara en shader har ändrats kan IDE:n komma fram till att det inte
+finns något att bygga och hoppa över pre-build-händelsen. Efter en ändring som bara gäller en shader använder du
+**Build → Rebuild Solution**, så att `glslc` kompilerar den igen.
+:::
 :::
 
 ## Bygga och köra
@@ -635,10 +636,7 @@ efter en ändring som bara gäller shaders använder du **Build → Rebuild Solu
 4. För varje kapitel kopierar du projektets `.sln`, `.vcxproj` och `.vcxproj.filters` till kapitelmappen, bredvid
    startfilerna, och öppnar `.sln`-filen där.
 5. **Build → Build Solution** (Ctrl+Shift+B) bygger programmet; **Debug → Start Without Debugging** (Ctrl+F5) eller
-   **Start Debugging** (F5) bygger det vid behov och kör det.
-
-Programmet hamnar i `x64/Debug/` inuti kapitelmappen, till exempel `x64/Debug/LearnOpenGL.exe`, och körs i
-kapitelmappen.
+   **Start Debugging** (F5) bygger det vid behov och kör det, med kapitelmappen som arbetskatalog.
 :::
 :::ide clion
 1. **File → Open…** och välj kapitelmappen. CLion läser `CMakeLists.txt` och frågar första gången efter en
@@ -646,8 +644,6 @@ kapitelmappen.
 2. CLion skapar en körkonfiguration för programmet. Öppna **Run → Edit Configurations…** och sätt dess
    **Working directory** till kapitelmappen (`$ProjectFileDir$`).
 3. **Build → Build Project** (Ctrl+F9) bygger det; **Run → Run** (Shift+F10) eller den gröna ▶-knappen kör det.
-
-Programmet hamnar i `cmake-build-debug/` inuti kapitelmappen.
 :::
 :::ide rider
 1. Installera *Build Tools for Visual Studio* (eller Visual Studio Community) med arbetsbelastningen **Desktop
@@ -661,8 +657,8 @@ Programmet hamnar i `cmake-build-debug/` inuti kapitelmappen.
    startfilerna, och öppnar `.sln`-filen där med **File → Open…**.
 5. **Build → Build Solution** bygger programmet; **Run → Run** kör det.
 
-Programmet hamnar i `x64/Debug/` inuti kapitelmappen. Om det inte hittar sina filer sätter du **Working directory**
-under **Run → Edit Configurations…** till kapitelmappen.
+Om programmet inte hittar sina filer sätter du **Working directory** under **Run → Edit Configurations…** till
+kapitelmappen.
 :::
 :::ide vscode
 1. Installera tilläggen **C/C++** och **CMake Tools** (båda från Microsoft), en kompilator och CMake.
@@ -694,20 +690,21 @@ den i CMake-profilen).
 
 ## Prova
 
-Det här kapitlets startfiler är triangelprogrammet från introduktionen. Välj en mapp för kapitlet, kopiera
-startfilerna, lägg till dina projektfiler, öppna mappen i din IDE, bygg och kör. Om ett fönster med en orange
-triangel på en mörkt blågrön bakgrund dyker upp är din IDE, din kompilator och biblioteken för {{api}} redo – nästa
-kapitel börjar med ett tomt fönster.
+Det här kapitlets startfiler är triangelprogrammet från introduktionen. Spara dem med **Spara startfilerna…**, lägg
+till dina projektfiler, öppna projektet i din IDE, bygg och kör. Om ett fönster med en orange triangel på en mörkt
+blågrön bakgrund dyker upp är din IDE, din kompilator och biblioteken för {{api}} redo – nästa kapitel börjar med ett
+tomt fönster.
 
 ```quiz
-Du bygger programmet, och uppgiftens rad i panelen ändras till *väntar på körning*. Vad ska du göra?
-- [ ] Kopiera startfilerna igen
-- [ ] Bygga programmet en gång till
-- [ ] Använda **Jag har kört det** – appen kan inte följa din IDE
-- [x] Köra programmet från din IDE: appen har sett det nya bygget, men ännu ingen körning av det
+Du lägger upp kursen på ditt eget sätt: ett CMake-projekt för alla kapitel, med varje kapitels kod i en egen mapp. Vad behöver **Kontrollera min kod** från dig?
+- [ ] Den föreslagna mappstrukturen, `learn/<api>/<kapitel>`
+- [ ] Ett bygge av programmet som är nyare än dina källfiler
+- [ ] Att programmet körs medan kontrollen läser din kod
+- [x] Kapitlets huvudfil, vald en gång, var den än ligger
 ---
-*Väntar på körning* betyder att bygget räknades. Nästa steg är att starta programmet från IDE:n (eller en terminal);
-**Jag har kört det** är bara till för uppsättningar där appen inte kan se ditt program starta.
+**Kontrollera min kod** läser dina källfiler – huvudfilen du väljer, och shaders och headerfiler som den hittar bredvid
+den, under den eller i mappen ovanför – och kör kursens kontroller på dem. Vilken mappstruktur som helst fungerar, och
+ingenting behöver byggas eller köras för kontrollen; du bygger och kör programmet för att se vad det ritar.
 ```
 
 ## Mer att läsa
