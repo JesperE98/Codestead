@@ -391,12 +391,31 @@ public sealed class MarkdownView : UserControl
         }
     }
 
+    /// <summary>
+    /// Opens a web link in the browser when nobody listens to <see cref="LinkClicked"/> (task texts, hints, quiz
+    /// questions, What's new): only http and https, through the window's launcher.
+    /// </summary>
+    private static async void Open(Visual from, string url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp)) return;
+        if (TopLevel.GetTopLevel(from)?.Launcher is { } launcher) await launcher.LaunchUriAsync(uri);
+    }
+
     private Avalonia.Controls.Documents.Inline LinkInline(string text, string url)
     {
         var tb = new TextBlock { Text = text, FontSize = BaseFontSize, Cursor = new Cursor(StandardCursorType.Hand), TextDecorations = TextDecorations.Underline };
         tb.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("CsLink"));
         ToolTip.SetTip(tb, url);
-        tb.PointerReleased += (_, _) => LinkClicked?.Invoke(url);
+        // On press, not release: the paragraph around the link is a SelectableTextBlock, which captures the pointer when
+        // it is pressed (to start a selection), so the link would never see the release. Handling the press also keeps
+        // a click on a link from starting a selection.
+        tb.PointerPressed += (_, e) =>
+        {
+            if (!e.GetCurrentPoint(tb).Properties.IsLeftButtonPressed) return;
+            e.Handled = true;
+            if (LinkClicked is { } handler) handler(url);
+            else Open(tb, url);
+        };
         return new InlineUIContainer(tb) { BaselineAlignment = BaselineAlignment.Baseline };
     }
 }
