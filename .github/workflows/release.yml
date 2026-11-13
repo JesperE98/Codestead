@@ -99,31 +99,8 @@ jobs:
           global-json-file: global.json
       - run: dotnet test -c Release -- --filter-not-class Codestead.GP.Tests.TaskTests
 
-  # Does a pull request change anything Codestead GP's TaskTests depend on? Pushes and hand-started runs always test.
-  changes:
-    runs-on: ubuntu-latest
-    outputs:
-      gp: ${{ steps.diff.outputs.gp }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - id: diff
-        env:
-          EVENT: ${{ github.event_name }}
-          BASE: ${{ github.event.pull_request.base.sha }}
-        run: |
-          if [ "$EVENT" != "pull_request" ]; then echo "gp=true" >> "$GITHUB_OUTPUT"; exit 0; fi
-          if git diff --name-only "$BASE" HEAD | grep -qE '^(src/GP/|tests/GP/|src/Shared/|build/|global\.json$|Directory\.Build\.props$|\.github/workflows/)'; then
-            echo "gp=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "gp=false" >> "$GITHUB_OUTPUT"
-          fi
-
   gp-tasks:
     name: GP tasks (${{ matrix.parts }})
-    needs: changes
-    if: needs.changes.outputs.gp == 'true'
     strategy:
       fail-fast: false
       matrix:
