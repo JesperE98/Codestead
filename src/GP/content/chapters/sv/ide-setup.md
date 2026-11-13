@@ -635,10 +635,6 @@ I projektfilen:
 `main.cpp` länkar dem. Bygg konfigurationen **Debug**: den definierar `_DEBUG`, som slår på koden för debug-lagret.
 :::
 
-:::ide clion vscode
-`VS_DEBUGGER_WORKING_DIRECTORY` finns där för Visual Studios skull: om du någon gång öppnar mappen där gör den att
-Visual Studio kör programmet i kapitelmappen.
-:::
 :::ide vs rider
 Shaders, texturer och modeller ligger kvar i kapitelmappen, där programmet körs. (Vill du hellre köra `.exe`-filen
 från dess egen mapp kopierar du dem dit med en post-build-händelse, till exempel
