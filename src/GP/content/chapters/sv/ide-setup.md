@@ -381,8 +381,8 @@ måste vara kapitelmappen – stegen här nedan visar hur för din IDE.
 ## Projektfilerna
 
 :::ide clion vscode
-En `CMakeLists.txt` är allt ett kapitel behöver. Lägg den i varje kapitelmapp bredvid startfilerna – det är samma fil
-för alla kapitel i kursen.
+Du skriver `CMakeLists.txt` själv – en per kapitel, eller en för hela kursen med ett program per kapitel. Ny på
+CMake? [CMakes tutorial](https://cmake.org/cmake/help/latest/guide/tutorial/index.html) har det du behöver.
 :::
 :::ide vs rider
 Du sätter upp ett Visual Studio-projekt en gång per API och kopierar dess två filer, `.sln` och `.vcxproj`, till varje
@@ -393,6 +393,19 @@ sökvägarna `..\..\libs` i inställningarna så att de stämmer.
 
 :::opengl
 :::ide clion vscode
+För OpenGL behöver den:
+
+- använda C++17 ([`CMAKE_CXX_STANDARD`](https://cmake.org/cmake/help/latest/variable/CMAKE_CXX_STANDARD.html))
+- hämta GLFW och GLM: installerade med [`find_package`](https://cmake.org/cmake/help/latest/command/find_package.html),
+  eller nedladdade med [`FetchContent`](https://cmake.org/cmake/help/latest/module/FetchContent.html)
+- bygga ett program av `main.cpp` och GLAD:s `glad.c`
+  ([`add_executable`](https://cmake.org/cmake/help/latest/command/add_executable.html))
+- lägga till GLAD:s och stb:s include-mappar
+  ([`target_include_directories`](https://cmake.org/cmake/help/latest/command/target_include_directories.html)) och
+  länka GLFW och GLM ([`target_link_libraries`](https://cmake.org/cmake/help/latest/command/target_link_libraries.html))
+
+<details data-summary="Visa en färdig CMakeLists.txt">
+
 ```text
 cmake_minimum_required(VERSION 3.24)
 project(LearnOpenGL C CXX)
@@ -412,10 +425,9 @@ set(LIBS ${CMAKE_CURRENT_SOURCE_DIR}/../../libs)
 add_executable(LearnOpenGL main.cpp ${LIBS}/glad/src/glad.c)
 target_include_directories(LearnOpenGL PRIVATE ${LIBS}/glad/include ${LIBS}/stb)
 target_link_libraries(LearnOpenGL PRIVATE glfw glm::glm ${CMAKE_DL_LIBS})
-
-# Visual Studio: run the program in the chapter folder, where its shaders and textures are
-set_target_properties(LearnOpenGL PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 ```
+
+</details>
 
 På Linux installerar du din distributions GLFW-paket: att bygga GLFW från källkod kräver där också utvecklingspaketen
 för X11 och Wayland. Du behöver inte länka mot `opengl32.lib` eller `libGL` själv – GLFW skapar kontexten och GLAD ber
@@ -457,6 +469,23 @@ Relativa sökvägar i de här inställningarna utgår från mappen där `.vcxpro
 :::
 :::vulkan
 :::ide clion vscode
+För Vulkan behöver den:
+
+- använda C++17 ([`CMAKE_CXX_STANDARD`](https://cmake.org/cmake/help/latest/variable/CMAKE_CXX_STANDARD.html))
+- hitta Vulkan-SDK:t och dess `glslc` ([`FindVulkan`](https://cmake.org/cmake/help/latest/module/FindVulkan.html)), och
+  hämta GLFW och GLM ([`find_package`](https://cmake.org/cmake/help/latest/command/find_package.html) eller
+  [`FetchContent`](https://cmake.org/cmake/help/latest/module/FetchContent.html))
+- bygga ett program av `main.cpp` ([`add_executable`](https://cmake.org/cmake/help/latest/command/add_executable.html))
+  med stb:s och tinyobjloaders include-mappar
+  ([`target_include_directories`](https://cmake.org/cmake/help/latest/command/target_include_directories.html))
+- länka Vulkan, GLFW och GLM
+  ([`target_link_libraries`](https://cmake.org/cmake/help/latest/command/target_link_libraries.html))
+- kompilera shaders till SPIR-V med `glslc`
+  ([`add_custom_command`](https://cmake.org/cmake/help/latest/command/add_custom_command.html)) – eller köra `glslc` för
+  hand, som vulkan-tutorial.coms `compile.bat` gör
+
+<details data-summary="Visa en färdig CMakeLists.txt">
+
 ```text
 cmake_minimum_required(VERSION 3.24)
 project(LearnVulkan CXX)
@@ -479,9 +508,6 @@ add_executable(LearnVulkan main.cpp)
 target_include_directories(LearnVulkan PRIVATE ${LIBS}/stb ${LIBS}/tinyobjloader)
 target_link_libraries(LearnVulkan PRIVATE Vulkan::Vulkan glfw glm::glm)
 
-# Visual Studio: run the program in the chapter folder, where its shaders and textures are
-set_target_properties(LearnVulkan PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
 # Compile every shader in shaders/ to SPIR-V next to it:
 # shader.vert -> vert.spv (vulkan-tutorial's names), any other name.vert -> name.vert.spv
 file(GLOB SHADERS CONFIGURE_DEPENDS shaders/*.vert shaders/*.frag shaders/*.geom shaders/*.tesc shaders/*.tese shaders/*.comp)
@@ -501,8 +527,10 @@ add_custom_target(shaders DEPENDS ${SPIRV_FILES})
 add_dependencies(LearnVulkan shaders)
 ```
 
-Loopen gör det som vulkan-tutorial.coms `compile.bat` och `compile.sh` gör för hand: den kör `glslc` för varje
-shader, och igen så fort du ändrar en.
+Loopen gör det som vulkan-tutorial.coms `compile.bat` gör för hand: den kör `glslc` för varje shader, och igen så
+fort du ändrar en.
+
+</details>
 :::
 :::ide vs rider
 Projektet, `LearnVulkan`, kompilerar `main.cpp` och behöver de här inställningarna för **alla konfigurationer** (All
@@ -549,6 +577,16 @@ Bygg inte konfigurationen **Release** medan du lär dig: den definierar `NDEBUG`
 :::
 :::d3d12
 :::ide clion vscode
+För DirectX 12 behöver den:
+
+- använda C++17 ([`CMAKE_CXX_STANDARD`](https://cmake.org/cmake/help/latest/variable/CMAKE_CXX_STANDARD.html))
+- bygga ett Windows-program av `main.cpp` – `WIN32`, eftersom det startar i `wWinMain`
+  ([`add_executable`](https://cmake.org/cmake/help/latest/command/add_executable.html))
+- lägga till include-mapparna för DirectX-Headers och stb
+  ([`target_include_directories`](https://cmake.org/cmake/help/latest/command/target_include_directories.html))
+
+<details data-summary="Visa en färdig CMakeLists.txt">
+
 ```text
 cmake_minimum_required(VERSION 3.24)
 project(LearnDirectX CXX)
@@ -562,10 +600,9 @@ set(LIBS ${CMAKE_CURRENT_SOURCE_DIR}/../../libs)
 # WIN32: a Windows program that starts in wWinMain, not a console program
 add_executable(LearnDirectX WIN32 main.cpp)
 target_include_directories(LearnDirectX PRIVATE ${LIBS}/DirectX-Headers/include/directx ${LIBS}/stb)
-
-# Visual Studio: run the program in the chapter folder, where shaders.hlsl and the textures are
-set_target_properties(LearnDirectX PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 ```
+
+</details>
 :::
 :::ide vs rider
 Projektet, `LearnDirectX`, kompilerar `main.cpp` och behöver de här inställningarna för **alla konfigurationer** (All

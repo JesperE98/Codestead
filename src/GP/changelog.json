@@ -6,42 +6,49 @@
       "en": [
         "**Choose your IDE** at the top, next to the graphics API – Visual Studio, CLion, Rider or VS Code. The chapters then show the steps for your IDE where they differ: CMake for CLion and VS Code, a Visual Studio solution for Visual Studio and Rider (libraries, shader files, the working directory, debugging), and the **Your project** panel says where your program will appear.",
         "**Tick the tasks yourself**, and organise your code however you like: the app no longer watches a folder or waits for you to build and run. Under every task, **Mark as done**; or **Check my code**: pick the chapter's main file – any name, any folder – and the app ticks every task your code solves and says what is missing in the others. **Save start files…** puts a chapter's files in a folder of your choice.",
+        "**Setting up your IDE**: with CLion or VS Code you write the CMakeLists.txt yourself. The chapter lists what it needs, with links to CMake's documentation, and a finished file is folded away for when you get stuck.",
         "New achievement **Second opinion**: let the app check your code. It replaces the typo achievement, which a real compiler made almost impossible.",
         "Links in the chapters – to GLFW, GLAD, GLM, the SDKs and the documentation – **open in your browser** again; clicking them did nothing. A link to the Vulkan tutorial's descriptor page is corrected."
       ],
       "sv": [
         "**Välj din IDE** överst, bredvid grafik-API:et – Visual Studio, CLion, Rider eller VS Code. Kapitlen visar sedan stegen för din IDE där de skiljer sig: CMake för CLion och VS Code, en Visual Studio-lösning för Visual Studio och Rider (bibliotek, shaderfiler, arbetskatalogen, felsökning), och panelen **Ditt projekt** säger var ditt program kommer att hamna.",
         "**Bocka i uppgifterna själv**, och ordna din kod som du vill: appen bevakar inte längre en mapp och väntar inte på att du bygger och kör. Under varje uppgift finns **Markera som klar**; eller **Kontrollera min kod**: välj kapitlets huvudfil – vilket namn och vilken mapp som helst – så bockar appen i varje uppgift som din kod löser och säger vad som saknas i de andra. **Spara startfilerna…** lägger ett kapitels filer i en mapp du väljer.",
+        "**Sätt upp din IDE**: med CLion eller VS Code skriver du CMakeLists.txt själv. Kapitlet listar vad den behöver, med länkar till CMakes dokumentation, och en färdig fil ligger hopfälld om du kör fast.",
         "Ny utmärkelse **En andra åsikt**: låt appen kontrollera din kod. Den ersätter stavfelsutmärkelsen, som en riktig kompilator gjorde nästan omöjlig.",
         "Länkarna i kapitlen – till GLFW, GLAD, GLM, SDK:erna och dokumentationen – **öppnas i webbläsaren** igen; att klicka på dem gjorde ingenting. En länk till Vulkan-tutorialens sida om deskriptorer är rättad."
       ],
       "de": [
         "**Wähle deine IDE** oben neben der Grafik-API – Visual Studio, CLion, Rider oder VS Code. Die Kapitel zeigen dann dort, wo es Unterschiede gibt, die Schritte für deine IDE: CMake für CLion und VS Code, eine Visual-Studio-Projektmappe für Visual Studio und Rider (Bibliotheken, Shader-Dateien, das Arbeitsverzeichnis, Debuggen), und das Feld **Dein Projekt** sagt, wo dein Programm landen wird.",
         "**Hake die Aufgaben selbst ab** und organisiere deinen Code, wie du willst: Die App überwacht keinen Ordner mehr und wartet nicht mehr darauf, dass du baust und ausführst. Unter jeder Aufgabe steht **Als erledigt markieren**; oder **Meinen Code prüfen**: Wähle die Hauptdatei des Kapitels – beliebiger Name, beliebiger Ordner –, und die App hakt jede Aufgabe ab, die dein Code löst, und sagt, was bei den anderen fehlt. **Startdateien speichern…** legt die Dateien eines Kapitels in einem Ordner deiner Wahl ab.",
+        "**Deine IDE einrichten**: Mit CLion oder VS Code schreibst du die CMakeLists.txt selbst. Das Kapitel zählt auf, was sie braucht, mit Links zur CMake-Dokumentation, und eine fertige Datei ist eingeklappt, falls du nicht weiterkommst.",
         "Neue Auszeichnung **Zweite Meinung**: Lass die App deinen Code prüfen. Sie ersetzt die Tippfehler-Auszeichnung, die ein echter Compiler fast unmöglich gemacht hat.",
         "Links in den Kapiteln – zu GLFW, GLAD, GLM, den SDKs und der Dokumentation – **öffnen sich wieder im Browser**; ein Klick darauf bewirkte nichts. Ein Link auf die Deskriptor-Seite des Vulkan-Tutorials ist korrigiert."
       ],
       "fr": [
         "**Choisissez votre IDE** en haut, à côté de l'API graphique – Visual Studio, CLion, Rider ou VS Code. Les chapitres montrent alors les étapes propres à votre IDE là où elles diffèrent : CMake pour CLion et VS Code, une solution Visual Studio pour Visual Studio et Rider (bibliothèques, fichiers de shaders, répertoire de travail, débogage), et le panneau **Votre projet** indique où votre programme apparaîtra.",
         "**Cochez les tâches vous-même**, et organisez votre code comme vous le voulez : l'application ne surveille plus de dossier et n'attend plus que vous compiliez et lanciez. Sous chaque tâche, **Marquer comme faite** ; ou **Vérifier mon code** : choisissez le fichier principal du chapitre – n'importe quel nom, n'importe quel dossier – et l'application coche chaque tâche que votre code résout et indique ce qui manque pour les autres. **Enregistrer les fichiers de départ…** place les fichiers d'un chapitre dans le dossier de votre choix.",
+        "**Configurer votre IDE** : avec CLion ou VS Code, vous écrivez vous-même le CMakeLists.txt. Le chapitre indique ce qu'il doit contenir, avec des liens vers la documentation de CMake, et un fichier complet est replié pour quand vous êtes bloqué.",
         "Nouveau succès **Deuxième avis** : laissez l'application vérifier votre code. Il remplace le succès de la faute de frappe, qu'un vrai compilateur rendait presque impossible.",
         "Les liens des chapitres – vers GLFW, GLAD, GLM, les SDK et la documentation – **s'ouvrent à nouveau dans votre navigateur** ; cliquer dessus ne faisait rien. Un lien vers la page du tutoriel Vulkan sur les descripteurs est corrigé."
       ],
       "es": [
         "**Elige tu IDE** arriba, junto a la API gráfica: Visual Studio, CLion, Rider o VS Code. Los capítulos muestran entonces los pasos de tu IDE donde difieren: CMake para CLion y VS Code, una solución de Visual Studio para Visual Studio y Rider (bibliotecas, archivos de shaders, directorio de trabajo, depuración), y el panel **Tu proyecto** indica dónde aparecerá tu programa.",
         "**Marca las tareas tú mismo** y organiza tu código como quieras: la aplicación ya no vigila una carpeta ni espera a que compiles y ejecutes. Debajo de cada tarea está **Marcar como hecha**; o **Revisar mi código**: elige el archivo principal del capítulo (cualquier nombre, cualquier carpeta) y la aplicación marca cada tarea que resuelve tu código y dice qué falta en las demás. **Guardar archivos iniciales…** pone los archivos de un capítulo en la carpeta que elijas.",
+        "**Configurar tu IDE**: con CLion o VS Code escribes tú mismo el CMakeLists.txt. El capítulo indica lo que necesita, con enlaces a la documentación de CMake, y hay un archivo terminado plegado por si te atascas.",
         "Nuevo logro **Segunda opinión**: deja que la aplicación revise tu código. Sustituye al logro de la errata, que un compilador real hacía casi imposible.",
         "Los enlaces de los capítulos (a GLFW, GLAD, GLM, los SDK y la documentación) **vuelven a abrirse en el navegador**; al hacer clic no pasaba nada. Se ha corregido un enlace a la página de descriptores del tutorial de Vulkan."
       ],
       "zh": [
         "在顶部图形 API 旁边**选择你的 IDE**——Visual Studio、CLion、Rider 或 VS Code。各章会在有差异的地方显示适用于你的 IDE 的步骤：CLion 和 VS Code 使用 CMake，Visual Studio 和 Rider 使用 Visual Studio 解决方案（库、着色器文件、工作目录、调试），**你的项目** 面板也会说明程序将出现在哪里。",
         "**自己勾选任务**，代码目录随你组织：应用不再监视文件夹，也不再等你构建和运行。每个任务下都有 **标记为完成**；或者使用 **检查我的代码**：选择本章的主文件——任意文件名、任意文件夹——应用会勾选你的代码完成的每个任务，并说明其他任务还缺什么。**保存起始文件…** 会把本章的文件放到你选择的文件夹。",
+        "**设置你的 IDE**：使用 CLion 或 VS Code 时，CMakeLists.txt 由你自己编写。本章列出它需要的内容并附上 CMake 文档链接，卡住时还可以展开一份完整的文件。",
         "新成就 **第二意见**：让应用检查你的代码。它取代了拼写错误成就——真正的编译器让那个成就几乎无法获得。",
         "章节中的链接（指向 GLFW、GLAD、GLM、各 SDK 和文档）现在**又能在浏览器中打开**了——之前点击没有任何反应。另外修正了一个指向 Vulkan 教程描述符页面的链接。"
       ],
       "ja": [
         "上部のグラフィックス API の隣で **IDE を選択** できるようになりました（Visual Studio、CLion、Rider、VS Code）。各章では違いのある箇所で選んだ IDE の手順が表示されます。CLion と VS Code は CMake、Visual Studio と Rider は Visual Studio ソリューション（ライブラリ、シェーダーファイル、作業ディレクトリ、デバッグ）で、**あなたのプロジェクト** パネルにはプログラムの出力先が表示されます。",
         "**課題には自分でチェックを付けられます**。コードの構成も自由です。アプリはフォルダーを監視せず、ビルドや実行を待つこともなくなりました。各課題の下に **完了にする** があります。または **コードを確認**：章のメインファイル（名前もフォルダーも自由）を選ぶと、コードが解いている課題すべてにチェックが付き、残りの課題に足りないものが表示されます。**開始ファイルを保存…** で章のファイルを好きなフォルダーに置けます。",
+        "**IDE のセットアップ**：CLion や VS Code では CMakeLists.txt を自分で書きます。章には必要な内容が CMake のドキュメントへのリンク付きで並び、行き詰まったときのために完成したファイルが折りたたまれています。",
         "新しい実績 **セカンドオピニオン**：アプリにコードを確認してもらう。本物のコンパイラーではほぼ取れなくなったタイプミスの実績に代わるものです。",
         "章の中のリンク（GLFW、GLAD、GLM、各 SDK、ドキュメントへのリンク）が再び**ブラウザーで開く**ようになりました。以前はクリックしても何も起きませんでした。Vulkan チュートリアルのディスクリプターのページへのリンクも修正しました。"
       ]
