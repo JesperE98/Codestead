@@ -637,10 +637,6 @@ In the project file:
 `main.cpp` link them. Build the **Debug** configuration: it defines `_DEBUG`, which turns on the debug layer code.
 :::
 
-:::ide clion vscode
-`VS_DEBUGGER_WORKING_DIRECTORY` is there for Visual Studio: should you ever open the folder there, it makes Visual
-Studio run the program in the chapter folder.
-:::
 :::ide vs rider
 The shaders, textures and models stay in the chapter folder, where the program runs. (If you'd rather run the `.exe`
 from its own folder, copy them next to it with a post-build event, for example
