@@ -32,7 +32,7 @@ the file formats we want to import. Luckily for us, there just happens to be a l
 ## The model of this part
 
 learnopengl.com uses a backpack model for this part; this course has a model of its own: a small planet with a ring,
-`models/planet.obj`. It is a Wavefront `.obj` file, a plain text file you can open in your IDE (**Copy start files**
+`models/planet.obj`. It is a Wavefront `.obj` file, a plain text file you can open in your IDE (**Save start files…**
 puts it into your project folder). Its first lines name the material library, `planet.mtl`, and start the first object:
 
 ```text

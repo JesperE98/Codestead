@@ -15,7 +15,7 @@ extra vertices.
 > but we'll leave that for a different topic.
 
 In this chapter you put two images on the rectangle from the previous chapters: a wooden crate, `container.png`, and a
-smiley, `awesomeface.png`. Both are 256×256 pixels and both are part of the project – **Copy start files** puts them
+smiley, `awesomeface.png`. Both are 256×256 pixels and both are part of the project – **Save start files…** puts them
 into your project folder. `container.png` has three channels (RGB). `awesomeface.png` has four (RGBA): around the face
 it is transparent, and those transparent pixels are stored as **black** with an alpha of 0. Keep that in mind; it will
 explain something you see later.

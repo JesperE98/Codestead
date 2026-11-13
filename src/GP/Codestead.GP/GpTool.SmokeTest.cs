@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using System.Diagnostics;
 using Codestead.GP.Course;
 using Codestead.GP.Course.Ide;
 using Codestead.GP.Gpu;
@@ -7,113 +6,38 @@ using Codestead.Learning.UI;
 
 namespace Codestead.GP;
 
-// The --smoke-test (installation tests, 180 s): the "Your project" flow end to end in a temporary folder.
+// The --smoke-test (installation tests, 180 s): "Check my code" end to end in a temporary folder.
 public sealed partial class GpTool
 {
     private string? smokeDir;
-    private string smokeRun = "";
+    private int smokeChecks;
 
     /// <summary>
-    /// Solves a task as a learner would: the chapter's folder is a temporary one, the start files are copied into
-    /// it and the course's solution written over them; the "build" is a real program copied into build/ (a copy of
-    /// the system's sleep, or ping on Windows) and run, so the app has to see it running – or, where it cannot,
-    /// "I ran it" stands in. The task counts once the background check has been handed to the window.
+    /// Solves a task as a learner would: the start files are saved into a temporary folder in a structure of the
+    /// learner's own (the main file under src/, renamed), the course's solution written over them, the main file
+    /// picked and "Check my code" run. The task counts once the background check has been handed to the window.
     /// </summary>
     public override async Task SolveForSmokeTest(TaskInfo task)
     {
         smokeDir ??= Directory.CreateTempSubdirectory("codestead-gp-smoke-").FullName;
-        var dir = Path.Combine(smokeDir, watchedApi, chapter);
+        var dir = Path.Combine(smokeDir, shownApi, chapter);
         Directory.CreateDirectory(dir);
-        if (folder != dir) SetFolder(dir);
-        // A clean build each time: an earlier program must not count for the new code.
-        if (Directory.Exists(Path.Combine(dir, "build"))) Directory.Delete(Path.Combine(dir, "build"), true);
-        var tasks = GpCourse.Tasks(chapter, watchedApi);
-        int index = tasks.ToList().FindIndex(t => GpCourse.TaskKey(chapter, t.Id, watchedApi) == task.Key);
-        StartFiles.Copy(dir, GpCourse.StartProject(chapter, watchedApi));
-        StartFiles.Copy(dir, ExpectedResult.Project(chapter, watchedApi, Math.Max(0, index)));
-        // The code was written a moment ago; the build comes after it.
-        var written = DateTime.UtcNow.AddSeconds(-3);
-        foreach (var file in Directory.GetFiles(dir, "*", SearchOption.AllDirectories).Where(ProjectFiles.IsSource)) File.SetLastWriteTimeUtc(file, written);
-
-        var checkedTask = new TaskCompletionSource<CheckReport>(TaskCreationOptions.RunContinuationsAsynchronously);
-        void OnChecked(CheckReport r) => checkedTask.TrySetResult(r);
-        Checked += OnChecked;
-        Process? program = null;
-        try
-        {
-            program = BuildAndRun(dir);
-            var watch = Stopwatch.StartNew();
-            if (program is null)
-            {
-                smokeRun = "no program to run here: \"I ran it\"";
-                watcher?.MarkRan();
-            }
-            else
-            {
-                // The process must be seen; where it is not (a locked-down Windows), "I ran it" stands in, except on Linux.
-                var seen = await Task.WhenAny(checkedTask.Task, Task.Delay(TimeSpan.FromSeconds(20)));
-                if (seen != checkedTask.Task)
-                {
-                    if (OperatingSystem.IsLinux()) throw new InvalidOperationException($"The run of {program.StartInfo.FileName} was not seen ({watcher?.Status}).");
-                    smokeRun = "run not seen: \"I ran it\"";
-                    watcher?.MarkRan();
-                }
-                else smokeRun = $"run seen after {watch.Elapsed.TotalSeconds:0.0} s";
-            }
-            var done = await Task.WhenAny(checkedTask.Task, Task.Delay(TimeSpan.FromSeconds(60)));
-            if (done != checkedTask.Task) throw new InvalidOperationException($"The project was not checked ({watcher?.Status}).");
-        }
-        finally
-        {
-            Checked -= OnChecked;
-            try
-            {
-                if (program is { HasExited: false }) program.Kill();
-            }
-            catch (InvalidOperationException)
-            {
-            }
-            program?.Dispose();
-        }
-    }
-
-    /// <summary>"Builds" the program: copies a small system program into build/, newer than the code, and starts it.</summary>
-    private static Process? BuildAndRun(string dir)
-    {
-        string? source;
-        string args;
-        if (OperatingSystem.IsWindows())
-        {
-            source = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "PING.EXE");
-            args = "-n 30 127.0.0.1";
-        }
-        else
-        {
-            source = new[] { "/bin/sleep", "/usr/bin/sleep" }.FirstOrDefault(File.Exists);
-            args = "30";
-        }
-        if (source is null || !File.Exists(source)) return null;
-        var build = Path.Combine(dir, "build", OperatingSystem.IsWindows() ? "Debug" : "");
-        Directory.CreateDirectory(build);
-        var exe = Path.Combine(build, OperatingSystem.IsWindows() ? "smoke-program.exe" : "smoke-program");
-        File.Copy(source, exe, overwrite: true);
-        File.SetLastWriteTimeUtc(exe, DateTime.UtcNow);
-        try
-        {
-            var p = Process.Start(new ProcessStartInfo(exe, args) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true });
-            if (p is not null)
-            {
-                p.OutputDataReceived += (_, _) => { };
-                p.ErrorDataReceived += (_, _) => { };
-                p.BeginOutputReadLine();
-                p.BeginErrorReadLine();
-            }
-            return p;
-        }
-        catch (Exception e) when (e is System.ComponentModel.Win32Exception or IOException or UnauthorizedAccessException)
-        {
-            return null;
-        }
+        var tasks = GpCourse.Tasks(chapter, shownApi);
+        int index = tasks.ToList().FindIndex(t => GpCourse.TaskKey(chapter, t.Id, shownApi) == task.Key);
+        var solution = ExpectedResult.Project(chapter, shownApi, Math.Max(0, index));
+        StartFiles.Copy(dir, GpCourse.StartProject(chapter, shownApi));
+        StartFiles.Copy(dir, solution);
+        // The learner's own layout: the main file is src/<chapter>.cpp, the other files stay beside src/.
+        var main = Path.Combine(dir, "src", chapter + ".cpp");
+        Directory.CreateDirectory(Path.GetDirectoryName(main)!);
+        File.Move(Path.Combine(dir, solution.MainFile), main, overwrite: true);
+        if (mainFile != main) SetMainFile(main);
+        var check = StartCheck();
+        var done = await Task.WhenAny(check, Task.Delay(TimeSpan.FromSeconds(60)));
+        if (done != check || check.Result is not { } r) throw new InvalidOperationException($"The code in {dir} was not checked.");
+        if (index >= 0 && !r.Tasks[index].Passed)
+            throw new InvalidOperationException($"The solution of {task.Key} did not pass its check: {string.Join("; ", r.Messages.Select(m => m.Key))}");
+        smokeChecks++;
     }
 
     /// <summary>
@@ -152,11 +76,9 @@ public sealed partial class GpTool
         }
         // The first task with a picture (Creating a window's first tasks open a window that closes again at once).
         var pictured = GpCourse.Chapters.Where(c => c.IsLesson).Take(8)
-            .SelectMany(c => Enumerable.Range(0, GpCourse.Tasks(c.Id, watchedApi).Count).Select(i => (c.Id, Index: i)))
-            .FirstOrDefault(x => ExpectedResult.Scene(x.Id, watchedApi, x.Index) is { ShowsFrames: true });
+            .SelectMany(c => Enumerable.Range(0, GpCourse.Tasks(c.Id, shownApi).Count).Select(i => (c.Id, Index: i)))
+            .FirstOrDefault(x => ExpectedResult.Scene(x.Id, shownApi, x.Index) is { ShowsFrames: true });
         if (pictured.Id is null) throw new InvalidOperationException("No expected result for the first tasks of the course.");
-        watcher?.Dispose();
-        watcher = null;
         try
         {
             if (smokeDir is not null) Directory.Delete(smokeDir, true);
@@ -164,6 +86,6 @@ public sealed partial class GpTool
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
         }
-        return $"{projects} projects, {builds} simulated builds, {ideIds.Count} IDEs, {smokeRun}";
+        return $"{projects} projects, {builds} simulated builds, {ideIds.Count} IDEs, {smokeChecks} checks of the learner's code";
     }
 }

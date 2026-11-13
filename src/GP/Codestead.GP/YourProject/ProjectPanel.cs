@@ -7,9 +7,10 @@ using static Codestead.UI.App.UiParts;
 namespace Codestead.GP.YourProject;
 
 /// <summary>
-/// "Your project": the learner's own project folder for the chapter and API, the buttons to choose it, copy the start
-/// files into it and open it, what the app has seen (built, run), every task's state, and the picture of what the
-/// current task's result should look like. The learner writes, builds and runs the code in their own IDE.
+/// "Your project": the learner writes, builds and runs the chapter's code in their own IDE, organised as they like. The
+/// panel ticks tasks by hand ("Mark as done" under each task), checks the code when asked ("Check my code" reads the
+/// chapter's main file, which the learner picks, and the files around it), saves the start files into a folder, and
+/// shows the picture of what the current task's result should look like.
 /// </summary>
 public sealed partial class ProjectPanel : Border
 {
@@ -18,12 +19,12 @@ public sealed partial class ProjectPanel : Border
     private readonly StackPanel content = new() { Spacing = 10, Margin = new Thickness(16, 14, 16, 16) };
     private readonly ExpectedPicture picture = new();
 
-    public event Action? ChooseRequested;
-    public event Action? UseSuggestionRequested;
-    public event Action? CopyRequested;
-    public event Action? CopyOldRequested;
-    public event Action? OpenRequested;
-    public event Action? RanRequested;
+    public event Action? CheckRequested;
+    public event Action? ChangeFileRequested;
+    public event Action? SaveRequested;
+    public event Action? SaveOldRequested;
+    /// <summary>The learner ticked a task by hand.</summary>
+    public event Action<int>? MarkDoneRequested;
     /// <summary>The learner clicked a task in the list: show its expected result.</summary>
     public event Action<int>? TaskSelected;
 
@@ -52,20 +53,33 @@ public sealed partial class ProjectPanel : Border
         Grid.SetColumn(api, 1);
         header.Children.Add(api);
         content.Children.Add(header);
+        content.Children.Add(Wrapped(t("yourProject.intro"), 13, "muted"));
 
-        content.Children.Add(FolderBox(m, t));
+        if (m.MainFile is { } file)
+        {
+            var path = new SelectableTextBlock { Text = file, FontFamily = Mono, FontSize = 12.5, TextWrapping = TextWrapping.Wrap };
+            ToolTip.SetTip(path, t("yourProject.fileTitle"));
+            content.Children.Add(path);
+            if (m.FileMissing) content.Children.Add(Note(Wrapped(t("yourProject.fileMissing"), 13), "CsWarningSoft"));
+        }
         content.Children.Add(Buttons(m, t));
-        if (m.HasOldCode && m.Folder is not null && !m.FolderMissing)
+        if (m.CheckSummary is not null || m.CheckMessages.Count > 0)
+        {
+            var box = new StackPanel { Spacing = 4 };
+            if (m.CheckSummary is { } summary) box.Children.Add(Wrapped(summary, 13.5));
+            foreach (var message in m.CheckMessages) box.Children.Add(Wrapped(message, 12.5, "muted"));
+            content.Children.Add(Note(box, m.AllPassed ? "CsSuccessSoft" : "CsSurface2"));
+        }
+        if (m.HasOldCode)
         {
             var old = new StackPanel { Spacing = 6 };
             old.Children.Add(Wrapped(t("yourProject.oldCode"), 13));
             var b = new Button { Content = t("yourProject.copyOld") };
             b.Classes.Add("secondary");
-            b.Click += (_, _) => CopyOldRequested?.Invoke();
+            b.Click += (_, _) => SaveOldRequested?.Invoke();
             old.Children.Add(b);
             content.Children.Add(Note(old, "CsInfoSoft"));
         }
-        if (m.Folder is not null && !m.FolderMissing) content.Children.Add(StatusBox(m, t));
         if (HostedTasks is { } tasks)
         {
             if (tasks.Parent is Panel old) old.Children.Remove(tasks);
@@ -94,68 +108,31 @@ public sealed partial class ProjectPanel : Border
         }
     }
 
-    private Control FolderBox(PanelModel m, Tr t)
-    {
-        var box = new StackPanel { Spacing = 6 };
-        if (m.Folder is null)
-        {
-            box.Children.Add(Wrapped(t("yourProject.noFolder"), 13.5));
-            if (m.Suggestion is { } s)
-            {
-                var row = new StackPanel { Spacing = 6 };
-                row.Children.Add(Wrapped(t("yourProject.suggestion", ("folder", s)), 12.5, "muted"));
-                var use = new Button { Content = t("yourProject.useSuggestion") };
-                use.Classes.Add("secondary");
-                use.Click += (_, _) => UseSuggestionRequested?.Invoke();
-                row.Children.Add(use);
-                box.Children.Add(row);
-            }
-            return box;
-        }
-        var path = new SelectableTextBlock { Text = m.Folder, FontFamily = Mono, FontSize = 12.5, TextWrapping = TextWrapping.Wrap };
-        box.Children.Add(path);
-        if (m.FolderMissing) box.Children.Add(Note(Wrapped(t("yourProject.missingFolder"), 13), "CsWarningSoft"));
-        return box;
-    }
-
     private Control Buttons(PanelModel m, Tr t)
     {
         var row = new WrapPanel { Orientation = Orientation.Horizontal };
-        var choose = new Button { Content = t("yourProject.choose"), Margin = new Thickness(0, 0, 8, 6) };
-        choose.Classes.Add(m.Folder is null ? "primary" : "secondary");
-        choose.Click += (_, _) => ChooseRequested?.Invoke();
-        row.Children.Add(choose);
-        bool usable = m.Folder is not null && !m.FolderMissing;
-        var copy = new Button { Content = t("yourProject.copy"), IsEnabled = usable, Margin = new Thickness(0, 0, 8, 6) };
-        copy.Classes.Add("secondary");
-        ToolTip.SetTip(copy, t("yourProject.copyTitle"));
-        copy.Click += (_, _) => CopyRequested?.Invoke();
-        row.Children.Add(copy);
-        var open = new Button { Content = t("yourProject.open"), IsEnabled = usable, Margin = new Thickness(0, 0, 8, 6) };
-        open.Classes.Add("secondary");
-        open.Click += (_, _) => OpenRequested?.Invoke();
-        row.Children.Add(open);
+        bool hasTasks = m.Tasks.Count > 0;
+        if (hasTasks)
+        {
+            var check = new Button { Content = m.Checking ? t("yourProject.checking") : t("yourProject.check"), IsEnabled = !m.Checking, Margin = new Thickness(0, 0, 8, 6) };
+            check.Classes.Add("primary");
+            ToolTip.SetTip(check, t("yourProject.checkTitle"));
+            check.Click += (_, _) => CheckRequested?.Invoke();
+            row.Children.Add(check);
+            if (m.MainFile is not null)
+            {
+                var change = new Button { Content = t("yourProject.changeFile"), Margin = new Thickness(0, 0, 8, 6) };
+                change.Classes.Add("secondary");
+                change.Click += (_, _) => ChangeFileRequested?.Invoke();
+                row.Children.Add(change);
+            }
+        }
+        var save = new Button { Content = t("yourProject.save"), Margin = new Thickness(0, 0, 8, 6) };
+        save.Classes.Add(hasTasks ? "secondary" : "primary");
+        ToolTip.SetTip(save, t("yourProject.saveTitle"));
+        save.Click += (_, _) => SaveRequested?.Invoke();
+        row.Children.Add(save);
         return row;
-    }
-
-    private Control StatusBox(PanelModel m, Tr t)
-    {
-        var box = new StackPanel { Spacing = 4 };
-        var line = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
-        line.Children.Add(Wrapped(m.StatusLine, 13.5));
-        // "I ran it": a small link for setups the app cannot see.
-        var ran = new Button { Content = t("yourProject.ranIt"), Padding = new Thickness(6, 2), FontSize = 12.5, VerticalAlignment = VerticalAlignment.Top };
-        ran.Classes.Add("flat");
-        ran.Bind(Button.ForegroundProperty, this.GetResourceObservable("CsLink"));
-        ToolTip.SetTip(ran, t("yourProject.ranItTitle"));
-        ran.Click += (_, _) => RanRequested?.Invoke();
-        Grid.SetColumn(ran, 1);
-        line.Children.Add(ran);
-        box.Children.Add(line);
-        if (m.WhereProgram is { } where) box.Children.Add(Wrapped(where, 12.5, "muted"));
-        string Time(DateTime? utc) => utc is { } u ? u.ToLocalTime().ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture) : t("yourProject.never");
-        box.Children.Add(Text(t("yourProject.times", ("built", Time(m.Status.BuiltAt)), ("run", Time(m.Status.LastRunAt))), 12.5, null, "muted"));
-        return Note(box, m.Status.Ready ? "CsSuccessSoft" : "CsSurface2");
     }
 
     private static TextBlock Wrapped(string text, double size, string? cls = null)

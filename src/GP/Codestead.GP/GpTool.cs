@@ -11,8 +11,8 @@ namespace Codestead.GP;
 
 /// <summary>
 /// Codestead GP in the shared learning window: the course, its texts, the graphics APIs (OpenGL, Vulkan,
-/// DirectX 12) as variants, and "Your project" as the workbench: the learner's own project folder, built and run in
-/// their IDE and checked in the background (GpTool.Project.cs, GpTool.Folder.cs).
+/// DirectX 12) as variants, and "Your project" as the workbench: the learner's own code, built and run in their IDE;
+/// tasks ticked by hand or by "Check my code" (GpTool.Project.cs, GpTool.Files.cs).
 /// </summary>
 public sealed partial class GpTool : LearningTool
 {
@@ -91,7 +91,7 @@ public sealed partial class GpTool : LearningTool
 
     public override void VariantChosen(string variantId)
     {
-        // The window saves the choice and calls ChapterShown, which watches the chapter's folder for the new API.
+        // The window saves the choice and calls ChapterShown, which shows the chapter's main file for the new API.
     }
 
     public override IReadOnlyList<VariantOption>? AllVariants => Apis.All.Select(a => new VariantOption(a.Id, a.Name)).ToList();

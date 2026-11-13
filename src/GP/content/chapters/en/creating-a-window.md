@@ -33,11 +33,12 @@ adapter (graphics card), the **device** and the **command queue**. That is the b
 the D3D12HelloWindow sample.
 :::
 
-The chapter's start files already contain the program's skeleton: copy them into this chapter's folder with
-**Copy start files**, add your project files and open the folder in your IDE. `// TODO:` comments mark where your
-code goes; after each task you build and run the program in your IDE, and the app ticks the task. How to set up the
-IDE, the compiler and the libraries is the subject of the previous chapter, *Setting up your IDE*; the sections below
-explain what each piece is for, the way learnopengl.com does.
+The chapter's start files already contain the program's skeleton: save them into a folder of your choice with
+**Save start files…**, add your project files and open the project in your IDE. `// TODO:` comments mark where your
+code goes. After each task, build and run the program in your IDE to see what it does; when it does what the task
+asks, tick the task with **Mark as done** – or let **Check my code** check your code and tick it for you. How to set
+up the IDE, the compiler and the libraries is the subject of the previous chapter, *Setting up your IDE*; the
+sections below explain what each piece is for, the way learnopengl.com does.
 
 ```quiz
 Why does a graphics program need a library like GLFW, or the operating system's own window functions, to get a window?

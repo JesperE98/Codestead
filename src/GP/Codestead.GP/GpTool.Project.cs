@@ -12,24 +12,28 @@ using Codestead.UI.Controls;
 
 namespace Codestead.GP;
 
-// "Your project": the learner writes, builds and runs the chapter's program in their own IDE. The app watches the
-// folder (ProjectWatcher); once the program was built after the last change and run after that build, the code is
-// checked in the background with the course's task checks (ProjectChecker), and the result goes to the window as a
-// finished "build" – the window ticks the tasks, counts XP and achievements as it always has.
+// "Your project": the learner writes, builds and runs the chapter's program in their own IDE, organised as they like.
+// A task is ticked by hand ("Mark as done"), or by "Check my code": the chapter's main file, which the learner picks,
+// and the files around it are checked in the background with the course's task checks (ProjectChecker), and the
+// result goes to the window as a finished "build" – the window ticks the tasks, counts XP and achievements as it
+// always has.
 public sealed partial class GpTool
 {
+    /// <summary>The window's "command line" for a task ticked by hand (no check, no statistics).</summary>
+    private const string MarkDoneLine = "mark-done";
+
     private readonly ProjectPanel panel = new();
-    private ProjectFolders? folders;
-    private ProjectWatcher? watcher;
+    private MainFiles? mainFiles;
     private string chapter = "";
-    private string watchedApi = "";
-    private string? folder;
-    private WatchStatus status = WatchStatus.None;
+    private string shownApi = "";
+    private string? mainFile;
     private CheckReport? report;
+    private DateTime checkedAt;
     private CancellationTokenSource? checkCancel;
-    private string checkingFingerprint = "";
+    private bool checking;
     private int generation;
     private int selectedTask = -1;
+    private string? markedDone;
 
     /// <summary>Raised on the UI thread after a check has been handed to the window (the smoke test waits for it).</summary>
     internal event Action<CheckReport>? Checked;
@@ -37,13 +41,11 @@ public sealed partial class GpTool
     public GpTool()
     {
         InitIdePicker();
-        GpAchievements.ProjectFolderChosen = () => Window is not null && Folders.Any;
-        panel.ChooseRequested += () => _ = ChooseFolder();
-        panel.UseSuggestionRequested += UseSuggestion;
-        panel.CopyRequested += () => CopyStartFiles(GpCourse.StartProject(chapter, watchedApi));
-        panel.CopyOldRequested += CopyOldCode;
-        panel.OpenRequested += () => _ = OpenFolder();
-        panel.RanRequested += RanByHand;
+        panel.CheckRequested += () => _ = CheckMyCode(false);
+        panel.ChangeFileRequested += () => _ = CheckMyCode(true);
+        panel.SaveRequested += () => _ = SaveFiles(GpCourse.StartProject(chapter, shownApi));
+        panel.SaveOldRequested += SaveOldCode;
+        panel.MarkDoneRequested += MarkDone;
         panel.TaskSelected += i =>
         {
             selectedTask = i;
@@ -54,7 +56,7 @@ public sealed partial class GpTool
 
     public override Control Workbench => panel;
 
-    private ProjectFolders Folders => folders ??= new ProjectFolders(Window.Storage);
+    private MainFiles MainFiles => mainFiles ??= new MainFiles(Window.Storage);
 
     /// <summary>The solution of a task that needs no code: build and run it in the IDE.</summary>
     private string BuildRunSolution => "▶ " + Window.T("yourProject.buildRunSolution");
@@ -86,80 +88,76 @@ public sealed partial class GpTool
         }
     }
 
-    public override void FocusWorkbench() => watcher?.Refresh();
+    public override void FocusWorkbench() { }
 
-    /// <summary>Nothing runs inside the app any more: the learner runs the program in the IDE.</summary>
+    /// <summary>Nothing runs inside the app: the learner runs the program in the IDE.</summary>
     public override void Run(string command) { }
 
     // ---------- Following the chapter ----------
 
-    /// <summary>Watches the chapter's folder for the chosen API (summaries and exams keep the last one).</summary>
+    /// <summary>Shows the chapter's main file for the chosen API (summaries and exams keep the last one).</summary>
     public override void ChapterShown(string chapterId)
     {
         if (!GpCourse.Chapter(chapterId).IsLesson) return;
-        if (chapterId == chapter && Api == watchedApi) return;
+        if (chapterId == chapter && Api == shownApi) return;
         chapter = chapterId;
-        watchedApi = Api;
+        shownApi = Api;
         selectedTask = -1;
-        Watch(Folders.Get(watchedApi, chapter));
+        UseFile(MainFiles.Get(shownApi, chapter, GpCourse.StartProject(chapter, shownApi).MainFile));
     }
 
-    private void Watch(string? path)
+    private void UseFile(string? path)
     {
         generation++;
-        watcher?.Dispose();
-        watcher = null;
         checkCancel?.Cancel();
-        checkingFingerprint = "";
+        checking = false;
         report = null;
-        status = WatchStatus.None;
-        folder = path;
-        if (path is not null && Directory.Exists(path))
-        {
-            int gen = generation;
-            var w = new ProjectWatcher(path);
-            w.Changed += s => Dispatcher.UIThread.Post(() =>
-            {
-                if (gen == generation) StatusChanged(s);
-            });
-            watcher = w;
-        }
+        mainFile = path;
         RenderPanel();
     }
 
-    private void StatusChanged(WatchStatus s)
+    /// <summary>The chapter's main file (also used by the smoke test).</summary>
+    internal void SetMainFile(string path)
     {
-        status = s;
-        // New changes while a check runs: that check is about old code.
-        if (checkingFingerprint != "" && checkingFingerprint != s.Fingerprint)
-        {
-            checkCancel?.Cancel();
-            checkingFingerprint = "";
-        }
-        if (s.Ready && checkingFingerprint == "" && report?.Fingerprint != s.Fingerprint) StartCheck(s.Fingerprint);
-        RenderPanel();
+        MainFiles.Set(shownApi, chapter, path);
+        UseFile(MainFiles.Get(shownApi, chapter, GpCourse.StartProject(chapter, shownApi).MainFile));
+        Window.RefreshGame();
     }
 
-    private void StartCheck(string fingerprint)
+    /// <summary>Checks the code around the main file in the background; the result is handed to the window.</summary>
+    internal Task<CheckReport?> StartCheck()
     {
-        if (folder is null) return;
+        var finished = new TaskCompletionSource<CheckReport?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (mainFile is null)
+        {
+            finished.SetResult(null);
+            return finished.Task;
+        }
         checkCancel?.Cancel();
         var cancel = checkCancel = new CancellationTokenSource();
-        checkingFingerprint = fingerprint;
+        checking = true;
         int gen = generation;
-        string f = folder, c = chapter, api = watchedApi;
-        Task.Run(() => ProjectChecker.Check(f, c, api, fingerprint, cancel.Token), cancel.Token).ContinueWith(done =>
+        string f = mainFile, c = chapter, api = shownApi;
+        RenderPanel();
+        Task.Run(() => ProjectChecker.Check(f, c, api, cancel.Token), cancel.Token).ContinueWith(done =>
         {
             Dispatcher.UIThread.Post(() =>
             {
-                if (gen != generation || cancel.IsCancellationRequested || done.Status != System.Threading.Tasks.TaskStatus.RanToCompletion) return;
-                checkingFingerprint = "";
+                if (gen != generation || cancel.IsCancellationRequested || done.Status != System.Threading.Tasks.TaskStatus.RanToCompletion)
+                {
+                    finished.TrySetResult(null);
+                    return;
+                }
+                checking = false;
                 report = done.Result;
+                checkedAt = DateTime.Now;
                 Hand(report);
                 RenderPanel();
                 Checked?.Invoke(report);
+                finished.TrySetResult(report);
             });
         }, TaskScheduler.Default);
+        return finished.Task;
     }
 
     /// <summary>Hands a check to the window as a finished build: it ticks the passing tasks (if they are unlocked).</summary>
@@ -169,20 +167,39 @@ public sealed partial class GpTool
         OnRan(new SandboxRun("build", string.Join("\n", errors), errors.Count == 0 ? 0 : 1, true));
     }
 
-    /// <summary>A check made while the tasks were locked counts once they are unlocked (if the code is still the same).</summary>
+    /// <summary>"Mark as done": the learner says the task is solved; the window ticks it like a solved one.</summary>
+    private void MarkDone(int index)
+    {
+        var tasks = GpCourse.Tasks(chapter, shownApi);
+        if (index < 0 || index >= tasks.Count || !Window.IsChapterUnlocked(chapter)) return;
+        markedDone = GpCourse.TaskKey(chapter, tasks[index].Id, shownApi);
+        try
+        {
+            OnRan(new SandboxRun(MarkDoneLine, "", 0, true));
+        }
+        finally
+        {
+            markedDone = null;
+        }
+        RenderPanel();
+    }
+
+    /// <summary>A check made while the tasks were locked counts once they are unlocked.</summary>
     public override void TasksUnlocked(string chapterId)
     {
-        if (chapterId == chapter && report is { } r && r.ChapterId == chapter && r.Api == Api && r.Fingerprint == status.Fingerprint) Hand(r);
+        if (chapterId == chapter && report is { } r && r.ChapterId == chapter && r.Api == Api) Hand(r);
         RenderPanel();
     }
 
     public override IReadOnlyList<string> Evaluate(string chapterId, SandboxRun run, OrderedDictionary<string, bool> completed)
     {
+        if (run.Line == MarkDoneLine) return markedDone is { } key && !completed.ContainsKey(key) ? [key] : [];
         if (report is not { } r || r.ChapterId != chapterId || r.Api != Api) return [];
         return r.PassedKeys.Where(k => !completed.ContainsKey(k)).ToList();
     }
 
-    public override CommandFacts? Analyze(SandboxRun run) => report?.Facts;
+    /// <summary>A check counts for the statistics and achievements; a task ticked by hand does not.</summary>
+    public override CommandFacts? Analyze(SandboxRun run) => run.Line == MarkDoneLine ? null : report?.Facts;
 
     public override ISandbox Sandbox(string chapterId) => new NoSandbox();
 
@@ -207,18 +224,24 @@ public sealed partial class GpTool
         if (chapter == "" || Window is null) return;
         var rows = Rows();
         bool unlocked = Window.IsChapterUnlocked(chapter);
-        bool checking = checkingFingerprint != "";
-        bool current = report is { } r0 && r0.Fingerprint == status.Fingerprint;
         int selected = Selected(rows);
-        bool missing = folder is not null && !Directory.Exists(folder);
         // Until the text is done the tasks are locked: say what unlocks them (the panel has no "read first" card above it).
         var questions = Window.CheckpointProgress(chapter);
         string? lockNote = unlocked || rows.Count == 0 ? null
             : questions.Total > 0 ? Window.T("yourProject.lockedQuestions", ("done", questions.Done), ("total", questions.Total))
             : Window.T("yourProject.lockedRead");
-        var model = new PanelModel(chapter, watchedApi, Apis.Get(watchedApi).FullName, folder, missing,
-            folder is null ? Folders.Suggestion(watchedApi, chapter) : null, HasOldCode(), status, checking, StatusLine(checking, current), WhereProgram(checking), rows, selected,
-            lockNote, questions);
+        string? summary = null;
+        var messages = new List<string>();
+        bool allPassed = false;
+        if (report is { } r && r.ChapterId == chapter && r.Api == shownApi)
+        {
+            summary = Window.T("yourProject.checked", ("time", checkedAt.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture)),
+                ("passed", r.Tasks.Count(x => x.Passed)), ("total", r.Tasks.Count));
+            messages.AddRange(r.Messages.Select(m => Window.T(m.Key, Args(m))).Take(3));
+            allPassed = r.Tasks.Count > 0 && r.Tasks.All(x => x.Passed);
+        }
+        var model = new PanelModel(chapter, shownApi, Apis.Get(shownApi).FullName, mainFile, mainFile is not null && !File.Exists(mainFile),
+            HasOldCode(), checking, summary, messages, allPassed, rows, selected, lockNote, questions);
         // The window's task list (text, hints, solutions) sits in the panel once the tasks are unlocked; each task's
         // state comes from TaskStatus, so the list is refreshed with the panel.
         if (unlocked && rows.Count > 0)
@@ -229,56 +252,38 @@ public sealed partial class GpTool
         }
         else panel.HostedTasks = null;
         panel.Render(model, Window.T);
-        if (rows.Count > 0) panel.Picture.Show(chapter, watchedApi, selected, Window.T);
+        if (rows.Count > 0) panel.Picture.Show(chapter, shownApi, selected, Window.T);
     }
 
     /// <summary>The task whose expected result the panel shows: the one clicked, else the first not done.</summary>
     private int Selected(List<TaskRow> rows) => selectedTask >= 0 && selectedTask < rows.Count ? selectedTask
         : rows.FindIndex(r => r.State != TaskState.Done) is var first && first >= 0 ? first : Math.Max(0, rows.Count - 1);
 
-    /// <summary>Every task's state: done, locked, waiting for a folder, a build or a run, being checked, or not yet.</summary>
+    /// <summary>Every task's state: done, locked, being checked, not passed by the last check, or open.</summary>
     private List<TaskRow> Rows()
     {
-        var tasks = GpCourse.Tasks(chapter, watchedApi);
+        var tasks = GpCourse.Tasks(chapter, shownApi);
         bool unlocked = Window.IsChapterUnlocked(chapter);
-        bool checking = checkingFingerprint != "";
-        bool current = report is { } r0 && r0.Fingerprint == status.Fingerprint;
-        var general = report?.Messages.Select(m => Window.T(m.Key, Args(m))).Take(3).ToList() ?? [];
+        var current = report is { } r0 && r0.ChapterId == chapter && r0.Api == shownApi ? r0 : null;
         var rows = new List<TaskRow>();
         for (int i = 0; i < tasks.Count; i++)
         {
-            var key = GpCourse.TaskKey(chapter, tasks[i].Id, watchedApi);
-            var result = report?.Tasks.FirstOrDefault(x => x.Key == key);
+            var key = GpCourse.TaskKey(chapter, tasks[i].Id, shownApi);
+            var result = current?.Tasks.FirstOrDefault(x => x.Key == key);
             var messages = new List<string>();
             TaskState state;
             if (Window.IsTaskDone(key)) state = TaskState.Done;
             else if (!unlocked) state = TaskState.Locked;
-            else if (folder is null) state = TaskState.NeedsFolder;
             else if (checking) state = TaskState.Checking;
-            else if (current && result is { Passed: false })
+            else if (result is { Passed: false })
             {
                 state = TaskState.NotYet;
-                messages.AddRange(general.Count > 0 ? general : [Window.T("yourProject.notYetHelp")]);
+                messages.Add(Window.T("yourProject.notYetHelp"));
             }
-            else if (!status.Built && !(status.NoExecutable && status.RanByHand)) state = TaskState.WaitingForBuild;
-            else if (!status.Ran) state = TaskState.WaitingForRun;
-            else state = TaskState.Checking;
-            rows.Add(new TaskRow(i, Title(CourseText.TaskText(chapter, tasks[i].Id, Window.Lang, watchedApi)), state, messages));
+            else state = TaskState.Open;
+            rows.Add(new TaskRow(i, Title(CourseText.TaskText(chapter, tasks[i].Id, Window.Lang, shownApi)), state, messages));
         }
         return rows;
-    }
-
-    /// <summary>While the app waits for a build: where the chosen IDE puts the program (detection looks everywhere).</summary>
-    private string? WhereProgram(bool checking) =>
-        !checking && !status.Built && !(status.NoExecutable && status.RanByHand) ? Window.T("yourProject.where." + Ide) : null;
-
-    private string StatusLine(bool checking, bool current)
-    {
-        if (checking) return Window.T("yourProject.stateChecking");
-        if (status.NoExecutable && !status.Ran) return Window.T("yourProject.stateNoExecutable");
-        if (!status.Built && !(status.NoExecutable && status.RanByHand)) return Window.T("yourProject.stateBuild");
-        if (!status.Ran) return Window.T("yourProject.stateRun");
-        return current ? Window.T("yourProject.stateChecked") : Window.T("yourProject.stateChecking");
     }
 
     /// <summary>A task's text as a short plain title: the first sentence, without markdown.</summary>

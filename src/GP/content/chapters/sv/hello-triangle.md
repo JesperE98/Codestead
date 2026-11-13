@@ -556,8 +556,9 @@ vilket kompileringsfel som helst.
 Pre-build-händelsen i ditt projekt från *Sätt upp din IDE* kompilerar båda shaderfilerna till `shaders/vert.spv` och
 `shaders/frag.spv` med `glslc` innan `main.cpp` kompileras; ett fel i en shader syns i byggutdata med meddelandet från
 `glslc`, och bygget stannar.
-En solution länkar inte om programmet när bara en shader har ändrats, och appen räknar bara ett program som är nyare
-än alla dina källfiler: efter en ändring som bara gäller en shader använder du **Build → Rebuild Solution**.
+En solution räknar inte shaderna som källfiler: när bara en shader har ändrats kan IDE:n komma fram till att det inte
+finns något att bygga och hoppa över pre-build-händelsen. Efter en ändring som bara gäller en shader använder du
+**Build → Rebuild Solution**, så att `glslc` kompilerar den igen.
 :::
 
 När programmet körs laddar det bytekoden med en liten hjälpfunktion, `readFile`:
@@ -641,9 +642,9 @@ effektflaggor (oanvända), utdatan och en valfri blob för kompilatorns felmedde
 öppna den från Solution Explorer sätter du dess **Properties → General → Item Type** till **Does not participate in
 build** – i `.vcxproj`-filen, som är där du ändrar det i Rider: `<None Include="shaders.hlsl" />` i stället för
 `<FxCompile Include="shaders.hlsl" />`. Annars kompilerar MSBuild den med Visual Studios egen HLSL-kompilator, som
-letar efter en funktion som heter `main` och stoppar bygget. Detsamma gäller senare kapitels `.hlsl`-filer. Och
-eftersom en solution inte länkar om programmet när bara `shaders.hlsl` har ändrats använder du **Build → Rebuild
-Solution** efter en sådan ändring: appen räknar bara ett program som är nyare än alla dina källfiler.
+letar efter en funktion som heter `main` och stoppar bygget. Detsamma gäller senare kapitels `.hlsl`-filer. En
+ändring som bara gäller `shaders.hlsl` kräver inget nytt bygge: programmet kompilerar filen varje gång det startar, så
+kör bara programmet igen.
 :::
 
 Resultatet är bytekod i en `ID3DBlob`, ett enkelt minnesblock. Om HLSL-koden har ett fel returnerar
@@ -1953,7 +1954,7 @@ kapitlen blir förhoppningsvis mycket lättare att förstå.
 
 För att verkligen förstå begreppen som tagits upp finns några övningar. Det är bra att arbeta igenom dem innan du går
 vidare till nästa ämne, så att du har koll på vad som händer. Projektet är ditt att ändra i: prova övningarna i din IDE,
-och kopiera startfilerna till en ny mapp om du vill börja om från början.
+och spara startfilerna i en ny mapp med **Spara startfilerna…** om du vill börja om från början.
 
 :::opengl
 1. Försök rita 2 trianglar bredvid varandra med `glDrawArrays` genom att lägga till fler vertexar i din data.

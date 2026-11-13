@@ -30,8 +30,8 @@ vill kunna läsa. Som tur är finns det ett bibliotek för just detta.
 ## Den här delens modell
 
 learnopengl.com använder en ryggsäck som modell i den här delen; kursen har en egen modell: en liten planet med en ring,
-`models/planet.obj`. Det är en Wavefront-`.obj`-fil, en vanlig textfil som du kan öppna i din IDE (**Kopiera
-startfilerna** lägger den i din projektmapp). Dess första rader anger materialbiblioteket, `planet.mtl`, och börjar det
+`models/planet.obj`. Det är en Wavefront-`.obj`-fil, en vanlig textfil som du kan öppna i din IDE (**Spara
+startfilerna…** lägger den i din projektmapp). Dess första rader anger materialbiblioteket, `planet.mtl`, och börjar det
 första objektet:
 
 ```text

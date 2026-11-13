@@ -5,8 +5,7 @@ using Codestead.GP.Course.Ide;
 
 namespace Codestead.GP;
 
-// The IDE picker in the top bar, next to the API: the chapters' ":::ide" blocks and the panel's "where the program
-// will appear" follow it. One choice for the whole course, saved in ide.json; until the learner chooses, Visual Studio
+// The IDE picker in the top bar, next to the API: the chapters' ":::ide" blocks follow it. One choice for the whole course, saved in ide.json; until the learner chooses, Visual Studio
 // on Windows and CLion elsewhere (and Setting up your IDE asks them to choose).
 public sealed partial class GpTool
 {

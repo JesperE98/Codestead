@@ -33,11 +33,12 @@ igenom den så att du vet vad den gör. Sedan startar vi själva Direct3D 12: de
 exemplet D3D12HelloWindow.
 :::
 
-Kapitlets startfiler innehåller redan programmets skelett: kopiera dem till kapitlets mapp med **Kopiera
-startfilerna**, lägg till dina projektfiler och öppna mappen i din IDE. `// TODO:`-kommentarerna visar var din kod
-ska stå; efter varje uppgift bygger och kör du programmet i din IDE, och appen bockar av uppgiften. Hur du sätter upp
-IDE:n, kompilatorn och biblioteken är ämnet för förra kapitlet, *Sätt upp din IDE*; avsnitten här nedan förklarar vad
-varje del är till för, så som learnopengl.com gör.
+Kapitlets startfiler innehåller redan programmets skelett: spara dem i en mapp du väljer med **Spara
+startfilerna…**, lägg till dina projektfiler och öppna projektet i din IDE. `// TODO:`-kommentarerna visar var din kod
+ska stå. Efter varje uppgift bygger och kör du programmet i din IDE för att se vad det gör; när det gör det som
+uppgiften ber om bockar du av uppgiften med **Markera som klar** – eller låter **Kontrollera min kod** kontrollera din
+kod och bocka av den åt dig. Hur du sätter upp IDE:n, kompilatorn och biblioteken är ämnet för förra kapitlet, *Sätt
+upp din IDE*; avsnitten här nedan förklarar vad varje del är till för, så som learnopengl.com gör.
 
 ```quiz
 Varför behöver ett grafikprogram ett bibliotek som GLFW, eller operativsystemets egna fönsterfunktioner, för att få ett fönster?
