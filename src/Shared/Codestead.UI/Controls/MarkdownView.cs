@@ -15,8 +15,10 @@ namespace Codestead.UI.Controls;
 
 /// <summary>
 /// Renders chapter markdown as native Avalonia controls: headings, paragraphs, lists, tables,
-/// block quotes, code blocks (```sh lines are clickable commands) and distro blocks
-/// (<c>&lt;div class="distro-block" data-label="…"&gt;</c> … <c>&lt;/div&gt;</c>).
+/// block quotes, code blocks (```sh lines are clickable commands), distro blocks
+/// (<c>&lt;div class="distro-block" data-label="…"&gt;</c> … <c>&lt;/div&gt;</c>) and folded blocks
+/// (<c>&lt;details data-summary="…"&gt;</c> … <c>&lt;/details&gt;</c>: hidden until the summary is clicked, e.g. a
+/// finished file the learner can look at when stuck). Both need a blank line after the opening and before the closing tag.
 /// </summary>
 public sealed class MarkdownView : UserControl
 {
@@ -29,6 +31,9 @@ public sealed class MarkdownView : UserControl
     private static readonly FontFamily Mono = new("Cascadia Mono, JetBrains Mono, DejaVu Sans Mono, Liberation Mono, Noto Sans Mono, Menlo, Consolas, monospace");
     private static readonly System.Text.RegularExpressions.Regex DistroOpen =
         new("<div class=\"distro-block\" data-family=\"(\\w+)\" data-label=\"([^\"]*)\">", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+    private static readonly System.Text.RegularExpressions.Regex DetailsOpen =
+        new("^<details data-summary=\"([^\"]*)\">$", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
 
     private readonly StackPanel root = new() { Spacing = 0 };
 
@@ -73,7 +78,15 @@ public sealed class MarkdownView : UserControl
                     stack.Push(inner);
                     continue;
                 }
-                if (text.Trim() == "</div>" && stack.Count > 1)
+                var details = DetailsOpen.Match(text.Trim());
+                if (details.Success)
+                {
+                    var (box, inner) = DetailsBox(System.Net.WebUtility.HtmlDecode(details.Groups[1].Value));
+                    stack.Peek().Children.Add(box);
+                    stack.Push(inner);
+                    continue;
+                }
+                if (text.Trim() is "</div>" or "</details>" && stack.Count > 1)
                 {
                     stack.Pop();
                     continue;
@@ -117,6 +130,30 @@ public sealed class MarkdownView : UserControl
         };
         box.Bind(Border.BorderBrushProperty, this.GetResourceObservable("CsBorder"));
         box.Bind(Border.BackgroundProperty, this.GetResourceObservable("CsSurface"));
+        return (box, inner);
+    }
+
+    /// <summary>A folded block: a button with the summary that shows or hides what is inside.</summary>
+    private (Control Box, Panel Inner) DetailsBox(string summary)
+    {
+        var inner = new StackPanel { IsVisible = false };
+        var arrow = new TextBlock { Text = "▸", Width = 16, FontSize = BaseFontSize * 0.9, VerticalAlignment = VerticalAlignment.Center };
+        var label = new TextBlock { Text = summary, FontSize = BaseFontSize * 0.95, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap };
+        var head = new StackPanel { Orientation = Orientation.Horizontal };
+        head.Children.Add(arrow);
+        head.Children.Add(label);
+        var toggle = new Button { Content = head, Padding = new Thickness(8, 4), HorizontalAlignment = HorizontalAlignment.Left };
+        toggle.Classes.Add("flat");
+        toggle.Bind(Button.ForegroundProperty, this.GetResourceObservable("CsLink"));
+        toggle.Click += (_, _) =>
+        {
+            inner.IsVisible = !inner.IsVisible;
+            arrow.Text = inner.IsVisible ? "▾" : "▸";
+        };
+        var body = new StackPanel();
+        body.Children.Add(toggle);
+        body.Children.Add(inner);
+        var box = new Border { Margin = new Thickness(0, 8, 0, 8), Child = body };
         return (box, inner);
     }
 
