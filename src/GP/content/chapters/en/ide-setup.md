@@ -381,8 +381,8 @@ the working directory has to be the chapter folder – the steps below show how 
 ## The project files
 
 :::ide clion vscode
-A `CMakeLists.txt` is all a chapter needs. Put it into each chapter folder next to the start files – it is the same
-file for every chapter of the course.
+You write the `CMakeLists.txt` yourself – one per chapter, or one for your whole course with a program per chapter.
+New to CMake? [CMake's tutorial](https://cmake.org/cmake/help/latest/guide/tutorial/index.html) has what you need.
 :::
 :::ide vs rider
 You set up a Visual Studio project once per API and copy its two files, the `.sln` and the `.vcxproj`, into every
@@ -393,6 +393,19 @@ differently, change the `..\..\libs` paths in the settings to match.
 
 :::opengl
 :::ide clion vscode
+For OpenGL it needs to:
+
+- use C++17 ([`CMAKE_CXX_STANDARD`](https://cmake.org/cmake/help/latest/variable/CMAKE_CXX_STANDARD.html))
+- get GLFW and GLM: installed with [`find_package`](https://cmake.org/cmake/help/latest/command/find_package.html), or
+  downloaded with [`FetchContent`](https://cmake.org/cmake/help/latest/module/FetchContent.html)
+- build a program from `main.cpp` and GLAD's `glad.c`
+  ([`add_executable`](https://cmake.org/cmake/help/latest/command/add_executable.html))
+- add GLAD's and stb's include folders
+  ([`target_include_directories`](https://cmake.org/cmake/help/latest/command/target_include_directories.html)) and link
+  GLFW and GLM ([`target_link_libraries`](https://cmake.org/cmake/help/latest/command/target_link_libraries.html))
+
+<details data-summary="Show a finished CMakeLists.txt">
+
 ```text
 cmake_minimum_required(VERSION 3.24)
 project(LearnOpenGL C CXX)
@@ -412,10 +425,9 @@ set(LIBS ${CMAKE_CURRENT_SOURCE_DIR}/../../libs)
 add_executable(LearnOpenGL main.cpp ${LIBS}/glad/src/glad.c)
 target_include_directories(LearnOpenGL PRIVATE ${LIBS}/glad/include ${LIBS}/stb)
 target_link_libraries(LearnOpenGL PRIVATE glfw glm::glm ${CMAKE_DL_LIBS})
-
-# Visual Studio: run the program in the chapter folder, where its shaders and textures are
-set_target_properties(LearnOpenGL PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 ```
+
+</details>
 
 On Linux, install your distribution's GLFW package: building GLFW from source there also needs the X11 and Wayland
 development packages. You don't have to link `opengl32.lib` or `libGL` yourself – GLFW creates the context and GLAD
@@ -457,6 +469,23 @@ Relative paths in these settings start at the folder of the `.vcxproj`, which is
 :::
 :::vulkan
 :::ide clion vscode
+For Vulkan it needs to:
+
+- use C++17 ([`CMAKE_CXX_STANDARD`](https://cmake.org/cmake/help/latest/variable/CMAKE_CXX_STANDARD.html))
+- find the Vulkan SDK and its `glslc` ([`FindVulkan`](https://cmake.org/cmake/help/latest/module/FindVulkan.html)), and
+  get GLFW and GLM ([`find_package`](https://cmake.org/cmake/help/latest/command/find_package.html) or
+  [`FetchContent`](https://cmake.org/cmake/help/latest/module/FetchContent.html))
+- build a program from `main.cpp` ([`add_executable`](https://cmake.org/cmake/help/latest/command/add_executable.html))
+  with stb's and tinyobjloader's include folders
+  ([`target_include_directories`](https://cmake.org/cmake/help/latest/command/target_include_directories.html))
+- link Vulkan, GLFW and GLM
+  ([`target_link_libraries`](https://cmake.org/cmake/help/latest/command/target_link_libraries.html))
+- compile the shaders to SPIR-V with `glslc`
+  ([`add_custom_command`](https://cmake.org/cmake/help/latest/command/add_custom_command.html)) – or run `glslc` by
+  hand, as vulkan-tutorial.com's `compile.bat` does
+
+<details data-summary="Show a finished CMakeLists.txt">
+
 ```text
 cmake_minimum_required(VERSION 3.24)
 project(LearnVulkan CXX)
@@ -479,9 +508,6 @@ add_executable(LearnVulkan main.cpp)
 target_include_directories(LearnVulkan PRIVATE ${LIBS}/stb ${LIBS}/tinyobjloader)
 target_link_libraries(LearnVulkan PRIVATE Vulkan::Vulkan glfw glm::glm)
 
-# Visual Studio: run the program in the chapter folder, where its shaders and textures are
-set_target_properties(LearnVulkan PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
 # Compile every shader in shaders/ to SPIR-V next to it:
 # shader.vert -> vert.spv (vulkan-tutorial's names), any other name.vert -> name.vert.spv
 file(GLOB SHADERS CONFIGURE_DEPENDS shaders/*.vert shaders/*.frag shaders/*.geom shaders/*.tesc shaders/*.tese shaders/*.comp)
@@ -501,8 +527,10 @@ add_custom_target(shaders DEPENDS ${SPIRV_FILES})
 add_dependencies(LearnVulkan shaders)
 ```
 
-The loop does what vulkan-tutorial.com's `compile.bat` and `compile.sh` do by hand: it runs `glslc` for each shader,
-and again whenever you change one.
+The loop does what vulkan-tutorial.com's `compile.bat` does by hand: it runs `glslc` for each shader, and again
+whenever you change one.
+
+</details>
 :::
 :::ide vs rider
 The project, `LearnVulkan`, compiles `main.cpp` and needs these settings for **all configurations** and the **x64**
@@ -550,6 +578,16 @@ off.
 :::
 :::d3d12
 :::ide clion vscode
+For DirectX 12 it needs to:
+
+- use C++17 ([`CMAKE_CXX_STANDARD`](https://cmake.org/cmake/help/latest/variable/CMAKE_CXX_STANDARD.html))
+- build a Windows program from `main.cpp` – `WIN32`, because it starts in `wWinMain`
+  ([`add_executable`](https://cmake.org/cmake/help/latest/command/add_executable.html))
+- add the include folders of DirectX-Headers and stb
+  ([`target_include_directories`](https://cmake.org/cmake/help/latest/command/target_include_directories.html))
+
+<details data-summary="Show a finished CMakeLists.txt">
+
 ```text
 cmake_minimum_required(VERSION 3.24)
 project(LearnDirectX CXX)
@@ -563,10 +601,9 @@ set(LIBS ${CMAKE_CURRENT_SOURCE_DIR}/../../libs)
 # WIN32: a Windows program that starts in wWinMain, not a console program
 add_executable(LearnDirectX WIN32 main.cpp)
 target_include_directories(LearnDirectX PRIVATE ${LIBS}/DirectX-Headers/include/directx ${LIBS}/stb)
-
-# Visual Studio: run the program in the chapter folder, where shaders.hlsl and the textures are
-set_target_properties(LearnDirectX PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 ```
+
+</details>
 :::
 :::ide vs rider
 The project, `LearnDirectX`, compiles `main.cpp` and needs these settings for **all configurations** and the **x64**
