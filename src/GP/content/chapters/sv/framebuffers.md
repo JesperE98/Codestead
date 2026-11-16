@@ -38,31 +38,30 @@ barriers*).
 Som i de andra kapitlen i den här delen är tekniken densamma i alla API:er; texten visar den för {{api}}.
 
 :::opengl
-Projektet börjar med scenen från *Depth testing* ritad direkt i fönstret: de två marmorkuberna på (-1, 0, -1) och
-(2, 0, 0) och metallgolvet, `glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`, kameran på (0, 0, 3) som tittar längs
--z, och shadrarna `framebuffers.vs` / `framebuffers.fs` som läser `texture1`. Två shaderfiler till finns med för den
-andra halvan: `framebuffers_screen.vs`, som är färdig, och `framebuffers_screen.fs`, vars `main` fortfarande är en
-TODO.
+Du fortsätter i ditt program från *Djuptestning*, med dess scen ritad direkt i fönstret: de två marmorkuberna på
+(-1, 0, -1) och (2, 0, 0) och metallgolvet, `glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`, kameran på (0, 0, 3) som
+tittar längs -z, och shadrarna `framebuffers.vs` / `framebuffers.fs` som läser `texture1`. Två shaderfiler till kommer
+i den andra halvan, `framebuffers_screen.vs` och `framebuffers_screen.fs`; texten visar dem.
 :::
 :::vulkan
-Projektet börjar med scenen från *Depth testing* ritad direkt i fönstret: de två marmorkuberna på (-1, 0, -1) och
-(2, 0, 0) och metallgolvet, kameran på (0, 0, 3) som tittar längs -z, alla vertexar i en enda vertex buffer (kuben är
+Du fortsätter i ditt program från *Djuptestning*, med dess scen ritad direkt i fönstret: de två marmorkuberna på
+(-1, 0, -1) och (2, 0, 0) och metallgolvet, kameran på (0, 0, 3) som tittar längs -z, alla vertexar i en enda vertex
+buffer (kuben är
 vertex 0..35, golvet 36..41), ett descriptor set per textur, modellmatrisen i en push constant och view och projection
 i uniform buffern. `createPipeline(vert, frag, pipeline)` skapar scenens pipeline från `shaders/framebuffers.vert` /
-`.frag`. Två shadrar till finns med för den andra halvan: `shaders/framebuffers_screen.vert`, som är färdig, och
-`shaders/framebuffers_screen.frag`, vars `main` fortfarande är en TODO.
+`.frag`. Två shadrar till kommer i den andra halvan, `shaders/framebuffers_screen.vert` och
+`shaders/framebuffers_screen.frag`; texten visar dem.
 :::
 :::d3d12
-Projektet börjar med scenen från *Depth testing* ritad direkt i fönstret: de två marmorkuberna på (-1, 0, -1) och
-(2, 0, 0) och metallgolvet, kameran på (0, 0, 3) som tittar längs -z, ett PSO med djupfunktionen LESS och shadrarna i
+Du fortsätter i ditt program från *Djuptestning*, med dess scen ritad direkt i fönstret: de två marmorkuberna på
+(-1, 0, -1) och (2, 0, 0) och metallgolvet, kameran på (0, 0, 3) som tittar längs -z, ett PSO med djupfunktionen LESS
+och shadrarna i
 `framebuffers.hlsl`. En vertex buffer rymmer kuben (vertex 0–35) och golvet (36–41); RTV-heapen rymmer swap chainens
 två buffrar, och CBV/SRV-heapen CBV:n (plats 0), marmorn (plats 1) och metallen (plats 2). En andra shaderfil,
-`framebuffers_screen.hlsl`, finns med för den andra halvan: dess `VSMain` är färdig, dess `PSMain` returnerar
-fortfarande svart.
+`framebuffers_screen.hlsl`, kommer i den andra halvan; texten visar den.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
-IDE.
+Efter varje uppgift bygger och kör du programmet i din IDE.
 
 ## Skapa en framebuffer
 
@@ -478,7 +477,7 @@ Tumregeln från OpenGL gäller även här: om du aldrig behöver sampla från en
 :::d3d12
 Direct3D 12 har inga renderbuffer objects: varje attachment är en resurs. Det som gör en resurs "renderbufferlik" är
 att den bara har den vy den ritas genom och ingen SRV, så att ingen shader någonsin kan läsa den. En djupbuffer skapad
-med `D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL` och utan SRV är precis det, och projektet har redan en:
+med `D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL` och utan SRV är precis det, och ditt program har redan en:
 `m_depthStencil`, fönstrets djupbuffer (`DXGI_FORMAT_D32_FLOAT`, ingen stencil – vår scen använder inte
 stenciltestet), med sin DSV i `m_dsvHeap`. (Flaggan `D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE` går ännu längre: den
 lovar att djupbuffern aldrig får någon SRV, vilket ger drivrutinen frihet att optimera den enbart för djuptestning.)
@@ -673,7 +672,7 @@ var. Efter golvet slutar offscreen-passen, och fönstrets pass börjar, rensad t
 
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        // TODO: draw the screen quad (screenPipeline, screenDescriptorSet, its 6 vertices) with the offscreen image as its texture
+        // draw the screen quad here (screenPipeline, screenDescriptorSet, its 6 vertices)
 
         vkCmdEndRenderPass(commandBuffer);
 ```
@@ -789,7 +788,7 @@ ett stride på fyra floats:
     glBindVertexArray(0);
 ```
 
-Vertex shadern, `framebuffers_screen.vs`, finns redan:
+Vertex shadern, `framebuffers_screen.vs`, skickar bara vidare hörnen och texturkoordinaterna:
 
 ```glsl
 #version 330 core
@@ -869,7 +868,7 @@ i offscreen-imagen med samma konvention (projektionens y-vändning håller den r
 rymmer bildens överkant. Längst ner i fönstret behöver vi därför v = 1, imagens sista rad – och det är vad learnopengls
 koordinater ger hörnet (-1, 1).
 
-Vertex shadern, `shaders/framebuffers_screen.vert`, finns redan – inga matriser, hörnen skickas bara vidare:
+Vertex shadern, `shaders/framebuffers_screen.vert`, har inga matriser – hörnen skickas bara vidare:
 
 ```glsl
 void main() {
@@ -922,7 +921,7 @@ poolstorlekarna):
 ```
 
 Hjälpfunktionen skriver imagen med `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL` i descriptorn – den layout som vår render
-pass lämnar imagen i. Till sist ritanropet, i fönstrets render pass där TODO:n står:
+pass lämnar imagen i. Till sist ritanropet, i fönstrets render pass:
 
 ```cpp
         // the screen quad with the offscreen image as its texture (the viewport, scissor and vertex buffer set above still apply)
@@ -957,7 +956,7 @@ rad är texturens första rad, v = 0. När vi ritade scenen hamnade dess överka
 behöver v = 0 för att visa den där. (I OpenGL ligger en texturs första rad nederst, så learnopengls quad har v = 1
 upptill.)
 
-Shadrarna finns i `framebuffers_screen.hlsl`. Vertex shadern finns redan – inga matriser, hörnen skickas bara vidare:
+Shadrarna finns i `framebuffers_screen.hlsl`. Vertex shadern har inga matriser – hörnen skickas bara vidare:
 
 ```hlsl
 PSInput VSMain(float4 position : POSITION, float2 texCoord : TEXCOORD)
@@ -1001,8 +1000,8 @@ på den djupbuffer det ritar med (`DSVFormat`), så quadens PSO säger "ingen", 
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_screenPipelineState)));
 ```
 
-`RTVFormats[0]` förblir `DXGI_FORMAT_R8G8B8A8_UNORM`, back bufferns format. Till sist ritanropet, i fönstrets pass där
-TODO:n står: quadens PSO, vår texturs SRV på heap-plats 3 för root-parameter 2, och de sex vertexarna från vertex 42:
+`RTVFormats[0]` förblir `DXGI_FORMAT_R8G8B8A8_UNORM`, back bufferns format. Till sist ritanropet, i fönstrets pass:
+quadens PSO, vår texturs SRV på heap-plats 3 för root-parameter 2, och de sex vertexarna från vertex 42:
 
 ```cpp
     CD3DX12_GPU_DESCRIPTOR_HANDLE screenTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_cbvSrvDescriptorSize);

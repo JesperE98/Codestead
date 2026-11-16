@@ -27,15 +27,15 @@ senare fönstrets surface).
 :::
 :::d3d12
 Direct3D 12 körs bara på Windows, så vi behöver inget plattformsoberoende bibliotek: precis som Microsofts
-D3D12HelloWorld-exempel skapar vi fönstret direkt med **Win32-API:et**. Den delen finns redan i ditt projekt – vi går
-igenom den så att du vet vad den gör. Sedan startar vi själva Direct3D 12: debug-lagret, DXGI-fabriken, adaptern
-(grafikkortet), **enheten** (device) och **kommandokön** (command queue). Det är början av `LoadPipeline()` i
+D3D12HelloWorld-exempel skapar vi fönstret direkt med **Win32-API:et**. Den delen skriver du först; texten visar hela
+den och går igenom den så att du vet vad den gör. Sedan startar vi själva Direct3D 12: debug-lagret, DXGI-fabriken,
+adaptern (grafikkortet), **enheten** (device) och **kommandokön** (command queue). Det är början av `LoadPipeline()` i
 exemplet D3D12HelloWindow.
 :::
 
-Kapitlets startfiler innehåller redan programmets skelett: spara dem i en mapp du väljer med **Spara
-startfilerna…**, lägg till dina projektfiler och öppna projektet i din IDE. `// TODO:`-kommentarerna visar var din kod
-ska stå. Efter varje uppgift bygger och kör du programmet i din IDE för att se vad det gör; när det gör det som
+Det här kapitlets program skriver du från första raden: börja i kapitelmappen som du skapade i slutet av *Sätt upp
+din IDE*, med dess projektfiler och den tomma `main.cpp`, och öppna den i din IDE. Texten visar varje rad som ska stå
+i `main.cpp`. Efter varje uppgift bygger och kör du programmet i din IDE för att se vad det gör; när det gör det som
 uppgiften ber om bockar du av uppgiften med **Markera som klar** – eller låter **Kontrollera min kod** kontrollera din
 kod och bocka av den åt dig. Hur du sätter upp IDE:n, kompilatorn och biblioteken är ämnet för förra kapitlet, *Sätt
 upp din IDE*; avsnitten här nedan förklarar vad varje del är till för, så som learnopengl.com gör.
@@ -133,7 +133,7 @@ include-katalog och lägg till `glad.c` i ditt projekt.
 
 ### Ditt projekt
 
-Projektet i det här kapitlet är en enda fil, `main.cpp`.
+Programmet i det här kapitlet är en enda fil, `main.cpp`.
 
 :::ide clion vscode
 `CMakeLists.txt` från *Sätt upp din IDE* bygger den tillsammans med `glad.c` och länkar GLFW – allt ovan på några
@@ -156,11 +156,23 @@ g++ -std=c++17 main.cpp glad.c -Iinclude -o window -lglfw -ldl
 
 ## Hello Window
 
-Låt oss se om vi kan få igång GLFW. Överst i `main.cpp` inkluderar projektet redan headerfilerna:
+Låt oss se om vi kan få igång GLFW. Ersätt det tomma programmet i `main.cpp` med headerfilerna vi behöver, fönstrets
+storlek och en tom `main`-funktion:
 
 ```cpp
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+#include <iostream>
+
+// settings
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
+
+int main()
+{
+    return 0;
+}
 ```
 
 Se till att inkludera GLAD före GLFW. GLAD:s headerfil inkluderar de OpenGL-headers som behövs bakom kulisserna (som
@@ -203,8 +215,8 @@ använda **core-profilen**: då får vi tillgång till en mindre del av OpenGL:s
 vi inte längre behöver. På macOS måste du också be om en *forward-compatible* kontext, annars skapas ingen kontext –
 det är vad raderna i `#ifdef __APPLE__` är till för.
 
-Gör nu den första uppgiften: ersätt den första `// TODO:`-kommentaren i `main` med anropet `glfwInit()` och
-fönsterhinten. Bygg & kör: ingenting syns ännu, men programmet ska byggas och avslutas normalt.
+Gör nu den första uppgiften: skriv anropet `glfwInit()` och fönsterhinten först i `main`. Bygg & kör: ingenting syns
+ännu, men programmet ska byggas och avslutas normalt.
 
 ```quiz
 Du ber GLFW om en OpenGL 3.3-kontext med core-profil, men datorns drivrutin stöder bara OpenGL 2.1. Vad händer?
@@ -365,8 +377,76 @@ eftersom den riktar sig mot Windows och Linux.
 
 ## Baskod
 
-Ditt projekt börjar med vulkan-tutorial.coms baskod. Programmet är inneslutet i en klass där vi sparar Vulkan-objekten
-som privata medlemmar och lägger till funktioner som skapar vart och ett av dem, och som anropas från `initVulkan`:
+Ditt program börjar med vulkan-tutorial.coms baskod. Ersätt det tomma programmet i `main.cpp` med den:
+
+```cpp
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
+#include <iostream>
+#include <stdexcept>
+#include <vector>
+#include <cstring>
+#include <cstdlib>
+#include <optional>
+
+const uint32_t WIDTH = 800;
+const uint32_t HEIGHT = 600;
+
+class HelloTriangleApplication {
+public:
+    void run() {
+        initWindow();
+        initVulkan();
+        mainLoop();
+        cleanup();
+    }
+
+private:
+    GLFWwindow* window;
+
+    void initWindow() {
+        glfwInit();
+
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+    }
+
+    void initVulkan() {
+    }
+
+    void mainLoop() {
+        while (!glfwWindowShouldClose(window)) {
+            glfwPollEvents();
+        }
+    }
+
+    void cleanup() {
+        glfwDestroyWindow(window);
+
+        glfwTerminate();
+    }
+};
+
+int main() {
+    HelloTriangleApplication app;
+
+    try {
+        app.run();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+}
+
+```
+
+Programmet är inneslutet i en klass där vi sparar Vulkan-objekten som privata medlemmar och lägger till funktioner som
+skapar vart och ett av dem, och som anropas från `initVulkan`. `run` anropar de fyra stegen i tur och ordning:
 
 ```cpp
 void run() {
@@ -429,7 +509,7 @@ void mainLoop() {
 }
 ```
 
-Bygg och kör projektet som det är: ett fönster med titeln "Vulkan" öppnas och förblir öppet tills du stänger det. Dess
+Bygg och kör programmet som det är: ett fönster med titeln "Vulkan" öppnas och förblir öppet tills du stänger det. Dess
 innehåll är svart (egentligen odefinierat) – ingenting visas i det förrän nästa kapitel presenterar den första bilden.
 
 ```quiz
@@ -727,7 +807,7 @@ if (enableValidationLayers) {
 
 `debugCreateInfo` deklareras utanför `if`-satsen så att den fortfarande finns när `vkCreateInstance` anropas.
 
-Gör nu den tredje uppgiften – den berör flera ställen, så följ TODO-kommentarerna: de två proxyfunktionerna, medlemmen
+Gör nu den tredje uppgiften – den berör flera ställen: de två proxyfunktionerna (före klassen), medlemmen
 `debugMessenger`, `debugCallback`, `populateDebugMessengerCreateInfo()` och `setupDebugMessenger()`, extensionen,
 `pNext`-kedjan, anropet i `initVulkan` och förstöringen i `cleanup`. Bygg & kör: programmets konsol visar nu rader som
 börjar med `validation layer:`. Eftersom vi också bad om verbose-meddelanden är det mest ofarlig information från
@@ -1013,9 +1093,190 @@ cl /std:c++17 /EHsc /MDd /Zi /I DirectX-Headers\include\directx main.cpp /link /
 
 ## Win32-fönstret
 
-Programmets fönsterdel är färdig i ditt projekt; den gör det som exemplens klass `Win32Application` gör. `wWinMain`
-beskriver och registrerar först en **fönsterklass** – vilken sorts fönster vi vill ha, och funktionen som tar hand om
-dess meddelanden:
+Du börjar med programmets fönsterdel; den gör det som exemplens klass `Win32Application` gör. Ersätt det tomma
+programmet i `main.cpp` med det här, utgångspunkten för allt som följer – `LoadPipeline()` och `GetHardwareAdapter()`
+är nästan tomma tills kapitlets uppgifter fyller i dem:
+
+```cpp
+// A Direct3D 12 program in one file, modelled on Microsoft's D3D12HelloWorld samples
+// (D3D12HelloWindow, D3D12HelloTriangle).
+
+#include <windows.h>
+#include <d3d12.h>
+#include <dxgi1_6.h>
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
+#include <wrl.h>
+#include "d3dx12.h"
+
+#include <climits>
+#include <cstdio>
+#include <cstring>
+#include <stdexcept>
+
+// The libraries to link: d3d12.lib, dxgi.lib and d3dcompiler.lib (Visual Studio reads these lines).
+#if defined(_MSC_VER)
+#pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3dcompiler.lib")
+#endif
+
+using namespace DirectX;
+
+// ComPtr is a smart pointer for COM objects: it releases the object when it goes away.
+// It knows nothing about the GPU, though: OnDestroy() waits until the GPU is done
+// before the objects are released.
+using Microsoft::WRL::ComPtr;
+
+// Turns a failed HRESULT (the result code of the D3D12 and DXGI calls) into an exception.
+inline void ThrowIfFailed(HRESULT hr)
+{
+    if (FAILED(hr))
+    {
+        char message[64] = {};
+        snprintf(message, sizeof(message), "HRESULT of 0x%08X", static_cast<unsigned int>(hr));
+        throw std::runtime_error(message);
+    }
+}
+
+class D3D12App
+{
+public:
+    D3D12App(UINT width, UINT height);
+
+    void OnInit(HWND hwnd);
+    void OnDestroy();
+
+private:
+    UINT m_width;
+    UINT m_height;
+    HWND m_hwnd = nullptr;
+
+    // Pipeline objects.
+    ComPtr<ID3D12Device> m_device;
+    ComPtr<ID3D12CommandQueue> m_commandQueue;
+
+    void LoadPipeline();
+    void GetHardwareAdapter(IDXGIFactory1* pFactory, IDXGIAdapter1** ppAdapter);
+};
+
+D3D12App::D3D12App(UINT width, UINT height) :
+    m_width(width),
+    m_height(height)
+{
+}
+
+void D3D12App::OnInit(HWND hwnd)
+{
+    m_hwnd = hwnd;
+    LoadPipeline();
+}
+
+// Load the rendering pipeline dependencies.
+void D3D12App::LoadPipeline()
+{
+}
+
+void D3D12App::OnDestroy()
+{
+    // Nothing to do by hand yet: the ComPtr members release the device and the command queue.
+}
+
+// Helper function for acquiring the first available hardware adapter that supports Direct3D 12.
+// If no such adapter can be found, *ppAdapter will be set to nullptr (D3D12CreateDevice then
+// uses the default adapter).
+void D3D12App::GetHardwareAdapter(IDXGIFactory1* pFactory, IDXGIAdapter1** ppAdapter)
+{
+    *ppAdapter = nullptr;
+}
+
+// Main message handler for the window.
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    }
+
+    // Handle any messages the switch statement didn't.
+    return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow)
+{
+    const UINT width = 800;
+    const UINT height = 600;
+
+    // Initialize the window class.
+    WNDCLASSEXW windowClass = {};
+    windowClass.cbSize = sizeof(WNDCLASSEXW);
+    windowClass.style = CS_HREDRAW | CS_VREDRAW;
+    windowClass.lpfnWndProc = WindowProc;
+    windowClass.hInstance = hInstance;
+    windowClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    windowClass.lpszClassName = L"DXSampleClass";
+    RegisterClassExW(&windowClass);
+
+    // The window is bigger than the area we draw in (title bar, borders):
+    // compute the window size for a client area of width x height.
+    RECT windowRect = { 0, 0, static_cast<LONG>(width), static_cast<LONG>(height) };
+    AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+
+    // Create the window and store a handle to it.
+    HWND hwnd = CreateWindowW(
+        windowClass.lpszClassName,
+        L"LearnDirectX",
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        windowRect.right - windowRect.left,
+        windowRect.bottom - windowRect.top,
+        nullptr,        // We have no parent window.
+        nullptr,        // We aren't using menus.
+        hInstance,
+        nullptr);
+    if (hwnd == nullptr)
+    {
+        MessageBoxW(nullptr, L"Failed to create the window", L"Error", MB_OK | MB_ICONERROR);
+        return EXIT_FAILURE;
+    }
+
+    D3D12App app(width, height);
+    try
+    {
+        app.OnInit(hwnd);
+
+        ShowWindow(hwnd, nCmdShow);
+
+        // Main loop: process the window's messages until the window is closed (WM_QUIT).
+        MSG msg = {};
+        while (msg.message != WM_QUIT)
+        {
+            if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+        }
+
+        app.OnDestroy();
+
+        // Return this part of the WM_QUIT message to Windows.
+        return static_cast<int>(msg.wParam);
+    }
+    catch (const std::exception& e)
+    {
+        MessageBoxA(nullptr, e.what(), "Error", MB_OK | MB_ICONERROR);
+        return EXIT_FAILURE;
+    }
+}
+
+```
+
+Resten av avsnittet går igenom fönsterdelen. `wWinMain` beskriver och registrerar först en **fönsterklass** – vilken
+sorts fönster vi vill ha, och funktionen som tar hand om dess meddelanden:
 
 ```cpp
 WNDCLASSEXW windowClass = {};
@@ -1080,7 +1341,7 @@ case WM_DESTROY:
 `PostQuitMessage` lägger ett `WM_QUIT`-meddelande i kön, vilket avslutar loopen. Alla andra meddelanden går till
 `DefWindowProc`, Windows standardhantering – som till exempel förstör fönstret när du trycker på stängningsknappen.
 
-Bygg och kör projektet som det är: ett fönster med titeln "LearnDirectX" öppnas och förblir öppet tills du stänger det.
+Bygg och kör programmet som det är: ett fönster med titeln "LearnDirectX" öppnas och förblir öppet tills du stänger det.
 Ingenting ritas i det – det händer först när det finns en swap chain, i nästa kapitel.
 
 ```quiz
@@ -1099,7 +1360,7 @@ som stilen `WS_OVERLAPPEDWINDOW` sätter runt den.
 
 Direct3D 12 och DXGI består av **COM**-gränssnitt (`ID3D12Device`, `IDXGIFactory4` …). Du skapar aldrig de här
 objekten med `new`; en funktion skapar dem och ger dig en gränssnittspekare, och du släpper (release) den när du är
-klar. Projektet använder **`ComPtr`** (från `wrl.h`), en smart pekare som släpper objektet automatiskt när den
+klar. Programmet använder **`ComPtr`** (från `wrl.h`), en smart pekare som släpper objektet automatiskt när den
 försvinner. Tre av dess medlemmar dyker upp i det här kapitlet: `Get()` returnerar den råa pekaren, `&` ger adressen
 som ska fyllas i (och släpper det den höll innan), och `Detach()` lämnar över pekaren utan att släppa den.
 
@@ -1107,7 +1368,7 @@ Funktionerna som skapar objekt tar det gränssnitt du vill ha och pekaren som sk
 skriver båda åt dig: gränssnittets ID (taget från pekarens typ) och adressen.
 
 Nästan varje anrop returnerar ett **`HRESULT`**, en resultatkod som är negativ vid fel; makrona `SUCCEEDED` och `FAILED`
-testar den. Projektets `ThrowIfFailed` gör om ett fel till ett undantag, som `wWinMain` visar i en meddelanderuta. På
+testar den. Programmets `ThrowIfFailed` gör om ett fel till ett undantag, som `wWinMain` visar i en meddelanderuta. På
 så vis går inget fel obemärkt förbi.
 
 ## DXGI-fabriken
@@ -1124,8 +1385,7 @@ ThrowIfFailed(CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)));
 `IDXGIFactory4` är den fabriksversion som D3D12-exemplen använder; första parametern till `CreateDXGIFactory2` håller
 flaggor för skapandet (inga än så länge – det ändras i nästa steg).
 
-Gör nu den första uppgiften: skapa fabriken där kommentaren `// TODO: create the DXGI factory` står. Bygg & kör:
-fönstret ser likadant ut.
+Gör nu den första uppgiften: skapa fabriken i `LoadPipeline()`. Bygg & kör: fönstret ser likadant ut.
 
 ```quiz
 Vad ansvarar DXGI för? (Välj alla som stämmer.)

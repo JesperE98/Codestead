@@ -25,7 +25,7 @@
       },
       "hint": {
         "opengl": "`powerUp.Position += powerUp.Velocity * dt;`, `if (powerUp.Activated) { powerUp.Duration -= dt; if (powerUp.Duration <= 0.0f) { powerUp.Activated = false; … } }`. The removal: `game.PowerUps.erase(std::remove_if(game.PowerUps.begin(), game.PowerUps.end(), [](const PowerUp& powerUp) { return powerUp.Destroyed && !powerUp.Activated; }), game.PowerUps.end());` (`#include <algorithm>`).",
-        "vulkan": "`powerUp.Position += powerUp.Velocity * dt;`, `if (powerUp.Activated) { powerUp.Duration -= dt; if (powerUp.Duration <= 0.0f) { powerUp.Activated = false; … } }`. The removal: `game.PowerUps.erase(std::remove_if(game.PowerUps.begin(), game.PowerUps.end(), [](const PowerUp& powerUp) { return powerUp.Destroyed && !powerUp.Activated; }), game.PowerUps.end());` (`<algorithm>` is already included).",
+        "vulkan": "`powerUp.Position += powerUp.Velocity * dt;`, `if (powerUp.Activated) { powerUp.Duration -= dt; if (powerUp.Duration <= 0.0f) { powerUp.Activated = false; … } }`. The removal: `game.PowerUps.erase(std::remove_if(game.PowerUps.begin(), game.PowerUps.end(), [](const PowerUp& powerUp) { return powerUp.Destroyed && !powerUp.Activated; }), game.PowerUps.end());` (include `<algorithm>` if your program does not yet).",
         "d3d12": "`XMStoreFloat2(&powerUp.Position, XMLoadFloat2(&powerUp.Position) + XMLoadFloat2(&powerUp.Velocity) * dt);`, `if (powerUp.Activated) { powerUp.Duration -= dt; if (powerUp.Duration <= 0.0f) { powerUp.Activated = false; … } }`. The removal: `game.PowerUps.erase(std::remove_if(game.PowerUps.begin(), game.PowerUps.end(), [](const PowerUp& powerUp) { return powerUp.Destroyed && !powerUp.Activated; }), game.PowerUps.end());` (`#include <algorithm>`)."
       }
     },

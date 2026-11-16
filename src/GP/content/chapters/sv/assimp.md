@@ -29,10 +29,11 @@ vill kunna läsa. Som tur är finns det ett bibliotek för just detta.
 
 ## Den här delens modell
 
-learnopengl.com använder en ryggsäck som modell i den här delen; kursen har en egen modell: en liten planet med en ring,
-`models/planet.obj`. Det är en Wavefront-`.obj`-fil, en vanlig textfil som du kan öppna i din IDE (**Spara
-startfilerna…** lägger den i din projektmapp). Dess första rader anger materialbiblioteket, `planet.mtl`, och börjar det
-första objektet:
+learnopengl.com använder en ryggsäck som modell i den här delen; kursen har en egen modell: en liten planet med en
+ring, `models/planet.obj`. Det är en Wavefront-`.obj`-fil, en vanlig textfil som du kan öppna i din IDE (**Spara
+resursfilerna…** i panelen kopierar modellen – `planet.obj`, `planet.mtl` och dess fyra texturer – till en mapp som du
+väljer; välj ditt programs mapp, så hamnar filerna i `models/`). Dess första rader anger materialbiblioteket,
+`planet.mtl`, och börjar det första objektet:
 
 ```text
 # A small planet with a ring - drawn for Codestead GP (see make_planet.py).
@@ -333,18 +334,18 @@ Assimp är ett kompilerat bibliotek, inte en enda header: headerfilerna deklarer
 ```
 :::
 
-## Projektet
+## Ditt program
 
-Det här kapitlet har ingen kod att skriva – learnopengls kapitel *Assimp* har inte heller någon. Projektet är redan det
-som de två nästa kapitlen arbetar i, så du kan se dig omkring i det och sedan bygga och köra det: fönstret visar bara
-den mörkgrå rensningsfärgen (0.05, 0.05, 0.05), eftersom inget ritas än. (I de följande kapitlen markerar
-`// TODO:`-kommentarerna var din kod ska in, och du bygger och kör den i din IDE som tidigare.)
+Det här kapitlet har inga uppgifter – learnopengls kapitel *Assimp* har ingen kod heller. Använd det till att förbereda
+programmet som de två nästa kapitlen arbetar i. Utgå från ditt program från *Kamera* (den fria kameran i (0, 0, 3)
+riktad längs -z) i en ny mapp, och gör om det till scenen som beskrivs här nedan. Bygg och kör sedan: fönstret visar
+bara den mörkgrå rensningsfärgen (0.05, 0.05, 0.05), eftersom inget ritas än.
 
 :::opengl
-Projektet är learnopengls scen `model_loading.cpp` före modellen: `main.cpp` med kameran från kapitlet *Camera* i
-(0, 0, 3) riktad längs -z (WASD, musstyrning och zoom), djuptestet, en shader
-`Shader ourShader("model_loading.vs", "model_loading.fs");` och matriserna – bland dem modellmatrisen som lutar
-planeten 25° kring x-axeln så att ringen syns, och skalar den med 0,5:
+Programmet är learnopengls scen `model_loading.cpp` före modellen: `main.cpp` med kameran från kapitlet *Kamera* i
+(0, 0, 3) riktad längs -z (WASD, musstyrning och zoom), djuptestet, rensningsfärgen (0.05, 0.05, 0.05), en shader
+`Shader ourShader("model_loading.vs", "model_loading.fs");` och inga hörndata eller texturer längre, och matriserna –
+bland dem modellmatrisen som lutar planeten 25° kring x-axeln så att ringen syns, och skalar den med 0,5:
 
 ```cpp
         // world transformation of the model
@@ -357,33 +358,104 @@ planeten 25° kring x-axeln så att ringen syns, och skalar den med 0,5:
 
 Shadrarna är learnopengls `1.model_loading.vs/.fs`: vertex shadern tar emot en position, en normal och
 texturkoordinater (location 0, 1 och 2), och fragment shadern ger ut färgen från `texture_diffuse1` – ett namn du
-förstår i nästa kapitel. `mesh.h` väntar med `// TODO:`-kommentarer på kapitlet *Mesh*; `model.h` och Assimps
-headerfiler kommer i kapitlet *Model*.
+förstår i nästa kapitel. `model_loading.vs`:
+
+```glsl
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 aTexCoords;
+
+out vec2 TexCoords;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+void main()
+{
+    TexCoords = aTexCoords;
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
+}
+```
+
+`model_loading.fs`:
+
+```glsl
+#version 330 core
+out vec4 FragColor;
+
+in vec2 TexCoords;
+
+uniform sampler2D texture_diffuse1;
+
+void main()
+{
+    FragColor = texture(texture_diffuse1, TexCoords);
+}
+```
+
+`mesh.h` kommer i kapitlet *Mesh*; `model.h` och Assimps headerfiler kommer i kapitlet *Modell*.
 
 :::ide vs rider
-Lägg till `mesh.h` i projektet (**Project → Add Existing Item…**; i Rider **Add → Existing Item…** i projektets
-snabbmeny) för att öppna den från Solution Explorer; `#include "mesh.h"` hittar den bredvid `main.cpp` utan någon
-inställning.
+När du skriver `mesh.h` i nästa kapitel lägger du till den i projektet (**Project → Add Existing Item…**; i Rider
+**Add → Existing Item…** i projektets snabbmeny) för att öppna den från Solution Explorer; `#include "mesh.h"` hittar
+den bredvid `main.cpp` utan någon inställning.
 :::
 :::
 :::vulkan
-Projektet är learnopengls scen `model_loading.cpp` före modellen, i Vulkan: kameran från kapitlet *Camera* i
+Programmet är learnopengls scen `model_loading.cpp` före modellen, i Vulkan: kameran från kapitlet *Kamera* i
 (0, 0, 3) riktad längs -z (WASD, musstyrning och zoom), en djupbuffer, en pipeline `modelPipeline` från
 `shaders/model_loading.vert` och `.frag`, uniform buffern med vy- och projektionsmatriserna på binding 0, och
 modellmatrisen som push constant – den lutar planeten 25° kring x-axeln så att ringen syns, och skalar den med 0,5.
 Culling är avstängt (`VK_CULL_MODE_NONE`): ringen är en enda platt yta som måste synas från båda hållen.
-`// TODO:`-kommentarerna i `main.cpp` och shadrarna är till för kapitlet *Mesh*; tinyobjloader kommer i kapitlet
-*Model*.
+Rensningsfärgen är (0.05, 0.05, 0.05), och kubens hörndata och texturer är borta. Än så länge läser shadrarna bara
+positionen och ritar vitt; kapitlet *Mesh* lägger till de andra attributen. `shaders/model_loading.vert`:
+
+```glsl
+#version 450
+
+// the vertex shader reads the matrices of the uniform buffer
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+} ubo;
+
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+} pc;
+
+layout(location = 0) in vec3 inPosition;
+
+void main() {
+    gl_Position = ubo.proj * ubo.view * pc.model * vec4(inPosition, 1.0);
+}
+```
+
+`shaders/model_loading.frag`:
+
+```glsl
+#version 450
+
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = vec4(1.0); // white
+}
+```
+
+tinyobjloader kommer i kapitlet *Modell*.
 :::
 :::d3d12
-Projektet är learnopengls scen `model_loading.cpp` före modellen, i DirectX 12: kameran från kapitlet *Camera* i
+Programmet är learnopengls scen `model_loading.cpp` före modellen, i DirectX 12: kameran från kapitlet *Kamera* i
 (0, 0, 3) riktad längs -z (WASD, musstyrning och zoom), en djupbuffer, `model_loading.hlsl` med learnopengls
 modellshadrar (`VSMain` tar emot `POSITION`, `NORMAL` och `TEXCOORD`, `PSMain` returnerar färgen från
 `texture_diffuse1`), och modellmatrisen som root constants – den lutar planeten 25° kring x-axeln så att ringen syns,
 och skalar den med 0,5. Culling är avstängt (`D3D12_CULL_MODE_NONE`): ringen är en enda platt yta som måste synas från
-båda hållen. Root signaturen har redan en tabell med två texturer (t0 och t1) för root parameter 2, som varje mesh
-sätter när den ritas. `// TODO:`-kommentarerna i `main.cpp` är till för kapitlet *Mesh*; Assimps headerfiler kommer i
-kapitlet *Model*.
+båda hållen. Rensningsfärgen är (0.05, 0.05, 0.05), och kubens hörndata och texturer är borta. Root signaturen får en
+tabell med två texturer (t0 och t1) för root parameter 2, som varje mesh sätter när den ritas, och CBV/SRV-heapen plats
+för CBV:n och två SRV:er per mesh (`1 + 2 * MaxMeshes` descriptors, med `static const UINT MaxMeshes = 8;`). Assimps
+headerfiler kommer i kapitlet *Modell*.
 :::
 
 ```quiz

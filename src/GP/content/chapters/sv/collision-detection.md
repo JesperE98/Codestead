@@ -7,6 +7,8 @@ ursprungliga objektet. Sedan letar vi efter kollisioner mellan de enkla formerna
 prestanda. Några exempel på sådana kollisionsformer är cirklar, sfärer, rektanglar och lådor; de är mycket enklare att
 arbeta med än godtyckliga meshar med hundratals trianglar.
 
+Du fortsätter i ditt program från *Bollen*.
+
 De enkla formerna ger oss visserligen enklare och effektivare algoritmer, men de har en gemensam nackdel: de omsluter
 oftast inte objektet helt. Följden är att en kollision kan upptäckas fast det verkliga objektet inte krockade; man bör
 alltid komma ihåg att formerna bara är approximationer av de verkliga formerna.
@@ -93,8 +95,8 @@ Vi kontrollerar om det första objektets högra sida är större än det andra o
 objektets högra sida är större än det första objektets vänstra sida; på samma sätt för den lodräta axeln.
 
 Kursen lägger kollisionskoden i ett nytt avsnitt efter spelets globala variabler (`Hedgerow`, `Renderer`, `Player`,
-`Ball`) – den behöver bollen – och före `Init` (learnopengl har den i `game.cpp`). Kommentarerna `// TODO:` i projektet
-visar var varje del ska in. Gör nu den första uppgiften, **aabb**. Ingenting anropar den ännu.
+`Ball`) – den behöver bollen – och före `Init` (learnopengl har den i `game.cpp`). Gör nu den första uppgiften,
+**aabb**. Ingenting anropar den ännu.
 
 ```quiz
 Block A täcker x 0…53, y 0…37; block B täcker x 60…113, y 0…37. Rapporterar `CheckCollision(A, B)` en kollision?

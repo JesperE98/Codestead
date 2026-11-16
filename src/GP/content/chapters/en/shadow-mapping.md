@@ -17,39 +17,41 @@ this part, it is the same technique in every API: a second render pass plus some
 shows where {{api}} puts the pass and the depth texture it draws into.
 
 :::opengl
-The project is learnopengl's scene: a large wooden floor (`planeVertices`, 50 × 50 units at y = -0.5, `wood.png`
-repeated 25 times) and three wooden cubes drawn by learnopengl's `renderScene(const Shader &shader)` with
-`renderCube()`: one floating at (0, 1.5, 0), one at (2, 0, 1) and a small rotated one at (-1, 0, 2). The light is at
-`lightPos` (-2, 4, -1). `shadow_mapping.vs/.fs` light the scene: a light colour of 0.3, ambient, diffuse and Blinn-Phong
-specular, combined as `(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – with `float shadow = 0.0;` for now.
-`renderQuad()`, a quad covering the window, is already there. The new shaders `shadow_mapping_depth.vs/.fs`,
-`debug_quad.vs` and `debug_quad_depth.fs` are used from the first task on.
+You continue in your program from *Gamma Correction* and turn it into learnopengl's scene: a large wooden floor
+(`planeVertices`, 50 × 50 units at y = -0.5, `wood.png` repeated 25 times) and three wooden cubes drawn by
+learnopengl's `renderScene(const Shader &shader)` with `renderCube()`: one floating at (0, 1.5, 0), one at (2, 0, 1)
+and a small rotated one at (-1, 0, 2). The light is at `lightPos` (-2, 4, -1). `shadow_mapping.vs/.fs` light the
+scene: a light colour of 0.3, ambient, diffuse and Blinn-Phong specular, combined as
+`(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – with `float shadow = 0.0;` for now. `renderQuad()`, a
+quad covering the window, is already there. The new shaders `shadow_mapping_depth.vs/.fs`, `debug_quad.vs` and
+`debug_quad_depth.fs` are used from the first task on.
 :::
 :::vulkan
-The project is learnopengl's scene: a large wooden floor (vertices 0..5: 50 × 50 units at y = -0.5,
-`textures/wood.png` repeated 25 times) and three wooden cubes (one cube, vertices 6..41, drawn three times): one
-floating at (0, 1.5, 0), one at (2, 0, 1) and a small rotated one at (-1, 0, 2). learnopengl's `renderScene()` is a
-helper `renderScene(VkCommandBuffer commandBuffer)` that pushes each model matrix (a push constant, vertex stage) and
-records the four draws. The light is at the global `lightPos` (-2, 4, -1). `shaders/shadow_mapping.vert/.frag` light the
-scene: a light colour of 0.3, ambient, diffuse and Blinn-Phong specular, combined as
-`(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – with `float shadow = 0.0;` for now. The new shaders
-`shadow_mapping_depth.vert/.frag`, `debug_quad.vert` and `debug_quad_depth.frag` are used from the first task on.
+You continue in your program from *Gamma Correction* and turn it into learnopengl's scene: a large wooden floor
+(vertices 0..5: 50 × 50 units at y = -0.5, `textures/wood.png` repeated 25 times) and three wooden cubes (one cube,
+vertices 6..41, drawn three times): one floating at (0, 1.5, 0), one at (2, 0, 1) and a small rotated one at (-1, 0,
+2). learnopengl's `renderScene()` is a helper `renderScene(VkCommandBuffer commandBuffer)` that pushes each model
+matrix (a push constant, vertex stage) and records the four draws. The light is at the global `lightPos` (-2, 4, -1).
+`shaders/shadow_mapping.vert/.frag` light the scene: a light colour of 0.3, ambient, diffuse and Blinn-Phong specular,
+combined as `(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – with `float shadow = 0.0;` for now. The new
+shaders `shadow_mapping_depth.vert/.frag`, `debug_quad.vert` and `debug_quad_depth.frag` are used from the first task
+on.
 :::
 :::d3d12
-The project is learnopengl's scene: a large wooden floor (vertices 0–5: 50 × 50 units at y = -0.5, `wood.png` repeated
-25 times) and three wooden cubes (one cube, vertices 6–41, drawn three times): one floating at (0, 1.5, 0), one at
-(2, 0, 1) and a small rotated one at (-1, 0, 2). `PopulateCommandList` computes four `ModelConstants` (the model matrix
-and the normal matrix of each object) and sets them with `SetGraphicsRoot32BitConstants(0, …)` before each of the four
-draws – learnopengl's `renderScene()`. The light is at the global `lightPos` (-2, 4, -1). `shadow_mapping.hlsl` lights the
-scene: a light colour of 0.3, ambient, diffuse and Blinn-Phong specular, combined as
-`(ambient + (1.0f - shadow) * (diffuse + specular)) * color` – with `float shadow = 0.0f;` for now.
-`shadow_mapping_depth.hlsl` and `debug_quad.hlsl` are complete already; the first task compiles them.
+You continue in your program from *Gamma Correction* and turn it into learnopengl's scene: a large wooden floor
+(vertices 0–5: 50 × 50 units at y = -0.5, `wood.png` repeated 25 times) and three wooden cubes (one cube, vertices
+6–41, drawn three times): one floating at (0, 1.5, 0), one at (2, 0, 1) and a small rotated one at (-1, 0, 2).
+`PopulateCommandList` computes four `ModelConstants` (the model matrix and the normal matrix of each object) and sets
+them with `SetGraphicsRoot32BitConstants(0, …)` before each of the four draws – learnopengl's `renderScene()`. The
+light is at the global `lightPos` (-2, 4, -1). `shadow_mapping.hlsl` lights the scene: a light colour of 0.3, ambient,
+diffuse and Blinn-Phong specular, combined as `(ambient + (1.0f - shadow) * (diffuse + specular)) * color` – with
+`float shadow = 0.0f;` for now. `shadow_mapping_depth.hlsl` and `debug_quad.hlsl` are complete already; the first task
+compiles them.
 :::
 
 From the camera at (0, 0, 3) you see the floor and, at the top of the window, the floating cube from below. The two
 other cubes are just outside the view, left and right of the camera; you'll meet them in the depth map. Build and run
-the program: the floor is lit evenly – dim, the light colour is only 0.3 – and nothing casts a shadow. The `// TODO:`
-comments in the project mark where your code goes.
+the program: the floor is lit evenly – dim, the light colour is only 0.3 – and nothing casts a shadow.
 
 ## Shadow mapping
 

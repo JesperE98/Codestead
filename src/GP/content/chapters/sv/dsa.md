@@ -13,20 +13,20 @@ rektangeln, ritad från en vertex buffer, en element buffer och ett vertex array
 längre än learnopengls demo och lägger containertexturen på den, också den skapad med DSA.
 :::
 :::vulkan
-Vulkan har aldrig haft bind to edit: från första början namnger varje Vulkan-funktion objektet den arbetar på. Därför har
-kapitlet **inga uppgifter** för Vulkan. Projektet är programmet från *Hello Triangle* – den orange rektangeln från en
-vertex buffer och en index buffer – och kapitlet förklarar vad DSA ändrar i OpenGL och hur det för OpenGL närmare den
-modell Vulkan alltid haft, och jämför varje DSA-funktion med den Vulkan-kod du känner. Det är värt att läsa även om du
-aldrig skriver OpenGL: mycket OpenGL-kod du kommer att stöta på är skriven på det ena eller det andra sättet, och
-jämförelsen visar varför Vulkans API ser ut som det gör.
+Vulkan har aldrig haft bind to edit: från första början namnger varje Vulkan-funktion objektet den arbetar på. Därför
+har kapitlet **inga uppgifter** för Vulkan. Det använder ditt program från *Hello Triangle* – den orange rektangeln
+från en vertex buffer och en index buffer – och kapitlet förklarar vad DSA ändrar i OpenGL och hur det för OpenGL
+närmare den modell Vulkan alltid haft, och jämför varje DSA-funktion med den Vulkan-kod du känner. Det är värt att
+läsa även om du aldrig skriver OpenGL: mycket OpenGL-kod du kommer att stöta på är skriven på det ena eller det andra
+sättet, och jämförelsen visar varför Vulkans API ser ut som det gör.
 :::
 :::d3d12
-Direct3D 12 har aldrig haft bind to edit: varje anrop namnger objektet det arbetar på, och objekten är COM-gränssnitt med
-metoder. Därför har kapitlet **inga uppgifter** för DirectX 12. Projektet är programmet från *Hello Triangle* – den orange
-rektangeln från en vertex buffer och en index buffer – och kapitlet förklarar vad DSA ändrar i OpenGL och hur det för
-OpenGL närmare den modell Direct3D 12 alltid haft, och jämför varje DSA-funktion med den Direct3D 12-kod du känner. Det är
-värt att läsa även om du aldrig skriver OpenGL: mycket OpenGL-kod du kommer att stöta på är skriven på det ena eller det
-andra sättet, och jämförelsen visar varför Direct3D 12:s API ser ut som det gör.
+Direct3D 12 har aldrig haft bind to edit: varje anrop namnger objektet det arbetar på, och objekten är COM-gränssnitt
+med metoder. Därför har kapitlet **inga uppgifter** för DirectX 12. Det använder ditt program från *Hello Triangle*
+– den orange rektangeln från en vertex buffer och en index buffer – och kapitlet förklarar vad DSA ändrar i OpenGL och
+hur det för OpenGL närmare den modell Direct3D 12 alltid haft, och jämför varje DSA-funktion med den Direct3D 12-kod
+du känner. Det är värt att läsa även om du aldrig skriver OpenGL: mycket OpenGL-kod du kommer att stöta på är skriven
+på det ena eller det andra sättet, och jämförelsen visar varför Direct3D 12:s API ser ut som det gör.
 :::
 
 ## Bind to edit
@@ -129,26 +129,25 @@ det gör även det här kapitlets program:
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 ```
 
-GLAD måste genereras för 4.5 (eller med tillägget) så att funktionspekarna läses in. **macOS stannar vid OpenGL 4.1**, så
-det här kapitlets program fungerar inte på en Mac – bind to edit-koden i de andra kapitlen gör det. (Före 4.5 erbjöd det
-äldre tillägget `EXT_direct_state_access` liknande funktioner med andra namn, som `glNamedBufferDataEXT` och
-`glTextureParameteriEXT`; du kan fortfarande stöta på dem i äldre kod.)
+GLAD måste genereras för 4.5 (eller med tillägget) så att funktionspekarna läses in. **macOS stannar vid OpenGL 4.1**,
+så det här kapitlets program fungerar inte på en Mac – bind to edit-koden i de andra kapitlen gör det. (Före 4.5
+erbjöd det äldre tillägget `EXT_direct_state_access` liknande funktioner med andra namn, som `glNamedBufferDataEXT`
+och `glTextureParameteriEXT`; du kan fortfarande stöta på dem i äldre kod.)
 
-Projektet är kursens lösning till *Hello Triangle*, den orange rektangeln, med `// TODO:`-kommentarer där DSA-koden ska
-in. Bygg och kör det i din IDE. Gör nu den första uppgiften, **context**. Bilden ändras inte: bind to edit-koden körs
-oförändrad i en 4.5-kontext.
+Du fortsätter i ditt program från *Hello Triangle*, den orange rektangeln, i en ny mapp. Bygg och kör det i din IDE.
+Gör nu den första uppgiften, **context**. Bilden ändras inte: bind to edit-koden körs oförändrad i en 4.5-kontext.
 :::
 :::vulkan
-### Projektet
+### Ditt program
 
-Projektet är kursens Vulkan-lösning till *Hello Triangle*: den orange rektangeln `(1.0, 0.5, 0.2)` – två trianglar från
+Ditt program är det från *Hello Triangle*: den orange rektangeln `(1.0, 0.5, 0.2)` – två trianglar från
 en index buffer – mot den blågröna rensningsfärgen. Bygg och kör det i din IDE; det är samma rektangel som
 OpenGL-versionen av kapitlet börjar med. Avsnitten nedan ställer dess kod bredvid OpenGL:s DSA-anrop.
 :::
 :::d3d12
-### Projektet
+### Ditt program
 
-Projektet är kursens DirectX 12-lösning till *Hello Triangle*: den orange rektangeln `(1.0, 0.5, 0.2)` – två trianglar
+Ditt program är det från *Hello Triangle*: den orange rektangeln `(1.0, 0.5, 0.2)` – två trianglar
 från en index buffer – mot den blågröna rensningsfärgen. Bygg och kör det i din IDE; det är samma rektangel som
 OpenGL-versionen av kapitlet börjar med. Avsnitten nedan ställer dess kod bredvid OpenGL:s DSA-anrop.
 :::
@@ -412,24 +411,25 @@ Gör nu den sista uppgiften, **texture**. Bygg och kör: trälådan sitter på r
 från nedre vänstra till övre högra hörnet.
 :::
 :::vulkan
-I Vulkan har en textur alltid byggts så här. `vkCreateImage` skapar bilden med fast storlek, format och antal mip-nivåer –
-oföränderligt minne, som `glTextureStorage2D`. Dess minne allokeras och kopplas separat, som för en buffer. Pixlarna kommer
-via en staging buffer och `vkCmdCopyBufferToImage` – `glTextureSubImage2D` – och mip-nivåerna fylls, där ett program
-vill ha dem, med `vkCmdBlitImage` från nivå till nivå (vulkan-tutorials kapitel *Generating Mipmaps*) –
-`glGenerateTextureMipmap`. Och det finns inga texturenheter: en shader läser en textur via en **deskriptor** som namnger
-bildvyn och samplern, skriven med `vkUpdateDescriptorSets` och bunden med `vkCmdBindDescriptorSets` – motsvarigheten till
-`glBindTextureUnit(unit, texture)`, där descriptor setets bindning spelar enhetens roll. Projektet i kapitlet *Texturer*
-har bilden, staging-kopian och deskriptorn; det här kapitlets projekt har ingen textur.
+I Vulkan har en textur alltid byggts så här. `vkCreateImage` skapar bilden med fast storlek, format och antal
+mip-nivåer – oföränderligt minne, som `glTextureStorage2D`. Dess minne allokeras och kopplas separat, som för en
+buffer. Pixlarna kommer via en staging buffer och `vkCmdCopyBufferToImage` – `glTextureSubImage2D` – och mip-nivåerna
+fylls, där ett program vill ha dem, med `vkCmdBlitImage` från nivå till nivå (vulkan-tutorials kapitel *Generating
+Mipmaps*) – `glGenerateTextureMipmap`. Och det finns inga texturenheter: en shader läser en textur via en
+**deskriptor** som namnger bildvyn och samplern, skriven med `vkUpdateDescriptorSets` och bunden med
+`vkCmdBindDescriptorSets` – motsvarigheten till `glBindTextureUnit(unit, texture)`, där descriptor setets bindning
+spelar enhetens roll. Ditt program från kapitlet *Texturer* har bilden, staging-kopian och deskriptorn; det här
+kapitlets program har ingen textur.
 :::
 :::d3d12
 I Direct3D 12 har en textur alltid byggts så här. En textur är en `ID3D12Resource` skapad med fast storlek, format och
 antal mip-nivåer – oföränderligt minne, som `glTextureStorage2D`. Pixlarna kommer via en upload-buffer och
 `UpdateSubresources` (en kopiering på command listen) – `glTextureSubImage2D`. Direct3D 12 har ingen inbyggd
-mipmap-generering: nivåerna räknas ut av programmet (till exempel med en compute shader) eller läses in med bilden. Och
-det finns inga texturenheter: en shader läser en textur via en **deskriptor** – en shader resource view i en descriptor
-heap – som root-signaturens descriptor table pekar på (`SetGraphicsRootDescriptorTable`) – motsvarigheten till
-`glBindTextureUnit(unit, texture)`, där shaderregistret `t0` spelar enhetens roll. Projektet i kapitlet *Texturer* har
-allt detta; det här kapitlets projekt har ingen textur.
+mipmap-generering: nivåerna räknas ut av programmet (till exempel med en compute shader) eller läses in med bilden.
+Och det finns inga texturenheter: en shader läser en textur via en **deskriptor** – en shader resource view i en
+descriptor heap – som root-signaturens descriptor table pekar på (`SetGraphicsRootDescriptorTable`) – motsvarigheten
+till `glBindTextureUnit(unit, texture)`, där shaderregistret `t0` spelar enhetens roll. Ditt program från kapitlet
+*Texturer* har allt detta; det här kapitlets program har ingen textur.
 :::
 
 ```quiz

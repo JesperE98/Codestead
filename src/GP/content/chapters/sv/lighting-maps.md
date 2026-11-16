@@ -148,12 +148,13 @@ bildkvalitet. För att få det att fungera behöver vi dock uppdatera vertexdata
 vertexattribut vidare till fragment shadern, ladda texturen och binda den till rätt texturenhet.
 
 :::opengl
-Det här kapitlets projekt är resultatet från *Materials*, med den belysta kubens shadrar omdöpta till
-`lighting_maps.vs` och `lighting_maps.fs`. Ljuset har learnopengls fasta intensiteter igen (ambient 0.2, diffust 0.5,
-spekulärt 1.0 – ingen föränderlig färg), och materialet är fortfarande korallfärgat. Några saker för texturer finns
-redan: `stb_image.h` (med `STB_IMAGE_IMPLEMENTATION`), de tre bilderna `container2.png`, `container2_specular.png` och
-`matrix.png`, och vertexdata med texturkoordinater – varje vertex har nu en position, en normal och texturkoordinater,
-8 floats:
+Du fortsätter i ditt program från *Material*. Förbered det först: döp om den belysta kubens shadrar till
+`lighting_maps.vs` och `lighting_maps.fs`, och ge ljuset learnopengls fasta intensiteter igen (ambient 0.2, diffust
+0.5, spekulärt 1.0 – ingen föränderlig färg); materialet förblir korallfärgat. Ta sedan tillbaka det som texturer
+behöver: `stb_image.h` (med `STB_IMAGE_IMPLEMENTATION`, som i *Texturer*), de tre bilderna `container2.png`,
+`container2_specular.png` och `matrix.png` – **Spara resursfilerna…** i panelen kopierar dem till din mapp – och
+vertexdata med texturkoordinater. Varje vertex har nu en position, en normal och texturkoordinater, 8 floats;
+texturkoordinaterna är desamma som för kuben i *Koordinatsystem*:
 
 ```cpp
     float vertices[] = {
@@ -164,20 +165,20 @@ redan: `stb_image.h` (med `STB_IMAGE_IMPLEMENTATION`), de tre bilderna `containe
         ...
 ```
 
-Positions- och normalattributen använder redan ett stride på `8 * sizeof(float)`, för kubens VAO och för lampans.
-`// TODO:`-kommentarerna markerar var din kod ska in: texturkoordinatattributet, laddningen av texturerna och
-bindningen av dem i renderloopen.
+Ändra positions- och normalattributens stride till `8 * sizeof(float)`, för kubens VAO och för lampans. Uppgifterna
+lägger till texturkoordinatattributet, laddar texturerna och binder dem i renderloopen.
 :::
 :::vulkan
-Det här kapitlets projekt är resultatet från *Materials*, med kubens shadrar omdöpta till `shaders/lighting_maps.vert`
-och `.frag`. Ljuset har learnopengls fasta intensiteter igen (ambient 0.2, diffust 0.5, spekulärt 1.0 – ingen
-föränderlig färg), och materialet är fortfarande korallfärgat. Det texturer behöver finns redan, från kapitlet
-*Textures*: `stb_image.h`, bilderna `textures/container2.png`, `textures/container2_specular.png` och
-`textures/matrix.png`, vulkan-tutorials hjälpfunktioner `beginSingleTimeCommands()`, `endSingleTimeCommands()`,
-`transitionImageLayout()` och `copyBufferToImage()`, och samplern `textureSampler` (linjär filtrering, repeat,
-anisotropi), som skapas i `initVulkan()` och förstörs i `cleanup()`. Structen `Vertex` har en tredje medlem,
-`glm::vec2 texCoord`, med learnopengls koordinater, v vänd (`1 - v`): learnopengl vänder bilderna när de laddas, vi
-vänder koordinaterna i stället, som i kapitlet *Textures*.
+Du fortsätter i ditt program från *Material*. Förbered det först: döp om kubens shadrar till
+`shaders/lighting_maps.vert` och `.frag`, och ge ljuset learnopengls fasta intensiteter igen (ambient 0.2, diffust
+0.5, spekulärt 1.0 – ingen föränderlig färg); materialet förblir korallfärgat. Ta sedan tillbaka det som texturer
+behöver, från ditt program i kapitlet *Texturer*: `stb_image.h`, vulkan-tutorials hjälpfunktioner `createBuffer()`,
+`createImage()`, `beginSingleTimeCommands()`, `endSingleTimeCommands()`, `transitionImageLayout()` och
+`copyBufferToImage()`, och samplern `textureSampler` (linjär filtrering, repeat, anisotropi), som skapas i
+`initVulkan()` och förstörs i `cleanup()`. Bilderna är `textures/container2.png`, `textures/container2_specular.png`
+och `textures/matrix.png`; **Spara resursfilerna…** i panelen kopierar dem till din mapp. Ge structen `Vertex` en
+tredje medlem, `glm::vec2 texCoord`, med learnopengls koordinater (desamma som för kuben i *Koordinatsystem*), v vänd
+(`1 - v`): learnopengl vänder bilderna när de laddas, vi vänder koordinaterna i stället, som i kapitlet *Texturer*.
 
 Kroppen av *Textures*-kapitlets `createTextureImage()` är nu en hjälpfunktion som varje karta kan använda:
 
@@ -189,18 +190,18 @@ Kroppen av *Textures*-kapitlets `createTextureImage()` är nu en hjälpfunktion 
 
 Den skapar en staging buffer, kopierar pixlarna dit, skapar en device-local `VK_FORMAT_R8G8B8A8_UNORM`-image, byter
 dess layout till `TRANSFER_DST_OPTIMAL`, kopierar buffern till den och byter layouten till
-`SHADER_READ_ONLY_OPTIMAL`. `// TODO:`-kommentarerna markerar var din kod ska in: texturkoordinatattributet och
-laddningen av kartorna.
+`SHADER_READ_ONLY_OPTIMAL`. Uppgifterna lägger till texturkoordinatattributet och laddar kartorna.
 :::
 :::d3d12
-Det här kapitlets projekt är resultatet från *Materials*, med den belysta kubens shadrar omdöpta till
-`lighting_maps.hlsl`. Ljuset har learnopengls fasta intensiteter igen (ambient 0.2, diffust 0.5, spekulärt 1.0 – ingen
-föränderlig färg), och materialet är fortfarande korallfärgat. Några saker för texturer finns redan: `stb_image.h`
-(med `STB_IMAGE_IMPLEMENTATION`), de tre bilderna `container2.png`, `container2_specular.png` och `matrix.png`, och en
-`Vertex`-struct med en tredje medlem, `XMFLOAT2 texCoord`. Texturkoordinaterna är learnopengls med v vänd (`1 - v`):
-i Direct3D är v = 0 bildens översta rad, och bilderna laddas utan vändning, som i kapitlet *Textures*.
-`// TODO:`-kommentarerna markerar var din kod ska in: input layoutens element för texturkoordinaterna, laddningen av
-texturerna och texturernas root parameter i `PopulateCommandList`.
+Du fortsätter i ditt program från *Material*. Förbered det först: döp om den belysta kubens shadrar till
+`lighting_maps.hlsl`, och ge ljuset learnopengls fasta intensiteter igen (ambient 0.2, diffust 0.5, spekulärt 1.0 –
+ingen föränderlig färg); materialet förblir korallfärgat. Ta sedan tillbaka det som texturer behöver: `stb_image.h`
+(med `STB_IMAGE_IMPLEMENTATION`, som i *Texturer*), de tre bilderna `container2.png`, `container2_specular.png` och
+`matrix.png` – **Spara resursfilerna…** i panelen kopierar dem till din mapp – och en `Vertex`-struct med en tredje
+medlem, `XMFLOAT2 texCoord`. Texturkoordinaterna är learnopengls (desamma som för kuben i *Koordinatsystem*) med v
+vänd (`1 - v`): i Direct3D är v = 0 bildens översta rad, och bilderna laddas utan vändning, som i kapitlet
+*Texturer*. Uppgifterna lägger till input layoutens element för texturkoordinaterna, laddar texturerna och sätter
+texturernas root parameter i `PopulateCommandList`.
 :::
 
 Först måste texturkoordinaterna nå fragment shadern, precis som normalerna gjorde i *Basic Lighting*.
@@ -293,8 +294,8 @@ korallfärgad – men koordinaterna är nu på väg till fragment shadern.
 Sedan kommer själva texturen.
 
 :::opengl
-Projektet använder learnopengls hjälpfunktion `loadTexture`, i slutet av `main.cpp`, så att vi slipper upprepa
-texturkoden från kapitlet *Textures* för varje karta:
+Vi använder learnopengls hjälpfunktion `loadTexture` – skriv den i slutet av `main.cpp`, med en deklaration överst –
+så att vi slipper upprepa texturkoden från kapitlet *Texturer* för varje karta:
 
 ```cpp
 // utility function for loading a 2D texture from file
@@ -402,7 +403,7 @@ programmet:
     }
 ```
 
-`initVulkan()` anropar `createDiffuseMap();` där TODO:n står, efter `createCommandPool()` (kopieringen behöver en
+`initVulkan()` anropar `createDiffuseMap();` efter `createCommandPool()` (kopieringen behöver en
 command buffer) och före `createTextureSampler()`, och `cleanup()` förstör de tre objekten efter samplern:
 
 ```cpp
@@ -470,8 +471,8 @@ och använder, som learnopengl, shininess 64:
 ```
 :::
 :::d3d12
-Projektet har learnopengls hjälpfunktion `loadTexture` som medlemsfunktion, `LoadTexture`, i slutet av `main.cpp`. Den
-gör stegen från kapitlet *Textures* för en fil, så att vi slipper upprepa dem för varje karta:
+Skriv learnopengls hjälpfunktion `loadTexture` som medlemsfunktion, `LoadTexture`, i slutet av `main.cpp`. Den gör
+stegen från kapitlet *Texturer* för en fil, så att vi slipper upprepa dem för varje karta:
 
 ```cpp
 void D3D12App::LoadTexture(const char* path, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex)
@@ -486,7 +487,7 @@ på GPU:n. Därför är upload buffern en utparameter: anroparen håller den vid
 Texturen har en enda mipnivå, som i kapitlet *Textures*. OpenGL:s `loadTexture` genererar mipmaps, så lådans finaste
 detaljer kan se lite skarpare ut här än i OpenGL.
 
-Laddningen av diffuse mapen hamnar där TODO:n står, efter vertex buffern. Texturen är en ny medlem,
+Laddningen av diffuse mapen hamnar i `LoadAssets`, efter vertex buffern. Texturen är en ny medlem,
 `ComPtr<ID3D12Resource> m_diffuseMap;`, och dess SRV hamnar i heap-plats 1, direkt efter CBV:n i plats 0:
 
 ```cpp

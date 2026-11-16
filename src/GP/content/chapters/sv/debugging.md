@@ -16,38 +16,44 @@ till, inga brytpunkter att sätta i GPU-kod och inget enkelt sätt att kontrolle
 I det här kapitlet tittar vi på flera tekniker och knep för att felsöka ditt {{api}}-program. Felsökning i {{api}} är
 inte särskilt svårt, och att lära sig teknikerna lönar sig garanterat i längden.
 
-## Projektet
+## Ditt program
 
-Projektet är learnopengls felsökningsdemo: en träkub (`wood.png`, kursens egen textur), 2.5 enheter framför kameran,
-som vrider sig 10° per sekund kring axeln (1, 1, 1). Det finns ingen vymatris – kameran står i origo och tittar längs
--z – och projektionen är en perspektivprojektion med 45° synfält och ett bortre plan på 10. Djuptestet och
-back-face culling är påslagna.
+Utgå från ditt program från *Koordinatsystem* i en ny mapp (en texturerad kub) och gör om det till learnopengls
+felsökningsdemo: en träkub (`wood.png`, kursens egen textur – **Spara resursfilerna…** i panelen kopierar den till din
+mapp), 2.5 enheter framför kameran, som vrider sig 10° per sekund kring axeln (1, 1, 1). Det finns ingen vymatris –
+kameran står i origo och tittar längs -z – och projektionen är en perspektivprojektion med 45° synfält och ett bortre
+plan på 10. Djuptestet och back-face culling är påslagna.
 
 Ett värde skiljer sig från learnopengls demo: fönstret rensas till **(0.2, 0.3, 0.3)**, en mörk blågrön färg, i stället
 för svart. Du ser snart varför: halvvägs genom kapitlet ritas kuben *svart*, och mot en svart bakgrund skulle du inte se
 den alls.
 
-learnopengl gömmer två fel i sin demo som läsaren ska hitta, och det gör projektet också. Bygg och kör det:
+learnopengl gömmer två fel i sin demo som läsaren ska hitta. Du skriver programmet själv, så bygg in dem med flit –
+blocket för ditt API nedan säger vilka de är – och se verktygen hitta dem. Bygg och kör det:
 
 :::opengl
 fönstret visar bara den blågröna rensningsfärgen. Ingen kub, och ingenting skrivs ut. De två felen är learnopengls
-egna: ett när texturen laddas och ett när uniformerna sätts – men programmet säger ingenting om dem. Att hitta dem är
-vad det här kapitlet handlar om.
+egna: ett när texturen laddas och ett när uniformerna sätts – men programmet säger ingenting om dem. För att bygga in
+dem ger du texturens `glTexImage2D`-anrop målet `GL_FRAMEBUFFER` i stället för `GL_TEXTURE_2D`, och sätter uniformerna
+`projection` och `tex` före `shader.use()`. Att hitta dem med verktygen är vad det här kapitlet handlar om.
 :::
 :::vulkan
 kuben finns där, men i en enda platt mörkbrun färg – inga ådringar alls. Inget i fönstret säger varför. Programmet
 skriver ändå ut något: några rader som börjar med `validation layer:`. Felet är Vulkans eget (learnopengls två fel är
-OpenGL-anrop som saknar motsvarighet i Vulkan): något som vertex shadern behöver saknas i pipelinen. Att hitta det är
-vad det här kapitlet handlar om.
+OpenGL-anrop som saknar motsvarighet i Vulkan): något som vertex shadern behöver saknas i pipelinen. För att bygga in
+det låter du `Vertex::getAttributeDescriptions()` beskriva bara location 0, positionen – utelämna texturkoordinaternas
+beskrivning (location 1), som vertex shadern läser. Att hitta det med verktygen är vad det här kapitlet handlar om.
 :::
 :::d3d12
-fönstret visar bara den blågröna rensningsfärgen. Ingen kub. Precis som learnopengls demo har projektet två fel: ett i
-`PopulateCommandList`, som gör att ritanropet inte hittar sin projektion och sin textur, och ett i `LoadTexture`, i
-texturens shader resource view. Programmet säger ingenting om dem. Att hitta dem är vad det här kapitlet handlar om.
+fönstret visar bara den blågröna rensningsfärgen. Ingen kub. Precis som learnopengls demo har ditt program två fel:
+ett i `PopulateCommandList`, som gör att ritanropet inte hittar sin projektion och sin textur, och ett i
+`LoadTexture`, i texturens shader resource view. För att bygga in dem utelämnar du anropet `SetDescriptorHeaps` före
+de två anropen till `SetGraphicsRootDescriptorTable` i `PopulateCommandList`, och sätter inte
+`srvDesc.Texture2D.MipLevels` i `LoadTexture`. Programmet säger ingenting om dem. Att hitta dem med verktygen är vad
+det här kapitlet handlar om.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Uppgifterna lägger först till verktygen och använder
-sedan det de rapporterar för att rätta felen.
+Uppgifterna lägger först till verktygen och använder sedan det de rapporterar för att rätta felen.
 
 Några av verktygen finns i din IDE:s **debugger**: du kör programmet i den, stoppar det vid en **brytpunkt** och tittar
 på **anropsstacken** – kedjan av anrop som ledde dit – och på variablerna.
@@ -224,7 +230,7 @@ Projektets messenger ber om tre allvarlighetsgrader:
         createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 ```
 
-och `debugCallback` skriver ut varje meddelande den får. Därför är utskriften från startprojektet så pratig: loadern
+och `debugCallback` skriver ut varje meddelande den får. Därför är utskriften från ditt program så pratig: loadern
 och lagret berättar vad de gör (rader som `validation layer: Searching for ICD drivers named …` och `validation layer:
 Loading layer library libVkLayer_khronos_validation.so`), och mellan de pratiga raderna finns en som spelar roll.
 Allvarlighetsgraderna är bitar i ordning efter hur viktiga de är:
@@ -341,10 +347,10 @@ void CheckDebugMessages_(ID3D12InfoQueue* infoQueue, const char* file, int line)
 
 `GetMessage` anropas två gånger, som dokumentationen beskriver: först med `nullptr` för att få veta meddelandets
 storlek (ett `D3D12_MESSAGE` med texten efter sig), sedan med minne av den storleken. Ett meddelande har en kategori,
-en allvarlighetsgrad (`CORRUPTION`, `ERROR`, `WARNING`, `INFO`, `MESSAGE` – `SeverityName`, som redan finns i
-projektet, gör den till text), ett `ID` och beskrivningen. Om du inte känner till `__FILE__` och `__LINE__`:
-preprocessorn ersätter dem med filen och raden där de står, så varje anrop av `CheckDebugMessages()` rapporterar sin
-egen plats.
+en allvarlighetsgrad (`CORRUPTION`, `ERROR`, `WARNING`, `INFO`, `MESSAGE` – `SeverityName`, en liten `switch` som
+returnerar varje grads namn, gör den till text), ett `ID` och beskrivningen. Om du inte känner till `__FILE__` och
+`__LINE__`: preprocessorn ersätter dem med filen och raden där de står, så varje anrop av `CheckDebugMessages()`
+rapporterar sin egen plats.
 
 Gör nu den första uppgiften, **info-queue**: hämta info queue i `LoadPipeline` direkt efter att enheten har skapats
 (innanför `#if defined(_DEBUG)` – i en release-build finns inget debuglager, `As` misslyckas och `m_infoQueue` förblir
@@ -684,7 +690,7 @@ layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inTexCoord;
 ```
 
-och `Vertex::getAttributeDescriptions()` i startprojektet beskriver bara ett attribut, positionen på location 0.
+och `Vertex::getAttributeDescriptions()` i ditt program beskriver bara ett attribut, positionen på location 0.
 Pipelinen skapas ändå, och vad shadern läser från en indata som ingen matar är odefinierat; här läser den (0, 0).
 Varje fragment samplar då texeln på (0, 0) – en mörk ådra i träet – och kuben blir en enda platt brun färg.
 OpenGL-motsvarigheten till felet är ett vertexattribut som aldrig slås på med `glEnableVertexAttribArray`.
@@ -739,7 +745,7 @@ buffern, texturen (`L"wood.png"`), constant buffern och djupbuffern. Kör progra
 Läs meddelandet: descriptor-tabellen pekar in i heapen `'CBV/SRV heap'`, men den descriptor heap som är satt på command
 listen är `(nullptr)` – ingen. En descriptor-tabell är bara ett GPU-handtag, en adress *inuti* en shader-synlig
 descriptor heap, och ett ritanrop kan bara använda deskriptorer från de heaps som command listen har fått med
-`SetDescriptorHeaps`. Startprojektets `PopulateCommandList` sätter root signaturen och de två tabellerna, men aldrig
+`SetDescriptorHeaps`. Ditt programs `PopulateCommandList` sätter root signaturen och de två tabellerna, men aldrig
 heapen. Därför pekar root-parametrarna 1 (constant buffern med projektionen) och 2 (texturen) ingenstans som ritanropet
 kan följa – formellt odefinierat beteende; här ritas ingenting, precis som med learnopengls projektion som aldrig når
 shadern.
@@ -840,7 +846,7 @@ kön, så `CheckDebugMessages()` skriver ut dem en gång till efteråt.)
 ### Det andra felet
 
 Meddelandet säger det rakt ut: vyn ber om `MipLevels` 0, och värdet måste ligga mellan 1 och 1 – texturen har en
-mipnivå – eller vara -1 för "alla". Startprojektet fyller i `srvDesc` så här:
+mipnivå – eller vara -1 för "alla". Din `LoadTexture` fyller i `srvDesc` så här:
 
 ```cpp
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};

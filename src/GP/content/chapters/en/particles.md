@@ -5,6 +5,8 @@ and (usually) contains a texture with large parts of the sprite being transparen
 just a sprite as we've been using extensively, but when you put together hundreds or even thousands of these particles
 together you can create amazing effects.
 
+You continue in your program from *Collision resolution*.
+
 When working with particles, there is usually an object called a *particle emitter* or *particle generator* that,
 from its location, continuously spawns new particles that decay over time. If such a particle emitter would for
 example spawn tiny particles with a smoke-like texture, color them less bright the larger the distance from the
@@ -16,8 +18,9 @@ particle emitter controls all its spawned particles and changes their behavior b
 generally has the following attributes: a position, a velocity, a colour and its life.
 
 The idea is to create a particle emitter that continuously spawns particles at the ball, so that a trail of soft,
-glowing particles follows the ball through the garden. The course's particle texture, `textures/particle.png`, is a
-64 × 64 soft white glow that fades to transparent towards its edges (learnopengl uses its own particle texture here).
+glowing particles follows the ball through the garden. The course's particle texture – **Save resources…** in the
+panel copies it into your folder –, `textures/particle.png`, is a 64 × 64 soft white glow that fades to transparent
+towards its edges (learnopengl uses its own particle texture here).
 
 ## Particles
 

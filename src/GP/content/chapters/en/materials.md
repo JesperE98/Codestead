@@ -103,31 +103,31 @@ Let's try implementing such a material system in the shaders.
 ## Setting materials
 
 :::opengl
-This chapter's project is the result of *Basic Lighting*, with the shaders of the lit cube renamed to `materials.vs`
-and `materials.fs` (`main.cpp` builds `lightingShader` from them). The moving light of that chapter's exercise is gone
-again: the lamp stays at `lightPos` (1.2, 1.0, 2.0). The fragment shader still has the uniforms `objectColor`,
+You continue in your program from *Basic Lighting*. Rename the shaders of the lit cube to `materials.vs` and
+`materials.fs` (`main.cpp` builds `lightingShader` from them), and take the moving light of that chapter's exercise
+out again: the lamp stays at `lightPos` (1.2, 1.0, 2.0). The fragment shader still has the uniforms `objectColor`,
 `lightColor`, `lightPos` and `viewPos`, and computes ambient (strength 0.1), diffuse and specular (strength 0.5,
 exponent 32) lighting. The camera looks at the cube's left and front faces and at the lamp.
 :::
 :::vulkan
-This chapter's project is the result of *Basic Lighting*, with the cube's shaders renamed to
-`shaders/materials.vert` and `shaders/materials.frag` (`createPipeline("shaders/materials.vert.spv",
-"shaders/materials.frag.spv", 2, lightingPipeline)`). The moving light of that chapter's exercise is gone again: the
-lamp stays at `lightPos` (1.2, 1.0, 2.0). The uniform buffer at binding 2 still holds `view`, `proj`, `objectColor`,
-`lightColor`, `lightPos` and `viewPos`, each `glm::vec3` followed by a padding `float` in C++. The camera looks at the
-cube's left and front faces and at the lamp.
+You continue in your program from *Basic Lighting*. Rename the cube's shaders to `shaders/materials.vert` and
+`shaders/materials.frag`
+(`createPipeline("shaders/materials.vert.spv", "shaders/materials.frag.spv", 2, lightingPipeline)`), and take the
+moving light of that chapter's exercise out again: the lamp stays at `lightPos` (1.2, 1.0, 2.0). The uniform buffer at
+binding 2 still holds `view`, `proj`, `objectColor`, `lightColor`, `lightPos` and `viewPos`, each `glm::vec3` followed
+by a padding `float` in C++. The camera looks at the cube's left and front faces and at the lamp.
 :::
 :::d3d12
-This chapter's project is the result of *Basic Lighting*, with the lit cube's shaders renamed to `materials.hlsl`.
-The moving light of that chapter's exercise is gone again: the lamp stays at `lightPos` (1.2, 1.0, 2.0). The constant
+You continue in your program from *Basic Lighting*. Rename the lit cube's shaders to `materials.hlsl`, and take the
+moving light of that chapter's exercise out again: the lamp stays at `lightPos` (1.2, 1.0, 2.0). The constant
 buffer at register `b1` still holds `view`, `projection`, `objectColor`, `lightColor`, `lightPos` and `viewPos` (each
 `XMFLOAT3` followed by a `float` of padding in C++), and `OnUpdate` fills it every frame. The camera looks at the
 cube's left and front faces and at the lamp. `light_cube.hlsl`, the lamp's shaders, only declares the first two
 matrices of the constant buffer, so nothing in this chapter changes it.
 :::
 
-There are no `// TODO:` comments this time: every task changes code that is already there, and the task text tells you
-where. After each task, build and run the program in your IDE.
+Every task changes code that is already there, and the task text tells you where. After each task, build and run
+the program in your IDE.
 
 We created a material struct in the fragment shader, so next we want to change the lighting calculations to comply
 with the new material properties. Since all the material variables are stored in a struct we can access them from
@@ -740,7 +740,7 @@ Try and experiment with several lighting and material values and see how they af
   light intensities into account. To correctly set their values you'd have to set all the light intensities to
   (1.0, 1.0, 1.0) to get the same output. learnopengl's solution is a **cyan plastic** container.
 
-This is not a task in the project: try it once you have finished the tasks, and build and run the program to see the
+This is not a task: try it once you have finished the tasks, and build and run the program to see the
 result. Replace the changing light colour with a white light at full intensity and set the cyan plastic material:
 
 :::opengl

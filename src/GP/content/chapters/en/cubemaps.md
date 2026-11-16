@@ -33,30 +33,32 @@ The GPU picks the face from the largest component of the vector and divides the 
 As in the other chapters of this part, everything here exists in every API; the text shows it for {{api}}.
 
 :::opengl
-The project starts with the *Depth testing* scene without the floor – learnopengl draws only the two marble cubes in
-this chapter: at (-1, 0, -1) and (2, 0, 0), with `glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`, the camera at
-(0, 0, 3) looking down -z, and the shaders `cubemaps.vs` / `cubemaps.fs` that sample `texture1`. The render loop
-computes `model`, `view` and `projection` first and has a TODO for the skybox before the cubes are drawn. New files:
-`skybox.vs` and `skybox.fs` (their `main` is a TODO), and the six images of the sky in `skybox/`.
+You continue in your program from *Depth testing*, with its scene without the floor – learnopengl draws only the two
+marble cubes in this chapter: at (-1, 0, -1) and (2, 0, 0), with `glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`, the
+camera at (0, 0, 3) looking down -z, and the shaders `cubemaps.vs` / `cubemaps.fs` that sample `texture1`. The render
+loop computes `model`, `view` and `projection` first; the skybox will be drawn there, before the cubes. New in this
+chapter: the shaders `skybox.vs` and `skybox.fs` (the text shows them), and the six images of the sky in `skybox/` –
+**Save resources…** in the panel copies them into your folder.
 :::
 :::vulkan
-The project starts with the *Depth testing* scene without the floor – learnopengl draws only the two marble cubes in
-this chapter: at (-1, 0, -1) and (2, 0, 0), the camera at (0, 0, 3) looking down -z, the cube's 36 vertices (position
-and texture coordinates) in the vertex buffer, one descriptor set with the marble, the model matrix in a push constant
-and view and projection in the uniform buffer. `createPipeline(vert, frag, pipeline)` creates the pipeline from
-`shaders/cubemaps.vert` / `.frag`. New files: `shaders/skybox.vert` and `shaders/skybox.frag` (their `main` is a TODO),
-and the six images of the sky in `textures/skybox/`.
+You continue in your program from *Depth testing*, with its scene without the floor – learnopengl draws only the two
+marble cubes in this chapter: at (-1, 0, -1) and (2, 0, 0), the camera at (0, 0, 3) looking down -z, the cube's 36
+vertices (position and texture coordinates) in the vertex buffer, one descriptor set with the marble, the model matrix
+in a push constant and view and projection in the uniform buffer. `createPipeline(vert, frag, pipeline)` creates the
+pipeline from `shaders/cubemaps.vert` / `.frag`. New in this chapter: the shaders `shaders/skybox.vert` and
+`shaders/skybox.frag` (the text shows them), and the six images of the sky in `textures/skybox/` – **Save resources…**
+in the panel copies them into your folder.
 :::
 :::d3d12
-The project starts with the *Depth testing* scene without the floor – learnopengl draws only the two marble cubes in
-this chapter: at (-1, 0, -1) and (2, 0, 0), the camera at (0, 0, 3) looking down -z, a PSO with the depth function
-LESS and the shaders of `cubemaps.hlsl`. The vertex buffer holds the cube (vertices 0–35, position and texture
-coordinates); the CBV/SRV heap holds the CBV (slot 0) and the marble (slot 1). New files: `skybox.hlsl`, which only
-has a TODO comment, and the six images of the sky in `skybox/`.
+You continue in your program from *Depth testing*, with its scene without the floor – learnopengl draws only the two
+marble cubes in this chapter: at (-1, 0, -1) and (2, 0, 0), the camera at (0, 0, 3) looking down -z, a PSO with the
+depth function LESS and the shaders of `cubemaps.hlsl`. The vertex buffer holds the cube (vertices 0–35, position and
+texture coordinates); the CBV/SRV heap holds the CBV (slot 0) and the marble (slot 1). New in this chapter: the
+shaders in `skybox.hlsl` (the text shows them), and the six images of the sky in `skybox/` – **Save resources…** in
+the panel copies them into your folder.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
-IDE.
+After each task, build and run the program in your IDE.
 
 ## Creating a cubemap
 
@@ -454,7 +456,7 @@ region per face:
 
 The loop with `bufferOffset = faceSize * i` and `baseArrayLayer = i` is learnopengl's loop over
 `GL_TEXTURE_CUBE_MAP_POSITIVE_X + i`. After the second barrier (to `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`) the
-staging buffer is destroyed and the cube view is created. The function goes where its TODO is, next to
+staging buffer is destroyed and the cube view is created. The function goes next to
 `loadTexture`; `faceSize` is the size of one RGBA face in bytes.
 
 Note what the function does *not* do: flip the images. A cube map has its own rule for how a face image lies on the
@@ -525,7 +527,7 @@ the GPU wants them. The copy itself takes one `D3D12_SUBRESOURCE_DATA` per face:
 `UpdateSubresources(commandList, destination, intermediate, intermediateOffset, firstSubresource, numSubresources,
 data)`: subresources 0 to 5 – learnopengl's loop over `GL_TEXTURE_CUBE_MAP_POSITIVE_X + i`. After it, a barrier from
 COPY_DEST to PIXEL_SHADER_RESOURCE, the cube SRV in slot `descriptorIndex` of the CBV/SRV heap, and the six images are
-freed. The function goes where its TODO is, at the end of the file, and its declaration into the class:
+freed. The function goes at the end of the file, and its declaration into the class:
 
 ```cpp
     void LoadCubemap(const std::vector<std::string>& faces, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex);

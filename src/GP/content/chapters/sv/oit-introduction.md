@@ -187,10 +187,11 @@ Det är också därför den är en approximation: ett medelvärde av lagren är 
 Riktiga renderare blandar de här: de sorterar det som går att sortera, använder weighted blending eller en variant för
 partiklar och andra volymer av små genomskinliga bitar, och sparar en exakt metod för de få fall där det spelar roll.
 
-## Projektet
+## Ditt program
 
-Projektet visar problemet: det är nästa kapitels start, ännu utan uppgifter. Tre fyrhörningar på 2 × 2 är vända mot
-kameran, som står i (0, 0, 5) och tittar längs -z:
+Det här kapitlet har inga uppgifter. I slutet förbereder du programmet som nästa kapitel börjar med, i en ny mapp –
+utgå från något av dina tidigare program, till exempel det från *Blending* – och det visar problemet. Tre fyrhörningar
+på 2 × 2 är vända mot kameran, som står i (0, 0, 5) och tittar längs -z:
 
 - en **röd** ogenomskinlig fyrhörning i (0.5, -0.2, 1.0);
 - en **grön** fyrhörning med alfa 0.5 i (-0.3, -0.6, 2.0) – den närmaste;
@@ -218,13 +219,12 @@ börjar med `#version 420 core`. Det solida passet ritar den röda fyrhörningen
 ```
 
 `transparent.fs` skriver bara ut färgen med dess alfa (`frag = color;`). Varje draw-anrop sätter learnopengls två
-uniforms, `mvp` och `color`. Filerna `composite.vs` / `.fs` och `screen.vs` / `.fs` finns redan till nästa kapitel;
-`main` i `composite.fs` är fortfarande en TODO.
+uniforms, `mvp` och `color`. Filerna `composite.vs` / `.fs` och `screen.vs` / `.fs` kommer i nästa kapitel.
 :::
 :::vulkan
-I Vulkan är blendfunktionen en del av pipelinen. Projektets hjälpfunktion `createPipeline(…)` tar emot djuptest,
-djupskrivning, om det ska blendas och blendfaktorerna för upp till två färg-attachments, och den genomskinliga pipelinen
-skapas med vanlig alfablending och djupskrivning påslagen:
+I Vulkan är blendfunktionen en del av pipelinen. Din hjälpfunktion `createPipeline(…)`, utbyggd för det här, tar emot
+djuptest, djupskrivning, om det ska blendas och blendfaktorerna för upp till två färg-attachments, och den
+genomskinliga pipelinen skapas med vanlig alfablending och djupskrivning påslagen:
 
 ```cpp
         // transparent objects: ordinary alpha blending (SRC_ALPHA, ONE_MINUS_SRC_ALPHA), depth test with depth writes
@@ -232,13 +232,12 @@ skapas med vanlig alfablending och djupskrivning påslagen:
             VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, transparentPipeline);
 ```
 
-Allt ritas i fönstrets render pass. learnopengls två uniforms `mvp` och `color` är push constants (`struct PushConstants
-{ glm::mat4 mvp; glm::vec4 color; }`), och `transparent.frag` skriver ut `pc.color` som den är. Shaderfilerna
-`composite.vert` / `.frag` och `screen.vert` / `.frag` finns redan till nästa kapitel; `main` i `composite.frag` är
-fortfarande en TODO.
+Allt ritas i fönstrets render pass. learnopengls två uniforms `mvp` och `color` är push constants
+(`struct PushConstants { glm::mat4 mvp; glm::vec4 color; }`), och `transparent.frag` skriver ut `pc.color` som den är.
+Shaderfilerna `composite.vert` / `.frag` och `screen.vert` / `.frag` kommer i nästa kapitel.
 :::
 :::d3d12
-I DirectX 12 är blendfunktionen en del av pipeline state-objektet. Projektet ritar den röda fyrhörningen med
+I DirectX 12 är blendfunktionen en del av pipeline state-objektet. Ditt program ritar den röda fyrhörningen med
 `m_solidPipelineState` och den gröna och den blå med `m_transparentPipelineState`, som blendar på vanligt sätt och
 behåller standardinställningen för djupet (test LESS, skrivning på):
 
@@ -251,8 +250,7 @@ behåller standardinställningen för djupet (test LESS, skrivning på):
 
 Allt ritas direkt i back buffern med en djupbuffer. learnopengls två uniforms `mvp` och `color` är root constants
 (`struct ObjectConstants { XMFLOAT4X4 mvp; XMFLOAT4 color; }`), och `PSMain` i `transparent.hlsl` returnerar `color`
-som den är. `composite.hlsl` och `screen.hlsl` finns redan till nästa kapitel; `PSMain` i `composite.hlsl` är
-fortfarande en TODO.
+som den är. `composite.hlsl` och `screen.hlsl` kommer i nästa kapitel.
 :::
 
 Det här kapitlet har inga uppgifter. Bygg och kör programmet: mot svart ser du den röda fyrhörningen till höger, den

@@ -32,8 +32,10 @@ the file formats we want to import. Luckily for us, there just happens to be a l
 ## The model of this part
 
 learnopengl.com uses a backpack model for this part; this course has a model of its own: a small planet with a ring,
-`models/planet.obj`. It is a Wavefront `.obj` file, a plain text file you can open in your IDE (**Save start files…**
-puts it into your project folder). Its first lines name the material library, `planet.mtl`, and start the first object:
+`models/planet.obj`. It is a Wavefront `.obj` file, a plain text file you can open in your IDE (**Save resources…**
+in the panel copies the model – `planet.obj`, `planet.mtl` and its four textures – into a folder you pick; pick your
+program's folder, and the files land in `models/`). Its first lines name the material library, `planet.mtl`, and
+start the first object:
 
 ```text
 # A small planet with a ring - drawn for Codestead GP (see make_planet.py).
@@ -341,18 +343,19 @@ Assimp is a compiled library, not a single header: the headers declare its class
 ```
 :::
 
-## The project
+## Your program
 
-This chapter has no code to write – learnopengl's *Assimp* chapter has none either. Its project is already the one the
-next two chapters work in, so you can look around in it, then build and run: the window shows only the dark grey clear
-colour (0.05, 0.05, 0.05), since nothing is drawn yet. (In the next chapters the `// TODO:` comments mark where your
-code goes, and you build and run it in your IDE as before.)
+This chapter has no tasks – learnopengl's *Assimp* chapter has no code either. Use it to prepare the program the next
+two chapters work in. Start from your program from *Camera* (the free camera at (0, 0, 3) looking down -z) in a new
+folder, and turn it into the scene described below. Then build and run: the window shows only the dark grey clear
+colour (0.05, 0.05, 0.05), since nothing is drawn yet.
 
 :::opengl
-The project is learnopengl's `model_loading.cpp` scene before the model: `main.cpp` with the camera of the *Camera*
-chapter at (0, 0, 3) looking down -z (WASD, mouse look and zoom), the depth test, one shader
-`Shader ourShader("model_loading.vs", "model_loading.fs");`, and the matrices – including the model matrix that
-tilts the planet by 25° about the x-axis so you can see the ring, and scales it by 0.5:
+The program is learnopengl's `model_loading.cpp` scene before the model: `main.cpp` with the camera of the *Camera*
+chapter at (0, 0, 3) looking down -z (WASD, mouse look and zoom), the depth test, the clear colour
+(0.05, 0.05, 0.05), one shader `Shader ourShader("model_loading.vs", "model_loading.fs");` and no vertex data or
+textures any more, and the matrices – including the model matrix that tilts the planet by 25° about the x-axis so
+you can see the ring, and scales it by 0.5:
 
 ```cpp
         // world transformation of the model
@@ -365,32 +368,104 @@ tilts the planet by 25° about the x-axis so you can see the ring, and scales it
 
 The shaders are learnopengl's `1.model_loading.vs/.fs`: the vertex shader takes a position, a normal and texture
 coordinates (locations 0, 1 and 2), and the fragment shader outputs the colour of `texture_diffuse1` – a name you'll
-understand in the next chapter. `mesh.h` waits with `// TODO:` comments for the *Mesh* chapter; `model.h` and
-Assimp's headers arrive in the *Model* chapter.
+understand in the next chapter. `model_loading.vs`:
+
+```glsl
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 aTexCoords;
+
+out vec2 TexCoords;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+void main()
+{
+    TexCoords = aTexCoords;
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
+}
+```
+
+`model_loading.fs`:
+
+```glsl
+#version 330 core
+out vec4 FragColor;
+
+in vec2 TexCoords;
+
+uniform sampler2D texture_diffuse1;
+
+void main()
+{
+    FragColor = texture(texture_diffuse1, TexCoords);
+}
+```
+
+`mesh.h` comes in the *Mesh* chapter; `model.h` and Assimp's headers arrive in the *Model* chapter.
 
 :::ide vs rider
-Add `mesh.h` to the project (**Project → Add Existing Item…**; in Rider **Add → Existing Item…** in the project's
-context menu) to open it from the Solution Explorer; `#include "mesh.h"` finds it next to `main.cpp` without a setting.
+When you write `mesh.h` in the next chapter, add it to the project (**Project → Add Existing Item…**; in Rider **Add →
+Existing Item…** in the project's context menu) to open it from the Solution Explorer; `#include "mesh.h"` finds it
+next to `main.cpp` without a setting.
 :::
 :::
 :::vulkan
-The project is learnopengl's `model_loading.cpp` scene before the model, in Vulkan: the camera of the *Camera*
+The program is learnopengl's `model_loading.cpp` scene before the model, in Vulkan: the camera of the *Camera*
 chapter at (0, 0, 3) looking down -z (WASD, mouse look and zoom), a depth buffer, one pipeline `modelPipeline` from
 `shaders/model_loading.vert` and `.frag`, the uniform buffer with the view and projection matrices at binding 0, and
 the model matrix as a push constant – it tilts the planet by 25° about the x-axis so you can see the ring, and scales
 it by 0.5. Culling is off (`VK_CULL_MODE_NONE`): the ring is a single flat surface that must be visible from both
-sides. The `// TODO:` comments in `main.cpp` and the shaders are for the *Mesh* chapter; tinyobjloader arrives in the
-*Model* chapter.
+sides. The clear colour is (0.05, 0.05, 0.05), and the cube's vertex data and textures are gone. For now the shaders
+only read the position and draw white; the *Mesh* chapter adds the other attributes. `shaders/model_loading.vert`:
+
+```glsl
+#version 450
+
+// the vertex shader reads the matrices of the uniform buffer
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+} ubo;
+
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+} pc;
+
+layout(location = 0) in vec3 inPosition;
+
+void main() {
+    gl_Position = ubo.proj * ubo.view * pc.model * vec4(inPosition, 1.0);
+}
+```
+
+`shaders/model_loading.frag`:
+
+```glsl
+#version 450
+
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = vec4(1.0); // white
+}
+```
+
+tinyobjloader arrives in the *Model* chapter.
 :::
 :::d3d12
-The project is learnopengl's `model_loading.cpp` scene before the model, in DirectX 12: the camera of the *Camera*
+The program is learnopengl's `model_loading.cpp` scene before the model, in DirectX 12: the camera of the *Camera*
 chapter at (0, 0, 3) looking down -z (WASD, mouse look and zoom), a depth buffer, `model_loading.hlsl` with
 learnopengl's model shaders (`VSMain` takes `POSITION`, `NORMAL` and `TEXCOORD`, `PSMain` returns the colour of
 `texture_diffuse1`), and the model matrix as root constants – it tilts the planet by 25° about the x-axis so you can
 see the ring, and scales it by 0.5. Culling is off (`D3D12_CULL_MODE_NONE`): the ring is a single flat surface that
-must be visible from both sides. The root signature already has a table of two textures (t0 and t1) for root parameter
-2, which every mesh will set when it is drawn. The `// TODO:` comments in `main.cpp` are for the *Mesh* chapter;
-Assimp's headers arrive in the *Model* chapter.
+must be visible from both sides. The clear colour is (0.05, 0.05, 0.05), and the cube's vertex data and textures are
+gone. The root signature gets a table of two textures (t0 and t1) for root parameter 2, which every mesh will set when
+it is drawn, and the CBV/SRV heap room for the CBV and two SRVs per mesh (`1 + 2 * MaxMeshes` descriptors, with
+`static const UINT MaxMeshes = 8;`). Assimp's headers arrive in the *Model* chapter.
 :::
 
 ```quiz

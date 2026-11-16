@@ -92,10 +92,10 @@ The frame then has four steps, the four passes of learnopengl's program:
 3. **Composite pass**: a full-screen quad that blends the transparent result over the opaque target.
 4. **Final pass**: a full-screen quad that copies the opaque target to the window.
 
-The project is the last chapter's: the camera at (0, 0, 5), the red opaque quad at (0.5, -0.2, 1.0), the green quad
-(alpha 0.5) at (-0.3, -0.6, 2.0) – the nearest – and the blue quad (alpha 0.5) at (-0.6, 0.5, 0.0) – the farthest,
-partly behind the red one – drawn red, green, blue. learnopengl's demo puts the three quads on top of each other in the
-middle of the window; the course spreads them out so that every case is visible.
+You continue in the program you prepared in *OIT: Introduction*: the camera at (0, 0, 5), the red opaque quad at (0.5,
+-0.2, 1.0), the green quad (alpha 0.5) at (-0.3, -0.6, 2.0) – the nearest – and the blue quad (alpha 0.5) at (-0.6,
+0.5, 0.0) – the farthest, partly behind the red one – drawn red, green, blue. learnopengl's demo puts the three quads
+on top of each other in the middle of the window; the course spreads them out so that every case is visible.
 
 :::opengl
 The program asks for an OpenGL 4.2 core context (learnopengl's): `glBlendFunci`, a blend function per colour
@@ -124,16 +124,16 @@ render passes with framebuffers made for them – four render passes per frame, 
 :::d3d12
 learnopengl's render states are pipeline state in DirectX 12: each pass gets a pipeline state object of its own,
 created in `LoadAssets` from one `D3D12_GRAPHICS_PIPELINE_STATE_DESC` that is changed step by step. learnopengl's
-uniforms `mvp` and `color` are root constants (root parameter 0: `struct ObjectConstants { XMFLOAT4X4 mvp; XMFLOAT4
-color; }`). The start already has what the screen quads need: root parameter 1, a descriptor table of two SRVs (t0, t1)
-for the pixel shader, a static sampler s0 (linear, clamp), and the descriptor heaps at their final sizes – the RTV heap
-with `FrameCount + 3` slots (the back buffers, then the opaque, accumulation and revealage textures), the SRV heap with 3
-(slot 0 opaque, 1 accumulation, 2 revealage) and the DSV heap with the depth buffer (`D32_FLOAT`). Each off-screen
-texture rests in the state `PIXEL_SHADER_RESOURCE` and is turned into a `RENDER_TARGET` by a barrier for the pass that
-draws into it.
+uniforms `mvp` and `color` are root constants (root parameter 0:
+`struct ObjectConstants { XMFLOAT4X4 mvp; XMFLOAT4 color; }`). Prepare what the screen quads need: root parameter 1, a
+descriptor table of two SRVs (t0, t1) for the pixel shader, a static sampler s0 (linear, clamp), and the descriptor
+heaps at their final sizes – the RTV heap with `FrameCount + 3` slots (the back buffers, then the opaque, accumulation
+and revealage textures), the SRV heap with 3 (slot 0 opaque, 1 accumulation, 2 revealage) and the DSV heap with the
+depth buffer (`D32_FLOAT`). Each off-screen texture rests in the state `PIXEL_SHADER_RESOURCE` and is turned into a
+`RENDER_TARGET` by a barrier for the pass that draws into it.
 :::
 
-The `// TODO:` comments in the project mark where your code goes; you build and run the program in your IDE.
+You build and run the program in your IDE after each task.
 
 ## The opaque pass
 
@@ -258,7 +258,7 @@ the final pass, for the window's `renderPass`, without depth test or blending:
             VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, screenPipeline);
 ```
 
-The screen shader reads the opaque image through a descriptor set. The start has a descriptor set layout with two
+The screen shader reads the opaque image through a descriptor set. Give your program a descriptor set layout with two
 combined image samplers (bindings 0 and 1 – the composite pass will need both), a pool, the sampler
 `colorBufferSampler` (linear, clamp to edge) and the helper `createDescriptorSet(firstView, secondView, set)`; the final
 pass uses `createDescriptorSet(opaqueImageView, opaqueImageView, screenDescriptorSet)` (binding 1 is unused by
@@ -301,10 +301,11 @@ resource view (the final pass reads it). It is a committed resource in a default
 ```
 
 Its RTV goes into RTV heap slot `FrameCount` (after the swap chain's buffers), its SRV into SRV heap slot 0. The depth
-buffer is the one the start already has. The solid pipeline state now renders into the texture's format,
+buffer is the one your program already has. The solid pipeline state now renders into the texture's format,
 `psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT` – the transparent one is derived from it – and the final pass
-gets a pipeline state of its own, `m_screenPipelineState`, compiled from `screen.hlsl`: no blending, `DepthEnable =
-FALSE`, one target in the back buffer's `DXGI_FORMAT_R8G8B8A8_UNORM` and `DSVFormat = DXGI_FORMAT_UNKNOWN`.
+gets a pipeline state of its own, `m_screenPipelineState`, compiled from `screen.hlsl`: no blending,
+`DepthEnable = FALSE`, one target in the back buffer's `DXGI_FORMAT_R8G8B8A8_UNORM` and
+`DSVFormat = DXGI_FORMAT_UNKNOWN`.
 
 In `PopulateCommandList` the solid pass begins with a barrier that turns the texture into a render target, binds it with
 the depth buffer and clears both:

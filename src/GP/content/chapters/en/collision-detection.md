@@ -8,6 +8,8 @@ on these simple shapes; this makes the code easier and saves a lot of performanc
 shapes are circles, spheres, rectangles, and boxes; these are a lot simpler to work with compared to arbitrary meshes
 with hundreds of triangles.
 
+You continue in your program from *Ball*.
+
 While the simple shapes do give us easier and more efficient collision detection algorithms, they share a common
 disadvantage in that these shapes usually do not fully surround the object. The effect is that a collision may be
 detected that didn't really collide with the actual object; one should always keep in mind that these shapes are just
@@ -94,8 +96,8 @@ We check if the right side of the first object is greater than the left side of 
 object's right side is greater than the first object's left side; similarly for the vertical axis.
 
 The course puts the collision code in a new section after the game's globals (`Hedgerow`, `Renderer`, `Player`,
-`Ball`) – it needs the ball – and before `Init` (learnopengl has it in `game.cpp`). The `// TODO:` comments in the
-project mark where each piece goes. Now do the first task, **aabb**. Nothing calls it yet.
+`Ball`) – it needs the ball – and before `Init` (learnopengl has it in `game.cpp`). Now do the first task, **aabb**.
+Nothing calls it yet.
 
 ```quiz
 Brick A covers x 0…53, y 0…37; brick B covers x 60…113, y 0…37. Does `CheckCollision(A, B)` report a collision?

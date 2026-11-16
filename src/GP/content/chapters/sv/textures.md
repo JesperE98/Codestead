@@ -15,40 +15,49 @@ behöva lägga till fler vertexar.
 > shaderprogrammen, men det får vänta till ett annat ämne.
 
 I det här kapitlet lägger du två bilder på rektangeln från de tidigare kapitlen: en trälåda, `container.png`, och en
-smiley, `awesomeface.png`. Båda är 256×256 pixlar och båda ingår i projektet – **Spara startfilerna…** lägger dem i
-din projektmapp. `container.png` har tre kanaler (RGB). `awesomeface.png` har fyra (RGBA): runt ansiktet är den
-genomskinlig, och de genomskinliga pixlarna är lagrade som **svarta** med alfa 0. Kom ihåg det; det förklarar något du
-kommer att se senare.
+smiley, `awesomeface.png`. Båda är 256×256 pixlar och följer med kursen – **Spara resursfilerna…** i panelen kopierar
+dem till mappen du väljer; välj ditt programs mapp. `container.png` har tre kanaler (RGB). `awesomeface.png` har fyra
+(RGBA): runt ansiktet är den genomskinlig, och de genomskinliga pixlarna är lagrade som **svarta** med alfa 0. Kom
+ihåg det; det förklarar något du kommer att se senare.
 
 :::opengl
-Det här kapitlets projekt är den indexerade rektangeln från *Hello Triangle* med `Shader`-klassen från kapitlet
-*Shaders* (`shader_s.h`, `shader.vs`, `shader.fs`) och en färg per vertex: varje vertex har en position och en färg
-(stride `6 * sizeof(float)`), hörnet uppe till höger är rött, nere till höger grönt, nere till vänster blått och uppe
-till vänster gult, och färgerna interpoleras över rektangeln. De två bilderna ligger bredvid `main.cpp` och läses in
-med sina filnamn.
+Du fortsätter i ditt program från *Shaders*, med dess `Shader`-klass (`shader_s.h`, `shader.vs`, `shader.fs`). Gör
+om det före den första uppgiften till den indexerade rektangeln från *Hello Triangle* med en färg per vertex: fyra
+hörn med en position och en färg var (stride `6 * sizeof(float)`) – hörnet uppe till höger `0.5f, 0.5f` rött, nere
+till höger grönt, nere till vänster blått och uppe till vänster `-0.5f, 0.5f` gult – element buffern med indexen
+`0, 1, 3` och `1, 2, 3` som i *Hello Triangle*, och `glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0)`. Shaderna är
+de från *Fler attribut!* i *Shaders*: `aColor` på location 1 skickas vidare som `ourColor` och blir fragmentets färg,
+utan förskjutning och utan vändning (ta bort övningarna). De två bilderna ligger bredvid `main.cpp` och läses in med
+sina filnamn.
 :::
 :::vulkan
-Det här kapitlets projekt är den indexerade rektangeln från *Hello Triangle* med en färg per vertex:
-`struct Vertex { glm::vec3 pos; glm::vec3 color; }` med två attributbeskrivningar, och hörnen uppe till vänster gult,
-uppe till höger rött, nere till höger grönt och nere till vänster blått. De två bilderna ligger i
+Du fortsätter i ditt program från *Shaders*. Gör om det före den första uppgiften till den indexerade rektangeln från
+*Hello Triangle* (index buffern `0, 1, 2, 2, 3, 0`, `vkCmdBindIndexBuffer`, `vkCmdDrawIndexed`) med en färg per
+vertex: `struct Vertex { glm::vec3 pos; glm::vec3 color; }` med två attributbeskrivningar, och hörnen uppe till
+vänster `{-0.5f, -0.5f, 0.0f}` gult, uppe till höger rött, nere till höger grönt och nere till vänster
+`{-0.5f, 0.5f, 0.0f}` blått. Ta bort övningarna från *Shaders*: ingen push constant, ingen vändning, och
+`rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE` igen. Lägg de två bilderna i en mapp `textures` bredvid `main.cpp`:
 `textures/container.png` och `textures/awesomeface.png`.
 
-Att lägga till en textur i ett Vulkan-program kräver flera nya funktioner, så projektet innehåller redan tomma
-stubbar för dem, som `initVulkan()` anropar i den ordning vulkan-tutorial använder: `createDescriptorSetLayout()`
-efter `createRenderPass()`; `createTextureImage()`, `createTextureImageView()` och `createTextureSampler()` efter
-`createCommandPool()`; `createDescriptorPool()` och `createDescriptorSets()` efter `createIndexBuffer()`.
+Att lägga till en textur i ett Vulkan-program kräver flera nya funktioner. Lägg till dem i klassen nu som tomma
+`void`-funktioner, och anropa dem från `initVulkan()` i den ordning vulkan-tutorial använder:
+`createDescriptorSetLayout()` efter `createRenderPass()`; `createTextureImage()`, `createTextureImageView()` och
+`createTextureSampler()` efter `createCommandPool()`; `createDescriptorPool()` och `createDescriptorSets()` efter
+`createIndexBuffer()`. Uppgifterna fyller i dem.
 :::
 :::d3d12
-Det här kapitlets projekt är den indexerade rektangeln från *Hello Triangle* med en färg per vertex:
-`struct Vertex { XMFLOAT3 position; XMFLOAT3 color; };` med ett `COLOR`-inputelement på offset 12, och hörnen uppe
-till höger rött, nere till höger grönt, nere till vänster blått och uppe till vänster gult. Root signaturen är
-fortfarande tom. De två bilderna ligger bredvid `main.cpp` och `shaders.hlsl` och läses in med sina filnamn.
+Du fortsätter i ditt program från *Shaders*. Gör om det före den första uppgiften till den indexerade rektangeln från
+*Hello Triangle* (index buffern `0, 1, 3, 1, 2, 3`, `IASetIndexBuffer`, `DrawIndexedInstanced(6, 1, 0, 0, 0)`) med
+en färg per vertex: `struct Vertex { XMFLOAT3 position; XMFLOAT3 color; };` med ett `COLOR`-inputelement på offset
+12, och hörnen uppe till höger `{ 0.5f, 0.5f, 0.0f }` rött, nere till höger grönt, nere till vänster blått och uppe
+till vänster gult. Ta bort övningarna från *Shaders*: inga root constants (root signaturen är tom igen), ingen
+vändning, och standardläget för culling. De två bilderna ligger bredvid `main.cpp` och `shaders.hlsl` och läses in
+med sina filnamn.
 Texturkoden följer Microsofts exempel D3D12HelloTexture – med skillnaden att exemplet genererar ett svartvitt
 schackbräde i koden, medan vi läser in riktiga bilder.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
-IDE.
+Efter varje uppgift bygger och kör du programmet i din IDE.
 
 ## Texturkoordinater
 
@@ -376,7 +385,7 @@ eller en null-pekare om filen inte kunde läsas in. När vi är klara med pixlar
     unsigned char *data = stbi_load("container.png", &width, &height, &nrChannels, 0);
     if (data)
     {
-        // TODO: create the texture image from the data and generate mipmaps
+        // the texture image comes here, in the next tasks
     }
     else
     {
@@ -392,8 +401,8 @@ Utan hjälp skulle lådan alltså hamna upp och ned. `stbi_set_flip_vertically_o
 vända bilden längs y-axeln vid inläsningen, så att den nedersta raden kommer först och bilden visas rättvänd.
 
 Gör nu den första uppgiften, **load-image**: inkludera `stb_image.h` (efter GLFW-includen) och läs in `container.png`
-som ovan, vid den andra `// TODO:` i `main.cpp`. Lämna insidan av `if (data)` till nästa uppgifter. Ingenting syns
-ändras ännu – men om filen inte kan läsas in ser du `Failed to load texture` i programmets konsol.
+som ovan, i `main` efter hörndata och före render loopen. Lämna insidan av `if (data)` till nästa uppgifter. Ingenting
+syns ändras ännu – men om filen inte kan läsas in ser du `Failed to load texture` i programmets konsol.
 :::
 :::vulkan
 I `createTextureImage()`:
@@ -417,7 +426,7 @@ bildens översta rad först, och i Vulkan är den första raden i minnet raden v
 Bilden kommer fram rättvänd som den är. (OpenGL-tutorials anropar `stbi_set_flip_vertically_on_load(true)` här,
 eftersom OpenGL betraktar t = 0 som texturens nederkant.)
 
-Frigör pixlarna med `stbi_image_free(pixels);` när de har kopierats – för tillfället direkt, vid dess `// TODO:`.
+Frigör pixlarna med `stbi_image_free(pixels);` när de har kopierats – för tillfället direkt, efter kontrollen.
 
 Gör nu den första uppgiften, **load-image**: lägg till definitionen och includen överst i `main.cpp` och läs in
 bilden i `createTextureImage()`. Ingenting syns ändras ännu; om filen inte kan läsas in avbryts programmet med
@@ -453,7 +462,7 @@ bildens översta rad först, och i Direct3D är den första raden i minnet raden
 `stbi_set_flip_vertically_on_load(true)` här, eftersom OpenGL betraktar t = 0 som texturens nederkant.)
 
 Gör nu den första uppgiften, **load-image**: lägg till definitionen och includen efter `#include "d3dx12.h"` och
-lägg till blocket ovan vid `// TODO:` efter indexbufferten. Ingenting syns ändras ännu; om filen inte kan läsas in
+lägg till blocket ovan i `LoadAssets`, efter indexbufferten. Ingenting syns ändras ännu; om filen inte kan läsas in
 avbryts programmet med ett undantag.
 :::
 
@@ -494,7 +503,7 @@ Det här är inställningarna för wrapping och filtrering från avsnitten ovan.
 ändrar den textur som just nu är bunden till `GL_TEXTURE_2D`. När programmet avslutas tas texturen bort precis som
 buffertarna, med `glDeleteTextures(1, &texture1);` efter `glDeleteBuffers(1, &EBO);`.
 
-Gör nu uppgiften **create-texture**: lägg raderna vid den första `// TODO:` (före bildinläsningen) och lägg till
+Gör nu uppgiften **create-texture**: lägg raderna före bildinläsningen och lägg till
 anropet till `glDeleteTextures`. Fortfarande ändras ingenting synligt.
 
 Nu när texturen är bunden kan vi börja skapa en textur av den bilddata vi läste in. Texturer skapas med
@@ -610,7 +619,7 @@ blir källa för en kopiering. Efter `memcpy` behövs pixlarna från `stb_image.
         vkFreeMemory(device, stagingBufferMemory, nullptr);
 ```
 
-Gör nu uppgiften **staging-buffer**: lägg till `createBuffer()` vid dess `// TODO:` och staging-koden i
+Gör nu uppgiften **staging-buffer**: lägg till `createBuffer()` i klassen och staging-koden i
 `createTextureImage()`. Bilden ändras inte.
 
 ### Texture image
@@ -697,7 +706,7 @@ Imagen är *mål* för kopieringen (`TRANSFER_DST`) och kommer att *samplas* av 
 > byte / 255 och skriver den oförändrad till skärmen – samma färger som i OpenGL- och Direct3D-versionerna. Vi
 > återkommer till sRGB i kapitlet om gammakorrigering.
 
-Imagen och dess minne förstörs i `cleanup()`, vid deras `// TODO:`:
+Imagen och dess minne förstörs i `cleanup()`, efter image-vyn och samplern:
 
 ```cpp
         vkDestroyImage(device, textureImage, nullptr);
@@ -858,7 +867,7 @@ Med hjälpfunktionerna på plats byter `createTextureImage()` layout, kopierar o
         transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 ```
 
-Gör nu uppgiften **layout-transitions**: lägg till de fyra hjälpfunktionerna vid deras `// TODO:` och de tre anropen
+Gör nu uppgiften **layout-transitions**: lägg till de fyra hjälpfunktionerna i klassen och de tre anropen
 i `createTextureImage()`. Bilden ändras inte, och det kommer fortfarande inga valideringsmeddelanden.
 
 ### Image view

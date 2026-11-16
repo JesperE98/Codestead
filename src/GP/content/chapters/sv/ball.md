@@ -4,6 +4,8 @@ Nu har vi en bana full av block och en racket som går att flytta. Det enda som 
 bollen krocka med alla block tills varje block som kan förstöras är förstört, men allt under villkoret att bollen inte
 får nå skärmens nederkant.
 
+Du fortsätter i ditt program från *Banor*.
+
 Utöver de vanliga komponenterna i ett spelobjekt har en boll en radie och ett extra booleskt värde som anger om bollen
 *sitter fast* (stuck) på spelarens racket eller får röra sig fritt. När spelet startar sitter bollen fast på racketen
 tills spelaren startar spelet genom att trycka på en viss tangent – i Hedgerow, som i learnopengls spel, mellanslag.
@@ -224,7 +226,7 @@ void Reset(BallObject& ball, XMFLOAT2 position, XMFLOAT2 velocity)
 ```
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in, och du bygger och kör den i din IDE. Gör nu de två första
+Du bygger och kör ditt program i din IDE som förut. Gör nu de två första
 uppgifterna: **ball-object** – structen och `MakeBallObject` – och **move-reset** – de två funktionerna. Ingenting
 använder dem ännu, så bilden ändras inte.
 

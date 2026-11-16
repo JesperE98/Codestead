@@ -8,7 +8,8 @@ using Codestead.GP.Gpu;
 namespace Codestead.GP;
 
 // The panel's buttons: "Check my code" (asks for the chapter's main file the first time; "Change file…" asks again)
-// and "Save start files…" (into a folder the learner picks; its main file is then the one checked).
+// and "Save resources…" (the course's own textures, models, fonts and levels, into a folder the learner picks – the
+// app never writes code into the learner's files).
 public sealed partial class GpTool
 {
     private static readonly FilePickerFileType SourceFiles = new("C/C++") { Patterns = ["*.cpp", "*.cc", "*.cxx", "*.c"] };
@@ -44,6 +45,23 @@ public sealed partial class GpTool
         return near is null ? null : await storage.TryGetFolderFromPathAsync(near);
     }
 
+    /// <summary>The chapter's files of the course's own: textures, models, fonts (with their licences), levels and data
+    /// tables – no code.</summary>
+    private GpuProject Resources()
+    {
+        var resources = new GpuProject();
+        if (chapter == "") return resources;
+        var start = GpCourse.StartProject(chapter, shownApi);
+        foreach (var (name, bytes) in start.Assets) resources.Assets[name] = bytes;
+        foreach (var (name, text) in start.Files.Where(f => IsData(f.Key)))
+            resources.Assets[name] = System.Text.Encoding.UTF8.GetBytes(text);
+        return resources;
+    }
+
+    /// <summary>Text files of the course's own that are data, not code: levels, licences, the LTC fit tables.</summary>
+    private static bool IsData(string path) =>
+        Path.GetExtension(path) is ".lvl" or ".txt" || Path.GetFileName(path) == "ltc_matrix.hpp";
+
     /// <summary>Saves files into a folder the learner picks, asking first when that would overwrite other contents.</summary>
     private async Task SaveFiles(GpuProject files)
     {
@@ -76,9 +94,10 @@ public sealed partial class GpTool
         try
         {
             int n = StartFiles.Copy(target, files);
-            var main = Path.Combine(target, files.MainFile);
-            if (File.Exists(main)) SetMainFile(main);
-            Window.Toast(Window.T("yourProject.saved", ("count", n), ("file", files.MainFile)));
+            // The learner's earlier code (from the old built-in editor) is then the code that is checked.
+            var main = files.Files.Count > 0 ? Path.Combine(target, files.MainFile) : null;
+            if (main is not null && File.Exists(main)) SetMainFile(main);
+            Window.Toast(Window.T("yourProject.saved", ("count", n)));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {

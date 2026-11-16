@@ -9,7 +9,7 @@
       },
       "hint": {
         "opengl": "`#include <ft2build.h>` och sedan `#include FT_FREETYPE_H`; `FT_Init_FreeType(&ft)` och `FT_New_Face(ft, \"fonts/Inter-Bold.otf\", 0, &face)` returnerar något annat än 0 vid fel (skriv ut och `return -1`); `FT_Set_Pixel_Sizes(face, 0, 48);`; `FT_Done_Face(face); FT_Done_FreeType(ft);`.",
-        "vulkan": "`#include <ft2build.h>` och sedan `#include FT_FREETYPE_H`; `FT_Init_FreeType(&ft)` och `FT_New_Face(ft, \"fonts/Inter-Bold.otf\", 0, &face)` returnerar något annat än 0 vid fel – kasta ett `std::runtime_error`; `FT_Set_Pixel_Sizes(face, 0, 48);`; lämna glyf-TODO:n mellan det och `FT_Done_Face(face); FT_Done_FreeType(ft);`.",
+        "vulkan": "`#include <ft2build.h>` och sedan `#include FT_FREETYPE_H`; `FT_Init_FreeType(&ft)` och `FT_New_Face(ft, \"fonts/Inter-Bold.otf\", 0, &face)` returnerar något annat än 0 vid fel – kasta ett `std::runtime_error`; `FT_Set_Pixel_Sizes(face, 0, 48);`; lämna plats för glyferna (nästa uppgift) mellan det och `FT_Done_Face(face); FT_Done_FreeType(ft);`.",
         "d3d12": "`#include <ft2build.h>` och sedan `#include FT_FREETYPE_H`, och `#pragma comment(lib, \"freetype.lib\")`; `FT_Init_FreeType(&ft)` och `FT_New_Face(ft, \"fonts/Inter-Bold.otf\", 0, &face)` returnerar något annat än 0 vid fel – kasta ett `std::runtime_error`; `FT_Set_Pixel_Sizes(face, 0, 48);`; `FT_Done_Face(face); FT_Done_FreeType(ft);`."
       }
     },

@@ -3,6 +3,8 @@
 Hedgerow är nästan klart, men det vore roligt att lägga till åtminstone en spelmekanik till, så att det inte bara blir
 ett vanligt spel av sin sort; vad sägs om power-ups?
 
+Du fortsätter i ditt program från *Efterbehandling*.
+
 Idén är att varje gång ett block förstörs har blocket en liten chans att skapa en power-up. En sådan power-up faller
 sakta nedåt, och om den kolliderar med racketen händer något intressant, beroende på vilken sorts power-up det är. Till
 exempel gör en power-up racketen större, och en annan låter bollen gå igenom block. Vi tar också med några negativa
@@ -20,10 +22,11 @@ länge den är aktiv, och om den är aktiverad just nu. Hedgerow har learnopengl
 - **Confuse** (förvirra): slår på efterbehandlingseffekten confuse en kort stund och förvirrar spelaren.
 - **Chaos** (kaos): slår på efterbehandlingseffekten chaos en kort stund och desorienterar spelaren rejält.
 
-Kursens power-up-texturer är sex ljusa piller med en mörk ikon, 512 × 128 pixlar, i `textures/`: `powerup_speed.png`,
-`powerup_sticky.png`, `powerup_pass.png`, `powerup_increase.png`, `powerup_confuse.png` och `powerup_chaos.png`
-(learnopengl har egna texturer). Precis som blocktexturerna är de ljusa och nästan utan färg, så varje power-ups
-färgvektor tonar dem: färgen gör varje sort lätt att känna igen.
+Kursens power-up-texturer är sex ljusa piller med en mörk ikon, 512 × 128 pixlar, i `textures/` (**Spara
+resursfilerna…** i panelen kopierar dem till din mapp): `powerup_speed.png`, `powerup_sticky.png`, `powerup_pass.png`,
+`powerup_increase.png`, `powerup_confuse.png` och `powerup_chaos.png` (learnopengl har egna texturer). Precis som
+blocktexturerna är de ljusa och nästan utan färg, så varje power-ups färgvektor tonar dem: färgen gör varje sort lätt
+att känna igen.
 
 **Ett test, eftersom inget block går sönder.** Med kursens fasta indata studsar bollen mot den solida stenen (5, 9) i
 bildruta 86 och tappas i bildruta 151 (se `collision-resolution`): inget block förstörs någonsin, så ingen power-up

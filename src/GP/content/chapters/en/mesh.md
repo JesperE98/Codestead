@@ -20,9 +20,10 @@ Everything a draw of the mesh reads: the vertex attributes the shaders take in, 
 ```
 
 :::opengl
-Now that we set the minimal requirements for a mesh class we can define a vertex in OpenGL. The `// TODO:` comments in
-`mesh.h` mark where the code goes; the file already has its include guard and includes (`glad`, `glm`,
-`"shader_m.h"`, `<string>` and `<vector>`):
+Now that we set the minimal requirements for a mesh class we can define a vertex in OpenGL. You continue in the
+program you prepared in the *Assimp* chapter. The code goes into a new file, `mesh.h`, next to `main.cpp`: give it an
+include guard (`#ifndef MESH_H` / `#define MESH_H` … `#endif`), include `<glad/glad.h>`, `<glm/glm.hpp>`,
+`"shader_m.h"`, `<string>` and `<vector>`, and include `"mesh.h"` in `main.cpp`. Then the vertex:
 
 ```cpp
 struct Vertex {
@@ -111,13 +112,11 @@ Vulkan programs – vulkan-tutorial's included – keep these as members of the 
 class would hold exactly the same buffers. The textures of a mesh come in the next chapter, together with the model's
 materials.
 
-The project is the one you looked at in the *Assimp* chapter. The `// TODO:` comments in `main.cpp` and the two
-shaders mark where your code goes. So far `Vertex` only has a position:
+You continue in the program you prepared in the *Assimp* chapter. So far its `Vertex` only has a position:
 
 ```cpp
 // One vertex of a mesh. For now it only has a position.
 struct Vertex {
-    // TODO: the vertex's data: its position, normal, texture coordinates and the index of its material
     glm::vec3 pos;
 ```
 
@@ -142,8 +141,8 @@ vertices even where their positions would coincide.
 :::d3d12
 DirectX 12 has no mesh class of its own, so we port learnopengl's `mesh.h` – `struct Vertex`, `struct Texture` and
 `class Mesh` with its data, constructor, `SetupMesh` and `Draw` – into `main.cpp`, at file scope before
-`class D3D12App`. The project is the one you looked at in the *Assimp* chapter; the two `// TODO:` comments before
-`class D3D12App` mark where the code goes.
+`class D3D12App`. You continue in the program you prepared in the *Assimp* chapter; the code goes before
+`class D3D12App`.
 
 Now that we set the minimal requirements for a mesh class we can define a vertex in Direct3D 12:
 
@@ -211,7 +210,7 @@ public:
     // render the mesh
     void Draw(ID3D12GraphicsCommandList* commandList)
     {
-        // TODO: bind the mesh's textures (root parameter 2) and draw it (its vertex and index buffers, DrawIndexedInstanced)
+        // bind the mesh's textures and draw it: the task draw-mesh
     }
 
 private:
@@ -225,9 +224,9 @@ private:
     // initializes all the buffers and views
     void SetupMesh(ID3D12Device* device, CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle)
     {
-        // TODO: the vertex buffer and the index buffer, and their views
+        // the vertex buffer and the index buffer, and their views: the task setup-mesh
 
-        // TODO: the shader resource views of the mesh's textures (diffuse in the first slot, specular in the second)
+        // the shader resource views of the mesh's textures: the task mesh-textures
     }
 };
 ```
@@ -249,10 +248,10 @@ the scenes:
   map (t1, `texture_specular1`). The CPU handle is where `SetupMesh` writes the views; the GPU handle is what `Draw`
   gives the command list, so the constructor keeps it in `m_srvHandle`.
 
-The project's heap has room for this: `cbvSrvHeapDesc.NumDescriptors = 1 + 2 * MaxMeshes;` – the CBV in slot 0 and
+Your program's heap has room for this: `cbvSrvHeapDesc.NumDescriptors = 1 + 2 * MaxMeshes;` – the CBV in slot 0 and
 two SRVs for each of up to `MaxMeshes` (8) meshes. Who hands out the slots is the *Model* chapter's job.
 
-Now do the task **mesh-class**: the class as above. `Draw` and `SetupMesh` stay TODOs for the next tasks.
+Now do the task **mesh-class**: the class as above. The bodies of `Draw` and `SetupMesh` stay empty for the next tasks.
 :::
 
 ## Initialization
@@ -599,7 +598,7 @@ Now do the task **index-buffer**. The picture doesn't change.
 :::d3d12
 Thanks to the constructor we now have large lists of mesh data that we can use for rendering. We do need to set up
 the appropriate buffers – and in OpenGL, specify the vertex shader layout via vertex attribute pointers. In Direct3D 12
-that layout is part of the pipeline state, and the project has it already: the input layout of `LoadAssets`.
+that layout is part of the pipeline state, and your program has it already: the input layout of `LoadAssets`.
 
 ```cpp
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -690,7 +689,7 @@ The format `DXGI_FORMAT_R32_UINT` says that the indices are 32-bit unsigned inte
 rectangle used them too; `DXGI_FORMAT_R16_UINT` would allow at most 65536 different vertices – too few for many
 models.) The buffers are `ComPtr` members of the mesh, so they live exactly as long as the mesh.
 
-Now do the task **setup-mesh**: this code at the first TODO of `SetupMesh`. The picture doesn't change.
+Now do the task **setup-mesh**: this code at the start of `SetupMesh`. The picture doesn't change.
 
 ### The textures' views
 
@@ -763,7 +762,7 @@ The format describes the bytes in the buffer: one 32-bit unsigned integer, 32 by
 :::
 :::d3d12
 ```quiz
-The project's input layout puts `NORMAL` at byte 12 and `TEXCOORD` at byte 24. Why does that fit our `Vertex`?
+Your program's input layout puts `NORMAL` at byte 12 and `TEXCOORD` at byte 24. Why does that fit our `Vertex`?
 - [ ] It doesn't matter: the input layout finds the members by their names
 - [x] The members of a struct lie one after the other: `position` takes bytes 0–11, `normal` 12–23, `texCoord` 24–31, so a `std::vector<Vertex>` is exactly the vertex buffer the input layout describes, with a stride of `sizeof(Vertex)` = 32
 - [ ] Because Direct3D 12 sorts the members of a vertex by size

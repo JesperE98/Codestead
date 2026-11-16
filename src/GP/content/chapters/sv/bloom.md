@@ -29,53 +29,55 @@ Inget av detta är en ny mekanism: det är förra kapitlets flyttalsmål plus tv
 gång, och pass som turas om att rita i en buffer och läsa en annan. Alla API:er har båda; det här kapitlet visar hur
 {{api}} gör.
 
-Projektet är learnopengls bloom-scen: ett trägolv (kuben på 2 × 2 × 2 skalad till en tunn platta på 25 × 1 × 25) med sex
-lådor på och ovanför det, belyst av fyra punktljus som är mycket starkare än i de tidigare kapitlen: vitt (5, 5, 5) på
-(0, 0.5, 1.5), rött (10, 0, 0) på (-4, 0.5, -3), blått (0, 0, 15) på (3, 0.5, 1) och grönt (0, 5, 0) på (-0.8, 2.4,
--1). Varje ljus visas också som en liten kub i sin egen färg – värden långt över 1.0. Kameran är learnopengls, på
-(0, 0, 5) och tittar längs -z. Båda texturerna läses som sRGB-texturer; belysningen är förra kapitlets (bara diffust ljus,
-kvadratisk dämpning, inget omgivningsljus).
+Kapitlets scen är learnopengls bloom-scen: ett trägolv (kuben på 2 × 2 × 2 skalad till en tunn platta på 25 × 1 × 25)
+med sex lådor på och ovanför det, belyst av fyra punktljus som är mycket starkare än i de tidigare kapitlen: vitt (5,
+5, 5) på (0, 0.5, 1.5), rött (10, 0, 0) på (-4, 0.5, -3), blått (0, 0, 15) på (3, 0.5, 1) och grönt (0, 5, 0) på
+(-0.8, 2.4, -1). Varje ljus visas också som en liten kub i sin egen färg – värden långt över 1.0. Kameran är
+learnopengls, på (0, 0, 5) och tittar längs -z. Båda texturerna läses som sRGB-texturer; belysningen är förra
+kapitlets (bara diffust ljus, kvadratisk dämpning, inget omgivningsljus).
 
 :::opengl
-Starten är förra kapitlets slutläge med den här scenen: `main.cpp` renderar scenen med `bloom.vs` / `bloom.fs` och
-ljuskuberna med `bloom.vs` / `light_box.fs` i `hdrFBO` – en `GL_RGBA16F`-färgtextur, `colorBuffer`, och en
-djup-renderbuffer – och ritar sedan `colorBuffer` på learnopengls `renderQuad()` med `bloom_final.vs` /
-`bloom_final.fs`, som tone mappar med exponeringskurvan (`exposure` = 1.0) och gammakorrigerar. Färgtexturen klämmer vid
-kanten (`GL_CLAMP_TO_EDGE`) – learnopengls kommentar säger varför: "we clamp to the edge as the blur filter would
-otherwise sample repeated texture values!". `blur.vs` är klar, `blur.fs` har sina uniformer men dess `main` är en TODO.
+Du fortsätter i ditt program från *HDR*, som det var i slutet av det kapitlet, med den här scenen: `main.cpp` renderar
+scenen med `bloom.vs` / `bloom.fs` och ljuskuberna med `bloom.vs` / `light_box.fs` i `hdrFBO` – en
+`GL_RGBA16F`-färgtextur, `colorBuffer`, och en djup-renderbuffer – och ritar sedan `colorBuffer` på learnopengls
+`renderQuad()` med `bloom_final.vs` / `bloom_final.fs`, som tone mappar med exponeringskurvan (`exposure` = 1.0) och
+gammakorrigerar. Färgtexturen klämmer vid kanten (`GL_CLAMP_TO_EDGE`) – learnopengls kommentar säger varför: "we clamp
+to the edge as the blur filter would otherwise sample repeated texture values!". `blur.vs` är klar, `blur.fs` börjar
+med sina uniformer och en tom `main`.
 :::
 :::vulkan
-Starten är förra kapitlets slutläge med den här scenen: `recordCommandBuffer()` ritar golvet och de sex lådorna med
-`graphicsPipeline` (`shaders/bloom.vert` / `.frag`) och ljuskuberna med `lightPipeline` (`bloom.vert` /
-`light_box.frag`) i `hdrRenderPass` – en `VK_FORMAT_R16G16B16A16_SFLOAT`-färgbild och en djupbild – och sedan
-skärmfyrhörningen (vertex 36..41) i fönstret med `bloomFinalPipeline` (`bloom_final.frag`), som tone mappar med
-exponeringskurvan (`ubo.exposure` = 1.0) och gammakorrigerar. Push constants är `struct PushConstants { glm::mat4 model;
-glm::vec3 lightColor; }` i ett enda intervall för vertex- **och** fragmentsteget (modellmatrisen för `bloom.vert`,
-ljusets färg för `light_box.frag`); push constants läggs ut som std430, så `vec3`:n ligger direkt efter `mat4`:n, på
-offset 64. Varje textur har sitt descriptor set (`woodDescriptorSet`, `containerDescriptorSet`, `hdrDescriptorSet`);
-flyttalsbilderna samplas med `colorBufferSampler`, som klämmer vid kanten (`VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE`) –
-learnopengls kommentar säger varför: "we clamp to the edge as the blur filter would otherwise sample repeated texture
-values!". `shaders/blur.vert` är klar; `blur.frag` har sina vikter, men dess push constants och `main` är TODO:er.
+Du fortsätter i ditt program från *HDR*, som det var i slutet av det kapitlet, med den här scenen:
+`recordCommandBuffer()` ritar golvet och de sex lådorna med `graphicsPipeline` (`shaders/bloom.vert` / `.frag`) och
+ljuskuberna med `lightPipeline` (`bloom.vert` / `light_box.frag`) i `hdrRenderPass` – en
+`VK_FORMAT_R16G16B16A16_SFLOAT`-färgbild och en djupbild – och sedan skärmfyrhörningen (vertex 36..41) i fönstret med
+`bloomFinalPipeline` (`bloom_final.frag`), som tone mappar med exponeringskurvan (`ubo.exposure` = 1.0) och
+gammakorrigerar. Push constants är `struct PushConstants { glm::mat4 model; glm::vec3 lightColor; }` i ett enda
+intervall för vertex- **och** fragmentsteget (modellmatrisen för `bloom.vert`, ljusets färg för `light_box.frag`);
+push constants läggs ut som std430, så `vec3`:n ligger direkt efter `mat4`:n, på offset 64. Varje textur har sitt
+descriptor set (`woodDescriptorSet`, `containerDescriptorSet`, `hdrDescriptorSet`); flyttalsbilderna samplas med
+`colorBufferSampler`, som klämmer vid kanten (`VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE`) – learnopengls kommentar säger
+varför: "we clamp to the edge as the blur filter would otherwise sample repeated texture values!". `shaders/blur.vert`
+är klar; `blur.frag` börjar med sina vikter; dess push constants och `main` kommer i uppgifterna.
 :::
 :::d3d12
-Starten är förra kapitlets slutläge med den här scenen: `PopulateCommandList` anropar `RenderScene()` – golvet och de sex
-lådorna med `m_pipelineState` (`bloom.hlsl`), ljuskuberna med `m_lightBoxPipelineState` (`PSMain` i `light_box.hlsl`,
-`lightColor`) – i en `R16G16B16A16_FLOAT`-färgbuffer, `m_colorBuffer` (plats `FrameCount` i RTV-heapen, plats 3 i
-CBV/SRV-heapen), med djupbuffern; sedan ritar den skärmfyrhörningen (vertex 36–41) i back buffern med
-`m_bloomFinalPipelineState` (`bloom_final.hlsl`), som tone mappar med exponeringskurvan (`exposure` = 1.0, en root
-constant) och gammakorrigerar. Root-parameter 0 håller root constants för det som ritas – `ModelConstants` (modell,
-normalmatris, `lightColor`: 35 värden) för scenen, en enda float för den sista fyrhörningen – och är synlig för alla
-shaders. Skärmfyrhörningens pass samplar med den statiska samplern s1: linjär, `D3D12_TEXTURE_ADDRESS_MODE_CLAMP` –
-learnopengl klämmer sina färgbuffrar vid kanten "as the blur filter would otherwise sample repeated texture values!".
-`blur.hlsl` har sin `VSMain`, sina vikter och cbuffern `BlurConstants`; dess `PSMain` är en TODO som returnerar svart
-(filen kompileras inte förrän du behöver den).
+Du fortsätter i ditt program från *HDR*, som det var i slutet av det kapitlet, med den här scenen:
+`PopulateCommandList` anropar `RenderScene()` – golvet och de sex lådorna med `m_pipelineState` (`bloom.hlsl`),
+ljuskuberna med `m_lightBoxPipelineState` (`PSMain` i `light_box.hlsl`, `lightColor`) – i en
+`R16G16B16A16_FLOAT`-färgbuffer, `m_colorBuffer` (plats `FrameCount` i RTV-heapen, plats 3 i CBV/SRV-heapen), med
+djupbuffern; sedan ritar den skärmfyrhörningen (vertex 36–41) i back buffern med `m_bloomFinalPipelineState`
+(`bloom_final.hlsl`), som tone mappar med exponeringskurvan (`exposure` = 1.0, en root constant) och gammakorrigerar.
+Root-parameter 0 håller root constants för det som ritas – `ModelConstants` (modell, normalmatris, `lightColor`: 35
+värden) för scenen, en enda float för den sista fyrhörningen – och är synlig för alla shaders. Skärmfyrhörningens pass
+samplar med den statiska samplern s1: linjär, `D3D12_TEXTURE_ADDRESS_MODE_CLAMP` – learnopengl klämmer sina
+färgbuffrar vid kanten "as the blur filter would otherwise sample repeated texture values!". `blur.hlsl` har sin
+`VSMain`, sina vikter och cbuffern `BlurConstants`; dess `PSMain` börjar med att returnera svart (filen kompileras
+inte förrän du behöver den).
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Bygg och kör programmet i din IDE: golvet och lådorna,
-den **vita ljuskuben** i mitten ovanför centrum, under den översta lådan, och den **gröna ljuskuben** vid överkanten.
-Den röda och den blå ljuskuben syns inte härifrån, men deras ljus färgar golvet och lådornas sidor. Tone mappingen
-behåller detaljerna, men ljuskuberna ser inte ut som ljus: de har skarpa kanter, och precis bredvid dem är den svarta
-bakgrunden lika svart som överallt annars.
+Bygg och kör programmet i din IDE: golvet och lådorna, den **vita ljuskuben** i mitten ovanför centrum, under den
+översta lådan, och den **gröna ljuskuben** vid överkanten. Den röda och den blå ljuskuben syns inte härifrån, men
+deras ljus färgar golvet och lådornas sidor. Tone mappingen behåller detaljerna, men ljuskuberna ser inte ut som ljus:
+de har skarpa kanter, och precis bredvid dem är den svarta bakgrunden lika svart som överallt annars.
 
 ## Att extrahera ljusa färger
 

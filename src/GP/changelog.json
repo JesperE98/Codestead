@@ -1,5 +1,39 @@
 [
   {
+    "version": "0.2.4",
+    "date": "2026-11-16",
+    "changes": {
+      "en": [
+        "**You write all the code yourself**, from the first line, in your own program – as on learnopengl.com. The app no longer hands out start files with code: every chapter says which of your programs it continues from, and **Save resources…** saves only the course's textures, models, fonts and levels that a chapter needs.",
+        "A task's **solution** opens in a window of its own, file by file, that you close again."
+      ],
+      "sv": [
+        "**Du skriver all kod själv**, från första raden, i ditt eget program – som på learnopengl.com. Appen delar inte längre ut startfiler med kod: varje kapitel säger vilket av dina program det fortsätter från, och **Spara resursfilerna…** sparar bara kursens texturer, modeller, typsnitt och banor som ett kapitel behöver.",
+        "En uppgifts **lösning** öppnas i ett eget fönster, fil för fil, som du stänger igen."
+      ],
+      "de": [
+        "**Du schreibst den ganzen Code selbst**, von der ersten Zeile an, in deinem eigenen Programm – wie auf learnopengl.com. Die App gibt keine Startdateien mit Code mehr aus: Jedes Kapitel sagt, mit welchem deiner Programme es weitergeht, und **Ressourcen speichern…** speichert nur die Texturen, Modelle, Schriften und Level des Kurses, die ein Kapitel braucht.",
+        "Die **Lösung** einer Aufgabe öffnet sich in einem eigenen Fenster, Datei für Datei, das du wieder schließt."
+      ],
+      "fr": [
+        "**Vous écrivez tout le code vous-même**, dès la première ligne, dans votre propre programme – comme sur learnopengl.com. L'application ne fournit plus de fichiers de départ avec du code : chaque chapitre indique de quel programme il repart, et **Enregistrer les ressources…** n'enregistre que les textures, modèles, polices et niveaux du cours dont un chapitre a besoin.",
+        "La **solution** d'une tâche s'ouvre dans une fenêtre à part, fichier par fichier, que vous refermez ensuite."
+      ],
+      "es": [
+        "**Escribes todo el código tú mismo**, desde la primera línea, en tu propio programa, como en learnopengl.com. La aplicación ya no entrega archivos iniciales con código: cada capítulo indica de cuál de tus programas parte, y **Guardar recursos…** guarda solo las texturas, modelos, fuentes y niveles del curso que necesita un capítulo.",
+        "La **solución** de una tarea se abre en una ventana propia, archivo por archivo, que luego cierras."
+      ],
+      "zh": [
+        "**所有代码都由你自己编写**，从第一行开始，写在你自己的程序里——就像在 learnopengl.com 上一样。应用不再提供带代码的起始文件：每章都会说明它从你的哪个程序继续，**保存资源文件…** 只保存本章需要的课程纹理、模型、字体和关卡。",
+        "任务的**答案**会在单独的窗口中按文件显示，看完可以关闭。"
+      ],
+      "ja": [
+        "**コードはすべて自分で書きます**。最初の 1 行から、自分のプログラムの中で――learnopengl.com と同じです。アプリはコード入りの開始ファイルを配らなくなりました。各章はどのプログラムから続けるかを示し、**リソースを保存…** は章に必要なコースのテクスチャ、モデル、フォント、レベルだけを保存します。",
+        "課題の**解答**はファイルごとに専用のウィンドウで開き、閉じることができます。"
+      ]
+    }
+  },
+  {
     "version": "0.2.3",
     "date": "2026-11-12",
     "changes": {

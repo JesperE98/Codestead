@@ -62,7 +62,7 @@
       "hint": { "vulkan": "`vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);` och `vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);` – testkvadraten syns i texturkoordinatfärger." }
     },
     "mesh-class": {
-      "text": { "d3d12": "Lägg till `class Mesh`: publika `vertices`, `indices` (`UINT`) och `textures`; en konstruktor som också tar emot devicen och meshens CPU- och GPU-handtag i heapen, sparar allt (GPU-handtaget i `m_srvHandle`) och anropar `SetupMesh(device, srvCpuHandle)`; `Draw(ID3D12GraphicsCommandList*)`; privata buffrar, vyer och `SetupMesh` (kropparna förblir TODO:er)." },
+      "text": { "d3d12": "Lägg till `class Mesh`: publika `vertices`, `indices` (`UINT`) och `textures`; en konstruktor som också tar emot devicen och meshens CPU- och GPU-handtag i heapen, sparar allt (GPU-handtaget i `m_srvHandle`) och anropar `SetupMesh(device, srvCpuHandle)`; `Draw(ID3D12GraphicsCommandList*)`; privata buffrar, vyer och `SetupMesh` (kropparna förblir tomma så länge)." },
       "hint": { "d3d12": "Som learnopengl: `this->vertices = vertices;` osv., och sätt sedan upp buffrarna. CPU-handtaget är där meshen skriver sina texturvyer; GPU-handtaget är det som `Draw` ger command listen." }
     },
     "mesh-textures": {

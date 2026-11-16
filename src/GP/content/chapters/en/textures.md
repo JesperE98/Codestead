@@ -15,40 +15,47 @@ extra vertices.
 > but we'll leave that for a different topic.
 
 In this chapter you put two images on the rectangle from the previous chapters: a wooden crate, `container.png`, and a
-smiley, `awesomeface.png`. Both are 256×256 pixels and both are part of the project – **Save start files…** puts them
-into your project folder. `container.png` has three channels (RGB). `awesomeface.png` has four (RGBA): around the face
-it is transparent, and those transparent pixels are stored as **black** with an alpha of 0. Keep that in mind; it will
-explain something you see later.
+smiley, `awesomeface.png`. Both are 256×256 pixels and come with the course – **Save resources…** in the panel copies
+them into the folder you pick; pick your program's folder. `container.png` has three channels (RGB). `awesomeface.png`
+has four (RGBA): around the face it is transparent, and those transparent pixels are stored as **black** with an alpha
+of 0. Keep that in mind; it will explain something you see later.
 
 :::opengl
-This chapter's project is the indexed rectangle of *Hello Triangle* with the `Shader` class of the *Shaders*
-chapter (`shader_s.h`, `shader.vs`, `shader.fs`) and a colour per vertex: each vertex has a position and a colour
-(stride `6 * sizeof(float)`), the top right corner is red, the bottom right green, the bottom left blue and the top
-left yellow, and the colours are interpolated across the rectangle. The two images lie next to `main.cpp` and are
+You continue in your program from *Shaders*, with its `Shader` class (`shader_s.h`, `shader.vs`, `shader.fs`).
+Before the first task, turn it back into the indexed rectangle of *Hello Triangle* with a colour per vertex: four
+vertices with a position and a colour each (stride `6 * sizeof(float)`) – the top right corner `0.5f, 0.5f` red, the
+bottom right green, the bottom left blue and the top left `-0.5f, 0.5f` yellow – the element buffer with the indices
+`0, 1, 3` and `1, 2, 3` as in *Hello Triangle*, and `glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0)`. The
+shaders are those of *More attributes!* in *Shaders*: `aColor` at location 1 is passed on as `ourColor` and becomes
+the fragment's colour, with no offset and no flip (undo the exercises). The two images lie next to `main.cpp` and are
 loaded by their file names.
 :::
 :::vulkan
-This chapter's project is the indexed rectangle of *Hello Triangle* with a colour per vertex:
-`struct Vertex { glm::vec3 pos; glm::vec3 color; }` with two attribute descriptions, the corners top left yellow,
-top right red, bottom right green and bottom left blue. The two images are in `textures/container.png` and
-`textures/awesomeface.png`.
+You continue in your program from *Shaders*. Before the first task, turn it back into the indexed rectangle of
+*Hello Triangle* (the index buffer `0, 1, 2, 2, 3, 0`, `vkCmdBindIndexBuffer`, `vkCmdDrawIndexed`) with a colour per
+vertex: `struct Vertex { glm::vec3 pos; glm::vec3 color; }` with two attribute descriptions, the corners top left
+`{-0.5f, -0.5f, 0.0f}` yellow, top right red, bottom right green and bottom left `{-0.5f, 0.5f, 0.0f}` blue. Undo the
+exercises of *Shaders*: no push constant, no flip, and `rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE` again. Put the
+two images into a folder `textures` next to `main.cpp`: `textures/container.png` and `textures/awesomeface.png`.
 
-Adding a texture to a Vulkan program takes several new functions, so the project already contains empty stubs for
-them, called from `initVulkan()` in the order vulkan-tutorial uses: `createDescriptorSetLayout()` after
+Adding a texture to a Vulkan program takes several new functions. Add them to the class as empty `void` functions
+now, and call them from `initVulkan()` in the order vulkan-tutorial uses: `createDescriptorSetLayout()` after
 `createRenderPass()`; `createTextureImage()`, `createTextureImageView()` and `createTextureSampler()` after
-`createCommandPool()`; `createDescriptorPool()` and `createDescriptorSets()` after `createIndexBuffer()`.
+`createCommandPool()`; `createDescriptorPool()` and `createDescriptorSets()` after `createIndexBuffer()`. The tasks
+fill them in.
 :::
 :::d3d12
-This chapter's project is the indexed rectangle of *Hello Triangle* with a colour per vertex:
-`struct Vertex { XMFLOAT3 position; XMFLOAT3 color; };` with a `COLOR` input element at offset 12, the corners top
-right red, bottom right green, bottom left blue and top left yellow. The root signature is still empty. The two
-images lie next to `main.cpp` and `shaders.hlsl` and are loaded by their file names. The texture code follows
-Microsoft's D3D12HelloTexture sample – except that the sample generates a black-and-white checkerboard in code,
-while we load real images.
+You continue in your program from *Shaders*. Before the first task, turn it back into the indexed rectangle of *Hello
+Triangle* (the index buffer `0, 1, 3, 1, 2, 3`, `IASetIndexBuffer`, `DrawIndexedInstanced(6, 1, 0, 0, 0)`) with a
+colour per vertex: `struct Vertex { XMFLOAT3 position; XMFLOAT3 color; };` with a `COLOR` input element at offset 12,
+the corners top right `{ 0.5f, 0.5f, 0.0f }` red, bottom right green, bottom left blue and top left yellow. Undo the
+exercises of *Shaders*: no root constants (the root signature is empty again), no flip, and the default cull mode. The
+two images lie next to `main.cpp` and `shaders.hlsl` and are loaded by their file names. The texture code follows
+Microsoft's D3D12HelloTexture sample – except that the sample generates a black-and-white checkerboard in code, while
+we load real images.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
-IDE.
+After each task, build and run the program in your IDE.
 
 ## Texture coordinates
 
@@ -385,7 +392,7 @@ done with the pixels we give the memory back with `stbi_image_free`.
     unsigned char *data = stbi_load("container.png", &width, &height, &nrChannels, 0);
     if (data)
     {
-        // TODO: create the texture image from the data and generate mipmaps
+        // the texture image comes here, in the next tasks
     }
     else
     {
@@ -401,9 +408,10 @@ the row at t = 0, the bottom. Without help the crate would therefore end up upsi
 `stbi_set_flip_vertically_on_load(true)` tells `stb_image.h` to flip the image on the y-axis while loading, so the
 bottom row comes first and the image appears upright.
 
-Now do the first task, **load-image**: include `stb_image.h` (after the GLFW include) and load `container.png` as shown
-above, at the second `// TODO:` in `main.cpp`. Leave the inside of `if (data)` for the next tasks. Nothing visible
-changes yet – but if the file can't be loaded, you'll see `Failed to load texture` in the program's console.
+Now do the first task, **load-image**: include `stb_image.h` (after the GLFW include) and load `container.png` as
+shown above, in `main` after the vertex data and before the render loop. Leave the inside of `if (data)` for the next
+tasks. Nothing visible changes yet – but if the file can't be loaded, you'll see `Failed to load texture` in the
+program's console.
 :::
 :::vulkan
 In `createTextureImage()`:
@@ -427,8 +435,7 @@ first, and in Vulkan the first row in memory is the row at v = 0, which is the *
 arrives upright as it is. (OpenGL tutorials call `stbi_set_flip_vertically_on_load(true)` here, because OpenGL
 treats t = 0 as the bottom of a texture.)
 
-Free the pixels with `stbi_image_free(pixels);` once they have been copied – for now right away, at the
-`// TODO:` for it.
+Free the pixels with `stbi_image_free(pixels);` once they have been copied – for now right away, after the check.
 
 Now do the first task, **load-image**: add the define and the include at the top of `main.cpp` and load the image
 in `createTextureImage()`. Nothing visible changes yet; if the file can't be loaded the program stops with
@@ -464,7 +471,7 @@ arrives upright as it is. (OpenGL tutorials call `stbi_set_flip_vertically_on_lo
 treats t = 0 as the bottom of a texture.)
 
 Now do the first task, **load-image**: add the define and the include after `#include "d3dx12.h"` and add the block
-above at the `// TODO:` after the index buffer. Nothing visible changes yet; if the file can't be loaded the program
+above to `LoadAssets`, after the index buffer. Nothing visible changes yet; if the file can't be loaded the program
 stops with an exception.
 :::
 
@@ -505,7 +512,7 @@ These are the wrapping and filtering options from the sections above. None of th
 all change the texture that is bound to `GL_TEXTURE_2D` right now. When the program ends, the texture is deleted
 like the buffers, with `glDeleteTextures(1, &texture1);` after `glDeleteBuffers(1, &EBO);`.
 
-Now do the task **create-texture**: put these lines at the first `// TODO:` (before the image is loaded) and add
+Now do the task **create-texture**: put these lines before the image is loaded and add
 the `glDeleteTextures` call. Still nothing visible changes.
 
 Now that the texture is bound, we can start generating a texture using the previously loaded image data. Textures
@@ -624,7 +631,7 @@ has finished, so at the end of `createTextureImage()` it is destroyed again:
         vkFreeMemory(device, stagingBufferMemory, nullptr);
 ```
 
-Now do the task **staging-buffer**: add `createBuffer()` at its `// TODO:` and the staging code to
+Now do the task **staging-buffer**: add `createBuffer()` to the class and the staging code to
 `createTextureImage()`. The picture doesn't change.
 
 ### Texture image
@@ -711,7 +718,7 @@ memory is `DEVICE_LOCAL`.
 > byte / 255 and writes it unchanged to the screen – the same colors as the OpenGL and Direct3D versions. We'll
 > come back to sRGB in the chapter on gamma correction.
 
-The image and its memory are destroyed in `cleanup()`, at their `// TODO:`:
+The image and its memory are destroyed in `cleanup()`, after the image view and the sampler:
 
 ```cpp
         vkDestroyImage(device, textureImage, nullptr);
@@ -871,7 +878,7 @@ destroying the staging buffer:
         transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 ```
 
-Now do the task **layout-transitions**: add the four helpers at their `// TODO:` comments and the three calls in
+Now do the task **layout-transitions**: add the four helpers to the class and the three calls in
 `createTextureImage()`. The picture doesn't change, and there are still no validation messages.
 
 ### Image view

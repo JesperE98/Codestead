@@ -5,6 +5,8 @@ has many definitions, but it's effectively not much more than a 2D image used to
 in a larger world (e.g. position, rotation, and size). Basically, sprites are the render-able image/texture objects we
 use in a 2D game.
 
+You continue in your program from *Setting up*.
+
 We can, just like we did in previous chapters, create a 2D shape out of vertex data, pass all data to the GPU, and
 transform it all by hand. However, in a larger application like this we rather have some abstractions on rendering 2D
 shapes. If we were to manually define these shapes and transformations for each object, it'll quickly get messy.
@@ -667,8 +669,9 @@ glm (and GLSL) multiply column vectors from the right, so the matrix written las
 ## Hello sprite
 
 With the sprite renderer we can draw a sprite in two lines. learnopengl draws its own face texture here; the course
-draws **its ball** – `textures/ball.png`, a pale green ball on a transparent background, 128 × 128 pixels – with exactly
-learnopengl's numbers: at (200, 200), 300 × 400 pixels, rotated 45°, tinted green. In `Init`:
+draws **its ball** – `textures/ball.png`, a pale green ball on a transparent background, 128 × 128 pixels (**Save
+resources…** in the panel copies it into your folder) – with exactly learnopengl's numbers: at (200, 200), 300 × 400
+pixels, rotated 45°, tinted green. In `Init`:
 
 :::opengl
 ```cpp

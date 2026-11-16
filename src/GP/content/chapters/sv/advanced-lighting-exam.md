@@ -330,7 +330,7 @@ En resurs tillstånd måste passa dess användning, och övergången ordnar ocks
 :::
 
 ```quiz
-Scenen i deferred shading har nio lådor och 32 ljus. Vad sparar deferred shading jämfört med startens forward rendering?
+Scenen i deferred shading har nio lådor och 32 ljus. Vad sparar deferred shading jämfört med forward renderingen som kapitlet börjar med?
 - [ ] Den behöver färre ljus för samma bild
 - [ ] Den behöver inget djuptest längre
 - [x] Belysningen körs en gång per synlig pixel – högst 800 × 600 × 32 ljusberäkningar – hur många lådor som än överlappar där; fragment som täcks senare belystes aldrig, eftersom geometripasset bara lagrar ytdata

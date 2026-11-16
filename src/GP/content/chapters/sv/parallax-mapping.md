@@ -19,41 +19,45 @@ likadant i alla API:er. Skillnaderna är var den tredje texturen hamnar, och –
 i en loop.
 
 :::opengl
-Projektet fortsätter förra kapitlet: den normal-mappade fyrhörningen – `renderQuad()` med tangenter och bitangenter, 14
-floats per vertex – och vertex shadern `parallax_mapping.vs`, som är klar: TBN-matrisen med Gram-Schmidt, och ljusets,
-vyns och fragmentets positioner i tangentrymden. Texturerna är nya: `bricks2.png` (sandfärgat tegel med djupa fogar,
-enhet 0) och dess normal map `bricks2_normal.png` (enhet 1). Fyrhörningen är roterad en fast vinkel på -45° kring
-x-axeln: dess överkant lutar bort och dess normal pekar mot (0, 0.707, 0.707), så kameran på (0, 0, 3) ser teglen 45°
-uppifrån, som ett golv framför sig (learnopengl vrider fyrhörningen med tiden). `parallax_mapping.fs` belyser den som
-förra kapitlet, men `main` räknar ut vyriktningen först och samplar normal mapen och färgen på
-`vec2 texCoords = fs_in.TexCoords;` – TODO:n är raden som ändrar `texCoords`. Ljuset står på `lightPos` (0.5, 1.0, 0.3).
+Du fortsätter i ditt program från *Normal mapping* (döp om dess shaders för det här kapitlet): den normal-mappade
+fyrhörningen – `renderQuad()` med tangenter och bitangenter, 14 floats per vertex – och vertex shadern
+`parallax_mapping.vs`, som är klar: TBN-matrisen med Gram-Schmidt, och ljusets, vyns och fragmentets positioner i
+tangentrymden. Texturerna är nya (**Spara resursfilerna…** i panelen kopierar dem till din mapp): `bricks2.png`
+(sandfärgat tegel med djupa fogar, enhet 0) och dess normal map `bricks2_normal.png` (enhet 1). Fyrhörningen är
+roterad en fast vinkel på -45° kring x-axeln: dess överkant lutar bort och dess normal pekar mot (0, 0.707, 0.707), så
+kameran på (0, 0, 3) ser teglen 45° uppifrån, som ett golv framför sig (learnopengl vrider fyrhörningen med tiden).
+`parallax_mapping.fs` belyser den som förra kapitlet, men `main` räknar ut vyriktningen först och samplar normal mapen
+och färgen på `vec2 texCoords = fs_in.TexCoords;` – raden som ändrar `texCoords` kommer direkt efter den. Ljuset står
+på `lightPos` (0.5, 1.0, 0.3).
 :::
 :::vulkan
-Projektet fortsätter förra kapitlet: den normal-mappade fyrhörningen – `createQuadVertices()` med tangenter och
-bitangenter – och vertex shadern `parallax_mapping.vert`, som är klar: TBN-matrisen med Gram-Schmidt, och ljusets, vyns
-och fragmentets positioner i tangentrymden. Texturerna är nya: `textures/bricks2.png` (sandfärgat tegel med djupa fogar,
-binding 1) och dess normal map `textures/bricks2_normal.png` (binding 2), laddade vända
+Du fortsätter i ditt program från *Normal mapping* (döp om dess shaders för det här kapitlet): den normal-mappade
+fyrhörningen – `createQuadVertices()` med tangenter och bitangenter – och vertex shadern `parallax_mapping.vert`, som
+är klar: TBN-matrisen med Gram-Schmidt, och ljusets, vyns och fragmentets positioner i tangentrymden. Texturerna är
+nya (**Spara resursfilerna…** i panelen kopierar dem till din mapp): `textures/bricks2.png` (sandfärgat tegel med
+djupa fogar, binding 1) och dess normal map `textures/bricks2_normal.png` (binding 2), laddade vända
 (`stbi_set_flip_vertically_on_load(true)`) som i förra kapitlet. Fyrhörningen är roterad en fast vinkel på -45° kring
 x-axeln: dess överkant lutar bort och dess normal pekar mot (0, 0.707, 0.707), så kameran på (0, 0, 3) ser teglen 45°
-uppifrån, som ett golv framför sig (learnopengl vrider fyrhörningen med tiden). `parallax_mapping.frag` belyser den som
-förra kapitlet, men `main` räknar ut vyriktningen först och samplar normal mapen och färgen på
-`vec2 texCoords = fs_in.texCoord;` – TODO:n är raden som ändrar `texCoords`. Ljuset står på `lightPos` (0.5, 1.0, 0.3).
+uppifrån, som ett golv framför sig (learnopengl vrider fyrhörningen med tiden). `parallax_mapping.frag` belyser den
+som förra kapitlet, men `main` räknar ut vyriktningen först och samplar normal mapen och färgen på
+`vec2 texCoords = fs_in.texCoord;` – raden som ändrar `texCoords` kommer direkt efter den. Ljuset står på `lightPos`
+(0.5, 1.0, 0.3).
 :::
 :::d3d12
-Projektet fortsätter förra kapitlet: den normal-mappade fyrhörningen – tangenter och bitangenter uträknade i
-`LoadAssets`, 14 floats per vertex – och `VSMain` i `parallax_mapping.hlsl`, som är klar: TBN-matrisen med Gram-Schmidt
-och `B = cross(T, N)`, och ljusets, vyns och fragmentets positioner i tangentrymden. Texturerna är nya: `bricks2.png`
-(sandfärgat tegel med djupa fogar, t0) och dess normal map `bricks2_normal.png` (t1) – i OpenGL-stil, så `PSMain` vänder
-dess y som i förra kapitlet. Fyrhörningen är roterad en fast vinkel på -45° kring x-axeln (`XMMatrixRotationX`): dess
-överkant lutar bort och dess normal pekar mot (0, 0.707, 0.707), så kameran på (0, 0, 3) ser teglen 45° uppifrån, som
-ett golv framför sig (learnopengl vrider fyrhörningen med tiden). `PSMain` räknar ut vyriktningen först och samplar
-normal mapen och färgen på `float2 texCoords = input.texCoords;` – TODO:n är raden som ändrar `texCoords`. Ljuset står på
-`lightPos` (0.5, 1.0, 0.3).
+Du fortsätter i ditt program från *Normal mapping* (döp om dess shaders för det här kapitlet): den normal-mappade
+fyrhörningen – tangenter och bitangenter uträknade i `LoadAssets`, 14 floats per vertex – och `VSMain` i
+`parallax_mapping.hlsl`, som är klar: TBN-matrisen med Gram-Schmidt och `B = cross(T, N)`, och ljusets, vyns och
+fragmentets positioner i tangentrymden. Texturerna är nya (**Spara resursfilerna…** i panelen kopierar dem till din
+mapp): `bricks2.png` (sandfärgat tegel med djupa fogar, t0) och dess normal map `bricks2_normal.png` (t1) – i
+OpenGL-stil, så `PSMain` vänder dess y som i förra kapitlet. Fyrhörningen är roterad en fast vinkel på -45° kring
+x-axeln (`XMMatrixRotationX`): dess överkant lutar bort och dess normal pekar mot (0, 0.707, 0.707), så kameran på (0,
+0, 3) ser teglen 45° uppifrån, som ett golv framför sig (learnopengl vrider fyrhörningen med tiden). `PSMain` räknar
+ut vyriktningen först och samplar normal mapen och färgen på `float2 texCoords = input.texCoords;` – raden som ändrar
+`texCoords` kommer direkt efter den. Ljuset står på `lightPos` (0.5, 1.0, 0.3).
 :::
 
 Bygg och kör programmet: ett tegelgolv sett snett, en trapets som är smalare upptill. Normal mapen ger fogarna deras
 fasningar, men alla tegelstenar ligger på samma höjd – titta längs teglen så ser de målade ut på en platt skiva.
-Kommentarerna `// TODO:` i projektet visar var din kod ska in.
 
 ## Parallax mapping
 

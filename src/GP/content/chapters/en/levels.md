@@ -8,6 +8,8 @@ can be one of two kinds:
 - A **solid** block: a block of grey stone that cannot be destroyed.
 - A **normal** block: a light tile, tinted in one of four colours, that the ball destroys when it hits it.
 
+You continue in your program from *Rendering Sprites*.
+
 To make the definition of levels easy, a level is a plain text file of numbers. Each number is a block, and the
 numbers are laid out on the lines of the file the way the blocks are laid out in the wall: one line per row of blocks,
 the numbers separated by spaces. learnopengl's level format:
@@ -16,8 +18,9 @@ the numbers separated by spaces. learnopengl's level format:
 - A number of **1**: a solid block, a block that cannot be destroyed.
 - A number **higher than 1**: a destroyable block; each subsequent number only differs in color.
 
-The course's levels are 15 blocks wide and 8 rows high. Level one, `levels/one.lvl`, is four full rows of coloured
-blocks – the numbers 5, 4, 3, 2 from the top –, an empty row, and a row of stones with gaps:
+The course's levels are 15 blocks wide and 8 rows high; **Save resources…** in the panel copies the four level files,
+`levels/one.lvl` to `levels/four.lvl`, and the game's textures into your folder. Level one, `levels/one.lvl`, is four
+full rows of coloured blocks – the numbers 5, 4, 3, 2 from the top –, an empty row, and a row of stones with gaps:
 
 ```text
 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5
@@ -239,9 +242,9 @@ draw something else):
 ```
 :::
 
-The `// TODO:` comments in the project mark where the code of each task goes. Now do the first task, **background**:
-load the four textures after the ball's and draw the background instead of the ball. Build and run the program: **the
-garden at dusk fills the window** – the stars, the moon in the upper right, the hills and the hedges.
+Now do the first task, **background**: load the four textures after the ball's and draw the background instead of the
+ball. Build and run the program: **the garden at dusk fills the window** – the stars, the moon in the upper right, the
+hills and the hedges.
 
 Now do the task **game-object**: the struct, `MakeGameObject` and `DrawObject`. Nothing uses them yet – the picture
 stays the same.

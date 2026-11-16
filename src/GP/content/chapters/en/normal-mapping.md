@@ -25,44 +25,47 @@ mapping. Like everything in this part, it is the same in every API: only shaders
 APIs differ is the direction of the texture's v axis – and that matters here, as you'll see.
 
 :::opengl
-The project is learnopengl's: a 2 × 2 quad facing +z, built by `renderQuad()` from the positions `pos1`…`pos4`
-((-1, 1), (-1, -1), (1, -1), (1, 1)), the texture coordinates `uv1`…`uv4` ((0, 1), (0, 0), (1, 0), (1, 1)) and the normal
-`nm` (0, 0, 1), as two triangles 1-2-3 and 1-3-4 – for now 8 floats per vertex: position, normal, texture coordinates.
-It is rotated by a fixed -30° about normalize(1, 0, 1) (learnopengl turns it with time, `glfwGetTime() * -10.0`
-degrees). The colour texture is `brickwall.png`, loaded with `loadTexture` (flipped on load, `GL_REPEAT`, mipmaps), on
-texture unit 0. The light is at `lightPos` (0.5, 1.0, 0.3), the camera at (0, 0, 3). `normal_mapping.vs` passes
-`FragPos`, `Normal` (with the normal matrix) and `TexCoords`; `normal_mapping.fs` lights with learnopengl's values:
-ambient `0.1 * color`, diffuse, and Blinn-Phong specular `vec3(0.2) * pow(…, 32.0)`. (learnopengl also draws a small
-copy of the quad at the light's position as a marker; the course leaves it out.)
+Start from your program from *Advanced Lighting* in a new folder (it has the textured, lit floor) and turn it into
+learnopengl's scene: a 2 × 2 quad facing +z, built by `renderQuad()` from the positions `pos1`…`pos4` ((-1, 1), (-1,
+-1), (1, -1), (1, 1)), the texture coordinates `uv1`…`uv4` ((0, 1), (0, 0), (1, 0), (1, 1)) and the normal `nm` (0, 0,
+1), as two triangles 1-2-3 and 1-3-4 – for now 8 floats per vertex: position, normal, texture coordinates. It is
+rotated by a fixed -30° about normalize(1, 0, 1) (learnopengl turns it with time, `glfwGetTime() * -10.0` degrees).
+The colour texture is `brickwall.png`, loaded with `loadTexture` (flipped on load, `GL_REPEAT`, mipmaps), on texture
+unit 0. The light is at `lightPos` (0.5, 1.0, 0.3), the camera at (0, 0, 3). `normal_mapping.vs` passes `FragPos`,
+`Normal` (with the normal matrix) and `TexCoords`; `normal_mapping.fs` lights with learnopengl's values: ambient
+`0.1 * color`, diffuse, and Blinn-Phong specular `vec3(0.2) * pow(…, 32.0)`. (learnopengl also draws a small copy of
+the quad at the light's position as a marker; the course leaves it out.)
 :::
 :::vulkan
-The project is learnopengl's: a 2 × 2 quad facing +z, built by `createQuadVertices()` (learnopengl's `renderQuad()`,
-called before `createVertexBuffer()`; it fills the member `std::vector<Vertex> vertices`, as vulkan-tutorial's
-`loadModel()` does) from the positions `pos1`…`pos4` ((-1, 1), (-1, -1), (1, -1), (1, 1)), the texture coordinates
-`uv1`…`uv4` ((0, 1), (0, 0), (1, 0), (1, 1)) and the normal `nm` (0, 0, 1), as two triangles 1-2-3 and 1-3-4 – for now
+Start from your program from *Advanced Lighting* in a new folder (it has the textured, lit floor) and turn it into
+learnopengl's scene: a 2 × 2 quad facing +z, built by `createQuadVertices()` (learnopengl's `renderQuad()`, called
+before `createVertexBuffer()`; it fills the member `std::vector<Vertex> vertices`, as vulkan-tutorial's `loadModel()`
+does) from the positions `pos1`…`pos4` ((-1, 1), (-1, -1), (1, -1), (1, 1)), the texture coordinates `uv1`…`uv4` ((0,
+1), (0, 0), (1, 0), (1, 1)) and the normal `nm` (0, 0, 1), as two triangles 1-2-3 and 1-3-4 – for now
 `{pos1, nm, uv1}` and so on. The push constants carry its model matrix, a fixed -30° rotation about normalize(1, 0, 1)
 (learnopengl turns it with time). The colour texture is `textures/brickwall.png` at binding 1. The light is at
 `lightPos` (0.5, 1.0, 0.3), the camera at (0, 0, 3). `normal_mapping.vert` passes `fragPos`, `normal` (with the normal
 matrix) and `texCoord`; `normal_mapping.frag` lights with learnopengl's values: ambient `0.1 * color`, diffuse, and
-Blinn-Phong specular `vec3(0.2) * pow(…, 32.0)`. (learnopengl also draws a small copy of the quad at the light's position
-as a marker; the course leaves it out.)
+Blinn-Phong specular `vec3(0.2) * pow(…, 32.0)`. (learnopengl also draws a small copy of the quad at the light's
+position as a marker; the course leaves it out.)
 :::
 :::d3d12
-The project is learnopengl's: a 2 × 2 quad facing +z, built in `LoadAssets` from the positions `pos1`…`pos4`
-((-1, 1), (-1, -1), (1, -1), (1, 1)), the normal `nm` (0, 0, 1) and the texture coordinates `uv1`…`uv4` – (0, 0), (0, 1),
-(1, 1), (1, 0): learnopengl's with v flipped, because Direct3D's v = 0 is the image's top row – as two triangles 1-2-3
-and 1-3-4. For now a `Vertex` is position, normal and texture coordinates (8 floats). The root constants carry its model
-matrix, a fixed -30° rotation about normalize(1, 0, 1) (learnopengl turns it with time), and its normal matrix. The
-colour texture is `brickwall.png` (t0), loaded by `LoadTexture` as `R8G8B8A8_UNORM`. The light is at `lightPos`
-(0.5, 1.0, 0.3), the camera at (0, 0, 3). `normal_mapping.hlsl`'s `VSMain` passes `fragPos`, `normal` (with the normal
-matrix) and `texCoords`; `PSMain` lights with learnopengl's values: ambient `0.1f * color`, diffuse, and Blinn-Phong
-specular `float3(0.2f, 0.2f, 0.2f) * pow(…, 32.0f)`. (learnopengl also draws a small copy of the quad at the light's
-position as a marker; the course leaves it out.)
+Start from your program from *Advanced Lighting* in a new folder (it has the textured, lit floor) and turn it into
+learnopengl's scene: a 2 × 2 quad facing +z, built in `LoadAssets` from the positions `pos1`…`pos4` ((-1, 1), (-1,
+-1), (1, -1), (1, 1)), the normal `nm` (0, 0, 1) and the texture coordinates `uv1`…`uv4` – (0, 0), (0, 1), (1, 1), (1,
+0): learnopengl's with v flipped, because Direct3D's v = 0 is the image's top row – as two triangles 1-2-3 and 1-3-4.
+For now a `Vertex` is position, normal and texture coordinates (8 floats). The root constants carry its model matrix,
+a fixed -30° rotation about normalize(1, 0, 1) (learnopengl turns it with time), and its normal matrix. The colour
+texture is `brickwall.png` (t0), loaded by `LoadTexture` as `R8G8B8A8_UNORM`. The light is at `lightPos` (0.5, 1.0,
+0.3), the camera at (0, 0, 3). `normal_mapping.hlsl`'s `VSMain` passes `fragPos`, `normal` (with the normal matrix)
+and `texCoords`; `PSMain` lights with learnopengl's values: ambient `0.1f * color`, diffuse, and Blinn-Phong specular
+`float3(0.2f, 0.2f, 0.2f) * pow(…, 32.0f)`. (learnopengl also draws a small copy of the quad at the light's position
+as a marker; the course leaves it out.)
 :::
 
 Build and run the program: a brick wall, turned at an angle – its bottom corner reaches below the window – with a
 highlight in its upper right. It is lit evenly – the bricks and the light mortar lines between them look painted on a
-flat board. The `// TODO:` comments in the project mark where your code goes.
+flat board.
 
 ## Normal mapping
 

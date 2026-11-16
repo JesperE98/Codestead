@@ -28,27 +28,27 @@ The technique is the same in every API – this chapter shows it for {{api}}, fo
 points that grow into houses, a model that explodes, and a model whose normal vectors are drawn as lines.
 
 :::opengl
-The project starts with learnopengl's first example before the geometry shader: no camera, no matrices, the clear
-colour (0.1, 0.1, 0.1), and four points – a 2D position and a colour each – drawn with
-`glDrawArrays(GL_POINTS, 0, 4)` by `geometry_shader.vs` and `geometry_shader.fs`. The project already contains the
-Model chapter's `mesh.h` and `model.h` and the planet (`models/planet.obj` with its textures) for the second half, and
-the shader files of the later tasks: `explode.vs/.fs/.gs`, `default.vs/.fs` and `normal_visualization.vs/.fs/.gs`.
-`geometry_shader.gs` and `normal_visualization.gs` are still empty apart from a TODO, and `explode.gs` passes every
-triangle through unchanged.
+Start from your program from *Model* in a new folder – its model code is needed in the second half – and make it
+learnopengl's first example before the geometry shader: no camera, no matrices, the clear colour (0.1, 0.1, 0.1), and
+four points – a 2D position and a colour each – drawn with `glDrawArrays(GL_POINTS, 0, 4)` by `geometry_shader.vs` and
+`geometry_shader.fs`. Keep the Model chapter's `mesh.h` and `model.h` and the planet (`models/planet.obj` with its
+textures) for the second half. The shader files of the later tasks – `geometry_shader.gs`, `explode.vs/.fs/.gs`,
+`default.vs/.fs` and `normal_visualization.vs/.fs/.gs` – come with their tasks, and the text shows them; `explode.gs`
+starts as a geometry shader that passes every triangle through unchanged.
 :::
 :::vulkan
-The project starts with learnopengl's first example before the geometry shader: no camera, no matrices, the clear
-colour (0.1, 0.1, 0.1), and learnopengl's four points (`struct PointVertex { glm::vec2 pos; glm::vec3 color; }` in
-their own vertex buffer, `pointsVertexBuffer`), drawn by `graphicsPipeline` with the topology
-`VK_PRIMITIVE_TOPOLOGY_POINT_LIST` and `vkCmdDraw(commandBuffer, static_cast<uint32_t>(points.size()), 1, 0, 0)`.
-Vulkan's y axis points down, so the points' y values are negated – learnopengl's top-left point (-0.5, 0.5) is
-(-0.5, -0.5) here, and the picture is the same. `createPipeline(vertFile, fragFile, topology, bindingDescription,
-attributeDescriptions, pipeline)` takes the topology and the vertex input as parameters, because the points and the
-model differ in both. The Model chapter's code (tinyobjloader, the planet's vertex and index buffer, its two diffuse
-maps, the uniform buffer with `view` and `proj`, the descriptor set, the model matrix as a push constant) is already
-created in `initVulkan()` but unused until the `planet` task. Every `.geom` file is compiled like the other shaders;
-`geometry_shader.geom` and `normal_visualization.geom` only have their layout lines and an empty `main`, and
-`explode.geom` passes every triangle through unchanged.
+Start from your program from *Model* in a new folder – its model code is needed in the second half – and make it
+learnopengl's first example before the geometry shader: no camera, no matrices, the clear colour (0.1, 0.1, 0.1), and
+learnopengl's four points (`struct PointVertex { glm::vec2 pos; glm::vec3 color; }` in their own vertex buffer,
+`pointsVertexBuffer`), drawn by `graphicsPipeline` with the topology `VK_PRIMITIVE_TOPOLOGY_POINT_LIST` and
+`vkCmdDraw(commandBuffer, static_cast<uint32_t>(points.size()), 1, 0, 0)`. Vulkan's y axis points down, so the points'
+y values are negated – learnopengl's top-left point (-0.5, 0.5) is (-0.5, -0.5) here, and the picture is the same.
+`createPipeline(vertFile, fragFile, topology, bindingDescription, attributeDescriptions, pipeline)` takes the topology
+and the vertex input as parameters, because the points and the model differ in both. Keep the Model chapter's code
+(tinyobjloader, the planet's vertex and index buffer, its two diffuse maps, the uniform buffer with `view` and `proj`,
+the descriptor set, the model matrix as a push constant) – it is created in `initVulkan()` but unused until the
+`planet` task. Every `.geom` file is compiled like the other shaders; The `.geom` files come with their tasks, and the
+text shows them; `explode.geom` starts as a geometry shader that passes every triangle through unchanged.
 
 :::ide clion vscode
 Your `CMakeLists.txt` compiles them – its `file(GLOB …)` line lists `shaders/*.geom` – to `shaders/<name>.geom.spv`.
@@ -58,20 +58,21 @@ The pre-build event of your project compiles them – its loop lists `shaders\*.
 :::
 :::
 :::d3d12
-The project starts with learnopengl's first example before the geometry shader: no camera, no matrices, the clear
-colour (0.1, 0.1, 0.1), and learnopengl's four points (`struct PointVertex { XMFLOAT2 position; XMFLOAT3 color; }`) in
-an upload-heap vertex buffer, drawn with `PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT`,
+Start from your program from *Model* in a new folder – its model code is needed in the second half – and make it
+learnopengl's first example before the geometry shader: no camera, no matrices, the clear colour (0.1, 0.1, 0.1), and
+learnopengl's four points (`struct PointVertex { XMFLOAT2 position; XMFLOAT3 color; }`) in an upload-heap vertex
+buffer, drawn with `PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT`,
 `IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST)` and `DrawInstanced(4, 1, 0, 0)`. The shaders are in
-`geometry_shader.hlsl`. Prepared for the second half (unused by the points): the Model chapter's `Model` class, the
-root signature (root constants `ModelConstants` at b0, a table with the CBV at b1 – visible to **all** stages, because
-the geometry shaders read it – and a table with a mesh's textures), the constant buffer `SceneConstantBuffer` and the
-member `Model m_model;`. `explode.hlsl` (whose geometry shader passes every triangle through), `default.hlsl` and
-`normal_visualization.hlsl` are there for the later tasks. All pipeline states use `CullMode = D3D12_CULL_MODE_NONE`,
-like learnopengl, which draws without face culling.
+`geometry_shader.hlsl`. Keep for the second half (unused by the points): the Model chapter's `Model` class, the root
+signature (root constants `ModelConstants` at b0, a table with the CBV at b1 – visible to **all** stages, because the
+geometry shaders read it – and a table with a mesh's textures), the constant buffer `SceneConstantBuffer` and the
+member `Model m_model;`. `explode.hlsl` (whose geometry shader starts by passing every triangle through),
+`default.hlsl` and `normal_visualization.hlsl` come with the later tasks; the text shows them. All pipeline states use
+`CullMode = D3D12_CULL_MODE_NONE`, like learnopengl, which draws without face culling.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
-IDE. Right now it shows four single pixels: red top-left, green top-right, yellow bottom-left and blue bottom-right.
+After each task, build and run the program in your IDE. Right now it shows four single pixels: red top-left, green
+top-right, yellow bottom-left and blue bottom-right.
 
 ## Using geometry shaders
 
@@ -1087,7 +1088,7 @@ to the [0,1] range. The resulting value is then used to scale the normal vector 
 added to the position vector.
 
 :::opengl
-Now do the task **explode**. In `explode.gs`, at the TODO, add the `time` uniform and the two functions:
+Now do the task **explode**. In `explode.gs`, add the `time` uniform and the two functions:
 
 ```glsl
 uniform float time;
@@ -1160,7 +1161,7 @@ visible to the stages its binding names. In `createDescriptorSetLayout()`:
         uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT; // the geometry shader reads it too
 ```
 
-In `shaders/explode.geom`, at the TODO, declare the block and add the two functions:
+In `shaders/explode.geom`, declare the block and add the two functions:
 
 ```glsl
 // the time in seconds: a new member of the uniform buffer (the matrices before it are not used here)
@@ -1217,7 +1218,7 @@ cbuffer SceneConstantBuffer : register(b1)
 ```
 
 The root signature's table with the CBV is already visible to all stages (`D3D12_SHADER_VISIBILITY_ALL`), so the
-geometry shader can read it. In `explode.hlsl`, at the TODO, add `GetNormal` from above and the `explode` function:
+geometry shader can read it. In `explode.hlsl`, add `GetNormal` from above and the `explode` function:
 
 ```hlsl
 // Moves a position along a direction: 0 .. 2 units and back, following sin(time).

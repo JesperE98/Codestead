@@ -9,35 +9,38 @@ den med kursens egna kontroller.
 learnopengl.com ägnar en god del av sitt kapitel *Creating a window* åt att sätta upp ett projekt, och det gör
 vulkan-tutorial.com också i sitt kapitel *Development environment*. Det här kapitlet gör detsamma för kursens tre
 API:er: du väljer en IDE, installerar en kompilator, hämtar de bibliotek som {{api}} behöver, sätter upp
-projektfilerna och lär dig hur panelen **Ditt projekt** fungerar. Kapitlet har inga uppgifter, men dess startfiler
-är triangelprogrammet från introduktionen, så i slutet kan du kontrollera att allt fungerar.
+projektfilerna och lär dig hur panelen **Ditt projekt** fungerar. Kapitlet har inga uppgifter; i slutet bygger du ett
+första, tomt program för att kontrollera att allt fungerar.
 
 Välj din IDE i väljaren **IDE** överst i fönstret, bredvid API:et. Från och med nu visar kapitlen stegen för den IDE
 du har valt, överallt där IDE:erna skiljer sig åt – du kan byta när som helst.
 
 ## Så arbetar du i kursen
 
-Varje kapitel med uppgifter har **startfiler**: `main.cpp`, och från senare kapitel även headerfiler, shaderfiler,
-texturer, modeller och typsnitt. `// TODO:`-kommentarerna i dem visar var din kod ska stå. Var du har din kod
-bestämmer du själv: dina egna mappar, ett projekt per kapitel eller ett för hela kursen, den IDE du gillar. Panelen
-**Ditt projekt** kopplar ihop kapitlet med din kod:
+Appen ger dig ingen kod: du skriver ditt program själv, varenda rad, så som learnopengl.coms läsare gör. *Skapa ett
+fönster* börjar med en tom `main.cpp`, och sedan fortsätter varje kapitel i programmet som du skrev i kapitlet före –
+kapitlets början säger vilket. Senare kapitel lägger till egna filer (shaders, headerfiler), och texten visar vad som
+ska stå i dem. Var du har din kod bestämmer du själv: dina egna mappar, ett projekt per kapitel eller ett för hela
+kursen, den IDE du gillar. Panelen **Ditt projekt** kopplar ihop kapitlet med din kod:
 
-1. **Spara startfilerna…** frågar efter en mapp och kopierar kapitlets startfiler dit: `main.cpp`, shaderna och
-   kursens texturer, modeller och typsnitt. Om en fil redan finns där frågar appen innan den skriver över den. Sedan
-   lägger du till dina projektfiler – se nedan – och öppnar projektet i din IDE.
+1. **Spara resursfilerna…** finns i kapitel som använder kursens egna filer – texturer, modeller, typsnitt, banfiler.
+   Den frågar efter en mapp och kopierar just de filerna dit; om en fil redan finns där frågar appen innan den skriver
+   över den. Shaderfiler är kod: dem skriver du själv.
 2. Du skriver koden för en uppgift, **bygger** programmet och **kör** det från din IDE. Det är så du ser vad din kod
    gör: jämför ditt fönster med **Förväntat resultat**, bilden som panelen visar för varje uppgift.
 3. När ditt program gör det som uppgiften ber om bockar du av den med **Markera som klar**. XP, dagar i rad och
    utmärkelser räknas precis som förut.
 4. När du vill ha en extra koll trycker du på **Kontrollera min kod**. Första gången frågar den efter kapitlets
-   huvudfil – `main.cpp`, eller vad du nu döpte den till – var den än ligger på din disk. (Efter **Spara
-   startfilerna…** använder den redan den `main.cpp` som sparades.) Appen läser den filen och kapitlets övriga filer –
-   shaders och headerfiler – som den hittar bredvid den, i mapparna under den eller i mappen ovanför, och kontrollerar
-   dem med kursens egna kontroller. Den bockar av varje uppgift som klarar kontrollen och talar om vad som fortfarande
-   saknas för de andra. **Byt fil…** väljer en annan fil.
+   huvudfil – `main.cpp`, eller vad du nu döpte den till – var den än ligger på din disk. Appen läser den filen och
+   kapitlets övriga filer – shaders och headerfiler – som den hittar bredvid den, i mapparna under den eller i mappen
+   ovanför, och kontrollerar dem med kursens egna kontroller. Den bockar av varje uppgift som klarar kontrollen och
+   talar om vad som fortfarande saknas för de andra. **Byt fil…** väljer en annan fil.
 
 **Kontrollera min kod** läser bara dina källfiler: ingenting behöver byggas eller köras för den. Bygg och kör ändå ditt
 program – en kontroll kan se att rätt anrop finns där, men bara ditt fönster visar vad de ritar.
+
+Om du kör fast hjälper uppgiftens **Tips**, och efter några försök kan du visa dess **lösning**. Den öppnas i ett eget
+fönster, som du stänger igen när du är klar: appen skriver aldrig något i dina filer.
 
 Uppgifterna är låsta tills du har svarat på frågorna i texten.
 
@@ -46,10 +49,11 @@ Du gör klart en uppgift i `main.cpp` och sparar filen. Hur kan uppgiften bli av
 - [x] Du bockar av den själv med **Markera som klar**, när ditt program gör det som uppgiften ber om
 - [ ] Appen märker att du har byggt och kört programmet, och bockar av den
 - [x] Du trycker på **Kontrollera min kod**, och kursens kontroller för uppgiften godkänns
-- [ ] Du sparar startfilerna igen med **Spara startfilerna…**
+- [ ] Du öppnar uppgiftens lösning, och appen skriver in den i din `main.cpp`
 ---
 Appen följer inte din IDE: du bockar av en uppgift själv, eller låter **Kontrollera min kod** läsa dina källfiler och
-bocka av varje uppgift som klarar kontrollen. Att spara startfilerna igen skulle skriva över ditt arbete.
+bocka av varje uppgift som klarar kontrollen. En lösning öppnas bara i ett eget fönster; appen ändrar aldrig dina
+filer.
 ```
 
 ## Välj en IDE
@@ -245,8 +249,9 @@ DirectXMath är matematikbiblioteket.
 
 Hur du organiserar din kod bestämmer du själv. Stegen i kursen använder en uppställning, som ett förslag: varje kapitel
 får en egen mapp, och de bibliotek som bara är filer – de du laddar ner själv – hamnar i en enda `libs`-mapp som alla
-kapitel delar. `CMakeLists.txt` och Visual Studio-inställningarna här nedan hittar den mappen som `../../libs`, två
-nivåer ovanför kapitelmappen:
+kapitel delar. När du börjar på ett kapitel kopierar du mappen från kapitlet före och fortsätter i kopian: varje
+kapitel bygger vidare på ditt program, och varje tidigare steg av det finns kvar som det var. `CMakeLists.txt` och
+Visual Studio-inställningarna här nedan hittar `libs`-mappen som `../../libs`, två nivåer ovanför kapitelmappen:
 
 :::opengl
 :::ide clion vscode
@@ -363,9 +368,10 @@ program per kapitel. Justera då sökvägarna till biblioteken: `LIBS` i `CMakeL
 bibliotekskatalogerna i Visual Studio-projektet.
 
 Programmen läser in sina shaders, texturer och modeller med sökvägar relativt **arbetskatalogen** (working
-directory), mappen som ett program körs i: `"shaders/vert.spv"`, `"container.png"`, `L"shaders.hlsl"`. Startfilerna
-lägger de filerna bredvid `main.cpp`, i kapitelmappen, så programmet måste köras med kapitelmappen som arbetskatalog.
-Stegen här nedan visar hur.
+directory), mappen som ett program körs i: `"shaders/vert.spv"`, `"container.png"`, `L"shaders.hlsl"`. Ha de filerna
+bredvid `main.cpp`, i kapitelmappen – dina shaderfiler, och kursens texturer och modeller där **Spara
+resursfilerna…** lägger dem när du väljer kapitelmappen – så programmet måste köras med kapitelmappen som
+arbetskatalog. Stegen här nedan visar hur.
 
 ```quiz
 Ditt program byggs, men när det startar avbryts det med ett fel om att det inte kan öppna en av sina shaderfiler. Filen ligger i kapitelmappen. Vad är den troligaste orsaken?
@@ -663,11 +669,12 @@ finns något att bygga och hoppa över pre-build-händelsen. Efter en ändring s
 2. Skapa en gång per API projektet som du ska kopiera: **File → New → Project…**, **Empty Project** (C++). Döp det
    till `LearnOpenGL`, `LearnVulkan` eller `LearnDirectX`, välj din mapp `learn/<api>` som plats (Location) och kryssa
    i **Place solution and project in the same directory**.
-3. Lägg till en `main.cpp` med **Project → Add New Item…** (en tom duger – varje kapitel har med sig sin egen; för
+3. Lägg till en `main.cpp` med **Project → Add New Item…** (en tom duger – du skriver den i kapitlen; för
    OpenGL lägger du också till `glad.c` med **Project → Add Existing Item…**), och gör inställningarna ovan under
    **Project → Properties** (Configuration *All Configurations*, Platform *x64*).
-4. För varje kapitel kopierar du projektets `.sln`, `.vcxproj` och `.vcxproj.filters` till kapitelmappen, bredvid
-   startfilerna, och öppnar `.sln`-filen där.
+4. För det första kapitlet kopierar du projektets `.sln`, `.vcxproj` och `.vcxproj.filters` till kapitelmappen,
+   bredvid `main.cpp`, och öppnar `.sln`-filen där. Senare kapitel börjar som en kopia av mappen före, filerna
+   inräknade.
 5. **Build → Build Solution** (Ctrl+Shift+B) bygger programmet; **Debug → Start Without Debugging** (Ctrl+F5) eller
    **Start Debugging** (F5) bygger det vid behov och kör det, med kapitelmappen som arbetskatalog.
 :::
@@ -686,8 +693,9 @@ finns något att bygga och hoppa över pre-build-händelsen. Efter en ändring s
    Solution…** eller, om du har det, med Visual Studios **Empty Project**.
 3. Lägg till en `main.cpp` (för OpenGL även `glad.c`) och inställningarna ovan: öppna `.vcxproj`-filen i editorn – den
    är MSBuild-XML – och lägg till `ItemDefinitionGroup` och `ItemGroup` efter dem som redan finns.
-4. För varje kapitel kopierar du projektets `.sln`, `.vcxproj` och `.vcxproj.filters` till kapitelmappen, bredvid
-   startfilerna, och öppnar `.sln`-filen där med **File → Open…**.
+4. För det första kapitlet kopierar du projektets `.sln`, `.vcxproj` och `.vcxproj.filters` till kapitelmappen,
+   bredvid `main.cpp`, och öppnar `.sln`-filen där med **File → Open…**. Senare kapitel börjar som en kopia av mappen
+   före, filerna inräknade.
 5. **Build → Build Solution** bygger programmet; **Run → Run** kör det.
 
 Om programmet inte hittar sina filer sätter du **Working directory** under **Run → Edit Configurations…** till
@@ -723,10 +731,33 @@ den i CMake-profilen).
 
 ## Prova
 
-Det här kapitlets startfiler är triangelprogrammet från introduktionen. Spara dem med **Spara startfilerna…**, lägg
-till dina projektfiler, öppna projektet i din IDE, bygg och kör. Om ett fönster med en orange triangel på en mörkt
-blågrön bakgrund dyker upp är din IDE, din kompilator och biblioteken för {{api}} redo – nästa kapitel börjar med ett
-tomt fönster.
+Skapa mappen för nästa kapitel, `creating-a-window`, och lägg dit dina projektfiler och en `main.cpp` med ingenting
+annat än ett tomt program:
+
+:::opengl vulkan
+```cpp
+int main()
+{
+    return 0;
+}
+```
+:::
+:::d3d12
+```cpp
+#include <windows.h>
+
+// A Windows (not console) program starts in wWinMain.
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow)
+{
+    return 0;
+}
+```
+:::
+
+Öppna projektet i din IDE, bygg och kör. Om det byggs och programmet avslutas utan fel är din IDE, din kompilator och
+dina projektfiler redo. Biblioteken för {{api}} används för första gången i nästa kapitel, *Skapa ett fönster*, som
+börjar med just den här `main.cpp`; om bygget där klagar på en headerfil eller ett bibliotek som inte hittas, gå
+tillbaka till *Biblioteken för {{api}}* ovan.
 
 ```quiz
 Du lägger upp kursen på ditt eget sätt: ett CMake-projekt för alla kapitel, med varje kapitels kod i en egen mapp. Vad behöver **Kontrollera min kod** från dig?

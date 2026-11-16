@@ -4,6 +4,8 @@ Innan vi ger oss på spelmekaniken behöver vi först sätta upp ett enkelt ramv
 flera tredjepartsbibliotek, och de flesta har vi redan presenterat i tidigare kapitel. Där ett nytt bibliotek behövs
 presenteras det ordentligt.
 
+Du fortsätter i programmet som du förberedde i slutet av *2D-spelet: Hedgerow*.
+
 Först definierar vi en så kallad överklass för spelet som innehåller all relevant renderings- och spelkod. Tanken med
 en sådan spelklass är att den (på sitt sätt) organiserar spelkoden och samtidigt frikopplar all fönsterkod från spelet.
 På så sätt kan du använda samma klass med ett helt annat fönsterbibliotek (som SDL eller SFML) utan större ansträngning.
@@ -41,7 +43,7 @@ kapitel, `InitRenderData`).
 
 | learnopengl | kursen (Vulkan) |
 |---|---|
-| `class Shader` (ett kompilerat program) | **grafikpipelinen** gjord av de två SPIR-V-filerna, en `VkPipeline`, skapad med projektets hjälpfunktion `createPipeline(vertFile, fragFile, pipeline)` |
+| `class Shader` (ett kompilerat program) | **grafikpipelinen** gjord av de två SPIR-V-filerna, en `VkPipeline`, skapad med din hjälpfunktion `createPipeline(vertFile, fragFile, pipeline)` |
 | `class Texture2D` (ID, storlek, wrap- och filterlägen) | `struct Texture2D { VkImage Image; VkDeviceMemory Memory; VkImageView View; VkDescriptorSet DescriptorSet; unsigned int Width, Height; }`; en gemensam sampler med learnopengls standardvärden (REPEAT, LINEAR) |
 | `class ResourceManager` | två globala mappar `Shaders` (namn → `VkPipeline`) och `Textures`, fria `GetShader` / `GetTexture`, medlemmarna `LoadShader`, `LoadTexture`, `loadTextureFromFile`, `ClearResources` |
 | `class Game` | `enum GameState`, `struct Game`, fria `ProcessInput`, `Update`, `Render`; medlemmen `Init` |
@@ -52,7 +54,7 @@ Direct3D 12-koden förblir applikationsklassen från varje Direct3D 12-kapitel (
 funktioner ligger ovanför den. learnopengls klasser når OpenGL genom dess globala kontext – vilken funktion som helst
 kan anropa `glBindTexture`. Direct3D 12 har ingen global kontext: du anropar metoder på objekt – enheten skapar
 resurser, command listen spelar in ritanrop. För att spelets fria funktioner ska kunna göra detsamma lägger `LoadAssets`
-de objekt som spelet behöver i en global struct, som redan finns i projektet:
+de objekt som spelet behöver i en global struct – lägg till den i ditt program:
 
 ```cpp
 struct GraphicsContext
@@ -84,9 +86,8 @@ inte av texturen.
 | `key_callback` | `OnKeyDown(UINT8 key)` / `OnKeyUp(UINT8 key)`, namnen från D3D12-exemplens ramverk, anropade av `WindowProc` |
 :::
 
-Kommentarerna `// TODO:` i projektet visar var varje del ska in. Det här kapitlet ritar ingenting – det gör inte
-learnopengls "Setting up" heller –, så ditt program visar ett svart fönster efter varje uppgift; uppgifterna
-kontrolleras i koden.
+Det här kapitlet ritar ingenting – det gör inte learnopengls "Setting up" heller –, så ditt program visar ett svart
+fönster efter varje uppgift; uppgifterna kontrolleras i koden.
 
 ## Spelet
 
@@ -567,10 +568,11 @@ Gör nu uppgiften **shader**.
 I Vulkan finns inget shaderobjekt att kompilera under körning: GLSL-koden kompileras till SPIR-V i förväg, och det som
 ritar med den är en **grafikpipeline** – shader modules tillsammans med vertex input, rasterizer-tillståndet,
 blendingen och layouten för deskriptorerna. Det som learnopengl kallar en "shader" är alltså, i Vulkan-versionen,
-`VkPipeline` gjord av de två SPIR-V-filerna, och att ladda en shader betyder att skapa en pipeline. Projektet har redan
-hjälpfunktionen för det, `createPipeline(vertFile, fragFile, pipeline)`: sprite-vertexformatet (en `vec4`), inget
-djuptest, ingen culling och alfablending (`SRC_ALPHA` / `ONE_MINUS_SRC_ALPHA` – learnopengls `glEnable(GL_BLEND)` i
-`main`). Det finns inga uniform-setters heller: det som learnopengl sätter som uniforms blir push constants (per sprite,
+`VkPipeline` gjord av de två SPIR-V-filerna, och att ladda en shader betyder att skapa en pipeline. Ditt program har
+redan hjälpfunktionen för det, `createPipeline(vertFile, fragFile, pipeline)`, från de tidigare kapitlen; för spelet
+använder den sprite-vertexformatet (en `vec4`), inget djuptest, ingen culling och alfablending (`SRC_ALPHA` /
+`ONE_MINUS_SRC_ALPHA` – learnopengls `glEnable(GL_BLEND)` i `main`). Det finns inga uniform-setters heller: det som
+learnopengl sätter som uniforms blir push constants (per sprite,
 `struct PushConstants { glm::mat4 model; glm::vec3 spriteColor; };`) och uniform buffern (projektionen). learnopengls
 klass `Shader` har därför ingen egen uppgift i Vulkan.
 :::
@@ -665,8 +667,8 @@ Gör nu uppgiften **texture**.
 :::
 :::vulkan
 En Vulkan-textur är flera objekt: bilden, dess minne, en image view – och, för att använda den i ett ritanrop, en
-descriptor set som pekar på vyn och en sampler. Projektets descriptor set-layout har två bindings – uniform buffern på
-binding 0, texturen på binding 1 – så varje textur får en egen descriptor set med båda, och att binda den seten är
+descriptor set som pekar på vyn och en sampler. Ditt programs descriptor set-layout har två bindings – uniform buffern
+på binding 0, texturen på binding 1 – så varje textur får en egen descriptor set med båda, och att binda den seten är
 Vulkan-versionen av `glBindTexture`. En sampler, `textureSampler` (REPEAT, LINEAR, ingen anisotropi: learnopengls
 standardvärden för `Texture2D`), delas av alla texturer.
 

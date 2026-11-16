@@ -27,26 +27,27 @@ Tekniken är densamma i alla API:er – kapitlet visar den för {{api}} och föl
 växer till hus, en modell som exploderar och en modell vars normalvektorer ritas som linjer.
 
 :::opengl
-Projektet börjar med learnopengls första exempel före geometry shadern: ingen kamera, inga matriser, rensningsfärgen
-(0.1, 0.1, 0.1) och fyra punkter – en 2D-position och en färg var – ritade med `glDrawArrays(GL_POINTS, 0, 4)` av
-`geometry_shader.vs` och `geometry_shader.fs`. Projektet innehåller redan Model-kapitlets `mesh.h` och `model.h` och
-planeten (`models/planet.obj` med sina texturer) för andra halvan, och shaderfilerna för de senare uppgifterna:
-`explode.vs/.fs/.gs`, `default.vs/.fs` och `normal_visualization.vs/.fs/.gs`. `geometry_shader.gs` och
-`normal_visualization.gs` är fortfarande tomma förutom en TODO, och `explode.gs` släpper igenom varje triangel
-oförändrad.
+Utgå från ditt program från *Modell* i en ny mapp – dess modellkod behövs i andra halvan – och gör det till
+learnopengls första exempel före geometry shadern: ingen kamera, inga matriser, rensningsfärgen (0.1, 0.1, 0.1) och
+fyra punkter – en 2D-position och en färg var – ritade med `glDrawArrays(GL_POINTS, 0, 4)` av `geometry_shader.vs` och
+`geometry_shader.fs`. Behåll Model-kapitlets `mesh.h` och `model.h` och planeten (`models/planet.obj` med sina
+texturer) för andra halvan. Shaderfilerna för de senare uppgifterna – `geometry_shader.gs`, `explode.vs/.fs/.gs`,
+`default.vs/.fs` och `normal_visualization.vs/.fs/.gs` – kommer med sina uppgifter, och texten visar dem; `explode.gs`
+börjar som en geometry shader som släpper igenom varje triangel oförändrad.
 :::
 :::vulkan
-Projektet börjar med learnopengls första exempel före geometry shadern: ingen kamera, inga matriser, rensningsfärgen
-(0.1, 0.1, 0.1) och learnopengls fyra punkter (`struct PointVertex { glm::vec2 pos; glm::vec3 color; }` i en egen
-vertexbuffer, `pointsVertexBuffer`), ritade av `graphicsPipeline` med topologin `VK_PRIMITIVE_TOPOLOGY_POINT_LIST` och
+Utgå från ditt program från *Modell* i en ny mapp – dess modellkod behövs i andra halvan – och gör det till
+learnopengls första exempel före geometry shadern: ingen kamera, inga matriser, rensningsfärgen (0.1, 0.1, 0.1) och
+learnopengls fyra punkter (`struct PointVertex { glm::vec2 pos; glm::vec3 color; }` i en egen vertexbuffer,
+`pointsVertexBuffer`), ritade av `graphicsPipeline` med topologin `VK_PRIMITIVE_TOPOLOGY_POINT_LIST` och
 `vkCmdDraw(commandBuffer, static_cast<uint32_t>(points.size()), 1, 0, 0)`. Vulkans y-axel pekar nedåt, så punkternas
 y-värden är negerade – learnopengls övre vänstra punkt (-0.5, 0.5) är (-0.5, -0.5) här, och bilden blir densamma.
 `createPipeline(vertFile, fragFile, topology, bindingDescription, attributeDescriptions, pipeline)` tar topologin och
 vertexindatan som parametrar, eftersom punkterna och modellen skiljer sig i båda. Model-kapitlets kod (tinyobjloader,
 planetens vertex- och indexbuffer, dess två diffuse maps, uniform buffern med `view` och `proj`, descriptor seten,
-modellmatrisen som push constant) skapas redan i `initVulkan()` men används inte förrän i uppgiften `planet`. Varje
-`.geom`-fil kompileras som de andra shadrarna; `geometry_shader.geom` och `normal_visualization.geom` har bara sina
-layout-rader och en tom `main`, och `explode.geom` släpper igenom varje triangel oförändrad.
+modellmatrisen som push constant) behåller du – den skapas i `initVulkan()` men används inte förrän i uppgiften
+`planet`. Varje `.geom`-fil kompileras som de andra shadrarna; `.geom`-filerna kommer med sina uppgifter, och texten
+visar dem; `explode.geom` börjar som en geometry shader som släpper igenom varje triangel oförändrad.
 
 :::ide clion vscode
 Din `CMakeLists.txt` kompilerar dem – dess rad `file(GLOB …)` tar med `shaders/*.geom` – till
@@ -58,11 +59,12 @@ Pre-build-händelsen i ditt projekt kompilerar dem – dess loop tar med `shader
 :::
 :::
 :::d3d12
-Projektet börjar med learnopengls första exempel före geometry shadern: ingen kamera, inga matriser, rensningsfärgen
-(0.1, 0.1, 0.1) och learnopengls fyra punkter (`struct PointVertex { XMFLOAT2 position; XMFLOAT3 color; }`) i en
-vertexbuffer i en upload heap, ritade med `PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT`,
+Utgå från ditt program från *Modell* i en ny mapp – dess modellkod behövs i andra halvan – och gör det till
+learnopengls första exempel före geometry shadern: ingen kamera, inga matriser, rensningsfärgen (0.1, 0.1, 0.1) och
+learnopengls fyra punkter (`struct PointVertex { XMFLOAT2 position; XMFLOAT3 color; }`) i en vertexbuffer i en upload
+heap, ritade med `PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT`,
 `IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST)` och `DrawInstanced(4, 1, 0, 0)`. Shadrarna ligger i
-`geometry_shader.hlsl`. Förberett för andra halvan (används inte av punkterna): Model-kapitlets klass `Model`, root
+`geometry_shader.hlsl`. Behåll för andra halvan (används inte av punkterna): Model-kapitlets klass `Model`, root
 signaturen (root constants `ModelConstants` på b0, en tabell med CBV:n på b1 – synlig för **alla** steg, eftersom
 geometry shadrarna läser den – och en tabell med en meshs texturer), constant buffern `SceneConstantBuffer` och
 medlemmen `Model m_model;`. `explode.hlsl` (vars geometry shader släpper igenom varje triangel), `default.hlsl` och
@@ -70,9 +72,8 @@ medlemmen `Model m_model;`. `explode.hlsl` (vars geometry shader släpper igenom
 `CullMode = D3D12_CULL_MODE_NONE`, som learnopengl, som ritar utan face culling.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
-IDE. Just nu visar den fyra enstaka pixlar: röd uppe till vänster, grön uppe till höger, gul nere till vänster och blå
-nere till höger.
+Efter varje uppgift bygger och kör du programmet i din IDE. Just nu visar den fyra enstaka pixlar: röd uppe till
+vänster, grön uppe till höger, gul nere till vänster och blå nere till höger.
 
 ## Använda geometry shaders
 
@@ -1069,7 +1070,7 @@ att objektet ska *implodera* omvandlar vi sinusvärdet till intervallet [0,1]. V
 den resulterande riktningsvektorn läggs till positionen.
 
 :::opengl
-Gör nu uppgiften **explode**. I `explode.gs`, vid TODO:n, lägg till uniformen `time` och de två funktionerna:
+Gör nu uppgiften **explode**. Lägg i `explode.gs` till uniformen `time` och de två funktionerna:
 
 ```glsl
 uniform float time;
@@ -1142,7 +1143,7 @@ synlig för de steg som dess binding nämner. I `createDescriptorSetLayout()`:
         uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT; // the geometry shader reads it too
 ```
 
-I `shaders/explode.geom`, vid TODO:n, deklarera blocket och lägg till de två funktionerna:
+Deklarera i `shaders/explode.geom` blocket och lägg till de två funktionerna:
 
 ```glsl
 // the time in seconds: a new member of the uniform buffer (the matrices before it are not used here)
@@ -1198,7 +1199,7 @@ cbuffer SceneConstantBuffer : register(b1)
 ```
 
 Root signaturens tabell med CBV:n är redan synlig för alla steg (`D3D12_SHADER_VISIBILITY_ALL`), så geometry shadern
-kan läsa den. I `explode.hlsl`, vid TODO:n, lägg till `GetNormal` från ovan och funktionen `explode`:
+kan läsa den. Lägg i `explode.hlsl` till `GetNormal` från ovan och funktionen `explode`:
 
 ```hlsl
 // Moves a position along a direction: 0 .. 2 units and back, following sin(time).

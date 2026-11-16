@@ -26,7 +26,7 @@ med alla delar som en riktig modell har.
 
 :::opengl
 Precis som learnopengl.com läser vi in modellen med Assimp och översätter den till `Mesh`-objekt av klassen du skrev i
-förra kapitlet. Utan vidare omsvep, här är strukturen för klassen `Model`, i projektets `model.h`:
+förra kapitlet. Utan vidare omsvep, här är strukturen för klassen `Model`, i en ny fil `model.h`:
 
 ```cpp
 class Model
@@ -37,16 +37,16 @@ public:
     std::vector<Mesh>    meshes;
     std::string directory;
 
-    // TODO: the constructor: load the model at path (loadModel)
+    // constructor: loads the model at path (loadModel)
 
-    // TODO: Draw: draw every mesh of the model
+    // Draw: draws every mesh of the model
 
 private:
     void loadModel(std::string const &path) { ... }
     void processNode(aiNode *node, const aiScene *scene) { ... }
     Mesh processMesh(aiMesh *mesh, const aiScene *scene) { ... }
 
-    // TODO: loadMaterialTextures: load the material's textures of one type (each file only once)
+    // loadMaterialTextures: loads the material's textures of one type (each file only once)
 };
 ```
 
@@ -67,12 +67,15 @@ Funktionen `Draw` är inget märkvärdigt; den loopar helt enkelt över alla mes
     }
 ```
 
-Projektet är resultatet av *Mesh*, med en ny fil `model.h`. Dess `// TODO:`-kommentarer visar var din kod ska in:
-konstruktorn och `Draw`, kropparna i `loadModel`, `processNode` och `processMesh`, samt funktionerna
-`loadMaterialTextures` och `TextureFromFile`. `main.cpp` inkluderar nu `"model.h"` (som inkluderar `"mesh.h"`) och har
-två egna TODO: att läsa in modellen och att rita den. Programmet länkas med Assimp, så som du satte upp det i kapitlet
-*Assimp*. Tills modellen ritas visar ditt program bara den mörkgrå bakgrunden (0.05, 0.05, 0.05) – varje steg
-dessförinnan kompileras och körs, det ritar bara ingenting än.
+Du fortsätter i ditt program från *Mesh*. Börja `model.h` bredvid `main.cpp` med en include guard (`MODEL_H`) och dess
+includes – `<glad/glad.h>`, `<glm/glm.hpp>`, `<glm/gtc/matrix_transform.hpp>`, `<stb_image.h>`, Assimps tre
+headerfiler (nedan), `"mesh.h"`, `"shader_m.h"`, `<string>`, `<cstring>`, `<iostream>` och `<vector>` – och
+deklarationen `unsigned int TextureFromFile(const char *path, const std::string &directory);` före klassen.
+Uppgifterna skriver konstruktorn och `Draw`, kropparna i `loadModel`, `processNode` och `processMesh`, samt
+funktionerna `loadMaterialTextures` och `TextureFromFile`. `main.cpp` inkluderar `"model.h"` (som inkluderar
+`"mesh.h"`) i stället för `"mesh.h"`; i `main.cpp` läser uppgifterna in modellen och ritar den. Programmet länkas med
+Assimp, så som du satte upp det i kapitlet *Assimp*. Tills modellen ritas visar ditt program bara den mörkgrå
+bakgrunden (0.05, 0.05, 0.05) – varje steg dessförinnan kompileras och körs, det ritar bara ingenting än.
 
 :::ide clion vscode
 Det här är det första OpenGL-projektet som anropar Assimp: lägg till de två Assimp-raderna från kapitlet *Assimp* i
@@ -99,14 +102,15 @@ och rita – och vi gör samma fyra jobb i applikationsklassen, bredvid vertex- 
 | `loadMaterialTextures`, `TextureFromFile` | `createTextures()`: de fyra kartorna, på descriptor-bindings 1–4 |
 | `Draw`: ett draw-anrop per mesh, var och en med sina texturer | ett `vkCmdDrawIndexed`; fragment shadern väljer varje fragments material |
 
-Projektet är resultatet av *Mesh*, oförändrat: testkvadraten, ritad i texturkoordinatfärger (rött = u, grönt = v) med
-ett `vkCmdDrawIndexed`. Den här gången finns inga `// TODO:`-kommentarer: varje uppgift ändrar koden du skrev i förra
-kapitlet, steg för steg, tills kvadraten har blivit planeten. Bygg och kör programmet efter varje uppgift för att se
+Du fortsätter i ditt program från *Mesh*, oförändrat: testkvadraten, ritad i texturkoordinatfärger (rött = u, grönt =
+v) med ett `vkCmdDrawIndexed`. Varje uppgift ändrar koden du skrev i förra kapitlet, steg för steg, tills kvadraten har
+blivit planeten. Bygg och kör programmet efter varje uppgift för att se
 resultatet.
 :::
 :::d3d12
 Precis som learnopengl.com läser vi in modellen med Assimp och översätter den till `Mesh`-objekt av klassen du skrev i
-förra kapitlet. Projektets `main.cpp` innehåller redan strukturen för klassen `Model`, efter `class Mesh`:
+förra kapitlet. Här är strukturen för klassen `Model`; skriv in den i `main.cpp`, efter `class Mesh` (uppgifterna
+fyller i kropparna som är markerade `{ ... }`):
 
 ```cpp
 class Model
@@ -140,7 +144,12 @@ public:
     }
 
 private:
-    ...
+    // What loading needs from the program (set by Load).
+    ID3D12Device* m_device = nullptr;
+    ID3D12GraphicsCommandList* m_commandList = nullptr;
+    ID3D12DescriptorHeap* m_srvHeap = nullptr;
+    UINT m_nextDescriptor = 0;    // the next free slot of the CBV/SRV heap
+
     void loadModel(std::string const& path) { ... }
     void processNode(aiNode* node, const aiScene* scene) { ... }
     Mesh processMesh(aiMesh* mesh, const aiScene* scene) { ... }
@@ -156,9 +165,9 @@ privata funktionerna tar var och en hand om en del av Assimps inläsning, och vi
 också katalogen i filsökvägen, som vi behöver senare när vi läser in texturer. `Draw` är inget märkvärdigt; den
 loopar helt enkelt över alla meshar och anropar deras respektive `Draw`-funktion.
 
-Projektet är resultatet av *Mesh*, med klassen `Model` tillagd. Dess `// TODO:`-kommentarer visar var din kod ska in:
-kropparna i `loadModel`, `processNode` och `loadMaterialTextures`, två delar av `processMesh`, och i `D3D12App`
-modellmedlemmen, inläsningen av den, frigörandet av dess upload-buffrar och ritandet. Tills modellen ritas visar ditt
+Du fortsätter i ditt program från *Mesh*, med klassen `Model` ovan tillagd. Uppgifterna skriver kropparna i
+`loadModel`, `processNode` och `loadMaterialTextures`, två delar av `processMesh`, och i `D3D12App` modellmedlemmen,
+inläsningen av den, frigörandet av dess upload-buffrar och ritandet. Tills modellen ritas visar ditt
 program bara den mörkgrå bakgrunden (0.05, 0.05, 0.05) – varje steg dessförinnan kompileras och körs, det ritar bara
 ingenting än.
 
@@ -176,7 +185,7 @@ självt; utan den gör du Assimp-inställningarna från kapitlet *Assimp* i det 
 ## Att importera en 3D-modell i {{api}}
 
 För att importera en modell och översätta den till vår egen struktur måste vi först inkludera Assimps headerfiler
-(projektet har dem redan):
+(överst i `model.h`):
 
 ```cpp
 #include <assimp/Importer.hpp>
@@ -622,9 +631,9 @@ var och en av meshens relevanta egenskaper och spara dem i vårt eget objekt. De
         std::vector<unsigned int> indices;
         std::vector<Texture> textures;
 
-        // TODO: copy every vertex (position, normal, texture coordinates) and the indices of every face
+        // copy every vertex (position, normal, texture coordinates) and the indices of every face
 
-        // TODO: process materials: load the diffuse, specular and normal maps (loadMaterialTextures)
+        // process materials: load the diffuse, specular and normal maps (loadMaterialTextures)
 
         // return a mesh object created from the extracted mesh data
         return Mesh(vertices, indices, textures);
@@ -698,11 +707,17 @@ slutet av varvet. Det här upprepas för var och en av meshens vertices.
         std::vector<UINT> indices;
         std::vector<Texture> textures;
 
-        // TODO: walk through each of the mesh's vertices (position, normal, texture coordinates) and faces (indices)
-        // TODO: process the material: its diffuse and specular maps (loadMaterialTextures)
+        // walk through each of the mesh's vertices (position, normal, texture coordinates) and faces (indices)
+        // process the material: its diffuse and specular maps (loadMaterialTextures)
 
         // The mesh's two texture views go into the next two free slots of the CBV/SRV heap.
-        ...
+        if (m_nextDescriptor + 2 > m_srvHeap->GetDesc().NumDescriptors)
+        {
+            throw std::runtime_error("The CBV/SRV heap has no room for another mesh");
+        }
+        UINT descriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvCpuHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), m_nextDescriptor, descriptorSize);
+        CD3DX12_GPU_DESCRIPTOR_HANDLE srvGpuHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), m_nextDescriptor, descriptorSize);
         m_nextDescriptor += 2;
 
         // return a mesh object created from the extracted mesh data
@@ -712,9 +727,9 @@ slutet av varvet. Det här upprepas för var och en av meshens vertices.
 
 Att bearbeta en mesh sker i tre delar: hämta all vertexdata, hämta meshens index och till sist hämta den relevanta
 materialdatan. Den bearbetade datan sparas i en av de tre vektorerna, och av dem skapas en `Mesh` som returneras till
-anroparen. Slutet av funktionen finns redan: varje mesh får de två nästa lediga platserna i CBV/SRV-heapen för sina
-texture views (kapitlet *Mesh*:s `SetupMesh` skriver dem), och kontrollen kastar ett undantag om heapen – `1 + 2 *
-MaxMeshes` descriptors, med `MaxMeshes = 8` – inte har plats kvar.
+anroparen. Skriv slutet av funktionen som det visas: varje mesh får de två nästa lediga platserna i CBV/SRV-heapen för
+sina texture views (kapitlet *Mesh*:s `SetupMesh` skriver dem), och kontrollen kastar ett undantag om heapen –
+`1 + 2 * MaxMeshes` descriptors, med `MaxMeshes = 8` – inte har plats kvar.
 
 Att hämta vertexdatan är ganska enkelt: vi definierar en `Vertex`-struct som vi lägger till i arrayen `vertices` efter
 varje varv i loopen. Vi loopar lika många gånger som meshen har vertices (som vi får via `mesh->mNumVertices`). I
@@ -991,7 +1006,7 @@ unsigned int TextureFromFile(const char *path, const std::string &directory)
 }
 ```
 
-Den hamnar efter klassen, där TODO:n står; klassen behöver bara deklarationen, som finns högst upp i `model.h`. Här
+Den hamnar efter klassen; klassen behöver bara deklarationen, som finns högst upp i `model.h`. Här
 finns ingen `stbi_set_flip_vertically_on_load`, av skälet ovan. `model.h` inkluderar `<stb_image.h>` bara för
 deklarationerna: `main.cpp` definierar `STB_IMAGE_IMPLEMENTATION` före sin egen include, så stb_images kod kompileras
 exakt en gång.
@@ -999,8 +1014,8 @@ exakt en gång.
 Gör nu uppgiften **texture-from-file**. Fortfarande ändras inget synligt: ingenting anropar funktionen än.
 :::
 :::d3d12
-`TextureFromFile` finns redan i projektet, efter klassen. Det är de tidigare kapitlens `LoadTexture` utan view (varje
-mesh skapar sina egna views på sina platser i heapen), med katalogen före filnamnet:
+`TextureFromFile` hamnar efter klassen, som en fri funktion. Det är de tidigare kapitlens `LoadTexture` utan view
+(varje mesh skapar sina egna views på sina platser i heapen), med katalogen före filnamnet:
 
 ```cpp
 ComPtr<ID3D12Resource> TextureFromFile(const char* path, const std::string& directory, ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadHeap)

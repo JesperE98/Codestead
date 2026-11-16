@@ -24,9 +24,10 @@ använda normaler per fragment i stället för per yta, kallas *normal mapping* 
 v-axel – och det spelar roll här, som du ska se.
 
 :::opengl
-Projektet är learnopengls: en fyrhörning på 2 × 2 som vetter mot +z, byggd av `renderQuad()` av positionerna
-`pos1`…`pos4` ((-1, 1), (-1, -1), (1, -1), (1, 1)), texturkoordinaterna `uv1`…`uv4` ((0, 1), (0, 0), (1, 0), (1, 1)) och
-normalen `nm` (0, 0, 1), som två trianglar 1-2-3 och 1-3-4 – tills vidare 8 floats per vertex: position, normal,
+Utgå från ditt program från *Avancerad belysning* i en ny mapp (det har det texturerade, belysta golvet) och gör om
+det till learnopengls scen: en fyrhörning på 2 × 2 som vetter mot +z, byggd av `renderQuad()` av positionerna
+`pos1`…`pos4` ((-1, 1), (-1, -1), (1, -1), (1, 1)), texturkoordinaterna `uv1`…`uv4` ((0, 1), (0, 0), (1, 0), (1, 1))
+och normalen `nm` (0, 0, 1), som två trianglar 1-2-3 och 1-3-4 – tills vidare 8 floats per vertex: position, normal,
 texturkoordinater. Den är roterad en fast vinkel på -30° kring normalize(1, 0, 1) (learnopengl vrider den med tiden,
 `glfwGetTime() * -10.0` grader). Färgtexturen är `brickwall.png`, laddad med `loadTexture` (vänd vid laddning,
 `GL_REPEAT`, mipmaps), på texturenhet 0. Ljuset står på `lightPos` (0.5, 1.0, 0.3), kameran på (0, 0, 3).
@@ -35,33 +36,34 @@ learnopengls värden: ambient `0.1 * color`, diffust och Blinn-Phong-spekulärt 
 ritar också en liten kopia av fyrhörningen på ljusets position som markering; kursen hoppar över den.)
 :::
 :::vulkan
-Projektet är learnopengls: en fyrhörning på 2 × 2 som vetter mot +z, byggd av `createQuadVertices()` (learnopengls
+Utgå från ditt program från *Avancerad belysning* i en ny mapp (det har det texturerade, belysta golvet) och gör om
+det till learnopengls scen: en fyrhörning på 2 × 2 som vetter mot +z, byggd av `createQuadVertices()` (learnopengls
 `renderQuad()`, anropad före `createVertexBuffer()`; den fyller medlemmen `std::vector<Vertex> vertices`, som
 vulkan-tutorials `loadModel()` gör) av positionerna `pos1`…`pos4` ((-1, 1), (-1, -1), (1, -1), (1, 1)),
 texturkoordinaterna `uv1`…`uv4` ((0, 1), (0, 0), (1, 0), (1, 1)) och normalen `nm` (0, 0, 1), som två trianglar 1-2-3
-och 1-3-4 – tills vidare `{pos1, nm, uv1}` och så vidare. Push constants bär dess modellmatris, en fast rotation på -30°
-kring normalize(1, 0, 1) (learnopengl vrider den med tiden). Färgtexturen är `textures/brickwall.png` på binding 1.
-Ljuset står på `lightPos` (0.5, 1.0, 0.3), kameran på (0, 0, 3). `normal_mapping.vert` skickar `fragPos`, `normal` (med
-normalmatrisen) och `texCoord`; `normal_mapping.frag` belyser med learnopengls värden: ambient `0.1 * color`, diffust och
-Blinn-Phong-spekulärt `vec3(0.2) * pow(…, 32.0)`. (learnopengl ritar också en liten kopia av fyrhörningen på ljusets
-position som markering; kursen hoppar över den.)
+och 1-3-4 – tills vidare `{pos1, nm, uv1}` och så vidare. Push constants bär dess modellmatris, en fast rotation på
+-30° kring normalize(1, 0, 1) (learnopengl vrider den med tiden). Färgtexturen är `textures/brickwall.png` på
+binding 1. Ljuset står på `lightPos` (0.5, 1.0, 0.3), kameran på (0, 0, 3). `normal_mapping.vert` skickar `fragPos`,
+`normal` (med normalmatrisen) och `texCoord`; `normal_mapping.frag` belyser med learnopengls värden: ambient
+`0.1 * color`, diffust och Blinn-Phong-spekulärt `vec3(0.2) * pow(…, 32.0)`. (learnopengl ritar också en liten kopia
+av fyrhörningen på ljusets position som markering; kursen hoppar över den.)
 :::
 :::d3d12
-Projektet är learnopengls: en fyrhörning på 2 × 2 som vetter mot +z, byggd i `LoadAssets` av positionerna `pos1`…`pos4`
-((-1, 1), (-1, -1), (1, -1), (1, 1)), normalen `nm` (0, 0, 1) och texturkoordinaterna `uv1`…`uv4` – (0, 0), (0, 1),
-(1, 1), (1, 0): learnopengls med v vänt, eftersom Direct3D:s v = 0 är bildens översta rad – som två trianglar 1-2-3 och
-1-3-4. Tills vidare är en `Vertex` position, normal och texturkoordinater (8 floats). Root constants bär dess
-modellmatris, en fast rotation på -30° kring normalize(1, 0, 1) (learnopengl vrider den med tiden), och dess
-normalmatris. Färgtexturen är `brickwall.png` (t0), laddad av `LoadTexture` som `R8G8B8A8_UNORM`. Ljuset står på
-`lightPos` (0.5, 1.0, 0.3), kameran på (0, 0, 3). `normal_mapping.hlsl`:s `VSMain` skickar `fragPos`, `normal` (med
+Utgå från ditt program från *Avancerad belysning* i en ny mapp (det har det texturerade, belysta golvet) och gör om
+det till learnopengls scen: en fyrhörning på 2 × 2 som vetter mot +z, byggd i `LoadAssets` av positionerna
+`pos1`…`pos4` ((-1, 1), (-1, -1), (1, -1), (1, 1)), normalen `nm` (0, 0, 1) och texturkoordinaterna `uv1`…`uv4` – (0,
+0), (0, 1), (1, 1), (1, 0): learnopengls med v vänt, eftersom Direct3D:s v = 0 är bildens översta rad – som två
+trianglar 1-2-3 och 1-3-4. Tills vidare är en `Vertex` position, normal och texturkoordinater (8 floats). Root
+constants bär dess modellmatris, en fast rotation på -30° kring normalize(1, 0, 1) (learnopengl vrider den med tiden),
+och dess normalmatris. Färgtexturen är `brickwall.png` (t0), laddad av `LoadTexture` som `R8G8B8A8_UNORM`. Ljuset står
+på `lightPos` (0.5, 1.0, 0.3), kameran på (0, 0, 3). `normal_mapping.hlsl`:s `VSMain` skickar `fragPos`, `normal` (med
 normalmatrisen) och `texCoords`; `PSMain` belyser med learnopengls värden: ambient `0.1f * color`, diffust och
 Blinn-Phong-spekulärt `float3(0.2f, 0.2f, 0.2f) * pow(…, 32.0f)`. (learnopengl ritar också en liten kopia av
 fyrhörningen på ljusets position som markering; kursen hoppar över den.)
 :::
 
 Bygg och kör programmet: en tegelvägg, vriden snett – dess nedersta hörn når nedanför fönstret – med ett högdager uppe
-till höger. Den är jämnt belyst – teglen och de ljusa fogarna mellan dem ser målade ut på en platt skiva. Kommentarerna
-`// TODO:` i projektet visar var din kod ska in.
+till höger. Den är jämnt belyst – teglen och de ljusa fogarna mellan dem ser målade ut på en platt skiva.
 
 ## Normal mapping
 

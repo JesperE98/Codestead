@@ -10,8 +10,54 @@ pixels. A large part of {{api}}'s work is to turn 3D coordinates into 2D pixels 
 by the **graphics pipeline**. The graphics pipeline can be split into two large parts: the first turns your 3D
 coordinates into 2D coordinates, the second turns those 2D coordinates into actual coloured pixels.
 
-As usual, the chapter's start files have `// TODO:` comments that mark where your code goes, and you build and run the
-program in your IDE. Until you reach the draw task, the program only shows the teal window from the previous chapter.
+You continue in your program from *Hello Window*, and you build and run it in your IDE after each task. Until you
+reach the draw task, the program only shows the teal window from the previous chapter.
+
+:::opengl
+Everything this chapter adds goes into `main`: the shaders after GLAD is loaded, the vertex data after them, the
+draw call in the render section of the loop, and the clean-up after the loop, before `glfwTerminate()`.
+:::
+:::vulkan
+Prepare your program first. Add `#include <glm/glm.hpp>` above `<iostream>`, and `<fstream>` and `<array>` to the
+other includes. Add an empty `void createGraphicsPipeline()` to the class and call it in `initVulkan()` right after
+`createRenderPass()`. Then make a folder `shaders` next to `main.cpp` with two files, `shader.vert` and
+`shader.frag`, each with nothing but the line `#version 450` and an empty `void main() {}` for now – the first task
+fills them in.
+:::
+:::d3d12
+Prepare your program first. Declare what the triangle needs in the class `D3D12App`: the vertex type, the viewport
+and the scissor rectangle, the root signature and the vertex buffer with its view –
+
+```cpp
+    struct Vertex
+    {
+        XMFLOAT3 position;
+    };
+
+    // Pipeline objects.
+    CD3DX12_VIEWPORT m_viewport;
+    CD3DX12_RECT m_scissorRect;
+    ComPtr<ID3D12RootSignature> m_rootSignature;
+
+    // App resources.
+    ComPtr<ID3D12Resource> m_vertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+```
+
+– and initialise the viewport and the scissor rectangle to the whole window in the constructor:
+
+```cpp
+D3D12App::D3D12App(UINT width, UINT height) :
+    m_width(width),
+    m_height(height),
+    m_viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)),
+    m_scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height))
+{
+}
+```
+
+Then add a file `shaders.hlsl` next to `main.cpp`, empty for now: the shaders go into it in the tasks.
+:::
 
 ## The graphics pipeline
 
@@ -148,7 +194,7 @@ Vertex vertices[] =
 };
 ```
 
-`Vertex` is already declared in the class: `struct Vertex { XMFLOAT3 position; };`, three floats per vertex.
+`Vertex` is the struct you declared in the class: `struct Vertex { XMFLOAT3 position; };`, three floats per vertex.
 Direct3D's normalized device coordinates are like OpenGL's: (0, 0) is the centre, x grows to the right and **y grows
 upwards**, so `(0.0, 0.5)` is the top corner.
 
@@ -220,8 +266,8 @@ The triangle's position doesn't change, is used a lot and stays the same for eve
 type is `GL_STATIC_DRAW`. If the data were likely to change frequently, `GL_DYNAMIC_DRAW` would let the driver
 place it in memory that allows faster writes.
 
-At the end of the program, everything you created should be deleted again. The project has a clean-up section at
-the end of `main` for that: `glDeleteBuffers(1, &VBO);`.
+At the end of the program, everything you created should be deleted again. Give `main` a clean-up section at
+its end for that: `glDeleteBuffers(1, &VBO);`.
 
 Now do the first task: put the three vertices in `float vertices[]`, create the VBO, bind it and fill it with
 `glBufferData`, and delete it in the clean-up. Build & run: nothing changes yet – the data is on the GPU, but
@@ -531,7 +577,7 @@ message and you print it. Shader errors don't stop your program: without this ch
 up as a missing triangle.
 
 Now do the second task: write `vertexShaderSource` at the top of `main.cpp`, then create and compile the vertex
-shader with the error check (where the TODO in `main` says). Build & run: no error should be printed.
+shader with the error check in `main`, after GLAD is loaded. Build & run: no error should be printed.
 :::
 :::vulkan
 OpenGL compiles GLSL at run time, inside the driver. Vulkan doesn't: it only accepts shaders in **SPIR-V**, a binary
@@ -739,8 +785,8 @@ void main() {
 colour: you declare your own output, and `layout(location = 0)` says it is written to the framebuffer's attachment
 with index 0 – the colour attachment of the render pass you created in the previous chapter.
 
-Now do the first task: write both shaders, `shader.vert` and `shader.frag` (the `#version 450` lines and empty
-`main` functions are already there). Build & run compiles them to SPIR-V; the window still shows only teal, because
+Now do the first task: write both shaders, `shader.vert` and `shader.frag` (each starting with `#version 450`).
+Build & run compiles them to SPIR-V; the window still shows only teal, because
 the program doesn't load them yet.
 :::
 :::d3d12
@@ -820,8 +866,8 @@ memory, and how it should connect the vertex data to the vertex shader's attribu
 :::vulkan
 Vulkan has no shader program object. What OpenGL links into a program – the shaders, plus everything OpenGL
 remembers as state, such as how vertices are read – becomes one **graphics pipeline** in Vulkan, a `VkPipeline`.
-The pipeline is created in `createGraphicsPipeline()`, which is already called in `initVulkan()` right after
-`createRenderPass()`. Its four TODO comments are the steps of the next tasks:
+The pipeline is created in `createGraphicsPipeline()`, the function you added and call in `initVulkan()` right after
+`createRenderPass()`. You write it in four steps, the next tasks:
 
 1. load the SPIR-V code, create the shader modules and the shader stages;
 2. describe the fixed-function stages and create the pipeline layout;
@@ -1369,7 +1415,8 @@ vkDestroyPipeline(device, graphicsPipeline, nullptr);
 vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 ```
 
-Now do the fifth task: create the graphics pipeline at the "create the graphics pipeline" TODO, add the member, and
+Now do the fifth task: create the graphics pipeline in `createGraphicsPipeline()`, after the pipeline layout and
+before the shader modules are destroyed, add the member, and
 destroy it in `cleanup()`. Build & run: still teal, but there should be no validation message.
 
 Then do the sixth task: the vertex buffer, as described in *Vertex input* – the members `vertexBuffer` and
@@ -1399,7 +1446,7 @@ m_vertexBufferView.SizeInBytes = vertexBufferSize;
 - `SizeInBytes` is the size of the whole buffer.
 
 Unlike most things in Direct3D 12, a vertex buffer view is not stored in a descriptor heap: it is passed directly to
-the command list. The member `m_vertexBufferView` is already declared in the class.
+the command list. The member `m_vertexBufferView` is the one you declared in the class.
 
 Now do the fifth task: create the vertex buffer in `LoadAssets` – the three vertices from *Vertex input* (top,
 bottom right, bottom left), the committed resource in the upload heap, `Map` + `memcpy` + `Unmap`, and the vertex
@@ -1503,8 +1550,9 @@ vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 - `vkCmdDraw` takes the vertex count (3), the instance count (`1`: no instanced rendering), the first vertex (`0`)
   and the first instance (`0`).
 
-Now do the seventh task: add these commands at the TODO in `recordCommandBuffer()`, then build and run. You should see
-an orange triangle on the teal background, with its corners at the pixels (400, 150), (600, 450) and (200, 450).
+Now do the seventh task: add these commands to `recordCommandBuffer()`, after `vkCmdBeginRenderPass`, then build and
+run. You should see an orange triangle on the teal background, with its corners at the pixels (400, 150), (600, 450)
+and (200, 450).
 
 If the window stays teal, check the program's console for validation messages first: they usually name the problem. Then
 check the vertices and the rasterizer settings (`cullMode` and `frontFace`). It took a lot of code to get here – about a
@@ -1957,9 +2005,8 @@ the next chapters will hopefully be much easier to understand.
 ## Exercises
 
 To really get a good grasp of the concepts discussed, a few exercises were set up. It is advised to work through them
-before continuing to the next subject, to make sure you get a good grasp of what's going on. The project is yours to
-change: try them in your IDE, and save the start files into a new folder with **Save start files…** if you want a
-clean start.
+before continuing to the next subject, to make sure you get a good grasp of what's going on. Try them in your IDE –
+in a copy of your program's folder, if you want to keep the finished chapter as it is.
 
 :::opengl
 1. Try to draw 2 triangles next to each other using `glDrawArrays` by adding more vertices to your data.

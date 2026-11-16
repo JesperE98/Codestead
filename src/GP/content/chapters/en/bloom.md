@@ -29,54 +29,56 @@ None of this is a new mechanism: it is the last chapter's floating point target 
 colour buffers at once, and passes that take turns drawing into one buffer and reading another. Every API has both;
 this chapter shows how {{api}} does it.
 
-The project is learnopengl's bloom scene: a wooden floor (the 2 × 2 × 2 cube scaled to a thin 25 × 1 × 25 slab) with six
-containers on and above it, lit by four point lights that are much brighter than in the earlier chapters: white (5, 5,
-5) at (0, 0.5, 1.5), red (10, 0, 0) at (-4, 0.5, -3), blue (0, 0, 15) at (3, 0.5, 1) and green (0, 5, 0) at (-0.8,
-2.4, -1). Each light is also shown as a small cube in its own colour – values far above 1.0. The camera is
-learnopengl's, at (0, 0, 5) looking down -z. Both textures are read as sRGB textures; the lighting is the last chapter's
-(diffuse only, quadratic attenuation, no ambient).
+This chapter's scene is learnopengl's bloom scene: a wooden floor (the 2 × 2 × 2 cube scaled to a thin 25 × 1 × 25
+slab) with six containers on and above it, lit by four point lights that are much brighter than in the earlier
+chapters: white (5, 5, 5) at (0, 0.5, 1.5), red (10, 0, 0) at (-4, 0.5, -3), blue (0, 0, 15) at (3, 0.5, 1) and green
+(0, 5, 0) at (-0.8, 2.4, -1). Each light is also shown as a small cube in its own colour – values far above 1.0. The
+camera is learnopengl's, at (0, 0, 5) looking down -z. Both textures are read as sRGB textures; the lighting is the
+last chapter's (diffuse only, quadratic attenuation, no ambient).
 
 :::opengl
-The start is the last chapter's end state with this scene: `main.cpp` renders the scene with `bloom.vs` / `bloom.fs`
-and the light cubes with `bloom.vs` / `light_box.fs` into `hdrFBO` – one `GL_RGBA16F` colour texture, `colorBuffer`,
-and a depth renderbuffer – and then draws `colorBuffer` on learnopengl's `renderQuad()` with `bloom_final.vs` /
-`bloom_final.fs`, which tone-maps with the exposure curve (`exposure` = 1.0) and gamma-corrects. The colour texture
-clamps to the edge (`GL_CLAMP_TO_EDGE`) – learnopengl's comment says why: "we clamp to the edge as the blur filter would
-otherwise sample repeated texture values!". `blur.vs` is complete, `blur.fs` has its uniforms but its `main` is a TODO.
+You continue in your program from *HDR*, as it was at the end of that chapter, with this scene: `main.cpp` renders the
+scene with `bloom.vs` / `bloom.fs` and the light cubes with `bloom.vs` / `light_box.fs` into `hdrFBO` – one
+`GL_RGBA16F` colour texture, `colorBuffer`, and a depth renderbuffer – and then draws `colorBuffer` on learnopengl's
+`renderQuad()` with `bloom_final.vs` / `bloom_final.fs`, which tone-maps with the exposure curve (`exposure` = 1.0)
+and gamma-corrects. The colour texture clamps to the edge (`GL_CLAMP_TO_EDGE`) – learnopengl's comment says why: "we
+clamp to the edge as the blur filter would otherwise sample repeated texture values!". `blur.vs` is complete,
+`blur.fs` starts with its uniforms and an empty `main`.
 :::
 :::vulkan
-The start is the last chapter's end state with this scene: `recordCommandBuffer()` draws the floor and the six
-containers with `graphicsPipeline` (`shaders/bloom.vert` / `.frag`) and the light cubes with `lightPipeline`
-(`bloom.vert` / `light_box.frag`) into `hdrRenderPass` – one `VK_FORMAT_R16G16B16A16_SFLOAT` colour image and a depth
-image – and then the screen quad (vertices 36..41) into the window with `bloomFinalPipeline` (`bloom_final.frag`), which
-tone-maps with the exposure curve (`ubo.exposure` = 1.0) and gamma-corrects. The push constants are `struct
-PushConstants { glm::mat4 model; glm::vec3 lightColor; }` in one range for the vertex **and** fragment stages (the
-model matrix for `bloom.vert`, the light's colour for `light_box.frag`); push constants are laid out like std430, so the
-`vec3` sits right after the `mat4`, at offset 64. Each texture has its descriptor set (`woodDescriptorSet`,
-`containerDescriptorSet`, `hdrDescriptorSet`); the floating point images are sampled with `colorBufferSampler`, which
-clamps to the edge (`VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE`) – learnopengl's comment says why: "we clamp to the edge as
-the blur filter would otherwise sample repeated texture values!". `shaders/blur.vert` is complete; `blur.frag` has its
-weights, but its push constants and `main` are TODOs.
+You continue in your program from *HDR*, as it was at the end of that chapter, with this scene:
+`recordCommandBuffer()` draws the floor and the six containers with `graphicsPipeline` (`shaders/bloom.vert` /
+`.frag`) and the light cubes with `lightPipeline` (`bloom.vert` / `light_box.frag`) into `hdrRenderPass` – one
+`VK_FORMAT_R16G16B16A16_SFLOAT` colour image and a depth image – and then the screen quad (vertices 36..41) into the
+window with `bloomFinalPipeline` (`bloom_final.frag`), which tone-maps with the exposure curve (`ubo.exposure` = 1.0)
+and gamma-corrects. The push constants are `struct PushConstants { glm::mat4 model; glm::vec3 lightColor; }` in one
+range for the vertex **and** fragment stages (the model matrix for `bloom.vert`, the light's colour for
+`light_box.frag`); push constants are laid out like std430, so the `vec3` sits right after the `mat4`, at offset 64.
+Each texture has its descriptor set (`woodDescriptorSet`, `containerDescriptorSet`, `hdrDescriptorSet`); the floating
+point images are sampled with `colorBufferSampler`, which clamps to the edge (`VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE`)
+– learnopengl's comment says why: "we clamp to the edge as the blur filter would otherwise sample repeated texture
+values!". `shaders/blur.vert` is complete; `blur.frag` starts with its weights; its push constants and `main` come in
+the tasks.
 :::
 :::d3d12
-The start is the last chapter's end state with this scene: `PopulateCommandList` calls `RenderScene()` – the floor and
-the six containers with `m_pipelineState` (`bloom.hlsl`), the light cubes with `m_lightBoxPipelineState`
-(`light_box.hlsl`'s `PSMain`, `lightColor`) – into one `R16G16B16A16_FLOAT` colour buffer, `m_colorBuffer` (RTV heap slot
-`FrameCount`, CBV/SRV heap slot 3), with the depth buffer; then it draws the screen quad (vertices 36–41) into the back
-buffer with `m_bloomFinalPipelineState` (`bloom_final.hlsl`), which tone-maps with the exposure curve (`exposure` = 1.0,
-a root constant) and gamma-corrects. Root parameter 0 holds the root constants of whatever is drawn – `ModelConstants`
-(model, normal matrix, `lightColor`: 35 values) for the scene, a single float for the final quad – and is visible to all
-shaders. The screen-quad passes sample with the static sampler s1: linear, `D3D12_TEXTURE_ADDRESS_MODE_CLAMP` –
-learnopengl clamps its colour buffers to the edge "as the blur filter would otherwise sample repeated texture values!".
-`blur.hlsl` has its `VSMain`, its weights and the `BlurConstants` cbuffer; its `PSMain` is a TODO that returns black
-(the file isn't compiled before you need it).
+You continue in your program from *HDR*, as it was at the end of that chapter, with this scene: `PopulateCommandList`
+calls `RenderScene()` – the floor and the six containers with `m_pipelineState` (`bloom.hlsl`), the light cubes with
+`m_lightBoxPipelineState` (`light_box.hlsl`'s `PSMain`, `lightColor`) – into one `R16G16B16A16_FLOAT` colour buffer,
+`m_colorBuffer` (RTV heap slot `FrameCount`, CBV/SRV heap slot 3), with the depth buffer; then it draws the screen
+quad (vertices 36–41) into the back buffer with `m_bloomFinalPipelineState` (`bloom_final.hlsl`), which tone-maps with
+the exposure curve (`exposure` = 1.0, a root constant) and gamma-corrects. Root parameter 0 holds the root constants
+of whatever is drawn – `ModelConstants` (model, normal matrix, `lightColor`: 35 values) for the scene, a single float
+for the final quad – and is visible to all shaders. The screen-quad passes sample with the static sampler s1: linear,
+`D3D12_TEXTURE_ADDRESS_MODE_CLAMP` – learnopengl clamps its colour buffers to the edge "as the blur filter would
+otherwise sample repeated texture values!". `blur.hlsl` has its `VSMain`, its weights and the `BlurConstants` cbuffer;
+its `PSMain` starts by returning black (the file isn't compiled before you need it).
 :::
 
-The `// TODO:` comments in the project mark where your code goes. Build and run the program in your IDE: the floor and
-the containers, the **white light cube** in the middle above the centre, under the top container, and the **green light
-cube** at the top edge. The red and blue light cubes aren't in view, but their light colours the floor and the sides of
-the boxes. The tone mapping keeps the details, but the light cubes don't look like lights: they have hard edges, and
-right next to them the black background is as black as anywhere.
+Build and run the program in your IDE: the floor and the containers, the **white light cube** in the middle above the
+centre, under the top container, and the **green light cube** at the top edge. The red and blue light cubes aren't in
+view, but their light colours the floor and the sides of the boxes. The tone mapping keeps the details, but the light
+cubes don't look like lights: they have hard edges, and right next to them the black background is as black as
+anywhere.
 
 ## Extracting bright color
 

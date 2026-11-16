@@ -22,7 +22,7 @@
       "hint": {
         "opengl": "`Shader shaderSingleColor(\"stencil_testing.vs\", \"stencil_single_color.fs\");`. I loopen: `shaderSingleColor.use();` före dess två `setMat4`-anrop – ett program måste vara i bruk för att dess uniforms ska kunna sättas.",
         "vulkan": "learnopengls `stencil_single_color.fs`: en färg, ingen textur. Ingen pipeline använder den än, så inget ändras.",
-        "d3d12": "Kompilera `VSMain`/`PSMain` i `stencil_single_color.hlsl` till `singleColorVertexShader`/`singleColorPixelShader`, sätt `psoDesc.VS`/`PS` och anropa `CreateGraphicsPipelineState` igen. Behåll TODO-raden före den till den sista uppgiften."
+        "d3d12": "Kompilera `VSMain`/`PSMain` i `stencil_single_color.hlsl` till `singleColorVertexShader`/`singleColorPixelShader`, sätt `psoDesc.VS`/`PS` och anropa `CreateGraphicsPipelineState` igen. Konturens djup- och stenciltillstånd, som sätts före det här anropet, kommer i den sista uppgiften."
       }
     },
     "write-stencil": {

@@ -50,8 +50,8 @@ at the horizon (w). Both are indexed by the roughness and by `sqrt(1 - cos θ)` 
 
 The course includes the tables from the reference implementation of the paper, the `ltc_code` repository. They are in
 `textures/ltc/ltc_matrix.hpp`, under that repository's BSD-style licence, whose notice and paper reference are at the
-top of the header. learnopengl ships the same numbers. Each project copies the header unchanged next to its
-`main.cpp`.
+top of the header. learnopengl ships the same numbers. **Save resources…** in the panel copies the header, unchanged,
+and the floor's texture into your folder: keep the header next to `main.cpp`.
 
 :::ide vs rider
 Add `ltc_matrix.hpp` to the project (**Project → Add Existing Item…**; in Rider **Add → Existing Item…** in the
@@ -69,13 +69,14 @@ Why can the shader evaluate a GGX-like reflection over a polygon without integra
 The fitted M⁻¹ (from LTC1) moves the polygon's corners. The integral of a clamped cosine over a polygon is exact: a sum over its edges.
 ```
 
-## The project
+## Your program
 
-The start draws learnopengl's scene. A floor of two triangles, 20 × 20 units, carries the wood texture of the Advanced
-Lighting chapters as an sRGB texture (learnopengl uses its own concrete texture). A light, a 2 × 2 rectangle standing at
-x = −8 and facing +x, is drawn in its colour, BurlyWood. The camera stands at (0, 1, 0.5) and looks along −x towards the
-light. The floor's shader writes black because there is no light yet. Build and run the program: it shows the rectangle
-on black; the `// TODO:` comments mark where your code goes.
+Start from your program from *Advanced Lighting* in a new folder (it has the wooden floor) and make it draw
+learnopengl's scene. A floor of two triangles, 20 × 20 units, carries the wood texture of the Advanced Lighting
+chapters as an sRGB texture (learnopengl uses its own concrete texture). A light, a 2 × 2 rectangle standing at x = −8
+and facing +x, is drawn in its colour, BurlyWood. The camera stands at (0, 1, 0.5) and looks along −x towards the
+light. The floor's shader writes black because there is no light yet. Build and run the program: it shows the
+rectangle on black.
 
 The values are learnopengl's: intensity 4, roughness 0.5, a specular colour of 0.23 (converted to linear), a
 two-sided light, output gamma-corrected with a power of 1/2.2. learnopengl changes the roughness, the intensity, the
@@ -144,8 +145,8 @@ and `LoadAssets` puts LTC1 in heap slot 1 and LTC2 in slot 2:
     LoadLTCTexture(LTC2, m_LTC.mat2, ltcMat2UploadHeap, 2);
 ```
 
-The upload heaps must live until the setup command list has run. The root signature's table already spans t0…t2 in the
-start, with the wood in slot 3 at t2. The tables use static sampler s0:
+The upload heaps must live until the setup command list has run. The root signature's table spans t0…t2, with the wood
+in slot 3 at t2. The tables use static sampler s0:
 
 ```cpp
         samplers[0].Filter = D3D12_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT;

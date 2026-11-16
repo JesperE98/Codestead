@@ -22,7 +22,7 @@
       "hint": {
         "opengl": "`Shader shaderSingleColor(\"stencil_testing.vs\", \"stencil_single_color.fs\");`. In the loop: `shaderSingleColor.use();` before its two `setMat4` calls – a program must be in use to set its uniforms.",
         "vulkan": "learnopengl's `stencil_single_color.fs`: one colour, no texture. No pipeline uses it yet, so nothing changes.",
-        "d3d12": "Compile `VSMain`/`PSMain` of `stencil_single_color.hlsl` into `singleColorVertexShader`/`singleColorPixelShader`, set `psoDesc.VS`/`PS` and call `CreateGraphicsPipelineState` again. Keep the TODO line before it for the last task."
+        "d3d12": "Compile `VSMain`/`PSMain` of `stencil_single_color.hlsl` into `singleColorVertexShader`/`singleColorPixelShader`, set `psoDesc.VS`/`PS` and call `CreateGraphicsPipelineState` again. The outline's depth and stencil state, set before this call, come in the last task."
       }
     },
     "write-stencil": {

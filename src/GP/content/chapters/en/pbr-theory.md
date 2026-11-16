@@ -33,10 +33,10 @@ popular engines, and looks visually amazing. By the end of the part we'll have s
 plastic and red metal from smooth to rough, lit by four point lights and by an environment of sky, hills and lamps, and
 then the same light on a textured material of riveted steel with patches of rust.
 
-Keep in mind, the topics in this part are rather advanced, so it is advised to have a good understanding of the earlier
-parts of the course – in particular of HDR and gamma correction, normal mapping and cube maps. This chapter has no
-tasks: it is the theory the next three chapters build on. Its project is already the one you will work in next; you
-can build and run it at the end of the chapter.
+Keep in mind, the topics in this part are rather advanced, so it is advised to have a good understanding of the
+earlier parts of the course – in particular of HDR and gamma correction, normal mapping and cube maps. This chapter
+has no tasks: it is the theory the next three chapters build on. At its end you prepare the program you will work in
+next, and build and run it.
 
 ## The microfacet model
 
@@ -635,37 +635,86 @@ regardless of environment or lighting setup, making life easier for artists to g
 Surfaces authored in a PBR pipeline can easily be shared among different PBR render engines, will look correct
 regardless of the environment they're in, and as a result look much more natural.
 
-## The project
+## Your program
 
-The project of this chapter is the one the next chapter starts from, so you can look at it and run it now. It is
-learnopengl's scene for PBR lighting: a 7 × 7 grid of spheres, each a UV sphere of radius 1, 2.5 units apart. The rows
-go from non-metal (bottom, `metallic = 0`) to metal (top, `metallic = 6/7`), the columns from smooth (left, roughness
-0.05) to rough (right, roughness 6/7); every sphere has the albedo (0.5, 0.0, 0.0) and an ao of 1.0. Four point lights
-of colour (300, 300, 300) hang at (±10, ±10, 10), in front of the grid. The camera is at **(0, 0, 22)** looking down -z,
-so the whole grid is in view (learnopengl's camera starts at (0, 0, 3), in the middle of the grid, and you would have
-to fly back with the keys to see it).
+This chapter has no tasks; at its end you prepare the program the next chapter works in. Start from your program from
+*Camera* in a new folder and turn it into learnopengl's scene for PBR lighting: a 7 × 7 grid of spheres, each a UV
+sphere of radius 1, 2.5 units apart. The rows go from non-metal (bottom, `metallic = 0`) to metal (top,
+`metallic = 6/7`), the columns from smooth (left, roughness 0.05) to rough (right, roughness 6/7); every sphere has
+the albedo (0.5, 0.0, 0.0) and an ao of 1.0. Four point lights of colour (300, 300, 300) hang at (±10, ±10, 10), in
+front of the grid. The camera is at **(0, 0, 22)** looking down -z, so the whole grid is in view (learnopengl's camera
+starts at (0, 0, 3), in the middle of the grid, and you would have to fly back with the keys to see it).
+
+The sphere is learnopengl's `renderSphere()`: a grid of points on the unit sphere, whose position is also its normal,
+drawn as one long triangle strip that runs back and forth row by row (`GL_TRIANGLE_STRIP`,
+`VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP`, `D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP`). The vertices and indices are the same
+in every API:
+
+```cpp
+// learnopengl's UV sphere: (X_SEGMENTS + 1) × (Y_SEGMENTS + 1) vertices on the unit sphere, drawn as one triangle strip
+const unsigned int X_SEGMENTS = 24;   // learnopengl uses 64; 24 is plenty for these small spheres
+const unsigned int Y_SEGMENTS = 24;
+const float PI = 3.14159265359f;
+for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
+{
+    for (unsigned int y = 0; y <= Y_SEGMENTS; ++y)
+    {
+        float xSegment = (float)x / (float)X_SEGMENTS;
+        float ySegment = (float)y / (float)Y_SEGMENTS;
+        float xPos = std::cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
+        float yPos = std::cos(ySegment * PI);
+        float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
+        // position = normal = (xPos, yPos, zPos), texture coordinates = (xSegment, ySegment)
+    }
+}
+
+bool oddRow = false;
+for (unsigned int y = 0; y < Y_SEGMENTS; ++y)
+{
+    if (!oddRow) // even rows: y == 0, y == 2; and so on
+    {
+        for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
+        {
+            indices.push_back(y       * (X_SEGMENTS + 1) + x);
+            indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+        }
+    }
+    else
+    {
+        for (int x = X_SEGMENTS; x >= 0; --x)
+        {
+            indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+            indices.push_back(y       * (X_SEGMENTS + 1) + x);
+        }
+    }
+    oddRow = !oddRow;
+}
+```
 
 :::opengl
 `main.cpp` builds the sphere in learnopengl's `renderSphere()`, sets `albedo`, `ao`, `camPos` and the four
 `lightPositions[i]` / `lightColors[i]`, and per sphere `metallic`, `roughness`, `model` and `normalMatrix`. `pbr.vs`
-passes the world position, the normal and the texture coordinates on; `pbr.fs` declares the material and the lights and
-already computes `N` and `V`, but its light loop and the three functions of the BRDF are still `// TODO:` comments. The
-five `.png` maps are in the folder as well; they are not used before the last task of the next chapter.
+passes the world position, the normal and the texture coordinates on; `pbr.fs` declares the material and the lights
+and computes `N` and `V` and adds only the ambient term `0.03 * albedo * ao`; the light loop and the three functions
+of the BRDF are the next chapter's tasks. The five `.png` maps – **Save resources…** in the panel copies them into
+your folder – are not used before the last task of the next chapter.
 :::
 :::vulkan
 `main.cpp` builds the sphere once in `createSphere()` and records the 49 draws in `recordCommandBuffer()`, each with
 `vkCmdPushConstants` of the sphere's model matrix, `metallic` and `roughness`; the uniform buffer holds the camera's
-matrices, the four lights, the albedo, the ao and `camPos`. `shaders/pbr.vert` passes the world position, the normal and
-the texture coordinates on; `shaders/pbr.frag` already computes `N` and `V`, but its light loop and the three functions
-of the BRDF are still `// TODO:` comments. The five maps in `textures/` are not used before the last task of the next
-chapter.
+matrices, the four lights, the albedo, the ao and `camPos`. `shaders/pbr.vert` passes the world position, the normal
+and the texture coordinates on; `shaders/pbr.frag` computes `N` and `V` and adds only the ambient term
+`0.03 * albedo * ao`; the light loop and the three functions of the BRDF are the next chapter's tasks. The five maps
+in `textures/` – **Save resources…** in the panel copies them into your folder – are not used before the last task of
+the next chapter.
 :::
 :::d3d12
 `main.cpp` builds the sphere in `LoadAssets` and draws the 49 spheres in `RenderScene()`, each with its model matrix,
 its normal matrix and its material in the root constants; the constant buffer holds the camera's matrices, the four
-lights and `camPos`. In `pbr.hlsl`, `VSMain` is complete; `PSMain` already computes `N` and `V`, but its light loop and
-the three functions of the BRDF are still `// TODO:` comments. The five `.png` maps are not used before the last task of
-the next chapter.
+lights and `camPos`. In `pbr.hlsl`, `VSMain` is complete; `PSMain` computes `N` and `V` and adds only the ambient term
+`0.03 * albedo * ao`; the light loop and the three functions of the BRDF are the next chapter's tasks. The five `.png`
+maps – **Save resources…** in the panel copies them into your folder – are not used before the last task of the next
+chapter.
 :::
 
 Build and run the program: you see 49 almost black discs on the dark grey clear colour (0.1, 0.1, 0.1). The fragment

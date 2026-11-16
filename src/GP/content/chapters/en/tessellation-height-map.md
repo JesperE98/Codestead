@@ -24,25 +24,26 @@ The camera looks at the whole landscape from the front and above: from (0, 190, 
 of 1000 (learnopengl starts at a point over its much larger map). The fragment shader colours every point by its height.
 
 :::opengl
-The project is a plain OpenGL 3.3 program: `main.cpp`, the course's `Shader` class, `cpuheight.vs` / `.fs`
-(learnopengl's `8.3.cpuheight` shaders) and `heightmap.png`. The start opens the window and clears it; there is nothing to
-draw yet.
+Start a new program for the terrain – a plain OpenGL 3.3 program, for example from your program from *Camera*:
+`main.cpp`, the course's `Shader` class, `cpuheight.vs` / `.fs` (learnopengl's `8.3.cpuheight` shaders) and
+`heightmap.png`. At first it opens the window and clears it; there is nothing to draw yet.
 :::
 :::vulkan
-The project is a plain Vulkan program with a pipeline for `shaders/cpuheight.vert` / `.frag`, the camera's matrices in a
-uniform buffer and the model matrix as a push constant. The start's `loadHeightMap()` is empty, and `vertexBuffer` and
-`indexBuffer` stay `VK_NULL_HANDLE` – Vulkan cannot create a buffer of size 0, and destroying a null handle does nothing.
-`createVertexBuffer()` and `createIndexBuffer()` are the *Model Loading* chapters' staging-buffer functions; the tasks
-call them once the data exists. The height map is only read on the CPU, so no texture is created for it.
+Start a new program for the terrain – a plain Vulkan program, for example from your program from *Camera* – with a
+pipeline for `shaders/cpuheight.vert` / `.frag`, the camera's matrices in a uniform buffer and the model matrix as a
+push constant. At first `loadHeightMap()` is empty, and `vertexBuffer` and `indexBuffer` stay `VK_NULL_HANDLE` –
+Vulkan cannot create a buffer of size 0, and destroying a null handle does nothing. `createVertexBuffer()` and
+`createIndexBuffer()` are the *Model Loading* chapters' staging-buffer functions; the tasks call them once the data
+exists. The height map is only read on the CPU, so no texture is created for it.
 :::
 :::d3d12
-The project is a plain Direct3D 12 program with a pipeline state for `cpuheight.hlsl`, the camera's matrices in a constant
-buffer and an empty `LoadAssets` section for the terrain. A Windows program has no console, so where learnopengl prints
-with `std::cout`, the course writes to the debugger's output window with `OutputDebugStringA` (after `snprintf` into a
-buffer).
+Start a new program for the terrain – a plain Direct3D 12 program, for example from your program from *Camera* – with
+a pipeline state for `cpuheight.hlsl`, the camera's matrices in a constant buffer and an empty `LoadAssets` section
+for the terrain. A Windows program has no console, so where learnopengl prints with `std::cout`, the course writes to
+the debugger's output window with `OutputDebugStringA` (after `snprintf` into a buffer).
 :::
 
-The `// TODO:` comments mark where your code goes. Build and run the program in your IDE: an empty, dark window.
+Build and run the program in your IDE: an empty, dark window.
 
 ## Loading the height map
 
@@ -154,9 +155,9 @@ and calls `vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0
 `gl_PointSize = 1.0;` – Vulkan takes the size of a point only from the shader (the strips task removes it again).
 :::
 :::d3d12
-In Direct3D 12 the primitive topology has two parts: the pipeline state's `PrimitiveTopologyType` (point, line, triangle
-or patch – what the rasterizer receives) and the command list's `IASetPrimitiveTopology` (list or strip – how the vertices
-are put together). The start's pipeline state is made for points; the command list sets
+In Direct3D 12 the primitive topology has two parts: the pipeline state's `PrimitiveTopologyType` (point, line,
+triangle or patch – what the rasterizer receives) and the command list's `IASetPrimitiveTopology` (list or strip – how
+the vertices are put together). At first the pipeline state is made for points; the command list sets
 `D3D_PRIMITIVE_TOPOLOGY_POINTLIST` and draws the vertices. A point is one pixel in Direct3D – there is no point size.
 :::
 

@@ -7,8 +7,8 @@ liven och menyn – och, i learnopengls version, ljud. Allt detta med begrepp fr
 transformationer, blending, framebuffers, multisampling och textrendering. Vi lärde oss egentligen inga nya spännande
 grafiktekniker, utan snarare hur man kombinerar all kunskap hittills till en större helhet.
 
-**Det här kapitlet har inga uppgifter.** Dess projekt är det färdiga spelet – lösningen från kapitlet `render-text`: en
-`main.cpp` plus dess shadrar, `textures/`, `levels/` och `fonts/`.
+***Det här kapitlet har inga uppgifter.** Ditt program är det färdiga spelet – som det var i slutet av *Rendera text*:
+en `main.cpp` plus dess shadrar, `textures/`, `levels/` och `fonts/`.
 :::opengl
 `main.cpp` innehåller spelets structar och fria funktioner.
 :::

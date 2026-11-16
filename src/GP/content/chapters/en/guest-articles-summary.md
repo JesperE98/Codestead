@@ -282,8 +282,8 @@ part checks what you've learned.
 - **Levels**: four **outer** levels (one per edge) and two **inner** levels. **Spacing**: `equal_spacing` / `integer`
   rounds up to whole equal segments; **`fractional_odd_spacing`** rounds up to the next odd number with two shorter
   segments, so a changing level moves the points smoothly. Level 8 → 9 segments, 9 × 9 quads, 162 triangles per patch.
-- **Levels 1** (the start's control stage): one flat quad per patch – a coarse terrain; **levels 8**: the full terrain,
-  about 65,000 triangles from 1,600 vertices.
+- **Levels 1** (the chapter's first control stage): one flat quad per patch – a coarse terrain; **levels 8**: the full
+  terrain, about 65,000 triangles from 1,600 vertices.
 - **Distance-based levels**: per corner the eye-space depth, scaled to 0..1 between 250 and 450; each outer level
   `mix(MAX, MIN, …)` (8 to 2) from the **nearer of its edge's two corners**, the inner levels the larger of the two
   parallel outer levels. Computing an edge only from its own corners avoids **cracks** between neighbouring patches.
@@ -303,8 +303,8 @@ part checks what you've learned.
 :::vulkan
 - The **`tessellationShader`** device feature; `maxTessellationGenerationLevel` (64); `VK_PRIMITIVE_TOPOLOGY_PATCH_LIST`
   and `VkPipelineTessellationStateCreateInfo.patchControlPoints = 4` – the patch size is pipeline state.
-- A tessellation pipeline **must** have both a control and an evaluation shader – hence the start's control shader with
-  levels 1. The tessellator places `gl_TessCoord` as OpenGL's does.
+- A tessellation pipeline **must** have both a control and an evaluation shader – hence the chapter's first control
+  shader with levels 1. The tessellator places `gl_TessCoord` as OpenGL's does.
 - Wireframe with `VK_POLYGON_MODE_LINE` and the **`fillModeNonSolid`** feature; the height map `VK_FORMAT_R8_UNORM`
   without mipmaps, sampled in the evaluation stage.
 :::

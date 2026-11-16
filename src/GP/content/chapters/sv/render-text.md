@@ -4,9 +4,9 @@ I det här kapitlet lägger vi till de sista förbättringarna i spelet: ett sys
 återkoppling i form av renderad text. Kapitlet bygger mycket på kapitlet Textrendering, så det rekommenderas starkt att
 du går igenom det först om du inte redan har gjort det.
 
-Projektet är lösningen från kapitlet `powerups` – som `audio` behöll – med nya `// TODO:`-avsnitt, en ny textshader
-vars startkroppar kompilerar och inte ritar något användbart, och typsnittet från kapitlet Textrendering,
-`fonts/Inter-Bold.otf`, med sin licens `fonts/OFL.txt` (learnopengls spel använder ett annat typsnitt).
+Du fortsätter i ditt program från *Power-ups* – som *Ljud* behöll –, med en ny textshader (texten visar den) och
+typsnittet från kapitlet Textrendering, `fonts/Inter-Bold.otf`, med sin licens `fonts/OFL.txt` (learnopengls spel
+använder ett annat typsnitt); **Spara resursfilerna…** i panelen kopierar båda till din mapp.
 :::opengl
 Textshadern är `text_2d.vs` / `text_2d.fs`.
 :::

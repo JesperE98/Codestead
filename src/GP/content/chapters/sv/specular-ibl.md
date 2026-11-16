@@ -90,19 +90,19 @@ Vad delar split sum-approximationen upp den spekulära integralen i?
 Hela integralen beror på vyriktningen och strävheten liksom på ljusriktningen – för många indata för att tabellera. Produkten av två integraler, var och en med bara två indata utöver riktningen, kan lagras i en cube map med mipnivåer och i en liten 2D-textur.
 ```
 
-## Projektet
+## Ditt program
 
-Projektet börjar i slutet av förra kapitlet: de 7 × 7 röda sfärerna, belysta direkt av de fyra punktljusen och indirekt
-av irradiansmappen, framför omgivningen. Nytt i det:
+Du fortsätter i ditt program från *Diffus irradians*, som det var i slutet av det kapitlet: de 7 × 7 röda sfärerna,
+belysta direkt av de fyra punktljusen och indirekt av irradiansmappen, framför omgivningen. Nytt i kapitlet:
 
 - **Skärmfyrhörningen**, learnopengls `renderQuad()` från de tidigare kapitlen: två trianglar som täcker render targeten,
   med texturkoordinater från 0 till 1 – för BRDF-integrationsmappen.
-- Shadrarna **`prefilter`** och **`brdf`** med TODO. Förfiltershadern har redan `DistributionGGX` och Hammersley-
-  sekvensens två funktioner (`RadicalInverse_VdC` och `Hammersley`), BRDF-shadern Hammersley-funktionerna;
-  skärmfyrhörningens vertex shader är färdig.
+- Shadrarna **`prefilter`** och **`brdf`**, som texten visar. Förfiltershadern använder `DistributionGGX` och
+  Hammersley-sekvensens två funktioner (`RadicalInverse_VdC` och `Hammersley`), BRDF-shadern Hammersley-funktionerna;
+  skärmfyrhörningens vertex shader skickar bara vidare hörnen.
 - **En debug-shader** som visar en textur med två kanaler på skärmfyrhörningen (`vec4(texture(image, TexCoords).rg, 0.0,
   1.0)`), för att titta på BRDF-integrationsmappen en stund.
-- Materialets fem mappar för den sista uppgiften.
+- Materialets fem mappar för den sista uppgiften (från *PBR-belysning*).
 
 Tre tal är mindre än learnopengls, eftersom kursen ritar sina kontroller och förväntade resultat på CPU:n (en riktig GPU
 klarar learnopengls värden lätt): förfiltermappen har 64 × 64 texlar per sida i stället för 128 × 128 (fortfarande med 5
@@ -110,23 +110,21 @@ mipnivåer), förfilterkonvolutionen och BRDF-integrationen tar 128 samples i st
 BRDF-integrationsmappen är 128 × 128 i stället för 512 × 512.
 
 :::opengl
-Filerna är `prefilter.fs`, `brdf.vs` (färdig), `brdf.fs`, `debug_quad.fs` (färdig) och de fem `.png`-mapparna;
+De nya filerna är `prefilter.fs`, `brdf.vs`, `brdf.fs` och `debug_quad.fs`;
 `renderQuad()` ritar en triangle strip med 4 vertex, med texturkoordinaterna (0, 0) nere till vänster och (1, 1) uppe
 till höger.
 :::
 :::vulkan
-Filerna är `shaders/prefilter.frag`, `shaders/brdf.vert` (färdig), `shaders/brdf.frag`, `shaders/debug_quad.frag` (färdig)
-och de fem mapparna i `textures/`. Skärmfyrhörningen är vertex 36–41 i den globala `vertices` (learnopengls fyrhörning som
-två trianglar, med oförändrade texturkoordinater) och `renderQuad(VkCommandBuffer)` ritar den: `vkCmdDraw(commandBuffer,
-6, 1, 36, 0)`.
+De nya filerna är `shaders/prefilter.frag`, `shaders/brdf.vert`, `shaders/brdf.frag` och `shaders/debug_quad.frag`.
+Skärmfyrhörningen är vertex 36–41 i den globala `vertices` (learnopengls fyrhörning som två trianglar, med oförändrade
+texturkoordinater) och `renderQuad(VkCommandBuffer)` ritar den: `vkCmdDraw(commandBuffer, 6, 1, 36, 0)`.
 :::
 :::d3d12
-Filerna är `prefilter.hlsl` (dess `cbuffer CaptureConstants` har en `float roughness` efter de två matriserna),
-`brdf.hlsl` (`VSMain` färdig), `downsample.hlsl` (`PSMain` TODO: den gör en mipnivå av nivån ovanför – mer nedan),
-`debug_quad.hlsl` (färdig) och de fem `.png`-mapparna. Skärmfyrhörningen är vertex 36–39 i `m_cubeVertexBuffer`, en
-triangle strip som ritas av `RenderQuad()` (`IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP)`,
-`DrawInstanced(4, 1, 36, 0)`); dess texturkoordinater är learnopengls med v vänt: (0, 0) **uppe** till vänster,
-(1, 1) nere till höger.
+De nya filerna är `prefilter.hlsl` (dess `cbuffer CaptureConstants` har en `float roughness` efter de två matriserna),
+`brdf.hlsl`, `downsample.hlsl` (dess `PSMain` gör en mipnivå av nivån ovanför – mer nedan) och `debug_quad.hlsl`.
+Skärmfyrhörningen är vertex 36–39 i `m_cubeVertexBuffer`, en triangle strip som ritas av `RenderQuad()`
+(`IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP)`, `DrawInstanced(4, 1, 36, 0)`); dess texturkoordinater
+är learnopengls med v vänt: (0, 0) **uppe** till vänster, (1, 1) nere till höger.
 :::
 
 ## Att förfiltrera en HDR-environment map
@@ -280,8 +278,8 @@ slumpmässig lågdiskrepanssekvens enligt Quasi-Monte Carlo-metoden. Sekvensen v
 noggrant beskriven av Holger Dammertz. Hammersley-sekvensen bygger på *Van der Corput*-sekvensen, som speglar ett tals
 binära representation kring binärpunkten.
 
-Med några smarta bittrick kan vi generera Van der Corput-sekvensen ganska effektivt i ett shaderprogram, och den använder
-vi för att få Hammersley-samplet i av totalt N samples – funktionerna finns redan i projektet:
+Med några smarta bittrick kan vi generera Van der Corput-sekvensen ganska effektivt i ett shaderprogram, och den
+använder vi för att få Hammersley-samplet i av totalt N samples – förfiltershadern får de här funktionerna:
 
 :::opengl vulkan
 ```glsl
@@ -577,7 +575,7 @@ samples med mindre inverkan på slutresultatet (för litet NdotL) bidrar mindre 
 ### Artefakter i förfilterkonvolutionen
 
 Förfiltreringen ovan fungerar bra för de flesta ändamål, men det finns några artefakter att känna till; learnopengl tar
-upp dem tillsammans med sina lösningar, och kursens kod innehåller redan båda lösningarna.
+upp dem tillsammans med sina lösningar, och kursens kod använder båda lösningarna, som nedan.
 
 #### Cube map-sömmar vid hög strävhet
 
@@ -659,11 +657,11 @@ större nivån. Irradianskonvolutionen, som körs efter den, läser nu också om
 väljer en utifrån derivatorna i skärmrummet); dess bild ändras med ungefär en nivå.
 :::
 :::vulkan
-Vulkan har inte heller någon `glGenerateMipmap`, men projektet har haft dess motsvarighet sedan kapitlet PBR-belysning:
-`generateMipmaps`, vulkan-tutorials funktion, som fyller varje nivå med en `vkCmdBlitImage` av nivån ovanför (en skalad
-kopia med linjär filtrering). Den tar ett antal lager, så den gör alla sex sidor på en gång. Environment-cube mappen skapas
-med 8 nivåer (128, 64 … 1) och med två användningar till – en blit läser en nivå av bilden och skriver en annan, så bilden
-måste vara både källa och mål för överföringar:
+Vulkan har inte heller någon `glGenerateMipmap`, men ditt program har haft dess motsvarighet sedan kapitlet
+PBR-belysning: `generateMipmaps`, vulkan-tutorials funktion, som fyller varje nivå med en `vkCmdBlitImage` av nivån
+ovanför (en skalad kopia med linjär filtrering). Den tar ett antal lager, så den gör alla sex sidor på en gång.
+Environment-cube mappen skapas med 8 nivåer (128, 64 … 1) och med två användningar till – en blit läser en nivå av
+bilden och skriver en annan, så bilden måste vara både källa och mål för överföringar:
 
 ```cpp
         createCubemap(128, 8, envCubemapImage, envCubemapImageMemory, envCubemapImageView);

@@ -101,31 +101,31 @@ Låt oss försöka implementera ett sådant materialsystem i shadrarna.
 ## Ange material
 
 :::opengl
-Det här kapitlets projekt är resultatet från *Basic Lighting*, med den belysta kubens shadrar omdöpta till
-`materials.vs` och `materials.fs` (`main.cpp` bygger `lightingShader` av dem). Det rörliga ljuset från det kapitlets
-övning är borttaget igen: lampan står kvar på `lightPos` (1.2, 1.0, 2.0). Fragment shadern har fortfarande
+Du fortsätter i ditt program från *Grundläggande ljussättning*. Döp om den belysta kubens shadrar till `materials.vs`
+och `materials.fs` (`main.cpp` bygger `lightingShader` av dem), och ta bort det rörliga ljuset från det kapitlets
+övning igen: lampan står kvar på `lightPos` (1.2, 1.0, 2.0). Fragment shadern har fortfarande
 uniform-variablerna `objectColor`, `lightColor`, `lightPos` och `viewPos`, och räknar ut ambient (styrka 0.1), diffus
 och spekulär belysning (styrka 0.5, exponent 32). Kameran tittar på kubens vänstra och främre sida och på lampan.
 :::
 :::vulkan
-Det här kapitlets projekt är resultatet från *Basic Lighting*, med kubens shadrar omdöpta till
-`shaders/materials.vert` och `shaders/materials.frag` (`createPipeline("shaders/materials.vert.spv",
-"shaders/materials.frag.spv", 2, lightingPipeline)`). Det rörliga ljuset från det kapitlets övning är borttaget igen:
-lampan står kvar på `lightPos` (1.2, 1.0, 2.0). Uniform buffern på binding 2 innehåller fortfarande `view`, `proj`,
-`objectColor`, `lightColor`, `lightPos` och `viewPos`, där varje `glm::vec3` följs av en utfyllnads-`float` i C++.
-Kameran tittar på kubens vänstra och främre sida och på lampan.
+Du fortsätter i ditt program från *Grundläggande ljussättning*. Döp om kubens shadrar till `shaders/materials.vert`
+och `shaders/materials.frag`
+(`createPipeline("shaders/materials.vert.spv", "shaders/materials.frag.spv", 2, lightingPipeline)`), och ta bort det
+rörliga ljuset från det kapitlets övning igen: lampan står kvar på `lightPos` (1.2, 1.0, 2.0). Uniform buffern på
+binding 2 innehåller fortfarande `view`, `proj`, `objectColor`, `lightColor`, `lightPos` och `viewPos`, där varje
+`glm::vec3` följs av en utfyllnads-`float` i C++. Kameran tittar på kubens vänstra och främre sida och på lampan.
 :::
 :::d3d12
-Det här kapitlets projekt är resultatet från *Basic Lighting*, med den belysta kubens shadrar omdöpta till
-`materials.hlsl`. Det rörliga ljuset från det kapitlets övning är borttaget igen: lampan står kvar på `lightPos`
+Du fortsätter i ditt program från *Grundläggande ljussättning*. Döp om den belysta kubens shadrar till
+`materials.hlsl`, och ta bort det rörliga ljuset från det kapitlets övning igen: lampan står kvar på `lightPos`
 (1.2, 1.0, 2.0). Constant buffern på register `b1` innehåller fortfarande `view`, `projection`, `objectColor`,
 `lightColor`, `lightPos` och `viewPos` (där varje `XMFLOAT3` följs av en `float` utfyllnad i C++), och `OnUpdate`
 fyller i den varje bildruta. Kameran tittar på kubens vänstra och främre sida och på lampan. `light_cube.hlsl`,
 lampans shadrar, deklarerar bara constant bufferns två första matriser, så inget i det här kapitlet ändrar den.
 :::
 
-Den här gången finns inga `// TODO:`-kommentarer: varje uppgift ändrar kod som redan finns, och uppgiftstexten talar om
-var. Efter varje uppgift bygger och kör du programmet i din IDE.
+Varje uppgift ändrar kod som redan finns, och uppgiftstexten talar om var. Efter varje uppgift bygger och kör du
+programmet i din IDE.
 
 Vi har skapat en material-struct i fragment shadern, så nu vill vi ändra ljusberäkningarna så att de följer de nya
 materialegenskaperna. Eftersom alla materialvariabler ligger i en struct kommer vi åt dem via medlemmen `material`:
@@ -736,7 +736,7 @@ Experimentera med olika ljus- och materialvärden och se hur de påverkar result
   värdena rätt måste du sätta alla ljusintensiteter till (1.0, 1.0, 1.0) för att få samma resultat. learnopengls
   lösning är en behållare av **cyanfärgad plast**.
 
-Det här är ingen uppgift i projektet: prova den när du är klar med uppgifterna, och bygg och kör programmet för att se
+Det här är ingen uppgift: prova den när du är klar med uppgifterna, och bygg och kör programmet för att se
 resultatet. Byt ut den föränderliga ljusfärgen mot ett vitt ljus med full intensitet och sätt materialet cyanfärgad
 plast:
 

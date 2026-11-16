@@ -8,29 +8,29 @@ I det här kapitlet går vi igenom hur du sätter upp en kamera i {{api}}. Vi by
 röra dig fritt i en 3D-scen. Vi går också igenom tangentbords- och musinmatning och avslutar med en egen kameraklass.
 
 :::opengl
-Det här kapitlets projekt är resultatet från *Coordinate Systems*: samma filer (`main.cpp`, `shader_m.h`,
+Du fortsätter i ditt program från *Koordinatsystem*: samma filer (`main.cpp`, `shader_m.h`,
 `shader.vs`, `shader.fs`, `container.png`, `awesomeface.png`) och samma tio texturerade lådor, där var tredje (kub 0,
 3, 6 och 9) roterar med tiden. Varje bildruta bygger renderloopen en `view`-matris (en förflyttning med (0, 0, -3))
 och en `projection`-matris (45°, 800/600, 0.1, 100) och sätter dem med `ourShader.setMat4`; sedan räknar
 `for`-loopen ut en `model`-matris per kub och ritar den med `glDrawArrays`.
 :::
 :::vulkan
-Det här kapitlets projekt är resultatet från *Coordinate Systems*: tio djuptestade, texturerade lådor, där var tredje
+Du fortsätter i ditt program från *Koordinatsystem*: tio djuptestade, texturerade lådor, där var tredje
 (kub 0, 3, 6 och 9) roterar med tiden. Vy- och projektionsmatriserna ligger i uniform buffern, som
 `updateUniformBuffer()` fyller i varje bildruta; varje kubs modellmatris skickas som push constant före dess
 ritanrop i `recordCommandBuffer()`. Allt kameraarbete i det här kapitlet sker i `updateUniformBuffer()` och i ny
 inmatningskod; `recordCommandBuffer()` ändras inte.
 :::
 :::d3d12
-Det här kapitlets projekt är resultatet från *Coordinate Systems*: tio djuptestade, texturerade lådor, där var tredje
+Du fortsätter i ditt program från *Koordinatsystem*: tio djuptestade, texturerade lådor, där var tredje
 (kub 0, 3, 6 och 9) roterar med tiden. `OnUpdate` skriver vymatrisen (`XMMatrixTranslation(0, 0, -3)`) och
 45°-projektionen till constant buffern varje bildruta; `PopulateCommandList` sätter varje kubs modellmatris som root
 constants och ritar den. Allt kameraarbete i det här kapitlet sker i `OnUpdate` och i fönstrets meddelandehanterare,
 `WindowProc`; `PopulateCommandList` ändras inte.
 :::
 
-Den här gången har projektet inga `// TODO:`-kommentarer: varje uppgift ändrar eller bygger ut kod som redan finns, och
-uppgiftstexten talar om var. Efter varje uppgift bygger och kör du programmet i din IDE.
+Varje uppgift ändrar eller bygger ut kod som redan finns, och uppgiftstexten talar om var. Efter varje uppgift bygger
+och kör du programmet i din IDE.
 
 > Kursens kontroller och bilderna **Förväntat resultat** kan inte trycka på tangenter eller flytta musen. När kameran
 > väl styrs med tangentbordet och musen visar det förväntade resultatet därför kamerans **startvy** – som, ska du se, är
@@ -1223,8 +1223,8 @@ Experimentera gärna lite, och om du kör fast kan du jämföra din kod med lös
 I de kommande kapitlen använder vi alltid en kamera för att enkelt se oss omkring i scenerna och se resultaten från
 alla vinklar. Eftersom kamerakoden kan ta upp en hel del plats i varje kapitel abstraherar vi dock bort detaljerna
 lite och skapar ett eget kameraobjekt som gör det mesta av jobbet åt oss, med några trevliga extrafunktioner.
-learnopengl gör det med en klass `Camera` i `camera.h`. Det här steget är **valfritt** i kursen: projekten behåller de
-globala variabler och fria funktioner du just skrev, så om du skriver klassen blir dina bilder desamma.
+learnopengl gör det med en klass `Camera` i `camera.h`. Det här steget är **valfritt** i kursen: kursens egen kod
+behåller de globala variabler och fria funktioner du just skrev, så om du skriver klassen blir dina bilder desamma.
 
 :::opengl vulkan
 Precis som Shader-objektet definieras kameraklassen helt i en enda headerfil. I stora drag:
@@ -1330,7 +1330,7 @@ delar samma kamera. De globala variablerna du skrev gör exakt samma jobb, och d
   bibliotekets look-at-funktion med din egen implementation och se om den fortfarande beter sig likadant. Prova också
   med den cirklande kameran, där varje bildruta ger en annan matris.
 
-Det här är inga uppgifter i projektet: prova dem när du är klar med uppgifterna, och bygg och kör programmet för att
+Det här är inga uppgifter: prova dem när du är klar med uppgifterna, och bygg och kör programmet för att
 jämföra bilderna.
 
 :::opengl vulkan
@@ -1400,7 +1400,7 @@ XMMATRIX MyLookAtRH(FXMVECTOR position, FXMVECTOR target, FXMVECTOR worldUp)
 ```
 
 Den förutsätter att w-komponenterna i de tre axlarna är 0, vilket gäller för vektorer som skapats med
-`XMVectorSet(…, 0.0f)` som i projektet.
+`XMVectorSet(…, 0.0f)` som i ditt program.
 :::
 
 Grattis – nu kan du flyga genom din scen. Det här är sista kapitlet i *Getting started*: du har ett fönster, shaders,

@@ -26,13 +26,14 @@ the light above some brightness, and bright things glow more simply because ther
 Like the earlier bloom, the technique is a chain of full-screen passes over textures, and it works the same way in every
 API. This chapter shows how {{api}} renders into a chain of smaller and smaller targets.
 
-## The project
+## Your program
 
-The scene is the *Bloom* chapter's – the wooden floor, six containers and four light cubes, the camera at (0, 0, 5) –
-rendered into a floating-point colour buffer and tone-mapped with the exposure curve, **without** the bright pass and
-the blur: the start of the *Bloom* chapter, a scene with hard-edged light cubes. Following the article, the new bloom
-works on the whole HDR image. (learnopengl's demo code still hands its thresholded bright buffer to the new bloom
-renderer; the article's text and the course use the scene itself.)
+Start from your program from *Bloom* in a new folder. The scene is the *Bloom* chapter's – the wooden floor, six
+containers and four light cubes, the camera at (0, 0, 5) – rendered into a floating-point colour buffer and
+tone-mapped with the exposure curve, **without** the bright pass and the blur: the scene the *Bloom* chapter started
+with, with hard-edged light cubes. Following the article, the new bloom works on the whole HDR image. (learnopengl's
+demo code still hands its thresholded bright buffer to the new bloom renderer; the article's text and the course use
+the scene itself.)
 
 learnopengl writes the bloom as two classes, `bloomFBO` and `BloomRenderer`. As in the *In Practice* part, the course
 writes them as structs and free functions with learnopengl's names: a `BloomMip` (the size of a level and its texture), a
@@ -42,21 +43,20 @@ writes them as structs and free functions with learnopengl's names: a `BloomMip`
 :::opengl
 `main.cpp` renders the scene into `hdrFBO` – the `GL_RGBA16F` texture `colorBuffer` and a depth renderbuffer – and draws
 `colorBuffer` on the screen quad with `bloom_final.vs` / `.fs`. `downsample.vs/.fs` and `upsample.vs/.fs`
-(learnopengl's `6.new_downsample` and `6.new_upsample`) are there with their uniforms; their `main`s are TODOs.
+(learnopengl's `6.new_downsample` and `6.new_upsample`) start with their uniforms and an empty `main`.
 :::
 :::vulkan
-`recordCommandBuffer()` renders the scene into the floating-point image of the *Bloom* chapter (`hdrRenderPass`) and draws
-it on the screen quad (vertices 36–41) with `bloomFinalPipeline`. The push constants and the descriptor sets are the
-*Bloom* chapter's; `shaders/downsample.frag` and `upsample.frag` have their inputs, their `main`s are TODOs.
+`recordCommandBuffer()` renders the scene into the floating-point image of the *Bloom* chapter (`hdrRenderPass`) and
+draws it on the screen quad (vertices 36–41) with `bloomFinalPipeline`. The push constants and the descriptor sets are
+the *Bloom* chapter's; `shaders/downsample.frag` and `upsample.frag` start with their inputs and an empty `main`.
 :::
 :::d3d12
-`PopulateCommandList` renders the scene into the floating-point colour buffer of the *Bloom* chapter (CBV/SRV heap slot 3)
-and draws it on the screen quad (vertices 36–41) with the final pipeline state. `downsample.hlsl` and `upsample.hlsl`
-have their inputs; their pixel shaders are TODOs.
+`PopulateCommandList` renders the scene into the floating-point colour buffer of the *Bloom* chapter (CBV/SRV heap
+slot 3) and draws it on the screen quad (vertices 36–41) with the final pipeline state. `downsample.hlsl` and
+`upsample.hlsl` start with their inputs and empty pixel shaders.
 :::
 
-The `// TODO:` comments mark where your code goes. Build and run the program in your IDE: the scene with hard light
-cubes and a black background right next to them.
+Build and run the program in your IDE: the scene with hard light cubes and a black background right next to them.
 
 ## The mip chain
 

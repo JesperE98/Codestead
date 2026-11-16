@@ -63,15 +63,15 @@ som påverkar ytans radians. Det gör PBR med direkta ljuskällor ganska enkelt,
 över de bidragande ljuskällorna. När vi senare tar med ljus från omgivningen i IBL-kapitlen måste vi däremot ta hänsyn
 till integralen, eftersom ljus då kan komma från alla håll.
 
-## Projektet
+## Ditt program
 
-Projektet är det du körde i slutet av förra kapitlet: learnopengls scen för PBR-belysning. 7 × 7 sfärer med radien 1,
-2.5 enheter isär, på z = 0, med `metallic = row / 7` (nedersta raden 0, översta 0.857) och `roughness = clamp(col / 7,
-0.05, 1.0)` (vänstra kolumnen 0.05, högra 0.857); varje sfär har albedot (0.5, 0.0, 0.0) och ao 1.0. Strävheten kläms
-till minst 0.05 eftersom helt släta ytor (strävhet 0.0) brukar se lite konstiga ut med direkt ljus: ett punktljus
-högdager skulle bli en oändligt liten punkt. Fyra punktljus hänger på (-10, 10, 10), (10, 10, 10), (-10, -10, 10) och
-(10, -10, 10), vart och ett med färgen (300, 300, 300). learnopengl ritar också en liten sfär vid varje ljus; med kursens
-kamera hamnar de utanför bilden, så kursen ritar dem inte.
+Du fortsätter i programmet som du förberedde i slutet av förra kapitlet: learnopengls scen för PBR-belysning. 7 × 7
+sfärer med radien 1, 2.5 enheter isär, på z = 0, med `metallic = row / 7` (nedersta raden 0, översta 0.857) och
+`roughness = clamp(col / 7, 0.05, 1.0)` (vänstra kolumnen 0.05, högra 0.857); varje sfär har albedot (0.5, 0.0, 0.0)
+och ao 1.0. Strävheten kläms till minst 0.05 eftersom helt släta ytor (strävhet 0.0) brukar se lite konstiga ut med
+direkt ljus: ett punktljus högdager skulle bli en oändligt liten punkt. Fyra punktljus hänger på (-10, 10, 10), (10,
+10, 10), (-10, -10, 10) och (10, -10, 10), vart och ett med färgen (300, 300, 300). learnopengl ritar också en liten
+sfär vid varje ljus; med kursens kamera hamnar de utanför bilden, så kursen ritar dem inte.
 
 Några tal skiljer sig från learnopengls program:
 
@@ -244,8 +244,8 @@ Pipeline staten bestämmer vilken typ av primitiv (punkt, linje, triangel, patch
 ```
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Varje uppgift är ett steg i learnopengls shader; bygg och
-kör programmet efter varje steg för att se hur sfärerna förändras.
+Varje uppgift är ett steg i learnopengls shader; bygg och kör programmet efter varje steg för att se hur sfärerna
+förändras.
 
 ## En PBR-ytmodell
 
@@ -739,7 +739,7 @@ vilka 4 inkommande ljusriktningar som kan påverka fragmentet. Därför kan vi l
 ljusriktningarna, det vill säga över antalet ljus i scenen.
 
 Det som återstår är att lägga till en (improviserad) ambient term till den direkta belysningens resultat Lo, så har vi
-fragmentets slutliga belysta färg – projektet har den redan efter loopen:
+fragmentets slutliga belysta färg – ditt program har den redan efter loopen:
 
 :::opengl vulkan
 ```glsl
@@ -1064,11 +1064,11 @@ och `roughness` lämnar `PushConstants`, som bara behåller `model`, och `albedo
 och `pad1` följer direkt efter ljusen). `cleanup()` förstör samplern och bilderna.
 :::
 :::d3d12
-`LoadTexture` (som har funnits sedan starten, oanvänd hittills) laddar en bild med `stbi_load` som RGBA, skapar en
-`DXGI_FORMAT_R8G8B8A8_UNORM`-textur med **en mipnivå** i en default heap, kopierar pixlarna via en upload heap
-(`UpdateSubresources`), gör den till `PIXEL_SHADER_RESOURCE` med en barriär och skriver dess SRV på en plats i
-CBV/SRV-heapen. Heapen växer till 6 descriptorer, och de fem mapparna tar platserna 1–5 – i följd, så att en descriptor
-table täcker dem:
+`LoadTexture` (som har funnits sedan du förberedde programmet, oanvänd hittills) laddar en bild med `stbi_load` som
+RGBA, skapar en `DXGI_FORMAT_R8G8B8A8_UNORM`-textur med **en mipnivå** i en default heap, kopierar pixlarna via en
+upload heap (`UpdateSubresources`), gör den till `PIXEL_SHADER_RESOURCE` med en barriär och skriver dess SRV på en
+plats i CBV/SRV-heapen. Heapen växer till 6 descriptorer, och de fem mapparna tar platserna 1–5 – i följd, så att en
+descriptor table täcker dem:
 
 ```cpp
     LoadTexture("albedo.png", m_albedoTexture, albedoUploadHeap, 1);
@@ -1165,7 +1165,7 @@ nästa kapitel ersätter det med ljus från en omgivning.
   skärmbilder av sfärrutnätet och det texturerade materialet.
 - [Fixed functions](https://vulkan-tutorial.com/Drawing_a_triangle/Graphics_pipeline_basics/Fixed_functions):
   vulkan-tutorial om input assemblyns topologier.
-- [Generating Mipmaps](https://vulkan-tutorial.com/Generating_Mipmaps): den `generateMipmaps` som projektets
+- [Generating Mipmaps](https://vulkan-tutorial.com/Generating_Mipmaps): den `generateMipmaps` som
   `loadTexture` använder.
 :::
 :::d3d12

@@ -31,30 +31,32 @@ GPU:n väljer sida utifrån vektorns största komponent och delar de två andra 
 Som i de andra kapitlen i den här delen finns allt här i alla API:er; texten visar det för {{api}}.
 
 :::opengl
-Projektet börjar med scenen från *Depth testing* utan golvet – learnopengl ritar bara de två marmorkuberna i det här
-kapitlet: på (-1, 0, -1) och (2, 0, 0), med `glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`, kameran på (0, 0, 3)
-som tittar längs -z, och shadrarna `cubemaps.vs` / `cubemaps.fs` som läser `texture1`. Renderloopen räknar ut `model`,
-`view` och `projection` först och har en TODO för skyboxen innan kuberna ritas. Nya filer: `skybox.vs` och `skybox.fs`
-(deras `main` är en TODO), och himlens sex bilder i `skybox/`.
+Du fortsätter i ditt program från *Djuptestning*, med dess scen utan golvet – learnopengl ritar bara de två
+marmorkuberna i det här kapitlet: på (-1, 0, -1) och (2, 0, 0), med `glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`,
+kameran på (0, 0, 3) som tittar längs -z, och shadrarna `cubemaps.vs` / `cubemaps.fs` som läser `texture1`.
+Renderloopen räknar ut `model`, `view` och `projection` först; där ritas skyboxen sedan, före kuberna. Nytt i
+kapitlet: shadrarna `skybox.vs` och `skybox.fs` (texten visar dem), och himlens sex bilder i `skybox/` – **Spara
+resursfilerna…** i panelen kopierar dem till din mapp.
 :::
 :::vulkan
-Projektet börjar med scenen från *Depth testing* utan golvet – learnopengl ritar bara de två marmorkuberna i det här
-kapitlet: på (-1, 0, -1) och (2, 0, 0), kameran på (0, 0, 3) som tittar längs -z, kubens 36 vertexar (position och
-texturkoordinater) i vertex buffern, ett descriptor set med marmorn, modellmatrisen i en push constant och view och
-projection i uniform buffern. `createPipeline(vert, frag, pipeline)` skapar pipelinen från `shaders/cubemaps.vert` /
-`.frag`. Nya filer: `shaders/skybox.vert` och `shaders/skybox.frag` (deras `main` är en TODO), och himlens sex bilder
-i `textures/skybox/`.
+Du fortsätter i ditt program från *Djuptestning*, med dess scen utan golvet – learnopengl ritar bara de två
+marmorkuberna i det här kapitlet: på (-1, 0, -1) och (2, 0, 0), kameran på (0, 0, 3) som tittar längs -z, kubens 36
+vertexar (position och texturkoordinater) i vertex buffern, ett descriptor set med marmorn, modellmatrisen i en push
+constant och view och projection i uniform buffern. `createPipeline(vert, frag, pipeline)` skapar pipelinen från
+`shaders/cubemaps.vert` / `.frag`. Nytt i kapitlet: shadrarna `shaders/skybox.vert` och `shaders/skybox.frag` (texten
+visar dem), och himlens sex bilder i `textures/skybox/` – **Spara resursfilerna…** i panelen kopierar dem till din
+mapp.
 :::
 :::d3d12
-Projektet börjar med scenen från *Depth testing* utan golvet – learnopengl ritar bara de två marmorkuberna i det här
-kapitlet: på (-1, 0, -1) och (2, 0, 0), kameran på (0, 0, 3) som tittar längs -z, ett PSO med djupfunktionen LESS och
-shadrarna i `cubemaps.hlsl`. Vertex buffern rymmer kuben (vertex 0–35, position och texturkoordinater); CBV/SRV-heapen
-rymmer CBV:n (plats 0) och marmorn (plats 1). Nya filer: `skybox.hlsl`, som bara har en TODO-kommentar, och himlens
-sex bilder i `skybox/`.
+Du fortsätter i ditt program från *Djuptestning*, med dess scen utan golvet – learnopengl ritar bara de två
+marmorkuberna i det här kapitlet: på (-1, 0, -1) och (2, 0, 0), kameran på (0, 0, 3) som tittar längs -z, ett PSO med
+djupfunktionen LESS och shadrarna i `cubemaps.hlsl`. Vertex buffern rymmer kuben (vertex 0–35, position och
+texturkoordinater); CBV/SRV-heapen rymmer CBV:n (plats 0) och marmorn (plats 1). Nytt i kapitlet: shadrarna i
+`skybox.hlsl` (texten visar dem), och himlens sex bilder i `skybox/` – **Spara resursfilerna…** i panelen kopierar dem
+till din mapp.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
-IDE.
+Efter varje uppgift bygger och kör du programmet i din IDE.
 
 ## Skapa en cube map
 
@@ -451,7 +453,7 @@ täcker alla sex lagren – `barrier.subresourceRange.layerCount = 6;` – och k
 
 Loopen med `bufferOffset = faceSize * i` och `baseArrayLayer = i` är learnopengls loop över
 `GL_TEXTURE_CUBE_MAP_POSITIVE_X + i`. Efter den andra barriären (till `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`)
-förstörs staging buffern och kubvyn skapas. Funktionen hamnar där dess TODO står, bredvid `loadTexture`; `faceSize` är
+förstörs staging buffern och kubvyn skapas. Funktionen hamnar bredvid `loadTexture`; `faceSize` är
 storleken på en RGBA-sida i bytes.
 
 Lägg märke till vad funktionen *inte* gör: vänder bilderna. En cube map har en egen regel för hur en sidbild ligger på
@@ -521,7 +523,7 @@ GPU:n vill ha dem. Själva kopieringen tar en `D3D12_SUBRESOURCE_DATA` per sida:
 `UpdateSubresources(commandList, destination, intermediate, intermediateOffset, firstSubresource, numSubresources,
 data)`: subresurs 0 till 5 – learnopengls loop över `GL_TEXTURE_CUBE_MAP_POSITIVE_X + i`. Efter den kommer en barriär
 från COPY_DEST till PIXEL_SHADER_RESOURCE, kub-SRV:n på plats `descriptorIndex` i CBV/SRV-heapen, och de sex bilderna
-frigörs. Funktionen hamnar där dess TODO står, i slutet av filen, och dess deklaration i klassen:
+frigörs. Funktionen hamnar i slutet av filen, och dess deklaration i klassen:
 
 ```cpp
     void LoadCubemap(const std::vector<std::string>& faces, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex);

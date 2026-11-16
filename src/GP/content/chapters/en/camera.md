@@ -9,29 +9,29 @@ you to freely move around in a 3D scene. We'll also discuss keyboard and mouse i
 class.
 
 :::opengl
-This chapter's project is the result of *Coordinate Systems*: the same files (`main.cpp`, `shader_m.h`,
+You continue in your program from *Coordinate Systems*: the same files (`main.cpp`, `shader_m.h`,
 `shader.vs`, `shader.fs`, `container.png`, `awesomeface.png`) and the same ten textured crates, every third one
 (cubes 0, 3, 6 and 9) turning over time. Every frame the render loop builds a `view` matrix (a translation by
 (0, 0, -3)) and a `projection` matrix (45°, 800/600, 0.1, 100) and sets them with `ourShader.setMat4`; then the
 `for` loop computes one `model` matrix per cube and draws it with `glDrawArrays`.
 :::
 :::vulkan
-This chapter's project is the result of *Coordinate Systems*: ten depth-tested, textured crates, every third one
+You continue in your program from *Coordinate Systems*: ten depth-tested, textured crates, every third one
 (cubes 0, 3, 6 and 9) turning over time. The view and projection matrices live in the uniform buffer, filled every
 frame by `updateUniformBuffer()`; the model matrix of each cube is pushed as a push constant before its draw in
 `recordCommandBuffer()`. All camera work in this chapter happens in `updateUniformBuffer()` and in new input code;
 `recordCommandBuffer()` does not change.
 :::
 :::d3d12
-This chapter's project is the result of *Coordinate Systems*: ten depth-tested, textured crates, every third one
+You continue in your program from *Coordinate Systems*: ten depth-tested, textured crates, every third one
 (cubes 0, 3, 6 and 9) turning over time. `OnUpdate` writes the view matrix (`XMMatrixTranslation(0, 0, -3)`) and the
 45° projection into the constant buffer every frame; `PopulateCommandList` sets each cube's model matrix as root
 constants and draws it. All camera work in this chapter happens in `OnUpdate` and in the window's message handler,
 `WindowProc`; `PopulateCommandList` does not change.
 :::
 
-This time the project has no `// TODO:` comments: every task changes or extends code that is already there, and the task
-text tells you where. After each task, build and run the program in your IDE.
+Every task changes or extends code that is already there, and the task text tells you where. After each task, build
+and run the program in your IDE.
 
 > The course's checks and the **Expected result** pictures can't press keys or move the mouse. Once the camera is
 > controlled by the keyboard and the mouse, the expected result therefore shows the camera's **starting view** – which,
@@ -1232,8 +1232,8 @@ Feel free to experiment a little and if you're stuck compare your code with the 
 In the upcoming chapters we'll always use a camera to easily look around the scenes and see the results from all
 angles. However, since the camera code can take up a significant amount of space on each chapter we'll abstract its
 details a little and create our own camera object that does most of the work for us with some neat little extras.
-learnopengl does this with a `Camera` class in `camera.h`. This step is **optional** in this course: the projects keep
-the globals and free functions you just wrote, so if you write the class, your pictures will be the same.
+learnopengl does this with a `Camera` class in `camera.h`. This step is **optional** in this course: the course's own
+code keeps the globals and free functions you just wrote, so if you write the class, your pictures will be the same.
 
 :::opengl vulkan
 Just like the Shader object, the camera class is defined entirely in a single header file. In outline:
@@ -1337,7 +1337,7 @@ share the same camera. The globals you wrote do exactly the same work, which is 
   this chapter. Replace the library's look-at function with your own implementation and see if it still acts the
   same. Try it with the circling camera too, where every frame gives a different matrix.
 
-These are not tasks in the project: try them once you have finished the tasks, and build and run the program to compare
+These are not tasks: try them once you have finished the tasks, and build and run the program to compare
 the pictures.
 
 :::opengl vulkan
@@ -1406,7 +1406,7 @@ XMMATRIX MyLookAtRH(FXMVECTOR position, FXMVECTOR target, FXMVECTOR worldUp)
 ```
 
 It relies on the w components of the three axes being 0, which holds for vectors made with `XMVectorSet(…, 0.0f)` as
-in the project.
+in your program.
 :::
 
 Congratulations – you can now fly through your scene. This is the last chapter of *Getting started*: you have a window, shaders,

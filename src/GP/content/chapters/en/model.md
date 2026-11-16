@@ -26,7 +26,7 @@ parts a real model has.
 
 :::opengl
 Like learnopengl.com, we'll load the model with Assimp and translate it to `Mesh` objects of the class you wrote in
-the previous chapter. Without further ado, here is the structure of the `Model` class, in the project's `model.h`:
+the previous chapter. Without further ado, here is the structure of the `Model` class, in a new file `model.h`:
 
 ```cpp
 class Model
@@ -37,16 +37,16 @@ public:
     std::vector<Mesh>    meshes;
     std::string directory;
 
-    // TODO: the constructor: load the model at path (loadModel)
+    // constructor: loads the model at path (loadModel)
 
-    // TODO: Draw: draw every mesh of the model
+    // Draw: draws every mesh of the model
 
 private:
     void loadModel(std::string const &path) { ... }
     void processNode(aiNode *node, const aiScene *scene) { ... }
     Mesh processMesh(aiMesh *mesh, const aiScene *scene) { ... }
 
-    // TODO: loadMaterialTextures: load the material's textures of one type (each file only once)
+    // loadMaterialTextures: loads the material's textures of one type (each file only once)
 };
 ```
 
@@ -67,12 +67,15 @@ function:
     }
 ```
 
-The project is the result of *Mesh*, with a new file `model.h`. Its `// TODO:` comments mark where your code goes: the
+You continue in your program from *Mesh*. Start `model.h` next to `main.cpp` with an include guard (`MODEL_H`) and its
+includes – `<glad/glad.h>`, `<glm/glm.hpp>`, `<glm/gtc/matrix_transform.hpp>`, `<stb_image.h>`, Assimp's three headers
+(below), `"mesh.h"`, `"shader_m.h"`, `<string>`, `<cstring>`, `<iostream>` and `<vector>` – and the declaration
+`unsigned int TextureFromFile(const char *path, const std::string &directory);` before the class. The tasks write the
 constructor and `Draw`, the bodies of `loadModel`, `processNode` and `processMesh`, and the functions
-`loadMaterialTextures` and `TextureFromFile`. `main.cpp` now includes `"model.h"` (which includes `"mesh.h"`) and has
-two TODOs of its own: loading the model and drawing it. The program is linked with Assimp, as you set it up in the
-*Assimp* chapter. Until the model is drawn, your program shows only the dark grey background (0.05, 0.05, 0.05) – every
-step before that compiles and runs, it just doesn't draw anything yet.
+`loadMaterialTextures` and `TextureFromFile`. `main.cpp` includes `"model.h"` (which includes `"mesh.h"`) instead of
+`"mesh.h"`; in `main.cpp` the tasks load the model and draw it. The program is linked with Assimp, as you set it up in
+the *Assimp* chapter. Until the model is drawn, your program shows only the dark grey background (0.05, 0.05, 0.05) –
+every step before that compiles and runs, it just doesn't draw anything yet.
 
 :::ide clion vscode
 This is the first OpenGL project that calls Assimp: add the two Assimp lines from the *Assimp* chapter to the end of
@@ -98,15 +101,15 @@ the same four jobs in the application class, next to the vertex and index buffer
 | `loadMaterialTextures`, `TextureFromFile` | `createTextures()`: the four maps, at descriptor bindings 1–4 |
 | `Draw`: one draw per mesh, each with its own textures | one `vkCmdDrawIndexed`; the fragment shader picks each fragment's material |
 
-The project is the result of *Mesh*, unchanged: the test square, drawn in texture-coordinate colours (red = u, green =
-v) with one `vkCmdDrawIndexed`. There are no `// TODO:` comments this time: each task changes the code you wrote in the
-previous chapter, step by step, until the square has become the planet. Build and run the program after each task to see
+You continue in your program from *Mesh*, unchanged: the test square, drawn in texture-coordinate colours (red = u,
+green = v) with one `vkCmdDrawIndexed`. Each task changes the code you wrote in the previous chapter, step by step,
+until the square has become the planet. Build and run the program after each task to see
 the result.
 :::
 :::d3d12
 Like learnopengl.com, we'll load the model with Assimp and translate it to `Mesh` objects of the class you wrote in
-the previous chapter. The project's `main.cpp` already contains the structure of the `Model` class, after
-`class Mesh`:
+the previous chapter. Here is the structure of the `Model` class; write it into `main.cpp`, after `class Mesh` (the
+tasks fill in the bodies marked `{ ... }`):
 
 ```cpp
 class Model
@@ -140,7 +143,12 @@ public:
     }
 
 private:
-    ...
+    // What loading needs from the program (set by Load).
+    ID3D12Device* m_device = nullptr;
+    ID3D12GraphicsCommandList* m_commandList = nullptr;
+    ID3D12DescriptorHeap* m_srvHeap = nullptr;
+    UINT m_nextDescriptor = 0;    // the next free slot of the CBV/SRV heap
+
     void loadModel(std::string const& path) { ... }
     void processNode(aiNode* node, const aiScene* scene) { ... }
     Mesh processMesh(aiMesh* mesh, const aiScene* scene) { ... }
@@ -156,9 +164,9 @@ The private functions are all designed to process a part of Assimp's import rout
 We also store the directory of the file path that we'll later need when loading textures. `Draw` is nothing special
 and basically loops over each of the meshes to call their respective `Draw` function.
 
-The project is the result of *Mesh*, with the `Model` class added. Its `// TODO:` comments mark where your code goes:
-the bodies of `loadModel`, `processNode` and `loadMaterialTextures`, and two parts of `processMesh`; and in `D3D12App`,
-the model member, loading it, freeing its upload buffers and drawing it. Until the model is drawn, your program shows
+You continue in your program from *Mesh*, with the `Model` class above added. The tasks write the bodies of
+`loadModel`, `processNode` and `loadMaterialTextures`, and two parts of `processMesh`; and in `D3D12App`, the model
+member, loading it, freeing its upload buffers and drawing it. Until the model is drawn, your program shows
 only the dark grey background (0.05, 0.05, 0.05) – every step before that compiles and runs, it just doesn't draw
 anything yet.
 
@@ -176,7 +184,7 @@ without it, make the Assimp settings from the *Assimp* chapter in this chapter's
 ## Importing a 3D model into {{api}}
 
 To import a model and translate it to our own structure, we first need to include the appropriate headers of Assimp
-(the project has them already):
+(at the top of `model.h`):
 
 ```cpp
 #include <assimp/Importer.hpp>
@@ -627,9 +635,9 @@ then becomes:
         std::vector<unsigned int> indices;
         std::vector<Texture> textures;
 
-        // TODO: copy every vertex (position, normal, texture coordinates) and the indices of every face
+        // copy every vertex (position, normal, texture coordinates) and the indices of every face
 
-        // TODO: process materials: load the diffuse, specular and normal maps (loadMaterialTextures)
+        // process materials: load the diffuse, specular and normal maps (loadMaterialTextures)
 
         // return a mesh object created from the extracted mesh data
         return Mesh(vertices, indices, textures);
@@ -703,11 +711,17 @@ the `vertices` vector at the end of the iteration. This process is repeated for 
         std::vector<UINT> indices;
         std::vector<Texture> textures;
 
-        // TODO: walk through each of the mesh's vertices (position, normal, texture coordinates) and faces (indices)
-        // TODO: process the material: its diffuse and specular maps (loadMaterialTextures)
+        // walk through each of the mesh's vertices (position, normal, texture coordinates) and faces (indices)
+        // process the material: its diffuse and specular maps (loadMaterialTextures)
 
         // The mesh's two texture views go into the next two free slots of the CBV/SRV heap.
-        ...
+        if (m_nextDescriptor + 2 > m_srvHeap->GetDesc().NumDescriptors)
+        {
+            throw std::runtime_error("The CBV/SRV heap has no room for another mesh");
+        }
+        UINT descriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvCpuHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), m_nextDescriptor, descriptorSize);
+        CD3DX12_GPU_DESCRIPTOR_HANDLE srvGpuHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), m_nextDescriptor, descriptorSize);
         m_nextDescriptor += 2;
 
         // return a mesh object created from the extracted mesh data
@@ -717,7 +731,7 @@ the `vertices` vector at the end of the iteration. This process is repeated for 
 
 Processing a mesh is a 3-part process: retrieve all the vertex data, retrieve the mesh's indices, and finally
 retrieve the relevant material data. The processed data is stored in one of the 3 vectors and from those a `Mesh` is
-created and returned to the function's caller. The end of the function is already there: each mesh gets the next two
+created and returned to the function's caller. Write the end of the function as shown: each mesh gets the next two
 free slots of the CBV/SRV heap for its texture views (the *Mesh* chapter's `SetupMesh` writes them), and the check
 throws if the heap – `1 + 2 * MaxMeshes` descriptors, with `MaxMeshes = 8` – has no room left.
 
@@ -996,7 +1010,7 @@ unsigned int TextureFromFile(const char *path, const std::string &directory)
 }
 ```
 
-It goes after the class, where the TODO is; the class only needs its declaration, which is at the top of `model.h`.
+It goes after the class; the class only needs its declaration, which is at the top of `model.h`.
 There is no `stbi_set_flip_vertically_on_load` here, for the reason above. `model.h` includes `<stb_image.h>` for the
 declarations only: `main.cpp` defines `STB_IMAGE_IMPLEMENTATION` before its own include, so stb_image's code is
 compiled exactly once.
@@ -1004,8 +1018,8 @@ compiled exactly once.
 Now do the task **texture-from-file**. Still nothing visible changes: nothing calls the function yet.
 :::
 :::d3d12
-`TextureFromFile` is already in the project, after the class. It is the earlier chapters' `LoadTexture` without the
-view (each mesh creates its own views in its heap slots), with the directory put in front of the file name:
+`TextureFromFile` goes after the class, a free function. It is the earlier chapters' `LoadTexture` without the view
+(each mesh creates its own views in its heap slots), with the directory put in front of the file name:
 
 ```cpp
 ComPtr<ID3D12Resource> TextureFromFile(const char* path, const std::string& directory, ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadHeap)

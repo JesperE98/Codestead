@@ -20,26 +20,26 @@ fragment shadern. Vi måste dock tala om för {{api}} vilka av sidorna vi använ
 som är baksidor. Det görs med ett smart knep: genom att analysera vertexdatans *winding order* (varvordning).
 
 :::opengl
-Projektet är än en gång scenen från *Depth testing*: de två marmorkuberna på (-1, 0, -1) och (2, 0, 0), metallgolvet,
-`glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`, kameran på (0, 0, 3), och learnopengls `cubeVertices` och
-`planeVertices`. Face culling är avstängt – OpenGL:s standard.
+Du fortsätter i ditt program från *Djuptestning*, än en gång med dess scen: de två marmorkuberna på (-1, 0, -1) och
+(2, 0, 0), metallgolvet, `glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`, kameran på (0, 0, 3), och learnopengls
+`cubeVertices` och `planeVertices`. Face culling är avstängt – OpenGL:s standard.
 :::
 :::vulkan
-Projektet är än en gång scenen från *Depth testing*: de två marmorkuberna på (-1, 0, -1) och (2, 0, 0), metallgolvet,
-en pipeline med djuptestet (`VK_COMPARE_OP_LESS`), kameran på (0, 0, 3), och alla vertexar i en enda vertex buffer –
-kuben är vertex 0..35, golvet 36..41. Pipelinens rasterizer har `cullMode = VK_CULL_MODE_NONE`: du stängde av culling
-i kapitlet *Coordinate systems*, eftersom learnopengls kub inte är gjord för det. I det här kapitlet rättar vi till det.
+Du fortsätter i ditt program från *Djuptestning*, än en gång med dess scen: de två marmorkuberna på (-1, 0, -1) och
+(2, 0, 0), metallgolvet, en pipeline med djuptestet (`VK_COMPARE_OP_LESS`), kameran på (0, 0, 3), och alla vertexar i
+en enda vertex buffer – kuben är vertex 0..35, golvet 36..41. Pipelinens rasterizer har
+`cullMode = VK_CULL_MODE_NONE`: du stängde av culling i kapitlet *Coordinate systems*, eftersom learnopengls kub inte
+är gjord för det. I det här kapitlet rättar vi till det.
 :::
 :::d3d12
-Projektet är än en gång scenen från *Depth testing*: de två marmorkuberna på (-1, 0, -1) och (2, 0, 0), metallgolvet,
-ett PSO med djupfunktionen LESS, kameran på (0, 0, 3), shadrarna i `face_culling.hlsl`, och alla vertexar i en enda
-vertex buffer – kuben är vertex 0 till 35, golvet 36 till 41. PSO:t har
+Du fortsätter i ditt program från *Djuptestning*, än en gång med dess scen: de två marmorkuberna på (-1, 0, -1) och
+(2, 0, 0), metallgolvet, ett PSO med djupfunktionen LESS, kameran på (0, 0, 3), shadrarna i `face_culling.hlsl`, och
+alla vertexar i en enda vertex buffer – kuben är vertex 0 till 35, golvet 36 till 41. PSO:t har
 `psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;`: du stängde av culling i kapitlet *Coordinate systems*,
 eftersom learnopengls kub inte är gjord för det. I det här kapitlet rättar vi till det.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
-IDE.
+Efter varje uppgift bygger och kör du programmet i din IDE.
 
 ## Winding order
 
@@ -226,7 +226,7 @@ framsidor i stället för moturs, med `glFrontFace`:
 
 Standardvärdet är `GL_CCW`, som står för moturs ordning, och det andra alternativet är `GL_CW`, som (förstås) står för
 medurs ordning. Båda anropen sätter standardvärdena, men när de står utskrivna syns det vad programmet förlitar sig på.
-De tre raderna hamnar där TODO:n står, efter `glDepthFunc`.
+De tre raderna hamnar efter `glDepthFunc`.
 :::
 :::vulkan
 I Vulkan är face culling en del av pipelinen, i rastreringstillståndet (kapitlet *Fixed functions* i vulkan-tutorial):
@@ -262,7 +262,7 @@ I Direct3D 12 är face culling en del av PSO:ts rasterizer state: `CullMode` sä
 
 `CullMode` tar `D3D12_CULL_MODE_NONE`, `D3D12_CULL_MODE_FRONT` eller `D3D12_CULL_MODE_BACK`; det finns inget alternativ
 för att culla båda (OpenGL:s `GL_FRONT_AND_BACK`). Vår kub går nu moturs sett utifrån, så framsidorna ska vara de som
-går moturs – OpenGL:s `GL_CCW`. Vid TODO:n ersätter du raden med `D3D12_CULL_MODE_NONE`:
+går moturs – OpenGL:s `GL_CCW`. I PSO-beskrivningen ersätter du raden med `D3D12_CULL_MODE_NONE`:
 
 ```cpp
         // Face culling: do not draw the triangles that face away from the camera (their back

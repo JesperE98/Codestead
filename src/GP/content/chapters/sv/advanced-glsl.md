@@ -18,29 +18,34 @@ HLSL, ofta med ett annat namn och en annan form, och det här kapitlet visar var
 :::
 
 :::opengl
-Projektet är än en gång scenen från *Depth testing* – två marmorkuber, metallgolvet, kameran på (0, 0, 3) – med kuben
-från kapitlet *Face culling*, vars trianglar alla går moturs sett utifrån. Face culling är avstängt, så den ser exakt
-ut som learnopengls kub. Den sista uppgiften ersätter scenen med learnopengls uniform buffer-demo; dess shaders
-(`uniform_buffer.vs`, `red.fs`, `green.fs`, `blue.fs`, `yellow.fs`) finns redan i projektet.
+Du fortsätter i ditt program från *Face culling*, tillbaka vid scenen från *Djuptestning* – två marmorkuber,
+metallgolvet, kameran på (0, 0, 3) – med kuben från kapitlet *Face culling*, vars trianglar alla går moturs sett
+utifrån. Stäng av face culling igen, så att den ser exakt ut som learnopengls kub. Den sista uppgiften ersätter scenen
+med learnopengls uniform buffer-demo. Dess shaders är nya: `uniform_buffer.vs` (avsnittet om uniform buffer objects
+visar den) och fyra fragment shaders som var och en skriver en enda färg, `red.fs`
+(`FragColor = vec4(1.0, 0.0, 0.0, 1.0);`), `green.fs` (0, 1, 0), `blue.fs` (0, 0, 1) och `yellow.fs` (1, 1, 0).
 :::
 :::vulkan
-Projektet är än en gång scenen från *Depth testing* – två marmorkuber, metallgolvet, kameran på (0, 0, 3) – med kuben
-från kapitlet *Face culling*, vars trianglar alla går moturs sett utifrån. Pipelinen cullar ingenting
-(`VK_CULL_MODE_NONE`, `VK_FRONT_FACE_CLOCKWISE`), så den ser exakt ut som learnopengls kub. Den sista uppgiften
-ersätter scenen med learnopengls uniform buffer-demo; dess shaders (`shaders/uniform_buffer.vert`, `red.frag`,
-`green.frag`, `blue.frag`, `yellow.frag`) finns redan i projektet.
+Du fortsätter i ditt program från *Face culling*, tillbaka vid scenen från *Djuptestning* – två marmorkuber,
+metallgolvet, kameran på (0, 0, 3) – med kuben från kapitlet *Face culling*, vars trianglar alla går moturs sett
+utifrån. Låt pipelinen culla ingenting igen (`VK_CULL_MODE_NONE`, `VK_FRONT_FACE_CLOCKWISE`), så att den ser exakt ut
+som learnopengls kub. Den sista uppgiften ersätter scenen med learnopengls uniform buffer-demo. Dess shaders är nya:
+`shaders/uniform_buffer.vert` (avsnittet om uniform buffer objects visar den) och fyra fragment shaders som var och en
+skriver en enda färg, `red.frag` (`outColor = vec4(1.0, 0.0, 0.0, 1.0);`), `green.frag` (0, 1, 0), `blue.frag`
+(0, 0, 1) och `yellow.frag` (1, 1, 0).
 :::
 :::d3d12
-Projektet är än en gång scenen från *Depth testing* – två marmorkuber, metallgolvet, kameran på (0, 0, 3) – med kuben
-från kapitlet *Face culling*, vars trianglar alla går moturs sett utifrån, och
-`psoDesc.RasterizerState.FrontCounterClockwise = TRUE;`. `CullMode` är fortfarande `D3D12_CULL_MODE_NONE`, så den ser
-exakt ut som learnopengls kub. Shadrarna ligger i `advanced_glsl.hlsl`. Den sista uppgiften ersätter scenen med
-learnopengls uniform buffer-demo; dess shaders (`uniform_buffer.hlsl`, `red.hlsl`, `green.hlsl`, `blue.hlsl`,
-`yellow.hlsl`) finns redan i projektet.
+Du fortsätter i ditt program från *Face culling*, tillbaka vid scenen från *Djuptestning* – två marmorkuber,
+metallgolvet, kameran på (0, 0, 3) – med kuben från kapitlet *Face culling*, vars trianglar alla går moturs sett
+utifrån, och `psoDesc.RasterizerState.FrontCounterClockwise = TRUE;`. Sätt tillbaka `CullMode` till
+`D3D12_CULL_MODE_NONE`, så att den ser exakt ut som learnopengls kub. Shadrarna flyttar till `advanced_glsl.hlsl`. Den
+sista uppgiften ersätter scenen med learnopengls uniform buffer-demo. Dess shaders är nya: `uniform_buffer.hlsl`
+(avsnittet om uniform buffer objects visar den) och fyra filer med en `PSMain` som returnerar en enda färg, `red.hlsl`
+(`return float4(1.0f, 0.0f, 0.0f, 1.0f);`), `green.hlsl` (0, 1, 0), `blue.hlsl` (0, 0, 1) och `yellow.hlsl`
+(1, 1, 0).
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
-IDE.
+Efter varje uppgift bygger och kör du programmet i din IDE.
 
 ## GLSL's built-in variables
 
@@ -341,7 +346,7 @@ du bara framsidor: för att se insidan måste framsidorna bort. Så vi cullar fr
 culling*, och tittar in i kuberna: det som blir kvar är insidorna av de bortre sidorna – baksidor.
 
 :::opengl
-Gör nu uppgiften **front-facing**. Vid TODO:n efter `glDepthFunc` cullar du framsidorna (vår kub går moturs sett
+Gör nu uppgiften **front-facing**. Direkt efter `glDepthFunc` cullar du framsidorna (vår kub går moturs sett
 utifrån, OpenGL:s standard för framsidor):
 
 ```cpp
@@ -415,8 +420,8 @@ marmor för framsidan och metall för baksidan, golvets set metall för båda:
 ```
 :::
 :::d3d12
-Gör nu uppgiften **front-facing**. Vid TODO:n cullar du framsidorna (`FrontCounterClockwise = TRUE` blir kvar: vår kub
-går moturs sett utifrån):
+Gör nu uppgiften **front-facing**. I PSO-beskrivningen cullar du framsidorna (`FrontCounterClockwise = TRUE` blir
+kvar: vår kub går moturs sett utifrån):
 
 ```cpp
         // Cull the front faces: only the back faces are drawn - the insides of the cubes (and
@@ -1398,8 +1403,8 @@ float4 VSMain(float4 position : POSITION) : SV_POSITION
 ```
 
 OpenGL:s fyra shaderprogram är fyra pipeline states i Direct3D 12 – ett PSO håller sina shaders. Lägg till
-medlemmarna `m_redPipelineState`, `m_greenPipelineState`, `m_bluePipelineState` och `m_yellowPipelineState`. Vid
-TODO:n i `LoadAssets` kompilerar du vertex shadern en gång och återanvänder `psoDesc` för varje färg, där bara pixel
+medlemmarna `m_redPipelineState`, `m_greenPipelineState`, `m_bluePipelineState` och `m_yellowPipelineState`. I
+`LoadAssets` kompilerar du vertex shadern en gång och återanvänder `psoDesc` för varje färg, där bara pixel
 shadern byts:
 
 ```cpp

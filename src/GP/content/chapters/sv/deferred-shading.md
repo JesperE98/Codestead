@@ -36,7 +36,7 @@ API-objekt: G-buffern är HDR-kapitlets flyttals-render targets, skrivna alla p�
 färgbuffrar, och belysningspasset är ännu en skärmfyrhörning. Det här kapitlet visar hur {{api}} sätter ihop dem.
 
 ```quiz
-I startens forward-renderare överlappar lådorna på skärmen. Var gör den belysningsarbete som deferred shading slipper?
+I forward-renderaren som du börjar med överlappar lådorna på skärmen. Var gör den belysningsarbete som deferred shading slipper?
 - [ ] Den belyser bakgrundspixlarna, där ingen låda finns
 - [ ] Den belyser varje låda två gånger: en gång för den diffusa och en gång för den spekulära delen
 - [x] Ett fragment av en låda längre bak belyses med alla 32 ljus, och sedan täcker en närmare låda det: det arbetet kastas bort – deferred shading belyser bara det fragment som blir kvar i varje pixel
@@ -106,20 +106,20 @@ ljusen. Den står på **(0, 5, 9) och tittar ner på rutnätet** (yaw -90, pitch
 mellan, ovanför och under lådorna. Inget rör sig; programmet behöver ingen inmatning.
 
 :::opengl
-Starten är en forward-renderare: `main.cpp` ritar de nio lådorna i fönstret med `forward_shading.vs` /
-`forward_shading.fs`, och fragment shadern går igenom alla 32 ljus för varje fragment – learnopengls belysningskod, med
-ytans data direkt från vertex shadern och texturerna. Ljusens uniforms sätts varje bildruta i en loop
-(`lights[i].Position`, `.Color`, `.Linear`, `.Quadratic`) tillsammans med `viewPos`. `renderCube()` och learnopengls
-`renderQuad()` (en fyrhörning som fyller skärmen, ritad som en triangle strip) finns i slutet av `main.cpp`.
-Deferred-shaderna finns redan: `g_buffer.vs` och `deferred_shading.vs` är klara, `g_buffer.fs` har sina utdata men dess
-`main` är en TODO, `deferred_shading.fs` läser G-buffern men visar bara albedot, och `deferred_light_box.vs` / `.fs` är
-klara (de används i den tredje uppgiften).
+Utgå från ditt program från *Bloom* i en ny mapp och gör om det till en forward-renderare: `main.cpp` ritar de nio
+lådorna i fönstret med `forward_shading.vs` / `forward_shading.fs`, och fragment shadern går igenom alla 32 ljus för
+varje fragment – learnopengls belysningskod, med ytans data direkt från vertex shadern och texturerna. Ljusens
+uniforms sätts varje bildruta i en loop (`lights[i].Position`, `.Color`, `.Linear`, `.Quadratic`) tillsammans med
+`viewPos`. `renderCube()` och learnopengls `renderQuad()` (en fyrhörning som fyller skärmen, ritad som en triangle
+strip) finns i slutet av `main.cpp`. Deferred-shaderna finns redan: `g_buffer.vs` och `deferred_shading.vs` är klara,
+`g_buffer.fs` börjar med sina utdata och en tom `main`, `deferred_shading.fs` läser G-buffern men visar bara albedot,
+och `deferred_light_box.vs` / `.fs` är klara (de används i den tredje uppgiften).
 :::
 :::vulkan
-Starten är en forward-renderare: `recordCommandBuffer()` ritar de nio lådorna i fönstret med `forwardPipeline`
-(`shaders/forward_shading.vert` / `.frag`) – en `for`-loop över `objectPositions` med modellmatrisen som push constant och
-`vkCmdDraw(commandBuffer, 36, 1, 0, 0)` – och fragment shadern går igenom alla 32 ljus för varje fragment. Ljusen ligger i
-uniform buffern, efter matriserna:
+Utgå från ditt program från *Bloom* i en ny mapp och gör om det till en forward-renderare: `recordCommandBuffer()`
+ritar de nio lådorna i fönstret med `forwardPipeline` (`shaders/forward_shading.vert` / `.frag`) – en `for`-loop över
+`objectPositions` med modellmatrisen som push constant och `vkCmdDraw(commandBuffer, 36, 1, 0, 0)` – och fragment
+shadern går igenom alla 32 ljus för varje fragment. Ljusen ligger i uniform buffern, efter matriserna:
 
 ```cpp
 struct Light {
@@ -131,35 +131,36 @@ struct Light {
 ```
 
 std140 börjar en `vec3` på en multipel av 16 byte, som en `vec4`, så det blir en lucka på 4 byte efter varje `vec3`.
-learnopengls ordning är Position, Color, Linear, Quadratic; kursen flyttar varje float in i luckan efter en `vec3`, så att
-C++-structen får shaderns offsets utan utfyllnadsmedlemmar (32 byte per ljus). `updateUniformBuffer()` fyller
+learnopengls ordning är Position, Color, Linear, Quadratic; kursen flyttar varje float in i luckan efter en `vec3`, så
+att C++-structen får shaderns offsets utan utfyllnadsmedlemmar (32 byte per ljus). `updateUniformBuffer()` fyller
 `ubo.lights[i]` varje bildruta (`linear` 0.7, `quadratic` 1.8) och `ubo.viewPos = cameraPos`; `createLights()` kör
 learnopengls loop ovan en gång. Vertexbuffern innehåller kuben (vertex 0..35) och skärmfyrhörningen (36..41).
 Pipelinehjälparen är `createPipeline(vertFile, fragFile, pipelineRenderPass, colorAttachmentCount, pipeline)`, med ett
-blend state per färg-attachment, som i bloom-kapitlet. `createTextureSampler(filter, addressMode, sampler)` slår bara på
-anisotropisk filtrering för `VK_FILTER_LINEAR` – en NEAREST-sampler måste returnera exakt en texel. Deferred-shaderna
-ligger i `shaders/`: `g_buffer.vert`, `deferred_shading.vert` (skärmfyrhörningen) och `deferred_light_box.vert` är klara;
-`g_buffer.frag`, `deferred_shading.frag` och `deferred_light_box.frag` är TODO:er som kompilerar och inte skriver något.
+blend state per färg-attachment, som i bloom-kapitlet. `createTextureSampler(filter, addressMode, sampler)` slår bara
+på anisotropisk filtrering för `VK_FILTER_LINEAR` – en NEAREST-sampler måste returnera exakt en texel.
+Deferred-shaderna ligger i `shaders/`: `g_buffer.vert`, `deferred_shading.vert` (skärmfyrhörningen) och
+`deferred_light_box.vert` är klara; `g_buffer.frag`, `deferred_shading.frag` och `deferred_light_box.frag` börjar med
+en tom `main` som inte skriver något.
 :::
 :::d3d12
-Starten är en forward-renderare: `PopulateCommandList` ritar de nio lådorna i back buffern med `m_pipelineState`
-(`forward_shading.hlsl`) – deras två kartor (heap-plats 1 och 2) i rotparameter 2:s tabell, och per låda modell- och
-normalmatrisen som rotkonstanter (`ModelConstants`, rotparameter 0) – och pixel shadern går igenom alla 32 ljus för varje
-pixel. Ljusen ligger i konstantbuffern (b1), ifyllda i `OnUpdate` från de globala `lightPositions` / `lightColors` som
-`LoadAssets` räknar fram med learnopengls loop ovan (som `XMFLOAT3`:or). HLSL packar
-`struct Light { float3 Position; float3 Color; float Linear; float Quadratic; }` i rader om 16 byte: Position på offset 0,
-Color på 16 – en `float3` korsar aldrig en rad, så den kan inte börja på 12 –, Linear på 28, Quadratic på 32, och varje
-element i en array börjar en ny rad, så ett ljus tar 48 byte. C++-structen speglar det med utfyllnad:
+Utgå från ditt program från *Bloom* i en ny mapp och gör om det till en forward-renderare: `PopulateCommandList` ritar
+de nio lådorna i back buffern med `m_pipelineState` (`forward_shading.hlsl`) – deras två kartor (heap-plats 1 och 2) i
+rotparameter 2:s tabell, och per låda modell- och normalmatrisen som rotkonstanter (`ModelConstants`, rotparameter 0)
+– och pixel shadern går igenom alla 32 ljus för varje pixel. Ljusen ligger i konstantbuffern (b1), ifyllda i
+`OnUpdate` från de globala `lightPositions` / `lightColors` som `LoadAssets` räknar fram med learnopengls loop ovan
+(som `XMFLOAT3`:or). HLSL packar `struct Light { float3 Position; float3 Color; float Linear; float Quadratic; }` i
+rader om 16 byte: Position på offset 0, Color på 16 – en `float3` korsar aldrig en rad, så den kan inte börja på 12 –,
+Linear på 28, Quadratic på 32, och varje element i en array börjar en ny rad, så ett ljus tar 48 byte. C++-structen
+speglar det med utfyllnad:
 `XMFLOAT3 Position; float padding0; XMFLOAT3 Color; float Linear; float Quadratic; float padding1[3];`. Deferred-
-shaderfilerna finns: `g_buffer.hlsl` (dess `PSMain` en TODO), `deferred_shading.hlsl` (den visar bara albedot) och
-`deferred_light_box.hlsl` (klar, används i den tredje uppgiften).
+shaderfilerna finns: `g_buffer.hlsl` (dess `PSMain` tom så länge), `deferred_shading.hlsl` (den visar bara albedot)
+och `deferred_light_box.hlsl` (klar, används i den tredje uppgiften).
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Bygg och kör programmet i din IDE: rutnätet på 3 × 3
-trälådor med stålramar, sett ovanifrån och bakifrån, den främre raden stor längst ner, den bakre liten längst upp, svart
-runt omkring. Lådornas ovansidor och de sidor som vetter mot närliggande ljus är belysta i varma pastellfärger, resten
-är mörkt – bara omgivningstermen 0.1. Själva ljusen syns inte. Varje fragment av varje låda belystes med alla 32 ljus,
-även de fragment som en närmare låda sedan täckte.
+Bygg och kör programmet i din IDE: rutnätet på 3 × 3 trälådor med stålramar, sett ovanifrån och bakifrån, den främre
+raden stor längst ner, den bakre liten längst upp, svart runt omkring. Lådornas ovansidor och de sidor som vetter mot
+närliggande ljus är belysta i varma pastellfärger, resten är mörkt – bara omgivningstermen 0.1. Själva ljusen syns
+inte. Varje fragment av varje låda belystes med alla 32 ljus, även de fragment som en närmare låda sedan täckte.
 
 ## G-buffern
 
@@ -210,8 +211,8 @@ En 8-bitars UNORM-kanal lagrar 256 värden mellan 0.0 och 1.0: den skulle klämm
 ```
 
 :::opengl
-G-buffern är en framebuffer med tre färgtexturer och en djup-renderbuffer – learnopengls kod, i startens TODO efter
-texturerna:
+G-buffern är en framebuffer med tre färgtexturer och en djup-renderbuffer – learnopengls kod, efter att texturerna har
+laddats:
 
 ```cpp
     // configure g-buffer framebuffer
@@ -335,13 +336,12 @@ pass – lådorna i G-buffern, sedan skärmfyrhörningen i fönstret:
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, gNormal);
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-        // TODO: send the lights and the view position to the lighting pass
+        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);        // (the lights and the view position: the next task)
         // finally render quad
         renderQuad();
 ```
 
-(TODO:n är nästa uppgift.) Startens `deferred_shading.fs` läser de fyra värdena ur G-buffern och skriver än så länge
+(Att skicka ljusen är nästa uppgift.) `deferred_shading.fs` läser de fyra värdena ur G-buffern och skriver än så länge
 `FragColor = vec4(Diffuse, 1.0); // for now: show the albedo`. Gör nu den första uppgiften, **g-buffer**, och ta bort de
 tre texturerna, renderbuffern och framebuffern i slutet av `main`.
 :::
@@ -448,9 +448,9 @@ I `recordCommandBuffer()` kommer geometripasset först. Det rensar fyra attachme
         gBufferClearValues[3].depthStencil = {1.0f, 0};
 ```
 
-I det: viewporten, scissorn, vertexbuffern, `geometryPipeline`, `containerDescriptorSet` och startens loop över lådorna.
-Efter `vkCmdEndRenderPass` ligger G-bufferns färgbilder i `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`. Sedan fönstrets
-render pass, med skärmfyrhörningen i stället för lådorna:
+I det: viewporten, scissorn, vertexbuffern, `geometryPipeline`, `containerDescriptorSet` och loopen över lådorna som
+du började med. Efter `vkCmdEndRenderPass` ligger G-bufferns färgbilder i `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`.
+Sedan fönstrets render pass, med skärmfyrhörningen i stället för lådorna:
 
 ```cpp
         // the screen quad, lit with the G-buffer's data (the viewport, scissor and vertex buffer set above still apply)
@@ -740,7 +740,7 @@ och beräknar sedan belysningen som vanligt – learnopengls kod:
 ```
 
 Uniforms är forward-shaderns: `struct Light { vec3 Position; vec3 Color; float Linear; float Quadratic; };`,
-`uniform Light lights[NR_LIGHTS];` och `uniform vec3 viewPos;`. I `main.cpp` skickar TODO:n i belysningspasset dem till
+`uniform Light lights[NR_LIGHTS];` och `uniform vec3 viewPos;`. I `main.cpp` skickar belysningspasset dem till
 `shaderLightingPass`, samma loop som forward-passet hade:
 
 ```cpp

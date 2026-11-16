@@ -19,7 +19,7 @@ transformen till ljusets rum, bias och PCF – och på kapitlet *Punktskuggor*, 
 en cube map i ett enda pass; här renderar samma knep alla kaskader i ett pass. Precis som de kapitlen fungerar det på
 samma sätt i alla API:er, och kapitlet visar var {{api}} lägger varje del.
 
-## Projektet
+## Ditt program
 
 Scenen är learnopengls: ett trägolv på 50 × 50 enheter vid y = -2 och tio trälådor som svävar ovanför det, belysta av ett
 riktat ljus som solen, `lightDir = normalize(20, 50, 20)` (riktningen mot ljuset). learnopengl placerar sina lådor med en
@@ -30,27 +30,27 @@ Belysningen är Blinn-Phong från kapitlet *Shadow mapping* med det ambienta lju
 CSM-shader multiplicerar det ambienta med träfärgen två gånger – kursen behåller det tidigare kapitlets variant).
 
 :::opengl
-Programmet begär en OpenGL **4.1** core-kontext, learnopengls val för den här demon, och alla shaders börjar med
-`#version 410 core`. Djuppassets geometry shader körs en gång per kaskad med `layout (triangles, invocations = 5) in;` –
-*geometry shader instancing*, core sedan OpenGL 4.0. 4.1 är också den högsta version macOS erbjuder, så kapitlet fungerar
-även där. `shader_m.h` är kursens `Shader`-klass med den valfria geometry shadern, som i *Punktskuggor*.
+Utgå från ditt program från *Shadow mapping* i en ny mapp. Programmet begär en OpenGL **4.1** core-kontext,
+learnopengls val för den här demon, och alla shaders börjar med `#version 410 core`. Djuppassets geometry shader körs
+en gång per kaskad med `layout (triangles, invocations = 5) in;` – *geometry shader instancing*, core sedan OpenGL
+4.0. 4.1 är också den högsta version macOS erbjuder, så kapitlet fungerar även där. `shader_m.h` är kursens
+`Shader`-klass med den valfria geometry shadern, som i *Punktskuggor*.
 :::
 :::vulkan
-Projektet bygger på Vulkan-projektet från *Shadow mapping*: dess render pass med bara djup (`depthMapRenderPass`),
+Utgå från ditt program från *Shadow mapping* i en ny mapp: dess render pass med bara djup (`depthMapRenderPass`),
 hjälpfunktionen `createPipeline` – här med en valfri fil för geometry shadern, som i *Punktskuggor* –, `renderScene()`
 och felsökningsfyrhörningen som visar skuggkartan. Scenens data per bildruta ligger i en uniform buffer på bindning 0,
 trätexturen på bindning 1.
 :::
 :::d3d12
-Projektet bygger på Direct3D 12-projektet från *Shadow mapping*: `RenderScene()` ritar golvet och lådorna och anropas av
+Utgå från ditt program från *Shadow mapping* i en ny mapp: `RenderScene()` ritar golvet och lådorna och anropas av
 båda passen, `m_depthPipelineState` renderar bara djup (ingen pixel shader, inget render target), och
-`m_debugQuadPipelineState` visar skuggkartan på en skärmfyrhörning. Scenens data per bildruta ligger i en constant buffer;
-lådornas placeringar är learnopengls translate · rotate · scale i DirectXMaths radvektorordning,
+`m_debugQuadPipelineState` visar skuggkartan på en skärmfyrhörning. Scenens data per bildruta ligger i en constant
+buffer; lådornas placeringar är learnopengls translate · rotate · scale i DirectXMaths radvektorordning,
 `XMMatrixScaling(…) * XMMatrixRotationAxis(…) * XMMatrixTranslation(…)`.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Bygg och kör det i din IDE: det belysta golvet och
-lådorna – ännu helt utan skuggor.
+Bygg och kör det i din IDE: det belysta golvet och lådorna – ännu helt utan skuggor.
 
 ## Att dela upp frustumet
 

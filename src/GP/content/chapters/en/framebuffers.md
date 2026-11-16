@@ -38,32 +38,28 @@ it between the two uses with resource barriers (Microsoft's *Using resource barr
 As in the other chapters of this part, the technique is the same in every API; the text shows it for {{api}}.
 
 :::opengl
-The project starts with the *Depth testing* scene drawn straight into the window: the two marble cubes at
-(-1, 0, -1) and (2, 0, 0) and the metal floor, `glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`, the camera at
+You continue in your program from *Depth testing*, with its scene drawn straight into the window: the two marble cubes
+at (-1, 0, -1) and (2, 0, 0) and the metal floor, `glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`, the camera at
 (0, 0, 3) looking down -z, and the shaders `framebuffers.vs` / `framebuffers.fs` that sample `texture1`. Two more
-shader files are there for the second half: `framebuffers_screen.vs`, which is complete, and `framebuffers_screen.fs`,
-whose `main` is still a TODO.
+shader files come in the second half, `framebuffers_screen.vs` and `framebuffers_screen.fs`; the text shows them.
 :::
 :::vulkan
-The project starts with the *Depth testing* scene drawn straight into the window: the two marble cubes at
-(-1, 0, -1) and (2, 0, 0) and the metal floor, the camera at (0, 0, 3) looking down -z, all vertices in one vertex
+You continue in your program from *Depth testing*, with its scene drawn straight into the window: the two marble cubes
+at (-1, 0, -1) and (2, 0, 0) and the metal floor, the camera at (0, 0, 3) looking down -z, all vertices in one vertex
 buffer (the cube is vertices 0..35, the floor 36..41), one descriptor set per texture, the model matrix in a push
 constant and view and projection in the uniform buffer. `createPipeline(vert, frag, pipeline)` creates the scene's
-pipeline from `shaders/framebuffers.vert` / `.frag`. Two more shaders are there for the second half:
-`shaders/framebuffers_screen.vert`, which is complete, and `shaders/framebuffers_screen.frag`, whose `main` is still
-a TODO.
+pipeline from `shaders/framebuffers.vert` / `.frag`. Two more shaders come in the second half,
+`shaders/framebuffers_screen.vert` and `shaders/framebuffers_screen.frag`; the text shows them.
 :::
 :::d3d12
-The project starts with the *Depth testing* scene drawn straight into the window: the two marble cubes at
-(-1, 0, -1) and (2, 0, 0) and the metal floor, the camera at (0, 0, 3) looking down -z, a PSO with the depth function
+You continue in your program from *Depth testing*, with its scene drawn straight into the window: the two marble cubes
+at (-1, 0, -1) and (2, 0, 0) and the metal floor, the camera at (0, 0, 3) looking down -z, a PSO with the depth function
 LESS and the shaders of `framebuffers.hlsl`. One vertex buffer holds the cube (vertices 0–35) and the floor (36–41);
 the RTV heap holds the swap chain's two buffers, and the CBV/SRV heap the CBV (slot 0), the marble (slot 1) and the
-metal (slot 2). A second shader file, `framebuffers_screen.hlsl`, is there for the second half: its `VSMain` is
-complete, its `PSMain` still returns black.
+metal (slot 2). A second shader file, `framebuffers_screen.hlsl`, comes in the second half; the text shows it.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
-IDE.
+After each task, build and run the program in your IDE.
 
 ## Creating a framebuffer
 
@@ -485,7 +481,7 @@ The rule of thumb carries over from OpenGL: if you never need to sample from an 
 :::d3d12
 Direct3D 12 has no renderbuffer objects: every attachment is a resource. What makes a resource "renderbuffer-like" is
 that it has only the view it is drawn through and no SRV, so no shader can ever read it. A depth buffer created with
-`D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL` and without an SRV is exactly that, and the project already has one:
+`D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL` and without an SRV is exactly that, and your program already has one:
 `m_depthStencil`, the window's depth buffer (`DXGI_FORMAT_D32_FLOAT`, no stencil – our scene doesn't use the stencil
 test), with its DSV in `m_dsvHeap`. (The flag `D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE` goes even further: it promises
 that there will never be an SRV of the depth buffer, which leaves the driver free to optimise it for depth testing
@@ -682,7 +678,7 @@ was. After the floor the offscreen pass ends, and the window's pass begins, clea
 
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        // TODO: draw the screen quad (screenPipeline, screenDescriptorSet, its 6 vertices) with the offscreen image as its texture
+        // draw the screen quad here (screenPipeline, screenDescriptorSet, its 6 vertices)
 
         vkCmdEndRenderPass(commandBuffer);
 ```
@@ -799,7 +795,7 @@ stride of four floats:
     glBindVertexArray(0);
 ```
 
-The vertex shader, `framebuffers_screen.vs`, is already there:
+The vertex shader, `framebuffers_screen.vs`, only passes the corners and texture coordinates on:
 
 ```glsl
 #version 330 core
@@ -880,7 +876,7 @@ scene was drawn into the offscreen image with the same convention (the projectio
 image's first row, v = 0, holds the top of the picture. At the bottom of the window we therefore need v = 1, the
 image's last row – and that is what learnopengl's coordinates give the corner (-1, 1).
 
-The vertex shader, `shaders/framebuffers_screen.vert`, is already there – no matrices, the corners are passed through:
+The vertex shader, `shaders/framebuffers_screen.vert`, has no matrices – the corners are passed through:
 
 ```glsl
 void main() {
@@ -933,7 +929,7 @@ both pool sizes):
 ```
 
 The helper writes the image with `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL` into the descriptor – the layout our render
-pass leaves the image in. Finally the draw, in the window's render pass where the TODO is:
+pass leaves the image in. Finally the draw, in the window's render pass:
 
 ```cpp
         // the screen quad with the offscreen image as its texture (the viewport, scissor and vertex buffer set above still apply)
@@ -968,8 +964,7 @@ render target is the texture's first row, v = 0. So when we drew the scene, its 
 top corners need v = 0 to show it there. (In OpenGL the first row of a texture is at the bottom, so learnopengl's quad
 has v = 1 at the top.)
 
-The shaders are in `framebuffers_screen.hlsl`. The vertex shader is already there – no matrices, the corners are
-passed through:
+The shaders are in `framebuffers_screen.hlsl`. The vertex shader has no matrices – the corners are passed through:
 
 ```hlsl
 PSInput VSMain(float4 position : POSITION, float2 texCoord : TEXCOORD)
@@ -1014,8 +1009,8 @@ created right after `m_pipelineState`:
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_screenPipelineState)));
 ```
 
-`RTVFormats[0]` stays `DXGI_FORMAT_R8G8B8A8_UNORM`, the back buffer's format. Finally the draw, in the window's pass
-where the TODO is: the quad's PSO, our texture's SRV in heap slot 3 for root parameter 2, and the six vertices from
+`RTVFormats[0]` stays `DXGI_FORMAT_R8G8B8A8_UNORM`, the back buffer's format. Finally the draw, in the window's pass:
+the quad's PSO, our texture's SRV in heap slot 3 for root parameter 2, and the six vertices from
 vertex 42 on:
 
 ```cpp

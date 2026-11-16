@@ -82,7 +82,7 @@
         "vulkan": "Write the two shaders: `shader.vert` reads `layout(location = 0) in vec3 inPosition;` and writes `gl_Position = vec4(inPosition, 1.0);`, `shader.frag` declares `layout(location = 0) out vec4 outColor;` and writes `outColor = vec4(1.0, 0.5, 0.2, 1.0);`."
       },
       "hint": {
-        "vulkan": "Vulkan shaders need explicit `location`s; `#version 450` is already there. The build compiles them to `vert.spv` and `frag.spv` with `glslc`."
+        "vulkan": "Vulkan shaders need explicit `location`s; each file starts with `#version 450`. The build compiles them to `vert.spv` and `frag.spv` with `glslc`."
       }
     },
     "shader-modules": {
@@ -115,7 +115,7 @@
         "d3d12": "Compile the shaders with `D3DCompileFromFile` (`VSMain`/`vs_5_0`, `PSMain`/`ps_5_0`), define the `POSITION` input layout, create the PSO with `CreateGraphicsPipelineState`, and pass `m_pipelineState.Get()` to `CreateCommandList`."
       },
       "hint": {
-        "vulkan": "The shader modules can be destroyed right after the pipeline is created, so the call goes before the \"destroy the shader modules\" TODO.",
+        "vulkan": "The shader modules can be destroyed right after the pipeline is created, so the call goes before the two `vkDestroyShaderModule` calls.",
         "d3d12": "`CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT)`, `CD3DX12_BLEND_DESC(D3D12_DEFAULT)`, no depth/stencil, `SampleMask = UINT_MAX`, `D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE`, one render target `DXGI_FORMAT_R8G8B8A8_UNORM`, `SampleDesc.Count = 1`."
       }
     },

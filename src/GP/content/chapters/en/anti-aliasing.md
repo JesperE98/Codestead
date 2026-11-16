@@ -19,36 +19,36 @@ the concepts behind SSAA while implementing a much more efficient approach. In t
 discussing this MSAA technique, as every graphics API has it built in.
 
 :::opengl
-The project is learnopengl's scene: one cube at the origin, flat green, on the dark (0.1, 0.1, 0.1) background, seen by
-the camera at (0, 0, 3) – WASD, the mouse and the scroll wheel still move it. One thing is different from learnopengl:
-the cube is turned by a fixed 30° about the axis (1, 1, 0). learnopengl's unrotated cube, seen from the front, is a
-square with horizontal and vertical edges, which show no stairs at all – so anti-aliasing would change nothing you
-could see. The shaders are `anti_aliasing.vs/.fs`; `aa_post.vs/.fs`, for a screen quad, are used from the `resolve`
-task on.
+Start from your program from *Camera* in a new folder and make it learnopengl's scene: one cube at the origin, flat
+green, on the dark (0.1, 0.1, 0.1) background, seen by the camera at (0, 0, 3) – WASD, the mouse and the scroll wheel
+still move it. One thing is different from learnopengl: the cube is turned by a fixed 30° about the axis (1, 1, 0).
+learnopengl's unrotated cube, seen from the front, is a square with horizontal and vertical edges, which show no
+stairs at all – so anti-aliasing would change nothing you could see. The shaders are `anti_aliasing.vs/.fs`;
+`aa_post.vs/.fs`, for a screen quad, are used from the `resolve` task on.
 :::
 :::vulkan
-The project is learnopengl's scene in the program of the earlier chapters: one cube at the origin, flat green, on the
-dark (0.1, 0.1, 0.1) background, seen by the camera at (0, 0, 3) – WASD, the mouse and the scroll wheel still move it.
-`createPipeline(vert, frag, attributeCount, pipeline)` creates the cube's pipeline (the cube's shaders only read the
-position), view and projection are in the uniform buffer, the model matrix is a push constant. One thing is different
-from learnopengl: the cube is turned by a fixed 30° about the axis (1, 1, 0). learnopengl's unrotated cube, seen from
-the front, is a square with horizontal and vertical edges, which show no stairs at all – so anti-aliasing would change
-nothing you could see. The shaders are `shaders/anti_aliasing.vert/.frag`; `shaders/aa_post.vert/.frag`, for a screen
-quad, are used from the `resolve` task on.
+Start from your program from *Camera* in a new folder and make it learnopengl's scene: one cube at the origin, flat
+green, on the dark (0.1, 0.1, 0.1) background, seen by the camera at (0, 0, 3) – WASD, the mouse and the scroll wheel
+still move it. `createPipeline(vert, frag, attributeCount, pipeline)` creates the cube's pipeline (the cube's shaders
+only read the position), view and projection are in the uniform buffer, the model matrix is a push constant. One thing
+is different from learnopengl: the cube is turned by a fixed 30° about the axis (1, 1, 0). learnopengl's unrotated
+cube, seen from the front, is a square with horizontal and vertical edges, which show no stairs at all – so
+anti-aliasing would change nothing you could see. The shaders are `shaders/anti_aliasing.vert/.frag`;
+`shaders/aa_post.vert/.frag`, for a screen quad, are used from the `resolve` task on.
 :::
 :::d3d12
-The project is learnopengl's scene: one cube at the origin, flat green, on the dark (0.1, 0.1, 0.1) background, seen by
-the camera at (0, 0, 3) – WASD, the mouse and the wheel still move it. The root constants hold the model matrix (b0),
-the constant buffer view and projection (b1); the shaders are in `anti_aliasing.hlsl`. One thing is different from
-learnopengl: the cube is turned by a fixed 30° about the axis (1, 1, 0). learnopengl's unrotated cube, seen from the
-front, is a square with horizontal and vertical edges, which show no stairs at all – so anti-aliasing would change
-nothing you could see. `aa_post.hlsl`, for a screen quad, is used from the `resolve` task on.
+Start from your program from *Camera* in a new folder and make it learnopengl's scene: one cube at the origin, flat
+green, on the dark (0.1, 0.1, 0.1) background, seen by the camera at (0, 0, 3) – WASD, the mouse and the wheel still
+move it. The root constants hold the model matrix (b0), the constant buffer view and projection (b1); the shaders are
+in `anti_aliasing.hlsl`. One thing is different from learnopengl: the cube is turned by a fixed 30° about the axis (1,
+1, 0). learnopengl's unrotated cube, seen from the front, is a square with horizontal and vertical edges, which show
+no stairs at all – so anti-aliasing would change nothing you could see. `aa_post.hlsl`, for a screen quad, is used
+from the `resolve` task on.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
-IDE. Right now it shows the green silhouette of the cube – a hexagon of three faces, all the same green – with hard,
-stair-stepped edges: every pixel is either exactly green or exactly the background. Zoom in on a slanted edge in your
-mind's eye and you see the staircase.
+After each task, build and run the program in your IDE. Right now it shows the green silhouette of the cube – a
+hexagon of three faces, all the same green – with hard, stair-stepped edges: every pixel is either exactly green or
+exactly the background. Zoom in on a slanted edge in your mind's eye and you see the staircase.
 
 ## Multisampling
 
@@ -180,7 +180,7 @@ and a function that finds it:
 
 vulkan-tutorial checks from `VK_SAMPLE_COUNT_64_BIT` downwards and takes the most the device offers; we stop at 4,
 learnopengl's count, so the picture is the same on every GPU. (Every Vulkan device supports at least 1 and 4 samples
-for these attachments.) In `pickPhysicalDevice()`, at the TODO, right after `physicalDevice = device;`:
+for these attachments.) In `pickPhysicalDevice()`, right after `physicalDevice = device;`:
 
 ```cpp
                 msaaSamples = getMaxUsableSampleCount();
@@ -342,7 +342,7 @@ The render target needs a render target view, after the swap chain's in the RTV 
         rtvHeapDesc.NumDescriptors = FrameCount + 1;    // the swap chain's buffers + the multisampled render target
 ```
 
-At the TODO in `LoadAssets`, create it. First, check that the device can draw 4 samples per pixel in our format (every
+In `LoadAssets`, create it. First, check that the device can draw 4 samples per pixel in our format (every
 Direct3D 11-class GPU can: from feature level 11_0 on, 4x is required for it), with `CheckFeatureSupport`:
 
 ```cpp
@@ -477,7 +477,7 @@ renderbuffer's memory storage. The one thing that changed here is the extra seco
 samples we'd like to use; 4 in this particular case.
 
 Now do the task **offscreen-msaa**. Remove the `GLFW_SAMPLES` hint – the window no longer needs samples; we do the
-multisampling ourselves (`glEnable(GL_MULTISAMPLE)` stays). At the TODO, create the multisampled framebuffer:
+multisampling ourselves (`glEnable(GL_MULTISAMPLE)` stays). Before the render loop, create the multisampled framebuffer:
 
 ```cpp
     // configure MSAA framebuffer

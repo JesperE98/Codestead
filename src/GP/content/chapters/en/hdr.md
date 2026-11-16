@@ -44,14 +44,15 @@ that buffer onto the window with a shader that tone-maps it. You have built the 
 chapter's off-screen target and screen quad. What is new is the format of the colour buffer and what the screen quad's
 shader does with it.
 
-The project is learnopengl's HDR scene: a long wooden tunnel – the 2 × 2 × 2 cube scaled by (2.5, 2.5, 27.5) and moved
-to z = 25, so it runs from z = -2.5 to z = 52.5 and is 5 units wide and high – lit by four point lights. Three of them
-are dim and coloured and hang near the camera: (-1.4, -1.9, 9) red with a strength of 0.1, (0, -1.8, 4) blue with 0.2,
+Start from your program from *Point Shadows* in a new folder (it has the cube and the lit wooden walls) and turn it
+into learnopengl's HDR scene: a long wooden tunnel – the 2 × 2 × 2 cube scaled by (2.5, 2.5, 27.5) and moved to z =
+25, so it runs from z = -2.5 to z = 52.5 and is 5 units wide and high – lit by four point lights. Three of them are
+dim and coloured and hang near the camera: (-1.4, -1.9, 9) red with a strength of 0.1, (0, -1.8, 4) blue with 0.2,
 (0.8, -1.7, 6) green with 0.1. The fourth, at (0, 0, 49.5), 3 units in front of the tunnel's far end, is white with a
-strength of **200** – far beyond what an 8-bit colour can hold. The camera is inside the tunnel at (0, 0, 5). We look at
-the cube from the inside, so its normals are turned round in the vertex shader (`inverse_normals` – the room of the
-*Point Shadows* chapter did the same with `reverse_normals`), and face culling is off. The wood texture is read as an sRGB texture, as in the *Gamma
-Correction* chapter.
+strength of **200** – far beyond what an 8-bit colour can hold. The camera is inside the tunnel at (0, 0, 5). We look
+at the cube from the inside, so its normals are turned round in the vertex shader (`inverse_normals` – the room of the
+*Point Shadows* chapter did the same with `reverse_normals`), and face culling is off. The wood texture is read as an
+sRGB texture, as in the *Gamma Correction* chapter.
 
 The lighting is learnopengl's: no ambient light, diffuse only, quadratic attenuation `1.0 / (distance * distance)`
 (the right one once lighting happens in linear space), no specular. Two choices differ from learnopengl's program:
@@ -74,9 +75,9 @@ The lighting is learnopengl's: no ambient light, diffuse only, quadratic attenua
 ```
 
 The lights are uniforms `lights[i].Position` and `lights[i].Color`, set in a loop over two `std::vector<glm::vec3>`.
-Two more shader files are there for the second half: `hdr.vs`, which is complete (the screen quad: positions already in
-normalized device coordinates, no matrices), and `hdr.fs`, whose `main` is still a TODO. learnopengl's `renderQuad()`
-is in `main.cpp` too, unused so far.
+Two more shader files are there for the second half: `hdr.vs`, which is complete (the screen quad: positions already
+in normalized device coordinates, no matrices), and `hdr.fs`, which starts with an empty `main` – the tasks fill it
+in. learnopengl's `renderQuad()` is in `main.cpp` too, unused so far.
 :::
 :::vulkan
 `recordCommandBuffer()` draws the tunnel – vertices 0..35 of the one vertex buffer – into the window's render pass with
@@ -106,9 +107,9 @@ only `xyz` – the same rule as the *Gamma Correction* chapter's light arrays. `
 ```
 
 Two more shaders are there for the second half: `shaders/hdr.vert`, which is complete (the screen quad: positions
-already in normalized device coordinates, no matrices), and `shaders/hdr.frag`, whose `main` is still a TODO.
-`createPipeline(vertFile, fragFile, pipelineRenderPass, pipeline)` takes the render pass the pipeline is made for – you
-will need that.
+already in normalized device coordinates, no matrices), and `shaders/hdr.frag`, which starts with an empty `main` –
+the tasks fill it in. `createPipeline(vertFile, fragFile, pipelineRenderPass, pipeline)` takes the render pass the
+pipeline is made for – you will need that.
 :::
 :::d3d12
 `PopulateCommandList` draws the tunnel – vertices 0–35 of the one vertex buffer – into the back buffer with the depth
@@ -142,12 +143,12 @@ already in normalized device coordinates, no matrices), its `PSMain` still retur
 need it.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. Build and run the program in your IDE: you look down
-the tunnel, its boards running towards a small square in the middle of the window – the far end. Near the camera the
-walls are very dark (only a faint red tint in the bottom-right corner, from the red light); towards the end they get
-brighter. And the end itself is **flat white**: the 200-strength light makes the colour there far brighter than 1.0, the
-window stores 0.0 to 1.0 per channel, and everything above is cut off at 1.0. The wood's boards are gone from that
-square – only along its edges, where the blue channel of the wood is still below 1.0, a little yellow remains.
+Build and run the program in your IDE: you look down the tunnel, its boards running towards a small square in the
+middle of the window – the far end. Near the camera the walls are very dark (only a faint red tint in the bottom-right
+corner, from the red light); towards the end they get brighter. And the end itself is **flat white**: the 200-strength
+light makes the colour there far brighter than 1.0, the window stores 0.0 to 1.0 per channel, and everything above is
+cut off at 1.0. The wood's boards are gone from that square – only along its edges, where the blue channel of the wood
+is still below 1.0, a little yellow remains.
 
 ```quiz
 The lighting shader computes the colour (3.5, 2.4, 1.2) for a fragment at the tunnel's end and writes it into the window, whose colour buffer has 8 bits per channel. What is stored?

@@ -24,30 +24,33 @@ sedan på riktig blending med fönstren. Som i de andra kapitlen i den här dele
 bara stället där du slår på det skiljer sig, och texten visar det för ditt API.
 
 :::opengl
-Projektet börjar där kapitlet *Depth testing* började: de två marmorkuberna på (-1, 0, -1) och (2, 0, 0) och
-metallgolvet, ritade med `glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`, kameran på (0, 0, 3) som tittar längs -z,
-och en shader (`blending.vs`, `blending.fs`) som läser `texture1`. Två nya filer följer med: `grass.png` och
-`window.png` bredvid `marble.png` och `metal.png`.
+Du fortsätter i ditt program från *Djuptestning*, tillbaka där det kapitlet började: de två marmorkuberna på (-1, 0,
+-1) och (2, 0, 0) och metallgolvet, ritade med `glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`, kameran på (0, 0, 3)
+som tittar längs -z, och en shader (`blending.vs`, `blending.fs`) som läser `texture1`. Två nya bilder hör till
+kapitlet, `grass.png` och `window.png`; **Spara resursfilerna…** i panelen kopierar dem till platsen bredvid
+`marble.png` och `metal.png`.
 :::
 :::vulkan
-Projektet börjar där kapitlet *Depth testing* började: de två marmorkuberna på (-1, 0, -1) och (2, 0, 0) och
-metallgolvet, kameran på (0, 0, 3) som tittar längs -z, en pipeline med djuptestet (`VK_COMPARE_OP_LESS`), och alla
-scenens vertexar i en enda vertex buffer – kuben är vertex 0..35, golvet 36..41 – ur vilken varje `vkCmdDraw` väljer
-sin del med `firstVertex`. Varje textur har ett eget descriptor set (uniform buffern på binding 0, texturen på
-binding 1), och hjälpfunktionerna `loadTexture(...)` och `createTextureSampler(addressMode, sampler)` laddar en bild
-och skapar en sampler. Nytt i `textures/`: `grass.png` och `window.png`.
+Du fortsätter i ditt program från *Djuptestning*, tillbaka där det kapitlet började: de två marmorkuberna på (-1, 0,
+-1) och (2, 0, 0) och metallgolvet, kameran på (0, 0, 3) som tittar längs -z, en pipeline med djuptestet
+(`VK_COMPARE_OP_LESS`), och alla scenens vertexar i en enda vertex buffer – kuben är vertex 0..35, golvet 36..41 – ur
+vilken varje `vkCmdDraw` väljer sin del med `firstVertex`. Varje textur har ett eget descriptor set (uniform buffern
+på binding 0, texturen på binding 1), och hjälpfunktionerna `loadTexture(...)` och
+`createTextureSampler(addressMode, sampler)` laddar en bild och skapar en sampler (ge din samplerfunktion
+adresseringsläget som parameter om den inte har det än). Nytt i `textures/`: `grass.png` och `window.png` – **Spara
+resursfilerna…** i panelen kopierar dem dit.
 :::
 :::d3d12
-Projektet börjar där kapitlet *Depth testing* började: de två marmorkuberna på (-1, 0, -1) och (2, 0, 0) och
-metallgolvet, kameran på (0, 0, 3) som tittar längs -z, ett PSO med djupfunktionen LESS, och shadrarna `VSMain` och
-`PSMain` i `blending.hlsl`. Alla vertexar ligger i en enda vertex buffer – kuben är vertex 0 till 35, golvet 36 till 41
-– och varje ritning väljer sin del med startvertexen i `DrawInstanced`. Varje textur har en SRV i CBV/SRV-heapen
-(CBV:n på plats 0, marmorn på plats 1, metallen på plats 2), och `SetGraphicsRootDescriptorTable(2, …)` pekar pixel
-shadern på en av dem före varje ritning. Nytt bredvid de andra bilderna: `grass.png` och `window.png`.
+Du fortsätter i ditt program från *Djuptestning*, tillbaka där det kapitlet började: de två marmorkuberna på (-1, 0,
+-1) och (2, 0, 0) och metallgolvet, kameran på (0, 0, 3) som tittar längs -z, ett PSO med djupfunktionen LESS, och
+shadrarna `VSMain` och `PSMain` i `blending.hlsl`. Alla vertexar ligger i en enda vertex buffer – kuben är vertex 0
+till 35, golvet 36 till 41 – och varje ritning väljer sin del med startvertexen i `DrawInstanced`. Varje textur har en
+SRV i CBV/SRV-heapen (CBV:n på plats 0, marmorn på plats 1, metallen på plats 2), och
+`SetGraphicsRootDescriptorTable(2, …)` pekar pixel shadern på en av dem före varje ritning. Nytt bredvid de andra
+bilderna: `grass.png` och `window.png` – **Spara resursfilerna…** i panelen kopierar dem dit.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
-IDE.
+Efter varje uppgift bygger och kör du programmet i din IDE.
 
 ## Kasta fragment
 
@@ -198,7 +201,7 @@ const std::vector<glm::vec3> vegetation = {
 };
 ```
 
-Gräs-texturen behöver det som varje textur i projektet har: en image, dess minne och en view
+Gräs-texturen behöver det som varje textur i ditt program har: en image, dess minne och en view
 (`transparentTextureImage`, `transparentTextureImageMemory`, `transparentTextureImageView`), och ett descriptor set
 `transparentDescriptorSet` med uniform buffern och texturen. Den får också en egen sampler, `transparentSampler` –
 varför ser du strax. I `initVulkan()`:

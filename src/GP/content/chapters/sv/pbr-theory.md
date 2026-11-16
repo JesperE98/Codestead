@@ -33,10 +33,10 @@ hyggligt dokumenterat, används i de flesta populära motorer och ser fantastisk
 det här: sfärer av röd plast och röd metall från blanka till sträva, belysta av fyra punktljus och av en omgivning med
 himmel, kullar och lampor, och sedan samma ljus på ett texturerat material av nitat stål med rostfläckar.
 
-Tänk på att ämnena i den här delen är ganska avancerade, så det är bra att ha god förståelse för kursens tidigare delar –
-särskilt HDR och gammakorrigering, normal mapping och cube maps. Det här kapitlet har inga uppgifter: det är teorin som
-de tre följande kapitlen bygger på. Projektet är redan det du ska arbeta i härnäst; du kan bygga och köra det i slutet
-av kapitlet.
+Tänk på att ämnena i den här delen är ganska avancerade, så det är bra att ha god förståelse för kursens tidigare
+delar – särskilt HDR och gammakorrigering, normal mapping och cube maps. Det här kapitlet har inga uppgifter: det är
+teorin som de tre följande kapitlen bygger på. I slutet förbereder du programmet som du ska arbeta i härnäst, och
+bygger och kör det.
 
 ## Mikrofasettmodellen
 
@@ -605,36 +605,87 @@ en PBR-pipeline, eftersom ytans fysikaliska egenskaper förblir desamma oavsett 
 lättare för grafikerna att få fysikaliskt rimliga resultat. Ytor som skapats i en PBR-pipeline kan lätt delas mellan
 olika PBR-motorer, ser rätt ut oavsett omgivning och ser därför mycket mer naturliga ut.
 
-## Projektet
+## Ditt program
 
-Projektet i det här kapitlet är det som nästa kapitel börjar med, så du kan titta på det och köra det redan nu. Det är
-learnopengls scen för PBR-belysning: ett rutnät med 7 × 7 sfärer, var och en en UV-sfär med radien 1, med 2.5 enheters
-mellanrum. Raderna går från icke-metall (nederst, `metallic = 0`) till metall (överst, `metallic = 6/7`), kolumnerna från
-slät (vänster, strävhet 0.05) till sträv (höger, strävhet 6/7); varje sfär har albedot (0.5, 0.0, 0.0) och ao 1.0. Fyra
-punktljus med färgen (300, 300, 300) hänger på (±10, ±10, 10), framför rutnätet. Kameran står på **(0, 0, 22)** och
-tittar längs -z, så att hela rutnätet syns (learnopengls kamera börjar på (0, 0, 3), mitt i rutnätet, och du skulle
-behöva flyga bakåt med tangenterna för att se det).
+Det här kapitlet har inga uppgifter; i slutet förbereder du programmet som nästa kapitel arbetar i. Utgå från ditt
+program från *Kamera* i en ny mapp och gör om det till learnopengls scen för PBR-belysning: ett rutnät med 7 × 7
+sfärer, var och en en UV-sfär med radien 1, med 2.5 enheters mellanrum. Raderna går från icke-metall (nederst,
+`metallic = 0`) till metall (överst, `metallic = 6/7`), kolumnerna från slät (vänster, strävhet 0.05) till sträv
+(höger, strävhet 6/7); varje sfär har albedot (0.5, 0.0, 0.0) och ao 1.0. Fyra punktljus med färgen (300, 300, 300)
+hänger på (±10, ±10, 10), framför rutnätet. Kameran står på **(0, 0, 22)** och tittar längs -z, så att hela rutnätet
+syns (learnopengls kamera börjar på (0, 0, 3), mitt i rutnätet, och du skulle behöva flyga bakåt med tangenterna för
+att se det).
+
+Sfären är learnopengls `renderSphere()`: ett rutnät av punkter på enhetssfären, där positionen också är normalen,
+ritat som en enda lång triangle strip som går fram och tillbaka rad för rad (`GL_TRIANGLE_STRIP`,
+`VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP`, `D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP`). Hörnen och indexen är desamma i alla
+API:er:
+
+```cpp
+// learnopengl's UV sphere: (X_SEGMENTS + 1) × (Y_SEGMENTS + 1) vertices on the unit sphere, drawn as one triangle strip
+const unsigned int X_SEGMENTS = 24;   // learnopengl uses 64; 24 is plenty for these small spheres
+const unsigned int Y_SEGMENTS = 24;
+const float PI = 3.14159265359f;
+for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
+{
+    for (unsigned int y = 0; y <= Y_SEGMENTS; ++y)
+    {
+        float xSegment = (float)x / (float)X_SEGMENTS;
+        float ySegment = (float)y / (float)Y_SEGMENTS;
+        float xPos = std::cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
+        float yPos = std::cos(ySegment * PI);
+        float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
+        // position = normal = (xPos, yPos, zPos), texture coordinates = (xSegment, ySegment)
+    }
+}
+
+bool oddRow = false;
+for (unsigned int y = 0; y < Y_SEGMENTS; ++y)
+{
+    if (!oddRow) // even rows: y == 0, y == 2; and so on
+    {
+        for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
+        {
+            indices.push_back(y       * (X_SEGMENTS + 1) + x);
+            indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+        }
+    }
+    else
+    {
+        for (int x = X_SEGMENTS; x >= 0; --x)
+        {
+            indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+            indices.push_back(y       * (X_SEGMENTS + 1) + x);
+        }
+    }
+    oddRow = !oddRow;
+}
+```
 
 :::opengl
 `main.cpp` bygger sfären i learnopengls `renderSphere()`, sätter `albedo`, `ao`, `camPos` och de fyra
-`lightPositions[i]` / `lightColors[i]`, och per sfär `metallic`, `roughness`, `model` och `normalMatrix`. `pbr.vs` skickar
-vidare världspositionen, normalen och texturkoordinaterna; `pbr.fs` deklarerar materialet och ljusen och räknar redan ut
-`N` och `V`, men dess ljusloop och BRDF:ens tre funktioner är fortfarande `// TODO:`-kommentarer. De fem `.png`-mapparna
-ligger också i mappen; de används inte förrän i nästa kapitels sista uppgift.
+`lightPositions[i]` / `lightColors[i]`, och per sfär `metallic`, `roughness`, `model` och `normalMatrix`. `pbr.vs`
+skickar vidare världspositionen, normalen och texturkoordinaterna; `pbr.fs` deklarerar materialet och ljusen och
+räknar redan ut `N` och `V` och lägger bara till det omgivande ljuset `0.03 * albedo * ao`; ljusloopen och BRDF:ens
+tre funktioner är nästa kapitels uppgifter. De fem `.png`-mapparna – **Spara resursfilerna…** i panelen kopierar dem
+till din mapp – används inte förrän i nästa kapitels sista uppgift.
 :::
 :::vulkan
-`main.cpp` bygger sfären en gång i `createSphere()` och spelar in de 49 ritanropen i `recordCommandBuffer()`, vart och ett
-med `vkCmdPushConstants` för sfärens modellmatris, `metallic` och `roughness`; uniform buffern innehåller kamerans
+`main.cpp` bygger sfären en gång i `createSphere()` och spelar in de 49 ritanropen i `recordCommandBuffer()`, vart och
+ett med `vkCmdPushConstants` för sfärens modellmatris, `metallic` och `roughness`; uniform buffern innehåller kamerans
 matriser, de fyra ljusen, albedot, ao och `camPos`. `shaders/pbr.vert` skickar vidare världspositionen, normalen och
-texturkoordinaterna; `shaders/pbr.frag` räknar redan ut `N` och `V`, men dess ljusloop och BRDF:ens tre funktioner är
-fortfarande `// TODO:`-kommentarer. De fem mapparna i `textures/` används inte förrän i nästa kapitels sista uppgift.
+texturkoordinaterna; `shaders/pbr.frag` räknar ut `N` och `V` och lägger bara till det omgivande ljuset
+`0.03 * albedo * ao`; ljusloopen och BRDF:ens tre funktioner är nästa kapitels uppgifter. De fem mapparna i
+`textures/` – **Spara resursfilerna…** i panelen kopierar dem till din mapp – används inte förrän i nästa kapitels
+sista uppgift.
 :::
 :::d3d12
-`main.cpp` bygger sfären i `LoadAssets` och ritar de 49 sfärerna i `RenderScene()`, var och en med sin modellmatris, sin
-normalmatris och sitt material i root-konstanterna; constant buffern innehåller kamerans matriser, de fyra ljusen och
-`camPos`. I `pbr.hlsl` är `VSMain` färdig; `PSMain` räknar redan ut `N` och `V`, men dess ljusloop och BRDF:ens tre
-funktioner är fortfarande `// TODO:`-kommentarer. De fem `.png`-mapparna används inte förrän i nästa kapitels sista
-uppgift.
+`main.cpp` bygger sfären i `LoadAssets` och ritar de 49 sfärerna i `RenderScene()`, var och en med sin modellmatris,
+sin normalmatris och sitt material i root-konstanterna; constant buffern innehåller kamerans matriser, de fyra ljusen
+och `camPos`. I `pbr.hlsl` är `VSMain` färdig; `PSMain` räknar ut `N` och `V` och lägger bara till det omgivande
+ljuset `0.03 * albedo * ao`; ljusloopen och BRDF:ens tre funktioner är nästa kapitels uppgifter. De fem
+`.png`-mapparna – **Spara resursfilerna…** i panelen kopierar dem till din mapp – används inte förrän i nästa kapitels
+sista uppgift.
 :::
 
 Bygg och kör programmet: du ser 49 nästan svarta skivor på den mörkgrå clear-färgen (0.1, 0.1, 0.1). Fragment shadern

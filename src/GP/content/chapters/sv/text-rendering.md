@@ -91,10 +91,18 @@ orsakar sannolikt flera konflikter mellan headers.
 
 **Kursens typsnitt.** learnopengl använder typsnittet Antonio Bold. Kursen använder **Inter Bold**
 (`fonts/Inter-Bold.otf`, nedbantat till de skrivbara ASCII-tecknen), som är fritt under SIL Open Font License 1.1 –
-licensen måste följa med typsnittet, så `fonts/OFL.txt` ligger bredvid i projektet. Kursens kontroller har ingen egen
-FreeType: de ersätter den med de glyfer som FreeType renderar från det här typsnittet i **48 och 24 pixlar** (storleken
-det här kapitlet använder, och den som spelets text använder senare). Med riktig FreeType i ditt program fungerar alla
-storlekar.
+licensen måste följa med typsnittet, så `fonts/OFL.txt` ligger bredvid – **Spara resursfilerna…** i panelen kopierar
+båda till din mapp. Kursens kontroller har ingen egen FreeType: de ersätter den med de glyfer som FreeType renderar
+från det här typsnittet i **48 och 24 pixlar** (storleken det här kapitlet använder, och den som spelets text använder
+senare). Med riktig FreeType i ditt program fungerar alla storlekar.
+
+**Ditt program.** Utgå från ditt program från *Blending* i en ny mapp (det har blending och en shaderklass) och banta
+ned det till det som text behöver: ingen kamera och inget djuptest (i Vulkan och Direct3D 12 ingen djupbuffer),
+rensningsfärgen (0.2, 0.3, 0.3), blending med `SRC_ALPHA` / `ONE_MINUS_SRC_ALPHA`, back-face culling påslagen, och en
+ortografisk projektion av fönstret, `glm::ortho(0.0f, 800.0f, 0.0f, 600.0f)` – (x, y) i pixlar från nedre vänstra
+hörnet, y uppåt. Textshadrarna visas i avsnittet *Shaders* nedan. I Vulkan och Direct3D 12 behöver texten också objekt
+av det slag du har skapat många gånger – en atlasbild med sin sampler, dess descriptors, pipelinen och en vertex
+buffer som CPU:n skriver i; avsnitten nedan beskriver vart och ett.
 
 FreeType laddar TrueType-typsnitten och genererar för varje glyf en bitmappsbild och räknar ut flera mått. Vi kan
 plocka ut bitmappsbilderna för att skapa texturer och placera varje glyf rätt med hjälp av de laddade måtten.
@@ -389,11 +397,11 @@ ruta, rad för rad:
 ```
 
 En FreeType-bitmapp har en byte per pixel, men raderna ligger `bitmap.pitch` byte isär, vilket kan vara mer än dess
-bredd – därför går kopieringen rad för rad. `createAtlasImage()` (finns redan i projektet och anropas efter
-`loadFont()`) laddar upp `atlasPixels` en gång via en staging buffer till en bild med formatet
-**`VK_FORMAT_R8_UNORM`**: en 8-bitarskanal, som shadern läser som `.r` från 0.0 till 1.0 – OpenGL:s `GL_RED`. Det finns
-ingen unpack-justering att ställa in: kopieringens `bufferRowLength` 0 säger åt Vulkan att raderna i buffern ligger tätt
-packade. Samplern är linjär med `VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE`, learnopengls inställningar.
+bredd – därför går kopieringen rad för rad. `createAtlasImage()` (anropas efter `loadFont()`, som
+texturuppladdningarna i de tidigare kapitlen) laddar upp `atlasPixels` en gång via en staging buffer till en bild med
+formatet **`VK_FORMAT_R8_UNORM`**: en 8-bitarskanal, som shadern läser som `.r` från 0.0 till 1.0 – OpenGL:s `GL_RED`.
+Det finns ingen unpack-justering att ställa in: kopieringens `bufferRowLength` 0 säger åt Vulkan att raderna i buffern
+ligger tätt packade. Samplern är linjär med `VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE`, learnopengls inställningar.
 
 (Stavfelet `FREETYTPE` i felmeddelandet är learnopengls eget.)
 :::
@@ -710,7 +718,7 @@ Sist skapar vi vertex buffern för att rendera rektanglarna. Varje rektangel beh
 uppdatera VBO:ns minne ganska ofta allokerar vi det med `GL_DYNAMIC_DRAW`.
 :::
 :::vulkan
-Projektet har den redan: en host-visible vertex buffer med plats för `MAX_CHARACTERS` = 256 rektanglar (6 ×
+Vulkans motsvarighet är en host-visible vertex buffer med plats för `MAX_CHARACTERS` = 256 rektanglar (6 ×
 `Vertex { glm::vec4 vertex; }` vardera, attribut 0 med formatet `VK_FORMAT_R32G32B32A32_SFLOAT`), mappad en gång för
 hela körningen till `vertexBufferMapped` – learnopengls `GL_DYNAMIC_DRAW`-buffer. Varför den har plats för 256
 rektanglar i stället för learnopengls en kommer i nästa avsnitt.

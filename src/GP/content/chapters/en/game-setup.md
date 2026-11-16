@@ -4,6 +4,8 @@ Before we get started with the game mechanics, we first need to set up a simple 
 The game will use several third party libraries of which most have been introduced in earlier chapters. Wherever a
 new library is required, it will be properly introduced.
 
+You continue in the program you prepared at the end of *The 2D Game: Hedgerow*.
+
 First, we define a so called uber game class that contains all relevant render and gameplay code. The idea of such a
 game class is that it (sort of) organizes your game code, while also decoupling all windowing code from the game. This
 way, you could use the same class in a completely different windowing library (like SDL or SFML for example) without
@@ -42,7 +44,7 @@ functions of the application class**: `Init`, `LoadShader`, `LoadTexture`, `load
 
 | learnopengl | the course (Vulkan) |
 |---|---|
-| `class Shader` (a compiled program) | the **graphics pipeline** made from the two SPIR-V files, a `VkPipeline`, created with the project's `createPipeline(vertFile, fragFile, pipeline)` helper |
+| `class Shader` (a compiled program) | the **graphics pipeline** made from the two SPIR-V files, a `VkPipeline`, created with your `createPipeline(vertFile, fragFile, pipeline)` helper |
 | `class Texture2D` (ID, size, wrap and filter modes) | `struct Texture2D { VkImage Image; VkDeviceMemory Memory; VkImageView View; VkDescriptorSet DescriptorSet; unsigned int Width, Height; }`; one shared sampler with learnopengl's defaults (REPEAT, LINEAR) |
 | `class ResourceManager` | two global maps `Shaders` (name → `VkPipeline`) and `Textures`, free `GetShader` / `GetTexture`, members `LoadShader`, `LoadTexture`, `loadTextureFromFile`, `ClearResources` |
 | `class Game` | `enum GameState`, `struct Game`, free `ProcessInput`, `Update`, `Render`; member `Init` |
@@ -53,7 +55,7 @@ The Direct3D 12 code stays the application class of every Direct3D 12 chapter (`
 functions sit above it. learnopengl's classes reach OpenGL through its global context – any function can call
 `glBindTexture`. Direct3D 12 has no global context: you call methods of objects – the device creates resources, the
 command list records draws. So that the game's free functions can do the same, `LoadAssets` puts the objects the game
-needs into one global struct, already in the project:
+needs into one global struct – add it to your program:
 
 ```cpp
 struct GraphicsContext
@@ -84,8 +86,8 @@ defaults `GL_LINEAR` and `GL_REPEAT`. In Direct3D 12 sampling is part of the roo
 | `key_callback` | `OnKeyDown(UINT8 key)` / `OnKeyUp(UINT8 key)`, the names of the D3D12 samples' framework, called by `WindowProc` |
 :::
 
-The `// TODO:` comments in the project mark where each piece goes. This chapter draws nothing – learnopengl's "Setting
-up" doesn't either –, so your program shows a black window after every task; the tasks are checked in the code.
+This chapter draws nothing – learnopengl's "Setting up" doesn't either –, so your program shows a black window after
+every task; the tasks are checked in the code.
 
 ## The game
 
@@ -566,10 +568,11 @@ Now do the task **shader**.
 In Vulkan there is no shader object to compile at run time: the GLSL is compiled to SPIR-V beforehand, and what draws
 with it is a **graphics pipeline** – the shader modules together with the vertex input, the rasterizer state, the
 blending and the layout of the descriptors. So what learnopengl calls a "shader" is, in the Vulkan version, the
-`VkPipeline` made from the two SPIR-V files, and loading a shader means making a pipeline. The project already has the
-helper for that, `createPipeline(vertFile, fragFile, pipeline)`: the sprite vertex format (one `vec4`), no depth
-test, no culling, and alpha blending (`SRC_ALPHA` / `ONE_MINUS_SRC_ALPHA` – learnopengl's `glEnable(GL_BLEND)` in
-`main`). There are no uniform setters either: what learnopengl sets as uniforms becomes push constants (per sprite,
+`VkPipeline` made from the two SPIR-V files, and loading a shader means making a pipeline. Your program already has
+the helper for that, `createPipeline(vertFile, fragFile, pipeline)`, from the earlier chapters; for the game it uses
+the sprite vertex format (one `vec4`), no depth test, no culling, and alpha blending (`SRC_ALPHA` /
+`ONE_MINUS_SRC_ALPHA` – learnopengl's `glEnable(GL_BLEND)` in `main`). There are no uniform setters either: what
+learnopengl sets as uniforms becomes push constants (per sprite,
 `struct PushConstants { glm::mat4 model; glm::vec3 spriteColor; };`) and the uniform buffer (the projection).
 learnopengl's `Shader` class therefore has no task of its own in Vulkan.
 :::
@@ -664,7 +667,7 @@ Now do the task **texture**.
 :::
 :::vulkan
 A Vulkan texture is several objects: the image, its memory, an image view – and, to use it in a draw, a descriptor set
-that points at the view and a sampler. The project's descriptor set layout has two bindings – the uniform buffer at
+that points at the view and a sampler. Your program's descriptor set layout has two bindings – the uniform buffer at
 binding 0, the texture at binding 1 – so each texture gets its own descriptor set with both, and binding that set is
 the Vulkan version of `glBindTexture`. One sampler, `textureSampler` (REPEAT, LINEAR, no anisotropy: learnopengl's
 `Texture2D` defaults), is shared by all textures.

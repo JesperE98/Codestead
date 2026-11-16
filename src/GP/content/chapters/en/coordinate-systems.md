@@ -26,13 +26,54 @@ You're probably quite confused by now by what a space or coordinate system actua
 more high-level fashion first by showing the total picture and what each specific space represents.
 
 :::opengl
-This chapter's project is the result of *Transformations* with the transformation taken out again: the textured
-container (80 % crate, 20 % face) lies flat in the middle of the window, and `shader.vs` writes
-`gl_Position = vec4(aPos, 1.0);`. One thing is new: the shader class is now learnopengl's **`shader_m.h`** – the same
-class as `shader_s.h`, with functions to set vectors and matrices added (`setVec2/3/4`, `setMat2/3/4`). The one we use
-is `setMat4`:
+You continue in your program from *Transformations*. First take the transformation out again: no `transform`
+uniform in `shader.vs`, which writes `gl_Position = vec4(aPos, 1.0);`, and one `glDrawElements` in the render loop.
+The textured container (80 % crate, 20 % face) then lies flat in the middle of the window.
+
+One thing is new: the shader class becomes learnopengl's **`shader_m.h`** – the same class as `shader_s.h`, with
+functions to set vectors and matrices added. Copy `shader_s.h` to `shader_m.h`, add `#include <glm/glm.hpp>` after
+the GLAD include, add these functions after `setFloat`, and include `"shader_m.h"` in `main.cpp` instead of
+`"shader_s.h"`. The later chapters use them all; this one uses `setMat4`.
 
 ```cpp
+    // ------------------------------------------------------------------------
+    void setVec2(const std::string &name, const glm::vec2 &value) const
+    {
+        glUniform2fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]);
+    }
+    void setVec2(const std::string &name, float x, float y) const
+    {
+        glUniform2f(glGetUniformLocation(ID, name.c_str()), x, y);
+    }
+    // ------------------------------------------------------------------------
+    void setVec3(const std::string &name, const glm::vec3 &value) const
+    {
+        glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]);
+    }
+    void setVec3(const std::string &name, float x, float y, float z) const
+    {
+        glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z);
+    }
+    // ------------------------------------------------------------------------
+    void setVec4(const std::string &name, const glm::vec4 &value) const
+    {
+        glUniform4fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]);
+    }
+    void setVec4(const std::string &name, float x, float y, float z, float w) const
+    {
+        glUniform4f(glGetUniformLocation(ID, name.c_str()), x, y, z, w);
+    }
+    // ------------------------------------------------------------------------
+    void setMat2(const std::string &name, const glm::mat2 &mat) const
+    {
+        glUniformMatrix2fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+    }
+    // ------------------------------------------------------------------------
+    void setMat3(const std::string &name, const glm::mat3 &mat) const
+    {
+        glUniformMatrix3fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+    }
+    // ------------------------------------------------------------------------
     void setMat4(const std::string &name, const glm::mat4 &mat) const
     {
         glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
@@ -40,30 +81,30 @@ is `setMat4`:
 ```
 :::
 :::vulkan
-This chapter's project is the result of *Transformations* with the transformation code taken out again: the textured
-container lies flat in the middle of the window, `shader.vert` writes `gl_Position = vec4(inPosition, 1.0);` and flips
-y, and `recordCommandBuffer()` draws once without pushing anything. Kept from *Transformations*: the push constant
-range in the pipeline layout and `struct PushConstants`, whose field is now called `glm::mat4 model`.
+You continue in your program from *Transformations*. First take the transformation code out again: `shader.vert`
+writes `gl_Position = vec4(inPosition, 1.0);` and flips y, and `recordCommandBuffer()` draws once without pushing
+anything, so the textured container lies flat in the middle of the window. Keep the push constant range in the
+pipeline layout and `struct PushConstants`, but rename its field to `glm::mat4 model` (and in the shader's push
+constant block too).
 
-This chapter follows two parts of vulkan-tutorial: *Uniform buffers* and *Depth buffering*. Their new functions
-already exist as empty stubs and are called from the right places: `createDepthResources()` in `initVulkan()` right
+This chapter follows two parts of vulkan-tutorial: *Uniform buffers* and *Depth buffering*. Add their new functions
+as empty `void` functions now and call them from the right places: `createDepthResources()` in `initVulkan()` right
 before `createFramebuffers()`, `createUniformBuffers()` after `createIndexBuffer()`, and `updateUniformBuffer()` in
-`drawFrame()` right after `vkAcquireNextImageKHR`.
+`drawFrame()` right after `vkAcquireNextImageKHR`. The tasks fill them in.
 :::
 :::d3d12
-This chapter's project is the result of *Transformations* with the transformation code taken out again:
+You continue in your program from *Transformations*. First take the transformation code out again:
 `PopulateCommandList()` draws the textured container once with `XMMATRIX model = XMMatrixIdentity();`, so it lies
-flat in the middle of the window. The root constants at register `b0` are now called
+flat in the middle of the window. Rename the root constants at register `b0` to
 `struct ModelConstants { XMFLOAT4X4 model; }` (`cbuffer ModelConstants : register(b0) { float4x4 model; }` in the
-shader). The CBV/SRV descriptor heap is renamed `m_cbvSrvHeap` (with `m_cbvSrvDescriptorSize`), because it will hold
-a constant buffer view next to the two textures' SRVs.
+shader), and the CBV/SRV descriptor heap to `m_cbvSrvHeap` (with `m_cbvSrvDescriptorSize`), because it will hold a
+constant buffer view next to the two textures' SRVs.
 
 The constant buffer follows Microsoft's D3D12HelloConstBuffers sample, the depth buffer the way the other
 D3D12 samples (for example D3D12Bundles) create theirs.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
-IDE.
+After each task, build and run the program in your IDE.
 
 ## The global picture
 
@@ -612,7 +653,7 @@ In Vulkan you choose the mechanism, and the two kinds of value fit two different
 
 - **The model matrix: a push constant.** You know push constants from *Transformations*: `vkCmdPushConstants` copies
   the bytes *into the command buffer*. Each draw recorded afterwards sees the values pushed before it, so ten
-  pushes and ten draws give ten different model matrices. The project already has the range and
+  pushes and ten draws give ten different model matrices. Your program already has the range and
   `struct PushConstants { glm::mat4 model; };`.
 - **View and projection: a uniform buffer.** A uniform buffer is an ordinary `VkBuffer` that the shader reads through
   a descriptor. The command buffer only refers to it; the GPU reads its *contents* when it executes the commands. So
@@ -680,7 +721,7 @@ The picture doesn't change – nothing uses the buffer yet.
 
 #### Descriptor pool and sets
 
-The shader reaches the buffer through a descriptor, exactly like the textures: the project's descriptor set already
+The shader reaches the buffer through a descriptor, exactly like the textures: your program's descriptor set already
 has the container's sampler at binding 0 and the face's at binding 1. The uniform buffer becomes binding 2 of the same
 set. First the layout, in `createDescriptorSetLayout()`:
 
@@ -989,7 +1030,7 @@ void main()
 ```
 
 We should also send the matrices to the shader (this is usually done each frame since transformation matrices tend
-to change a lot). In the render loop, at the `// TODO:` after `ourShader.use();`:
+to change a lot). In the render loop, after `ourShader.use();`:
 
 ```cpp
         // create transformations
@@ -1039,7 +1080,7 @@ copies them into the mapped memory:
     }
 ```
 
-The model matrix is pushed in `recordCommandBuffer()`, at the `// TODO:` before the draw:
+The model matrix is pushed in `recordCommandBuffer()`, right before the draw:
 
 ```cpp
         // the model matrix: tilt the plane back

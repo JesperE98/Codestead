@@ -21,7 +21,7 @@
       },
       "hint": {
         "opengl": "`vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;`. Efter laddningen: `lightingShader.use(); lightingShader.setInt(\"material.diffuse\", 0);`. I loopen: `glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, diffuseMap);`. Ta bort texturen i slutet.",
-        "vulkan": "Anropa `createDiffuseMap()` vid TODO:n i `initVulkan()` och förstör vyn, imagen och minnet i `cleanup()`. Skrivningen: `dstBinding = 0`, `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`, `pImageInfo = &diffuseMapInfo` (vyn, `textureSampler`, `SHADER_READ_ONLY_OPTIMAL`).",
+        "vulkan": "Anropa `createDiffuseMap()` i `initVulkan()`, efter `createCommandPool()`, och förstör vyn, imagen och minnet i `cleanup()`. Skrivningen: `dstBinding = 0`, `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`, `pImageInfo = &diffuseMapInfo` (vyn, `textureSampler`, `SHADER_READ_ONLY_OPTIMAL`).",
         "d3d12": "`ComPtr<ID3D12Resource> diffuseMapUploadHeap; LoadTexture(\"container2.png\", m_diffuseMap, diffuseMapUploadHeap, 1);` – `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);`, `rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);`, och handtaget till plats 1 för `SetGraphicsRootDescriptorTable(2, …)`."
       }
     },

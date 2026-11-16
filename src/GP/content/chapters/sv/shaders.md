@@ -10,12 +10,20 @@ särskilt shaderspråket {{shaderLanguage}}, mer allmänt: vilka typer det har, 
 shader, och hur programmet på CPU:n kan lämna värden till shaders medan programmet körs.
 
 :::opengl
-Kapitlets projekt är triangeln från *Hello Triangle* med en ändring som du kommer att känna igen i slutet av
-kapitlet: shaderkällkoden ligger inte längre som strängar i `main.cpp` utan i två egna filer, `shader.vs`
-(vertex shadern) och `shader.fs` (fragment shadern), och en liten klass `Shader` i `shader_s.h` läser, kompilerar
-och länkar dem. Avsnitten *Vår egen shaderklass* och *Läsa från fil* förklarar hur klassen fungerar; fram till dess
-räcker det att veta att `Shader ourShader("shader.vs", "shader.fs");` bygger shaderprogrammet och att
-`ourShader.use();` aktiverar det.
+Du fortsätter i ditt program från *Hello Triangle*. Gör tre ändringar i det före den första uppgiften:
+
+1. Gå tillbaka till triangeln: de tre hörnen `0.5f, -0.5f, 0.0f` (nere till höger), `-0.5f, -0.5f, 0.0f` (nere till
+   vänster) och `0.0f, 0.5f, 0.0f` (överst), ritade med `glDrawArrays(GL_TRIANGLES, 0, 3)`. Ta bort element buffern
+   (`EBO`, `indices`, `glDrawElements`) och wireframe-raden om du fortfarande har den.
+2. Flytta shaderkällkoden ut ur `main.cpp` till två egna filer bredvid den, `shader.vs` (vertex shadern) och
+   `shader.fs` (fragment shadern), med exakt samma GLSL som i *Hello Triangle* – utan citattecknen och `\n`.
+3. Skriv den lilla klassen `Shader` som läser, kompilerar och länkar dem, i `shader_s.h`. Avsnitten *Vår egen
+   shaderklass* och *Läsa från fil* mot slutet av kapitlet visar och förklarar hela klassen; skriv den därifrån nu och
+   läs förklaringen när du kommer dit. Inkludera sedan `"shader_s.h"` i `main.cpp`, ersätt koden som bygger
+   shaderprogrammet med `Shader ourShader("shader.vs", "shader.fs");`, och `glUseProgram(shaderProgram)` i render
+   loopen med `ourShader.use();` (`glDeleteProgram` i slutet försvinner också).
+
+Bygg och kör: den orange triangeln är tillbaka, nu byggd av klassen `Shader`.
 
 De nya filerna ligger i kapitelmappen, bredvid `main.cpp`. `main.cpp` inkluderar `"shader_s.h"` inom citattecken, som
 letar i den egna mappen först, och programmet läser shaderfilerna medan det körs, från sin arbetskatalog –
@@ -33,21 +41,26 @@ det startar, så efter en ändring som bara gäller en shader finns det inget at
 :::
 :::
 :::vulkan
-Kapitlets projekt är det färdiga Hello Triangle-programmet: den orange triangeln på blågrön bakgrund, ritad från en
-vertex buffer som innehåller en `glm::vec3 pos` per vertex. De två shaderna ligger i `shaders/shader.vert` och
+Du fortsätter i ditt program från *Hello Triangle*, tillbaka vid triangeln: den orange triangeln på blågrön bakgrund,
+ritad från en vertex buffer som innehåller en `glm::vec3 pos` per vertex. Om ditt program ritar rektangeln från den
+sista uppgiften går du tillbaka till de tre hörnen `{{0.0f, -0.5f, 0.0f}}`, `{{0.5f, 0.5f, 0.0f}}` och
+`{{-0.5f, 0.5f, 0.0f}}`, ritade med `vkCmdDraw`, och tar bort index buffern (`indices`, `createIndexBuffer()`, dess
+medlemmar, dess städning och `vkCmdBindIndexBuffer`). De två shaderna ligger i `shaders/shader.vert` och
 `shaders/shader.frag`. Kom ihåg att y-axeln i Vulkans clip space pekar **nedåt**: vertexen `{0.0f, -0.5f, 0.0f}` är
 triangelns övre hörn.
 :::
 :::d3d12
-Kapitlets projekt är det färdiga Hello Triangle-programmet i stil med Microsofts exempel D3D12HelloTriangle: den
-orange triangeln på blågrön bakgrund, ritad från en vertex buffer som innehåller en `XMFLOAT3 position` per vertex.
+Du fortsätter i ditt program från *Hello Triangle*, tillbaka vid triangeln i stil med Microsofts exempel
+D3D12HelloTriangle: den orange triangeln på blågrön bakgrund, ritad från en vertex buffer som innehåller en
+`XMFLOAT3 position` per vertex. Om ditt program ritar rektangeln från den sista uppgiften går du tillbaka till de tre
+hörnen `{ 0.0f, 0.5f, 0.0f }`, `{ 0.5f, -0.5f, 0.0f }` och `{ -0.5f, -0.5f, 0.0f }` (överst, nere till höger, nere till
+vänster: medurs på skärmen), ritade med `DrawInstanced(3, 1, 0, 0)`, och tar bort index buffern och dess vy.
 Båda shaderna ligger i filen `shaders.hlsl`: vertex shadern `VSMain` och pixel shadern `PSMain` (Direct3D:s namn på
 fragment shadern).
 :::
 
-Alla uppgifter i det här kapitlet ändrar ett program som redan fungerar, så den här gången finns det inga
-`// TODO:`-kommentarer: varje uppgift talar om vilka rader du ska ändra. Bygg och kör programmet efter varje uppgift för
-att se resultatet.
+Alla uppgifter i det här kapitlet ändrar ett program som redan fungerar: varje uppgift talar om vilka rader du ska
+ändra. Bygg och kör programmet efter varje uppgift för att se resultatet.
 
 ## {{shaderLanguage}}
 
@@ -1050,7 +1063,7 @@ Vertex shaderns utdata interpoleras linjärt över triangeln. Mitt på en kant b
 Att skriva, kompilera och hantera shaders kan vara ganska omständligt. Som en sista touch på shaderämnet ska vi göra
 livet lite enklare genom att bygga en shaderklass som läser shaders från disk, kompilerar och länkar dem, letar
 efter fel och är lätt att använda. Det ger dig också en idé om hur vi kan kapsla in en del av det vi har lärt oss
-hittills i användbara abstrakta objekt. Det här är klassen i `shader_s.h` som projektet har använt från början.
+hittills i användbara abstrakta objekt. Det här är klassen i `shader_s.h` som du skrev i början av kapitlet.
 
 Vi skapar shaderklassen helt i en headerfil, främst av pedagogiska skäl och för portabilitetens skull. Låt oss börja
 med att lägga till de includes som behövs och definiera klassens struktur:
@@ -1242,7 +1255,38 @@ felloggarna förr eller senare):
 `checkCompileErrors` är en liten privat hjälpfunktion i klassen: för en shader kontrollerar den
 `GL_COMPILE_STATUS` med `glGetShaderiv` och skriver ut `glGetShaderInfoLog`; för programmet kontrollerar den
 `GL_LINK_STATUS` med `glGetProgramiv` och skriver ut `glGetProgramInfoLog` – samma kontroller som du skrev i
-*Hello Triangle*.
+*Hello Triangle*:
+
+```cpp
+private:
+    // utility function for checking shader compilation/linking errors.
+    void checkCompileErrors(unsigned int shader, std::string type)
+    {
+        int success;
+        char infoLog[1024];
+        if (type != "PROGRAM")
+        {
+            glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+            if (!success)
+            {
+                glGetShaderInfoLog(shader, 1024, NULL, infoLog);
+                std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << std::endl;
+            }
+        }
+        else
+        {
+            glGetProgramiv(shader, GL_LINK_STATUS, &success);
+            if (!success)
+            {
+                glGetProgramInfoLog(shader, 1024, NULL, infoLog);
+                std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << std::endl;
+            }
+        }
+    }
+};
+
+#endif
+```
 
 Funktionen `use` är enkel:
 

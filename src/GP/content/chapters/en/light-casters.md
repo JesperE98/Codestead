@@ -10,47 +10,47 @@ We'll first discuss a directional light, then a point light which is an extensio
 we'll discuss spotlights. In the next chapter we'll combine several of these different light types into one scene.
 
 :::opengl
-This chapter's project starts from the result of *Lighting maps* (without the emission exercise): the same
-`main.cpp` and `shader_m.h`, the container's diffuse map `container2.png` and specular map
-`container2_specular.png`, and the lamp's shaders `light_cube.vs` / `light_cube.fs`. The shaders of the lit
-objects are now called `light_casters.vs` and `light_casters.fs`; the fragment shader has the `Material` struct
-(two samplers and a shininess) and a `Light` struct with a `position` and the three colour strengths.
+You continue in your program from *Lighting maps* (without the emission exercise): the same `main.cpp` and
+`shader_m.h`, the container's diffuse map `container2.png` and specular map `container2_specular.png`, and the lamp's
+shaders `light_cube.vs` / `light_cube.fs`. Rename the shaders of the lit objects to `light_casters.vs` and
+`light_casters.fs`; the fragment shader keeps the `Material` struct (two samplers and a shininess) and the `Light`
+struct with a `position` and the three colour strengths.
 
-Two things are new. The scene has learnopengl's **ten containers** again – the `cubePositions` of *Coordinate
-Systems* and a `for` loop that draws each one with its own model matrix (rotated by 20° · i, nothing turns over time).
-And the camera is **back at (0, 0, 3)** looking down -z (`cameraPos`, `cameraFront`, `yaw = -90.0f`,
-`pitch = 0.0f`), so all ten containers are in view and container 0 fills the centre of the window. The light is
-still the point light of *Lighting maps* at `lightPos` (1.2, 1.0, 2.0), with ambient 0.2, diffuse 0.5, specular 1.0
-and shininess 64.
+Two things change too – make them before the first task. The scene gets learnopengl's **ten containers** again – the
+`cubePositions` of *Coordinate Systems* and a `for` loop that draws each one with its own model matrix (rotated by 20°
+· i, nothing turns over time). And the camera is **back at (0, 0, 3)** looking down -z (`cameraPos`, `cameraFront`,
+`yaw = -90.0f`, `pitch = 0.0f`), so all ten containers are in view and container 0 fills the centre of the window. The
+light is still the point light of *Lighting maps* at `lightPos` (1.2, 1.0, 2.0), with ambient 0.2, diffuse 0.5,
+specular 1.0 and shininess 64.
 :::
 :::vulkan
-This chapter's project starts from the result of *Lighting maps* (without the emission exercise): the diffuse map at
-binding 0, the specular map at binding 1 and the uniform buffer at binding 2. The shaders of the lit objects are now
-called `shaders/light_casters.vert` and `shaders/light_casters.frag`; the lamp keeps `shaders/light_cube.*` and its
-own pipeline, `lightCubePipeline`. The uniform block holds the matrices, `viewPos`, a `Material` (the shininess) and a
+You continue in your program from *Lighting maps* (without the emission exercise): the diffuse map at binding 0, the
+specular map at binding 1 and the uniform buffer at binding 2. Rename the shaders of the lit objects to
+`shaders/light_casters.vert` and `shaders/light_casters.frag`; the lamp keeps `shaders/light_cube.*` and its own
+pipeline, `lightCubePipeline`. The uniform block holds the matrices, `viewPos`, a `Material` (the shininess) and a
 `Light` with a `position` and the three colour strengths, mirrored by C++ structs with padding floats.
 
-Two things are new. The scene has learnopengl's **ten containers** again: a global `cubePositions` and a loop in
-`recordCommandBuffer()` that pushes each container's model matrix (rotated by 20° · i, nothing turns over time) and
-draws it. And the camera is **back at (0, 0, 3)** looking down -z (`cameraPos`, `cameraFront`, `yaw = -90`,
-`pitch = 0`), so all ten containers are in view and container 0 fills the centre of the window. The light is still
-the point light of *Lighting maps* at `lightPos` (1.2, 1.0, 2.0), set in `updateUniformBuffer()` with ambient 0.2,
-diffuse 0.5, specular 1.0 and shininess 64.
+Two things change too – make them before the first task. The scene gets learnopengl's **ten containers** again: a
+global `cubePositions` and a loop in `recordCommandBuffer()` that pushes each container's model matrix (rotated by 20°
+· i, nothing turns over time) and draws it. And the camera is **back at (0, 0, 3)** looking down -z (`cameraPos`,
+`cameraFront`, `yaw = -90`, `pitch = 0`), so all ten containers are in view and container 0 fills the centre of the
+window. The light is still the point light of *Lighting maps* at `lightPos` (1.2, 1.0, 2.0), set in
+`updateUniformBuffer()` with ambient 0.2, diffuse 0.5, specular 1.0 and shininess 64.
 :::
 :::d3d12
-This chapter's project starts from the result of *Lighting maps* (without the emission exercise): the diffuse map
-(`t0`) and specular map (`t1`), the constant buffer `SceneConstantBuffer` (`b1`) and the root constants with the model
-and normal matrices (`b0`). The shaders of the lit objects are now in `light_casters.hlsl`; the lamp keeps
+You continue in your program from *Lighting maps* (without the emission exercise): the diffuse map (`t0`) and
+specular map (`t1`), the constant buffer `SceneConstantBuffer` (`b1`) and the root constants with the model and
+normal matrices (`b0`). Rename the shaders of the lit objects to `light_casters.hlsl`; the lamp keeps
 `light_cube.hlsl` and its own pipeline state, `m_lightCubePipelineState`. The constant buffer holds the matrices,
 `viewPos`, a `Material` (the shininess) and a `Light` with a `position` and the three colour strengths, mirrored by
 C++ structs with padding floats.
 
-Two things are new. The scene has learnopengl's **ten containers** again: `PopulateCommandList` has the
-`cubePositions` array and a `for` loop that sets each container's model matrix (rotated by 20° · i, nothing turns
-over time) and normal matrix as root constants and draws it. And the camera is **back at (0, 0, 3)** looking down -z
-(`cameraPos`, `cameraFront`, `yaw = -90.0f`, `pitch = 0.0f`), so all ten containers are in view and container 0 fills
-the centre of the window. The light is still the point light of *Lighting maps* at `lightPos` (1.2, 1.0, 2.0), set in
-`OnUpdate` with ambient 0.2, diffuse 0.5, specular 1.0 and shininess 64.
+Two things change too – make them before the first task. The scene gets learnopengl's **ten containers** again:
+`PopulateCommandList` has the `cubePositions` array and a `for` loop that sets each container's model matrix (rotated
+by 20° · i, nothing turns over time) and normal matrix as root constants and draws it. And the camera is **back at (0,
+0, 3)** looking down -z (`cameraPos`, `cameraFront`, `yaw = -90.0f`, `pitch = 0.0f`), so all ten containers are in
+view and container 0 fills the centre of the window. The light is still the point light of *Lighting maps* at
+`lightPos` (1.2, 1.0, 2.0), set in `OnUpdate` with ambient 0.2, diffuse 0.5, specular 1.0 and shininess 64.
 :::
 
 > The earlier lighting chapters placed the camera off to the side so you could see the lit cube *and* the lamp. In this
@@ -59,9 +59,9 @@ the centre of the window. The light is still the point light of *Lighting maps* 
 > edge of the view. Even in the steps where the lamp is drawn, you won't see it. You can still fly around with the
 > keyboard and mouse in your program to find it.
 
-The project has no `// TODO:` comments this time: every task changes code that is already there, and the task text tells
-you where. After each task, build and run the program in your IDE. Build it once now: all ten containers are lit by the
-lamp, the far ones just as brightly as the near ones.
+Every task changes code that is already there, and the task text tells you where. After each task, build and run the
+program in your IDE. Build it once now: all ten containers are lit by the lamp, the far ones just as brightly as the
+near ones.
 
 ## Directional Light
 
@@ -313,7 +313,7 @@ scene.
 If you'd add the 10 containers to the lighting scene from the previous chapters, you'd notice that the container all
 the way in the back is lit with the same intensity as the container in front of the light; there is no logic yet
 that diminishes light over distance. We want the container in the back to only be slightly lit in comparison to the
-containers close to the light source. You saw exactly that in the start picture of this project.
+containers close to the light source. You saw exactly that when you built the program at the start of this chapter.
 
 ## Attenuation
 
@@ -1279,7 +1279,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 - Try experimenting with all the different light types and their fragment shaders. Try inverting some vectors and/or
   use `<` instead of `>`. Try to explain the different visual outcomes.
 
-This is not a task in the project: try it once you have finished the tasks, and build and run the program to see the
+This is not a task: try it once you have finished the tasks, and build and run the program to see the
 result. For example, with `theta < light.cutOff` in the spotlight step the circle turns inside out – everything
 *outside* the cone is lit and the centre of container 0 gets only the ambient light. And if you use
 `normalize(light.direction)` without the minus, theta becomes the cosine of the angle to the *opposite* direction, which

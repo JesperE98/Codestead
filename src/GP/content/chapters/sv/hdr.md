@@ -41,12 +41,13 @@ Tekniken är densamma i alla API:er: rita scenen i en färgbuffer som kan hålla
 på fönstret med en shader som tone mappar den. Den andra halvan har du byggt förut – kapitlet *Framebuffers* med sitt
 off-screen-mål och sin skärmfyrhörning. Det nya är färgbufferns format och vad skärmfyrhörningens shader gör med den.
 
-Projektet är learnopengls HDR-scen: en lång tunnel av trä – kuben på 2 × 2 × 2 skalad med (2.5, 2.5, 27.5) och flyttad
-till z = 25, så att den går från z = -2.5 till z = 52.5 och är 5 enheter bred och hög – belyst av fyra punktljus. Tre av
-dem är svaga och färgade och hänger nära kameran: (-1.4, -1.9, 9) rött med styrkan 0.1, (0, -1.8, 4) blått med 0.2,
-(0.8, -1.7, 6) grönt med 0.1. Det fjärde, på (0, 0, 49.5), 3 enheter framför tunnelns bortre ände, är vitt med styrkan
-**200** – långt mer än vad en 8-bitarsfärg kan hålla. Kameran står inne i tunneln på (0, 0, 5). Vi ser kuben inifrån, så
-dess normaler vänds i vertex shadern (`inverse_normals` – rummet i kapitlet *Punktskuggor* gjorde samma sak med
+Utgå från ditt program från *Punktskuggor* i en ny mapp (det har kuben och de belysta träväggarna) och gör om det till
+learnopengls HDR-scen: en lång tunnel av trä – kuben på 2 × 2 × 2 skalad med (2.5, 2.5, 27.5) och flyttad till z = 25,
+så att den går från z = -2.5 till z = 52.5 och är 5 enheter bred och hög – belyst av fyra punktljus. Tre av dem är
+svaga och färgade och hänger nära kameran: (-1.4, -1.9, 9) rött med styrkan 0.1, (0, -1.8, 4) blått med 0.2, (0.8,
+-1.7, 6) grönt med 0.1. Det fjärde, på (0, 0, 49.5), 3 enheter framför tunnelns bortre ände, är vitt med styrkan
+**200** – långt mer än vad en 8-bitarsfärg kan hålla. Kameran står inne i tunneln på (0, 0, 5). Vi ser kuben inifrån,
+så dess normaler vänds i vertex shadern (`inverse_normals` – rummet i kapitlet *Punktskuggor* gjorde samma sak med
 `reverse_normals`), och face culling är avstängt. Trätexturen läses som en sRGB-textur, som i kapitlet
 *Gammakorrigering*.
 
@@ -71,8 +72,8 @@ Belysningen är learnopengls: inget omgivningsljus, bara diffust ljus, kvadratis
 
 Ljusen är uniformerna `lights[i].Position` och `lights[i].Color`, som sätts i en loop över två
 `std::vector<glm::vec3>`. Två shaderfiler till finns för den andra halvan: `hdr.vs`, som är klar (skärmfyrhörningen:
-positionerna redan i normaliserade enhetskoordinater, inga matriser), och `hdr.fs`, vars `main` fortfarande är en TODO.
-learnopengls `renderQuad()` finns också i `main.cpp`, oanvänd än så länge.
+positionerna redan i normaliserade enhetskoordinater, inga matriser), och `hdr.fs`, som börjar med en tom `main` –
+uppgifterna fyller i den. learnopengls `renderQuad()` finns också i `main.cpp`, oanvänd än så länge.
 :::
 :::vulkan
 `recordCommandBuffer()` ritar tunneln – vertex 0..35 i den enda vertexbuffern – i fönstrets render pass med
@@ -102,9 +103,9 @@ kapitlet *Gammakorrigering*:
 ```
 
 Två shaders till finns för den andra halvan: `shaders/hdr.vert`, som är klar (skärmfyrhörningen: positionerna redan i
-normaliserade enhetskoordinater, inga matriser), och `shaders/hdr.frag`, vars `main` fortfarande är en TODO.
-`createPipeline(vertFile, fragFile, pipelineRenderPass, pipeline)` tar den render pass som pipelinen görs för – det
-kommer du att behöva.
+normaliserade enhetskoordinater, inga matriser), och `shaders/hdr.frag`, som börjar med en tom `main` – uppgifterna
+fyller i den. `createPipeline(vertFile, fragFile, pipelineRenderPass, pipeline)` tar den render pass som pipelinen
+görs för – det kommer du att behöva.
 :::
 :::d3d12
 `PopulateCommandList` ritar tunneln – vertex 0–35 i den enda vertexbuffern – i back buffern med djupbuffern, med
@@ -137,12 +138,11 @@ i normaliserade enhetskoordinater, inga matriser), dess `PSMain` returnerar fort
 förrän du behöver den.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Bygg och kör programmet i din IDE: du tittar längs
-tunneln, vars brädor löper mot en liten kvadrat mitt i fönstret – den bortre änden. Nära kameran är väggarna mycket
-mörka (bara en svag röd ton i nedre högra hörnet, från det röda ljuset); mot änden blir de ljusare. Och själva änden är
-**platt vit**: ljuset med styrkan 200 gör färgen där långt ljusare än 1.0, fönstret lagrar 0.0 till 1.0 per kanal, och
-allt däröver kapas vid 1.0. Träets brädor är borta från den kvadraten – bara längs dess kanter, där träets blå kanal
-fortfarande är under 1.0, finns lite gult kvar.
+Bygg och kör programmet i din IDE: du tittar längs tunneln, vars brädor löper mot en liten kvadrat mitt i fönstret –
+den bortre änden. Nära kameran är väggarna mycket mörka (bara en svag röd ton i nedre högra hörnet, från det röda
+ljuset); mot änden blir de ljusare. Och själva änden är **platt vit**: ljuset med styrkan 200 gör färgen där långt
+ljusare än 1.0, fönstret lagrar 0.0 till 1.0 per kanal, och allt däröver kapas vid 1.0. Träets brädor är borta från
+den kvadraten – bara längs dess kanter, där träets blå kanal fortfarande är under 1.0, finns lite gult kvar.
 
 ```quiz
 Belysningsshadern räknar fram färgen (3.5, 2.4, 1.2) för ett fragment vid tunnelns ände och skriver den i fönstret, vars färgbuffer har 8 bitar per kanal. Vad lagras?

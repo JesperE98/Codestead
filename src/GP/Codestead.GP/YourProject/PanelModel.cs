@@ -7,6 +7,7 @@ public sealed record PanelModel(
     string ApiName,
     string? MainFile,
     bool FileMissing,
+    bool HasResources,
     bool HasOldCode,
     bool Checking,
     string? CheckSummary,

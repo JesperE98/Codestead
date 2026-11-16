@@ -62,7 +62,7 @@
       "hint": { "vulkan": "`vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);` and `vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);` – the test square appears in texture-coordinate colours." }
     },
     "mesh-class": {
-      "text": { "d3d12": "Add `class Mesh`: public `vertices`, `indices` (`UINT`) and `textures`; a constructor that also takes the device and the mesh's CPU and GPU heap handles, stores everything (the GPU handle in `m_srvHandle`) and calls `SetupMesh(device, srvCpuHandle)`; `Draw(ID3D12GraphicsCommandList*)`; private buffers, views and `SetupMesh` (bodies stay TODOs)." },
+      "text": { "d3d12": "Add `class Mesh`: public `vertices`, `indices` (`UINT`) and `textures`; a constructor that also takes the device and the mesh's CPU and GPU heap handles, stores everything (the GPU handle in `m_srvHandle`) and calls `SetupMesh(device, srvCpuHandle)`; `Draw(ID3D12GraphicsCommandList*)`; private buffers, views and `SetupMesh` (their bodies stay empty for now)." },
       "hint": { "d3d12": "As learnopengl: `this->vertices = vertices;` etc., then set up the buffers. The CPU handle is where the mesh writes its texture views; the GPU handle is what `Draw` gives the command list." }
     },
     "mesh-textures": {

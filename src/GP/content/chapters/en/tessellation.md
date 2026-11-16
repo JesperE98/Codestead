@@ -47,14 +47,14 @@ Tessellation is part of every Direct3D 12 device – it came with feature level 
 There is nothing to ask for or enable.
 :::
 
-## The project
+## Your program
 
-The start is the last chapter's solution, the CPU terrain, with the GPU version's files added: `gpuheight` shaders for
-the vertex stage (passing the control points through), the control/hull stage (passing them through and setting every
-level to 1 – more on that below), an empty evaluation/domain stage, and the fragment stage that colours by height, the
-same as before. The camera, the height map and the colours are the last chapter's, so the two chapters show the same
-landscape from the same place. Build and run the program: it shows the grey CPU terrain; the `// TODO:` comments mark
-where the GPU version goes.
+You continue in your program from *Tessellation: Height Map*, the CPU terrain, and add the GPU version's files:
+`gpuheight` shaders for the vertex stage (passing the control points through), the control/hull stage (passing them
+through and setting every level to 1 – more on that below), an empty evaluation/domain stage, and the fragment stage
+that colours by height, the same as before. The camera, the height map and the colours are the last chapter's, so the
+two chapters show the same landscape from the same place. Build and run the program: it shows the grey CPU terrain;
+the tasks add the GPU version.
 
 :::opengl
 :::ide vs rider
@@ -362,10 +362,10 @@ D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH`. The command list says how many control poi
 0, 0)` draws the 1,600 control points.
 :::
 
-The start's control/hull stage sets every level to 1, so the tessellator makes no new points: each patch becomes a
-single quad – two triangles – with the heights of its four corners. Now do the fourth task, **tess-evaluation**. Build
-and run: a **coarse terrain** of 20 × 20 tilted squares – the right outline, but the peaks blunt and the lake only a
-shallow dent.
+The control/hull stage you start with sets every level to 1, so the tessellator makes no new points: each patch
+becomes a single quad – two triangles – with the heights of its four corners. Now do the fourth task,
+**tess-evaluation**. Build and run: a **coarse terrain** of 20 × 20 tilted squares – the right outline, but the peaks
+blunt and the lake only a shallow dent.
 
 ## Tessellation levels
 
@@ -434,12 +434,12 @@ layout(vertices = 4) out;
 ```
 
 and inside the `if`, for this task, `gl_TessLevelOuter[0]` … `[3]` and `gl_TessLevelInner[0]` … `[1]` = 8. A Vulkan
-pipeline with tessellation **must** have both a control and an evaluation shader – OpenGL can leave the control shader out
-and use default levels, Vulkan has no such defaults. That is why the start's control shader writes level 1 everywhere:
-without it, the pipeline of the last task couldn't have been built.
+pipeline with tessellation **must** have both a control and an evaluation shader – OpenGL can leave the control shader
+out and use default levels, Vulkan has no such defaults. That is why the control shader you start with writes level 1
+everywhere: without it, the pipeline of the last task couldn't have been built.
 
 ```quiz
-Why does the start of the Vulkan project already have a control shader that only writes level 1 everywhere?
+Why does the Vulkan program start with a control shader that only writes level 1 everywhere?
 - [ ] Because level 1 makes the tessellator double the vertices
 - [ ] Because the evaluation shader can't read `gl_TessCoord` without it
 - [ ] Because Vulkan requires the levels to be written once per frame by the CPU
@@ -483,7 +483,7 @@ struct HSConstantOutput
 ```
 
 For this task, `PatchConstantFunction` sets all six to 8. A Direct3D pipeline with tessellation always needs a hull
-shader – there are no default factors – which is why the start's writes 1 everywhere.
+shader – there are no default factors – which is why the one you start with writes 1 everywhere.
 
 ```quiz
 Which part of the Direct3D hull shader does what OpenGL's `if (gl_InvocationID == 0)` block in the control shader does?

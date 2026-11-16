@@ -270,27 +270,30 @@ Förloppet sätter stencilbufferns innehåll till ettor för varje fragment av f
 kanterna ritar vi uppskalade versioner av föremålen bara där stenciltestet går igenom. Med hjälp av stencilbuffern
 kastar vi i praktiken alla fragment av de uppskalade versionerna som ligger där originalföremålens fragment ligger.
 
-Kapitlets projekt är scenen från *Djuptestning* ritad på vanligt sätt (med texturer och djupfunktionen LESS), med en
-ändring hämtad från learnopengls stencilkod: loopen ritar **golvet först**, sedan de två kuberna. Med djuptestet ändrar
-ordningen inte bilden, men den spelar roll för stencilbuffern, som du ska se. Bygg och kör programmet: startbilden är
-den du känner igen från förra kapitlet.
+Du fortsätter i ditt program från *Djuptestning*, med dess scen ritad på vanligt sätt igen (med texturer och
+djupfunktionen LESS) och en ändring hämtad från learnopengls stencilkod: loopen ritar **golvet först**, sedan de två
+kuberna. Med djuptestet ändrar ordningen inte bilden, men den spelar roll för stencilbuffern, som du ska se. Bygg och
+kör programmet: bilden är den du känner igen från förra kapitlet.
 
 :::opengl
-`// TODO:`-kommentarerna markerar var din kod ska stå: efter `glDepthFunc`, efter shadern, vid `glClear`-anropet, efter
-matriserna, före golvet, före kuberna och efter dem. Matriserna för varje bildruta räknas nu ut före `shader.use()`,
-under `// set uniforms`, så att en andra shader också kan få dem.
+Din kod hamnar efter `glDepthFunc`, efter shadern, vid `glClear`-anropet, efter matriserna, före golvet, före kuberna
+och efter dem. Räkna nu ut matriserna för varje bildruta före `shader.use()`, under en kommentar `// set uniforms`, så
+att en andra shader också kan få dem.
 :::
 :::vulkan
-Projektet har samma struktur som förra kapitlets: en vertex buffer, ett descriptor set per textur,
-`createPipeline(vertFile, fragFile, pipeline)` med djupfunktionen LESS, och modellmatrisen som push constant.
-Fragment shadern `shaders/stencil_single_color.frag` har en `// TODO:`-kommentar; ändringarna i `main.cpp` görs i rader
-som redan finns och i de funktioner som varje uppgift nämner.
+Ditt program har samma struktur som i förra kapitlet: en vertex buffer, ett descriptor set per textur,
+`createPipeline(vertFile, fragFile, pipeline)` med djupfunktionen LESS, och modellmatrisen som push constant. Lägg
+till en ny fragment shader, `shaders/stencil_single_color.frag`, med bara `#version 450`, utdatan
+`layout(location = 0) out vec4 outColor;` och en tom `main` – en uppgift fyller i den. Ändringarna i `main.cpp` görs i
+rader som redan finns och i de funktioner som varje uppgift nämner.
 :::
 :::d3d12
-Projektet har samma struktur som förra kapitlets: en vertex buffer, en SRV per textur,
-`SetGraphicsRootDescriptorTable(2, …)` före varje anrop. Den nya filen `stencil_single_color.hlsl` har redan konturens
-vertex shader. `// TODO:`-kommentarer markerar varje ställe som en uppgift fyller i: djupbufferns format, PSO:ns
-stenciltillstånd, konturens PSO, tömningen av stencilbuffern och de tre ritomgångarna i `PopulateCommandList`.
+Ditt program har samma struktur som i förra kapitlet: en vertex buffer, en SRV per textur,
+`SetGraphicsRootDescriptorTable(2, …)` före varje anrop. Lägg till en ny fil `stencil_single_color.hlsl` för
+konturen: de två cbuffrarna från `depth_testing.hlsl` (`ModelConstants` på b0, `SceneConstantBuffer` på b1), en
+`PSInput` med bara `SV_POSITION`, samma `VSMain` utan texturkoordinaterna, och en `PSMain` som returnerar svart så
+länge – en uppgift ger den konturens färg. Uppgifterna fyller i djupbufferns format, PSO:ns stenciltillstånd,
+konturens PSO, tömningen av stencilbuffern och de tre ritomgångarna i `PopulateCommandList`.
 :::
 
 Först behöver vi en stencilbuffer som är påslagen och töms varje bildruta, och stenciloperationen i steg 2: vi vill
@@ -482,12 +485,12 @@ shadrarna – som lampans PSO i belysningskapitlen. Den kommer efter att `m_pipe
 
         psoDesc.VS = CD3DX12_SHADER_BYTECODE(singleColorVertexShader.Get());
         psoDesc.PS = CD3DX12_SHADER_BYTECODE(singleColorPixelShader.Get());
-        // TODO: the outline's depth and stencil state
+        // (the outline's depth and stencil state go here: the last task)
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_singleColorPipelineState)));
 ```
 
-Behåll `// TODO:`-raden: konturens djup- och stenciltillstånd kommer i den sista uppgiften. Input layouten listar
-fortfarande `TEXCOORD`; en vertex shader får strunta i element som den inte läser.
+Konturens djup- och stenciltillstånd kommer i den sista uppgiften, direkt före `CreateGraphicsPipelineState`. Input
+layouten listar fortfarande `TEXCOORD`; en vertex shader får strunta i element som den inte läser.
 :::
 
 Gör uppgiften **single-color** och bygg och kör sedan. Inte heller nu ändras något: inget ritas med den nya shadern än.
@@ -709,8 +712,7 @@ djup- och stenciltillstånd, och nästa bildruta börjar med att binda `floorPip
 beror inte heller på någon mask: render passets load op tömmer hela stencilbuffern, oavsett pipelinernas skrivmasker.
 :::
 :::d3d12
-Återigen en egen PSO. Den sista uppgiftens `// TODO:`-rad innan `m_singleColorPipelineState` skapas får konturens
-tillstånd:
+Återigen en egen PSO. Direkt innan `m_singleColorPipelineState` skapas får konturen sitt tillstånd:
 
 ```cpp
         // Only where the stencil value is not 1 (NOT_EQUAL with the reference value 1), no

@@ -4,6 +4,8 @@ At this point we have a level full of bricks and a movable player paddle. The on
 objective is to let the ball collide with all the bricks until each of the destroyable bricks are destroyed, but this
 all within the condition that the ball is not allowed to reach the bottom edge of the screen.
 
+You continue in your program from *Levels*.
+
 In addition to the general game object components, a ball has a radius, and an extra boolean value indicating
 whether the ball is *stuck* on the player paddle or it's allowed free movement. When the game starts, the ball is
 initially stuck on the player paddle until the player starts the game by pressing some arbitrary key – in Hedgerow,
@@ -225,7 +227,7 @@ void Reset(BallObject& ball, XMFLOAT2 position, XMFLOAT2 velocity)
 ```
 :::
 
-The `// TODO:` comments in the project mark where your code goes, and you build and run it in your IDE. Now do the first
+You build and run your program in your IDE as before. Now do the first
 two tasks: **ball-object** – the struct and `MakeBallObject` – and **move-reset** – the two functions. Nothing uses them
 yet, so the picture does not change.
 

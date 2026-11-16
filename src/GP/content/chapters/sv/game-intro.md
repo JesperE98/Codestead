@@ -9,8 +9,8 @@ learnopengl gör det med en klon av ett berömt arkadspel från 1970-talet. Kurs
 racket och en mur av block – och varje teknik och varje steg i learnopengls kapitel finns kvar; bara namnet, grafiken
 och banorna är kursens egna. När texten säger "learnopengls spel" menas learnopengls version.
 
-Det här kapitlet har inga uppgifter. Det beskriver spelet och vägen dit; projektet är det du ska arbeta i härnäst, och
-du kan bygga och köra det i slutet.
+Det här kapitlet har inga uppgifter. Det beskriver spelet och vägen dit; i slutet förbereder du programmet som du ska
+arbeta i härnäst, och bygger och kör det.
 
 ## Hedgerow
 
@@ -90,33 +90,36 @@ den enda tangent som någonsin "trycks ned" är mellanslag, en halv sekund efter
 riktiga klockan och reagerar på dina tangenter. Nästa kapitel förklarar hur.
 
 :::opengl
-## Projektet
+## Ditt program
 
-Projektet är början på nästa kapitel: en `main.cpp` som öppnar ett fönster på 800 × 600 med titeln "Hedgerow" (som inte
+Förbered programmet som nästa kapitel börjar med, i en ny mapp – spelet är ett eget program. Utgå från ditt program
+från *Hello Window* och gör det till en `main.cpp` som öppnar ett fönster på 800 × 600 med titeln "Hedgerow" (som inte
 går att ändra storlek på) med en OpenGL 3.3 core-kontext, slår på blending och rensar fönstret till svart i sin
-renderloop. Resten är `// TODO:`-avsnitt för spelet, i ordningen för learnopengls filer: Shader, Texture2D,
+renderloop. Spelets delar följer i nästa kapitel, i ordningen för learnopengls filer: Shader, Texture2D,
 ResourceManager, Game och programmet.
 :::
 :::vulkan
-## Projektet
+## Ditt program
 
-Projektet är början på nästa kapitel: en `main.cpp` med vulkan-tutorials `HelloTriangleApplication` och allt som de
-tidigare kapitlen byggt – instansen med valideringslagret, swap chainen, ett render pass med ett färg-attachment (ett
-2D-spel behöver ingen djupbuffer), descriptor set-layouten (en uniform buffer på binding 0, en textur på binding 1),
-pipelinelayouten med push constants för sprites, hjälpfunktionen `createPipeline`, texturfunktionerna, uniform buffern
-och en descriptor pool med plats för 16 texturer. Den öppnar ett fönster på 800 × 600 med titeln "Hedgerow" och rensar
-det till svart. Spelets delar är `// TODO:`-avsnitt bredvid klassen, i ordningen för learnopengls filer: Texture2D,
-ResourceManager, Game och key-callbacken.
+Förbered programmet som nästa kapitel börjar med, i en ny mapp – spelet är ett eget program. Utgå från ditt program
+från *Textrendering* (ett 2D-program utan djupbuffer) och gör det till en `main.cpp` med vulkan-tutorials
+`HelloTriangleApplication` och allt som de tidigare kapitlen byggt – instansen med valideringslagret, swap chainen,
+ett render pass med ett färg-attachment (ett 2D-spel behöver ingen djupbuffer), descriptor set-layouten (en uniform
+buffer på binding 0, en textur på binding 1), pipelinelayouten med push constants för sprites, hjälpfunktionen
+`createPipeline`, texturfunktionerna, uniform buffern och en descriptor pool med plats för 16 texturer. Den öppnar ett
+fönster på 800 × 600 med titeln "Hedgerow" och rensar det till svart. Spelets delar följer i nästa kapitel, bredvid
+klassen, i ordningen för learnopengls filer: Texture2D, ResourceManager, Game och key-callbacken.
 :::
 :::d3d12
-## Projektet
+## Ditt program
 
-Projektet är början på nästa kapitel: en `main.cpp` med Direct3D 12-applikationsklassen från de tidigare kapitlen
+Förbered programmet som nästa kapitel börjar med, i en ny mapp – spelet är ett eget program. Utgå från ditt program
+från *Textrendering* och gör det till en `main.cpp` med Direct3D 12-applikationsklassen från de tidigare kapitlen
 (`D3D12App` med `LoadPipeline`, `LoadAssets`, `OnUpdate`, `OnRender`, `PopulateCommandList`, `WaitForPreviousFrame`).
-Den öppnar ett fönster på 800 × 600 med titeln "Hedgerow" som inte går att ändra storlek på, och rensar det till svart.
-Den har redan `GraphicsContext Graphics`, en struct med de Direct3D 12-objekt som spelets funktioner ska skapa resurser
-och rita med (nästa kapitel förklarar den). Spelets delar är `// TODO:`-avsnitt, i ordningen för learnopengls filer:
-Shader, Texture2D, ResourceManager, Game och programmet.
+Den öppnar ett fönster på 800 × 600 med titeln "Hedgerow" som inte går att ändra storlek på, och rensar det till
+svart. Nästa kapitel lägger till `GraphicsContext Graphics`, en struct med de Direct3D 12-objekt som spelets
+funktioner ska skapa resurser och rita med, och spelets delar, i ordningen för learnopengls filer: Shader, Texture2D,
+ResourceManager, Game och programmet.
 :::
 
 Bygg och kör programmet: du ser ett tomt, svart fönster. Det är allt som learnopengls "Setting up" ritar också – nästa
