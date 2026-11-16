@@ -1,3 +1,4 @@
+using Codestead.Common;
 using Codestead.GP.Gpu;
 using Codestead.Learning;
 
@@ -146,6 +147,20 @@ public static class GpCourse
     }
 
     /// <summary>Binary files of a project (images, models: OBJ + MTL, glTF + its .bin), loaded as assets rather than code.</summary>
+    /// <summary>
+    /// A picture of the chapters' texts ("images/pipeline.webp"): the one for the language (images/sv/pipeline.webp)
+    /// if there is one, else the shared one. Null when there is none.
+    /// </summary>
+    public static byte[]? Picture(string path, string lang)
+    {
+        const string prefix = "images/";
+        if (!path.StartsWith(prefix, StringComparison.Ordinal) || path.Contains("..", StringComparison.Ordinal)) return null;
+        var name = path[prefix.Length..];
+        foreach (var l in Languages.FallbackChain(lang))
+            if (Resources.ReadBytes($"{prefix}{l}/{name}") is { } own) return own;
+        return Resources.ReadBytes(path);
+    }
+
     public static bool IsAsset(string path) =>
         new[] { ".png", ".jpg", ".hdr", ".obj", ".mtl", ".otf", ".ttf", ".gltf", ".bin" }.Any(e => path.EndsWith(e, StringComparison.OrdinalIgnoreCase));
 

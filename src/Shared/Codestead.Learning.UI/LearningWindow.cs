@@ -95,6 +95,7 @@ public partial class LearningWindow : Window
         markdown.CommandClicked += text => tool.Inject(text);
         markdown.LinkClicked += OpenLink;
         markdown.CustomBlockRenderer = RenderCheckpoint;
+        markdown.ImageSource = path => tool.Picture(path, Lang);
 
         ApplyTheme();
         ApplyLanguage();

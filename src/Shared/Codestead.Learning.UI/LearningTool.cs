@@ -163,6 +163,12 @@ public abstract class LearningTool
     public virtual Control? TaskStatus(TaskInfo task, int index) => null;
 
     /// <summary>
+    /// A picture or animation of the chapters' texts (<c>![alt](images/name.webp)</c>) in the learner's language: its
+    /// bytes, or null (the picture is left out). Codestead Linux has none.
+    /// </summary>
+    public virtual byte[]? Picture(string path, string lang) => null;
+
+    /// <summary>
     /// A task's solution as a window of its own, which the learner closes again; null (Codestead Linux): the solution
     /// opens under the task as clickable commands.
     /// </summary>
