@@ -4,6 +4,8 @@ I förra kapitlet gick vi igenom möjligheten att ge varje föremål ett eget ma
 ljus. Det är utmärkt för att ge varje föremål ett unikt utseende jämfört med andra föremål, men ger fortfarande inte
 mycket flexibilitet i hur ett enskilt föremål ser ut.
 
+![Det här har du byggt i slutet av kapitlet](images/results/lighting-maps.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 I förra kapitlet definierade vi ett material för ett helt föremål. Föremål i verkligheten består dock oftast inte av
 ett enda material, utan av flera. Tänk på en bil: karossen har en blank lack, rutorna speglar delvis omgivningen,
 däcken är allt annat än blanka och har därför inga spekulära högdagrar, och fälgarna är superblanka (om du faktiskt

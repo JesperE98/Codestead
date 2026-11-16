@@ -3,6 +3,8 @@
 Hedgerow is close to finished, but it would be cool to add at least one more gameplay mechanic so it's not your
 average standard game of its kind; what about power-ups?
 
+![What you will have built by the end of this chapter](images/results/powerups.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 You continue in your program from *Postprocessing*.
 
 The idea is that whenever a block is destroyed, the block has a small chance of spawning a power-up. Such a power-up

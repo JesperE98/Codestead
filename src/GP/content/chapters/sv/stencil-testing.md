@@ -5,6 +5,8 @@ fragment. Därefter skickas de återstående fragmenten vidare till djuptestet, 
 bygger på innehållet i ännu en buffer, *stencilbuffern*, som vi får uppdatera under renderingen för att åstadkomma
 intressanta effekter.
 
+![Det här har du byggt i slutet av kapitlet](images/results/stencil-testing.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 En stencilbuffer innehåller (oftast) 8 bitar per *stencilvärde*, vilket ger totalt 256 olika stencilvärden per pixel.
 Vi kan sätta stencilvärdena till vad vi vill, och vi kan kasta eller behålla fragment när ett visst fragment har ett
 visst stencilvärde.

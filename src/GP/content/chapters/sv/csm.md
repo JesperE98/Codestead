@@ -7,6 +7,8 @@ enheter bort, och skuggkartan skulle behöva täcka alltihop. Fördela 1024 texl
 halv enhet mark – och precis framför kameran, där en halv enhet fyller en stor del av skärmen, blir skuggorna grova,
 taggiga block.
 
+![Det här har du byggt i slutet av kapitlet](images/results/csm.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Problemet har ett namn: *perspektivaliasing*. En perspektivkamera visar nära saker stora och avlägsna små, men en
 skuggkarta fördelar sina texlar jämnt. Nära kameran finns för få texlar per pixel, långt bort alldeles för många.
 *Kaskaderade skuggkartor* (cascaded shadow mapping, CSM) svarar med flera skuggkartor: dela kamerans synfrustum på djupet

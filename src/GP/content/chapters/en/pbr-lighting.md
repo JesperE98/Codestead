@@ -4,6 +4,8 @@ In the previous chapter we laid the foundation for getting a realistic physicall
 this chapter we'll focus on translating the previously discussed theory into an actual renderer that uses direct (or
 analytic) light sources: think of point lights, directional lights and/or spotlights.
 
+![What you will have built by the end of this chapter](images/results/pbr-lighting.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 Let's start by re-visiting the final reflectance equation of the previous chapter:
 
 ```text

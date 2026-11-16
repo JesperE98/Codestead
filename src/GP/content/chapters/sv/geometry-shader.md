@@ -6,6 +6,8 @@ Geometry shadern kan sedan transformera dessa vertices som den vill innan den sk
 shadersteg. Det som gör geometry shadern intressant är att den kan göra om den ursprungliga primitiven (uppsättningen
 vertices) till helt andra primitiver, och kanske skapa fler vertices än den fick från början.
 
+![Det här har du byggt i slutet av kapitlet](images/results/geometry-shader.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 :::opengl
 I OpenGL ingår geometry shadern i core-profilen sedan version 3.2, så vår 3.3-kontext har den alltid. Du skriver den i
 GLSL precis som de två andra stegen, kompilerar den som en `GL_GEOMETRY_SHADER` och länkar in den i samma program.

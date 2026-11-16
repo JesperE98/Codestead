@@ -8,6 +8,8 @@ also tends to waste a lot of fragment shader runs in scenes with a high depth co
 same screen pixel) as fragment shader outputs are overwritten: a fragment is lit with every light, and then a nearer
 object covers it and all that work is thrown away.
 
+![What you will have built by the end of this chapter](images/results/deferred-shading.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 *Deferred shading* or *deferred rendering* aims to overcome these issues by drastically changing the way we render
 objects. This gives us several new options to significantly optimize scenes with large numbers of lights, allowing us to
 render hundreds (or even thousands) of lights with an acceptable framerate. Deferred shading is based on the idea that

@@ -5,6 +5,8 @@ way to the detected collisions; it moves straight through all the bricks. We wan
 collided bricks. This chapter discusses how we can accomplish this so called *collision resolution* within the AABB –
 circle collision detection logic.
 
+![What you will have built by the end of this chapter](images/results/collision-resolution.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 You continue in your program from *Collision detection*.
 
 Whenever a collision occurs we want two things to happen: we want to reposition the ball so it is no longer inside the

@@ -6,6 +6,8 @@ is not free. Every vertex of every object is still run through the vertex shader
 time to record and submit. In a large scene most objects are usually *not* in view: behind the camera, beside it,
 beyond the far plane. *Frustum culling* finds them on the CPU, before any draw is issued, and skips them.
 
+![What you will have built by the end of this chapter](images/results/frustum-culling.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 The idea is simple: describe the volume the camera can see – the *view frustum* – with six planes, wrap every object in
 a simple *bounding volume* that is cheap to test, and only draw an object whose bounding volume is at least partly
 inside all six planes. This chapter follows learnopengl's guest article *Frustum Culling*, the second of its two scene

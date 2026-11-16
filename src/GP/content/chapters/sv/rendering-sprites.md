@@ -5,6 +5,8 @@ har många definitioner, men i grunden är den inte mycket mer än en 2D-bild so
 placera den i en större värld (till exempel position, rotation och storlek). Kort sagt är sprites de renderbara
 bild- och texturobjekt vi använder i ett 2D-spel.
 
+![Det här har du byggt i slutet av kapitlet](images/results/rendering-sprites.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Du fortsätter i ditt program från *Förberedelser*.
 
 Vi kan, precis som i tidigare kapitel, skapa en 2D-form av vertexdata, skicka alla data till GPU:n och transformera allt

@@ -7,6 +7,8 @@ now every picture went straight into the framebuffer of the window – the one w
 screen. In this chapter we create a framebuffer of our own, draw the scene into it, and then use what we drew as a
 texture.
 
+![What you will have built by the end of this chapter](images/results/framebuffers.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 The rendering operations we've done so far were all done on top of the render buffers attached to the window's
 framebuffer. Drawing into a framebuffer of our own instead may seem like an unnecessary detour, but it opens a lot of
 doors: once the scene is in a texture, a shader can read every pixel of it, and its neighbours, and change the picture

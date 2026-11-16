@@ -7,6 +7,8 @@ gör man det genom att bearbeta en environment map i form av en cube map (tagen 
 ljuskälla. På så sätt kan vi fånga en miljös globala belysning och allmänna känsla, och föremålen ser ut att höra hemma i
 sin omgivning.
 
+![Det här har du byggt i slutet av kapitlet](images/results/diffuse-irradiance.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Eftersom IBL-algoritmer fångar belysningen från en (global) miljö räknas indata som en mer exakt form av ambient ljus,
 till och med en grov approximation av global belysning. Det gör IBL intressant för PBR, eftersom föremål ser betydligt
 mer fysikaliskt korrekta ut när vi tar med omgivningens belysning.

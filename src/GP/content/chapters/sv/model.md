@@ -5,6 +5,8 @@ Målet med det här kapitlet är att göra om en modellfil till något som {{api
 en modell som består av flera meshar, kanske med flera texturer. Ett hus med en träbalkong, ett torn och kanske en
 pool kan ändå läsas in som en enda modell.
 
+![Det här har du byggt i slutet av kapitlet](images/results/model.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Vår modell är kursens egen `models/planet.obj`: en liten planet med en ring runt sig. Filen innehåller två objekt,
 `planet` och `rings`, och dess materialfil `planet.mtl` ger vart och ett av dem ett material med samma namn, med en
 diffuse map och en specular map:

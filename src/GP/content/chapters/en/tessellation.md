@@ -7,6 +7,8 @@ as it needs, reading the heights from the height map as a texture. Then it goes 
 are cut finely, patches far away coarsely, decided anew every frame. That is **tessellation**, and this chapter follows
 learnopengl's guest article *Tessellation*.
 
+![What you will have built by the end of this chapter](images/results/tessellation.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 Tessellation has been part of every API since Direct3D 11 and OpenGL 4.0. It adds two programmable stages and one fixed
 one between the vertex shader and the rasterizer; the names differ between the APIs, the ideas don't. This chapter shows
 how {{api}} sets them up.

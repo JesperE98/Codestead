@@ -6,6 +6,8 @@ parallax mapping mycket bättre på att förmedla djup, och tillsammans med norm
 resultat. Parallax mapping är inte nödvändigtvis en teknik som hör direkt till (avancerad) belysning, men vi tar ändå upp
 den här eftersom den är en logisk fortsättning på normal mapping.
 
+![Det här har du byggt i slutet av kapitlet](images/results/parallax-mapping.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Parallax mapping är nära släkt med familjen displacement mapping-tekniker, som förskjuter vertex utifrån geometrisk
 information lagrad i en textur. Ett sätt är att ta ett plan med ungefär 1000 vertex och förskjuta var och en av dem efter
 ett värde i en textur som anger planets höjd på just det stället. En sådan textur med höjdvärden per texel kallas en

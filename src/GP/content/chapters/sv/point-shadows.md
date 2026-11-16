@@ -4,6 +4,8 @@ I förra kapitlet lärde vi oss att skapa dynamiska skuggor med shadow mapping. 
 riktade ljus (eller spotlights), eftersom skuggorna bara skapas i ljuskällans riktning. Därför kallas tekniken också
 *riktad shadow mapping*: djupkartan (shadow mapen) skapas bara från den riktning som ljuset tittar åt.
 
+![Det här har du byggt i slutet av kapitlet](images/results/point-shadows.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Det här kapitlet handlar om att skapa dynamiska skuggor i alla riktningar runt ljuset. Tekniken passar perfekt för
 punktljus, eftersom ett riktigt punktljus kastar skuggor åt alla håll. Den kallas punkt(ljus)skuggor eller, mer formellt,
 *rundstrålande shadow maps* (omnidirectional shadow maps).

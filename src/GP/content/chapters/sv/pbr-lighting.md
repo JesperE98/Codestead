@@ -4,6 +4,8 @@ I förra kapitlet lade vi grunden för att få igång en realistisk, fysikaliskt
 fokuserar vi på att omsätta teorin i en verklig renderare som använder direkta (eller analytiska) ljuskällor: tänk
 punktljus, riktade ljus och/eller spotlights.
 
+![Det här har du byggt i slutet av kapitlet](images/results/pbr-lighting.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Vi börjar med att åter titta på förra kapitlets slutliga reflektansekvation:
 
 ```text

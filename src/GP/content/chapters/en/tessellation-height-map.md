@@ -6,6 +6,8 @@ on the CPU, one vertex for every pixel of a height map, sent to the GPU as one b
 *Tessellation*, draws the same landscape from a mesh of only a few hundred vertices and lets the tessellation stages add
 the detail – and adapt it to the distance from the camera.
 
+![What you will have built by the end of this chapter](images/results/tessellation-height-map.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 Nothing in this chapter is new for the GPU: a vertex buffer, an index buffer, triangle strips and a fragment shader that
 colours by height. It works the same way in every API; the interesting part is the mesh and what it costs.
 
@@ -171,6 +173,8 @@ To turn the points into a surface, neighbouring vertices are connected into tria
 two before it. Zigzag between two neighbouring rows – one vertex from row `i`, then one from row `i + 1`, then the next
 column – and each new vertex adds a triangle. A strip over 256 columns has 512 indices and 510 triangles; with a plain
 triangle list the same triangles would need 1530 indices.
+
+![A triangle strip](images/viz-strip.webp "A triangle strip: every new vertex makes a triangle with the two before it.")
 
 learnopengl builds one strip per pair of rows with three nested loops:
 

@@ -1,5 +1,7 @@
 # Spekulär IBL
 
+![Det här har du byggt i slutet av kapitlet](images/results/specular-ibl.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 I förra kapitlet satte vi upp PBR tillsammans med bildbaserad belysning genom att räkna ut en irradiansmap i förväg som
 belysningens indirekta diffusa del. I det här kapitlet fokuserar vi på reflektansekvationens spekulära del:
 

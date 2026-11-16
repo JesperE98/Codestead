@@ -6,6 +6,8 @@ dubbla ljusstyrkan. En dubblad inspänning gav en ljusstyrka enligt ett exponent
 bildskärmens så kallade *gamma*. Det råkar (av en slump) också stämma ganska väl med hur människor uppfattar ljusstyrka,
 eftersom vi också upplever ljusstyrka enligt ett liknande (omvänt) potenssamband.
 
+![Det här har du byggt i slutet av kapitlet](images/results/gamma-correction.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Föreställ dig två rader med gråtoner från svart till vitt. I den första lägger varje steg till lika mycket till värdet vi
 skickar till bildskärmen: 0.0, 0.1, 0.2 … 1.0. För det mänskliga ögat ser den raden ut som en jämn skala: våra ögon är
 känsligare för förändringar i mörka toner än i ljusa, och bildskärmens kurva råkar kompensera för det. I den andra raden

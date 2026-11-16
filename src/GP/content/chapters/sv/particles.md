@@ -5,6 +5,8 @@ En *partikel* är, sett från {{api}}s perspektiv, en liten 2D-rektangel som all
 som vi har använt flitigt, men när du lägger ihop hundratals eller till och med tusentals sådana partiklar kan du skapa
 fantastiska effekter.
 
+![Det här har du byggt i slutet av kapitlet](images/results/particles.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Du fortsätter i ditt program från *Kollisionshantering*.
 
 När man arbetar med partiklar finns det oftast ett objekt som kallas *partikelsändare* (particle emitter) eller

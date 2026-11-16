@@ -5,6 +5,8 @@ kunna göra en suddig skakeffekt, invertera alla färger i scenen, flytta hörne
 intressanta effekter förhållandevis enkelt – tack vare att vi först renderar till en textur. Det här kapitlet använder
 mycket av det som kapitlen Framebuffers och Anti-aliasing tog upp.
 
+![Det här har du byggt i slutet av kapitlet](images/results/postprocessing.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 I kapitlet Framebuffers visade vi hur efterbehandling kan ge intressanta effekter med bara en enda textur. I Hedgerow
 gör vi något liknande: vi renderar hela spelet till en **multisamplad** färgbuffert, löser upp (resolve) den till en
 vanlig textur – varje pixel medelvärdet av sina samples, så kanterna blir kantutjämnade – och ritar sedan den texturen

@@ -5,6 +5,8 @@ The goal of this chapter is to turn a model file into something {{api}} can draw
 a model that contains multiple meshes, possibly with multiple textures. A house that contains a wooden balcony, a
 tower and perhaps a swimming pool could still be loaded as a single model.
 
+![What you will have built by the end of this chapter](images/results/model.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 Our model is the course's own `models/planet.obj`: a small planet with a ring around it. The file holds two objects,
 `planet` and `rings`, and its material file `planet.mtl` gives each of them a material of the same name with a
 diffuse map and a specular map:

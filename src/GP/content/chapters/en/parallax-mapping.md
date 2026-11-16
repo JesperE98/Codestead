@@ -6,6 +6,8 @@ illusion, parallax mapping is a lot better in conveying a sense of depth and tog
 incredibly realistic results. While parallax mapping isn't necessarily a technique directly related to (advanced)
 lighting, we'll still discuss it here as the technique is a logical follow-up of normal mapping.
 
+![What you will have built by the end of this chapter](images/results/parallax-mapping.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 Parallax mapping is closely related to the family of displacement mapping techniques that displace or offset vertices
 based on geometrical information stored inside a texture. One way to do this, is to take a plane with roughly 1000
 vertices and displace each of these vertices based on a value in a texture that tells us the height of the plane at

@@ -7,6 +7,8 @@ bright area with multiple bright light sources whose total sum exceeds 1.0? The 
 brightness or colour sum over 1.0 get clamped to 1.0, which isn't pretty to look at: a large area of the picture turns
 into one flat white (or flat yellow, or flat red) and every detail in it is lost.
 
+![What you will have built by the end of this chapter](images/results/hdr.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 Because a large number of fragments' colour values get clamped to 1.0, each of the bright fragments gets the exact same
 white colour value in large regions, losing a significant amount of detail and giving the picture a fake look. A
 solution to this problem would be to reduce the strength of the light sources and make sure no area of fragments in

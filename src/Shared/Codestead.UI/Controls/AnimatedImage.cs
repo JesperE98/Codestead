@@ -11,11 +11,15 @@ namespace Codestead.UI.Controls;
 
 /// <summary>
 /// A picture in a text: a still image (PNG, JPEG, WebP) or an animation (animated GIF or WebP), decoded with Skia and
-/// played in a loop. A click pauses and resumes the animation. The picture is never wider than its natural size.
+/// played in a loop. Frames shown for a second or more are a slideshow: the next one fades in. A click pauses and
+/// resumes the animation. The picture is never wider than its natural size.
 /// </summary>
 public sealed class AnimatedImage : Border
 {
     private readonly Image image = new() { Stretch = Stretch.Uniform };
+    private readonly Image fading = new() { Stretch = Stretch.Uniform, Opacity = 0 };
+    private static readonly TimeSpan SlideshowFrame = TimeSpan.FromSeconds(1);
+    private const int FadeSteps = 10;
     private readonly List<(Bitmap Frame, TimeSpan Duration)> frames = [];
     private DispatcherTimer? timer;
     private int current;
@@ -23,7 +27,10 @@ public sealed class AnimatedImage : Border
 
     public AnimatedImage(byte[] bytes, string? hint = null)
     {
-        Child = image;
+        var layers = new Grid();
+        layers.Children.Add(image);
+        layers.Children.Add(fading);
+        Child = layers;
         HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left;
         var decoded = Decode(bytes);
         frames.AddRange(decoded);
@@ -54,11 +61,32 @@ public sealed class AnimatedImage : Border
         timer.Tick += (_, _) =>
         {
             if (paused) return;
+            bool slideshow = frames[current].Duration >= SlideshowFrame;
             current = (current + 1) % frames.Count;
-            image.Source = frames[current].Frame;
+            if (slideshow) FadeTo(frames[current].Frame);
+            else image.Source = frames[current].Frame;
             timer!.Interval = frames[current].Duration;
         };
         timer.Start();
+    }
+
+    /// <summary>Fades the next slide in over the current one (a third of a second).</summary>
+    private void FadeTo(Bitmap next)
+    {
+        fading.Source = next;
+        fading.Opacity = 0;
+        int step = 0;
+        var fade = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(30) };
+        fade.Tick += (_, _) =>
+        {
+            step++;
+            fading.Opacity = Math.Min(1, step / (double)FadeSteps);
+            if (step < FadeSteps) return;
+            fade.Stop();
+            image.Source = next;
+            fading.Opacity = 0;
+        };
+        fade.Start();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)

@@ -5,6 +5,8 @@ kollisionerna; den flyger rakt igenom alla block. Vi vill att bollen ska *studsa
 kapitlet visar hur vi åstadkommer den så kallade *kollisionshanteringen* (collision resolution) inom logiken för
 AABB – cirkel-detekteringen.
 
+![Det här har du byggt i slutet av kapitlet](images/results/collision-resolution.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Du fortsätter i ditt program från *Kollisionsdetektering*.
 
 När en kollision sker vill vi att två saker händer: vi vill flytta bollen så att den inte längre är inuti det andra

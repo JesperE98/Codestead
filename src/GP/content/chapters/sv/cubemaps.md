@@ -3,6 +3,8 @@
 Vi har använt 2D-texturer ett tag nu, men det finns fler texturtyper som vi inte har utforskat än. I det här kapitlet
 går vi igenom en texturtyp som är en kombination av flera texturer i en: en *cube map*.
 
+![Det här har du byggt i slutet av kapitlet](images/results/cubemaps.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 En cube map är en textur som innehåller 6 enskilda 2D-texturer som var och en bildar en sida av en kub: en texturerad
 kub. Du undrar kanske vad poängen är med en sådan kub? Varför kombinera 6 enskilda texturer till en enda enhet i
 stället för att bara använda 6 separata texturer? Jo, cube maps har den användbara egenskapen att de kan indexeras och

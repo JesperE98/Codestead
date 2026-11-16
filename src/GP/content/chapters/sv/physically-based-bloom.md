@@ -1,5 +1,7 @@
 # Fysikaliskt baserad bloom
 
+![Det här har du byggt i slutet av kapitlet](images/results/physically-based-bloom.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Kapitlet *Bloom* i delen *Avancerad belysning* fick starkt ljus att glöda: ett ljuspass skrev varje fragment som var
 ljusare än 1.0 i en andra färgbuffer, tio pass av en gaussisk blur smetade ut den, och det sista passet adderade bluren
 till scenen före tone mappingen. Det fungerar, och så gjorde många spel bloom i åratal. Men det har svagheter som syns så

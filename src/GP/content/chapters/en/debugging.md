@@ -7,6 +7,8 @@ clone of a well-known arcade game; the course builds its own game of the same ki
 and a wall of blocks in a garden at dusk. None of this is specific to one API: finding mistakes, drawing text and
 writing a game loop work the same way in OpenGL, Vulkan and DirectX 12, and each chapter shows how {{api}} does it.
 
+![What you will have built by the end of this chapter](images/results/debugging.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 Graphics programming can be a lot of fun, but it can also be a large source of frustration whenever something isn't
 rendering just right, or perhaps not even rendering at all. Seeing as most of what we do involves manipulating pixels,
 it can be difficult to figure out the cause of error whenever something doesn't work the way it's supposed to.

@@ -119,6 +119,8 @@ has loaded the model, we can retrieve all the data we need from Assimp's data st
 of Assimp stays the same, regardless of the type of file format we imported, it abstracts us from all the different
 file formats out there.
 
+![Loading a model](images/viz-parse.webp "Loading a model: the file's text becomes numbers, then vertices, then a mesh you can draw.")
+
 When importing a model via Assimp it loads the entire model into a *scene* object that contains all the data of the
 imported model/scene. Assimp then has a collection of nodes where each node contains indices to data stored in the
 scene object where each node can have any number of children. learnopengl.com shows this as a diagram; in words, the

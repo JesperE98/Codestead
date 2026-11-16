@@ -7,6 +7,8 @@ som svänger från en axel. Du vill beskriva månen *i förhållande till sin pl
 och låta den följa med planeten vart den än tar vägen, utan att räkna ut dess position i världen för hand. Strukturen som
 gör det är en *scengraf*: ett träd av objekt där varje objekts transform är relativ till förälderns.
 
+![Det här har du byggt i slutet av kapitlet](images/results/scene-graph.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Det här kapitlet följer learnopengls gästartikel *Scene Graph*, den första av två om att organisera en scen; den andra,
 *Frustum culling*, använder grafen för att hoppa över objekt som kameran inte ser. Inget i kapitlet är knutet till ett
 API: en scengraf är kod på CPU:n som slutar i en modellmatris per objekt, och API:et tar bara emot de matriserna. Vad

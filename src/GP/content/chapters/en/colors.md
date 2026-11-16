@@ -3,6 +3,8 @@
 We briefly used and manipulated colors in the previous chapters, but never defined them properly. Here we'll discuss
 what colors are and start building the scene for the upcoming *Lighting* chapters.
 
+![What you will have built by the end of this chapter](images/results/colors.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 In the real world, colors can take any known color value with each object having its own color(s). In the digital
 world we need to map the (infinite) real colors to (limited) digital values and therefore not all real-world colors
 can be represented digitally. Colors are digitally represented using a *red*, *green* and *blue* component, commonly

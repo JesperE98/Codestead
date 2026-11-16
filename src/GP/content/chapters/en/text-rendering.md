@@ -8,6 +8,8 @@ need more than 128 characters, and what if you want to express special symbols f
 sheet music symbols, and what about rendering text from top to bottom? Once you think about all these complicated
 matters of text, it wouldn't surprise you that this probably doesn't belong in a low-level API like {{api}}.
 
+![What you will have built by the end of this chapter](images/results/text-rendering.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 Since there is no support for text capabilities within {{api}}, it is up to us to define a system for rendering text
 to the screen. There are no graphical primitives for text characters, we have to get creative. Some example
 techniques are: drawing letter shapes as lines and triangles, rendering a font's glyphs into textures and drawing

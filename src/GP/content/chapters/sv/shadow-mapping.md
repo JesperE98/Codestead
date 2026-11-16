@@ -5,6 +5,8 @@ eftersom ett annat objekt är i vägen ligger objektet i skugga. Skuggor tillfö
 det lättare för betraktaren att uppfatta hur objekten förhåller sig till varandra i rummet. De ger scenen och objekten
 ett starkare djup: utan skuggor ser en kub som svävar ovanför golvet och en kub som står på det nästan likadana ut.
 
+![Det här har du byggt i slutet av kapitlet](images/results/shadow-mapping.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Skuggor är dock lite knepiga att implementera, särskilt eftersom realtidsforskningen ännu inte har tagit fram någon
 idealisk skuggalgoritm. Det finns flera bra tekniker för att approximera skuggor, men alla har sina små egenheter och
 irritationsmoment som vi måste ta hänsyn till.

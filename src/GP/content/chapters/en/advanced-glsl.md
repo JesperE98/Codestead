@@ -5,6 +5,8 @@ visual quality. This chapter goes more or less into some interesting aspects of 
 that may help you in your future endeavors – basically some *good to knows* and *features that may make your life
 easier* when creating {{api}} applications in combination with {{shaderLanguage}}.
 
+![What you will have built by the end of this chapter](images/results/advanced-glsl.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 We'll discuss some interesting *built-in variables*, new ways to organize shader input and output, and a very useful
 tool called *uniform buffer objects*.
 
@@ -832,6 +834,8 @@ HLSL matches what one stage writes with what the next reads by semantic. The str
 :::
 
 ## Uniform buffer objects
+
+![Uniform data reaches the shaders through buffers the program updates.](images/viz-uniforms.webp "Uniform data reaches the shaders through buffers the program updates.")
 
 :::opengl
 We've been using OpenGL for quite a while now and learned some pretty cool tricks, but also a few annoyances. For

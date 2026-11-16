@@ -8,6 +8,8 @@ on these simple shapes; this makes the code easier and saves a lot of performanc
 shapes are circles, spheres, rectangles, and boxes; these are a lot simpler to work with compared to arbitrary meshes
 with hundreds of triangles.
 
+![What you will have built by the end of this chapter](images/results/collision-detection.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 You continue in your program from *Ball*.
 
 While the simple shapes do give us easier and more efficient collision detection algorithms, they share a common

@@ -4,6 +4,8 @@ At this point we have a level full of bricks and a movable player paddle. The on
 objective is to let the ball collide with all the bricks until each of the destroyable bricks are destroyed, but this
 all within the condition that the ball is not allowed to reach the bottom edge of the screen.
 
+![What you will have built by the end of this chapter](images/results/ball.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 You continue in your program from *Levels*.
 
 In addition to the general game object components, a ball has a radius, and an extra boolean value indicating

@@ -8,6 +8,8 @@ indirect lighting by darkening creases, holes, and surfaces that are close to ea
 occluded by surrounding geometry and thus light rays have fewer places to escape to, hence the areas appear darker. Take
 a look at the corners and creases of the room you're in to see that the light there seems just a little darker.
 
+![What you will have built by the end of this chapter](images/results/ssao.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 Ambient occlusion techniques are expensive as they have to take surrounding geometry into account. One could shoot a
 large number of rays for each point in space to determine its amount of occlusion, but that quickly becomes
 computationally infeasible for real-time solutions. In 2007, Crytek published a technique called *screen-space ambient

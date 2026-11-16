@@ -8,6 +8,8 @@ allt tidigare är teknikerna inte knutna till ett visst API: de handlar om hur m
 och de fungerar likadant i OpenGL, Vulkan och DirectX 12. Varje kapitel visar var {{api}} lägger dem – och där en
 artikel handlar om OpenGL självt (*DSA*) berättar kapitlet vad de explicita API:erna gör i stället.
 
+![Det här har du byggt i slutet av kapitlet](images/results/oit-introduction.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 De två första kapitlen handlar om *ordningsoberoende transparens* (order-independent transparency, förkortat OIT). Det här
 kapitlet förklarar problemet och de olika lösningsfamiljerna; nästa kapitel, *Weighted Blended*, implementerar en av dem.
 I kapitlet *Blending* i delen *Avancerad OpenGL* renderade du halvgenomskinliga fönster och såg att de bara blev rätt när

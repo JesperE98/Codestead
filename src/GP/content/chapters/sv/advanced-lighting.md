@@ -7,6 +7,8 @@ och senare normal mapping och parallax mapping, HDR, bloom, deferred shading och
 bunden till ett visst API: allihop är matematik i shadrarna plus några extra buffrar och pass, och de fungerar likadant i
 OpenGL, Vulkan och DirectX 12. Varje kapitel visar var {{api}} lägger dem.
 
+![Det här har du byggt i slutet av kapitlet](images/results/advanced-lighting.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 I belysningskapitlen introducerade vi kort Phongs belysningsmodell för att ge våra scener en grundläggande realism.
 Phong-modellen ser bra ut, men har några nyanser som vi ska fokusera på i det här kapitlet.
 

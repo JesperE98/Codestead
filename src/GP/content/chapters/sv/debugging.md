@@ -7,6 +7,8 @@ klon av ett välkänt arkadspel; kursen bygger ett eget spel av samma slag, **He
 av block i en trädgård i skymningen. Inget av detta är bundet till ett visst API: att hitta fel, rita text och skriva en
 spelloop fungerar likadant i OpenGL, Vulkan och DirectX 12, och varje kapitel visar hur {{api}} gör det.
 
+![Det här har du byggt i slutet av kapitlet](images/results/debugging.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Grafikprogrammering kan vara väldigt roligt, men den kan också vara en stor källa till frustration när något inte
 renderas riktigt rätt, eller kanske inte renderas alls. Eftersom det mesta vi gör handlar om att manipulera pixlar kan
 det vara svårt att lista ut orsaken till ett fel när något inte fungerar som det ska. Att felsöka den här sortens

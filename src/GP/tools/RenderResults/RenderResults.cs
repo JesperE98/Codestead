@@ -2,6 +2,7 @@ using System.Globalization;
 using Codestead.GP.Gpu;
 using Codestead.GP.Gpu.Raster;
 
+// A tool for the course writers, not shipped with the app (so not a Program.cs with Velopack).
 // Renders the result of every chapter – the course's own OpenGL solution, built and run by the simulated GPU – as
 // frames for the chapter texts: one frame for a still scene, a short loop for an animated one. The frames are raw
 // RGB files (out/<chapter>/<n>.rgb with size.txt); make_results.py turns them into WebP pictures.

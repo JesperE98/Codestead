@@ -4,6 +4,8 @@ Nu har vi en bana full av block och en racket som går att flytta. Det enda som 
 bollen krocka med alla block tills varje block som kan förstöras är förstört, men allt under villkoret att bollen inte
 får nå skärmens nederkant.
 
+![Det här har du byggt i slutet av kapitlet](images/results/ball.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Du fortsätter i ditt program från *Banor*.
 
 Utöver de vanliga komponenterna i ett spelobjekt har en boll en radie och ett extra booleskt värde som anger om bollen

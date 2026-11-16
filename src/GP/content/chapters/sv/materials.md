@@ -5,6 +5,8 @@ en trälåda reagerar inte på ljus på samma sätt som en stållåda. Vissa fö
 spridning, vilket ger små spekulära högdagrar, medan andra sprider det mycket och ger högdagern en större radie. Om vi
 vill simulera flera sorters föremål i {{api}} måste vi definiera *materialegenskaper* som är specifika för varje yta.
 
+![Det här har du byggt i slutet av kapitlet](images/results/materials.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 I förra kapitlet bestämde vi föremålets utseende med en objektfärg och en ljusfärg, kombinerade med en styrka för den
 ambienta och den spekulära komponenten. När vi beskriver en yta kan vi i stället definiera en materialfärg för var och
 en av de 3 ljuskomponenterna: ambient, diffust och spekulärt ljus. Genom att ange en färg för varje komponent får vi

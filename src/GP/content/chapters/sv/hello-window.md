@@ -217,6 +217,8 @@ visas på skärmen, medan alla renderingskommandon ritar i *back*-bufferten. Så
 klara *byter* vi back-bufferten mot front-bufferten, så att bilden kan visas utan att fortfarande renderas till –
 och alla de nämnda artefakterna försvinner.
 
+![Dubbelbuffring](images/viz-present.webp "Dubbelbuffring: programmet ritar i bakre bufferten medan skärmen visar den främre, sedan byter de plats.")
+
 ```quiz
 Varför renderar fönsterprogram i en back buffer i stället för direkt i bilden som syns på skärmen?
 - [ ] Eftersom GPU:n bara kan skriva till buffertar som inte syns
@@ -935,6 +937,8 @@ visar sin färg, i slutet av nästa avsnitt.
 Vi vill lägga alla renderingskommandon i render loopen, eftersom vi vill köra alla renderingskommandon i varje varv,
 alltså varje frame. I början av varje frame vill vi rensa skärmen. Annars skulle vi fortfarande se resultatet från
 förra framen (det kan vara effekten du är ute efter, men oftast inte).
+
+![Kommandon](images/viz-commands.webp "Kommandon: programmet spelar in dem i en kommandobuffert och GPU:n kör dem senare – medan CPU:n förbereder nästa bild.")
 
 :::opengl
 Vi kan rensa skärmens färgbuffert med `glClear`, där vi skickar in buffertbitar som anger vilken buffert vi vill

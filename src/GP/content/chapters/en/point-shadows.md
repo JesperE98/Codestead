@@ -5,6 +5,8 @@ for directional (or spot) lights as the shadows are generated only in the direct
 therefore also known as *directional shadow mapping*, as the depth (or shadow) map is generated from only the direction
 the light is looking at.
 
+![What you will have built by the end of this chapter](images/results/point-shadows.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 What this chapter will focus on is the generation of dynamic shadows in all surrounding directions. The technique we're
 using is perfect for point lights, as a real point light would cast shadows in all directions. This technique is known
 as point (light) shadows or more formerly as *omnidirectional shadow maps*.

@@ -6,6 +6,8 @@ verkligheten, med förenklade modeller som är mycket lättare att beräkna och 
 bygger på ljusets fysik så som vi förstår den. En av dem kallas *Phongs belysningsmodell* (Phong lighting model). Dess
 viktigaste byggstenar är 3 komponenter: ambient, diffust och spekulärt ljus.
 
+![Det här har du byggt i slutet av kapitlet](images/results/basic-lighting.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 - **Ambient ljus**: även när det är mörkt finns det oftast lite ljus någonstans (månen, ett avlägset ljus), så objekt
   är nästan aldrig helt mörka. För att simulera det använder vi en konstant för ambient ljus som alltid ger objektet
   lite färg.
@@ -122,6 +124,8 @@ Ambient ljus ger i sig inga särskilt intressanta resultat, men diffust ljus bö
 objektet. Diffust ljus gör objektet ljusare ju närmare dess fragment är riktade mot ljusstrålarna från en ljuskälla.
 Föreställ dig en ljusstråle som träffar ett fragment: ljuset kommer från ljuskällan, fragmentet har en *normalvektor*
 som sticker rakt ut från ytan, och θ är vinkeln mellan normalen och riktningen mot ljuset.
+
+![Ljus per fragment](images/viz-fragment.webp "Ljus per fragment: varje fragment får sin egen interpolerade normal och belyses för sig.")
 
 Om ljusstrålen är vinkelrät mot objektets yta har ljuset störst påverkan. För att mäta vinkeln mellan ljusstrålen och
 fragmentet använder vi en så kallad normalvektor, alltså en vektor som är vinkelrät mot fragmentets yta;

@@ -6,6 +6,8 @@ som helst, men du kommer aldrig att kunna se mer än 3 sidor. Varför ska vi då
 sidorna som vi inte ens kan se? Om vi kunde kasta dem på något sätt skulle vi spara mer än 50 % av kubens alla
 körningar av fragment shadern!
 
+![Det här har du byggt i slutet av kapitlet](images/results/face-culling.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Vi säger *mer än 50 %* i stället för 50 %, eftersom bara 2 eller till och med 1 sida kan synas från vissa vinklar. Då
 sparar vi *mer* än 50 %.
 
@@ -46,6 +48,8 @@ Efter varje uppgift bygger och kör du programmet i din IDE.
 När vi definierar en uppsättning triangelvertexar definierar vi dem i en viss ordning (winding order) som antingen är
 *medurs* (clockwise) eller *moturs* (counter-clockwise). Varje triangel består av 3 vertexar, och vi anger de 3
 vertexarna i en ordning sedd från triangelns mitt.
+
+![Varvningsordning](images/viz-winding.webp "Varvningsordning: sett från kameran går en framsidas hörn moturs.")
 
 Tänk dig en triangel med hörnet 1 överst, 2 nere till höger och 3 nere till vänster. Går du 1 → 2 → 3 rör du dig
 medurs; går du 1 → 3 → 2 rör du dig moturs. I vertexdatan är ordningen helt enkelt den ordning hörnen räknas upp i:
@@ -190,6 +194,8 @@ Enligt högerhandsregeln pekar (b − a) × (c − a) mot den betraktare för vi
 
 I början av kapitlet sa vi att {{api}} kan kasta triangelprimitiver om de ritas som baksidor. Nu när vi vet hur vi
 anger vertexarnas ordning kan vi börja använda face culling.
+
+![Face culling](images/viz-culling.webp "Face culling: trianglar som vänder sig bort från kameran kastas före rasteriseringen.")
 
 :::opengl
 Face culling är avstängt som standard. För att slå på det behöver vi bara slå på OpenGL:s alternativ `GL_CULL_FACE`:

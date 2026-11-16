@@ -8,6 +8,8 @@ du vill visa specialsymboler för matematiska uttryck eller noter, eller rendera
 alla dessa komplicerade frågor kring text är det ingen överraskning att det här förmodligen inte hör hemma i ett
 lågnivå-API som {{api}}.
 
+![Det här har du byggt i slutet av kapitlet](images/results/text-rendering.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Eftersom {{api}} saknar stöd för text är det upp till oss att bygga ett system för att rendera text till skärmen. Det
 finns inga grafiska primitiver för tecken, så vi får vara kreativa. Några exempel på tekniker: rita bokstävernas former
 som linjer och trianglar, rendera ett typsnitts glyfer till texturer och rita texturerade rektanglar, eller mer exotiska

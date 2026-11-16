@@ -6,6 +6,8 @@ som byggs helt på CPU:n, en vertex för varje pixel i en höjdkarta, skickat ti
 kapitel, *Tessellering*, ritar samma landskap från ett mesh med bara några hundra vertexar och låter tesselleringsstegen
 lägga till detaljerna – och anpassa dem efter avståndet till kameran.
 
+![Det här har du byggt i slutet av kapitlet](images/results/tessellation-height-map.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Inget i kapitlet är nytt för GPU:n: en vertex buffer, en index buffer, triangle strips och en fragment shader som färgar
 efter höjd. Det fungerar likadant i alla API:er; det intressanta är meshet och vad det kostar.
 
@@ -171,6 +173,8 @@ för **triangle strips**: en strip är en lista av vertexar där varje vertex ef
 två före den. Sicksacka mellan två närliggande rader – en vertex från rad `i`, sedan en från rad `i + 1`, sedan nästa
 kolumn – så lägger varje ny vertex till en triangel. En strip över 256 kolumner har 512 index och 510 trianglar; med en
 vanlig triangellista skulle samma trianglar kräva 1530 index.
+
+![En triangle strip](images/viz-strip.webp "En triangle strip: varje ny vertex bildar en triangel med de två före den.")
 
 learnopengl bygger en strip per radpar med tre nästlade loopar:
 

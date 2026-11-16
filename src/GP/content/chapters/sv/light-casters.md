@@ -5,6 +5,8 @@ verkligheten finns flera typer av ljus som beter sig olika. En ljuskälla som *k
 **light caster** (ljuskälla). I det här kapitlet går vi igenom flera olika typer av ljuskällor. Att kunna simulera
 olika ljuskällor är ännu ett verktyg i din verktygslåda för att göra dina miljöer rikare.
 
+![Det här har du byggt i slutet av kapitlet](images/results/light-casters.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Först går vi igenom ett riktat ljus (directional light), sedan ett punktljus (point light), som är en utbyggnad av det
 vi hade tidigare, och sist strålkastare (spotlights). I nästa kapitel kombinerar vi flera av de här ljustyperna i en
 och samma scen.

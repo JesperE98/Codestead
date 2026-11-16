@@ -5,6 +5,8 @@ run for each specific section of the graphics pipeline. In a basic sense, shader
 transforming inputs to outputs. Shaders are also very isolated programs in that they're not allowed to communicate
 with each other; the only communication they have is via their inputs and outputs.
 
+![What you will have built by the end of this chapter](images/results/shaders.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 In the previous chapter we briefly touched the surface of shaders and how to properly use them. We will now explain
 shaders, and specifically the {{shaderLanguage}} shading language, in a more general fashion: what types it has,
 how data gets into and out of a shader, and how the application on the CPU can hand values to the shaders while
@@ -65,6 +67,8 @@ All the tasks in this chapter change a program that already works: each task tel
 each one, build and run the program to see the result.
 
 ## {{shaderLanguage}}
+
+![From shader source to GPU code](images/viz-shaders.webp "From shader source to GPU code: the driver (or a compiler ahead of time) turns your text into instructions.")
 
 :::opengl
 Shaders are written in the C-like language GLSL. GLSL is tailored for use with graphics and contains useful
@@ -481,6 +485,8 @@ Outputs and inputs between stages are matched by their semantics; using one stru
 :::
 
 ## Uniforms
+
+![Uniforms](images/viz-uniforms.webp "Uniforms: values the program sets that stay the same for every vertex and fragment of a draw.")
 
 :::opengl
 *Uniforms* are another way to pass data from our application on the CPU to the shaders on the GPU. Uniforms are

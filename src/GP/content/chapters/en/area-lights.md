@@ -7,6 +7,8 @@ of the light it can see. Highlights take the light's shape: on a glossy floor, a
 highlight, but a rectangular lamp gives a stretched, rectangular glow. Light from an area is an integral over its
 surface, and doing that integral quickly is the problem this chapter solves.
 
+![What you will have built by the end of this chapter](images/results/area-lights.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 The chapter follows learnopengl's guest article *Area Lights*. It uses **Linearly Transformed Cosines** (LTC), the
 method by Eric Heitz, Jonathan Dupuy, Stephen Hill and David Neubelt (SIGGRAPH 2016). LTC lights a surface with a
 polygonal light, specular part included, using a handful of vector operations and two texture lookups per light. The

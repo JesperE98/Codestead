@@ -4,6 +4,8 @@ Throughout most chapters we've been extensively using buffers to store data on t
 discuss a few alternative approaches to managing buffers: filling a buffer in parts, writing into it through a
 pointer, storing the vertex attributes in blocks instead of interleaved, and copying one buffer into another.
 
+![What you will have built by the end of this chapter](images/results/advanced-data.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 :::opengl
 A buffer in OpenGL is, at its core, an object that manages a certain piece of GPU memory and nothing more. We give
 meaning to a buffer when binding it to a specific *buffer target*. A buffer is only a vertex array buffer when we bind

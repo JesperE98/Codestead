@@ -3,6 +3,8 @@
 We've been using 2D textures for a while now, but there are more texture types we haven't explored yet. In this
 chapter we'll discuss a texture type that is a combination of multiple textures mapped into one: a *cube map*.
 
+![What you will have built by the end of this chapter](images/results/cubemaps.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 A cube map is a texture that contains 6 individual 2D textures that each form one side of a cube: a textured cube.
 You may be wondering what the point is of such a cube? Why bother combining 6 individual textures into a single
 entity instead of just using 6 individual textures? Well, cube maps have the useful property that they can be

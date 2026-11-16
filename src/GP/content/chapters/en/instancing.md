@@ -7,6 +7,8 @@ with thousands or maybe tens of thousands of grass leaves that you need to rende
 a few triangles, the leaf is rendered almost instantly. However, the thousands of render calls you'll have to make will
 drastically reduce performance.
 
+![What you will have built by the end of this chapter](images/results/instancing.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 If we were to actually render such a large amount of objects it will look a bit like this in code:
 
 :::opengl

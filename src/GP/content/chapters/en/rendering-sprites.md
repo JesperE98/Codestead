@@ -5,6 +5,8 @@ has many definitions, but it's effectively not much more than a 2D image used to
 in a larger world (e.g. position, rotation, and size). Basically, sprites are the render-able image/texture objects we
 use in a 2D game.
 
+![What you will have built by the end of this chapter](images/results/rendering-sprites.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 You continue in your program from *Setting up*.
 
 We can, just like we did in previous chapters, create a 2D shape out of vertex data, pass all data to the GPU, and

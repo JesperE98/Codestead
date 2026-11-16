@@ -8,6 +8,8 @@ culling, skinning, simulering av vätskor eller folkmassor, eller matematiken ba
 ger dig den maskinen direkt: inga vertexar, ingen rasterisering, inga fragment – bara ett program, ett antal anrop och de
 buffrar och bilder som programmet läser och skriver.
 
+![Det här har du byggt i slutet av kapitlet](images/results/compute-shaders.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Kapitlet följer learnopengls gästartikel *Compute Shaders: Introduction*. Programmet är compute-världens "hello world":
 en compute shader fyller en textur med en färggradient som rör sig över tid, och en vanlig skärmfyrhörning visar
 texturen. Litet som det är visar det alla delar: compute-pipelinen, arbetsgrupperna och deras ID:n, att skriva till en

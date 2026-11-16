@@ -8,6 +8,8 @@ fragment shadern i scener med stor djupkomplexitet (flera objekt täcker samma p
 shaderns utdata skrivs över: ett fragment belyses med varje ljus, och sedan täcks det av ett närmare objekt och allt det
 arbetet kastas bort.
 
+![Det här har du byggt i slutet av kapitlet](images/results/deferred-shading.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 *Deferred shading* eller *deferred rendering* försöker komma runt de problemen genom att i grunden ändra hur vi renderar
 objekt. Det ger oss flera nya möjligheter att optimera scener med många ljus avsevärt, så att vi kan rendera hundratals
 (eller till och med tusentals) ljus med en godtagbar bildfrekvens. Deferred shading bygger på idén att vi *skjuter upp*

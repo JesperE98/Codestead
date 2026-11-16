@@ -6,6 +6,8 @@ fragment bakom kulisserna. En pixel ligger antingen inuti en triangel eller inte
 pixelrutnätet blir därför en trappa. Den här effekten, att man tydligt ser pixlarna som en kant består av, kallas
 *aliasing*. Det finns en hel del tekniker, kallade *anti-aliasing*, som motverkar aliasing genom att ge *mjuka* kanter.
 
+![Det här har du byggt i slutet av kapitlet](images/results/anti-aliasing.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Först hade vi en teknik som heter *super sample anti-aliasing* (SSAA), som tillfälligt använder en renderbuffer med
 mycket högre upplösning att rendera scenen i (super sampling). När hela scenen är renderad skalas upplösningen ned
 till den vanliga igen. Den här *extra* upplösningen användes för att undvika de taggiga kanterna. Den löste visserligen
@@ -53,6 +55,8 @@ bakgrunden. Zooma in på en sned kant i tanken, så ser du trappan.
 
 För att förstå vad multisampling är och hur det löser aliasingproblemet måste vi först gräva lite djupare i hur
 rastreraren fungerar.
+
+![Multisampling](images/viz-msaa.webp "Multisampling: täckningen testas i flera punkter per pixel, men fragmentshadern körs oftast en gång.")
 
 Rastreraren är alla de algoritmer och processer som sitter mellan dina färdigbehandlade vertices och fragment shadern.
 Rastreraren tar alla vertices som hör till en primitiv och gör om dem till en mängd fragment. Vertexkoordinater kan i

@@ -169,6 +169,8 @@ objects with.
 {{api}} allows us to modify the comparison operators it uses for the depth test. This allows us to control when the
 GPU should pass or discard fragments and when to update the depth buffer.
 
+![The depth test](images/viz-depth.webp "The depth test: each fragment's depth is compared with the depth buffer, and the nearest one wins.")
+
 :::opengl
 We can set the comparison operator (or depth function) by calling `glDepthFunc`:
 

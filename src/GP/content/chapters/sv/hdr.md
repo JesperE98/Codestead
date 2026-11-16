@@ -7,6 +7,8 @@ ljust område med flera starka ljuskällor vars sammanlagda bidrag överstiger 1
 ljusstyrka eller färgsumma över 1.0 kläms till 1.0, och det är inte vackert att se på: en stor del av bilden blir en
 platt vit (eller platt gul, eller platt röd) yta, och varje detalj i den går förlorad.
 
+![Det här har du byggt i slutet av kapitlet](images/results/hdr.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Eftersom många fragments färgvärden kläms till 1.0 får alla ljusa fragment exakt samma vita färgvärde i stora områden.
 Mycket detaljer försvinner och bilden ser falsk ut. En lösning vore att sänka ljuskällornas styrka och se till att inget
 område i scenen blir ljusare än 1.0. Det är ingen bra lösning, eftersom den tvingar oss att använda orealistiska

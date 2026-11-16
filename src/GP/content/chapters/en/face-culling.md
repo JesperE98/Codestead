@@ -6,6 +6,8 @@ position and/or direction, but you would never be able to see more than 3 faces.
 drawing those other 3 faces that we can't even see? If we could discard those in some way we would save more than 50%
 of this cube's total fragment shader runs!
 
+![What you will have built by the end of this chapter](images/results/face-culling.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 We say *more than 50%* instead of 50%, because from certain angles only 2 or even 1 face could be visible. In that
 case we'd save *more* than 50%.
 
@@ -46,6 +48,8 @@ After each task, build and run the program in your IDE.
 When we define a set of triangle vertices we're defining them in a certain winding order that is either *clockwise*
 or *counter-clockwise*. Each triangle consists of 3 vertices and we specify those 3 vertices in a winding order as
 seen from the center of the triangle.
+
+![Winding order](images/viz-winding.webp "Winding order: seen from the camera, a front-facing triangle's corners go round counter-clockwise.")
 
 Imagine a triangle with the corners 1 at the top, 2 at the bottom right and 3 at the bottom left. Going 1 → 2 → 3
 you move clockwise; going 1 → 3 → 2 you move counter-clockwise. In the vertex data, the order is simply the order in
@@ -196,6 +200,8 @@ By the right-hand rule, (b − a) × (c − a) points towards the viewer for who
 At the start of the chapter we said that {{api}} is able to discard triangle primitives if they're rendered as
 back-facing triangles. Now that we know how to set the winding order of the vertices we can start using face
 culling.
+
+![Face culling](images/viz-culling.webp "Face culling: the triangles that face away from the camera are thrown away before rasterization.")
 
 :::opengl
 Face culling is disabled by default. To enable it we only have to enable OpenGL's `GL_CULL_FACE` option:
