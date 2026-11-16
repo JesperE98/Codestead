@@ -9,8 +9,9 @@ namespace Codestead.GP.YourProject;
 /// <summary>
 /// "Your project": the learner writes, builds and runs the chapter's code in their own IDE, organised as they like. The
 /// panel ticks tasks by hand ("Mark as done" under each task), checks the code when asked ("Check my code" reads the
-/// chapter's main file, which the learner picks, and the files around it), saves the start files into a folder, and
-/// shows the picture of what the current task's result should look like.
+/// chapter's main file, which the learner picks, and the files around it), saves the course's own textures, models
+/// and fonts into a folder (never code: the learner writes all of it), and shows the picture of what the current
+/// task's result should look like.
 /// </summary>
 public sealed partial class ProjectPanel : Border
 {
@@ -127,11 +128,15 @@ public sealed partial class ProjectPanel : Border
                 row.Children.Add(change);
             }
         }
-        var save = new Button { Content = t("yourProject.save"), Margin = new Thickness(0, 0, 8, 6) };
-        save.Classes.Add(hasTasks ? "secondary" : "primary");
-        ToolTip.SetTip(save, t("yourProject.saveTitle"));
-        save.Click += (_, _) => SaveRequested?.Invoke();
-        row.Children.Add(save);
+        // The course's own textures, models and fonts; the code is the learner's own.
+        if (m.HasResources)
+        {
+            var save = new Button { Content = t("yourProject.save"), Margin = new Thickness(0, 0, 8, 6) };
+            save.Classes.Add("secondary");
+            ToolTip.SetTip(save, t("yourProject.saveTitle"));
+            save.Click += (_, _) => SaveRequested?.Invoke();
+            row.Children.Add(save);
+        }
         return row;
     }
 

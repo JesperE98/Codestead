@@ -162,6 +162,12 @@ public abstract class LearningTool
     /// <summary>Extra lines under a task in the task list (e.g. whether the app has seen it built and run), or null.</summary>
     public virtual Control? TaskStatus(TaskInfo task, int index) => null;
 
+    /// <summary>
+    /// A task's solution as a window of its own, which the learner closes again; null (Codestead Linux): the solution
+    /// opens under the task as clickable commands.
+    /// </summary>
+    public virtual Control? SolutionWindow(TaskInfo task, int index, Action close) => null;
+
     /// <summary>Save the workbench (the window saves its own state).</summary>
     public virtual void Save() { }
 

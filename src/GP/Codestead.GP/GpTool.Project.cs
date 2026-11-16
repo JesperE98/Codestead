@@ -27,6 +27,7 @@ public sealed partial class GpTool
     private string chapter = "";
     private string shownApi = "";
     private string? mainFile;
+    private bool hasResources;
     private CheckReport? report;
     private DateTime checkedAt;
     private CancellationTokenSource? checkCancel;
@@ -43,7 +44,7 @@ public sealed partial class GpTool
         InitIdePicker();
         panel.CheckRequested += () => _ = CheckMyCode(false);
         panel.ChangeFileRequested += () => _ = CheckMyCode(true);
-        panel.SaveRequested += () => _ = SaveFiles(GpCourse.StartProject(chapter, shownApi));
+        panel.SaveRequested += () => _ = SaveFiles(Resources());
         panel.SaveOldRequested += SaveOldCode;
         panel.MarkDoneRequested += MarkDone;
         panel.TaskSelected += i =>
@@ -103,6 +104,7 @@ public sealed partial class GpTool
         chapter = chapterId;
         shownApi = Api;
         selectedTask = -1;
+        hasResources = Resources().Assets.Count > 0;
         UseFile(MainFiles.Get(shownApi, chapter, GpCourse.StartProject(chapter, shownApi).MainFile));
     }
 
@@ -241,7 +243,7 @@ public sealed partial class GpTool
             allPassed = r.Tasks.Count > 0 && r.Tasks.All(x => x.Passed);
         }
         var model = new PanelModel(chapter, shownApi, Apis.Get(shownApi).FullName, mainFile, mainFile is not null && !File.Exists(mainFile),
-            HasOldCode(), checking, summary, messages, allPassed, rows, selected, lockNote, questions);
+            hasResources, HasOldCode(), checking, summary, messages, allPassed, rows, selected, lockNote, questions);
         // The window's task list (text, hints, solutions) sits in the panel once the tasks are unlocked; each task's
         // state comes from TaskStatus, so the list is refreshed with the panel.
         if (unlocked && rows.Count > 0)

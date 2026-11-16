@@ -168,7 +168,21 @@ public partial class LearningWindow
             actions.Children.Add(hintButton);
         }
         solutionButton.Classes.Add("chip");
-        solutionButton.Click += (_, _) => Show(open = open == "solution" ? null : "solution");
+        solutionButton.Click += (_, _) =>
+        {
+            // A tool can show the solution in a window of its own; it counts as seen all the same.
+            if (tool.SolutionWindow(task, index, overlay.CloseDialog) is { } window)
+            {
+                if (!done && !state.Game.SolutionSeen.Contains(key))
+                {
+                    GameRules.OnSolutionShown(state.Game, key);
+                    SaveState();
+                }
+                overlay.ShowDialog(window, overlay.CloseDialog, 720);
+                return;
+            }
+            Show(open = open == "solution" ? null : "solution");
+        };
         actions.Children.Add(solutionButton);
         Show(null);
         main.Children.Add(actions);
